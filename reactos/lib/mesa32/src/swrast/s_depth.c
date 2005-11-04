@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.5
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,51 +27,22 @@
 #include "context.h"
 #include "macros.h"
 #include "imports.h"
+#include "fbobject.h"
 
 #include "s_depth.h"
 #include "s_context.h"
+#include "s_span.h"
 
 
 /**
- * Return address of depth buffer value for given window coord.
- */
-GLvoid *
-_swrast_zbuffer_address(GLcontext *ctx, GLint x, GLint y)
-{
-   if (ctx->Visual.depthBits <= 16)
-      return (GLushort *) ctx->DrawBuffer->DepthBuffer
-         + ctx->DrawBuffer->Width * y + x;
-   else
-      return (GLuint *) ctx->DrawBuffer->DepthBuffer
-         + ctx->DrawBuffer->Width * y + x;
-}
-
-
-#define Z_ADDRESS16( CTX, X, Y )				\
-            ( ((GLushort *) (CTX)->DrawBuffer->DepthBuffer)	\
-              + (CTX)->DrawBuffer->Width * (Y) + (X) )
-
-#define Z_ADDRESS32( CTX, X, Y )				\
-            ( ((GLuint *) (CTX)->DrawBuffer->DepthBuffer)	\
-              + (CTX)->DrawBuffer->Width * (Y) + (X) )
-
-
-
-/**********************************************************************/
-/*****                   Depth Testing Functions                  *****/
-/**********************************************************************/
-
-
-/*
- * Do depth test for an array of fragments.  This is used both for
- * software and hardware Z buffers.
+ * Do depth test for a horizontal span of fragments.
  * Input:  zbuffer - array of z values in the zbuffer
  *         z - array of fragment z values
  * Return:  number of fragments which pass the test.
  */
 static GLuint
 depth_test_span16( GLcontext *ctx, GLuint n,
-                   GLushort zbuffer[], const GLdepth z[], GLubyte mask[] )
+                   GLushort zbuffer[], const GLuint z[], GLubyte mask[] )
 {
    GLuint passed = 0;
 
@@ -300,7 +271,7 @@ depth_test_span16( GLcontext *ctx, GLuint n,
 
 static GLuint
 depth_test_span32( GLcontext *ctx, GLuint n,
-                   GLuint zbuffer[], const GLdepth z[], GLubyte mask[] )
+                   GLuint zbuffer[], const GLuint z[], GLubyte mask[] )
 {
    GLuint passed = 0;
 
@@ -529,74 +500,69 @@ depth_test_span32( GLcontext *ctx, GLuint n,
 
 
 /*
- * Apply depth test to span of fragments.  Hardware or software z buffer.
+ * Apply depth test to span of fragments.
  */
 static GLuint
 depth_test_span( GLcontext *ctx, struct sw_span *span)
 {
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+   struct gl_renderbuffer *rb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
    const GLint x = span->x;
    const GLint y = span->y;
-   const GLuint n = span->end;
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   const GLuint count = span->end;
+   const GLuint *zValues = span->array->z;
+   GLubyte *mask = span->array->mask;
+   GLuint passed;
 
    ASSERT((span->arrayMask & SPAN_XY) == 0);
    ASSERT(span->arrayMask & SPAN_Z);
    
-   if (swrast->Driver.ReadDepthSpan) {
-      /* hardware-based depth buffer */
-      GLdepth zbuffer[MAX_WIDTH];
-      GLuint passed;
-      (*swrast->Driver.ReadDepthSpan)(ctx, n, x, y, zbuffer);
-      passed = depth_test_span32(ctx, n, zbuffer, span->array->z,
-                                 span->array->mask);
-      ASSERT(swrast->Driver.WriteDepthSpan);
-      (*swrast->Driver.WriteDepthSpan)(ctx, n, x, y, zbuffer,
-                                       span->array->mask);
-      if (passed < n)
-         span->writeAll = GL_FALSE;
-      return passed;
-   }
-   else {
-      GLuint passed;
-      /* software depth buffer */
-      if (ctx->Visual.depthBits <= 16) {
-         GLushort *zptr = (GLushort *) Z_ADDRESS16(ctx, x, y);
-         passed = depth_test_span16(ctx, n, zptr, span->array->z, span->array->mask);
+   if (rb->GetPointer(ctx, rb, 0, 0)) {
+      /* Directly access buffer */
+      if (ctx->DrawBuffer->Visual.depthBits <= 16) {
+         GLushort *zbuffer = (GLushort *) rb->GetPointer(ctx, rb, x, y);
+         passed = depth_test_span16(ctx, count, zbuffer, zValues, mask);
       }
       else {
-         GLuint *zptr = (GLuint *) Z_ADDRESS32(ctx, x, y);
-         passed = depth_test_span32(ctx, n, zptr, span->array->z, span->array->mask);
+         GLuint *zbuffer = (GLuint *) rb->GetPointer(ctx, rb, x, y);
+         passed = depth_test_span32(ctx, count, zbuffer, zValues, mask);
       }
-#if 1
-      if (passed < span->end) {
-         span->writeAll = GL_FALSE;
-      }
-#else
-      /* this causes a glDrawPixels(GL_DEPTH_COMPONENT) conformance failure */
-      if (passed < span->end) {
-	  span->writeAll = GL_FALSE;
-	  if (passed == 0) {
-	      span->end = 0;
-	      return 0;
-	  }
-	  while (span->end > 0  &&  span->mask[span->end - 1] == 0)
-	      span->end --;
-      }
-#endif
-      return passed;
    }
+   else {
+      /* read depth values from buffer, test, write back */
+      if (rb->DataType == GL_UNSIGNED_SHORT) {
+         GLushort zbuffer[MAX_WIDTH];
+         rb->GetRow(ctx, rb, count, x, y, zbuffer);
+         passed = depth_test_span16(ctx, count, zbuffer, zValues, mask );
+         rb->PutRow(ctx, rb, count, x, y, zbuffer, NULL);
+      }
+      else {
+         GLuint zbuffer[MAX_WIDTH];
+         ASSERT(rb->DataType == GL_UNSIGNED_INT);
+         rb->GetRow(ctx, rb, count, x, y, zbuffer);
+         passed = depth_test_span32(ctx, count, zbuffer, zValues, mask );
+         rb->PutRow(ctx, rb, count, x, y, zbuffer, NULL);
+      }
+   }
+
+   if (passed < count) {
+      span->writeAll = GL_FALSE;
+   }
+   return passed;
 }
 
 
 
+#define Z_ADDRESS(X, Y)   (zStart + (Y) * stride + (X))
+
 
 /*
- * Do depth testing for an array of fragments using software Z buffer.
+ * Do depth testing for an array of fragments at assorted locations.
  */
 static void
-software_depth_test_pixels16( GLcontext *ctx, GLuint n,
-                              const GLint x[], const GLint y[],
-                              const GLdepth z[], GLubyte mask[] )
+direct_depth_test_pixels16(GLcontext *ctx, GLushort *zStart, GLuint stride,
+                           GLuint n, const GLint x[], const GLint y[],
+                           const GLuint z[], GLubyte mask[] )
 {
    /* switch cases ordered from most frequent to less frequent */
    switch (ctx->Depth.Func) {
@@ -606,7 +572,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] < *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -623,7 +589,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] < *zptr) {
 		     /* pass */
 		  }
@@ -641,7 +607,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] <= *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -658,7 +624,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] <= *zptr) {
 		     /* pass */
 		  }
@@ -676,7 +642,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] >= *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -693,7 +659,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] >= *zptr) {
 		     /* pass */
 		  }
@@ -711,7 +677,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] > *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -728,7 +694,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] > *zptr) {
 		     /* pass */
 		  }
@@ -746,7 +712,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] != *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -763,7 +729,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] != *zptr) {
 		     /* pass */
 		  }
@@ -781,7 +747,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] == *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -798,7 +764,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] == *zptr) {
 		     /* pass */
 		  }
@@ -816,7 +782,7 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLushort *zptr = Z_ADDRESS16(ctx,x[i],y[i]);
+		  GLushort *zptr = Z_ADDRESS(x[i], y[i]);
 		  *zptr = z[i];
 	       }
 	    }
@@ -830,19 +796,19 @@ software_depth_test_pixels16( GLcontext *ctx, GLuint n,
          _mesa_bzero(mask, n * sizeof(GLubyte));
 	 break;
       default:
-         _mesa_problem(ctx, "Bad depth func in software_depth_test_pixels");
+         _mesa_problem(ctx, "Bad depth func in direct_depth_test_pixels");
    }
 }
 
 
 
 /*
- * Do depth testing for an array of fragments using software Z buffer.
+ * Do depth testing for an array of fragments with direct access to zbuffer.
  */
 static void
-software_depth_test_pixels32( GLcontext *ctx, GLuint n,
-                              const GLint x[], const GLint y[],
-                              const GLdepth z[], GLubyte mask[] )
+direct_depth_test_pixels32(GLcontext *ctx, GLuint *zStart, GLuint stride,
+                           GLuint n, const GLint x[], const GLint y[],
+                           const GLuint z[], GLubyte mask[] )
 {
    /* switch cases ordered from most frequent to less frequent */
    switch (ctx->Depth.Func) {
@@ -852,7 +818,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] < *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -869,7 +835,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] < *zptr) {
 		     /* pass */
 		  }
@@ -887,7 +853,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] <= *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -904,7 +870,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] <= *zptr) {
 		     /* pass */
 		  }
@@ -922,7 +888,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] >= *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -939,7 +905,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] >= *zptr) {
 		     /* pass */
 		  }
@@ -957,7 +923,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] > *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -974,7 +940,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] > *zptr) {
 		     /* pass */
 		  }
@@ -992,7 +958,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] != *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -1009,7 +975,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] != *zptr) {
 		     /* pass */
 		  }
@@ -1027,7 +993,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] == *zptr) {
 		     /* pass */
 		     *zptr = z[i];
@@ -1044,7 +1010,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  if (z[i] == *zptr) {
 		     /* pass */
 		  }
@@ -1062,7 +1028,7 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
             GLuint i;
 	    for (i=0; i<n; i++) {
 	       if (mask[i]) {
-		  GLuint *zptr = Z_ADDRESS32(ctx,x[i],y[i]);
+		  GLuint *zptr = Z_ADDRESS(x[i], y[i]);
 		  *zptr = z[i];
 	       }
 	    }
@@ -1076,275 +1042,55 @@ software_depth_test_pixels32( GLcontext *ctx, GLuint n,
          _mesa_bzero(mask, n * sizeof(GLubyte));
 	 break;
       default:
-         _mesa_problem(ctx, "Bad depth func in software_depth_test_pixels");
+         _mesa_problem(ctx, "Bad depth func in direct_depth_test_pixels");
    }
 }
 
-
-
-/*
- * Do depth testing for an array of pixels using hardware Z buffer.
- * Input/output:  zbuffer - array of depth values from Z buffer
- * Input:  z - array of fragment z values.
- */
-static void
-hardware_depth_test_pixels( GLcontext *ctx, GLuint n, GLdepth zbuffer[],
-                            const GLdepth z[], GLubyte mask[] )
-{
-   /* switch cases ordered from most frequent to less frequent */
-   switch (ctx->Depth.Func) {
-      case GL_LESS:
-         if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] < zbuffer[i]) {
-		     /* pass */
-		     zbuffer[i] = z[i];
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] < zbuffer[i]) {
-		     /* pass */
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 break;
-      case GL_LEQUAL:
-         if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] <= zbuffer[i]) {
-		     /* pass */
-		     zbuffer[i] = z[i];
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] <= zbuffer[i]) {
-		     /* pass */
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 break;
-      case GL_GEQUAL:
-         if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] >= zbuffer[i]) {
-		     /* pass */
-		     zbuffer[i] = z[i];
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] >= zbuffer[i]) {
-		     /* pass */
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 break;
-      case GL_GREATER:
-         if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] > zbuffer[i]) {
-		     /* pass */
-		     zbuffer[i] = z[i];
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] > zbuffer[i]) {
-		     /* pass */
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 break;
-      case GL_NOTEQUAL:
-         if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] != zbuffer[i]) {
-		     /* pass */
-		     zbuffer[i] = z[i];
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] != zbuffer[i]) {
-		     /* pass */
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 break;
-      case GL_EQUAL:
-         if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] == zbuffer[i]) {
-		     /* pass */
-		     zbuffer[i] = z[i];
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  if (z[i] == zbuffer[i]) {
-		     /* pass */
-		  }
-		  else {
-		     /* fail */
-		     mask[i] = 0;
-		  }
-	       }
-	    }
-	 }
-	 break;
-      case GL_ALWAYS:
-	 if (ctx->Depth.Mask) {
-	    /* Update Z buffer */
-            GLuint i;
-	    for (i=0; i<n; i++) {
-	       if (mask[i]) {
-		  zbuffer[i] = z[i];
-	       }
-	    }
-	 }
-	 else {
-	    /* Don't update Z buffer or mask */
-	 }
-	 break;
-      case GL_NEVER:
-	 /* depth test never passes */
-         _mesa_bzero(mask, n * sizeof(GLubyte));
-	 break;
-      default:
-         _mesa_problem(ctx, "Bad depth func in hardware_depth_test_pixels");
-   }
-}
 
 
 
 static GLuint
 depth_test_pixels( GLcontext *ctx, struct sw_span *span )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLuint n = span->end;
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+   struct gl_renderbuffer *rb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
+   const GLuint count = span->end;
    const GLint *x = span->array->x;
    const GLint *y = span->array->y;
-   const GLdepth *z = span->array->z;
+   const GLuint *z = span->array->z;
    GLubyte *mask = span->array->mask;
 
-   if (swrast->Driver.ReadDepthPixels) {
-      /* read depth values from hardware Z buffer */
-      GLdepth zbuffer[MAX_WIDTH];
-      (*swrast->Driver.ReadDepthPixels)(ctx, n, x, y, zbuffer);
-
-      hardware_depth_test_pixels( ctx, n, zbuffer, z, mask );
-
-      /* update hardware Z buffer with new values */
-      assert(swrast->Driver.WriteDepthPixels);
-      (*swrast->Driver.WriteDepthPixels)(ctx, n, x, y, zbuffer, mask );
+   if (rb->GetPointer(ctx, rb, 0, 0)) {
+      /* Directly access values */
+      if (rb->DataType == GL_UNSIGNED_SHORT) {
+         GLushort *zStart = (GLushort *) rb->Data;
+         GLuint stride = rb->Width;
+         direct_depth_test_pixels16(ctx, zStart, stride, count, x, y, z, mask);
+      }
+      else {
+         GLuint *zStart = (GLuint *) rb->Data;
+         GLuint stride = rb->Width;
+         direct_depth_test_pixels32(ctx, zStart, stride, count, x, y, z, mask);
+      }
    }
    else {
-      /* software depth testing */
-      if (ctx->Visual.depthBits <= 16)
-         software_depth_test_pixels16(ctx, n, x, y, z, mask);
-      else
-         software_depth_test_pixels32(ctx, n, x, y, z, mask);
+      /* read depth values from buffer, test, write back */
+      if (rb->DataType == GL_UNSIGNED_SHORT) {
+         GLushort zbuffer[MAX_WIDTH];
+         _swrast_get_values(ctx, rb, count, x, y, zbuffer, sizeof(GLushort));
+         depth_test_span16(ctx, count, zbuffer, z, mask );
+         rb->PutValues(ctx, rb, count, x, y, zbuffer, NULL);
+      }
+      else {
+         GLuint zbuffer[MAX_WIDTH];
+         ASSERT(rb->DataType == GL_UNSIGNED_INT);
+         _swrast_get_values(ctx, rb, count, x, y, zbuffer, sizeof(GLuint));
+         depth_test_span32(ctx, count, zbuffer, z, mask );
+         rb->PutValues(ctx, rb, count, x, y, zbuffer, NULL);
+      }
    }
-   return n; /* not really correct, but OK */
+
+   return count; /* not really correct, but OK */
 }
 
 
@@ -1372,24 +1118,34 @@ _swrast_depth_test_span( GLcontext *ctx, struct sw_span *span)
 GLboolean
 _swrast_depth_bounds_test( GLcontext *ctx, struct sw_span *span )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLdepth zMin = (GLdepth) (ctx->Depth.BoundsMin * ctx->DepthMaxF + 0.5F);
-   GLdepth zMax = (GLdepth) (ctx->Depth.BoundsMax * ctx->DepthMaxF + 0.5F);
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+   struct gl_renderbuffer *rb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
+   GLuint zMin = (GLuint) (ctx->Depth.BoundsMin * fb->_DepthMaxF + 0.5F);
+   GLuint zMax = (GLuint) (ctx->Depth.BoundsMax * fb->_DepthMaxF + 0.5F);
    GLubyte *mask = span->array->mask;
+   const GLuint count = span->end;
    GLuint i;
    GLboolean anyPass = GL_FALSE;
 
-   if (swrast->Driver.ReadDepthPixels) {
-      /* read depth values from hardware Z buffer */
-      GLdepth zbuffer[MAX_WIDTH];
-      ASSERT(span->end <= MAX_WIDTH);
-      if (span->arrayMask & SPAN_XY)
-         (*swrast->Driver.ReadDepthPixels)(ctx, span->end, span->array->x,
-                                           span->array->y, zbuffer);
-      else
-         (*swrast->Driver.ReadDepthSpan)(ctx, span->end, span->x, span->y,
-                                         zbuffer);
-      for (i = 0; i < span->end; i++) {
+   if (rb->DataType == GL_UNSIGNED_SHORT) {
+      /* get 16-bit values */
+      GLushort zbuffer16[MAX_WIDTH], *zbuffer;
+      if (span->arrayMask & SPAN_XY) {
+         _swrast_get_values(ctx, rb, count, span->array->x, span->array->y,
+                            zbuffer16, sizeof(GLushort));
+         zbuffer = zbuffer16;
+      }
+      else {
+         zbuffer = rb->GetPointer(ctx, rb, span->x, span->y);
+         if (!zbuffer) {
+            rb->GetRow(ctx, rb, count, span->x, span->y, zbuffer16);
+            zbuffer = zbuffer16;
+         }
+      }
+      assert(zbuffer);
+
+      /* Now do the tests */
+      for (i = 0; i < count; i++) {
          if (mask[i]) {
             if (zbuffer[i] < zMin || zbuffer[i] > zMax)
                mask[i] = GL_FALSE;
@@ -1399,62 +1155,33 @@ _swrast_depth_bounds_test( GLcontext *ctx, struct sw_span *span )
       }
    }
    else {
-      /* software Z buffer */
+      /* get 32-bit values */
+      GLuint zbuffer32[MAX_WIDTH], *zbuffer;
       if (span->arrayMask & SPAN_XY) {
-         if (ctx->Visual.depthBits <= 16) {
-            /* 16 bits / Z */
-            for (i = 0; i < span->end; i++) {
-               if (mask[i]) {
-                  const GLushort *zPtr = Z_ADDRESS16(ctx, span->array->x[i],
-                                                     span->array->y[i]);
-                  if (*zPtr < zMin || *zPtr > zMax)
-                     mask[i] = GL_FALSE;
-                  else
-                     anyPass = GL_TRUE;
-               }
-            }
-         }
-         else {
-            /* 32 bits / Z */
-            for (i = 0; i < span->end; i++) {
-               if (mask[i]) {
-                  const GLuint *zPtr = Z_ADDRESS32(ctx, span->array->x[i],
-                                                   span->array->y[i]);
-                  if (*zPtr < zMin || *zPtr > zMax)
-                     mask[i] = GL_FALSE;
-                  else
-                     anyPass = GL_TRUE;
-               }
-            }
-         }
+         _swrast_get_values(ctx, rb, count, span->array->x, span->array->y,
+                            zbuffer32, sizeof(GLuint));
+         zbuffer = zbuffer32;
       }
       else {
-         if (ctx->Visual.depthBits <= 16) {
-            /* 16 bits / Z */
-            const GLushort *zPtr = Z_ADDRESS16(ctx, span->x, span->y);
-            for (i = 0; i < span->end; i++) {
-               if (mask[i]) {
-                  if (zPtr[i] < zMin || zPtr[i] > zMax)
-                     mask[i] = GL_FALSE;
-                  else
-                     anyPass = GL_TRUE;
-               }
-            }
+         zbuffer = rb->GetPointer(ctx, rb, span->x, span->y);
+         if (!zbuffer) {
+            rb->GetRow(ctx, rb, count, span->x, span->y, zbuffer32);
+            zbuffer = zbuffer32;
          }
-         else {
-            /* 32 bits / Z */
-            const GLuint *zPtr = Z_ADDRESS32(ctx, span->x, span->y);
-            for (i = 0; i < span->end; i++) {
-               if (mask[i]) {
-                  if (zPtr[i] < zMin || zPtr[i] > zMax)
-                     mask[i] = GL_FALSE;
-                  else
-                     anyPass = GL_TRUE;
-               }
-            }
+      }
+      assert(zbuffer);
+
+      /* Now do the tests */
+      for (i = 0; i < count; i++) {
+         if (mask[i]) {
+            if (zbuffer[i] < zMin || zbuffer[i] > zMax)
+               mask[i] = GL_FALSE;
+            else
+               anyPass = GL_TRUE;
          }
       }
    }
+
    return anyPass;
 }
 
@@ -1468,15 +1195,16 @@ _swrast_depth_bounds_test( GLcontext *ctx, struct sw_span *span )
 /**
  * Read a span of depth values from the depth buffer.
  * This function does clipping before calling the device driver function.
+ *
+ * XXXX this is no longer a swrast function!!!
+ *
  */
 void
-_swrast_read_depth_span( GLcontext *ctx,
-                       GLint n, GLint x, GLint y, GLdepth depth[] )
+_swrast_read_depth_span( GLcontext *ctx, struct gl_renderbuffer *rb,
+                         GLint n, GLint x, GLint y, GLuint depth[] )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-
-   if (y < 0 || y >= (GLint) ctx->DrawBuffer->Height ||
-       x + (GLint) n <= 0 || x >= (GLint) ctx->DrawBuffer->Width) {
+   if (y < 0 || y >= (GLint) rb->Height ||
+       x + (GLint) n <= 0 || x >= (GLint) rb->Width) {
       /* span is completely outside framebuffer */
       GLint i;
       for (i = 0; i < n; i++)
@@ -1493,8 +1221,8 @@ _swrast_read_depth_span( GLcontext *ctx,
       n -= dx;
       depth += dx;
    }
-   if (x + n > (GLint) ctx->DrawBuffer->Width) {
-      GLint dx = x + n - (GLint) ctx->DrawBuffer->Width;
+   if (x + n > (GLint) rb->Width) {
+      GLint dx = x + n - (GLint) rb->Width;
       GLint i;
       for (i = 0; i < dx; i++)
          depth[n - i - 1] = 0;
@@ -1504,293 +1232,133 @@ _swrast_read_depth_span( GLcontext *ctx,
       return;
    }
 
-   if (ctx->DrawBuffer->DepthBuffer) {
-      /* read from software depth buffer */
-      if (ctx->Visual.depthBits <= 16) {
-         const GLushort *zptr = Z_ADDRESS16( ctx, x, y );
-         GLint i;
-         for (i = 0; i < n; i++) {
-            depth[i] = zptr[i];
-         }
-      }
-      else {
-         const GLuint *zptr = Z_ADDRESS32( ctx, x, y );
-         GLint i;
-         for (i = 0; i < n; i++) {
-            depth[i] = zptr[i];
-         }
-      }
+   /* we'll always return 32-bit values to our caller */
+   if (!rb) {
+      _mesa_bzero(depth, n * sizeof(GLuint));
    }
-   else if (swrast->Driver.ReadDepthSpan) {
-      /* read from hardware depth buffer */
-      (*swrast->Driver.ReadDepthSpan)( ctx, n, x, y, depth );
+   else if (rb->DataType == GL_UNSIGNED_INT) {
+      rb->GetRow(ctx, rb, n, x, y, depth);
    }
    else {
-      /* no depth buffer */
-      _mesa_bzero(depth, n * sizeof(GLfloat));
+      GLushort temp[MAX_WIDTH];
+      GLuint i;
+      ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
+      rb->GetRow(ctx, rb, n, x, y, temp);
+      for (i = 0; i < n; i++) {
+         depth[i] = temp[i];
+      }
    }
-
 }
-
-
 
 
 /**
  * Return a span of depth values from the depth buffer as floats in [0,1].
- * This is used for both hardware and software depth buffers.
  * Input:  n - how many pixels
  *         x,y - location of first pixel
  * Output:  depth - the array of depth values
  */
 void
-_swrast_read_depth_span_float( GLcontext *ctx,
-                             GLint n, GLint x, GLint y, GLfloat depth[] )
+_swrast_read_depth_span_float( GLcontext *ctx, struct gl_renderbuffer *rb,
+                               GLint n, GLint x, GLint y, GLfloat depth[] )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLfloat scale = 1.0F / ctx->DepthMaxF;
+   const GLfloat scale = 1.0F / ctx->DrawBuffer->_DepthMaxF;
+   GLuint temp[MAX_WIDTH];
+   GLint i;
 
-   if (y < 0 || y >= (GLint) ctx->DrawBuffer->Height ||
-       x + (GLint) n <= 0 || x >= (GLint) ctx->DrawBuffer->Width) {
-      /* span is completely outside framebuffer */
-      GLint i;
-      for (i = 0; i < n; i++)
-         depth[i] = 0.0F;
-      return;
-   }
+   assert(n <= MAX_WIDTH);
 
-   if (x < 0) {
-      GLint dx = -x;
-      GLint i;
-      for (i = 0; i < dx; i++)
-         depth[i] = 0.0F;
-      n -= dx;
-      x = 0;
-   }
-   if (x + n > (GLint) ctx->DrawBuffer->Width) {
-      GLint dx = x + n - (GLint) ctx->DrawBuffer->Width;
-      GLint i;
-      for (i = 0; i < dx; i++)
-         depth[n - i - 1] = 0.0F;
-      n -= dx;
-   }
-   if (n <= 0) {
-      return;
-   }
-
-   if (ctx->DrawBuffer->DepthBuffer) {
-      /* read from software depth buffer */
-      if (ctx->Visual.depthBits <= 16) {
-         const GLushort *zptr = Z_ADDRESS16( ctx, x, y );
-         GLint i;
-         for (i = 0; i < n; i++) {
-            depth[i] = (GLfloat) zptr[i] * scale;
-         }
-      }
-      else {
-         const GLuint *zptr = Z_ADDRESS32( ctx, x, y );
-         GLint i;
-         for (i = 0; i < n; i++) {
-            depth[i] = (GLfloat) zptr[i] * scale;
-         }
-      }
-   }
-   else if (swrast->Driver.ReadDepthSpan) {
-      /* read from hardware depth buffer */
-      GLdepth d[MAX_WIDTH];
-      GLint i;
-      assert(n <= MAX_WIDTH);
-      (*swrast->Driver.ReadDepthSpan)( ctx, n, x, y, d );
-      for (i = 0; i < n; i++) {
-	 depth[i] = d[i] * scale;
-      }
-   }
-   else {
-      /* no depth buffer */
-      _mesa_bzero(depth, n * sizeof(GLfloat));
-   }
-}
-
-
-
-/**********************************************************************/
-/*****                Allocate and Clear Depth Buffer             *****/
-/**********************************************************************/
-
-
-
-/**
- * Allocate a new depth buffer.  If there's already a depth buffer allocated
- * it will be free()'d.  The new depth buffer will be uniniitalized.
- * This function is only called through Driver.alloc_depth_buffer.
- */
-void
-_swrast_alloc_depth_buffer( GLframebuffer *buffer )
-{
-   GLint bytesPerValue;
-
-   ASSERT(buffer->UseSoftwareDepthBuffer);
-
-   /* deallocate current depth buffer if present */
-   if (buffer->DepthBuffer) {
-      MESA_PBUFFER_FREE(buffer->DepthBuffer);
-      buffer->DepthBuffer = NULL;
-   }
-
-   /* allocate new depth buffer, but don't initialize it */
-   if (buffer->Visual.depthBits <= 16)
-      bytesPerValue = sizeof(GLushort);
-   else
-      bytesPerValue = sizeof(GLuint);
-
-   buffer->DepthBuffer = MESA_PBUFFER_ALLOC(buffer->Width * buffer->Height
-                                            * bytesPerValue);
-
-   if (!buffer->DepthBuffer) {
-      /* out of memory */
-      GET_CURRENT_CONTEXT(ctx);
-      if (ctx) {
-         ctx->Depth.Test = GL_FALSE;
-         ctx->NewState |= _NEW_DEPTH;
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "Couldn't allocate depth buffer");
-      }
+   _swrast_read_depth_span(ctx, rb, n, x, y, temp);
+   for (i = 0; i < n; i++) {
+      depth[i] = temp[i] * scale;
    }
 }
 
 
 /**
- * Clear the depth buffer.  If the depth buffer doesn't exist yet we'll
- * allocate it now.
- * This function is only called through Driver.clear_depth_buffer.
+ * Clear the depth buffer.
  */
 void
-_swrast_clear_depth_buffer( GLcontext *ctx )
+_swrast_clear_depth_buffer( GLcontext *ctx, struct gl_renderbuffer *rb )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   GLuint clearValue;
+   GLint x, y, width, height;
 
-   if (ctx->Visual.depthBits == 0
-       || !ctx->Depth.Mask) {
+   if (!rb || !ctx->Depth.Mask) {
       /* no depth buffer, or writing to it is disabled */
       return;
    }
 
-   if (swrast->Driver.WriteMonoDepthSpan) {
-      const GLdepth clearValue = (GLdepth)(ctx->Depth.Clear * ctx->DepthMax);
-      const GLint x = ctx->DrawBuffer->_Xmin;
-      const GLint y = ctx->DrawBuffer->_Ymin;
-      const GLint height = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
-      const GLint width  = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
-      GLint i;
-
-      for (i = 0; i < height; i++) {
-         (*swrast->Driver.WriteMonoDepthSpan)( ctx, width, x, y + i,
-                                               clearValue, NULL );
-      }
-
-      return;
+   /* compute integer clearing value */
+   if (ctx->Depth.Clear == 1.0) {
+      clearValue = ctx->DrawBuffer->_DepthMax;
+   }
+   else {
+      clearValue = (GLuint) (ctx->Depth.Clear * ctx->DrawBuffer->_DepthMaxF);
    }
 
-   if (!ctx->DrawBuffer->DepthBuffer)
-      return;
+   assert(rb->_BaseFormat == GL_DEPTH_COMPONENT);
 
-   /* The loops in this function have been written so the IRIX 5.3
-    * C compiler can unroll them.  Hopefully other compilers can too!
-    */
+   /* compute region to clear */
+   x = ctx->DrawBuffer->_Xmin;
+   y = ctx->DrawBuffer->_Ymin;
+   width  = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
+   height = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
 
-   if (ctx->Scissor.Enabled) {
-      /* only clear scissor region */
-      if (ctx->Visual.depthBits <= 16) {
-         const GLushort clearValue = (GLushort) (ctx->Depth.Clear * ctx->DepthMax);
-         const GLint rows = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
-         const GLint cols = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
-         const GLint rowStride = ctx->DrawBuffer->Width;
-         GLushort *dRow = (GLushort *) ctx->DrawBuffer->DepthBuffer
-            + ctx->DrawBuffer->_Ymin * rowStride + ctx->DrawBuffer->_Xmin;
-         GLint i, j;
-         for (i = 0; i < rows; i++) {
-            for (j = 0; j < cols; j++) {
-               dRow[j] = clearValue;
+   if (rb->GetPointer(ctx, rb, 0, 0)) {
+      /* Direct buffer access is possible.  Either this is just malloc'd
+       * memory, or perhaps the driver mmap'd the zbuffer memory.
+       */
+      if (rb->DataType == GL_UNSIGNED_SHORT) {
+         if (width == rb->Width &&
+             (clearValue & 0xff) == ((clearValue >> 8) & 0xff)) {
+            /* optimized case */
+            GLushort *dst = (GLushort *) rb->GetPointer(ctx, rb, x, y);
+            GLuint len = width * height * sizeof(GLushort);
+            _mesa_memset(dst, (clearValue & 0xff), len);
+         }
+         else {
+            /* general case */
+            GLint i, j;
+            for (i = 0; i < height; i++) {
+               GLushort *dst = (GLushort *) rb->GetPointer(ctx, rb, x, y + i);
+               for (j = 0; j < width; j++) {
+                  dst[j] = clearValue;
+               }
             }
-            dRow += rowStride;
          }
       }
       else {
-         const GLuint clearValue = (GLuint) (ctx->Depth.Clear * ctx->DepthMax);
-         const GLint rows = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
-         const GLint cols = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
-         const GLint rowStride = ctx->DrawBuffer->Width;
-         GLuint *dRow = (GLuint *) ctx->DrawBuffer->DepthBuffer
-            + ctx->DrawBuffer->_Ymin * rowStride + ctx->DrawBuffer->_Xmin;
          GLint i, j;
-         for (i = 0; i < rows; i++) {
-            for (j = 0; j < cols; j++) {
-               dRow[j] = clearValue;
+         ASSERT(rb->DataType == GL_UNSIGNED_INT);
+         for (i = 0; i < height; i++) {
+            GLuint *dst = (GLuint *) rb->GetPointer(ctx, rb, x, y + i);
+            for (j = 0; j < width; j++) {
+               dst[j] = clearValue;
             }
-            dRow += rowStride;
          }
       }
    }
    else {
-      /* clear whole buffer */
-      if (ctx->Visual.depthBits <= 16) {
-         const GLushort clearValue = (GLushort) (ctx->Depth.Clear * ctx->DepthMax);
-         if ((clearValue & 0xff) == (clearValue >> 8)) {
-            if (clearValue == 0) {
-               _mesa_bzero(ctx->DrawBuffer->DepthBuffer,
-                     2*ctx->DrawBuffer->Width*ctx->DrawBuffer->Height);
-            }
-            else {
-               /* lower and upper bytes of clear_value are same, use MEMSET */
-               MEMSET( ctx->DrawBuffer->DepthBuffer, clearValue & 0xff,
-                       2 * ctx->DrawBuffer->Width * ctx->DrawBuffer->Height);
-            }
+      /* Direct access not possible.  Use PutRow to write new values. */
+      if (rb->DataType == GL_UNSIGNED_SHORT) {
+         GLushort clearRow[MAX_WIDTH];
+         GLint i, j;
+         for (j = 0; j < width; j++) {
+            clearRow[j] = clearValue;
          }
-         else {
-            GLushort *d = (GLushort *) ctx->DrawBuffer->DepthBuffer;
-            GLint n = ctx->DrawBuffer->Width * ctx->DrawBuffer->Height;
-            while (n >= 16) {
-               d[0] = clearValue;    d[1] = clearValue;
-               d[2] = clearValue;    d[3] = clearValue;
-               d[4] = clearValue;    d[5] = clearValue;
-               d[6] = clearValue;    d[7] = clearValue;
-               d[8] = clearValue;    d[9] = clearValue;
-               d[10] = clearValue;   d[11] = clearValue;
-               d[12] = clearValue;   d[13] = clearValue;
-               d[14] = clearValue;   d[15] = clearValue;
-               d += 16;
-               n -= 16;
-            }
-            while (n > 0) {
-               *d++ = clearValue;
-               n--;
-            }
+         for (i = 0; i < height; i++) {
+            rb->PutRow(ctx, rb, width, x, y + i, clearRow, NULL);
          }
       }
       else {
-         /* >16 bit depth buffer */
-         const GLuint clearValue = (GLuint) (ctx->Depth.Clear * ctx->DepthMax);
-         if (clearValue == 0) {
-            _mesa_bzero(ctx->DrawBuffer->DepthBuffer,
-                ctx->DrawBuffer->Width*ctx->DrawBuffer->Height*sizeof(GLuint));
+         GLuint clearRow[MAX_WIDTH];
+         GLint i, j;
+         assert(rb->DataType == GL_UNSIGNED_INT);
+         for (j = 0; j < width; j++) {
+            clearRow[j] = clearValue;
          }
-         else {
-            GLint n = ctx->DrawBuffer->Width * ctx->DrawBuffer->Height;
-            GLuint *d = (GLuint *) ctx->DrawBuffer->DepthBuffer;
-            while (n >= 16) {
-               d[0] = clearValue;    d[1] = clearValue;
-               d[2] = clearValue;    d[3] = clearValue;
-               d[4] = clearValue;    d[5] = clearValue;
-               d[6] = clearValue;    d[7] = clearValue;
-               d[8] = clearValue;    d[9] = clearValue;
-               d[10] = clearValue;   d[11] = clearValue;
-               d[12] = clearValue;   d[13] = clearValue;
-               d[14] = clearValue;   d[15] = clearValue;
-               d += 16;
-               n -= 16;
-            }
-            while (n > 0) {
-               *d++ = clearValue;
-               n--;
-            }
+         for (i = 0; i < height; i++) {
+            rb->PutRow(ctx, rb, width, x, y + i, clearRow, NULL);
          }
       }
    }

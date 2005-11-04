@@ -77,7 +77,7 @@ static void _tnl_bind_vertex_list( GLcontext *ctx,
 	 data += node->attrsz[attr];
       }
       else {
-	 tmp->Attribs[attr].count = node->count;
+	 tmp->Attribs[attr].count = 1;
 	 tmp->Attribs[attr].data = (GLfloat (*)[4]) tnl->vtx.current[attr];
 	 tmp->Attribs[attr].start = tnl->vtx.current[attr];
 	 tmp->Attribs[attr].size = get_size( tnl->vtx.current[attr] );
@@ -105,11 +105,11 @@ static void _tnl_bind_vertex_list( GLcontext *ctx,
    VB->ObjPtr = VB->AttribPtr[_TNL_ATTRIB_POS];
    VB->NormalPtr = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
    VB->ColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR0];
-   VB->ColorPtr[1] = 0;
+   VB->ColorPtr[1] = NULL;
    VB->IndexPtr[0] = VB->AttribPtr[_TNL_ATTRIB_INDEX];
-   VB->IndexPtr[1] = 0;
+   VB->IndexPtr[1] = NULL;
    VB->SecondaryColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR1];
-   VB->SecondaryColorPtr[1] = 0;
+   VB->SecondaryColorPtr[1] = NULL;
    VB->FogCoordPtr = VB->AttribPtr[_TNL_ATTRIB_FOG];
 
    for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
@@ -131,8 +131,7 @@ static void _playback_copy_to_current( GLcontext *ctx,
 
    for (i = _TNL_ATTRIB_POS+1 ; i <= _TNL_ATTRIB_INDEX ; i++) {
       if (node->attrsz[i]) {
-	 ASSIGN_4V(tnl->vtx.current[i], 0, 0, 0, 1);
-	 COPY_SZ_4V(tnl->vtx.current[i], node->attrsz[i], data);
+	 COPY_CLEAN_4V(tnl->vtx.current[i], node->attrsz[i], data);
 	 data += node->attrsz[i];
       }
    }
@@ -178,7 +177,7 @@ void _tnl_playback_vertex_list( GLcontext *ctx, void *data )
    if (node->prim_count > 0 && node->count > 0) {
 
       if (ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END &&
-	       (node->prim[0].mode & PRIM_BEGIN)) {
+	  (node->prim[0].mode & PRIM_BEGIN)) {
 
 	 /* Degenerate case: list is called inside begin/end pair and
 	  * includes operations such as glBegin or glDrawArrays.
@@ -187,10 +186,9 @@ void _tnl_playback_vertex_list( GLcontext *ctx, void *data )
 	 _tnl_loopback_vertex_list( ctx, node );
 	 return;
       }
-      else if (tnl->LoopbackDListCassettes ||
-	       node->dangling_attr_ref) {
-	 /* Degenerate case: list references current data and would
-	  * require fixup.  Take the easier option & loop it back.
+      else if (tnl->save.replay_flags) {
+	 /* Various degnerate cases: translate into immediate mode
+	  * calls rather than trying to execute in place.
 	  */
 	 _tnl_loopback_vertex_list( ctx, node );
 	 return;
@@ -206,16 +204,9 @@ void _tnl_playback_vertex_list( GLcontext *ctx, void *data )
          return;
       }
 
-      if (tnl->pipeline.build_state_changes)
-	 _tnl_validate_pipeline( ctx );
-
       _tnl_bind_vertex_list( ctx, node );
 
-      /* Invalidate all stored data before and after run:
-       */
-      tnl->pipeline.run_input_changes |= tnl->pipeline.inputs;
       tnl->Driver.RunPipeline( ctx );
-      tnl->pipeline.run_input_changes |= tnl->pipeline.inputs;
    }
 
    /* Copy to current?

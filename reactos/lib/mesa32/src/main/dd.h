@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,6 +34,7 @@
 /* THIS FILE ONLY INCLUDED BY mtypes.h !!!!! */
 
 struct gl_pixelstore_attrib;
+struct mesa_display_list;
 
 /**
  * Device driver function table.
@@ -74,12 +75,10 @@ struct dd_function_table {
                           GLuint *width, GLuint *height );
 
    /**
-    * Resize the driver's depth/stencil/accum/back buffers to match the
-    * size given in the GLframebuffer struct.  
-    *
-    * This is typically called when Mesa detects that a window size has changed.
+    * Resize the given framebuffer to the given size.
     */
-   void (*ResizeBuffers)( GLframebuffer *buffer );
+   void (*ResizeBuffers)( GLcontext *ctx, GLframebuffer *fb,
+                          GLuint width, GLuint height);
 
    /**
     * Called whenever an error is generated.  
@@ -157,10 +156,9 @@ struct dd_function_table {
     * This function must respect all rasterization state, glPixelTransfer(),
     * glPixelZoom(), etc.
     */
-   void (*CopyPixels)( GLcontext *ctx,
-                            GLint srcx, GLint srcy,
-                            GLsizei width, GLsizei height,
-                            GLint dstx, GLint dsty, GLenum type );
+   void (*CopyPixels)( GLcontext *ctx, GLint srcx, GLint srcy,
+                       GLsizei width, GLsizei height,
+                       GLint dstx, GLint dsty, GLenum type );
 
    /**
     * This is called by glBitmap().  
@@ -296,6 +294,14 @@ struct dd_function_table {
                           const struct gl_pixelstore_attrib *packing,
                           struct gl_texture_object *texObj,
                           struct gl_texture_image *texImage );
+
+   /**
+    * Called by glGetTexImage().
+    */
+   void (*GetTexImage)( GLcontext *ctx, GLenum target, GLint level,
+                        GLenum format, GLenum type, GLvoid *pixels,
+                        const struct gl_texture_object *texObj,
+                        const struct gl_texture_image *texImage );
 
    /**
     * Called by glCopyTexImage1D().
@@ -454,6 +460,15 @@ struct dd_function_table {
                                    struct gl_texture_object *texObj,
                                    struct gl_texture_image *texImage);
 
+
+   /**
+    * Called by glGetCompressedTexImage.
+    */
+   void (*GetCompressedTexImage)(GLcontext *ctx, GLenum target, GLint level,
+                                 GLvoid *img,
+                                 const struct gl_texture_object *texObj,
+                                 const struct gl_texture_image *texImage);
+
    /**
     * Called to query number of bytes of storage needed to store the
     * specified compressed texture.
@@ -493,6 +508,24 @@ struct dd_function_table {
     * Called to allocate a new texture image object.
     */
    struct gl_texture_image * (*NewTextureImage)( GLcontext *ctx );
+
+   /** 
+    * Called to free tImage->Data.
+    */
+   void (*FreeTexImageData)( GLcontext *ctx, struct gl_texture_image *tImage );
+
+   /**
+    * Note: no context argument.  This function doesn't initially look
+    * like it belongs here, except that the driver is the only entity
+    * that knows for sure how the texture memory is allocated - via
+    * the above callbacks.  There is then an argument that the driver
+    * knows what memcpy paths might be fast.  Typically this is invoked with
+    * 
+    * to -- a pointer into texture memory allocated by NewTextureImage() above.
+    * from -- a pointer into client memory or a mesa temporary.
+    * sz -- nr bytes to copy.
+    */
+   void* (*TextureMemCpy)( void *to, const void *from, size_t sz );
 
    /**
     * Called by glAreTextureResident().
@@ -615,6 +648,8 @@ struct dd_function_table {
    void (*DepthRange)(GLcontext *ctx, GLclampd nearval, GLclampd farval);
    /** Specify the current buffer for writing */
    void (*DrawBuffer)( GLcontext *ctx, GLenum buffer );
+   /** Specify the buffers for writing for fragment programs*/
+   void (*DrawBuffers)( GLcontext *ctx, GLsizei n, const GLenum *buffers );
    /** Enable or disable server-side gl capabilities */
    void (*Enable)(GLcontext *ctx, GLenum cap, GLboolean state);
    /** Specify fog parameters */
@@ -658,7 +693,16 @@ struct dd_function_table {
    void (*StencilMask)(GLcontext *ctx, GLuint mask);
    /** Set stencil test actions */
    void (*StencilOp)(GLcontext *ctx, GLenum fail, GLenum zfail, GLenum zpass);
+   /** Set active stencil face (GL_EXT_stencil_two_side) */
    void (*ActiveStencilFace)(GLcontext *ctx, GLuint face);
+   /** OpenGL 2.0 two-sided StencilFunc */
+   void (*StencilFuncSeparate)(GLcontext *ctx, GLenum face, GLenum func,
+                               GLint ref, GLuint mask);
+   /** OpenGL 2.0 two-sided StencilMask */
+   void (*StencilMaskSeparate)(GLcontext *ctx, GLenum face, GLuint mask);
+   /** OpenGL 2.0 two-sided StencilOp */
+   void (*StencilOpSeparate)(GLcontext *ctx, GLenum face, GLenum fail,
+                             GLenum zfail, GLenum zpass);
    /** Control the generation of texture coordinates */
    void (*TexGen)(GLcontext *ctx, GLenum coord, GLenum pname,
 		  const GLfloat *params);
@@ -723,7 +767,7 @@ struct dd_function_table {
    
 
    /**
-    * \name Vertex buffer object functions
+    * \name Vertex/pixel buffer object functions
     */
 #if FEATURE_ARB_vertex_buffer_object
    /*@{*/
@@ -754,6 +798,24 @@ struct dd_function_table {
 			     struct gl_buffer_object *obj );
    /*@}*/
 #endif
+
+   /**
+    * \name Functions for GL_EXT_framebuffer_object
+    */
+#if FEATURE_EXT_framebuffer_object
+   /*@{*/
+   struct gl_framebuffer * (*NewFramebuffer)(GLcontext *ctx, GLuint name);
+   struct gl_renderbuffer * (*NewRenderbuffer)(GLcontext *ctx, GLuint name);
+   void (*FramebufferRenderbuffer)(GLcontext *ctx, 
+                                   struct gl_renderbuffer_attachment *att,
+                                   struct gl_renderbuffer *rb);
+   void (*RenderbufferTexture)(GLcontext *ctx,
+                               struct gl_renderbuffer_attachment *att,
+                               struct gl_texture_object *texObj,
+                               GLenum texTarget, GLuint level, GLuint zoffset);
+   /*@}*/
+#endif
+
 
    /**
     * \name Support for multiple T&L engines
@@ -859,12 +921,12 @@ struct dd_function_table {
    void (*EndList)( GLcontext *ctx );
 
    /**
-    * Called by glCallList(s), but not recursively.
+    * Called by glCallList(s).
     *
     * Notify the T&L component before and after calling a display list.
-    * Called by glCallList(s), but not recursively.
     */
-   void (*BeginCallList)( GLcontext *ctx, GLuint list );
+   void (*BeginCallList)( GLcontext *ctx, 
+			  struct mesa_display_list *dlist );
    /**
     * Called by glEndCallList().
     *
@@ -954,6 +1016,14 @@ typedef struct {
    void (GLAPIENTRYP VertexAttrib3fvNV)( GLuint index, const GLfloat *v );
    void (GLAPIENTRYP VertexAttrib4fNV)( GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w );
    void (GLAPIENTRYP VertexAttrib4fvNV)( GLuint index, const GLfloat *v );
+   void (GLAPIENTRYP VertexAttrib1fARB)( GLuint index, GLfloat x );
+   void (GLAPIENTRYP VertexAttrib1fvARB)( GLuint index, const GLfloat *v );
+   void (GLAPIENTRYP VertexAttrib2fARB)( GLuint index, GLfloat x, GLfloat y );
+   void (GLAPIENTRYP VertexAttrib2fvARB)( GLuint index, const GLfloat *v );
+   void (GLAPIENTRYP VertexAttrib3fARB)( GLuint index, GLfloat x, GLfloat y, GLfloat z );
+   void (GLAPIENTRYP VertexAttrib3fvARB)( GLuint index, const GLfloat *v );
+   void (GLAPIENTRYP VertexAttrib4fARB)( GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w );
+   void (GLAPIENTRYP VertexAttrib4fvARB)( GLuint index, const GLfloat *v );
    /*@}*/
 
    /*

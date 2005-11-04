@@ -1,9 +1,7 @@
 # src/mesa/x86/Makefile
 
 TOP = ../../..
-
 include $(TOP)/configs/current
-
 
 
 INCLUDE_DIRS = \
@@ -11,16 +9,22 @@ INCLUDE_DIRS = \
 	-I$(TOP)/include \
 	-I.. \
 	-I../main \
+	-I../math \
 	-I../glapi \
 	-I../tnl
 
 
-default: matypes.h
+default: gen_matypes matypes.h
 
+clean:
+	rm -f matypes.h gen_matypes
+
+
+gen_matypes: gen_matypes.c
+	$(CC) $(INCLUDE_DIRS) $(CFLAGS) gen_matypes.c -o gen_matypes
 
 # need some special rules here, unfortunately
-matypes.h: ../main/mtypes.h ../tnl/t_context.h gen_matypes.c
-	$(CC) $(INCLUDE_DIRS) $(CFLAGS) gen_matypes.c -o gen_matypes
+matypes.h: ../main/mtypes.h ../tnl/t_context.h gen_matypes
 	./gen_matypes > matypes.h
 
 common_x86_asm.o: matypes.h

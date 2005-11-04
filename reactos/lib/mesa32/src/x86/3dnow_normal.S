@@ -1,4 +1,4 @@
-/* $Id: 3dnow_normal.S,v 1.8 2004/04/26 10:10:25 alanh Exp $ */
+/* $Id: 3dnow_normal.S,v 1.9 2005/01/04 14:33:47 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -41,6 +41,7 @@
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_transform_normalize_normals)
+HIDDEN(_mesa_3dnow_transform_normalize_normals)
 GLNAME(_mesa_3dnow_transform_normalize_normals):
 
 #define FRAME_OFFSET 12
@@ -218,6 +219,7 @@ LLBL (G3TN_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_transform_normalize_normals_no_rot)
+HIDDEN(_mesa_3dnow_transform_normalize_normals_no_rot)
 GLNAME(_mesa_3dnow_transform_normalize_normals_no_rot):
 
 #undef FRAME_OFFSET
@@ -357,6 +359,7 @@ LLBL (G3TNNR_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_transform_rescale_normals_no_rot)
+HIDDEN(_mesa_3dnow_transform_rescale_normals_no_rot)
 GLNAME(_mesa_3dnow_transform_rescale_normals_no_rot):
 
 #undef FRAME_OFFSET
@@ -428,6 +431,7 @@ LLBL (G3TRNR_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_transform_rescale_normals)
+HIDDEN(_mesa_3dnow_transform_rescale_normals)
 GLNAME(_mesa_3dnow_transform_rescale_normals):
 
 #undef  FRAME_OFFSET
@@ -525,6 +529,7 @@ LLBL (G3TR_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_transform_normals_no_rot)
+HIDDEN(_mesa_3dnow_transform_normals_no_rot)
 GLNAME(_mesa_3dnow_transform_normals_no_rot):
 
 #undef  FRAME_OFFSET
@@ -591,6 +596,7 @@ LLBL (G3TNR_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_transform_normals)
+HIDDEN(_mesa_3dnow_transform_normals)
 GLNAME(_mesa_3dnow_transform_normals):
 
 #undef  FRAME_OFFSET
@@ -675,6 +681,7 @@ LLBL (G3T_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_normalize_normals)
+HIDDEN(_mesa_3dnow_normalize_normals)
 GLNAME(_mesa_3dnow_normalize_normals):
 
 #undef  FRAME_OFFSET
@@ -786,6 +793,7 @@ LLBL (G3N_end):
 
 ALIGNTEXT16
 GLOBL GLNAME(_mesa_3dnow_rescale_normals)
+HIDDEN(_mesa_3dnow_rescale_normals)
 GLNAME(_mesa_3dnow_rescale_normals):
 
 #undef  FRAME_OFFSET

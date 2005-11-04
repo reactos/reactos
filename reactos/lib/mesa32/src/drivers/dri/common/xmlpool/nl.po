@@ -1,0 +1,230 @@
+# Dutch translations for PACKAGE package.
+# Copyright (C) 2005 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#  <manfred.stienstra@dwerg.net>, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-04-12 20:09+0200\n"
+"PO-Revision-Date: 2005-04-12 20:09+0200\n"
+"Last-Translator:  Manfred Stienstra <manfred.stienstra@dwerg.net>\n"
+"Language-Team: Dutch <vertaling@nl.linux.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: t_options.h:53
+msgid "Debugging"
+msgstr "Debuggen"
+
+#: t_options.h:57
+msgid "Disable 3D acceleration"
+msgstr "3D versnelling uitschakelen"
+
+#: t_options.h:62
+msgid "Show performance boxes"
+msgstr "Laat prestatie boxjes zien"
+
+#: t_options.h:69
+msgid "Image Quality"
+msgstr "Beeldkwaliteit"
+
+#: t_options.h:77
+msgid "Texture color depth"
+msgstr "Textuurkleurendiepte"
+
+#: t_options.h:78
+msgid "Prefer frame buffer color depth"
+msgstr "Prefereer kaderbufferkleurdiepte"
+
+#: t_options.h:79
+msgid "Prefer 32 bits per texel"
+msgstr "Prefereer 32 bits per texel"
+
+#: t_options.h:80
+msgid "Prefer 16 bits per texel"
+msgstr "Prefereer 16 bits per texel"
+
+#: t_options.h:81
+msgid "Force 16 bits per texel"
+msgstr "Dwing 16 bits per texel af"
+
+#: t_options.h:87
+msgid "Initial maximum value for anisotropic texture filtering"
+msgstr "Initïele maximum waarde voor anisotrophische textuur filtering"
+
+#: t_options.h:92
+msgid "Forbid negative texture LOD bias"
+msgstr "Verbied negatief niveau detailonderscheid (LOD) van texturen"
+
+#: t_options.h:97
+msgid ""
+"Enable S3TC texture compression even if software support is not available"
+msgstr ""
+"Schakel S3TC textuurcompressie in, zelfs als softwareondersteuning niet "
+"aanwezig is"
+
+#: t_options.h:104
+msgid "Initial color reduction method"
+msgstr "Initïele kleurreductie methode"
+
+#: t_options.h:105
+msgid "Round colors"
+msgstr "Rond kleuren af"
+
+#: t_options.h:106
+msgid "Dither colors"
+msgstr "Rasteriseer kleuren"
+
+#: t_options.h:114
+msgid "Color rounding method"
+msgstr "Kleurafrondingmethode"
+
+#: t_options.h:115
+msgid "Round color components downward"
+msgstr "Rond kleurencomponenten af naar beneden"
+
+#: t_options.h:116
+msgid "Round to nearest color"
+msgstr "Rond af naar dichtsbijzijnde kleur"
+
+#: t_options.h:125
+msgid "Color dithering method"
+msgstr "Kleurrasteriseringsmethode"
+
+#: t_options.h:126
+msgid "Horizontal error diffusion"
+msgstr "Horizontale foutdiffusie"
+
+#: t_options.h:127
+msgid "Horizontal error diffusion, reset error at line start"
+msgstr "Horizontale foutdiffusie, zet fout bij lijnbegin terug"
+
+#: t_options.h:128
+msgid "Ordered 2D color dithering"
+msgstr "Geordende 2D kleurrasterisering"
+
+#: t_options.h:134
+msgid "Floating point depth buffer"
+msgstr "Dieptebuffer als commagetal"
+
+#: t_options.h:140
+msgid "Performance"
+msgstr "Prestatie"
+
+#: t_options.h:148
+msgid "TCL mode (Transformation, Clipping, Lighting)"
+msgstr "TCL-modus (Transformatie, Clipping, Licht)"
+
+#: t_options.h:149
+msgid "Use software TCL pipeline"
+msgstr "Gebruik software TCL pijpleiding"
+
+#: t_options.h:150
+msgid "Use hardware TCL as first TCL pipeline stage"
+msgstr "Gebruik hardware TCL as eerste TCL pijpleiding trap"
+
+#: t_options.h:151
+msgid "Bypass the TCL pipeline"
+msgstr "Omzeil de TCL pijpleiding"
+
+#: t_options.h:152
+msgid ""
+"Bypass the TCL pipeline with state-based machine code generated on-the-fly"
+msgstr ""
+"Omzeil de TCL pijpleiding met staatgebaseerde machinecode die tijdens "
+"executie gegenereerd wordt"
+
+#: t_options.h:161
+msgid "Method to limit rendering latency"
+msgstr "Methode om beeldopbouwvertraging te onderdrukken"
+
+#: t_options.h:162
+msgid "Busy waiting for the graphics hardware"
+msgstr "Actief wachten voor de grafische hardware"
+
+#: t_options.h:163
+msgid "Sleep for brief intervals while waiting for the graphics hardware"
+msgstr "Slaap voor korte intervallen tijdens het wachten op de grafische "
+"hardware"
+
+#: t_options.h:164
+msgid "Let the graphics hardware emit a software interrupt and sleep"
+msgstr "Laat de grafische hardware een software onderbreking uitzenden en in "
+"slaap vallen"
+
+#: t_options.h:174
+msgid "Synchronization with vertical refresh (swap intervals)"
+msgstr "Synchronisatie met verticale verversing (interval omwisselen)"
+
+#: t_options.h:175
+msgid "Never synchronize with vertical refresh, ignore application's choice"
+msgstr "Nooit synchroniseren met verticale verversing, negeer de keuze van de "
+"applicatie"
+
+#: t_options.h:176
+msgid "Initial swap interval 0, obey application's choice"
+msgstr "Initïeel omwisselingsinterval 0, honoreer de keuze van de applicatie"
+
+#: t_options.h:177
+msgid "Initial swap interval 1, obey application's choice"
+msgstr "Initïeel omwisselingsinterval 1, honoreer de keuze van de applicatie"
+
+#: t_options.h:178
+msgid ""
+"Always synchronize with vertical refresh, application chooses the minimum "
+"swap interval"
+msgstr ""
+"Synchroniseer altijd met verticale verversing, de applicatie kiest het "
+"minimum omwisselingsinterval"
+
+#: t_options.h:186
+msgid "Use HyperZ to boost performance"
+msgstr "Gebruik HyperZ om de prestaties te verbeteren"
+
+#: t_options.h:191
+msgid "Number of texture units used"
+msgstr "Aantal textuureenheden in gebruik"
+
+#: t_options.h:196
+msgid ""
+"Enable hack to allow larger textures with texture compression on radeon/r200"
+msgstr ""
+"Schakel hack in om met textuurcompressie grotere texturen toe te staan op "
+"een radeon/r200"
+
+#: t_options.h:201
+msgid "Texture filtering quality vs. speed, AKA “brilinear” texture filtering"
+msgstr "Textuurfilterkwaliteit versus -snelheid, ookwel bekend als "
+"“brilineaire” textuurfiltering"
+
+#: t_options.h:209
+msgid "Used types of texture memory"
+msgstr "Gebruikte soorten textuurgeheugen"
+
+#: t_options.h:210
+msgid "All available memory"
+msgstr "Al het beschikbaar geheugen"
+
+#: t_options.h:211
+msgid "Only card memory (if available)"
+msgstr "Alleen geheugen op de kaart (als het aanwezig is)"
+
+#: t_options.h:212
+msgid "Only GART (AGP/PCIE) memory (if available)"
+msgstr "Alleen GART (AGP/PCIE) geheugen (als het aanwezig is)"
+
+#: t_options.h:220
+msgid "Features that are not hardware-accelerated"
+msgstr "Eigenschappen die niet hardwareversneld zijn"
+
+#: t_options.h:224
+msgid "Enable extension GL_ARB_vertex_program"
+msgstr "Zet uitbreiding GL_ARB_vertex_program aan"
+
+#: t_options.h:229
+msgid "Enable extension GL_NV_vertex_program"
+msgstr "Zet uitbreiding GL_NV_vertex_program aan"

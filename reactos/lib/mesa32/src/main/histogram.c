@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -24,6 +24,7 @@
 
 
 #include "glheader.h"
+#include "bufferobj.h"
 #include "colormac.h"
 #include "context.h"
 #include "image.h"
@@ -705,7 +706,7 @@ _mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvo
        format != GL_ABGR_EXT &&
        format != GL_LUMINANCE &&
        format != GL_LUMINANCE_ALPHA) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetHistogram(format)");
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetMinMax(format)");
    }
 
    if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
@@ -713,8 +714,29 @@ _mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvo
       return;
    }
 
-   if (!values)
+   if (ctx->Pack.BufferObj->Name) {
+      /* pack min/max values into a PBO */
+      GLubyte *buf;
+      if (!_mesa_validate_pbo_access(1, &ctx->Pack, 2, 1, 1,
+                                     format, type, values)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glGetMinMax(invalid PBO access)");
+         return;
+      }
+      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
+                                              GL_WRITE_ONLY_ARB,
+                                              ctx->Pack.BufferObj);
+      if (!buf) {
+         /* buffer is already mapped - that's an error */
+         _mesa_error(ctx, GL_INVALID_OPERATION,"glGetMinMax(PBO is mapped)");
+         return;
+      }
+      values = ADD_POINTERS(buf, values);
+   }
+   else if (!values) {
+      /* not an error */
       return;
+   }
 
    {
       GLfloat minmax[2][4];
@@ -728,6 +750,11 @@ _mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvo
       minmax[1][ACOMP] = CLAMP(ctx->MinMax.Max[ACOMP], 0.0F, 1.0F);
       _mesa_pack_rgba_span_float(ctx, 2, (CONST GLfloat (*)[4]) minmax,
                                  format, type, values, &ctx->Pack, 0);
+   }
+
+   if (ctx->Pack.BufferObj->Name) {
+      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
+                              ctx->Pack.BufferObj);
    }
 
    if (reset) {
@@ -771,12 +798,38 @@ _mesa_GetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, G
       return;
    }
 
-   if (!values)
+   if (ctx->Pack.BufferObj->Name) {
+      /* pack min/max values into a PBO */
+      GLubyte *buf;
+      if (!_mesa_validate_pbo_access(1, &ctx->Pack, ctx->Histogram.Width, 1, 1,
+                                     format, type, values)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glGetHistogram(invalid PBO access)");
+         return;
+      }
+      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
+                                              GL_WRITE_ONLY_ARB,
+                                              ctx->Pack.BufferObj);
+      if (!buf) {
+         /* buffer is already mapped - that's an error */
+         _mesa_error(ctx,GL_INVALID_OPERATION,"glGetHistogram(PBO is mapped)");
+         return;
+      }
+      values = ADD_POINTERS(buf, values);
+   }
+   else if (!values) {
+      /* not an error */
       return;
+   }
 
    pack_histogram(ctx, ctx->Histogram.Width,
                   (CONST GLuint (*)[4]) ctx->Histogram.Count,
                   format, type, values, &ctx->Pack);
+
+   if (ctx->Pack.BufferObj->Name) {
+      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
+                              ctx->Pack.BufferObj);
+   }
 
    if (reset) {
       GLuint i;

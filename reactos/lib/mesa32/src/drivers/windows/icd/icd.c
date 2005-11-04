@@ -45,13 +45,13 @@ extern "C" {
 
 #include <stdio.h>
 #include <tchar.h>
-#include "../gdi/wmesadef.h"
 #include "GL/wmesa.h"
 #include "mtypes.h"
 #include "glapi.h"
 
 #define MAX_MESA_ATTRS	20
 
+typedef struct wmesa_context *PWMC;
 
 typedef struct _icdTable {
     DWORD size;

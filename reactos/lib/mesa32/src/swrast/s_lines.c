@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -68,7 +68,7 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
 
    ASSERT(span->end < MAX_WIDTH);
 
-   width = (GLint) CLAMP( ctx->Line.Width, MIN_LINE_WIDTH, MAX_LINE_WIDTH );
+   width = (GLint) CLAMP( ctx->Line._Width, MIN_LINE_WIDTH, MAX_LINE_WIDTH );
 
    if (width & 1)
       start = width / 2;
@@ -88,9 +88,7 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
             for (i = 0; i < span->end; i++)
                y[i]++;
          }
-         if ((span->interpMask | span->arrayMask) & SPAN_TEXTURE)
-            _swrast_write_texture_span(ctx, span);
-         else if ((span->interpMask | span->arrayMask) & SPAN_RGBA)
+         if (ctx->Visual.rgbMode)
             _swrast_write_rgba_span(ctx, span);
          else
             _swrast_write_index_span(ctx, span);
@@ -109,9 +107,7 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
             for (i = 0; i < span->end; i++)
                x[i]++;
          }
-         if ((span->interpMask | span->arrayMask) & SPAN_TEXTURE)
-            _swrast_write_texture_span(ctx, span);
-         else if ((span->interpMask | span->arrayMask) & SPAN_RGBA)
+         if (ctx->Visual.rgbMode)
             _swrast_write_rgba_span(ctx, span);
          else
             _swrast_write_index_span(ctx, span);
@@ -148,7 +144,7 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);    \
    }								\
-   if (ctx->Line.Width > 1.0) {					\
+   if (ctx->Line._Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
@@ -167,7 +163,7 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);	\
    }								\
-   if (ctx->Line.Width > 1.0) {					\
+   if (ctx->Line._Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
@@ -187,11 +183,11 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);	\
    }								\
-   if (ctx->Line.Width > 1.0) {					\
+   if (ctx->Line._Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
-      _swrast_write_texture_span(ctx, &span);			\
+      _swrast_write_rgba_span(ctx, &span);			\
    }
 #include "s_linetemp.h"
 
@@ -208,11 +204,11 @@ draw_wide_line( GLcontext *ctx, struct sw_span *span, GLboolean xMajor )
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);	\
    }								\
-   if (ctx->Line.Width > 1.0) {					\
+   if (ctx->Line._Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
-      _swrast_write_texture_span(ctx, &span);			\
+      _swrast_write_rgba_span(ctx, &span);			\
    }
 #include "s_linetemp.h"
 
@@ -258,7 +254,7 @@ _mesa_print_line_function(GLcontext *ctx)
    else if (swrast->Line == multitextured_line)
       _mesa_printf("multitextured_line\n");
    else
-      _mesa_printf("Driver func %p\n", (void *) swrast->Line);
+      _mesa_printf("Driver func %p\n", (void *(*)()) swrast->Line);
 }
 #endif
 
@@ -314,7 +310,7 @@ _swrast_choose_line( GLcontext *ctx )
             USE(textured_line);
          }
       }
-      else if (ctx->Depth.Test || ctx->Fog.Enabled || ctx->Line.Width != 1.0
+      else if (ctx->Depth.Test || ctx->Fog.Enabled || ctx->Line._Width != 1.0
                || ctx->Line.StippleFlag) {
          /* no texture, but Z, fog, width>1, stipple, etc. */
          if (rgbmode)

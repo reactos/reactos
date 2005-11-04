@@ -13,7 +13,7 @@
  */
 ALIGNTEXT16
 GLOBL GLNAME( TAG(_mesa_mmx_blend) )
-
+HIDDEN( TAG(_mesa_mmx_blend) )
 GLNAME( TAG(_mesa_mmx_blend) ):
 
     PUSH_L     ( EBP )

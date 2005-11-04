@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -95,6 +94,7 @@ _swrast_pixel_texture(GLcontext *ctx, struct sw_span *span)
 
    ASSERT(!(span->arrayMask & SPAN_TEXTURE));
    span->arrayMask |= SPAN_TEXTURE;
+   span->interpMask &= ~SPAN_TEXTURE;
 
    /* convert colors into texture coordinates */
    pixeltexgen( ctx, span->end,
@@ -108,10 +108,4 @@ _swrast_pixel_texture(GLcontext *ctx, struct sw_span *span)
                  span->end * 4 * sizeof(GLfloat) );
       }
    }
-
-   /* apply texture mapping */
-   _swrast_texture_span( ctx, span );
-
-   /* this is a work-around to be fixed by initializing again span */
-   span->arrayMask &= ~SPAN_TEXTURE;
 }

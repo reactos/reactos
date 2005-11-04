@@ -99,34 +99,6 @@ _mesa_destroy_visual( GLvisual *vis );
 
 
 /**********************************************************************/
-/** \name Create/destroy a GLframebuffer. */
-/*@{*/
- 
-extern GLframebuffer *
-_mesa_create_framebuffer( const GLvisual *visual,
-                          GLboolean softwareDepth,
-                          GLboolean softwareStencil,
-                          GLboolean softwareAccum,
-                          GLboolean softwareAlpha );
-
-extern void
-_mesa_initialize_framebuffer( GLframebuffer *fb,
-                              const GLvisual *visual,
-                              GLboolean softwareDepth,
-                              GLboolean softwareStencil,
-                              GLboolean softwareAccum,
-                              GLboolean softwareAlpha );
-
-extern void
-_mesa_free_framebuffer_data( GLframebuffer *buffer );
-
-extern void
-_mesa_destroy_framebuffer( GLframebuffer *buffer );
-
-/*@}*/
-
-
-/**********************************************************************/
 /** \name Create/destroy a GLcontext. */
 /*@{*/
 
@@ -155,43 +127,16 @@ _mesa_copy_context(const GLcontext *src, GLcontext *dst, GLuint mask);
 
 
 extern void
-_mesa_make_current( GLcontext *ctx, GLframebuffer *buffer );
+_mesa_make_current( GLcontext *ctx, GLframebuffer *drawBuffer,
+                    GLframebuffer *readBuffer );
 
-
-extern void
-_mesa_make_current2( GLcontext *ctx, GLframebuffer *drawBuffer,
-                     GLframebuffer *readBuffer );
-
+extern GLboolean
+_mesa_share_state(GLcontext *ctx, GLcontext *ctxToShare);
 
 extern GLcontext *
 _mesa_get_current_context(void);
 
 /*@}*/
-
-
-/**
- * Macro for declaration and fetching the current context.
- *
- * \param C local variable which will hold the current context.
- *
- * It should be used in the variable declaration area of a function:
- * \code
- * ...
- * {
- *   GET_CURRENT_CONTEXT(ctx);
- *   ...
- * \endcode
- */
-#ifdef THREADS
-
-#define GET_CURRENT_CONTEXT(C)	GLcontext *C = (GLcontext *) (_glapi_Context ? _glapi_Context : _glapi_get_context())
-
-#else
-
-#define GET_CURRENT_CONTEXT(C)  GLcontext *C = (GLcontext *) _glapi_Context
-
-#endif
-
 
 
 /**********************************************************************/

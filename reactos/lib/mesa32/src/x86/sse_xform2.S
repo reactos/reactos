@@ -1,4 +1,4 @@
-/* $Id: sse_xform2.S,v 1.2 2004/04/26 10:10:25 alanh Exp $ */
+/* $Id: sse_xform2.S,v 1.3 2005/01/04 14:33:47 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -44,6 +44,7 @@
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_general)
+HIDDEN (_mesa_sse_transform_points2_general)
 GLNAME( _mesa_sse_transform_points2_general ):
 
 #define FRAME_OFFSET 8
@@ -104,6 +105,7 @@ LLBL(K_GTP2GR_finish):
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_identity)
+HIDDEN(_mesa_sse_transform_points2_identity)
 GLNAME( _mesa_sse_transform_points2_identity ):
 
 #define FRAME_OFFSET 8
@@ -156,6 +158,7 @@ LLBL(K_GTP2IR_finish):
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_3d_no_rot)
+HIDDEN(_mesa_sse_transform_points2_3d_no_rot)
 GLNAME(_mesa_sse_transform_points2_3d_no_rot):
 
 #define FRAME_OFFSET 8
@@ -215,6 +218,7 @@ LLBL(K_GTP23DNRR_finish):
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_perspective)
+HIDDEN(_mesa_sse_transform_points2_perspective)
 GLNAME(_mesa_sse_transform_points2_perspective):
 
 #define FRAME_OFFSET 8
@@ -273,6 +277,7 @@ LLBL(K_GTP23PR_finish):
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_2d)
+HIDDEN(_mesa_sse_transform_points2_2d)
 GLNAME(_mesa_sse_transform_points2_2d):
 
 #define FRAME_OFFSET 8
@@ -335,6 +340,7 @@ LLBL(K_GTP23P2DR_finish):
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_2d_no_rot)
+HIDDEN(_mesa_sse_transform_points2_2d_no_rot)
 GLNAME(_mesa_sse_transform_points2_2d_no_rot):
 
 #define FRAME_OFFSET 8
@@ -391,6 +397,7 @@ LLBL(K_GTP23P2DNRR_finish):
 
 ALIGNTEXT4
 GLOBL GLNAME(_mesa_sse_transform_points2_3d)
+HIDDEN(_mesa_sse_transform_points2_3d)
 GLNAME(_mesa_sse_transform_points2_3d):
 
 #define FRAME_OFFSET 8

@@ -20,9 +20,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -70,19 +70,29 @@
 #include <stdarg.h>
 
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
+/* Get typedefs for uintptr_t and friends */
+#if defined(_WIN32) && !defined(__MINGW32__)
+#include <BaseTsd.h>
+#if _MSC_VER == 1200
+typedef UINT_PTR uintptr_t;
+#endif 
+#if defined(__MINGW32__)
+#include <stdint.h>
+#endif
+#else
+#include <inttypes.h>
 #endif
 
-
 #if defined(_WIN32) && !defined(__WIN32__) && !defined(__CYGWIN__) && !defined(BUILD_FOR_SNAP)
-#	define __WIN32__
-#	define finite _finite
+#  define __WIN32__
+#  define finite _finite
 #endif
 
 #if defined(__WATCOMC__)
-#	define finite _finite
+#  define finite _finite
+#  pragma disable_message(201) /* Disable unreachable code warnings */
 #endif
+
 
 #if !defined(OPENSTEP) && (defined(__WIN32__) && !defined(__CYGWIN__)) && !defined(BUILD_FOR_SNAP)
 #  if !defined(__GNUC__) /* mingw environment */
@@ -99,57 +109,19 @@
 #    endif
 #  endif
 #  if (defined(_MSC_VER) || defined(__MINGW32__)) && defined(BUILD_GL32) /* tag specify we're building mesa as a DLL */
-#    define GLAPI __declspec(dllexport)
 #    define WGLAPI __declspec(dllexport)
 #  elif (defined(_MSC_VER) || defined(__MINGW32__)) && defined(_DLL) /* tag specifying we're building for DLL runtime support */
-#    define GLAPI __declspec(dllimport)
 #    define WGLAPI __declspec(dllimport)
 #  else /* for use with static link lib build of Win32 edition only */
-#    define GLAPI extern
 #    define WGLAPI __declspec(dllimport)
 #  endif /* _STATIC_MESA support */
-#  define GLAPIENTRY __stdcall
-#  define GLAPIENTRYP GLAPIENTRY *
-#  define GLCALLBACK __stdcall
-#  define GLCALLBACKP GLCALLBACK *
-#  if defined(__CYGWIN__)
-#    define GLCALLBACKPCAST *
-#  else
-#    define GLCALLBACKPCAST __stdcall *
-#  endif
-#  define GLWINAPI __stdcall
-#  define GLWINAPIV __cdecl
-#elif !defined(BUILD_FOR_SNAP)
-/* non-Windows compilation */
-#  define GLAPI extern
-#  define GLAPIENTRY
-#  ifndef GLAPIENTRYP
-#    define GLAPIENTRYP *
-#  endif
-#  define GLCALLBACK
-#  define GLCALLBACKP *
-#  define GLCALLBACKPCAST *
-#  define GLWINAPI
-#  define GLWINAPIV
 #endif /* WIN32 / CYGWIN bracket */
 
-/* compatibility guard so we don't need to change client code */
 
-#if defined(_WIN32) && !defined(_WINDEF_) && !defined(_WINDEF_H) && !defined(_GNU_H_WINDOWS32_BASE) && !defined(OPENSTEP) && !defined(__CYGWIN__) && !defined(BUILD_FOR_SNAP)
-#if 0
-#	define CALLBACK GLCALLBACK
-typedef void *HGLRC;
-typedef void *HDC;
-#endif
-typedef int (GLAPIENTRY *PROC)();
-typedef unsigned long COLORREF;
-#endif
-
-
-/* Make sure we include glext.h from gl.h */
-#define GL_GLEXT_PROTOTYPES
-
-
+#ifndef __MINGW32__
+/* XXX why is this here?
+ * It should probaby be somewhere in src/mesa/drivers/windows/
+ */
 #if defined(_WIN32) && !defined(_WINGDI_) && !defined(_WINGDI_H) && !defined(_GNU_H_WINDOWS32_DEFINES) && !defined(OPENSTEP) && !defined(BUILD_FOR_SNAP) 
 #	define WGL_FONT_LINES      0
 #	define WGL_FONT_POLYGONS   1
@@ -169,6 +141,7 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 #include <GL/mesa_wgl.h>
 #endif
 #endif
+#endif /* !__MINGW32__ */
 
 
 /*
@@ -192,71 +165,20 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 #define LE32_TO_CPU( x )	CPU_TO_LE32( x )
 
 
-/* This is a macro on IRIX */
-#ifdef _P
-#undef _P
-#endif
-
-
-
+#define GL_GLEXT_PROTOTYPES
 #include "GL/gl.h"
 #include "GL/glext.h"
 
 
-#ifndef CAPI
-#if defined(WIN32) && !defined(BUILD_FOR_SNAP)
+#if !defined(CAPI) && defined(WIN32) && !defined(BUILD_FOR_SNAP)
 #define CAPI _cdecl
-#else
-#define CAPI
-#endif
 #endif
 #include <GL/internal/glcore.h>
 
 
-/* XXX temporary hack - remove when glext.h is updated */
-#ifndef GL_ARB_half_float_pixel
-#define GL_ARB_half_float_pixel 1
-#define GL_HALF_FLOAT_ARB 0x140B
-typedef GLushort GLhalfARB;
-#endif
-
-/* XXX temporary hack - remove when glext.h is updated */
-#ifndef GL_ARB_texture_float
-#define GL_ARB_texture_float 1
-#define GL_TEXTURE_RED_TYPE_ARB             0x9000
-#define GL_TEXTURE_GREEN_TYPE_ARB           0x9001
-#define GL_TEXTURE_BLUE_TYPE_ARB            0x9002
-#define GL_TEXTURE_ALPHA_TYPE_ARB           0x9003
-#define GL_TEXTURE_LUMINANCE_TYPE_ARB       0x9004
-#define GL_TEXTURE_INTENSITY_TYPE_ARB       0x9005
-#define GL_TEXTURE_DEPTH_TYPE_ARB           0x9006
-#define GL_UNSIGNED_NORMALIZED_ARB          0x9007
-#define GL_RGBA32F_ARB                      0x8814
-#define GL_RGB32F_ARB                       0x8815
-#define GL_ALPHA32F_ARB                     0x8816
-#define GL_INTENSITY32F_ARB                 0x8817
-#define GL_LUMINANCE32F_ARB                 0x8818
-#define GL_LUMINANCE_ALPHA32F_ARB           0x8819
-#define GL_RGBA16F_ARB                      0x881A
-#define GL_RGB16F_ARB                       0x881B
-#define GL_ALPHA16F_ARB                     0x881C
-#define GL_INTENSITY16F_ARB                 0x881D
-#define GL_LUMINANCE16F_ARB                 0x881E
-#define GL_LUMINANCE_ALPHA16F_ARB           0x881F
-#endif
-
-/* XXX temporary hack - remove when glext.h is updated */
-#ifndef GL_POINT_SPRITE_COORD_ORIGIN
-#define GL_POINT_SPRITE_COORD_ORIGIN        0x10000
-#define GL_LOWER_LEFT                       0x10001
-#define GL_UPPER_LEFT                       0x10002
-#endif
-
-
-
-/* Disable unreachable code warnings for Watcom C++ */
-#ifdef	__WATCOMC__
-#pragma disable_message(201)
+/* This is a macro on IRIX */
+#ifdef _P
+#undef _P
 #endif
 
 
@@ -309,6 +231,21 @@ typedef GLushort GLhalfARB;
 #endif
 
 
+/* If we build the library with gcc's -fvisibility=hidden flag, we'll
+ * use the PUBLIC macro to mark functions that are to be exported.
+ *
+ * We also need to define a USED attribute, so the optimizer doesn't 
+ * inline a static function that we later use in an alias. - ajax
+ */
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 303
+#  define PUBLIC __attribute__((visibility("default")))
+#  define USED __attribute__((used))
+#else
+#  define PUBLIC
+#  define USED
+#endif
+
+
 /* Some compilers don't like some of Mesa's const usage */
 #ifdef NO_CONST
 #  define CONST
@@ -327,20 +264,52 @@ typedef GLushort GLhalfARB;
 
 
 #if !defined __GNUC__ || __GNUC__ < 3
-# define __builtin_expect(x, y) x
+#  define __builtin_expect(x, y) x
+#endif
+
+/* Windows does not have the ffs() function */
+#if defined(_WIN32)
+static int INLINE
+ffs(register int value)
+{
+    register int bit = 0;
+    if (value != 0)
+    {
+        if ((value & 0xffff) == 0)
+        {
+            bit += 16;
+            value >>= 16;
+        }
+        if ((value & 0xff) == 0)
+        {
+            bit += 8;
+            value >>= 8;
+        }
+        if ((value & 0xf) == 0)
+        {
+            bit += 4;
+            value >>= 4;
+        }
+        while ((value & 1) == 0)
+        {
+            bit++;
+            value >>= 1;
+        }
+    }
+    return bit;
+}
 #endif
 
 
-
-/**
- * Sometimes we treat GLfloats as GLints.  On x86 systems, moving a float
- * as a int (thereby using integer registers instead of FP registers) is
- * a performance win.  Typically, this can be done with ordinary casts.
- * But with gcc's -fstrict-aliasing flag (which defaults to on in gcc 3.0)
- * these casts generate warnings.
- * The following union typedef is used to solve that.
+/* The __FUNCTION__ gcc variable is generally only used for debugging.
+ * If we're not using gcc, define __FUNCTION__ as a cpp symbol here.
+ * Don't define it if using a newer Windows compiler.
  */
-typedef union { GLfloat f; GLint i; } fi_type;
+#if defined(__VMS)
+#define __FUNCTION__ "VMS$NL:"
+#elif !(defined(__GNUC__) && __GNUC__ >= 2) && !(defined(_MSC_VER) && _MSC_VER >= 1300)
+#define __FUNCTION__ "unknown"
+#endif
 
 
 #include "config.h"

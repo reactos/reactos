@@ -11,8 +11,13 @@ GL_MINOR = 5
 GL_TINY = 0$(MESA_MAJOR)0$(MESA_MINOR)0$(MESA_TINY)
 
 
+.SUFFIXES : .cpp
+
 .c.o:
 	$(CC) -c $(INCLUDE_DIRS) $(CFLAGS) $< -o $@
+
+.cpp.o:
+	$(CXX) -c $(INCLUDE_DIRS) $(CXXFLAGS) $< -o $@
 
 .S.o:
 	$(CC) -c $(INCLUDE_DIRS) $(CFLAGS) $< -o $@
@@ -26,6 +31,8 @@ default:
 		$(MAKE) osmesa-only ; \
 	elif [ "$(DRIVER_DIRS)" = "beos" ]; then \
 		$(MAKE) beos ; \
+	elif [ "$(DRIVER_DIRS)" = "directfb" ]; then \
+		$(MAKE) directfb; \
 	else \
 		$(MAKE) stand-alone ; \
 	fi
@@ -34,6 +41,11 @@ default:
 beos: depend subdirs mesa.a
 	cd drivers/beos; $(MAKE)
 
+
+install: default
+	@if [ "${DRIVER_DIRS}" = "dri" ] ; then \
+		cd drivers/dri ; $(MAKE) install ; \
+	fi
 
 ######################################################################
 # Linux solo DRI drivers
@@ -46,6 +58,7 @@ SOLO_C_SOURCES = \
 	$(SWRAST_SOURCES)	\
 	$(SWRAST_SETUP_SOURCES)	\
 	$(SHADER_SOURCES)       \
+	$(SLANG_SOURCES)	\
 	$(ASM_C_SOURCES)	
 
 SOLO_OBJECTS = $(SOLO_C_SOURCES:.c=.o) \
@@ -67,6 +80,30 @@ mesa.a:	$(SOLO_OBJECTS)
 # already exists, so not try to rebuild it...
 drivers-dri:
 	cd drivers/dri ; $(MAKE)
+
+
+
+#####################################################################
+# Stand-alone Mesa libGL, no built-in drivers (DirectFB)
+
+LIBGL_CORE_SOURCES =	\
+	$(CORE_SOURCES) 	\
+	$(ASM_SOURCES)
+
+LIBGL_CORE_OBJECTS = 	\
+	$(CORE_OBJECTS) 	\
+	$(ASM_SOURCES:.S=.o)
+
+# Make libGL from core object files
+libgl-core: $(LIBGL_CORE_OBJECTS)
+	@ $(TOP)/bin/mklib -o $(GL_LIB) -linker '$(CC)' \
+		-major $(MESA_MAJOR) -minor $(MESA_MINOR) -patch $(MESA_TINY) \
+		-install $(LIB_DIR) $(MKLIB_OPTIONS) $(LIBGL_CORE_OBJECTS) $(GL_LIB_DEPS)
+
+# DirectFB driver target
+directfb: depend subdirs libgl-core
+	cd drivers/directfb; $(MAKE)
+
 
 
 ######################################################################
@@ -109,22 +146,26 @@ osmesa-only: depend subdirs $(LIB_DIR)/$(OSMESA_LIB_NAME)
 
 subdirs:
 	@ (cd x86 ; $(MAKE))
+	@ (cd x86-64 ; $(MAKE))
 
 # Make the GL library
 $(LIB_DIR)/$(GL_LIB_NAME): $(STAND_ALONE_OBJECTS)
-	CC=$(CC) CXX=$(CXX) $(TOP)/bin/mklib -o $(GL_LIB) -major $(GL_MAJOR) \
-		-minor $(GL_MINOR) -patch $(GL_TINY) -install $(LIB_DIR) \
+	@ $(TOP)/bin/mklib -o $(GL_LIB) -linker '$(CC)' \
+		-major $(GL_MAJOR) -minor $(GL_MINOR) -patch $(GL_TINY) \
+		-install $(LIB_DIR) \
 		$(MKLIB_OPTIONS) $(GL_LIB_DEPS) $(STAND_ALONE_OBJECTS)
 
 # Make the OSMesa library
 $(LIB_DIR)/$(OSMESA_LIB_NAME): $(OSMESA_DRIVER_OBJECTS) $(OSMESA16_OBJECTS)
-	if [ "${DRIVER_DIRS}" = "osmesa" ] ; then \
-		CC=$(CC) CXX=$(CXX) $(TOP)/bin/mklib -o $(OSMESA_LIB) -major $(MESA_MAJOR) \
+	@ if [ "${DRIVER_DIRS}" = "osmesa" ] ; then \
+		$(TOP)/bin/mklib -o $(OSMESA_LIB) -linker '$(CC)' \
+			-major $(MESA_MAJOR) \
 			-minor $(MESA_MINOR) -patch $(MESA_TINY) \
 			-install $(LIB_DIR) $(MKLIB_OPTIONS) \
 			$(OSMESA_LIB_DEPS) $(OSMESA16_OBJECTS) ; \
 	else \
-		CC=$(CC) CXX=$(CXX) $(TOP)/bin/mklib -o $(OSMESA_LIB) -major $(MESA_MAJOR) \
+		$(TOP)/bin/mklib -o $(OSMESA_LIB) -linker '$(CC)' \
+			-major $(MESA_MAJOR) \
 			-minor $(MESA_MINOR) -patch $(GL_TINY) \
 			-install $(LIB_DIR) $(MKLIB_OPTIONS) \
 			$(OSMESA_LIB_DEPS) $(OSMESA_DRIVER_OBJECTS) ; \
@@ -156,7 +197,9 @@ ALL_SOURCES = \
 	$(SWRAST_SETUP_SOURCES)	\
 	$(ASM_C_SOURCES)	\
 	$(X86_SOURCES)		\
-	$(COMMON_DRIVER_SOURCES)
+	$(COMMON_DRIVER_SOURCES)\
+	$(X11_DRIVER_SOURCES)	\
+	$(OSMESA_DRIVER_SOURCES)
 
 
 SUBDIRS = array_cache drivers/dri glapi main math sparc swrast swrast_setup \
@@ -165,19 +208,23 @@ SUBDIRS = array_cache drivers/dri glapi main math sparc swrast swrast_setup \
 
 # Update dependencies
 depend: $(ALL_SOURCES)
-	touch depend
-	$(MKDEP) $(MKDEP_OPTIONS) $(INCLUDE_DIRS) $(ALL_SOURCES) \
-		> /dev/null 2>&1
+	@ echo "running $(MKDEP)"
+	@ touch depend
+	$(MKDEP) $(MKDEP_OPTIONS) $(DEFINES) $(INCLUDE_DIRS) $(ALL_SOURCES) \
+		> /dev/null 
 
 
 # Emacs tags
 tags:
-	etags `find . -name \*.[ch]` `find ../include`
+	etags `find . -name \*.[ch]` $(TOP)/include/GL/*.h
 
 clean:
 	-rm -f */*.o
-	-rm -f depend mesa.a
+	-rm -f */*/*.o
+	-rm -f depend depend.bak mesa.a
 	-rm -f drivers/*/*.o
 	(cd drivers/dri ; $(MAKE) clean)
+	(cd x86 ; $(MAKE) clean)
+	(cd x86-64 ; $(MAKE) clean)
 
 include depend

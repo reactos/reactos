@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.5
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,7 +24,7 @@
 
 
 #include "glheader.h"
-#include "imports.h"
+#include "bufferobj.h"
 #include "colortab.h"
 #include "context.h"
 #include "image.h"
@@ -102,13 +102,17 @@ set_component_sizes( struct gl_color_table *table )
 
    switch (table->Type) {
    case GL_UNSIGNED_BYTE:
-      sz = sizeof(GLubyte);
+      sz = 8 * sizeof(GLubyte);
       break;
    case GL_UNSIGNED_SHORT:
-      sz = sizeof(GLushort);
+      sz = 8 * sizeof(GLushort);
       break;
    case GL_FLOAT:
-      sz = sizeof(GLfloat);
+      /* Don't actually return 32 here since that causes the conformance
+       * tests to blow up.  Conform thinks the component is an integer,
+       * not a float.
+       */
+      sz = 8;  /** 8 * sizeof(GLfloat); **/
       break;
    default:
       _mesa_problem(NULL, "bad color table type in set_component_sizes 0x%x", table->Type);
@@ -192,6 +196,27 @@ store_colortable_entries(GLcontext *ctx, struct gl_color_table *table,
 			 GLfloat bScale, GLfloat bBias,
 			 GLfloat aScale, GLfloat aBias)
 {
+   if (ctx->Unpack.BufferObj->Name) {
+      /* Get/unpack the color table data from a PBO */
+      GLubyte *buf;
+      if (!_mesa_validate_pbo_access(1, &ctx->Unpack, count, 1, 1,
+                                     format, type, data)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glColor[Sub]Table(bad PBO access)");
+         return;
+      }
+      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_UNPACK_BUFFER_EXT,
+                                              GL_READ_ONLY_ARB,
+                                              ctx->Unpack.BufferObj);
+      if (!buf) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glColor[Sub]Table(PBO mapped)");
+         return;
+      }
+      data = ADD_POINTERS(buf, data);
+   }
+
+
    if (table->Type == GL_FLOAT) {
       /* convert user-provided data to GLfloat values */
       GLfloat tempTab[MAX_COLOR_TABLE_SIZE * 4];
@@ -199,15 +224,18 @@ store_colortable_entries(GLcontext *ctx, struct gl_color_table *table,
       GLint i;
 
       _mesa_unpack_color_span_float(ctx,
-				    count,          /* number of pixels */
-				    table->Format,  /* dest format */
-                                    tempTab,        /* dest address */
-                                    format, type, data, /* src data */
-				    &ctx->Unpack,
+                                    count,         /* number of pixels */
+                                    table->Format, /* dest format */
+                                    tempTab,       /* dest address */
+                                    format, type,  /* src format/type */
+                                    data,          /* src data */
+                                    &ctx->Unpack,
                                     IMAGE_CLAMP_BIT); /* transfer ops */
 
+      /* the destination */
       tableF = (GLfloat *) table->Table;
 
+      /* Apply scale & bias & clamp now */
       switch (table->Format) {
          case GL_INTENSITY:
             for (i = 0; i < count; i++) {
@@ -266,6 +294,11 @@ store_colortable_entries(GLcontext *ctx, struct gl_color_table *table,
                                    format, type, data, /* src data */
 				   &ctx->Unpack,
 				   0);                 /* transfer ops */
+   }
+
+   if (ctx->Unpack.BufferObj->Name) {
+      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_UNPACK_BUFFER_EXT,
+                              ctx->Unpack.BufferObj);
    }
 }
 
@@ -334,6 +367,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
          break;
       case GL_SHARED_TEXTURE_PALETTE_EXT:
          table = &ctx->Texture.Palette;
+	 tableType = GL_FLOAT;
          break;
       case GL_COLOR_TABLE:
          table = &ctx->ColorTable;
@@ -373,6 +407,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
             return;
          }
          table = &(texUnit->ProxyColorTable);
+	 tableType = GL_FLOAT;
          proxy = GL_TRUE;
          break;
       case GL_POST_CONVOLUTION_COLOR_TABLE:
@@ -389,6 +424,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
          break;
       case GL_PROXY_POST_CONVOLUTION_COLOR_TABLE:
          table = &ctx->ProxyPostConvolutionColorTable;
+	 tableType = GL_FLOAT;
          proxy = GL_TRUE;
          break;
       case GL_POST_COLOR_MATRIX_COLOR_TABLE:
@@ -405,6 +441,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
          break;
       case GL_PROXY_POST_COLOR_MATRIX_COLOR_TABLE:
          table = &ctx->ProxyPostColorMatrixColorTable;
+	 tableType = GL_FLOAT;
          proxy = GL_TRUE;
          break;
       default:
@@ -454,7 +491,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
    table->Size = width;
    table->IntFormat = internalFormat;
    table->Format = (GLenum) baseFormat;
-   set_component_sizes(table);
+   table->Type = (tableType == GL_FLOAT) ? GL_FLOAT : CHAN_TYPE;
 
    comps = _mesa_components_in_format(table->Format);
    assert(comps > 0);  /* error should have been caught sooner */
@@ -467,12 +504,10 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
       }
 
       if (width > 0) {
-         if (tableType == GL_FLOAT) {
-	    table->Type = GL_FLOAT;
+         if (table->Type == GL_FLOAT) {
 	    table->Table = MALLOC(comps * width * sizeof(GLfloat));
 	 }
 	 else {
-	    table->Type = CHAN_TYPE;
             table->Table = MALLOC(comps * width * sizeof(GLchan));
 	 }
 
@@ -490,6 +525,9 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
 				  aScale, aBias);
       }
    } /* proxy */
+
+   /* do this after the table's Type and Format are set */
+   set_component_sizes(table);
 
    if (texObj || target == GL_SHARED_TEXTURE_PALETTE_EXT) {
       /* texture object palette, texObj==NULL means the shared palette */
@@ -514,7 +552,6 @@ _mesa_ColorSubTable( GLenum target, GLsizei start,
    struct gl_color_table *table = NULL;
    GLfloat rScale = 1.0, gScale = 1.0, bScale = 1.0, aScale = 1.0;
    GLfloat rBias  = 0.0, gBias  = 0.0, bBias  = 0.0, aBias  = 0.0;
-   GLint comps;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
    switch (target) {
@@ -607,8 +644,8 @@ _mesa_ColorSubTable( GLenum target, GLsizei start,
       return;
    }
 
-   comps = _mesa_components_in_format(table->Format);
-   assert(comps > 0);  /* error should have been caught sooner */
+   /* error should have been caught sooner */
+   assert(_mesa_components_in_format(table->Format) > 0);
 
    if (start + count > (GLint) table->Size) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glColorSubTable(count)");
@@ -639,7 +676,6 @@ _mesa_ColorSubTable( GLenum target, GLsizei start,
 
 
 
-/* XXX not tested */
 void GLAPIENTRY
 _mesa_CopyColorTable(GLenum target, GLenum internalformat,
                      GLint x, GLint y, GLsizei width)
@@ -653,7 +689,6 @@ _mesa_CopyColorTable(GLenum target, GLenum internalformat,
 
 
 
-/* XXX not tested */
 void GLAPIENTRY
 _mesa_CopyColorSubTable(GLenum target, GLsizei start,
                         GLint x, GLint y, GLsizei width)
@@ -861,8 +896,34 @@ _mesa_GetColorTable( GLenum target, GLenum format,
          return;
    }
 
+   if (ctx->Pack.BufferObj->Name) {
+      /* pack color table into PBO */
+      GLubyte *buf;
+      if (!_mesa_validate_pbo_access(1, &ctx->Pack, table->Size, 1, 1,
+                                     format, type, data)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glGetColorTable(invalid PBO access)");
+         return;
+      }
+      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
+                                              GL_WRITE_ONLY_ARB,
+                                              ctx->Pack.BufferObj);
+      if (!buf) {
+         /* buffer is already mapped - that's an error */
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glGetColorTable(PBO is mapped)");
+         return;
+      }
+      data = ADD_POINTERS(buf, data);
+   }
+
    _mesa_pack_rgba_span_chan(ctx, table->Size, (const GLchan (*)[4]) rgba,
                         format, type, data, &ctx->Pack, GL_FALSE);
+
+   if (ctx->Pack.BufferObj->Name) {
+      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
+                              ctx->Pack.BufferObj);
+   }
 }
 
 

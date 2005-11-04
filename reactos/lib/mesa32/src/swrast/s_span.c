@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,8 +36,8 @@
 #include "macros.h"
 #include "imports.h"
 
+#include "s_atifragshader.h"
 #include "s_alpha.h"
-#include "s_alphabuf.h"
 #include "s_blend.h"
 #include "s_context.h"
 #include "s_depth.h"
@@ -57,10 +57,11 @@
 void
 _swrast_span_default_z( GLcontext *ctx, struct sw_span *span )
 {
+   const GLfloat depthMax = ctx->DrawBuffer->_DepthMaxF;
    if (ctx->Visual.depthBits <= 16)
-      span->z = FloatToFixed(ctx->Current.RasterPos[2] * ctx->DepthMax + 0.5F);
+      span->z = FloatToFixed(ctx->Current.RasterPos[2] * depthMax + 0.5F);
    else
-      span->z = (GLint) (ctx->Current.RasterPos[2] * ctx->DepthMax + 0.5F);
+      span->z = (GLint) (ctx->Current.RasterPos[2] * depthMax + 0.5F);
    span->zStep = 0;
    span->interpMask |= SPAN_Z;
 }
@@ -80,7 +81,7 @@ _swrast_span_default_fog( GLcontext *ctx, struct sw_span *span )
 
 
 /**
- * Init span's color or index interpolation values to the RasterPos color.
+ * Init span's rgba or index interpolation values to the RasterPos color.
  * Used during setup for glDraw/CopyPixels.
  */
 void
@@ -127,7 +128,10 @@ _swrast_span_default_texcoords( GLcontext *ctx, struct sw_span *span )
    GLuint i;
    for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
       const GLfloat *tc = ctx->Current.RasterTexCoords[i];
-      if (tc[3] > 0.0F) {
+      if (ctx->FragmentProgram._Active || ctx->ATIFragmentShader._Enabled) {
+         COPY_4V(span->tex[i], tc);
+      }
+      else if (tc[3] > 0.0F) {
          /* use (s/q, t/q, r/q, 1) */
          span->tex[i][0] = tc[0] / tc[3];
          span->tex[i][1] = tc[1] / tc[3];
@@ -231,6 +235,7 @@ interpolate_indexes(GLcontext *ctx, struct sw_span *span)
       }
    }
    span->arrayMask |= SPAN_INDEX;
+   span->interpMask &= ~SPAN_INDEX;
 }
 
 
@@ -276,6 +281,26 @@ interpolate_specular(GLcontext *ctx, struct sw_span *span)
 }
 
 
+/* Fill in the span.array.fog values from the interpolation values */
+static void
+interpolate_fog(const GLcontext *ctx, struct sw_span *span)
+{
+   GLfloat *fog = span->array->fog;
+   const GLfloat fogStep = span->fogStep;
+   GLfloat fogCoord = span->fog;
+   const GLuint haveW = (span->interpMask & SPAN_W);
+   const GLfloat wStep = haveW ? span->dwdx : 0.0F;
+   GLfloat w = haveW ? span->w : 1.0F;
+   GLuint i;
+   for (i = 0; i < span->end; i++) {
+      fog[i] = fogCoord / w;
+      fogCoord += fogStep;
+      w += wStep;
+   }
+   span->arrayMask |= SPAN_FOG;
+}
+
+
 /* Fill in the span.zArray array from the interpolation values */
 void
 _swrast_span_interpolate_z( const GLcontext *ctx, struct sw_span *span )
@@ -303,6 +328,7 @@ _swrast_span_interpolate_z( const GLcontext *ctx, struct sw_span *span )
          zval += span->zStep;
       }
    }
+   span->interpMask &= ~SPAN_Z;
    span->arrayMask |= SPAN_Z;
 }
 
@@ -382,7 +408,7 @@ interpolate_texcoords(GLcontext *ctx, struct sw_span *span)
             if (obj) {
                const struct gl_texture_image *img = obj->Image[0][obj->BaseLevel];
                needLambda = (obj->MinFilter != obj->MagFilter)
-                  || ctx->FragmentProgram._Enabled;
+                  || ctx->FragmentProgram._Active;
                texW = img->WidthScale;
                texH = img->HeightScale;
             }
@@ -407,7 +433,7 @@ interpolate_texcoords(GLcontext *ctx, struct sw_span *span)
                GLfloat r = span->tex[u][2];
                GLfloat q = span->tex[u][3];
                GLuint i;
-               if (ctx->FragmentProgram._Enabled) {
+               if (ctx->FragmentProgram._Active) {
                   /* do perspective correction but don't divide s, t, r by q */
                   const GLfloat dwdx = span->dwdx;
                   GLfloat w = span->w;
@@ -458,7 +484,7 @@ interpolate_texcoords(GLcontext *ctx, struct sw_span *span)
                GLfloat r = span->tex[u][2];
                GLfloat q = span->tex[u][3];
                GLuint i;
-               if (ctx->FragmentProgram._Enabled) {
+               if (ctx->FragmentProgram._Active) {
                   /* do perspective correction but don't divide s, t, r by q */
                   const GLfloat dwdx = span->dwdx;
                   GLfloat w = span->w;
@@ -516,7 +542,7 @@ interpolate_texcoords(GLcontext *ctx, struct sw_span *span)
       if (obj) {
          const struct gl_texture_image *img = obj->Image[0][obj->BaseLevel];
          needLambda = (obj->MinFilter != obj->MagFilter)
-            || ctx->FragmentProgram._Enabled;
+            || ctx->FragmentProgram._Active;
          texW = (GLfloat) img->WidthScale;
          texH = (GLfloat) img->HeightScale;
       }
@@ -541,7 +567,7 @@ interpolate_texcoords(GLcontext *ctx, struct sw_span *span)
          GLfloat r = span->tex[0][2];
          GLfloat q = span->tex[0][3];
          GLuint i;
-         if (ctx->FragmentProgram._Enabled) {
+         if (ctx->FragmentProgram._Active) {
             /* do perspective correction but don't divide s, t, r by q */
             const GLfloat dwdx = span->dwdx;
             GLfloat w = span->w;
@@ -592,7 +618,7 @@ interpolate_texcoords(GLcontext *ctx, struct sw_span *span)
          GLfloat r = span->tex[0][2];
          GLfloat q = span->tex[0][3];
          GLuint i;
-         if (ctx->FragmentProgram._Enabled) {
+         if (ctx->FragmentProgram._Active) {
             /* do perspective correction but don't divide s, t, r by q */
             const GLfloat dwdx = span->dwdx;
             GLfloat w = span->w;
@@ -737,141 +763,22 @@ clip_span( GLcontext *ctx, struct sw_span *span )
 }
 
 
-
 /**
- * Draw to more than one color buffer (or none).
- */
-static void
-multi_write_index_span( GLcontext *ctx, struct sw_span *span )
-{
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   GLuint bufferBit;
-
-   /* loop over four possible dest color buffers */
-   for (bufferBit = 1; bufferBit <= 8; bufferBit <<= 1) {
-      if (bufferBit & ctx->Color._DrawDestMask) {
-         GLuint indexTmp[MAX_WIDTH];
-         ASSERT(span->end < MAX_WIDTH);
-
-         /* Set the current read/draw buffer */
-         swrast->CurrentBufferBit = bufferBit;
-         (*swrast->Driver.SetBuffer)(ctx, ctx->DrawBuffer, bufferBit);
-
-         /* make copy of incoming indexes */
-         MEMCPY( indexTmp, span->array->index, span->end * sizeof(GLuint) );
-
-         if (ctx->Color.IndexLogicOpEnabled) {
-            _swrast_logicop_ci_span(ctx, span, indexTmp);
-         }
-
-         if (ctx->Color.IndexMask != 0xffffffff) {
-            _swrast_mask_index_span(ctx, span, indexTmp);
-         }
-
-         if (span->arrayMask & SPAN_XY) {
-            /* array of pixel coords */
-            (*swrast->Driver.WriteCI32Pixels)(ctx, span->end,
-                                              span->array->x, span->array->y,
-                                              indexTmp, span->array->mask);
-         }
-         else {
-            /* horizontal run of pixels */
-            (*swrast->Driver.WriteCI32Span)(ctx, span->end, span->x, span->y,
-                                            indexTmp, span->array->mask);
-         }
-      }
-   }
-
-   /* restore default dest buffer */
-   _swrast_use_draw_buffer(ctx);
-}
-
-
-/**
- * Draw to more than one RGBA color buffer (or none).
- * All fragment operations, up to (but not) blending/logicop should
- * have been done first.
- */
-static void
-multi_write_rgba_span( GLcontext *ctx, struct sw_span *span )
-{
-   const GLuint colorMask = *((GLuint *) ctx->Color.ColorMask);
-   GLuint bufferBit;
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-
-   ASSERT(colorMask != 0x0);
-
-   if (ctx->Color.DrawBuffer == GL_NONE)
-      return;
-
-   /* loop over four possible dest color buffers */
-   for (bufferBit = 1; bufferBit <= 8; bufferBit <<= 1) {
-      if (bufferBit & ctx->Color._DrawDestMask) {
-         GLchan rgbaTmp[MAX_WIDTH][4];
-         ASSERT(span->end < MAX_WIDTH);
-
-         /* Set the current read/draw buffer */
-         swrast->CurrentBufferBit = bufferBit;
-         (*swrast->Driver.SetBuffer)(ctx, ctx->DrawBuffer, bufferBit);
-
-         /* make copy of incoming colors */
-         MEMCPY( rgbaTmp, span->array->rgba, 4 * span->end * sizeof(GLchan) );
-
-         if (ctx->Color._LogicOpEnabled) {
-            _swrast_logicop_rgba_span(ctx, span, rgbaTmp);
-         }
-         else if (ctx->Color.BlendEnabled) {
-            _swrast_blend_span(ctx, span, rgbaTmp);
-         }
-
-         if (colorMask != 0xffffffff) {
-            _swrast_mask_rgba_span(ctx, span, rgbaTmp);
-         }
-
-         if (span->arrayMask & SPAN_XY) {
-            /* array of pixel coords */
-            (*swrast->Driver.WriteRGBAPixels)(ctx, span->end,
-                                              span->array->x, span->array->y,
-                                              (const GLchan (*)[4]) rgbaTmp,
-                                              span->array->mask);
-            if (SWRAST_CONTEXT(ctx)->_RasterMask & ALPHABUF_BIT) {
-               _swrast_write_alpha_pixels(ctx, span->end,
-                                        span->array->x, span->array->y,
-                                        (const GLchan (*)[4]) rgbaTmp,
-                                        span->array->mask);
-            }
-         }
-         else {
-            /* horizontal run of pixels */
-            (*swrast->Driver.WriteRGBASpan)(ctx, span->end, span->x, span->y,
-                                            (const GLchan (*)[4]) rgbaTmp,
-                                            span->array->mask);
-            if (swrast->_RasterMask & ALPHABUF_BIT) {
-               _swrast_write_alpha_span(ctx, span->end, span->x, span->y,
-                                      (const GLchan (*)[4]) rgbaTmp,
-                                      span->array->mask);
-            }
-         }
-      }
-   }
-
-   /* restore default dest buffer */
-   _swrast_use_draw_buffer(ctx);
-}
-
-
-
-/**
- * This function may modify any of the array values in the span.
+ * Apply all the per-fragment opertions to a span of color index fragments
+ * and write them to the enabled color drawbuffers.
+ * The 'span' parameter can be considered to be const.  Note that
  * span->interpMask and span->arrayMask may be changed but will be restored
  * to their original values before returning.
  */
 void
 _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   const SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   const struct gl_framebuffer *fb = ctx->DrawBuffer;
+   const GLuint output = 0;
    const GLuint origInterpMask = span->interpMask;
    const GLuint origArrayMask = span->arrayMask;
+   GLuint buf;
 
    ASSERT(span->end <= MAX_WIDTH);
    ASSERT(span->primitive == GL_POINT  ||  span->primitive == GL_LINE ||
@@ -884,7 +791,7 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
       span->writeAll = GL_FALSE;
    }
    else {
-      MEMSET(span->array->mask, 1, span->end);
+      _mesa_memset(span->array->mask, 1, span->end);
       span->writeAll = GL_TRUE;
    }
 
@@ -903,6 +810,7 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
    }
 
 #ifdef DEBUG
+   /* Make sure all fragments are within window bounds */
    if (span->arrayMask & SPAN_XY) {
       GLuint i;
       for (i = 0; i < span->end; i++) {
@@ -921,7 +829,7 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
       stipple_polygon_span(ctx, span);
    }
 
-   /* Depth test and stencil */
+   /* Stencil and Z testing */
    if (ctx->Depth.Test || ctx->Stencil.Enabled) {
       if (span->interpMask & SPAN_Z)
          _swrast_span_interpolate_z(ctx, span);
@@ -935,6 +843,7 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
       else {
          ASSERT(ctx->Depth.Test);
          if (!_swrast_depth_test_span(ctx, span)) {
+            span->interpMask = origInterpMask;
             span->arrayMask = origArrayMask;
             return;
          }
@@ -963,10 +872,13 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
    }
 
    /* Interpolate the color indexes if needed */
-   if (span->interpMask & SPAN_INDEX) {
-      interpolate_indexes(ctx, span);
-      /* clear the bit - this allows the WriteMonoCISpan optimization below */
-      span->interpMask &= ~SPAN_INDEX;
+   if (ctx->Fog.Enabled ||
+       ctx->Color.IndexLogicOpEnabled ||
+       ctx->Color.IndexMask != 0xffffffff ||
+       (span->arrayMask & SPAN_COVERAGE)) {
+      if (span->interpMask & SPAN_INDEX) {
+         interpolate_indexes(ctx, span);
+      }
    }
 
    /* Fog */
@@ -976,316 +888,110 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
 
    /* Antialias coverage application */
    if (span->arrayMask & SPAN_COVERAGE) {
-      GLuint i;
+      const GLfloat *coverage = span->array->coverage;
       GLuint *index = span->array->index;
-      GLfloat *coverage = span->array->coverage;
+      GLuint i;
       for (i = 0; i < span->end; i++) {
          ASSERT(coverage[i] < 16);
          index[i] = (index[i] & ~0xf) | ((GLuint) coverage[i]);
       }
    }
 
-   if (swrast->_RasterMask & MULTI_DRAW_BIT) {
-      /* draw to zero or two or more buffers */
-      multi_write_index_span(ctx, span);
-   }
-   else {
-      /* normal situation: draw to exactly one buffer */
-      if (ctx->Color.IndexLogicOpEnabled) {
-         _swrast_logicop_ci_span(ctx, span, span->array->index);
+   /* Loop over drawing buffers */
+   for (buf = 0; buf < fb->_NumColorDrawBuffers[output]; buf++) {
+      struct gl_renderbuffer *rb = fb->_ColorDrawBuffers[output][buf];
+      GLuint indexTemp[MAX_WIDTH], *index32;
+
+      ASSERT(rb->_BaseFormat == GL_COLOR_INDEX);
+
+      if (ctx->Color.IndexLogicOpEnabled ||
+          ctx->Color.IndexMask != 0xffffffff) {
+         /* make copy of incoming indexes */
+         MEMCPY(indexTemp, span->array->index, span->end * sizeof(GLuint));
+
+         if (ctx->Color.IndexLogicOpEnabled) {
+            _swrast_logicop_ci_span(ctx, rb, span, indexTemp);
+         }
+
+         if (ctx->Color.IndexMask != 0xffffffff) {
+            _swrast_mask_ci_span(ctx, rb, span, indexTemp);
+         }
+         index32 = indexTemp;
+      }
+      else {
+         index32 = span->array->index;
       }
 
-      if (ctx->Color.IndexMask != 0xffffffff) {
-         _swrast_mask_index_span(ctx, span, span->array->index);
-      }
+      if ((span->interpMask & SPAN_INDEX) && span->indexStep == 0) {
+         /* all fragments have same color index */
+         GLubyte index8;
+         GLushort index16;
+         GLuint index32;
+         void *value;
 
-      /* write pixels */
-      if (span->arrayMask & SPAN_XY) {
-         /* array of pixel coords */
-         if ((span->interpMask & SPAN_INDEX) && span->indexStep == 0) {
-            /* all pixels have same color index */
-            (*swrast->Driver.WriteMonoCIPixels)(ctx, span->end,
-                                                span->array->x, span->array->y,
-                                                FixedToInt(span->index),
-                                                span->array->mask);
+         if (rb->DataType == GL_UNSIGNED_BYTE) {
+            index8 = FixedToInt(span->index);
+            value = &index8;
+         }
+         else if (rb->DataType == GL_UNSIGNED_SHORT) {
+            index16 = FixedToInt(span->index);
+            value = &index16;
          }
          else {
-            (*swrast->Driver.WriteCI32Pixels)(ctx, span->end, span->array->x,
-                                              span->array->y, span->array->index,
-                                              span->array->mask );
+            ASSERT(rb->DataType == GL_UNSIGNED_INT);
+            index32 = FixedToInt(span->index);
+            value = &index32;
+         }
+
+         if (span->arrayMask & SPAN_XY) {
+            rb->PutMonoValues(ctx, rb, span->end, span->array->x, 
+                              span->array->y, value, span->array->mask);
+         }
+         else {
+            rb->PutMonoRow(ctx, rb, span->end, span->x, span->y,
+                           value, span->array->mask);
          }
       }
       else {
-         /* horizontal run of pixels */
-         if ((span->interpMask & SPAN_INDEX) && span->indexStep == 0) {
-            /* all pixels have same color index */
-            (*swrast->Driver.WriteMonoCISpan)(ctx, span->end, span->x, span->y,
-                                              FixedToInt(span->index),
-                                              span->array->mask);
+         /* each fragment is a different color */
+         GLubyte index8[MAX_WIDTH];
+         GLushort index16[MAX_WIDTH];
+         void *values;
+
+         if (rb->DataType == GL_UNSIGNED_BYTE) {
+            GLuint k;
+            for (k = 0; k < span->end; k++) {
+               index8[k] = (GLubyte) index32[k];
+            }
+            values = index8;
+         }
+         else if (rb->DataType == GL_UNSIGNED_SHORT) {
+            GLuint k;
+            for (k = 0; k < span->end; k++) {
+               index16[k] = (GLushort) index32[k];
+            }
+            values = index16;
          }
          else {
-            (*swrast->Driver.WriteCI32Span)(ctx, span->end, span->x, span->y,
-                                            span->array->index,
-                                            span->array->mask);
+            ASSERT(rb->DataType == GL_UNSIGNED_INT);
+            values = index32;
          }
-      }
-   }
 
-   span->interpMask = origInterpMask;
-   span->arrayMask = origArrayMask;
-}
-
-
-/**
- * This function may modify any of the array values in the span.
- * span->interpMask and span->arrayMask may be changed but will be restored
- * to their original values before returning.
- */
-void
-_swrast_write_rgba_span( GLcontext *ctx, struct sw_span *span)
-{
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLuint colorMask = *((GLuint *) ctx->Color.ColorMask);
-   const GLuint origInterpMask = span->interpMask;
-   const GLuint origArrayMask = span->arrayMask;
-   GLboolean monoColor;
-
-   ASSERT(span->end <= MAX_WIDTH);
-   ASSERT(span->primitive == GL_POINT  ||  span->primitive == GL_LINE ||
-	  span->primitive == GL_POLYGON  ||  span->primitive == GL_BITMAP);
-   ASSERT((span->interpMask & span->arrayMask) == 0);
-   ASSERT((span->interpMask | span->arrayMask) & SPAN_RGBA);
-#ifdef DEBUG
-   if (ctx->Fog.Enabled)
-      ASSERT((span->interpMask | span->arrayMask) & SPAN_FOG);
-   if (ctx->Depth.Test)
-      ASSERT((span->interpMask | span->arrayMask) & SPAN_Z);
-#endif
-
-   if (span->arrayMask & SPAN_MASK) {
-      /* mask was initialized by caller, probably glBitmap */
-      span->writeAll = GL_FALSE;
-   }
-   else {
-      MEMSET(span->array->mask, 1, span->end);
-      span->writeAll = GL_TRUE;
-   }
-
-   /* Determine if we have mono-chromatic colors */
-   monoColor = (span->interpMask & SPAN_RGBA) &&
-      span->redStep == 0 && span->greenStep == 0 &&
-      span->blueStep == 0 && span->alphaStep == 0;
-
-   /* Clipping */
-   if ((swrast->_RasterMask & CLIP_BIT) || (span->primitive != GL_POLYGON)) {
-      if (!clip_span(ctx, span)) {
-         return;
-      }
-   }
-
-   /* Depth bounds test */
-   if (ctx->Depth.BoundsTest && ctx->Visual.depthBits > 0) {
-      if (!_swrast_depth_bounds_test(ctx, span)) {
-         return;
-      }
-   }
-
-#ifdef DEBUG
-   if (span->arrayMask & SPAN_XY) {
-      GLuint i;
-      for (i = 0; i < span->end; i++) {
-         if (span->array->mask[i]) {
-            assert(span->array->x[i] >= ctx->DrawBuffer->_Xmin);
-            assert(span->array->x[i] < ctx->DrawBuffer->_Xmax);
-            assert(span->array->y[i] >= ctx->DrawBuffer->_Ymin);
-            assert(span->array->y[i] < ctx->DrawBuffer->_Ymax);
-         }
-      }
-   }
-#endif
-
-   /* Polygon Stippling */
-   if (ctx->Polygon.StippleFlag && span->primitive == GL_POLYGON) {
-      stipple_polygon_span(ctx, span);
-   }
-
-   /* Fragment program */
-   if (ctx->FragmentProgram._Enabled) {
-      /* Now we may need to interpolate the colors and texcoords */
-      if ((span->interpMask & SPAN_RGBA) &&
-          (span->arrayMask & SPAN_RGBA) == 0) {
-         interpolate_colors(ctx, span);
-         span->interpMask &= ~SPAN_RGBA;
-      }
-      if (span->interpMask & SPAN_SPEC) {
-         interpolate_specular(ctx, span);
-      }
-      if ((span->interpMask & SPAN_TEXTURE)
-          && (span->arrayMask & SPAN_TEXTURE) == 0)
-         interpolate_texcoords(ctx, span);
-      _swrast_exec_fragment_program(ctx, span);
-      monoColor = GL_FALSE;
-   }
-
-   /* Do the alpha test */
-   if (ctx->Color.AlphaEnabled) {
-      if (!_swrast_alpha_test(ctx, span)) {
-         span->interpMask = origInterpMask;
-         span->arrayMask = origArrayMask;
-	 return;
-      }
-   }
-
-   /* Stencil and Z testing */
-   if (ctx->Stencil.Enabled || ctx->Depth.Test) {
-      if (span->interpMask & SPAN_Z)
-         _swrast_span_interpolate_z(ctx, span);
-
-      if (ctx->Stencil.Enabled) {
-         if (!_swrast_stencil_and_ztest_span(ctx, span)) {
-            span->interpMask = origInterpMask;
-            span->arrayMask = origArrayMask;
-            return;
-         }
-      }
-      else {
-         ASSERT(ctx->Depth.Test);
-         ASSERT(span->arrayMask & SPAN_Z);
-         /* regular depth testing */
-         if (!_swrast_depth_test_span(ctx, span)) {
-            span->interpMask = origInterpMask;
-            span->arrayMask = origArrayMask;
-            return;
-         }
-      }
-   }
-
-   /* if we get here, something passed the depth test */
-   if (ctx->Depth.OcclusionTest) {
-      ctx->OcclusionResult = GL_TRUE;
-   }
-
-#if FEATURE_ARB_occlusion_query
-   if (ctx->Occlusion.Active) {
-      /* update count of 'passed' fragments */
-      GLuint i;
-      for (i = 0; i < span->end; i++)
-         ctx->Occlusion.PassedCounter += span->array->mask[i];
-   }
-#endif
-
-   /* can't abort span-writing until after occlusion testing */
-   if (colorMask == 0x0) {
-      span->interpMask = origInterpMask;
-      span->arrayMask = origArrayMask;
-      return;
-   }
-
-   /* Now we may need to interpolate the colors */
-   if ((span->interpMask & SPAN_RGBA) && (span->arrayMask & SPAN_RGBA) == 0) {
-      interpolate_colors(ctx, span);
-      /* clear the bit - this allows the WriteMonoCISpan optimization below */
-      span->interpMask &= ~SPAN_RGBA;
-   }
-
-   /* Fog */
-   if (swrast->_FogEnabled) {
-      _swrast_fog_rgba_span(ctx, span);
-      monoColor = GL_FALSE;
-   }
-
-   /* Antialias coverage application */
-   if (span->arrayMask & SPAN_COVERAGE) {
-      GLchan (*rgba)[4] = span->array->rgba;
-      GLfloat *coverage = span->array->coverage;
-      GLuint i;
-      for (i = 0; i < span->end; i++) {
-         rgba[i][ACOMP] = (GLchan) (rgba[i][ACOMP] * coverage[i]);
-      }
-      monoColor = GL_FALSE;
-   }
-
-   if (swrast->_RasterMask & MULTI_DRAW_BIT) {
-      multi_write_rgba_span(ctx, span);
-   }
-   else {
-      /* normal: write to exactly one buffer */
-      if (ctx->Color._LogicOpEnabled) {
-         _swrast_logicop_rgba_span(ctx, span, span->array->rgba);
-         monoColor = GL_FALSE;
-      }
-      else if (ctx->Color.BlendEnabled) {
-         _swrast_blend_span(ctx, span, span->array->rgba);
-         monoColor = GL_FALSE;
-      }
-
-      /* Color component masking */
-      if (colorMask != 0xffffffff) {
-         _swrast_mask_rgba_span(ctx, span, span->array->rgba);
-         monoColor = GL_FALSE;
-      }
-
-      /* write pixels */
-      if (span->arrayMask & SPAN_XY) {
-         /* array of pixel coords */
-         if (monoColor) {
-            /* all pixels have same color */
-            GLchan color[4];
-            color[RCOMP] = FixedToChan(span->red);
-            color[GCOMP] = FixedToChan(span->green);
-            color[BCOMP] = FixedToChan(span->blue);
-            color[ACOMP] = FixedToChan(span->alpha);
-            (*swrast->Driver.WriteMonoRGBAPixels)(ctx, span->end,
-                     span->array->x, span->array->y, color, span->array->mask);
-            if (SWRAST_CONTEXT(ctx)->_RasterMask & ALPHABUF_BIT) {
-               _swrast_write_mono_alpha_pixels(ctx, span->end,
-                                              span->array->x, span->array->y,
-                                              color[ACOMP], span->array->mask);
-            }
+         if (span->arrayMask & SPAN_XY) {
+            rb->PutValues(ctx, rb, span->end, span->array->x, span->array->y,
+                          values, span->array->mask);
          }
          else {
-            (*swrast->Driver.WriteRGBAPixels)(ctx, span->end,
-                                       span->array->x, span->array->y,
-                                       (const GLchan (*)[4]) span->array->rgba,
-                                       span->array->mask);
-            if (SWRAST_CONTEXT(ctx)->_RasterMask & ALPHABUF_BIT) {
-               _swrast_write_alpha_pixels(ctx, span->end,
-                                       span->array->x, span->array->y,
-                                       (const GLchan (*)[4]) span->array->rgba,
-                                       span->array->mask);
-            }
-         }
-      }
-      else {
-         /* horizontal run of pixels */
-         if (monoColor) {
-            /* all pixels have same color */
-            GLchan color[4];
-            color[RCOMP] = FixedToChan(span->red);
-            color[GCOMP] = FixedToChan(span->green);
-            color[BCOMP] = FixedToChan(span->blue);
-            color[ACOMP] = FixedToChan(span->alpha);
-            (*swrast->Driver.WriteMonoRGBASpan)(ctx, span->end, span->x,
-                                           span->y, color, span->array->mask);
-            if (swrast->_RasterMask & ALPHABUF_BIT) {
-               _swrast_write_mono_alpha_span(ctx, span->end, span->x, span->y,
-                      color[ACOMP],
-                      span->writeAll ? ((const GLubyte *) NULL) : span->array->mask);
-            }
-         }
-         else {
-            /* each pixel is a different color */
-            (*swrast->Driver.WriteRGBASpan)(ctx, span->end, span->x, span->y,
-                      (const GLchan (*)[4]) span->array->rgba,
-                      span->writeAll ? ((const GLubyte *) NULL) : span->array->mask);
-            if (swrast->_RasterMask & ALPHABUF_BIT) {
-               _swrast_write_alpha_span(ctx, span->end, span->x, span->y,
-                      (const GLchan (*)[4]) span->array->rgba,
-                      span->writeAll ? ((const GLubyte *) NULL) : span->array->mask);
-            }
+            rb->PutRow(ctx, rb, span->end, span->x, span->y,
+                       values, span->array->mask);
          }
       }
    }
+
+#if OLD_RENDERBUFFER
+   /* restore default dest buffer */
+   _swrast_use_draw_buffer(ctx);
+#endif
 
    span->interpMask = origInterpMask;
    span->arrayMask = origArrayMask;
@@ -1319,26 +1025,100 @@ add_colors(GLuint n, GLchan rgba[][4], GLchan specular[][4] )
 
 
 /**
+ * XXX merge this code into the _swrast_write_rgba_span() routine!
+ *
+ * Draw to more than one RGBA color buffer (or none).
+ * All fragment operations, up to (but not) blending/logicop should
+ * have been done first.
+ */
+static void
+multi_write_rgba_span( GLcontext *ctx, struct sw_span *span )
+{
+#if OLD_RENDERBUFFER
+   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+#endif
+   const GLuint colorMask = *((GLuint *) ctx->Color.ColorMask);
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+   const GLuint output = 0;
+   GLuint i;
+
+   ASSERT(span->end < MAX_WIDTH);
+   ASSERT(colorMask != 0x0);
+
+   for (i = 0; i < fb->_NumColorDrawBuffers[output]; i++) {
+      struct gl_renderbuffer *rb = fb->_ColorDrawBuffers[output][i];
+      GLchan rgbaTmp[MAX_WIDTH][4];
+
+#if OLD_RENDERBUFFER
+      /* obsolete code */
+      GLuint bufferBit = fb->_ColorDrawBit[output][i];
+      /* Set the current read/draw buffer */
+      swrast->CurrentBufferBit = bufferBit;
+      if (swrast->Driver.SetBuffer)
+         (*swrast->Driver.SetBuffer)(ctx, ctx->DrawBuffer, bufferBit);
+#endif
+
+      /* make copy of incoming colors */
+      MEMCPY( rgbaTmp, span->array->rgba, 4 * span->end * sizeof(GLchan) );
+
+      if (ctx->Color._LogicOpEnabled) {
+         _swrast_logicop_rgba_span(ctx, rb, span, rgbaTmp);
+      }
+      else if (ctx->Color.BlendEnabled) {
+         _swrast_blend_span(ctx, rb, span, rgbaTmp);
+      }
+
+      if (colorMask != 0xffffffff) {
+         _swrast_mask_rgba_span(ctx, rb, span, rgbaTmp);
+      }
+
+      if (span->arrayMask & SPAN_XY) {
+         /* array of pixel coords */
+         ASSERT(rb->PutValues);
+         rb->PutValues(ctx, rb, span->end, span->array->x,
+                       span->array->y, rgbaTmp, span->array->mask);
+      }
+      else {
+         /* horizontal run of pixels */
+         ASSERT(rb->PutRow);
+         rb->PutRow(ctx, rb, span->end, span->x, span->y, rgbaTmp,
+                    span->array->mask);
+      }
+   }
+
+#if OLD_RENDERBUFFER
+   /* restore default dest buffer */
+   _swrast_use_draw_buffer(ctx);
+#endif
+}
+
+
+/**
+ * Apply all the per-fragment operations to a span.
+ * This now includes texturing (_swrast_write_texture_span() is history).
  * This function may modify any of the array values in the span.
  * span->interpMask and span->arrayMask may be changed but will be restored
  * to their original values before returning.
  */
 void
-_swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
+_swrast_write_rgba_span( GLcontext *ctx, struct sw_span *span)
 {
    const GLuint colorMask = *((GLuint *) ctx->Color.ColorMask);
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const GLuint origInterpMask = span->interpMask;
    const GLuint origArrayMask = span->arrayMask;
+   const GLboolean deferredTexture = !(ctx->Color.AlphaEnabled ||
+                                       ctx->FragmentProgram._Active ||
+                                       ctx->ATIFragmentShader._Enabled);
 
    ASSERT(span->primitive == GL_POINT  ||  span->primitive == GL_LINE ||
 	  span->primitive == GL_POLYGON  ||  span->primitive == GL_BITMAP);
    ASSERT(span->end <= MAX_WIDTH);
    ASSERT((span->interpMask & span->arrayMask) == 0);
-   ASSERT(ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram._Enabled);
 
    /*
-   printf("%s()  interp 0x%x  array 0x%x\n", __FUNCTION__, span->interpMask, span->arrayMask);
+   printf("%s()  interp 0x%x  array 0x%x\n", __FUNCTION__,
+          span->interpMask, span->arrayMask);
    */
 
    if (span->arrayMask & SPAN_MASK) {
@@ -1346,11 +1126,11 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
       span->writeAll = GL_FALSE;
    }
    else {
-      MEMSET(span->array->mask, 1, span->end);
+      _mesa_memset(span->array->mask, 1, span->end);
       span->writeAll = GL_TRUE;
    }
 
-   /* Clipping */
+   /* Clip to window/scissor box */
    if ((swrast->_RasterMask & CLIP_BIT) || (span->primitive != GL_POLYGON)) {
       if (!clip_span(ctx, span)) {
 	 return;
@@ -1358,6 +1138,7 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
    }
 
 #ifdef DEBUG
+   /* Make sure all fragments are within window bounds */
    if (span->arrayMask & SPAN_XY) {
       GLuint i;
       for (i = 0; i < span->end; i++) {
@@ -1376,28 +1157,39 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
       stipple_polygon_span(ctx, span);
    }
 
-   /* Need texture coordinates now */
-   if ((span->interpMask & SPAN_TEXTURE)
-       && (span->arrayMask & SPAN_TEXTURE) == 0)
+   /* Interpolate texcoords? */
+   if (ctx->Texture._EnabledCoordUnits
+       && (span->interpMask & SPAN_TEXTURE)
+       && (span->arrayMask & SPAN_TEXTURE) == 0) {
       interpolate_texcoords(ctx, span);
+   }
 
-   /* Texture with alpha test */
-   if (ctx->Color.AlphaEnabled) {
-
+   /* This is the normal place to compute the resulting fragment color/Z.
+    * As an optimization, we try to defer this until after Z/stencil
+    * testing in order to try to avoid computing colors that we won't
+    * actually need.
+    */
+   if (!deferredTexture) {
       /* Now we need the rgba array, fill it in if needed */
       if ((span->interpMask & SPAN_RGBA) && (span->arrayMask & SPAN_RGBA) == 0)
          interpolate_colors(ctx, span);
 
-      if (span->interpMask & SPAN_SPEC) {
+      if (span->interpMask & SPAN_SPEC)
          interpolate_specular(ctx, span);
-      }
 
-      /* Texturing without alpha is done after depth-testing which
-       * gives a potential speed-up.
-       */
-      if (ctx->FragmentProgram._Enabled)
+      if (span->interpMask & SPAN_FOG)
+         interpolate_fog(ctx, span);
+
+      /* Compute fragment colors with fragment program or texture lookups */
+      if (ctx->FragmentProgram._Active) {
+         /* frag prog may need Z values */
+         if (span->interpMask & SPAN_Z)
+            _swrast_span_interpolate_z(ctx, span);
          _swrast_exec_fragment_program( ctx, span );
-      else
+      }
+      else if (ctx->ATIFragmentShader._Enabled)
+         _swrast_exec_fragment_shader( ctx, span );
+      else if (ctx->Texture._EnabledUnits && (span->arrayMask & SPAN_TEXTURE))
          _swrast_texture_span( ctx, span );
 
       /* Do the alpha test */
@@ -1412,17 +1204,18 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
       if (span->interpMask & SPAN_Z)
          _swrast_span_interpolate_z(ctx, span);
 
-      if (ctx->Stencil.Enabled) {
+      if (ctx->Stencil.Enabled && ctx->DrawBuffer->Visual.stencilBits > 0) {
+         /* Combined Z/stencil tests */
          if (!_swrast_stencil_and_ztest_span(ctx, span)) {
             span->interpMask = origInterpMask;
             span->arrayMask = origArrayMask;
             return;
          }
       }
-      else {
+      else if (ctx->DrawBuffer->Visual.depthBits > 0) {
+         /* Just regular depth testing */
          ASSERT(ctx->Depth.Test);
          ASSERT(span->arrayMask & SPAN_Z);
-         /* regular depth testing */
          if (!_swrast_depth_test_span(ctx, span)) {
             span->interpMask = origInterpMask;
             span->arrayMask = origArrayMask;
@@ -1445,7 +1238,7 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
    }
 #endif
 
-   /* We had to wait until now to check for glColorMask(F,F,F,F) because of
+   /* We had to wait until now to check for glColorMask(0,0,0,0) because of
     * the occlusion test.
     */
    if (colorMask == 0x0) {
@@ -1454,34 +1247,48 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
       return;
    }
 
-   /* Texture without alpha test */
-   if (!ctx->Color.AlphaEnabled) {
-
+   /* If we were able to defer fragment color computation to now, there's
+    * a good chance that many fragments will have already been killed by
+    * Z/stencil testing.
+    */
+   if (deferredTexture) {
       /* Now we need the rgba array, fill it in if needed */
       if ((span->interpMask & SPAN_RGBA) && (span->arrayMask & SPAN_RGBA) == 0)
          interpolate_colors(ctx, span);
 
-      if (span->interpMask & SPAN_SPEC) {
+      if (span->interpMask & SPAN_SPEC)
          interpolate_specular(ctx, span);
-      }
 
-      if (ctx->FragmentProgram._Enabled)
+      if (span->interpMask & SPAN_FOG)
+         interpolate_fog(ctx, span);
+
+      if (ctx->FragmentProgram._Active)
          _swrast_exec_fragment_program( ctx, span );
-      else
+      else if (ctx->ATIFragmentShader._Enabled)
+         _swrast_exec_fragment_shader( ctx, span );
+      else if (ctx->Texture._EnabledUnits && (span->arrayMask & SPAN_TEXTURE))
          _swrast_texture_span( ctx, span );
    }
 
    ASSERT(span->arrayMask & SPAN_RGBA);
 
-   /* Add base and specular colors */
-   if (ctx->Fog.ColorSumEnabled ||
-       (ctx->Light.Enabled &&
-        ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)) {
-      if (span->interpMask & SPAN_SPEC) {
-         interpolate_specular(ctx, span);
+   if (!ctx->FragmentProgram._Enabled) {
+      /* Add base and specular colors */
+      if (ctx->Fog.ColorSumEnabled ||
+          (ctx->Light.Enabled &&
+           ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)) {
+         if (span->interpMask & SPAN_SPEC) {
+            interpolate_specular(ctx, span);
+         }
+         if (span->arrayMask & SPAN_SPEC) {
+            add_colors( span->end, span->array->rgba, span->array->spec );
+         }
+         else {
+            /* We probably added the base/specular colors during the
+             * vertex stage!
+             */
+         }
       }
-      ASSERT(span->arrayMask & SPAN_SPEC);
-      add_colors( span->end, span->array->rgba, span->array->spec );
    }
 
    /* Fog */
@@ -1500,44 +1307,41 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
    }
 
    if (swrast->_RasterMask & MULTI_DRAW_BIT) {
+      /* need to do blend/logicop separately for each color buffer */
       multi_write_rgba_span(ctx, span);
    }
    else {
       /* normal: write to exactly one buffer */
+      struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+
       if (ctx->Color._LogicOpEnabled) {
-         _swrast_logicop_rgba_span(ctx, span, span->array->rgba);
+         _swrast_logicop_rgba_span(ctx, rb, span, span->array->rgba);
       }
       else if (ctx->Color.BlendEnabled) {
-         _swrast_blend_span(ctx, span, span->array->rgba);
+         _swrast_blend_span(ctx, rb, span, span->array->rgba);
       }
 
       /* Color component masking */
       if (colorMask != 0xffffffff) {
-         _swrast_mask_rgba_span(ctx, span, span->array->rgba);
+         _swrast_mask_rgba_span(ctx, rb, span, span->array->rgba);
       }
 
-      /* write pixels */
+      /* Finally, write the pixels to a color buffer */
       if (span->arrayMask & SPAN_XY) {
          /* array of pixel coords */
-         (*swrast->Driver.WriteRGBAPixels)(ctx, span->end, span->array->x,
-             span->array->y, (const GLchan (*)[4]) span->array->rgba, span->array->mask);
-         if (SWRAST_CONTEXT(ctx)->_RasterMask & ALPHABUF_BIT) {
-            _swrast_write_alpha_pixels(ctx, span->end,
-                                     span->array->x, span->array->y,
-                                     (const GLchan (*)[4]) span->array->rgba,
-                                     span->array->mask);
-         }
+         ASSERT(rb->PutValues);
+         ASSERT(rb->_BaseFormat == GL_RGB || rb->_BaseFormat == GL_RGBA);
+         /* XXX check datatype */
+         rb->PutValues(ctx, rb, span->end, span->array->x, span->array->y,
+                       span->array->rgba, span->array->mask);
       }
       else {
          /* horizontal run of pixels */
-         (*swrast->Driver.WriteRGBASpan)(ctx, span->end, span->x, span->y,
-                                       (const GLchan (*)[4]) span->array->rgba,
-                                       span->writeAll ? NULL : span->array->mask);
-         if (swrast->_RasterMask & ALPHABUF_BIT) {
-            _swrast_write_alpha_span(ctx, span->end, span->x, span->y,
-                                   (const GLchan (*)[4]) span->array->rgba,
-                                   span->writeAll ? NULL : span->array->mask);
-         }
+         ASSERT(rb->PutRow);
+         ASSERT(rb->_BaseFormat == GL_RGB || rb->_BaseFormat == GL_RGBA);
+         /* XXX check datatype */
+         rb->PutRow(ctx, rb, span->end, span->x, span->y, span->array->rgba,
+                    span->writeAll ? NULL : span->array->mask);
       }
    }
 
@@ -1552,22 +1356,21 @@ _swrast_write_texture_span( GLcontext *ctx, struct sw_span *span)
  * reading ouside the buffer's boundaries.
  */
 void
-_swrast_read_rgba_span( GLcontext *ctx, GLframebuffer *buffer,
-                      GLuint n, GLint x, GLint y, GLchan rgba[][4] )
+_swrast_read_rgba_span( GLcontext *ctx, struct gl_renderbuffer *rb,
+                        GLuint n, GLint x, GLint y, GLchan rgba[][4] )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLint bufWidth = (GLint) buffer->Width;
-   const GLint bufHeight = (GLint) buffer->Height;
+   const GLint bufWidth = (GLint) rb->Width;
+   const GLint bufHeight = (GLint) rb->Height;
 
    if (y < 0 || y >= bufHeight || x + (GLint) n < 0 || x >= bufWidth) {
       /* completely above, below, or right */
-      /* XXX maybe leave undefined? */
+      /* XXX maybe leave rgba values undefined? */
       _mesa_bzero(rgba, 4 * n * sizeof(GLchan));
    }
    else {
       GLint skip, length;
       if (x < 0) {
-         /* left edge clippping */
+         /* left edge clipping */
          skip = -x;
          length = (GLint) n - skip;
          if (length < 0) {
@@ -1593,10 +1396,11 @@ _swrast_read_rgba_span( GLcontext *ctx, GLframebuffer *buffer,
          length = (GLint) n;
       }
 
-      (*swrast->Driver.ReadRGBASpan)( ctx, length, x + skip, y, rgba + skip );
-      if (buffer->UseSoftwareAlphaBuffers) {
-         _swrast_read_alpha_span(ctx, length, x + skip, y, rgba + skip);
-      }
+      ASSERT(rb);
+      ASSERT(rb->GetRow);
+      ASSERT(rb->_BaseFormat == GL_RGB || rb->_BaseFormat == GL_RGBA);
+      ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
+      rb->GetRow(ctx, rb, length, x + skip, y, rgba + skip);
    }
 }
 
@@ -1606,21 +1410,20 @@ _swrast_read_rgba_span( GLcontext *ctx, GLframebuffer *buffer,
  * reading ouside the buffer's boundaries.
  */
 void
-_swrast_read_index_span( GLcontext *ctx, GLframebuffer *buffer,
-                       GLuint n, GLint x, GLint y, GLuint indx[] )
+_swrast_read_index_span( GLcontext *ctx, struct gl_renderbuffer *rb,
+                         GLuint n, GLint x, GLint y, GLuint index[] )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLint bufWidth = (GLint) buffer->Width;
-   const GLint bufHeight = (GLint) buffer->Height;
+   const GLint bufWidth = (GLint) rb->Width;
+   const GLint bufHeight = (GLint) rb->Height;
 
    if (y < 0 || y >= bufHeight || x + (GLint) n < 0 || x >= bufWidth) {
       /* completely above, below, or right */
-      _mesa_bzero(indx, n * sizeof(GLuint));
+      _mesa_bzero(index, n * sizeof(GLuint));
    }
    else {
       GLint skip, length;
       if (x < 0) {
-         /* left edge clippping */
+         /* left edge clipping */
          skip = -x;
          length = (GLint) n - skip;
          if (length < 0) {
@@ -1646,6 +1449,63 @@ _swrast_read_index_span( GLcontext *ctx, GLframebuffer *buffer,
          length = (GLint) n;
       }
 
-      (*swrast->Driver.ReadCI32Span)( ctx, length, skip + x, y, indx + skip );
+      ASSERT(rb->GetRow);
+      ASSERT(rb->_BaseFormat == GL_COLOR_INDEX);
+
+      if (rb->DataType == GL_UNSIGNED_BYTE) {
+         GLubyte index8[MAX_WIDTH];
+         GLint i;
+         rb->GetRow(ctx, rb, length, x + skip, y, index8);
+         for (i = 0; i < length; i++)
+            index[skip + i] = index8[i];
+      }
+      else if (rb->DataType == GL_UNSIGNED_SHORT) {
+         GLushort index16[MAX_WIDTH];
+         GLint i;
+         rb->GetRow(ctx, rb, length, x + skip, y, index16);
+         for (i = 0; i < length; i++)
+            index[skip + i] = index16[i];
+      }
+      else if (rb->DataType == GL_UNSIGNED_INT) {
+         rb->GetRow(ctx, rb, length, x + skip, y, index + skip);
+      }
+   }
+}
+
+
+/**
+ * Wrapper for gl_renderbuffer::GetValues() which does clipping to avoid
+ * reading values outside the buffer bounds.
+ * We can use this for reading any format/type of renderbuffer.
+ * \param valueSize is the size in bytes of each value put into the
+ *                  values array.
+ */
+void
+_swrast_get_values(GLcontext *ctx, struct gl_renderbuffer *rb,
+                   GLuint count, const GLint x[], const GLint y[],
+                   void *values, GLuint valueSize)
+{
+   GLuint i, inCount = 0, inStart = 0;
+
+   for (i = 0; i < count; i++) {
+      if (x[i] >= 0 && y[i] >= 0 && x[i] < rb->Width && y[i] < rb->Height) {
+         /* inside */
+         if (inCount == 0)
+            inStart = i;
+         inCount++;
+      }
+      else {
+         if (inCount > 0) {
+            /* read [inStart, inStart + inCount) */
+            rb->GetValues(ctx, rb, inCount, x + inStart, y + inStart,
+                          (GLubyte *) values + inStart * valueSize);
+            inCount = 0;
+         }
+      }
+   }
+   if (inCount > 0) {
+      /* read last values */
+      rb->GetValues(ctx, rb, inCount, x + inStart, y + inStart,
+                    (GLubyte *) values + inStart * valueSize);
    }
 }

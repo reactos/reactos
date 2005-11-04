@@ -247,7 +247,7 @@ _mesa_compressed_image_address(GLint col, GLint row, GLint img,
       addr = (GLubyte *) image + 16 * (((width + 3) / 4) * (row / 4) + col / 4);
       break;
    default:
-      return 0;
+      return NULL;
    }
 
    return addr;

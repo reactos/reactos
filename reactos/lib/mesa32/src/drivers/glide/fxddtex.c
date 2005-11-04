@@ -49,7 +49,7 @@
 
 
 /* no borders! can't halve 1x1! (stride > width * comp) not allowed */
-void
+static void
 _mesa_halve2x2_teximage2d ( GLcontext *ctx,
 			    struct gl_texture_image *texImage,
 			    GLuint bytesPerPixel,
@@ -66,7 +66,7 @@ _mesa_halve2x2_teximage2d ( GLcontext *ctx,
    GLuint bpt = 0;
    GLubyte *_s = NULL;
    GLubyte *_d = NULL;
-   GLenum _t;
+   GLenum _t = 0;
 
    if (texImage->TexFormat->MesaFormat == MESA_FORMAT_RGB565) {
       _t = GL_UNSIGNED_SHORT_5_6_5_REV;
@@ -322,14 +322,11 @@ fxDDTexParam(GLcontext * ctx, GLenum target, struct gl_texture_object *tObj,
 	 ti->LODblend = FXFALSE;
 	 break;
       case GL_NEAREST_MIPMAP_LINEAR:
-         /* [koolsmoky]
-          * trilinear is bugged! mipmap blending produce
-          * incorrect filtered colors for the smallest mipmap levels.
-          * [dBorca]
+         /* [dBorca]
           * currently Napalm can't do single-pass trilinear,
           * because the way its combiners are set. So we fall back
           * to GL_NEAREST_MIPMAP_NEAREST. We'll let true trilinear
-          * enabled for V2, V3. If user shoots foot, not our problem!
+          * enabled for V2, V3.
           */
          if (!fxMesa->HaveCmbExt) {
 	    if (fxMesa->haveTwoTMUs) {
@@ -348,14 +345,11 @@ fxDDTexParam(GLcontext * ctx, GLenum target, struct gl_texture_object *tObj,
 	 ti->LODblend = FXFALSE;
 	 break;
       case GL_LINEAR_MIPMAP_LINEAR:
-         /* [koolsmoky]
-          * trilinear is bugged! mipmap blending produce
-          * incorrect filtered colors for the smallest mipmap levels.
-          * [dBorca]
+         /* [dBorca]
           * currently Napalm can't do single-pass trilinear,
           * because the way its combiners are set. So we fall back
           * to GL_LINEAR_MIPMAP_NEAREST. We'll let true trilinear
-          * enabled for V2, V3. If user shoots foot, not our problem!
+          * enabled for V2, V3.
           */
          if (!fxMesa->HaveCmbExt) {
             if (fxMesa->haveTwoTMUs) {
@@ -586,7 +580,7 @@ fxDDTexPalette(GLcontext * ctx, struct gl_texture_object *tObj)
       }
       /* This might be a proxy texture. */
       if (!tObj->Palette.Table)
-         return; 
+         return;
       if (!tObj->DriverData)
          tObj->DriverData = fxAllocTexObjData(fxMesa);
       ti = fxTMGetTexInfo(tObj);
@@ -1000,6 +994,7 @@ fetch_rgba_dxt5(const struct gl_texture_image *texImage,
 }
 
 
+#if 0 /* break glass in case of emergency */
 static void
 PrintTexture(int w, int h, int c, const GLubyte * data)
 {
@@ -1015,6 +1010,7 @@ PrintTexture(int w, int h, int c, const GLubyte * data)
       fprintf(stderr, "\n");
    }
 }
+#endif
 
 
 const struct gl_texture_format *
@@ -1030,11 +1026,6 @@ fxDDChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
 
    switch (internalFormat) {
    case GL_COMPRESSED_RGB:
-#if FX_TC_NCC
-      if (fxMesa->HaveTexus2) {
-         return &_mesa_texformat_argb8888;
-      }
-#endif
      /* intentional fall through */
    case 3:
    case GL_RGB:
@@ -1052,11 +1043,6 @@ fxDDChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_RGBA4:
       return &_mesa_texformat_argb4444;
    case GL_COMPRESSED_RGBA:
-#if FX_TC_NCC
-      if (fxMesa->HaveTexus2) {
-         return &_mesa_texformat_argb8888;
-      }
-#endif
      /* intentional fall through */
    case 4:
    case GL_RGBA:
@@ -1267,6 +1253,7 @@ adjust2DRatio (GLcontext *ctx,
             + xoffset * mml->wScale) * texelBytes;
 
       _mesa_rescale_teximage2d(texelBytes,
+                               width,
                                dstRowStride, /* dst stride */
                                width, height,
                                newWidth, newHeight,
@@ -1290,6 +1277,7 @@ adjust2DRatio (GLcontext *ctx,
                               width, height, 1,
                               format, type, pixels, packing);
       _mesa_rescale_teximage2d(rawBytes,
+                               width,
                                newWidth * rawBytes, /* dst stride */
                                width, height, /* src */
                                newWidth, newHeight, /* dst */
@@ -1360,7 +1348,7 @@ fxDDTexImage2D(GLcontext * ctx, GLenum target, GLint level,
 
 #if FX_COMPRESS_S3TC_AS_FXT1_HACK
    /* [koolsmoky] substitute FXT1 for DXTn and Legacy S3TC */
-   if (texImage->IsCompressed) {
+   if (!ctx->Mesa_DXTn && texImage->IsCompressed) {
      switch (internalFormat) {
      case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
      case GL_RGB_S3TC:
@@ -1411,10 +1399,10 @@ fxDDTexImage2D(GLcontext * ctx, GLenum target, GLint level,
                                                                1,
                                                                internalFormat);
       dstRowStride = _mesa_compressed_row_stride(internalFormat, mml->width);
-      texImage->Data = MESA_PBUFFER_ALLOC(texImage->CompressedSize);
+      texImage->Data = _mesa_malloc(texImage->CompressedSize);
    } else {
       dstRowStride = mml->width * texelBytes;
-      texImage->Data = MESA_PBUFFER_ALLOC(mml->width * mml->height * texelBytes);
+      texImage->Data = _mesa_malloc(mml->width * mml->height * texelBytes);
    }
    if (!texImage->Data) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glTexImage2D");
@@ -1449,39 +1437,7 @@ fxDDTexImage2D(GLcontext * ctx, GLenum target, GLint level,
                                          width, height, 1,
                                          format, type, pixels, packing);
       }
-#if FX_TC_NCC
-      if (fxMesa->HaveTexus2) {
-         GLenum texNCC = 0;
-         GLuint texSize = mml->width * mml->height;
-         if (internalFormat == GL_COMPRESSED_RGB) {
-            texNCC = GR_TEXFMT_YIQ_422;
-         } else if (internalFormat == GL_COMPRESSED_RGBA) {
-            texNCC = GR_TEXFMT_AYIQ_8422;
-            texSize <<= 1;
-         }
-         if (texNCC) {
-            TxMip txMip, pxMip;
-            GLubyte *tempImage = MESA_PBUFFER_ALLOC(texSize);
-            if (!tempImage) {
-               _mesa_error(ctx, GL_OUT_OF_MEMORY, "glTexImage2D");
-               return;
-            }
-            txMip.width = mml->width;
-            txMip.height = mml->height;
-            txMip.depth = 1;
-            txMip.data[0] = texImage->Data;
-            pxMip.data[0] = tempImage;
-            fxMesa->Glide.txMipQuantize(&pxMip, &txMip, texNCC, TX_DITHER_ERR, TX_COMPRESSION_HEURISTIC);
-            if (level == 0) {
-               fxMesa->Glide.txPalToNcc((GuNccTable *)(&(ti->palette)), pxMip.pal);
-            }
-            MESA_PBUFFER_FREE(texImage->Data);
-            texImage->Data = tempImage;
-            mml->glideFormat = texNCC;
-         }
-      }
-#endif
-   
+
       /* GL_SGIS_generate_mipmap */
       if (level == texObj->BaseLevel && texObj->GenerateMipmap) {
          GLint mipWidth, mipHeight;
@@ -1489,9 +1445,9 @@ fxDDTexImage2D(GLcontext * ctx, GLenum target, GLint level,
          struct gl_texture_image *mipImage;
          const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
          const GLint maxLevels = _mesa_max_texture_levels(ctx, texObj->Target);
-   
+
          assert(!texImage->IsCompressed);
-   
+
          while (level < texObj->MaxLevel && level < maxLevels - 1) {
             mipWidth = width / 2;
             if (!mipWidth) {
@@ -1543,10 +1499,6 @@ fxDDTexSubImage2D(GLcontext * ctx, GLenum target, GLint level,
    tfxTexInfo *ti;
    tfxMipMapLevel *mml;
    GLint texelBytes, dstRowStride;
-
-   /* [dBorca] Hack alert:
-    * FX_TC_NCC not supported
-    */
 
    if (TDFX_DEBUG & VERBOSE_TEXTURE) {
        fprintf(stderr, "fxDDTexSubImage2D: id=%d\n", texObj->Name);
@@ -1713,7 +1665,7 @@ fxDDCompressedTexImage2D (GLcontext *ctx, GLenum target,
                                                                mml->height,
                                                                1,
                                                                internalFormat);
-      texImage->Data = MESA_PBUFFER_ALLOC(texImage->CompressedSize);
+      texImage->Data = _mesa_malloc(texImage->CompressedSize);
       if (!texImage->Data) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage2D");
          return;

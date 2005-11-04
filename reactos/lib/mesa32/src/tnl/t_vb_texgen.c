@@ -65,7 +65,6 @@ struct texgen_stage_data {
    /* Per-texunit derived state.
     */
    GLuint TexgenSize[MAX_TEXTURE_COORD_UNITS];
-   GLuint TexgenHoles[MAX_TEXTURE_COORD_UNITS];
    texgen_func TexgenFunc[MAX_TEXTURE_COORD_UNITS];
 
    /* Temporary values used in texgen.
@@ -162,8 +161,8 @@ typedef void (*build_m_func)( GLfloat f[][3],
 
 
 static build_m_func build_m_tab[5] = {
-   0,
-   0,
+   NULL,
+   NULL,
    build_m2,
    build_m3,
    build_m3
@@ -239,12 +238,13 @@ typedef void (*build_f_func)( GLfloat *f,
 /* Just treat 4-vectors as 3-vectors.
  */
 static build_f_func build_f_tab[5] = {
-   0,
-   0,
+   NULL,
+   NULL,
    build_f2,
    build_f3,
    build_f3
 };
+
 
 
 /* Special case texgen functions.
@@ -262,19 +262,11 @@ static void texgen_reflection_map_nv( GLcontext *ctx,
 				  VB->NormalPtr,
 				  VB->EyePtr );
 
-   if (in) {
-      out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
-      out->count = in->count;
-      out->size = MAX2(in->size, 3);
-      if (in->size == 4)
-	 _mesa_copy_tab[0x8]( out, in );
-   }
-   else {
-      out->flags |= VEC_SIZE_3;
-      out->size = 3;
-      out->count = in->count;
-   }
-
+   out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
+   out->count = VB->Count;
+   out->size = MAX2(in->size, 3);
+   if (in->size == 4) 
+      _mesa_copy_tab[0x8]( out, in );
 }
 
 
@@ -299,18 +291,11 @@ static void texgen_normal_map_nv( GLcontext *ctx,
    }
 
 
-   if (in) {
-      out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
-      out->count = in->count;
-      out->size = MAX2(in->size, 3);
-      if (in->size == 4)
-	 _mesa_copy_tab[0x8]( out, in );
-   }
-   else {
-      out->flags |= VEC_SIZE_3;
-      out->size = 3;
-      out->count = in->count;
-   }
+   out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
+   out->count = count;
+   out->size = MAX2(in->size, 3);
+   if (in->size == 4) 
+      _mesa_copy_tab[0x8]( out, in );
 }
 
 
@@ -332,22 +317,17 @@ static void texgen_sphere_map( GLcontext *ctx,
 				    VB->NormalPtr,
 				    VB->EyePtr );
 
+   out->size = MAX2(in->size,2);
+
    for (i=0;i<count;i++) {
       texcoord[i][0] = f[i][0] * m[i] + 0.5F;
       texcoord[i][1] = f[i][1] * m[i] + 0.5F;
    }
 
-   if (in) {
-      out->size = MAX2(in->size,2);
-      out->count = in->count;
-      out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_2;
-      if (in->size > 2)
-	 _mesa_copy_tab[all_bits[in->size] & ~0x3]( out, in );
-   } else {
-      out->size = 2;
-      out->flags |= VEC_SIZE_2;
-      out->count = in->count;
-   }
+   out->count = count;
+   out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_2;
+   if (in->size > 2)
+      _mesa_copy_tab[all_bits[in->size] & ~0x3]( out, in );
 }
 
 
@@ -368,7 +348,7 @@ static void texgen( GLcontext *ctx,
    const GLuint count = VB->Count;
    GLfloat (*texcoord)[4] = (GLfloat (*)[4])out->data;
    GLfloat (*f)[3] = store->tmp_f;
-   GLuint holes = 0;
+   GLuint copy;
 
    if (texUnit->_GenFlags & TEXGEN_NEED_M) {
       build_m_tab[eye->size]( store->tmp_f, store->tmp_m, normal, eye );
@@ -376,34 +356,14 @@ static void texgen( GLcontext *ctx,
       build_f_tab[eye->size]( (GLfloat *)store->tmp_f, 3, normal, eye );
    }
 
-   if (!in) {
-      ASSERT(0);
-      in = out;
-      in->count = VB->Count;
 
-      out->size = store->TexgenSize[unit];
-      out->flags |= texUnit->TexGenEnabled;
-      out->count = VB->Count;
-      holes = store->TexgenHoles[unit];
-   }
-   else {
-      GLuint copy = (all_bits[in->size] & ~texUnit->TexGenEnabled);
-      if (copy)
-	 _mesa_copy_tab[copy]( out, in );
+   out->size = MAX2(in->size, store->TexgenSize[unit]);
+   out->flags |= (in->flags & VEC_SIZE_FLAGS) | texUnit->TexGenEnabled;
+   out->count = count;
 
-      out->size = MAX2(in->size, store->TexgenSize[unit]);
-      out->flags |= (in->flags & VEC_SIZE_FLAGS) | texUnit->TexGenEnabled;
-      out->count = in->count;
-
-      holes = ~all_bits[in->size] & store->TexgenHoles[unit];
-   }
-
-   if (holes) {
-      if (holes & VEC_DIRTY_3) _mesa_vector4f_clean_elem(out, count, 3);
-      if (holes & VEC_DIRTY_2) _mesa_vector4f_clean_elem(out, count, 2);
-      if (holes & VEC_DIRTY_1) _mesa_vector4f_clean_elem(out, count, 1);
-      if (holes & VEC_DIRTY_0) _mesa_vector4f_clean_elem(out, count, 0);
-   }
+   copy = (all_bits[in->size] & ~texUnit->TexGenEnabled);
+   if (copy)
+      _mesa_copy_tab[copy]( out, in );
 
    if (texUnit->TexGenEnabled & S_BIT) {
       GLuint i;
@@ -520,33 +480,41 @@ static void texgen( GLcontext *ctx,
 
 
 
+
 static GLboolean run_texgen_stage( GLcontext *ctx,
 				   struct tnl_pipeline_stage *stage )
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
-   struct texgen_stage_data *store = TEXGEN_STAGE_DATA( stage );
+   struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
    GLuint i;
 
-   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-      if (ctx->Texture._TexGenEnabled & ENABLE_TEXGEN(i)) {
-	 if (stage->changed_inputs & (_TNL_BIT_POS | _TNL_BIT_NORMAL | _TNL_BIT_TEX(i)))
-	    store->TexgenFunc[i]( ctx, store, i );
+   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Enabled) 
+      return GL_TRUE;
+
+   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
+      struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
+
+      if (texUnit->TexGenEnabled) {
+
+	 store->TexgenFunc[i]( ctx, store, i );
 
 	 VB->AttribPtr[VERT_ATTRIB_TEX0+i] = 
 	    VB->TexCoordPtr[i] = &store->texcoord[i];
       }
+   }
 
    return GL_TRUE;
 }
 
 
-
-
-static GLboolean run_validate_texgen_stage( GLcontext *ctx,
-					    struct tnl_pipeline_stage *stage )
+static void validate_texgen_stage( GLcontext *ctx,
+				   struct tnl_pipeline_stage *stage )
 {
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
    GLuint i;
+
+   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Enabled) 
+      return;
 
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
       struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
@@ -564,7 +532,6 @@ static GLboolean run_validate_texgen_stage( GLcontext *ctx,
 	    sz = 1;
 
 	 store->TexgenSize[i] = sz;
-	 store->TexgenHoles[i] = (all_bits[sz] & ~texUnit->TexGenEnabled);
 	 store->TexgenFunc[i] = texgen; /* general solution */
 
          /* look for special texgen cases */
@@ -582,47 +549,8 @@ static GLboolean run_validate_texgen_stage( GLcontext *ctx,
 	 }
       }
    }
-
-   stage->run = run_texgen_stage;
-   return stage->run( ctx, stage );
 }
 
-
-static void check_texgen( GLcontext *ctx, struct tnl_pipeline_stage *stage )
-{
-   GLuint i;
-   stage->active = 0;
-
-   if (ctx->Texture._TexGenEnabled && !ctx->VertexProgram._Enabled) {
-      GLuint inputs = 0;
-      GLuint outputs = 0;
-
-      if (ctx->Texture._GenFlags & (TEXGEN_OBJ_LINEAR | TEXGEN_NEED_EYE_COORD))
-	 inputs |= _TNL_BIT_POS;
-
-      if (ctx->Texture._GenFlags & TEXGEN_NEED_NORMALS)
-	 inputs |= _TNL_BIT_NORMAL;
-
-      for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-	 if (ctx->Texture._TexGenEnabled & ENABLE_TEXGEN(i))
-	 {
-	    outputs |= _TNL_BIT_TEX(i);
-
-	    /* Need the original input in case it contains a Q coord:
-	     * (sigh)
-	     */
-	    inputs |= _TNL_BIT_TEX(i);
-
-	    /* Something for Feedback? */
-	 }
-
-      if (stage->privatePtr)
-	 stage->run = run_validate_texgen_stage;
-      stage->active = 1;
-      stage->inputs = inputs;
-      stage->outputs = outputs;
-   }
-}
 
 
 
@@ -647,10 +575,7 @@ static GLboolean alloc_texgen_data( GLcontext *ctx,
    store->tmp_f = (GLfloat (*)[3]) MALLOC(VB->Size * sizeof(GLfloat) * 3);
    store->tmp_m = (GLfloat *) MALLOC(VB->Size * sizeof(GLfloat));
 
-   /* Now validate and run the stage.
-    */
-   stage->run = run_validate_texgen_stage;
-   return stage->run( ctx, stage );
+   return GL_TRUE;
 }
 
 
@@ -678,14 +603,9 @@ static void free_texgen_data( struct tnl_pipeline_stage *stage )
 const struct tnl_pipeline_stage _tnl_texgen_stage =
 {
    "texgen",			/* name */
-   _NEW_TEXTURE|_NEW_PROGRAM,	/* when to call check() */
-   _NEW_TEXTURE,		/* when to invalidate stored data */
-   GL_FALSE,			/* active? */
-   0,				/* inputs */
-   0,				/* outputs */
-   0,				/* changed_inputs */
    NULL,			/* private data */
+   alloc_texgen_data,		/* destructor */
    free_texgen_data,		/* destructor */
-   check_texgen,		/* check */
-   alloc_texgen_data		/* run -- initially set to alloc data */
+   validate_texgen_stage,		/* check */
+   run_texgen_stage		/* run -- initially set to alloc data */
 };

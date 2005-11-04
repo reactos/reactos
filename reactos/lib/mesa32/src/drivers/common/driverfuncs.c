@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,13 +27,21 @@
 #include "imports.h"
 #include "buffers.h"
 #include "context.h"
+#include "framebuffer.h"
 #include "program.h"
+#include "renderbuffer.h"
 #include "texcompress.h"
 #include "texformat.h"
 #include "teximage.h"
 #include "texobj.h"
 #include "texstore.h"
+#if FEATURE_ARB_vertex_buffer_object
 #include "bufferobj.h"
+#endif
+#if FEATURE_EXT_framebuffer_object
+#include "fbobject.h"
+#include "texrender.h"
+#endif
 
 #include "driverfuncs.h"
 #include "swrast/swrast.h"
@@ -57,7 +65,7 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->GetString = NULL;  /* REQUIRED! */
    driver->UpdateState = NULL;  /* REQUIRED! */
    driver->GetBufferSize = NULL;  /* REQUIRED! */
-   driver->ResizeBuffers = _swrast_alloc_buffers;
+   driver->ResizeBuffers = _mesa_resize_framebuffer;
    driver->Error = NULL;
 
    driver->Finish = NULL;
@@ -79,6 +87,7 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->TexSubImage1D = _mesa_store_texsubimage1d;
    driver->TexSubImage2D = _mesa_store_texsubimage2d;
    driver->TexSubImage3D = _mesa_store_texsubimage3d;
+   driver->GetTexImage = _mesa_get_teximage;
    driver->CopyTexImage1D = _swrast_copy_teximage1d;
    driver->CopyTexImage2D = _swrast_copy_teximage2d;
    driver->CopyTexSubImage1D = _swrast_copy_texsubimage1d;
@@ -91,11 +100,14 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->CompressedTexSubImage1D = _mesa_store_compressed_texsubimage1d;
    driver->CompressedTexSubImage2D = _mesa_store_compressed_texsubimage2d;
    driver->CompressedTexSubImage3D = _mesa_store_compressed_texsubimage3d;
+   driver->GetCompressedTexImage = _mesa_get_compressed_teximage;
    driver->CompressedTextureSize = _mesa_compressed_texture_size;
    driver->BindTexture = NULL;
    driver->NewTextureObject = _mesa_new_texture_object;
    driver->DeleteTexture = _mesa_delete_texture_object;
    driver->NewTextureImage = _mesa_new_texture_image;
+   driver->FreeTexImageData = _mesa_free_texture_image_data; 
+   driver->TextureMemCpy = _mesa_memcpy; 
    driver->IsTextureResident = NULL;
    driver->PrioritizeTexture = NULL;
    driver->ActiveTexture = NULL;
@@ -126,6 +138,7 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->ColorMaterial = NULL;
    driver->CullFace = NULL;
    driver->DrawBuffer = _swrast_DrawBuffer;
+   driver->DrawBuffers = NULL; /***_swrast_DrawBuffers;***/
    driver->FrontFace = NULL;
    driver->DepthFunc = NULL;
    driver->DepthMask = NULL;
@@ -186,7 +199,14 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->BufferSubData = _mesa_buffer_subdata;
    driver->GetBufferSubData = _mesa_buffer_get_subdata;
    driver->MapBuffer = _mesa_buffer_map;
-   driver->UnmapBuffer = NULL;
+   driver->UnmapBuffer = _mesa_buffer_unmap;
+#endif
+
+#if FEATURE_EXT_framebuffer_object
+   driver->NewFramebuffer = _mesa_new_framebuffer;
+   driver->NewRenderbuffer = _mesa_new_soft_renderbuffer;
+   driver->RenderbufferTexture = _mesa_renderbuffer_texture;
+   driver->FramebufferRenderbuffer = _mesa_framebuffer_renderbuffer;
 #endif
 
    /* T&L stuff */

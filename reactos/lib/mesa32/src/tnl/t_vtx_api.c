@@ -43,6 +43,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "t_vtx_api.h"
 #include "simple_list.h"
 
+#include "dispatch.h"
+
 static void reset_attrfv( TNLcontext *tnl );
 
 static tnl_attrfv_func choose[_TNL_MAX_ATTR_CODEGEN+1][4]; /* +1 for ERROR_ATTRIB */
@@ -64,7 +66,7 @@ static void _tnl_wrap_buffers( GLcontext *ctx )
    }
    else {
       GLuint last_prim = tnl->vtx.prim[tnl->vtx.prim_count-1].mode;
-      GLuint last_count = tnl->vtx.prim[tnl->vtx.prim_count-1].count;
+      GLuint last_count;
 
       if (ctx->Driver.CurrentExecPrimitive != GL_POLYGON+1) {
 	 GLint i = tnl->vtx.prim_count - 1;
@@ -73,6 +75,8 @@ static void _tnl_wrap_buffers( GLcontext *ctx )
 				    tnl->vtx.counter) - 
 				   tnl->vtx.prim[i].start);
       }
+
+      last_count = tnl->vtx.prim[tnl->vtx.prim_count-1].count;
 
       /* Execute the buffer and save copied vertices.
        */
@@ -140,23 +144,30 @@ static void _tnl_copy_to_current( GLcontext *ctx )
    TNLcontext *tnl = TNL_CONTEXT(ctx); 
    GLuint i;
 
-   for (i = _TNL_ATTRIB_POS+1 ; i <= _TNL_ATTRIB_INDEX ; i++)
+   for (i = _TNL_ATTRIB_POS+1 ; i < _TNL_ATTRIB_INDEX ; i++) {
       if (tnl->vtx.attrsz[i]) {
          /* Note: the tnl->vtx.current[i] pointers points to
           * the ctx->Current fields.  The first 16 or so, anyway.
           */
-	 ASSIGN_4V( tnl->vtx.current[i], 0, 0, 0, 1 );
-	 COPY_SZ_4V(tnl->vtx.current[i], 
+	 COPY_CLEAN_4V(tnl->vtx.current[i], 
 		    tnl->vtx.attrsz[i], 
 		    tnl->vtx.attrptr[i]);
       }
+   }
 
-   /* Edgeflag requires special treatment:
+   /* color index is special (it's not a float[4] so COPY_CLEAN_4V above
+    * will trash adjacent memory!)
     */
-   if (tnl->vtx.attrsz[_TNL_ATTRIB_EDGEFLAG]) 
-      ctx->Current.EdgeFlag = 
-	 (tnl->vtx.attrptr[_TNL_ATTRIB_EDGEFLAG][0] == 1.0);
+   if (tnl->vtx.attrsz[_TNL_ATTRIB_INDEX]) {
+      ctx->Current.Index = tnl->vtx.attrptr[_TNL_ATTRIB_INDEX][0];
+   }
 
+   /* Edgeflag requires additional treatment:
+    */
+   if (tnl->vtx.attrsz[_TNL_ATTRIB_EDGEFLAG]) {
+      ctx->Current.EdgeFlag = 
+	 (tnl->vtx.CurrentFloatEdgeFlag == 1.0);
+   }
 
    /* Colormaterial -- this kindof sucks.
     */
@@ -178,7 +189,12 @@ static void _tnl_copy_from_current( GLcontext *ctx )
    TNLcontext *tnl = TNL_CONTEXT(ctx); 
    GLint i;
 
-   for (i = _TNL_ATTRIB_POS+1 ; i <= _TNL_ATTRIB_INDEX ; i++) 
+   /* Edgeflag requires additional treatment:
+    */
+   tnl->vtx.CurrentFloatEdgeFlag = 
+      (GLfloat)ctx->Current.EdgeFlag;
+   
+   for (i = _TNL_ATTRIB_POS+1 ; i <= _TNL_ATTRIB_MAX ; i++) 
       switch (tnl->vtx.attrsz[i]) {
       case 4: tnl->vtx.attrptr[i][3] = tnl->vtx.current[i][3];
       case 3: tnl->vtx.attrptr[i][2] = tnl->vtx.current[i][2];
@@ -186,13 +202,6 @@ static void _tnl_copy_from_current( GLcontext *ctx )
       case 1: tnl->vtx.attrptr[i][0] = tnl->vtx.current[i][0];
 	 break;
       }
-
-   /* Edgeflag requires special treatment:
-    */
-   if (tnl->vtx.attrsz[_TNL_ATTRIB_EDGEFLAG]) 
-      tnl->vtx.attrptr[_TNL_ATTRIB_EDGEFLAG][0] = 
-	 (GLfloat)ctx->Current.EdgeFlag;
-
 
    ctx->Driver.NeedFlush |= FLUSH_UPDATE_CURRENT;
 }
@@ -253,7 +262,7 @@ static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
 	 tmp += tnl->vtx.attrsz[i];
       }
       else 
-	 tnl->vtx.attrptr[i] = 0; /* will not be dereferenced */
+	 tnl->vtx.attrptr[i] = NULL; /* will not be dereferenced */
    }
 
    /* Copy from current to repopulate the vertex with correct values.
@@ -276,8 +285,7 @@ static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
 	    if (tnl->vtx.attrsz[j]) {
 	       if (j == attr) {
 		  if (oldsz) {
-		     ASSIGN_4V( dest, 0, 0, 0, 1 );
-		     COPY_SZ_4V( dest, oldsz, data );
+		     COPY_CLEAN_4V( dest, oldsz, data );
 		     data += oldsz;
 		     dest += newsz;
 		  } else {
@@ -356,14 +364,14 @@ static struct _tnl_dynfn *lookup( struct _tnl_dynfn *l, GLuint key )
 	 return f;
    }
 
-   return 0;
+   return NULL;
 }
 
 
 static tnl_attrfv_func do_codegen( GLcontext *ctx, GLuint attr, GLuint sz )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx); 
-   struct _tnl_dynfn *dfn = 0;
+   struct _tnl_dynfn *dfn = NULL;
 
    if (attr == 0) {
       GLuint key = tnl->vtx.vertex_size;
@@ -385,7 +393,7 @@ static tnl_attrfv_func do_codegen( GLcontext *ctx, GLuint attr, GLuint sz )
    if (dfn) 
       return *(tnl_attrfv_func *) &dfn->code;
    else
-      return 0;
+      return NULL;
 }
 
 #endif /* USE_X86_ASM */
@@ -420,7 +428,7 @@ static tnl_attrfv_func do_choose( GLuint attr, GLuint sz )
       tnl->vtx.tabfv[attr][sz-1] = do_codegen( ctx, attr, sz );
    else
 #endif
-      tnl->vtx.tabfv[attr][sz-1] = 0;
+      tnl->vtx.tabfv[attr][sz-1] = NULL;
 
    /* Else use generic version:
     */
@@ -743,7 +751,7 @@ static void GLAPIENTRY _tnl_Begin( GLenum mode )
 
 	 if (!(tnl->Driver.NotifyBegin && 
 	       tnl->Driver.NotifyBegin( ctx, mode )))
-	     ctx->Exec->Begin(mode);
+	     CALL_Begin(ctx->Exec, (mode));
 	 return;
       }
 
@@ -860,12 +868,13 @@ static void _tnl_current_init( GLcontext *ctx )
 	 ctx->Light.Material.Attrib[i];
 
    tnl->vtx.current[_TNL_ATTRIB_INDEX] = &ctx->Current.Index;
+   tnl->vtx.current[_TNL_ATTRIB_EDGEFLAG] = &tnl->vtx.CurrentFloatEdgeFlag;
 }
 
 static struct _tnl_dynfn *no_codegen( GLcontext *ctx, int key )
 {
    (void) ctx; (void) key;
-   return 0;
+   return NULL;
 }
 
 void _tnl_vtx_init( GLcontext *ctx )
@@ -910,7 +919,7 @@ void _tnl_vtx_init( GLcontext *ctx )
    }
 
    for (i = 0; i < _TNL_ATTRIB_INDEX; i++)
-      _mesa_vector4f_init( &tmp->Attribs[i], 0, 0);
+      _mesa_vector4f_init( &tmp->Attribs[i], 0, NULL);
 
    for (i = 0; i < 4; i++) {
       make_empty_list( &tnl->vtx.cache.Vertex[i] );

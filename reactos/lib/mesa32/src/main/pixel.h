@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -79,7 +79,7 @@ _mesa_PixelZoom( GLfloat xfactor, GLfloat yfactor );
 /*@{*/
 
 extern void
-_mesa_scale_and_bias_rgba(const GLcontext *ctx, GLuint n, GLfloat rgba[][4],
+_mesa_scale_and_bias_rgba(GLuint n, GLfloat rgba[][4],
                           GLfloat rScale, GLfloat gScale,
                           GLfloat bScale, GLfloat aScale,
                           GLfloat rBias, GLfloat gBias,

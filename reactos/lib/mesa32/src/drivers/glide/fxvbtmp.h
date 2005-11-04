@@ -124,23 +124,23 @@ static void TAG(emit)( GLcontext *ctx,
 	    VIEWPORT_Y(v->y,   proj[0][1]);
 	    VIEWPORT_Z(v->ooz, proj[0][2]);
 	    v->oow = proj[0][3];
+
+	    if (IND & SETUP_SNAP) {
+#if defined(USE_IEEE)
+	       const float snapper = (3L << 18);
+	       v->x += snapper;
+	       v->x -= snapper;
+	       v->y += snapper;
+	       v->y -= snapper;
+#else
+	       v->x = ((int) (v->x * 16.0f)) * (1.0f / 16.0f);
+	       v->y = ((int) (v->y * 16.0f)) * (1.0f / 16.0f);
+#endif
+	    }
          } else {
             /* clipped */
             v->oow = 1.0;
          }
-
-	 if (IND & SETUP_SNAP) {
-#if defined(USE_IEEE)
-	    const float snapper = (3L << 18);
-	    v->x += snapper;
-	    v->x -= snapper;
-	    v->y += snapper;
-	    v->y -= snapper;
-#else
-	    v->x = ((int) (v->x * 16.0f)) * (1.0f / 16.0f);
-	    v->y = ((int) (v->y * 16.0f)) * (1.0f / 16.0f);
-#endif
-	 }
 
 	 proj =  (GLfloat (*)[4])((GLubyte *)proj +  proj_stride);
       }

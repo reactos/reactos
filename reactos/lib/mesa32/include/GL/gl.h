@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,8 +38,6 @@
  */
 #if !defined(__SCITECH_SNAP__)
 
-#include <stddef.h>     /* to get ptrdiff_t, used below */
-
 #if defined(__BEOS__)
 #include <stdlib.h>     /* to get some BeOS-isms */
 #endif
@@ -64,11 +62,10 @@
 #elif defined(__CYGWIN__) && defined(USE_OPENGL32) /* use native windows opengl32 */
 #  define GLAPI extern
 #  define GLAPIENTRY __stdcall
-#else
-/* non-Windows compilation */
-#  define GLAPI extern
+#elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 303
+#  define GLAPI __attribute__((visibility("default")))
 #  define GLAPIENTRY
-#endif /* WIN32 / CYGWIN bracket */
+#endif /* WIN32 && !CYGWIN */
 
 #if (defined(__BEOS__) && defined(__POWERPC__)) || defined(__QUICKDRAW__)
 #  define PRAGMA_EXPORT_SUPPORTED		1
@@ -95,10 +92,22 @@
 #pragma import on
 #endif
 
+#ifndef GLAPI
+#define GLAPI extern
+#endif
+
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+
 #ifndef APIENTRY
 #define APIENTRY GLAPIENTRY
 #endif
+
+/* "P" suffix to be used for a pointer to a function */
+#ifndef APIENTRYP
 #define APIENTRYP APIENTRY *
+#endif
 
 #ifndef GLAPIENTRYP
 #define GLAPIENTRYP GLAPIENTRY *
@@ -844,7 +853,7 @@ GLAPI GLint GLAPIENTRY glRenderMode( GLenum mode );
 
 GLAPI GLenum GLAPIENTRY glGetError( void );
 
-GLAPI const GLubyte* GLAPIENTRY glGetString( GLenum name );
+GLAPI const GLubyte * GLAPIENTRY glGetString( GLenum name );
 
 GLAPI void GLAPIENTRY glFinish( void );
 
@@ -2204,13 +2213,9 @@ GLAPI void GLAPIENTRY glTracePointerRangeMESA( const GLvoid* first, const GLvoid
 
 typedef void (*GLprogramcallbackMESA)(GLenum target, GLvoid *data);
 
-extern void
-glProgramCallbackMESA(GLenum target, GLprogramcallbackMESA callback,
-                      GLvoid *data);
+GLAPI void GLAPIENTRY glProgramCallbackMESA(GLenum target, GLprogramcallbackMESA callback, GLvoid *data);
 
-extern void
-glGetProgramRegisterfvMESA(GLenum target, GLsizei len, const GLubyte *name,
-                           GLfloat *v);
+GLAPI void GLAPIENTRY glGetProgramRegisterfvMESA(GLenum target, GLsizei len, const GLubyte *name, GLfloat *v);
 
 #endif /* GL_MESA_program_debug */
 
@@ -2231,6 +2236,7 @@ typedef void (APIENTRYP PFNGLBLENDEQUATIONSEPARATEATIPROC) (GLenum modeRGB, GLen
  ** glext.h be sure to regenerate the gl_mangle.h file.  See comments
  ** in that file for details.
  **/
+
 
 
 /**********************************************************************

@@ -22,10 +22,14 @@ MAIN_SOURCES = \
 	main/enable.c \
 	main/enums.c \
 	main/eval.c \
+	main/execmem.c \
 	main/extensions.c \
+	main/fbobject.c \
 	main/feedback.c \
 	main/fog.c \
+	main/framebuffer.c \
 	main/get.c \
+	main/getstring.c \
 	main/hash.c \
 	main/hint.c \
 	main/histogram.c \
@@ -34,18 +38,22 @@ MAIN_SOURCES = \
 	main/light.c \
 	main/lines.c \
 	main/matrix.c \
+	main/mm.c \
 	main/occlude.c \
 	main/pixel.c \
 	main/points.c \
 	main/polygon.c \
 	main/rastpos.c \
+	main/renderbuffer.c \
 	main/state.c \
 	main/stencil.c \
 	main/texcompress.c \
 	main/texcompress_s3tc.c \
 	main/texcompress_fxt1.c \
+	main/texenvprogram.c \
 	main/texformat.c \
 	main/teximage.c \
+	main/texrender.c \
 	main/texobj.c \
 	main/texstate.c \
 	main/texstore.c \
@@ -76,8 +84,7 @@ SWRAST_SOURCES = \
 	swrast/s_aatriangle.c \
 	swrast/s_accum.c \
 	swrast/s_alpha.c \
-	swrast/s_alphabuf.c \
-	swrast/s_auxbuffer.c \
+	swrast/s_atifragshader.c \
 	swrast/s_bitmap.c \
 	swrast/s_blend.c \
 	swrast/s_buffers.c \
@@ -115,42 +122,94 @@ TNL_SOURCES = \
 	tnl/t_save_api.c \
 	tnl/t_save_loopback.c \
 	tnl/t_save_playback.c \
-	tnl/t_vb_fog.c \
-	tnl/t_vb_light.c \
-	tnl/t_vb_normals.c \
-	tnl/t_vb_points.c \
+	tnl/t_vb_arbprogram.c \
+	tnl/t_vb_arbprogram_sse.c \
 	tnl/t_vb_program.c \
 	tnl/t_vb_render.c \
 	tnl/t_vb_texgen.c \
 	tnl/t_vb_texmat.c \
 	tnl/t_vb_vertex.c \
+	tnl/t_vb_cull.c \
+	tnl/t_vb_fog.c \
+	tnl/t_vb_light.c \
+	tnl/t_vb_normals.c \
+	tnl/t_vb_points.c \
+	tnl/t_vp_build.c \
 	tnl/t_vertex.c \
-	tnl/t_vertex_c.c \
-	tnl/t_vertex_codegen.c \
+	tnl/t_vertex_sse.c \
+	tnl/t_vertex_generic.c \
 	tnl/t_vtx_api.c \
 	tnl/t_vtx_generic.c \
 	tnl/t_vtx_x86.c \
 	tnl/t_vtx_eval.c \
 	tnl/t_vtx_exec.c 
 
+
+
 SHADER_SOURCES = \
 	shader/arbfragparse.c \
 	shader/arbprogparse.c \
 	shader/arbprogram.c \
 	shader/arbvertparse.c \
-	shader/grammar_mesa.c \
+	shader/atifragshader.c \
+	shader/grammar/grammar_mesa.c \
 	shader/nvfragparse.c \
 	shader/nvprogram.c \
 	shader/nvvertexec.c \
 	shader/nvvertparse.c \
-	shader/program.c
+	shader/program.c \
+	shader/shaderobjects.c \
+	shader/shaderobjects_3dlabs.c
+
+SLANG_C_SOURCES = \
+	shader/slang/MachineIndependent/preprocessor/atom.c \
+	shader/slang/MachineIndependent/preprocessor/cpp.c \
+	shader/slang/MachineIndependent/preprocessor/cppstruct.c \
+	shader/slang/MachineIndependent/preprocessor/memory.c \
+	shader/slang/MachineIndependent/preprocessor/scanner.c \
+	shader/slang/MachineIndependent/preprocessor/symbols.c \
+	shader/slang/MachineIndependent/preprocessor/tokens.c
+
+SLANG_CPP_SOURCES = \
+	shader/slang/slang_mesa.cpp	\
+	shader/slang/MachineIndependent/Gen_glslang.cpp	\
+	shader/slang/MachineIndependent/Gen_glslang_tab.cpp	\
+	shader/slang/MachineIndependent/InfoSink.cpp	\
+	shader/slang/MachineIndependent/Initialize.cpp	\
+	shader/slang/MachineIndependent/Intermediate.cpp	\
+	shader/slang/MachineIndependent/intermOut.cpp	\
+	shader/slang/MachineIndependent/IntermTraverse.cpp	\
+	shader/slang/MachineIndependent/parseConst.cpp	\
+	shader/slang/MachineIndependent/ParseHelper.cpp	\
+	shader/slang/MachineIndependent/PoolAlloc.cpp	\
+	shader/slang/MachineIndependent/QualifierAlive.cpp	\
+	shader/slang/MachineIndependent/RemoveTree.cpp	\
+	shader/slang/MachineIndependent/ShaderLang.cpp	\
+	shader/slang/MachineIndependent/SymbolTable.cpp	\
+	shader/slang/OGLCompilersDLL/Initialisation.cpp	\
+	shader/slang/OSDependent/Linux/ossource.cpp
+	
+SLANG_SOURCES =	\
+	shader/slang/slang_assemble.c	\
+	shader/slang/slang_assemble_assignment.c	\
+	shader/slang/slang_assemble_conditional.c	\
+	shader/slang/slang_assemble_constructor.c	\
+	shader/slang/slang_assemble_typeinfo.c	\
+	shader/slang/slang_compile.c	\
+	shader/slang/slang_execute.c	\
+	shader/slang/slang_preprocess.c	\
+	shader/slang/slang_storage.c	\
+	shader/slang/slang_utility.c
 
 ASM_C_SOURCES =	\
 	x86/common_x86.c \
 	x86/x86.c \
 	x86/3dnow.c \
 	x86/sse.c \
-	sparc/sparc.c
+	x86/rtasm/x86sse.c \
+	sparc/sparc.c \
+	ppc/common_ppc.c \
+	x86-64/x86-64.c
 
 X86_SOURCES =			\
 	x86/common_x86_asm.S	\
@@ -168,11 +227,18 @@ X86_SOURCES =			\
 	x86/sse_xform2.S	\
 	x86/sse_xform3.S	\
 	x86/sse_xform4.S	\
-	x86/sse_normal.S \
+	x86/sse_normal.S	\
+	x86/read_rgba_span_x86.S \
 	tnl/t_vtx_x86_gcc.S
 
 X86_API =			\
 	x86/glapi_x86.S
+
+X86-64_SOURCES =		\
+	x86-64/xform4.S
+
+X86-64_API =			\
+	x86-64/glapi_x86-64.S
 
 SPARC_SOURCES =			\
 	sparc/clip.S		\
@@ -182,7 +248,7 @@ SPARC_SOURCES =			\
 SPARC_API =			\
 	sparc/glapi_sparc.S
 
-COMMON_DRIVER_SOURCES =		\
+COMMON_DRIVER_SOURCES =			\
 	drivers/common/driverfuncs.c
 
 X11_DRIVER_SOURCES =		\
@@ -190,6 +256,7 @@ X11_DRIVER_SOURCES =		\
 	drivers/x11/fakeglx.c	\
 	drivers/x11/xfonts.c	\
 	drivers/x11/xm_api.c	\
+	drivers/x11/xm_buffer.c	\
 	drivers/x11/xm_dd.c	\
 	drivers/x11/xm_line.c	\
 	drivers/x11/xm_span.c	\
@@ -233,12 +300,15 @@ CORE_SOURCES = \
 	$(SHADER_SOURCES)	\
 	$(SWRAST_SOURCES)	\
 	$(SWRAST_SETUP_SOURCES)	\
-	$(ASM_C_SOURCES)
+	$(ASM_C_SOURCES)	\
+	$(SLANG_SOURCES)
 
+#	$(SLANG_C_SOURCES)
 
 
 ### Object files
 
+#CORE_OBJECTS = $(CORE_SOURCES:.c=.o) $(SLANG_CPP_SOURCES:.cpp=.o)
 CORE_OBJECTS = $(CORE_SOURCES:.c=.o)
 
 OSMESA_DRIVER_OBJECTS = $(OSMESA_DRIVER_SOURCES:.c=.o)
@@ -257,5 +327,9 @@ INCLUDE_DIRS = \
 	-I$(TOP)/src/mesa/math \
 	-I$(TOP)/src/mesa/tnl \
 	-I$(TOP)/src/mesa/shader \
+	-I$(TOP)/src/mesa/shader/grammar \
+	-I$(TOP)/src/mesa/shader/slang \
+	-I$(TOP)/src/mesa/shader/slang/OSDependent/Linux \
+	-I$(TOP)/src/mesa/shader/slang/OGLCompilersDLL \
 	-I$(TOP)/src/mesa/swrast \
 	-I$(TOP)/src/mesa/swrast_setup

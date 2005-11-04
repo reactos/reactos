@@ -52,23 +52,7 @@ struct texmat_stage_data {
 
 #define TEXMAT_STAGE_DATA(stage) ((struct texmat_stage_data *)stage->privatePtr)
 
-static void check_texmat( GLcontext *ctx, struct tnl_pipeline_stage *stage )
-{
-   GLuint i;
-   stage->active = 0;
 
-   if (ctx->Texture._TexMatEnabled && !ctx->VertexProgram._Enabled) {
-      GLuint flags = 0;
-
-      for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-	 if (ctx->Texture._TexMatEnabled & ENABLE_TEXMAT(i))
-	    flags |= _TNL_BIT_TEX(i);
-
-      stage->active = 1;
-      stage->inputs = flags;
-      stage->outputs = flags;
-   }
-}
 
 static GLboolean run_texmat_stage( GLcontext *ctx,
 				   struct tnl_pipeline_stage *stage )
@@ -77,19 +61,23 @@ static GLboolean run_texmat_stage( GLcontext *ctx,
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
    GLuint i;
 
+   if (!ctx->Texture._TexMatEnabled || ctx->VertexProgram._Enabled) 
+      return GL_TRUE;
+
    /* ENABLE_TEXMAT implies that the texture matrix is not the
     * identity, so we don't have to check that here.
     */
-   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
+   for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
       if (ctx->Texture._TexMatEnabled & ENABLE_TEXMAT(i)) {
-	 if (stage->changed_inputs & _TNL_BIT_TEX(i))
-	    (void) TransformRaw( &store->texcoord[i],
-                                 ctx->TextureMatrixStack[i].Top,
-				 VB->TexCoordPtr[i]);
+	 (void) TransformRaw( &store->texcoord[i],
+			      ctx->TextureMatrixStack[i].Top,
+			      VB->TexCoordPtr[i]);
 
 	 VB->AttribPtr[VERT_ATTRIB_TEX0+i] = 
 	    VB->TexCoordPtr[i] = &store->texcoord[i];
       }
+   }
+
    return GL_TRUE;
 }
 
@@ -111,10 +99,7 @@ static GLboolean alloc_texmat_data( GLcontext *ctx,
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
       _mesa_vector4f_alloc( &store->texcoord[i], 0, VB->Size, 32 );
 
-   /* Now run the stage.
-    */
-   stage->run = run_texmat_stage;
-   return stage->run( ctx, stage );
+   return GL_TRUE;
 }
 
 
@@ -128,7 +113,7 @@ static void free_texmat_data( struct tnl_pipeline_stage *stage )
 	 if (store->texcoord[i].data)
 	    _mesa_vector4f_free( &store->texcoord[i] );
       FREE( store );
-      stage->privatePtr = 0;
+      stage->privatePtr = NULL;
    }
 }
 
@@ -137,14 +122,9 @@ static void free_texmat_data( struct tnl_pipeline_stage *stage )
 const struct tnl_pipeline_stage _tnl_texture_transform_stage =
 {
    "texture transform",			/* name */
-   _NEW_TEXTURE|_NEW_TEXTURE_MATRIX|_NEW_PROGRAM,	/* check_state */
-   _NEW_TEXTURE|_NEW_TEXTURE_MATRIX,	/* run_state */
-   GL_FALSE,				/* active? */
-   0,					/* inputs */
-   0,					/* outputs */
-   0,					/* changed_inputs */
    NULL,				/* private data */
+   alloc_texmat_data,
    free_texmat_data,			/* destructor */
-   check_texmat,			/* check */
-   alloc_texmat_data,			/* run -- initially set to init */
+   NULL,
+   run_texmat_stage,
 };

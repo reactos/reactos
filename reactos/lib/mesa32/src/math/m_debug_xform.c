@@ -166,7 +166,7 @@ ALIGN16(static GLfloat, d[TEST_COUNT][4]);
 ALIGN16(static GLfloat, r[TEST_COUNT][4]);
 
 static int test_transform_function( transform_func func, int psize,
-				    int mtype, long *cycles )
+				    int mtype, unsigned long *cycles )
 {
    GLvector4f source[1], dest[1], ref[1];
    GLmatrix mat[1];
@@ -187,7 +187,7 @@ static int test_transform_function( transform_func func, int psize,
    mat->type = mtypes[mtype];
 
    m = mat->m;
-   ASSERT( ((GLuint)m & 15) == 0 );
+   ASSERT( ((long)m & 15) == 0 );
 
    init_matrix( m );
 
@@ -279,7 +279,7 @@ static int test_transform_function( transform_func func, int psize,
 void _math_test_all_transform_functions( char *description )
 {
    int psize, mtype;
-   long benchmark_tab[4][7];
+   unsigned long benchmark_tab[4][7];
    static int first_time = 1;
 
    if ( first_time ) {
@@ -291,7 +291,7 @@ void _math_test_all_transform_functions( char *description )
    if ( mesa_profile ) {
       if ( !counter_overhead ) {
 	 INIT_COUNTER();
-	 _mesa_printf("counter overhead: %ld cycles\n\n", counter_overhead );
+	 _mesa_printf("counter overhead: %lu cycles\n\n", counter_overhead );
       }
       _mesa_printf("transform results after hooking in %s functions:\n", description );
    }
@@ -310,7 +310,7 @@ void _math_test_all_transform_functions( char *description )
    for ( mtype = 0 ; mtype < 7 ; mtype++ ) {
       for ( psize = 1 ; psize <= 4 ; psize++ ) {
 	 transform_func func = _mesa_transform_tab[psize][mtypes[mtype]];
-	 long *cycles = &(benchmark_tab[psize-1][mtype]);
+	 unsigned long *cycles = &(benchmark_tab[psize-1][mtype]);
 
 	 if ( test_transform_function( func, psize, mtype, cycles ) == 0 ) {
 	    char buf[100];

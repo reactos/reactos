@@ -976,9 +976,13 @@ EXPORTS
 	_ac_InvalidateState
 	_glapi_get_context
 	_glapi_get_proc_address
+	_mesa_add_soft_renderbuffers
+	_mesa_add_renderbuffer
 	_mesa_buffer_data
+	_mesa_buffer_get_subdata
 	_mesa_buffer_map
 	_mesa_buffer_subdata
+	_mesa_buffer_unmap
 	_mesa_bzero
 	_mesa_calloc
 	_mesa_choose_tex_format
@@ -986,6 +990,7 @@ EXPORTS
 	_mesa_create_framebuffer
 	_mesa_create_visual
 	_mesa_delete_buffer_object
+	_mesa_delete_program
 	_mesa_delete_texture_object
 	_mesa_destroy_framebuffer
 	_mesa_destroy_visual
@@ -994,19 +999,31 @@ EXPORTS
 	_mesa_enable_1_5_extensions
 	_mesa_enable_sw_extensions
 	_mesa_error
+	_mesa_framebuffer_renderbuffer
 	_mesa_free
 	_mesa_free_context_data
+	_mesa_free_texture_image_data
+	_mesa_get_compressed_teximage
 	_mesa_get_current_context
+	_mesa_get_teximage
 	_mesa_init_default_imports
 	_mesa_init_driver_functions
+	_mesa_init_renderbuffer
 	_mesa_initialize_context
 	_mesa_make_current
 	_mesa_memcpy
 	_mesa_memset
 	_mesa_new_buffer_object
+	_mesa_new_framebuffer
+	_mesa_new_program
+	_mesa_new_soft_renderbuffer
+	_mesa_new_texture_image
 	_mesa_new_texture_object
 	_mesa_problem
+	_mesa_renderbuffer_texture
 	_mesa_ResizeBuffersMESA
+	_mesa_resize_framebuffer
+;	_mesa_resize_renderbuffer
 	_mesa_store_compressed_teximage1d
 	_mesa_store_compressed_teximage2d
 	_mesa_store_compressed_teximage3d
@@ -1023,7 +1040,7 @@ EXPORTS
 	_mesa_test_proxy_teximage
 	_mesa_Viewport
 	_swrast_Accum
-	_swrast_alloc_buffers
+;	_swrast_alloc_buffers
 	_swrast_Bitmap
 	_swrast_CopyPixels
 	_swrast_DrawBuffer
@@ -1045,7 +1062,7 @@ EXPORTS
 	_swrast_DestroyContext
 	_swrast_InvalidateState
 	_swrast_ReadPixels
-	_swrast_zbuffer_address
+;	_swrast_zbuffer_address
 	_swsetup_Wakeup
 	_swsetup_CreateContext
 	_swsetup_DestroyContext

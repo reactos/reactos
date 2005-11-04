@@ -1,18 +1,8 @@
-/**
- * \file matrix.c
- * Matrix operations.
- *
- * \note
- * -# 4x4 transformation matrices are stored in memory in column major order.
- * -# Points/vertices are to be thought of as column vectors.
- * -# Transformation of a point p by a matrix M is: p' = M * p
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,9 +23,19 @@
  */
 
 
+/**
+ * \file matrix.c
+ * Matrix operations.
+ *
+ * \note
+ * -# 4x4 transformation matrices are stored in memory in column major order.
+ * -# Points/vertices are to be thought of as column vectors.
+ * -# Transformation of a point p by a matrix M is: p' = M * p
+ */
+
+
 #include "glheader.h"
 #include "imports.h"
-#include "buffers.h"
 #include "context.h"
 #include "enums.h"
 #include "macros.h"
@@ -556,11 +556,6 @@ _mesa_Viewport( GLint x, GLint y, GLsizei width, GLsizei height )
  * Set new viewport parameters and update derived state (the _WindowMap
  * matrix).  Usually called from _mesa_Viewport().
  * 
- * \note  We also call _mesa_ResizeBuffersMESA() because this is a good
- * time to check if the window has been resized.  Many device drivers
- * can't get direct notification from the window system of size changes
- * so this is an ad-hoc solution to that problem.
- * 
  * \param ctx GL context.
  * \param x, y coordinates of the lower left corner of the viewport rectangle.
  * \param width width of the viewport rectangle.
@@ -575,8 +570,11 @@ void
 _mesa_set_viewport( GLcontext *ctx, GLint x, GLint y,
                     GLsizei width, GLsizei height )
 {
+   const GLfloat depthMax = ctx->DrawBuffer->_DepthMaxF;
    const GLfloat n = ctx->Viewport.Near;
    const GLfloat f = ctx->Viewport.Far;
+
+   ASSERT(depthMax > 0);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glViewport %d %d %d %d\n", x, y, width, height);
@@ -588,8 +586,8 @@ _mesa_set_viewport( GLcontext *ctx, GLint x, GLint y,
    }
 
    /* clamp width, and height to implementation dependent range */
-   width  = CLAMP( width,  1, MAX_WIDTH );
-   height = CLAMP( height, 1, MAX_HEIGHT );
+   width  = CLAMP( width,  1, ctx->Const.MaxViewportWidth );
+   height = CLAMP( height, 1, ctx->Const.MaxViewportHeight );
 
    /* Save viewport */
    ctx->Viewport.X = x;
@@ -604,29 +602,19 @@ _mesa_set_viewport( GLcontext *ctx, GLint x, GLint y,
       tmps = width; width = height; height = tmps;
    }
 
-   /* compute scale and bias values :: This is really driver-specific
-    * and should be maintained elsewhere if at all.  NOTE: RasterPos
-    * uses this.
+   /* Compute scale and bias values. This is really driver-specific
+    * and should be maintained elsewhere if at all.
+    * NOTE: RasterPos uses this.
     */
-   ctx->Viewport._WindowMap.m[MAT_SX] = (GLfloat) width / 2.0F;
-   ctx->Viewport._WindowMap.m[MAT_TX] = ctx->Viewport._WindowMap.m[MAT_SX] + x;
-   ctx->Viewport._WindowMap.m[MAT_SY] = (GLfloat) height / 2.0F;
-   ctx->Viewport._WindowMap.m[MAT_TY] = ctx->Viewport._WindowMap.m[MAT_SY] + y;
-   ctx->Viewport._WindowMap.m[MAT_SZ] = ctx->DepthMaxF * ((f - n) / 2.0F);
-   ctx->Viewport._WindowMap.m[MAT_TZ] = ctx->DepthMaxF * ((f - n) / 2.0F + n);
-   ctx->Viewport._WindowMap.flags = MAT_FLAG_GENERAL_SCALE|MAT_FLAG_TRANSLATION;
-   ctx->Viewport._WindowMap.type = MATRIX_3D_NO_ROT;
+   _math_matrix_viewport(&ctx->Viewport._WindowMap, x, y, width, height,
+                         n, f, depthMax);
+
    ctx->NewState |= _NEW_VIEWPORT;
 
-   /* Check if window/buffer has been resized and if so, reallocate the
-    * ancillary buffers.  This is an ad-hoc solution to detecting window
-    * size changes.  99% of all GL apps call glViewport when a window is
-    * resized so this is a good time to check for new window dims and
-    * reallocate color buffers and ancilliary buffers.
-    */
-   _mesa_ResizeBuffersMESA();
-
    if (ctx->Driver.Viewport) {
+      /* Many drivers will use this call to check for window size changes
+       * and reallocate the z/stencil/accum/etc buffers if needed.
+       */
       (*ctx->Driver.Viewport)( ctx, x, y, width, height );
    }
 }
@@ -647,9 +635,12 @@ _mesa_DepthRange( GLclampd nearval, GLclampd farval )
     * specifies a linear mapping of the normalized z coords in
     * this range to window z coords.
     */
+   GLfloat depthMax;
    GLfloat n, f;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
+
+   depthMax = ctx->DrawBuffer->_DepthMaxF;
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glDepthRange %f %f\n", nearval, farval);
@@ -659,8 +650,8 @@ _mesa_DepthRange( GLclampd nearval, GLclampd farval )
 
    ctx->Viewport.Near = n;
    ctx->Viewport.Far = f;
-   ctx->Viewport._WindowMap.m[MAT_SZ] = ctx->DepthMaxF * ((f - n) / 2.0F);
-   ctx->Viewport._WindowMap.m[MAT_TZ] = ctx->DepthMaxF * ((f - n) / 2.0F + n);
+   ctx->Viewport._WindowMap.m[MAT_SZ] = depthMax * ((f - n) / 2.0F);
+   ctx->Viewport._WindowMap.m[MAT_TZ] = depthMax * ((f - n) / 2.0F + n);
    ctx->NewState |= _NEW_VIEWPORT;
 
    if (ctx->Driver.DepthRange) {
@@ -921,6 +912,8 @@ void _mesa_init_transform( GLcontext *ctx )
  */
 void _mesa_init_viewport( GLcontext *ctx )
 {
+   GLfloat depthMax = 65535.0F; /* sorf of arbitrary */
+
    /* Viewport group */
    ctx->Viewport.X = 0;
    ctx->Viewport.Y = 0;
@@ -930,15 +923,8 @@ void _mesa_init_viewport( GLcontext *ctx )
    ctx->Viewport.Far = 1.0;
    _math_matrix_ctr(&ctx->Viewport._WindowMap);
 
-#define Sz 10
-#define Tz 14
-   ctx->Viewport._WindowMap.m[Sz] = 0.5F * ctx->DepthMaxF;
-   ctx->Viewport._WindowMap.m[Tz] = 0.5F * ctx->DepthMaxF;
-#undef Sz
-#undef Tz
-
-   ctx->Viewport._WindowMap.flags = MAT_FLAG_GENERAL_SCALE|MAT_FLAG_TRANSLATION;
-   ctx->Viewport._WindowMap.type = MATRIX_3D_NO_ROT;
+   _math_matrix_viewport(&ctx->Viewport._WindowMap, 0, 0, 0, 0,
+                         0.0F, 1.0F, depthMax);
 }
 
 

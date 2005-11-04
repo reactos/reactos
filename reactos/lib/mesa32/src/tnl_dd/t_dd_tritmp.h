@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.3
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -41,6 +40,7 @@
  * DO_FLAT:      For hardware without native flatshading, copy provoking colors
  *               into the other vertices.  Restore after rendering.
  * DO_UNFILLED:  Decompose triangles to lines and points where appropriate.
+ * DO_TWOSTENCIL:Gross hack for two-sided stencil.
  *
  * HAVE_RGBA: Vertices have rgba values (otherwise index values).
  * HAVE_SPEC: Vertices have secondary rgba values.
@@ -48,7 +48,8 @@
  * VERT_X(v): Alias for vertex x value.
  * VERT_Y(v): Alias for vertex y value.
  * VERT_Z(v): Alias for vertex z value.
- * DEPTH_SCALE: Scale for offset.
+ * DEPTH_SCALE: Scale for constant offset.
+ * REVERSE_DEPTH: Viewport depth range reversed.
  *
  * VERTEX: Hardware vertex type.
  * GET_VERTEX(n): Retreive vertex with index n.
@@ -107,15 +108,33 @@
 #define VERT_Z_ADD(v,val) VERT_Z(v) += val
 #endif
 
+#ifndef REVERSE_DEPTH
+#define REVERSE_DEPTH 0
+#endif
+
+/* disable twostencil for un-aware drivers */
+#ifndef HAVE_STENCIL_TWOSIDE
+#define HAVE_STENCIL_TWOSIDE 0
+#endif
+#ifndef DO_TWOSTENCIL
+#define DO_TWOSTENCIL 0
+#endif
+#ifndef SETUP_STENCIL
+#define SETUP_STENCIL(f)
+#endif
+#ifndef UNSET_STENCIL
+#define UNSET_STENCIL(f)
+#endif
+
 #if DO_TRI
 static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 {
    struct vertex_buffer *VB = &TNL_CONTEXT( ctx )->vb;
    VERTEX *v[3];
-   GLfloat offset;
+   GLfloat offset = 0;
    GLfloat z[3];
    GLenum mode = GL_FILL;
-   GLuint facing;
+   GLuint facing = 0;
    LOCAL_VARS(3);
 
 /*     fprintf(stderr, "%s\n", __FUNCTION__); */
@@ -124,7 +143,7 @@ static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
    v[1] = (VERTEX *)GET_VERTEX(e1);
    v[2] = (VERTEX *)GET_VERTEX(e2);
 
-   if (DO_TWOSIDE || DO_OFFSET || DO_UNFILLED)
+   if (DO_TWOSIDE || DO_OFFSET || DO_UNFILLED || DO_TWOSTENCIL)
    {
       GLfloat ex = VERT_X(v[0]) - VERT_X(v[2]);
       GLfloat ey = VERT_Y(v[0]) - VERT_Y(v[2]);
@@ -132,9 +151,13 @@ static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
       GLfloat fy = VERT_Y(v[1]) - VERT_Y(v[2]);
       GLfloat cc = ex*fy - ey*fx;
 
-      if (DO_TWOSIDE || DO_UNFILLED)
+      if (DO_TWOSIDE || DO_UNFILLED || DO_TWOSTENCIL)
       {
 	 facing = AREA_IS_CCW( cc ) ^ ctx->Polygon._FrontBit;
+
+         if (DO_TWOSTENCIL && ctx->Stencil.TestTwoSide) {
+            ctx->_Facing = facing; /* mixed mode rendering: for 2-sided stencil test */
+         }
 
 	 if (DO_UNFILLED) {
 	    if (facing) {
@@ -177,20 +200,34 @@ static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 	       }
 	       else {
 		  GLfloat (*vbcolor)[4] = VB->ColorPtr[1]->data;
-		  ASSERT(VB->ColorPtr[1]->stride == 4*sizeof(GLfloat));
 		  (void) vbcolor;
 
 		  if (!DO_FLAT) {
 		     VERT_SAVE_RGBA( 0 );
 		     VERT_SAVE_RGBA( 1 );
-		     VERT_SET_RGBA( v[0], vbcolor[e0] );
-		     VERT_SET_RGBA( v[1], vbcolor[e1] );
 		  }
 		  VERT_SAVE_RGBA( 2 );
-		  VERT_SET_RGBA( v[2], vbcolor[e2] );
+
+		  if (VB->ColorPtr[1]->stride) {
+		     ASSERT(VB->ColorPtr[1]->stride == 4*sizeof(GLfloat));
+
+		     if (!DO_FLAT) {		  
+			VERT_SET_RGBA( v[0], vbcolor[e0] );
+			VERT_SET_RGBA( v[1], vbcolor[e1] );
+		     }
+		     VERT_SET_RGBA( v[2], vbcolor[e2] );
+		  }
+		  else {
+		     if (!DO_FLAT) {		  
+			VERT_SET_RGBA( v[0], vbcolor[0] );
+			VERT_SET_RGBA( v[1], vbcolor[0] );
+		     }
+		     VERT_SET_RGBA( v[2], vbcolor[0] );
+		  }
 
 		  if (HAVE_SPEC && VB->SecondaryColorPtr[1]) {
 		     GLfloat (*vbspec)[4] = VB->SecondaryColorPtr[1]->data;
+		     ASSERT(VB->SecondaryColorPtr[1]->stride == 4*sizeof(GLfloat));
 
 		     if (!DO_FLAT) {
 			VERT_SAVE_SPEC( 0 );
@@ -236,7 +273,7 @@ static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 	    if ( bc < 0.0f ) bc = -bc;
 	    offset += MAX2( ac, bc ) * ctx->Polygon.OffsetFactor;
 	 }
-	 offset *= ctx->MRD;
+	 offset *= ctx->DrawBuffer->_MRD * (REVERSE_DEPTH ? -1.0 : 1.0);
       }
    }
 
@@ -267,14 +304,26 @@ static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 	 VERT_Z_ADD(v[1], offset);
 	 VERT_Z_ADD(v[2], offset);
       }
-      UNFILLED_TRI( ctx, GL_POINT, e0, e1, e2 );
+      if (DO_TWOSTENCIL && !HAVE_STENCIL_TWOSIDE && ctx->Stencil.TestTwoSide) {
+         SETUP_STENCIL(facing);
+         UNFILLED_TRI( ctx, GL_POINT, e0, e1, e2 );
+         UNSET_STENCIL(facing);
+      } else {
+         UNFILLED_TRI( ctx, GL_POINT, e0, e1, e2 );
+      }
    } else if (mode == GL_LINE) {
       if (DO_OFFSET && ctx->Polygon.OffsetLine) {
 	 VERT_Z_ADD(v[0], offset);
 	 VERT_Z_ADD(v[1], offset);
 	 VERT_Z_ADD(v[2], offset);
       }
-      UNFILLED_TRI( ctx, GL_LINE, e0, e1, e2 );
+      if (DO_TWOSTENCIL && !HAVE_STENCIL_TWOSIDE && ctx->Stencil.TestTwoSide) {
+         SETUP_STENCIL(facing);
+         UNFILLED_TRI( ctx, GL_LINE, e0, e1, e2 );
+         UNSET_STENCIL(facing);
+      } else {
+         UNFILLED_TRI( ctx, GL_LINE, e0, e1, e2 );
+      }
    } else {
       if (DO_OFFSET && ctx->Polygon.OffsetFill) {
 	 VERT_Z_ADD(v[0], offset);
@@ -283,7 +332,13 @@ static void TAG(triangle)( GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
       }
       if (DO_UNFILLED)
 	 RASTERIZE( GL_TRIANGLES );
-      TRI( v[0], v[1], v[2] );
+      if (DO_TWOSTENCIL && !HAVE_STENCIL_TWOSIDE && ctx->Stencil.TestTwoSide) {
+         SETUP_STENCIL(facing);
+         TRI( v[0], v[1], v[2] );
+         UNSET_STENCIL(facing);
+      } else {
+         TRI( v[0], v[1], v[2] );
+      }
    }
 
    if (DO_OFFSET)
@@ -343,10 +398,10 @@ static void TAG(quad)( GLcontext *ctx,
 {
    struct vertex_buffer *VB = &TNL_CONTEXT( ctx )->vb;
    VERTEX *v[4];
-   GLfloat offset;
+   GLfloat offset = 0;
    GLfloat z[4];
    GLenum mode = GL_FILL;
-   GLuint facing;
+   GLuint facing = 0;
    LOCAL_VARS(4);
 
    v[0] = (VERTEX *)GET_VERTEX(e0);
@@ -354,7 +409,7 @@ static void TAG(quad)( GLcontext *ctx,
    v[2] = (VERTEX *)GET_VERTEX(e2);
    v[3] = (VERTEX *)GET_VERTEX(e3);
 
-   if (DO_TWOSIDE || DO_OFFSET || DO_UNFILLED)
+   if (DO_TWOSIDE || DO_OFFSET || DO_UNFILLED || DO_TWOSTENCIL)
    {
       GLfloat ex = VERT_X(v[2]) - VERT_X(v[0]);
       GLfloat ey = VERT_Y(v[2]) - VERT_Y(v[0]);
@@ -362,9 +417,13 @@ static void TAG(quad)( GLcontext *ctx,
       GLfloat fy = VERT_Y(v[3]) - VERT_Y(v[1]);
       GLfloat cc = ex*fy - ey*fx;
 
-      if (DO_TWOSIDE || DO_UNFILLED)
+      if (DO_TWOSIDE || DO_UNFILLED || DO_TWOSTENCIL)
       {
 	 facing = AREA_IS_CCW( cc ) ^ ctx->Polygon._FrontBit;
+
+         if (DO_TWOSTENCIL && ctx->Stencil.TestTwoSide) {
+            ctx->_Facing = facing; /* mixed mode rendering: for 2-sided stencil test */
+         }
 
 	 if (DO_UNFILLED) {
 	    if (facing) {
@@ -417,12 +476,25 @@ static void TAG(quad)( GLcontext *ctx,
 		     VERT_SAVE_RGBA( 0 );
 		     VERT_SAVE_RGBA( 1 );
 		     VERT_SAVE_RGBA( 2 );
-		     VERT_SET_RGBA( v[0], vbcolor[e0] );
-		     VERT_SET_RGBA( v[1], vbcolor[e1] );
-		     VERT_SET_RGBA( v[2], vbcolor[e2] );
-	          }
+		  }
 	          VERT_SAVE_RGBA( 3 );
-	          VERT_SET_RGBA( v[3], vbcolor[e3] );
+
+		  if (VB->ColorPtr[1]->stride) {
+		     if (!DO_FLAT) {
+			VERT_SET_RGBA( v[0], vbcolor[e0] );
+			VERT_SET_RGBA( v[1], vbcolor[e1] );
+			VERT_SET_RGBA( v[2], vbcolor[e2] );
+		     }
+		     VERT_SET_RGBA( v[3], vbcolor[e3] );
+		  }
+		  else {
+		     if (!DO_FLAT) {
+			VERT_SET_RGBA( v[0], vbcolor[0] );
+			VERT_SET_RGBA( v[1], vbcolor[0] );
+			VERT_SET_RGBA( v[2], vbcolor[0] );
+		     }
+		     VERT_SET_RGBA( v[3], vbcolor[0] );
+		  }
 
 	          if (HAVE_SPEC && VB->SecondaryColorPtr[1]) {
 		     GLfloat (*vbspec)[4] = VB->SecondaryColorPtr[1]->data;
@@ -477,7 +549,7 @@ static void TAG(quad)( GLcontext *ctx,
 	    if ( bc < 0.0f ) bc = -bc;
 	    offset += MAX2( ac, bc ) * ctx->Polygon.OffsetFactor;
 	 }
-	 offset *= ctx->MRD;
+	 offset *= ctx->DrawBuffer->_MRD * (REVERSE_DEPTH ? -1.0 : 1.0);
       }
    }
 
@@ -515,7 +587,13 @@ static void TAG(quad)( GLcontext *ctx,
 	 VERT_Z_ADD(v[2], offset);
 	 VERT_Z_ADD(v[3], offset);
       }
-      UNFILLED_QUAD( ctx, GL_POINT, e0, e1, e2, e3 );
+      if (DO_TWOSTENCIL && !HAVE_STENCIL_TWOSIDE && ctx->Stencil.TestTwoSide) {
+         SETUP_STENCIL(facing);
+         UNFILLED_QUAD( ctx, GL_POINT, e0, e1, e2, e3 );
+         UNSET_STENCIL(facing);
+      } else {
+         UNFILLED_QUAD( ctx, GL_POINT, e0, e1, e2, e3 );
+      }
    } else if (mode == GL_LINE) {
       if (DO_OFFSET && ctx->Polygon.OffsetLine) {
 	 VERT_Z_ADD(v[0], offset);
@@ -523,7 +601,13 @@ static void TAG(quad)( GLcontext *ctx,
 	 VERT_Z_ADD(v[2], offset);
 	 VERT_Z_ADD(v[3], offset);
       }
-      UNFILLED_QUAD( ctx, GL_LINE, e0, e1, e2, e3 );
+      if (DO_TWOSTENCIL && !HAVE_STENCIL_TWOSIDE && ctx->Stencil.TestTwoSide) {
+         SETUP_STENCIL(facing);
+         UNFILLED_QUAD( ctx, GL_LINE, e0, e1, e2, e3 );
+         UNSET_STENCIL(facing);
+      } else {
+         UNFILLED_QUAD( ctx, GL_LINE, e0, e1, e2, e3 );
+      }
    } else {
       if (DO_OFFSET && ctx->Polygon.OffsetFill) {
 	 VERT_Z_ADD(v[0], offset);
@@ -531,8 +615,14 @@ static void TAG(quad)( GLcontext *ctx,
 	 VERT_Z_ADD(v[2], offset);
 	 VERT_Z_ADD(v[3], offset);
       }
-      RASTERIZE( GL_TRIANGLES );
-      QUAD( (v[0]), (v[1]), (v[2]), (v[3]) );
+      RASTERIZE( GL_QUADS );
+      if (DO_TWOSTENCIL && !HAVE_STENCIL_TWOSIDE && ctx->Stencil.TestTwoSide) {
+         SETUP_STENCIL(facing);
+         QUAD( (v[0]), (v[1]), (v[2]), (v[3]) );
+         UNSET_STENCIL(facing);
+      } else {
+         QUAD( (v[0]), (v[1]), (v[2]), (v[3]) );
+      }
    }
 
    if (DO_OFFSET)
@@ -658,7 +748,7 @@ static void TAG(line)( GLcontext *ctx, GLuint e0, GLuint e1 )
 static void TAG(points)( GLcontext *ctx, GLuint first, GLuint last )
 {
    struct vertex_buffer *VB = &TNL_CONTEXT( ctx )->vb;
-   int i;
+   GLuint i;
    LOCAL_VARS(1);
 
    if (VB->Elts == 0) {

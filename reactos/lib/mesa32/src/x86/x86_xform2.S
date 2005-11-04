@@ -1,4 +1,4 @@
-/* $Id: x86_xform2.S,v 1.2 2002/03/07 21:40:08 brianp Exp $ */
+/* $Id: x86_xform2.S,v 1.3 2005/01/04 14:33:47 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -66,6 +66,7 @@
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_x86_transform_points2_general )
+HIDDEN(_mesa_x86_transform_points2_general)
 GLNAME( _mesa_x86_transform_points2_general ):
 
 #define FRAME_OFFSET 8
@@ -156,6 +157,7 @@ LLBL(x86_p2_gr_done):
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_x86_transform_points2_perspective )
+HIDDEN(_mesa_x86_transform_points2_perspective)
 GLNAME( _mesa_x86_transform_points2_perspective ):
 
 #define FRAME_OFFSET 12
@@ -221,6 +223,7 @@ LLBL(x86_p2_pr_done):
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_x86_transform_points2_3d )
+HIDDEN(_mesa_x86_transform_points2_3d)
 GLNAME( _mesa_x86_transform_points2_3d ):
 
 #define FRAME_OFFSET 8
@@ -302,6 +305,7 @@ LLBL(x86_p2_3dr_done):
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_x86_transform_points2_3d_no_rot )
+HIDDEN(_mesa_x86_transform_points2_3d_no_rot)
 GLNAME( _mesa_x86_transform_points2_3d_no_rot ):
 
 #define FRAME_OFFSET 12
@@ -371,6 +375,7 @@ LLBL(x86_p2_3dnrr_done):
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_x86_transform_points2_2d )
+HIDDEN(_mesa_x86_transform_points2_2d)
 GLNAME( _mesa_x86_transform_points2_2d ):
 
 #define FRAME_OFFSET 8
@@ -443,6 +448,7 @@ LLBL(x86_p2_2dr_done):
 
 ALIGNTEXT4
 GLOBL GLNAME( _mesa_x86_transform_points2_2d_no_rot )
+HIDDEN(_mesa_x86_transform_points2_2d_no_rot)
 GLNAME( _mesa_x86_transform_points2_2d_no_rot ):
 
 #define FRAME_OFFSET 8
@@ -507,6 +513,7 @@ LLBL(x86_p2_2dnrr_done):
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_x86_transform_points2_identity )
+HIDDEN(_mesa_x86_transform_points2_identity)
 GLNAME( _mesa_x86_transform_points2_identity ):
 
 #define FRAME_OFFSET 12

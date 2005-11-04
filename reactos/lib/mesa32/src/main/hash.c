@@ -2,8 +2,8 @@
  * \file hash.c
  * Generic hash table. 
  *
- * Used for display lists and texture objects.  The hash functions are
- * thread-safe.
+ * Used for display lists, texture objects, vertex/fragment programs,
+ * buffer objects, etc.  The hash functions are thread-safe.
  * 
  * \note key=0 is illegal.
  *
@@ -12,9 +12,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.4
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -39,10 +39,12 @@
 #include "imports.h"
 #include "glthread.h"
 #include "hash.h"
-#include "context.h"
 
 
 #define TABLE_SIZE 1023  /**< Size of lookup table/array */
+
+#define HASH_FUNC(K)  ((K) % TABLE_SIZE)
+
 
 /**
  * An entry in the hash table.  
@@ -67,13 +69,13 @@ struct _mesa_HashTable {
 };
 
 
-
 /**
  * Create a new hash table.
  * 
  * \return pointer to a new, empty hash table.
  */
-struct _mesa_HashTable *_mesa_NewHashTable(void)
+struct _mesa_HashTable *
+_mesa_NewHashTable(void)
 {
    struct _mesa_HashTable *table = CALLOC_STRUCT(_mesa_HashTable);
    if (table) {
@@ -86,16 +88,18 @@ struct _mesa_HashTable *_mesa_NewHashTable(void)
 
 /**
  * Delete a hash table.
- * 
- * \param table the hash table to delete.
- *
  * Frees each entry on the hash table and then the hash table structure itself.
+ * Note that the caller should have already traversed the table and deleted
+ * the objects in the table (i.e. We don't free the entries' data pointer).
+ *
+ * \param table the hash table to delete.
  */
-void _mesa_DeleteHashTable(struct _mesa_HashTable *table)
+void
+_mesa_DeleteHashTable(struct _mesa_HashTable *table)
 {
    GLuint i;
    assert(table);
-   for (i=0;i<TABLE_SIZE;i++) {
+   for (i = 0; i < TABLE_SIZE; i++) {
       struct HashEntry *entry = table->Table[i];
       while (entry) {
 	 struct HashEntry *next = entry->Next;
@@ -116,10 +120,9 @@ void _mesa_DeleteHashTable(struct _mesa_HashTable *table)
  * \param key the key.
  * 
  * \return pointer to user's data or NULL if key not in table
- *
- * Walks through the hash entry until finding the matching key.
  */
-void *_mesa_HashLookup(const struct _mesa_HashTable *table, GLuint key)
+void *
+_mesa_HashLookup(const struct _mesa_HashTable *table, GLuint key)
 {
    GLuint pos;
    const struct HashEntry *entry;
@@ -127,7 +130,7 @@ void *_mesa_HashLookup(const struct _mesa_HashTable *table, GLuint key)
    assert(table);
    assert(key);
 
-   pos = key & (TABLE_SIZE-1);
+   pos = HASH_FUNC(key);
    entry = table->Table[pos];
    while (entry) {
       if (entry->Key == key) {
@@ -141,18 +144,15 @@ void *_mesa_HashLookup(const struct _mesa_HashTable *table, GLuint key)
 
 
 /**
- * Insert into the hash table.  
- *
+ * Insert a key/pointer pair into the hash table.  
  * If an entry with this key already exists we'll replace the existing entry.
  * 
  * \param table the hash table.
  * \param key the key (not zero).
  * \param data pointer to user data.
- *
- * While holding the hash table's lock, walk through the hash entry list replacing the data if a
- * matching key is found, or inserts a new table entry otherwise.
  */
-void _mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data)
+void
+_mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data)
 {
    /* search for existing entry with this key */
    GLuint pos;
@@ -166,7 +166,7 @@ void _mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data)
    if (key > table->MaxKey)
       table->MaxKey = key;
 
-   pos = key & (TABLE_SIZE-1);
+   pos = HASH_FUNC(key);
    entry = table->Table[pos];
    while (entry) {
       if (entry->Key == key) {
@@ -199,7 +199,8 @@ void _mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data)
  * While holding the hash table's lock, searches the entry with the matching
  * key and unlinks it.
  */
-void _mesa_HashRemove(struct _mesa_HashTable *table, GLuint key)
+void
+_mesa_HashRemove(struct _mesa_HashTable *table, GLuint key)
 {
    GLuint pos;
    struct HashEntry *entry, *prev;
@@ -209,7 +210,7 @@ void _mesa_HashRemove(struct _mesa_HashTable *table, GLuint key)
 
    _glthread_LOCK_MUTEX(table->Mutex);
 
-   pos = key & (TABLE_SIZE-1);
+   pos = HASH_FUNC(key);
    prev = NULL;
    entry = table->Table[pos];
    while (entry) {
@@ -247,7 +248,8 @@ void _mesa_HashRemove(struct _mesa_HashTable *table, GLuint key)
  * While holding the lock, walks through all table positions until finding
  * the first entry of the first non-empty one.
  */
-GLuint _mesa_HashFirstEntry(struct _mesa_HashTable *table)
+GLuint
+_mesa_HashFirstEntry(struct _mesa_HashTable *table)
 {
    GLuint pos;
    assert(table);
@@ -263,13 +265,61 @@ GLuint _mesa_HashFirstEntry(struct _mesa_HashTable *table)
 }
 
 
+/**
+ * Given a hash table key, return the next key.  This is used to walk
+ * over all entries in the table.  Note that the keys returned during
+ * walking won't be in any particular order.
+ * \return next hash key or 0 if end of table.
+ */
+GLuint
+_mesa_HashNextEntry(const struct _mesa_HashTable *table, GLuint key)
+{
+   const struct HashEntry *entry;
+   GLuint pos;
+
+   assert(table);
+   assert(key);
+
+   /* Find the entry with given key */
+   pos = HASH_FUNC(key);
+   entry = table->Table[pos];
+   while (entry) {
+      if (entry->Key == key) {
+         break;
+      }
+      entry = entry->Next;
+   }
+
+   if (!entry) {
+      /* the key was not found, we can't find next entry */
+      return 0;
+   }
+
+   if (entry->Next) {
+      /* return next in linked list */
+      return entry->Next->Key;
+   }
+   else {
+      /* look for next non-empty table slot */
+      pos++;
+      while (pos < TABLE_SIZE) {
+         if (table->Table[pos]) {
+            return table->Table[pos]->Key;
+         }
+         pos++;
+      }
+      return 0;
+   }
+}
+
 
 /**
  * Dump contents of hash table for debugging.
  * 
  * \param table the hash table.
  */
-void _mesa_HashPrint(const struct _mesa_HashTable *table)
+void
+_mesa_HashPrint(const struct _mesa_HashTable *table)
 {
    GLuint i;
    assert(table);
@@ -297,7 +347,8 @@ void _mesa_HashPrint(const struct _mesa_HashTable *table)
  * the adjacent key. Otherwise do a full search for a free key block in the
  * allowable key range.
  */
-GLuint _mesa_HashFindFreeKeyBlock(struct _mesa_HashTable *table, GLuint numKeys)
+GLuint
+_mesa_HashFindFreeKeyBlock(struct _mesa_HashTable *table, GLuint numKeys)
 {
    GLuint maxKey = ~((GLuint) 0);
    _glthread_LOCK_MUTEX(table->Mutex);
@@ -333,28 +384,68 @@ GLuint _mesa_HashFindFreeKeyBlock(struct _mesa_HashTable *table, GLuint numKeys)
 }
 
 
+#if 0 /* debug only */
 
-#ifdef HASH_TEST_HARNESS
-int main(int argc, char *argv[])
+/**
+ * Test walking over all the entries in a hash table.
+ */
+static void
+test_hash_walking(void)
+{
+   struct _mesa_HashTable *t = _mesa_NewHashTable();
+   const GLuint limit = 50000;
+   GLuint i;
+
+   /* create some entries */
+   for (i = 0; i < limit; i++) {
+      GLuint dummy;
+      GLuint k = (rand() % (limit * 10)) + 1;
+      while (_mesa_HashLookup(t, k)) {
+         /* id already in use, try another */
+         k = (rand() % (limit * 10)) + 1;
+      }
+      _mesa_HashInsert(t, k, &dummy);
+   }
+
+   /* walk over all entries */
+   {
+      GLuint k = _mesa_HashFirstEntry(t);
+      GLuint count = 0;
+      while (k) {
+         GLuint knext = _mesa_HashNextEntry(t, k);
+         assert(knext != k);
+         _mesa_HashRemove(t, k);
+         count++;
+         k = knext;
+      }
+      assert(count == limit);
+      k = _mesa_HashFirstEntry(t);
+      assert(k==0);
+   }
+
+   _mesa_DeleteHashTable(t);
+}
+
+
+void
+_mesa_test_hash_functions(void)
 {
    int a, b, c;
-   struct HashTable *t;
-
-   _mesa_printf("&a = %p\n", &a);
-   _mesa_printf("&b = %p\n", &b);
+   struct _mesa_HashTable *t;
 
    t = _mesa_NewHashTable();
    _mesa_HashInsert(t, 501, &a);
    _mesa_HashInsert(t, 10, &c);
    _mesa_HashInsert(t, 0xfffffff8, &b);
-   _mesa_HashPrint(t);
+   /*_mesa_HashPrint(t);*/
 
-   _mesa_printf("Find 501: %p\n", _mesa_HashLookup(t,501));
-   _mesa_printf("Find 1313: %p\n", _mesa_HashLookup(t,1313));
-   _mesa_printf("Find block of 100: %d\n", _mesa_HashFindFreeKeyBlock(t, 100));
+   assert(_mesa_HashLookup(t,501));
+   assert(!_mesa_HashLookup(t,1313));
+   assert(_mesa_HashFindFreeKeyBlock(t, 100));
 
    _mesa_DeleteHashTable(t);
 
-   return 0;
+   test_hash_walking();
 }
+
 #endif

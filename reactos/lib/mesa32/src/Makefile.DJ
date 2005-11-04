@@ -20,9 +20,9 @@
 # AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# DOS/DJGPP core makefile v1.6 for Mesa
+# DOS/DJGPP core makefile v1.7 for Mesa
 #
-#  Copyright (C) 2002 - Borca Daniel
+#  Copyright (C) 2002 - Daniel Borca
 #  Email : dborca@users.sourceforge.net
 #  Web   : http://www.geocities.com/dborca
 
@@ -64,6 +64,7 @@ export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH);$(LIBDIR);$(GLIDE)/lib
 
 CC = gcc
 CFLAGS += $(INCLUDE_DIRS)
+CFLAGS += -DUSE_EXTERNAL_DXTN_LIB=1
 ifeq ($(FX),1)
 CFLAGS += -D__DOS__
 CFLAGS += -I$(GLIDE)/include -DFX
@@ -73,7 +74,7 @@ LIBNAME = "Mesa DJGPP"
 endif
 
 AR = ar
-ARFLAGS = rus
+ARFLAGS = crus
 
 HAVEDXE3 = $(wildcard $(DJDIR)/bin/dxe3gen.exe)
 
@@ -157,6 +158,7 @@ clean:
 	-$(call UNLINK,math/*.o)
 	-$(call UNLINK,shader/*.o)
 	-$(call UNLINK,sparc/*.o)
+	-$(call UNLINK,ppc/*.o)
 	-$(call UNLINK,swrast/*.o)
 	-$(call UNLINK,swrast_setup/*.o)
 	-$(call UNLINK,tnl/*.o)

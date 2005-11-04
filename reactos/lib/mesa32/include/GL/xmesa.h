@@ -87,8 +87,8 @@ extern struct Library *XLibBase;
 #endif
 
 
-#define XMESA_MAJOR_VERSION 4
-#define XMESA_MINOR_VERSION 1
+#define XMESA_MAJOR_VERSION 6
+#define XMESA_MINOR_VERSION 3
 
 
 

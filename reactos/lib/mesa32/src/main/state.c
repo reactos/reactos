@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,9 @@
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
 #include "arbprogram.h"
 #endif
+#if FEATURE_ATI_fragment_shader
+#include "atifragshader.h"
+#endif
 #include "attrib.h"
 #include "blend.h"
 #if FEATURE_ARB_vertex_buffer_object
@@ -55,6 +58,10 @@
 #include "get.h"
 #include "feedback.h"
 #include "fog.h"
+#if FEATURE_EXT_framebuffer_object
+#include "fbobject.h"
+#endif
+#include "framebuffer.h"
 #include "hint.h"
 #include "histogram.h"
 #include "imports.h"
@@ -83,49 +90,14 @@
 #include "nvfragprog.h"
 #include "nvprogram.h"
 #include "program.h"
+#include "texenvprogram.h"
+#endif
+#if FEATURE_ARB_shader_objects
+#include "shaderobjects.h"
 #endif
 #include "debug.h"
+#include "dispatch.h"
 
-/* #include "math/m_matrix.h" */
-/* #include "math/m_xform.h" */
-
-
-/**********************************************************************/
-/** \name Dispatch table setup */
-/*@{*/
-
-/**
- * Generic no-op dispatch function.
- *
- * Used in replacement of the functions which are not part of Mesa subset.
- *
- * Displays a message.
- */
-static int
-generic_noop(void)
-{
-   _mesa_problem(NULL, "User called no-op dispatch function (an unsupported extension function?)");
-   return 0;
-}
-
-
-/**
- * Set all pointers in the given dispatch table to point to a
- * generic no-op function - generic_noop().
- *
- * \param table dispatch table.
- * \param tableSize dispatch table size.
- */
-void
-_mesa_init_no_op_table(struct _glapi_table *table, GLuint tableSize)
-{
-   typedef void (*func_ptr_t)();
-   GLuint i;
-   func_ptr_t *dispatch = (func_ptr_t *) table;
-   for (i = 0; i < tableSize; i++) {
-      dispatch[i] = (func_ptr_t)generic_noop;
-   }
-}
 
 
 /**
@@ -135,508 +107,510 @@ _mesa_init_no_op_table(struct _glapi_table *table, GLuint tableSize)
  * Pointers to glBegin()/glEnd() object commands and a few others
  * are provided via the GLvertexformat interface.
  *
+ * \param ctx  GL context to which \c exec belongs.
  * \param exec dispatch table.
- * \param tableSize dispatch table size.
  */
 void
-_mesa_init_exec_table(struct _glapi_table *exec, GLuint tableSize)
+_mesa_init_exec_table(struct _glapi_table *exec)
 {
-   /* first initialize all dispatch slots to no-op */
-   _mesa_init_no_op_table(exec, tableSize);
-
 #if _HAVE_FULL_GL
    _mesa_loopback_init_api_table( exec );
 #endif
 
    /* load the dispatch slots we understand */
-   exec->AlphaFunc = _mesa_AlphaFunc;
-   exec->BlendFunc = _mesa_BlendFunc;
-   exec->Clear = _mesa_Clear;
-   exec->ClearColor = _mesa_ClearColor;
-   exec->ClearStencil = _mesa_ClearStencil;
-   exec->ColorMask = _mesa_ColorMask;
-   exec->CullFace = _mesa_CullFace;
-   exec->Disable = _mesa_Disable;
-   exec->DrawBuffer = _mesa_DrawBuffer;
-   exec->Enable = _mesa_Enable;
-   exec->Finish = _mesa_Finish;
-   exec->Flush = _mesa_Flush;
-   exec->FrontFace = _mesa_FrontFace;
-   exec->Frustum = _mesa_Frustum;
-   exec->GetError = _mesa_GetError;
-   exec->GetFloatv = _mesa_GetFloatv;
-   exec->GetString = _mesa_GetString;
-   exec->InitNames = _mesa_InitNames;
-   exec->LineStipple = _mesa_LineStipple;
-   exec->LineWidth = _mesa_LineWidth;
-   exec->LoadIdentity = _mesa_LoadIdentity;
-   exec->LoadMatrixf = _mesa_LoadMatrixf;
-   exec->LoadName = _mesa_LoadName;
-   exec->LogicOp = _mesa_LogicOp;
-   exec->MatrixMode = _mesa_MatrixMode;
-   exec->MultMatrixf = _mesa_MultMatrixf;
-   exec->Ortho = _mesa_Ortho;
-   exec->PixelStorei = _mesa_PixelStorei;
-   exec->PopMatrix = _mesa_PopMatrix;
-   exec->PopName = _mesa_PopName;
-   exec->PushMatrix = _mesa_PushMatrix;
-   exec->PushName = _mesa_PushName;
-   exec->RasterPos2f = _mesa_RasterPos2f;
-   exec->RasterPos2fv = _mesa_RasterPos2fv;
-   exec->RasterPos2i = _mesa_RasterPos2i;
-   exec->RasterPos2iv = _mesa_RasterPos2iv;
-   exec->ReadBuffer = _mesa_ReadBuffer;
-   exec->RenderMode = _mesa_RenderMode;
-   exec->Rotatef = _mesa_Rotatef;
-   exec->Scalef = _mesa_Scalef;
-   exec->Scissor = _mesa_Scissor;
-   exec->SelectBuffer = _mesa_SelectBuffer;
-   exec->ShadeModel = _mesa_ShadeModel;
-   exec->StencilFunc = _mesa_StencilFunc;
-   exec->StencilMask = _mesa_StencilMask;
-   exec->StencilOp = _mesa_StencilOp;
-   exec->TexEnvfv = _mesa_TexEnvfv;
-   exec->TexEnvi = _mesa_TexEnvi;
-   exec->TexImage2D = _mesa_TexImage2D;
-   exec->TexParameteri = _mesa_TexParameteri; 
-   exec->Translatef = _mesa_Translatef;
-   exec->Viewport = _mesa_Viewport;
+   SET_AlphaFunc(exec, _mesa_AlphaFunc);
+   SET_BlendFunc(exec, _mesa_BlendFunc);
+   SET_Clear(exec, _mesa_Clear);
+   SET_ClearColor(exec, _mesa_ClearColor);
+   SET_ClearStencil(exec, _mesa_ClearStencil);
+   SET_ColorMask(exec, _mesa_ColorMask);
+   SET_CullFace(exec, _mesa_CullFace);
+   SET_Disable(exec, _mesa_Disable);
+   SET_DrawBuffer(exec, _mesa_DrawBuffer);
+   SET_Enable(exec, _mesa_Enable);
+   SET_Finish(exec, _mesa_Finish);
+   SET_Flush(exec, _mesa_Flush);
+   SET_FrontFace(exec, _mesa_FrontFace);
+   SET_Frustum(exec, _mesa_Frustum);
+   SET_GetError(exec, _mesa_GetError);
+   SET_GetFloatv(exec, _mesa_GetFloatv);
+   SET_GetString(exec, _mesa_GetString);
+   SET_InitNames(exec, _mesa_InitNames);
+   SET_LineStipple(exec, _mesa_LineStipple);
+   SET_LineWidth(exec, _mesa_LineWidth);
+   SET_LoadIdentity(exec, _mesa_LoadIdentity);
+   SET_LoadMatrixf(exec, _mesa_LoadMatrixf);
+   SET_LoadName(exec, _mesa_LoadName);
+   SET_LogicOp(exec, _mesa_LogicOp);
+   SET_MatrixMode(exec, _mesa_MatrixMode);
+   SET_MultMatrixf(exec, _mesa_MultMatrixf);
+   SET_Ortho(exec, _mesa_Ortho);
+   SET_PixelStorei(exec, _mesa_PixelStorei);
+   SET_PopMatrix(exec, _mesa_PopMatrix);
+   SET_PopName(exec, _mesa_PopName);
+   SET_PushMatrix(exec, _mesa_PushMatrix);
+   SET_PushName(exec, _mesa_PushName);
+   SET_RasterPos2f(exec, _mesa_RasterPos2f);
+   SET_RasterPos2fv(exec, _mesa_RasterPos2fv);
+   SET_RasterPos2i(exec, _mesa_RasterPos2i);
+   SET_RasterPos2iv(exec, _mesa_RasterPos2iv);
+   SET_ReadBuffer(exec, _mesa_ReadBuffer);
+   SET_RenderMode(exec, _mesa_RenderMode);
+   SET_Rotatef(exec, _mesa_Rotatef);
+   SET_Scalef(exec, _mesa_Scalef);
+   SET_Scissor(exec, _mesa_Scissor);
+   SET_SelectBuffer(exec, _mesa_SelectBuffer);
+   SET_ShadeModel(exec, _mesa_ShadeModel);
+   SET_StencilFunc(exec, _mesa_StencilFunc);
+   SET_StencilMask(exec, _mesa_StencilMask);
+   SET_StencilOp(exec, _mesa_StencilOp);
+   SET_TexEnvfv(exec, _mesa_TexEnvfv);
+   SET_TexEnvi(exec, _mesa_TexEnvi);
+   SET_TexImage2D(exec, _mesa_TexImage2D);
+   SET_TexParameteri(exec, _mesa_TexParameteri);
+   SET_Translatef(exec, _mesa_Translatef);
+   SET_Viewport(exec, _mesa_Viewport);
 #if _HAVE_FULL_GL
-   exec->Accum = _mesa_Accum;
-   exec->Bitmap = _mesa_Bitmap;
-   exec->CallList = _mesa_CallList;
-   exec->CallLists = _mesa_CallLists;
-   exec->ClearAccum = _mesa_ClearAccum;
-   exec->ClearDepth = _mesa_ClearDepth;
-   exec->ClearIndex = _mesa_ClearIndex;
-   exec->ClipPlane = _mesa_ClipPlane;
-   exec->ColorMaterial = _mesa_ColorMaterial;
-   exec->CopyPixels = _mesa_CopyPixels;
-   exec->CullParameterfvEXT = _mesa_CullParameterfvEXT;
-   exec->CullParameterdvEXT = _mesa_CullParameterdvEXT;
-   exec->DeleteLists = _mesa_DeleteLists;
-   exec->DepthFunc = _mesa_DepthFunc;
-   exec->DepthMask = _mesa_DepthMask;
-   exec->DepthRange = _mesa_DepthRange;
-   exec->DrawPixels = _mesa_DrawPixels;
-   exec->EndList = _mesa_EndList;
-   exec->FeedbackBuffer = _mesa_FeedbackBuffer;
-   exec->FogCoordPointerEXT = _mesa_FogCoordPointerEXT;
-   exec->Fogf = _mesa_Fogf;
-   exec->Fogfv = _mesa_Fogfv;
-   exec->Fogi = _mesa_Fogi;
-   exec->Fogiv = _mesa_Fogiv;
-   exec->GenLists = _mesa_GenLists;
-   exec->GetClipPlane = _mesa_GetClipPlane;
-   exec->GetBooleanv = _mesa_GetBooleanv;
-   exec->GetDoublev = _mesa_GetDoublev;
-   exec->GetIntegerv = _mesa_GetIntegerv;
-   exec->GetLightfv = _mesa_GetLightfv;
-   exec->GetLightiv = _mesa_GetLightiv;
-   exec->GetMapdv = _mesa_GetMapdv;
-   exec->GetMapfv = _mesa_GetMapfv;
-   exec->GetMapiv = _mesa_GetMapiv;
-   exec->GetMaterialfv = _mesa_GetMaterialfv;
-   exec->GetMaterialiv = _mesa_GetMaterialiv;
-   exec->GetPixelMapfv = _mesa_GetPixelMapfv;
-   exec->GetPixelMapuiv = _mesa_GetPixelMapuiv;
-   exec->GetPixelMapusv = _mesa_GetPixelMapusv;
-   exec->GetPolygonStipple = _mesa_GetPolygonStipple;
-   exec->GetTexEnvfv = _mesa_GetTexEnvfv;
-   exec->GetTexEnviv = _mesa_GetTexEnviv;
-   exec->GetTexLevelParameterfv = _mesa_GetTexLevelParameterfv;
-   exec->GetTexLevelParameteriv = _mesa_GetTexLevelParameteriv;
-   exec->GetTexParameterfv = _mesa_GetTexParameterfv;
-   exec->GetTexParameteriv = _mesa_GetTexParameteriv;
-   exec->GetTexGendv = _mesa_GetTexGendv;
-   exec->GetTexGenfv = _mesa_GetTexGenfv;
-   exec->GetTexGeniv = _mesa_GetTexGeniv;
-   exec->GetTexImage = _mesa_GetTexImage;
-   exec->Hint = _mesa_Hint;
-   exec->IndexMask = _mesa_IndexMask;
-   exec->IsEnabled = _mesa_IsEnabled;
-   exec->IsList = _mesa_IsList;
-   exec->LightModelf = _mesa_LightModelf;
-   exec->LightModelfv = _mesa_LightModelfv;
-   exec->LightModeli = _mesa_LightModeli;
-   exec->LightModeliv = _mesa_LightModeliv;
-   exec->Lightf = _mesa_Lightf;
-   exec->Lightfv = _mesa_Lightfv;
-   exec->Lighti = _mesa_Lighti;
-   exec->Lightiv = _mesa_Lightiv;
-   exec->ListBase = _mesa_ListBase;
-   exec->LoadMatrixd = _mesa_LoadMatrixd;
-   exec->Map1d = _mesa_Map1d;
-   exec->Map1f = _mesa_Map1f;
-   exec->Map2d = _mesa_Map2d;
-   exec->Map2f = _mesa_Map2f;
-   exec->MapGrid1d = _mesa_MapGrid1d;
-   exec->MapGrid1f = _mesa_MapGrid1f;
-   exec->MapGrid2d = _mesa_MapGrid2d;
-   exec->MapGrid2f = _mesa_MapGrid2f;
-   exec->MultMatrixd = _mesa_MultMatrixd;
-   exec->NewList = _mesa_NewList;
-   exec->PassThrough = _mesa_PassThrough;
-   exec->PixelMapfv = _mesa_PixelMapfv;
-   exec->PixelMapuiv = _mesa_PixelMapuiv;
-   exec->PixelMapusv = _mesa_PixelMapusv;
-   exec->PixelStoref = _mesa_PixelStoref;
-   exec->PixelTransferf = _mesa_PixelTransferf;
-   exec->PixelTransferi = _mesa_PixelTransferi;
-   exec->PixelZoom = _mesa_PixelZoom;
-   exec->PointSize = _mesa_PointSize;
-   exec->PolygonMode = _mesa_PolygonMode;
-   exec->PolygonOffset = _mesa_PolygonOffset;
-   exec->PolygonStipple = _mesa_PolygonStipple;
-   exec->PopAttrib = _mesa_PopAttrib;
-   exec->PushAttrib = _mesa_PushAttrib;
-   exec->RasterPos2d = _mesa_RasterPos2d;
-   exec->RasterPos2dv = _mesa_RasterPos2dv;
-   exec->RasterPos2s = _mesa_RasterPos2s;
-   exec->RasterPos2sv = _mesa_RasterPos2sv;
-   exec->RasterPos3d = _mesa_RasterPos3d;
-   exec->RasterPos3dv = _mesa_RasterPos3dv;
-   exec->RasterPos3f = _mesa_RasterPos3f;
-   exec->RasterPos3fv = _mesa_RasterPos3fv;
-   exec->RasterPos3i = _mesa_RasterPos3i;
-   exec->RasterPos3iv = _mesa_RasterPos3iv;
-   exec->RasterPos3s = _mesa_RasterPos3s;
-   exec->RasterPos3sv = _mesa_RasterPos3sv;
-   exec->RasterPos4d = _mesa_RasterPos4d;
-   exec->RasterPos4dv = _mesa_RasterPos4dv;
-   exec->RasterPos4f = _mesa_RasterPos4f;
-   exec->RasterPos4fv = _mesa_RasterPos4fv;
-   exec->RasterPos4i = _mesa_RasterPos4i;
-   exec->RasterPos4iv = _mesa_RasterPos4iv;
-   exec->RasterPos4s = _mesa_RasterPos4s;
-   exec->RasterPos4sv = _mesa_RasterPos4sv;
-   exec->ReadPixels = _mesa_ReadPixels;
-   exec->Rotated = _mesa_Rotated;
-   exec->Scaled = _mesa_Scaled;
-   exec->SecondaryColorPointerEXT = _mesa_SecondaryColorPointerEXT;
-   exec->TexEnvf = _mesa_TexEnvf;
-   exec->TexEnviv = _mesa_TexEnviv;
-   exec->TexGend = _mesa_TexGend;
-   exec->TexGendv = _mesa_TexGendv;
-   exec->TexGenf = _mesa_TexGenf;
-   exec->TexGenfv = _mesa_TexGenfv;
-   exec->TexGeni = _mesa_TexGeni;
-   exec->TexGeniv = _mesa_TexGeniv;
-   exec->TexImage1D = _mesa_TexImage1D;
-   exec->TexParameterf = _mesa_TexParameterf;
-   exec->TexParameterfv = _mesa_TexParameterfv;
-   exec->TexParameteriv = _mesa_TexParameteriv;
-   exec->Translated = _mesa_Translated;
+   SET_Accum(exec, _mesa_Accum);
+   SET_Bitmap(exec, _mesa_Bitmap);
+   SET_CallList(exec, _mesa_CallList);
+   SET_CallLists(exec, _mesa_CallLists);
+   SET_ClearAccum(exec, _mesa_ClearAccum);
+   SET_ClearDepth(exec, _mesa_ClearDepth);
+   SET_ClearIndex(exec, _mesa_ClearIndex);
+   SET_ClipPlane(exec, _mesa_ClipPlane);
+   SET_ColorMaterial(exec, _mesa_ColorMaterial);
+   SET_CopyPixels(exec, _mesa_CopyPixels);
+   SET_CullParameterfvEXT(exec, _mesa_CullParameterfvEXT);
+   SET_CullParameterdvEXT(exec, _mesa_CullParameterdvEXT);
+   SET_DeleteLists(exec, _mesa_DeleteLists);
+   SET_DepthFunc(exec, _mesa_DepthFunc);
+   SET_DepthMask(exec, _mesa_DepthMask);
+   SET_DepthRange(exec, _mesa_DepthRange);
+   SET_DrawPixels(exec, _mesa_DrawPixels);
+   SET_EndList(exec, _mesa_EndList);
+   SET_FeedbackBuffer(exec, _mesa_FeedbackBuffer);
+   SET_FogCoordPointerEXT(exec, _mesa_FogCoordPointerEXT);
+   SET_Fogf(exec, _mesa_Fogf);
+   SET_Fogfv(exec, _mesa_Fogfv);
+   SET_Fogi(exec, _mesa_Fogi);
+   SET_Fogiv(exec, _mesa_Fogiv);
+   SET_GenLists(exec, _mesa_GenLists);
+   SET_GetClipPlane(exec, _mesa_GetClipPlane);
+   SET_GetBooleanv(exec, _mesa_GetBooleanv);
+   SET_GetDoublev(exec, _mesa_GetDoublev);
+   SET_GetIntegerv(exec, _mesa_GetIntegerv);
+   SET_GetLightfv(exec, _mesa_GetLightfv);
+   SET_GetLightiv(exec, _mesa_GetLightiv);
+   SET_GetMapdv(exec, _mesa_GetMapdv);
+   SET_GetMapfv(exec, _mesa_GetMapfv);
+   SET_GetMapiv(exec, _mesa_GetMapiv);
+   SET_GetMaterialfv(exec, _mesa_GetMaterialfv);
+   SET_GetMaterialiv(exec, _mesa_GetMaterialiv);
+   SET_GetPixelMapfv(exec, _mesa_GetPixelMapfv);
+   SET_GetPixelMapuiv(exec, _mesa_GetPixelMapuiv);
+   SET_GetPixelMapusv(exec, _mesa_GetPixelMapusv);
+   SET_GetPolygonStipple(exec, _mesa_GetPolygonStipple);
+   SET_GetTexEnvfv(exec, _mesa_GetTexEnvfv);
+   SET_GetTexEnviv(exec, _mesa_GetTexEnviv);
+   SET_GetTexLevelParameterfv(exec, _mesa_GetTexLevelParameterfv);
+   SET_GetTexLevelParameteriv(exec, _mesa_GetTexLevelParameteriv);
+   SET_GetTexParameterfv(exec, _mesa_GetTexParameterfv);
+   SET_GetTexParameteriv(exec, _mesa_GetTexParameteriv);
+   SET_GetTexGendv(exec, _mesa_GetTexGendv);
+   SET_GetTexGenfv(exec, _mesa_GetTexGenfv);
+   SET_GetTexGeniv(exec, _mesa_GetTexGeniv);
+   SET_GetTexImage(exec, _mesa_GetTexImage);
+   SET_Hint(exec, _mesa_Hint);
+   SET_IndexMask(exec, _mesa_IndexMask);
+   SET_IsEnabled(exec, _mesa_IsEnabled);
+   SET_IsList(exec, _mesa_IsList);
+   SET_LightModelf(exec, _mesa_LightModelf);
+   SET_LightModelfv(exec, _mesa_LightModelfv);
+   SET_LightModeli(exec, _mesa_LightModeli);
+   SET_LightModeliv(exec, _mesa_LightModeliv);
+   SET_Lightf(exec, _mesa_Lightf);
+   SET_Lightfv(exec, _mesa_Lightfv);
+   SET_Lighti(exec, _mesa_Lighti);
+   SET_Lightiv(exec, _mesa_Lightiv);
+   SET_ListBase(exec, _mesa_ListBase);
+   SET_LoadMatrixd(exec, _mesa_LoadMatrixd);
+   SET_Map1d(exec, _mesa_Map1d);
+   SET_Map1f(exec, _mesa_Map1f);
+   SET_Map2d(exec, _mesa_Map2d);
+   SET_Map2f(exec, _mesa_Map2f);
+   SET_MapGrid1d(exec, _mesa_MapGrid1d);
+   SET_MapGrid1f(exec, _mesa_MapGrid1f);
+   SET_MapGrid2d(exec, _mesa_MapGrid2d);
+   SET_MapGrid2f(exec, _mesa_MapGrid2f);
+   SET_MultMatrixd(exec, _mesa_MultMatrixd);
+   SET_NewList(exec, _mesa_NewList);
+   SET_PassThrough(exec, _mesa_PassThrough);
+   SET_PixelMapfv(exec, _mesa_PixelMapfv);
+   SET_PixelMapuiv(exec, _mesa_PixelMapuiv);
+   SET_PixelMapusv(exec, _mesa_PixelMapusv);
+   SET_PixelStoref(exec, _mesa_PixelStoref);
+   SET_PixelTransferf(exec, _mesa_PixelTransferf);
+   SET_PixelTransferi(exec, _mesa_PixelTransferi);
+   SET_PixelZoom(exec, _mesa_PixelZoom);
+   SET_PointSize(exec, _mesa_PointSize);
+   SET_PolygonMode(exec, _mesa_PolygonMode);
+   SET_PolygonOffset(exec, _mesa_PolygonOffset);
+   SET_PolygonStipple(exec, _mesa_PolygonStipple);
+   SET_PopAttrib(exec, _mesa_PopAttrib);
+   SET_PushAttrib(exec, _mesa_PushAttrib);
+   SET_RasterPos2d(exec, _mesa_RasterPos2d);
+   SET_RasterPos2dv(exec, _mesa_RasterPos2dv);
+   SET_RasterPos2s(exec, _mesa_RasterPos2s);
+   SET_RasterPos2sv(exec, _mesa_RasterPos2sv);
+   SET_RasterPos3d(exec, _mesa_RasterPos3d);
+   SET_RasterPos3dv(exec, _mesa_RasterPos3dv);
+   SET_RasterPos3f(exec, _mesa_RasterPos3f);
+   SET_RasterPos3fv(exec, _mesa_RasterPos3fv);
+   SET_RasterPos3i(exec, _mesa_RasterPos3i);
+   SET_RasterPos3iv(exec, _mesa_RasterPos3iv);
+   SET_RasterPos3s(exec, _mesa_RasterPos3s);
+   SET_RasterPos3sv(exec, _mesa_RasterPos3sv);
+   SET_RasterPos4d(exec, _mesa_RasterPos4d);
+   SET_RasterPos4dv(exec, _mesa_RasterPos4dv);
+   SET_RasterPos4f(exec, _mesa_RasterPos4f);
+   SET_RasterPos4fv(exec, _mesa_RasterPos4fv);
+   SET_RasterPos4i(exec, _mesa_RasterPos4i);
+   SET_RasterPos4iv(exec, _mesa_RasterPos4iv);
+   SET_RasterPos4s(exec, _mesa_RasterPos4s);
+   SET_RasterPos4sv(exec, _mesa_RasterPos4sv);
+   SET_ReadPixels(exec, _mesa_ReadPixels);
+   SET_Rotated(exec, _mesa_Rotated);
+   SET_Scaled(exec, _mesa_Scaled);
+   SET_SecondaryColorPointerEXT(exec, _mesa_SecondaryColorPointerEXT);
+   SET_TexEnvf(exec, _mesa_TexEnvf);
+   SET_TexEnviv(exec, _mesa_TexEnviv);
+   SET_TexGend(exec, _mesa_TexGend);
+   SET_TexGendv(exec, _mesa_TexGendv);
+   SET_TexGenf(exec, _mesa_TexGenf);
+   SET_TexGenfv(exec, _mesa_TexGenfv);
+   SET_TexGeni(exec, _mesa_TexGeni);
+   SET_TexGeniv(exec, _mesa_TexGeniv);
+   SET_TexImage1D(exec, _mesa_TexImage1D);
+   SET_TexParameterf(exec, _mesa_TexParameterf);
+   SET_TexParameterfv(exec, _mesa_TexParameterfv);
+   SET_TexParameteriv(exec, _mesa_TexParameteriv);
+   SET_Translated(exec, _mesa_Translated);
 #endif
 
    /* 1.1 */
-   exec->BindTexture = _mesa_BindTexture;
-   exec->DeleteTextures = _mesa_DeleteTextures;
-   exec->GenTextures = _mesa_GenTextures;
+   SET_BindTexture(exec, _mesa_BindTexture);
+   SET_DeleteTextures(exec, _mesa_DeleteTextures);
+   SET_GenTextures(exec, _mesa_GenTextures);
 #if _HAVE_FULL_GL
-   exec->AreTexturesResident = _mesa_AreTexturesResident;
-   exec->AreTexturesResidentEXT = _mesa_AreTexturesResident;
-   exec->ColorPointer = _mesa_ColorPointer;
-   exec->CopyTexImage1D = _mesa_CopyTexImage1D;
-   exec->CopyTexImage2D = _mesa_CopyTexImage2D;
-   exec->CopyTexSubImage1D = _mesa_CopyTexSubImage1D;
-   exec->CopyTexSubImage2D = _mesa_CopyTexSubImage2D;
-   exec->DisableClientState = _mesa_DisableClientState;
-   exec->EdgeFlagPointer = _mesa_EdgeFlagPointer;
-   exec->EnableClientState = _mesa_EnableClientState;
-   exec->GenTexturesEXT = _mesa_GenTextures;
-   exec->GetPointerv = _mesa_GetPointerv;
-   exec->IndexPointer = _mesa_IndexPointer;
-   exec->InterleavedArrays = _mesa_InterleavedArrays;
-   exec->IsTexture = _mesa_IsTexture;
-   exec->IsTextureEXT = _mesa_IsTexture;
-   exec->NormalPointer = _mesa_NormalPointer;
-   exec->PopClientAttrib = _mesa_PopClientAttrib;
-   exec->PrioritizeTextures = _mesa_PrioritizeTextures;
-   exec->PushClientAttrib = _mesa_PushClientAttrib;
-   exec->TexCoordPointer = _mesa_TexCoordPointer;
-   exec->TexSubImage1D = _mesa_TexSubImage1D;
-   exec->TexSubImage2D = _mesa_TexSubImage2D;
-   exec->VertexPointer = _mesa_VertexPointer;
+   SET_AreTexturesResident(exec, _mesa_AreTexturesResident);
+   SET_AreTexturesResidentEXT(exec, _mesa_AreTexturesResident);
+   SET_ColorPointer(exec, _mesa_ColorPointer);
+   SET_CopyTexImage1D(exec, _mesa_CopyTexImage1D);
+   SET_CopyTexImage2D(exec, _mesa_CopyTexImage2D);
+   SET_CopyTexSubImage1D(exec, _mesa_CopyTexSubImage1D);
+   SET_CopyTexSubImage2D(exec, _mesa_CopyTexSubImage2D);
+   SET_DisableClientState(exec, _mesa_DisableClientState);
+   SET_EdgeFlagPointer(exec, _mesa_EdgeFlagPointer);
+   SET_EnableClientState(exec, _mesa_EnableClientState);
+   SET_GenTexturesEXT(exec, _mesa_GenTextures);
+   SET_GetPointerv(exec, _mesa_GetPointerv);
+   SET_IndexPointer(exec, _mesa_IndexPointer);
+   SET_InterleavedArrays(exec, _mesa_InterleavedArrays);
+   SET_IsTexture(exec, _mesa_IsTexture);
+   SET_IsTextureEXT(exec, _mesa_IsTexture);
+   SET_NormalPointer(exec, _mesa_NormalPointer);
+   SET_PopClientAttrib(exec, _mesa_PopClientAttrib);
+   SET_PrioritizeTextures(exec, _mesa_PrioritizeTextures);
+   SET_PushClientAttrib(exec, _mesa_PushClientAttrib);
+   SET_TexCoordPointer(exec, _mesa_TexCoordPointer);
+   SET_TexSubImage1D(exec, _mesa_TexSubImage1D);
+   SET_TexSubImage2D(exec, _mesa_TexSubImage2D);
+   SET_VertexPointer(exec, _mesa_VertexPointer);
 #endif
 
    /* 1.2 */
 #if _HAVE_FULL_GL
-   exec->CopyTexSubImage3D = _mesa_CopyTexSubImage3D;
-   exec->TexImage3D = _mesa_TexImage3D;
-   exec->TexSubImage3D = _mesa_TexSubImage3D;
+   SET_CopyTexSubImage3D(exec, _mesa_CopyTexSubImage3D);
+   SET_TexImage3D(exec, _mesa_TexImage3D);
+   SET_TexSubImage3D(exec, _mesa_TexSubImage3D);
 #endif
 
    /* OpenGL 1.2  GL_ARB_imaging */
 #if _HAVE_FULL_GL
-   exec->BlendColor = _mesa_BlendColor;
-   exec->BlendEquation = _mesa_BlendEquation;
-   exec->BlendEquationSeparateEXT = _mesa_BlendEquationSeparateEXT;
-   exec->ColorSubTable = _mesa_ColorSubTable;
-   exec->ColorTable = _mesa_ColorTable;
-   exec->ColorTableParameterfv = _mesa_ColorTableParameterfv;
-   exec->ColorTableParameteriv = _mesa_ColorTableParameteriv;
-   exec->ConvolutionFilter1D = _mesa_ConvolutionFilter1D;
-   exec->ConvolutionFilter2D = _mesa_ConvolutionFilter2D;
-   exec->ConvolutionParameterf = _mesa_ConvolutionParameterf;
-   exec->ConvolutionParameterfv = _mesa_ConvolutionParameterfv;
-   exec->ConvolutionParameteri = _mesa_ConvolutionParameteri;
-   exec->ConvolutionParameteriv = _mesa_ConvolutionParameteriv;
-   exec->CopyColorSubTable = _mesa_CopyColorSubTable;
-   exec->CopyColorTable = _mesa_CopyColorTable;
-   exec->CopyConvolutionFilter1D = _mesa_CopyConvolutionFilter1D;
-   exec->CopyConvolutionFilter2D = _mesa_CopyConvolutionFilter2D;
-   exec->GetColorTable = _mesa_GetColorTable;
-   exec->GetColorTableEXT = _mesa_GetColorTable;
-   exec->GetColorTableParameterfv = _mesa_GetColorTableParameterfv;
-   exec->GetColorTableParameterfvEXT = _mesa_GetColorTableParameterfv;
-   exec->GetColorTableParameteriv = _mesa_GetColorTableParameteriv;
-   exec->GetColorTableParameterivEXT = _mesa_GetColorTableParameteriv;
-   exec->GetConvolutionFilter = _mesa_GetConvolutionFilter;
-   exec->GetConvolutionFilterEXT = _mesa_GetConvolutionFilter;
-   exec->GetConvolutionParameterfv = _mesa_GetConvolutionParameterfv;
-   exec->GetConvolutionParameterfvEXT = _mesa_GetConvolutionParameterfv;
-   exec->GetConvolutionParameteriv = _mesa_GetConvolutionParameteriv;
-   exec->GetConvolutionParameterivEXT = _mesa_GetConvolutionParameteriv;
-   exec->GetHistogram = _mesa_GetHistogram;
-   exec->GetHistogramEXT = _mesa_GetHistogram;
-   exec->GetHistogramParameterfv = _mesa_GetHistogramParameterfv;
-   exec->GetHistogramParameterfvEXT = _mesa_GetHistogramParameterfv;
-   exec->GetHistogramParameteriv = _mesa_GetHistogramParameteriv;
-   exec->GetHistogramParameterivEXT = _mesa_GetHistogramParameteriv;
-   exec->GetMinmax = _mesa_GetMinmax;
-   exec->GetMinmaxEXT = _mesa_GetMinmax;
-   exec->GetMinmaxParameterfv = _mesa_GetMinmaxParameterfv;
-   exec->GetMinmaxParameterfvEXT = _mesa_GetMinmaxParameterfv;
-   exec->GetMinmaxParameteriv = _mesa_GetMinmaxParameteriv;
-   exec->GetMinmaxParameterivEXT = _mesa_GetMinmaxParameteriv;
-   exec->GetSeparableFilter = _mesa_GetSeparableFilter;
-   exec->GetSeparableFilterEXT = _mesa_GetSeparableFilter;
-   exec->Histogram = _mesa_Histogram;
-   exec->Minmax = _mesa_Minmax;
-   exec->ResetHistogram = _mesa_ResetHistogram;
-   exec->ResetMinmax = _mesa_ResetMinmax;
-   exec->SeparableFilter2D = _mesa_SeparableFilter2D;
+   SET_BlendColor(exec, _mesa_BlendColor);
+   SET_BlendEquation(exec, _mesa_BlendEquation);
+   SET_BlendEquationSeparateEXT(exec, _mesa_BlendEquationSeparateEXT);
+   SET_ColorSubTable(exec, _mesa_ColorSubTable);
+   SET_ColorTable(exec, _mesa_ColorTable);
+   SET_ColorTableParameterfv(exec, _mesa_ColorTableParameterfv);
+   SET_ColorTableParameteriv(exec, _mesa_ColorTableParameteriv);
+   SET_ConvolutionFilter1D(exec, _mesa_ConvolutionFilter1D);
+   SET_ConvolutionFilter2D(exec, _mesa_ConvolutionFilter2D);
+   SET_ConvolutionParameterf(exec, _mesa_ConvolutionParameterf);
+   SET_ConvolutionParameterfv(exec, _mesa_ConvolutionParameterfv);
+   SET_ConvolutionParameteri(exec, _mesa_ConvolutionParameteri);
+   SET_ConvolutionParameteriv(exec, _mesa_ConvolutionParameteriv);
+   SET_CopyColorSubTable(exec, _mesa_CopyColorSubTable);
+   SET_CopyColorTable(exec, _mesa_CopyColorTable);
+   SET_CopyConvolutionFilter1D(exec, _mesa_CopyConvolutionFilter1D);
+   SET_CopyConvolutionFilter2D(exec, _mesa_CopyConvolutionFilter2D);
+   SET_GetColorTable(exec, _mesa_GetColorTable);
+   SET_GetColorTableEXT(exec, _mesa_GetColorTable);
+   SET_GetColorTableParameterfv(exec, _mesa_GetColorTableParameterfv);
+   SET_GetColorTableParameterfvEXT(exec, _mesa_GetColorTableParameterfv);
+   SET_GetColorTableParameteriv(exec, _mesa_GetColorTableParameteriv);
+   SET_GetColorTableParameterivEXT(exec, _mesa_GetColorTableParameteriv);
+   SET_GetConvolutionFilter(exec, _mesa_GetConvolutionFilter);
+   SET_GetConvolutionFilterEXT(exec, _mesa_GetConvolutionFilter);
+   SET_GetConvolutionParameterfv(exec, _mesa_GetConvolutionParameterfv);
+   SET_GetConvolutionParameterfvEXT(exec, _mesa_GetConvolutionParameterfv);
+   SET_GetConvolutionParameteriv(exec, _mesa_GetConvolutionParameteriv);
+   SET_GetConvolutionParameterivEXT(exec, _mesa_GetConvolutionParameteriv);
+   SET_GetHistogram(exec, _mesa_GetHistogram);
+   SET_GetHistogramEXT(exec, _mesa_GetHistogram);
+   SET_GetHistogramParameterfv(exec, _mesa_GetHistogramParameterfv);
+   SET_GetHistogramParameterfvEXT(exec, _mesa_GetHistogramParameterfv);
+   SET_GetHistogramParameteriv(exec, _mesa_GetHistogramParameteriv);
+   SET_GetHistogramParameterivEXT(exec, _mesa_GetHistogramParameteriv);
+   SET_GetMinmax(exec, _mesa_GetMinmax);
+   SET_GetMinmaxEXT(exec, _mesa_GetMinmax);
+   SET_GetMinmaxParameterfv(exec, _mesa_GetMinmaxParameterfv);
+   SET_GetMinmaxParameterfvEXT(exec, _mesa_GetMinmaxParameterfv);
+   SET_GetMinmaxParameteriv(exec, _mesa_GetMinmaxParameteriv);
+   SET_GetMinmaxParameterivEXT(exec, _mesa_GetMinmaxParameteriv);
+   SET_GetSeparableFilter(exec, _mesa_GetSeparableFilter);
+   SET_GetSeparableFilterEXT(exec, _mesa_GetSeparableFilter);
+   SET_Histogram(exec, _mesa_Histogram);
+   SET_Minmax(exec, _mesa_Minmax);
+   SET_ResetHistogram(exec, _mesa_ResetHistogram);
+   SET_ResetMinmax(exec, _mesa_ResetMinmax);
+   SET_SeparableFilter2D(exec, _mesa_SeparableFilter2D);
 #endif
+
+   /* OpenGL 2.0 */
+   SET_StencilFuncSeparate(exec, _mesa_StencilFuncSeparate);
+   SET_StencilMaskSeparate(exec, _mesa_StencilMaskSeparate);
+   SET_StencilOpSeparate(exec, _mesa_StencilOpSeparate);
 
    /* 2. GL_EXT_blend_color */
 #if 0
-/*    exec->BlendColorEXT = _mesa_BlendColorEXT; */
+/*    SET_BlendColorEXT(exec, _mesa_BlendColorEXT); */
 #endif
 
    /* 3. GL_EXT_polygon_offset */
 #if _HAVE_FULL_GL
-   exec->PolygonOffsetEXT = _mesa_PolygonOffsetEXT;
+   SET_PolygonOffsetEXT(exec, _mesa_PolygonOffsetEXT);
 #endif
 
    /* 6. GL_EXT_texture3d */
 #if 0
-/*    exec->CopyTexSubImage3DEXT = _mesa_CopyTexSubImage3D; */
-/*    exec->TexImage3DEXT = _mesa_TexImage3DEXT; */
-/*    exec->TexSubImage3DEXT = _mesa_TexSubImage3D; */
+/*    SET_CopyTexSubImage3DEXT(exec, _mesa_CopyTexSubImage3D); */
+/*    SET_TexImage3DEXT(exec, _mesa_TexImage3DEXT); */
+/*    SET_TexSubImage3DEXT(exec, _mesa_TexSubImage3D); */
 #endif
 
    /* 11. GL_EXT_histogram */
 #if _HAVE_FULL_GL
-   exec->GetHistogramEXT = _mesa_GetHistogram;
-   exec->GetHistogramParameterfvEXT = _mesa_GetHistogramParameterfv;
-   exec->GetHistogramParameterivEXT = _mesa_GetHistogramParameteriv;
-   exec->GetMinmaxEXT = _mesa_GetMinmax;
-   exec->GetMinmaxParameterfvEXT = _mesa_GetMinmaxParameterfv;
-   exec->GetMinmaxParameterivEXT = _mesa_GetMinmaxParameteriv;
+   SET_GetHistogramEXT(exec, _mesa_GetHistogram);
+   SET_GetHistogramParameterfvEXT(exec, _mesa_GetHistogramParameterfv);
+   SET_GetHistogramParameterivEXT(exec, _mesa_GetHistogramParameteriv);
+   SET_GetMinmaxEXT(exec, _mesa_GetMinmax);
+   SET_GetMinmaxParameterfvEXT(exec, _mesa_GetMinmaxParameterfv);
+   SET_GetMinmaxParameterivEXT(exec, _mesa_GetMinmaxParameteriv);
 #endif
 
    /* ?. GL_SGIX_pixel_texture */
 #if _HAVE_FULL_GL
-   exec->PixelTexGenSGIX = _mesa_PixelTexGenSGIX;
+   SET_PixelTexGenSGIX(exec, _mesa_PixelTexGenSGIX);
 #endif
 
    /* 15. GL_SGIS_pixel_texture */
 #if _HAVE_FULL_GL
-   exec->PixelTexGenParameteriSGIS = _mesa_PixelTexGenParameteriSGIS;
-   exec->PixelTexGenParameterivSGIS = _mesa_PixelTexGenParameterivSGIS;
-   exec->PixelTexGenParameterfSGIS = _mesa_PixelTexGenParameterfSGIS;
-   exec->PixelTexGenParameterfvSGIS = _mesa_PixelTexGenParameterfvSGIS;
-   exec->GetPixelTexGenParameterivSGIS = _mesa_GetPixelTexGenParameterivSGIS;
-   exec->GetPixelTexGenParameterfvSGIS = _mesa_GetPixelTexGenParameterfvSGIS;
+   SET_PixelTexGenParameteriSGIS(exec, _mesa_PixelTexGenParameteriSGIS);
+   SET_PixelTexGenParameterivSGIS(exec, _mesa_PixelTexGenParameterivSGIS);
+   SET_PixelTexGenParameterfSGIS(exec, _mesa_PixelTexGenParameterfSGIS);
+   SET_PixelTexGenParameterfvSGIS(exec, _mesa_PixelTexGenParameterfvSGIS);
+   SET_GetPixelTexGenParameterivSGIS(exec, _mesa_GetPixelTexGenParameterivSGIS);
+   SET_GetPixelTexGenParameterfvSGIS(exec, _mesa_GetPixelTexGenParameterfvSGIS);
 #endif
 
    /* 30. GL_EXT_vertex_array */
 #if _HAVE_FULL_GL
-   exec->ColorPointerEXT = _mesa_ColorPointerEXT;
-   exec->EdgeFlagPointerEXT = _mesa_EdgeFlagPointerEXT;
-   exec->IndexPointerEXT = _mesa_IndexPointerEXT;
-   exec->NormalPointerEXT = _mesa_NormalPointerEXT;
-   exec->TexCoordPointerEXT = _mesa_TexCoordPointerEXT;
-   exec->VertexPointerEXT = _mesa_VertexPointerEXT;
+   SET_ColorPointerEXT(exec, _mesa_ColorPointerEXT);
+   SET_EdgeFlagPointerEXT(exec, _mesa_EdgeFlagPointerEXT);
+   SET_IndexPointerEXT(exec, _mesa_IndexPointerEXT);
+   SET_NormalPointerEXT(exec, _mesa_NormalPointerEXT);
+   SET_TexCoordPointerEXT(exec, _mesa_TexCoordPointerEXT);
+   SET_VertexPointerEXT(exec, _mesa_VertexPointerEXT);
 #endif
 
    /* 37. GL_EXT_blend_minmax */
 #if 0
-   exec->BlendEquationEXT = _mesa_BlendEquationEXT;
+   SET_BlendEquationEXT(exec, _mesa_BlendEquationEXT);
 #endif
 
    /* 54. GL_EXT_point_parameters */
 #if _HAVE_FULL_GL
-   exec->PointParameterfEXT = _mesa_PointParameterfEXT;
-   exec->PointParameterfvEXT = _mesa_PointParameterfvEXT;
+   SET_PointParameterfEXT(exec, _mesa_PointParameterfEXT);
+   SET_PointParameterfvEXT(exec, _mesa_PointParameterfvEXT);
 #endif
 
    /* 78. GL_EXT_paletted_texture */
 #if 0
-   exec->ColorTableEXT = _mesa_ColorTableEXT;
-   exec->ColorSubTableEXT = _mesa_ColorSubTableEXT;
+   SET_ColorTableEXT(exec, _mesa_ColorTableEXT);
+   SET_ColorSubTableEXT(exec, _mesa_ColorSubTableEXT);
 #endif
 #if _HAVE_FULL_GL
-   exec->GetColorTableEXT = _mesa_GetColorTable;
-   exec->GetColorTableParameterfvEXT = _mesa_GetColorTableParameterfv;
-   exec->GetColorTableParameterivEXT = _mesa_GetColorTableParameteriv;
+   SET_GetColorTableEXT(exec, _mesa_GetColorTable);
+   SET_GetColorTableParameterfvEXT(exec, _mesa_GetColorTableParameterfv);
+   SET_GetColorTableParameterivEXT(exec, _mesa_GetColorTableParameteriv);
 #endif
 
    /* 97. GL_EXT_compiled_vertex_array */
 #if _HAVE_FULL_GL
-   exec->LockArraysEXT = _mesa_LockArraysEXT;
-   exec->UnlockArraysEXT = _mesa_UnlockArraysEXT;
+   SET_LockArraysEXT(exec, _mesa_LockArraysEXT);
+   SET_UnlockArraysEXT(exec, _mesa_UnlockArraysEXT);
 #endif
 
    /* 148. GL_EXT_multi_draw_arrays */
 #if _HAVE_FULL_GL
-   exec->MultiDrawArraysEXT = _mesa_MultiDrawArraysEXT;
-   exec->MultiDrawElementsEXT = _mesa_MultiDrawElementsEXT;
+   SET_MultiDrawArraysEXT(exec, _mesa_MultiDrawArraysEXT);
+   SET_MultiDrawElementsEXT(exec, _mesa_MultiDrawElementsEXT);
 #endif
 
    /* 173. GL_INGR_blend_func_separate */
 #if _HAVE_FULL_GL
-   exec->BlendFuncSeparateEXT = _mesa_BlendFuncSeparateEXT;
+   SET_BlendFuncSeparateEXT(exec, _mesa_BlendFuncSeparateEXT);
 #endif
 
    /* 196. GL_MESA_resize_buffers */
 #if _HAVE_FULL_GL
-   exec->ResizeBuffersMESA = _mesa_ResizeBuffersMESA;
+   SET_ResizeBuffersMESA(exec, _mesa_ResizeBuffersMESA);
 #endif
 
    /* 197. GL_MESA_window_pos */
 #if _HAVE_FULL_GL
-   exec->WindowPos2dMESA = _mesa_WindowPos2dMESA;
-   exec->WindowPos2dvMESA = _mesa_WindowPos2dvMESA;
-   exec->WindowPos2fMESA = _mesa_WindowPos2fMESA;
-   exec->WindowPos2fvMESA = _mesa_WindowPos2fvMESA;
-   exec->WindowPos2iMESA = _mesa_WindowPos2iMESA;
-   exec->WindowPos2ivMESA = _mesa_WindowPos2ivMESA;
-   exec->WindowPos2sMESA = _mesa_WindowPos2sMESA;
-   exec->WindowPos2svMESA = _mesa_WindowPos2svMESA;
-   exec->WindowPos3dMESA = _mesa_WindowPos3dMESA;
-   exec->WindowPos3dvMESA = _mesa_WindowPos3dvMESA;
-   exec->WindowPos3fMESA = _mesa_WindowPos3fMESA;
-   exec->WindowPos3fvMESA = _mesa_WindowPos3fvMESA;
-   exec->WindowPos3iMESA = _mesa_WindowPos3iMESA;
-   exec->WindowPos3ivMESA = _mesa_WindowPos3ivMESA;
-   exec->WindowPos3sMESA = _mesa_WindowPos3sMESA;
-   exec->WindowPos3svMESA = _mesa_WindowPos3svMESA;
-   exec->WindowPos4dMESA = _mesa_WindowPos4dMESA;
-   exec->WindowPos4dvMESA = _mesa_WindowPos4dvMESA;
-   exec->WindowPos4fMESA = _mesa_WindowPos4fMESA;
-   exec->WindowPos4fvMESA = _mesa_WindowPos4fvMESA;
-   exec->WindowPos4iMESA = _mesa_WindowPos4iMESA;
-   exec->WindowPos4ivMESA = _mesa_WindowPos4ivMESA;
-   exec->WindowPos4sMESA = _mesa_WindowPos4sMESA;
-   exec->WindowPos4svMESA = _mesa_WindowPos4svMESA;
+   SET_WindowPos2dMESA(exec, _mesa_WindowPos2dMESA);
+   SET_WindowPos2dvMESA(exec, _mesa_WindowPos2dvMESA);
+   SET_WindowPos2fMESA(exec, _mesa_WindowPos2fMESA);
+   SET_WindowPos2fvMESA(exec, _mesa_WindowPos2fvMESA);
+   SET_WindowPos2iMESA(exec, _mesa_WindowPos2iMESA);
+   SET_WindowPos2ivMESA(exec, _mesa_WindowPos2ivMESA);
+   SET_WindowPos2sMESA(exec, _mesa_WindowPos2sMESA);
+   SET_WindowPos2svMESA(exec, _mesa_WindowPos2svMESA);
+   SET_WindowPos3dMESA(exec, _mesa_WindowPos3dMESA);
+   SET_WindowPos3dvMESA(exec, _mesa_WindowPos3dvMESA);
+   SET_WindowPos3fMESA(exec, _mesa_WindowPos3fMESA);
+   SET_WindowPos3fvMESA(exec, _mesa_WindowPos3fvMESA);
+   SET_WindowPos3iMESA(exec, _mesa_WindowPos3iMESA);
+   SET_WindowPos3ivMESA(exec, _mesa_WindowPos3ivMESA);
+   SET_WindowPos3sMESA(exec, _mesa_WindowPos3sMESA);
+   SET_WindowPos3svMESA(exec, _mesa_WindowPos3svMESA);
+   SET_WindowPos4dMESA(exec, _mesa_WindowPos4dMESA);
+   SET_WindowPos4dvMESA(exec, _mesa_WindowPos4dvMESA);
+   SET_WindowPos4fMESA(exec, _mesa_WindowPos4fMESA);
+   SET_WindowPos4fvMESA(exec, _mesa_WindowPos4fvMESA);
+   SET_WindowPos4iMESA(exec, _mesa_WindowPos4iMESA);
+   SET_WindowPos4ivMESA(exec, _mesa_WindowPos4ivMESA);
+   SET_WindowPos4sMESA(exec, _mesa_WindowPos4sMESA);
+   SET_WindowPos4svMESA(exec, _mesa_WindowPos4svMESA);
 #endif
 
    /* 200. GL_IBM_multimode_draw_arrays */
 #if _HAVE_FULL_GL
-   exec->MultiModeDrawArraysIBM = _mesa_MultiModeDrawArraysIBM;
-   exec->MultiModeDrawElementsIBM = _mesa_MultiModeDrawElementsIBM;
+   SET_MultiModeDrawArraysIBM(exec, _mesa_MultiModeDrawArraysIBM);
+   SET_MultiModeDrawElementsIBM(exec, _mesa_MultiModeDrawElementsIBM);
 #endif
 
    /* 233. GL_NV_vertex_program */
 #if FEATURE_NV_vertex_program
-   exec->BindProgramNV = _mesa_BindProgram;
-   exec->DeleteProgramsNV = _mesa_DeletePrograms;
-   exec->ExecuteProgramNV = _mesa_ExecuteProgramNV;
-   exec->GenProgramsNV = _mesa_GenPrograms;
-   exec->AreProgramsResidentNV = _mesa_AreProgramsResidentNV;
-   exec->RequestResidentProgramsNV = _mesa_RequestResidentProgramsNV;
-   exec->GetProgramParameterfvNV = _mesa_GetProgramParameterfvNV;
-   exec->GetProgramParameterdvNV = _mesa_GetProgramParameterdvNV;
-   exec->GetProgramivNV = _mesa_GetProgramivNV;
-   exec->GetProgramStringNV = _mesa_GetProgramStringNV;
-   exec->GetTrackMatrixivNV = _mesa_GetTrackMatrixivNV;
-   exec->GetVertexAttribdvNV = _mesa_GetVertexAttribdvNV;
-   exec->GetVertexAttribfvNV = _mesa_GetVertexAttribfvNV;
-   exec->GetVertexAttribivNV = _mesa_GetVertexAttribivNV;
-   exec->GetVertexAttribPointervNV = _mesa_GetVertexAttribPointervNV;
-   exec->IsProgramNV = _mesa_IsProgram;
-   exec->LoadProgramNV = _mesa_LoadProgramNV;
-   exec->ProgramParameter4dNV = _mesa_ProgramParameter4dNV;
-   exec->ProgramParameter4dvNV = _mesa_ProgramParameter4dvNV;
-   exec->ProgramParameter4fNV = _mesa_ProgramParameter4fNV;
-   exec->ProgramParameter4fvNV = _mesa_ProgramParameter4fvNV;
-   exec->ProgramParameters4dvNV = _mesa_ProgramParameters4dvNV;
-   exec->ProgramParameters4fvNV = _mesa_ProgramParameters4fvNV;
-   exec->TrackMatrixNV = _mesa_TrackMatrixNV;
-   exec->VertexAttribPointerNV = _mesa_VertexAttribPointerNV;
+   SET_BindProgramNV(exec, _mesa_BindProgram);
+   SET_DeleteProgramsNV(exec, _mesa_DeletePrograms);
+   SET_ExecuteProgramNV(exec, _mesa_ExecuteProgramNV);
+   SET_GenProgramsNV(exec, _mesa_GenPrograms);
+   SET_AreProgramsResidentNV(exec, _mesa_AreProgramsResidentNV);
+   SET_RequestResidentProgramsNV(exec, _mesa_RequestResidentProgramsNV);
+   SET_GetProgramParameterfvNV(exec, _mesa_GetProgramParameterfvNV);
+   SET_GetProgramParameterdvNV(exec, _mesa_GetProgramParameterdvNV);
+   SET_GetProgramivNV(exec, _mesa_GetProgramivNV);
+   SET_GetProgramStringNV(exec, _mesa_GetProgramStringNV);
+   SET_GetTrackMatrixivNV(exec, _mesa_GetTrackMatrixivNV);
+   SET_GetVertexAttribdvNV(exec, _mesa_GetVertexAttribdvNV);
+   SET_GetVertexAttribfvNV(exec, _mesa_GetVertexAttribfvNV);
+   SET_GetVertexAttribivNV(exec, _mesa_GetVertexAttribivNV);
+   SET_GetVertexAttribPointervNV(exec, _mesa_GetVertexAttribPointervNV);
+   SET_IsProgramNV(exec, _mesa_IsProgram);
+   SET_LoadProgramNV(exec, _mesa_LoadProgramNV);
+   SET_ProgramParameter4dNV(exec, _mesa_ProgramParameter4dNV);
+   SET_ProgramParameter4dvNV(exec, _mesa_ProgramParameter4dvNV);
+   SET_ProgramParameter4fNV(exec, _mesa_ProgramParameter4fNV);
+   SET_ProgramParameter4fvNV(exec, _mesa_ProgramParameter4fvNV);
+   SET_ProgramParameters4dvNV(exec, _mesa_ProgramParameters4dvNV);
+   SET_ProgramParameters4fvNV(exec, _mesa_ProgramParameters4fvNV);
+   SET_TrackMatrixNV(exec, _mesa_TrackMatrixNV);
+   SET_VertexAttribPointerNV(exec, _mesa_VertexAttribPointerNV);
    /* glVertexAttrib*NV functions handled in api_loopback.c */
 #endif
 
    /* 282. GL_NV_fragment_program */
 #if FEATURE_NV_fragment_program
-   exec->ProgramNamedParameter4fNV = _mesa_ProgramNamedParameter4fNV;
-   exec->ProgramNamedParameter4dNV = _mesa_ProgramNamedParameter4dNV;
-   exec->ProgramNamedParameter4fvNV = _mesa_ProgramNamedParameter4fvNV;
-   exec->ProgramNamedParameter4dvNV = _mesa_ProgramNamedParameter4dvNV;
-   exec->GetProgramNamedParameterfvNV = _mesa_GetProgramNamedParameterfvNV;
-   exec->GetProgramNamedParameterdvNV = _mesa_GetProgramNamedParameterdvNV;
-   exec->ProgramLocalParameter4dARB = _mesa_ProgramLocalParameter4dARB;
-   exec->ProgramLocalParameter4dvARB = _mesa_ProgramLocalParameter4dvARB;
-   exec->ProgramLocalParameter4fARB = _mesa_ProgramLocalParameter4fARB;
-   exec->ProgramLocalParameter4fvARB = _mesa_ProgramLocalParameter4fvARB;
-   exec->GetProgramLocalParameterdvARB = _mesa_GetProgramLocalParameterdvARB;
-   exec->GetProgramLocalParameterfvARB = _mesa_GetProgramLocalParameterfvARB;
+   SET_ProgramNamedParameter4fNV(exec, _mesa_ProgramNamedParameter4fNV);
+   SET_ProgramNamedParameter4dNV(exec, _mesa_ProgramNamedParameter4dNV);
+   SET_ProgramNamedParameter4fvNV(exec, _mesa_ProgramNamedParameter4fvNV);
+   SET_ProgramNamedParameter4dvNV(exec, _mesa_ProgramNamedParameter4dvNV);
+   SET_GetProgramNamedParameterfvNV(exec, _mesa_GetProgramNamedParameterfvNV);
+   SET_GetProgramNamedParameterdvNV(exec, _mesa_GetProgramNamedParameterdvNV);
+   SET_ProgramLocalParameter4dARB(exec, _mesa_ProgramLocalParameter4dARB);
+   SET_ProgramLocalParameter4dvARB(exec, _mesa_ProgramLocalParameter4dvARB);
+   SET_ProgramLocalParameter4fARB(exec, _mesa_ProgramLocalParameter4fARB);
+   SET_ProgramLocalParameter4fvARB(exec, _mesa_ProgramLocalParameter4fvARB);
+   SET_GetProgramLocalParameterdvARB(exec, _mesa_GetProgramLocalParameterdvARB);
+   SET_GetProgramLocalParameterfvARB(exec, _mesa_GetProgramLocalParameterfvARB);
 #endif
 
    /* 262. GL_NV_point_sprite */
 #if _HAVE_FULL_GL
-   exec->PointParameteriNV = _mesa_PointParameteriNV;
-   exec->PointParameterivNV = _mesa_PointParameterivNV;
+   SET_PointParameteriNV(exec, _mesa_PointParameteriNV);
+   SET_PointParameterivNV(exec, _mesa_PointParameterivNV);
 #endif
 
    /* 268. GL_EXT_stencil_two_side */
 #if _HAVE_FULL_GL
-   exec->ActiveStencilFaceEXT = _mesa_ActiveStencilFaceEXT;
+   SET_ActiveStencilFaceEXT(exec, _mesa_ActiveStencilFaceEXT);
 #endif
 
    /* ???. GL_EXT_depth_bounds_test */
-   exec->DepthBoundsEXT = _mesa_DepthBoundsEXT;
+   SET_DepthBoundsEXT(exec, _mesa_DepthBoundsEXT);
 
    /* ARB 1. GL_ARB_multitexture */
 #if _HAVE_FULL_GL
-   exec->ActiveTextureARB = _mesa_ActiveTextureARB;
-   exec->ClientActiveTextureARB = _mesa_ClientActiveTextureARB;
+   SET_ActiveTextureARB(exec, _mesa_ActiveTextureARB);
+   SET_ClientActiveTextureARB(exec, _mesa_ClientActiveTextureARB);
 #endif
 
    /* ARB 3. GL_ARB_transpose_matrix */
 #if _HAVE_FULL_GL
-   exec->LoadTransposeMatrixdARB = _mesa_LoadTransposeMatrixdARB;
-   exec->LoadTransposeMatrixfARB = _mesa_LoadTransposeMatrixfARB;
-   exec->MultTransposeMatrixdARB = _mesa_MultTransposeMatrixdARB;
-   exec->MultTransposeMatrixfARB = _mesa_MultTransposeMatrixfARB;
+   SET_LoadTransposeMatrixdARB(exec, _mesa_LoadTransposeMatrixdARB);
+   SET_LoadTransposeMatrixfARB(exec, _mesa_LoadTransposeMatrixfARB);
+   SET_MultTransposeMatrixdARB(exec, _mesa_MultTransposeMatrixdARB);
+   SET_MultTransposeMatrixfARB(exec, _mesa_MultTransposeMatrixfARB);
 #endif
 
    /* ARB 5. GL_ARB_multisample */
 #if _HAVE_FULL_GL
-   exec->SampleCoverageARB = _mesa_SampleCoverageARB;
+   SET_SampleCoverageARB(exec, _mesa_SampleCoverageARB);
 #endif
 
    /* ARB 12. GL_ARB_texture_compression */
 #if _HAVE_FULL_GL
-   exec->CompressedTexImage3DARB = _mesa_CompressedTexImage3DARB;
-   exec->CompressedTexImage2DARB = _mesa_CompressedTexImage2DARB;
-   exec->CompressedTexImage1DARB = _mesa_CompressedTexImage1DARB;
-   exec->CompressedTexSubImage3DARB = _mesa_CompressedTexSubImage3DARB;
-   exec->CompressedTexSubImage2DARB = _mesa_CompressedTexSubImage2DARB;
-   exec->CompressedTexSubImage1DARB = _mesa_CompressedTexSubImage1DARB;
-   exec->GetCompressedTexImageARB = _mesa_GetCompressedTexImageARB;
+   SET_CompressedTexImage3DARB(exec, _mesa_CompressedTexImage3DARB);
+   SET_CompressedTexImage2DARB(exec, _mesa_CompressedTexImage2DARB);
+   SET_CompressedTexImage1DARB(exec, _mesa_CompressedTexImage1DARB);
+   SET_CompressedTexSubImage3DARB(exec, _mesa_CompressedTexSubImage3DARB);
+   SET_CompressedTexSubImage2DARB(exec, _mesa_CompressedTexSubImage2DARB);
+   SET_CompressedTexSubImage1DARB(exec, _mesa_CompressedTexSubImage1DARB);
+   SET_GetCompressedTexImageARB(exec, _mesa_GetCompressedTexImageARB);
 #endif
 
    /* ARB 14. GL_ARB_point_parameters */
@@ -681,62 +655,151 @@ _mesa_init_exec_table(struct _glapi_table *exec, GLuint tableSize)
    /* glVertexAttrib4NivARB handled in api_loopback.c */
    /* glVertexAttrib4NusvARB handled in api_loopback.c */
    /* glVertexAttrib4NuivARB handled in api_loopback.c */
-   exec->VertexAttribPointerARB = _mesa_VertexAttribPointerARB;
-   exec->EnableVertexAttribArrayARB = _mesa_EnableVertexAttribArrayARB;
-   exec->DisableVertexAttribArrayARB = _mesa_DisableVertexAttribArrayARB;
-   exec->ProgramStringARB = _mesa_ProgramStringARB;
+   SET_VertexAttribPointerARB(exec, _mesa_VertexAttribPointerARB);
+   SET_EnableVertexAttribArrayARB(exec, _mesa_EnableVertexAttribArrayARB);
+   SET_DisableVertexAttribArrayARB(exec, _mesa_DisableVertexAttribArrayARB);
+   SET_ProgramStringARB(exec, _mesa_ProgramStringARB);
    /* glBindProgramARB aliases glBindProgramNV */
    /* glDeleteProgramsARB aliases glDeleteProgramsNV */
    /* glGenProgramsARB aliases glGenProgramsNV */
    /* glIsProgramARB aliases glIsProgramNV */
-   /* glGetVertexAttribdvARB aliases glGetVertexAttribdvNV */
-   /* glGetVertexAttribfvARB aliases glGetVertexAttribfvNV */
-   /* glGetVertexAttribivARB aliases glGetVertexAttribivNV */
+   SET_GetVertexAttribdvARB(exec, _mesa_GetVertexAttribdvARB);
+   SET_GetVertexAttribfvARB(exec, _mesa_GetVertexAttribfvARB);
+   SET_GetVertexAttribivARB(exec, _mesa_GetVertexAttribivARB);
    /* glGetVertexAttribPointervARB aliases glGetVertexAttribPointervNV */
-   exec->ProgramEnvParameter4dARB = _mesa_ProgramEnvParameter4dARB;
-   exec->ProgramEnvParameter4dvARB = _mesa_ProgramEnvParameter4dvARB;
-   exec->ProgramEnvParameter4fARB = _mesa_ProgramEnvParameter4fARB;
-   exec->ProgramEnvParameter4fvARB = _mesa_ProgramEnvParameter4fvARB;
-   exec->ProgramLocalParameter4dARB = _mesa_ProgramLocalParameter4dARB;
-   exec->ProgramLocalParameter4dvARB = _mesa_ProgramLocalParameter4dvARB;
-   exec->ProgramLocalParameter4fARB = _mesa_ProgramLocalParameter4fARB;
-   exec->ProgramLocalParameter4fvARB = _mesa_ProgramLocalParameter4fvARB;
-   exec->GetProgramEnvParameterdvARB = _mesa_GetProgramEnvParameterdvARB;
-   exec->GetProgramEnvParameterfvARB = _mesa_GetProgramEnvParameterfvARB;
-   exec->GetProgramLocalParameterdvARB = _mesa_GetProgramLocalParameterdvARB;
-   exec->GetProgramLocalParameterfvARB = _mesa_GetProgramLocalParameterfvARB;
-   exec->GetProgramivARB = _mesa_GetProgramivARB;
-   exec->GetProgramStringARB = _mesa_GetProgramStringARB;
+   SET_ProgramEnvParameter4dARB(exec, _mesa_ProgramEnvParameter4dARB);
+   SET_ProgramEnvParameter4dvARB(exec, _mesa_ProgramEnvParameter4dvARB);
+   SET_ProgramEnvParameter4fARB(exec, _mesa_ProgramEnvParameter4fARB);
+   SET_ProgramEnvParameter4fvARB(exec, _mesa_ProgramEnvParameter4fvARB);
+   SET_ProgramLocalParameter4dARB(exec, _mesa_ProgramLocalParameter4dARB);
+   SET_ProgramLocalParameter4dvARB(exec, _mesa_ProgramLocalParameter4dvARB);
+   SET_ProgramLocalParameter4fARB(exec, _mesa_ProgramLocalParameter4fARB);
+   SET_ProgramLocalParameter4fvARB(exec, _mesa_ProgramLocalParameter4fvARB);
+   SET_GetProgramEnvParameterdvARB(exec, _mesa_GetProgramEnvParameterdvARB);
+   SET_GetProgramEnvParameterfvARB(exec, _mesa_GetProgramEnvParameterfvARB);
+   SET_GetProgramLocalParameterdvARB(exec, _mesa_GetProgramLocalParameterdvARB);
+   SET_GetProgramLocalParameterfvARB(exec, _mesa_GetProgramLocalParameterfvARB);
+   SET_GetProgramivARB(exec, _mesa_GetProgramivARB);
+   SET_GetProgramStringARB(exec, _mesa_GetProgramStringARB);
 #endif
 
    /* ARB 28. GL_ARB_vertex_buffer_object */
 #if FEATURE_ARB_vertex_buffer_object
-   exec->BindBufferARB = _mesa_BindBufferARB;
-   exec->BufferDataARB = _mesa_BufferDataARB;
-   exec->BufferSubDataARB = _mesa_BufferSubDataARB;
-   exec->DeleteBuffersARB = _mesa_DeleteBuffersARB;
-   exec->GenBuffersARB = _mesa_GenBuffersARB;
-   exec->GetBufferParameterivARB = _mesa_GetBufferParameterivARB;
-   exec->GetBufferPointervARB = _mesa_GetBufferPointervARB;
-   exec->GetBufferSubDataARB = _mesa_GetBufferSubDataARB;
-   exec->IsBufferARB = _mesa_IsBufferARB;
-   exec->MapBufferARB = _mesa_MapBufferARB;
-   exec->UnmapBufferARB = _mesa_UnmapBufferARB;
+   SET_BindBufferARB(exec, _mesa_BindBufferARB);
+   SET_BufferDataARB(exec, _mesa_BufferDataARB);
+   SET_BufferSubDataARB(exec, _mesa_BufferSubDataARB);
+   SET_DeleteBuffersARB(exec, _mesa_DeleteBuffersARB);
+   SET_GenBuffersARB(exec, _mesa_GenBuffersARB);
+   SET_GetBufferParameterivARB(exec, _mesa_GetBufferParameterivARB);
+   SET_GetBufferPointervARB(exec, _mesa_GetBufferPointervARB);
+   SET_GetBufferSubDataARB(exec, _mesa_GetBufferSubDataARB);
+   SET_IsBufferARB(exec, _mesa_IsBufferARB);
+   SET_MapBufferARB(exec, _mesa_MapBufferARB);
+   SET_UnmapBufferARB(exec, _mesa_UnmapBufferARB);
 #endif
 
+   /* ARB 29. GL_ARB_occlusion_query */
 #if FEATURE_ARB_occlusion_query
-   exec->GenQueriesARB = _mesa_GenQueriesARB;
-   exec->DeleteQueriesARB = _mesa_DeleteQueriesARB;
-   exec->IsQueryARB = _mesa_IsQueryARB;
-   exec->BeginQueryARB = _mesa_BeginQueryARB;
-   exec->EndQueryARB = _mesa_EndQueryARB;
-   exec->GetQueryivARB = _mesa_GetQueryivARB;
-   exec->GetQueryObjectivARB = _mesa_GetQueryObjectivARB;
-   exec->GetQueryObjectuivARB = _mesa_GetQueryObjectuivARB;
+   SET_GenQueriesARB(exec, _mesa_GenQueriesARB);
+   SET_DeleteQueriesARB(exec, _mesa_DeleteQueriesARB);
+   SET_IsQueryARB(exec, _mesa_IsQueryARB);
+   SET_BeginQueryARB(exec, _mesa_BeginQueryARB);
+   SET_EndQueryARB(exec, _mesa_EndQueryARB);
+   SET_GetQueryivARB(exec, _mesa_GetQueryivARB);
+   SET_GetQueryObjectivARB(exec, _mesa_GetQueryObjectivARB);
+   SET_GetQueryObjectuivARB(exec, _mesa_GetQueryObjectuivARB);
+#endif
+
+   /* ARB 37. GL_ARB_draw_buffers */
+   SET_DrawBuffersARB(exec, _mesa_DrawBuffersARB);
+   
+#if FEATURE_ARB_shader_objects
+   SET_DeleteObjectARB(exec, _mesa_DeleteObjectARB);
+   SET_GetHandleARB(exec, _mesa_GetHandleARB);
+   SET_DetachObjectARB(exec, _mesa_DetachObjectARB);
+   SET_CreateShaderObjectARB(exec, _mesa_CreateShaderObjectARB);
+   SET_ShaderSourceARB(exec, _mesa_ShaderSourceARB);
+   SET_CompileShaderARB(exec, _mesa_CompileShaderARB);
+   SET_CreateProgramObjectARB(exec, _mesa_CreateProgramObjectARB);
+   SET_AttachObjectARB(exec, _mesa_AttachObjectARB);
+   SET_LinkProgramARB(exec, _mesa_LinkProgramARB);
+   SET_UseProgramObjectARB(exec, _mesa_UseProgramObjectARB);
+   SET_ValidateProgramARB(exec, _mesa_ValidateProgramARB);
+   SET_Uniform1fARB(exec, _mesa_Uniform1fARB);
+   SET_Uniform2fARB(exec, _mesa_Uniform2fARB);
+   SET_Uniform3fARB(exec, _mesa_Uniform3fARB);
+   SET_Uniform4fARB(exec, _mesa_Uniform4fARB);
+   SET_Uniform1iARB(exec, _mesa_Uniform1iARB);
+   SET_Uniform2iARB(exec, _mesa_Uniform2iARB);
+   SET_Uniform3iARB(exec, _mesa_Uniform3iARB);
+   SET_Uniform4iARB(exec, _mesa_Uniform4iARB);
+   SET_Uniform1fvARB(exec, _mesa_Uniform1fvARB);
+   SET_Uniform2fvARB(exec, _mesa_Uniform2fvARB);
+   SET_Uniform3fvARB(exec, _mesa_Uniform3fvARB);
+   SET_Uniform4fvARB(exec, _mesa_Uniform4fvARB);
+   SET_Uniform1ivARB(exec, _mesa_Uniform1ivARB);
+   SET_Uniform2ivARB(exec, _mesa_Uniform2ivARB);
+   SET_Uniform3ivARB(exec, _mesa_Uniform3ivARB);
+   SET_Uniform4ivARB(exec, _mesa_Uniform4ivARB);
+   SET_UniformMatrix2fvARB(exec, _mesa_UniformMatrix2fvARB);
+   SET_UniformMatrix3fvARB(exec, _mesa_UniformMatrix3fvARB);
+   SET_UniformMatrix4fvARB(exec, _mesa_UniformMatrix4fvARB);
+   SET_GetObjectParameterfvARB(exec, _mesa_GetObjectParameterfvARB);
+   SET_GetObjectParameterivARB(exec, _mesa_GetObjectParameterivARB);
+   SET_GetInfoLogARB(exec, _mesa_GetInfoLogARB);
+   SET_GetAttachedObjectsARB(exec, _mesa_GetAttachedObjectsARB);
+   SET_GetUniformLocationARB(exec, _mesa_GetUniformLocationARB);
+   SET_GetActiveUniformARB(exec, _mesa_GetActiveUniformARB);
+   SET_GetUniformfvARB(exec, _mesa_GetUniformfvARB);
+   SET_GetUniformivARB(exec, _mesa_GetUniformivARB);
+   SET_GetShaderSourceARB(exec, _mesa_GetShaderSourceARB);
+#endif    /* FEATURE_ARB_shader_objects */
+
+#if FEATURE_ARB_vertex_shader
+   SET_BindAttribLocationARB(exec, _mesa_BindAttribLocationARB);
+   SET_GetActiveAttribARB(exec, _mesa_GetActiveAttribARB);
+   SET_GetAttribLocationARB(exec, _mesa_GetAttribLocationARB);
+#endif    /* FEATURE_ARB_vertex_shader */
+
+  /* GL_ATI_fragment_shader */
+#if FEATURE_ATI_fragment_shader
+   SET_GenFragmentShadersATI(exec, _mesa_GenFragmentShadersATI);
+   SET_BindFragmentShaderATI(exec, _mesa_BindFragmentShaderATI);
+   SET_DeleteFragmentShaderATI(exec, _mesa_DeleteFragmentShaderATI);
+   SET_BeginFragmentShaderATI(exec, _mesa_BeginFragmentShaderATI);
+   SET_EndFragmentShaderATI(exec, _mesa_EndFragmentShaderATI);
+   SET_PassTexCoordATI(exec, _mesa_PassTexCoordATI);
+   SET_SampleMapATI(exec, _mesa_SampleMapATI);
+   SET_ColorFragmentOp1ATI(exec, _mesa_ColorFragmentOp1ATI);
+   SET_ColorFragmentOp2ATI(exec, _mesa_ColorFragmentOp2ATI);
+   SET_ColorFragmentOp3ATI(exec, _mesa_ColorFragmentOp3ATI);
+   SET_AlphaFragmentOp1ATI(exec, _mesa_AlphaFragmentOp1ATI);
+   SET_AlphaFragmentOp2ATI(exec, _mesa_AlphaFragmentOp2ATI);
+   SET_AlphaFragmentOp3ATI(exec, _mesa_AlphaFragmentOp3ATI);
+   SET_SetFragmentShaderConstantATI(exec, _mesa_SetFragmentShaderConstantATI);
+#endif
+
+#if FEATURE_EXT_framebuffer_object
+   SET_IsRenderbufferEXT(exec, _mesa_IsRenderbufferEXT);
+   SET_BindRenderbufferEXT(exec, _mesa_BindRenderbufferEXT);
+   SET_DeleteRenderbuffersEXT(exec, _mesa_DeleteRenderbuffersEXT);
+   SET_GenRenderbuffersEXT(exec, _mesa_GenRenderbuffersEXT);
+   SET_RenderbufferStorageEXT(exec, _mesa_RenderbufferStorageEXT);
+   SET_GetRenderbufferParameterivEXT(exec, _mesa_GetRenderbufferParameterivEXT);
+   SET_IsFramebufferEXT(exec, _mesa_IsFramebufferEXT);
+   SET_BindFramebufferEXT(exec, _mesa_BindFramebufferEXT);
+   SET_DeleteFramebuffersEXT(exec, _mesa_DeleteFramebuffersEXT);
+   SET_GenFramebuffersEXT(exec, _mesa_GenFramebuffersEXT);
+   SET_CheckFramebufferStatusEXT(exec, _mesa_CheckFramebufferStatusEXT);
+   SET_FramebufferTexture1DEXT(exec, _mesa_FramebufferTexture1DEXT);
+   SET_FramebufferTexture2DEXT(exec, _mesa_FramebufferTexture2DEXT);
+   SET_FramebufferTexture3DEXT(exec, _mesa_FramebufferTexture3DEXT);
+   SET_FramebufferRenderbufferEXT(exec, _mesa_FramebufferRenderbufferEXT);
+   SET_GetFramebufferAttachmentParameterivEXT(exec, _mesa_GetFramebufferAttachmentParameterivEXT);
+   SET_GenerateMipmapEXT(exec, _mesa_GenerateMipmapEXT);
 #endif
 }
 
-/*@}*/
 
 
 /**********************************************************************/
@@ -871,23 +934,38 @@ update_program(GLcontext *ctx)
       && ctx->VertexProgram.Current->Instructions;
    ctx->FragmentProgram._Enabled = ctx->FragmentProgram.Enabled
       && ctx->FragmentProgram.Current->Instructions;
+   ctx->ATIFragmentShader._Enabled = ctx->ATIFragmentShader.Enabled
+      && ctx->ATIFragmentShader.Current->Instructions;
+      
+   ctx->FragmentProgram._Current = ctx->FragmentProgram.Current;
+   ctx->FragmentProgram._Active = ctx->FragmentProgram._Enabled;
+
+   if (ctx->_MaintainTexEnvProgram && !ctx->FragmentProgram._Enabled) {
+      if (!ctx->_TexEnvProgram)
+	 ctx->_TexEnvProgram = (struct fragment_program *)
+	    ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0);
+
+      ctx->FragmentProgram._Current = ctx->_TexEnvProgram;
+      ctx->FragmentProgram._Active = GL_TRUE;
+   }
 }
 
 
-/*
+/**
  * If __GLcontextRec::NewState is non-zero then this function \b must be called
  * before rendering any primitive.  Basically, function pointers and
  * miscellaneous flags are updated to reflect the current state of the state
  * machine.
  *
- * Calls dd_function_table::UpdateState to perform any internal state management
- * necessary.
+ * Calls dd_function_table::UpdateState to perform any internal state
+ * management necessary.
  * 
  * \sa _mesa_update_modelview_project(), _mesa_update_texture(),
- * _mesa_update_buffers(), _mesa_update_polygon(), _mesa_update_lighting() and
- * _mesa_update_tnl_spaces().
+ * _mesa_update_buffer_bounds(), _mesa_update_polygon(),
+ * _mesa_update_lighting() and _mesa_update_tnl_spaces().
  */
-void _mesa_update_state( GLcontext *ctx )
+void
+_mesa_update_state( GLcontext *ctx )
 {
    GLuint new_state = ctx->NewState;
 
@@ -903,8 +981,14 @@ void _mesa_update_state( GLcontext *ctx )
    if (new_state & (_NEW_PROGRAM|_NEW_TEXTURE|_NEW_TEXTURE_MATRIX))
       _mesa_update_texture( ctx, new_state );
 
-   if (new_state & (_NEW_SCISSOR|_NEW_BUFFERS))
-      _mesa_update_buffers( ctx );
+   if (new_state & (_NEW_BUFFERS | _NEW_COLOR | _NEW_PIXEL))
+      _mesa_update_framebuffer(ctx);
+
+   if (new_state & (_NEW_SCISSOR | _NEW_BUFFERS | _NEW_VIEWPORT))
+      _mesa_update_draw_buffer_bounds( ctx );
+
+   if (new_state & _NEW_POINT)
+      _mesa_update_point( ctx );
 
    if (new_state & _NEW_POLYGON)
       _mesa_update_polygon( ctx );
@@ -920,6 +1004,11 @@ void _mesa_update_state( GLcontext *ctx )
 
    if (new_state & (_NEW_ARRAY | _NEW_PROGRAM))
       update_arrays( ctx );
+
+   if (ctx->_MaintainTexEnvProgram) {
+      if (new_state & (_NEW_TEXTURE | _DD_NEW_SEPARATE_SPECULAR | _NEW_FOG))
+	 _mesa_UpdateTexEnvProgram(ctx);
+   }
 
    /* ctx->_NeedEyeCoords is now up to date.
     *

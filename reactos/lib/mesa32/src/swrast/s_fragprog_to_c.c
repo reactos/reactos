@@ -808,7 +808,7 @@ static void translate_program( struct fragment_program *p )
 
 void _swrast_translate_program( GLcontext *ctx )
 {
-   struct fragment_program *p = ctx->FragmentProgram.Current;
+   struct fragment_program *p = ctx->FragmentProgram._Current;
 
    if (p) {
       p->c_strlen = 0;

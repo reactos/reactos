@@ -266,7 +266,7 @@ _mesa_GetProgramivNV(GLuint id, GLenum pname, GLint *params)
          *params = prog->Target;
          return;
       case GL_PROGRAM_LENGTH_NV:
-         *params = prog->String ? _mesa_strlen((char *) prog->String) : 0;
+         *params = prog->String ?(GLint)_mesa_strlen((char *) prog->String) : 0;
          return;
       case GL_PROGRAM_RESIDENT_NV:
          *params = prog->Resident;

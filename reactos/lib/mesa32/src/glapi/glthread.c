@@ -242,7 +242,7 @@ _glthread_SetTSD(_glthread_TSD *tsd, void *ptr)
  * XFree86 has its own thread wrapper, Xthreads.h
  * We wrap it again for GL.
  */
-#ifdef XTHREADS
+#ifdef USE_XTHREADS
 
 unsigned long
 _glthread_GetID(void)

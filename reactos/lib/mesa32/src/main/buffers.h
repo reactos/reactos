@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.3
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -50,6 +50,13 @@ extern void GLAPIENTRY
 _mesa_DrawBuffer( GLenum mode );
 
 extern void GLAPIENTRY
+_mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers);
+
+extern void
+_mesa_drawbuffers(GLcontext *ctx, GLsizei n, const GLenum *buffers,
+                  const GLuint *destMask);
+
+extern void GLAPIENTRY
 _mesa_ReadBuffer( GLenum mode );
 
 extern void GLAPIENTRY
@@ -62,9 +69,10 @@ extern void GLAPIENTRY
 _mesa_SampleCoverageARB(GLclampf value, GLboolean invert);
 
 extern void 
-_mesa_init_buffers( GLcontext * ctx );
+_mesa_init_scissor(GLcontext *ctx);
 
 extern void 
-_mesa_update_buffers( GLcontext *ctx );
+_mesa_init_multisample(GLcontext *ctx);
+
 
 #endif

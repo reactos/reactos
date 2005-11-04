@@ -1,4 +1,4 @@
-/* $Id: svgamesa8.c,v 1.8 2001/02/06 00:03:48 brianp Exp $ */
+/* $Id: svgamesa8.c,v 1.9 2005/05/04 20:11:39 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -98,7 +98,8 @@ void __clear8( GLcontext *ctx, GLbitfield mask, GLboolean all,
       _swrast_Clear( ctx, mask, all, x, y, width, height );
 }
 
-void __write_ci32_span8( const GLcontext *ctx, GLuint n, GLint x, GLint y,
+void __write_ci32_span8( const GLcontext *ctx, struct gl_renderbuffer *rb,
+                         GLuint n, GLint x, GLint y,
                          const GLuint index[], const GLubyte mask[] )
 {
    int i;
@@ -109,7 +110,8 @@ void __write_ci32_span8( const GLcontext *ctx, GLuint n, GLint x, GLint y,
    }
 }
 
-void __write_ci8_span8( const GLcontext *ctx, GLuint n, GLint x, GLint y,
+void __write_ci8_span8( const GLcontext *ctx, struct gl_renderbuffer *rb,
+                        GLuint n, GLint x, GLint y,
                         const GLubyte index[], const GLubyte mask[] )
 {
    int i;
@@ -121,8 +123,8 @@ void __write_ci8_span8( const GLcontext *ctx, GLuint n, GLint x, GLint y,
    }
 }
 
-void __write_mono_ci_span8( const GLcontext *ctx, GLuint n,
-                            GLint x, GLint y,
+void __write_mono_ci_span8( const GLcontext *ctx, struct gl_renderbuffer *rb,
+                            GLuint n, GLint x, GLint y,
                             GLuint colorIndex, const GLubyte mask[] )
 {
    int i;
@@ -133,7 +135,7 @@ void __write_mono_ci_span8( const GLcontext *ctx, GLuint n,
    }
 }
 
-void __read_ci32_span8( const GLcontext *ctx,
+void __read_ci32_span8( const GLcontext *ctx, struct gl_renderbuffer *rb,
                         GLuint n, GLint x, GLint y, GLuint index[])
 {
    int i;
@@ -142,7 +144,7 @@ void __read_ci32_span8( const GLcontext *ctx,
    }
 }
 
-void __write_ci32_pixels8( const GLcontext *ctx,
+void __write_ci32_pixels8( const GLcontext *ctx, struct gl_renderbuffer *rb,
                            GLuint n, const GLint x[], const GLint y[],
                            const GLuint index[], const GLubyte mask[] )
 {
@@ -155,8 +157,8 @@ void __write_ci32_pixels8( const GLcontext *ctx,
 }
 
 
-void __write_mono_ci_pixels8( const GLcontext *ctx, GLuint n,
-                              const GLint x[], const GLint y[],
+void __write_mono_ci_pixels8( const GLcontext *ctx, struct gl_renderbuffer *rb,
+                              GLuint n, const GLint x[], const GLint y[],
                               GLuint colorIndex, const GLubyte mask[] )
 {
    int i;
@@ -167,7 +169,7 @@ void __write_mono_ci_pixels8( const GLcontext *ctx, GLuint n,
    }
 }
 
-void __read_ci32_pixels8( const GLcontext *ctx,
+void __read_ci32_pixels8( const GLcontext *ctx, struct gl_renderbuffer *rb,
                           GLuint n, const GLint x[], const GLint y[],
                           GLuint index[], const GLubyte mask[] )
 {

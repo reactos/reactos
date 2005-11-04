@@ -51,12 +51,6 @@ extern void
 _mesa_delete_texture_object( GLcontext *ctx, struct gl_texture_object *obj );
 
 extern void
-_mesa_save_texture_object( GLcontext *ctx, struct gl_texture_object *obj );
-
-extern void
-_mesa_remove_texture_object( GLcontext *ctx, struct gl_texture_object *obj );
-
-extern void
 _mesa_copy_texture_object( struct gl_texture_object *dest,
                            const struct gl_texture_object *src );
 

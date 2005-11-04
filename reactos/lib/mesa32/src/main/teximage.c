@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.5
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -36,6 +36,7 @@
 
 
 #include "glheader.h"
+#include "bufferobj.h"
 #include "context.h"
 #include "convolve.h"
 #include "image.h"
@@ -48,6 +49,29 @@
 #include "texstate.h"
 #include "texstore.h"
 #include "mtypes.h"
+
+
+/**
+ * We allocate texture memory on 512-byte boundaries so we can use MMX/SSE
+ * elsewhere.
+ */
+void *
+_mesa_alloc_texmemory(GLsizei bytes)
+{
+   return _mesa_align_malloc(bytes, 512);
+}
+
+
+/**
+ * Free texture memory allocated with _mesa_alloc_texmemory()
+ */
+void
+_mesa_free_texmemory(void *m)
+{
+   _mesa_align_free(m);
+}
+
+
 
 
 #if 0
@@ -218,7 +242,8 @@ _mesa_base_tex_format( GLcontext *ctx, GLint internalFormat )
       }
    }
 
-   if (ctx->Extensions.SGIX_depth_texture) {
+   if (ctx->Extensions.SGIX_depth_texture ||
+       ctx->Extensions.ARB_depth_texture) {
       switch (internalFormat) {
          case GL_DEPTH_COMPONENT:
          case GL_DEPTH_COMPONENT16_SGIX:
@@ -330,6 +355,9 @@ static GLboolean
 is_color_format(GLenum format)
 {
    switch (format) {
+      case GL_RED:
+      case GL_GREEN:
+      case GL_BLUE:
       case GL_ALPHA:
       case GL_ALPHA4:
       case GL_ALPHA8:
@@ -529,12 +557,13 @@ _mesa_set_tex_image(struct gl_texture_object *tObj,
       case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB:
       case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB:
       case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB:
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB: {
-	 GLuint face = ((GLuint) target - 
-			(GLuint) GL_TEXTURE_CUBE_MAP_POSITIVE_X);
-         tObj->Image[face][level] = texImage;
-	 break;
-      }
+      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB:
+         {
+            GLuint face = ((GLuint) target - 
+                           (GLuint) GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+            tObj->Image[face][level] = texImage;
+         }
+         break;
       case GL_TEXTURE_RECTANGLE_NV:
          ASSERT(level == 0);
          tObj->Image[0][level] = texImage;
@@ -566,21 +595,41 @@ _mesa_new_texture_image( GLcontext *ctx )
 
 
 /**
+ * Free texture image data.
+ * This function is a fallback called via ctx->Driver.FreeTexImageData().
+ *
+ * \param teximage texture image.
+ *
+ * Free the texture image data if it's not marked as client data.
+ */
+void
+_mesa_free_texture_image_data(GLcontext *ctx,
+                              struct gl_texture_image *texImage)
+{
+   if (texImage->Data && !texImage->IsClientData) {
+      /* free the old texture data */
+      _mesa_free_texmemory(texImage->Data);
+   }
+
+   texImage->Data = NULL;
+}
+
+
+/**
  * Free texture image.
  *
  * \param teximage texture image.
  *
- * Free the texture image structure and the associated image data if it's not
- * marked as client data.
+ * Free the texture image structure and the associated image data.
  */
 void
-_mesa_delete_texture_image( struct gl_texture_image *teximage )
+_mesa_delete_texture_image( GLcontext *ctx, struct gl_texture_image *texImage )
 {
-   if (teximage->Data && !teximage->IsClientData) {
-      MESA_PBUFFER_FREE( teximage->Data );
-      teximage->Data = NULL;
+   if (texImage->Data) {
+      ctx->Driver.FreeTexImageData( ctx, texImage );
    }
-   FREE( teximage );
+   ASSERT(texImage->Data == NULL);
+   FREE( texImage );
 }
 
 
@@ -882,11 +931,9 @@ _mesa_max_texture_levels(GLcontext *ctx, GLenum target)
    case GL_TEXTURE_CUBE_MAP_ARB:
    case GL_PROXY_TEXTURE_CUBE_MAP_ARB:
       return ctx->Const.MaxCubeTextureLevels;
-      break;
    case GL_TEXTURE_RECTANGLE_NV:
    case GL_PROXY_TEXTURE_RECTANGLE_NV:
       return 1;
-      break;
    default:
       return 0; /* bad target */
    }
@@ -1187,6 +1234,7 @@ texture_error_check( GLcontext *ctx, GLenum target,
 {
    const GLboolean isProxy = is_proxy_target(target);
    GLboolean sizeOK;
+   GLboolean colorFormat, indexFormat;
 
    /* Basic level check (more checking in ctx->Driver.TestProxyTexImage) */
    if (level < 0 || level >= MAX_TEXTURE_LEVELS) {
@@ -1316,8 +1364,10 @@ texture_error_check( GLcontext *ctx, GLenum target,
    }
 
    /* make sure internal format and format basically agree */
-   if ((is_color_format(internalFormat) != is_color_format(format)) ||
-       (is_index_format(internalFormat) != is_index_format(format)) ||
+   colorFormat = is_color_format(format);
+   indexFormat = is_index_format(format);
+   if ((is_color_format(internalFormat) && !colorFormat && !indexFormat) ||
+       (is_index_format(internalFormat) && !indexFormat) ||
        (is_depth_format(internalFormat) != is_depth_format(format)) ||
        (is_ycbcr_format(internalFormat) != is_ycbcr_format(format))) {
       if (!isProxy)
@@ -1933,7 +1983,8 @@ _mesa_GetTexImage( GLenum target, GLint level, GLenum format,
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexImage(format)");
    }
 
-   if (!ctx->Extensions.SGIX_depth_texture && is_depth_format(format)) {
+   if (!ctx->Extensions.SGIX_depth_texture &&
+       !ctx->Extensions.ARB_depth_texture && is_depth_format(format)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexImage(format)");
    }
 
@@ -1950,16 +2001,13 @@ _mesa_GetTexImage( GLenum target, GLint level, GLenum format,
       return;
    }
 
-   if (!texImage->Data) {
-      /* no image data, not an error */
-      return;
-   }
-
    /* Make sure the requested image format is compatible with the
-    * texture's format.
+    * texture's format. We let the colorformat-indexformat go through,
+    * because the texelfetcher will dequantize to full rgba.
     */
    if (is_color_format(format)
-       && !is_color_format(texImage->TexFormat->BaseFormat)) {
+       && !is_color_format(texImage->TexFormat->BaseFormat)
+       && !is_index_format(texImage->TexFormat->BaseFormat)) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetTexImage(format mismatch)");
       return;
    }
@@ -1979,92 +2027,9 @@ _mesa_GetTexImage( GLenum target, GLint level, GLenum format,
       return;
    }
 
-   /*
-    * XXX Move this code into a new driver fall-back function
-    */
-   {
-      const GLint width = texImage->Width;
-      const GLint height = texImage->Height;
-      const GLint depth = texImage->Depth;
-      GLint img, row;
-      for (img = 0; img < depth; img++) {
-         for (row = 0; row < height; row++) {
-            /* compute destination address in client memory */
-            GLvoid *dest = _mesa_image_address( &ctx->Pack, pixels,
-                                                width, height, format, type,
-                                                img, row, 0);
-            assert(dest);
-
-            if (format == GL_COLOR_INDEX) {
-               GLuint indexRow[MAX_WIDTH];
-               GLint col;
-               /* Can't use FetchTexel here because that returns RGBA */
-               if (texImage->TexFormat->IndexBits == 8) {
-                  const GLubyte *src = (const GLubyte *) texImage->Data;
-                  for (col = 0; col < width; col++) {
-                     indexRow[col] = src[texImage->Width *
-                                        (img * texImage->Height + row) + col];
-                  }
-               }
-               else if (texImage->TexFormat->IndexBits == 16) {
-                  const GLushort *src = (const GLushort *) texImage->Data;
-                  for (col = 0; col < width; col++) {
-                     indexRow[col] = src[texImage->Width *
-                                        (img * texImage->Height + row) + col];
-                  }
-               }
-               else {
-                  _mesa_problem(ctx,
-                                "Color index problem in _mesa_GetTexImage");
-                  return;
-               }
-               _mesa_pack_index_span(ctx, width, type, dest,
-                                     indexRow, &ctx->Pack,
-                                     0 /* no image transfer */);
-            }
-            else if (format == GL_DEPTH_COMPONENT) {
-               GLfloat depthRow[MAX_WIDTH];
-               GLint col;
-               for (col = 0; col < width; col++) {
-                  (*texImage->FetchTexelf)(texImage, col, row, img,
-                                           depthRow + col);
-               }
-               _mesa_pack_depth_span(ctx, width, dest, type,
-                                     depthRow, &ctx->Pack);
-            }
-            else if (format == GL_YCBCR_MESA) {
-               /* No pixel transfer */
-               const GLint rowstride = texImage->RowStride;
-               MEMCPY(dest,
-                      (const GLushort *) texImage->Data + row * rowstride,
-                      width * sizeof(GLushort));
-               /* check for byte swapping */
-               if ((texImage->TexFormat->MesaFormat == MESA_FORMAT_YCBCR
-                    && type == GL_UNSIGNED_SHORT_8_8_REV_MESA) ||
-                   (texImage->TexFormat->MesaFormat == MESA_FORMAT_YCBCR_REV
-                    && type == GL_UNSIGNED_SHORT_8_8_MESA)) {
-                  if (!ctx->Pack.SwapBytes)
-                     _mesa_swap2((GLushort *) dest, width);
-               }
-               else if (ctx->Pack.SwapBytes) {
-                  _mesa_swap2((GLushort *) dest, width);
-               }
-            }
-            else {
-               /* general case:  convert row to RGBA format */
-               GLfloat rgba[MAX_WIDTH][4];
-               GLint col;
-               for (col = 0; col < width; col++) {
-                  (*texImage->FetchTexelf)(texImage, col, row, img, rgba[col]);
-               }
-               _mesa_pack_rgba_span_float(ctx, width,
-                                          (const GLfloat (*)[4]) rgba,
-                                          format, type, dest, &ctx->Pack,
-                                          0 /* no image transfer */);
-            } /* format */
-         } /* row */
-      } /* img */
-   }
+   /* typically, this will call _mesa_get_teximage() */
+   ctx->Driver.GetTexImage(ctx, target, level, format, type, pixels,
+                           texObj, texImage);
 }
 
 
@@ -2086,6 +2051,7 @@ _mesa_TexImage1D( GLenum target, GLint level, GLint internalFormat,
    }
 
    if (target == GL_TEXTURE_1D) {
+      /* non-proxy target */
       struct gl_texture_unit *texUnit;
       struct gl_texture_object *texObj;
       struct gl_texture_image *texImage;
@@ -2103,11 +2069,10 @@ _mesa_TexImage1D( GLenum target, GLint level, GLint internalFormat,
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glTexImage1D");
          return;
       }
-      else if (texImage->Data && !texImage->IsClientData) {
-         /* free the old texture data */
-         MESA_PBUFFER_FREE(texImage->Data);
+      else if (texImage->Data) {
+	 ctx->Driver.FreeTexImageData( ctx, texImage );
       }
-      texImage->Data = NULL;
+      ASSERT(texImage->Data == NULL);
       clear_teximage_fields(texImage); /* not really needed, but helpful */
       _mesa_init_teximage_fields(ctx, target, texImage,
                                  postConvWidth, 1, 1,
@@ -2203,11 +2168,10 @@ _mesa_TexImage2D( GLenum target, GLint level, GLint internalFormat,
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glTexImage2D");
          return;
       }
-      else if (texImage->Data && !texImage->IsClientData) {
-         /* free the old texture data */
-         MESA_PBUFFER_FREE(texImage->Data);
+      else if (texImage->Data) {
+	 ctx->Driver.FreeTexImageData( ctx, texImage );
       }
-      texImage->Data = NULL;
+      ASSERT(texImage->Data == NULL);
       clear_teximage_fields(texImage); /* not really needed, but helpful */
       _mesa_init_teximage_fields(ctx, target, texImage,
                                  postConvWidth, postConvHeight, 1,
@@ -2285,6 +2249,7 @@ _mesa_TexImage3D( GLenum target, GLint level, GLint internalFormat,
       struct gl_texture_unit *texUnit;
       struct gl_texture_object *texObj;
       struct gl_texture_image *texImage;
+      /* non-proxy target */
 
       if (texture_error_check(ctx, target, level, (GLint) internalFormat,
                               format, type, 3, width, height, depth, border)) {
@@ -2298,10 +2263,10 @@ _mesa_TexImage3D( GLenum target, GLint level, GLint internalFormat,
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glTexImage3D");
          return;
       }
-      else if (texImage->Data && !texImage->IsClientData) {
-         MESA_PBUFFER_FREE(texImage->Data);
+      else if (texImage->Data) {
+	 ctx->Driver.FreeTexImageData( ctx, texImage );
       }
-      texImage->Data = NULL;
+      ASSERT(texImage->Data == NULL);
       clear_teximage_fields(texImage); /* not really needed, but helpful */
       _mesa_init_teximage_fields(ctx, target, texImage,
                                  width, height, depth,
@@ -2538,11 +2503,10 @@ _mesa_CopyTexImage1D( GLenum target, GLint level,
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCopyTexImage1D");
       return;
    }
-   else if (texImage->Data && !texImage->IsClientData) {
-      /* free the old texture data */
-      MESA_PBUFFER_FREE(texImage->Data);
+   else if (texImage->Data) {
+      ctx->Driver.FreeTexImageData( ctx, texImage );
    }
-   texImage->Data = NULL;
+   ASSERT(texImage->Data == NULL);
 
    clear_teximage_fields(texImage); /* not really needed, but helpful */
    _mesa_init_teximage_fields(ctx, target, texImage, postConvWidth, 1, 1,
@@ -2601,11 +2565,10 @@ _mesa_CopyTexImage2D( GLenum target, GLint level, GLenum internalFormat,
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCopyTexImage2D");
       return;
    }
-   else if (texImage->Data && !texImage->IsClientData) {
-      /* free the old texture data */
-      MESA_PBUFFER_FREE(texImage->Data);
+   else if (texImage->Data) {
+      ctx->Driver.FreeTexImageData( ctx, texImage );
    }
-   texImage->Data = NULL;
+   ASSERT(texImage->Data == NULL);
 
    clear_teximage_fields(texImage); /* not really needed, but helpful */
    _mesa_init_teximage_fields(ctx, target, texImage,
@@ -2798,6 +2761,9 @@ compressed_texture_error_check(GLcontext *ctx, GLint dimensions,
    if (!is_compressed_format(ctx, internalFormat))
       return GL_INVALID_ENUM;
 
+   if (_mesa_base_tex_format(ctx, internalFormat) < 0)
+      return GL_INVALID_ENUM;
+
    if (border != 0)
       return GL_INVALID_VALUE;
 
@@ -2805,16 +2771,16 @@ compressed_texture_error_check(GLcontext *ctx, GLint dimensions,
     * XXX We should probably use the proxy texture error check function here.
     */
    if (width < 1 || width > maxTextureSize ||
-       (!ctx->Extensions.ARB_texture_non_power_of_two && logbase2(width) < 0))
+       (!ctx->Extensions.ARB_texture_non_power_of_two && _mesa_bitcount(width) != 1))
       return GL_INVALID_VALUE;
 
    if ((height < 1 || height > maxTextureSize ||
-        (!ctx->Extensions.ARB_texture_non_power_of_two && logbase2(height) < 0))
+       (!ctx->Extensions.ARB_texture_non_power_of_two && _mesa_bitcount(height) != 1))
        && dimensions > 1)
       return GL_INVALID_VALUE;
 
    if ((depth < 1 || depth > maxTextureSize ||
-        (!ctx->Extensions.ARB_texture_non_power_of_two && logbase2(depth) < 0))
+       (!ctx->Extensions.ARB_texture_non_power_of_two && _mesa_bitcount(depth) != 1))
        && dimensions > 2)
       return GL_INVALID_VALUE;
 
@@ -2930,6 +2896,7 @@ _mesa_CompressedTexImage1DARB(GLenum target, GLint level,
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
    if (target == GL_TEXTURE_1D) {
+      /* non-proxy target */
       struct gl_texture_unit *texUnit;
       struct gl_texture_object *texObj;
       struct gl_texture_image *texImage;
@@ -2947,10 +2914,10 @@ _mesa_CompressedTexImage1DARB(GLenum target, GLint level,
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage1D");
          return;
       }
-      else if (texImage->Data && !texImage->IsClientData) {
-         MESA_PBUFFER_FREE(texImage->Data);
+      else if (texImage->Data) {
+	 ctx->Driver.FreeTexImageData( ctx, texImage );
       }
-      texImage->Data = NULL;
+      ASSERT(texImage->Data == NULL);
 
       _mesa_init_teximage_fields(ctx, target, texImage, width, 1, 1,
                                  border, internalFormat);
@@ -3012,6 +2979,7 @@ _mesa_CompressedTexImage2DARB(GLenum target, GLint level,
        (ctx->Extensions.ARB_texture_cube_map &&
         target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB &&
         target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB)) {
+      /* non-proxy target */
       struct gl_texture_unit *texUnit;
       struct gl_texture_object *texObj;
       struct gl_texture_image *texImage;
@@ -3029,10 +2997,10 @@ _mesa_CompressedTexImage2DARB(GLenum target, GLint level,
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage2D");
          return;
       }
-      else if (texImage->Data && !texImage->IsClientData) {
-         MESA_PBUFFER_FREE(texImage->Data);
+      else if (texImage->Data) {
+	 ctx->Driver.FreeTexImageData( ctx, texImage );
       }
-      texImage->Data = NULL;
+      ASSERT(texImage->Data == NULL);
 
       _mesa_init_teximage_fields(ctx, target, texImage, width, height, 1,
                                  border, internalFormat);
@@ -3093,6 +3061,7 @@ _mesa_CompressedTexImage3DARB(GLenum target, GLint level,
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
    if (target == GL_TEXTURE_3D) {
+      /* non-proxy target */
       struct gl_texture_unit *texUnit;
       struct gl_texture_object *texObj;
       struct gl_texture_image *texImage;
@@ -3110,10 +3079,10 @@ _mesa_CompressedTexImage3DARB(GLenum target, GLint level,
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage3D");
          return;
       }
-      else if (texImage->Data && !texImage->IsClientData) {
-         MESA_PBUFFER_FREE(texImage->Data);
+      else if (texImage->Data) {
+	 ctx->Driver.FreeTexImageData( ctx, texImage );
       }
-      texImage->Data = NULL;
+      ASSERT(texImage->Data == NULL);
 
       _mesa_init_teximage_fields(ctx, target, texImage, width, height, depth,
                                  border, internalFormat);
@@ -3356,9 +3325,6 @@ _mesa_GetCompressedTexImageARB(GLenum target, GLint level, GLvoid *img)
       return;
    }
 
-   if (!img)
-      return;
-
-   /* just memcpy, no pixelstore or pixel transfer */
-   MEMCPY(img, texImage->Data, texImage->CompressedSize);
+   /* this typically calls _mesa_get_compressed_teximage() */
+   ctx->Driver.GetCompressedTexImage(ctx, target, level, img, texObj,texImage);
 }

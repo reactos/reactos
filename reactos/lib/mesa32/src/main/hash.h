@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,13 +35,6 @@
 #include "glheader.h"
 
 
-/**
- * Opaque hash table type.
- */
-struct HashTable;
-
-
-
 extern struct _mesa_HashTable *_mesa_NewHashTable(void);
 
 extern void _mesa_DeleteHashTable(struct _mesa_HashTable *table);
@@ -54,9 +47,13 @@ extern void _mesa_HashRemove(struct _mesa_HashTable *table, GLuint key);
 
 extern GLuint _mesa_HashFirstEntry(struct _mesa_HashTable *table);
 
+extern GLuint _mesa_HashNextEntry(const struct _mesa_HashTable *table, GLuint key);
+
 extern void _mesa_HashPrint(const struct _mesa_HashTable *table);
 
 extern GLuint _mesa_HashFindFreeKeyBlock(struct _mesa_HashTable *table, GLuint numKeys);
+
+extern void _mesa_test_hash_functions(void);
 
 
 #endif

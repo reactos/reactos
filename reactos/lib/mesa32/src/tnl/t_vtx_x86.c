@@ -48,8 +48,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #if defined(USE_X86_ASM) && !defined(HAVE_NONSTANDARD_GLAPIENTRY)
 
 #define EXTERN( FUNC )		\
-extern const char *FUNC;	\
-extern const char *FUNC##_end
+extern const char FUNC[];	\
+extern const char FUNC##_end[]
 
 EXTERN( _tnl_x86_Attribute1fv );
 EXTERN( _tnl_x86_Attribute2fv );
@@ -84,8 +84,8 @@ EXTERN( _tnl_x86_choose_fv );
 
 #define DFN( FUNC, CACHE, KEY )				\
    struct _tnl_dynfn *dfn = MALLOC_STRUCT( _tnl_dynfn );\
-   char *start = (char *)&FUNC;				\
-   char *end = (char *)&FUNC##_end;			\
+   const char *start = FUNC;				\
+   const char *end = FUNC##_end;			\
    int offset = 0;               			\
    insert_at_head( &CACHE, dfn );			\
    dfn->key = KEY;					\
@@ -174,10 +174,11 @@ static struct _tnl_dynfn *makeX86Vertex2fv( GLcontext *ctx, int vertex_size )
 static struct _tnl_dynfn *makeX86Vertex3fv( GLcontext *ctx, int vertex_size )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   DFN ( _tnl_x86_Vertex3fv, tnl->vtx.cache.Vertex[3-1], vertex_size );
 
    switch (vertex_size) {
       default: {
+         DFN ( _tnl_x86_Vertex3fv, tnl->vtx.cache.Vertex[3-1], vertex_size );
+
          FIXUP(dfn->code, 0, 0, (int)&tnl->vtx.vbptr);
          FIXUP(dfn->code, 0, 1, vertex_size - 3);
          FIXUP(dfn->code, 0, 2, (int)&tnl->vtx.vertex[3]);
@@ -272,8 +273,8 @@ void _tnl_InitX86Codegen( struct _tnl_dynfn_generators *gen )
 #define MKDISP(FUNC, SIZE, ATTR, WARP)					\
 do {									\
    char *code;								\
-   char *start = (char *)&WARP;						\
-   char *end = (char *)&WARP##_end;					\
+   const char *start = WARP;						\
+   const char *end = WARP##_end;					\
    int offset = 0;							\
    code = ALIGN_MALLOC( end - start, 16 );				\
    memcpy (code, start, end - start);					\
@@ -346,8 +347,8 @@ void _tnl_x86choosers( tnl_attrfv_func (*choose)[4],
    for (attr = 0; attr < _TNL_MAX_ATTR_CODEGEN; attr++) {
       for (size = 0; size < 4; size++) {
          char *code;
-         char *start = (char *)&_tnl_x86_choose_fv;
-         char *end = (char *)&_tnl_x86_choose_fv_end;
+         const char *start = _tnl_x86_choose_fv;
+         const char *end = _tnl_x86_choose_fv_end;
          int offset = 0;
          code = ALIGN_MALLOC( end - start, 16 );
          memcpy (code, start, end - start);

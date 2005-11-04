@@ -257,7 +257,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
             if (state) {
                ctx->Transform.ClipPlanesEnabled |= (1 << p);
 
-               if (ctx->ProjectionMatrixStack.Top->flags & MAT_DIRTY)
+               if (_math_matrix_is_dirty(ctx->ProjectionMatrixStack.Top))
                   _math_matrix_analyse( ctx->ProjectionMatrixStack.Top );
 
                /* This derived state also calculated in clip.c and
@@ -301,7 +301,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          break;
 
       case GL_DEPTH_TEST:
-         if (state && ctx->Visual.depthBits==0) {
+         if (state && ctx->DrawBuffer->Visual.depthBits == 0) {
             _mesa_warning(ctx,"glEnable(GL_DEPTH_TEST) but no depth buffer");
             return;
          }
@@ -575,7 +575,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          ctx->Texture.SharedPalette = state;
          break;
       case GL_STENCIL_TEST:
-         if (state && ctx->Visual.stencilBits==0) {
+         if (state && ctx->DrawBuffer->Visual.stencilBits == 0) {
             _mesa_warning(ctx,
                           "glEnable(GL_STENCIL_TEST) but no stencil buffer");
             return;
@@ -591,7 +591,8 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          GLuint newenabled = texUnit->Enabled & ~TEXTURE_1D_BIT;
          if (state)
             newenabled |= TEXTURE_1D_BIT;
-         if (!ctx->Visual.rgbMode || texUnit->Enabled == newenabled)
+         if (!ctx->DrawBuffer->Visual.rgbMode
+             || texUnit->Enabled == newenabled)
             return;
          FLUSH_VERTICES(ctx, _NEW_TEXTURE);
          texUnit->Enabled = newenabled;
@@ -603,7 +604,8 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          GLuint newenabled = texUnit->Enabled & ~TEXTURE_2D_BIT;
          if (state)
             newenabled |= TEXTURE_2D_BIT;
-         if (!ctx->Visual.rgbMode || texUnit->Enabled == newenabled)
+         if (!ctx->DrawBuffer->Visual.rgbMode
+             || texUnit->Enabled == newenabled)
             return;
          FLUSH_VERTICES(ctx, _NEW_TEXTURE);
          texUnit->Enabled = newenabled;
@@ -615,7 +617,8 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          GLuint newenabled = texUnit->Enabled & ~TEXTURE_3D_BIT;
          if (state)
             newenabled |= TEXTURE_3D_BIT;
-         if (!ctx->Visual.rgbMode || texUnit->Enabled == newenabled)
+         if (!ctx->DrawBuffer->Visual.rgbMode
+             || texUnit->Enabled == newenabled)
             return;
          FLUSH_VERTICES(ctx, _NEW_TEXTURE);
          texUnit->Enabled = newenabled;
@@ -645,7 +648,6 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          texUnit->TexGenEnabled = newenabled;
          break;
       }
-      break;
       case GL_TEXTURE_GEN_S: {
          GLuint unit = ctx->Texture.CurrentUnit;
          struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
@@ -658,7 +660,6 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          texUnit->TexGenEnabled = newenabled;
          break;
       }
-      break;
       case GL_TEXTURE_GEN_T: {
          GLuint unit = ctx->Texture.CurrentUnit;
          struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
@@ -671,7 +672,6 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          texUnit->TexGenEnabled = newenabled;
          break;
       }
-      break;
 
       /*
        * CLIENT STATE!!!
@@ -780,7 +780,8 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
             CHECK_EXTENSION(ARB_texture_cube_map, cap);
             if (state)
                newenabled |= TEXTURE_CUBE_BIT;
-            if (!ctx->Visual.rgbMode || texUnit->Enabled == newenabled)
+            if (!ctx->DrawBuffer->Visual.rgbMode
+                || texUnit->Enabled == newenabled)
                return;
             FLUSH_VERTICES(ctx, _NEW_TEXTURE);
             texUnit->Enabled = newenabled;
@@ -941,7 +942,8 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
             CHECK_EXTENSION(NV_texture_rectangle, cap);
             if (state)
                newenabled |= TEXTURE_RECT_BIT;
-            if (!ctx->Visual.rgbMode || texUnit->Enabled == newenabled)
+            if (!ctx->DrawBuffer->Visual.rgbMode
+                || texUnit->Enabled == newenabled)
                return;
             FLUSH_VERTICES(ctx, _NEW_TEXTURE);
             texUnit->Enabled = newenabled;
@@ -955,6 +957,11 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
             return;
          FLUSH_VERTICES(ctx, _NEW_STENCIL);
          ctx->Stencil.TestTwoSide = state;
+         if (state) {
+            ctx->_TriangleCaps |= DD_TRI_TWOSTENCIL;
+         } else {
+            ctx->_TriangleCaps &= ~DD_TRI_TWOSTENCIL;
+         }
          break;
 
 #if FEATURE_ARB_fragment_program
@@ -970,7 +977,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
       /* GL_EXT_depth_bounds_test */
       case GL_DEPTH_BOUNDS_TEST_EXT:
          CHECK_EXTENSION(EXT_depth_bounds_test, cap);
-         if (state && ctx->Visual.depthBits==0) {
+         if (state && ctx->DrawBuffer->Visual.depthBits == 0) {
             _mesa_warning(ctx,
                    "glEnable(GL_DEPTH_BOUNDS_TEST_EXT) but no depth buffer");
             return;
@@ -991,6 +998,15 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          ctx->VertexProgram.CallbackEnabled = state;
          break;
 
+#if FEATURE_ATI_fragment_shader
+      case GL_FRAGMENT_SHADER_ATI:
+        CHECK_EXTENSION(ATI_fragment_shader, cap);
+	if (ctx->ATIFragmentShader.Enabled == state)
+	  return;
+	FLUSH_VERTICES(ctx, _NEW_PROGRAM);
+	ctx->ATIFragmentShader.Enabled = state;
+        break;
+#endif
       default:
          _mesa_error(ctx, GL_INVALID_ENUM,
                      "%s(0x%x)", state ? "glEnable" : "glDisable", cap);
@@ -1428,7 +1444,11 @@ _mesa_IsEnabled( GLenum cap )
       case GL_VERTEX_PROGRAM_CALLBACK_MESA:
          CHECK_EXTENSION(MESA_program_debug);
          return ctx->VertexProgram.CallbackEnabled;
-
+#if FEATURE_ATI_fragment_shader
+      case GL_FRAGMENT_SHADER_ATI:
+	 CHECK_EXTENSION(ATI_fragment_shader);
+	 return ctx->ATIFragmentShader.Enabled;
+#endif /* FEATURE_ATI_fragment_shader */
       default:
          _mesa_error(ctx, GL_INVALID_ENUM, "glIsEnabled(0x%x)", (int) cap);
 	 return GL_FALSE;

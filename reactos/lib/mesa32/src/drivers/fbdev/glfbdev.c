@@ -38,16 +38,18 @@
  * 24 bits |    ?     0x312   0x315    0x318      ?      0x31B     0x31F
  * 32 bits |    ?       ?       ?        ?      0x164      ?
  */
-
-
 #ifdef USE_GLFBDEV_DRIVER
 
 #include "glheader.h"
 #include <linux/fb.h>
 #include "GL/glfbdev.h"
+#include "buffers.h"
 #include "context.h"
 #include "extensions.h"
+#include "fbobject.h"
+#include "framebuffer.h"
 #include "imports.h"
+#include "renderbuffer.h"
 #include "texformat.h"
 #include "teximage.h"
 #include "texstore.h"
@@ -85,15 +87,8 @@ struct GLFBDevBufferRec {
    GLFBDevVisualPtr visual;
    struct fb_fix_screeninfo fix;
    struct fb_var_screeninfo var;
-   void *frontStart;
-   void *backStart;
-   size_t size;
+   size_t size;                    /* color buffer size in bytes */
    GLuint bytesPerPixel;
-   GLuint rowStride;               /* in bytes */
-   GLubyte *frontBottom;           /* pointer to last row */
-   GLubyte *backBottom;            /* pointer to last row */
-   GLubyte *curBottom;             /* = frontBottom or backBottom */
-   GLboolean mallocBackBuffer;
 };
 
 /*
@@ -105,6 +100,16 @@ struct GLFBDevContextRec {
    GLFBDevBufferPtr drawBuffer;
    GLFBDevBufferPtr readBuffer;
    GLFBDevBufferPtr curBuffer;
+};
+
+/*
+ * Derived from Mesa's gl_renderbuffer class.
+ */
+struct GLFBDevRenderbufferRec {
+   struct gl_renderbuffer Base;
+   GLubyte *bottom;                /* pointer to last row */
+   GLuint rowStride;               /* in bytes */
+   GLboolean mallocedBuffer;
 };
 
 
@@ -145,9 +150,17 @@ update_state( GLcontext *ctx, GLuint new_state )
 static void
 get_buffer_size( GLframebuffer *buffer, GLuint *width, GLuint *height )
 {
-   const GLFBDevBufferPtr fbdevbuffer = (GLFBDevBufferPtr) buffer;
+   const GLFBDevBufferPtr fbdevbuffer = GLFBDEV_BUFFER(buffer);
    *width = fbdevbuffer->var.xres_virtual;
    *height = fbdevbuffer->var.yres_virtual;
+}
+
+
+static void
+viewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
+{
+   /* poll for window size change and realloc software Z/stencil/etc if needed */
+   _mesa_ResizeBuffersMESA();
 }
 
 
@@ -155,19 +168,7 @@ get_buffer_size( GLframebuffer *buffer, GLuint *width, GLuint *height )
 static void
 set_buffer( GLcontext *ctx, GLframebuffer *buffer, GLuint bufferBit )
 {
-   GLFBDevContextPtr fbdevctx = GLFBDEV_CONTEXT(ctx);
-   GLFBDevBufferPtr fbdevbuf = GLFBDEV_BUFFER(buffer);
-   fbdevctx->curBuffer = fbdevbuf;
-   switch (bufferBit) {
-   case DD_FRONT_LEFT_BIT:
-      fbdevbuf->curBottom = fbdevbuf->frontBottom;
-      break;
-   case DD_BACK_LEFT_BIT:
-      fbdevbuf->curBottom = fbdevbuf->backBottom;
-      break;
-   default:
-      _mesa_problem(ctx, "bad bufferBit in set_buffer()");
-   }
+   /* this is a no-op when using the new gl_renderbuffer span functions. */
 }
 
 
@@ -177,96 +178,102 @@ set_buffer( GLcontext *ctx, GLframebuffer *buffer, GLuint bufferBit )
 
 /* 24-bit BGR */
 #define NAME(PREFIX) PREFIX##_B8G8R8
+#define FORMAT GL_RGBA8
 #define SPAN_VARS \
-   const GLFBDevContextPtr fbdevctx = GLFBDEV_CONTEXT(ctx); \
-   const GLFBDevBufferPtr fbdevbuf = fbdevctx->curBuffer;
+   struct GLFBDevRenderbufferRec *frb = (struct GLFBDevRenderbufferRec *) rb;
 #define INIT_PIXEL_PTR(P, X, Y) \
-   GLubyte *P = fbdevbuf->curBottom - (Y) * fbdevbuf->rowStride + (X) * 3
+   GLubyte *P = frb->bottom - (Y) * frb->rowStride + (X) * 3
 #define INC_PIXEL_PTR(P) P += 3
-#define STORE_RGB_PIXEL(P, X, Y, R, G, B) \
-   P[0] = B;  P[1] = G;  P[2] = R
-#define STORE_RGBA_PIXEL(P, X, Y, R, G, B, A) \
-   P[0] = B;  P[1] = G;  P[2] = R
-#define FETCH_RGBA_PIXEL(R, G, B, A, P) \
-   R = P[2];  G = P[1];  B = P[0];  A = CHAN_MAX
+#define STORE_PIXEL(DST, X, Y, VALUE) \
+   DST[0] = VALUE[BCOMP];  \
+   DST[1] = VALUE[GCOMP];  \
+   DST[2] = VALUE[RCOMP]
+#define FETCH_PIXEL(DST, SRC) \
+   DST[RCOMP] = SRC[2];  \
+   DST[GCOMP] = SRC[1];  \
+   DST[BCOMP] = SRC[0];  \
+   DST[ACOMP] = CHAN_MAX
 
-#include "swrast/s_spantemp.h"
+#include "swrast/s_spantemp2.h"
 
 
 /* 32-bit BGRA */
 #define NAME(PREFIX) PREFIX##_B8G8R8A8
+#define FORMAT GL_RGBA8
 #define SPAN_VARS \
-   const GLFBDevContextPtr fbdevctx = GLFBDEV_CONTEXT(ctx); \
-   const GLFBDevBufferPtr fbdevbuf = fbdevctx->curBuffer;
+   struct GLFBDevRenderbufferRec *frb = (struct GLFBDevRenderbufferRec *) rb;
 #define INIT_PIXEL_PTR(P, X, Y) \
-   GLubyte *P = fbdevbuf->curBottom - (Y) * fbdevbuf->rowStride + (X) * 4
+   GLubyte *P = frb->bottom - (Y) * frb->rowStride + (X) * 4
 #define INC_PIXEL_PTR(P) P += 4
-#define STORE_RGB_PIXEL(P, X, Y, R, G, B) \
-   P[0] = B;  P[1] = G;  P[2] = R;  P[3] = 255
-#define STORE_RGBA_PIXEL(P, X, Y, R, G, B, A) \
-   P[0] = B;  P[1] = G;  P[2] = R;  P[3] = A
-#define FETCH_RGBA_PIXEL(R, G, B, A, P) \
-   R = P[2];  G = P[1];  B = P[0];  A = P[3]
+#define STORE_PIXEL(DST, X, Y, VALUE) \
+   DST[0] = VALUE[BCOMP];  \
+   DST[1] = VALUE[GCOMP];  \
+   DST[2] = VALUE[RCOMP];  \
+   DST[3] = VALUE[ACOMP]
+#define FETCH_PIXEL(DST, SRC) \
+   DST[RCOMP] = SRC[2];  \
+   DST[GCOMP] = SRC[1];  \
+   DST[BCOMP] = SRC[0];  \
+   DST[ACOMP] = SRC[3]
 
-#include "swrast/s_spantemp.h"
+#include "swrast/s_spantemp2.h"
 
 
 /* 16-bit BGR (XXX implement dithering someday) */
 #define NAME(PREFIX) PREFIX##_B5G6R5
+#define FORMAT GL_RGBA8
 #define SPAN_VARS \
-   const GLFBDevContextPtr fbdevctx = GLFBDEV_CONTEXT(ctx); \
-   const GLFBDevBufferPtr fbdevbuf = fbdevctx->curBuffer;
+   struct GLFBDevRenderbufferRec *frb = (struct GLFBDevRenderbufferRec *) rb;
 #define INIT_PIXEL_PTR(P, X, Y) \
-   GLushort *P = (GLushort *) (fbdevbuf->curBottom - (Y) * fbdevbuf->rowStride + (X) * 2)
+   GLushort *P = (GLushort *) (frb->bottom - (Y) * frb->rowStride + (X) * 2)
 #define INC_PIXEL_PTR(P) P += 1
-#define STORE_RGB_PIXEL(P, X, Y, R, G, B) \
-   *P = ( (((R) & 0xf8) << 8) | (((G) & 0xfc) << 3) | ((B) >> 3) )
-#define STORE_RGBA_PIXEL(P, X, Y, R, G, B, A) \
-   *P = ( (((R) & 0xf8) << 8) | (((G) & 0xfc) << 3) | ((B) >> 3) )
-#define FETCH_RGBA_PIXEL(R, G, B, A, P) \
-   R = ( (((*P) >> 8) & 0xf8) | (((*P) >> 11) & 0x7) ); \
-   G = ( (((*P) >> 3) & 0xfc) | (((*P) >>  5) & 0x3) ); \
-   B = ( (((*P) << 3) & 0xf8) | (((*P)      ) & 0x7) ); \
-   A = CHAN_MAX
+#define STORE_PIXEL(DST, X, Y, VALUE) \
+   DST[0] = ( (((VALUE[RCOMP]) & 0xf8) << 8) | (((VALUE[GCOMP]) & 0xfc) << 3) | ((VALUE[BCOMP]) >> 3) )
+#define FETCH_PIXEL(DST, SRC) \
+   DST[RCOMP] = ( (((SRC[0]) >> 8) & 0xf8) | (((SRC[0]) >> 11) & 0x7) ); \
+   DST[GCOMP] = ( (((SRC[0]) >> 3) & 0xfc) | (((SRC[0]) >>  5) & 0x3) ); \
+   DST[BCOMP] = ( (((SRC[0]) << 3) & 0xf8) | (((SRC[0])      ) & 0x7) ); \
+   DST[ACOMP] = CHAN_MAX
 
-#include "swrast/s_spantemp.h"
+#include "swrast/s_spantemp2.h"
 
 
 /* 15-bit BGR (XXX implement dithering someday) */
 #define NAME(PREFIX) PREFIX##_B5G5R5
+#define FORMAT GL_RGBA8
 #define SPAN_VARS \
-   const GLFBDevContextPtr fbdevctx = GLFBDEV_CONTEXT(ctx); \
-   const GLFBDevBufferPtr fbdevbuf = fbdevctx->curBuffer;
+   struct GLFBDevRenderbufferRec *frb = (struct GLFBDevRenderbufferRec *) rb;
 #define INIT_PIXEL_PTR(P, X, Y) \
-   GLushort *P = (GLushort *) (fbdevbuf->curBottom - (Y) * fbdevbuf->rowStride + (X) * 2)
+   GLushort *P = (GLushort *) (frb->bottom - (Y) * frb->rowStride + (X) * 2)
 #define INC_PIXEL_PTR(P) P += 1
-#define STORE_RGB_PIXEL(P, X, Y, R, G, B) \
-   *P = ( (((R) & 0xf8) << 7) | (((G) & 0xf8) << 2) | ((B) >> 3) )
-#define STORE_RGBA_PIXEL(P, X, Y, R, G, B, A) \
-   *P = ( (((R) & 0xf8) << 7) | (((G) & 0xf8) << 2) | ((B) >> 3) )
-#define FETCH_RGBA_PIXEL(R, G, B, A, P) \
-   R = ( (((*P) >> 7) & 0xf8) | (((*P) >> 10) & 0x7) ); \
-   G = ( (((*P) >> 2) & 0xf8) | (((*P) >>  5) & 0x7) ); \
-   B = ( (((*P) << 3) & 0xf8) | (((*P)      ) & 0x7) ); \
-   A = CHAN_MAX
+#define STORE_PIXEL(DST, X, Y, VALUE) \
+   DST[0] = ( (((VALUE[RCOMP]) & 0xf8) << 7) | (((VALUE[GCOMP]) & 0xf8) << 2) | ((VALUE[BCOMP]) >> 3) )
+#define FETCH_PIXEL(DST, SRC) \
+   DST[RCOMP] = ( (((SRC[0]) >> 7) & 0xf8) | (((SRC[0]) >> 10) & 0x7) ); \
+   DST[GCOMP] = ( (((SRC[0]) >> 2) & 0xf8) | (((SRC[0]) >>  5) & 0x7) ); \
+   DST[BCOMP] = ( (((SRC[0]) << 3) & 0xf8) | (((SRC[0])      ) & 0x7) ); \
+   DST[ACOMP] = CHAN_MAX
 
-#include "swrast/s_spantemp.h"
+#include "swrast/s_spantemp2.h"
 
 
 /* 8-bit color index */
 #define NAME(PREFIX) PREFIX##_CI8
+#define FORMAT GL_COLOR_INDEX8_EXT
 #define SPAN_VARS \
-   const GLFBDevContextPtr fbdevctx = GLFBDEV_CONTEXT(ctx); \
-   const GLFBDevBufferPtr fbdevbuf = fbdevctx->curBuffer;
+   struct GLFBDevRenderbufferRec *frb = (struct GLFBDevRenderbufferRec *) rb;
 #define INIT_PIXEL_PTR(P, X, Y) \
-   GLubyte *P = fbdevbuf->curBottom - (Y) * fbdevbuf->rowStride + (X)
+   GLubyte *P = frb->bottom - (Y) * frb->rowStride + (X)
 #define INC_PIXEL_PTR(P) P += 1
-#define STORE_CI_PIXEL(P, CI) \
-   P[0] = CI
-#define FETCH_CI_PIXEL(CI, P) \
-   CI = P[0]
+#define STORE_PIXEL(DST, X, Y, VALUE) \
+   *DST = VALUE[0]
+#define FETCH_PIXEL(DST, SRC) \
+   DST = SRC[0]
 
-#include "swrast/s_spantemp.h"
+#include "swrast/s_spantemp2.h"
+
+
+
 
 /**********************************************************************/
 /* Public API functions                                               */
@@ -287,30 +294,30 @@ glFBDevGetString( int str )
 }
 
 
-const void *
+const GLFBDevProc
 glFBDevGetProcAddress( const char *procName )
 {
    struct name_address {
       const char *name;
-      const void *func;
+      const GLFBDevProc func;
    };
    static const struct name_address functions[] = {
-      { "glFBDevGetString", (void *) glFBDevGetString },
-      { "glFBDevGetProcAddress", (void *) glFBDevGetProcAddress },
-      { "glFBDevCreateVisual", (void *) glFBDevCreateVisual },
-      { "glFBDevDestroyVisual", (void *) glFBDevDestroyVisual },
-      { "glFBDevGetVisualAttrib", (void *) glFBDevGetVisualAttrib },
-      { "glFBDevCreateBuffer", (void *) glFBDevCreateBuffer },
-      { "glFBDevDestroyBuffer", (void *) glFBDevDestroyBuffer },
-      { "glFBDevGetBufferAttrib", (void *) glFBDevGetBufferAttrib },
-      { "glFBDevGetCurrentDrawBuffer", (void *) glFBDevGetCurrentDrawBuffer },
-      { "glFBDevGetCurrentReadBuffer", (void *) glFBDevGetCurrentReadBuffer },
-      { "glFBDevSwapBuffers", (void *) glFBDevSwapBuffers },
-      { "glFBDevCreateContext", (void *) glFBDevCreateContext },
-      { "glFBDevDestroyContext", (void *) glFBDevDestroyContext },
-      { "glFBDevGetContextAttrib", (void *) glFBDevGetContextAttrib },
-      { "glFBDevGetCurrentContext", (void *) glFBDevGetCurrentContext },
-      { "glFBDevMakeCurrent", (void *) glFBDevMakeCurrent },
+      { "glFBDevGetString", (GLFBDevProc) glFBDevGetString },
+      { "glFBDevGetProcAddress", (GLFBDevProc) glFBDevGetProcAddress },
+      { "glFBDevCreateVisual", (GLFBDevProc) glFBDevCreateVisual },
+      { "glFBDevDestroyVisual", (GLFBDevProc) glFBDevDestroyVisual },
+      { "glFBDevGetVisualAttrib", (GLFBDevProc) glFBDevGetVisualAttrib },
+      { "glFBDevCreateBuffer", (GLFBDevProc) glFBDevCreateBuffer },
+      { "glFBDevDestroyBuffer", (GLFBDevProc) glFBDevDestroyBuffer },
+      { "glFBDevGetBufferAttrib", (GLFBDevProc) glFBDevGetBufferAttrib },
+      { "glFBDevGetCurrentDrawBuffer", (GLFBDevProc) glFBDevGetCurrentDrawBuffer },
+      { "glFBDevGetCurrentReadBuffer", (GLFBDevProc) glFBDevGetCurrentReadBuffer },
+      { "glFBDevSwapBuffers", (GLFBDevProc) glFBDevSwapBuffers },
+      { "glFBDevCreateContext", (GLFBDevProc) glFBDevCreateContext },
+      { "glFBDevDestroyContext", (GLFBDevProc) glFBDevDestroyContext },
+      { "glFBDevGetContextAttrib", (GLFBDevProc) glFBDevGetContextAttrib },
+      { "glFBDevGetCurrentContext", (GLFBDevProc) glFBDevGetCurrentContext },
+      { "glFBDevMakeCurrent", (GLFBDevProc) glFBDevMakeCurrent },
       { NULL, NULL }
    };
    const struct name_address *entry;
@@ -470,11 +477,100 @@ glFBDevDestroyVisual( GLFBDevVisualPtr visual )
 int
 glFBDevGetVisualAttrib( const GLFBDevVisualPtr visual, int attrib)
 {
+   /* XXX unfinished */
    (void) visual;
    (void) attrib;
    return -1;
 }
 
+
+static void
+delete_renderbuffer(struct gl_renderbuffer *rb)
+{
+   struct GLFBDevRenderbufferRec *frb = (struct GLFBDevRenderbufferRec *) rb;
+   if (frb->mallocedBuffer) {
+      _mesa_free(frb->Base.Data);
+   }
+   _mesa_free(frb);
+}
+
+
+static GLboolean
+renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
+                     GLenum internalFormat, GLuint width, GLuint height)
+{
+   /* no-op: the renderbuffer storage is allocated just once when it's
+    * created.  Never resized or reallocated.
+    */
+   return GL_TRUE;
+}
+
+
+static struct GLFBDevRenderbufferRec *
+new_glfbdev_renderbuffer(void *bufferStart, int pixelFormat)
+{
+   struct GLFBDevRenderbufferRec *rb = CALLOC_STRUCT(GLFBDevRenderbufferRec);
+   if (rb) {
+      GLuint name = 0;
+      _mesa_init_renderbuffer(&rb->Base, name);
+
+      rb->Base.Delete = delete_renderbuffer;
+      rb->Base.AllocStorage = renderbuffer_storage;
+
+      if (pixelFormat == PF_B8G8R8) {
+         rb->Base.GetRow = get_row_B8G8R8;
+         rb->Base.GetValues = get_values_B8G8R8;
+         rb->Base.PutRow = put_row_B8G8R8;
+         rb->Base.PutMonoRow = put_mono_row_B8G8R8;
+         rb->Base.PutValues = put_values_B8G8R8;
+         rb->Base.PutMonoValues = put_mono_values_B8G8R8;
+      }
+      else if (pixelFormat == PF_B8G8R8A8) {
+         rb->Base.GetRow = get_row_B8G8R8A8;
+         rb->Base.GetValues = get_values_B8G8R8A8;
+         rb->Base.PutRow = put_row_B8G8R8A8;
+         rb->Base.PutMonoRow = put_mono_row_B8G8R8A8;
+         rb->Base.PutValues = put_values_B8G8R8A8;
+         rb->Base.PutMonoValues = put_mono_values_B8G8R8A8;
+      }
+      else if (pixelFormat == PF_B5G6R5) {
+         rb->Base.GetRow = get_row_B5G6R5;
+         rb->Base.GetValues = get_values_B5G6R5;
+         rb->Base.PutRow = put_row_B5G6R5;
+         rb->Base.PutMonoRow = put_mono_row_B5G6R5;
+         rb->Base.PutValues = put_values_B5G6R5;
+         rb->Base.PutMonoValues = put_mono_values_B5G6R5;
+      }
+      else if (pixelFormat == PF_B5G5R5) {
+         rb->Base.GetRow = get_row_B5G5R5;
+         rb->Base.GetValues = get_values_B5G5R5;
+         rb->Base.PutRow = put_row_B5G5R5;
+         rb->Base.PutMonoRow = put_mono_row_B5G5R5;
+         rb->Base.PutValues = put_values_B5G5R5;
+         rb->Base.PutMonoValues = put_mono_values_B5G5R5;
+      }
+      else if (pixelFormat == PF_CI8) {
+         rb->Base.GetRow = get_row_CI8;
+         rb->Base.GetValues = get_values_CI8;
+         rb->Base.PutRow = put_row_CI8;
+         rb->Base.PutMonoRow = put_mono_row_CI8;
+         rb->Base.PutValues = put_values_CI8;
+         rb->Base.PutMonoValues = put_mono_values_CI8;
+      }
+
+      if (pixelFormat == PF_CI8) {
+         rb->Base.InternalFormat = GL_COLOR_INDEX8_EXT;
+         rb->Base._BaseFormat = GL_COLOR_INDEX;
+      }
+      else {
+         rb->Base.InternalFormat = GL_RGBA;
+         rb->Base._BaseFormat = GL_RGBA;
+      }
+      rb->Base.DataType = GL_UNSIGNED_BYTE;
+      rb->Base.Data = bufferStart;
+   }
+   return rb;
+}
 
 
 GLFBDevBufferPtr
@@ -483,6 +579,7 @@ glFBDevCreateBuffer( const struct fb_fix_screeninfo *fixInfo,
                      const GLFBDevVisualPtr visual,
                      void *frontBuffer, void *backBuffer, size_t size )
 {
+   struct GLFBDevRenderbufferRec *frontrb, *backrb;
    GLFBDevBufferPtr buf;
 
    ASSERT(visual);
@@ -505,45 +602,56 @@ glFBDevCreateBuffer( const struct fb_fix_screeninfo *fixInfo,
    if (!buf)
       return NULL;
 
-   _mesa_initialize_framebuffer(&buf->glframebuffer, &visual->glvisual,
+   /* basic framebuffer setup */
+   _mesa_initialize_framebuffer(&buf->glframebuffer, &visual->glvisual);
+   /* add front renderbuffer */
+   frontrb = new_glfbdev_renderbuffer(frontBuffer, visual->pixelFormat);
+   _mesa_add_renderbuffer(&buf->glframebuffer, BUFFER_FRONT_LEFT,
+                          &frontrb->Base);
+   /* add back renderbuffer */
+   if (visual->glvisual.doubleBufferMode) {
+      backrb = new_glfbdev_renderbuffer(backBuffer, visual->pixelFormat);
+      _mesa_add_renderbuffer(&buf->glframebuffer, BUFFER_BACK_LEFT,
+                             &backrb->Base);
+   }
+   /* add software renderbuffers */
+   _mesa_add_soft_renderbuffers(&buf->glframebuffer,
+                                GL_FALSE, /* color */
                                 visual->glvisual.haveDepthBuffer,
                                 visual->glvisual.haveStencilBuffer,
                                 visual->glvisual.haveAccumBuffer,
-                                GL_FALSE);
+                                GL_FALSE, /* alpha */
+                                GL_FALSE /* aux bufs */);
+
+
 
    buf->fix = *fixInfo;   /* struct assignment */
    buf->var = *varInfo;   /* struct assignment */
    buf->visual = visual;  /* ptr assignment */
-   buf->frontStart = frontBuffer;
    buf->size = size;
    buf->bytesPerPixel = visual->var.bits_per_pixel / 8;
-   buf->rowStride = visual->var.xres_virtual * buf->bytesPerPixel;
-   buf->frontBottom = (GLubyte *) buf->frontStart
-                    + (visual->var.yres_virtual - 1) * buf->rowStride;
+   frontrb->rowStride = visual->var.xres_virtual * buf->bytesPerPixel;
+   frontrb->bottom = (GLubyte *) frontrb->Base.Data
+      + (visual->var.yres_virtual - 1) * frontrb->rowStride;
 
    if (visual->glvisual.doubleBufferMode) {
-      if (backBuffer) {
-         buf->backStart = backBuffer;
-         buf->mallocBackBuffer = GL_FALSE;
-      }
-      else {
-         buf->backStart = _mesa_malloc(size);
-         if (!buf->backStart) {
+      if (!backBuffer) {
+         /* malloc a back buffer */
+         backrb->Base.Data = _mesa_malloc(size);
+         if (!backrb->Base.Data) {
             _mesa_free_framebuffer_data(&buf->glframebuffer);
             _mesa_free(buf);
             return NULL;
          }
-         buf->mallocBackBuffer = GL_TRUE;
+         backrb->mallocedBuffer = GL_TRUE;
       }
-      buf->backBottom = (GLubyte *) buf->backStart
-                      + (visual->var.yres_virtual - 1) * buf->rowStride;
-      buf->curBottom = buf->backBottom;
+      backrb->rowStride = frontrb->rowStride;
+      backrb->bottom = (GLubyte *) backrb->Base.Data
+         + (visual->var.yres_virtual - 1) * backrb->rowStride;
    }
    else {
-      buf->backStart = NULL;
-      buf->mallocBackBuffer = GL_FALSE;
-      buf->backBottom = NULL;
-      buf->curBottom = buf->frontBottom;
+      backrb->bottom = NULL;
+      backrb->rowStride = 0;
    }
 
    return buf;
@@ -559,9 +667,6 @@ glFBDevDestroyBuffer( GLFBDevBufferPtr buffer )
       GLFBDevBufferPtr curRead = glFBDevGetCurrentReadBuffer();
       if (buffer == curDraw || buffer == curRead) {
          glFBDevMakeCurrent( NULL, NULL, NULL);
-      }
-      if (buffer->mallocBackBuffer) {
-         _mesa_free(buffer->backStart);
       }
       /* free the software depth, stencil, accum buffers */
       _mesa_free_framebuffer_data(&buffer->glframebuffer);
@@ -605,6 +710,10 @@ void
 glFBDevSwapBuffers( GLFBDevBufferPtr buffer )
 {
    GLFBDevContextPtr fbdevctx = glFBDevGetCurrentContext();
+   struct GLFBDevRenderbufferRec *frontrb = (struct GLFBDevRenderbufferRec *)
+      buffer->glframebuffer.Attachment[BUFFER_FRONT_LEFT].Renderbuffer;
+   struct GLFBDevRenderbufferRec *backrb = (struct GLFBDevRenderbufferRec *)
+      buffer->glframebuffer.Attachment[BUFFER_BACK_LEFT].Renderbuffer;
 
    if (!buffer || !buffer->visual->glvisual.doubleBufferMode)
       return;
@@ -615,9 +724,9 @@ glFBDevSwapBuffers( GLFBDevBufferPtr buffer )
       _mesa_notifySwapBuffers(&fbdevctx->glcontext);
    }
 
-   ASSERT(buffer->frontStart);
-   ASSERT(buffer->backStart);
-   _mesa_memcpy(buffer->frontStart, buffer->backStart, buffer->size);
+   ASSERT(frontrb->Base.Data);
+   ASSERT(backrb->Base.Data);
+   _mesa_memcpy(frontrb->Base.Data, backrb->Base.Data, buffer->size);
 }
 
 
@@ -639,6 +748,7 @@ glFBDevCreateContext( const GLFBDevVisualPtr visual, GLFBDevContextPtr share )
    functions.GetString = get_string;
    functions.UpdateState = update_state;
    functions.GetBufferSize = get_buffer_size;
+   functions.Viewport = viewport;
 
    if (!_mesa_initialize_context(&ctx->glcontext, &visual->glvisual,
                                  share ? &share->glcontext : NULL,
@@ -662,54 +772,15 @@ glFBDevCreateContext( const GLFBDevVisualPtr visual, GLFBDevContextPtr share )
       struct swrast_device_driver *swdd;
       swdd = _swrast_GetDeviceDriverReference( glctx );
       swdd->SetBuffer = set_buffer;
-      if (visual->pixelFormat == PF_B8G8R8) {
-         swdd->WriteRGBASpan = write_rgba_span_B8G8R8;
-         swdd->WriteRGBSpan = write_rgb_span_B8G8R8;
-         swdd->WriteMonoRGBASpan = write_monorgba_span_B8G8R8;
-         swdd->WriteRGBAPixels = write_rgba_pixels_B8G8R8;
-         swdd->WriteMonoRGBAPixels = write_monorgba_pixels_B8G8R8;
-         swdd->ReadRGBASpan = read_rgba_span_B8G8R8;
-         swdd->ReadRGBAPixels = read_rgba_pixels_B8G8R8;
-      }
-      else if (visual->pixelFormat == PF_B8G8R8A8) {
-         swdd->WriteRGBASpan = write_rgba_span_B8G8R8A8;
-         swdd->WriteRGBSpan = write_rgb_span_B8G8R8A8;
-         swdd->WriteMonoRGBASpan = write_monorgba_span_B8G8R8A8;
-         swdd->WriteRGBAPixels = write_rgba_pixels_B8G8R8A8;
-         swdd->WriteMonoRGBAPixels = write_monorgba_pixels_B8G8R8A8;
-         swdd->ReadRGBASpan = read_rgba_span_B8G8R8A8;
-         swdd->ReadRGBAPixels = read_rgba_pixels_B8G8R8A8;
-      }
-      else if (visual->pixelFormat == PF_B5G6R5) {
-         swdd->WriteRGBASpan = write_rgba_span_B5G6R5;
-         swdd->WriteRGBSpan = write_rgb_span_B5G6R5;
-         swdd->WriteMonoRGBASpan = write_monorgba_span_B5G6R5;
-         swdd->WriteRGBAPixels = write_rgba_pixels_B5G6R5;
-         swdd->WriteMonoRGBAPixels = write_monorgba_pixels_B5G6R5;
-         swdd->ReadRGBASpan = read_rgba_span_B5G6R5;
-         swdd->ReadRGBAPixels = read_rgba_pixels_B5G6R5;
-      }
-      else if (visual->pixelFormat == PF_B5G5R5) {
-         swdd->WriteRGBASpan = write_rgba_span_B5G5R5;
-         swdd->WriteRGBSpan = write_rgb_span_B5G5R5;
-         swdd->WriteMonoRGBASpan = write_monorgba_span_B5G5R5;
-         swdd->WriteRGBAPixels = write_rgba_pixels_B5G5R5;
-         swdd->WriteMonoRGBAPixels = write_monorgba_pixels_B5G5R5;
-         swdd->ReadRGBASpan = read_rgba_span_B5G5R5;
-         swdd->ReadRGBAPixels = read_rgba_pixels_B5G5R5;
-      }
-      else if (visual->pixelFormat == PF_CI8) {
-         swdd->WriteCI32Span = write_index32_span_CI8;
-         swdd->WriteCI8Span = write_index8_span_CI8;
-         swdd->WriteMonoCISpan = write_monoindex_span_CI8;
-         swdd->WriteCI32Pixels = write_index_pixels_CI8;
-         swdd->WriteMonoCIPixels = write_monoindex_pixels_CI8;
-         swdd->ReadCI32Span = read_index_span_CI8;
-         swdd->ReadCI32Pixels = read_index_pixels_CI8;
-      }
-      else {
-         _mesa_printf("bad pixelformat: %d\n", visual->pixelFormat);
-      }
+
+      /* no longer used */
+      swdd->WriteRGBASpan = NULL;
+      swdd->WriteRGBSpan = NULL;
+      swdd->WriteMonoRGBASpan = NULL;
+      swdd->WriteRGBAPixels = NULL;
+      swdd->WriteMonoRGBAPixels = NULL;
+      swdd->ReadRGBASpan = NULL;
+      swdd->ReadRGBAPixels = NULL;
    }
 
    /* use default TCL pipeline */
@@ -732,7 +803,7 @@ glFBDevDestroyContext( GLFBDevContextPtr context )
    if (context) {
       if (fbdevctx == context) {
          /* destroying current context */
-         _mesa_make_current2(NULL, NULL, NULL);
+         _mesa_make_current(NULL, NULL, NULL);
          _mesa_notifyDestroy(&context->glcontext);
       }
       _mesa_free_context_data(&context->glcontext);
@@ -772,20 +843,19 @@ glFBDevMakeCurrent( GLFBDevContextPtr context,
           context->visual != readBuffer->visual) {
          return 0;
       }
-      _mesa_make_current2( &context->glcontext,
-                           &drawBuffer->glframebuffer,
-                           &readBuffer->glframebuffer );
+      _mesa_make_current( &context->glcontext,
+                          &drawBuffer->glframebuffer,
+                          &readBuffer->glframebuffer );
       context->drawBuffer = drawBuffer;
       context->readBuffer = readBuffer;
       context->curBuffer = drawBuffer;
    }
    else {
       /* unbind */
-      _mesa_make_current2( NULL, NULL, NULL );
+      _mesa_make_current( NULL, NULL, NULL );
    }
 
    return 1;
 }
 
-#endif /* USE_GLFBDEV_DRIVER */
-
+#endif

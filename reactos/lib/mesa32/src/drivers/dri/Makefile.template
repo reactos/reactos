@@ -1,0 +1,109 @@
+# -*-makefile-*-
+
+MESA_MODULES = $(TOP)/src/mesa/mesa.a
+
+COMMON_SOURCES = \
+        ../../common/driverfuncs.c \
+        ../common/utils.c \
+        ../common/texmem.c \
+        ../common/vblank.c \
+        ../common/dri_util.c \
+        ../common/xmlconfig.c \
+        ../common/drirenderbuffer.c
+
+ifeq ($(WINDOW_SYSTEM),dri)
+WINOBJ=
+WINLIB=
+INCLUDES = $(SHARED_INCLUDES) $(EXPAT_INCLUDES) \
+           `pkg-config --cflags libdrm`
+
+OBJECTS = $(C_SOURCES:.c=.o) \
+	  $(ASM_SOURCES:.S=.o) 
+
+else
+WINOBJ=
+WINLIB=-L$(MESA)/src/glx/mini
+MINIGLX_INCLUDES = -I$(TOP)/src/glx/mini
+INCLUDES = $(MINIGLX_INCLUDES) \
+	   -I$(DRM_SOURCE_PATH)/shared-core \
+	   -I$(DRM_SOURCE_PATH)/libdrm \
+	   $(SHARED_INCLUDES)
+
+OBJECTS = $(C_SOURCES:.c=.o) \
+	  $(MINIGLX_SOURCES:.c=.o) \
+	  $(ASM_SOURCES:.S=.o) 
+endif
+
+
+### Include directories
+SHARED_INCLUDES = \
+	-I. \
+	-I$(TOP)/src/mesa/drivers/dri/common \
+	-Iserver \
+	-I$(DRM_SOURCE_PATH)/shared-core \
+	-I$(TOP)/include \
+	-I$(TOP)/include/GL/internal \
+	-I$(TOP)/src/mesa \
+	-I$(TOP)/src/mesa/main \
+	-I$(TOP)/src/mesa/glapi \
+	-I$(TOP)/src/mesa/math \
+	-I$(TOP)/src/mesa/transform \
+	-I$(TOP)/src/mesa/shader \
+	-I$(TOP)/src/mesa/swrast \
+	-I$(TOP)/src/mesa/swrast_setup \
+	-I$(TOP)/src/egl/main \
+	-I$(TOP)/src/egl/drivers/dri
+
+##### RULES #####
+
+.c.o:
+	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
+
+.S.o:
+	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES)  $< -o $@
+
+
+##### TARGETS #####
+
+default: depend symlinks $(LIBNAME) $(LIB_DIR)/$(LIBNAME)
+
+
+#$(LIB_DIR)/$(LIBNAME): $(OBJECTS) $(MESA_MODULES) $(WINOBJ) Makefile
+#	@echo BUILDING FOR: $(WINDOW_SYSTEM)
+#	$(TOP)/bin/mklib -o $(LIBNAME) -noprefix -install $(LIB_DIR) \
+#		$(WINLIB) $(LIB_DEPS) $(WINOBJ) $(MESA_MODULES) $(OBJECTS)
+
+# XXX we should use the mklib script here
+$(LIBNAME):  $(OBJECTS) $(MESA_MODULES) $(WINOBJ) Makefile $(TOP)/src/mesa/drivers/dri/Makefile.template
+	rm -f $@ 
+	$(CC) $(ARCH_FLAGS) -o $@ -shared $(OBJECTS) $(MESA_MODULES) $(WINOBJ) $(DRI_LIB_DEPS)
+
+
+$(LIB_DIR)/$(LIBNAME): $(LIBNAME)
+	install $(LIBNAME) $(LIB_DIR) 
+
+
+
+# Run 'make depend' to update the dependencies if you change
+# what's included by any source file.
+.PHONY: depend
+depend: $(C_SOURCES) $(ASM_SOURCES) $(SYMLINKS)
+	touch depend
+	$(MKDEP) $(MKDEP_OPTIONS) $(DEFINES) $(INCLUDES) $(C_SOURCES) $(ASM_SOURCES) \
+		> /dev/null 
+
+
+# Emacs tags
+tags:
+	etags `find . -name \*.[ch]` `find ../include`
+
+
+# Remove .o and backup files
+clean:
+	-rm -f *.o */*.o *~ *.so *~ server/*.o $(SYMLINKS)
+	-rm -f depend depend.bak
+
+install: $(LIBNAME)
+	install $(LIBNAME) /usr/X11R6/lib/modules/dri/$(LIBNAME)
+
+include depend

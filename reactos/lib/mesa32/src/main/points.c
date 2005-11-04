@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.5
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,17 +37,9 @@
 
 
 /**
- * Set the point size.
- *
- * \param size pointer diameter.
- *
+ * Set current point size.
+ * \param size  point diameter in pixels
  * \sa glPointSize().
- *
- * Verifies the parameter and updates gl_point_attrib::Size. On a change,
- * flushes the vertices, updates the clamped point size and marks the
- * DD_POINT_SIZE flag in __GLcontextRec::_TriangleCaps for the drivers if the
- * size is different from one. Notifies the driver via
- * the dd_function_table::PointSize callback.
  */
 void GLAPIENTRY
 _mesa_PointSize( GLfloat size )
@@ -65,17 +57,9 @@ _mesa_PointSize( GLfloat size )
 
    FLUSH_VERTICES(ctx, _NEW_POINT);
    ctx->Point.Size = size;
-   ctx->Point._Size = CLAMP(size,
-			    ctx->Const.MinPointSize,
-			    ctx->Const.MaxPointSize);
-
-   if (ctx->Point._Size == 1.0F)
-      ctx->_TriangleCaps &= ~DD_POINT_SIZE;
-   else
-      ctx->_TriangleCaps |= DD_POINT_SIZE;
 
    if (ctx->Driver.PointSize)
-      (*ctx->Driver.PointSize)(ctx, size);
+      ctx->Driver.PointSize(ctx, size);
 }
 
 
@@ -127,24 +111,10 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
    switch (pname) {
       case GL_DISTANCE_ATTENUATION_EXT:
          if (ctx->Extensions.EXT_point_parameters) {
-            const GLboolean tmp = ctx->Point._Attenuated;
             if (TEST_EQ_3V(ctx->Point.Params, params))
 	       return;
-
 	    FLUSH_VERTICES(ctx, _NEW_POINT);
             COPY_3V(ctx->Point.Params, params);
-
-	    /* Update several derived values now.  This likely to be
-	     * more efficient than trying to catch this statechange in
-	     * state.c.
-	     */
-            ctx->Point._Attenuated = (params[0] != 1.0 ||
-				      params[1] != 0.0 ||
-				      params[2] != 0.0);
-
-            if (tmp != ctx->Point._Attenuated) {
-               ctx->_TriangleCaps ^= DD_POINT_ATTEN;
-            }
          }
          else {
             _mesa_error(ctx, GL_INVALID_ENUM,
@@ -260,6 +230,37 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
 #endif
 
 
+
+/**
+ * Update derived point-related state.
+ */
+void
+_mesa_update_point(GLcontext *ctx)
+{
+   /* clamp to user-specified limits now, clamp to ctx->Const.Min/Max
+    * limits during rasterization.
+    */
+   ctx->Point._Size = CLAMP(ctx->Point.Size,
+			    ctx->Point.MinSize,
+			    ctx->Point.MaxSize);
+
+   if (ctx->Point._Size == 1.0F)
+      ctx->_TriangleCaps &= ~DD_POINT_SIZE;
+   else
+      ctx->_TriangleCaps |= DD_POINT_SIZE;
+
+   ctx->Point._Attenuated = (ctx->Point.Params[0] != 1.0 ||
+                             ctx->Point.Params[1] != 0.0 ||
+                             ctx->Point.Params[2] != 0.0);
+
+   if (ctx->Point._Attenuated)
+      ctx->_TriangleCaps |= DD_POINT_ATTEN;
+   else
+      ctx->_TriangleCaps &= ~DD_POINT_ATTEN;
+}
+
+
+
 /**
  * Initialize the context point state.
  *
@@ -268,11 +269,11 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
  * Initializes __GLcontextRec::Point and point related constants in
  * __GLcontextRec::Const.
  */
-void _mesa_init_point( GLcontext * ctx )
+void
+_mesa_init_point(GLcontext *ctx)
 {
-   int i;
-   
-   /* Point group */
+   GLuint i;
+
    ctx->Point.SmoothFlag = GL_FALSE;
    ctx->Point.Size = 1.0;
    ctx->Point._Size = 1.0;
@@ -281,12 +282,13 @@ void _mesa_init_point( GLcontext * ctx )
    ctx->Point.Params[2] = 0.0;
    ctx->Point._Attenuated = GL_FALSE;
    ctx->Point.MinSize = 0.0;
-   ctx->Point.MaxSize = ctx->Const.MaxPointSize;
+   ctx->Point.MaxSize
+      = MAX2(ctx->Const.MaxPointSize, ctx->Const.MaxPointSizeAA);
    ctx->Point.Threshold = 1.0;
-   ctx->Point.PointSprite = GL_FALSE; /* GL_ARB_point_sprite / GL_NV_point_sprite */
+   ctx->Point.PointSprite = GL_FALSE; /* GL_ARB/NV_point_sprite */
    ctx->Point.SpriteRMode = GL_ZERO; /* GL_NV_point_sprite (only!) */
    ctx->Point.SpriteOrigin = GL_UPPER_LEFT; /* GL_ARB_point_sprite */
    for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
-      ctx->Point.CoordReplace[i] = GL_FALSE; /* GL_ARB_point_sprite / GL_NV_point_sprite */
+      ctx->Point.CoordReplace[i] = GL_FALSE; /* GL_ARB/NV_point_sprite */
    }
 }

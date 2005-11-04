@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -42,8 +42,13 @@
 #include "arbprogparse.h"
 #include "grammar_mesa.h"
 
-#if !defined(__GNUC__) && !defined(__extension__)
+#include "dispatch.h"
+
+#ifndef __extension__
+#if !defined(__GNUC__) || (__GNUC__ < 2) || \
+    ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 7))
 # define __extension__
+#endif
 #endif
 
 /* TODO:
@@ -146,7 +151,7 @@ __extension__ static char arb_grammar_text[] =
     - changed and merged V_* and F_* opcode values to OP_*.
     - added GL_ARB_fragment_program_shadow specific tokens (michal)
 */
-#define  REVISION                                   0x07
+#define  REVISION                                   0x09
 
 /* program type */
 #define  FRAGMENT_PROGRAM                           0x01
@@ -158,18 +163,21 @@ __extension__ static char arb_grammar_text[] =
 #define  DECLARATION                                0x03
 #define  END                                        0x04
 
-/* GL_ARB_fragment_program option flags */
-#define  ARB_PRECISION_HINT_FASTEST                 0x01
-#define  ARB_PRECISION_HINT_NICEST                  0x02
-#define  ARB_FOG_EXP                                0x04
-#define  ARB_FOG_EXP2                               0x08
-#define  ARB_FOG_LINEAR                             0x10
+/* GL_ARB_fragment_program option */
+#define  ARB_PRECISION_HINT_FASTEST                 0x00
+#define  ARB_PRECISION_HINT_NICEST                  0x01
+#define  ARB_FOG_EXP                                0x02
+#define  ARB_FOG_EXP2                               0x03
+#define  ARB_FOG_LINEAR                             0x04
 
-/* GL_ARB_vertex_program option flags */
-#define  ARB_POSITION_INVARIANT                     0x20
+/* GL_ARB_vertex_program option */
+#define  ARB_POSITION_INVARIANT                     0x05
 
-/* GL_ARB_fragment_program_shadow option flags */
-#define  ARB_FRAGMENT_PROGRAM_SHADOW                0x40
+/* GL_ARB_fragment_program_shadow option */
+#define  ARB_FRAGMENT_PROGRAM_SHADOW                0x06
+
+/* GL_ARB_draw_buffers option */
+#define  ARB_DRAW_BUFFERS                           0x07
 
 /* GL_ARB_fragment_program instruction class */
 #define  OP_ALU_INST                                0x00
@@ -549,12 +557,12 @@ var_cache_append (struct var_cache **va, struct var_cache *nv)
 static struct var_cache *
 var_cache_find (struct var_cache *va, GLubyte * name)
 {
-   struct var_cache *first = va;
+   /*struct var_cache *first = va;*/
 
    while (va) {
       if (!strcmp ( (const char*) name, (const char*) va->name)) {
          if (va->type == vt_alias)
-            return var_cache_find (first, va->name);
+            return va->alias_binding;
          return va;
       }
 
@@ -680,39 +688,60 @@ parse_integer (GLubyte ** inst, struct arb_program *Program)
 }
 
 /**
+  Accumulate this string of digits, and return them as 
+  a large integer represented in floating point (for range).
+  If scale is not NULL, also accumulates a power-of-ten
+  integer scale factor that represents the number of digits 
+  in the string.
+*/
+static GLdouble
+parse_float_string(GLubyte ** inst, struct arb_program *Program, GLdouble *scale)
+{
+   GLdouble value = 0.0;
+   GLdouble oscale = 1.0;
+
+   if (**inst == 0) { /* this string of digits is empty-- do nothing */
+      (*inst)++;
+   }
+   else { /* nonempty string-- parse out the digits */
+      while (**inst >= '0' && **inst <= '9') {
+         GLubyte digit = *((*inst)++);
+         value = value * 10.0 + (GLint) (digit - '0');
+         oscale *= 10.0;
+      }
+      assert(**inst == 0); /* integer string should end with 0 */
+      (*inst)++; /* skip over terminating 0 */
+      Program->Position = parse_position(inst); /* skip position (from integer) */
+   }
+   if (scale)
+      *scale = oscale;
+   return value;
+}
+
+/**
+  Parse an unsigned floating-point number from this stream of tokenized
+  characters.  Example floating-point formats supported:
+     12.34
+     12
+     0.34
+     .34
+     12.34e-4
  */
 static GLfloat
 parse_float (GLubyte ** inst, struct arb_program *Program)
 {
-   GLint tmp[5], denom;
-   GLuint leading_zeros =0;
-   GLfloat value = 0;
+   GLint exponent;
+   GLdouble whole, fraction, fracScale = 1.0;
 
-   tmp[1] = parse_integer (inst, Program);   /* This is the integer portion of the number */
+   whole = parse_float_string(inst, Program, 0);
+   fraction = parse_float_string(inst, Program, &fracScale);
+   
+   /* Parse signed exponent */
+   exponent = parse_integer(inst, Program);   /* This is the exponent */
 
-   /* Now we grab the fractional portion of the number (the digits after
-	* the .). We can have leading 0's here, which parse_integer will ignore,
-	* so we'll check for those first
-	*/
-   while ((**inst == '0') && ( *(*inst+1) != 0))
-   {
-	  leading_zeros++;
-	  (*inst)++;
-   }
-   tmp[2] = parse_integer (inst, Program);   /* This is the fractional portion of the number */
-   tmp[3] = parse_sign (inst);               /* This is the sign of the exponent */
-   tmp[4] = parse_integer (inst, Program);   /* This is the exponent */
-
-   value = (GLfloat) tmp[1];
-   denom = 1;
-   while (denom < tmp[2])
-      denom *= 10;
-   denom *= (GLint) _mesa_pow( 10, leading_zeros );
-   value += (GLfloat) tmp[2] / (GLfloat) denom;
-
-   value *= (GLfloat) _mesa_pow (10, (GLfloat) tmp[3] * (GLfloat) tmp[4]);
-
-   return value;
+   /* Assemble parts of floating-point number: */
+   return (GLfloat) ((whole + fraction / fracScale) *
+                     _mesa_pow(10.0, (GLfloat) exponent));
 }
 
 
@@ -775,14 +804,6 @@ parse_relative_offset (GLcontext *ctx, GLubyte **inst, struct arb_program *Progr
                         GLint *offset)
 {
    *offset = parse_integer(inst, Program);
-   if ((*offset > 63) || (*offset < -64)) {
-      _mesa_set_program_error (ctx, Program->Position,
-                               "Relative offset out of range");
-      _mesa_error (ctx, GL_INVALID_OPERATION, "Relative offset %d out of range",
-                                                *offset);
-      return 1;
-   }
-
    return 0;
 }
 
@@ -821,6 +842,28 @@ parse_generic_attrib_num(GLcontext *ctx, GLubyte ** inst,
 
    *attrib = (GLuint) i;
 
+   return 0;
+}
+
+
+/**
+ * \param color The index of the color buffer to write into
+ * \return 0 on sucess, 1 on error
+ */
+static GLuint
+parse_output_color_num (GLcontext * ctx, GLubyte ** inst,
+                    struct arb_program *Program, GLuint * color)
+{
+   GLint i = parse_integer (inst, Program);
+
+   if ((i < 0) || (i >= (int)ctx->Const.MaxDrawBuffers)) {
+      _mesa_set_program_error (ctx, Program->Position,
+                               "Invalid draw buffer index");
+      _mesa_error (ctx, GL_INVALID_OPERATION, "Invalid draw buffer index");
+      return 1;
+   }
+
+   *color = (GLuint) i;
    return 0;
 }
 
@@ -1558,13 +1601,20 @@ static GLuint
 parse_result_binding (GLcontext * ctx, GLubyte ** inst, GLuint * binding,
                       GLuint * binding_idx, struct arb_program *Program)
 {
-   GLuint b;
+   GLuint b, out_color;
 
    switch (*(*inst)++) {
       case FRAGMENT_RESULT_COLOR:
          /* for frag programs, this is FRAGMENT_RESULT_COLOR */
          if (Program->Base.Target == GL_FRAGMENT_PROGRAM_ARB) {
+            /* This gets result of the color buffer we're supposed to 
+             * draw into
+             */
+            parse_output_color_num(ctx, inst, Program, &out_color);
+
             *binding = FRAG_OUTPUT_COLR;
+
+				/* XXX: We're ignoring the color buffer for now. */
             *binding_idx = 0;
          }
          /* for vtx programs, this is VERTEX_RESULT_POSITION */
@@ -2184,10 +2234,9 @@ parse_declaration (GLcontext * ctx, GLubyte ** inst, struct var_cache **vc_head,
 static GLuint
 parse_masked_dst_reg (GLcontext * ctx, GLubyte ** inst,
                       struct var_cache **vc_head, struct arb_program *Program,
-                      GLint * File, GLint * Index, GLboolean * WriteMask)
+                      GLint * File, GLint * Index, GLint *WriteMask)
 {
-   GLuint result;
-   GLubyte mask;
+   GLuint result, tmp;
    struct var_cache *dst;
 
    /* We either have a result register specified, or a
@@ -2263,13 +2312,14 @@ parse_masked_dst_reg (GLcontext * ctx, GLubyte ** inst,
     *  z,b -> bit 1
     *  y,g -> bit 2
     *  x,r -> bit 3
+    *
+    * ==> Need to reverse the order of bits for this!
     */
-   mask = *(*inst)++;
-
-   WriteMask[0] = (GLboolean) (mask & (1 << 3)) >> 3;
-   WriteMask[1] = (GLboolean) (mask & (1 << 2)) >> 2;
-   WriteMask[2] = (GLboolean) (mask & (1 << 1)) >> 1;
-   WriteMask[3] = (GLboolean) (mask & (1));
+   tmp =  (GLint) *(*inst)++;
+   *WriteMask = (((tmp>>3) & 0x1) |
+		 ((tmp>>1) & 0x2) |
+		 ((tmp<<1) & 0x4) |
+		 ((tmp<<3) & 0x8));
 
    return 0;
 }
@@ -2313,6 +2363,7 @@ parse_address_reg (GLcontext * ctx, GLubyte ** inst,
    return 0;
 }
 
+#if 0 /* unused */
 /**
  * Handle the parsing out of a masked address register
  *
@@ -2339,7 +2390,7 @@ parse_masked_address_reg (GLcontext * ctx, GLubyte ** inst,
 
    return 0;
 }
-
+#endif
 
 /**
  * Parse out a swizzle mask.
@@ -2393,15 +2444,15 @@ parse_swizzle_mask (GLubyte ** inst, GLubyte * mask, GLint len)
 /**
  */
 static GLuint
-parse_extended_swizzle_mask (GLubyte ** inst, GLubyte * mask, GLboolean * Negate)
+parse_extended_swizzle_mask(GLubyte **inst, GLubyte *mask, GLubyte *negate)
 {
    GLint a;
    GLubyte swz;
 
-   *Negate = GL_FALSE;
+   *negate = 0x0;
    for (a = 0; a < 4; a++) {
       if (parse_sign (inst) == -1)
-         *Negate = GL_TRUE;
+         *negate |= (1 << a);
 
       swz = *(*inst)++;
 
@@ -2449,6 +2500,8 @@ parse_src_reg (GLcontext * ctx, GLubyte ** inst, struct var_cache **vc_head,
    struct var_cache *src;
    GLuint binding_state, binding_idx, is_generic, found;
    GLint offset;
+
+   *IsRelOffset = 0;
 
    /* And the binding for the src */
    switch (*(*inst)++) {
@@ -2604,44 +2657,93 @@ parse_src_reg (GLcontext * ctx, GLubyte ** inst, struct var_cache **vc_head,
 /**
  */
 static GLuint
-parse_vector_src_reg (GLcontext * ctx, GLubyte ** inst,
-                      struct var_cache **vc_head, struct arb_program *Program,
-                      GLint * File, GLint * Index, GLboolean * Negate,
-                      GLubyte * Swizzle, GLboolean *IsRelOffset)
+parse_fp_vector_src_reg (GLcontext * ctx, GLubyte ** inst,
+			 struct var_cache **vc_head, struct arb_program *Program,
+			 struct fp_src_register *reg )
 {
+
+   GLint File;
+   GLint Index;
+   GLboolean Negate;
+   GLubyte Swizzle[4];
+   GLboolean IsRelOffset;
+
    /* Grab the sign */
-   *Negate = (parse_sign (inst) == -1);
+   Negate = (parse_sign (inst) == -1) ? 0xf : 0x0;
 
    /* And the src reg */
-   if (parse_src_reg (ctx, inst, vc_head, Program, File, Index, IsRelOffset))
+   if (parse_src_reg (ctx, inst, vc_head, Program, &File, &Index, &IsRelOffset))
       return 1;
 
    /* finally, the swizzle */
    parse_swizzle_mask (inst, Swizzle, 4);
 
+   reg->File = File;
+   reg->Index = Index;
+   reg->Abs = 0;		/* NV only */
+   reg->NegateAbs = 0;		/* NV only */
+   reg->NegateBase = Negate;
+   reg->Swizzle = (Swizzle[0] << 0 |
+		   Swizzle[1] << 3 |
+		   Swizzle[2] << 6 |
+		   Swizzle[3] << 9);
+
    return 0;
 }
 
-/**
- */
-static GLuint
-parse_scalar_src_reg (GLcontext * ctx, GLubyte ** inst,
-                      struct var_cache **vc_head, struct arb_program *Program,
-                      GLint * File, GLint * Index, GLboolean * Negate,
-                      GLubyte * Swizzle, GLboolean *IsRelOffset)
-{
-   /* Grab the sign */
-   *Negate = (parse_sign (inst) == -1);
 
-   /* And the src reg */
-   if (parse_src_reg (ctx, inst, vc_head, Program, File, Index, IsRelOffset))
+static GLuint 
+parse_fp_dst_reg(GLcontext * ctx, GLubyte ** inst,
+		 struct var_cache **vc_head, struct arb_program *Program,
+		 struct fp_dst_register *reg )
+{
+   GLint file, idx, mask;
+   
+   if (parse_masked_dst_reg (ctx, inst, vc_head, Program, &file, &idx, &mask))
       return 1;
 
-   /* Now, get the component and shove it into all the swizzle slots  */
+   reg->CondMask = 0;		/* NV only */
+   reg->CondSwizzle = 0;	/* NV only */
+   reg->File = file;
+   reg->Index = idx;
+   reg->WriteMask = mask;
+   return 0;
+}
+
+
+
+static GLuint
+parse_fp_scalar_src_reg (GLcontext * ctx, GLubyte ** inst,
+			 struct var_cache **vc_head, struct arb_program *Program,
+			 struct fp_src_register *reg )
+{
+
+   GLint File;
+   GLint Index;
+   GLboolean Negate;
+   GLubyte Swizzle[4];
+   GLboolean IsRelOffset;
+
+   /* Grab the sign */
+   Negate = (parse_sign (inst) == -1) ? 0x1 : 0x0;
+
+   /* And the src reg */
+   if (parse_src_reg (ctx, inst, vc_head, Program, &File, &Index, &IsRelOffset))
+      return 1;
+
+   /* finally, the swizzle */
    parse_swizzle_mask (inst, Swizzle, 1);
+
+   reg->File = File;
+   reg->Index = Index;
+   reg->Abs = 0;		/* NV only */
+   reg->NegateAbs = 0;		/* NV only */
+   reg->NegateBase = Negate;
+   reg->Swizzle = (Swizzle[0] << 0);
 
    return 0;
 }
+
 
 /**
  * This is a big mother that handles getting opcodes into the instruction
@@ -2652,8 +2754,7 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                       struct var_cache **vc_head, struct arb_program *Program,
                       struct fp_instruction *fp)
 {
-   GLint a, b;
-   GLubyte swz[4]; /* FP's swizzle mask is a GLubyte, while VP's is GLuint */
+   GLint a;
    GLuint texcoord;
    GLubyte instClass, type, code;
    GLboolean rel;
@@ -2663,6 +2764,13 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
 
    /* Record the position in the program string for debugging */
    fp->StringPos = Program->Position;
+
+   fp->Data = NULL;
+
+   fp->DstReg.File = 0xf;	/* mark as undef */
+   fp->SrcReg[0].File = 0xf;	/* mark as undef */
+   fp->SrcReg[1].File = 0xf;	/* mark as undef */
+   fp->SrcReg[2].File = 0xf;	/* mark as undef */
 
    /* OP_ALU_INST or OP_TEX_INST */
    instClass = *(*inst)++;
@@ -2724,20 +2832,11 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg (ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
 
-         fp->SrcReg[0].Abs = GL_FALSE;
-         fp->SrcReg[0].NegateAbs = GL_FALSE;
-         if (parse_vector_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[0].File,
-              &fp->SrcReg[0].Index, &fp->SrcReg[0].NegateBase,
-              swz, &rel))
+         if (parse_fp_vector_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[0]))
             return 1;
-         for (b=0; b<4; b++)
-            fp->SrcReg[0].Swizzle[b] = swz[b];
          break;
 
       case OP_ALU_SCALAR:
@@ -2786,19 +2885,11 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg (ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
-         fp->SrcReg[0].Abs = GL_FALSE;
-         fp->SrcReg[0].NegateAbs = GL_FALSE;
-         if (parse_scalar_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[0].File,
-              &fp->SrcReg[0].Index, &fp->SrcReg[0].NegateBase,
-              swz, &rel))
+
+         if (parse_fp_scalar_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[0]))
             return 1;
-         for (b=0; b<4; b++)
-            fp->SrcReg[0].Swizzle[b] = swz[b];
          break;
 
       case OP_ALU_BINSC:
@@ -2810,20 +2901,12 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg(ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
+
          for (a = 0; a < 2; a++) {
-            fp->SrcReg[a].Abs = GL_FALSE;
-            fp->SrcReg[a].NegateAbs = GL_FALSE;
-            if (parse_scalar_src_reg
-                (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[a].File,
-                 &fp->SrcReg[a].Index, &fp->SrcReg[a].NegateBase,
-                 swz, &rel))
+	    if (parse_fp_scalar_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[a]))
                return 1;
-            for (b=0; b<4; b++)
-               fp->SrcReg[a].Swizzle[b] = swz[b];
          }
          break;
 
@@ -2903,20 +2986,11 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg (ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
          for (a = 0; a < 2; a++) {
-            fp->SrcReg[a].Abs = GL_FALSE;
-            fp->SrcReg[a].NegateAbs = GL_FALSE;
-            if (parse_vector_src_reg
-                (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[a].File,
-                 &fp->SrcReg[a].Index, &fp->SrcReg[a].NegateBase,
-                 swz, &rel))
-               return 1;
-            for (b=0; b<4; b++)
-               fp->SrcReg[a].Swizzle[b] = swz[b];
+	    if (parse_fp_vector_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[a]))
+	       return 1;
          }
          break;
 
@@ -2941,20 +3015,12 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg (ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
+
          for (a = 0; a < 3; a++) {
-            fp->SrcReg[a].Abs = GL_FALSE;
-            fp->SrcReg[a].NegateAbs = GL_FALSE;
-            if (parse_vector_src_reg
-                (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[a].File,
-                 &fp->SrcReg[a].Index, &fp->SrcReg[a].NegateBase,
-                 swz, &rel))
-               return 1;
-            for (b=0; b<4; b++)
-               fp->SrcReg[a].Swizzle[b] = swz[b];
+	    if (parse_fp_vector_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[a]))
+	       return 1;
          }
          break;
 
@@ -2966,19 +3032,25 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                fp->Opcode = FP_OPCODE_SWZ;
                break;
          }
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg (ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
 
-         if (parse_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[0].File,
-              &fp->SrcReg[0].Index, &rel))
-            return 1;
-         parse_extended_swizzle_mask (inst, swz,
-                                      &fp->SrcReg[0].NegateBase);
-         for (b=0; b<4; b++)
-            fp->SrcReg[0].Swizzle[b] = swz[b];
+	 {
+	    GLubyte Swizzle[4]; /* FP's swizzle mask is a GLubyte, while VP's is GLuint */
+	    GLubyte negateMask;
+	    GLint File, Index;
+
+	    if (parse_src_reg(ctx, inst, vc_head, Program, &File, &Index, &rel))
+	       return 1;
+	    parse_extended_swizzle_mask (inst, Swizzle, &negateMask);
+	    fp->SrcReg[0].File = File;
+	    fp->SrcReg[0].Index = Index;
+	    fp->SrcReg[0].NegateBase = negateMask;
+	    fp->SrcReg[0].Swizzle = (Swizzle[0] << 0 |
+				     Swizzle[1] << 3 |
+				     Swizzle[2] << 6 |
+				     Swizzle[3] << 9);
+	 }
          break;
 
       case OP_TEX_SAMPLE:
@@ -2996,26 +3068,17 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
 
             case OP_TXB_SAT:
-
                fp->Saturate = 1;
             case OP_TXB:
                fp->Opcode = FP_OPCODE_TXB;
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->DstReg.File,
-              &fp->DstReg.Index, fp->DstReg.WriteMask))
+         if (parse_fp_dst_reg (ctx, inst, vc_head, Program, &fp->DstReg))
             return 1;
-         fp->SrcReg[0].Abs = GL_FALSE;
-         fp->SrcReg[0].NegateAbs = GL_FALSE;
-         if (parse_vector_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[0].File,
-              &fp->SrcReg[0].Index, &fp->SrcReg[0].NegateBase,
-              swz, &rel))
+
+	 if (parse_fp_vector_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[0]))
             return 1;
-         for (b=0; b<4; b++)
-            fp->SrcReg[0].Swizzle[b] = swz[b];
 
          /* texImageUnit */
          if (parse_texcoord_num (ctx, inst, Program, &texcoord))
@@ -3025,19 +3088,19 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
          /* texTarget */
          switch (*(*inst)++) {
             case TEXTARGET_1D:
-               fp->TexSrcBit = TEXTURE_1D_BIT;
+               fp->TexSrcIdx = TEXTURE_1D_INDEX;
                break;
             case TEXTARGET_2D:
-               fp->TexSrcBit = TEXTURE_2D_BIT;
+               fp->TexSrcIdx = TEXTURE_2D_INDEX;
                break;
             case TEXTARGET_3D:
-               fp->TexSrcBit = TEXTURE_3D_BIT;
+               fp->TexSrcIdx = TEXTURE_3D_INDEX;
                break;
             case TEXTARGET_RECT:
-               fp->TexSrcBit = TEXTURE_RECT_BIT;
+               fp->TexSrcIdx = TEXTURE_RECT_INDEX;
                break;
             case TEXTARGET_CUBE:
-               fp->TexSrcBit = TEXTURE_CUBE_BIT;
+               fp->TexSrcIdx = TEXTURE_CUBE_INDEX;
                break;
 	    case TEXTARGET_SHADOW1D:
 	    case TEXTARGET_SHADOW2D:
@@ -3045,25 +3108,131 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
 	       /* TODO ARB_fragment_program_shadow code */
 	       break;
          }
-         Program->TexturesUsed[texcoord] |= fp->TexSrcBit;
+         Program->TexturesUsed[texcoord] |= (1<<fp->TexSrcIdx);
          break;
 
       case OP_TEX_KIL:
-         fp->Opcode = FP_OPCODE_KIL;
-         fp->SrcReg[0].Abs = GL_FALSE;
-         fp->SrcReg[0].NegateAbs = GL_FALSE;
-         if (parse_vector_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & fp->SrcReg[0].File,
-              &fp->SrcReg[0].Index, &fp->SrcReg[0].NegateBase,
-              swz, &rel))
+	 if (parse_fp_vector_src_reg(ctx, inst, vc_head, Program, &fp->SrcReg[0]))
             return 1;
-         for (b=0; b<4; b++)
-            fp->SrcReg[0].Swizzle[b] = swz[b];
+         fp->Opcode = FP_OPCODE_KIL;
          break;
    }
 
    return 0;
 }
+
+static GLuint 
+parse_vp_dst_reg(GLcontext * ctx, GLubyte ** inst,
+		 struct var_cache **vc_head, struct arb_program *Program,
+		 struct vp_dst_register *reg )
+{
+   GLint file, idx, mask;
+
+   if (parse_masked_dst_reg(ctx, inst, vc_head, Program, &file, &idx, &mask))
+      return 1;
+
+   reg->File = file;
+   reg->Index = idx;
+   reg->WriteMask = mask;
+   return 0;
+}
+
+/**
+ * Handle the parsing out of a masked address register
+ *
+ * \param Index     - The register index we write to
+ * \param WriteMask - The mask controlling which components we write (1->write)
+ *
+ * \return 0 on sucess, 1 on error
+ */
+static GLuint
+parse_vp_address_reg (GLcontext * ctx, GLubyte ** inst,
+		      struct var_cache **vc_head,
+		      struct arb_program *Program,
+		      struct vp_dst_register *reg)
+{
+   GLint idx;
+
+   if (parse_address_reg (ctx, inst, vc_head, Program, &idx))
+      return 1;
+
+   /* This should be 0x8 */
+   (*inst)++;
+
+   reg->File = PROGRAM_ADDRESS;
+   reg->Index = idx;
+
+   /* Writemask of .x is implied */
+   reg->WriteMask = 0x1;
+   return 0;
+}
+
+/**
+ */
+static GLuint
+parse_vp_vector_src_reg (GLcontext * ctx, GLubyte ** inst,
+			 struct var_cache **vc_head, struct arb_program *Program,
+			 struct vp_src_register *reg )
+{
+
+   GLint File;
+   GLint Index;
+   GLboolean Negate;
+   GLubyte Swizzle[4];
+   GLboolean IsRelOffset;
+
+   /* Grab the sign */
+   Negate = (parse_sign (inst) == -1) ? 0xf : 0x0;
+
+   /* And the src reg */
+   if (parse_src_reg (ctx, inst, vc_head, Program, &File, &Index, &IsRelOffset))
+      return 1;
+
+   /* finally, the swizzle */
+   parse_swizzle_mask (inst, Swizzle, 4);
+
+   reg->File = File;
+   reg->Index = Index;
+   reg->Swizzle = ((Swizzle[0] << 0) |
+		   (Swizzle[1] << 3) |
+		   (Swizzle[2] << 6) |
+		   (Swizzle[3] << 9));
+   reg->Negate = Negate;
+   reg->RelAddr = IsRelOffset;
+   return 0;
+}
+
+
+static GLuint
+parse_vp_scalar_src_reg (GLcontext * ctx, GLubyte ** inst,
+			 struct var_cache **vc_head, struct arb_program *Program,
+			 struct vp_src_register *reg )
+{
+
+   GLint File;
+   GLint Index;
+   GLboolean Negate;
+   GLubyte Swizzle[4];
+   GLboolean IsRelOffset;
+
+   /* Grab the sign */
+   Negate = (parse_sign (inst) == -1) ? 0x1 : 0x0;
+
+   /* And the src reg */
+   if (parse_src_reg (ctx, inst, vc_head, Program, &File, &Index, &IsRelOffset))
+      return 1;
+
+   /* finally, the swizzle */
+   parse_swizzle_mask (inst, Swizzle, 1);
+
+   reg->File = File;
+   reg->Index = Index;
+   reg->Swizzle = (Swizzle[0] << 0);
+   reg->Negate = Negate;
+   reg->RelAddr = IsRelOffset;
+   return 0;
+}
+
 
 /**
  * This is a big mother that handles getting opcodes into the instruction
@@ -3085,15 +3254,13 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
 
    /* Record the position in the program string for debugging */
    vp->StringPos = Program->Position;
-
+   vp->Data = NULL;
    vp->SrcReg[0].RelAddr = vp->SrcReg[1].RelAddr = vp->SrcReg[2].RelAddr = 0;
-
-   for (a = 0; a < 4; a++) {
-      vp->SrcReg[0].Swizzle[a] = a;
-      vp->SrcReg[1].Swizzle[a] = a;
-      vp->SrcReg[2].Swizzle[a] = a;
-      vp->DstReg.WriteMask[a] = 1;
-   }
+   vp->SrcReg[0].Swizzle = SWIZZLE_NOOP;
+   vp->SrcReg[1].Swizzle = SWIZZLE_NOOP;
+   vp->SrcReg[2].Swizzle = SWIZZLE_NOOP;
+   vp->SrcReg[3].Swizzle = SWIZZLE_NOOP;
+   vp->DstReg.WriteMask = 0xf;
 
    switch (type) {
          /* XXX: */
@@ -3103,17 +3270,13 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
          /* Remember to set SrcReg.RelAddr; */
 
          /* Get the masked address register [dst] */
-         if (parse_masked_address_reg
-             (ctx, inst, vc_head, Program, &vp->DstReg.Index,
-              vp->DstReg.WriteMask))
+         if (parse_vp_address_reg(ctx, inst, vc_head, Program, &vp->DstReg))
             return 1;
+
          vp->DstReg.File = PROGRAM_ADDRESS;
 
          /* Get a scalar src register */
-         if (parse_scalar_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[0].File,
-              &vp->SrcReg[0].Index, &vp->SrcReg[0].Negate,
-              vp->SrcReg[0].Swizzle, &vp->SrcReg[0].RelAddr))
+	 if (parse_vp_scalar_src_reg(ctx, inst, vc_head, Program, &vp->SrcReg[0]))
             return 1;
 
          break;
@@ -3136,14 +3299,11 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
                vp->Opcode = VP_OPCODE_MOV;
                break;
          }
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->DstReg.File,
-              &vp->DstReg.Index, vp->DstReg.WriteMask))
+
+         if (parse_vp_dst_reg(ctx, inst, vc_head, Program, &vp->DstReg))
             return 1;
-         if (parse_vector_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[0].File,
-              &vp->SrcReg[0].Index, &vp->SrcReg[0].Negate,
-              vp->SrcReg[0].Swizzle, &vp->SrcReg[0].RelAddr))
+
+         if (parse_vp_vector_src_reg(ctx, inst, vc_head, Program, &vp->SrcReg[0]))
             return 1;
          break;
 
@@ -3168,14 +3328,10 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
                vp->Opcode = VP_OPCODE_RSQ;
                break;
          }
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->DstReg.File,
-              &vp->DstReg.Index, vp->DstReg.WriteMask))
+         if (parse_vp_dst_reg(ctx, inst, vc_head, Program, &vp->DstReg))
             return 1;
-         if (parse_scalar_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[0].File,
-              &vp->SrcReg[0].Index, &vp->SrcReg[0].Negate,
-              vp->SrcReg[0].Swizzle, &vp->SrcReg[0].RelAddr))
+
+	 if (parse_vp_scalar_src_reg(ctx, inst, vc_head, Program, &vp->SrcReg[0]))
             return 1;
          break;
 
@@ -3185,15 +3341,11 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
                vp->Opcode = VP_OPCODE_POW;
                break;
          }
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->DstReg.File,
-              &vp->DstReg.Index, vp->DstReg.WriteMask))
+         if (parse_vp_dst_reg(ctx, inst, vc_head, Program, &vp->DstReg))
             return 1;
+
          for (a = 0; a < 2; a++) {
-            if (parse_scalar_src_reg
-                (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[a].File,
-                 &vp->SrcReg[a].Index, &vp->SrcReg[a].Negate,
-                 vp->SrcReg[a].Swizzle, &vp->SrcReg[a].RelAddr))
+	    if (parse_vp_scalar_src_reg(ctx, inst, vc_head, Program, &vp->SrcReg[a]))
                return 1;
          }
          break;
@@ -3237,15 +3389,11 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
                vp->Opcode = VP_OPCODE_XPD;
                break;
          }
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->DstReg.File,
-              &vp->DstReg.Index, vp->DstReg.WriteMask))
+         if (parse_vp_dst_reg(ctx, inst, vc_head, Program, &vp->DstReg))
             return 1;
+
          for (a = 0; a < 2; a++) {
-            if (parse_vector_src_reg
-                (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[a].File,
-                 &vp->SrcReg[a].Index, &vp->SrcReg[a].Negate,
-                 vp->SrcReg[a].Swizzle, &vp->SrcReg[a].RelAddr))
+	    if (parse_vp_vector_src_reg(ctx, inst, vc_head, Program, &vp->SrcReg[a]))
                return 1;
          }
          break;
@@ -3257,15 +3405,11 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
                break;
          }
 
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->DstReg.File,
-              &vp->DstReg.Index, vp->DstReg.WriteMask))
+         if (parse_vp_dst_reg(ctx, inst, vc_head, Program, &vp->DstReg))
             return 1;
+
          for (a = 0; a < 3; a++) {
-            if (parse_vector_src_reg
-                (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[a].File,
-                 &vp->SrcReg[a].Index, &vp->SrcReg[a].Negate,
-                 vp->SrcReg[a].Swizzle, &vp->SrcReg[a].RelAddr))
+	    if (parse_vp_vector_src_reg(ctx, inst, vc_head, Program, &vp->SrcReg[a]))
                return 1;
          }
          break;
@@ -3276,17 +3420,30 @@ parse_vp_instruction (GLcontext * ctx, GLubyte ** inst,
                vp->Opcode = VP_OPCODE_SWZ;
                break;
          }
-         if (parse_masked_dst_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->DstReg.File,
-              &vp->DstReg.Index, vp->DstReg.WriteMask))
-            return 1;
+	 {
+	    GLubyte Swizzle[4]; /* FP's swizzle mask is a GLubyte, while VP's is GLuint */
+	    GLubyte Negate[4];
+	    GLboolean RelAddr;
+	    GLint File, Index;
 
-         if (parse_src_reg
-             (ctx, inst, vc_head, Program, (GLint *) & vp->SrcReg[0].File,
-              &vp->SrcReg[0].Index, &vp->SrcReg[0].RelAddr))
-            return 1;
-         parse_extended_swizzle_mask (inst, vp->SrcReg[0].Swizzle,
-                                      &vp->SrcReg[0].Negate);
+	    if (parse_vp_dst_reg(ctx, inst, vc_head, Program, &vp->DstReg))
+	       return 1;
+
+	    if (parse_src_reg(ctx, inst, vc_head, Program, &File, &Index, &RelAddr))
+	       return 1;
+	    parse_extended_swizzle_mask (inst, Swizzle, Negate);
+	    vp->SrcReg[0].File = File;
+	    vp->SrcReg[0].Index = Index;
+	    vp->SrcReg[0].Negate = (Negate[0] << 0 |
+				    Negate[1] << 1 |
+				    Negate[2] << 2 |
+				    Negate[3] << 3);
+	    vp->SrcReg[0].Swizzle = (Swizzle[0] << 0 |
+				     Swizzle[1] << 3 |
+				     Swizzle[2] << 6 |
+				     Swizzle[3] << 9);
+	    vp->SrcReg[0].RelAddr = RelAddr;
+	 }
          break;
    }
    return 0;
@@ -3594,6 +3751,12 @@ parse_arb_program (GLcontext * ctx, GLubyte * inst, struct var_cache **vc_head,
 	             /* TODO ARB_fragment_program_shadow code */
 		  }
 		  break;
+
+               case ARB_DRAW_BUFFERS:
+	          if (Program->Base.Target == GL_FRAGMENT_PROGRAM_ARB) {
+                     /* do nothing for now */
+                  }
+                  break;
             }
             break;
 
@@ -3669,10 +3832,16 @@ parse_arb_program (GLcontext * ctx, GLubyte * inst, struct var_cache **vc_head,
                                                   (Program->Base.NumInstructions+1)*sizeof(struct fp_instruction));
 
       Program->FPInstructions[Program->Base.NumInstructions].Opcode = FP_OPCODE_END;
+      Program->FPInstructions[Program->Base.NumInstructions].Saturate = 0;
+      Program->FPInstructions[Program->Base.NumInstructions].DstReg.File = 0xf;
+      Program->FPInstructions[Program->Base.NumInstructions].SrcReg[0].File = 0xf;
+      Program->FPInstructions[Program->Base.NumInstructions].SrcReg[1].File = 0xf;
+      Program->FPInstructions[Program->Base.NumInstructions].SrcReg[2].File = 0xf;
       /* YYY Wrong Position in program, whatever, at least not random -> crash
 	 Program->Position = parse_position (&inst);
       */
       Program->FPInstructions[Program->Base.NumInstructions].StringPos = Program->Position;
+      Program->FPInstructions[Program->Base.NumInstructions].Data = NULL;
    }
    else {
       Program->VPInstructions =
@@ -3685,6 +3854,7 @@ parse_arb_program (GLcontext * ctx, GLubyte * inst, struct var_cache **vc_head,
 	 Program->Position = parse_position (&inst);
       */
       Program->VPInstructions[Program->Base.NumInstructions].StringPos = Program->Position;
+      Program->VPInstructions[Program->Base.NumInstructions].Data = NULL;
    }
 
    /* increment Program->Base.NumInstructions */
@@ -3714,9 +3884,9 @@ static int set_reg8 (GLcontext *ctx, grammar id, const byte *name, byte value)
 
 static int extension_is_supported (const GLubyte *ext)
 {
-   const GLubyte *extensions = glGetString (GL_EXTENSIONS);
+   const GLubyte *extensions = CALL_GetString(GET_DISPATCH(), (GL_EXTENSIONS));
    const GLubyte *end = extensions + _mesa_strlen ((const char *) extensions);
-   const GLint ext_len = _mesa_strlen ((const char *) ext);
+   const GLint ext_len = (GLint)_mesa_strlen ((const char *) ext);
 
    while (extensions < end)
    {
@@ -3844,7 +4014,9 @@ _mesa_parse_arb_program (GLcontext * ctx, const GLubyte * str, GLsizei len,
        enable_ext (ctx, arbprogram_syn_id,
           (byte *) "texture_rectangle", (byte *) "GL_NV_texture_rectangle") ||
        enable_ext (ctx, arbprogram_syn_id,
-          (byte *) "fragment_program_shadow", (byte *) "GL_ARB_fragment_program_shadow")) {
+          (byte *) "fragment_program_shadow", (byte *) "GL_ARB_fragment_program_shadow") ||
+       enable_ext (ctx, arbprogram_syn_id,
+          (byte *) "draw_buffers", (byte *) "GL_ARB_draw_buffers")) {
       grammar_destroy (arbprogram_syn_id);
       return 1;
    }
@@ -3871,7 +4043,8 @@ _mesa_parse_arb_program (GLcontext * ctx, const GLubyte * str, GLsizei len,
 #if DEBUG_PARSING
    printf ("Checking Grammar!\n");
 #endif
-   err = grammar_check (arbprogram_syn_id, strz, &parsed, &parsed_len);
+   /* do a fast check on program string - initial production buffer is 4K */
+   err = grammar_fast_check (arbprogram_syn_id, strz, &parsed, &parsed_len, 0x1000);
 
    /* Syntax parse error */
    if (err == 0) {
@@ -3935,15 +4108,8 @@ _mesa_parse_arb_program (GLcontext * ctx, const GLubyte * str, GLsizei len,
       err = 1;
    }
    else {
-      switch (*inst++) {
-         case FRAGMENT_PROGRAM:
-            program->Base.Target = GL_FRAGMENT_PROGRAM_ARB;
-            break;
-
-         case VERTEX_PROGRAM:
-            program->Base.Target = GL_VERTEX_PROGRAM_ARB;
-            break;
-      }
+      /* ignore program target */
+      inst++;
 
       err = parse_arb_program (ctx, inst, &vc_head, program);
 #if DEBUG_PARSING

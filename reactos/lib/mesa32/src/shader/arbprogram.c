@@ -107,7 +107,7 @@ _mesa_GetVertexAttribfvARB(GLuint index, GLenum pname, GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   if (index == 0 || index >= VERT_ATTRIB_MAX) {
+   if (index == 0 || index >= MAX_VERTEX_PROGRAM_ATTRIBS) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glGetVertexAttribfvARB(index)");
       return;
    }
@@ -130,6 +130,9 @@ _mesa_GetVertexAttribfvARB(GLuint index, GLenum pname, GLfloat *params)
          break;
       case GL_CURRENT_VERTEX_ATTRIB_ARB:
 	 FLUSH_CURRENT(ctx, 0);
+         /* XXX should read:
+            COPY_4V(params, ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index]);
+          */
          COPY_4V(params, ctx->Current.Attrib[index]);
          break;
       case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB:
@@ -262,7 +265,7 @@ _mesa_ProgramEnvParameter4fARB(GLenum target, GLuint index,
       }
       ASSIGN_4V(ctx->FragmentProgram.Parameters[index], x, y, z, w);
    }
-   if (target == GL_VERTEX_PROGRAM_ARB
+   else if (target == GL_VERTEX_PROGRAM_ARB
        && ctx->Extensions.ARB_vertex_program) {
       if (index >= ctx->Const.MaxVertexProgramEnvParams) {
          _mesa_error(ctx, GL_INVALID_VALUE, "glProgramEnvParameter(index)");
@@ -322,7 +325,7 @@ _mesa_GetProgramEnvParameterfvARB(GLenum target, GLuint index,
       }
       COPY_4V(params, ctx->FragmentProgram.Parameters[index]);
    }
-   if (target == GL_VERTEX_PROGRAM_ARB
+   else if (target == GL_VERTEX_PROGRAM_ARB
        && ctx->Extensions.ARB_vertex_program) {
       if (index >= ctx->Const.MaxVertexProgramEnvParams) {
          _mesa_error(ctx, GL_INVALID_VALUE, "glGetProgramEnvParameter(index)");
@@ -506,7 +509,7 @@ _mesa_GetProgramivARB(GLenum target, GLenum pname, GLint *params)
 
    switch (pname) {
       case GL_PROGRAM_LENGTH_ARB:
-         *params = prog->String ? _mesa_strlen((char *) prog->String) : 0;
+         *params = prog->String ? (GLint)_mesa_strlen((char *) prog->String) : 0;
          break;
       case GL_PROGRAM_FORMAT_ARB:
          *params = prog->Format;

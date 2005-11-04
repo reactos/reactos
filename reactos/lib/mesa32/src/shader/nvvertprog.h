@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3.1
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,36 +37,38 @@
 /* Vertex program opcodes */
 enum vp_opcode
 {
-   VP_OPCODE_MOV,
-   VP_OPCODE_LIT,
-   VP_OPCODE_RCP,
-   VP_OPCODE_RSQ,
-   VP_OPCODE_EXP,
-   VP_OPCODE_LOG,
-   VP_OPCODE_MUL,
+   VP_OPCODE_ABS,
    VP_OPCODE_ADD,
+   VP_OPCODE_ARL,
    VP_OPCODE_DP3,
    VP_OPCODE_DP4,
-   VP_OPCODE_DST,
-   VP_OPCODE_MIN,
-   VP_OPCODE_MAX,
-   VP_OPCODE_SLT,
-   VP_OPCODE_SGE,
-   VP_OPCODE_MAD,
-   VP_OPCODE_ARL,
    VP_OPCODE_DPH,
+   VP_OPCODE_DST,
+   VP_OPCODE_END,		/* Placeholder */
+   VP_OPCODE_EX2,		/* ARB only */
+   VP_OPCODE_EXP,
+   VP_OPCODE_FLR,		/* ARB */
+   VP_OPCODE_FRC,		/* ARB */
+   VP_OPCODE_LG2,		/* ARB only */
+   VP_OPCODE_LIT,
+   VP_OPCODE_LOG,
+   VP_OPCODE_MAD,
+   VP_OPCODE_MAX,
+   VP_OPCODE_MIN,
+   VP_OPCODE_MOV,
+   VP_OPCODE_MUL,
+   VP_OPCODE_POW,		/* ARB only */
+   VP_OPCODE_PRINT,		/* Mesa only */
    VP_OPCODE_RCC,
+   VP_OPCODE_RCP,
+   VP_OPCODE_RSQ,
+   VP_OPCODE_SGE,
+   VP_OPCODE_SLT,
    VP_OPCODE_SUB,
-   VP_OPCODE_ABS,
-   VP_OPCODE_END,
-   /* Additional opcodes for GL_ARB_vertex_program */ 
-   VP_OPCODE_FLR,
-   VP_OPCODE_FRC,
-   VP_OPCODE_EX2,
-   VP_OPCODE_LG2,
-   VP_OPCODE_POW,
-   VP_OPCODE_XPD,
-   VP_OPCODE_SWZ
+   VP_OPCODE_SWZ,		/* ARB only */
+   VP_OPCODE_XPD,		/* ARB only */
+
+   VP_MAX_OPCODE
 };
 
 
@@ -74,33 +76,35 @@ enum vp_opcode
 /* Instruction source register */
 struct vp_src_register
 {
-   enum register_file File;  /* which register file */
-   GLint Index;              /* index into register file */
-   GLubyte Swizzle[4]; /* Each value is 0,1,2,3 for x,y,z,w or */
-                       /* SWIZZLE_ZERO or SWIZZLE_ONE for VP_OPCODE_SWZ. */
-   GLboolean Negate;
-   GLboolean RelAddr;
+   GLuint File:4;		/* one of the PROGRAM_* register file values */
+   GLint Index:9;		/* may be negative for relative addressing */
+   GLuint Swizzle:12;
+   GLuint Negate:4;		/* ARB requires component-wise negation. */
+   GLuint RelAddr:1;
+   GLuint pad:2;
 };
 
 
 /* Instruction destination register */
 struct vp_dst_register
 {
-   enum register_file File;  /* which register file */
-   GLint Index;              /* index into register file */
-   GLboolean WriteMask[4];
+   GLuint File:4;		/* one of the PROGRAM_* register file values */
+   GLuint Index:8;
+   GLuint WriteMask:4;
+   GLuint pad:16;
 };
 
 
 /* Vertex program instruction */
 struct vp_instruction
 {
-   enum vp_opcode Opcode;
+   GLshort Opcode;
+#if FEATURE_MESA_program_debug
+   GLshort StringPos;
+#endif
+   void *Data;  /* some arbitrary data, only used for PRINT instruction now */
    struct vp_src_register SrcReg[3];
    struct vp_dst_register DstReg;
-#if FEATURE_MESA_program_debug
-   GLint StringPos;
-#endif
 };
 
 

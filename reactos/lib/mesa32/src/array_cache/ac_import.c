@@ -461,7 +461,7 @@ import_attrib( GLcontext *ctx, GLuint index, GLenum type, GLuint stride )
    struct gl_client_array *to = &ac->Cache.Attrib[index];
    (void) type; (void) stride;
 
-   ASSERT(index < VERT_ATTRIB_MAX);
+   ASSERT(index < MAX_VERTEX_PROGRAM_ATTRIBS);
 
    /* Limited choices at this stage:
     */
@@ -511,7 +511,7 @@ _ac_import_texcoord( GLcontext *ctx,
    /* Is the request impossible?
     */
    if (reqsize != 0 && ac->Raw.TexCoord[unit].Size > (GLint) reqsize)
-      return 0;
+      return NULL;
 
    /* Do we need to pull in a copy of the client data:
     */
@@ -548,7 +548,7 @@ _ac_import_vertex( GLcontext *ctx,
    /* Is the request impossible?
     */
    if (reqsize != 0 && ac->Raw.Vertex.Size > (GLint) reqsize)
-      return 0;
+      return NULL;
 
    /* Do we need to pull in a copy of the client data:
     */
@@ -616,7 +616,7 @@ _ac_import_color( GLcontext *ctx,
    /* Is the request impossible?
     */
    if (reqsize != 0 && ac->Raw.Color.Size > (GLint) reqsize) {
-      return 0;
+      return NULL;
    }
 
    /* Do we need to pull in a copy of the client data:
@@ -687,7 +687,7 @@ _ac_import_secondarycolor( GLcontext *ctx,
    /* Is the request impossible?
     */
    if (reqsize != 0 && ac->Raw.SecondaryColor.Size > (GLint) reqsize)
-      return 0;
+      return NULL;
 
    /* Do we need to pull in a copy of the client data:
     */
@@ -866,10 +866,10 @@ _ac_import_elements( GLcontext *ctx,
    switch (new_type) {
    case GL_UNSIGNED_BYTE:
       ASSERT(0);
-      return 0;
+      return NULL;
    case GL_UNSIGNED_SHORT:
       ASSERT(0);
-      return 0;
+      return NULL;
    case GL_UNSIGNED_INT: {
       GLuint *out = (GLuint *)ac->Elts;
       GLuint i;
@@ -898,5 +898,5 @@ _ac_import_elements( GLcontext *ctx,
       break;
    }
 
-   return 0;
+   return NULL;
 }

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -68,7 +67,7 @@ _mesa_ClipPlane( GLenum plane, const GLdouble *eq )
     * clipping now takes place.  The clip-space equations are recalculated
     * whenever the projection matrix changes.
     */
-   if (ctx->ModelviewMatrixStack.Top->flags & MAT_DIRTY)
+   if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top))
       _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
 
    _mesa_transform_vector( equation, equation,
@@ -85,7 +84,7 @@ _mesa_ClipPlane( GLenum plane, const GLdouble *eq )
     * code in _mesa_update_state().
     */
    if (ctx->Transform.ClipPlanesEnabled & (1 << p)) {
-      if (ctx->ProjectionMatrixStack.Top->flags & MAT_DIRTY)
+      if (_math_matrix_is_dirty(ctx->ProjectionMatrixStack.Top))
          _math_matrix_analyse( ctx->ProjectionMatrixStack.Top );
 
       _mesa_transform_vector( ctx->Transform._ClipUserPlane[p],

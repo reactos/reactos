@@ -23,7 +23,7 @@
  */
 
 /*
- * DOS/DJGPP device driver v1.4 for Mesa
+ * DOS/DJGPP device driver v1.3 for Mesa
  *
  *  Copyright (C) 2002 - Borca Daniel
  *  Email : dborca@yahoo.com
@@ -31,10 +31,7 @@
  */
 
 
-#include "x86/assyntax.h"
-
-
-		FILE("blit.S")
+		.file	"blit.S"
 
 /*
  * extern unsigned int vesa_gran_mask, vesa_gran_shift;
@@ -44,15 +41,8 @@
  * extern int vl_current_stride, vl_current_height;
  * extern int vl_current_offset, vl_current_delta;
  */
-EXTERN _vesa_gran_mask, _vesa_gran_shift
-EXTERN _vl_video_selector
 
-EXTERN _vl_current_draw_buffer
-EXTERN _vl_current_stride, _vl_current_height
-EXTERN _vl_current_offset, _vl_current_delta
-
-		SEG_TEXT
-		USE32
+		.text
 
 /* Desc: VESA bank switching routine (BIOS)
  *
@@ -61,15 +51,15 @@ EXTERN _vl_current_offset, _vl_current_delta
  *
  * Note: thrashes EAX
  */
-		ALIGNTEXT32
+		.p2align 5,,31
 _vesa_swbankBIOS:
-		MOV_W	(CONST(0x4f05), AX)
-		INT	(CONST(0x10))
-		RET
+		movw	$0x4f05, %ax
+		int	$0x10
+		ret
 
-		ALIGNTEXT8
-		GLOBL	_vesa_swbank
-_vesa_swbank:	D_LONG	_vesa_swbankBIOS
+		.p2align 2,,3
+		.global	_vesa_swbank
+_vesa_swbank:	.long	_vesa_swbankBIOS
 
 /* Desc: void vesa_b_dump_virtual (void);
  *
@@ -78,60 +68,60 @@ _vesa_swbank:	D_LONG	_vesa_swbankBIOS
  *
  * Note: uses current draw buffer
  */
-		ALIGNTEXT32
-		GLOBL	_vesa_b_dump_virtual
+		.p2align 5,,31
+		.global	_vesa_b_dump_virtual
 _vesa_b_dump_virtual:
-		CLD
-		PUSH_SR	(ES)
-		PUSH_L	(EBX)
-		PUSH_L	(ESI)
-		PUSH_L	(EDI)
-		PUSH_L	(EBP)
-		MOV_SR	(CONTENT(_vl_video_selector), ES)
-		MOV_L	(CONTENT(_vl_current_draw_buffer), ESI)
-		MOV_L	(CONTENT(_vl_current_offset), EDI)
-		MOV_L	(CONTENT(_vesa_gran_shift), ECX)
-		MOV_L	(CONTENT(_vesa_gran_mask), EBP)
-		MOV_L	(EDI, EDX)
-		XOR_L	(EBX, EBX)
-		AND_L	(EBP, EDI)
-		SHR_L	(CL, EDX)
-		INC_L	(EBP)
-		CALL	(VARINDIRECT(_vesa_swbank))
-		MOV_L	(CONTENT(_vl_current_stride), ECX)
-		MOV_L	(CONTENT(_vl_current_height), EAX)
-		MOV_L	(CONTENT(_vl_current_delta), EBX)
-		SHR_L	(CONST(2), ECX)
-		ALIGNTEXT4
-	TLBL(0):
-		PUSH_L	(ECX)
-		ALIGNTEXT4
-	TLBL(1):
-		CMP_L	(EBP, EDI)
-		jb	TLBL(2)
-		PUSH_L	(EAX)
-		PUSH_L	(EBX)
-		INC_L	(EDX)
-		XOR_L	(EBX, EBX)
-		CALL	(VARINDIRECT(_vesa_swbank))
-		POP_L	(EBX)
-		POP_L	(EAX)
-		SUB_L	(EBP, EDI)
-		ALIGNTEXT4
-	TLBL(2):
-		MOVS_L
-		DEC_L	(ECX)
-		jnz	TLBL(1)
-		POP_L	(ECX)
-		ADD_L	(EBX, EDI)
-		DEC_L	(EAX)
-		jnz	TLBL(0)
-		POP_L	(EBP)
-		POP_L	(EDI)
-		POP_L	(ESI)
-		POP_L	(EBX)
-		POP_SR	(ES)
-		RET
+		cld
+		pushl	%es
+		pushl	%ebx
+		pushl	%esi
+		pushl	%edi
+		pushl	%ebp
+		movl	_vl_video_selector, %es
+		movl	_vl_current_draw_buffer, %esi
+		movl	_vl_current_offset, %edi
+		movl	_vesa_gran_shift, %ecx
+		movl	_vesa_gran_mask, %ebp
+		movl	%edi, %edx
+		xorl	%ebx, %ebx
+		andl	%ebp, %edi
+		shrl	%cl, %edx
+		incl	%ebp
+		call	*_vesa_swbank
+		movl	_vl_current_stride, %ecx
+		movl	_vl_current_height, %eax
+		movl	_vl_current_delta, %ebx
+		shrl	$2, %ecx
+		.balign	4
+	0:
+		pushl	%ecx
+		.balign	4
+	1:
+		cmpl	%ebp, %edi
+		jb	2f
+		pushl	%eax
+		pushl	%ebx
+		incl	%edx
+		xorl	%ebx, %ebx
+		call	*_vesa_swbank
+		popl	%ebx
+		popl	%eax
+		subl	%ebp, %edi
+		.balign	4
+	2:
+		movsl
+		decl	%ecx
+		jnz	1b
+		popl	%ecx
+		addl	%ebx, %edi
+		decl	%eax
+		jnz	0b
+		popl	%ebp
+		popl	%edi
+		popl	%esi
+		popl	%ebx
+		popl	%es
+		ret
 
 /* Desc: void vesa_l_dump_virtual (void);
  *
@@ -140,32 +130,32 @@ _vesa_b_dump_virtual:
  *
  * Note: uses current draw buffer
  */
-		ALIGNTEXT32
-		GLOBL	_vesa_l_dump_virtual
+		.p2align 5,,31
+		.global	_vesa_l_dump_virtual
 _vesa_l_dump_virtual:
-		CLD
-		PUSH_SR	(ES)
-		PUSH_L	(ESI)
-		PUSH_L	(EDI)
-		MOV_SR	(CONTENT(_vl_video_selector), ES)
-		MOV_L	(CONTENT(_vl_current_draw_buffer), ESI)
-		MOV_L	(CONTENT(_vl_current_offset), EDI)
-		MOV_L	(CONTENT(_vl_current_stride), ECX)
-		MOV_L	(CONTENT(_vl_current_height), EDX)
-		MOV_L	(CONTENT(_vl_current_delta), EAX)
-		SHR_L	(CONST(2), ECX)
-		ALIGNTEXT4
-	TLBL(0):
-		PUSH_L	(ECX)
-		REP	MOVS_L
-		POP_L	(ECX)
-		ADD_L	(EAX, EDI)
-		DEC_L	(EDX)
-		jnz	TLBL(0)
-		POP_L	(EDI)
-		POP_L	(ESI)
-		POP_SR	(ES)
-		RET
+		cld
+		pushl	%es
+		pushl	%esi
+		pushl	%edi
+		movl	_vl_video_selector, %es
+		movl	_vl_current_draw_buffer, %esi
+		movl	_vl_current_offset, %edi
+		movl	_vl_current_stride, %ecx
+		movl	_vl_current_height, %edx
+		movl	_vl_current_delta, %eax
+		shrl	$2, %ecx
+		.balign	4
+	0:
+		pushl	%ecx
+		rep;	movsl
+		popl	%ecx
+		addl	%eax, %edi
+		decl	%edx
+		jnz	0b
+		popl	%edi
+		popl	%esi
+		popl	%es
+		ret
 
 /* Desc: void vesa_l_dump_virtual_mmx (void);
  *
@@ -174,37 +164,36 @@ _vesa_l_dump_virtual:
  *
  * Note: uses current draw buffer
  */
-		ALIGNTEXT32
-		GLOBL	_vesa_l_dump_virtual_mmx
+		.p2align 5,,31
+		.global	_vesa_l_dump_virtual_mmx
 _vesa_l_dump_virtual_mmx:
 #ifdef USE_MMX_ASM
-		PUSH_L	(ESI)
-		PUSH_L	(EDI)
-		MOV_SR	(CONTENT(_vl_video_selector), FS)
-		MOV_L	(CONTENT(_vl_current_draw_buffer), ESI)
-		MOV_L	(CONTENT(_vl_current_offset), EDI)
-		MOV_L	(CONTENT(_vl_current_stride), ECX)
-		MOV_L	(CONTENT(_vl_current_height), EDX)
-		MOV_L	(CONTENT(_vl_current_delta), EAX)
-		SHR_L	(CONST(3), ECX)
-		ALIGNTEXT4
-	TLBL(0):
-		PUSH_L	(ECX)
-		ALIGNTEXT4
-	TLBL(1):
-		MOVQ	(REGIND(ESI), MM0)
-		ADD_L	(CONST(8), ESI)
-		SEGFS
-		MOVQ	(MM0, REGIND(EDI))
-		ADD_L	(CONST(8), EDI)
-		DEC_L	(ECX)
-		jnz	TLBL(1)
-		POP_L	(ECX)
-		ADD_L	(EAX, EDI)
-		DEC_L	(EDX)
-		jnz	TLBL(0)
-		POP_L	(EDI)
-		POP_L	(ESI)
-		EMMS
+		pushl	%esi
+		pushl	%edi
+		movl	_vl_video_selector, %fs
+		movl	_vl_current_draw_buffer, %esi
+		movl	_vl_current_offset, %edi
+		movl	_vl_current_stride, %ecx
+		movl	_vl_current_height, %edx
+		movl	_vl_current_delta, %eax
+		shrl	$3, %ecx
+		.balign	4
+	0:
+		pushl	%ecx
+		.balign	4
+	1:
+		movq	(%esi), %mm0
+		addl	$8, %esi
+		movq	%mm0, %fs:(%edi)
+		addl	$8, %edi
+		decl	%ecx
+		jnz	1b
+		popl	%ecx
+		addl	%eax, %edi
+		decl	%edx
+		jnz	0b
+		popl	%edi
+		popl	%esi
+		emms
 #endif
-		RET
+		ret

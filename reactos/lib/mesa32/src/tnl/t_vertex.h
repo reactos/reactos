@@ -53,6 +53,8 @@ enum tnl_attr_format {
    EMIT_3UB_3F_BGR,		/* for specular color */
    EMIT_4UB_4F_RGBA,		/* for color */
    EMIT_4UB_4F_BGRA,		/* for color */
+   EMIT_4UB_4F_ARGB,		/* for color */
+   EMIT_4UB_4F_ABGR,		/* for color */
    EMIT_4CHAN_4F_RGBA,		/* for swrast color */
    EMIT_PAD,			/* leave a hole of 'offset' bytes */
    EMIT_MAX
@@ -63,7 +65,15 @@ struct tnl_attr_map {
    enum tnl_attr_format format;
    GLuint offset;
 };
-   
+
+struct tnl_format_info {
+   const char *name;
+   tnl_extract_func extract;
+   tnl_insert_func insert[4];
+   const GLuint attrsize;
+};
+
+extern const struct tnl_format_info _tnl_format_info[EMIT_MAX];
 
 
 /* Interpolate between two vertices to produce a third:
@@ -93,17 +103,10 @@ extern void _tnl_set_attr( GLcontext *ctx, void *vout, GLenum attrib,
 
 extern void *_tnl_get_vertex( GLcontext *ctx, GLuint nr );
 
-
-/*
- */
 extern GLuint _tnl_install_attrs( GLcontext *ctx,
 				  const struct tnl_attr_map *map,
 				  GLuint nr, const GLfloat *vp,
 				  GLuint unpacked_size );
-
-
-
-
 
 extern void _tnl_free_vertices( GLcontext *ctx );
 
@@ -125,24 +128,42 @@ extern void _tnl_invalidate_vertices( GLcontext *ctx, GLuint newinputs );
 
 extern void _tnl_invalidate_vertex_state( GLcontext *ctx, GLuint new_state );
 
-extern tnl_emit_func _tnl_codegen_emit( GLcontext *ctx );
+extern void _tnl_notify_pipeline_output_change( GLcontext *ctx );
 
-#define REG_IN   (0<<16)
-#define REG_OUT  (1<<16)
-#define REG_VP   (2<<16)
-#define REG_TMP  (3<<16)
-#define REG_MASK (3<<16)
-
-#define REG_OFFSET_MASK  0xffff
-
-#define in( offset )  (REG_IN  | (offset))
-#define out( offset ) (REG_OUT | (offset))
-#define vp( offset )  (REG_VP  | (offset))
-#define tmp( offset ) (REG_TMP | (offset))
-
-
-extern void _tnl_init_c_codegen( struct tnl_clipspace_codegen *p );
 
 #define GET_VERTEX_STATE(ctx)  &(TNL_CONTEXT(ctx)->clipspace)
+
+/* Internal function:
+ */
+void _tnl_register_fastpath( struct tnl_clipspace *vtx,
+			     GLboolean match_strides );
+
+
+/* t_vertex_generic.c -- Internal functions for t_vertex.c
+ */
+void _tnl_generic_copy_pv_extras( GLcontext *ctx, 
+				  GLuint dst, GLuint src );
+
+void _tnl_generic_interp_extras( GLcontext *ctx,
+				 GLfloat t,
+				 GLuint dst, GLuint out, GLuint in,
+				 GLboolean force_boundary );
+
+void _tnl_generic_copy_pv( GLcontext *ctx, GLuint edst, GLuint esrc );
+
+void _tnl_generic_interp( GLcontext *ctx,
+			  GLfloat t,
+			  GLuint edst, GLuint eout, GLuint ein,
+			  GLboolean force_boundary );
+
+void _tnl_generic_emit( GLcontext *ctx,
+			GLuint count,
+			GLubyte *v );
+
+void _tnl_generate_hardwired_emit( GLcontext *ctx );
+
+/* t_vertex_sse.c -- Internal functions for t_vertex.c
+ */
+void _tnl_generate_sse_emit( GLcontext *ctx );
 
 #endif

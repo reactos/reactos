@@ -22,10 +22,10 @@ LIBDIR = [----.lib]
 CFLAGS = /include=($(INCDIR),[])/define=(PTHREADS=1)/name=(as_is,short)
 
 SOURCES = fakeglx.c glxapi.c xfonts.c xm_api.c xm_dd.c xm_line.c xm_span.c\
-	xm_tri.c
+	xm_tri.c xm_buffer.c
 
 OBJECTS =fakeglx.obj,glxapi.obj,xfonts.obj,xm_api.obj,xm_dd.obj,xm_line.obj,\
-	xm_span.obj,xm_tri.obj
+	xm_span.obj,xm_tri.obj,xm_buffer.obj
 
 ##### RULES #####
 
@@ -44,6 +44,7 @@ fakeglx.obj : fakeglx.c
 glxapi.obj : glxapi.c
 xfonts.obj : xfonts.c
 xm_api.obj : xm_api.c
+xm_buffer.obj : xm_buffer.c
 xm_dd.obj : xm_dd.c
 xm_line.obj : xm_line.c
 xm_span.obj : xm_span.c

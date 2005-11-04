@@ -39,7 +39,7 @@
 #include "gld_driver.h"
 #endif
 
-#include "glu.h"	// MUST USE MICROSOFT'S GLU32!
+#include "gl/glu.h"	// MUST USE MICROSOFT'S GLU32!
 
 #ifndef _USE_GLD3_WGL
 extern DGL_mesaFuncs mesaFuncs;
@@ -1417,31 +1417,37 @@ DoClipperOnly:
 	dglInitStateD3D(ctx);
 
 	// Now we have to recreate all of our textures (+ mipmaps).
-	// Luckily, Mesa has a list of them.
-	tObj = ctx->Shared->TexObjectList;
-	while (tObj != NULL) {
-		if (tObj->DriverData) {
-			// We could call our TexImage function directly, but it's
-			// safer to use the driver pointer.
-			for (i=0; i<MAX_TEXTURE_LEVELS; i++) {
-				image = tObj->Image[i];
-				if (image) {
-					switch (tObj->Dimensions){
-					case 1:
-						if (ctx->Driver.TexImage)
-							(*ctx->Driver.TexImage)(ctx, GL_TEXTURE_1D, tObj, i, image->Format, image);
-						break;
-					case 2:
-						if (ctx->Driver.TexImage)
-							(*ctx->Driver.TexImage)(ctx, GL_TEXTURE_2D, tObj, i, image->Format, image);
-						break;
-					default:
-						break;
+	// Walk over all textures in hash table
+	// XXX what about the default texture objects (id=0)?
+	{
+		struct _mesa_HashTable *textures = ctx->Shared->TexObjects;
+		GLuint id;
+		for (id = _mesa_HashFirstEntry(textures);
+				 id;
+				 id = _mesa_HashNextEntry(textures, id)) {
+			tObj = (struct gl_texture_object *) _mesa_HashLookup(textures, id);
+			if (tObj->DriverData) {
+				// We could call our TexImage function directly, but it's
+				// safer to use the driver pointer.
+				for (i=0; i<MAX_TEXTURE_LEVELS; i++) {
+					image = tObj->Image[i];
+					if (image) {
+						switch (tObj->Dimensions){
+						case 1:
+							if (ctx->Driver.TexImage)
+								(*ctx->Driver.TexImage)(ctx, GL_TEXTURE_1D, tObj, i, image->Format, image);
+							break;
+						case 2:
+							if (ctx->Driver.TexImage)
+								(*ctx->Driver.TexImage)(ctx, GL_TEXTURE_2D, tObj, i, image->Format, image);
+							break;
+						default:
+							break;
+						}
 					}
 				}
 			}
 		}
-		tObj = tObj->Next;
 	}
 
 	// Re-Bind each texture Unit

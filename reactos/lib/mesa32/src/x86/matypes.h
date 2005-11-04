@@ -13,18 +13,18 @@
  * Offsets for GLcontext
  */
 
-#define CTX_DRIVER_CTX              	852
+#define CTX_DRIVER_CTX              	908
 
-#define CTX_LIGHT_ENABLED           	38212
-#define CTX_LIGHT_SHADE_MODEL       	38216
-#define CTX_LIGHT_COLOR_MAT_FACE    	38220
-#define CTX_LIGHT_COLOR_MAT_MODE    	38224
-#define CTX_LIGHT_COLOR_MAT_MASK    	38228
-#define CTX_LIGHT_COLOR_MAT_ENABLED 	38232
-#define CTX_LIGHT_ENABLED_LIST      	38236
-#define CTX_LIGHT_NEED_VERTS        	42593
-#define CTX_LIGHT_FLAGS             	42596
-#define CTX_LIGHT_BASE_COLOR        	42600
+#define CTX_LIGHT_ENABLED           	38596
+#define CTX_LIGHT_SHADE_MODEL       	38600
+#define CTX_LIGHT_COLOR_MAT_FACE    	38604
+#define CTX_LIGHT_COLOR_MAT_MODE    	38608
+#define CTX_LIGHT_COLOR_MAT_MASK    	38612
+#define CTX_LIGHT_COLOR_MAT_ENABLED 	38616
+#define CTX_LIGHT_ENABLED_LIST      	38620
+#define CTX_LIGHT_NEED_VERTS        	42977
+#define CTX_LIGHT_FLAGS             	42980
+#define CTX_LIGHT_BASE_COLOR        	42984
 
 
 /* =============================================================

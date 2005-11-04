@@ -49,6 +49,10 @@
 #undef GET_PROGRAM_NAME
 
 #if (defined(__GNU_LIBRARY__) || defined(__GLIBC__)) && !defined(__UCLIBC__)
+#    if !defined(__GLIBC__) || (__GLIBC__ < 2)
+/* These aren't declared in any libc5 header */
+extern char *program_invocation_name, *program_invocation_short_name;
+#    endif
 #    define GET_PROGRAM_NAME() program_invocation_short_name
 #elif defined(__FreeBSD__) && (__FreeBSD__ >= 2)
 #    include <osreldate.h>
@@ -256,7 +260,7 @@ static GLfloat strToF (const XML_Char *string, const XML_Char **tail) {
     string = numStart;
 
     /* scale of the first digit */
-    scale = sign * powf (10.0f, (GLfloat)(pointPos-1 + exponent));
+    scale = sign * (GLfloat)pow (10.0, (GLdouble)(pointPos-1 + exponent));
 
     /* second pass: parse digits */
     do {

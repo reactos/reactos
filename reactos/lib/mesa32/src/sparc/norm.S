@@ -1,8 +1,8 @@
-/* $Id: norm.S,v 1.3 2004/04/26 10:10:25 alanh Exp $ */
+/* $Id: norm.S,v 1.5 2005/07/28 00:11:11 idr Exp $ */
 
 #include "sparc_matrix.h"
 
-#ifdef SVR4
+#if defined(SVR4) || defined(__SVR4) || defined(__svr4__)
 	/* Solaris requires this for 64-bit. */
 	.register %g2, #scratch
 	.register %g3, #scratch
@@ -10,7 +10,7 @@
 
 	.text
 
-#if defined(__sparc_v9__) && !defined(__linux__)
+#ifdef __arch64__
 #define STACK_VAR_OFF	(2047 + (8 * 16))
 #else
 #define STACK_VAR_OFF	(4 * 16)

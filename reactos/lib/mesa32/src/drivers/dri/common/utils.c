@@ -20,24 +20,30 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * Authors:
- *    Ian Romanick <idr@us.ibm.com>
  */
-/* $XFree86:$ */
+
+/**
+ * \file utils.c
+ * Utility functions for DRI drivers.
+ *
+ * \author Ian Romanick <idr@us.ibm.com>
+ */
 
 #include <string.h>
 #include <stdlib.h>
 #include "mtypes.h"
 #include "extensions.h"
 #include "utils.h"
+#include "dispatch.h"
 
-#if !defined( DRI_NEW_INTERFACE_ONLY )
-#include "xf86dri.h"        /* For XF86DRIQueryVersion prototype. */
-#endif
+int driDispatchRemapTable[ driDispatchRemapTable_size ];
 
 #if defined(USE_X86_ASM)
 #include "x86/common_x86_asm.h"
+#endif
+
+#if defined(USE_PPC_ASM)
+#include "ppc/common_ppc_features.h"
 #endif
 
 unsigned
@@ -64,17 +70,33 @@ driParseDebugString( const char * debug,
 
 
 
-
+/**
+ * Create the \c GL_RENDERER string for DRI drivers.
+ * 
+ * Almost all DRI drivers use a \c GL_RENDERER string of the form:
+ *
+ *    "Mesa DRI <chip> <driver date> <AGP speed) <CPU information>"
+ *
+ * Using the supplied chip name, driver data, and AGP speed, this function
+ * creates the string.
+ * 
+ * \param buffer         Buffer to hold the \c GL_RENDERER string.
+ * \param hardware_name  Name of the hardware.
+ * \param driver_date    Driver date.
+ * \param agp_mode       AGP mode (speed).
+ * 
+ * \returns
+ * The length of the string stored in \c buffer.  This does \b not include
+ * the terminating \c NUL character.
+ */
 unsigned
 driGetRendererString( char * buffer, const char * hardware_name,
 		      const char * driver_date, GLuint agp_mode )
 {
-#ifdef USE_X86_ASM
-   char * x86_str = "";
-   char * mmx_str = "";
-   char * tdnow_str = "";
-   char * sse_str = "";
-#endif
+#define MAX_INFO   4
+   const char * cpu[MAX_INFO];
+   unsigned   next = 0;
+   unsigned   i;
    unsigned   offset;
 
 
@@ -98,32 +120,58 @@ driGetRendererString( char * buffer, const char * hardware_name,
     */
 #ifdef USE_X86_ASM
    if ( _mesa_x86_cpu_features ) {
-      x86_str = " x86";
+      cpu[next] = " x86";
+      next++;
    }
 # ifdef USE_MMX_ASM
    if ( cpu_has_mmx ) {
-      mmx_str = (cpu_has_mmxext) ? "/MMX+" : "/MMX";
+      cpu[next] = (cpu_has_mmxext) ? "/MMX+" : "/MMX";
+      next++;
    }
 # endif
 # ifdef USE_3DNOW_ASM
    if ( cpu_has_3dnow ) {
-      tdnow_str = (cpu_has_3dnowext) ? "/3DNow!+" : "/3DNow!";
+      cpu[next] = (cpu_has_3dnowext) ? "/3DNow!+" : "/3DNow!";
+      next++;
    }
 # endif
 # ifdef USE_SSE_ASM
    if ( cpu_has_xmm ) {
-      sse_str = (cpu_has_xmm2) ? "/SSE2" : "/SSE";
+      cpu[next] = (cpu_has_xmm2) ? "/SSE2" : "/SSE";
+      next++;
    }
 # endif
 
-   offset += sprintf( & buffer[ offset ], "%s%s%s%s", 
-		      x86_str, mmx_str, tdnow_str, sse_str );
-
 #elif defined(USE_SPARC_ASM)
 
-   offset += sprintf( & buffer[ offset ], " Sparc" );
+   cpu[0] = " SPARC";
+   next = 1;
 
+#elif defined(USE_PPC_ASM)
+   if ( _mesa_ppc_cpu_features ) {
+      cpu[next] = (cpu_has_64) ? " PowerPC 64" : " PowerPC";
+      next++;
+   }
+
+# ifdef USE_VMX_ASM
+   if ( cpu_has_vmx ) {
+      cpu[next] = "/Altivec";
+      next++;
+   }
+# endif
+
+   if ( ! cpu_has_fpu ) {
+      cpu[next] = "/No FPU";
+      next++;
+   }
 #endif
+
+   for ( i = 0 ; i < next ; i++ ) {
+      const size_t len = strlen( cpu[i] );
+
+      strncpy( & buffer[ offset ], cpu[i], len );
+      offset += len;
+   }
 
    return offset;
 }
@@ -131,72 +179,154 @@ driGetRendererString( char * buffer, const char * hardware_name,
 
 
 
+#define need_GL_ARB_multisample
+#define need_GL_ARB_transpose_matrix
+#define need_GL_ARB_window_pos
+#define need_GL_EXT_compiled_vertex_array
+#define need_GL_EXT_polygon_offset
+#define need_GL_EXT_texture_object
+#define need_GL_EXT_vertex_array
+#define need_GL_MESA_window_pos
+
+/* These are needed in *all* drivers because Mesa internally implements
+ * certain functionality in terms of functions provided by these extensions.
+ * For example, glBlendFunc is implemented by calling glBlendFuncSeparateEXT.
+ */
+#define need_GL_EXT_blend_func_separate
+#define need_GL_NV_vertex_program
+
+#include "extension_helper.h"
+
+static const struct dri_extension all_mesa_extensions[] = {
+   { "GL_ARB_multisample",           GL_ARB_multisample_functions },
+   { "GL_ARB_transpose_matrix",      GL_ARB_transpose_matrix_functions },
+   { "GL_ARB_window_pos",            GL_ARB_window_pos_functions },
+   { "GL_EXT_blend_func_separate",   GL_EXT_blend_func_separate_functions },
+   { "GL_EXT_compiled_vertex_array", GL_EXT_compiled_vertex_array_functions },
+   { "GL_EXT_polygon_offset",        GL_EXT_polygon_offset_functions },
+   { "GL_EXT_texture_object",        GL_EXT_texture_object_functions },
+   { "GL_EXT_vertex_array",          GL_EXT_vertex_array_functions },
+   { "GL_MESA_window_pos",           GL_MESA_window_pos_functions },
+   { "GL_NV_vertex_program",         GL_NV_vertex_program_functions },
+   { NULL,                           NULL }
+};
+
+
+/**
+ * Enable extensions supported by the driver.
+ * 
+ * \bug
+ * ARB_imaging isn't handled properly.  In Mesa, enabling ARB_imaging also
+ * enables all the sub-extensions that are folded into it.  This means that
+ * we need to add entry-points (via \c driInitSingleExtension) for those
+ * new functions here.
+ */
 void driInitExtensions( GLcontext * ctx,
-			const char * const extensions_to_enable[],
-			GLboolean  enable_imaging )
+			const struct dri_extension * extensions_to_enable,
+			GLboolean enable_imaging )
 {
+   static int first_time = 1;
    unsigned   i;
 
-   if ( enable_imaging ) {
+   if ( first_time ) {
+      for ( i = 0 ; i < driDispatchRemapTable_size ; i++ ) {
+	 driDispatchRemapTable[i] = -1;
+      }
+
+      first_time = 0;
+      driInitExtensions( ctx, all_mesa_extensions, GL_FALSE );
+   }
+
+   if ( (ctx != NULL) && enable_imaging ) {
       _mesa_enable_imaging_extensions( ctx );
    }
 
-   for ( i = 0 ; extensions_to_enable[i] != NULL ; i++ ) {
-      _mesa_enable_extension( ctx, extensions_to_enable[i] );
+   for ( i = 0 ; extensions_to_enable[i].name != NULL ; i++ ) {
+       driInitSingleExtension( ctx, & extensions_to_enable[i] );
    }
 }
 
 
 
 
-#ifndef DRI_NEW_INTERFACE_ONLY
 /**
- * Utility function used by drivers to test the verions of other components.
+ * Enable and add dispatch functions for a single extension
  * 
- * \deprecated
- * All drivers using the new interface should use \c driCheckDriDdxVersions2
- * instead.  This function is implemented using a call that is not available
- * to drivers using the new interface.  Furthermore, the information gained
- * by this call (the DRI and DDX version information) is already provided to
- * the driver via the new interface.
+ * \param ctx  Context where extension is to be enabled.
+ * \param ext  Extension that is to be enabled.
+ * 
+ * \sa driInitExtensions, _mesa_enable_extension, _glapi_add_entrypoint
+ *
+ * \todo
+ * Determine if it would be better to use \c strlen instead of the hardcoded
+ * for-loops.
  */
-GLboolean
-driCheckDriDdxDrmVersions(__DRIscreenPrivate *sPriv,
-			  const char * driver_name,
-			  int dri_major, int dri_minor,
-			  int ddx_major, int ddx_minor,
-			  int drm_major, int drm_minor)
+void driInitSingleExtension( GLcontext * ctx,
+			     const struct dri_extension * ext )
 {
-   static const char format[] = "%s DRI driver expected %s version %d.%d.x "
-       "but got version %d.%d.%d";
-   int major, minor, patch;
+    unsigned i;
 
-   /* Check the DRI version */
-   if (XF86DRIQueryVersion(sPriv->display, &major, &minor, &patch)) {
-      if (major != dri_major || minor < dri_minor) {
-	 __driUtilMessage(format, driver_name, "DRI", dri_major, dri_minor,
-			  major, minor, patch);
-	 return GL_FALSE;
-      }
-   }
 
-   /* Check that the DDX driver version is compatible */
-   if (sPriv->ddxMajor != ddx_major || sPriv->ddxMinor < ddx_minor) {
-      __driUtilMessage(format, driver_name, "DDX", ddx_major, ddx_minor,
-		       sPriv->ddxMajor, sPriv->ddxMinor, sPriv->ddxPatch);
-      return GL_FALSE;
-   }
-   
-   /* Check that the DRM driver version is compatible */
-   if (sPriv->drmMajor != drm_major || sPriv->drmMinor < drm_minor) {
-      __driUtilMessage(format, driver_name, "DRM", drm_major, drm_minor,
-		       sPriv->drmMajor, sPriv->drmMinor, sPriv->drmPatch);
-      return GL_FALSE;
-   }
+    if ( ext->functions != NULL ) {
+	for ( i = 0 ; ext->functions[i].strings != NULL ; i++ ) {
+	    const char * functions[16];
+	    const char * parameter_signature;
+	    const char * str = ext->functions[i].strings;
+	    unsigned j;
+	    unsigned offset;
 
-   return GL_TRUE;
+
+	    /* Separate the parameter signature from the rest of the string.
+	     * If the parameter signature is empty (i.e., the string starts
+	     * with a NUL character), then the function has a void parameter
+	     * list.
+	     */
+	    parameter_signature = str;
+	    while ( str[0] != '\0' ) {
+		str++;
+	    }
+	    str++;
+
+
+	    /* Divide the string into the substrings that name each
+	     * entry-point for the function.
+	     */
+	    for ( j = 0 ; j < 16 ; j++ ) {
+		if ( str[0] == '\0' ) {
+		    functions[j] = NULL;
+		    break;
+		}
+
+		functions[j] = str;
+
+		while ( str[0] != '\0' ) {
+		    str++;
+		}
+		str++;
+	    }
+
+
+	    /* Add each entry-point to the dispatch table.
+	     */
+	    offset = _glapi_add_dispatch( functions, parameter_signature );
+	    if ( ext->functions[i].remap_index != -1 ) {
+		driDispatchRemapTable[ ext->functions[i].remap_index ] = offset;
+	    }
+
+	    if ( (ext->functions[i].offset != -1)
+		 && (ext->functions[i].offset != offset) ) {
+		fprintf(stderr, "DISPATCH ERROR! %s -> %u != %u\n", functions[0],
+			driDispatchRemapTable[ ext->functions[i].remap_index ],
+			ext->functions[i].offset);
+	    }
+	}
+    }
+
+    if ( ctx != NULL ) {
+	_mesa_enable_extension( ctx, ext->name );
+    }
 }
-#endif /* DRI_NEW_INTERFACE_ONLY */
+
 
 /**
  * Utility function used by drivers to test the verions of other components.
@@ -208,25 +338,31 @@ driCheckDriDdxDrmVersions(__DRIscreenPrivate *sPriv,
  * \param driActual    Actual DRI version supplied __driCreateNewScreen.
  * \param driExpected  Minimum DRI version required by the driver.
  * \param ddxActual    Actual DDX version supplied __driCreateNewScreen.
- * \param ddxExpected  Minimum DDX version required by the driver.
+ * \param ddxExpected  Minimum DDX minor and range of DDX major version required by the driver.
  * \param drmActual    Actual DRM version supplied __driCreateNewScreen.
  * \param drmExpected  Minimum DRM version required by the driver.
  * 
  * \returns \c GL_TRUE if all version requirements are met.  Otherwise,
  *          \c GL_FALSE is returned.
  * 
- * \sa __driCreateNewScreen, driCheckDriDdxDrmVersions, __driUtilMessage
+ * \sa __driCreateNewScreen, driCheckDriDdxDrmVersions2, __driUtilMessage
+ *
+ * \todo
+ * Now that the old \c driCheckDriDdxDrmVersions function is gone, this
+ * function and \c driCheckDriDdxDrmVersions2 should be renamed.
  */
 GLboolean
-driCheckDriDdxDrmVersions2(const char * driver_name,
+driCheckDriDdxDrmVersions3(const char * driver_name,
 			   const __DRIversion * driActual,
 			   const __DRIversion * driExpected,
 			   const __DRIversion * ddxActual,
-			   const __DRIversion * ddxExpected,
+			   const __DRIutilversion2 * ddxExpected,
 			   const __DRIversion * drmActual,
 			   const __DRIversion * drmExpected)
 {
    static const char format[] = "%s DRI driver expected %s version %d.%d.x "
+       "but got version %d.%d.%d";
+   static const char format2[] = "%s DRI driver expected %s version %d-%d.%d.x "
        "but got version %d.%d.%d";
 
 
@@ -240,10 +376,11 @@ driCheckDriDdxDrmVersions2(const char * driver_name,
    }
 
    /* Check that the DDX driver version is compatible */
-   if ( (ddxActual->major != ddxExpected->major)
+   if ( (ddxActual->major < ddxExpected->major_min)
+	|| (ddxActual->major > ddxExpected->major_max)
 	|| (ddxActual->minor < ddxExpected->minor) ) {
-      __driUtilMessage(format, driver_name, "DDX",
-		       ddxExpected->major, ddxExpected->minor,
+      __driUtilMessage(format2, driver_name, "DDX",
+		       ddxExpected->major_min, ddxExpected->major_max, ddxExpected->minor,
 		       ddxActual->major, ddxActual->minor, ddxActual->patch);
       return GL_FALSE;
    }
@@ -259,6 +396,26 @@ driCheckDriDdxDrmVersions2(const char * driver_name,
 
    return GL_TRUE;
 }
+
+GLboolean
+driCheckDriDdxDrmVersions2(const char * driver_name,
+			   const __DRIversion * driActual,
+			   const __DRIversion * driExpected,
+			   const __DRIversion * ddxActual,
+			   const __DRIversion * ddxExpected,
+			   const __DRIversion * drmActual,
+			   const __DRIversion * drmExpected)
+{
+   __DRIutilversion2 ddx_expected;
+   ddx_expected.major_min = ddxExpected->major;
+   ddx_expected.major_max = ddxExpected->major;
+   ddx_expected.minor = ddxExpected->minor;
+   ddx_expected.patch = ddxExpected->patch;
+   return driCheckDriDdxDrmVersions3(driver_name, driActual,
+				driExpected, ddxActual, & ddx_expected,
+				drmActual, drmExpected);
+}
+
 
 
 GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
@@ -366,12 +523,12 @@ GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
 GLboolean
 driFillInModes( __GLcontextModes ** ptr_to_modes,
 		GLenum fb_format, GLenum fb_type,
-		const uint8_t * depth_bits, const uint8_t * stencil_bits,
+		const u_int8_t * depth_bits, const u_int8_t * stencil_bits,
 		unsigned num_depth_stencil_bits,
 		const GLenum * db_modes, unsigned num_db_modes,
 		int visType )
 {
-   static const uint8_t bits_table[3][4] = {
+   static const u_int8_t bits_table[3][4] = {
      /* R  G  B  A */
       { 5, 6, 5, 0 }, /* Any GL_UNSIGNED_SHORT_5_6_5 */
       { 8, 8, 8, 0 }, /* Any RGB with any GL_UNSIGNED_INT_8_8_8_8 */
@@ -382,7 +539,7 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
     * Given the four supported fb_type values, this results in valid array
     * indices of 3, 4, 5, and 7.
     */
-   static const uint32_t masks_table_rgb[8][4] = {
+   static const u_int32_t masks_table_rgb[8][4] = {
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -393,7 +550,7 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
       { 0x000000FF, 0x0000FF00, 0x00FF0000, 0x00000000 }  /* 8_8_8_8_REV */
    };
 
-   static const uint32_t masks_table_rgba[8][4] = {
+   static const u_int32_t masks_table_rgba[8][4] = {
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -404,7 +561,7 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
       { 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000 }, /* 8_8_8_8_REV */
    };
 
-   static const uint32_t masks_table_bgr[8][4] = {
+   static const u_int32_t masks_table_bgr[8][4] = {
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -415,7 +572,7 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
       { 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000 }, /* 8_8_8_8_REV */
    };
 
-   static const uint32_t masks_table_bgra[8][4] = {
+   static const u_int32_t masks_table_bgra[8][4] = {
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
       { 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -426,12 +583,12 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
       { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 }, /* 8_8_8_8_REV */
    };
 
-   static const uint8_t bytes_per_pixel[8] = {
+   static const u_int8_t bytes_per_pixel[8] = {
       0, 0, 0, 2, 2, 4, 0, 4
    };
 
-   const uint8_t  * bits;
-   const uint32_t * masks;
+   const u_int8_t  * bits;
+   const u_int32_t * masks;
    const int index = fb_type & 0x07;
    __GLcontextModes * modes = *ptr_to_modes;
    unsigned i;
@@ -441,7 +598,7 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
 
    if ( bytes_per_pixel[ index ] == 0 ) {
       fprintf( stderr, "[%s:%u] Framebuffer type 0x%04x has 0 bytes per pixel.\n",
-	       __func__, __LINE__, fb_type );
+	       __FUNCTION__, __LINE__, fb_type );
       return GL_FALSE;
    }
 
@@ -479,7 +636,7 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
 
       default:
          fprintf( stderr, "[%s:%u] Framebuffer format 0x%04x is not GL_RGB, GL_RGBA, GL_BGR, or GL_BGRA.\n",
-	       __func__, __LINE__, fb_format );
+	       __FUNCTION__, __LINE__, fb_format );
          return GL_FALSE;
    }
 
@@ -520,6 +677,13 @@ driFillInModes( __GLcontextModes ** ptr_to_modes,
 		    modes->doubleBufferMode = GL_TRUE;
 		    modes->swapMethod = db_modes[i];
 		}
+
+		modes->haveAccumBuffer = ((modes->accumRedBits +
+					   modes->accumGreenBits +
+					   modes->accumBlueBits +
+					   modes->accumAlphaBits) > 0);
+		modes->haveDepthBuffer = (modes->depthBits > 0);
+		modes->haveStencilBuffer = (modes->stencilBits > 0);
 
 		modes = modes->next;
 	    }

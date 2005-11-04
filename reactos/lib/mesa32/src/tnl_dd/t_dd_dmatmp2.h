@@ -470,7 +470,7 @@ static void TAG(render_quads_verts)( GLcontext *ctx,
       return;
 
    if (HAVE_QUADS) {
-      EMIT_PRIM( ctx, HW_QUADS, GL_QUADS, start, count );
+      EMIT_PRIM( ctx, GL_QUADS, HW_QUADS, start, count );
    } 
    else {
       /* Hardware doesn't have a quad primitive type -- simulate it

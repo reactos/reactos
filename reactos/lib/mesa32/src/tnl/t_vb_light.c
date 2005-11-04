@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -46,12 +46,20 @@ typedef void (*light_func)( GLcontext *ctx,
 			    struct tnl_pipeline_stage *stage,
 			    GLvector4f *input );
 
+/**
+ * Information for updating current material attributes from vertex color,
+ * for GL_COLOR_MATERIAL.
+ */
 struct material_cursor {
-   const GLfloat *ptr;
-   GLuint stride;
-   GLfloat *current;
+   const GLfloat *ptr;    /* points to src vertex color (in VB array) */
+   GLuint stride;         /* stride to next vertex color (bytes) */
+   GLfloat *current;      /* points to material attribute to update */
+   GLuint size;           /* vertex/color size: 1, 2, 3 or 4 */
 };
 
+/**
+ * Data private to this pipeline stage.
+ */
 struct light_stage_data {
    GLvector4f Input;
    GLvector4f LitColor[2];
@@ -69,54 +77,75 @@ struct light_stage_data {
 
 
 
-/* In the case of colormaterial, the effected material attributes
+/**
+ * In the case of colormaterial, the effected material attributes
  * should already have been bound to point to the incoming color data,
  * prior to running the pipeline.
+ * This function copies the vertex's color to the material attributes
+ * which are tracking glColor.
+ * It's called per-vertex in the lighting loop.
  */
-static void update_materials( GLcontext *ctx,
-			      struct light_stage_data *store )
+static void
+update_materials(GLcontext *ctx, struct light_stage_data *store)
 {
    GLuint i;
 
    for (i = 0 ; i < store->mat_count ; i++) {
-      COPY_4V(store->mat[i].current, store->mat[i].ptr);
+      /* update the material */
+      COPY_CLEAN_4V(store->mat[i].current, store->mat[i].size, store->mat[i].ptr);
+      /* increment src vertex color pointer */
       STRIDE_F(store->mat[i].ptr, store->mat[i].stride);
    }
       
+   /* recompute derived light/material values */
    _mesa_update_material( ctx, store->mat_bitmask );
+   /* XXX we should only call this if we're tracking/changing the specular
+    * exponent.
+    */
    _mesa_validate_all_lighting_tables( ctx );
 }
 
-static GLuint prepare_materials( GLcontext *ctx,
-				 struct vertex_buffer *VB,
-				 struct light_stage_data *store )
+
+/**
+ * Prepare things prior to running the lighting stage.
+ * Return number of material attributes which will track vertex color.
+ */
+static GLuint
+prepare_materials(GLcontext *ctx,
+                  struct vertex_buffer *VB, struct light_stage_data *store)
 {
    GLuint i;
    
    store->mat_count = 0;
    store->mat_bitmask = 0;
 
-   /* If ColorMaterial enabled, overwrite affected AttrPtr's with
-    * the color pointer.  This could be done earlier.
+   /* Examine the ColorMaterialBitmask to determine which materials
+    * track vertex color.  Override the material attribute's pointer
+    * with the color pointer for each one.
     */
    if (ctx->Light.ColorMaterialEnabled) {
-      GLuint bitmask = ctx->Light.ColorMaterialBitmask;
+      const GLuint bitmask = ctx->Light.ColorMaterialBitmask;
       for (i = 0 ; i < MAT_ATTRIB_MAX ; i++)
 	 if (bitmask & (1<<i))
 	    VB->AttribPtr[_TNL_ATTRIB_MAT_FRONT_AMBIENT + i] = VB->ColorPtr[0];
    }
 
+   /* Now, for each material attribute that's tracking vertex color, save
+    * some values (ptr, stride, size, current) that we'll need in
+    * update_materials(), above, that'll actually copy the vertex color to
+    * the material attribute(s).
+    */
    for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT ; i < _TNL_ATTRIB_INDEX ; i++) {
       if (VB->AttribPtr[i]->stride) {
-	 GLuint j = store->mat_count++;
-	 GLuint attr = i - _TNL_ATTRIB_MAT_FRONT_AMBIENT;
-	 store->mat[j].ptr = VB->AttribPtr[i]->start;
+	 const GLuint j = store->mat_count++;
+	 const GLuint attr = i - _TNL_ATTRIB_MAT_FRONT_AMBIENT;
+	 store->mat[j].ptr    = VB->AttribPtr[i]->start;
 	 store->mat[j].stride = VB->AttribPtr[i]->stride;
+	 store->mat[j].size   = VB->AttribPtr[i]->size;
 	 store->mat[j].current = ctx->Light.Material.Attrib[attr];
 	 store->mat_bitmask |= (1<<attr);
       }
    }
-   
 
    /* FIXME: Is this already done?
     */
@@ -151,7 +180,7 @@ static light_func _tnl_light_ci_tab[MAX_LIGHT_FUNC];
 #include "t_vb_lighttmp.h"
 
 
-static void init_lighting( void )
+static void init_lighting_tables( void )
 {
    static int done;
 
@@ -174,33 +203,34 @@ static GLboolean run_lighting( GLcontext *ctx,
    GLvector4f *input = ctx->_NeedEyeCoords ? VB->EyePtr : VB->ObjPtr;
    GLuint idx;
 
+   if (!ctx->Light.Enabled || ctx->VertexProgram._Enabled)
+      return GL_TRUE;
+
    /* Make sure we can talk about position x,y and z:
     */
-   if (stage->changed_inputs & _TNL_BIT_POS) {
-      if (input->size <= 2 && input == VB->ObjPtr) {
+   if (input->size <= 2 && input == VB->ObjPtr) {
 
-	 _math_trans_4f( store->Input.data,
-			 VB->ObjPtr->data,
-			 VB->ObjPtr->stride,
-			 GL_FLOAT,
-			 VB->ObjPtr->size,
-			 0,
-			 VB->Count );
+      _math_trans_4f( store->Input.data,
+		      VB->ObjPtr->data,
+		      VB->ObjPtr->stride,
+		      GL_FLOAT,
+		      VB->ObjPtr->size,
+		      0,
+		      VB->Count );
 
-	 if (input->size <= 2) {
-	    /* Clean z.
-	     */
-	    _mesa_vector4f_clean_elem(&store->Input, VB->Count, 2);
-	 }
-	 
-	 if (input->size <= 1) {
-	    /* Clean y.
-	     */
-	    _mesa_vector4f_clean_elem(&store->Input, VB->Count, 1);
-	 }
-
-	 input = &store->Input;
+      if (input->size <= 2) {
+	 /* Clean z.
+	  */
+	 _mesa_vector4f_clean_elem(&store->Input, VB->Count, 2);
       }
+	 
+      if (input->size <= 1) {
+	 /* Clean y.
+	  */
+	 _mesa_vector4f_clean_elem(&store->Input, VB->Count, 1);
+      }
+
+      input = &store->Input;
    }
    
    idx = 0;
@@ -226,10 +256,13 @@ static GLboolean run_lighting( GLcontext *ctx,
 
 /* Called in place of do_lighting when the light table may have changed.
  */
-static GLboolean run_validate_lighting( GLcontext *ctx,
+static void validate_lighting( GLcontext *ctx,
 					struct tnl_pipeline_stage *stage )
 {
    light_func *tab;
+
+   if (!ctx->Light.Enabled || ctx->VertexProgram._Enabled)
+      return;
 
    if (ctx->Visual.rgbMode) {
       if (ctx->Light._NeedVertices) {
@@ -254,11 +287,6 @@ static GLboolean run_validate_lighting( GLcontext *ctx,
    /* This and the above should only be done on _NEW_LIGHT:
     */
    TNL_CONTEXT(ctx)->Driver.NotifyMaterialChange( ctx );
-
-   /* Now run the stage...
-    */
-   stage->run = run_lighting;
-   return stage->run( ctx, stage );
 }
 
 
@@ -266,8 +294,8 @@ static GLboolean run_validate_lighting( GLcontext *ctx,
 /* Called the first time stage->run is called.  In effect, don't
  * allocate data until the first time the stage is run.
  */
-static GLboolean run_init_lighting( GLcontext *ctx,
-				    struct tnl_pipeline_stage *stage )
+static GLboolean init_lighting( GLcontext *ctx,
+				struct tnl_pipeline_stage *stage )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct light_stage_data *store;
@@ -280,7 +308,7 @@ static GLboolean run_init_lighting( GLcontext *ctx,
 
    /* Do onetime init.
     */
-   init_lighting();
+   init_lighting_tables();
 
    _mesa_vector4f_alloc( &store->Input, 0, size, 32 );
    _mesa_vector4f_alloc( &store->LitColor[0], 0, size, 32 );
@@ -300,35 +328,10 @@ static GLboolean run_init_lighting( GLcontext *ctx,
    store->LitIndex[1].size = 1;
    store->LitIndex[1].stride = sizeof(GLfloat);
 
-   /* Now validate the stage derived data...
-    */
-   stage->run = run_validate_lighting;
-   return stage->run( ctx, stage );
+   return GL_TRUE;
 }
 
 
-
-/*
- * Check if lighting is enabled.  If so, configure the pipeline stage's
- * type, inputs, and outputs.
- */
-static void check_lighting( GLcontext *ctx, struct tnl_pipeline_stage *stage )
-{
-   stage->active = ctx->Light.Enabled && !ctx->VertexProgram._Enabled;
-   if (stage->active) {
-      if (stage->privatePtr)
-	 stage->run = run_validate_lighting;
-      stage->inputs = _TNL_BIT_NORMAL|_TNL_BITS_MAT_ANY;
-      if (ctx->Light._NeedVertices)
-	 stage->inputs |= _TNL_BIT_POS; 
-      if (ctx->Light.ColorMaterialEnabled)
-	 stage->inputs |= _TNL_BIT_COLOR0;
-
-      stage->outputs = _TNL_BIT_COLOR0;
-      if (ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
-	 stage->outputs |= _TNL_BIT_COLOR1;
-   }
-}
 
 
 static void dtr( struct tnl_pipeline_stage *stage )
@@ -344,23 +347,16 @@ static void dtr( struct tnl_pipeline_stage *stage )
       _mesa_vector4f_free( &store->LitIndex[0] );
       _mesa_vector4f_free( &store->LitIndex[1] );
       FREE( store );
-      stage->privatePtr = 0;
+      stage->privatePtr = NULL;
    }
 }
 
 const struct tnl_pipeline_stage _tnl_lighting_stage =
 {
    "lighting",			/* name */
-   _NEW_LIGHT|_NEW_PROGRAM,			/* recheck */
-   _NEW_LIGHT|_NEW_MODELVIEW,	/* recalc -- modelview dependency
-				 * otherwise not captured by inputs
-				 * (which may be _TNL_BIT_POS) */
-   GL_FALSE,			/* active? */
-   0,				/* inputs */
-   0,				/* outputs */
-   0,				/* changed_inputs */
    NULL,			/* private_data */
+   init_lighting,
    dtr,				/* destroy */
-   check_lighting,		/* check */
-   run_init_lighting		/* run -- initially set to ctr */
+   validate_lighting,
+   run_lighting
 };

@@ -361,6 +361,7 @@ static void GLAPIENTRY _tnl_MultiTexCoord4fv( GLenum target,
    DISPATCH_ATTR4FV( attr, v );
 }
 
+
 static void GLAPIENTRY _tnl_VertexAttrib1fNV( GLuint index, GLfloat x )
 {
    if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
@@ -418,6 +419,67 @@ static void GLAPIENTRY _tnl_VertexAttrib4fvNV( GLuint index,
 }
 
 
+/*
+ * XXX adjust index
+ */
+
+static void GLAPIENTRY _tnl_VertexAttrib1fARB( GLuint index, GLfloat x )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR1F( index, x );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib1fvARB( GLuint index, 
+					       const GLfloat *v )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR1FV( index, v );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib2fARB( GLuint index, GLfloat x, 
+					      GLfloat y )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR2F( index, x, y );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib2fvARB( GLuint index,
+					       const GLfloat *v )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR2FV( index, v );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib3fARB( GLuint index, GLfloat x,
+					      GLfloat y, GLfloat z )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR3F( index, x, y, z );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib3fvARB( GLuint index,
+					       const GLfloat *v )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR3FV( index, v );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib4fARB( GLuint index, GLfloat x,
+					      GLfloat y, GLfloat z,
+					      GLfloat w )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR4F( index, x, y, z, w );
+}
+
+static void GLAPIENTRY _tnl_VertexAttrib4fvARB( GLuint index, 
+					       const GLfloat *v )
+{
+   if (index >= VERT_ATTRIB_MAX) index = ERROR_ATTRIB;
+   DISPATCH_ATTR4FV( index, v );
+}
+
+
 /* Install the generic versions of the 2nd level dispatch
  * functions.  Some of these have a codegen alternative.
  */
@@ -465,4 +527,12 @@ void _tnl_generic_exec_vtxfmt_init( GLcontext *ctx )
    vfmt->VertexAttrib3fvNV = _tnl_VertexAttrib3fvNV;
    vfmt->VertexAttrib4fNV = _tnl_VertexAttrib4fNV;
    vfmt->VertexAttrib4fvNV = _tnl_VertexAttrib4fvNV;
+   vfmt->VertexAttrib1fARB = _tnl_VertexAttrib1fARB;
+   vfmt->VertexAttrib1fvARB = _tnl_VertexAttrib1fvARB;
+   vfmt->VertexAttrib2fARB = _tnl_VertexAttrib2fARB;
+   vfmt->VertexAttrib2fvARB = _tnl_VertexAttrib2fvARB;
+   vfmt->VertexAttrib3fARB = _tnl_VertexAttrib3fARB;
+   vfmt->VertexAttrib3fvARB = _tnl_VertexAttrib3fvARB;
+   vfmt->VertexAttrib4fARB = _tnl_VertexAttrib4fARB;
+   vfmt->VertexAttrib4fvARB = _tnl_VertexAttrib4fvARB;
 }

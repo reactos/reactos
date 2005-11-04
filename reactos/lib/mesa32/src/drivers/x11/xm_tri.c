@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -45,6 +44,9 @@
 #include "swrast/s_triangle.h"
 
 
+#define GET_XRB(XRB)  struct xmesa_renderbuffer *XRB = \
+   (struct xmesa_renderbuffer *) ctx->DrawBuffer->_ColorDrawBuffers[0][0]->Wrapped
+
 
 /**********************************************************************/
 /***                   Triangle rendering                           ***/
@@ -60,10 +62,10 @@
 #define INTERP_RGB 1
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);
 
 #define RENDER_SPAN( span )					\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    GLuint i;							\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
@@ -71,7 +73,7 @@
          unsigned long p;					\
          PACK_TRUECOLOR(p, FixedToInt(span.red),		\
             FixedToInt(span.green), FixedToInt(span.blue));	\
-         XMesaPutPixel(img, x, y, p);				\
+         XMesaPutPixel(xrb->ximage, x, y, p);			\
          zRow[i] = z;						\
       }								\
       span.red += span.redStep;					\
@@ -92,12 +94,11 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    for (i = 0; i < span.end; i++) {				\
@@ -118,17 +119,49 @@
 
 
 /*
+ * XImage, smooth, depth-buffered, PF_8A8R8G8B triangle.
+ */
+#define NAME smooth_8A8R8G8B_z_triangle
+#define INTERP_Z 1
+#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
+#define INTERP_RGB 1
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
+#define PIXEL_TYPE GLuint
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define SETUP_CODE						\
+   GET_XRB(xrb);
+
+#define RENDER_SPAN( span )					\
+   GLuint i;							\
+   for (i = 0; i < span.end; i++) {				\
+      const DEPTH_TYPE z = FixedToDepth(span.z);		\
+      if (z < zRow[i]) {					\
+         pRow[i] = PACK_8R8G8B(FixedToInt(span.red),		\
+            FixedToInt(span.green), FixedToInt(span.blue));	\
+         zRow[i] = z;						\
+      }								\
+      span.red += span.redStep;					\
+      span.green += span.greenStep;				\
+      span.blue += span.blueStep;				\
+      span.z += span.zStep;					\
+   }
+
+#include "swrast/s_tritemp.h"
+
+
+
+/*
  * XImage, smooth, depth-buffered, PF_8R8G8B triangle.
  */
 #define NAME smooth_8R8G8B_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);
 
 #define RENDER_SPAN( span )					\
    GLuint i;							\
@@ -156,11 +189,11 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR3(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR3(xrb, X, Y)
 #define PIXEL_TYPE bgr_t
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span ) 					\
    GLuint i;							\
    for (i = 0; i < span.end; i++) {				\
@@ -190,17 +223,17 @@
 #define INTERP_RGB 1
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
          unsigned long p;					\
          PACK_TRUEDITHER(p, x, y, FixedToInt(span.red),		\
             FixedToInt(span.green), FixedToInt(span.blue));	\
-         XMesaPutPixel(img, x, y, p);				\
+         XMesaPutPixel(xrb->ximage, x, y, p);			\
          zRow[i] = z;						\
       }								\
       span.red += span.redStep;					\
@@ -219,11 +252,11 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    for (i = 0; i < span.end; i++) {				\
@@ -249,14 +282,15 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -280,14 +314,14 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    XDITHER_SETUP(y);						\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
@@ -313,11 +347,11 @@
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    XDITHER_SETUP(y);						\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
@@ -343,11 +377,11 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    LOOKUP_SETUP;						\
@@ -374,14 +408,15 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -406,12 +441,13 @@
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;		\
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;				\
    unsigned long pixel;						\
    PACK_TRUECOLOR(pixel, v2->color[0], v2->color[1], v2->color[2]);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -430,13 +466,38 @@
 #define NAME flat_8A8B8G8R_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
-   unsigned long p = PACK_8B8G8R( v2->color[0],		\
-		 v2->color[1], v2->color[2] );
+   GET_XRB(xrb);					\
+   GLuint p = PACK_8B8G8R( v2->color[0], v2->color[1], v2->color[2] );
+#define RENDER_SPAN( span )				\
+   GLuint i;						\
+   for (i = 0; i < span.end; i++) {			\
+      const DEPTH_TYPE z = FixedToDepth(span.z);	\
+      if (z < zRow[i]) {				\
+	 pRow[i] = (PIXEL_TYPE) p;			\
+         zRow[i] = z;					\
+      }							\
+      span.z += span.zStep;				\
+   }
+#include "swrast/s_tritemp.h"
+
+
+
+/*
+ * XImage, flat, depth-buffered, PF_8A8R8G8B triangle.
+ */
+#define NAME flat_8A8R8G8B_z_triangle
+#define INTERP_Z 1
+#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
+#define PIXEL_TYPE GLuint
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define SETUP_CODE					\
+   GET_XRB(xrb);					\
+   GLuint p = PACK_8R8G8B( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )				\
    GLuint i;						\
    for (i = 0; i < span.end; i++) {			\
@@ -457,13 +518,12 @@
 #define NAME flat_8R8G8B_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
-   unsigned long p = PACK_8R8G8B( v2->color[0],		\
-		 v2->color[1], v2->color[2] );
+   GET_XRB(xrb);					\
+   GLuint p = PACK_8R8G8B( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )			\
    GLuint i;					\
    for (i = 0; i < span.end; i++) {		\
@@ -474,6 +534,7 @@
       }						\
       span.z += span.zStep;			\
    }
+
 #include "swrast/s_tritemp.h"
 
 
@@ -484,11 +545,11 @@
 #define NAME flat_8R8G8B24_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR3(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR3(xrb, X, Y)
 #define PIXEL_TYPE bgr_t
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    const GLubyte *color = v2->color;
 #define RENDER_SPAN( span )				\
    GLuint i;						\
@@ -515,10 +576,11 @@
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -540,13 +602,12 @@
 #define NAME flat_5R6G5B_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
-   unsigned long p = PACK_5R6G5B( v2->color[0],		\
-            v2->color[1], v2->color[2] );
+   GET_XRB(xrb);					\
+   GLushort p = PACK_5R6G5B( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )				\
    GLuint i;						\
    for (i = 0; i < span.end; i++) {			\
@@ -567,15 +628,16 @@
 #define NAME flat_DITHER_5R6G5B_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = v2->color;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -595,16 +657,16 @@
 #define NAME flat_DITHER8_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    FLAT_DITHER_SETUP( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
-   FLAT_DITHER_ROW_SETUP(FLIP(xmesa->xm_buffer, y));		\
+   GLint x = span.x, y = YFLIP(xrb, span.y);			\
+   FLAT_DITHER_ROW_SETUP(YFLIP(xrb, y));			\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -624,12 +686,12 @@
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;		\
+   GET_XRB(xrb);					\
+   XMesaImage *img = xrb->ximage;		\
    FLAT_DITHER_SETUP( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    FLAT_DITHER_ROW_SETUP(y);					\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
@@ -650,17 +712,18 @@
 #define NAME flat_HPCR_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    GLubyte r = v2->color[0];					\
    GLubyte g = v2->color[1];					\
    GLubyte b = v2->color[2];
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       const DEPTH_TYPE z = FixedToDepth(span.z);		\
       if (z < zRow[i]) {					\
@@ -679,11 +742,11 @@
 #define NAME flat_LOOKUP8_z_triangle
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    LOOKUP_SETUP;					\
    GLubyte r = v2->color[0];				\
    GLubyte g = v2->color[1];				\
@@ -710,10 +773,11 @@
 #define INTERP_RGB 1
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       unsigned long p;						\
       PACK_TRUECOLOR(p, FixedToInt(span.red),			\
@@ -732,11 +796,11 @@
  */
 #define NAME smooth_8A8B8G8R_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    for (i = 0; i < span.end; i++) {				\
@@ -751,15 +815,38 @@
 
 
 /*
+ * XImage, smooth, NON-depth-buffered, PF_8A8R8G8B triangle.
+ */
+#define NAME smooth_8A8R8G8B_triangle
+#define INTERP_RGB 1
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
+#define PIXEL_TYPE GLuint
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define SETUP_CODE						\
+   GET_XRB(xrb);
+#define RENDER_SPAN( span )					\
+   GLuint i;							\
+   for (i = 0; i < span.end; i++) {				\
+      pRow[i] = PACK_8R8G8B(FixedToInt(span.red),		\
+         FixedToInt(span.green), FixedToInt(span.blue) );	\
+      span.red += span.redStep;					\
+      span.green += span.greenStep;				\
+      span.blue += span.blueStep;				\
+   }
+#include "swrast/s_tritemp.h"
+
+
+
+/*
  * XImage, smooth, NON-depth-buffered, PF_8R8G8B triangle.
  */
 #define NAME smooth_8R8G8B_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    for (i = 0; i < span.end; i++) {				\
@@ -778,11 +865,11 @@
  */
 #define NAME smooth_8R8G8B24_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR3(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR3(xrb, X, Y)
 #define PIXEL_TYPE bgr_t
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )				\
    GLuint i;						\
    PIXEL_TYPE *pixel = pRow;				\
@@ -805,10 +892,11 @@
 #define INTERP_RGB 1
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       unsigned long p;						\
       PACK_TRUEDITHER(p, x, y, FixedToInt(span.red),		\
@@ -827,11 +915,11 @@
  */
 #define NAME smooth_5R6G5B_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    for (i = 0; i < span.end; i++) {				\
@@ -850,14 +938,15 @@
  */
 #define NAME smooth_DITHER_5R6G5B_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       PACK_TRUEDITHER(pRow[i], x, y, FixedToInt(span.red),	\
          FixedToInt(span.green), FixedToInt(span.blue));	\
@@ -874,14 +963,14 @@
  */
 #define NAME smooth_DITHER8_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    XDITHER_SETUP(y);						\
    for (i = 0; i < span.end; i++, x++) {			\
       pRow[i] = (PIXEL_TYPE) XDITHER(x, FixedToInt(span.red),	\
@@ -900,11 +989,11 @@
 #define NAME smooth_DITHER_triangle
 #define INTERP_RGB 1
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    XDITHER_SETUP(y);						\
    for (i = 0; i < span.end; i++, x++) {			\
       unsigned long p = XDITHER(x, FixedToInt(span.red),	\
@@ -923,11 +1012,11 @@
  */
 #define NAME smooth_LOOKUP8_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
    LOOKUP_SETUP;						\
@@ -947,14 +1036,15 @@
  */
 #define NAME smooth_HPCR_triangle
 #define INTERP_RGB 1
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       pRow[i] = DITHER_HPCR(x, y, FixedToInt(span.red),		\
          FixedToInt(span.green), FixedToInt(span.blue));	\
@@ -972,12 +1062,13 @@
 #define NAME flat_TRUECOLOR_triangle
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;		\
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;				\
    unsigned long pixel;						\
    PACK_TRUECOLOR(pixel, v2->color[0], v2->color[1], v2->color[2]);
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       XMesaPutPixel(img, x, y, pixel);				\
    }
@@ -989,12 +1080,32 @@
  * XImage, flat, NON-depth-buffered, PF_8A8B8G8R triangle.
  */
 #define NAME flat_8A8B8G8R_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    unsigned long p = PACK_8B8G8R( v2->color[0],		\
+		 v2->color[1], v2->color[2] );
+#define RENDER_SPAN( span )				\
+   GLuint i;						\
+   for (i = 0; i < span.end; i++) {			\
+      pRow[i] = (PIXEL_TYPE) p;				\
+   }
+#include "swrast/s_tritemp.h"
+
+
+
+/*
+ * XImage, flat, NON-depth-buffered, PF_8A8R8G8B triangle.
+ */
+#define NAME flat_8A8R8G8B_triangle
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
+#define PIXEL_TYPE GLuint
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define SETUP_CODE					\
+   GET_XRB(xrb);					\
+   unsigned long p = PACK_8R8G8B( v2->color[0],		\
 		 v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )				\
    GLuint i;						\
@@ -1009,11 +1120,11 @@
  * XImage, flat, NON-depth-buffered, PF_8R8G8B triangle.
  */
 #define NAME flat_8R8G8B_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    unsigned long p = PACK_8R8G8B( v2->color[0],		\
 		 v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )				\
@@ -1029,11 +1140,11 @@
  * XImage, flat, NON-depth-buffered, PF_8R8G8B24 triangle.
  */
 #define NAME flat_8R8G8B24_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR3(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR3(xrb, X, Y)
 #define PIXEL_TYPE bgr_t
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    const GLubyte *color = v2->color;
 #define RENDER_SPAN( span )				\
    GLuint i;						\
@@ -1053,10 +1164,11 @@
 #define NAME flat_TRUEDITHER_triangle
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       unsigned long p;						\
       PACK_TRUEDITHER(p, x, y, v2->color[0],			\
@@ -1071,11 +1183,11 @@
  * XImage, flat, NON-depth-buffered, PF_5R6G5B triangle.
  */
 #define NAME flat_5R6G5B_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    unsigned long p = PACK_5R6G5B( v2->color[0],		\
 		 v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )				\
@@ -1091,15 +1203,16 @@
  * XImage, flat, NON-depth-buffered, PF_DITHER_5R6G5B triangle.
  */
 #define NAME flat_DITHER_5R6G5B_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = v2->color;
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       PACK_TRUEDITHER(pRow[i], x, y, color[RCOMP],		\
          color[GCOMP], color[BCOMP]);				\
@@ -1112,16 +1225,16 @@
  * XImage, flat, NON-depth-buffered, 8-bit PF_DITHER triangle.
  */
 #define NAME flat_DITHER8_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    FLAT_DITHER_SETUP( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
-   FLAT_DITHER_ROW_SETUP(FLIP(xmesa->xm_buffer, y));		\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
+   FLAT_DITHER_ROW_SETUP(YFLIP(xrb, y));		\
    for (i = 0; i < span.end; i++, x++) {			\
       pRow[i] = (PIXEL_TYPE) FLAT_DITHER(x);			\
    }
@@ -1134,12 +1247,12 @@
  */
 #define NAME flat_DITHER_triangle
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;		\
+   GET_XRB(xrb);						\
+   XMesaImage *img = xrb->ximage;				\
    FLAT_DITHER_SETUP( v2->color[0], v2->color[1], v2->color[2] );
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    FLAT_DITHER_ROW_SETUP(y);					\
    for (i = 0; i < span.end; i++, x++) {			\
       unsigned long p = FLAT_DITHER(x);				\
@@ -1153,17 +1266,18 @@
  * XImage, flat, NON-depth-buffered, 8-bit PF_HPCR triangle.
  */
 #define NAME flat_HPCR_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    GLubyte r = v2->color[0];					\
    GLubyte g = v2->color[1];					\
    GLubyte b = v2->color[2];
 #define RENDER_SPAN( span )					\
    GLuint i;							\
-   GLint x = span.x, y = FLIP(xmesa->xm_buffer, span.y);	\
+   GLint x = span.x, y = YFLIP(xrb, span.y);	\
    for (i = 0; i < span.end; i++, x++) {			\
       pRow[i] = (PIXEL_TYPE) DITHER_HPCR(x, y, r, g, b);	\
    }
@@ -1175,11 +1289,11 @@
  * XImage, flat, NON-depth-buffered, 8-bit PF_LOOKUP triangle.
  */
 #define NAME flat_LOOKUP8_triangle
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    LOOKUP_SETUP;					\
    GLubyte r = v2->color[0];				\
    GLubyte g = v2->color[1];				\
@@ -1203,6 +1317,8 @@ void _xmesa_print_triangle_func( swrast_tri_func triFunc )
       _mesa_printf("smooth_TRUECOLOR_z_triangle\n");
    else if (triFunc ==smooth_8A8B8G8R_z_triangle)
       _mesa_printf("smooth_8A8B8G8R_z_triangle\n");
+   else if (triFunc ==smooth_8A8R8G8B_z_triangle)
+      _mesa_printf("smooth_8A8R8G8B_z_triangle\n");
    else if (triFunc ==smooth_8R8G8B_z_triangle)
       _mesa_printf("smooth_8R8G8B_z_triangle\n");
    else if (triFunc ==smooth_8R8G8B24_z_triangle)
@@ -1223,6 +1339,8 @@ void _xmesa_print_triangle_func( swrast_tri_func triFunc )
       _mesa_printf("flat_TRUECOLOR_z_triangle\n");
    else if (triFunc ==flat_8A8B8G8R_z_triangle)
       _mesa_printf("flat_8A8B8G8R_z_triangle\n");
+   else if (triFunc ==flat_8A8R8G8B_z_triangle)
+      _mesa_printf("flat_8A8R8G8B_z_triangle\n");
    else if (triFunc ==flat_8R8G8B_z_triangle)
       _mesa_printf("flat_8R8G8B_z_triangle\n");
    else if (triFunc ==flat_8R8G8B24_z_triangle)
@@ -1243,6 +1361,8 @@ void _xmesa_print_triangle_func( swrast_tri_func triFunc )
       _mesa_printf("smooth_TRUECOLOR_triangle\n");
    else if (triFunc ==smooth_8A8B8G8R_triangle)
       _mesa_printf("smooth_8A8B8G8R_triangle\n");
+   else if (triFunc ==smooth_8A8R8G8B_triangle)
+      _mesa_printf("smooth_8A8R8G8B_triangle\n");
    else if (triFunc ==smooth_8R8G8B_triangle)
       _mesa_printf("smooth_8R8G8B_triangle\n");
    else if (triFunc ==smooth_8R8G8B24_triangle)
@@ -1265,6 +1385,8 @@ void _xmesa_print_triangle_func( swrast_tri_func triFunc )
       _mesa_printf("flat_TRUEDITHER_triangle\n");
    else if (triFunc ==flat_8A8B8G8R_triangle)
       _mesa_printf("flat_8A8B8G8R_triangle\n");
+   else if (triFunc ==flat_8A8R8G8B_triangle)
+      _mesa_printf("flat_8A8R8G8B_triangle\n");
    else if (triFunc ==flat_8R8G8B_triangle)
       _mesa_printf("flat_8R8G8B_triangle\n");
    else if (triFunc ==flat_8R8G8B24_triangle)
@@ -1308,12 +1430,14 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    XMesaContext xmesa = XMESA_CONTEXT(ctx);
    int depth = GET_VISUAL_DEPTH(xmesa->xm_visual);
+   GET_XRB(xrb);
 
 #ifdef DEBUG
    triFuncName = NULL;
 #endif
 
-   if ((ctx->Color._DrawDestMask & (DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT)) ==0)
+   if ((ctx->DrawBuffer->_ColorDrawBufferMask[0]
+        & (BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT)) == 0)
       return (swrast_tri_func) NULL;
    if (ctx->RenderMode != GL_RENDER)  return (swrast_tri_func) NULL;
    if (ctx->Polygon.SmoothFlag)       return (swrast_tri_func) NULL;
@@ -1323,7 +1447,7 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
        ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK)
                                         return (swrast_tri_func) NULL;
 
-   if (xmesa->xm_buffer->buffer==XIMAGE) {
+   if (xrb->ximage) {
       if (   ctx->Light.ShadeModel==GL_SMOOTH
           && swrast->_RasterMask==DEPTH_BIT
           && ctx->Depth.Func==GL_LESS
@@ -1335,6 +1459,8 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
 	       USE(smooth_TRUECOLOR_z_triangle);
             case PF_8A8B8G8R:
                USE(smooth_8A8B8G8R_z_triangle);
+            case PF_8A8R8G8B:
+               USE(smooth_8A8R8G8B_z_triangle);
             case PF_8R8G8B:
                USE(smooth_8R8G8B_z_triangle);
             case PF_8R8G8B24:
@@ -1352,7 +1478,6 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
                   USE(smooth_DITHER8_z_triangle);
                else
                   USE(smooth_DITHER_z_triangle);
-               break;
             case PF_Lookup:
                if (depth == 8)
                   USE(smooth_LOOKUP8_z_triangle);
@@ -1373,6 +1498,8 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
 	       USE(flat_TRUECOLOR_z_triangle);
             case PF_8A8B8G8R:
                USE(flat_8A8B8G8R_z_triangle);
+            case PF_8A8R8G8B:
+               USE(flat_8A8R8G8B_z_triangle);
             case PF_8R8G8B:
                USE(flat_8R8G8B_z_triangle);
             case PF_8R8G8B24:
@@ -1390,7 +1517,6 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
                   USE(flat_DITHER8_z_triangle);
                else
                   USE(flat_DITHER_z_triangle);
-               break;
             case PF_Lookup:
                if (depth == 8)
                   USE(flat_LOOKUP8_z_triangle);
@@ -1408,6 +1534,8 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
 	       USE(smooth_TRUECOLOR_triangle);
             case PF_8A8B8G8R:
                USE(smooth_8A8B8G8R_triangle);
+            case PF_8A8R8G8B:
+               USE(smooth_8A8R8G8B_triangle);
             case PF_8R8G8B:
                USE(smooth_8R8G8B_triangle);
             case PF_8R8G8B24:
@@ -1425,7 +1553,6 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
                   USE(smooth_DITHER8_triangle);
                else
                   USE(smooth_DITHER_triangle);
-               break;
             case PF_Lookup:
                if (depth == 8)
                   USE(smooth_LOOKUP8_triangle);
@@ -1446,6 +1573,8 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
 	       USE(flat_TRUEDITHER_triangle);
             case PF_8A8B8G8R:
                USE(flat_8A8B8G8R_triangle);
+            case PF_8A8R8G8B:
+               USE(flat_8A8R8G8B_triangle);
             case PF_8R8G8B:
                USE(flat_8R8G8B_triangle);
             case PF_8R8G8B24:
@@ -1461,7 +1590,6 @@ static swrast_tri_func get_triangle_func( GLcontext *ctx )
                   USE(flat_DITHER8_triangle);
                else
                   USE(flat_DITHER_triangle);
-               break;
             case PF_Lookup:
                if (depth == 8)
                   USE(flat_LOOKUP8_triangle);

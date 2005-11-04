@@ -76,7 +76,6 @@ EXPORTS
 	_mesa_test_proxy_teximage
 	_mesa_Viewport
 	_swrast_Accum
-	_swrast_alloc_buffers
 	_swrast_Bitmap
 	_swrast_CopyPixels
 	_swrast_DrawBuffer
@@ -98,7 +97,6 @@ EXPORTS
 	_swrast_DestroyContext
 	_swrast_InvalidateState
 	_swrast_ReadPixels
-	_swrast_zbuffer_address
 	_swsetup_Wakeup
 	_swsetup_CreateContext
 	_swsetup_DestroyContext

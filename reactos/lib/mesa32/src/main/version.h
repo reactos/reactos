@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,9 +29,9 @@
 
 /* Mesa version */
 #define MESA_MAJOR 6
-#define MESA_MINOR 2
+#define MESA_MINOR 4
 #define MESA_PATCH 0
-#define MESA_VERSION_STRING "6.2"
+#define MESA_VERSION_STRING "6.4"
 
 /* To make version comparison easy */
 #define MESA_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))

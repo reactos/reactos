@@ -11,7 +11,7 @@ MESA_MODULES = $(TOP)/src/mesa/mesa.a
 
 # GLU_DIR	= $(TOP)/src/glu/mesa
 ifeq ($(GLU_DIR),)
-	# By default, we build the SGI GLU implementation
+# By default, we build the SGI GLU implementation
 	GLU_DIR = $(TOP)/src/glu/sgi
 endif
 
@@ -146,9 +146,9 @@ DRIVER_SOURCES = \
 ifeq ($(CPU), x86)
 	DRIVER_SOURCES += $(addprefix ../../, $(X86_API))
 else
-	# No GL API PPC optimization yet
+# No GL API PPC optimization yet
 endif 
-	
+
 DRIVER_OBJECTS = $(DRIVER_SOURCES:.c=.o)
 DRIVER_OBJECTS := $(DRIVER_OBJECTS:.S=.o)
 
@@ -171,10 +171,10 @@ default: depend $(LIB_DIR) $(LIB_DIR)/$(GL_LIB_NAME)
 
 $(MESA_MODULES):
 	cd $(TOP)/src/mesa; $(MAKE) mesa.a ;
-	
+
 $(GLU_MODULES):
 	cd $(GLU_DIR); $(MAKE) $(subst $(GLU_DIR)/,,$(GLU_MODULES)) ; 
-	
+
 $(LIB_DIR):
 	mkdir $(LIB_DIR)
 
@@ -187,9 +187,9 @@ $(LIB_DIR)/$(GL_LIB_NAME): $(OBJECTS) $(MESA_MODULES) $(GLU_MODULES)
 
 depend: $(DRIVER_SOURCES) $(GLU_SOURCES)
 	touch depend
-	$(MKDEP) $(MKDEP_OPTIONS) $(INCLUDES) $(DRIVER_SOURCES) $(GLU_SOURCES) > /dev/null 2>&1
+	$(MKDEP) $(MKDEP_OPTIONS) $(INCLUDES) $(DRIVER_SOURCES) $(GLU_SOURCES) > /dev/null 
 
 clean:
 	rm -f depend $(OBJECTS)
-		
+
 include depend

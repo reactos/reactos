@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -53,6 +53,18 @@ _mesa_StencilOp( GLenum fail, GLenum zfail, GLenum zpass );
 
 extern void GLAPIENTRY
 _mesa_ActiveStencilFaceEXT(GLenum face);
+
+
+extern void GLAPIENTRY
+_mesa_StencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+
+
+extern void GLAPIENTRY
+_mesa_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
+
+
+extern void GLAPIENTRY
+_mesa_StencilMaskSeparate(GLenum face, GLuint mask);
 
 
 extern void 

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,8 +35,6 @@
 #include "imports.h"
 #include "macros.h"
 #include "texformat.h"
-#include "teximage.h"
-#include "texstate.h"
 
 #include "s_aatriangle.h"
 #include "s_context.h"
@@ -150,7 +148,7 @@ _swrast_culltriangle( GLcontext *ctx,
 #define T_SCALE theight
 
 #define SETUP_CODE							\
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);                             \
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];\
    struct gl_texture_object *obj = ctx->Texture.Unit[0].Current2D;	\
    const GLint b = obj->BaseLevel;					\
    const GLfloat twidth = (GLfloat) obj->Image[0][b]->Width;		\
@@ -179,9 +177,8 @@ _swrast_culltriangle( GLcontext *ctx,
       span.intTex[0] += span.intTexStep[0];				\
       span.intTex[1] += span.intTexStep[1];				\
    }									\
-   (*swrast->Driver.WriteRGBSpan)(ctx, span.end, span.x, span.y,	\
-                                  (CONST GLchan (*)[3]) span.array->rgb,\
-                                  NULL );
+   rb->PutRowRGB(ctx, rb, span.end, span.x, span.y, span.array->rgb, NULL);
+
 #include "s_tritemp.h"
 
 
@@ -202,7 +199,7 @@ _swrast_culltriangle( GLcontext *ctx,
 #define T_SCALE theight
 
 #define SETUP_CODE							\
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);                             \
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];\
    struct gl_texture_object *obj = ctx->Texture.Unit[0].Current2D;	\
    const GLint b = obj->BaseLevel;					\
    const GLfloat twidth = (GLfloat) obj->Image[0][b]->Width;		\
@@ -240,9 +237,9 @@ _swrast_culltriangle( GLcontext *ctx,
       span.intTex[1] += span.intTexStep[1];				\
       span.z += span.zStep;						\
    }									\
-   (*swrast->Driver.WriteRGBSpan)(ctx, span.end, span.x, span.y,	\
-                                  (CONST GLchan (*)[3]) span.array->rgb,\
-                                  span.array->mask );
+   rb->PutRowRGB(ctx, rb, span.end, span.x, span.y,			\
+                 span.array->rgb, span.array->mask);
+
 #include "s_tritemp.h"
 
 
@@ -260,6 +257,21 @@ struct affine_info
    GLfixed er, eg, eb, ea;
    GLint tbytesline, tsize;
 };
+
+
+static INLINE GLint
+ilerp(GLint t, GLint a, GLint b)
+{
+   return a + ((t * (b - a)) >> FIXED_SHIFT);
+}
+
+static INLINE GLint
+ilerp_2d(GLint ia, GLint ib, GLint v00, GLint v10, GLint v01, GLint v11)
+{
+   const GLint temp0 = ilerp(ia, v00, v10);
+   const GLint temp1 = ilerp(ia, v01, v11);
+   return ilerp(ib, temp0, temp1);
+}
 
 
 /* This function can handle GL_NEAREST or GL_LINEAR sampling of 2D RGB or RGBA
@@ -285,25 +297,18 @@ affine_span(GLcontext *ctx, struct sw_span *span,
    sample[ACOMP] = CHAN_MAX
 
 #define LINEAR_RGB							\
-   sample[RCOMP] = (ti * (si * tex00[0] + sf * tex01[0]) +		\
-             tf * (si * tex10[0] + sf * tex11[0])) >> 2 * FIXED_SHIFT;	\
-   sample[GCOMP] = (ti * (si * tex00[1] + sf * tex01[1]) +		\
-             tf * (si * tex10[1] + sf * tex11[1])) >> 2 * FIXED_SHIFT;	\
-   sample[BCOMP] = (ti * (si * tex00[2] + sf * tex01[2]) +		\
-             tf * (si * tex10[2] + sf * tex11[2])) >> 2 * FIXED_SHIFT;	\
-   sample[ACOMP] = CHAN_MAX
+   sample[RCOMP] = ilerp_2d(sf, tf, tex00[0], tex01[0], tex10[0], tex11[0]);\
+   sample[GCOMP] = ilerp_2d(sf, tf, tex00[1], tex01[1], tex10[1], tex11[1]);\
+   sample[BCOMP] = ilerp_2d(sf, tf, tex00[2], tex01[2], tex10[2], tex11[2]);\
+   sample[ACOMP] = CHAN_MAX;
 
 #define NEAREST_RGBA  COPY_CHAN4(sample, tex00)
 
 #define LINEAR_RGBA							\
-   sample[RCOMP] = (ti * (si * tex00[0] + sf * tex01[0]) +		\
-               tf * (si * tex10[0] + sf * tex11[0])) >> 2 * FIXED_SHIFT;\
-   sample[GCOMP] = (ti * (si * tex00[1] + sf * tex01[1]) +		\
-               tf * (si * tex10[1] + sf * tex11[1])) >> 2 * FIXED_SHIFT;\
-   sample[BCOMP] = (ti * (si * tex00[2] + sf * tex01[2]) +		\
-               tf * (si * tex10[2] + sf * tex11[2])) >> 2 * FIXED_SHIFT;\
-   sample[ACOMP] = (ti * (si * tex00[3] + sf * tex01[3]) +		\
-               tf * (si * tex10[3] + sf * tex11[3])) >> 2 * FIXED_SHIFT
+   sample[RCOMP] = ilerp_2d(sf, tf, tex00[0], tex01[0], tex10[0], tex11[0]);\
+   sample[GCOMP] = ilerp_2d(sf, tf, tex00[1], tex01[1], tex10[1], tex11[1]);\
+   sample[BCOMP] = ilerp_2d(sf, tf, tex00[2], tex01[2], tex10[2], tex11[2]);\
+   sample[ACOMP] = ilerp_2d(sf, tf, tex00[3], tex01[3], tex10[3], tex11[3])
 
 #define MODULATE							  \
    dest[RCOMP] = span->red   * (sample[RCOMP] + 1u) >> (FIXED_SHIFT + 8); \
@@ -356,13 +361,13 @@ affine_span(GLcontext *ctx, struct sw_span *span,
 
 #define NEAREST_RGBA_REPLACE  COPY_CHAN4(dest, tex00)
 
-#define SPAN_NEAREST(DO_TEX,COMP)					\
+#define SPAN_NEAREST(DO_TEX, COMPS)					\
 	for (i = 0; i < span->end; i++) {				\
            /* Isn't it necessary to use FixedFloor below?? */		\
            GLint s = FixedToInt(span->intTex[0]) & info->smask;		\
            GLint t = FixedToInt(span->intTex[1]) & info->tmask;		\
            GLint pos = (t << info->twidth_log2) + s;			\
-           const GLchan *tex00 = info->texture + COMP * pos;		\
+           const GLchan *tex00 = info->texture + COMPS * pos;		\
            DO_TEX;							\
            span->red += span->redStep;					\
 	   span->green += span->greenStep;				\
@@ -373,22 +378,18 @@ affine_span(GLcontext *ctx, struct sw_span *span,
            dest += 4;							\
 	}
 
-#define SPAN_LINEAR(DO_TEX,COMP)					\
+#define SPAN_LINEAR(DO_TEX, COMPS)					\
 	for (i = 0; i < span->end; i++) {				\
            /* Isn't it necessary to use FixedFloor below?? */		\
-           GLint s = FixedToInt(span->intTex[0]) & info->smask;		\
-           GLint t = FixedToInt(span->intTex[1]) & info->tmask;		\
-           GLfixed sf = span->intTex[0] & FIXED_FRAC_MASK;		\
-           GLfixed tf = span->intTex[1] & FIXED_FRAC_MASK;		\
-           GLfixed si = FIXED_FRAC_MASK - sf;				\
-           GLfixed ti = FIXED_FRAC_MASK - tf;				\
-           GLint pos = (t << info->twidth_log2) + s;			\
-           const GLchan *tex00 = info->texture + COMP * pos;		\
+           const GLint s = FixedToInt(span->intTex[0]) & info->smask;	\
+           const GLint t = FixedToInt(span->intTex[1]) & info->tmask;	\
+           const GLfixed sf = span->intTex[0] & FIXED_FRAC_MASK;	\
+           const GLfixed tf = span->intTex[1] & FIXED_FRAC_MASK;	\
+           const GLint pos = (t << info->twidth_log2) + s;		\
+           const GLchan *tex00 = info->texture + COMPS * pos;		\
            const GLchan *tex10 = tex00 + info->tbytesline;		\
-           const GLchan *tex01 = tex00 + COMP;				\
-           const GLchan *tex11 = tex10 + COMP;				\
-           (void) ti;							\
-           (void) si;							\
+           const GLchan *tex01 = tex00 + COMPS;				\
+           const GLchan *tex11 = tex10 + COMPS;				\
            if (t == info->tmask) {					\
               tex10 -= info->tsize;					\
               tex11 -= info->tsize;					\
@@ -636,23 +637,19 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 	for (i = 0; i < span->end; i++) {				\
            GLdouble invQ = tex_coord[2] ?				\
                                  (1.0 / tex_coord[2]) : 1.0;            \
-           GLfloat s_tmp = (GLfloat) (tex_coord[0] * invQ);		\
-           GLfloat t_tmp = (GLfloat) (tex_coord[1] * invQ);		\
-           GLfixed s_fix = FloatToFixed(s_tmp) - FIXED_HALF;		\
-           GLfixed t_fix = FloatToFixed(t_tmp) - FIXED_HALF;        	\
-           GLint s = FixedToInt(FixedFloor(s_fix)) & info->smask;	\
-           GLint t = FixedToInt(FixedFloor(t_fix)) & info->tmask;	\
-           GLfixed sf = s_fix & FIXED_FRAC_MASK;			\
-           GLfixed tf = t_fix & FIXED_FRAC_MASK;			\
-           GLfixed si = FIXED_FRAC_MASK - sf;				\
-           GLfixed ti = FIXED_FRAC_MASK - tf;				\
-           GLint pos = (t << info->twidth_log2) + s;			\
+           const GLfloat s_tmp = (GLfloat) (tex_coord[0] * invQ);	\
+           const GLfloat t_tmp = (GLfloat) (tex_coord[1] * invQ);	\
+           const GLfixed s_fix = FloatToFixed(s_tmp) - FIXED_HALF;	\
+           const GLfixed t_fix = FloatToFixed(t_tmp) - FIXED_HALF;      \
+           const GLint s = FixedToInt(FixedFloor(s_fix)) & info->smask;	\
+           const GLint t = FixedToInt(FixedFloor(t_fix)) & info->tmask;	\
+           const GLfixed sf = s_fix & FIXED_FRAC_MASK;			\
+           const GLfixed tf = t_fix & FIXED_FRAC_MASK;			\
+           const GLint pos = (t << info->twidth_log2) + s;		\
            const GLchan *tex00 = info->texture + COMP * pos;		\
            const GLchan *tex10 = tex00 + info->tbytesline;		\
            const GLchan *tex01 = tex00 + COMP;				\
            const GLchan *tex11 = tex10 + COMP;				\
-           (void) ti;							\
-           (void) si;							\
            if (t == info->tmask) {					\
               tex10 -= info->tsize;					\
               tex11 -= info->tsize;					\
@@ -675,6 +672,9 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
    GLuint i;
    GLfloat tex_coord[3], tex_step[3];
    GLchan *dest = span->array->rgba[0];
+
+   const GLuint savedTexEnable = ctx->Texture._EnabledUnits;
+   ctx->Texture._EnabledUnits = 0;
 
    tex_coord[0] = span->tex[0][0]  * (info->smask + 1);
    tex_step[0] = span->texStepX[0][0] * (info->smask + 1);
@@ -785,6 +785,9 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 
 #undef SPAN_NEAREST
 #undef SPAN_LINEAR
+
+   /* restore state */
+   ctx->Texture._EnabledUnits = savedTexEnable;
 }
 
 
@@ -873,7 +876,7 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 #define INTERP_SPEC 1
 #define INTERP_ALPHA 1
 #define INTERP_TEX 1
-#define RENDER_SPAN( span )   _swrast_write_texture_span(ctx, &span);
+#define RENDER_SPAN( span )   _swrast_write_rgba_span(ctx, &span);
 #include "s_tritemp.h"
 
 
@@ -891,7 +894,7 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 #define INTERP_ALPHA 1
 #define INTERP_SPEC 1
 #define INTERP_MULTITEX 1
-#define RENDER_SPAN( span )   _swrast_write_texture_span(ctx, &span);
+#define RENDER_SPAN( span )   _swrast_write_rgba_span(ctx, &span);
 #include "s_tritemp.h"
 
 
@@ -902,6 +905,8 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 #define NAME occlusion_zless_triangle
 #define INTERP_Z 1
 #define SETUP_CODE						\
+   struct gl_renderbuffer *rb					\
+      = ctx->DrawBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;	\
    ASSERT(ctx->Depth.Test);					\
    ASSERT(!ctx->Depth.Mask);					\
    ASSERT(ctx->Depth.Func == GL_LESS);				\
@@ -912,7 +917,7 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
    if (ctx->Visual.depthBits <= 16) {					\
       GLuint i;								\
       const GLushort *zRow = (const GLushort *)				\
-         _swrast_zbuffer_address(ctx, span.x, span.y);			\
+         rb->GetPointer(ctx, rb, span.x, span.y);			\
       for (i = 0; i < span.end; i++) {					\
          GLdepth z = FixedToDepth(span.z);				\
          if (z < zRow[i]) {						\
@@ -925,7 +930,7 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
    else {								\
       GLuint i;								\
       const GLuint *zRow = (const GLuint *)				\
-         _swrast_zbuffer_address(ctx, span.x, span.y);			\
+         rb->GetPointer(ctx, rb, span.x, span.y);			\
       for (i = 0; i < span.end; i++) {					\
          if ((GLuint)span.z < zRow[i]) {				\
             ctx->OcclusionResult = GL_TRUE;				\
@@ -1069,7 +1074,7 @@ _swrast_choose_triangle( GLcontext *ctx )
          }
       }
 
-      if (ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram._Enabled) {
+      if (ctx->Texture._EnabledCoordUnits || ctx->FragmentProgram._Active) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
 	 const struct gl_texture_object *texObj2D;
          const struct gl_texture_image *texImg;
@@ -1084,7 +1089,7 @@ _swrast_choose_triangle( GLcontext *ctx )
 
          /* First see if we can use an optimized 2-D texture function */
          if (ctx->Texture._EnabledCoordUnits == 0x1
-             && !ctx->FragmentProgram._Enabled
+             && !ctx->FragmentProgram._Active
              && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT
              && texObj2D->WrapS == GL_REPEAT
 	     && texObj2D->WrapT == GL_REPEAT

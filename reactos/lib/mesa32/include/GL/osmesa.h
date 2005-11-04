@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  * 
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -60,8 +60,8 @@ extern "C" {
 #include <GL/gl.h>
 
 
-#define OSMESA_MAJOR_VERSION 4
-#define OSMESA_MINOR_VERSION 1
+#define OSMESA_MAJOR_VERSION 6
+#define OSMESA_MINOR_VERSION 3
 #define OSMESA_PATCH_VERSION 0
 
 
@@ -252,12 +252,18 @@ OSMesaGetColorBuffer( OSMesaContext c, GLint *width, GLint *height,
 
 
 
+/**
+ * This typedef is new in Mesa 6.3.
+ */
+typedef void (*OSMESAproc)();
+
+
 /*
  * Return pointer to the named function.
- *
  * New in Mesa 4.1
+ * Return OSMESAproc in 6.3.
  */
-GLAPI void * GLAPIENTRY
+GLAPI OSMESAproc GLAPIENTRY
 OSMesaGetProcAddress( const char *funcName );
 
 

@@ -31,11 +31,6 @@
 #include "mtypes.h"
 #include "swrast.h"
 
-
-extern GLboolean
-_swrast_clip_pixelrect(const GLcontext *ctx,
-                     GLint *destX, GLint *destY,
-                     GLsizei *width, GLsizei *height,
-                     GLint *skipPixels, GLint *skipRows);
+/* XXX kill this header? */
 
 #endif

@@ -43,7 +43,7 @@ extern void _tnl_EndList( GLcontext *ctx );
 extern void _tnl_NewList( GLcontext *ctx, GLuint list, GLenum mode );
 
 extern void _tnl_EndCallList( GLcontext *ctx );
-extern void _tnl_BeginCallList( GLcontext *ctx, GLuint list );
+extern void _tnl_BeginCallList( GLcontext *ctx, struct mesa_display_list *list );
 
 extern void _tnl_SaveFlushVertices( GLcontext *ctx );
 

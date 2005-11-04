@@ -447,12 +447,12 @@ struct tfxMesaContext
 
    tfxUnitsState unitsState;
    tfxUnitsState restoreUnitsState;	/* saved during multipass */
-
+   GLboolean multipass;			/* true when drawing intermediate pass */
 
    GLuint new_state;
    GLuint new_gl_state;
 
-   /* Texture Memory Manager Data 
+   /* Texture Memory Manager Data
     */
    GLuint texBindNumber;
    GLint tmuSrc;
@@ -483,7 +483,7 @@ struct tfxMesaContext
    GLenum render_primitive;
    GLenum raster_primitive;
 
-   /* Current rasterization functions 
+   /* Current rasterization functions
     */
    fx_point_func draw_point;
    fx_line_func draw_line;
@@ -556,7 +556,7 @@ extern void fxAllocVB(GLcontext * ctx);
 extern void fxFreeVB(GLcontext * ctx);
 extern void fxPrintSetupFlags(char *msg, GLuint flags );
 extern void fxCheckTexSizes( GLcontext *ctx );
-extern void fxBuildVertices( GLcontext *ctx, GLuint start, GLuint count,
+extern void fxBuildVertices( GLcontext *ctx, GLuint start, GLuint end,
 			     GLuint newinputs );
 extern void fxChooseVertexState( GLcontext *ctx );
 
@@ -715,6 +715,7 @@ void fxSetupBlend (GLcontext *ctx);
 void fxSetupDepthTest (GLcontext *ctx);
 void fxSetupTexture (GLcontext *ctx);
 void fxSetupStencil (GLcontext *ctx);
+void fxSetupStencilFace (GLcontext *ctx, GLint face);
 
 /* Flags for software fallback cases */
 #define FX_FALLBACK_TEXTURE_MAP		0x0001

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -54,7 +53,7 @@ static void feedback_vertex( GLcontext *ctx,
 
    win[0] = v->win[0];
    win[1] = v->win[1];
-   win[2] = v->win[2] / ctx->DepthMaxF;
+   win[2] = v->win[2] / ctx->DrawBuffer->_DepthMaxF;
    win[3] = 1.0F / v->win[3];
 
    color[0] = CHAN_TO_FLOAT(pv->color[0]);
@@ -138,7 +137,7 @@ void _swrast_select_triangle( GLcontext *ctx,
 			 const SWvertex *v2)
 {
    if (_swrast_culltriangle( ctx, v0, v1, v2 )) {
-      const GLfloat zs = 1.0F / ctx->DepthMaxF;
+      const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
 
       _mesa_update_hitflag( ctx, v0->win[2] * zs );
       _mesa_update_hitflag( ctx, v1->win[2] * zs );
@@ -149,7 +148,7 @@ void _swrast_select_triangle( GLcontext *ctx,
 
 void _swrast_select_line( GLcontext *ctx, const SWvertex *v0, const SWvertex *v1 )
 {
-   const GLfloat zs = 1.0F / ctx->DepthMaxF;
+   const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
    _mesa_update_hitflag( ctx, v0->win[2] * zs );
    _mesa_update_hitflag( ctx, v1->win[2] * zs );
 }
@@ -157,6 +156,6 @@ void _swrast_select_line( GLcontext *ctx, const SWvertex *v0, const SWvertex *v1
 
 void _swrast_select_point( GLcontext *ctx, const SWvertex *v )
 {
-   const GLfloat zs = 1.0F / ctx->DepthMaxF;
+   const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
    _mesa_update_hitflag( ctx, v->win[2] * zs );
 }

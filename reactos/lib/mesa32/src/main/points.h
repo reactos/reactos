@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.5
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -49,6 +49,9 @@ _mesa_PointParameterfEXT( GLenum pname, GLfloat param );
 
 extern void GLAPIENTRY
 _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params );
+
+extern void
+_mesa_update_point(GLcontext *ctx);
 
 extern void 
 _mesa_init_point( GLcontext * ctx );

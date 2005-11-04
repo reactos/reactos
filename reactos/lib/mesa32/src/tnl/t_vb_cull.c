@@ -57,6 +57,10 @@ static GLboolean run_cull_stage( GLcontext *ctx,
    GLuint count = VB->Count;
    GLuint i;
 
+   if (ctx->VertexProgram._Enabled ||
+       !ctx->Transform.CullVertexFlag) 
+      return GL_TRUE;
+
    VB->ClipOrMask &= ~CLIP_CULL_BIT;
    VB->ClipAndMask |= CLIP_CULL_BIT;
 
@@ -81,31 +85,13 @@ static GLboolean run_cull_stage( GLcontext *ctx,
 }
 
 
-static void check_cull( GLcontext *ctx, struct tnl_pipeline_stage *stage )
-{
-   stage->active = (!ctx->VertexProgram._Enabled &&
-		    ctx->Transform.CullVertexFlag);
-}
-
-
-static void dtr( struct tnl_pipeline_stage *stage )
-{
-}
-
 
 const struct tnl_pipeline_stage _tnl_vertex_cull_stage =
 {
    "EXT_cull_vertex",
-   _NEW_PROGRAM | 
-   _NEW_TRANSFORM,  
-   _NEW_TRANSFORM,
-   GL_TRUE,			/* active */
-   _TNL_BIT_NORMAL | 
-   _TNL_BIT_POS,		/* inputs */
-   _TNL_BIT_POS,		/* outputs */
-   0,				/* changed_inputs */
    NULL,			/* private data */
-   dtr,				/* destructor */
-   check_cull,		/* check */
+   NULL,				/* ctr */
+   NULL,				/* destructor */
+   NULL,
    run_cull_stage		/* run -- initially set to init */
 };

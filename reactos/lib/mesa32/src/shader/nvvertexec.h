@@ -38,6 +38,6 @@ extern void
 _mesa_exec_vertex_program(GLcontext *ctx, const struct vertex_program *program);
 
 extern void
-_mesa_dump_vp_state( const struct vertex_program_state *state );
+_mesa_dump_vp_state( const struct gl_vertex_program_state *state );
 
 #endif

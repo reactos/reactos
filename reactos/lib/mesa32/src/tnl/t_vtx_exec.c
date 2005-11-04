@@ -49,7 +49,7 @@ static void _tnl_print_vtx( GLcontext *ctx )
 
    for (i = 0 ; i < tnl->vtx.prim_count ; i++) {
       struct tnl_prim *prim = &tnl->vtx.prim[i];
-      _mesa_debug(0, "   prim %d: %s %d..%d %s %s\n",
+      _mesa_debug(NULL, "   prim %d: %s %d..%d %s %s\n",
 		  i, 
 		  _mesa_lookup_enum_by_nr(prim->mode & PRIM_MODE_MASK),
 		  prim->start, 
@@ -139,7 +139,7 @@ static void _tnl_vb_bind_vtx( GLcontext *ctx )
 /* 	 VB->AttribPtr[attr] = &tnl->current.Attribs[attr]; */
 
 
-	 tmp->Attribs[attr].count = count;
+	 tmp->Attribs[attr].count = 1;
 	 tmp->Attribs[attr].data = (GLfloat (*)[4]) tnl->vtx.current[attr];
 	 tmp->Attribs[attr].start = tnl->vtx.current[attr];
 	 tmp->Attribs[attr].size = get_size( tnl->vtx.current[attr] );
@@ -166,11 +166,11 @@ static void _tnl_vb_bind_vtx( GLcontext *ctx )
    VB->ObjPtr = VB->AttribPtr[_TNL_ATTRIB_POS];
    VB->NormalPtr = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
    VB->ColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR0];
-   VB->ColorPtr[1] = 0;
+   VB->ColorPtr[1] = NULL;
    VB->IndexPtr[0] = VB->AttribPtr[_TNL_ATTRIB_INDEX];
-   VB->IndexPtr[1] = 0;
+   VB->IndexPtr[1] = NULL;
    VB->SecondaryColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR1];
-   VB->SecondaryColorPtr[1] = 0;
+   VB->SecondaryColorPtr[1] = NULL;
    VB->FogCoordPtr = VB->AttribPtr[_TNL_ATTRIB_FOG];
 
    for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
@@ -259,28 +259,23 @@ static GLuint _tnl_copy_vertices( GLcontext *ctx )
 void _tnl_flush_vtx( GLcontext *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
+   GLuint vertex_count = tnl->vtx.initial_counter - tnl->vtx.counter;
 
    if (0)
       _tnl_print_vtx( ctx );
 
-   if (tnl->vtx.prim_count && 
-       tnl->vtx.counter != tnl->vtx.initial_counter) {
+   if (tnl->vtx.prim_count && vertex_count) {
 
       tnl->vtx.copied.nr = _tnl_copy_vertices( ctx ); 
 
-      if (ctx->NewState)
-	 _mesa_update_state( ctx );
+      if (tnl->vtx.copied.nr != vertex_count) {
+	 if (ctx->NewState)
+	    _mesa_update_state( ctx );
       
-      if (tnl->pipeline.build_state_changes)
-	 _tnl_validate_pipeline( ctx );
+	 _tnl_vb_bind_vtx( ctx );
 
-      _tnl_vb_bind_vtx( ctx );
-
-      /* Invalidate all stored data before and after run:
-       */
-      tnl->pipeline.run_input_changes |= tnl->pipeline.inputs;
-      tnl->Driver.RunPipeline( ctx );
-      tnl->pipeline.run_input_changes |= tnl->pipeline.inputs;
+	 tnl->Driver.RunPipeline( ctx );
+      }
    }
 
    tnl->vtx.prim_count = 0;

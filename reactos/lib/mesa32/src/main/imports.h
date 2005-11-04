@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -88,8 +88,6 @@ extern "C" {
 /** Set \p N bytes in \p DST to \p VAL */
 #define MEMSET( DST, VAL, N )      _mesa_memset(DST, VAL, N)
 
-#define MEMSET16( DST, VAL, N )   _mesa_memset16( (DST), (VAL), (size_t) (N) )
-
 /*@}*/
 
 
@@ -100,7 +98,7 @@ extern "C" {
  * this macro.
  * Both pointers/offsets are expressed in bytes.
  */
-#define ADD_POINTERS(A, B)  ( (A) + (unsigned long) (B) )
+#define ADD_POINTERS(A, B)  ( (GLubyte *) (A) + (uintptr_t) (B) )
 
 
 /**********************************************************************/
@@ -160,42 +158,15 @@ extern "C" {
 /*@}*/
 
 
-/**********************************************************************/
-/** \name External pixel buffer allocation.
- *
- * If you want Mesa's depth/stencil/accum/etc buffers to be allocated with a
- * specialized allocator you can define MESA_EXTERNAL_BUFFERALLOC and implement
- * _ext_mesa_alloc_pixelbuffer() _ext_mesa_free_pixelbuffer() in your
- * application.
- *
- * \author
- * Contributed by Gerk Huisma (gerk@five-d.demon.nl).
- */
-/*@{*/
-
 /**
- * \def MESA_PBUFFER_ALLOC
- * Allocate a pixel buffer.
+ * Sometimes we treat GLfloats as GLints.  On x86 systems, moving a float
+ * as a int (thereby using integer registers instead of FP registers) is
+ * a performance win.  Typically, this can be done with ordinary casts.
+ * But with gcc's -fstrict-aliasing flag (which defaults to on in gcc 3.0)
+ * these casts generate warnings.
+ * The following union typedef is used to solve that.
  */
-
-/**
- * \def MESA_PBUFFER_FREE
- * Free a pixel buffer.
- */
-
-#ifdef MESA_EXTERNAL_BUFFERALLOC
-extern void *_ext_mesa_alloc_pixelbuffer( unsigned int size );
-extern void _ext_mesa_free_pixelbuffer( void *pb );
-
-#define MESA_PBUFFER_ALLOC(BYTES)  (void *) _ext_mesa_alloc_pixelbuffer(BYTES)
-#define MESA_PBUFFER_FREE(PTR)     _ext_mesa_free_pixelbuffer(PTR)
-#else
-/* Default buffer allocation uses the aligned allocation routines: */
-#define MESA_PBUFFER_ALLOC(BYTES)  (void *) _mesa_align_malloc(BYTES, 512)
-#define MESA_PBUFFER_FREE(PTR)     _mesa_align_free(PTR)
-#endif
-
-/*@}*/
+typedef union { GLfloat f; GLint i; } fi_type;
 
 
 
@@ -209,6 +180,11 @@ extern void _ext_mesa_free_pixelbuffer( void *pb );
 #ifndef M_PI
 #define M_PI (3.1415926536)
 #endif
+
+#ifndef M_E
+#define M_E (2.7182818284590452354)
+#endif
+
 
 /* XXX this is a bit of a hack needed for compilation within XFree86 */
 #ifndef FLT_MIN
@@ -224,11 +200,12 @@ extern void _ext_mesa_free_pixelbuffer( void *pb );
  ***/
 #if defined(__i386__) || defined(__386__) || defined(__sparc__) || \
     defined(__s390x__) || defined(__powerpc__) || \
-    defined(__AMD64__) || \
+    defined(__amd64__) || \
     defined(ia64) || defined(__ia64__) || \
     defined(__hppa__) || defined(hpux) || \
     defined(__mips) || defined(_MIPS_ARCH) || \
     defined(__arm__) || \
+    defined(__sh__) || \
     (defined(__alpha__) && (defined(__IEEE_FLOAT) || !defined(VMS)))
 #define USE_IEEE
 #define IEEE_ONE 0x3f800000
@@ -326,8 +303,13 @@ static INLINE int IS_INF_OR_NAN( float x )
  *** IS_NEGATIVE: test if float is negative
  ***/
 #if defined(USE_IEEE)
-#define GET_FLOAT_BITS(x) ((fi_type *) &(x))->i
-#define IS_NEGATIVE(x) (GET_FLOAT_BITS(x) & (1<<31))
+static INLINE int GET_FLOAT_BITS( float x )
+{
+   fi_type fi;
+   fi.f = x;
+   return fi.i;
+}
+#define IS_NEGATIVE(x) (GET_FLOAT_BITS(x) < 0)
 #else
 #define IS_NEGATIVE(x) (x < 0.0F)
 #endif
@@ -350,20 +332,32 @@ static INLINE int IS_INF_OR_NAN( float x )
  *** CEILF: ceiling of float
  *** FLOORF: floor of float
  *** FABSF: absolute value of float
+ *** EXPF: raise e to the value
+ *** LDEXPF: multiply value by an integral power of two
+ *** FREXPF: extract mantissa and exponent from value
  ***/
 #if defined(XFree86LOADER) && defined(IN_MODULE)
 #define CEILF(x)   ((GLfloat) xf86ceil(x))
 #define FLOORF(x)  ((GLfloat) xf86floor(x))
 #define FABSF(x)   ((GLfloat) xf86fabs(x))
+#define EXPF(x)    ((GLfloat) xf86exp(x))
+#define LDEXPF(x,y)   ((GLfloat) xf86ldexp(x,y))
+#define FREXPF(x,y)   ((GLfloat) xf86frexp(x,y))
 #elif defined(__gnu_linux__)
 /* C99 functions */
 #define CEILF(x)   ceilf(x)
 #define FLOORF(x)  floorf(x)
 #define FABSF(x)   fabsf(x)
+#define EXPF(x)    expf(x)
+#define LDEXPF(x,y)  ldexpf(x,y)
+#define FREXPF(x,y)  frexpf(x,y)
 #else
 #define CEILF(x)   ((GLfloat) ceil(x))
 #define FLOORF(x)  ((GLfloat) floor(x))
 #define FABSF(x)   ((GLfloat) fabs(x))
+#define EXPF(x)    ((GLfloat) exp(x))
+#define LDEXPF(x,y)  ((GLfloat) ldexp(x,y))
+#define FREXPF(x,y)  ((GLfloat) frexp(x,y))
 #endif
 
 
@@ -553,14 +547,9 @@ static INLINE int iceil(float f)
 
 
 /***
- *** COPY_FLOAT: copy a float from src to dest, avoid slow FP regs if possible
+ *** COPY_FLOAT: copy a float from src to dest.
  ***/
-#if defined(USE_IEEE) && !defined(DEBUG)
-#define COPY_FLOAT( dst, src )					\
-	((fi_type *) &(dst))->i = ((fi_type *) (void *) &(src))->i
-#else
 #define COPY_FLOAT( dst, src )		(dst) = (src)
-#endif
 
 
 /***
@@ -670,6 +659,12 @@ _mesa_align_calloc( size_t bytes, unsigned long alignment );
 
 extern void
 _mesa_align_free( void *ptr );
+
+extern void *
+_mesa_exec_malloc( GLuint size );
+
+extern void 
+_mesa_exec_free( void *addr );
 
 extern void *
 _mesa_realloc( void *oldBuffer, size_t oldSize, size_t newSize );

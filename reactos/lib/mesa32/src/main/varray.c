@@ -33,7 +33,7 @@
 #include "texstate.h"
 #include "mtypes.h"
 #include "varray.h"
-
+#include "dispatch.h"
 
 #ifndef GL_BOOLEAN
 #define GL_BOOLEAN 0x9999
@@ -851,7 +851,7 @@ _mesa_MultiDrawArraysEXT( GLenum mode, GLint *first,
 
    for (i = 0; i < primcount; i++) {
       if (count[i] > 0) {
-         (ctx->Exec->DrawArrays)(mode, first[i], count[i]);
+         CALL_DrawArrays(ctx->Exec, (mode, first[i], count[i]));
       }
    }
 }
@@ -869,7 +869,7 @@ _mesa_MultiDrawElementsEXT( GLenum mode, const GLsizei *count, GLenum type,
 
    for (i = 0; i < primcount; i++) {
       if (count[i] > 0) {
-         (ctx->Exec->DrawElements)(mode, count[i], type, indices[i]);
+         CALL_DrawElements(ctx->Exec, (mode, count[i], type, indices[i]));
       }
    }
 }
@@ -889,7 +889,7 @@ _mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,
    for ( i = 0 ; i < primcount ; i++ ) {
       if ( count[i] > 0 ) {
          GLenum m = *((GLenum *) ((GLubyte *) mode + i * modestride));
-	 (ctx->Exec->DrawArrays)( m, first[i], count[i] );
+	 CALL_DrawArrays(ctx->Exec, ( m, first[i], count[i] ));
       }
    }
 }
@@ -911,7 +911,7 @@ _mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
    for ( i = 0 ; i < primcount ; i++ ) {
       if ( count[i] > 0 ) {
          GLenum m = *((GLenum *) ((GLubyte *) mode + i * modestride));
-	 (ctx->Exec->DrawElements)( m, count[i], type, indices[i] );
+	 CALL_DrawElements(ctx->Exec, ( m, count[i], type, indices[i] ));
       }
    }
 }

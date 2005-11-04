@@ -185,6 +185,44 @@ extern char *mesa_profile;
 
 #endif
 
+#elif defined(__amd64__)
+
+#define rdtscll(val) do { \
+     unsigned int a,d; \
+     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d)); \
+     (val) = ((unsigned long)a) | (((unsigned long)d)<<32); \
+} while(0) 
+
+/* Copied from i386 PIII version */
+#define  INIT_COUNTER()							\
+   do {									\
+      int cycle_i;							\
+      counter_overhead = LONG_MAX;					\
+      for ( cycle_i = 0 ; cycle_i < 16 ; cycle_i++ ) {			\
+	 unsigned long cycle_tmp1, cycle_tmp2;        			\
+	 rdtscll(cycle_tmp1);						\
+	 rdtscll(cycle_tmp2);						\
+	 if ( counter_overhead > (cycle_tmp2 - cycle_tmp1) ) {		\
+	    counter_overhead = cycle_tmp2 - cycle_tmp1;			\
+	 }								\
+      }									\
+   } while (0)
+
+
+#define  BEGIN_RACE(x)							\
+   x = LONG_MAX;							\
+   for ( cycle_i = 0 ; cycle_i < 10 ; cycle_i++ ) {			\
+      unsigned long cycle_tmp1, cycle_tmp2;				\
+      rdtscll(cycle_tmp1);						\
+
+#define END_RACE(x)							\
+      rdtscll(cycle_tmp2);						\
+      if ( x > (cycle_tmp2 - cycle_tmp1) ) {				\
+	 x = cycle_tmp2 - cycle_tmp1;					\
+      }									\
+   }									\
+   x -= counter_overhead;
+
 #elif defined(__sparc__)
 
 #define  INIT_COUNTER()	\
@@ -248,9 +286,9 @@ static int significand_match( GLfloat a, GLfloat b )
       return 0;
    }
 
-   frexp( a, &a_ex );
-   frexp( b, &b_ex );
-   frexp( d, &d_ex );
+   FREXPF( a, &a_ex );
+   FREXPF( b, &b_ex );
+   FREXPF( d, &d_ex );
 
    if ( a_ex < b_ex ) {
       return a_ex - d_ex;

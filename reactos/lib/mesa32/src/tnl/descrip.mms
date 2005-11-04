@@ -1,10 +1,11 @@
 # Makefile for core library for VMS
 # contributed by Jouk Jansen  joukj@hrem.stm.tudelft.nl
-# Last revision : 18 August 2004
+# Last revision : 13 June 2005
 
 .first
 	define gl [---.include.gl]
 	define math [-.math]
+	define shader [-.shader]
 	define array_cache [-.array_cache]
 
 .include [---]mms-config.
@@ -22,14 +23,16 @@ SOURCES = t_array_api.c t_array_import.c t_context.c \
 	t_vb_light.c t_vb_normals.c t_vb_points.c t_vb_program.c \
 	t_vb_render.c t_vb_texgen.c t_vb_texmat.c t_vb_vertex.c \
 	t_vtx_eval.c t_vtx_exec.c t_save_playback.c t_save_loopback.c \
-	t_vertex.c t_vtx_generic.c t_vtx_x86.c t_vertex_c.c;
+	t_vertex.c t_vtx_generic.c t_vtx_x86.c t_vertex_generic.c \
+	t_vb_arbprogram.c t_vp_build.c
 
 OBJECTS = t_array_api.obj,t_array_import.obj,t_context.obj,\
 	t_pipeline.obj,t_vb_fog.obj,t_vb_light.obj,t_vb_normals.obj,\
 	t_vb_points.obj,t_vb_program.obj,t_vb_render.obj,t_vb_texgen.obj,\
 	t_vb_texmat.obj,t_vb_vertex.obj,t_save_api.obj,t_vtx_api.obj,\
 	t_vtx_eval.obj,t_vtx_exec.obj,t_save_playback.obj,t_save_loopback.obj,\
-	t_vertex.obj,t_vtx_generic.obj,t_vtx_x86.obj,t_vertex_c.obj
+	t_vertex.obj,t_vtx_generic.obj,t_vtx_x86.obj,t_vertex_generic.obj,\
+	t_vb_arbprogram.obj,t_vp_build.obj
 
 ##### RULES #####
 
@@ -66,4 +69,6 @@ t_save_loopback.obj : t_save_loopback.c
 t_vertex.obj : t_vertex.c
 t_vtx_x86.obj : t_vtx_x86.c
 t_vtx_generic.obj : t_vtx_generic.c
-t_vertex_c.obj : t_vertex_c.c
+t_vertex_generic.obj : t_vertex_generic.c
+t_vb_arbprogram.obj : t_vb_arbprogram.c
+t_vp_build.obj : t_vp_build.c

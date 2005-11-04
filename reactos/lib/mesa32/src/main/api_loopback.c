@@ -6,7 +6,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -36,6 +36,8 @@
 #include "colormac.h"
 #include "api_loopback.h"
 #include "glthread.h"
+#include "mtypes.h"
+#include "dispatch.h"
 
 /* KW: A set of functions to convert unusual Color/Normal/Vertex/etc
  * calls to a smaller set of driver-provided formats.  Currently just
@@ -46,34 +48,35 @@
  * listed in dd.h.  The easiest way for a driver to do this is to
  * install the supplied software t&l module.
  */
-#define COLORF(r,g,b,a)             GL_CALL(Color4f)(r,g,b,a)
-#define VERTEX2(x,y)	            GL_CALL(Vertex2f)(x,y)
-#define VERTEX3(x,y,z)	            GL_CALL(Vertex3f)(x,y,z)
-#define VERTEX4(x,y,z,w)            GL_CALL(Vertex4f)(x,y,z,w)
-#define NORMAL(x,y,z)               GL_CALL(Normal3f)(x,y,z)
-#define TEXCOORD1(s)                GL_CALL(TexCoord1f)(s)
-#define TEXCOORD2(s,t)              GL_CALL(TexCoord2f)(s,t)
-#define TEXCOORD3(s,t,u)            GL_CALL(TexCoord3f)(s,t,u)
-#define TEXCOORD4(s,t,u,v)          GL_CALL(TexCoord4f)(s,t,u,v)
-#define INDEX(c)		    GL_CALL(Indexf)(c)
-#define MULTI_TEXCOORD1(z,s)	    GL_CALL(MultiTexCoord1fARB)(z,s)
-#define MULTI_TEXCOORD2(z,s,t)	    GL_CALL(MultiTexCoord2fARB)(z,s,t)
-#define MULTI_TEXCOORD3(z,s,t,u)    GL_CALL(MultiTexCoord3fARB)(z,s,t,u)
-#define MULTI_TEXCOORD4(z,s,t,u,v)  GL_CALL(MultiTexCoord4fARB)(z,s,t,u,v)
-#define EVALCOORD1(x)               GL_CALL(EvalCoord1f)(x)
-#define EVALCOORD2(x,y)             GL_CALL(EvalCoord2f)(x,y)
-#define MATERIALFV(a,b,c)           GL_CALL(Materialfv)(a,b,c)
-#define RECTF(a,b,c,d)              GL_CALL(Rectf)(a,b,c,d)
+#define COLORF(r,g,b,a)             CALL_Color4f(GET_DISPATCH(), (r,g,b,a))
+#define VERTEX2(x,y)	            CALL_Vertex2f(GET_DISPATCH(), (x,y))
+#define VERTEX3(x,y,z)	            CALL_Vertex3f(GET_DISPATCH(), (x,y,z))
+#define VERTEX4(x,y,z,w)            CALL_Vertex4f(GET_DISPATCH(), (x,y,z,w))
+#define NORMAL(x,y,z)               CALL_Normal3f(GET_DISPATCH(), (x,y,z))
+#define TEXCOORD1(s)                CALL_TexCoord1f(GET_DISPATCH(), (s))
+#define TEXCOORD2(s,t)              CALL_TexCoord2f(GET_DISPATCH(), (s,t))
+#define TEXCOORD3(s,t,u)            CALL_TexCoord3f(GET_DISPATCH(), (s,t,u))
+#define TEXCOORD4(s,t,u,v)          CALL_TexCoord4f(GET_DISPATCH(), (s,t,u,v))
+#define INDEX(c)		    CALL_Indexf(GET_DISPATCH(), (c))
+#define MULTI_TEXCOORD1(z,s)	    CALL_MultiTexCoord1fARB(GET_DISPATCH(), (z,s))
+#define MULTI_TEXCOORD2(z,s,t)	    CALL_MultiTexCoord2fARB(GET_DISPATCH(), (z,s,t))
+#define MULTI_TEXCOORD3(z,s,t,u)    CALL_MultiTexCoord3fARB(GET_DISPATCH(), (z,s,t,u))
+#define MULTI_TEXCOORD4(z,s,t,u,v)  CALL_MultiTexCoord4fARB(GET_DISPATCH(), (z,s,t,u,v))
+#define EVALCOORD1(x)               CALL_EvalCoord1f(GET_DISPATCH(), (x))
+#define EVALCOORD2(x,y)             CALL_EvalCoord2f(GET_DISPATCH(), (x,y))
+#define MATERIALFV(a,b,c)           CALL_Materialfv(GET_DISPATCH(), (a,b,c))
+#define RECTF(a,b,c,d)              CALL_Rectf(GET_DISPATCH(), (a,b,c,d))
 
-/* Extension functions must be dereferenced through _glapi_Dispatch as
- * not all libGL.so's will have all the uptodate entrypoints.
- */
-#define ATTRIB1(index,x)        GL_CALL(VertexAttrib1fNV)(index,x)
-#define ATTRIB2(index,x,y)      GL_CALL(VertexAttrib2fNV)(index,x,y)
-#define ATTRIB3(index,x,y,z)    GL_CALL(VertexAttrib3fNV)(index,x,y,z)
-#define ATTRIB4(index,x,y,z,w)  GL_CALL(VertexAttrib4fNV)(index,x,y,z,w)
-#define FOGCOORDF(x)            GL_CALL(FogCoordfEXT)(x)
-#define SECONDARYCOLORF(a,b,c)  GL_CALL(SecondaryColor3fEXT)(a,b,c)
+#define ATTRIB1NV(index,x)          CALL_VertexAttrib1fNV(GET_DISPATCH(), (index,x))
+#define ATTRIB2NV(index,x,y)        CALL_VertexAttrib2fNV(GET_DISPATCH(), (index,x,y))
+#define ATTRIB3NV(index,x,y,z)      CALL_VertexAttrib3fNV(GET_DISPATCH(), (index,x,y,z))
+#define ATTRIB4NV(index,x,y,z,w)    CALL_VertexAttrib4fNV(GET_DISPATCH(), (index,x,y,z,w))
+#define ATTRIB1ARB(index,x)         CALL_VertexAttrib1fARB(GET_DISPATCH(), (index,x))
+#define ATTRIB2ARB(index,x,y)       CALL_VertexAttrib2fARB(GET_DISPATCH(), (index,x,y))
+#define ATTRIB3ARB(index,x,y,z)     CALL_VertexAttrib3fARB(GET_DISPATCH(), (index,x,y,z))
+#define ATTRIB4ARB(index,x,y,z,w)   CALL_VertexAttrib4fARB(GET_DISPATCH(), (index,x,y,z,w))
+#define FOGCOORDF(x)                CALL_FogCoordfEXT(GET_DISPATCH(), (x))
+#define SECONDARYCOLORF(a,b,c)      CALL_SecondaryColor3fEXT(GET_DISPATCH(), (a,b,c))
 
 static void GLAPIENTRY
 loopback_Color3b_f( GLbyte red, GLbyte green, GLbyte blue )
@@ -1024,159 +1027,118 @@ loopback_SecondaryColor3ubvEXT_f( const GLubyte *v )
 
 
 /*
- * GL_NV_vertex_program
+ * GL_NV_vertex_program:
+ * Always loop-back to one of the VertexAttrib[1234]f[v]NV functions.
  */
 
 static void GLAPIENTRY
 loopback_VertexAttrib1sNV(GLuint index, GLshort x)
 {
-   ATTRIB1(index, (GLfloat) x);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib1fNV(GLuint index, GLfloat x)
-{
-   ATTRIB1(index, x);
+   ATTRIB1NV(index, (GLfloat) x);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib1dNV(GLuint index, GLdouble x)
 {
-   ATTRIB1(index, (GLfloat) x);
+   ATTRIB1NV(index, (GLfloat) x);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib2sNV(GLuint index, GLshort x, GLshort y)
 {
-   ATTRIB2(index, (GLfloat) x, y);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib2fNV(GLuint index, GLfloat x, GLfloat y)
-{
-   ATTRIB2(index, (GLfloat) x, y);
+   ATTRIB2NV(index, (GLfloat) x, y);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib2dNV(GLuint index, GLdouble x, GLdouble y)
 {
-   ATTRIB2(index, (GLfloat) x, (GLfloat) y);
+   ATTRIB2NV(index, (GLfloat) x, (GLfloat) y);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib3sNV(GLuint index, GLshort x, GLshort y, GLshort z)
 {
-   ATTRIB3(index, (GLfloat) x, y, z);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib3fNV(GLuint index, GLfloat x, GLfloat y, GLfloat z)
-{
-   ATTRIB3(index, x, y, z);
+   ATTRIB3NV(index, (GLfloat) x, (GLfloat) y, (GLfloat) z);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib3dNV(GLuint index, GLdouble x, GLdouble y, GLdouble z)
 {
-   ATTRIB4(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, 1.0F);
+   ATTRIB4NV(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, 1.0F);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4sNV(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
 {
-   ATTRIB4(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, (GLfloat) w);
+   ATTRIB4NV(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, (GLfloat) w);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4dNV(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
-   ATTRIB4(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, (GLfloat) w);
+   ATTRIB4NV(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, (GLfloat) w);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4ubNV(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
 {
-   ATTRIB4(index, UBYTE_TO_FLOAT(x), UBYTE_TO_FLOAT(y),
+   ATTRIB4NV(index, UBYTE_TO_FLOAT(x), UBYTE_TO_FLOAT(y),
 	UBYTE_TO_FLOAT(z), UBYTE_TO_FLOAT(w));
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib1svNV(GLuint index, const GLshort *v)
 {
-   ATTRIB1(index, (GLfloat) v[0]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib1fvNV(GLuint index, const GLfloat *v)
-{
-   ATTRIB1(index, v[0]);
+   ATTRIB1NV(index, (GLfloat) v[0]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib1dvNV(GLuint index, const GLdouble *v)
 {
-   ATTRIB1(index, (GLfloat) v[0]);
+   ATTRIB1NV(index, (GLfloat) v[0]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib2svNV(GLuint index, const GLshort *v)
 {
-   ATTRIB2(index, (GLfloat) v[0], (GLfloat) v[1]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib2fvNV(GLuint index, const GLfloat *v)
-{
-   ATTRIB2(index, v[0], v[1]);
+   ATTRIB2NV(index, (GLfloat) v[0], (GLfloat) v[1]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib2dvNV(GLuint index, const GLdouble *v)
 {
-   ATTRIB2(index, (GLfloat) v[0], (GLfloat) v[1]);
+   ATTRIB2NV(index, (GLfloat) v[0], (GLfloat) v[1]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib3svNV(GLuint index, const GLshort *v)
 {
-   ATTRIB2(index, (GLfloat) v[0], (GLfloat) v[1]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib3fvNV(GLuint index, const GLfloat *v)
-{
-   ATTRIB3(index, v[0], v[1], v[2]);
+   ATTRIB3NV(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib3dvNV(GLuint index, const GLdouble *v)
 {
-   ATTRIB3(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2]);
+   ATTRIB3NV(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4svNV(GLuint index, const GLshort *v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], 
+   ATTRIB4NV(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], 
 	  (GLfloat)v[3]);
-}
-
-static void GLAPIENTRY
-loopback_VertexAttrib4fvNV(GLuint index, const GLfloat *v)
-{
-   ATTRIB4(index, v[0], v[1], v[2], v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4dvNV(GLuint index, const GLdouble *v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+   ATTRIB4NV(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4ubvNV(GLuint index, const GLubyte *v)
 {
-   ATTRIB4(index, UBYTE_TO_FLOAT(v[0]), UBYTE_TO_FLOAT(v[1]),
+   ATTRIB4NV(index, UBYTE_TO_FLOAT(v[0]), UBYTE_TO_FLOAT(v[1]),
           UBYTE_TO_FLOAT(v[2]), UBYTE_TO_FLOAT(v[3]));
 }
 
@@ -1194,7 +1156,7 @@ loopback_VertexAttribs1fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
    GLint i;
    for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib1fvNV(index + i, v + i);
+      ATTRIB1NV(index + i, v[i]);
 }
 
 static void GLAPIENTRY
@@ -1218,7 +1180,7 @@ loopback_VertexAttribs2fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
    GLint i;
    for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib2fvNV(index + i, v + 2 * i);
+      ATTRIB2NV(index + i, v[2 * i], v[2 * i + 1]);
 }
 
 static void GLAPIENTRY
@@ -1242,7 +1204,7 @@ loopback_VertexAttribs3fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
    GLint i;
    for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib3fvNV(index + i, v + 3 * i);
+      ATTRIB3NV(index + i, v[3 * i], v[3 * i + 1], v[3 * i + 2]);
 }
 
 static void GLAPIENTRY
@@ -1266,7 +1228,7 @@ loopback_VertexAttribs4fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
    GLint i;
    for (i = n - 1; i >= 0; i--)
-      loopback_VertexAttrib4fvNV(index + i, v + 4 * i);
+      ATTRIB4NV(index + i, v[4 * i], v[4 * i + 1], v[4 * i + 2], v[4 * i + 3]);
 }
 
 static void GLAPIENTRY
@@ -1288,70 +1250,182 @@ loopback_VertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte *v)
 
 /*
  * GL_ARB_vertex_program
+ * Always loop-back to one of the VertexAttrib[1234]f[v]ARB functions.
  */
+
+static void GLAPIENTRY
+loopback_VertexAttrib1sARB(GLuint index, GLshort x)
+{
+   ATTRIB1ARB(index, (GLfloat) x);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib1dARB(GLuint index, GLdouble x)
+{
+   ATTRIB1ARB(index, (GLfloat) x);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib2sARB(GLuint index, GLshort x, GLshort y)
+{
+   ATTRIB2ARB(index, (GLfloat) x, y);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib2dARB(GLuint index, GLdouble x, GLdouble y)
+{
+   ATTRIB2ARB(index, (GLfloat) x, (GLfloat) y);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib3sARB(GLuint index, GLshort x, GLshort y, GLshort z)
+{
+   ATTRIB3ARB(index, (GLfloat) x, (GLfloat) y, (GLfloat) z);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib3dARB(GLuint index, GLdouble x, GLdouble y, GLdouble z)
+{
+   ATTRIB4ARB(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, 1.0F);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib4sARB(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
+{
+   ATTRIB4ARB(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, (GLfloat) w);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib4dARB(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   ATTRIB4ARB(index, (GLfloat) x, (GLfloat) y, (GLfloat) z, (GLfloat) w);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib1svARB(GLuint index, const GLshort *v)
+{
+   ATTRIB1ARB(index, (GLfloat) v[0]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib1dvARB(GLuint index, const GLdouble *v)
+{
+   ATTRIB1ARB(index, (GLfloat) v[0]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib2svARB(GLuint index, const GLshort *v)
+{
+   ATTRIB2ARB(index, (GLfloat) v[0], (GLfloat) v[1]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib2dvARB(GLuint index, const GLdouble *v)
+{
+   ATTRIB2ARB(index, (GLfloat) v[0], (GLfloat) v[1]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib3svARB(GLuint index, const GLshort *v)
+{
+   ATTRIB3ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib3dvARB(GLuint index, const GLdouble *v)
+{
+   ATTRIB3ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib4svARB(GLuint index, const GLshort *v)
+{
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], 
+	  (GLfloat)v[3]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib4dvARB(GLuint index, const GLdouble *v)
+{
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+}
 
 static void GLAPIENTRY
 loopback_VertexAttrib4bvARB(GLuint index, const GLbyte * v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4ivARB(GLuint index, const GLint * v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4ubvARB(GLuint index, const GLubyte * v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4usvARB(GLuint index, const GLushort * v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4uivARB(GLuint index, const GLuint * v)
 {
-   ATTRIB4(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], (GLfloat) v[3]);
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4NbvARB(GLuint index, const GLbyte * v)
 {
-   ATTRIB4(index, BYTE_TO_FLOAT(v[0]), BYTE_TO_FLOAT(v[1]),
+   ATTRIB4ARB(index, BYTE_TO_FLOAT(v[0]), BYTE_TO_FLOAT(v[1]),
           BYTE_TO_FLOAT(v[2]), BYTE_TO_FLOAT(v[3]));
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4NsvARB(GLuint index, const GLshort * v)
 {
-   ATTRIB4(index, SHORT_TO_FLOAT(v[0]), SHORT_TO_FLOAT(v[1]),
+   ATTRIB4ARB(index, SHORT_TO_FLOAT(v[0]), SHORT_TO_FLOAT(v[1]),
           SHORT_TO_FLOAT(v[2]), SHORT_TO_FLOAT(v[3]));
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4NivARB(GLuint index, const GLint * v)
 {
-   ATTRIB4(index, INT_TO_FLOAT(v[0]), INT_TO_FLOAT(v[1]),
+   ATTRIB4ARB(index, INT_TO_FLOAT(v[0]), INT_TO_FLOAT(v[1]),
           INT_TO_FLOAT(v[2]), INT_TO_FLOAT(v[3]));
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib4NubARB(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
+{
+   ATTRIB4ARB(index, UBYTE_TO_FLOAT(x), UBYTE_TO_FLOAT(y),
+              UBYTE_TO_FLOAT(z), UBYTE_TO_FLOAT(w));
+}
+
+static void GLAPIENTRY
+loopback_VertexAttrib4NubvARB(GLuint index, const GLubyte * v)
+{
+   ATTRIB4ARB(index, UBYTE_TO_FLOAT(v[0]), UBYTE_TO_FLOAT(v[1]),
+          UBYTE_TO_FLOAT(v[2]), UBYTE_TO_FLOAT(v[3]));
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4NusvARB(GLuint index, const GLushort * v)
 {
-   ATTRIB4(index, USHORT_TO_FLOAT(v[0]), USHORT_TO_FLOAT(v[1]),
+   ATTRIB4ARB(index, USHORT_TO_FLOAT(v[0]), USHORT_TO_FLOAT(v[1]),
           USHORT_TO_FLOAT(v[2]), USHORT_TO_FLOAT(v[3]));
 }
 
 static void GLAPIENTRY
 loopback_VertexAttrib4NuivARB(GLuint index, const GLuint * v)
 {
-   ATTRIB4(index, UINT_TO_FLOAT(v[0]), UINT_TO_FLOAT(v[1]),
+   ATTRIB4ARB(index, UINT_TO_FLOAT(v[0]), UINT_TO_FLOAT(v[1]),
           UINT_TO_FLOAT(v[2]), UINT_TO_FLOAT(v[3]));
 }
 
@@ -1365,200 +1439,209 @@ loopback_VertexAttrib4NuivARB(GLuint index, const GLuint * v)
 void
 _mesa_loopback_init_api_table( struct _glapi_table *dest )
 {
-   dest->Color3b = loopback_Color3b_f;
-   dest->Color3d = loopback_Color3d_f;
-   dest->Color3i = loopback_Color3i_f;
-   dest->Color3s = loopback_Color3s_f;
-   dest->Color3ui = loopback_Color3ui_f;
-   dest->Color3us = loopback_Color3us_f;
-   dest->Color3ub = loopback_Color3ub_f;
-   dest->Color4b = loopback_Color4b_f;
-   dest->Color4d = loopback_Color4d_f;
-   dest->Color4i = loopback_Color4i_f;
-   dest->Color4s = loopback_Color4s_f;
-   dest->Color4ui = loopback_Color4ui_f;
-   dest->Color4us = loopback_Color4us_f;
-   dest->Color4ub = loopback_Color4ub_f;
-   dest->Color3bv = loopback_Color3bv_f;
-   dest->Color3dv = loopback_Color3dv_f;
-   dest->Color3iv = loopback_Color3iv_f;
-   dest->Color3sv = loopback_Color3sv_f;
-   dest->Color3uiv = loopback_Color3uiv_f;
-   dest->Color3usv = loopback_Color3usv_f;
-   dest->Color3ubv = loopback_Color3ubv_f;
-   dest->Color4bv = loopback_Color4bv_f;
-   dest->Color4dv = loopback_Color4dv_f;
-   dest->Color4iv = loopback_Color4iv_f;
-   dest->Color4sv = loopback_Color4sv_f;
-   dest->Color4uiv = loopback_Color4uiv_f;
-   dest->Color4usv = loopback_Color4usv_f;
-   dest->Color4ubv = loopback_Color4ubv_f;
+   SET_Color3b(dest, loopback_Color3b_f);
+   SET_Color3d(dest, loopback_Color3d_f);
+   SET_Color3i(dest, loopback_Color3i_f);
+   SET_Color3s(dest, loopback_Color3s_f);
+   SET_Color3ui(dest, loopback_Color3ui_f);
+   SET_Color3us(dest, loopback_Color3us_f);
+   SET_Color3ub(dest, loopback_Color3ub_f);
+   SET_Color4b(dest, loopback_Color4b_f);
+   SET_Color4d(dest, loopback_Color4d_f);
+   SET_Color4i(dest, loopback_Color4i_f);
+   SET_Color4s(dest, loopback_Color4s_f);
+   SET_Color4ui(dest, loopback_Color4ui_f);
+   SET_Color4us(dest, loopback_Color4us_f);
+   SET_Color4ub(dest, loopback_Color4ub_f);
+   SET_Color3bv(dest, loopback_Color3bv_f);
+   SET_Color3dv(dest, loopback_Color3dv_f);
+   SET_Color3iv(dest, loopback_Color3iv_f);
+   SET_Color3sv(dest, loopback_Color3sv_f);
+   SET_Color3uiv(dest, loopback_Color3uiv_f);
+   SET_Color3usv(dest, loopback_Color3usv_f);
+   SET_Color3ubv(dest, loopback_Color3ubv_f);
+   SET_Color4bv(dest, loopback_Color4bv_f);
+   SET_Color4dv(dest, loopback_Color4dv_f);
+   SET_Color4iv(dest, loopback_Color4iv_f);
+   SET_Color4sv(dest, loopback_Color4sv_f);
+   SET_Color4uiv(dest, loopback_Color4uiv_f);
+   SET_Color4usv(dest, loopback_Color4usv_f);
+   SET_Color4ubv(dest, loopback_Color4ubv_f);
 
-   dest->SecondaryColor3bEXT = loopback_SecondaryColor3bEXT_f;
-   dest->SecondaryColor3dEXT = loopback_SecondaryColor3dEXT_f;
-   dest->SecondaryColor3iEXT = loopback_SecondaryColor3iEXT_f;
-   dest->SecondaryColor3sEXT = loopback_SecondaryColor3sEXT_f;
-   dest->SecondaryColor3uiEXT = loopback_SecondaryColor3uiEXT_f;
-   dest->SecondaryColor3usEXT = loopback_SecondaryColor3usEXT_f;
-   dest->SecondaryColor3ubEXT = loopback_SecondaryColor3ubEXT_f;
-   dest->SecondaryColor3bvEXT = loopback_SecondaryColor3bvEXT_f;
-   dest->SecondaryColor3dvEXT = loopback_SecondaryColor3dvEXT_f;
-   dest->SecondaryColor3ivEXT = loopback_SecondaryColor3ivEXT_f;
-   dest->SecondaryColor3svEXT = loopback_SecondaryColor3svEXT_f;
-   dest->SecondaryColor3uivEXT = loopback_SecondaryColor3uivEXT_f;
-   dest->SecondaryColor3usvEXT = loopback_SecondaryColor3usvEXT_f;
-   dest->SecondaryColor3ubvEXT = loopback_SecondaryColor3ubvEXT_f;
+   SET_SecondaryColor3bEXT(dest, loopback_SecondaryColor3bEXT_f);
+   SET_SecondaryColor3dEXT(dest, loopback_SecondaryColor3dEXT_f);
+   SET_SecondaryColor3iEXT(dest, loopback_SecondaryColor3iEXT_f);
+   SET_SecondaryColor3sEXT(dest, loopback_SecondaryColor3sEXT_f);
+   SET_SecondaryColor3uiEXT(dest, loopback_SecondaryColor3uiEXT_f);
+   SET_SecondaryColor3usEXT(dest, loopback_SecondaryColor3usEXT_f);
+   SET_SecondaryColor3ubEXT(dest, loopback_SecondaryColor3ubEXT_f);
+   SET_SecondaryColor3bvEXT(dest, loopback_SecondaryColor3bvEXT_f);
+   SET_SecondaryColor3dvEXT(dest, loopback_SecondaryColor3dvEXT_f);
+   SET_SecondaryColor3ivEXT(dest, loopback_SecondaryColor3ivEXT_f);
+   SET_SecondaryColor3svEXT(dest, loopback_SecondaryColor3svEXT_f);
+   SET_SecondaryColor3uivEXT(dest, loopback_SecondaryColor3uivEXT_f);
+   SET_SecondaryColor3usvEXT(dest, loopback_SecondaryColor3usvEXT_f);
+   SET_SecondaryColor3ubvEXT(dest, loopback_SecondaryColor3ubvEXT_f);
       
-   dest->Indexd = loopback_Indexd;
-   dest->Indexi = loopback_Indexi;
-   dest->Indexs = loopback_Indexs;
-   dest->Indexub = loopback_Indexub;
-   dest->Indexdv = loopback_Indexdv;
-   dest->Indexiv = loopback_Indexiv;
-   dest->Indexsv = loopback_Indexsv;
-   dest->Indexubv = loopback_Indexubv;
-   dest->Normal3b = loopback_Normal3b;
-   dest->Normal3d = loopback_Normal3d;
-   dest->Normal3i = loopback_Normal3i;
-   dest->Normal3s = loopback_Normal3s;
-   dest->Normal3bv = loopback_Normal3bv;
-   dest->Normal3dv = loopback_Normal3dv;
-   dest->Normal3iv = loopback_Normal3iv;
-   dest->Normal3sv = loopback_Normal3sv;
-   dest->TexCoord1d = loopback_TexCoord1d;
-   dest->TexCoord1i = loopback_TexCoord1i;
-   dest->TexCoord1s = loopback_TexCoord1s;
-   dest->TexCoord2d = loopback_TexCoord2d;
-   dest->TexCoord2s = loopback_TexCoord2s;
-   dest->TexCoord2i = loopback_TexCoord2i;
-   dest->TexCoord3d = loopback_TexCoord3d;
-   dest->TexCoord3i = loopback_TexCoord3i;
-   dest->TexCoord3s = loopback_TexCoord3s;
-   dest->TexCoord4d = loopback_TexCoord4d;
-   dest->TexCoord4i = loopback_TexCoord4i;
-   dest->TexCoord4s = loopback_TexCoord4s;
-   dest->TexCoord1dv = loopback_TexCoord1dv;
-   dest->TexCoord1iv = loopback_TexCoord1iv;
-   dest->TexCoord1sv = loopback_TexCoord1sv;
-   dest->TexCoord2dv = loopback_TexCoord2dv;
-   dest->TexCoord2iv = loopback_TexCoord2iv;
-   dest->TexCoord2sv = loopback_TexCoord2sv;
-   dest->TexCoord3dv = loopback_TexCoord3dv;
-   dest->TexCoord3iv = loopback_TexCoord3iv;
-   dest->TexCoord3sv = loopback_TexCoord3sv;
-   dest->TexCoord4dv = loopback_TexCoord4dv;
-   dest->TexCoord4iv = loopback_TexCoord4iv;
-   dest->TexCoord4sv = loopback_TexCoord4sv;
-   dest->Vertex2d = loopback_Vertex2d;
-   dest->Vertex2i = loopback_Vertex2i;
-   dest->Vertex2s = loopback_Vertex2s;
-   dest->Vertex3d = loopback_Vertex3d;
-   dest->Vertex3i = loopback_Vertex3i;
-   dest->Vertex3s = loopback_Vertex3s;
-   dest->Vertex4d = loopback_Vertex4d;
-   dest->Vertex4i = loopback_Vertex4i;
-   dest->Vertex4s = loopback_Vertex4s;
-   dest->Vertex2dv = loopback_Vertex2dv;
-   dest->Vertex2iv = loopback_Vertex2iv;
-   dest->Vertex2sv = loopback_Vertex2sv;
-   dest->Vertex3dv = loopback_Vertex3dv;
-   dest->Vertex3iv = loopback_Vertex3iv;
-   dest->Vertex3sv = loopback_Vertex3sv;
-   dest->Vertex4dv = loopback_Vertex4dv;
-   dest->Vertex4iv = loopback_Vertex4iv;
-   dest->Vertex4sv = loopback_Vertex4sv;
-   dest->MultiTexCoord1dARB = loopback_MultiTexCoord1dARB;
-   dest->MultiTexCoord1dvARB = loopback_MultiTexCoord1dvARB;
-   dest->MultiTexCoord1iARB = loopback_MultiTexCoord1iARB;
-   dest->MultiTexCoord1ivARB = loopback_MultiTexCoord1ivARB;
-   dest->MultiTexCoord1sARB = loopback_MultiTexCoord1sARB;
-   dest->MultiTexCoord1svARB = loopback_MultiTexCoord1svARB;
-   dest->MultiTexCoord2dARB = loopback_MultiTexCoord2dARB;
-   dest->MultiTexCoord2dvARB = loopback_MultiTexCoord2dvARB;
-   dest->MultiTexCoord2iARB = loopback_MultiTexCoord2iARB;
-   dest->MultiTexCoord2ivARB = loopback_MultiTexCoord2ivARB;
-   dest->MultiTexCoord2sARB = loopback_MultiTexCoord2sARB;
-   dest->MultiTexCoord2svARB = loopback_MultiTexCoord2svARB;
-   dest->MultiTexCoord3dARB = loopback_MultiTexCoord3dARB;
-   dest->MultiTexCoord3dvARB = loopback_MultiTexCoord3dvARB;
-   dest->MultiTexCoord3iARB = loopback_MultiTexCoord3iARB;
-   dest->MultiTexCoord3ivARB = loopback_MultiTexCoord3ivARB;
-   dest->MultiTexCoord3sARB = loopback_MultiTexCoord3sARB;
-   dest->MultiTexCoord3svARB = loopback_MultiTexCoord3svARB;
-   dest->MultiTexCoord4dARB = loopback_MultiTexCoord4dARB;
-   dest->MultiTexCoord4dvARB = loopback_MultiTexCoord4dvARB;
-   dest->MultiTexCoord4iARB = loopback_MultiTexCoord4iARB;
-   dest->MultiTexCoord4ivARB = loopback_MultiTexCoord4ivARB;
-   dest->MultiTexCoord4sARB = loopback_MultiTexCoord4sARB;
-   dest->MultiTexCoord4svARB = loopback_MultiTexCoord4svARB;
-   dest->EvalCoord2dv = loopback_EvalCoord2dv;
-   dest->EvalCoord2fv = loopback_EvalCoord2fv;
-   dest->EvalCoord2d = loopback_EvalCoord2d;
-   dest->EvalCoord1dv = loopback_EvalCoord1dv;
-   dest->EvalCoord1fv = loopback_EvalCoord1fv;
-   dest->EvalCoord1d = loopback_EvalCoord1d;
-   dest->Materialf = loopback_Materialf;
-   dest->Materiali = loopback_Materiali;
-   dest->Materialiv = loopback_Materialiv;
-   dest->Rectd = loopback_Rectd;
-   dest->Rectdv = loopback_Rectdv;
-   dest->Rectfv = loopback_Rectfv;
-   dest->Recti = loopback_Recti;
-   dest->Rectiv = loopback_Rectiv;
-   dest->Rects = loopback_Rects;
-   dest->Rectsv = loopback_Rectsv;
-   dest->FogCoorddEXT = loopback_FogCoorddEXT;
-   dest->FogCoorddvEXT = loopback_FogCoorddvEXT;
+   SET_Indexd(dest, loopback_Indexd);
+   SET_Indexi(dest, loopback_Indexi);
+   SET_Indexs(dest, loopback_Indexs);
+   SET_Indexub(dest, loopback_Indexub);
+   SET_Indexdv(dest, loopback_Indexdv);
+   SET_Indexiv(dest, loopback_Indexiv);
+   SET_Indexsv(dest, loopback_Indexsv);
+   SET_Indexubv(dest, loopback_Indexubv);
+   SET_Normal3b(dest, loopback_Normal3b);
+   SET_Normal3d(dest, loopback_Normal3d);
+   SET_Normal3i(dest, loopback_Normal3i);
+   SET_Normal3s(dest, loopback_Normal3s);
+   SET_Normal3bv(dest, loopback_Normal3bv);
+   SET_Normal3dv(dest, loopback_Normal3dv);
+   SET_Normal3iv(dest, loopback_Normal3iv);
+   SET_Normal3sv(dest, loopback_Normal3sv);
+   SET_TexCoord1d(dest, loopback_TexCoord1d);
+   SET_TexCoord1i(dest, loopback_TexCoord1i);
+   SET_TexCoord1s(dest, loopback_TexCoord1s);
+   SET_TexCoord2d(dest, loopback_TexCoord2d);
+   SET_TexCoord2s(dest, loopback_TexCoord2s);
+   SET_TexCoord2i(dest, loopback_TexCoord2i);
+   SET_TexCoord3d(dest, loopback_TexCoord3d);
+   SET_TexCoord3i(dest, loopback_TexCoord3i);
+   SET_TexCoord3s(dest, loopback_TexCoord3s);
+   SET_TexCoord4d(dest, loopback_TexCoord4d);
+   SET_TexCoord4i(dest, loopback_TexCoord4i);
+   SET_TexCoord4s(dest, loopback_TexCoord4s);
+   SET_TexCoord1dv(dest, loopback_TexCoord1dv);
+   SET_TexCoord1iv(dest, loopback_TexCoord1iv);
+   SET_TexCoord1sv(dest, loopback_TexCoord1sv);
+   SET_TexCoord2dv(dest, loopback_TexCoord2dv);
+   SET_TexCoord2iv(dest, loopback_TexCoord2iv);
+   SET_TexCoord2sv(dest, loopback_TexCoord2sv);
+   SET_TexCoord3dv(dest, loopback_TexCoord3dv);
+   SET_TexCoord3iv(dest, loopback_TexCoord3iv);
+   SET_TexCoord3sv(dest, loopback_TexCoord3sv);
+   SET_TexCoord4dv(dest, loopback_TexCoord4dv);
+   SET_TexCoord4iv(dest, loopback_TexCoord4iv);
+   SET_TexCoord4sv(dest, loopback_TexCoord4sv);
+   SET_Vertex2d(dest, loopback_Vertex2d);
+   SET_Vertex2i(dest, loopback_Vertex2i);
+   SET_Vertex2s(dest, loopback_Vertex2s);
+   SET_Vertex3d(dest, loopback_Vertex3d);
+   SET_Vertex3i(dest, loopback_Vertex3i);
+   SET_Vertex3s(dest, loopback_Vertex3s);
+   SET_Vertex4d(dest, loopback_Vertex4d);
+   SET_Vertex4i(dest, loopback_Vertex4i);
+   SET_Vertex4s(dest, loopback_Vertex4s);
+   SET_Vertex2dv(dest, loopback_Vertex2dv);
+   SET_Vertex2iv(dest, loopback_Vertex2iv);
+   SET_Vertex2sv(dest, loopback_Vertex2sv);
+   SET_Vertex3dv(dest, loopback_Vertex3dv);
+   SET_Vertex3iv(dest, loopback_Vertex3iv);
+   SET_Vertex3sv(dest, loopback_Vertex3sv);
+   SET_Vertex4dv(dest, loopback_Vertex4dv);
+   SET_Vertex4iv(dest, loopback_Vertex4iv);
+   SET_Vertex4sv(dest, loopback_Vertex4sv);
+   SET_MultiTexCoord1dARB(dest, loopback_MultiTexCoord1dARB);
+   SET_MultiTexCoord1dvARB(dest, loopback_MultiTexCoord1dvARB);
+   SET_MultiTexCoord1iARB(dest, loopback_MultiTexCoord1iARB);
+   SET_MultiTexCoord1ivARB(dest, loopback_MultiTexCoord1ivARB);
+   SET_MultiTexCoord1sARB(dest, loopback_MultiTexCoord1sARB);
+   SET_MultiTexCoord1svARB(dest, loopback_MultiTexCoord1svARB);
+   SET_MultiTexCoord2dARB(dest, loopback_MultiTexCoord2dARB);
+   SET_MultiTexCoord2dvARB(dest, loopback_MultiTexCoord2dvARB);
+   SET_MultiTexCoord2iARB(dest, loopback_MultiTexCoord2iARB);
+   SET_MultiTexCoord2ivARB(dest, loopback_MultiTexCoord2ivARB);
+   SET_MultiTexCoord2sARB(dest, loopback_MultiTexCoord2sARB);
+   SET_MultiTexCoord2svARB(dest, loopback_MultiTexCoord2svARB);
+   SET_MultiTexCoord3dARB(dest, loopback_MultiTexCoord3dARB);
+   SET_MultiTexCoord3dvARB(dest, loopback_MultiTexCoord3dvARB);
+   SET_MultiTexCoord3iARB(dest, loopback_MultiTexCoord3iARB);
+   SET_MultiTexCoord3ivARB(dest, loopback_MultiTexCoord3ivARB);
+   SET_MultiTexCoord3sARB(dest, loopback_MultiTexCoord3sARB);
+   SET_MultiTexCoord3svARB(dest, loopback_MultiTexCoord3svARB);
+   SET_MultiTexCoord4dARB(dest, loopback_MultiTexCoord4dARB);
+   SET_MultiTexCoord4dvARB(dest, loopback_MultiTexCoord4dvARB);
+   SET_MultiTexCoord4iARB(dest, loopback_MultiTexCoord4iARB);
+   SET_MultiTexCoord4ivARB(dest, loopback_MultiTexCoord4ivARB);
+   SET_MultiTexCoord4sARB(dest, loopback_MultiTexCoord4sARB);
+   SET_MultiTexCoord4svARB(dest, loopback_MultiTexCoord4svARB);
+   SET_EvalCoord2dv(dest, loopback_EvalCoord2dv);
+   SET_EvalCoord2fv(dest, loopback_EvalCoord2fv);
+   SET_EvalCoord2d(dest, loopback_EvalCoord2d);
+   SET_EvalCoord1dv(dest, loopback_EvalCoord1dv);
+   SET_EvalCoord1fv(dest, loopback_EvalCoord1fv);
+   SET_EvalCoord1d(dest, loopback_EvalCoord1d);
+   SET_Materialf(dest, loopback_Materialf);
+   SET_Materiali(dest, loopback_Materiali);
+   SET_Materialiv(dest, loopback_Materialiv);
+   SET_Rectd(dest, loopback_Rectd);
+   SET_Rectdv(dest, loopback_Rectdv);
+   SET_Rectfv(dest, loopback_Rectfv);
+   SET_Recti(dest, loopback_Recti);
+   SET_Rectiv(dest, loopback_Rectiv);
+   SET_Rects(dest, loopback_Rects);
+   SET_Rectsv(dest, loopback_Rectsv);
+   SET_FogCoorddEXT(dest, loopback_FogCoorddEXT);
+   SET_FogCoorddvEXT(dest, loopback_FogCoorddvEXT);
 
-   dest->VertexAttrib1sNV = loopback_VertexAttrib1sNV;
-   dest->VertexAttrib1fNV = loopback_VertexAttrib1fNV;
-   dest->VertexAttrib1dNV = loopback_VertexAttrib1dNV;
-   dest->VertexAttrib2sNV = loopback_VertexAttrib2sNV;
-   dest->VertexAttrib2fNV = loopback_VertexAttrib2fNV;
-   dest->VertexAttrib2dNV = loopback_VertexAttrib2dNV;
-   dest->VertexAttrib3sNV = loopback_VertexAttrib3sNV;
-   dest->VertexAttrib3fNV = loopback_VertexAttrib3fNV;
-   dest->VertexAttrib3dNV = loopback_VertexAttrib3dNV;
-   dest->VertexAttrib4sNV = loopback_VertexAttrib4sNV;
-   dest->VertexAttrib4dNV = loopback_VertexAttrib4dNV;
-   dest->VertexAttrib4ubNV = loopback_VertexAttrib4ubNV;
+   SET_VertexAttrib1sNV(dest, loopback_VertexAttrib1sNV);
+   SET_VertexAttrib1dNV(dest, loopback_VertexAttrib1dNV);
+   SET_VertexAttrib2sNV(dest, loopback_VertexAttrib2sNV);
+   SET_VertexAttrib2dNV(dest, loopback_VertexAttrib2dNV);
+   SET_VertexAttrib3sNV(dest, loopback_VertexAttrib3sNV);
+   SET_VertexAttrib3dNV(dest, loopback_VertexAttrib3dNV);
+   SET_VertexAttrib4sNV(dest, loopback_VertexAttrib4sNV);
+   SET_VertexAttrib4dNV(dest, loopback_VertexAttrib4dNV);
+   SET_VertexAttrib4ubNV(dest, loopback_VertexAttrib4ubNV);
+   SET_VertexAttrib1svNV(dest, loopback_VertexAttrib1svNV);
+   SET_VertexAttrib1dvNV(dest, loopback_VertexAttrib1dvNV);
+   SET_VertexAttrib2svNV(dest, loopback_VertexAttrib2svNV);
+   SET_VertexAttrib2dvNV(dest, loopback_VertexAttrib2dvNV);
+   SET_VertexAttrib3svNV(dest, loopback_VertexAttrib3svNV);
+   SET_VertexAttrib3dvNV(dest, loopback_VertexAttrib3dvNV);
+   SET_VertexAttrib4svNV(dest, loopback_VertexAttrib4svNV);
+   SET_VertexAttrib4dvNV(dest, loopback_VertexAttrib4dvNV);
+   SET_VertexAttrib4ubvNV(dest, loopback_VertexAttrib4ubvNV);
+   SET_VertexAttribs1svNV(dest, loopback_VertexAttribs1svNV);
+   SET_VertexAttribs1fvNV(dest, loopback_VertexAttribs1fvNV);
+   SET_VertexAttribs1dvNV(dest, loopback_VertexAttribs1dvNV);
+   SET_VertexAttribs2svNV(dest, loopback_VertexAttribs2svNV);
+   SET_VertexAttribs2fvNV(dest, loopback_VertexAttribs2fvNV);
+   SET_VertexAttribs2dvNV(dest, loopback_VertexAttribs2dvNV);
+   SET_VertexAttribs3svNV(dest, loopback_VertexAttribs3svNV);
+   SET_VertexAttribs3fvNV(dest, loopback_VertexAttribs3fvNV);
+   SET_VertexAttribs3dvNV(dest, loopback_VertexAttribs3dvNV);
+   SET_VertexAttribs4svNV(dest, loopback_VertexAttribs4svNV);
+   SET_VertexAttribs4fvNV(dest, loopback_VertexAttribs4fvNV);
+   SET_VertexAttribs4dvNV(dest, loopback_VertexAttribs4dvNV);
+   SET_VertexAttribs4ubvNV(dest, loopback_VertexAttribs4ubvNV);
 
-   dest->VertexAttrib1svNV = loopback_VertexAttrib1svNV;
-   dest->VertexAttrib1fvNV = loopback_VertexAttrib1fvNV;
-   dest->VertexAttrib1dvNV = loopback_VertexAttrib1dvNV;
-   dest->VertexAttrib2svNV = loopback_VertexAttrib2svNV;
-   dest->VertexAttrib2fvNV = loopback_VertexAttrib2fvNV;
-   dest->VertexAttrib2dvNV = loopback_VertexAttrib2dvNV;
-   dest->VertexAttrib3svNV = loopback_VertexAttrib3svNV;
-   dest->VertexAttrib3fvNV = loopback_VertexAttrib3fvNV;
-   dest->VertexAttrib3dvNV = loopback_VertexAttrib3dvNV;
-   dest->VertexAttrib4svNV = loopback_VertexAttrib4svNV;
-   dest->VertexAttrib4fvNV = loopback_VertexAttrib4fvNV;
-   dest->VertexAttrib4dvNV = loopback_VertexAttrib4dvNV;
-   dest->VertexAttrib4ubvNV = loopback_VertexAttrib4ubvNV;
-
-   dest->VertexAttribs1svNV = loopback_VertexAttribs1svNV;
-   dest->VertexAttribs1fvNV = loopback_VertexAttribs1fvNV;
-   dest->VertexAttribs1dvNV = loopback_VertexAttribs1dvNV;
-   dest->VertexAttribs2svNV = loopback_VertexAttribs2svNV;
-   dest->VertexAttribs2fvNV = loopback_VertexAttribs2fvNV;
-   dest->VertexAttribs2dvNV = loopback_VertexAttribs2dvNV;
-   dest->VertexAttribs3svNV = loopback_VertexAttribs3svNV;
-   dest->VertexAttribs3fvNV = loopback_VertexAttribs3fvNV;
-   dest->VertexAttribs3dvNV = loopback_VertexAttribs3dvNV;
-   dest->VertexAttribs4svNV = loopback_VertexAttribs4svNV;
-   dest->VertexAttribs4fvNV = loopback_VertexAttribs4fvNV;
-   dest->VertexAttribs4dvNV = loopback_VertexAttribs4dvNV;
-   dest->VertexAttribs4ubvNV = loopback_VertexAttribs4ubvNV;
-
-   dest->VertexAttrib4bvARB = loopback_VertexAttrib4bvARB;
-   dest->VertexAttrib4ivARB = loopback_VertexAttrib4ivARB;
-   dest->VertexAttrib4ubvARB = loopback_VertexAttrib4ubvARB;
-   dest->VertexAttrib4usvARB = loopback_VertexAttrib4usvARB;
-   dest->VertexAttrib4uivARB = loopback_VertexAttrib4uivARB;
-   dest->VertexAttrib4NbvARB = loopback_VertexAttrib4NbvARB;
-   dest->VertexAttrib4NsvARB = loopback_VertexAttrib4NsvARB;
-   dest->VertexAttrib4NivARB = loopback_VertexAttrib4NivARB;
-   dest->VertexAttrib4NusvARB = loopback_VertexAttrib4NusvARB;
-   dest->VertexAttrib4NuivARB = loopback_VertexAttrib4NuivARB;
+   SET_VertexAttrib1sARB(dest, loopback_VertexAttrib1sARB);
+   SET_VertexAttrib1dARB(dest, loopback_VertexAttrib1dARB);
+   SET_VertexAttrib2sARB(dest, loopback_VertexAttrib2sARB);
+   SET_VertexAttrib2dARB(dest, loopback_VertexAttrib2dARB);
+   SET_VertexAttrib3sARB(dest, loopback_VertexAttrib3sARB);
+   SET_VertexAttrib3dARB(dest, loopback_VertexAttrib3dARB);
+   SET_VertexAttrib4sARB(dest, loopback_VertexAttrib4sARB);
+   SET_VertexAttrib4dARB(dest, loopback_VertexAttrib4dARB);
+   SET_VertexAttrib1svARB(dest, loopback_VertexAttrib1svARB);
+   SET_VertexAttrib1dvARB(dest, loopback_VertexAttrib1dvARB);
+   SET_VertexAttrib2svARB(dest, loopback_VertexAttrib2svARB);
+   SET_VertexAttrib2dvARB(dest, loopback_VertexAttrib2dvARB);
+   SET_VertexAttrib3svARB(dest, loopback_VertexAttrib3svARB);
+   SET_VertexAttrib3dvARB(dest, loopback_VertexAttrib3dvARB);
+   SET_VertexAttrib4svARB(dest, loopback_VertexAttrib4svARB);
+   SET_VertexAttrib4dvARB(dest, loopback_VertexAttrib4dvARB);
+   SET_VertexAttrib4NubARB(dest, loopback_VertexAttrib4NubARB);
+   SET_VertexAttrib4NubvARB(dest, loopback_VertexAttrib4NubvARB);
+   SET_VertexAttrib4bvARB(dest, loopback_VertexAttrib4bvARB);
+   SET_VertexAttrib4ivARB(dest, loopback_VertexAttrib4ivARB);
+   SET_VertexAttrib4ubvARB(dest, loopback_VertexAttrib4ubvARB);
+   SET_VertexAttrib4usvARB(dest, loopback_VertexAttrib4usvARB);
+   SET_VertexAttrib4uivARB(dest, loopback_VertexAttrib4uivARB);
+   SET_VertexAttrib4NbvARB(dest, loopback_VertexAttrib4NbvARB);
+   SET_VertexAttrib4NsvARB(dest, loopback_VertexAttrib4NsvARB);
+   SET_VertexAttrib4NivARB(dest, loopback_VertexAttrib4NivARB);
+   SET_VertexAttrib4NusvARB(dest, loopback_VertexAttrib4NusvARB);
+   SET_VertexAttrib4NuivARB(dest, loopback_VertexAttrib4NuivARB);
 }

@@ -43,6 +43,7 @@
 #include "fxdrv.h"
 
 #include "drivers/common/driverfuncs.h"
+#include "framebuffer.h"
 
 #ifndef TDFX_DEBUG
 int TDFX_DEBUG = (0
@@ -561,8 +562,8 @@ fxMesaCreateContext(GLuint win,
 
  if ((str = Glide->grGetRegistryOrEnvironmentStringExt("FX_GLIDE_SWAPPENDINGCOUNT"))) {
     fxMesa->maxPendingSwapBuffers = atoi(str);
-    if (fxMesa->maxPendingSwapBuffers > 3) {
-       fxMesa->maxPendingSwapBuffers = 3;
+    if (fxMesa->maxPendingSwapBuffers > 6) {
+       fxMesa->maxPendingSwapBuffers = 6;
     } else if (fxMesa->maxPendingSwapBuffers < 0) {
        fxMesa->maxPendingSwapBuffers = 0;
     }
@@ -638,7 +639,7 @@ fxMesaCreateContext(GLuint win,
                       fxMesa->snapVertices ? "" : "no ");
    }
 
-  sprintf(fxMesa->rendererString, "Mesa %s v0.62 %s%s",
+  sprintf(fxMesa->rendererString, "Mesa %s v0.63 %s%s",
           grGetString(GR_RENDERER),
           grGetString(GR_HARDWARE),
           ((fxMesa->type < GR_SSTTYPE_Voodoo4) && (voodoo->numChips > 1)) ? " SLI" : "");
@@ -678,11 +679,17 @@ fxMesaCreateContext(GLuint win,
    }
 
 
-   fxMesa->glBuffer = _mesa_create_framebuffer(fxMesa->glVis,
+   fxMesa->glBuffer = _mesa_create_framebuffer(fxMesa->glVis);
+#if 0
+/* XXX this is a complete mess :(
+ *	_mesa_add_soft_renderbuffers
+ *	driNewRenderbuffer
+ */
 					       GL_FALSE,	/* no software depth */
 					       stencilSize && !fxMesa->haveHwStencil,
 					       fxMesa->glVis->accumRedBits > 0,
 					       alphaSize && !fxMesa->haveHwAlpha);
+#endif
    if (!fxMesa->glBuffer) {
       str = "_mesa_create_framebuffer";
       goto errorhandler;
@@ -838,7 +845,7 @@ void GLAPIENTRY
 fxMesaMakeCurrent(fxMesaContext fxMesa)
 {
    if (!fxMesa) {
-      _mesa_make_current(NULL, NULL);
+      _mesa_make_current(NULL, NULL, NULL);
       fxMesaCurrentCtx = NULL;
 
       if (TDFX_DEBUG & VERBOSE_DRIVER) {
@@ -870,13 +877,9 @@ fxMesaMakeCurrent(fxMesaContext fxMesa)
    grSstSelect(fxMesa->board);
    grGlideSetState((GrState *) fxMesa->state);
 
-   _mesa_make_current(fxMesa->glCtx, fxMesa->glBuffer);
+   _mesa_make_current(fxMesa->glCtx, fxMesa->glBuffer, fxMesa->glBuffer);
 
    fxSetupDDPointers(fxMesa->glCtx);
-
-   /* The first time we call MakeCurrent we set the initial viewport size */
-   if (fxMesa->glCtx->Viewport.Width == 0)
-      _mesa_set_viewport(fxMesa->glCtx, 0, 0, fxMesa->width, fxMesa->height);
 }
 
 

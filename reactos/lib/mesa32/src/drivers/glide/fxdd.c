@@ -43,6 +43,7 @@
 #include "image.h"
 #include "mtypes.h"
 #include "fxdrv.h"
+#include "buffers.h"
 #include "enums.h"
 #include "extensions.h"
 #include "macros.h"
@@ -106,19 +107,27 @@ static void fxDisableColor (fxMesaContext fxMesa)
 
 /* Return buffer size information */
 static void
-fxDDBufferSize(GLframebuffer *buffer, GLuint *width, GLuint *height)
+fxDDGetBufferSize(GLframebuffer *buffer, GLuint *width, GLuint *height)
 {
    GET_CURRENT_CONTEXT(ctx);
    if (ctx && FX_CONTEXT(ctx)) {
       fxMesaContext fxMesa = FX_CONTEXT(ctx);
 
       if (TDFX_DEBUG & VERBOSE_DRIVER) {
-         fprintf(stderr, "fxDDBufferSize(...)\n");
+         fprintf(stderr, "fxDDGetBufferSize(...)\n");
       }
 
       *width = fxMesa->width;
       *height = fxMesa->height;
    }
+}
+
+
+static void
+fxDDViewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
+{
+   /* poll for window size change and realloc software Z/stencil/etc if needed */
+   _mesa_ResizeBuffersMESA();
 }
 
 
@@ -150,9 +159,9 @@ static void fxDDClear( GLcontext *ctx,
 			GLint x, GLint y, GLint width, GLint height )
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
-   GLbitfield softwareMask = mask & (DD_ACCUM_BIT);
+   GLbitfield softwareMask = mask & (BUFFER_BIT_ACCUM);
    const GLuint stencil_size = fxMesa->haveHwStencil ? ctx->Visual.stencilBits : 0;
-   const FxU32 clearD = (FxU32) (ctx->DepthMaxF * ctx->Depth.Clear);
+   const FxU32 clearD = (FxU32) (ctx->DrawBuffer->_DepthMaxF * ctx->Depth.Clear);
    const FxU8 clearS = (FxU8) (ctx->Stencil.Clear & 0xff);
 
    if ( TDFX_DEBUG & MESA_VERBOSE ) {
@@ -161,7 +170,7 @@ static void fxDDClear( GLcontext *ctx,
    }
 
    /* we can't clear accum buffers nor stereo */
-   mask &= ~(DD_ACCUM_BIT | DD_FRONT_RIGHT_BIT | DD_BACK_RIGHT_BIT);
+   mask &= ~(BUFFER_BIT_ACCUM | BUFFER_BIT_FRONT_RIGHT | BUFFER_BIT_BACK_RIGHT);
 
    /* Need this check to respond to certain HW updates */
    if (fxMesa->new_state & (FX_NEW_SCISSOR | FX_NEW_COLOR_MASK)) {
@@ -177,8 +186,8 @@ static void fxDDClear( GLcontext *ctx,
       /* can only do color masking if running in 24/32bpp on Napalm */
       if (ctx->Color.ColorMask[RCOMP] != ctx->Color.ColorMask[GCOMP] ||
           ctx->Color.ColorMask[GCOMP] != ctx->Color.ColorMask[BCOMP]) {
-         softwareMask |= (mask & (DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT));
-         mask &= ~(DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT);
+         softwareMask |= (mask & (BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT));
+         mask &= ~(BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT);
       }
    }
 
@@ -189,7 +198,7 @@ static void fxDDClear( GLcontext *ctx,
        * in the OGL state.
        */
       BEGIN_BOARD_LOCK();
-      if (mask & DD_STENCIL_BIT) {
+      if (mask & BUFFER_BIT_STENCIL) {
 	 fxMesa->Glide.grStencilMaskExt(fxMesa->unitsState.stencilWriteMask);
 	 /* set stencil ref value = desired clear value */
 	 fxMesa->Glide.grStencilFuncExt(GR_CMP_ALWAYS, clearS, 0xff);
@@ -201,9 +210,9 @@ static void fxDDClear( GLcontext *ctx,
 	 grDisable(GR_STENCIL_MODE_EXT);
       }
       END_BOARD_LOCK();
-   } else if (mask & DD_STENCIL_BIT) {
-      softwareMask |= (mask & (DD_STENCIL_BIT));
-      mask &= ~(DD_STENCIL_BIT);
+   } else if (mask & BUFFER_BIT_STENCIL) {
+      softwareMask |= (mask & (BUFFER_BIT_STENCIL));
+      mask &= ~(BUFFER_BIT_STENCIL);
    }
 
    /*
@@ -216,8 +225,8 @@ static void fxDDClear( GLcontext *ctx,
        * This could probably be done fancier but doing each possible case
        * explicitly is less error prone.
        */
-      switch (mask & ~DD_STENCIL_BIT) {
-      case DD_BACK_LEFT_BIT | DD_DEPTH_BIT:
+      switch (mask & ~BUFFER_BIT_STENCIL) {
+      case BUFFER_BIT_BACK_LEFT | BUFFER_BIT_DEPTH:
 	 /* back buffer & depth */
          grDepthMask(FXTRUE);
 	 grRenderBuffer(GR_BUFFER_BACKBUFFER);
@@ -231,7 +240,7 @@ static void fxDDClear( GLcontext *ctx,
                           fxMesa->clearA,
                           clearD);
 	 break;
-      case DD_FRONT_LEFT_BIT | DD_DEPTH_BIT:
+      case BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_DEPTH:
 	 /* XXX it appears that the depth buffer isn't cleared when
 	  * glRenderBuffer(GR_BUFFER_FRONTBUFFER) is set.
 	  * This is a work-around/
@@ -261,7 +270,7 @@ static void fxDDClear( GLcontext *ctx,
                           fxMesa->clearA,
                           clearD);
 	 break;
-      case DD_BACK_LEFT_BIT:
+      case BUFFER_BIT_BACK_LEFT:
 	 /* back buffer only */
 	 grDepthMask(FXFALSE);
 	 grRenderBuffer(GR_BUFFER_BACKBUFFER);
@@ -274,7 +283,7 @@ static void fxDDClear( GLcontext *ctx,
                           fxMesa->clearA,
                           clearD);
 	 break;
-      case DD_FRONT_LEFT_BIT:
+      case BUFFER_BIT_FRONT_LEFT:
 	 /* front buffer only */
 	 grDepthMask(FXFALSE);
 	 grRenderBuffer(GR_BUFFER_FRONTBUFFER);
@@ -287,7 +296,7 @@ static void fxDDClear( GLcontext *ctx,
                           fxMesa->clearA,
                           clearD);
 	 break;
-      case DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT:
+      case BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT:
 	 /* front and back */
 	 grDepthMask(FXFALSE);
 	 grRenderBuffer(GR_BUFFER_BACKBUFFER);
@@ -309,7 +318,7 @@ static void fxDDClear( GLcontext *ctx,
                           fxMesa->clearA,
                           clearD);
 	 break;
-      case DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT | DD_DEPTH_BIT:
+      case BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT | BUFFER_BIT_DEPTH:
 	 /* clear back and depth */
          grDepthMask(FXTRUE);
 	 grRenderBuffer(GR_BUFFER_BACKBUFFER);
@@ -333,7 +342,7 @@ static void fxDDClear( GLcontext *ctx,
                           fxMesa->clearA,
                           clearD);
 	 break;
-      case DD_DEPTH_BIT:
+      case BUFFER_BIT_DEPTH:
 	 /* just the depth buffer */
          grDepthMask(FXTRUE);
          fxDisableColor(fxMesa);
@@ -350,7 +359,7 @@ static void fxDDClear( GLcontext *ctx,
 	 break;
       default:
          /* clear no color buffers or depth buffer but might clear stencil */
-	 if ((stencil_size > 0) && (mask & DD_STENCIL_BIT)) {
+	 if ((stencil_size > 0) && (mask & BUFFER_BIT_STENCIL)) {
             /* XXX need this RenderBuffer call to work around Glide bug */
             grDepthMask(FXFALSE);
             grRenderBuffer(GR_BUFFER_BACKBUFFER);
@@ -432,7 +441,6 @@ fxDDDrawBitmap2 (GLcontext *ctx, GLint px, GLint py,
 			      /*CLIP_BIT |*/    /* clipping ok, below */
 			      STENCIL_BIT |
 			      MASKING_BIT |
-			      ALPHABUF_BIT |    /* nope! see 565 span kludge */
 			      MULTI_DRAW_BIT |
 			      OCCLUSION_BIT |   /* nope! at least not yet */
 			      TEXTURE_BIT |
@@ -525,10 +533,10 @@ fxDDDrawBitmap2 (GLcontext *ctx, GLint px, GLint py,
 
       for (row = 0; row < height; row++) {
 	 const GLubyte *src =
-	    (const GLubyte *) _mesa_image_address(finalUnpack,
-						  bitmap, width, height,
-						  GL_COLOR_INDEX, GL_BITMAP,
-						  0, row, 0);
+	    (const GLubyte *) _mesa_image_address2d(finalUnpack,
+                                                    bitmap, width, height,
+                                                    GL_COLOR_INDEX, GL_BITMAP,
+                                                    row, 0);
 	 if (finalUnpack->LsbFirst) {
 	    /* least significan bit first */
 	    GLubyte mask = 1U << (finalUnpack->SkipPixels & 0x7);
@@ -596,7 +604,6 @@ fxDDDrawBitmap4 (GLcontext *ctx, GLint px, GLint py,
 			      /*CLIP_BIT |*/    /* clipping ok, below */
 			      STENCIL_BIT |
 			      /*MASKING_BIT |*/ /* masking ok, we're in 32bpp */
-			      /*ALPHABUF_BIT |*//* alpha ok, we're in 32bpp */
 			      MULTI_DRAW_BIT |
 			      OCCLUSION_BIT |   /* nope! at least not yet */
 			      TEXTURE_BIT |
@@ -684,10 +691,10 @@ fxDDDrawBitmap4 (GLcontext *ctx, GLint px, GLint py,
 
       for (row = 0; row < height; row++) {
 	 const GLubyte *src =
-	    (const GLubyte *) _mesa_image_address(finalUnpack,
-						  bitmap, width, height,
-						  GL_COLOR_INDEX, GL_BITMAP,
-						  0, row, 0);
+	    (const GLubyte *) _mesa_image_address2d(finalUnpack,
+                                                    bitmap, width, height,
+                                                    GL_COLOR_INDEX, GL_BITMAP,
+                                                    row, 0);
 	 if (finalUnpack->LsbFirst) {
 	    /* least significan bit first */
 	    GLubyte mask = 1U << (finalUnpack->SkipPixels & 0x7);
@@ -762,9 +769,9 @@ fxDDReadPixels565 (GLcontext * ctx,
 	 const GLint srcStride = info.strideInBytes / 2;	/* stride in GLushorts */
 	 const GLushort *src = (const GLushort *) info.lfbPtr
 	    + (winY - y) * srcStride + (winX + x);
-	 GLubyte *dst = (GLubyte *) _mesa_image_address(packing, dstImage,
+	 GLubyte *dst = (GLubyte *) _mesa_image_address2d(packing, dstImage,
 							width, height, format,
-							type, 0, 0, 0);
+							type, 0, 0);
 	 GLint dstStride =
 	    _mesa_image_row_stride(packing, width, format, type);
 
@@ -875,9 +882,9 @@ fxDDReadPixels555 (GLcontext * ctx,
 	 const GLint srcStride = info.strideInBytes / 2;	/* stride in GLushorts */
 	 const GLushort *src = (const GLushort *) info.lfbPtr
 	    + (winY - y) * srcStride + (winX + x);
-	 GLubyte *dst = (GLubyte *) _mesa_image_address(packing, dstImage,
+	 GLubyte *dst = (GLubyte *) _mesa_image_address2d(packing, dstImage,
 							width, height, format,
-							type, 0, 0, 0);
+							type, 0, 0);
 	 GLint dstStride =
 	    _mesa_image_row_stride(packing, width, format, type);
 
@@ -988,9 +995,9 @@ fxDDReadPixels8888 (GLcontext * ctx,
 	 const GLint srcStride = info.strideInBytes / 4;	/* stride in GLuints */
 	 const GLuint *src = (const GLuint *) info.lfbPtr
 	    + (winY - y) * srcStride + (winX + x);
-	 GLubyte *dst = (GLubyte *) _mesa_image_address(packing, dstImage,
+	 GLubyte *dst = (GLubyte *) _mesa_image_address2d(packing, dstImage,
 							width, height, format,
-							type, 0, 0, 0);
+							type, 0, 0);
 	 GLint dstStride =
 	    _mesa_image_row_stride(packing, width, format, type);
 
@@ -1055,7 +1062,7 @@ fxDDReadPixels8888 (GLcontext * ctx,
 }
 
 
-void
+static void
 fxDDDrawPixels555 (GLcontext * ctx, GLint x, GLint y,
                    GLsizei width, GLsizei height,
                    GLenum format, GLenum type,
@@ -1080,16 +1087,15 @@ fxDDDrawPixels555 (GLcontext * ctx, GLint x, GLint y,
 			      /*CLIP_BIT |*/    /* clipping ok, below */
 			      STENCIL_BIT |
 			      MASKING_BIT |
-			      ALPHABUF_BIT |
 			      MULTI_DRAW_BIT |
 			      OCCLUSION_BIT |   /* nope! at least not yet */
 			      TEXTURE_BIT |
 			      FRAGPROG_BIT)) ||
        fxMesa->fallback)
    {
-      _swrast_DrawPixels( ctx, x, y, width, height, format, type, 
+      _swrast_DrawPixels( ctx, x, y, width, height, format, type,
 			  unpack, pixels );
-      return; 
+      return;
    }
 
    /* make sure the pixelpipe is configured correctly */
@@ -1155,9 +1161,8 @@ fxDDDrawPixels555 (GLcontext * ctx, GLint x, GLint y,
       if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR1555(src[2], src[1], src[0], src[3]);
@@ -1169,9 +1174,8 @@ fxDDDrawPixels555 (GLcontext * ctx, GLint x, GLint y,
       else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR1555(src[2], src[1], src[0], 255);
@@ -1192,7 +1196,7 @@ fxDDDrawPixels555 (GLcontext * ctx, GLint x, GLint y,
 }
 
 
-void
+static void
 fxDDDrawPixels565 (GLcontext * ctx, GLint x, GLint y,
                    GLsizei width, GLsizei height,
                    GLenum format, GLenum type,
@@ -1217,16 +1221,15 @@ fxDDDrawPixels565 (GLcontext * ctx, GLint x, GLint y,
 			      /*CLIP_BIT |*/    /* clipping ok, below */
 			      STENCIL_BIT |
 			      MASKING_BIT |
-			      ALPHABUF_BIT |
 			      MULTI_DRAW_BIT |
 			      OCCLUSION_BIT |   /* nope! at least not yet */
 			      TEXTURE_BIT |
 			      FRAGPROG_BIT)) ||
        fxMesa->fallback)
    {
-      _swrast_DrawPixels( ctx, x, y, width, height, format, type, 
+      _swrast_DrawPixels( ctx, x, y, width, height, format, type,
 			  unpack, pixels );
-      return; 
+      return;
    }
 
    /* make sure the pixelpipe is configured correctly */
@@ -1292,9 +1295,8 @@ fxDDDrawPixels565 (GLcontext * ctx, GLint x, GLint y,
       if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR565(src[2], src[1], src[0]);
@@ -1306,9 +1308,8 @@ fxDDDrawPixels565 (GLcontext * ctx, GLint x, GLint y,
       else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR565(src[2], src[1], src[0]);
@@ -1329,7 +1330,7 @@ fxDDDrawPixels565 (GLcontext * ctx, GLint x, GLint y,
 }
 
 
-void
+static void
 fxDDDrawPixels565_rev (GLcontext * ctx, GLint x, GLint y,
                    GLsizei width, GLsizei height,
                    GLenum format, GLenum type,
@@ -1354,16 +1355,15 @@ fxDDDrawPixels565_rev (GLcontext * ctx, GLint x, GLint y,
 			      /*CLIP_BIT |*/    /* clipping ok, below */
 			      STENCIL_BIT |
 			      MASKING_BIT |
-			      ALPHABUF_BIT |
 			      MULTI_DRAW_BIT |
 			      OCCLUSION_BIT |   /* nope! at least not yet */
 			      TEXTURE_BIT |
 			      FRAGPROG_BIT)) ||
        fxMesa->fallback)
    {
-      _swrast_DrawPixels( ctx, x, y, width, height, format, type, 
+      _swrast_DrawPixels( ctx, x, y, width, height, format, type,
 			  unpack, pixels );
-      return; 
+      return;
    }
 
    /* make sure the pixelpipe is configured correctly */
@@ -1429,9 +1429,8 @@ fxDDDrawPixels565_rev (GLcontext * ctx, GLint x, GLint y,
       if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR565(src[0], src[1], src[2]);
@@ -1443,9 +1442,8 @@ fxDDDrawPixels565_rev (GLcontext * ctx, GLint x, GLint y,
       else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR565(src[0], src[1], src[2]);
@@ -1466,7 +1464,7 @@ fxDDDrawPixels565_rev (GLcontext * ctx, GLint x, GLint y,
 }
 
 
-void
+static void
 fxDDDrawPixels8888 (GLcontext * ctx, GLint x, GLint y,
                     GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
@@ -1491,16 +1489,15 @@ fxDDDrawPixels8888 (GLcontext * ctx, GLint x, GLint y,
 			      /*CLIP_BIT |*/    /* clipping ok, below */
 			      STENCIL_BIT |
 			      /*MASKING_BIT |*/ /* masking ok, we're in 32bpp */
-			      /*ALPHABUF_BIT |*//* alpha ok, we're in 32bpp */
 			      MULTI_DRAW_BIT |
 			      OCCLUSION_BIT |   /* nope! at least not yet */
 			      TEXTURE_BIT |
 			      FRAGPROG_BIT)) ||
        fxMesa->fallback)
    {
-      _swrast_DrawPixels( ctx, x, y, width, height, format, type, 
+      _swrast_DrawPixels( ctx, x, y, width, height, format, type,
 			  unpack, pixels );
-      return; 
+      return;
    }
 
    /* make sure the pixelpipe is configured correctly */
@@ -1568,9 +1565,8 @@ fxDDDrawPixels8888 (GLcontext * ctx, GLint x, GLint y,
          const GLint widthInBytes = width * 4;
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                                  pixels, width, height, format, type, row, 0);
              MEMCPY(dst, src, widthInBytes);
              dst += dstStride;
          }
@@ -1578,9 +1574,8 @@ fxDDDrawPixels8888 (GLcontext * ctx, GLint x, GLint y,
       else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
          GLint row;
          for (row = 0; row < height; row++) {
-	     GLubyte *src = (GLubyte *) _mesa_image_address(finalUnpack, pixels,
-							width, height, format,
-							type, 0, row, 0);
+	     GLubyte *src = (GLubyte *) _mesa_image_address2d(finalUnpack,
+                               pixels, width, height, format, type, row, 0);
 	     GLint col;
 	     for (col = 0; col < width; col++) {
                  dst[col] = TDFXPACKCOLOR8888(src[2], src[1], src[0], 255);
@@ -1663,6 +1658,7 @@ static const struct tnl_pipeline_stage *fx_pipeline[] = {
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
 #if defined(FEATURE_NV_vertex_program) || defined(FEATURE_ARB_vertex_program)
+   &_tnl_arb_vertex_program_stage,
    &_tnl_vertex_program_stage,
 #endif
    &_tnl_render_stage,
@@ -1675,7 +1671,6 @@ static const struct tnl_pipeline_stage *fx_pipeline[] = {
 int
 fxDDInitFxMesaContext(fxMesaContext fxMesa)
 {
-   int i;
    GLcontext *ctx = fxMesa->glCtx;
 
    FX_setupGrVertexLayout();
@@ -1773,7 +1768,7 @@ fxDDInitFxMesaContext(fxMesaContext fxMesa)
    ctx->Const.MaxTextureCoordUnits =
    ctx->Const.MaxTextureImageUnits = fxMesa->haveTwoTMUs ? 2 : 1;
    ctx->Const.MaxTextureUnits = MAX2(ctx->Const.MaxTextureImageUnits, ctx->Const.MaxTextureCoordUnits);
-   
+
    fxMesa->new_state = _NEW_ALL;
    if (!fxMesa->haveHwStencil) {
       /* don't touch stencil if there is none */
@@ -1856,6 +1851,7 @@ fxDDInitExtensions(GLcontext * ctx)
    _mesa_enable_extension(ctx, "GL_EXT_blend_func_separate");
    _mesa_enable_extension(ctx, "GL_EXT_texture_env_add");
    _mesa_enable_extension(ctx, "GL_EXT_stencil_wrap");
+   _mesa_enable_extension(ctx, "GL_EXT_stencil_two_side");
 
    if (fxMesa->haveTwoTMUs) {
       _mesa_enable_extension(ctx, "GL_ARB_multitexture");
@@ -1868,27 +1864,34 @@ fxDDInitExtensions(GLcontext * ctx)
       _mesa_enable_extension(ctx, "GL_S3_s3tc");
       _mesa_enable_extension(ctx, "GL_NV_blend_square");
    } else {
-#if FX_TC_NCC
-      /* [dBorca] Hack alert:
-       * 1) NCC w/o DITHER_ERR has poor quality and NCC w/ DITHER_ERR is
-       *    damn slow!
-       * 2) NCC compression cannot be used with multitexturing, because
-       *    the decompression tables are not per TMU anymore (bear in mind
-       *    that earlier Voodoos could handle 2 NCC tables for each TMU --
-       *    just look for POINTCAST_PALETTE). As a last resort, we could
-       *    fake NCC multitexturing through multipass rendering, but...
-       *    ohwell, it's not worth the effort...
-       *    This stand true for multitexturing palletized textures.
-       * 3) since NCC is not an OpenGL standard (as opposed to FXT1/DXTC), we
-       *    can't use precompressed textures!
+      /* [dBorca]
+       * We should enable generic texture compression functions,
+       * but some poorly written apps automatically assume S3TC.
+       * Binding NCC to GL_COMPRESSED_RGB[A] is an unnecessary hassle,
+       * since it's slow and ugly (better with palette textures, then).
+       * Moreover, NCC is not an OpenGL standard, so we can't use
+       * precompressed textures. Last, but not least, NCC runs amok
+       * when multitexturing on a Voodoo3 and up (see POINTCAST vs UMA).
+       * Note: this is also a problem with palette textures, but
+       * faking multitex by multipass is evil...
+       * Implementing NCC requires three stages:
+       * fxDDChooseTextureFormat:
+       *    bind GL_COMPRESSED_RGB[A] to _mesa_texformat_argb8888,
+       *    so we can quantize properly, at a later time
+       * fxDDTexImage:
+       *    if GL_COMPRESSED_RGB
+       *       use _mesa_texformat_l8 to get 1bpt and set GR_TEXFMT_YIQ_422
+       *    if GL_COMPRESSED_RGBA
+       *       use _mesa_texformat_al88 to get 2bpt and set GR_TEXFMT_AYIQ_8422
+       *    txMipQuantize(...);
+       *    if (level == 0) {
+       *       txPalToNcc((GuNccTable *)(&(ti->palette)), pxMip.pal);
+       *    }
+       * fxSetupSingleTMU_NoLock/fxSetupDoubleTMU_NoLock:
+       *    grTexDownloadTable(GR_TEXTABLE_NCC0, &(ti->palette));
        */
-      if (fxMesa->HaveTexus2) {
-         _mesa_enable_extension(ctx, "GL_ARB_texture_compression");
-      }
-#else
-      /* doesn't like texture compression */
+      /*_mesa_enable_extension(ctx, "GL_ARB_texture_compression");*/
       _mesa_enable_extension(ctx, "GL_SGIS_generate_mipmap");
-#endif
    }
 
    if (fxMesa->HaveCmbExt) {
@@ -1913,12 +1916,16 @@ fxDDInitExtensions(GLcontext * ctx)
    _mesa_enable_extension(ctx, "GL_EXT_multi_draw_arrays");
    _mesa_enable_extension(ctx, "GL_IBM_multimode_draw_arrays");
    _mesa_enable_extension(ctx, "GL_ARB_vertex_buffer_object");
-#if 1
-   /* not just yet */
-   _mesa_enable_extension(ctx, "GL_ARB_vertex_program");
-   _mesa_enable_extension(ctx, "GL_NV_vertex_program");
-   _mesa_enable_extension(ctx, "GL_NV_vertex_program1_1");
-   _mesa_enable_extension(ctx, "GL_MESA_program_debug");
+   /* dangerous */
+   if (getenv("MESA_FX_ALLOW_VP")) {
+      _mesa_enable_extension(ctx, "GL_ARB_vertex_program");
+      _mesa_enable_extension(ctx, "GL_NV_vertex_program");
+      _mesa_enable_extension(ctx, "GL_NV_vertex_program1_1");
+      _mesa_enable_extension(ctx, "GL_MESA_program_debug");
+   }
+#if 0
+   /* this requires _tnl_vertex_cull_stage in the pipeline */
+   _mesa_enable_extension(ctx, "EXT_cull_vertex");
 #endif
 }
 
@@ -1944,8 +1951,8 @@ fx_check_IsInHardware(GLcontext * ctx)
       return FX_FALLBACK_STENCIL;
    }
 
-   if (ctx->Color._DrawDestMask != DD_FRONT_LEFT_BIT &&
-       ctx->Color._DrawDestMask != DD_BACK_LEFT_BIT) {
+   if (ctx->DrawBuffer->_ColorDrawBufferMask[0] != BUFFER_BIT_FRONT_LEFT &&
+       ctx->DrawBuffer->_ColorDrawBufferMask[0] != BUFFER_BIT_BACK_LEFT) {
       return FX_FALLBACK_DRAW_BUFFER;
    }
 
@@ -2050,7 +2057,8 @@ fx_check_IsInHardware(GLcontext * ctx)
 	 }
 #endif
 
-	 if ((ctx->Texture.Unit[0].EnvMode != ctx->Texture.Unit[1].EnvMode) &&
+	 if (!fxMesa->HaveCmbExt &&
+	     (ctx->Texture.Unit[0].EnvMode != ctx->Texture.Unit[1].EnvMode) &&
 	     (ctx->Texture.Unit[0].EnvMode != GL_MODULATE) &&
 	     (ctx->Texture.Unit[0].EnvMode != GL_REPLACE)) {	/* q2, seems ok... */
 	    if (TDFX_DEBUG & VERBOSE_DRIVER)
@@ -2080,7 +2088,7 @@ fx_check_IsInHardware(GLcontext * ctx)
 static void
 fxDDUpdateDDPointers(GLcontext * ctx, GLuint new_state)
 {
-   /*   TNLcontext *tnl = TNL_CONTEXT(ctx);*/
+   /* TNLcontext *tnl = TNL_CONTEXT(ctx); */
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
 
    if (TDFX_DEBUG & VERBOSE_DRIVER) {
@@ -2102,7 +2110,7 @@ void
 fxSetupDDPointers(GLcontext * ctx)
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
-   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   /* TNLcontext *tnl = TNL_CONTEXT(ctx); */
 
    if (TDFX_DEBUG & VERBOSE_DRIVER) {
       fprintf(stderr, "fxSetupDDPointers()\n");
@@ -2114,7 +2122,8 @@ fxSetupDDPointers(GLcontext * ctx)
    ctx->Driver.ClearColor = fxDDClearColor;
    ctx->Driver.Clear = fxDDClear;
    ctx->Driver.DrawBuffer = fxDDSetDrawBuffer;
-   ctx->Driver.GetBufferSize = fxDDBufferSize;
+   ctx->Driver.GetBufferSize = fxDDGetBufferSize;
+   ctx->Driver.Viewport = fxDDViewport;
    switch (fxMesa->colDepth) {
       case 15:
          ctx->Driver.DrawPixels = fxDDDrawPixels555;

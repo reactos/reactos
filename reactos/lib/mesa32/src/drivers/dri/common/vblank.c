@@ -181,11 +181,9 @@ int driWaitForMSC32( __DRIdrawablePrivate *priv,
 
 GLuint driGetDefaultVBlankFlags( const driOptionCache *optionCache )
 {
-   GLuint  flags = 0;
+   GLuint  flags = VBLANK_FLAG_INTERVAL;
    int vblank_mode;
 
-   flags |= (driCompareGLXAPIVersion( 20030317 ) >= 0) 
-       ? VBLANK_FLAG_INTERVAL : 0;
 
    if ( driCheckOption( optionCache, "vblank_mode", DRI_ENUM ) )
       vblank_mode = driQueryOptioni( optionCache, "vblank_mode" );

@@ -40,6 +40,7 @@
 
 #if defined(FX)
 
+#include "hash.h"
 #include "fxdrv.h"
 
 int texSwaps = 0;
@@ -150,7 +151,7 @@ fxTMUInit(fxMesaContext fxMesa, int tmu)
    end = grTexMaxAddress(tmu);
 
    chunk = (fxMesa->type >= GR_SSTTYPE_Banshee) ? (end - start) : FX_2MB_SPLIT;
-	
+
    if (fxMesa->verbose) {
       fprintf(stderr, "Voodoo TMU%d configuration:\n", tmu);
    }
@@ -233,9 +234,8 @@ fxTMFindStartAddr(fxMesaContext fxMesa, GLint tmu, int size)
 
 int fxTMCheckStartAddr (fxMesaContext fxMesa, GLint tmu, tfxTexInfo *ti)
 {
- MemRange *prev, *tmp;
+ MemRange *tmp;
  int size;
- struct gl_texture_object *obj;
 
  if (fxMesa->HaveTexUma) {
     return FXTRUE;
@@ -312,12 +312,13 @@ fxTMFindOldestObject(fxMesaContext fxMesa, int tmu)
 {
    GLuint age, old, lasttime, bindnumber;
    GLfloat lowestPriority;
-   tfxTexInfo *info;
-   struct gl_texture_object *obj, *tmp, *lowestPriorityObj;
+   struct gl_texture_object *obj, *lowestPriorityObj;
+   struct _mesa_HashTable *textures = fxMesa->glCtx->Shared->TexObjects;
+   GLuint id;
 
-   tmp = fxMesa->glCtx->Shared->TexObjectList;
-   if (!tmp)
+   if (!_mesa_HashFirstEntry(textures))
       return 0;
+
    obj = NULL;
    old = 0;
 
@@ -325,8 +326,13 @@ fxTMFindOldestObject(fxMesaContext fxMesa, int tmu)
    lowestPriority = 1.0F;
 
    bindnumber = fxMesa->texBindNumber;
-   while (tmp) {
-      info = fxTMGetTexInfo(tmp);
+
+   for (id = _mesa_HashFirstEntry(textures);
+        id;
+        id = _mesa_HashNextEntry(textures, id)) {
+      struct gl_texture_object *tmp
+         = (struct gl_texture_object *) _mesa_HashLookup(textures, id);
+      tfxTexInfo *info = fxTMGetTexInfo(tmp);
 
       if (info && info->isInTM &&
 	  ((info->whichTMU == tmu) ||
@@ -353,7 +359,6 @@ fxTMFindOldestObject(fxMesaContext fxMesa, int tmu)
             lowestPriorityObj = tmp;
          }
       }
-      tmp = tmp->Next;
    }
 
    if (lowestPriorityObj != NULL) {
@@ -826,26 +831,29 @@ fxTMClose(fxMesaContext fxMesa)
 void
 fxTMRestoreTextures_NoLock(fxMesaContext ctx)
 {
-   tfxTexInfo *ti;
-   struct gl_texture_object *tObj;
-   int i, where;
+   struct _mesa_HashTable *textures = ctx->glCtx->Shared->TexObjects;
+   GLuint id;
 
-   tObj = ctx->glCtx->Shared->TexObjectList;
-   while (tObj) {
-      ti = fxTMGetTexInfo(tObj);
+   for (id = _mesa_HashFirstEntry(textures);
+        id;
+        id = _mesa_HashNextEntry(textures, id)) {
+      struct gl_texture_object *tObj
+         = (struct gl_texture_object *) _mesa_HashLookup(textures, id);
+      tfxTexInfo *ti = fxTMGetTexInfo(tObj);
       if (ti && ti->isInTM) {
-	 for (i = 0; i < MAX_TEXTURE_UNITS; i++)
+         int i;
+	 for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
 	    if (ctx->glCtx->Texture.Unit[i]._Current == tObj) {
 	       /* Force the texture onto the board, as it could be in use */
-	       where = ti->whichTMU;
+	       int where = ti->whichTMU;
 	       fxTMMoveOutTM_NoLock(ctx, tObj);
 	       fxTMMoveInTM_NoLock(ctx, tObj, where);
 	       break;
 	    }
+         }
 	 if (i == MAX_TEXTURE_UNITS)	/* Mark the texture as off the board */
 	    fxTMMoveOutTM_NoLock(ctx, tObj);
       }
-      tObj = tObj->Next;
    }
 }
 

@@ -79,8 +79,8 @@ read_color_image( GLcontext *ctx, GLint x, GLint y,
    dst = image;
    stride = width * 4;
    for (i = 0; i < height; i++) {
-      _swrast_read_rgba_span( ctx, ctx->ReadBuffer, width, x, y + i,
-                         (GLchan (*)[4]) dst );
+      _swrast_read_rgba_span(ctx, ctx->ReadBuffer->_ColorReadBuffer,
+                             width, x, y + i, (GLchan (*)[4]) dst);
       dst += stride;
    }
 
@@ -100,6 +100,8 @@ static GLfloat *
 read_depth_image( GLcontext *ctx, GLint x, GLint y,
                   GLsizei width, GLsizei height )
 {
+   struct gl_renderbuffer *rb
+      = ctx->ReadBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLfloat *image, *dst;
    GLint i;
@@ -112,7 +114,7 @@ read_depth_image( GLcontext *ctx, GLint x, GLint y,
 
    dst = image;
    for (i = 0; i < height; i++) {
-      _swrast_read_depth_span_float(ctx, width, x, y + i, dst);
+      _swrast_read_depth_span_float(ctx, rb, width, x, y + i, dst);
       dst += width;
    }
 

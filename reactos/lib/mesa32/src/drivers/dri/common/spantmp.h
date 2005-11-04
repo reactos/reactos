@@ -1,21 +1,36 @@
+/*
+ * Copyright 2000-2001 VA Linux Systems, Inc.
+ * (C) Copyright IBM Corporation 2002, 2003
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * on the rights to use, copy, modify, merge, publish, distribute, sub
+ * license, and/or sell copies of the Software, and to permit persons to whom
+ * the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
+ * VA LINUX SYSTEM, IBM AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Authors:
+ *    Keith Whitwell <keithw@tungstengraphics.com>
+ *    Gareth Hughes <gareth@nvidia.com>
+ */
+
+#include "spantmp_common.h"
+
 #ifndef DBG
 #define DBG 0
-#endif
-
-#ifndef HW_WRITE_LOCK
-#define HW_WRITE_LOCK()		HW_LOCK()
-#endif
-
-#ifndef HW_WRITE_UNLOCK
-#define HW_WRITE_UNLOCK()	HW_UNLOCK()
-#endif
-
-#ifndef HW_READ_LOCK
-#define HW_READ_LOCK()		HW_LOCK()
-#endif
-
-#ifndef HW_READ_UNLOCK
-#define HW_READ_UNLOCK()	HW_UNLOCK()
 #endif
 
 #ifndef HW_READ_CLIPLOOP
@@ -27,13 +42,14 @@
 #endif
 
 
-static void TAG(WriteRGBASpan)( const GLcontext *ctx,
+static void TAG(WriteRGBASpan)( GLcontext *ctx,
+                                struct gl_renderbuffer *rb,
 				GLuint n, GLint x, GLint y,
-				const GLubyte rgba[][4],
-				const GLubyte mask[] )
+				const void *values, const GLubyte mask[] )
 {
    HW_WRITE_LOCK()
       {
+         const GLubyte (*rgba)[4] = (const GLubyte (*)[4]) values;
 	 GLint x1;
 	 GLint n1;
 	 LOCAL_VARS;
@@ -69,13 +85,14 @@ static void TAG(WriteRGBASpan)( const GLcontext *ctx,
    HW_WRITE_UNLOCK();
 }
 
-static void TAG(WriteRGBSpan)( const GLcontext *ctx,
+static void TAG(WriteRGBSpan)( GLcontext *ctx,
+                               struct gl_renderbuffer *rb,
 			       GLuint n, GLint x, GLint y,
-			       const GLubyte rgb[][3],
-			       const GLubyte mask[] )
+			       const void *values, const GLubyte mask[] )
 {
    HW_WRITE_LOCK()
       {
+         const GLubyte (*rgb)[3] = (const GLubyte (*)[3]) values;
 	 GLint x1;
 	 GLint n1;
 	 LOCAL_VARS;
@@ -107,16 +124,15 @@ static void TAG(WriteRGBSpan)( const GLcontext *ctx,
    HW_WRITE_UNLOCK();
 }
 
-static void TAG(WriteRGBAPixels)( const GLcontext *ctx,
-			       GLuint n,
-			       const GLint x[],
-			       const GLint y[],
-			       const GLubyte rgba[][4],
-			       const GLubyte mask[] )
+static void TAG(WriteRGBAPixels)( GLcontext *ctx,
+                                  struct gl_renderbuffer *rb,
+                                  GLuint n, const GLint x[], const GLint y[],
+                                  const void *values, const GLubyte mask[] )
 {
    HW_WRITE_LOCK()
       {
-	 GLint i;
+         const GLubyte (*rgba)[4] = (const GLubyte (*)[4]) values;
+	 GLuint i;
 	 LOCAL_VARS;
 
 	 if (DBG) fprintf(stderr, "WriteRGBAPixels\n");
@@ -154,13 +170,15 @@ static void TAG(WriteRGBAPixels)( const GLcontext *ctx,
 }
 
 
-static void TAG(WriteMonoRGBASpan)( const GLcontext *ctx,	
+static void TAG(WriteMonoRGBASpan)( GLcontext *ctx,	
+                                    struct gl_renderbuffer *rb,
 				    GLuint n, GLint x, GLint y, 
-				    const GLchan color[4],
+				    const void *value,
 				    const GLubyte mask[] )
 {
    HW_WRITE_LOCK()
       {
+         const GLubyte *color = (const GLubyte *) value;
 	 GLint x1;
 	 GLint n1;
 	 LOCAL_VARS;
@@ -192,15 +210,17 @@ static void TAG(WriteMonoRGBASpan)( const GLcontext *ctx,
 }
 
 
-static void TAG(WriteMonoRGBAPixels)( const GLcontext *ctx,
+static void TAG(WriteMonoRGBAPixels)( GLcontext *ctx,
+                                      struct gl_renderbuffer *rb,
 				      GLuint n,
-				      const GLint x[], const GLint y[],
-				      const GLchan color[],
-				      const GLubyte mask[] ) 
+                                      const GLint x[], const GLint y[],
+				      const void *value,
+                                      const GLubyte mask[] ) 
 {
    HW_WRITE_LOCK()
       {
-	 GLint i;
+         const GLubyte *color = (const GLubyte *) value;
+	 GLuint i;
 	 LOCAL_VARS;
 	 INIT_MONO_PIXEL(p, color);
 
@@ -232,12 +252,14 @@ static void TAG(WriteMonoRGBAPixels)( const GLcontext *ctx,
 }
 
 
-static void TAG(ReadRGBASpan)( const GLcontext *ctx,
+static void TAG(ReadRGBASpan)( GLcontext *ctx,
+                               struct gl_renderbuffer *rb,
 			       GLuint n, GLint x, GLint y,
-			       GLubyte rgba[][4])
+			       void *values)
 {
    HW_READ_LOCK()
       {
+         GLubyte (*rgba)[4] = (GLubyte (*)[4]) values;
 	 GLint x1,n1;
 	 LOCAL_VARS;
 
@@ -258,13 +280,16 @@ static void TAG(ReadRGBASpan)( const GLcontext *ctx,
 }
 
 
-static void TAG(ReadRGBAPixels)( const GLcontext *ctx,
+static void TAG(ReadRGBAPixels)( GLcontext *ctx,
+                                 struct gl_renderbuffer *rb,
 				 GLuint n, const GLint x[], const GLint y[],
-				 GLubyte rgba[][4], const GLubyte mask[] )
+				 void *values )
 {
    HW_READ_LOCK()
       {
-	 GLint i;
+         GLubyte (*rgba)[4] = (GLubyte (*)[4]) values;
+         const GLubyte *mask = NULL; /* remove someday */
+	 GLuint i;
 	 LOCAL_VARS;
 
 	 if (DBG) fprintf(stderr, "ReadRGBAPixels\n");

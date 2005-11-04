@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.3
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -65,9 +64,10 @@
 #define GLTHREAD_H
 
 
-#if defined(PTHREADS) || defined(SOLARIS_THREADS) || defined(WIN32_THREADS) || \
-	defined(XTHREADS) || defined(BEOS_THREADS)
-#define THREADS
+#if (defined(PTHREADS) || defined(SOLARIS_THREADS) ||\
+     defined(WIN32_THREADS) || defined(USE_XTHREADS) || defined(BEOS_THREADS)) \
+    && !defined(THREADS)
+# define THREADS
 #endif
 
 #ifdef VMS
@@ -109,20 +109,6 @@ typedef pthread_mutex_t _glthread_Mutex;
 
 #define _glthread_UNLOCK_MUTEX(name) \
    (void) pthread_mutex_unlock(&(name))
-
-/* This is temporarilly removed because driver binaries cannot count on
- * the existance of _gl_DispatchTSD in libGL.  It only exists in "new"
- * libGL.  We may be able to ressurect this optimization at some point
- * for DRI driver or for software Mesa.
- */
-#if 0
-extern struct _glapi_table * _glapi_DispatchTSD;
-extern _glthread_TSD _gl_DispatchTSD;
-
-#define GL_CALL(name) \
-   (((__builtin_expect( _glapi_DispatchTSD != NULL, 1 )) \
-	? _glapi_DispatchTSD : (struct _glapi_table *) pthread_getspecific(_gl_DispatchTSD.key))-> name)
-#endif
 
 #endif /* PTHREADS */
 
@@ -193,8 +179,8 @@ typedef CRITICAL_SECTION _glthread_Mutex;
  * XFree86 has its own thread wrapper, Xthreads.h
  * We wrap it again for GL.
  */
-#ifdef XTHREADS
-#include "Xthreads.h"
+#ifdef USE_XTHREADS
+#include <X11/Xthreads.h>
 
 typedef struct {
    xthread_key_t key;
@@ -225,7 +211,7 @@ typedef xmutex_rec _glthread_Mutex;
 #define _glthread_UNLOCK_MUTEX(name) \
    (void) xmutex_unlock(&(name))
 
-#endif /* XTHREADS */
+#endif /* USE_XTHREADS */
 
 
 
@@ -307,14 +293,20 @@ _glthread_GetTSD(_glthread_TSD *);
 extern void
 _glthread_SetTSD(_glthread_TSD *, void *);
 
-#ifndef GL_CALL
+#if defined(GLX_USE_TLS)
+
+extern __thread struct _glapi_table * _glapi_tls_Dispatch
+    __attribute__((tls_model("initial-exec")));
+
+#define GET_DISPATCH() _glapi_tls_Dispatch
+
+#elif !defined(GL_CALL)
 # if defined(THREADS)
-extern struct _glapi_table * _glapi_DispatchTSD;
-#  define GL_CALL(name) \
-   (((__builtin_expect( _glapi_DispatchTSD != NULL, 1 )) \
-	? _glapi_DispatchTSD : _glapi_get_dispatch())-> name)
+#  define GET_DISPATCH() \
+   ((__builtin_expect( _glapi_Dispatch != NULL, 1 )) \
+       ? _glapi_Dispatch : _glapi_get_dispatch())
 # else
-#  define GL_CALL(name) (*(_glapi_Dispatch-> name))
+#  define GET_DISPATCH() _glapi_Dispatch
 # endif /* defined(THREADS) */
 #endif  /* ndef GL_CALL */
 

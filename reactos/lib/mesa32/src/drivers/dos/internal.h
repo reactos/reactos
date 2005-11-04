@@ -23,7 +23,7 @@
  */
 
 /*
- * DOS/DJGPP device driver v1.5 for Mesa
+ * DOS/DJGPP device driver v1.6 for Mesa
  *
  *  Copyright (C) 2002 - Borca Daniel
  *  Email : dborca@users.sourceforge.net
@@ -35,6 +35,7 @@
 #define INTERNAL_H_included
 
 #include "../main/mtypes.h"
+
 
 /*
  * general purpose defines, etc.
@@ -54,37 +55,34 @@ typedef unsigned long word32;
 #define _32_ *(word32 *)&
 
 
-
 /*
  * video mode structure
  */
 typedef struct vl_mode {
-        int xres, yres;
-        int bpp;
+   int xres, yres;
+   int bpp;
 
-        int mode;
-        int scanlen;
+   int mode;
+   int scanlen;
 
-        int sel;
-        int gran;
+   int sel;
+   int gran;
 } vl_mode;
-
 
 
 /*
  * video driver structure
  */
 typedef struct {
-        vl_mode *(*init) (void);
-        int (*entermode) (vl_mode *p, int refresh);
-        void (*blit) (void);
-        void (*setCI_f) (int index, float red, float green, float blue);
-        void (*setCI_i) (int index, int red, int green, int blue);
-        int (*get) (int pname, int *params);
-        void (*restore) (void);
-        void (*fini) (void);
+   vl_mode *(*init) (void);
+   int (*entermode) (vl_mode *p, int refresh);
+   void (*blit) (void);
+   void (*setCI_f) (int index, float red, float green, float blue);
+   void (*setCI_i) (int index, int red, int green, int blue);
+   int (*get) (int pname, int *params);
+   void (*restore) (void);
+   void (*fini) (void);
 } vl_driver;
-
 
 
 /*
@@ -95,10 +93,12 @@ void _remove_linear_mapping (unsigned long *linear);
 int _create_selector (int *segment, unsigned long base, int size);
 void _remove_selector (int *segment);
 
+
 /*
  * system routines
  */
 int _can_mmx (void);
+
 
 /*
  * asm routines to deal with virtual buffering
@@ -126,5 +126,6 @@ extern void v_putpixel8 (unsigned int offset, int color);
 extern void v_putpixel16 (unsigned int offset, int color);
 extern void v_putpixel24 (unsigned int offset, int color);
 extern void v_putpixel32 (unsigned int offset, int color);
+
 
 #endif

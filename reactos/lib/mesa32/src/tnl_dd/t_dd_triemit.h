@@ -143,7 +143,7 @@ static void TAG(fast_clipped_poly)( GLcontext *ctx, const GLuint *elts,
    GLuint vertsize = GET_VERTEX_DWORDS();
    GLuint *vb = (GLuint *)ALLOC_VERTS( (n-2) * 3, vertsize );
    const GLuint *start = (const GLuint *)VERT(elts[0]);
-   int i,j;
+   GLuint i,j;
 
    if (DO_DEBUG_VERTS) {
       fprintf(stderr, "%s\n", __FUNCTION__);

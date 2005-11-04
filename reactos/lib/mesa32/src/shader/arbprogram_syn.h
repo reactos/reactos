@@ -1,48 +1,19 @@
-/*
- * Mesa 3-D graphics library
- * Version:  6.1
- *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
-/**
- * \file arbprogram_syn.h
- * ARB_fragment_program/ARB_vertex_program syntax
- * \author Michal Krol
- */
-
 ".syntax program;\n"
-".emtcode REVISION 0x07\n"
+".emtcode REVISION 0x09\n"
 ".emtcode FRAGMENT_PROGRAM 0x01\n"
 ".emtcode VERTEX_PROGRAM 0x02\n"
 ".emtcode OPTION 0x01\n"
 ".emtcode INSTRUCTION 0x02\n"
 ".emtcode DECLARATION 0x03\n"
 ".emtcode END 0x04\n"
-".emtcode ARB_PRECISION_HINT_FASTEST 0x01\n"
-".emtcode ARB_PRECISION_HINT_NICEST 0x02\n"
-".emtcode ARB_FOG_EXP 0x04\n"
-".emtcode ARB_FOG_EXP2 0x08\n"
-".emtcode ARB_FOG_LINEAR 0x10\n"
-".emtcode ARB_POSITION_INVARIANT 0x20\n"
-".emtcode ARB_FRAGMENT_PROGRAM_SHADOW 0x40\n"
+".emtcode ARB_PRECISION_HINT_FASTEST 0x00\n"
+".emtcode ARB_PRECISION_HINT_NICEST 0x01\n"
+".emtcode ARB_FOG_EXP 0x02\n"
+".emtcode ARB_FOG_EXP2 0x03\n"
+".emtcode ARB_FOG_LINEAR 0x04\n"
+".emtcode ARB_POSITION_INVARIANT 0x05\n"
+".emtcode ARB_FRAGMENT_PROGRAM_SHADOW 0x06\n"
+".emtcode ARB_DRAW_BUFFERS 0x07\n"
 ".emtcode OP_ALU_INST 0x00\n"
 ".emtcode OP_TEX_INST 0x01\n"
 ".emtcode OP_ALU_VECTOR 0x00\n"
@@ -292,6 +263,7 @@
 ".regbyte fog_coord 0x00\n"
 ".regbyte texture_rectangle 0x00\n"
 ".regbyte fragment_program_shadow 0x00\n"
+".regbyte draw_buffers 0x00\n"
 ".regbyte ARB_precision_hint_fastest 0x00\n"
 ".regbyte ARB_precision_hint_nicest 0x00\n"
 ".regbyte ARB_fog_exp 0x00\n"
@@ -299,6 +271,7 @@
 ".regbyte ARB_fog_linear 0x00\n"
 ".regbyte ARB_position_invariant 0x00\n"
 ".regbyte ARB_fragment_program_shadow 0x00\n"
+".regbyte ARB_draw_buffers 0x00\n"
 ".regbyte program_target 0x00\n"
 "program\n"
 " programs .error UNKNOWN_PROGRAM_SIGNATURE .emit REVISION;\n"
@@ -334,7 +307,9 @@
 " fp_ARB_fog_exp2 .emit ARB_FOG_EXP2 .load ARB_fog_exp2 0x01 .or\n"
 " fp_ARB_fog_linear .emit ARB_FOG_LINEAR .load ARB_fog_linear 0x01 .or\n"
 " .if (fragment_program_shadow != 0x00) \"ARB_fragment_program_shadow\"\n"
-" .emit ARB_FRAGMENT_PROGRAM_SHADOW .load ARB_fragment_program_shadow 0x01;\n"
+" .emit ARB_FRAGMENT_PROGRAM_SHADOW .load ARB_fragment_program_shadow 0x01 .or\n"
+" .if (draw_buffers != 0x00) \"ARB_draw_buffers\" .emit ARB_DRAW_BUFFERS\n"
+" .load ARB_draw_buffers 0x01;\n"
 "vp_optionString\n"
 " \"ARB_position_invariant\" .emit ARB_POSITION_INVARIANT .load ARB_position_invariant 0x01;\n"
 "fp_ARB_fog_exp\n"
@@ -1101,8 +1076,10 @@
 "vp_resultBinding\n"
 " \"result\" .and dot .and vp_resultBinding_1 .error INVALID_RESULT_PROPERTY;\n"
 "fp_resultBinding_1\n"
-" \"color\" .emit FRAGMENT_RESULT_COLOR .or\n"
+" fp_resultBinding_2 .emit FRAGMENT_RESULT_COLOR .or\n"
 " \"depth\" .emit FRAGMENT_RESULT_DEPTH;\n"
+"fp_resultBinding_2\n"
+" \"color\" .and optOutputColorNum;\n"
 "vp_resultBinding_1\n"
 " .if (ARB_position_invariant == 0x00) \"position\" .emit VERTEX_RESULT_POSITION .or\n"
 " resultColBinding .emit VERTEX_RESULT_COLOR .or\n"
@@ -1111,6 +1088,12 @@
 " vp_resultBinding_2 .emit VERTEX_RESULT_TEXCOORD;\n"
 "vp_resultBinding_2\n"
 " \"texcoord\" .and optTexCoordNum;\n"
+"optOutputColorNum\n"
+" .if (ARB_draw_buffers != 0x00) optOutputColorNum_1 .or .true .emit 0x00;\n"
+"optOutputColorNum_1\n"
+" lbracket_ne .and outputColorNum .and rbracket;\n"
+"outputColorNum\n"
+" integer;\n"
 "resultColBinding\n"
 " \"color\" .and optFaceType .and optColorType;\n"
 "optFaceType\n"

@@ -70,9 +70,16 @@ static void TAG(triangle)(GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 		  COPY_CHAN4(saved_color[1], v[1]->color);
 		  COPY_CHAN4(saved_color[2], v[2]->color);
 
-		  SS_COLOR(v[0]->color, vbcolor[e0]);
-		  SS_COLOR(v[1]->color, vbcolor[e1]);
-		  SS_COLOR(v[2]->color, vbcolor[e2]);
+		  if (VB->ColorPtr[1]->stride) {
+		     SS_COLOR(v[0]->color, vbcolor[e0]);
+		     SS_COLOR(v[1]->color, vbcolor[e1]);
+		     SS_COLOR(v[2]->color, vbcolor[e2]);
+		  }
+		  else {
+		     SS_COLOR(v[0]->color, vbcolor[0]);
+		     SS_COLOR(v[1]->color, vbcolor[0]);
+		     SS_COLOR(v[2]->color, vbcolor[0]);
+		  }
 
 		  if (VB->SecondaryColorPtr[1]) {
 		     GLfloat (*vbspec)[4] = VB->SecondaryColorPtr[1]->data;
@@ -81,9 +88,16 @@ static void TAG(triangle)(GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 		     COPY_CHAN4(saved_spec[1], v[1]->specular);
 		     COPY_CHAN4(saved_spec[2], v[2]->specular);
 
-		     SS_SPEC(v[0]->specular, vbspec[e0]);
-		     SS_SPEC(v[1]->specular, vbspec[e1]);
-		     SS_SPEC(v[2]->specular, vbspec[e2]);
+		     if (VB->SecondaryColorPtr[1]->stride) {
+			SS_SPEC(v[0]->specular, vbspec[e0]);
+			SS_SPEC(v[1]->specular, vbspec[e1]);
+			SS_SPEC(v[2]->specular, vbspec[e2]);
+		     }
+		     else {
+			SS_SPEC(v[0]->specular, vbspec[0]);
+			SS_SPEC(v[1]->specular, vbspec[0]);
+			SS_SPEC(v[2]->specular, vbspec[0]);
+		     }
 		  }
 	       } else {
 		  GLfloat *vbindex = (GLfloat *)VB->IndexPtr[1]->data;
@@ -101,7 +115,7 @@ static void TAG(triangle)(GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 
       if (IND & SS_OFFSET_BIT)
       {
-	 offset = ctx->Polygon.OffsetUnits * ctx->MRD;
+	 offset = ctx->Polygon.OffsetUnits * ctx->DrawBuffer->_MRD;
 	 z[0] = v[0]->win[2];
 	 z[1] = v[1]->win[2];
 	 z[2] = v[2]->win[2];

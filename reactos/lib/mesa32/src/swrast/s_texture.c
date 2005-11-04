@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,15 +36,94 @@
 #include "s_texture.h"
 
 
-/*
- * These values are used in the fixed-point arithmetic used
- * for linear filtering.
+/**
+ * Constants for integer linear interpolation.
  */
-#define WEIGHT_SCALE 65536.0F
-#define WEIGHT_SHIFT 16
+#define ILERP_SCALE 65536.0F
+#define ILERP_SHIFT 16
 
 
-/*
+/**
+ * Linear interpolation macros
+ */
+#define LERP(T, A, B)  ( (A) + (T) * ((B) - (A)) )
+#define ILERP(IT, A, B)  ( (A) + (((IT) * ((B) - (A))) >> ILERP_SHIFT) )
+
+
+/**
+ * Do 2D/biliner interpolation of float values.
+ * v00, v10, v01 and v11 are typically four texture samples in a square/box.
+ * a and b are the horizontal and vertical interpolants.
+ * It's important that this function is inlined when compiled with
+ * optimization!  If we find that's not true on some systems, convert
+ * to a macro.
+ */
+static INLINE GLfloat
+lerp_2d(GLfloat a, GLfloat b,
+        GLfloat v00, GLfloat v10, GLfloat v01, GLfloat v11)
+{
+   const GLfloat temp0 = LERP(a, v00, v10);
+   const GLfloat temp1 = LERP(a, v01, v11);
+   return LERP(b, temp0, temp1);
+}
+
+
+/**
+ * Do 2D/biliner interpolation of integer values.
+ * \sa lerp_2d
+ */
+static INLINE GLint
+ilerp_2d(GLint ia, GLint ib,
+         GLint v00, GLint v10, GLint v01, GLint v11)
+{
+   /* fixed point interpolants in [0, ILERP_SCALE] */
+   const GLint temp0 = ILERP(ia, v00, v10);
+   const GLint temp1 = ILERP(ia, v01, v11);
+   return ILERP(ib, temp0, temp1);
+}
+
+
+/**
+ * Do 3D/trilinear interpolation of float values.
+ * \sa lerp_2d
+ */
+static INLINE GLfloat
+lerp_3d(GLfloat a, GLfloat b, GLfloat c,
+        GLfloat v000, GLfloat v100, GLfloat v010, GLfloat v110,
+        GLfloat v001, GLfloat v101, GLfloat v011, GLfloat v111)
+{
+   const GLfloat temp00 = LERP(a, v000, v100);
+   const GLfloat temp10 = LERP(a, v010, v110);
+   const GLfloat temp01 = LERP(a, v001, v101);
+   const GLfloat temp11 = LERP(a, v011, v111);
+   const GLfloat temp0 = LERP(b, temp00, temp10);
+   const GLfloat temp1 = LERP(b, temp01, temp11);
+   return LERP(c, temp0, temp1);
+}
+
+
+/**
+ * Do 3D/trilinear interpolation of integer values.
+ * \sa lerp_2d
+ */
+static INLINE GLint
+ilerp_3d(GLint ia, GLint ib, GLint ic,
+         GLint v000, GLint v100, GLint v010, GLint v110,
+         GLint v001, GLint v101, GLint v011, GLint v111)
+{
+   /* fixed point interpolants in [0, ILERP_SCALE] */
+   const GLint temp00 = ILERP(ia, v000, v100);
+   const GLint temp10 = ILERP(ia, v010, v110);
+   const GLint temp01 = ILERP(ia, v001, v101);
+   const GLint temp11 = ILERP(ia, v011, v111);
+   const GLint temp0 = ILERP(ib, temp00, temp10);
+   const GLint temp1 = ILERP(ib, temp01, temp11);
+   return ILERP(ic, temp0, temp1);
+}
+
+
+
+/**
  * Compute the remainder of a divided by b, but be careful with
  * negative values so that GL_REPEAT mode works right.
  */
@@ -58,7 +137,7 @@ repeat_remainder(GLint a, GLint b)
 }
 
 
-/*
+/**
  * Used to compute texel locations for linear sampling.
  * Input:
  *    wrapMode = GL_REPEAT, GL_CLAMP, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER
@@ -176,7 +255,7 @@ repeat_remainder(GLint a, GLint b)
 }
 
 
-/*
+/**
  * Used to compute texel location for nearest sampling.
  */
 #define COMPUTE_NEAREST_TEXEL_LOCATION(wrapMode, S, SIZE, I)		\
@@ -503,17 +582,9 @@ sample_1d_linear(GLcontext *ctx,
 
    {
       const GLfloat a = FRAC(u);
-
-#if CHAN_TYPE == GL_FLOAT || CHAN_TYPE == GL_UNSIGNED_SHORT
-      const GLfloat w0 = (1.0F-a);
-      const GLfloat w1 =       a ;
-#else /* CHAN_BITS == 8 */
-      /* compute sample weights in fixed point in [0,WEIGHT_SCALE] */
-      const GLint w0 = IROUND_POS((1.0F - a) * WEIGHT_SCALE);
-      const GLint w1 = IROUND_POS(        a  * WEIGHT_SCALE);
-#endif
       GLchan t0[4], t1[4];  /* texels */
 
+      /* fetch texel colors */
       if (useBorderColor & I0BIT) {
          COPY_CHAN4(t0, tObj->_BorderChan);
       }
@@ -527,23 +598,28 @@ sample_1d_linear(GLcontext *ctx,
          img->FetchTexelc(img, i1, 0, 0, t1);
       }
 
+      /* do linear interpolation of texel colors */
 #if CHAN_TYPE == GL_FLOAT
-      rgba[0] = w0 * t0[0] + w1 * t1[0];
-      rgba[1] = w0 * t0[1] + w1 * t1[1];
-      rgba[2] = w0 * t0[2] + w1 * t1[2];
-      rgba[3] = w0 * t0[3] + w1 * t1[3];
+      rgba[0] = LERP(a, t0[0], t1[0]);
+      rgba[1] = LERP(a, t0[1], t1[1]);
+      rgba[2] = LERP(a, t0[2], t1[2]);
+      rgba[3] = LERP(a, t0[3], t1[3]);
 #elif CHAN_TYPE == GL_UNSIGNED_SHORT
-      rgba[0] = (GLchan) (w0 * t0[0] + w1 * t1[0] + 0.5);
-      rgba[1] = (GLchan) (w0 * t0[1] + w1 * t1[1] + 0.5);
-      rgba[2] = (GLchan) (w0 * t0[2] + w1 * t1[2] + 0.5);
-      rgba[3] = (GLchan) (w0 * t0[3] + w1 * t1[3] + 0.5);
-#else /* CHAN_BITS == 8 */
-      rgba[0] = (GLchan) ((w0 * t0[0] + w1 * t1[0]) >> WEIGHT_SHIFT);
-      rgba[1] = (GLchan) ((w0 * t0[1] + w1 * t1[1]) >> WEIGHT_SHIFT);
-      rgba[2] = (GLchan) ((w0 * t0[2] + w1 * t1[2]) >> WEIGHT_SHIFT);
-      rgba[3] = (GLchan) ((w0 * t0[3] + w1 * t1[3]) >> WEIGHT_SHIFT);
+      rgba[0] = (GLchan) (LERP(a, t0[0], t1[0]) + 0.5);
+      rgba[1] = (GLchan) (LERP(a, t0[1], t1[1]) + 0.5);
+      rgba[2] = (GLchan) (LERP(a, t0[2], t1[2]) + 0.5);
+      rgba[3] = (GLchan) (LERP(a, t0[3], t1[3]) + 0.5);
+#else
+      ASSERT(CHAN_TYPE == GL_UNSIGNED_BYTE);
+      {
+         /* fixed point interpolants in [0, ILERP_SCALE] */
+         const GLint ia = IROUND_POS(a * ILERP_SCALE);
+         rgba[0] = ILERP(ia, t0[0], t1[0]);
+         rgba[1] = ILERP(ia, t0[1], t1[1]);
+         rgba[2] = ILERP(ia, t0[2], t1[2]);
+         rgba[3] = ILERP(ia, t0[3], t1[3]);
+      }
 #endif
-
    }
 }
 
@@ -798,7 +874,7 @@ sample_2d_nearest(GLcontext *ctx,
 
 
 
-/*
+/**
  * Return the texture sample for coordinate (s,t) using GL_LINEAR filter.
  * New sampling code contributed by Lynn Quam <quam@ai.sri.com>.
  */
@@ -836,24 +912,13 @@ sample_2d_linear(GLcontext *ctx,
    {
       const GLfloat a = FRAC(u);
       const GLfloat b = FRAC(v);
-
-#if CHAN_TYPE == GL_FLOAT || CHAN_TYPE == GL_UNSIGNED_SHORT
-      const GLfloat w00 = (1.0F-a) * (1.0F-b);
-      const GLfloat w10 =       a  * (1.0F-b);
-      const GLfloat w01 = (1.0F-a) *       b ;
-      const GLfloat w11 =       a  *       b ;
-#else /* CHAN_BITS == 8 */
-      /* compute sample weights in fixed point in [0,WEIGHT_SCALE] */
-      const GLint w00 = IROUND_POS((1.0F-a) * (1.0F-b) * WEIGHT_SCALE);
-      const GLint w10 = IROUND_POS(      a  * (1.0F-b) * WEIGHT_SCALE);
-      const GLint w01 = IROUND_POS((1.0F-a) *       b  * WEIGHT_SCALE);
-      const GLint w11 = IROUND_POS(      a  *       b  * WEIGHT_SCALE);
+#if CHAN_TYPE == GL_UNSIGNED_BYTE
+      const GLint ia = IROUND_POS(a * ILERP_SCALE);
+      const GLint ib = IROUND_POS(b * ILERP_SCALE);
 #endif
-      GLchan t00[4];
-      GLchan t10[4];
-      GLchan t01[4];
-      GLchan t11[4];
+      GLchan t00[4], t10[4], t01[4], t11[4]; /* sampled texel colors */
 
+      /* fetch four texel colors */
       if (useBorderColor & (I0BIT | J0BIT)) {
          COPY_CHAN4(t00, tObj->_BorderChan);
       }
@@ -878,39 +943,31 @@ sample_2d_linear(GLcontext *ctx,
       else {
          img->FetchTexelc(img, i1, j1, 0, t11);
       }
+
+      /* do bilinear interpolation of texel colors */
 #if CHAN_TYPE == GL_FLOAT
-      rgba[0] = w00 * t00[0] + w10 * t10[0] + w01 * t01[0] + w11 * t11[0];
-      rgba[1] = w00 * t00[1] + w10 * t10[1] + w01 * t01[1] + w11 * t11[1];
-      rgba[2] = w00 * t00[2] + w10 * t10[2] + w01 * t01[2] + w11 * t11[2];
-      rgba[3] = w00 * t00[3] + w10 * t10[3] + w01 * t01[3] + w11 * t11[3];
+      rgba[0] = lerp_2d(a, b, t00[0], t10[0], t01[0], t11[0]);
+      rgba[1] = lerp_2d(a, b, t00[1], t10[1], t01[1], t11[1]);
+      rgba[2] = lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]);
+      rgba[3] = lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]);
 #elif CHAN_TYPE == GL_UNSIGNED_SHORT
-      rgba[0] = (GLchan) (w00 * t00[0] + w10 * t10[0] +
-                          w01 * t01[0] + w11 * t11[0] + 0.5);
-      rgba[1] = (GLchan) (w00 * t00[1] + w10 * t10[1] +
-                          w01 * t01[1] + w11 * t11[1] + 0.5);
-      rgba[2] = (GLchan) (w00 * t00[2] + w10 * t10[2] +
-                          w01 * t01[2] + w11 * t11[2] + 0.5);
-      rgba[3] = (GLchan) (w00 * t00[3] + w10 * t10[3] +
-                          w01 * t01[3] + w11 * t11[3] + 0.5);
-#else /* CHAN_BITS == 8 */
-      rgba[0] = (GLchan) ((w00 * t00[0] + w10 * t10[0] +
-                           w01 * t01[0] + w11 * t11[0]) >> WEIGHT_SHIFT);
-      rgba[1] = (GLchan) ((w00 * t00[1] + w10 * t10[1] +
-                           w01 * t01[1] + w11 * t11[1]) >> WEIGHT_SHIFT);
-      rgba[2] = (GLchan) ((w00 * t00[2] + w10 * t10[2] +
-                           w01 * t01[2] + w11 * t11[2]) >> WEIGHT_SHIFT);
-      rgba[3] = (GLchan) ((w00 * t00[3] + w10 * t10[3] +
-                           w01 * t01[3] + w11 * t11[3]) >> WEIGHT_SHIFT);
+      rgba[0] = (GLchan) (lerp_2d(a, b, t00[0], t10[0], t01[0], t11[0]) + 0.5);
+      rgba[1] = (GLchan) (lerp_2d(a, b, t00[1], t10[1], t01[1], t11[1]) + 0.5);
+      rgba[2] = (GLchan) (lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]) + 0.5);
+      rgba[3] = (GLchan) (lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]) + 0.5);
+#else
+      ASSERT(CHAN_TYPE == GL_UNSIGNED_BYTE);
+      rgba[0] = ilerp_2d(ia, ib, t00[0], t10[0], t01[0], t11[0]);
+      rgba[1] = ilerp_2d(ia, ib, t00[1], t10[1], t01[1], t11[1]);
+      rgba[2] = ilerp_2d(ia, ib, t00[2], t10[2], t01[2], t11[2]);
+      rgba[3] = ilerp_2d(ia, ib, t00[3], t10[3], t01[3], t11[3]);
 #endif
-
    }
-
 }
 
 
 /*
- * As above, but we know WRAP_S == REPEAT and WRAP_T == REPEAT
- * and we're not using a paletted texture.
+ * As above, but we know WRAP_S == REPEAT and WRAP_T == REPEAT.
  */
 static INLINE void
 sample_2d_linear_repeat(GLcontext *ctx,
@@ -938,56 +995,36 @@ sample_2d_linear_repeat(GLcontext *ctx,
    {
       const GLfloat a = FRAC(u);
       const GLfloat b = FRAC(v);
-
-#if CHAN_TYPE == GL_FLOAT || CHAN_TYPE == GL_UNSIGNED_SHORT
-      const GLfloat w00 = (1.0F-a) * (1.0F-b);
-      const GLfloat w10 =       a  * (1.0F-b);
-      const GLfloat w01 = (1.0F-a) *       b ;
-      const GLfloat w11 =       a  *       b ;
-#else /* CHAN_BITS == 8 */
-      /* compute sample weights in fixed point in [0,WEIGHT_SCALE] */
-      const GLint w00 = IROUND_POS((1.0F-a) * (1.0F-b) * WEIGHT_SCALE);
-      const GLint w10 = IROUND_POS(      a  * (1.0F-b) * WEIGHT_SCALE);
-      const GLint w01 = IROUND_POS((1.0F-a) *       b  * WEIGHT_SCALE);
-      const GLint w11 = IROUND_POS(      a  *       b  * WEIGHT_SCALE);
+#if CHAN_TYPE == GL_UNSIGNED_BYTE
+      const GLint ia = IROUND_POS(a * ILERP_SCALE);
+      const GLint ib = IROUND_POS(b * ILERP_SCALE);
 #endif
-      GLchan t00[4];
-      GLchan t10[4];
-      GLchan t01[4];
-      GLchan t11[4];
+      GLchan t00[4], t10[4], t01[4], t11[4]; /* sampled texel colors */
 
       img->FetchTexelc(img, i0, j0, 0, t00);
       img->FetchTexelc(img, i1, j0, 0, t10);
       img->FetchTexelc(img, i0, j1, 0, t01);
       img->FetchTexelc(img, i1, j1, 0, t11);
 
+      /* do bilinear interpolation of texel colors */
 #if CHAN_TYPE == GL_FLOAT
-      rgba[0] = w00 * t00[0] + w10 * t10[0] + w01 * t01[0] + w11 * t11[0];
-      rgba[1] = w00 * t00[1] + w10 * t10[1] + w01 * t01[1] + w11 * t11[1];
-      rgba[2] = w00 * t00[2] + w10 * t10[2] + w01 * t01[2] + w11 * t11[2];
-      rgba[3] = w00 * t00[3] + w10 * t10[3] + w01 * t01[3] + w11 * t11[3];
+      rgba[0] = lerp_2d(a, b, t00[0], t10[0], t01[0], t11[0]);
+      rgba[1] = lerp_2d(a, b, t00[1], t10[1], t01[1], t11[1]);
+      rgba[2] = lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]);
+      rgba[3] = lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]);
 #elif CHAN_TYPE == GL_UNSIGNED_SHORT
-      rgba[0] = (GLchan) (w00 * t00[0] + w10 * t10[0] +
-                          w01 * t01[0] + w11 * t11[0] + 0.5);
-      rgba[1] = (GLchan) (w00 * t00[1] + w10 * t10[1] +
-                          w01 * t01[1] + w11 * t11[1] + 0.5);
-      rgba[2] = (GLchan) (w00 * t00[2] + w10 * t10[2] +
-                          w01 * t01[2] + w11 * t11[2] + 0.5);
-      rgba[3] = (GLchan) (w00 * t00[3] + w10 * t10[3] +
-                          w01 * t01[3] + w11 * t11[3] + 0.5);
-#else /* CHAN_BITS == 8 */
-      rgba[0] = (GLchan) ((w00 * t00[0] + w10 * t10[0] +
-                           w01 * t01[0] + w11 * t11[0]) >> WEIGHT_SHIFT);
-      rgba[1] = (GLchan) ((w00 * t00[1] + w10 * t10[1] +
-                           w01 * t01[1] + w11 * t11[1]) >> WEIGHT_SHIFT);
-      rgba[2] = (GLchan) ((w00 * t00[2] + w10 * t10[2] +
-                           w01 * t01[2] + w11 * t11[2]) >> WEIGHT_SHIFT);
-      rgba[3] = (GLchan) ((w00 * t00[3] + w10 * t10[3] +
-                           w01 * t01[3] + w11 * t11[3]) >> WEIGHT_SHIFT);
+      rgba[0] = (GLchan) (lerp_2d(a, b, t00[0], t10[0], t01[0], t11[0]) + 0.5);
+      rgba[1] = (GLchan) (lerp_2d(a, b, t00[1], t10[1], t01[1], t11[1]) + 0.5);
+      rgba[2] = (GLchan) (lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]) + 0.5);
+      rgba[3] = (GLchan) (lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]) + 0.5);
+#else
+      ASSERT(CHAN_TYPE == GL_UNSIGNED_BYTE);
+      rgba[0] = ilerp_2d(ia, ib, t00[0], t10[0], t01[0], t11[0]);
+      rgba[1] = ilerp_2d(ia, ib, t00[1], t10[1], t01[1], t11[1]);
+      rgba[2] = ilerp_2d(ia, ib, t00[2], t10[2], t01[2], t11[2]);
+      rgba[3] = ilerp_2d(ia, ib, t00[3], t10[3], t01[3], t11[3]);
 #endif
-
    }
-
 }
 
 
@@ -1144,8 +1181,16 @@ sample_linear_2d( GLcontext *ctx, GLuint texUnit,
    struct gl_texture_image *image = tObj->Image[0][tObj->BaseLevel];
    (void) texUnit;
    (void) lambda;
-   for (i=0;i<n;i++) {
-      sample_2d_linear(ctx, tObj, image, texcoords[i], rgba[i]);
+   if (tObj->WrapS == GL_REPEAT && tObj->WrapT == GL_REPEAT
+       && image->Border == 0) {
+      for (i=0;i<n;i++) {
+         sample_2d_linear_repeat(ctx, tObj, image, texcoords[i], rgba[i]);
+      }
+   }
+   else {
+      for (i=0;i<n;i++) {
+         sample_2d_linear(ctx, tObj, image, texcoords[i], rgba[i]);
+      }
    }
 }
 
@@ -1444,32 +1489,15 @@ sample_3d_linear(GLcontext *ctx,
       const GLfloat a = FRAC(u);
       const GLfloat b = FRAC(v);
       const GLfloat c = FRAC(w);
-
-#if CHAN_TYPE == GL_FLOAT || CHAN_TYPE == GL_UNSIGNED_SHORT
-      /* compute sample weights in fixed point in [0,WEIGHT_SCALE] */
-      GLfloat w000 = (1.0F-a) * (1.0F-b) * (1.0F-c);
-      GLfloat w100 =       a  * (1.0F-b) * (1.0F-c);
-      GLfloat w010 = (1.0F-a) *       b  * (1.0F-c);
-      GLfloat w110 =       a  *       b  * (1.0F-c);
-      GLfloat w001 = (1.0F-a) * (1.0F-b) *       c ;
-      GLfloat w101 =       a  * (1.0F-b) *       c ;
-      GLfloat w011 = (1.0F-a) *       b  *       c ;
-      GLfloat w111 =       a  *       b  *       c ;
-#else /* CHAN_BITS == 8 */
-      /* compute sample weights in fixed point in [0,WEIGHT_SCALE] */
-      GLint w000 = IROUND_POS((1.0F-a) * (1.0F-b) * (1.0F-c) * WEIGHT_SCALE);
-      GLint w100 = IROUND_POS(      a  * (1.0F-b) * (1.0F-c) * WEIGHT_SCALE);
-      GLint w010 = IROUND_POS((1.0F-a) *       b  * (1.0F-c) * WEIGHT_SCALE);
-      GLint w110 = IROUND_POS(      a  *       b  * (1.0F-c) * WEIGHT_SCALE);
-      GLint w001 = IROUND_POS((1.0F-a) * (1.0F-b) *       c  * WEIGHT_SCALE);
-      GLint w101 = IROUND_POS(      a  * (1.0F-b) *       c  * WEIGHT_SCALE);
-      GLint w011 = IROUND_POS((1.0F-a) *       b  *       c  * WEIGHT_SCALE);
-      GLint w111 = IROUND_POS(      a  *       b  *       c  * WEIGHT_SCALE);
+#if CHAN_TYPE == GL_UNSIGNED_BYTE
+      const GLint ia = IROUND_POS(a * ILERP_SCALE);
+      const GLint ib = IROUND_POS(b * ILERP_SCALE);
+      const GLint ic = IROUND_POS(c * ILERP_SCALE);
 #endif
-
       GLchan t000[4], t010[4], t001[4], t011[4];
       GLchan t100[4], t110[4], t101[4], t111[4];
 
+      /* Fetch texels */
       if (useBorderColor & (I0BIT | J0BIT | K0BIT)) {
          COPY_CHAN4(t000, tObj->_BorderChan);
       }
@@ -1520,51 +1548,48 @@ sample_3d_linear(GLcontext *ctx,
          img->FetchTexelc(img, i1, j1, k1, t111);
       }
 
+      /* trilinear interpolation of samples */
 #if CHAN_TYPE == GL_FLOAT
-      rgba[0] = w000*t000[0] + w010*t010[0] + w001*t001[0] + w011*t011[0] +
-                w100*t100[0] + w110*t110[0] + w101*t101[0] + w111*t111[0];
-      rgba[1] = w000*t000[1] + w010*t010[1] + w001*t001[1] + w011*t011[1] +
-                w100*t100[1] + w110*t110[1] + w101*t101[1] + w111*t111[1];
-      rgba[2] = w000*t000[2] + w010*t010[2] + w001*t001[2] + w011*t011[2] +
-                w100*t100[2] + w110*t110[2] + w101*t101[2] + w111*t111[2];
-      rgba[3] = w000*t000[3] + w010*t010[3] + w001*t001[3] + w011*t011[3] +
-                w100*t100[3] + w110*t110[3] + w101*t101[3] + w111*t111[3];
+      rgba[0] = lerp_3d(a, b, c,
+                        t000[0], t100[0], t010[0], t110[0],
+                        t001[0], t101[0], t011[0], t111[0]);
+      rgba[1] = lerp_3d(a, b, c,
+                        t000[1], t100[1], t010[1], t110[1],
+                        t001[1], t101[1], t011[1], t111[1]);
+      rgba[2] = lerp_3d(a, b, c,
+                        t000[2], t100[2], t010[2], t110[2],
+                        t001[2], t101[2], t011[2], t111[2]);
+      rgba[3] = lerp_3d(a, b, c,
+                        t000[3], t100[3], t010[3], t110[3],
+                        t001[3], t101[3], t011[3], t111[3]);
 #elif CHAN_TYPE == GL_UNSIGNED_SHORT
-      rgba[0] = (GLchan) (w000*t000[0] + w010*t010[0] +
-                          w001*t001[0] + w011*t011[0] +
-                          w100*t100[0] + w110*t110[0] +
-                          w101*t101[0] + w111*t111[0] + 0.5);
-      rgba[1] = (GLchan) (w000*t000[1] + w010*t010[1] +
-                          w001*t001[1] + w011*t011[1] +
-                          w100*t100[1] + w110*t110[1] +
-                          w101*t101[1] + w111*t111[1] + 0.5);
-      rgba[2] = (GLchan) (w000*t000[2] + w010*t010[2] +
-                          w001*t001[2] + w011*t011[2] +
-                          w100*t100[2] + w110*t110[2] +
-                          w101*t101[2] + w111*t111[2] + 0.5);
-      rgba[3] = (GLchan) (w000*t000[3] + w010*t010[3] +
-                          w001*t001[3] + w011*t011[3] +
-                          w100*t100[3] + w110*t110[3] +
-                          w101*t101[3] + w111*t111[3] + 0.5);
-#else /* CHAN_BITS == 8 */
-      rgba[0] = (GLchan) (
-                 (w000*t000[0] + w010*t010[0] + w001*t001[0] + w011*t011[0] +
-                  w100*t100[0] + w110*t110[0] + w101*t101[0] + w111*t111[0] )
-                 >> WEIGHT_SHIFT);
-      rgba[1] = (GLchan) (
-                 (w000*t000[1] + w010*t010[1] + w001*t001[1] + w011*t011[1] +
-                  w100*t100[1] + w110*t110[1] + w101*t101[1] + w111*t111[1] )
-                 >> WEIGHT_SHIFT);
-      rgba[2] = (GLchan) (
-                 (w000*t000[2] + w010*t010[2] + w001*t001[2] + w011*t011[2] +
-                  w100*t100[2] + w110*t110[2] + w101*t101[2] + w111*t111[2] )
-                 >> WEIGHT_SHIFT);
-      rgba[3] = (GLchan) (
-                 (w000*t000[3] + w010*t010[3] + w001*t001[3] + w011*t011[3] +
-                  w100*t100[3] + w110*t110[3] + w101*t101[3] + w111*t111[3] )
-                 >> WEIGHT_SHIFT);
+      rgba[0] = (GLchan) (lerp_3d(a, b, c,
+                                  t000[0], t100[0], t010[0], t110[0],
+                                  t001[0], t101[0], t011[0], t111[0]) + 0.5F);
+      rgba[1] = (GLchan) (lerp_3d(a, b, c,
+                                  t000[1], t100[1], t010[1], t110[1],
+                                  t001[1], t101[1], t011[1], t111[1]) + 0.5F);
+      rgba[2] = (GLchan) (lerp_3d(a, b, c,
+                                  t000[2], t100[2], t010[2], t110[2],
+                                  t001[2], t101[2], t011[2], t111[2]) + 0.5F);
+      rgba[3] = (GLchan) (lerp_3d(a, b, c,
+                                  t000[3], t100[3], t010[3], t110[3],
+                                  t001[3], t101[3], t011[3], t111[3]) + 0.5F);
+#else
+      ASSERT(CHAN_TYPE == GL_UNSIGNED_BYTE);
+      rgba[0] = ilerp_3d(ia, ib, ic,
+                         t000[0], t100[0], t010[0], t110[0],
+                         t001[0], t101[0], t011[0], t111[0]);
+      rgba[1] = ilerp_3d(ia, ib, ic,
+                         t000[1], t100[1], t010[1], t110[1],
+                         t001[1], t101[1], t011[1], t111[1]);
+      rgba[2] = ilerp_3d(ia, ib, ic,
+                         t000[2], t100[2], t010[2], t110[2],
+                         t001[2], t101[2], t011[2], t111[2]);
+      rgba[3] = ilerp_3d(ia, ib, ic,
+                         t000[3], t100[3], t010[3], t110[3],
+                         t001[3], t101[3], t011[3], t111[3]);
 #endif
-
    }
 }
 
@@ -2150,8 +2175,11 @@ sample_linear_rect(GLcontext *ctx, GLuint texUnit,
       GLfloat frow, fcol;
       GLint i0, j0, i1, j1;
       GLchan t00[4], t01[4], t10[4], t11[4];
-      GLfloat a, b, w00, w01, w10, w11;
+      GLfloat a, b;
       GLuint useBorderColor = 0;
+#if CHAN_TYPE == GL_UNSIGNED_BYTE
+      GLint ia, ib;
+#endif
 
       /* NOTE: we DO NOT use [0, 1] texture coordinates! */
       if (tObj->WrapS == GL_CLAMP) {
@@ -2225,23 +2253,32 @@ sample_linear_rect(GLcontext *ctx, GLuint texUnit,
       else
          img->FetchTexelc(img, i1, j1, 0, t11);
 
-      /* compute sample weights */
+      /* compute interpolants */
       a = FRAC(fcol);
       b = FRAC(frow);
-      w00 = (1.0F-a) * (1.0F-b);
-      w10 =       a  * (1.0F-b);
-      w01 = (1.0F-a) *       b ;
-      w11 =       a  *       b ;
+#if CHAN_TYPE == GL_UNSIGNED_BYTE
+      ia = IROUND_POS(a * ILERP_SCALE);
+      ib = IROUND_POS(b * ILERP_SCALE);
+#endif
 
-      /* compute weighted average of samples */
-      rgba[i][0] = 
-	  (GLchan) (w00 * t00[0] + w10 * t10[0] + w01 * t01[0] + w11 * t11[0]);
-      rgba[i][1] = 
-	  (GLchan) (w00 * t00[1] + w10 * t10[1] + w01 * t01[1] + w11 * t11[1]);
-      rgba[i][2] = 
-	  (GLchan) (w00 * t00[2] + w10 * t10[2] + w01 * t01[2] + w11 * t11[2]);
-      rgba[i][3] = 
-	  (GLchan) (w00 * t00[3] + w10 * t10[3] + w01 * t01[3] + w11 * t11[3]);
+      /* do bilinear interpolation of texel colors */
+#if CHAN_TYPE == GL_FLOAT
+      rgba[i][0] = lerp_2d(a, b, t00[0], t10[0], t01[0], t11[0]);
+      rgba[i][1] = lerp_2d(a, b, t00[1], t10[1], t01[1], t11[1]);
+      rgba[i][2] = lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]);
+      rgba[i][3] = lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]);
+#elif CHAN_TYPE == GL_UNSIGNED_SHORT
+      rgba[i][0] = (GLchan) (lerp_2d(a, b, t00[0], t10[0], t01[0], t11[0]) + 0.5);
+      rgba[i][1] = (GLchan) (lerp_2d(a, b, t00[1], t10[1], t01[1], t11[1]) + 0.5);
+      rgba[i][2] = (GLchan) (lerp_2d(a, b, t00[2], t10[2], t01[2], t11[2]) + 0.5);
+      rgba[i][3] = (GLchan) (lerp_2d(a, b, t00[3], t10[3], t01[3], t11[3]) + 0.5);
+#else
+      ASSERT(CHAN_TYPE == GL_UNSIGNED_BYTE);
+      rgba[i][0] = ilerp_2d(ia, ib, t00[0], t10[0], t01[0], t11[0]);
+      rgba[i][1] = ilerp_2d(ia, ib, t00[1], t10[1], t01[1], t11[1]);
+      rgba[i][2] = ilerp_2d(ia, ib, t00[2], t10[2], t01[2], t11[2]);
+      rgba[i][3] = ilerp_2d(ia, ib, t00[3], t10[3], t01[3], t11[3]);
+#endif
    }
 }
 
@@ -2456,12 +2493,8 @@ sample_depth_texture( GLcontext *ctx, GLuint unit,
             /* compute a single weighted depth sample and do one comparison */
             const GLfloat a = FRAC(u + 1.0F);
             const GLfloat b = FRAC(v + 1.0F);
-            const GLfloat w00 = (1.0F - a) * (1.0F - b);
-            const GLfloat w10 = (       a) * (1.0F - b);
-            const GLfloat w01 = (1.0F - a) * (       b);
-            const GLfloat w11 = (       a) * (       b);
-            const GLfloat depthSample = w00 * depth00 + w10 * depth10
-                                      + w01 * depth01 + w11 * depth11;
+            const GLfloat depthSample
+               = lerp_2d(a, b, depth00, depth10, depth01, depth11);
             if ((depthSample <= texcoords[i][2] && function == GL_LEQUAL) ||
                 (depthSample >= texcoords[i][2] && function == GL_GEQUAL)) {
                result  = ambient;
@@ -2532,12 +2565,8 @@ sample_depth_texture( GLcontext *ctx, GLuint unit,
                {
                   const GLfloat a = FRAC(u + 1.0F);
                   const GLfloat b = FRAC(v + 1.0F);
-                  const GLfloat w00 = (1.0F - a) * (1.0F - b);
-                  const GLfloat w10 = (       a) * (1.0F - b);
-                  const GLfloat w01 = (1.0F - a) * (       b);
-                  const GLfloat w11 = (       a) * (       b);
-                  const GLfloat depthSample = w00 * depth00 + w10 * depth10
-                                            + w01 * depth01 + w11 * depth11;
+                  const GLfloat depthSample
+                     = lerp_2d(a, b, depth00, depth10, depth01, depth11);
                   CLAMPED_FLOAT_TO_CHAN(result, depthSample);
                }
                break;
@@ -2727,7 +2756,6 @@ _swrast_choose_texture_sample_func( GLcontext *ctx,
             ASSERT(t->MinFilter == GL_NEAREST);
             return &sample_nearest_1d;
          }
-         break;
       case GL_TEXTURE_2D:
          if (format == GL_DEPTH_COMPONENT) {
             return &sample_depth_texture;
@@ -2759,7 +2787,6 @@ _swrast_choose_texture_sample_func( GLcontext *ctx,
                return &sample_nearest_2d;
             }
          }
-         break;
       case GL_TEXTURE_3D:
          if (needLambda) {
             return &sample_lambda_3d;
@@ -2771,7 +2798,6 @@ _swrast_choose_texture_sample_func( GLcontext *ctx,
             ASSERT(t->MinFilter == GL_NEAREST);
             return &sample_nearest_3d;
          }
-         break;
       case GL_TEXTURE_CUBE_MAP:
          if (needLambda) {
             return &sample_lambda_cube;
@@ -2783,7 +2809,6 @@ _swrast_choose_texture_sample_func( GLcontext *ctx,
             ASSERT(t->MinFilter == GL_NEAREST);
             return &sample_nearest_cube;
          }
-         break;
       case GL_TEXTURE_RECTANGLE_NV:
          if (needLambda) {
             return &sample_lambda_rect;
@@ -2795,7 +2820,6 @@ _swrast_choose_texture_sample_func( GLcontext *ctx,
             ASSERT(t->MinFilter == GL_NEAREST);
             return &sample_nearest_rect;
          }
-         break;
       default:
          _mesa_problem(ctx,
                        "invalid target in _swrast_choose_texture_sample_func");

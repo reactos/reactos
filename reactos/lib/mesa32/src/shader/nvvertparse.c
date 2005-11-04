@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -233,7 +233,7 @@ Peek_Token(struct parse_state *parseState, GLubyte *token)
       parseState->pos += (-i);
       return GL_FALSE;
    }
-   len = _mesa_strlen((const char *) token);
+   len = (GLint)_mesa_strlen((const char *) token);
    parseState->pos += (i - len);
    return GL_TRUE;
 }
@@ -299,6 +299,8 @@ static const char *Opcodes[] = {
    "ABS", "END",
    /* GL_ARB_vertex_program */
    "FLR", "FRC", "EX2", "LG2", "POW", "XPD", "SWZ",
+   /* Mesa-specific */
+   "PRINT",
    NULL
 };
 
@@ -561,6 +563,7 @@ static GLboolean
 Parse_MaskedDstReg(struct parse_state *parseState, struct vp_dst_register *dstReg)
 {
    GLubyte token[100];
+   GLint idx;
 
    /* Dst reg can be R<n> or o[n] */
    if (!Peek_Token(parseState, token))
@@ -569,22 +572,25 @@ Parse_MaskedDstReg(struct parse_state *parseState, struct vp_dst_register *dstRe
    if (token[0] == 'R') {
       /* a temporary register */
       dstReg->File = PROGRAM_TEMPORARY;
-      if (!Parse_TempReg(parseState, &dstReg->Index))
+      if (!Parse_TempReg(parseState, &idx))
          RETURN_ERROR;
+      dstReg->Index = idx;
    }
    else if (!parseState->isStateProgram && token[0] == 'o') {
       /* an output register */
       dstReg->File = PROGRAM_OUTPUT;
-      if (!Parse_OutputReg(parseState, &dstReg->Index))
+      if (!Parse_OutputReg(parseState, &idx))
          RETURN_ERROR;
+      dstReg->Index = idx;
    }
    else if (parseState->isStateProgram && token[0] == 'c' &&
             parseState->isStateProgram) {
       /* absolute program parameter register */
       /* Only valid for vertex state programs */
       dstReg->File = PROGRAM_ENV_PARAM;
-      if (!Parse_AbsParamReg(parseState, &dstReg->Index))
+      if (!Parse_AbsParamReg(parseState, &idx))
          RETURN_ERROR;
+      dstReg->Index = idx;
    }
    else {
       RETURN_ERROR1("Bad destination register name");
@@ -604,25 +610,22 @@ Parse_MaskedDstReg(struct parse_state *parseState, struct vp_dst_register *dstRe
       if (!Parse_Token(parseState, token))
          RETURN_ERROR;
 
-      dstReg->WriteMask[0] = GL_FALSE;
-      dstReg->WriteMask[1] = GL_FALSE;
-      dstReg->WriteMask[2] = GL_FALSE;
-      dstReg->WriteMask[3] = GL_FALSE;
+      dstReg->WriteMask = 0;
 
       if (token[k] == 'x') {
-         dstReg->WriteMask[0] = GL_TRUE;
+         dstReg->WriteMask |= WRITEMASK_X;
          k++;
       }
       if (token[k] == 'y') {
-         dstReg->WriteMask[1] = GL_TRUE;
+         dstReg->WriteMask |= WRITEMASK_Y;
          k++;
       }
       if (token[k] == 'z') {
-         dstReg->WriteMask[2] = GL_TRUE;
+         dstReg->WriteMask |= WRITEMASK_Z;
          k++;
       }
       if (token[k] == 'w') {
-         dstReg->WriteMask[3] = GL_TRUE;
+         dstReg->WriteMask |= WRITEMASK_W;
          k++;
       }
       if (k == 0) {
@@ -631,10 +634,7 @@ Parse_MaskedDstReg(struct parse_state *parseState, struct vp_dst_register *dstRe
       return GL_TRUE;
    }
    else {
-      dstReg->WriteMask[0] = GL_TRUE;
-      dstReg->WriteMask[1] = GL_TRUE;
-      dstReg->WriteMask[2] = GL_TRUE;
-      dstReg->WriteMask[3] = GL_TRUE;
+      dstReg->WriteMask = WRITEMASK_XYZW;
       return GL_TRUE;
    }
 }
@@ -644,6 +644,7 @@ static GLboolean
 Parse_SwizzleSrcReg(struct parse_state *parseState, struct vp_src_register *srcReg)
 {
    GLubyte token[100];
+   GLint idx;
 
    srcReg->RelAddr = GL_FALSE;
 
@@ -663,8 +664,9 @@ Parse_SwizzleSrcReg(struct parse_state *parseState, struct vp_src_register *srcR
    /* Src reg can be R<n>, c[n], c[n +/- offset], or a named vertex attrib */
    if (token[0] == 'R') {
       srcReg->File = PROGRAM_TEMPORARY;
-      if (!Parse_TempReg(parseState, &srcReg->Index))
+      if (!Parse_TempReg(parseState, &idx))
          RETURN_ERROR;
+      srcReg->Index = idx;
    }
    else if (token[0] == 'c') {
       if (!Parse_ParamReg(parseState, srcReg))
@@ -672,18 +674,16 @@ Parse_SwizzleSrcReg(struct parse_state *parseState, struct vp_src_register *srcR
    }
    else if (token[0] == 'v') {
       srcReg->File = PROGRAM_INPUT;
-      if (!Parse_AttribReg(parseState, &srcReg->Index))
+      if (!Parse_AttribReg(parseState, &idx))
          RETURN_ERROR;
+      srcReg->Index = idx;
    }
    else {
       RETURN_ERROR2("Bad source register name", token);
    }
 
    /* init swizzle fields */
-   srcReg->Swizzle[0] = 0;
-   srcReg->Swizzle[1] = 1;
-   srcReg->Swizzle[2] = 2;
-   srcReg->Swizzle[3] = 3;
+   srcReg->Swizzle = SWIZZLE_NOOP;
 
    /* Look for optional swizzle suffix */
    if (!Peek_Token(parseState, token))
@@ -697,13 +697,13 @@ Parse_SwizzleSrcReg(struct parse_state *parseState, struct vp_src_register *srcR
       if (token[1] == 0) {
          /* single letter swizzle */
          if (token[0] == 'x')
-            ASSIGN_4V(srcReg->Swizzle, 0, 0, 0, 0);
+            srcReg->Swizzle = MAKE_SWIZZLE4(0, 0, 0, 0);
          else if (token[0] == 'y')
-            ASSIGN_4V(srcReg->Swizzle, 1, 1, 1, 1);
+            srcReg->Swizzle = MAKE_SWIZZLE4(1, 1, 1, 1);
          else if (token[0] == 'z')
-            ASSIGN_4V(srcReg->Swizzle, 2, 2, 2, 2);
+            srcReg->Swizzle = MAKE_SWIZZLE4(2, 2, 2, 2);
          else if (token[0] == 'w')
-            ASSIGN_4V(srcReg->Swizzle, 3, 3, 3, 3);
+            srcReg->Swizzle = MAKE_SWIZZLE4(3, 3, 3, 3);
          else
             RETURN_ERROR1("Expected x, y, z, or w");
       }
@@ -712,13 +712,13 @@ Parse_SwizzleSrcReg(struct parse_state *parseState, struct vp_src_register *srcR
          GLint k;
          for (k = 0; token[k] && k < 5; k++) {
             if (token[k] == 'x')
-               srcReg->Swizzle[k] = 0;
+               srcReg->Swizzle |= 0 << (k*3);
             else if (token[k] == 'y')
-               srcReg->Swizzle[k] = 1;
+               srcReg->Swizzle |= 1 << (k*3);
             else if (token[k] == 'z')
-               srcReg->Swizzle[k] = 2;
+               srcReg->Swizzle |= 2 << (k*3);
             else if (token[k] == 'w')
-               srcReg->Swizzle[k] = 3;
+               srcReg->Swizzle |= 3 << (k*3);
             else
                RETURN_ERROR;
          }
@@ -735,6 +735,7 @@ static GLboolean
 Parse_ScalarSrcReg(struct parse_state *parseState, struct vp_src_register *srcReg)
 {
    GLubyte token[100];
+   GLint idx;
 
    srcReg->RelAddr = GL_FALSE;
 
@@ -754,8 +755,9 @@ Parse_ScalarSrcReg(struct parse_state *parseState, struct vp_src_register *srcRe
    /* Src reg can be R<n>, c[n], c[n +/- offset], or a named vertex attrib */
    if (token[0] == 'R') {
       srcReg->File = PROGRAM_TEMPORARY;
-      if (!Parse_TempReg(parseState, &srcReg->Index))
+      if (!Parse_TempReg(parseState, &idx))
          RETURN_ERROR;
+      srcReg->Index = idx;
    }
    else if (token[0] == 'c') {
       if (!Parse_ParamReg(parseState, srcReg))
@@ -763,8 +765,9 @@ Parse_ScalarSrcReg(struct parse_state *parseState, struct vp_src_register *srcRe
    }
    else if (token[0] == 'v') {
       srcReg->File = PROGRAM_INPUT;
-      if (!Parse_AttribReg(parseState, &srcReg->Index))
+      if (!Parse_AttribReg(parseState, &idx))
          RETURN_ERROR;
+      srcReg->Index = idx;
    }
    else {
       RETURN_ERROR2("Bad source register name", token);
@@ -778,21 +781,20 @@ Parse_ScalarSrcReg(struct parse_state *parseState, struct vp_src_register *srcRe
       RETURN_ERROR;
 
    if (token[0] == 'x' && token[1] == 0) {
-      srcReg->Swizzle[0] = 0;
+      srcReg->Swizzle = 0;
    }
    else if (token[0] == 'y' && token[1] == 0) {
-      srcReg->Swizzle[0] = 1;
+      srcReg->Swizzle = 1;
    }
    else if (token[0] == 'z' && token[1] == 0) {
-      srcReg->Swizzle[0] = 2;
+      srcReg->Swizzle = 2;
    }
    else if (token[0] == 'w' && token[1] == 0) {
-      srcReg->Swizzle[0] = 3;
+      srcReg->Swizzle = 3;
    }
    else {
       RETURN_ERROR1("Bad scalar source suffix");
    }
-   srcReg->Swizzle[1] = srcReg->Swizzle[2] = srcReg->Swizzle[3] = 0;
 
    return GL_TRUE;
 }
@@ -1019,6 +1021,99 @@ Parse_EndInstruction(struct parse_state *parseState, struct vp_instruction *inst
 }
 
 
+/**
+ * The PRINT instruction is Mesa-specific and is meant as a debugging aid for
+ * the vertex program developer.
+ * The NV_vertex_program extension grammar is modified as follows:
+ *
+ *  <instruction>        ::= <ARL-instruction>
+ *                         | ...
+ *                         | <PRINT-instruction>
+ *
+ *  <PRINT-instruction>  ::= "PRINT" <string literal>
+ *                         | "PRINT" <string literal> "," <srcReg>
+ *                         | "PRINT" <string literal> "," <dstReg>
+ */
+static GLboolean
+Parse_PrintInstruction(struct parse_state *parseState, struct vp_instruction *inst)
+{
+   const GLubyte *str;
+   GLubyte *msg;
+   GLuint len;
+   GLubyte token[100];
+   struct vp_src_register *srcReg = &inst->SrcReg[0];
+   GLint idx;
+
+   inst->Opcode = VP_OPCODE_PRINT;
+   inst->StringPos = parseState->curLine - parseState->start;
+
+   /* The first argument is a literal string 'just like this' */
+   if (!Parse_String(parseState, "'"))
+      RETURN_ERROR;
+
+   str = parseState->pos;
+   for (len = 0; str[len] != '\''; len++) /* find closing quote */
+      ;
+   parseState->pos += len + 1;
+   msg = _mesa_malloc(len + 1);
+
+   _mesa_memcpy(msg, str, len);
+   msg[len] = 0;
+   inst->Data = msg;
+
+   /* comma */
+   if (Parse_String(parseState, ",")) {
+
+      /* The second argument is a register name */
+      if (!Peek_Token(parseState, token))
+         RETURN_ERROR;
+
+      srcReg->RelAddr = GL_FALSE;
+      srcReg->Negate = GL_FALSE;
+      srcReg->Swizzle = SWIZZLE_NOOP;
+
+      /* Register can be R<n>, c[n], c[n +/- offset], a named vertex attrib,
+       * or an o[n] output register.
+       */
+      if (token[0] == 'R') {
+         srcReg->File = PROGRAM_TEMPORARY;
+         if (!Parse_TempReg(parseState, &idx))
+            RETURN_ERROR;
+	 srcReg->Index = idx;
+      }
+      else if (token[0] == 'c') {
+         srcReg->File = PROGRAM_ENV_PARAM;
+         if (!Parse_ParamReg(parseState, srcReg))
+            RETURN_ERROR;
+      }
+      else if (token[0] == 'v') {
+         srcReg->File = PROGRAM_INPUT;
+         if (!Parse_AttribReg(parseState, &idx))
+            RETURN_ERROR;
+	 srcReg->Index = idx;
+      }
+      else if (token[0] == 'o') {
+         srcReg->File = PROGRAM_OUTPUT;
+         if (!Parse_OutputReg(parseState, &idx))
+            RETURN_ERROR;
+	 srcReg->Index = idx;
+      }
+      else {
+         RETURN_ERROR2("Bad source register name", token);
+      }
+   }
+   else {
+      srcReg->File = 0;
+   }
+
+   /* semicolon */
+   if (!Parse_String(parseState, ";"))
+      RETURN_ERROR;
+
+   return GL_TRUE;
+}
+
+
 static GLboolean
 Parse_OptionSequence(struct parse_state *parseState,
                      struct vp_instruction program[])
@@ -1047,10 +1142,11 @@ Parse_InstructionSequence(struct parse_state *parseState,
       struct vp_instruction *inst = program + parseState->numInst;
 
       /* Initialize the instruction */
-      inst->SrcReg[0].File = (enum register_file) -1;
-      inst->SrcReg[1].File = (enum register_file) -1;
-      inst->SrcReg[2].File = (enum register_file) -1;
-      inst->DstReg.File = (enum register_file) -1;
+      inst->SrcReg[0].File = PROGRAM_UNDEFINED;
+      inst->SrcReg[1].File = PROGRAM_UNDEFINED;
+      inst->SrcReg[2].File = PROGRAM_UNDEFINED;
+      inst->DstReg.File = PROGRAM_UNDEFINED;
+      inst->Data = NULL;
 
       if (Parse_String(parseState, "MOV")) {
          if (!Parse_UnaryOpInstruction(parseState, inst, VP_OPCODE_MOV))
@@ -1134,6 +1230,10 @@ Parse_InstructionSequence(struct parse_state *parseState,
       }
       else if (Parse_String(parseState, "ARL")) {
          if (!Parse_AddressInstruction(parseState, inst))
+            RETURN_ERROR;
+      }
+      else if (Parse_String(parseState, "PRINT")) {
+         if (!Parse_PrintInstruction(parseState, inst))
             RETURN_ERROR;
       }
       else if (Parse_String(parseState, "END")) {
@@ -1349,20 +1449,17 @@ PrintSrcReg(const struct vp_src_register *src)
       _mesa_printf("R%d", src->Index);
    }
 
-   if (src->Swizzle[0] == src->Swizzle[1] &&
-       src->Swizzle[0] == src->Swizzle[2] &&
-       src->Swizzle[0] == src->Swizzle[3]) {
-      _mesa_printf(".%c", comps[src->Swizzle[0]]);
+   if (GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 1) &&
+       GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 2) &&
+       GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 3)) {
+      _mesa_printf(".%c", comps[GET_SWZ(src->Swizzle, 0)]);
    }
-   else if (src->Swizzle[0] != 0 ||
-            src->Swizzle[1] != 1 ||
-            src->Swizzle[2] != 2 ||
-            src->Swizzle[3] != 3) {
+   else if (src->Swizzle != SWIZZLE_NOOP) {
       _mesa_printf(".%c%c%c%c",
-             comps[src->Swizzle[0]],
-             comps[src->Swizzle[1]],
-             comps[src->Swizzle[2]],
-             comps[src->Swizzle[3]]);
+             comps[GET_SWZ(src->Swizzle, 0)],
+             comps[GET_SWZ(src->Swizzle, 1)],
+             comps[GET_SWZ(src->Swizzle, 2)],
+             comps[GET_SWZ(src->Swizzle, 3)]);
    }
 }
 
@@ -1370,9 +1467,6 @@ PrintSrcReg(const struct vp_src_register *src)
 static void
 PrintDstReg(const struct vp_dst_register *dst)
 {
-   GLint w = dst->WriteMask[0] + dst->WriteMask[1]
-           + dst->WriteMask[2] + dst->WriteMask[3];
-
    if (dst->File == PROGRAM_OUTPUT) {
       _mesa_printf("o[%s]", OutputRegisters[dst->Index]);
    }
@@ -1387,15 +1481,15 @@ PrintDstReg(const struct vp_dst_register *dst)
       _mesa_printf("R%d", dst->Index);
    }
 
-   if (w != 0 && w != 4) {
+   if (dst->WriteMask != 0 && dst->WriteMask != 0xf) {
       _mesa_printf(".");
-      if (dst->WriteMask[0])
+      if (dst->WriteMask & 0x1)
          _mesa_printf("x");
-      if (dst->WriteMask[1])
+      if (dst->WriteMask & 0x2)
          _mesa_printf("y");
-      if (dst->WriteMask[2])
+      if (dst->WriteMask & 0x4)
          _mesa_printf("z");
-      if (dst->WriteMask[3])
+      if (dst->WriteMask & 0x8)
          _mesa_printf("w");
    }
 }
@@ -1456,6 +1550,17 @@ _mesa_print_nv_vertex_instruction(const struct vp_instruction *inst)
          _mesa_printf("ARL A0.x, ");
          PrintSrcReg(&inst->SrcReg[0]);
          _mesa_printf(";\n");
+         break;
+      case VP_OPCODE_PRINT:
+         _mesa_printf("PRINT '%s'", inst->Data);
+         if (inst->SrcReg[0].File) {
+            _mesa_printf(", ");
+            PrintSrcReg(&inst->SrcReg[0]);
+            _mesa_printf(";\n");
+         }
+         else {
+            _mesa_printf("\n");
+         }
          break;
       case VP_OPCODE_END:
          _mesa_printf("END\n");

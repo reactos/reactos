@@ -29,6 +29,7 @@
 extern "C" {
 
 #include "glheader.h"
+#include "version.h"
 #include "buffers.h"
 #include "bufferobj.h"
 #include "context.h"
@@ -89,6 +90,8 @@ extern "C" {
 
 #define FLIP(coord) (LIBGGI_MODE(ggi_ctx->ggi_visual)->visible.y-(coord) - 1) 
 
+const char * color_space_name(color_space space);
+
 //
 // This object hangs off of the BGLView object.  We have to use
 // Be's BGLView class as-is to maintain binary compatibility (we
@@ -101,11 +104,15 @@ friend class BGLView;
 public:
 	MesaDriver();
 	~MesaDriver();
-	void Init(BGLView * bglview, GLcontext * c, GLvisual * v, GLframebuffer * b);
+	
+	void 		Init(BGLView * bglview, GLcontext * c, GLvisual * v, GLframebuffer * b);
 
-	void LockGL();
-	void UnlockGL();
-	void SwapBuffers() const;
+	void 		LockGL();
+	void 		UnlockGL();
+	void 		SwapBuffers() const;
+	status_t 	CopyPixelsOut(BPoint source, BBitmap *dest);
+	status_t 	CopyPixelsIn(BBitmap *source, BPoint dest);
+
 	void CopySubBuffer(GLint x, GLint y, GLuint width, GLuint height) const;
 	void Draw(BRect updateRect) const;
 
@@ -126,7 +133,7 @@ private:
 	GLuint 			m_width;
 	GLuint			m_height;
 	
-   // Mesa Device Driver functions
+   // Mesa Device Driver callback functions
    static void 		UpdateState(GLcontext *ctx, GLuint new_state);
    static void 		ClearIndex(GLcontext *ctx, GLuint index);
    static void 		ClearColor(GLcontext *ctx, const GLfloat color[4]);
@@ -144,7 +151,9 @@ private:
                              GLenum mode);
    static void 		GetBufferSize(GLframebuffer * framebuffer, GLuint *width,
                              GLuint *height);
+   static void		Error(GLcontext *ctx);
    static const GLubyte *	GetString(GLcontext *ctx, GLenum name);
+   static void          Viewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h);
 
    // Front-buffer functions
    static void 		WriteRGBASpanFront(const GLcontext *ctx, GLuint n,
@@ -258,7 +267,7 @@ private:
 BGLView::BGLView(BRect rect, char *name,
                  ulong resizingMode, ulong mode,
                  ulong options)
-   : BView(rect, name, resizingMode, mode | B_WILL_DRAW | B_FRAME_EVENTS) //  | B_FULL_UPDATE_ON_RESIZE)
+   : BView(rect, name, B_FOLLOW_ALL_SIDES, mode | B_WILL_DRAW | B_FRAME_EVENTS) //  | B_FULL_UPDATE_ON_RESIZE)
 {
 	// We don't support single buffering (yet): double buffering forced.
 	options |= BGL_DOUBLE;
@@ -308,6 +317,8 @@ BGLView::BGLView(BRect rect, char *name,
 	functions.Clear 		= md->Clear;
 	functions.ClearIndex 	= md->ClearIndex;
 	functions.ClearColor 	= md->ClearColor;
+	functions.Error			= md->Error;
+        functions.Viewport      = md->Viewport;
 
 	// create core context
 	GLcontext *ctx = _mesa_create_context(visual, NULL, &functions, md);
@@ -394,8 +405,6 @@ void BGLView::SwapBuffers(bool vSync)
 }
 
 
-
-
 #if 0
 void BGLView::CopySubBufferMESA(GLint x, GLint y, GLuint width, GLuint height)
 {
@@ -407,31 +416,36 @@ void BGLView::CopySubBufferMESA(GLint x, GLint y, GLuint width, GLuint height)
 
 BView *	BGLView::EmbeddedView()
 {
-   // TODO
 	return NULL;
 }
 
 status_t BGLView::CopyPixelsOut(BPoint source, BBitmap *dest)
 {
-   // TODO
-	printf("BGLView::CopyPixelsOut() not implemented yet!\n");
-	return B_UNSUPPORTED;
-}
+	if (! dest || ! dest->Bounds().IsValid())
+		return B_BAD_VALUE;
 
+	MesaDriver * md = (MesaDriver *) m_gc;
+	assert(md);
+	return md->CopyPixelsOut(source, dest);
+}
 
 status_t BGLView::CopyPixelsIn(BBitmap *source, BPoint dest)
 {
-   // TODO
-	printf("BGLView::CopyPixelsIn() not implemented yet!\n");
-	return B_UNSUPPORTED;
+	if (! source || ! source->Bounds().IsValid())
+		return B_BAD_VALUE;
+
+	MesaDriver * md = (MesaDriver *) m_gc;
+	assert(md);
+	return md->CopyPixelsIn(source, dest);
 }
+
 
 void BGLView::ErrorCallback(unsigned long errorCode) // Mesa's GLenum is not ulong but uint!
 {
 	char msg[32];
 	sprintf(msg, "GL: Error code $%04lx.", errorCode);
 	// debugger(msg);
-	printf("%s\n", msg);
+	fprintf(stderr, "%s\n", msg);
 	return;
 }
 
@@ -496,13 +510,11 @@ void BGLView::SetResizingMode(uint32 mode)
 
 void BGLView::Show()
 {
-//   printf("BGLView Show\n");
    BView::Show();
 }
 
 void BGLView::Hide()
 {
-//   printf("BGLView Hide\n");
    BView::Hide();
 }
 
@@ -557,8 +569,7 @@ void BGLView::EnableDirectMode( bool enabled )
 }
 
 
-
-//---- private methods ----------
+//---- virtual reserved methods ----------
 
 void BGLView::_ReservedGLView1() {}
 void BGLView::_ReservedGLView2() {}
@@ -570,20 +581,21 @@ void BGLView::_ReservedGLView7() {}
 void BGLView::_ReservedGLView8() {}
 
 #if 0
+// Not implemented!!!
+
 BGLView::BGLView(const BGLView &v)
 	: BView(v)
 {
    // XXX not sure how this should work
    printf("Warning BGLView::copy constructor not implemented\n");
 }
-#endif
-
 
 BGLView &BGLView::operator=(const BGLView &v)
 {
    printf("Warning BGLView::operator= not implemented\n");
 	return *this;
 }
+#endif
 
 void BGLView::dither_front()
 {
@@ -653,7 +665,8 @@ MesaDriver::~MesaDriver()
    _mesa_destroy_visual(m_glvisual);
    _mesa_destroy_framebuffer(m_glframebuffer);
    _mesa_destroy_context(m_glcontext);
-
+   
+   delete m_bitmap;
 }
 
 
@@ -669,6 +682,8 @@ void MesaDriver::Init(BGLView * bglview, GLcontext * ctx, GLvisual * visual, GLf
 	TNLcontext * tnl = TNL_CONTEXT(ctx);
 
 	assert(md->m_glcontext == ctx );
+	assert(tnl);
+	assert(swdd);
 
 	// Use default TCL pipeline
 	tnl->Driver.RunPipeline = _tnl_run_pipeline;
@@ -722,6 +737,78 @@ void MesaDriver::CopySubBuffer(GLint x, GLint y, GLuint width, GLuint height) co
    }
 }
 
+status_t MesaDriver::CopyPixelsOut(BPoint location, BBitmap *bitmap)
+{
+	color_space scs = m_bitmap->ColorSpace();
+	color_space dcs = bitmap->ColorSpace();
+
+	if (scs != dcs && (scs != B_RGBA32 || dcs != B_RGB32)) {
+		printf("CopyPixelsOut(): incompatible color space: %s != %s\n",
+			color_space_name(scs),
+			color_space_name(dcs));
+		return B_BAD_TYPE;
+	}
+	
+	// debugger("CopyPixelsOut()");
+	
+	BRect sr = m_bitmap->Bounds();
+	BRect dr = bitmap->Bounds();
+
+	sr = sr & dr.OffsetBySelf(location);
+	dr = sr.OffsetByCopy(-location.x, -location.y); 
+	
+	uint8 *ps = (uint8 *) m_bitmap->Bits();
+	uint8 *pd = (uint8 *) bitmap->Bits();
+	uint32 *s, *d;
+	uint32 y;
+	for (y = (uint32) sr.top; y <= (uint32) sr.bottom; y++) {
+		s = (uint32 *) (ps + y * m_bitmap->BytesPerRow());
+		s += (uint32) sr.left;
+		
+		d = (uint32 *) (pd + (y + (uint32) (dr.top - sr.top)) * bitmap->BytesPerRow());
+		d += (uint32) dr.left;
+		
+		memcpy(d, s, dr.IntegerWidth() * 4);
+	}
+	return B_OK;
+}
+
+status_t MesaDriver::CopyPixelsIn(BBitmap *bitmap, BPoint location)
+{
+	color_space scs = bitmap->ColorSpace();
+	color_space dcs = m_bitmap->ColorSpace();
+
+	if (scs != dcs && (dcs != B_RGBA32 || scs != B_RGB32)) {
+		printf("CopyPixelsIn(): incompatible color space: %s != %s\n",
+			color_space_name(scs),
+			color_space_name(dcs));
+		return B_BAD_TYPE;
+	}
+	
+	// debugger("CopyPixelsIn()");
+
+	BRect sr = bitmap->Bounds();
+	BRect dr = m_bitmap->Bounds();
+
+	sr = sr & dr.OffsetBySelf(location);
+	dr = sr.OffsetByCopy(-location.x, -location.y); 
+	
+	uint8 *ps = (uint8 *) bitmap->Bits();
+	uint8 *pd = (uint8 *) m_bitmap->Bits();
+	uint32 *s, *d;
+	uint32 y;
+	for (y = (uint32) sr.top; y <= (uint32) sr.bottom; y++) {
+		s = (uint32 *) (ps + y * bitmap->BytesPerRow());
+		s += (uint32) sr.left;
+		
+		d = (uint32 *) (pd + (y + (uint32) (dr.top - sr.top)) * m_bitmap->BytesPerRow());
+		d += (uint32) dr.left;
+		
+		memcpy(d, s, dr.IntegerWidth() * 4);
+	}
+	return B_OK;
+}
+
 
 void MesaDriver::Draw(BRect updateRect) const
 {
@@ -729,6 +816,13 @@ void MesaDriver::Draw(BRect updateRect) const
       m_bglview->DrawBitmap(m_bitmap, updateRect, updateRect);
 }
 
+
+void MesaDriver::Error(GLcontext *ctx)
+{
+	MesaDriver *md = (MesaDriver *) ctx->DriverCtx;
+	if (md && md->m_bglview)
+		md->m_bglview->ErrorCallback((unsigned long) ctx->ErrorValue);
+}
 
 void MesaDriver::UpdateState( GLcontext *ctx, GLuint new_state )
 {
@@ -739,7 +833,7 @@ void MesaDriver::UpdateState( GLcontext *ctx, GLuint new_state )
 	_ac_InvalidateState( ctx, new_state );
 	_tnl_InvalidateState( ctx, new_state );
 
-	if (ctx->Color.DrawBuffer == GL_FRONT) {
+	if (ctx->Color.DrawBuffer[0] == GL_FRONT) {
       /* read/write front buffer */
       swdd->WriteRGBASpan = MesaDriver::WriteRGBASpanFront;
       swdd->WriteRGBSpan = MesaDriver::WriteRGBSpanFront;
@@ -936,11 +1030,18 @@ void MesaDriver::GetBufferSize(GLframebuffer * framebuffer, GLuint *width,
 }
 
 
+void MesaDriver::Viewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
+{
+   /* poll for window size change and realloc software Z/stencil/etc if needed */
+   _mesa_ResizeBuffersMESA();
+}
+
+
 const GLubyte *MesaDriver::GetString(GLcontext *ctx, GLenum name)
 {
    switch (name) {
       case GL_RENDERER:
-         return (const GLubyte *) "Mesa BGLView (software)";
+         return (const GLubyte *) "Mesa " MESA_VERSION_STRING " powered BGLView (software)";
       default:
          // Let core library handle all other cases
          return NULL;
@@ -1448,5 +1549,27 @@ void MesaDriver::ReadRGBAPixelsBack( const GLcontext *ctx,
    };
 }
 
+const char * color_space_name(color_space space)
+{
+#define C2N(a)	case a:	return #a
+
+	switch (space) {
+	C2N(B_RGB24);
+	C2N(B_RGB32);
+	C2N(B_RGBA32);
+	C2N(B_RGB32_BIG);
+	C2N(B_RGBA32_BIG);
+	C2N(B_GRAY8);
+	C2N(B_GRAY1);
+	C2N(B_RGB16);
+	C2N(B_RGB15);
+	C2N(B_RGBA15);
+	C2N(B_CMAP8);
+	default:
+		return "Unknown!";
+	};
+
+#undef C2N
+};
 
 

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,8 +31,6 @@
 #include "s_context.h"
 #include "s_fog.h"
 #include "s_span.h"
-
-
 
 
 /**
@@ -99,7 +96,7 @@ _swrast_fog_rgba_span( const GLcontext *ctx, struct sw_span *span )
       /* The span's fog values are fog coordinates, now compute blend factors
        * and blend the fragment colors with the fog color.
        */
-      switch (ctx->Fog.Mode) {
+      switch (swrast->_FogMode) {
       case GL_LINEAR:
          {
             const GLfloat fogEnd = ctx->Fog.End;
@@ -112,7 +109,7 @@ _swrast_fog_rgba_span( const GLcontext *ctx, struct sw_span *span )
             GLuint i;
             for (i = 0; i < span->end; i++) {
                GLfloat f, oneMinusF;
-               f = (fogEnd - fogCoord / w) * fogScale;
+               f = (fogEnd - FABSF(fogCoord) / w) * fogScale;
                f = CLAMP(f, 0.0F, 1.0F);
                oneMinusF = 1.0F - f;
                rgba[i][RCOMP] = (GLchan) (f * rgba[i][RCOMP] + oneMinusF * rFog);
@@ -133,7 +130,7 @@ _swrast_fog_rgba_span( const GLcontext *ctx, struct sw_span *span )
             GLuint i;
             for (i = 0; i < span->end; i++) {
                GLfloat f, oneMinusF;
-               f = (GLfloat) exp(density * fogCoord / w);
+               f = (GLfloat) exp(density * FABSF(fogCoord) / w);
                f = CLAMP(f, 0.0F, 1.0F);
                oneMinusF = 1.0F - f;
                rgba[i][RCOMP] = (GLchan) (f * rgba[i][RCOMP] + oneMinusF * rFog);

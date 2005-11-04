@@ -51,26 +51,6 @@
 #include "t_pipeline.h"
 
 
-/**
- * \warning These values _MUST_ match the values in the OutputRegisters[]
- * array in vpparse.c!!!
- */
-#define VERT_RESULT_HPOS 0
-#define VERT_RESULT_COL0 1
-#define VERT_RESULT_COL1 2
-#define VERT_RESULT_BFC0 3
-#define VERT_RESULT_BFC1 4
-#define VERT_RESULT_FOGC 5
-#define VERT_RESULT_PSIZ 6
-#define VERT_RESULT_TEX0 7
-#define VERT_RESULT_TEX1 8
-#define VERT_RESULT_TEX2 9
-#define VERT_RESULT_TEX3 10
-#define VERT_RESULT_TEX4 11
-#define VERT_RESULT_TEX5 12
-#define VERT_RESULT_TEX6 13
-#define VERT_RESULT_TEX7 14
-
 
 /*!
  * Private storage for the vertex program pipeline stage.
@@ -99,6 +79,10 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
    struct vertex_buffer *VB = &tnl->vb;
    struct vertex_program *program = ctx->VertexProgram.Current;
    GLuint i;
+
+   if (!ctx->VertexProgram._Enabled ||
+       !program->IsNVProgram)
+      return GL_TRUE;
 
    /* load program parameter registers (they're read-only) */
    _mesa_init_vp_per_primitive_registers(ctx);
@@ -133,8 +117,7 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 	    const GLuint size = VB->AttribPtr[attr]->size;
 	    const GLuint stride = VB->AttribPtr[attr]->stride;
 	    const GLfloat *data = (GLfloat *) (ptr + stride * i);
-	    ASSIGN_4V(ctx->VertexProgram.Inputs[attr], 0, 0, 0, 1);
-	    COPY_SZ_4V(ctx->VertexProgram.Inputs[attr], size, data);
+	    COPY_CLEAN_4V(ctx->VertexProgram.Inputs[attr], size, data);
 	 }
       }
 
@@ -201,9 +184,9 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
                                             &store->andmask );
    }
    else {
-      VB->NdcPtr = 0;
+      VB->NdcPtr = NULL;
       _mesa_clip_np_tab[VB->ClipPtr->size]( VB->ClipPtr,
-                                            0,
+                                            NULL,
                                             store->clipmask,
                                             &store->ormask,
                                             &store->andmask );
@@ -224,61 +207,14 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 }
 
 
-/**
- * This function validates stuff.
- */
-static GLboolean run_validate_program( GLcontext *ctx,
-					struct tnl_pipeline_stage *stage )
-{
-#if 000
-   /* XXX do we need any validation for vertex programs? */
-   GLuint ind = 0;
-   light_func *tab;
-
-   if (ctx->Visual.rgbMode) {
-      if (ctx->Light._NeedVertices) {
-	 if (ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
-	    tab = _tnl_light_spec_tab;
-	 else
-	    tab = _tnl_light_tab;
-      }
-      else {
-	 if (ctx->Light.EnabledList.next == ctx->Light.EnabledList.prev)
-	    tab = _tnl_light_fast_single_tab;
-	 else
-	    tab = _tnl_light_fast_tab;
-      }
-   }
-   else
-      tab = _tnl_light_ci_tab;
-
-   if (ctx->Light.ColorMaterialEnabled)
-      ind |= LIGHT_COLORMATERIAL;
-
-   if (ctx->Light.Model.TwoSide)
-      ind |= LIGHT_TWOSIDE;
-
-   VP_STAGE_DATA(stage)->light_func_tab = &tab[ind];
-
-   /* This and the above should only be done on _NEW_LIGHT:
-    */
-   _mesa_validate_all_lighting_tables( ctx );
-#endif
-
-   /* Now run the stage...
-    */
-   stage->run = run_vp;
-   return stage->run( ctx, stage );
-}
-
 
 
 /**
  * Called the first time stage->run is called.  In effect, don't
  * allocate data until the first time the stage is run.
  */
-static GLboolean run_init_vp( GLcontext *ctx,
-                              struct tnl_pipeline_stage *stage )
+static GLboolean init_vp( GLcontext *ctx,
+			  struct tnl_pipeline_stage *stage )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &(tnl->vb);
@@ -301,29 +237,11 @@ static GLboolean run_init_vp( GLcontext *ctx,
    _mesa_vector4f_alloc( &store->ndcCoords, 0, size, 32 );
    store->clipmask = (GLubyte *) ALIGN_MALLOC(sizeof(GLubyte)*size, 32 );
 
-   /* Now validate the stage derived data...
-    */
-   stage->run = run_validate_program;
-   return stage->run( ctx, stage );
+   return GL_TRUE;
 }
 
 
 
-/**
- * Check if vertex program mode is enabled. 
- * If so, configure the pipeline stage's type, inputs, and outputs.
- */
-static void check_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
-{
-   stage->active = ctx->VertexProgram._Enabled;
-
-   if (stage->active) {
-      /* Set stage->inputs equal to the bitmask of vertex attributes
-       * which the program needs for inputs.
-       */
-      stage->inputs = ctx->VertexProgram.Current->InputsRead;
-   }
-}
 
 
 /**
@@ -337,7 +255,7 @@ static void dtr( struct tnl_pipeline_stage *stage )
       GLuint i;
 
       /* free the vertex program result arrays */
-      for (i = 0; i < 15; i++)
+      for (i = 0; i < VERT_RESULT_MAX; i++)
          _mesa_vector4f_free( &store->attribs[i] );
 
       /* free misc arrays */
@@ -345,7 +263,7 @@ static void dtr( struct tnl_pipeline_stage *stage )
       ALIGN_FREE( store->clipmask );
 
       FREE( store );
-      stage->privatePtr = 0;
+      stage->privatePtr = NULL;
    }
 }
 
@@ -355,14 +273,9 @@ static void dtr( struct tnl_pipeline_stage *stage )
 const struct tnl_pipeline_stage _tnl_vertex_program_stage =
 {
    "vertex-program",
-   _NEW_ALL,	/*XXX FIX */	/* recheck */
-   _NEW_ALL,	/*XXX FIX */    /* recalc */
-   GL_FALSE,			/* active */
-   0,				/* inputs - calculated on the fly */
-   _TNL_BITS_PROG_ANY,		/* outputs -- could calculate */
-   0,				/* changed_inputs */
    NULL,			/* private_data */
+   init_vp,			/* create */
    dtr,				/* destroy */
-   check_vp,			/* check */
-   run_init_vp			/* run -- initially set to ctr */
+   NULL, 			/* validate */
+   run_vp			/* run -- initially set to ctr */
 };

@@ -37,7 +37,7 @@
 #include "dglcontext.h"
 
 // Get compile errors without this. KeithH
-#include "scitech.h"	// ibool, etc.
+//#include "scitech.h"	// ibool, etc.
 
 #ifdef _USE_GLD3_WGL
 #include "gld_driver.h"
@@ -517,12 +517,12 @@ LRESULT CALLBACK dglKeyProc(
 	HGLRC hGLRC = NULL;
 	DGL_ctx* lpCtx = NULL;
 	int cmd = 0, dx1 = 0, dx2 = 0, i;
-	static ibool bAltPressed = false;
-	static ibool bCtrlPressed = false;
-	static ibool bShiftPressed = false;
+	static BOOL bAltPressed = FALSE;
+	static BOOL bCtrlPressed = FALSE;
+	static BOOL bShiftPressed = FALSE;
     RECT r, rf, rc;
     POINT pt;
-    ibool bForceReshape = false;
+    BOOL bForceReshape = FALSE;
 
 	return CallNextHookEx(hKeyHook, code, wParam, lParam);
 }

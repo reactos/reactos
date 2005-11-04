@@ -1,4 +1,4 @@
-/* $Id: sse_xform4.S,v 1.2 2004/04/26 10:10:25 alanh Exp $ */
+/* $Id: sse_xform4.S,v 1.3 2005/01/04 14:33:47 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -41,6 +41,7 @@
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_sse_transform_points4_general )
+HIDDEN(_mesa_sse_transform_points4_general)
 GLNAME( _mesa_sse_transform_points4_general ):
 
 	PUSH_L( ESI )
@@ -112,6 +113,7 @@ LLBL( sse_general_done ):
 
 ALIGNTEXT4
 GLOBL GLNAME( _mesa_sse_transform_points4_3d )
+HIDDEN(_mesa_sse_transform_points4_3d)
 GLNAME( _mesa_sse_transform_points4_3d ):
 
 	PUSH_L( ESI )
@@ -183,6 +185,7 @@ LLBL( K_GTP43P3DR_finish ):
 
 ALIGNTEXT16
 GLOBL GLNAME( _mesa_sse_transform_points4_identity )
+HIDDEN(_mesa_sse_transform_points4_identity)
 GLNAME( _mesa_sse_transform_points4_identity ):
 
 	PUSH_L( ESI )

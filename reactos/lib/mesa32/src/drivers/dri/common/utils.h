@@ -32,10 +32,56 @@
 #include "context.h"
 #include "dri_util.h"
 
-struct dri_debug_control
-{
+struct dri_debug_control {
     const char * string;
     unsigned     flag;
+};
+
+/**
+ * Description of the entry-points and parameters for an OpenGL function.
+ */
+struct dri_extension_function {
+    /**
+     * \brief
+     * Packed string describing the parameter signature and the entry-point
+     * names.
+     * 
+     * The parameter signature and the names of the entry-points for this
+     * function are packed into a single string.  The substrings are
+     * separated by NUL characters.  The whole string is terminated by
+     * two consecutive NUL characters.
+     */
+    const char * strings;
+
+
+    /**
+     * Location in the remap table where the dispatch offset should be
+     * stored.
+     */
+    int remap_index;
+
+    /**
+     * Offset of the function in the dispatch table.
+     */
+    int offset;
+};
+
+/**
+ * Description of the API for an extension to OpenGL.
+ */
+struct dri_extension {
+    /**
+     * Name of the extension.
+     */
+    const char * name;
+    
+
+    /**
+     * Pointer to a list of \c dri_extension_function structures.  The list
+     * is terminated by a structure with a \c NULL
+     * \c dri_extension_function::strings pointer.
+     */
+    const struct dri_extension_function * functions;
 };
 
 extern unsigned driParseDebugString( const char * debug,
@@ -45,17 +91,19 @@ extern unsigned driGetRendererString( char * buffer,
     const char * hardware_name, const char * driver_date, GLuint agp_mode );
 
 extern void driInitExtensions( GLcontext * ctx, 
-    const char * const card_extensions[], GLboolean enable_imaging );
+    const struct dri_extension * card_extensions, GLboolean enable_imaging );
 
-#ifndef DRI_NEW_INTERFACE_ONLY
-extern GLboolean driCheckDriDdxDrmVersions( __DRIscreenPrivate *sPriv,
-    const char * driver_name, int dri_major, int dri_minor,
-    int ddx_major, int ddx_minor, int drm_major, int drm_minor );
-#endif
+extern void driInitSingleExtension( GLcontext * ctx,
+    const struct dri_extension * ext );
 
 extern GLboolean driCheckDriDdxDrmVersions2(const char * driver_name,
     const __DRIversion * driActual, const __DRIversion * driExpected,
     const __DRIversion * ddxActual, const __DRIversion * ddxExpected,
+    const __DRIversion * drmActual, const __DRIversion * drmExpected);
+
+extern GLboolean driCheckDriDdxDrmVersions3(const char * driver_name,
+    const __DRIversion * driActual, const __DRIversion * driExpected,
+    const __DRIversion * ddxActual, const __DRIutilversion2 * ddxExpected,
     const __DRIversion * drmActual, const __DRIversion * drmExpected);
 
 extern GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
@@ -64,7 +112,7 @@ extern GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
 
 extern GLboolean driFillInModes( __GLcontextModes ** modes,
     GLenum fb_format, GLenum fb_type,
-    const uint8_t * depth_bits, const uint8_t * stencil_bits,
+    const u_int8_t * depth_bits, const u_int8_t * stencil_bits,
     unsigned num_depth_stencil_bits,
     const GLenum * db_modes, unsigned num_db_modes, int visType );
 

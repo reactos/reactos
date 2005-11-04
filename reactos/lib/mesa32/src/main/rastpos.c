@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -466,7 +466,7 @@ raster_pos4f(GLcontext *ctx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
                                    + ctx->Viewport._WindowMap.m[MAT_TY]);
       ctx->Current.RasterPos[2] = (ndc[2] * ctx->Viewport._WindowMap.m[MAT_SZ]
                                    + ctx->Viewport._WindowMap.m[MAT_TZ])
-                                  / ctx->DepthMaxF;
+                                  / ctx->DrawBuffer->_DepthMaxF;
       ctx->Current.RasterPos[3] = clip[3];
 
       /* compute raster distance */
@@ -996,30 +996,6 @@ void _mesa_init_rastpos( GLcontext * ctx )
    for (i=0; i<MAX_TEXTURE_UNITS; i++)
       ASSIGN_4V( ctx->Current.RasterTexCoords[i], 0.0, 0.0, 0.0, 1.0 );
    ctx->Current.RasterPosValid = GL_TRUE;
-
-  /*
-    * For XFree86/DRI: tell libGL to add these functions to the dispatcher.
-    * Basically, we should add all extension functions above offset 577.
-    * This enables older libGL libraries to work with newer drivers that
-    * have newer extensions.
-    */
-   /* GL_ARB_window_pos aliases with GL_MESA_window_pos */
-   _glapi_add_entrypoint("glWindowPos2dARB", 513);
-   _glapi_add_entrypoint("glWindowPos2dvARB", 514);
-   _glapi_add_entrypoint("glWindowPos2fARB", 515);
-   _glapi_add_entrypoint("glWindowPos2fvARB", 516);
-   _glapi_add_entrypoint("glWindowPos2iARB", 517);
-   _glapi_add_entrypoint("glWindowPos2ivARB", 518);
-   _glapi_add_entrypoint("glWindowPos2sARB", 519);
-   _glapi_add_entrypoint("glWindowPos2svARB", 520);
-   _glapi_add_entrypoint("glWindowPos3dARB", 521);
-   _glapi_add_entrypoint("glWindowPos3dvARB", 522);
-   _glapi_add_entrypoint("glWindowPos3fARB", 523);
-   _glapi_add_entrypoint("glWindowPos3fvARB", 524);
-   _glapi_add_entrypoint("glWindowPos3iARB", 525);
-   _glapi_add_entrypoint("glWindowPos3ivARB", 526);
-   _glapi_add_entrypoint("glWindowPos3sARB", 527);
-   _glapi_add_entrypoint("glWindowPos3svARB", 528);
 }
 
 /*@}*/

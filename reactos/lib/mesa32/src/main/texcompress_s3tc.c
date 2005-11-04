@@ -28,6 +28,9 @@
  * GL_EXT_texture_compression_s3tc support.
  */
 
+#ifndef USE_EXTERNAL_DXTN_LIB
+#define USE_EXTERNAL_DXTN_LIB 0
+#endif
 
 #include "glheader.h"
 #include "imports.h"
@@ -39,15 +42,88 @@
 #include "texformat.h"
 #include "texstore.h"
 
+#if USE_EXTERNAL_DXTN_LIB
+#ifdef __MINGW32__
+/* no dlopen */
+#define DXTN_EXT "dxtn.dll"
+#define DXTN_PREFIX ""
+#define dlopen(name, mode) LoadLibrary(name)
+#define dlsym(hndl, proc) GetProcAddress(hndl, proc)
+#define dlclose(hndl) FreeLibrary(hndl)
+#elif defined(__DJGPP__)
+/* has dlopen, but doesn't like the names */
+#include <dlfcn.h>
+#define DXTN_EXT "dxtn.dxe"
+#define DXTN_PREFIX "_"
+#else
+/* happiness */
+#include <dlfcn.h>
+#define DXTN_EXT "libtxc_dxtn.so"
+#define DXTN_PREFIX ""
+#endif
+#endif /* USE_EXTERNAL_DXTN_LIB */
 
+typedef void (*dxtFetchTexelFuncExt)( GLint srcRowstride, GLubyte *pixdata, GLint col, GLint row, GLvoid *texelOut );
+dxtFetchTexelFuncExt fetch_ext_rgb_dxt1 = NULL;
+dxtFetchTexelFuncExt fetch_ext_rgba_dxt1 = NULL;
+dxtFetchTexelFuncExt fetch_ext_rgba_dxt3 = NULL;
+dxtFetchTexelFuncExt fetch_ext_rgba_dxt5 = NULL;
+
+typedef void (*dxtCompressTexFuncExt)(GLint srccomps, GLint width, GLint height, const GLubyte *srcPixData, GLenum destformat, GLubyte *dest, GLint dstRowStride);
+dxtCompressTexFuncExt ext_tx_compress_dxtn = NULL;
+
+void *dxtlibhandle = NULL;
 
 void
 _mesa_init_texture_s3tc( GLcontext *ctx )
 {
    /* called during context initialization */
-   (void) ctx;
-}
+   ctx->Mesa_DXTn = GL_FALSE;
+#if USE_EXTERNAL_DXTN_LIB
+   if (!dxtlibhandle) {
+      dxtlibhandle = dlopen (DXTN_EXT, RTLD_LAZY | RTLD_GLOBAL);
+      if (!dxtlibhandle) {
+	 _mesa_warning(ctx, "couldn't open " DXTN_EXT ", software DXTn "
+	    "compression/decompression unavailable\n");
+      }
+      else {
+         /* the fetch functions are not per context! Might be problematic... */
+         fetch_ext_rgb_dxt1 = (dxtFetchTexelFuncExt)dlsym(dxtlibhandle, DXTN_PREFIX "fetch_2d_texel_rgb_dxt1");
+         if (fetch_ext_rgb_dxt1 != NULL) {
+            fetch_ext_rgba_dxt1 = (dxtFetchTexelFuncExt)dlsym(dxtlibhandle, DXTN_PREFIX "fetch_2d_texel_rgba_dxt1");
+         }
+         if (fetch_ext_rgba_dxt1 != NULL) {
+            fetch_ext_rgba_dxt3 = (dxtFetchTexelFuncExt)dlsym(dxtlibhandle, DXTN_PREFIX "fetch_2d_texel_rgba_dxt3");
+         }
+         if (fetch_ext_rgba_dxt3 != NULL) {
+            fetch_ext_rgba_dxt5 = (dxtFetchTexelFuncExt)dlsym(dxtlibhandle, DXTN_PREFIX "fetch_2d_texel_rgba_dxt5");
+         }
+         if (fetch_ext_rgba_dxt5 != NULL) {
+            ext_tx_compress_dxtn = (dxtCompressTexFuncExt)dlsym(dxtlibhandle, DXTN_PREFIX "tx_compress_dxtn");
+         }
 
+         if (ext_tx_compress_dxtn == NULL) {
+	    _mesa_warning(ctx, "couldn't reference all symbols in "
+	       DXTN_EXT ", software DXTn compression/decompression "
+	       "unavailable\n");
+            fetch_ext_rgb_dxt1 = NULL;
+            fetch_ext_rgba_dxt1 = NULL;
+            fetch_ext_rgba_dxt3 = NULL;
+            fetch_ext_rgba_dxt5 = NULL;
+            ext_tx_compress_dxtn = NULL;
+            dlclose(dxtlibhandle);
+            dxtlibhandle = NULL;
+         }
+      }
+   }
+   if (dxtlibhandle) {
+      ctx->Mesa_DXTn = GL_TRUE;
+      _mesa_warning(ctx, "software DXTn compression/decompression available\n");
+   }
+#else
+   (void) ctx;
+#endif
+}
 
 /**
  * Called via TexFormat->StoreImage to store an RGB_DXT1 texture.
@@ -95,10 +171,12 @@ texstore_rgb_dxt1(STORE_PARAMS)
                                         GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
                                         texWidth, (GLubyte *) dstAddr);
 
-#if 0
-   compress_dxt1(ctx, srcWidth, srcHeight, srcFormat, pixels, srcRowStride,
-                 dst, dstRowStride);
-#endif
+   if (ext_tx_compress_dxtn) {
+      (*ext_tx_compress_dxtn)(3, srcWidth, srcHeight, pixels,  GL_COMPRESSED_RGB_S3TC_DXT1_EXT, dst, dstRowStride);
+   }
+   else {
+      _mesa_problem(ctx, "external dxt library not available");
+   }
 
    if (tempImage)
       _mesa_free((void *) tempImage);
@@ -152,10 +230,13 @@ texstore_rgba_dxt1(STORE_PARAMS)
    dst = _mesa_compressed_image_address(dstXoffset, dstYoffset, 0,
                                         GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,
                                         texWidth, (GLubyte *) dstAddr);
-#if 0
-   compress_dxt1(ctx, srcWidth, srcHeight, srcFormat, pixels, srcRowStride,
-                 dst, dstRowStride);
-#endif
+   if (ext_tx_compress_dxtn) {
+      (*ext_tx_compress_dxtn)(4, srcWidth, srcHeight, pixels,  GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, dst, dstRowStride);
+   }
+   else {
+      _mesa_problem(ctx, "external dxt library not available");
+   }
+
    if (tempImage)
       _mesa_free((void*) tempImage);
 
@@ -207,10 +288,13 @@ texstore_rgba_dxt3(STORE_PARAMS)
    dst = _mesa_compressed_image_address(dstXoffset, dstYoffset, 0,
                                         GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,
                                         texWidth, (GLubyte *) dstAddr);
-#if 0
-   compress_rgba_dxt3(ctx, srcWidth, srcHeight, pixels,
-                      srcRowStride, dst, dstRowStride);
-#endif
+   if (ext_tx_compress_dxtn) {
+      (*ext_tx_compress_dxtn)(4, srcWidth, srcHeight, pixels,  GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, dst, dstRowStride);
+   }
+   else {
+      _mesa_problem(ctx, "external dxt library not available");
+   }
+
    if (tempImage)
       _mesa_free((void *) tempImage);
 
@@ -262,10 +346,13 @@ texstore_rgba_dxt5(STORE_PARAMS)
    dst = _mesa_compressed_image_address(dstXoffset, dstYoffset, 0,
                                         GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,
                                         texWidth, (GLubyte *) dstAddr);
-#if 0
-   compress_rgba_dxt5(ctx, srcWidth, srcHeight, pixels,
-                      srcRowStride, dst, dstRowStride);
-#endif
+   if (ext_tx_compress_dxtn) {
+      (*ext_tx_compress_dxtn)(4, srcWidth, srcHeight, pixels,  GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, dst, dstRowStride);
+   }
+   else {
+      _mesa_problem(ctx, "external dxt library not available");
+   }
+
    if (tempImage)
       _mesa_free((void *) tempImage);
 
@@ -277,7 +364,12 @@ static void
 fetch_texel_2d_rgb_dxt1( const struct gl_texture_image *texImage,
                          GLint i, GLint j, GLint k, GLchan *texel )
 {
-   (void) texImage; (void) i; (void) j; (void) k; (void) texel;
+    (void) k;
+    if (fetch_ext_rgb_dxt1) {
+       ASSERT (sizeof(GLchan) == sizeof(GLubyte));
+       (*fetch_ext_rgb_dxt1)((texImage)->RowStride, (GLubyte *)(texImage)->Data, i, j, texel);
+    }
+    else _mesa_debug(NULL, "attempted to decode s3tc texture without library available\n");
 }
 
 
@@ -299,7 +391,11 @@ static void
 fetch_texel_2d_rgba_dxt1( const struct gl_texture_image *texImage,
                           GLint i, GLint j, GLint k, GLchan *texel )
 {
-   (void) texImage; (void) i; (void) j; (void) k; (void) texel;
+   (void) k;
+   if (fetch_ext_rgba_dxt1) {
+       (*fetch_ext_rgba_dxt1)((texImage)->RowStride, (GLubyte *)(texImage)->Data, i, j, texel);
+    }
+    else _mesa_debug(NULL, "attempted to decode s3tc texture without library available\n");
 }
 
 
@@ -321,7 +417,12 @@ static void
 fetch_texel_2d_rgba_dxt3( const struct gl_texture_image *texImage,
                           GLint i, GLint j, GLint k, GLchan *texel )
 {
-   (void) texImage; (void) i; (void) j; (void) k; (void) texel;
+   (void) k;
+   if (fetch_ext_rgba_dxt3) {
+       ASSERT (sizeof(GLchan) == sizeof(GLubyte));
+       (*fetch_ext_rgba_dxt3)((texImage)->RowStride, (GLubyte *)(texImage)->Data, i, j, texel);
+    }
+    else _mesa_debug(NULL, "attempted to decode s3tc texture without library available\n");
 }
 
 
@@ -343,7 +444,11 @@ static void
 fetch_texel_2d_rgba_dxt5( const struct gl_texture_image *texImage,
                           GLint i, GLint j, GLint k, GLchan *texel )
 {
-   (void) texImage; (void) i; (void) j; (void) k; (void) texel;
+   (void) k;
+   if (fetch_ext_rgba_dxt5) {
+       (*fetch_ext_rgba_dxt5)((texImage)->RowStride, (GLubyte *)(texImage)->Data, i, j, texel);
+    }
+    else _mesa_debug(NULL, "attempted to decode s3tc texture without library available\n");
 }
 
 

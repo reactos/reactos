@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -213,15 +213,49 @@ _mesa_generate_mipmap(GLcontext *ctx, GLenum target,
 
 
 extern void
-_mesa_rescale_teximage2d(GLuint bytesPerPixel, GLuint dstRowStride,
+_mesa_rescale_teximage2d(GLuint bytesPerPixel,
+                         GLuint srcStrideInPixels,
+                         GLuint dstRowStride,
                          GLint srcWidth, GLint srcHeight,
                          GLint dstWidth, GLint dstHeight,
                          const GLvoid *srcImage, GLvoid *dstImage);
 
 extern void
-_mesa_upscale_teximage2d( GLsizei inWidth, GLsizei inHeight,
-                          GLsizei outWidth, GLsizei outHeight,
-                          GLint comps, const GLchan *src, GLint srcRowStride,
-                          GLchan *dest );
+_mesa_upscale_teximage2d(GLsizei inWidth, GLsizei inHeight,
+                         GLsizei outWidth, GLsizei outHeight,
+                         GLint comps, const GLchan *src, GLint srcRowStride,
+                         GLchan *dest);
+
+
+extern void
+_mesa_get_teximage(GLcontext *ctx, GLenum target, GLint level,
+                   GLenum format, GLenum type, GLvoid *pixels,
+                   const struct gl_texture_object *texObj,
+                   const struct gl_texture_image *texImage);
+
+
+extern void
+_mesa_get_compressed_teximage(GLcontext *ctx, GLenum target, GLint level,
+                              GLvoid *img,
+                              const struct gl_texture_object *texObj,
+                              const struct gl_texture_image *texImage);
+
+extern const GLvoid *
+_mesa_validate_pbo_teximage(GLcontext *ctx, GLuint dimensions,
+			    GLsizei width, GLsizei height, GLsizei depth,
+			    GLenum format, GLenum type, const GLvoid *pixels,
+			    const struct gl_pixelstore_attrib *unpack,
+			    const char *funcName);
+
+extern const GLvoid *
+_mesa_validate_pbo_compressed_teximage(GLcontext *ctx,
+                                    GLsizei imageSize, const GLvoid *pixels,
+                                    const struct gl_pixelstore_attrib *packing,
+                                    const char *funcName);
+
+extern void
+_mesa_unmap_teximage_pbo(GLcontext *ctx,
+                         const struct gl_pixelstore_attrib *unpack);
+
 
 #endif

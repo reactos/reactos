@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -190,6 +190,7 @@ _mesa_PushAttrib(GLbitfield mask)
       attr->RescaleNormals = ctx->Transform.RescaleNormals;
       attr->Scissor = ctx->Scissor.Enabled;
       attr->Stencil = ctx->Stencil.Enabled;
+      attr->StencilTwoSide = ctx->Stencil.TestTwoSide;
       attr->MultisampleEnabled = ctx->Multisample.Enabled;
       attr->SampleAlphaToCoverage = ctx->Multisample.SampleAlphaToCoverage;
       attr->SampleAlphaToOne = ctx->Multisample.SampleAlphaToOne;
@@ -518,7 +519,9 @@ pop_enable_group(GLcontext *ctx, const struct gl_enable_attrib *enable)
                    GL_POLYGON_STIPPLE);
    TEST_AND_UPDATE(ctx->Scissor.Enabled, enable->Scissor, GL_SCISSOR_TEST);
    TEST_AND_UPDATE(ctx->Stencil.Enabled, enable->Stencil, GL_STENCIL_TEST);
-   /* XXX two-sided stencil */
+   if (ctx->Extensions.EXT_stencil_two_side) {
+      TEST_AND_UPDATE(ctx->Stencil.TestTwoSide, enable->StencilTwoSide, GL_STENCIL_TEST_TWO_SIDE_EXT);
+   }
    TEST_AND_UPDATE(ctx->Multisample.Enabled, enable->MultisampleEnabled,
                    GL_MULTISAMPLE_ARB);
    TEST_AND_UPDATE(ctx->Multisample.SampleAlphaToCoverage,
@@ -646,6 +649,14 @@ pop_texture_group(GLcontext *ctx, const struct gl_texture_attrib *texAttrib)
       _mesa_TexGenfv(GL_T, GL_EYE_PLANE, unit->EyePlaneT);
       _mesa_TexGenfv(GL_R, GL_EYE_PLANE, unit->EyePlaneR);
       _mesa_TexGenfv(GL_Q, GL_EYE_PLANE, unit->EyePlaneQ);
+      _mesa_set_enable(ctx, GL_TEXTURE_GEN_S,
+                       ((unit->TexGenEnabled & S_BIT) ? GL_TRUE : GL_FALSE));
+      _mesa_set_enable(ctx, GL_TEXTURE_GEN_T,
+                       ((unit->TexGenEnabled & T_BIT) ? GL_TRUE : GL_FALSE));
+      _mesa_set_enable(ctx, GL_TEXTURE_GEN_R,
+                       ((unit->TexGenEnabled & R_BIT) ? GL_TRUE : GL_FALSE));
+      _mesa_set_enable(ctx, GL_TEXTURE_GEN_Q,
+                       ((unit->TexGenEnabled & Q_BIT) ? GL_TRUE : GL_FALSE));
       if (ctx->Extensions.EXT_texture_lod_bias) {
          _mesa_TexEnvf(GL_TEXTURE_FILTER_CONTROL_EXT,
                        GL_TEXTURE_LOD_BIAS_EXT, unit->LodBias);
@@ -830,7 +841,13 @@ _mesa_PopAttrib(void)
                                (GLboolean) (color->ColorMask[1] != 0),
                                (GLboolean) (color->ColorMask[2] != 0),
                                (GLboolean) (color->ColorMask[3] != 0));
-               _mesa_DrawBuffer(color->DrawBuffer);
+#if 0
+               _mesa_DrawBuffersARB(ctx->Const.MaxDrawBuffers,
+                                    color->DrawBuffer);
+#else
+               _mesa_drawbuffers(ctx, ctx->Const.MaxDrawBuffers,
+                                 color->DrawBuffer, NULL);
+#endif
                _mesa_set_enable(ctx, GL_ALPHA_TEST, color->AlphaEnabled);
                _mesa_AlphaFunc(color->AlphaFunc, color->AlphaRef);
                _mesa_set_enable(ctx, GL_BLEND, color->BlendEnabled);
@@ -928,9 +945,8 @@ _mesa_PopAttrib(void)
                /* lighting enable */
                _mesa_set_enable(ctx, GL_LIGHTING, light->Enabled);
                /* per-light state */
-
-	       if (ctx->ModelviewMatrixStack.Top->flags & MAT_DIRTY_INVERSE) 
-		  _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
+               if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top))
+                  _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
 	       
                for (i = 0; i < MAX_LIGHTS; i++) {
                   GLenum lgt = (GLenum) (GL_LIGHT0 + i);
@@ -989,6 +1005,8 @@ _mesa_PopAttrib(void)
             break;
          case GL_PIXEL_MODE_BIT:
             MEMCPY( &ctx->Pixel, attr->data, sizeof(struct gl_pixel_attrib) );
+            /* XXX what other pixel state needs to be set by function calls? */
+            _mesa_ReadBuffer(ctx->Pixel.ReadBuffer);
 	    ctx->NewState |= _NEW_PIXEL;
             break;
          case GL_POINT_BIT:
@@ -1060,17 +1078,26 @@ _mesa_PopAttrib(void)
             break;
          case GL_STENCIL_BUFFER_BIT:
             {
-               const GLint face = 0; /* XXX stencil two side */
+               GLint face;
                const struct gl_stencil_attrib *stencil;
                stencil = (const struct gl_stencil_attrib *) attr->data;
                _mesa_set_enable(ctx, GL_STENCIL_TEST, stencil->Enabled);
                _mesa_ClearStencil(stencil->Clear);
-               _mesa_StencilFunc(stencil->Function[face], stencil->Ref[face],
-                                 stencil->ValueMask[face]);
-               _mesa_StencilMask(stencil->WriteMask[face]);
-               _mesa_StencilOp(stencil->FailFunc[face],
-                               stencil->ZFailFunc[face],
-                               stencil->ZPassFunc[face]);
+               face = stencil->ActiveFace;
+               if (ctx->Extensions.EXT_stencil_two_side) {
+                  _mesa_set_enable(ctx, GL_STENCIL_TEST_TWO_SIDE_EXT, stencil->TestTwoSide);
+                  face ^= 1;
+               }
+               do {
+                  _mesa_ActiveStencilFaceEXT(face);
+                  _mesa_StencilFunc(stencil->Function[face], stencil->Ref[face],
+                                    stencil->ValueMask[face]);
+                  _mesa_StencilMask(stencil->WriteMask[face]);
+                  _mesa_StencilOp(stencil->FailFunc[face],
+                                  stencil->ZFailFunc[face],
+                                  stencil->ZPassFunc[face]);
+                  face ^= 1;
+               } while (face != (stencil->ActiveFace ^ 1));
             }
             break;
          case GL_TRANSFORM_BIT:
@@ -1079,8 +1106,7 @@ _mesa_PopAttrib(void)
                const struct gl_transform_attrib *xform;
                xform = (const struct gl_transform_attrib *) attr->data;
                _mesa_MatrixMode(xform->MatrixMode);
-
-               if (ctx->ProjectionMatrixStack.Top->flags & MAT_DIRTY)
+               if (_math_matrix_is_dirty(ctx->ProjectionMatrixStack.Top))
                   _math_matrix_analyse( ctx->ProjectionMatrixStack.Top );
 
                /* restore clip planes */

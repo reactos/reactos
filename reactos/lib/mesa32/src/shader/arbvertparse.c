@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -37,6 +37,7 @@
 #include "imports.h"
 #include "macros.h"
 #include "mtypes.h"
+#include "program.h"
 #include "nvprogram.h"
 #include "nvvertparse.h"
 #include "nvvertprog.h"
@@ -44,126 +45,114 @@
 #include "arbprogparse.h"
 
 
-static GLvoid
-debug_vp_inst(GLint num, struct vp_instruction *vp)
+/**
+ * XXX this is probably redundant.  We've already got code like this
+ * in the nvvertparse.c file.  Combine/clean-up someday.
+ */
+void _mesa_debug_vp_inst(GLint num, struct vp_instruction *vp)
 {
    GLint a;
+   static const char *opcode_string[] = {
+      "ABS",
+      "ADD",
+      "ARL",
+      "DP3",
+      "DP4",
+      "DPH",
+      "DST",
+      "END",		/* Placeholder */
+      "EX2",		/* ARB only */
+      "EXP",
+      "FLR",		/* ARB */
+      "FRC",		/* ARB */
+      "LG2",		/* ARB only */
+      "LIT",
+      "LOG",
+      "MAD",
+      "MAX",
+      "MIN",
+      "MOV",
+      "MUL",
+      "POW",		/* ARB only */
+      "PRINT",		/* Mesa only */
+      "RCC",
+      "RCP",
+      "RSQ",
+      "SGE",
+      "SLT",
+      "SUB",
+      "SWZ",		/* ARB only */
+      "XPD"		/* ARB only */
+   };
+
+   static const char *file_string[] = {
+      "TEMP",
+      "INPUT",
+      "OUTPUT",
+      "LOCAL",
+      "ENV",
+      "NAMED",
+      "STATE",
+      "WRITE_ONLY",
+      "ADDR"
+   };
+
+   static const char swz[] = "xyzw01??";
 
    for (a=0; a<num; a++) {
-      switch (vp[a].Opcode) {
-         case VP_OPCODE_MOV:
-            fprintf(stderr, "VP_OPCODE_MOV"); break;
+      _mesa_printf("%s", opcode_string[vp[a].Opcode]);
 
-         case VP_OPCODE_LIT:
-            fprintf(stderr, "VP_OPCODE_LIT"); break;
-
-         case VP_OPCODE_RCP:
-            fprintf(stderr, "VP_OPCODE_RCP"); break;
-
-         case VP_OPCODE_RSQ:
-            fprintf(stderr, "VP_OPCODE_RSQ"); break;
-
-         case VP_OPCODE_EXP:
-            fprintf(stderr, "VP_OPCODE_EXP"); break;
-
-         case VP_OPCODE_LOG:
-            fprintf(stderr, "VP_OPCODE_LOG"); break;
-
-         case VP_OPCODE_MUL:
-            fprintf(stderr, "VP_OPCODE_MUL"); break;
-
-         case VP_OPCODE_ADD:
-            fprintf(stderr, "VP_OPCODE_ADD"); break;
-				
-         case VP_OPCODE_DP3:
-            fprintf(stderr, "VP_OPCODE_DP3"); break;
-
-         case VP_OPCODE_DP4:
-            fprintf(stderr, "VP_OPCODE_DP4"); break;
-
-         case VP_OPCODE_DST:
-            fprintf(stderr, "VP_OPCODE_DST"); break;
-
-         case VP_OPCODE_MIN:
-            fprintf(stderr, "VP_OPCODE_MIN"); break;
-
-         case VP_OPCODE_MAX:
-            fprintf(stderr, "VP_OPCODE_MAX"); break;
-
-         case VP_OPCODE_SLT:
-            fprintf(stderr, "VP_OPCODE_SLT"); break;
-
-         case VP_OPCODE_SGE:
-            fprintf(stderr, "VP_OPCODE_SGE"); break;
-
-         case VP_OPCODE_MAD:
-            fprintf(stderr, "VP_OPCODE_MAD"); break;
-
-         case VP_OPCODE_ARL:
-            fprintf(stderr, "VP_OPCODE_ARL"); break;
-
-         case VP_OPCODE_DPH:
-            fprintf(stderr, "VP_OPCODE_DPH"); break;
-
-         case VP_OPCODE_RCC:
-            fprintf(stderr, "VP_OPCODE_RCC"); break;
-
-         case VP_OPCODE_SUB:
-            fprintf(stderr, "VP_OPCODE_SUB"); break;
-
-         case VP_OPCODE_ABS:
-            fprintf(stderr, "VP_OPCODE_ABS"); break;
-
-         case VP_OPCODE_FLR:
-            fprintf(stderr, "VP_OPCODE_FLR"); break;
-
-         case VP_OPCODE_FRC:
-            fprintf(stderr, "VP_OPCODE_FRC"); break;
-
-         case VP_OPCODE_EX2:
-            fprintf(stderr, "VP_OPCODE_EX2"); break;
-
-         case VP_OPCODE_LG2:
-            fprintf(stderr, "VP_OPCODE_LG2"); break;
-
-         case VP_OPCODE_POW:
-            fprintf(stderr, "VP_OPCODE_POW"); break;
-
-         case VP_OPCODE_XPD:
-            fprintf(stderr, "VP_OPCODE_XPD"); break;
-
-         case VP_OPCODE_SWZ:
-            fprintf(stderr, "VP_OPCODE_SWZ"); break;
-				
-         case VP_OPCODE_END:
-            fprintf(stderr, "VP_OPCODE_END"); break;
+      if (vp[a].DstReg.File != 0xf) {
+	 if (vp[a].DstReg.WriteMask != 0xf)
+	    _mesa_printf(" %s[%d].%s%s%s%s ", file_string[vp[a].DstReg.File], vp[a].DstReg.Index,
+			 GET_BIT(vp[a].DstReg.WriteMask, 0) ? "x" : "",
+			 GET_BIT(vp[a].DstReg.WriteMask, 1) ? "y" : "",
+			 GET_BIT(vp[a].DstReg.WriteMask, 2) ? "z" : "",
+			 GET_BIT(vp[a].DstReg.WriteMask, 3) ? "w" : "");
+	 else
+	    _mesa_printf(" %s[%d] ", file_string[vp[a].DstReg.File], vp[a].DstReg.Index);
       }
 
-      fprintf(stderr, " D(0x%x:%d:%d%d%d%d) ", vp[a].DstReg.File, vp[a].DstReg.Index,
-          vp[a].DstReg.WriteMask[0],
-          vp[a].DstReg.WriteMask[1],
-          vp[a].DstReg.WriteMask[2],
-          vp[a].DstReg.WriteMask[3]);
-		
-      fprintf(stderr, "S1(0x%x:%d:%d%d%d%d) ", vp[a].SrcReg[0].File, vp[a].SrcReg[0].Index,
-          vp[a].SrcReg[0].Swizzle[0],
-          vp[a].SrcReg[0].Swizzle[1],
-          vp[a].SrcReg[0].Swizzle[2],
-          vp[a].SrcReg[0].Swizzle[3]);
+      if (vp[a].SrcReg[0].File != 0xf) {
+	 if (vp[a].SrcReg[0].Swizzle != SWIZZLE_NOOP ||
+	     vp[a].SrcReg[0].Negate)
+	    _mesa_printf("%s[%d].%s%c%c%c%c ", file_string[vp[a].SrcReg[0].File], vp[a].SrcReg[0].Index,
+			 vp[a].SrcReg[0].Negate ? "-" : "",
+			 swz[GET_SWZ(vp[a].SrcReg[0].Swizzle, 0)],
+			 swz[GET_SWZ(vp[a].SrcReg[0].Swizzle, 1)],
+			 swz[GET_SWZ(vp[a].SrcReg[0].Swizzle, 2)],
+			 swz[GET_SWZ(vp[a].SrcReg[0].Swizzle, 3)]);
+	 else
+	    _mesa_printf("%s[%d] ", file_string[vp[a].SrcReg[0].File], vp[a].SrcReg[0].Index);
+      }
 
-      fprintf(stderr, "S2(0x%x:%d:%d%d%d%d) ", vp[a].SrcReg[1].File, vp[a].SrcReg[1].Index,
-          vp[a].SrcReg[1].Swizzle[0],
-          vp[a].SrcReg[1].Swizzle[1],
-          vp[a].SrcReg[1].Swizzle[2],
-          vp[a].SrcReg[1].Swizzle[3]);
+      if (vp[a].SrcReg[1].File != 0xf) {
+	 if (vp[a].SrcReg[1].Swizzle != SWIZZLE_NOOP ||
+	     vp[a].SrcReg[1].Negate)
+	    _mesa_printf("%s[%d].%s%c%c%c%c ", file_string[vp[a].SrcReg[1].File], vp[a].SrcReg[1].Index,
+			 vp[a].SrcReg[1].Negate ? "-" : "",
+			 swz[GET_SWZ(vp[a].SrcReg[1].Swizzle, 0)],
+			 swz[GET_SWZ(vp[a].SrcReg[1].Swizzle, 1)],
+			 swz[GET_SWZ(vp[a].SrcReg[1].Swizzle, 2)],
+			 swz[GET_SWZ(vp[a].SrcReg[1].Swizzle, 3)]);
+	 else
+	    _mesa_printf("%s[%d] ", file_string[vp[a].SrcReg[1].File], vp[a].SrcReg[1].Index);
+      }
 
-      fprintf(stderr, "S3(0x%x:%d:%d%d%d%d)",  vp[a].SrcReg[2].File, vp[a].SrcReg[2].Index,	
-          vp[a].SrcReg[2].Swizzle[0],
-          vp[a].SrcReg[2].Swizzle[1],
-          vp[a].SrcReg[2].Swizzle[2],
-          vp[a].SrcReg[2].Swizzle[3]);
+      if (vp[a].SrcReg[2].File != 0xf) {
+	 if (vp[a].SrcReg[2].Swizzle != SWIZZLE_NOOP ||
+	     vp[a].SrcReg[2].Negate)
+	    _mesa_printf("%s[%d].%s%c%c%c%c ", file_string[vp[a].SrcReg[2].File], vp[a].SrcReg[2].Index,
+			 vp[a].SrcReg[2].Negate ? "-" : "",
+			 swz[GET_SWZ(vp[a].SrcReg[2].Swizzle, 0)],
+			 swz[GET_SWZ(vp[a].SrcReg[2].Swizzle, 1)],
+			 swz[GET_SWZ(vp[a].SrcReg[2].Swizzle, 2)],
+			 swz[GET_SWZ(vp[a].SrcReg[2].Swizzle, 3)]);
+	 else
+	    _mesa_printf("%s[%d] ", file_string[vp[a].SrcReg[2].File], vp[a].SrcReg[2].Index);
+      }
 
-      fprintf(stderr, "\n");
+      _mesa_printf("\n");
    }
 }
 
@@ -185,8 +174,8 @@ _mesa_parse_arb_vertex_program(GLcontext * ctx, GLenum target,
    /*  Parse error. Allocate a dummy program and return */	
    if (retval)
    {
-      program->Instructions = (struct vp_instruction *) _mesa_malloc (
-                                     sizeof(struct vp_instruction) );			  
+      program->Instructions = (struct vp_instruction *)
+         _mesa_malloc ( sizeof(struct vp_instruction) );
       program->Instructions[0].Opcode = VP_OPCODE_END;
       return;
    }
@@ -206,26 +195,10 @@ _mesa_parse_arb_vertex_program(GLcontext * ctx, GLenum target,
    program->OutputsWritten = ap.OutputsWritten;
    program->Parameters     = ap.Parameters; 
 
-   /* Eh.. we parsed something that wasn't a vertex program. doh! */
-   /* this wont happen any more */
-/*
-   if (ap.Base.Target != GL_VERTEX_PROGRAM_ARB)
-   {
-      program->Instructions = (struct vp_instruction *) _mesa_malloc (
-                                     sizeof(struct vp_instruction) );
-      program->Instructions[0].Opcode = VP_OPCODE_END;
-
-      _mesa_error (ctx, GL_INVALID_OPERATION, "Parsed a non-vertex program as a vertex program");
-      return;
-   }
-*/
-
    program->Instructions   = ap.VPInstructions;
 
 #if DEBUG_VP
-   debug_vp_inst(ap.Base.NumInstructions, ap.VPInstructions);
-#else
-   (void) debug_vp_inst;
+   _mesa_debug_vp_inst(ap.Base.NumInstructions, ap.VPInstructions);
 #endif
 
 }

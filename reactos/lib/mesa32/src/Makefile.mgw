@@ -20,9 +20,9 @@
 # AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# MinGW core makefile v1.3 for Mesa
+# MinGW core makefile v1.4 for Mesa
 #
-#  Copyright (C) 2002 - Borca Daniel
+#  Copyright (C) 2002 - Daniel Borca
 #  Email : dborca@users.sourceforge.net
 #  Web   : http://www.geocities.com/dborca
 
@@ -57,6 +57,9 @@
 .INTERMEDIATE: x86/gen_matypes.exe
 .SUFFIXES: .rc .res
 
+# Set this to the prefix of your build tools, i.e. mingw32-
+TOOLS_PREFIX = mingw32-
+
 TOP = ../..
 GLIDE ?= $(TOP)/glide3
 LIBDIR = $(TOP)/lib
@@ -70,14 +73,15 @@ endif
 
 LDLIBS = -lgdi32
 
-CC = mingw32-gcc
-CFLAGS += -DBUILD_GL32 -D_OPENGL32_ -D_MSC_VER
+CC = $(TOOLS_PREFIX)gcc
+CFLAGS += -DBUILD_GL32 -D_OPENGL32_
 CFLAGS += $(INCLUDE_DIRS)
+CFLAGS += -DUSE_EXTERNAL_DXTN_LIB=1
 ifeq ($(FX),1)
   CFLAGS += -I$(GLIDE)/include -DFX
   LDLIBS += -L$(GLIDE)/lib -lglide3x
-  GL_DEF = drivers/glide/fxopengl.def
-  GL_RES = drivers/glide/fx.rc
+  GL_DEF = drivers/windows/fx/fxopengl.def
+  GL_RES = drivers/windows/fx/fx.rc
 else
   ifeq ($(ICD),1)
     CFLAGS += -DUSE_MGL_NAMESPACE
@@ -88,11 +92,13 @@ else
 endif
 
 AR = ar
-ARFLAGS = rus
+ARFLAGS = crus
 
-ifeq ($(wildcard $(addsuffix /rm.exe,$(subst ;, ,$(PATH)))),)
 UNLINK = del $(subst /,\,$(1))
-else
+ifneq ($(wildcard $(addsuffix /rm.exe,$(subst ;, ,$(PATH)))),)
+UNLINK = $(RM) $(1)
+endif
+ifneq ($(wildcard $(addsuffix /rm,$(subst :, ,$(PATH)))),)
 UNLINK = $(RM) $(1)
 endif
 
@@ -111,7 +117,7 @@ endif
 ifeq ($(FX),1)
 DRIVER_SOURCES = \
 	$(GLIDE_DRIVER_SOURCES) \
-	drivers/glide/fxwgl.c
+	drivers/windows/fx/fxwgl.c
 else
 ifeq ($(ICD),1)
 DRIVER_SOURCES = \
@@ -141,10 +147,15 @@ RESOURCE = $(GL_RES:.rc=.res)
 .rc.res:
 	windres -o $@ -Irc -Ocoff $<
 
-all: $(LIBDIR)/$(GL_DLL) $(LIBDIR)/$(GL_IMP)
+all: $(LIBDIR) $(LIBDIR)/$(GL_DLL) $(LIBDIR)/$(GL_IMP)
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
 
 $(LIBDIR)/$(GL_DLL) $(LIBDIR)/$(GL_IMP): $(OBJECTS) $(RESOURCE)
-	dllwrap -o $(LIBDIR)/$(GL_DLL) --output-lib $(LIBDIR)/$(GL_IMP) --target i386-mingw32 --def $(GL_DEF) $^ $(LDLIBS)
+	$(TOOLS_PREFIX)dllwrap -o $(LIBDIR)/$(GL_DLL) --output-lib $(LIBDIR)/$(GL_IMP) \
+	                       --target i386-mingw32 --def $(GL_DEF) -Wl,-enable-stdcall-fixup \
+	                       $^ $(LDLIBS)
 
 $(X86_OBJECTS): x86/matypes.h
 
@@ -162,7 +173,7 @@ x86/gen_matypes.exe: x86/gen_matypes.c
 # with USE_X86_ASM (useful for trace/debug)
 ifeq (1,1)
 x86/glapi_x86.o: x86/glapi_x86.S
-	$(CC) -o $@ $(CFLAGS) -U__WIN32__ -DSTDCALL_API -c $<
+	$(CC) -o $@ $(CFLAGS) -DSTDCALL_API -c $<
 else
 main/dispatch.o: main/dispatch.c
 	$(CC) -o $@ $(CFLAGS) -UUSE_X86_ASM -c $<
@@ -182,12 +193,14 @@ clean:
 	-$(call UNLINK,math/*.o)
 	-$(call UNLINK,shader/*.o)
 	-$(call UNLINK,sparc/*.o)
+	-$(call UNLINK,ppc/*.o)
 	-$(call UNLINK,swrast/*.o)
 	-$(call UNLINK,swrast_setup/*.o)
 	-$(call UNLINK,tnl/*.o)
 	-$(call UNLINK,x86/*.o)
 	-$(call UNLINK,drivers/common/*.o)
+	-$(call UNLINK,drivers/glide/*.o)
+	-$(call UNLINK,drivers/windows/fx/*.o)
+	-$(call UNLINK,drivers/windows/fx/*.res)
 	-$(call UNLINK,drivers/windows/gdi/*.o)
 	-$(call UNLINK,drivers/windows/icd/*.o)
-	-$(call UNLINK,drivers/glide/*.o)
-	-$(call UNLINK,drivers/glide/*.res)

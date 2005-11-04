@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -83,6 +82,7 @@ NAME( GLcontext *ctx, const SWvertex *vert0, const SWvertex *vert1 )
 #if defined(DEPTH_TYPE)
    const GLint depthBits = ctx->Visual.depthBits;
    const GLint fixedToDepthShift = depthBits <= 16 ? FIXED_SHIFT : 0;
+   struct gl_renderbuffer *zrb = ctx->DrawBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;
 #define FixedToDepth(F)  ((F) >> fixedToDepthShift)
    GLint zPtrXstep, zPtrYstep;
    DEPTH_TYPE *zPtr;
@@ -152,7 +152,7 @@ NAME( GLcontext *ctx, const SWvertex *vert0, const SWvertex *vert1 )
       return;
 
 #ifdef DEPTH_TYPE
-   zPtr = (DEPTH_TYPE *) _swrast_zbuffer_address(ctx, x0, y0);
+   zPtr = (DEPTH_TYPE *) zrb->GetPointer(ctx, zrb, x0, y0);
 #endif
 #ifdef PIXEL_ADDRESS
    pixelPtr = (PIXEL_TYPE *) PIXEL_ADDRESS(x0,y0);
@@ -336,6 +336,11 @@ NAME( GLcontext *ctx, const SWvertex *vert0, const SWvertex *vert1 )
 
    INIT_SPAN(span, GL_LINE, numPixels, interpFlags, SPAN_XY);
 
+   /* Need these for fragment prog texcoord interpolation */
+   span.w = 1.0F;
+   span.dwdx = 0.0F;
+   span.dwdy = 0.0F;
+
    /*
     * Draw
     */
@@ -424,6 +429,8 @@ NAME( GLcontext *ctx, const SWvertex *vert0, const SWvertex *vert1 )
 #ifdef RENDER_SPAN
    RENDER_SPAN( span );
 #endif
+
+   (void)span;
 
 }
 

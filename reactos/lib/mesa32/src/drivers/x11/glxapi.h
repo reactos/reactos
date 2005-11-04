@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  * 
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,12 +31,6 @@
 #include "GL/glx.h"
 
 
-#ifdef GLX_BUILT_IN_XMESA
-/* The GLX API dispatcher (i.e. this code) is being built into XFree86's
- * libGL so we'll use the __GLXContextRec defined in xc/lib/GL/glx/glxclient.h
-*/
-#include "glxclient.h"
-#else
 /* The GLX API dispatcher (i.e. this code) is being built into stand-alone
  * Mesa.  We don't know anything about XFree86 or real GLX so we define a
  * minimal __GLXContextRec here so some of the functions in this file can
@@ -50,7 +43,6 @@ typedef struct __GLXcontextRec {
    GLXDrawable currentReadable;
    XID xid;
 } __GLXcontext;
-#endif
 
 
 /*
@@ -204,11 +196,6 @@ struct _glxapi_table {
 
    /*** GLX_MESA_agp_offset ***/
    GLuint (*GetAGPOffsetMESA)( const GLvoid *pointer );
-
-   /*** GLX_ARB_render_texture ***/
-   Bool (*BindTexImageARB)(Display *dpy, GLXPbuffer pbuffer, int buffer);
-   Bool (*ReleaseTexImageARB)(Display *dpy, GLXPbuffer pbuffer, int buffer);
-   Bool (*DrawableAttribARB)(Display *dpy, GLXDrawable draw, const int *attribList);
 };
 
 
@@ -229,7 +216,7 @@ extern void
 _glxapi_set_no_op_table(struct _glxapi_table *t);
 
 
-extern const GLvoid *
+extern __GLXextFuncPtr
 _glxapi_get_proc_address(const char *funcName);
 
 

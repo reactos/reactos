@@ -35,8 +35,6 @@
  * Where various primitive types are unaccelerated by hardware, the
  * code attempts to fallback to other primitive types (quadstrips to
  * tristrips, lineloops to linestrips), or to indexed vertices.
- * Ultimately, a FALLBACK() macro is invoked if there is no way to
- * render the primitive natively.
  */
 
 #if !defined(HAVE_TRIANGLES)
@@ -441,7 +439,9 @@ static void TAG(render_quad_strip_verts)( GLcontext *ctx,
 
       FLUSH();
 
-   } else if (HAVE_TRI_STRIPS && (ctx->_TriangleCaps & DD_FLATSHADE)) {
+   } else if (HAVE_TRI_STRIPS && 
+	      (ctx->_TriangleCaps & DD_FLATSHADE) &&
+	      TNL_CONTEXT(ctx)->vb.ColorPtr[0]->stride) {
       if (HAVE_ELTS) {
 	 LOCAL_VARS;
 	 int dmasz = GET_SUBSEQUENT_VB_MAX_ELTS();
@@ -491,8 +491,8 @@ static void TAG(render_quad_strip_verts)( GLcontext *ctx,
 	 FLUSH();
       }
       else {
-	 /* Vertices won't fit in a single buffer or elts not available,
-	  * VERT_FALLBACK.
+	 /* Vertices won't fit in a single buffer or elts not
+	  * available - should never happen.
 	  */
 	 fprintf(stderr, "%s - cannot draw primitive\n", __FUNCTION__);
 	 return;
@@ -561,9 +561,8 @@ static void TAG(render_quads_verts)( GLcontext *ctx,
          TAG(emit_verts)( ctx, j, nr, ALLOC_VERTS(nr) );
          currentsz = dmasz;
       }
-
-
-   } else if (HAVE_ELTS) {
+   }
+   else if (HAVE_ELTS) {
       /* Hardware doesn't have a quad primitive type -- try to
        * simulate it using indexed vertices and the triangle
        * primitive:
@@ -614,8 +613,29 @@ static void TAG(render_quads_verts)( GLcontext *ctx,
 
       RELEASE_ELT_VERTS();
    }
+   else if (HAVE_TRIANGLES) {
+      /* Hardware doesn't have a quad primitive type -- try to
+       * simulate it using triangle primitive.  This is a win for
+       * gears, but is it useful in the broader world?
+       */
+      LOCAL_VARS;
+      GLuint j;
+
+      INIT(GL_TRIANGLES);
+
+      for (j = start; j < count-3; j += 4) {
+	 void *tmp = ALLOC_VERTS( 6 );
+	 /* Send v0, v1, v3
+	  */
+	 tmp = EMIT_VERTS(ctx, j,     2, tmp);
+	 tmp = EMIT_VERTS(ctx, j + 3, 1, tmp);
+	 /* Send v1, v2, v3
+	  */
+	 tmp = EMIT_VERTS(ctx, j + 1, 3, tmp);
+      }
+   }
    else {
-      /* Vertices won't fit in a single buffer, fallback.
+      /* Vertices won't fit in a single buffer, should never happen.
        */
       fprintf(stderr, "%s - cannot draw primitive\n", __FUNCTION__);
       return;
@@ -1011,8 +1031,7 @@ static void TAG(render_quad_strip_elts)( GLcontext *ctx,
 	    {
 	       GLint i;
 	       GLint quads = (nr/2)-1;
-	       void *buf = ALLOC_ELTS( quads*6 );
-	       ELTS_VARS( buf );
+	       ELTS_VARS( ALLOC_ELTS( quads*6 ) );
 
 	       for ( i = j-start ; i < j-start+quads ; i++, elts += 2 ) {
 		  EMIT_TWO_ELTS( 0, elts[0], elts[1] );
@@ -1100,8 +1119,7 @@ static void TAG(render_quads_elts)( GLcontext *ctx,
 	 {
 	    GLint quads = nr/4;
 	    GLint i;
-	    void *buf = ALLOC_ELTS( quads * 6 );
-	    ELTS_VARS(buf);
+	    ELTS_VARS( ALLOC_ELTS( quads * 6 ) );
 
 	    for ( i = j-start ; i < j-start+quads ; i++, elts += 4 ) {
 	       EMIT_TWO_ELTS( 0, elts[0], elts[1] );
@@ -1141,10 +1159,8 @@ static tnl_render_func TAG(render_tab_elts)[GL_POLYGON+2] =
 
 
 
-
-
-
-/* Prevent fallbacks later on.
+/* Pre-check the primitives in the VB to prevent the need for
+ * fallbacks later on.
  */
 static GLboolean TAG(validate_render)( GLcontext *ctx,
 				       struct vertex_buffer *VB )
@@ -1200,7 +1216,9 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	 }
 	 else if (HAVE_QUAD_STRIPS) {
 	    ok = GL_TRUE;
-	 } else if (HAVE_TRI_STRIPS && (ctx->_TriangleCaps & DD_FLATSHADE)) {
+	 } else if (HAVE_TRI_STRIPS && 
+		    (ctx->_TriangleCaps & DD_FLATSHADE) &&
+		    VB->ColorPtr[0]->stride != 0) {
 	    if (HAVE_ELTS) {
 	       ok = (GLint) count < GET_SUBSEQUENT_VB_MAX_ELTS();
 	    }
@@ -1218,14 +1236,17 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	    ok = (GLint) count < GET_SUBSEQUENT_VB_MAX_ELTS();
 	 }
 	 else {
-	    ok = GL_FALSE;
+	    ok = HAVE_TRIANGLES; /* flatshading is ok. */
 	 }
 	 break;
       default:
 	 break;
       }
       
-      if (!ok) return GL_FALSE;
+      if (!ok) {
+/* 	 fprintf(stderr, "not ok %s\n", _mesa_lookup_enum_by_nr(prim & PRIM_MODE_MASK)); */
+	 return GL_FALSE;
+      }
    }
 
    return GL_TRUE;

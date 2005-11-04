@@ -45,6 +45,8 @@
 #include "tnl.h"
 #include "tnl/t_context.h"
 #include "swrast.h"
+#include "texstore.h"
+
 
 static void
 fxTexValidate(GLcontext * ctx, struct gl_texture_object *tObj)
@@ -69,11 +71,6 @@ fxTexValidate(GLcontext * ctx, struct gl_texture_object *tObj)
 
 #if FX_RESCALE_BIG_TEXURES_HACK
 {
-   extern void _mesa_rescale_teximage2d( GLuint bytesPerPixel,
-                                         GLuint dstRowStride,
-                                         GLint srcWidth, GLint srcHeight,
-                                         GLint dstWidth, GLint dstHeight,
-                                         const GLvoid *srcImage, GLvoid *dstImage );
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
    /* [dBorca]
     * Fake textures larger than HW supports:
@@ -109,13 +106,14 @@ fxTexValidate(GLcontext * ctx, struct gl_texture_object *tObj)
                       &(mml->wScale), &(mml->hScale));
          _w *= mml->wScale;
          _h *= mml->hScale;
-         texImage->Data = MESA_PBUFFER_ALLOC(_w * _h * texelBytes);
+         texImage->Data = _mesa_malloc(_w * _h * texelBytes);
          _mesa_rescale_teximage2d(texelBytes,
+                                  mml->width,
                                   _w * texelBytes, /* dst stride */
                                   mml->width, mml->height, /* src */
                                   _w, _h, /* dst */
                                   texImage_Data /*src*/, texImage->Data /*dst*/ );
-         MESA_PBUFFER_FREE(texImage_Data);
+         _mesa_free(texImage_Data);
          mml->width = _w;
          mml->height = _h;
          /* (!) ... and set mml->wScale = _w / texImage->Width */
@@ -383,15 +381,6 @@ fxSetupSingleTMU_NoLock(fxMesaContext fxMesa, struct gl_texture_object *tObj)
 	 }
 	 grTexDownloadTable(ti->paltype, &(ti->palette));
       }
-#if FX_TC_NCC
-      if ((ti->info.format == GR_TEXFMT_AYIQ_8422) ||
-          (ti->info.format == GR_TEXFMT_YIQ_422)) {
-	 if (TDFX_DEBUG & VERBOSE_DRIVER) {
-	    fprintf(stderr, "fxSetupSingleTMU_NoLock: uploading NCC table\n");
-	 }
-	 grTexDownloadTable(GR_TEXTABLE_NCC0, &(ti->palette));
-      }
-#endif
 
       grTexClampMode(GR_TMU0, ti->sClamp, ti->tClamp);
       grTexClampMode(GR_TMU1, ti->sClamp, ti->tClamp);
@@ -419,15 +408,6 @@ fxSetupSingleTMU_NoLock(fxMesaContext fxMesa, struct gl_texture_object *tObj)
 	 }
 	 fxMesa->Glide.grTexDownloadTableExt(tmu, ti->paltype, &(ti->palette));
       }
-#if FX_TC_NCC
-      if ((ti->info.format == GR_TEXFMT_AYIQ_8422) ||
-          (ti->info.format == GR_TEXFMT_YIQ_422)) {
-	 if (TDFX_DEBUG & VERBOSE_DRIVER) {
-	    fprintf(stderr, "fxSetupSingleTMU_NoLock: uploading NCC table\n");
-	 }
-	 fxMesa->Glide.grTexDownloadTableExt(tmu, GR_TEXTABLE_NCC0, &(ti->palette));
-      }
-#endif
 
       /* KW: The alternative is to do the download to the other tmu.  If
        * we get to this point, I think it means we are thrashing the
@@ -876,23 +856,6 @@ fxSetupDoubleTMU_NoLock(fxMesaContext fxMesa,
 	 fxMesa->Glide.grTexDownloadTableExt(ti0->whichTMU, ti0->paltype, &(ti0->palette));
       }
    }
-#if FX_TC_NCC
-   /* pointcast */
-   if ((ti1->info.format == GR_TEXFMT_AYIQ_8422) ||
-       (ti1->info.format == GR_TEXFMT_YIQ_422)) {
-      if (TDFX_DEBUG & VERBOSE_DRIVER) {
-         fprintf(stderr, "fxSetupDoubleTMU_NoLock: uploading NCC0 table for TMU1\n");
-      }
-      fxMesa->Glide.grTexDownloadTableExt(ti1->whichTMU, GR_TEXTABLE_NCC0, &(ti1->palette));
-   }
-   if ((ti0->info.format == GR_TEXFMT_AYIQ_8422) ||
-       (ti0->info.format == GR_TEXFMT_YIQ_422)) {
-      if (TDFX_DEBUG & VERBOSE_DRIVER) {
-         fprintf(stderr, "fxSetupDoubleTMU_NoLock: uploading NCC0 table for TMU0\n");
-      }
-      fxMesa->Glide.grTexDownloadTableExt(ti0->whichTMU, GR_TEXTABLE_NCC0, &(ti0->palette));
-   }
-#endif
 
    grTexSource(tmu0, ti0->tm[tmu0]->startAddr,
 			 GR_MIPMAPLEVELMASK_BOTH, &(ti0->info));
@@ -1723,6 +1686,10 @@ fxDDStencilFunc (GLcontext *ctx, GLenum func, GLint ref, GLuint mask)
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
    tfxUnitsState *us = &fxMesa->unitsState;
 
+   if (ctx->Stencil.ActiveFace) {
+      return;
+   }
+
    if (
        (us->stencilFunction != func)
        ||
@@ -1743,6 +1710,10 @@ fxDDStencilMask (GLcontext *ctx, GLuint mask)
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
    tfxUnitsState *us = &fxMesa->unitsState;
 
+   if (ctx->Stencil.ActiveFace) {
+      return;
+   }
+
    if (us->stencilWriteMask != mask) {
       us->stencilWriteMask = mask;
       fxMesa->new_state |= FX_NEW_STENCIL;
@@ -1754,6 +1725,10 @@ fxDDStencilOp (GLcontext *ctx, GLenum sfail, GLenum zfail, GLenum zpass)
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
    tfxUnitsState *us = &fxMesa->unitsState;
+
+   if (ctx->Stencil.ActiveFace) {
+      return;
+   }
 
    if (
        (us->stencilFailFunc != sfail)
@@ -1776,14 +1751,50 @@ fxSetupStencil (GLcontext * ctx)
    tfxUnitsState *us = &fxMesa->unitsState;
 
    if (us->stencilEnabled) {
+      GrCmpFnc_t stencilFailFunc = GR_STENCILOP_KEEP;
+      GrCmpFnc_t stencilZFailFunc = GR_STENCILOP_KEEP;
+      GrCmpFnc_t stencilZPassFunc = GR_STENCILOP_KEEP;
+      if (!fxMesa->multipass) {
+         stencilFailFunc = convertGLStencilOp(us->stencilFailFunc);
+         stencilZFailFunc = convertGLStencilOp(us->stencilZFailFunc);
+         stencilZPassFunc = convertGLStencilOp(us->stencilZPassFunc);
+      }
       grEnable(GR_STENCIL_MODE_EXT);
-      fxMesa->Glide.grStencilOpExt(convertGLStencilOp(us->stencilFailFunc),
-                                   convertGLStencilOp(us->stencilZFailFunc),
-                                   convertGLStencilOp(us->stencilZPassFunc));
+      fxMesa->Glide.grStencilOpExt(stencilFailFunc,
+                                   stencilZFailFunc,
+                                   stencilZPassFunc);
       fxMesa->Glide.grStencilFuncExt(us->stencilFunction - GL_NEVER + GR_CMP_NEVER,
                                      us->stencilRefValue,
                                      us->stencilValueMask);
       fxMesa->Glide.grStencilMaskExt(us->stencilWriteMask);
+   } else {
+      grDisable(GR_STENCIL_MODE_EXT);
+   }
+}
+
+void
+fxSetupStencilFace (GLcontext * ctx, GLint face)
+{
+   fxMesaContext fxMesa = FX_CONTEXT(ctx);
+   tfxUnitsState *us = &fxMesa->unitsState;
+
+   if (us->stencilEnabled) {
+      GrCmpFnc_t stencilFailFunc = GR_STENCILOP_KEEP;
+      GrCmpFnc_t stencilZFailFunc = GR_STENCILOP_KEEP;
+      GrCmpFnc_t stencilZPassFunc = GR_STENCILOP_KEEP;
+      if (!fxMesa->multipass) {
+         stencilFailFunc = convertGLStencilOp(ctx->Stencil.FailFunc[face]);
+         stencilZFailFunc = convertGLStencilOp(ctx->Stencil.ZFailFunc[face]);
+         stencilZPassFunc = convertGLStencilOp(ctx->Stencil.ZPassFunc[face]);
+      }
+      grEnable(GR_STENCIL_MODE_EXT);
+      fxMesa->Glide.grStencilOpExt(stencilFailFunc,
+                                   stencilZFailFunc,
+                                   stencilZPassFunc);
+      fxMesa->Glide.grStencilFuncExt(ctx->Stencil.Function[face] - GL_NEVER + GR_CMP_NEVER,
+                                     ctx->Stencil.Ref[face],
+                                     ctx->Stencil.ValueMask[face]);
+      fxMesa->Glide.grStencilMaskExt(ctx->Stencil.WriteMask[face]);
    } else {
       grDisable(GR_STENCIL_MODE_EXT);
    }

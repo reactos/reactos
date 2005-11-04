@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.3
  * 
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -483,6 +483,21 @@ typedef GLuint (* PFNGLXGETAGPOFFSETMESAPROC) (const GLvoid *pointer);
 
 
 /*
+ * ???. GLX_MESA_allocate_memory
+ */ 
+#ifndef GLX_MESA_allocate_memory
+#define GLX_MESA_allocate_memory 1
+
+extern void *glXAllocateMemoryMESA(Display *dpy, int scrn, size_t size, float readfreq, float writefreq, float priority);
+extern void glXFreeMemoryMESA(Display *dpy, int scrn, void *pointer);
+extern GLuint glXGetMemoryOffsetMESA(Display *dpy, int scrn, const void *pointer);
+typedef void * ( * PFNGLXALLOCATEMEMORYMESAPROC) (Display *dpy, int scrn, size_t size, float readfreq, float writefreq, float priority);
+typedef void ( * PFNGLXFREEMEMORYMESAPROC) (Display *dpy, int scrn, void *pointer);
+typedef GLuint (* PFNGLXGETMEMORYOFFSETMESAPROC) (Display *dpy, int scrn, const void *pointer);
+
+#endif /* GLX_MESA_allocate_memory */
+
+/*
  * ARB ?. GLX_ARB_render_texture
  */
 #ifndef GLX_ARB_render_texture
@@ -495,6 +510,39 @@ extern Bool glXDrawableAttribARB(Display *dpy, GLXDrawable draw, const int *attr
 #endif /* GLX_ARB_render_texture */
 
 
+/*
+ * Remove this when glxext.h is updated.
+ */
+#ifndef GLX_NV_float_buffer
+#define GLX_NV_float_buffer 1
+
+#define GLX_FLOAT_COMPONENTS_NV         0x20B0
+
+#endif /* GLX_NV_float_buffer */
+
+
+/*** Should these go here, or in another header? */
+/*
+** GLX Events
+*/
+typedef struct {
+    int event_type;		/* GLX_DAMAGED or GLX_SAVED */
+    int draw_type;		/* GLX_WINDOW or GLX_PBUFFER */
+    unsigned long serial;	/* # of last request processed by server */
+    Bool send_event;		/* true if this came for SendEvent request */
+    Display *display;		/* display the event was read from */
+    GLXDrawable drawable;	/* XID of Drawable */
+    unsigned int buffer_mask;	/* mask indicating which buffers are affected */
+    unsigned int aux_buffer;	/* which aux buffer was affected */
+    int x, y;
+    int width, height;
+    int count;			/* if nonzero, at least this many more */
+} GLXPbufferClobberEvent;
+
+typedef union __GLXEvent {
+    GLXPbufferClobberEvent glxpbufferclobber;
+    long pad[24];
+} GLXEvent;
 
 #ifdef __cplusplus
 }

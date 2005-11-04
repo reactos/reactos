@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -56,40 +56,41 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
       return;
    }
 
-   if (ctx->RenderMode==GL_RENDER) {
-      GLint x, y;
-      if (!ctx->Current.RasterPosValid) {
-	 return;
-      }
+   if (ctx->NewState) {
+      _mesa_update_state(ctx);
+   }
 
-      if (ctx->NewState) {
-         _mesa_update_state(ctx);
-      }
+   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+                  "glDrawPixels(incomplete framebuffer)" );
+      return;
+   }
 
+   if (!ctx->Current.RasterPosValid) {
+      return;
+   }
+
+   if (ctx->RenderMode == GL_RENDER) {
       /* Round, to satisfy conformance tests (matches SGI's OpenGL) */
-      x = IROUND(ctx->Current.RasterPos[0]);
-      y = IROUND(ctx->Current.RasterPos[1]);
-
+      GLint x = IROUND(ctx->Current.RasterPos[0]);
+      GLint y = IROUND(ctx->Current.RasterPos[1]);
       ctx->OcclusionResult = GL_TRUE;
       ctx->Driver.DrawPixels(ctx, x, y, width, height, format, type,
 			     &ctx->Unpack, pixels);
    }
-   else if (ctx->RenderMode==GL_FEEDBACK) {
+   else if (ctx->RenderMode == GL_FEEDBACK) {
       /* Feedback the current raster pos info */
-      if (ctx->Current.RasterPosValid) {
-	 FLUSH_CURRENT( ctx, 0 );
-         FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_DRAW_PIXEL_TOKEN );
-         _mesa_feedback_vertex( ctx,
-				ctx->Current.RasterPos,
-				ctx->Current.RasterColor,
-				ctx->Current.RasterIndex,
-				ctx->Current.RasterTexCoords[0] );
-      }
+      FLUSH_CURRENT( ctx, 0 );
+      FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_DRAW_PIXEL_TOKEN );
+      _mesa_feedback_vertex( ctx,
+                             ctx->Current.RasterPos,
+                             ctx->Current.RasterColor,
+                             ctx->Current.RasterIndex,
+                             ctx->Current.RasterTexCoords[0] );
    }
-   else if (ctx->RenderMode==GL_SELECT) {
-      if (ctx->Current.RasterPosValid) {
-         _mesa_update_hitflag( ctx, ctx->Current.RasterPos[2] );
-      }
+   else {
+      ASSERT(ctx->RenderMode == GL_SELECT);
+      /* Do nothing.  See OpenGL Spec, Appendix B, Corollary 6. */
    }
 }
 
@@ -99,7 +100,6 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
                   GLenum type )
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLint destx, desty;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
    if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
@@ -117,34 +117,37 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
       _mesa_update_state(ctx);
    }
 
-   if (ctx->RenderMode==GL_RENDER) {
-      /* Destination of copy: */
-      if (!ctx->Current.RasterPosValid) {
-	 return;
-      }
+   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT ||
+       ctx->ReadBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+                  "glCopyPixels(incomplete framebuffer)" );
+      return;
+   }
 
-      /* Round, to satisfy conformance tests (matches SGI's OpenGL) */
-      destx = IROUND(ctx->Current.RasterPos[0]);
-      desty = IROUND(ctx->Current.RasterPos[1]);
+   if (!ctx->Current.RasterPosValid) {
+      return;
+   }
 
+   if (ctx->RenderMode == GL_RENDER) {
+      /* Round to satisfy conformance tests (matches SGI's OpenGL) */
+      GLint destx = IROUND(ctx->Current.RasterPos[0]);
+      GLint desty = IROUND(ctx->Current.RasterPos[1]);
       ctx->OcclusionResult = GL_TRUE;
-
       ctx->Driver.CopyPixels( ctx, srcx, srcy, width, height, destx, desty,
 			      type );
    }
    else if (ctx->RenderMode == GL_FEEDBACK) {
-      if (ctx->Current.RasterPosValid) {
-         FLUSH_CURRENT( ctx, 0 );
-         FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_COPY_PIXEL_TOKEN );
-         _mesa_feedback_vertex( ctx, 
-                                ctx->Current.RasterPos,
-                                ctx->Current.RasterColor,
-                                ctx->Current.RasterIndex,
-                                ctx->Current.RasterTexCoords[0] );
-      }
+      FLUSH_CURRENT( ctx, 0 );
+      FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_COPY_PIXEL_TOKEN );
+      _mesa_feedback_vertex( ctx, 
+                             ctx->Current.RasterPos,
+                             ctx->Current.RasterColor,
+                             ctx->Current.RasterIndex,
+                             ctx->Current.RasterTexCoords[0] );
    }
-   else if (ctx->RenderMode == GL_SELECT) {
-      _mesa_update_hitflag( ctx, ctx->Current.RasterPos[2] );
+   else {
+      ASSERT(ctx->RenderMode == GL_SELECT);
+      /* Do nothing.  See OpenGL Spec, Appendix B, Corollary 6. */
    }
 }
 
@@ -157,6 +160,7 @@ _mesa_ReadPixels( GLint x, GLint y, GLsizei width, GLsizei height,
 		  GLenum format, GLenum type, GLvoid *pixels )
 {
    GET_CURRENT_CONTEXT(ctx);
+   const struct gl_renderbuffer *rb = ctx->ReadBuffer->_ColorReadBuffer;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
    if (width < 0 || height < 0) {
@@ -167,6 +171,17 @@ _mesa_ReadPixels( GLint x, GLint y, GLsizei width, GLsizei height,
 
    if (ctx->NewState)
       _mesa_update_state(ctx);
+
+   if (ctx->ReadBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+                  "glReadPixels(incomplete framebuffer)" );
+      return;
+   }
+
+   if (!rb) {
+      _mesa_error(ctx, GL_INVALID_OPERATION, "glReadPixels(no readbuffer)");
+      return;
+   }
 
    ctx->Driver.ReadPixels(ctx, x, y, width, height,
 			  format, type, &ctx->Pack, pixels);
@@ -193,37 +208,40 @@ _mesa_Bitmap( GLsizei width, GLsizei height,
       return;
    }
 
-   if (ctx->Current.RasterPosValid == GL_FALSE) {
+   if (!ctx->Current.RasterPosValid) {
       return;    /* do nothing */
    }
 
-   if (ctx->RenderMode==GL_RENDER) {
+   if (ctx->NewState) {
+      _mesa_update_state(ctx);
+   }
+
+   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+                  "glBitmap(incomplete framebuffer)");
+      return;
+   }
+
+   if (ctx->RenderMode == GL_RENDER) {
       /* Truncate, to satisfy conformance tests (matches SGI's OpenGL). */
       GLint x = IFLOOR(ctx->Current.RasterPos[0] - xorig);
       GLint y = IFLOOR(ctx->Current.RasterPos[1] - yorig);
-
-      if (ctx->NewState) {
-         _mesa_update_state(ctx);
-      }
-
       ctx->OcclusionResult = GL_TRUE;
       ctx->Driver.Bitmap( ctx, x, y, width, height, &ctx->Unpack, bitmap );
    }
 #if _HAVE_FULL_GL
-   else if (ctx->RenderMode==GL_FEEDBACK) {
-      if (ctx->Current.RasterPosValid) {
-	 FLUSH_CURRENT(ctx, 0);
-         FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_BITMAP_TOKEN );
-         _mesa_feedback_vertex( ctx,
-				ctx->Current.RasterPos,
-				ctx->Current.RasterColor,
-				ctx->Current.RasterIndex, 
-				ctx->Current.RasterTexCoords[0] );
-      }
+   else if (ctx->RenderMode == GL_FEEDBACK) {
+      FLUSH_CURRENT(ctx, 0);
+      FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_BITMAP_TOKEN );
+      _mesa_feedback_vertex( ctx,
+                             ctx->Current.RasterPos,
+                             ctx->Current.RasterColor,
+                             ctx->Current.RasterIndex, 
+                             ctx->Current.RasterTexCoords[0] );
    }
    else {
       ASSERT(ctx->RenderMode == GL_SELECT);
-      /* Bitmaps don't generate selection hits.  See appendix B of 1.1 spec. */
+      /* Do nothing.  See OpenGL Spec, Appendix B, Corollary 6. */
    }
 #endif
 
@@ -257,41 +275,42 @@ _mesa_DrawDepthPixelsMESA( GLsizei width, GLsizei height,
       return;
    }
 
-   if (ctx->RenderMode==GL_RENDER) {
-      GLint x, y;
-      if (!colors || !depths || !ctx->Current.RasterPosValid) {
-	 return;
-      }
+   if (!ctx->Current.RasterPosValid) {
+      return;
+   }
 
-      if (ctx->NewState) {
-         _mesa_update_state(ctx);
-      }
+   if (ctx->NewState) {
+      _mesa_update_state(ctx);
+   }
 
+   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+                  "glDrawDepthPixelsMESA(incomplete framebuffer)");
+      return;
+   }
+
+   if (ctx->RenderMode == GL_RENDER) {
       /* Round, to satisfy conformance tests (matches SGI's OpenGL) */
-      x = IROUND(ctx->Current.RasterPos[0]);
-      y = IROUND(ctx->Current.RasterPos[1]);
-
+      GLint x = IROUND(ctx->Current.RasterPos[0]);
+      GLint y = IROUND(ctx->Current.RasterPos[1]);
       ctx->OcclusionResult = GL_TRUE;
       ctx->Driver.DrawDepthPixelsMESA(ctx, x, y, width, height,
                                       colorFormat, colorType, colors,
                                       depthType, depths, &ctx->Unpack);
    }
-   else if (ctx->RenderMode==GL_FEEDBACK) {
+   else if (ctx->RenderMode == GL_FEEDBACK) {
       /* Feedback the current raster pos info */
-      if (ctx->Current.RasterPosValid) {
-	 FLUSH_CURRENT( ctx, 0 );
-         FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_DRAW_PIXEL_TOKEN );
-         _mesa_feedback_vertex( ctx,
-				ctx->Current.RasterPos,
-				ctx->Current.RasterColor,
-				ctx->Current.RasterIndex,
-				ctx->Current.RasterTexCoords[0] );
-      }
+      FLUSH_CURRENT( ctx, 0 );
+      FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_DRAW_PIXEL_TOKEN );
+      _mesa_feedback_vertex( ctx,
+                             ctx->Current.RasterPos,
+                             ctx->Current.RasterColor,
+                             ctx->Current.RasterIndex,
+                             ctx->Current.RasterTexCoords[0] );
    }
-   else if (ctx->RenderMode==GL_SELECT) {
-      if (ctx->Current.RasterPosValid) {
-         _mesa_update_hitflag( ctx, ctx->Current.RasterPos[2] );
-      }
+   else {
+      ASSERT(ctx->RenderMode == GL_SELECT);
+      /* Do nothing.  See OpenGL Spec, Appendix B, Corollary 6. */
    }
 }
 

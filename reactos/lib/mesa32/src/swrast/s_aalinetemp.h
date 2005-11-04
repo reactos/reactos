@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -30,6 +30,8 @@
 
 /*
  * Function to render each fragment in the AA line.
+ * \param ix  - integer fragment window X coordiante
+ * \param iy  - integer fragment window Y coordiante
  */
 static void
 NAME(plot)(GLcontext *ctx, struct LineInfo *line, int ix, int iy)
@@ -77,34 +79,46 @@ NAME(plot)(GLcontext *ctx, struct LineInfo *line, int ix, int iy)
 #endif
 #ifdef DO_TEX
    {
-      const GLfloat invQ = solve_plane_recip(fx, fy, line->vPlane[0]);
+      GLfloat invQ;
+      if (ctx->FragmentProgram._Active) {
+         invQ = 1.0F;
+      }
+      else {
+         invQ = solve_plane_recip(fx, fy, line->vPlane[0]);
+      }
       line->span.array->texcoords[0][i][0] = solve_plane(fx, fy, line->sPlane[0]) * invQ;
       line->span.array->texcoords[0][i][1] = solve_plane(fx, fy, line->tPlane[0]) * invQ;
       line->span.array->texcoords[0][i][2] = solve_plane(fx, fy, line->uPlane[0]) * invQ;
-      line->span.array->lambda[0][i] = compute_lambda(line->sPlane[0], line->tPlane[0], invQ,
-                                          line->texWidth[0], line->texHeight[0]);
+      line->span.array->lambda[0][i] = compute_lambda(line->sPlane[0],
+                                                      line->tPlane[0], invQ,
+                                                      line->texWidth[0],
+                                                      line->texHeight[0]);
    }
 #elif defined(DO_MULTITEX)
    {
       GLuint unit;
       for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++) {
          if (ctx->Texture.Unit[unit]._ReallyEnabled) {
-            const GLfloat invQ = solve_plane_recip(fx, fy, line->vPlane[unit]);
+            GLfloat invQ;
+            if (ctx->FragmentProgram._Active) {
+               invQ = 1.0F;
+            }
+            else {
+               invQ = solve_plane_recip(fx, fy, line->vPlane[unit]);
+            }
             line->span.array->texcoords[unit][i][0] = solve_plane(fx, fy, line->sPlane[unit]) * invQ;
             line->span.array->texcoords[unit][i][1] = solve_plane(fx, fy, line->tPlane[unit]) * invQ;
             line->span.array->texcoords[unit][i][2] = solve_plane(fx, fy, line->uPlane[unit]) * invQ;
             line->span.array->lambda[unit][i] = compute_lambda(line->sPlane[unit],
-                                               line->tPlane[unit], invQ,
-                                               line->texWidth[unit], line->texHeight[unit]);
+                                                               line->tPlane[unit], invQ,
+                                                               line->texWidth[unit], line->texHeight[unit]);
          }
       }
    }
 #endif
 
    if (line->span.end == MAX_WIDTH) {
-#if defined(DO_TEX) || defined(DO_MULTITEX)
-      _swrast_write_texture_span(ctx, &(line->span));
-#elif defined(DO_RGBA)
+#if defined(DO_RGBA)
       _swrast_write_rgba_span(ctx, &(line->span));
 #else
       _swrast_write_index_span(ctx, &(line->span));
@@ -135,7 +149,7 @@ NAME(line)(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
    line.dx = line.x1 - line.x0;
    line.dy = line.y1 - line.y0;
    line.len = SQRTF(line.dx * line.dx + line.dy * line.dy);
-   line.halfWidth = 0.5F * ctx->Line.Width;
+   line.halfWidth = 0.5F * ctx->Line._Width;
 
    if (line.len == 0.0 || IS_INF_OR_NAN(line.len))
       return;
@@ -209,11 +223,11 @@ NAME(line)(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
       const GLfloat s0 = v0->texcoord[0][0] * invW0;
       const GLfloat s1 = v1->texcoord[0][0] * invW1;
       const GLfloat t0 = v0->texcoord[0][1] * invW0;
-      const GLfloat t1 = v1->texcoord[0][1] * invW0;
+      const GLfloat t1 = v1->texcoord[0][1] * invW1;
       const GLfloat r0 = v0->texcoord[0][2] * invW0;
-      const GLfloat r1 = v1->texcoord[0][2] * invW0;
+      const GLfloat r1 = v1->texcoord[0][2] * invW1;
       const GLfloat q0 = v0->texcoord[0][3] * invW0;
-      const GLfloat q1 = v1->texcoord[0][3] * invW0;
+      const GLfloat q1 = v1->texcoord[0][3] * invW1;
       line.span.arrayMask |= (SPAN_TEXTURE | SPAN_LAMBDA);
       compute_plane(line.x0, line.y0, line.x1, line.y1, s0, s1, line.sPlane[0]);
       compute_plane(line.x0, line.y0, line.x1, line.y1, t0, t1, line.tPlane[0]);
@@ -235,11 +249,11 @@ NAME(line)(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
             const GLfloat s0 = v0->texcoord[u][0] * invW0;
             const GLfloat s1 = v1->texcoord[u][0] * invW1;
             const GLfloat t0 = v0->texcoord[u][1] * invW0;
-            const GLfloat t1 = v1->texcoord[u][1] * invW0;
+            const GLfloat t1 = v1->texcoord[u][1] * invW1;
             const GLfloat r0 = v0->texcoord[u][2] * invW0;
-            const GLfloat r1 = v1->texcoord[u][2] * invW0;
+            const GLfloat r1 = v1->texcoord[u][2] * invW1;
             const GLfloat q0 = v0->texcoord[u][3] * invW0;
-            const GLfloat q1 = v1->texcoord[u][3] * invW0;
+            const GLfloat q1 = v1->texcoord[u][3] * invW1;
             compute_plane(line.x0, line.y0, line.x1, line.y1, s0, s1, line.sPlane[u]);
             compute_plane(line.x0, line.y0, line.x1, line.y1, t0, t1, line.tPlane[u]);
             compute_plane(line.x0, line.y0, line.x1, line.y1, r0, r1, line.uPlane[u]);
@@ -295,9 +309,7 @@ NAME(line)(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
       segment(ctx, &line, NAME(plot), 0.0, 1.0);
    }
 
-#if defined(DO_TEX) || defined(DO_MULTITEX)
-   _swrast_write_texture_span(ctx, &(line.span));
-#elif defined(DO_RGBA)
+#if defined(DO_RGBA)
    _swrast_write_rgba_span(ctx, &(line.span));
 #else
    _swrast_write_index_span(ctx, &(line.span));

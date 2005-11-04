@@ -23,7 +23,7 @@
  */
 
 /*
- * DOS/DJGPP device driver v1.6 for Mesa
+ * DOS/DJGPP device driver v1.7 for Mesa
  *
  *  Copyright (C) 2002 - Borca Daniel
  *  Email : dborca@users.sourceforge.net
@@ -38,58 +38,57 @@
 #include "null.h"
 
 
-
 static vl_mode *modes;
 
 #define null_color_precision 8
 
 
-
-
-static void null_blit_nop (void)
+static void
+null_blit_nop (void)
 {
 }
 
 
-
-/* Desc: Attempts to detect VGA, check video modes and create selectors.
+/* Desc: Attempts to detect NUL, check video modes and create selectors.
  *
  * In  : -
  * Out : mode array
  *
  * Note: -
  */
-static vl_mode *null_init (void)
+static vl_mode *
+null_init (void)
 {
- static int m[][2] = {
-        {320, 200},
-        {320, 240},
-        {400, 300},
-        {512, 384},
-        {640, 400},
-        {640, 480},
-        {800, 600},
-        {1024, 768},
-        {1280, 1024},
-        {1600, 1200}
- };
- static int b[] = {
-        8,
-        15,
-        16,
-        24,
-        32
- };
+   static int m[][2] = {
+      {  320,  200 },
+      {  320,  240 },
+      {  400,  300 },
+      {  512,  384 },
+      {  640,  400 },
+      {  640,  480 },
+      {  800,  600 },
+      { 1024,  768 },
+      { 1280, 1024 },
+      { 1600, 1200 }
+   };
+   static int b[] = {
+      8,
+      15,
+      16,
+      24,
+      32
+   };
+   const unsigned int m_count = sizeof(m) / sizeof(m[0]);
+   const unsigned int b_count = sizeof(b) / sizeof(b[0]);
 
- unsigned int i, j, k;
+   unsigned int i, j, k;
 
- if (modes == NULL) {
-    modes = malloc(sizeof(vl_mode) *
-                   (1 + (sizeof(m) / sizeof(m[0]) * sizeof(b) / sizeof(b[0]))));
+   if (modes == NULL) {
+      modes = malloc(sizeof(vl_mode) * (1 + m_count * b_count));
 
-    if (modes != NULL) {
-       for (k = 0, i = 0; i < sizeof(m) / sizeof(m[0]); i++) {
-           for (j = 0; j < sizeof(b) / sizeof(b[0]); j++, k++) {
+      if (modes != NULL) {
+         for (k = 0, i = 0; i < m_count; i++) {
+            for (j = 0; j < b_count; j++, k++) {
                modes[k].xres    = m[i][0];
                modes[k].yres    = m[i][1];
                modes[k].bpp     = b[j];
@@ -97,34 +96,37 @@ static vl_mode *null_init (void)
                modes[k].scanlen = m[i][0] * ((b[j] + 7) / 8);
                modes[k].sel     = -1;
                modes[k].gran    = -1;
-           }
-       }
-       modes[k].xres    = -1;
-       modes[k].yres    = -1;
-       modes[k].bpp     = -1;
-       modes[k].mode    = 0xffff;
-       modes[k].scanlen = -1;
-       modes[k].sel     = -1;
-       modes[k].gran    = -1;
-    }
- }
+            }
+         }
+         modes[k].xres    = -1;
+         modes[k].yres    = -1;
+         modes[k].bpp     = -1;
+         modes[k].mode    = 0xffff;
+         modes[k].scanlen = -1;
+         modes[k].sel     = -1;
+         modes[k].gran    = -1;
+      }
+   }
 
- return modes;
+   return modes;
 }
 
 
-
-/* Desc: Frees all resources allocated by VGA init code.
+/* Desc: Frees all resources allocated by NUL init code.
  *
  * In  : -
  * Out : -
  *
  * Note: -
  */
-static void null_fini (void)
+static void
+null_fini (void)
 {
+   if (modes != NULL) {
+      free(modes);
+      modes = NULL;
+   }
 }
-
 
 
 /* Desc: Attempts to enter specified video mode.
@@ -134,15 +136,15 @@ static void null_fini (void)
  *
  * Note: -
  */
-static int null_entermode (vl_mode *p, int refresh)
+static int
+null_entermode (vl_mode *p, int refresh)
 {
- NUL.blit = null_blit_nop;
+   NUL.blit = null_blit_nop;
 
- return 0;
+   return 0;
 
- (void)(p && refresh); /* silence compiler warning */
+   (void)(p && refresh); /* silence compiler warning */
 }
-
 
 
 /* Desc: Restores to the mode prior to first call to null_entermode.
@@ -152,10 +154,10 @@ static int null_entermode (vl_mode *p, int refresh)
  *
  * Note: -
  */
-static void null_restore (void)
+static void
+null_restore (void)
 {
 }
-
 
 
 /* Desc: set one palette entry
@@ -165,11 +167,11 @@ static void null_restore (void)
  *
  * Note: uses integer values
  */
-static void null_setCI_i (int index, int red, int green, int blue)
+static void
+null_setCI_i (int index, int red, int green, int blue)
 {
- (void)(index && red && green && blue); /* silence compiler warning */
+   (void)(index && red && green && blue); /* silence compiler warning */
 }
-
 
 
 /* Desc: set one palette entry
@@ -179,13 +181,13 @@ static void null_setCI_i (int index, int red, int green, int blue)
  *
  * Note: uses normalized values
  */
-static void null_setCI_f (int index, float red, float green, float blue)
+static void
+null_setCI_f (int index, float red, float green, float blue)
 {
- float max = (1 << null_color_precision) - 1;
+   float max = (1 << null_color_precision) - 1;
 
- null_setCI_i(index, (int)(red * max), (int)(green * max), (int)(blue * max));
+   null_setCI_i(index, (int)(red * max), (int)(green * max), (int)(blue * max));
 }
-
 
 
 /* Desc: state retrieval
@@ -195,28 +197,28 @@ static void null_setCI_f (int index, float red, float green, float blue)
  *
  * Note: -
  */
-static int null_get (int pname, int *params)
+static int
+null_get (int pname, int *params)
 {
- switch (pname) {
-        default:
-             params[0] = params[0]; /* silence compiler warning */
-             return -1;
- }
- return 0;
+   switch (pname) {
+      default:
+         params[0] = params[0]; /* silence compiler warning */
+         return -1;
+   }
+   return 0;
 }
-
 
 
 /*
  * the driver
  */
 vl_driver NUL = {
-          null_init,
-          null_entermode,
-          NULL,
-          null_setCI_f,
-          null_setCI_i,
-          null_get,
-          null_restore,
-          null_fini
+   null_init,
+   null_entermode,
+   NULL,
+   null_setCI_f,
+   null_setCI_i,
+   null_get,
+   null_restore,
+   null_fini
 };

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.4
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -71,7 +70,7 @@ static void draw_points_ANY_pixmap( GLcontext *ctx, const SWvertex *vert )
 						  xmesa->pixelformat);
       XMesaSetForeground( dpy, gc, pixel );
       x =                         (GLint) vert->win[0];
-      y = FLIP( xmesa->xm_buffer, (GLint) vert->win[1] );
+      y = YFLIP( xrb, (GLint) vert->win[1] );
       XMesaDrawPoint( dpy, buffer, gc, x, y);
    }
    else {
@@ -79,7 +78,7 @@ static void draw_points_ANY_pixmap( GLcontext *ctx, const SWvertex *vert )
       register int x, y;
       XMesaSetForeground( dpy, gc, vert->index );
       x =                         (GLint) vert->win[0];
-      y = FLIP( xmesa->xm_buffer, (GLint) vert->win[1] );
+      y = YFLIP( xrb, (GLint) vert->win[1] );
       XMesaDrawPoint( dpy, buffer, gc, x, y);
    }
 }
@@ -118,18 +117,22 @@ void xmesa_choose_point( GLcontext *ctx )
 /**********************************************************************/
 
 
+#define GET_XRB(XRB)  struct xmesa_renderbuffer *XRB = \
+   (struct xmesa_renderbuffer *) ctx->DrawBuffer->_ColorDrawBuffers[0][0]->Wrapped
+
+
 /*
  * Draw a flat-shaded, PF_TRUECOLOR line into an XImage.
  */
 #define NAME flat_TRUECOLOR_line
 #define SETUP_CODE					\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);					\
    const GLubyte *color = vert1->color;			\
-   XMesaImage *img = xmesa->xm_buffer->backimage;	\
    unsigned long pixel;					\
    PACK_TRUECOLOR( pixel, color[0], color[1], color[2] );
 #define CLIP_HACK 1
-#define PLOT(X,Y) XMesaPutPixel( img, X, FLIP(xmesa->xm_buffer, Y), pixel );
+#define PLOT(X,Y) XMesaPutPixel(xrb->ximage, X, YFLIP(xrb, Y), pixel );
 #include "swrast/s_linetemp.h"
 
 
@@ -139,12 +142,29 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_8A8B8G8R_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLuint pixel = PACK_8B8G8R( color[0], color[1], color[2] );
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
+#define CLIP_HACK 1
+#define PLOT(X,Y) *pixelPtr = pixel;
+#include "swrast/s_linetemp.h"
+
+
+
+/*
+ * Draw a flat-shaded, PF_8A8R8G8B line into an XImage.
+ */
+#define NAME flat_8A8R8G8B_line
+#define SETUP_CODE						\
+   GET_XRB(xrb);						\
+   const GLubyte *color = vert1->color;				\
+   GLuint pixel = PACK_8R8G8B( color[0], color[1], color[2] );
+#define PIXEL_TYPE GLuint
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) *pixelPtr = pixel;
 #include "swrast/s_linetemp.h"
@@ -156,12 +176,12 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_8R8G8B_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLuint pixel = PACK_8R8G8B( color[0], color[1], color[2] );
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X, Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) *pixelPtr = pixel;
 #include "swrast/s_linetemp.h"
@@ -173,11 +193,11 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_8R8G8B24_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;
 #define PIXEL_TYPE bgr_t
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR3(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR3(xrb, X, Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) {			\
       pixelPtr->r = color[RCOMP];	\
@@ -193,12 +213,12 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_5R6G5B_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLushort pixel = PACK_5R6G5B( color[0], color[1], color[2] );
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) *pixelPtr = pixel;
 #include "swrast/s_linetemp.h"
@@ -210,11 +230,12 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_DITHER_5R6G5B_line
 #define SETUP_CODE						\
+   GET_XRB(xrb);						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
    const GLubyte *color = vert1->color;
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X, Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) PACK_TRUEDITHER( *pixelPtr, X, Y, color[0], color[1], color[2] );
 #include "swrast/s_linetemp.h"
@@ -227,13 +248,13 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_DITHER8_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLint r = color[0], g = color[1], b = color[2];		\
    DITHER_SETUP;
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) *pixelPtr = DITHER(X,Y,r,g,b);
 #include "swrast/s_linetemp.h"
@@ -245,14 +266,14 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_LOOKUP8_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLubyte pixel;						\
    LOOKUP_SETUP;						\
    pixel = (GLubyte) LOOKUP( color[0], color[1], color[2] );
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) *pixelPtr = pixel;
 #include "swrast/s_linetemp.h"
@@ -264,12 +285,13 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_HPCR_line
 #define SETUP_CODE						\
+   GET_XRB(xrb);						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
    const GLubyte *color = vert1->color;				\
    GLint r = color[0], g = color[1], b = color[2];
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y) *pixelPtr = (GLubyte) DITHER_HPCR(X,Y,r,g,b);
 #include "swrast/s_linetemp.h"
@@ -282,9 +304,9 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_TRUECOLOR_z_line
 #define SETUP_CODE						\
+   GET_XRB(xrb);						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
    const GLubyte *color = vert1->color;				\
-   XMesaImage *img = xmesa->xm_buffer->backimage;		\
    unsigned long pixel;						\
    PACK_TRUECOLOR( pixel, color[0], color[1], color[2] );
 #define INTERP_Z 1
@@ -293,7 +315,7 @@ void xmesa_choose_point( GLcontext *ctx )
 #define PLOT(X,Y)							\
 	if (Z < *zPtr) {						\
 	   *zPtr = Z;							\
-           XMesaPutPixel( img, X, FLIP(xmesa->xm_buffer, Y), pixel );	\
+           XMesaPutPixel(xrb->ximage, X, YFLIP(xrb, Y), pixel);		\
 	}
 #include "swrast/s_linetemp.h"
 
@@ -304,14 +326,37 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_8A8B8G8R_z_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLuint pixel = PACK_8B8G8R( color[0], color[1], color[2] );
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X,Y)
+#define CLIP_HACK 1
+#define PLOT(X,Y)		\
+	if (Z < *zPtr) {	\
+	   *zPtr = Z;		\
+	   *pixelPtr = pixel;	\
+	}
+#include "swrast/s_linetemp.h"
+
+
+
+/*
+ * Draw a flat-shaded, Z-less, PF_8A8R8G8B line into an XImage.
+ */
+#define NAME flat_8A8R8G8B_z_line
+#define SETUP_CODE						\
+   GET_XRB(xrb);						\
+   const GLubyte *color = vert1->color;				\
+   GLuint pixel = PACK_8R8G8B( color[0], color[1], color[2] );
+#define INTERP_Z 1
+#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
+#define PIXEL_TYPE GLuint
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)		\
 	if (Z < *zPtr) {	\
@@ -327,14 +372,14 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_8R8G8B_z_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLuint pixel = PACK_8R8G8B( color[0], color[1], color[2] );
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLuint
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR4(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR4(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)		\
 	if (Z < *zPtr) {	\
@@ -350,13 +395,13 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_8R8G8B24_z_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE bgr_t
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR3(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR3(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)			\
 	if (Z < *zPtr) {		\
@@ -374,14 +419,14 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_5R6G5B_z_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLushort pixel = PACK_5R6G5B( color[0], color[1], color[2] );
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)		\
 	if (Z < *zPtr) {	\
@@ -397,13 +442,14 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_DITHER_5R6G5B_z_line
 #define SETUP_CODE					\
+   GET_XRB(xrb);						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
    const GLubyte *color = vert1->color;
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLushort
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR2(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR2(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)		\
 	if (Z < *zPtr) {	\
@@ -419,15 +465,15 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_DITHER8_z_line
 #define SETUP_CODE					\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);		\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;			\
    GLint r = color[0], g = color[1], b = color[2];	\
    DITHER_SETUP;
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)						\
 	if (Z < *zPtr) {					\
@@ -443,7 +489,7 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_LOOKUP8_z_line
 #define SETUP_CODE						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
+   GET_XRB(xrb);						\
    const GLubyte *color = vert1->color;				\
    GLubyte pixel;						\
    LOOKUP_SETUP;						\
@@ -451,8 +497,8 @@ void xmesa_choose_point( GLcontext *ctx )
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)		\
 	if (Z < *zPtr) {	\
@@ -468,14 +514,15 @@ void xmesa_choose_point( GLcontext *ctx )
  */
 #define NAME flat_HPCR_z_line
 #define SETUP_CODE 						\
+   GET_XRB(xrb);						\
    XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
    const GLubyte *color = vert1->color;				\
    GLint r = color[0], g = color[1], b = color[2];
 #define INTERP_Z 1
 #define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
 #define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xmesa->xm_buffer->backimage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXELADDR1(xmesa->xm_buffer,X,Y)
+#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
+#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
 #define CLIP_HACK 1
 #define PLOT(X,Y)						\
 	if (Z < *zPtr) {					\
@@ -486,13 +533,49 @@ void xmesa_choose_point( GLcontext *ctx )
 
 
 
+#ifndef XFree86Server
+/**
+ * Draw fast, XOR line with XDrawLine in front color buffer.
+ * WARNING: this isn't fully OpenGL conformant because different pixels
+ * will be hit versus using the other line functions.
+ * Don't use the code in X server GLcore module since we need a wrapper
+ * for the XSetLineAttributes() function call.
+ */
+static void
+xor_line(GLcontext *ctx, const SWvertex *vert0, const SWvertex *vert1)
+{
+   XMesaContext xmesa = XMESA_CONTEXT(ctx);
+   XMesaDisplay *dpy = xmesa->xm_visual->display;
+   XMesaGC gc = xmesa->xm_buffer->gc;
+   struct xmesa_renderbuffer *xrb = (struct xmesa_renderbuffer *)
+      ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+   unsigned long pixel = xmesa_color_to_pixel(ctx,
+                                              vert1->color[0], vert1->color[1],
+                                              vert1->color[2], vert1->color[3],
+                                              xmesa->pixelformat);
+   int x0 = (int) vert0->win[0];
+   int y0 = YFLIP(xrb, (GLint) vert0->win[1]);
+   int x1 = (int) vert1->win[0];
+   int y1 = YFLIP(xrb, (GLint) vert1->win[1]);
+   XMesaSetForeground(dpy, gc, pixel);
+   XMesaSetFunction(dpy, gc, GXxor);
+   XSetLineAttributes(dpy, gc, (int) ctx->Line.Width,
+                      LineSolid, CapButt, JoinMiter);
+   XDrawLine(dpy, xrb->pixmap, gc, x0, y0, x1, y1);
+   XMesaSetFunction(dpy, gc, GXcopy);  /* this gc is used elsewhere */
+}
+#endif /* XFree86Server */
+
+
 static swrast_line_func get_line_func( GLcontext *ctx )
 {
    XMesaContext xmesa = XMESA_CONTEXT(ctx);
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    int depth = GET_VISUAL_DEPTH(xmesa->xm_visual);
+   GET_XRB(xrb);
 
-   if ((ctx->Color._DrawDestMask & (DD_FRONT_LEFT_BIT | DD_BACK_LEFT_BIT)) ==0)
+   if ((ctx->DrawBuffer->_ColorDrawBufferMask[0]
+        & (BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT)) == 0)
       return (swrast_line_func) NULL;
    if (ctx->RenderMode != GL_RENDER)      return (swrast_line_func) NULL;
    if (ctx->Line.SmoothFlag)              return (swrast_line_func) NULL;
@@ -501,7 +584,7 @@ static swrast_line_func get_line_func( GLcontext *ctx )
    if (ctx->Line.StippleFlag)             return (swrast_line_func) NULL;
    if (swrast->_RasterMask & MULTI_DRAW_BIT) return (swrast_line_func) NULL;
 
-   if (xmesa->xm_buffer->buffer==XIMAGE
+   if (xrb->ximage
        && swrast->_RasterMask==DEPTH_BIT
        && ctx->Depth.Func==GL_LESS
        && ctx->Depth.Mask==GL_TRUE
@@ -512,6 +595,8 @@ static swrast_line_func get_line_func( GLcontext *ctx )
             return flat_TRUECOLOR_z_line;
          case PF_8A8B8G8R:
             return flat_8A8B8G8R_z_line;
+         case PF_8A8R8G8B:
+            return flat_8A8R8G8B_z_line;
          case PF_8R8G8B:
             return flat_8R8G8B_z_line;
          case PF_8R8G8B24:
@@ -530,7 +615,7 @@ static swrast_line_func get_line_func( GLcontext *ctx )
             return (swrast_line_func)NULL;
       }
    }
-   if (xmesa->xm_buffer->buffer==XIMAGE
+   if (xrb->ximage
        && swrast->_RasterMask==0
        && ctx->Line.Width==1.0F) {
       switch (xmesa->pixelformat) {
@@ -538,6 +623,8 @@ static swrast_line_func get_line_func( GLcontext *ctx )
             return flat_TRUECOLOR_line;
          case PF_8A8B8G8R:
             return flat_8A8B8G8R_line;
+         case PF_8A8R8G8B:
+            return flat_8A8R8G8B_line;
          case PF_8R8G8B:
             return flat_8R8G8B_line;
          case PF_8R8G8B24:
@@ -557,14 +644,28 @@ static swrast_line_func get_line_func( GLcontext *ctx )
       }
    }
 
+#ifndef XFree86Server
+   if (ctx->DrawBuffer->_NumColorDrawBuffers[0] == 1
+       && ctx->DrawBuffer->_ColorDrawBufferMask[0] == BUFFER_BIT_FRONT_LEFT
+       && swrast->_RasterMask == LOGIC_OP_BIT
+       && ctx->Color.LogicOp == GL_XOR
+       && !ctx->Line.StippleFlag
+       && !ctx->Line.SmoothFlag) {
+      return xor_line;
+   }
+#endif /* XFree86Server */
+
    return (swrast_line_func) NULL;
 }
 
-/* Override for the swrast line-selection function.  Try to use one
+
+/**
+ * Override for the swrast line-selection function.  Try to use one
  * of our internal line functions, otherwise fall back to the
  * standard swrast functions.
  */
-void xmesa_choose_line( GLcontext *ctx )
+void
+xmesa_choose_line(GLcontext *ctx)
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
 

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,7 +34,7 @@
 #define NVFRAGPROG_H
 
 #include "config.h"
-
+#include "mtypes.h"
 
 /* output registers */
 #define FRAG_OUTPUT_COLR  0
@@ -62,22 +62,22 @@
 
 /* Fragment program instruction opcodes */
 enum fp_opcode {
-   FP_OPCODE_INVALID = -1,   /* Force signed enum */
-   FP_OPCODE_ABS = 1000,     /* ARB_f_p only */
+   FP_OPCODE_ABS,		/* ARB_f_p only */
    FP_OPCODE_ADD,
-   FP_OPCODE_CMP,            /* ARB_f_p only */
+   FP_OPCODE_CMP,		/* ARB_f_p only */
    FP_OPCODE_COS,
-   FP_OPCODE_DDX,            /* NV_f_p only */
-   FP_OPCODE_DDY,            /* NV_f_p only */
+   FP_OPCODE_DDX,		/* NV_f_p only */
+   FP_OPCODE_DDY,		/* NV_f_p only */
    FP_OPCODE_DP3,
    FP_OPCODE_DP4,
-   FP_OPCODE_DPH,            /* ARB_f_p only */
+   FP_OPCODE_DPH,		/* ARB_f_p only */
    FP_OPCODE_DST,
+   FP_OPCODE_END,		/* private opcode */
    FP_OPCODE_EX2,
    FP_OPCODE_FLR,
    FP_OPCODE_FRC,
-   FP_OPCODE_KIL_NV,         /* NV_f_p only */
-   FP_OPCODE_KIL,            /* ARB_f_p only */
+   FP_OPCODE_KIL,		/* ARB_f_p only */
+   FP_OPCODE_KIL_NV,		/* NV_f_p only */
    FP_OPCODE_LG2,
    FP_OPCODE_LIT,
    FP_OPCODE_LRP,
@@ -86,78 +86,82 @@ enum fp_opcode {
    FP_OPCODE_MIN,
    FP_OPCODE_MOV,
    FP_OPCODE_MUL,
-   FP_OPCODE_PK2H,           /* NV_f_p only */
-   FP_OPCODE_PK2US,          /* NV_f_p only */
-   FP_OPCODE_PK4B,           /* NV_f_p only */
-   FP_OPCODE_PK4UB,          /* NV_f_p only */
+   FP_OPCODE_PK2H,		/* NV_f_p only */
+   FP_OPCODE_PK2US,		/* NV_f_p only */
+   FP_OPCODE_PK4B,		/* NV_f_p only */
+   FP_OPCODE_PK4UB,		/* NV_f_p only */
    FP_OPCODE_POW,
+   FP_OPCODE_PRINT,		/* Mesa only */
    FP_OPCODE_RCP,
-   FP_OPCODE_RFL,            /* NV_f_p only */
+   FP_OPCODE_RFL,		/* NV_f_p only */
    FP_OPCODE_RSQ,
-   FP_OPCODE_SCS,            /* ARB_f_p only */
-   FP_OPCODE_SEQ,            /* NV_f_p only */
-   FP_OPCODE_SFL,            /* NV_f_p only */
-   FP_OPCODE_SGE,            /* NV_f_p only */
-   FP_OPCODE_SGT,            /* NV_f_p only */
+   FP_OPCODE_SCS,		/* ARB_f_p only */
+   FP_OPCODE_SEQ,		/* NV_f_p only */
+   FP_OPCODE_SFL,		/* NV_f_p only */
+   FP_OPCODE_SGE,		/* NV_f_p only */
+   FP_OPCODE_SGT,		/* NV_f_p only */
    FP_OPCODE_SIN,
-   FP_OPCODE_SLE,            /* NV_f_p only */
+   FP_OPCODE_SLE,		/* NV_f_p only */
    FP_OPCODE_SLT,
-   FP_OPCODE_SNE,            /* NV_f_p only */
-   FP_OPCODE_STR,            /* NV_f_p only */
+   FP_OPCODE_SNE,		/* NV_f_p only */
+   FP_OPCODE_STR,		/* NV_f_p only */
    FP_OPCODE_SUB,
-   FP_OPCODE_SWZ,            /* ARB_f_p only */
+   FP_OPCODE_SWZ,		/* ARB_f_p only */
    FP_OPCODE_TEX,
-   FP_OPCODE_TXB,            /* ARB_f_p only */
-   FP_OPCODE_TXD,            /* NV_f_p only */
-   FP_OPCODE_TXP,            /* ARB_f_p only */
-   FP_OPCODE_TXP_NV,         /* NV_f_p only */
-   FP_OPCODE_UP2H,           /* NV_f_p only */
-   FP_OPCODE_UP2US,          /* NV_f_p only */
-   FP_OPCODE_UP4B,           /* NV_f_p only */
-   FP_OPCODE_UP4UB,          /* NV_f_p only */
-   FP_OPCODE_X2D,            /* NV_f_p only - 2d mat mul */
-   FP_OPCODE_XPD,            /* ARB_f_p only - cross product */
-   FP_OPCODE_END /* private opcode */
+   FP_OPCODE_TXB,		/* ARB_f_p only */
+   FP_OPCODE_TXD,		/* NV_f_p only */
+   FP_OPCODE_TXP,		/* ARB_f_p only */
+   FP_OPCODE_TXP_NV,		/* NV_f_p only */
+   FP_OPCODE_UP2H,		/* NV_f_p only */
+   FP_OPCODE_UP2US,		/* NV_f_p only */
+   FP_OPCODE_UP4B,		/* NV_f_p only */
+   FP_OPCODE_UP4UB,		/* NV_f_p only */
+   FP_OPCODE_X2D,		/* NV_f_p only - 2d mat mul */
+   FP_OPCODE_XPD		/* ARB_f_p only - cross product */
 };
 
 
 /* Instruction source register */
 struct fp_src_register
 {
-   enum register_file File;
-   GLint Index;
-   GLuint Swizzle[4];
-   GLboolean NegateBase; /* negate before absolute value? */
-   GLboolean Abs;        /* take absolute value? */
-   GLboolean NegateAbs;  /* negate after absolute value? */
+   GLuint File:4;
+   GLuint Index:8;
+   GLuint Swizzle:12;
+   GLuint NegateBase:4; /* ARB: negate/extended negate.
+			   NV: negate before absolute value? */
+   GLuint Abs:1;        /* NV: take absolute value? */
+   GLuint NegateAbs:1;  /* NV: negate after absolute value? */
 };
 
 
 /* Instruction destination register */
 struct fp_dst_register
 {
-   enum register_file File;
-   GLint Index;
-   GLboolean WriteMask[4];
-   GLuint CondMask;
-   GLuint CondSwizzle[4];
+   GLuint File:4;
+   GLuint Index:8;
+   GLuint WriteMask:4;
+   GLuint CondMask:4;		/* NV: enough bits? */
+   GLuint CondSwizzle:12;	/* NV: enough bits? */
 };
 
 
 /* Fragment program instruction */
 struct fp_instruction
 {
-   enum fp_opcode Opcode;
+   GLuint Opcode:6;
+   GLuint Saturate:1;	
+   GLuint UpdateCondRegister:1;	/* NV */
+   GLuint Precision:2;    /* NV: unused/unneeded? */
+   GLuint TexSrcUnit:4;   /* texture unit for TEX, TXD, TXP instructions */
+   GLuint TexSrcIdx:3;    /* TEXTURE_1D,2D,3D,CUBE,RECT_INDEX source target */
+
+#if FEATURE_MESA_program_debug
+   GLint StringPos:15;		/* enough bits? */
+#endif
+
+   void *Data;  /* some arbitrary data, only used for PRINT instruction now */
    struct fp_src_register SrcReg[3];
    struct fp_dst_register DstReg;
-   GLboolean Saturate;
-   GLboolean UpdateCondRegister;
-   GLubyte Precision;    /* FLOAT32, FLOAT16 or FIXED12 */
-   GLubyte TexSrcUnit;   /* texture unit for TEX, TXD, TXP instructions */
-   GLubyte TexSrcBit;    /* TEXTURE_1D,2D,3D,CUBE,RECT_BIT source target */
-#if FEATURE_MESA_program_debug
-   GLint StringPos;
-#endif
 };
 
 

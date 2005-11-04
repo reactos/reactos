@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -35,6 +35,7 @@
 #include "imports.h"
 #include "macros.h"
 #include "mtypes.h"
+#include "program.h"
 #include "arbprogparse.h"
 #include "arbfragparse.h"
 
@@ -42,140 +43,138 @@ void
 _mesa_debug_fp_inst(GLint num, struct fp_instruction *fp)
 {
    GLint a;
- 
-   fprintf(stderr, "PROGRAM_OUTPUT: 0x%x\n",    PROGRAM_OUTPUT);
-   fprintf(stderr, "PROGRAM_INPUT: 0x%x\n",     PROGRAM_INPUT);
-   fprintf(stderr, "PROGRAM_TEMPORARY: 0x%x\n", PROGRAM_TEMPORARY);
+
+   static const char *opcode_string[] = {
+      "ABS",		/* ARB_f_p only */
+      "ADD",
+      "CMP",		/* ARB_f_p only */
+      "COS",
+      "DDX",		/* NV_f_p only */
+      "DDY",		/* NV_f_p only */
+      "DP3",
+      "DP4",
+      "DPH",		/* ARB_f_p only */
+      "DST",
+      "END",		/* private opcode */
+      "EX2",
+      "FLR",
+      "FRC",
+      "KIL",		/* ARB_f_p only */
+      "KIL_NV",		/* NV_f_p only */
+      "LG2",
+      "LIT",
+      "LRP",
+      "MAD",
+      "MAX",
+      "MIN",
+      "MOV",
+      "MUL",
+      "PK2H",		/* NV_f_p only */
+      "PK2US",		/* NV_f_p only */
+      "PK4B",		/* NV_f_p only */
+      "PK4UB",		/* NV_f_p only */
+      "POW",
+      "PRINT",		/* Mesa only */
+      "RCP",
+      "RFL",		/* NV_f_p only */
+      "RSQ",
+      "SCS",		/* ARB_f_p only */
+      "SEQ",		/* NV_f_p only */
+      "SFL",		/* NV_f_p only */
+      "SGE",		/* NV_f_p only */
+      "SGT",		/* NV_f_p only */
+      "SIN",
+      "SLE",		/* NV_f_p only */
+      "SLT",
+      "SNE",		/* NV_f_p only */
+      "STR",		/* NV_f_p only */
+      "SUB",
+      "SWZ",		/* ARB_f_p only */
+      "TEX",
+      "TXB",		/* ARB_f_p only */
+      "TXD",		/* NV_f_p only */
+      "TXP",		/* ARB_f_p only */
+      "TXP_NV",		/* NV_f_p only */
+      "UP2H",		/* NV_f_p only */
+      "UP2US",		/* NV_f_p only */
+      "UP4B",		/* NV_f_p only */
+      "UP4UB",		/* NV_f_p only */
+      "X2D",		/* NV_f_p only - 2d mat mul */
+      "XPD",		/* ARB_f_p only - cross product */
+   };
+
+   static const char *file_string[] = {
+      "TEMP",
+      "INPUT",
+      "OUTPUT",
+      "LOCAL",
+      "ENV",
+      "NAMED",
+      "STATE",
+      "WRITE_ONLY",
+      "ADDR"
+   };
+
+   static const char swz[] = "xyzw01??";
 
    for (a=0; a<num; a++) {
-      switch (fp[a].Opcode) {
-         case FP_OPCODE_END:
-            fprintf(stderr, "FP_OPCODE_END"); break;
+      _mesa_printf("%s", opcode_string[fp[a].Opcode]);
 
-         case  FP_OPCODE_ABS:
-            fprintf(stderr, "FP_OPCODE_ABS"); break;
+      if (fp[a].Saturate)
+	 _mesa_printf("_SAT");
 
-         case  FP_OPCODE_ADD:
-            fprintf(stderr, "FP_OPCODE_ADD"); break;
-
-         case  FP_OPCODE_CMP:
-            fprintf(stderr, "FP_OPCODE_CMP"); break;
-
-         case  FP_OPCODE_COS:
-            fprintf(stderr, "FP_OPCODE_COS"); break;
-
-         case  FP_OPCODE_DP3:
-            fprintf(stderr, "FP_OPCODE_DP3"); break;
-
-         case  FP_OPCODE_DP4:
-            fprintf(stderr, "FP_OPCODE_DP4"); break;
-
-         case  FP_OPCODE_DPH:
-            fprintf(stderr, "FP_OPCODE_DPH"); break;
-
-         case  FP_OPCODE_DST:
-            fprintf(stderr, "FP_OPCODE_DST"); break;
-
-         case  FP_OPCODE_EX2:
-            fprintf(stderr, "FP_OPCODE_EX2"); break;
-
-         case  FP_OPCODE_FLR:
-            fprintf(stderr, "FP_OPCODE_FLR"); break;
-
-         case  FP_OPCODE_FRC:
-            fprintf(stderr, "FP_OPCODE_FRC"); break;
-
-         case  FP_OPCODE_KIL:
-            fprintf(stderr, "FP_OPCODE_KIL"); break;
-
-         case  FP_OPCODE_LG2:
-            fprintf(stderr, "FP_OPCODE_LG2"); break;
-
-         case  FP_OPCODE_LIT:
-            fprintf(stderr, "FP_OPCODE_LIT"); break;
-
-         case  FP_OPCODE_LRP:
-            fprintf(stderr, "FP_OPCODE_LRP"); break;
-
-         case  FP_OPCODE_MAD:
-            fprintf(stderr, "FP_OPCODE_MAD"); break;
-
-         case  FP_OPCODE_MAX:
-            fprintf(stderr, "FP_OPCODE_MAX"); break;
-
-         case  FP_OPCODE_MIN:
-            fprintf(stderr, "FP_OPCODE_MIN"); break;
-
-         case  FP_OPCODE_MOV:
-            fprintf(stderr, "FP_OPCODE_MOV"); break;
-
-         case  FP_OPCODE_MUL:
-            fprintf(stderr, "FP_OPCODE_MUL"); break;
-
-         case  FP_OPCODE_POW:
-            fprintf(stderr, "FP_OPCODE_POW"); break;
-
-         case  FP_OPCODE_RCP:
-            fprintf(stderr, "FP_OPCODE_RCP"); break;
-
-         case  FP_OPCODE_RSQ:
-            fprintf(stderr, "FP_OPCODE_RSQ"); break;
-
-         case  FP_OPCODE_SCS:
-            fprintf(stderr, "FP_OPCODE_SCS"); break;
-
-         case  FP_OPCODE_SIN:
-            fprintf(stderr, "FP_OPCODE_SIN"); break;
-
-         case  FP_OPCODE_SLT:
-            fprintf(stderr, "FP_OPCODE_SLT"); break;
-
-         case  FP_OPCODE_SUB:
-            fprintf(stderr, "FP_OPCODE_SUB"); break;
-
-         case  FP_OPCODE_SWZ:
-            fprintf(stderr, "FP_OPCODE_SWZ"); break;
-
-         case  FP_OPCODE_TEX:
-            fprintf(stderr, "FP_OPCODE_TEX"); break;
-
-         case  FP_OPCODE_TXB:
-            fprintf(stderr, "FP_OPCODE_TXB"); break;
-
-         case  FP_OPCODE_TXP:
-            fprintf(stderr, "FP_OPCODE_TXP"); break;
-
-         case  FP_OPCODE_XPD:
-            fprintf(stderr, "FP_OPCODE_XPD"); break;
-
-         default:
-            _mesa_warning(NULL, "Bad opcode in debug_fg_inst()");
+      if (fp[a].DstReg.File != 0xf) {
+	 if (fp[a].DstReg.WriteMask != 0xf ||
+	     fp[a].SrcReg[0].NegateBase)
+	    _mesa_printf(" %s[%d].%s%s%s%s ", file_string[fp[a].DstReg.File], fp[a].DstReg.Index,
+			 GET_BIT(fp[a].DstReg.WriteMask, 0) ? "x" : "",
+			 GET_BIT(fp[a].DstReg.WriteMask, 1) ? "y" : "",
+			 GET_BIT(fp[a].DstReg.WriteMask, 2) ? "z" : "",
+			 GET_BIT(fp[a].DstReg.WriteMask, 3) ? "w" : "");
+	 else
+	    _mesa_printf(" %s[%d] ", file_string[fp[a].DstReg.File], fp[a].DstReg.Index);
       }
 
-      fprintf(stderr, " D(0x%x:%d:%d%d%d%d) ", 
-         fp[a].DstReg.File, fp[a].DstReg.Index,
-         fp[a].DstReg.WriteMask[0], fp[a].DstReg.WriteMask[1], 
-         fp[a].DstReg.WriteMask[2], fp[a].DstReg.WriteMask[3]); 
-						 
-      fprintf(stderr, "S1(0x%x:%d:%d%d%d%d) ", fp[a].SrcReg[0].File, fp[a].SrcReg[0].Index,
-         fp[a].SrcReg[0].Swizzle[0],
-         fp[a].SrcReg[0].Swizzle[1],
-         fp[a].SrcReg[0].Swizzle[2],
-         fp[a].SrcReg[0].Swizzle[3]);
+      if (fp[a].SrcReg[0].File != 0xf) {
+	 if (fp[a].SrcReg[0].Swizzle != SWIZZLE_NOOP ||
+	     fp[a].SrcReg[0].NegateBase)
+	    _mesa_printf("%s[%d].%s%c%c%c%c ", file_string[fp[a].SrcReg[0].File], fp[a].SrcReg[0].Index,
+			 fp[a].SrcReg[0].NegateBase ? "-" : "",
+			 swz[GET_SWZ(fp[a].SrcReg[0].Swizzle, 0)],
+			 swz[GET_SWZ(fp[a].SrcReg[0].Swizzle, 1)],
+			 swz[GET_SWZ(fp[a].SrcReg[0].Swizzle, 2)],
+			 swz[GET_SWZ(fp[a].SrcReg[0].Swizzle, 3)]);
+	 else
+	    _mesa_printf("%s[%d] ", file_string[fp[a].SrcReg[0].File], fp[a].SrcReg[0].Index);
+      }
 
-      fprintf(stderr, "S2(0x%x:%d:%d%d%d%d) ", fp[a].SrcReg[1].File, fp[a].SrcReg[1].Index,
-        fp[a].SrcReg[1].Swizzle[0],
-        fp[a].SrcReg[1].Swizzle[1],
-        fp[a].SrcReg[1].Swizzle[2],
-        fp[a].SrcReg[1].Swizzle[3]);
+      if (fp[a].SrcReg[1].File != 0xf) {
+	 if (fp[a].SrcReg[1].Swizzle != SWIZZLE_NOOP ||
+	     fp[a].SrcReg[1].NegateBase)
+	    _mesa_printf("%s[%d].%s%c%c%c%c ", file_string[fp[a].SrcReg[1].File], fp[a].SrcReg[1].Index,
+			 fp[a].SrcReg[1].NegateBase ? "-" : "",
+			 swz[GET_SWZ(fp[a].SrcReg[1].Swizzle, 0)],
+			 swz[GET_SWZ(fp[a].SrcReg[1].Swizzle, 1)],
+			 swz[GET_SWZ(fp[a].SrcReg[1].Swizzle, 2)],
+			 swz[GET_SWZ(fp[a].SrcReg[1].Swizzle, 3)]);
+	 else
+	    _mesa_printf("%s[%d] ", file_string[fp[a].SrcReg[1].File], fp[a].SrcReg[1].Index);
+      }
 
-      fprintf(stderr, "S3(0x%x:%d:%d%d%d%d)",  fp[a].SrcReg[2].File, fp[a].SrcReg[2].Index,
-        fp[a].SrcReg[2].Swizzle[0],
-        fp[a].SrcReg[2].Swizzle[1],
-        fp[a].SrcReg[2].Swizzle[2],
-        fp[a].SrcReg[2].Swizzle[3]);
+      if (fp[a].SrcReg[2].File != 0xf) {
+	 if (fp[a].SrcReg[2].Swizzle != SWIZZLE_NOOP ||
+	     fp[a].SrcReg[2].NegateBase)
+	    _mesa_printf("%s[%d].%s%c%c%c%c ", file_string[fp[a].SrcReg[2].File], fp[a].SrcReg[2].Index,
+			 fp[a].SrcReg[1].NegateBase ? "-" : "",
+			 swz[GET_SWZ(fp[a].SrcReg[2].Swizzle, 0)],
+			 swz[GET_SWZ(fp[a].SrcReg[2].Swizzle, 1)],
+			 swz[GET_SWZ(fp[a].SrcReg[2].Swizzle, 2)],
+			 swz[GET_SWZ(fp[a].SrcReg[2].Swizzle, 3)]);
+	 else
+	    _mesa_printf("%s[%d] ", file_string[fp[a].SrcReg[2].File], fp[a].SrcReg[2].Index);
+      }
 
-      fprintf(stderr, "\n");
+      _mesa_printf("\n");
    }
 }
 
@@ -221,20 +220,6 @@ _mesa_parse_arb_fragment_program(GLcontext * ctx, GLenum target,
    program->NumTexIndirections = ap.NumTexIndirections;
    program->Parameters         = ap.Parameters;
    program->FogOption          = ap.FogOption;
-
-   /* XXX: Eh.. we parsed something that wasn't a fragment program. doh! */
-   /* this wont happen any more */
-/*
-   if (ap.Base.Target != GL_FRAGMENT_PROGRAM_ARB)
-   {
-      program->Instructions = (struct fp_instruction *) _mesa_malloc (
-                                     sizeof(struct fp_instruction) );
-      program->Instructions[0].Opcode = FP_OPCODE_END;
-
-      _mesa_error (ctx, GL_INVALID_OPERATION, "Parsed a non-fragment program as a fragment program");
-      return;
-   }
-*/
 
 #if DEBUG_FP
    _mesa_debug_fp_inst(ap.Base.NumInstructions, ap.FPInstructions);

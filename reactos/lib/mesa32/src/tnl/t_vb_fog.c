@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.5
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -80,7 +80,7 @@ init_static_data( void )
    GLfloat f = 0.0F;
    GLint i = 0;
    for ( ; i < FOG_EXP_TABLE_SIZE ; i++, f += FOG_INCR) {
-      exp_table[i] = (GLfloat) exp(-f);
+      exp_table[i] = EXPF(-f);
    }
    inited = 1;
 }
@@ -148,8 +148,9 @@ run_fog_stage(GLcontext *ctx, struct tnl_pipeline_stage *stage)
    struct fog_stage_data *store = FOG_STAGE_DATA(stage);
    GLvector4f *input;
 
-   if (stage->changed_inputs == 0)
+   if (!ctx->Fog.Enabled || ctx->VertexProgram._Enabled)
       return GL_TRUE;
+
 
    if (ctx->Fog.FogCoordinateSource == GL_FRAGMENT_DEPTH_EXT) {
       /* Fog is computed from vertex or fragment Z values */
@@ -196,6 +197,12 @@ run_fog_stage(GLcontext *ctx, struct tnl_pipeline_stage *stage)
    else {
       /* use glFogCoord() coordinates */
       input = VB->FogCoordPtr;  /* source data */
+
+      /* input->count may be one if glFogCoord was only called once
+       * before glBegin.  But we need to compute fog for all vertices.
+       */
+      input->count = VB->ObjPtr->count;
+
       VB->FogCoordPtr = &store->fogcoord;  /* dest data */
    }
 
@@ -213,17 +220,6 @@ run_fog_stage(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 }
 
 
-static void
-check_fog_stage(GLcontext *ctx, struct tnl_pipeline_stage *stage)
-{
-   stage->active = ctx->Fog.Enabled && !ctx->VertexProgram._Enabled;
-
-   if (ctx->Fog.FogCoordinateSource == GL_FRAGMENT_DEPTH_EXT)
-      stage->inputs = _TNL_BIT_POS;
-   else
-      stage->inputs = _TNL_BIT_FOG;
-}
-
 
 /* Called the first time stage->run() is invoked.
  */
@@ -238,15 +234,12 @@ alloc_fog_data(GLcontext *ctx, struct tnl_pipeline_stage *stage)
       return GL_FALSE;
 
    _mesa_vector4f_alloc( &store->fogcoord, 0, tnl->vb.Size, 32 );
-   _mesa_vector4f_init( &store->input, 0, 0 );
+   _mesa_vector4f_init( &store->input, 0, NULL );
 
    if (!inited)
       init_static_data();
 
-   /* Now run the stage.
-    */
-   stage->run = run_fog_stage;
-   return stage->run( ctx, stage );
+   return GL_TRUE;
 }
 
 
@@ -265,14 +258,9 @@ free_fog_data(struct tnl_pipeline_stage *stage)
 const struct tnl_pipeline_stage _tnl_fog_coordinate_stage =
 {
    "build fog coordinates",	/* name */
-   _NEW_FOG|_NEW_PROGRAM,	/* check_state */
-   _NEW_FOG,			/* run_state */
-   GL_FALSE,			/* active? */
-   0,				/* inputs */
-   _TNL_BIT_FOG,		/* outputs */
-   0,				/* changed_inputs */
    NULL,			/* private_data */
+   alloc_fog_data,		/* dtr */
    free_fog_data,		/* dtr */
-   check_fog_stage,		/* check */
-   alloc_fog_data		/* run -- initially set to init. */
+   NULL,		/* check */
+   run_fog_stage		/* run -- initially set to init. */
 };

@@ -58,8 +58,7 @@ extern void GLAPIENTRY _mesa_ListBase( GLuint base );
 
 extern void GLAPIENTRY _mesa_NewList( GLuint list, GLenum mode );
 
-extern void _mesa_init_dlist_table( struct _glapi_table *table,
-                                    GLuint tableSize );
+extern void _mesa_init_dlist_table( struct _glapi_table *table );
 
 extern void _mesa_save_error( GLcontext *ctx, GLenum error, const char *s );
 

@@ -39,6 +39,7 @@
 #include "nvfragparse.h"
 #include "nvfragprog.h"
 #include "nvvertparse.h"
+#include "nvvertprog.h"
 
 
 /**********************************************************************/
@@ -82,6 +83,13 @@ _mesa_init_program(GLcontext *ctx)
    assert(ctx->FragmentProgram.Current);
    ctx->FragmentProgram.Current->Base.RefCount++;
 #endif
+
+#if FEATURE_ATI_fragment_shader
+   ctx->ATIFragmentShader.Enabled = GL_FALSE;
+   ctx->ATIFragmentShader.Current = (struct ati_fragment_shader *) ctx->Shared->DefaultFragmentShader;
+   assert(ctx->ATIFragmentShader.Current);
+   ctx->ATIFragmentShader.Current->Base.RefCount++;
+#endif
 }
 
 
@@ -103,6 +111,13 @@ _mesa_free_program_data(GLcontext *ctx)
       ctx->FragmentProgram.Current->Base.RefCount--;
       if (ctx->FragmentProgram.Current->Base.RefCount <= 0)
          ctx->Driver.DeleteProgram(ctx, &(ctx->FragmentProgram.Current->Base));
+   }
+#endif
+#if FEATURE_ATI_fragment_shader
+   if (ctx->ATIFragmentShader.Current) {
+      ctx->ATIFragmentShader.Current->Base.RefCount--;
+      if (ctx->ATIFragmentShader.Current->Base.RefCount <= 0)
+	ctx->Driver.DeleteProgram(ctx, &(ctx->ATIFragmentShader.Current->Base));
    }
 #endif
    _mesa_free((void *) ctx->Program.ErrorString);
@@ -215,6 +230,21 @@ _mesa_init_vertex_program( GLcontext *ctx, struct vertex_program *prog,
       return NULL;
 }
 
+/**
+ * Initialize a new ATI fragment shader object.
+ */
+struct program *
+_mesa_init_ati_fragment_shader( GLcontext *ctx,
+                                struct ati_fragment_shader *prog,
+                                GLenum target, GLuint id )
+{
+   if (prog) 
+      return _mesa_init_program_struct( ctx, &prog->Base, target, id );
+   else
+      return NULL;
+}
+
+
 
 /**
  * Allocate and initialize a new fragment/vertex program object but
@@ -239,6 +269,10 @@ _mesa_new_program(GLcontext *ctx, GLenum target, GLuint id)
    case GL_FRAGMENT_PROGRAM_ARB:
       return _mesa_init_fragment_program( ctx, CALLOC_STRUCT(fragment_program),
 					  target, id );
+   case GL_FRAGMENT_SHADER_ATI:
+      return _mesa_init_ati_fragment_shader( ctx, CALLOC_STRUCT(ati_fragment_shader),
+					  target, id );
+
    default:
       _mesa_problem(ctx, "bad target in _mesa_new_program");
       return NULL;
@@ -263,19 +297,37 @@ _mesa_delete_program(GLcontext *ctx, struct program *prog)
    if (prog->Target == GL_VERTEX_PROGRAM_NV ||
        prog->Target == GL_VERTEX_STATE_PROGRAM_NV) {
       struct vertex_program *vprog = (struct vertex_program *) prog;
-      if (vprog->Instructions)
+      if (vprog->Instructions) {
+         GLuint i;
+         for (i = 0; i < vprog->Base.NumInstructions; i++) {
+            if (vprog->Instructions[i].Data)
+               _mesa_free(vprog->Instructions[i].Data);
+         }
          _mesa_free(vprog->Instructions);
+      }
       if (vprog->Parameters)
          _mesa_free_parameter_list(vprog->Parameters);
    }
    else if (prog->Target == GL_FRAGMENT_PROGRAM_NV ||
             prog->Target == GL_FRAGMENT_PROGRAM_ARB) {
       struct fragment_program *fprog = (struct fragment_program *) prog;
-      if (fprog->Instructions)
+      if (fprog->Instructions) {
+         GLuint i;
+         for (i = 0; i < fprog->Base.NumInstructions; i++) {
+            if (fprog->Instructions[i].Data)
+               _mesa_free(fprog->Instructions[i].Data);
+         }
          _mesa_free(fprog->Instructions);
+      }
       if (fprog->Parameters)
          _mesa_free_parameter_list(fprog->Parameters);
    }
+   else if (prog->Target == GL_FRAGMENT_SHADER_ATI) {
+      struct ati_fragment_shader *atifs = (struct ati_fragment_shader *)prog;
+      if (atifs->Instructions)
+	 _mesa_free(atifs->Instructions);
+   }
+
    _mesa_free(prog);
 }
 
@@ -300,6 +352,9 @@ void
 _mesa_free_parameter_list(struct program_parameter_list *paramList)
 {
    _mesa_free_parameters(paramList);
+   _mesa_free(paramList->Parameters);
+   if (paramList->ParameterValues)
+      ALIGN_FREE(paramList->ParameterValues);
    _mesa_free(paramList);
 }
 
@@ -313,11 +368,10 @@ _mesa_free_parameters(struct program_parameter_list *paramList)
 {
    GLuint i;
    for (i = 0; i < paramList->NumParameters; i++) {
-      _mesa_free((void *) paramList->Parameters[i].Name);
+      if (paramList->Parameters[i].Name)
+	 _mesa_free((void *) paramList->Parameters[i].Name);
    }
-   _mesa_free(paramList->Parameters);
    paramList->NumParameters = 0;
-   paramList->Parameters = NULL;
 }
 
 
@@ -331,21 +385,44 @@ add_parameter(struct program_parameter_list *paramList,
 {
    const GLuint n = paramList->NumParameters;
 
-   paramList->Parameters = (struct program_parameter *)
-      _mesa_realloc(paramList->Parameters,
-                    n * sizeof(struct program_parameter),
-                    (n + 1) * sizeof(struct program_parameter));
-   if (!paramList->Parameters) {
+   if (n == paramList->Size) {
+      GLfloat (*tmp)[4];
+
+      paramList->Size *= 2;
+      if (!paramList->Size)
+	 paramList->Size = 8;
+
+      paramList->Parameters = (struct program_parameter *)
+	 _mesa_realloc(paramList->Parameters,
+		       n * sizeof(struct program_parameter),
+		       paramList->Size * sizeof(struct program_parameter));
+
+      tmp = paramList->ParameterValues;
+      paramList->ParameterValues = ALIGN_MALLOC(paramList->Size * 4 * sizeof(GLfloat), 16);
+      if (tmp) {
+	 _mesa_memcpy(paramList->ParameterValues, tmp, 
+		      n * 4 * sizeof(GLfloat));
+	 ALIGN_FREE(tmp);
+      }
+   }
+
+   if (!paramList->Parameters ||
+       !paramList->ParameterValues) {
       /* out of memory */
       paramList->NumParameters = 0;
+      paramList->Size = 0;
       return -1;
    }
    else {
       paramList->NumParameters = n + 1;
-      paramList->Parameters[n].Name = _mesa_strdup(name);
+
+      _mesa_memset(&paramList->Parameters[n], 0, 
+		   sizeof(struct program_parameter));
+
+      paramList->Parameters[n].Name = name ? _mesa_strdup(name) : NULL;
       paramList->Parameters[n].Type = type;
       if (values)
-         COPY_4V(paramList->Parameters[n].Values, values);
+         COPY_4V(paramList->ParameterValues[n], values);
       return (GLint) n;
    }
 }
@@ -387,13 +464,7 @@ GLint
 _mesa_add_unnamed_constant(struct program_parameter_list *paramList,
                            const GLfloat values[4])
 {
-   /* generate a new dummy name */
-   static GLuint n = 0;
-   char name[20];
-   _mesa_sprintf(name, "constant%d", n);
-   n++;
-   /* store it */
-   return add_parameter(paramList, name, values, CONSTANT);
+   return add_parameter(paramList, NULL, values, CONSTANT);
 }
 
 
@@ -413,7 +484,7 @@ _mesa_add_state_reference(struct program_parameter_list *paramList,
     */
    GLint a, idx;
 
-   idx = add_parameter(paramList, "Some State", NULL, STATE);
+   idx = add_parameter(paramList, NULL, NULL, STATE);
 	
    for (a=0; a<6; a++)
       paramList->Parameters[idx].StateIndexes[a] = (enum state_index) stateTokens[a];
@@ -438,16 +509,18 @@ _mesa_lookup_parameter_value(struct program_parameter_list *paramList,
    if (nameLen == -1) {
       /* name is null-terminated */
       for (i = 0; i < paramList->NumParameters; i++) {
-         if (_mesa_strcmp(paramList->Parameters[i].Name, name) == 0)
-            return paramList->Parameters[i].Values;
+         if (paramList->Parameters[i].Name &&
+	     _mesa_strcmp(paramList->Parameters[i].Name, name) == 0)
+            return paramList->ParameterValues[i];
       }
    }
    else {
       /* name is not null-terminated, use nameLen */
       for (i = 0; i < paramList->NumParameters; i++) {
-         if (_mesa_strncmp(paramList->Parameters[i].Name, name, nameLen) == 0
+         if (paramList->Parameters[i].Name &&
+	     _mesa_strncmp(paramList->Parameters[i].Name, name, nameLen) == 0
              && _mesa_strlen(paramList->Parameters[i].Name) == (size_t)nameLen)
-            return paramList->Parameters[i].Values;
+            return paramList->ParameterValues[i];
       }
    }
    return NULL;
@@ -470,14 +543,16 @@ _mesa_lookup_parameter_index(struct program_parameter_list *paramList,
    if (nameLen == -1) {
       /* name is null-terminated */
       for (i = 0; i < (GLint) paramList->NumParameters; i++) {
-         if (_mesa_strcmp(paramList->Parameters[i].Name, name) == 0)
+         if (paramList->Parameters[i].Name &&
+	     _mesa_strcmp(paramList->Parameters[i].Name, name) == 0)
             return i;
       }
    }
    else {
       /* name is not null-terminated, use nameLen */
       for (i = 0; i < (GLint) paramList->NumParameters; i++) {
-         if (_mesa_strncmp(paramList->Parameters[i].Name, name, nameLen) == 0
+         if (paramList->Parameters[i].Name &&
+	     _mesa_strncmp(paramList->Parameters[i].Name, name, nameLen) == 0
              && _mesa_strlen(paramList->Parameters[i].Name) == (size_t)nameLen)
             return i;
       }
@@ -541,8 +616,7 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
             _mesa_problem(ctx, "Invalid material state in fetch_state");
             return;
          }
-      };
-      return;
+      }
    case STATE_LIGHT:
       {
          /* state[1] is the light number */
@@ -568,7 +642,8 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
             value[3] = ctx->Light.Light[ln].SpotExponent;
             return;
          case STATE_SPOT_DIRECTION:
-            COPY_4V(value, ctx->Light.Light[ln].EyeDirection);
+            COPY_3V(value, ctx->Light.Light[ln].EyeDirection);
+            value[3] = ctx->Light.Light[ln]._CosCutoff;
             return;
          case STATE_HALF:
             {
@@ -577,20 +652,23 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
                /* Compute infinite half angle vector:
                 *   half-vector = light_position + (0, 0, 1) 
                 * and then normalize.  w = 0
-					 *
-					 * light.EyePosition.w should be 0 for infinite lights.
+		*
+		* light.EyePosition.w should be 0 for infinite lights.
                 */
-					ADD_3V(value, eye_z, ctx->Light.Light[ln].EyePosition);
-					NORMALIZE_3FV(value);
-					value[3] = 0;
+	       ADD_3V(value, eye_z, ctx->Light.Light[ln].EyePosition);
+	       NORMALIZE_3FV(value);
+	       value[3] = 0;
             }						  
+            return;
+	 case STATE_POSITION_NORMALIZED:
+            COPY_4V(value, ctx->Light.Light[ln].EyePosition);
+	    NORMALIZE_3FV( value );
             return;
          default:
             _mesa_problem(ctx, "Invalid light state in fetch_state");
             return;
          }
       }
-      return;
    case STATE_LIGHTMODEL_AMBIENT:
       COPY_4V(value, ctx->Light.Model.Ambient);
       return;
@@ -598,20 +676,22 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
       if (state[1] == 0) {
          /* front */
          GLint i;
-         for (i = 0; i < 4; i++) {
+         for (i = 0; i < 3; i++) {
             value[i] = ctx->Light.Model.Ambient[i]
                * ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_AMBIENT][i]
                + ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_EMISSION][i];
          }
+	 value[3] = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3];
       }
       else {
          /* back */
          GLint i;
-         for (i = 0; i < 4; i++) {
+         for (i = 0; i < 3; i++) {
             value[i] = ctx->Light.Model.Ambient[i]
                * ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_AMBIENT][i]
                + ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_EMISSION][i];
          }
+	 value[3] = ctx->Light.Material.Attrib[MAT_ATTRIB_BACK_DIFFUSE][3];
       }
       return;
    case STATE_LIGHTPROD:
@@ -650,7 +730,6 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
                return;
          }
       }
-      return;
    case STATE_TEXGEN:
       {
          /* state[1] is the texture unit */
@@ -686,7 +765,6 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
             return;
          }
       }
-      return;
    case STATE_TEXENV_COLOR:
       {		
          /* state[1] is the texture unit */
@@ -758,7 +836,9 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
          }
          if (modifier == STATE_MATRIX_INVERSE ||
              modifier == STATE_MATRIX_INVTRANS) {
-            /* XXX be sure inverse is up to date */
+            /* Be sure inverse is up to date:
+	     */
+	    _math_matrix_analyse( (GLmatrix*) matrix );
             m = matrix->inv;
          }
          else {
@@ -826,6 +906,20 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
          }
       }
       return;
+
+   case STATE_INTERNAL:
+      {
+         switch (state[1]) {
+	    case STATE_NORMAL_SCALE:
+               ASSIGN_4V(value, ctx->_ModelViewInvScale, 0, 0, 1);
+               break;
+	    default:
+               _mesa_problem(ctx, "Bad state switch in _mesa_fetch_state()");
+               return;
+         }
+      }
+      return;
+
    default:
       _mesa_problem(ctx, "Invalid state in _mesa_fetch_state");
       return;
@@ -850,8 +944,9 @@ _mesa_load_state_parameters(GLcontext *ctx,
 
    for (i = 0; i < paramList->NumParameters; i++) {
       if (paramList->Parameters[i].Type == STATE) {
-         _mesa_fetch_state(ctx, paramList->Parameters[i].StateIndexes,
-                           paramList->Parameters[i].Values);
+         _mesa_fetch_state(ctx, 
+			   paramList->Parameters[i].StateIndexes,
+                           paramList->ParameterValues[i]);
       }
    }
 }
@@ -892,9 +987,8 @@ _mesa_BindProgram(GLenum target, GLuint id)
          curProg->Base.RefCount--;
          /* and delete if refcount goes below one */
          if (curProg->Base.RefCount <= 0) {
-            ASSERT(curProg->Base.DeletePending);
+            /* the program ID was already removed from the hash table */
             ctx->Driver.DeleteProgram(ctx, &(curProg->Base));
-            _mesa_HashRemove(ctx->Shared->Programs, id);
          }
       }
    }
@@ -913,9 +1007,8 @@ _mesa_BindProgram(GLenum target, GLuint id)
          curProg->Base.RefCount--;
          /* and delete if refcount goes below one */
          if (curProg->Base.RefCount <= 0) {
-            ASSERT(curProg->Base.DeletePending);
+            /* the program ID was already removed from the hash table */
             ctx->Driver.DeleteProgram(ctx, &(curProg->Base));
-            _mesa_HashRemove(ctx->Shared->Programs, id);
          }
       }
    }
@@ -1020,13 +1113,10 @@ _mesa_DeletePrograms(GLsizei n, const GLuint *ids)
                _mesa_problem(ctx, "bad target in glDeleteProgramsNV");
                return;
             }
-            /* Decrement reference count if not already marked for delete */
-            if (!prog->DeletePending) {
-               prog->DeletePending = GL_TRUE;
-               prog->RefCount--;
-            }
+            /* The ID is immediately available for re-use now */
+            _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
+            prog->RefCount--;
             if (prog->RefCount <= 0) {
-               _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
                ctx->Driver.DeleteProgram(ctx, prog);
             }
          }
@@ -1100,7 +1190,7 @@ _mesa_IsProgram(GLuint id)
 
 
 /* XXX temporary */
-void
+GLAPI void GLAPIENTRY
 glProgramCallbackMESA(GLenum target, GLprogramcallbackMESA callback,
                       GLvoid *data)
 {
@@ -1148,7 +1238,7 @@ _mesa_ProgramCallbackMESA(GLenum target, GLprogramcallbackMESA callback,
 
 
 /* XXX temporary */
-void
+GLAPI void GLAPIENTRY
 glGetProgramRegisterfvMESA(GLenum target,
                            GLsizei len, const GLubyte *registerName,
                            GLfloat *v)

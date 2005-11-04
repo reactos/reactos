@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -46,16 +46,46 @@
 
 
 #include "GL/gl.h"
-
-struct _glapi_table;
+#include "glapitable.h"
 
 typedef void (*_glapi_warning_func)(void *ctx, const char *str, ...);
 
 
-extern void *_glapi_Context;
+#if defined (GLX_USE_TLS)
 
+const extern void *_glapi_Context;
+const extern struct _glapi_table *_glapi_Dispatch;
+
+extern __thread void * _glapi_tls_Context
+    __attribute__((tls_model("initial-exec")));
+
+# define GET_CURRENT_CONTEXT(C)  GLcontext *C = (GLcontext *) _glapi_tls_Context
+
+#else
+
+extern void *_glapi_Context;
 extern struct _glapi_table *_glapi_Dispatch;
 
+/**
+ * Macro for declaration and fetching the current context.
+ *
+ * \param C local variable which will hold the current context.
+ *
+ * It should be used in the variable declaration area of a function:
+ * \code
+ * ...
+ * {
+ *   GET_CURRENT_CONTEXT(ctx);
+ *   ...
+ * \endcode
+ */
+# ifdef THREADS
+#  define GET_CURRENT_CONTEXT(C)  GLcontext *C = (GLcontext *) (_glapi_Context ? _glapi_Context : _glapi_get_context())
+# else
+#  define GET_CURRENT_CONTEXT(C)  GLcontext *C = (GLcontext *) _glapi_Context
+# endif
+
+#endif /* defined (GLX_USE_TLS) */
 
 extern void
 _glapi_noop_enable_warnings(GLboolean enable);
@@ -99,23 +129,19 @@ extern GLuint
 _glapi_get_dispatch_table_size(void);
 
 
-extern const char *
-_glapi_get_version(void);
-
-
 extern void
 _glapi_check_table(const struct _glapi_table *table);
 
 
-extern GLboolean
-_glapi_add_entrypoint(const char *funcName, GLuint offset);
-
+extern int
+_glapi_add_dispatch( const char * const * function_names,
+		     const char * parameter_signature );
 
 extern GLint
 _glapi_get_proc_offset(const char *funcName);
 
 
-extern const GLvoid *
+extern _glapi_proc
 _glapi_get_proc_address(const char *funcName);
 
 

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,15 +28,10 @@
 
 
 #include "mtypes.h"
-#include "swrast.h"
 
 
 extern void
-_swrast_alloc_accum_buffer( GLframebuffer *buffer );
-
-
-extern void
-_swrast_clear_accum_buffer( GLcontext *ctx );
+_swrast_clear_accum_buffer(GLcontext *ctx, struct gl_renderbuffer *rb);
 
 
 #endif

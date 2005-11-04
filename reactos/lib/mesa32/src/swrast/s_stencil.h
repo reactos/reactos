@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,10 +36,9 @@ extern GLboolean
 _swrast_stencil_and_ztest_span(GLcontext *ctx, struct sw_span *span);
 
 
-
 extern void
-_swrast_read_stencil_span( GLcontext *ctx, GLint n, GLint x, GLint y,
-                         GLstencil stencil[] );
+_swrast_read_stencil_span(GLcontext *ctx, struct gl_renderbuffer *rb,
+                          GLint n, GLint x, GLint y, GLstencil stencil[]);
 
 
 extern void
@@ -49,11 +47,7 @@ _swrast_write_stencil_span( GLcontext *ctx, GLint n, GLint x, GLint y,
 
 
 extern void
-_swrast_alloc_stencil_buffer( GLframebuffer *buffer );
-
-
-extern void
-_swrast_clear_stencil_buffer( GLcontext *ctx );
+_swrast_clear_stencil_buffer( GLcontext *ctx, struct gl_renderbuffer *rb );
 
 
 #endif

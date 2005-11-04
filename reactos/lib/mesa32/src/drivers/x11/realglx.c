@@ -176,10 +176,5 @@ _real_GetGLXDispatchTable(void)
    /*** GLX_MESA_agp_offset ***/
    glx.GetAGPOffsetMESA = _real_glXGetAGPOffsetMESA;
 
-   /*** GLX_ARB_render_texture ***/
-   glx.BindTexImageARB = _real_glXBindTexImageARB;
-   glx.ReleaseTexImageARB = _real_glXReleaseTexImageARB;
-   glx.DrawableAttribARB = _real_glXDrawableAttribARB;
-
    return &glx;
 }

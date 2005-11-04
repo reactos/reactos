@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -61,8 +61,11 @@
  *     primitives unaccelerated), hook in swrast_setup instead.
  */
 typedef struct {
-   /** win[0], win[1] are the screen-coords of SWvertex. win[2] is the
-    * z-coord. what is win[3]? */
+   /** win[0], win[1] are the screen-coords of SWvertex.
+    * win[2] is the z-buffer coord (if 16-bit Z buffer, in range [0,65535]).
+    * win[3] is 1/w where w is the clip-space W coord.  This is the value
+    * that clip{XYZ} were multiplied by to get ndc{XYZ}.
+    */
    GLfloat win[4];
    GLfloat texcoord[MAX_TEXTURE_COORD_UNITS][4];
    GLchan color[4];
@@ -78,9 +81,6 @@ struct swrast_device_driver;
 
 /* These are the public-access functions exported from swrast.
  */
-extern void
-_swrast_alloc_buffers( GLframebuffer *buffer );
-
 extern void
 _swrast_use_read_buffer( GLcontext *ctx );
 
@@ -141,6 +141,10 @@ extern void
 _swrast_DrawBuffer( GLcontext *ctx, GLenum mode );
 
 
+extern void
+_swrast_DrawBuffers( GLcontext *ctx, GLsizei n, const GLenum *buffers );
+
+
 /* Reset the stipple counter
  */
 extern void
@@ -196,11 +200,6 @@ _swrast_allow_pixel_fog( GLcontext *ctx, GLboolean value );
 extern void
 _swrast_print_vertex( GLcontext *ctx, const SWvertex *v );
 
-
-extern GLvoid *
-_swrast_validate_pbo_access(const struct gl_pixelstore_attrib *pack,
-                            GLsizei width, GLsizei height, GLsizei depth,
-                            GLenum format, GLenum type, GLvoid *ptr);
 
 /*
  * Imaging fallbacks (a better solution should be found, perhaps
@@ -261,7 +260,7 @@ _swrast_copy_texsubimage3d(GLcontext *ctx,
  * Unless otherwise noted, all functions are mandatory.  
  */
 struct swrast_device_driver {
-
+#if OLD_RENDERBUFFER
    void (*SetBuffer)(GLcontext *ctx, GLframebuffer *buffer, GLuint bufferBit);
    /*
     * Specifies the current color buffer for span/pixel writing/reading.
@@ -275,7 +274,7 @@ struct swrast_device_driver {
     *    DD_BACK_RIGHT_BIT - when using stereo and double buffering
     *    DD_AUXn_BIT - if aux buffers are implemented
     */
-
+#endif
 
    /***
     *** Functions for synchronizing access to the framebuffer:
@@ -292,175 +291,6 @@ struct swrast_device_driver {
     * NOTE: The swrast triangle/line/point routines *DO NOT* call
     * these functions.  Locking in that case must be organized by the
     * driver by other mechanisms.
-    */
-
-   /***
-    *** Functions for writing pixels to the frame buffer:
-    ***/
-
-   void (*WriteRGBASpan)( const GLcontext *ctx,
-                          GLuint n, GLint x, GLint y,
-                          CONST GLchan rgba[][4], const GLubyte mask[] );
-   void (*WriteRGBSpan)( const GLcontext *ctx,
-                         GLuint n, GLint x, GLint y,
-                         CONST GLchan rgb[][3], const GLubyte mask[] );
-   /* Write a horizontal run of RGBA or RGB pixels.
-    * If mask is NULL, draw all pixels.
-    * If mask is not null, only draw pixel [i] when mask [i] is true.
-    */
-
-   void (*WriteMonoRGBASpan)( const GLcontext *ctx, GLuint n, GLint x, GLint y,
-                              const GLchan color[4], const GLubyte mask[] );
-   /* Write a horizontal run of RGBA pixels all with the same color.
-    * If mask is NULL, draw all pixels.
-    * If mask is not null, only draw pixel [i] when mask [i] is true.
-    */
-
-   void (*WriteRGBAPixels)( const GLcontext *ctx,
-                            GLuint n, const GLint x[], const GLint y[],
-                            CONST GLchan rgba[][4], const GLubyte mask[] );
-   /* Write array of RGBA pixels at random locations.
-    */
-
-   void (*WriteMonoRGBAPixels)( const GLcontext *ctx,
-                                GLuint n, const GLint x[], const GLint y[],
-                                const GLchan color[4], const GLubyte mask[] );
-   /* Write an array of mono-RGBA pixels at random locations.
-    */
-
-   void (*WriteCI32Span)( const GLcontext *ctx, GLuint n, GLint x, GLint y,
-                          const GLuint index[], const GLubyte mask[] );
-   void (*WriteCI8Span)( const GLcontext *ctx, GLuint n, GLint x, GLint y,
-                         const GLubyte index[], const GLubyte mask[] );
-   /* Write a horizontal run of CI pixels.  One function is for 32bpp
-    * indexes and the other for 8bpp pixels (the common case).  You mus
-    * implement both for color index mode.
-    * If mask is NULL, draw all pixels.
-    * If mask is not null, only draw pixel [i] when mask [i] is true.
-    */
-
-   void (*WriteMonoCISpan)( const GLcontext *ctx, GLuint n, GLint x, GLint y,
-                            GLuint colorIndex, const GLubyte mask[] );
-   /* Write a horizontal run of color index pixels using the color index
-    * last specified by the Index() function.
-    * If mask is NULL, draw all pixels.
-    * If mask is not null, only draw pixel [i] when mask [i] is true.
-    */
-
-   void (*WriteCI32Pixels)( const GLcontext *ctx,
-                            GLuint n, const GLint x[], const GLint y[],
-                            const GLuint index[], const GLubyte mask[] );
-   /*
-    * Write a random array of CI pixels.
-    */
-
-   void (*WriteMonoCIPixels)( const GLcontext *ctx,
-                              GLuint n, const GLint x[], const GLint y[],
-                              GLuint colorIndex, const GLubyte mask[] );
-   /* Write a random array of color index pixels using the color index
-    * last specified by the Index() function.
-    */
-
-
-   /***
-    *** Functions to read pixels from frame buffer:
-    ***/
-
-   void (*ReadCI32Span)( const GLcontext *ctx,
-                         GLuint n, GLint x, GLint y, GLuint index[] );
-   /* Read a horizontal run of color index pixels.
-    */
-
-   void (*ReadRGBASpan)( const GLcontext *ctx, GLuint n, GLint x, GLint y,
-                         GLchan rgba[][4] );
-   /* Read a horizontal run of RGBA pixels.
-    */
-
-   void (*ReadCI32Pixels)( const GLcontext *ctx,
-                           GLuint n, const GLint x[], const GLint y[],
-                           GLuint indx[], const GLubyte mask[] );
-   /* Read a random array of CI pixels.
-    */
-
-   void (*ReadRGBAPixels)( const GLcontext *ctx,
-                           GLuint n, const GLint x[], const GLint y[],
-                           GLchan rgba[][4], const GLubyte mask[] );
-   /* Read a random array of RGBA pixels.
-    */
-
-
-
-   /***
-    *** For supporting hardware Z buffers:
-    *** Either ALL or NONE of these functions must be implemented!
-    *** NOTE that Each depth value is a 32-bit GLuint.  If the depth
-    *** buffer is less than 32 bits deep then the extra upperbits are zero.
-    ***/
-
-   void (*WriteDepthSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
-                           const GLdepth depth[], const GLubyte mask[] );
-   /* Write a horizontal span of values into the depth buffer.  Only write
-    * depth[i] value if mask[i] is nonzero.
-    */
-
-   void (*WriteMonoDepthSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
-                               const GLdepth depth, const GLubyte mask[] );
-   /* Write a horizontal run of depth values.
-    * If mask is NULL, draw all pixels.
-    * If mask is not null, only draw pixel [i] when mask [i] is true.
-    */
-
-   void (*ReadDepthSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
-                          GLdepth depth[] );
-   /* Read a horizontal span of values from the depth buffer.
-    */
-
-
-   void (*WriteDepthPixels)( GLcontext *ctx, GLuint n,
-                             const GLint x[], const GLint y[],
-                             const GLdepth depth[], const GLubyte mask[] );
-   /* Write an array of randomly positioned depth values into the
-    * depth buffer.  Only write depth[i] value if mask[i] is nonzero.
-    */
-
-   void (*ReadDepthPixels)( GLcontext *ctx, GLuint n,
-                            const GLint x[], const GLint y[],
-                            GLdepth depth[] );
-   /* Read an array of randomly positioned depth values from the depth buffer.
-    */
-
-
-
-   /***
-    *** For supporting hardware stencil buffers:
-    *** Either ALL or NONE of these functions must be implemented!
-    ***/
-
-   void (*WriteStencilSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
-                             const GLstencil stencil[], const GLubyte mask[] );
-   /* Write a horizontal span of stencil values into the stencil buffer.
-    * If mask is NULL, write all stencil values.
-    * Else, only write stencil[i] if mask[i] is non-zero.
-    */
-
-   void (*ReadStencilSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
-                            GLstencil stencil[] );
-   /* Read a horizontal span of stencil values from the stencil buffer.
-    */
-
-   void (*WriteStencilPixels)( GLcontext *ctx, GLuint n,
-                               const GLint x[], const GLint y[],
-                               const GLstencil stencil[],
-                               const GLubyte mask[] );
-   /* Write an array of stencil values into the stencil buffer.
-    * If mask is NULL, write all stencil values.
-    * Else, only write stencil[i] if mask[i] is non-zero.
-    */
-
-   void (*ReadStencilPixels)( GLcontext *ctx, GLuint n,
-                              const GLint x[], const GLint y[],
-                              GLstencil stencil[] );
-   /* Read an array of stencil values from the stencil buffer.
     */
 };
 

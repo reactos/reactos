@@ -246,7 +246,7 @@ _swrast_choose_point( GLcontext *ctx )
          /* textured */
          USE(textured_rgba_point);
       }
-      else if (ctx->Point.Size != 1.0) {
+      else if (ctx->Point._Size != 1.0) {
          /* large points */
          if (rgbMode) {
             USE(general_rgba_point);

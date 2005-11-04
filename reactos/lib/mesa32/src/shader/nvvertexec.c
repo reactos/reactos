@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -145,7 +145,7 @@ _mesa_init_vp_per_primitive_registers(GLcontext *ctx)
          }
          else if (ctx->VertexProgram.TrackMatrixTransform[i] == GL_INVERSE_NV) {
             _math_matrix_analyse(mat); /* update the inverse */
-            assert((mat->flags & MAT_DIRTY_INVERSE) == 0);
+            ASSERT(!_math_matrix_is_dirty(mat));
             load_matrix(ctx->VertexProgram.Parameters, i*4, mat->inv);
          }
          else if (ctx->VertexProgram.TrackMatrixTransform[i] == GL_TRANSPOSE_NV) {
@@ -155,7 +155,7 @@ _mesa_init_vp_per_primitive_registers(GLcontext *ctx)
             assert(ctx->VertexProgram.TrackMatrixTransform[i]
                    == GL_INVERSE_TRANSPOSE_NV);
             _math_matrix_analyse(mat); /* update the inverse */
-            assert((mat->flags & MAT_DIRTY_INVERSE) == 0);
+            ASSERT(!_math_matrix_is_dirty(mat));
             load_transpose_matrix(ctx->VertexProgram.Parameters, i*4, mat->inv);
          }
       }
@@ -176,7 +176,7 @@ _mesa_init_vp_per_primitive_registers(GLcontext *ctx)
  * For debugging.  Dump the current vertex program machine registers.
  */
 void
-_mesa_dump_vp_state( const struct vertex_program_state *state )
+_mesa_dump_vp_state( const struct gl_vertex_program_state *state )
 {
    int i;
    _mesa_printf("VertexIn:\n");
@@ -228,7 +228,7 @@ _mesa_dump_vp_state( const struct vertex_program_state *state )
  */
 static INLINE const GLfloat *
 get_register_pointer( const struct vp_src_register *source,
-                      const struct vertex_program_state *state )
+                      const struct gl_vertex_program_state *state )
 {
    if (source->RelAddr) {
       const GLint reg = source->Index + state->AddressReg[0];
@@ -239,7 +239,7 @@ get_register_pointer( const struct vp_src_register *source,
       else if (source->File == PROGRAM_ENV_PARAM)
          return state->Parameters[reg];
       else
-         return state->Current->Parameters->Parameters[reg].Values;
+         return state->Current->Parameters->ParameterValues[reg];
    }
    else {
       switch (source->File) {
@@ -249,6 +249,10 @@ get_register_pointer( const struct vp_src_register *source,
          case PROGRAM_INPUT:
             ASSERT(source->Index < MAX_NV_VERTEX_PROGRAM_INPUTS);
             return state->Inputs[source->Index];
+         case PROGRAM_OUTPUT:
+            /* This is only needed for the PRINT instruction */
+            ASSERT(source->Index < MAX_NV_VERTEX_PROGRAM_OUTPUTS);
+            return state->Outputs[source->Index];
          case PROGRAM_LOCAL_PARAM:
             ASSERT(source->Index < MAX_PROGRAM_LOCAL_PARAMS);
             return state->Current->Base.LocalParams[source->Index];
@@ -257,7 +261,7 @@ get_register_pointer( const struct vp_src_register *source,
             return state->Parameters[source->Index];
          case PROGRAM_STATE_VAR:
             ASSERT(source->Index < state->Current->Parameters->NumParameters);
-            return state->Current->Parameters->Parameters[source->Index].Values;
+            return state->Current->Parameters->ParameterValues[source->Index];
          default:
             _mesa_problem(NULL,
                           "Bad source register file in get_register_pointer");
@@ -274,22 +278,22 @@ get_register_pointer( const struct vp_src_register *source,
  */
 static INLINE void
 fetch_vector4( const struct vp_src_register *source,
-               const struct vertex_program_state *state,
+               const struct gl_vertex_program_state *state,
                GLfloat result[4] )
 {
    const GLfloat *src = get_register_pointer(source, state);
 
    if (source->Negate) {
-      result[0] = -src[source->Swizzle[0]];
-      result[1] = -src[source->Swizzle[1]];
-      result[2] = -src[source->Swizzle[2]];
-      result[3] = -src[source->Swizzle[3]];
+      result[0] = -src[GET_SWZ(source->Swizzle, 0)];
+      result[1] = -src[GET_SWZ(source->Swizzle, 1)];
+      result[2] = -src[GET_SWZ(source->Swizzle, 2)];
+      result[3] = -src[GET_SWZ(source->Swizzle, 3)];
    }
    else {
-      result[0] = src[source->Swizzle[0]];
-      result[1] = src[source->Swizzle[1]];
-      result[2] = src[source->Swizzle[2]];
-      result[3] = src[source->Swizzle[3]];
+      result[0] = src[GET_SWZ(source->Swizzle, 0)];
+      result[1] = src[GET_SWZ(source->Swizzle, 1)];
+      result[2] = src[GET_SWZ(source->Swizzle, 2)];
+      result[3] = src[GET_SWZ(source->Swizzle, 3)];
    }
 }
 
@@ -300,16 +304,16 @@ fetch_vector4( const struct vp_src_register *source,
  */
 static INLINE void
 fetch_vector1( const struct vp_src_register *source,
-               const struct vertex_program_state *state,
+               const struct gl_vertex_program_state *state,
                GLfloat result[4] )
 {
    const GLfloat *src = get_register_pointer(source, state);
 
    if (source->Negate) {
-      result[0] = -src[source->Swizzle[0]];
+      result[0] = -src[GET_SWZ(source->Swizzle, 0)];
    }
    else {
-      result[0] = src[source->Swizzle[0]];
+      result[0] = src[GET_SWZ(source->Swizzle, 0)];
    }
 }
 
@@ -319,7 +323,7 @@ fetch_vector1( const struct vp_src_register *source,
  */
 static void
 store_vector4( const struct vp_dst_register *dest,
-               struct vertex_program_state *state,
+               struct gl_vertex_program_state *state,
                const GLfloat value[4] )
 {
    GLfloat *dst;
@@ -343,13 +347,13 @@ store_vector4( const struct vp_dst_register *dest,
          return;
    }
 
-   if (dest->WriteMask[0])
+   if (dest->WriteMask & WRITEMASK_X)
       dst[0] = value[0];
-   if (dest->WriteMask[1])
+   if (dest->WriteMask & WRITEMASK_Y)
       dst[1] = value[1];
-   if (dest->WriteMask[2])
+   if (dest->WriteMask & WRITEMASK_Z)
       dst[2] = value[2];
-   if (dest->WriteMask[3])
+   if (dest->WriteMask & WRITEMASK_W)
       dst[3] = value[3];
 }
 
@@ -377,7 +381,7 @@ store_vector4( const struct vp_dst_register *dest,
 void
 _mesa_exec_vertex_program(GLcontext *ctx, const struct vertex_program *program)
 {
-   struct vertex_program_state *state = &ctx->VertexProgram;
+   struct gl_vertex_program_state *state = &ctx->VertexProgram;
    const struct vp_instruction *inst;
 
    ctx->_CurrentProgram = GL_VERTEX_PROGRAM_ARB; /* or NV, doesn't matter */
@@ -412,20 +416,15 @@ _mesa_exec_vertex_program(GLcontext *ctx, const struct vertex_program *program)
             break;
          case VP_OPCODE_LIT:
             {
-               const GLfloat epsilon = 1.0e-5F; /* XXX fix? */
+               const GLfloat epsilon = 1.0F / 256.0F; /* per NV spec */
                GLfloat t[4], lit[4];
                fetch_vector4( &inst->SrcReg[0], state, t );
-               if (t[3] < -(128.0F - epsilon))
-                   t[3] = - (128.0F - epsilon);
-               else if (t[3] > 128.0F - epsilon)
-                  t[3] = 128.0F - epsilon;
-               if (t[0] < 0.0)
-                  t[0] = 0.0;
-               if (t[1] < 0.0)
-                  t[1] = 0.0;
+               t[0] = MAX2(t[0], 0.0F);
+               t[1] = MAX2(t[1], 0.0F);
+               t[3] = CLAMP(t[3], -(128.0F - epsilon), (128.0F - epsilon));
                lit[0] = 1.0;
                lit[1] = t[0];
-               lit[2] = (t[0] > 0.0) ? (GLfloat) exp(t[3] * log(t[1])) : 0.0F;
+               lit[2] = (t[0] > 0.0) ? (GLfloat) _mesa_pow(t[1], t[3]) : 0.0F;
                lit[3] = 1.0;
                store_vector4( &inst->DstReg, state, lit );
             }
@@ -767,19 +766,29 @@ _mesa_exec_vertex_program(GLcontext *ctx, const struct vertex_program *program)
 
                /* do extended swizzling here */
                for (i = 0; i < 3; i++) {
-                  if (source->Swizzle[i] == SWIZZLE_ZERO)
+                  if (GET_SWZ(source->Swizzle, i) == SWIZZLE_ZERO)
                      result[i] = 0.0;
-                  else if (source->Swizzle[i] == SWIZZLE_ONE)
+                  else if (GET_SWZ(source->Swizzle, i) == SWIZZLE_ONE)
                      result[i] = -1.0;
                   else
-                     result[i] = -src[source->Swizzle[i]];
+                     result[i] = -src[GET_SWZ(source->Swizzle, i)];
                   if (source->Negate)
                      result[i] = -result[i];
                }
                store_vector4( &inst->DstReg, state, result );
             }
             break;
-
+         case VP_OPCODE_PRINT:
+            if (inst->SrcReg[0].File) {
+               GLfloat t[4];
+               fetch_vector4( &inst->SrcReg[0], state, t );
+               _mesa_printf("%s%g, %g, %g, %g\n",
+                            (char *) inst->Data, t[0], t[1], t[2], t[3]);
+            }
+            else {
+               _mesa_printf("%s\n", (char *) inst->Data);
+            }
+            break;
          case VP_OPCODE_END:
             ctx->_CurrentProgram = 0;
             return;

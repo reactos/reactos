@@ -238,13 +238,24 @@ static void _tnl_import_attrib( GLcontext *ctx,
 }
 
 
+static void _tnl_constant_attrib( TNLcontext *tnl,
+				  struct tnl_vertex_arrays *tmp,
+				  GLuint i )
+{
+   tmp->Attribs[i].count = 1;
+   tmp->Attribs[i].data = (GLfloat (*)[4]) tnl->vtx.current[i];
+   tmp->Attribs[i].start = tnl->vtx.current[i];
+   tmp->Attribs[i].size = 4; 
+   tmp->Attribs[i].stride = 0;
+   tnl->vb.AttribPtr[i] = &tmp->Attribs[i];
+}
+
 
 
 void _tnl_vb_bind_arrays( GLcontext *ctx, GLint start, GLint end)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
-   GLuint inputs = tnl->pipeline.inputs;
    struct tnl_vertex_arrays *tmp = &tnl->array_inputs;
    GLuint i, index;
 
@@ -269,76 +280,57 @@ void _tnl_vb_bind_arrays( GLcontext *ctx, GLint start, GLint end)
       }
       /* use conventional arrays... */
       else if (index == VERT_ATTRIB_POS) {
-         if (inputs & _TNL_BIT_POS) {
-            _tnl_import_vertex( ctx, 0, 0 );
-            tmp->Obj.count = VB->Count;
-            VB->AttribPtr[_TNL_ATTRIB_POS] = &tmp->Obj;
-         }
+	 _tnl_import_vertex( ctx, 0, 0 );
+	 tmp->Obj.count = VB->Count;
+	 VB->AttribPtr[_TNL_ATTRIB_POS] = &tmp->Obj;
       }
       else if (index == VERT_ATTRIB_NORMAL) {
-         if (inputs & _TNL_BIT_NORMAL) {
-            _tnl_import_normal( ctx, 0, 0 );
-            tmp->Normal.count = VB->Count;
-            VB->AttribPtr[_TNL_ATTRIB_NORMAL] = &tmp->Normal;
-         }
+	 _tnl_import_normal( ctx, 0, 0 );
+	 tmp->Normal.count = VB->Count;
+	 VB->AttribPtr[_TNL_ATTRIB_NORMAL] = &tmp->Normal;
       }
       else if (index == VERT_ATTRIB_COLOR0) {
-         if (inputs & _TNL_BIT_COLOR0) {
-            _tnl_import_color( ctx, 0, 0 );
-            tmp->Color.count = VB->Count;
-            VB->AttribPtr[_TNL_ATTRIB_COLOR0] = &tmp->Color;
-         }
+	 _tnl_import_color( ctx, 0, 0 );
+	 tmp->Color.count = VB->Count;
+	 VB->AttribPtr[_TNL_ATTRIB_COLOR0] = &tmp->Color;
       }
       else if (index == VERT_ATTRIB_COLOR1) {
-         if (inputs & _TNL_BIT_COLOR1) {
-            _tnl_import_secondarycolor( ctx, 0, 0 );
-            tmp->SecondaryColor.count = VB->Count;
-            VB->AttribPtr[_TNL_ATTRIB_COLOR1] = &tmp->SecondaryColor;
-         }
+	 _tnl_import_secondarycolor( ctx, 0, 0 );
+	 tmp->SecondaryColor.count = VB->Count;
+	 VB->AttribPtr[_TNL_ATTRIB_COLOR1] = &tmp->SecondaryColor;
       }
       else if (index == VERT_ATTRIB_FOG) {
-         if (inputs & _TNL_BIT_FOG) {
-            _tnl_import_fogcoord( ctx, 0, 0 );
-            tmp->FogCoord.count = VB->Count;
-            VB->AttribPtr[_TNL_ATTRIB_FOG] = &tmp->FogCoord;
-         }
+	 _tnl_import_fogcoord( ctx, 0, 0 );
+	 tmp->FogCoord.count = VB->Count;
+	 VB->AttribPtr[_TNL_ATTRIB_FOG] = &tmp->FogCoord;
       }
       else if (index >= VERT_ATTRIB_TEX0 && index <= VERT_ATTRIB_TEX7) {
-         if (inputs & _TNL_BITS_TEX_ANY) {
-            for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
-               if (inputs & _TNL_BIT_TEX(i)) {
-                  _tnl_import_texcoord( ctx, i, GL_FALSE, GL_FALSE );
-                  tmp->TexCoord[i].count = VB->Count;
-                  VB->AttribPtr[_TNL_ATTRIB_TEX0 + i] = &tmp->TexCoord[i];
-               }
-            }
-         }
+	 i = index - VERT_ATTRIB_TEX0;
+	 _tnl_import_texcoord( ctx, i, GL_FALSE, GL_FALSE );
+	 tmp->TexCoord[i].count = VB->Count;
+	 VB->AttribPtr[_TNL_ATTRIB_TEX0 + i] = &tmp->TexCoord[i];
+      }
+      else {
+	 _tnl_constant_attrib(tnl, tmp, index);
       }
    }
 
    /* odd-ball vertex attributes */
-   if (inputs & _TNL_BIT_INDEX) {
+   {
       _tnl_import_index( ctx, 0, 0 );
       tmp->Index.count = VB->Count;
       VB->AttribPtr[_TNL_ATTRIB_INDEX] = &tmp->Index;
    }
 
-   if (inputs & _TNL_BIT_EDGEFLAG) {
+   {
       _tnl_import_edgeflag( ctx, GL_TRUE, sizeof(GLboolean) );
       VB->EdgeFlag = (GLboolean *) tmp->EdgeFlag;
    }
 
-   /* These are constant & can be precalculated:
+   /* These are constant & could be precalculated:
     */
-   if (inputs & _TNL_BITS_MAT_ANY) {
-      for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT; i < _TNL_ATTRIB_INDEX; i++) {
-	 tmp->Attribs[i].count = VB->Count;
-	 tmp->Attribs[i].data = (GLfloat (*)[4]) tnl->vtx.current[i];
-	 tmp->Attribs[i].start = tnl->vtx.current[i];
-	 tmp->Attribs[i].size = 4; 
-	 tmp->Attribs[i].stride = 0;
-	 VB->AttribPtr[i] = &tmp->Attribs[i];
-      }      
+   for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT; i < _TNL_ATTRIB_INDEX; i++) {
+      _tnl_constant_attrib(tnl, tmp, i);
    }
 
 
@@ -347,15 +339,14 @@ void _tnl_vb_bind_arrays( GLcontext *ctx, GLint start, GLint end)
    VB->ObjPtr = VB->AttribPtr[_TNL_ATTRIB_POS];
    VB->NormalPtr = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
    VB->ColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR0];
-   VB->ColorPtr[1] = 0;
+   VB->ColorPtr[1] = NULL;
    VB->IndexPtr[0] = VB->AttribPtr[_TNL_ATTRIB_INDEX];
-   VB->IndexPtr[1] = 0;
+   VB->IndexPtr[1] = NULL;
    VB->SecondaryColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR1];
-   VB->SecondaryColorPtr[1] = 0;
+   VB->SecondaryColorPtr[1] = NULL;
    VB->FogCoordPtr = VB->AttribPtr[_TNL_ATTRIB_FOG];
 
    for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
       VB->TexCoordPtr[i] = VB->AttribPtr[_TNL_ATTRIB_TEX0 + i];
    }
-
 }

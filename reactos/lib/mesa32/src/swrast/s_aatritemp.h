@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -348,11 +347,9 @@
          span.y = iy;
          span.end = (GLuint) ix - (GLuint) startX;
          ASSERT(span.interpMask == 0);
-#if defined(DO_MULTITEX) || defined(DO_TEX)
-         _swrast_write_texture_span(ctx, &span);
-#elif defined(DO_RGBA)
+#if defined(DO_RGBA)
          _swrast_write_rgba_span(ctx, &span);
-#elif defined(DO_INDEX)
+#else
          _swrast_write_index_span(ctx, &span);
 #endif
       }
@@ -509,11 +506,9 @@
          span.y = iy;
          span.end = n;
          ASSERT(span.interpMask == 0);
-#if defined(DO_MULTITEX) || defined(DO_TEX)
-         _swrast_write_texture_span(ctx, &span);
-#elif defined(DO_RGBA)
+#if defined(DO_RGBA)
          _swrast_write_rgba_span(ctx, &span);
-#elif defined(DO_INDEX)
+#else
          _swrast_write_index_span(ctx, &span);
 #endif
       }

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.5
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -120,16 +120,31 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
 #endif
 #if FLAGS & TEXTURE
    span->arrayMask |= SPAN_TEXTURE;
-   for (u = 0; u < ctx->Const.MaxTextureUnits; u++) {
-      if (ctx->Texture.Unit[u]._ReallyEnabled) {
-         const GLfloat q = vert->texcoord[u][3];
-         const GLfloat invQ = (q == 0.0F || q == 1.0F) ? 1.0F : (1.0F / q);
-         texcoord[u][0] = vert->texcoord[u][0] * invQ;
-         texcoord[u][1] = vert->texcoord[u][1] * invQ;
-         texcoord[u][2] = vert->texcoord[u][2] * invQ;
-         texcoord[u][3] = q;
+   if (ctx->FragmentProgram._Active) {
+      /* Don't divide texture s,t,r by q (use TXP to do that) */
+      for (u = 0; u < ctx->Const.MaxTextureUnits; u++) {
+         if (ctx->Texture._EnabledCoordUnits & (1 << u)) {
+            COPY_4V(texcoord[u], vert->texcoord[u]);
+         }
       }
    }
+   else {
+      /* Divide texture s,t,r by q here */
+      for (u = 0; u < ctx->Const.MaxTextureUnits; u++) {
+         if (ctx->Texture._EnabledCoordUnits & (1 << u)) {
+            const GLfloat q = vert->texcoord[u][3];
+            const GLfloat invQ = (q == 0.0F || q == 1.0F) ? 1.0F : (1.0F / q);
+            texcoord[u][0] = vert->texcoord[u][0] * invQ;
+            texcoord[u][1] = vert->texcoord[u][1] * invQ;
+            texcoord[u][2] = vert->texcoord[u][2] * invQ;
+            texcoord[u][3] = q;
+         }
+      }
+   }
+   /* need these for fragment programs */
+   span->w = 1.0F;
+   span->dwdx = 0.0F;
+   span->dwdy = 0.0F;
 #endif
 #if FLAGS & SMOOTH
    span->arrayMask |= SPAN_COVERAGE;
@@ -138,28 +153,44 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
    span->arrayMask |= SPAN_TEXTURE;
 #endif
 
+   /* Compute point size if not known to be one */
 #if FLAGS & ATTENUATE
-   if (vert->pointSize >= ctx->Point.Threshold) {
-      size = MIN2(vert->pointSize, ctx->Point.MaxSize);
+   /* first, clamp attenuated size to the user-specifed range */
+   size = CLAMP(vert->pointSize, ctx->Point.MinSize, ctx->Point.MaxSize);
 #if (FLAGS & RGBA) && (FLAGS & SMOOTH)
-      alphaAtten = 1.0F;
-#endif
+   /* only if multisampling, compute the fade factor */
+   if (ctx->Multisample.Enabled) {
+      if (vert->pointSize >= ctx->Point.Threshold) {
+         alphaAtten = 1.0F;
+      }
+      else {
+         GLfloat dsize = vert->pointSize / ctx->Point.Threshold;
+         alphaAtten = dsize * dsize;
+      }
    }
    else {
-#if (FLAGS & RGBA) && (FLAGS & SMOOTH)
-      GLfloat dsize = vert->pointSize / ctx->Point.Threshold;
-      alphaAtten = dsize * dsize;
-#endif
-      size = MAX2(ctx->Point.Threshold, ctx->Point.MinSize);
+      alphaAtten = 1.0;
    }
+#endif
 #elif FLAGS & (LARGE | SMOOTH | SPRITE)
-   size = ctx->Point._Size;
+   /* constant, non-attenuated size */
+   size = ctx->Point._Size; /* this is already clamped */
 #endif
 
+
 #if FLAGS & (ATTENUATE | LARGE | SMOOTH | SPRITE)
-   /*
-    * Multi-pixel points
-    */
+   /***
+    *** Multi-pixel points
+    ***/
+
+   /* do final clamping now */
+   if (ctx->Point.SmoothFlag) {
+      size = CLAMP(size, ctx->Const.MinPointSizeAA, ctx->Const.MaxPointSizeAA);
+   }
+   else {
+      size = CLAMP(size, ctx->Const.MinPointSize, ctx->Const.MaxPointSize);
+   }
+
    {{
       GLint x, y;
       const GLfloat radius = 0.5F * size;
@@ -201,12 +232,7 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
       /* check if we need to flush */
       if (span->end + (xmax-xmin+1) * (ymax-ymin+1) >= MAX_WIDTH ||
           (swrast->_RasterMask & (BLEND_BIT | LOGIC_OP_BIT | MASKING_BIT))) {
-#if FLAGS & (TEXTURE | SPRITE)
-         if (ctx->Texture._EnabledUnits)
-            _swrast_write_texture_span(ctx, span);
-         else
-            _swrast_write_rgba_span(ctx, span);
-#elif FLAGS & RGBA
+#if FLAGS & RGBA
          _swrast_write_rgba_span(ctx, span);
 #else
          _swrast_write_index_span(ctx, span);
@@ -220,6 +246,16 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
       count = span->end;
       (void) radius;
       for (y = ymin; y <= ymax; y++) {
+         /* check if we need to flush */
+         if (count + (xmax-xmin+1) >= MAX_WIDTH) {
+	     span->end = count;
+#if FLAGS & RGBA
+            _swrast_write_rgba_span(ctx, span);
+#else
+            _swrast_write_index_span(ctx, span);
+#endif
+            count = span->end = 0;
+         }
          for (x = xmin; x <= xmax; x++) {
 #if FLAGS & (SPRITE | TEXTURE)
             GLuint u;
@@ -241,7 +277,7 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
 #endif
 #if FLAGS & TEXTURE
             for (u = 0; u < ctx->Const.MaxTextureUnits; u++) {
-               if (ctx->Texture.Unit[u]._ReallyEnabled) {
+               if (ctx->Texture._EnabledCoordUnits & (1 << u)) {
                   COPY_4V(span->array->texcoords[u][count], texcoord[u]);
                }
             }
@@ -292,20 +328,21 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
                if (ctx->Texture.Unit[u]._ReallyEnabled) {
                   if (ctx->Point.CoordReplace[u]) {
                      GLfloat s = 0.5F + (x + 0.5F - vert->win[0]) / size;
-                     GLfloat t;
+                     GLfloat t, r;
                      if (ctx->Point.SpriteOrigin == GL_LOWER_LEFT)
                         t = 0.5F + (y + 0.5F - vert->win[1]) / size;
                      else /* GL_UPPER_LEFT */
                         t = 0.5F - (y + 0.5F - vert->win[1]) / size;
+                     if (ctx->Point.SpriteRMode == GL_ZERO)
+                        r = 0.0F;
+                     else if (ctx->Point.SpriteRMode == GL_S)
+                        r = vert->texcoord[u][0];
+                     else /* GL_R */
+                        r = vert->texcoord[u][2];
                      span->array->texcoords[u][count][0] = s;
                      span->array->texcoords[u][count][1] = t;
+                     span->array->texcoords[u][count][2] = r;
                      span->array->texcoords[u][count][3] = 1.0F;
-                     if (ctx->Point.SpriteRMode == GL_ZERO)
-                        span->array->texcoords[u][count][2] = 0.0F;
-                     else if (ctx->Point.SpriteRMode == GL_S)
-                        span->array->texcoords[u][count][2] = vert->texcoord[u][0];
-                     else /* GL_R */
-                        span->array->texcoords[u][count][2] = vert->texcoord[u][2];
                   }
                   else {
                      COPY_4V(span->array->texcoords[u][count], vert->texcoord[u]);
@@ -325,21 +362,16 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
 
 #else /* LARGE | ATTENUATE | SMOOTH | SPRITE */
 
-   /*
-    * Single-pixel points
-    */
+   /***
+    *** Single-pixel points
+    ***/
    {{
       GLuint count;
 
       /* check if we need to flush */
       if (span->end >= MAX_WIDTH ||
           (swrast->_RasterMask & (BLEND_BIT | LOGIC_OP_BIT | MASKING_BIT))) {
-#if FLAGS & (TEXTURE | SPRITE)
-         if (ctx->Texture._EnabledUnits)
-            _swrast_write_texture_span(ctx, span);
-         else
-            _swrast_write_rgba_span(ctx, span);
-#elif FLAGS & RGBA
+#if FLAGS & RGBA
          _swrast_write_rgba_span(ctx, span);
 #else
          _swrast_write_index_span(ctx, span);

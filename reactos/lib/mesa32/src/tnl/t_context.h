@@ -1,8 +1,8 @@
 /*
  * mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -82,18 +82,15 @@
 
 #define MAX_PIPELINE_STAGES     30
 
-
 /*
  * Note: The first attributes match the VERT_ATTRIB_* definitions
  * in mtypes.h.  However, the tnl module has additional attributes
  * for materials, color indexes, edge flags, etc.
  */
-/* Note: These are currently being used to define both inputs and
- * outputs from the tnl pipeline.  A better solution (which would also
- * releive the congestion to slightly prolong the life of the bitmask
- * below) is to have the fixed function pipeline populate a set of
- * arrays named after those produced by the vertex program stage, and
- * have the rest the mesa backend work on those.
+/* Although it's nice to use these as bit indexes in a DWORD flag, we
+ * could manage without if necessary.  Another limit currently is the
+ * number of bits allocated for these numbers in places like vertex
+ * program instruction formats and register layouts.
  */
 enum {
 	_TNL_ATTRIB_POS = 0,
@@ -285,6 +282,7 @@ struct tnl_vtx {
    GLfloat vertex[_TNL_ATTRIB_MAX*4]; /* current vertex */
    GLfloat *attrptr[_TNL_ATTRIB_MAX]; /* points into vertex */
    GLfloat *current[_TNL_ATTRIB_MAX]; /* points into ctx->Current, etc */
+   GLfloat CurrentFloatEdgeFlag;
    GLuint counter, initial_counter;
    struct tnl_copied_vtx copied;
 
@@ -364,6 +362,7 @@ struct tnl_save {
    GLfloat *buffer;
    GLuint count;
    GLuint wrap_count;
+   GLuint replay_flags;
 
    struct tnl_prim *prim;
    GLuint prim_count, prim_max;
@@ -381,6 +380,8 @@ struct tnl_save {
    GLuint opcode_vertex_list;
 
    struct tnl_copied_vtx copied;
+   
+   GLfloat CurrentFloatEdgeFlag;
 
    GLfloat *current[_TNL_ATTRIB_MAX]; /* points into ctx->ListState */
    GLubyte *currentsz[_TNL_ATTRIB_MAX];
@@ -462,43 +463,23 @@ struct vertex_buffer
 struct tnl_pipeline_stage
 {
    const char *name;
-   GLuint check_state;		/* All state referenced in check() --
-				 * When is the pipeline_stage struct
-				 * itself invalidated?  Must be
-				 * constant.
-				 */
-
-   /* Usually constant or set by the 'check' callback:
-    */
-   GLuint run_state;		/* All state referenced in run() --
-				 * When is the cached output of the
-				 * stage invalidated?
-				 */
-
-   GLboolean active;		/* True if runnable in current state */
-   GLuint inputs;		/* VERT_* inputs to the stage */
-   GLuint outputs;		/* VERT_* outputs of the stage */
-
-   /* Set in _tnl_run_pipeline():
-    */
-   GLuint changed_inputs;	/* Generated value -- inputs to the
-				 * stage that have changed since last
-				 * call to 'run'.
-				 */
-
 
    /* Private data for the pipeline stage:
     */
    void *privatePtr;
 
-   /* Free private data.  May not be null.
+   /* Allocate private data
+    */
+   GLboolean (*create)( GLcontext *ctx, struct tnl_pipeline_stage * );
+
+   /* Free private data.
     */
    void (*destroy)( struct tnl_pipeline_stage * );
 
-   /* Called from _tnl_validate_pipeline().  Must update all fields in
-    * the pipeline_stage struct for the current state.
+   /* Called on any statechange or input array size change or
+    * input array change to/from zero stride.
     */
-   void (*check)( GLcontext *ctx, struct tnl_pipeline_stage * );
+   void (*validate)( GLcontext *ctx, struct tnl_pipeline_stage * );
 
    /* Called from _tnl_run_pipeline().  The stage.changed_inputs value
     * encodes all inputs to thee struct which have changed.  If
@@ -511,15 +492,18 @@ struct tnl_pipeline_stage
    GLboolean (*run)( GLcontext *ctx, struct tnl_pipeline_stage * );
 };
 
+
+
 /** Contains the array of all pipeline stages.
- * The default values are defined at the end of t_pipeline.c */
+ * The default values are defined at the end of t_pipeline.c 
+ */
 struct tnl_pipeline {
-   GLuint build_state_trigger;	  /**< state changes which require build */
-   GLuint build_state_changes;    /**< state changes since last build */
-   GLuint run_state_changes;	  /**< state changes since last run */
-   GLuint run_input_changes;	  /**< VERT_* changes since last run */
-   GLuint inputs;		  /**< VERT_* inputs to pipeline */
-   /** This array has to end with a NULL-pointer. */
+   
+   GLuint last_attrib_stride[_TNL_ATTRIB_MAX];
+   GLuint last_attrib_size[_TNL_ATTRIB_MAX];
+   GLuint input_changes;
+   GLuint new_state;
+
    struct tnl_pipeline_stage stages[MAX_PIPELINE_STAGES+1];
    GLuint nr_stages;
 };
@@ -536,8 +520,8 @@ typedef void (*tnl_insert_func)( const struct tnl_clipspace_attr *a,
 				 const GLfloat *in );
 
 typedef void (*tnl_emit_func)( GLcontext *ctx, 
-			       GLuint start, 
-			       GLuint end, void *dest );
+			       GLuint count, 
+			       GLubyte *dest );
 
 
 /**
@@ -552,45 +536,13 @@ struct tnl_clipspace_attr
    GLuint vertattrsize;    /* size of the attribute in bytes */
    GLubyte *inputptr;
    GLuint inputstride;
-   tnl_insert_func *insert;
+   GLuint inputsize;
+   const tnl_insert_func *insert;
    tnl_insert_func emit;
    tnl_extract_func extract;
    const GLfloat *vp;   /* NDC->Viewport mapping matrix */
 };
 
-
-struct tnl_clipspace_codegen {
-   GLboolean (*emit_header)( struct tnl_clipspace_codegen *,
-			     struct tnl_clipspace *);
-   GLboolean (*emit_footer)( struct tnl_clipspace_codegen * );
-   GLboolean (*emit_attr_header)( struct tnl_clipspace_codegen *,
-				  struct tnl_clipspace_attr *,
-				  GLint j, GLenum out_type, 
-				  GLboolean need_vp );
-   GLboolean (*emit_attr_footer)( struct tnl_clipspace_codegen * );
-   GLboolean (*emit_mov)( struct tnl_clipspace_codegen *, 
-			  GLint, GLint );
-   GLboolean (*emit_const)( struct tnl_clipspace_codegen *, 
-			    GLint, GLfloat );
-   GLboolean (*emit_mad)( struct tnl_clipspace_codegen *,
-			  GLint, GLint, GLint, GLint );
-   GLboolean (*emit_float_to_chan)( struct tnl_clipspace_codegen *, 
-				    GLint, GLint );
-   GLboolean (*emit_const_chan)( struct tnl_clipspace_codegen *, 
-				 GLint, GLchan );
-   GLboolean (*emit_float_to_ubyte)( struct tnl_clipspace_codegen *, 
-				     GLint, GLint );
-   GLboolean (*emit_const_ubyte)( struct tnl_clipspace_codegen *, 
-				  GLint, GLubyte );
-   tnl_emit_func (*emit_store_func)( struct tnl_clipspace_codegen * );
-   
-   struct _tnl_dynfn codegen_list;
-   
-   char *buf;
-   int buf_size;
-   int buf_used;
-   int out_offset;
-};
 
 
 
@@ -610,6 +562,22 @@ typedef void (*tnl_setup_func)( GLcontext *ctx,
 				GLuint start, GLuint end,
 				GLuint new_inputs);
 
+
+struct tnl_clipspace_fastpath {
+   GLuint vertex_size;
+   GLuint attr_count;
+   GLboolean match_strides;
+
+   struct {
+      GLuint format;
+      GLuint size;
+      GLuint stride;
+      GLuint offset;
+   } *attr;
+
+   tnl_emit_func func;
+   struct tnl_clipspace_fastpath *next;
+};
 
 /**
  * Used to describe conversion of vertex arrays to vertex structures.
@@ -632,7 +600,26 @@ struct tnl_clipspace
    tnl_interp_func interp;
    tnl_copy_pv_func copy_pv;
 
-   struct tnl_clipspace_codegen codegen;
+   /* Parameters and constants for codegen:
+    */
+   GLboolean need_viewport;
+   GLfloat vp_scale[4];		
+   GLfloat vp_xlate[4];
+   GLfloat chan_scale[4];
+   GLfloat identity[4];
+
+   struct tnl_clipspace_fastpath *fastpath;
+   
+   void (*codegen_emit)( GLcontext *ctx );
+};
+
+
+
+struct tnl_cache {
+   GLuint hash;
+   void *key;
+   void *data;
+   struct tnl_cache *next;
 };
 
 
@@ -791,11 +778,13 @@ typedef struct
    GLvertexformat exec_vtxfmt;
    GLvertexformat save_vtxfmt;
 
+   struct tnl_cache *vp_cache;
+
 } TNLcontext;
 
 
 
-#define TNL_CONTEXT(ctx) ((TNLcontext *)(ctx->swtnl_context))
+#define TNL_CONTEXT(ctx) ((TNLcontext *)((ctx)->swtnl_context))
 
 
 #define TYPE_IDX(t) ((t) & 0xf)

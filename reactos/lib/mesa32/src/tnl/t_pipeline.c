@@ -37,33 +37,27 @@
 
 #include "t_context.h"
 #include "t_pipeline.h"
-
+#include "t_vp_build.h"
+#include "t_vertex.h"
 
 void _tnl_install_pipeline( GLcontext *ctx,
 			    const struct tnl_pipeline_stage **stages )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   struct tnl_pipeline *pipe = &tnl->pipeline;
    GLuint i;
 
-   ASSERT(pipe->nr_stages == 0);
-
-   pipe->run_state_changes = ~0;
-   pipe->run_input_changes = ~0;
-   pipe->build_state_changes = ~0;
-   pipe->build_state_trigger = 0;
-   pipe->inputs = 0;
+   tnl->pipeline.new_state = ~0;
 
    /* Create a writeable copy of each stage.
     */
    for (i = 0 ; i < MAX_PIPELINE_STAGES && stages[i] ; i++) {
-      MEMCPY( &pipe->stages[i], stages[i], sizeof( **stages ));
-      pipe->build_state_trigger |= pipe->stages[i].check_state;
+      struct tnl_pipeline_stage *s = &tnl->pipeline.stages[i];
+      MEMCPY(s, stages[i], sizeof(*s));
+      if (s->create)
+	 s->create(ctx, s);
    }
 
-   MEMSET( &pipe->stages[i], 0, sizeof( **stages ));
-
-   pipe->nr_stages = i;
+   tnl->pipeline.nr_stages = i;
 }
 
 void _tnl_destroy_pipeline( GLcontext *ctx )
@@ -71,100 +65,101 @@ void _tnl_destroy_pipeline( GLcontext *ctx )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint i;
 
-   for (i = 0 ; i < tnl->pipeline.nr_stages ; i++)
-      tnl->pipeline.stages[i].destroy( &tnl->pipeline.stages[i] );
+   for (i = 0 ; i < tnl->pipeline.nr_stages ; i++) {
+      struct tnl_pipeline_stage *s = &tnl->pipeline.stages[i];
+      if (s->destroy)
+	 s->destroy(s);
+   }
 
    tnl->pipeline.nr_stages = 0;
 }
 
-/* TODO: merge validate with run.
- */
-void _tnl_validate_pipeline( GLcontext *ctx )
+
+
+static GLuint check_input_changes( GLcontext *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   struct tnl_pipeline *pipe = &tnl->pipeline;
-   struct tnl_pipeline_stage *s = pipe->stages;
-   GLuint newstate = pipe->build_state_changes;
-   GLuint generated = 0;
-   GLuint changed_inputs = 0;
-
-   pipe->inputs = 0;
-   pipe->build_state_changes = 0;
-
-   for ( ; s->check ; s++) {
-
-      s->changed_inputs |= s->inputs & changed_inputs;
-
-      if (s->check_state & newstate) {
-	 if (s->active) {
-	    GLuint old_outputs = s->outputs;
-	    s->check(ctx, s);
-	    if (!s->active)
-	       changed_inputs |= old_outputs;
-	 }
-	 else
-	    s->check(ctx, s);
-      }
-
-      if (s->active) {
-	 pipe->inputs |= s->inputs & ~generated;
-	 generated |= s->outputs;
+   GLuint i;
+   
+   for (i = 0; i < _TNL_ATTRIB_EDGEFLAG; i++) {
+      if (tnl->vb.AttribPtr[i]->size != tnl->pipeline.last_attrib_size[i] ||
+	  tnl->vb.AttribPtr[i]->stride != tnl->pipeline.last_attrib_stride[i]) {
+	 tnl->pipeline.last_attrib_size[i] = tnl->vb.AttribPtr[i]->size;
+	 tnl->pipeline.last_attrib_stride[i] = tnl->vb.AttribPtr[i]->stride;
+	 tnl->pipeline.input_changes |= 1<<i;
       }
    }
+
+   return tnl->pipeline.input_changes;
 }
 
+
+static GLuint check_output_changes( GLcontext *ctx )
+{
+#if 0
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   
+   for (i = 0; i < VERT_RESULT_MAX; i++) {
+      if (tnl->vb.ResultPtr[i]->size != tnl->last_result_size[i] ||
+	  tnl->vb.ResultPtr[i]->stride != tnl->last_result_stride[i]) {
+	 tnl->last_result_size[i] = tnl->vb.ResultPtr[i]->size;
+	 tnl->last_result_stride[i] = tnl->vb.ResultPtr[i]->stride;
+	 tnl->pipeline.output_changes |= 1<<i;
+      }
+   }
+
+   if (tnl->pipeline.output_changes) 
+      tnl->Driver.NotifyOutputChanges( ctx, tnl->pipeline.output_changes );
+   
+   return tnl->pipeline.output_changes;
+#else
+   return ~0;
+#endif
+}
 
 
 void _tnl_run_pipeline( GLcontext *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   struct tnl_pipeline *pipe = &tnl->pipeline;
-   struct tnl_pipeline_stage *s = pipe->stages;
-   GLuint changed_state = pipe->run_state_changes;
-   GLuint changed_inputs = pipe->run_input_changes;
-   GLboolean running = GL_TRUE;
-#ifdef HAVE_FAST_MATH
    unsigned short __tmp;
-#endif
+   GLuint i;
 
    if (!tnl->vb.Count)
       return;
 
-   pipe->run_state_changes = 0;
-   pipe->run_input_changes = 0;
-
-   /* Done elsewhere.
+   /* Check for changed input sizes or change in stride to/from zero
+    * (ie const or non-const).
     */
-   ASSERT(pipe->build_state_changes == 0);
+   if (check_input_changes( ctx ) || tnl->pipeline.new_state) {
+      if (ctx->_MaintainTnlProgram)
+	 _tnl_UpdateFixedFunctionProgram( ctx );
 
-#ifdef HAVE_FAST_MATH
-   START_FAST_MATH(__tmp);
-#endif
-
-   /* If something changes in the pipeline, tag all subsequent stages
-    * using this value for recalculation.  Inactive stages have their
-    * state and inputs examined to try to keep cached data alive over
-    * state-changes.
-    */
-   for ( ; s->run ; s++) {
-      s->changed_inputs |= s->inputs & changed_inputs;
-
-      if (s->run_state & changed_state)
-	 s->changed_inputs = s->inputs;
-
-      if (s->active && running) {
-	 if (s->changed_inputs)
-	    changed_inputs |= s->outputs;
-
-	 running = s->run( ctx, s );
-
-	 s->changed_inputs = 0;
+      for (i = 0; i < tnl->pipeline.nr_stages ; i++) {
+	 struct tnl_pipeline_stage *s = &tnl->pipeline.stages[i];
+	 if (s->validate)
+	    s->validate( ctx, s );
       }
+      
+      tnl->pipeline.new_state = 0;
+      tnl->pipeline.input_changes = 0;
+      
+      /* Pipeline can only change its output in response to either a
+       * statechange or an input size/stride change.  No other changes
+       * are allowed.
+       */
+      if (check_output_changes( ctx ))
+	 _tnl_notify_pipeline_output_change( ctx );
    }
 
-#ifdef HAVE_FAST_MATH
+   START_FAST_MATH(__tmp);
+
+   for (i = 0; i < tnl->pipeline.nr_stages ; i++) {
+      struct tnl_pipeline_stage *s = &tnl->pipeline.stages[i];
+      if (!s->run( ctx, s ))
+	 break;
+   }
+
    END_FAST_MATH(__tmp);
-#endif
 }
 
 
@@ -209,8 +204,15 @@ const struct tnl_pipeline_stage *_tnl_default_pipeline[] = {
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
 #if defined(FEATURE_NV_vertex_program) || defined(FEATURE_ARB_vertex_program)
-   &_tnl_vertex_program_stage,
+   &_tnl_arb_vertex_program_stage,
+   &_tnl_vertex_program_stage, 
 #endif
    &_tnl_render_stage,
-   0
+   NULL 
+};
+
+const struct tnl_pipeline_stage *_tnl_vp_pipeline[] = {
+   &_tnl_arb_vertex_program_stage,
+   &_tnl_render_stage,
+   NULL
 };

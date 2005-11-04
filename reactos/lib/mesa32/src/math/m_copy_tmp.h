@@ -34,7 +34,7 @@ static void TAG2(copy, BITS)( GLvector4f *to, const GLvector4f *f )	\
    GLfloat (*t)[4] = (GLfloat (*)[4])to->start;				\
    GLfloat *from = f->start;						\
    GLuint stride = f->stride;				        	\
-   GLuint count = f->count;						\
+   GLuint count = to->count;						\
    GLuint i;								\
 									\
    if (BITS)								\

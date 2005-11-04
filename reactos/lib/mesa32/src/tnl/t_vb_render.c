@@ -268,7 +268,6 @@ static GLboolean run_render( GLcontext *ctx,
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
-   GLuint new_inputs = stage->changed_inputs;
    tnl_render_func *tab;
    GLint pass = 0;
 
@@ -293,7 +292,7 @@ static GLboolean run_render( GLcontext *ctx,
    ASSERT(tnl->Driver.Render.ClippedPolygon);
    ASSERT(tnl->Driver.Render.Finish);
 
-   tnl->Driver.Render.BuildVertices( ctx, 0, VB->Count, new_inputs );
+   tnl->Driver.Render.BuildVertices( ctx, 0, VB->Count, ~0 );
 
    if (VB->ClipOrMask) {
       tab = VB->Elts ? clip_render_tab_elts : clip_render_tab_verts;
@@ -340,42 +339,14 @@ static GLboolean run_render( GLcontext *ctx,
 
 
 
-/* Quite a bit of work involved in finding out the inputs for the
- * render stage.
- */
-static void check_render( GLcontext *ctx, struct tnl_pipeline_stage *stage )
-{
-   stage->inputs = TNL_CONTEXT(ctx)->render_inputs;
-}
-
-
-
-
-static void dtr( struct tnl_pipeline_stage *stage )
-{
-   (void) stage;
-}
 
 
 const struct tnl_pipeline_stage _tnl_render_stage =
 {
    "render",			/* name */
-   (_NEW_BUFFERS |
-    _DD_NEW_SEPARATE_SPECULAR |
-    _DD_NEW_FLATSHADE |
-    _NEW_TEXTURE|
-    _NEW_LIGHT|
-    _NEW_POINT|
-    _NEW_FOG|
-    _DD_NEW_TRI_UNFILLED |
-    _NEW_RENDERMODE),		/* re-check (new inputs, interp function) */
-   0,				/* re-run (always runs) */
-   GL_TRUE,			/* active? */
-   0,				/* inputs (set in check_render) */
-   0,				/* outputs */
-   0,				/* changed_inputs */
    NULL,			/* private data */
-   dtr,				/* destructor */
-   check_render,		/* check */
+   NULL,			/* creator */
+   NULL,			/* destructor */
+   NULL,			/* validate */
    run_render			/* run */
 };

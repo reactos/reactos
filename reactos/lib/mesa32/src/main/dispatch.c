@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -24,16 +23,21 @@
  */
 
 
-/*
- * This file generates all the gl* function entyrpoints.
- * But if we're using X86-optimized dispatch (X86/glapi_x86.S) then
- * we don't use this code.
+/**
+ * \file dispatch.c
  *
- * NOTE: This file should _not_ be used when compiling Mesa for a DRI-
- * based device driver.
+ * This file generates all the gl* function entrypoints.  This code is not
+ * used if optimized assembly stubs are available (e.g., using x86/glapi_x86.S
+ * on IA32 or sparc/glapi_sparc.S on SPARC).
  *
+ * \note
+ * This file is also used to build the client-side libGL that loads DRI-based
+ * device drivers.  At build-time it is symlinked to src/glx/x11.
+ *
+ * \author Brian Paul <brian@precisioninsight.com>
  */
 
+#ifndef GLX_USE_APPLEGL
 
 #include "glheader.h"
 #include "glapi.h"
@@ -41,12 +45,12 @@
 #include "glthread.h"
 
 
-#if !(defined(USE_X86_ASM) || defined(USE_SPARC_ASM))
+#if !(defined(USE_X86_ASM) || defined(USE_X86_64_ASM) || defined(USE_SPARC_ASM))
 
 #if defined(WIN32)
 #define KEYWORD1 GLAPI
 #else
-#define KEYWORD1
+#define KEYWORD1 PUBLIC
 #endif
 
 #define KEYWORD2 GLAPIENTRY
@@ -62,19 +66,19 @@
 #define F stdout
 #define DISPATCH(FUNC, ARGS, MESSAGE)		\
    fprintf MESSAGE;				\
-   GL_CALL(FUNC) ARGS;
+   CALL_ ## FUNC(GET_DISPATCH(), ARGS);
 
 #define RETURN_DISPATCH(FUNC, ARGS, MESSAGE) 	\
    fprintf MESSAGE;				\
-   return GL_CALL(FUNC) ARGS;
+   return CALL_ ## FUNC(GET_DISPATCH(), ARGS);
 
 #else
 
 #define DISPATCH(FUNC, ARGS, MESSAGE)		\
-   GL_CALL(FUNC) ARGS;
+   CALL_ ## FUNC(GET_DISPATCH(), ARGS);
 
 #define RETURN_DISPATCH(FUNC, ARGS, MESSAGE) 	\
-   return GL_CALL(FUNC) ARGS;
+   return CALL_ ## FUNC(GET_DISPATCH(), ARGS);
 
 #endif /* logging */
 
@@ -83,7 +87,9 @@
 #define GLAPIENTRY
 #endif
 
+#include "dispatch.h"
 #include "glapitemp.h"
 
-
 #endif /* USE_X86_ASM */
+
+#endif /* !GLX_USE_APPLEGL */

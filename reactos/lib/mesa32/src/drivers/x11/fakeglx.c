@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -52,6 +52,9 @@
 #include "xfonts.h"
 #include "xmesaP.h"
 
+#ifdef __VMS
+#define _mesa_sprintf sprintf
+#endif
 
 /* This indicates the client-side GLX API and GLX encoder version. */
 #define CLIENT_MAJOR_VERSION 1
@@ -105,8 +108,7 @@ struct fake_glx_context {
 #define DONT_CARE -1
 
 
-#define MAX_VISUALS 100
-static XMesaVisual VisualTable[MAX_VISUALS];
+static XMesaVisual *VisualTable = NULL;
 static int NumVisuals = 0;
 
 
@@ -133,7 +135,6 @@ typedef struct _OverlayInfo {
 #else
 #define CLASS class
 #endif
-
 
 
 
@@ -169,7 +170,53 @@ is_usable_visual( XVisualInfo *vinfo )
 
 
 
-/*
+/**
+ * Get an array OverlayInfo records for specified screen.
+ * \param dpy  the display
+ * \param screen  screen number
+ * \param numOverlays  returns numver of OverlayInfo records
+ * \return  pointer to OverlayInfo array, free with XFree()
+ */
+static OverlayInfo *
+GetOverlayInfo(Display *dpy, int screen, int *numOverlays)
+{
+   Atom overlayVisualsAtom;
+   Atom actualType;
+   Status status;
+   unsigned char *ovInfo;
+   unsigned long sizeData, bytesLeft;
+   int actualFormat;
+
+   /*
+    * The SERVER_OVERLAY_VISUALS property on the root window contains
+    * a list of overlay visuals.  Get that list now.
+    */
+   overlayVisualsAtom = XInternAtom(dpy,"SERVER_OVERLAY_VISUALS", True);
+   if (overlayVisualsAtom == None) {
+      return 0;
+   }
+
+   status = XGetWindowProperty(dpy, RootWindow(dpy, screen),
+                               overlayVisualsAtom, 0L, (long) 10000, False,
+                               overlayVisualsAtom, &actualType, &actualFormat,
+                               &sizeData, &bytesLeft,
+                               &ovInfo);
+
+   if (status != Success || actualType != overlayVisualsAtom ||
+       actualFormat != 32 || sizeData < 4) {
+      /* something went wrong */
+      XFree((void *) ovInfo);
+      *numOverlays = 0;
+      return NULL;
+   }
+
+   *numOverlays = sizeData / 4;
+   return (OverlayInfo *) ovInfo;
+}
+
+
+
+/**
  * Return the level (overlay, normal, underlay) of a given XVisualInfo.
  * Input:  dpy - the X display
  *         vinfo - the XVisualInfo to test
@@ -181,43 +228,18 @@ is_usable_visual( XVisualInfo *vinfo )
 static int
 level_of_visual( Display *dpy, XVisualInfo *vinfo )
 {
-   Atom overlayVisualsAtom;
-   OverlayInfo *overlay_info = NULL;
-   int numOverlaysPerScreen;
-   Status status;
-   Atom actualType;
-   int actualFormat;
-   unsigned long sizeData, bytesLeft;
-   int i;
+   OverlayInfo *overlay_info;
+   int numOverlaysPerScreen, i;
 
-   /*
-    * The SERVER_OVERLAY_VISUALS property on the root window contains
-    * a list of overlay visuals.  Get that list now.
-    */
-   overlayVisualsAtom = XInternAtom(dpy,"SERVER_OVERLAY_VISUALS", True);
-   if (overlayVisualsAtom == None) {
-      return 0;
-   }
-
-   status = XGetWindowProperty(dpy, RootWindow( dpy, vinfo->screen ),
-                               overlayVisualsAtom, 0L, (long) 10000, False,
-                               overlayVisualsAtom, &actualType, &actualFormat,
-                               &sizeData, &bytesLeft,
-                               (unsigned char **) &overlay_info );
-
-   if (status != Success || actualType != overlayVisualsAtom ||
-       actualFormat != 32 || sizeData < 4) {
-      /* something went wrong */
-      XFree((void *) overlay_info);
+   overlay_info = GetOverlayInfo(dpy, vinfo->screen, &numOverlaysPerScreen);
+   if (!overlay_info) {
       return 0;
    }
 
    /* search the overlay visual list for the visual ID of interest */
-   numOverlaysPerScreen = (int) (sizeData / 4);
-   for (i=0;i<numOverlaysPerScreen;i++) {
-      OverlayInfo *ov;
-      ov = overlay_info + i;
-      if (ov->overlay_visual==vinfo->visualid) {
+   for (i = 0; i < numOverlaysPerScreen; i++) {
+      const OverlayInfo *ov = overlay_info + i;
+      if (ov->overlay_visual == vinfo->visualid) {
          /* found the visual */
          if (/*ov->transparent_type==1 &&*/ ov->layer!=0) {
             int level = ov->layer;
@@ -311,11 +333,6 @@ save_glx_visual( Display *dpy, XVisualInfo *vinfo,
 
    /* Create a new visual and add it to the list. */
 
-   if (NumVisuals >= MAX_VISUALS) {
-      _mesa_problem(NULL, "GLX Error: maximum number of visuals exceeded");
-      return NULL;
-   }
-
    xmvis = XMesaCreateVisual( dpy, vinfo, rgbFlag, alphaFlag, dbFlag,
                               stereoFlag, ximageFlag,
                               depth_size, stencil_size,
@@ -327,6 +344,10 @@ save_glx_visual( Display *dpy, XVisualInfo *vinfo,
        * if we need to search for it in find_glx_visual().
        */
       xmvis->vishandle = vinfo;
+      /* Allocate more space for additional visual */
+      VisualTable = _mesa_realloc( VisualTable, 
+                                   sizeof(XMesaVisual) * NumVisuals, 
+                                   sizeof(XMesaVisual) * (NumVisuals + 1));
       /* add xmvis to the list */
       VisualTable[NumVisuals] = xmvis;
       NumVisuals++;
@@ -397,11 +418,8 @@ create_glx_visual( Display *dpy, XVisualInfo *visinfo )
                                  GL_TRUE,   /* double */
                                  GL_FALSE,  /* stereo */
                                  zBits,
-                                 8 * sizeof(GLstencil),
-                                 0 * sizeof(GLaccum), /* r */
-                                 0 * sizeof(GLaccum), /* g */
-                                 0 * sizeof(GLaccum), /* b */
-                                 0 * sizeof(GLaccum), /* a */
+                                 STENCIL_BITS,
+                                 0, 0, 0, 0, /* accum bits */
                                  0,         /* level */
                                  0          /* numAux */
                                );
@@ -416,11 +434,11 @@ create_glx_visual( Display *dpy, XVisualInfo *visinfo )
                                  GL_TRUE,   /* double */
                                  GL_FALSE,  /* stereo */
                                  zBits,
-                                 8 * sizeof(GLstencil),
-                                 8 * sizeof(GLaccum), /* r */
-                                 8 * sizeof(GLaccum), /* g */
-                                 8 * sizeof(GLaccum), /* b */
-                                 8 * sizeof(GLaccum), /* a */
+                                 STENCIL_BITS,
+                                 ACCUM_BITS, /* r */
+                                 ACCUM_BITS, /* g */
+                                 ACCUM_BITS, /* b */
+                                 ACCUM_BITS, /* a */
                                  0,         /* level */
                                  0          /* numAux */
                                );
@@ -462,7 +480,7 @@ find_glx_visual( Display *dpy, XVisualInfo *vinfo )
 
 
 
-/*
+/**
  * Return the transparent pixel value for a GLX visual.
  * Input:  glxvis - the glx_visual
  * Return:  a pixel value or -1 if no transparent pixel
@@ -472,45 +490,19 @@ transparent_pixel( XMesaVisual glxvis )
 {
    Display *dpy = glxvis->display;
    XVisualInfo *vinfo = glxvis->visinfo;
-   Atom overlayVisualsAtom;
-   OverlayInfo *overlay_info = NULL;
-   int numOverlaysPerScreen;
-   Status status;
-   Atom actualType;
-   int actualFormat;
-   unsigned long sizeData, bytesLeft;
-   int i;
+   OverlayInfo *overlay_info;
+   int numOverlaysPerScreen, i;
 
-   /*
-    * The SERVER_OVERLAY_VISUALS property on the root window contains
-    * a list of overlay visuals.  Get that list now.
-    */
-   overlayVisualsAtom = XInternAtom(dpy,"SERVER_OVERLAY_VISUALS", True);
-   if (overlayVisualsAtom == None) {
+   overlay_info = GetOverlayInfo(dpy, vinfo->screen, &numOverlaysPerScreen);
+   if (!overlay_info) {
       return -1;
    }
 
-   status = XGetWindowProperty(dpy, RootWindow( dpy, vinfo->screen ),
-                               overlayVisualsAtom, 0L, (long) 10000, False,
-                               overlayVisualsAtom, &actualType, &actualFormat,
-                               &sizeData, &bytesLeft,
-                               (unsigned char **) &overlay_info );
-
-   if (status != Success || actualType != overlayVisualsAtom ||
-       actualFormat != 32 || sizeData < 4) {
-      /* something went wrong */
-      XFree((void *) overlay_info);
-      return -1;
-   }
-
-   /* search the overlay visual list for the visual ID of interest */
-   numOverlaysPerScreen = (int) (sizeData / 4);
-   for (i=0;i<numOverlaysPerScreen;i++) {
-      OverlayInfo *ov;
-      ov = overlay_info + i;
-      if (ov->overlay_visual==vinfo->visualid) {
+   for (i = 0; i < numOverlaysPerScreen; i++) {
+      const OverlayInfo *ov = overlay_info + i;
+      if (ov->overlay_visual == vinfo->visualid) {
          /* found it! */
-         if (ov->transparent_type==0) {
+         if (ov->transparent_type == 0) {
             /* type 0 indicates no transparency */
             XFree((void *) overlay_info);
             return -1;
@@ -530,7 +522,7 @@ transparent_pixel( XMesaVisual glxvis )
 
 
 
-/*
+/**
  * Try to get an X visual which matches the given arguments.
  */
 static XVisualInfo *
@@ -808,13 +800,8 @@ choose_x_overlay_visual( Display *dpy, int scr, GLboolean rgbFlag,
                          int level, int trans_type, int trans_value,
                          int min_depth, int preferred_class )
 {
-   Atom overlayVisualsAtom;
    OverlayInfo *overlay_info;
    int numOverlaysPerScreen;
-   Status status;
-   Atom actualType;
-   int actualFormat;
-   unsigned long sizeData, bytesLeft;
    int i;
    XVisualInfo *deepvis;
    int deepest;
@@ -831,24 +818,8 @@ choose_x_overlay_visual( Display *dpy, int scr, GLboolean rgbFlag,
       default:                    preferred_class = DONT_CARE;
    }
 
-   /*
-    * The SERVER_OVERLAY_VISUALS property on the root window contains
-    * a list of overlay visuals.  Get that list now.
-    */
-   overlayVisualsAtom = XInternAtom(dpy,"SERVER_OVERLAY_VISUALS", True);
-   if (overlayVisualsAtom == (Atom) None) {
-      return NULL;
-   }
-
-   status = XGetWindowProperty(dpy, RootWindow( dpy, scr ),
-                               overlayVisualsAtom, 0L, (long) 10000, False,
-                               overlayVisualsAtom, &actualType, &actualFormat,
-                               &sizeData, &bytesLeft,
-                               (unsigned char **) &overlay_info );
-
-   if (status != Success || actualType != overlayVisualsAtom ||
-       actualFormat != 32 || sizeData < 4) {
-      /* something went wrong */
+   overlay_info = GetOverlayInfo(dpy, scr, &numOverlaysPerScreen);
+   if (!overlay_info) {
       return NULL;
    }
 
@@ -856,12 +827,10 @@ choose_x_overlay_visual( Display *dpy, int scr, GLboolean rgbFlag,
    deepest = min_depth;
    deepvis = NULL;
 
-   numOverlaysPerScreen = (int) (sizeData / 4);
-   for (i=0;i<numOverlaysPerScreen;i++) {
+   for (i = 0; i < numOverlaysPerScreen; i++) {
+      const OverlayInfo *ov = overlay_info + i;
       XVisualInfo *vislist, vistemplate;
       int count;
-      OverlayInfo *ov;
-      ov = overlay_info + i;
 
       if (ov->layer!=level) {
          /* failed overlay level criteria */
@@ -931,10 +900,16 @@ choose_x_overlay_visual( Display *dpy, int scr, GLboolean rgbFlag,
 /**********************************************************************/
 
 
+/**
+ * Helper used by glXChooseVisual and glXChooseFBConfig.
+ * The fbConfig parameter must be GL_FALSE for the former and GL_TRUE for
+ * the later.
+ * In either case, the attribute list is terminated with the value 'None'.
+ */
 static XMesaVisual
-choose_visual( Display *dpy, int screen, const int *list,
-               GLboolean rgbModeDefault )
+choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
 {
+   const GLboolean rgbModeDefault = fbConfig;
    const int *parselist;
    XVisualInfo *vis;
    int min_ci = 0;
@@ -964,8 +939,14 @@ choose_visual( Display *dpy, int screen, const int *list,
 
       switch (*parselist) {
 	 case GLX_USE_GL:
-	    /* ignore */
-	    parselist++;
+            if (fbConfig) {
+               /* invalid token */
+               return NULL;
+            }
+            else {
+               /* skip */
+               parselist++;
+            }
 	    break;
 	 case GLX_BUFFER_SIZE:
 	    parselist++;
@@ -976,18 +957,34 @@ choose_visual( Display *dpy, int screen, const int *list,
             level = *parselist++;
 	    break;
 	 case GLX_RGBA:
-	    rgb_flag = GL_TRUE;
-	    parselist++;
+            if (fbConfig) {
+               /* invalid token */
+               return NULL;
+            }
+            else {
+               rgb_flag = GL_TRUE;
+               parselist++;
+            }
 	    break;
 	 case GLX_DOUBLEBUFFER:
-	    double_flag = GL_TRUE;
-	    parselist++;
+            parselist++;
+            if (fbConfig) {
+               double_flag = *parselist++;
+            }
+            else {
+               double_flag = GL_TRUE;
+            }
 	    break;
 	 case GLX_STEREO:
-            stereo_flag = GL_TRUE;
-            return NULL;
+            parselist++;
+            if (fbConfig) {
+               stereo_flag = *parselist++;
+            }
+            else {
+               stereo_flag = GL_TRUE;
+            }
+            return NULL; /* stereo not supported */
 	 case GLX_AUX_BUFFERS:
-	    /* ignore */
 	    parselist++;
             numAux = *parselist++;
             if (numAux > MAX_AUX_BUFFERS)
@@ -1095,6 +1092,8 @@ choose_visual( Display *dpy, int screen, const int *list,
           * FBConfig attribs.
           */
          case GLX_RENDER_TYPE:
+            if (!fbConfig)
+               return NULL;
             parselist++;
             if (*parselist == GLX_RGBA_BIT) {
                rgb_flag = GL_TRUE;
@@ -1108,6 +1107,8 @@ choose_visual( Display *dpy, int screen, const int *list,
             parselist++;
             break;
          case GLX_DRAWABLE_TYPE:
+            if (!fbConfig)
+               return NULL;
             parselist++;
             if (*parselist & ~(GLX_WINDOW_BIT | GLX_PIXMAP_BIT | GLX_PBUFFER_BIT)) {
                return NULL; /* bad bit */
@@ -1115,8 +1116,16 @@ choose_visual( Display *dpy, int screen, const int *list,
             parselist++;
             break;
          case GLX_FBCONFIG_ID:
+            if (!fbConfig)
+               return NULL;
             parselist++;
-            desiredVisualID = *parselist;
+            desiredVisualID = *parselist++;
+            break;
+         case GLX_X_RENDERABLE:
+            if (!fbConfig)
+               return NULL;
+            parselist += 2;
+            /* ignore */
             break;
 
 	 case None:
@@ -1360,11 +1369,7 @@ Fake_glXMakeContextCurrent( Display *dpy, GLXDrawable draw,
       if (XMesaMakeCurrent2(xmctx, drawBuffer, readBuffer)) {
          ((__GLXcontext *) ctx)->currentDpy = dpy;
          ((__GLXcontext *) ctx)->currentDrawable = draw;
-#ifndef GLX_BUILT_IN_XMESA
          ((__GLXcontext *) ctx)->currentReadable = read;
-#else
-         __glXSetCurrentContext(ctx);
-#endif
          return True;
       }
       else {
@@ -1379,9 +1384,6 @@ Fake_glXMakeContextCurrent( Display *dpy, GLXDrawable draw,
       MakeCurrent_PrevReadable = 0;
       MakeCurrent_PrevDrawBuffer = 0;
       MakeCurrent_PrevReadBuffer = 0;
-#ifdef GLX_BUILT_IN_XMESA
-      /* XXX bind dummy context with __glXSetCurrentContext(ctx); */
-#endif
       return True;
    }
    else {
@@ -1419,7 +1421,7 @@ Fake_glXCreateGLXPixmap( Display *dpy, XVisualInfo *visinfo, Pixmap pixmap )
    if (!b) {
       return 0;
    }
-   return b->frontbuffer;
+   return b->frontxrb->pixmap;
 }
 
 
@@ -1445,7 +1447,7 @@ Fake_glXCreateGLXPixmapMESA( Display *dpy, XVisualInfo *visinfo,
    if (!b) {
       return 0;
    }
-   return b->frontbuffer;
+   return b->frontxrb->pixmap;
 }
 
 
@@ -1528,7 +1530,8 @@ Fake_glXSwapBuffers( Display *dpy, GLXDrawable drawable )
       XMesaSwapBuffers(buffer);
    }
    else if (_mesa_getenv("MESA_DEBUG")) {
-      _mesa_warning(NULL, "Mesa: glXSwapBuffers: invalid drawable\n");
+      _mesa_warning(NULL, "glXSwapBuffers: invalid drawable 0x%x\n",
+                    (int) drawable);
    }
 }
 
@@ -1571,6 +1574,8 @@ get_config( XMesaVisual xmvis, int attrib, int *value, GLboolean fbconfig )
    ASSERT(xmvis);
    switch(attrib) {
       case GLX_USE_GL:
+         if (fbconfig)
+            return GLX_BAD_ATTRIBUTE;
          *value = (int) True;
 	 return 0;
       case GLX_BUFFER_SIZE:
@@ -1580,6 +1585,8 @@ get_config( XMesaVisual xmvis, int attrib, int *value, GLboolean fbconfig )
 	 *value = xmvis->mesa_visual.level;
 	 return 0;
       case GLX_RGBA:
+         if (fbconfig)
+            return GLX_BAD_ATTRIBUTE;
 	 if (xmvis->mesa_visual.rgbMode) {
 	    *value = True;
 	 }
@@ -1768,7 +1775,7 @@ Fake_glXGetConfig( Display *dpy, XVisualInfo *visinfo,
                    int attrib, int *value )
 {
    XMesaVisual xmvis;
-
+   int k;
    if (!dpy || !visinfo)
       return GLX_BAD_ATTRIBUTE;
 
@@ -1788,7 +1795,8 @@ Fake_glXGetConfig( Display *dpy, XVisualInfo *visinfo,
       }
    }
 
-   return get_config(xmvis, attrib, value, GL_FALSE);
+   k = get_config(xmvis, attrib, value, GL_FALSE);
+   return k;
 }
 
 
@@ -1888,28 +1896,6 @@ Fake_glXGetClientString( Display *dpy, int name )
  */
 
 
-static GLXFBConfig *
-Fake_glXChooseFBConfig( Display *dpy, int screen,
-                        const int *attribList, int *nitems )
-{
-   XMesaVisual xmvis = choose_visual(dpy, screen, attribList, GL_TRUE);
-   if (xmvis) {
-      GLXFBConfig *config = (GLXFBConfig *) _mesa_malloc(sizeof(XMesaVisual));
-      if (!config) {
-         *nitems = 0;
-         return NULL;
-      }
-      *nitems = 1;
-      config[0] = (GLXFBConfig) xmvis;
-      return (GLXFBConfig *) config;
-   }
-   else {
-      *nitems = 0;
-      return NULL;
-   }
-}
-
-
 static int
 Fake_glXGetFBConfigAttrib( Display *dpy, GLXFBConfig config,
                            int attribute, int *value )
@@ -1948,6 +1934,35 @@ Fake_glXGetFBConfigs( Display *dpy, int screen, int *nelements )
       return (GLXFBConfig *) results;
    }
    return NULL;
+}
+
+
+static GLXFBConfig *
+Fake_glXChooseFBConfig( Display *dpy, int screen,
+                        const int *attribList, int *nitems )
+{
+   XMesaVisual xmvis;
+
+   if (!attribList || !attribList[0]) {
+      /* return list of all configs (per GLX_SGIX_fbconfig spec) */
+      return Fake_glXGetFBConfigs(dpy, screen, nitems);
+   }
+
+   xmvis = choose_visual(dpy, screen, attribList, GL_TRUE);
+   if (xmvis) {
+      GLXFBConfig *config = (GLXFBConfig *) _mesa_malloc(sizeof(XMesaVisual));
+      if (!config) {
+         *nitems = 0;
+         return NULL;
+      }
+      *nitems = 1;
+      config[0] = (GLXFBConfig) xmvis;
+      return (GLXFBConfig *) config;
+   }
+   else {
+      *nitems = 0;
+      return NULL;
+   }
 }
 
 
@@ -2084,7 +2099,10 @@ Fake_glXCreatePbuffer( Display *dpy, GLXFBConfig config,
    /* A GLXPbuffer handle must be an X Drawable because that's what
     * glXMakeCurrent takes.
     */
-   return (GLXPbuffer) xmbuf->frontbuffer;
+   if (xmbuf)
+      return (GLXPbuffer) xmbuf->frontxrb->pixmap;
+   else
+      return 0;
 }
 
 
@@ -2108,16 +2126,16 @@ Fake_glXQueryDrawable( Display *dpy, GLXDrawable draw, int attribute,
 
    switch (attribute) {
       case GLX_WIDTH:
-         *value = xmbuf->width;
+         *value = xmbuf->mesa_buffer.Width;
          break;
       case GLX_HEIGHT:
-         *value = xmbuf->height;
+         *value = xmbuf->mesa_buffer.Height;
          break;
       case GLX_PRESERVED_CONTENTS:
          *value = True;
          break;
       case GLX_LARGEST_PBUFFER:
-         *value = xmbuf->width * xmbuf->height;
+         *value = xmbuf->mesa_buffer.Width * xmbuf->mesa_buffer.Height;
          break;
       case GLX_FBCONFIG_ID:
          *value = xmbuf->xm_visual->visinfo->visualid;
@@ -2345,7 +2363,7 @@ Fake_glXCreateGLXPixmapWithConfigSGIX(Display *dpy, GLXFBConfigSGIX config, Pixm
 {
    XMesaVisual xmvis = (XMesaVisual) config;
    XMesaBuffer xmbuf = XMesaCreatePixmapBuffer(xmvis, pixmap, 0);
-   return xmbuf->frontbuffer; /* need to return an X ID */
+   return xmbuf->frontxrb->pixmap; /* need to return an X ID */
 }
 
 
@@ -2439,7 +2457,7 @@ Fake_glXCreateGLXPbufferSGIX(Display *dpy, GLXFBConfigSGIX config,
    /* A GLXPbuffer handle must be an X Drawable because that's what
     * glXMakeCurrent takes.
     */
-   return (GLXPbuffer) xmbuf->frontbuffer;
+   return (GLXPbuffer) xmbuf->frontxrb->pixmap;
 }
 
 
@@ -2468,13 +2486,13 @@ Fake_glXQueryGLXPbufferSGIX(Display *dpy, GLXPbufferSGIX pbuf, int attribute, un
          *value = True;
          break;
       case GLX_LARGEST_PBUFFER_SGIX:
-         *value = xmbuf->width * xmbuf->height;
+         *value = xmbuf->mesa_buffer.Width * xmbuf->mesa_buffer.Height;
          break;
       case GLX_WIDTH_SGIX:
-         *value = xmbuf->width;
+         *value = xmbuf->mesa_buffer.Width;
          break;
       case GLX_HEIGHT_SGIX:
-         *value = xmbuf->height;
+         *value = xmbuf->mesa_buffer.Height;
          break;
       case GLX_EVENT_MASK_SGIX:
          *value = 0;  /* XXX might be wrong */
@@ -2709,29 +2727,6 @@ Fake_glXGetAGPOffsetMESA( const GLvoid *pointer )
 }
 
 
-/*** GLX_ARB_render_texture ***/
-
-static Bool
-Fake_glXBindTexImageARB( Display *dpy, GLXPbuffer pbuffer, int buffer )
-{
-   return False;
-}
-
-
-static Bool
-Fake_glXReleaseTexImageARB(Display *dpy, GLXPbuffer pbuffer, int buffer )
-{
-   return False;
-}
-
-
-static Bool
-Fake_glXDrawableAttribARB( Display *dpy, GLXDrawable draw, const int *attribList )
-{
-   return False;
-}
-
-
 /* silence warning */
 extern struct _glxapi_table *_mesa_GetGLXDispatchTable(void);
 
@@ -2886,11 +2881,6 @@ _mesa_GetGLXDispatchTable(void)
 
    /*** GLX_MESA_agp_offset ***/
    glx.GetAGPOffsetMESA = Fake_glXGetAGPOffsetMESA;
-
-   /*** GLX_ARB_render_texture ***/
-   glx.BindTexImageARB = Fake_glXBindTexImageARB;
-   glx.ReleaseTexImageARB = Fake_glXReleaseTexImageARB;
-   glx.DrawableAttribARB = Fake_glXDrawableAttribARB;
 
    return &glx;
 }

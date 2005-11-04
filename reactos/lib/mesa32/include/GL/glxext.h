@@ -331,6 +331,26 @@ typedef struct {
 } GLXBufferClobberEventSGIX;
 #endif
 
+#if defined(__sun__)
+#include <inttypes.h>
+#if defined(__STDC__)
+#if defined(__arch64__)
+typedef long int int64_t;
+#else
+typedef long long int int64_t;   
+#endif /* __arch64__ */
+#endif /* __STDC__ */
+#elif defined(__UNIXOS2__) || defined(__SOL64__)
+typedef long int int32_t;
+typedef long long int int64_t;
+#elif defined( __VMS )
+#include <inttypes.h>
+#elif defined(__SCO__) || defined(__USLC__)
+#include <stdint.h>
+#elif defined(WIN32) && defined(__GNUC__)
+#include <stdint.h>
+#endif
+
 #ifndef GLX_VERSION_1_3
 #define GLX_VERSION_1_3 1
 #ifdef GLX_GLXEXT_PROTOTYPES
@@ -597,11 +617,6 @@ typedef Bool ( * PFNGLXSET3DFXMODEMESAPROC) (int mode);
 
 #ifndef GLX_OML_sync_control
 #define GLX_OML_sync_control 1
-#if defined(__STDC_VERSION__)
-#if __STDC_VERSION__ >= 199901L
-/* Include ISO C99 integer types for OML_sync_control; need a better test */
-#include <inttypes.h>
-
 #ifdef GLX_GLXEXT_PROTOTYPES
 extern Bool glXGetSyncValuesOML (Display *, GLXDrawable, int64_t *, int64_t *, int64_t *);
 extern Bool glXGetMscRateOML (Display *, GLXDrawable, int32_t *, int32_t *);
@@ -614,8 +629,6 @@ typedef Bool ( * PFNGLXGETMSCRATEOMLPROC) (Display *dpy, GLXDrawable drawable, i
 typedef int64_t ( * PFNGLXSWAPBUFFERSMSCOMLPROC) (Display *dpy, GLXDrawable drawable, int64_t target_msc, int64_t divisor, int64_t remainder);
 typedef Bool ( * PFNGLXWAITFORMSCOMLPROC) (Display *dpy, GLXDrawable drawable, int64_t target_msc, int64_t divisor, int64_t remainder, int64_t *ust, int64_t *msc, int64_t *sbc);
 typedef Bool ( * PFNGLXWAITFORSBCOMLPROC) (Display *dpy, GLXDrawable drawable, int64_t target_sbc, int64_t *ust, int64_t *msc, int64_t *sbc);
-#endif /* C99 version test */
-#endif /* STDC test */
 #endif
 
 #ifndef GLX_SGIX_hyperpipe_group
@@ -672,7 +685,6 @@ extern unsigned int glXGetAGPOffsetMESA (const void *);
 #endif /* GLX_GLXEXT_PROTOTYPES */
 typedef unsigned int ( * PFNGLXGETAGPOFFSETMESAPROC) (const void *pointer);
 #endif
-
 
 #ifdef __cplusplus
 }

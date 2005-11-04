@@ -49,16 +49,9 @@
 #ifndef _DRI_UTIL_H_
 #define _DRI_UTIL_H_
 
-#ifdef GLX_DIRECT_RENDERING
-
 #define CAPI  /* XXX this should be globally defined somewhere */
 
-#include <inttypes.h>
-#ifdef DRI_NEW_INTERFACE_ONLY
-# include <GL/gl.h>
-#else
-# include "glxclient.h"
-#endif /* DRI_NEW_INTERFACE_ONLY */
+#include <GL/gl.h>
 #include "drm.h"
 #include "drm_sarea.h"
 #include "GL/internal/glcore.h"
@@ -66,18 +59,12 @@
 
 #define GLX_BAD_CONTEXT                    5
 
-/* This is a temporary relic.  Once all drivers are converted to support
- * the new interface, it can go away.
- */
-#ifdef DRI_NEW_INTERFACE_ONLY
-#define USE_NEW_INTERFACE
-#endif
-
 typedef struct __DRIdisplayPrivateRec  __DRIdisplayPrivate;
 typedef struct __DRIscreenPrivateRec   __DRIscreenPrivate;
 typedef struct __DRIcontextPrivateRec  __DRIcontextPrivate;
 typedef struct __DRIdrawablePrivateRec __DRIdrawablePrivate;
 typedef struct __DRIswapInfoRec        __DRIswapInfo;
+typedef struct __DRIutilversionRec2    __DRIutilversion2;
 
 
 /**
@@ -208,7 +195,7 @@ struct __DRIswapInfoRec {
     /** 
      * Number of swapBuffers operations that have been *completed*. 
      */
-    uint64_t  swap_count;
+    u_int64_t swap_count;
 
     /**
      * Unadjusted system time of the last buffer swap.  This is the time
@@ -222,7 +209,7 @@ struct __DRIswapInfoRec {
      * swap, it has missed its deadline.  If swap_interval is 0, then the
      * swap deadline is 1 frame after the previous swap.
      */
-    uint64_t  swap_missed_count;
+    u_int64_t swap_missed_count;
 
     /**
      * Amount of time used by the last swap that missed its deadline.  This
@@ -327,7 +314,7 @@ struct __DRIdrawablePrivateRec {
      * \name Display and screen information.
      * 
      * Basically just need these for when the locking code needs to call
-     * __driUtilUpdateDrawableInfo() which calls XF86DRIGetDrawableInfo().
+     * \c __driUtilUpdateDrawableInfo.
      */
     /*@{*/
     __DRInativeDisplay *display;
@@ -338,12 +325,6 @@ struct __DRIdrawablePrivateRec {
      * Called via glXSwapBuffers().
      */
     void (*swapBuffers)( __DRIdrawablePrivate *dPriv );
-
-    /**
-     * Get information about the location, size, and clip rects of the
-     * drawable within the display.
-     */
-    PFNGLXGETDRAWABLEINFOPROC getInfo;
 };
 
 /**
@@ -527,6 +508,17 @@ struct __DRIscreenPrivateRec {
 };
 
 
+/**
+ * Used to store a version which includes a major range instead of a single
+ * major version number.
+ */
+struct __DRIutilversionRec2 {
+    int    major_min;    /** min allowed Major version number. */
+    int    major_max;    /** max allowed Major version number. */
+    int    minor;        /**< Minor version number. */
+    int    patch;        /**< Patch-level. */
+};
+
 
 extern void
 __driUtilMessage(const char *f, ...);
@@ -543,24 +535,20 @@ extern __DRIscreenPrivate * __driUtilCreateNewScreen( __DRInativeDisplay *dpy,
     drm_sarea_t *pSAREA, int fd, int internal_api_version,
     const struct __DriverAPIRec *driverAPI );
 
-#ifndef DRI_NEW_INTERFACE_ONLY
-extern __DRIscreenPrivate *
-__driUtilCreateScreen(Display *dpy, int scrn, __DRIscreen *psc,
-                      int numConfigs, __GLXvisualConfig *config,
-                      const struct __DriverAPIRec *driverAPI);
-#endif /* DRI_NEW_INTERFACE_ONLY */
-
 /* Test the version of the internal GLX API.  Returns a value like strcmp. */
 extern int
-driCompareGLXAPIVersion( GLuint required_version );
+driCompareGLXAPIVersion( GLint required_version );
 
 extern float
 driCalculateSwapUsage( __DRIdrawablePrivate *dPriv,
 		       int64_t last_swap_ust, int64_t current_ust );
 
-extern void 
-(*glXGetProcAddress(const GLubyte *procname))( void );
-
-#endif /* GLX_DIRECT_RENDERING */
+/**
+ * Pointer to the \c __DRIinterfaceMethods passed to the driver by the loader.
+ * 
+ * This pointer is set in the driver's \c __driCreateNewScreen function and
+ * is defined in dri_util.c.
+ */
+extern const __DRIinterfaceMethods * dri_interface;
 
 #endif /* _DRI_UTIL_H_ */

@@ -2,7 +2,7 @@
  * Clip testing in SPARC assembly
  */
 
-#if defined(__sparc_v9__) && !defined(__linux__)
+#if __arch64__
 #define LDPTR		ldx
 #define V4F_DATA	0x00
 #define V4F_START	0x08
@@ -25,7 +25,7 @@
 #define VEC_SIZE_3   	7
 #define VEC_SIZE_4   	15
 
-#ifdef SVR4
+#if defined(SVR4) || defined(__SVR4) || defined(__svr4__)
         /* Solaris requires this for 64-bit. */
         .register %g2, #scratch
         .register %g3, #scratch

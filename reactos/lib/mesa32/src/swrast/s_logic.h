@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,13 +32,13 @@
 
 
 extern void
-_swrast_logicop_ci_span( GLcontext *ctx, const struct sw_span *span,
-                       GLuint index[] );
+_swrast_logicop_ci_span(GLcontext *ctx, struct gl_renderbuffer *rb,
+                        const struct sw_span *span, GLuint index[]);
 
 
 extern void
-_swrast_logicop_rgba_span( GLcontext *ctx, const struct sw_span *span,
-                         GLchan rgba[][4] );
+_swrast_logicop_rgba_span(GLcontext *ctx, struct gl_renderbuffer *rb,
+                          const struct sw_span *span, GLchan rgba[][4]);
 
 
 #endif

@@ -188,7 +188,7 @@ static void printLocalLRU( driTexHeap * heap, const char *callername  )
 static void printGlobalLRU( driTexHeap * heap, const char *callername )
 {
    drmTextureRegionPtr list = heap->global_regions;
-   int i, j;
+   unsigned int i, j;
 
    fprintf( stderr, "%s in %s:\nGlobal LRU, heap %d list %p:\n", 
 	    __FUNCTION__, callername, heap->heapId, (void *)list );
@@ -477,6 +477,8 @@ void driAgeTextures( driTexHeap * heap )
 
 
 
+#define INDEX_ARRAY_SIZE 6 /* I'm not aware of driver with more than 2 heaps */
+
 /**
  * Allocate memory from a texture heap to hold a texture object.  This
  * routine will attempt to allocate memory for the texture from the heaps
@@ -528,35 +530,91 @@ driAllocateTexture( driTexHeap * const * heap_array, unsigned nr_heaps,
     */
 
    if ( t->memBlock == NULL ) {
-      for ( id = 0 ; (t->memBlock == NULL) && (id < nr_heaps) ; id++ ) {
+      unsigned index[INDEX_ARRAY_SIZE];
+      unsigned nrGoodHeaps = 0;
+
+      /* Trying to avoid dynamic memory allocation. If you have more
+       * heaps, increase INDEX_ARRAY_SIZE. I'm not aware of any
+       * drivers with more than 2 tex heaps. */
+      assert( nr_heaps < INDEX_ARRAY_SIZE );
+
+      /* Sort large enough heaps by duty. Insertion sort should be
+       * fast enough for such a short array. */
+      for ( id = 0 ; id < nr_heaps ; id++ ) {
 	 heap = heap_array[ id ];
-	 if ( t->totalSize <= heap->size ) { 
 
-	    for ( cursor = heap->texture_objects.prev, temp = cursor->prev;
-		  cursor != &heap->texture_objects ; 
-		  cursor = temp, temp = cursor->prev ) {
-	       
-	       /* The the LRU element.  If the texture is bound to one of
-		* the texture units, then we cannot kick it out.
-		*/
-	       if ( cursor->bound /* || cursor->reserved */ ) {
-		  continue;
-	       }
+	 if ( heap != NULL && t->totalSize <= heap->size ) {
+	    unsigned j;
 
-	       /* If this is a placeholder, there's no need to keep it */
-	       if (cursor->tObj)
-		   driSwapOutTextureObject( cursor );
-	       else
-		   driDestroyTextureObject( cursor );
-
-	       t->memBlock = mmAllocMem( heap->memory_heap, t->totalSize, 
-					 heap->alignmentShift, 0 );
-
-	       if (t->memBlock)
+	    for ( j = 0 ; j < nrGoodHeaps; j++ ) {
+	       if ( heap->duty > heap_array[ index[ j ] ]->duty )
 		  break;
 	    }
-	 }     /* if ( t->totalSize <= heap->size ) ... */
+
+	    if ( j < nrGoodHeaps ) {
+	       memmove( &index[ j+1 ], &index[ j ],
+			sizeof(index[ 0 ]) * (nrGoodHeaps - j) );
+	    }
+
+	    index[ j ] = id;
+
+	    nrGoodHeaps++;
+	 }
       }
+
+      for ( id = 0 ; (t->memBlock == NULL) && (id < nrGoodHeaps) ; id++ ) {
+	 heap = heap_array[ index[ id ] ];
+
+	 for ( cursor = heap->texture_objects.prev, temp = cursor->prev;
+	       cursor != &heap->texture_objects ; 
+	       cursor = temp, temp = cursor->prev ) {
+	       
+	    /* The the LRU element.  If the texture is bound to one of
+	     * the texture units, then we cannot kick it out.
+	     */
+	    if ( cursor->bound /* || cursor->reserved */ ) {
+	       continue;
+	    }
+
+	    if ( cursor->memBlock )
+	       heap->duty -= cursor->memBlock->size;
+
+	    /* If this is a placeholder, there's no need to keep it */
+	    if (cursor->tObj)
+	       driSwapOutTextureObject( cursor );
+	    else
+	       driDestroyTextureObject( cursor );
+
+	    t->memBlock = mmAllocMem( heap->memory_heap, t->totalSize, 
+				      heap->alignmentShift, 0 );
+
+	    if (t->memBlock)
+	       break;
+	 }
+      }
+
+      /* Rebalance duties. If a heap kicked more data than its duty,
+       * then all other heaps get that amount multiplied with their
+       * relative weight added to their duty. The negative duty is
+       * reset to 0. In the end all heaps have a duty >= 0.
+       *
+       * CAUTION: we must not change the heap pointer here, because it
+       * is used below to update the texture object.
+       */
+      for ( id = 0 ; id < nr_heaps ; id++ )
+	 if ( heap_array[ id ] != NULL && heap_array[ id ]->duty < 0) {
+	    int duty = -heap_array[ id ]->duty;
+	    double weight = heap_array[ id ]->weight;
+	    unsigned j;
+
+	    for ( j = 0 ; j < nr_heaps ; j++ )
+	       if ( j != id && heap_array[ j ] != NULL ) {
+		  heap_array[ j ]->duty += (double) duty *
+		     heap_array[ j ]->weight / weight;
+	       }
+
+	    heap_array[ id ]->duty = 0;
+	 }
    }
 
 
@@ -675,6 +733,9 @@ driCreateTextureHeap( unsigned heap_id, void * context, unsigned size,
 
 	 make_empty_list( & heap->texture_objects );
 	 driSetTextureSwapCounterLocation( heap, NULL );
+
+	 heap->weight = heap->size;
+	 heap->duty = 0;
       }
       else {
 	 FREE( heap );

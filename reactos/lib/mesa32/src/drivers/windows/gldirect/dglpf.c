@@ -270,12 +270,12 @@ void dglBuildPixelFormatList()
 	int				i;
 	char			buf[128];
 	char			cat[8];
-	HRESULT			hRes;
 	DGL_pixelFormat	*lpPF;
 
 #ifdef _USE_GLD3_WGL
 	_gldDriver.BuildPixelformatList();
 #else
+	HRESULT			hRes;
 	IDirectDraw		*lpDD1 = NULL;
 	IDirectDraw4	*lpDD4 = NULL;
 	IDirect3D3		*lpD3D3 = NULL;

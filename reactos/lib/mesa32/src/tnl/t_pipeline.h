@@ -36,8 +36,6 @@
 
 extern void _tnl_run_pipeline( GLcontext *ctx );
 
-extern void _tnl_validate_pipeline( GLcontext *ctx );
-
 extern void _tnl_destroy_pipeline( GLcontext *ctx );
 
 extern void _tnl_install_pipeline( GLcontext *ctx,
@@ -54,12 +52,14 @@ extern const struct tnl_pipeline_stage _tnl_fog_coordinate_stage;
 extern const struct tnl_pipeline_stage _tnl_texgen_stage;
 extern const struct tnl_pipeline_stage _tnl_texture_transform_stage;
 extern const struct tnl_pipeline_stage _tnl_point_attenuation_stage;
+extern const struct tnl_pipeline_stage _tnl_arb_vertex_program_stage;
 extern const struct tnl_pipeline_stage _tnl_vertex_program_stage;
 extern const struct tnl_pipeline_stage _tnl_render_stage;
 
 /* Shorthand to plug in the default pipeline:
  */
 extern const struct tnl_pipeline_stage *_tnl_default_pipeline[];
+extern const struct tnl_pipeline_stage *_tnl_vp_pipeline[];
 
 
 /* Convenience routines provided by t_vb_render.c:

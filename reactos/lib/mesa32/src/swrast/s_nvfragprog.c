@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.4
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -120,6 +120,11 @@ get_register_pointer( GLcontext *ctx,
          ASSERT(source->Index < MAX_NV_FRAGMENT_PROGRAM_INPUTS);
          src = machine->Inputs[source->Index];
          break;
+      case PROGRAM_OUTPUT:
+         /* This is only for PRINT */
+         ASSERT(source->Index < MAX_NV_FRAGMENT_PROGRAM_OUTPUTS);
+         src = machine->Outputs[source->Index];
+         break;
       case PROGRAM_LOCAL_PARAM:
          ASSERT(source->Index < MAX_PROGRAM_LOCAL_PARAMS);
          src = program->Base.LocalParams[source->Index];
@@ -128,16 +133,14 @@ get_register_pointer( GLcontext *ctx,
          ASSERT(source->Index < MAX_NV_FRAGMENT_PROGRAM_PARAMS);
          src = ctx->FragmentProgram.Parameters[source->Index];
          break;
-
       case PROGRAM_STATE_VAR:
-			/* Fallthrough */
-
+         /* Fallthrough */
       case PROGRAM_NAMED_PARAM:
          ASSERT(source->Index < (GLint) program->Parameters->NumParameters);
-         src = program->Parameters->Parameters[source->Index].Values;
+         src = program->Parameters->ParameterValues[source->Index];
          break;
       default:
-         _mesa_problem(ctx, "Invalid input register file in fetch_vector4");
+         _mesa_problem(ctx, "Invalid input register file %d in fetch_vector4", source->File);
          src = NULL;
    }
    return src;
@@ -158,10 +161,10 @@ fetch_vector4( GLcontext *ctx,
    const GLfloat *src = get_register_pointer(ctx, source, machine, program);
    ASSERT(src);
 
-   result[0] = src[source->Swizzle[0]];
-   result[1] = src[source->Swizzle[1]];
-   result[2] = src[source->Swizzle[2]];
-   result[3] = src[source->Swizzle[3]];
+   result[0] = src[GET_SWZ(source->Swizzle, 0)];
+   result[1] = src[GET_SWZ(source->Swizzle, 1)];
+   result[2] = src[GET_SWZ(source->Swizzle, 2)];
+   result[3] = src[GET_SWZ(source->Swizzle, 3)];
 
    if (source->NegateBase) {
       result[0] = -result[0];
@@ -204,13 +207,13 @@ fetch_vector4_deriv( GLcontext *ctx,
       if (xOrY == 'X') {
          src[0] = 1.0;
          src[1] = 0.0;
-         src[2] = span->dzdx / ctx->DepthMaxF;
+         src[2] = span->dzdx / ctx->DrawBuffer->_DepthMaxF;
          src[3] = span->dwdx;
       }
       else {
          src[0] = 0.0;
          src[1] = 1.0;
-         src[2] = span->dzdy / ctx->DepthMaxF;
+         src[2] = span->dzdy / ctx->DrawBuffer->_DepthMaxF;
          src[3] = span->dwdy;
       }
       break;
@@ -288,10 +291,10 @@ fetch_vector4_deriv( GLcontext *ctx,
       return GL_FALSE;
    }
 
-   result[0] = src[source->Swizzle[0]];
-   result[1] = src[source->Swizzle[1]];
-   result[2] = src[source->Swizzle[2]];
-   result[3] = src[source->Swizzle[3]];
+   result[0] = src[GET_SWZ(source->Swizzle, 0)];
+   result[1] = src[GET_SWZ(source->Swizzle, 1)];
+   result[2] = src[GET_SWZ(source->Swizzle, 2)];
+   result[3] = src[GET_SWZ(source->Swizzle, 3)];
 
    if (source->NegateBase) {
       result[0] = -result[0];
@@ -328,7 +331,7 @@ fetch_vector1( GLcontext *ctx,
    const GLfloat *src = get_register_pointer(ctx, source, machine, program);
    ASSERT(src);
 
-   result[0] = src[source->Swizzle[0]];
+   result[0] = src[GET_SWZ(source->Swizzle, 0)];
 
    if (source->NegateBase) {
       result[0] = -result[0];
@@ -342,7 +345,7 @@ fetch_vector1( GLcontext *ctx,
 }
 
 
-/*
+/**
  * Test value against zero and return GT, LT, EQ or UN if NaN.
  */
 static INLINE GLuint
@@ -357,7 +360,8 @@ generate_cc( float value )
    return COND_EQ;
 }
 
-/*
+
+/**
  * Test if the ccMaskRule is satisfied by the given condition code.
  * Used to mask destination writes according to the current condition codee.
  */
@@ -393,8 +397,8 @@ store_vector4( const struct fp_instruction *inst,
    GLfloat *dstReg;
    GLfloat dummyReg[4];
    GLfloat clampedValue[4];
-   const GLboolean *writeMask = dest->WriteMask;
    GLboolean condWriteMask[4];
+   GLuint writeMask = dest->WriteMask;
 
    switch (dest->File) {
       case PROGRAM_OUTPUT:
@@ -429,33 +433,37 @@ store_vector4( const struct fp_instruction *inst,
    }
 
    if (dest->CondMask != COND_TR) {
-      condWriteMask[0] = writeMask[0]
-         && test_cc(machine->CondCodes[dest->CondSwizzle[0]], dest->CondMask);
-      condWriteMask[1] = writeMask[1]
-         && test_cc(machine->CondCodes[dest->CondSwizzle[1]], dest->CondMask);
-      condWriteMask[2] = writeMask[2]
-         && test_cc(machine->CondCodes[dest->CondSwizzle[2]], dest->CondMask);
-      condWriteMask[3] = writeMask[3]
-         && test_cc(machine->CondCodes[dest->CondSwizzle[3]], dest->CondMask);
-      writeMask = condWriteMask;
+      condWriteMask[0] = GET_BIT(writeMask, 0)
+         && test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 0)], dest->CondMask);
+      condWriteMask[1] = GET_BIT(writeMask, 1)
+         && test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 1)], dest->CondMask);
+      condWriteMask[2] = GET_BIT(writeMask, 2)
+         && test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 2)], dest->CondMask);
+      condWriteMask[3] = GET_BIT(writeMask, 3)
+         && test_cc(machine->CondCodes[GET_SWZ(dest->CondSwizzle, 3)], dest->CondMask);
+
+      writeMask = ((condWriteMask[0] << 0) |
+		   (condWriteMask[1] << 1) |
+		   (condWriteMask[2] << 2) |
+		   (condWriteMask[3] << 3));
    }
 
-   if (writeMask[0]) {
+   if (GET_BIT(writeMask, 0)) {
       dstReg[0] = value[0];
       if (updateCC)
          machine->CondCodes[0] = generate_cc(value[0]);
    }
-   if (writeMask[1]) {
+   if (GET_BIT(writeMask, 1)) {
       dstReg[1] = value[1];
       if (updateCC)
          machine->CondCodes[1] = generate_cc(value[1]);
    }
-   if (writeMask[2]) {
+   if (GET_BIT(writeMask, 2)) {
       dstReg[2] = value[2];
       if (updateCC)
          machine->CondCodes[2] = generate_cc(value[2]);
    }
-   if (writeMask[3]) {
+   if (GET_BIT(writeMask, 3)) {
       dstReg[3] = value[3];
       if (updateCC)
          machine->CondCodes[3] = generate_cc(value[3]);
@@ -775,12 +783,12 @@ execute_program( GLcontext *ctx,
             break;
          case FP_OPCODE_KIL_NV: /* NV_f_p only */
             {
-               const GLuint *swizzle = inst->DstReg.CondSwizzle;
+               const GLuint swizzle = inst->DstReg.CondSwizzle;
                const GLuint condMask = inst->DstReg.CondMask;
-               if (test_cc(machine->CondCodes[swizzle[0]], condMask) ||
-                   test_cc(machine->CondCodes[swizzle[1]], condMask) ||
-                   test_cc(machine->CondCodes[swizzle[2]], condMask) ||
-                   test_cc(machine->CondCodes[swizzle[3]], condMask)) {
+               if (test_cc(machine->CondCodes[GET_SWZ(swizzle, 0)], condMask) ||
+                   test_cc(machine->CondCodes[GET_SWZ(swizzle, 1)], condMask) ||
+                   test_cc(machine->CondCodes[GET_SWZ(swizzle, 2)], condMask) ||
+                   test_cc(machine->CondCodes[GET_SWZ(swizzle, 3)], condMask)) {
                   return GL_FALSE;
                }
             }
@@ -805,14 +813,16 @@ execute_program( GLcontext *ctx,
             break;
          case FP_OPCODE_LIT:
             {
+               const GLfloat epsilon = 1.0F / 256.0F; /* from NV VP spec */
                GLfloat a[4], result[4];
                fetch_vector4( ctx, &inst->SrcReg[0], machine, program, a );
-               if (a[0] < 0.0F)
-                  a[0] = 0.0F;
-               if (a[1] < 0.0F)
-                  a[1] = 0.0F;
+               a[0] = MAX2(a[0], 0.0F);
+               a[1] = MAX2(a[1], 0.0F);
+               /* XXX ARB version clamps a[3], NV version doesn't */
+               a[3] = CLAMP(a[3], -(128.0F - epsilon), (128.0F - epsilon));
                result[0] = 1.0F;
                result[1] = a[0];
+               /* XXX we could probably just use pow() here */
                result[2] = (a[0] > 0.0F) ? (GLfloat) exp(a[3] * log(a[1])) : 0.0F;
                result[3] = 1.0F;
                store_vector4( inst, machine, result );
@@ -1147,14 +1157,15 @@ execute_program( GLcontext *ctx,
                GLuint i;
 
                /* do extended swizzling here */
-               for (i = 0; i < 3; i++) {
-                  if (source->Swizzle[i] == SWIZZLE_ZERO)
+               for (i = 0; i < 4; i++) {
+                  if (GET_SWZ(source->Swizzle, i) == SWIZZLE_ZERO)
                      result[i] = 0.0;
-                  else if (source->Swizzle[i] == SWIZZLE_ONE)
-                     result[i] = -1.0;
+                  else if (GET_SWZ(source->Swizzle, i) == SWIZZLE_ONE)
+                     result[i] = 1.0;
                   else
-                     result[i] = -src[source->Swizzle[i]];
-                  if (source->NegateBase)
+                     result[i] = src[GET_SWZ(source->Swizzle, i)];
+
+                  if (source->NegateBase & (1 << i))
                      result[i] = -result[i];
                }
                store_vector4( inst, machine, result );
@@ -1168,7 +1179,19 @@ execute_program( GLcontext *ctx,
                /* Note: we pass 0 for LOD.  The ARB extension requires it
                 * while the NV extension says it's implementation dependant.
                 */
-               fetch_texel( ctx, texcoord, 0.0F, inst->TexSrcUnit, color );
+               /* KW: Previously lambda was passed as zero, but I
+		* believe this is incorrect, the spec seems to
+		* indicate rather that lambda should not be
+		* changed/biased, unlike TXB where texcoord[3] is
+		* added to the lambda calculations.  The lambda should
+		* still be calculated normally for TEX & TXP though,
+		* not set to zero.  Otherwise it's very difficult to
+		* implement normal GL semantics through the fragment
+		* shader.
+		*/
+               fetch_texel( ctx, texcoord, 
+			    span->array->lambda[inst->TexSrcUnit][column],
+			    inst->TexSrcUnit, color );
                store_vector4( inst, machine, color );
             }
             break;
@@ -1205,11 +1228,26 @@ execute_program( GLcontext *ctx,
             {
                GLfloat texcoord[4], color[4];
                fetch_vector4( ctx, &inst->SrcReg[0], machine, program, texcoord );
-               texcoord[0] /= texcoord[3];
-               texcoord[1] /= texcoord[3];
-               texcoord[2] /= texcoord[3];
-               /* Note: LOD=0 */
-               fetch_texel( ctx, texcoord, 0.0F, inst->TexSrcUnit, color );
+	       /* Not so sure about this test - if texcoord[3] is
+		* zero, we'd probably be fine except for an ASSERT in
+		* IROUND_POS() which gets triggered by the inf values created.
+		*/
+	       if (texcoord[3] != 0.0) {
+		  texcoord[0] /= texcoord[3];
+		  texcoord[1] /= texcoord[3];
+		  texcoord[2] /= texcoord[3];
+	       }
+               /* KW: Previously lambda was passed as zero, but I
+		* believe this is incorrect, the spec seems to
+		* indicate rather that lambda should not be
+		* changed/biased, unlike TXB where texcoord[3] is
+		* added to the lambda calculations.  The lambda should
+		* still be calculated normally for TEX & TXP though,
+		* not set to zero.
+		*/
+               fetch_texel( ctx, texcoord, 
+			    span->array->lambda[inst->TexSrcUnit][column],
+			    inst->TexSrcUnit, color );
                store_vector4( inst, machine, color );
             }
             break;
@@ -1218,7 +1256,8 @@ execute_program( GLcontext *ctx,
             {
                GLfloat texcoord[4], color[4];
                fetch_vector4( ctx, &inst->SrcReg[0], machine, program, texcoord );
-               if (inst->TexSrcBit != TEXTURE_CUBE_BIT) {
+               if (inst->TexSrcIdx != TEXTURE_CUBE_INDEX &&
+		   texcoord[3] != 0.0) {
                   texcoord[0] /= texcoord[3];
                   texcoord[1] /= texcoord[3];
                   texcoord[2] /= texcoord[3];
@@ -1304,6 +1343,19 @@ execute_program( GLcontext *ctx,
                store_vector4( inst, machine, result );
             }
             break;
+         case FP_OPCODE_PRINT:
+            {
+               if (inst->SrcReg[0].File != -1) {
+                  GLfloat a[4];
+                  fetch_vector4( ctx, &inst->SrcReg[0], machine, program, a);
+                  _mesa_printf("%s%g, %g, %g, %g\n", (const char *) inst->Data,
+                               a[0], a[1], a[2], a[3]);
+               }
+               else {
+                  _mesa_printf("%s\n", (const char *) inst->Data);
+               }
+            }
+            break;
          case FP_OPCODE_END:
             return GL_TRUE;
          default:
@@ -1336,13 +1388,15 @@ init_machine( GLcontext *ctx, struct fp_machine *machine,
    /* Load input registers */
    if (inputsRead & (1 << FRAG_ATTRIB_WPOS)) {
       GLfloat *wpos = machine->Inputs[FRAG_ATTRIB_WPOS];
+      ASSERT(span->arrayMask & SPAN_Z);
       wpos[0] = (GLfloat) span->x + col;
       wpos[1] = (GLfloat) span->y;
-      wpos[2] = (GLfloat) span->array->z[col] / ctx->DepthMaxF;
+      wpos[2] = (GLfloat) span->array->z[col] / ctx->DrawBuffer->_DepthMaxF;
       wpos[3] = span->w + col * span->dwdx;
    }
    if (inputsRead & (1 << FRAG_ATTRIB_COL0)) {
       GLfloat *col0 = machine->Inputs[FRAG_ATTRIB_COL0];
+      ASSERT(span->arrayMask & SPAN_RGBA);
       col0[0] = CHAN_TO_FLOAT(span->array->rgba[col][RCOMP]);
       col0[1] = CHAN_TO_FLOAT(span->array->rgba[col][GCOMP]);
       col0[2] = CHAN_TO_FLOAT(span->array->rgba[col][BCOMP]);
@@ -1357,6 +1411,7 @@ init_machine( GLcontext *ctx, struct fp_machine *machine,
    }
    if (inputsRead & (1 << FRAG_ATTRIB_FOGC)) {
       GLfloat *fogc = machine->Inputs[FRAG_ATTRIB_FOGC];
+      ASSERT(span->arrayMask & SPAN_FOG);
       fogc[0] = span->array->fog[col];
       fogc[1] = 0.0F;
       fogc[2] = 0.0F;
@@ -1386,26 +1441,32 @@ init_machine( GLcontext *ctx, struct fp_machine *machine,
 void
 _swrast_exec_fragment_program( GLcontext *ctx, struct sw_span *span )
 {
-   const struct fragment_program *program = ctx->FragmentProgram.Current;
+   const struct fragment_program *program = ctx->FragmentProgram._Current;
    GLuint i;
 
    ctx->_CurrentProgram = GL_FRAGMENT_PROGRAM_ARB; /* or NV, doesn't matter */
 
+   if (program->Parameters) {
+      _mesa_load_state_parameters(ctx, program->Parameters);
+   }   
+
    for (i = 0; i < span->end; i++) {
       if (span->array->mask[i]) {
          init_machine(ctx, &ctx->FragmentProgram.Machine,
-                      ctx->FragmentProgram.Current, span, i);
+                      ctx->FragmentProgram._Current, span, i);
 
 #ifdef USE_TCC
          if (!_swrast_execute_codegen_program(ctx, program, ~0,
 					      &ctx->FragmentProgram.Machine,
 					      span, i)) {
             span->array->mask[i] = GL_FALSE;  /* killed fragment */
+            span->writeAll = GL_FALSE;
          }
 #else
          if (!execute_program(ctx, program, ~0,
                               &ctx->FragmentProgram.Machine, span, i)) {
             span->array->mask[i] = GL_FALSE;  /* killed fragment */
+            span->writeAll = GL_FALSE;
          }
 #endif
 
@@ -1419,9 +1480,17 @@ _swrast_exec_fragment_program( GLcontext *ctx, struct sw_span *span )
             UNCLAMPED_FLOAT_TO_CHAN(span->array->rgba[i][ACOMP], colOut[3]);
          }
          /* depth value */
-         if (program->OutputsWritten & (1 << FRAG_OUTPUT_DEPR))
-            span->array->z[i] = IROUND(ctx->FragmentProgram.Machine.Outputs[FRAG_OUTPUT_DEPR][0] * ctx->DepthMaxF);
+         if (program->OutputsWritten & (1 << FRAG_OUTPUT_DEPR)) {
+            const GLfloat depth
+               = ctx->FragmentProgram.Machine.Outputs[FRAG_OUTPUT_DEPR][2];
+            span->array->z[i] = IROUND(depth * ctx->DrawBuffer->_DepthMaxF);
+         }
       }
+   }
+
+   if (program->OutputsWritten & (1 << FRAG_OUTPUT_DEPR)) {
+      span->interpMask &= ~SPAN_Z;
+      span->arrayMask |= SPAN_Z;
    }
 
    ctx->_CurrentProgram = 0;

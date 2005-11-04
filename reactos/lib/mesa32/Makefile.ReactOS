@@ -1,0 +1,82 @@
+# Makefile to import Mesa3D into ReactOS
+#
+# Place this into Mesa/src/mesa and run make -f Makefile.ReactOS to create 
+# a mesa32 output directory which contains the source code and a mesa32.xml
+# rbuild file.
+
+.PHONY: import_mesa3d
+doonly: import_mesa3d
+
+# Output directory
+OUTPUT = mesa32
+
+# Enable the OpenGL ICD interface
+ICD=1
+
+# Enable x86 optimizations
+X86=1
+
+include Makefile.mgw
+
+# rbuild XML creation
+
+RBUILD_OUTPUT =
+
+RBUILD_HEADER = '<!-- Autogeneratd by Makefile.ReactOS -->\n'
+RBUILD_HEADER += '<module name="mesa32" type="win32dll" baseaddress="$${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" allowwarnings="true">\n'
+RBUILD_HEADER += '\t<importlibrary definition="src/$(GL_DEF)" />\n'
+RBUILD_HEADER += '\t<linkerflag>-Wl,--enable-stdcall-fixup</linkerflag>\n'
+RBUILD_HEADER += '\t<library>ntdll</library>\n'
+RBUILD_HEADER += '\t<library>kernel32</library>\n'
+RBUILD_HEADER += '\t<define name="__USE_W32API" />\n'
+RBUILD_HEADER += '\t<define name="USE_EXTERNAL_DXTN_LIB" />\n'
+RBUILD_HEADER += '\t<!-- The following is autogenrated by Makefile.ReactOS -->\n'
+
+RBUILD_FOOTER += '</module>\n'
+
+define rbuild_xml_include
+	INC = $(1:-I$(TOP)/src/mesa%=src%)
+	INC2 = $(INC:-I$(TOP)/%=%)
+	ifneq ($(INC2),)
+		RBUILD_OUTPUT += '\t<include base="mesa32">$(INC2)</include>\n'
+	endif
+endef
+
+define rbuild_xml_library
+	RBUILD_OUTPUT += '\t<library>$(1:-l%=%)</library>\n'
+endef
+
+define rbuild_xml_define
+	RBUILD_OUTPUT += '\t<define name="$(1:-D%=%)" />\n'
+endef
+
+define rbuild_xml_file
+	RBUILD_OUTPUT += '\t<file>src/$(1)</file>\n'
+endef
+
+rbuild_makefile:
+	$(foreach library,$(filter -l%,$(LDLIBS)),$(eval $(call rbuild_xml_library,$(library))))
+	$(foreach define,$(filter -D%,$(CFLAGS)),$(eval $(call rbuild_xml_define,$(define))))
+	$(foreach include,$(filter -I%,$(INCLUDE_DIRS)),$(eval $(call rbuild_xml_include,$(include))))
+	$(foreach file,$(SOURCES),$(eval $(call rbuild_xml_file,$(file))))
+	@echo -ne $(RBUILD_HEADER)$(RBUILD_OUTPUT)$(RBUILD_FOOTER) > $(OUTPUT)/mesa32.xml
+
+# Main import target
+
+SOURCE_DIRS =
+
+define import_add_dir
+	DIR = $(firstword $(subst /, ,$(dir $(1))))
+	ifeq ($(filter $(DIR),$(SOURCE_DIRS)),)
+		SOURCE_DIRS += $(DIR)
+	endif
+endef
+
+$(OUTPUT):
+	test -d $(OUTPUT) || mkdir -p $(OUTPUT)
+
+import_mesa3d: $(OUTPUT) rbuild_makefile
+	$(foreach file,$(SOURCES),$(eval $(call import_add_dir,$(file))))
+	cp -r $(TOP)/include $(OUTPUT)
+	test -d $(OUTPUT)/src || mkdir -p $(OUTPUT)/src
+	cp -r $(SOURCE_DIRS) $(OUTPUT)/src

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.0
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,6 @@
 #include "colormac.h"
 #include "macros.h"
 
-#include "s_alphabuf.h"
 #include "s_blend.h"
 #include "s_context.h"
 #include "s_span.h"
@@ -847,10 +846,9 @@ void _swrast_choose_blend_func( GLcontext *ctx )
  * pixel coordinates.
  */
 void
-_swrast_blend_span( GLcontext *ctx, const struct sw_span *span,
-                  GLchan rgba[][4] )
+_swrast_blend_span(GLcontext *ctx, struct gl_renderbuffer *rb,
+                   const struct sw_span *span, GLchan rgba[][4])
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLchan framebuffer[MAX_WIDTH][4];
 
    ASSERT(span->end <= MAX_WIDTH);
@@ -860,19 +858,13 @@ _swrast_blend_span( GLcontext *ctx, const struct sw_span *span,
    /* Read span of current frame buffer pixels */
    if (span->arrayMask & SPAN_XY) {
       /* array of x/y pixel coords */
-      (*swrast->Driver.ReadRGBAPixels)( ctx, span->end,
-                                        span->array->x, span->array->y,
-                                        framebuffer, span->array->mask );
-      if (swrast->_RasterMask & ALPHABUF_BIT) {
-         _swrast_read_alpha_pixels( ctx, span->end,
-                                  span->array->x, span->array->y,
-                                  framebuffer, span->array->mask );
-      }
+      _swrast_get_values(ctx, rb, span->end, span->array->x, span->array->y,
+                         framebuffer, 4 * sizeof(GLchan));
    }
    else {
       /* horizontal run of pixels */
-      _swrast_read_rgba_span( ctx, ctx->DrawBuffer, span->end,
-                            span->x, span->y, framebuffer );
+      _swrast_read_rgba_span(ctx, rb, span->end, span->x, span->y,
+                             framebuffer);
    }
 
    SWRAST_CONTEXT(ctx)->BlendFunc( ctx, span->end, span->array->mask, rgba,

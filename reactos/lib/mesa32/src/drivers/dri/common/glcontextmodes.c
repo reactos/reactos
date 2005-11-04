@@ -31,11 +31,11 @@
  * \author Ian Romanick <idr@us.ibm.com>
  */
 
-#ifdef DRI_NEW_INTERFACE_ONLY
+#if defined(IN_MINI_GLX)
 # include <stdlib.h>
 # include <string.h>
 # include <GL/gl.h>
-# include "dri_interface.h"
+# include "GL/internal/dri_interface.h"
 # include "imports.h"
 # define __glXMemset  memset
 #else
@@ -55,11 +55,11 @@ extern void __glXFree( void * ptr );
 #  define _mesa_malloc(b) Xmalloc(b)
 #  define _mesa_free(m) Xfree(m)
 # endif /* XFree86Server */
-#endif  /* DRI_NEW_INTERFACE_ONLY */
+#endif /* !defined(IN_MINI_GLX) */
 
 #include "glcontextmodes.h"
 
-#ifndef DRI_NEW_INTERFACE_ONLY
+#if !defined(IN_MINI_GLX)
 #define NUM_VISUAL_TYPES   6
 
 /**
@@ -320,7 +320,7 @@ _gl_get_context_mode_data(const __GLcontextModes *mode, int attribute,
 	return GLX_BAD_ATTRIBUTE;
     }
 }
-#endif /* DRI_NEW_INTERFACE_ONLY */
+#endif /* !defined(IN_MINI_GLX) */
 
 
 /**

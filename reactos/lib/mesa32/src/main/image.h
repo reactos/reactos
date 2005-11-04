@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -58,10 +58,33 @@ _mesa_is_legal_format_and_type( GLcontext *ctx, GLenum format, GLenum type );
 
 
 extern GLvoid *
-_mesa_image_address( const struct gl_pixelstore_attrib *packing,
-                     const GLvoid *image, GLsizei width,
-                     GLsizei height, GLenum format, GLenum type,
+_mesa_image_address( GLuint dimensions,
+                     const struct gl_pixelstore_attrib *packing,
+                     const GLvoid *image,
+                     GLsizei width, GLsizei height,
+                     GLenum format, GLenum type,
                      GLint img, GLint row, GLint column );
+
+extern GLvoid *
+_mesa_image_address1d( const struct gl_pixelstore_attrib *packing,
+                       const GLvoid *image,
+                       GLsizei width,
+                       GLenum format, GLenum type,
+                       GLint column );
+
+extern GLvoid *
+_mesa_image_address2d( const struct gl_pixelstore_attrib *packing,
+                       const GLvoid *image,
+                       GLsizei width, GLsizei height,
+                       GLenum format, GLenum type,
+                       GLint row, GLint column );
+
+extern GLvoid *
+_mesa_image_address3d( const struct gl_pixelstore_attrib *packing,
+                       const GLvoid *image,
+                       GLsizei width, GLsizei height,
+                       GLenum format, GLenum type,
+                       GLint img, GLint row, GLint column );
 
 
 extern GLint
@@ -171,9 +194,24 @@ _mesa_pack_depth_span( const GLcontext *ctx, GLuint n, GLvoid *dest,
 
 
 extern void *
-_mesa_unpack_image( GLsizei width, GLsizei height, GLsizei depth,
+_mesa_unpack_image( GLuint dimensions,
+                    GLsizei width, GLsizei height, GLsizei depth,
                     GLenum format, GLenum type, const GLvoid *pixels,
                     const struct gl_pixelstore_attrib *unpack );
+
+
+extern GLboolean
+_mesa_clip_drawpixels(const GLcontext *ctx,
+                      GLint *destX, GLint *destY,
+                      GLsizei *width, GLsizei *height,
+                      GLint *skipPixels, GLint *skipRows);
+
+
+extern GLboolean
+_mesa_clip_readpixels(const GLcontext *ctx,
+                      GLint *destX, GLint *destY,
+                      GLsizei *width, GLsizei *height,
+                      GLint *skipPixels, GLint *skipRows);
 
 
 #endif

@@ -331,6 +331,7 @@
  * since OpenGL says obscured pixels have undefined values.
  */
 static void fxReadRGBASpan_ARGB1555 (const GLcontext * ctx,
+                                     struct gl_renderbuffer *rb,
                                      GLuint n,
                                      GLint x, GLint y,
                                      GLubyte rgba[][4])
@@ -378,6 +379,7 @@ static void fxReadRGBASpan_ARGB1555 (const GLcontext * ctx,
  * since OpenGL says obscured pixels have undefined values.
  */
 static void fxReadRGBASpan_RGB565 (const GLcontext * ctx,
+                                   struct gl_renderbuffer *rb,
                                    GLuint n,
                                    GLint x, GLint y,
                                    GLubyte rgba[][4])
@@ -425,6 +427,7 @@ static void fxReadRGBASpan_RGB565 (const GLcontext * ctx,
  * since OpenGL says obscured pixels have undefined values.
  */
 static void fxReadRGBASpan_ARGB8888 (const GLcontext * ctx,
+                                     struct gl_renderbuffer *rb,
                                      GLuint n,
                                      GLint x, GLint y,
                                      GLubyte rgba[][4])
@@ -444,8 +447,8 @@ static void fxReadRGBASpan_ARGB8888 (const GLcontext * ctx,
 /*****                    Depth functions (optimized)               *****/
 /************************************************************************/
 
-void
-fxReadDepthSpan_Z16(GLcontext * ctx,
+static void
+fxReadDepthSpan_Z16(GLcontext * ctx, struct gl_renderbuffer *rb,
 		    GLuint n, GLint x, GLint y, GLdepth depth[])
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
@@ -464,8 +467,8 @@ fxReadDepthSpan_Z16(GLcontext * ctx,
 }
 
 
-void
-fxReadDepthSpan_Z24(GLcontext * ctx,
+static void
+fxReadDepthSpan_Z24(GLcontext * ctx, struct gl_renderbuffer *rb,
 		    GLuint n, GLint x, GLint y, GLdepth depth[])
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
@@ -487,16 +490,18 @@ fxReadDepthSpan_Z24(GLcontext * ctx,
 /*****                    Stencil functions (optimized)             *****/
 /************************************************************************/
 
-void fxWriteStencilSpan (GLcontext *ctx, GLuint n, GLint x, GLint y,
-                         const GLstencil stencil[], const GLubyte mask[])
+static void
+fxWriteStencilSpan (GLcontext *ctx, struct gl_renderbuffer *rb,
+                    GLuint n, GLint x, GLint y,
+                    const GLstencil stencil[], const GLubyte mask[])
 {
  /*
   * XXX todo
   */
 }
 
-void
-fxReadStencilSpan(GLcontext * ctx,
+static void
+fxReadStencilSpan(GLcontext * ctx, struct gl_renderbuffer *rb,
 		  GLuint n, GLint x, GLint y, GLstencil stencil[])
 {
    fxMesaContext fxMesa = FX_CONTEXT(ctx);
@@ -514,19 +519,21 @@ fxReadStencilSpan(GLcontext * ctx,
    }
 }
 
-void fxWriteStencilPixels (GLcontext *ctx, GLuint n,
-                           const GLint x[], const GLint y[],
-                           const GLstencil stencil[],
-                           const GLubyte mask[])
+static void
+fxWriteStencilPixels (GLcontext *ctx, struct gl_renderbuffer *rb, GLuint n,
+                      const GLint x[], const GLint y[],
+                      const GLstencil stencil[],
+                      const GLubyte mask[])
 {
  /*
   * XXX todo
   */
 }
 
-void fxReadStencilPixels (GLcontext *ctx, GLuint n,
-                          const GLint x[], const GLint y[],
-                          GLstencil stencil[])
+static void
+fxReadStencilPixels (GLcontext *ctx, struct gl_renderbuffer *rb, GLuint n,
+                     const GLint x[], const GLint y[],
+                     GLstencil stencil[])
 {
  /*
   * XXX todo
@@ -550,11 +557,11 @@ fxDDSetBuffer(GLcontext * ctx, GLframebuffer * buffer, GLuint bufferBit)
       fprintf(stderr, "fxDDSetBuffer(%x)\n", (int)bufferBit);
    }
 
-   if (bufferBit == DD_FRONT_LEFT_BIT) {
+   if (bufferBit == BUFFER_BIT_FRONT_LEFT) {
       fxMesa->currentFB = GR_BUFFER_FRONTBUFFER;
       grRenderBuffer(fxMesa->currentFB);
    }
-   else if (bufferBit == DD_BACK_LEFT_BIT) {
+   else if (bufferBit == BUFFER_BIT_BACK_LEFT) {
       fxMesa->currentFB = GR_BUFFER_BACKBUFFER;
       grRenderBuffer(fxMesa->currentFB);
    }

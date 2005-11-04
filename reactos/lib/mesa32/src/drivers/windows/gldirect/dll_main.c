@@ -43,8 +43,8 @@
 
 #include "dllmain.h"
 
-#include "snap/graphics.h"
-#include "drvlib/os/os.h"
+//#include "snap/graphics.h"
+//#include "drvlib/os/os.h"
 
 #ifdef _USE_GLD3_WGL
 typedef void (APIENTRY *LPDGLSPLASHSCREEN)(int, int, char*);
@@ -390,6 +390,7 @@ BOOL dllReadRegistry(
 	if (bRegistryError || !bSuccess)
 		return FALSE;
 	else
+		
 		return TRUE;
 
 #undef REG_READ_DWORD
@@ -568,7 +569,7 @@ BOOL dglInitDriver(void)
 		"Direct3D RGB SW",
 		"Direct3D HW",
 	};
-    static ibool bWarnOnce = false;
+    static BOOL bWarnOnce = FALSE;
 
     // Already initialized?
     if (bInitialized)
@@ -586,7 +587,7 @@ BOOL dglInitDriver(void)
 							  "Please run the configuration program\n"
                               "before using GLDirect with applications.\n",
 							  "GLDirect", MB_OK | MB_ICONWARNING);
-            bWarnOnce = true;
+            bWarnOnce = TRUE;
             return FALSE;
 		}
 

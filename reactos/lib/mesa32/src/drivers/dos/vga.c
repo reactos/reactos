@@ -23,7 +23,7 @@
  */
 
 /*
- * DOS/DJGPP device driver v1.6 for Mesa
+ * DOS/DJGPP device driver v1.7 for Mesa
  *
  *  Copyright (C) 2002 - Borca Daniel
  *  Email : dborca@users.sourceforge.net
@@ -38,26 +38,25 @@
 #include "vga.h"
 
 
-
 static vl_mode modes[] = {
-       {
-        /* .xres    = */ 320,
-        /* .yres    = */ 200,
-        /* .bpp     = */ 8,
-        /* .mode    = */ 0x13 | 0x4000,
-        /* .scanlen = */ 320,
-        /* .sel     = */ -1,
-        /* .gran    = */ 320*200
-       },
-       {
-        /* .xres    = */ -1,
-        /* .yres    = */ -1,
-        /* .bpp     = */ -1,
-        /* .mode    = */ 0xffff,
-        /* .scanlen = */ -1,
-        /* .sel     = */ -1,
-        /* .gran    = */ -1
-       }
+   {
+    /* .xres    = */ 320,
+    /* .yres    = */ 200,
+    /* .bpp     = */ 8,
+    /* .mode    = */ 0x13 | 0x4000,
+    /* .scanlen = */ 320,
+    /* .sel     = */ -1,
+    /* .gran    = */ 320*200
+   },
+   {
+    /* .xres    = */ -1,
+    /* .yres    = */ -1,
+    /* .bpp     = */ -1,
+    /* .mode    = */ 0xffff,
+    /* .scanlen = */ -1,
+    /* .sel     = */ -1,
+    /* .gran    = */ -1
+   }
 };
 
 static word16 vga_ver;
@@ -67,7 +66,6 @@ static int oldmode = -1;
 #define vga_color_precision 6
 
 
-
 /* Desc: Attempts to detect VGA, check video modes and create selectors.
  *
  * In  : -
@@ -75,15 +73,16 @@ static int oldmode = -1;
  *
  * Note: -
  */
-static vl_mode *vga_init (void)
+static vl_mode *
+vga_init (void)
 {
- int rv = 0;
+   int rv = 0;
 
- if (vga_ver) {
-    return modes;
- }
+   if (vga_ver) {
+      return modes;
+   }
 
- __asm("\n\
+   __asm("\n\
 		movw	$0x1a00, %%ax	\n\
 		int	$0x10		\n\
 		cmpb	$0x1a, %%al	\n\
@@ -92,21 +91,20 @@ static vl_mode *vga_init (void)
 		jb	0f		\n\
 		andl	$0xff, %%ebx	\n\
 		movl	%%ebx, %0	\n\
- 0:":"=g"(rv)::"%eax", "%ebx");
- if (rv == 0) {
-    return NULL;
- }
+   0:":"=g"(rv)::"%eax", "%ebx");
+   if (rv == 0) {
+      return NULL;
+   }
 
- if (_create_selector(&linear_selector, 0xa0000, 0x10000)) {
-    return NULL;
- }
+   if (_create_selector(&linear_selector, 0xa0000, 0x10000)) {
+      return NULL;
+   }
 
- modes[0].sel = linear_selector;
+   modes[0].sel = linear_selector;
 
- vga_ver = rv;
- return modes;
+   vga_ver = rv;
+   return modes;
 }
-
 
 
 /* Desc: Frees all resources allocated by VGA init code.
@@ -116,13 +114,13 @@ static vl_mode *vga_init (void)
  *
  * Note: -
  */
-static void vga_fini (void)
+static void
+vga_fini (void)
 {
- if (vga_ver) {
-    _remove_selector(&linear_selector);
- }
+   if (vga_ver) {
+      _remove_selector(&linear_selector);
+   }
 }
-
 
 
 /* Desc: Attempts to enter specified video mode.
@@ -132,29 +130,29 @@ static void vga_fini (void)
  *
  * Note: -
  */
-static int vga_entermode (vl_mode *p, int refresh)
+static int
+vga_entermode (vl_mode *p, int refresh)
 {
- if (!(p->mode & 0x4000)) {
-    return -1;
- }
- VGA.blit = _can_mmx() ? vesa_l_dump_virtual_mmx : vesa_l_dump_virtual;
+   if (!(p->mode & 0x4000)) {
+      return -1;
+   }
+   VGA.blit = _can_mmx() ? vesa_l_dump_virtual_mmx : vesa_l_dump_virtual;
 
- if (oldmode == -1) {
-    __asm("\n\
+   if (oldmode == -1) {
+      __asm("\n\
 		movb	$0x0f, %%ah	\n\
 		int	$0x10		\n\
 		andl	$0xff, %%eax	\n\
 		movl	%%eax, %0	\n\
-    ":"=g"(oldmode)::"%eax", "%ebx");
- }
+      ":"=g"(oldmode)::"%eax", "%ebx");
+   }
 
- __asm("int $0x10"::"a"(p->mode&0xff));
+   __asm("int $0x10"::"a"(p->mode&0xff));
 
- return 0;
+   return 0;
 
- (void)refresh; /* silence compiler warning */
+   (void)refresh; /* silence compiler warning */
 }
-
 
 
 /* Desc: Restores to the mode prior to first call to vga_entermode.
@@ -164,14 +162,14 @@ static int vga_entermode (vl_mode *p, int refresh)
  *
  * Note: -
  */
-static void vga_restore (void)
+static void
+vga_restore (void)
 {
- if (oldmode != -1) {
-    __asm("int $0x10"::"a"(oldmode));
-    oldmode = -1;
- }
+   if (oldmode != -1) {
+      __asm("int $0x10"::"a"(oldmode));
+      oldmode = -1;
+   }
 }
-
 
 
 /* Desc: set one palette entry
@@ -181,23 +179,23 @@ static void vga_restore (void)
  *
  * Note: uses integer values
  */
-static void vga_setCI_i (int index, int red, int green, int blue)
+static void
+vga_setCI_i (int index, int red, int green, int blue)
 {
 #if 0
- __asm("\n\
-		movw $0x1010, %%ax	\n\
-		movb %1, %%dh		\n\
-		movb %2, %%ch		\n\
-		int  $0x10		\n\
- "::"b"(index), "m"(red), "m"(green), "c"(blue):"%eax", "%edx");
+   __asm("\n\
+		movw	$0x1010, %%ax	\n\
+		movb	%1, %%dh	\n\
+		movb	%2, %%ch	\n\
+		int	$0x10		\n\
+   "::"b"(index), "m"(red), "m"(green), "c"(blue):"%eax", "%edx");
 #else
- outportb(0x03C8, index);
- outportb(0x03C9, red);
- outportb(0x03C9, green);
- outportb(0x03C9, blue);
+   outportb(0x03C8, index);
+   outportb(0x03C9, red);
+   outportb(0x03C9, green);
+   outportb(0x03C9, blue);
 #endif
 }
-
 
 
 /* Desc: set one palette entry
@@ -207,13 +205,13 @@ static void vga_setCI_i (int index, int red, int green, int blue)
  *
  * Note: uses normalized values
  */
-static void vga_setCI_f (int index, float red, float green, float blue)
+static void
+vga_setCI_f (int index, float red, float green, float blue)
 {
- float max = (1 << vga_color_precision) - 1;
+    float max = (1 << vga_color_precision) - 1;
 
- vga_setCI_i(index, (int)(red * max), (int)(green * max), (int)(blue * max));
+    vga_setCI_i(index, (int)(red * max), (int)(green * max), (int)(blue * max));
 }
-
 
 
 /* Desc: state retrieval
@@ -223,30 +221,30 @@ static void vga_setCI_f (int index, float red, float green, float blue)
  *
  * Note: -
  */
-static int vga_get (int pname, int *params)
+static int
+vga_get (int pname, int *params)
 {
- switch (pname) {
-        case VL_GET_CI_PREC:
-             params[0] = vga_color_precision;
-             break;
-        default:
-             return -1;
- }
- return 0;
+   switch (pname) {
+      case VL_GET_CI_PREC:
+         params[0] = vga_color_precision;
+         break;
+      default:
+         return -1;
+   }
+   return 0;
 }
-
 
 
 /*
  * the driver
  */
 vl_driver VGA = {
-          vga_init,
-          vga_entermode,
-          NULL,
-          vga_setCI_f,
-          vga_setCI_i,
-          vga_get,
-          vga_restore,
-          vga_fini
+   vga_init,
+   vga_entermode,
+   NULL,
+   vga_setCI_f,
+   vga_setCI_i,
+   vga_get,
+   vga_restore,
+   vga_fini
 };

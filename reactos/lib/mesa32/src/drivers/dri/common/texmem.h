@@ -216,6 +216,23 @@ struct dri_tex_heap {
 	 * framebuffer.  
 	 */
         unsigned timestamp;
+
+	/** \brief Kick/upload weight
+	 *
+	 * When not enough free space is available this weight
+	 * influences the choice of the heap from which textures are
+	 * kicked. By default the weight is equal to the heap size.
+	 */
+	double weight;
+
+	/** \brief Kick/upload duty
+	 *
+	 * The heap with the highest duty will be chosen for kicking
+	 * textures if not enough free space is available. The duty is
+	 * reduced by the amount of data kicked. Rebalancing of
+	 * negative duties takes the weights into account.
+	 */
+	int duty;
 };
 
 

@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,11 +30,6 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
-
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
 
 /**
  * \name OpenGL implementation limits
@@ -71,7 +66,7 @@
 /** Maximum pixel map lookup table size */
 #define MAX_PIXEL_MAP_TABLE 256
 
-/** Maximum Number of auxillary color buffers */
+/** Maximum number of auxillary color buffers */
 #define MAX_AUX_BUFFERS 4
 
 /** Maximum order (degree) of curves */
@@ -165,7 +160,7 @@
 /*@{*/
 #define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
 #define MAX_NV_VERTEX_PROGRAM_TEMPS         12
-#define MAX_NV_VERTEX_PROGRAM_PARAMS        96
+#define MAX_NV_VERTEX_PROGRAM_PARAMS        128	/* KW: power of two */
 #define MAX_NV_VERTEX_PROGRAM_INPUTS        16
 #define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
 /*@}*/
@@ -196,10 +191,36 @@
 
 /** For any program target/extension */
 /*@{*/
-#define MAX_PROGRAM_LOCAL_PARAMS 96
+#define MAX_PROGRAM_LOCAL_PARAMS 128 /* KW: power of two */
 #define MAX_PROGRAM_MATRICES 8
 #define MAX_PROGRAM_MATRIX_STACK_DEPTH 4
 /*@}*/
+
+/** For GL_ARB_fragment_shader */
+/*@{*/
+#define MAX_FRAGMENT_UNIFORM_COMPONENTS 64
+/*@}*/
+
+/** For GL_ARB_vertex_shader */
+/*@{*/
+#define MAX_VERTEX_UNIFORM_COMPONENTS 512
+#define MAX_VARYING_FLOATS 32
+#define MAX_VERTEX_TEXTURE_IMAGE_UNITS 0
+#define MAX_COMBINED_TEXTURE_IMAGE_UNITS (MAX_TEXTURE_IMAGE_UNITS + MAX_VERTEX_TEXTURE_IMAGE_UNITS)
+/*@}*/
+
+
+/** For GL_ARB_draw_buffers */
+/*@{*/
+#define MAX_DRAW_BUFFERS 1
+/*@}*/
+
+
+/** For GL_EXT_framebuffer_object */
+/*@{*/
+#define MAX_COLOR_ATTACHMENTS 8
+/*@}*/
+
 
 
 /**
@@ -279,8 +300,25 @@
 #define FEATURE_userclip  _HAVE_FULL_GL
 #define FEATURE_texgen  _HAVE_FULL_GL
 #define FEATURE_windowpos  _HAVE_FULL_GL
-
+#define FEATURE_ARB_vertex_shader _HAVE_FULL_GL
+#define FEATURE_ARB_fragment_shader _HAVE_FULL_GL
+#define FEATURE_ARB_shader_objects (FEATURE_ARB_vertex_shader || FEATURE_ARB_fragment_shader)
+#define FEATURE_ARB_shading_language_100 FEATURE_ARB_shader_objects
+#define FEATURE_ATI_fragment_shader _HAVE_FULL_GL
+#define FEATURE_EXT_framebuffer_object _HAVE_FULL_GL
 /*@}*/
+
+
+/**
+ * Maximum number of temporary vertices required for clipping.  
+ *
+ * Used in array_cache and tnl modules.
+ */
+#define MAX_CLIPPED_VERTICES ((2 * (6 + MAX_CLIP_PLANES))+1)
+
+
+/* XXX everything marked with OLD_RENDERBUFFER will be going away... */
+#define OLD_RENDERBUFFER 1
 
 
 #endif /* CONFIG_H */

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.5
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -39,6 +39,7 @@
 #include "texobj.h"
 #include "teximage.h"
 #include "texstate.h"
+#include "texenvprogram.h"
 #include "mtypes.h"
 #include "math/m_xform.h"
 #include "math/m_matrix.h"
@@ -543,8 +544,7 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	 }
 	 break;
       case GL_OPERAND2_RGB:
-	 if (ctx->Extensions.EXT_texture_env_combine ||
-             ctx->Extensions.ARB_texture_env_combine) {
+	 if (ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum operand = (GLenum) (GLint) *param;
 	    if (texUnit->Combine.OperandRGB[2] == operand)
 	       return;
@@ -561,14 +561,24 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	       return;
 	    }
 	 }
+	 else if (ctx->Extensions.EXT_texture_env_combine) {
+	    const GLenum operand = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.OperandRGB[2] == operand)
+	       return;
+	    /* operand must be GL_SRC_ALPHA which is the initial value - thus
+	       don't need to actually compare the operand to the possible value */
+	    else {
+               TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
+	       return;
+	    }
+	 }
 	 else {
             TE_ERROR(GL_INVALID_ENUM, "glTexEnv(pname=%s)", pname);
 	    return;
 	 }
 	 break;
       case GL_OPERAND2_ALPHA:
-	 if (ctx->Extensions.EXT_texture_env_combine ||
-             ctx->Extensions.ARB_texture_env_combine) {
+	 if (ctx->Extensions.ARB_texture_env_combine) {
 	    const GLenum operand = (GLenum) (GLint) *param;
 	    if (texUnit->Combine.OperandA[2] == operand)
 	       return;
@@ -579,6 +589,17 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
 	       texUnit->Combine.OperandA[2] = operand;
 	       break;
 	    default:
+               TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
+	       return;
+	    }
+	 }
+	 else if (ctx->Extensions.EXT_texture_env_combine) {
+	    const GLenum operand = (GLenum) (GLint) *param;
+	    if (texUnit->Combine.OperandA[2] == operand)
+	       return;
+	    /* operand must be GL_SRC_ALPHA which is the initial value - thus
+	       don't need to actually compare the operand to the possible value */
+	    else {
                TE_ERROR(GL_INVALID_ENUM, "glTexEnv(param=%s)", operand);
 	       return;
 	    }
@@ -1388,7 +1409,9 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
 	       return;
 	    }
             FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-            texObj->MaxAnisotropy = params[0];
+            /* clamp to max, that's what NVIDIA does */
+            texObj->MaxAnisotropy = MIN2(params[0],
+                                         ctx->Const.MaxTextureMaxAnisotropy);
          }
          else {
             _mesa_error(ctx, GL_INVALID_ENUM,
@@ -1747,11 +1770,9 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
          else
             *params = 0;
          return;
-      case GL_DEPTH_BITS:
-         /* XXX this isn't in the GL_SGIX_depth_texture spec
-          * but seems appropriate.
-          */
-         if (ctx->Extensions.SGIX_depth_texture)
+      case GL_TEXTURE_DEPTH_SIZE_ARB:
+         if (ctx->Extensions.SGIX_depth_texture ||
+             ctx->Extensions.ARB_depth_texture)
             *params = img->TexFormat->DepthBits;
          else
             _mesa_error(ctx, GL_INVALID_ENUM,
@@ -2174,7 +2195,7 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 	    GLfloat tmp[4];
 
             /* Transform plane equation by the inverse modelview matrix */
-            if (ctx->ModelviewMatrixStack.Top->flags & MAT_DIRTY_INVERSE) {
+            if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top)) {
                _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
             }
             _mesa_transform_vector( tmp, params, ctx->ModelviewMatrixStack.Top->inv );
@@ -2230,7 +2251,7 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 	 else if (pname==GL_EYE_PLANE) {
 	    GLfloat tmp[4];
             /* Transform plane equation by the inverse modelview matrix */
-	    if (ctx->ModelviewMatrixStack.Top->flags & MAT_DIRTY_INVERSE) {
+	    if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top)) {
                _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
             }
             _mesa_transform_vector( tmp, params, ctx->ModelviewMatrixStack.Top->inv );
@@ -2283,7 +2304,7 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 	 else if (pname==GL_EYE_PLANE) {
 	    GLfloat tmp[4];
             /* Transform plane equation by the inverse modelview matrix */
-            if (ctx->ModelviewMatrixStack.Top->flags & MAT_DIRTY_INVERSE) {
+            if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top)) {
                _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
             }
             _mesa_transform_vector( tmp, params, ctx->ModelviewMatrixStack.Top->inv );
@@ -2330,7 +2351,7 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 	 else if (pname==GL_EYE_PLANE) {
 	    GLfloat tmp[4];
             /* Transform plane equation by the inverse modelview matrix */
-            if (ctx->ModelviewMatrixStack.Top->flags & MAT_DIRTY_INVERSE) {
+            if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top)) {
                _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
             }
             _mesa_transform_vector( tmp, params, ctx->ModelviewMatrixStack.Top->inv );
@@ -2872,7 +2893,7 @@ update_texture_matrices( GLcontext *ctx )
    ctx->Texture._TexMatEnabled = 0;
 
    for (i=0; i < ctx->Const.MaxTextureUnits; i++) {
-      if (ctx->TextureMatrixStack[i].Top->flags & MAT_DIRTY) {
+      if (_math_matrix_is_dirty(ctx->TextureMatrixStack[i].Top)) {
 	 _math_matrix_analyse( ctx->TextureMatrixStack[i].Top );
 
 	 if (ctx->Texture.Unit[i]._ReallyEnabled &&
@@ -3245,4 +3266,6 @@ void _mesa_free_texture_data( GLcontext *ctx )
 
    for (i = 0; i < MAX_TEXTURE_IMAGE_UNITS; i++)
       _mesa_free_colortable_data( &ctx->Texture.Unit[i].ColorTable );
+
+   _mesa_TexEnvProgramCacheDestroy( ctx );
 }

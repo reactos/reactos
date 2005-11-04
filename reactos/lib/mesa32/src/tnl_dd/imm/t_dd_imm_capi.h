@@ -287,12 +287,12 @@ static void TAG(choose_Color3f)( GLfloat r, GLfloat g, GLfloat b )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color3f = TAG(ColorMaterial3f);
+	 SET_Color3f(ctx->Exec, TAG(ColorMaterial3f));
       } else {
-	 ctx->Exec->Color3f = _mesa_noop_Color3f;
+	 SET_Color3f(ctx->Exec, _mesa_noop_Color3f);
       }
    } else {
-      ctx->Exec->Color3f = TAG(Color3f);
+      SET_Color3f(ctx->Exec, TAG(Color3f));
    }
    glColor3f( r, g, b );
 }
@@ -303,12 +303,12 @@ static void TAG(choose_Color3fv)( const GLfloat *v )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color3fv = TAG(ColorMaterial3fv);
+	 SET_Color3fv(ctx->Exec, TAG(ColorMaterial3fv));
       } else {
-	 ctx->Exec->Color3fv = _mesa_noop_Color3fv;
+	 SET_Color3fv(ctx->Exec, _mesa_noop_Color3fv);
       }
    } else {
-      ctx->Exec->Color3fv = TAG(Color3fv);
+      SET_Color3fv(ctx->Exec, TAG(Color3fv));
    }
    glColor3fv( v );
 }
@@ -319,12 +319,12 @@ static void TAG(choose_Color3ub)( GLubyte r, GLubyte g, GLubyte b )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color3ub = TAG(ColorMaterial3ub);
+	 SET_Color3ub(ctx->Exec, TAG(ColorMaterial3ub));
       } else {
-	 ctx->Exec->Color3ub = _mesa_noop_Color3ub;
+	 SET_Color3ub(ctx->Exec, _mesa_noop_Color3ub);
       }
    } else {
-      ctx->Exec->Color3ub = TAG(Color3ub);
+      SET_Color3ub(ctx->Exec, TAG(Color3ub));
    }
    glColor3ub( r, g, b );
 }
@@ -335,12 +335,12 @@ static void TAG(choose_Color3ubv)( const GLubyte *v )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color3ubv = TAG(ColorMaterial3ubv);
+	 SET_Color3ubv(ctx->Exec, TAG(ColorMaterial3ubv));
       } else {
-	 ctx->Exec->Color3ubv = _mesa_noop_Color3ubv;
+	 SET_Color3ubv(ctx->Exec, _mesa_noop_Color3ubv);
       }
    } else {
-      ctx->Exec->Color3ubv = TAG(Color3ubv);
+      SET_Color3ubv(ctx->Exec, TAG(Color3ubv));
    }
    glColor3ubv( v );
 }
@@ -351,12 +351,12 @@ static void TAG(choose_Color4f)( GLfloat r, GLfloat g, GLfloat b, GLfloat a )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color4f = TAG(ColorMaterial4f);
+	 SET_Color4f(ctx->Exec, TAG(ColorMaterial4f));
       } else {
-	 ctx->Exec->Color4f = _mesa_noop_Color4f;
+	 SET_Color4f(ctx->Exec, _mesa_noop_Color4f);
       }
    } else {
-      ctx->Exec->Color4f = TAG(Color4f);
+      SET_Color4f(ctx->Exec, TAG(Color4f));
    }
    glColor4f( r, g, b, a );
 }
@@ -367,12 +367,12 @@ static void TAG(choose_Color4fv)( const GLfloat *v )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color4fv = TAG(ColorMaterial4fv);
+	 SET_Color4fv(ctx->Exec, TAG(ColorMaterial4fv));
       } else {
-	 ctx->Exec->Color4fv = _mesa_noop_Color4fv;
+	 SET_Color4fv(ctx->Exec, _mesa_noop_Color4fv);
       }
    } else {
-      ctx->Exec->Color4fv = TAG(Color4fv);
+      SET_Color4fv(ctx->Exec, TAG(Color4fv));
    }
    glColor4fv( v );
 }
@@ -383,12 +383,12 @@ static void TAG(choose_Color4ub)( GLubyte r, GLubyte g, GLubyte b, GLubyte a )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color4ub = TAG(ColorMaterial4ub);
+	 SET_Color4ub(ctx->Exec, TAG(ColorMaterial4ub));
       } else {
-	 ctx->Exec->Color4ub = _mesa_noop_Color4ub;
+	 SET_Color4ub(ctx->Exec, _mesa_noop_Color4ub);
       }
    } else {
-      ctx->Exec->Color4ub = TAG(Color4ub);
+      SET_Color4ub(ctx->Exec, TAG(Color4ub));
    }
    glColor4ub( r, g, b, a );
 }
@@ -399,12 +399,12 @@ static void TAG(choose_Color4ubv)( const GLubyte *v )
 
    if ( ctx->Light.Enabled ) {
       if ( ctx->Light.ColorMaterialEnabled ) {
-	 ctx->Exec->Color4ubv = TAG(ColorMaterial4ubv);
+	 SET_Color4ubv(ctx->Exec, TAG(ColorMaterial4ubv));
       } else {
-	 ctx->Exec->Color4ubv = _mesa_noop_Color4ubv;
+	 SET_Color4ubv(ctx->Exec, _mesa_noop_Color4ubv);
       }
    } else {
-      ctx->Exec->Color4ubv = TAG(Color4ubv);
+      SET_Color4ubv(ctx->Exec, TAG(Color4ubv));
    }
    glColor4ubv( v );
 }

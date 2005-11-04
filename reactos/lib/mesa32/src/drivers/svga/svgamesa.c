@@ -1,4 +1,4 @@
-/* $Id: svgamesa.c,v 1.23 2002/11/11 18:42:38 brianp Exp $ */
+/* $Id: svgamesa.c,v 1.25 2004/11/29 17:30:21 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library
@@ -39,6 +39,7 @@
 #include <string.h>
 #include <vga.h>
 #include "GL/svgamesa.h"
+#include "buffers.h"
 #include "context.h"
 #include "extensions.h"
 #include "imports.h"
@@ -212,6 +213,11 @@ static void get_buffer_size( GLframebuffer *buffer, GLuint *width, GLuint *heigh
    *height = SVGAMesa->height = vga_getydim();
 }
 
+static void viewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
+{
+   /* poll for window size change and realloc software Z/stencil/etc if needed */
+   _mesa_ResizeBuffersMESA();
+}
 
 static void set_buffer( GLcontext *ctx, GLframebuffer *colorBuffer,
                         GLenum buffer )
@@ -258,6 +264,7 @@ static void svgamesa_update_state( GLcontext *ctx, GLuint new_state )
 
    ctx->Driver.GetBufferSize = get_buffer_size;
    ctx->Driver.ResizeBuffers = _swrast_alloc_buffers;
+   ctx->Driver.Viewport = viewport;
 
    /* Software rasterizer pixel paths:
     */
@@ -446,10 +453,8 @@ void SVGAMesaMakeCurrent( SVGAMesaContext ctx )
    _mesa_make_current( ctx->gl_ctx, ctx->gl_buffer );
 
    if (ctx->width==0 || ctx->height==0) {
-      /* setup initial viewport */
       ctx->width = vga_getxdim();
       ctx->height = vga_getydim();
-      _mesa_set_viewport( ctx->gl_ctx, 0, 0, ctx->width, ctx->height );
    }
 #endif
 }
@@ -503,7 +508,7 @@ void SVGAMesaSwapBuffers( void )
  * Need this to provide at least one external definition when SVGA is
  * not defined on the compiler command line.
  */
-
+extern int gl_svga_dummy_function(void);
 int gl_svga_dummy_function(void)
 {
    return 0;

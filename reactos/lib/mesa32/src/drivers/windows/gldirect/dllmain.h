@@ -47,7 +47,7 @@
 #include "DirectGL.h"
 #endif // _USE_GLD3_WGL
 
-#include "gldirect/regkeys.h"
+//#include "gldirect/regkeys.h"
 #include "dglglobals.h"
 #include "ddlog.h"
 #ifndef _USE_GLD3_WGL

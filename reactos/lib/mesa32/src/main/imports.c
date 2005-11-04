@@ -32,9 +32,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.2
+ * Version:  6.3
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -124,16 +124,16 @@ _mesa_free(void *ptr)
 void *
 _mesa_align_malloc(size_t bytes, unsigned long alignment)
 {
-   unsigned long ptr, buf;
+   uintptr_t ptr, buf;
 
    ASSERT( alignment > 0 );
 
-   ptr = (unsigned long) _mesa_malloc(bytes + alignment + sizeof(void *));
+   ptr = (uintptr_t) _mesa_malloc(bytes + alignment + sizeof(void *));
    if (!ptr)
       return NULL;
 
-   buf = (ptr + alignment + sizeof(void *)) & ~(unsigned long)(alignment - 1);
-   *(unsigned long *)(buf - sizeof(void *)) = ptr;
+   buf = (ptr + alignment + sizeof(void *)) & ~(uintptr_t)(alignment - 1);
+   *(uintptr_t *)(buf - sizeof(void *)) = ptr;
 
 #ifdef DEBUG
    /* mark the non-aligned area */
@@ -146,21 +146,23 @@ _mesa_align_malloc(size_t bytes, unsigned long alignment)
    return (void *) buf;
 }
 
-/** Same as _mesa_align_malloc(), but using _mesa_calloc() instead of
- * _mesa_malloc() */
+/**
+ * Same as _mesa_align_malloc(), but using _mesa_calloc() instead of
+ * _mesa_malloc()
+ */
 void *
 _mesa_align_calloc(size_t bytes, unsigned long alignment)
 {
-   unsigned long ptr, buf;
+   uintptr_t ptr, buf;
 
    ASSERT( alignment > 0 );
 
-   ptr = (unsigned long) _mesa_calloc(bytes + alignment + sizeof(void *));
+   ptr = (uintptr_t) _mesa_calloc(bytes + alignment + sizeof(void *));
    if (!ptr)
       return NULL;
 
-   buf = (ptr + alignment + sizeof(void *)) & ~(unsigned long)(alignment - 1);
-   *(unsigned long *)(buf - sizeof(void *)) = ptr;
+   buf = (ptr + alignment + sizeof(void *)) & ~(uintptr_t)(alignment - 1);
+   *(uintptr_t *)(buf - sizeof(void *)) = ptr;
 
 #ifdef DEBUG
    /* mark the non-aligned area */
@@ -174,10 +176,9 @@ _mesa_align_calloc(size_t bytes, unsigned long alignment)
 }
 
 /**
- * Free memory allocated with _mesa_align_malloc() or _mesa_align_calloc().
- *
+ * Free memory which was allocated with either _mesa_align_malloc()
+ * or _mesa_align_calloc().
  * \param ptr pointer to the memory to be freed.
- * 
  * The actual address to free is stored in the word immediately before the
  * address the client sees.
  */
@@ -193,20 +194,20 @@ _mesa_align_free(void *ptr)
 #endif
 }
 
-/** Wrapper around either memcpy() or xf86memcpy() */
+/** Reallocate memory */
 void *
 _mesa_realloc(void *oldBuffer, size_t oldSize, size_t newSize)
 {
    const size_t copySize = (oldSize < newSize) ? oldSize : newSize;
    void *newBuffer = _mesa_malloc(newSize);
-   if (newBuffer && copySize > 0)
+   if (newBuffer && oldBuffer && copySize > 0)
       _mesa_memcpy(newBuffer, oldBuffer, copySize);
    if (oldBuffer)
       _mesa_free(oldBuffer);
    return newBuffer;
 }
 
-
+/** memcpy wrapper */
 void *
 _mesa_memcpy(void *dest, const void *src, size_t n)
 {
@@ -232,8 +233,8 @@ _mesa_memset( void *dst, int val, size_t n )
 #endif
 }
 
-/** Fill memory with a constant 16bit word.
- *
+/**
+ * Fill memory with a constant 16bit word.
  * \param dst destination pointer.
  * \param val value.
  * \param n number of words.
@@ -682,6 +683,8 @@ _mesa_getenv( const char *var )
 {
 #if defined(XFree86LOADER) && defined(IN_MODULE)
    return xf86getenv(var);
+#elif defined(_XBOX)
+   return NULL;
 #else
    return getenv(var);
 #endif
@@ -775,7 +778,7 @@ _mesa_strncmp( const char *s1, const char *s2, size_t n )
 char *
 _mesa_strdup( const char *s )
 {
-   int l = _mesa_strlen(s);
+   size_t l = _mesa_strlen(s);
    char *s2 = (char *) _mesa_malloc(l + 1);
    if (s2)
       _mesa_strcpy(s2, s);
@@ -840,7 +843,7 @@ _mesa_printf( const char *fmtString, ... )
 #if defined(XFree86LOADER) && defined(IN_MODULE)
    xf86printf("%s", s);
 #else
-   printf("%s", s);
+   fprintf(stderr,"%s", s);
 #endif
 }
 
@@ -878,9 +881,9 @@ _mesa_warning( GLcontext *ctx, const char *fmtString, ... )
 #endif
    if (debug) {
 #if defined(XFree86LOADER) && defined(IN_MODULE)
-      xf86fprintf(stderr, "Mesa warning: %s\n", str);
+      xf86fprintf(stderr, "Mesa warning: %s", str);
 #else
-      fprintf(stderr, "Mesa warning: %s\n", str);
+      fprintf(stderr, "Mesa warning: %s", str);
 #endif
    }
 }
@@ -907,10 +910,10 @@ _mesa_problem( const GLcontext *ctx, const char *fmtString, ... )
 
 #if defined(XFree86LOADER) && defined(IN_MODULE)
    xf86fprintf(stderr, "Mesa %s implementation error: %s\n", MESA_VERSION_STRING, str);
-   xf86fprintf(stderr, "Please report to the DRI project at dri.sourceforge.net\n");
+   xf86fprintf(stderr, "Please report at bugzilla.freedesktop.org\n");
 #else
    fprintf(stderr, "Mesa %s implementation error: %s\n", MESA_VERSION_STRING, str);
-   fprintf(stderr, "Please report to the Mesa bug database at www.mesa3d.org\n" );
+   fprintf(stderr, "Please report at bugzilla.freedesktop.org\n");
 #endif
 }
 

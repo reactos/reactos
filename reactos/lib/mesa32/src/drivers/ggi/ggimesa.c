@@ -30,6 +30,7 @@
 #include <ggi/mesa/ggimesa_int.h>
 #include <ggi/mesa/debug.h>
 #include "extensions.h"
+#include "buffers.h"
 #include "colormac.h"
 #include "imports.h"
 #include "matrix.h"
@@ -256,6 +257,13 @@ static void gl_ggiGetSize(GLframebuffer *fb, GLuint *width, GLuint *height)
 	printf("returning %d, %d\n", *width, *height);
 }
 
+static void gl_ggiViewport(GLcontext *ctx, GLint x, GLint y, GLsizei w, GLsizei h)
+{
+   /* poll for window size change and realloc software Z/stencil/etc if needed */
+   _mesa_ResizeBuffersMESA();
+}
+
+
 static void gl_ggiSetIndex(GLcontext *ctx, GLuint ci)
 {
 	ggi_mesa_context_t ggi_ctx = (ggi_mesa_context_t)ctx->DriverCtx;
@@ -400,6 +408,7 @@ static void gl_ggiSetupPointers(GLcontext *ctx)
 	/* General information */
 	ctx->Driver.GetString = gl_ggiGetString;
 	ctx->Driver.GetBufferSize = gl_ggiGetSize;
+        ctx->Driver.Viewport = gl_ggiViewport;
 	ctx->Driver.Finish = gl_ggiFlush;
 	ctx->Driver.Flush = gl_ggiFlush;
 	
@@ -632,15 +641,6 @@ void ggiMesaMakeCurrent(ggi_mesa_context_t ctx, ggi_visual_t vis)
 	}
 	
 	_mesa_make_current(ctx->gl_ctx, &LIBGGI_MESAEXT(vis)->mesa_buffer);
-	
-	if (ctx->gl_ctx->Viewport.Width == 0)
-	{
-		_mesa_Viewport(0, 0,
-			       LIBGGI_VIRTX(vis),
-			       LIBGGI_VIRTY(vis));
-		ctx->gl_ctx->Scissor.Width = LIBGGI_VIRTX(vis);
-		ctx->gl_ctx->Scissor.Height = LIBGGI_VIRTY(vis);
-	}
 }
 
 
