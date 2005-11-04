@@ -16,13 +16,14 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
     HRESULT ret;
 
-    // this if it is not called by DirectDrawCreate
-    if(FALSE)
+	if (This->InitializeDraw == TRUE)
         return DDERR_ALREADYINITIALIZED;
 
-    // save the parameter
-    This->lpGUID = lpGUID;
+    This->InitializeDraw = TRUE;
 
+   
+
+           
     // get the HDC
     This->hdc = GetWindowDC(GetDesktopWindow());
     This->Height = GetDeviceCaps(This->hdc, VERTRES);

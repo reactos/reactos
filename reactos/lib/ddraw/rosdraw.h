@@ -28,7 +28,8 @@ typedef struct
 	HDC hdc;
 	int Height, Width, Bpp;
 
-	GUID* lpGUID;
+	GUID InGUID;
+	BOOL InitializeDraw;
 
 } IDirectDrawImpl; 
 
