@@ -61,6 +61,10 @@ void LinesProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
 
 void TextProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
 
+unsigned AlphaBlendInit(void **Context, PPERF_INFO PerfInfo, unsigned Reps);
+void AlphaBlendCleanup(void *Context, PPERF_INFO PerfInfo);
+void AlphaBlendProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
+
 #endif /* ROSPERF_H_INCLUDED */
 
 /* EOF */
