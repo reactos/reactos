@@ -636,7 +636,6 @@ SecurityPageCallback(IN HWND hwnd,
         case PSPCB_RELEASE:
         {
             DestroySecurityPage(sp);
-            UnregisterCheckListControl();
             return FALSE;
         }
     }
@@ -1214,15 +1213,20 @@ SecurityPageProc(IN HWND hwndDlg,
                                                         MAKEINTRESOURCE(IDB_USRGRPIMAGES),
                                                         16,
                                                         3,
-                                                        0);
+                                                        RGB(255,
+                                                            0,
+                                                            255));
 
                 /* setup the listview control */
-                ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
-                                                    LVS_EX_FULLROWSELECT,
-                                                    LVS_EX_FULLROWSELECT);
-                ListView_SetImageList(sp->hWndPrincipalsList,
-                                      sp->hiPrincipals,
-                                      LVSIL_SMALL);
+                if (sp->hiPrincipals != NULL)
+                {
+                    ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
+                                                        LVS_EX_FULLROWSELECT,
+                                                        LVS_EX_FULLROWSELECT);
+                    ListView_SetImageList(sp->hWndPrincipalsList,
+                                          sp->hiPrincipals,
+                                          LVSIL_SMALL);
+                }
 
                 GetClientRect(sp->hWndPrincipalsList,
                               &rcLvClient);
@@ -1326,12 +1330,6 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     if (FAILED(hRet))
     {
         DPRINT("CoInitialize failed!\n");
-        return NULL;
-    }
-    
-    if (!RegisterCheckListControl(hDllInstance))
-    {
-        DPRINT("Registering the CHECKLIST_ACLUI class failed!\n");
         return NULL;
     }
     
@@ -1468,12 +1466,21 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
             hDllInstance = hinstDLL;
+
+            DisableThreadLibraryCalls(hinstDLL);
+
+            if (!RegisterCheckListControl(hinstDLL))
+            {
+                DPRINT("Registering the CHECKLIST_ACLUI class failed!\n");
+                return FALSE;
+            }
             break;
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
+
         case DLL_PROCESS_DETACH:
+            UnregisterCheckListControl();
             break;
     }
+
     return TRUE;
 }
 
