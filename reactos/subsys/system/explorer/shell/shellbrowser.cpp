@@ -252,13 +252,13 @@ void ShellBrowser::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 					lpdi->item.pszText = entry->_data.cFileName;
 */
 			if (lpdi->item.mask & TVIF_IMAGE)
-				if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY) == _himl)
+				if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_LINKOVERLAY|SHGFI_SMALLICON) == _himl)
 					lpdi->item.iImage = sfi.iIcon;
 				else
 					lpdi->item.iImage = -1;
 
 			if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
-				if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_OPENICON) == _himl)
+				if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_OPENICON|SHGFI_SMALLICON) == _himl)
 					lpdi->item.iSelectedImage = sfi.iIcon;
 				else
 					lpdi->item.iSelectedImage = -1;

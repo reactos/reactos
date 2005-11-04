@@ -149,9 +149,10 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 
 
 MainFrameBase::MainFrameBase(HWND hwnd)
- :	super(hwnd),
-	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0))
+ :	super(hwnd)
 {
+	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-3);
 

@@ -48,7 +48,7 @@ enum SORT_ORDER {
 };
 
 enum SCAN_FLAGS {
-	SCAN_EXTRACT_ICONS	= 1,
+//	SCAN_EXTRACT_ICONS	= 1,
 	SCAN_DO_ACCESS		= 2,
 
 	SCAN_ALL			= 3,
@@ -103,7 +103,7 @@ public:
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
 	void	sort_directory(SORT_ORDER sortOrder);
 	void	smart_scan(SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
-	void	extract_icon();
+	void	extract_icon(bool big_icons);
 
 	virtual void		read_directory(int scan_flags=SCAN_ALL) {}
 	virtual const void*	get_next_path_component(const void*) const {return NULL;}
@@ -115,7 +115,7 @@ public:
 	virtual HRESULT		do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& cm_ifs);
 
 protected:
-	bool get_path_base(PTSTR path, size_t path_count, ENTRY_TYPE etype) const;
+	bool	get_path_base(PTSTR path, size_t path_count, ENTRY_TYPE etype) const;
 };
 
 

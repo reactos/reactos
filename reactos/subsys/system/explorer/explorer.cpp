@@ -246,10 +246,10 @@ Icon::Icon()
 {
 }
 
-Icon::Icon(ICON_ID id, UINT nid)
+Icon::Icon(ICON_ID id, UINT nid)	//, int cx, int cy
  :	_id(id),
 	_itype(IT_STATIC),
-	_hicon(SmallIcon(nid))
+	_hicon(ResIcon(nid))	// ResIconEx(nid, cx, cy)
 {
 }
 
@@ -322,7 +322,24 @@ int Icon::add_to_imagelist(HIMAGELIST himl, HDC hdc_wnd, COLORREF bk_color, HBRU
 	return ret;
 }
 
-HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
+HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool big_icons*/)
+{
+	int cx = GetSystemMetrics(SM_CXSMICON);	//ICON_SIZE_X;
+	int cy = GetSystemMetrics(SM_CYSMICON);	//ICON_SIZE_Y;
+	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, cx, cy);
+
+	MemCanvas canvas;
+	BitmapSelection sel(canvas, hbmp);
+
+	RECT rect = {0, 0, cx, cy};
+	FillRect(canvas, &rect, hbrush_bkgnd);
+
+	DrawIconEx(canvas, 0, 0, hIcon, cx, cy, 0, hbrush_bkgnd, DI_NORMAL);
+
+	return hbmp;
+}
+
+HBITMAP create_small_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
 {
 	int cx = GetSystemMetrics(SM_CXSMICON);
 	int cy = GetSystemMetrics(SM_CYSMICON);
@@ -379,7 +396,7 @@ void IconCache::init()
 }
 
 
-const Icon& IconCache::extract(const String& path)
+const Icon& IconCache::extract(LPCTSTR path, bool big_icons)
 {
 	PathMap::iterator found = _pathMap.find(path);
 
@@ -388,24 +405,32 @@ const Icon& IconCache::extract(const String& path)
 
 	SHFILEINFO sfi;
 
-#if 1	// use system image list - the "search program dialog" needs it
-	HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
+	if (big_icons) {
+		if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON)) {
+			const Icon& icon = add(sfi.hIcon, IT_CACHED);
 
-	if (himlSys) {
-		_himlSys = himlSys;
+			///@todo limit cache size
+			_pathMap[path] = icon;
 
-		const Icon& icon = add(sfi.iIcon/*, IT_SYSCACHE*/);
-#else
-	if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON)) {
-		const Icon& icon = add(sfi.hIcon, IT_CACHED);
-#endif
+			return icon;
+		}
+	} else {
+		 // use system image list - the "search program dialog" needs it
+		HIMAGELIST himlSys_small = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
 
-		///@todo limit cache size
-		_pathMap[path] = icon;
+		if (himlSys_small) {
+			_himlSys_small = himlSys_small;
 
-		return icon;
-	} else
-		return _icons[ICID_NONE];
+			const Icon& icon = add(sfi.iIcon/*, IT_SYSCACHE*/);
+
+			///@todo limit cache size
+			_pathMap[path] = icon;
+
+			return icon;
+		}
+	}
+
+	return _icons[ICID_NONE];
 }
 
 const Icon& IconCache::extract(LPCTSTR path, int idx)
@@ -435,16 +460,23 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 	}
 }
 
-const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx)
+const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx, bool big_icons)
 {
 	HICON hIconLarge = 0;
 	HICON hIcon;
 
-	HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(0/*GetSystemMetrics(SM_CXICON)*/,GetSystemMetrics(SM_CXSMICON)));
+	HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(GetSystemMetrics(SM_CXICON), ICON_SIZE_X));
 
 	if (hr == NOERROR) {	//@@ oder SUCCEEDED(hr) ?
-		if (hIconLarge)
-			DestroyIcon(hIconLarge);
+		if (big_icons) {	//@@ OK?
+			if (hIcon)
+				DestroyIcon(hIcon);
+
+			hIcon = hIconLarge;
+		} else {
+			if (hIconLarge)
+				DestroyIcon(hIconLarge);
+		}
 
 		if (hIcon)
 			return add(hIcon);

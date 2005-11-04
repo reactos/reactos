@@ -58,38 +58,40 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 			if (SUCCEEDED(hr)) {
 				LPCTSTR path = (LPCTSTR)GlobalLock(medium.UNION_MEMBER(hGlobal));
 
-				 // fill with drive names "C:", ...
-				assert(_tcslen(path) < GlobalSize(medium.UNION_MEMBER(hGlobal)));
-				_tcscpy(pw32fdata->cFileName, path);
+				if (path) {
+					 // fill with drive names "C:", ...
+					assert(_tcslen(path) < GlobalSize(medium.UNION_MEMBER(hGlobal)));
+					_tcscpy(pw32fdata->cFileName, path);
 
-				UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
+					UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
 
-				if (GetFileAttributesEx(path, GetFileExInfoStandard, &fad)) {
-					pw32fdata->dwFileAttributes = fad.dwFileAttributes;
-					pw32fdata->ftCreationTime = fad.ftCreationTime;
-					pw32fdata->ftLastAccessTime = fad.ftLastAccessTime;
-					pw32fdata->ftLastWriteTime = fad.ftLastWriteTime;
+					if (GetFileAttributesEx(path, GetFileExInfoStandard, &fad)) {
+						pw32fdata->dwFileAttributes = fad.dwFileAttributes;
+						pw32fdata->ftCreationTime = fad.ftCreationTime;
+						pw32fdata->ftLastAccessTime = fad.ftLastAccessTime;
+						pw32fdata->ftLastWriteTime = fad.ftLastWriteTime;
 
-					if (!(fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-						pw32fdata->nFileSizeLow = fad.nFileSizeLow;
-						pw32fdata->nFileSizeHigh = fad.nFileSizeHigh;
+						if (!(fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+							pw32fdata->nFileSizeLow = fad.nFileSizeLow;
+							pw32fdata->nFileSizeHigh = fad.nFileSizeHigh;
+						}
 					}
+
+					HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+												0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+
+					if (hFile != INVALID_HANDLE_VALUE) {
+						if (GetFileInformationByHandle(hFile, pbhfi))
+							bhfi_valid = true;
+
+						CloseHandle(hFile);
+					}
+
+					SetErrorMode(sem_org);
+
+					GlobalUnlock(medium.UNION_MEMBER(hGlobal));
+					GlobalFree(medium.UNION_MEMBER(hGlobal));
 				}
-
-				HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-											0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-
-				if (hFile != INVALID_HANDLE_VALUE) {
-					if (GetFileInformationByHandle(hFile, pbhfi))
-						bhfi_valid = true;
-
-					CloseHandle(hFile);
-				}
-
-				SetErrorMode(sem_org);
-
-				GlobalUnlock(medium.UNION_MEMBER(hGlobal));
-				GlobalFree(medium.UNION_MEMBER(hGlobal));
 			}
 		}
 	}
@@ -322,13 +324,13 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					entry->_icon_id = ICID_FOLDER;
-				else if (scan_flags & SCAN_EXTRACT_ICONS)
+/*				else if (scan_flags & SCAN_EXTRACT_ICONS)
 					try {
-						entry->extract_icon();
+						entry->extract_icon(big_icons);
 					} catch(COMException&) {
 						// ignore unexpected exceptions while extracting icons
 					}
-
+*/
 				last = entry;
 			} while(FindNextFile(hFind, &w32fd));
 
@@ -428,13 +430,13 @@ void ShellDirectory::read_directory(int scan_flags)
 					 // get icons for files and virtual objects
 					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 						!(attribs & SFGAO_FILESYSTEM)) {
-						if (scan_flags & SCAN_EXTRACT_ICONS)
+/*						if (scan_flags & SCAN_EXTRACT_ICONS)
 							try {
-								entry->extract_icon();
+								entry->extract_icon(big_icons);
 							} catch(COMException&) {
 								// ignore unexpected exceptions while extracting icons
 							}
-					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+*/					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 						entry->_icon_id = ICID_FOLDER;
 					else
 						entry->_icon_id = ICID_NONE;	// don't try again later
@@ -486,13 +488,13 @@ Entry* ShellDirectory::find_entry(const void* p)
 	return NULL;
 }
 
-int ShellDirectory::extract_icons()
+int ShellDirectory::extract_icons(bool big_icons)
 {
 	int cnt = 0;
 
 	for(Entry*entry=_down; entry; entry=entry->_next)
 		if (entry->_icon_id == ICID_UNKNOWN) {
-			entry->extract_icon();
+			entry->extract_icon(big_icons);
 
 			if (entry->_icon_id != ICID_NONE)
 				++cnt;

@@ -319,14 +319,14 @@ void Entry::smart_scan(SORT_ORDER sortOrder, int scan_flags)
 }
 
 
-void Entry::extract_icon()
+void Entry::extract_icon(bool big_icons)
 {
 	TCHAR path[MAX_PATH];
 
 	ICON_ID icon_id = ICID_NONE;
 
 	if (get_path(path, COUNTOF(path)) && _tcsncmp(path,TEXT("::{"),3))
-		icon_id = g_Globals._icon_cache.extract(path);
+		icon_id = g_Globals._icon_cache.extract(path, big_icons);
 
 	if (icon_id == ICID_NONE) {
 		IExtractIcon* pExtract;
@@ -336,7 +336,7 @@ void Entry::extract_icon()
 
 			if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
 				if (flags & GIL_NOTFILENAME)
-					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx);
+					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx, big_icons);
 				else {
 					if (idx == -1)
 						idx = 0;	// special case for some control panel applications ("System")
@@ -374,11 +374,11 @@ void Entry::extract_icon()
 			const ShellPath& pidl_abs = create_absolute_pidl();
 			LPCITEMIDLIST pidl = pidl_abs;
 
-			HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_PIDL|SHGFI_SMALLICON);
+			HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_PIDL|(big_icons? SHGFI_SMALLICON: 0));
 			if (himlSys)
 				icon_id = g_Globals._icon_cache.add(sfi.iIcon);
 			/*
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
+			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|(g_Globals._big_icons? SHGFI_SMALLICON: 0)))
 				icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
 			*/
 		}

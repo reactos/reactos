@@ -36,7 +36,7 @@
 
 
 #define	STARTMENU_WIDTH_MIN		120
-#define	STARTMENU_LINE_HEIGHT	20
+#define	STARTMENU_LINE_HEIGHT	(ICON_SIZE_X+4)
 #define	STARTMENU_SEP_HEIGHT	(STARTMENU_LINE_HEIGHT/2)
 #define	STARTMENU_TOP_BTN_SPACE	8
 
@@ -187,12 +187,12 @@ struct SMBtnInfo
 
 typedef vector<SMBtnInfo> SMBtnVector;
 
-extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed);
+extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed, bool big_icons);
 
 #else
 
 extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
-								bool hasSubmenu, bool enabled, bool has_focus, bool pushed);
+								bool hasSubmenu, bool enabled, bool has_focus, bool pushed, bool big_icons);
 
 #endif
 
@@ -214,11 +214,11 @@ struct StartMenu :
 	typedef ExtContextMenuHandlerT<OwnerDrawParent<DialogWindow> > super;
 #endif
 
-	StartMenu(HWND hwnd);
-	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
+	StartMenu(HWND hwnd, bool big_icons=false);
+	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info, bool big_icons=false);
 	~StartMenu();
 
-	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title,
+	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title, bool parent_big_icons,
 						CREATORFUNC_INFO creator=s_def_creator, void* info=NULL, const String& filter="");
 	static CREATORFUNC_INFO s_def_creator;
 
@@ -252,6 +252,8 @@ protected:
 	int		_invisible_lines;
 
 	StartMenuCreateInfo _create_info;	// copy of the original create info
+
+	bool	_big_icons;
 
 #ifdef _LIGHT_STARTMENU
 	SMBtnVector _buttons;
@@ -301,7 +303,7 @@ protected:
 	void	GetFloatingButtonRect(LPRECT prect);
 	void	GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down);
 
-	void	DrawArrows(HDC hdc);
+	void	DrawArrows(HDC hdc, bool big_icons);
 
 	void	Paint(PaintCanvas& canvas);
 	void	UpdateIcons(/*int idx*/);
@@ -336,13 +338,13 @@ struct StartMenuHandler : public StartMenu
 {
 	typedef StartMenu super;
 
-	StartMenuHandler(HWND hwnd)
-	 :	super(hwnd)
+	StartMenuHandler(HWND hwnd, bool big_icons=false)
+	 :	super(hwnd, big_icons)
 	{
 	}
 
-	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info)
-	 :	super(hwnd, create_info)
+	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info, bool big_icons=false)
+	 :	super(hwnd, create_info, big_icons)
 	{
 	}
 
@@ -363,7 +365,7 @@ struct StartMenuRoot : public StartMenuHandler
 
 	StartMenuRoot(HWND hwnd);
 
-	static HWND Create(HWND hwndDesktopBar);
+	static HWND Create(HWND hwndDesktopBar, bool big_icons);
 	void	TrackStartmenu();
 
 protected:

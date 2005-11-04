@@ -105,7 +105,15 @@ void QuickLaunchBar::AddShortcuts()
 		RecursiveCreateDirectory(path);
 		_dir = new ShellDirectory(GetDesktopFolder(), path, _hwnd);
 
-		_dir->smart_scan(SORT_NAME, SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
+		_dir->smart_scan(SORT_NAME, /*SCAN_EXTRACT_ICONS|*/SCAN_FILESYSTEM);
+
+		 // immediatelly extract the shortcut icons
+		for(Entry*entry=_dir->_down; entry; entry=entry->_next)
+			try {
+				entry->extract_icon(false);
+			} catch(COMException&) {
+				// ignore unexpected exceptions while extracting icons
+			}
 	} catch(COMException&) {
 		return;
 	}

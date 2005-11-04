@@ -114,19 +114,20 @@ struct SysCacheIcon : public Icon {
 };
 
 struct IconCache {
-	IconCache() : _himlSys(0) {}
+	IconCache() : _himlSys_small(0) {}
 
 	void	init();
 
-	const Icon&	extract(const String& path);
+	const Icon&	extract(LPCTSTR path, bool big_icons);
 	const Icon&	extract(LPCTSTR path, int idx);
-	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx);
+	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx, bool big_icons);
 
 	const Icon&	add(HICON hIcon, ICON_TYPE type=IT_DYNAMIC);
 	const Icon&	add(int sys_idx/*, ICON_TYPE type=IT_SYSCACHE*/);
 
 	const Icon&	get_icon(int icon_id);
-	HIMAGELIST get_sys_imagelist() const {return _himlSys;}
+
+	HIMAGELIST get_sys_imagelist() const {return _himlSys_small;}
 
 	void	free_icon(int icon_id);
 
@@ -143,12 +144,16 @@ protected:
 	typedef map<CachePair, ICON_ID> PathIdxMap;
 	PathIdxMap _pathIdxMap;
 
-	HIMAGELIST _himlSys;
+	HIMAGELIST _himlSys_small;
 };
 
 
+#define	ICON_SIZE_X		GetSystemMetrics(big_icons? SM_CXICON: SM_CXSMICON)
+#define	ICON_SIZE_Y		GetSystemMetrics(big_icons? SM_CYICON: SM_CYSMICON)
+
+
  /// create a bitmap from an icon
-extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool big_icons*/);
 
  /// add icon with alpha channel to imagelist using the specified background color
 extern int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
