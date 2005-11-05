@@ -21,6 +21,14 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 
     This->InitializeDraw = TRUE;
 
+	RtlZeroMemory(&This->DirectDrawGlobal, sizeof(DDRAWI_DIRECTDRAW_GBL));
+
+	
+
+	/* cObsolete is undoc in msdn it being use in CreateDCA */
+	RtlCopyMemory(&This->DirectDrawGlobal.cObsolete,&"DISPLAY",7);
+	RtlCopyMemory(&This->DirectDrawGlobal.cDriverName,&"DISPLAY",7);
+
     /* Setup the lpExclusiveOwner struct in msdn this struct member is undoc 
 	   I am using there name to figout which info it should be fild with 
 	   My hardware drv does not support call to SetExusive so I can not 
