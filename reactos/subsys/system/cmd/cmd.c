@@ -469,11 +469,12 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		                   NULL,
 		                   NULL,
 		                   TRUE,
-		                   CREATE_NEW_PROCESS_GROUP,
+		                   0,			/* CREATE_NEW_PROCESS_GROUP */
 		                   NULL,
 		                   NULL,
 		                   &stui,
 		                   &prci))
+						   
 		{
 			if (IsConsoleProcess(prci.hProcess))
 			{
@@ -1295,12 +1296,12 @@ ProcessInput (BOOL bFlag)
 			ReadCommand (readline, CMDLINE_LENGTH);
 			ip = readline;
 			bEchoThisLine = FALSE;
-                        bIsBatch = FALSE;
+            bIsBatch = FALSE;
 		}
-                else
-                {
-                        bIsBatch = TRUE;
-                }
+        else
+        {
+            bIsBatch = TRUE;
+        }
 
 		/* skip leading blanks */
 		while ( _istspace(*ip) )
@@ -1426,20 +1427,33 @@ ProcessInput (BOOL bFlag)
 BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 {
 
+	static BOOL SelfGenerated = FALSE;
+
 	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
+	{
 		return FALSE;
-
+	}
+	else
+	{		
+		if(SelfGenerated)
+		{
+			SelfGenerated = FALSE;
+			return TRUE;
+		}
+	}
+	
 	if (bChildProcessRunning == TRUE)
 	{
-		GenerateConsoleCtrlEvent (CTRL_C_EVENT,
-		                          dwChildProcessId);
+		SelfGenerated = TRUE;
+		GenerateConsoleCtrlEvent (dwCtrlType, 0);
 		return TRUE;
 	}
 
+	bCtrlBreak = TRUE;
 	/* FIXME: Handle batch files */
 
-	/* FIXME: Print "^C" */
+	//ConOutPrintf(_T("^C"));
 
 
 	return TRUE;
