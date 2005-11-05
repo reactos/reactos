@@ -19,7 +19,8 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 
 	This->owner = (IDirectDrawImpl*)pDD;	
 
-	/************ fill the discription of our primary surface ***********************/  	
+	/************ fill the discription of our primary surface ***********************/  
+
 	memset (&This->ddsd, 0, sizeof(DDSURFACEDESC));
 	This->ddsd.dwSize = sizeof(DDSURFACEDESC);
 
@@ -43,6 +44,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->ddsd.lpSurface = pDDSD2->lpSurface;
 
     /************ Test see if we can Create Surface ***********************/
+
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{
 		/* can the driver create the surface */
@@ -59,8 +61,6 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	}
 
    /************ Create Surface ***********************/
-
-	/* FIXME we are skipping filling in some data, I do not care for now */	
 	 
 	/* surface global struct */	
 	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));	
@@ -68,21 +68,25 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->Global.wHeight = This->owner->DirectDrawGlobal.vmiData.dwDisplayHeight;
 	This->Global.wWidth = This->owner->DirectDrawGlobal.vmiData.dwDisplayWidth;
 	This->Global.dwLinearSize =  This->owner->DirectDrawGlobal.vmiData.lDisplayPitch;
-	
-	
+	if(pDDSD2->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+		This->Global.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE; 
+
 	/* surface more struct */	
 	memset(&This->More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
 	This->More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+	This->More.dmiDDrawReserved7.wWidth = This->Global.wWidth;
+	This->More.dmiDDrawReserved7.wHeight = This->Global.wHeight;
+	This->More.dmiDDrawReserved7.wBPP = This->owner->Bpp;
+	//This->More.dmiDDrawReserved7.wRefreshRate = ;
+	//This->More.dmiDDrawReserved7.wMonitorsAttachedToDesktop = 2;
+	/* ToDo: fill ddsCapsEx */
  
 	/* surface local struct */
-	
 	memset(&This->Local, 0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
 	This->Local.lpGbl = &This->Global;
 	This->Local.lpSurfMore = &This->More;
-
-	
-	/* FIXME do a memcopy */
-	This->Local.ddsCaps = *(DDSCAPS*)&This->ddsd.ddsCaps;
+	This->Local.ddsCaps.dwCaps = pDDSD2->ddsCaps.dwCaps;
+	This->Local.dwProcessId = GetCurrentProcessId();
  
 	/* for the double pointer below */	
 	This->pLocal[0] = &This->Local; 
@@ -92,7 +96,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
 	CreateData.lpDD = &This->owner->DirectDrawGlobal;	
-	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC) &This->ddsd; 
+	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&This->ddsd; 
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = This->pLocal;	
 	CreateData.ddRVal = DD_FALSE;
