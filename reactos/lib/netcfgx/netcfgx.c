@@ -7,7 +7,7 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "netcfgx.h"
@@ -21,7 +21,6 @@ AppendStringToMultiSZ(
 	IN HKEY hKey,
 	IN PCWSTR ValueName,
 	IN PCWSTR ValueToAppend)
-
 {
 	PWSTR Buffer = NULL;
 	DWORD dwRegType;
@@ -113,6 +112,8 @@ NetClassInstaller(
 	
 	if (InstallFunction != DIF_INSTALLDEVICE)
 		return ERROR_DI_DO_DEFAULT;
+
+	DPRINT("%lu %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
 
 	/* Create a new UUID */
 	RpcStatus = UuidCreate(&Uuid);
@@ -280,13 +281,22 @@ NetClassInstaller(
 	}
 	rc = AppendStringToMultiSZ(hKey, L"Bind", DeviceName);
 	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
 		goto cleanup;
+	}
 	rc = AppendStringToMultiSZ(hKey, L"Export", ExportName);
 	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
 		goto cleanup;
+	}
 	rc = AppendStringToMultiSZ(hKey, L"Route", UuidString);
 	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
 		goto cleanup;
+	}
 
 	rc = ERROR_SUCCESS;
 
@@ -305,5 +315,8 @@ cleanup:
 	if (hConnectionKey != INVALID_HANDLE_VALUE)
 		RegCloseKey(hConnectionKey);
 
-	return rc == ERROR_SUCCESS ? ERROR_DI_DO_DEFAULT : rc;
+	if (rc == ERROR_SUCCESS)
+		rc = ERROR_DI_DO_DEFAULT;
+	DPRINT("Returning 0x%lx\n", rc);
+	return rc;
 }
