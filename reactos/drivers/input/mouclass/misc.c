@@ -28,9 +28,12 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PDEVICE_OBJECT LowerDevice = ((PMOUCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+	PDEVICE_OBJECT LowerDevice;
 	KEVENT Event;
 	NTSTATUS Status;
+	
+	ASSERT(!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO);
+	LowerDevice = ((PPORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
 	
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
@@ -54,7 +57,10 @@ ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PDEVICE_OBJECT LowerDevice = ((PMOUCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+	PDEVICE_OBJECT LowerDevice;
+	
+	ASSERT(!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO);
+	LowerDevice = ((PPORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
 	
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
