@@ -59,6 +59,10 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
 	  Attributes |= OBJ_INHERIT;
      }
 
+   /* use default buffer size if desired */
+   if (nSize == 0)
+      nSize = 0x1000;
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PipeName,
 			      Attributes,
@@ -66,7 +70,7 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
 			      SecurityDescriptor);
 
    Status = NtCreateNamedPipeFile(&ReadPipeHandle,
-				  FILE_GENERIC_READ,
+				  FILE_GENERIC_READ |FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
 				  &ObjectAttributes,
 				  &StatusBlock,
 				  FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -86,10 +90,10 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
      }
 
    Status = NtOpenFile(&WritePipeHandle,
-		       FILE_GENERIC_WRITE,
+		       FILE_GENERIC_WRITE | SYNCHRONIZE,
 		       &ObjectAttributes,
 		       &StatusBlock,
-		       0,
+		       FILE_SHARE_READ | FILE_SHARE_WRITE,
 		       FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
    if (!NT_SUCCESS(Status))
      {
