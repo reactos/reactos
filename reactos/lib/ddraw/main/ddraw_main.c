@@ -37,7 +37,7 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
                 
     This->Height = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , VERTRES);
     This->Width = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , HORZRES);
-    This->Bpp = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , BITSPIXEL);
+    This->Bpp = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , BITSPIXEL);	
 
     // call software first
     if((ret = Hal_DirectDraw_Initialize (iface)) != DD_OK)
@@ -46,6 +46,10 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
     // ... then overwrite with hal
     if((ret = Hel_DirectDraw_Initialize (iface)) != DD_OK)
         return ret;
+
+	/* Hack to set right freq */
+	
+	This->DirectDrawGlobal.dwMonitorFrequency =  GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , VREFRESH);    
    
     return DD_OK;
 }

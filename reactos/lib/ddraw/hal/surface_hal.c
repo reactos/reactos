@@ -77,7 +77,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->More.dmiDDrawReserved7.wWidth = This->Global.wWidth;
 	This->More.dmiDDrawReserved7.wHeight = This->Global.wHeight;
 	This->More.dmiDDrawReserved7.wBPP = This->owner->Bpp;
-	//This->More.dmiDDrawReserved7.wRefreshRate = ;
+	This->More.dmiDDrawReserved7.wRefreshRate = This->owner->DirectDrawGlobal.dwMonitorFrequency;
 	//This->More.dmiDDrawReserved7.wMonitorsAttachedToDesktop = 2;
 	/* ToDo: fill ddsCapsEx */
  
@@ -86,7 +86,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->Local.lpGbl = &This->Global;
 	This->Local.lpSurfMore = &This->More;
 	This->Local.ddsCaps.dwCaps = pDDSD2->ddsCaps.dwCaps;
-	This->Local.dwProcessId = GetCurrentProcessId();
+	This->Local.dwProcessId = This->owner->ExclusiveOwner.dwProcessId;
  
 	/* for the double pointer below */	
 	This->pLocal[0] = &This->Local; 
