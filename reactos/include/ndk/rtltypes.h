@@ -282,6 +282,17 @@ typedef enum
 /* FUNCTION TYPES ************************************************************/
 #ifndef NTOS_MODE_USER
 typedef VOID (NTAPI *WAITORTIMERCALLBACKFUNC)(PVOID, BOOLEAN);
+
+#else
+
+typedef EXCEPTION_DISPOSITION
+(NTAPI *PEXCEPTION_ROUTINE)(
+    IN struct _EXCEPTION_RECORD *ExceptionRecord,
+    IN PVOID EstablisherFrame,
+    IN OUT struct _CONTEXT *ContextRecord,
+    IN OUT PVOID DispatcherContext
+);
+
 #endif
 
 struct _RTL_AVL_TABLE;
@@ -292,14 +303,6 @@ typedef NTSTATUS
 (*PHEAP_ENUMERATION_ROUTINE)(
     IN PVOID HeapHandle,
     IN PVOID UserParam
-);
-
-typedef EXCEPTION_DISPOSITION
-(NTAPI *PEXCEPTION_ROUTINE)(
-    IN struct _EXCEPTION_RECORD *ExceptionRecord,
-    IN PVOID EstablisherFrame,
-    IN OUT struct _CONTEXT *ContextRecord,
-    IN OUT PVOID DispatcherContext
 );
 
 typedef LONG (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
@@ -393,14 +396,6 @@ typedef OSVERSIONINFOW RTL_OSVERSIONINFOW;
 typedef LPOSVERSIONINFOW PRTL_OSVERSIONINFOW;
 typedef OSVERSIONINFOEXW RTL_OSVERSIONINFOEXW;
 typedef LPOSVERSIONINFOEXW PRTL_OSVERSIONINFOEXW;
-
-typedef EXCEPTION_DISPOSITION
-(*PEXCEPTION_HANDLER)(
-    struct _EXCEPTION_RECORD*,
-    PVOID,
-    struct _CONTEXT*,
-    PVOID
-);
 
 typedef struct _RTL_HEAP_PARAMETERS
 {
@@ -539,6 +534,14 @@ typedef struct _TIME_FIELDS
     CSHORT Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
 #endif
+
+typedef EXCEPTION_DISPOSITION
+(*PEXCEPTION_HANDLER)(
+    struct _EXCEPTION_RECORD*,
+    PVOID,
+    struct _CONTEXT*,
+    PVOID
+);
 
 typedef struct _ACE
 {

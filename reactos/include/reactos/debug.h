@@ -16,8 +16,6 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-#define UNIMPLEMENTED   DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
-
 /*  FIXME: should probably remove this later  */
 #if !defined(CHECKED) && !defined(NDEBUG)
 #define CHECKED
@@ -61,22 +59,22 @@
         #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
     
     #else
-		#if defined (__STDC__)
-			#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-		#endif
+		#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
         #define CHECKPOINT
     
     #endif
 
+    #define UNIMPLEMENTED \
+        DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+
 #else
 
     /* On non-debug builds, we never show these */
-    #if defined (__STDC__)
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-    #endif
     #define CHECKPOINT1
     #define CHECKPOINT
+    #define UNIMPLEMENTED
 #endif
 
 /*
