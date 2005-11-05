@@ -129,7 +129,7 @@ struct device {
 	struct list_head driver_list;
 	void    (*release)(struct device * dev);
 
-	void *dev_ext; // ReactOS-specific: pointer to windows device extension
+	PDEVICE_OBJECT dev_ext; // ReactOS-specific: pointer to windows device object
 };
 struct class_device{int a;};
 struct semaphore{int a;};

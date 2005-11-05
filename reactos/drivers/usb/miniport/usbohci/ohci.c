@@ -21,7 +21,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	/* Initialize generic linux structure */
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
-	dev->dev.dev_ext = (PVOID)DeviceExtension;
+	dev->dev.dev_ext = (PVOID)DeviceObject;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_OHCI_TAG); // 128 max len for slot name
 
 	// Init wrapper
