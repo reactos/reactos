@@ -114,18 +114,20 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   PNPFS_FCB ServerFcb = NULL;
   PNPFS_DEVICE_EXTENSION DeviceExt;
   BOOLEAN SpecialAccess;
+  ACCESS_MASK DesiredAccess;
 
   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
   FileObject = IoStack->FileObject;
+  DesiredAccess = IoStack->Parameters.CreatePipe.SecurityContext->DesiredAccess;
   DPRINT("FileObject %p\n", FileObject);
   DPRINT("FileName %wZ\n", &FileObject->FileName);
 
   Irp->IoStatus.Information = 0;
 
-  SpecialAccess = ((IoStack->Parameters.CreatePipe.ShareAccess & 3) == 3);
+  SpecialAccess = ((DesiredAccess & SPECIFIC_RIGHTS_ALL) == FILE_READ_ATTRIBUTES);
   if (SpecialAccess)
     {
       DPRINT("NpfsCreate() open client end for special use!\n");
