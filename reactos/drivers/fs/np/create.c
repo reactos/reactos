@@ -329,6 +329,14 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
    Irp->IoStatus.Information = 0;
 
+   if (!(IoStack->Parameters.CreatePipe.ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE)) ||
+       (IoStack->Parameters.CreatePipe.ShareAccess & ~(FILE_SHARE_READ|FILE_SHARE_WRITE)))
+     {
+	Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	return STATUS_INVALID_PARAMETER;
+     }
+
    Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
    if (Fcb == NULL)
      {
@@ -411,12 +419,23 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        Pipe->WriteMode = Buffer->ReadMode;
        Pipe->ReadMode = Buffer->ReadMode;
        Pipe->CompletionMode = Buffer->CompletionMode;
-       Pipe->PipeConfiguration = IoStack->Parameters.CreatePipe.Options & 0x3;
+       switch (IoStack->Parameters.CreatePipe.ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE))
+         {
+           case FILE_SHARE_READ:
+             Pipe->PipeConfiguration = FILE_PIPE_OUTBOUND;
+             break;
+           case FILE_SHARE_WRITE:
+             Pipe->PipeConfiguration = FILE_PIPE_INBOUND;
+             break;
+           case FILE_SHARE_READ|FILE_SHARE_WRITE:
+             Pipe->PipeConfiguration = FILE_PIPE_FULL_DUPLEX;
+             break;
+         }
        Pipe->MaximumInstances = Buffer->MaximumInstances;
        Pipe->CurrentInstances = 0;
        Pipe->TimeOut = Buffer->DefaultTimeout;
-       if (!(IoStack->Parameters.CreatePipe.Options & FILE_PIPE_OUTBOUND) ||
-           IoStack->Parameters.CreatePipe.Options & FILE_PIPE_FULL_DUPLEX)
+       if (!(Pipe->PipeConfiguration & FILE_PIPE_OUTBOUND) ||
+           Pipe->PipeConfiguration & FILE_PIPE_FULL_DUPLEX)
          {
            if (Buffer->InboundQuota == 0)
              {
@@ -440,7 +459,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
            Pipe->InboundQuota = 0;
          }
 
-       if (IoStack->Parameters.CreatePipe.Options & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
+       if (Pipe->PipeConfiguration & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
          {
            if (Buffer->OutboundQuota == 0)
              {

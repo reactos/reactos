@@ -41,11 +41,11 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
    ULONG Attributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 
-   DefaultTimeout.QuadPart = 300000000; /* 30 seconds */
+   DefaultTimeout.QuadPart = -300000000; /* 30 seconds */
 
    PipeId = (ULONG)InterlockedIncrement((LONG*)&ProcessPipeId);
    swprintf(Buffer,
-	    L"\\Device\\NamedPipe\\Win32Pipes.%08x.%08x",
+	    L"\\\\.\\PIPE\\Win32Pipes.%08x.%08x",
 	    NtCurrentTeb()->Cid.UniqueProcess,
 	    PipeId);
    RtlInitUnicodeString (&PipeName,
@@ -73,7 +73,7 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
 				  FILE_GENERIC_READ |FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
 				  &ObjectAttributes,
 				  &StatusBlock,
-				  FILE_SHARE_READ | FILE_SHARE_WRITE,
+				  FILE_SHARE_WRITE,
 				  FILE_CREATE,
 				  FILE_SYNCHRONOUS_IO_NONALERT,
 				  FALSE,
@@ -93,8 +93,8 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
 		       FILE_GENERIC_WRITE | SYNCHRONIZE,
 		       &ObjectAttributes,
 		       &StatusBlock,
-		       FILE_SHARE_READ | FILE_SHARE_WRITE,
-		       FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+		       FILE_SHARE_READ,
+		       FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
      {
 	NtClose(ReadPipeHandle);

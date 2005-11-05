@@ -123,27 +123,16 @@ CreateNamedPipeW(LPCWSTR lpName,
    if (!(dwOpenMode & FILE_FLAG_OVERLAPPED))
       CreateOptions = CreateOptions | FILE_SYNCHRONOUS_IO_NONALERT;
 
-   switch (dwOpenMode & PIPE_ACCESS_DUPLEX)
-   {
-      case PIPE_ACCESS_INBOUND:
-         CreateOptions |= FILE_PIPE_INBOUND;
-         ShareAccess |= FILE_SHARE_WRITE;
-         DesiredAccess |= GENERIC_READ;
-         break;
-
-      case PIPE_ACCESS_OUTBOUND:
-         CreateOptions |= FILE_PIPE_OUTBOUND;
-         ShareAccess |= FILE_SHARE_READ;
-         DesiredAccess |= GENERIC_WRITE;
-         break;
-
-      case PIPE_ACCESS_DUPLEX:
-         CreateOptions |= FILE_PIPE_FULL_DUPLEX;
-         ShareAccess |= (FILE_SHARE_READ | FILE_SHARE_WRITE);
-         DesiredAccess |= (GENERIC_READ | GENERIC_WRITE);
-         break;
-   }
-
+   if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
+     {
+       ShareAccess |= FILE_SHARE_READ;
+       DesiredAccess |= GENERIC_WRITE;
+     }
+   if (dwOpenMode & PIPE_ACCESS_INBOUND)
+     {
+       ShareAccess |= FILE_SHARE_WRITE;
+       DesiredAccess |= GENERIC_READ;
+     }
    if (dwPipeMode & PIPE_TYPE_MESSAGE)
       WriteModeMessage = FILE_PIPE_MESSAGE_MODE;
    else
