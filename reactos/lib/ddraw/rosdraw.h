@@ -14,22 +14,27 @@
 
 typedef struct 
 {
+	/* Setup the Vtbl COM table */
 	IDirectDraw7Vtbl* lpVtbl;
 	IDirectDraw4Vtbl* lpVtbl_v4;
 	IDirectDraw2Vtbl* lpVtbl_v2;
 	IDirectDrawVtbl*  lpVtbl_v1;
 
+	/* The main struct that contain all info from the HAL and HEL */
 	DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
+
+	/* ExclusiveOwner */
+	DDRAWI_DIRECTDRAW_LCL ExclusiveOwner;
+				
+	/* MISC info that will be remove in futuer */	
 	DDHAL_DDMISCELLANEOUSCALLBACKS Misc2Callback;
 	DDHALINFO HalInfo;	
-
-    HWND window;
-    DWORD cooperative_level;
-	HDC hdc;
+    
+    DWORD cooperative_level;	
 	int Height, Width, Bpp;
 
-	GUID InGUID;
 	BOOL InitializeDraw;
+
 
 } IDirectDrawImpl; 
 

@@ -19,12 +19,9 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     This->DirectDrawGlobal.lp16DD = &This->DirectDrawGlobal;
 
     /* get the object */
-    if(!DdCreateDirectDrawObject (&This->DirectDrawGlobal, This->hdc))
+    if(!DdCreateDirectDrawObject (&This->DirectDrawGlobal, (HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC ))
         return DDERR_INVALIDPARAMS;
-
-	BOOL dummy;
-	DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
-            
+	
     /* alloc all the space */
     This->DirectDrawGlobal.lpDDCBtmp = (LPDDHAL_CALLBACKS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                                                     sizeof(DDHAL_CALLBACKS));        
@@ -267,12 +264,14 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     This->HalInfo.GetDriverInfo(&DriverInfo);
     
     /* Get the ZPixelFormats */
+	/* take off this it until we figout how lpexluisev should be fild in 
     This->DirectDrawGlobal.lpZPixelFormats = (LPDDPIXELFORMAT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                                sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
     DriverInfo.guidInfo = GUID_ZPixelFormats;
     DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpZPixelFormats;
     DriverInfo.dwExpectedSize = sizeof(DDPIXELFORMAT);
     This->HalInfo.GetDriverInfo(&DriverInfo);
+	*/
     
     /* Setup some info from the callbacks we got  */    
     DDHAL_GETAVAILDRIVERMEMORYDATA  mem;

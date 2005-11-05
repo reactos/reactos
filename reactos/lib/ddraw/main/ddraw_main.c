@@ -21,14 +21,23 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 
     This->InitializeDraw = TRUE;
 
-   
+    /* Setup the lpExclusiveOwner struct in msdn this struct member is undoc 
+	   I am using there name to figout which info it should be fild with 
+	   My hardware drv does not support call to SetExusive so I can not 
+	   debug it see how it should be fild 
+	*/
+	
+	This->DirectDrawGlobal.lpExclusiveOwner = &This->ExclusiveOwner;
+	memset(&This->ExclusiveOwner, 0, sizeof(DDRAWI_DIRECTDRAW_LCL));
 
-           
-    // get the HDC
-    This->hdc = GetWindowDC(GetDesktopWindow());
-    This->Height = GetDeviceCaps(This->hdc, VERTRES);
-    This->Width = GetDeviceCaps(This->hdc, HORZRES);
-    This->Bpp = GetDeviceCaps(This->hdc, BITSPIXEL);
+	This->DirectDrawGlobal.lpExclusiveOwner->dwProcessId = GetCurrentProcessId();	
+	This->DirectDrawGlobal.lpExclusiveOwner->hDC = ((ULONG_PTR)GetWindowDC(GetDesktopWindow())); 
+	This->DirectDrawGlobal.lpExclusiveOwner->hWnd = ((ULONG_PTR)GetDesktopWindow());
+	This->DirectDrawGlobal.lpExclusiveOwner->lpGbl = &This->DirectDrawGlobal;
+                
+    This->Height = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , VERTRES);
+    This->Width = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , HORZRES);
+    This->Bpp = GetDeviceCaps((HDC)This->DirectDrawGlobal.lpExclusiveOwner->hDC , BITSPIXEL);
 
     // call software first
     if((ret = Hal_DirectDraw_Initialize (iface)) != DD_OK)
@@ -51,12 +60,9 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
     // check the parameters
-    if (This->cooperative_level == cooplevel && This->window == hwnd)
+    if ((This->cooperative_level == cooplevel) && ((HWND)This->DirectDrawGlobal.lpExclusiveOwner->hWnd  == hwnd))
         return DD_OK;
-
-    if (This->window)
-        return DDERR_HWNDALREADYSET;
-
+    
     if (This->cooperative_level)
         return DDERR_EXCLUSIVEMODEALREADYSET;
 
@@ -67,8 +73,8 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
         return DDERR_INVALIDPARAMS;
 
     // set the data
-    This->window = hwnd;
-    This->hdc = GetDC(hwnd);
+    This->DirectDrawGlobal.lpExclusiveOwner->hWnd = (ULONG_PTR) hwnd;
+    This->DirectDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC(hwnd);
     This->cooperative_level = cooplevel;
 
     if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE) 
