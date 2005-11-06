@@ -51,7 +51,12 @@ enum
 #define BUFF_SIZE 16384         /* 16k = max buffer size */
  
  
-int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFlags, BOOL bTouch)
+INT 
+copy (TCHAR source[MAX_PATH], 
+	  TCHAR dest[MAX_PATH], 
+	  INT append, 
+	  DWORD lpdwFlags, 
+	  BOOL bTouch)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	FILETIME srctime,NewFileTime;
@@ -68,6 +73,9 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 	TCHAR * FileName;
 	SYSTEMTIME CurrentTime;
  
+	/* Check Breaker */
+	if(CheckCtrlBreak(BREAK_INPUT))
+		return 0;
 
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
@@ -235,6 +243,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
  
 	do
 	{
+
 		ReadFile (hFileSrc, buffer, BUFF_SIZE, &dwRead, NULL);
 		if (lpdwFlags & COPY_ASCII)
 		{
@@ -254,14 +263,14 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 			break;
  
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
-		if (dwWritten != dwRead)
+		if (dwWritten != dwRead || CheckCtrlBreak(BREAK_INPUT))
 		{
 			ConOutResPuts(STRING_COPY_ERROR3);
  
 			free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
-      nErrorLevel = 1;
+			nErrorLevel = 1;
 			return 0;
 		}
 	}
@@ -731,6 +740,12 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
  
 		do
 		{
+			/* Check Breaker */
+			if(CheckCtrlBreak(BREAK_INPUT))
+			{
+				freep(arg);
+				return 1;
+			}
 			/* Set the override to yes each new file */
 			nOverwrite = 1;
  

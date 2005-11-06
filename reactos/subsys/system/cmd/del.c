@@ -107,7 +107,8 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags, WIN32_FIND_DATA* f)
 	/*This function is called by CommandDelete and
 	does the actual process of deleting the single 
 	file*/
-
+		if(CheckCtrlBreak(BREAK_INPUT))
+			return 1;
 
         /*check to see if it is read only and if this is done based on /A
           if it is done by file name, access is denied. However, if it is done 

@@ -643,6 +643,8 @@ DoCommand (LPTSTR line)
 			}
 		}
 	}
+	/* Just in case a CTRL+C slipped through a command */
+	bCtrlBreak = FALSE;
 	free(com);
 }
 

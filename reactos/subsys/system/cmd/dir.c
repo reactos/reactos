@@ -2027,7 +2027,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		}
 
 	/* read the parameters */
-	if (!DirReadParam(rest, &params, &entries, &stFlags))
+	if (!DirReadParam(rest, &params, &entries, &stFlags) || CheckCtrlBreak(BREAK_INPUT))
 	{
 		nErrorLevel = 1;
 		return 1;
@@ -2044,7 +2044,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 	for(loop = 0; loop < entries; loop++)
 	{
 		/* parse the directory info */
-		if (DirParsePathspec (params[loop], szPath, szFilespec))
+		if (DirParsePathspec (params[loop], szPath, szFilespec) || CheckCtrlBreak(BREAK_INPUT))
 		{
 			nErrorLevel = 1;
 			return 1;
