@@ -139,11 +139,6 @@ struct DeviceInfoSet /* HDEVINFO */
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
 };
 
-#define COPYFILEDLGORD	1000
-#define SOURCESTRORD	500
-#define DESTSTRORD	501
-#define PROGRESSORD	502
-
 extern HINSTANCE hInstance;
 #define RC_STRING_MAX_SIZE 256
 
