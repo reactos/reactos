@@ -123,7 +123,7 @@ CreateGroupOrderListRoutine(PWSTR ValueName,
 {
     PSERVICE_GROUP Group;
 
-    DPRINT("IopGetGroupOrderList(%S, %x, %x, %x, %x, %x)\n",
+    DPRINT("CreateGroupOrderListRoutine(%S, %x, %x, %x, %x, %x)\n",
            ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
 
     if (ValueType == REG_BINARY &&
@@ -253,6 +253,7 @@ CreateServiceListEntry(LPWSTR lpServiceName,
                        HKEY hServiceKey)
 {
     PSERVICE lpService = NULL;
+    LPWSTR lpDisplayName = NULL;
     LPWSTR lpGroup = NULL;
     DWORD dwSize;
     DWORD dwError;
@@ -326,6 +327,14 @@ CreateServiceListEntry(LPWSTR lpServiceName,
 
     DPRINT("Group: %S\n", lpGroup);
 
+    dwError = ScmReadString(hServiceKey,
+                            L"DisplayName",
+                            &lpDisplayName);
+    if (dwError != ERROR_SUCCESS)
+        lpDisplayName = NULL;
+
+    DPRINT("Display name: %S\n", lpDisplayName);
+
     dwError = ScmCreateNewServiceRecord(lpServiceName,
                                         &lpService);
     if (dwError != ERROR_SUCCESS)
@@ -342,6 +351,12 @@ CreateServiceListEntry(LPWSTR lpServiceName,
         lpGroup = NULL;
     }
 
+    if (lpDisplayName != NULL)
+    {
+        lpService->lpDisplayName = lpDisplayName;
+        lpDisplayName = NULL;
+    }
+
     DPRINT("ServiceName: '%S'\n", lpService->lpServiceName);
     DPRINT("Group: '%S'\n", lpService->lpServiceGroup);
     DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
@@ -356,6 +371,9 @@ CreateServiceListEntry(LPWSTR lpServiceName,
 done:;
     if (lpGroup != NULL)
         HeapFree(GetProcessHeap(), 0, lpGroup);
+
+    if (lpDisplayName != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDisplayName);
 
     return dwError;
 }
@@ -455,6 +473,8 @@ ScmCreateServiceDatabase(VOID)
     }
 
     RegCloseKey(hServicesKey);
+
+    /* FIXME: Delete services that are marked for delete */
 
     DPRINT("ScmCreateServiceDatabase() done\n");
 

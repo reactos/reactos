@@ -592,6 +592,8 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    (*lpcchBuffer)--;
+
     return TRUE;
 }
 
@@ -643,6 +645,8 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
         SetLastError(dwError);
         return FALSE;
     }
+
+    (*lpcchBuffer)--;
 
     return TRUE;
 }

@@ -969,10 +969,10 @@ ScmrGetServiceDisplayNameW(handle_t BindingHandle,
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
-    dwLength = wcslen(lpService->lpDisplayName);
+    dwLength = wcslen(lpService->lpDisplayName) + 1;
 
     if (lpDisplayName != NULL &&
-        *lpcchBuffer > dwLength)
+        *lpcchBuffer >= dwLength)
     {
         wcscpy(lpDisplayName, lpService->lpDisplayName);
     }
@@ -1019,10 +1019,10 @@ ScmrGetServiceKeyNameW(handle_t BindingHandle,
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
-    dwLength = wcslen(lpService->lpServiceName);
+    dwLength = wcslen(lpService->lpServiceName) + 1;
 
     if (lpServiceName != NULL &&
-        *lpcchBuffer > dwLength)
+        *lpcchBuffer >= dwLength)
     {
         wcscpy(lpServiceName, lpService->lpServiceName);
     }
