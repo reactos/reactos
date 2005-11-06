@@ -1,1118 +1,1032 @@
 /*
- *	IMAGEHLP library
- *
- *	Copyright 1998	Patrik Stridvall
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         Imagehlp Libary
+ * FILE:            lib/imagehlp/modify.c
+ * PURPOSE:         Binding, Base Fixing and Rebasing
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-#include <stdarg.h>
+/* INCLUDES ******************************************************************/
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wine/debug.h"
-#include "imagehlp.h"
+#include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
+//#define NDEBUG
+#include <debug.h>
 
-static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD WordCount);
-extern PIMAGE_NT_HEADERS WINAPI ImageNtHeader(PVOID Base);
+/* DATA **********************************************************************/
 
-/* Internal Structures we use to keep track of the Bound Imports */
-typedef struct _BOUND_FORWARDER_REFS {
-    ULONG	TimeDateStamp;
-    LPSTR	ModuleName;
-} BOUND_FORWARDER_REFS, *PBOUND_FORWARDER_REFS;
+CHAR BoundLibraries[4096];
+LPSTR BoundLibrariesPointer;
 
-typedef struct _BOUND_IMPORT_DESCRIPTOR {
-    LPSTR	ModuleName;
-    ULONG	TimeDateStamp;
-    USHORT	ForwaderReferences;
-    PBOUND_FORWARDER_REFS Forwarders;
-} BOUND_IMPORT_DESCRIPTOR, *PBOUND_IMPORT_DESCRIPTOR;
+/* FUNCTIONS *****************************************************************/
 
-
-VOID
-STDCALL
-BindpWalkAndBindImports(
-    PLOADED_IMAGE File,
-    LPSTR DllPath
-    );
-
-PBOUND_IMPORT_DESCRIPTOR
-STDCALL
-BindpCreateBoundImportDescriptor(
-	LPSTR LibraryName,
-	PLOADED_IMAGE Library,
-	PULONG BoundImportDescriptor
-    );
-
-BOOL
-STDCALL
-BindpBindThunk(
-    PIMAGE_THUNK_DATA Thunk,
-    PLOADED_IMAGE Image,
-    PIMAGE_THUNK_DATA BoundThunk,
-    PLOADED_IMAGE LoadedLibrary,
-    PIMAGE_EXPORT_DIRECTORY Exports,
-    PBOUND_IMPORT_DESCRIPTOR BoundImportDescriptor,
-    LPSTR DllPath
-    );
-
-PIMAGE_BOUND_IMPORT_DESCRIPTOR
-STDCALL
-BindpCreateBoundImportSection(
-    PULONG BoundImportDescriptor,
-    PULONG BoundImportsSize
-    );
-
-ULONG
-STDCALL
-BindpAddBoundForwarder(
-    PBOUND_IMPORT_DESCRIPTOR BoundImportDescriptor,
-    LPSTR DllPath,
-    PUCHAR ForwarderString
-    );
-
-UCHAR	BoundLibraries[4096];
-LPSTR	BoundLibrariesPointer = BoundLibraries;
-PULONG	BoundImportDescriptors;
-
-/*
- * BindImageEx
- *
- * FUNCTION:
- *      Binds a PE Image File to its imported Libraries
- * ARGUMENTS:
- *      Flags			- Caller Specified Flags
- *      ImageName		- Name of Imagefile to Bind
- *      DllPath			- Path to search DLL Files in, can be NULL to use Default
- *      SymbolPath		- Path to search Symbol Files in, can be NULL to use Default
- *      StatusRoutine	- Callback routine to notify of Bind Events, can be NULL to disable.
- *
- * RETURNS:
- *      TRUE if Success.
- */
-BOOL 
-WINAPI 
-BindImageEx(
-    IN DWORD Flags,
-    IN LPSTR ImageName,
-    IN LPSTR DllPath,
-    IN LPSTR SymbolPath,
-    IN PIMAGEHLP_STATUS_ROUTINE StatusRoutine
-    )
+LPSTR
+IMAGEAPI
+BindpCaptureImportModuleName(LPSTR ModuleName)
 {
-	LOADED_IMAGE				FileData;
-	PLOADED_IMAGE				File;
-	ULONG						CheckSum, HeaderSum, OldChecksum;
-    SYSTEMTIME					SystemTime;
-    FILETIME					LastWriteTime;
-    
-	FIXME("BindImageEx Called for: %s \n", ImageName);
+    LPSTR Name = BoundLibraries;
 
-	/* Set and Clear Buffer */
-	File = &FileData;
-	RtlZeroMemory(File, sizeof(*File));
+    /* Check if it hasn't been initialized yet */
+    if (!BoundLibrariesPointer)
+    {
+        /* Start with a null char and set the pointer */
+        *Name = ANSI_NULL;
+        BoundLibrariesPointer = Name;
+    }
 
-	/* Request Image Data */
-	if (MapAndLoad(ImageName, DllPath, File, TRUE, FALSE)) {
+    /* Loop the current buffer */
+    while (*Name)
+    {
+        /* Try to match this DLL's name and return it */
+        if (!_stricmp(Name, ModuleName)) return Name;
 
-		//FIXME("Image Mapped and Loaded\n");
+        /* Move on to the next DLL Name */
+        Name += strlen(Name) + sizeof(CHAR);
+    }
 
-		/* Read Import Table */
-		BindpWalkAndBindImports(File, DllPath);
+    /* If we got here, we didn't find one, so add this one to our buffer */
+    strcpy(Name, ModuleName);
 
-		//FIXME("Binding Completed, getting Checksum\n");
-		
-		/* Update Checksum */
-		OldChecksum = File->FileHeader->OptionalHeader.CheckSum;
-	    CheckSumMappedFile (File->MappedAddress,
-							GetFileSize(File->hFile, NULL),
-                            &HeaderSum,
-                            &CheckSum);
-        File->FileHeader->OptionalHeader.CheckSum = CheckSum;
+    /* Set the new position of the buffer, and null-terminate it */
+    BoundLibrariesPointer = Name + strlen(Name) + sizeof(CHAR);
+    *BoundLibrariesPointer = ANSI_NULL;
 
-		//FIXME("Saving Changes to file\n");
-
-		/* Save Changes */
-        UnmapViewOfFile(File->MappedAddress);
-
-		//FIXME("Setting time\n");
-
-		/* Save new Modified Time */
-        GetSystemTime(&SystemTime);
-		SystemTimeToFileTime(&SystemTime, &LastWriteTime);
-        SetFileTime(File->hFile, NULL, NULL, &LastWriteTime);
-
-		/* Close Handle */
-		CloseHandle(File->hFile);
-	}
-
-	FIXME("Done\n");
-	return TRUE;
+    /* Return the pointer to the name */
+    return Name;
 }
 
-/*
- * BindpWalkAndBindImports
- *
- * FUNCTION:
- *      Does the actual Binding of the Imports and Forward-Referencing
- *
- * ARGUMENTS:
- *      File			- Name of Imagefile to Bind
- *      DllPath			- Path to search DLL Files in, can be NULL to use Default
- *
- * RETURNS:
- *      Nothing
- */
-VOID
-STDCALL
-BindpWalkAndBindImports(
-    PLOADED_IMAGE File,
-    LPSTR DllPath
-    )
-{
-	PIMAGE_IMPORT_DESCRIPTOR	Imports;
-	PIMAGE_EXPORT_DIRECTORY		Exports;
-	ULONG						SizeOfImports;
-	ULONG						SizeOfExports;
-	ULONG						SizeOfThunks;
-	PIMAGE_OPTIONAL_HEADER		OptionalHeader32 = NULL;
-    PIMAGE_FILE_HEADER			FileHeader;
-	LPSTR						ImportedLibrary;
-	PLOADED_IMAGE				LoadedLibrary;
-	PBOUND_IMPORT_DESCRIPTOR	BoundImportDescriptor = NULL;
-	PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportTable;
-	PIMAGE_THUNK_DATA			Thunks, TempThunk;
-    PIMAGE_THUNK_DATA			BoundThunks, TempBoundThunk;
-    ULONG						ThunkCount = 0;
-	ULONG						Thunk;
-	ULONG						BoundImportTableSize;
-	ULONG						VirtBytesFree, HeaderBytesFree, FirstFreeByte, PhysBytesFree;
-	
-	//FIXME("BindpWalkAndBindImports Called\n");
-
-	/* Load the Import Descriptor */
-	Imports = ImageDirectoryEntryToData (File->MappedAddress,
-											FALSE, 
-											IMAGE_DIRECTORY_ENTRY_IMPORT, 
-											&SizeOfImports);
-
-	/* Read the File Header */
-	FileHeader = &File->FileHeader->FileHeader;
-	OptionalHeader32 = &File->FileHeader->OptionalHeader;
-
-	/* Support for up to 32 imported DLLs */
-	BoundImportDescriptors = GlobalAlloc(GMEM_ZEROINIT, 32* sizeof(*BoundImportDescriptor));
-
-	//FIXME("BoundImportDescriptors Allocated\n");
-
-	/* For each Import */
-	for(; Imports->Name ; Imports++) {
-		
-		/* Which DLL is being Imported */
-		ImportedLibrary = ImageRvaToVa (File->FileHeader, 
-										File->MappedAddress, 
-										Imports->Name, 
-										&File->LastRvaSection);
-
-		FIXME("Loading Imported DLL: %s \n", ImportedLibrary);
-
-		/* Load the DLL */
-		LoadedLibrary = ImageLoad(ImportedLibrary, DllPath);
-
-		FIXME("DLL Loaded at: %p \n", LoadedLibrary->MappedAddress);
-
-		/* Now load the Exports */
-		Exports = ImageDirectoryEntryToData (LoadedLibrary->MappedAddress, 
-											FALSE, 
-											IMAGE_DIRECTORY_ENTRY_EXPORT, 
-											&SizeOfExports);
-
-		/* And load the Thunks */
-		Thunks = ImageRvaToVa (File->FileHeader, 
-								File->MappedAddress, 
-								(ULONG)Imports->OriginalFirstThunk, 
-								&File->LastRvaSection);
-
-		/* No actual Exports (UPX Packer can do this */
-		if (!Thunks) continue;
-
-		//FIXME("Creating Bound Descriptor for this DLL\n");
-		
-		/* Create Bound Import Descriptor */
-		BoundImportDescriptor = BindpCreateBoundImportDescriptor (ImportedLibrary, 
-															LoadedLibrary, 
-															BoundImportDescriptors);
-
-		/* Count how many Thunks we have */
-		ThunkCount = 0;
-		TempThunk = Thunks;
-		while (TempThunk->u1.AddressOfData) {
-			ThunkCount++;
-			TempThunk++;
-		}
-
-		/* Allocate Memory for the Thunks we will Bind */
-		SizeOfThunks = ThunkCount * sizeof(*TempBoundThunk);
-		BoundThunks = GlobalAlloc(GMEM_ZEROINIT, SizeOfThunks);
-
-		//FIXME("Binding Thunks\n");
-
-		/* Bind the Thunks */
-		TempThunk = Thunks;
-		TempBoundThunk = BoundThunks;
-		for (Thunk=0; Thunk < ThunkCount; Thunk++) {
-			BindpBindThunk (TempThunk, 
-						File, 
-						TempBoundThunk, 
-						LoadedLibrary, 
-						Exports, 
-						BoundImportDescriptor, 
-						DllPath);
-			TempThunk++;
-			TempBoundThunk++;
-		}
-
-		/* Load the Second Thunk Array */
-		TempThunk = ImageRvaToVa (File->FileHeader, 
-									File->MappedAddress, 
-									(ULONG)Imports->FirstThunk, 
-									&File->LastRvaSection);
-
-		//FIXME("Copying Bound Thunks\n");
-
-		/* Copy the Pointers */
-		if (memcmp(TempThunk, BoundThunks, SizeOfThunks)) {
-			RtlCopyMemory(TempThunk, BoundThunks, SizeOfThunks);
-		}
-		
-		/* Set the TimeStamp */
-		if (Imports->TimeDateStamp != 0xFFFFFFFF) {
-            Imports->TimeDateStamp = 0xFFFFFFFF;
-        }
-
-		/* Free the Allocated Memory */
-		GlobalFree(BoundThunks);
-
-		//FIXME("Moving to next File\n");
-	}
-
-	//FIXME("Creating Bound Import Section\n");
-
-	/* Create the Bound Import Table */
-	BoundImportTable = BindpCreateBoundImportSection(BoundImportDescriptors, &BoundImportTableSize);
-
-	/* Zero out the Bound Import Table */
-	File->FileHeader->OptionalHeader.DataDirectory
-		[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].VirtualAddress = 0;
-	File->FileHeader->OptionalHeader.DataDirectory
-		[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].Size = 0;
-
-	/* Check if we have enough space */
-    FirstFreeByte = GetImageUnusedHeaderBytes(File, &VirtBytesFree);
-    HeaderBytesFree = File->Sections->VirtualAddress - 
-						File->FileHeader->OptionalHeader.SizeOfHeaders + VirtBytesFree;
-    PhysBytesFree = File->Sections->PointerToRawData -
-						File->FileHeader->OptionalHeader.SizeOfHeaders + VirtBytesFree;
-
-	//FIXME("Calculating Space\n");
-
-    if (BoundImportTableSize > VirtBytesFree) {
-        if (BoundImportTableSize > HeaderBytesFree) {
-			FIXME("Not enough Space\n");
-			return; /* Fail...not enough space */
-        }
-        if (BoundImportTableSize <= PhysBytesFree) {
-            
-			FIXME("Header Recalculation\n");
-			/* We have enough NULLs to add it, simply enlarge header data */
-            File->FileHeader->OptionalHeader.SizeOfHeaders = File->FileHeader->OptionalHeader.SizeOfHeaders - 
-															VirtBytesFree +
-															BoundImportTableSize +
-															((File->FileHeader->OptionalHeader.FileAlignment - 1)
-															& ~(File->FileHeader->OptionalHeader.FileAlignment - 1));
-
-        } else  {
-
-			FIXME("Header Resizing\n");
-
-			/* Resize the Headers */
-			//UNIMPLEMENTED
-
-            /* Recalculate Headers */
-			FileHeader = &File->FileHeader->FileHeader;
-			OptionalHeader32 = &File->FileHeader->OptionalHeader;
-		}
-	}
-	
-	/* Set Bound Import Table Data */
-	File->FileHeader->OptionalHeader.DataDirectory
-		[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].VirtualAddress = FirstFreeByte;
-	File->FileHeader->OptionalHeader.DataDirectory
-		[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].Size = BoundImportTableSize;
-
-	//FIXME("Copying Bound Import Table\n");
-	
-	/* Copy the Bound Import Table */
-	RtlCopyMemory(File->MappedAddress + FirstFreeByte, BoundImportTable, BoundImportTableSize);
-
-	/* Free out local copy */
-	GlobalFree(BoundImportTable);
-}
-
-
-/*
- * BindpCreateBoundImportSection
- *
- * FUNCTION:
- *      Creates a 32-bit PE Bound Import Table
- *
- * ARGUMENTS:
- *      BoundImportDescriptor		- Pointer to the Bound Import Table
- *      BoundImportsSize			- Size of the Bound Import Table
- *
- * RETURNS:
- *      PIMAGE_BOUND_IMPORT_DESCRIPTOR	- The Bound Import Table
- */
 PIMAGE_BOUND_IMPORT_DESCRIPTOR
-STDCALL
-BindpCreateBoundImportSection(
-    PULONG BoundImportDescriptor,
-    PULONG BoundImportsSize
-    )
+IMAGEAPI
+BindpCreateNewImportSection(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
+                            PULONG BoundImportsSize)
 {
-    ULONG BoundLibraryNamesSize, BoundImportTableSize;
-    PBOUND_FORWARDER_REFS BoundForwarder;
-	PBOUND_IMPORT_DESCRIPTOR CurrentBoundImportDescriptor;
-    PVOID BoundLibraryNames;
-    PIMAGE_BOUND_IMPORT_DESCRIPTOR CurrentBoundImportTableEntry, BoundImportTable;
-    PIMAGE_BOUND_FORWARDER_REF NewForwarder;
+    ULONG BoundLibraryNamesSize = 0, BoundImportTableSize = 0;
+    PBOUND_FORWARDER_REFS Forwarder, *NextForwarder;
+    PIMPORT_DESCRIPTOR Descriptor, *NextDescriptor;
+    LPSTR BoundLibraryNames;
+    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundTableEntry, BoundTable;
+    PIMAGE_BOUND_FORWARDER_REF BoundForwarder;
 
-	/* Zero the Sizes */
+    /* Zero the outoging size */
     *BoundImportsSize = 0;
-    BoundLibraryNamesSize = 0;
-    BoundImportTableSize = 0;
 
-	/* Start with the first Internal Descriptor */
-    CurrentBoundImportDescriptor = (PBOUND_IMPORT_DESCRIPTOR)BoundImportDescriptor;
-
-	/* Loop through every Descriptor we loaded */
-    while (CurrentBoundImportDescriptor->ModuleName) {
-
-		/* Add to the size of the Bound Import Table */
+    /* Loop the descriptors and forwarders to get the size */
+    NextDescriptor = BoundImportDescriptor;
+    while ((Descriptor = *NextDescriptor))
+    {
+        /* Add to the size of the Bound Import Table */
         BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
 
-		/* Check Forwarders */
-        BoundForwarder = CurrentBoundImportDescriptor->Forwarders;
-		while (BoundForwarder->ModuleName) {
-
-			/* Add to size of Bound Import Table */
+        /* Check Forwarders */
+        NextForwarder = &Descriptor->Forwarders;
+        while ((Forwarder = *NextForwarder))
+        {
+            /* Add to size of Bound Import Table */
             BoundImportTableSize += sizeof(IMAGE_BOUND_FORWARDER_REF);
 
-			/* Next Forwarder */
-            BoundForwarder++;
-            }
-
-		/* Read Next Internal Descriptor */
-        CurrentBoundImportDescriptor++;
+            /* Next Forwarder */
+            NextForwarder = &Forwarder->Next;
         }
 
-	/* Add Terminator for PE Loader*/
+        /* Read Next Internal Descriptor */
+        NextDescriptor = &Descriptor->Next;
+    }
+
+    /* Add Terminator for PE Loader*/
     BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
+    DPRINT("Table size: %lx\n", BoundImportTableSize);
 
-	/* Name of Libraries Bound in Bound Import Table */
-    BoundLibraryNamesSize = ((ULONG)BoundLibrariesPointer - (ULONG)(&BoundLibraries));
+    /* Name of Libraries Bound in Bound Import Table */
+    BoundLibraryNamesSize = (ULONG)((ULONG_PTR)BoundLibrariesPointer -
+                                    (ULONG_PTR)BoundLibraries);
+    BoundLibrariesPointer = NULL;
 
-	/* Size of the whole table, dword aligned */
+    /* Size of the whole table, dword aligned */
     *BoundImportsSize = BoundImportTableSize + 
-						((BoundLibraryNamesSize + sizeof(ULONG) - 1) & ~(sizeof(ULONG)-1));
+                        ((BoundLibraryNamesSize + sizeof(ULONG) - 1) &
+                        ~(sizeof(ULONG) - 1));
 
-	/* Allocate it */
-    BoundImportTable = GlobalAlloc(GMEM_ZEROINIT, *BoundImportsSize);
+    /* Allocate it */
+    BoundTable = HeapAlloc(IMAGEHLP_hHeap, HEAP_ZERO_MEMORY, *BoundImportsSize);
     
-	/* Pointer Library Names inside the Bound Import Table */
-    BoundLibraryNames = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)((ULONG_PTR)BoundImportTable + 
-																	BoundImportTableSize);
+    /* Pointer Library Names inside the Bound Import Table */
+    BoundLibraryNames = (LPSTR)BoundTable + BoundImportTableSize;
 
-	/* Copy the Library Names */
+    /* Copy the Library Names */
     RtlCopyMemory(BoundLibraryNames, BoundLibraries, BoundLibraryNamesSize);
 
-	/* Go back to first Internal Descriptor and load first entry in the Bound Import Table */
-    CurrentBoundImportTableEntry = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)BoundImportTable;
-    CurrentBoundImportDescriptor = (PBOUND_IMPORT_DESCRIPTOR)BoundImportDescriptor;
+    /* Now loop both tables */
+    BoundTableEntry = BoundTable;
+    NextDescriptor = BoundImportDescriptor;
+    while ((Descriptor = *NextDescriptor))
+    {
+        /* Copy the data */
+        BoundTableEntry->TimeDateStamp = Descriptor->TimeDateStamp;
+        BoundTableEntry->OffsetModuleName = (USHORT)(BoundImportTableSize +
+                                                     (Descriptor->ModuleName -
+                                                      (ULONG_PTR)BoundLibraries));
+        BoundTableEntry->NumberOfModuleForwarderRefs = Descriptor->ForwaderReferences;
 
-	/* Copy the data from our Internal Structure to the Bound Import Table */
-    while (CurrentBoundImportDescriptor->ModuleName) {
-        CurrentBoundImportTableEntry->TimeDateStamp = CurrentBoundImportDescriptor->TimeDateStamp;
-        CurrentBoundImportTableEntry->OffsetModuleName = (USHORT)(BoundImportTableSize + 
-																(CurrentBoundImportDescriptor->ModuleName - 
-																(LPSTR) BoundLibraries));
-		CurrentBoundImportTableEntry->NumberOfModuleForwarderRefs = CurrentBoundImportDescriptor->ForwaderReferences;
+        /* Now loop the forwarders */
+        BoundForwarder = (PIMAGE_BOUND_FORWARDER_REF)BoundTableEntry + 1;
+        NextForwarder = &Descriptor->Forwarders;
+        while ((Forwarder = *NextForwarder))
+        {
+            /* Copy the data */
+            BoundForwarder->TimeDateStamp = Forwarder->TimeDateStamp;
+            BoundForwarder->OffsetModuleName = (USHORT)(BoundImportTableSize +
+                                                       (Forwarder->ModuleName -
+                                                       (ULONG_PTR)BoundLibraries));
 
-		/* Copy the data from our Forwader Entries to the Bound Import Table */
-        NewForwarder = (PIMAGE_BOUND_FORWARDER_REF)(CurrentBoundImportTableEntry+1);
-        BoundForwarder = CurrentBoundImportDescriptor->Forwarders;
-		while (BoundForwarder->ModuleName) {
-            NewForwarder->TimeDateStamp =BoundForwarder->TimeDateStamp;
-            NewForwarder->OffsetModuleName = (USHORT)(BoundImportTableSize + 
-													(BoundForwarder->ModuleName - 
-													(LPSTR) BoundLibraries));
-            NewForwarder++;
+            /* Move to the next new forwarder, and move to the next entry */
             BoundForwarder++;
-		}
+            NextForwarder = &Forwarder->Next;
+        }
 
-		/* Move to next Bound Import Table Entry */
-        CurrentBoundImportTableEntry = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)NewForwarder;
+        /* Move to next Bound Import Table Entry */
+        BoundTableEntry = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)BoundForwarder;
 
-		/* move to next Internal Descriptor */
-        CurrentBoundImportDescriptor++;
-	}
+        /* Move to the next descriptor */
+        NextDescriptor = &Descriptor->Next;
+    }
 
-	/* Now put the pointer back at the beginning and clear the buffer */
-	RtlZeroMemory(BoundLibraries, 4096);
-	BoundLibrariesPointer = BoundLibraries;
+    /* Loop the descriptors and forwarders to free them */
+    NextDescriptor = BoundImportDescriptor;
+    while ((Descriptor = *NextDescriptor))
+    {
+        /* Read next internal descriptor */
+        *NextDescriptor = Descriptor->Next;
 
-    return BoundImportTable;
+        /* Loop its forwarders */
+        NextForwarder = &Descriptor->Forwarders;
+        while ((Forwarder = *NextForwarder))
+        {
+            /* Next Forwarder */
+            *NextForwarder = Forwarder->Next;
+
+            /* Free it */
+            HeapFree(IMAGEHLP_hHeap, 0, Forwarder);
+        }
+
+        /* Free it */
+        HeapFree(IMAGEHLP_hHeap, 0, Descriptor);
+    }
+
+    /* Return the Bound Import Table */
+    return BoundTable;
+}
+
+PCHAR
+IMAGEAPI
+BindpAddForwarderReference(LPSTR ModuleName,
+                           LPSTR ImportName,
+                           PIMPORT_DESCRIPTOR BoundImportDescriptor,
+                           LPSTR DllPath,
+                           PCHAR ForwarderString,
+                           PBOOL ForwarderBound)
+{
+    CHAR DllName[256];
+    PCHAR TempDllName, FunctionName;
+    PLOADED_IMAGE Library;
+    SIZE_T DllNameSize;
+    USHORT OrdinalNumber;
+    USHORT HintIndex;
+    ULONG ExportSize;
+    PIMAGE_EXPORT_DIRECTORY Exports;
+    ULONG_PTR ExportsBase;
+    PULONG AddressOfNames;
+    PUSHORT AddressOfOrdinals;
+    PULONG AddressOfPointers;
+    LPSTR ExportName;
+    ULONG_PTR ForwardedAddress;
+    PBOUND_FORWARDER_REFS Forwarder, *NextForwarder;
+    PIMAGE_OPTIONAL_HEADER OptionalHeader = NULL;
+
+NextForwarder:
+
+    /* Get the DLL Name */
+    TempDllName = ForwarderString;
+    while (*TempDllName && *TempDllName != '.') TempDllName++;
+    if (*TempDllName != '.') return ForwarderString;
+
+    /* Get the size */
+    DllNameSize = (SIZE_T)(TempDllName - ForwarderString);
+    if (DllNameSize >= MAX_PATH) return ForwarderString;
+
+    /* Now copy the name and append the extension */
+    strncpy(DllName, ForwarderString, DllNameSize);
+    DllName[DllNameSize] = ANSI_NULL;
+    strcat(DllName, ".DLL");
+
+    /* Load it */
+    DPRINT("Loading the Thunk Library: %s \n", DllName);
+    Library = ImageLoad(DllName, DllPath);
+    if (!Library) return ForwarderString;
+
+    /* Move past the name */
+    DPRINT("It Loaded at: %p \n", Library->MappedAddress);
+    FunctionName = TempDllName += 1;
+
+    /* Load Exports */
+    Exports = ImageDirectoryEntryToData(Library->MappedAddress,
+                                        FALSE,
+                                        IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                        &ExportSize);
+    if (!Exports) return ForwarderString;
+
+    /* Get the Optional Header */
+    OptionalHeader = &Library->FileHeader->OptionalHeader;
+
+    /* Check if we're binding by ordinal */
+    if (*FunctionName == '#')
+    {
+        /* We are, get the number and validate it */
+        OrdinalNumber = atoi(FunctionName + 1) - (USHORT)Exports->Base;
+        if (OrdinalNumber >= Exports->NumberOfFunctions) return ForwarderString;
+    }
+    else
+    {
+        /* Binding by name... */
+        OrdinalNumber = -1;
+    }
+
+    /* Get the Pointers to the Tables */
+    AddressOfNames = ImageRvaToVa(Library->FileHeader,
+                                  Library->MappedAddress,
+                                  Exports->AddressOfNames,
+                                  &Library->LastRvaSection);
+    AddressOfOrdinals = ImageRvaToVa(Library->FileHeader,
+                                     Library->MappedAddress, 
+                                     Exports->AddressOfNameOrdinals, 
+                                     &Library->LastRvaSection);
+    AddressOfPointers = ImageRvaToVa(Library->FileHeader, 
+                                     Library->MappedAddress, 
+                                     Exports->AddressOfFunctions, 
+                                     &Library->LastRvaSection);
+
+    /* Check if we're binding by name... */
+    if (OrdinalNumber == 0xffff)
+    {
+        /* Do a full search for the ordinal */
+        for (HintIndex = 0; HintIndex < Exports->NumberOfNames; HintIndex++)
+        {
+            /* Get the Export Name */
+            ExportName = ImageRvaToVa(Library->FileHeader,
+                                      Library->MappedAddress, 
+                                      (ULONG)AddressOfNames[HintIndex], 
+                                      &Library->LastRvaSection);
+            
+            /* Check if it's the one we want */
+            if (!strcmp(FunctionName, ExportName))
+            {
+                OrdinalNumber = AddressOfOrdinals[HintIndex];
+                break;
+            }
+        }
+
+        /* Make sure it's valid */
+        if (HintIndex >= Exports->NumberOfNames) return ForwarderString;
+    }
+
+    /* Get the Forwarded Address */
+    ForwardedAddress = AddressOfPointers[OrdinalNumber] +
+                       OptionalHeader->ImageBase;
+
+    /* Loop the forwarders to see if this DLL was already processed */
+    NextForwarder = &BoundImportDescriptor->Forwarders;
+    while ((Forwarder = *NextForwarder))
+    {
+        /* Check for a name match */
+        if (!_stricmp(DllName, Forwarder->ModuleName)) break;
+
+        /* Move to the next one */
+        NextForwarder = &Forwarder->Next;
+    }
+
+    /* Check if we've went through them all without luck */
+    if (!Forwarder)
+    {
+        /* Allocate a forwarder structure */
+        Forwarder = HeapAlloc(IMAGEHLP_hHeap,
+                              HEAP_ZERO_MEMORY,
+                              sizeof(BOUND_FORWARDER_REFS));
+
+        /* Set the name */
+        Forwarder->ModuleName = BindpCaptureImportModuleName(DllName);        
+
+        /* Increase the number of forwarders */
+        BoundImportDescriptor->ForwaderReferences++;
+
+        /* Link it */
+        *NextForwarder = Forwarder;
+    }
+
+    /* Set the timestamp */
+    Forwarder->TimeDateStamp = Library->FileHeader->FileHeader.TimeDateStamp;
+
+    /* Load DLL's Exports */
+    ExportsBase = (ULONG_PTR)ImageDirectoryEntryToData(Library->MappedAddress,
+                                                       TRUE,
+                                                       IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                       &ExportSize) -
+                  (ULONG_PTR)Library->MappedAddress;
+    
+    /* Convert to VA */
+    ExportsBase += OptionalHeader->ImageBase;
+
+    /* Is this yet another Forward? */
+    DPRINT("I've thunked it\n");
+    if ((ForwardedAddress > ExportsBase) &&
+        (ForwardedAddress < (ExportsBase + ExportSize)))
+    {
+        /* Update the string pointer */
+        ForwarderString = ImageRvaToVa(Library->FileHeader, 
+                                       Library->MappedAddress, 
+                                       AddressOfPointers[OrdinalNumber], 
+                                       &Library->LastRvaSection); 
+        goto NextForwarder;
+    }
+    else
+    {
+        /* Update the pointer and return success */
+        ForwarderString = (PUCHAR)ForwardedAddress;
+        *ForwarderBound = TRUE;
+    }
+
+    /* Return the pointer */
+    return ForwarderString;
+}
+
+BOOL
+IMAGEAPI
+BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
+                 PLOADED_IMAGE Image,
+                 PIMAGE_THUNK_DATA BoundThunk,
+                 PIMAGE_THUNK_DATA ThunkFunction,
+                 PLOADED_IMAGE Library,
+                 PIMAGE_EXPORT_DIRECTORY Exports,
+                 PIMPORT_DESCRIPTOR BoundImportDescriptor,
+                 LPSTR DllPath,
+                 PULONG *Forwarders)
+{
+    PULONG AddressOfNames;
+    PUSHORT AddressOfOrdinals;
+    PULONG AddressOfPointers;
+    PIMAGE_IMPORT_BY_NAME ImportName;
+    ULONG OrdinalNumber = 0;
+    USHORT HintIndex;
+    LPSTR ExportName;
+    ULONG_PTR ExportsBase;
+    ULONG ExportSize;
+    UCHAR NameBuffer[32];
+    PIMAGE_OPTIONAL_HEADER OptionalHeader = NULL;
+    PIMAGE_OPTIONAL_HEADER LibraryOptionalHeader = NULL;
+    BOOL ForwarderBound = FALSE;
+    PUCHAR ForwarderName;
+    DPRINT("Binding a Thunk\n");
+
+    /* Get the Pointers to the Tables */
+    AddressOfNames = ImageRvaToVa(Library->FileHeader,
+                                  Library->MappedAddress,
+                                  Exports->AddressOfNames,
+                                  &Library->LastRvaSection);
+    AddressOfOrdinals = ImageRvaToVa(Library->FileHeader,
+                                     Library->MappedAddress, 
+                                     Exports->AddressOfNameOrdinals, 
+                                     &Library->LastRvaSection);
+    AddressOfPointers = ImageRvaToVa(Library->FileHeader, 
+                                     Library->MappedAddress, 
+                                     Exports->AddressOfFunctions, 
+                                     &Library->LastRvaSection);
+
+    /* Get the Optional Headers */
+    OptionalHeader = &Image->FileHeader->OptionalHeader;
+    LibraryOptionalHeader = &Library->FileHeader->OptionalHeader;
+    
+    /* Import by Ordinal */
+    if (IMAGE_SNAP_BY_ORDINAL(Thunk->u1.Ordinal) == TRUE)
+    {
+        /* Get the ordinal number and pointer to the name */
+        OrdinalNumber = (IMAGE_ORDINAL(Thunk->u1.Ordinal) - Exports->Base);
+        ImportName = (PIMAGE_IMPORT_BY_NAME)NameBuffer;
+
+        /* Setup the name for this ordinal */
+        sprintf(ImportName->Name, "Ordinal%lx\n", OrdinalNumber);
+    }
+    else
+    {    
+        /* Import by Name, get the data */
+        ImportName = ImageRvaToVa(Image->FileHeader,
+                                  Image->MappedAddress, 
+                                  (ULONG)Thunk->u1.AddressOfData, 
+                                  &Image->LastRvaSection);
+
+        /* Get the hint and see if we can use it */
+        OrdinalNumber = (USHORT)(Exports->NumberOfFunctions + 1);
+        HintIndex = ImportName->Hint;
+        if (HintIndex < Exports->NumberOfNames)
+        {
+            /* Hint seems valid, get the export name */
+            ExportName = ImageRvaToVa(Library->FileHeader,
+                                      Library->MappedAddress, 
+                                      (ULONG)AddressOfNames[HintIndex], 
+                                      &Library->LastRvaSection);
+            /* Check if it's the one we want */
+            if (!strcmp(ImportName->Name, ExportName))
+            {
+                OrdinalNumber = AddressOfOrdinals[HintIndex];
+            }
+        }
+
+        /* If the ordinal isn't valid, we'll have to do a long loop */
+        if (OrdinalNumber >= Exports->NumberOfFunctions)
+        {
+            for (HintIndex = 0; HintIndex < Exports->NumberOfNames; HintIndex++)
+            {
+                /* Get the Export Name */
+                ExportName = ImageRvaToVa(Library->FileHeader,
+                                          Library->MappedAddress, 
+                                          (ULONG)AddressOfNames[HintIndex], 
+                                          &Library->LastRvaSection);
+            
+                /* Check if it's the one we want */
+                if (!strcmp(ImportName->Name, ExportName))
+                {
+                    OrdinalNumber = AddressOfOrdinals[HintIndex];
+                    break;
+                }
+            }
+
+            /* Make sure it's valid now */
+            if (OrdinalNumber >= Exports->NumberOfFunctions) return FALSE;
+        }
+    }
+
+    /* Write the Pointer */
+    ThunkFunction->u1.Function = AddressOfPointers[OrdinalNumber] +
+                                 LibraryOptionalHeader->ImageBase;
+
+    /* Load DLL's Exports */
+    ExportsBase = (ULONG_PTR)ImageDirectoryEntryToData(Library->MappedAddress,
+                                                       TRUE, 
+                                                       IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                       &ExportSize) -
+                  (ULONG_PTR)Library->MappedAddress;
+    
+    /* RVA to VA */
+    ExportsBase += LibraryOptionalHeader->ImageBase;
+
+    /* Check if the Export is forwarded (meaning that it's pointer is inside the Export Table) */
+    if ((ThunkFunction->u1.Function > ExportsBase) &&
+        (ThunkFunction->u1.Function < ExportsBase + ExportSize))
+    {
+        /* Make sure we have a descriptor */
+        if (BoundImportDescriptor)
+        {
+            DPRINT("This Thunk is a forward...calling forward thunk bounder\n");
+
+            /* Get the VA of the pointer containg the name */
+            ForwarderName = ImageRvaToVa(Library->FileHeader,
+                                         Library->MappedAddress,
+                                         AddressOfPointers[OrdinalNumber],
+                                         &Library->LastRvaSection);
+
+            /* Replace the Forwarder String by the actual name */
+            ThunkFunction->u1.ForwarderString =
+                PtrToUlong(BindpAddForwarderReference(Image->ModuleName,
+                                                      ImportName->Name,
+                                                      BoundImportDescriptor,
+                                                      DllPath,
+                                                      ForwarderName,
+                                                      &ForwarderBound));
+        }
+
+        /* Check if it wasn't bound */
+        if (!ForwarderBound)
+        {
+            /* Set the chain to the ordinal to reflect this */
+            **Forwarders = (ULONG)(ThunkFunction - BoundThunk);
+            *Forwarders = (PULONG)&ThunkFunction->u1.Ordinal;
+        }
+    }
+
+    /* Return Success */
+    return TRUE;
+}
+
+PIMPORT_DESCRIPTOR
+IMAGEAPI
+BindpAddImportDescriptor(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
+                         PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor,
+                         LPSTR DllName,
+                         PLOADED_IMAGE Image)
+{
+    PIMPORT_DESCRIPTOR Descriptor, *NextDescriptor;
+
+    /* Loop descriptors and check if this library has already been bound */
+    NextDescriptor = BoundImportDescriptor;
+    while ((Descriptor = *NextDescriptor))
+    {
+        /* Compare the names and return the descriptor if found */
+        if (!_stricmp(Descriptor->ModuleName, DllName)) return Descriptor;
+        
+        /* Move to the next one */
+        NextDescriptor = &Descriptor->Next;
+    }
+
+    /* Allocate a new descriptor */
+    Descriptor = HeapAlloc(IMAGEHLP_hHeap,
+                           HEAP_ZERO_MEMORY,
+                           sizeof(IMPORT_DESCRIPTOR));
+
+    /* Set its Data and check if we have a valid loaded image */
+    Descriptor->ModuleName = BindpCaptureImportModuleName(DllName);
+    *NextDescriptor = Descriptor;
+    if (Image)
+    {
+        /* Save the time stamp */
+        Descriptor->TimeDateStamp = Image->FileHeader->FileHeader.TimeDateStamp;
+    }
+    
+    /* Return the descriptor */
+    return Descriptor;
+}
+
+VOID
+IMAGEAPI
+BindpWalkAndProcessImports(PLOADED_IMAGE File,
+                           LPSTR DllPath,
+                           PBOOLEAN UpdateImage)
+{
+    PIMAGE_IMPORT_DESCRIPTOR Imports;
+    PIMAGE_EXPORT_DIRECTORY Exports;
+    ULONG SizeOfImports;
+    ULONG SizeOfExports;
+    ULONG SizeOfThunks;
+    PIMAGE_OPTIONAL_HEADER OptionalHeader;
+    PIMAGE_FILE_HEADER FileHeader;
+    LPSTR ImportedLibrary;
+    PLOADED_IMAGE LoadedLibrary;
+    ULONG TopForwarderChain;
+    PULONG ForwarderChain;
+    PIMPORT_DESCRIPTOR TopBoundDescriptor = NULL, BoundImportDescriptor;
+    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportTable, OldBoundImportTable;
+    PIMAGE_THUNK_DATA Thunks, TempThunk;
+    PIMAGE_THUNK_DATA BoundThunks, TempBoundThunk;
+    ULONG ThunkCount = 0;
+    ULONG Thunk;
+    ULONG BoundImportTableSize, OldBoundImportTableSize;
+    ULONG VirtBytesFree, HeaderBytesFree, FirstFreeByte, PhysBytesFree;
+    BOOL ThunkStatus;
+    DPRINT("BindpWalkAndBindImports Called\n");
+
+    /* Assume untouched image */
+    *UpdateImage = FALSE;
+
+    /* Load the Import Descriptor */
+    Imports = ImageDirectoryEntryToData(File->MappedAddress,
+                                        FALSE, 
+                                        IMAGE_DIRECTORY_ENTRY_IMPORT, 
+                                        &SizeOfImports);
+    if (!Imports) return;
+
+    /* Read the File Header */
+    FileHeader = &File->FileHeader->FileHeader;
+    OptionalHeader = &File->FileHeader->OptionalHeader;
+
+    /* Get the old Bound Import Table, if any */
+    OldBoundImportTable = ImageDirectoryEntryToData(File->MappedAddress,
+                                                    FALSE,
+                                                    IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT,
+                                                    &OldBoundImportTableSize);
+
+    /* For each Import */
+    while(Imports)
+    {
+        /* Make sure we have a name */
+        if (!Imports->Name) break;
+
+        /* Which DLL is being Imported */
+        ImportedLibrary = ImageRvaToVa(File->FileHeader, 
+                                       File->MappedAddress, 
+                                       Imports->Name, 
+                                       &File->LastRvaSection);
+        if (ImportedLibrary)
+        {
+            DPRINT("Loading Imported DLL: %s \n", ImportedLibrary);
+            
+            /* Load the DLL */
+            LoadedLibrary = ImageLoad(ImportedLibrary, DllPath);
+            if (!LoadedLibrary)
+            {
+                /* Create the descriptor, even if we failed */
+                BindpAddImportDescriptor(&TopBoundDescriptor,
+                                         Imports,
+                                         ImportedLibrary,
+                                         LoadedLibrary);
+
+                /* Move on the next file */
+                Imports++;
+                continue;
+            }
+
+            /* Now load the Exports */
+            DPRINT("DLL Loaded at: %p \n", LoadedLibrary->MappedAddress);
+            Exports = ImageDirectoryEntryToData(LoadedLibrary->MappedAddress, 
+                                                FALSE, 
+                                                IMAGE_DIRECTORY_ENTRY_EXPORT, 
+                                                &SizeOfExports);
+
+            /* Move on, if we don't have exports */
+            if (!Exports) continue;
+
+            /* And load the Thunks */
+            Thunks = ImageRvaToVa(File->FileHeader, 
+                                  File->MappedAddress, 
+                                  (ULONG)Imports->OriginalFirstThunk, 
+                                  &File->LastRvaSection);
+
+            /* No actual Exports (UPX Packer can do this */
+            if (!(Thunks) || !(Thunks->u1.Function)) continue;
+        
+            /* Create Bound Import Descriptor */
+            DPRINT("Creating Bound Descriptor for this DLL\n");
+            BoundImportDescriptor = BindpAddImportDescriptor(&TopBoundDescriptor,
+                                                             Imports,
+                                                             ImportedLibrary,
+                                                             LoadedLibrary);
+
+            /* Count how many Thunks we have */
+            ThunkCount = 0;
+            TempThunk = Thunks;
+            while (TempThunk->u1.AddressOfData)
+            {
+                ThunkCount++;
+                TempThunk++;
+            }
+
+            /* Allocate Memory for the Thunks we will Bind */
+            SizeOfThunks = ThunkCount * sizeof(*TempBoundThunk);
+            BoundThunks = HeapAlloc(IMAGEHLP_hHeap,
+                                    HEAP_ZERO_MEMORY,
+                                    SizeOfThunks);
+
+            /* Setup the initial data pointers */
+            DPRINT("Binding Thunks\n");
+            TempThunk = Thunks;
+            TempBoundThunk = BoundThunks;
+            TopForwarderChain = -1;
+            ForwarderChain = &TopForwarderChain;
+
+            /* Loop for every thunk */
+            for (Thunk = 0; Thunk < ThunkCount; Thunk++)
+            {
+                /* Bind it */
+                ThunkStatus = BindpLookupThunk(TempThunk,
+                                               File,
+                                               BoundThunks,
+                                               TempBoundThunk,
+                                               LoadedLibrary,
+                                               Exports,
+                                               BoundImportDescriptor,
+                                               DllPath,
+                                               &ForwarderChain);
+                /* Check if binding failed */
+                if (!ThunkStatus)
+                {
+                    /* If we have a descriptor */
+                    if (BoundImportDescriptor)
+                    {
+                        /* Zero the timestamp */
+                        BoundImportDescriptor->TimeDateStamp = 0;
+                    }
+
+                    /* Quit the loop */
+                    break;
+                }
+
+                /* Move on */
+                TempThunk++;
+                TempBoundThunk++;
+            }
+
+            /* Load the Second Thunk Array */
+            TempThunk = ImageRvaToVa(File->FileHeader, 
+                                     File->MappedAddress, 
+                                     (ULONG)Imports->FirstThunk, 
+                                     &File->LastRvaSection);
+            if (TempThunk)
+            {
+                /* Check if the forwarder chain changed */
+                if (TopForwarderChain != -1)
+                {
+                    /* It did. Update the chain and let caller know */
+                    *ForwarderChain = -1;
+                    *UpdateImage = TRUE;
+                }
+
+                /* Check if we're not pointing at the new top chain */
+                if (Imports->ForwarderChain != TopForwarderChain)
+                {
+                    /* Update it, and let the caller know */
+                    Imports->ForwarderChain = TopForwarderChain;
+                    *UpdateImage = TRUE;
+                }
+
+                /* Check if thunks have changed */
+                if (memcmp(TempThunk, BoundThunks, SizeOfThunks))
+                {
+                    /* Copy the Pointers and let caller know */
+                    DPRINT("Copying Bound Thunks\n");
+                    RtlCopyMemory(TempThunk, BoundThunks, SizeOfThunks);
+                    *UpdateImage = TRUE;
+                }
+
+                /* Check if we have no bound entries */
+                if (!TopBoundDescriptor)
+                {
+                    /* Check if the timestamp is different */
+                    if (Imports->TimeDateStamp != FileHeader->TimeDateStamp)
+                    {
+                        /* Update it, and let the caller knmow */
+                        Imports->TimeDateStamp = FileHeader->TimeDateStamp;
+                        *UpdateImage = TRUE;
+                    }
+                }
+                else if ((Imports->TimeDateStamp != 0xFFFFFFFF))
+                {
+                    /* Invalidate the timedate stamp */
+                    Imports->TimeDateStamp = 0xFFFFFFFF;
+                }
+            }
+
+            /* Free the Allocated Memory */
+            HeapFree(IMAGEHLP_hHeap, 0, BoundThunks);
+
+            DPRINT("Moving to next File\n");
+            Imports++;
+        }
+    }
+
+    /* Create the Bound Import Table */
+    DPRINT("Creating Bound Import Section\n");
+    BoundImportTable = BindpCreateNewImportSection(&TopBoundDescriptor,
+                                                   &BoundImportTableSize);
+
+    /* Check if the import table changed */
+    if (OldBoundImportTableSize != BoundImportTableSize)
+    {
+        /* Let the caller know */
+        *UpdateImage = TRUE;
+    }
+
+    /* 
+     * At this point, check if anything that we've done until now has resulted
+     * in the image being touched. If not, then we'll simply return to caller.
+     */
+    if (!(*UpdateImage)) return;
+
+    /* Check if we have a new table */
+    if (BoundImportTable)
+    {
+        /* Zero it out */
+        OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].VirtualAddress = 0;
+        OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].Size = 0;
+
+        /* Check if we have enough space */
+        DPRINT("Calculating Space\n");
+        FirstFreeByte = GetImageUnusedHeaderBytes(File, &VirtBytesFree);
+        HeaderBytesFree = File->Sections->VirtualAddress -
+                          OptionalHeader->SizeOfHeaders + VirtBytesFree;
+        PhysBytesFree = File->Sections->PointerToRawData -
+                        OptionalHeader->SizeOfHeaders + VirtBytesFree;
+
+        /* Check if we overflowed */
+        if (BoundImportTableSize > VirtBytesFree)
+        {
+            /* Check if we have no space a tall */
+            if (BoundImportTableSize > HeaderBytesFree)
+            {
+                DPRINT1("Not enough Space\n");
+                return; /* Fail...not enough space */
+            }
+
+            /* Check if we have space on disk to enlarge it */
+            if (BoundImportTableSize <= PhysBytesFree)
+            {
+                /* We have enough NULLs to add it, simply enlarge header data */
+                DPRINT("Header Recalculation\n");
+                OptionalHeader->SizeOfHeaders = OptionalHeader->SizeOfHeaders -
+                                                VirtBytesFree +
+                                                BoundImportTableSize +
+                                                ((OptionalHeader->FileAlignment - 1) &
+                                                ~(OptionalHeader->FileAlignment - 1));
+            }
+            else 
+            {
+                /* Resize the Headers */
+                DPRINT1("UNIMPLEMENTED: Header Resizing\n");
+
+                /* Recalculate Headers */
+                FileHeader = &File->FileHeader->FileHeader;
+                OptionalHeader = &File->FileHeader->OptionalHeader;
+            }
+        }
+    
+        /* Set Bound Import Table Data */
+        OptionalHeader->DataDirectory
+            [IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].VirtualAddress = FirstFreeByte;
+        OptionalHeader->DataDirectory
+            [IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].Size = BoundImportTableSize;
+    
+        /* Copy the Bound Import Table */
+        DPRINT("Copying Bound Import Table\n");
+        RtlCopyMemory(File->MappedAddress + FirstFreeByte,
+                      BoundImportTable,
+                      BoundImportTableSize);
+
+        /* Free the data */
+        HeapFree(IMAGEHLP_hHeap, 0, BoundImportTable);
+    }
+    
 }
 
 /*
- * BindpBindThunk
- *
- * FUNCTION:
- *      Finds the pointer of the Imported function, and writes it into the Thunk,
- *		thus making the Thunk Bound.
- *
- * ARGUMENTS:
- *      Thunk					- Current Thunk in Unbound File
- *      File					- File containing the Thunk
- *      BoundThunk				- Pointer to the corresponding Bound Thunk
- *      LoadedLibrary			- Library containing the Exported Function
- *      Exports					- Export Directory of LoadedLibrary
- *      BoundImportDescriptor	- Internal Bound Import Descriptor of LoadedLibrary
- *      DllPath					- DLL Search Path
- *
- * RETURNS:
- *      TRUE if Suceeded
+ * @implemented
  */
-BOOL
-STDCALL
-BindpBindThunk(
-    PIMAGE_THUNK_DATA Thunk,
-    PLOADED_IMAGE File,
-    PIMAGE_THUNK_DATA BoundThunk,
-    PLOADED_IMAGE LoadedLibrary,
-    PIMAGE_EXPORT_DIRECTORY Exports,
-    PBOUND_IMPORT_DESCRIPTOR BoundImportDescriptor,
-    LPSTR DllPath
-    )
+BOOL 
+IMAGEAPI 
+BindImageEx(IN DWORD Flags,
+            IN LPSTR ImageName,
+            IN LPSTR DllPath,
+            IN LPSTR SymbolPath,
+            IN PIMAGEHLP_STATUS_ROUTINE StatusRoutine)
 {
-	PULONG					AddressOfNames;
-    PUSHORT					AddressOfOrdinals;
-    PULONG					AddressOfPointers;
-    PIMAGE_IMPORT_BY_NAME	ImportName;
-	ULONG					OrdinalNumber = 0;
-    USHORT					HintIndex;
-    LPSTR					ExportName;
-    ULONG					ExportsBase;
-    ULONG					ExportSize;
-    UCHAR					NameBuffer[32];
-    PIMAGE_OPTIONAL_HEADER	OptionalHeader32 = NULL;
-    PIMAGE_OPTIONAL_HEADER	LibraryOptionalHeader32 = NULL;
+    LOADED_IMAGE FileData;
+    PLOADED_IMAGE File;
+    PIMAGE_FILE_HEADER FileHeader;
+    PIMAGE_OPTIONAL_HEADER32 OptionalHeader;
+    ULONG CheckSum, HeaderCheckSum, OldChecksum;
+    SYSTEMTIME SystemTime;
+    FILETIME LastWriteTime;
+    BOOLEAN UpdateImage;
+    DWORD DataSize;
+    DPRINT("BindImageEx Called for: %s \n", ImageName);
 
-	/* Get the Pointers to the Tables */
-	AddressOfNames = ImageRvaToVa (LoadedLibrary->FileHeader, 
-									LoadedLibrary->MappedAddress,
-									Exports->AddressOfNames,
-									&LoadedLibrary->LastRvaSection);
-	AddressOfOrdinals = ImageRvaToVa (LoadedLibrary->FileHeader,
-										LoadedLibrary->MappedAddress, 
-										Exports->AddressOfNameOrdinals, 
-										&LoadedLibrary->LastRvaSection);
-	AddressOfPointers = ImageRvaToVa (LoadedLibrary->FileHeader, 
-										LoadedLibrary->MappedAddress, 
-										Exports->AddressOfFunctions, 
-										&LoadedLibrary->LastRvaSection);
+    /* Set and Clear Buffer */
+    File = &FileData;
+    RtlZeroMemory(File, sizeof(*File));
 
-	//FIXME("Binding a Thunk\n");
+    /* Request Image Data */
+    if (MapAndLoad(ImageName, DllPath, File, TRUE, FALSE))
+    {
+        /* Write the image's name */
+        DPRINT("Image Mapped and Loaded\n");
+        File->ModuleName = ImageName;
 
-	/* Get the Optional Header */
-	OptionalHeader32 = &File->FileHeader->OptionalHeader;
-	LibraryOptionalHeader32 = &LoadedLibrary->FileHeader->OptionalHeader;
-    
-	/* Import by Ordinal */
-	if (IMAGE_SNAP_BY_ORDINAL(Thunk->u1.Ordinal) == TRUE) {
-        OrdinalNumber = (IMAGE_ORDINAL(Thunk->u1.Ordinal) - Exports->Base);
-        ImportName = (PIMAGE_IMPORT_BY_NAME)NameBuffer;
-	} else {
-		
-		/* Import by Name */
-		ImportName = ImageRvaToVa (File->FileHeader,
-									File->MappedAddress, 
-									(ULONG)Thunk->u1.AddressOfData, 
-									&File->LastRvaSection);
+        /* Check if the image is valid and if it should be bound */
+        if ((File->FileHeader) &&
+            ((Flags & BIND_ALL_IMAGES) || (!File->fSystemImage)))
+        {
+            /* Get the optional header */
+            FileHeader = &File->FileHeader->FileHeader;
+            OptionalHeader = &File->FileHeader->OptionalHeader;
 
-        for (HintIndex = 0; HintIndex < Exports->NumberOfNames; HintIndex++) {
-            
-			/* Get the Export Name */
-			ExportName = ImageRvaToVa (LoadedLibrary->FileHeader,
-										LoadedLibrary->MappedAddress, 
-										(ULONG)AddressOfNames[HintIndex], 
-										&LoadedLibrary->LastRvaSection);
-            
-			/* Check if it's the one we want */
-			if (!strcmp(ImportName->Name, ExportName)) {
-				OrdinalNumber = AddressOfOrdinals[HintIndex];
-                break;
+            /* Check if this image should be bound */
+            if (OptionalHeader->DllCharacteristics &
+                IMAGE_DLLCHARACTERISTICS_NO_BIND)
+            {
+                /* Don't bind it */
+                goto Skip;
             }
-		}
-	}
 
-	/* Fail if we still didn't find anything */
-	if (!OrdinalNumber) return FALSE;
+            /* Check if the image has security data */
+            if ((ImageDirectoryEntryToData(File->MappedAddress,
+                                           FALSE,
+                                           IMAGE_DIRECTORY_ENTRY_SECURITY,
+                                           &DataSize)) || DataSize)
+            {
+                /* It does, skip it */
+                goto Skip;
+            }
 
-	/* Write the Pointer */
-	BoundThunk->u1.Function = (PDWORD)(AddressOfPointers[OrdinalNumber] + LibraryOptionalHeader32->ImageBase);
+            /* Read Import Table */
+            BindpWalkAndProcessImports(File, DllPath, &UpdateImage);
 
-	/* Load DLL's Exports */
-    ExportsBase = (ULONG)ImageDirectoryEntryToData (LoadedLibrary->MappedAddress, 
-													TRUE, 
-													IMAGE_DIRECTORY_ENTRY_EXPORT, 
-													&ExportSize) - 
-													(ULONG_PTR)LoadedLibrary->MappedAddress;
-	/* RVA to VA */
-    ExportsBase += LibraryOptionalHeader32->ImageBase;
-
-	/* Check if the Export is forwarded (meaning that it's pointer is inside the Export Table) */
-    if (BoundThunk->u1.Function > (PDWORD)ExportsBase && BoundThunk->u1.Function < (PDWORD)(ExportsBase + ExportSize)) {
+            /* Check if we need to update the image */
+            if ((UpdateImage) && (File->hFile != INVALID_HANDLE_VALUE))
+            {
+                /* FIXME: Update symbols */
         
-		//FIXME("This Thunk is a forward...calling forward thunk bounder\n");
+                /* Update Checksum */
+                DPRINT("Binding Completed, getting Checksum\n");
+                OldChecksum = File->FileHeader->OptionalHeader.CheckSum;
+                CheckSumMappedFile(File->MappedAddress,
+                                   GetFileSize(File->hFile, NULL),
+                                   &HeaderCheckSum,
+                                   &CheckSum);
+                File->FileHeader->OptionalHeader.CheckSum = CheckSum;
 
-		/* Replace the Forwarder String by the actual Pointer */
-        BoundThunk->u1.Function = (PDWORD)BindpAddBoundForwarder (BoundImportDescriptor,
-														DllPath,
-														ImageRvaToVa (LoadedLibrary->FileHeader,
-																		LoadedLibrary->MappedAddress,
-																		AddressOfPointers[OrdinalNumber],
-																		&LoadedLibrary->LastRvaSection));
+                /* Save Changes */
+                DPRINT("Saving Changes to file\n");
+                FlushViewOfFile(File->MappedAddress, File->SizeOfImage);
 
-	}
+                /* Save new Modified Time */
+                DPRINT("Setting time\n");
+                GetSystemTime(&SystemTime);
+                SystemTimeToFileTime(&SystemTime, &LastWriteTime);
+                SetFileTime(File->hFile, NULL, NULL, &LastWriteTime);
+            }
+        }
+    }
 
-	/* Return Success */
+Skip:
+
+    /* Unmap the image */
+    UnmapViewOfFile(File->MappedAddress);
+
+    /* Close the handle if it's valid */
+    if (File->hFile != INVALID_HANDLE_VALUE) CloseHandle(File->hFile);
+
+    /* Unload all the images if we're not supposed to cache them */
+    if (!(Flags & BIND_CACHE_IMPORT_DLLS)) UnloadAllImages();
+   
+    /* Return success */
+    DPRINT("Done\n");
     return TRUE;
 }
 
 /*
- * BindpAddBoundForwarder
- *
- * FUNCTION:
- *      Finds the pointer of the Forwarded function, and writes it into the Thunk,
- *		thus making the Thunk Bound.
- *
- * ARGUMENTS:
- *      BoundImportDescriptor	- Internal Bound Import Descriptor of LoadedLibrary
- *      DllPath					- DLL Search Path
- *		ForwarderString			- Name of the Forwader String
- *
- * RETURNS:
- *      Pointer to the Forwaded Function.
+ * @implemented
  */
-ULONG
-STDCALL
-BindpAddBoundForwarder(
-    PBOUND_IMPORT_DESCRIPTOR BoundImportDescriptor,
-    LPSTR DllPath,
-    PUCHAR ForwarderString
-    )
+BOOL
+IMAGEAPI
+BindImage(LPSTR ImageName,
+          LPSTR DllPath,
+          LPSTR SymbolPath)
 {
-    CHAR					DllName[256];
-	PUCHAR					TempDllName;
-    PLOADED_IMAGE			LoadedLibrary;
-    ULONG					DllNameSize;
-    USHORT					OrdinalNumber = 0;
-    USHORT					HintIndex;
-    ULONG					ExportSize;
-    PIMAGE_EXPORT_DIRECTORY Exports;
-	ULONG					ExportsBase;
-	PULONG					AddressOfNames;
-    PUSHORT					AddressOfOrdinals;
-    PULONG					AddressOfPointers;
-    LPSTR					ExportName;
-    ULONG					ForwardedAddress;
-    PBOUND_FORWARDER_REFS	BoundForwarder;
-    PIMAGE_OPTIONAL_HEADER	OptionalHeader32 = NULL;
-
-NextForwarder:
-
-	/* Get the DLL Name */
-    TempDllName = ForwarderString;
-    while (*TempDllName && *TempDllName != '.') TempDllName++;
-	DllNameSize = (ULONG) (TempDllName - ForwarderString);
-    lstrcpyn(DllName, ForwarderString, DllNameSize + 1);
-
-	/* Append .DLL extension */
-    DllName[DllNameSize] = '\0';
-    strcat(DllName, ".DLL" );
-
-	/* Load it */
-	FIXME("Loading the Thunk Library: %s \n", DllName);
-    LoadedLibrary = ImageLoad(DllName, DllPath);
-    TempDllName += 1;
-
-	/* Return whatever we got back in case of failure*/
-	if (!LoadedLibrary) return (ULONG)ForwarderString;
-	FIXME("It Loaded at: %p \n", LoadedLibrary->MappedAddress);
-
-	/* Load Exports */
-    Exports = ImageDirectoryEntryToData(LoadedLibrary->MappedAddress, FALSE, IMAGE_DIRECTORY_ENTRY_EXPORT, &ExportSize);
-
-	/* Get the Pointers to the Tables */
-	AddressOfNames = ImageRvaToVa (LoadedLibrary->FileHeader, 
-									LoadedLibrary->MappedAddress, 
-									Exports->AddressOfNames, 
-									&LoadedLibrary->LastRvaSection);
-	AddressOfOrdinals = ImageRvaToVa (LoadedLibrary->FileHeader, 
-										LoadedLibrary->MappedAddress, 
-										Exports->AddressOfNameOrdinals, 
-										&LoadedLibrary->LastRvaSection);
-	AddressOfPointers = ImageRvaToVa (LoadedLibrary->FileHeader, 
-										LoadedLibrary->MappedAddress, 
-										Exports->AddressOfFunctions, 
-										&LoadedLibrary->LastRvaSection);
-
-	/* Get the Optional Header */
-	OptionalHeader32 = &LoadedLibrary->FileHeader->OptionalHeader;
-
-	/* Get the Ordinal Number */
-    for (HintIndex = 0; HintIndex < Exports->NumberOfNames; HintIndex++) {
-		
-		/* Get the Export Name */
-		ExportName = ImageRvaToVa (LoadedLibrary->FileHeader, 
-									LoadedLibrary->MappedAddress, 
-									AddressOfNames[HintIndex],
-									&LoadedLibrary->LastRvaSection);
-
-		/* Check if it matches */
-        if (!strcmp(TempDllName, ExportName)) {
-			OrdinalNumber = AddressOfOrdinals[HintIndex];
-            break;
-        }
-	}
-
-    do {
-		/* Get the Forwarded Address */
-		ForwardedAddress = AddressOfPointers[OrdinalNumber] + OptionalHeader32->ImageBase;
-
-		/* Load the First Bound Forward Structure */
-		BoundForwarder = BoundImportDescriptor->Forwarders;
-
-		/* Check if we already have the Module Name written */
-		while (BoundForwarder->ModuleName) {
-			if (!lstrcmpi(DllName, BoundForwarder->ModuleName)) break;
-			BoundForwarder++;
-		}
-
-		if (!BoundForwarder->ModuleName) {
-
-			/* Save Library Name in Bound Libraries Buffer */
-			strcat((char *)BoundLibrariesPointer, DllName);
-
-			/* Set Data */
-			BoundForwarder->ModuleName = BoundLibrariesPointer;
-			BoundForwarder->TimeDateStamp = LoadedLibrary->FileHeader->FileHeader.TimeDateStamp;
-	
-			/* Next String */
-			BoundLibrariesPointer = BoundLibrariesPointer + strlen((char *)BoundLibrariesPointer) + 1;
-			BoundImportDescriptor->ForwaderReferences += 1;
-       }
-
-		/* Load DLL's Exports */
-		ExportsBase = (ULONG)ImageDirectoryEntryToData (LoadedLibrary->MappedAddress, 
-														TRUE, 
-														IMAGE_DIRECTORY_ENTRY_EXPORT, 
-														&ExportSize) - 
-														(ULONG_PTR)LoadedLibrary->MappedAddress;
-		ExportsBase += OptionalHeader32->ImageBase;
-
-		//FIXME("I've thunked it\n");
-
-		/* Is this yet another Forward? */
-		if (ForwardedAddress > ExportsBase && ForwardedAddress < (ExportsBase + ExportSize)) {
-			ForwarderString = ImageRvaToVa (LoadedLibrary->FileHeader, 
-											LoadedLibrary->MappedAddress, 
-											AddressOfPointers[OrdinalNumber], 
-											&LoadedLibrary->LastRvaSection); 
-			goto NextForwarder;
-		}
-	}
-	while (0);
-    return ForwardedAddress;
+    /* Call the newer API */
+    return BindImageEx(0,
+                       ImageName,
+                       DllPath,
+                       SymbolPath,
+                       NULL);
 }
 
 /*
- * BindpCreateBoundImportDescriptor
- *
- * FUNCTION:
- *      Creates an Internal Structure for the Bound Library
- *
- * ARGUMENTS:
- *      LibraryName				- Name of the Library
- *		Library					- Loaded Library
- *		BoundImportDescriptor	- Internal Bound Import Descriptor of Library
- *
- * RETURNS:
- *      PBOUND_IMPORT_DESCRIPTOR	- Pointer to the Internal Bind Structure
+ * @unimplemented
  */
-PBOUND_IMPORT_DESCRIPTOR
-STDCALL
-BindpCreateBoundImportDescriptor(
-	LPSTR LibraryName,
-	PLOADED_IMAGE Library,
-	PULONG BoundImportDescriptor
-    )
+BOOL
+IMAGEAPI
+ReBaseImage(LPSTR CurrentImageName,
+            LPSTR SymbolPath,
+            BOOL fReBase,
+            BOOL fRebaseSysfileOk,
+            BOOL fGoingDown,
+            ULONG CheckImageSize,
+            ULONG *OldImageSize,
+            ULONG *OldImageBase,
+            ULONG *NewImageSize,
+            ULONG *NewImageBase,
+            ULONG TimeStamp)
 {
-    PBOUND_IMPORT_DESCRIPTOR CurrentBoundImportDescriptor;
-
-	/* Load the First Descriptor */
-	CurrentBoundImportDescriptor = (PBOUND_IMPORT_DESCRIPTOR)BoundImportDescriptor;
-
-	/* Check if we've already bound this library */
-	while (CurrentBoundImportDescriptor->ModuleName) {
-		if (!lstrcmpi(CurrentBoundImportDescriptor->ModuleName, LibraryName)) {
-				return CurrentBoundImportDescriptor;
-		}
-		CurrentBoundImportDescriptor++;
-	}
-
-	/* Save Library Name in Bound Libraries Buffer */
-	strcat((char *)BoundLibrariesPointer, LibraryName);
-
-	/* Set Data */
-	CurrentBoundImportDescriptor->ModuleName = BoundLibrariesPointer;
-	CurrentBoundImportDescriptor->TimeDateStamp = Library->FileHeader->FileHeader.TimeDateStamp;	
-	
-	/* Support for up to 32 Forwarded DLLs */
-	CurrentBoundImportDescriptor->Forwarders = GlobalAlloc(GMEM_ZEROINIT, 32* sizeof(BOUND_FORWARDER_REFS));
-	
-	/* Next String */
-	BoundLibrariesPointer = BoundLibrariesPointer + strlen((char *)BoundLibrariesPointer) + 1;
-
-	return CurrentBoundImportDescriptor;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
-/***********************************************************************
- *		BindImage (IMAGEHLP.@)
+/*
+ * @unimplemented
  */
-BOOL WINAPI BindImage(
-  LPSTR ImageName, LPSTR DllPath, LPSTR SymbolPath)
+VOID
+IMAGEAPI
+RemoveRelocations(PCHAR ImageName)
 {
-  return BindImageEx(0, ImageName, DllPath, SymbolPath, NULL);
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
-/***********************************************************************
- *		CheckSum (internal)
+/*
+ * @implemented
  */
-static WORD CalcCheckSum(
-  DWORD StartValue, LPVOID BaseAddress, DWORD WordCount)
+BOOL
+IMAGEAPI
+TouchFileTimes(HANDLE FileHandle,
+               LPSYSTEMTIME lpSystemTime)
 {
-   LPWORD Ptr;
-   DWORD Sum;
-   DWORD i;
+    FILETIME FileTime;
+    SYSTEMTIME SystemTime;
+  
+    if(lpSystemTime == NULL)
+    {
+        GetSystemTime(&SystemTime);
+        lpSystemTime = &SystemTime;
+    }
 
-   Sum = StartValue;
-   Ptr = (LPWORD)BaseAddress;
-   for (i = 0; i < WordCount; i++)
-     {
-	Sum += *Ptr;
-	if (HIWORD(Sum) != 0)
-	  {
-	     Sum = LOWORD(Sum) + HIWORD(Sum);
-	  }
-	Ptr++;
-     }
-
-   return (WORD)(LOWORD(Sum) + HIWORD(Sum));
-}
-
-
-/***********************************************************************
- *		CheckSumMappedFile (IMAGEHLP.@)
- */
-PIMAGE_NT_HEADERS WINAPI CheckSumMappedFile(
-  LPVOID BaseAddress, DWORD FileLength,
-  LPDWORD HeaderSum, LPDWORD CheckSum)
-{
-  PIMAGE_NT_HEADERS Header;
-  DWORD CalcSum;
-  DWORD HdrSum;
-
-  FIXME("stub\n");
-
-  CalcSum = (DWORD)CalcCheckSum(0,
-				BaseAddress,
-				(FileLength + 1) / sizeof(WORD));
-
-  Header = ImageNtHeader(BaseAddress);
-  HdrSum = Header->OptionalHeader.CheckSum;
-
-  /* Subtract image checksum from calculated checksum. */
-  /* fix low word of checksum */
-  if (LOWORD(CalcSum) >= LOWORD(HdrSum))
-  {
-    CalcSum -= LOWORD(HdrSum);
-  }
-  else
-  {
-    CalcSum = ((LOWORD(CalcSum) - LOWORD(HdrSum)) & 0xFFFF) - 1;
-  }
-
-   /* fix high word of checksum */
-  if (LOWORD(CalcSum) >= HIWORD(HdrSum))
-  {
-    CalcSum -= HIWORD(HdrSum);
-  }
-  else
-  {
-    CalcSum = ((LOWORD(CalcSum) - HIWORD(HdrSum)) & 0xFFFF) - 1;
-  }
-
-  /* add file length */
-  CalcSum += FileLength;
-
-  *CheckSum = CalcSum;
-  *HeaderSum = Header->OptionalHeader.CheckSum;
-
-  return Header;
-}
-
-/***********************************************************************
- *		MapFileAndCheckSumA (IMAGEHLP.@)
- */
-DWORD WINAPI MapFileAndCheckSumA(
-  LPSTR Filename, LPDWORD HeaderSum, LPDWORD CheckSum)
-{
-  HANDLE hFile;
-  HANDLE hMapping;
-  LPVOID BaseAddress;
-  DWORD FileLength;
-
-  TRACE("(%s, %p, %p): stub\n",
-    debugstr_a(Filename), HeaderSum, CheckSum
-  );
-
-  hFile = CreateFileA(Filename,
-		      GENERIC_READ,
-		      FILE_SHARE_READ | FILE_SHARE_WRITE,
-		      NULL,
-		      OPEN_EXISTING,
-		      FILE_ATTRIBUTE_NORMAL,
-		      0);
-  if (hFile == INVALID_HANDLE_VALUE)
-  {
-    return CHECKSUM_OPEN_FAILURE;
-  }
-
-  hMapping = CreateFileMappingW(hFile,
-			       NULL,
-			       PAGE_READONLY,
-			       0,
-			       0,
-			       NULL);
-  if (hMapping == 0)
-  {
-    CloseHandle(hFile);
-    return CHECKSUM_MAP_FAILURE;
-  }
-
-  BaseAddress = MapViewOfFile(hMapping,
-			      FILE_MAP_READ,
-			      0,
-			      0,
-			      0);
-  if (hMapping == 0)
-  {
-    CloseHandle(hMapping);
-    CloseHandle(hFile);
-    return CHECKSUM_MAPVIEW_FAILURE;
-  }
-
-  FileLength = GetFileSize(hFile,
-			   NULL);
-
-  CheckSumMappedFile(BaseAddress,
-		     FileLength,
-		     HeaderSum,
-		     CheckSum);
-
-  UnmapViewOfFile(BaseAddress);
-  CloseHandle(hMapping);
-  CloseHandle(hFile);
-
-  return 0;
-}
-
-/***********************************************************************
- *		MapFileAndCheckSumW (IMAGEHLP.@)
- */
-DWORD WINAPI MapFileAndCheckSumW(
-  LPWSTR Filename, LPDWORD HeaderSum, LPDWORD CheckSum)
-{
-  HANDLE hFile;
-  HANDLE hMapping;
-  LPVOID BaseAddress;
-  DWORD FileLength;
-
-  TRACE("(%s, %p, %p): stub\n",
-    debugstr_w(Filename), HeaderSum, CheckSum
-  );
-
-  hFile = CreateFileW(Filename,
-		      GENERIC_READ,
-		      FILE_SHARE_READ | FILE_SHARE_WRITE,
-		      NULL,
-		      OPEN_EXISTING,
-		      FILE_ATTRIBUTE_NORMAL,
-		      0);
-  if (hFile == INVALID_HANDLE_VALUE)
-  {
-  return CHECKSUM_OPEN_FAILURE;
-  }
-
-  hMapping = CreateFileMappingW(hFile,
-			       NULL,
-			       PAGE_READONLY,
-			       0,
-			       0,
-			       NULL);
-  if (hMapping == 0)
-  {
-    CloseHandle(hFile);
-    return CHECKSUM_MAP_FAILURE;
-  }
-
-  BaseAddress = MapViewOfFile(hMapping,
-			      FILE_MAP_READ,
-			      0,
-			      0,
-			      0);
-  if (hMapping == 0)
-  {
-    CloseHandle(hMapping);
-    CloseHandle(hFile);
-    return CHECKSUM_MAPVIEW_FAILURE;
-  }
-
-  FileLength = GetFileSize(hFile,
-			   NULL);
-
-  CheckSumMappedFile(BaseAddress,
-		     FileLength,
-		     HeaderSum,
-		     CheckSum);
-
-  UnmapViewOfFile(BaseAddress);
-  CloseHandle(hMapping);
-  CloseHandle(hFile);
-
-  return 0;
-}
-
-/***********************************************************************
- *		ReBaseImage (IMAGEHLP.@)
- */
-BOOL WINAPI ReBaseImage(
-  LPSTR CurrentImageName, LPSTR SymbolPath, BOOL fReBase,
-  BOOL fRebaseSysfileOk, BOOL fGoingDown, ULONG CheckImageSize,
-  ULONG *OldImageSize, ULONG *OldImageBase, ULONG *NewImageSize,
-  ULONG *NewImageBase, ULONG TimeStamp)
-{
-  FIXME(
-    "(%s, %s, %d, %d, %d, %ld, %p, %p, %p, %p, %ld): stub\n",
-      debugstr_a(CurrentImageName),debugstr_a(SymbolPath), fReBase,
-      fRebaseSysfileOk, fGoingDown, CheckImageSize, OldImageSize,
-      OldImageBase, NewImageSize, NewImageBase, TimeStamp
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-/***********************************************************************
- *		RemovePrivateCvSymbolic (IMAGEHLP.@)
- */
-BOOL WINAPI RemovePrivateCvSymbolic(
-  PCHAR DebugData, PCHAR *NewDebugData, ULONG *NewDebugSize)
-{
-  FIXME("(%p, %p, %p): stub\n",
-    DebugData, NewDebugData, NewDebugSize
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-/***********************************************************************
- *		RemoveRelocations (IMAGEHLP.@)
- */
-VOID WINAPI RemoveRelocations(PCHAR ImageName)
-{
-  FIXME("(%p): stub\n", ImageName);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/***********************************************************************
- *		SplitSymbols (IMAGEHLP.@)
- */
-BOOL WINAPI SplitSymbols(
-  LPSTR ImageName, LPSTR SymbolsPath,
-  LPSTR SymbolFilePath, DWORD Flags)
-{
-  FIXME("(%s, %s, %s, %ld): stub\n",
-    debugstr_a(ImageName), debugstr_a(SymbolsPath),
-    debugstr_a(SymbolFilePath), Flags
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-/***********************************************************************
- *		UpdateDebugInfoFile (IMAGEHLP.@)
- */
-BOOL WINAPI UpdateDebugInfoFile(
-  LPSTR ImageFileName, LPSTR SymbolPath,
-  LPSTR DebugFilePath, PIMAGE_NT_HEADERS NtHeaders)
-{
-  FIXME("(%s, %s, %s, %p): stub\n",
-    debugstr_a(ImageFileName), debugstr_a(SymbolPath),
-    debugstr_a(DebugFilePath), NtHeaders
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-/***********************************************************************
- *		UpdateDebugInfoFileEx (IMAGEHLP.@)
- */
-BOOL WINAPI UpdateDebugInfoFileEx(
-  LPSTR ImageFileName, LPSTR SymbolPath, LPSTR DebugFilePath,
-  PIMAGE_NT_HEADERS NtHeaders, DWORD OldChecksum)
-{
-  FIXME("(%s, %s, %s, %p, %ld): stub\n",
-    debugstr_a(ImageFileName), debugstr_a(SymbolPath),
-    debugstr_a(DebugFilePath), NtHeaders, OldChecksum
-  );
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    return (SystemTimeToFileTime(lpSystemTime,
+                                 &FileTime) &&
+            SetFileTime(FileHandle,
+                        NULL,
+                        NULL,
+                        &FileTime));
 }
