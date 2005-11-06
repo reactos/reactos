@@ -18,12 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include <rpc.h>
-#include <rpcdce.h>
-#include <setupapi.h>
-#include "rpc_private.h"
+#include "setupapi_private.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 static RPC_BINDING_HANDLE LocalBindingHandle = NULL;
 static HSTRING_TABLE LocalStringTable = NULL;

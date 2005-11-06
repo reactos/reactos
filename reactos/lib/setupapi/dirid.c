@@ -18,21 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "setupapi.h"
-#include "shlobj.h"
-#include "wine/unicode.h"
 #include "setupapi_private.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 

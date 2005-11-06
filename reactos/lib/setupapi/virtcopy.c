@@ -21,19 +21,7 @@
  *        This is bad ! We ought to have 16bit resource handling working.
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "wownt32.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "setupapi.h"
-#include "setupx16.h"
 #include "setupapi_private.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 

@@ -23,26 +23,7 @@
  *
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "wine/debug.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "setupapi.h"
 #include "setupapi_private.h"
-#include "fdi.h"
-#include "wine/unicode.h"
-
-#include "fcntl.h"
-#include "share.h"
-
-#include "wine/debug.h"
 
 HINSTANCE hInstance = 0;
 OSVERSIONINFOW OsVersionInfo;
