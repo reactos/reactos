@@ -1175,7 +1175,9 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 
-	return _T(""); /* not found - return empty string */
+	GrowIfNecessary(_tcslen(varName) + 2, &ret, &retlen);
+	_stprintf(ret,_T("%%%s%%"),varName);
+	return ret; /* not found - return orginal string */
 }
 
 LPCTSTR
