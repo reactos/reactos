@@ -560,49 +560,6 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
 }
 
 
-static DWORD
-CreateServiceKey(LPWSTR lpServiceName,
-                 PHKEY phKey)
-{
-    HKEY hServicesKey = NULL;
-    DWORD dwDisposition;
-    DWORD dwError;
-
-    *phKey = NULL;
-
-    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                            L"System\\CurrentControlSet\\Services",
-                            0,
-                            KEY_WRITE,
-                            &hServicesKey);
-    if (dwError != ERROR_SUCCESS)
-        return dwError;
-
-    dwError = RegCreateKeyExW(hServicesKey,
-                              lpServiceName,
-                              0,
-                              NULL,
-                              REG_OPTION_NON_VOLATILE,
-                              KEY_WRITE,
-                              NULL,
-                              phKey,
-                              &dwDisposition);
-#if 0
-    if ((dwError == ERROR_SUCCESS) &&
-        (dwDisposition == REG_OPENED_EXISTING_KEY))
-    {
-        RegCloseKey(*phKey);
-        *phKey = NULL;
-        dwError = ERROR_SERVICE_EXISTS;
-    }
-#endif
-
-    RegCloseKey(hServicesKey);
-
-    return dwError;
-}
-
-
 /* Function 12 */
 unsigned long
 ScmrCreateServiceW(handle_t BindingHandle,
@@ -710,7 +667,9 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     /* Write service data to the registry */
     /* Create the service key */
-    dwError = CreateServiceKey(lpServiceName, &hServiceKey);
+    dwError = ScmCreateServiceKey(lpServiceName,
+                                  KEY_WRITE,
+                                  &hServiceKey);
     if (dwError != ERROR_SUCCESS)
         goto done;
 

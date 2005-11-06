@@ -211,89 +211,6 @@ CreateGroupListRoutine(PWSTR ValueName,
 }
 
 
-static NTSTATUS STDCALL
-CreateServiceListEntry(LPWSTR lpServiceName)
-{
-    RTL_QUERY_REGISTRY_TABLE QueryTable[6];
-    PSERVICE Service = NULL;
-    NTSTATUS Status;
-
-    DPRINT("Service: '%S'\n", lpServiceName);
-
-
-    /* Allocate service entry */
-    Service = HeapAlloc(GetProcessHeap(),
-                        HEAP_ZERO_MEMORY,
-                        sizeof(SERVICE) + ((wcslen(lpServiceName) + 1) * sizeof(WCHAR)));
-    if (Service == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Copy service name */
-    wcscpy(Service->szServiceName, lpServiceName);
-    Service->lpServiceName = Service->szServiceName;
-    Service->lpDisplayName = Service->lpServiceName;
-
-    /* Get service data */
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
-
-    QueryTable[0].Name = L"Start";
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-    QueryTable[0].EntryContext = &Service->dwStartType;
-
-    QueryTable[1].Name = L"Type";
-    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-    QueryTable[1].EntryContext = &Service->Status.dwServiceType;
-
-    QueryTable[2].Name = L"ErrorControl";
-    QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-    QueryTable[2].EntryContext = &Service->dwErrorControl;
-
-    QueryTable[3].Name = L"Group";
-    QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
-    QueryTable[3].EntryContext = &Service->ServiceGroup;
-
-    QueryTable[4].Name = L"Tag";
-    QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
-    QueryTable[4].EntryContext = &Service->dwTag;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-                                    lpServiceName,
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-        HeapFree(GetProcessHeap(), 0, Service);
-        return Status;
-    }
-
-    DPRINT("ServiceName: '%S'\n", Service->lpServiceName);
-    DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
-    DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
-           Service->dwStartType,
-           Service->Status.dwServiceType,
-           Service->dwTag,
-           Service->dwErrorControl);
-
-    /* Append service entry */
-    InsertTailList(&ServiceListHead,
-                   &Service->ServiceListEntry);
-
-    Service->Status.dwCurrentState = SERVICE_STOPPED;
-    Service->Status.dwControlsAccepted = 0;
-    Service->Status.dwWin32ExitCode = 0;
-    Service->Status.dwServiceSpecificExitCode = 0;
-    Service->Status.dwCheckPoint = 0;
-    Service->Status.dwWaitHint = 2000; /* 2 seconds */
-
-    return STATUS_SUCCESS;
-}
-
-
 DWORD
 ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                           PSERVICE *lpServiceRecord)
@@ -331,30 +248,126 @@ ScmCreateNewServiceRecord(LPWSTR lpServiceName,
 }
 
 
-NTSTATUS
-ScmCreateServiceDataBase(VOID)
+static DWORD
+CreateServiceListEntry(LPWSTR lpServiceName,
+                       HKEY hServiceKey)
+{
+    PSERVICE lpService = NULL;
+    LPWSTR lpGroup = NULL;
+    DWORD dwSize;
+    DWORD dwError;
+    DWORD dwServiceType;
+    DWORD dwStartType;
+    DWORD dwErrorControl;
+    DWORD dwTagId;
+
+    DPRINT("Service: '%S'\n", lpServiceName);
+    if (*lpServiceName == L'{')
+        return ERROR_SUCCESS;
+
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hServiceKey,
+                               L"Type",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwServiceType,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    if (((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_OWN_PROCESS) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_SHARE_PROCESS) &&
+        (dwServiceType != SERVICE_KERNEL_DRIVER) &&
+        (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER))
+        return ERROR_SUCCESS;
+
+    DPRINT("Service type: %lx\n", dwServiceType);
+
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hServiceKey,
+                               L"Start",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwStartType,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    DPRINT("Start type: %lx\n", dwStartType);
+
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hServiceKey,
+                               L"ErrorControl",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwErrorControl,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    DPRINT("Error control: %lx\n", dwErrorControl);
+
+    dwError = RegQueryValueExW(hServiceKey,
+                               L"Tag",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwTagId,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        dwTagId = 0;
+
+    DPRINT("Tag: %lx\n", dwTagId);
+
+    dwError = ScmReadString(hServiceKey,
+                            L"Group",
+                            &lpGroup);
+    if (dwError != ERROR_SUCCESS)
+        lpGroup = NULL;
+
+    DPRINT("Group: %S\n", lpGroup);
+
+    dwError = ScmCreateNewServiceRecord(lpServiceName,
+                                        &lpService);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    lpService->Status.dwServiceType = dwServiceType;
+    lpService->dwStartType = dwStartType;
+    lpService->dwErrorControl = dwErrorControl;
+    lpService->dwTag = dwTagId;
+
+    if (lpGroup != NULL)
+    {
+        lpService->lpServiceGroup = lpGroup;
+        lpGroup = NULL;
+    }
+
+    DPRINT("ServiceName: '%S'\n", lpService->lpServiceName);
+    DPRINT("Group: '%S'\n", lpService->lpServiceGroup);
+    DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
+           lpService->dwStartType,
+           lpService->Status.dwServiceType,
+           lpService->dwTag,
+           lpService->dwErrorControl);
+
+    if (ScmIsDeleteFlagSet(hServiceKey))
+        lpService->bDeleted = TRUE;
+
+done:;
+    if (lpGroup != NULL)
+        HeapFree(GetProcessHeap(), 0, lpGroup);
+
+    return dwError;
+}
+
+
+DWORD
+ScmReadGroupList(VOID)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING ServicesKeyName =
-    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
-    UNICODE_STRING SubKeyName;
-    HKEY ServicesKey;
-    ULONG Index;
     NTSTATUS Status;
 
-    PKEY_BASIC_INFORMATION KeyInfo = NULL;
-    ULONG KeyInfoLength = 0;
-    ULONG ReturnedLength;
-
-    DPRINT("ScmCreateServiceDataBase() called\n");
-
-    /* Initialize basic variables */
     InitializeListHead(&GroupListHead);
-    InitializeListHead(&ServiceListHead);
-
-    /* Initialize the database lock */
-    RtlInitializeResource(&DatabaseLock);
 
     /* Build group order list */
     RtlZeroMemory(&QueryTable,
@@ -368,75 +381,84 @@ ScmCreateServiceDataBase(VOID)
                                     QueryTable,
                                     NULL,
                                     NULL);
-    if (!NT_SUCCESS(Status))
-        return Status;
 
-    RtlInitUnicodeString(&ServicesKeyName,
-                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
+    return RtlNtStatusToDosError(Status);
+}
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &ServicesKeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
 
-    Status = RtlpNtOpenKey(&ServicesKey,
-                           KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS,
-                           &ObjectAttributes,
-                           0);
-    if (!NT_SUCCESS(Status))
-        return Status;
+DWORD
+ScmCreateServiceDatabase(VOID)
+{
+    WCHAR szSubKey[MAX_PATH];
+    HKEY hServicesKey;
+    HKEY hServiceKey;
+    DWORD dwSubKey;
+    DWORD dwSubKeyLength;
+    FILETIME ftLastChanged;
+    DWORD dwError;
 
-    /* Allocate key info buffer */
-    KeyInfoLength = sizeof(KEY_BASIC_INFORMATION) + MAX_PATH * sizeof(WCHAR);
-    KeyInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, KeyInfoLength);
-    if (KeyInfo == NULL)
+    DPRINT("ScmCreateServiceDatabase() called\n");
+
+    dwError = ScmReadGroupList();
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Initialize basic variables */
+    InitializeListHead(&ServiceListHead);
+
+    /* Initialize the database lock */
+    RtlInitializeResource(&DatabaseLock);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwSubKey = 0;
+    for (;;)
     {
-        NtClose(ServicesKey);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Index = 0;
-    while (TRUE)
-    {
-        Status = NtEnumerateKey(ServicesKey,
-                                Index,
-                                KeyBasicInformation,
-                                KeyInfo,
-                                KeyInfoLength,
-                                &ReturnedLength);
-        if (NT_SUCCESS(Status))
+        dwSubKeyLength = MAX_PATH;
+        dwError = RegEnumKeyExW(hServicesKey,
+                                dwSubKey,
+                                szSubKey,
+                                &dwSubKeyLength,
+                                NULL,
+                                NULL,
+                                NULL,
+                                &ftLastChanged);
+        if (dwError == ERROR_SUCCESS &&
+            szSubKey[0] != L'{')
         {
-            if (KeyInfo->NameLength < MAX_PATH * sizeof(WCHAR))
+            DPRINT("SubKeyName: '%S'\n", szSubKey);
+
+            dwError = RegOpenKeyExW(hServicesKey,
+                                    szSubKey,
+                                    0,
+                                    KEY_READ,
+                                    &hServiceKey);
+            if (dwError == ERROR_SUCCESS)
             {
-                SubKeyName.Length = KeyInfo->NameLength;
-                SubKeyName.MaximumLength = KeyInfo->NameLength + sizeof(WCHAR);
-                SubKeyName.Buffer = KeyInfo->Name;
-                SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
+                dwError = CreateServiceListEntry(szSubKey,
+                                                 hServiceKey);
 
-                DPRINT("KeyName: '%wZ'\n", &SubKeyName);
-                Status = CreateServiceListEntry(SubKeyName.Buffer);
-
-                /* Ignore services without proper registry. */
-                if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-                {
-                    Status = STATUS_SUCCESS;
-                }
+                RegCloseKey(hServiceKey);
             }
         }
 
-        if (!NT_SUCCESS(Status))
+        if (dwError != ERROR_SUCCESS)
             break;
 
-        Index++;
+        dwSubKey++;
     }
 
-    HeapFree(GetProcessHeap(), 0, KeyInfo);
-    NtClose(ServicesKey);
+    RegCloseKey(hServicesKey);
 
-    DPRINT("ScmCreateServiceDataBase() done\n");
+    DPRINT("ScmCreateServiceDatabase() done\n");
 
-    return STATUS_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 
@@ -518,7 +540,7 @@ ScmCheckDriver(PSERVICE Service)
             Service->Status.dwCurrentState = SERVICE_RUNNING;
 
             /* Find the driver's group and mark it as 'running' */
-            if (Service->ServiceGroup.Buffer != NULL)
+            if (Service->lpServiceGroup != NULL)
             {
                 GroupEntry = GroupListHead.Flink;
                 while (GroupEntry != &GroupListHead)
@@ -526,7 +548,8 @@ ScmCheckDriver(PSERVICE Service)
                     CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
                     DPRINT("Checking group '%wZ'\n", &CurrentGroup->GroupName);
-                    if (RtlEqualUnicodeString(&Service->ServiceGroup, &CurrentGroup->GroupName, TRUE))
+                    if (Service->lpServiceGroup != NULL &&
+                        _wcsicmp(Service->lpServiceGroup, CurrentGroup->GroupName.Buffer) == 0)
                     {
                         CurrentGroup->ServicesRunning = TRUE;
                     }
@@ -902,7 +925,8 @@ ScmAutoStartServices(VOID)
             {
                 CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-                if ((RtlEqualUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE)) &&
+                if ((CurrentService->lpServiceGroup != NULL) &&
+                    (_wcsicmp(CurrentGroup->GroupName.Buffer, CurrentService->lpServiceGroup) == 0) &&
                     (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                     (CurrentService->ServiceVisited == FALSE) &&
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
@@ -922,7 +946,8 @@ ScmAutoStartServices(VOID)
         {
             CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-            if ((RtlEqualUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE)) &&
+            if ((CurrentService->lpServiceGroup != NULL) &&
+                (_wcsicmp(CurrentGroup->GroupName.Buffer, CurrentService->lpServiceGroup) == 0) &&
                 (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                 (CurrentService->ServiceVisited == FALSE))
             {
@@ -943,7 +968,7 @@ ScmAutoStartServices(VOID)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-        if ((CurrentService->ServiceGroup.Length != 0) &&
+        if ((CurrentService->lpServiceGroup != NULL) &&
             (CurrentService->dwStartType == SERVICE_AUTO_START) &&
             (CurrentService->ServiceVisited == FALSE))
         {
@@ -961,7 +986,7 @@ ScmAutoStartServices(VOID)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-        if ((CurrentService->ServiceGroup.Length == 0) &&
+        if ((CurrentService->lpServiceGroup == NULL) &&
             (CurrentService->dwStartType == SERVICE_AUTO_START) &&
             (CurrentService->ServiceVisited == FALSE))
         {
@@ -981,34 +1006,6 @@ ScmAutoStartServices(VOID)
         CurrentService->ServiceVisited = FALSE;
         ServiceEntry = ServiceEntry->Flink;
     }
-}
-
-
-DWORD
-ScmMarkServiceForDelete(PSERVICE pService)
-{
-    HKEY hServiceKey = NULL;
-    DWORD dwValue = 1;
-    DWORD dwError;
-
-    DPRINT("ScmMarkServiceForDelete() called\n");
-
-    dwError = ScmOpenServiceKey(pService->lpServiceName,
-                                KEY_WRITE,
-                                &hServiceKey);
-    if (dwError != ERROR_SUCCESS)
-        return dwError;
-
-    dwError = RegSetValueExW(hServiceKey,
-                             L"DeleteFlag",
-                             0,
-                             REG_DWORD,
-                             (LPBYTE)&dwValue,
-                             sizeof(DWORD));
-
-    RegCloseKey(hServiceKey);
-
-    return dwError;
 }
 
 /* EOF */

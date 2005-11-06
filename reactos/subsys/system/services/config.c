@@ -43,6 +43,51 @@ ScmOpenServiceKey(LPWSTR lpServiceName,
 
 
 DWORD
+ScmCreateServiceKey(LPWSTR lpServiceName,
+                    REGSAM samDesired,
+                    PHKEY phKey)
+{
+    HKEY hServicesKey = NULL;
+    DWORD dwDisposition;
+    DWORD dwError;
+
+    *phKey = NULL;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ | KEY_CREATE_SUB_KEY,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegCreateKeyExW(hServicesKey,
+                              lpServiceName,
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              samDesired,
+                              NULL,
+                              phKey,
+                              &dwDisposition);
+#if 0
+    if ((dwError == ERROR_SUCCESS) &&
+        (dwDisposition == REG_OPENED_EXISTING_KEY))
+    {
+        RegCloseKey(*phKey);
+        *phKey = NULL;
+        dwError = ERROR_SERVICE_EXISTS;
+    }
+#endif
+
+    RegCloseKey(hServicesKey);
+
+    return dwError;
+}
+
+
+
+DWORD
 ScmWriteDependencies(HKEY hServiceKey,
                      LPWSTR lpDependencies,
                      DWORD dwDependenciesLength)
@@ -126,6 +171,107 @@ ScmWriteDependencies(HKEY hServiceKey,
 
         HeapFree(GetProcessHeap(), 0, lpGroupDeps);
     }
+
+    return dwError;
+}
+
+
+DWORD
+ScmMarkServiceForDelete(PSERVICE pService)
+{
+    HKEY hServiceKey = NULL;
+    DWORD dwValue = 1;
+    DWORD dwError;
+
+    DPRINT("ScmMarkServiceForDelete() called\n");
+
+    dwError = ScmOpenServiceKey(pService->lpServiceName,
+                                KEY_WRITE,
+                                &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegSetValueExW(hServiceKey,
+                             L"DeleteFlag",
+                             0,
+                             REG_DWORD,
+                             (LPBYTE)&dwValue,
+                             sizeof(DWORD));
+
+    RegCloseKey(hServiceKey);
+
+    return dwError;
+}
+
+
+BOOL
+ScmIsDeleteFlagSet(HKEY hServiceKey)
+{
+    DWORD dwError;
+    DWORD dwType;
+    DWORD dwFlag;
+    DWORD dwSize = sizeof(DWORD);
+
+    dwError = RegQueryValueExW(hServiceKey,
+                               L"DeleteFlag",
+                               0,
+                               &dwType,
+                               (LPBYTE)&dwFlag,
+                               &dwSize);
+
+    return (dwError == ERROR_SUCCESS);
+}
+
+
+DWORD
+ScmReadString(HKEY hServiceKey,
+              LPWSTR lpValueName,
+              LPWSTR *lpValue)
+{
+    DWORD dwError;
+    DWORD dwSize;
+    DWORD dwType;
+    LPBYTE ptr = NULL;
+
+    *lpValue = NULL;
+
+    dwSize = 0;
+    dwError = RegQueryValueExW(hServiceKey,
+                               lpValueName,
+                               0,
+                               &dwType,
+                               NULL,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    ptr = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (ptr == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    dwError = RegQueryValueExW(hServiceKey,
+                               lpValueName,
+                               0,
+                               &dwType,
+                               ptr,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    if (dwType == REG_EXPAND_SZ)
+    {
+        /* FIXME: ... */
+        DPRINT1("Expand me!\n");
+        *lpValue = (LPWSTR)ptr;
+    }
+    else
+    {
+        *lpValue = (LPWSTR)ptr;
+    }
+
+done:;
+    if (dwError != ERROR_SUCCESS)
+        HeapFree(GetProcessHeap(), 0, ptr);
 
     return dwError;
 }

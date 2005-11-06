@@ -14,7 +14,7 @@ typedef struct _SERVICE
     LIST_ENTRY ServiceListEntry;
     LPWSTR lpServiceName;
     LPWSTR lpDisplayName;
-    UNICODE_STRING ServiceGroup;
+    LPWSTR lpServiceGroup;
     BOOL bDeleted;
 
     SERVICE_STATUS Status;
@@ -47,14 +47,25 @@ DWORD ScmOpenServiceKey(LPWSTR lpServiceName,
                         REGSAM samDesired,
                         PHKEY phKey);
 
+DWORD ScmCreateServiceKey(LPWSTR lpServiceName,
+                          REGSAM samDesired,
+                          PHKEY phKey);
+
 DWORD ScmWriteDependencies(HKEY hServiceKey,
                            LPWSTR lpDependencies,
                            DWORD dwDependenciesLength);
 
+DWORD ScmMarkServiceForDelete(PSERVICE pService);
+BOOL ScmIsDeleteFlagSet(HKEY hServiceKey);
+
+DWORD ScmReadString(HKEY hServiceKey,
+                    LPWSTR lpValueName,
+                    LPWSTR *lpValue);
+
 
 /* database.c */
 
-NTSTATUS ScmCreateServiceDataBase(VOID);
+DWORD ScmCreateServiceDatabase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
 

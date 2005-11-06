@@ -313,7 +313,7 @@ WinMain(HINSTANCE hInstance,
 {
     HANDLE hScmStartEvent;
     HANDLE hEvent;
-    NTSTATUS Status;
+    DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
 
@@ -335,10 +335,10 @@ WinMain(HINSTANCE hInstance,
 
 
     /* Create the service database */
-    Status = ScmCreateServiceDataBase();
-    if (!NT_SUCCESS(Status))
+    dwError = ScmCreateServiceDatabase();
+    if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: failed to create SCM database (Status %lx)\n", Status);
+        DPRINT1("SERVICES: failed to create SCM database (Error %lu)\n", dwError);
         ExitThread(0);
     }
 
