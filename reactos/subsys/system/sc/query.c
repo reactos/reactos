@@ -13,7 +13,7 @@
 
 /* local function decs */
 VOID PrintService(BOOL bExtended);
-INT EnumServices(DWORD ServiceType, DWORD ServiceState);
+BOOL EnumServices(DWORD ServiceType, DWORD ServiceState);
 
 /* global variables */
 static ENUM_SERVICE_STATUS_PROCESS *pServiceStatus = NULL;
@@ -88,13 +88,15 @@ BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
         /* print default values */
         PrintService(bExtended);
     }
+    
+    return TRUE;
 
 }
 
 
-INT EnumServices(DWORD ServiceType, DWORD ServiceState)
+BOOL EnumServices(DWORD ServiceType, DWORD ServiceState)
 {
-    SC_HANDLE hSc;
+    //SC_HANDLE hSc;
     DWORD BufSize = 0;
     DWORD BytesNeeded = 0;
     DWORD NumServices = 0;
@@ -144,6 +146,8 @@ INT EnumServices(DWORD ServiceType, DWORD ServiceState)
             return FALSE;
         }
     }
+    
+    return TRUE;
 }
 
 

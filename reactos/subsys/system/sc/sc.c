@@ -62,7 +62,7 @@ INT ScControl(LPTSTR MachineName,   // remote machine name
     hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
-        _tprintf(_T("[SC] OpenSCManager FAILED %d:\n\n"), GetLastError());
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
         ReportLastError();
         return -1;
     }
@@ -134,7 +134,7 @@ INT ScControl(LPTSTR MachineName,   // remote machine name
 }
 
 
-int _tmain(DWORD argc, LPCTSTR argv[])
+int _tmain(int argc, LPCTSTR argv[])
 {
     LPTSTR MachineName = NULL;   // remote machine
     LPCTSTR Command = NULL;      // sc command
