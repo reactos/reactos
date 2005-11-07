@@ -57,6 +57,7 @@ CompareUnicodeStrings(IN PUNICODE_STRING String,
     ULONG ScanLength = min(StringLength, PrefixLength);
     ULONG i;
     WCHAR FoundPrefix, FoundString;
+    PWCHAR p, p1;
 
     /* Validate the Case Check Character Position */
     if (CaseCheckChar > ScanLength) CaseCheckChar = ScanLength;
@@ -75,7 +76,29 @@ CompareUnicodeStrings(IN PUNICODE_STRING String,
     /* Check if we exausted the search above */
     if (i == CaseCheckChar)
     {
-        /* FIXME: Do a case-insensitive search */
+        /* Do a case-insensitive search */
+        p = &Prefix->Buffer[i];
+        p1 = &String->Buffer[i];
+        do
+        {
+            /* Move to the next character */
+            FoundPrefix = *p++;
+            FoundString = *p1++;
+
+            /* Compare it */
+            if (FoundPrefix != FoundString)
+            {
+                /* Upcase the characters */
+                FoundPrefix = RtlUpcaseUnicodeChar(FoundPrefix);
+                FoundString = RtlUpcaseUnicodeChar(FoundString);
+
+                /* Compare them again */
+                if (FoundPrefix != FoundString) break;
+            }
+
+            /* Move to the next char */
+            i++;
+        } while (i < ScanLength);
     }
 
     /* Check if we weren't able to find a match in the loops */
@@ -120,8 +143,50 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                      PUNICODE_STRING FullName,
                      ULONG CaseInsensitiveIndex)
 {
-	UNIMPLEMENTED;
-	return 0;
+    ULONG NameCount;
+    PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry;
+    PRTL_SPLAY_LINKS SplayLinks;
+
+    /* Find out how many names there are */
+    NameCount = ComputeUnicodeNameLength(FullName);
+
+    /* Find the right spot where to start looking for this entry */
+    PreviousEntry = (PUNICODE_PREFIX_TABLE_ENTRY)PrefixTable;
+    CurrentEntry = PreviousEntry->NextPrefixTree;
+    while (CurrentEntry->NameLength > NameCount)
+    {
+        /* Not a match, move to the next entry */
+        PreviousEntry = CurrentEntry;
+        CurrentEntry = CurrentEntry->NextPrefixTree;
+    }
+
+    /* Loop every entry which has valid entries */
+    while (CurrentEntry->NameLength)
+    {
+        /* Get the splay links and loop */
+        while ((SplayLinks = &CurrentEntry->Links))
+        {
+            /*
+             * Implementation notes:
+             *  - get the entry
+             *  - compare the entry's prefix with the fullname:
+             *    if greater: restart on the left child
+             *    if lesser: restart on the right child
+             *  - else if equal:
+             *    for caseinsensitive, just return the entry and
+             *        splay it and set it as root if it's a child
+             *    for casesensitive, loop the circular case match list and
+             *        keep comparing for each entry
+             */
+        }
+
+        /* Splay links exausted, move to next entry */
+        PreviousEntry = CurrentEntry;
+        CurrentEntry = CurrentEntry->NextPrefixTree;
+    }
+
+	/* If we got here, nothing was found */
+	return NULL;
 }
 
 /*
