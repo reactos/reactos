@@ -45,8 +45,8 @@ ComputeUnicodeNameLength(IN PUNICODE_STRING UnicodeName)
 }
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 PUNICODE_PREFIX_TABLE_ENTRY
 NTAPI
 RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
@@ -58,8 +58,8 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 VOID
 NTAPI
 RtlInitializeUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable)
@@ -72,8 +72,8 @@ RtlInitializeUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable)
 }
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 BOOLEAN
 NTAPI
 RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
@@ -168,8 +168,8 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 VOID
 NTAPI
 RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
@@ -199,7 +199,60 @@ RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         /* Check if this entry is a case match */
         if (PrefixTableEntry->CaseMatch != PrefixTableEntry)
         {
-            /* FIXME */
+            /* Get the case match entry */
+            Entry = PrefixTableEntry->CaseMatch;
+
+            /* Now loop until we find one referencing what the caller sent */
+            while (Entry->CaseMatch != PrefixTableEntry) Entry = Entry->CaseMatch;
+
+            /* We found the entry that was sent, link them to delete this entry */
+            Entry->CaseMatch = PrefixTableEntry->CaseMatch;
+
+            /* Copy the data */
+            Entry->NodeTypeCode = PrefixTableEntry->NodeTypeCode;
+            Entry->NextPrefixTree = PrefixTableEntry->NextPrefixTree;
+            Entry->Links = PrefixTableEntry->Links;
+
+            /* Now check if we are a root entry */
+            if (RtlIsRoot(&PrefixTableEntry->Links))
+            {
+                /* We are, so make this entry root as well */
+                Entry->Links.Parent = &Entry->Links;
+
+                /* Find the entry referencing us */
+                RefEntry = Entry->NextPrefixTree;
+                while (RefEntry->NextPrefixTree != Entry)
+                {
+                    /* Not this one, move to the next entry */
+                    RefEntry = RefEntry->NextPrefixTree;
+                }
+
+                /* Link them to us now */
+                RefEntry->NextPrefixTree = Entry;
+            }
+            else if (RtlIsLeftChild(&PrefixTableEntry->Links))
+            {
+                /* We were the left child, so make us as well */
+                Entry->Links.LeftChild = &Entry->Links;
+            }
+            else
+            {
+                /* We were the right child, so make us as well */
+                Entry->Links.RightChild = &Entry->Links;
+            }
+
+            /* Check if we have a left child */
+            if (RtlLeftChild(&Entry->Links))
+            {
+                /* Update its parent link */
+                RtlLeftChild(&Entry->Links)->Parent = &Entry->Links;
+            }
+            /* Check if we have a right child */
+            if (RtlRightChild(&Entry->Links))
+            {
+                /* Update its parent link */
+                RtlRightChild(&Entry->Links)->Parent = &Entry->Links;
+            }
         }
         else
         {

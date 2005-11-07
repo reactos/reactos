@@ -24,6 +24,9 @@
 #define RtlIsLeftChild(Links) \
     (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
 
+#define RtlRightChild(Links) \
+    (PRTL_SPLAY_LINKS)(Links)->RightChild
+
 #define RtlIsRoot(Links) \
     (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
 
