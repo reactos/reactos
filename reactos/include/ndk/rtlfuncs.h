@@ -36,6 +36,13 @@
 #define RtlParent(Links) \
     (PRTL_SPLAY_LINKS)(Links)->Parent
 
+#define RtlInitializeSplayLinks(Links)       \
+    PRTL_SPLAY_LINKS _SplayLinks;            \
+    _SplayLinks = (PRTL_SPLAY_LINKS)(Links); \
+    _SplayLinks->Parent = _SplayLinks;       \
+    _SplayLinks->LeftChild = NULL;           \
+    _SplayLinks->RightChild = NULL;
+
 /* PROTOTYPES ****************************************************************/
 
 /*

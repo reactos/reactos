@@ -25,7 +25,7 @@ typedef USHORT NODE_TYPE_CODE;
 
 /* FUNCTIONS ***************************************************************/
 
-/*STATIC*/
+STATIC
 ULONG
 NTAPI
 ComputeUnicodeNameLength(IN PUNICODE_STRING UnicodeName)
@@ -82,15 +82,52 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 {
     /*
      * implementation notes:
-     * - get name length (number of names)
-     * - init splay links
-     * - find a matching tree
-     * - if !found, insert a new NTC_ROOT entry and return TRUE;
+     * - get name length (number of names) DONE
+     * - init splay links DONE
+     * - find a matching tree DONE
+     * - if !found, insert a new NTC_ROOT entry and return TRUE; DONE
      * - if found, loop tree and compare strings:
      *   if equal, handle casematch/nomatch
      *   if greater or lesser equal, then add left/right childs accordingly
      * - splay the tree
      */
+    PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry;
+    ULONG NameCount;
+
+    /* Find out how many names there are */
+    NameCount = ComputeUnicodeNameLength(Prefix);
+
+    /* Set up the initial entry data */
+    PrefixTableEntry->NameLength = NameCount;
+    PrefixTableEntry->Prefix = Prefix;
+    RtlInitializeSplayLinks(&PrefixTableEntry->Links);
+
+    /* Find the right spot where to insert this entry */
+    PreviousEntry = (PUNICODE_PREFIX_TABLE_ENTRY)PrefixTable;
+    CurrentEntry = PreviousEntry->NextPrefixTree;
+    while (CurrentEntry->NameLength > NameCount)
+    {
+        /* Not a match, move to the next entry */
+        PreviousEntry = CurrentEntry;
+        CurrentEntry = CurrentEntry->NextPrefixTree;
+    }
+
+    /* Check if we did find a tree by now */
+    if (CurrentEntry->NameLength != NameCount)
+    {
+        /* We didn't, so insert a new entry in the list */
+        PreviousEntry->NextPrefixTree = PrefixTableEntry;
+        PrefixTableEntry->NextPrefixTree = CurrentEntry;
+
+        /* This is now a root entry with case match */
+        PrefixTableEntry->NodeTypeCode = PFX_NTC_ROOT;
+        PrefixTableEntry->CaseMatch = PrefixTableEntry;
+
+        /* Quick return */
+        return TRUE;
+    }
+
+    /* FIXME */
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -104,8 +141,7 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                      BOOLEAN Restart)
 {
     PRTL_SPLAY_LINKS SplayLinks;
-    PUNICODE_PREFIX_TABLE_ENTRY Entry;
-    PUNICODE_PREFIX_TABLE_ENTRY CaseMatchEntry;
+    PUNICODE_PREFIX_TABLE_ENTRY Entry, CaseMatchEntry;
 
     /* We might need this entry 2/3rd of the time, so cache it now */
     CaseMatchEntry = PrefixTable->LastNextEntry->CaseMatch;
