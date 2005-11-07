@@ -44,6 +44,73 @@ ComputeUnicodeNameLength(IN PUNICODE_STRING UnicodeName)
     return NamesFound;
 }
 
+
+STATIC
+RTL_GENERIC_COMPARE_RESULTS
+NTAPI
+CompareUnicodeStrings(IN PUNICODE_STRING String,
+                      IN PUNICODE_STRING Prefix,
+                      IN ULONG CaseCheckChar)
+{
+    ULONG StringLength = String->Length / sizeof(WCHAR);
+    ULONG PrefixLength = Prefix->Length / sizeof(WCHAR);
+    ULONG ScanLength = min(StringLength, PrefixLength);
+    ULONG i;
+    WCHAR FoundPrefix, FoundString;
+
+    /* Validate the Case Check Character Position */
+    if (CaseCheckChar > ScanLength) CaseCheckChar = ScanLength;
+
+    /* Do the case sensitive comparison first */
+    for (i = 0; i < CaseCheckChar; i++)
+    {
+        /* Compare the two characters */
+        if (Prefix->Buffer[i] != String->Buffer[i]) break;
+    }
+
+    /* Save the characters we found */
+    FoundPrefix = Prefix->Buffer[i];
+    FoundString = String->Buffer[i];
+
+    /* Check if we exausted the search above */
+    if (i == CaseCheckChar)
+    {
+        /* FIXME: Do a case-insensitive search */
+    }
+
+    /* Check if we weren't able to find a match in the loops */
+    if (i < ScanLength)
+    {
+        /* If the prefix character found was a backslash, this is a less */
+        if (FoundPrefix == '\\') return GenericLessThan;
+
+        /* If the string character found was a backslack, then this is a more */
+        if (FoundString == '\\') return GenericGreaterThan;
+
+        /* None of those two special cases, do a normal check */
+        if (FoundPrefix < FoundString) return GenericLessThan;
+
+        /* The only choice left is that Prefix > String */
+        return GenericGreaterThan;
+    }
+
+    /* If we got here, a match was found. Check if the prefix is smaller */
+    if (PrefixLength < StringLength)
+    {
+        /* Check if the string is actually a prefix */
+        if (String->Buffer[PrefixLength] == '\\') return -1;
+
+        /* It's not a prefix, and it's shorter, so it's a less */
+        return GenericLessThan;
+    }
+    
+    /* Check if the prefix is longer */
+    if (PrefixLength > StringLength) return GenericGreaterThan;
+
+    /* If we got here, then they are 100% equal */
+    return GenericEqual;
+}
+
 /*
  * @unimplemented
  */
@@ -86,13 +153,15 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
      * - init splay links DONE
      * - find a matching tree DONE
      * - if !found, insert a new NTC_ROOT entry and return TRUE; DONE
-     * - if found, loop tree and compare strings:
-     *   if equal, handle casematch/nomatch
+     * - if found, loop tree and compare strings: DONE
+     *   if equal, handle casematch/nomatch DONE
      *   if greater or lesser equal, then add left/right childs accordingly
-     * - splay the tree
+     * - splay the tree DONE
      */
-    PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry;
+    PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry, Entry, NextEntry;
     ULONG NameCount;
+    RTL_GENERIC_COMPARE_RESULTS Result;
+    PRTL_SPLAY_LINKS SplayLinks;
 
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(Prefix);
@@ -127,9 +196,77 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         return TRUE;
     }
 
-    /* FIXME */
-	UNIMPLEMENTED;
-	return FALSE;
+    /* We found a tree, so star thte search loop */
+    Entry = CurrentEntry;
+    while (TRUE)
+    {
+        /* Do a case-insensitive comparison to find out the match level */
+        Result = CompareUnicodeStrings(Entry->Prefix, Prefix, 0);
+        if (Result == GenericEqual)
+        {
+            /* We have a match, start doing a case-sensitive search */
+            NextEntry = Entry;
+
+            /* Search the circular case-match list */
+            do
+            {
+                /* Check if we found a match */
+                if (CompareUnicodeStrings(NextEntry->Prefix, Prefix, -1) ==
+                    (GenericEqual))
+                {
+                    /* We must fail the insert: it already exists */
+                    return FALSE;
+                }
+
+                /* Move to the next entry in the circular list */
+                NextEntry = NextEntry->CaseMatch;
+            }
+            while (NextEntry != Entry);
+
+            /*
+             * No match found, so we can safely insert it. Remember that a
+             * case insensitive match was found, so this is not a ROOT NTC
+             * but a Case Match NTC instead.
+             */
+            PrefixTableEntry->NodeTypeCode = PFX_NTC_CASE_MATCH;
+            PrefixTableEntry->NextPrefixTree = NULL;
+            
+            /* Insert it into the circular list */
+            PrefixTableEntry->CaseMatch = Entry->CaseMatch;
+            Entry->CaseMatch = PrefixTableEntry;
+        }
+        else if (Result == GenericGreaterThan)
+        {
+            /* TODO: Check out the left child and add us */
+        }
+        else
+        {
+            /* TODO: Check out the right child and add us */
+        }
+    }
+
+    /* Get the next tree entry */
+    NextEntry = CurrentEntry->NextPrefixTree;
+
+    /* Set what was the current entry to a child entry */
+    CurrentEntry->NodeTypeCode = PFX_NTC_CHILD;
+    CurrentEntry->NextPrefixTree = NULL;
+
+    /* Splay the tree */
+    SplayLinks = RtlSplay(&Entry->Links);
+
+    /* The link points to the root, get it */
+    Entry = CONTAINING_RECORD(SplayLinks, UNICODE_PREFIX_TABLE_ENTRY, Links);
+
+    /* Mark the root as a root entry */
+    Entry->NodeTypeCode = PFX_NTC_ROOT;
+
+    /* Add it to the tree list */
+    PreviousEntry->NextPrefixTree = Entry;
+    Entry->NextPrefixTree = NextEntry;
+
+    /* Return success */
+	return TRUE;
 }
 
 /*
