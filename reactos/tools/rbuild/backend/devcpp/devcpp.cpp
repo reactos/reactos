@@ -158,16 +158,18 @@ void DevCppBackend::ProcessFile(string &filepath)
 		return;
 
 	// Change the \ to /
+	
 	for(size_t i = 0; i < filepath.length(); i++)
 	{
-		if(filepath[i] == '\\')
-			filepath[i] = '/';
+		if(filepath[i] == '/')
+			filepath[i] = '\\';
 	}
+	
 
 	// Remove the filename from the path
 	string folder = "";
 
-	size_t pos = filepath.rfind(string("/"), filepath.length() - 1);
+	size_t pos = filepath.rfind(string("\\"), filepath.length() - 1);
 
 	if(pos != string::npos)
 	{
@@ -206,7 +208,7 @@ void DevCppBackend::AddFolders(string &folder)
 	
 	m_folders.push_back(folder);
 	
-	size_t pos = folder.rfind(string("/"), folder.length() - 1);
+	size_t pos = folder.rfind(string("\\"), folder.length() - 1);
 
 	if(pos == string::npos)
 		return;
