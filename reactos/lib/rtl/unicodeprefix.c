@@ -175,7 +175,8 @@ NTAPI
 RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                        PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry)
 {
-    PUNICODE_PREFIX_TABLE_ENTRY Entry;
+    PUNICODE_PREFIX_TABLE_ENTRY Entry, RefEntry, NewEntry;
+    PRTL_SPLAY_LINKS SplayLinks;
 
     /* Erase the last entry */
     PrefixTable->LastNextEntry = NULL;
@@ -186,7 +187,7 @@ RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         /* Get the case match entry */
         Entry = PrefixTableEntry->CaseMatch;
 
-        /* Now loop until we find the one matching what the caller sent */
+        /* Now loop until we find one referencing what the caller sent */
         while (Entry->CaseMatch != PrefixTableEntry) Entry = Entry->CaseMatch;
 
         /* We found the entry that was sent, link them to delete this entry */
@@ -195,7 +196,66 @@ RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     else if ((PrefixTableEntry->NodeTypeCode == PFX_NTC_ROOT) ||
             (PrefixTableEntry->NodeTypeCode == PFX_NTC_CHILD))
     {
-        /* FIXME */
+        /* Check if this entry is a case match */
+        if (PrefixTableEntry->CaseMatch != PrefixTableEntry)
+        {
+            /* FIXME */
+        }
+        else
+        {
+            /* It's not a case match, so we'll delete the actual entry */
+            SplayLinks = &PrefixTableEntry->Links;
+
+            /* Find the root entry */
+            while (!RtlIsRoot(SplayLinks)) SplayLinks = RtlParent(SplayLinks);
+            Entry = CONTAINING_RECORD(SplayLinks,
+                                      UNICODE_PREFIX_TABLE_ENTRY,
+                                      Links);
+
+            /* Delete the entry and check if the whole tree is gone */
+            SplayLinks = RtlDelete(&PrefixTableEntry->Links);
+            if (!SplayLinks)
+            {
+                /* The tree is also gone now, find the entry referencing us */
+                RefEntry = Entry->NextPrefixTree;
+                while (RefEntry->NextPrefixTree != Entry)
+                {
+                    /* Not this one, move to the next entry */
+                    RefEntry = RefEntry->NextPrefixTree;
+                }
+
+                /* Link them so this entry stops being referenced */
+                RefEntry->NextPrefixTree = Entry->NextPrefixTree;
+            }
+            else if (&Entry->Links != SplayLinks)
+            {
+                /* The tree is still here, but we got moved to a new one */
+                NewEntry = CONTAINING_RECORD(SplayLinks,
+                                             UNICODE_PREFIX_TABLE_ENTRY,
+                                             Links);
+
+                /* Find the entry referencing us */
+                RefEntry = Entry->NextPrefixTree;
+                while (RefEntry->NextPrefixTree != Entry)
+                {
+                    /* Not this one, move to the next entry */
+                    RefEntry = RefEntry->NextPrefixTree;
+                }
+
+                /* Since we got moved, make us the new root entry */
+                NewEntry->NodeTypeCode = PFX_NTC_ROOT;
+
+                /* Link us with the entry referencing the old root */
+                RefEntry->NextPrefixTree = NewEntry;
+
+                /* And link us with the old tree */
+                NewEntry->NextPrefixTree = Entry->NextPrefixTree;
+
+                /* Set the old tree as a child */
+                Entry->NodeTypeCode = PFX_NTC_CHILD;
+                Entry->NextPrefixTree = NULL;
+            }
+        }
     }
 }
 
