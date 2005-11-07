@@ -25,39 +25,45 @@
     (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
 
 #define RtlRightChild(Links) \
-    (PRTL_SPLAY_LINKS)(Links)->RightChild
+    ((PRTL_SPLAY_LINKS)(Links))->RightChild
 
 #define RtlIsRoot(Links) \
     (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
 
 #define RtlLeftChild(Links) \
-    (PRTL_SPLAY_LINKS)(Links)->LeftChild
+    ((PRTL_SPLAY_LINKS)(Links))->LeftChild
 
 #define RtlParent(Links) \
-    (PRTL_SPLAY_LINKS)(Links)->Parent
+    ((PRTL_SPLAY_LINKS)(Links))->Parent
 
 #define RtlInitializeSplayLinks(Links)                  \
-    PRTL_SPLAY_LINKS _SplayLinks;                       \
-    _SplayLinks = (PRTL_SPLAY_LINKS)(Links);            \
-    _SplayLinks->Parent = _SplayLinks;                  \
-    _SplayLinks->LeftChild = NULL;                      \
-    _SplayLinks->RightChild = NULL;
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayLinks;                   \
+        _SplayLinks = (PRTL_SPLAY_LINKS)(Links);        \
+        _SplayLinks->Parent = _SplayLinks;              \
+        _SplayLinks->LeftChild = NULL;                  \
+        _SplayLinks->RightChild = NULL;                 \
+    }
 
 #define RtlInsertAsLeftChild(ParentLinks,ChildLinks)    \
-    PRTL_SPLAY_LINKS _SplayParent;                      \
-    PRTL_SPLAY_LINKS _SplayChild;                       \
-    _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks);     \
-    _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);       \
-    _SplayParent->LeftChild = _SplayChild;              \
-    _SplayChild->Parent = _SplayParent;
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->LeftChild = _SplayChild;          \
+        _SplayChild->Parent = _SplayParent;             \
+    }
 
 #define RtlInsertAsRightChild(ParentLinks,ChildLinks)   \
-    PRTL_SPLAY_LINKS _SplayParent;                      \
-    PRTL_SPLAY_LINKS _SplayChild;                       \
-    _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks);     \
-    _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);       \
-    _SplayParent->RightChild = _SplayChild;             \
-    _SplayChild->Parent = _SplayParent;
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->RightChild = _SplayChild;         \
+        _SplayChild->Parent = _SplayParent;             \
+    }
 
 /* PROTOTYPES ****************************************************************/
 
