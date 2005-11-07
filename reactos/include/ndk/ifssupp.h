@@ -19,6 +19,13 @@
 
 typedef PVOID PRTL_HEAP_PARAMETERS;
 
+typedef struct _RTL_SPLAY_LINKS
+{
+    struct _RTL_SPLAY_LINKS *Parent;
+    struct _RTL_SPLAY_LINKS *LeftChild;
+    struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
 #define LPC_SIZE_T ULONGLONG

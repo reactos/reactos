@@ -14,7 +14,67 @@
 #include "extypes.h"
 #include "rtltypes.h"
 
+/* MACROS ********************************************************************/
+
+/* FIXME: Eventually move the ones in rtltypes.h here... */
+
+/*
+ * Splay Tree Macros
+ */
+#define RtlIsLeftChild(Links) \
+    (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlIsRoot(Links) \
+    (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlLeftChild(Links) \
+    (PRTL_SPLAY_LINKS)(Links)->LeftChild
+
+#define RtlParent(Links) \
+    (PRTL_SPLAY_LINKS)(Links)->Parent
+
 /* PROTOTYPES ****************************************************************/
+
+/*
+ * Splay Tree Functions
+ */
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSplay(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlDelete(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+    PRTL_SPLAY_LINKS Links,
+    PRTL_SPLAY_LINKS *Root
+);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
 
 /*
  * Error and Exception Functions
