@@ -4,7 +4,7 @@
 
 extern SC_HANDLE hSCManager; // declared in sc.c
 
-//#define DBG
+//#define SCDBG
 
 /* control functions */
 BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended);

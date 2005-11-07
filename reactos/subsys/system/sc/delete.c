@@ -15,8 +15,10 @@ BOOL Delete(LPCTSTR ServiceName)
 {
     SC_HANDLE hSc;
 
+#ifdef SCDBG  
     /* testing */
     printf("service to delete - %s\n\n", ServiceName);
+#endif
 
     hSc = OpenService(hSCManager, ServiceName, DELETE);
 
@@ -34,6 +36,7 @@ BOOL Delete(LPCTSTR ServiceName)
         return FALSE;
     }
 
+	_tprintf(_T("[SC] DeleteService SUCCESS\n"));
     CloseServiceHandle(hSc);
     return TRUE;
 }

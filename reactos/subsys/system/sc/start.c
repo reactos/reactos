@@ -14,9 +14,10 @@
 BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
 {
     SC_HANDLE hSc;
-    SERVICE_STATUS_PROCESS ServiceStatus;
+    SERVICE_STATUS_PROCESS ServiceStatus, ServiceStatus2;
     DWORD BytesNeeded;
 
+#ifdef SCDBG  
     /* testing */
     _tprintf(_T("service to start - %s\n\n"), ServiceName);
     _tprintf(_T("Arguments :\n"));
@@ -25,7 +26,7 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
         printf("%s\n", *ServiceArgs);
         ServiceArgs++;
     }
-    
+#endif    
 
     /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager, ServiceName, SERVICE_ALL_ACCESS);
@@ -40,7 +41,7 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
     /* start the service opened */
     if (! StartService(hSc, ArgCount, ServiceArgs))
     {
-        _tprintf(_T("StartService failed\n"));
+		_tprintf(_T("[SC] StartService FAILED %lu:\n\n"), GetLastError());
         ReportLastError();
         return FALSE;
     }
@@ -77,11 +78,22 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
         }
     }
 
+	QueryServiceStatusEx(hSc, SC_STATUS_PROCESS_INFO, (LPBYTE)&ServiceStatus2, 
+		sizeof(SERVICE_STATUS_PROCESS), &BytesNeeded);
+
     CloseServiceHandle(hSc);
     
     if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
     {
-        _tprintf(_T("%s is running\n"), ServiceName);
+        _tprintf(_T("\nSERVICE_NAME: %s\n"), ServiceName);
+        _tprintf(_T("\tTYPE               : %lu\n"), ServiceStatus2.dwServiceType);
+        _tprintf(_T("\tSTATE              : %lu\n"), ServiceStatus2.dwCurrentState);
+		_tprintf(_T("\tWIN32_EXIT_CODE    : %lu\n"), ServiceStatus2.dwWin32ExitCode);
+		_tprintf(_T("\tCHECKPOINT         : %lu\n"), ServiceStatus2.dwCheckPoint);
+		_tprintf(_T("\tWAIT_HINT          : %lu\n"), ServiceStatus2.dwWaitHint);
+		_tprintf(_T("\tPID                : %lu\n"), ServiceStatus2.dwProcessId);
+		_tprintf(_T("\tFLAGS              : %lu\n"), ServiceStatus2.dwServiceFlags);
+
         return TRUE;
     }
     else

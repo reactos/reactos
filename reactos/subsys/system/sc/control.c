@@ -20,7 +20,8 @@ BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args)
 {
     SC_HANDLE hSc;
     SERVICE_STATUS Status;
-    
+
+#ifdef SCDBG    
     /* testing */
     _tprintf(_T("service to control - %s\n\n"), ServiceName);
     _tprintf(_T("command - %lu\n\n"), Control);
@@ -30,7 +31,7 @@ BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args)
         printf("%s\n", *Args);
         Args++;
     }
-
+#endif /* SCDBG */
 
     hSc = OpenService(hSCManager, ServiceName,
                       SERVICE_INTERROGATE | SERVICE_PAUSE_CONTINUE |
@@ -46,7 +47,7 @@ BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args)
 
     if (! ControlService(hSc, Control, &Status))
     {
-        _tprintf(_T("controlService failed\n"));
+		_tprintf(_T("[SC] controlService FAILED %lu:\n\n"), GetLastError());
         ReportLastError();
         return FALSE;
     }

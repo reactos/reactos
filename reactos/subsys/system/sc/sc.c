@@ -58,8 +58,12 @@ INT ScControl(LPTSTR MachineName,   // remote machine name
         _tprintf(_T("Remote service control is not yet implemented\n"));
         return 2;
     }
-
-    hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ALL_ACCESS);
+    
+    /* if we are emurating the services, we don't need administrator access */
+    if ( (_tcsicmp(Command, _T("query")) == 0) || (_tcsicmp(Command, _T("queryex")) == 0) )
+        hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    else
+        hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
         _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());

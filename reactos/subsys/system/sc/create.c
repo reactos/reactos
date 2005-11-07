@@ -19,7 +19,8 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
     
     if ((! ServiceName) || (! BinaryPathName))
         return CreateUsage();
-    
+
+#ifdef SCDBG  
     /* testing */
     printf("service to create - %s\n", ServiceName);
     printf("Binary path - %s\n", BinaryPathName);
@@ -29,7 +30,7 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
         printf("%s\n", *Options);
         Options++;
     }
-
+#endif 
     hSc = CreateService(hSCManager,
                         ServiceName,
                         ServiceName,
@@ -50,9 +51,8 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
         ReportLastError();
         return FALSE;
     }
-    else
-    {
-        CloseServiceHandle(hSc);
-        return TRUE;
-    }
+
+	_tprintf(_T("[SC] CreateService SUCCESS\n"));
+    CloseServiceHandle(hSc);
+    return TRUE;
 }
