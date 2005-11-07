@@ -175,7 +175,28 @@ NTAPI
 RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                        PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry)
 {
-	UNIMPLEMENTED;
+    PUNICODE_PREFIX_TABLE_ENTRY Entry;
+
+    /* Erase the last entry */
+    PrefixTable->LastNextEntry = NULL;
+
+    /* Check if this was a Case Match Entry */
+    if (PrefixTableEntry->NodeTypeCode == PFX_NTC_CASE_MATCH)
+    {
+        /* Get the case match entry */
+        Entry = PrefixTableEntry->CaseMatch;
+
+        /* Now loop until we find the one matching what the caller sent */
+        while (Entry->CaseMatch != PrefixTableEntry) Entry = Entry->CaseMatch;
+
+        /* We found the entry that was sent, link them to delete this entry */
+        Entry->CaseMatch = PrefixTableEntry->CaseMatch;
+    }
+    else if ((PrefixTableEntry->NodeTypeCode == PFX_NTC_ROOT) ||
+            (PrefixTableEntry->NodeTypeCode == PFX_NTC_CHILD))
+    {
+        /* FIXME */
+    }
 }
 
 /* EOF */
