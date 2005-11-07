@@ -281,7 +281,7 @@ ScmrControlService(handle_t BindingHandle,
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
 
-    DPRINT1("ScmrControlService() called\n");
+    DPRINT("ScmrControlService() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -326,7 +326,7 @@ ScmrDeleteService(handle_t BindingHandle,
     PSERVICE lpService;
     DWORD dwError;
 
-    DPRINT1("ScmrDeleteService() called\n");
+    DPRINT("ScmrDeleteService() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -361,7 +361,7 @@ ScmrDeleteService(handle_t BindingHandle,
 
     /* FIXME: Release service database lock */
 
-    DPRINT1("ScmrDeleteService() done\n");
+    DPRINT("ScmrDeleteService() done\n");
 
     return dwError;
 }
@@ -509,13 +509,13 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
 
-    DPRINT1("ScmrChangeServiceConfigW() called\n");
-    DPRINT1("dwServiceType = %lu\n", dwServiceType);
-    DPRINT1("dwStartType = %lu\n", dwStartType);
-    DPRINT1("dwErrorControl = %lu\n", dwErrorControl);
-    DPRINT1("lpBinaryPathName = %S\n", lpBinaryPathName);
-    DPRINT1("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
-    DPRINT1("lpDisplayName = %S\n", lpDisplayName);
+    DPRINT("ScmrChangeServiceConfigW() called\n");
+    DPRINT("dwServiceType = %lu\n", dwServiceType);
+    DPRINT("dwStartType = %lu\n", dwStartType);
+    DPRINT("dwErrorControl = %lu\n", dwErrorControl);
+    DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
+    DPRINT("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+    DPRINT("lpDisplayName = %S\n", lpDisplayName);
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -554,7 +554,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
 
     /* FIXME: Unlock database */
 
-    DPRINT1("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
+    DPRINT("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
@@ -587,15 +587,15 @@ ScmrCreateServiceW(handle_t BindingHandle,
     LPWSTR lpImagePath = NULL;
     HKEY hServiceKey = NULL;
 
-    DPRINT1("ScmrCreateServiceW() called\n");
-    DPRINT1("lpServiceName = %S\n", lpServiceName);
-    DPRINT1("lpDisplayName = %S\n", lpDisplayName);
-    DPRINT1("dwDesiredAccess = %lx\n", dwDesiredAccess);
-    DPRINT1("dwServiceType = %lu\n", dwServiceType);
-    DPRINT1("dwStartType = %lu\n", dwStartType);
-    DPRINT1("dwErrorControl = %lu\n", dwErrorControl);
-    DPRINT1("lpBinaryPathName = %S\n", lpBinaryPathName);
-    DPRINT1("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+    DPRINT("ScmrCreateServiceW() called\n");
+    DPRINT("lpServiceName = %S\n", lpServiceName);
+    DPRINT("lpDisplayName = %S\n", lpDisplayName);
+    DPRINT("dwDesiredAccess = %lx\n", dwDesiredAccess);
+    DPRINT("dwServiceType = %lu\n", dwServiceType);
+    DPRINT("dwStartType = %lu\n", dwStartType);
+    DPRINT("dwErrorControl = %lu\n", dwErrorControl);
+    DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
+    DPRINT("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -622,7 +622,11 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     if (dwServiceType & SERVICE_DRIVER)
     {
-        /* FIXME: Adjust the image path */
+        /* FIXME: Adjust the image path
+         * Following line is VERY BAD, because it assumes that the
+         * first part of full file name is the OS directory */
+        if (lpBinaryPathName[1] == ':') lpBinaryPathName += GetWindowsDirectoryW(NULL, 0);
+
         lpImagePath = HeapAlloc(GetProcessHeap(),
                                 HEAP_ZERO_MEMORY,
                                 (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
@@ -787,7 +791,7 @@ done:;
 
     if (dwError == ERROR_SUCCESS)
     {
-        DPRINT1("hService %lx\n", hServiceHandle);
+        DPRINT("hService %lx\n", hServiceHandle);
         *hService = (unsigned int)hServiceHandle;
 
         if (lpdwTagId != NULL)
@@ -814,7 +818,7 @@ done:;
     if (lpImagePath != NULL)
         HeapFree(GetProcessHeap(), 0, lpImagePath);
 
-    DPRINT1("ScmrCreateServiceW() done (Error %lu)\n", dwError);
+    DPRINT("ScmrCreateServiceW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
@@ -903,7 +907,7 @@ ScmrOpenServiceW(handle_t BindingHandle,
     lpService = ScmGetServiceEntryByName(lpServiceName);
     if (lpService == NULL)
     {
-        DPRINT1("Could not find a service!\n");
+        DPRINT("Could not find a service!\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
