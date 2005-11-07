@@ -139,7 +139,7 @@ RtlInitializeUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -147,17 +147,6 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                        PUNICODE_STRING Prefix,
                        PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry)
 {
-    /*
-     * implementation notes:
-     * - get name length (number of names) DONE
-     * - init splay links DONE
-     * - find a matching tree DONE
-     * - if !found, insert a new NTC_ROOT entry and return TRUE; DONE
-     * - if found, loop tree and compare strings: DONE
-     *   if equal, handle casematch/nomatch DONE
-     *   if greater or lesser equal, then add left/right childs accordingly
-     * - splay the tree DONE
-     */
     PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry, Entry, NextEntry;
     ULONG NameCount;
     RTL_GENERIC_COMPARE_RESULTS Result;
@@ -237,11 +226,49 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         }
         else if (Result == GenericGreaterThan)
         {
-            /* TODO: Check out the left child and add us */
+            /* Check out if we have a left child */
+            if (RtlLeftChild(&Entry->Links))
+            {
+                /* We do, enter it and restart the loop */
+                SplayLinks = RtlLeftChild(&Entry->Links);
+                Entry = CONTAINING_RECORD(SplayLinks,
+                                          UNICODE_PREFIX_TABLE_ENTRY,
+                                          Links);
+            }
+            else
+            {
+                /* We don't, set this entry as a child */
+                PrefixTableEntry->NodeTypeCode = PFX_NTC_CHILD;
+                PrefixTableEntry->NextPrefixTree = NULL;
+                PrefixTableEntry->CaseMatch = PrefixTableEntry;
+
+                /* Insert us into the tree */
+                RtlInsertAsLeftChild(&Entry->Links, &PrefixTableEntry->Links);
+                break;
+            }
         }
         else
         {
-            /* TODO: Check out the right child and add us */
+            /* Check out if we have a right child */
+            if (RtlRightChild(&Entry->Links))
+            {
+                /* We do, enter it and restart the loop */
+                SplayLinks = RtlLeftChild(&Entry->Links);
+                Entry = CONTAINING_RECORD(SplayLinks,
+                                          UNICODE_PREFIX_TABLE_ENTRY,
+                                          Links);
+            }
+            else
+            {
+                /* We don't, set this entry as a child */
+                PrefixTableEntry->NodeTypeCode = PFX_NTC_CHILD;
+                PrefixTableEntry->NextPrefixTree = NULL;
+                PrefixTableEntry->CaseMatch = PrefixTableEntry;
+
+                /* Insert us into the tree */
+                RtlInsertAsRightChild(&Entry->Links, &PrefixTableEntry->Links);
+                break;
+            }
         }
     }
 
