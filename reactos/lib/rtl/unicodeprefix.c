@@ -269,12 +269,12 @@ RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
             else if (RtlIsLeftChild(&PrefixTableEntry->Links))
             {
                 /* We were the left child, so make us as well */
-                Entry->Links.LeftChild = &Entry->Links;
+                PrefixTableEntry->Links.LeftChild = &Entry->Links;
             }
             else
             {
                 /* We were the right child, so make us as well */
-                Entry->Links.RightChild = &Entry->Links;
+                PrefixTableEntry->Links.RightChild = &Entry->Links;
             }
 
             /* Check if we have a left child */
