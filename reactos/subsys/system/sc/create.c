@@ -15,7 +15,7 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
 {
     SC_HANDLE hSc;
     LPCTSTR BinaryPathName = *++ServiceArgs;
-    LPCTSTR *Options = ++ServiceArgs;
+//    LPCTSTR *Options = ++ServiceArgs;
     
     if ((! ServiceName) || (! BinaryPathName))
         return CreateUsage();
