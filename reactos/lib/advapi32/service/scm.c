@@ -909,8 +909,17 @@ QueryServiceConfigW(
     LPDWORD                 pcbBytesNeeded)
 {
     DPRINT1("QueryServiceConfigW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    if (lpServiceConfig && cbBufSize >= sizeof(QUERY_SERVICE_CONFIGW))
+    {
+        memset(lpServiceConfig, 0, *pcbBytesNeeded);
+        return TRUE;
+    }
+    else
+    {
+        *pcbBytesNeeded = sizeof(QUERY_SERVICE_CONFIGW);
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
 }
 
 
