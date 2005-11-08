@@ -78,15 +78,21 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
         /* Make sure it returned at right IRQL */
         if (KeGetCurrentIrql() != PASSIVE_LEVEL) {
 
-            /* FIXME: Make this an Ex */
-            KEBUGCHECK(WORKER_THREAD_RETURNED_AT_BAD_IRQL);
+            KEBUGCHECKEX(WORKER_THREAD_RETURNED_AT_BAD_IRQL,
+                         (ULONG_PTR)WorkItem->WorkerRoutine,
+                         KeGetCurrentIrql(),
+                         (ULONG_PTR)WorkItem->Parameter,
+                         (ULONG_PTR)WorkItem);
         }
 
         /* Make sure it returned with Impersionation Disabled */
         if (PsGetCurrentThread()->ActiveImpersonationInfo) {
 
-            /* FIXME: Make this an Ex */
-            KEBUGCHECK(IMPERSONATING_WORKER_THREAD);
+            KEBUGCHECKEX(IMPERSONATING_WORKER_THREAD,
+                         (ULONG_PTR)WorkItem->WorkerRoutine,
+                         (ULONG_PTR)WorkItem->Parameter,
+                         (ULONG_PTR)WorkItem,
+                         0);
         }
     }
 }
