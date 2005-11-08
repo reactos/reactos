@@ -69,7 +69,7 @@ RtlRealSuccessor (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 PRTL_SPLAY_LINKS
 NTAPI
@@ -249,7 +249,18 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
             /* "Finally" case: N doesn't have a grandparent => P is root */
             else
             {
+                /* P's left-child becomes N's right child */
+                RtlLeftChild(P) = RtlRightChild(N);
 
+                /* If it exists, update its parent pointer too */
+                if (RtlLeftChild(P)) RtlParent(RtlLeftChild(P)) = P;
+
+                /* Now make N the root, no need to worry about references */
+                N->Parent = N;
+
+                /* And make P its right child */
+                N->RightChild = P;
+                P->Parent = N;
             }
         }
         /* Case 2 & 4: N is right child of P */
@@ -380,7 +391,18 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
             /* "Finally" case: N doesn't have a grandparent => P is root */
             else
             {
+                /* P's right-child becomes N's left child */
+                RtlRightChild(P) = RtlLeftChild(N);
 
+                /* If it exists, update its parent pointer too */
+                if (RtlRightChild(P)) RtlParent(RtlRightChild(P)) = P;
+
+                /* Now make N the root, no need to worry about references */
+                N->Parent = N;
+
+                /* And make P its left child */
+                N->LeftChild = P;
+                P->Parent = N;
             }
         }
     }
