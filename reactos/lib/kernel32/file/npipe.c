@@ -199,7 +199,195 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
    return(r);
 }
 
+/*
+ * When NPFS will work properly, use this code instead. It is compatible with
+ * Microsoft's NPFS.SYS. The main difference is that:
+ *      - This code actually respects the timeout instead of ignoring it!
+ *      - This code validates and creates the proper names for both UNC and local pipes
+ *      - On NT, you open the *root* pipe directory (either \DosDevices\Pipe or 
+ *        \DosDevices\Unc\Server\Pipe) and then send the pipe to wait on in the 
+ *        FILE_PIPE_WAIT_FOR_BUFFER structure.
+ */
+#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+WaitNamedPipeW(LPCWSTR lpNamedPipeName,
+               DWORD nTimeOut)
+{
+    UNICODE_STRING NamedPipeName, NewName, DevicePath, PipePrefix;
+    ULONG NameLength;
+    ULONG i;
+    PWCHAR p;
+    ULONG Type;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    IO_STATUS_BLOCK IoStatusBlock;
+    ULONG WaitPipeInfoSize;
+    PFILE_PIPE_WAIT_FOR_BUFFER WaitPipeInfo;
 
+    /* Start by making a unicode string of the name */
+    DPRINT("Sent path: %S\n", lpNamedPipeName);
+    RtlCreateUnicodeString(&NamedPipeName, lpNamedPipeName);
+    NameLength = NamedPipeName.Length / sizeof(WCHAR);
+
+    /* All slashes must become backslashes */
+    for (i = 0; i < NameLength; i++)
+    {
+        /* Check and convert */
+        if (NamedPipeName.Buffer[i] == L'/') NamedPipeName.Buffer[i] = L'\\';
+    }
+
+    /* Find the path type of the name we were given */
+    NewName = NamedPipeName;
+    Type = RtlDetermineDosPathNameType_U(lpNamedPipeName);
+ 
+    /* Check if this was a device path, ie : "\\.\pipe\name" */
+    if (Type == DEVICE_PATH)
+    {
+        /* Make sure it's a valid prefix */
+        RtlInitUnicodeString(&PipePrefix, L"\\\\.\\pipe\\");
+        RtlPrefixString((PANSI_STRING)&PipePrefix, (PANSI_STRING)&NewName, TRUE);
+
+        /* Move past it */
+        NewName.Buffer += 9;
+        NewName.Length -= 9 * sizeof(WCHAR);
+
+        /* Initialize the Dos Devices name */
+        DPRINT("NewName: %wZ\n", &NewName);
+        RtlInitUnicodeString(&DevicePath, L"\\DosDevices\\pipe\\");
+    }
+    else if (Type == UNC_PATH)
+    {
+        /* The path is \\server\\pipe\name; find the pipename itself */
+        p = &NewName.Buffer[2];
+
+        /* First loop to get past the server name */
+        do
+        {
+            /* Check if this is a backslash */
+            if (*p == L'\\') break;
+
+            /* Check next */
+            p++;
+        } while (*p);
+
+        /* Now make sure the full name contains "pipe\" */
+        if ((*p) && !(_wcsnicmp(p + 1, L"pipe\\", sizeof("pipe\\"))))
+        {
+            /* Get to the pipe name itself now */
+            p += sizeof("pipe\\") - 1;
+        }
+        else
+        {
+            /* The name is invalid */
+            DPRINT1("Invalid name!\n");
+	        SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
+	        return FALSE;
+        }
+
+        /* FIXME: Open \DosDevices\Unc\Server\Pipe\Name */
+    }
+    else
+    {
+        DPRINT1("Invalid path type\n");
+        SetLastErrorByStatus(STATUS_OBJECT_PATH_SYNTAX_BAD);
+        return FALSE;
+    }
+
+    /* Initialize the object attributes */
+    DPRINT("Opening: %wZ\n", &DevicePath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DevicePath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Open the path */
+    Status = NtOpenFile(&FileHandle,
+                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail; couldn't open */
+        DPRINT1("Status: %lx\n", Status);
+        SetLastErrorByStatus(Status);
+        RtlFreeUnicodeString(&NamedPipeName);
+        return(FALSE);
+    }
+
+    /* Now calculate the total length of the structure and allocate it */
+    WaitPipeInfoSize = FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name[0]) +
+                       NewName.Length;
+    WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
+
+    /* Check what timeout we got */
+    if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
+    {
+        /* Don't use a timeout */
+        WaitPipeInfo->TimeoutSpecified = FALSE;
+    }
+    else
+    {
+        /* Check if we should wait forever */
+        if (nTimeOut == NMPWAIT_WAIT_FOREVER)
+        {
+            /* Set the max */
+            WaitPipeInfo->Timeout.LowPart = 0;
+            WaitPipeInfo->Timeout.HighPart = 0x80000000;
+        }
+        else
+        {
+            /* Convert to NT format */
+            WaitPipeInfo->Timeout.QuadPart = UInt32x32To64(-10000, nTimeOut);
+        }
+
+        /* In both cases, we do have a timeout */
+        WaitPipeInfo->TimeoutSpecified = FALSE;
+    }
+
+    /* Set the length and copy the name */
+    WaitPipeInfo->NameLength = NewName.Length;
+    RtlCopyMemory(WaitPipeInfo->Name, NewName.Buffer, NewName.Length);
+
+    /* Get rid of the full name */
+    RtlFreeUnicodeString(&NamedPipeName);
+
+    /* Let NPFS know of our request */
+    Status = NtFsControlFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             FSCTL_PIPE_WAIT,
+                             WaitPipeInfo,
+                             WaitPipeInfoSize,
+                             NULL,
+                             0);
+
+    /* Free our pipe info data and close the handle */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
+    NtClose(FileHandle);
+
+    /* Check the status */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure to wait on the pipe */
+        DPRINT1("Status: %lx\n", Status);
+        SetLastErrorByStatus (Status);
+        return FALSE;
+     }
+
+    /* Success */
+    return TRUE;
+}
+#else
 /*
  * @implemented
  */
@@ -262,7 +450,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 
    return(TRUE);
 }
-
+#endif
 
 /*
  * @implemented
@@ -334,7 +522,6 @@ ConnectNamedPipe(IN HANDLE hNamedPipe,
 
    return TRUE;
 }
-
 
 /*
  * @implemented
