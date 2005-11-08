@@ -255,13 +255,13 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
         /* Case 2 & 4: N is right child of P */
         else
         {
-            /* Case 2: P is the left child of G */
-            if (RtlIsLeftChild(P))
+            /* Case 2: P is the right child of G */
+            if (RtlIsRightChild(P))
             {
 
             }
-            /* Case 4: P is the right child of G */
-            else if (RtlIsRightChild(P))
+            /* Case 4: P is the left child of G */
+            else if (RtlIsLeftChild(P))
             {
 
             }
