@@ -48,8 +48,8 @@ ComputeUnicodeNameLength(IN PUNICODE_STRING UnicodeName)
 STATIC
 RTL_GENERIC_COMPARE_RESULTS
 NTAPI
-CompareUnicodeStrings(IN PUNICODE_STRING String,
-                      IN PUNICODE_STRING Prefix,
+CompareUnicodeStrings(IN PUNICODE_STRING Prefix,
+                      IN PUNICODE_STRING String,
                       IN ULONG CaseCheckChar)
 {
     ULONG StringLength = String->Length / sizeof(WCHAR);
@@ -58,6 +58,17 @@ CompareUnicodeStrings(IN PUNICODE_STRING String,
     ULONG i;
     WCHAR FoundPrefix, FoundString;
     PWCHAR p, p1;
+    DPRINT("CompareUnicodeStrings: %wZ %wZ\n", String, Prefix);
+
+    /* Handle case noticed in npfs when Prefix = '\' and name starts with '\' */
+    if ((PrefixLength == 1) &&
+        (Prefix->Buffer[0] == '\\') &&
+        (StringLength > 1) &&
+        (String->Buffer[0] == '\\'))
+    {
+        /* The string is actually a prefix */
+        return -1;
+    }
 
     /* Validate the Case Check Character Position */
     if (CaseCheckChar > ScanLength) CaseCheckChar = ScanLength;
@@ -147,6 +158,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry, Entry, NextEntry;
     PRTL_SPLAY_LINKS SplayLinks;
     RTL_GENERIC_COMPARE_RESULTS Result;
+    DPRINT("RtlFindUnicodePrefix\n");
 
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(FullName);
@@ -164,16 +176,20 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     /* Loop every entry which has valid entries */
     while (CurrentEntry->NameLength)
     {
+        DPRINT("CurrentEntry->NameLength %lx\n", CurrentEntry->NameLength);
+
         /* Get the splay links and loop */
         while ((SplayLinks = &CurrentEntry->Links))
         {
             /* Get the entry */
+            DPRINT("SplayLinks %p\n", SplayLinks);
             Entry = CONTAINING_RECORD(SplayLinks,
                                       UNICODE_PREFIX_TABLE_ENTRY,
                                       Links);
 
             /* Do the comparison */
             Result = CompareUnicodeStrings(Entry->Prefix, FullName, 0);
+            DPRINT("Result %lx\n", Result);
             if (Result == GenericGreaterThan)
             {
                 /* Prefix is greater, so restart on the left child */
@@ -192,6 +208,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
              * NOTE: An index of 0 means case-insensitive(ie, we'll be case
              * insensitive since index 0, ie, all the time)
              */
+            DPRINT("CaseInsensitiveIndex %lx\n", CaseInsensitiveIndex);
             if (!CaseInsensitiveIndex)
             {
                 /* 
@@ -225,6 +242,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                 }
 
                 /* Return the entry */
+                DPRINT("RtlFindUnicodePrefix: %p\n", Entry);
                 return Entry;
             }
 
@@ -240,11 +258,13 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                     (Result != GenericGreaterThan))
                 {
                     /* This is a positive match, return it */
+                    DPRINT("RtlFindUnicodePrefix: %p\n", NextEntry);
                     return NextEntry;
                 }
 
                 /* No match yet, continue looping the circular list */
                 NextEntry = NextEntry->CaseMatch;
+                DPRINT("NextEntry %p\n", NextEntry);
             } while (NextEntry != Entry);
 
             /*
@@ -258,9 +278,11 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         /* Splay links exausted, move to next entry */
         PreviousEntry = CurrentEntry;
         CurrentEntry = CurrentEntry->NextPrefixTree;
+        DPRINT("CurrentEntry %p\n", CurrentEntry);
     }
 
 	/* If we got here, nothing was found */
+    DPRINT("RtlFindUnicodePrefix: %p\n", NULL);
 	return NULL;
 }
 
@@ -291,6 +313,7 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     ULONG NameCount;
     RTL_GENERIC_COMPARE_RESULTS Result;
     PRTL_SPLAY_LINKS SplayLinks;
+    DPRINT("RtlInsertUnicodePrefix\n");
 
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(Prefix);
@@ -322,6 +345,7 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         PrefixTableEntry->CaseMatch = PrefixTableEntry;
 
         /* Quick return */
+        DPRINT("RtlInsertUnicodePrefix TRUE\n");
         return TRUE;
     }
 
@@ -344,6 +368,7 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                     (GenericEqual))
                 {
                     /* We must fail the insert: it already exists */
+                    DPRINT("RtlInsertUnicodePrefix FALSE\n");
                     return FALSE;
                 }
 
@@ -436,6 +461,7 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     Entry->NextPrefixTree = NextEntry;
 
     /* Return success */
+    DPRINT("RtlInsertUnicodePrefix TRUE\n");
 	return TRUE;
 }
 
@@ -449,6 +475,7 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 {
     PRTL_SPLAY_LINKS SplayLinks;
     PUNICODE_PREFIX_TABLE_ENTRY Entry, CaseMatchEntry;
+    DPRINT("RtlNextUnicodePrefix\n");
 
     /* We might need this entry 2/3rd of the time, so cache it now */
     CaseMatchEntry = PrefixTable->LastNextEntry->CaseMatch;
@@ -507,6 +534,7 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 
     /* Save this entry as the last one returned, and return it */
     PrefixTable->LastNextEntry = Entry;
+    DPRINT("RtlNextUnicodePrefix: %p\n", Entry);
     return Entry;
 }
 
@@ -520,6 +548,7 @@ RtlRemoveUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 {
     PUNICODE_PREFIX_TABLE_ENTRY Entry, RefEntry, NewEntry;
     PRTL_SPLAY_LINKS SplayLinks;
+    DPRINT("RtlRemoveUnicodePrefix\n");
 
     /* Erase the last entry */
     PrefixTable->LastNextEntry = NULL;

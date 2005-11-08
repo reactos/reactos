@@ -146,19 +146,26 @@ RtlGetElementGenericTableAvl (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 VOID
 NTAPI
-RtlInitializeGenericTable (
-	PRTL_GENERIC_TABLE Table,
-	PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
-	PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
-	PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
-	PVOID TableContext
-	)
+RtlInitializeGenericTable(PRTL_GENERIC_TABLE Table,
+                          PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
+                          PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
+                          PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
+                          PVOID TableContext)
 {
-	UNIMPLEMENTED;
+	/* Initialize the table to default and passed values */
+    InitializeListHead(&Table->InsertOrderList);
+    Table->TableRoot = NULL;
+    Table->NumberGenericTableElements = 0;
+    Table->WhichOrderedElement = 0;
+    Table->OrderedPointer = &Table->InsertOrderList;
+    Table->CompareRoutine = CompareRoutine;
+    Table->AllocateRoutine = AllocateRoutine;
+    Table->FreeRoutine = FreeRoutine;
+    Table->TableContext = TableContext;
 }
 
 
