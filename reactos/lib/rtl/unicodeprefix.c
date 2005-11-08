@@ -10,7 +10,7 @@
 
 #include <rtl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /*
@@ -179,7 +179,8 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         DPRINT("CurrentEntry->NameLength %lx\n", CurrentEntry->NameLength);
 
         /* Get the splay links and loop */
-        while ((SplayLinks = &CurrentEntry->Links))
+        SplayLinks = &CurrentEntry->Links;
+        while (SplayLinks)
         {
             /* Get the entry */
             DPRINT("SplayLinks %p\n", SplayLinks);
