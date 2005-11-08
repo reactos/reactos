@@ -135,7 +135,7 @@ CompareUnicodeStrings(IN PUNICODE_STRING String,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PUNICODE_PREFIX_TABLE_ENTRY
 NTAPI
@@ -144,8 +144,9 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                      ULONG CaseInsensitiveIndex)
 {
     ULONG NameCount;
-    PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry;
+    PUNICODE_PREFIX_TABLE_ENTRY CurrentEntry, PreviousEntry, Entry, NextEntry;
     PRTL_SPLAY_LINKS SplayLinks;
+    RTL_GENERIC_COMPARE_RESULTS Result;
 
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(FullName);
@@ -178,6 +179,91 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
              *    for casesensitive, loop the circular case match list and
              *        keep comparing for each entry
              */
+            Entry = CONTAINING_RECORD(SplayLinks,
+                                      UNICODE_PREFIX_TABLE_ENTRY,
+                                      Links);
+
+            /* Do the comparison */
+            Result = CompareUnicodeStrings(Entry->Prefix, FullName, 0);
+            if (Result == GenericGreaterThan)
+            {
+                /* Prefix is greater, so restart on the left child */
+                SplayLinks = RtlLeftChild(SplayLinks);
+                continue;
+            }
+            else if (Result == GenericLessThan)
+            {
+                /* Prefix is smaller, so restart on the right child */
+                SplayLinks = RtlRightChild(SplayLinks);
+                continue;
+            }
+
+            /*
+             * We have a match, check if this was a case-sensitive search
+             * NOTE: An index of 0 means case-insensitive(ie, we'll be case
+             * insensitive since index 0, ie, all the time)
+             */
+            if (!CaseInsensitiveIndex)
+            {
+                /* 
+                 * Check if this entry was a child. We need to return the root,
+                 * so if this entry was a child, we'll splay the tree and get
+                 * the root, and set the current entry as a child.
+                 */
+                if (Entry->NodeTypeCode == PFX_NTC_CHILD)
+                {
+                    /* Get the next entry */
+                    NextEntry = CurrentEntry->NextPrefixTree;
+
+                    /* Make the current entry become a child */
+                    CurrentEntry->NodeTypeCode = PFX_NTC_CHILD;
+                    CurrentEntry->NextPrefixTree = NULL;
+
+                    /* Splay the tree */
+                    SplayLinks = RtlSplay(&Entry->Links);
+
+                    /* Get the new root entry */
+                    Entry = CONTAINING_RECORD(SplayLinks,
+                                              UNICODE_PREFIX_TABLE_ENTRY,
+                                              Links);
+
+                    /* Set it as a root entry */
+                    Entry->NodeTypeCode = PFX_NTC_ROOT;
+
+                    /* Add it to the root entries list */
+                    PreviousEntry->NextPrefixTree = Entry;
+                    Entry->NextPrefixTree = NextEntry;
+                }
+
+                /* Return the entry */
+                return Entry;
+            }
+
+            /* We'll do a case-sensitive search if we've reached this point */
+            NextEntry = Entry;
+            do
+            {
+                /* Do the case-sensitive search */
+                Result = CompareUnicodeStrings(NextEntry->Prefix,
+                                               FullName,
+                                               CaseInsensitiveIndex);
+                if ((Result != GenericLessThan) &&
+                    (Result != GenericGreaterThan))
+                {
+                    /* This is a positive match, return it */
+                    return NextEntry;
+                }
+
+                /* No match yet, continue looping the circular list */
+                NextEntry = NextEntry->CaseMatch;
+            } while (NextEntry != Entry);
+
+            /*
+             * If we got here, then we found a non-case-sensitive match, but
+             * we need to find a case-sensitive match, so we'll just keep 
+             * searching the next tree (NOTE: we need to break out for this).
+             */
+            break;
         }
 
         /* Splay links exausted, move to next entry */
