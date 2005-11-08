@@ -258,12 +258,124 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
             /* Case 2: P is the right child of G */
             if (RtlIsRightChild(P))
             {
+                /*
+                 * P's left-child becomes G's right child and
+                 * N's left-child becomes P's right child.
+                 */
+                RtlRightChild(G) = RtlLeftChild(P);
+                RtlRightChild(P) = RtlLeftChild(N);
 
+                /*
+                 * If they exist, update their parent pointers too, 
+                 * since they've changed trees.
+                 */
+                if (RtlRightChild(G)) RtlParent(RtlRightChild(G)) = G;
+                if (RtlRightChild(P)) RtlParent(RtlRightChild(P)) = P;
+
+                /*
+                 * Now we'll shove N all the way to the top.
+                 * Check if G is the root first.
+                 */
+                if (RtlIsRoot(G))
+                {
+                    /* G doesn't have a parent, so N will become the root! */
+                    RtlParent(N) = N;
+                }
+                else
+                {
+                    /* G has a parent, so inherit it since we take G's place */
+                    RtlParent(N) = RtlParent(G);
+
+                    /*
+                     * Now find out who was referencing G and have it reference
+                     * N instead, since we're taking G's place.
+                     */
+                    if (RtlIsLeftChild(G))
+                    {
+                        /*
+                         * G was a left child, so change its parent's left
+                         * child link to point to N now.
+                         */
+                        RtlLeftChild(RtlParent(G)) = N;
+                    }
+                    else
+                    {
+                        /*
+                         * G was a right child, so change its parent's right
+                         * child link to point to N now.
+                         */
+                        RtlLeftChild(RtlParent(G)) = N;
+                    }
+                }
+
+                /* Now N is on top, so P has become its child. */
+                RtlLeftChild(N) = P;
+                RtlParent(P) = N;
+
+                /* N is on top, P is its child, so G is grandchild. */
+                RtlLeftChild(P) = G;
+                RtlParent(G) = P;
             }
             /* Case 4: P is the left child of G */
             else if (RtlIsLeftChild(P))
             {
+                /*
+                 * N's left-child becomes G's right child and
+                 * N's right-child becomes P's left child.
+                 */
+                RtlRightChild(P) = RtlLeftChild(N);
+                RtlLeftChild(G) = RtlRightChild(N);
 
+                /*
+                 * If they exist, update their parent pointers too, 
+                 * since they've changed trees.
+                 */
+                if (RtlRightChild(P)) RtlParent(RtlRightChild(P)) = P;
+                if (RtlLeftChild(G)) RtlParent(RtlLeftChild(G)) = G;
+
+                /*
+                 * Now we'll shove N all the way to the top.
+                 * Check if G is the root first.
+                 */
+                if (RtlIsRoot(G))
+                {
+                    /* G doesn't have a parent, so N will become the root! */
+                    RtlParent(N) = N;
+                }
+                else
+                {
+                    /* G has a parent, so inherit it since we take G's place */
+                    RtlParent(N) = RtlParent(G);
+
+                    /*
+                     * Now find out who was referencing G and have it reference
+                     * N instead, since we're taking G's place.
+                     */
+                    if (RtlIsLeftChild(G))
+                    {
+                        /*
+                         * G was a left child, so change its parent's left
+                         * child link to point to N now.
+                         */
+                        RtlLeftChild(RtlParent(G)) = N;
+                    }
+                    else
+                    {
+                        /*
+                         * G was a right child, so change its parent's right
+                         * child link to point to N now.
+                         */
+                        RtlLeftChild(RtlParent(G)) = N;
+                    }
+                }
+
+                /* Now N is on top, so P has become its left child. */
+                RtlLeftChild(N) = P;
+                RtlParent(G) = N;
+
+                /* N is on top, P is its left child, so G is right child. */
+                RtlRightChild(N) = G;
+                RtlParent(P) = N;
             }
             /* "Finally" case: N doesn't have a grandparent => P is root */
             else
