@@ -27,6 +27,7 @@
 
 ULONG CsrssInitialized = FALSE;
 PKPROCESS Csrss = NULL;
+ULONG VideoPortDeviceNumber = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -128,41 +129,6 @@ IntVideoPortDeferredRoutine(
    ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
 }
 
-ULONG NTAPI
-IntVideoPortAllocateDeviceNumber(VOID)
-{
-   NTSTATUS Status;
-   ULONG DeviceNumber;
-   WCHAR SymlinkBuffer[20];
-   UNICODE_STRING SymlinkName;
-
-   for (DeviceNumber = 0;;)
-   {
-      OBJECT_ATTRIBUTES Obj;
-      HANDLE ObjHandle;
-
-      swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
-      RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
-      InitializeObjectAttributes(&Obj, &SymlinkName, 0, NULL, NULL);
-      Status = ZwOpenSymbolicLinkObject(&ObjHandle, GENERIC_READ, &Obj);
-      if (NT_SUCCESS(Status))
-      {
-         ZwClose(ObjHandle);
-         DeviceNumber++;
-         continue;
-      }
-      else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-         break;
-      else
-      {
-         DPRINT1("ZwOpenSymbolicLinkObject() returned unexpected status: 0x%08lx\n", Status);
-         return 0xFFFFFFFF;
-      }
-   }
-
-   return DeviceNumber;
-}
-
 NTSTATUS NTAPI
 IntVideoPortCreateAdapterDeviceObject(
    IN PDRIVER_OBJECT DriverObject,
@@ -186,7 +152,7 @@ IntVideoPortCreateAdapterDeviceObject(
     * object names and symlinks.
     */
 
-   DeviceNumber = IntVideoPortAllocateDeviceNumber();
+   DeviceNumber = VideoPortDeviceNumber++;
    if (DeviceNumber == 0xFFFFFFFF)
    {
       DPRINT("Can't find free device number\n");

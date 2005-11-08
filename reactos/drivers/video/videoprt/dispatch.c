@@ -68,6 +68,8 @@ IntVideoPortAddDevice(
    IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+   PDEVICE_OBJECT DeviceObject;
+   NTSTATUS Status;
 
    /*
     * Get the initialization data we saved in VideoPortInitialize.
@@ -79,11 +81,20 @@ IntVideoPortAddDevice(
     * Create adapter device object.
     */
 
-   return IntVideoPortCreateAdapterDeviceObject(
+   Status = IntVideoPortCreateAdapterDeviceObject(
       DriverObject,
       DriverExtension,
       PhysicalDeviceObject,
-      NULL);
+      &DeviceObject);
+   if (!NT_SUCCESS(Status))
+      return Status;
+
+   if (PhysicalDeviceObject == NULL)
+   {
+      /* We will never have a IRP_MJ_PNP/IRP_MN_START_DEVICE Irp */
+      Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
+   }
+   return Status;
 }
 
 /*
