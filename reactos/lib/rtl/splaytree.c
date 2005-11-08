@@ -109,8 +109,60 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
      * we keep recently accessed nodes near the root and keep the tree
      * roughly balanced, so that we achieve the desired amortized time bounds.
      */
-	UNIMPLEMENTED;
-	return 0;
+    PRTL_SPLAY_LINKS N, P, G;
+
+    /* N is the item we'll be playing with */
+    N = Links;
+
+    /* Let the algorithm run until N becomes the root entry */
+    while (!RtlIsRoot(N))
+    {
+        /* Now get the parent and grand-parent */
+        P = RtlParent(N);
+        G = RtlParent(P);
+
+        /* Case 1 & 3: N is left child of P */
+        if (RtlIsLeftChild(N))
+        {
+            /* Case 1: P is the left child of G */
+            if (RtlIsLeftChild(P))
+            {
+
+            }
+            /* Case 3: P is the right child of G */
+            else if (RtlIsRightChild(P))
+            {
+
+            }
+            /* "Finally" case: N doesn't have a grandparent => P is root */
+            else
+            {
+
+            }
+        }
+        /* Case 2 & 4: N is right child of P */
+        else
+        {
+            /* Case 2: P is the left child of G */
+            if (RtlIsLeftChild(P))
+            {
+
+            }
+            /* Case 4: P is the right child of G */
+            else if (RtlIsRightChild(P))
+            {
+
+            }
+            /* "Finally" case: N doesn't have a grandparent => P is root */
+            else
+            {
+
+            }
+        }
+    }
+
+	/* Return the root entry */
+	return N;
 }
 
 
