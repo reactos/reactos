@@ -671,7 +671,7 @@ co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 
    ASSERT_REFS_CO(Window);
 
-   Desktop = PsGetCurrentThread()->Tcb.Win32Thread->Desktop;
+   Desktop = ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->Desktop;
    CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 

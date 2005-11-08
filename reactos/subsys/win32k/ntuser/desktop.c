@@ -1432,14 +1432,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    {
       /* just return the handle, we queried the desktop handle of a thread running
          in the same context */
-      Ret = Thread->Tcb.Win32Thread->hDesktop;
+      Ret = ((PW32THREAD)Thread->Tcb.Win32Thread)->hDesktop;
       ObDereferenceObject(Thread);
       RETURN(Ret);
    }
 
    /* get the desktop handle and the desktop of the thread */
-   if(!(hThreadDesktop = Thread->Tcb.Win32Thread->hDesktop) ||
-         !(DesktopObject = Thread->Tcb.Win32Thread->Desktop))
+   if(!(hThreadDesktop = ((PW32THREAD)Thread->Tcb.Win32Thread)->hDesktop) ||
+         !(DesktopObject = ((PW32THREAD)Thread->Tcb.Win32Thread)->Desktop))
    {
       ObDereferenceObject(Thread);
       DPRINT1("Desktop information of thread 0x%x broken!?\n", dwThreadId);

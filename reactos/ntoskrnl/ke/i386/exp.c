@@ -806,7 +806,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         if (PreviousMode != KernelMode)
         {
             /* Set the Debug Flag */
-            KeGetCurrentThread()->DebugActive = (Context->Dr7 & DR7_ACTIVE);
+            KeGetCurrentThread()->DispatcherHeader.DebugActive = (Context->Dr7 & DR7_ACTIVE);
         }
     }
 

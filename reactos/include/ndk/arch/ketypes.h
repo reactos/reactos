@@ -12,10 +12,10 @@
 /* Shared structures needed by Arch-specific headers */
 typedef struct _KDPC_DATA
 {
-    LIST_ENTRY  DpcListHead;
-    ULONG  DpcLock;
-    ULONG  DpcQueueDepth;
-    ULONG  DpcCount;
+    LIST_ENTRY DpcListHead;
+    ULONG DpcLock;
+    ULONG DpcQueueDepth;
+    ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
 typedef struct _PP_LOOKASIDE_LIST

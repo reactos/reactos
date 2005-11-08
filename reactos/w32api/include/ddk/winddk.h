@@ -394,6 +394,7 @@ extern NTOSAPI POBJECT_TYPE SeTokenObjectType;
 extern NTOSAPI CCHAR KeNumberProcessors;
 
 #define PROCESSOR_FEATURE_MAX 64
+#define MAX_WOW64_SHARED_ENTRIES 16
 
 typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE 
 {
@@ -418,12 +419,12 @@ typedef struct _KUSER_SHARED_DATA
     volatile KSYSTEM_TIME TimeZoneBias;
     USHORT ImageNumberLow;
     USHORT ImageNumberHigh;
-    WCHAR NtSystemRoot[ 260 ];
+    WCHAR NtSystemRoot[260];
     ULONG MaxStackTraceDepth;
     ULONG CryptoExponent;
     ULONG TimeZoneId;
     ULONG LargePageMinimum;
-    ULONG Reserved2[ 7 ];
+    ULONG Reserved2[7];
     NT_PRODUCT_TYPE NtProductType;
     BOOLEAN ProductTypeIsValid;
     ULONG NtMajorVersion;
@@ -443,12 +444,19 @@ typedef struct _KUSER_SHARED_DATA
     ULONG NumberOfPhysicalPages;
     BOOLEAN SafeBootMode;
     ULONG TraceLogging;
-    ULONGLONG   Fill0;
-    ULONGLONG   SystemCall[4];
+    ULONG Fill0;
+    ULONGLONG TestRetInstruction;
+    ULONG SystemCall;
+    ULONG SystemCallReturn;
+    ULONGLONG SystemCallPad[3];
     union {
         volatile KSYSTEM_TIME TickCount;
         volatile ULONG64 TickCountQuad;
     };
+    ULONG Cookie;
+    LONGLONG ConsoleSessionForegroundProcessId;
+    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+    ULONG UserModeGlobalLogging;
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 /*
@@ -929,21 +937,24 @@ typedef BOOLEAN
 (DDKAPI *PKTRANSFER_ROUTINE)(
   VOID);
 
-typedef struct _KAPC {
-  CSHORT  Type;
-  CSHORT  Size;
-  ULONG  Spare0;
-  struct _KTHREAD  *Thread;
-  LIST_ENTRY  ApcListEntry;
-  PKKERNEL_ROUTINE  KernelRoutine;
-  PKRUNDOWN_ROUTINE  RundownRoutine;
-  PKNORMAL_ROUTINE  NormalRoutine;
-  PVOID  NormalContext;
-  PVOID  SystemArgument1;
-  PVOID  SystemArgument2;
-  CCHAR  ApcStateIndex;
-  KPROCESSOR_MODE  ApcMode;
-  BOOLEAN  Inserted;
+typedef struct _KAPC
+{
+    UCHAR Type;
+    UCHAR SpareByte0;
+    UCHAR Size;
+    UCHAR SpareByte1;
+    ULONG SpareLong0;
+    struct _KTHREAD *Thread;
+    LIST_ENTRY ApcListEntry;
+    PKKERNEL_ROUTINE KernelRoutine;
+    PKRUNDOWN_ROUTINE RundownRoutine;
+    PKNORMAL_ROUTINE NormalRoutine;
+    PVOID NormalContext;
+    PVOID SystemArgument1;
+    PVOID SystemArgument2;
+    CCHAR ApcStateIndex;
+    KPROCESSOR_MODE ApcMode;
+    BOOLEAN Inserted;
 } KAPC, *PKAPC, *RESTRICTED_POINTER PRKAPC;
 
 typedef struct _KDEVICE_QUEUE {
@@ -1015,13 +1026,33 @@ typedef struct _WAIT_CONTEXT_BLOCK {
   PKDPC  BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
-typedef struct _DISPATCHER_HEADER {
-  UCHAR  Type;
-  UCHAR  Absolute;
-  UCHAR  Size;
-  UCHAR  Inserted;
-  LONG  SignalState;
-  LIST_ENTRY  WaitListHead;
+typedef struct _DISPATCHER_HEADER
+{
+    union
+    {
+        struct
+        {
+            UCHAR Type;
+            union
+            {
+                UCHAR Absolute;
+                UCHAR NpxIrql;
+            };
+            union
+            {
+                UCHAR Size;
+                UCHAR Hand;
+            };
+            union
+            {
+                UCHAR Inserted;
+                BOOLEAN DebugActive;
+            };
+        };
+        volatile LONG Lock;
+    };
+    LONG SignalState;
+    LIST_ENTRY WaitListHead;
 } DISPATCHER_HEADER, *PDISPATCHER_HEADER;
 
 typedef struct _KEVENT {

@@ -51,20 +51,20 @@
 #define KTHREAD_DEBUG_ACTIVE            0x03
 #define KTHREAD_INITIAL_STACK           0x18
 #define KTHREAD_STACK_LIMIT             0x1C
-#define KTHREAD_TEB                     0x20
-#define KTHREAD_KERNEL_STACK            0x28
-#define KTHREAD_NPX_STATE               0x31
-#define KTHREAD_STATE                   0x2D
-#define KTHREAD_ALERTED                 0x2E
-#define KTHREAD_APCSTATE_PROCESS        0x34 + 0x10
-#define KTHREAD_PENDING_USER_APC        0x34 + 0x16
-#define KTHREAD_PENDING_KERNEL_APC      0x34 + 0x15
-#define KTHREAD_CONTEXT_SWITCHES        0x4C
-#define KTHREAD_WAIT_IRQL               0x54
-#define KTHREAD_SERVICE_TABLE           0xDC
-#define KTHREAD_PREVIOUS_MODE           0x137
-#define KTHREAD_TRAP_FRAME              0x128
-#define KTHREAD_CALLBACK_STACK          0x120
+#define KTHREAD_TEB                     0x74
+#define KTHREAD_KERNEL_STACK            0x20
+#define KTHREAD_NPX_STATE               0x4D
+#define KTHREAD_STATE                   0x4C
+#define KTHREAD_ALERTED                 0x5E
+#define KTHREAD_APCSTATE_PROCESS        0x28 + 0x10
+#define KTHREAD_PENDING_USER_APC        0x28 + 0x16
+#define KTHREAD_PENDING_KERNEL_APC      0x28 + 0x15
+#define KTHREAD_CONTEXT_SWITCHES        0x48
+#define KTHREAD_WAIT_IRQL               0x4E
+#define KTHREAD_SERVICE_TABLE           0x118
+#define KTHREAD_PREVIOUS_MODE           0xD7
+#define KTHREAD_TRAP_FRAME              0x110
+#define KTHREAD_CALLBACK_STACK          0x114
 
 #define KPROCESS_DIRECTORY_TABLE_BASE   0x18
 #define KPROCESS_LDT_DESCRIPTOR0        0x20

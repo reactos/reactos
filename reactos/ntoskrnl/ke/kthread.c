@@ -1259,7 +1259,6 @@ KeSetBasePriorityThread (PKTHREAD Thread,
     Thread->BasePriority = BasePriority;
 
     /* Reset the decrements */
-    Thread->DecrementCount = 0;
     Thread->PriorityDecrement = 0;
 
     /* If the priority will change, reset quantum and change it for real */
@@ -1303,7 +1302,6 @@ KeSetPriorityThread(PKTHREAD Thread,
 
     /* Reset the Quantum and Decrements */
     Thread->Quantum = Thread->QuantumReset;
-    Thread->DecrementCount = 0;
     Thread->PriorityDecrement = 0;
 
     /* Set the new Priority */

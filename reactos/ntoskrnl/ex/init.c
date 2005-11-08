@@ -229,6 +229,7 @@ ExecuteRuntimeAsserts(VOID)
      * Fail at runtime if someone has changed various structures without
      * updating the offsets used for the assembler code.
      */
+    ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
     ASSERT(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
     ASSERT(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
     ASSERT(FIELD_OFFSET(KTHREAD, KernelStack) == KTHREAD_KERNEL_STACK);

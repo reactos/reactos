@@ -17,11 +17,12 @@
 
 /* CONSTANTS *****************************************************************/
 #define SSDT_MAX_ENTRIES 4
-#define PROCESSOR_FEATURE_MAX 64
 #define CONTEXT_DEBUGGER (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
 
 #ifdef NTOS_MODE_USER
 #define SharedUserData ((KUSER_SHARED_DATA * CONST) USER_SHARED_DATA)
+#define MAX_WOW64_SHARED_ENTRIES 16
+#define PROCESSOR_FEATURE_MAX 64
 #endif
 
 /* ENUMERATIONS **************************************************************/
@@ -216,12 +217,19 @@ typedef struct _KUSER_SHARED_DATA
     ULONG NumberOfPhysicalPages;
     BOOLEAN SafeBootMode;
     ULONG TraceLogging;
-    ULONGLONG Fill0;
-    ULONGLONG SystemCall[4];
+    ULONG Fill0;
+    ULONGLONG TestRetInstruction;
+    ULONG SystemCall;
+    ULONG SystemCallReturn;
+    ULONGLONG SystemCallPad[3];
     union {
         volatile KSYSTEM_TIME TickCount;
         volatile ULONG64 TickCountQuad;
     };
+    ULONG Cookie;
+    LONGLONG ConsoleSessionForegroundProcessId;
+    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+    ULONG UserModeGlobalLogging;
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 #endif
 
@@ -347,89 +355,179 @@ typedef enum _KOBJECTS
 
 typedef struct _KTHREAD
 {
-    DISPATCHER_HEADER DispatcherHeader;    /* 00 */
-    LIST_ENTRY        MutantListHead;      /* 10 */
-    PVOID             InitialStack;        /* 18 */
-    ULONG_PTR         StackLimit;          /* 1C */
-    struct _TEB       *Teb;                /* 20 */
-    PVOID             TlsArray;            /* 24 */
-    PVOID             KernelStack;         /* 28 */
-    UCHAR             DebugActive;         /* 2C */
-    UCHAR             State;               /* 2D */
-    BOOLEAN           Alerted[2];          /* 2E */
-    UCHAR             Iopl;                /* 30 */
-    UCHAR             NpxState;            /* 31 */
-    CHAR              Saturation;          /* 32 */
-    CHAR              Priority;            /* 33 */
-    KAPC_STATE        ApcState;            /* 34 */
-    ULONG             ContextSwitches;     /* 4C */
-    LONG              WaitStatus;          /* 50 */
-    KIRQL             WaitIrql;            /* 54 */
-    CHAR              WaitMode;            /* 55 */
-    UCHAR             WaitNext;            /* 56 */
-    UCHAR             WaitReason;          /* 57 */
-    union                                  /* 58 */
-    {
-        PKWAIT_BLOCK  WaitBlockList;       /* 58 */
-        PKGATE        GateObject;          /* 58 */
-    };                                     /* 58 */
-    LIST_ENTRY        WaitListEntry;       /* 5C */
-    ULONG             WaitTime;            /* 64 */
-    CHAR              BasePriority;        /* 68 */
-    UCHAR             DecrementCount;      /* 69 */
-    UCHAR             PriorityDecrement;   /* 6A */
-    CHAR              Quantum;             /* 6B */
-    KWAIT_BLOCK       WaitBlock[4];        /* 6C */
-    PVOID             LegoData;            /* CC */
-    union
-    {
-        struct
-        {
-            USHORT    KernelApcDisable;
-            USHORT    SpecialApcDisable;
-        };
-        ULONG         CombinedApcDisable;  /* D0 */
-    };
-    KAFFINITY         UserAffinity;        /* D4 */
-    UCHAR             SystemAffinityActive;/* D8 */
-    UCHAR             PowerState;          /* D9 */
-    UCHAR             NpxIrql;             /* DA */
-    UCHAR             Pad[1];              /* DB */
-    PVOID             ServiceTable;        /* DC */
-    struct _KQUEUE    *Queue;              /* E0 */
-    KSPIN_LOCK        ApcQueueLock;        /* E4 */
-    KTIMER            Timer;               /* E8 */
-    LIST_ENTRY        QueueListEntry;      /* 110 */
-    KAFFINITY         Affinity;            /* 118 */
-    UCHAR             Preempted;           /* 11C */
-    UCHAR             ProcessReadyQueue;   /* 11D */
-    UCHAR             KernelStackResident; /* 11E */
-    UCHAR             NextProcessor;       /* 11F */
-    PVOID             CallbackStack;       /* 120 */
-    struct _W32THREAD *Win32Thread;        /* 124 */
-    struct _KTRAP_FRAME *TrapFrame;        /* 128 */
-    PKAPC_STATE       ApcStatePointer[2];  /* 12C */
-    UCHAR             EnableStackSwap;     /* 134 */
-    UCHAR             LargeStack;          /* 135 */
-    UCHAR             ResourceIndex;       /* 136 */
-    UCHAR             PreviousMode;        /* 137 */
-    ULONG             KernelTime;          /* 138 */
-    ULONG             UserTime;            /* 13C */
-    KAPC_STATE        SavedApcState;       /* 140 */
-    UCHAR             Alertable;           /* 158 */
-    UCHAR             ApcStateIndex;       /* 159 */
-    UCHAR             ApcQueueable;        /* 15A */
-    UCHAR             AutoAlignment;       /* 15B */
-    PVOID             StackBase;           /* 15C */
-    KAPC              SuspendApc;          /* 160 */
-    KSEMAPHORE        SuspendSemaphore;    /* 190 */
-    LIST_ENTRY        ThreadListEntry;     /* 1A4 */
-    CHAR              FreezeCount;         /* 1AC */
-    UCHAR             SuspendCount;        /* 1AD */
-    UCHAR             IdealProcessor;      /* 1AE */
-    UCHAR             DisableBoost;        /* 1AF */
-    UCHAR             QuantumReset;        /* 1B0 */
-} KTHREAD;
+    DISPATCHER_HEADER DispatcherHeader;                 /* 00 */
+    LIST_ENTRY MutantListHead;                          /* 10 */
+    PVOID InitialStack;                                 /* 18 */
+    ULONG_PTR StackLimit;                               /* 1C */
+    PVOID KernelStack;                                  /* 20 */
+    KSPIN_LOCK ThreadLock;                              /* 24 */
+    union                                               /* 28 */
+    {                                                   /* 28 */
+        KAPC_STATE ApcState;                            /* 34 */
+        struct                                          /* 28 */
+        {                                               /* 28 */
+            UCHAR ApcStateFill[23];                     /* 34 */
+            UCHAR ApcQueueable;                         /* 3F */
+        };                                              /* 3F */
+    };                                                  /* 3F */
+    UCHAR NextProcessor;                                /* 40 */
+    UCHAR DeferredProcessor;                            /* 41 */
+    UCHAR AdjustReason;                                 /* 42 */
+    UCHAR AdjustIncrement;                              /* 43 */
+    KSPIN_LOCK ApcQueueLock;                            /* 44 */
+    ULONG ContextSwitches;                              /* 48 */
+    UCHAR State;                                        /* 4C */
+    UCHAR NpxState;                                     /* 4D */
+    UCHAR WaitIrql;                                     /* 4E */
+    UCHAR WaitMode;                                     /* 4F */
+    LONG WaitStatus;                                    /* 50 */
+    union                                               /* 54 */
+    {                                                   /* 54 */
+        PKWAIT_BLOCK WaitBlockList;                     /* 54 */
+        PKGATE GateObject;                              /* 54 */
+    };                                                  /* 54 */
+    UCHAR Alertable;                                    /* 58 */
+    UCHAR WaitNext;                                     /* 59 */
+    UCHAR WaitReason;                                   /* 5A */
+    UCHAR Priority;                                     /* 5B */
+    UCHAR EnableStackSwap;                              /* 5C */
+    UCHAR SwapBusy;                                     /* 5D */
+    UCHAR Alerted[2];                                   /* 5E */
+    union                                               /* 60 */
+    {                                                   /* 60 */
+        LIST_ENTRY WaitListEntry;                       /* 60 */
+        SINGLE_LIST_ENTRY SwapListEntry;                /* 60 */
+    };                                                  /* 68 */
+    PKQUEUE Queue;                                      /* 68 */
+    ULONG WaitTime;                                     /* 6C */
+    union                                               /* 70 */
+    {                                                   /* 70 */
+        struct                                          /* 70 */
+        {                                               /* 70 */
+            USHORT KernelApcDisable;                    /* 70 */
+            USHORT SpecialApcDisable;                   /* 72 */
+        };                                              /* 70 */
+        ULONG CombinedApcDisable;                       /* 70 */
+    };                                                  /* 74 */
+    struct _TEB *Teb;                                   /* 74 */
+    union                                               /* 78 */
+    {                                                   /* 78 */
+        KTIMER Timer;                                   /* 78 */
+        UCHAR TimerFill[40];                            /* 78 */
+    };                                                  /* 78 */
+    union                                               /* A0 */
+    {                                                   /* A0 */
+        struct                                          /* A0 */
+        {                                               /* A0 */
+            LONG AutoAlignment:1;                       /* A0 */
+            LONG DisableBoost:1;                        /* A0 */
+            LONG ReservedFlags:30;                      /* A0 */
+        };                                              /* A0 */
+        LONG ThreadFlags;                               /* A0 */
+    };                                                  /* A0 */
+    PVOID Padding;                                      /* A4 */
+    union                                               /* A8 */
+    {                                                   /* A8 */
+        KWAIT_BLOCK WaitBlock[4];                       /* A8 */
+        union                                           /* A8 */
+        {                                               /* A8 */
+            struct                                      /* A8 */
+            {                                           /* A8 */
+                UCHAR WaitBlockFill0[23];               /* A8 */
+                UCHAR SystemAffinityActive;             /* BF */
+            };                                          /* A8 */
+            struct                                      /* A8 */
+            {                                           /* A8 */
+                UCHAR WaitBlockFill1[47];               /* A8 */
+                UCHAR PreviousMode;                     /* D7 */
+            };                                          /* A8 */
+            struct                                      /* A8 */
+            {                                           /* A8 */
+                UCHAR WaitBlockFill2[71];               /* A8 */
+                UCHAR ResourceIndex;                    /* EF */
+            };                                          /* A8 */
+            struct                                      /* A8 */
+            {                                           /* A8 */
+                UCHAR WaitBlockFill3[95];               /* A8 */
+                UCHAR LargeStack;                       /* 107 */
+            };                                          /* A8 */
+        };                                              /* A8 */
+    };                                                  /* A8 */
+    LIST_ENTRY QueueListEntry;                          /* 108 */
+    PKTRAP_FRAME TrapFrame;                             /* 110 */
+    PVOID CallbackStack;                                /* 114 */
+    PVOID ServiceTable;                                 /* 118 */
+    UCHAR ApcStateIndex;                                /* 11C */
+    UCHAR IdealProcessor;                               /* 11D */
+    UCHAR Preempted;                                    /* 11E */
+    UCHAR ProcessReadyQueue;                            /* 11F */
+    UCHAR KernelStackResident;                          /* 120 */
+    CHAR BasePriority;                                  /* 121 */
+    CHAR PriorityDecrement;                             /* 122 */
+    CHAR Saturation;                                    /* 123 */
+    KAFFINITY UserAffinity;                             /* 124 */
+    struct _KPROCESS *Process;                          /* 128 */
+    KAFFINITY Affinity;                                 /* 12C */
+    PKAPC_STATE ApcStatePointer[2];                     /* 130 */
+    union                                               /* 138 */
+    {                                                   /* 138 */
+        KAPC_STATE SavedApcState;                       /* 138 */
+        union                                           /* 138 */
+        {                                               /* 138 */
+            UCHAR SavedApcStateFill[23];                /* 138 */
+            CHAR FreezeCount;                           /* 14F */
+        };                                              /* 138 */
+    };                                                  /* 138 */
+    CHAR SuspendCount;                                  /* 150 */
+    UCHAR UserIdealProcessor;                           /* 151 */
+    UCHAR CalloutActive;                                /* 152 */
+    UCHAR Iopl;                                         /* 153 */
+    PVOID Win32Thread;                                  /* 154 */
+    PVOID StackBase;                                    /* 158 */
+    union                                               /* 15C */
+    {                                                   /* 15C */
+        KAPC SuspendApc;                                /* 15C */
+        union                                           /* 15C */
+        {                                               /* 15C */
+            UCHAR SuspendApcFill0[1];                   /* 15C */
+            CHAR Quantum;                               /* 15D */
+        };                                              /* 15C */
+        union                                           /* 15C */
+        {                                               /* 15C */
+            UCHAR SuspendApcFill1[3];                   /* 15C */
+            UCHAR QuantumReset;                         /* 15F */
+        };                                              /* 15C */
+        union                                           /* 15C */
+        {                                               /* 15C */
+            UCHAR SuspendApcFill2[4];                   /* 15C */
+            ULONG KernelTime;                           /* 160 */
+        };                                              /* 15C */
+        union                                           /* 15C */
+        {                                               /* 15C */
+            UCHAR SuspendApcFill3[36];                  /* 15C */
+            PVOID TlsArray;                             /* 180 */
+        };                                              /* 15C */
+        union                                           /* 15C */
+        {                                               /* 15C */
+            UCHAR SuspendApcFill4[40];                  /* 15C */
+            PVOID LegoData;                             /* 184 */
+        };                                              /* 15C */
+        union                                           /* 15C */
+        {                                               /* 15C */
+            UCHAR SuspendApcFill5[47];                  /* 15C */
+            UCHAR PowerState;                           /* 18B */
+        };                                              /* 15C */
+    };                                                  /* 15C */
+    ULONG UserTime;                                     /* 18C */
+    union                                               /* 190 */
+    {                                                   /* 190 */
+        KSEMAPHORE SuspendSemaphore;                    /* 190 */
+        UCHAR SuspendSemaphorefill[20];                 /* 190 */
+    };                                                  /* 190 */
+    ULONG SListFaultCount;                              /* 1A4 */
+    LIST_ENTRY ThreadListEntry;                         /* 1A8 */
+    PVOID SListFaultAddress;                            /* 1B0 */
+} KTHREAD;                                              /* sizeof: 1B4 */
 
 #include <poppack.h>
 

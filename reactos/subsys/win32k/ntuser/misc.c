@@ -459,7 +459,7 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
          {
-            PUSER_MESSAGE_QUEUE MsgQueue = PsGetCurrentThread()->Tcb.Win32Thread->MessageQueue;
+            PUSER_MESSAGE_QUEUE MsgQueue = ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
 
             ASSERT(MsgQueue);
             RETURN( (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
@@ -1333,12 +1333,12 @@ NtUserGetGUIThreadInfo(
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
-      Desktop = Thread->Tcb.Win32Thread->Desktop;
+      Desktop = ((PW32THREAD)Thread->Tcb.Win32Thread)->Desktop;
    }
    else
    {
       /* get the foreground thread */
-      PW32THREAD W32Thread = PsGetCurrentThread()->Tcb.Win32Thread;
+      PW32THREAD W32Thread = (PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread;
       Desktop = W32Thread->Desktop;
       if(Desktop)
       {

@@ -571,7 +571,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 #error Unknown compiler for inline assembler
 #endif
 
-    KeGetCurrentThread()->NpxIrql = KeGetCurrentIrql();
+    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
 
     return STATUS_SUCCESS;
 }
@@ -582,7 +582,7 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState = *((PVOID *) Save);
 
-    if (KeGetCurrentThread()->NpxIrql != KeGetCurrentIrql())
+    if (KeGetCurrentThread()->DispatcherHeader.NpxIrql != KeGetCurrentIrql())
     {
         KEBUGCHECK(UNDEFINED_BUG_CODE);
     }

@@ -1283,7 +1283,7 @@ NtUserPostThreadMessage(DWORD idThread,
 
    if( Status == STATUS_SUCCESS )
    {
-      pThread = peThread->Tcb.Win32Thread;
+      pThread = (PW32THREAD)peThread->Tcb.Win32Thread;
       if( !pThread || !pThread->MessageQueue )
       {
          ObDereferenceObject( peThread );
@@ -1780,18 +1780,18 @@ CLEANUP:
 BOOL STDCALL
 IntInitMessagePumpHook()
 {
-   PsGetCurrentThread()->Tcb.Win32Thread->MessagePumpHookValue++;
+   ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessagePumpHookValue++;
    return TRUE;
 }
 
 BOOL STDCALL
 IntUninitMessagePumpHook()
 {
-   if (PsGetCurrentThread()->Tcb.Win32Thread->MessagePumpHookValue <= 0)
+   if (((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessagePumpHookValue <= 0)
    {
       return FALSE;
    }
-   PsGetCurrentThread()->Tcb.Win32Thread->MessagePumpHookValue--;
+   ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessagePumpHookValue--;
    return TRUE;
 }
 

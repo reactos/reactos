@@ -571,7 +571,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
    PLIST_ENTRY Current;
    PWINDOW_OBJECT Wnd;
    USER_REFERENCE_ENTRY Ref;
-   WThread = Thread->Tcb.Win32Thread;
+   WThread = (PW32THREAD)Thread->Tcb.Win32Thread;
    
    while (!IsListEmpty(&WThread->WindowListHead))
    {
@@ -1121,7 +1121,7 @@ NtUserBuildHwndList(
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return 0;
       }
-      if(!(W32Thread = Thread->Tcb.Win32Thread))
+      if(!(W32Thread = (PW32THREAD)Thread->Tcb.Win32Thread))
       {
          ObDereferenceObject(Thread);
          DPRINT("Thread is not a GUI Thread!\n");
@@ -1622,7 +1622,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
-      IntGetDesktopWorkArea(Window->OwnerThread->Tcb.Win32Thread->Desktop, &WorkArea);
+      IntGetDesktopWorkArea(((PW32THREAD)Window->OwnerThread->Tcb.Win32Thread)->Desktop, &WorkArea);
 
       rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
@@ -3363,7 +3363,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            WindowStation = Window->OwnerThread->Tcb.Win32Thread->Desktop->WindowStation;
+            WindowStation = ((PW32THREAD)Window->OwnerThread->Tcb.Win32Thread)->Desktop->WindowStation;
             if(WindowStation)
             {
                if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)

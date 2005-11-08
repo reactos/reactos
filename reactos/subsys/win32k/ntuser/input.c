@@ -670,14 +670,14 @@ KeyboardThreadMain(PVOID StartContext)
             FocusThread = FocusQueue->Thread;
 
             if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
-                  FocusThread->Tcb.Win32Thread->KeyboardLayout))
+                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout))
                continue;
 
             /* This function uses lParam to fill wParam according to the
              * keyboard layout in use.
              */
             W32kKeyProcessMessage(&msg,
-                                  FocusThread->Tcb.Win32Thread->KeyboardLayout,
+                                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout,
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 

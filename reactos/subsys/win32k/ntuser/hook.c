@@ -90,7 +90,7 @@ STATIC FASTCALL PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
 {
    PHOOK Hook;
-   PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(Thread->Tcb.Win32Thread->MessageQueue);
+   PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(((PW32THREAD)Thread->Tcb.Win32Thread)->MessageQueue);
    HANDLE Handle;
 
    if (NULL == Table)
@@ -106,7 +106,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       }
       else
       {
-         MsqSetHooks(Thread->Tcb.Win32Thread->MessageQueue, Table);
+         MsqSetHooks(((PW32THREAD)Thread->Tcb.Win32Thread)->MessageQueue, Table);
       }
    }
 
@@ -136,7 +136,7 @@ IntGetTable(PHOOK Hook)
       return GlobalHooks;
    }
 
-   return MsqGetHooks(Hook->Thread->Tcb.Win32Thread->MessageQueue);
+   return MsqGetHooks(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue);
 }
 
 /* get the first hook in the chain */
@@ -272,7 +272,7 @@ IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Ho
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(Hook->Thread->Tcb.Win32Thread->MessageQueue, (HWND) Code, HookId,
+   Status = co_MsqSendMessage(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue, (HWND) Code, HookId,
                               wParam, lParam, 5000, TRUE, TRUE, &uResult);
 
    return NT_SUCCESS(Status) ? uResult : 0;
