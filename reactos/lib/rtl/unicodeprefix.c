@@ -167,18 +167,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
         /* Get the splay links and loop */
         while ((SplayLinks = &CurrentEntry->Links))
         {
-            /*
-             * Implementation notes:
-             *  - get the entry
-             *  - compare the entry's prefix with the fullname:
-             *    if greater: restart on the left child
-             *    if lesser: restart on the right child
-             *  - else if equal:
-             *    for caseinsensitive, just return the entry and
-             *        splay it and set it as root if it's a child
-             *    for casesensitive, loop the circular case match list and
-             *        keep comparing for each entry
-             */
+            /* Get the entry */
             Entry = CONTAINING_RECORD(SplayLinks,
                                       UNICODE_PREFIX_TABLE_ENTRY,
                                       Links);
@@ -374,8 +363,11 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
             /* Insert it into the circular list */
             PrefixTableEntry->CaseMatch = Entry->CaseMatch;
             Entry->CaseMatch = PrefixTableEntry;
+            break;
         }
-        else if (Result == GenericGreaterThan)
+
+        /* Check if the result was greater or lesser than */
+        if (Result == GenericGreaterThan)
         {
             /* Check out if we have a left child */
             if (RtlLeftChild(&Entry->Links))
