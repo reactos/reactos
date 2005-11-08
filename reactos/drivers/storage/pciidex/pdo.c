@@ -180,7 +180,7 @@ PciIdeXPdoQueryResourceRequirements(
 
 	/* FIXME: what to do with BusMasterPortBase? */
 
-	ListSize = sizeof(PIO_RESOURCE_REQUIREMENTS_LIST)
+	ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
 		+ 2 * sizeof(IO_RESOURCE_DESCRIPTOR);
 	RequirementsList = ExAllocatePool(PagedPool, ListSize);
 	if (!RequirementsList)
