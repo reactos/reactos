@@ -143,8 +143,8 @@ ACPIAddDevice(
   DeviceExtension->Pdo = PhysicalDeviceObject;
   DeviceExtension->Common.IsFDO = TRUE;
 
-  DeviceExtension->Common.Ldo =
-    IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
+  //DeviceExtension->Common.Ldo =
+  //  IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
 
   DeviceExtension->State = dsStopped;
 

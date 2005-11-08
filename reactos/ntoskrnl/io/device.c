@@ -72,6 +72,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 {
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
+   BOOLEAN IsPnpDriver = FALSE;
 
    if (DriverObject->DriverExtension->AddDevice)
    {
@@ -83,39 +84,43 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
          DriverObject->DriverExtension->AddDevice);
 
+      IsPnpDriver = !IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER);
       Status = DriverObject->DriverExtension->AddDevice(
-         DriverObject, DeviceNode->PhysicalDeviceObject);
+         DriverObject, IsPnpDriver ? DeviceNode->PhysicalDeviceObject : NULL);
 
       if (!NT_SUCCESS(Status))
       {
          return Status;
       }
 
-      Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-
-      if (Fdo == DeviceNode->PhysicalDeviceObject)
+      if (IsPnpDriver)
       {
-         /* FIXME: What do we do? Unload the driver or just disable the device? */
-         DbgPrint("An FDO was not attached\n");
-         IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-         return STATUS_UNSUCCESSFUL;
+         Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+
+         if (Fdo == DeviceNode->PhysicalDeviceObject)
+         {
+            /* FIXME: What do we do? Unload the driver or just disable the device? */
+            DbgPrint("An FDO was not attached\n");
+            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+            return STATUS_UNSUCCESSFUL;
+         }
+
+         if (Fdo->DeviceType == FILE_DEVICE_ACPI)
+         {
+            static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
+
+            /* There can be only one system power device */
+            if (!SystemPowerDeviceNodeCreated)
+            {
+               PopSystemPowerDeviceNode = DeviceNode;
+               SystemPowerDeviceNodeCreated = TRUE;
+            }
+         }
+
+         ObDereferenceObject(Fdo);
       }
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
-
-      if (Fdo->DeviceType == FILE_DEVICE_ACPI)
-      {
-         static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
-
-         /* There can be only one system power device */
-         if (!SystemPowerDeviceNodeCreated)
-         {
-            PopSystemPowerDeviceNode = DeviceNode;
-            SystemPowerDeviceNodeCreated = TRUE;
-         }
-      }
-
-      ObDereferenceObject(Fdo);
    }
 
    return STATUS_SUCCESS;
@@ -564,7 +569,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Cannot insert Device Object into Handle Table\n");
+        DPRINT1("Cannot insert Device Object into Handle Table (status 0x%08lx)\n", Status);
         *DeviceObject = NULL;
         return Status;
     }

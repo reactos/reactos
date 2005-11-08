@@ -472,6 +472,9 @@ ClassAddDevice(
 
 	DPRINT("ClassAddDevice called. Pdo = 0x%p\n", Pdo);
 
+	if (Pdo == NULL)
+		return STATUS_SUCCESS;
+
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 
 	/* Create new device object */

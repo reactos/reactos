@@ -696,14 +696,15 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 	PDEVICE_EXTENSION DevExt;
 	PFDO_DEVICE_EXTENSION FdoDevExt;
 	PDEVICE_OBJECT Fdo;
-	static BOOLEAN AlreadyAdded = FALSE;
 
 	DPRINT("I8042AddDevice\n");
 
-	/* HACK! */
-	if (AlreadyAdded)
+	if (Pdo != NULL)
+	{
+		/* Device detected by pnpmgr. Ignore it, as we already have
+		 * detected the keyboard and mouse at first call */
 		return STATUS_UNSUCCESSFUL;
-	AlreadyAdded = TRUE;
+	}
 
 	Status = IoCreateDevice(DriverObject,
 	               sizeof(DEVICE_EXTENSION),
@@ -715,8 +716,6 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 
 	if (!NT_SUCCESS(Status))
 		return Status;
-
-	IoAttachDeviceToDeviceStack(Fdo, Pdo);
 
 	DevExt = Fdo->DeviceExtension;
 
