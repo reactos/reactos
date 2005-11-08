@@ -1184,6 +1184,15 @@ RtlIsTextUnicode(
 NTSYSAPI
 BOOLEAN
 NTAPI
+RtlPrefixString(
+    PCANSI_STRING String1,
+    PCANSI_STRING String2,
+    BOOLEAN CaseInsensitive
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
 RtlPrefixUnicodeString(
     PCUNICODE_STRING String1,
     PCUNICODE_STRING String2,

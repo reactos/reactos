@@ -37,6 +37,7 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define FILE_DOES_NOT_EXIST                 0x00000005
 
 /* Pipe Flags */
+#define FILE_PIPE_BYTE_STREAM_TYPE          0x00000000
 #define FILE_PIPE_BYTE_STREAM_MODE          0x00000000
 #define FILE_PIPE_MESSAGE_MODE              0x00000001
 #define FILE_PIPE_QUEUE_OPERATION           0x00000000
