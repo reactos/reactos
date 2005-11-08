@@ -262,9 +262,8 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
                         OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
                         IN ULONG RefBias)
 {
-    DPRINT1("ObLogSecurityDescriptor is not implemented!\n");
-
     /* HACK: Return the same descriptor back */
+    DPRINT1("ObLogSecurityDescriptor is not implemented!\n");
     *OutputSecurityDescriptor = InputSecurityDescriptor;
     return STATUS_SUCCESS;
 }

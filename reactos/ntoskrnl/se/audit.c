@@ -225,7 +225,7 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 		       IN KPROCESSOR_MODE AccessMode,
 		       OUT PBOOLEAN GenerateOnClose)
 {
-  UNIMPLEMENTED;
+    DPRINT1("SeOpenObjectAuditAlarm is UNIMPLEMENTED!\n");
 }
 
 
