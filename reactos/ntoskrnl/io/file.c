@@ -758,6 +758,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    LARGE_INTEGER        SafeAllocationSize;
    PVOID                SystemEaBuffer = NULL;
    NTSTATUS  Status = STATUS_SUCCESS;
+   AUX_DATA AuxData;
+   ACCESS_STATE AccessState;
 
    DPRINT("IoCreateFile(FileHandle 0x%p, DesiredAccess %x, "
           "ObjectAttributes 0x%p ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -962,8 +964,14 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    if (CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
      FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
 
+    /* 
+     * FIXME: We should get the access state from Ob once this function becomes
+     * a parse routine once the Ob is refactored.
+     */
+   SeCreateAccessState(&AccessState, &AuxData, FILE_ALL_ACCESS, NULL);
+
    SecurityContext.SecurityQos = NULL; /* ?? */
-   SecurityContext.AccessState = NULL; /* ?? */
+   SecurityContext.AccessState = &AccessState;
    SecurityContext.DesiredAccess = DesiredAccess;
    SecurityContext.FullCreateOptions = 0; /* ?? */
 
