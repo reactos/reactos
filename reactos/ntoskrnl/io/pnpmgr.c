@@ -1406,21 +1406,29 @@ IopGetParentIdPrefix(
    {
       if (ParentIdPrefixInformation->Type != REG_SZ)
          Status = STATUS_UNSUCCESSFUL;
+      else
+      {
+         KeyValue.Length = KeyValue.MaximumLength = ParentIdPrefixInformation->DataLength;
+         KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+      }
       goto cleanup;
    }
    if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+   {
+      KeyValue.Length = KeyValue.MaximumLength = ParentIdPrefixInformation->DataLength;
+      KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
       goto cleanup;
+   }
 
    /* 2. Create the ParentIdPrefix value */
    currentByte = (PBYTE)DeviceNode->Parent->InstancePath.Buffer;
    for (i = 0; i < DeviceNode->Parent->InstancePath.Length; i++, currentByte++)
       crc32 = (crc32 >> 8) ^ crc32Table[*currentByte ^ (crc32 & 0xff)];
    crc32 = ~crc32;
-   KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
-   swprintf(KeyValue.Buffer, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
+   swprintf((PWSTR)ParentIdPrefixInformation->Data, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
+   RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation->Data);
 
    /* 3. Try to write the ParentIdPrefix to registry */
-   RtlInitUnicodeString(&KeyValue, KeyValue.Buffer);
    Status = ZwSetValueKey(
       hKey, &ValueName,
       0, REG_SZ,
@@ -1431,8 +1439,6 @@ cleanup:
    if (NT_SUCCESS(Status))
    {
       /* Duplicate the string to return it */
-      KeyValue.Length = KeyValue.MaximumLength = ParentIdPrefixInformation->DataLength;
-      KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
       Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &KeyValue, ParentIdPrefix);
    }
    ExFreePool(ParentIdPrefixInformation);
