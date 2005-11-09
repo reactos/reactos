@@ -7,22 +7,19 @@
 * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
 */
 
-
 //#define NDEBUG
 #include <debug.h>
-#include <tchar.h>
-#include <windows.h>
-#include <commctrl.h>
-#include <regstr.h>
-
-#include <stdio.h>
 
 #include "newdev.h"
-#include "resource.h"
+
+static BOOL SearchDriver ( PDEVINSTDATA DevInstData, LPCTSTR Path );
+static BOOL InstallDriver ( PDEVINSTDATA DevInstData );
+static DWORD WINAPI FindDriverProc( LPVOID lpParam );
+static BOOL FindDriver ( PDEVINSTDATA DevInstData );
 
 static DEVINSTDATA DevInstData;
 HINSTANCE hDllInstance;
-HANDLE hThread; 
+HANDLE hThread;
 
 static HFONT
 CreateTitleFont(VOID)
@@ -72,11 +69,12 @@ CenterWindow(HWND hWnd)
 		SWP_NOSIZE);
 }
 
-INT_PTR CALLBACK
-WelcomeDlgProc(HWND hwndDlg,
-			   UINT uMsg,
-			   WPARAM wParam,
-			   LPARAM lParam)
+static INT_PTR CALLBACK
+WelcomeDlgProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
 {
 
 	PDEVINSTDATA DevInstData;
@@ -160,11 +158,12 @@ WelcomeDlgProc(HWND hwndDlg,
 	return FALSE;
 }
 
-INT_PTR CALLBACK
-CHSourceDlgProc(HWND hwndDlg,
-				UINT uMsg,
-				WPARAM wParam,
-				LPARAM lParam)
+static INT_PTR CALLBACK
+CHSourceDlgProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
 {
 
 	PDEVINSTDATA DevInstData;
@@ -196,8 +195,7 @@ CHSourceDlgProc(HWND hwndDlg,
 				IDC_RADIO_SEARCHHERE,
 				BM_SETCHECK,
 				(WPARAM) TRUE,
-				(LPARAM) 0); 
-
+				(LPARAM) 0);
 
 		}
 		break;
@@ -232,15 +230,16 @@ CHSourceDlgProc(HWND hwndDlg,
 	return FALSE;
 }
 
-INT_PTR CALLBACK
-SearchDrvDlgProc(HWND hwndDlg,
-				 UINT uMsg,
-				 WPARAM wParam,
-				 LPARAM lParam)
+static INT_PTR CALLBACK
+SearchDrvDlgProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
 {
 
 	PDEVINSTDATA DevInstData;
-    DWORD dwThreadId;
+	DWORD dwThreadId;
 
 	/* Retrieve pointer to the global setup data */
 	DevInstData = (PDEVINSTDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -296,7 +295,8 @@ SearchDrvDlgProc(HWND hwndDlg,
 				break;
 
 			case PSN_KILLACTIVE:
-				if (hThread != 0) {
+				if (hThread != 0)
+				{
 					SetWindowLong ( hwndDlg, DWL_MSGRESULT, TRUE);
 					return TRUE;
 				}
@@ -318,8 +318,10 @@ SearchDrvDlgProc(HWND hwndDlg,
 	return FALSE;
 }
 
-DWORD WINAPI FindDriverProc( LPVOID lpParam ) 
-{ 
+static DWORD WINAPI
+FindDriverProc(
+	IN LPVOID lpParam)
+{
 	TCHAR drive[] = {'?',':',0};
 	size_t nType;
 	DWORD dwDrives;
@@ -328,15 +330,20 @@ DWORD WINAPI FindDriverProc( LPVOID lpParam )
 
 	DevInstData = (PDEVINSTDATA)lpParam;
 
-	dwDrives = GetLogicalDrives();		
-	for (drive[0] = 'A'; drive[0] <= 'Z'; drive[0]++) {
-		if (dwDrives & i) {
+	dwDrives = GetLogicalDrives();
+	for (drive[0] = 'A'; drive[0] <= 'Z'; drive[0]++)
+	{
+		if (dwDrives & i)
+		{
 			nType = GetDriveType( drive );
-			if ((nType == DRIVE_CDROM) || (nType == DRIVE_FIXED)) {
+			if ((nType == DRIVE_CDROM) || (nType == DRIVE_FIXED))
+			{
 				/* search for inf file */
-				if (SearchDriver ( DevInstData, drive )) { 
+				if (SearchDriver ( DevInstData, drive ))
+				{
 					/* if we found a valid driver inf... */
-					if (FindDriver ( DevInstData )) {
+					if (FindDriver ( DevInstData ))
+					{
 						InstallDriver ( DevInstData );
 						PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 1, 0);
 						return 0;
@@ -346,16 +353,17 @@ DWORD WINAPI FindDriverProc( LPVOID lpParam )
 		}
 		i <<= 1;
 	}
-	
+
 	PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
 	return 0;
 }
 
-INT_PTR CALLBACK
-FinishDlgProc(HWND hwndDlg,
-			  UINT uMsg,
-			  WPARAM wParam,
-			  LPARAM lParam)
+static INT_PTR CALLBACK
+FinishDlgProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
 {
 
 	PDEVINSTDATA DevInstData;
@@ -424,11 +432,12 @@ FinishDlgProc(HWND hwndDlg,
 	return FALSE;
 }
 
-INT_PTR CALLBACK
-InstFailDlgProc(HWND hwndDlg,
-				UINT uMsg,
-				WPARAM wParam,
-				LPARAM lParam)
+static INT_PTR CALLBACK
+InstFailDlgProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
 {
 
 	PDEVINSTDATA DevInstData;
@@ -478,13 +487,14 @@ InstFailDlgProc(HWND hwndDlg,
 
 			case PSN_WIZFINISH:
 				/* Handle a Finish button click, if necessary */
-				if (SendDlgItemMessage(hwndDlg, IDC_DONOTSHOWDLG, BM_GETCHECK, (WPARAM) 0, (LPARAM) 0) == BST_CHECKED) {
+				if (SendDlgItemMessage(hwndDlg, IDC_DONOTSHOWDLG, BM_GETCHECK, (WPARAM) 0, (LPARAM) 0) == BST_CHECKED)
+				{
 
-					if(SetupDiGetDeviceRegistryProperty(DevInstData->hDevInfo, 
+					if(SetupDiGetDeviceRegistryProperty(DevInstData->hDevInfo,
 						&DevInstData->devInfoData,
-						SPDRP_CONFIGFLAGS, 
-						NULL,  
-						(BYTE *)&config_flags, 
+						SPDRP_CONFIGFLAGS,
+						NULL,
+						(BYTE *)&config_flags,
 						sizeof(config_flags),
 						NULL))
 					{
@@ -513,7 +523,11 @@ InstFailDlgProc(HWND hwndDlg,
 }
 
 
-BOOL FindDriver ( PDEVINSTDATA DevInstData ) {
+static BOOL
+FindDriver(
+	IN PDEVINSTDATA DevInstData)
+{
+
 	BOOL ret;
 
 	ret = SetupDiBuildDriverInfoList(DevInstData->hDevInfo, &DevInstData->devInfoData, SPDIT_COMPATDRIVER);
@@ -543,12 +557,15 @@ BOOL FindDriver ( PDEVINSTDATA DevInstData ) {
 }
 
 
-BOOL IsDots(const TCHAR* str) {
+static BOOL
+IsDots(IN LPCTSTR str)
+{
 	if(_tcscmp(str, _T(".")) && _tcscmp(str, _T(".."))) return FALSE;
 	return TRUE;
 }
 
-TCHAR* GetFileExt(TCHAR* FileName)
+static LPTSTR
+GetFileExt(IN LPTSTR FileName)
 {
 	if (FileName == 0)
 		return _T("");
@@ -565,7 +582,11 @@ TCHAR* GetFileExt(TCHAR* FileName)
 		return _T("");
 }
 
-BOOL SearchDriver ( PDEVINSTDATA DevInstData, const TCHAR* Path ) {
+static BOOL
+SearchDriver(
+	IN PDEVINSTDATA DevInstData,
+	IN LPCTSTR Path)
+{
 	WIN32_FIND_DATA wfd;
 	SP_DEVINSTALL_PARAMS DevInstallParams;
 	TCHAR DirPath[MAX_PATH];
@@ -589,18 +610,21 @@ BOOL SearchDriver ( PDEVINSTDATA DevInstData, const TCHAR* Path ) {
 	{
 
 		_tcscpy(FileName, wfd.cFileName);
-		if(IsDots(FileName)) continue;   
+		if (IsDots(FileName)) continue;
 
-		if((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+		if((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		{
 			_tcscpy(FullPath, DirPath);
 			_tcscat(FullPath, FileName);
 			if(SearchDriver(DevInstData, FullPath))
 				break;
 		}
-		else {
-			TCHAR* pszExtension = GetFileExt(FileName);
+		else
+		{
+			LPCTSTR pszExtension = GetFileExt(FileName);
 
-			if ((_tcscmp(pszExtension, _T(".inf")) == 0) && (_tcscmp(LastDirPath, DirPath) != 0)){
+			if ((_tcscmp(pszExtension, _T(".inf")) == 0) && (_tcscmp(LastDirPath, DirPath) != 0))
+			{
 				_tcscpy(LastDirPath, DirPath);
 				ZeroMemory (&DevInstallParams, sizeof(SP_DEVINSTALL_PARAMS));
 				DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
@@ -610,7 +634,8 @@ BOOL SearchDriver ( PDEVINSTDATA DevInstData, const TCHAR* Path ) {
 					&DevInstData->devInfoData,
 					&DevInstallParams);
 
-				if (_tcsclen(DirPath) <= MAX_PATH) {
+				if (_tcsclen(DirPath) <= MAX_PATH)
+				{
 					memcpy(DevInstallParams.DriverPath, DirPath, (_tcsclen(DirPath) + 1) *  sizeof(TCHAR));
 				}
 
@@ -619,23 +644,28 @@ BOOL SearchDriver ( PDEVINSTDATA DevInstData, const TCHAR* Path ) {
 					&DevInstData->devInfoData,
 					&DevInstallParams);
 
-				if ( FindDriver ( DevInstData ) ) {
+				if ( FindDriver ( DevInstData ) )
+				{
 					if (hFindFile != INVALID_HANDLE_VALUE)
 						FindClose(hFindFile);
 					return TRUE;
 				}
-				
+
 			}
 		}
 	}
-		
+
 	if (hFindFile != INVALID_HANDLE_VALUE)
 		FindClose(hFindFile);
 
 	return FALSE;
 }
 
-BOOL InstallDriver ( PDEVINSTDATA DevInstData ) {
+static BOOL
+InstallDriver(
+	IN PDEVINSTDATA DevInstData)
+{
+
 	BOOL ret;
 
 	ret = SetupDiCallClassInstaller(
@@ -742,7 +772,9 @@ BOOL InstallDriver ( PDEVINSTDATA DevInstData ) {
 
 }
 
-void CleanUp ( void ) {
+static VOID
+CleanUp(VOID)
+{
 
 	if (DevInstData.devInfoData.cbSize != 0)
 	{
@@ -763,10 +795,10 @@ void CleanUp ( void ) {
 
 BOOL WINAPI
 DevInstallW(
-			IN HWND hWndParent,
-			IN HINSTANCE hInstance,
-			IN LPCWSTR InstanceId,
-			IN INT Show)
+	IN HWND hWndParent,
+	IN HINSTANCE hInstance,
+	IN LPCWSTR InstanceId,
+	IN INT Show)
 {
 
 	PROPSHEETHEADER psh;
@@ -796,7 +828,7 @@ DevInstallW(
 		&DevInstData.devInfoData);
 	if (!ret)
 	{
-		DPRINT("SetupDiOpenDeviceInfoW() failed with error 0x%lx\n", GetLastError());
+		DPRINT("SetupDiOpenDeviceInfoW() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
 		DevInstData.devInfoData.cbSize = 0;
 		CleanUp();
 		return FALSE;
@@ -832,14 +864,15 @@ DevInstallW(
 	}
 	if (!ret)
 	{
-		DPRINT("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx\n", GetLastError());
+		DPRINT("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
 		CleanUp();
 		return FALSE;
 	}
 
 	DPRINT("Installing %S (%S)\n", DevInstData.buffer, InstanceId);
 
-	if ((Show =! SW_HIDE) && (!FindDriver(&DevInstData))) {
+	if ((Show =! SW_HIDE) && (!FindDriver(&DevInstData)))
+	{
 
 		/* Create the Welcome page */
 		ZeroMemory (&psp, sizeof(PROPSHEETPAGE));
@@ -895,7 +928,8 @@ DevInstallW(
 		DeleteObject(DevInstData.hTitleFont);
 
 	}
-	else {
+	else
+	{
 		InstallDriver ( &DevInstData );
 	}
 
@@ -903,10 +937,11 @@ DevInstallW(
 	return TRUE;
 }
 
-BOOL STDCALL
-DllMain (HINSTANCE hInstance,
-		 DWORD dwReason,
-		 LPVOID lpReserved)
+BOOL WINAPI
+DllMain(
+	IN HINSTANCE hInstance,
+	IN DWORD dwReason,
+	IN LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{

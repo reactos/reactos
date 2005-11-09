@@ -1,5 +1,12 @@
 #include <windows.h>
+#include <commctrl.h>
+#include <regstr.h>
 #include <setupapi.h>
+#include <tchar.h>
+
+#include <stdio.h>
+
+#include "resource.h"
 
 ULONG DbgPrint(PCH Format,...);
 
@@ -14,10 +21,5 @@ typedef struct _DEVINSTDATA
 	SP_DEVINFO_DATA devInfoData;
 	SP_DRVINFO_DATA drvInfoData;
 } DEVINSTDATA, *PDEVINSTDATA;
-
-BOOL SearchDriver ( PDEVINSTDATA DevInstData, const TCHAR* Path );
-BOOL InstallDriver ( PDEVINSTDATA DevInstData );
-DWORD WINAPI FindDriverProc( LPVOID lpParam );
-BOOL FindDriver ( PDEVINSTDATA DevInstData );
 
 #define WM_SEARCH_FINISHED (WM_USER + 10)
