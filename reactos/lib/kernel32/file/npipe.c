@@ -674,12 +674,12 @@ CallNamedPipeA(LPCSTR lpNamedPipeName,
                LPDWORD lpBytesRead,
                DWORD nTimeOut)
 {
-    UNICODE_STRING PipeName = &NtCurrentTeb()->StaticUnicodeString;
+    PUNICODE_STRING PipeName = &NtCurrentTeb()->StaticUnicodeString;
     ANSI_STRING AnsiPipe;
 
     /* Initialize the string as ANSI_STRING and convert to Unicode */
-    RtlInitAnsiString(&NameA, (LPSTR)lpName);
-    RtlAnsiStringToUnicodeString(NameU, &NameA, FALSE);
+    RtlInitAnsiString(&AnsiPipe, (LPSTR)lpNamedPipeName);
+    RtlAnsiStringToUnicodeString(PipeName, &AnsiPipe, FALSE);
 
     /* Call the Unicode function */
     return CallNamedPipeW(PipeName->Buffer,
@@ -694,64 +694,68 @@ CallNamedPipeA(LPCSTR lpNamedPipeName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 CallNamedPipeW(LPCWSTR lpNamedPipeName,
-	       LPVOID lpInBuffer,
-	       DWORD nInBufferSize,
-	       LPVOID lpOutBuffer,
-	       DWORD nOutBufferSize,
-	       LPDWORD lpBytesRead,
-	       DWORD nTimeOut)
+               LPVOID lpInBuffer,
+               DWORD nInBufferSize,
+               LPVOID lpOutBuffer,
+               DWORD nOutBufferSize,
+               LPDWORD lpBytesRead,
+               DWORD nTimeOut)
 {
-  HANDLE hPipe = INVALID_HANDLE_VALUE;
-  BOOL bRetry = TRUE;
-  BOOL bError = FALSE;
-  DWORD dwPipeMode;
+    HANDLE hPipe;
+    BOOL bRetry = TRUE;
+    BOOL bError;
+    DWORD dwPipeMode;
 
-  while (TRUE)
+    while (TRUE)
     {
-      hPipe = CreateFileW(lpNamedPipeName,
-			  GENERIC_READ | GENERIC_WRITE,
-			  FILE_SHARE_READ | FILE_SHARE_WRITE,
-			  NULL,
-			  OPEN_EXISTING,
-			  FILE_ATTRIBUTE_NORMAL,
-			  NULL);
-      if (hPipe != INVALID_HANDLE_VALUE)
-	break;
+        /* Try creating it */
+        hPipe = CreateFileW(lpNamedPipeName,
+                            GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            NULL,
+                            OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL,
+                            NULL);
 
-      if (bRetry == FALSE)
-	return(FALSE);
+        /* Success, break out */
+        if (hPipe != INVALID_HANDLE_VALUE) break;
 
-      WaitNamedPipeW(lpNamedPipeName,
-		     nTimeOut);
+        /* Already tried twice, give up */
+        if (bRetry == FALSE) return FALSE;
 
-      bRetry = FALSE;
+        /* Wait on it */
+        WaitNamedPipeW(lpNamedPipeName, nTimeOut);
+
+        /* Get ready to try again */
+        bRetry = FALSE;
     }
 
-  dwPipeMode = PIPE_READMODE_MESSAGE;
-  bError = SetNamedPipeHandleState(hPipe,
-				   &dwPipeMode,
-				   NULL,
-				   NULL);
-  if (!bError)
+    /* Set the pipe mode */
+    dwPipeMode = PIPE_READMODE_MESSAGE | PIPE_WAIT;
+    bError = SetNamedPipeHandleState(hPipe, &dwPipeMode, NULL, NULL);
+    if (!bError)
     {
-      CloseHandle(hPipe);
-      return(FALSE);
+        /* Couldn't change state, fail */
+        CloseHandle(hPipe);
+        return FALSE;
     }
 
-  bError = TransactNamedPipe(hPipe,
-			     lpInBuffer,
-			     nInBufferSize,
-			     lpOutBuffer,
-			     nOutBufferSize,
-			     lpBytesRead,
-			     NULL);
-  CloseHandle(hPipe);
-
-  return(bError);
+    /* Do the transact */
+    bError = TransactNamedPipe(hPipe,
+                               lpInBuffer,
+                               nInBufferSize,
+                               lpOutBuffer,
+                               nOutBufferSize,
+                               lpBytesRead,
+                               NULL);
+    
+    /* Close the handle and return */
+    CloseHandle(hPipe);
+    return bError;
 }
-
 
 /*
  * @implemented
