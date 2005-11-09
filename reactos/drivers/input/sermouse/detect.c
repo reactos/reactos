@@ -160,7 +160,7 @@ SermouseDetectLegacyDevice(
 	ULONG Command;
 	SERIAL_TIMEOUTS Timeouts;
 	SERIAL_LINE_CONTROL LCR;
-	ULONG i, Count;
+	ULONG i, Count = 0;
 	UCHAR Buffer[16];
 	SERMOUSE_MOUSE_TYPE MouseType = mtNone;
 	NTSTATUS Status;

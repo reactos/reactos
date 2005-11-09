@@ -49,6 +49,7 @@ SermouseInternalDeviceControl(
 
 			/* Ask read loop to end */
 			KeSetEvent(&DeviceExtension->StopWorkerThreadEvent, (KPRIORITY)0, FALSE);
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_MOUSE_QUERY_ATTRIBUTES:
