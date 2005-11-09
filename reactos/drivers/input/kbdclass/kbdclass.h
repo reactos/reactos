@@ -24,6 +24,8 @@ typedef enum
 
 typedef struct _CLASS_DRIVER_EXTENSION
 {
+	UNICODE_STRING RegistryPath;
+
 	/* Registry settings */
 	ULONG ConnectMultiplePorts;
 	ULONG DataQueueSize;

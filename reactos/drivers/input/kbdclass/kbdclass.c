@@ -13,6 +13,11 @@
 #define INITGUID
 #include "kbdclass.h"
 
+static NTSTATUS
+SearchForLegacyDrivers(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PCLASS_DRIVER_EXTENSION DriverExtension);
+
 static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
@@ -206,7 +211,7 @@ ReadRegistryEntries(
 	Parameters[2].EntryContext = &DriverExtension->DeviceBaseName;
 	Parameters[2].DefaultType = REG_SZ;
 	Parameters[2].DefaultData = &DefaultDeviceBaseName;
-	Parameters[2].DefaultLength = sizeof(ULONG);
+	Parameters[2].DefaultLength = 0;
 
 	Status = RtlQueryRegistryValues(
 		RTL_REGISTRY_ABSOLUTE,
@@ -327,7 +332,14 @@ cleanup:
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	/* FIXME: create registry entry in HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP */
+	/* Add entry entry to HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\[DeviceBaseName] */
+	RtlWriteRegistryValue(
+		RTL_REGISTRY_DEVICEMAP,
+		DriverExtension->DeviceBaseName.Buffer,
+		DeviceNameU.Buffer,
+		REG_SZ,
+		DriverExtension->RegistryPath.Buffer,
+		DriverExtension->RegistryPath.MaximumLength);
 
 	/* HACK: 1st stage setup needs a keyboard to open it in user-mode
 	 * Create a link to user space... */
@@ -464,7 +476,7 @@ ConnectPortDriver(
 	else
 		IoStatus.Status = Status;
 
-	if (NT_SUCCESS(Status))
+	if (NT_SUCCESS(IoStatus.Status))
 		ObReferenceObject(PortDO);
 
 	return IoStatus.Status;
@@ -482,10 +494,12 @@ ClassAddDevice(
 
 	DPRINT("ClassAddDevice called. Pdo = 0x%p\n", Pdo);
 
-	if (Pdo == NULL)
-		return STATUS_SUCCESS;
-
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
+
+	if (Pdo == NULL)
+		/* We're getting a NULL Pdo at the first call as we're a legacy driver.
+		 * Use it to search for legacy port drivers. */
+		return SearchForLegacyDrivers(DriverObject, DriverExtension);
 
 	/* Create new device object */
 	Status = IoCreateDevice(
@@ -686,7 +700,6 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-				ObDereferenceObject(PortDeviceObject);
 			}
 		}
 		else
@@ -697,7 +710,6 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
-				ObDereferenceObject(PortDeviceObject);
 				continue;
 			}
 			Status = ConnectPortDriver(PortDeviceObject, ClassDO);
@@ -705,7 +717,6 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-				ObDereferenceObject(PortDeviceObject);
 				IoDeleteDevice(ClassDO);
 			}
 		}
@@ -747,6 +758,16 @@ DriverEntry(
 	}
 	RtlZeroMemory(DriverExtension, sizeof(CLASS_DRIVER_EXTENSION));
 
+	Status = RtlDuplicateUnicodeString(
+		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+		RegistryPath,
+		&DriverExtension->RegistryPath);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+
 	Status = ReadRegistryEntries(RegistryPath, DriverExtension);
 	if (!NT_SUCCESS(Status))
 	{
@@ -779,7 +800,5 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ClassDeviceControl;
 	DriverObject->DriverStartIo                        = ClassStartIo;
 
-	Status = SearchForLegacyDrivers(DriverObject, DriverExtension);
-
-	return Status;
+	return STATUS_SUCCESS;
 }
