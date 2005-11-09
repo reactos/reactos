@@ -38,12 +38,11 @@ HKR, , Icon,           0, "-27"
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
-%PCI\CC_0601.DeviceDesc% = PCI_Inst,PCI\CC_0604
+%PCI\CC_0601.DeviceDesc% = PCI_Inst,PCI\CC_0601
 %PCI\CC_0604.DeviceDesc% = PCI_ISA_Inst,PCI\CC_0604
 
 [IntelMfg]
 %PCI\VEN_8086&DEV_7110.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7110
-%PCI\VEN_8086&DEV_7110.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7110
 %PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7113
 %PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
 %PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7190
@@ -102,12 +101,12 @@ SystemClassName = "System devices"
 
 GenericMfg = "(Generic system devices)"
 *PNP0001.DeviceDesc = "EISA programmable interrupt controller"
-*PNP0A03.DeviceDesc = "PCI bus"
-*PNP0A05.DeviceDesc = "Generic ACPI bus"
-*PNP0B00.DeviceDesc = "AT real-time clock"
 *PNP0100.DeviceDesc = "System timer"
 *PNP0200.DeviceDesc = "DMA controller"
 *PNP0800.DeviceDesc = "System speaker"
+*PNP0A03.DeviceDesc = "PCI bus"
+*PNP0A05.DeviceDesc = "Generic ACPI bus"
+*PNP0B00.DeviceDesc = "AT real-time clock"
 *PNP0C02.DeviceDesc = "Motherboard resources"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 ACPI\FixedButton.DeviceDesc ="ACPI Fixed Feature Button"
