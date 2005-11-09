@@ -760,42 +760,41 @@ CallNamedPipeW(LPCWSTR lpNamedPipeName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL 
+WINAPI
 DisconnectNamedPipe(HANDLE hNamedPipe)
 {
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
 
-  Status = NtFsControlFile(hNamedPipe,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &Iosb,
-			   FSCTL_PIPE_DISCONNECT,
-			   NULL,
-			   0,
-			   NULL,
-			   0);
-  if (Status == STATUS_PENDING)
+    /* Send the FSCTL to the driver */
+    Status = NtFsControlFile(hNamedPipe,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             FSCTL_PIPE_DISCONNECT,
+                             NULL,
+                             0,
+                             NULL,
+                             0);
+    if (Status == STATUS_PENDING)
     {
-      Status = NtWaitForSingleObject(hNamedPipe,
-				     FALSE,
-				     NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  SetLastErrorByStatus(Status);
-	  return(FALSE);
+        /* Wait on NPFS to finish and get updated status */
+        Status = NtWaitForSingleObject(hNamedPipe, FALSE, NULL);
+        if (NT_SUCCESS(Status)) Status = Iosb.Status;
+    }
+
+    /* Check for error */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        SetLastErrorByStatus(Status);
+        return FALSE;
 	}
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-  return(TRUE);
+    
+    return TRUE;
 }
-
 
 /*
  * @unimplemented
@@ -989,90 +988,91 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
   return(TRUE);
 }
 
-
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 PeekNamedPipe(HANDLE hNamedPipe,
-	      LPVOID lpBuffer,
-	      DWORD nBufferSize,
-	      LPDWORD lpBytesRead,
-	      LPDWORD lpTotalBytesAvail,
-	      LPDWORD lpBytesLeftThisMessage)
+              LPVOID lpBuffer,
+              DWORD nBufferSize,
+              LPDWORD lpBytesRead,
+              LPDWORD lpTotalBytesAvail,
+              LPDWORD lpBytesLeftThisMessage)
 {
-  PFILE_PIPE_PEEK_BUFFER Buffer;
-  IO_STATUS_BLOCK Iosb;
-  ULONG BufferSize;
-  NTSTATUS Status;
+    PFILE_PIPE_PEEK_BUFFER Buffer;
+    IO_STATUS_BLOCK Iosb;
+    ULONG BufferSize;
+    NTSTATUS Status;
 
-  BufferSize = nBufferSize + sizeof(FILE_PIPE_PEEK_BUFFER);
-  Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-			   0,
-			   BufferSize);
+    /* Calculate the buffer space that we'll need and allocate it */
+    BufferSize = nBufferSize + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
 
-  Status = NtFsControlFile(hNamedPipe,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &Iosb,
-			   FSCTL_PIPE_PEEK,
-			   NULL,
-			   0,
-			   Buffer,
-			   BufferSize);
-  if (Status == STATUS_PENDING)
+    /* Tell the driver to seek */
+    Status = NtFsControlFile(hNamedPipe,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             FSCTL_PIPE_PEEK,
+                             NULL,
+                             0,
+                             Buffer,
+                             BufferSize);
+    if (Status == STATUS_PENDING)
     {
-      Status = NtWaitForSingleObject(hNamedPipe,
-				     FALSE,
-				     NULL);
-      if (NT_SUCCESS(Status))
-	Status = Iosb.Status;
+        /* Wait for npfs to be done, and update the status */
+        Status = NtWaitForSingleObject(hNamedPipe, FALSE, NULL);
+        if (NT_SUCCESS(Status)) Status = Iosb.Status;
     }
 
-  if (Status == STATUS_BUFFER_OVERFLOW)
+    /* Overflow is success for us */
+    if (Status == STATUS_BUFFER_OVERFLOW) Status = STATUS_SUCCESS;
+
+    /* If we failed */
+    if (!NT_SUCCESS(Status))
     {
-      Status = STATUS_SUCCESS;
+        /* Free the buffer and return failure */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+        SetLastErrorByStatus(Status);
+        return FALSE;
     }
 
-  if (!NT_SUCCESS(Status))
+    /* Check if caller requested bytes available */
+    if (lpTotalBytesAvail) *lpTotalBytesAvail = Buffer->ReadDataAvailable;
+
+    /* Check if caller requested bytes read */
+    if (lpBytesRead)
     {
-      RtlFreeHeap(RtlGetProcessHeap(),
-		  0,
-		  Buffer);
-      SetLastErrorByStatus(Status);
-      return(FALSE);
+        /* Calculate the bytes returned, minus our structure overhead */
+        *lpBytesRead = (ULONG)(Iosb.Information -
+                               FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]));
     }
 
-  if (lpTotalBytesAvail != NULL)
+    /* Check if caller requested bytes left */
+    if (lpBytesLeftThisMessage)
     {
-      *lpTotalBytesAvail = Buffer->ReadDataAvailable;
+        /* Calculate total minus what we returned and our structure overhead */
+        *lpBytesLeftThisMessage = Buffer->MessageLength -
+                                  (ULONG)(Iosb.Information -
+                                          FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]));
     }
 
-  if (lpBytesRead != NULL)
+    /* Check if the caller wanted to see the actual data */
+    if (lpBuffer)
     {
-      *lpBytesRead = Iosb.Information - sizeof(FILE_PIPE_PEEK_BUFFER);
+        /* Give him what he wants */
+        RtlCopyMemory(lpBuffer,
+                      Buffer->Data,
+	                  Iosb.Information -
+                      FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]));
     }
 
-  if (lpBytesLeftThisMessage != NULL)
-    {
-      *lpBytesLeftThisMessage = Buffer->MessageLength -
-	(Iosb.Information - sizeof(FILE_PIPE_PEEK_BUFFER));
-    }
-
-  if (lpBuffer != NULL)
-    {
-      memcpy(lpBuffer, Buffer->Data,
-	     min(nBufferSize, Iosb.Information - sizeof(FILE_PIPE_PEEK_BUFFER)));
-    }
-
-  RtlFreeHeap(RtlGetProcessHeap(),
-	      0,
-	      Buffer);
-
-  return(TRUE);
+    /* Free the buffer and return success */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    return TRUE;
 }
-
 
 /*
  * @implemented
