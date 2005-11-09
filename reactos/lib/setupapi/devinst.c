@@ -2,7 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005 Hervé Poussineau (hpoussin@reactos.com)
+ *           2005 Hervé Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -4281,10 +4281,14 @@ SetupDiBuildDriverInfoList(
                 wcscpy(pFullFilename, filename);
                 TRACE("Opening file %S\n", FullInfFileName);
 
-                currentInfFileDetails = HeapAlloc(GetProcessHeap(), 0, sizeof(struct InfFileDetails));
+                currentInfFileDetails = HeapAlloc(
+                    GetProcessHeap(),
+                    0,
+                    FIELD_OFFSET(struct InfFileDetails, FullInfFileName) + wcslen(FullInfFileName) * sizeof(WCHAR) + UNICODE_NULL);
                 if (!currentInfFileDetails)
                     continue;
                 memset(currentInfFileDetails, 0, sizeof(struct InfFileDetails));
+                wcscpy(currentInfFileDetails->FullInfFileName, FullInfFileName);
 
                 currentInfFileDetails->hInf = SetupOpenInfFileW(FullInfFileName, NULL, INF_STYLE_WIN4, NULL);
                 ReferenceInfFile(currentInfFileDetails);
@@ -5606,6 +5610,45 @@ SetupDiInstallDeviceInterfaces(
     return TRUE;
 }
 
+BOOL
+InfIsFromOEMLocation(
+    IN PCWSTR FullName,
+    OUT LPBOOL IsOEMLocation)
+{
+    PWCHAR last;
+
+    last = strrchrW(FullName, '\\');
+    if (!last)
+    {
+        /* No directory specified */
+        *IsOEMLocation = FALSE;
+    }
+    else
+    {
+        WCHAR Windir[MAX_PATH];
+        UINT ret;
+
+        ret = GetWindowsDirectory(Windir, MAX_PATH);
+        if (ret == 0 || ret >= MAX_PATH)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            return FALSE;
+        }
+
+        if (strncmpW(FullName, Windir, last - FullName) == 0)
+        {
+            /* The path is %SYSTEMROOT%\Inf */
+            *IsOEMLocation = FALSE;
+        }
+        else
+        {
+            /* The file is in another place */
+            *IsOEMLocation = TRUE;
+        }
+    }
+    return TRUE;
+}
+
 /***********************************************************************
  *		SetupDiInstallDevice (SETUPAPI.@)
  */
@@ -5634,6 +5677,7 @@ SetupDiInstallDevice(
     BOOL RebootRequired = FALSE;
     HKEY hKey = INVALID_HANDLE_VALUE;
     HKEY hClassKey = INVALID_HANDLE_VALUE;
+    BOOL NeedtoCopyFile;
     LONG rc;
     BOOL ret = FALSE; /* Return value */
 
@@ -5870,8 +5914,25 @@ nextfile:
         Result = SetupFindNextLine(&ContextService, &ContextService);
     }
 
-    /* Copy .inf file to Inf\ directory */
-    FIXME("FIXME: Copy .inf file to Inf\\ directory\n"); /* SetupCopyOEMInf */
+    /* Copy .inf file to Inf\ directory (if needed) */
+    Result = InfIsFromOEMLocation(SelectedDriver->InfFileDetails->FullInfFileName, &NeedtoCopyFile);
+    if (!Result)
+        goto cleanup;
+    if (NeedtoCopyFile)
+    {
+        Result = SetupCopyOEMInfW(
+            SelectedDriver->InfFileDetails->FullInfFileName,
+            NULL,
+            SPOST_NONE,
+            SP_COPY_NOOVERWRITE,
+            NULL, 0,
+            NULL,
+            NULL);
+        if (!Result)
+            goto cleanup;
+        /* FIXME: create a new struct InfFileDetails, and set it to SelectedDriver->InfFileDetails,
+         * to release use of current InfFile */
+    }
 
     /* Open device registry key */
     hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_SET_VALUE);

@@ -63,6 +63,9 @@ struct InfFileDetails
 {
     HINF hInf;
     LONG References;
+
+    /* May contain no directory if the file is already in %SYSTEMROOT%\Inf */
+    WCHAR FullInfFileName[0];
 };
 
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */

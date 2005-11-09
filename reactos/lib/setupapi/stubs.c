@@ -82,7 +82,8 @@ BOOL WINAPI SetupCopyOEMInfW(PCWSTR sourceinffile, PCWSTR sourcemedialoc,
 {
   FIXME("stub: source %s location %s ...\n", debugstr_w(sourceinffile),
         debugstr_w(sourcemedialoc));
-  return FALSE;
+  //return FALSE;
+  return TRUE;
 }
 
 /***********************************************************************
