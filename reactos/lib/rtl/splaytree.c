@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Splay-Tree implementation
  * FILE:              lib/rtl/splaytree.c
- * PROGRAMMER:        
+ * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)   
  */
 
 /* INCLUDES *****************************************************************/
@@ -274,7 +274,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                          * G was a right child, so change its parent's right
                          * child link to point to N now.
                          */
-                        RtlLeftChild(RtlParent(G)) = N;
+                        RtlRightChild(RtlParent(G)) = N;
                     }
                 }
 
@@ -335,7 +335,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                          * G was a right child, so change its parent's right
                          * child link to point to N now.
                          */
-                        RtlLeftChild(RtlParent(G)) = N;
+                        RtlRightChild(RtlParent(G)) = N;
                     }
                 }
 
@@ -416,7 +416,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                          * G was a right child, so change its parent's right
                          * child link to point to N now.
                          */
-                        RtlLeftChild(RtlParent(G)) = N;
+                        RtlRightChild(RtlParent(G)) = N;
                     }
                 }
 
@@ -477,7 +477,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                          * G was a right child, so change its parent's right
                          * child link to point to N now.
                          */
-                        RtlLeftChild(RtlParent(G)) = N;
+                        RtlRightChild(RtlParent(G)) = N;
                     }
                 }
 
