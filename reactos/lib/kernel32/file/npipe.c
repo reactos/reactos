@@ -12,7 +12,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#define USING_PROPER_NPFS_WAIT_SEMANTICS
+//#define USING_PROPER_NPFS_WAIT_SEMANTICS
 #include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -664,34 +664,32 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 CallNamedPipeA(LPCSTR lpNamedPipeName,
-	       LPVOID lpInBuffer,
-	       DWORD nInBufferSize,
-	       LPVOID lpOutBuffer,
-	       DWORD nOutBufferSize,
-	       LPDWORD lpBytesRead,
-	       DWORD nTimeOut)
+               LPVOID lpInBuffer,
+               DWORD nInBufferSize,
+               LPVOID lpOutBuffer,
+               DWORD nOutBufferSize,
+               LPDWORD lpBytesRead,
+               DWORD nTimeOut)
 {
-  UNICODE_STRING PipeName;
-  BOOL Result;
+    UNICODE_STRING PipeName = &NtCurrentTeb()->StaticUnicodeString;
+    ANSI_STRING AnsiPipe;
 
-  RtlCreateUnicodeStringFromAsciiz(&PipeName,
-				   (LPSTR)lpNamedPipeName);
+    /* Initialize the string as ANSI_STRING and convert to Unicode */
+    RtlInitAnsiString(&NameA, (LPSTR)lpName);
+    RtlAnsiStringToUnicodeString(NameU, &NameA, FALSE);
 
-  Result = CallNamedPipeW(PipeName.Buffer,
-			  lpInBuffer,
-			  nInBufferSize,
-			  lpOutBuffer,
-			  nOutBufferSize,
-			  lpBytesRead,
-			  nTimeOut);
-
-  RtlFreeUnicodeString(&PipeName);
-
-  return(Result);
+    /* Call the Unicode function */
+    return CallNamedPipeW(PipeName->Buffer,
+                          lpInBuffer,
+                          nInBufferSize,
+                          lpOutBuffer,
+                          nOutBufferSize,
+                          lpBytesRead,
+                          nTimeOut);
 }
-
 
 /*
  * @implemented
