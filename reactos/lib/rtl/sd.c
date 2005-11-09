@@ -815,7 +815,7 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
 
     ASSERT((ULONG_PTR)DataEnd >= (ULONG_PTR)DataStart);
 
-    DataSize = (ULONG)((ULONG_PTR)DataEnd >= (ULONG_PTR)DataStart);
+    DataSize = (ULONG)((ULONG_PTR)DataEnd - (ULONG_PTR)DataStart);
 
     if (*BufferSize < sizeof(SECURITY_DESCRIPTOR) + DataSize)
     {
