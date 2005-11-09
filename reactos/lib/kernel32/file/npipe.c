@@ -1,11 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         ReactOS Win32 Kernel Library
  * FILE:            lib/kernel32/file/npipe.c
- * PURPOSE:         Directory functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
+ * PURPOSE:         Named Pipe Functions
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ *                  Ariadne ( ariadne@xs4all.nl)
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,7 +12,7 @@
 #include <k32.h>
 
 #define NDEBUG
-//#define USING_PROPER_NPFS_WAIT_SEMANTICS
+#define USING_PROPER_NPFS_WAIT_SEMANTICS
 #include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -21,35 +20,33 @@
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE
+WINAPI
 CreateNamedPipeA(LPCSTR lpName,
-		 DWORD dwOpenMode,
-		 DWORD dwPipeMode,
-		 DWORD nMaxInstances,
-		 DWORD nOutBufferSize,
-		 DWORD nInBufferSize,
-		 DWORD nDefaultTimeOut,
-		 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+                 DWORD dwOpenMode,
+                 DWORD dwPipeMode,
+                 DWORD nMaxInstances,
+                 DWORD nOutBufferSize,
+                 DWORD nInBufferSize,
+                 DWORD nDefaultTimeOut,
+                 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-   HANDLE NamedPipeHandle;
-   UNICODE_STRING NameU;
-   ANSI_STRING NameA;
+    PUNICODE_STRING NameU = &NtCurrentTeb()->StaticUnicodeString;
+    ANSI_STRING NameA;
 
-   RtlInitAnsiString(&NameA, (LPSTR)lpName);
-   RtlAnsiStringToUnicodeString(&NameU, &NameA, TRUE);
+    /* Initialize the string as ANSI_STRING and convert to Unicode */
+    RtlInitAnsiString(&NameA, (LPSTR)lpName);
+    RtlAnsiStringToUnicodeString(NameU, &NameA, FALSE);
 
-   NamedPipeHandle = CreateNamedPipeW(NameU.Buffer,
-				      dwOpenMode,
-				      dwPipeMode,
-				      nMaxInstances,
-				      nOutBufferSize,
-				      nInBufferSize,
-				      nDefaultTimeOut,
-				      lpSecurityAttributes);
-
-   RtlFreeUnicodeString(&NameU);
-
-   return(NamedPipeHandle);
+    /* Call the Unicode API */
+    return CreateNamedPipeW(NameU->Buffer,
+                            dwOpenMode,
+                            dwPipeMode,
+                            nMaxInstances,
+                            nOutBufferSize,
+                            nInBufferSize,
+                            nDefaultTimeOut,
+                            lpSecurityAttributes);
 }
 
 /*
@@ -104,8 +101,8 @@ CreateNamedPipeW(LPCWSTR lpName,
         return(INVALID_HANDLE_VALUE);
     }
 
-    DPRINT1("Pipe name: %wZ\n", &NamedPipeName);
-    DPRINT1("Pipe name: %S\n", NamedPipeName.Buffer);
+    DPRINT("Pipe name: %wZ\n", &NamedPipeName);
+    DPRINT("Pipe name: %S\n", NamedPipeName.Buffer);
 
     /* Always case insensitive, check if we got extra attributes */
     Attributes = OBJ_CASE_INSENSITIVE;
@@ -226,26 +223,28 @@ CreateNamedPipeW(LPCWSTR lpName,
     return PipeHandle;
 }
 
-
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 WaitNamedPipeA(LPCSTR lpNamedPipeName,
-	       DWORD nTimeOut)
+               DWORD nTimeOut)
 {
-   BOOL r;
-   UNICODE_STRING NameU;
-   ANSI_STRING NameA;
+    BOOL r;
+    UNICODE_STRING NameU;
 
-   RtlInitAnsiString(&NameA, (LPSTR)lpNamedPipeName);
-   RtlAnsiStringToUnicodeString(&NameU, &NameA, TRUE);
+    /* Convert the name to Unicode */
+    Basep8BitStringToLiveUnicodeString(&NameU, lpNamedPipeName);
 
-   r = WaitNamedPipeW(NameU.Buffer, nTimeOut);
+    /* Call the Unicode API */
+    r = WaitNamedPipeW(NameU.Buffer, nTimeOut);
 
-   RtlFreeUnicodeString(&NameU);
+    /* Free the Unicode string */
+    RtlFreeUnicodeString(&NameU);
 
-   return(r);
+    /* Return result */
+    return r;
 }
 
 /*
