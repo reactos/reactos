@@ -97,13 +97,13 @@ DWORD DoFormatMessage(DWORD ErrorCode)
 
 INT ShowInfo(BOOL bAll)
 {
-    PIP_ADAPTER_INFO pAdapterInfo;
+    PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL;
     ULONG    adaptOutBufLen;
 
     PFIXED_INFO pFixedInfo;
     ULONG    netOutBufLen;
-    PIP_ADDR_STRING pIPAddr;
+    PIP_ADDR_STRING pIPAddr = NULL;
 
     /* assign memory for call to GetNetworkParams */
     pFixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
@@ -114,29 +114,32 @@ INT ShowInfo(BOOL bAll)
     adaptOutBufLen = sizeof(IP_ADAPTER_INFO);
 
     /* set required buffer size */
-    if(GetNetworkParams(pFixedInfo, &netOutBufLen) == ERROR_BUFFER_OVERFLOW)
-    {
+    if(GetNetworkParams(pFixedInfo, &netOutBufLen) == ERROR_BUFFER_OVERFLOW) 
+	{
         GlobalFree(pFixedInfo);
         pFixedInfo = (FIXED_INFO *) GlobalAlloc(GPTR, netOutBufLen);
     }
 
     /* set required buffer size */
-    if (GetAdaptersInfo( pAdapterInfo, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW)
-    {
+    if (GetAdaptersInfo( pAdapterInfo, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW) 
+	{
        free(pAdapterInfo);
        pAdapterInfo = (IP_ADAPTER_INFO *) malloc (adaptOutBufLen);
     }
 
-    if (GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR)
-    {
-      if (GetNetworkParams(pFixedInfo, &netOutBufLen) == NO_ERROR)
-      {
-        pAdapter = pAdapterInfo;
+    if (! GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR)
+        _tprintf(_T("GetAdaptersInfo failed %lu\n"), GetLastError());
+    if (! GetNetworkParams(pFixedInfo, &netOutBufLen) == NO_ERROR)
+        _tprintf(_T("GetNetworkParams failed %lu\n"), GetLastError());
+    
+    pAdapter = pAdapterInfo;
         //HKEY hKey;
         //LPCTSTR lpSubKey = _T("SYSTEM\\ControlSet\\Control\\Network");
 
-        _tprintf(_T("\nReactOS IP Configuration\n\n"));
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
+	do
+	{
         if (bAll)
         {
             _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
@@ -153,7 +156,7 @@ INT ShowInfo(BOOL bAll)
             _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
         }
 
-        _tprintf(_T("\n%s Local Area Connection: \n\n"), GetInterfaceTypeName(pAdapter->Type));
+        _tprintf(_T("\n%s ...... : \n\n"), GetInterfaceTypeName(pAdapter->Type));
         _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
 
         if (bAll)
@@ -196,14 +199,11 @@ INT ShowInfo(BOOL bAll)
             }
         }
         _tprintf(_T("\n"));
-    }
-    else
-        _tprintf(_T("Call to GetNetworkParams failed.\n"));
         
-       }
-    else
-        _tprintf(_T("Call to GetAdaptersInfo failed.\n"));
+		pAdapter = pAdapter->Next;
 
+    } while (pAdapter);
+ 
     return 0;
 }
 
