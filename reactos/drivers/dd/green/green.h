@@ -1,10 +1,10 @@
 #include <ntddk.h>
 #include <ntddser.h>
 #include <kbdmou.h>
+#include <wincon.h>
 #include <stdarg.h>
 
 #if defined(__GNUC__)
-  #include <wincon.h>
   #include <drivers/blue/ntddblue.h>
 
   #define INFINITE 0xFFFFFFFF
@@ -95,19 +95,19 @@ typedef struct _GREEN_DEVICE_EXTENSION
 
 /************************************ createclose.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 GreenCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 GreenClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /************************************ dispatch.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 GreenDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
@@ -137,7 +137,7 @@ GreenDeviceIoControl(
 
 /************************************ pnp.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 GreenAddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo);
