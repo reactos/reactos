@@ -41,31 +41,62 @@ RtlDeleteNoSplay (
 	UNIMPLEMENTED;
 }
 
-
 /*
-* @unimplemented
+* @implemented
 */
 PRTL_SPLAY_LINKS
 NTAPI
-RtlRealPredecessor (
-	PRTL_SPLAY_LINKS Links
-	)
+RtlRealPredecessor(PRTL_SPLAY_LINKS Links)
 {
-	UNIMPLEMENTED;
-	return 0;
+    PRTL_SPLAY_LINKS Child;
+
+    /* Get the left child */
+    Child = RtlLeftChild(Links);
+    if (Child)
+    {
+        /* Get right-most child */
+        while (RtlRightChild(Child)) Child = RtlRightChild(Child);
+        return Child;
+    }
+
+    /* We don't have a left child, keep looping until we find our parent */
+    Child = Links;
+    while (RtlIsLeftChild(Child)) Child = RtlParent(Child);
+
+    /* The parent should be a right child, return the real predecessor */
+    if (RtlIsRightChild(Child)) return RtlParent(Child);
+
+    /* The parent isn't a right child, so no real precessor for us */
+    return NULL;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 PRTL_SPLAY_LINKS
 NTAPI
-RtlRealSuccessor (
-	PRTL_SPLAY_LINKS Links
-	)
+RtlRealSuccessor(PRTL_SPLAY_LINKS Links)
 {
-	UNIMPLEMENTED;
-	return 0;
+    PRTL_SPLAY_LINKS Child;
+
+    /* Get the right child */
+    Child = RtlRightChild(Links);
+    if (Child)
+    {
+        /* Get left-most child */
+        while (RtlLeftChild(Child)) Child = RtlLeftChild(Child);
+        return Child;
+    }
+
+    /* We don't have a right child, keep looping until we find our parent */
+    Child = Links;
+    while (RtlIsRightChild(Child)) Child = RtlParent(Child);
+
+    /* The parent should be a left child, return the real successor */
+    if (RtlIsLeftChild(Child)) return RtlParent(Child);
+
+    /* The parent isn't a right child, so no real successor for us */
+    return NULL;
 }
 
 /*
