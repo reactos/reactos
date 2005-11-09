@@ -82,7 +82,6 @@ cleanup:
 	return Status;
 }
 
-/*
 static NTSTATUS
 ReleaseBusInterface(
 	IN PFDO_DEVICE_EXTENSION DeviceExtension)
@@ -99,7 +98,6 @@ ReleaseBusInterface(
 
 	return Status;
 }
-*/
 
 NTSTATUS NTAPI
 PciIdeXAddDevice(
@@ -109,6 +107,8 @@ PciIdeXAddDevice(
 	PPCIIDEX_DRIVER_EXTENSION DriverExtension;
 	PFDO_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT Fdo;
+	ULONG BytesRead;
+	PCI_COMMON_CONFIG PciConfig;
 	NTSTATUS Status;
 
 	DPRINT("PciIdeXAddDevice(%p %p)\n", DriverObject, Pdo);
@@ -145,9 +145,27 @@ PciIdeXAddDevice(
 	Status = GetBusInterface(DeviceExtension);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("GetBusInterface() failed() failed with status 0x%08lx\n", Status);
+		DPRINT("GetBusInterface() failed with status 0x%08lx\n", Status);
+		IoDetachDevice(DeviceExtension->LowerDevice);
 		return Status;
 	}
+
+	BytesRead = (*DeviceExtension->BusInterface->GetBusData)(
+		DeviceExtension->BusInterface->Context,
+		PCI_WHICHSPACE_CONFIG,
+		&PciConfig,
+		0,
+		PCI_COMMON_HDR_LENGTH);
+	if (BytesRead != PCI_COMMON_HDR_LENGTH)
+	{
+		DPRINT("BusInterface->GetBusData() failed()\n");
+		ReleaseBusInterface(DeviceExtension);
+		IoDetachDevice(DeviceExtension->LowerDevice);
+		return STATUS_IO_DEVICE_ERROR;
+	}
+
+	DeviceExtension->VendorId = PciConfig.VendorID;
+	DeviceExtension->DeviceId = PciConfig.DeviceID;
 
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -156,7 +174,7 @@ PciIdeXAddDevice(
 
 static NTSTATUS NTAPI
 PciIdeXUdmaModesSupported(
-	IN IDE_DRIVE_IDENTIFY IdentifyData,
+	IN IDENTIFY_DATA IdentifyData,
 	OUT PULONG BestXferMode,
 	OUT PULONG CurrentXferMode)
 {
@@ -317,7 +335,7 @@ PciIdeXFdoQueryBusRelations(
 		}
 		ChannelState = DeviceExtension->Properties.PciIdeChannelEnabled(
 			DeviceExtension->MiniControllerExtension, i);
-		if (ChannelState != ChannelEnabled)
+		if (ChannelState == ChannelDisabled)
 		{
 			DPRINT("Channel %lu is disabled\n", i);
 			continue;

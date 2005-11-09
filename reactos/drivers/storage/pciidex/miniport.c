@@ -67,7 +67,7 @@ PciIdeXGetBusData(
 {
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	ULONG BytesRead = 0;
-	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+	NTSTATUS Status = STATUS_IO_DEVICE_ERROR;
 
 	DPRINT("PciIdeXGetBusData(%p %p 0x%lx 0x%lx)\n",
 		DeviceExtension, Buffer, ConfigDataOffset, BufferLength);

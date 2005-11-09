@@ -18,6 +18,7 @@ PciIdeXPdoQueryId(
 	OUT ULONG_PTR* Information)
 {
 	PPDO_DEVICE_EXTENSION DeviceExtension;
+	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	WCHAR Buffer[256];
 	ULONG Index = 0;
 	ULONG IdType;
@@ -27,6 +28,7 @@ PciIdeXPdoQueryId(
 
 	IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
 	DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->ControllerFdo->DeviceExtension;
 
 	switch (IdType)
 	{
@@ -40,26 +42,62 @@ PciIdeXPdoQueryId(
 		{
 			DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
 
+			switch (FdoDeviceExtension->VendorId)
+			{
+				case 0x0e11:
+					Index += swprintf(&Buffer[Index], L"Compaq-%04x", FdoDeviceExtension->DeviceId) + 1;
+					break;
+				case 0x1039:
+					Index += swprintf(&Buffer[Index], L"SiS-%04x", FdoDeviceExtension->DeviceId) + 1;
+					break;
+				case 0x1050:
+					Index += swprintf(&Buffer[Index], L"WinBond-%04x", FdoDeviceExtension->DeviceId) + 1;
+					break;
+				case 0x1095:
+					Index += swprintf(&Buffer[Index], L"CMD-%04x", FdoDeviceExtension->DeviceId) + 1;
+					break;
+				case 0x8086:
+				{
+					switch (FdoDeviceExtension->DeviceId)
+					{
+						case 0x1230:
+							Index += swprintf(&Buffer[Index], L"Intel-PIIX") + 1;
+							break;
+						case 0x7010:
+							Index += swprintf(&Buffer[Index], L"Intel-PIIX3") + 1;
+							break;
+						case 0x7111:
+							Index += swprintf(&Buffer[Index], L"Intel-PIIX4") + 1;
+							break;
+						default:
+							Index += swprintf(&Buffer[Index], L"Intel-%04x", FdoDeviceExtension->DeviceId) + 1;
+							break;
+					}
+					break;
+				}
+				default:
+					break;
+			}
 			if (DeviceExtension->Channel == 0)
-				Index += swprintf(&Buffer[Index], L"Primary_IDE_Channel");
+				Index += swprintf(&Buffer[Index], L"Primary_IDE_Channel") + 1;
 			else
-				Index += swprintf(&Buffer[Index], L"Secondary_IDE_Channel");
-			Index++;
+				Index += swprintf(&Buffer[Index], L"Secondary_IDE_Channel") + 1;
+			Index += swprintf(&Buffer[Index], L"*PNP0600") + 1;
 			Buffer[Index] = UNICODE_NULL;
 			SourceString.Length = SourceString.MaximumLength = Index * sizeof(WCHAR);
 			SourceString.Buffer = Buffer;
 			break;
 		}
 		case BusQueryCompatibleIDs:
+		{
 			DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
 
-			Index += swprintf(&Buffer[Index],
-				L"*PNP0600");
-			Index++;
+			Index += swprintf(&Buffer[Index], L"*PNP0600") + 1;
 			Buffer[Index] = UNICODE_NULL;
 			SourceString.Length = SourceString.MaximumLength = Index * sizeof(WCHAR);
 			SourceString.Buffer = Buffer;
 			break;
+		}
 		case BusQueryInstanceID:
 		{
 			DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
@@ -69,9 +107,7 @@ PciIdeXPdoQueryId(
 		}
 		default:
 			DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n", IdType);
-#ifndef NDEBUG
-			DbgBreakPoint();
-#endif					
+			ASSERT(FALSE);
 			return STATUS_NOT_SUPPORTED;
 	}
 
@@ -94,21 +130,22 @@ GetCurrentResources(
 	PPDO_DEVICE_EXTENSION DeviceExtension;
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	ULONG BaseIndex;
+	ULONG BytesRead;
 	PCI_COMMON_CONFIG PciConfig;
-	NTSTATUS Status;
 	NTSTATUS ret = STATUS_UNSUCCESSFUL;
 
 	DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->ControllerFdo->DeviceExtension;
 	BaseIndex = DeviceExtension->Channel * 2;
 
-	Status = PciIdeXGetBusData(
-		FdoDeviceExtension->MiniControllerExtension,
+	BytesRead = (*FdoDeviceExtension->BusInterface->GetBusData)(
+		FdoDeviceExtension->BusInterface->Context,
+		PCI_WHICHSPACE_CONFIG,
 		&PciConfig,
 		0,
 		PCI_COMMON_HDR_LENGTH);
-	if (!NT_SUCCESS(Status))
-		return Status;
+	if (BytesRead != PCI_COMMON_HDR_LENGTH)
+		return STATUS_IO_DEVICE_ERROR;
 
 	/* We have found a known native pci ide controller */
 	if ((PciConfig.ProgIf & 0x80) && (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE))
@@ -122,17 +159,22 @@ GetCurrentResources(
 		*BusMasterPortBase = 0;
 	}
 
-	if ((PciConfig.u.type0.BaseAddresses[BaseIndex + 0] & PCI_ADDRESS_IO_SPACE) &&
-	    (PciConfig.u.type0.BaseAddresses[BaseIndex + 1] & PCI_ADDRESS_IO_SPACE))
+	if ((PciConfig.ProgIf >> BaseIndex) & 0x1)
 	{
-		/* Channel is enabled */
-		*CommandPortBase = PciConfig.u.type0.BaseAddresses[BaseIndex + 0] & PCI_ADDRESS_IO_ADDRESS_MASK;
-		*ControlPortBase = PciConfig.u.type0.BaseAddresses[BaseIndex + 1] & PCI_ADDRESS_IO_ADDRESS_MASK;
-		*InterruptVector = PciConfig.u.type0.InterruptLine;
-		ret = STATUS_SUCCESS;
+		/* Native mode */
+		if ((PciConfig.u.type0.BaseAddresses[BaseIndex + 0] & PCI_ADDRESS_IO_SPACE) &&
+		    (PciConfig.u.type0.BaseAddresses[BaseIndex + 1] & PCI_ADDRESS_IO_SPACE))
+		{
+			/* Channel is enabled */
+			*CommandPortBase = PciConfig.u.type0.BaseAddresses[BaseIndex + 0] & PCI_ADDRESS_IO_ADDRESS_MASK;
+			*ControlPortBase = PciConfig.u.type0.BaseAddresses[BaseIndex + 1] & PCI_ADDRESS_IO_ADDRESS_MASK;
+			*InterruptVector = PciConfig.u.type0.InterruptLine;
+			ret = STATUS_SUCCESS;
+		}
 	}
 	else
 	{
+		/* Compatibility mode */
 		switch (DeviceExtension->Channel)
 		{
 			case 0:
@@ -263,9 +305,7 @@ PciIdeXPdoQueryDeviceText(
 		}
 		default:
 			DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / unknown type 0x%lx\n", DeviceTextType);
-#ifndef NDEBUG
-			DbgBreakPoint();
-#endif					
+			ASSERT(FALSE);
 			return STATUS_NOT_SUPPORTED;
 	}
 
@@ -370,9 +410,7 @@ PciIdeXPdoPnpDispatch(
 				{
 					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
-#ifndef NDEBUG
-					DbgBreakPoint();
-#endif					
+					ASSERT(FALSE);
 					Status = STATUS_NOT_SUPPORTED;
 					break;
 				}
@@ -456,9 +494,7 @@ PciIdeXPdoPnpDispatch(
 			/* We can't forward request to the lower driver, because
 			 * we are a Pdo, so we don't have lower driver... */
 			DPRINT1("IRP_MJ_PNP / Unknown minor function 0x%lx\n", MinorFunction);
-#ifndef NDEBUG
-			DbgBreakPoint();
-#endif
+			ASSERT(FALSE);
 			Information = Irp->IoStatus.Information;
 			Status = Irp->IoStatus.Status;
 		}
