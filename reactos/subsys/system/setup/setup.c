@@ -88,7 +88,6 @@ RunNewSetup (HINSTANCE hInstance)
 
   SetupIsActive(1);
   InstallReactOS = (PINSTALL_REACTOS)GetProcAddress (hDll, "InstallReactOS");
-  SetupIsActive(0);
 
   if (InstallReactOS == NULL)
     {

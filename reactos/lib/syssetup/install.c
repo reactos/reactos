@@ -236,6 +236,16 @@ AppendRidToSid (PSID *Dst,
 			       Dst);
 }
 
+VOID
+SetupIsActive( DWORD dw )
+{
+  HKEY hKey = 0;
+  if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, _T("SYSTEM\\Setup"), 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
+    RegSetValueEx( hKey, _T("SystemSetupInProgress"), 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
+    RegCloseKey( hKey );
+  }
+}
+
 INT_PTR CALLBACK
 RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -255,7 +265,10 @@ RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             hWndProgress = GetDlgItem(hWnd, IDC_RESTART_PROGRESS);
             Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
             if (Position == 300)
+            {
+               SetupIsActive(0);
                EndDialog(hWnd, 0);
+            }
             else
                SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
          }
