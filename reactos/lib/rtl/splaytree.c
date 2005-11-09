@@ -411,49 +411,44 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
 	return N;
 }
 
-
 /*
 * @implemented
 */
-PRTL_SPLAY_LINKS NTAPI
-RtlSubtreePredecessor (IN PRTL_SPLAY_LINKS Links)
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreePredecessor(IN PRTL_SPLAY_LINKS Links)
 {
-   PRTL_SPLAY_LINKS Child;
+    PRTL_SPLAY_LINKS Child;
 
-   Child = Links->RightChild;
-   if (Child == NULL)
-      return NULL;
+    /* Get the left child */
+    Child = RtlLeftChild(Links);
+    if (!Child) return NULL;
 
-   if (Child->LeftChild == NULL)
-      return Child;
+    /* Get right-most child */
+    while (RtlRightChild(Child)) Child = RtlRightChild(Child);
 
-   /* Get left-most child */
-   while (Child->LeftChild != NULL)
-      Child = Child->LeftChild;
-
-   return Child;
+    /* Return it */
+    return Child;
 }
 
 /*
 * @implemented
 */
-PRTL_SPLAY_LINKS NTAPI
-RtlSubtreeSuccessor (IN PRTL_SPLAY_LINKS Links)
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreeSuccessor(IN PRTL_SPLAY_LINKS Links)
 {
-   PRTL_SPLAY_LINKS Child;
+    PRTL_SPLAY_LINKS Child;
 
-   Child = Links->LeftChild;
-   if (Child == NULL)
-      return NULL;
+    /* Get the right child */
+    Child = RtlRightChild(Links);
+    if (!Child) return NULL;
 
-   if (Child->RightChild == NULL)
-      return Child;
+    /* Get left-most child */
+    while (RtlLeftChild(Child)) Child = RtlLeftChild(Child);
 
-   /* Get right-most child */
-   while (Child->RightChild != NULL)
-      Child = Child->RightChild;
-
-   return Child;
+    /* Return it */
+    return Child;
 }
 
 /* EOF */
