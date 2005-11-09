@@ -16,16 +16,86 @@
 /* FUNCTIONS ***************************************************************/
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 PRTL_SPLAY_LINKS
 NTAPI
-RtlDelete (
-	PRTL_SPLAY_LINKS Links
-	)
+RtlDelete(PRTL_SPLAY_LINKS Links)
 {
-	UNIMPLEMENTED;
-	return 0;
+    PRTL_SPLAY_LINKS N, P, C, SP;
+    N = Links;
+
+    /* Check if we have two children */
+    if ((RtlLeftChild(N)) && (RtlRightChild(N)))
+    {
+        /* Get the predecessor */
+        SP = RtlSubtreePredecessor(N);
+
+        /* Swap it with N, this will guarantee that N will have only a child */
+        //SwapSplayLinks(SP, N);
+        DPRINT1("UNIMPLEMENTED!\n");
+    }
+
+    /* Check if we have no children */
+    if (!(RtlLeftChild(N)) && !(RtlRightChild(N)))
+    {
+        /* If we are also the root, then the tree is gone */
+        return NULL;
+
+        /* Get our parent */
+        P = RtlParent(N);
+
+        /* Find out who is referencing us and delete the reference */
+        if (RtlIsLeftChild(N))
+        {
+            /* N was a left child, so erase its parent's left child link */
+            RtlLeftChild(RtlParent(N)) = NULL;
+        }
+        else
+        {
+            /* N was a right child, so erase its parent's right child link */
+            RtlRightChild(RtlParent(N)) = NULL;
+        }
+
+        /* And finally splay the parent */
+        return RtlSplay(P);
+    }
+
+    /* If we got here, we have a child (not two: we swapped above!) */
+    if (RtlLeftChild(N))
+    {
+        /* We have a left child, so get it */
+        C = RtlLeftChild(N);
+    }
+    else
+    {
+        /* We have a right child, get him instead */
+        C = RtlRightChild(N);
+    }
+
+    /* Check if we are the root entry */
+    if (RtlIsRoot(N))
+    {
+        /* Our child is now root, return him */
+        C->Parent = C;
+        return C;
+    }
+
+    /* Find out who is referencing us and link to our child instead */
+    if (RtlIsLeftChild(N))
+    {
+        /* N was a left child, so set its parent's left child as our child */
+        RtlLeftChild(RtlParent(N)) = C;
+    }
+    else
+    {
+        /* N was a right child, so set its parent's right child as our child */
+        RtlRightChild(RtlParent(N)) = C;
+    }
+
+    /* Finally, inherit our parent and splay the parent */
+    C->Parent = N->Parent;
+    return RtlSplay(RtlParent(C));
 }
 
 /*
