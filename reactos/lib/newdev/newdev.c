@@ -389,7 +389,7 @@ FinishDlgProc(
 				IDC_DEVICE,
 				WM_SETTEXT,
 				0,
-				(LPARAM) DevInstData->buffer);
+				(LPARAM) DevInstData->drvInfoData.Description);
 
 			/* Set title font */
 			SendDlgItemMessage(hwndDlg,
