@@ -159,7 +159,9 @@ IopCompleteRequest(PKAPC Apc,
     if (Irp->Flags & IRP_BUFFERED_IO)
     {
         /* Check if we have an input buffer and if we suceeded */
-        if (Irp->Flags & IRP_INPUT_OPERATION && NT_SUCCESS(Irp->IoStatus.Status))
+        if ((Irp->Flags & IRP_INPUT_OPERATION) && 
+            (Irp->IoStatus.Status != STATUS_VERIFY_REQUIRED) &&
+            !(NT_ERROR(Irp->IoStatus.Status)))
         {
             /* Copy the buffer back to the user */
             RtlCopyMemory(Irp->UserBuffer,
@@ -191,10 +193,10 @@ IopCompleteRequest(PKAPC Apc,
 
 #if 1
     /* Check for Success but allow failure for Async IRPs */
-    if (NT_SUCCESS(Irp->IoStatus.Status) ||
-        (Irp->PendingReturned &&
-        !SyncIrp &&
-        (FileObject == NULL || FileObject->Flags & FO_SYNCHRONOUS_IO)))
+    if (!(NT_ERROR(Irp->IoStatus.Status)) ||
+        ((NT_ERROR(Irp->IoStatus.Status)) &&
+        (Irp->PendingReturned) && !(SyncIrp) &&
+        ((FileObject == NULL) || (FileObject->Flags & FO_SYNCHRONOUS_IO))))
     {
         _SEH_TRY
         {
