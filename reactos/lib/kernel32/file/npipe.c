@@ -13,6 +13,7 @@
 #include <k32.h>
 
 #define NDEBUG
+//#define USING_PROPER_NPFS_WAIT_SEMANTICS
 #include "../include/debug.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -51,130 +52,178 @@ CreateNamedPipeA(LPCSTR lpName,
    return(NamedPipeHandle);
 }
 
-
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE
+STDCALL
 CreateNamedPipeW(LPCWSTR lpName,
-		 DWORD dwOpenMode,
-		 DWORD dwPipeMode,
-		 DWORD nMaxInstances,
-		 DWORD nOutBufferSize,
-		 DWORD nInBufferSize,
-		 DWORD nDefaultTimeOut,
-		 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+                 DWORD dwOpenMode,
+                 DWORD dwPipeMode,
+                 DWORD nMaxInstances,
+                 DWORD nOutBufferSize,
+                 DWORD nInBufferSize,
+                 DWORD nDefaultTimeOut,
+                 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-   UNICODE_STRING NamedPipeName;
-   BOOL Result;
-   NTSTATUS Status;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE PipeHandle;
-   ACCESS_MASK DesiredAccess;
-   ULONG CreateOptions;
-   ULONG WriteModeMessage;
-   ULONG ReadModeMessage;
-   ULONG NonBlocking;
-   IO_STATUS_BLOCK Iosb;
-   ULONG ShareAccess, Attributes;
-   LARGE_INTEGER DefaultTimeOut;
-   PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    UNICODE_STRING NamedPipeName;
+    BOOL Result;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE PipeHandle;
+    ACCESS_MASK DesiredAccess;
+    ULONG CreateOptions = 0;
+    ULONG WriteModeMessage;
+    ULONG ReadModeMessage;
+    ULONG NonBlocking;
+    IO_STATUS_BLOCK Iosb;
+    ULONG ShareAccess = 0, Attributes;
+    LARGE_INTEGER DefaultTimeOut;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 
-   if (nMaxInstances == 0 || nMaxInstances > PIPE_UNLIMITED_INSTANCES)
-   {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return INVALID_HANDLE_VALUE;
-   }
+    /* Check for valid instances */
+    if (nMaxInstances == 0 || nMaxInstances > PIPE_UNLIMITED_INSTANCES)
+    {
+        /* Fail */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return INVALID_HANDLE_VALUE;
+    }
 
-   Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
-					 &NamedPipeName,
-					 NULL,
-					 NULL);
-   if (!Result)
-     {
-	SetLastError(ERROR_PATH_NOT_FOUND);
-	return(INVALID_HANDLE_VALUE);
-     }
+    /* Convert to NT syntax */
+    if (nMaxInstances == PIPE_UNLIMITED_INSTANCES) nMaxInstances = -1;
 
-   DPRINT("Pipe name: %wZ\n", &NamedPipeName);
-   DPRINT("Pipe name: %S\n", NamedPipeName.Buffer);
+    /* Convert the name */
+    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
+                                           &NamedPipeName,
+                                           NULL,
+                                           NULL);
+    if (!Result)
+    {
+        /* Conversion failed */
+	    SetLastError(ERROR_PATH_NOT_FOUND);
+        return(INVALID_HANDLE_VALUE);
+    }
 
-   Attributes = OBJ_CASE_INSENSITIVE;
-   if(lpSecurityAttributes)
-     {
-       SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
-       if(lpSecurityAttributes->bInheritHandle)
-          Attributes |= OBJ_INHERIT;
-     }
+    DPRINT1("Pipe name: %wZ\n", &NamedPipeName);
+    DPRINT1("Pipe name: %S\n", NamedPipeName.Buffer);
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &NamedPipeName,
-			      Attributes,
-			      NULL,
-			      SecurityDescriptor);
+    /* Always case insensitive, check if we got extra attributes */
+    Attributes = OBJ_CASE_INSENSITIVE;
+    if(lpSecurityAttributes)
+    {
+        /* We did; get the security descriptor */
+        SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
 
-   DesiredAccess = SYNCHRONIZE | (dwOpenMode & (WRITE_DAC | WRITE_OWNER | ACCESS_SYSTEM_SECURITY));
-   ShareAccess = 0;
-   CreateOptions = 0;
+        /* And check if this is pipe's handle will beinheritable */
+        if(lpSecurityAttributes->bInheritHandle) Attributes |= OBJ_INHERIT;
+    }
 
-   if (dwOpenMode & FILE_FLAG_WRITE_THROUGH)
-      CreateOptions = CreateOptions | FILE_WRITE_THROUGH;
+    /* Now we can initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NamedPipeName,
+                               Attributes,
+                               NULL,
+                               SecurityDescriptor);
 
-   if (!(dwOpenMode & FILE_FLAG_OVERLAPPED))
-      CreateOptions = CreateOptions | FILE_SYNCHRONOUS_IO_NONALERT;
+    /* Setup the default Desired Access */
+    DesiredAccess = SYNCHRONIZE | (dwOpenMode & (WRITE_DAC |
+                                                 WRITE_OWNER |
+                                                 ACCESS_SYSTEM_SECURITY));
 
-   if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
-     {
-       ShareAccess |= FILE_SHARE_READ;
-       DesiredAccess |= GENERIC_WRITE;
-     }
-   if (dwOpenMode & PIPE_ACCESS_INBOUND)
-     {
-       ShareAccess |= FILE_SHARE_WRITE;
-       DesiredAccess |= GENERIC_READ;
-     }
-   if (dwPipeMode & PIPE_TYPE_MESSAGE)
-      WriteModeMessage = FILE_PIPE_MESSAGE_MODE;
-   else
-      WriteModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+    /* Convert to NT Create Flags */
+    if (dwOpenMode & FILE_FLAG_WRITE_THROUGH)
+    {
+        CreateOptions |= FILE_WRITE_THROUGH;
+    }
+    if (!(dwOpenMode & FILE_FLAG_OVERLAPPED))
+    {
+        CreateOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
+    }
 
-   if (dwPipeMode & PIPE_READMODE_MESSAGE)
-      ReadModeMessage = FILE_PIPE_MESSAGE_MODE;
-   else
-      ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+    /* Handle all open modes */ 
+    if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
+    {
+        ShareAccess |= FILE_SHARE_READ;
+        DesiredAccess |= GENERIC_WRITE;
+    }
+    if (dwOpenMode & PIPE_ACCESS_INBOUND)
+    {
+        ShareAccess |= FILE_SHARE_WRITE;
+        DesiredAccess |= GENERIC_READ;
+    }
 
-   if (dwPipeMode & PIPE_NOWAIT)
-       NonBlocking = FILE_PIPE_COMPLETE_OPERATION;
-   else
-      NonBlocking = FILE_PIPE_QUEUE_OPERATION;
+    /* Handle the type flags */
+    if (dwPipeMode & PIPE_TYPE_MESSAGE)
+    {
+        WriteModeMessage = FILE_PIPE_MESSAGE_TYPE;
+    }
+    else
+    {
+        WriteModeMessage = FILE_PIPE_BYTE_STREAM_TYPE;
+    }
 
-   DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000LL;
+    /* Handle the mode flags */
+    if (dwPipeMode & PIPE_READMODE_MESSAGE)
+    {
+        ReadModeMessage = FILE_PIPE_MESSAGE_MODE;
+    }
+    else
+    {
+        ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+    }
 
-   Status = NtCreateNamedPipeFile(&PipeHandle,
-				  DesiredAccess,
-				  &ObjectAttributes,
-				  &Iosb,
-				  ShareAccess,
-				  FILE_OPEN_IF,
-				  CreateOptions,
-				  WriteModeMessage,
-				  ReadModeMessage,
-				  NonBlocking,
-				  nMaxInstances,
-				  nInBufferSize,
-				  nOutBufferSize,
-				  &DefaultTimeOut);
+    /* Handle the blocking mode */
+    if (dwPipeMode & PIPE_NOWAIT)
+    {
+        NonBlocking = FILE_PIPE_COMPLETE_OPERATION;
+    }
+    else
+    {
+        NonBlocking = FILE_PIPE_QUEUE_OPERATION;
+    }
 
-   RtlFreeUnicodeString(&NamedPipeName);
+    /* Check if we have a timeout */
+    if (nDefaultTimeOut)
+    {
+        /* Convert the time to NT format */
+        DefaultTimeOut.QuadPart = UInt32x32To64(nDefaultTimeOut, -10000);
+    }
+    else
+    {
+        /* Use default timeout of 50 ms */
+        DefaultTimeOut.QuadPart = -500000;
+    }
 
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("NtCreateNamedPipe failed (Status %x)!\n", Status);
-	SetLastErrorByStatus (Status);
-	return INVALID_HANDLE_VALUE;
-     }
+    /* Now create the pipe */
+    Status = NtCreateNamedPipeFile(&PipeHandle,
+                                   DesiredAccess,
+                                   &ObjectAttributes,
+                                   &Iosb,
+                                   ShareAccess,
+                                   FILE_OPEN_IF,
+                                   CreateOptions,
+                                   WriteModeMessage,
+                                   ReadModeMessage,
+                                   NonBlocking,
+                                   nMaxInstances,
+                                   nInBufferSize,
+                                   nOutBufferSize,
+                                   &DefaultTimeOut);
 
-   return PipeHandle;
+    /* Free the name */
+    RtlFreeUnicodeString(&NamedPipeName);
+
+    /* Check status */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to create it */
+        DPRINT1("NtCreateNamedPipe failed (Status %x)!\n", Status);
+        SetLastErrorByStatus (Status);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* Return the handle */
+    return PipeHandle;
 }
 
 
