@@ -317,7 +317,7 @@ KiInsertQueueApc(PKAPC Apc,
             InsertHeadList(&ApcState->ApcListHead[ApcMode], &Apc->ApcListEntry);
 
             /* Display debug message */
-            DPRINT1("Inserted the Thread Exit APC for '%.16s' into the Queue\n",
+            DPRINT("Inserted the Thread Exit APC for '%.16s' into the Queue\n",
                    ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
         }
         else
