@@ -54,7 +54,7 @@ CreatePipe(PHANDLE hReadPipe,
 
     /* Create the pipe name */
     swprintf(Buffer,
-             L"\\\\.\\PIPE\\Win32Pipes.%08x.%08x",
+             L"\\Device\\NamedPipe\\Win32Pipes.%08x.%08x",
              NtCurrentTeb()->Cid.UniqueProcess,
              PipeId);
     RtlInitUnicodeString(&PipeName, Buffer);
@@ -81,15 +81,15 @@ CreatePipe(PHANDLE hReadPipe,
 
     /* Create the named pipe */
     Status = NtCreateNamedPipeFile(&ReadPipeHandle,
-                                   FILE_GENERIC_READ |FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                                   GENERIC_READ |FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
                                    &ObjectAttributes,
                                    &StatusBlock,
-                                   FILE_SHARE_WRITE,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
                                    FILE_CREATE,
                                    FILE_SYNCHRONOUS_IO_NONALERT,
                                    FILE_PIPE_BYTE_STREAM_TYPE,
                                    FILE_PIPE_BYTE_STREAM_MODE,
-                                   FILE_PIPE_BYTE_STREAM_MODE,
+                                   FILE_PIPE_QUEUE_OPERATION,
                                    1,
                                    nSize,
                                    nSize,
@@ -97,6 +97,7 @@ CreatePipe(PHANDLE hReadPipe,
     if (!NT_SUCCESS(Status))
     {
         /* Convert error and fail */
+        DPRINT1("Status: %lx\n", Status);
         SetLastErrorByStatus(Status);
         return FALSE;
     }
@@ -111,6 +112,7 @@ CreatePipe(PHANDLE hReadPipe,
     if (!NT_SUCCESS(Status))
     {
         /* Convert error and fail */
+        DPRINT1("Status: %lx\n", Status);
         NtClose(ReadPipeHandle);
         SetLastErrorByStatus(Status);
         return FALSE;

@@ -207,6 +207,13 @@ CreateNamedPipeW(LPCWSTR lpName,
                                    nOutBufferSize,
                                    &DefaultTimeOut);
 
+    /* Normalize special error codes */
+    if ((Status == STATUS_INVALID_DEVICE_REQUEST) ||
+        (Status == STATUS_NOT_SUPPORTED))
+    {
+        Status = STATUS_OBJECT_NAME_INVALID;
+    }
+
     /* Free the name */
     RtlFreeUnicodeString(&NamedPipeName);
 
