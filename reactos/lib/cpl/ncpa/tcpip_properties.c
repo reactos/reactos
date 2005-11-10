@@ -53,23 +53,26 @@
 #include "resource.h"
 #include "ncpa.h"
 
-extern void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
+void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 
-void EnableDHCP( HWND hwndDlg, BOOL Enabled ) {
+static void
+EnableDHCP( HWND hwndDlg, BOOL Enabled ) {
     CheckDlgButton(hwndDlg,IDC_USEDHCP,Enabled ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hwndDlg,IDC_NODHCP,Enabled ? BST_UNCHECKED : BST_CHECKED);
 }
 
-void ManualDNS( HWND hwndDlg, BOOL Enabled ) {
+static void
+ManualDNS( HWND hwndDlg, BOOL Enabled ) {
     CheckDlgButton(hwndDlg,IDC_FIXEDDNS,Enabled ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hwndDlg,IDC_AUTODNS,Enabled ? BST_UNCHECKED : BST_CHECKED);
     EnableWindow(GetDlgItem(hwndDlg,IDC_DNS1),Enabled);
     EnableWindow(GetDlgItem(hwndDlg,IDC_DNS2),Enabled);
 }
 
-BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId, 
-                          DWORD *dwIPAddr,
-                          const char **AddressString ) {
+static BOOL
+GetAddressFromField( HWND hwndDlg, UINT CtlId,
+                     DWORD *dwIPAddr,
+                     const char **AddressString ) {
     LRESULT lResult;
     struct in_addr inIPAddr;
 
@@ -86,7 +89,8 @@ BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId,
     return TRUE;
 }
 
-BOOL InternTCPIPSettings( HWND hwndDlg ) {
+static BOOL
+InternTCPIPSettings( HWND hwndDlg ) {
     PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
     IP_ADAPTER_INFO *pInfo = NULL;
     TCHAR pszRegKey[MAX_PATH];
@@ -147,7 +151,7 @@ cleanup:
     return RetVal;
 }
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);

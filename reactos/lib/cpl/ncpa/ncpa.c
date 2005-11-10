@@ -66,14 +66,14 @@
 
 typedef void (ENUMREGKEYCALLBACK)(void *pCookie,HKEY hBaseKey,TCHAR *pszSubKey);
 
-LONG CALLBACK DisplayApplet(VOID);
-INT_PTR CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LONG CALLBACK DisplayApplet(VOID);
+static INT_PTR CALLBACK NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo);
 
 HINSTANCE hApplet = 0;
 
 /* Applets */
-APPLET Applets[] = 
+static APPLET Applets[] =
 {
 	{IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, DisplayApplet}
 };
@@ -81,7 +81,8 @@ APPLET Applets[] =
 
 
 /* useful utilities */
-VOID EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tpszRegPath)
+static VOID
+EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tpszRegPath)
 {
 	HKEY hKey;
 	INT i;
@@ -119,7 +120,8 @@ VOID EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR
 	RegCloseKey(hKey);
 }
 
-void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc,LPARAM lParam)
+void
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc,LPARAM lParam)
 {
 	ZeroMemory(psp, sizeof(PROPSHEETPAGE));
 	psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -132,7 +134,8 @@ void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc,LPARAM lP
 
 
 
-BOOL FindNICClassKeyForCfgInstance(TCHAR *tpszCfgInst,TCHAR *tpszSubKeyOut)
+static BOOL
+FindNICClassKeyForCfgInstance(TCHAR *tpszCfgInst,TCHAR *tpszSubKeyOut)
 {
 	int i;
 	TCHAR tpszSubKey[MAX_PATH];
@@ -161,7 +164,8 @@ BOOL FindNICClassKeyForCfgInstance(TCHAR *tpszCfgInst,TCHAR *tpszSubKeyOut)
 }
 
 
-void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
+static void
+NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 {
 	HWND hwndDlg;
 	DWORD dwCharacteristics;
@@ -233,7 +237,7 @@ void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
@@ -370,7 +374,8 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-void DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
+static void
+DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 {
 	PROPSHEETPAGE psp[1];
 	PROPSHEETHEADER psh;
@@ -411,7 +416,7 @@ void DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg)
@@ -439,7 +444,8 @@ NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-VOID DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
+static VOID
+DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 {
 	PROPSHEETPAGE psp[1];
 	PROPSHEETHEADER psh;
@@ -484,7 +490,8 @@ VOID DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 // IPHLPAPI does not provide a list of all adapters
 //
 #if 0
-VOID EnumAdapters(HWND hwndDlg)
+static VOID
+EnumAdapters(HWND hwndDlg)
 {
 	TCHAR pszText[MAX_ADAPTER_NAME_LENGTH + 4];
 	IP_ADAPTER_INFO *pInfo;
@@ -511,7 +518,8 @@ VOID EnumAdapters(HWND hwndDlg)
 
 
 
-void NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
+static void
+NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 {
 	TCHAR tpszDisplayName[MAX_PATH];
 	//TCHAR tpszDeviceID[MAX_PATH];
@@ -579,7 +587,8 @@ void NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 }
 
 
-void EnumAdapters(HWND hwndDlg)
+static void
+EnumAdapters(HWND hwndDlg)
 {
 	LPTSTR lpRegPath = _T("SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}");
 
@@ -588,7 +597,7 @@ void EnumAdapters(HWND hwndDlg)
 }
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	NMHDR* pnmh;
@@ -651,15 +660,15 @@ NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 /* First Applet */
-LONG CALLBACK DisplayApplet(VOID)
+static LONG CALLBACK
+DisplayApplet(VOID)
 {
 	PROPSHEETPAGE psp[1];
-	PROPSHEETHEADER psh;
+	PROPSHEETHEADER psh = {0};
 	TCHAR Caption[1024];
 
 	LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
-	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE;
 	psh.hwndParent = NULL;
@@ -677,7 +686,8 @@ LONG CALLBACK DisplayApplet(VOID)
 }
 
 /* Control Panel Callback */
-LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+LONG CALLBACK
+CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
 	switch (uMsg)
 	{
