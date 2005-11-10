@@ -53,6 +53,9 @@
 <directory name="devenum">
 	<xi:include href="devenum/devenum.xml" />
 </directory>
+<directory name="dhcpcapi">
+	<xi:include href="dhcpcapi/dhcpcapi.xml" />
+</directory>
 <directory name="dinput">
 	<xi:include href="dinput/dinput.xml" />
 </directory>
