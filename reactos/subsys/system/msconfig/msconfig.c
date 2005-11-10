@@ -23,29 +23,35 @@ BOOL OnCreate(HWND hWnd)
     item.pszText = szTemp;
     TabCtrl_InsertItem(hTabWnd, 0, &item);
 
-	LoadString(hInst, IDS_TAB_FREELDR, szTemp, 256);
+	LoadString(hInst, IDS_TAB_SYSTEM, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
     TabCtrl_InsertItem(hTabWnd, 1, &item);
 
-	LoadString(hInst, IDS_TAB_SERVICES, szTemp, 256);
+	LoadString(hInst, IDS_TAB_FREELDR, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
     TabCtrl_InsertItem(hTabWnd, 2, &item);
 
-	LoadString(hInst, IDS_TAB_STARTUP, szTemp, 256);
+	LoadString(hInst, IDS_TAB_SERVICES, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
     TabCtrl_InsertItem(hTabWnd, 3, &item);
 
-	LoadString(hInst, IDS_TAB_TOOLS, szTemp, 256);
+	LoadString(hInst, IDS_TAB_STARTUP, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
     TabCtrl_InsertItem(hTabWnd, 4, &item);
+
+	LoadString(hInst, IDS_TAB_TOOLS, szTemp, 256);
+    memset(&item, 0, sizeof(TCITEM));
+    item.mask = TCIF_TEXT;
+    item.pszText = szTemp;
+    TabCtrl_InsertItem(hTabWnd, 5, &item);
 
 	return TRUE;
 }
@@ -61,28 +67,35 @@ void MsConfig_OnTabWndSelChange(void)
 		ShowWindow(hServicesPage, SW_HIDE);
         //BringWindowToTop(hFreeLdrPage);
 		break;
-    case 1: //Freeldr
+    case 1: //SYSTEM.INI
         ShowWindow(hToolsPage, SW_HIDE);
 		ShowWindow(hStartupPage, SW_HIDE);
 		//ShowWindow(hFreeLdrPage, SW_SHOW);
 		ShowWindow(hServicesPage, SW_HIDE);
         //BringWindowToTop(hFreeLdrPage);
 		break;
-    case 2: //Services
+    case 2: //Freeldr
+        ShowWindow(hToolsPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_HIDE);
+		//ShowWindow(hFreeLdrPage, SW_SHOW);
+		ShowWindow(hServicesPage, SW_HIDE);
+        //BringWindowToTop(hFreeLdrPage);
+		break;
+    case 3: //Services
         ShowWindow(hToolsPage, SW_HIDE);
 		ShowWindow(hStartupPage, SW_HIDE);
 		//ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_SHOW);
-        //BringWindowToTop(hFreeLdrPage);
+        BringWindowToTop(hServicesPage);
 		break;
-    case 3: //startup
+    case 4: //startup
         ShowWindow(hToolsPage, SW_HIDE);
 		ShowWindow(hStartupPage, SW_SHOW);
 		//ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
         BringWindowToTop(hStartupPage);
 		break;
-	case 4: //Tools
+	case 5: //Tools
         ShowWindow(hToolsPage, SW_SHOW);
 		ShowWindow(hStartupPage, SW_HIDE);
 		//ShowWindow(hFreeLdrPage, SW_HIDE);

@@ -14,19 +14,20 @@
 #define IDC_STARTUP_LIST                1008
 
 #define IDS_TAB_TOOLS                   2001
-#define IDS_TAB_FREELDR                 2002
-#define IDS_TAB_STARTUP                 2003
-#define IDS_TAB_SERVICES                2004
-#define IDS_TAB_GENERAL                 2005
+#define IDS_TAB_SYSTEM                  2002
+#define IDS_TAB_FREELDR                 2003
+#define IDS_TAB_STARTUP                 2004
+#define IDS_TAB_SERVICES                2005
+#define IDS_TAB_GENERAL                 2006
 
 #define IDS_TOOLS_COLUMN_NAME           2010
 #define IDS_TOOLS_COLUMN_DESCR          2011
 #define IDS_SERVICES_COLUMN_SERVICE     2012
 #define IDS_SERVICES_COLUMN_VENDOR      2013
 #define IDS_SERVICES_COLUMN_STATUS      2014
-#define IDS_STARTUP_COLUMN_ELEMENT     2015
-#define IDS_STARTUP_COLUMN_CMD         2016
-#define IDS_STARTUP_COLUMN_PATH        2017
+#define IDS_STARTUP_COLUMN_ELEMENT      2015
+#define IDS_STARTUP_COLUMN_CMD          2016
+#define IDS_STARTUP_COLUMN_PATH         2017
 
 #define IDS_TOOLS_CMD_NAME              2100
 #define IDS_TOOLS_CMD_DESCR             2101
