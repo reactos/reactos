@@ -8,4 +8,9 @@
 #include "msconfig.h"
 #include "toolspage.h"
 #include "srvpage.h"
+#include "startuppage.h"
+
+#define MAX_KEY_LENGTH 255
+#define MAX_VALUE_NAME 16383
+
 

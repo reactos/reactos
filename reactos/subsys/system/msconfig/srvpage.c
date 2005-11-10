@@ -14,7 +14,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message) {
     case WM_INITDIALOG:
 
-        hServicesListCtrl = GetDlgItem(hDlg, IDC_TOOLS_LIST);
+        hServicesListCtrl = GetDlgItem(hDlg, IDC_SERVICES_LIST);
         hServicesDialog = hDlg;
 
         dwStyle = SendMessage(hServicesListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
@@ -41,7 +41,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         LoadString(hInst, IDS_SERVICES_COLUMN_STATUS, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 70;
-        ListView_InsertColumn(hServicesListCtrl, 1, &column);
+        ListView_InsertColumn(hServicesListCtrl, 2, &column);
 
 		return TRUE;
 	}

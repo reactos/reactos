@@ -14,6 +14,7 @@ BOOL OnCreate(HWND hWnd)
 	hTabWnd = GetDlgItem(hWnd, IDC_TAB);
     hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, ToolsPageWndProc);
     hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd, ServicesPageWndProc);
+    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd, StartupPageWndProc);
 
 	// Insert Tab Pages
 	LoadString(hInst, IDS_TAB_GENERAL, szTemp, 256);
@@ -53,32 +54,37 @@ BOOL OnCreate(HWND hWnd)
 void MsConfig_OnTabWndSelChange(void)
 {
     switch (TabCtrl_GetCurSel(hTabWnd)) {
-    case 0:
+    case 0: //General
         ShowWindow(hToolsPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_HIDE);
+		//ShowWindow(hFreeLdrPage, SW_HIDE);
+		ShowWindow(hServicesPage, SW_HIDE);
+        //BringWindowToTop(hFreeLdrPage);
+		break;
+    case 1: //Freeldr
+        ShowWindow(hToolsPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_HIDE);
 		//ShowWindow(hFreeLdrPage, SW_SHOW);
 		ShowWindow(hServicesPage, SW_HIDE);
         //BringWindowToTop(hFreeLdrPage);
 		break;
-    case 1:
+    case 2: //Services
         ShowWindow(hToolsPage, SW_HIDE);
-		//ShowWindow(hFreeLdrPage, SW_SHOW);
-		ShowWindow(hServicesPage, SW_HIDE);
-        //BringWindowToTop(hFreeLdrPage);
-		break;
-    case 2:
-        ShowWindow(hToolsPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_HIDE);
 		//ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_SHOW);
         //BringWindowToTop(hFreeLdrPage);
 		break;
-    case 3:
+    case 3: //startup
         ShowWindow(hToolsPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_SHOW);
 		//ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
-        //BringWindowToTop(hFreeLdrPage);
+        BringWindowToTop(hStartupPage);
 		break;
-	case 4:
+	case 4: //Tools
         ShowWindow(hToolsPage, SW_SHOW);
+		ShowWindow(hStartupPage, SW_HIDE);
 		//ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
         BringWindowToTop(hToolsPage);
@@ -125,6 +131,7 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
 		DestroyWindow(hToolsPage);
 		DestroyWindow(hServicesPage);
+		DestroyWindow(hStartupPage);
         return DefWindowProc(hDlg, message, wParam, lParam);
 
     }

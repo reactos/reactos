@@ -11,6 +11,7 @@
 #define IDC_BTN_RUN                     1005
 #define IDC_SERVICES_LIST               1006
 #define IDC_TOOLS_LIST                  1007
+#define IDC_STARTUP_LIST                1008
 
 #define IDS_TAB_TOOLS                   2001
 #define IDS_TAB_FREELDR                 2002
@@ -23,6 +24,9 @@
 #define IDS_SERVICES_COLUMN_SERVICE     2012
 #define IDS_SERVICES_COLUMN_VENDOR      2013
 #define IDS_SERVICES_COLUMN_STATUS      2014
+#define IDS_STARTUP_COLUMN_ELEMENT     2015
+#define IDS_STARTUP_COLUMN_CMD         2016
+#define IDS_STARTUP_COLUMN_PATH        2017
 
 #define IDS_TOOLS_CMD_NAME              2100
 #define IDS_TOOLS_CMD_DESCR             2101

@@ -12,6 +12,7 @@
 	<library>shell32</library>
 	<file>toolspage.c</file>
 	<file>srvpage.c</file>
+	<file>startuppage.c</file>
 	<file>msconfig.c</file>
 	<file>msconfig.rc</file>
 </module>
