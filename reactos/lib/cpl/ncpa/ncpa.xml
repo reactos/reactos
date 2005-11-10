@@ -11,6 +11,9 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>iphlpapi</library>
+	<library>ws2_32</library>
+	<library>dhcpcapi</library>
+	<library>ntdll</library>
 	<file>ncpa.c</file>
 	<file>tcpip_properties.c</file>
 	<file>ncpa.rc</file>
