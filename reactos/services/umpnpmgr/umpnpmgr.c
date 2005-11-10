@@ -878,7 +878,7 @@ PNP_RequestEjectPC(handle_t BindingHandle)
 typedef BOOL (WINAPI *PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
 
 static BOOL
-InstallDevice(PCWSTR DeviceInstance)
+InstallDevice(PCWSTR DeviceInstance, BOOL SetupIsActive)
 {
     PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
     HMODULE hNewDev = NULL;
@@ -909,7 +909,7 @@ InstallDevice(PCWSTR DeviceInstance)
     DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
     if (!DevInstallW)
         goto cleanup;
-    if (!DevInstallW(NULL, NULL, DeviceInstance, SW_SHOWNOACTIVATE))
+    if (!DevInstallW(NULL, NULL, DeviceInstance, SetupIsActive ? SW_HIDE : SW_SHOWNOACTIVATE))
         goto cleanup;
 
     DeviceInstalled = TRUE;
@@ -921,6 +921,33 @@ cleanup:
     return DeviceInstalled;
 }
 
+static BOOL
+SetupIsActive(VOID)
+{
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    DWORD regType, active, size;
+    LONG rc;
+    BOOL ret = FALSE;
+
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_QUERY_VALUE, &hKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+
+    rc = RegQueryValueExW(hKey, L"SystemSetupInProgress", NULL, &regType, (LPBYTE)&active, &size);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    if (regType != REG_DWORD)
+        goto cleanup;
+
+    ret = (active != 0);
+
+cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+    DPRINT("System setup in progress? %S\n", ret ? L"YES" : L"NO");
+    return ret;
+}
+
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
@@ -928,11 +955,14 @@ PnpEventThread(LPVOID lpParameter)
     ULONG PnpEventSize;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
+    BOOL setupActive;
 
     PnpEventSize = 0x1000;
     PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
     if (PnpEvent == NULL)
         return ERROR_OUTOFMEMORY;
+
+    setupActive = SetupIsActive();
 
     for (;;)
     {
@@ -961,7 +991,7 @@ PnpEventThread(LPVOID lpParameter)
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            InstallDevice(PnpEvent->TargetDevice.DeviceIds);
+            InstallDevice(PnpEvent->TargetDevice.DeviceIds, setupActive);
         }
         else
         {
