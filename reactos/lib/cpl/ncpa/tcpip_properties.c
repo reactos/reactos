@@ -94,7 +94,7 @@ BOOL InternTCPIPSettings( HWND hwndDlg ) {
     DWORD IpAddress, NetMask, Gateway;
     const char *AddressString;
     BOOL RetVal = FALSE;
-    BOOL DhcpEnabled;
+    BOOL DhcpEnabled = FALSE;
     MIB_IPFORWARDROW RowToAdd = { 0 };
 
     if(pPage)
@@ -108,18 +108,18 @@ BOOL InternTCPIPSettings( HWND hwndDlg ) {
     if( !GetAddressFromField
         ( hwndDlg, IDC_IPADDR, &IpAddress, &AddressString ) ||
         RegSetValueEx
-        ( hKey, _T("IPAddress"), 0, REG_SZ, AddressString, 
+        ( hKey, _T("IPAddress"), 0, REG_SZ, (const BYTE*)AddressString,
           strlen(AddressString) ) != ERROR_SUCCESS )
         goto cleanup;
 
     if( !GetAddressFromField
         ( hwndDlg, IDC_SUBNETMASK, &NetMask, &AddressString ) ||
         RegSetValueEx
-        ( hKey, _T("SubnetMask"), 0, REG_SZ, AddressString, 
+        ( hKey, _T("SubnetMask"), 0, REG_SZ, (const BYTE*)AddressString,
           strlen(AddressString) ) != ERROR_SUCCESS )
         goto cleanup;
 
-    if( DhcpEnabled )
+    if( DhcpEnabled ) /* FIXME - DhcpEnabled is never initialized at this point! */
         DhcpLeaseIpAddress( pInfo->Index );
     else {
         DhcpReleaseIpAddressLease( pInfo->Index );
@@ -129,7 +129,7 @@ BOOL InternTCPIPSettings( HWND hwndDlg ) {
     if( !GetAddressFromField
         ( hwndDlg, IDC_DEFGATEWAY, &Gateway, &AddressString ) ||
         RegSetValueEx
-        ( hKey, _T("DefaultGateway"), 0, REG_SZ, AddressString, 
+        ( hKey, _T("DefaultGateway"), 0, REG_SZ, (const BYTE*)AddressString,
           strlen(AddressString) ) != ERROR_SUCCESS )
         goto cleanup;
 
