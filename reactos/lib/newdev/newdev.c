@@ -871,7 +871,7 @@ DevInstallW(
 
 	DPRINT("Installing %S (%S)\n", DevInstData.buffer, InstanceId);
 
-	if ((Show =! SW_HIDE) && (!FindDriver(&DevInstData)))
+	if ((Show != SW_HIDE) && (!FindDriver(&DevInstData)))
 	{
 
 		/* Create the Welcome page */
