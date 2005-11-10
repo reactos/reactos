@@ -13,7 +13,6 @@
  */
 /*
  * TODO:
- * display multiple adapters
  * fix renew / release
  * implement flushdns, registerdns, displaydns, showclassid, setclassid
  * allow globbing on adapter names
@@ -138,7 +137,7 @@ INT ShowInfo(BOOL bAll)
 
     _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
-	do
+	while (pAdapter)
 	{
         if (bAll)
         {
@@ -157,6 +156,15 @@ INT ShowInfo(BOOL bAll)
         }
 
         _tprintf(_T("\n%s ...... : \n\n"), GetInterfaceTypeName(pAdapter->Type));
+        
+        /* check if the adapter is connected to the media */
+        if (_tcscmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0") == 0)
+        {
+            _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
+            pAdapter = pAdapter->Next;
+            continue;
+        }
+        
         _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
 
         if (bAll)
@@ -202,7 +210,7 @@ INT ShowInfo(BOOL bAll)
         
 		pAdapter = pAdapter->Next;
 
-    } while (pAdapter);
+    }
  
     return 0;
 }
