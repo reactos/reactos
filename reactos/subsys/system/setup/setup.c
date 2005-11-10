@@ -57,17 +57,6 @@ LPTSTR lstrchr(LPCTSTR s, TCHAR c)
   return (LPTSTR)NULL;
 }
 
-
-static VOID
-SetupIsActive( DWORD dw )
-{
-  HKEY hKey = 0;
-  if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, _T("SYSTEM\\Setup"), 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
-    RegSetValueEx( hKey, _T("SystemSetupInProgress"), 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
-    RegCloseKey( hKey );
-  }
-}
-
 static VOID
 RunNewSetup (HINSTANCE hInstance)
 {
@@ -85,8 +74,6 @@ RunNewSetup (HINSTANCE hInstance)
     }
 
   DPRINT("Loaded 'syssetup'!\n");
-
-  SetupIsActive(1);
   InstallReactOS = (PINSTALL_REACTOS)GetProcAddress (hDll, "InstallReactOS");
 
   if (InstallReactOS == NULL)
