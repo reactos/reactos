@@ -60,6 +60,7 @@
 	<symbol>ExFreePool@4</symbol>
 	<symbol>ExAllocatePoolWithTag@12</symbol>
 	<symbol>IoBuildDeviceIoControlRequest@36</symbol>
+	<symbol>IoBuildSynchronousFsdRequest@28</symbol>
 	<symbol>@IofCallDriver@8</symbol>
 	<symbol>KeWaitForSingleObject@20</symbol>
 	<symbol>@ExAcquireFastMutex@4</symbol>
