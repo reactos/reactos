@@ -933,10 +933,11 @@ SetupIsActive(VOID)
     if (rc != ERROR_SUCCESS)
         goto cleanup;
 
+    size = sizeof(DWORD);
     rc = RegQueryValueExW(hKey, L"SystemSetupInProgress", NULL, &regType, (LPBYTE)&active, &size);
     if (rc != ERROR_SUCCESS)
         goto cleanup;
-    if (regType != REG_DWORD)
+    if (regType != REG_DWORD || size != sizeof(DWORD))
         goto cleanup;
 
     ret = (active != 0);
