@@ -127,9 +127,16 @@ INT ShowInfo(BOOL bAll)
     }
 
     if (! GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR)
-        _tprintf(_T("GetAdaptersInfo failed %lu\n"), GetLastError());
+	{
+		_tprintf(_T("GetAdaptersInfo failed %lu\n"), GetLastError());
+		return EXIT_FAILURE;
+	}
+
     if (! GetNetworkParams(pFixedInfo, &netOutBufLen) == NO_ERROR)
+	{
         _tprintf(_T("GetNetworkParams failed %lu\n"), GetLastError());
+		return EXIT_FAILURE;
+	}
     
     pAdapter = pAdapterInfo;
         //HKEY hKey;
