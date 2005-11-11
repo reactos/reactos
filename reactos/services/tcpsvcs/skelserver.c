@@ -12,36 +12,35 @@
  *
  */
 
-#include <stdio.h>
-#include <winsock2.h>
-#include <tchar.h>
 #include "tcpsvcs.h"
+
+extern BOOL bShutDownFlag;
+extern BOOL bPauseFlag;
 
 DWORD WINAPI StartServer(LPVOID lpParam)
 {
 	SOCKET ListeningSocket;
+	PSERVICES pServices;
     const TCHAR* HostIP = "127.0.0.1";
-    PSERVICES pServices;
+    TCHAR temp[512];
 
     pServices = (PSERVICES)lpParam;
-
+	
+//DebugBreak();
     ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
     {
-        _tprintf(_T("error setting up socket\n"));
+		LogEvent("Socket error when setting up listener", 0, TRUE);
         return 3;
     }
 
-    _tprintf(_T("%s is waiting for connections on port %d...\n"),
+    _stprintf(temp, _T("%s is waiting for connections on port %d...\n"),
         pServices->Name, pServices->Port);
-    while (1)
-    {
-        AcceptConnections(ListeningSocket, pServices->Service, pServices->Name);
-        printf("Acceptor restarting...\n");
-    }
+    LogEvent(temp, 0, FALSE);
 
-    /* won't see this yet as we kill the service with ctrl+c */
-    _tprintf(_T("Detaching Winsock2...\n"));
+	AcceptConnections(ListeningSocket, pServices->Service, pServices->Name);
+
+    LogEvent(_T("Detaching Winsock2...\n"), 0, FALSE);
     WSACleanup();
     return 0;
 }
@@ -64,49 +63,98 @@ SOCKET SetUpListener(const char* ServAddr, int Port)
             return Sock;
         }
         else
-            printf("bind() failed\n");
+            LogEvent(_T("bind() failed\n"), 0, TRUE);
 
     }
     return INVALID_SOCKET;
 }
 
+/* note: consider allowing a maximum number of connections
+ * A number of threads can be allocated and worker threads will
+ * only be spawned if a free space is available
+ 
+typedef struct _WORKER_THREAD {
+    DWORD num;
+    BOOL available;
+    HANDLE hThread;
+} WORKER_THREAD;
 
-
+*/
 
 VOID AcceptConnections(SOCKET ListeningSocket,
     LPTHREAD_START_ROUTINE Service, TCHAR *Name)
 {
     SOCKADDR_IN Client;
     SOCKET Sock;
+    HANDLE hThread;
+    TIMEVAL TimeVal;
+    FD_SET ReadFDS;
     INT nAddrSize = sizeof(Client);
     DWORD ThreadID;
+    TCHAR temp[512];
+    INT TimeOut = 2000; // 2 seconds
 
-    while (1)
+//DebugBreak();
+    /* monitor for incomming connections */
+    FD_ZERO(&ReadFDS);
+
+    /* set timeout values */
+    TimeVal.tv_sec  = TimeOut / 1000;
+    TimeVal.tv_usec = TimeOut % 1000;
+
+    while (! bShutDownFlag) // (i<MAX_CLIENTS && !bShutDownFlag)
     {
-        Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
-        if (Sock != INVALID_SOCKET)
+		FD_SET(ListeningSocket, &ReadFDS);
+        if (select(0, &ReadFDS, NULL, NULL, &TimeVal) == SOCKET_ERROR)
         {
-            _tprintf(_T("Accepted connection to %s server from %s:%d\n"),
-                Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
-            _tprintf(_T("Creating new thread for %s\n"), Name);
-            CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
-        }
-        else
-        {
-            _tprintf(_T("accept() failed\n"));
+            LogEvent(_T("select failed\n"), 0, TRUE);
             return;
+        }
+        
+        if (FD_ISSET(ListeningSocket, &ReadFDS))
+        {
+            Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
+            if (Sock != INVALID_SOCKET)
+            {
+                _stprintf(temp, _T("Accepted connection to %s server from %s:%d\n"),
+                    Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
+                LogEvent(temp, 0, FALSE);
+                _stprintf(temp, _T("Creating new thread for %s\n"), Name);
+                LogEvent(temp, 0, FALSE);
+
+                hThread = CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
+
+                /* Check the return value for success. */ 
+                if (hThread == NULL)
+                {
+                    _stprintf(temp, _T("Failed to start worker thread for "
+                        "the %s server....\n"), Name);
+                    LogEvent(temp, 0, TRUE);
+                }
+
+                //Do we need to wait, or just kill it?
+                WaitForSingleObject(hThread, INFINITE);
+
+            }
+            else
+            {
+                LogEvent(_T("accept failed\n"), 0, TRUE);
+                return;
+            }
         }
     }
 }
 
 BOOL ShutdownConnection(SOCKET Sock, BOOL bRec)
 {
+    TCHAR temp[512];
+
     /* Disallow any further data sends.  This will tell the other side
        that we want to go away now.  If we skip this step, we don't
        shut the connection down nicely. */
     if (shutdown(Sock, SD_SEND) == SOCKET_ERROR)
     {
-        _tprintf(_T("Error in shutdown"));
+        LogEvent(_T("Error in shutdown()\n"), 0, TRUE);
         return FALSE;
     }
 
@@ -122,7 +170,10 @@ BOOL ShutdownConnection(SOCKET Sock, BOOL bRec)
         if (NewBytes == SOCKET_ERROR)
             return FALSE;
         else if (NewBytes != 0)
-            _tprintf(_T("FYI, received %d unexpected bytes during shutdown\n"), NewBytes);
+        {
+            _stprintf(temp, _T("FYI, received %d unexpected bytes during shutdown\n"), NewBytes);
+            LogEvent(temp, 0, FALSE);
+        }
     }
 
     /* Close the socket. */

@@ -15,32 +15,31 @@
  * TODO:
  * - Start tcpsvcs as a service.
  * - write debugging function and print all dbg info via that.
- *
+ * - change 'temp' to something meaningfull
  */
  
-#include <stdio.h>
-#include <winsock2.h>
-#include <tchar.h>
+
 #include "tcpsvcs.h"
 
-#if 0
+//#define NDEBUG
+//#include <debug.h>
+
+
 /*
  * globals
  */
+VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
+
 static SERVICE_STATUS hServStatus;
 static SERVICE_STATUS_HANDLE hSStat;
-FILE *hLogFile;
-BOOL bLogEvents = TRUE;
-BOOL ShutDown, PauseFlag;
-LPCTSTR LogFileName = "tcpsvcs_log.log";
 
-static SERVICE_TABLE_ENTRY
-ServiceTable[2] =
-{
-    {_T("tcpsvcs"), ServiceMain},
-    {NULL, NULL}
-};
-#endif
+FILE *hLogFile;
+BOOL bShutDownFlag = FALSE;
+BOOL bPauseFlag = FALSE;
+
+LPCTSTR LogFileName = "\\tcpsvcs_log.log";
+LPTSTR ServiceName = _T("Simp Tcp");
+//LPTSTR DisplayName = _T("Simple TCP/IP Services");
 
 static SERVICES
 Services[NUM_SERVICES] =
@@ -53,79 +52,46 @@ Services[NUM_SERVICES] =
 };
 
 
-int main(void)
-{
-    DWORD dwThreadId[NUM_SERVICES];
-    HANDLE hThread[NUM_SERVICES];
-    WSADATA wsaData;
-    DWORD RetVal;
-    INT i;
-    
-    if ((RetVal = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
-    {
-        _tprintf(_T("WSAStartup() failed : %lu\n"), RetVal);
-        return -1;
-    }
-
-    /* Create MAX_THREADS worker threads. */
-    for( i=0; i<NUM_SERVICES; i++ )
-    {
-        _tprintf(_T("Starting %s server....\n"), Services[i].Name);
-
-        hThread[i] = CreateThread(
-            NULL,              // default security attributes
-            0,                 // use default stack size
-            StartServer,       // thread function
-            &Services[i],     // argument to thread function
-            0,                 // use default creation flags
-            &dwThreadId[i]);   // returns the thread identifier
-
-        /* Check the return value for success. */
-        if (hThread[i] == NULL)
-        {
-            _tprintf(_T("Failed to start %s server....\n"), Services[i].Name);
-            //ExitProcess(i);
-        }
-    }
-
-    /* Wait until all threads have terminated. */
-    WaitForMultipleObjects(NUM_SERVICES, hThread, TRUE, INFINITE);
-
-    /* Close all thread handles upon completion. */
-    for(i=0; i<NUM_SERVICES; i++)
-    {
-        CloseHandle(hThread[i]);
-    }
-    return 0;
-}
-
-
-
-/* code to run tcpsvcs as a service through services.msc */
-#if 0
 int
 main(int argc, char *argv[])
 {
-    //DPRINT("tcpsvcs: main() started. See tcpsvcs_log.txt for info\n");
+    SERVICE_TABLE_ENTRY ServiceTable[] =
+    {
+        {ServiceName, ServiceMain},
+        {NULL, NULL}
+    };
+    
+    //DPRINT("Starting tcpsvcs service. See \system32%s for logs\n", LogFileName);
 
-    if (!StartServiceCtrlDispatcher(ServiceTable))
-        _tprintf(_T("failed to start the service control dispatcher\n"));
+    if (! StartServiceCtrlDispatcher(ServiceTable))
+        LogEvent(_T("failed to start the service control dispatcher\n"), -1, TRUE);
 
-    //DPRINT("tcpsvcs: main() done\n");
+    //DPRINT("Shutdown tcpsvcs service\n");
 
     return 0;
 }
 
 
-static VOID WINAPI
+VOID WINAPI
 ServiceMain(DWORD argc, LPTSTR argv[])
 {
-    DWORD i;
+    TCHAR LogFilePath[MAX_PATH];
 
-    hLogFile = fopen(LogFileName, _T("w+"));
-    if (hLogFile == NULL)
+    if(! GetSystemDirectory(LogFilePath, MAX_PATH))
         return;
+    
+    _tcscat(LogFilePath, LogFileName);
+
+	hLogFile = fopen(LogFilePath, _T("w"));
+    if (hLogFile == NULL)
+    {
+        TCHAR *temp = NULL;
         
+        _stprintf(temp, _T("Could not open log file: %s"), LogFilePath);
+        MessageBox(NULL, temp, NULL, MB_OK);
+        return;
+    }
+      
     LogEvent(_T("Entering ServiceMain"), 0, FALSE);
 
     hServStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -133,13 +99,13 @@ ServiceMain(DWORD argc, LPTSTR argv[])
     hServStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP |
         SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PAUSE_CONTINUE;
     hServStatus.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
-    hServStatus.dwServiceSpecificExitCode = 0;
+    hServStatus.dwServiceSpecificExitCode = NO_ERROR;
     hServStatus.dwCheckPoint = 0;
     hServStatus.dwWaitHint = 2*CS_TIMEOUT;
     
-    hSStat = RegisterServiceCtrlHandler("tcpsvcs", ServerCtrlHandler);
+    hSStat = RegisterServiceCtrlHandler(ServiceName, ServerCtrlHandler);
     if (hSStat == 0)
-        LogEvent(_T("Failed to register service\n"), 100, TRUE);
+        LogEvent(_T("Failed to register service\n"), -1, TRUE);
 
 	LogEvent(_T("Control handler registered successfully"), 0, FALSE);
 	SetServiceStatus (hSStat, &hServStatus);
@@ -158,6 +124,7 @@ ServiceMain(DWORD argc, LPTSTR argv[])
 		completes, indicating system shutdown. */
 	UpdateStatus (SERVICE_STOPPED, 0);
 	LogEvent(_T("Service status set to SERVICE_STOPPED"), 0, FALSE);
+	LogEvent(_T("Leaving ServiceMain"), 0, FALSE);
 	fclose(hLogFile);  /*  Clean up everything, in general */
 	return;
 
@@ -170,14 +137,14 @@ ServerCtrlHandler(DWORD Control)
     {
         case SERVICE_CONTROL_SHUTDOWN: /* fall through */
         case SERVICE_CONTROL_STOP:
-            ShutDown = TRUE;
+            bShutDownFlag = TRUE;
             UpdateStatus(SERVICE_STOP_PENDING, -1);
             break;
         case SERVICE_CONTROL_PAUSE:
-            PauseFlag = TRUE;
+            bPauseFlag = TRUE;
             break;
         case SERVICE_CONTROL_CONTINUE:
-            PauseFlag = FALSE;
+            bPauseFlag = FALSE;
             break;
         case SERVICE_CONTROL_INTERROGATE:
             break;
@@ -193,11 +160,17 @@ ServerCtrlHandler(DWORD Control)
 void UpdateStatus (int NewStatus, int Check)
 /*  Set a new service status and checkpoint (either specific value or increment) */
 {
-	if (Check < 0 ) hServStatus.dwCheckPoint++;
-	else			hServStatus.dwCheckPoint = Check;
-	if (NewStatus >= 0) hServStatus.dwCurrentState = NewStatus;
-	if (!SetServiceStatus (hSStat, &hServStatus))
-		LogEvent (_T("Cannot set service status"), 101, TRUE);
+	if (Check < 0 )
+        hServStatus.dwCheckPoint++;
+	else
+        hServStatus.dwCheckPoint = Check;
+        
+	if (NewStatus >= 0)
+        hServStatus.dwCurrentState = NewStatus;
+	
+	if (! SetServiceStatus (hSStat, &hServStatus))
+		LogEvent(_T("Cannot set service status"), -1, TRUE);
+		
 	return;
 }
 
@@ -206,14 +179,27 @@ CreateServers()
 {
     DWORD dwThreadId[NUM_SERVICES];
     HANDLE hThread[NUM_SERVICES];
+	WSADATA wsaData;
+	TCHAR temp[512]; // temp for holding LogEvent text
     INT i;
+    DWORD RetVal;
+    
+    if ((RetVal = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
+    {
+        _stprintf(temp, _T("WSAStartup() failed : %lu\n"), RetVal);
+        LogEvent(temp, RetVal, TRUE);
+        return -1;
+    }
     
     UpdateStatus(-1, -1); /* increment checkpoint */
+
+    LogEvent(_T("Creating server Threads\n"), 0, FALSE);
 
     /* Create MAX_THREADS worker threads. */
     for( i=0; i<NUM_SERVICES; i++ )
     {
-        _tprintf(_T("Starting %s server....\n"), Services[i].Name);
+        _stprintf(temp, _T("Starting %s server....\n"), Services[i].Name);
+        LogEvent(temp, 0, FALSE);
 
         hThread[i] = CreateThread(
             NULL,              // default security attributes
@@ -226,10 +212,17 @@ CreateServers()
         /* Check the return value for success. */
         if (hThread[i] == NULL)
         {
-            _tprintf(_T("Failed to start %s server....\n"), Services[i].Name);
+            _stprintf(temp, _T("Failed to start %s server....\n"), Services[i].Name);
+            /* don't exit process via LogEvent. We want to exit via the server
+             * which failed to start, which could mean i=0 */
+            LogEvent(temp, 0, TRUE);
             ExitProcess(i);
         }
     }
+    
+    LogEvent(_T("setting service status to running\n"), 0, FALSE);
+
+    UpdateStatus(SERVICE_RUNNING, 0);
 
     /* Wait until all threads have terminated. */
     WaitForMultipleObjects(NUM_SERVICES, hThread, TRUE, INFINITE);
@@ -254,26 +247,27 @@ LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg)
 	LPTSTR lpvSysMsg;
 	TCHAR MessageBuffer[512];
 
-	if (PrintErrorMsg) {
+	if (PrintErrorMsg)
+    {
 		eMsgLen = FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM, NULL,
 			ErrNum, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPTSTR)&lpvSysMsg, 0, NULL);
 
-		_stprintf (MessageBuffer, _T("\n%s %s ErrNum = %d. ExitCode = %d."),
+		_stprintf(MessageBuffer, _T("\n%s %s ErrNum = %lu. ExitCode = %lu."),
 			UserMessage, lpvSysMsg, ErrNum, ExitCode);
-		HeapFree (GetProcessHeap (), 0, lpvSysMsg);
-	} else {
-		_stprintf (MessageBuffer, _T("\n%s ExitCode = %d."),
+		HeapFree(GetProcessHeap (), 0, lpvSysMsg);
+	}
+    else
+    {
+		_stprintf(MessageBuffer, _T("\n%s ExitCode = %lu."),
 			UserMessage, ExitCode);
 	}
 
 	fputs (MessageBuffer, hLogFile);
 
-	if (ExitCode > 0)
-		ExitProcess (ExitCode);
+	if (ExitCode != 0)
+		ExitProcess(ExitCode);
 	else
 		return;
 }
-
-#endif

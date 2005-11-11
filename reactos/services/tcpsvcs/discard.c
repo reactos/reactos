@@ -12,9 +12,6 @@
  *
  */
 
-#include <stdio.h>
-#include <winsock2.h>
-#include <tchar.h>
 #include "tcpsvcs.h"
 
 DWORD WINAPI DiscardHandler(VOID* Sock_)
@@ -24,22 +21,20 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
 
     if (!RecieveIncomingPackets(Sock))
     {
-        _tprintf(_T("RecieveIncomingPackets failed\n"));
+        LogEvent(_T("Discard: RecieveIncomingPackets failed\n"), 0, FALSE);
         RetVal = -1;
     }
 
-    _tprintf(_T("Shutting connection down...\n"));
+    LogEvent(_T("Discard: Shutting connection down...\n"), 0, FALSE);
     if (ShutdownConnection(Sock, TRUE))
-    {
-        _tprintf(_T("Connection is down.\n"));
-    }
+        LogEvent(_T("Discard: Connection is down.\n"), 0, FALSE);
     else
     {
-        _tprintf(_T("Connection shutdown failed\n"));
+        LogEvent(_T("Discard: Connection shutdown failed\n"), 0, FALSE);
         RetVal = -1;
     }
     
-    _tprintf(_T("Terminating discard thread\n"));
+    LogEvent(_T("Discard: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
 }
 
@@ -48,20 +43,25 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
 BOOL RecieveIncomingPackets(SOCKET Sock)
 {
     TCHAR ReadBuffer[BUF];
+    TCHAR temp[512]; // temp for holding LogEvent text
     INT ReadBytes;
 
     do
     {
         ReadBytes = recv(Sock, ReadBuffer, BUF, 0);
         if (ReadBytes > 0)
-            _tprintf(_T("Received %d bytes from client\n"), ReadBytes);
+        {
+            _stprintf(temp, _T("Received %d bytes from client\n"), ReadBytes);
+            LogEvent(temp, 0, FALSE);
+        }
         else if (ReadBytes == SOCKET_ERROR)
         {
-            _tprintf(("Socket Error: %d\n"), WSAGetLastError());
+            _stprintf(temp, ("Socket Error: %d\n"), WSAGetLastError());
+            LogEvent(temp, 0, TRUE);
             return FALSE;
         }
     } while (ReadBytes > 0);
 
-    _tprintf(("Connection closed by peer.\n"));
+    LogEvent(_T("Discard: Connection closed by peer.\n"), 0, FALSE);
     return TRUE;
 }

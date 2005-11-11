@@ -19,7 +19,6 @@
 #include "tcpsvcs.h"
 
 #define QBUFSIZ 160
-#define NUMQUOTES 60
 
 LPCTSTR FilePath = _T("\\drivers\\etc\\quotes");
 
@@ -28,51 +27,55 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     FILE *fp;
     SOCKET Sock;
     TCHAR Sys[MAX_PATH];
-    TCHAR Quote[NUMQUOTES][BUFSIZ]; // need to set this dynamically
+    TCHAR Quote[60][BUFSIZ]; // need to set this dynamically
     INT QuoteToPrint;
-    INT i = 0;
+    INT NumQuotes;
 
     Sock = (SOCKET)Sock_;
 
     if(! GetSystemDirectory(Sys, MAX_PATH))
-    	_tprintf(_T("Getting system path failed. Error: %lu\n"), GetLastError());
+    {
+    	LogEvent(_T("QOTD: Getting system path failed.\n"), 0, TRUE);
+    	ExitThread(-1);
+    }
     
     _tcscat(Sys, FilePath);
 
-    _tprintf(_T("Opening quotes file\n"));
+    LogEvent(_T("QOTD: Opening quotes file\n"), 0, FALSE);
     if ((fp = _tfopen(Sys, "r")) == NULL)
     {
-        _tprintf(_T("Error opening file: %lu\n"), GetLastError());
-        _tprintf(_T("Terminating qotd thread\n"));
+        LogEvent(_T("QOTD: Error opening quote file\n"), 0, TRUE);
+        LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
         ExitThread(-1);
     }
 
-    while (_fgetts(Quote[i], QBUFSIZ, fp) != NULL)
-        i++;
+    /* read all quotes in the file into an array */
+    NumQuotes = 0;
+    while (_fgetts(Quote[NumQuotes], QBUFSIZ, fp) != NULL)
+        NumQuotes++;
 
-    _tprintf(_T("Closing quotes file\n"));
+    LogEvent(_T("QOTD: Closing quotes file\n"), 0, FALSE);
     fclose(fp);
 
     /* randomise the quote */
     srand((unsigned int) time(0));
-    QuoteToPrint = rand() % NUMQUOTES;
+    QuoteToPrint = rand() % NumQuotes;
 
     if (!SendQuote(Sock, Quote[QuoteToPrint]))
-    {
-        _tprintf(_T("Error sending data. Error: %x\n"), WSAGetLastError());
-    }
+        LogEvent(_T("QOTD: Error sending data\n"), 0, TRUE);
 
-    _tprintf(_T("Shutting connection down...\n"));
+
+    LogEvent(_T("QOTD: Shutting connection down...\n"), 0, FALSE);
     if (ShutdownConnection(Sock, FALSE))
-        _tprintf(_T("Connection is down.\n"));
+        LogEvent(_T("QOTD: Connection is down\n"), 0, FALSE);
     else
     {
-        _tprintf(_T("Connection shutdown failed\n"));
-        _tprintf(_T("Terminating qotd thread\n"));
+        LogEvent(_T("QOTD: Connection shutdown failed\n"), 0, FALSE);
+        LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
         ExitThread(-1);
     }
     
-    _tprintf(_T("Terminating qotd thread\n"));
+    LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
     ExitThread(0);
 
     //return Retval;
@@ -90,6 +93,6 @@ BOOL SendQuote(SOCKET Sock, TCHAR* Quote)
     if (RetVal == SOCKET_ERROR)
         return FALSE;
 
-    _tprintf(("Connection closed by peer.\n"));
+    LogEvent(_T("QOTD: Connection closed by peer\n"), 0, FALSE);
     return TRUE;
 }

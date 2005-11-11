@@ -24,20 +24,20 @@ DWORD WINAPI ChargenHandler(VOID* Sock_)
 
     if (!GenerateChars(Sock))
     {
-        _tprintf(_T("Char generation failed\n"));
+        LogEvent(_T("Chargen: Char generation failed\n"), 0, FALSE);
         RetVal = -1;
     }
 
-    _tprintf(_T("Shutting connection down...\n"));
+    LogEvent(_T("Chargen: Shutting connection down...\n"), 0, FALSE);
     if (ShutdownConnection(Sock, FALSE))
-        _tprintf(_T("Connection is down.\n"));
+        LogEvent(_T("Chargen: Connection is down.\n"), 0, FALSE);
     else
     {
-        _tprintf(_T("Connection shutdown failed\n"));
+        LogEvent(_T("Chargen: Connection shutdown failed\n"), 0, FALSE);
         RetVal = -1;
     }
     
-    _tprintf(_T("Terminating chargen thread\n"));
+    LogEvent(_T("Chargen: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
 
 }
@@ -108,7 +108,7 @@ BOOL SendLine(SOCKET Sock, TCHAR* Line)
     {
         if (RetVal != LineSize)
         {
-            _tprintf(("Not sent enough\n"));
+            LogEvent(_T("Chargen: Not sent enough bytes\n"), 0, FALSE);
             return FALSE;
         }
         SentBytes += RetVal;
@@ -116,13 +116,13 @@ BOOL SendLine(SOCKET Sock, TCHAR* Line)
     }
     else if (RetVal == SOCKET_ERROR)
     {
-        _tprintf(("Socket error\n"));
+        LogEvent(_T("Chargen: Socket error\n"), 0, FALSE);
         return FALSE;
     }
     else
-        _tprintf(("unknown error\n"));
+        LogEvent(_T("Chargen: unknown error\n"), 0, FALSE);
         //WSAGetLastError()
 
-    _tprintf(("Connection closed by peer.\n"));
+    LogEvent(_T("Chargen: Connection closed by peer.\n"), 0, FALSE);
     return TRUE;
 }
