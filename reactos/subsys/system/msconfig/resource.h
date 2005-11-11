@@ -23,11 +23,12 @@
 #define IDS_TOOLS_COLUMN_NAME           2010
 #define IDS_TOOLS_COLUMN_DESCR          2011
 #define IDS_SERVICES_COLUMN_SERVICE     2012
-#define IDS_SERVICES_COLUMN_VENDOR      2013
-#define IDS_SERVICES_COLUMN_STATUS      2014
-#define IDS_STARTUP_COLUMN_ELEMENT      2015
-#define IDS_STARTUP_COLUMN_CMD          2016
-#define IDS_STARTUP_COLUMN_PATH         2017
+#define IDS_SERVICES_COLUMN_REQ         2013
+#define IDS_SERVICES_COLUMN_VENDOR      2014
+#define IDS_SERVICES_COLUMN_STATUS      2015
+#define IDS_STARTUP_COLUMN_ELEMENT      2016
+#define IDS_STARTUP_COLUMN_CMD          2017
+#define IDS_STARTUP_COLUMN_PATH         2018
 
 #define IDS_TOOLS_CMD_NAME              2100
 #define IDS_TOOLS_CMD_DESCR             2101
@@ -49,4 +50,8 @@
 #define IDS_TOOLS_SYSDM_CMD             2114
 #define IDS_TOOLS_SYSDM_PARAM           2115
 
+#define IDS_SERVICES_STATUS_STOPPED     2200
+#define IDS_SERVICES_STATUS_RUNNING     2201
+#define IDS_YES                         2202
+#define IDS_NO                          2203
 /* EOF */
