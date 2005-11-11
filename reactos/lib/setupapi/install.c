@@ -1212,7 +1212,7 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             }
             rc = RegQueryValueExW(hGroupOrderListKey, lpLoadOrderGroup, NULL, &dwRegType, NULL, &bufferSize);
             if (rc == ERROR_FILE_NOT_FOUND)
-                bufferSize = 0;
+                bufferSize = sizeof(DWORD);
             else if (rc != ERROR_SUCCESS)
             {
                 SetLastError(rc);
@@ -1246,10 +1246,17 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
                     goto cleanup;
                 }
             }
-            if (flags & SPSVCINST_TAGTOFRONT)
-                GroupOrder[0] = tagId;
             else
+            {
+                GroupOrder[0] = 0;
+            }
+            if (flags & SPSVCINST_TAGTOFRONT)
+                GroupOrder[1] = tagId;
+            else
+            {
+                GroupOrder[0]++;
                 GroupOrder[bufferSize / sizeof(DWORD)] = tagId;
+            }
 
             rc = RegSetValueExW(
                 hGroupOrderListKey,
