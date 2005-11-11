@@ -8,11 +8,13 @@
  *           Ged Murphy 20/10/05 Created
  *
  */
-
+#include <conio.h>
 #include "sc.h"
 
 INT MainUsage(VOID)
 {
+    TCHAR c;
+
     _tprintf(_T("DESCRIPTION:\n")
     _T("\tSC is a command line program used for communicating with\n")
     _T("\tthe Service Control Manager and its services.\n")
@@ -51,6 +53,43 @@ INT MainUsage(VOID)
 //    "\t                   be saved as the last-known-good boot configuration\n")
 //    "\t  Lock           : Locks the SCM Database\n")
 //    "\t  QueryLock      : Queries the LockStatus for the SCM Database\n")
+
+    _tprintf(_T("\nWould you like to see help for the QUERY and QUERYEX commands? [ y | n ]: "));
+    c = _getch(); // _gettch isn't defined in our tchar.h
+    _tprintf(_T("%c\n"), c);
+    if (tolower(c) == 'y')
+    {
+        _tprintf(_T("QUERY and QUERYEX OPTIONS :\n")
+        _T("        If the query command is followed by a service name, the status\n")
+        _T("        for that service is returned.  Further options do not apply in\n")
+        _T("        this case.  If the query command is followed by nothing or one of\n")
+        _T("        the options listed below, the services are enumerated.\n")
+        _T("    type=    Type of services to enumerate (driver, service, all)\n")
+        _T("             (default = service)\n")
+        _T("    state=   State of services to enumerate (inactive, all)\n")
+        _T("             (default = active)\n")
+/*
+        _T("    bufsize= The size (in bytes) of the enumeration buffer\n")
+        _T("             (default = 4096)\n")
+        _T("    ri=      The resume index number at which to begin the enumeration\n")
+        _T("             (default = 0)\n")
+        _T("    group=   Service group to enumerate\n")
+        _T("             (default = all groups)\n")
+*/
+        _T("SYNTAX EXAMPLES\n")
+        _T("sc query                - Enumerates status for active services & drivers\n")
+        _T("sc query messenger      - Displays status for the messenger service\n")
+        _T("sc queryex messenger    - Displays extended status for the messenger service\n")
+        _T("sc query type= driver   - Enumerates only active drivers\n")
+        _T("sc query type= service  - Enumerates only Win32 services\n")
+        _T("sc query state= all     - Enumerates all services & drivers\n")
+//        _T("sc query bufsize= 50    - Enumerates with a 50 byte buffer.\n")
+//        _T("sc query ri= 14         - Enumerates with resume index = 14\n")
+//        _T("sc queryex group= ""    - Enumerates active services not in a group\n")
+        _T("sc query type= service type= interact - Enumerates all interactive services\n"));
+//        _T("sc query type= driver group= NDIS     - Enumerates all NDIS drivers\n"));
+    }
+
 
     return 0;
 }
