@@ -184,6 +184,7 @@ subsys\system\regedit\clb\clb.dll       1
 subsys\system\regsvr32\regsvr32.exe     1
 subsys\system\reporterror\reporterror.exe 1
 subsys\system\rundll32\rundll32.exe     1
+subsys\system\sc\sc.exe     		1
 subsys\system\services\services.exe     1
 subsys\system\setup\setup.exe           1
 subsys\system\taskmgr\taskmgr.exe       1

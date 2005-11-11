@@ -715,11 +715,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00010000,"Tcpip"
 
 ; Simple TCP services
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,"Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simple TCP/IP Services"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ImagePath",0x00020000,"%SystemRoot%\system32\tcpsvcs.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
 
 ; Virtual FAT filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ErrorControl",0x00010001,0x00000000
