@@ -39,7 +39,7 @@ VOID DiskReportError (BOOL bError)
 	bReportError = bError;
 }
 
-VOID DiskError(PCHAR ErrorString, ULONG ErrorCode)
+VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 {
 	CHAR	ErrorCodeString[200];
 
@@ -53,7 +53,7 @@ VOID DiskError(PCHAR ErrorString, ULONG ErrorCode)
 	UiMessageBox(ErrorCodeString);
 }
 
-PCHAR DiskGetErrorCodeString(ULONG ErrorCode)
+PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
 {
 	switch (ErrorCode)
 	{

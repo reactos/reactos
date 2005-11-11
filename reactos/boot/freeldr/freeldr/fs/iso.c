@@ -180,7 +180,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-static BOOL IsoLookupFile(PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOL IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	UINT		i;
 	ULONG			NumberOfPathParts;
@@ -263,7 +263,7 @@ static BOOL IsoLookupFile(PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* IsoOpenFile(PCHAR FileName)
+FILE* IsoOpenFile(PCSTR FileName)
 {
 	ISO_FILE_INFO		TempFileInfo;
 	PISO_FILE_INFO		FileHandle;

@@ -63,7 +63,6 @@ void	sound(int freq);
 #define min(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 #define UINT64_C(val) val##ULL
 
 ///////////////////////////////////////////////////////////////////////////////////////

@@ -106,7 +106,7 @@ CmdLineParse(char *CmdLine)
     }
 }
 
-char *
+const char *
 CmdLineGetDefaultOS(void)
 {
   return CmdLineInfo.DefaultOperatingSystem;

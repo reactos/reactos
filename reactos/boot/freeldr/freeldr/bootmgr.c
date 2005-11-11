@@ -43,8 +43,8 @@ VOID RunLoader(VOID)
 	CHAR	SettingValue[80];
 	ULONG		SectionId;
 	ULONG		OperatingSystemCount;
-	PCHAR	*OperatingSystemSectionNames;
-	PCHAR	*OperatingSystemDisplayNames;
+	PCSTR	*OperatingSystemSectionNames;
+	PCSTR	*OperatingSystemDisplayNames;
 	ULONG		DefaultOperatingSystem;
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
@@ -166,10 +166,10 @@ reboot:
 	return;
 }
 
-ULONG	 GetDefaultOperatingSystem(PCHAR OperatingSystemList[], ULONG	 OperatingSystemCount)
+ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSystemCount)
 {
 	CHAR	DefaultOSText[80];
-	PCHAR	DefaultOSName;
+	PCSTR	DefaultOSName;
 	ULONG	SectionId;
 	ULONG	DefaultOS = 0;
 	ULONG	Idx;

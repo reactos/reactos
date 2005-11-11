@@ -87,7 +87,7 @@ static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *
 }
 
 /* FIXME: Add support for attribute lists! */
-static BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, PWCHAR Name)
+static BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, const WCHAR *Name)
 {
     PNTFS_ATTR_RECORD AttrRecord;
     PNTFS_ATTR_RECORD AttrRecordEnd;
@@ -563,7 +563,7 @@ static BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex
     return FALSE;
 }
 
-static BOOL NtfsLookupFile(PCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
+static BOOL NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
 {
     ULONG NumberOfPathParts;
     CHAR PathPart[261];
@@ -680,7 +680,7 @@ BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
     return TRUE;
 }
 
-FILE* NtfsOpenFile(PCHAR FileName)
+FILE* NtfsOpenFile(PCSTR FileName)
 {
     PNTFS_FILE_HANDLE FileHandle;
     PNTFS_MFT_RECORD MftRecord;

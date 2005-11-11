@@ -42,7 +42,7 @@ ULONG			FsType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-VOID FileSystemError(PCHAR ErrorString)
+VOID FileSystemError(PCSTR ErrorString)
 {
 	DbgPrint((DPRINT_FILESYSTEM, "%s\n", ErrorString));
 
@@ -123,7 +123,7 @@ BOOL FsOpenSystemVolume(char *SystemPath, char *RemainingPath, PULONG Device)
 }
 
 
-PFILE FsOpenFile(PCHAR FileName)
+PFILE FsOpenFile(PCSTR FileName)
 {
 	PFILE	FileHandle = NULL;
 
@@ -337,7 +337,7 @@ BOOL FsIsEndOfFile(PFILE FileHandle)
  * This function parses a path in the form of dir1\dir2\file1.ext
  * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
  */
-ULONG FsGetNumPathParts(PCHAR Path)
+ULONG FsGetNumPathParts(PCSTR Path)
 {
 	size_t		i;
 	ULONG		num;
@@ -362,7 +362,7 @@ ULONG FsGetNumPathParts(PCHAR Path)
  * and puts the first name of the path (e.g. "dir1") in buffer
  * compatible with the MSDOS directory structure
  */
-VOID FsGetFirstNameFromPath(PCHAR Buffer, PCHAR Path)
+VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 {
 	size_t		i;
 

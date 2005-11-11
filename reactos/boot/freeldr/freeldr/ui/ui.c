@@ -57,7 +57,7 @@ VIDEODISPLAYMODE	UiDisplayMode		= VideoTextMode;		// Tells us if we are in text 
 
 BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
 
-CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
+const CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
 
 BOOL UiInitialize(BOOLEAN ShowGui)
@@ -235,7 +235,7 @@ BOOL SetupUiInitialize(VOID)
 	return TRUE;
 }
 
-VOID UiUnInitialize(PCHAR BootText)
+VOID UiUnInitialize(PCSTR BootText)
 {
 	UiDrawBackdrop();
 	UiDrawStatusText("Booting...");
@@ -306,7 +306,7 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
 	}
 }
 
-VOID UiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
+VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -319,7 +319,7 @@ VOID UiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr)
+VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -332,7 +332,7 @@ VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR 
 	}
 }
 
-VOID UiDrawStatusText(PCHAR StatusText)
+VOID UiDrawStatusText(PCSTR StatusText)
 {
 	if (!UserInterfaceUp) return;
 
@@ -360,7 +360,7 @@ VOID UiUpdateDateTime(VOID)
 	}
 }
 
-VOID UiInfoBox(PCHAR MessageText)
+VOID UiInfoBox(PCSTR MessageText)
 {
 	ULONG		TextLength;
 	ULONG		BoxWidth;
@@ -421,7 +421,7 @@ VOID UiInfoBox(PCHAR MessageText)
 	UiDrawCenteredText(Left, Top, Right, Bottom, MessageText, ATTR(UiTextColor, UiMenuBgColor));
 }
 
-VOID UiMessageBox(PCHAR MessageText)
+VOID UiMessageBox(PCSTR MessageText)
 {
 	// We have not yet displayed the user interface
 	// We are probably still reading the .ini file
@@ -446,7 +446,7 @@ VOID UiMessageBox(PCHAR MessageText)
 	}
 }
 
-VOID UiMessageBoxCritical(PCHAR MessageText)
+VOID UiMessageBoxCritical(PCSTR MessageText)
 {
 	// We have not yet displayed the user interface
 	// We are probably still reading the .ini file
@@ -471,7 +471,7 @@ VOID UiMessageBoxCritical(PCHAR MessageText)
 	}
 }
 
-UCHAR UiTextToColor(PCHAR ColorText)
+UCHAR UiTextToColor(PCSTR ColorText)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -485,7 +485,7 @@ UCHAR UiTextToColor(PCHAR ColorText)
 	}
 }
 
-UCHAR UiTextToFillStyle(PCHAR FillStyleText)
+UCHAR UiTextToFillStyle(PCSTR FillStyleText)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -527,7 +527,7 @@ VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG P
 	}
 }
 
-VOID UiShowMessageBoxesInSection(PCHAR SectionName)
+VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 {
 	ULONG		Idx;
 	CHAR	SettingName[80];
@@ -605,7 +605,7 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 	}
 }
 
-BOOL UiDisplayMenu(PCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOL UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -645,7 +645,7 @@ VOID UiFadeOut(VOID)
 	}
 }
 
-BOOL UiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length)
+BOOL UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{

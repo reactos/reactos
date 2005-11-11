@@ -156,10 +156,10 @@ BOOL	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSe
 ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
 PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOL RootDirectory);
 BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-BOOL	FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+BOOL	FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
 BOOL	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
-FILE*	FatOpenFile(PCHAR FileName);
+FILE*	FatOpenFile(PCSTR FileName);
 ULONG	FatCountClustersInChain(ULONG StartCluster);
 ULONG*	FatGetClusterChainArray(ULONG StartCluster);
 BOOL	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);

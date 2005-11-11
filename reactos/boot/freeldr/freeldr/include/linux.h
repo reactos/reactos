@@ -127,9 +127,9 @@ typedef struct
 VOID	BootNewLinuxKernel(VOID);				// Implemented in linux.S
 VOID	BootOldLinuxKernel(ULONG KernelSize);		// Implemented in linux.S
 
-VOID	LoadAndBootLinux(PCHAR OperatingSystemName, PCHAR Description);
+VOID	LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description);
 
-BOOL	LinuxParseIniSection(PCHAR OperatingSystemName);
+BOOL	LinuxParseIniSection(PCSTR OperatingSystemName);
 BOOL	LinuxReadBootSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOL	LinuxReadKernel(PFILE LinuxKernelFile);

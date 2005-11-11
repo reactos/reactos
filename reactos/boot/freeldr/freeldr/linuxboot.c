@@ -54,7 +54,7 @@ PVOID			LinuxInitrdLoadAddress = NULL;
 CHAR			LinuxBootDescription[80];
 CHAR			LinuxBootPath[260] = "";
 
-VOID LoadAndBootLinux(PCHAR OperatingSystemName, PCHAR Description)
+VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 {
 	PFILE	LinuxKernel = NULL;
 	PFILE	LinuxInitrdFile = NULL;
@@ -229,7 +229,7 @@ LinuxBootFailed:
 	LinuxCommandLineSize = 0;
 }
 
-BOOL LinuxParseIniSection(PCHAR OperatingSystemName)
+BOOL LinuxParseIniSection(PCSTR OperatingSystemName)
 {
 	CHAR	SettingName[260];
 	ULONG	SectionId;

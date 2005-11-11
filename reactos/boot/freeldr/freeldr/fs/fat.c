@@ -687,7 +687,7 @@ static BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Direct
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-BOOL FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	UINT		i;
 	ULONG		NumberOfPathParts;
@@ -915,7 +915,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* FatOpenFile(PCHAR FileName)
+FILE* FatOpenFile(PCSTR FileName)
 {
 	FAT_FILE_INFO		TempFatFileInfo;
 	PFAT_FILE_INFO		FileHandle;

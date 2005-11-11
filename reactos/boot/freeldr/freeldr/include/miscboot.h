@@ -20,8 +20,8 @@
 #ifndef __BOOT_H
 #define __BOOT_H
 
-VOID	LoadAndBootBootSector(PCHAR OperatingSystemName);
-VOID	LoadAndBootPartition(PCHAR OperatingSystemName);
-VOID	LoadAndBootDrive(PCHAR OperatingSystemName);
+VOID	LoadAndBootBootSector(PCSTR OperatingSystemName);
+VOID	LoadAndBootPartition(PCSTR OperatingSystemName);
+VOID	LoadAndBootDrive(PCSTR OperatingSystemName);
 
 #endif // defined __BOOT_H

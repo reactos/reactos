@@ -32,17 +32,17 @@
 #define FILE			VOID
 #define PFILE			FILE *
 
-VOID	FileSystemError(PCHAR ErrorString);
+VOID	FileSystemError(PCSTR ErrorString);
 BOOL	FsOpenBootVolume();
 BOOL	FsOpenSystemVolume(PCHAR SystemPath, PCHAR RemainingPath, PULONG BootDevice);
-PFILE	FsOpenFile(PCHAR FileName);
+PFILE	FsOpenFile(PCSTR FileName);
 VOID	FsCloseFile(PFILE FileHandle);
 BOOL	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		FsGetFileSize(PFILE FileHandle);
 VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
 ULONG		FsGetFilePointer(PFILE FileHandle);
 BOOL	FsIsEndOfFile(PFILE FileHandle);
-ULONG		FsGetNumPathParts(PCHAR Path);
-VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCHAR Path);
+ULONG		FsGetNumPathParts(PCSTR Path);
+VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
 #endif // #defined __FS_H

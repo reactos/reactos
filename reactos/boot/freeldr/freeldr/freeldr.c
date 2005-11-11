@@ -27,7 +27,7 @@
 #include <fs.h>
 #include <cmdline.h>
 
-VOID BootMain(char *CmdLine)
+VOID BootMain(LPSTR CmdLine)
 {
 	CmdLineParse(CmdLine);
 

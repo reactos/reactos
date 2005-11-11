@@ -78,7 +78,7 @@ FrLdrLoadKernel(PCHAR szFileName,
     FrLdrMapKernel(FilePointer);
 
     /* Update Processbar and return success */
-    UiDrawProgressBarCenter(nPos, 100, "Loading ReactOS...");
+    UiDrawProgressBarCenter(nPos, 100, (PCHAR)"Loading ReactOS...");
     return(TRUE);
 }
 
@@ -145,8 +145,8 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
 }
 
 static BOOL
-FrLdrLoadNlsFile(PCHAR szFileName,
-                 PCHAR szModuleName)
+FrLdrLoadNlsFile(PCSTR szFileName,
+                 PCSTR szModuleName)
 {
     PFILE FilePointer;
     CHAR value[256];
@@ -340,7 +340,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FrLdrLoadModule(FilePointer, szFileName, NULL);
 
     /* Update status and return */
-    UiDrawProgressBarCenter(nPos, 100, "Loading ReactOS...");
+    UiDrawProgressBarCenter(nPos, 100, (PCHAR)"Loading ReactOS...");
     return(TRUE);
 }
 
@@ -570,7 +570,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 }
 
 VOID
-LoadAndBootReactOS(PCHAR OperatingSystemName)
+LoadAndBootReactOS(PCSTR OperatingSystemName)
 {
 	PFILE FilePointer;
 	CHAR  name[1024];
@@ -704,7 +704,7 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
 	UiDrawStatusText("Loading...");
-	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");
+	UiDrawProgressBarCenter(0, 100, (PCHAR)"Loading ReactOS...");
 
 	/*
 	 * Try to open system drive
@@ -838,7 +838,7 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	 */
 	RegInitCurrentControlSet(FALSE);
 
-	UiDrawProgressBarCenter(15, 100, "Loading ReactOS...");
+	UiDrawProgressBarCenter(15, 100, (PCHAR)"Loading ReactOS...");
 
 	/*
 	 * Export the hardware hive
@@ -847,7 +847,7 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", (PCHAR)Base, &Size);
 	FrLdrCloseModule (Base, Size);
 
-	UiDrawProgressBarCenter(20, 100, "Loading ReactOS...");
+	UiDrawProgressBarCenter(20, 100, (PCHAR)"Loading ReactOS...");
 
 	/*
 	 * Load NLS files
@@ -857,13 +857,13 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	        UiMessageBox(MsgBuffer);
 		return;
 	}
-	UiDrawProgressBarCenter(30, 100, "Loading ReactOS...");
+	UiDrawProgressBarCenter(30, 100, (PCHAR)"Loading ReactOS...");
 
 	/*
 	 * Load kernel symbols
 	 */
 	LoadKernelSymbols(szKernelName, 30);
-	UiDrawProgressBarCenter(40, 100, "Loading ReactOS...");
+	UiDrawProgressBarCenter(40, 100, (PCHAR)"Loading ReactOS...");
 
 	/*
 	 * Load boot drivers

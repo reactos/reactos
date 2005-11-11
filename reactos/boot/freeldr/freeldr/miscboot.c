@@ -29,7 +29,7 @@
 #include <drivemap.h>
 #include <machine.h>
 
-VOID LoadAndBootBootSector(PCHAR OperatingSystemName)
+VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 {
 	PFILE	FilePointer;
 	CHAR	SettingName[80];
@@ -100,7 +100,7 @@ VOID LoadAndBootBootSector(PCHAR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootPartition(PCHAR OperatingSystemName)
+VOID LoadAndBootPartition(PCSTR OperatingSystemName)
 {
 	CHAR			SettingName[80];
 	CHAR			SettingValue[80];
@@ -171,7 +171,7 @@ VOID LoadAndBootPartition(PCHAR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootDrive(PCHAR OperatingSystemName)
+VOID LoadAndBootDrive(PCSTR OperatingSystemName)
 {
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];

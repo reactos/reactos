@@ -24,7 +24,7 @@
 #include <debug.h>
 #include <mm.h>
 
-BOOL IniOpenSection(PCHAR SectionName, ULONG* SectionId)
+BOOL IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -131,7 +131,7 @@ BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PCHAR SettingN
 	return FALSE;
 }
 
-BOOL IniReadSettingByName(ULONG SectionId, PCHAR SettingName, PCHAR Buffer, ULONG BufferSize)
+BOOL IniReadSettingByName(ULONG SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
@@ -163,7 +163,7 @@ BOOL IniReadSettingByName(ULONG SectionId, PCHAR SettingName, PCHAR Buffer, ULON
 	return FALSE;
 }
 
-BOOL IniAddSection(PCHAR SectionName, ULONG* SectionId)
+BOOL IniAddSection(PCSTR SectionName, ULONG* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -203,7 +203,7 @@ BOOL IniAddSection(PCHAR SectionName, ULONG* SectionId)
 	return TRUE;
 }
 
-BOOL IniAddSettingValueToSection(ULONG SectionId, PCHAR SettingName, PCHAR SettingValue)
+BOOL IniAddSettingValueToSection(ULONG SectionId, PCSTR SettingName, PCSTR SettingValue)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;

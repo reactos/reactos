@@ -24,7 +24,7 @@
 #include <mm.h>
 #include <ui.h>
 
-BOOL InitOperatingSystemList(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
+BOOL InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
 {
 	ULONG		Idx;
 	ULONG		CurrentOperatingSystemIndex;
@@ -79,8 +79,8 @@ BOOL InitOperatingSystemList(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPo
 	}
 
 	*OperatingSystemCountPointer = OperatingSystemCount;
-	*SectionNamesPointer = OperatingSystemSectionNames;
-	*DisplayNamesPointer = OperatingSystemDisplayNames;
+	*SectionNamesPointer = (PCSTR*)OperatingSystemSectionNames;
+	*DisplayNamesPointer = (PCSTR*)OperatingSystemDisplayNames;
 
 	return TRUE;
 }

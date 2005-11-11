@@ -304,7 +304,7 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
  * DrawText()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
+VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	ULONG		i, j;
@@ -317,7 +317,7 @@ VOID TuiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr)
+VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
 	ULONG		TextLength;
 	ULONG		BoxWidth;
@@ -378,7 +378,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR
 	}
 }
 
-VOID TuiDrawStatusText(PCHAR StatusText)
+VOID TuiDrawStatusText(PCSTR StatusText)
 {
 	ULONG		i;
 
@@ -504,7 +504,7 @@ VOID TuiRestoreScreen(PUCHAR Buffer)
 	}
 }
 
-VOID TuiMessageBox(PCHAR MessageText)
+VOID TuiMessageBox(PCSTR MessageText)
 {
 	PVOID	ScreenBuffer;
 
@@ -520,7 +520,7 @@ VOID TuiMessageBox(PCHAR MessageText)
 	MmFreeMemory(ScreenBuffer);
 }
 
-VOID TuiMessageBoxCritical(PCHAR MessageText)
+VOID TuiMessageBoxCritical(PCSTR MessageText)
 {
 	int		width = 8;
 	unsigned int	height = 1;
@@ -662,7 +662,7 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 	VideoCopyOffScreenBufferToVRAM();
 }
 
-UCHAR TuiTextToColor(PCHAR ColorText)
+UCHAR TuiTextToColor(PCSTR ColorText)
 {
 	if (stricmp(ColorText, "Black") == 0)
 		return COLOR_BLACK;
@@ -700,7 +700,7 @@ UCHAR TuiTextToColor(PCHAR ColorText)
 	return COLOR_BLACK;
 }
 
-UCHAR TuiTextToFillStyle(PCHAR FillStyleText)
+UCHAR TuiTextToFillStyle(PCSTR FillStyleText)
 {
 	if (stricmp(FillStyleText, "Light") == 0)
 	{
@@ -772,7 +772,7 @@ VOID TuiFadeOut(VOID)
 
 }
 
-BOOL TuiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length)
+BOOL TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	int		width = 8;
 	unsigned int	height = 1;

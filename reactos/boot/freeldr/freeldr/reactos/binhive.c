@@ -326,7 +326,7 @@ CmiCreateDefaultBinCell (PHBIN BinCell)
 
 
 static VOID
-CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCHAR KeyName)
+CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCSTR KeyName)
 {
   PCHAR BaseKeyName;
   ULONG NameSize;
@@ -357,7 +357,7 @@ CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCHAR KeyName)
 
 
 static PREGISTRY_HIVE
-CmiCreateHive (PCHAR KeyName)
+CmiCreateHive (PCSTR KeyName)
 {
   PREGISTRY_HIVE Hive;
   PCELL_HEADER FreeCell;
@@ -1258,7 +1258,7 @@ CmiCalcHiveChecksum (PREGISTRY_HIVE Hive)
 
 static BOOL
 CmiExportHive (PREGISTRY_HIVE Hive,
-	       PCHAR KeyName)
+	       PCSTR KeyName)
 {
   PKEY_CELL KeyCell;
   FRLDRHKEY Key;
@@ -1624,7 +1624,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
 
 BOOL
-RegExportBinaryHive(PCHAR KeyName,
+RegExportBinaryHive(PCSTR KeyName,
 		    PCHAR ChunkBase,
 		    ULONG* ChunkSize)
 {

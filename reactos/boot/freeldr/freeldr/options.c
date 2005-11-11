@@ -27,7 +27,7 @@
 #include <arch.h>
 
 
-PCHAR	OptionsMenuList[] =
+PCSTR	OptionsMenuList[] =
 {
 	"Safe Mode",
 	"Safe Mode with Networking",

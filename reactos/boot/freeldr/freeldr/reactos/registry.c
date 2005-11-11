@@ -206,7 +206,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
 
 LONG
 RegCreateKey(FRLDRHKEY ParentKey,
-	     PCHAR KeyName,
+	     PCSTR KeyName,
 	     PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
@@ -214,7 +214,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
   FRLDRHKEY CurrentKey;
   FRLDRHKEY NewKey;
   PCHAR p;
-  PCHAR name;
+  PCSTR name;
   int subkeyLength;
   int stringLength;
 
@@ -331,7 +331,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 
 LONG
 RegDeleteKey(FRLDRHKEY Key,
-	     PCHAR Name)
+	     PCSTR Name)
 {
 
 
@@ -384,14 +384,14 @@ RegEnumKey(FRLDRHKEY Key,
 
 LONG
 RegOpenKey(FRLDRHKEY ParentKey,
-	   PCHAR KeyName,
+	   PCSTR KeyName,
 	   PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
   FRLDRHKEY SearchKey = NULL;
   FRLDRHKEY CurrentKey;
   PCHAR p;
-  PCHAR name;
+  PCSTR name;
   int subkeyLength;
   int stringLength;
 
@@ -484,9 +484,9 @@ RegOpenKey(FRLDRHKEY ParentKey,
 
 LONG
 RegSetValue(FRLDRHKEY Key,
-	    PCHAR ValueName,
+	    PCSTR ValueName,
 	    ULONG Type,
-	    PCHAR Data,
+	    PCSTR Data,
 	    ULONG DataSize)
 {
   PLIST_ENTRY Ptr;
@@ -585,7 +585,7 @@ RegSetValue(FRLDRHKEY Key,
 
 LONG
 RegQueryValue(FRLDRHKEY Key,
-	      PCHAR ValueName,
+	      PCSTR ValueName,
 	      ULONG* Type,
 	      PUCHAR Data,
 	      ULONG* DataSize)
@@ -672,7 +672,7 @@ RegQueryValue(FRLDRHKEY Key,
 
 LONG
 RegDeleteValue(FRLDRHKEY Key,
-	       PCHAR ValueName)
+	       PCSTR ValueName)
 {
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;

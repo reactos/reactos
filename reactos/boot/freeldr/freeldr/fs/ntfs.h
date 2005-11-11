@@ -219,7 +219,7 @@ typedef struct
 } PACKED NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 
 BOOL	NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector);
-FILE*	NtfsOpenFile(PCHAR FileName);
+FILE*	NtfsOpenFile(PCSTR FileName);
 BOOL	NtfsReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG	NtfsGetFileSize(FILE *FileHandle);
 VOID	NtfsSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);

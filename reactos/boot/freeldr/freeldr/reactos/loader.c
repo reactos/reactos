@@ -706,7 +706,7 @@ FrLdrMapKernel(FILE *KernelImage)
 ULONG_PTR
 STDCALL
 FrLdrLoadModule(FILE *ModuleImage,
-                LPSTR ModuleName,
+                LPCSTR ModuleName,
                 PULONG ModuleSize)
 {
     ULONG LocalModuleSize;
@@ -757,7 +757,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 
 ULONG_PTR
 STDCALL
-FrLdrCreateModule(LPSTR ModuleName)
+FrLdrCreateModule(LPCSTR ModuleName)
 {
     PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;

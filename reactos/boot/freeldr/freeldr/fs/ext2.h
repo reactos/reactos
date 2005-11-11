@@ -667,8 +667,8 @@ typedef struct
 
 
 BOOL	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector);
-FILE*	Ext2OpenFile(PCHAR FileName);
-BOOL	Ext2LookupFile(PCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
+FILE*	Ext2OpenFile(PCSTR FileName);
+BOOL	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
 BOOL	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
 BOOL	Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 ULONGLONG		Ext2GetFileSize(FILE *FileHandle);

@@ -72,12 +72,12 @@ RegInitCurrentControlSet(BOOL LastKnownGood);
 
 LONG
 RegCreateKey(FRLDRHKEY ParentKey,
-	     PCHAR KeyName,
+	     PCSTR KeyName,
 	     PFRLDRHKEY Key);
 
 LONG
 RegDeleteKey(FRLDRHKEY Key,
-	     PCHAR Name);
+	     PCSTR Name);
 
 LONG
 RegEnumKey(FRLDRHKEY Key,
@@ -87,27 +87,27 @@ RegEnumKey(FRLDRHKEY Key,
 
 LONG
 RegOpenKey(FRLDRHKEY ParentKey,
-	   PCHAR KeyName,
+	   PCSTR KeyName,
 	   PFRLDRHKEY Key);
 
 
 LONG
 RegSetValue(FRLDRHKEY Key,
-	    PCHAR ValueName,
+	    PCSTR ValueName,
 	    ULONG Type,
-	    PCHAR Data,
+	    PCSTR Data,
 	    ULONG DataSize);
 
 LONG
 RegQueryValue(FRLDRHKEY Key,
-	      PCHAR ValueName,
+	      PCSTR ValueName,
 	      ULONG* Type,
 	      PUCHAR Data,
 	      ULONG* DataSize);
 
 LONG
 RegDeleteValue(FRLDRHKEY Key,
-	       PCHAR ValueName);
+	       PCSTR ValueName);
 
 LONG
 RegEnumValue(FRLDRHKEY Key,
@@ -130,7 +130,7 @@ RegImportBinaryHive (PCHAR ChunkBase,
 		     ULONG ChunkSize);
 
 BOOL
-RegExportBinaryHive (PCHAR KeyName,
+RegExportBinaryHive (PCSTR KeyName,
 		     PCHAR ChunkBase,
 		     ULONG* ChunkSize);
 

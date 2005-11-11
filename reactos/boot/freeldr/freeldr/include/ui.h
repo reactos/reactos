@@ -47,7 +47,7 @@ extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is display
 
 extern	BOOL	UiUseSpecialEffects;							// Tells us if we should use fade effects
 
-extern	CHAR	UiMonthNames[12][15];
+extern	const CHAR	UiMonthNames[12][15];
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -56,26 +56,26 @@ extern	CHAR	UiMonthNames[12][15];
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOL	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
 BOOL	SetupUiInitialize(VOID);						// Initialize User-Interface
-VOID	UiUnInitialize(PCHAR BootText);						// Un-initialize User-Interface
+VOID	UiUnInitialize(PCSTR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
 VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
-VOID	UiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
-VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
-VOID	UiDrawStatusText(PCHAR StatusText);					// Draws text at the very bottom line on the screen
+VOID	UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
+VOID	UiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
 VOID	UiUpdateDateTime(VOID);									// Updates the date and time
-VOID	UiInfoBox(PCHAR MessageText);							// Displays a info box on the screen
-VOID	UiMessageBox(PCHAR MessageText);						// Displays a message box on the screen with an ok button
-VOID	UiMessageBoxCritical(PCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
+VOID	UiInfoBox(PCSTR MessageText);							// Displays a info box on the screen
+VOID	UiMessageBox(PCSTR MessageText);						// Displays a message box on the screen with an ok button
+VOID	UiMessageBoxCritical(PCSTR MessageText);				// Displays a message box on the screen with an ok button using no system resources
 VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
-VOID	UiShowMessageBoxesInSection(PCHAR SectionName);		// Displays all the message boxes in a given section
+VOID	UiShowMessageBoxesInSection(PCSTR SectionName);		// Displays all the message boxes in a given section
 VOID	UiEscapeString(PCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
-BOOL	UiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length);
+BOOL	UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 
-UCHAR	UiTextToColor(PCHAR ColorText);						// Converts the text color into it's equivalent color value
-UCHAR	UiTextToFillStyle(PCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
+UCHAR	UiTextToColor(PCSTR ColorText);						// Converts the text color into it's equivalent color value
+UCHAR	UiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into it's equivalent fill value
 
 VOID	UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars);	// Truncates a string to MaxChars by adding an ellipsis on the end '...'
 
@@ -89,7 +89,7 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef BOOL	(*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOL	UiDisplayMenu(PCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOL	UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 

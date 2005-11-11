@@ -27,7 +27,7 @@
 #include "rtl.h"
 
 VOID
-MachInit(char *CmdLine)
+MachInit(const char *CmdLine)
 {
   ULONG PciId;
 

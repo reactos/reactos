@@ -106,7 +106,7 @@ typedef struct
 
 
 BOOL	IsoOpenVolume(ULONG DriveNumber);
-FILE*	IsoOpenFile(PCHAR FileName);
+FILE*	IsoOpenFile(PCSTR FileName);
 BOOL	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		IsoGetFileSize(FILE *FileHandle);
 VOID	IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);

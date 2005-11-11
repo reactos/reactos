@@ -24,7 +24,7 @@
 #include "i386.h"
 
 VOID
-XboxMachInit(char *CmdLine)
+XboxMachInit(const char *CmdLine)
 {
   /* Initialize our stuff */
   XboxMemInit();

@@ -33,23 +33,23 @@ VOID	GuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillCha
 VOID	GuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
 VOID	GuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
 VOID	GuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
-VOID	GuiDrawStatusText(PUCHAR StatusText);					// Draws text at the very bottom line on the screen
+VOID	GuiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
 VOID	GuiUpdateDateTime(VOID);								// Updates the date and time
 VOID	GuiSaveScreen(PUCHAR Buffer);							// Saves the screen so that it can be restored later
 VOID	GuiRestoreScreen(PUCHAR Buffer);						// Restores the screen from a previous save
-VOID	GuiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
-VOID	GuiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
+VOID	GuiMessageBox(PCSTR MessageText);						// Displays a message box on the screen with an ok button
+VOID	GuiMessageBoxCritical(PCSTR MessageText);				// Displays a message box on the screen with an ok button using no system resources
 VOID	GuiDrawProgressBar(ULONG Position, ULONG Range);		// Draws the progress bar showing nPos percent filled
 
-UCHAR	GuiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
-UCHAR	GuiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
+UCHAR	GuiTextToColor(PCSTR ColorText);						// Converts the text color into it's equivalent color value
+UCHAR	GuiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into it's equivalent fill value
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	GuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem);
+BOOL	GuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem);
 
 
 
