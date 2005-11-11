@@ -10,11 +10,6 @@ const char* WndClassName = "GMainWnd";
 LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam);
 
-WINBOOL
-STDCALL
-GdiAlphaBlend(HDC hdcDst,LONG DstX,LONG DstY,LONG DstCx,LONG DstCy,HDC hdcSrc,LONG SrcX,LONG SrcY,LONG SrcCx,LONG SrcCy,BLENDFUNCTION BlendFunction);
-
-
 int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
     LPTSTR lpCmdLine, int nCmdShow)
 {
