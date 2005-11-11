@@ -50,21 +50,10 @@ static char sccsid[] = "@(#)err.c	8.1 (Berkeley) 6/4/93";
 extern char *__progname;		/* Program name, from crt0. */
 
 void
-#ifdef __STDC__
 err(int eval, const char *fmt, ...)
-#else
-err(eval, fmt, va_alist)
-	int eval;
-	const char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
-#if __STDC__
 	va_start(ap, fmt);
-#else
-	va_start(ap);
-#endif
 	verr(eval, fmt, ap);
 	va_end(ap);
 }
@@ -85,21 +74,10 @@ verr(int eval, const char *fmt, va_list ap)
 }
 
 void
-#if __STDC__
 errx(int eval, const char *fmt, ...)
-#else
-errx(eval, fmt, va_alist)
-	int eval;
-	const char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
-#if __STDC__
 	va_start(ap, fmt);
-#else
-	va_start(ap);
-#endif
 	verrx(eval, fmt, ap);
 	va_end(ap);
 }
@@ -115,20 +93,10 @@ verrx(int eval, const char *fmt, va_list ap)
 }
 
 void
-#if __STDC__
 warn(const char *fmt, ...)
-#else
-warn(fmt, va_alist)
-	const char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
-#if __STDC__
 	va_start(ap, fmt);
-#else
-	va_start(ap);
-#endif
 	vwarn(fmt, ap);
 	va_end(ap);
 }
@@ -150,20 +118,10 @@ vwarn(fmt, ap)
 }
 
 void
-#ifdef __STDC__
 warnx(const char *fmt, ...)
-#else
-warnx(fmt, va_alist)
-	const char *fmt;
-	va_dcl
-#endif
 {
 	va_list ap;
-#ifdef __STDC__
 	va_start(ap, fmt);
-#else
-	va_start(ap);
-#endif
 	vwarnx(fmt, ap);
 	va_end(ap);
 }
