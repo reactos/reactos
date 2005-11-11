@@ -210,7 +210,7 @@ InfpCacheFreeSection (PINFCACHESECTION Section)
 
 static PINFCACHESECTION
 InfpCacheFindSection (PINFCACHE Cache,
-		      PCHAR Name)
+		      PCSTR Name)
 {
   PINFCACHESECTION Section = NULL;
 
@@ -373,7 +373,7 @@ InfpAddFieldToLine (PINFCACHELINE Line,
 
 static PINFCACHELINE
 InfpCacheFindKeyLine (PINFCACHESECTION Section,
-		      PCHAR Key)
+		      PCSTR Key)
 {
   PINFCACHELINE Line;
 
@@ -876,7 +876,7 @@ InfpParseBuffer (PINFCACHE file,
 
 BOOLEAN
 InfOpenFile(PHINF InfHandle,
-	    PCHAR FileName,
+	    PCSTR FileName,
 	    PULONG ErrorLine)
 {
   PFILE FileHandle;
@@ -991,8 +991,8 @@ InfCloseFile(HINF InfHandle)
 
 BOOLEAN
 InfFindFirstLine (HINF InfHandle,
-		  PCHAR Section,
-		  PCHAR Key,
+		  PCSTR Section,
+		  PCSTR Key,
 		  PINFCONTEXT Context)
 {
   PINFCACHE Cache;
@@ -1457,7 +1457,7 @@ InfGetData (PINFCONTEXT Context,
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
 		 ULONG FieldIndex,
-		 PCHAR *Data)
+		 PCSTR *Data)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;

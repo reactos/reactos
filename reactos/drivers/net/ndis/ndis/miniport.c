@@ -1335,7 +1335,7 @@ NdisIPnPStartDevice(
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
                                DevicePropertyLegacyBusType, Size,
                                &Adapter->NdisMiniportBlock.BusType, &Size);
-  if (!NT_SUCCESS(Status) || Adapter->NdisMiniportBlock.BusType == InterfaceTypeUndefined)
+  if (!NT_SUCCESS(Status) || (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType == InterfaceTypeUndefined)
     {
       NdisInitUnicodeString(&ParamName, L"BusType");
       NdisReadConfiguration(&NdisStatus, &ConfigParam, ConfigHandle,

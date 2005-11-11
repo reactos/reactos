@@ -355,7 +355,7 @@ NtfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 /* fcb.c */
 
 PFCB
-NtfsCreateFCB(PWCHAR FileName);
+NtfsCreateFCB(PCWSTR FileName);
 
 VOID
 NtfsDestroyFCB(PFCB Fcb);
@@ -380,7 +380,7 @@ NtfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
 
 PFCB
 NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
-		     PWSTR FileName);
+		     PCWSTR FileName);
 
 NTSTATUS
 NtfsFCBInitializeCache(PVCB Vcb,

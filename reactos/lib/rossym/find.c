@@ -127,7 +127,7 @@ __asm__("int $3\n");
     }
   if (FileName != NULL)
     {
-      PCHAR Name = "";
+      PCSTR Name = "";
       if (RosSymEntry->FileOffset != 0)
         {
           Name = (PCHAR) RosSymInfo->Strings + RosSymEntry->FileOffset;
@@ -136,7 +136,7 @@ __asm__("int $3\n");
     }
   if (FunctionName != NULL)
     {
-      PCHAR Name = "";
+      PCSTR Name = "";
       if (RosSymEntry->FunctionOffset != 0)
         {
           Name = (PCHAR) RosSymInfo->Strings + RosSymEntry->FunctionOffset;

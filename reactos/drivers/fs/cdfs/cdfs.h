@@ -288,7 +288,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 /* fcb.c */
 
 PFCB
-CdfsCreateFCB(PWCHAR FileName);
+CdfsCreateFCB(PCWSTR FileName);
 
 VOID
 CdfsDestroyFCB(PFCB Fcb);

@@ -58,7 +58,7 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
 			     PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
 			     PULONG BufferLength)
 {
-  WCHAR* pName; ULONG Length;
+  PCWSTR pName; ULONG Length;
   DPRINT("FsdGetFsAttributeInformation()\n");
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);

@@ -60,14 +60,14 @@ FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
 }
 
 static BOOL
-LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
+LoadKernel(PCSTR szSourcePath, PCSTR szFileName)
 {
   CHAR szFullName[256];
 #ifdef USE_UI
   CHAR szBuffer[80];
 #endif
   PFILE FilePointer;
-  PCHAR szShortName;
+  PCSTR szShortName;
 
   if (szSourcePath[0] != '\\')
     {
@@ -125,7 +125,7 @@ LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
 }
 
 static BOOL
-LoadKernelSymbols(PCHAR szSourcePath, PCHAR szFileName)
+LoadKernelSymbols(PCSTR szSourcePath, PCSTR szFileName)
 {
   static ROSSYM_CALLBACKS FreeldrCallbacks =
     {
@@ -180,14 +180,14 @@ LoadKernelSymbols(PCHAR szSourcePath, PCHAR szFileName)
 }
 
 static BOOL
-LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
+LoadDriver(PCSTR szSourcePath, PCSTR szFileName)
 {
   CHAR szFullName[256];
 #ifdef USE_UI
   CHAR szBuffer[80];
 #endif
   PFILE FilePointer;
-  PCHAR szShortName;
+  PCSTR szShortName;
 
   if (szSourcePath[0] != '\\')
     {
@@ -245,14 +245,14 @@ LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
 
 
 static BOOL
-LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
+LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 {
   CHAR szFullName[256];
 #ifdef USE_UI
   CHAR szBuffer[80];
 #endif
   PFILE FilePointer;
-  PCHAR szShortName;
+  PCSTR szShortName;
 
   if (szSourcePath[0] != '\\')
     {
@@ -312,8 +312,8 @@ VOID RunLoader(VOID)
 {
   ULONG_PTR Base;
   ULONG Size;
-  char *SourcePath;
-  char *LoadOptions;
+  const char *SourcePath;
+  const char *LoadOptions;
   UINT i;
 
   HINF InfHandle;

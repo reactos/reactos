@@ -342,7 +342,7 @@ NTSTATUS
 PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
                                  PPCI_DEVICE Device)
 {
-  PWSTR Description;
+  PCWSTR Description;
 
   switch (Device->PciConfig.BaseClass)
   {
