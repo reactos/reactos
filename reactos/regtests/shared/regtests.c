@@ -145,7 +145,6 @@ VOID
 DisplayResult(PERFORM_TEST_ARGS* Args,
               LPSTR OutputBuffer)
 {
-  char Buffer[5000];
   char Format[100];
 
   if (Args->Result == TS_OK)
@@ -165,7 +164,7 @@ DisplayResult(PERFORM_TEST_ARGS* Args,
                                   Args->Time));
     }
   else
-      sprintf(OutputBuffer, "[%s] Failed (%s)\n", Args->TestName, Buffer);
+      sprintf(OutputBuffer, "[%s] Failed (%s)\n", Args->TestName, Args->Buffer);
 
   if (Args->OutputRoutine != NULL)
     (*Args->OutputRoutine)(OutputBuffer);
