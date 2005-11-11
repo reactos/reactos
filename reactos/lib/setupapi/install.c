@@ -1218,7 +1218,7 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
                 SetLastError(rc);
                 goto cleanup;
             }
-            else if (dwRegType != REG_BINARY || bufferSize % sizeof(DWORD) != 0)
+            else if (dwRegType != REG_BINARY || bufferSize == 0 || bufferSize % sizeof(DWORD) != 0)
             {
                 SetLastError(ERROR_GEN_FAILURE);
                 goto cleanup;
@@ -1238,13 +1238,15 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
                     lpLoadOrderGroup,
                     NULL,
                     NULL,
-                    (flags & SPSVCINST_TAGTOFRONT) ? (BYTE*)&GroupOrder[1] : (BYTE*)&GroupOrder[0],
+                    (BYTE*)GroupOrder,
                     &bufferSize);
                 if (rc != ERROR_SUCCESS)
                 {
                     SetLastError(rc);
                     goto cleanup;
                 }
+                if (flags & SPSVCINST_TAGTOFRONT)
+                    memmove(&GroupOrder[2], &GroupOrder[1], bufferSize - sizeof(DWORD));
             }
             else
             {
