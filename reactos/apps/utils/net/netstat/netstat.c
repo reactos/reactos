@@ -523,7 +523,7 @@ VOID ShowUdpTable()
  * Translate port numbers into their text equivalent if there is one
  */
 PCHAR
-GetPortName(UINT Port, PCHAR Proto, CHAR Name[], INT NameLen)
+GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
 {
     struct servent *pSrvent;
 

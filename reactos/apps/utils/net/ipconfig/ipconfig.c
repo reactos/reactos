@@ -32,7 +32,7 @@
 #define _UNICODE
 
 
-PTCHAR GetNodeTypeName(UINT NodeType)
+LPCTSTR GetNodeTypeName(UINT NodeType)
 {
     switch (NodeType) {
         case 1: return _T("Broadcast");
@@ -43,7 +43,7 @@ PTCHAR GetNodeTypeName(UINT NodeType)
     }
 }
 
-PTCHAR GetInterfaceTypeName(UINT InterfaceType)
+LPCTSTR GetInterfaceTypeName(UINT InterfaceType)
 {
     switch (InterfaceType) {
         case MIB_IF_TYPE_OTHER:     return _T("Other Type Of Adapter");
