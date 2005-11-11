@@ -24,9 +24,6 @@
 #define REG_MAX_NAME_SIZE     256
 #define REG_MAX_DATA_SIZE     2048
 
-/* FIXME: should go into msvcrt.h header? */
-#define offsetof(s,m)       (size_t)&(((s*)NULL)->m)
-
 /* GLOBALS ******************************************************************/
 
 static RTL_CRITICAL_SECTION HandleTableCS;
@@ -2240,7 +2237,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
     DWORD total_size;
     char buffer[256], *buf_ptr = buffer;
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
-    static const int info_size = offsetof( KEY_VALUE_FULL_INFORMATION, Name );
+    static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
 
     //TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
       //    hkey, index, value, val_count, reserved, type, data, count );
@@ -2367,7 +2364,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
     DWORD total_size;
     char buffer[256], *buf_ptr = buffer;
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
-    static const int info_size = offsetof( KEY_VALUE_FULL_INFORMATION, Name );
+    static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
 
     //TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
     //      hkey, index, value, val_count, reserved, type, data, count );
