@@ -5374,7 +5374,7 @@ SetupDiGetDriverInfoDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DriverInfoDetailData && DriverInfoDetailData->cbSize != sizeof(SP_DRVINFO_DETAIL_DATA_W))
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (DriverInfoDetailData && DriverInfoDetailData->Reserved == 0)
+    else if (DriverInfoData->Reserved == 0)
         SetLastError(ERROR_NO_DRIVER_SELECTED);
     else
     {
