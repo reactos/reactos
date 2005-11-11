@@ -98,9 +98,9 @@ sig_t	lostpeer();
 off_t	restart_point = 0;
 
 SOCKET cin, cout;
-int	dataconn(char *mode);
+int	dataconn(const char *mode);
 
-int command(char *fmt, ...);
+int command(const char *fmt, ...);
 
 char *hostname;
 
@@ -203,19 +203,23 @@ bad:
 	return ((char *)0);
 }
 
-int login(char *host)
+int login(const char *host)
 {
 	char tmp[80];
-	char *user, *pass, *acct;
+	char *puser, *ppass, *pacct;
+	const char *user, *pass, *acct;
 	int n, aflag = 0;
 
 	user = pass = acct = 0;
-	if (ruserpass(host, &user, &pass, &acct) < 0) {
+	if (ruserpass(host, &puser, &ppass, &pacct) < 0) {
 		code = -1;
 		return(0);
 	}
+	user = puser;
+	pass = ppass;
+	acct = pacct;
 	while (user == NULL) {
-           char *myname = "none"; // This needs to become the usename env
+           const char *myname = "none"; // This needs to become the usename env
 
            if (myname)
               printf("Name (%s:%s): ", host, myname);
@@ -273,7 +277,7 @@ cmdabort(int sig)
 }
 
 /*VARARGS1*/
-int command(char *fmt, ...)
+int command(const char *fmt, ...)
 {
 	va_list ap;
 	int r;
@@ -450,7 +454,7 @@ void abortsend()
 
 #define HASHBYTES 1024
 
-void sendrequest(char *cmd, char *local, char *remote, int printnames)
+void sendrequest(const char *cmd, const char *local, const char *remote, int printnames)
 {
 	FILE *fin;
         int dout = 0;
@@ -461,7 +465,7 @@ void sendrequest(char *cmd, char *local, char *remote, int printnames)
 	register int c, d;
 	struct stat st;
 	struct timeval start, stop;
-	char *mode;
+	const char *mode;
 
 	if (verbose && printnames) {
 		if (local && *local != '-')
@@ -723,7 +727,7 @@ void abortrecv()
 }
 #endif
 
-void recvrequest(char *cmd, char *local, char *remote, char *mode,
+void recvrequest(const char *cmd, const char *local, const char *remote, const char *mode,
                 int printnames)
 {
 	FILE *fout = stdout;
@@ -1253,7 +1257,7 @@ bad:
 	return (1);
 }
 
-int dataconn(char *mode)
+int dataconn(const char *mode)
 {
    struct sockaddr_in from;
    int s, fromlen = sizeof (from);
@@ -1278,7 +1282,7 @@ int dataconn(char *mode)
 }
 
 void ptransfer(direction, bytes, t0, t1)
-	char *direction;
+	const char *direction;
 	long bytes;
 	struct timeval *t0, *t1;
 {
@@ -1432,12 +1436,12 @@ abortpt()
 #endif
 
 void proxtrans(cmd, local, remote)
-	char *cmd, *local, *remote;
+	const char *cmd, *local, *remote;
 {
 //	void (*oldintr)(int);
 	int tmptype, oldtype = 0, secndflag = 0, nfnd;
 	extern jmp_buf ptabort;
-	char *cmd2;
+	const char *cmd2;
 //	struct
 	fd_set mask;
 

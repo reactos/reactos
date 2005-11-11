@@ -40,7 +40,7 @@ private:
 #endif
 
 	void ConSetAttribute(unsigned char wAttr);
-	char *GetTerminalID();
+	const char *GetTerminalID();
 	void ConSetCursorPos(int x, int y);
 	void ResetTerminal();
 	void Init();

@@ -219,7 +219,7 @@ void TANSIParser::ConSetCursorPos(int x, int y) {
 		Console.SetCursorPosition(x, y);
 }
 
-char* TANSIParser::GetTerminalID()
+const char* TANSIParser::GetTerminalID()
 {
 	return "\033[?1;2c";
 }
@@ -479,7 +479,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		// Get Terminal ID
 		case 'c': 
 			{
-				char* szTerminalId = GetTerminalID();
+				const char* szTerminalId = GetTerminalID();
 				Network.WriteString(szTerminalId, strlen(szTerminalId));
 				break;
 			}
@@ -1005,7 +1005,7 @@ char* TANSIParser::ParseEscape(char* pszBuffer, char* pszBufferEnd) {
 		// Terminal ID Request
 		case 'Z':
 			{
-				char* szTerminalId = GetTerminalID();
+				const char* szTerminalId = GetTerminalID();
 				Network.WriteString(szTerminalId, strlen(szTerminalId));
 				break;
 			}

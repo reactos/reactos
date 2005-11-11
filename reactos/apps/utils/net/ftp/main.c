@@ -115,18 +115,18 @@ char	*stringbase;		/* current scan point in line buffer */
 char	argbuf[200];		/* argument storage buffer */
 char	*argbase;		/* current storage point in arg buffer */
 int	margc;			/* count of arguments on input line */
-char	*margv[20];		/* args parsed from input line */
+const char	*margv[20];		/* args parsed from input line */
 int     cpend;                  /* flag: if != 0, then pending server reply */
 int	mflag;			/* flag: if != 0, then active multi command */
 
 int	options;		/* used during socket creation */
 
-static char *slurpstring();
+static const char *slurpstring();
 
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
-	register char *cp;
+	const char *cp;
 	int top;
 #if 0
 	char homedir[MAXPATHLEN];
@@ -357,12 +357,12 @@ void cmdscanner(top)
 
 struct cmd *
 getcmd(name)
-	register char *name;
+	const char *name;
 {
 	extern struct cmd cmdtab[];
-	register char *p, *q;
-	register struct cmd *c, *found;
-	register int nmatches, longest;
+	const char *p, *q;
+	struct cmd *c, *found;
+	int nmatches, longest;
 
 	longest = 0;
 	nmatches = 0;
@@ -393,7 +393,7 @@ int slrflag;
 
 void makeargv()
 {
-	char **argp;
+	const char **argp;
 
 	margc = 0;
 	argp = margv;
@@ -409,7 +409,7 @@ void makeargv()
  * implemented with FSM to
  * handle quoting and strings
  */
-static char *
+static const char *
 slurpstring()
 {
 	int got_one = 0;

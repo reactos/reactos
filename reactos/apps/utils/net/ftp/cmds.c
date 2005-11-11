@@ -53,9 +53,9 @@ extern	int allbinary;
 extern off_t restart_point;
 extern char reply_string[];
 
-char *mname;
+const char *mname;
 jmp_buf jabort;
-char *dotrans(), *domap();
+const char *dotrans(), *domap();
 
 extern short portnum;
 extern char *hostname;
@@ -64,7 +64,7 @@ extern int autologin;
  * Connect to peer server and
  * auto-login, if possible.
  */
-void setpeer(int argc, char *argv[])
+void setpeer(int argc, const char *argv[])
 {
 	char *host;
 
@@ -154,8 +154,8 @@ void setpeer(int argc, char *argv[])
 }
 
 struct	types {
-	char	*t_name;
-	char	*t_mode;
+	const char	*t_name;
+	const char	*t_mode;
 	int	t_type;
 	char	*t_arg;
 } types[] = {
@@ -171,13 +171,13 @@ struct	types {
  * Set transfer type.
  */
 void settype(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	register struct types *p;
 	int comret;
 
 	if (argc > 2) {
-		char *sep;
+		const char *sep;
 
 		printf("usage: %s [", argv[0]);
 		sep = " ";
@@ -216,7 +216,7 @@ void settype(argc, argv)
 	}
 }
 
-char *stype[] = {
+const char *stype[] = {
 	"type",
 	"",
 	0
@@ -308,11 +308,11 @@ void setstruct(argc, argv)
  */
 void put(argc, argv)
 	int argc;
-	char *argv[];
+	const char *argv[];
 {
-	char *cmd;
+	const char *cmd;
 	int loc = 0;
-	char *oldargv1, *oldargv2;
+	const char *oldargv1, *oldargv2;
 
 	if (argc == 2) {
 		argc++;
@@ -374,12 +374,12 @@ usage:
  * Send multiple files.
  */
 void mput(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	register int i;
 	int ointer;
 	extern jmp_buf jabort;
-	char *tp;
+	const char *tp;
 
 	if (argc < 2) {
 		(void) strcat(line, " ");
@@ -505,13 +505,13 @@ void mput(argc, argv)
 }
 
 void reget(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	(void) getit(argc, argv, 1, "r+w");
 }
 
 void get(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	(void) getit(argc, argv, 0, restart_point ? "r+w" : "w" );
 }
@@ -520,11 +520,11 @@ void get(argc, argv)
  * Receive one file.
  */
 int getit(argc, argv, restartit, mode)
-	char *argv[];
-	char *mode;
+	const char *argv[];
+	const char *mode;
 {
 	int loc = 0;
-	char *oldargv1, *oldargv2;
+	const char *oldargv1, *oldargv2;
 
 	if (argc == 2) {
 		argc++;
@@ -565,7 +565,8 @@ usage:
 		return (0);
 	}
 	if (loc && mcase) {
-		char *tp = argv[1], *tp2, tmpbuf[MAXPATHLEN];
+		const char *tp = argv[1];
+        char *tp2, tmpbuf[MAXPATHLEN];
 
 		while (*tp && !islower(*tp)) {
 			tp++;
@@ -675,9 +676,10 @@ mabort()
  * Get multiple files.
  */
 void mget(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
-	char *cp, *tp, *tp2, tmpbuf[MAXPATHLEN];
+	const char *cp, *tp;
+    char *tp2, tmpbuf[MAXPATHLEN];
 	int ointer;
 	extern jmp_buf jabort;
 
@@ -756,7 +758,8 @@ remglob(argv,doswitch)
 	static FILE *ftemp = NULL;
 	static char **args;
 	int oldverbose, oldhash;
-	char *cp, *mode;
+	char *cp;
+    const char *mode;
 
 	if (!mflag) {
 		if (!doglob) {
@@ -808,7 +811,7 @@ remglob(argv,doswitch)
 	return (buf);
 }
 
-static char *
+static const char *
 onoff(bool)
 	int bool;
 {
@@ -1002,7 +1005,7 @@ void setdebug(argc, argv)
  * on remote machine.
  */
 void cd(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 
 	if (argc < 2) {
@@ -1034,7 +1037,7 @@ void cd(argc, argv)
  * on local machine.
  */
 void lcd(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	char buf[MAXPATHLEN];
 
@@ -1064,7 +1067,7 @@ void lcd(argc, argv)
  * Delete a single file.
  */
 void delete(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 
 	if (argc < 2) {
@@ -1089,7 +1092,7 @@ void delete(argc, argv)
  * Delete multiple files.
  */
 void mdelete(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	char *cp;
 	int ointer;
@@ -1139,7 +1142,7 @@ void mdelete(argc, argv)
  * Rename a remote file.
  */
 void renamefile(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 
 	if (argc < 2) {
@@ -1178,9 +1181,9 @@ usage:
  * of remote files.
  */
 void ls(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
-	char *cmd;
+	const char *cmd;
 
 	if (argc < 2)
 		argc++, argv[1] = NULL;
@@ -1211,9 +1214,10 @@ void ls(argc, argv)
  * of multiple remote files.
  */
 void mls(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
-	char *cmd, mode[1], *dest;
+	const char *cmd, *dest;
+	char mode[1];
 	int ointer, i;
 	extern jmp_buf jabort;
 
@@ -1395,7 +1399,7 @@ void shell(argc, argv)
  */
 void user(argc, argv)
 	int argc;
-	char **argv;
+	const char **argv;
 {
 	char acct[80], *getpass();
 	int n, aflag = 0;
@@ -1466,7 +1470,7 @@ void pwd()
  * Make a directory.
  */
 void makedir(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 
 	if (argc < 2) {
@@ -1497,7 +1501,7 @@ void makedir(argc, argv)
  * Remove a directory.
  */
 void removedir(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 
 	if (argc < 2) {
@@ -1528,7 +1532,7 @@ void removedir(argc, argv)
  * Send a line, verbatim, to the remote machine.
  */
 void quote(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	int i;
 	char buf[BUFSIZ];
@@ -1565,7 +1569,7 @@ void quote(argc, argv)
  */
 
 void site(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	int i;
 	char buf[BUFSIZ];
@@ -1597,7 +1601,7 @@ void site(argc, argv)
 }
 
 void do_chmod(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	if (argc == 2) {
 		printf("usage: %s mode file-name\n", argv[0]);
@@ -1692,7 +1696,7 @@ void disconnect()
 }
 
 int confirm(cmd, file)
-	char *cmd, *file;
+	const char *cmd, *file;
 {
 	char line[BUFSIZ];
 
@@ -1721,7 +1725,7 @@ static void fatal(msg)
  * from the expression, we return only the first.
  */
 int globulize(cpp)
-	char **cpp;
+	const char **cpp;
 {
 	char **globbed;
 
@@ -1796,7 +1800,7 @@ proxabort()
 
 void doproxy(argc,argv)
 	int argc;
-	char *argv[];
+	const char *argv[];
 {
 	register struct cmd *c;
 	struct cmd *getcmd();
@@ -1901,12 +1905,13 @@ void setntrans(argc,argv)
 	ntout[16] = '\0';
 }
 
-char *
+const char *
 dotrans(name)
-	char *name;
+	const char *name;
 {
 	static char new[MAXPATHLEN];
-	char *cp1, *cp2 = new;
+	const char *cp1;
+    char *cp2 = new;
 	register int i, ostop, found;
 
 	for (ostop = 0; *(ntout + ostop) && ostop < 16; ostop++);
@@ -1943,7 +1948,7 @@ setpassive(argc, argv)
 
 void setnmap(argc, argv)
 	int argc;
-	char *argv[];
+	const char *argv[];
 {
 	char *cp;
 
@@ -1983,13 +1988,14 @@ void setnmap(argc, argv)
 	(void) strncpy(mapout, cp, MAXPATHLEN - 1);
 }
 
-char *
+const char *
 domap(name)
-	char *name;
+	const char *name;
 {
 	static char new[MAXPATHLEN];
-	register char *cp1 = name, *cp2 = mapin;
-	char *tp[9], *te[9];
+	const char *cp1 = name;
+    char *cpn, *cp2 = mapin;
+	const char *tp[9], *te[9];
 	int i, toks[9], toknum = 0, match = 1;
 
 	for (i=0; i < 9; ++i) {
@@ -2032,33 +2038,34 @@ domap(name)
 	{
 		toks[toknum] = 0;
 	}
-	cp1 = new;
-	*cp1 = '\0';
+
+	cpn = new;
+	*cpn = '\0';
 	cp2 = mapout;
 	while (*cp2) {
 		match = 0;
 		switch (*cp2) {
 			case '\\':
 				if (*(cp2 + 1)) {
-					*cp1++ = *++cp2;
+					*cpn++ = *++cp2;
 				}
 				break;
 			case '[':
 LOOP:
 				if (*++cp2 == '$' && isdigit(*(cp2+1))) {
 					if (*++cp2 == '0') {
-						char *cp3 = name;
+						const char *cp3 = name;
 
 						while (*cp3) {
-							*cp1++ = *cp3++;
+							*cpn++ = *cp3++;
 						}
 						match = 1;
 					}
 					else if (toks[toknum = *cp2 - '1']) {
-						char *cp3 = tp[toknum];
+						const char *cp3 = tp[toknum];
 
 						while (cp3 != te[toknum]) {
-							*cp1++ = *cp3++;
+							*cpn++ = *cp3++;
 						}
 						match = 1;
 					}
@@ -2072,24 +2079,24 @@ LOOP:
 						else if (*cp2 == '$' &&
    						        isdigit(*(cp2+1))) {
 							if (*++cp2 == '0') {
-							   char *cp3 = name;
+							   const char *cp3 = name;
 
 							   while (*cp3) {
-								*cp1++ = *cp3++;
+								*cpn++ = *cp3++;
 							   }
 							}
 							else if (toks[toknum =
 							    *cp2 - '1']) {
-							   char *cp3=tp[toknum];
+							   const char *cp3=tp[toknum];
 
 							   while (cp3 !=
 								  te[toknum]) {
-								*cp1++ = *cp3++;
+								*cpn++ = *cp3++;
 							   }
 							}
 						}
 						else if (*cp2) {
-							*cp1++ = *cp2++;
+							*cpn++ = *cp2++;
 						}
 					}
 					if (!*cp2) {
@@ -2126,29 +2133,29 @@ LOOP:
 			case '$':
 				if (isdigit(*(cp2 + 1))) {
 					if (*++cp2 == '0') {
-						char *cp3 = name;
+						const char *cp3 = name;
 
 						while (*cp3) {
-							*cp1++ = *cp3++;
+							*cpn++ = *cp3++;
 						}
 					}
 					else if (toks[toknum = *cp2 - '1']) {
-						char *cp3 = tp[toknum];
+						const char *cp3 = tp[toknum];
 
 						while (cp3 != te[toknum]) {
-							*cp1++ = *cp3++;
+							*cpn++ = *cp3++;
 						}
 					}
 					break;
 				}
 				/* intentional drop through */
 			default:
-				*cp1++ = *cp2;
+				*cpn++ = *cp2;
 				break;
 		}
 		cp2++;
 	}
-	*cp1 = '\0';
+	*cpn = '\0';
 	if (!*new) {
 		return(name);
 	}
@@ -2207,7 +2214,7 @@ void syst()
 
 void macdef(argc, argv)
 	int argc;
-	char *argv[];
+	const char *argv[];
 {
 	char *tmp;
 	int c;
@@ -2283,7 +2290,7 @@ void macdef(argc, argv)
  * get size of file on remote machine
  */
 void sizecmd(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 
 	if (argc < 2) {
@@ -2308,7 +2315,7 @@ void sizecmd(argc, argv)
  * get last modification time of file on remote machine
  */
 void modtime(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	int overbose;
 
@@ -2347,7 +2354,7 @@ void modtime(argc, argv)
  * show status on reomte machine
  */
 void rmtstatus(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	(void) command(argc > 1 ? "STAT %s" : "STAT" , argv[1]);
 }
@@ -2356,7 +2363,7 @@ void rmtstatus(argc, argv)
  * get file if modtime is more recent than current file
  */
 void newer(argc, argv)
-	char *argv[];
+	const char *argv[];
 {
 	if (getit(argc, argv, -1, "w")) {
 		printf("Local file \"%s\" is newer than remote file \"%s\"\n",

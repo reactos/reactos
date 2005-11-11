@@ -1,6 +1,6 @@
 /* getopt.h */
 
-extern char *optarg;
+extern const char *optarg;
 extern int optind;
 
 int

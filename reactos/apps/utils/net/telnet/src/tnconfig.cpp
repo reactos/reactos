@@ -186,8 +186,8 @@ enum {
 };
 
 struct ini_variable {
-	char *name;				// variable name
-	char *section;			// name of ini file section the variable is in
+	const char *name;				// variable name
+	const char *section;			// name of ini file section the variable is in
 	enum ini_data_type data_type;		// type of data
 	void *ini_data;			// pointer to data
 	int  max_size;			// max size if string

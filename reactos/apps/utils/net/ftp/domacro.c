@@ -30,10 +30,11 @@ static char sccsid[] = "@(#)domacro.c	1.6 (Berkeley) 2/28/89";
 
 void domacro(argc, argv)
 	int argc;
-	char *argv[];
+	const char *argv[];
 {
-	register int i, j;
-	register char *cp1, *cp2;
+	int i, j;
+	const char *cp1;
+    char *cp2;
 	int count = 2, loopflg = 0;
 	char line2[200];
 	struct cmd *getcmd(), *c;

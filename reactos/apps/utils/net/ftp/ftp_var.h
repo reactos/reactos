@@ -130,7 +130,7 @@ extern char	*stringbase;		/* current scan point in line buffer */
 extern char	argbuf[200];		/* argument storage buffer */
 extern char	*argbase;		/* current storage point in arg buffer */
 extern int	margc;			/* count of arguments on input line */
-extern char	*margv[20];		/* args parsed from input line */
+extern const char	*margv[20];		/* args parsed from input line */
 extern int     cpend;                  /* flag: if != 0, then pending server reply */
 extern int	mflag;			/* flag: if != 0, then active multi command */
 
@@ -140,8 +140,8 @@ extern int	options;		/* used during socket creation */
  * Format of command table.
  */
 struct cmd {
-	char	*c_name;	/* name of command */
-	char	*c_help;	/* help string */
+	const char	*c_name;	/* name of command */
+	const char	*c_help;	/* help string */
 	char	c_bell;		/* give bell when command completes */
 	char	c_conn;		/* must be connected to use command */
 	char	c_proxy;	/* proxy server may execute */
