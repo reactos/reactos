@@ -22,43 +22,47 @@
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "&Fil" {
-  MENUITEM "&Ny...",            CMD_NEW
-  MENUITEM "Å&bn\tEnter",       CMD_OPEN
-  MENUITEM "&Gem",              CMD_SAVE
-  MENUITEM "Gem so&m...",       CMD_SAVE_AS
-  MENUITEM "Side&opsætning...", CMD_PAGE_SETUP
-  MENUITEM "&Udskriv",          CMD_PRINT
-  MENUITEM "&Indstil printer...",       CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "&Afslut",           CMD_EXIT
- }
-POPUP "&Rediger" {
-  MENUITEM "&Fortryd\tCtrl+Z",  CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "&Klip\tCtrl+X",     CMD_CUT
-  MENUITEM "K&opier\tCtrl+C",   CMD_COPY
-  MENUITEM "Sæt &ind\tCtrl+V",  CMD_PASTE
-  MENUITEM "&Slet\tDel",        CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "Marker &alt",       CMD_SELECT_ALL
-  MENUITEM "&Dato/tid\tF5",     CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "Automatisk &linjeskift",    CMD_WRAP
- }
-POPUP "&Søg" {
-  MENUITEM "&Søg...",           CMD_SEARCH
-  MENUITEM "&Find næste\tF3",   CMD_SEARCH_NEXT
- }
-POPUP "&Hjælp" {
-  MENUITEM "&Indhold",          CMD_HELP_CONTENTS
-  MENUITEM "&Søg efter hjælp om...",    CMD_HELP_SEARCH
-  MENUITEM "&Brug af Hjælp",    CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "&Om Notesblok",         CMD_ABOUT_WINE
- }
-}
+BEGIN
+	POPUP "&Fil"
+	BEGIN
+		MENUITEM "&Ny...",            CMD_NEW
+		MENUITEM "Å&bn\tEnter",       CMD_OPEN
+		MENUITEM "&Gem",              CMD_SAVE
+		MENUITEM "Gem so&m...",       CMD_SAVE_AS
+		MENUITEM "Side&opsætning...", CMD_PAGE_SETUP
+		MENUITEM "&Udskriv",          CMD_PRINT
+		MENUITEM "&Indstil printer...",       CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "&Afslut",           CMD_EXIT
+	END
+	POPUP "&Rediger"
+	BEGIN
+		MENUITEM "&Fortryd\tCtrl+Z",  CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "&Klip\tCtrl+X",     CMD_CUT
+		MENUITEM "K&opier\tCtrl+C",   CMD_COPY
+		MENUITEM "Sæt &ind\tCtrl+V",  CMD_PASTE
+		MENUITEM "&Slet\tDel",        CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "Marker &alt",       CMD_SELECT_ALL
+		MENUITEM "&Dato/tid\tF5",     CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "Automatisk &linjeskift",    CMD_WRAP
+	END
+	POPUP "&Søg"
+	BEGIN
+		MENUITEM "&Søg...",           CMD_SEARCH
+		MENUITEM "&Find næste\tF3",   CMD_SEARCH_NEXT
+	END
+	POPUP "&Hjælp"
+	BEGIN
+		MENUITEM "&Indhold",          CMD_HELP_CONTENTS
+		MENUITEM "&Søg efter hjælp om...",    CMD_HELP_SEARCH
+		MENUITEM "&Brug af Hjælp",    CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&Om Notesblok",         CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 

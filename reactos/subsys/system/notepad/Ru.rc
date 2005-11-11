@@ -17,45 +17,49 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-MAIN_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-{
- POPUP "&Файл" {
-  MENUITEM "Созд&ать",           CMD_NEW
-  MENUITEM "&Открыть...",             CMD_OPEN
-  MENUITEM "&Сохранить",             CMD_SAVE
-  MENUITEM "Сохранить &как...",       CMD_SAVE_AS
-  MENUITEM SEPARATOR
-  MENUITEM "Пара&метры страницы...",    CMD_PAGE_SETUP
-  MENUITEM "&Настройка принтера...", CMD_PRINTER_SETUP
-  MENUITEM "&Печатать",            CMD_PRINT
-  MENUITEM SEPARATOR
-  MENUITEM "В&ыход",             CMD_EXIT
- }
-POPUP "&Правка" {
-  MENUITEM "&Отменить\tCtrl+Z",     CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "&Вырезать\tCtrl+X",      CMD_CUT
-  MENUITEM "&Копировать\tCtrl+C",     CMD_COPY
-  MENUITEM "Вст&авить\tCtrl+V",    CMD_PASTE
-  MENUITEM "&Удалить\tDel",      CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "&Найти",           CMD_SEARCH
-  MENUITEM "Найти &далее\tF3",  CMD_SEARCH_NEXT
-  MENUITEM SEPARATOR
-  MENUITEM "Выделить в&се",       CMD_SELECT_ALL
-  MENUITEM "Врем&я и дата\tF5",    CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "&Перенос по словам",  CMD_WRAP
- }
-POPUP "&Справка" {
-  MENUITEM "&Содержание",         CMD_HELP_CONTENTS
-  MENUITEM "&Поиск...",        CMD_HELP_SEARCH
-  MENUITEM "&Использование справки",     CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "&Сведения...",      CMD_ABOUT_WINE
- }
-}
+MAIN_MENU MENU 
+BEGIN
+	POPUP "&Файл" 
+	BEGIN
+		MENUITEM "Созд&ать",           CMD_NEW
+		MENUITEM "&Открыть...",             CMD_OPEN
+		MENUITEM "&Сохранить",             CMD_SAVE
+		MENUITEM "Сохранить &как...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "Пара&метры страницы...",    CMD_PAGE_SETUP
+		MENUITEM "&Настройка принтера...", CMD_PRINTER_SETUP
+		MENUITEM "&Печатать",            CMD_PRINT
+		MENUITEM SEPARATOR
+		MENUITEM "В&ыход",             CMD_EXIT
+	END
+	POPUP "&Правка"
+	BEGIN
+		MENUITEM "&Отменить\tCtrl+Z",     CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "&Вырезать\tCtrl+X",      CMD_CUT
+		MENUITEM "&Копировать\tCtrl+C",     CMD_COPY
+		MENUITEM "Вст&авить\tCtrl+V",    CMD_PASTE
+		MENUITEM "&Удалить\tDel",      CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "&Найти",           CMD_SEARCH
+		MENUITEM "Найти &далее\tF3",  CMD_SEARCH_NEXT
+		MENUITEM SEPARATOR
+		MENUITEM "Выделить в&се",       CMD_SELECT_ALL
+		MENUITEM "Врем&я и дата\tF5",    CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "&Перенос по словам",  CMD_WRAP
+	END
+	POPUP "&Справка" 
+	BEGIN
+		MENUITEM "&Содержание",         CMD_HELP_CONTENTS
+		MENUITEM "&Поиск...",        CMD_HELP_SEARCH
+		MENUITEM "&Использование справки",     CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&Сведения...",      CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 
@@ -85,7 +89,7 @@ PUSHBUTTON    "Отмена",     0x152,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Справка",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
-STRINGTABLE DISCARDABLE LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE 
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Страница &s"   /* FIXME */

@@ -22,42 +22,45 @@
 LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "&Tiedosto" {
-  MENUITEM "&Uusi...",		CMD_NEW
-  MENUITEM "&Avaa",		CMD_OPEN
-  MENUITEM "Ta&lleta",		CMD_SAVE
-  MENUITEM "Talleta &nimellä...",	CMD_SAVE_AS
-  MENUITEM "T&ulosta",		CMD_PRINT
-  MENUITEM "&Sivun asetukset...",	CMD_PAGE_SETUP
-  MENUITEM "&Kirjoittimen asetukset...",	CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "&Poistu",		CMD_EXIT
- }
-POPUP "&Muokkaa" {
-  MENUITEM "&Palauta\tCtrl+Z",	CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "&Leikkaa\tCtrl+X",	CMD_CUT
-  MENUITEM "&Kopioi\tCtrl+C",	CMD_COPY
-  MENUITEM "L&iitä\tCtrl+V",	CMD_PASTE
-  MENUITEM "P&oista\tDel",	CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "Etsi...",		CMD_SEARCH
-  MENUITEM "Etsi &seuraava\tF3",	CMD_SEARCH_NEXT
-  MENUITEM SEPARATOR
-  MENUITEM "&Valitse kaikki",	CMD_SELECT_ALL
-  MENUITEM "&Aika/Päivämäärä\tF5",	CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "Ka&tkaise pitkä rivi",	CMD_WRAP
- }
-POPUP "&Apua" {
-  MENUITEM "&Sisältö",		CMD_HELP_CONTENTS
-  MENUITEM "&Etsi...",		CMD_HELP_SEARCH
-  MENUITEM "Apua &Opastuksesta",	CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "Inf&o...",	CMD_ABOUT_WINE
- }
-}
+BEGIN
+	POPUP "&Tiedosto" 
+	BEGIN
+		MENUITEM "&Uusi...",		CMD_NEW
+		MENUITEM "&Avaa",		CMD_OPEN
+		MENUITEM "Ta&lleta",		CMD_SAVE
+		MENUITEM "Talleta &nimellä...",	CMD_SAVE_AS
+		MENUITEM "T&ulosta",		CMD_PRINT
+		MENUITEM "&Sivun asetukset...",	CMD_PAGE_SETUP
+		MENUITEM "&Kirjoittimen asetukset...",	CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "&Poistu",		CMD_EXIT
+	END
+	POPUP "&Muokkaa" 
+	BEGIN
+		MENUITEM "&Palauta\tCtrl+Z",	CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "&Leikkaa\tCtrl+X",	CMD_CUT
+		MENUITEM "&Kopioi\tCtrl+C",	CMD_COPY
+		MENUITEM "L&iitä\tCtrl+V",	CMD_PASTE
+		MENUITEM "P&oista\tDel",	CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "Etsi...",		CMD_SEARCH
+		MENUITEM "Etsi &seuraava\tF3",	CMD_SEARCH_NEXT
+		MENUITEM SEPARATOR
+		MENUITEM "&Valitse kaikki",	CMD_SELECT_ALL
+		MENUITEM "&Aika/Päivämäärä\tF5",	CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "Ka&tkaise pitkä rivi",	CMD_WRAP
+	END
+	POPUP "&Apua" 
+	BEGIN
+		MENUITEM "&Sisältö",		CMD_HELP_CONTENTS
+		MENUITEM "&Etsi...",		CMD_HELP_SEARCH
+		MENUITEM "Apua &Opastuksesta",	CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "Inf&o...",	CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 

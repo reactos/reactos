@@ -25,44 +25,47 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "&File" {
-  MENUITEM "&Nuovo",           CMD_NEW
-  MENUITEM "&Apri...\tCtrl+O",     CMD_OPEN
-  MENUITEM "&Salva\tCtrl+S",     CMD_SAVE
-  MENUITEM "Salva &con nome...",       CMD_SAVE_AS
-  MENUITEM SEPARATOR
-  MENUITEM "&Stampa",            CMD_PRINT
-  MENUITEM "&Imposta pagina...",    CMD_PAGE_SETUP
-  MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "E&sci",             CMD_EXIT
- }
-POPUP "&Modifica" {
-  MENUITEM "&Anulla\tCtrl+Z",     CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "&Taglia\tCtrl+X",      CMD_CUT
-  MENUITEM "&Copia\tCtrl+C",     CMD_COPY
-  MENUITEM "&Incolla\tCtrl+V",    CMD_PASTE
-  MENUITEM "&Elimina\tDel",      CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "&Trova\tCtrl+F",   CMD_SEARCH
-  MENUITEM "&Trova successivo\tF3",  CMD_SEARCH_NEXT
-  MENUITEM SEPARATOR
-  MENUITEM "Seleziona &tutto\tCtrl+A",       CMD_SELECT_ALL
-  MENUITEM "&Ora/Data\tF5",    CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "&A campo automatico",  CMD_WRAP
-  MENUITEM "&Imposta carattere...",          CMD_FONT
- }
-POPUP "&Aiuto" {
-  MENUITEM "&Contenuti",         CMD_HELP_CONTENTS
-  MENUITEM "&Trova...",        CMD_HELP_SEARCH
-  MENUITEM "&Aiuto sulla Guida",     CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "Inf&o...",      CMD_ABOUT_WINE
- }
-}
+BEGIN
+	POPUP "&File" 
+	BEGIN
+		MENUITEM "&Nuovo",           CMD_NEW
+		MENUITEM "&Apri...\tCtrl+O",     CMD_OPEN
+		MENUITEM "&Salva\tCtrl+S",     CMD_SAVE
+		MENUITEM "Salva &con nome...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "&Stampa",            CMD_PRINT
+		MENUITEM "&Imposta pagina...",    CMD_PAGE_SETUP
+		MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "E&sci",             CMD_EXIT
+	END
+	POPUP "&Modifica" 
+	BEGIN
+		MENUITEM "&Anulla\tCtrl+Z",     CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "&Taglia\tCtrl+X",      CMD_CUT
+		MENUITEM "&Copia\tCtrl+C",     CMD_COPY
+		MENUITEM "&Incolla\tCtrl+V",    CMD_PASTE
+		MENUITEM "&Elimina\tDel",      CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "&Trova\tCtrl+F",   CMD_SEARCH
+		MENUITEM "&Trova successivo\tF3",  CMD_SEARCH_NEXT
+		MENUITEM SEPARATOR
+		MENUITEM "Seleziona &tutto\tCtrl+A",       CMD_SELECT_ALL
+		MENUITEM "&Ora/Data\tF5",    CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "&A campo automatico",  CMD_WRAP
+		MENUITEM "&Imposta carattere...",          CMD_FONT
+	END
+	POPUP "&Aiuto" 
+	BEGIN
+		MENUITEM "&Contenuti",         CMD_HELP_CONTENTS
+		MENUITEM "&Trova...",        CMD_HELP_SEARCH
+		MENUITEM "&Aiuto sulla Guida",     CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "Inf&o...",      CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 

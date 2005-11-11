@@ -21,44 +21,47 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "แฟ้ม" {
-  MENUITEM "สร้างใหม่...",        CMD_NEW
-  MENUITEM "เปิด...\tCtrl+O",   CMD_OPEN
-  MENUITEM "บันทืก\tCtrl+S",     CMD_SAVE
-  MENUITEM "บันทืกเป็น...",       CMD_SAVE_AS
-  MENUITEM SEPARATOR
-  MENUITEM "พิมพ์",            CMD_PRINT
-  MENUITEM "ปรับแต่งหน้า...",    CMD_PAGE_SETUP
-  MENUITEM "ปรับแต่งเครื่องพิมพ์...", CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "ออก",             CMD_EXIT
- }
- POPUP "แก้ไข" {
-  MENUITEM "เรียกคืน\tCtrl+Z",     CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "ตัด\tCtrl+X",      CMD_CUT
-  MENUITEM "ตัดลอก\tCtrl+C",     CMD_COPY
-  MENUITEM "วาง\tCtrl+V",    CMD_PASTE
-  MENUITEM "ลบ\tDel",      CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "ค้นหา\tCtrl+F",   CMD_SEARCH
-  MENUITEM "ค้นหาต่อไป\tF3",  CMD_SEARCH_NEXT
-  MENUITEM SEPARATOR
-  MENUITEM "เลือกทั้งหมด\tCtrl+A",       CMD_SELECT_ALL
-  MENUITEM "วันที่/\tF5",    CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "ห่อบรรทัดยาว",  CMD_WRAP
-  MENUITEM "รูปแบบดัวอักษร...",          CMD_FONT
- }
- POPUP "ช่วยเหลีอ" {
-  MENUITEM "เนื้อหา",         CMD_HELP_CONTENTS
-  MENUITEM "ค้นหา...",        CMD_HELP_SEARCH
-  MENUITEM "เกี่ยวกับช่วยเหลีอ",     CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "รายละเอียด...", CMD_ABOUT_WINE
- }
-}
+BEGIN
+	POPUP "แฟ้ม"
+	BEGIN
+		MENUITEM "สร้างใหม่...",        CMD_NEW
+		MENUITEM "เปิด...\tCtrl+O",   CMD_OPEN
+		MENUITEM "บันทืก\tCtrl+S",     CMD_SAVE
+		MENUITEM "บันทืกเป็น...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "พิมพ์",            CMD_PRINT
+		MENUITEM "ปรับแต่งหน้า...",    CMD_PAGE_SETUP
+		MENUITEM "ปรับแต่งเครื่องพิมพ์...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "ออก",             CMD_EXIT
+    END
+	POPUP "แก้ไข" 
+	BEGIN
+		MENUITEM "เรียกคืน\tCtrl+Z",     CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "ตัด\tCtrl+X",      CMD_CUT
+		MENUITEM "ตัดลอก\tCtrl+C",     CMD_COPY
+		MENUITEM "วาง\tCtrl+V",    CMD_PASTE
+		MENUITEM "ลบ\tDel",      CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "ค้นหา\tCtrl+F",   CMD_SEARCH
+		MENUITEM "ค้นหาต่อไป\tF3",  CMD_SEARCH_NEXT
+		MENUITEM SEPARATOR
+		MENUITEM "เลือกทั้งหมด\tCtrl+A",       CMD_SELECT_ALL
+		MENUITEM "วันที่/\tF5",    CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "ห่อบรรทัดยาว",  CMD_WRAP
+		MENUITEM "รูปแบบดัวอักษร...",          CMD_FONT
+	END
+	POPUP "ช่วยเหลีอ"
+	BEGIN
+		MENUITEM "เนื้อหา",         CMD_HELP_CONTENTS
+		MENUITEM "ค้นหา...",        CMD_HELP_SEARCH
+		MENUITEM "เกี่ยวกับช่วยเหลีอ",     CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "รายละเอียด...", CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 

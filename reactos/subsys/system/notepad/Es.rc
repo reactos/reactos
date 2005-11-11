@@ -25,44 +25,47 @@
 LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "&Archivo" {
-  MENUITEM "&Nuevo...",                   CMD_NEW
-  MENUITEM "&Abrir\tCtrl+O",              CMD_OPEN
-  MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
-  MENUITEM "Guardar &como...",            CMD_SAVE_AS
-  MENUITEM SEPARATOR
-  MENUITEM "&Imprimir",                   CMD_PRINT
-  MENUITEM "Configurar &página...",       CMD_PAGE_SETUP
-  MENUITEM "Configuración &impresora...", CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "&Salir",                      CMD_EXIT
- }
-POPUP "&Editar" {
-  MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "Cor&tar\tCtrl+X",           CMD_CUT
-  MENUITEM "&Copiar\tCtrl+C",           CMD_COPY
-  MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
-  MENUITEM "&Borrar\tDel",              CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
-  MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
-  MENUITEM SEPARATOR
-  MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
-  MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "&Ajuste de línea",          CMD_WRAP
-  MENUITEM "Tipo de &letra...",         CMD_FONT
- }
-POPUP "A&yuda" {
-  MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
-  MENUITEM "&Buscar...",            CMD_HELP_SEARCH
-  MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "&Información...",      CMD_ABOUT_WINE
- }
-}
+BEGIN
+	POPUP "&Archivo"
+	BEGIN
+		MENUITEM "&Nuevo...",                   CMD_NEW
+		MENUITEM "&Abrir\tCtrl+O",              CMD_OPEN
+		MENUITEM "&Guardar\tCtrl+S",            CMD_SAVE
+		MENUITEM "Guardar &como...",            CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "&Imprimir",                   CMD_PRINT
+		MENUITEM "Configurar &página...",       CMD_PAGE_SETUP
+		MENUITEM "Configuración &impresora...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "&Salir",                      CMD_EXIT
+	END
+	POPUP "&Editar" 
+	BEGIN
+		MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "Cor&tar\tCtrl+X",           CMD_CUT
+		MENUITEM "&Copiar\tCtrl+C",           CMD_COPY
+		MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
+		MENUITEM "&Borrar\tDel",              CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
+		MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
+		MENUITEM SEPARATOR
+		MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
+		MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "&Ajuste de línea",          CMD_WRAP
+		MENUITEM "Tipo de &letra...",         CMD_FONT
+	END
+	POPUP "A&yuda" 
+	BEGIN
+		MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
+		MENUITEM "&Buscar...",            CMD_HELP_SEARCH
+		MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&Información...",      CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 

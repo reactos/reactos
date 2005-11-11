@@ -21,43 +21,46 @@
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
-{
- POPUP "&Datoteka" {
-  MENUITEM "&Nova",           CMD_NEW
-  MENUITEM "&Odpri ...",             CMD_OPEN
-  MENUITEM "&Shrani",             CMD_SAVE
-  MENUITEM "Shrani &kot ...",       CMD_SAVE_AS
-  MENUITEM SEPARATOR
-  MENUITEM "Na&tisni",            CMD_PRINT
-  MENUITEM "P&riprava strani ...",    CMD_PAGE_SETUP
-  MENUITEM "&Tiskalnik ...", CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "Iz&hod",             CMD_EXIT
- }
-POPUP "&Urejanje" {
-  MENUITEM "&Razveljavi\tCtrl+Z",     CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "&Izreži\tCtrl+X",      CMD_CUT
-  MENUITEM "&Kopiraj\tCtrl+C",     CMD_COPY
-  MENUITEM "&Prilepi\tCtrl+V",    CMD_PASTE
-  MENUITEM "Izbri&ši\tDel",      CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "&Najdi ...",           CMD_SEARCH
-  MENUITEM "Na&daljuj iskanje\tF3",  CMD_SEARCH_NEXT
-  MENUITEM SEPARATOR
-  MENUITEM "Izberi &vse",       CMD_SELECT_ALL
-  MENUITEM "Èas/&Datum\tF5",    CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "Pr&elom vrstice",  CMD_WRAP
- }
-POPUP "&Pomoè" {
-  MENUITEM "&Teme pomoèi",         CMD_HELP_CONTENTS
-  MENUITEM "&Najdi ...",        CMD_HELP_SEARCH
-  MENUITEM "&O pomoèi",     CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-  MENUITEM "Inf&ormacije ...",      CMD_ABOUT_WINE
- }
-}
+BEGIN
+	POPUP "&Datoteka" 
+	BEGIN
+		MENUITEM "&Nova",           CMD_NEW
+		MENUITEM "&Odpri ...",             CMD_OPEN
+		MENUITEM "&Shrani",             CMD_SAVE
+		MENUITEM "Shrani &kot ...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "Na&tisni",            CMD_PRINT
+		MENUITEM "P&riprava strani ...",    CMD_PAGE_SETUP
+		MENUITEM "&Tiskalnik ...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "Iz&hod",             CMD_EXIT
+	END
+	POPUP "&Urejanje"
+	BEGIN
+		MENUITEM "&Razveljavi\tCtrl+Z",     CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "&Izreži\tCtrl+X",      CMD_CUT
+		MENUITEM "&Kopiraj\tCtrl+C",     CMD_COPY
+		MENUITEM "&Prilepi\tCtrl+V",    CMD_PASTE
+		MENUITEM "Izbri&ši\tDel",      CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "&Najdi ...",           CMD_SEARCH
+		MENUITEM "Na&daljuj iskanje\tF3",  CMD_SEARCH_NEXT
+		MENUITEM SEPARATOR
+		MENUITEM "Izberi &vse",       CMD_SELECT_ALL
+		MENUITEM "Èas/&Datum\tF5",    CMD_TIME_DATE
+		MENUITEM SEPARATOR
+		MENUITEM "Pr&elom vrstice",  CMD_WRAP
+ END
+	POPUP "&Pomoè"
+	BEGIN
+		MENUITEM "&Teme pomoèi",         CMD_HELP_CONTENTS
+		MENUITEM "&Najdi ...",        CMD_HELP_SEARCH
+		MENUITEM "&O pomoèi",     CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "Inf&ormacije ...",      CMD_ABOUT_WINE
+	END
+END
 
 /* Dialog `Page setup' */
 
