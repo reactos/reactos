@@ -279,6 +279,9 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem); 
     This->DirectDrawGlobal.ddCaps.dwVidMemFree = mem.dwFree;
     This->DirectDrawGlobal.ddCaps.dwVidMemTotal = mem.dwTotal;
+
+	BOOL dummy = TRUE;
+	DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
     
     /* Now all setup for HAL is done */
     return DD_OK;
