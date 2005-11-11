@@ -3310,6 +3310,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
   SetTextXY(8, 12, "Install bootloader on the harddisk (MBR).");
   SetTextXY(8, 13, "Install bootloader on a floppy disk.");
+  SetTextXY(8, 14, "Skip install bootloader.");
   InvertTextXY (8, Line, 48, 1);
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -3322,28 +3323,25 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
 	  NormalTextXY (8, Line, 48, 1);
-	  if (Line == 12)
-	    Line = 13;
-	  else if (Line == 13)
-	    Line = 12;
-#if 0
-	  else
-	    Line++;
-#endif
+	  
+	  Line++;
+      if (Line<12) Line=14;
+      if (Line>14) Line=12;
+      	 
+       
+
 	  InvertTextXY (8, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
 	  NormalTextXY (8, Line, 48, 1);
-	  if (Line == 12)
-	    Line = 13;
-	  else if (Line == 13)
-	    Line = 12;
-#if 0
-	  else
-	    Line--;
-#endif
+	  
+	  Line--;
+      if (Line<12) Line=14;
+      if (Line>14) Line=12;
+
+
 	  InvertTextXY (8, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -3362,6 +3360,10 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  else if (Line == 13)
 	    {
 	      return BOOT_LOADER_FLOPPY_PAGE;
+	    }
+      else if (Line == 14)
+	    {
+	       return SUCCESS_PAGE;;
 	    }
 
 	  return BOOT_LOADER_PAGE;
