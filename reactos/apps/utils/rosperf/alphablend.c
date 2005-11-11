@@ -60,7 +60,7 @@ AlphaBlendCleanup(void *Context, PPERF_INFO PerfInfo)
 
 ULONG
 DbgPrint(
-  IN PCH  Format,
+  IN PCSTR  Format,
   IN ...);
 
 void
