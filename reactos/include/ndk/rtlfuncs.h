@@ -1315,6 +1315,14 @@ RtlQueryAtomInAtomTable(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlPinAtomInAtomTable(
+    IN PRTL_ATOM_TABLE AtomTable,
+    IN RTL_ATOM Atom
+);  	
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlLookupAtomInAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN PWSTR AtomName,
