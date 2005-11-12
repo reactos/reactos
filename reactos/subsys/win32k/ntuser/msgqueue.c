@@ -1805,6 +1805,8 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->message = Timer->Msg;
    Msg->wParam = (WPARAM) Timer->IDEvent;
    Msg->lParam = (LPARAM) Timer->TimerFunc;
+   IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
+                        &Msg->pt);
 
    if (Restart)
    {
