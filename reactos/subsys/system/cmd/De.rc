@@ -1,3 +1,4 @@
+#include "windows.h"
 #include "resource.h"
 /*
  *  German language file by Klemens Friedl <frik85> 2005-06-03

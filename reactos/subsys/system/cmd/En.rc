@@ -1,3 +1,4 @@
+#include "windows.h"
 #include "resource.h"
 /*
  * Moved all hardcoded strings to En.rc.

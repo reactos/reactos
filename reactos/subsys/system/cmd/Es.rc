@@ -1,3 +1,4 @@
+#include "windows.h"
 #include "resource.h"
 /*
  * Spanish resource file by HUMA2000
