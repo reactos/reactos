@@ -317,7 +317,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       if (L'\\' == RemainingPath.Buffer[i])
         {
-          DPRINT1("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
+          DPRINT("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
 
           PostCreateKeyInfo.Object = NULL;
           PostCreateKeyInfo.Status = STATUS_OBJECT_NAME_NOT_FOUND;
