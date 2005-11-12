@@ -45,7 +45,7 @@ MIDIERR_STILLPLAYING, 		"Nie mo¿na wykonaæ tej operacji w czasie, gdy dane multi
 MIDIERR_NOMAP, 			"Nie mo¿na odnaleŸæ mapowanie urz¹dzenia MIDI. Mo¿e to byæ spowodowane problemem ze sterownikiem albo brakiem lub uszkodzeniem pliku MIDIMAP.CFG."
 MIDIERR_NOTREADY, 		"Port przesy³a dane do urz¹dzenia. Poczekaj, a¿ dane zostan¹ przes³ane i spróbuj ponownie."
 MIDIERR_NODEVICE, 		"Bie¿¹ce ustawienia mapowania MIDI odwo³uj¹ siê do urz¹dzenia MIDI, które nie jest zainstalowane w systemie. U¿yj Mapowania MIDI do edycji ustawieñ."
-MIDIERR_INVALIDSETUP, 		"Bie¿¹ce ustawienia MIDI s¹ uszkodzone. Skopiuj oryginalny plik MIDIMAP.CFG do katalogu Windows SYSTEM, a nastêpnie spróbuj ponownie."
+MIDIERR_INVALIDSETUP, 		"Bie¿¹ce ustawienia MIDI s¹ uszkodzone. Skopiuj oryginalny plik MIDIMAP.CFG do katalogu ReactOS SYSTEM, a nastêpnie spróbuj ponownie."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Nieprawid³owy identyfikator urz¹dzenia MCI. U¿yj identyfikatora zwróconego podczas otwierania urz¹dzenia MCI."
@@ -66,7 +66,7 @@ MCIERR_MISSING_PARAMETER, 	"Okreœlone polecenie wymaga parametru. Podaj ten para
 MCIERR_UNSUPPORTED_FUNCTION, 	"U¿ywane urz¹dzenie MCI nie obs³uguje okreœlonego polecenia."
 MCIERR_FILE_NOT_FOUND, 		"Nie mo¿na znaleŸæ okreœlonego pliku. SprawdŸ, czy œcie¿ka i nazwa pliku s¹ poprawne."
 MCIERR_DEVICE_NOT_READY, 	"Sterownik urz¹dzenia nie jest gotowy."
-MCIERR_INTERNAL, 		"Wyst¹pi³ problem podczas inicjowania MCI. Spróbuj uruchomiæ ponownie Windows."
+MCIERR_INTERNAL, 		"Wyst¹pi³ problem podczas inicjowania MCI. Spróbuj uruchomiæ ponownie ReactOS."
 MCIERR_DRIVER, 			"Wyst¹pi³ problem ze steronikiem tego urz¹dzenia. Sterownik zosta³ zamkniêty. Nie ma dostêpu do informacji o b³êdach."
 MCIERR_CANNOT_USE_ALL, 		"W okreœlonym poleceniu nie mo¿na u¿yæ parametru 'all' jako nazwy urz¹dzenia."
 MCIERR_MULTIPLE, 		"Wyst¹pi³ b³¹d w wiêcej ni¿ jednym urz¹dzeniu. Okreœl ka¿de polecenie i urz¹dzenie oddzielnie, aby ustaliæ, które urz¹dzenie spowodowa³o b³êdy."

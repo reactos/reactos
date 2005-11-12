@@ -45,7 +45,7 @@ MIDIERR_STILLPLAYING, 		"Cannot perform this operation while media data is still
 MIDIERR_NOMAP, 			"A MIDI map was not found. There may be a problem with the driver, or the MIDIMAP.CFG file may be corrupt or missing."
 MIDIERR_NOTREADY, 		"The port is transmitting data to the device. Wait until the data has been transmitted, and then try again."
 MIDIERR_NODEVICE, 		"The current MIDI Mapper setup refers to a MIDI device that is not installed on the system. Use MIDI Mapper to edit the setup."
-MIDIERR_INVALIDSETUP, 		"The current MIDI setup is damaged. Copy the original MIDIMAP.CFG file to the Windows SYSTEM directory, and then try again."
+MIDIERR_INVALIDSETUP, 		"The current MIDI setup is damaged. Copy the original MIDIMAP.CFG file to the ReactOS SYSTEM directory, and then try again."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Invalid MCI device ID. Use the ID returned when opening the MCI device."
@@ -66,7 +66,7 @@ MCIERR_MISSING_PARAMETER, 	"The specified command requires a parameter. Please s
 MCIERR_UNSUPPORTED_FUNCTION, 	"The MCI device you are using does not support the specified command."
 MCIERR_FILE_NOT_FOUND, 		"Cannot find the specified file. Make sure the path and filename are correct."
 MCIERR_DEVICE_NOT_READY, 	"The device driver is not ready."
-MCIERR_INTERNAL, 		"A problem occurred in initializing MCI. Try restarting Windows."
+MCIERR_INTERNAL, 		"A problem occurred in initializing MCI. Try restarting ReactOS."
 MCIERR_DRIVER, 			"There is a problem with the device driver. The driver has closed. Cannot access error."
 MCIERR_CANNOT_USE_ALL, 		"Cannot use 'all' as the device name with the specified command."
 MCIERR_MULTIPLE, 		"Errors occurred in more than one device. Specify each command and device separately to determine which devices caused the error"

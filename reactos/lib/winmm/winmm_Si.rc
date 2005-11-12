@@ -46,7 +46,7 @@ MIDIERR_STILLPLAYING, 		"Predvajanje še traja. Ponastavite napravo ali pa poèaka
 MIDIERR_NOMAP, 			"Razporeditve MIDI ni mogo1e najti. To je lahko posledica težav z gonilnikom, ali pa manjkajoè ali poškodovane datoteke MIDIMAP.CFG."
 MIDIERR_NOTREADY, 		"Prek vrat poteka prenos podatkov do naprave. Poèakajte, da se prenos konèa in poskusite znova."
 MIDIERR_NODEVICE, 		"Trenutna nastavitev MIDI se sklicuje na MIDI napravo, ki ni prisotna. Uporabite MIDI Mapper in spremenite nastavitve."
-MIDIERR_INVALIDSETUP, 		"Trenutna nastavitev MIDI je pošodovana. Namestite originalno datoteko MIDIMAP.CFG v sistemsko mapo Windows (System) in poskusite znova."
+MIDIERR_INVALIDSETUP, 		"Trenutna nastavitev MIDI je pošodovana. Namestite originalno datoteko MIDIMAP.CFG v sistemsko mapo ReactOS (System) in poskusite znova."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Neveljavna identifikacijska oznaka MCI naprave. Uporabite oznako, ki jo vrne odpiranje MCI naprave."
@@ -67,7 +67,7 @@ MCIERR_MISSING_PARAMETER, 	"V navedenem ukazu manjka parameter. Vnesite ga."
 MCIERR_UNSUPPORTED_FUNCTION, 	"MCI naprava, ki jo uporabljate, ne podpira navedenega ukaza."
 MCIERR_FILE_NOT_FOUND, 		"Navedene datoteke ni mogoèe najti. Preverite, ali ste pravilno vnesli ime in pot do datoteke."
 MCIERR_DEVICE_NOT_READY, 	"Gonilnik za napravo ni pripravljen. Malo poèakajte in nato poskusite znova."
-MCIERR_INTERNAL, 		"Pri inicializaciji MCI naprave je prišlo do težav. Znova zaženite Windows."
+MCIERR_INTERNAL, 		"Pri inicializaciji MCI naprave je prišlo do težav. Znova zaženite ReactOS."
 MCIERR_DRIVER, 			"Zaradi napake, znaèilne za gonilnik, je bil gonilnik zaprt. Ponovite ukaz."
 MCIERR_CANNOT_USE_ALL, 		"V tem ukazu uporabite ime toèno doloèene naprave."
 MCIERR_MULTIPLE, 		"V veè napravah je prišlo do napak. Loèeno vnesite vsak ukaz in vsako napravo. Tako boste lahko ugotovili, katere naprave povzroèajo napake."

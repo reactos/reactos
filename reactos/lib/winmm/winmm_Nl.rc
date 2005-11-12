@@ -45,7 +45,7 @@ MIDIERR_STILLPLAYING, 	"Kan deze opdracht niet uitvoeren zolang afgespeeld wordt
 MIDIERR_NOMAP, 			"Er is geen MIDI Map gevonden. Er zou een driver probleem kunnen zijn of de MIDIMAP.CFG file is verminkt of afwezig."
 MIDIERR_NOTREADY, 		"De poort is bezig data ter versturen naar het apparaat. Wacht totdat alle data is verstuurd en probeer het dan opnieuw."
 MIDIERR_NODEVICE, 		"De huidige MIDI Mapper setup verwijst naar een MIDI apparaat dat niet op het systeem aanwezig is. Gebruik MIDI Mapper om de instellingen aan te passen."
-MIDIERR_INVALIDSETUP, 	"De huidige MIDI setup is beschadigd. Kopieer de originele MIDIMAP.CFG file naar de Windows SYSTEM directory en probeer het daarna weer."
+MIDIERR_INVALIDSETUP, 	"De huidige MIDI setup is beschadigd. Kopieer de originele MIDIMAP.CFG file naar de ReactOS SYSTEM directory en probeer het daarna weer."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	    "Ongeldige MCI apparaat ID. Gebruik de teruggegeven ID als u dit MCI apparaat opent."
@@ -66,7 +66,7 @@ MCIERR_MISSING_PARAMETER, 	    "De gegeven opdracht benodigt een parameter. Vult
 MCIERR_UNSUPPORTED_FUNCTION, 	"Het MCI apparaat dat u gebruikt ondersteund het gegeven commando niet."
 MCIERR_FILE_NOT_FOUND, 		    "Kan het opgegeven bestand niet vinden. Zorg ervoor dat het pad en de bestandsnaam correct zijn."
 MCIERR_DEVICE_NOT_READY, 	    "De apparaat driver is niet gereed."
-MCIERR_INTERNAL, 		        "Tijdens het initialiseren van MCI onstond een probleem. Probeer dit te verhelpen door Windows opnieuw te starten."
+MCIERR_INTERNAL, 		        "Tijdens het initialiseren van MCI onstond een probleem. Probeer dit te verhelpen door ReactOS opnieuw te starten."
 MCIERR_DRIVER, 			        "Er is een probleem met de apparaat driver. Daarom is de driver afgesloten. Derhalve een toegangsfout."
 MCIERR_CANNOT_USE_ALL, 		    "Kan 'all' niet gebruiken als apparaat naam bij het opgegeven commando."
 MCIERR_MULTIPLE, 		        "In meer dan een apparaat zijn fouten opgetreden. Geef elk commando en apparaat apart om te achterhalen welke apparaten fouten veroorzaken."

@@ -45,7 +45,7 @@ MIDIERR_STILLPLAYING, 		"Die Funktion kann nicht durchgeführt werden, wenn noch 
 MIDIERR_NOMAP, 		"Es wurde keine MIDI - Map gefunden. Es könnte ein Problem mit dem Treiber geben oder die Datei MIDIMAP.CFG fehlt oder ist beschädigt."
 MIDIERR_NOTREADY, 		"Der Anschluss ist mit der Datenausgabe belegt. Warten Sie, bis die Daten übertragen wurden und versuchen Sie es erneut."
 MIDIERR_NODEVICE, 		"Das gegenwärtige MIDI - Mapper Setup benutzt ein MIDI - Gerät, das nicht installiert ist. Benutzen Sie den MIDI - Mapper, um das Setup zu ändern."
-MIDIERR_INVALIDSETUP, 		"Das aktuelle MIDI Setup ist beschädigt. Kopieren sie die ursprüngliche Datei MIDIMAP.CFG ind das Windows - Systemverzeichnis und versuchen Sie es erneut."
+MIDIERR_INVALIDSETUP, 		"Das aktuelle MIDI Setup ist beschädigt. Kopieren sie die ursprüngliche Datei MIDIMAP.CFG ind das ReactOS - Systemverzeichnis und versuchen Sie es erneut."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Ungültige MCI - Gerätekennung. Benutzen Sie die zurückgegebene ID, wenn Sie das MCI - Gerät öffnen."
@@ -66,7 +66,7 @@ MCIERR_MISSING_PARAMETER, 	"Der angegebene Befehl erfordert einen Parameter. Bit
 MCIERR_UNSUPPORTED_FUNCTION, 	"Das verwendete MCI - Gerät unterstützt diesen Befehl nicht."
 MCIERR_FILE_NOT_FOUND, 	"Die angeforderte Datei wurde nicht gefunden. Stellen Sie sicher, dass Pfad- und Dateiname richtig sind."
 MCIERR_DEVICE_NOT_READY, 	"Der Gerätetreiber ist nicht bereit."
-MCIERR_INTERNAL, 		"Ein Fehler ereignete sich beim Starten von MCI. Versuche Windows neu zu starten."
+MCIERR_INTERNAL, 		"Ein Fehler ereignete sich beim Starten von MCI. Versuche ReactOS neu zu starten."
 MCIERR_DRIVER, 		"Es gibt ein Problem mit dem Gerätetreiber. Der Treiber wird geschlossen. Ein Fehler kann nicht gemeldet werden."
 MCIERR_CANNOT_USE_ALL, 	"Der Gerätename 'all' ist nicht in diesem Befehl erlaubt."
 MCIERR_MULTIPLE, 		"Es traten Fehler in mehr als einem Gerät auf. Geben Sie jeden Befehl für jedes Gerät einzeln an, um zu bestimmen, welches Gerät die Fehler verursachte."
