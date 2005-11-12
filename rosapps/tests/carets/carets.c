@@ -8,6 +8,8 @@ static int CharWidth = 10;
 static int CharHeight = 16;
 static HBITMAP CaretBitmap;
 
+ULONG __cdecl DbgPrint(IN PCH  Format, IN ...);
+
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI

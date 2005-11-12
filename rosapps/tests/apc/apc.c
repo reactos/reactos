@@ -1,9 +1,8 @@
-#include <stdarg.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 HANDLE OutputHandle;
 HANDLE InputHandle;
@@ -22,7 +21,7 @@ int main(int argc, char* argv[])
    NTSTATUS Status;
    HANDLE FileHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING FileName = ROS_STRING_INITIALIZER(L"\\C:\\a.txt");
+   UNICODE_STRING FileName = RTL_CONSTANT_STRING(L"\\C:\\a.txt");
    IO_STATUS_BLOCK IoStatus;
    CHAR Buffer[256];
    HANDLE EventHandle;

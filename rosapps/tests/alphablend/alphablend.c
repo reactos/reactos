@@ -1,6 +1,10 @@
 #include <windows.h>
 #include <string.h>
 
+BOOL WINAPI GdiAlphaBlend(HDC hdcDst, int xDst, int yDst, int widthDst, int heightDst,
+                          HDC hdcSrc, int xSrc, int ySrc, int widthSrc, int heightSrc,
+                           BLENDFUNCTION blendFunction);
+
 #ifndef AC_SRC_ALPHA
 #define AC_SRC_ALPHA	(0x1)
 #endif

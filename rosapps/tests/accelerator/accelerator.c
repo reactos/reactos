@@ -7,6 +7,10 @@
 #define ID_ACCEL3 0x102
 #define ID_ACCEL4 0x103
 
+#ifndef VK_A
+#define VK_A 0x41
+#endif
+
 /*
  * {fVirt, key, cmd}
  * fVirt |= FVIRTKEY | FCONTROL | FALT | FSHIFT

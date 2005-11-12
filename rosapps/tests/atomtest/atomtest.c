@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #define BUFFER_SIZE 256
 

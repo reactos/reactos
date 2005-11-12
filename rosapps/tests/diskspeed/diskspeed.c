@@ -8,12 +8,16 @@
  * PROGRAMMER:      Hartmut Birr
  */
 
-#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntddscsi.h>
-#include <ddk/scsi.h>
+
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+#define _NTSCSI_USER_MODE_
+#include <ntddscsi.h>
+#include <scsi.h>
 
 BOOL GetInquiryData(HANDLE hDevice, PINQUIRYDATA InquiryData)
 {
