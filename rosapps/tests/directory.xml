@@ -130,9 +130,9 @@
 <directory name="linetest">
 	<xi:include href="linetest/linetest.xml" />
 </directory>
-<directory name="lpctst">
-	<xi:include href="lpctst/lpctst.xml" />
-</directory>
+
+<!-- fixme: lpctst -->
+
 <directory name="map_dup_inherit">
 	<xi:include href="map_dup_inherit/map_dup_inherit.xml" />
 </directory>
@@ -148,9 +148,9 @@
 <directory name="moztest">
 	<xi:include href="moztest/moztest.xml" />
 </directory>
-<directory name="mstest">
-	<xi:include href="mstest/mstest.xml" />
-</directory>
+
+<!--  fixme: mstest -->
+
 <directory name="multithrdwin">
 	<xi:include href="multithrdwin/multithrdwin.xml" />
 </directory>
@@ -166,9 +166,9 @@
 <directory name="noexecute">
 	<xi:include href="noexecute/noexecute.xml" />
 </directory>
-<directory name="nptest">
-	<xi:include href="nptest/nptest.xml" />
-</directory>
+
+<!-- fixme: nptest -->
+
 <directory name="oskittcp">
 	<xi:include href="oskittcp/oskittcp.xml" />
 </directory>
@@ -211,9 +211,9 @@
 <directory name="shaptest">
 	<xi:include href="shaptest/shaptest.xml" />
 </directory>
-<directory name="shm">
-	<xi:include href="shm/shm.xml" />
-</directory>
+
+<!-- fixme: shm -->
+
 <directory name="statst">
 	<xi:include href="statst/statst.xml" />
 </directory>
@@ -253,8 +253,7 @@
 <directory name="txtscale">
 	<xi:include href="txtscale/txtscale.xml" />
 </directory>
-
-<directory name="vmtest/vmtest">
+<directory name="vmtest">
 	<xi:include href="vmtest/vmtest.xml" />
 </directory>
 <directory name="wclickat">
