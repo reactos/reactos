@@ -862,7 +862,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
                                   Filename);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
+      DPRINT("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -3235,6 +3235,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   PHBIN tmpBin;
   ULONG BinSize;
   ULONG i;
+  ULONG BitmapSize;
 
   DPRINT ("CmiAddBin (BlockCount %lu)\n", BlockCount);
 
@@ -3287,17 +3288,17 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   tmpBlock = (PCELL_HEADER)((ULONG_PTR) tmpBin + REG_HBIN_DATA_OFFSET);
   tmpBlock->CellSize = (BinSize - REG_HBIN_DATA_OFFSET);
 
+  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
+  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
+
   /* Grow bitmap if necessary */
-  if (IsNoFileHive(RegistryHive) &&
-      (RegistryHive->BlockListSize % (sizeof(ULONG) * 8) == 0))
+  if (!IsNoFileHive(RegistryHive) &&
+      BitmapSize > RegistryHive->DirtyBitMap.SizeOfBitMap)
     {
       PULONG BitmapBuffer;
-      ULONG BitmapSize;
 
       DPRINT("Grow hive bitmap\n");
 
-      /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
-      BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
       DPRINT("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
       DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
       BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
