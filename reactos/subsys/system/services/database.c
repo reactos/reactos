@@ -851,7 +851,7 @@ ScmStartService(PSERVICE Service,
     {
         /* Load driver */
         wcscpy(szDriverPath,
-               L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
+               L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
         wcscat(szDriverPath,
                Service->lpServiceName);
 
