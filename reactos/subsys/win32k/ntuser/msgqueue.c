@@ -1754,6 +1754,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 {
    PTIMER_ENTRY Timer;
    LARGE_INTEGER CurrentTime;
+   LARGE_INTEGER LargeTickCount;
    PLIST_ENTRY EnumEntry;
    BOOLEAN GotMessage;
 
@@ -1805,6 +1806,8 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->message = Timer->Msg;
    Msg->wParam = (WPARAM) Timer->IDEvent;
    Msg->lParam = (LPARAM) Timer->TimerFunc;
+   KeQueryTickCount(&LargeTickCount);
+   Msg->time = LargeTickCount.u.LowPart;
    IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
                         &Msg->pt);
 
