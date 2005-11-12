@@ -213,7 +213,7 @@ static struct line *add_line( struct inf_file *file, int section_index )
     struct section *section;
     struct line *line;
 
-    assert( section_index >= 0 && section_index < file->nb_sections );
+    ASSERT( section_index >= 0 && section_index < file->nb_sections );
 
     section = file->sections[section_index];
     if (section->nb_lines == section->alloc_lines)  /* need to grow the section */
@@ -420,7 +420,7 @@ static WCHAR *push_string( struct inf_file *file, const WCHAR *string )
 /* push the current state on the parser stack */
 inline static void push_state( struct parser *parser, enum parser_state state )
 {
-    assert( parser->stack_pos < sizeof(parser->stack)/sizeof(parser->stack[0]) );
+    ASSERT( parser->stack_pos < sizeof(parser->stack)/sizeof(parser->stack[0]) );
     parser->stack[parser->stack_pos++] = state;
 }
 
@@ -428,7 +428,7 @@ inline static void push_state( struct parser *parser, enum parser_state state )
 /* pop the current state */
 inline static void pop_state( struct parser *parser )
 {
-    assert( parser->stack_pos );
+    ASSERT( parser->stack_pos );
     parser->state = parser->stack[--parser->stack_pos];
 }
 
@@ -509,12 +509,12 @@ static struct field *add_field_from_token( struct parser *parser, int is_key )
     {
         if (parser->cur_section == -1)  /* got a line before the first section */
         {
-            parser->error = ERROR_WRONG_INF_STYLE;
+            parser->error = ERROR_EXPECTED_SECTION_NAME;
             return NULL;
         }
         if (!(parser->line = add_line( parser->file, parser->cur_section ))) goto error;
     }
-    else assert(!is_key);
+    else ASSERT(!is_key);
 
     text = push_string( parser->file, parser->token );
     if ((field = add_field( parser->file, text )))
@@ -964,6 +964,7 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
                 if (!strcmpiW( field->text, Windows95 )) goto done;
             }
         }
+        if (error_line) *error_line = 0;
         err = ERROR_WRONG_INF_STYLE;
     }
 
