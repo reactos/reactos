@@ -683,7 +683,7 @@ VOID DIALOG_SelectFont(VOID)
     }
 }
 
-typedef HWND (STDCALL *FINDPROC)(LPFINDREPLACE lpfr);
+typedef HWND (WINAPI *FINDPROC)(LPFINDREPLACE lpfr);
 
 static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
 {
