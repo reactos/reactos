@@ -280,11 +280,6 @@ AddDevice(
 
 	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
 
-	if (NT_SUCCESS(Status))
-		Status = AddDevice_Keyboard(DriverObject, pdo);
-	if (NT_SUCCESS(Status))
-		Status = AddDevice_Mouse(DriverObject, pdo);
-
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("USBMP: IoCreateSymbolicLink() call failed with status 0x%08x\n", Status);
@@ -427,6 +422,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 	MouseClassInformation.ClassDeviceObject = NULL;
 	
 	RegisterPortDriver(DriverObject, &UsbPortInterface);
+
+	AddDevice_Keyboard(DriverObject, NULL);
+	AddDevice_Mouse(DriverObject, NULL);
 
 	return STATUS_SUCCESS;
 }
