@@ -515,7 +515,7 @@ CHCP     Zeigt die aktive Codepagenummer an bzw. legt diese fest.\n\
 CHOICE   Wartet auf den Benutzer, welcher aus einer Auswahl eine Option\n\
          waehlen muss.\n\
 CLS      Loescht den Bildschirminhalt.\n\
-CMD      Startet eine neue Instanz des Windows-Befehlsinterpreters.\n\
+CMD      Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\
 COLOR    Legt die Hintergrund- und Vordergrundfarben fuer die Konsole fest.\n\
 COPY     Kopiert eine oder mehrere Dateien an eine andere Stelle.\n\
 DATE     Zeigt das Datum an bzw. legt dieses fest.\n\

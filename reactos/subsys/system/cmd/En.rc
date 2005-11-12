@@ -513,7 +513,7 @@ CD       Displays the name of or changes the current directory.\n\
 CHCP     Displays or sets the active code page number.\n\
 CHOICE   Waits for the user to choose one of a set of choices.\n\
 CLS      Clears the screen.\n\
-CMD      Starts a new instance of the Windows command interpreter.\n\
+CMD      Starts a new instance of the ReactOS command interpreter.\n\
 COLOR    Sets the default console foreground and background colors.\n\
 COPY     Copies one or more files to another location.\n\
 DATE     Displays or sets the date.\n\
