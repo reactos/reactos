@@ -524,7 +524,7 @@ ERASE    Deletes one or more files.\n\
 EXIT     Quits the CMD.EXE program (command interpreter).\n\
 FOR      Runs a specified command for each file in a set of files.\n\
 FREE     (free) disc space.\n\
-GOTO     Directs the Windows command interpreter to a labeled line in\n\
+GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
          a batch program.\n\
 HELP     Provides Help information for ReactOS commands.\n\
 HISTORY  List alle commands which has been used\n\
@@ -546,7 +546,7 @@ REN      Renames a file or files.\n\
 RENAME   Renames a file or files.\n\
 RMDIR    Removes a directory.\n\
 SCREEN   Move cursor and optionally print text.\n\
-SET      Displays, sets, or removes Windows environment variables.\n\
+SET      Displays, sets, or removes ReactOS environment variables.\n\
 SHIFT    Shifts the position of replaceable parameters in batch files.\n"
 STRING_HELP2, "START    Starts a separate window to run a specified program or command.\n\
          Executes command.\n\
@@ -554,8 +554,8 @@ TIME     Displays or sets the system time.\n\
 TIMER    Allow the use of ten stopwaches.\n\
 TITLE    Sets the window title for a CMD.EXE session.\n\
 TYPE     Displays the contents of a text file.\n\
-VER      Displays the Windows version.\n\
-VERIFY   Tells Windows whether to verify that your files are written\n\
+VER      Displays the ReactOS version.\n\
+VERIFY   Tells ReactOS whether to verify that your files are written\n\
          correctly to a disk.\n\
 VOL      Displays a disk volume label and serial number.\n"
 

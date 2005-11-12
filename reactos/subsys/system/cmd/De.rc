@@ -527,7 +527,7 @@ EXIT     Beendet das Programm CMD.EXE (Befehlsinterpreter).\n\
 FOR      Fuehrt einen angegebenen Befehl fuer jede Datei in einem Dateiensatz\n\
          aus.\n\
 FREE     Zeigt den (freien) Speicherplatz an.\n\
-GOTO     Setzt den Windows-Befehlsinterpreter auf eine markierte Zeile in\n\
+GOTO     Setzt den ReactOS-Befehlsinterpreter auf eine markierte Zeile in\n\
          einem Batchprogramm.\n\
 HELP     Zeigt Hilfeinformationen zu ReactOS-Befehlen an.\n\
 HISTORY  Listet alle Befehle auf welche sich im Speicher befinden.\n\
@@ -557,7 +557,7 @@ TIME     Zeigt die Systemzeit an bzw. legt sie fest.\n\
 TIMER    Erlaubt die Benutzung von bis zu 10 Stopuhren\n\
 TITLE    Legt den Fenstertitel fuer das Eingabeaufforderungsfenster fest.\n\
 TYPE     Zeigt den Inhalt einer Textdatei an.\n\
-VER      Zeigt die Windows-Version an.\n\
+VER      Zeigt die ReactOS-Version an.\n\
 VERIFY   Legt fest, ob ueberwacht werden soll, ob Dateien korrekt auf den\n\
          Datentraeger geschrieben werden.\n\
 VOL      Zeigt die Datentraegervolumebezeichnung und die Seriennummer an.\n"
