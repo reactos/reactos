@@ -7,7 +7,7 @@
 #include <string.h>
 #include <windows.h>
 
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 int test(int x)
 {

@@ -1,9 +1,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 HANDLE OutputHandle;
 HANDLE InputHandle;
@@ -55,12 +56,11 @@ void CreateKeyTest(void)
 {
   HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
   NTSTATUS Status;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
 
   dprintf("Create key '\\Registry\\Machine\\Software\\testkey':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software\\testkey");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE,
@@ -85,13 +85,12 @@ void CreateKeyTest(void)
 void DeleteKeyTest(void)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
   HKEY hKey;
   NTSTATUS Status;
 
   dprintf("Delete key '\\Registry\\Machine\\Software\\testkey':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software\\testkey");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE,
@@ -117,15 +116,14 @@ void EnumerateKeyTest(void)
   HKEY hKey = NULL;
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software");
   ULONG Index;
   ULONG Length;
   ULONG i;
   KEY_BASIC_INFORMATION KeyInformation[5];
 
   dprintf("Enumerate key '\\Registry\\Machine\\Software':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE,
@@ -184,13 +182,12 @@ void SetValueTest1(void)
 {
   HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
   NTSTATUS Status;
 
   dprintf("Create key '\\Registry\\Machine\\Software\\testkey':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software\\testkey");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
@@ -208,8 +205,7 @@ void SetValueTest1(void)
   if (!NT_SUCCESS(Status))
     return;
 
-  RtlRosInitUnicodeStringFromLiteral(&ValueName,
-				  L"TestValue");
+
   dprintf("NtSetValueKey:\n");
   Status = NtSetValueKey(hKey,
 			 &ValueName,
@@ -227,13 +223,12 @@ void SetValueTest2(void)
 {
   HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
   NTSTATUS Status;
 
   dprintf("Create key '\\Registry\\Machine\\Software\\testkey':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software\\testkey");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
@@ -251,8 +246,6 @@ void SetValueTest2(void)
   if (!NT_SUCCESS(Status))
     return;
 
-  RtlRosInitUnicodeStringFromLiteral(&ValueName,
-				  L"TestValue");
   dprintf("NtSetValueKey:\n");
   Status = NtSetValueKey(hKey,
 			 &ValueName,
@@ -269,14 +262,13 @@ void SetValueTest2(void)
 void DeleteValueTest(void)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
   HKEY KeyHandle;
   NTSTATUS Status;
 
   dprintf("Open key '\\Registry\\Machine\\Software\\testkey':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software\\testkey");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE,
@@ -290,8 +282,8 @@ void DeleteValueTest(void)
     return;
 
   dprintf("Delete value:\n");
-  RtlRosInitUnicodeStringFromLiteral(&ValueName,
-				  L"TestValue");
+
+
   Status = NtDeleteValueKey(KeyHandle,
 			    &ValueName);
   dprintf("  Status = %lx\n", Status);
@@ -306,14 +298,13 @@ void EnumerateValueTest(void)
 {
   KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
   ULONG Index,Length,i;
   HKEY hKey = NULL;
   NTSTATUS Status;
 
   dprintf("Open key '\\Registry\\Machine\\Software\\testkey':\n");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Software\\testkey");
+
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE,
@@ -369,10 +360,7 @@ void test1(void)
  HKEY hKey = NULL, hKey1;
  OBJECT_ATTRIBUTES ObjectAttributes;
  NTSTATUS Status;
-#if 0
- UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry");
-#endif
- UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\Machine\\Software");
+ UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software");
  ULONG Index,Length,i;
  KEY_BASIC_INFORMATION KeyInformation[5];
 
@@ -421,73 +409,6 @@ void test1(void)
     dprintf("\t\t\t\t\tStatus =%x\n",Status);
   }
   NtClose(hKey);
-
-#if 0
-  dprintf("NtOpenKey \\Registry\\Machine : ");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine");
-  InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-  Status=NtOpenKey( &hKey1, MAXIMUM_ALLOWED, &ObjectAttributes);
-  dprintf("\t\t\tStatus =%x\n",Status);
-
-  dprintf("NtOpenKey System\\Setup : ");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"System\\Setup");
-  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
-				, hKey1 , NULL);
-  Status = NtOpenKey ( &hKey, KEY_READ , &ObjectAttributes);
-  dprintf("\t\t\tStatus =%x\n",Status);
-  if(Status==0)
-  {
-    dprintf("NtQueryValueKey : ");
-    RtlRosInitUnicodeStringFromLiteral(&KeyName, L"CmdLine");
-    Status=NtQueryValueKey(hKey,&KeyName,KeyValueFullInformation
-		,&KeyValueInformation[0], sizeof(KeyValueInformation)
-		,&Length);
-    dprintf("\t\t\t\tStatus =%x\n",Status);
-    if (Status == STATUS_SUCCESS)
-    {
-      dprintf("\tValue:DO=%d, DL=%d, NL=%d, Name = "
-	      ,KeyValueInformation[0].DataOffset
-	      ,KeyValueInformation[0].DataLength
-	      ,KeyValueInformation[0].NameLength);
-      for (i=0;i<10 && i<KeyValueInformation[0].NameLength/2;i++)
-	dprintf("%C",KeyValueInformation[0].Name[i]);
-      dprintf("\n");
-      dprintf("\t\tType = %d\n",KeyValueInformation[0].Type);
-      if (KeyValueInformation[0].Type == REG_SZ)
-	dprintf("\t\tValue = %S\n",
-		(PWCHAR)((PCHAR)&KeyValueInformation[0] + KeyValueInformation[0].DataOffset));
-    }
-    dprintf("NtEnumerateValueKey : \n");
-    Index=0;
-    while(Status == STATUS_SUCCESS)
-    {
-      Status=NtEnumerateValueKey(hKey,Index++,KeyValueFullInformation
-		,&KeyValueInformation[0], sizeof(KeyValueInformation)
-		,&Length);
-      if(Status== STATUS_SUCCESS)
-	{
-        dprintf("\tValue:DO=%d, DL=%d, NL=%d, Name = "
-		,KeyValueInformation[0].DataOffset
-		,KeyValueInformation[0].DataLength
-		,KeyValueInformation[0].NameLength);
-	  for (i=0;i<KeyValueInformation[0].NameLength/2;i++)
-		dprintf("%C",KeyValueInformation[0].Name[i]);
-        dprintf(", Type = %d\n",KeyValueInformation[0].Type);
-	  if (KeyValueInformation[0].Type == REG_SZ)
-          dprintf("\t\tValue = %S\n",((char*)&KeyValueInformation[0]
-    					+KeyValueInformation[0].DataOffset));
-	}
-    }
-    dprintf("NtClose : ");
-    Status = NtClose( hKey );
-    dprintf("\t\t\t\t\tStatus =%x\n",Status);
-  }
-  NtClose( hKey1 );
-#endif
 }
 
 
@@ -508,106 +429,11 @@ void test3(void)
 		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
   dprintf("\t\tStatus=%x\n",Status);
   NtClose(hKey);
-#if 0
-  do_enumeratekey(L"\\Registry\\Machine\\Software");
-  dprintf("NtOpenKey: ");
-  Status=NtOpenKey( &hKey, MAXIMUM_ALLOWED, &ObjectAttributes);
-  dprintf("\t\tStatus=%x\n",Status);
-  NtClose(hKey);
-  dprintf("  ...\\test3 :");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
-  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
-				, NULL, NULL);
-  Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
-		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
-  dprintf("\t\t\t\t\tStatus=%x\n",Status);
-  dprintf("NtOpenKey: ");
-  Status=NtOpenKey( &hKey1, MAXIMUM_ALLOWED, &ObjectAttributes);
-  dprintf("\t\tStatus=%x\n",Status);
-  NtClose(hKey);
-  dprintf("  ...\\testNonVolatile :");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"TestNonVolatile");
-  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
-				, hKey1, NULL);
-  Status = NtCreateKey ( &hKey, KEY_ALL_ACCESS , &ObjectAttributes
-		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
-  dprintf("\t\t\t\tStatus=%x\n",Status);
-  NtClose(hKey1);
-  RtlRosInitUnicodeStringFromLiteral(&ValueName, L"TestREG_SZ");
-  dprintf("NtSetValueKey reg_sz: ");
-  Status=NtSetValueKey(hKey,&ValueName,0,REG_SZ,(PVOID)L"Test Reg_sz",24);
-  dprintf("\t\t\t\tStatus=%x\n",Status);
-  RtlRosInitUnicodeStringFromLiteral(&ValueName, L"TestDWORD");
-  dprintf("NtSetValueKey reg_dword: ");
-  Status=NtSetValueKey(hKey,&ValueName,0,REG_DWORD,(PVOID)"reac",4);
-  dprintf("\t\t\tStatus=%x\n",Status);
-  NtClose(hKey);
-  dprintf("NtOpenKey \\Registry\\Machine\\Software\\test3reactos\\test3\\testNonVolatile : ");
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3\\testNonVolatile");
-  InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-  Status=NtOpenKey( &hKey, MAXIMUM_ALLOWED, &ObjectAttributes);
-  dprintf("\t\t\t\tStatus =%x\n",Status);
-  if(Status==0)
-  {
-    dprintf("NtEnumerateValueKey : \n");
-    Index=0;
-    while(Status == STATUS_SUCCESS)
-    {
-      Status=NtEnumerateValueKey(hKey,Index++,KeyValueFullInformation
-		,&KeyValueInformation[0], sizeof(KeyValueInformation)
-		,&Length);
-      if(Status== STATUS_SUCCESS)
-	{
-        dprintf("\tValue:DO=%d, DL=%d, NL=%d, Name = "
-		,KeyValueInformation[0].DataOffset
-		,KeyValueInformation[0].DataLength
-		,KeyValueInformation[0].NameLength);
-	  for (i=0;i<KeyValueInformation[0].NameLength/2;i++)
-		dprintf("%C",KeyValueInformation[0].Name[i]);
-        dprintf(", Type = %d\n",KeyValueInformation[0].Type);
-	  if (KeyValueInformation[0].Type == REG_SZ)
-          dprintf("\t\tValue = %S\n",((char*)&KeyValueInformation[0]
-    					+KeyValueInformation[0].DataOffset));
-	}
-    }
-  }
-  NtClose(hKey);
-#endif
 
   dprintf("delete \\Registry\\Machine\\software\\test3reactos ?");
   ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
   if (Buffer[0] != 'y' && Buffer[0] != 'Y') return;
-#if 0
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3\\testNonvolatile");
-  InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-  dprintf("NtOpenKey : ");
-  Status=NtOpenKey( &hKey, KEY_ALL_ACCESS, &ObjectAttributes);
-  dprintf("\t\t\t\tStatus =%x\n",Status);
-  dprintf("NtDeleteKey : ");
-  Status=NtDeleteKey(hKey);
-  dprintf("\t\t\t\tStatus =%x\n",Status);
-  RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
-  InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-  dprintf("NtOpenKey : ");
-  Status=NtOpenKey( &hKey, KEY_ALL_ACCESS, &ObjectAttributes);
-  dprintf("\t\t\t\tStatus =%x\n",Status);
-  dprintf("NtDeleteKey : ");
-  Status=NtDeleteKey(hKey);
-  dprintf("\t\t\t\tStatus =%x\n",Status);
-  NtClose(hKey);
-#endif
+
   dprintf("delete \\Registry\\Machine\\software\\test3reactos ?");
   RtlRosInitUnicodeStringFromLiteral(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -1029,7 +855,7 @@ void test9(void)
     HKEY hKey = NULL, hKey1;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
-    UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry");
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry");
     ULONG Index,Length,i;
     KEY_BASIC_INFORMATION KeyInformation[5];
     KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
@@ -1194,3 +1020,4 @@ int main(int argc, char* argv[])
   }
   return(0);
 }
+

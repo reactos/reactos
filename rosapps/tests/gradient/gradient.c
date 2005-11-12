@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+BOOL WINAPI GdiGradientFill( HDC hdc, TRIVERTEX *vert_array, ULONG nvert,
+                           void * grad_array, ULONG ngrad, ULONG mode );
+
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI

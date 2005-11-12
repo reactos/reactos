@@ -8,9 +8,10 @@
 
 ULONG DbgPrint(PCH Format,...);
 
+#undef DBG
 #define DBG(x) \
-	 printf("%s:%i - %s", __FILE__, __LINE__, x); \
-	 DbgPrint("%s:%i - %s", __FILE__, __LINE__, x);
+  printf("%s:%i - %s", __FILE__, __LINE__, x); \
+  DbgPrint("%s:%i - %s", __FILE__, __LINE__, x);
 
 int SocketTest()
 {

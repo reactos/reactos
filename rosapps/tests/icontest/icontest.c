@@ -3,9 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef GetCursorInfo
-  #define _GetCursorInfo
-#endif
+ULONG __cdecl DbgPrint(IN PCH  Format, IN ...);
 
 const char titleDrwIco[] = "DrawIcon Output";
 const char titleMask[] = "Mask(AND image)";
@@ -15,12 +13,6 @@ const char res[] = "Icon from Resorce:";
 const char cursor[] = "Current Cursor:";
 const char cursormask[] = "Cursor Mask Bitmap";
 const char cursorcolor[] = "Cursor Color Bitmap";
-
-#ifdef _GetCursorInfo
-typedef BOOL (__stdcall *GETCURSORINFO) (CURSORINFO *CursorInfo);
-
-static GETCURSORINFO GetCursorInfo = NULL;
-#endif
 
 HFONT tf;
 HINSTANCE hInst;

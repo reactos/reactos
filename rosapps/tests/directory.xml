@@ -67,9 +67,6 @@
 <directory name="dnsquery">
 	<xi:include href="dnsquery/dnsquery.xml" />
 </directory>
-<directory name="dump_shared_data">
-	<xi:include href="dump_shared_data/dump_shared_data.xml" />
-</directory>
 <directory name="edit">
 	<xi:include href="edit/edit.xml" />
 </directory>
@@ -87,9 +84,6 @@
 </directory>
 <directory name="event">
 	<xi:include href="event/event.xml" />
-</directory>
-<directory name="eventpair">
-	<xi:include href="eventpair/eventpair.xml" />
 </directory>
 <directory name="fiber">
 	<xi:include href="fiber/fiber.xml" />
@@ -109,21 +103,21 @@
 <directory name="hello">
 	<xi:include href="hello/hello.xml" />
 </directory>
-<directory name="hivetest">
-	<xi:include href="hivetest/hivetest.xml" />
-</directory>
+
+<!-- fixme: hivetest -->
+
 <directory name="icontest">
 	<xi:include href="icontest/icontest.xml" />
 </directory>
-<directory name="iptest">
-	<xi:include href="iptest/iptest.xml" />
-</directory>
+
+<!-- fixme: iptest -->
+
 <directory name="isotest">
 	<xi:include href="isotest/isotest.xml" />
 </directory>
-<directory name="lantst">
-	<xi:include href="lantst/lantest.xml" />
-</directory>
+
+<!-- fixme: lantst -->
+
 <directory name="lineclip">
 	<xi:include href="lineclip/lineclip.xml" />
 </directory>
@@ -169,9 +163,8 @@
 
 <!-- fixme: nptest -->
 
-<directory name="oskittcp">
-	<xi:include href="oskittcp/oskittcp.xml" />
-</directory>
+<!-- fixme: oskittcp -->
+
 <directory name="palbitblt">
 	<xi:include href="palbitblt/palbitblt.xml" />
 </directory>
@@ -187,21 +180,22 @@
 <directory name="primitives">
 	<xi:include href="primitives/primitives.xml" />
 </directory>
-<directory name="pteb">
-	<xi:include href="pteb/pteb.xml" />
-</directory>
+
+<!-- fixme: pteb -->
+
 <directory name="p_dup_handle">
 	<xi:include href="p_dup_handle/p_dup_handle.xml" />
 </directory>
-<directory name="regdump">
-	<xi:include href="regdump/regdump.xml" />
-</directory>
+
+<!-- fixme: regdump -->
+
 <directory name="regqueryvalue">
 	<xi:include href="regqueryvalue/regqueryvalue.xml" />
 </directory>
-<directory name="regtest">
-	<xi:include href="regtest/regtest.xml" />
-</directory>
+
+<!-- fixme: regtest -->
+
+<!--
 <directory name="sectest">
 	<xi:include href="sectest/sectest.xml" />
 </directory>
@@ -212,7 +206,7 @@
 	<xi:include href="shaptest/shaptest.xml" />
 </directory>
 
-<!-- fixme: shm -->
+fixme: shm
 
 <directory name="statst">
 	<xi:include href="statst/statst.xml" />
@@ -274,4 +268,4 @@
 <directory name="zwcontinue">
 	<xi:include href="zwcontinue/zwcontinue.xml" />
 </directory>
-
+-->

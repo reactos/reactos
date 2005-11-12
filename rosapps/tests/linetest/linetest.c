@@ -1,5 +1,8 @@
+
 #include <windows.h>
 #include <stdio.h>
+
+#include <tchar.h>
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 

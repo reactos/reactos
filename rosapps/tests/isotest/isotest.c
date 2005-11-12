@@ -3,7 +3,9 @@
  */
 
 #include <windows.h>
-//#include <winioctl.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

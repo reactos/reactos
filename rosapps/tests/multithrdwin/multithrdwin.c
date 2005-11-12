@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+ULONG DbgPrint(PCH Format,...);
+
 typedef struct _THRDCREATEWIN
 {
   HANDLE hThread;
