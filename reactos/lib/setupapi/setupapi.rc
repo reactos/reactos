@@ -31,6 +31,7 @@
 #include "Fr.rc"
 #include "It.rc"
 #include "Ja.rc"
+#include "Ko.rc"
 #include "Nl.rc"
 #include "No.rc"
 #include "Pl.rc"
