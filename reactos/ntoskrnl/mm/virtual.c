@@ -186,8 +186,8 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		  case MEMORY_AREA_NO_ACCESS:
 	             Info->Type = MEM_PRIVATE;
                      Info->State = MEM_RESERVE;
-	             Info->Protect = MemoryArea->Attributes;
-		     Info->AllocationProtect = MemoryArea->Attributes;
+	             Info->Protect = MemoryArea->Protect;
+		     Info->AllocationProtect = MemoryArea->Protect;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
 	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
@@ -198,8 +198,8 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		  case MEMORY_AREA_SHARED_DATA:
 	             Info->Type = MEM_PRIVATE;
                      Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Attributes;
-		     Info->AllocationProtect = MemoryArea->Attributes;
+	             Info->Protect = MemoryArea->Protect;
+		     Info->AllocationProtect = MemoryArea->Protect;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
 	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
@@ -210,8 +210,8 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		  case MEMORY_AREA_SYSTEM:
 	             Info->Type = 0;
                      Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Attributes;
-		     Info->AllocationProtect = MemoryArea->Attributes;
+	             Info->Protect = MemoryArea->Protect;
+		     Info->AllocationProtect = MemoryArea->Protect;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
 	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
@@ -222,8 +222,8 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 		  case MEMORY_AREA_KERNEL_STACK:
 	             Info->Type = 0;
                      Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Attributes;
-		     Info->AllocationProtect = MemoryArea->Attributes;
+	             Info->Protect = MemoryArea->Protect;
+		     Info->AllocationProtect = MemoryArea->Protect;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
 	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
@@ -234,8 +234,8 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                   case MEMORY_AREA_PAGED_POOL:
 	             Info->Type = 0;
                      Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Attributes;
-		     Info->AllocationProtect = MemoryArea->Attributes;
+	             Info->Protect = MemoryArea->Protect;
+		     Info->AllocationProtect = MemoryArea->Protect;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
 	             Info->AllocationBase = MemoryArea->StartingAddress;
 	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -

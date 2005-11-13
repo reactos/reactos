@@ -70,15 +70,14 @@ MmInitializeMdlImplementation(VOID)
    MiMdlMappingRegionBase = NULL;
 
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   Status = MmCreateMemoryArea(NULL,
-                               MmGetKernelAddressSpace(),
+   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                MEMORY_AREA_MDL_MAPPING,
                                &MiMdlMappingRegionBase,
                                MI_MDL_MAPPING_REGION_SIZE,
-                               0,
+                               PAGE_READWRITE,
                                &Result,
                                FALSE,
-                               FALSE,
+                               0,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
@@ -779,6 +778,12 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
    /* FIXME: Implement Priority */
    (void) Priority;
 
+   Protect = PAGE_READWRITE;
+   if (CacheType == MmNonCached)
+      Protect |= PAGE_NOCACHE;
+   else if (CacheType == MmWriteCombined)
+      DPRINT("CacheType MmWriteCombined not supported!\n");
+
    /* Calculate the number of pages required. */
    PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
 
@@ -797,15 +802,14 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       CurrentProcess = PsGetCurrentProcess();
 
       MmLockAddressSpace(&CurrentProcess->AddressSpace);
-      Status = MmCreateMemoryArea(CurrentProcess,
-                                  &CurrentProcess->AddressSpace,
+      Status = MmCreateMemoryArea(&CurrentProcess->AddressSpace,
                                   MEMORY_AREA_MDL_MAPPING,
                                   &Base,
                                   PageCount * PAGE_SIZE,
-                                  0, /* PAGE_READWRITE? */
+                                  Protect,
                                   &Result,
                                   (Base != NULL),
-                                  FALSE,
+                                  0,
                                   BoundaryAddressMultiple);
       MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
       if (!NT_SUCCESS(Status))
@@ -865,11 +869,6 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
    /* Set the virtual mappings for the MDL pages. */
    MdlPages = (PULONG)(Mdl + 1);
 
-   Protect = PAGE_READWRITE;
-   if (CacheType == MmNonCached)
-      Protect |= PAGE_NOCACHE;
-   else if (CacheType == MmWriteCombined)
-      DPRINT("CacheType MmWriteCombined not supported!\n");
    if (Mdl->MdlFlags & MDL_IO_SPACE)
       Status = MmCreateVirtualMappingUnsafe(CurrentProcess,
                                             Base,

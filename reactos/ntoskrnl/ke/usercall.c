@@ -108,15 +108,14 @@ PsAllocateCallbackStack(ULONG StackSize)
   BoundaryAddressMultiple.QuadPart = 0;
   StackSize = PAGE_ROUND_UP(StackSize);
   MmLockAddressSpace(MmGetKernelAddressSpace());
-  Status = MmCreateMemoryArea(NULL,
-			      MmGetKernelAddressSpace(),
+  Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
 			      MEMORY_AREA_KERNEL_STACK,
 			      &KernelStack,
 			      StackSize,
-			      0,
+			      PAGE_READWRITE,
 			      &StackArea,
 			      FALSE,
-			      FALSE,
+			      0,
 			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))

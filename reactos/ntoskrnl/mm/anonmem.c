@@ -727,15 +727,14 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
       }
    }
 
-   Status = MmCreateMemoryArea(Process,
-                               AddressSpace,
+   Status = MmCreateMemoryArea(AddressSpace,
                                MEMORY_AREA_VIRTUAL_MEMORY,
                                &BaseAddress,
                                RegionSize,
                                Protect,
                                &MemoryArea,
                                PBaseAddress != 0,
-                               (AllocationType & MEM_TOP_DOWN) == MEM_TOP_DOWN,
+                               AllocationType & MEM_TOP_DOWN,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
@@ -1000,7 +999,7 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                          Address, &RegionBase);
    Info->BaseAddress = RegionBase;
    Info->AllocationBase = MemoryArea->StartingAddress;
-   Info->AllocationProtect = MemoryArea->Attributes;
+   Info->AllocationProtect = MemoryArea->Protect;
    Info->RegionSize = Region->Length;
    Info->State = Region->Type;
    Info->Protect = Region->Protect;

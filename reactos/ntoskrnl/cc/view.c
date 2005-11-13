@@ -657,15 +657,14 @@ CcRosCreateCacheSegment(PBCB Bcb,
 #else
   MmLockAddressSpace(MmGetKernelAddressSpace());
   current->BaseAddress = NULL;
-  Status = MmCreateMemoryArea(NULL,
-			      MmGetKernelAddressSpace(),
+  Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
 			      MEMORY_AREA_CACHE_SEGMENT,
 			      &current->BaseAddress,
 			      Bcb->CacheSegmentSize,
 			      PAGE_READWRITE,
 			      (PMEMORY_AREA*)&current->MemoryArea,
 			      FALSE,
-			      FALSE,
+			      0,
 			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
@@ -1366,15 +1365,14 @@ CcInitView(VOID)
 
   MmLockAddressSpace(MmGetKernelAddressSpace());
 
-  Status = MmCreateMemoryArea(NULL,
-			      MmGetKernelAddressSpace(),
+  Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
 			      MEMORY_AREA_CACHE_SEGMENT,
 			      &CiCacheSegMappingRegionBase,
 			      CI_CACHESEG_MAPPING_REGION_SIZE,
-			      0,
+			      PAGE_READWRITE,
 			      &marea,
 			      FALSE,
-			      FALSE,
+			      0,
 			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))

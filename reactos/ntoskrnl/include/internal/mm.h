@@ -215,7 +215,8 @@ typedef struct _MEMORY_AREA
     struct _MEMORY_AREA *LeftChild;
     struct _MEMORY_AREA *RightChild;
     ULONG Type;
-    ULONG Attributes;
+    ULONG Protect;
+    ULONG Flags;
     ULONG LockCount;
     BOOLEAN DeleteInProgress;
     ULONG PageOpCount;
@@ -377,15 +378,14 @@ MmInitMemoryAreas(VOID);
 NTSTATUS
 STDCALL
 MmCreateMemoryArea(
-    struct _EPROCESS* Process,
     PMADDRESS_SPACE AddressSpace,
     ULONG Type,
     PVOID *BaseAddress,
     ULONG_PTR Length,
-    ULONG Attributes,
+    ULONG Protection,
     PMEMORY_AREA *Result,
     BOOLEAN FixedAddress,
-    BOOLEAN TopDown,
+    ULONG AllocationFlags,
     PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL
 );
 
