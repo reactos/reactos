@@ -38,8 +38,8 @@ HKR, , Icon,           0, "-27"
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
-%PCI\CC_0601.DeviceDesc% = PCI_Inst,PCI\CC_0601
-%PCI\CC_0604.DeviceDesc% = PCI_ISA_Inst,PCI\CC_0604
+%PCI\CC_0601.DeviceDesc% = PCI_ISA_Inst,PCI\CC_0601
+%PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
 
 [IntelMfg]
 %PCI\VEN_8086&DEV_7110.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7110
