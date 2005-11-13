@@ -14,5 +14,4 @@
 	<directory name="reactos">
 	  <file>setupldr.c</file>
 	</directory>
-	<pch>include/freeldr.h</pch>
 </module>
