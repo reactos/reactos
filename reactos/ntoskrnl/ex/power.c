@@ -148,15 +148,16 @@ ShutdownThreadMain(PVOID Context)
                                           sizeof(PCH))]);
      }
 
+   PiShutdownProcessManager();
+   Waittime.QuadPart = (LONGLONG)-10000000; /* 1sec */
+   KeDelayExecutionThread(KernelMode, FALSE, &Waittime);
+
    CmShutdownRegistry();
    IoShutdownRegisteredFileSystems();
    IoShutdownRegisteredDevices();
 
-   PiShutdownProcessManager();
    MiShutdownMemoryManager();
 
-   Waittime.QuadPart = (LONGLONG)-10000000; /* 1sec */
-   KeDelayExecutionThread(KernelMode, FALSE, &Waittime);
 
    if (Action == ShutdownNoReboot)
      {
