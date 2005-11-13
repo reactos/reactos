@@ -190,19 +190,18 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
 	ULONG		i, j;
 
 	// Clip the area to the screen
-	// FIXME: This code seems to have problems... Uncomment and view ;-)
-	/*if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
+	if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
 	{
 		return;
 	}
-	if ((Left + Right) >= UiScreenWidth)
+	if (Right >= UiScreenWidth)
 	{
-		Right = UiScreenWidth - Left;
+		Right = UiScreenWidth - 1;
 	}
-	if ((Top + Bottom) >= UiScreenHeight)
+	if (Bottom >= UiScreenHeight)
 	{
-		Bottom = UiScreenHeight - Top;
-	}*/
+		Bottom = UiScreenHeight - 1;
+	}
 
 	// Loop through each line and fill it in
 	for (i=Top; i<=Bottom; i++)
