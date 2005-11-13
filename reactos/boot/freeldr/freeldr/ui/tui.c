@@ -42,7 +42,10 @@ int printf(const char *format, ... )
 			switch (c = *(format++))
 			{
 			case 'd': case 'u': case 'x':
-                *_itoa(va_arg(ap, unsigned long), str, 10) = 0;
+                if (c == 'x')
+                    *_itoa(va_arg(ap, unsigned long), str, 16) = 0;
+                else
+                    *_itoa(va_arg(ap, unsigned long), str, 10) = 0;
 
 				ptr = str;
 
