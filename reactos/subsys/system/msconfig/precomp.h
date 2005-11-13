@@ -9,6 +9,9 @@
 #include "toolspage.h"
 #include "srvpage.h"
 #include "startuppage.h"
+#include "freeldrpage.h"
+#include "systempage.h"
+#include "generalpage.h"
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383

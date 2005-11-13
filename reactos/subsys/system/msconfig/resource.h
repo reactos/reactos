@@ -3,6 +3,8 @@
 #define IDD_SERVICES_PAGE                103
 #define IDD_GENERAL_PAGE                 104
 #define IDD_STARTUP_PAGE                 105
+#define IDD_FREELDR_PAGE                 106
+#define IDD_SYSTEM_PAGE                  107
 
 #define IDC_TAB                         1001
 #define IDC_BTN_APPLY                   1002
@@ -12,6 +14,10 @@
 #define IDC_SERVICES_LIST               1006
 #define IDC_TOOLS_LIST                  1007
 #define IDC_STARTUP_LIST                1008
+#define IDC_BTN_SERVICES_ACTIVATE       1009
+#define IDC_BTN_SERVICES_DEACTIVATE     1010
+#define IDC_BTN_STARTUP_ACTIVATE        1011
+#define IDC_BTN_STARTUP_DEACTIVATE      1012
 
 #define IDS_TAB_TOOLS                   2001
 #define IDS_TAB_SYSTEM                  2002
@@ -52,6 +58,9 @@
 
 #define IDS_SERVICES_STATUS_STOPPED     2200
 #define IDS_SERVICES_STATUS_RUNNING     2201
-#define IDS_YES                         2202
-#define IDS_NO                          2203
+#define IDS_SERVICES_YES                2202
+#define IDS_SERVICES_UNKNOWN            2203
+
+#define IDS_MSCONFIG                    3000
+
 /* EOF */

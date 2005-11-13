@@ -13,7 +13,10 @@
 	<library>shell32</library>
 	<file>toolspage.c</file>
 	<file>srvpage.c</file>
+	<file>systempage.c</file>
 	<file>startuppage.c</file>
+	<file>freeldrpage.c</file>
+	<file>generalpage.c</file>
 	<file>msconfig.c</file>
 	<file>msconfig.rc</file>
 </module>

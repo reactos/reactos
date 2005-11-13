@@ -149,7 +149,7 @@ GetServices ( void )
                     {
                         if (pServiceFailureActions->lpsaActions[0].Type == SC_ACTION_REBOOT)
                         {
-                            LoadString(hInst, IDS_YES, szStatus, 128);
+                            LoadString(hInst, IDS_SERVICES_YES, szStatus, 128);
                             item.pszText = szStatus;
                             item.iSubItem = 1;
                             SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
@@ -211,7 +211,14 @@ GetServices ( void )
                             item.pszText = lpBuffer;
                             item.iSubItem = 2;
                             SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                        }
+                        }  
+                    }
+                    else
+                    {
+                        LoadString(hInst, IDS_SERVICES_UNKNOWN, szStatus, 128);
+                        item.pszText = szStatus;
+                        item.iSubItem = 2;
+                        SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                     }
                     CloseServiceHandle(hService);
                 }

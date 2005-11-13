@@ -12,9 +12,15 @@ BOOL OnCreate(HWND hWnd)
 	TCITEM  item;
 
 	hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, ToolsPageWndProc);
+    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd, GeneralPageWndProc);
+    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd, SystemPageWndProc);
+    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd, FreeLdrPageWndProc);
     hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd, ServicesPageWndProc);
     hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd, StartupPageWndProc);
+    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, ToolsPageWndProc);
+
+    LoadString(hInst, IDS_MSCONFIG, szTemp, 256);
+    SetWindowText(hWnd, szTemp);
 
 	// Insert Tab Pages
 	LoadString(hInst, IDS_TAB_GENERAL, szTemp, 256);
@@ -61,45 +67,57 @@ void MsConfig_OnTabWndSelChange(void)
 {
     switch (TabCtrl_GetCurSel(hTabWnd)) {
     case 0: //General
-        ShowWindow(hToolsPage, SW_HIDE);
-		ShowWindow(hStartupPage, SW_HIDE);
-		//ShowWindow(hFreeLdrPage, SW_HIDE);
+        ShowWindow(hGeneralPage, SW_SHOW);
+        ShowWindow(hSystemPage, SW_HIDE);
+		ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
-        //BringWindowToTop(hFreeLdrPage);
+		ShowWindow(hStartupPage, SW_HIDE);
+        ShowWindow(hToolsPage, SW_HIDE);
+        BringWindowToTop(hGeneralPage);
 		break;
     case 1: //SYSTEM.INI
+        ShowWindow(hGeneralPage, SW_HIDE);
+        ShowWindow(hSystemPage, SW_SHOW);
         ShowWindow(hToolsPage, SW_HIDE);
 		ShowWindow(hStartupPage, SW_HIDE);
-		//ShowWindow(hFreeLdrPage, SW_SHOW);
+		ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
-        //BringWindowToTop(hFreeLdrPage);
+        BringWindowToTop(hSystemPage);
 		break;
     case 2: //Freeldr
-        ShowWindow(hToolsPage, SW_HIDE);
-		ShowWindow(hStartupPage, SW_HIDE);
-		//ShowWindow(hFreeLdrPage, SW_SHOW);
+        ShowWindow(hGeneralPage, SW_HIDE);
+        ShowWindow(hSystemPage, SW_HIDE);
+		ShowWindow(hFreeLdrPage, SW_SHOW);
 		ShowWindow(hServicesPage, SW_HIDE);
-        //BringWindowToTop(hFreeLdrPage);
+		ShowWindow(hStartupPage, SW_HIDE);
+        ShowWindow(hToolsPage, SW_HIDE);
+        BringWindowToTop(hFreeLdrPage);
 		break;
     case 3: //Services
-        ShowWindow(hToolsPage, SW_HIDE);
-		ShowWindow(hStartupPage, SW_HIDE);
-		//ShowWindow(hFreeLdrPage, SW_HIDE);
+        ShowWindow(hGeneralPage, SW_HIDE);
+        ShowWindow(hSystemPage, SW_HIDE);
+		ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_SHOW);
+		ShowWindow(hStartupPage, SW_HIDE);
+        ShowWindow(hToolsPage, SW_HIDE);
         BringWindowToTop(hServicesPage);
 		break;
     case 4: //startup
-        ShowWindow(hToolsPage, SW_HIDE);
-		ShowWindow(hStartupPage, SW_SHOW);
-		//ShowWindow(hFreeLdrPage, SW_HIDE);
+        ShowWindow(hGeneralPage, SW_HIDE);
+        ShowWindow(hSystemPage, SW_HIDE);
+		ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_SHOW);
+        ShowWindow(hToolsPage, SW_HIDE);
         BringWindowToTop(hStartupPage);
 		break;
 	case 5: //Tools
-        ShowWindow(hToolsPage, SW_SHOW);
-		ShowWindow(hStartupPage, SW_HIDE);
-		//ShowWindow(hFreeLdrPage, SW_HIDE);
+        ShowWindow(hGeneralPage, SW_HIDE);
+        ShowWindow(hSystemPage, SW_HIDE);
+		ShowWindow(hFreeLdrPage, SW_HIDE);
 		ShowWindow(hServicesPage, SW_HIDE);
+		ShowWindow(hStartupPage, SW_HIDE);
+        ShowWindow(hToolsPage, SW_SHOW);
         BringWindowToTop(hToolsPage);
 		break;
 	}
@@ -145,6 +163,8 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(hToolsPage);
 		DestroyWindow(hServicesPage);
 		DestroyWindow(hStartupPage);
+        DestroyWindow(hFreeLdrPage);
+        DestroyWindow(hSystemPage);
         return DefWindowProc(hDlg, message, wParam, lParam);
 
     }
