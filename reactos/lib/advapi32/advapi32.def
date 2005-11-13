@@ -216,8 +216,8 @@ EnumDependentServicesA@24
 EnumDependentServicesW@24
 EnumServiceGroupW@36
 EnumServicesStatusA@32
-;EnumServicesStatusExA
-;EnumServicesStatusExW
+EnumServicesStatusExA@40
+EnumServicesStatusExW@40
 EnumServicesStatusW@32
 ;EnumerateTraceGuids
 EqualDomainSid@12
