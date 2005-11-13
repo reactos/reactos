@@ -36,6 +36,7 @@
 #include <cache.h>
 #include <machine.h>
 #include <inifile.h>
+#include <inffile.h>
 #include <video.h>
 #include <portio.h>
 #include <reactos.h>

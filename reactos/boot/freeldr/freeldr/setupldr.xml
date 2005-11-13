@@ -5,4 +5,6 @@
 	<library>freeldr_base</library>
 	<library>setupldr_main</library>
 	<library>rossym</library>
+	<library>string</library>
+	<library>rtl</library>
 </module>
