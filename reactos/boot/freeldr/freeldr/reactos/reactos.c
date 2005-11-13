@@ -453,7 +453,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 /* Make sure it should be started */
                 if ((StartValue == 0) &&
                     (TagValue == OrderList[TagIndex]) &&
-                    (stricmp(DriverGroup, GroupName) == 0)) {
+                    (_stricmp(DriverGroup, GroupName) == 0)) {
 
                     /* Get the Driver's Location */
                     ValueSize = 256;
@@ -529,7 +529,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 
             if ((StartValue == 0) &&
                 (TagIndex > OrderList[0]) &&
-                (stricmp(DriverGroup, GroupName) == 0)) {
+                (_stricmp(DriverGroup, GroupName) == 0)) {
 
                     ValueSize = 256;
                     rc = RegQueryValue(hDriverKey, "ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
@@ -660,7 +660,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Special case for Live CD.
 	 */
-	if (!stricmp(SystemPath, "LiveCD"))
+	if (!_stricmp(SystemPath, "LiveCD"))
 	{
 		/* Normalize */
 		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));

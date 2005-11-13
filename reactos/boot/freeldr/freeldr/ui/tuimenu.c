@@ -230,7 +230,7 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 	if (MenuInfo->MenuTimeRemaining >= 0)
 	{
 		strcpy(MenuLineText, "[ Time Remaining: ");
-		itoa(MenuInfo->MenuTimeRemaining, TempString, 10);
+		_itoa(MenuInfo->MenuTimeRemaining, TempString, 10);
 		strcat(MenuLineText, TempString);
 		strcat(MenuLineText, " ]");
 
@@ -245,7 +245,7 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 	//
 	for (Idx=0; Idx<MenuInfo->MenuItemCount; Idx++)
 	{
-		if (stricmp(MenuInfo->MenuItemList[Idx], "SEPARATOR") == 0)
+		if (_stricmp(MenuInfo->MenuItemList[Idx], "SEPARATOR") == 0)
 		{
 			UiDrawText(MenuInfo->Left, MenuInfo->Top + Idx + 1, "\xC7", ATTR(UiMenuFgColor, UiMenuBgColor));
 			UiDrawText(MenuInfo->Right, MenuInfo->Top + Idx + 1, "\xB6", ATTR(UiMenuFgColor, UiMenuBgColor));
@@ -295,7 +295,7 @@ VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
 	//
 	// If it is a separator then adjust the text accordingly
 	//
-	if (stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR") == 0)
+	if (_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR") == 0)
 	{
 		memset(MenuLineText, 0, 80);
 		memset(MenuLineText, 0xC4, (MenuInfo->Right - MenuInfo->Left - 1));
@@ -387,7 +387,7 @@ ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterC
 				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem + 1);	// Deselect previous item
 
 				// Skip past any separators
-				if (MenuInfo->SelectedMenuItem > 0 && stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
+				if (MenuInfo->SelectedMenuItem > 0 && _stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
 				{
 					MenuInfo->SelectedMenuItem--;
 				}
@@ -409,7 +409,7 @@ ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterC
 				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem - 1);	// Deselect previous item
 
 				// Skip past any separators
-				if (MenuInfo->SelectedMenuItem < (MenuInfo->MenuItemCount - 1) && stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
+				if (MenuInfo->SelectedMenuItem < (MenuInfo->MenuItemCount - 1) && _stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
 				{
 					MenuInfo->SelectedMenuItem++;
 				}

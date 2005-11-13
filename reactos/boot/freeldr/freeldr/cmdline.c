@@ -92,11 +92,11 @@ CmdLineParse(char *CmdLine)
             {
               *s++ = '\0';
             }
-          if (0 == stricmp(Name, "defaultos"))
+          if (0 == _stricmp(Name, "defaultos"))
             {
               CmdLineInfo.DefaultOperatingSystem = Value;
             }
-          else if (0 == stricmp(Name, "timeout"))
+          else if (0 == _stricmp(Name, "timeout"))
             {
               CmdLineInfo.TimeOut = atoi(Value);
             }

@@ -267,7 +267,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 					KeyList);
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
 	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
-	  if (strnicmp(SearchKey->Name, name, subkeyLength) == 0)
+	  if (_strnicmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -448,7 +448,7 @@ RegOpenKey(FRLDRHKEY ParentKey,
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
 	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
 
-	  if (strnicmp(SearchKey->Name, name, subkeyLength) == 0)
+	  if (_strnicmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -526,7 +526,7 @@ RegSetValue(FRLDRHKEY Key,
 
 	  DbgPrint((DPRINT_REGISTRY, "Value->Name '%s'\n", Value->Name));
 
-	  if (stricmp(Value->Name, ValueName) == 0)
+	  if (_stricmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -631,7 +631,7 @@ RegQueryValue(FRLDRHKEY Key,
 
 	  DbgPrint((DPRINT_REGISTRY, "Searching for '%s'. Value name '%s'\n", ValueName, Value->Name));
 
-	  if (stricmp(Value->Name, ValueName) == 0)
+	  if (_stricmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -692,7 +692,7 @@ RegDeleteValue(FRLDRHKEY Key,
 	  Value = CONTAINING_RECORD(Ptr,
 				    VALUE,
 				    ValueList);
-	  if (stricmp(Value->Name, ValueName) == 0)
+	  if (_stricmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;

@@ -21,6 +21,62 @@
 
 PVOID	TextVideoBuffer = NULL;
 
+/*
+ * printf() - prints formatted text to stdout
+ * originally from GRUB
+ */
+int printf(const char *format, ... )
+{
+	va_list ap;
+	va_start(ap,format);
+	char c, *ptr, str[16];
+
+	while ((c = *(format++)))
+	{
+		if (c != '%')
+		{
+			MachConsPutChar(c);
+		}
+		else
+		{
+			switch (c = *(format++))
+			{
+			case 'd': case 'u': case 'x':
+                *_itoa(va_arg(ap, unsigned long), str, 10) = 0;
+
+				ptr = str;
+
+				while (*ptr)
+				{
+					MachConsPutChar(*(ptr++));
+				}
+				break;
+
+			case 'c': MachConsPutChar((va_arg(ap,int))&0xff); break;
+
+			case 's':
+				ptr = va_arg(ap,char *);
+
+				while ((c = *(ptr++)))
+				{
+					MachConsPutChar(c);
+				}
+				break;
+			case '%':
+				MachConsPutChar(c);
+				break;
+			default:
+				printf("\nprintf() invalid format specifier - %%%c\n", c);
+				break;
+			}
+		}
+	}
+
+	va_end(ap);
+
+	return 0;
+}
+
 BOOL TuiInitialize(VOID)
 {
 	MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
@@ -401,7 +457,7 @@ VOID TuiUpdateDateTime(VOID)
 	// Get the month name
 	strcpy(DateString, UiMonthNames[Month - 1]);
 	// Get the day
-	itoa(Day, TempString, 10);
+	_itoa(Day, TempString, 10);
 	// Get the day postfix
 	if (1 == Day || 21 == Day || 31 == Day)
 	{
@@ -425,7 +481,7 @@ VOID TuiUpdateDateTime(VOID)
 	strcat(DateString, " ");
 
 	// Get the year and add it to the date
-	itoa(Year, TempString, 10);
+	_itoa(Year, TempString, 10);
 	strcat(DateString, TempString);
 
 	// Draw the date
@@ -441,18 +497,18 @@ VOID TuiUpdateDateTime(VOID)
 	{
 		Hour = 12;
 	}
-	itoa(Hour, TempString, 10);
+	_itoa(Hour, TempString, 10);
 	strcpy(TimeString, "    ");
 	strcat(TimeString, TempString);
 	strcat(TimeString, ":");
-	itoa(Minute, TempString, 10);
+	_itoa(Minute, TempString, 10);
 	if (Minute < 10)
 	{
 		strcat(TimeString, "0");
 	}
 	strcat(TimeString, TempString);
 	strcat(TimeString, ":");
-	itoa(Second, TempString, 10);
+	_itoa(Second, TempString, 10);
 	if (Second < 10)
 	{
 		strcat(TimeString, "0");
@@ -653,37 +709,37 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 
 UCHAR TuiTextToColor(PCSTR ColorText)
 {
-	if (stricmp(ColorText, "Black") == 0)
+	if (_stricmp(ColorText, "Black") == 0)
 		return COLOR_BLACK;
-	else if (stricmp(ColorText, "Blue") == 0)
+	else if (_stricmp(ColorText, "Blue") == 0)
 		return COLOR_BLUE;
-	else if (stricmp(ColorText, "Green") == 0)
+	else if (_stricmp(ColorText, "Green") == 0)
 		return COLOR_GREEN;
-	else if (stricmp(ColorText, "Cyan") == 0)
+	else if (_stricmp(ColorText, "Cyan") == 0)
 		return COLOR_CYAN;
-	else if (stricmp(ColorText, "Red") == 0)
+	else if (_stricmp(ColorText, "Red") == 0)
 		return COLOR_RED;
-	else if (stricmp(ColorText, "Magenta") == 0)
+	else if (_stricmp(ColorText, "Magenta") == 0)
 		return COLOR_MAGENTA;
-	else if (stricmp(ColorText, "Brown") == 0)
+	else if (_stricmp(ColorText, "Brown") == 0)
 		return COLOR_BROWN;
-	else if (stricmp(ColorText, "Gray") == 0)
+	else if (_stricmp(ColorText, "Gray") == 0)
 		return COLOR_GRAY;
-	else if (stricmp(ColorText, "DarkGray") == 0)
+	else if (_stricmp(ColorText, "DarkGray") == 0)
 		return COLOR_DARKGRAY;
-	else if (stricmp(ColorText, "LightBlue") == 0)
+	else if (_stricmp(ColorText, "LightBlue") == 0)
 		return COLOR_LIGHTBLUE;
-	else if (stricmp(ColorText, "LightGreen") == 0)
+	else if (_stricmp(ColorText, "LightGreen") == 0)
 		return COLOR_LIGHTGREEN;
-	else if (stricmp(ColorText, "LightCyan") == 0)
+	else if (_stricmp(ColorText, "LightCyan") == 0)
 		return COLOR_LIGHTCYAN;
-	else if (stricmp(ColorText, "LightRed") == 0)
+	else if (_stricmp(ColorText, "LightRed") == 0)
 		return COLOR_LIGHTRED;
-	else if (stricmp(ColorText, "LightMagenta") == 0)
+	else if (_stricmp(ColorText, "LightMagenta") == 0)
 		return COLOR_LIGHTMAGENTA;
-	else if (stricmp(ColorText, "Yellow") == 0)
+	else if (_stricmp(ColorText, "Yellow") == 0)
 		return COLOR_YELLOW;
-	else if (stricmp(ColorText, "White") == 0)
+	else if (_stricmp(ColorText, "White") == 0)
 		return COLOR_WHITE;
 
 	return COLOR_BLACK;
@@ -691,15 +747,15 @@ UCHAR TuiTextToColor(PCSTR ColorText)
 
 UCHAR TuiTextToFillStyle(PCSTR FillStyleText)
 {
-	if (stricmp(FillStyleText, "Light") == 0)
+	if (_stricmp(FillStyleText, "Light") == 0)
 	{
 		return LIGHT_FILL;
 	}
-	else if (stricmp(FillStyleText, "Medium") == 0)
+	else if (_stricmp(FillStyleText, "Medium") == 0)
 	{
 		return MEDIUM_FILL;
 	}
-	else if (stricmp(FillStyleText, "Dark") == 0)
+	else if (_stricmp(FillStyleText, "Dark") == 0)
 	{
 		return DARK_FILL;
 	}

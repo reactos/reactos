@@ -217,7 +217,7 @@ InfpCacheFindSection (PINFCACHE Cache,
   Section = Cache->FirstSection;
   while (Section != NULL)
     {
-      if (stricmp (Section->Name, Name) == 0)
+      if (_stricmp (Section->Name, Name) == 0)
 	{
 	  return Section;
 	}
@@ -374,7 +374,7 @@ InfpCacheFindKeyLine (PINFCACHESECTION Section,
   Line = Section->FirstLine;
   while (Line != NULL)
     {
-      if (Line->Key != NULL && stricmp (Line->Key, Key) == 0)
+      if (Line->Key != NULL && _stricmp (Line->Key, Key) == 0)
 	{
 	  return Line;
 	}
@@ -1008,7 +1008,7 @@ InfFindFirstLine (HINF InfHandle,
 //      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
 
       /* Are the section names the same? */
-      if (stricmp(CacheSection->Name, Section) == 0)
+      if (_stricmp(CacheSection->Name, Section) == 0)
 	{
 	  if (Key != NULL)
 	    {
@@ -1082,7 +1082,7 @@ InfFindFirstMatchLine (PINFCONTEXT ContextIn,
   CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && stricmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && _stricmp (CacheLine->Key, Key) == 0)
 	{
 
 	  if (ContextIn != ContextOut)
@@ -1118,7 +1118,7 @@ InfFindNextMatchLine (PINFCONTEXT ContextIn,
   CacheLine = (PINFCACHELINE)ContextIn->Line;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && stricmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && _stricmp (CacheLine->Key, Key) == 0)
 	{
 
 	  if (ContextIn != ContextOut)
@@ -1160,7 +1160,7 @@ InfGetLineCount(HINF InfHandle,
 //      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
 
       /* Are the section names the same? */
-      if (stricmp(CacheSection->Name, Section) == 0)
+      if (_stricmp(CacheSection->Name, Section) == 0)
 	{
 	  return CacheSection->LineCount;
 	}

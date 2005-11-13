@@ -306,7 +306,7 @@ BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize
 		DbgPrint((DPRINT_FILESYSTEM, "Dumping directory entry at offset %d:\n", CurrentOffset));
 		DbgDumpBuffer(DPRINT_FILESYSTEM, CurrentDirectoryEntry, CurrentDirectoryEntry->rec_len);
 
-		if ((strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->name_len) == 0) &&
+		if ((_strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->name_len) == 0) &&
 			(strlen(FileName) == CurrentDirectoryEntry->name_len))
 		{
 			RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT2_DIR_ENTRY));

@@ -56,7 +56,7 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 		// Get the next setting from the .ini file section
 		if (IniReadSettingByNumber(SectionId, Index, SettingName, 80, SettingValue, 80))
 		{
-			if (stricmp(SettingName, "DriveMap") == 0)
+			if (_stricmp(SettingName, "DriveMap") == 0)
 			{
 				// Make sure we haven't exceeded the drive map max count
 				if (DriveMapList.DriveMapCount >= 4)

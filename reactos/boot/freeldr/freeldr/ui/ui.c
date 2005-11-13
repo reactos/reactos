@@ -153,7 +153,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 		}
 		if (IniReadSettingByName(SectionId, "SpecialEffects", SettingText, 260))
 		{
-			if (stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
 			{
 				UiUseSpecialEffects = TRUE;
 			}
@@ -544,7 +544,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, 79, SettingValue, 79);
 
-		if (stricmp(SettingName, "MessageBox") == 0)
+		if (_stricmp(SettingName, "MessageBox") == 0)
 		{
 			// Get the real length of the MessageBox text
 			MessageBoxTextSize = IniGetSectionSettingValueSize(SectionId, Idx);

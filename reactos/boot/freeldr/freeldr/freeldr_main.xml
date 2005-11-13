@@ -2,7 +2,6 @@
 	<include base="freeldr_main">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />
-	<compilerflag>-nostdlib</compilerflag>
 	<compilerflag>-ffreestanding</compilerflag>
 	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>
@@ -15,5 +14,4 @@
 	<file>linuxboot.c</file>
 	<file>oslist.c</file>
 	<file>custom.c</file>
-	<pch>include/freeldr.h</pch>
 </module>

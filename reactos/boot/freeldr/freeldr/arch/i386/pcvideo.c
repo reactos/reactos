@@ -895,11 +895,11 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOL Init)
     {
       DbgPrint((DPRINT_UI, "VGA display adapter detected.\n"));
 
-      if (0 == stricmp(DisplayModeName, "NORMAL_VGA"))
+      if (0 == _stricmp(DisplayModeName, "NORMAL_VGA"))
         {
           VideoMode = VIDEOMODE_NORMAL_TEXT;
         }
-      else if (0 == stricmp(DisplayModeName, "EXTENDED_VGA"))
+      else if (0 == _stricmp(DisplayModeName, "EXTENDED_VGA"))
         {
           VideoMode = VIDEOMODE_EXTENDED_TEXT;
         }

@@ -3,7 +3,6 @@
 	<include base="freeldr_base">cache</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />
-	<compilerflag>-nostdlib</compilerflag>
 	<compilerflag>-ffreestanding</compilerflag>
 	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>
@@ -80,13 +79,6 @@
 	</directory>
 	<directory name="rtl">
 		<file>list.c</file>
-		<file>memcmp.c</file>
-		<file>memcpy.c</file>
-		<file>memmove.c</file>
-		<file>memset.c</file>
-		<file>print.c</file>
-		<file>stdlib.c</file>
-		<file>string.c</file>
 	</directory>
 	<directory name="ui">
 		<file>gui.c</file>

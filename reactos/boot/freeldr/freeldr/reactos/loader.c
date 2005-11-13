@@ -243,7 +243,7 @@ FrLdrGetKernelBase(VOID)
     while ((p = strchr(p, '/')) != NULL) {
 
         /* Find "/3GB" */
-        if (!strnicmp(p + 1, "3GB", 3)) {
+        if (!_strnicmp(p + 1, "3GB", 3)) {
 
             /* Make sure there's nothing following it */
             if (p[4] == ' ' || p[4] == 0) {
@@ -303,7 +303,7 @@ FrLdrGetPaeMode(VOID)
 
           p++;
           /* Find "PAE" */
-          if (!strnicmp(p, "PAE", 3)) {
+          if (!_strnicmp(p, "PAE", 3)) {
 
               /* Make sure there's nothing following it */
               if (p[3] == ' ' || p[3] == 0) {

@@ -36,7 +36,7 @@ BOOL IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 	while (Section != NULL)
 	{
 		// Compare against the section name
-		if (stricmp(SectionName, Section->SectionName) == 0)
+		if (_stricmp(SectionName, Section->SectionName) == 0)
 		{
 			// We found it
 			*SectionId = (ULONG)Section;
@@ -141,7 +141,7 @@ BOOL IniReadSettingByName(ULONG SectionId, PCSTR SettingName, PCHAR Buffer, ULON
 	while (SectionItem != NULL)
 	{
 		// Check to see if this is the setting they want
-		if (stricmp(SettingName, SectionItem->ItemName) == 0)
+		if (_stricmp(SettingName, SectionItem->ItemName) == 0)
 		{
 			DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting \'%s\' found.\n", SettingName));
 			DbgPrint((DPRINT_INIFILE, "IniReadSettingByName() Setting value = %s\n", SectionItem->ItemValue));

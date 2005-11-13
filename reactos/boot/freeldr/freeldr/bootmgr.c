@@ -120,23 +120,23 @@ NoGui:
 
 		// Install the drive mapper according to this sections drive mappings
 		DriveMapMapDrivesInSection(OperatingSystemSectionNames[SelectedOperatingSystem]);
-		if (stricmp(SettingValue, "ReactOS") == 0)
+		if (_stricmp(SettingValue, "ReactOS") == 0)
 		{
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "Linux") == 0)
+		else if (_stricmp(SettingValue, "Linux") == 0)
 		{
 			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem], OperatingSystemDisplayNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "BootSector") == 0)
+		else if (_stricmp(SettingValue, "BootSector") == 0)
 		{
 			LoadAndBootBootSector(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "Partition") == 0)
+		else if (_stricmp(SettingValue, "Partition") == 0)
 		{
 			LoadAndBootPartition(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "Drive") == 0)
+		else if (_stricmp(SettingValue, "Drive") == 0)
 		{
 			LoadAndBootDrive(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
@@ -174,7 +174,7 @@ ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSy
 	{
 		for (Idx=0; Idx<OperatingSystemCount; Idx++)
 		{
-			if (stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
+			if (_stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
 			{
 				DefaultOS = Idx;
 				break;

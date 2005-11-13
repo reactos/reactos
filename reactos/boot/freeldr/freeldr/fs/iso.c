@@ -99,7 +99,7 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Directo
 			Name[i] = 0;
 			DbgPrint((DPRINT_FILESYSTEM, "Name '%s'\n", Name));
 
-			if (strlen(FileName) == strlen(Name) && stricmp(FileName, Name) == 0)
+			if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
 			{
 				IsoFileInfoPointer->FileStart = Record->ExtentLocationL;
 				IsoFileInfoPointer->FileSize = Record->DataLengthL;

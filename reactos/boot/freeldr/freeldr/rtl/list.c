@@ -173,3 +173,4 @@ VOID RtlListMoveEntryNext(PLIST_ITEM ListEntry)
 	RtlListRemoveEntry(ListEntry);
 	RtlListInsertEntry(ListNext, ListEntry);
 }
+
