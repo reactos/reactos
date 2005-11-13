@@ -280,12 +280,14 @@ ScmrControlService(handle_t BindingHandle,
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
+    ACCESS_MASK DesiredAccess;
 
     DPRINT("ScmrControlService() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
+    /* Check the service handle */
     hSvc = (PSERVICE_HANDLE)hService;
     if (hSvc->Handle.Tag != SERVICE_TAG)
     {
@@ -293,10 +295,39 @@ ScmrControlService(handle_t BindingHandle,
         return ERROR_INVALID_HANDLE;
     }
 
+    /* Check access rights */
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_STOP:
+            DesiredAccess = SERVICE_STOP;
+            break;
 
-    /* FIXME: Check access rights */
+        case SERVICE_CONTROL_PAUSE:
+        case SERVICE_CONTROL_CONTINUE:
+            DesiredAccess = SERVICE_PAUSE_CONTINUE;
+            break;
 
+        case SERVICE_INTERROGATE:
+            DesiredAccess = SERVICE_INTERROGATE;
+            break;
 
+        default:
+            if (dwControl >= 128 && dwControl <= 255)
+                DesiredAccess = SERVICE_USER_DEFINED_CONTROL;
+            else
+                DesiredAccess = SERVICE_QUERY_CONFIG |
+                                SERVICE_CHANGE_CONFIG |
+                                SERVICE_QUERY_STATUS |
+                                SERVICE_START |
+                                SERVICE_PAUSE_CONTINUE;
+            break;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  DesiredAccess))
+        return ERROR_ACCESS_DENIED;
+
+    /* Check the service entry point */
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
