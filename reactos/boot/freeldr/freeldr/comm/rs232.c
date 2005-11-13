@@ -23,6 +23,8 @@
 
 /* MACROS *******************************************************************/
 
+#ifndef DEBUG
+
 #define DEFAULT_BAUD_RATE    19200
 
 #define   SER_RBR(x)   ((x)+0)
@@ -272,3 +274,5 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 
 	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
 }
+
+#endif
