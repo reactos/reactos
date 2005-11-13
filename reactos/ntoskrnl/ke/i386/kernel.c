@@ -298,6 +298,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->TSS = &KiBootTss;
    KPCR->Number = 0;
    KPCR->SetMember = 1 << 0;
+   KeActiveProcessors = 1 << 0;
    KPCR->PrcbData.SetMember = 1 << 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
