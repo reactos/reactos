@@ -96,7 +96,7 @@ BEGIN
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&Über Explorer...",          ID_ABOUT_EXPLORER
-        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "Über &OS...",                ID_ABOUT_WINDOWS
     END
 END
 
@@ -207,7 +207,7 @@ END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 204
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Startmenu-Einstellungen"
+CAPTION "Startmenü-Einstellungen"
 FONT 8, "MS Sans Serif"
 BEGIN
 END
@@ -284,7 +284,7 @@ IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Programmsuche im Startmenu"
+CAPTION "Programmsuche im Startmenü"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
