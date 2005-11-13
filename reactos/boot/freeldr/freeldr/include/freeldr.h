@@ -43,18 +43,18 @@
 #include <registry.h>
 #include <fsrec.h>
 /* file system headers */
-#include <fs\ext2.h>
-#include <fs\fat.h>
-#include <fs\ntfs.h>
-#include <fs\iso.h>
+#include <fs/ext2.h>
+#include <fs/fat.h>
+#include <fs/ntfs.h>
+#include <fs/iso.h>
 /* ui support */
-#include <ui\tui.h>
-#include <ui\gui.h>
+#include <ui/tui.h>
+#include <ui/gui.h>
 /* arch files */
-#include <arch\i386\hardware.h>
-#include <arch\i386\i386.h>
-#include <arch\i386\machpc.h>
-#include <arch\i386\machxbox.h>
+#include <arch/i386/hardware.h>
+#include <arch/i386/i386.h>
+#include <arch/i386/machpc.h>
+#include <arch/i386/machxbox.h>
 #include <internal/i386/ke.h>
 /* misc files */
 #include <keycodes.h>
