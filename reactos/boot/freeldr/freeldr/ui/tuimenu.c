@@ -18,15 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <ui.h>
-#include "tui.h"
-#include "keycodes.h"
-#include <options.h>
-#include <mm.h>
-#include <machine.h>
-#include <video.h>
-
 
 BOOL TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {

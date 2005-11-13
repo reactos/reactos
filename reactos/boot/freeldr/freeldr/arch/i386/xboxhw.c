@@ -17,9 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "machine.h"
-#include "machxbox.h"
+#include <freeldr.h>
 
 VOID
 XboxHwDetect(VOID)

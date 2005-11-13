@@ -20,8 +20,6 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-
 
 BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition)
 {

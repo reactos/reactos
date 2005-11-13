@@ -17,14 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "mm.h"
-#include "machine.h"
-#include "machpc.h"
-#include "machxbox.h"
-#include "portio.h"
-#include "hardware.h"
-#include "rtl.h"
+#include <freeldr.h>
 
 VOID
 MachInit(const char *CmdLine)

@@ -19,21 +19,9 @@
 
 
 #include <freeldr.h>
-#include <arch.h>
-#include <disk.h>
-#include <miscboot.h>
-#include <rtl.h>
-#include <fs.h>
-#include <ui.h>
-#include <linux.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <mm.h>
-#include <inifile.h>
-#include <oslist.h> // For RemoveQuotes()
-#include <video.h>
-#include <drivemap.h>
-
-
 
 #define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
 

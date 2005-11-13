@@ -20,12 +20,7 @@
  * by the Xbox Linux group: http://www.xbox-linux.org
  */
 
-#include "freeldr.h"
-#include "debug.h"
-#include "rtl.h"
-#include "machine.h"
-#include "machxbox.h"
-#include "portio.h"
+#include <freeldr.h>
 
 #define I2C_IO_BASE 0xc000
 

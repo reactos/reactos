@@ -17,13 +17,10 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "machine.h"
-#include "arch.h"
-#include "debug.h"
-#include "machpc.h"
-#include "rtl.h"
-#include "portio.h"
+#include <freeldr.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #define VIDEOPORT_PALETTE_READ		0x03C7
 #define VIDEOPORT_PALETTE_WRITE		0x03C8

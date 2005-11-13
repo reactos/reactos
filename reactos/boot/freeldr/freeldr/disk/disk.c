@@ -18,12 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <disk.h>
-#include <arch.h>
-#include <rtl.h>
-#include <ui.h>
-#include <debug.h>
 
+#define NDEBUG
+#include <debug.h>
 
 #undef  UNIMPLEMENTED
 #define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "Unimplemented\n"));

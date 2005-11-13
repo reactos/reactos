@@ -17,10 +17,10 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "debug.h"
-#include "i386.h"
-#include "fsrec.h"
+#include <freeldr.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS

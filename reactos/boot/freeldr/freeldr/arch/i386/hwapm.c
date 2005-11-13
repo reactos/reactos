@@ -19,15 +19,9 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <mm.h>
-#include <portio.h>
-
-#include "../../reactos/registry.h"
-#include "hardware.h"
-
 
 static BOOL
 FindApmBios(VOID)

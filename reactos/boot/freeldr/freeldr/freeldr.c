@@ -18,14 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <arch.h>
-#include <machine.h>
-#include <mm.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <bootmgr.h>
-#include <fs.h>
-#include <cmdline.h>
 
 VOID BootMain(LPSTR CmdLine)
 {

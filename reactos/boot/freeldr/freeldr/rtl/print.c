@@ -18,9 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <machine.h>
-#include <rtl.h>
-#include <stdarg.h>
 
 /*
  * print() - prints unformatted text to stdout

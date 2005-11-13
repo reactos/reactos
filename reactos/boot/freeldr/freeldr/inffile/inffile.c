@@ -28,12 +28,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <freeldr.h>
-#include <mm.h>
-#include <rtl.h>
-#include <fs.h>
-
-#include <inffile.h>
-
 
 #define CONTROL_Z  '\x1a'
 #define MAX_SECTION_NAME_LEN  255

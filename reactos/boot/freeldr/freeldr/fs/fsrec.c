@@ -18,20 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include "fsrec.h"
-#include "fat.h"
-#include "iso.h"
-#include "ext2.h"
-#include "ntfs.h"
-#include <disk.h>
-#include <rtl.h>
-#include <arch.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <machine.h>
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS

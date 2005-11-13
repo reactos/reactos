@@ -18,18 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <ui.h>
-#include <options.h>
-#include <miscboot.h>
-#include <debug.h>
-#include <disk.h>
-#include <arch.h>
-#include <inifile.h>
-#include <linux.h>
-#include <reactos.h>
-#include <drivemap.h>
-#include <machine.h>
 
 
 const CHAR	BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";

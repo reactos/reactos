@@ -18,17 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include "ext2.h"
-#include <disk.h>
-#include <rtl.h>
-#include <ui.h>
-#include <arch.h>
-#include <mm.h>
-#include <debug.h>
-#include <cache.h>
-#include <machine.h>
 
+#define NDEBUG
+#include <debug.h>
 
 GEOMETRY			Ext2DiskGeometry;				// Ext2 file system disk geometry
 

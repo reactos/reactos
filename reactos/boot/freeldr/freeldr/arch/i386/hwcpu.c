@@ -19,15 +19,9 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <mm.h>
-#include <portio.h>
-
-#include "../../reactos/registry.h"
-#include "hardware.h"
-
 
 #define MP_FP_SIGNATURE 0x5F504D5F	/* "_MP_" */
 #define MP_CT_SIGNATURE 0x504D4350	/* "PCMP" */

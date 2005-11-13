@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <rtl.h>
+#include <freeldr.h>
 
 /*
  * convert_to_ascii() - converts a number to it's ascii equivalent

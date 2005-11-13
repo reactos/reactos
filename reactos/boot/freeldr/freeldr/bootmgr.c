@@ -18,24 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <fs.h>
-#include <reactos.h>
-#include <ui.h>
-#include <arch.h>
-#include <miscboot.h>
-#include <linux.h>
-#include <mm.h>
-#include <inifile.h>
-#include <debug.h>
-#include <options.h>
-#include <oslist.h>
-#include <video.h>
-#include <bootmgr.h>
-#include <drivemap.h>
-#include <keycodes.h>
-#include <cmdline.h>
-#include <machine.h>
 
 VOID RunLoader(VOID)
 {

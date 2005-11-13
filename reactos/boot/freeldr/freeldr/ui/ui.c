@@ -18,16 +18,10 @@
  */
 
 #include <freeldr.h>
-#include <ui.h>
-#include "tui.h"
-#include <rtl.h>
-#include <mm.h>
-#include <machine.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <inifile.h>
-#include <version.h>
-#include <video.h>
-#include <reactos/buildno.h>
+
 
 ULONG	UiScreenWidth = 80;							// Screen Width
 ULONG	UiScreenHeight = 25;							// Screen Height

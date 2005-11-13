@@ -18,11 +18,9 @@
  */
 
 #include <freeldr.h>
-#include "ini.h"
-#include <ui.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <mm.h>
 
 BOOL IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 {

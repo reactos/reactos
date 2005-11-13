@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <video.h>
-#include <machine.h>
 
 VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {

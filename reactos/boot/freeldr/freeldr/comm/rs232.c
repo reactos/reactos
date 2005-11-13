@@ -20,9 +20,6 @@
  */
 
 #include <freeldr.h>
-#include <comm.h>
-#include <portio.h>
-
 
 /* MACROS *******************************************************************/
 

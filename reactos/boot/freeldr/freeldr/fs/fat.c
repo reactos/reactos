@@ -18,16 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include "fat.h"
-#include <disk.h>
-#include <rtl.h>
-#include <ui.h>
-#include <arch.h>
-#include <mm.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <cache.h>
-#include <machine.h>
 
 ULONG			BytesPerSector;			/* Number of bytes per sector */
 ULONG			SectorsPerCluster;		/* Number of sectors per cluster */

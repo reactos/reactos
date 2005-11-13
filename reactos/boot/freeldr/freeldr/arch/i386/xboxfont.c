@@ -19,9 +19,7 @@
  * Note: Converted from the XFree vga.bdf font
  */
 
-#include "freeldr.h"
-#include "machine.h"
-#include "machxbox.h"
+#include <freeldr.h>
 
 UCHAR XboxFont8x16[256 * 16] =
 {

@@ -18,13 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <mm.h>
-#include "mem.h"
-#include <rtl.h>
-#include <debug.h>
-#include <ui.h>
-#include <machine.h>
 
+#define NDEBUG
+#include <debug.h>
 
 #ifdef DEBUG
 ULONG			AllocationCount = 0;

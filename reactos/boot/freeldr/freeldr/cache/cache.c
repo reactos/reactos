@@ -17,14 +17,9 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include <freeldr.h>
-#include "cm.h"
-#include <mm.h>
-#include <disk.h>
-#include <machine.h>
-#include <cache.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////

@@ -18,11 +18,8 @@
  */
 
 #include <freeldr.h>
-#include <drivemap.h>
-#include <rtl.h>
-#include <inifile.h>
-#include <cache.h>
-#include <ui.h>
+
+#define NDEBUG
 #include <debug.h>
 
 BOOL	DriveMapInstalled = FALSE;	// Tells us if we have already installed our drive map int 13h handler code

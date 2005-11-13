@@ -20,12 +20,9 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <mm.h>
+
+#define NDEBUG
 #include <debug.h>
-
-#include "registry.h"
-
 
 #define  REG_HIVE_ID                   0x66676572 /* "regf" */
 #define  REG_BIN_ID                    0x6e696268 /* "hbin" */

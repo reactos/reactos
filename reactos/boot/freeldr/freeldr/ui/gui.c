@@ -18,13 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <ui.h>
-#include "gui.h"
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-#include <inifile.h>
-#include <version.h>
 
 VOID GuiDrawBackdrop(VOID)
 {

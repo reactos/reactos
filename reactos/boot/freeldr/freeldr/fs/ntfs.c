@@ -25,16 +25,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include <disk.h>
-#include <rtl.h>
-#include <arch.h>
-#include <mm.h>
-#include <debug.h>
-#include <cache.h>
-#include <machine.h>
 
-#include "ntfs.h"
+#define NDEBUG
+#include <debug.h>
 
 PNTFS_BOOTSECTOR NtfsBootSector;
 ULONG NtfsClusterSize;

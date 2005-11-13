@@ -19,8 +19,6 @@
  */
 
 #include <freeldr.h>
-#include <cmdline.h>
-#include <rtl.h>
 
 static CMDLINEINFO CmdLineInfo;
 

@@ -18,9 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <video.h>
-#include <machine.h>
-
 
 #define RGB_MAX						64
 #define RGB_MAX_PER_ITERATION		64

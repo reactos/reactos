@@ -19,14 +19,9 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
-#include <debug.h>
-#include <mm.h>
-#include <portio.h>
 
-#include "../../reactos/registry.h"
-#include "hardware.h"
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _ROUTING_SLOT
 {

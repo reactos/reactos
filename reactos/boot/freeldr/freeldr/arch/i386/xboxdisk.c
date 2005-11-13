@@ -22,13 +22,10 @@
  *
  */
 
-#include "freeldr.h"
-#include "debug.h"
-#include "hardware.h"
-#include "machine.h"
-#include "machxbox.h"
-#include "portio.h"
-#include "rtl.h"
+#include <freeldr.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #define XBOX_IDE_COMMAND_PORT 0x1f0
 #define XBOX_IDE_CONTROL_PORT 0x170

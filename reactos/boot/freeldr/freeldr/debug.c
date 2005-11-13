@@ -18,11 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <debug.h>
-#include <rtl.h>
-#include <comm.h>
-#include <portio.h>
-#include <machine.h>
 
 #ifdef DEBUG
 

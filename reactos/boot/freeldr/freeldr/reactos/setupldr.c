@@ -19,20 +19,6 @@
  */
 
 #include <freeldr.h>
-#include <reactos/rossym.h>
-#include <debug.h>
-#include <arch.h>
-#include <disk.h>
-#include <reactos.h>
-#include <rtl.h>
-#include <fs.h>
-#include <multiboot.h>
-#include <mm.h>
-#include <machine.h>
-#include <ui.h>
-#include <inffile.h>
-
-#include "registry.h"
 
 LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel

@@ -18,17 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <ui.h>
-#include "tui.h"
-#include "keycodes.h"
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-#include <inifile.h>
-#include <version.h>
-#include <video.h>
-#include <machine.h>
-
 
 PVOID	TextVideoBuffer = NULL;
 

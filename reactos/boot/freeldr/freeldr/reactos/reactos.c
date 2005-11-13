@@ -20,9 +20,6 @@
  */
 
 #include <freeldr.h>
-#include <reactos/rossym.h>
-
-#include "registry.h"
 
 #define NDEBUG
 #include <debug.h>

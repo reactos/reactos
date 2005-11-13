@@ -18,17 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include <disk.h>
-#include <rtl.h>
-#include <arch.h>
-#include <mm.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <cache.h>
-#include <machine.h>
-
-#include "iso.h"
-
 
 #define SECTORSIZE 2048
 

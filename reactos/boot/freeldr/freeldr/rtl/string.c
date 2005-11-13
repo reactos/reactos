@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <rtl.h>
+#include <freeldr.h>
 
 size_t strlen(const char *str)
 {

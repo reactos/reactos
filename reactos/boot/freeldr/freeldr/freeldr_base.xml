@@ -106,4 +106,5 @@
 	<file>version.c</file>
 	<file>cmdline.c</file>
 	<file>machine.c</file>
+	<pch>include/freeldr.h</pch>
 </module>

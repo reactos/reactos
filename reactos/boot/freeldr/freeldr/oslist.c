@@ -18,11 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <inifile.h>
-#include <oslist.h>
-#include <rtl.h>
-#include <mm.h>
-#include <ui.h>
 
 BOOL InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
 {

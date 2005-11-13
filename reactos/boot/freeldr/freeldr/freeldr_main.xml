@@ -15,4 +15,5 @@
 	<file>linuxboot.c</file>
 	<file>oslist.c</file>
 	<file>custom.c</file>
+	<pch>include/freeldr.h</pch>
 </module>

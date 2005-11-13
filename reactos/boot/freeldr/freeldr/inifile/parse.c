@@ -18,12 +18,9 @@
  */
 
 #include <freeldr.h>
-#include "ini.h"
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-#include <machine.h>
 
+#define NDEBUG
+#include <debug.h>
 
 PINI_SECTION		IniFileSectionListHead = NULL;
 ULONG					IniFileSectionCount = 0;

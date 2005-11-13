@@ -20,8 +20,6 @@
  */
 
 #include <freeldr.h>
-#include <../arch/i386/hardware.h>
-#include <internal/i386/ke.h>
 
 #define NDEBUG
 #include <debug.h>

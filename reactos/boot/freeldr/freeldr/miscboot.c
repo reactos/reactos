@@ -17,17 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include <freeldr.h>
-#include <arch.h>
-#include <miscboot.h>
-#include <rtl.h>
-#include <fs.h>
-#include <ui.h>
-#include <inifile.h>
-#include <disk.h>
-#include <drivemap.h>
-#include <machine.h>
 
 VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 {

@@ -18,13 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <disk.h>
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-#include <arch.h>
-#include <machine.h>
 
+#define NDEBUG
+#include <debug.h>
 
 BOOL DiskGetActivePartitionEntry(ULONG DriveNumber,
                                  PPARTITION_TABLE_ENTRY PartitionTableEntry,

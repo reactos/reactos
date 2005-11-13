@@ -19,19 +19,9 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <disk.h>
-#include <mm.h>
-#include <machine.h>
-#include <portio.h>
-#include <video.h>
-
-#include "../../reactos/registry.h"
-#include "hardware.h"
-#include "machpc.h"
-
 
 #define MILLISEC     (10)
 #define PRECISION    (8)

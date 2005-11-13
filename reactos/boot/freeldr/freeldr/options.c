@@ -18,14 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <ui.h>
-#include <options.h>
-#include <miscboot.h>
-#include <debug.h>
-#include <disk.h>
-#include <arch.h>
-
 
 PCSTR	OptionsMenuList[] =
 {
