@@ -330,7 +330,8 @@ OK  :  10    |  CANCELAR:  12\n"
 
 STRING_PATH_HELP1, "Muestra o cambia la ruta de búsqueda de archivos ejecutables.\n\n\
 PATH [[unidad:]ruta[;...]]\nRuta ;\n\n\
-Escribe PATH ; para limpiar todas las configuraciones de búsqueda y usar solo el\n\ directorio actual del interprete de comandos.\n\
+Escribe PATH ; para limpiar todas las configuraciones de búsqueda y usar solo el\n\
+directorio actual del interprete de comandos.\n\
 Escribe PATH sin parámetros para mostrar la ruta actual.\n"
 
 STRING_PROMPT_HELP1, "Cambia el símbolo de comandos.\n\n\
