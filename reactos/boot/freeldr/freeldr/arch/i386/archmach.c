@@ -32,9 +32,7 @@ MachInit(const char *CmdLine)
   PciId = READ_PORT_ULONG((ULONG*) 0xcfc);
   if (0x02a510de == PciId)
     {
-#ifdef XBOX
       XboxMachInit(CmdLine);
-#endif
     }
   else
     {

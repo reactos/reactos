@@ -28,16 +28,14 @@
 				<file>pcrtc.c</file>
 				<file>pcvideo.c</file>
 				<file>portio.c</file>
-				<if property="SARCH" value="xbox">
-					<file>machxbox.c</file>
-					<file>xboxcons.c</file>
-					<file>xboxdisk.c</file>
-					<file>xboxfont.c</file>
-					<file>xboxhw.c</file>
-					<file>xboxmem.c</file>
-					<file>xboxrtc.c</file>
-					<file>xboxvideo.c</file>
-				</if>
+				<file>machxbox.c</file>
+				<file>xboxcons.c</file>
+				<file>xboxdisk.c</file>
+				<file>xboxfont.c</file>
+				<file>xboxhw.c</file>
+				<file>xboxmem.c</file>
+				<file>xboxrtc.c</file>
+				<file>xboxvideo.c</file>
 			</directory>
 		</if>
 	</directory>
