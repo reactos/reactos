@@ -122,7 +122,7 @@ BOOL FsRecIsNtfs(ULONG DriveNumber, ULONG VolumeStartSector)
 		return FALSE;
 	}
 
-	if (!RtlCompareMemory(BootSector->SystemId, "NTFS", 4))
+	if (RtlEqualMemory(BootSector->SystemId, "NTFS", 4))
 	{
 		return TRUE;
 	}

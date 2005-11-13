@@ -102,7 +102,7 @@ static BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRe
             if (AttrRecord->NameLength == NameLength)
             {
                 AttrName = (PWCHAR)((PCHAR)AttrRecord + AttrRecord->NameOffset);
-                if (!RtlCompareMemory(AttrName, Name, NameLength << 1))
+                if (RtlEqualMemory(AttrName, Name, NameLength << 1))
                 {
                     /* Found it, fill up the context and return. */
                     Context->Record = AttrRecord;
@@ -611,7 +611,7 @@ BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
         return FALSE;
     }
 
-    if (RtlCompareMemory(NtfsBootSector->SystemId, "NTFS", 4))
+    if (!RtlEqualMemory(NtfsBootSector->SystemId, "NTFS", 4))
     {
         FileSystemError("Invalid NTFS signature.");
         return FALSE;

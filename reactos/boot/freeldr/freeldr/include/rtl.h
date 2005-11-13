@@ -22,57 +22,12 @@
 
 #include <freeldr.h>
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Memory Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
-int		memcmp(const void *buf1, const void *buf2, size_t count);
-void *	memcpy(void *to, const void *from, size_t count);
-void *	memmove(void *dest, const void *src, size_t count);
-void *	memset(void *src, int val, size_t count);
-
-#define RtlCompareMemory(Source1, Source2, Length)	memcmp(Source1, Source2, Length)
-
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Standard Library Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
-int		atoi(const char *string);
-char *	itoa(int value, char *string, int radix);
-int		toupper(int c);
-int		tolower(int c);
-
-int		isspace(int c);
-int		isdigit(int c);
-int		isxdigit(int c);
-
 char *	convert_to_ascii(char *buf, int c, int num);
 char *	convert_i64_to_ascii(char *buf, int c, unsigned long long num);
 
 void	beep(void);
 void	delay(unsigned msec);
 void	sound(int freq);
-
-#ifndef max
-#define max(a, b)  (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a, b)  (((a) < (b)) ? (a) : (b))
-#endif
-
-#define UINT64_C(val) val##ULL
-
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Screen Output Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
-void	print(char *str);
-int		printf(const char *fmt, ...);
-int		sprintf(char *buffer, const char *format, ...);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

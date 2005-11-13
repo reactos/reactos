@@ -21,7 +21,7 @@
 #define __FS_H
 
 
-#define	EOF				-1
+//#define	EOF				-1
 
 #define	FS_FAT			1
 #define	FS_NTFS			2

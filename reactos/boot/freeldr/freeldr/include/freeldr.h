@@ -20,6 +20,10 @@
 #ifndef __FREELDR_H
 #define __FREELDR_H
 
+#define UINT64_C(val) val##ULL
+
+#include <stdlib.h>
+#include <stdio.h>
 #include <ddk/ntddk.h>
 #include <ndk/ntndk.h>
 #include <arch.h>
