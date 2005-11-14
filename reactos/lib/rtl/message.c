@@ -91,9 +91,11 @@ RtlFindMessage(PVOID BaseAddress,
    DPRINT("IdOffset 0x%08lx\n", IdOffset);
 
    DPRINT("MessageEntry: %p\n", MessageEntry);
-   for (i = 0; i < IdOffset; i++)
+   
+   for (i = 0; i < MessageTable->NumberOfBlocks; i++)
      {
-	MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((PUCHAR)MessageEntry + (ULONG)MessageEntry->Length);
+         if (MessageId >= MessageTable->Blocks[i].LowId && MessageId <= MessageTable->Blocks[i].HighId)
+	        MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((char *)MessageEntry + MessageEntry->Length);
      }
 
    if (MessageEntry->Flags == 0)
