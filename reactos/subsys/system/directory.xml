@@ -9,7 +9,7 @@
 	<xi:include href="cmd/cmd.xml" />
 </directory>
 <directory name="devmgr">
-        <xi:include href="devmgr/devmgr.xml" />
+        <xi:include href="devmgr/devmgrapp.xml" />
 </directory>
 <directory name="expand">
 	<xi:include href="expand/expand.xml" />
