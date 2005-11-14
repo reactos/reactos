@@ -35,6 +35,7 @@
 #define strlwrW(s) _wcslwr((wchar_t *)(s))
 #define struprW(s) _wcsupr((wchar_t *)(s))
 #define sprintfW swprintf
+#define vsprintfW vswprintf
 #define snprintfW _snwprintf
 #define vsnprintfW vsnwprintf
 
