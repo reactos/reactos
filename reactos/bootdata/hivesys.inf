@@ -568,10 +568,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard P
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","Service",0x00000000,"i8042prt"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","ClassGUID",0x00000000,"{4D36E96B-E325-11CE-BFC1-08002BE10318}"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0F13\0000","Service",0x00000000,"i8042prt"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0F13\0000","ClassGUID",0x00000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
 ; Keyboard class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000
@@ -626,10 +622,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\drivers\ndis.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
-
-; NE2000 network card
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP80D6\0000","HardwareID",0x00010000,"*PNP80D6"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP80D6\0000","DeviceDesc",0x00000000,"Network card"
 
 ; PCI driver
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","HardwareID",0x00010000,"*PNP0A03"
@@ -730,15 +722,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Group",0x00000000,"Boot File Sy
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32\drivers\vfatfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
-
-; Xbox Nvidia driver
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Group",0x00000000,"Video"
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","ImagePath",0x00020000,"system32\drivers\xboxvmp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10DE&DEV_02A0&SUBSYS_00000000&REV_A1\0000","Service",0x00000000,"XboxVmp"
 
 ; VBE SVGA driver
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
