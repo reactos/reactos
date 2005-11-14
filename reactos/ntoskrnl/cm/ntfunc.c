@@ -1135,18 +1135,16 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                   ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
               ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
 
-	      if (Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) <
-	          NameSize)
+              if (Length < ValueFullInformation->DataOffset)
 	        {
 	          NameSize = Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]);
 	          DataSize = 0;
 	          Status = STATUS_BUFFER_OVERFLOW;
 	          CHECKPOINT;
 	        }
-              else if (ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
-                       Name[0]) - NameSize, sizeof(PVOID)) < DataSize)
+              else if (Length - ValueFullInformation->DataOffset < DataSize) 
 	        {
-	          DataSize = ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) - NameSize, sizeof(PVOID));
+	          DataSize = Length - ValueFullInformation->DataOffset;
 	          Status = STATUS_BUFFER_OVERFLOW;
 	          CHECKPOINT;
 	        }
