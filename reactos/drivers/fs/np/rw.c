@@ -529,6 +529,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
      }
      Irp->IoStatus.Information = Information;
      Irp->IoStatus.Status = Status;
+     
+     ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
 
      if (IoIsOperationSynchronous(Irp))
      {
