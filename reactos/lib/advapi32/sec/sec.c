@@ -558,4 +558,26 @@ BOOL WINAPI EncryptFileA(LPCSTR lpFileName)
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
+    PSECURITY_DESCRIPTOR pSecurityDescriptor, 
+    DWORD dword, 
+    SECURITY_INFORMATION SecurityInformation, 
+    LPWSTR* lpwstr,
+    PULONG pulong)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorA(
+    PSECURITY_DESCRIPTOR pSecurityDescriptor, 
+    DWORD dword, 
+    SECURITY_INFORMATION SecurityInformation, 
+    LPSTR* lpstr,
+    PULONG pulong)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
 /* EOF */

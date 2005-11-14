@@ -84,8 +84,8 @@ ControlServiceEx@16
 ;ConvertSecurityDescriptorToAccessNamedA=ConvertSecurityDescriptorToAccessA@28
 ;ConvertSecurityDescriptorToAccessNamedW=ConvertSecurityDescriptorToAccessW@28
 ;ConvertSecurityDescriptorToAccessW@28
-;ConvertSecurityDescriptorToStringSecurityDescriptorA@20
-;ConvertSecurityDescriptorToStringSecurityDescriptorW@20
+ConvertSecurityDescriptorToStringSecurityDescriptorA@20
+ConvertSecurityDescriptorToStringSecurityDescriptorW@20
 ConvertSidToStringSidA@8
 ConvertSidToStringSidW@8
 ;ConvertStringSDToSDDomainA@24
@@ -94,8 +94,8 @@ ConvertSidToStringSidW@8
 ;ConvertStringSDToSDRootDomainW@20
 ConvertStringSecurityDescriptorToSecurityDescriptorA@16
 ConvertStringSecurityDescriptorToSecurityDescriptorW@16
-;ConvertStringSidToSidA@8
-;ConvertStringSidToSidW@8
+ConvertStringSidToSidA@8
+ConvertStringSidToSidW@8
 ConvertToAutoInheritPrivateObjectSecurity@24
 CopySid@12
 ;CreateCodeAuthzLevel@20
@@ -106,7 +106,7 @@ CreateProcessAsUserA@44
 ;CreateProcessAsUserSecure
 CreateProcessAsUserW@44
 ;CreateProcessWithLogonW
-;CreateRestrictedToken@36
+CreateRestrictedToken@36
 CreateServiceA@52
 CreateServiceW@52
 ;CreateTraceInstanceId@8
@@ -211,7 +211,7 @@ DuplicateTokenEx@24
 EncryptFileA@4
 EncryptFileW@4
 ;EncryptedFileKeyInfo
-;EncryptionDisable@8
+EncryptionDisable@8
 EnumDependentServicesA@24
 EnumDependentServicesW@24
 EnumServiceGroupW@36

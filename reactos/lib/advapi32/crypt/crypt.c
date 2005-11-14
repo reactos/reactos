@@ -1965,14 +1965,6 @@ DWORD WINAPI RemoveUsersFromEncryptedFile (
 /*
  * @unimplemented
  */
-BOOL WINAPI EncryptionDisable (
-	LPCWSTR,
-	BOOL
-	);
-
-/*
- * @unimplemented
- */
 BOOL WINAPI FileEncryptionStatusW (
 	LPCWSTR lpcwstr,
 	LPDWORD lpdword
@@ -2031,3 +2023,17 @@ DWORD WINAPI QueryRecoveryAgentsOnEncryptedFile (
 	DPRINT1("%s() not implemented!\n", __FUNCTION__);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptionDisable(
+    LPCWSTR DirPath,
+    BOOL Disable
+    )
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+

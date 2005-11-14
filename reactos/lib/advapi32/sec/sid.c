@@ -1039,4 +1039,40 @@ IsWellKnownSid(IN PSID pSid,
 }
 
 
+/*
+ * @implemented
+ */
+BOOL STDCALL
+ConvertStringSidToSidA(
+                IN LPCSTR StringSid,
+                OUT PSID* sid)
+{
+    BOOL bRetVal = FALSE;
+
+    if (!StringSid || !sid)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        UINT len = MultiByteToWideChar(CP_ACP, 0, StringSid, -1, NULL, 0);
+        LPWSTR wStringSid = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, StringSid, - 1, wStringSid, len);
+        bRetVal = ConvertStringSidToSidW(wStringSid, sid);
+        HeapFree(GetProcessHeap(), 0, wStringSid);
+    }
+    return bRetVal;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+ConvertStringSidToSidW(
+                IN LPCWSTR StringSid,
+                OUT PSID* sid)
+{
+    FIXME("unimplemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
 /* EOF */
