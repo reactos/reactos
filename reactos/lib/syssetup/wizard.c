@@ -1375,6 +1375,16 @@ ProcessPageDlgProc(HWND hwndDlg,
 }
 
 
+static VOID
+SetupIsActive( DWORD dw )
+{
+  HKEY hKey = 0;
+  if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, _T("SYSTEM\\Setup"), 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
+    RegSetValueEx( hKey, _T("SystemSetupInProgress"), 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
+    RegCloseKey( hKey );
+  }
+}
+
 
 static INT_PTR CALLBACK
 FinishDlgProc(HWND hwndDlg,
@@ -1400,6 +1410,10 @@ FinishDlgProc(HWND hwndDlg,
                              (LPARAM)TRUE);
         }
         break;
+
+      case WM_DESTROY:
+         SetupIsActive(0);
+         return TRUE;
 
       case WM_TIMER:
          {
