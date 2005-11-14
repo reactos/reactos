@@ -103,6 +103,8 @@ static PETHREAD GspRunThread; /* NULL means run all threads */
 static PETHREAD GspDbgThread;
 static PETHREAD GspEnumThread;
 
+static FAST_MUTEX GspLock;
+
 extern LIST_ENTRY PsActiveProcessHead;
 KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 }; /* FIXME hardcoded for COM2, 115200 baud */
 
@@ -1137,6 +1139,9 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     }
   else
     {
+      /* Can only debug 1 thread at a time... */
+      ExAcquireFastMutex(&GspLock);
+
       /* Make sure we're debugging the current thread. */
       if (NULL != GspDbgThread)
         {
@@ -1390,6 +1395,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                     GspDbgThread = NULL;
                   }
 
+                ExReleaseFastMutex(&GspLock);
                 return kdContinue;
                 break;
               }
@@ -1538,6 +1544,8 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
 
   if (BootPhase == 0)
     {
+      ExInitializeFastMutex(&GspLock);
+
       /* Write out the functions that we support for now */
       WrapperTable->KdpInitRoutine = KdpGdbStubInit;
       WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
