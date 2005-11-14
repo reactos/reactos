@@ -1,11 +1,10 @@
 #define UNICODE
 
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <windows.h>
 #include <stdio.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
-#define DBG
 #define NDEBUG
 #include <debug.h>
 

@@ -5,6 +5,10 @@
 #include <windows.h>
 #include <stdlib.h>
 
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+
 #define INCLUDE_THE_DDK_HEADERS
 #ifdef INCLUDE_THE_DDK_HEADERS
 #include <ddk/ntddk.h>
@@ -107,6 +111,7 @@ ZwCreateToken(
 	);
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
 #endif
+
 #include <stdio.h>
 
 #define INITIAL_PRIV_ENABLED SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED

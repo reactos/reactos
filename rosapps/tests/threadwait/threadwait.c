@@ -7,6 +7,9 @@
 #include <windows.h>
 #include <stdio.h>
 
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 DWORD __stdcall threadfunc(void* UNREFERENCED)
 {
 	printf("Thread: Initialized\n");

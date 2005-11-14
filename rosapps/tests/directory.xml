@@ -195,7 +195,6 @@
 
 <!-- fixme: regtest -->
 
-<!--
 <directory name="sectest">
 	<xi:include href="sectest/sectest.xml" />
 </directory>
@@ -206,7 +205,7 @@
 	<xi:include href="shaptest/shaptest.xml" />
 </directory>
 
-fixme: shm
+<!-- fixme: shm -->
 
 <directory name="statst">
 	<xi:include href="statst/statst.xml" />
@@ -241,9 +240,9 @@ fixme: shm
 <directory name="tmrqueue">
 	<xi:include href="tmrqueue/tmrqueue.xml" />
 </directory>
-<directory name="tokentest">
-	<xi:include href="tokentest/tokentest.xml" />
-</directory>
+
+<!-- fixme: tokentest -->
+
 <directory name="txtscale">
 	<xi:include href="txtscale/txtscale.xml" />
 </directory>
@@ -262,10 +261,8 @@ fixme: shm
 <directory name="wm_paint">
 	<xi:include href="wm_paint/wm_paint.xml" />
 </directory>
-<directory name="wpickclick">
-	<xi:include href="wpickclick/wpickclick.xml" />
-</directory>
-<directory name="zwcontinue">
-	<xi:include href="zwcontinue/zwcontinue.xml" />
-</directory>
--->
+
+<!-- fixme: wpickclick.xml -->
+
+<!-- fixme: zwcontinue -->
+

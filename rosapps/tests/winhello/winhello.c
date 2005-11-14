@@ -26,6 +26,10 @@
  * ????????
  */
 
+#ifndef VK_C
+#define VK_C 'C'
+#endif
+
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>

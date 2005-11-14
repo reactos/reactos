@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <tchar.h>
+
 #define BUFSIZE 128
 #define MAX_PORTNAME_LEN 20
 #define APP_VERSION_STR "0.01"
