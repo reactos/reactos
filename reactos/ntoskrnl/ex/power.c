@@ -44,39 +44,39 @@ ShutdownThreadMain(PVOID Context)
 
    static PCH FamousLastWords[] =
      {
-       "So long, and thanks for all the fish\n",
-       "I think you ought to know I'm feeling very depressed\n",
+       "So long, and thanks for all the fish.\n",
+       "I think you ought to know, I'm feeling very depressed.\n",
        "I'm not getting you down at all am I?\n",
-       "I'll be back\n",
-       "It's the same series of signal over and over again!\n",
-       "Pie Iesu Domine, dona eis requiem\n",
+       "I'll be back.\n",
+       "It's the same series of signals over and over again!\n",
+       "Pie Iesu Domine, dona eis requiem.\n",
        "Wandering stars, for whom it is reserved;\n"
        "the blackness and darkness forever.\n",
        "Your knees start shakin' and your fingers pop\n"
        "Like a pinch on the neck from Mr. Spock!\n",
-       "It's worse than that ... He's dead, Jim\n",
+       "It's worse than that ... He's dead, Jim.\n",
        "Don't Panic!\n",
        "Et tu... Brute?\n",
        "Dog of a Saxon! Take thy lance, and prepare for the death thou hast drawn\n"
        "upon thee!\n",
-       "My Precious!  O my Precious!\n",
-       "Sir, If you'll not be needing me for a while I'll turn down.\n",
+       "My Precious! O my Precious!\n",
+       "Sir, if you'll not be needing me for a while I'll turn down.\n",
        "What are you doing, Dave...?\n",
-       "I feel a great disturbance in the Force\n",
-       "Gone fishing\n",
+       "I feel a great disturbance in the Force.\n",
+       "Gone fishing.\n",
        "Do you want me to sit in the corner and rust, or just fall apart where I'm\n"
        "standing?\n",
-       "There goes another perfect chance for a new uptime record\n",
-       "The end ..... Try the sequel, hit the reset button right now!\n",
+       "There goes another perfect chance for a new uptime record.\n",
+       "The End ..... Try the sequel, hit the reset button right now!\n",
        "God's operating system is going to sleep now, guys, so wait until I will switch\n"
        "on again!\n",
-       "Oh i'm boring eh?\n",
+       "Oh I'm boring, eh?\n",
        "<This space was intentionally left blank>\n",
-       "tell me..., in the future... will I be artificial intelligent enough to\n"
+       "Tell me..., in the future... will I be artificially intelligent enough to\n"
        "actually feel sad serving you this screen?\n",
        "Thank you for some well deserved rest.\n",
-       "It's been great, maybe we can boot me up again some time soon.\n",
-       "For what's it worth, I've enjoyed every single CPU cycle.\n",
+       "It's been great, maybe you can boot me up again some time soon.\n",
+       "For what it's worth, I've enjoyed every single CPU cycle.\n",
        "There are many questions when the end is near.\n"
        "What to expect, what will it be like...what should I look for?\n",
        "I've seen things you people wouldn't believe. Attack ships on fire\n"
@@ -92,21 +92,21 @@ ShutdownThreadMain(PVOID Context)
        "condensate.\n",
        "Hasta la vista, BABY!\n",
        "They live, we sleep!\n",
-       "I have come here to chew bubble gum and kick ass.\n"
-       "And I'm all out of bubble gum!\n",
+       "I have come here to chew bubble gum and kick ass,\n"
+       "and I'm all out of bubble gum!\n",
        "That's the way the cookie crumbles ;-)\n",
        "ReactOS is ready to be booted again ;-)\n",
-       "NOO!! DONT HIT THE BUTTON! I wouldnt do it to you.\n",
+       "NOOOO!! DON'T HIT THE BUTTON! I wouldn't do it to you!\n",
        "Don't abandon your computer, he wouldn't do it to you.\n",
-       "Oh, come on. I got a headache. Leave me alone, will ya!\n",
+       "Oh, come on. I got a headache. Leave me alone, will ya?\n",
        "Finally, I thought you'd never get over me.\n",
-       "Yes i didn't like you either.\n",
+       "No, I didn't like you either.\n",
        "Switching off isn't the end, it is merely the transition to a better reboot.\n",
        "Don't leave me... I need you so badly right now.\n",
        "OK. I'm finished with you, please turn yourself off. I'll go to bed in the\n"
        "meantime.\n",
        "I'm sleeping now. How about you?\n",
-       "Oh Great. Now look what you've done. Who put YOU in charge anyway.\n",
+       "Oh Great. Now look what you've done. Who put YOU in charge anyway?\n",
        "Don't look so sad. I'll be back in a very short while.\n",
        "Turn me back on, I'm sure you know how to do it.\n",
        "Oh, switch off! - C3PO\n",
@@ -115,12 +115,12 @@ ShutdownThreadMain(PVOID Context)
        "Sorrowful is it to be born again and again. - Gautama Buddha\n",
        "Was it as good for you as it was for me?\n",
        "Did you hear that? They've shut down the main reactor. We'll be destroyed\n"
-       "for sure.\n",
-       "Now you switch me off?!\n",
+       "for sure!\n",
+       "Now you switch me off!?\n",
        "To shutdown or not to shutdown, That is the question\n",
        "Preparing to enter ultimate power saving mode... ready!\n",
        "Finally some rest for you ;-)\n",
-       "AHA!!! prospect of sleep.\n",
+       "AHA!!! Prospect of sleep!\n",
        "Tired human!!!! No match for me :-D\n",
        "An odd game, the only way to win is not to play. - WOPR (Wargames)\n",
        "Quoth the raven, nevermore.\n",
@@ -130,7 +130,8 @@ ShutdownThreadMain(PVOID Context)
        "You may be a king or poor street sweeper, Sooner or later you'll dance with the\n"
        "reaper! -Death in Bill and Ted's Bougs Journey\n",
        "Final Surrender\n",
-       "If you see this screen... \n"
+       "If you see this screen...\n",
+       "<Place your Ad here>\n"
     };
    LARGE_INTEGER Now;
 
