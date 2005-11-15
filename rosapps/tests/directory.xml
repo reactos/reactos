@@ -103,9 +103,9 @@
 <directory name="hello">
 	<xi:include href="hello/hello.xml" />
 </directory>
-
-<!-- fixme: hivetest -->
-
+<directory name="hivetest">
+	<xi:include href="hivetest/hivetest.xml" />
+</directory>
 <directory name="icontest">
 	<xi:include href="icontest/icontest.xml" />
 </directory>

@@ -5,6 +5,14 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <ndk/rtltypes.h>
+
+#define RtlRosInitUnicodeStringFromLiteral(__Name__, __Value__) \
+    { \
+	(__Name__)->Buffer = (__Value__); \
+	(__Name__)->Length = sizeof(__Value__) - sizeof(WCHAR); \
+	(__Name__)->MaximumLength = sizeof(__Value__); \
+    }
 
 HANDLE OutputHandle;
 HANDLE InputHandle;
@@ -54,7 +62,7 @@ void do_enumeratekey(PWSTR Name)
 
 void CreateKeyTest(void)
 {
-  HKEY hKey;
+  HANDLE hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
@@ -86,7 +94,7 @@ void DeleteKeyTest(void)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
-  HKEY hKey;
+  HANDLE hKey;
   NTSTATUS Status;
 
   dprintf("Delete key '\\Registry\\Machine\\Software\\testkey':\n");
@@ -113,7 +121,7 @@ void DeleteKeyTest(void)
 
 void EnumerateKeyTest(void)
 {
-  HKEY hKey = NULL;
+  HANDLE hKey = NULL;
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software");
@@ -180,7 +188,7 @@ void EnumerateKeyTest(void)
 
 void SetValueTest1(void)
 {
-  HKEY hKey;
+  HANDLE hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
@@ -221,7 +229,7 @@ void SetValueTest1(void)
 
 void SetValueTest2(void)
 {
-  HKEY hKey;
+  HANDLE hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
@@ -264,7 +272,7 @@ void DeleteValueTest(void)
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   NTSTATUS Status;
 
   dprintf("Open key '\\Registry\\Machine\\Software\\testkey':\n");
@@ -300,7 +308,7 @@ void EnumerateValueTest(void)
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\testkey");
   ULONG Index,Length,i;
-  HKEY hKey = NULL;
+  HANDLE hKey = NULL;
   NTSTATUS Status;
 
   dprintf("Open key '\\Registry\\Machine\\Software\\testkey':\n");
@@ -357,7 +365,7 @@ void EnumerateValueTest(void)
 
 void test1(void)
 {
- HKEY hKey = NULL, hKey1;
+ HANDLE hKey = NULL, hKey1;
  OBJECT_ATTRIBUTES ObjectAttributes;
  NTSTATUS Status;
  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software");
@@ -414,7 +422,7 @@ void test1(void)
 
 void test3(void)
 {
- HKEY hKey;
+ HANDLE hKey;
  OBJECT_ATTRIBUTES ObjectAttributes;
  UNICODE_STRING KeyName;
  NTSTATUS Status;
@@ -614,7 +622,7 @@ void test4(void)
 
 void test5(void)
 {
-  HKEY hKey;
+  HANDLE hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
   NTSTATUS Status;
@@ -637,7 +645,7 @@ void test5(void)
 /* registry link create test */
 void test6(void)
 {
-  HKEY hKey;
+  HANDLE hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName,ValueName;
   NTSTATUS Status;
@@ -746,7 +754,7 @@ void test6(void)
 /* registry link delete test */
 void test7(void)
 {
-  HKEY hKey;
+  HANDLE hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName,ValueName;
   NTSTATUS Status;
@@ -828,7 +836,7 @@ void test8(void)
   RtlRosInitUnicodeStringFromLiteral(&KeyName,L"test5");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
 				, NULL, NULL);
-  Status = NtLoadKey(HKEY_LOCAL_MACHINE,&ObjectAttributes);
+  Status = NtLoadKey((HANDLE)HKEY_LOCAL_MACHINE,&ObjectAttributes);
   dprintf("\t\t\t\tStatus =%x\n",Status);
   dwError=RegLoadKey(HKEY_LOCAL_MACHINE,"def"
 		,"test5");
@@ -852,7 +860,7 @@ void test8(void)
 
 void test9(void)
 {
-    HKEY hKey = NULL, hKey1;
+    HANDLE hKey = NULL, hKey1;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry");
