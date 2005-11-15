@@ -4425,7 +4425,7 @@ SetupDiBuildDriverInfoList(
                                 DriverAlreadyAdded = FALSE;
                                 for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
                                 {
-                                    if (wcscmp(DeviceId, currentId) == 0)
+                                    if (wcsicmp(DeviceId, currentId) == 0)
                                     {
                                         AddDriverToList(
                                             &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead,
@@ -4446,7 +4446,7 @@ SetupDiBuildDriverInfoList(
                                 {
                                     for (DriverRank = 0, currentId = (LPCWSTR)CompatibleIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
                                     {
-                                        if (wcscmp(DeviceId, currentId) == 0)
+                                        if (wcsicmp(DeviceId, currentId) == 0)
                                         {
                                             AddDriverToList(
                                                 &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead,
