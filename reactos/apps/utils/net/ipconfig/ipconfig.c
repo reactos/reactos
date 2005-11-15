@@ -32,6 +32,7 @@
 #define _UNICODE
 
 
+
 LPCTSTR GetNodeTypeName(UINT NodeType)
 {
     switch (NodeType) {
@@ -104,6 +105,8 @@ INT ShowInfo(BOOL bAll)
     ULONG    netOutBufLen;
     PIP_ADDR_STRING pIPAddr = NULL;
 
+	DWORD ErrRet = 0;
+
     /* assign memory for call to GetNetworkParams */
     pFixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
     netOutBufLen = sizeof(FIXED_INFO);
@@ -126,15 +129,17 @@ INT ShowInfo(BOOL bAll)
        pAdapterInfo = (IP_ADAPTER_INFO *) malloc (adaptOutBufLen);
     }
 
-    if (! GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR)
+    if ((ErrRet = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen)) != NO_ERROR)
 	{
-		_tprintf(_T("GetAdaptersInfo failed %lu\n"), GetLastError());
+		_tprintf(_T("GetAdaptersInfo failed : "));
+		DoFormatMessage(ErrRet);
 		return EXIT_FAILURE;
 	}
 
-    if (! GetNetworkParams(pFixedInfo, &netOutBufLen) == NO_ERROR)
+    if ((ErrRet = GetNetworkParams(pFixedInfo, &netOutBufLen)) != NO_ERROR)
 	{
-        _tprintf(_T("GetNetworkParams failed %lu\n"), GetLastError());
+		_tprintf(_T("GetNetworkParams failed : "));
+		DoFormatMessage(ErrRet);
 		return EXIT_FAILURE;
 	}
     
