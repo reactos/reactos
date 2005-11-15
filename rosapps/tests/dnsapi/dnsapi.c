@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
-#include <WinError.h>
-#include <WinDNS.h>
+#include <winerror.h>
+#include <windns.h>
 #include <winsock2.h>
 #include <assert.h>
 

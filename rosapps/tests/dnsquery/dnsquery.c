@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
-#include <WinError.h>
-#include <WinDNS.h>
+#include <winerror.h>
+#include <windns.h>
 #include <assert.h>
 
 int main( int argc, char **argv ) {
