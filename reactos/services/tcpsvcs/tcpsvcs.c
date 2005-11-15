@@ -260,8 +260,7 @@ LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg)
 	}
     else
     {
-		_stprintf(MessageBuffer, _T("\n%s ExitCode = %lu."),
-			UserMessage, ExitCode);
+		_stprintf(MessageBuffer, _T("\n%s"), UserMessage);
 	}
 
 	fputs (MessageBuffer, hLogFile);
