@@ -125,6 +125,9 @@ ACPIAddDevice(
 
   DPRINT("Called\n");
 
+  if (PhysicalDeviceObject == NULL)
+    return STATUS_SUCCESS;
+
   Status = IoCreateDevice(DriverObject,
                           sizeof(FDO_DEVICE_EXTENSION),
                           NULL,
@@ -143,8 +146,8 @@ ACPIAddDevice(
   DeviceExtension->Pdo = PhysicalDeviceObject;
   DeviceExtension->Common.IsFDO = TRUE;
 
-  //DeviceExtension->Common.Ldo =
-  //  IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
+  DeviceExtension->Common.Ldo =
+    IoAttachDeviceToDeviceStack(Fdo, PhysicalDeviceObject);
 
   DeviceExtension->State = dsStopped;
 
