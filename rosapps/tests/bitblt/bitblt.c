@@ -84,8 +84,8 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             /* load a bitmap from file */
             HBITMAP HBmp =
                /* static_cast<HBITMAP> */(
-                  LoadImage(HInst, filename, IMAGE_BITMAP,
-                            0, 0, LR_LOADFROMFILE)
+                  LoadImage(HInst, MAKEINTRESOURCE(1000), IMAGE_BITMAP,
+                            0, 0, 0)
                             );
             if (HBmp)
             {
