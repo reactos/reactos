@@ -1185,6 +1185,8 @@ static LONG SETUP_CreateDevListFromEnumerator(
                 if (pClassGuid)
                     /* Skip this bad entry as we can't verify it */
                     continue;
+                /* Set a default GUID for this device */
+                memcpy(&KeyGuid, &GUID_NULL, sizeof(GUID));
             }
             else if (rc != ERROR_SUCCESS)
             {
@@ -1196,13 +1198,14 @@ static LONG SETUP_CreateDevListFromEnumerator(
                 RegCloseKey(hDeviceIdKey);
                 return ERROR_GEN_FAILURE;
             }
-
-            KeyBuffer[37] = '\0'; /* Replace the } by a NULL character */
-            if (UuidFromStringW(&KeyBuffer[1], &KeyGuid) != RPC_S_OK)
+            else
             {
-                RegCloseKey(hDeviceIdKey);
-                return GetLastError();
+                KeyBuffer[37] = '\0'; /* Replace the } by a NULL character */
+                if (UuidFromStringW(&KeyBuffer[1], &KeyGuid) != RPC_S_OK)
+                    /* Bad GUID, skip the entry */
+                    continue;
             }
+
             if (pClassGuid && !IsEqualIID(&KeyGuid, pClassGuid))
             {
                 /* Skip this entry as it is not the right device class */
@@ -1259,7 +1262,7 @@ static LONG SETUP_CreateDevList(
         return rc;
 
     /* If enumerator is provided, call directly SETUP_CreateDevListFromEnumerator.
-     * Else, enumerate all enumerators all call SETUP_CreateDevListFromEnumerator
+     * Else, enumerate all enumerators and call SETUP_CreateDevListFromEnumerator
      * for each one.
      */
     if (Enumerator)

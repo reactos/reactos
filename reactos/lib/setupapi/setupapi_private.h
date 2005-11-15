@@ -103,7 +103,8 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
      *       String which identifies the device. Can be NULL. If not NULL,
      *       points into the Data field at the end of the structure
      * - ClassGuid
-     *       Identifies the class of this device. FIXME: can it be GUID_NULL?
+     *       Identifies the class of this device. It is GUID_NULL if the
+     *       device has not been installed
      * - CreationFlags
      *       Is a combination of:
      *       - DICD_GENERATE_ID
