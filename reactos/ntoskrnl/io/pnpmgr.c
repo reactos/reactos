@@ -437,7 +437,7 @@ IoOpenDeviceRegistryKey(
       L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
    static WCHAR ClassKeyName[] = L"Control\\Class\\";
    static WCHAR EnumKeyName[] = L"Enum\\";
-   static WCHAR DeviceParametersKeyName[] = L"Device Parameters\\";
+   static WCHAR DeviceParametersKeyName[] = L"Device Parameters";
    ULONG KeyNameLength;
    LPWSTR KeyNameBuffer;
    UNICODE_STRING KeyName;
