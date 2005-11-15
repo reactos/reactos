@@ -85,8 +85,8 @@ BOOL ConvertBitmapTo32Bpp(HDC hDC, BITMAP *bmp)
     BitBlt(hDC, 0, 0, bmp->bmWidth, bmp->bmHeight, HMemDC, 0, 0, SRCCOPY);
 
     /* load and apply alpha channel */
-    bmpalpha = LoadImage(HInst, TEXT("lenaalpha.bmp"), IMAGE_BITMAP,
-                            0, 0, LR_LOADFROMFILE);
+    bmpalpha = LoadImage(HInst, MAKEINTRESOURCE(2000), IMAGE_BITMAP,
+                            0, 0, 0);
     if(bmpalpha)
     {
       COLORREF *col = pBmpBits;
@@ -131,8 +131,8 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             /* load a bitmap from file */
             HBITMAP HBmp =
                /* static_cast<HBITMAP> */(
-                  LoadImage(HInst, filename, IMAGE_BITMAP,
-                            0, 0, LR_LOADFROMFILE)
+                  LoadImage(HInst, MAKEINTRESOURCE(1000), IMAGE_BITMAP,
+                            0, 0, 0)
                             );
             if (HBmp)
             {
