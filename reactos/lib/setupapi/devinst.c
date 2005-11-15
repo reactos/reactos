@@ -1236,7 +1236,7 @@ static LONG SETUP_CreateDevList(
     DWORD dwLength;
     DWORD rc;
 
-    if (IsEqualIID(class, &GUID_NULL))
+    if (class && IsEqualIID(class, &GUID_NULL))
         class = NULL;
 
     /* Open Enum key */
