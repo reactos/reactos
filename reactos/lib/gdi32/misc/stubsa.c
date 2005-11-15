@@ -32,41 +32,6 @@ DeviceCapabilitiesExA(
   return 0;
 }
 
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-EnumFontsA (
-	HDC  hDC,
-	LPCSTR lpFaceName,
-	FONTENUMPROCA  FontFunc,
-	LPARAM  lParam
-	)
-{
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#if 0
-  NTSTATUS Status;
-  LPWSTR lpFaceNameW;
-  int rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpFaceNameW, lpFaceName );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = NtGdiEnumFonts ( hDC, lpFaceNameW, FontFunc, lParam );
-
-      HEAP_free ( lpFaceNameW );
-    }
-  return rc;
-#endif
-}
-
-
 /*
  * @unimplemented
  */
