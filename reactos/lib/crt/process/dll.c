@@ -11,31 +11,30 @@
 #include "precomp.h"
 #include <process.h>
 
-
 /*
  * @implemented
  */
-void* _loaddll(char* name)
+intptr_t _loaddll(char* name)
 {
-	return LoadLibraryA(name);
+	return (intptr_t) LoadLibraryA(name);
 }
 
 /*
  * @implemented
  */
-int _unloaddll(void* handle)
+int _unloaddll(intptr_t handle)
 {
-	return FreeLibrary(handle);
+	return FreeLibrary((HMODULE) handle);
 }
 
 /*
  * @implemented
  */
-FARPROC _getdllprocaddr(void* hModule, char* lpProcName, int iOrdinal)
+FARPROC _getdllprocaddr(intptr_t hModule, char* lpProcName, intptr_t iOrdinal)
 {
 	if (lpProcName != NULL)
-		return GetProcAddress(hModule, lpProcName);
+		return GetProcAddress((HMODULE) hModule, lpProcName);
 	else
-		return GetProcAddress(hModule, (LPSTR)iOrdinal);
+		return GetProcAddress((HMODULE) hModule, (LPSTR)iOrdinal);
    	return (NULL);
 }

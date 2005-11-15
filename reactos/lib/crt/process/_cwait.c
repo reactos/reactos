@@ -22,15 +22,15 @@ int _cwait(int* pnStatus, int hProc, int nAction)
     DWORD ExitCode;
 
 	nAction = 0;
-	if (WaitForSingleObject((void*)hProc, INFINITE) != WAIT_OBJECT_0) {
+	if (WaitForSingleObject((void*)ULongToPtr(hProc), INFINITE) != WAIT_OBJECT_0) {
 		__set_errno(ECHILD);
 		return -1;
 	}
 
-	if (!GetExitCodeProcess((void*)hProc, &ExitCode))
+	if (!GetExitCodeProcess((void*)ULongToPtr(hProc), &ExitCode))
 		return -1;
 	if (pnStatus != NULL)
         *pnStatus = (int)ExitCode;
-    CloseHandle((HANDLE)hProc);
+    CloseHandle((HANDLE)ULongToPtr(hProc));
     return hProc;
 }

@@ -30,8 +30,9 @@
 
 unsigned long DbgPrint(char *Format,...);
 
-#define TRACE(...)
-
+#ifdef __GNUC__
+	#define TRACE(...)
+#endif
 
 #ifdef DBG
    #ifdef __GNUC__
@@ -50,7 +51,9 @@ unsigned long DbgPrint(char *Format,...);
 #endif
 
 #if !defined(NDEBUG) && defined(DBG)
-   #define DPRINT(args...) do { DbgPrint("(MSVCRT:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+   #ifdef __GNUC__
+       #define DPRINT(args...) do { DbgPrint("(MSVCRT:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+   #endif
    #define CHECKPOINT do { DbgPrint("MSVCRT:%s:%d\n",__FILE__,__LINE__); } while(0);
 #else
    #ifdef __GNUC__
