@@ -12,8 +12,6 @@
 #include <time.h>
 #include <internal/file.h>
 
-VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
-
 /*
  * @implemented
  */

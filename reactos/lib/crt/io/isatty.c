@@ -1,3 +1,5 @@
+#include "precomp.h"
+
 #include <internal/file.h>
 
 #define NDEBUG

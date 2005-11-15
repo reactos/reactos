@@ -1,3 +1,5 @@
+#include "precomp.h"
+
 #include <internal/tls.h>
 #include <assert.h>
 

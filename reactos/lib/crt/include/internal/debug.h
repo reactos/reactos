@@ -34,7 +34,11 @@ unsigned long DbgPrint(char *Format,...);
 
 
 #ifdef DBG
-   #define DPRINT1(args...) do { DbgPrint("(MSVCRT:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+   #ifdef __GNUC__
+      #define DPRINT1(args...) do { DbgPrint("(MSVCRT:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+   #else
+      #define DPRINT1 DbgPrint
+   #endif
    #define CHECKPOINT1 do { DbgPrint("MSVCRT:%s:%d\n",__FILE__,__LINE__); } while(0);
 #else
    #ifdef __GNUC__

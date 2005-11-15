@@ -1,3 +1,4 @@
+#include "precomp.h"
 #include <io.h>
 #include <internal/file.h>
 

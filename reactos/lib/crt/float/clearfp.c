@@ -1,5 +1,7 @@
 #include <float.h>
 
+unsigned int _statusfp( void );
+
 /*
  * @implemented
  */

@@ -10,7 +10,7 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
+#include "precomp.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>

@@ -8,6 +8,7 @@
  *                  Created 19/01/99
  * NOTE		    Not tested.
  */
+#include "precomp.h"
 
 #include <stdio.h>
 #include <string.h>

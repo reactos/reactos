@@ -8,6 +8,8 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
+#include "precomp.h"
+
 #include <stdio.h>
 #include <tchar.h>
 #include <internal/file.h>

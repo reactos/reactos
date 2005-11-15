@@ -80,7 +80,7 @@ static int g_fdend = 3; /* highest allocated fd */
  * INTERNAL
  */
  /*
-static inline FD_INFO* fdinfo(int fd)
+static __inline FD_INFO* fdinfo(int fd)
 {
    FD_INFO* bucket = __pioinfo[fd >> FDINFO_ENTRIES_PER_BUCKET_SHIFT];
    if (!bucket){
@@ -94,7 +94,7 @@ static inline FD_INFO* fdinfo(int fd)
 /*
  * INTERNAL
  */
-inline BOOL is_valid_fd(int fd)
+__inline BOOL is_valid_fd(int fd)
 {
    BOOL b = (fd >= 0 && fd < g_fdend && (fdinfo(fd)->fdflags & FOPEN));
 

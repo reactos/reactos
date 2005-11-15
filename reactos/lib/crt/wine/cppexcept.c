@@ -50,7 +50,7 @@ static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* fram
                                 int nested_trylevel, CONTEXT86 *context );
 
 /* call a function with a given ebp */
-inline static void *call_ebp_func( void *func, void *ebp )
+__inline static void *call_ebp_func( void *func, void *ebp )
 {
     void *ret;
     __asm__ __volatile__ ("pushl %%ebp; movl %2,%%ebp; call *%%eax; popl %%ebp" \
@@ -59,7 +59,7 @@ inline static void *call_ebp_func( void *func, void *ebp )
 }
 
 /* call a copy constructor */
-inline static void call_copy_ctor( void *func, void *this, void *src, int has_vbase )
+__inline static void call_copy_ctor( void *func, void *this, void *src, int has_vbase )
 {
     TRACE( "calling copy ctor %p object %p src %p\n", func, this, src );
     if (has_vbase)
@@ -72,7 +72,7 @@ inline static void call_copy_ctor( void *func, void *this, void *src, int has_vb
 }
 
 /* call the destructor of the exception object */
-inline static void call_dtor( void *func, void *object )
+__inline static void call_dtor( void *func, void *object )
 {
     __asm__ __volatile__("call *%0" : : "r" (func), "c" (object) : "eax", "edx", "memory" );
 }
@@ -261,7 +261,7 @@ static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REG
 
 /* find and call the appropriate catch block for an exception */
 /* returns the address to continue execution to after the catch block was called */
-inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame *frame,
+__inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame *frame,
                                       cxx_function_descr *descr, int nested_trylevel,
                                       cxx_exception_type *info )
 {

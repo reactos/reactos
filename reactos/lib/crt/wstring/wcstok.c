@@ -1,3 +1,5 @@
+#include "precomp.h"
+
 #include <string.h>
 #include <internal/tls.h>
 
