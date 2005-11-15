@@ -4,6 +4,7 @@
 	<define name="__REACTOS__" />
 	<library>kernel32</library>
 	<library>ws2_32</library>
+	<library>user32</library>
 	<directory name="src">
 		<file>ansiprsr.cpp</file>
 		<file>keytrans.cpp</file>
