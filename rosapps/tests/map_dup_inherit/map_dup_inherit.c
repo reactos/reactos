@@ -16,7 +16,11 @@ int main( int argc, char **argv ) {
   fprintf( stderr, "%lu: Starting\n", GetCurrentProcessId() );
 
   if( argc == 2 ) {
-    file_map = (void *)atoi(argv[1]);
+    #ifdef WIN64
+        file_map = (void *)atoi64(argv[1]);
+    #else
+        file_map = (void *)UlongToPtr(atoi(argv[1]));
+    #endif
   } else {
     file_map = CreateFileMapping( INVALID_HANDLE_VALUE,
 				  NULL,
@@ -46,12 +50,16 @@ int main( int argc, char **argv ) {
   if( !file_view ) {
     fprintf( stderr, "%lu: Could not map view of file.\n",
 	     GetCurrentProcessId() );
+    if (file_map != INVALID_HANDLE_VALUE)
+        CloseHandle(file_map);
     return 2;
   }
 
   if( !VirtualAlloc( file_view, 0x1000, MEM_COMMIT, PAGE_READWRITE ) ) {
     fprintf( stderr, "%lu: VirtualAlloc failed to realize the page.\n",
 	     GetCurrentProcessId() );
+    if (file_map != INVALID_HANDLE_VALUE)
+        CloseHandle(file_map);
     return 3;
   }
 
@@ -72,19 +80,30 @@ int main( int argc, char **argv ) {
     memset( &si, 0, sizeof( si ) );
     memset( &pi, 0, sizeof( pi ) );
 
-    sprintf(cmdline,"%s %d", argv[0], (int)file_map);
+    sprintf(cmdline,"%s %p", argv[0], file_map);
+	CloseHandle(file_map);
+
     if( !CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL,
 		       &si, &pi ) ) {
       fprintf( stderr, "%lu: Could not create child process.\n",
 	       GetCurrentProcessId() );
+      if (pi.hProcess != INVALID_HANDLE_VALUE)
+          CloseHandle(pi.hProcess);
+
       return 5;
     }
 
     if( WaitForSingleObject( pi.hThread, INFINITE ) != WAIT_OBJECT_0 ) {
       fprintf( stderr, "%lu: Failed to wait for child process to terminate.\n",
 	       GetCurrentProcessId() );
+      if (pi.hProcess != INVALID_HANDLE_VALUE)
+          CloseHandle(pi.hProcess);
       return 6;
     }
+	
+    if (pi.hProcess != INVALID_HANDLE_VALUE)
+        CloseHandle(pi.hProcess);
+
   }
 
   return 0;
