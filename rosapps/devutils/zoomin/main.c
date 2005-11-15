@@ -68,7 +68,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ZOOMIN_MENU));
 
-    hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
+    hFrameWnd = CreateWindowEx(0, (LPCTSTR)UlongToPtr(hFrameWndClass), szTitle,
                     WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE | WS_VSCROLL,
                     CW_USEDEFAULT, CW_USEDEFAULT, 250, 250,
                     NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
@@ -89,7 +89,6 @@ void ExitInstance(void)
 {
     DestroyMenu(hMenuFrame);
 }
-
 
 int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -116,6 +115,5 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    ExitInstance();
     return msg.wParam;
 }

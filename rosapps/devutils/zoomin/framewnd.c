@@ -29,6 +29,7 @@
 #include "main.h"
 #include "framewnd.h"
 
+extern void ExitInstance();
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
@@ -228,6 +229,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	case WM_DESTROY:
 		KillTimer(hWnd, 0);
 		PostQuitMessage(0);
+		ExitInstance();
 		break;
 
 	default:
