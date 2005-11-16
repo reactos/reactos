@@ -66,6 +66,7 @@ UpdateDriverForPlugAndPlayDevicesA(
     FullInfPathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (!FullInfPathW)
     {
+        HeapFree(GetProcessHeap(), 0, HardwareIdW);
         SetLastError(ERROR_GEN_FAILURE);
         return FALSE;
     }
