@@ -498,7 +498,8 @@ NtGdiGetDIBits(HDC hDC,
             DestPaletteType, SourcePaletteType, hDestPalette, hSourcePalette);
 
          SourcePoint.x = 0;
-         SourcePoint.y = StartScan;
+         SourcePoint.y = BitmapObj->SurfObj.sizlBitmap.cy -
+                         (StartScan + ScanLines);
 
          /* Determine destination rectangle */
          DestRect.top = 0;
