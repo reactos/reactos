@@ -1436,6 +1436,7 @@ _strrev
 _strset
 _strupr
 _vsnprintf
+_vsnwprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp
