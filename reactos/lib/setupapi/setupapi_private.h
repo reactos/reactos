@@ -133,6 +133,7 @@ struct DeviceInfoSet /* HDEVINFO */
     DWORD magic; /* SETUP_DEV_INFO_SET_MAGIC */
     GUID ClassGuid; /* If != GUID_NULL, only devices of this class can be in the device info set */
     HKEY HKLM; /* Local or distant HKEY_LOCAL_MACHINE registry key */
+    HMACHINE hMachine; /* Used in CM_* functions */
 
     /* Reserved Field points to a struct DriverInfoElement */
     SP_DEVINSTALL_PARAMS_W InstallParams;

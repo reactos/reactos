@@ -618,7 +618,10 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
 			       PVOID Reserved)
 {
   struct DeviceInfoSet *list;
+  LPWSTR UNCServerName = NULL;
   DWORD rc;
+  //CONFIGRET cr;
+  HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
 
   TRACE("%p %p %S %p\n", ClassGuid, hwndParent, MachineName, Reserved);
 
@@ -626,7 +629,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
   if (!list)
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return (HDEVINFO)INVALID_HANDLE_VALUE;
+    goto cleanup;
   }
   memset(list, 0, sizeof(struct DeviceInfoSet));
 
@@ -644,17 +647,59 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     if (rc != ERROR_SUCCESS)
     {
       SetLastError(rc);
-      HeapFree(GetProcessHeap(), 0, list);
-      return (HDEVINFO)INVALID_HANDLE_VALUE;
+      goto cleanup;
     }
+    UNCServerName = HeapAlloc(GetProcessHeap(), 0, (strlenW(MachineName) + 3) * sizeof(WCHAR));
+    if (!UNCServerName)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      goto cleanup;
+    }
+    
+    strcpyW(UNCServerName + 2, MachineName);
   }
   else
   {
+    DWORD Size = MAX_PATH;
     list->HKLM = HKEY_LOCAL_MACHINE;
+    UNCServerName = HeapAlloc(GetProcessHeap(), 0, (MAX_PATH + 2) * sizeof(WCHAR));
+    if (!UNCServerName)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      goto cleanup;
+    }
+    if (!GetComputerNameW(UNCServerName + 2, &Size))
+      goto cleanup;
   }
+#if 0
+  UNCServerName[0] = UNCServerName[1] = '\\';
+  cr = CM_Connect_MachineW(UNCServerName, &list->hMachine);
+  if (cr != CR_SUCCESS)
+  {
+    switch (cr)
+    {
+      case CR_OUT_OF_MEMORY: rc = ERROR_NOT_ENOUGH_MEMORY; break;
+      case CR_INVALID_MACHINENAME: rc = ERROR_INVALID_COMPUTERNAME; break;
+      default: rc = ERROR_GEN_FAILURE; break;
+    }
+    SetLastError(rc);
+    goto cleanup;
+  }
+#endif
   InitializeListHead(&list->DriverListHead);
   InitializeListHead(&list->ListHead);
-  return (HDEVINFO)list;
+
+  ret = (HDEVINFO)list;
+
+cleanup:
+  if (ret == INVALID_HANDLE_VALUE)
+  {
+    if (list && list->HKLM != 0 && list->HKLM != HKEY_LOCAL_MACHINE)
+      RegCloseKey(list->HKLM);
+    HeapFree(GetProcessHeap(), 0, list);
+  }
+  HeapFree(GetProcessHeap(), 0, UNCServerName);
+  return ret;
 }
 
 /***********************************************************************
@@ -691,12 +736,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
                 memcpy(&DeviceInfoData->ClassGuid,
                     &DevInfo->ClassGuid,
                     sizeof(GUID));
-                DeviceInfoData->DevInst = 0; /* FIXME */
-                /* Note: this appears to be dangerous, passing a private
-                 * pointer a heap-allocated datum to the caller.  However, the
-                 * expected lifetime of the device data is the same as the
-                 * HDEVINFO; once that is closed, the data are no longer valid.
-                 */
+                DeviceInfoData->DevInst = (DWORD)list->hMachine;
                 DeviceInfoData->Reserved = (ULONG_PTR)DevInfo;
                 ret = TRUE;
             }
@@ -1806,11 +1846,6 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
                             &DevItf->InterfaceClassGuid,
                             sizeof(GUID));
                         DeviceInterfaceData->Flags = 0; /* FIXME */
-                        /* Note: this appears to be dangerous, passing a private
-                         * pointer a heap-allocated datum to the caller.  However, the
-                         * expected lifetime of the device data is the same as the
-                         * HDEVINFO; once that is closed, the data are no longer valid.
-                         */
                         DeviceInterfaceData->Reserved = (ULONG_PTR)DevItf;
                         Found = TRUE;
                     }
@@ -1888,6 +1923,7 @@ static BOOL DestroyDeviceInfoSet(struct DeviceInfoSet* list)
     }
     if (list->HKLM != HKEY_LOCAL_MACHINE)
         RegCloseKey(list->HKLM);
+    CM_Disconnect_Machine(list->hMachine);
     HeapFree(GetProcessHeap(), 0, list);
     return TRUE;
 }
@@ -1997,6 +2033,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
       PDWORD RequiredSize,
       PSP_DEVINFO_DATA DeviceInfoData)
 {
+    struct DeviceInfoSet *list;
     BOOL ret = FALSE;
 
     TRACE("(%p, %p, %p, %ld, %p, %p): stub\n", DeviceInfoSet,
@@ -2007,7 +2044,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInterfaceData->cbSize != sizeof(SP_DEVICE_INTERFACE_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -2041,12 +2078,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
                 memcpy(&DeviceInfoData->ClassGuid,
                     &deviceInterface->DeviceInfo->ClassGuid,
                     sizeof(GUID));
-                DeviceInfoData->DevInst = 0; /* FIXME */
-                /* Note: this appears to be dangerous, passing a private
-                 * pointer a heap-allocated datum to the caller.  However, the
-                 * expected lifetime of the device data is the same as the
-                 * HDEVINFO; once that is closed, the data are no longer valid.
-                 */
+                DeviceInfoData->DevInst = (DWORD)list->hMachine;
                 DeviceInfoData->Reserved = (ULONG_PTR)deviceInterface->DeviceInfo;
             }
             ret = TRUE;
@@ -2323,7 +2355,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
 
             default:
             {
-                FIXME("Property 0x%lx not implemented\n", Property);
+                ERR("Property 0x%lx not implemented\n", Property);
                 SetLastError(ERROR_NOT_SUPPORTED);
             }
         }
@@ -2472,7 +2504,7 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
 
             default:
             {
-                FIXME("Property 0x%lx not implemented\n", Property);
+                ERR("Property 0x%lx not implemented\n", Property);
                 SetLastError(ERROR_NOT_SUPPORTED);
             }
         }
@@ -3010,8 +3042,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
                 DefaultHandler = SetupDiSelectBestCompatDrv;
                 break;
             default:
-                FIXME("Install function %ld not implemented\n", InstallFunction);
-                SetLastError(ERROR_INVALID_PARAMETER);
+                ERR("Install function %lu not supported\n", InstallFunction);
+                SetLastError(ERROR_NOT_SUPPORTED);
         }
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
@@ -3809,7 +3841,6 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             {
                 struct DeviceInfoElement *deviceInfo;
 
-                /* FIXME: ClassGuid can be NULL */
                 if (CreateDeviceInfoElement(DeviceName, ClassGuid, &deviceInfo))
                 {
                     InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
@@ -3825,7 +3856,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
                         else
                         {
                             memcpy(&DeviceInfoData->ClassGuid, ClassGuid, sizeof(GUID));
-                            DeviceInfoData->DevInst = 0; /* FIXME */
+                            DeviceInfoData->DevInst = (DWORD)list->hMachine;
                             DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
                             ret = TRUE;
                         }
@@ -4728,8 +4759,10 @@ SetupDiOpenDeviceInfoW(
                 return FALSE;
             }
 
-            /* FIXME: GUID_NULL is not allowed */
-            if (!CreateDeviceInfoElement(DeviceInstanceId, &GUID_NULL /* FIXME */, &deviceInfo))
+            /* FIXME: try to get ClassGUID from registry, instead of
+             * sending GUID_NULL to CreateDeviceInfoElement
+             */
+            if (!CreateDeviceInfoElement(DeviceInstanceId, &GUID_NULL, &deviceInfo))
             {
                 RegCloseKey(hKey);
                 return FALSE;
@@ -4743,7 +4776,7 @@ SetupDiOpenDeviceInfoW(
         if (ret && deviceInfo && DeviceInfoData)
         {
             memcpy(&DeviceInfoData->ClassGuid, &deviceInfo->ClassGuid, sizeof(GUID));
-            DeviceInfoData->DevInst = 0; /* FIXME */
+            DeviceInfoData->DevInst = (DWORD)list->hMachine;
             DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
         }
     }

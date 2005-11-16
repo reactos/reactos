@@ -1252,13 +1252,11 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             {
                 GroupOrder[0] = 0;
             }
+            GroupOrder[0]++;
             if (flags & SPSVCINST_TAGTOFRONT)
                 GroupOrder[1] = tagId;
             else
-            {
-                GroupOrder[0]++;
                 GroupOrder[bufferSize / sizeof(DWORD)] = tagId;
-            }
 
             rc = RegSetValueExW(
                 hGroupOrderListKey,
