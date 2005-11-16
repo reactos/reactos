@@ -227,6 +227,9 @@ Project::ReadXml ()
 		}
 	}
 
+	if (node == NULL)
+		node = head->subElements[0];
+
 	throw InvalidBuildFileException (
 		node->location,
 		"Document contains no 'project' tag." );
