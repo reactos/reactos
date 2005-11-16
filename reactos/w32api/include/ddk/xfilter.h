@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __XFILTER_H
-#define __XFILTER_H
+#ifndef _X_FILTER_DEFS_
+#define _X_FILTER_DEFS_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -233,4 +233,4 @@ typedef ULONG TR_GROUP_ADDRESS;
 }
 #endif
 
-#endif /* __XFILTER_H */
+#endif /* _X_FILTER_DEFS_ */

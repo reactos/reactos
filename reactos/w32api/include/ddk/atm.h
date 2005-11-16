@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __ATM_H
-#define __ATM_H
+#ifndef _ATM_H
+#define _ATM_H
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -504,4 +504,4 @@ typedef struct _ATM_SERVICE_ADDRESS_LIST {
 }
 #endif
 
-#endif /* __ATM_H */
+#endif /* _ATM_H */

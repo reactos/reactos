@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __SCSI_H
-#define __SCSI_H
+#ifndef _NTSCSI_
+#define _NTSCSI_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -1692,4 +1692,4 @@ typedef union _TWO_BYTE {
 }
 #endif
 
-#endif /* __SCSI_H */
+#endif /* _NTSCSI_ */

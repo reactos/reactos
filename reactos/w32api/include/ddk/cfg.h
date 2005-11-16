@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __CFG_H
-#define __CFG_H
+#ifndef _CFG_INCLUDED_
+#define _CFG_INCLUDED_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -142,4 +142,4 @@ typedef enum _PNP_VETO_TYPE {
 }
 #endif
 
-#endif /* __CFG_H */
+#endif /* _CFG_INCLUDED_ */

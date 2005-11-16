@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __CFGMGR32_H
-#define __CFGMGR32_H
+#ifndef _CFGMGR32_H_
+#define _CFGMGR32_H_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -1876,4 +1876,4 @@ CMP_WaitNoPendingInstallEvents(
 }
 #endif
 
-#endif /* __CFGMGR32_H */
+#endif /* _CFGMGR32_H_ */
