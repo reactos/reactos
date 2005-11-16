@@ -396,37 +396,33 @@ done:
   return Ret;
 }
 
-HBITMAP STDCALL
-NtGdiCreateBitmap(
-	INT  Width,
-	INT  Height,
-	UINT  Planes,
-	UINT  BitsPerPel,
-	CONST VOID *Bits)
+static FASTCALL HBITMAP
+IntCreateBitmapIndirect(CONST BITMAP *BM)
 {
    PBITMAPOBJ bmp;
    HBITMAP hBitmap;
    SIZEL Size;
+   UINT BitsPixel;
 
    /* NOTE: Windows also doesn't store nr. of planes separately! */
-   BitsPerPel = (BYTE)BitsPerPel * (BYTE)Planes;
+   BitsPixel = BM->bmBitsPixel * BM->bmPlanes;
 
    /* Check parameters */
-   if (!Height || !Width)
+   if (0 == BM->bmHeight || 0 == BM->bmWidth)
    {
       Size.cx = Size.cy = 1;
    }
    else
    {
-      Size.cx = abs(Width);
-      Size.cy = abs(Height);
+      Size.cx = abs(BM->bmWidth);
+      Size.cy = abs(BM->bmHeight);
    }
 
    /* Create the bitmap object. */
-   hBitmap = IntCreateBitmap(Size, BITMAPOBJ_GetWidthBytes(Width, BitsPerPel),
-                             BitmapFormat(BitsPerPel, BI_RGB),
-                             (Height < 0 ? BMF_TOPDOWN : 0) |
-                             (Bits == NULL ? 0 : BMF_NOZEROINIT), NULL);
+   hBitmap = IntCreateBitmap(Size, BM->bmWidthBytes,
+                             BitmapFormat(BitsPixel, BI_RGB),
+                             (BM->bmHeight < 0 ? BMF_TOPDOWN : 0) |
+                             (NULL == BM->bmBits ? 0 : BMF_NOZEROINIT), NULL);
    if (!hBitmap)
    {
       DPRINT("NtGdiCreateBitmap: IntCreateBitmap returned 0\n");
@@ -434,7 +430,7 @@ NtGdiCreateBitmap(
    }
 
    DPRINT("NtGdiCreateBitmap:%dx%d, %d BPP colors returning %08x\n",
-          Size.cx, Size.cy, BitsPerPel, hBitmap);
+          Size.cx, Size.cy, BitsPixel, hBitmap);
 
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
    /* FIXME - bmp can be NULL!!!!!! */
@@ -447,12 +443,33 @@ NtGdiCreateBitmap(
     * to us it should be safe.
     */
 
-   if (Bits != NULL)
+   if (NULL != BM->bmBits)
    {
-      NtGdiSetBitmapBits(hBitmap, bmp->SurfObj.cjBits, Bits);
+      NtGdiSetBitmapBits(hBitmap, bmp->SurfObj.cjBits, BM->bmBits);
    }
 
    return hBitmap;
+}
+
+HBITMAP STDCALL
+NtGdiCreateBitmap(
+	INT  Width,
+	INT  Height,
+	UINT  Planes,
+	UINT  BitsPixel,
+	CONST VOID *Bits)
+{
+   BITMAP BM;
+
+   BM.bmType = 0;
+   BM.bmWidth = Width;
+   BM.bmHeight = Height;
+   BM.bmWidthBytes = BITMAPOBJ_GetWidthBytes(Width, Planes * BitsPixel);
+   BM.bmPlanes = Planes;
+   BM.bmBitsPixel = BitsPixel;
+   BM.bmBits = (LPVOID) Bits;
+
+   return IntCreateBitmapIndirect(&BM);
 }
 
 BOOL INTERNAL_CALL
@@ -542,13 +559,32 @@ NtGdiCreateCompatibleBitmap(
 }
 
 HBITMAP STDCALL
-NtGdiCreateBitmapIndirect(CONST BITMAP  *BM)
+NtGdiCreateBitmapIndirect(CONST BITMAP *UnsafeBM)
 {
-	return NtGdiCreateBitmap (BM->bmWidth,
-		BM->bmHeight,
-		BM->bmPlanes,
-		BM->bmBitsPixel,
-		BM->bmBits);
+  BITMAP BM;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  _SEH_TRY
+  {
+    ProbeForRead(UnsafeBM, sizeof(BITMAP), 1);
+    BM = *UnsafeBM;
+    if (NULL != BM.bmBits)
+      {
+      ProbeForRead(BM.bmBits, BM.bmWidthBytes * abs(BM.bmHeight), 2);
+      }
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return NULL;
+  }
+
+  return IntCreateBitmapIndirect(&BM);
 }
 
 HBITMAP STDCALL
@@ -1478,7 +1514,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	if (Bitmap->SurfObj.lDelta >= 0)
 		bm.bmHeight = -bm.bmHeight;
 
-	res = NtGdiCreateBitmapIndirect(&bm);
+	res = IntCreateBitmapIndirect(&bm);
 	if(res)
 	{
 		char *buf;
