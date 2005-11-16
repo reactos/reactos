@@ -25,7 +25,7 @@ endif
 
 ifeq ($(UNICODE),1)
 CFLAGS	+= -DUNICODE
-# LFLAGS+= -Wl,--entry,_wWinMain@16
+#LFLAGS	+= -Wl,--entry,_wWinMain@16
 RCFLAGS += -DUNICODE
 endif
 

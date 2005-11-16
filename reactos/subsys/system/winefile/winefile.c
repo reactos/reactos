@@ -2146,9 +2146,7 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 			break;
 
 		case WM_DESTROY:
-			 /* don't exit desktop when closing file manager window */
-			if (!Globals.hwndParent)
-				PostQuitMessage(0);
+			PostQuitMessage(0);
 			break;
 
 		case WM_INITMENUPOPUP: {
@@ -4683,11 +4681,11 @@ static void InitInstance(HINSTANCE hinstance)
 }
 
 
-static void show_frame(HWND hwndParent, int cmdshow)
+static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 {
 	const static TCHAR sMDICLIENT[] = {'M','D','I','C','L','I','E','N','T','\0'};
 
-	TCHAR path[MAX_PATH], b1[BUFFER_LEN];
+	TCHAR buffer[MAX_PATH], b1[BUFFER_LEN];
 	ChildWnd* child;
 	HMENU hMenuFrame, hMenuWindow;
 
@@ -4695,8 +4693,6 @@ static void show_frame(HWND hwndParent, int cmdshow)
 
 	if (Globals.hMainWnd)
 		return;
-
-	Globals.hwndParent = hwndParent;
 
 	hMenuFrame = LoadMenu(Globals.hInstance, MAKEINTRESOURCE(IDM_WINEFILE));
 	hMenuWindow = GetSubMenu(hMenuFrame, GetMenuItemCount(hMenuFrame)-2);
@@ -4752,7 +4748,11 @@ static void show_frame(HWND hwndParent, int cmdshow)
 					Globals.hMainWnd, (HMENU)IDW_STATUSBAR, hinstance, 0);*/
 
 	/*TODO: read paths and window placements from registry */
-	GetCurrentDirectory(MAX_PATH, path);
+
+	if (!path || !*path) {
+		GetCurrentDirectory(MAX_PATH, buffer);
+		path = buffer;
+	}
 
 	ShowWindow(Globals.hMainWnd, cmdshow);
 
@@ -4826,7 +4826,7 @@ static int find_window_class(LPCTSTR classname)
 
 #endif
 
-static int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
+static int winefile_main(HINSTANCE hinstance, int cmdshow, LPCTSTR path)
 {
 	MSG msg;
 
@@ -4836,7 +4836,7 @@ static int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 	        /*TODO: read window placement from registry */
 		cmdshow = SW_MAXIMIZE;
 
-	show_frame(hwndParent, cmdshow);
+	show_frame(0, cmdshow, path);
 
 	while(GetMessage(&msg, 0, 0, 0)) {
 		if (Globals.hmdiclient && TranslateMDISysAccel(Globals.hmdiclient, &msg))
@@ -4855,17 +4855,26 @@ static int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 }
 
 
-int APIENTRY WinMain(HINSTANCE hinstance,
-					 HINSTANCE previnstance,
-					 LPSTR	   cmdline,
-					 int	   cmdshow)
+#if defined(UNICODE) && defined(_MSC_VER)
+int APIENTRY wWinMain(HINSTANCE hinstance, HINSTANCE previnstance, LPWSTR cmdline, int cmdshow)
+#else
+int APIENTRY WinMain(HINSTANCE hinstance, HINSTANCE previnstance, LPSTR cmdline, int cmdshow)
+#endif
 {
 #ifdef _NO_EXTENSIONS
 	if (find_window_class(sWINEFILEFRAME))
 		return 1;
 #endif
 
-	winefile_main(hinstance, 0, cmdshow);
+#if defined(UNICODE) && !defined(_MSC_VER)
+	{ /* convert ANSI cmdline into WCS path string */
+	TCHAR buffer[MAX_PATH];
+	MultiByteToWideChar(CP_ACP, 0, cmdline, -1, buffer, MAX_PATH);
+	winefile_main(hinstance, cmdshow, buffer);
+	}
+#else
+	winefile_main(hinstance, cmdshow, cmdline);
+#endif
 
 	return 0;
 }

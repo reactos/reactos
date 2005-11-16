@@ -118,7 +118,6 @@ typedef struct
   HANDLE    hInstance;
   HACCEL    haccel;
   ATOM      hframeClass;
-  HWND      hwndParent;
 
   HWND      hMainWnd;
   HMENU     hMenuFrame;
