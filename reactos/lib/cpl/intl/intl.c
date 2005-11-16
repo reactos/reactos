@@ -31,7 +31,7 @@
 #include "resource.h"
 
 
-#define NUM_APPLETS	(2)
+#define NUM_APPLETS	(1)
 
 LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
