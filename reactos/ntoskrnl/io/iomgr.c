@@ -483,7 +483,14 @@ BOOLEAN STDCALL
 IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
                         IN UCHAR MinorVersion)
 {
-   if (MajorVersion <= 1 && MinorVersion <= 10)
+   /* MinorVersion = 0x20 : WinXP
+                     0x10 : Win2k
+                     0x5  : WinMe
+                     <0x5 : Win98
+
+      We report Win2k now
+      */
+   if (MajorVersion <= 1 && MinorVersion <= 0x10)
       return TRUE;
    return FALSE;
 }
