@@ -19,8 +19,6 @@
 #include <_mingw.h>
 #endif
 
-#include <windef.h>
-
 /*
  * NOTE: The constants structs and typedefs below should be defined in the
  *       Win32 API headers.
