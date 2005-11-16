@@ -449,7 +449,8 @@ NtGdiGetDIBits(HDC hDC,
          DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
          DestSize.cy = ScanLines;
          DestBitmap = EngCreateBitmap(
-            DestSize, BitmapObj->SurfObj.lDelta,
+            DestSize, DIB_GetDIBWidthBytes(DestSize.cx,
+                                           Info->bmiHeader.biBitCount),
             BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
             0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
             Bits);
@@ -667,6 +668,7 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   int height;
   WORD bpp;
   WORD compr;
+  SIZEL size;
 
   if (DIB_GetBitmapInfo( header, &width, &height, &bpp, &compr ) == -1) return 0;
 
@@ -721,7 +723,12 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   }
   else
   {
-    handle = NtGdiCreateBitmap( width, height, 1, 1, NULL);
+    size.cx = width;
+    size.cy = abs(height);
+
+    handle = IntCreateBitmap(size, DIB_GetDIBWidthBytes(width, 1), BMF_1BPP,
+                             (height < 0 ? BMF_TOPDOWN : 0) | BMF_NOZEROINIT,
+                             NULL);
   }
 
   if (height < 0)
@@ -986,24 +993,7 @@ DIB_CreateDIBSection(
  */
 INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
 {
-  int words;
-
-  switch(depth)
-  {
-    case 1:  words = (width + 31) >> 5; break;
-    case 4:  words = (width + 7) >> 3; break;
-    case 8:  words = (width + 3) >> 2; break;
-    case 15:
-    case 16: words = (width + 1) >> 1; break;
-    case 24: words = (width * 3 + 3) >> 2; break;
-
-    default:
-      DPRINT("(%d): Unsupported depth\n", depth );
-      /* fall through */
-    case 32:
-      words = width;
-  }
-  return words << 2;
+  return ((width * depth + 31) & ~31) >> 3;
 }
 
 /***********************************************************************
