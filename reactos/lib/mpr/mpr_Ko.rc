@@ -1,7 +1,8 @@
 /*
- * Czech MPR dll resources
+ * MPR dll resources
+ *
  * Copyright (C) 2004 Juan Lang
- * Copyright (C) 2004, 2005 David Kredba
+ * Copyright 2005 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,29 +19,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ENTIRENETWORK "Celá sí»"
+    IDS_ENTIRENETWORK "ÀüÃ¼ ³×Æ®¿öÅ©"
 }
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Zadání sí»ového hesla"
+CAPTION "³×Æ®¿öÅ© ¾ÏÈ£ ÀÔ·Â"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Prosím zadejte své u¾ivatelské jméno a heslo:", IDC_EXPLAIN, 40, 6, 150, 15
- LTEXT "Proxy", -1, 40, 26, 50, 10
+ LTEXT "´ç½ÅÀÇ »ç¿ëÀÚÀÌ¸§°ú ¾ÏÈ£¸¦ ÀÔ·ÂÇÏ½Ã¿À:", IDC_EXPLAIN, 40, 6, 150, 15
+ LTEXT "ÇÁ·Ï½Ã", -1, 40, 26, 50, 10
 /* LTEXT "Realm", -1, 40, 46, 50, 10 */
- LTEXT "U¾ivatel", -1, 40, 66, 50, 10
- LTEXT "Heslo", -1, 40, 86, 50, 10
+ LTEXT "»ç¿ëÀÚ", -1, 40, 66, 50, 10
+ LTEXT "¾ÏÈ£", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Ulo¾it toto heslo (Není bezpeèné) ?", IDC_SAVEPASSWORD,
+ CHECKBOX "¾ÏÈ£ ÀúÀå(&S) (Insecure)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Zru¹it", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "È®ÀÎ", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Ãë¼Ò", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
