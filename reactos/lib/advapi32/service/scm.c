@@ -343,7 +343,7 @@ CreateServiceA(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
-    MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, len);
+    MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, dwDependenciesLength);
 
     len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
     lpServiceStartName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
