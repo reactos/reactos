@@ -1,7 +1,7 @@
 /*
- * Resources for MSI
+ * Korean resources for MSI
  *
- * Copyright 2005 Mike McCormack
+ * Copyright 2005 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,24 +18,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-#include "version.rc"
-
-#include "msi_Bg.rc"
-#include "msi_De.rc"
-#include "msi_En.rc"
-#include "msi_Ja.rc"
-#include "msi_Es.rc"
-#include "msi_Fi.rc"
-#include "msi_Fr.rc"
-#include "msi_Ko.rc"
-#include "msi_Nl.rc"
-#include "msi_No.rc"
-#include "msi_Pt.rc"
-#include "msi_Ru.rc"
+STRINGTABLE DISCARDABLE
+{
+	5 "path %s not found"
+	9 "디스크 %s 삽입"
+	10 "절못된 매개변수"
+	11 "enter which folder contains %s"
+	12 "install source for feature missing"
+	13 "network drive for feature missing"
+	14 "feature from:"
+	15 "choose which folder contains %s"
+}

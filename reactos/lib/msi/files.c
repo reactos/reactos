@@ -56,26 +56,6 @@ extern const WCHAR szRemoveFiles[];
 
 static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
-static UINT create_component_directory( MSIPACKAGE* package, MSICOMPONENT *comp )
-{
-    UINT rc = ERROR_SUCCESS;
-    MSIFOLDER *folder;
-    LPWSTR install_path;
-
-    install_path = resolve_folder(package, comp->Directory, FALSE, FALSE, &folder);
-    if (!install_path)
-        return ERROR_FUNCTION_FAILED; 
-
-    /* create the path */
-    if (folder->State == 0)
-    {
-        create_full_pathW(install_path);
-        folder->State = 2;
-    }
-    msi_free(install_path);
-
-    return rc;
-}
 
 /*
  * This is a helper function for handling embedded cabinet media
@@ -139,6 +119,7 @@ static void cabinet_free(void *pv)
 
 static INT_PTR cabinet_open(char *pszFile, int oflag, int pmode)
 {
+    HANDLE handle;
     DWORD dwAccess = 0;
     DWORD dwShareMode = 0;
     DWORD dwCreateDisposition = OPEN_EXISTING;
@@ -161,35 +142,62 @@ static INT_PTR cabinet_open(char *pszFile, int oflag, int pmode)
         dwCreateDisposition = CREATE_NEW;
     else if (oflag & _O_CREAT)
         dwCreateDisposition = CREATE_ALWAYS;
-    return (INT_PTR)CreateFileA(pszFile, dwAccess, dwShareMode, NULL, 
-                                dwCreateDisposition, 0, NULL);
+    handle = CreateFileA( pszFile, dwAccess, dwShareMode, NULL, 
+                          dwCreateDisposition, 0, NULL );
+    if (handle == INVALID_HANDLE_VALUE)
+        return 0;
+    return (INT_PTR) handle;
 }
 
 static UINT cabinet_read(INT_PTR hf, void *pv, UINT cb)
 {
+    HANDLE handle = (HANDLE) hf;
     DWORD dwRead;
-    if (ReadFile((HANDLE)hf, pv, cb, &dwRead, NULL))
+    if (ReadFile(handle, pv, cb, &dwRead, NULL))
         return dwRead;
     return 0;
 }
 
 static UINT cabinet_write(INT_PTR hf, void *pv, UINT cb)
 {
+    HANDLE handle = (HANDLE) hf;
     DWORD dwWritten;
-    if (WriteFile((HANDLE)hf, pv, cb, &dwWritten, NULL))
+    if (WriteFile(handle, pv, cb, &dwWritten, NULL))
         return dwWritten;
     return 0;
 }
 
 static int cabinet_close(INT_PTR hf)
 {
-    return CloseHandle((HANDLE)hf) ? 0 : -1;
+    HANDLE handle = (HANDLE) hf;
+    return CloseHandle(handle) ? 0 : -1;
 }
 
 static long cabinet_seek(INT_PTR hf, long dist, int seektype)
 {
+    HANDLE handle = (HANDLE) hf;
     /* flags are compatible and so are passed straight through */
-    return SetFilePointer((HANDLE)hf, dist, NULL, seektype);
+    return SetFilePointer(handle, dist, NULL, seektype);
+}
+
+static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f )
+{
+    MSIRECORD *uirow;
+    LPWSTR uipath, p;
+
+    /* the UI chunk */
+    uirow = MSI_CreateRecord( 9 );
+    MSI_RecordSetStringW( uirow, 1, f->FileName );
+    uipath = strdupW( f->TargetPath );
+    p = strrchrW(uipath,'\\');
+    if (p)
+        p[1]=0;
+    MSI_RecordSetStringW( uirow, 9, uipath);
+    MSI_RecordSetInteger( uirow, 6, f->FileSize );
+    ui_actiondata( package, szInstallFiles, uirow);
+    msiobj_release( &uirow->hdr );
+    msi_free( uipath );
+    ui_progress( package, 2, f->FileSize, 0, 0);
 }
 
 static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
@@ -199,22 +207,13 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
     case fdintCOPY_FILE:
     {
         CabData *data = (CabData*) pfdin->pv;
-        ULONG len = strlen(data->cab_path) + strlen(pfdin->psz1);
-        char *file;
-
-        LPWSTR trackname;
-        LPWSTR trackpath;
-        LPWSTR tracknametmp;
-        static const WCHAR tmpprefix[] = {'C','A','B','T','M','P','_',0};
-        LPWSTR given_file;
-
-        MSIRECORD * uirow;
-        LPWSTR uipath;
+        HANDLE handle;
+        LPWSTR file;
         MSIFILE *f;
 
-        given_file = strdupAtoW(pfdin->psz1);
-        f = get_loaded_file(data->package, given_file);
-        msi_free(given_file);
+        file = strdupAtoW(pfdin->psz1);
+        f = get_loaded_file(data->package, file);
+        msi_free(file);
 
         if (!f)
         {
@@ -222,60 +221,41 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
             return 0;
         }
 
-        if (!((f->State == 1 || f->State == 2)))
+        if (f->state != msifs_missing && f->state != msifs_overwrite)
         {
             TRACE("Skipping extraction of %s\n",debugstr_a(pfdin->psz1));
             return 0;
         }
 
-        file = cabinet_alloc((len+1)*sizeof(char));
-        strcpy(file, data->cab_path);
-        strcat(file, pfdin->psz1);
+        msi_file_update_ui( data->package, f );
 
-        TRACE("file: %s\n", debugstr_a(file));
+        TRACE("extracting %s\n", debugstr_w(f->TargetPath) );
 
-        /* track this file so it can be deleted if not installed */
-        trackpath=strdupAtoW(file);
-        tracknametmp=strdupAtoW(strrchr(file,'\\')+1);
-        trackname = msi_alloc((strlenW(tracknametmp) + 
-                                  strlenW(tmpprefix)+1) * sizeof(WCHAR));
+        handle = CreateFileW( f->TargetPath, GENERIC_READ | GENERIC_WRITE, 0,
+                              NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
+        if ( handle == INVALID_HANDLE_VALUE )
+        {
+            ERR("failed to create %s (error %ld)\n",
+                debugstr_w( f->TargetPath ), GetLastError() );
+            return 0;
+        }
 
-        strcpyW(trackname,tmpprefix);
-        strcatW(trackname,tracknametmp);
-
-        track_tempfile(data->package, trackname, trackpath);
-
-        msi_free(trackpath);
-        msi_free(trackname);
-        msi_free(tracknametmp);
-
-        /* the UI chunk */
-        uirow=MSI_CreateRecord(9);
-        MSI_RecordSetStringW( uirow, 1, f->FileName );
-        uipath = strdupW( f->TargetPath );
-        *(strrchrW(uipath,'\\')+1)=0;
-        MSI_RecordSetStringW(uirow,9,uipath);
-        MSI_RecordSetInteger( uirow, 6, f->FileSize );
-        ui_actiondata(data->package,szInstallFiles,uirow);
-        msiobj_release( &uirow->hdr );
-        msi_free(uipath);
-
-        ui_progress( data->package, 2, f->FileSize, 0, 0);
-
-        return cabinet_open(file, _O_WRONLY | _O_CREAT, 0);
+        f->state = msifs_installed;
+        return (INT_PTR) handle;
     }
     case fdintCLOSE_FILE_INFO:
     {
         FILETIME ft;
-	    FILETIME ftLocal;
+        FILETIME ftLocal;
+        HANDLE handle = (HANDLE) pfdin->hf;
+
         if (!DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft))
             return -1;
         if (!LocalFileTimeToFileTime(&ft, &ftLocal))
             return -1;
-        if (!SetFileTime((HANDLE)pfdin->hf, &ftLocal, 0, &ftLocal))
+        if (!SetFileTime(handle, &ftLocal, 0, &ftLocal))
             return -1;
-
-        cabinet_close(pfdin->hf);
+        CloseHandle(handle);
         return 1;
     }
     default:
@@ -400,7 +380,8 @@ static UINT ready_volume(MSIPACKAGE* package, LPCWSTR path, LPWSTR last_volume,
     LPCWSTR want_volume = MSI_RecordGetString(row, 5);
     BOOL ok = check_volume(path, want_volume, volume, type);
 
-    TRACE("Readying Volume for %s (%s, %s)\n",debugstr_w(path), debugstr_w(want_volume), debugstr_w(last_volume));
+    TRACE("Readying Volume for %s (%s, %s)\n", debugstr_w(path),
+          debugstr_w(want_volume), debugstr_w(last_volume));
 
     if (check_for_sourcefile(path) && !ok)
     {
@@ -463,7 +444,7 @@ static void free_media_info( struct media_info *mi )
 }
 
 static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
-                                  MSIFILE *file, MSICOMPONENT* comp )
+                                  MSIFILE *file )
 {
     UINT rc = ERROR_SUCCESS;
     MSIRECORD * row = 0;
@@ -478,6 +459,7 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
     INT seq;
     UINT type;
     LPCWSTR prompt;
+    MSICOMPONENT *comp = file->Component;
 
     if (file->Sequence <= mi->last_sequence)
     {
@@ -560,7 +542,7 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
             mi->last_path = msi_alloc(MAX_PATH*sizeof(WCHAR));
             if (MSI_GetPropertyW(package, cszSourceDir, mi->source, &sz))
             {
-                ERR("No Source dir defined \n");
+                ERR("No Source dir defined\n");
                 rc = ERROR_FUNCTION_FAILED;
             }
             else
@@ -626,14 +608,11 @@ static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key,
 {
     MSIFILE *file;
 
-    if (!package)
-        return ERROR_INVALID_HANDLE;
-
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
         if (lstrcmpW( file_key, file->File )==0)
         {
-            if (file->State >= 2)
+            if (file->state >= msifs_overwrite)
             {
                 *file_source = strdupW( file->TargetPath );
                 return ERROR_SUCCESS;
@@ -647,11 +626,11 @@ static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key,
 }
 
 /*
- * In order to make this work more effeciencly I am going to do this in 2
- * passes.
- * Pass 1) Correct all the TargetPaths and determin what files are to be
- * installed.
- * Pass 2) Extract Cabinents and copy files.
+ * ACTION_InstallFiles()
+ * 
+ * For efficiency, this is done in two passes:
+ * 1) Correct all the TargetPaths and determine what files are to be installed.
+ * 2) Extract Cabinets and copy files.
  */
 UINT ACTION_InstallFiles(MSIPACKAGE *package)
 {
@@ -660,13 +639,10 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     LPWSTR ptr;
     MSIFILE *file;
 
-    if (!package)
-        return ERROR_INVALID_HANDLE;
-
     /* increment progress bar each time action data is sent */
     ui_progress(package,1,1,0,0);
 
-    /* handle the keys for the SouceList */
+    /* handle the keys for the SourceList */
     ptr = strrchrW(package->PackagePath,'\\');
     if (ptr)
     {
@@ -676,106 +652,87 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
                 MSICODE_PRODUCT,
                 INSTALLPROPERTY_PACKAGENAMEW, ptr);
     }
-    FIXME("Write DiskPrompt\n");
+    /* FIXME("Write DiskPrompt\n"); */
     
     /* Pass 1 */
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        MSICOMPONENT* comp = NULL;
-
-        if (!ACTION_VerifyComponentForAction(package, file->Component, 
-                                       INSTALLSTATE_LOCAL))
+        if (!ACTION_VerifyComponentForAction( file->Component, INSTALLSTATE_LOCAL ))
         {
             ui_progress(package,2,file->FileSize,0,0);
             TRACE("File %s is not scheduled for install\n",
                    debugstr_w(file->File));
 
-            file->State = 5;
-            continue;
-        }
-
-        if ((file->State == 1) || (file->State == 2))
-        {
-            LPWSTR p = NULL;
-
-            TRACE("Pass 1: %s\n",debugstr_w(file->File));
-
-            create_component_directory( package, file->Component );
-
-            /* recalculate file paths because things may have changed */
-
-            comp = file->Component;
-            if (!comp)
-            {
-                ERR("No Component for file\n");
-                continue;
-            }
-
-            p = resolve_folder(package, comp->Directory, FALSE, FALSE, NULL);
-            msi_free(file->TargetPath);
-
-            file->TargetPath = build_directory_name(2, p, file->FileName);
-            msi_free(p);
+            file->state = msifs_skipped;
         }
     }
+
+    /*
+     * Despite MSDN specifying that the CreateFolders action
+     * should be called before InstallFiles, some installers don't
+     * do that, and they seem to work correctly.  We need to create
+     * directories here to make sure that the files can be copied.
+     */
+    msi_create_component_directories( package );
 
     mi = create_media_info();
 
     /* Pass 2 */
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        if ((file->State == 1) || (file->State == 2))
+        if (file->state != msifs_missing && file->state != msifs_overwrite)
+            continue;
+
+        TRACE("Pass 2: %s\n",debugstr_w(file->File));
+
+        rc = ready_media_for_file( package, mi, file );
+        if (rc != ERROR_SUCCESS)
         {
-            TRACE("Pass 2: %s\n",debugstr_w(file->File));
+            ERR("Unable to ready media\n");
+            rc = ERROR_FUNCTION_FAILED;
+            break;
+        }
 
-            rc = ready_media_for_file( package, mi, file, file->Component );
-            if (rc != ERROR_SUCCESS)
+        TRACE("file paths %s to %s\n",debugstr_w(file->SourcePath),
+              debugstr_w(file->TargetPath));
+
+        if (file->state != msifs_missing && file->state != msifs_overwrite)
+            continue;
+
+        /* compressed files are extracted in ready_media_for_file */
+        if (~file->Attributes & msidbFileAttributesNoncompressed)
+        {
+            if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW(file->TargetPath))
+                ERR("compressed file wasn't extracted (%s)\n",
+                    debugstr_w(file->TargetPath));
+            continue;
+        }
+
+        rc = CopyFileW(file->SourcePath,file->TargetPath,FALSE);
+        if (!rc)
+        {
+            rc = GetLastError();
+            ERR("Unable to copy file (%s -> %s) (error %d)\n",
+                debugstr_w(file->SourcePath), debugstr_w(file->TargetPath), rc);
+            if (rc == ERROR_ALREADY_EXISTS && file->state == msifs_overwrite)
             {
-                ERR("Unable to ready media\n");
-                rc = ERROR_FUNCTION_FAILED;
-                break;
+                rc = 0;
             }
-
-            TRACE("file paths %s to %s\n",debugstr_w(file->SourcePath),
-                  debugstr_w(file->TargetPath));
-
-            if (file->Attributes & msidbFileAttributesNoncompressed)
-                rc = CopyFileW(file->SourcePath,file->TargetPath,FALSE);
-            else
-                rc = MoveFileW(file->SourcePath, file->TargetPath);
-
-            if (!rc)
+            else if (rc == ERROR_FILE_NOT_FOUND)
             {
-                rc = GetLastError();
-                ERR("Unable to move/copy file (%s -> %s) (error %d)\n",
-                     debugstr_w(file->SourcePath), debugstr_w(file->TargetPath),
-                      rc);
-                if (rc == ERROR_ALREADY_EXISTS && file->State == 2)
-                {
-                    if (!CopyFileW(file->SourcePath,file->TargetPath,FALSE))
-                        ERR("Unable to copy file (%s -> %s) (error %ld)\n",
-                            debugstr_w(file->SourcePath), 
-                            debugstr_w(file->TargetPath), GetLastError());
-                    if (!(file->Attributes & msidbFileAttributesNoncompressed))
-                        DeleteFileW(file->SourcePath);
-                    rc = 0;
-                }
-                else if (rc == ERROR_FILE_NOT_FOUND)
-                {
-                    ERR("Source File Not Found!  Continuing\n");
-                    rc = 0;
-                }
-                else if (file->Attributes & msidbFileAttributesVital)
-                {
-                    ERR("Ignoring Error and continuing (nonvital file)...\n");
-                    rc = 0;
-                }
+                ERR("Source File Not Found!  Continuing\n");
+                rc = 0;
             }
-            else
+            else if (file->Attributes & msidbFileAttributesVital)
             {
-                file->State = 4;
-                rc = ERROR_SUCCESS;
+                ERR("Ignoring Error and continuing (nonvital file)...\n");
+                rc = 0;
             }
+        }
+        else
+        {
+            file->state = msifs_installed;
+            rc = ERROR_SUCCESS;
         }
     }
 
@@ -798,7 +755,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     component = MSI_RecordGetString(row,2);
     comp = get_loaded_component(package,component);
 
-    if (!ACTION_VerifyComponentForAction(package, comp, INSTALLSTATE_LOCAL))
+    if (!ACTION_VerifyComponentForAction( comp, INSTALLSTATE_LOCAL ))
     {
         TRACE("Skipping copy due to disabled component %s\n",
                         debugstr_w(component));
@@ -873,7 +830,8 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
         rc = ERROR_SUCCESS;
 
     if (rc != ERROR_SUCCESS)
-        ERR("Failed to copy file %s -> %s, last error %ld\n", debugstr_w(file_source), debugstr_w(dest_path), GetLastError());
+        ERR("Failed to copy file %s -> %s, last error %ld\n",
+            debugstr_w(file_source), debugstr_w(dest_path), GetLastError());
 
     FIXME("We should track these duplicate files as well\n");   
 
@@ -892,9 +850,6 @@ UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
 
-    if (!package)
-        return ERROR_INVALID_HANDLE;
-
     rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -903,4 +858,30 @@ UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
     msiobj_release(&view->hdr);
 
     return rc;
+}
+
+UINT ACTION_RemoveFiles( MSIPACKAGE *package )
+{
+    MSIFILE *file;
+
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
+    {
+        if ( !file->Component )
+            continue;
+        if ( file->Component->Installed == INSTALLSTATE_LOCAL )
+            continue;
+
+        if ( file->state == msifs_installed )
+            ERR("removing installed file %s\n", debugstr_w(file->TargetPath));
+
+        if ( file->state != msifs_present )
+            continue;
+
+        TRACE("removing %s\n", debugstr_w(file->File) );
+        if ( !DeleteFileW( file->TargetPath ) )
+            ERR("failed to delete %s\n",  debugstr_w(file->TargetPath) );
+        file->state = msifs_missing;
+    }
+
+    return ERROR_SUCCESS;
 }

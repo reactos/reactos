@@ -67,6 +67,7 @@ typedef struct tagMSIDATABASE
     string_table *strings;
     LPCWSTR mode;
     struct list tables;
+    struct list transforms;
 } MSIDATABASE;
 
 typedef struct tagMSIVIEW MSIVIEW;
@@ -219,6 +220,16 @@ typedef struct tagMSIPREVIEW
     msi_dialog *dialog;
 } MSIPREVIEW;
 
+#define MSI_MAX_PROPS 20
+
+typedef struct tagMSISUMMARYINFO
+{
+    MSIOBJECTHDR hdr;
+    MSIDATABASE *db;
+    DWORD update_count;
+    PROPVARIANT property[MSI_MAX_PROPS];
+} MSISUMMARYINFO;
+
 #define MSIHANDLETYPE_ANY 0
 #define MSIHANDLETYPE_DATABASE 1
 #define MSIHANDLETYPE_SUMMARYINFO 2
@@ -243,6 +254,7 @@ DEFINE_GUID(CLSID_IMsiServerX3, 0x000C1094,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x0
 
 DEFINE_GUID(CLSID_IMsiServerMessage, 0x000C101D,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
+/* handle unicode/ascii output in the Msi* API functions */
 typedef struct {
     BOOL unicode;
     union {
@@ -259,6 +271,8 @@ typedef struct {
     } str;
 } awcstring;
 
+UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz );
+
 /* handle functions */
 extern void *msihandle2msiinfo(MSIHANDLE handle, UINT type);
 extern MSIHANDLE alloc_msihandle( MSIOBJECTHDR * );
@@ -269,6 +283,7 @@ extern void msiobj_lock(MSIOBJECTHDR *);
 extern void msiobj_unlock(MSIOBJECTHDR *);
 
 extern void free_cached_tables( MSIDATABASE *db );
+extern void msi_free_transforms( MSIDATABASE *db );
 extern string_table *load_string_table( IStorage *stg );
 extern UINT MSI_CommitTables( MSIDATABASE *db );
 extern HRESULT init_string_table( IStorage *stg );
@@ -299,6 +314,9 @@ extern BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name );
 
 extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
                               USHORT **pdata, UINT *psz );
+
+/* transform functions */
+extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg );
 
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
@@ -400,6 +418,10 @@ extern void msi_dialog_handle_event( msi_dialog*, LPCWSTR, LPCWSTR, MSIRECORD * 
 /* preview */
 extern MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE * );
 extern UINT MSI_PreviewDialogW( MSIPREVIEW *, LPCWSTR );
+
+/* summary information */
+extern MSISUMMARYINFO *MSI_GetSummaryInformationW( MSIDATABASE *db, UINT uiUpdateCount );
+extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty );
 
 /* undocumented functions */
 UINT WINAPI MsiCreateAndVerifyInstallerDirectory( DWORD );

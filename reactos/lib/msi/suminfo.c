@@ -39,8 +39,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-#define MSI_MAX_PROPS 20
-
 #include "pshpack1.h"
 
 typedef struct { 
@@ -82,14 +80,6 @@ typedef struct {
 #include "poppack.h"
 
 #define SECT_HDR_SIZE (sizeof(PROPERTYSECTIONHEADER))
-
-typedef struct tagMSISUMMARYINFO
-{
-    MSIOBJECTHDR hdr;
-    MSIDATABASE *db;
-    DWORD update_count;
-    PROPVARIANT property[MSI_MAX_PROPS];
-} MSISUMMARYINFO;
 
 static const WCHAR szSumInfo[] = { 5 ,'S','u','m','m','a','r','y',
                        'I','n','f','o','r','m','a','t','i','o','n',0 };
@@ -417,45 +407,19 @@ static UINT save_summary_info( MSISUMMARYINFO * si, IStream *stm )
     return ERROR_SUCCESS;
 }
 
-UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase, 
-              LPCWSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle )
+MSISUMMARYINFO *MSI_GetSummaryInformationW( MSIDATABASE *db, UINT uiUpdateCount )
 {
-    UINT ret = ERROR_SUCCESS;
     IStream *stm = NULL;
     MSISUMMARYINFO *si;
-    MSIHANDLE handle;
-    MSIDATABASE *db;
     DWORD grfMode;
     HRESULT r;
 
-    TRACE("%ld %s %d %p\n", hDatabase, debugstr_w(szDatabase),
-           uiUpdateCount, pHandle);
-
-    if( !pHandle )
-        return ERROR_INVALID_PARAMETER;
-
-    if( szDatabase )
-    {
-        UINT res;
-
-        res = MSI_OpenDatabaseW(szDatabase, NULL, &db);
-        if( res != ERROR_SUCCESS )
-            return res;
-    }
-    else
-    {
-        db = msihandle2msiinfo(hDatabase, MSIHANDLETYPE_DATABASE);
-        if( !db )
-            return ERROR_INVALID_PARAMETER;
-    }
+    TRACE("%p %d\n", db, uiUpdateCount );
 
     si = alloc_msiobject( MSIHANDLETYPE_SUMMARYINFO, 
                   sizeof (MSISUMMARYINFO), MSI_CloseSummaryInfo );
     if( !si )
-    {
-        ret = ERROR_FUNCTION_FAILED;
-        goto end;
-    }
+        return si;
 
     msiobj_addref( &db->hdr );
     si->db = db;
@@ -471,14 +435,44 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
         IStream_Release( stm );
     }
 
-    handle = alloc_msihandle( &si->hdr );
-    if( handle )
-        *pHandle = handle;
-    else
-        ret = ERROR_FUNCTION_FAILED;
-    msiobj_release( &si->hdr );
+    return si;
+}
 
-end:
+UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase, 
+              LPCWSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle )
+{
+    MSISUMMARYINFO *si;
+    MSIDATABASE *db;
+    UINT ret = ERROR_FUNCTION_FAILED;
+
+    TRACE("%ld %s %d %p\n", hDatabase, debugstr_w(szDatabase),
+           uiUpdateCount, pHandle);
+
+    if( !pHandle )
+        return ERROR_INVALID_PARAMETER;
+
+    if( szDatabase )
+    {
+        ret = MSI_OpenDatabaseW( szDatabase, NULL, &db );
+        if( ret != ERROR_SUCCESS )
+            return ret;
+    }
+    else
+    {
+        db = msihandle2msiinfo( hDatabase, MSIHANDLETYPE_DATABASE );
+        if( !db )
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    si = MSI_GetSummaryInformationW( db, uiUpdateCount );
+    if (si)
+    {
+        *pHandle = alloc_msihandle( &si->hdr );
+        if( *pHandle )
+            ret = ERROR_SUCCESS;
+        msiobj_release( &si->hdr );
+    }
+
     if( db )
         msiobj_release( &db->hdr );
 
@@ -539,6 +533,12 @@ static UINT get_prop( MSIHANDLE handle, UINT uiProperty, UINT *puiDataType,
     if( !si )
         return ERROR_INVALID_HANDLE;
 
+    if ( uiProperty >= MSI_MAX_PROPS )
+    {
+        *puiDataType = VT_EMPTY;
+        return ret;
+    }
+
     prop = &si->property[uiProperty];
 
     if( puiDataType )
@@ -588,6 +588,18 @@ static UINT get_prop( MSIHANDLE handle, UINT uiProperty, UINT *puiDataType,
     }
     msiobj_release( &si->hdr );
     return ret;
+}
+
+LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty )
+{
+    PROPVARIANT *prop;
+
+    if ( uiProperty >= MSI_MAX_PROPS )
+        return NULL;
+    prop = &si->property[uiProperty];
+    if( prop->vt != VT_LPSTR )
+        return NULL;
+    return strdupAtoW( prop->u.pszVal );
 }
 
 UINT WINAPI MsiSummaryInfoGetPropertyA(

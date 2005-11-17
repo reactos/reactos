@@ -107,36 +107,9 @@ LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
     return FilePath;
 }
 
-WCHAR *load_dynamic_stringW(MSIRECORD *row, INT index)
+LPWSTR msi_dup_record_field( MSIRECORD *row, INT index )
 {
-    UINT rc;
-    DWORD sz;
-    LPWSTR ret;
-   
-    sz = 0; 
-    if (MSI_RecordIsNull(row,index))
-        return NULL;
-
-    rc = MSI_RecordGetStringW(row,index,NULL,&sz);
-
-    /* having an empty string is different than NULL */
-    if (sz == 0)
-    {
-        ret = msi_alloc(sizeof(WCHAR));
-        ret[0] = 0;
-        return ret;
-    }
-
-    sz ++;
-    ret = msi_alloc(sz * sizeof (WCHAR));
-    rc = MSI_RecordGetStringW(row,index,ret,&sz);
-    if (rc!=ERROR_SUCCESS)
-    {
-        ERR("Unable to load dynamic string\n");
-        msi_free(ret);
-        ret = NULL;
-    }
-    return ret;
+    return strdupW( MSI_RecordGetString(row,index) );
 }
 
 LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop)
@@ -199,9 +172,6 @@ MSIFILE* get_loaded_file( MSIPACKAGE* package, LPCWSTR key )
 int track_tempfile( MSIPACKAGE *package, LPCWSTR name, LPCWSTR path )
 {
     MSITEMPFILE *temp;
-
-    if (!package)
-        return -1;
 
     LIST_FOR_EACH_ENTRY( temp, &package->tempfiles, MSITEMPFILE, entry )
     {
@@ -751,7 +721,7 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
 
         /* update the cached actionformat */
         msi_free(package->ActionFormat);
-        package->ActionFormat = load_dynamic_stringW(row,3);
+        package->ActionFormat = msi_dup_record_field(row,3);
 
         msi_free(package->LastAction);
         package->LastAction = strdupW(action);
@@ -773,8 +743,7 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     msiobj_release(&row->hdr);
 }
 
-BOOL ACTION_VerifyComponentForAction(MSIPACKAGE* package, MSICOMPONENT* comp,
-                                            INSTALLSTATE check )
+BOOL ACTION_VerifyComponentForAction( MSICOMPONENT* comp, INSTALLSTATE check )
 {
     if (!comp)
         return FALSE;
@@ -935,7 +904,7 @@ UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
     UINT count;
     LPWSTR *newbuf = NULL;
 
-    if (!package || !package->script)
+    if (!package->script)
         return FALSE;
 
     TRACE("Registering Action %s as having fun\n",debugstr_w(action));
@@ -958,7 +927,7 @@ BOOL check_unique_action(MSIPACKAGE *package, LPCWSTR action)
 {
     INT i;
 
-    if (!package || !package->script)
+    if (!package->script)
         return FALSE;
 
     for (i = 0; i < package->script->UniqueActionsCount; i++)

@@ -31,8 +31,8 @@
 35 stdcall MsiEnableUIPreview(long ptr)
 36 stdcall MsiEnumClientsA(str long ptr)
 37 stdcall MsiEnumClientsW(wstr long ptr)
-38 stdcall MsiEnumComponentQualifiersA(str long str ptr str ptr)
-39 stdcall MsiEnumComponentQualifiersW(wstr long wstr ptr wstr ptr)
+38 stdcall MsiEnumComponentQualifiersA(str long ptr ptr ptr ptr)
+39 stdcall MsiEnumComponentQualifiersW(wstr long ptr ptr ptr ptr)
 40 stdcall MsiEnumComponentsA(long ptr)
 41 stdcall MsiEnumComponentsW(long ptr)
 42 stdcall MsiEnumFeaturesA(str long ptr ptr)
@@ -66,8 +66,8 @@
 70 stdcall MsiGetProductInfoW(wstr wstr wstr long)
 71 stdcall MsiGetProductPropertyA(long str ptr ptr)
 72 stdcall MsiGetProductPropertyW(long wstr ptr ptr)
-73 stdcall MsiGetPropertyA(ptr str str ptr)
-74 stdcall MsiGetPropertyW(ptr wstr wstr ptr)
+73 stdcall MsiGetPropertyA(ptr str ptr ptr)
+74 stdcall MsiGetPropertyW(ptr wstr ptr ptr)
 75 stdcall MsiGetSourcePathA(long str ptr ptr)
 76 stdcall MsiGetSourcePathW(long wstr ptr ptr)
 77 stdcall MsiGetSummaryInformationA(long str long ptr)
@@ -136,7 +136,7 @@
 140 stub MsiSetInstallLevel
 141 stdcall MsiSetInternalUI(long ptr)
 142 stub MsiVerifyDiskSpace
-143 stub MsiSetMode
+143 stdcall MsiSetMode(long long long)
 144 stdcall MsiSetPropertyA(long str str)
 145 stdcall MsiSetPropertyW(long wstr wstr)
 146 stdcall MsiSetTargetPathA(long str str)
@@ -169,8 +169,8 @@
 173 stdcall MsiGetComponentPathW(wstr wstr ptr ptr)
 174 stdcall MsiApplyPatchA(str str long str)
 175 stdcall MsiApplyPatchW(wstr wstr long wstr)
-176 stub MsiAdvertiseScriptA
-177 stub MsiAdvertiseScriptW
+176 stdcall MsiAdvertiseScriptA(str long ptr long)
+177 stdcall MsiAdvertiseScriptW(wstr long ptr long)
 178 stub MsiGetPatchInfoA
 179 stub MsiGetPatchInfoW
 180 stdcall MsiEnumPatchesA(str long ptr ptr ptr)
@@ -211,8 +211,8 @@
 215 stub MsiIsProductElevatedW
 216 stdcall MsiGetShortcutTargetA(str ptr ptr ptr)
 217 stdcall MsiGetShortcutTargetW(wstr ptr ptr ptr)
-218 stub MsiGetFileHashA
-219 stub MsiGetFileHashW
+218 stdcall MsiGetFileHashA(str long ptr)
+219 stdcall MsiGetFileHashW(wstr long ptr)
 220 stub MsiEnumComponentCostsA
 221 stub MsiEnumComponentCostsW
 222 stdcall MsiCreateAndVerifyInstallerDirectory(long)

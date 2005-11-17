@@ -253,6 +253,9 @@ BOOL decode_base85_guid( LPCWSTR str, GUID *guid )
 {
     DWORD i, val = 0, base = 1, *p;
 
+    if (!str)
+        return FALSE;
+
     p = (DWORD*) guid;
     for( i=0; i<20; i++ )
     {
@@ -532,10 +535,13 @@ UINT WINAPI MsiDecomposeDescriptorW( LPCWSTR szDescriptor, LPWSTR szProduct,
     len = (p - &szDescriptor[20]);
     if( len > MAX_FEATURE_CHARS )
         return ERROR_INVALID_PARAMETER;
-    memcpy( szFeature, &szDescriptor[20], len*sizeof(WCHAR) );
-    szFeature[len] = 0;
+    if (szFeature)
+    {
+        memcpy( szFeature, &szDescriptor[20], len*sizeof(WCHAR) );
+        szFeature[len] = 0;
+    }
 
-    TRACE("feature %s\n", debugstr_w( szFeature ));
+    TRACE("feature %s\n", debugstr_w( &szDescriptor[20] ));
 
     r = decode_base85_guid( p+1, &component );
     if( !r )
@@ -543,8 +549,10 @@ UINT WINAPI MsiDecomposeDescriptorW( LPCWSTR szDescriptor, LPWSTR szProduct,
 
     TRACE("component %s\n", debugstr_guid( &component ));
 
-    StringFromGUID2( &product, szProduct, MAX_FEATURE_CHARS+1 );
-    StringFromGUID2( &component, szComponent, MAX_FEATURE_CHARS+1 );
+    if (szProduct)
+        StringFromGUID2( &product, szProduct, MAX_FEATURE_CHARS+1 );
+    if (szComponent)
+        StringFromGUID2( &component, szComponent, MAX_FEATURE_CHARS+1 );
     len = ( &p[21] - szDescriptor );
 
     TRACE("length = %d\n", len);
@@ -559,26 +567,30 @@ UINT WINAPI MsiDecomposeDescriptorA( LPCSTR szDescriptor, LPSTR szProduct,
     WCHAR product[MAX_FEATURE_CHARS+1];
     WCHAR feature[MAX_FEATURE_CHARS+1];
     WCHAR component[MAX_FEATURE_CHARS+1];
-    LPWSTR str = NULL;
+    LPWSTR str = NULL, p = NULL, f = NULL, c = NULL;
     UINT r;
 
     TRACE("%s %p %p %p %p\n", debugstr_a(szDescriptor), szProduct,
           szFeature, szComponent, pUsed);
 
-    if( szDescriptor )
-    {
-        str = strdupAtoW( szDescriptor );
-        if( !str )
-            return ERROR_OUTOFMEMORY;
-    }
+    str = strdupAtoW( szDescriptor );
+    if( szDescriptor && !str )
+        return ERROR_OUTOFMEMORY;
 
-    r = MsiDecomposeDescriptorW( str, product, feature, component, pUsed );
+    if (szProduct)
+        p = product;
+    if (szFeature)
+        f = feature;
+    if (szComponent)
+        c = component;
 
-    WideCharToMultiByte( CP_ACP, 0, product, MAX_FEATURE_CHARS+1,
+    r = MsiDecomposeDescriptorW( str, p, f, c, pUsed );
+
+    WideCharToMultiByte( CP_ACP, 0, p, MAX_FEATURE_CHARS+1,
                          szProduct, MAX_FEATURE_CHARS+1, NULL, NULL );
-    WideCharToMultiByte( CP_ACP, 0, feature, MAX_FEATURE_CHARS+1,
+    WideCharToMultiByte( CP_ACP, 0, f, MAX_FEATURE_CHARS+1,
                          szFeature, MAX_FEATURE_CHARS+1, NULL, NULL );
-    WideCharToMultiByte( CP_ACP, 0, component, MAX_FEATURE_CHARS+1,
+    WideCharToMultiByte( CP_ACP, 0, c, MAX_FEATURE_CHARS+1,
                          szComponent, MAX_FEATURE_CHARS+1, NULL, NULL );
 
     msi_free( str );
@@ -757,157 +769,134 @@ UINT WINAPI MsiEnumClientsW(LPCWSTR szComponent, DWORD index, LPWSTR szProduct)
     return r;
 }
 
+UINT WINAPI MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
+                awstring *lpQualBuf, DWORD* pcchQual,
+                awstring *lpAppBuf, DWORD* pcchAppBuf )
+{
+    DWORD name_sz, val_sz, type, ofs;
+    LPWSTR name = NULL, val = NULL;
+    UINT r, r2;
+    HKEY key;
+
+    TRACE("%s %08lx %p %p %p %p\n", debugstr_w(szComponent), iIndex,
+          lpQualBuf, pcchQual, lpAppBuf, pcchAppBuf);
+
+    if (!szComponent)
+        return ERROR_INVALID_PARAMETER;
+
+    r = MSIREG_OpenUserComponentsKey( szComponent, &key, FALSE );
+    if (r != ERROR_SUCCESS)
+        return ERROR_UNKNOWN_COMPONENT;
+
+    /* figure out how big the name is we want to return */
+    name_sz = 0;
+    if (pcchQual)
+    {
+        r = ERROR_OUTOFMEMORY;
+        name_sz = *pcchQual * 4;
+        name = msi_alloc( name_sz * sizeof(WCHAR) );
+        if (!name)
+            goto end;
+    }
+
+    /* figure out how big the value is */
+    type = 0;
+    val_sz = 0;
+    r = RegEnumValueW( key, iIndex, NULL, NULL,
+                       NULL, &type, NULL, &val_sz );
+    if (r != ERROR_SUCCESS)
+        goto end;
+
+    if (type != REG_MULTI_SZ)
+    {
+        ERR("component data has wrong type (%ld)\n", type);
+        goto end;
+    }
+
+    /* the value size is in bytes */
+    val_sz += sizeof(WCHAR);
+    val = msi_alloc( val_sz );
+    if (!val)
+        goto end;
+
+    r = RegEnumValueW( key, iIndex, name, &name_sz,
+                       NULL, &type, (LPBYTE)val, &val_sz );
+    if (r != ERROR_SUCCESS)
+        goto end;
+
+    ofs = 0;
+    r = MsiDecomposeDescriptorW( val, NULL, NULL, NULL, &ofs );
+    if (r != ERROR_SUCCESS)
+        goto end;
+
+    TRACE("Providing %s and %s\n", debugstr_w(name), debugstr_w(val+ofs));
+
+    r = msi_strcpy_to_awstring( name, lpQualBuf, pcchQual );
+    r2 = msi_strcpy_to_awstring( val+ofs, lpAppBuf, pcchAppBuf );
+
+    if (r2 != ERROR_SUCCESS)
+        r = r2;
+
+end:
+    msi_free(val);
+    msi_free(name);
+    RegCloseKey(key);
+
+    return r;
+}
+
 /*************************************************************************
  *  MsiEnumComponentQualifiersA [MSI.@]
- *
  */
-UINT WINAPI MsiEnumComponentQualifiersA( LPSTR szComponent, DWORD iIndex,
+UINT WINAPI MsiEnumComponentQualifiersA( LPCSTR szComponent, DWORD iIndex,
                 LPSTR lpQualifierBuf, DWORD* pcchQualifierBuf,
-                LPSTR lpApplicationDataBuf, DWORD* pcchApplicationDataBuf)
+                LPSTR lpApplicationDataBuf, DWORD* pcchApplicationDataBuf )
 {
-    LPWSTR szwComponent;
-    LPWSTR lpwQualifierBuf;
-    DWORD pcchwQualifierBuf;
-    LPWSTR lpwApplicationDataBuf;
-    DWORD pcchwApplicationDataBuf;
-    DWORD rc;
-    DWORD length;
+    awstring qual, appdata;
+    LPWSTR comp;
+    UINT r;
 
     TRACE("%s %08lx %p %p %p %p\n", debugstr_a(szComponent), iIndex,
           lpQualifierBuf, pcchQualifierBuf, lpApplicationDataBuf,
           pcchApplicationDataBuf);
 
-    szwComponent = strdupAtoW(szComponent);
+    comp = strdupAtoW( szComponent );
+    if (szComponent && !comp)
+        return ERROR_OUTOFMEMORY;
 
-    if (lpQualifierBuf)
-        lpwQualifierBuf = msi_alloc( (*pcchQualifierBuf) * sizeof(WCHAR));
-    else
-        lpwQualifierBuf = NULL;
+    qual.unicode = FALSE;
+    qual.str.a = lpQualifierBuf;
 
-    if (pcchQualifierBuf)
-        pcchwQualifierBuf = *pcchQualifierBuf;
-    else
-        pcchwQualifierBuf = 0;
+    appdata.unicode = FALSE;
+    appdata.str.a = lpApplicationDataBuf;
 
-    if (lpApplicationDataBuf)
-       lpwApplicationDataBuf = msi_alloc( (*pcchApplicationDataBuf) * sizeof(WCHAR));
-    else
-        lpwApplicationDataBuf = NULL;
-
-    if (pcchApplicationDataBuf)
-        pcchwApplicationDataBuf = *pcchApplicationDataBuf;
-    else
-        pcchwApplicationDataBuf = 0;
-
-    rc = MsiEnumComponentQualifiersW( szwComponent, iIndex, lpwQualifierBuf, 
-                    &pcchwQualifierBuf, lpwApplicationDataBuf,
-                    &pcchwApplicationDataBuf);
-
-    /*
-     * A bit of wizardry to report back the length without the null.
-     * just in case the buffer is too small and is filled.
-     */
-    if (lpQualifierBuf)
-    {
-        length = WideCharToMultiByte(CP_ACP, 0, lpwQualifierBuf, -1,
-                        lpQualifierBuf, *pcchQualifierBuf, NULL, NULL); 
-
-        if (*pcchQualifierBuf == length && lpQualifierBuf[length-1])
-            *pcchQualifierBuf = length;
-        else
-            *pcchQualifierBuf = length - 1;
-    }
-    if (lpApplicationDataBuf)
-    {
-        length = WideCharToMultiByte(CP_ACP, 0,
-                        lpwApplicationDataBuf, -1, lpApplicationDataBuf,
-                        *pcchApplicationDataBuf, NULL, NULL); 
-
-        if (*pcchApplicationDataBuf == length && lpApplicationDataBuf[length-1])
-            *pcchApplicationDataBuf = length;
-        else
-            *pcchApplicationDataBuf = length - 1;
-    }
-
-    msi_free(lpwApplicationDataBuf);
-    msi_free(lpwQualifierBuf);
-    msi_free(szwComponent);
-
-    return rc;
+    r = MSI_EnumComponentQualifiers( comp, iIndex,
+              &qual, pcchQualifierBuf, &appdata, pcchApplicationDataBuf );
+    msi_free( comp );
+    return r;
 }
 
 /*************************************************************************
  *  MsiEnumComponentQualifiersW [MSI.@]
- *
  */
-UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
+UINT WINAPI MsiEnumComponentQualifiersW( LPCWSTR szComponent, DWORD iIndex,
                 LPWSTR lpQualifierBuf, DWORD* pcchQualifierBuf,
                 LPWSTR lpApplicationDataBuf, DWORD* pcchApplicationDataBuf )
 {
-    UINT rc;
-    HKEY key;
-    DWORD actual_pcchQualifierBuf = 0;
-    DWORD actual_pcchApplicationDataBuf = 0;
-    LPWSTR full_buffer = NULL;
-    DWORD full_buffer_size = 0;
-    LPWSTR ptr;
+    awstring qual, appdata;
 
     TRACE("%s %08lx %p %p %p %p\n", debugstr_w(szComponent), iIndex,
           lpQualifierBuf, pcchQualifierBuf, lpApplicationDataBuf,
           pcchApplicationDataBuf);
 
-    if (pcchQualifierBuf)
-        actual_pcchQualifierBuf = *pcchQualifierBuf * sizeof(WCHAR);
-    if (pcchApplicationDataBuf)
-        actual_pcchApplicationDataBuf = *pcchApplicationDataBuf * sizeof(WCHAR);
-    
-    rc = MSIREG_OpenUserComponentsKey(szComponent, &key, FALSE);
-    if (rc != ERROR_SUCCESS)
-        return ERROR_UNKNOWN_COMPONENT;
+    qual.unicode = TRUE;
+    qual.str.w = lpQualifierBuf;
 
-    full_buffer_size = (52 * sizeof(WCHAR)) + actual_pcchApplicationDataBuf;
-    full_buffer = msi_alloc(full_buffer_size);
-    
-    rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
-                    NULL, (LPBYTE)full_buffer, &full_buffer_size);
+    appdata.unicode = TRUE;
+    appdata.str.w = lpApplicationDataBuf;
 
-    if (rc == ERROR_MORE_DATA)
-    {
-        msi_free(full_buffer);
-        full_buffer_size+=sizeof(WCHAR);
-        full_buffer = msi_alloc(full_buffer_size);
-        rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
-                    NULL, (LPBYTE)full_buffer, &full_buffer_size);
-    }
-    
-    RegCloseKey(key);
-
-    if (rc == ERROR_SUCCESS)
-    {
-        if (lpApplicationDataBuf && pcchApplicationDataBuf)
-        {
-            ptr = full_buffer;
-            /* Skip the first guid */
-            ptr += 21;
-    
-            /* Skip the name and the component guid if it exists */
-            if (strchrW(ptr,'<'))
-                ptr = strchrW(ptr,'<');
-            else 
-                ptr = strchrW(ptr,'>') + 21;
-
-            lstrcpynW(lpApplicationDataBuf,ptr,*pcchApplicationDataBuf);
-            *pcchApplicationDataBuf = strlenW(ptr);
-        }
-        if (lpQualifierBuf && pcchQualifierBuf)
-            *pcchQualifierBuf /= sizeof(WCHAR); 
-        TRACE("Providing %s and %s\n", debugstr_w(lpQualifierBuf), 
-                        debugstr_w(lpApplicationDataBuf));
-    }
-
-    msi_free(full_buffer);
-
-    return rc;
+    return MSI_EnumComponentQualifiers( szComponent, iIndex,
+                 &qual, pcchQualifierBuf, &appdata, pcchApplicationDataBuf );
 }
 
 /*************************************************************************

@@ -37,7 +37,7 @@
 
 #include "query.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msi);
+WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 typedef struct tagMSICOLUMNINFO
 {
@@ -55,6 +55,11 @@ struct tagMSITABLE
     struct list entry;
     WCHAR name[1];
 };
+
+typedef struct tagMSITRANSFORM {
+    struct list entry;
+    IStorage *stg;
+} MSITRANSFORM;
 
 #define MAX_STREAM_NAME 0x1f
 
@@ -276,14 +281,23 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 
     r = IStorage_OpenStream(db->storage, encname, NULL, 
             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm);
-    msi_free( encname );
     if( FAILED( r ) )
     {
-        WARN("open stream failed r = %08lx - empty table?\n",r);
-        return ERROR_FUNCTION_FAILED;
+        MSITRANSFORM *transform;
+
+        LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
+        {
+            TRACE("looking for %s in transform storage\n", debugstr_w(stname) );
+            r = IStorage_OpenStream( transform->stg, encname, NULL, 
+                    STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
+            if (SUCCEEDED(r))
+                break;
+        }
     }
 
-    return ERROR_SUCCESS;
+    msi_free( encname );
+
+    return SUCCEEDED(r) ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
 }
 
 UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
@@ -1050,7 +1064,7 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
         return ERROR_FUNCTION_FAILED;
     }
 
-    /* TRACE("Data [%d][%d] = %d \n", row, col, *val ); */
+    /* TRACE("Data [%d][%d] = %d\n", row, col, *val ); */
 
     return ERROR_SUCCESS;
 }
@@ -1246,118 +1260,64 @@ static UINT TABLE_get_column_info( struct tagMSIVIEW *view,
     return ERROR_SUCCESS;
 }
 
-static UINT table_find_in_column( MSITABLEVIEW *tv, UINT col, UINT val, UINT *row )
-{
-    UINT i, r, x;
-
-    for( i=0; i<tv->table->row_count; i++ )
-    {
-        r = TABLE_fetch_int( (struct tagMSIVIEW*) tv, i, col, &x );
-        if ( r != ERROR_SUCCESS )
-        {
-            ERR("TABLE_fetch_int shouldn't fail here\n");
-            break;
-        }
-        if ( x == val )
-        {
-            *row = i;
-            return ERROR_SUCCESS;
-        }
-    }
-    return ERROR_FUNCTION_FAILED;
-}
+static UINT msi_table_find_row( MSITABLEVIEW *tv, MSIRECORD *rec, UINT *row );
 
 static UINT table_validate_new( MSITABLEVIEW *tv, MSIRECORD *rec )
 {
-    LPCWSTR str;
-    UINT i, val, r, row;
-    BOOL has_key = FALSE;
+    UINT r, row;
 
-    /* FIXME: set the MsiViewGetError value */
-
-    for( i = 0; i<tv->num_cols; i++ )
-    {
-        /* check for duplicate keys */
-        if( !( tv->columns[i].type & MSITYPE_KEY ) )
-            continue;
-
-        has_key = TRUE;
-
-        TRACE("column %d (%s.%s)is a key\n", i,
-             debugstr_w(tv->columns[i].tablename),
-             debugstr_w(tv->columns[i].colname) );
-
-        val = 0;
-        if( tv->columns[i].type & MSITYPE_STRING )
-        {
-             /* keys can't be null */
-             str = MSI_RecordGetString( rec, i+1 );
-             if( !str )
-                 return ERROR_INVALID_DATA;
-
-             /* if the string doesn't exist in the string table yet, it's OK */
-             r = msi_string2idW( tv->db->strings, str, &val );
-             if( ERROR_SUCCESS != r )
-                 return ERROR_SUCCESS;
-        }
-        else
-        {
-            val = MSI_RecordGetInteger( rec, i+1 );
-            val ^= 0x8000;
-        }
-
-        /* if we find the same value in the table, it's a duplicate */
-        row = 0;
-        r = table_find_in_column( tv, i+1, val, &row );
-        if( ERROR_SUCCESS != r )
-            return ERROR_SUCCESS;
-
-        TRACE("found in row %d\n", row );
-    }
-
-    if (has_key)
-        return ERROR_INVALID_DATA;
-
-    return ERROR_SUCCESS;
+    r = msi_table_find_row( tv, rec, &row );
+    if (r != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+    return ERROR_INVALID_DATA;
 }
 
-static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec )
+static UINT msi_table_modify_row( MSITABLEVIEW *tv, MSIRECORD *rec,
+                                  UINT row, UINT mask )
 {
-    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    UINT n, type, val, r, row, col_count = 0;
+    UINT i, val, r = ERROR_SUCCESS;
 
-    r = TABLE_get_dimensions( view, NULL, &col_count );
-    if( r )
-        return r;
+    TRACE("%p %p %u %08x\n", tv, rec, row, mask );
 
-    row = -1;
-    r = table_create_new_row( view, &row );
-    TRACE("insert_row returned %08x\n", r);
-    if( r )
-        return r;
-
-    for( n = 1; n <= col_count; n++ )
+    for( i = 0; i < tv->num_cols; i++ )
     {
-        r = TABLE_get_column_info( view, n, NULL, &type );
-        if( r )
-            break;
+        /* set keys or values specified in the mask */
+        if( (~tv->columns[i].type & MSITYPE_KEY) && (~mask & (1<<i)) )
+            continue;
 
-        if( type & MSITYPE_STRING )
+        if( (tv->columns[i].type & MSITYPE_STRING) &&
+            ! MSITYPE_IS_BINARY(tv->columns[i].type) )
         {
-            const WCHAR *str = MSI_RecordGetString( rec, n );
+            const WCHAR *str = MSI_RecordGetString( rec, i+1 );
             val = msi_addstringW( tv->db->strings, 0, str, -1, 1 );
         }
         else
         {
-            val = MSI_RecordGetInteger( rec, n );
-            val ^= 0x8000;
+            val = MSI_RecordGetInteger( rec, i+1 );
+            if ( 2 == bytes_per_column( &tv->columns[i] ) )
+                val ^= 0x8000;
         }
-        r = TABLE_set_int( view, row, n, val );
+        r = TABLE_set_int( &tv->view, row, i+1, val );
         if( r )
             break;
     }
 
     return r;
+}
+
+static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec )
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    UINT r, row = -1;
+
+    TRACE("%p %p\n", tv, rec );
+
+    r = table_create_new_row( view, &row );
+    TRACE("insert_row returned %08x\n", r);
+    if( r != ERROR_SUCCESS )
+        return r;
+
+    return msi_table_modify_row( tv, rec, row, ~0 );
 }
 
 static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
@@ -1531,4 +1491,371 @@ UINT MSI_CommitTables( MSIDATABASE *db )
     free_cached_tables( db );
 
     return ERROR_SUCCESS;
+}
+
+static MSIRECORD *msi_get_transform_record( MSITABLEVIEW *tv, string_table *st, USHORT *rawdata )
+{
+    UINT i, val, ofs = 0;
+    USHORT mask = *rawdata++;
+    MSICOLUMNINFO *columns = tv->columns;
+    MSIRECORD *rec;
+    const int debug_transform = 0;
+
+    rec = MSI_CreateRecord( tv->num_cols );
+    if( !rec )
+        return rec;
+
+    if( debug_transform ) MESSAGE("row -> ");
+    for( i=0; i<tv->num_cols; i++ )
+    {
+        UINT n = bytes_per_column( &columns[i] );
+
+        if ( (mask&1) && (i>=(mask>>8)) )
+            break;
+        /* all keys must be present */
+        if ( (~mask&1) && (~columns[i].type & MSITYPE_KEY) && ((1<<i) & ~mask) )
+            continue;
+
+        switch( n )
+        {
+        case 2:
+            val = rawdata[ofs];
+            if( (columns[i].type & MSITYPE_STRING) &&
+                ! MSITYPE_IS_BINARY(tv->columns[i].type) )
+            {
+                LPCWSTR sval = msi_string_lookup_id( st, val );
+                MSI_RecordSetStringW( rec, i+1, sval );
+                if( debug_transform ) MESSAGE("[%s]", debugstr_w(sval));
+            }
+            else
+            {
+                val ^= 0x8000;
+                MSI_RecordSetInteger( rec, i+1, val );
+                if( debug_transform) MESSAGE("[0x%04x]", val );
+            }
+            break;
+        case 4:
+            val = rawdata[ofs] + (rawdata[ofs + 1]<<16);
+            /* val ^= 0x80000000; */
+            MSI_RecordSetInteger( rec, i+1, val );
+            if( debug_transform ) MESSAGE("[0x%08x]", val );
+            break;
+        default:
+            ERR("oops - unknown column width %d\n", n);
+            break;
+        }
+        ofs += n/2;
+    }
+    if( debug_transform) MESSAGE("\n");
+    return rec;
+}
+
+static void dump_record( MSIRECORD *rec )
+{
+    UINT i, n;
+
+    MESSAGE("row -> ");
+    n = MSI_RecordGetFieldCount( rec );
+    for( i=1; i<=n; i++ )
+    {
+        LPCWSTR sval = MSI_RecordGetString( rec, i );
+
+        if( MSI_RecordIsNull( rec, i ) )
+            MESSAGE("[]");
+        else if( (sval = MSI_RecordGetString( rec, i )) )
+            MESSAGE("[%s]", debugstr_w(sval));
+        else
+            MESSAGE("[0x%08x]", MSI_RecordGetInteger( rec, i ) );
+    }
+    MESSAGE("\n");
+}
+
+static void dump_table( string_table *st, USHORT *rawdata, UINT rawsize )
+{
+    LPCWSTR sval;
+    UINT i;
+
+    for( i=0; i<(rawsize/2); i++ )
+    {
+        sval = msi_string_lookup_id( st, rawdata[i] );
+        if( !sval ) sval = (WCHAR[]) {0};
+        MESSAGE(" %04x %s\n", rawdata[i], debugstr_w(sval) );
+    }
+}
+
+static UINT* msi_record_to_row( MSITABLEVIEW *tv, MSIRECORD *rec )
+{
+    LPCWSTR str;
+    UINT i, r, *data;
+
+    data = msi_alloc( tv->num_cols *sizeof (UINT) );
+    for( i=0; i<tv->num_cols; i++ )
+    {
+        data[i] = 0;
+
+        if ( ~tv->columns[i].type & MSITYPE_KEY )
+            continue;
+
+        /* turn the transform column value into a row value */
+        if ( ( tv->columns[i].type & MSITYPE_STRING ) &&
+             ! MSITYPE_IS_BINARY(tv->columns[i].type) )
+        {
+            str = MSI_RecordGetString( rec, i+1 );
+            r = msi_string2idW( tv->db->strings, str, &data[i] );
+
+            /* if there's no matching string in the string table,
+               these keys can't match any record, so fail now. */
+            if( ERROR_SUCCESS != r )
+            {
+                msi_free( data );
+                return NULL;
+            }
+        }
+        else
+            data[i] = MSI_RecordGetInteger( rec, i+1 );
+    }
+    return data;
+}
+
+static UINT msi_row_matches( MSITABLEVIEW *tv, UINT row, UINT *data )
+{
+    UINT i, r, x, ret = ERROR_FUNCTION_FAILED;
+
+    for( i=0; i<tv->num_cols; i++ )
+    {
+        if ( ~tv->columns[i].type & MSITYPE_KEY )
+            continue;
+
+        /* turn the transform column value into a row value */
+        r = TABLE_fetch_int( &tv->view, row, i+1, &x );
+        if ( r != ERROR_SUCCESS )
+        {
+            ERR("TABLE_fetch_int shouldn't fail here\n");
+            break;
+        }
+
+        /* if this key matches, move to the next column */
+        if ( x != data[i] )
+        {
+            ret = ERROR_FUNCTION_FAILED;
+            break;
+        }
+
+        ret = ERROR_SUCCESS;
+    }
+
+    return ret;
+}
+
+static UINT msi_table_find_row( MSITABLEVIEW *tv, MSIRECORD *rec, UINT *row )
+{
+    UINT i, r = ERROR_FUNCTION_FAILED, *data;
+
+    data = msi_record_to_row( tv, rec );
+    if( !data )
+        return r;
+    for( i=0; i<tv->table->row_count; i++ )
+    {
+        r = msi_row_matches( tv, i, data );
+        if( r == ERROR_SUCCESS )
+        {
+            *row = i;
+            break;
+        }
+    }
+    msi_free( data );
+    return r;
+}
+
+static UINT msi_delete_row( MSITABLEVIEW *tv, UINT row )
+{
+    UINT i;
+    for( i=1; i<=tv->num_cols; i++ )
+        tv->view.ops->set_int( &tv->view, row, i, 0 );
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
+                                      string_table *st, LPCWSTR name )
+{
+    UINT rawsize = 0;
+    USHORT *rawdata = NULL;
+    MSITABLEVIEW *tv = NULL;
+    UINT r, n, sz, i, mask;
+    MSIRECORD *rec = NULL;
+    const int debug_transform = 0;
+
+    TRACE("%p %p %p %s\n", db, stg, st, debugstr_w(name) );
+
+    /* create a table view */
+    r = TABLE_CreateView( db, name, (MSIVIEW**) &tv );
+    if( r != ERROR_SUCCESS )
+        goto err;
+
+    r = tv->view.ops->execute( &tv->view, NULL );
+    if( r != ERROR_SUCCESS )
+        goto err;
+
+    /* read the transform data */
+    r = ERROR_FUNCTION_FAILED;
+    read_stream_data( stg, name, &rawdata, &rawsize );
+    if( !rawdata || (rawsize < 2) )
+    {
+        ERR("odd sized transform for table %s\n", debugstr_w(name));
+        goto err;
+    }
+
+    TRACE("name = %s columns = %u row_size = %u raw size = %u\n",
+          debugstr_w(name), tv->num_cols, tv->row_size, rawsize );
+
+    /* interpret the data */
+    r = ERROR_SUCCESS;
+    for( n=0; n < (rawsize/2);  )
+    {
+        mask = rawdata[n];
+
+        if (mask&1)
+        {
+            /*
+             * if the low bit is set, columns are continuous and
+             * the number of columns is specified in the high byte
+             */
+            sz = 2 + tv->row_size;
+        }
+        else
+        {
+            /*
+             * If the low bit is not set, rowdata[n] is a bitmask.
+             * Excepting for key fields, which are always present,
+             *  each bit indicates that a field is present in the transform record.
+             *
+             * rawdata[n] == 0 is a special case ... only the keys will be present
+             * and it means that this row should be deleted.
+             */
+            sz = 2;
+            for( i=0; i<tv->num_cols; i++ )
+            {
+                if( (tv->columns[i].type & MSITYPE_KEY) || ((1<<i)&mask))
+                    sz += bytes_per_column( &tv->columns[i] );
+            }
+        }
+
+        /* check we didn't run of the end of the table */
+        if ( (n+sz) > rawsize )
+        {
+            ERR("borked.\n");
+            dump_table( st, rawdata, rawsize );
+            break;
+        }
+
+        rec = msi_get_transform_record( tv, st, &rawdata[n] );
+        if (rec)
+        {
+            UINT row = 0;
+
+            r = msi_table_find_row( tv, rec, &row );
+
+            if( rawdata[n] & 1)
+            {
+                if( debug_transform ) MESSAGE("insert [%d]: ", row);
+                TABLE_insert_row( &tv->view, rec );
+            }
+            else if( mask & 0xff )
+            {
+                if( debug_transform ) MESSAGE("modify [%d]: ", row);
+                msi_table_modify_row( tv, rec, row, mask );
+            }
+            else
+            {
+                if( debug_transform ) MESSAGE("delete [%d]: ", row);
+                msi_delete_row( tv, row );
+            }
+            if( debug_transform ) dump_record( rec );
+            msiobj_release( &rec->hdr );
+        }
+
+        n += sz/2;
+        
+    }
+
+err:
+    /* no need to free the table, it's associated with the database */
+    msi_free( rawdata );
+    if( tv )
+        tv->view.ops->delete( &tv->view );
+
+    return ERROR_SUCCESS;
+}
+
+/*
+ * msi_table_apply_transform
+ *
+ * Enumerate the table transforms in a transform storage and apply each one.
+ */
+UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
+{
+    IEnumSTATSTG *stgenum = NULL;
+    HRESULT r;
+    STATSTG stat;
+    ULONG n, count;
+    WCHAR name[0x40];
+    string_table *strings;
+    UINT ret = ERROR_FUNCTION_FAILED;
+
+    TRACE("%p %p\n", db, stg );
+
+    strings = load_string_table( stg );
+    if( !strings )
+        goto end;
+
+    r = IStorage_EnumElements( stg, 0, NULL, 0, &stgenum );
+    if( FAILED( r ) )
+        goto end;
+
+    n = 0;
+    ret = ERROR_SUCCESS;
+
+    while( r == ERROR_SUCCESS )
+    {
+        count = 0;
+        r = IEnumSTATSTG_Next( stgenum, 1, &stat, &count );
+        if( FAILED( r ) || !count )
+            break;
+        decode_streamname( stat.pwcsName, name );
+        if( ( name[0] == 0x4840 ) && ( name[1] != '_' ) )
+            ret = msi_table_load_transform( db, stg, strings, name+1 );
+        else
+            TRACE("transform contains stream %s\n", debugstr_w(name));
+        n++;
+    }
+
+    if ( ret == ERROR_SUCCESS )
+    {
+        MSITRANSFORM *t;
+
+        t = msi_alloc( sizeof *t );
+        t->stg = stg;
+        IStorage_AddRef( stg );
+        list_add_tail( &db->transforms, &t->entry );
+    }
+
+end:
+    if ( stgenum )
+        IEnumSTATSTG_Release( stgenum );
+    if ( strings )
+        msi_destroy_stringtable( strings );
+
+    return ret;
+}
+
+void msi_free_transforms( MSIDATABASE *db )
+{
+    while( !list_empty( &db->transforms ) )
+    {
+        MSITRANSFORM *t = LIST_ENTRY( list_head( &db->transforms ),
+                                      MSITRANSFORM, entry );
+        list_remove( &t->entry );
+        IStorage_Release( t->stg );
+        msi_free( t );
+    }
 }

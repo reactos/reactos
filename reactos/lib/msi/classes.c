@@ -65,15 +65,15 @@ static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
     if (!appid)
         return NULL;
     
-    appid->AppID = load_dynamic_stringW( row, 1 );
+    appid->AppID = msi_dup_record_field( row, 1 );
     TRACE("loading appid %s\n", debugstr_w( appid->AppID ));
 
     buffer = MSI_RecordGetString(row,2);
     deformat_string( package, buffer, &appid->RemoteServerName );
 
-    appid->LocalServer = load_dynamic_stringW(row,3);
-    appid->ServiceParameters = load_dynamic_stringW(row,4);
-    appid->DllSurrogate = load_dynamic_stringW(row,5);
+    appid->LocalServer = msi_dup_record_field(row,3);
+    appid->ServiceParameters = msi_dup_record_field(row,4);
+    appid->DllSurrogate = msi_dup_record_field(row,5);
 
     appid->ActivateAtStorage = !MSI_RecordIsNull(row,6);
     appid->RunAsInteractiveUser = !MSI_RecordIsNull(row,7);
@@ -131,7 +131,7 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 
     list_add_tail( &package->progids, &progid->entry );
 
-    progid->ProgID = load_dynamic_stringW(row,1);
+    progid->ProgID = msi_dup_record_field(row,1);
     TRACE("loading progid %s\n",debugstr_w(progid->ProgID));
 
     buffer = MSI_RecordGetString(row,2);
@@ -144,12 +144,12 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
     if (progid->Class == NULL && buffer)
         FIXME("Unknown class %s\n",debugstr_w(buffer));
 
-    progid->Description = load_dynamic_stringW(row,4);
+    progid->Description = msi_dup_record_field(row,4);
 
     if (!MSI_RecordIsNull(row,6))
     {
         INT icon_index = MSI_RecordGetInteger(row,6); 
-        LPWSTR FileName = load_dynamic_stringW(row,5);
+        LPCWSTR FileName = MSI_RecordGetString(row,5);
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
@@ -160,7 +160,6 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
         sprintfW(progid->IconPath,fmt,FilePath,icon_index);
 
         msi_free(FilePath);
-        msi_free(FileName);
     }
     else
     {
@@ -180,7 +179,7 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
         while (parent->Parent && parent->Parent != parent)
             parent = parent->Parent;
 
-        FIXME("need to determing if we are really the CurVer\n");
+        /* FIXME: need to determing if we are really the CurVer */
 
         progid->CurVer = parent;
         parent->VersionInd = progid;
@@ -235,28 +234,28 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
 
     list_add_tail( &package->classes, &cls->entry );
 
-    cls->clsid = load_dynamic_stringW( row, 1 );
+    cls->clsid = msi_dup_record_field( row, 1 );
     TRACE("loading class %s\n",debugstr_w(cls->clsid));
-    cls->Context = load_dynamic_stringW( row, 2 );
+    cls->Context = msi_dup_record_field( row, 2 );
     buffer = MSI_RecordGetString(row,3);
     cls->Component = get_loaded_component(package, buffer);
 
-    cls->ProgIDText = load_dynamic_stringW(row,4);
+    cls->ProgIDText = msi_dup_record_field(row,4);
     cls->ProgID = load_given_progid(package, cls->ProgIDText);
 
-    cls->Description = load_dynamic_stringW(row,5);
+    cls->Description = msi_dup_record_field(row,5);
 
     buffer = MSI_RecordGetString(row,6);
     if (buffer)
         cls->AppID = load_given_appid(package, buffer);
 
-    cls->FileTypeMask = load_dynamic_stringW(row,7);
+    cls->FileTypeMask = msi_dup_record_field(row,7);
 
     if (!MSI_RecordIsNull(row,9))
     {
 
         INT icon_index = MSI_RecordGetInteger(row,9); 
-        LPWSTR FileName = load_dynamic_stringW(row,8);
+        LPCWSTR FileName = MSI_RecordGetString(row,8);
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
@@ -267,7 +266,6 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
         sprintfW(cls->IconPath,fmt,FilePath,icon_index);
 
         msi_free(FilePath);
-        msi_free(FileName);
     }
     else
     {
@@ -300,7 +298,7 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
         }
         else
         {
-            cls->DefInprocHandler32 = load_dynamic_stringW( row, 10);
+            cls->DefInprocHandler32 = msi_dup_record_field( row, 10);
             reduce_to_longfilename(cls->DefInprocHandler32);
         }
     }
@@ -366,13 +364,13 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
     if (!mt)
         return mt;
 
-    mt->ContentType = load_dynamic_stringW( row, 1 ); 
+    mt->ContentType = msi_dup_record_field( row, 1 ); 
     TRACE("loading mime %s\n", debugstr_w(mt->ContentType));
 
     buffer = MSI_RecordGetString( row, 2 );
     mt->Extension = load_given_extension( package, buffer );
 
-    mt->clsid = load_dynamic_stringW( row, 3 );
+    mt->clsid = msi_dup_record_field( row, 3 );
     mt->Class = load_given_class( package, mt->clsid );
 
     list_add_tail( &package->mimes, &mt->entry );
@@ -428,13 +426,13 @@ static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
 
     list_add_tail( &package->extensions, &ext->entry );
 
-    ext->Extension = load_dynamic_stringW( row, 1 );
+    ext->Extension = msi_dup_record_field( row, 1 );
     TRACE("loading extension %s\n", debugstr_w(ext->Extension));
 
     buffer = MSI_RecordGetString( row, 2 );
     ext->Component = get_loaded_component( package,buffer );
 
-    ext->ProgIDText = load_dynamic_stringW( row, 3 );
+    ext->ProgIDText = msi_dup_record_field( row, 3 );
     ext->ProgID = load_given_progid( package, ext->ProgIDText );
 
     buffer = MSI_RecordGetString( row, 4 );
@@ -505,7 +503,7 @@ static UINT iterate_load_verb(MSIRECORD *row, LPVOID param)
     if (!verb)
         return ERROR_OUTOFMEMORY;
 
-    verb->Verb = load_dynamic_stringW(row,2);
+    verb->Verb = msi_dup_record_field(row,2);
     TRACE("loading verb %s\n",debugstr_w(verb->Verb));
     verb->Sequence = MSI_RecordGetInteger(row,3);
 
@@ -837,9 +835,6 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     BOOL install_on_demand = FALSE;
     MSICLASS *cls;
 
-    if (!package)
-        return ERROR_INVALID_HANDLE;
-
     load_classes_and_such(package);
     rc = RegCreateKeyW(HKEY_CLASSES_ROOT,szCLSID,&hkey);
     if (rc != ERROR_SUCCESS)
@@ -1043,68 +1038,36 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     return rc;
 }
 
-static UINT register_progid_base(MSIPACKAGE* package, MSIPROGID* progid,
-                                 LPWSTR clsid)
+static LPCWSTR get_clsid_of_progid( MSIPROGID *progid )
+{
+    while (progid)
+    {
+        if (progid->Class)
+            return progid->Class->clsid;
+        progid = progid->Parent;
+    }
+    return NULL;
+}
+
+static UINT register_progid( MSIPROGID* progid )
 {
     static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
     static const WCHAR szDefaultIcon[] =
         {'D','e','f','a','u','l','t','I','c','o','n',0};
-    HKEY hkey;
+    static const WCHAR szCurVer[] =
+        {'C','u','r','V','e','r',0};
+    HKEY hkey = 0;
+    UINT rc;
 
-    RegCreateKeyW(HKEY_CLASSES_ROOT,progid->ProgID,&hkey);
+    rc = RegCreateKeyW( HKEY_CLASSES_ROOT, progid->ProgID, &hkey );
+    if (rc == ERROR_SUCCESS)
+    {
+        LPCWSTR clsid = get_clsid_of_progid( progid );
 
-    if (progid->Description)
-        msi_reg_set_val_str( hkey, NULL, progid->Description );
-
-    if (progid->Class)
-    {   
-        msi_reg_set_subkey_val( hkey, szCLSID, NULL, progid->Class->clsid );
         if (clsid)
-            strcpyW( clsid, progid->Class->clsid );
-    }
-    else
-    {
-        FIXME("progid (%s) with null classid\n", debugstr_w(progid->ProgID));
-    }
-
-    if (progid->IconPath)
-        msi_reg_set_subkey_val( hkey, szDefaultIcon, NULL, progid->IconPath );
-
-    return ERROR_SUCCESS;
-}
-
-static UINT register_progid(MSIPACKAGE *package, MSIPROGID* progid, 
-                LPWSTR clsid)
-{
-    UINT rc = ERROR_SUCCESS; 
-
-    if (progid->Parent == NULL)
-        rc = register_progid_base(package, progid, clsid);
-    else
-    {
-        DWORD disp;
-        HKEY hkey;
-        static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
-        static const WCHAR szDefaultIcon[] =
-            {'D','e','f','a','u','l','t','I','c','o','n',0};
-        static const WCHAR szCurVer[] =
-            {'C','u','r','V','e','r',0};
-
-        /* check if already registered */
-        RegCreateKeyExW(HKEY_CLASSES_ROOT, progid->ProgID, 0, NULL, 0,
-                        KEY_ALL_ACCESS, NULL, &hkey, &disp );
-        if (disp == REG_OPENED_EXISTING_KEY)
-        {
-            TRACE("Key already registered\n");
-            RegCloseKey(hkey);
-            return rc;
-        }
-
-        TRACE("Registering Parent %s\n", debugstr_w(progid->Parent->ProgID) );
-        rc = register_progid( package, progid->Parent, clsid );
-
-        /* clsid is same as parent */
-        msi_reg_set_subkey_val( hkey, szCLSID, NULL, clsid );
+            msi_reg_set_subkey_val( hkey, szCLSID, NULL, clsid );
+        else
+            ERR("%s has no class\n", debugstr_w( progid->ProgID ) );
 
         if (progid->Description)
             msi_reg_set_val_str( hkey, NULL, progid->Description );
@@ -1118,6 +1081,9 @@ static UINT register_progid(MSIPACKAGE *package, MSIPROGID* progid,
 
         RegCloseKey(hkey);
     }
+    else
+        ERR("failed to create key %s\n", debugstr_w( progid->ProgID ) );
+
     return rc;
 }
 
@@ -1126,15 +1092,10 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
     MSIPROGID *progid;
     MSIRECORD *uirow;
 
-    if (!package)
-        return ERROR_INVALID_HANDLE;
-
     load_classes_and_such(package);
 
     LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
     {
-        WCHAR clsid[0x1000];
-
         /* check if this progid is to be installed */
         if (progid->Class && progid->Class->Installed)
             progid->InstallMe = TRUE;
@@ -1148,9 +1109,9 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
        
         TRACE("Registering progid %s\n", debugstr_w(progid->ProgID));
 
-        register_progid( package, progid, clsid );
+        register_progid( progid );
 
-        uirow = MSI_CreateRecord(1);
+        uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, progid->ProgID );
         ui_actiondata( package, szRegisterProgIdInfo, uirow );
         msiobj_release( &uirow->hdr );
@@ -1246,9 +1207,6 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
     MSIEXTENSION *ext;
     MSIRECORD *uirow;
     BOOL install_on_demand = TRUE;
-
-    if (!package)
-        return ERROR_INVALID_HANDLE;
 
     load_classes_and_such(package);
 
@@ -1354,9 +1312,6 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
         {'E','x','t','e','n','s','i','o','n',0 };
     MSIRECORD *uirow;
     MSIMIME *mt;
-
-    if (!package)
-        return ERROR_INVALID_HANDLE;
 
     load_classes_and_such(package);
 

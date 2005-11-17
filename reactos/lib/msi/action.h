@@ -93,6 +93,15 @@ typedef struct tagMSIFOLDER
     INT   Space;
 } MSIFOLDER;
 
+typedef enum _msi_file_state {
+    msifs_invalid,
+    msifs_missing,
+    msifs_overwrite,
+    msifs_present,
+    msifs_installed,
+    msifs_skipped,
+} msi_file_state;
+
 typedef struct tagMSIFILE
 {
     struct list entry;
@@ -105,14 +114,7 @@ typedef struct tagMSIFILE
     LPWSTR Language;
     INT Attributes;
     INT Sequence;   
-
-    INT State;
-       /* 0 = uninitialize */
-       /* 1 = not present */
-       /* 2 = present but replace */
-       /* 3 = present do not replace */
-       /* 4 = Installed */
-       /* 5 = Skipped */
+    msi_file_state state;
     LPWSTR  SourcePath;
     LPWSTR  TargetPath;
 } MSIFILE;
@@ -241,6 +243,7 @@ extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, BOOL ex
 extern UINT ACTION_AppSearch(MSIPACKAGE *package);
 extern UINT ACTION_FindRelatedProducts(MSIPACKAGE *package);
 extern UINT ACTION_InstallFiles(MSIPACKAGE *package);
+extern UINT ACTION_RemoveFiles(MSIPACKAGE *package);
 extern UINT ACTION_DuplicateFiles(MSIPACKAGE *package);
 extern UINT ACTION_RegisterClassInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package);
@@ -250,7 +253,7 @@ extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
 
 /* Helpers */
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
-extern WCHAR *load_dynamic_stringW(MSIRECORD *row, INT index);
+extern LPWSTR msi_dup_record_field(MSIRECORD *row, INT index);
 extern LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop);
 extern LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder);
@@ -264,7 +267,7 @@ extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
 extern DWORD build_version_dword(LPCWSTR);
 extern LPWSTR build_directory_name(DWORD , ...);
 extern BOOL create_full_pathW(const WCHAR *path);
-extern BOOL ACTION_VerifyComponentForAction(MSIPACKAGE*, MSICOMPONENT*, INSTALLSTATE);
+extern BOOL ACTION_VerifyComponentForAction(MSICOMPONENT*, INSTALLSTATE);
 extern BOOL ACTION_VerifyFeatureForAction(MSIFEATURE*, INSTALLSTATE);
 extern void reduce_to_longfilename(WCHAR*);
 extern void reduce_to_shortfilename(WCHAR*);
@@ -273,6 +276,7 @@ extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
 extern UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
 extern BOOL check_unique_action(MSIPACKAGE *, LPCWSTR);
 extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
+extern UINT msi_create_component_directories( MSIPACKAGE *package );
 
 
 /* control event stuff */
