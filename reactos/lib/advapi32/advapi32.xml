@@ -24,6 +24,7 @@
 		<file>dllmain.c</file>
 		<file>hwprofiles.c</file>
 		<file>logon.c</file>
+		<file>msi.c</file>
 		<file>shutdown.c</file>
 		<file>sysfunc.c</file>
 	</directory>

@@ -70,7 +70,7 @@ ClearEventLogW@8
 CloseEventLog@4
 CloseServiceHandle@4
 ;CloseTrace@8
-;CommandLineFromMsiDescriptor@12
+CommandLineFromMsiDescriptor@12
 ;ComputeAccessTokenFromCodeAuthzLevel@20
 ControlService@12
 ControlServiceEx@16
