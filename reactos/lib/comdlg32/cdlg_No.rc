@@ -401,6 +401,9 @@ Oppgi en verdi mellom %d og %d."
     PD32_OUT_OF_MEMORY                    "Ikke mer minne."
     PD32_GENERIC_ERROR                    "En feil har oppstått."
     PD32_DRIVER_UNKNOWN                   "Ukjent skriverdriver."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Standardskriver; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Det er %d dokumenter i køen"

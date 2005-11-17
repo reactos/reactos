@@ -404,6 +404,9 @@ pela sua impressora.\nPor favor entre um valor entre 1 e %d."
     PD32_OUT_OF_MEMORY				"Memória insuficiente."
     PD32_GENERIC_ERROR				"Ocorreu algum erro."
     PD32_DRIVER_UNKNOWN				"Driver de impressora desconhecido."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER			"Impressora Padrão; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE		"Existem %d documentos na fila"

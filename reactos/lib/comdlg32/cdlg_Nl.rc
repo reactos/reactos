@@ -285,6 +285,9 @@ beschikbaar"
     PD32_GENERIC_ERROR                    "Er onstond een niet nader \
 gespecifieerde fout"
     PD32_DRIVER_UNKNOWN                   "De printer driver is onbekend"
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Default Printer, "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Er staan %d documenten in de \

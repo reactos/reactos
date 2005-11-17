@@ -409,6 +409,9 @@ Veuillez indiquer un nombre de copies entre 1 et %d."
     PD32_OUT_OF_MEMORY                    "Pas assez de mémoire."
     PD32_GENERIC_ERROR                    "Une erreur est intervenue."
     PD32_DRIVER_UNKNOWN                   "Pilote d'imprimante inconnu."
+    PD32_NO_DEVICES                       "Avant de pouvoir effectuer des opérations en relation avec l'impression \
+comme la configuration de l'imprimante ou l'impression d'un document, vous devez installer une imprimante. \
+Veuillez en installer une et réessayez."
 
     PD32_DEFAULT_PRINTER                  "Imprimante par défaut; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Il y a %d documents dans la file d'attente"

@@ -400,6 +400,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY                    "Muisti loppu."
     PD32_GENERIC_ERROR                    "Virhe."
     PD32_DRIVER_UNKNOWN                   "Tuntematon tulostinajuri."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Oletustulostin; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Jonossa on %d dokumenttia"

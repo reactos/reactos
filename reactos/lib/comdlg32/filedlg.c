@@ -250,6 +250,7 @@ static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
     LPCVOID template;
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
+    HRESULT hr;
 
     /* test for missing functionality */
     if (fodInfos->ofnInfos->Flags & UNIMPLEMENTED_FLAGS)
@@ -281,11 +282,16 @@ static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
       fodInfos->HookMsg.sharevistring = RegisterWindowMessageA(SHAREVISTRINGA);
     }
 
+    /* Some shell namespace extensions depend on COM being initialized. */
+    hr = CoInitialize(NULL);
+
     lRes = DialogBoxIndirectParamA(COMDLG32_hInstance,
                                   (LPDLGTEMPLATEA) template,
                                   fodInfos->ofnInfos->hwndOwner,
                                   FileOpenDlgProc95,
                                   (LPARAM) fodInfos);
+    if (SUCCEEDED(hr)) 
+        CoUninitialize();
 
     /* Unable to create the dialog */
     if( lRes == -1)

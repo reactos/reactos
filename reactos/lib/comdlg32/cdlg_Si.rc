@@ -402,6 +402,9 @@ Vnesite število med %d in %d."
     PD32_OUT_OF_MEMORY                    "Na voljo ni dovolj pomnilnika, da bi bilo mogoèe dokonèati operacijo."
     PD32_GENERIC_ERROR                    "Med operacijo je prišlo do napake."
     PD32_DRIVER_UNKNOWN                   "Neznan gonilnik tiskalnika."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Privzeti tiskalnik; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d èakajoèih dok."

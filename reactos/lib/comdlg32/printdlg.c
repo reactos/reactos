@@ -1156,6 +1156,31 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
     return TRUE;
 }
 
+ /***********************************************************************
+ *           check_printer_setup			[internal]
+ */
+static LRESULT check_printer_setup(HWND hDlg)
+{
+    DWORD needed,num;
+    WCHAR resourcestr[256],resultstr[256];
+    int res;
+
+    EnumPrintersW(PRINTER_ENUM_LOCAL, NULL, 2, NULL, 0, &needed, &num);
+    if(needed == 0)
+    {
+          EnumPrintersW(PRINTER_ENUM_CONNECTIONS, NULL, 2, NULL, 0, &needed, &num);
+    }
+    if(needed > 0)
+          return TRUE;
+    else
+    {
+          LoadStringW(COMDLG32_hInstance, PD32_NO_DEVICES,resultstr, 255);
+          LoadStringW(COMDLG32_hInstance, PD32_PRINT_TITLE,resourcestr, 255);
+          res = MessageBoxW(hDlg, resultstr, resourcestr,MB_OK | MB_ICONWARNING);
+          return FALSE;
+    }
+}
+
 /***********************************************************************
  *           PRINTDLG_WMInitDialog                      [internal]
  */
@@ -1740,6 +1765,11 @@ static INT_PTR CALLBACK PrintDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
     } else {
         PrintStructures = (PRINT_PTRA*) lParam;
 	SetPropA(hDlg,"__WINE_PRINTDLGDATA",PrintStructures);
+        if(!check_printer_setup(hDlg))
+        {
+            EndDialog(hDlg,FALSE);
+            return FALSE;
+        }
 	res = PRINTDLG_WMInitDialog(hDlg, wParam, PrintStructures);
 
 	if(PrintStructures->lpPrintDlg->Flags & PD_ENABLEPRINTHOOK)
@@ -1785,6 +1815,11 @@ static INT_PTR CALLBACK PrintDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
     } else {
         PrintStructures = (PRINT_PTRW*) lParam;
 	SetPropW(hDlg, propW, PrintStructures);
+        if(!check_printer_setup(hDlg))
+        {
+            EndDialog(hDlg,FALSE);
+            return FALSE;
+        }
 	res = PRINTDLG_WMInitDialogW(hDlg, wParam, PrintStructures);
 
 	if(PrintStructures->lpPrintDlg->Flags & PD_ENABLEPRINTHOOK)
@@ -2105,6 +2140,8 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
 
 /***********************************************************************
  *           PrintDlgW   (COMDLG32.@)
+ *
+ * See PrintDlgA.
  */
 BOOL WINAPI PrintDlgW(
 		      LPPRINTDLGW lppd /* [in/out] ptr to PRINTDLG32 struct */
@@ -3379,6 +3416,8 @@ BOOL WINAPI PageSetupDlgA(LPPAGESETUPDLGA setupdlg) {
 }
 /***********************************************************************
  *            PageSetupDlgW  (COMDLG32.@)
+ *
+ * See PageSetupDlgA.
  */
 BOOL WINAPI PageSetupDlgW(LPPAGESETUPDLGW setupdlg) {
     HGLOBAL		hDlgTmpl;
@@ -3448,6 +3487,11 @@ BOOL WINAPI PageSetupDlgW(LPPAGESETUPDLGW setupdlg) {
 
 /***********************************************************************
  *	PrintDlgExA (COMDLG32.@)
+ *
+ * See PrintDlgExW.
+ *
+ * FIXME
+ *   Stub
  */
 HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lpPrintDlgExA)
 {
@@ -3457,6 +3501,25 @@ HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lpPrintDlgExA)
 
 /***********************************************************************
  *	PrintDlgExW (COMDLG32.@)
+ *
+ * Display the the PRINT dialog box, which enables the user to specify
+ * specific properties of the print job.  The property sheet can also have
+ * additional application-specific and driver-specific property pages.
+ *  
+ * PARAMS
+ *  lppd  [IO] ptr to PRINTDLGEX struct
+ * 
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: One of the following COM error codes:
+ *    E_OUTOFMEMORY Insufficient memory.
+ *    E_INVALIDARG  One or more arguments are invalid.
+ *    E_POINTER     Invalid pointer.
+ *    E_HANDLE      Invalid handle.
+ *    E_FAIL        Unspecified error.
+ *  
+ * FIXME
+ *   Stub
  */
 HRESULT WINAPI PrintDlgExW(LPPRINTDLGEXW lpPrintDlgExW)
 {

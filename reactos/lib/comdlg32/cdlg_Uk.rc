@@ -373,6 +373,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY                    "Мало пам'яті"
     PD32_GENERIC_ERROR                    "Виникла(и) помилка(и)"
     PD32_DRIVER_UNKNOWN                   "Невідомий драйвер принтера"
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Принтер за обумовленням; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d документів у черзі"

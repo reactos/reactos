@@ -375,6 +375,9 @@ supported by your printer.\nPlease enter a value between 1 and %d"
     PD32_OUT_OF_MEMORY                    "Nedostatok pamäte"
     PD32_GENERIC_ERROR                    "Vyskytla sa chyba"
     PD32_DRIVER_UNKNOWN                   "Neznámy ovládaè tlaèiarne"
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Implicitná tlaèiareò; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "There are %d documents in queue"

@@ -404,6 +404,9 @@ supportato dalla stampante.\nInserire un valore compreso tra 1 e %d"
     PD32_OUT_OF_MEMORY                    "Memoria esaurita."
     PD32_GENERIC_ERROR                    "Si è verificato un errore."
     PD32_DRIVER_UNKNOWN                   "Driver della stampante sconosciuto."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Stampante predefinita; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Ci sono %d documenti nella coda di stampa"

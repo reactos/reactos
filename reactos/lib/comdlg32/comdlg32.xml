@@ -18,6 +18,7 @@
 	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>winspool</library>
+	<library>ole32</library>
 	<file>cdlg32.c</file>
 	<file>colordlg.c</file>
 	<file>filedlg.c</file>

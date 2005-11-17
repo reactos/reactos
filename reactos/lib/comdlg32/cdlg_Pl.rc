@@ -402,6 +402,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY       "Za ma³o pamiêci dla tej operacji."
     PD32_GENERIC_ERROR       "Podczas tej operacji wyst¹pi³ b³¹d."
     PD32_DRIVER_UNKNOWN      "Nieznany sterownik drukarki."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Domyœlna Drukarka; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "W kolejce znajduj¹ siê %d dokumenty"

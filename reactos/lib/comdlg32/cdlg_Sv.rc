@@ -395,6 +395,9 @@ pappersgränserna.\nVar god skriv in marginallerna igen."
  PD32_OUT_OF_MEMORY                    "Slut på minne."
  PD32_GENERIC_ERROR                    "Ett fel uppstog."
  PD32_DRIVER_UNKNOWN                   "Okänd skrivardrivrutin."
+ PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
  PD32_DEFAULT_PRINTER                  "Standardskrivare; "
  PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Det är %d dokument i kön"

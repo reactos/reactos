@@ -406,6 +406,9 @@ defecto."
     PD32_GENERIC_ERROR                    "Ocurrió un error."
     PD32_DRIVER_UNKNOWN                   "Manejador de la impresora \
 desconocido."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Impresora por defecto; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Hay %d documentos en la cola"

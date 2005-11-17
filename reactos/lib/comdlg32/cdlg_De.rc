@@ -399,6 +399,9 @@ Bitte geben sie einen Wert zwischen %d und %d an."
     PD32_OUT_OF_MEMORY                    "Kein freier Speicher mehr."
     PD32_GENERIC_ERROR                    "Ein unbekannter Fehler ist aufgetreten."
     PD32_DRIVER_UNKNOWN                   "Unbekannter Druckertreiber."
+    PD32_NO_DEVICES                       "Bevor Sie drucker-relevante Aufgaben ausführen können, \
+    wie die Seiteneinrichtung oder ein Dokument zu drucken,\
+    müssen Sie einen Drucker installieren. Bitte führen Sie dies zuerst aus und versuchen Sie es erneut."
 
     PD32_DEFAULT_PRINTER                  "Standard Drucker; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Es sind %d Dokumente in der Queue"

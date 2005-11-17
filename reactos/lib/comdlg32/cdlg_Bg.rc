@@ -406,6 +406,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY                    "Недостиг на памет."
     PD32_GENERIC_ERROR                    "Появи се грешка."
     PD32_DRIVER_UNKNOWN                   "Непознат драйвер за принтера."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Принтер по подразбиране; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Има %d документа в опашката"
