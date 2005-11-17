@@ -5,6 +5,7 @@
  *		      1999  Rein Klazes
  *		      2000  Francois Jacques
  *		      2001  Huw D M Davies for CodeWeavers
+ *		      2005  Robert Shearman, for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -979,6 +980,7 @@ typedef struct tagITypeInfoImpl
      */
     BSTR Name;
     BSTR DocString;
+    BSTR DllName;
     unsigned long  dwHelpContext;
     unsigned long  dwHelpStringContext;
 
@@ -1072,10 +1074,19 @@ static void dump_TypeDesc(TYPEDESC *pTD,char *szVarType) {
 
 static void dump_ELEMDESC(ELEMDESC *edesc) {
   char buf[200];
+  USHORT flags = edesc->u.paramdesc.wParamFlags;
   dump_TypeDesc(&edesc->tdesc,buf);
   MESSAGE("\t\ttdesc.vartype %d (%s)\n",edesc->tdesc.vt,buf);
-  MESSAGE("\t\tu.parmadesc.flags %x\n",edesc->u.paramdesc.wParamFlags);
-  MESSAGE("\t\tu.parmadesc.lpex %p\n",edesc->u.paramdesc.pparamdescex);
+  MESSAGE("\t\tu.paramdesc.wParamFlags");
+  if (!flags) MESSAGE(" PARAMFLAGS_NONE");
+  if (flags & PARAMFLAG_FIN) MESSAGE(" PARAMFLAG_FIN");
+  if (flags & PARAMFLAG_FOUT) MESSAGE(" PARAMFLAG_FOUT");
+  if (flags & PARAMFLAG_FLCID) MESSAGE(" PARAMFLAG_FLCID");
+  if (flags & PARAMFLAG_FRETVAL) MESSAGE(" PARAMFLAG_FRETVAL");
+  if (flags & PARAMFLAG_FOPT) MESSAGE(" PARAMFLAG_FOPT");
+  if (flags & PARAMFLAG_FHASDEFAULT) MESSAGE(" PARAMFLAG_FHASDEFAULT");
+  if (flags & PARAMFLAG_FHASCUSTDATA) MESSAGE(" PARAMFLAG_FHASCUSTDATA");
+  MESSAGE("\n\t\tu.paramdesc.lpex %p\n",edesc->u.paramdesc.pparamdescex);
 }
 static void dump_FUNCDESC(FUNCDESC *funcdesc) {
   int i;
@@ -1275,6 +1286,7 @@ static void dump_TypeInfo(ITypeInfoImpl * pty)
       pty->TypeAttr.cFuncs, pty->TypeAttr.cVars, pty->TypeAttr.cImplTypes);
     TRACE("parent tlb:%p index in TLB:%u\n",pty->pTypeLib, pty->index);
     TRACE("%s %s\n", debugstr_w(pty->Name), debugstr_w(pty->DocString));
+    if (pty->TypeAttr.typekind == TKIND_MODULE) TRACE("dllname:%s\n", debugstr_w(pty->DllName));
     dump_TLBFuncDesc(pty->funclist);
     dump_TLBVarDesc(pty->varlist);
     dump_TLBImplType(pty->impltypelist);
@@ -1437,6 +1449,11 @@ static BSTR MSFT_ReadName( TLBContext *pcx, int offset)
     WCHAR* pwstring = NULL;
     BSTR bstrName = NULL;
 
+    if (offset < 0)
+    {
+        ERR_(typelib)("bad offset %d\n", offset);
+        return NULL;
+    }
     MSFT_ReadLEDWords(&niName, sizeof(niName), pcx,
 		      pcx->pTblDir->pNametab.offset+offset);
     niName.namelen &= 0xFF; /* FIXME: correct ? */
@@ -1765,7 +1782,16 @@ MSFT_DoFuncs(TLBContext*     pcx,
 
                 (*pptfd)->funcdesc.lprgelemdescParam[j].u.paramdesc.wParamFlags = paraminfo.Flags;
 
-                (*pptfd)->pParamDesc[j].Name = (void *) paraminfo.oName;
+                /* name */
+                if (paraminfo.oName == -1)
+                    /* this occurs for [propput] or [propget] methods, so
+                     * we should just set the name of the parameter to the
+                     * name of the method. */
+                    (*pptfd)->pParamDesc[j].Name = SysAllocString((*pptfd)->Name);
+                else
+                    (*pptfd)->pParamDesc[j].Name =
+                        MSFT_ReadName( pcx, paraminfo.oName );
+                TRACE_(typelib)("param[%d] = %s\n", j, debugstr_w((*pptfd)->pParamDesc[j].Name));
 
                 /* SEEK value = jump to offset,
                  * from there jump to the end of record,
@@ -1844,10 +1870,6 @@ MSFT_DoFuncs(TLBContext*     pcx,
             /* second time around */
             for(j=0;j<pFuncRec->nrargs;j++)
             {
-                /* name */
-                (*pptfd)->pParamDesc[j].Name =
-                    MSFT_ReadName( pcx, (int)(*pptfd)->pParamDesc[j].Name );
-
                 /* default value */
                 if ( (PARAMFLAG_FHASDEFAULT &
                       (*pptfd)->funcdesc.lprgelemdescParam[j].u.paramdesc.wParamFlags) &&
@@ -2029,6 +2051,7 @@ static ITypeInfoImpl * MSFT_DoTypeInfo(
     ptiRet = (ITypeInfoImpl*) ITypeInfo_Constructor();
     MSFT_ReadLEDWords(&tiBase, sizeof(tiBase) ,pcx ,
                       pcx->pTblDir->pTypeInfoTab.offset+count*sizeof(tiBase));
+
 /* this is where we are coming from */
     ptiRet->pTypeLib = pLibInfo;
     ptiRet->index=count;
@@ -2064,6 +2087,10 @@ static ITypeInfoImpl * MSFT_DoTypeInfo(
     ptiRet->DocString=MSFT_ReadString(pcx, tiBase.docstringoffs);
     ptiRet->dwHelpStringContext=tiBase.helpstringcontext;
     ptiRet->dwHelpContext=tiBase.helpcontext;
+
+    if (ptiRet->TypeAttr.typekind == TKIND_MODULE)
+        ptiRet->DllName = MSFT_ReadString(pcx, tiBase.datatype1);
+
 /* note: InfoType's Help file and HelpStringDll come from the containing
  * library. Further HelpString and Docstring appear to be the same thing :(
  */
@@ -3522,7 +3549,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfo(
     ITypeLibImpl *This = (ITypeLibImpl *)iface;
     ITypeInfoImpl *pTypeInfo = This->pTypeInfo;
 
-    TRACE("(%p)->(index=%d) \n", This, index);
+    TRACE("(%p)->(index=%d)\n", This, index);
 
     if (!ppTInfo) return E_INVALIDARG;
 
@@ -3558,7 +3585,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoType(
     int i;
     ITypeInfoImpl *pTInfo = This->pTypeInfo;
 
-    TRACE("(%p) index %d \n",This, index);
+    TRACE("(%p) index %d\n", This, index);
 
     if(!pTKind) return E_INVALIDARG;
 
@@ -3992,7 +4019,7 @@ static HRESULT WINAPI ITypeLib2_fnGetAllCustData(
             VariantCopy(& pCustData->prgCustData[i].varValue, & pCData->data);
         }
     }else{
-        ERR(" OUT OF MEMORY! \n");
+        ERR(" OUT OF MEMORY!\n");
         return E_OUTOFMEMORY;
     }
     return S_OK;
@@ -4158,6 +4185,12 @@ static ULONG WINAPI ITypeInfo_fnRelease(ITypeInfo2 *iface)
       {
           SysFreeString(This->DocString);
           This->DocString = 0;
+      }
+
+      if (This->DllName)
+      {
+          SysFreeString(This->DllName);
+          This->DllName = 0;
       }
 
       if (This->next)
@@ -4731,7 +4764,7 @@ static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTY
     switch (tattr->typekind)
     {
     case TKIND_ENUM:
-        *vt |= VT_INT;
+        *vt |= VT_I4;
         break;
 
     case TKIND_ALIAS:
@@ -4829,46 +4862,47 @@ static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTYP
 HRESULT WINAPI
 DispCallFunc(
     void* pvInstance, ULONG oVft, CALLCONV cc, VARTYPE vtReturn, UINT cActuals,
-    VARTYPE* prgvt, VARIANTARG** prgpvarg, VARIANT* pvargResult
-) {
+    VARTYPE* prgvt, VARIANTARG** prgpvarg, VARIANT* pvargResult)
+{
     int i, argsize, argspos;
     DWORD *args;
     HRESULT hres;
 
     TRACE("(%p, %ld, %d, %d, %d, %p, %p, %p (vt=%d))\n",
-	pvInstance, oVft, cc, vtReturn, cActuals, prgvt, prgpvarg, pvargResult, V_VT(pvargResult)
-    );
-    /* DispCallFunc is only used to invoke methods belonging to an IDispatch-derived COM interface.
-    So we need to add a first parameter to the list of arguments, to supply the interface pointer */
+        pvInstance, oVft, cc, vtReturn, cActuals, prgvt, prgpvarg,
+        pvargResult, V_VT(pvargResult));
+
+    /* DispCallFunc is only used to invoke methods belonging to an
+     * IDispatch-derived COM interface. So we need to add a first parameter
+     * to the list of arguments, to supply the interface pointer */
     argsize = 1;
-    for (i=0;i<cActuals;i++) {
-	TRACE("arg %d: type %d, size %d\n",i,prgvt[i],_argsize(prgvt[i]));
-	dump_Variant(prgpvarg[i]);
-	argsize += _argsize(prgvt[i]);
+    for (i=0;i<cActuals;i++)
+    {
+        TRACE("arg %d: type %d, size %d\n",i,prgvt[i],_argsize(prgvt[i]));
+        dump_Variant(prgpvarg[i]);
+        argsize += _argsize(prgvt[i]);
     }
     args = HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*argsize);
     args[0] = (DWORD)pvInstance;      /* this is the fake IDispatch interface pointer */
     argspos = 1;
-    for (i=0;i<cActuals;i++) {
-	VARIANT *arg = prgpvarg[i];
-	TRACE("Storing arg %d (%d as %d)\n",i,V_VT(arg),prgvt[i]);
-	_copy_arg(NULL, NULL, &args[argspos], arg, prgvt[i]);
-	argspos += _argsize(prgvt[i]);
+    for (i=0;i<cActuals;i++)
+    {
+        VARIANT *arg = prgpvarg[i];
+        TRACE("Storing arg %d (%d as %d)\n",i,V_VT(arg),prgvt[i]);
+        memcpy(&args[argspos], &V_NONE(arg), _argsize(prgvt[i]) * sizeof(DWORD));
+        argspos += _argsize(prgvt[i]);
     }
 
-    if(pvargResult!=NULL && V_VT(pvargResult)==VT_EMPTY)
+    hres = _invoke((*(FARPROC**)pvInstance)[oVft/sizeof(void *)],cc,argsize,args);
+    if (pvargResult && (vtReturn != VT_EMPTY))
     {
-        _invoke((*(FARPROC**)pvInstance)[oVft/4],cc,argsize,args);
-        hres=S_OK;
+        TRACE("Method returned 0x%08lx\n",hres);
+        V_VT(pvargResult) = vtReturn;
+        V_UI4(pvargResult) = hres;
     }
-    else
-    {
-        FIXME("Do not know how to handle pvargResult %p. Expect crash ...\n",pvargResult);
-        hres = _invoke((*(FARPROC**)pvInstance)[oVft/4],cc,argsize,args);
-        FIXME("Method returned %lx\n",hres);
-    }
+
     HeapFree(GetProcessHeap(),0,args);
-    return hres;
+    return S_OK;
 }
 
 static HRESULT WINAPI ITypeInfo_fnInvoke(
@@ -5031,7 +5065,10 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                          * variants here too */
                         if ((V_VT(&varresult) == (VT_UNKNOWN | VT_BYREF)) ||
                             (V_VT(&varresult) == (VT_DISPATCH | VT_BYREF)))
-                            IUnknown_Release(*V_UNKNOWNREF(&varresult));
+                        {
+                            if(*V_UNKNOWNREF(&varresult))
+                                IUnknown_Release(*V_UNKNOWNREF(&varresult));
+                        }
                         break;
 		    }
 		}
@@ -5072,6 +5109,7 @@ func_fail:
         }
 
         ITypeInfo2_ReleaseFuncDesc(iface, func_desc);
+        TRACE("-- 0x%08lx\n", hres);
         return hres;
 
     } else if(SUCCEEDED(hres = ITypeInfo2_GetVarIndexOfMemId(iface, memid, &var_index))) {
@@ -5171,18 +5209,22 @@ static HRESULT WINAPI ITypeInfo_fnGetDllEntry( ITypeInfo2 *iface, MEMBERID memid
     ITypeInfoImpl *This = (ITypeInfoImpl *)iface;
     TLBFuncDesc *pFDesc;
 
-    FIXME("(%p, memid %lx, %d, %p, %p, %p), partial stub!\n", This, memid, invKind, pBstrDllName, pBstrName, pwOrdinal);
+    TRACE("(%p)->(memid %lx, %d, %p, %p, %p)\n", This, memid, invKind, pBstrDllName, pBstrName, pwOrdinal);
+
+    if (pBstrDllName) *pBstrDllName = NULL;
+    if (pBstrName) *pBstrName = NULL;
+    if (pwOrdinal) *pwOrdinal = 0;
+
+    if (This->TypeAttr.typekind != TKIND_MODULE)
+        return TYPE_E_BADMODULEKIND;
 
     for(pFDesc=This->funclist; pFDesc; pFDesc=pFDesc->next)
         if(pFDesc->funcdesc.memid==memid){
 	    dump_TypeInfo(This);
 	    dump_TLBFuncDescOne(pFDesc);
 
-	    /* FIXME: This is wrong, but how do you find that out? */
-	    if (pBstrDllName) {
-		static const WCHAR oleaut32W[] = {'O','L','E','A','U','T','3','2','.','D','L','L',0};
-		*pBstrDllName = SysAllocString(oleaut32W);
-	    }
+	    if (pBstrDllName)
+		*pBstrDllName = SysAllocString(This->DllName);
 
 	    if (HIWORD(pFDesc->Entry) && (pFDesc->Entry != (void*)-1)) {
 		if (pBstrName)
@@ -5197,7 +5239,7 @@ static HRESULT WINAPI ITypeInfo_fnGetDllEntry( ITypeInfo2 *iface, MEMBERID memid
 		*pwOrdinal = (DWORD)pFDesc->Entry;
 	    return S_OK;
         }
-    return E_FAIL;
+    return TYPE_E_ELEMENTNOTFOUND;
 }
 
 /* ITypeInfo::GetRefTypeInfo
@@ -5728,7 +5770,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetAllCustData(
             VariantCopy(& pCustData->prgCustData[i].varValue, & pCData->data);
         }
     }else{
-        ERR(" OUT OF MEMORY! \n");
+        ERR(" OUT OF MEMORY!\n");
         return E_OUTOFMEMORY;
     }
     return S_OK;
@@ -5764,7 +5806,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetAllFuncCustData(
                         & pCData->data);
             }
         }else{
-            ERR(" OUT OF MEMORY! \n");
+            ERR(" OUT OF MEMORY!\n");
             return E_OUTOFMEMORY;
         }
         return S_OK;
@@ -5801,7 +5843,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetAllParamCustData( ITypeInfo2 * iface,
                         & pCData->data);
             }
         }else{
-            ERR(" OUT OF MEMORY! \n");
+            ERR(" OUT OF MEMORY!\n");
             return E_OUTOFMEMORY;
         }
         return S_OK;
@@ -5837,7 +5879,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetAllVarCustData( ITypeInfo2 * iface,
                         & pCData->data);
             }
         }else{
-            ERR(" OUT OF MEMORY! \n");
+            ERR(" OUT OF MEMORY!\n");
             return E_OUTOFMEMORY;
         }
         return S_OK;
@@ -5875,7 +5917,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetAllImplTypeCustData(
                         & pCData->data);
             }
         }else{
-            ERR(" OUT OF MEMORY! \n");
+            ERR(" OUT OF MEMORY!\n");
             return E_OUTOFMEMORY;
         }
         return S_OK;

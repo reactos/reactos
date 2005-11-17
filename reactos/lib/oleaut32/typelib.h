@@ -152,6 +152,7 @@ typedef struct tagMSFT_TypeInfoBase {
                                 /* or in base intefaces */
                                 /* if coclass: offset in reftable */
                                 /* if interface: reference to inherited if */
+                                /* if module: offset to dllname in name table */
         INT     datatype2;      /* if 0x8000, entry above is valid */
                                 /* actually dunno */
                                 /* else it is zero? */

@@ -544,15 +544,6 @@ static struct regsvr_coclass const coclass_list[] = {
 /***********************************************************************
  *		interface list
  */
-
-/* FIXME: these interfaces should be defined in ocidl.idl */
-
-static IID const IID_IFontEventsDisp = {
-    0x4EF6100A, 0xAF88, 0x11D0, {0x98,0x46,0x00,0xC0,0x4F,0xC2,0x99,0x93} };
-
-static IID const IID_IProvideMultipleClassInfo = {
-    0xA7ABA9C1, 0x8983, 0x11CF, {0x8F,0x20,0x00,0x80,0x5F,0x2C,0xD0,0x64} };
-
 static struct regsvr_interface const interface_list[] = {
     {   &IID_IDispatch,
 	"IDispatch",
