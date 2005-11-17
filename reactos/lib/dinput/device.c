@@ -279,7 +279,7 @@ void fill_DataFormat(void *out, const void *in, DataFormat *df) {
 
 void release_DataFormat(DataFormat * format)
 {
-    TRACE("Deleting DataTransform : \n");
+    TRACE("Deleting DataTransform :\n");
 
     HeapFree(GetProcessHeap(), 0, format->dt);
 }
@@ -300,7 +300,7 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
     
     dt = HeapAlloc(GetProcessHeap(), 0, asked_format->dwNumObjs * sizeof(DataTransform));
     
-    TRACE("Creating DataTransform : \n");
+    TRACE("Creating DataTransform :\n");
     
     for (i = 0; i < wine_format->dwNumObjs; i++) {
 	offset[i] = -1;
@@ -328,7 +328,7 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
 		
 		done[j] = 1;
 		
-		TRACE("Matching : \n");
+		TRACE("Matching :\n");
 		TRACE("   - Asked (%d) :\n", j);
 		TRACE("       * GUID: %s ('%s')\n",
 		      debugstr_guid(asked_format->rgodf[j].pguid),

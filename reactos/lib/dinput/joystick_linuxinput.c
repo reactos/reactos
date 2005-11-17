@@ -145,6 +145,7 @@ static GUID DInput_Wine_Joystick_GUID = { /* 9e573eda-7734-11d2-8d4a-23903fb6bdf
 };
 
 static void fake_current_js_state(JoystickImpl *ji);
+static int find_property_offset(JoystickImpl *This, LPCDIPROPHEADER ph);
 
 #define test_bit(arr,bit) (((BYTE*)arr)[bit>>3]&(1<<(bit&7)))
 
@@ -418,15 +419,37 @@ static HRESULT WINAPI JoystickAImpl_SetDataFormat(
 
   TRACE("(this=%p,%p)\n",This,df);
 
+  if (df == NULL) {
+    WARN("invalid pointer\n");
+    return E_POINTER;
+  }
+
+  if (df->dwSize != sizeof(*df)) {
+    WARN("invalid argument\n");
+    return DIERR_INVALIDPARAM;
+  }
+
   _dump_DIDATAFORMAT(df);
-  
+
+  if (This->joyfd!=-1) {
+    WARN("acquired\n");
+    return DIERR_ACQUIRED;
+  }
+
   /* Store the new data format */
   This->df = HeapAlloc(GetProcessHeap(),0,df->dwSize);
+  if (This->df==NULL) {
+    return DIERR_OUTOFMEMORY;
+  }
   memcpy(This->df, df, df->dwSize);
   This->df->rgodf = HeapAlloc(GetProcessHeap(),0,df->dwNumObjs*df->dwObjSize);
+  if (This->df->rgodf==NULL) {
+    HeapFree(GetProcessHeap(), 0, This->df);
+    return DIERR_OUTOFMEMORY;
+  }
   memcpy(This->df->rgodf,df->rgodf,df->dwNumObjs*df->dwObjSize);
 
-  return 0;
+  return DI_OK;
 }
 
 /******************************************************************************
@@ -591,6 +614,47 @@ static void fake_current_js_state(JoystickImpl *ji)
 	ji->js.lRz = map_axis(ji, ABS_RZ, ji->axes[ABS_RZ][AXE_ABS]);
 	ji->js.rglSlider[0] = map_axis(ji, ABS_THROTTLE, ji->axes[ABS_THROTTLE][AXE_ABS]);
 	ji->js.rglSlider[1] = map_axis(ji, ABS_RUDDER,   ji->axes[ABS_RUDDER  ][AXE_ABS]);
+}
+
+static int find_property_offset(JoystickImpl *This, LPCDIPROPHEADER ph)
+{
+  int i,c;
+  switch (ph->dwHow) {
+    case DIPH_BYOFFSET:
+      for (i=0; i<This->df->dwNumObjs; i++) {
+        if (This->df->rgodf[i].dwOfs == ph->dwObj) {
+          return i;
+        }
+      }
+      break;
+    case DIPH_BYID:
+      /* XXX: this is a hack - see below */
+      c = DIDFT_GETINSTANCE(ph->dwObj)>>WINE_JOYSTICK_AXIS_BASE;
+      for (i=0; (c&1)==0 && i<0x0F; i++) {
+        c >>= 1;
+      }
+      if (i<0x0F) {
+        return i;
+      }
+
+      /* XXX - the following part wont work with LiveForSpeed
+       * - the game sets the dwTypes to something else then
+       * the ddoi.dwType set in EnumObjects
+       */
+#if 0
+      for (i=0; i<This->df->dwNumObjs; i++) {
+        TRACE("dwType='%08x'\n", This->df->rgodf[i].dwType);
+        if ((This->df->rgodf[i].dwType & 0x00ffffff) == (ph->dwObj & 0x00ffffff)) {
+          return i;
+        }
+      }
+#endif
+      break;
+    default:
+      FIXME("Unhandled ph->dwHow=='%04X'\n", (unsigned int)ph->dwHow);
+  }
+
+  return -1;
 }
 
 static void joy_polldev(JoystickImpl *This) {
@@ -769,17 +833,68 @@ static HRESULT WINAPI JoystickAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 					      DWORD flags
 ) {
   JoystickImpl *This = (JoystickImpl *)iface;
+  DWORD len;
+  int nqtail;
+  HRESULT hr = DI_OK;
 
-  FIXME("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx),STUB!\n",This,dodsize,*entries,flags);
+  TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
+
+  if (This->joyfd==-!1) {
+    WARN("not acquired\n");
+    return DIERR_NOTACQUIRED;
+  }
 
   joy_polldev(This);
   if (flags & DIGDD_PEEK)
     FIXME("DIGDD_PEEK\n");
 
+  len = ((This->queue_head < This->queue_tail) ? This->queue_len : 0)
+    + (This->queue_head - This->queue_tail);
+  if (len > *entries)
+    len = *entries;
+
   if (dod == NULL) {
+    if (len)
+      TRACE("Application discarding %ld event(s).\n", len);
+
+    *entries = len;
+    nqtail = This->queue_tail + len;
+    while (nqtail >= This->queue_len)
+      nqtail -= This->queue_len;
   } else {
+    if (dodsize < sizeof(DIDEVICEOBJECTDATA_DX3)) {
+      ERR("Wrong structure size !\n");
+      return DIERR_INVALIDPARAM;
   }
-  return 0;
+
+    if (len)
+      TRACE("Application retrieving %ld event(s).\n", len);
+
+    *entries = 0;
+    nqtail = This->queue_tail;
+    while (len) {
+      /* Copy the buffered data into the application queue */
+      memcpy((char *)dod + *entries * dodsize, This->data_queue + nqtail, dodsize);
+      /* Advance position */
+      nqtail++;
+      if (nqtail >= This->queue_len)
+        nqtail -= This->queue_len;
+      (*entries)++;
+      len--;
+    }
+  }
+
+  if (This->overflow) {
+    hr = DI_BUFFEROVERFLOW;
+    if (!(flags & DIGDD_PEEK)) {
+      This->overflow = FALSE;
+    }
+  }
+
+  if (!(flags & DIGDD_PEEK))
+    This->queue_tail = nqtail;
+
+  return hr;
 }
 
 /******************************************************************************
@@ -791,44 +906,66 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
   JoystickImpl *This = (JoystickImpl *)iface;
 
-  FIXME("(this=%p,%s,%p)\n",This,debugstr_guid(rguid),ph);
-  FIXME("ph.dwSize = %ld, ph.dwHeaderSize =%ld, ph.dwObj = %ld, ph.dwHow= %ld\n",ph->dwSize, ph->dwHeaderSize,ph->dwObj,ph->dwHow);
+  if (!ph) {
+    WARN("invalid argument\n");
+    return DIERR_INVALIDPARAM;
+  }
+
+  TRACE("(this=%p,%s,%p)\n",This,debugstr_guid(rguid),ph);
+  TRACE("ph.dwSize = %ld, ph.dwHeaderSize =%ld, ph.dwObj = %ld, ph.dwHow= %ld\n",ph->dwSize, ph->dwHeaderSize,ph->dwObj,ph->dwHow);
 
   if (!HIWORD(rguid)) {
     switch (LOWORD(rguid)) {
     case (DWORD) DIPROP_BUFFERSIZE: {
       LPCDIPROPDWORD	pd = (LPCDIPROPDWORD)ph;
 
-      FIXME("buffersize = %ld\n",pd->dwData);
+      TRACE("buffersize = %ld\n",pd->dwData);
+      if (This->data_queue) {
+        This->data_queue = HeapReAlloc(GetProcessHeap(),0, This->data_queue, pd->dwData * sizeof(DIDEVICEOBJECTDATA));
+      } else {
+        This->data_queue = HeapAlloc(GetProcessHeap(),0, pd->dwData * sizeof(DIDEVICEOBJECTDATA));
+      }
+      This->queue_head = 0;
+      This->queue_tail = 0;
+      This->queue_len  = pd->dwData;
       break;
     }
     case (DWORD)DIPROP_RANGE: {
       LPCDIPROPRANGE	pr = (LPCDIPROPRANGE)ph;
 
-      FIXME("proprange(%ld,%ld)\n",pr->lMin,pr->lMax);
-      switch (ph->dwObj) {
-      case 0:	/* X */
-      case 4:	/* Y */
-      case 8:	/* Z */
-      case 12:  /* Rx */
-      case 16:  /* Ry */
-      case 20:  /* Rz */
-      case 24:  /* Slider 0 -> Throttle */
-      case 28:  /* Slider 1 -> Rudder */
-	  This->wantmin[ph->dwObj/4] = pr->lMin;
-	  This->wantmax[ph->dwObj/4] = pr->lMax;
-	  break;
-      default:
-	  FIXME("setting proprange %ld - %ld for dwObj %ld\n",pr->lMin,pr->lMax,ph->dwObj);
+      if (ph->dwHow == DIPH_DEVICE) {
+        int i;
+        TRACE("proprange(%ld,%ld) all\n",pr->lMin,pr->lMax);
+        for (i = 0; i < This->df->dwNumObjs; i++) {
+          This->wantmin[i] = pr->lMin;
+          This->wantmax[i] = pr->lMax;
+        }
+      } else {
+        int obj = find_property_offset(This, ph);
+        TRACE("proprange(%ld,%ld) obj=%d\n",pr->lMin,pr->lMax,obj);
+        if (obj >= 0) {
+          This->wantmin[obj] = pr->lMin;
+          This->wantmax[obj] = pr->lMax;
+        }
       }
-      break;
+      return DI_OK;
     }
     case (DWORD)DIPROP_DEADZONE: {
       LPCDIPROPDWORD	pd = (LPCDIPROPDWORD)ph;
-
-      FIXME("setting deadzone(%ld)\n",pd->dwData);
-      This->deadz[ph->dwObj/4] = pd->dwData;
-      break;
+      if (ph->dwHow == DIPH_DEVICE) {
+        int i;
+        TRACE("deadzone(%ld) all\n",pd->dwData);
+        for (i = 0; i < This->df->dwNumObjs; i++) {
+          This->deadz[i] = pd->dwData;
+        }
+      } else {
+        int obj = find_property_offset(This, ph);
+        TRACE("deadzone(%ld) obj=%d\n",pd->dwData,obj);
+        if (obj >= 0) {
+          This->deadz[obj] = pd->dwData;
+        }
+      }
+      return DI_OK;
     }
     default:
       FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
@@ -859,15 +996,24 @@ static HRESULT WINAPI JoystickAImpl_GetCapabilities(
     JoystickImpl *This = (JoystickImpl *)iface;
     int		xfd = This->joyfd;
     int		i,axes,buttons;
-    int		wasacquired = 1;
 
     TRACE("%p->(%p)\n",iface,lpDIDevCaps);
+
+    if (!lpDIDevCaps) {
+	WARN("invalid pointer\n");
+	return E_POINTER;
+    }
+
+    if (lpDIDevCaps->dwSize != sizeof(DIDEVCAPS)) {
+        WARN("invalid argument\n");
+        return DIERR_INVALIDPARAM;
+    }
+
     if (xfd==-1) {
 	/* yes, games assume we return something, even if unacquired */
 	JoystickAImpl_Acquire(iface);
-	xfd = This->joyfd;
-	wasacquired = 0;
     }
+
     lpDIDevCaps->dwFlags	= DIDC_ATTACHED;
     if (This->dinput->dwVersion >= 0x0800)
         lpDIDevCaps->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
@@ -885,15 +1031,20 @@ static HRESULT WINAPI JoystickAImpl_GetCapabilities(
     lpDIDevCaps->dwAxes = axes;
     lpDIDevCaps->dwButtons = buttons;
 
-    if (!wasacquired)
-	JoystickAImpl_Unacquire(iface);
+    if (xfd==-1) {
+      JoystickAImpl_Unacquire(iface);
+    }
 
     return DI_OK;
 }
 
 static HRESULT WINAPI JoystickAImpl_Poll(LPDIRECTINPUTDEVICE8A iface) {
     JoystickImpl *This = (JoystickImpl *)iface;
-    TRACE("(),stub!\n");
+    TRACE("(%p)\n",This);
+
+    if (This->joyfd==-1) {
+      return DIERR_NOTACQUIRED;
+    }
 
     joy_polldev(This);
     return DI_OK;
