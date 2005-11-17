@@ -12,7 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ndk/ntndk.h>
+#include <ndk/halfuncs.h>
+#include <ndk/kdfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -24,7 +25,7 @@ ULONG KdComPortInUse = 0;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
   PDRIVER_OBJECT DriverObject,
   PUNICODE_STRING RegistryPath)
@@ -64,7 +65,7 @@ ExTryToAcquireFastMutex(
 
 
 VOID
-STDCALL
+NTAPI
 HalAcquireDisplayOwnership(
   PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 {
@@ -73,7 +74,7 @@ HalAcquireDisplayOwnership(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 HalAdjustResourceList(
   PCM_RESOURCE_LIST Resources)
 {
@@ -84,7 +85,7 @@ HalAdjustResourceList(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalAllProcessorsStarted(VOID)
 {
   UNIMPLEMENTED;
@@ -94,7 +95,7 @@ HalAllProcessorsStarted(VOID)
 
 
 NTSTATUS
-STDCALL
+NTAPI
 HalAllocateAdapterChannel(
   PADAPTER_OBJECT AdapterObject,
   PWAIT_CONTEXT_BLOCK WaitContextBlock,
@@ -108,7 +109,7 @@ HalAllocateAdapterChannel(
 
 
 PVOID
-STDCALL
+NTAPI
 HalAllocateCommonBuffer(
   PADAPTER_OBJECT AdapterObject,
   ULONG Length,
@@ -122,7 +123,7 @@ HalAllocateCommonBuffer(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 HalAssignSlotResources(
   PUNICODE_STRING RegistryPath,
   PUNICODE_STRING DriverClassName,
@@ -140,7 +141,7 @@ HalAssignSlotResources(
 
 
 BOOLEAN 
-STDCALL 
+NTAPI 
 HalBeginSystemInterrupt (ULONG Vector,
 			 KIRQL Irql,
 			 PKIRQL OldIrql)
@@ -152,7 +153,7 @@ HalBeginSystemInterrupt (ULONG Vector,
 
 
 VOID
-STDCALL
+NTAPI
 HalCalibratePerformanceCounter(
   ULONG Count)
 {
@@ -161,7 +162,7 @@ HalCalibratePerformanceCounter(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalDisableSystemInterrupt(
   ULONG Vector,
   KIRQL Irql)
@@ -173,7 +174,7 @@ HalDisableSystemInterrupt(
 
 
 VOID
-STDCALL
+NTAPI
 HalDisplayString(
   PCH String)
 {
@@ -182,7 +183,7 @@ HalDisplayString(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalEnableSystemInterrupt(
   ULONG Vector,
   KIRQL Irql,
@@ -195,7 +196,7 @@ HalEnableSystemInterrupt(
 
 
 VOID
-STDCALL
+NTAPI
 HalEndSystemInterrupt(
   KIRQL Irql,
   ULONG Unknown2)
@@ -205,7 +206,7 @@ HalEndSystemInterrupt(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalFlushCommonBuffer(
   ULONG Unknown1,
   ULONG Unknown2,
@@ -220,7 +221,7 @@ HalFlushCommonBuffer(
 
 
 VOID
-STDCALL
+NTAPI
 HalFreeCommonBuffer(
   PADAPTER_OBJECT AdapterObject,
   ULONG Length,
@@ -233,7 +234,7 @@ HalFreeCommonBuffer(
 
 
 PADAPTER_OBJECT
-STDCALL
+NTAPI
 HalGetAdapter(
   PDEVICE_DESCRIPTION DeviceDescription,
   PULONG NumberOfMapRegisters)
@@ -245,7 +246,7 @@ HalGetAdapter(
 
 
 ULONG
-STDCALL
+NTAPI
 HalGetBusData(
   BUS_DATA_TYPE BusDataType,
   ULONG BusNumber,
@@ -260,7 +261,7 @@ HalGetBusData(
 
 
 ULONG
-STDCALL
+NTAPI
 HalGetBusDataByOffset(
   BUS_DATA_TYPE BusDataType,
   ULONG BusNumber,
@@ -276,7 +277,7 @@ HalGetBusDataByOffset(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalGetEnvironmentVariable(
   PCH Name,
   PCH Value,
@@ -289,7 +290,7 @@ HalGetEnvironmentVariable(
 
 
 ULONG
-STDCALL
+NTAPI
 HalGetInterruptVector(
   INTERFACE_TYPE InterfaceType,
   ULONG BusNumber,
@@ -305,7 +306,7 @@ HalGetInterruptVector(
 
 
 VOID
-STDCALL
+NTAPI
 HalHandleNMI(
   ULONG Unused)
 {
@@ -314,7 +315,7 @@ HalHandleNMI(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalInitSystem(
   ULONG BootPhase,
   PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -326,7 +327,7 @@ HalInitSystem(
 
 
 VOID
-STDCALL
+NTAPI
 HalInitializeProcessor(
   ULONG ProcessorNumber,
   PVOID ProcessorStack)
@@ -336,7 +337,7 @@ HalInitializeProcessor(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalMakeBeep(
   ULONG Frequency)
 {
@@ -347,7 +348,7 @@ HalMakeBeep(
 
 
 VOID
-STDCALL
+NTAPI
 HalProcessorIdle(VOID)
 {
   UNIMPLEMENTED;
@@ -355,7 +356,7 @@ HalProcessorIdle(VOID)
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalQueryDisplayOwnership(VOID)
 {
   UNIMPLEMENTED;
@@ -365,7 +366,7 @@ HalQueryDisplayOwnership(VOID)
 
 
 VOID
-STDCALL
+NTAPI
 HalQueryDisplayParameters(
   OUT PULONG DispSizeX,
   OUT PULONG DispSizeY,
@@ -377,7 +378,7 @@ HalQueryDisplayParameters(
 
 
 VOID
-STDCALL
+NTAPI
 HalQueryRealTimeClock(
   PTIME_FIELDS Time)
 {
@@ -386,7 +387,7 @@ HalQueryRealTimeClock(
 
 
 ULONG
-STDCALL
+NTAPI
 HalReadDmaCounter(
   PADAPTER_OBJECT AdapterObject)
 {
@@ -397,14 +398,14 @@ HalReadDmaCounter(
 
 
 VOID
-STDCALL
+NTAPI
 HalReleaseDisplayOwnership(VOID)
 {
   UNIMPLEMENTED;
 }
 
 VOID
-STDCALL
+NTAPI
 HalReportResourceUsage(VOID)
 {
   UNIMPLEMENTED;
@@ -412,7 +413,7 @@ HalReportResourceUsage(VOID)
 
 
 VOID
-STDCALL
+NTAPI
 HalRequestIpi(
   ULONG Unknown)
 {
@@ -430,7 +431,7 @@ HalRequestSoftwareInterrupt(
 
 
 VOID
-STDCALL
+NTAPI
 HalReturnToFirmware(
   FIRMWARE_REENTRY Action)
 {
@@ -439,7 +440,7 @@ HalReturnToFirmware(
 
 
 ULONG
-STDCALL
+NTAPI
 HalSetBusData(
   BUS_DATA_TYPE BusDataType,
   ULONG BusNumber,
@@ -454,7 +455,7 @@ HalSetBusData(
 
 
 ULONG
-STDCALL
+NTAPI
 HalSetBusDataByOffset(
   BUS_DATA_TYPE BusDataType,
   ULONG BusNumber,
@@ -470,7 +471,7 @@ HalSetBusDataByOffset(
 
 
 VOID
-STDCALL
+NTAPI
 HalSetDisplayParameters(
   ULONG CursorPosX,
   ULONG CursorPosY)
@@ -480,7 +481,7 @@ HalSetDisplayParameters(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalSetEnvironmentVariable(
   PCH Name,
   PCH Value)
@@ -492,7 +493,7 @@ HalSetEnvironmentVariable(
 
 
 VOID
-STDCALL
+NTAPI
 HalSetRealTimeClock(
   PTIME_FIELDS Time)
 {
@@ -501,7 +502,7 @@ HalSetRealTimeClock(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalStartNextProcessor(
   ULONG Unknown1,
   ULONG Unknown2)
@@ -526,7 +527,7 @@ HalSystemVectorDispatchEntry(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalTranslateBusAddress(
   INTERFACE_TYPE InterfaceType,
   ULONG BusNumber,
@@ -541,7 +542,7 @@ HalTranslateBusAddress(
 
 
 VOID
-STDCALL
+NTAPI
 IoAssignDriveLetters(
   PLOADER_PARAMETER_BLOCK LoaderBlock,
   PSTRING NtDeviceName,
@@ -553,7 +554,7 @@ IoAssignDriveLetters(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 IoFlushAdapterBuffers(
   PADAPTER_OBJECT AdapterObject,
   PMDL Mdl,
@@ -569,7 +570,7 @@ IoFlushAdapterBuffers(
 
 
 VOID
-STDCALL
+NTAPI
 IoFreeAdapterChannel(
   PADAPTER_OBJECT AdapterObject)
 {
@@ -578,7 +579,7 @@ IoFreeAdapterChannel(
 
 
 VOID
-STDCALL
+NTAPI
 IoFreeMapRegisters(
   PADAPTER_OBJECT AdapterObject,
   PVOID MapRegisterBase,
@@ -589,7 +590,7 @@ IoFreeMapRegisters(
 
 
 PHYSICAL_ADDRESS
-STDCALL
+NTAPI
 IoMapTransfer(
   PADAPTER_OBJECT AdapterObject,
   PMDL Mdl,
@@ -609,7 +610,7 @@ IoMapTransfer(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortGetByte(
   PUCHAR  ByteRecieved)
 {
@@ -620,7 +621,7 @@ KdPortGetByte(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortGetByteEx(
   PKD_PORT_INFORMATION PortInformation,
   PUCHAR  ByteRecieved)
@@ -632,11 +633,11 @@ KdPortGetByteEx(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortInitialize(
   PKD_PORT_INFORMATION PortInformation,
-  DWORD Unknown1,
-  DWORD Unknown2)
+  ULONG Unknown1,
+  ULONG Unknown2)
 {
   UNIMPLEMENTED;
 
@@ -645,11 +646,11 @@ KdPortInitialize(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortInitializeEx(
   PKD_PORT_INFORMATION PortInformation,
-  DWORD Unknown1,
-  DWORD Unknown2)
+  ULONG Unknown1,
+  ULONG Unknown2)
 {
   UNIMPLEMENTED;
   
@@ -658,7 +659,7 @@ KdPortInitializeEx(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortPollByte(
   PUCHAR  ByteRecieved)
 {
@@ -669,7 +670,7 @@ KdPortPollByte(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortPollByteEx(
   PKD_PORT_INFORMATION PortInformation,
   PUCHAR  ByteRecieved)
@@ -681,7 +682,7 @@ KdPortPollByteEx(
 
 
 VOID
-STDCALL
+NTAPI
 KdPortPutByte(
   UCHAR ByteToSend)
 {
@@ -690,7 +691,7 @@ KdPortPutByte(
 
 
 VOID
-STDCALL
+NTAPI
 KdPortPutByteEx(
   PKD_PORT_INFORMATION PortInformation,
   UCHAR ByteToSend)
@@ -700,7 +701,7 @@ KdPortPutByteEx(
 
 
 VOID
-STDCALL
+NTAPI
 KdPortRestore(VOID)
 {
   UNIMPLEMENTED;
@@ -708,7 +709,7 @@ KdPortRestore(VOID)
 
 
 VOID
-STDCALL
+NTAPI
 KdPortSave(VOID)
 {
   UNIMPLEMENTED;
@@ -716,7 +717,7 @@ KdPortSave(VOID)
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortDisableInterrupts()
 {
   UNIMPLEMENTED;
@@ -726,7 +727,7 @@ KdPortDisableInterrupts()
 
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortEnableInterrupts()
 {
   UNIMPLEMENTED;
@@ -736,7 +737,7 @@ KdPortEnableInterrupts()
 
 #undef KeAcquireSpinLock
 VOID
-STDCALL
+NTAPI
 KeAcquireSpinLock(
   PKSPIN_LOCK SpinLock,
   PKIRQL OldIrql)
@@ -776,9 +777,8 @@ KeReleaseInStackQueuedSpinLock(
   UNIMPLEMENTED;
 }
 
-
 VOID
-STDCALL
+NTAPI
 KeFlushWriteBuffer(VOID)
 {
   UNIMPLEMENTED;
@@ -786,7 +786,7 @@ KeFlushWriteBuffer(VOID)
 
 #undef KeGetCurrentIrql
 KIRQL
-STDCALL 
+NTAPI
 KeGetCurrentIrql(VOID)
 {
   UNIMPLEMENTED;
@@ -796,7 +796,7 @@ KeGetCurrentIrql(VOID)
 
 #undef KeLowerIrql
 VOID
-STDCALL
+NTAPI
 KeLowerIrql(
   KIRQL NewIrql)
 {
@@ -805,7 +805,7 @@ KeLowerIrql(
 
 
 LARGE_INTEGER
-STDCALL
+NTAPI
 KeQueryPerformanceCounter(
   PLARGE_INTEGER PerformanceFreq)
 {
@@ -820,7 +820,7 @@ KeQueryPerformanceCounter(
 
 #undef KeRaiseIrql
 VOID
-STDCALL
+NTAPI
 KeRaiseIrql(
   KIRQL NewIrql,
   PKIRQL OldIrql)
@@ -830,7 +830,7 @@ KeRaiseIrql(
 
 
 KIRQL
-STDCALL
+NTAPI
 KeRaiseIrqlToDpcLevel(VOID)
 {
   UNIMPLEMENTED;
@@ -840,7 +840,7 @@ KeRaiseIrqlToDpcLevel(VOID)
 
 
 KIRQL
-STDCALL
+NTAPI
 KeRaiseIrqlToSynchLevel(VOID)
 {
   UNIMPLEMENTED;
@@ -850,7 +850,7 @@ KeRaiseIrqlToSynchLevel(VOID)
 
 #undef KeReleaseSpinLock
 VOID
-STDCALL
+NTAPI
 KeReleaseSpinLock(
   PKSPIN_LOCK SpinLock,
   KIRQL NewIrql)
@@ -860,7 +860,7 @@ KeReleaseSpinLock(
 
 
 VOID
-STDCALL
+NTAPI
 KeStallExecutionProcessor(
   ULONG Microseconds)
 {
@@ -910,7 +910,7 @@ KfReleaseSpinLock(
 
 
 VOID
-STDCALL
+NTAPI
 READ_PORT_BUFFER_UCHAR(
   PUCHAR Port,
   PUCHAR Buffer,
@@ -921,7 +921,7 @@ READ_PORT_BUFFER_UCHAR(
 
 
 VOID
-STDCALL
+NTAPI
 READ_PORT_BUFFER_ULONG(
   PULONG Port,
   PULONG Buffer,
@@ -932,7 +932,7 @@ READ_PORT_BUFFER_ULONG(
 
 
 VOID
-STDCALL
+NTAPI
 READ_PORT_BUFFER_USHORT(
   PUSHORT Port,
   PUSHORT Buffer,
@@ -943,7 +943,7 @@ READ_PORT_BUFFER_USHORT(
 
 
 UCHAR
-STDCALL
+NTAPI
 READ_PORT_UCHAR(
   PUCHAR Port)
 {
@@ -954,7 +954,7 @@ READ_PORT_UCHAR(
 
 
 ULONG
-STDCALL
+NTAPI
 READ_PORT_ULONG(
   PULONG Port)
 {
@@ -965,7 +965,7 @@ READ_PORT_ULONG(
 
 
 USHORT
-STDCALL
+NTAPI
 READ_PORT_USHORT(
   PUSHORT Port)
 {
@@ -976,7 +976,7 @@ READ_PORT_USHORT(
 
 
 VOID
-STDCALL
+NTAPI
 WRITE_PORT_BUFFER_UCHAR(
   PUCHAR Port,
   PUCHAR Buffer,
@@ -987,7 +987,7 @@ WRITE_PORT_BUFFER_UCHAR(
 
 
 VOID
-STDCALL
+NTAPI
 WRITE_PORT_BUFFER_USHORT(
   PUSHORT Port,
   PUSHORT Buffer,
@@ -998,7 +998,7 @@ WRITE_PORT_BUFFER_USHORT(
 
 
 VOID
-STDCALL
+NTAPI
 WRITE_PORT_BUFFER_ULONG(
   PULONG Port,
   PULONG Buffer,
@@ -1009,7 +1009,7 @@ WRITE_PORT_BUFFER_ULONG(
 
 
 VOID
-STDCALL
+NTAPI
 WRITE_PORT_UCHAR(
   PUCHAR Port,
   UCHAR Value)
@@ -1018,7 +1018,7 @@ WRITE_PORT_UCHAR(
 }
 
 VOID
-STDCALL
+NTAPI
 WRITE_PORT_ULONG(
   PULONG Port,
   ULONG Value)
@@ -1027,7 +1027,7 @@ WRITE_PORT_ULONG(
 }
 
 VOID
-STDCALL
+NTAPI
 WRITE_PORT_USHORT(
   PUSHORT Port,
   USHORT Value)
