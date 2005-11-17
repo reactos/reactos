@@ -154,7 +154,7 @@
 @ stdcall NdrByteCountPointerFree(ptr ptr ptr)
 @ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
 @ stdcall NdrByteCountPointerUnmarshall(ptr ptr ptr long)
-@ stub NdrCStdStubBuffer2_Release
+@ stdcall NdrCStdStubBuffer2_Release(ptr ptr)
 @ stdcall NdrCStdStubBuffer_Release(ptr ptr)
 @ stdcall NdrClearOutParameters(ptr ptr ptr)
 @ varargs NdrClientCall2(ptr ptr)
@@ -325,7 +325,7 @@
 @ stdcall NdrSimpleTypeUnmarshall(ptr ptr long)
 @ stub NdrStubCall2
 @ stub NdrStubCall
-@ stub NdrStubForwardingFunction
+@ stdcall NdrStubForwardingFunction(ptr ptr ptr ptr)
 @ stdcall NdrStubGetBuffer(ptr ptr ptr)
 @ stdcall NdrStubInitialize(ptr ptr ptr ptr)
 @ stub NdrStubInitializeMarshall

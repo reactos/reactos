@@ -1431,6 +1431,7 @@ unsigned char * WINAPI ComplexMarshall(PMIDL_STUB_MESSAGE pStubMsg,
       break;
     case RPC_FC_LONG:
     case RPC_FC_ULONG:
+    case RPC_FC_ENUM32:
       TRACE("long=%ld <= %p\n", *(DWORD*)pMemory, pMemory);
       memcpy(pStubMsg->Buffer, pMemory, 4);
       pStubMsg->Buffer += 4;
@@ -1492,6 +1493,7 @@ unsigned char * WINAPI ComplexUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
       break;
     case RPC_FC_LONG:
     case RPC_FC_ULONG:
+    case RPC_FC_ENUM32:
       memcpy(pMemory, pStubMsg->Buffer, 4);
       TRACE("long=%ld => %p\n", *(DWORD*)pMemory, pMemory);
       pStubMsg->Buffer += 4;
@@ -1552,6 +1554,7 @@ unsigned char * WINAPI ComplexBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
       break;
     case RPC_FC_LONG:
     case RPC_FC_ULONG:
+    case RPC_FC_ENUM32:
       pStubMsg->BufferLength += 4;
       pMemory += 4;
       break;
@@ -1605,6 +1608,7 @@ unsigned char * WINAPI ComplexFree(PMIDL_STUB_MESSAGE pStubMsg,
       break;
     case RPC_FC_LONG:
     case RPC_FC_ULONG:
+    case RPC_FC_ENUM32:
       pMemory += 4;
       break;
     case RPC_FC_POINTER:

@@ -308,3 +308,13 @@ RPC_STATUS RPC_ENTRY NdrMapCommAndFaultStatus( PMIDL_STUB_MESSAGE pStubMsg,
 
     return RPC_S_OK;
 }
+
+/************************************************************************
+ *           NdrStubForwardingFunction [RPCRT4.@]
+ */
+void __RPC_STUB NdrStubForwardingFunction( IRpcStubBuffer *This, IRpcChannelBuffer *pChannel,
+                                           PRPC_MESSAGE pMsg, DWORD *pdwStubPhase )
+{
+    FIXME("Not implemented\n");
+    return;
+}

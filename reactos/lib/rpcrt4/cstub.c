@@ -109,6 +109,13 @@ ULONG WINAPI NdrCStdStubBuffer_Release(LPRPCSTUBBUFFER iface,
   return This->RefCount;
 }
 
+ULONG WINAPI NdrCStdStubBuffer2_Release(LPRPCSTUBBUFFER iface,
+                                        LPPSFACTORYBUFFER pPSF)
+{
+    FIXME("Not implemented\n");
+    return 0;
+}
+
 HRESULT WINAPI CStdStubBuffer_Connect(LPRPCSTUBBUFFER iface,
                                      LPUNKNOWN lpUnkServer)
 {
