@@ -3293,7 +3293,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
   /* Grow bitmap if necessary */
   if (!IsNoFileHive(RegistryHive) &&
-      BitmapSize > RegistryHive->DirtyBitMap.SizeOfBitMap)
+      BitmapSize > RegistryHive->DirtyBitMap.SizeOfBitMap / 8)
     {
       PULONG BitmapBuffer;
 
@@ -3306,7 +3306,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
       RtlZeroMemory(BitmapBuffer, BitmapSize);
       RtlCopyMemory(BitmapBuffer,
 		    RegistryHive->DirtyBitMap.Buffer,
-		    RegistryHive->DirtyBitMap.SizeOfBitMap);
+		    RegistryHive->DirtyBitMap.SizeOfBitMap / 8);
       ExFreePool(RegistryHive->BitmapBuffer);
       RegistryHive->BitmapBuffer = BitmapBuffer;
       RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
