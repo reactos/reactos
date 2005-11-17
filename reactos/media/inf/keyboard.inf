@@ -36,12 +36,14 @@ AddReg = PS2_AddReg
 i8042prt.sys
 
 [PS2_Inst.NT.Services]
-AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
+;DO NOT INSTALL i8042prt driver, as long as it is not PnP-compatible
+;AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
+AddService = , 0x00000002
 AddService = kbdclass, , kbdclass_Service_Inst
 
 [i8042prt_Service_Inst]
 ServiceType   = 1
-StartType     = 1
+StartType     = 3
 ErrorControl  = 1
 ServiceBinary = %12%\i8042prt.sys
 LoadOrderGroup = Keyboard Port
