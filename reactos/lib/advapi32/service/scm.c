@@ -126,7 +126,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwLength;
     LPWSTR lpStr;
 
-    DPRINT1("ChangeServiceConfigW() called\n");
+    DPRINT("ChangeServiceConfigW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -1061,9 +1061,10 @@ StartServiceW(
     DWORD       dwNumServiceArgs,
     LPCWSTR     *lpServiceArgVectors)
 {
-    DPRINT1("StartServiceW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DPRINT1("StartServiceW is unimplemented, but returns success...\n");
+    //SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    //return FALSE;
+    return TRUE;
 }
 
 

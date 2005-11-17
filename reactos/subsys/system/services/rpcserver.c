@@ -539,6 +539,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    HKEY hServiceKey = NULL;
 
     DPRINT("ScmrChangeServiceConfigW() called\n");
     DPRINT("dwServiceType = %lu\n", dwServiceType);
@@ -581,9 +582,136 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
         return ERROR_SERVICE_MARKED_FOR_DELETE;
     }
 
-    /* FIXME: ... */
+    /* Open the service key */
+    dwError = ScmOpenServiceKey(lpService->szServiceName,
+                                KEY_WRITE,
+                                &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    /* Write service data to the registry */
+    /* Set the display name */
+    if (lpDisplayName != NULL && *lpDisplayName != 0)
+    {
+        RegSetValueExW(hServiceKey,
+                       L"DisplayName",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)lpDisplayName,
+                       (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
+    }
+
+    if (dwServiceType != SERVICE_NO_CHANGE)
+    {
+        /* Set the service type */
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"Type",
+                                 0,
+                                 REG_DWORD,
+                                 (LPBYTE)&dwServiceType,
+                                 sizeof(DWORD));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    if (dwStartType != SERVICE_NO_CHANGE)
+    {
+        /* Set the start value */
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"Start",
+                                 0,
+                                 REG_DWORD,
+                                 (LPBYTE)&dwStartType,
+                                 sizeof(DWORD));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    if (dwErrorControl != SERVICE_NO_CHANGE)
+    {
+        /* Set the error control value */
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ErrorControl",
+                                 0,
+                                 REG_DWORD,
+                                 (LPBYTE)&dwErrorControl,
+                                 sizeof(DWORD));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+#if 0
+    /* FIXME: set the new ImagePath value */
+
+    /* Set the image path */
+    if (dwServiceType & SERVICE_WIN32)
+    {
+        if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
+        {
+            dwError = RegSetValueExW(hServiceKey,
+                                     L"ImagePath",
+                                     0,
+                                     REG_EXPAND_SZ,
+                                     (LPBYTE)lpBinaryPathName,
+                                     (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+    }
+    else if (dwServiceType & SERVICE_DRIVER)
+    {
+        if (lpImagePath != NULL && *lpImagePath != 0)
+        {
+            dwError = RegSetValueExW(hServiceKey,
+                                     L"ImagePath",
+                                     0,
+                                     REG_EXPAND_SZ,
+                                     (LPBYTE)lpImagePath,
+                                     (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+    }
+#endif
+
+    /* Set the group name */
+    if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
+    {
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"Group",
+                                 0,
+                                 REG_SZ,
+                                 (LPBYTE)lpLoadOrderGroup,
+                                 (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    if (lpdwTagId != NULL)
+    {
+        /* FIXME: Write tag */
+    }
+
+    /* Write dependencies */
+    if (lpDependencies != NULL && *lpDependencies != 0)
+    {
+        dwError = ScmWriteDependencies(hServiceKey,
+                                       lpDependencies,
+                                       dwDependenciesLength);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    if (lpPassword != NULL)
+    {
+        /* FIXME: Write password */
+    }
 
     /* FIXME: Unlock database */
+
+done:
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
 
     DPRINT("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
 
@@ -694,11 +822,6 @@ ScmrCreateServiceW(handle_t BindingHandle,
         }
         wcscpy(lpService->lpDisplayName, lpDisplayName);
     }
-
-
-
-    /* FIXME: set lpLoadOrderGroup, lpDependencies etc. */
-
 
     /* Write service data to the registry */
     /* Create the service key */
