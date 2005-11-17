@@ -1,0 +1,27 @@
+EXTRADEFS = -DCOM_NO_WINDOWS_H
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = dplayx.dll
+IMPORTLIB = libdplayx.$(IMPLIBEXT)
+IMPORTS   = winmm ole32 user32 advapi32 kernel32
+EXTRALIBS = -ldxguid -luuid
+
+C_SRCS = \
+	dpclassfactory.c \
+	dplay.c \
+	dplaysp.c \
+	dplayx_global.c \
+	dplayx_main.c \
+	dplayx_messages.c \
+	dplobby.c \
+	lobbysp.c \
+	name_server.c \
+	regsvr.c
+
+RC_SRCS = version.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
