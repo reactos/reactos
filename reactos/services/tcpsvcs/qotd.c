@@ -44,10 +44,10 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     LogEvent(_T("QOTD: Opening quotes file\n"), 0, FALSE);
     if ((fp = _tfopen(Sys, "r")) == NULL)
     {
-		TCHAR temp[512];
+		TCHAR buf[256];
 
-		_stprintf(temp, _T("QOTD: Error opening quote file : %s\n"), Sys);
-        LogEvent(temp, 0, TRUE);
+		_stprintf(buf, _T("QOTD: Error opening quote file : %s\n"), Sys);
+        LogEvent(buf, 0, TRUE);
         LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
         ExitThread(-1);
     }

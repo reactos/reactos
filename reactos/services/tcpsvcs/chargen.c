@@ -17,6 +17,8 @@
 #include <tchar.h>
 #include "tcpsvcs.h"
 
+extern BOOL bShutDown;
+
 DWORD WINAPI ChargenHandler(VOID* Sock_)
 {
     DWORD RetVal = 0;
@@ -60,7 +62,7 @@ BOOL GenerateChars(SOCKET Sock)
 
     /* where we will start output from */
     loopIndex = 0;
-    while (1)
+    while (! bShutDown)
     {
         /* if the loop index is equal to the last char,
          * start the loop again from the beginning */
@@ -82,14 +84,17 @@ BOOL GenerateChars(SOCKET Sock)
         Line[LINESIZ - 2] = L'\r';
         Line[LINESIZ - 1] = L'\n';
 
-        if (!SendLine(Sock, Line))
+        if (! SendLine(Sock, Line))
             break;
 
         /* increment loop index to start printing from next char in ring */
         loopIndex++;
     }
-
-    return TRUE;
+    
+    if (bShutDown)
+        return FALSE;
+    else
+        return TRUE;
 }
 
 BOOL SendLine(SOCKET Sock, TCHAR* Line)
@@ -121,7 +126,7 @@ BOOL SendLine(SOCKET Sock, TCHAR* Line)
     }
     else
         LogEvent(_T("Chargen: unknown error\n"), 0, FALSE);
-        //WSAGetLastError()
+        // return FALSE;
 
     LogEvent(_T("Chargen: Connection closed by peer.\n"), 0, FALSE);
     return TRUE;
