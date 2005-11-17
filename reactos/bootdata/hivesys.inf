@@ -241,8 +241,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0441",0x00000000,"l_intl.n
 ;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0443",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0843",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0456",0x00000000,"l_intl.nls"
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"040c"
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"040c"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
 
 ; Supported and installed locales
 ; If you add/uncomment an entry here, please also add the appropriate Language
