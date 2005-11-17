@@ -285,6 +285,9 @@ CreateServiceA(
     LPWSTR lpDependenciesW = NULL;
     LPWSTR lpServiceStartNameW = NULL;
     LPWSTR lpPasswordW = NULL;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    LPSTR lpStr;
 
     int len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
     lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
@@ -322,8 +325,19 @@ CreateServiceA(
     }
     MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
 
-    len = MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, NULL, 0);
-    lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (lpDependencies != NULL)
+    {
+        lpStr = (LPSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = strlen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+    }
+
+    lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
     if (!lpDependenciesW)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -365,13 +379,13 @@ CreateServiceA(
 
 
 cleanup:
-    if (!lpServiceNameW) HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-    if (!lpDisplayNameW) HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-    if (!lpBinaryPathNameW) HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-    if (!lpLoadOrderGroupW) HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-    if (!lpDependenciesW) HeapFree(GetProcessHeap(), 0, lpDependenciesW);
-    if (!lpServiceStartNameW) HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
-    if (!lpPasswordW) HeapFree(GetProcessHeap(), 0, lpPasswordW);
+    HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+    HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+    HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+    HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+    HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+    HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
+    HeapFree(GetProcessHeap(), 0, lpPasswordW);
 
     return RetVal;
 }
