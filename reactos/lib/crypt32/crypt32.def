@@ -1,0 +1,36 @@
+LIBRARY CRYPT32.DLL
+EXPORTS
+
+CertAlgIdToOID@4                         @1030
+
+CertOIDToAlgId@4                         @1095
+
+CryptMemAlloc@4                          @1175
+CryptMemFree@4                           @1176
+CryptMemRealloc@8                        @1177
+
+CryptProtectData@28                      @1193
+
+CryptRegisterDefaultOIDFunction@16       @1195
+CryptSIPAddProvider@4                    @1198
+
+CryptSIPLoad@12                          @1201
+CryptSIPRemoveProvider@4                 @1203
+
+CryptSIPRetrieveSubjectGuid@12           @1205
+
+CryptUnprotectData@28                    @1221
+
+I_CryptCreateLruCache@8                  @1240
+
+I_CryptDetachTls@4                       @1242
+
+I_CryptFindLruEntryData@4                @1247
+
+I_CryptFlushLruCache@4                   @1249
+I_CryptFreeLruCache@4                    @1250
+I_CryptFreeTls@8                         @1251
+
+I_CryptGetTls@4                          @1260
+
+I_CryptSetTls@8                          @1268
