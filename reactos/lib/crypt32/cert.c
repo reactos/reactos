@@ -2652,7 +2652,7 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
         return NULL;
     }
 
-    __TRY
+    _SEH_TRY
     {
         const WINE_CONTEXT_INTERFACE *contextInterface = NULL;
         const WINE_CERT_PROP_HEADER *hdr = NULL;
@@ -2814,7 +2814,7 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
         SetLastError(STATUS_ACCESS_VIOLATION);
         context = NULL;
     }
-    __ENDTRY
+    _SEH_END
     return context;
 }
 

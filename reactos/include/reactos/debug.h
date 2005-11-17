@@ -59,9 +59,10 @@
         #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
     
     #else
-		#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+        #ifdef __GNUC__
+            #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+        #endif
         #define CHECKPOINT
-    
     #endif
 
     #define UNIMPLEMENTED \

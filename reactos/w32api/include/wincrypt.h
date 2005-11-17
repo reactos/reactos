@@ -80,6 +80,17 @@ extern "C" {
 #define ALG_SID_TLS1PRF 10
 #define ALG_SID_EXAMPLE 80
 
+/* some typedefs for function parameters */
+typedef unsigned int ALG_ID;
+typedef unsigned long HCRYPTPROV;
+typedef unsigned long HCRYPTKEY;
+typedef unsigned long HCRYPTHASH;
+typedef void *HCERTSTORE;
+typedef void *HCRYPTMSG;
+typedef void *HCERTSTOREPROV;
+typedef void *HCRYPTOIDFUNCSET;
+typedef void *HCRYPTOIDFUNCADDR;
+
 #define CALG_MD2 (ALG_CLASS_HASH|ALG_TYPE_ANY|ALG_SID_MD2)
 #define CALG_MD4 (ALG_CLASS_HASH|ALG_TYPE_ANY|ALG_SID_MD4)
 #define CALG_MD5 (ALG_CLASS_HASH|ALG_TYPE_ANY|ALG_SID_MD5)
@@ -99,6 +110,196 @@ extern "C" {
 #define CALG_DH_EPHEM (ALG_CLASS_KEY_EXCHANGE|ALG_TYPE_STREAM|ALG_TYPE_DSS|ALG_SID_DSS_DMS)
 #define CALG_DESX (ALG_CLASS_DATA_ENCRYPT|ALG_TYPE_BLOCK|ALG_SID_DESX)
 #define CALG_TLS1PRF (ALG_CLASS_DHASH|ALG_TYPE_ANY|ALG_SID_TLS1PRF)
+
+/* physical store dwFlags, also used by CertAddStoreToCollection as
+ * dwUpdateFlags
+ */
+#define CERT_PHYSICAL_STORE_ADD_ENABLE_FLAG                  0x1
+#define CERT_PHYSICAL_STORE_OPEN_DISABLE_FLAG                0x2
+#define CERT_PHYSICAL_STORE_REMOVE_OPEN_DISABLE_FLAG         0x4
+#define CERT_PHYSICAL_STORE_INSERT_COMPUTER_NAME_ENABLE_FLAG 0x8
+
+/* dwFlag values for CertEnumPhysicalStore callback */
+#define CERT_PHYSICAL_STORE_PREDEFINED_ENUM_FLAG 0x1
+
+/* predefined store names */
+#if defined(__GNUC__)
+# define CERT_PHYSICAL_STORE_DEFAULT_NAME (const WCHAR[])\
+ {'.','D','e','f','a','u','l','t','0'}
+# define CERT_PHYSICAL_STORE_GROUP_POLICY_NAME (const WCHAR[])\
+ {'.','G','r','o','u','p','P','o','l','i','c','y',0}
+# define CERT_PHYSICAL_STORE_LOCAL_MACHINE_NAME (const WCHAR[])\
+ {'.','L','o','c','a','l','M','a','c','h','i','n','e',0}
+# define CERT_PHYSICAL_STORE_DS_USER_CERTIFICATE_NAME (const WCHAR[])\
+ {'.','U','s','e','r','C','e','r','t','i','f','i','c','a','t','e',0}
+# define CERT_PHYSICAL_STORE_LOCAL_MACHINE_GROUP_POLICY_NAME (const WCHAR[])\
+ {'.','L','o','c','a','l','M','a','c','h','i','n','e','G','r','o','u','p',\
+ 'P','o','l','i','c','y',0}
+# define CERT_PHYSICAL_STORE_ENTERPRISE_NAME (const WCHAR[])\
+ {'.','E','n','t','e','r','p','r','i','s','e',0}
+# define CERT_PHYSICAL_STORE_AUTH_ROOT_NAME (const WCHAR[])\
+ {'.','A','u','t','h','R','o','o','t',0}
+#elif defined(_MSC_VER)
+# define CERT_PHYSICAL_STORE_DEFAULT_NAME \
+ L".Default"
+# define CERT_PHYSICAL_STORE_GROUP_POLICY_NAME \
+ L".GroupPolicy"
+# define CERT_PHYSICAL_STORE_LOCAL_MACHINE_NAME \
+ L".LocalMachine"
+# define CERT_PHYSICAL_STORE_DS_USER_CERTIFICATE_NAME \
+ L".UserCertificate"
+# define CERT_PHYSICAL_STORE_LOCAL_MACHINE_GROUP_POLICY_NAME \
+ L".LocalMachineGroupPolicy"
+# define CERT_PHYSICAL_STORE_ENTERPRISE_NAME \
+ L".Enterprise"
+# define CERT_PHYSICAL_STORE_AUTH_ROOT_NAME \
+ L".AuthRoot"
+#else
+static const WCHAR CERT_PHYSICAL_STORE_DEFAULT_NAME[] = 
+ {'.','D','e','f','a','u','l','t','0'};
+static const WCHAR CERT_PHYSICAL_STORE_GROUP_POLICY_NAME[] =
+ {'.','G','r','o','u','p','P','o','l','i','c','y',0};
+static const WCHAR CERT_PHYSICAL_STORE_LOCAL_MACHINE_NAME[] =
+ {'.','L','o','c','a','l','M','a','c','h','i','n','e',0};
+static const WCHAR CERT_PHYSICAL_STORE_DS_USER_CERTIFICATE_NAME[] =
+ {'.','U','s','e','r','C','e','r','t','i','f','i','c','a','t','e',0};
+static const WCHAR CERT_PHYSICAL_STORE_LOCAL_MACHINE_GROUP_POLICY_NAME[] =
+ {'.','L','o','c','a','l','M','a','c','h','i','n','e','G','r','o','u','p',
+ 'P','o','l','i','c','y',0};
+static const WCHAR CERT_PHYSICAL_STORE_ENTERPRISE_NAME[] =
+ {'.','E','n','t','e','r','p','r','i','s','e',0};
+static const WCHAR CERT_PHYSICAL_STORE_AUTH_ROOT_NAME[] =
+ {'.','A','u','t','h','R','o','o','t',0};
+#endif
+
+/* system store locations */
+#define CERT_SYSTEM_STORE_LOCATION_MASK  0x00ff0000
+#define CERT_SYSTEM_STORE_LOCATION_SHIFT 16
+
+/* system store location ids */
+/* hkcu */
+#define CERT_SYSTEM_STORE_CURRENT_USER_ID               1
+/* hklm */
+#define CERT_SYSTEM_STORE_LOCAL_MACHINE_ID              2
+/* hklm\Software\Microsoft\Cryptography\Services */
+#define CERT_SYSTEM_STORE_CURRENT_SERVICE_ID            4
+#define CERT_SYSTEM_STORE_SERVICES_ID                   5
+/* HKEY_USERS */
+#define CERT_SYSTEM_STORE_USERS_ID                      6
+/* hkcu\Software\Policies\Microsoft\SystemCertificates */
+#define CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY_ID  7
+/* hklm\Software\Policies\Microsoft\SystemCertificates */
+#define CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY_ID 8
+/* hklm\Software\Microsoft\EnterpriseCertificates */
+#define CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE_ID   9
+
+/* system store location values */
+#define CERT_SYSTEM_STORE_CURRENT_USER \
+ (CERT_SYSTEM_STORE_CURRENT_USER_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_LOCAL_MACHINE \
+ (CERT_SYSTEM_STORE_LOCAL_MACHINE_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_CURRENT_SERVICE \
+ (CERT_SYSTEM_STORE_CURRENT_SERVICE_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_SERVICES \
+ (CERT_SYSTEM_STORE_SERVICES_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_USERS \
+ (CERT_SYSTEM_STORE_USERS_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY \
+ (CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY \
+ (CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+#define CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE \
+ (CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
+
+#if defined(__GNUC__)
+#define CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH (const WCHAR[])\
+ {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t',\
+  '\\','S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s',\
+  0 }
+#define CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH (const WCHAR[])\
+ {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',\
+  'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',\
+  't','i','f','i','c','a','t','e','s',0 }
+#elif defined(_MSC_VER)
+#define CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH \
+ L"Software\\Microsoft\\SystemCertificates"
+#define CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH \
+ L"Software\\Policies\\Microsoft\\SystemCertificates"
+#else
+static const WCHAR CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH[] = 
+ {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+  'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s',0 };
+static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] = 
+ {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
+  'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',
+  't','i','f','i','c','a','t','e','s',0 };
+#endif
+
+/* flags for CertOpenStore dwFlags */
+#define CERT_STORE_NO_CRYPT_RELEASE_FLAG            0x00000001
+#define CERT_STORE_SET_LOCALIZED_NAME_FLAG          0x00000002
+#define CERT_STORE_DEFER_CLOSE_UNTIL_LAST_FREE_FLAG 0x00000004
+#define CERT_STORE_DELETE_FLAG                      0x00000010
+#define CERT_STORE_UNSAFE_PHYSICAL_FLAG             0x00000020
+#define CERT_STORE_SHARE_STORE_FLAG                 0x00000040
+#define CERT_STORE_SHARE_CONTEXT_FLAG               0x00000080
+#define CERT_STORE_MANIFOLD_FLAG                    0x00000100
+#define CERT_STORE_ENUM_ARCHIVED_FLAG               0x00000200
+#define CERT_STORE_UPDATE_KEYID_FLAG                0x00000400
+#define CERT_STORE_BACKUP_RESTORE_FLAG              0x00000800
+#define CERT_STORE_MAXIMUM_ALLOWED_FLAG             0x00001000
+#define CERT_STORE_CREATE_NEW_FLAG                  0x00002000
+#define CERT_STORE_OPEN_EXISTING_FLAG               0x00004000
+#define CERT_STORE_READONLY_FLAG                    0x00008000
+
+/* dwAddDisposition */
+#define CERT_STORE_ADD_NEW                                 1
+#define CERT_STORE_ADD_USE_EXISTING                        2
+#define CERT_STORE_ADD_REPLACE_EXISTING                    3
+#define CERT_STORE_ADD_ALWAYS                              4
+#define CERT_STORE_ADD_REPLACE_EXISTING_INHERIT_PROPERTIES 5
+#define CERT_STORE_ADD_NEWER                               6
+#define CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES            7
+
+/* cert store provider types */
+#define CERT_STORE_PROV_MSG                  ((LPCSTR)1)
+#define CERT_STORE_PROV_MEMORY               ((LPCSTR)2)
+#define CERT_STORE_PROV_FILE                 ((LPCSTR)3)
+#define CERT_STORE_PROV_REG                  ((LPCSTR)4)
+#define CERT_STORE_PROV_PKCS7                ((LPCSTR)5)
+#define CERT_STORE_PROV_SERIALIZED           ((LPCSTR)6)
+#define CERT_STORE_PROV_FILENAME_A           ((LPCSTR)7)
+#define CERT_STORE_PROV_FILENAME_W           ((LPCSTR)8)
+#define CERT_STORE_PROV_SYSTEM_A             ((LPCSTR)9)
+#define CERT_STORE_PROV_SYSTEM_W             ((LPCSTR)10)
+#define CERT_STORE_PROV_SYSTEM               CERT_STORE_PROV_SYSTEM_W
+#define CERT_STORE_PROV_COLLECTION           ((LPCSTR)11)
+#define CERT_STORE_PROV_SYSTEM_REGISTRY_A    ((LPCSTR)12)
+#define CERT_STORE_PROV_SYSTEM_REGISTRY_W    ((LPCSTR)13)
+#define CERT_STORE_PROV_SYSTEM_REGISTRY      CERT_STORE_PROV_SYSTEM_REGISTRY_W
+#define CERT_STORE_PROV_PHYSICAL_W           ((LPCSTR)14)
+#define CERT_STORE_PROV_PHYSICAL             CERT_STORE_PROV_PHYSICAL_W
+#define CERT_STORE_PROV_SMART_CARD_W         ((LPCSTR)15)
+#define CERT_STORE_PROV_SMART_CARD           CERT_STORE_PROV_SMART_CARD_W
+#define CERT_STORE_PROV_LDAP_W               ((LPCSTR)16)
+#define CERT_STORE_PROV_LDAP                 CERT_STORE_PROV_LDAP_W
+
+#define sz_CERT_STORE_PROV_MEMORY            "Memory"
+#define sz_CERT_STORE_PROV_FILENAME_W        "File"
+#define sz_CERT_STORE_PROV_FILENAME          sz_CERT_STORE_PROV_FILENAME_W
+#define sz_CERT_STORE_PROV_SYSTEM_W          "System"
+#define sz_CERT_STORE_PROV_SYSTEM            sz_CERT_STORE_PROV_SYSTEM_W
+#define sz_CERT_STORE_PROV_PKCS7             "PKCS7"
+#define sz_CERT_STORE_PROV_SERIALIZED        "Serialized"
+#define sz_CERT_STORE_PROV_COLLECTION        "Collection"
+#define sz_CERT_STORE_PROV_SYSTEM_REGISTRY_W "SystemRegistry"
+#define sz_CERT_STORE_PROV_SYSTEM_REGISTRY   sz_CERT_STORE_PROV_SYSTEM_REGISTRY_W
+#define sz_CERT_STORE_PROV_PHYSICAL_W        "Physical"
+#define sz_CERT_STORE_PROV_PHYSICAL          sz_CERT_STORE_PROV_PHYSICAL_W
+#define sz_CERT_STORE_PROV_SMART_CARD_W      "SmartCard"
+#define sz_CERT_STORE_PROV_SMART_CARD        sz_CERT_STORE_PROV_SMART_CARD_W
+#define sz_CERT_STORE_PROV_LDAP_W            "Ldap"
+#define sz_CERT_STORE_PROV_LDAP              sz_CERT_STORE_PROV_LDAP_W
 
 #define CRYPT_VERIFYCONTEXT 0xF0000000
 #define CRYPT_NEWKEYSET 8
@@ -140,6 +341,91 @@ extern "C" {
 #define CRYPT_MACHINE_DEFAULT     0x00000001
 #define CRYPT_USER_DEFAULT        0x00000002
 #define CRYPT_DELETE_DEFAULT      0x00000004
+
+/* cert system store flags */
+#define CERT_SYSTEM_STORE_MASK 0xffff0000
+#define CERT_SYSTEM_STORE_RELOCATE_FLAG 0x80000000
+
+/* CertFindChainInStore dwFindType types */
+#define CERT_CHAIN_FIND_BY_ISSUER 1
+
+/* CERT_INFO versions/flags */
+#define CERT_V1 0
+#define CERT_V2 1
+#define CERT_V3 2
+#define CERT_INFO_VERSION_FLAG                 1
+#define CERT_INFO_SERIAL_NUMBER_FLAG           2
+#define CERT_INFO_SIGNATURE_ALGORITHM_FLAG     3
+#define CERT_INFO_ISSUER_FLAG                  4
+#define CERT_INFO_NOT_BEFORE_FLAG              5
+#define CERT_INFO_NOT_AFTER_FLAG               6
+#define CERT_INFO_SUBJECT_FLAG                 7
+#define CERT_INFO_SUBJECT_PUBLIC_KEY_INFO_FLAG 8
+#define CERT_INFO_ISSUER_UNIQUE_ID_FLAG        9
+#define CERT_INFO_SUBJECT_UNIQUE_ID_FLAG       10
+#define CERT_INFO_EXTENSION_FLAG               11
+
+/* CERT_REQUEST_INFO versions */
+#define CERT_REQUEST_V1 0
+
+/* CERT_KEYGEN_REQUEST_INFO versions */
+#define CERT_KEYGEN_REQUEST_V1 0
+
+/* CRL versions */
+#define CRL_V1 0
+#define CRL_V2 1
+
+/* CTL versions */
+#define CTL_V1 0
+
+/* Certificate, CRL, CTL property IDs */
+#define CERT_KEY_PROV_HANDLE_PROP_ID               1
+#define CERT_KEY_PROV_INFO_PROP_ID                 2
+#define CERT_SHA1_HASH_PROP_ID                     3
+#define CERT_HASH_PROP_ID                          CERT_SHA1_HASH_PROP_ID
+#define CERT_MD5_HASH_PROP_ID                      4
+#define CERT_KEY_CONTEXT_PROP_ID                   5
+#define CERT_KEY_SPEC_PROP_ID                      6
+#define CERT_IE30_RESERVED_PROP_ID                 7
+#define CERT_PUBKEY_HASH_RESERVED_PROP_ID          8
+#define CERT_ENHKEY_USAGE_PROP_ID                  9
+#define CERT_CTL_USAGE_PROP_ID                     CERT_ENHKEY_USAGE_PROP_ID
+#define CERT_NEXT_UPDATE_LOCATION_PROP_ID          10
+#define CERT_FRIENDLY_NAME_PROP_ID                 11
+#define CERT_PVK_FILE_PROP_ID                      12
+#define CERT_DESCRIPTION_PROP_ID                   13
+#define CERT_ACCESS_STATE_PROP_ID                  14
+#define CERT_SIGNATURE_HASH_PROP_ID                15
+#define CERT_SMART_CARD_DATA_PROP_ID               16
+#define CERT_EFS_PROP_ID                           17
+#define CERT_FORTEZZA_DATA_PROP                    18
+#define CERT_ARCHIVED_PROP_ID                      19
+#define CERT_KEY_IDENTIFIER_PROP_ID                20
+#define CERT_AUTO_ENROLL_PROP_ID                   21
+#define CERT_PUBKEY_ALG_PARA_PROP_ID               22
+#define CERT_CROSS_CERT_DIST_POINTS_PROP_ID        23
+#define CERT_ISSUER_PUBLIC_KEY_MD5_HASH_PROP_ID    24
+#define CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID   25
+#define CERT_ENROLLMENT_PROP_ID                    26
+#define CERT_DATE_STAMP_PROP_ID                    27
+#define CERT_ISSUER_SERIAL_NUMBER_MD5_HASH_PROP_ID 28
+#define CERT_SUBJECT_NAME_MD5_HASH_PROP_ID         29
+#define CERT_EXTENDED_ERROR_INFO_PROP_ID           30
+/* 31    -- unused?
+   32    -- cert prop id
+   33    -- CRL prop id
+   34    -- CTL prop id
+   35    -- KeyId prop id
+   36-63 -- reserved
+ */
+#define CERT_RENEWAL_PROP_ID                       64
+#define CERT_ARCHIVED_KEY_HASH_PROP_ID             65
+#define CERT_AUTO_ENROLL_RETRY_PROP_ID             66
+#define CERT_AIA_URL_RETRIEVED_PROP_ID             67
+#define CERT_FIRST_RESERVED_PROP_ID                68
+#define CERT_LAST_RESERVED_PROP_ID                 0x00007fff
+#define CERT_FIRST_USER_PROP_ID                    0x00008000
+#define CERT_LAST_USER_PROP_ID                     0x0000ffff
 
 /* Algorithm IDs */
 
@@ -244,6 +530,44 @@ extern "C" {
 #define CALG_PCT1_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_PCT1_MASTER)
 #define CALG_SSL2_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL2_MASTER)
 #define CALG_TLS1_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_TLS1_MASTER)
+
+/* CRL reason codes */
+#define CRL_REASON_UNSPECIFIED            0
+#define CRL_REASON_KEY_COMPROMISE         1
+#define CRL_REASON_CA_COMPROMISE          2
+#define CRL_REASON_AFFILIATION_CHANGED    3
+#define CRL_REASON_SUPERSEDED             4
+#define CRL_REASON_CESSATION_OF_OPERATION 5
+#define CRL_REASON_CERTIFICATE_HOLD       6
+#define CRL_REASON_REMOVE_FROM_CRL        8
+
+/* CertControlStore control types */
+#define CERT_STORE_CTRL_RESYNC        1
+#define CERT_STORE_CTRL_NOTIFY_CHANGE 2
+#define CERT_STORE_CTRL_COMMIT        3
+#define CERT_STORE_CTRL_AUTO_RESYNC   4
+#define CERT_STORE_CTRL_CANCEL_NOTIFY 5
+
+#define CERT_STORE_CTRL_COMMIT_FORCE_FLAG 0x1
+#define CERT_STORE_CTRL_COMMIT_CLEAR_FLAG 0x2
+
+/* access state flags */
+#define CERT_ACCESS_STATE_WRITE_PERSIST_FLAG   0x1
+#define CERT_ACCESS_STATE_SYSTEM_STORE_FLAG    0x2
+#define CERT_ACCESS_STATE_LM_SYSTEM_STORE_FLAG 0x4
+
+/* PFN_CERT_STORE_PROV_WRITE_CERT dwFlags values */
+#define CERT_STORE_PROV_WRITE_ADD_FLAG 0x1
+
+/* CertAddSerializedElementToStore context types */
+#define CERT_STORE_CERTIFICATE_CONTEXT 1
+#define CERT_STORE_CRL_CONTEXT         2
+#define CERT_STORE_CTL_CONTEXT         3
+#define CERT_STORE_ALL_CONTEXT_FLAG    ~0U
+#define CERT_STORE_CERTIFICATE_CONTEXT_FLAG \
+                                    (1 << CERT_STORE_CERTIFICATE_CONTEXT)
+#define CERT_STORE_CRL_CONTEXT_FLAG (1 << CERT_STORE_CRL_CONTEXT)
+#define CERT_STORE_CTL_CONTEXT_FLAG (1 << CERT_STORE_CTL_CONTEXT)
 
 /* OIDs */
 #define szOID_RSA                           "1.2.840.113549"
@@ -1182,12 +1506,148 @@ typedef struct _CRYPTPROTECT_PROMPTSTRUCT{
   LPCWSTR szPrompt;
 } CRYPTPROTECT_PROMPTSTRUCT, *PCRYPTPROTECT_PROMPTSTRUCT;
 
+typedef struct _CERT_SIGNED_CONTENT_INFO {
+    CRYPT_DER_BLOB             ToBeSigned;
+    CRYPT_ALGORITHM_IDENTIFIER SignatureAlgorithm;
+    CRYPT_BIT_BLOB             Signature;
+} CERT_SIGNED_CONTENT_INFO, *PCERT_SIGNED_CONTENT_INFO;
+
+typedef struct _CERT_RDN_ATTR {
+    LPSTR               pszObjId;
+    DWORD               dwValueType;
+    CERT_RDN_VALUE_BLOB Value;
+} CERT_RDN_ATTR, *PCERT_RDN_ATTR;
+
+typedef struct _CERT_RDN {
+    DWORD          cRDNAttr;
+    PCERT_RDN_ATTR rgRDNAttr;
+} CERT_RDN, *PCERT_RDN;
+
+typedef struct _CERT_NAME_INFO {
+    DWORD     cRDN;
+    PCERT_RDN rgRDN;
+} CERT_NAME_INFO, *PCERT_NAME_INFO;
+
+typedef struct _CRYPT_ENCODE_PARA {
+    DWORD           cbSize;
+    PFN_CRYPT_ALLOC pfnAlloc;
+    PFN_CRYPT_FREE  pfnFree;
+} CRYPT_ENCODE_PARA, *PCRYPT_ENCODE_PARA;
+
+typedef struct _CERT_SYSTEM_STORE_INFO {
+    DWORD cbSize;
+} CERT_SYSTEM_STORE_INFO, *PCERT_SYSTEM_STORE_INFO;
+
+typedef struct _CERT_PHYSICAL_STORE_INFO {
+    DWORD           cbSize;
+    LPSTR           pszOpenStoreProvider;
+    DWORD           dwOpenEncodingType;
+    DWORD           dwOpenFlags;
+    CRYPT_DATA_BLOB OpenParameters;
+    DWORD           dwFlags;
+    DWORD           dwPriority;
+} CERT_PHYSICAL_STORE_INFO, *PCERT_PHYSICAL_STORE_INFO;
+
+typedef struct _CERT_STORE_PROV_INFO {
+    DWORD             cbSize;
+    DWORD             cStoreProvFunc;
+    void            **rgpvStoreProvFunc;
+    HCERTSTOREPROV    hStoreProv;
+    DWORD             dwStoreProvFlags;
+    HCRYPTOIDFUNCADDR hStoreProvFuncAddr2;
+} CERT_STORE_PROV_INFO, *PCERT_STORE_PROV_INFO;
+
+typedef BOOL (WINAPI *PFN_CERT_ENUM_SYSTEM_STORE_LOCATION)(
+ LPCWSTR pwszStoreLocation, DWORD dwFlags, void *pvReserved, void *pvArg);
+
+typedef BOOL (WINAPI *PFN_CERT_ENUM_SYSTEM_STORE)(const void *pvSystemStore,
+ DWORD dwFlags, PCERT_SYSTEM_STORE_INFO pStoreInfo, void *pvReserved,
+ void *pvArg);
+
+typedef BOOL (WINAPI *PFN_CERT_ENUM_PHYSICAL_STORE)(const void *pvSystemStore,
+ DWORD dwFlags, LPCWSTR pwszStoreName, PCERT_PHYSICAL_STORE_INFO pStoreInfo,
+ void *pvReserved, void *pvArg);
+
+/* Encode/decode object */
+typedef LPVOID (WINAPI *PFN_CRYPT_ALLOC)(size_t cbsize);
+typedef VOID   (WINAPI *PFN_CRYPT_FREE)(LPVOID pv);
+
+typedef BOOL (WINAPI *PFN_CERT_DLL_OPEN_STORE_PROV_FUNC)(
+ LPCSTR lpszStoreProvider, DWORD dwEncodingType, HCRYPTPROV hCryptProv,
+ DWORD dwFlags, const void *pvPara, HCERTSTORE hCertStore,
+ PCERT_STORE_PROV_INFO pStoreProvInfo);
+
+typedef void (WINAPI *PFN_CERT_STORE_PROV_CLOSE)(HCERTSTOREPROV hStoreProv,
+ DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_READ_CERT)(HCERTSTOREPROV hStoreProv,
+ PCCERT_CONTEXT pStoreCertContext, DWORD dwFlags,
+ PCCERT_CONTEXT *ppProvCertContext);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_WRITE_CERT)(HCERTSTOREPROV hStoreProv,
+ PCCERT_CONTEXT pCertContext, DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_DELETE_CERT)(
+ HCERTSTOREPROV hStoreProv, PCCERT_CONTEXT pCertContext, DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CERT_PROPERTY)(
+ HCERTSTOREPROV hStoreProv, PCCERT_CONTEXT pCertContext, DWORD dwPropId,
+ DWORD dwFlags, const void *pvData);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_READ_CRL)(HCERTSTOREPROV hStoreProv,
+ PCCRL_CONTEXT pStoreCrlContext, DWORD dwFlags,
+ PCCRL_CONTEXT *ppProvCrlContext);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_WRITE_CRL)(HCERTSTOREPROV hStoreProv,
+ PCCRL_CONTEXT pCrlContext, DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_DELETE_CRL)(HCERTSTOREPROV hStoreProv,
+ PCCRL_CONTEXT pCrlContext, DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CRL_PROPERTY)(
+ HCERTSTOREPROV hStoreProv, PCCRL_CONTEXT pCrlContext, DWORD dwPropId,
+ DWORD dwFlags, const void *pvData);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_READ_CTL)(HCERTSTOREPROV hStoreProv,
+ PCCTL_CONTEXT pStoreCtlContext, DWORD dwFlags,
+ PCCTL_CONTEXT *ppProvCtlContext);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_WRITE_CTL)(HCERTSTOREPROV hStoreProv,
+ PCCTL_CONTEXT pCtlContext, DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_DELETE_CTL)(
+ HCERTSTOREPROV hStoreProv, PCCTL_CONTEXT pCtlContext, DWORD dwFlags);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CTL_PROPERTY)(
+ HCERTSTOREPROV hStoreProv, PCCTL_CONTEXT pCtlContext, DWORD dwPropId,
+ DWORD dwFlags, const void *pvData);
+
+typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_CONTROL)(HCERTSTOREPROV hStoreProv,
+ DWORD dwFlags, DWORD dwCtrlType, void const *pvCtrlPara);
+
+/* subject types for CryptVerifyCertificateSignatureEx */
+#define CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB 1
+#define CRYPT_VERIFY_CERT_SIGN_SUBJECT_CERT 2
+#define CRYPT_VERIFY_CERT_SIGN_SUBJECT_CRL  3
+
+/* issuer types for CryptVerifyCertificateSignatureEx */
+#define CRYPT_VERIFY_CERT_SIGN_ISSUER_PUBKEY 1
+#define CRYPT_VERIFY_CERT_SIGN_ISSUER_CERT   2
+#define CRYPT_VERIFY_CERT_SIGN_ISSUER_CHAIN  3
+#define CRYPT_VERIFY_CERT_SIGN_ISSUER_NULL   4
 
 /* crypt32.dll functions */
 LPVOID WINAPI CryptMemAlloc(ULONG cbSize);
 LPVOID WINAPI CryptMemRealloc(LPVOID pv, ULONG cbSize);
 VOID   WINAPI CryptMemFree(LPVOID pv);
 
+PCRYPT_ATTRIBUTE WINAPI CertFindAttribute(LPCSTR pszObjId, DWORD cAttr, CRYPT_ATTRIBUTE rgAttr[]);
+PCERT_EXTENSION WINAPI CertFindExtension(LPCSTR pszObjId, DWORD cExtensions, CERT_EXTENSION rgExtensions[]);
+PCERT_RDN_ATTR WINAPI CertFindRDNAttr(LPCSTR pszObjId, PCERT_NAME_INFO pName);
+
+BOOL WINAPI CertSerializeCertificateStoreElement(PCCERT_CONTEXT pCertContext, DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+BOOL WINAPI CertSerializeCRLStoreElement(PCCRL_CONTEXT pCrlContext, DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+BOOL WINAPI CertSerializeCTLStoreElement(PCCTL_CONTEXT pCtlContext, DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
 
 BOOL WINAPI CertCloseStore(HCERTSTORE,DWORD);
 BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE,PCCERT_CONTEXT,LPFILETIME,HCERTSTORE,PCERT_CHAIN_PARA,DWORD,LPVOID,PCCERT_CHAIN_CONTEXT*);
@@ -1197,7 +1657,7 @@ DWORD WINAPI CertNameToStrA(DWORD,PCERT_NAME_BLOB,DWORD,LPSTR,DWORD);
 DWORD WINAPI CertNameToStrW(DWORD,PCERT_NAME_BLOB,DWORD,LPWSTR,DWORD);
 HCERTSTORE WINAPI CertOpenSystemStoreA(HCRYPTPROV,LPCSTR);
 HCERTSTORE WINAPI CertOpenSystemStoreW(HCRYPTPROV,LPCWSTR);
-HCERTSTORE WINAPI CertOpenStore(LPCSTR,DWORD,HCRYPTPROV,DWORD,const void*);
+HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider, DWORD dwEncodingType, HCRYPTPROV hCryptProv, DWORD dwFlags, const void *pvPara);
 PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE,DWORD,DWORD,DWORD,const void*,PCCERT_CONTEXT);
 BOOL WINAPI CertFreeCertificateContext(PCCERT_CONTEXT);
 PCCERT_CONTEXT WINAPI CertGetIssuerCertificateFromStore(HCERTSTORE,PCCERT_CONTEXT,PCCERT_CONTEXT,DWORD*);
@@ -1213,19 +1673,22 @@ BOOL WINAPI CryptDestroyKey(HCRYPTKEY);
 BOOL WINAPI CryptDuplicateHash(HCRYPTHASH,DWORD*,DWORD,HCRYPTHASH*);
 BOOL WINAPI CryptDuplicateKey(HCRYPTKEY,DWORD*,DWORD,HCRYPTKEY*);
 #endif
-
+BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore, HCERTSTORE hSiblingStore, DWORD dwUpdateFlags, DWORD dwPriority);
 BOOL WINAPI CryptExportKey (HCRYPTKEY hKey, HCRYPTKEY hExpKey, DWORD dwBlobType, DWORD dwFlags, BYTE *pbData, DWORD *pdwDataLen);
-
+LPCSTR WINAPI CertAlgIdToOID(DWORD dwAlgId);
+DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId);
 BOOL WINAPI CryptExportPublicKeyInfo(HCRYPTPROV hCryptProv, DWORD dwKeySpec, DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD *pcbInfo);
 BOOL WINAPI CryptExportPublicKeyInfoEx(HCRYPTPROV hCryptProv, DWORD dwKeySpec, DWORD dwCertEncodingType, LPSTR pszPublicKeyObjId, DWORD dwFlags, void *pvAuxInfo, PCERT_PUBLIC_KEY_INFO pInfo, DWORD *pcbInfo);
 BOOL WINAPI CryptImportPublicKeyInfo(HCRYPTPROV hCryptProv, DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, HCRYPTKEY *phKey);
 BOOL WINAPI CryptImportPublicKeyInfoEx(HCRYPTPROV hCryptProv, DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, ALG_ID aiKeyAlg, DWORD dwFlags, void *pvAuxInfo, HCRYPTKEY *phKey);
-
 BOOL WINAPI CryptProtectData( DATA_BLOB* pDataIn, LPCWSTR szDataDescr, DATA_BLOB* pOptionalEntropy, PVOID pvReserved, CRYPTPROTECT_PROMPTSTRUCT* pPromptStruct, DWORD dwFlags, DATA_BLOB* pDataOut );
 BOOL WINAPI CryptUnprotectData( DATA_BLOB* pDataIn, LPWSTR* ppszDataDescr, DATA_BLOB* pOptionalEntropy, PVOID pvReserved, CRYPTPROTECT_PROMPTSTRUCT* pPromptStruct, DWORD dwFlags, DATA_BLOB* pDataOut );
-
+BOOL WINAPI CryptVerifyCertificateSignature(HCRYPTPROV hCryptProv, DWORD dwCertEncodingType, const BYTE *pbEncoded, DWORD cbEncoded, PCERT_PUBLIC_KEY_INFO pPublicKey);
+BOOL WINAPI CryptVerifyCertificateSignatureEx(HCRYPTPROV hCryptProv, DWORD dwCertEncodingType, DWORD dwSubjectType, void *pvSubject, DWORD dwIssuerType, void *pvIssuer, DWORD dwFlags, void *pvReserved);
 BOOL WINAPI CryptSetKeyParam(HCRYPTKEY,DWORD,PBYTE,DWORD);
 BOOL WINAPI CryptGetKeyParam(HCRYPTKEY,DWORD,PBYTE,PDWORD,DWORD);
+BOOL WINAPI CryptDecodeObject(DWORD dwCertEncodingType, LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags, void *pvStructInfo, DWORD *pcbStructInfo);
+BOOL WINAPI CryptDecodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags, PCRYPT_DECODE_PARA pDecodePara, void *pvStructInfo, DWORD *pcbStructInfo);
 BOOL WINAPI CryptSetHashParam(HCRYPTHASH,DWORD,PBYTE,DWORD);
 BOOL WINAPI CryptGetHashParam(HCRYPTHASH,DWORD,PBYTE,PDWORD,DWORD);
 BOOL WINAPI CryptSetProvParam(HCRYPTPROV,DWORD,PBYTE,DWORD);
