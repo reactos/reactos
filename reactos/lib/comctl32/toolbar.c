@@ -7234,6 +7234,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_NOTIFYFORMAT:
 	    return TOOLBAR_NotifyFormat (infoPtr, wParam, lParam);
 
+	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    return TOOLBAR_Paint (hwnd, wParam);
 

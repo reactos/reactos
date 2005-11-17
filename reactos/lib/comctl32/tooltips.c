@@ -2782,6 +2782,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_NOTIFYFORMAT:
 	    return TOOLTIPS_NotifyFormat (hwnd, wParam, lParam);
 
+	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    return TOOLTIPS_Paint (hwnd, wParam, lParam);
 

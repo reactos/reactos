@@ -1395,7 +1395,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT *dis)
     if (!item) {
         item = get_item_data(infoPtr, dis->itemID);
 	if (item == (CBE_ITEMDATA *)CB_ERR) {
-	    ERR("invalid item for id %d \n", dis->itemID);
+	    ERR("invalid item for id %d\n", dis->itemID);
 	    return 0;
 	}
     }

@@ -1463,6 +1463,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         return DefWindowProcW( hwnd, message, wParam, lParam );
 
     switch(message) {
+    case WM_PRINTCLIENT:
     case WM_PAINT:
         return SYSLINK_Paint (infoPtr, (HDC)wParam);
 

@@ -899,6 +899,7 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
     case WM_TIMER:
         return ANIMATE_Timer(infoPtr);
 
+    case WM_PRINTCLIENT:
     case WM_PAINT:
         {
             /* the animation isn't playing, or has not decompressed

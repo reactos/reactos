@@ -1342,6 +1342,7 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_NOTIFYFORMAT:
 	    return STATUSBAR_NotifyFormat(infoPtr, (HWND)wParam, (INT)lParam);
 
+	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    return STATUSBAR_WMPaint (infoPtr, (HDC)wParam);
 

@@ -1581,8 +1581,7 @@ ImageList_GetImageRect (HIMAGELIST himl, INT i, LPRECT lpRect)
  *
  * Creates an image list from a bitmap, icon or cursor.
  *
- * SEE
- *     ImageList_LoadImageW ()
+ * See ImageList_LoadImageW.
  */
 
 HIMAGELIST WINAPI

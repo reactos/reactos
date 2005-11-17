@@ -3274,6 +3274,9 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
 {
     TRACKMOUSEEVENT trackinfo;
 
+    if (!(fwKeys & MK_LBUTTON))
+        infoPtr->bLButtonDown = FALSE;
+
     if (infoPtr->bLButtonDown && DragDetect(infoPtr->hwndSelf, infoPtr->ptClickPos))
     {
         LVHITTESTINFO lvHitTestInfo;
@@ -4189,7 +4192,7 @@ static HIMAGELIST LISTVIEW_CreateDragImage(LISTVIEW_INFO *infoPtr, INT iItem, LP
     HDC hdc, hdcOrig;
     HBITMAP hbmp, hOldbmp;
     HIMAGELIST dragList = 0;
-    TRACE("iItem=%d Count=%d \n", iItem, infoPtr->nItemCount);
+    TRACE("iItem=%d Count=%d\n", iItem, infoPtr->nItemCount);
 
     if (iItem < 0 || iItem >= infoPtr->nItemCount)
         return 0;
@@ -5137,7 +5140,7 @@ static HIMAGELIST LISTVIEW_GetImageList(LISTVIEW_INFO *infoPtr, INT nImageList)
  *
  * NOTE:
  *   This is the internal 'GetItem' interface -- it tries to
- *   be smart, and avoids text copies, if possible, by modifing
+ *   be smart and avoid text copies, if possible, by modifying
  *   lpLVItem->pszText to point to the text string. Please note
  *   that this is not always possible (e.g. OWNERDATA), so on
  *   entry you *must* supply valid values for pszText, and cchTextMax.
@@ -5612,6 +5615,7 @@ static BOOL LISTVIEW_GetSubItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lp
 {
     POINT Position;
     LVITEMW lvItem;
+    INT nColumn = lprc->top;
     
     if (!lprc) return FALSE;
 
@@ -5624,9 +5628,11 @@ static BOOL LISTVIEW_GetSubItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lp
 
     if (!LISTVIEW_GetItemPosition(infoPtr, nItem, &Position)) return FALSE;
 
+    if (nColumn < 0 || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns)) return FALSE;
+
     lvItem.mask = 0;
     lvItem.iItem = nItem;
-    lvItem.iSubItem = lprc->top;
+    lvItem.iSubItem = nColumn;
     
     if (lvItem.mask && !LISTVIEW_GetItemW(infoPtr, &lvItem)) return FALSE;
     switch(lprc->left)
