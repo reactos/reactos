@@ -155,6 +155,13 @@ inline static void list_init( struct list *list )
          &(elem)->field != (list); \
          (elem) = LIST_ENTRY((elem)->field.next, type, field))
 
+#define LIST_FOR_EACH_ENTRY_SAFE(cursor, cursor2, list, type, field) \
+    for ((cursor) = LIST_ENTRY((list)->next, type, field), \
+         (cursor2) = LIST_ENTRY((cursor)->field.next, type, field); \
+         &(cursor)->field != (list); \
+         (cursor) = (cursor2), \
+         (cursor2) = LIST_ENTRY((cursor)->field.next, type, field))
+
 /* macros for statically initialized lists */
 #define LIST_INIT(list)  { &(list), &(list) }
 
