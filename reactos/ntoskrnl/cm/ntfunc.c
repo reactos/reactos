@@ -1993,7 +1993,6 @@ NtSetValueKey(IN HANDLE KeyHandle,
       RtlCopyMemory(&ValueCell->DataOffset, Data, DataSize);
       ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
       ValueCell->DataType = Type;
-      RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
       CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
   else if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
@@ -2005,6 +2004,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
       RtlCopyMemory(DataCell->Data, Data, DataSize);
       ValueCell->DataSize = DataSize;
       ValueCell->DataType = Type;
+      CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
+      CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
   else
     {
