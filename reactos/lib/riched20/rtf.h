@@ -1093,8 +1093,6 @@ struct _RTF_Info {
 
     RTFFuncPtr       readHook;
 
-    RTFFuncPtr       panicProc;
-
     DWORD    dwOutputCount;
     WCHAR    OutputBuffer[0x1000];
 
@@ -1140,18 +1138,6 @@ RTFColor	*RTFGetColor (RTF_Info *, int);
 RTFStyle	*RTFGetStyle (RTF_Info *, int);
 int		RTFCharToHex ( char);
 int		RTFHexToChar ( int );
-void		RTFSetMsgProc ( RTFFuncPtr );
-void		RTFSetPanicProc ( RTF_Info *, RTFFuncPtr);
-
-/*
- * The following messing around is used to allow RTFMsg() and RTFPanic()
- * to be variable-argument functions that are declared publicly but
- * without generating prototype-mismatch errors on systems that have
- * stdarg.h.
- */
-
-void	RTFMsg (RTF_Info *, const char *fmt, ...);
-void	RTFPanic (RTF_Info *, const char *fmt, ...);
 
 void	RTFFlushOutputBuffer( RTF_Info *info );
 void	RTFSetEditStream(RTF_Info *info, ME_InStream *stream);

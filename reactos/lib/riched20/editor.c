@@ -83,7 +83,7 @@
   - EM_PASTESPECIAL
   + EM_POSFROMCHAR
   + EM_REDO 2.0
-  - EM_REQUESTRESIZE
+  + EM_REQUESTRESIZE
   + EM_REPLACESEL (proper style?) ANSI&Unicode
   - EM_SCROLL
   - EM_SCROLLCARET
@@ -153,7 +153,7 @@
   - EN_MSGFILTER
   - EN_OLEOPFAILED
   - EN_PROTECTED
-  - EN_REQUESTRESIZE
+  + EN_REQUESTRESIZE
   - EN_SAVECLIPBOARD
   + EN_SELCHANGE 
   + EN_SETFOCUS
@@ -633,6 +633,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   }
   ME_MoveCaret(editor);
   ME_SendSelChange(editor);
+  ME_SendRequestResize(editor, FALSE);
 
   return 0;
 }
@@ -820,6 +821,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->nUDArrowX = -1;
   ed->nSequence = 0;
   ed->rgbBackColor = -1;
+  ed->hbrBackground = GetSysColorBrush(COLOR_WINDOW);
   ed->bCaretAtEnd = FALSE;
   ed->nEventMask = 0;
   ed->nModifyStep = 0;
@@ -925,7 +927,8 @@ void ME_DestroyEditor(ME_TextEditor *editor)
     if (editor->pFontCache[i].hFont)
       DeleteObject(editor->pFontCache[i].hFont);
   }
-    
+  DeleteObject(editor->hbrBackground);
+
   FREE_OBJ(editor);
 }
 
@@ -1134,7 +1137,6 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_HIDESELECTION)
   UNSUPPORTED_MSG(EM_LIMITTEXT) /* also known as EM_SETLIMITTEXT */
   UNSUPPORTED_MSG(EM_PASTESPECIAL)
-  UNSUPPORTED_MSG(EM_REQUESTRESIZE)
   UNSUPPORTED_MSG(EM_SCROLL)
   UNSUPPORTED_MSG(EM_SCROLLCARET)
   UNSUPPORTED_MSG(EM_SELECTIONTYPE)
@@ -1265,10 +1267,18 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_SETBKGNDCOLOR:
   {
     LRESULT lColor = ME_GetBackColor(editor);
+    if (editor->rgbBackColor != -1)
+      DeleteObject(editor->hbrBackground);
     if (wParam)
+    {
       editor->rgbBackColor = -1;
+      editor->hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+    }
     else
+    {
       editor->rgbBackColor = lParam;
+      editor->hbrBackground = CreateSolidBrush(editor->rgbBackColor);
+    }
     if (editor->bRedraw)
     {
       InvalidateRect(hWnd, NULL, TRUE);
@@ -1792,12 +1802,9 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     {
       HDC hDC = (HDC)wParam;
       RECT rc;
-      COLORREF rgbBG = ME_GetBackColor(editor);
       if (GetUpdateRect(hWnd,&rc,TRUE))
       {
-        HBRUSH hbr = CreateSolidBrush(rgbBG);
-        FillRect(hDC, &rc, hbr);
-        DeleteObject(hbr);
+        FillRect(hDC, &rc, editor->hbrBackground);
       }
     }
     return 1;
@@ -1974,6 +1981,9 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       ME_RewrapRepaint(editor);
     return 0;
   }
+  case EM_REQUESTRESIZE:
+    ME_SendRequestResize(editor, TRUE);
+    return 0;
   case WM_SETREDRAW:
     editor->bRedraw = wParam;
     return 0;

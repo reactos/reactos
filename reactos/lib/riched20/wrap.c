@@ -448,9 +448,36 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   }
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
   editor->sizeWindow.cy = c.rcView.bottom-c.rcView.top;
+  
   editor->nTotalLength = c.pt.y;
 
   ME_DestroyContext(&c);
   ReleaseDC(hWnd, hDC);
   return bModified;
+}
+
+
+void
+ME_SendRequestResize(ME_TextEditor *editor, BOOL force)
+{
+  if (editor->nEventMask & ENM_REQUESTRESIZE)
+  {
+    RECT rc;
+
+    GetClientRect(editor->hWnd, &rc);
+
+    if (force || rc.bottom != editor->nTotalLength)
+    {
+      REQRESIZE info;
+
+      info.nmhdr.hwndFrom = editor->hWnd;
+      info.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
+      info.nmhdr.code = EN_REQUESTRESIZE;
+      info.rc = rc;
+      info.rc.bottom = editor->nTotalLength;
+    
+      SendMessageW(GetParent(editor->hWnd), WM_NOTIFY,
+                   info.nmhdr.idFrom, (LPARAM)&info);
+    }
+  }
 }
