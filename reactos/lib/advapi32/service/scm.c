@@ -258,7 +258,7 @@ ControlServiceEx(IN SC_HANDLE hService,
 /**********************************************************************
  *  CreateServiceA
  *
- * @unimplemented
+ * @implemented
  */
 SC_HANDLE
 STDCALL
@@ -277,8 +277,103 @@ CreateServiceA(
     LPCSTR      lpServiceStartName,
     LPCSTR      lpPassword)
 {
-    DPRINT1("CreateServiceA is unimplemented, but returning INVALID_HANDLE_VALUE instead of NULL\n");
-    return INVALID_HANDLE_VALUE;
+    SC_HANDLE RetVal = NULL;
+    LPWSTR lpServiceNameW = NULL;
+    LPWSTR lpDisplayNameW = NULL;
+    LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpLoadOrderGroupW = NULL;
+    LPWSTR lpDependenciesW = NULL;
+    LPWSTR lpServiceStartNameW = NULL;
+    LPWSTR lpPasswordW = NULL;
+
+    int len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
+    lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpServiceNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
+    lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpDisplayNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
+    lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpBinaryPathNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpBinaryPathNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
+    lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpLoadOrderGroupW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, NULL, 0);
+    lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpDependenciesW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
+    lpServiceStartName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpServiceStartNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, NULL, 0);
+    lpPasswordW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpPasswordW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
+
+    RetVal = CreateServiceW(hSCManager,
+                   lpServiceNameW,
+                   lpDisplayNameW,
+                   dwDesiredAccess,
+                   dwServiceType,
+                   dwStartType,
+                   dwErrorControl,
+                   lpBinaryPathNameW,
+                   lpLoadOrderGroupW,
+                   lpdwTagId,
+                   lpDependenciesW,
+                   lpServiceStartNameW,
+                   lpPasswordW);
+
+
+cleanup:
+    if (!lpServiceNameW) HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+    if (!lpDisplayNameW) HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+    if (!lpBinaryPathNameW) HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+    if (!lpLoadOrderGroupW) HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+    if (!lpDependenciesW) HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+    if (!lpServiceStartNameW) HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
+    if (!lpPasswordW) HeapFree(GetProcessHeap(), 0, lpPasswordW);
+
+    return RetVal;
 }
 
 
