@@ -2063,11 +2063,6 @@ IopActionInitChildServices(
    }
 #endif
 
-   if (DeviceNode->ServiceName.Length == 0)
-      /* We have a NULL driver for this device. We can't really do
-       * something with it, so state it is started... */
-      IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
-
    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED))

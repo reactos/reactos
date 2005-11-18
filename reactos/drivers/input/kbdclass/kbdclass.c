@@ -329,7 +329,7 @@ cleanup:
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
-	Fdo->Flags |= DO_POWER_PAGABLE;
+	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* Add entry entry to HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\[DeviceBaseName] */
@@ -385,7 +385,7 @@ ClassCallback(
 		/* A read request is waiting for input, so go straight to it */
 		/* FIXME: use SEH */
 		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
+			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->AssociatedIrp.SystemBuffer,
 			DataStart,
 			sizeof(KEYBOARD_INPUT_DATA));
 
@@ -585,7 +585,7 @@ ClassStartIo(
 
 		/* FIXME: use SEH */
 		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
+			Irp->AssociatedIrp.SystemBuffer,
 			DeviceExtension->PortData - DeviceExtension->InputCount,
 			sizeof(KEYBOARD_INPUT_DATA));
 
