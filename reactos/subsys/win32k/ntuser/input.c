@@ -413,7 +413,6 @@ KeyboardThreadMain(PVOID StartContext)
    struct _ETHREAD *FocusThread;
    extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
-
    PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
    UINT ModifierState = 0;
    USHORT LastMakeCode = 0;
@@ -486,8 +485,10 @@ KeyboardThreadMain(PVOID StartContext)
          HWND hWnd;
          int id;
 
+	 DPRINT("KeyInput @ %08x\n", &KeyInput);
+
          Status = NtReadFile (KeyboardDeviceHandle,
-                              NULL,
+			      NULL,
                               NULL,
                               NULL,
                               &Iosb,
@@ -495,6 +496,22 @@ KeyboardThreadMain(PVOID StartContext)
                               sizeof(KEYBOARD_INPUT_DATA),
                               NULL,
                               NULL);
+
+         if(Status == STATUS_ALERTED && !InputThreadsRunning)
+         {
+            break;
+         }
+         if(Status == STATUS_PENDING)
+         {
+            NtWaitForSingleObject(KeyboardDeviceHandle, FALSE, NULL);
+            Status = Iosb.Status;
+         }
+         if(!NT_SUCCESS(Status))
+         {
+            DPRINT1("Win32K: Failed to read from mouse.\n");
+            return; //(Status);
+         }
+
          DPRINT("KeyRaw: %s %04x\n",
                 (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
                 KeyInput.MakeCode );

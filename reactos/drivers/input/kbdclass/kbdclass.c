@@ -369,6 +369,8 @@ ClassCallback(
 
 	ASSERT(ClassDeviceExtension->Common.IsClassDO);
 
+	KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
+
 	DPRINT("ClassCallback()\n");
 	/* A filter driver might have consumed all the data already; I'm
 	 * not sure if they are supposed to move the packets when they
@@ -382,6 +384,8 @@ ClassCallback(
 
 		/* A read request is waiting for input, so go straight to it */
 		/* FIXME: use SEH */
+		DPRINT("Immediate Completion: %x\n", DataStart->MakeCode);
+
 		RtlCopyMemory(
 			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->AssociatedIrp.SystemBuffer,
 			DataStart,
@@ -403,8 +407,6 @@ ClassCallback(
 	/* If we have data from the port driver and a higher service to send the data to */
 	if (InputCount != 0)
 	{
-		KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
-
 		if (ClassDeviceExtension->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
 			ReadSize = ClassDeviceExtension->DriverExtension->DataQueueSize - ClassDeviceExtension->InputCount;
 		else
@@ -428,13 +430,14 @@ ClassCallback(
 		ClassDeviceExtension->PortData += ReadSize;
 		ClassDeviceExtension->InputCount += ReadSize;
 
-		KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
 		(*ConsumedCount) += ReadSize;
 	}
 	else
 	{
 		DPRINT("ClassCallBack() entered, InputCount = %lu - DOING NOTHING\n", InputCount);
 	}
+
+	KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
 
 	if (Irp != NULL)
 	{
@@ -575,11 +578,17 @@ ClassStartIo(
 
 		KeAcquireSpinLock(&DeviceExtension->SpinLock, &oldIrql);
 
+		DPRINT("Mdl: %x, UserBuffer: %x, InputCount: %d, Data: %x\n",
+		       Irp->MdlAddress,
+		       Irp->UserBuffer,
+		       DeviceExtension->InputCount,
+		       (DeviceExtension->PortData-DeviceExtension->InputCount)->MakeCode);
+
 		/* FIXME: use SEH */
 		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
-			DeviceExtension->PortData - DeviceExtension->InputCount,
-			sizeof(KEYBOARD_INPUT_DATA));
+		    Irp->AssociatedIrp.SystemBuffer,
+		    DeviceExtension->PortData - DeviceExtension->InputCount,
+		    sizeof(KEYBOARD_INPUT_DATA));
 
 		if (DeviceExtension->InputCount > 1)
 		{
