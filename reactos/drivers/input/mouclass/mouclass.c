@@ -359,6 +359,8 @@ ClassCallback(
 
 	ASSERT(ClassDeviceExtension->Common.IsClassDO);
 
+	KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
+
 	DPRINT("ClassCallback()\n");
 	/* A filter driver might have consumed all the data already; I'm
 	 * not sure if they are supposed to move the packets when they
@@ -393,8 +395,6 @@ ClassCallback(
 	/* If we have data from the port driver and a higher service to send the data to */
 	if (InputCount != 0)
 	{
-		KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
-
 		if (ClassDeviceExtension->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
 			ReadSize = ClassDeviceExtension->DriverExtension->DataQueueSize - ClassDeviceExtension->InputCount;
 		else
@@ -418,13 +418,14 @@ ClassCallback(
 		ClassDeviceExtension->PortData += ReadSize;
 		ClassDeviceExtension->InputCount += ReadSize;
 
-		KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
 		(*ConsumedCount) += ReadSize;
 	}
 	else
 	{
 		DPRINT("ClassCallBack() entered, InputCount = %lu - DOING NOTHING\n", InputCount);
 	}
+
+	KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
 
 	if (Irp != NULL)
 	{
@@ -510,7 +511,6 @@ ClassAddDevice(
 	RtlZeroMemory(DeviceExtension, sizeof(CLASS_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsClassDO = FALSE;
 	DeviceExtension->PnpState = dsStopped;
-	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
@@ -518,7 +518,10 @@ ClassAddDevice(
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
-	Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
+		Fdo->Flags |= DO_POWER_PAGABLE;
+	if (DeviceExtension->LowerDevice->Flags & DO_BUFFERED_IO)
+		Fdo->Flags |= DO_BUFFERED_IO;
 
 	if (DriverExtension->ConnectMultiplePorts)
 		Status = ConnectPortDriver(Fdo, DriverExtension->MainClassDeviceObject);
@@ -564,6 +567,11 @@ ClassStartIo(
 		KIRQL oldIrql;
 
 		KeAcquireSpinLock(&DeviceExtension->SpinLock, &oldIrql);
+
+		DPRINT("Mdl: %p, UserBuffer: %p, InputCount: %lu\n",
+			Irp->MdlAddress,
+			Irp->UserBuffer,
+			DeviceExtension->InputCount);
 
 		/* FIXME: use SEH */
 		RtlCopyMemory(

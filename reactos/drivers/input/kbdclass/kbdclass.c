@@ -329,7 +329,7 @@ cleanup:
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
-	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
+	Fdo->Flags |= DO_POWER_PAGABLE;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* Add entry entry to HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\[DeviceBaseName] */
@@ -384,10 +384,8 @@ ClassCallback(
 
 		/* A read request is waiting for input, so go straight to it */
 		/* FIXME: use SEH */
-		DPRINT("Immediate Completion: %x\n", DataStart->MakeCode);
-
 		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->AssociatedIrp.SystemBuffer,
+			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
 			DataStart,
 			sizeof(KEYBOARD_INPUT_DATA));
 
@@ -523,7 +521,6 @@ ClassAddDevice(
 	RtlZeroMemory(DeviceExtension, sizeof(CLASS_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsClassDO = FALSE;
 	DeviceExtension->PnpState = dsStopped;
-	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
@@ -531,7 +528,10 @@ ClassAddDevice(
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
-	Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
+		Fdo->Flags |= DO_POWER_PAGABLE;
+	if (DeviceExtension->LowerDevice->Flags & DO_BUFFERED_IO)
+		Fdo->Flags |= DO_BUFFERED_IO;
 
 	if (DriverExtension->ConnectMultiplePorts)
 		Status = ConnectPortDriver(Fdo, DriverExtension->MainClassDeviceObject);
@@ -578,17 +578,16 @@ ClassStartIo(
 
 		KeAcquireSpinLock(&DeviceExtension->SpinLock, &oldIrql);
 
-		DPRINT("Mdl: %x, UserBuffer: %x, InputCount: %d, Data: %x\n",
-		       Irp->MdlAddress,
-		       Irp->UserBuffer,
-		       DeviceExtension->InputCount,
-		       (DeviceExtension->PortData-DeviceExtension->InputCount)->MakeCode);
+		DPRINT("Mdl: %p, UserBuffer: %p, InputCount: %lu\n",
+			Irp->MdlAddress,
+			Irp->UserBuffer,
+			DeviceExtension->InputCount);
 
 		/* FIXME: use SEH */
 		RtlCopyMemory(
-		    Irp->AssociatedIrp.SystemBuffer,
-		    DeviceExtension->PortData - DeviceExtension->InputCount,
-		    sizeof(KEYBOARD_INPUT_DATA));
+			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
+			DeviceExtension->PortData - DeviceExtension->InputCount,
+			sizeof(KEYBOARD_INPUT_DATA));
 
 		if (DeviceExtension->InputCount > 1)
 		{
