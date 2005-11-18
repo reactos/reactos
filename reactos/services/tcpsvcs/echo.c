@@ -88,5 +88,8 @@ BOOL EchoIncomingPackets(SOCKET Sock)
     if (! bShutDown)
         LogEvent(_T("Echo: Connection closed by peer.\n"), 0, FALSE);
 
+	if (bShutDown)
+		LogEvent(_T("Echo: thread recieved shutdown signal\n"), 0, FALSE);
+
     return TRUE;
 }

@@ -30,7 +30,7 @@ DWORD WINAPI StartServer(LPVOID lpParam)
     ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
     {
-		LogEvent("Socket error when setting up listener", 0, TRUE);
+		LogEvent("Socket error when setting up listener\n", 0, TRUE);
         return 3;
     }
 
@@ -94,8 +94,6 @@ VOID AcceptConnections(SOCKET ListeningSocket,
     INT TimeOut = 2000; // 2 seconds
 
 //DebugBreak();
-    /* monitor for incomming connections */
-    FD_ZERO(&ReadFDS);
 
     /* set timeout values */
     TimeVal.tv_sec  = TimeOut / 1000;
@@ -103,45 +101,52 @@ VOID AcceptConnections(SOCKET ListeningSocket,
 
     while (! bShutDown) // (i<MAX_CLIENTS && !bShutDown)
     {
+		INT SelRet = 0;
+
+		FD_ZERO(&ReadFDS);
 		FD_SET(ListeningSocket, &ReadFDS);
-        if (select(0, &ReadFDS, NULL, NULL, &TimeVal) == SOCKET_ERROR)
+
+		SelRet = select(0, &ReadFDS, NULL, NULL, &TimeVal);
+        if (SelRet == SOCKET_ERROR)
         {
             LogEvent(_T("select failed\n"), 0, TRUE);
             return;
         }
+		else if (SelRet > 0)
+		{
+			/* don't call FD_ISSET if bShutDown flag is set */
+			if ((! bShutDown) || (FD_ISSET(ListeningSocket, &ReadFDS)))
+			{
+				Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
+				if (Sock != INVALID_SOCKET)
+				{
+					_stprintf(buf, _T("Accepted connection to %s server from %s:%d\n"),
+						Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
+					LogEvent(buf, 0, FALSE);
+					_stprintf(buf, _T("Creating new thread for %s\n"), Name);
+					LogEvent(buf, 0, FALSE);
 
-        /* don't call FD_ISSET if bShutDown flag is set */
-        if ((! bShutDown) || (FD_ISSET(ListeningSocket, &ReadFDS)))
-        {
-            Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
-            if (Sock != INVALID_SOCKET)
-            {
-                _stprintf(buf, _T("Accepted connection to %s server from %s:%d\n"),
-                    Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
-                LogEvent(buf, 0, FALSE);
-                _stprintf(buf, _T("Creating new thread for %s\n"), Name);
-                LogEvent(buf, 0, FALSE);
+					hThread = CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
 
-                hThread = CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
+					/* Check the return value for success. */
+					if (hThread == NULL)
+					{
+						_stprintf(buf, _T("Failed to start worker thread for "
+							"the %s server....\n"), Name);
+						LogEvent(buf, 0, TRUE);
+					}
 
-                /* Check the return value for success. */
-                if (hThread == NULL)
-                {
-                    _stprintf(buf, _T("Failed to start worker thread for "
-                        "the %s server....\n"), Name);
-                    LogEvent(buf, 0, TRUE);
-                }
-
-                WaitForSingleObject(hThread, INFINITE);
-                
-                CloseHandle(hThread);
-            }
-            else
-            {
-                LogEvent(_T("accept failed\n"), 0, TRUE);
-                return;
-            }
-        }
+					WaitForSingleObject(hThread, INFINITE);
+	                
+					CloseHandle(hThread);
+				}
+				else
+				{
+					LogEvent(_T("accept failed\n"), 0, TRUE);
+					return;
+				}
+			}
+		}
     }
 }
 

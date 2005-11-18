@@ -75,24 +75,25 @@ main(int argc, char *argv[])
 VOID WINAPI
 ServiceMain(DWORD argc, LPTSTR argv[])
 {
-    TCHAR LogFilePath[MAX_PATH];
+	TCHAR LogFilePath[MAX_PATH];
 
     if(! GetSystemDirectory(LogFilePath, MAX_PATH))
         return;
 
     _tcscat(LogFilePath, LogFileName);
 
-	hLogFile = fopen(LogFilePath, _T("w"));
+	hLogFile = fopen(LogFilePath, _T("a+"));
     if (hLogFile == NULL)
     {
         TCHAR buf[50];
 
-        _stprintf(buf, _T("Could not open log file: %s"), LogFilePath);
+        _stprintf(buf, _T("Could not open log file: %s\n"), LogFilePath);
         MessageBox(NULL, buf, NULL, MB_OK);
         return;
     }
 
-    LogEvent(_T("Entering ServiceMain"), 0, FALSE);
+
+    LogEvent(_T("Entering ServiceMain\n"), 0, FALSE);
 
     hServStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     hServStatus.dwCurrentState = SERVICE_START_PENDING;
@@ -107,9 +108,9 @@ ServiceMain(DWORD argc, LPTSTR argv[])
     if (hSStat == 0)
         LogEvent(_T("Failed to register service\n"), -1, TRUE);
 
-	LogEvent(_T("Control handler registered successfully"), 0, FALSE);
+	LogEvent(_T("Control handler registered successfully\n"), 0, FALSE);
 	SetServiceStatus (hSStat, &hServStatus);
-	LogEvent(_T("Service status set to SERVICE_START_PENDING"), 0, FALSE);
+	LogEvent(_T("Service status set to SERVICE_START_PENDING\n"), 0, FALSE);
 
     if (CreateServers() != 0)
     {
@@ -119,13 +120,15 @@ ServiceMain(DWORD argc, LPTSTR argv[])
         return;
     }
 
-	LogEvent(_T("Service threads shut down. Set SERVICE_STOPPED status"), 0, FALSE);
+	LogEvent(_T("Service threads shut down. Set SERVICE_STOPPED status\n"), 0, FALSE);
 	/*  We will only return here when the ServiceSpecific function
 		completes, indicating system shutdown. */
 	UpdateStatus (SERVICE_STOPPED, 0);
-	LogEvent(_T("Service status set to SERVICE_STOPPED"), 0, FALSE);
-	LogEvent(_T("Leaving ServiceMain"), 0, FALSE);
-	fclose(hLogFile);  /*  Clean up everything, in general */
+	LogEvent(_T("Service status set to SERVICE_STOPPED\n"), 0, FALSE);
+	LogEvent(_T("Leaving ServiceMain\n"), 0, FALSE);
+	
+	fclose(hLogFile);
+
 	return;
 
 }
@@ -133,18 +136,23 @@ ServiceMain(DWORD argc, LPTSTR argv[])
 VOID WINAPI
 ServerCtrlHandler(DWORD Control)
 {
+	TCHAR buf[256];
+
     switch (Control)
     {
         case SERVICE_CONTROL_SHUTDOWN: /* fall through */
         case SERVICE_CONTROL_STOP:
-            bShutDown = TRUE;
+			LogEvent(_T("stopping service\n"), 0, FALSE);
+            InterlockedExchange((LONG *)&bShutDown, TRUE);
             UpdateStatus(SERVICE_STOP_PENDING, -1);
             break;
-        case SERVICE_CONTROL_PAUSE:
-            bPause = TRUE;
+        case SERVICE_CONTROL_PAUSE: /* not yet implemented */
+			LogEvent(_T("pausing service\n"), 0, FALSE);
+            InterlockedExchange((LONG *)&bPause, TRUE);
             break;
         case SERVICE_CONTROL_CONTINUE:
-            bPause = FALSE;
+			LogEvent(_T("continuing service\n"), 0, FALSE);
+            InterlockedExchange((LONG *)&bPause, FALSE);
             break;
         case SERVICE_CONTROL_INTERROGATE:
             break;
@@ -169,7 +177,7 @@ void UpdateStatus (int NewStatus, int Check)
         hServStatus.dwCurrentState = NewStatus;
 
 	if (! SetServiceStatus (hSStat, &hServStatus))
-		LogEvent(_T("Cannot set service status"), -1, TRUE);
+		LogEvent(_T("Cannot set service status\n"), -1, TRUE);
 
 	return;
 }
@@ -180,7 +188,7 @@ CreateServers()
     DWORD dwThreadId[NUM_SERVICES];
     HANDLE hThread[NUM_SERVICES];
 	WSADATA wsaData;
-	TCHAR buf[256]; // temp for holding LogEvent text
+	TCHAR buf[256];
     INT i;
     DWORD RetVal;
 
@@ -251,6 +259,8 @@ LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg)
 	LPTSTR lpvSysMsg;
 	TCHAR MessageBuffer[512];
 
+
+
 	if (PrintErrorMsg)
     {
 		eMsgLen = FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER |
@@ -258,13 +268,13 @@ LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg)
 			ErrNum, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPTSTR)&lpvSysMsg, 0, NULL);
 
-		_stprintf(MessageBuffer, _T("\n%s %s ErrNum = %lu. ExitCode = %lu."),
+		_stprintf(MessageBuffer, _T("%s %s ErrNum = %lu. ExitCode = %lu."),
 			UserMessage, lpvSysMsg, ErrNum, ExitCode);
 		HeapFree(GetProcessHeap (), 0, lpvSysMsg);
 	}
     else
     {
-		_stprintf(MessageBuffer, _T("\n%s"), UserMessage);
+		_stprintf(MessageBuffer, _T("%s"), UserMessage);
 	}
 
 	fputs (MessageBuffer, hLogFile);
