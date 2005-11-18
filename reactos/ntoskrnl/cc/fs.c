@@ -153,7 +153,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
   {
      InitializeListHead(&FreeListHead);
-     ExAcquireFastMutex(&ViewLock);
+     CcAcquireBrokenMutex(&ViewLock);
      KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
 
      current_entry = Bcb->BcbSegmentListHead.Flink;
@@ -186,7 +186,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
      Bcb->AllocationSize = FileSizes->AllocationSize;
      Bcb->FileSize = FileSizes->FileSize;
      KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-     ExReleaseFastMutex(&ViewLock);
+     CcReleaseBrokenMutex(&ViewLock);
 
      current_entry = FreeListHead.Flink;
      while(current_entry != &FreeListHead)

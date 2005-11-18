@@ -236,7 +236,7 @@ CcUnpinRepinnedBcb (
       IoStatus->Information = 0;
       if (WriteThrough)
         {
-          ExAcquireFastMutex(&iBcb->CacheSegment->Lock);
+          CcAcquireBrokenMutex(&iBcb->CacheSegment->Lock);
           if (iBcb->CacheSegment->Dirty)
             {
               IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
@@ -245,7 +245,7 @@ CcUnpinRepinnedBcb (
             {
               IoStatus->Status = STATUS_SUCCESS;
             }
-          ExReleaseFastMutex(&iBcb->CacheSegment->Lock);
+          CcReleaseBrokenMutex(&iBcb->CacheSegment->Lock);
         }
       else
         {
