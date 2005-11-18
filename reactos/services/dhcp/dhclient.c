@@ -53,8 +53,8 @@
  * purpose.
  */
 
-#include <winsock2.h>
 #include "rosdhcp.h"
+#include <winsock2.h>
 #include "dhcpd.h"
 #include "privsep.h"
 

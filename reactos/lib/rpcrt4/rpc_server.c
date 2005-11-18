@@ -34,7 +34,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "winreg.h"
-#include "ntstatus.h"
 
 #include "rpc.h"
 #include "rpcndr.h"

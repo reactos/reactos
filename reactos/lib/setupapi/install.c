@@ -1041,6 +1041,10 @@ static BOOL GetIntField( HINF hinf, PCWSTR section_name, PCWSTR key_name, INT *v
  */
 BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname, DWORD flags, HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData, PVOID reserved1, PVOID reserved2 )
 {
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService = NULL;
+    LPDWORD GroupOrder = NULL;
+    LPQUERY_SERVICE_CONFIG ServiceConfig = NULL;
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
 
@@ -1065,16 +1069,12 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
     }
     else
     {
-        SC_HANDLE hSCManager = NULL;
-        SC_HANDLE hService = NULL;
         HKEY hGroupOrderListKey = INVALID_HANDLE_VALUE;
-        LPQUERY_SERVICE_CONFIG ServiceConfig = NULL;
         LPWSTR ServiceBinary = NULL;
         LPWSTR LoadOrderGroup = NULL;
         LPWSTR DisplayName = NULL;
         LPWSTR Description = NULL;
         LPWSTR Dependencies = NULL;
-        LPDWORD GroupOrder = NULL;
         INT ServiceType, StartType, ErrorControl;
         DWORD dwRegType;
         DWORD tagId = (DWORD)-1;

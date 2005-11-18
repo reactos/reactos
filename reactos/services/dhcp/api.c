@@ -7,9 +7,9 @@
  * PROGRAMMER:       arty
  */
 
+#include "rosdhcp.h"
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include "rosdhcp.h"
 
 static CRITICAL_SECTION ApiCriticalSection;
 

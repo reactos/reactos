@@ -33,6 +33,7 @@
 #include <stddef.h>
 
 /* PSDK/NDK */
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <fmifs/fmifs.h>
 #define NTOS_MODE_USER

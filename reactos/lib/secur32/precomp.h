@@ -16,3 +16,6 @@
 #include <lsass/lsass.h>
 
 #include <ntsecapi.h>
+#include <secext.h>
+#include <security.h>
+#include <sspi.h>

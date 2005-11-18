@@ -22,7 +22,6 @@
 #define __WINE_STACKFRAME_H
 
 #include <string.h>
-#include <winnt.h>
 #define NTOS_MODE_USER
 #include <ndk/umtypes.h>
 #include <ndk/extypes.h>

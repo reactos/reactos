@@ -34,7 +34,6 @@
 }
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(x) ((x)>=0)
-#define STATUS_SUCCESS ((NTSTATUS)0)
 #endif
 #define NT_WARNING(x) ((ULONG)(x)>>30==2)
 #define NT_ERROR(x) ((ULONG)(x)>>30==3)
