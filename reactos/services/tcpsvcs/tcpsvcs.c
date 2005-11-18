@@ -13,9 +13,8 @@
  */
 /*
  * TODO:
- * - Start tcpsvcs as a service.
- * - write debugging function and print all dbg info via that.
- * - change 'temp' to something meaningfull
+ * - fix bug when terminating chargen server
+ * - log info in the event logger (when it's implemented)
  */
 
 
