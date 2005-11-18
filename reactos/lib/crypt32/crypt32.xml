@@ -3,11 +3,14 @@
 	<include base="crypt32">.</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x501</define>
+	<library>pseh</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>wine</library>
 	<library>advapi32</library>
 	<file>main.c</file>
+	<file>encode.c</file>
+	<file>cert.c</file>
 	<file>protectdata.c</file>
 	<file>crypt32.rc</file>
 	<pch>precomp.h</pch>

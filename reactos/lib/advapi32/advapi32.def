@@ -176,7 +176,7 @@ CryptSetProviderA@8
 ;CryptSetProviderExW@16
 CryptSetProviderW@8
 CryptSignHashA@24
-;CryptSignHashW@24
+CryptSignHashW@24
 CryptVerifySignatureA@24
 CryptVerifySignatureW@24
 DecryptFileA@8

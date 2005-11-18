@@ -31,6 +31,15 @@
 
 #include "precomp.h"
 
+#define NONAMELESSUNION
+
+static _SEH_FILTER(page_fault)
+{
+    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
+        return _SEH_EXECUTE_HANDLER;
+    return _SEH_CONTINUE_SEARCH;
+}
+
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 #define WINE_CRYPTCERTSTORE_MAGIC 0x74726563
@@ -304,12 +313,14 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
  DWORD cbElement, DWORD dwContextTypeFlags, DWORD *pdwContentType);
 
 /* filter for page-fault exceptions */
+/*
 static WINE_EXCEPTION_FILTER(page_fault)
 {
     if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_EXECUTE_HANDLER;
     return EXCEPTION_CONTINUE_SEARCH;
 }
+*/
 
 static void CRYPT_InitStore(WINECRYPT_CERTSTORE *store, HCRYPTPROV hCryptProv,
  DWORD dwFlags, CertStoreType type)
@@ -330,6 +341,7 @@ static void CRYPT_InitStore(WINECRYPT_CERTSTORE *store, HCRYPTPROV hCryptProv,
  * be a PWINE_CERT_CONTEXT, and increments pCertContext's reference count.
  * Also sets the hCertStore member of the reference to store.
  */
+
 static void CRYPT_InitCertRef(PWINE_CERT_CONTEXT_REF ref,
  PWINE_CERT_CONTEXT context, HCERTSTORE store)
 {
@@ -3301,6 +3313,15 @@ BOOL WINAPI CryptVerifyCertificateSignatureEx(HCRYPTPROV hCryptProv,
     return ret;
 }
 
+BOOL WINAPI CryptEncryptMessage( PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptMessagePara,
+                                 DWORD dwCert, PCCERT_CONTEXT pccertCert[],
+                                 const BYTE* pbEncrypted, DWORD dwEncrypted,
+                                 BYTE* pbBlob, DWORD* dwEncryptedBlob)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 HCRYPTOIDFUNCSET WINAPI CryptInitOIDFunctionSet(LPCSTR pszFuncName, DWORD dwFlags)
 {
     FIXME("stub: %s %lx\n", debugstr_a(pszFuncName), dwFlags);
@@ -3313,3 +3334,42 @@ BOOL WINAPI CryptUnregisterDefaultOIDFunction(DWORD dwEncodingType,
     FIXME("stub: %lx %s %s\n", dwEncodingType, debugstr_a(pszFuncName), debugstr_w(pwszDll));
     return FALSE;
 }
+
+DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext,
+                                DWORD dwType, DWORD dwFlags,
+                                LPVOID pvType, LPWSTR pszName, 
+                                DWORD dwName)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT pCertContext, 
+                                DWORD dwType, DWORD dwFlags, 
+                                LPVOID pvType, LPSTR pszName,
+                                DWORD dwName)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD WINAPI CertNameToStrA(DWORD dwCertEncoding, 
+                            PCERT_NAME_BLOB pCertName, 
+                            DWORD dwType, LPSTR psz,
+                            DWORD dwSZ)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD WINAPI CertNameToStrW(DWORD dwCertEncoding,
+                            PCERT_NAME_BLOB pCertName,
+                            DWORD dwType, LPWSTR psz, 
+                            DWORD dwSZ)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+

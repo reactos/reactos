@@ -19,6 +19,8 @@
 #ifndef __CRYPT32_PRIVATE_H__
 #define __CRYPT32_PRIVATE_H__
 
+#define STATUS_ACCESS_VIOLATION          0xC0000005
+
 /* Returns a handle to the default crypto provider; loads it if necessary.
  * Returns NULL on failure.
  */

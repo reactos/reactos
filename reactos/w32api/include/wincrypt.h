@@ -111,6 +111,45 @@ typedef void *HCRYPTOIDFUNCADDR;
 #define CALG_DESX (ALG_CLASS_DATA_ENCRYPT|ALG_TYPE_BLOCK|ALG_SID_DESX)
 #define CALG_TLS1PRF (ALG_CLASS_DHASH|ALG_TYPE_ANY|ALG_SID_TLS1PRF)
 
+typedef struct _CERT_PRIVATE_KEY_VALIDITY {
+    FILETIME NotBefore;
+    FILETIME NotAfter;
+} CERT_PRIVATE_KEY_VALIDITY, *PCERT_PRIVATE_KEY_VALIDITY;
+
+
+/* access state flags */
+#define CERT_ACCESS_STATE_WRITE_PERSIST_FLAG   0x1
+#define CERT_ACCESS_STATE_SYSTEM_STORE_FLAG    0x2
+#define CERT_ACCESS_STATE_LM_SYSTEM_STORE_FLAG 0x4
+
+/* CERT_RDN attribute dwValueType types */
+#define CERT_RDN_TYPE_MASK 0x000000ff
+#define CERT_RDN_ANY_TYPE         0
+#define CERT_RDN_ENCODED_BLOB     1
+#define CERT_RDN_OCTET_STRING     2
+#define CERT_RDN_NUMERIC_STRING   3
+#define CERT_RDN_PRINTABLE_STRING 4
+#define CERT_RDN_TELETEX_STRING   5
+#define CERT_RDN_T61_STRING       5
+#define CERT_RDN_VIDEOTEX_STRING  6
+#define CERT_RDN_IA5_STRING       7
+#define CERT_RDN_GRAPHIC_STRING   8
+#define CERT_RDN_VISIBLE_STRING   9
+#define CERT_RDN_ISO646_STRING    9
+#define CERT_RDN_GENERAL_STRING   10
+#define CERT_RDN_UNIVERSAL_STRING 11
+#define CERT_RDN_INT4_STRING      11
+#define CERT_RDN_BMP_STRING       12
+#define CERT_RDN_UNICODE_STRING   12
+#define CERT_RDN_UTF8_STRING      13
+
+/* CERT_RDN attribute dwValueType flags */
+#define CERT_RDN_FLAGS_MASK 0xff000000
+#define CERT_RDN_ENABLE_T61_UNICODE_FLAG  0x80000000
+#define CERT_RDN_DISABLE_CHECK_TYPE_FLAG  0x4000000
+#define CERT_RDN_ENABLE_UTF8_UNICODE_FLAG 0x2000000
+#define CERT_RDN_DISABLE_IE4_UTF8_FLAG    0x0100000
+
 /* physical store dwFlags, also used by CertAddStoreToCollection as
  * dwUpdateFlags
  */
@@ -1363,6 +1402,15 @@ typedef struct _CERT_ALT_NAME_INFO {
 typedef LPVOID (WINAPI *PFN_CRYPT_ALLOC)(size_t cbsize);
 typedef VOID   (WINAPI *PFN_CRYPT_FREE)(LPVOID pv);
 
+typedef struct _CRYPT_ENCRYPT_MESSAGE_PARA {
+    DWORD cbSize;
+    DWORD dwMsgEncodingType;
+    HCRYPTPROV hCryptProv;
+    CRYPT_ALGORITHM_IDENTIFIER ContentEncryptionAlgorithm;
+    void* pvEncryptionAuxInfo;
+    DWORD dwFlags;
+    DWORD dwInnerContentType;
+} CRYPT_ENCRYPT_MESSAGE_PARA, *PCRYPT_ENCRYPT_MESSAGE_PARA;
 typedef struct _CRYPT_DECODE_PARA {
     DWORD           cbSize;
     PFN_CRYPT_ALLOC pfnAlloc;
@@ -1512,11 +1560,21 @@ typedef struct _CERT_SIGNED_CONTENT_INFO {
     CRYPT_BIT_BLOB             Signature;
 } CERT_SIGNED_CONTENT_INFO, *PCERT_SIGNED_CONTENT_INFO;
 
+typedef struct _CERT_EXTENSIONS {
+    DWORD           cExtension;
+    PCERT_EXTENSION rgExtension;
+} CERT_EXTENSIONS, *PCERT_EXTENSIONS;
+
 typedef struct _CERT_RDN_ATTR {
     LPSTR               pszObjId;
     DWORD               dwValueType;
     CERT_RDN_VALUE_BLOB Value;
 } CERT_RDN_ATTR, *PCERT_RDN_ATTR;
+
+typedef struct _CERT_NAME_VALUE {
+    DWORD               dwValueType;
+    CERT_RDN_VALUE_BLOB Value;
+} CERT_NAME_VALUE, *PCERT_NAME_VALUE;
 
 typedef struct _CERT_RDN {
     DWORD          cRDNAttr;
@@ -1556,6 +1614,22 @@ typedef struct _CERT_STORE_PROV_INFO {
     DWORD             dwStoreProvFlags;
     HCRYPTOIDFUNCADDR hStoreProvFuncAddr2;
 } CERT_STORE_PROV_INFO, *PCERT_STORE_PROV_INFO;
+
+#define CERT_ALT_NAME_ENTRY_ERR_INDEX_MASK  0xff
+#define CERT_ALT_NAME_ENTRY_ERR_INDEX_SHIFT 16
+#define CERT_ALT_NAME_VALUE_ERR_INDEX_MASK  0x0000ffff
+#define CERT_ALT_NAME_VALUE_ERR_INDEX_SHIFT 0
+#define GET_CERT_ALT_NAME_ENTRY_ERR_INDEX(x) \
+ (((x) >> CERT_ALT_NAME_ENTRY_ERR_INDEX_SHIFT) & \
+  CERT_ALT_NAME_ENTRY_ERR_INDEX_MASK)
+#define GET_CERT_ALT_NAME_VALUE_ERR_INDEX(x) \
+ ((x) & CERT_ALT_NAME_VALUE_ERR_INDEX_MASK)
+
+typedef struct _CERT_BASIC_CONSTRAINTS2_INFO {
+    BOOL  fCA;
+    BOOL  fPathLenConstraint;
+    DWORD dwPathLenConstraint;
+} CERT_BASIC_CONSTRAINTS2_INFO, *PCERT_BASIC_CONSTRAINTS2_INFO;
 
 typedef BOOL (WINAPI *PFN_CERT_ENUM_SYSTEM_STORE_LOCATION)(
  LPCWSTR pwszStoreLocation, DWORD dwFlags, void *pvReserved, void *pvArg);
@@ -1648,7 +1722,31 @@ PCERT_RDN_ATTR WINAPI CertFindRDNAttr(LPCSTR pszObjId, PCERT_NAME_INFO pName);
 BOOL WINAPI CertSerializeCertificateStoreElement(PCCERT_CONTEXT pCertContext, DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
 BOOL WINAPI CertSerializeCRLStoreElement(PCCRL_CONTEXT pCrlContext, DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
 BOOL WINAPI CertSerializeCTLStoreElement(PCCTL_CONTEXT pCtlContext, DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
-
+BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore, PCCERT_CONTEXT pCertContext, DWORD dwAddDisposition, PCCERT_CONTEXT *ppStoreContext);
+BOOL WINAPI CertAddEncodedCertificateToStore(HCERTSTORE hCertStore, DWORD dwCertEncodingType, const BYTE *pbCertEncoded, DWORD cbCertEncoded, DWORD dwAddDisposition, PCCERT_CONTEXT *ppCertContext);
+PCCERT_CONTEXT WINAPI CertCreateCertificateContext(DWORD dwCertEncodingType, const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+PCCERT_CONTEXT WINAPI CertEnumCertificatesInStore(HCERTSTORE hCertStore, PCCERT_CONTEXT pPrev);
+PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE,DWORD,DWORD,DWORD,const void*,PCCERT_CONTEXT);
+PCCTL_CONTEXT WINAPI CertEnumCTLsInStore(HCERTSTORE hCertStore, PCCTL_CONTEXT pPrev);
+PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType, const BYTE *pbCtlEncoded, DWORD cbCtlEncoded);
+PCCRL_CONTEXT WINAPI CertCreateCRLContext( DWORD dwCertEncodingType,  const BYTE* pbCrlEncoded, DWORD cbCrlEncoded);
+PCCRL_CONTEXT WINAPI CertEnumCRLsInStore(HCERTSTORE hCertStore, PCCRL_CONTEXT pPrev);
+BOOL WINAPI CryptHashCertificate(HCRYPTPROV hCryptProv, ALG_ID Algid, DWORD dwFlags, const BYTE *pbEncoded, DWORD cbEncoded, BYTE *pbComputedHash, DWORD *pcbComputedHash);
+BOOL WINAPI CertFreeCTLContext( PCCTL_CONTEXT pCtlContext );
+BOOL WINAPI CertDeleteCTLFromStore(PCCTL_CONTEXT pCtlContext);
+BOOL WINAPI CertSetCTLContextProperty(PCCTL_CONTEXT pCTLContext, DWORD dwPropId, DWORD dwFlags, const void *pvData);
+BOOL WINAPI CertGetCTLContextProperty(PCCTL_CONTEXT pCTLContext, DWORD dwPropId, void *pvData, DWORD *pcbData);
+BOOL WINAPI CertAddCTLContextToStore( HCERTSTORE hCertStore, PCCTL_CONTEXT pCtlContext, DWORD dwAddDisposition, PCCTL_CONTEXT *ppStoreContext );
+BOOL WINAPI CertFreeCRLContext( PCCRL_CONTEXT pCrlContext );
+BOOL WINAPI CertSetCRLContextProperty(PCCRL_CONTEXT pCRLContext, DWORD dwPropId, DWORD dwFlags, const void *pvData);
+BOOL WINAPI CertDeleteCRLFromStore(PCCRL_CONTEXT pCrlContext);
+BOOL WINAPI CertAddEncodedCTLToStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType, const BYTE *pbCtlEncoded, DWORD cbCtlEncoded, DWORD dwAddDisposition, PCCTL_CONTEXT *ppCtlContext);
+BOOL WINAPI CertAddEncodedCRLToStore(HCERTSTORE hCertStore, DWORD dwCertEncodingType, const BYTE *pbCrlEncoded, DWORD cbCrlEncoded, DWORD dwAddDisposition, PCCRL_CONTEXT *ppCrlContext);
+BOOL WINAPI CertDeleteCertificateFromStore(PCCERT_CONTEXT pCertContext);
+BOOL WINAPI CertSetCertificateContextProperty(PCCERT_CONTEXT pCertContext, DWORD dwPropId, DWORD dwFlags, const void *pvData);
+BOOL WINAPI CertAddCRLContextToStore( HCERTSTORE hCertStore, PCCRL_CONTEXT pCrlContext, DWORD dwAddDisposition, PCCRL_CONTEXT *ppStoreContext );
+BOOL WINAPI CertGetCRLContextProperty(PCCRL_CONTEXT pCRLContext, DWORD dwPropId, void *pvData, DWORD *pcbData);
+BOOL WINAPI CertGetCertificateContextProperty(PCCERT_CONTEXT pCertContext, DWORD dwPropId, void *pvData, DWORD *pcbData);
 BOOL WINAPI CertCloseStore(HCERTSTORE,DWORD);
 BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE,PCCERT_CONTEXT,LPFILETIME,HCERTSTORE,PCERT_CHAIN_PARA,DWORD,LPVOID,PCCERT_CHAIN_CONTEXT*);
 BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR,PCCERT_CHAIN_CONTEXT,PCERT_CHAIN_POLICY_PARA,PCERT_CHAIN_POLICY_STATUS);
@@ -1657,9 +1755,12 @@ DWORD WINAPI CertNameToStrA(DWORD,PCERT_NAME_BLOB,DWORD,LPSTR,DWORD);
 DWORD WINAPI CertNameToStrW(DWORD,PCERT_NAME_BLOB,DWORD,LPWSTR,DWORD);
 HCERTSTORE WINAPI CertOpenSystemStoreA(HCRYPTPROV,LPCSTR);
 HCERTSTORE WINAPI CertOpenSystemStoreW(HCRYPTPROV,LPCWSTR);
+DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType, DWORD dwFlags, LPVOID pvType, LPWSTR pszName, DWORD dwName);
+DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT pCertContext, DWORD dwType, DWORD dwFlags, LPVOID pvType, LPSTR pszName, DWORD dwName);
 HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider, DWORD dwEncodingType, HCRYPTPROV hCryptProv, DWORD dwFlags, const void *pvPara);
-PCCERT_CONTEXT WINAPI CertFindCertificateInStore(HCERTSTORE,DWORD,DWORD,DWORD,const void*,PCCERT_CONTEXT);
 BOOL WINAPI CertFreeCertificateContext(PCCERT_CONTEXT);
+DWORD WINAPI CertNameToStrA(DWORD dwCertEncoding, PCERT_NAME_BLOB pCertName, DWORD dwType, LPSTR psz, DWORD dwSZ);
+DWORD WINAPI CertNameToStrW(DWORD dwCertEncoding, PCERT_NAME_BLOB pCertName, DWORD dwType, LPWSTR psz, DWORD dwSZ);
 PCCERT_CONTEXT WINAPI CertGetIssuerCertificateFromStore(HCERTSTORE,PCCERT_CONTEXT,PCCERT_CONTEXT,DWORD*);
 PCCERT_CHAIN_CONTEXT WINAPI CertFindChainInStore(HCERTSTORE,DWORD,DWORD,DWORD,const void*,PCCERT_CHAIN_CONTEXT);
 BOOL WINAPI CryptAcquireContextA(HCRYPTPROV*,LPCSTR,LPCSTR,DWORD,DWORD);
@@ -1669,6 +1770,7 @@ BOOL WINAPI CryptReleaseContext(HCRYPTPROV,DWORD);
 BOOL WINAPI CryptGenKey(HCRYPTPROV,ALG_ID,DWORD,HCRYPTKEY*);
 BOOL WINAPI CryptDeriveKey(HCRYPTPROV,ALG_ID,HCRYPTHASH,DWORD,HCRYPTKEY*);
 BOOL WINAPI CryptDestroyKey(HCRYPTKEY);
+BOOL WINAPI CryptEncryptMessage( PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptMessagePara, DWORD dwCert, PCCERT_CONTEXT pccertCert[],  const BYTE* pbEncrypted, DWORD dwEncrypted, BYTE* pbBlob, DWORD* dwEncryptedBlob);
 #if (WINVER >= 0x0500)
 BOOL WINAPI CryptDuplicateHash(HCRYPTHASH,DWORD*,DWORD,HCRYPTHASH*);
 BOOL WINAPI CryptDuplicateKey(HCRYPTKEY,DWORD*,DWORD,HCRYPTKEY*);
@@ -1712,6 +1814,9 @@ BOOL WINAPI CryptSetProviderA(LPCSTR,DWORD);
 BOOL WINAPI CryptSetProviderW(LPCWSTR,DWORD);
 BOOL WINAPI CryptSetProviderExA(LPCSTR,DWORD,DWORD*,DWORD);
 BOOL WINAPI CryptSetProviderExW(LPCWSTR,DWORD,DWORD*,DWORD);
+BOOL WINAPI CryptEncodeObject(DWORD dwCertEncodingType, LPCSTR lpszStructType, const void *pvStructInfo, BYTE *pbEncoded, DWORD *pcbEncoded);
+BOOL WINAPI CryptEncodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType, const void *pvStructInfo, DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, void *pvEncoded, DWORD *pcbEncoded);
+
 #ifdef UNICODE
 #define CertNameToStr CertNameToStrW
 #define CryptAcquireContext CryptAcquireContextW

@@ -34,13 +34,20 @@
 
 #include "precomp.h"
 
+static _SEH_FILTER(page_fault)
+{
+    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
+        return _SEH_EXECUTE_HANDLER;
+    return _SEH_CONTINUE_SEARCH;
+}
+
 /* This is a bit arbitrary, but to set some limit: */
 #define MAX_ENCODED_LEN 0x02000000
 
 /* a few asn.1 tags we need */
 #define ASN_BOOL            (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x01)
 #define ASN_BITSTRING       (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x03)
-#define ASN_OCTETSTRING     (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x04)
+//#define ASN_OCTETSTRING     (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x04)
 #define ASN_ENUMERATED      (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x0a)
 #define ASN_SETOF           (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x11)
 #define ASN_NUMERICSTRING   (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x12)
@@ -160,14 +167,6 @@ static BOOL WINAPI CRYPT_AsnDecodeUnsignedIntegerInternal(
  DWORD dwCertEncodingType, LPCSTR lpszStructType, const BYTE *pbEncoded,
  DWORD cbEncoded, DWORD dwFlags, PCRYPT_DECODE_PARA pDecodePara,
  void *pvStructInfo, DWORD *pcbStructInfo);
-
-/* filter for page-fault exceptions */
-static WINE_EXCEPTION_FILTER(page_fault)
-{
-    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
-        return EXCEPTION_EXECUTE_HANDLER;
-    return EXCEPTION_CONTINUE_SEARCH;
-}
 
 static char *CRYPT_GetKeyName(DWORD dwEncodingType, LPCSTR pszFuncName,
  LPCSTR pszOID)
@@ -1491,15 +1490,15 @@ static BOOL CRYPT_AsnEncodeAltNameEntry(const CERT_ALT_NAME_ENTRY *entry,
     case CERT_ALT_NAME_RFC822_NAME:
     case CERT_ALT_NAME_DNS_NAME:
     case CERT_ALT_NAME_URL:
-        if (entry->u.pwszURL)
+        if (entry->pwszURL)
         {
             DWORD i;
 
             /* Not + 1: don't encode the NULL-terminator */
-            dataLen = lstrlenW(entry->u.pwszURL);
+            dataLen = lstrlenW(entry->pwszURL);
             for (i = 0; ret && i < dataLen; i++)
             {
-                if (entry->u.pwszURL[i] > 0x7f)
+                if (entry->pwszURL[i] > 0x7f)
                 {
                     SetLastError(CRYPT_E_INVALID_IA5_STRING);
                     ret = FALSE;
@@ -1511,7 +1510,7 @@ static BOOL CRYPT_AsnEncodeAltNameEntry(const CERT_ALT_NAME_ENTRY *entry,
             dataLen = 0;
         break;
     case CERT_ALT_NAME_IP_ADDRESS:
-        dataLen = entry->u.IPAddress.cbData;
+        dataLen = entry->IPAddress.cbData;
         break;
     case CERT_ALT_NAME_REGISTERED_ID:
         /* FIXME: encode OID */
@@ -1551,11 +1550,11 @@ static BOOL CRYPT_AsnEncodeAltNameEntry(const CERT_ALT_NAME_ENTRY *entry,
                 DWORD i;
 
                 for (i = 0; i < dataLen; i++)
-                    *pbEncoded++ = (BYTE)entry->u.pwszURL[i];
+                    *pbEncoded++ = (BYTE)entry->pwszURL[i];
                 break;
             }
             case CERT_ALT_NAME_IP_ADDRESS:
-                memcpy(pbEncoded, entry->u.IPAddress.pbData, dataLen);
+                memcpy(pbEncoded, entry->IPAddress.pbData, dataLen);
                 break;
             }
             if (ret)
@@ -4146,18 +4145,18 @@ static BOOL CRYPT_AsnDecodeAltNameEntry(const BYTE *pbEncoded, DWORD cbEncoded,
                     DWORD i;
 
                     for (i = 0; i < dataLen; i++)
-                        entry->u.pwszURL[i] =
+                        entry->pwszURL[i] =
                          (WCHAR)pbEncoded[1 + lenBytes + i];
-                    entry->u.pwszURL[i] = 0;
+                    entry->pwszURL[i] = 0;
                     break;
                 }
                 case 7: /* iPAddress */
                     /* The next data pointer is in the pwszURL spot, that is,
                      * the first 4 bytes.  Need to move it to the next spot.
                      */
-                    entry->u.IPAddress.pbData = (LPBYTE)entry->u.pwszURL;
-                    entry->u.IPAddress.cbData = dataLen;
-                    memcpy(entry->u.IPAddress.pbData, pbEncoded + 1 + lenBytes,
+                    entry->IPAddress.pbData = (LPBYTE)entry->pwszURL;
+                    entry->IPAddress.cbData = dataLen;
+                    memcpy(entry->IPAddress.pbData, pbEncoded + 1 + lenBytes,
                      dataLen);
                     break;
                 }
@@ -4239,7 +4238,7 @@ static BOOL WINAPI CRYPT_AsnDecodeAltName(DWORD dwCertEncodingType,
                              i < cEntry && ptr - pbEncoded - 1 - lenBytes <
                              dataLen; i++)
                             {
-                                info->rgAltEntry[i].u.pwszURL =
+                                info->rgAltEntry[i].pwszURL =
                                  (LPWSTR)nextData;
                                 size = bytesNeeded;
                                 ret = CRYPT_AsnDecodeAltNameEntry(ptr,
