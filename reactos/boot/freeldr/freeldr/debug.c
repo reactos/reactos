@@ -19,6 +19,8 @@
 
 #include <freeldr.h>
 
+#include <debug.h>
+
 #ifdef DEBUG
 
 //#define DEBUG_ALL
@@ -64,7 +66,7 @@ BOOL	DebugStartOfLine = TRUE;
 
 VOID DebugInit(VOID)
 {
-	if (DebugPort == RS232)
+	if (DebugPort & RS232)
 	{
 		Rs232PortInitialize(ComPort, BaudRate);
 	}
@@ -227,86 +229,11 @@ VOID DebugPrintHeader(ULONG Mask)
 	}
 }
 
-static VOID DebugPrintV(char *format, int *dataptr)
-{
-	char c, *ptr, str[16];
-	int ll;
-
-	ll = 0;
-	while ((c = *(format++)))
-	{
-		if (c != '%')
-		{
-			DebugPrintChar(c);
-		}
-		else
-		{
-			if (*format == 'I' && *(format+1) == '6' && *(format+2) == '4')
-			{
-				ll = 1;
-				format += 3;
-			}
-			else
-			{
-				ll = 0;
-			}
-			switch (c = *(format++))
-			{
-			case 'd': case 'u': case 'x':
-
-				if (ll)
-				{
-					*convert_i64_to_ascii(str, c, *((unsigned long long*) dataptr)) = 0;
-					dataptr += 2;
-				}
-				else
-				{
-					*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
-				}
-
-				ptr = str;
-
-				while (*ptr)
-				{
-					DebugPrintChar(*(ptr++));
-				}
-				break;
-
-			case 'c':
-
-				DebugPrintChar((*(dataptr++))&0xff);
-				break;
-
-			case 's':
-
-				ptr = (char *)(*(dataptr++));
-
-				while ((c = *(ptr++)))
-				{
-					DebugPrintChar(c);
-				}
-				break;
-			case '%':
-				DebugPrintChar(c);
-				break;
-			default:
-				DebugPrint(DPRINT_WARNING, "\nDebugPrint() invalid format specifier - %%%c\n", c);
-				break;
-			}
-		}
-	}
-
-
-	if (DebugPort == SCREEN)
-	{
-		//getch();
-	}
-
-}
-
 VOID DebugPrint(ULONG Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
+        char Buffer[4096];
+        char *ptr = Buffer;
 
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
@@ -321,14 +248,24 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 		DebugStartOfLine = FALSE;
 	}
 
-	DebugPrintV(format, ++dataptr);
+        vsprintf(Buffer, format, (PVOID)(++dataptr));
+        while (*ptr)
+        {
+            DebugPrintChar(*ptr++);
+        }
 }
 
 VOID DebugPrint1(char *format, ...)
 {
 	int *dataptr = (int *) &format;
+        char Buffer[4096];
+        char *ptr = Buffer;
 
-	DebugPrintV(format, ++dataptr);
+        vsprintf(Buffer, format, (PVOID)(++dataptr));
+        while (*ptr)
+        {
+            DebugPrintChar(*ptr++);
+        }
 }
 
 VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)

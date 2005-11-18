@@ -26,7 +26,7 @@ BOOL Rs232PortInitialize(ULONG ComPort, ULONG BaudRate);
 BOOL Rs232PortGetByte(PUCHAR ByteRecieved);
 BOOL Rs232PortPollByte(PUCHAR ByteRecieved);
 VOID Rs232PortPutByte(UCHAR ByteToSend);
-
+BOOL Rs232PortInUse(ULONG Base);
 
 
 #endif // defined __RS232_H

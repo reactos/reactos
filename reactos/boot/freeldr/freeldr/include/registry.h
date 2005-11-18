@@ -31,7 +31,7 @@ typedef struct _REG_KEY
   ULONG ValueCount;
 
   ULONG NameSize;
-  PCHAR Name;
+  PWCHAR Name;
 
   /* default data */
   ULONG DataType;
@@ -46,7 +46,7 @@ typedef struct _REG_VALUE
 
   /* value name */
   ULONG NameSize;
-  PCHAR Name;
+  PWCHAR Name;
 
   /* value data */
   ULONG DataType;
@@ -72,47 +72,47 @@ RegInitCurrentControlSet(BOOL LastKnownGood);
 
 LONG
 RegCreateKey(FRLDRHKEY ParentKey,
-	     PCSTR KeyName,
+	     PCWSTR KeyName,
 	     PFRLDRHKEY Key);
 
 LONG
 RegDeleteKey(FRLDRHKEY Key,
-	     PCSTR Name);
+	     PCWSTR Name);
 
 LONG
 RegEnumKey(FRLDRHKEY Key,
 	   ULONG Index,
-	   PCHAR Name,
+	   PWCHAR Name,
 	   ULONG* NameSize);
 
 LONG
 RegOpenKey(FRLDRHKEY ParentKey,
-	   PCSTR KeyName,
+	   PCWSTR KeyName,
 	   PFRLDRHKEY Key);
 
 
 LONG
 RegSetValue(FRLDRHKEY Key,
-	    PCSTR ValueName,
+	    PCWSTR ValueName,
 	    ULONG Type,
 	    PCSTR Data,
 	    ULONG DataSize);
 
 LONG
 RegQueryValue(FRLDRHKEY Key,
-	      PCSTR ValueName,
+	      PCWSTR ValueName,
 	      ULONG* Type,
 	      PUCHAR Data,
 	      ULONG* DataSize);
 
 LONG
 RegDeleteValue(FRLDRHKEY Key,
-	       PCSTR ValueName);
+	       PCWSTR ValueName);
 
 LONG
 RegEnumValue(FRLDRHKEY Key,
 	     ULONG Index,
-	     PCHAR ValueName,
+	     PWCHAR ValueName,
 	     ULONG* NameSize,
 	     ULONG* Type,
 	     PUCHAR Data,
@@ -130,7 +130,7 @@ RegImportBinaryHive (PCHAR ChunkBase,
 		     ULONG ChunkSize);
 
 BOOL
-RegExportBinaryHive (PCSTR KeyName,
+RegExportBinaryHive (PCWSTR KeyName,
 		     PCHAR ChunkBase,
 		     ULONG* ChunkSize);
 

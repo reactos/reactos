@@ -105,8 +105,9 @@ static VOID
 DetectCPU(FRLDRHKEY CpuKey,
 	  FRLDRHKEY FpuKey)
 {
-  CHAR VendorIdentifier[13];
-  CHAR Identifier[64];
+  WCHAR VendorIdentifier[13];
+  CHAR tmpVendorIdentifier[13];
+  WCHAR Identifier[64];
   ULONG FeatureSet;
   FRLDRHKEY CpuInstKey;
   FRLDRHKEY FpuInstKey;
@@ -122,7 +123,7 @@ DetectCPU(FRLDRHKEY CpuKey,
 
   /* Create the CPU instance key */
   Error = RegCreateKey(CpuKey,
-		       "0",
+		       L"0",
 		       &CpuInstKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -132,7 +133,7 @@ DetectCPU(FRLDRHKEY CpuKey,
 
   /* Create the FPU instance key */
   Error = RegCreateKey(FpuKey,
-		       "0",
+		       L"0",
 		       &FpuInstKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -147,21 +148,22 @@ DetectCPU(FRLDRHKEY CpuKey,
 
       /* Get vendor identifier */
       GetCpuid(0, &eax, &ebx, &ecx, &edx);
-      VendorIdentifier[12] = 0;
-      Ptr = (ULONG*)&VendorIdentifier[0];
+      tmpVendorIdentifier[12] = 0;
+      Ptr = (ULONG*)&tmpVendorIdentifier[0];
       *Ptr = ebx;
       Ptr++;
       *Ptr = edx;
       Ptr++;
       *Ptr = ecx;
+      swprintf(VendorIdentifier, L"%s", tmpVendorIdentifier);
 
       /* Get Identifier */
       GetCpuid(1, &eax, &ebx, &ecx, &edx);
-      sprintf(Identifier,
-	      "x86 Family %u Model %u Stepping %u",
-	      (unsigned int)((eax >> 8) & 0x0F),
-	      (unsigned int)((eax >> 4) & 0x0F),
-	      (unsigned int)(eax & 0x0F));
+      swprintf(Identifier,
+	       L"x86 Family %u Model %u Stepping %u",
+	       (unsigned int)((eax >> 8) & 0x0F),
+	       (unsigned int)((eax >> 4) & 0x0F),
+	       (unsigned int)(eax & 0x0F));
       FeatureSet = edx;
       if (((eax >> 8) & 0x0F) >= 5)
         SupportTSC = TRUE;
@@ -170,9 +172,9 @@ DetectCPU(FRLDRHKEY CpuKey,
     {
       DbgPrint((DPRINT_HWDETECT, "CPUID not supported\n"));
 
-      strcpy(VendorIdentifier, "Unknown");
-      sprintf(Identifier,
-	      "x86 Family %u Model %u Stepping %u",
+      wcscpy(VendorIdentifier, L"Unknown");
+      swprintf(Identifier,
+	      L"x86 Family %u Model %u Stepping %u",
 	      (unsigned int)((eax >> 8) & 0x0F),
 	      (unsigned int)((eax >> 4) & 0x0F),
 	      (unsigned int)(eax & 0x0F));
@@ -187,7 +189,7 @@ DetectCPU(FRLDRHKEY CpuKey,
   DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
 
   Error = RegSetValue(CpuInstKey,
-		      "FeatureSet",
+		      L"FeatureSet",
 		      REG_DWORD,
 		      (PCHAR)&FeatureSet,
 		      sizeof(ULONG));
@@ -197,36 +199,36 @@ DetectCPU(FRLDRHKEY CpuKey,
     }
 
   /* Set 'Identifier' value (CPU and FPU) */
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %S\n", Identifier));
 
   Error = RegSetValue(CpuInstKey,
-		      "Identifier",
+		      L"Identifier",
 		      REG_SZ,
-		      Identifier,
-		      strlen(Identifier) + 1);
+		      (PCHAR)Identifier,
+		      (wcslen(Identifier) + 1)* sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
     }
 
   Error = RegSetValue(FpuInstKey,
-		      "Identifier",
+		      L"Identifier",
 		      REG_SZ,
-		      Identifier,
-		      strlen(Identifier) + 1);
+		      (PCHAR)Identifier,
+		      (wcslen(Identifier) + 1) * sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
     }
 
   /* Set 'VendorIdentifier' value (CPU only) */
-  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %s\n", VendorIdentifier));
+  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %S\n", VendorIdentifier));
 
   Error = RegSetValue(CpuInstKey,
-		      "VendorIdentifier",
+		      L"VendorIdentifier",
 		      REG_SZ,
-		      VendorIdentifier,
-		      strlen(VendorIdentifier) + 1);
+		      (PCHAR)VendorIdentifier,
+		      (wcslen(VendorIdentifier) + 1) * sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -242,7 +244,7 @@ DetectCPU(FRLDRHKEY CpuKey,
       CpuSpeed = GetCpuSpeed();
 
       Error = RegSetValue(CpuInstKey,
-			  "~MHz",
+			  L"~MHz",
 			  REG_DWORD,
 			  (PCHAR)&CpuSpeed,
 			  sizeof(ULONG));
@@ -259,9 +261,10 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
 		FRLDRHKEY FpuKey,
 		PMP_PROCESSOR_ENTRY CpuEntry)
 {
-  char VendorIdentifier[13];
-  char Identifier[64];
-  char Buffer[8];
+  WCHAR VendorIdentifier[13];
+  CHAR tmpVendorIdentifier[13];
+  WCHAR Identifier[64];
+  WCHAR Buffer[8];
   ULONG FeatureSet;
   FRLDRHKEY CpuInstKey;
   FRLDRHKEY FpuInstKey;
@@ -274,7 +277,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   ULONG CpuSpeed;
 
   /* Get processor instance number */
-  sprintf(Buffer, "%u", CpuEntry->LocalApicId);
+  swprintf(Buffer, L"%u", CpuEntry->LocalApicId);
 
   /* Create the CPU instance key */
   Error = RegCreateKey(CpuKey,
@@ -298,17 +301,18 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
 
   /* Get 'VendorIdentifier' */
   GetCpuid(0, &eax, &ebx, &ecx, &edx);
-  VendorIdentifier[12] = 0;
-  Ptr = (ULONG*)&VendorIdentifier[0];
+  tmpVendorIdentifier[12] = 0;
+  Ptr = (ULONG*)&tmpVendorIdentifier[0];
   *Ptr = ebx;
   Ptr++;
   *Ptr = edx;
   Ptr++;
   *Ptr = ecx;
+  swprintf(VendorIdentifier, L"%s", tmpVendorIdentifier);
 
   /* Get 'Identifier' */
-  sprintf(Identifier,
-	  "x86 Family %u Model %u Stepping %u",
+  swprintf(Identifier,
+	  L"x86 Family %u Model %u Stepping %u",
 	  (ULONG)((CpuEntry->CpuSignature >> 8) & 0x0F),
 	  (ULONG)((CpuEntry->CpuSignature >> 4) & 0x0F),
 	  (ULONG)(CpuEntry->CpuSignature & 0x0F));
@@ -331,7 +335,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
 
   Error = RegSetValue(CpuInstKey,
-		      "FeatureSet",
+		      L"FeatureSet",
 		      REG_DWORD,
 		      (PCHAR)&FeatureSet,
 		      sizeof(ULONG));
@@ -341,36 +345,36 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
     }
 
   /* Set 'Identifier' value (CPU and FPU) */
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %S\n", Identifier));
 
   Error = RegSetValue(CpuInstKey,
-		      "Identifier",
+		      L"Identifier",
 		      REG_SZ,
-		      Identifier,
-		      strlen(Identifier) + 1);
+		      (PCHAR)Identifier,
+		      (wcslen(Identifier) + 1) * sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
     }
 
   Error = RegSetValue(FpuInstKey,
-		      "Identifier",
+		      L"Identifier",
 		      REG_SZ,
-		      Identifier,
-		      strlen(Identifier) + 1);
+		      (PCHAR)Identifier,
+		      (wcslen(Identifier) + 1) * sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
     }
 
   /* Set 'VendorIdentifier' value (CPU only) */
-  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %s\n", VendorIdentifier));
+  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %S\n", VendorIdentifier));
 
   Error = RegSetValue(CpuInstKey,
-		      "VendorIdentifier",
+		      L"VendorIdentifier",
 		      REG_SZ,
-		      VendorIdentifier,
-		      strlen(VendorIdentifier) + 1);
+		      (PCHAR)VendorIdentifier,
+		      (wcslen(VendorIdentifier) + 1) * sizeof(WCHAR));
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -386,7 +390,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
       CpuSpeed = GetCpuSpeed();
 
       Error = RegSetValue(CpuInstKey,
-			  "~MHz",
+			  L"~MHz",
 			  REG_DWORD,
 			  (PCHAR)&CpuSpeed,
 			  sizeof(ULONG));
@@ -601,7 +605,7 @@ DetectCPUs(FRLDRHKEY SystemKey)
 
   /* Create the 'CentralProcessor' key */
   Error = RegCreateKey(SystemKey,
-		       "CentralProcessor",
+		       L"CentralProcessor",
 		       &CpuKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -611,7 +615,7 @@ DetectCPUs(FRLDRHKEY SystemKey)
 
   /* Create the 'FloatingPointProcessor' key */
   Error = RegCreateKey(SystemKey,
-		       "FloatingPointProcessor",
+		       L"FloatingPointProcessor",
 		       &FpuKey);
   if (Error != ERROR_SUCCESS)
     {

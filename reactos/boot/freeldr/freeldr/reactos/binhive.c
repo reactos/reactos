@@ -129,8 +129,8 @@ typedef struct _KEY_CELL
   /* Key cell identifier "kn" (0x6b6e) */
   USHORT  Id;
 
-  /* ? */
-  USHORT  Type;
+  /* Flags */
+  USHORT  Flags;
 
   /* Time of last flush */
   ULONGLONG  LastWriteTime;		/* FILETIME */
@@ -181,8 +181,8 @@ typedef struct _KEY_CELL
 
 /* KEY_CELL.Type constants */
 #define  REG_LINK_KEY_CELL_TYPE        0x10
-#define  REG_KEY_CELL_TYPE             0x20
-#define  REG_ROOT_KEY_CELL_TYPE        0x2c
+#define  REG_KEY_NAME_PACKED           0x20
+#define  REG_ROOT_KEY_CELL_TYPE        0x0c
 
 
 // hash record :
@@ -323,22 +323,34 @@ CmiCreateDefaultBinCell (PHBIN BinCell)
 
 
 static VOID
-CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCSTR KeyName)
+CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCWSTR KeyName)
 {
-  PCHAR BaseKeyName;
+  PWCHAR BaseKeyName;
   ULONG NameSize;
   ULONG CellSize;
+  ULONG i;
+  BOOL Packable = TRUE;
 
   assert (RootKeyCell);
 
-  BaseKeyName = strrchr(KeyName, '\\') + 1;
-  NameSize = strlen(BaseKeyName);
-  CellSize = ROUND_UP(sizeof(KEY_CELL) + NameSize - 1, 16);
+  BaseKeyName = wcsrchr(KeyName, L'\\') + 1;
+  NameSize = wcslen(BaseKeyName);
+  for (i = 0; i < NameSize; i++)
+    {
+      if (KeyName[i] & 0xFF00)
+        {
+          Packable = FALSE;
+          NameSize *= sizeof(WCHAR);
+          break;
+        }
+    }
+
+  CellSize = ROUND_UP(sizeof(KEY_CELL) + NameSize, 16);
 
   memset (RootKeyCell, 0, CellSize);
   RootKeyCell->CellSize = -CellSize;
   RootKeyCell->Id = REG_KEY_CELL_ID;
-  RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
+  RootKeyCell->Flags = REG_ROOT_KEY_CELL_TYPE;
   RootKeyCell->LastWriteTime = 0ULL;
   RootKeyCell->ParentKeyOffset = 0;
   RootKeyCell->NumberOfSubKeys = 0;
@@ -349,12 +361,23 @@ CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCSTR KeyName)
   RootKeyCell->ClassNameOffset = -1;
   RootKeyCell->NameSize = NameSize;
   RootKeyCell->ClassSize = 0;
-  memcpy (RootKeyCell->Name, BaseKeyName, NameSize);
+  if (Packable)
+    {
+      for(i = 0; i < NameSize; i++)
+        {
+          ((PCHAR)RootKeyCell->Name)[i] = BaseKeyName[i];
+        }
+      RootKeyCell->Flags |= REG_KEY_NAME_PACKED;
+    }
+  else
+    {
+      memcpy (RootKeyCell->Name, BaseKeyName, NameSize);
+    }
 }
 
 
 static PREGISTRY_HIVE
-CmiCreateHive (PCSTR KeyName)
+CmiCreateHive (PCWSTR KeyName)
 {
   PREGISTRY_HIVE Hive;
   PCELL_HEADER FreeCell;
@@ -886,7 +909,7 @@ CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
 	  HashBlock->Table[i].KeyOffset = NKBOffset;
 	  memcpy (&HashBlock->Table[i].HashValue,
 		  NewKeyCell->Name,
-		  4);
+		  min(NewKeyCell->NameSize, sizeof(ULONG)));
 	  ParentKeyCell->NumberOfSubKeys++;
 	  return TRUE;
 	}
@@ -925,13 +948,24 @@ static BOOL
 CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 		     PVALUE_CELL *ValueCell,
 		     BLOCK_OFFSET *ValueCellOffset,
-		     PCHAR ValueName)
+		     PWCHAR ValueName)
 {
   PVALUE_CELL NewValueCell;
   ULONG NameSize;
   BOOL Status;
+  BOOLEAN Packable = TRUE;
+  ULONG i;
 
-  NameSize = (ValueName == NULL) ? 0 : strlen (ValueName);
+  NameSize = (ValueName == NULL) ? 0 : wcslen (ValueName);
+  for (i = 0; i < NameSize; i++)
+    {
+      if (ValueName[i] & 0xFF00)
+        {
+          NameSize *= sizeof(WCHAR);
+          Packable = FALSE;
+          break;
+        }
+    }
   Status = CmiAllocateCell (Hive,
 			    sizeof(VALUE_CELL) + NameSize,
 			    (PVOID*)(PVOID)&NewValueCell,
@@ -944,12 +978,23 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 
   NewValueCell->Id = REG_VALUE_CELL_ID;
   NewValueCell->NameSize = NameSize;
+  NewValueCell->Flags = 0;
   if (NameSize > 0)
     {
-      memcpy (NewValueCell->Name,
-	      ValueName,
-	      NameSize);
-      NewValueCell->Flags = REG_VALUE_NAME_PACKED;
+      if (Packable)
+        {
+          for (i = 0; i < NameSize; i++)
+            {
+              ((PCHAR)NewValueCell->Name)[i] = (CHAR)ValueName[i];
+            }
+          NewValueCell->Flags |= REG_VALUE_NAME_PACKED;
+        }
+      else
+        {
+          memcpy (NewValueCell->Name,
+	          ValueName,
+	          NameSize);
+        }
     }
   NewValueCell->DataType = 0;
   NewValueCell->DataSize = 0;
@@ -989,19 +1034,6 @@ CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
   return TRUE;
 }
 
-
-static VOID
-memexpand (PWCHAR Dst,
-	   PCHAR Src,
-	   ULONG Length)
-{
-  ULONG i;
-
-  for (i = 0; i < Length; i++)
-    Dst[i] = (WCHAR)Src[i];
-}
-
-
 static BOOL
 CmiExportValue (PREGISTRY_HIVE Hive,
 		BLOCK_OFFSET KeyCellOffset,
@@ -1012,13 +1044,11 @@ CmiExportValue (PREGISTRY_HIVE Hive,
   BLOCK_OFFSET DataCellOffset;
   PVALUE_CELL ValueCell;
   PDATA_CELL DataCell;
-  ULONG SrcDataSize;
-  ULONG DstDataSize;
+  ULONG DataSize;
   ULONG DataType;
   PCHAR Data;
-  BOOL Expand = FALSE;
 
-  DbgPrint((DPRINT_REGISTRY, "CmiExportValue('%s') called\n",
+  DbgPrint((DPRINT_REGISTRY, "CmiExportValue('%S') called\n",
 	   (Value == NULL) ? "<default>" : (PCHAR)Value->Name));
   DbgPrint((DPRINT_REGISTRY, "DataSize %lu\n",
 	   (Value == NULL) ? Key->DataSize : Value->DataSize));
@@ -1037,47 +1067,29 @@ CmiExportValue (PREGISTRY_HIVE Hive,
   if (Value == NULL)
     {
       DataType = Key->DataType;
-      SrcDataSize = Key->DataSize;
+      DataSize = Key->DataSize;
       Data = Key->Data;
     }
   else
     {
       DataType = Value->DataType;
-      SrcDataSize = Value->DataSize;
+      DataSize = Value->DataSize;
       Data = Value->Data;
     }
 
-  DstDataSize = SrcDataSize;
-  if (DataType == REG_SZ ||
-      DataType == REG_EXPAND_SZ ||
-      DataType == REG_MULTI_SZ)
+  if (DataSize <= sizeof(BLOCK_OFFSET))
     {
-      DstDataSize *= sizeof(WCHAR);
-      Expand = TRUE;
-    }
-
-  if (DstDataSize <= sizeof(BLOCK_OFFSET))
-    {
-      ValueCell->DataSize = DstDataSize | REG_DATA_IN_OFFSET;
+      ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
       ValueCell->DataType = DataType;
-      if (Expand)
-	{
-	  memexpand ((PWCHAR)&ValueCell->DataOffset,
-		     (PCHAR)&Data,
-		     SrcDataSize);
-	}
-      else
-	{
-	  memcpy (&ValueCell->DataOffset,
-		  &Data,
-		  SrcDataSize);
-	}
+      memcpy (&ValueCell->DataOffset,
+	      Data,
+	      DataSize);
     }
   else
     {
       /* Allocate data cell */
       if (!CmiAllocateCell (Hive,
-			    sizeof(CELL_HEADER) + DstDataSize,
+			    sizeof(CELL_HEADER) + DataSize,
 			    (PVOID *)(PVOID)&DataCell,
 			    &DataCellOffset))
 	{
@@ -1085,30 +1097,12 @@ CmiExportValue (PREGISTRY_HIVE Hive,
 	}
 
       ValueCell->DataOffset = DataCellOffset;
-      ValueCell->DataSize = DstDataSize;
+      ValueCell->DataSize = DataSize;
       ValueCell->DataType = DataType;
 
-      if (Expand)
-	{
-	  if (SrcDataSize <= sizeof(BLOCK_OFFSET))
-	    {
-	      memexpand ((PWCHAR)DataCell->Data,
-			 (PCHAR)&Data,
-			 SrcDataSize);
-	    }
-	  else
-	    {
-	      memexpand ((PWCHAR)DataCell->Data,
-			 Data,
-			 SrcDataSize);
-	    }
-	}
-      else
-	{
-	  memcpy (DataCell->Data,
-		  Data,
-		  SrcDataSize);
-	}
+      memcpy (DataCell->Data,
+	      Data,
+	      DataSize);
     }
 
   return TRUE;
@@ -1129,15 +1123,29 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
   PLIST_ENTRY Entry;
   FRLDRHKEY SubKey;
   PVALUE Value;
+  BOOLEAN Packable = TRUE;
+  ULONG i;
+  ULONG NameSize;
 
-  DbgPrint((DPRINT_REGISTRY, "CmiExportSubKey('%s') called\n", Key->Name));
+  DbgPrint((DPRINT_REGISTRY, "CmiExportSubKey('%S') called\n", Key->Name));
 
   /* Don't export links */
   if (Key->DataType == REG_LINK)
     return TRUE;
 
+  NameSize = (Key->NameSize - sizeof(WCHAR)) / sizeof(WCHAR);
+  for (i = 0; i < NameSize; i++)
+    {
+      if (Key->Name[i] & 0xFF00)
+        {
+          Packable = FALSE;
+          NameSize *= sizeof(WCHAR);
+          break;
+        }
+    }
+          
   /* Allocate key cell */
-  KeyCellSize = sizeof(KEY_CELL) + Key->NameSize - 1;
+  KeyCellSize = sizeof(KEY_CELL) + NameSize;
   if (!CmiAllocateCell (Hive, KeyCellSize, (PVOID)&NewKeyCell, &NKBOffset))
     {
       DbgPrint((DPRINT_REGISTRY, "CmiAllocateCell() failed\n"));
@@ -1146,7 +1154,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
 
   /* Initialize key cell */
   NewKeyCell->Id = REG_KEY_CELL_ID;
-  NewKeyCell->Type = REG_KEY_CELL_TYPE;
+  NewKeyCell->Flags = 0;
   NewKeyCell->LastWriteTime = 0ULL;
   NewKeyCell->ParentKeyOffset = ParentKeyOffset;
   NewKeyCell->NumberOfSubKeys = 0;
@@ -1155,11 +1163,23 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
   NewKeyCell->ValueListOffset = -1;
   NewKeyCell->SecurityKeyOffset = -1;
   NewKeyCell->ClassNameOffset = -1;
-  NewKeyCell->NameSize = Key->NameSize - 1;
+  NewKeyCell->NameSize = NameSize;
   NewKeyCell->ClassSize = 0;
-  memcpy (NewKeyCell->Name,
-	  Key->Name,
-	  Key->NameSize - 1);
+  if (Packable)
+    {
+      for (i = 0; i < NameSize; i++)
+        {
+          ((PCHAR)NewKeyCell->Name)[i] = (CHAR)Key->Name[i];
+        }
+      NewKeyCell->Flags |= REG_KEY_NAME_PACKED;
+
+    }
+  else
+    {
+      memcpy (NewKeyCell->Name,
+	      Key->Name,
+	      NameSize);
+    }
 
   /* Add key cell to the parent key's hash table */
   if (!CmiAddKeyToParentHashTable (Hive,
@@ -1255,7 +1275,7 @@ CmiCalcHiveChecksum (PREGISTRY_HIVE Hive)
 
 static BOOL
 CmiExportHive (PREGISTRY_HIVE Hive,
-	       PCSTR KeyName)
+	       PCWSTR KeyName)
 {
   PKEY_CELL KeyCell;
   FRLDRHKEY Key;
@@ -1265,7 +1285,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
   FRLDRHKEY SubKey;
   PVALUE Value;
 
-  DbgPrint((DPRINT_REGISTRY, "CmiExportHive(%x, '%s') called\n", Hive, KeyName));
+  DbgPrint((DPRINT_REGISTRY, "CmiExportHive(%x, '%S') called\n", Hive, KeyName));
 
   if (RegOpenKey (NULL, KeyName, &Key) != ERROR_SUCCESS)
     {
@@ -1355,11 +1375,8 @@ RegImportValue (PHBIN RootBin,
 {
   PDATA_CELL DataCell;
   PWCHAR wName;
-  PCHAR cName;
   LONG Error;
   ULONG DataSize;
-  PCHAR cBuffer;
-  PWCHAR wBuffer;
   ULONG i;
 
   if (ValueCell->CellSize >= 0 || ValueCell->Id != REG_VALUE_CELL_ID)
@@ -1370,37 +1387,38 @@ RegImportValue (PHBIN RootBin,
 
   if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
     {
-      cName = MmAllocateMemory (ValueCell->NameSize + 1);
-      memcpy (cName,
-	      ValueCell->Name,
-	      ValueCell->NameSize);
-      cName[ValueCell->NameSize] = 0;
+      wName = MmAllocateMemory ((ValueCell->NameSize + 1)*sizeof(WCHAR));
+      for (i = 0; i < ValueCell->NameSize; i++)
+        {
+          wName[i] = ((PCHAR)ValueCell->Name)[i];
+        }
+      wName[ValueCell->NameSize] = 0;
     }
   else
     {
-      wName = (PWCHAR)ValueCell->Name;
-      cName = MmAllocateMemory (ValueCell->NameSize / 2 + 1);
-      for (i = 0; i < ValueCell->NameSize / 2; i++)
-	cName[i] = (CHAR)wName[i];
-      cName[ValueCell->NameSize / 2] = 0;
+      wName = MmAllocateMemory (ValueCell->NameSize + sizeof(WCHAR));
+      memcpy (wName,
+	      ValueCell->Name,
+	      ValueCell->NameSize);
+      wName[ValueCell->NameSize / sizeof(WCHAR)] = 0;
     }
 
   DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
 
-  DbgPrint((DPRINT_REGISTRY, "ValueName: '%s'\n", cName));
+  DbgPrint((DPRINT_REGISTRY, "ValueName: '%S'\n", wName));
   DbgPrint((DPRINT_REGISTRY, "DataSize: %u\n", DataSize));
 
   if (DataSize <= sizeof(BLOCK_OFFSET) && (ValueCell->DataSize & REG_DATA_IN_OFFSET))
     {
       Error = RegSetValue(Key,
-			  cName,
+			  wName,
 			  ValueCell->DataType,
 			  (PCHAR)&ValueCell->DataOffset,
 			  DataSize);
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
-	  MmFreeMemory (cName);
+	  MmFreeMemory (wName);
 	  return FALSE;
 	}
     }
@@ -1412,44 +1430,25 @@ RegImportValue (PHBIN RootBin,
       if (DataCell->CellSize >= 0)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "Invalid data cell size!\n"));
-	  MmFreeMemory (cName);
+	  MmFreeMemory (wName);
 	  return FALSE;
 	}
 
-      if (ValueCell->DataType == REG_SZ ||
-	  ValueCell->DataType == REG_EXPAND_SZ ||
-	  ValueCell->DataType == REG_MULTI_SZ)
-	{
-	  wBuffer = (PWCHAR)DataCell->Data;
-	  cBuffer = MmAllocateMemory(DataSize/2);
-	  for (i = 0; i < DataSize / 2; i++)
-	    cBuffer[i] = (CHAR)wBuffer[i];
-
-	  Error = RegSetValue (Key,
-			       cName,
-			       ValueCell->DataType,
-			       cBuffer,
-			       DataSize/2);
-
-	  MmFreeMemory(cBuffer);
-	}
-      else
-	{
-	  Error = RegSetValue (Key,
-			       cName,
-			       ValueCell->DataType,
-			       DataCell->Data,
-			       DataSize);
-	}
+      Error = RegSetValue (Key,
+			   wName,
+			   ValueCell->DataType,
+			   DataCell->Data,
+			   DataSize);
+	
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
-	  MmFreeMemory (cName);
+	  MmFreeMemory (wName);
 	  return FALSE;
 	}
     }
 
-  MmFreeMemory (cName);
+  MmFreeMemory (wName);
 
   return TRUE;
 }
@@ -1464,7 +1463,7 @@ RegImportSubKey(PHBIN RootBin,
   PKEY_CELL SubKeyCell;
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL ValueCell = NULL;
-  PCHAR cName;
+  PWCHAR wName;
   FRLDRHKEY SubKey;
   LONG Error;
   ULONG i;
@@ -1479,20 +1478,31 @@ RegImportSubKey(PHBIN RootBin,
       return FALSE;
     }
 
-  /* FIXME: implement packed key names */
-  cName = MmAllocateMemory (KeyCell->NameSize + 1);
-  memcpy (cName,
-	  KeyCell->Name,
-	  KeyCell->NameSize);
-  cName[KeyCell->NameSize] = 0;
+  if (KeyCell->Flags & REG_KEY_NAME_PACKED)
+    {
+      wName = MmAllocateMemory ((KeyCell->NameSize + 1) * sizeof(WCHAR));
+      for (i = 0; i < KeyCell->NameSize; i++)
+        {
+          wName[i] = ((PCHAR)KeyCell->Name)[i];
+        }
+      wName[KeyCell->NameSize] = 0;
+    }
+  else
+    {
+      wName = MmAllocateMemory (KeyCell->NameSize + sizeof(WCHAR));
+      memcpy (wName,
+	      KeyCell->Name,
+	      KeyCell->NameSize);
+      wName[KeyCell->NameSize/sizeof(WCHAR)] = 0;
+    }
 
-  DbgPrint((DPRINT_REGISTRY, "KeyName: '%s'\n", cName));
+  DbgPrint((DPRINT_REGISTRY, "KeyName: '%S'\n", wName));
 
   /* Create new sub key */
   Error = RegCreateKey (ParentKey,
-			cName,
+			wName,
 			&SubKey);
-  MmFreeMemory (cName);
+  MmFreeMemory (wName);
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_REGISTRY, "RegCreateKey() failed!\n"));
@@ -1589,7 +1599,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
   /* Open 'System' key */
   Error = RegOpenKey(NULL,
-		     "\\Registry\\Machine\\SYSTEM",
+		     L"\\Registry\\Machine\\SYSTEM",
 		     &SystemKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -1621,7 +1631,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
 
 BOOL
-RegExportBinaryHive(PCSTR KeyName,
+RegExportBinaryHive(PCWSTR KeyName,
 		    PCHAR ChunkBase,
 		    ULONG* ChunkSize)
 {

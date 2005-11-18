@@ -43,9 +43,9 @@ RegInitializeRegistry (VOID)
   RootKey->SubKeyCount = 0;
   RootKey->ValueCount = 0;
 
-  RootKey->NameSize = 2;
-  RootKey->Name = MmAllocateMemory (2);
-  strcpy (RootKey->Name, "\\");
+  RootKey->NameSize = 4;
+  RootKey->Name = MmAllocateMemory (4);
+  wcscpy (RootKey->Name, L"\\");
 
   RootKey->DataType = 0;
   RootKey->DataSize = 0;
@@ -53,37 +53,37 @@ RegInitializeRegistry (VOID)
 
   /* Create 'SYSTEM' key */
   RegCreateKey (RootKey,
-		"Registry\\Machine\\SYSTEM",
+		L"Registry\\Machine\\SYSTEM",
 		NULL);
 
   /* Create 'HARDWARE' key */
   RegCreateKey (RootKey,
-		"Registry\\Machine\\HARDWARE",
+		L"Registry\\Machine\\HARDWARE",
 		NULL);
 
   /* Create 'HARDWARE\DESCRIPTION' key */
   RegCreateKey (RootKey,
-		"Registry\\Machine\\HARDWARE\\DESCRIPTION",
+		L"Registry\\Machine\\HARDWARE\\DESCRIPTION",
 		NULL);
 
   /* Create 'HARDWARE\DEVICEMAP' key */
   RegCreateKey (RootKey,
-		"Registry\\Machine\\HARDWARE\\DEVICEMAP",
+		L"Registry\\Machine\\HARDWARE\\DEVICEMAP",
 		NULL);
 
   /* Create 'HARDWARE\RESOURCEMAP' key */
   RegCreateKey (RootKey,
-		"Registry\\Machine\\HARDWARE\\RESOURCEMAP",
+		L"Registry\\Machine\\HARDWARE\\RESOURCEMAP",
 		NULL);
 
 /* Testcode */
 #if 0
   RegCreateKey (RootKey,
-		"Registry\\Machine\\HARDWARE\\DESCRIPTION\\TestKey",
+		L"Registry\\Machine\\HARDWARE\\DESCRIPTION\\TestKey",
 		&TestKey);
 
   RegSetValue (TestKey,
-	       "TestValue",
+	       L"TestValue",
 	       REG_SZ,
 	       (PUCHAR)"TestString",
 	       11);
@@ -94,7 +94,7 @@ RegInitializeRegistry (VOID)
 LONG
 RegInitCurrentControlSet(BOOL LastKnownGood)
 {
-  CHAR ControlSetKeyName[80];
+  WCHAR ControlSetKeyName[80];
   FRLDRHKEY SelectKey;
   FRLDRHKEY SystemKey;
   FRLDRHKEY ControlSetKey;
@@ -106,8 +106,8 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
   LONG Error;
 
   Error = RegOpenKey(NULL,
-		     "\\Registry\\Machine\\SYSTEM\\Select",
-		    &SelectKey);
+		     L"\\Registry\\Machine\\SYSTEM\\Select",
+		     &SelectKey);
   if (Error != ERROR_SUCCESS)
     {
       DbgPrint((DPRINT_REGISTRY, "RegOpenKey() failed (Error %u)\n", (int)Error));
@@ -116,7 +116,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
 
   DataSize = sizeof(ULONG);
   Error = RegQueryValue(SelectKey,
-			"Default",
+			L"Default",
 			NULL,
 			(PUCHAR)&DefaultSet,
 			&DataSize);
@@ -128,7 +128,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
 
   DataSize = sizeof(ULONG);
   Error = RegQueryValue(SelectKey,
-			"LastKnownGood",
+			L"LastKnownGood",
 			NULL,
 			(PUCHAR)&LastKnownGoodSet,
 			&DataSize);
@@ -139,28 +139,28 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
     }
 
   CurrentSet = (LastKnownGood == TRUE) ? LastKnownGoodSet : DefaultSet;
-  strcpy(ControlSetKeyName, "ControlSet");
+  wcscpy(ControlSetKeyName, L"ControlSet");
   switch(CurrentSet)
     {
       case 1:
-	strcat(ControlSetKeyName, "001");
+	wcscat(ControlSetKeyName, L"001");
 	break;
       case 2:
-	strcat(ControlSetKeyName, "002");
+	wcscat(ControlSetKeyName, L"002");
 	break;
       case 3:
-	strcat(ControlSetKeyName, "003");
+	wcscat(ControlSetKeyName, L"003");
 	break;
       case 4:
-	strcat(ControlSetKeyName, "004");
+	wcscat(ControlSetKeyName, L"004");
 	break;
       case 5:
-	strcat(ControlSetKeyName, "005");
+	wcscat(ControlSetKeyName, L"005");
 	break;
     }
 
   Error = RegOpenKey(NULL,
-		     "\\Registry\\Machine\\SYSTEM",
+		     L"\\Registry\\Machine\\SYSTEM",
 		     &SystemKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -178,7 +178,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
     }
 
   Error = RegCreateKey(SystemKey,
-		       "CurrentControlSet",
+		       L"CurrentControlSet",
 		       &LinkKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -203,21 +203,22 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
 
 LONG
 RegCreateKey(FRLDRHKEY ParentKey,
-	     PCSTR KeyName,
+	     PCWSTR KeyName,
 	     PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
   FRLDRHKEY SearchKey = NULL;
   FRLDRHKEY CurrentKey;
   FRLDRHKEY NewKey;
-  PCHAR p;
-  PCSTR name;
+  PWCHAR p;
+  PCWSTR name;
   int subkeyLength;
   int stringLength;
+  ULONG NameSize;
 
-  DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+  DbgPrint((DPRINT_REGISTRY, "KeyName '%S'\n", KeyName));
 
-  if (*KeyName == '\\')
+  if (*KeyName == L'\\')
     {
       KeyName++;
       CurrentKey = RootKey;
@@ -239,11 +240,11 @@ RegCreateKey(FRLDRHKEY ParentKey,
 
   while (*KeyName != 0)
     {
-      DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+      DbgPrint((DPRINT_REGISTRY, "KeyName '%S'\n", KeyName));
 
-      if (*KeyName == '\\')
+      if (*KeyName == L'\\')
 	KeyName++;
-      p = strchr(KeyName, '\\');
+      p = wcschr(KeyName, L'\\');
       if ((p != NULL) && (p != KeyName))
 	{
 	  subkeyLength = p - KeyName;
@@ -252,11 +253,12 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	}
       else
 	{
-	  subkeyLength = strlen(KeyName);
+	  subkeyLength = wcslen(KeyName);
 	  stringLength = subkeyLength;
 	  name = KeyName;
 	}
-
+      NameSize = (subkeyLength + 1) * sizeof(WCHAR);
+      
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
@@ -266,8 +268,9 @@ RegCreateKey(FRLDRHKEY ParentKey,
 					KEY,
 					KeyList);
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
-	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
-	  if (_strnicmp(SearchKey->Name, name, subkeyLength) == 0)
+	  DbgPrint((DPRINT_REGISTRY, "Searching '%S'\n", SearchKey->Name));
+	  if (SearchKey->NameSize == NameSize &&
+              _wcsnicmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -278,7 +281,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  /* no key found -> create new subkey */
 	  NewKey = (FRLDRHKEY)MmAllocateMemory(sizeof(KEY));
 	  if (NewKey == NULL)
-	   return(ERROR_OUTOFMEMORY);
+	    return(ERROR_OUTOFMEMORY);
 
 	  InitializeListHead(&NewKey->SubKeyList);
 	  InitializeListHead(&NewKey->ValueList);
@@ -293,15 +296,15 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  InsertTailList(&CurrentKey->SubKeyList, &NewKey->KeyList);
 	  CurrentKey->SubKeyCount++;
 
-	  NewKey->NameSize = subkeyLength + 1;
-	  NewKey->Name = (PCHAR)MmAllocateMemory(NewKey->NameSize);
+	  NewKey->NameSize = NameSize;
+	  NewKey->Name = (PWCHAR)MmAllocateMemory(NewKey->NameSize);
 	  if (NewKey->Name == NULL)
-	   return(ERROR_OUTOFMEMORY);
-	  memcpy(NewKey->Name, name, subkeyLength);
+	    return(ERROR_OUTOFMEMORY);
+	  memcpy(NewKey->Name, name, NewKey->NameSize - sizeof(WCHAR));
 	  NewKey->Name[subkeyLength] = 0;
 
 	  DbgPrint((DPRINT_REGISTRY, "NewKey 0x%x\n", NewKey));
-	  DbgPrint((DPRINT_REGISTRY, "NewKey '%s'  Length %d\n", NewKey->Name, NewKey->NameSize));
+	  DbgPrint((DPRINT_REGISTRY, "NewKey '%S'  Length %d\n", NewKey->Name, NewKey->NameSize));
 
 	  CurrentKey = NewKey;
 	}
@@ -328,11 +331,11 @@ RegCreateKey(FRLDRHKEY ParentKey,
 
 LONG
 RegDeleteKey(FRLDRHKEY Key,
-	     PCSTR Name)
+	     PCWSTR Name)
 {
 
 
-  if (strchr(Name, '\\') != NULL)
+  if (wcschr(Name, L'\\') != NULL)
     return(ERROR_INVALID_PARAMETER);
 
 
@@ -344,7 +347,7 @@ RegDeleteKey(FRLDRHKEY Key,
 LONG
 RegEnumKey(FRLDRHKEY Key,
 	   ULONG Index,
-	   PCHAR Name,
+	   PWCHAR Name,
 	   ULONG* NameSize)
 {
   PLIST_ENTRY Ptr;
@@ -369,7 +372,7 @@ RegEnumKey(FRLDRHKEY Key,
 				KEY,
 				KeyList);
 
-  DbgPrint((DPRINT_REGISTRY, "Name '%s'  Length %d\n", SearchKey->Name, SearchKey->NameSize));
+  DbgPrint((DPRINT_REGISTRY, "Name '%S'  Length %d\n", SearchKey->Name, SearchKey->NameSize));
 
   Size = min(SearchKey->NameSize, *NameSize);
   *NameSize = Size;
@@ -381,22 +384,23 @@ RegEnumKey(FRLDRHKEY Key,
 
 LONG
 RegOpenKey(FRLDRHKEY ParentKey,
-	   PCSTR KeyName,
+	   PCWSTR KeyName,
 	   PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
   FRLDRHKEY SearchKey = NULL;
   FRLDRHKEY CurrentKey;
-  PCHAR p;
-  PCSTR name;
+  PWCHAR p;
+  PCWSTR name;
   int subkeyLength;
   int stringLength;
+  ULONG NameSize;
 
-  DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+  DbgPrint((DPRINT_REGISTRY, "KeyName '%S'\n", KeyName));
 
   *Key = NULL;
 
-  if (*KeyName == '\\')
+  if (*KeyName == L'\\')
     {
       KeyName++;
       CurrentKey = RootKey;
@@ -418,11 +422,11 @@ RegOpenKey(FRLDRHKEY ParentKey,
 
   while (*KeyName != 0)
     {
-      DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+      DbgPrint((DPRINT_REGISTRY, "KeyName '%S'\n", KeyName));
 
-      if (*KeyName == '\\')
+      if (*KeyName == L'\\')
 	KeyName++;
-      p = strchr(KeyName, '\\');
+      p = wcschr(KeyName, L'\\');
       if ((p != NULL) && (p != KeyName))
 	{
 	  subkeyLength = p - KeyName;
@@ -431,10 +435,11 @@ RegOpenKey(FRLDRHKEY ParentKey,
 	}
       else
 	{
-	  subkeyLength = strlen(KeyName);
+	  subkeyLength = wcslen(KeyName);
 	  stringLength = subkeyLength;
 	  name = KeyName;
 	}
+      NameSize = (subkeyLength + 1) * sizeof(WCHAR);
 
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
@@ -446,9 +451,10 @@ RegOpenKey(FRLDRHKEY ParentKey,
 					KeyList);
 
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
-	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
+	  DbgPrint((DPRINT_REGISTRY, "Searching '%S'\n", SearchKey->Name));
 
-	  if (_strnicmp(SearchKey->Name, name, subkeyLength) == 0)
+	  if (SearchKey->NameSize == NameSize &&
+	      _wcsnicmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -481,7 +487,7 @@ RegOpenKey(FRLDRHKEY ParentKey,
 
 LONG
 RegSetValue(FRLDRHKEY Key,
-	    PCSTR ValueName,
+	    PCWSTR ValueName,
 	    ULONG Type,
 	    PCSTR Data,
 	    ULONG DataSize)
@@ -489,7 +495,7 @@ RegSetValue(FRLDRHKEY Key,
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
 
-  DbgPrint((DPRINT_REGISTRY, "Key 0x%x, ValueName '%s', Type %d, Data 0x%x, DataSize %d\n",
+  DbgPrint((DPRINT_REGISTRY, "Key 0x%x, ValueName '%S', Type %d, Data 0x%x, DataSize %d\n",
     (int)Key, ValueName, (int)Type, (int)Data, (int)DataSize));
 
   if ((ValueName == NULL) || (*ValueName == 0))
@@ -524,9 +530,9 @@ RegSetValue(FRLDRHKEY Key,
 				    VALUE,
 				    ValueList);
 
-	  DbgPrint((DPRINT_REGISTRY, "Value->Name '%s'\n", Value->Name));
+	  DbgPrint((DPRINT_REGISTRY, "Value->Name '%S'\n", Value->Name));
 
-	  if (_stricmp(Value->Name, ValueName) == 0)
+	  if (_wcsicmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -544,11 +550,11 @@ RegSetValue(FRLDRHKEY Key,
 	  InsertTailList(&Key->ValueList, &Value->ValueList);
 	  Key->ValueCount++;
 
-	  Value->NameSize = strlen(ValueName)+1;
-	  Value->Name = (PCHAR)MmAllocateMemory(Value->NameSize);
+	  Value->NameSize = (wcslen(ValueName)+1)*sizeof(WCHAR);
+	  Value->Name = (PWCHAR)MmAllocateMemory(Value->NameSize);
 	  if (Value->Name == NULL)
 	    return(ERROR_OUTOFMEMORY);
-	  strcpy(Value->Name, ValueName);
+	  wcscpy(Value->Name, ValueName);
 	  Value->DataType = REG_NONE;
 	  Value->DataSize = 0;
 	  Value->Data = NULL;
@@ -582,7 +588,7 @@ RegSetValue(FRLDRHKEY Key,
 
 LONG
 RegQueryValue(FRLDRHKEY Key,
-	      PCSTR ValueName,
+	      PCWSTR ValueName,
 	      ULONG* Type,
 	      PUCHAR Data,
 	      ULONG* DataSize)
@@ -629,9 +635,9 @@ RegQueryValue(FRLDRHKEY Key,
 				    VALUE,
 				    ValueList);
 
-	  DbgPrint((DPRINT_REGISTRY, "Searching for '%s'. Value name '%s'\n", ValueName, Value->Name));
+	  DbgPrint((DPRINT_REGISTRY, "Searching for '%S'. Value name '%S'\n", ValueName, Value->Name));
 
-	  if (_stricmp(Value->Name, ValueName) == 0)
+	  if (_wcsicmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -669,7 +675,7 @@ RegQueryValue(FRLDRHKEY Key,
 
 LONG
 RegDeleteValue(FRLDRHKEY Key,
-	       PCSTR ValueName)
+	       PCWSTR ValueName)
 {
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
@@ -692,7 +698,7 @@ RegDeleteValue(FRLDRHKEY Key,
 	  Value = CONTAINING_RECORD(Ptr,
 				    VALUE,
 				    ValueList);
-	  if (_stricmp(Value->Name, ValueName) == 0)
+	  if (_wcsicmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -727,7 +733,7 @@ RegDeleteValue(FRLDRHKEY Key,
 LONG
 RegEnumValue(FRLDRHKEY Key,
 	     ULONG Index,
-	     PCHAR ValueName,
+	     PWCHAR ValueName,
 	     ULONG* NameSize,
 	     ULONG* Type,
 	     PUCHAR Data,
