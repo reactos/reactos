@@ -1149,6 +1149,7 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
   if (bits <= 8)
     {
       *paletteType = PAL_INDEXED;
+      RedMask = GreenMask = BlueMask = 0;
     }
   else if(bits < 24)
     {
