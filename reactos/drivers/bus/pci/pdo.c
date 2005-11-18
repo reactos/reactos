@@ -900,7 +900,7 @@ InterfaceBusSetBusData(
   PPDO_DEVICE_EXTENSION DeviceExtension;
   ULONG Size;
 
-  DPRINT("InterfaceBusSetBusData()\n",
+  DPRINT("InterfaceBusSetBusData(%p 0x%lx %p 0x%lx 0x%lx)\n",
     Context, DataType, Buffer, Offset, Length);
 
   if (DataType != PCI_WHICHSPACE_CONFIG)
@@ -933,7 +933,7 @@ InterfaceBusGetBusData(
   PPDO_DEVICE_EXTENSION DeviceExtension;
   ULONG Size;
 
-  DPRINT("InterfaceBusGetBusData() called\n",
+  DPRINT("InterfaceBusGetBusData(%p 0x%lx %p 0x%lx 0x%lx) called\n",
     Context, DataType, Buffer, Offset, Length);
 
   if (DataType != PCI_WHICHSPACE_CONFIG)
@@ -954,6 +954,43 @@ InterfaceBusGetBusData(
   return Size;
 }
 
+static BOOLEAN NTAPI
+InterfacePciDevicePresent(
+  IN USHORT  VendorID,
+  IN USHORT  DeviceID,
+  IN UCHAR   RevisionID,
+  IN USHORT  SubVendorID,
+  IN USHORT  SubSystemID,
+  IN ULONG   Flags
+)
+{
+  DPRINT1("Checking for PCI %04X:%04X not implemented\n",
+    VendorID, DeviceID);
+
+  return FALSE;
+}
+
+static BOOLEAN NTAPI
+InterfacePciDevicePresentEx(
+  IN PVOID Context,
+  IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT1("InterfacePciDevicePresentEx(%p %p) called\n",
+    Context, Parameters);
+
+  if (!Parameters || Parameters->Size != sizeof(PCI_DEVICE_PRESENCE_PARAMETERS))
+    return FALSE;
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+
+  DPRINT1("Checking for PCI %04X:%04X not implemented\n",
+    Parameters->VendorID, Parameters->DeviceID);
+
+  return FALSE;
+}
+
 
 static NTSTATUS
 PdoQueryInterface(
@@ -966,7 +1003,7 @@ PdoQueryInterface(
   if (RtlCompareMemory(IrpSp->Parameters.QueryInterface.InterfaceType,
     &GUID_BUS_INTERFACE_STANDARD, sizeof(GUID)) == sizeof(GUID))
   {
-    /* BUS_INTERFACE STANDARD */
+    /* BUS_INTERFACE_STANDARD */
     if (IrpSp->Parameters.QueryInterface.Version < 1)
       Status = STATUS_NOT_SUPPORTED;
     else if (IrpSp->Parameters.QueryInterface.Size < sizeof(BUS_INTERFACE_STANDARD))
@@ -984,6 +1021,28 @@ PdoQueryInterface(
       BusInterface->GetDmaAdapter = InterfaceBusGetDmaAdapter;
       BusInterface->SetBusData = InterfaceBusSetBusData;
       BusInterface->GetBusData = InterfaceBusGetBusData;
+      Status = STATUS_SUCCESS;
+    }
+  }
+  else if (RtlCompareMemory(IrpSp->Parameters.QueryInterface.InterfaceType,
+    &GUID_PCI_DEVICE_PRESENT_INTERFACE, sizeof(GUID)) == sizeof(GUID))
+  {
+    /* PCI_DEVICE_PRESENT_INTERFACE */
+    if (IrpSp->Parameters.QueryInterface.Version < 1)
+      Status = STATUS_NOT_SUPPORTED;
+    else if (IrpSp->Parameters.QueryInterface.Size < sizeof(PCI_DEVICE_PRESENT_INTERFACE))
+      Status = STATUS_BUFFER_TOO_SMALL;
+    else
+    {
+      PPCI_DEVICE_PRESENT_INTERFACE BusInterface;
+      BusInterface = (PPCI_DEVICE_PRESENT_INTERFACE)IrpSp->Parameters.QueryInterface.Interface;
+      BusInterface->Size = sizeof(PCI_DEVICE_PRESENT_INTERFACE);
+      BusInterface->Version = 1;
+      BusInterface->Context = DeviceObject;
+      BusInterface->InterfaceReference = InterfaceReference;
+      BusInterface->InterfaceDereference = InterfaceDereference;
+	  BusInterface->IsDevicePresent = InterfacePciDevicePresent;
+      BusInterface->IsDevicePresentEx = InterfacePciDevicePresentEx;
       Status = STATUS_SUCCESS;
     }
   }
