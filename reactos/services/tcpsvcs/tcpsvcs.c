@@ -135,8 +135,6 @@ ServiceMain(DWORD argc, LPTSTR argv[])
 VOID WINAPI
 ServerCtrlHandler(DWORD Control)
 {
-	TCHAR buf[256];
-
     switch (Control)
     {
         case SERVICE_CONTROL_SHUTDOWN: /* fall through */
