@@ -873,6 +873,12 @@ DevInstallW(
     DWORD config_flags;
     /*TCHAR buf[128];*/
 
+    if (!IsUserAdmin())
+    {
+        /* XP kills the process... */
+        ExitProcess(ERROR_ACCESS_DENIED);
+    }
+
     /* Clear devinst data */
     ZeroMemory(&DevInstData, sizeof(DEVINSTDATA));
     DevInstData.devInfoData.cbSize = 0; /* Tell if the devInfoData is valid */
@@ -1027,6 +1033,17 @@ DevInstallW(
 }
 
 BOOL WINAPI
+ClientSideInstallW(IN HWND hWndOwner,
+                   IN DWORD dwUnknownFlags,
+                   IN LPWSTR lpNamedPipeName)
+{
+    /* NOTE: pNamedPipeName is in the format:
+     *       "\\.\pipe\PNP_Device_Install_Pipe_0.{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}"
+     */
+    return FALSE;
+}
+
+BOOL WINAPI
 DllMain(
         IN HINSTANCE hInstance,
         IN DWORD dwReason,
@@ -1035,6 +1052,8 @@ DllMain(
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         INITCOMMONCONTROLSEX InitControls;
+
+        DisableThreadLibraryCalls(hInstance);
 
         InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
         InitControls.dwICC = ICC_PROGRESS_CLASS;
