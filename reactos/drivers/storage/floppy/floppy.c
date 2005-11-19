@@ -1153,7 +1153,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
    * Create the queue processing thread.  Save its handle in the global variable
    * ThreadHandle so we can wait on its termination during Unload.
    */
-  if(PsCreateSystemThread(&ThreadHandle, 0, 0, 0, 0, QueueThread, 0) != STATUS_SUCCESS)
+  if(PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, QueueThread, 0) != STATUS_SUCCESS)
     {
       DPRINT("floppy: Unable to create system thread; failing init\n");
       return STATUS_INSUFFICIENT_RESOURCES;
