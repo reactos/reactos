@@ -1081,9 +1081,10 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	CLEAN_FILE(stub_file)
 
 	fprintf ( fMakefile,
-	          "%s: %s $(WINEBUILD_TARGET)\n",
+	          "%s: %s $(WINEBUILD_TARGET) | %s\n",
 	          def_file.c_str (),
-	          dependencies.c_str () );
+	          dependencies.c_str (),
+	          GetDirectory ( def_file ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -o %s --def -E %s\n",
