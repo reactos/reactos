@@ -1308,11 +1308,11 @@ ProcessInput (BOOL bFlag)
 			{
 				UINT envNameLen;
 				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
-				if ( envVal )
-				{
-					ip += envNameLen;
-					cp = _stpcpy ( cp, envVal );
-				}
+				if ( !envVal )
+					return 1;
+				ip += envNameLen;
+				cp = _stpcpy ( cp, envVal );
+				continue;
 			}
 
 			if (_istcntrl (*ip))
