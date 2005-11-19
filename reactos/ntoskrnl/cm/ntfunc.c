@@ -202,7 +202,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   PAGED_CODE();
 
-  PreviousMode = KeGetPreviousMode();
+  PreviousMode = ExGetPreviousMode();
 
   if (PreviousMode != KernelMode)
   {
@@ -982,7 +982,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
 		CmiKeyType,
-		UserMode,
+		ExGetPreviousMode(),
 		(PVOID *) &KeyObject,
 		NULL);
 
@@ -1429,7 +1429,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		(KeyInformationClass != KeyNameInformation ? KEY_QUERY_VALUE : 0),
 		CmiKeyType,
-		UserMode,
+		ExGetPreviousMode(),
 		(PVOID *) &KeyObject,
 		NULL);
   if (!NT_SUCCESS(Status))
@@ -1655,7 +1655,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
 		CmiKeyType,
-		UserMode,
+		ExGetPreviousMode(),
 		(PVOID *)&KeyObject,
 		NULL);
 
@@ -2089,7 +2089,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 
   PAGED_CODE();
   
-  PreviousMode = KeGetPreviousMode();
+  PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
@@ -2196,7 +2196,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   DPRINT ("NtLoadKey2() called\n");
 
 #if 0
-  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, KeGetPreviousMode ()))
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 
@@ -2367,7 +2367,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_QUERY_VALUE,
 				     CmiKeyType,
-				     UserMode,
+				     ExGetPreviousMode(),
 				     (PVOID *) &KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -2514,14 +2514,14 @@ NtSaveKey (IN HANDLE KeyHandle,
   DPRINT ("NtSaveKey() called\n");
 
 #if 0
-  if (!SeSinglePrivilegeCheck (SeBackupPrivilege, KeGetPreviousMode ()))
+  if (!SeSinglePrivilegeCheck (SeBackupPrivilege, ExGetPreviousMode ()))
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 
   Status = ObReferenceObjectByHandle (KeyHandle,
 				      0,
 				      CmiKeyType,
-				      KeGetPreviousMode(),
+				      ExGetPreviousMode(),
 				      (PVOID *)&KeyObject,
 				      NULL);
   if (!NT_SUCCESS(Status))
@@ -2621,7 +2621,7 @@ NtSetInformationKey (IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle (KeyHandle,
 				      KEY_SET_VALUE,
 				      CmiKeyType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID *)&KeyObject,
 				      NULL);
   if (!NT_SUCCESS (Status))
@@ -2703,7 +2703,7 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
   DPRINT ("NtUnloadKey() called\n");
 
 #if 0
-  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, KeGetPreviousMode ()))
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 
