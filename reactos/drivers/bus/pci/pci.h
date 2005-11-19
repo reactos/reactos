@@ -2,13 +2,6 @@
 #define __PCI_H
 
 
-typedef enum {
-  pbtUnknown = 0,
-  pbtType1,
-  pbtType2,
-} PCI_BUS_TYPE;
-
-
 typedef struct _PCI_DEVICE
 {
   // Entry on device list
@@ -77,6 +70,8 @@ typedef struct _FDO_DEVICE_EXTENSION
 {
   // Common device data
   COMMON_DEVICE_EXTENSION Common;
+  // Entry on device list
+  LIST_ENTRY ListEntry;
   // PCI bus number serviced by this FDO
   ULONG BusNumber;
   // Current state of the driver
@@ -91,6 +86,21 @@ typedef struct _FDO_DEVICE_EXTENSION
   PDEVICE_OBJECT Ldo;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
+
+/* Driver extension associated with PCI driver */
+typedef struct _PCI_DRIVER_EXTENSION
+{
+  // 
+  LIST_ENTRY BusListHead;
+  // Lock for namespace bus list
+  KSPIN_LOCK BusListLock;
+} PCI_DRIVER_EXTENSION, *PPCI_DRIVER_EXTENSION;
+
+
+/* We need a global variable to get the driver extension,
+ * because at least InterfacePciDevicePresent has no
+ * other way to get it... */
+extern PPCI_DRIVER_EXTENSION DriverExtension;
 
 /* fdo.c */
 

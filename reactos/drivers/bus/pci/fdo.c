@@ -125,7 +125,7 @@ FdoEnumerateDevices(
       Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
       if (!NT_SUCCESS(Status))
       {
-        Device = (PPCI_DEVICE)ExAllocatePool(PagedPool, sizeof(PCI_DEVICE));
+        Device = (PPCI_DEVICE)ExAllocatePool(NonPagedPool, sizeof(PCI_DEVICE));
         if (!Device)
         {
           /* FIXME: Cleanup resources for already discovered devices */
@@ -412,6 +412,11 @@ FdoStartDevice(
   KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
   DeviceExtension->DeviceListCount = 0;
   DeviceExtension->State = dsStarted;
+
+  ExInterlockedInsertTailList(
+    &DriverExtension->BusListHead,
+    &DeviceExtension->ListEntry,
+    &DriverExtension->BusListLock);
 
   Irp->IoStatus.Information = 0;
 

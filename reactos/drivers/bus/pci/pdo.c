@@ -954,21 +954,97 @@ InterfaceBusGetBusData(
   return Size;
 }
 
+
 static BOOLEAN NTAPI
 InterfacePciDevicePresent(
-  IN USHORT  VendorID,
-  IN USHORT  DeviceID,
-  IN UCHAR   RevisionID,
-  IN USHORT  SubVendorID,
-  IN USHORT  SubSystemID,
-  IN ULONG   Flags
-)
+  IN USHORT VendorID,
+  IN USHORT DeviceID,
+  IN UCHAR RevisionID,
+  IN USHORT SubVendorID,
+  IN USHORT SubSystemID,
+  IN ULONG Flags)
 {
-  DPRINT1("Checking for PCI %04X:%04X not implemented\n",
-    VendorID, DeviceID);
+  PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+  PPCI_DEVICE PciDevice;
+  PLIST_ENTRY CurrentBus, CurrentEntry;
+  KIRQL OldIrql;
+  BOOLEAN Found = FALSE;
 
-  return FALSE;
+  KeAcquireSpinLock(&DriverExtension->BusListLock, &OldIrql);
+  CurrentBus = DriverExtension->BusListHead.Flink;
+  while (!Found && CurrentBus != &DriverExtension->BusListHead)
+  {
+    FdoDeviceExtension = CONTAINING_RECORD(CurrentBus, FDO_DEVICE_EXTENSION, ListEntry);
+
+    KeAcquireSpinLockAtDpcLevel(&FdoDeviceExtension->DeviceListLock);
+    CurrentEntry = FdoDeviceExtension->DeviceListHead.Flink;
+    while (!Found && CurrentEntry != &FdoDeviceExtension->DeviceListHead)
+    {
+      PciDevice = CONTAINING_RECORD(CurrentEntry, PCI_DEVICE, ListEntry);
+      if (PciDevice->PciConfig.VendorID == VendorID &&
+        PciDevice->PciConfig.DeviceID == DeviceID)
+      {
+        if (!(Flags & PCI_USE_SUBSYSTEM_IDS) || (
+          PciDevice->PciConfig.u.type0.SubVendorID == SubVendorID &&
+          PciDevice->PciConfig.u.type0.SubSystemID == SubSystemID))
+        {
+          if (!(Flags & PCI_USE_REVISION) ||
+            PciDevice->PciConfig.RevisionID == RevisionID)
+          {
+            DPRINT("Found the PCI device\n");
+            Found = TRUE;
+          }
+        }
+      }
+
+      CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&FdoDeviceExtension->DeviceListLock);
+    CurrentBus = CurrentBus->Flink;
+  }
+  KeReleaseSpinLock(&DriverExtension->BusListLock, OldIrql);
+
+  return Found;
 }
+
+
+static BOOLEAN
+CheckPciDevice(
+  IN PPCI_COMMON_CONFIG PciConfig,
+  IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters)
+{
+  if ((Parameters->Flags & PCI_USE_VENDEV_IDS) && (
+    PciConfig->VendorID != Parameters->VendorID ||
+    PciConfig->DeviceID != Parameters->DeviceID))
+  {
+    return FALSE;
+  }
+  if ((Parameters->Flags && PCI_USE_CLASS_SUBCLASS) && (
+    PciConfig->u.type0.SubVendorID != Parameters->SubVendorID ||
+    PciConfig->u.type0.SubSystemID != Parameters->SubSystemID))
+  {
+    return FALSE;
+  }
+  if ((Parameters->Flags & PCI_USE_PROGIF) &&
+    PciConfig->ProgIf != Parameters->ProgIf)
+  {
+    return FALSE;
+  }
+  if ((Parameters->Flags & PCI_USE_SUBSYSTEM_IDS) && (
+    PciConfig->Command != Parameters->SubVendorID ||
+    PciConfig->Status != Parameters->SubSystemID))
+  {
+    return FALSE;
+  }
+  if ((Parameters->Flags & PCI_USE_REVISION) &&
+    PciConfig->RevisionID != Parameters->RevisionID)
+  {
+    return FALSE;
+  }
+  return TRUE;
+}
+
 
 static BOOLEAN NTAPI
 InterfacePciDevicePresentEx(
@@ -976,19 +1052,56 @@ InterfacePciDevicePresentEx(
   IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
+  PFDO_DEVICE_EXTENSION MyFdoDeviceExtension;
+  PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+  PPCI_DEVICE PciDevice;
+  PLIST_ENTRY CurrentBus, CurrentEntry;
+  KIRQL OldIrql;
+  BOOLEAN Found = FALSE;
 
-  DPRINT1("InterfacePciDevicePresentEx(%p %p) called\n",
+  DPRINT("InterfacePciDevicePresentEx(%p %p) called\n",
     Context, Parameters);
 
   if (!Parameters || Parameters->Size != sizeof(PCI_DEVICE_PRESENCE_PARAMETERS))
     return FALSE;
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+  MyFdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
 
-  DPRINT1("Checking for PCI %04X:%04X not implemented\n",
-    Parameters->VendorID, Parameters->DeviceID);
+  if (Parameters->Flags & PCI_USE_LOCAL_DEVICE)
+  {
+    return CheckPciDevice(&DeviceExtension->PciDevice->PciConfig, Parameters);
+  }
 
-  return FALSE;
+  KeAcquireSpinLock(&DriverExtension->BusListLock, &OldIrql);
+  CurrentBus = DriverExtension->BusListHead.Flink;
+  while (!Found && CurrentBus != &DriverExtension->BusListHead)
+  {
+    FdoDeviceExtension = CONTAINING_RECORD(CurrentBus, FDO_DEVICE_EXTENSION, ListEntry);
+    if (!(Parameters->Flags & PCI_USE_LOCAL_BUS) || FdoDeviceExtension == MyFdoDeviceExtension)
+    {
+      KeAcquireSpinLockAtDpcLevel(&FdoDeviceExtension->DeviceListLock);
+      CurrentEntry = FdoDeviceExtension->DeviceListHead.Flink;
+      while (!Found && CurrentEntry != &FdoDeviceExtension->DeviceListHead)
+      {
+        PciDevice = CONTAINING_RECORD(CurrentEntry, PCI_DEVICE, ListEntry);
+
+        if (CheckPciDevice(&PciDevice->PciConfig, Parameters))
+        {
+          DPRINT("Found the PCI device\n");
+          Found = TRUE;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+      }
+
+      KeReleaseSpinLockFromDpcLevel(&FdoDeviceExtension->DeviceListLock);
+    }
+    CurrentBus = CurrentBus->Flink;
+  }
+  KeReleaseSpinLock(&DriverExtension->BusListLock, OldIrql);
+
+  return Found;
 }
 
 
@@ -1034,15 +1147,15 @@ PdoQueryInterface(
       Status = STATUS_BUFFER_TOO_SMALL;
     else
     {
-      PPCI_DEVICE_PRESENT_INTERFACE BusInterface;
-      BusInterface = (PPCI_DEVICE_PRESENT_INTERFACE)IrpSp->Parameters.QueryInterface.Interface;
-      BusInterface->Size = sizeof(PCI_DEVICE_PRESENT_INTERFACE);
-      BusInterface->Version = 1;
-      BusInterface->Context = DeviceObject;
-      BusInterface->InterfaceReference = InterfaceReference;
-      BusInterface->InterfaceDereference = InterfaceDereference;
-	  BusInterface->IsDevicePresent = InterfacePciDevicePresent;
-      BusInterface->IsDevicePresentEx = InterfacePciDevicePresentEx;
+      PPCI_DEVICE_PRESENT_INTERFACE PciDevicePresentInterface;
+      PciDevicePresentInterface = (PPCI_DEVICE_PRESENT_INTERFACE)IrpSp->Parameters.QueryInterface.Interface;
+      PciDevicePresentInterface->Size = sizeof(PCI_DEVICE_PRESENT_INTERFACE);
+      PciDevicePresentInterface->Version = 1;
+      PciDevicePresentInterface->Context = DeviceObject;
+      PciDevicePresentInterface->InterfaceReference = InterfaceReference;
+      PciDevicePresentInterface->InterfaceDereference = InterfaceDereference;
+      PciDevicePresentInterface->IsDevicePresent = InterfacePciDevicePresent;
+      PciDevicePresentInterface->IsDevicePresentEx = InterfacePciDevicePresentEx;
       Status = STATUS_SUCCESS;
     }
   }

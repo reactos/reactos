@@ -29,6 +29,7 @@
 
 /*** PUBLIC ******************************************************************/
 
+PPCI_DRIVER_EXTENSION DriverExtension = NULL;
 
 /*** PRIVATE *****************************************************************/
 
@@ -173,12 +174,26 @@ DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)
 {
+  NTSTATUS Status;
+
   DPRINT("Peripheral Component Interconnect Bus Driver\n");
 
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = PciDispatchDeviceControl;
   DriverObject->MajorFunction[IRP_MJ_PNP] = PciPnpControl;
   DriverObject->MajorFunction[IRP_MJ_POWER] = PciPowerControl;
   DriverObject->DriverExtension->AddDevice = PciAddDevice;
+
+  Status = IoAllocateDriverObjectExtension(
+    DriverObject,
+    DriverObject,
+    sizeof(PCI_DRIVER_EXTENSION),
+    (PVOID*)&DriverExtension);
+  if (!NT_SUCCESS(Status))
+    return Status;
+  RtlZeroMemory(DriverExtension, sizeof(PCI_DRIVER_EXTENSION));
+
+  InitializeListHead(&DriverExtension->BusListHead);
+  KeInitializeSpinLock(&DriverExtension->BusListLock);
 
   return STATUS_SUCCESS;
 }
