@@ -18,6 +18,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef ExAcquireFastMutex
+#undef ExReleaseFastMutex
+#undef ExTryToAcquireFastMutex
+
 /* DATA **********************************************************************/
 
 ULONG KdComPortInUse = 0;
