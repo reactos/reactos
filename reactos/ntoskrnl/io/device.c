@@ -121,6 +121,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       }
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
+      IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
    }
 
    return STATUS_SUCCESS;
@@ -153,12 +154,11 @@ IopStartDevice(
    }
    else
    {
-      if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
-          Fdo->DeviceType == FILE_DEVICE_ACPI)
+	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
       {
-         DPRINT("Bus extender found\n");
-
+         DPRINT("Device needs enumeration, invalidating bus relations\n");
          Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
+		 IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
       }
    }
 
