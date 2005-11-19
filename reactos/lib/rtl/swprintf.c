@@ -537,6 +537,9 @@ int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...)
 }
 
 
+/*
+ * @implemented
+ */
 int vswprintf(wchar_t *buf, const wchar_t *fmt, va_list args)
 {
 	return _vsnwprintf(buf,MAXLONG,fmt,args);
