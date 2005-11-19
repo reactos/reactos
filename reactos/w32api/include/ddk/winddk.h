@@ -376,6 +376,11 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 #define THREAD_ALERT (0x0004)
 
+#define FM_LOCK_BIT             (0x1)
+#define FM_LOCK_BIT_V           (0x0)
+#define FM_LOCK_WAITER_WOKEN    (0x2)
+#define FM_LOCK_WAITER_INC      (0x4)
+
 /* Exported object types */
 extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
 extern NTOSAPI POBJECT_TYPE ExEventObjectType;
@@ -1110,12 +1115,13 @@ typedef struct _KSEMAPHORE {
     LONG Limit;
 } KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
-typedef struct _FAST_MUTEX {
-  LONG  Count;
-  struct _KTHREAD  *Owner;
-  ULONG  Contention;
-  KEVENT  Event;
-  ULONG  OldIrql;
+typedef struct _FAST_MUTEX
+{
+    LONG Count;
+    PKTHREAD Owner;
+    ULONG Contention;
+    KEVENT Gate;
+    ULONG OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
 
 typedef struct _KGATE
@@ -6137,23 +6143,64 @@ KeTryToAcquireGuardedMutex(
     PKGUARDED_MUTEX GuardedMutex
 );
 
-/** Executive support routines **/
+/* Fast Mutex */
+#define ExInitializeFastMutex(_FastMutex) \
+{ \
+    (_FastMutex)->Count = FM_LOCK_BIT; \
+    (_FastMutex)->Owner = NULL; \
+    (_FastMutex)->Contention = 0; \
+    KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
+}
 
-#if defined(_X86_)
-NTHALAPI
+NTOSAPI
+VOID
+FASTCALL
+ExAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+VOID
+FASTCALL
+ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
+
+#if defined(_NTHAL_) && defined(_X86_)
+NTOSAPI
+VOID
+FASTCALL
+ExiAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+VOID
+FASTCALL
+ExiReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+BOOLEAN
+FASTCALL
+ExiTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+#define ExAcquireFastMutex(FastMutex)       ExiAcquireFastMutex(FastMutex)
+#define ExReleaseFastMutex(FastMutex)       ExiReleaseFastMutex(FastMutex)
+#define ExTryToAcquireFastMutex(FastMutex)  ExiTryToAcquireFastMutex(FastMutex)
+
 #else
-NTOSAPI
-#endif
-VOID
-DDKFASTAPI
-ExAcquireFastMutex(
-  IN PFAST_MUTEX  FastMutex);
 
 NTOSAPI
 VOID
-DDKFASTAPI
-ExAcquireFastMutexUnsafe(
-  IN PFAST_MUTEX  FastMutex);
+FASTCALL
+ExAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+VOID
+FASTCALL
+ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+BOOLEAN
+FASTCALL
+ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+#endif
+
+/** Executive support routines **/
 
 NTOSAPI
 BOOLEAN
@@ -6376,19 +6423,6 @@ KeInitializeEvent(
   IN EVENT_TYPE  Type,
   IN BOOLEAN  State);
 
-/*
- * VOID DDKAPI
- * ExInitializeFastMutex(
- *   IN PFAST_MUTEX  FastMutex)
- */
-#define ExInitializeFastMutex(_FastMutex) \
-{ \
-  (_FastMutex)->Count = 1; \
-  (_FastMutex)->Owner = NULL; \
-  (_FastMutex)->Contention = 0; \
-  KeInitializeEvent(&(_FastMutex)->Event, SynchronizationEvent, FALSE); \
-}
-
 NTOSAPI
 VOID
 DDKAPI
@@ -6606,22 +6640,6 @@ DDKAPI
 ExReinitializeResourceLite(
   IN PERESOURCE  Resource);
 
-#if defined(_X86_)
-NTHALAPI
-#else
-NTOSAPI
-#endif
-VOID
-DDKFASTAPI
-ExReleaseFastMutex(
-  IN PFAST_MUTEX  FastMutex);
-
-NTOSAPI
-VOID
-DDKFASTAPI
-ExReleaseFastMutexUnsafe(
-  IN PFAST_MUTEX  FastMutex);
-
 NTOSAPI
 VOID
 DDKAPI
@@ -6655,16 +6673,6 @@ DDKAPI
 ExSystemTimeToLocalTime(
   IN PLARGE_INTEGER  SystemTime,
   OUT PLARGE_INTEGER  LocalTime);
-
-#ifdef _M_IX86
-NTHALAPI
-#else
-NTOSAPI
-#endif
-BOOLEAN
-DDKFASTAPI
-ExTryToAcquireFastMutex(
-  IN PFAST_MUTEX  FastMutex);
 
 NTOSAPI
 BOOLEAN

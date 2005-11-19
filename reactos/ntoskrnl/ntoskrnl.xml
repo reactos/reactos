@@ -73,7 +73,6 @@
 	</directory>
 	<directory name="cc">
 		<file>cacheman.c</file>
-		<file>ccmutex.c</file>
 		<file>copy.c</file>
 		<file>fs.c</file>
 		<file>mdl.c</file>

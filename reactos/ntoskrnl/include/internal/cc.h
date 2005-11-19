@@ -1,18 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
 
-VOID 
-FASTCALL
-CcAcquireBrokenMutex(PFAST_MUTEX FastMutex);
-
-VOID
-FASTCALL
-CcReleaseBrokenMutex(PFAST_MUTEX FastMutex);
-
-BOOLEAN
-FASTCALL
-CcTryToAcquireBrokenMutex(PFAST_MUTEX FastMutex);
-
 typedef struct _BCB
 {
     LIST_ENTRY BcbSegmentListHead;

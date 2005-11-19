@@ -27,6 +27,7 @@
 #include "haltypes.h"       /* Hardware Abstraction Layer Types */
 #include "halfuncs.h"       /* Hardware Abstraction Layer Functions */
 #include "inbvfuncs.h"      /* Initialization Boot Video Functions */
+#include "exfuncs.h"        /* Executive Functions */
 #include "iofuncs.h"        /* Input/Output Manager Functions */
 #include "kefuncs.h"        /* Kernel Functions */
 #include "mmfuncs.h"        /* Memory Manager Functions */

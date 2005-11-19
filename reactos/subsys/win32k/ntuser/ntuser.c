@@ -91,7 +91,7 @@ VOID FASTCALL UUserEnterShared(VOID)
    //DPRINT("%x\n",__builtin_return_address(0));
    //   KeEnterCriticalRegion();
    //   ExAcquireResourceSharedLite(&UserLock, TRUE);
-   ExAcquireFastMutex(&UserLock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&UserLock);
 }
 
 VOID FASTCALL UUserEnterExclusive(VOID)
@@ -101,7 +101,7 @@ VOID FASTCALL UUserEnterExclusive(VOID)
    //DPRINT("%x\n",__builtin_return_address(0));
    //   KeEnterCriticalRegion();
    //   ExAcquireResourceExclusiveLite(&UserLock, TRUE);
-   ExAcquireFastMutex(&UserLock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&UserLock);
 }
 
 VOID FASTCALL UUserLeave(VOID)
@@ -111,5 +111,5 @@ VOID FASTCALL UUserLeave(VOID)
    //DPRINT("%x\n",__builtin_return_address(0));
    //  ExReleaseResourceLite(&UserLock);
    //   KeLeaveCriticalRegion();
-   ExReleaseFastMutex(&UserLock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&UserLock);
 }

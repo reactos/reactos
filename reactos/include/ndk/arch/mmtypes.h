@@ -10,7 +10,7 @@
 #define _ARCH_MMTYPES_H
 
 #ifdef _M_IX86
-#include <ndk/i386/mmtypes.h>
+#include "./../i386/mmtypes.h"
 #else
 #error "Unknown processor"
 #endif

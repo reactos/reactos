@@ -41,7 +41,6 @@
 /* GLOBALS *******************************************************************/
 
 static LONG NrGuiAppsRunning = 0;
-static FAST_MUTEX GuiSwitchLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -53,9 +52,7 @@ co_AddGuiApp(PW32PROCESS W32Data)
    {
       BOOL Initialized;
 
-      ExAcquireFastMutex(&GuiSwitchLock);
       Initialized = co_IntInitializeDesktopGraphics();
-      ExReleaseFastMutex(&GuiSwitchLock);
 
       if (!Initialized)
       {
@@ -73,9 +70,7 @@ RemoveGuiApp(PW32PROCESS W32Data)
    W32Data->Flags &= ~W32PF_CREATEDWINORDC;
    if (InterlockedDecrement(&NrGuiAppsRunning) == 0)
    {
-      ExAcquireFastMutex(&GuiSwitchLock);
       IntEndDesktopGraphics();
-      ExReleaseFastMutex(&GuiSwitchLock);
    }
 }
 
@@ -139,7 +134,6 @@ NtUserManualGuiCheck(LONG Check)
 NTSTATUS FASTCALL
 InitGuiCheckImpl (VOID)
 {
-   ExInitializeFastMutex(&GuiSwitchLock);
    return STATUS_SUCCESS;
 }
 

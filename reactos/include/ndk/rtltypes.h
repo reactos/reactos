@@ -175,7 +175,7 @@ RemoveEntryList(
     OldBlink = Entry->Blink;
     OldFlink->Blink = OldBlink;
     OldBlink->Flink = OldFlink;
-    return (OldFlink == OldBlink);
+    return (BOOLEAN)(OldFlink == OldBlink);
 }
 
 static __inline

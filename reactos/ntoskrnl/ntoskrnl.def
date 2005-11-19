@@ -63,6 +63,7 @@ DbgPrintEx
 DbgPrintReturnControlC
 DbgQueryDebugFilterState@8
 DbgSetDebugFilterState@12
+@ExiAcquireFastMutex@4=@ExAcquireFastMutex@4
 @ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8
@@ -86,6 +87,7 @@ ExDeleteResourceLite@4
 ExDesktopObjectType DATA
 ExDisableResourceBoostLite@4
 ExEnumHandleTable@16
+@ExEnterCriticalRegionAndAcquireFastMutexUnsafe@4
 ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
@@ -133,7 +135,9 @@ ExRaiseStatus@4=RtlRaiseStatus@4
 ExRegisterCallback@12
 ExReinitializeResourceLite@4
 @ExReInitializeRundownProtection@4
+@ExiReleaseFastMutex@4=@ExReleaseFastMutex@4
 @ExReleaseFastMutexUnsafe@4
+@ExReleaseFastMutexUnsafeAndLeaveCriticalRegion@4
 ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4

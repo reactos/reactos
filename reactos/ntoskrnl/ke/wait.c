@@ -1,11 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS project
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ke/wait.c
- * PURPOSE:         Manages non-busy waiting
- *
- * PROGRAMMERS:     Alex Ionescu - Fixes and optimization.
- *                  Gunnar Dalsnes - Implementation
+ * PURPOSE:         Manages dispatch level wait-related code
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gunnar Dalsnes
  */
 
 /* INCLUDES ******************************************************************/
@@ -754,6 +753,21 @@ KiAbortWaitThread(PKTHREAD Thread,
     /* Reschedule the Thread */
     DPRINT("Unblocking the Thread\n");
     KiUnblockThread(Thread, &WaitStatus, 0);
+}
+
+VOID
+FASTCALL
+KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
+{
+    /* Increase contention count */
+    FastMutex->Contention++;
+
+    /* Wait for the event */
+    KeWaitForSingleObject(&FastMutex->Gate,
+                          WrMutex,
+                          WaitAny,
+                          FALSE,
+                          NULL);
 }
 
 BOOLEAN

@@ -26,7 +26,7 @@ CcAcquireBrokenMutexUnsafe(PFAST_MUTEX FastMutex)
     InterlockedIncrementUL(&FastMutex->Contention);
     while (InterlockedExchange(&FastMutex->Count, 0) == 0)
     {
-        KeWaitForSingleObject(&FastMutex->Event,
+        KeWaitForSingleObject(&FastMutex->Gate,
                               Executive,
                               KernelMode,
                               FALSE,
@@ -50,7 +50,7 @@ CcReleaseBrokenMutexUnsafe(PFAST_MUTEX FastMutex)
     InterlockedExchange(&FastMutex->Count, 1);
     if (FastMutex->Contention > 0)
     {
-        KeSetEvent(&FastMutex->Event, 0, FALSE);
+        KeSetEvent(&FastMutex->Gate, 0, FALSE);
     }
 }
 

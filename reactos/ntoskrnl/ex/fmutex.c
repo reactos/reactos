@@ -1,11 +1,9 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/fmutex.c
  * PURPOSE:         Implements fast mutexes
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,48 +11,193 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+VOID
+FASTCALL
+KiAcquireFastMutex(IN PFAST_MUTEX FastMutex);
+
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
-VOID FASTCALL
-ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
+VOID
+FASTCALL
+ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
-  ASSERT(KeGetCurrentThread() == NULL || FastMutex->Owner != KeGetCurrentThread());
-  ASSERT(KeGetCurrentIrql() == APC_LEVEL || 
-   KeGetCurrentThread() == NULL || 
-   KeGetCurrentThread()->KernelApcDisable);
-  
-  InterlockedIncrementUL(&FastMutex->Contention);
-  while (InterlockedExchange(&FastMutex->Count, 0) == 0)
-     {
-       KeWaitForSingleObject(&FastMutex->Event,
-			     Executive,
-			     KernelMode,
-			     FALSE,
-			     NULL);
-     }
-  InterlockedDecrementUL(&FastMutex->Contention);
-  FastMutex->Owner = KeGetCurrentThread();
+    PKTHREAD Thread = KeGetCurrentThread();
+
+    /* Enter the Critical Region */
+    KeEnterCriticalRegion();
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (Thread == NULL) ||
+           (Thread->CombinedApcDisable != 0) ||
+           (Thread->Teb == NULL) ||
+           (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    ASSERT((Thread == NULL) || (FastMutex->Owner != Thread));
+
+    /* Decrease the count */
+    if (InterlockedDecrement(&FastMutex->Count))
+    {
+        /* Someone is still holding it, use slow path */
+        KiAcquireFastMutex(FastMutex);
+    }
+
+    /* Set the owner */
+    FastMutex->Owner = Thread;
 }
 
 /*
  * @implemented
  */
-VOID FASTCALL
+VOID
+FASTCALL
+ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
+{
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (KeGetCurrentThread() == NULL) ||
+           (KeGetCurrentThread()->CombinedApcDisable != 0) ||
+           (KeGetCurrentThread()->Teb == NULL) ||
+           (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    ASSERT(FastMutex->Owner == KeGetCurrentThread());
+  
+    /* Erase the owner */
+    FastMutex->Owner = NULL;
+
+    /* Increase the count */
+    if (InterlockedIncrement(&FastMutex->Count) <= 0)
+    {
+        /* Someone was waiting for it, signal the waiter */
+        KeSetEventBoostPriority(&FastMutex->Gate, IO_NO_INCREMENT);
+    }
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+ExAcquireFastMutex(PFAST_MUTEX FastMutex)
+{
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
+    KIRQL OldIrql;
+   
+    /* Raise IRQL to APC */
+    OldIrql = KfRaiseIrql(APC_LEVEL);
+   
+    /* Decrease the count */
+    if (InterlockedDecrement(&FastMutex->Count))
+    {
+        /* Someone is still holding it, use slow path */
+        KiAcquireFastMutex(FastMutex);
+    }
+
+    /* Set the owner and IRQL */
+    FastMutex->Owner = KeGetCurrentThread();
+    FastMutex->OldIrql = OldIrql;
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+ExReleaseFastMutex (PFAST_MUTEX FastMutex)
+{
+    ASSERT_IRQL(APC_LEVEL);
+
+    /* Erase the owner */
+    FastMutex->Owner = NULL;
+
+    /* Increase the count */
+    if (InterlockedIncrement(&FastMutex->Count) <= 0)
+    {
+        /* Someone was waiting for it, signal the waiter */
+        KeSetEventBoostPriority(&FastMutex->Gate, IO_NO_INCREMENT);
+    }
+
+    /* Lower IRQL back */
+    KfLowerIrql(FastMutex->OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (Thread == NULL) ||
+           (Thread->CombinedApcDisable != 0) ||
+           (Thread->Teb == NULL) ||
+           (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    ASSERT((Thread == NULL) || (FastMutex->Owner != Thread));
+
+    /* Decrease the count */
+    if (InterlockedDecrement(&FastMutex->Count))
+    {
+        /* Someone is still holding it, use slow path */
+        KiAcquireFastMutex(FastMutex);
+    }
+
+    /* Set the owner */
+    FastMutex->Owner = Thread;
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
 ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
-  ASSERT(KeGetCurrentThread() == NULL || FastMutex->Owner == KeGetCurrentThread());
-  ASSERT(KeGetCurrentIrql() == APC_LEVEL || 
-   KeGetCurrentThread() == NULL || 
-   KeGetCurrentThread()->KernelApcDisable);
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (KeGetCurrentThread() == NULL) ||
+           (KeGetCurrentThread()->CombinedApcDisable != 0) ||
+           (KeGetCurrentThread()->Teb == NULL) ||
+           (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    ASSERT(FastMutex->Owner == KeGetCurrentThread());
   
-  FastMutex->Owner = NULL;
-  InterlockedExchange(&FastMutex->Count, 1);
-  if (FastMutex->Contention > 0)
+    /* Erase the owner */
+    FastMutex->Owner = NULL;
+
+    /* Increase the count */
+    if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
-      KeSetEvent(&FastMutex->Event, 0, FALSE);
+        /* Someone was waiting for it, signal the waiter */
+        KeSetEventBoostPriority(&FastMutex->Gate, IO_NO_INCREMENT);
+    }
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+FASTCALL
+ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
+{
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
+    KIRQL OldIrql;
+
+    /* Raise to APC_LEVEL */
+    OldIrql = KfRaiseIrql(APC_LEVEL);
+
+    /* Check if we can quickly acquire it */
+    if (InterlockedCompareExchange(&FastMutex->Count, 0, 1) == 1)
+    {
+        /* We have, set us as owners */
+        FastMutex->Owner = KeGetCurrentThread();
+        return TRUE;
+    }
+    else
+    {
+        /* Acquire attempt failed */
+        KfLowerIrql(OldIrql);
+        return FALSE;
     }
 }
 

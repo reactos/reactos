@@ -8,21 +8,21 @@ VOID FASTCALL IntEnableFontRendering(BOOL Enable);
 INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
 
 #define IntLockProcessPrivateFonts(W32Process) \
-  ExAcquireFastMutex(&W32Process->PrivateFontListLock)
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)
 
 #define IntUnLockProcessPrivateFonts(W32Process) \
-  ExReleaseFastMutex(&W32Process->PrivateFontListLock)
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&W32Process->PrivateFontListLock)
 
 #define IntLockGlobalFonts \
-  ExAcquireFastMutex(&FontListLock)
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&FontListLock)
 
 #define IntUnLockGlobalFonts \
-  ExReleaseFastMutex(&FontListLock)
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&FontListLock)
 
 #define IntLockFreeType \
-  ExAcquireFastMutex(&FreeTypeLock)
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&FreeTypeLock)
 
 #define IntUnLockFreeType \
-  ExReleaseFastMutex(&FreeTypeLock)
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&FreeTypeLock)
 
 #endif /* _WIN32K_TEXT_H */

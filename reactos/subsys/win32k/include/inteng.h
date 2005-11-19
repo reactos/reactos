@@ -35,10 +35,10 @@ typedef struct tagSPAN
 /* Definitions of IntEngXxx functions */
 
 #define IntEngLockProcessDriverObjs(W32Process) \
-  ExAcquireFastMutex(&(W32Process)->DriverObjListLock)
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&(W32Process)->DriverObjListLock)
 
 #define IntEngUnLockProcessDriverObjs(W32Process) \
-  ExReleaseFastMutex(&(W32Process)->DriverObjListLock)
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&(W32Process)->DriverObjListLock)
 
 VOID FASTCALL
 IntEngCleanupDriverObjs(struct _EPROCESS *Process,
