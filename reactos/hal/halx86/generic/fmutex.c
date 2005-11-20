@@ -42,7 +42,7 @@ ExAcquireFastMutex(PFAST_MUTEX FastMutex)
         FastMutex->Contention++;
         KeWaitForSingleObject(&FastMutex->Gate,
                               WrExecutive,
-                              WaitAny,
+                              KernelMode,
                               FALSE,
                               NULL);
     }
