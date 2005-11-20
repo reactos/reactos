@@ -3,7 +3,7 @@
 #ifdef __GNUC__
 #include "regtests.h"
 #define NDEBUG
-#include "../../include/debug.h"
+#include "debug.h"
 
 #define TestFilename L"C:\\File"
 #define TestExpectedFilename L"\\??\\" TestFilename
