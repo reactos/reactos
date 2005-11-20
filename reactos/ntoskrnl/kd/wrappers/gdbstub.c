@@ -320,12 +320,29 @@ GspPutPacketNoWait(PCHAR Buffer)
 static volatile BOOLEAN GspMemoryError = FALSE;
 static volatile void *GspAccessLocation = NULL;
 
+static CHAR
+GspReadMemSafe(PCHAR Address)
+{
+  CHAR ch;
+
+  if (NULL == Address)
+    {
+      GspMemoryError = TRUE;
+      return '\0';
+    }
+
+  GspAccessLocation = Address;
+  ch = *Address;
+  GspAccessLocation = NULL;
+
+  return ch;
+}
 
 /* Convert the memory pointed to by Address into hex, placing result in Buffer */
 /* Return a pointer to the last char put in Buffer (null) */
 /* If MayFault is TRUE, then we should set GspMemoryError in response to
    a fault; if FALSE treat a fault like any other fault in the stub.  */
-PCHAR
+static PCHAR
 GspMem2Hex(PCHAR Address,
   PCHAR Buffer,
   LONG Count,
@@ -334,89 +351,124 @@ GspMem2Hex(PCHAR Address,
   ULONG i;
   CHAR ch;
 
-  if (NULL == Address && MayFault)
-    {
-      GspMemoryError = TRUE;
-      return Buffer;
-    }
-
   for (i = 0; i < (ULONG) Count; i++)
     {
       if (MayFault)
         {
-          GspAccessLocation = Address;
-        }
-      ch = *Address;
-      GspAccessLocation = NULL;
-      if (MayFault && GspMemoryError)
-        {
-          return Buffer;
-        }
-      *Buffer++ = HexChars[(ch >> 4) & 0xf];
-      *Buffer++ = HexChars[ch & 0xf];
-      Address++;
-    }
-  *Buffer = 0;
-  return Buffer;
-}
-
-
-/* Convert the hex array pointed to by Buffer into binary to be placed at Address */
-/* Return a pointer to the character AFTER the last byte read from Buffer */
-PCHAR
-GspHex2Mem(PCHAR Buffer,
-  PCHAR Address,
-  ULONG Count,
-  BOOLEAN MayFault)
-{
-  PCHAR current;
-  PCHAR page;
-  ULONG countinpage;
-  ULONG i;
-  CHAR ch;
-  ULONG oldprot = 0;
-
-  current = Address;
-  while ( current < Address + Count )
-    {
-      page = (PCHAR)PAGE_ROUND_DOWN(current);
-      if (Address + Count <= page + PAGE_SIZE)
-        {
-          /* Fits in this page */
-          countinpage = Count;
-        }
-      else
-        {
-          /* Flows into next page, handle only current page in this iteration */
-          countinpage = PAGE_SIZE - (Address - page);
-        }
-      if (MayFault)
-        {
-          oldprot = MmGetPageProtect(NULL, Address);
-          MmSetPageProtect(NULL, Address, PAGE_EXECUTE_READWRITE);
-        }
-
-      for (i = 0; i < countinpage && ! GspMemoryError; i++)
-        {
-          ch = (CHAR)(HexValue(*Buffer++) << 4);
-          ch = (CHAR)(ch + HexValue(*Buffer++));
-
-          GspAccessLocation = current;
-          *current = ch;
-          GspAccessLocation = NULL;
-          current++;
-        }
-      if (MayFault)
-        {
-          MmSetPageProtect(NULL, page, oldprot);
+          ch = GspReadMemSafe(Address);
           if (GspMemoryError)
             {
               return Buffer;
             }
         }
+      else
+        {
+          ch = *Address;
+        }
+      *Buffer++ = HexChars[(ch >> 4) & 0xf];
+      *Buffer++ = HexChars[ch & 0xf];
+      Address++;
     }
 
+  *Buffer = 0;
   return Buffer;
+}
+
+static ULONG
+GspWriteMem(PCHAR Address,
+  ULONG Count,
+  BOOLEAN MayFault,
+  CHAR (*GetContent)(PVOID Context, ULONG Offset),
+  PVOID Context)
+{
+  PCHAR Current;
+  PCHAR Page;
+  ULONG CountInPage;
+  ULONG i;
+  CHAR ch;
+  ULONG OldProt = 0;
+
+  Current = Address;
+  while (Current < Address + Count)
+    {
+      Page = (PCHAR)PAGE_ROUND_DOWN(Current);
+      if (Address + Count <= Page + PAGE_SIZE)
+        {
+          /* Fits in this page */
+          CountInPage = Count;
+        }
+      else
+        {
+          /* Flows into next page, handle only current page in this iteration */
+          CountInPage = PAGE_SIZE - (Address - Page);
+        }
+      if (MayFault)
+        {
+          OldProt = MmGetPageProtect(NULL, Address);
+          MmSetPageProtect(NULL, Address, PAGE_EXECUTE_READWRITE);
+        }
+
+      for (i = 0; i < CountInPage && ! GspMemoryError; i++)
+        {
+          ch = (*GetContent)(Context, Current - Address);
+
+          if (MayFault)
+            {
+              GspAccessLocation = Current;
+            }
+          *Current = ch;
+          if (MayFault)
+            {
+              GspAccessLocation = NULL;
+            }
+          Current++;
+        }
+      if (MayFault)
+        {
+          MmSetPageProtect(NULL, Page, OldProt);
+          if (GspMemoryError)
+            {
+              return Current - Address;
+            }
+        }
+    }
+
+  return Current - Address;
+}
+
+static CHAR
+GspHex2MemGetContent(PVOID Context, ULONG Offset)
+{
+  return (CHAR)((HexValue(*((PCHAR) Context + 2 * Offset)) << 4) +
+                HexValue(*((PCHAR) Context + 2 * Offset + 1)));
+}
+
+/* Convert the hex array pointed to by Buffer into binary to be placed at Address */
+/* Return a pointer to the character AFTER the last byte read from Buffer */
+static PCHAR
+GspHex2Mem(PCHAR Buffer,
+  PCHAR Address,
+  ULONG Count,
+  BOOLEAN MayFault)
+{
+  Count = GspWriteMem(Address, Count, MayFault, GspHex2MemGetContent, Buffer);
+
+  return Buffer + 2 * Count;
+}
+
+static CHAR
+GspWriteMemSafeGetContent(PVOID Context, ULONG Offset)
+{
+  ASSERT(0 == Offset);
+
+  return *((PCHAR) Context);
+}
+
+static void
+GspWriteMemSafe(PCHAR Address,
+  CHAR Ch)
+{
+  GspWriteMem(Address, 1, TRUE, GspWriteMemSafeGetContent, &Ch);
 }
 
 
@@ -922,186 +974,329 @@ GspQueryThreadStatus(PCHAR Request)
     }
 }
 
+#define DR7_L0         0x00000001 /* Local breakpoint 0 enable */
+#define DR7_G0         0x00000002 /* Global breakpoint 0 enable */
+#define DR7_L1         0x00000004 /* Local breakpoint 1 enable */
+#define DR7_G1         0x00000008 /* Global breakpoint 1 enable */
+#define DR7_L2         0x00000010 /* Local breakpoint 2 enable */
+#define DR7_G2         0x00000020 /* Global breakpoint 2 enable */
+#define DR7_L3         0x00000040 /* Local breakpoint 3 enable */
+#define DR7_G3         0x00000080 /* Global breakpoint 3 enable */
+#define DR7_LE         0x00000100 /* Local exact breakpoint enable (old) */
+#define DR7_GE         0x00000200 /* Global exact breakpoint enable (old) */
+#define DR7_GD         0x00002000 /* General detect enable */
+#define DR7_TYPE0_MASK 0x00030000 /* Breakpoint 0 condition */
+#define DR7_LEN0_MASK  0x000c0000 /* Breakpoint 0 length */
+#define DR7_TYPE1_MASK 0x00300000 /* Breakpoint 1 condition */
+#define DR7_LEN1_MASK  0x00c00000 /* Breakpoint 1 length */
+#define DR7_TYPE2_MASK 0x03000000 /* Breakpoint 2 condition */
+#define DR7_LEN2_MASK  0x0c000000 /* Breakpoint 2 length */
+#define DR7_TYPE3_MASK 0x30000000 /* Breakpoint 3 condition */
+#define DR7_LEN3_MASK  0xc0000000 /* Breakpoint 3 length */
+#define DR7_GLOBAL_ENABLE(Bp) (2 << (2 * (Bp)))
+#define DR7_TYPE(Bp, Type)    ((Type) << (16 + 4 * (Bp)))
+#define DR7_LEN(Bp, Len)      ((Len) << (18 + 4 * (Bp)))
 
-typedef struct _GsHwBreakPoint
+#define I386_BP_TYPE_EXECUTE        0
+#define I386_BP_TYPE_DATA_WRITE     1
+#define I386_BP_TYPE_DATA_READWRITE 3
+
+#define I386_OPCODE_INT3 0xcc
+
+#define GDB_ZTYPE_MEMORY_BREAKPOINT   0
+#define GDB_ZTYPE_HARDWARE_BREAKPOINT 1
+#define GDB_ZTYPE_WRITE_WATCHPOINT    2
+#define GDB_ZTYPE_READ_WATCHPOINT     3
+#define GDB_ZTYPE_ACCESS_WATCHPOINT   4
+
+typedef struct _GSPHWBREAKPOINT
 {
-  BOOLEAN Enabled;
   ULONG Type;
+  ULONG_PTR Address;
   ULONG Length;
-  ULONG Address;
-} GsHwBreakPoint;
+} GSPHWBREAKPOINT;
 
-#if defined(__GNUC__)
-GsHwBreakPoint GspBreakpoints[4] =
-{
-  { Enabled : FALSE },
-  { Enabled : FALSE },
-  { Enabled : FALSE },
-  { Enabled : FALSE }
-};
-#else
-GsHwBreakPoint GspBreakpoints[4] =
-{
-  { FALSE },
-  { FALSE },
-  { FALSE },
-  { FALSE }
-};
-#endif
+#define MAX_HW_BREAKPOINTS 4
+static unsigned GspHwBreakpointCount = 0;
+static GSPHWBREAKPOINT GspHwBreakpoints[MAX_HW_BREAKPOINTS];
 
-VOID
-GspCorrectHwBreakpoint()
+typedef struct _GSPSWBREAKPOINT
 {
-  ULONG BreakpointNumber;
-  BOOLEAN CorrectIt;
-  BOOLEAN Bit;
-  ULONG dr7_;
+  ULONG_PTR Address;
+  CHAR PrevContent;
+  BOOLEAN Active;
+} GSPSWBREAKPOINT;
 
-#if defined(__GNUC__)
-  asm volatile (
-    "movl %%db7, %0\n" : "=r" (dr7_) : );
-  do
+#define MAX_SW_BREAKPOINTS 64
+static unsigned GspSwBreakpointCount = 0;
+static GSPSWBREAKPOINT GspSwBreakpoints[MAX_SW_BREAKPOINTS];
+
+static void
+GspSetHwBreakpoint(ULONG Type, ULONG_PTR Address, ULONG Length)
+{
+  DPRINT("GspSetHwBreakpoint(%lu, 0x%p, %lu)\n", Type, Address, Length);
+
+  if (GDB_ZTYPE_READ_WATCHPOINT == Type)
     {
-      ULONG addr0, addr1, addr2, addr3;
-
-      asm volatile (
-        "movl %%db0, %0\n"
-        "movl %%db1, %1\n"
-        "movl %%db2, %2\n"
-        "movl %%db3, %3\n"
-          : "=r" (addr0), "=r" (addr1),
-            "=r" (addr2), "=r" (addr3) : );
-    } while (FALSE);
-#elif defined(_MSC_VER)
-  __asm
-    {
-      mov eax, dr7; mov dr7_, eax;
-      mov eax, dr0; mov addr0, eax;
-      mov eax, dr1; mov addr1, eax;
-      mov eax, dr2; mov addr2, eax;
-      mov eax, dr3; mov addr3, eax;
+      DPRINT1("Read watchpoint not supported\n");
+      strcpy(GspOutBuffer, "E22");
     }
-#else
-#error Unknown compiler for inline assembler
-#endif
-  CorrectIt = FALSE;
-  for (BreakpointNumber = 0; BreakpointNumber < 3; BreakpointNumber++)
+  else if (GDB_ZTYPE_HARDWARE_BREAKPOINT == Type && 1 != Length)
     {
-      Bit = 2 << (BreakpointNumber << 1);
-      if (!(dr7_ & Bit) && GspBreakpoints[BreakpointNumber].Enabled)
+      DPRINT1("Invalid length %lu for hardware breakpoint\n", Length);
+      strcpy(GspOutBuffer, "E22");
+    }
+  else if (1 != Length && 2 != Length && 4 != Length)
+    {
+      DPRINT1("Invalid length %lu for GDB Z type %lu\n", Length, Type);
+      strcpy(GspOutBuffer, "E22");
+    }
+  else if (0 != (Address & (Length - 1)))
+    {
+      DPRINT1("Invalid alignment for address 0x%p and length %d\n",
+              Address, Length);
+      strcpy(GspOutBuffer, "E22");
+    }
+  else if (MAX_HW_BREAKPOINTS == GspHwBreakpointCount)
+    {
+      DPRINT1("Trying to set too many hardware breakpoints\n");
+      strcpy(GspOutBuffer, "E22");
+    }
+  else
+    {
+      DPRINT("Stored at index %u\n", GspHwBreakpointCount);
+      GspHwBreakpoints[GspHwBreakpointCount].Type = Type;
+      GspHwBreakpoints[GspHwBreakpointCount].Address = Address;
+      GspHwBreakpoints[GspHwBreakpointCount].Length = Length;
+      GspHwBreakpointCount++;
+      strcpy(GspOutBuffer, "OK");
+    }
+}
+
+static void
+GspRemoveHwBreakpoint(ULONG Type, ULONG_PTR Address, ULONG Length)
+{
+  unsigned Index;
+
+  DPRINT("GspRemoveHwBreakpoint(%lu, 0x%p, %lu)\n", Type, Address, Length);
+  for (Index = 0; Index < GspHwBreakpointCount; Index++)
+    {
+      if (GspHwBreakpoints[Index].Type == Type &&
+          GspHwBreakpoints[Index].Address == Address &&
+          GspHwBreakpoints[Index].Length == Length)
         {
-          CorrectIt = TRUE;
-          dr7_ |= Bit;
-          dr7_ &= ~(0xf0000 << (BreakpointNumber << 2));
-          dr7_ |= (((GspBreakpoints[BreakpointNumber].Length << 2) |
-          GspBreakpoints[BreakpointNumber].Type) << 16) << (BreakpointNumber << 2);
-          switch (BreakpointNumber)
+          DPRINT("Found match at index %u\n", Index);
+          if (Index + 1 < GspHwBreakpointCount)
             {
-#if defined(__GNUC__)
-            case 0:
-              asm volatile ("movl %0, %%dr0\n"
-                            : : "r" (GspBreakpoints[BreakpointNumber].Address) );
-              break;
+              memmove(GspHwBreakpoints + Index,
+                      GspHwBreakpoints + (Index + 1),
+                      (GspHwBreakpointCount - Index - 1) *
+                      sizeof(GSPHWBREAKPOINT));
+            }
+          GspHwBreakpointCount--;
+          strcpy(GspOutBuffer, "OK");
+          return;
+        }
+    }
 
-            case 1:
-              asm volatile ("movl %0, %%dr1\n"
-                            : : "r" (GspBreakpoints[BreakpointNumber].Address) );
-              break;
+  DPRINT1("Not found\n");
+  strcpy(GspOutBuffer, "E22");
+}
 
-            case 2:
-              asm volatile ("movl %0, %%dr2\n"
-                            : : "r" (GspBreakpoints[BreakpointNumber].Address) );
-              break;
+static void
+GspSetSwBreakpoint(ULONG_PTR Address)
+{
+  DPRINT("GspSetSwBreakpoint(0x%p)\n", Address);
 
-            case 3:
-              asm volatile ("movl %0, %%dr3\n"
-                            : : "r" (GspBreakpoints[BreakpointNumber].Address) );
-              break;
-#elif defined(_MSC_VER)
-            case 0:
-              {
-                ULONG addr = GspBreakpoints[BreakpointNumber].Address;
-                __asm mov eax, addr;
-                __asm mov dr0, eax;
-              }
-              break;
-            case 1:
-              {
-                ULONG addr = GspBreakpoints[BreakpointNumber].Address;
-                __asm mov eax, addr;
-                __asm mov dr1, eax;
-              }
-              break;
-            case 2:
-              {
-                ULONG addr = GspBreakpoints[BreakpointNumber].Address;
-                __asm mov eax, addr;
-                __asm mov dr2, eax;
-              }
-              break;
-            case 3:
-              {
-                ULONG addr = GspBreakpoints[BreakpointNumber].Address;
-                __asm mov eax, addr;
-                __asm mov dr3, eax;
-              }
-              break;
-#else
-#error Unknown compiler for inline assembler
-#endif
+  if (MAX_SW_BREAKPOINTS == GspSwBreakpointCount)
+    {
+      DPRINT1("Trying to set too many software breakpoints\n");
+      strcpy(GspOutBuffer, "E22");
+    }
+  else
+    {
+      DPRINT("Stored at index %u\n", GspSwBreakpointCount);
+      GspSwBreakpoints[GspSwBreakpointCount].Address = Address;
+      GspSwBreakpoints[GspSwBreakpointCount].Active = FALSE;
+      GspSwBreakpointCount++;
+      strcpy(GspOutBuffer, "OK");
+    }
+}
+
+static void
+GspRemoveSwBreakpoint(ULONG_PTR Address)
+{
+  unsigned Index;
+
+  DPRINT("GspRemoveSwBreakpoint(0x%p)\n", Address);
+  for (Index = 0; Index < GspSwBreakpointCount; Index++)
+    {
+      if (GspSwBreakpoints[Index].Address == Address)
+        {
+          DPRINT("Found match at index %u\n", Index);
+          ASSERT(! GspSwBreakpoints[Index].Active);
+          if (Index + 1 < GspSwBreakpointCount)
+            {
+              memmove(GspSwBreakpoints + Index,
+                      GspSwBreakpoints + (Index + 1),
+                      (GspSwBreakpointCount - Index - 1) *
+                      sizeof(GSPSWBREAKPOINT));
+            }
+          GspSwBreakpointCount--;
+          strcpy(GspOutBuffer, "OK");
+          return;
+        }
+    }
+
+  DPRINT1("Not found\n");
+  strcpy(GspOutBuffer, "E22");
+}
+
+static void
+GspLoadHwBreakpoint(PKTRAP_FRAME TrapFrame,
+                    unsigned BpIndex,
+                    ULONG_PTR Address,
+                    ULONG Length,
+                    ULONG Type)
+{
+  DPRINT("GspLoadHwBreakpoint(0x%p, %d, 0x%p, %d)\n", TrapFrame, BpIndex,
+         Address, Type);
+
+  /* Set the DR7_Gx bit to globally enable the breakpoint */
+  TrapFrame->Dr7 |= DR7_GLOBAL_ENABLE(BpIndex) |
+                    DR7_LEN(BpIndex, Length) |
+                    DR7_TYPE(BpIndex, Type);
+
+  switch (BpIndex)
+    {
+    case 0:
+      DPRINT("Setting DR0 to 0x%p\n", Address);
+      TrapFrame->Dr0 = Address;
+      break;
+
+    case 1:
+      DPRINT("Setting DR1 to 0x%p\n", Address);
+      TrapFrame->Dr1 = Address;
+      break;
+
+    case 2:
+      DPRINT("Setting DR2 to 0x%p\n", Address);
+      TrapFrame->Dr2 = Address;
+      break;
+
+    case 3:
+      DPRINT("Setting DR3 to 0x%p\n", Address);
+      TrapFrame->Dr3 = Address;
+      break;
+    }
+}
+
+static void
+GspLoadBreakpoints(PKTRAP_FRAME TrapFrame)
+{
+  unsigned Index;
+  ULONG i386Type;
+
+  DPRINT("GspLoadBreakpoints\n");
+  DPRINT("DR7 on entry: 0x%08x\n", TrapFrame->Dr7);
+  /* Remove all breakpoints */
+  TrapFrame->Dr7 &= ~(DR7_L0 | DR7_L1 | DR7_L2 | DR7_L3 |
+                      DR7_G0 | DR7_G1 | DR7_G2 | DR7_G3 |
+                      DR7_TYPE0_MASK | DR7_LEN0_MASK |
+                      DR7_TYPE1_MASK | DR7_LEN1_MASK |
+                      DR7_TYPE2_MASK | DR7_LEN2_MASK |
+                      DR7_TYPE3_MASK | DR7_LEN3_MASK);
+
+  for (Index = 0; Index < GspHwBreakpointCount; Index++)
+    {
+      switch(GspHwBreakpoints[Index].Type)
+        {
+        case GDB_ZTYPE_HARDWARE_BREAKPOINT:
+          i386Type = I386_BP_TYPE_EXECUTE;
+          break;
+        case GDB_ZTYPE_WRITE_WATCHPOINT:
+          i386Type = I386_BP_TYPE_DATA_WRITE;
+          break;
+        case GDB_ZTYPE_ACCESS_WATCHPOINT:
+          i386Type = I386_BP_TYPE_DATA_READWRITE;
+          break;
+        default:
+          ASSERT(FALSE);
+          i386Type = I386_BP_TYPE_EXECUTE;
+          break;
+        }
+
+      GspLoadHwBreakpoint(TrapFrame, Index, GspHwBreakpoints[Index].Address,
+                          GspHwBreakpoints[Index].Length - 1, i386Type);
+    }
+
+  for (Index = 0; Index < GspSwBreakpointCount; Index++)
+    {
+      if (GspHwBreakpointCount + Index < MAX_HW_BREAKPOINTS)
+        {
+          DPRINT("Implementing software interrupt using hardware register\n");
+          GspLoadHwBreakpoint(TrapFrame, GspHwBreakpointCount + Index,
+                              GspSwBreakpoints[Index].Address, 0,
+                              I386_BP_TYPE_EXECUTE);
+          GspSwBreakpoints[Index].Active = FALSE;
+        }
+      else
+        {
+          DPRINT("Using real software breakpoint\n");
+          GspMemoryError = FALSE;
+          GspSwBreakpoints[Index].PrevContent = GspReadMemSafe((PCHAR) GspSwBreakpoints[Index].Address);
+          if (! GspMemoryError)
+            {
+              GspWriteMemSafe((PCHAR) GspSwBreakpoints[Index].Address, I386_OPCODE_INT3);
+            }
+          GspSwBreakpoints[Index].Active = ! GspMemoryError;
+          if (GspMemoryError)
+            {
+              DPRINT1("Failed to set software breakpoint at 0x%p\n",
+                      GspSwBreakpoints[Index].Address);
+            }
+          else
+            {
+              DPRINT("Successfully set software breakpoint at 0x%p\n",
+                     GspSwBreakpoints[Index].Address);
+    DPRINT1("Successfully set software breakpoint at 0x%p\n", GspSwBreakpoints[Index].Address);
             }
         }
-      else if ((dr7_ & Bit) && !GspBreakpoints[BreakpointNumber].Enabled)
+    }
+
+  DPRINT("Final DR7 value 0x%08x\n", TrapFrame->Dr7);
+}
+
+static void
+GspUnloadBreakpoints(PKTRAP_FRAME TrapFrame)
+{
+  unsigned Index;
+
+  DPRINT("GspUnloadHwBreakpoints\n");
+
+  for (Index = 0; Index < GspSwBreakpointCount; Index++)
+    {
+      if (GspSwBreakpoints[Index].Active)
         {
-          CorrectIt = TRUE;
-          dr7_ &= ~Bit;
-          dr7_ &= ~(0xf0000 << (BreakpointNumber << 2));
+          GspMemoryError = FALSE;
+          GspWriteMemSafe((PCHAR) GspSwBreakpoints[Index].Address,
+                          GspSwBreakpoints[Index].PrevContent);
+          GspSwBreakpoints[Index].Active = FALSE;
+          if (GspMemoryError)
+            {
+              DPRINT1("Failed to remove software breakpoint from 0x%p\n",
+                      GspSwBreakpoints[Index].Address);
+            }
+          else
+            {
+              DPRINT("Successfully removed software breakpoint from 0x%p\n",
+                     GspSwBreakpoints[Index].Address);
+            }
         }
     }
-  if (CorrectIt)
-    {
-#if defined(__GNUC__)
-      asm volatile ( "movl %0, %%db7\n" : : "r" (dr7_));
-#elif defined(_MSC_VER)
-      __asm mov eax, dr7_;
-      __asm mov dr7, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
-    }
 }
 
-ULONG
-GspRemoveHwBreakpoint(ULONG BreakpointNumber)
-{
-  if (!GspBreakpoints[BreakpointNumber].Enabled)
-    {
-      return -1;
-    }
-  GspBreakpoints[BreakpointNumber].Enabled = 0;
-  return 0;
-}
-
-
-ULONG
-GspSetHwBreakpoint(ULONG BreakpointNumber,
-  ULONG Type,
-  ULONG Length,
-  ULONG Address)
-{
-  if (GspBreakpoints[BreakpointNumber].Enabled)
-    {
-      return -1;
-    }
-  GspBreakpoints[BreakpointNumber].Enabled = TRUE;
-  GspBreakpoints[BreakpointNumber].Type = Type;
-  GspBreakpoints[BreakpointNumber].Length = Length;
-  GspBreakpoints[BreakpointNumber].Address = Address;
-  return 0;
-}
-
-
-static BOOL gdb_attached_yet = FALSE;
+static BOOLEAN gdb_attached_yet = FALSE;
 /*
  * This function does all command procesing for interfacing to gdb.
  */
@@ -1119,14 +1314,6 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   PCHAR ptr;
 
   /* FIXME: Stop on other CPUs too */
-  /* Disable hardware debugging while we are inside the stub */
-#if defined(__GNUC__)
-  __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
-#elif defined(_MSC_VER)
-  __asm mov eax, 0  __asm mov dr7, eax
-#else
-#error Unknown compiler for inline assembler
-#endif
 
   if (STATUS_ACCESS_VIOLATION == (NTSTATUS) ExceptionRecord->ExceptionCode &&
       NULL != GspAccessLocation &&
@@ -1139,8 +1326,21 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     }
   else
     {
+      DPRINT("Thread %p entering stub\n", PsGetCurrentThread());
       /* Can only debug 1 thread at a time... */
       ExAcquireFastMutex(&GspLock);
+      DPRINT("Thread %p acquired mutex\n", PsGetCurrentThread());
+
+      /* Disable hardware debugging while we are inside the stub */
+#if defined(__GNUC__)
+      __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
+#elif defined(_MSC_VER)
+      __asm mov eax, 0  __asm mov dr7, eax
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+      GspUnloadBreakpoints(TrapFrame);
 
       /* Make sure we're debugging the current thread. */
       if (NULL != GspDbgThread)
@@ -1371,7 +1571,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                       {
                         if (dr6_ & (1 << BreakpointNumber))
                           {
-                            if (GspBreakpoints[BreakpointNumber].Type == 0)
+                            if (GspHwBreakpoints[BreakpointNumber].Type == 0)
                               {
                                 /* Set restore flag */
                                 Context->EFlags |= 0x10000;
@@ -1380,7 +1580,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                           }
                       }
                   }
-                GspCorrectHwBreakpoint();
+                GspLoadBreakpoints(TrapFrame);
 #if defined(__GNUC__)
                 asm volatile ("movl %0, %%db6\n" : : "r" (0));
 #elif defined(_MSC_VER)
@@ -1395,7 +1595,9 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                     GspDbgThread = NULL;
                   }
 
+                DPRINT("Thread %p releasing mutex\n", PsGetCurrentThread());
                 ExReleaseFastMutex(&GspLock);
+                DPRINT("Thread %p leaving stub\n", PsGetCurrentThread());
                 return kdContinue;
                 break;
               }
@@ -1417,46 +1619,46 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
               GspQueryThreadStatus(ptr);
               break;
 
-            case 'Y':
+            case 'Z':
               {
-                LONG Number;
-                LONG Length;
                 LONG Type;
                 LONG Address;
+                LONG Length;
 
-                ptr = &GspOutBuffer[1];
-                GspHex2Long(&ptr, &Number);
-                ptr++;
                 GspHex2Long(&ptr, &Type);
                 ptr++;
-                GspHex2Long(&ptr, &Length);
-                ptr++;
                 GspHex2Long(&ptr, &Address);
-                if (GspSetHwBreakpoint(Number & 0x3, Type & 0x3 , Length & 0x3, Address) == 0)
+                ptr++;
+                GspHex2Long(&ptr, &Length);
+                if (0 == Type)
                   {
-                    strcpy(GspOutBuffer, "OK");
+                  GspSetSwBreakpoint((ULONG_PTR) Address);
                   }
                 else
                   {
-                    strcpy(GspOutBuffer, "E");
+                  GspSetHwBreakpoint(Type, (ULONG_PTR) Address, Length);
                   }
                 break;
               }
 
-            /* Remove hardware breakpoint */
-            case 'y':
+            case 'z':
               {
-                LONG Number;
+                LONG Type;
+                LONG Address;
+                LONG Length;
 
-                ptr = &GspOutBuffer[1];
-                GspHex2Long(&ptr, &Number);
-                if (GspRemoveHwBreakpoint(Number & 0x3) == 0)
+                GspHex2Long(&ptr, &Type);
+                ptr++;
+                GspHex2Long(&ptr, &Address);
+                ptr++;
+                GspHex2Long(&ptr, &Length);
+                if (0 == Type)
                   {
-                    strcpy(GspOutBuffer, "OK");
+                  GspRemoveSwBreakpoint((ULONG_PTR) Address);
                   }
                 else
                   {
-                    strcpy(GspOutBuffer, "E");
+                  GspRemoveHwBreakpoint(Type, (ULONG_PTR) Address, Length);
                   }
                 break;
               }
@@ -1466,7 +1668,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
             }
 
           /* reply to the request */
-          GspPutPacket(&GspOutBuffer[0]);
+          GspPutPacket(GspOutBuffer);
         }
 
       /* not reached */
