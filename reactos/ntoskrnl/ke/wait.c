@@ -765,7 +765,7 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
     /* Wait for the event */
     KeWaitForSingleObject(&FastMutex->Gate,
                           WrMutex,
-                          WaitAny,
+                          KernelMode,
                           FALSE,
                           NULL);
 }
