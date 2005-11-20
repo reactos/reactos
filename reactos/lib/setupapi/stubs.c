@@ -213,6 +213,18 @@ BOOL WINAPI SetupDiGetClassImageListExW(PSP_CLASSIMAGELIST_DATA ClassImageListDa
 
 
 /***********************************************************************
+ *		SetupDiGetClassImageIndex(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageIndex(PSP_CLASSIMAGELIST_DATA ClassImageListData,
+                                      CONST GUID *ClassGuid, PINT ImageIndex)
+{
+    FIXME ("Stub %p %p %p\n", ClassImageListData, ClassGuid, ImageIndex);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/***********************************************************************
  *		SetupDiDestroyClassImageList(SETUPAPI.@)
  */
 BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
