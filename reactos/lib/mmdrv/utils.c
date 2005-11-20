@@ -166,12 +166,51 @@ MMRESULT FindDevices()
 //    DriverKey = OpenParametersKey();
 //  see drvutil.c of MS DDK for how this SHOULD be done...
 
-    // FIXME: This is hard-coded for now, to use the hardware emulated by Bochs...
+  
+    SHORT i;
+    HANDLE h;
+    WCHAR DeviceName[SOUND_MAX_DEVICE_NAME]; 
+
+    for (i=0; OpenDevice(WaveOutDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
+    { 
+        wsprintf(DeviceName, L"WaveOut%d\0", i);
+        CloseHandle(h);
+        AddDeviceToList(&DeviceList, WaveOutDevice, 0, DeviceName);
+    }
+
+    for (i=0; OpenDevice(WaveInDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
+    { 
+        wsprintf(DeviceName, L"WaveIn%d\0", i);
+        CloseHandle(h);
+        AddDeviceToList(&DeviceList, WaveInDevice, 0, DeviceName);
+    }
+
+    for (i=0; OpenDevice(MidiOutDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
+    { 
+        wsprintf(DeviceName, L"MidiOut%d\0", i);
+        CloseHandle(h);
+        AddDeviceToList(&DeviceList, MidiOutDevice, 0, DeviceName);
+    }
+
+    for (i=0; OpenDevice(MidiInDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
+    { 
+        wsprintf(DeviceName, L"MidiIn%d\0", i);
+        CloseHandle(h);
+        AddDeviceToList(&DeviceList, MidiInDevice, 0, DeviceName);
+    }
+
+    for (i=0; OpenDevice(AuxDevice, i, &h, GENERIC_READ) == MMSYSERR_NOERROR; i++) 
+    { 
+        wsprintf(DeviceName, L"Aux%d\0", i);
+        CloseHandle(h);
+        AddDeviceToList(&DeviceList, AuxDevice, 0, DeviceName);
+    }
+
 
     // MIDI Out 0: MPU-401 UART
-    AddDeviceToList(&DeviceList, MidiOutDevice, 0, L"MidiOut0");
+    // AddDeviceToList(&DeviceList, MidiOutDevice, 0, L"MidiOut0");
     // Wave Out 0: Sound Blaster 16 (ok?)
-    AddDeviceToList(&DeviceList, WaveOutDevice, 0, L"WaveOut0");
+    // AddDeviceToList(&DeviceList, WaveOutDevice, 0, L"WaveOut0");
 
     return MMSYSERR_NOERROR; // ok?
 }
