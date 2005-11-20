@@ -156,6 +156,7 @@ DECLARE_INTERFACE_(IHTMLDocument,IDispatch)
 	STDMETHOD(get_Script)(THIS_ IDispatch**) PURE;
 };
 #undef INTERFACE
+EXTERN_C const CLSID CLSID_HTMLDocument;
 
 EXTERN_C const IID IID_IHTMLDocument2;
 #define INTERFACE IHTMLDocument2

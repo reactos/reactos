@@ -643,6 +643,36 @@ DECLARE_INTERFACE_(IMoniker,IPersistStream)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IMoniker_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IMoniker_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IMoniker_Release(p) (p)->lpVtbl->Release(p)
+/*** IPersist methods ***/
+#define IMoniker_GetClassID(p,a) (p)->lpVtbl->GetClassID(p,a)
+/*** IPersistStream methods ***/
+#define IMoniker_IsDirty(p) (p)->lpVtbl->IsDirty(p)
+#define IMoniker_Load(p,a) (p)->lpVtbl->Load(p,a)
+#define IMoniker_Save(p,a,b) (p)->lpVtbl->Save(p,a,b)
+#define IMoniker_GetSizeMax(p,a) (p)->lpVtbl->GetSizeMax(p,a)
+/*** IMoniker methods ***/
+#define IMoniker_BindToObject(p,a,b,c,d) (p)->lpVtbl->BindToObject(p,a,b,c,d)
+#define IMoniker_BindToStorage(p,a,b,c,d) (p)->lpVtbl->BindToStorage(p,a,b,c,d)
+#define IMoniker_Reduce(p,a,b,c,d) (p)->lpVtbl->Reduce(p,a,b,c,d)
+#define IMoniker_ComposeWith(p,a,b,c) (p)->lpVtbl->ComposeWith(p,a,b,c)
+#define IMoniker_Enum(p,a,b) (p)->lpVtbl->Enum(p,a,b)
+#define IMoniker_IsEqual(p,a) (p)->lpVtbl->IsEqual(p,a)
+#define IMoniker_Hash(p,a) (p)->lpVtbl->Hash(p,a)
+#define IMoniker_IsRunning(p,a,b,c) (p)->lpVtbl->IsRunning(p,a,b,c)
+#define IMoniker_GetTimeOfLastChange(p,a,b,c) (p)->lpVtbl->GetTimeOfLastChange(p,a,b,c)
+#define IMoniker_Inverse(p,a) (p)->lpVtbl->Inverse(p,a)
+#define IMoniker_CommonPrefixWith(p,a,b) (p)->lpVtbl->CommonPrefixWith(p,a,b)
+#define IMoniker_RelativePathTo(p,a,b) (p)->lpVtbl->RelativePathTo(p,a,b)
+#define IMoniker_GetDisplayName(p,a,b,c) (p)->lpVtbl->GetDisplayName(p,a,b,c)
+#define IMoniker_ParseDisplayName(p,a,b,c,d,e) (p)->lpVtbl->ParseDisplayName(p,a,b,c,d,e)
+#define IMoniker_IsSystemMoniker(p,a) (p)->lpVtbl->IsSystemMoniker(p,a)
+#endif
+
 EXTERN_C const IID IID_IPersistStorage;
 #define INTERFACE IPersistStorage
 DECLARE_INTERFACE_(IPersistStorage,IPersist)

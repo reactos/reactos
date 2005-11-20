@@ -125,6 +125,18 @@ DECLARE_INTERFACE_(IOleContainer,IParseDisplayName)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IOleContainer_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleContainer_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IOleContainer_Release(p) (p)->lpVtbl->Release(p)
+/*** IParseDisplayName methods ***/
+#define IOleContainer_ParseDisplayName(p,a,b,c,d) (p)->lpVtbl->ParseDisplayName(p,a,b,c,d)
+/*** IOleContainer methods ***/
+#define IOleContainer_EnumObjects(p,a,b) (p)->lpVtbl->EnumObjects(p,a,b)
+#define IOleContainer_LockContainer(p,a) (p)->lpVtbl->LockContainer(p,a)
+#endif
+
 EXTERN_C const IID IID_IOleItemContainer;
 #define INTERFACE IOleItemContainer
 DECLARE_INTERFACE_(IOleItemContainer,IOleContainer)
@@ -275,6 +287,21 @@ DECLARE_INTERFACE_(IOleInPlaceUIWindow,IOleWindow)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IOleInPlaceUIWindow_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleInPlaceUIWindow_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IOleInPlaceUIWindow_Release(p) (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IOleInPlaceUIWindow_GetWindow(p,a) (p)->lpVtbl->GetWindow(p,a)
+#define IOleInPlaceUIWindow_ContextSensitiveHelp(p,a) (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IOleInPlaceUIWindow methods ***/
+#define IOleInPlaceUIWindow_GetBorder(p,a) (p)->lpVtbl->GetBorder(p,a)
+#define IOleInPlaceUIWindow_RequestBorderSpace(p,a) (p)->lpVtbl->RequestBorderSpace(p,a)
+#define IOleInPlaceUIWindow_SetBorderSpace(p,a) (p)->lpVtbl->SetBorderSpace(p,a)
+#define IOleInPlaceUIWindow_SetActiveObject(p,a,b) (p)->lpVtbl->SetActiveObject(p,a,b)
+#endif
+
 EXTERN_C const IID IID_IOleInPlaceObject;
 #define INTERFACE IOleInPlaceObject
 DECLARE_INTERFACE_(IOleInPlaceObject,IOleWindow)
@@ -385,6 +412,27 @@ DECLARE_INTERFACE_(IOleInPlaceSite,IOleWindow)
 	STDMETHOD(OnPosRectChange)(THIS_ LPCRECT) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IOleInPlaceSite_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleInPlaceSite_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IOleInPlaceSite_Release(p) (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IOleInPlaceSite_GetWindow(p,a) (p)->lpVtbl->GetWindow(p,a)
+#define IOleInPlaceSite_ContextSensitiveHelp(p,a) (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IOleInPlaceSite methods ***/
+#define IOleInPlaceSite_CanInPlaceActivate(p) (p)->lpVtbl->CanInPlaceActivate(p)
+#define IOleInPlaceSite_OnInPlaceActivate(p) (p)->lpVtbl->OnInPlaceActivate(p)
+#define IOleInPlaceSite_OnUIActivate(p) (p)->lpVtbl->OnUIActivate(p)
+#define IOleInPlaceSite_GetWindowContext(p,a,b,c,d,e) (p)->lpVtbl->GetWindowContext(p,a,b,c,d,e)
+#define IOleInPlaceSite_Scroll(p,a) (p)->lpVtbl->Scroll(p,a)
+#define IOleInPlaceSite_OnUIDeactivate(p,a) (p)->lpVtbl->OnUIDeactivate(p,a)
+#define IOleInPlaceSite_OnInPlaceDeactivate(p) (p)->lpVtbl->OnInPlaceDeactivate(p)
+#define IOleInPlaceSite_DiscardUndoState(p) (p)->lpVtbl->DiscardUndoState(p)
+#define IOleInPlaceSite_DeactivateAndUndo(p) (p)->lpVtbl->DeactivateAndUndo(p)
+#define IOleInPlaceSite_OnPosRectChange(p,a) (p)->lpVtbl->OnPosRectChange(p,a)
+#endif
 
 EXTERN_C const IID IID_IOleAdviseHolder;
 #define INTERFACE IOleAdviseHolder

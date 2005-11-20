@@ -480,7 +480,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         return r;
     }
 
-    if (IsEqualGUID(&IID_IClassFactory, riid))
+    if (IsEqualCLSID(&CLSID_WebBrowser, rclsid) &&
+        IsEqualIID(&IID_IClassFactory, riid))
     {
         /* Pass back our shdocvw class factory */
         *ppv = (LPVOID)&SHDOCVW_ClassFactory;
@@ -489,7 +490,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         return S_OK;
     }
 
-    return CLASS_E_CLASSNOTAVAILABLE;
+    /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */
+    return SHDOCVW_GetShellInstanceObjectClassObject(rclsid, riid, ppv);
 }
 
 /***********************************************************************

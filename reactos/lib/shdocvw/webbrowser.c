@@ -19,8 +19,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define COBJMACROS
 #include "wine/debug.h"
 #include "shdocvw.h"
+#include "mshtml.h"
+
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -41,7 +44,7 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IWebBrowser2 *iface, REFIID riid
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = WEBBROWSER(This);
-    }else if(IsEqualGUID (&IID_IDispatch, riid)) {
+    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
         *ppv = WEBBROWSER(This);
     }else if(IsEqualGUID(&IID_IWebBrowser, riid)) {
@@ -74,18 +77,24 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IWebBrowser2 *iface, REFIID riid
     }else if(IsEqualGUID (&IID_IPersistStreamInit, riid)) {
         TRACE("(%p)->(IID_IPersistStreamInit %p)\n", This, ppv);
         *ppv = PERSTRINIT(This);
-    }else if(IsEqualGUID (&IID_IProvideClassInfo, riid)) {
+    }else if(IsEqualGUID(&IID_IProvideClassInfo, riid)) {
         TRACE("(%p)->(IID_IProvideClassInfo %p)\n", This, ppv);
         *ppv = CLASSINFO(This);
-    }else if(IsEqualGUID (&IID_IProvideClassInfo2, riid)) {
+    }else if(IsEqualGUID(&IID_IProvideClassInfo2, riid)) {
         TRACE("(%p)->(IID_IProvideClassInfo2 %p)\n", This, ppv);
         *ppv = CLASSINFO(This);
-    }else if(IsEqualGUID (&IID_IQuickActivate, riid)) {
+    }else if(IsEqualGUID(&IID_IQuickActivate, riid)) {
         TRACE("(%p)->(IID_IQuickActivate %p)\n", This, ppv);
         *ppv = QUICKACT(This);
-    }else if(IsEqualGUID (&IID_IConnectionPointContainer, riid)) {
+    }else if(IsEqualGUID(&IID_IConnectionPointContainer, riid)) {
         TRACE("(%p)->(IID_IConnectionPointContainer %p)\n", This, ppv);
         *ppv = CONPTCONT(This);
+    }else if(IsEqualGUID(&IID_IViewObject, riid)) {
+        TRACE("(%p)->(IID_IViewObject %p)\n", This, ppv);
+        *ppv = VIEWOBJ(This);
+    }else if(IsEqualGUID(&IID_IViewObject2, riid)) {
+        TRACE("(%p)->(IID_IViewObject2 %p)\n", This, ppv);
+        *ppv = VIEWOBJ2(This);
     }
 
     if(*ppv) {
@@ -113,6 +122,11 @@ static ULONG WINAPI WebBrowser_Release(IWebBrowser2 *iface)
     TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
+        if(This->document)
+            IUnknown_Release(This->document);
+
+        WebBrowser_OleObject_Destroy(This);
+
         HeapFree(GetProcessHeap(), 0, This);
         SHDOCVW_UnlockModule();
     }
@@ -480,8 +494,63 @@ static HRESULT WINAPI WebBrowser_Navigate2(IWebBrowser2 *iface, VARIANT *URL, VA
         VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%p %p %p %p %p)\n", This, URL, Flags, TargetFrameName, PostData, Headers);
-    return E_NOTIMPL;
+    IPersistMoniker *persist;
+    IOleObject *oleobj;
+    IMoniker *mon;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p %p %p %p %p)\n", This, URL, Flags, TargetFrameName, PostData, Headers);
+
+    if(!This->client)
+        return E_FAIL;
+
+    if(V_VT(Flags) != VT_EMPTY || V_VT(TargetFrameName) != VT_EMPTY
+       || V_VT(PostData) != VT_EMPTY || V_VT(Headers) != VT_EMPTY)
+        FIXME("Unsupported arguments\n");
+
+    if(V_VT(URL) != VT_BSTR)
+        FIXME("V_VT(URL) != VT_BSTR\n");
+
+    /*
+     * FIXME:
+     * We should use URLMoniker's BindToObject instead creating HTMLDocument here.
+     * This should be fixed when mshtml.dll and urlmon.dll will be good enough.
+     */
+
+    if(!This->document) {
+        hres = CoCreateInstance(&CLSID_HTMLDocument, NULL,
+                                CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+                                &IID_IUnknown, (void**)&This->document);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IPersistMoniker, (void**)&persist);
+    if(FAILED(hres))
+        return hres;
+
+    hres = CreateURLMoniker(NULL, V_BSTR(URL), &mon);
+    if(FAILED(hres)) {
+        IPersistMoniker_Release(persist);
+        return hres;
+    }
+
+    hres = IPersistMoniker_Load(persist, FALSE, mon, NULL /* FIXME */, 0);
+    IMoniker_Release(mon);
+    IPersistMoniker_Release(persist);
+    if(FAILED(hres)) {
+        WARN("Load failed: %08lx\n", hres);
+        return hres;
+    }
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IOleObject, (void**)&oleobj);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IOleObject_SetClientSite(oleobj, CLIENTSITE(This));
+    IOleObject_Release(oleobj);
+
+    return hres;
 }
 
 static HRESULT WINAPI WebBrowser_QueryStatusWB(IWebBrowser2 *iface, OLECMDID cmdID, OLECMDF *pcmdf)
@@ -705,11 +774,15 @@ HRESULT WebBrowser_Create(IUnknown *pOuter, REFIID riid, void **ppv)
     ret->lpWebBrowser2Vtbl = &WebBrowser2Vtbl;
     ret->ref = 0;
 
+    ret->document = NULL;
+
     WebBrowser_OleObject_Init(ret);
+    WebBrowser_ViewObject_Init(ret);
     WebBrowser_Persist_Init(ret);
     WebBrowser_ClassInfo_Init(ret);
     WebBrowser_Misc_Init(ret);
     WebBrowser_Events_Init(ret);
+    WebBrowser_ClientSite_Init(ret);
 
     hres = IWebBrowser_QueryInterface(WEBBROWSER(ret), riid, ppv);
     if(SUCCEEDED(hres)) {

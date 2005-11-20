@@ -139,15 +139,58 @@ static HRESULT WINAPI OleObject_DoVerb(IOleObject *iface, LONG iVerb, struct tag
         LPOLECLIENTSITE pActiveSite, LONG lindex, HWND hwndParent, LPCRECT lprcPosRect)
 {
     WebBrowser *This = OLEOBJ_THIS(iface);
-    FIXME("(%p)->(%ld %p %p %ld %p %p)\n", This, iVerb, lpmsg, pActiveSite, lindex, hwndParent,
+    HRESULT hres;
+
+    TRACE("(%p)->(%ld %p %p %ld %p %p)\n", This, iVerb, lpmsg, pActiveSite, lindex, hwndParent,
             lprcPosRect);
+
     switch (iVerb)
     {
-    case OLEIVERB_INPLACEACTIVATE:
-        FIXME ("stub for OLEIVERB_INPLACEACTIVATE\n");
-        break;
-    case OLEIVERB_HIDE:
-        FIXME ("stub for OLEIVERB_HIDE\n");
+    case OLEIVERB_INPLACEACTIVATE: {
+        IOleInPlaceSite *inplace;
+
+        TRACE("OLEIVERB_INPLACEACTIVATE\n");
+
+        if(!pActiveSite)
+            return E_INVALIDARG;
+
+        hres = IOleClientSite_QueryInterface(pActiveSite, &IID_IOleInPlaceSite, (void**)&inplace);
+        if(FAILED(hres)) {
+            WARN("Could not get IOleInPlaceSite\n");
+            return hres;
+        }
+
+        hres = IOleInPlaceSite_CanInPlaceActivate(inplace);
+        if(hres != S_OK) {
+            WARN("CanInPlaceActivate returned: %08lx\n", hres);
+            IOleInPlaceSite_Release(inplace);
+            return E_FAIL;
+        }
+
+        hres = IOleInPlaceSite_GetWindow(inplace, &This->iphwnd);
+        if(FAILED(hres))
+            This->iphwnd = hwndParent;
+
+        IOleInPlaceSite_OnInPlaceActivate(inplace);
+
+        IOleInPlaceSite_GetWindowContext(inplace, &This->frame, &This->uiwindow,
+                                         &This->pos_rect, &This->clip_rect,
+                                         &This->frameinfo);
+
+        IOleInPlaceSite_Release(inplace);
+
+        if(This->client) {
+            IOleClientSite_ShowObject(This->client);
+            IOleClientSite_GetContainer(This->client, &This->container);
+        }
+
+        if(This->frame)
+            IOleInPlaceFrame_GetWindow(This->frame, &This->frame_hwnd);
+
+        return S_OK;
+    }
+    default:
+        FIXME("stub for %ld\n", iVerb);
         break;
     }
 
@@ -451,4 +494,25 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
     This->lpOleControlVtbl       = &OleControlVtbl;
 
     This->client = NULL;
+    This->container = NULL;
+    This->iphwnd = NULL;
+    This->frame_hwnd = NULL;
+    This->frame = NULL;
+    This->uiwindow = NULL;
+
+    memset(&This->pos_rect, 0, sizeof(RECT));
+    memset(&This->clip_rect, 0, sizeof(RECT));
+    memset(&This->frameinfo, 0, sizeof(OLEINPLACEFRAMEINFO));
+}
+
+void WebBrowser_OleObject_Destroy(WebBrowser *This)
+{
+    if(This->client)
+        IOleClientSite_Release(This->client);
+    if(This->container)
+        IOleContainer_Release(This->container);
+    if(This->frame)
+        IOleInPlaceFrame_Release(This->frame);
+    if(This->uiwindow)
+        IOleInPlaceUIWindow_Release(This->uiwindow);
 }

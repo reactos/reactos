@@ -48,11 +48,18 @@ typedef struct
 
 extern IClassFactoryImpl SHDOCVW_ClassFactory;
 
+/**********************************************************************
+ * Shell Instance Objects
+ */
+extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid, 
+    REFIID riid, LPVOID *ppvClassObj);
 
 /**********************************************************************
  * WebBrowser declaration for SHDOCVW.DLL
  */
 typedef struct {
+    /* Interfaces available via WebBrowser object */
+
     const IWebBrowser2Vtbl              *lpWebBrowser2Vtbl;
     const IOleObjectVtbl                *lpOleObjectVtbl;
     const IOleInPlaceObjectVtbl         *lpOleInPlaceObjectVtbl;
@@ -62,10 +69,29 @@ typedef struct {
     const IProvideClassInfo2Vtbl        *lpProvideClassInfoVtbl;
     const IQuickActivateVtbl            *lpQuickActivateVtbl;
     const IConnectionPointContainerVtbl *lpConnectionPointContainerVtbl;
+    const IViewObject2Vtbl              *lpViewObjectVtbl;
+
+    /* Interfaces available for embeded document */
+
+    const IOleClientSiteVtbl            *lpOleClientSiteVtbl;
+    const IOleInPlaceSiteVtbl           *lpOleInPlaceSiteVtbl;
 
     LONG ref;
 
+    IUnknown *document;
+
     IOleClientSite *client;
+    IOleContainer *container;
+
+    /* window context */
+
+    HWND iphwnd;
+    HWND frame_hwnd;
+    IOleInPlaceFrame *frame;
+    IOleInPlaceUIWindow *uiwindow;
+    RECT pos_rect;
+    RECT clip_rect;
+    OLEINPLACEFRAMEINFO frameinfo;
 } WebBrowser;
 
 #define WEBBROWSER(x)   ((IWebBrowser*)                 &(x)->lpWebBrowser2Vtbl)
@@ -78,12 +104,22 @@ typedef struct {
 #define CLASSINFO(x)    ((IProvideClassInfo2*)          &(x)->lpProvideClassInfoVtbl)
 #define QUICKACT(x)     ((IQuickActivate*)              &(x)->lpQuickActivateVtbl)
 #define CONPTCONT(x)    ((IConnectionPointContainer*)   &(x)->lpConnectionPointContainerVtbl)
+#define VIEWOBJ(x)      ((IViewObject*)                 &(x)->lpViewObjectVtbl);
+#define VIEWOBJ2(x)     ((IViewObject2*)                &(x)->lpViewObjectVtbl);
+
+#define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
+#define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
 
 void WebBrowser_OleObject_Init(WebBrowser*);
+void WebBrowser_ViewObject_Init(WebBrowser*);
 void WebBrowser_Persist_Init(WebBrowser*);
 void WebBrowser_ClassInfo_Init(WebBrowser*);
 void WebBrowser_Misc_Init(WebBrowser*);
 void WebBrowser_Events_Init(WebBrowser*);
+
+void WebBrowser_ClientSite_Init(WebBrowser*);
+
+void WebBrowser_OleObject_Destroy(WebBrowser*);
 
 HRESULT WebBrowser_Create(IUnknown*,REFIID,void**);
 
