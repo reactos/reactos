@@ -10,6 +10,7 @@
  */
 
 #include "mmdrv.h"
+#include "wave.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -233,7 +234,7 @@ APIENTRY DWORD modMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWO
         
         case MODM_GETDEVCAPS:
             DPRINT("MODM_GETDEVCAPS");
-            return MMSYSERR_NOTSUPPORTED;
+            return GetDeviceCapabilities(ID, MidiOutDevice, (LPBYTE)Param1, (DWORD)Param2);
             
         case MODM_OPEN :
             return OpenMidiDevice(MidiOutDevice, ID, User, Param1, Param2);

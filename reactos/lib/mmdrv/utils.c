@@ -82,8 +82,12 @@ MMRESULT OpenDevice(UINT DeviceType, DWORD ID, PHANDLE pDeviceHandle,
         case MidiInDevice :
             wsprintf(DeviceName, L"\\\\.%ls%d", MIDI_IN_DEVICE_NAME_U + strlen("\\Device"), ID);
             break;
+		case AuxDevice :
+			 wsprintf(DeviceName, L"\\\\.%ls%d", AUX_DEVICE_NAME_U + strlen("\\Device"), ID);
+			 break;
         default : // Aux
-            wsprintf(DeviceName, L"\\\\.%ls%d", AUX_DEVICE_NAME_U + strlen("\\Device"), ID);
+            DPRINT("No Auido Device Found");
+            return MMSYSERR_BADDEVICEID; /* Maybe we should change error code */
     };
 
     DPRINT("Attempting to open %S\n", DeviceName);

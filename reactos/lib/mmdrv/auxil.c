@@ -9,13 +9,14 @@
  * UPDATE HISTORY:
  *                       Mar 16, 2004: Created skeleton implementation
  */
-
 #include "mmdrv.h"
+#include "wave.h"
+
 
 #define NDEBUG
 #include <debug.h>
 
-APIENTRY DWORD auxMessage(UINT uDevice,
+APIENTRY DWORD auxMessage(UINT dwId,
                   UINT uMessage,
                   DWORD dwUser,
                   DWORD dwParam1,
@@ -28,14 +29,21 @@ APIENTRY DWORD auxMessage(UINT uDevice,
 	switch (uMessage)
 	{
 	case AUXDM_GETDEVCAPS:
-		return 0;
+		DPRINT("AUXDM_GETDEVCAPS");
+		return GetDeviceCapabilities(dwId, AuxDevice, (LPBYTE)dwParam1, (DWORD)dwParam2);
+
 	case AUXDM_GETNUMDEVS:
-		return 0;
+		DPRINT("AUXDM_GETNUMDEVS");
+		return GetDeviceCount(AuxDevice);
+		
 	case AUXDM_GETVOLUME:
 		return 0;
+
 	case AUXDM_SETVOLUME:
 		return 0;
 	}
 
     return MMSYSERR_NOERROR;
 }
+
+

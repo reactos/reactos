@@ -23,13 +23,9 @@
  * ============================
  */
 
-static MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
+MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                                       LPBYTE pCaps, DWORD Size)
 {
-    // FIXME: Implement :)
-//    return sndGetData(DeviceType, id, dwSize, lpCaps,
-//                      IOCTL_WAVE_GET_CAPABILITIES);
-
     HANDLE DeviceHandle = NULL;
     MMRESULT Result = MMSYSERR_NOERROR;
     DWORD BytesReturned = 0;
@@ -46,11 +42,31 @@ static MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
     // Setting the overlapped parameter (last) to null means we
     // wait until the operation completes.
     //
+    
 
-    Result = DeviceIoControl(DeviceHandle, IOCTL_WAVE_GET_CAPABILITIES,
+	if (DeviceType == WaveOutDevice)
+	{
+		Result = DeviceIoControl(DeviceHandle, IOCTL_WAVE_GET_CAPABILITIES,
                             NULL, 0, (LPVOID)pCaps, Size,
                   &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
+	}
 
+	else if (DeviceType == MidiOutDevice)
+	{
+	    Result = DeviceIoControl(DeviceHandle, IOCTL_MIDI_GET_CAPABILITIES,
+                            NULL, 0, (LPVOID)pCaps, Size,
+                  &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
+	}
+
+    else if (DeviceType == AuxDevice)
+	{
+	    Result = DeviceIoControl(DeviceHandle, IOCTL_AUX_GET_CAPABILITIES,
+                            NULL, 0, (LPVOID)pCaps, Size,
+                  &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
+	}
+
+	
+		
 
     // Close the handle and return the result code
 //    CloseHandle(DeviceHandle);

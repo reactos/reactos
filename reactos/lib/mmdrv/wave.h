@@ -78,3 +78,6 @@ typedef struct tag_WAVEALLOC {
     HANDLE              ThreadHandle;   // Handle for thread termination ONLY
     MMRESULT            AuxReturnCode;  // Return code from Aux task
 }WAVEALLOC, *PWAVEALLOC;
+
+MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
+                                      LPBYTE pCaps, DWORD Size);
