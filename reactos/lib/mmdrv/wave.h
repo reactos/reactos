@@ -79,5 +79,13 @@ typedef struct tag_WAVEALLOC {
     MMRESULT            AuxReturnCode;  // Return code from Aux task
 }WAVEALLOC, *PWAVEALLOC;
 
+/* Misc should move to own header */
 MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                                       LPBYTE pCaps, DWORD Size);
+
+DWORD AuxGetAudio(DWORD dwID, PBYTE pVolume, DWORD sizeVolume);
+
+typedef struct _AUX_DD_VOLUME {
+        ULONG   Left;
+        ULONG   Right;
+} AUX_DD_VOLUME, *PAUX_DD_VOLUME;

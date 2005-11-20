@@ -23,7 +23,11 @@ APIENTRY DWORD auxMessage(UINT dwId,
                   DWORD dwParam2)
 
 {
+    MMRESULT Result;
+    AUX_DD_VOLUME Volume;
+
     DPRINT("auxMessage\n");
+
 
 	// the following cases are documented by DDK
 	switch (uMessage)
@@ -37,7 +41,15 @@ APIENTRY DWORD auxMessage(UINT dwId,
 		return GetDeviceCount(AuxDevice);
 		
 	case AUXDM_GETVOLUME:
-		return 0;
+         DPRINT("AUXDM_GETVOLUME");
+         Result = AuxGetAudio(dwId, (PBYTE) &Volume, sizeof(Volume));
+         
+         if (Result == MMSYSERR_NOERROR) 
+         {
+            *(LPDWORD)dwParam1 = (DWORD)MAKELONG(HIWORD(Volume.Left), HIWORD(Volume.Right));
+         }
+         return Result;
+		
 
 	case AUXDM_SETVOLUME:
 		return 0;
@@ -46,4 +58,24 @@ APIENTRY DWORD auxMessage(UINT dwId,
     return MMSYSERR_NOERROR;
 }
 
+
+DWORD AuxGetAudio(DWORD dwID, PBYTE pVolume, DWORD sizeVolume)
+{
+    HANDLE DeviceHandle;
+    MMRESULT Result;
+    DWORD BytesReturned;
+
+    Result = OpenDevice(AuxDevice, dwID, &DeviceHandle, GENERIC_READ);
+    if (Result != MMSYSERR_NOERROR)
+         return Result;
+
+    
+    Result = DeviceIoControl(DeviceHandle, IOCTL_AUX_GET_VOLUME, NULL, 0, (LPVOID)pVolume, sizeVolume,
+                           &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
+
+
+    CloseHandle(DeviceHandle);
+
+    return Result;
+ }
 

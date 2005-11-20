@@ -85,7 +85,7 @@ MMRESULT OpenDevice(UINT DeviceType, DWORD ID, PHANDLE pDeviceHandle,
 		case AuxDevice :
 			 wsprintf(DeviceName, L"\\\\.%ls%d", AUX_DEVICE_NAME_U + strlen("\\Device"), ID);
 			 break;
-        default : // Aux
+        default : 
             DPRINT("No Auido Device Found");
             return MMSYSERR_BADDEVICEID; /* Maybe we should change error code */
     };
