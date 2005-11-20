@@ -26,7 +26,7 @@ BEGIN
     IDS_FAVORITES      "Ulubione"
     IDS_STARTMENU      "Menu Start"
     IDS_PROGRAMS       "Menu Start\\Programy"
-    IDS_ADMINTOOLS     "Menu Start\\Programy\\NarzÃªia administracyjne"
+    IDS_ADMINTOOLS     "Menu Start\\Programy\\Narzêdzia administracyjne"
     IDS_STARTUP        "Menu Start\\Programy\\Autostart"
     IDS_MYDOCUMENTS    "Moje dokumenty"
     IDS_MYPICTURES     "Moje dokumenty\\Moje obrazy"
