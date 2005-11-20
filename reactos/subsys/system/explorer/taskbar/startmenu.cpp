@@ -391,7 +391,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (_arrow_btns) {
 				RECT rect_up, rect_down;
 
-				GetArrowButtonRects(&rect_up, &rect_down);
+				GetArrowButtonRects(&rect_up, &rect_down, _big_icons);
 
 				SCROLL_MODE scroll_mode = SCROLL_NOT;
 
@@ -837,21 +837,24 @@ void StartMenu::DrawArrows(HDC hdc, bool big_icons)
 	DrawIconEx(hdc, clnt.right/2-cx/2, clnt.bottom-cy-1, arrowDownIcon, cx, cy, 0, 0, DI_NORMAL);
 }
 
-void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down)
+void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, bool big_icons)
 {
+	int cx = big_icons? 16: 8;
+	int cy = big_icons? 8: 4;
+
 	GetClientRect(_hwnd, prect_up);
 	*prect_down = *prect_up;
 
-//	prect_up->left = prect_up->right/2 - 4;
-//	prect_up->right = prect_up->left + 8;
-	prect_up->right -= 8;
-	prect_up->top = _floating_btn? 3: 1;
-	prect_up->bottom = prect_up->top + 4;
+//	prect_up->left = prect_up->right/2 - cx/2;
+//	prect_up->right = prect_up->left + cy;
+	prect_up->right -= cx;
+	prect_up->top = _floating_btn? cy-1: 1;
+	prect_up->bottom = prect_up->top + cy;
 
-//	prect_down->left = prect_down->right/2 - 4;
-//	prect_down->right = prect_down->left + 8;
-	prect_down->right -= 8;
-	prect_down->top = prect_down->bottom - 5;
+//	prect_down->left = prect_down->right/2 - cx/2;
+//	prect_down->right = prect_down->left + cy;
+	prect_down->right -= cx;
+	prect_down->top = prect_down->bottom - cy - 1;
 }
 
 

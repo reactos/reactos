@@ -301,7 +301,7 @@ protected:
 
 	void	DrawFloatingButton(HDC hdc);
 	void	GetFloatingButtonRect(LPRECT prect);
-	void	GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down);
+	void	GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, bool big_icons);
 
 	void	DrawArrows(HDC hdc, bool big_icons);
 
