@@ -266,7 +266,7 @@ static BOOL CreateMyCompEnumList(IEnumIDList *list, DWORD dwFlags)
 {
     BOOL ret = TRUE;
 
-    TRACE("(%p)->(flags=0x%08lx) \n",list,dwFlags);
+    TRACE("(%p)->(flags=0x%08lx)\n", list, dwFlags);
 
     /* enumerate the folders */
     if (dwFlags & SHCONTF_FOLDERS)

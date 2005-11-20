@@ -192,12 +192,12 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
  *   pathRoot can be NULL for Folders beeing a drive.
  *   In this case the absolute path is build from pidlChild (eg. C:)
  */
-HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,	LPCSTR pathRoot,
+static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
     LPCITEMIDLIST pidlChild, REFCLSID clsid, REFIID riid, LPVOID * ppvOut)
 {
     HRESULT hr;
 
-    TRACE ("%p %s %p\n", pidlRoot, pathRoot, pidlChild);
+    TRACE ("%p %s %p\n", pidlRoot, debugstr_w(pathRoot), pidlChild);
 
     if (SUCCEEDED ((hr = SHCoCreateInstance (NULL, clsid, NULL, riid, ppvOut)))) {
 	LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
@@ -208,31 +208,28 @@ HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,	LPCSTR pathRoot,
             SUCCEEDED (IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder3, (LPVOID *) & ppf))) 
         {
 	    PERSIST_FOLDER_TARGET_INFO ppfti;
-	    char szDestPath[MAX_PATH];
 
 	    ZeroMemory (&ppfti, sizeof (ppfti));
-
-	    /* build path */
-	    if (pathRoot) {
-		lstrcpyA (szDestPath, pathRoot);
-		PathAddBackslashA(szDestPath);          /* FIXME: why have drives a backslash here ? */
-	    } else {
-		szDestPath[0] = '\0';
-	    }
-
-	    if (pidlChild) {
-		LPSTR pszChild = _ILGetTextPointer(pidlChild);
-
-		if (pszChild)
-		    lstrcatA (szDestPath, pszChild);
-		else
-		    hr = E_INVALIDARG;
-	    }
 
 	    /* fill the PERSIST_FOLDER_TARGET_INFO */
 	    ppfti.dwAttributes = -1;
 	    ppfti.csidl = -1;
-	    MultiByteToWideChar (CP_ACP, 0, szDestPath, -1, ppfti.szTargetParsingName, MAX_PATH);
+
+	    /* build path */
+	    if (pathRoot) {
+		lstrcpynW (ppfti.szTargetParsingName, pathRoot, MAX_PATH - 1);
+		PathAddBackslashW(ppfti.szTargetParsingName); /* FIXME: why have drives a backslash here ? */
+	    }
+
+	    if (pidlChild) {
+		LPCSTR pszChild = _ILGetTextPointer(pidlChild);
+                int len = lstrlenW(ppfti.szTargetParsingName);
+
+		if (pszChild)
+		    MultiByteToWideChar (CP_ACP, 0, pszChild, -1, ppfti.szTargetParsingName + len, MAX_PATH - len);
+		else
+		    hr = E_INVALIDARG;
+	    }
 
 	    IPersistFolder3_InitializeEx (ppf, NULL, pidlAbsolute, &ppfti);
 	    IPersistFolder3_Release (ppf);
@@ -265,7 +262,7 @@ HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,	LPCSTR pathRoot,
  *  means you probably can't use it for your IShellFolder implementation.
  */
 HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
-                             LPCSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut)
+                             LPCWSTR pathRoot, LPCITEMIDLIST pidlComplete, REFIID riid, LPVOID * ppvOut)
 {
     GUID const *clsid;
     IShellFolder *pSF;
@@ -290,10 +287,10 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
        
         /* see if folder CLSID should be overridden by desktop.ini file */
         if (pathRoot) {
-            MultiByteToWideChar(CP_ACP, 0, pathRoot, -1, wszFolderPath, MAX_PATH);
+            lstrcpynW(wszFolderPath, pathRoot, MAX_PATH);
             pwszPathTail = PathAddBackslashW(wszFolderPath);
         }
-        MultiByteToWideChar(CP_ACP, 0, _ILGetTextPointer(pidlChild), -1, pwszPathTail, MAX_PATH);
+        MultiByteToWideChar(CP_ACP, 0, _ILGetTextPointer(pidlChild), -1, pwszPathTail, MAX_PATH - (int)(pwszPathTail - wszFolderPath));
         if (SHELL32_GetCustomFolderAttributeFromPath (wszFolderPath,
             wszDotShellClassInfo, wszCLSID, wszCLSIDValue, CHARS_IN_GUID))
             CLSIDFromString (wszCLSIDValue, &clsidFolder);
@@ -421,16 +418,23 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
     } else if (_ILGetDataPointer (pidl)) {
 	dwAttributes = _ILGetFileAttributes (pidl, NULL, 0);
 
-        if ((SFGAO_FILESYSANCESTOR & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            *pdwAttributes &= ~SFGAO_FILESYSANCESTOR;
+        /* Set common attributes */
+        *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE | 
+                          SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
 
-	if ((SFGAO_FOLDER & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
-	    *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER);
+	if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	    *pdwAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+	else
+	    *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
 
-	if ((SFGAO_HIDDEN & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_HIDDEN))
+	if (dwAttributes & FILE_ATTRIBUTE_HIDDEN)
+	    *pdwAttributes |=  SFGAO_HIDDEN;
+	else
 	    *pdwAttributes &= ~SFGAO_HIDDEN;
 
-	if ((SFGAO_READONLY & *pdwAttributes) && !(dwAttributes & FILE_ATTRIBUTE_READONLY))
+	if (dwAttributes & FILE_ATTRIBUTE_READONLY)
+	    *pdwAttributes |=  SFGAO_READONLY;
+	else
 	    *pdwAttributes &= ~SFGAO_READONLY;
 
 	if (SFGAO_LINK & *pdwAttributes) {

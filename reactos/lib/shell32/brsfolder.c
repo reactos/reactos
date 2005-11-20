@@ -388,7 +388,7 @@ static void BrsFolder_CheckValidSelection( browse_info *info, LPTV_ITEMDATA lptv
         dwAttributes = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
         r = IShellFolder_GetAttributesOf(lptvid->lpsfParent, 1,
                                 (LPCITEMIDLIST*)&lptvid->lpi, &dwAttributes);
-        if (FAILED(r) || !dwAttributes)
+        if (FAILED(r) || !(dwAttributes & (SFGAO_FILESYSANCESTOR|SFGAO_FILESYSTEM)))
             bEnabled = FALSE;
     }
     if (lpBrowseInfo->ulFlags & BIF_RETURNONLYFSDIRS)
@@ -396,8 +396,11 @@ static void BrsFolder_CheckValidSelection( browse_info *info, LPTV_ITEMDATA lptv
         dwAttributes = SFGAO_FOLDER | SFGAO_FILESYSTEM;
         r = IShellFolder_GetAttributesOf(lptvid->lpsfParent, 1,
                                 (LPCITEMIDLIST*)&lptvid->lpi, &dwAttributes);
-        if (FAILED(r) || (dwAttributes != (SFGAO_FOLDER | SFGAO_FILESYSTEM)))
+        if (FAILED(r) || 
+            ((dwAttributes & (SFGAO_FOLDER|SFGAO_FILESYSTEM)) != (SFGAO_FOLDER|SFGAO_FILESYSTEM)))
+        {
             bEnabled = FALSE;
+        }
     }
     SendMessageW(info->hWnd, BFFM_ENABLEOK, 0, (LPARAM)bEnabled);
 }
@@ -662,21 +665,25 @@ LPITEMIDLIST WINAPI SHBrowseForFolderA (LPBROWSEINFOA lpbi)
 /*************************************************************************
  * SHBrowseForFolderW [SHELL32.@]
  *
- * NOTES:
+ * NOTES
  *  crashes when passed a null pointer
  */
 LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
 {
     browse_info info;
     DWORD r;
+    HRESULT hr;
 
     info.hWnd = 0;
     info.pidlRet = NULL;
     info.lpBrowseInfo = lpbi;
     info.hwndTreeView = NULL;
 
+    hr = CoInitialize(NULL);
     r = DialogBoxParamW( shell32_hInstance, swBrowseTemplateName, lpbi->hwndOwner,
 	                 BrsFolderDlgProc, (LPARAM)&info );
+    if (SUCCEEDED(hr)) 
+        CoUninitialize();
     if (!r)
         return NULL;
 

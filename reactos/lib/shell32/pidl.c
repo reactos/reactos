@@ -254,7 +254,7 @@ LPITEMIDLIST WINAPI ILCloneFirst(LPCITEMIDLIST pidl)
     DWORD len;
     LPITEMIDLIST pidlNew = NULL;
 
-    TRACE("pidl=%p \n",pidl);
+    TRACE("pidl=%p\n", pidl);
     pdump(pidl);
 
     if (pidl)
@@ -885,6 +885,9 @@ LPITEMIDLIST WINAPI ILAppend(LPITEMIDLIST pidl, LPCITEMIDLIST item, BOOL bEnd)
  * PARAMS
  *  pidl         [I]
  *
+ * RETURNS
+ *  Nothing
+ *
  * NOTES
  *  exported by ordinal
  */
@@ -902,6 +905,9 @@ void WINAPI ILFree(LPITEMIDLIST pidl)
  *
  * PARAMS
  *  pidl         [I]
+ *
+ * RETURNS
+ *  Nothing
  *
  * NOTES
  *  exported by ordinal.
@@ -941,6 +947,8 @@ LPITEMIDLIST WINAPI ILCreateFromPathA (LPCSTR path)
 
 /*************************************************************************
  * ILCreateFromPathW         [SHELL32.190]
+ *
+ * See ILCreateFromPathA.
  */
 LPITEMIDLIST WINAPI ILCreateFromPathW (LPCWSTR path)
 {
@@ -1238,6 +1246,8 @@ BOOL WINAPI SHGetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath)
 
 /*************************************************************************
  * SHGetPathFromIDListW             [SHELL32.@]
+ *
+ * See SHGetPathFromIDListA.
  */
 BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
 {

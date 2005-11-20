@@ -365,7 +365,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
 
 	if ( INVALID_INDEX == index )
 	{
-	  ret = SIC_LoadIcon (sSourceFile, dwSourceIndex, dwFlags);
+          ret = SIC_LoadIcon (sSourceFile, dwSourceIndex, dwFlags);
 	}
 	else
 	{
@@ -378,15 +378,10 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
 }
 /*****************************************************************************
  * SIC_Initialize			[internal]
- *
- * NOTES
- *  hack to load the resources from the shell32.dll under a different dll name
- *  will be removed when the resource-compiler is ready
  */
 BOOL SIC_Initialize(void)
 {
 	HICON		hSm, hLg;
-	UINT		index;
 	int		cx_small, cy_small;
 	int		cx_large, cy_large;
 
@@ -407,29 +402,27 @@ BOOL SIC_Initialize(void)
 	  return(FALSE);
 	}
 
-	ShellSmallIconList = ImageList_Create(16,16,ILC_COLOR32|ILC_MASK,0,0x20);
-	ShellBigIconList = ImageList_Create(32,32,ILC_COLOR32|ILC_MASK,0,0x20);
+        ShellSmallIconList = ImageList_Create(cx_small,cy_small,ILC_COLOR32|ILC_MASK,0,0x20);
+        ShellBigIconList = ImageList_Create(cx_large,cy_large,ILC_COLOR32|ILC_MASK,0,0x20);
 
-	ImageList_SetBkColor(ShellSmallIconList, CLR_NONE);
-	ImageList_SetBkColor(ShellBigIconList, CLR_NONE);
+        ImageList_SetBkColor(ShellSmallIconList, CLR_NONE);
+        ImageList_SetBkColor(ShellBigIconList, CLR_NONE);
 
-	/*
-	 * Wine will extract and cache all shell32 icons here. That's because
-	 * they are unable to extract resources from their built-in DLLs.
-	 * We don't need that, but we still want to make sure that the very
-	 * first icon in the image lists is icon 1 from shell32.dll, since
-	 * that's the default icon.
-	 */
-	index = 1;
-	hSm = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(index), IMAGE_ICON, cx_small, cy_small, LR_SHARED);
-	hLg = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(index), IMAGE_ICON, cx_large, cy_large, LR_SHARED);
+        /* Load the document icon, which is used as the default if an icon isn't found. */
+        hSm = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(IDI_SHELL_DOCUMENT), 
+                                IMAGE_ICON, cx_small, cy_small, LR_SHARED);
+        hLg = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(IDI_SHELL_DOCUMENT), 
+                                IMAGE_ICON, cx_large, cy_large, LR_SHARED);
 
-	if(hSm)
-	{
-          SIC_IconAppend (swShell32Name, index - 1, hSm, hLg, 0);
-          SIC_IconAppend (swShell32Name, -index, hSm, hLg, 0);
-	}
+        if (!hSm || !hLg) 
+        {
+          FIXME("Failed to load IDI_SHELL_DOCUMENT icon!\n");
+          return FALSE;
+        }
 
+        SIC_IconAppend (swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
+        SIC_IconAppend (swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
+   
 	TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
 
 	return TRUE;

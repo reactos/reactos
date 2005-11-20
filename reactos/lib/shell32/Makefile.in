@@ -6,7 +6,7 @@ VPATH     = @srcdir@
 MODULE    = shell32.dll
 IMPORTLIB = libshell32.$(IMPLIBEXT)
 IMPORTS   = shlwapi comctl32 user32 gdi32 advapi32 kernel32 ntdll
-DELAYIMPORTS = ole32
+DELAYIMPORTS = ole32 oleaut32
 EXTRALIBS = -luuid $(LIBUNICODE)
 
 C_SRCS = \

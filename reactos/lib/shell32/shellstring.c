@@ -260,7 +260,7 @@ static const WCHAR strEscapedChars[] = {' ','"',',',';','^',0};
 /*************************************************************************
  * CheckEscapesW             [SHELL32.@]
  *
- * see CheckEscapesA
+ * See CheckEscapesA.
  */
 DWORD WINAPI CheckEscapesW(
 	LPWSTR	string,

@@ -335,12 +335,13 @@ SEGPTR WINAPI FindEnvironmentString16(LPSTR str)
  * from "DOS" environment. If it is not found the %KEYWORD% is left
  * intact. If the buffer is too small, str is not modified.
  *
- * str         [I] '\0' terminated string with %keyword%.
+ * PARAMS
+ *  str        [I] '\0' terminated string with %keyword%.
  *             [O] '\0' terminated string with %keyword% substituted.
- * length      [I] size of str.
+ *  length     [I] size of str.
  *
- * Return
- *     str length in the LOWORD and 1 in HIWORD if subst was successful.
+ * RETURNS
+ *  str length in the LOWORD and 1 in HIWORD if subst was successful.
  */
 DWORD WINAPI DoEnvironmentSubst16(LPSTR str,WORD length)
 {
@@ -625,7 +626,7 @@ HINSTANCE16 WINAPI ShellExecute16( HWND16 hWnd, LPCSTR lpOperation,
     seiW.dwHotKey = 0;
     seiW.hProcess = hProcess;
 
-    SHELL_execute( &seiW, SHELL_Execute16, FALSE );
+    SHELL_execute( &seiW, SHELL_Execute16 );
 
     if (wVerb) SHFree(wVerb);
     if (wFile) SHFree(wFile);

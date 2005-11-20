@@ -689,8 +689,8 @@ BOOL WINAPI DragQueryPoint(HDROP hDrop, POINT *p)
 }
 
 /*************************************************************************
- *  DragQueryFile 		[SHELL32.@]
  *  DragQueryFileA		[SHELL32.@]
+ *  DragQueryFile 		[SHELL32.@]
  */
 UINT WINAPI DragQueryFileA(
 	HDROP hDrop,

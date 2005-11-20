@@ -818,6 +818,8 @@ void WINAPI FileMenu_AbortInitMenu (void)
 /*************************************************************************
  * SHFind_InitMenuPopup				[SHELL32.149]
  *
+ * Get the IContextMenu instance for the submenu of options displayed
+ * for the Search entry in the Classic style Start menu.
  *
  * PARAMETERS
  *  hMenu		[in] handle of menu previously created

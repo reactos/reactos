@@ -116,7 +116,7 @@ BOOL CreateFolderEnumList(
     static const WCHAR dot[] = { '.',0 };
     static const WCHAR dotdot[] = { '.','.',0 };
 
-    TRACE("(%p)->(path=%s flags=0x%08lx) \n",list,debugstr_w(lpszPath),dwFlags);
+    TRACE("(%p)->(path=%s flags=0x%08lx)\n", list, debugstr_w(lpszPath), dwFlags);
 
     if(!lpszPath || !lpszPath[0]) return FALSE;
 
