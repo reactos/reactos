@@ -84,7 +84,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
 	  pInfo->Name[Length] = L'\0';
           pInfo->Base = (ULONG_PTR)current->DllBase;
           pInfo->Size = current->SizeOfImage;
-          pInfo->RosSymInfo = current->RosSymInfo;
+          pInfo->RosSymInfo = current->PatchInformation;
           return TRUE;
         }
       current_entry = current_entry->Flink;
@@ -127,7 +127,7 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
 	  pInfo->Name[Length] = L'\0';
           pInfo->Base = (ULONG_PTR)current->DllBase;
           pInfo->Size = current->SizeOfImage;
-          pInfo->RosSymInfo = current->RosSymInfo;
+          pInfo->RosSymInfo = current->PatchInformation;
           return TRUE;
         }
       current_entry = current_entry->Flink;
@@ -493,7 +493,7 @@ KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
   UNICODE_STRING KernelName;
   DPRINT("LdrModule %p\n", LdrModule);
 
-  LdrModule->RosSymInfo = NULL;
+  LdrModule->PatchInformation = NULL;
 
   KernelName.MaximumLength = sizeof(Prefix) + LdrModule->FullDllName.Length;
   KernelName.Length = KernelName.MaximumLength - sizeof(WCHAR);
@@ -507,7 +507,7 @@ KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
          LdrModule->FullDllName.Length);
   KernelName.Buffer[KernelName.Length / sizeof(WCHAR)] = L'\0';
 
-  KdbpSymLoadModuleSymbols(&KernelName, (PROSSYM_INFO*)&LdrModule->RosSymInfo);
+  KdbpSymLoadModuleSymbols(&KernelName, (PROSSYM_INFO*)&LdrModule->PatchInformation);
 
   ExFreePool(KernelName.Buffer);
 }
@@ -539,7 +539,7 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
     {
       Current = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-      KdbpSymUnloadModuleSymbols(Current->RosSymInfo);
+      KdbpSymUnloadModuleSymbols(Current->PatchInformation);
 
       CurrentEntry = CurrentEntry->Flink;
     }
@@ -561,9 +561,9 @@ KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
   /* Load symbols for the image if available */
   DPRINT("Loading driver %wZ symbols (driver @ %08x)\n", Filename, Module->Base);
 
-  Module->RosSymInfo = NULL;
+  Module->PatchInformation = NULL;
 
-  KdbpSymLoadModuleSymbols(Filename, (PROSSYM_INFO*)&Module->RosSymInfo);
+  KdbpSymLoadModuleSymbols(Filename, (PROSSYM_INFO*)&Module->PatchInformation);
 }
 
 /*! \brief Unloads symbol info for a driver.
@@ -574,8 +574,8 @@ VOID
 KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
 {
   /* Unload symbols for module if available */
-  KdbpSymUnloadModuleSymbols(ModuleObject->RosSymInfo);
-  ModuleObject->RosSymInfo = NULL;
+  KdbpSymUnloadModuleSymbols(ModuleObject->PatchInformation);
+  ModuleObject->PatchInformation = NULL;
 }
 
 /*! \brief Called when a symbol file is loaded by the loader?
@@ -617,7 +617,7 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
   {
      if (! LoadSymbols)
      {
-        ModuleObject->RosSymInfo = NULL;
+        ModuleObject->PatchInformation = NULL;
         return;
      }
 
@@ -631,16 +631,16 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
      if (i < KeLoaderBlock.ModsCount)
      {
         KeLoaderModules[i].Reserved = 1;
-        if (ModuleObject->RosSymInfo != NULL)
+        if (ModuleObject->PatchInformation != NULL)
         {
-           KdbpSymRemoveCachedFile(ModuleObject->RosSymInfo);
+           KdbpSymRemoveCachedFile(ModuleObject->PatchInformation);
         }
 
         if (IsRaw)
         {
            if (! RosSymCreateFromRaw((PVOID) KeLoaderModules[i].ModStart,
                                      KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart,
-                                     (PROSSYM_INFO*)&ModuleObject->RosSymInfo))
+                                     (PROSSYM_INFO*)&ModuleObject->PatchInformation))
            {
               return;
            }
@@ -649,7 +649,7 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         {
            if (! RosSymCreateFromMem((PVOID) KeLoaderModules[i].ModStart,
                                      KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart,
-                                     (PROSSYM_INFO*)&ModuleObject->RosSymInfo))
+                                     (PROSSYM_INFO*)&ModuleObject->PatchInformation))
            {
               return;
            }
@@ -658,14 +658,14 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         /* add file to cache */
         RtlInitAnsiString(&AnsiString, FileName);
 	RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-        KdbpSymAddCachedFile(&UnicodeString, ModuleObject->RosSymInfo);
+        KdbpSymAddCachedFile(&UnicodeString, ModuleObject->PatchInformation);
         RtlFreeUnicodeString(&UnicodeString);
 
         DPRINT("Installed symbols: %s@%08x-%08x %p\n",
 	       FileName,
 	       ModuleObject->DllBase,
 	       ModuleObject->SizeOfImage + ModuleObject->DllBase,
-	       ModuleObject->RosSymInfo);
+	       ModuleObject->PatchInformation);
      }
   }
 }
@@ -683,8 +683,8 @@ KdbSymInit(IN PLDR_DATA_TABLE_ENTRY NtoskrnlModuleObject,
   int Found;
   char YesNo;
 
-  NtoskrnlModuleObject->RosSymInfo = NULL;
-  LdrHalModuleObject->RosSymInfo = NULL;
+  NtoskrnlModuleObject->PatchInformation = NULL;
+  LdrHalModuleObject->PatchInformation = NULL;
 
   InitializeListHead(&SymbolFileListHead);
   KeInitializeSpinLock(&SymbolFileListLock);

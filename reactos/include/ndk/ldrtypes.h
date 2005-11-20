@@ -76,10 +76,6 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     };
     PVOID EntryPointActivationContext;
     PVOID PatchInformation;
-#if defined(DBG) || defined(KDBG)
-    /* FIXME: THIS _REALLY_ NEEDS TO GO SOMEWHERE ELSE */
-    PVOID RosSymInfo;
-#endif /* KDBG */
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
 typedef struct _LDR_RESOURCE_INFO
