@@ -1,6 +1,5 @@
 /*
- * Copyright 2002
- Mike McCormack for CodeWeavers
+ * Copyright 2002 Mike McCormack for CodeWeavers
  * Copyright 2004,2005 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
@@ -28,17 +27,19 @@
  *   registering and enumerating physical stores and locations.)
  * - Many flags, options and whatnot are unimplemented.
  */
-
-#include "precomp.h"
-
-#define NONAMELESSUNION
-
-static _SEH_FILTER(page_fault)
-{
-    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
-        return _SEH_EXECUTE_HANDLER;
-    return _SEH_CONTINUE_SEARCH;
-}
+#include <assert.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "wincrypt.h"
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "excpt.h"
+#include "wine/exception.h"
+#include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -313,14 +314,12 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
  DWORD cbElement, DWORD dwContextTypeFlags, DWORD *pdwContentType);
 
 /* filter for page-fault exceptions */
-/*
 static WINE_EXCEPTION_FILTER(page_fault)
 {
     if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_EXECUTE_HANDLER;
     return EXCEPTION_CONTINUE_SEARCH;
 }
-*/
 
 static void CRYPT_InitStore(WINECRYPT_CERTSTORE *store, HCRYPTPROV hCryptProv,
  DWORD dwFlags, CertStoreType type)
@@ -341,7 +340,6 @@ static void CRYPT_InitStore(WINECRYPT_CERTSTORE *store, HCRYPTPROV hCryptProv,
  * be a PWINE_CERT_CONTEXT, and increments pCertContext's reference count.
  * Also sets the hCertStore member of the reference to store.
  */
-
 static void CRYPT_InitCertRef(PWINE_CERT_CONTEXT_REF ref,
  PWINE_CERT_CONTEXT context, HCERTSTORE store)
 {
@@ -2664,7 +2662,7 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
         return NULL;
     }
 
-    _SEH_TRY
+    __TRY
     {
         const WINE_CONTEXT_INTERFACE *contextInterface = NULL;
         const WINE_CERT_PROP_HEADER *hdr = NULL;
@@ -2821,12 +2819,12 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
             }
         }
     }
-    _SEH_EXCEPT(page_fault)
+    __EXCEPT(page_fault)
     {
         SetLastError(STATUS_ACCESS_VIOLATION);
         context = NULL;
     }
-    _SEH_END
+    __ENDTRY
     return context;
 }
 
@@ -3313,15 +3311,6 @@ BOOL WINAPI CryptVerifyCertificateSignatureEx(HCRYPTPROV hCryptProv,
     return ret;
 }
 
-BOOL WINAPI CryptEncryptMessage( PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptMessagePara,
-                                 DWORD dwCert, PCCERT_CONTEXT pccertCert[],
-                                 const BYTE* pbEncrypted, DWORD dwEncrypted,
-                                 BYTE* pbBlob, DWORD* dwEncryptedBlob)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 HCRYPTOIDFUNCSET WINAPI CryptInitOIDFunctionSet(LPCSTR pszFuncName, DWORD dwFlags)
 {
     FIXME("stub: %s %lx\n", debugstr_a(pszFuncName), dwFlags);
@@ -3334,42 +3323,3 @@ BOOL WINAPI CryptUnregisterDefaultOIDFunction(DWORD dwEncodingType,
     FIXME("stub: %lx %s %s\n", dwEncodingType, debugstr_a(pszFuncName), debugstr_w(pwszDll));
     return FALSE;
 }
-
-DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext,
-                                DWORD dwType, DWORD dwFlags,
-                                LPVOID pvType, LPWSTR pszName, 
-                                DWORD dwName)
-{
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT pCertContext, 
-                                DWORD dwType, DWORD dwFlags, 
-                                LPVOID pvType, LPSTR pszName,
-                                DWORD dwName)
-{
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-DWORD WINAPI CertNameToStrA(DWORD dwCertEncoding, 
-                            PCERT_NAME_BLOB pCertName, 
-                            DWORD dwType, LPSTR psz,
-                            DWORD dwSZ)
-{
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-DWORD WINAPI CertNameToStrW(DWORD dwCertEncoding,
-                            PCERT_NAME_BLOB pCertName,
-                            DWORD dwType, LPWSTR psz, 
-                            DWORD dwSZ)
-{
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-

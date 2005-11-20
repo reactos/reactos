@@ -34,7 +34,16 @@
  *
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wincrypt.h"
+#include "winreg.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
