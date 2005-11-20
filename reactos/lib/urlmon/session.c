@@ -23,6 +23,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "winreg.h"
 #include "ole2.h"
 #include "urlmon.h"
 #include "urlmon_main.h"
@@ -30,6 +31,52 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
+
+HRESULT get_protocol_iface(LPCWSTR url, IUnknown **ret)
+{
+    WCHAR schema[64], str_clsid[64];
+    HKEY hkey = NULL;
+    DWORD res, type, size, schema_len;
+    CLSID clsid;
+    LPWSTR wszKey;
+    HRESULT hres;
+
+    static const WCHAR wszProtocolsKey[] =
+        {'P','R','O','T','O','C','O','L','S','\\','H','a','n','d','l','e','r','\\'};
+    static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
+
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(schema[0]),
+            &schema_len, 0);
+    if(FAILED(hres) || !schema_len)
+        return E_FAIL;
+
+    wszKey = HeapAlloc(GetProcessHeap(), 0, sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
+    memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
+    memcpy(wszKey + sizeof(wszProtocolsKey)/sizeof(WCHAR), schema, (schema_len+1)*sizeof(WCHAR));
+
+    res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
+    HeapFree(GetProcessHeap(), 0, wszKey);
+    if(res != ERROR_SUCCESS) {
+        TRACE("Could not open key %s\n", debugstr_w(wszKey));
+        return E_FAIL;
+    }
+    
+    size = sizeof(str_clsid);
+    res = RegQueryValueExW(hkey, wszCLSID, NULL, &type, (LPBYTE)str_clsid, &size);
+    RegCloseKey(hkey);
+    if(res != ERROR_SUCCESS || type != REG_SZ) {
+        WARN("Could not get protocol CLSID res=%ld\n", res);
+        return E_FAIL;
+    }
+
+    hres = CLSIDFromString(str_clsid, &clsid);
+    if(FAILED(hres)) {
+        WARN("CLSIDFromString failed: %08lx\n", hres);
+        return hres;
+    }
+
+    return CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)ret);
+}
 
 static HRESULT WINAPI InternetSession_QueryInterface(IInternetSession *iface,
         REFIID riid, void **ppv)

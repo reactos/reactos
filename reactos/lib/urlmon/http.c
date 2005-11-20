@@ -32,13 +32,18 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
-    const IInternetProtocolVtbl  *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl *lpInternetProtocolVtbl;
+    const IInternetPriorityVtbl *lpInternetPriorityVtbl;
+
+    LONG priority;
+
     LONG ref;
 } HttpProtocol;
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, InternetProtocol, iface)
-
 #define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
+#define PRIORITY(x)  ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
+
+#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, InternetProtocol, iface)
 
 static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -54,6 +59,9 @@ static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFI
     }else if(IsEqualGUID(&IID_IInternetProtocol, riid)) {
         TRACE("(%p)->(IID_IInternetProtocol %p)\n", This, ppv);
         *ppv = PROTOCOL(This);
+    }else if(IsEqualGUID(&IID_IInternetPriority, riid)) {
+        TRACE("(%p)->(IID_IInternetPriority %p)\n", This, ppv);
+        *ppv = PRIORITY(This);
     }
 
     if(*ppv) {
@@ -167,6 +175,56 @@ static HRESULT WINAPI HttpProtocol_UnlockRequest(IInternetProtocol *iface)
 
 #undef PROTOCOL_THIS
 
+#define PRIORITY_THIS(iface) DEFINE_THIS(HttpProtocol, InternetPriority, iface)
+
+static HRESULT WINAPI HttpPriority_QueryInterface(IInternetPriority *iface, REFIID riid, void **ppv)
+{
+    HttpProtocol *This = PRIORITY_THIS(iface);
+    return IInternetProtocol_QueryInterface(PROTOCOL(This), riid, ppv);
+}
+
+static ULONG WINAPI HttpPriority_AddRef(IInternetPriority *iface)
+{
+    HttpProtocol *This = PRIORITY_THIS(iface);
+    return IInternetProtocol_AddRef(PROTOCOL(This));
+}
+
+static ULONG WINAPI HttpPriority_Release(IInternetPriority *iface)
+{
+    HttpProtocol *This = PRIORITY_THIS(iface);
+    return IInternetProtocol_Release(PROTOCOL(This));
+}
+
+static HRESULT WINAPI HttpPriority_SetPriority(IInternetPriority *iface, LONG nPriority)
+{
+    HttpProtocol *This = PRIORITY_THIS(iface);
+
+    TRACE("(%p)->(%ld)\n", This, nPriority);
+
+    This->priority = nPriority;
+    return S_OK;
+}
+
+static HRESULT WINAPI HttpPriority_GetPriority(IInternetPriority *iface, LONG *pnPriority)
+{
+    HttpProtocol *This = PRIORITY_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", This, pnPriority);
+
+    *pnPriority = This->priority;
+    return S_OK;
+}
+
+#undef PRIORITY_THIS
+
+static const IInternetPriorityVtbl HttpPriorityVtbl = {
+    HttpPriority_QueryInterface,
+    HttpPriority_AddRef,
+    HttpPriority_Release,
+    HttpPriority_SetPriority,
+    HttpPriority_GetPriority
+};
+
 static const IInternetProtocolVtbl HttpProtocolVtbl = {
     HttpProtocol_QueryInterface,
     HttpProtocol_AddRef,
@@ -194,7 +252,11 @@ HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret = HeapAlloc(GetProcessHeap(), 0, sizeof(HttpProtocol));
 
     ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
+    ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
+
     ret->ref = 1;
+
+    ret->priority = 0;
 
     *ppobj = PROTOCOL(ret);
     

@@ -64,8 +64,8 @@
 @ stdcall RevokeFormatEnumerator(ptr ptr)
 @ stub SetSoftwareUpdateAdvertisementState
 @ stub URLDownloadA
-@ stub URLDownloadToCacheFileA
-@ stub URLDownloadToCacheFileW
+@ stdcall URLDownloadToCacheFileA(ptr str str long long ptr)
+@ stdcall URLDownloadToCacheFileW(ptr wstr wstr long long ptr)
 @ stdcall URLDownloadToFileA(ptr str str long ptr)
 @ stdcall URLDownloadToFileW(ptr wstr wstr long ptr)
 @ stub URLDownloadW
