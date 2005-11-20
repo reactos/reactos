@@ -76,6 +76,15 @@ DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 
+/* driver.c */
+
+NTSTATUS ScmLoadDriver(PSERVICE lpService);
+DWORD ScmUnloadDriver(PSERVICE lpService);
+DWORD ScmControlDriver(PSERVICE lpService,
+                       DWORD dwControl,
+                       LPSERVICE_STATUS lpServiceStatus);
+
+
 /* rpcserver.c */
 
 VOID ScmStartRpcServer(VOID);

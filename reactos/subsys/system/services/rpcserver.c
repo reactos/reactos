@@ -281,6 +281,7 @@ ScmrControlService(handle_t BindingHandle,
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
     ACCESS_MASK DesiredAccess;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmrControlService() called\n");
 
@@ -335,16 +336,30 @@ ScmrControlService(handle_t BindingHandle,
         return ERROR_INVALID_HANDLE;
     }
 
-
-    /* FIXME: Send control code to the service */
-
+    if (lpService->Status.dwServiceType & SERVICE_DRIVER)
+    {
+        /* Send control code to the driver */
+        dwError = ScmControlDriver(lpService,
+                                   dwControl,
+                                   lpServiceStatus);
+    }
+    else
+    {
+        /* FIXME: Send control code to the service */
+#if 0
+        dwError = ScmControlService(lpService,
+                                    dwControl,
+                                    lpServiceStatus);
+#endif
+        dwError = ERROR_INVALID_SERVICE_CONTROL;
+    }
 
     /* Return service status information */
     RtlCopyMemory(lpServiceStatus,
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 

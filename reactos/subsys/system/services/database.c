@@ -404,6 +404,32 @@ ScmReadGroupList(VOID)
 }
 
 
+VOID
+ScmDeleteMarkedServices(VOID)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+        ServiceEntry = ServiceEntry->Flink;
+
+        if (CurrentService->bDeleted == TRUE)
+        {
+            DPRINT1("Delete service: %S\n", CurrentService->lpServiceName);
+
+            /* FIXME: Delete the registry keys */
+
+            /* FIXME: Delete the service record from the list */
+
+        }
+    }
+}
+
+
 DWORD
 ScmCreateServiceDatabase(VOID)
 {
@@ -474,7 +500,8 @@ ScmCreateServiceDatabase(VOID)
 
     RegCloseKey(hServicesKey);
 
-    /* FIXME: Delete services that are marked for delete */
+    /* Delete services that are marked for delete */
+    ScmDeleteMarkedServices();
 
     DPRINT("ScmCreateServiceDatabase() done\n");
 
@@ -836,8 +863,6 @@ static NTSTATUS
 ScmStartService(PSERVICE Service,
                 PSERVICE_GROUP Group)
 {
-    WCHAR szDriverPath[MAX_PATH];
-    UNICODE_STRING DriverPath;
     NTSTATUS Status;
 
     DPRINT("ScmStartService() called\n");
@@ -845,21 +870,12 @@ ScmStartService(PSERVICE Service,
     Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
     DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
 
-    if (Service->Status.dwServiceType == SERVICE_KERNEL_DRIVER ||
-        Service->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER ||
-        Service->Status.dwServiceType == SERVICE_RECOGNIZER_DRIVER)
+    if (Service->Status.dwServiceType & SERVICE_DRIVER)
     {
         /* Load driver */
-        wcscpy(szDriverPath,
-               L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-        wcscat(szDriverPath,
-               Service->lpServiceName);
-
-        RtlInitUnicodeString(&DriverPath,
-                             szDriverPath);
-
-        DPRINT("  Path: %wZ\n", &DriverPath);
-        Status = NtLoadDriver(&DriverPath);
+        Status = ScmLoadDriver(Service);
+        if (Status == STATUS_SUCCESS)
+            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
     }
     else
     {
