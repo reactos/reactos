@@ -4,6 +4,7 @@
  * Purpose: Probe for PsUnblockThread crash due to double-acquire spin lock.
  */
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <stdio.h>
 
