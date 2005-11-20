@@ -157,6 +157,7 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
 
 	if (DeviceType == MidiInDevice) 
 	{
+
         pClient->AuxEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
         if (pClient->AuxEvent1 == NULL) 
 		{
@@ -173,6 +174,7 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
 
         
         // TaskCreate
+        
         
        WaitForSingleObject(pClient->AuxEvent2, INFINITE);
     }

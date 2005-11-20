@@ -29,6 +29,15 @@
 #include <mmsystem.h>
 #include <winbase.h>
 
+typedef VOID (TASKCALLBACK) (DWORD dwInst);
+
+typedef TASKCALLBACK FAR *LPTASKCALLBACK;
+
+UINT        APIENTRY mmTaskCreate(LPTASKCALLBACK lpfn, HANDLE FAR * lph, DWORD dwInst);
+VOID        APIENTRY mmTaskBlock(DWORD h);
+BOOL        APIENTRY mmTaskSignal(DWORD h);
+VOID        APIENTRY mmTaskYield(VOID);
+DWORD       APIENTRY mmGetCurrentTask(VOID);
 
 
 #define MAX_MIDIINDRV 	(16)

@@ -36,15 +36,7 @@ MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
     if (Result != MMSYSERR_NOERROR)
          return Result;
 
-    //
-    // Set our data.
-    //
-    // Setting the overlapped parameter (last) to null means we
-    // wait until the operation completes.
-    //
-    
-
-	if (DeviceType == WaveOutDevice)
+	if ((DeviceType == WaveOutDevice) || (DeviceType == WaveInDevice))
 	{
 		Result = DeviceIoControl(DeviceHandle, IOCTL_WAVE_GET_CAPABILITIES,
                             NULL, 0, (LPVOID)pCaps, Size,
@@ -69,7 +61,7 @@ MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
 		
 
     // Close the handle and return the result code
-//    CloseHandle(DeviceHandle);
+    CloseHandle(DeviceHandle);
 
     return Result;
 }
@@ -81,6 +73,15 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 								DWORD dwParam2)
 {
 	// TODO: Implement
+    //PWAVEALLOC     pClient;  
+    //MMRESULT mResult;
+    //BOOL Result;
+    //DWORD BytesReturned;
+    LPWAVEFORMATEX pFormats;
+
+    pFormats = (LPWAVEFORMATEX)((LPWAVEOPENDESC)dwParam1)->lpFormat;
+
+
 	return MMSYSERR_NOERROR;
 }
 
