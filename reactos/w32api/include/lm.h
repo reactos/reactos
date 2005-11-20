@@ -23,5 +23,6 @@
 #include <lmwksta.h>
 #include <lmserver.h>
 #include <lmstats.h>
+#include <lmjoin.h>
 
 #endif

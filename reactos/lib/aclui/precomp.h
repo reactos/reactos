@@ -5,6 +5,7 @@
 #include <prsht.h>
 #include <aclui.h>
 #include <sddl.h>
+#include <winternl.h>
 #include <ntsecapi.h>
 #if SUPPORT_UXTHEME
 #include <uxtheme.h>
