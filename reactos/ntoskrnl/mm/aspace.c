@@ -30,7 +30,7 @@ MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
-   ExAcquireFastMutex(&AddressSpace->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Lock);
 }
 
 VOID
@@ -44,7 +44,7 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
-   ExReleaseFastMutex(&AddressSpace->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Lock);
 }
 
 VOID
