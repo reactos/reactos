@@ -17,6 +17,42 @@
 
 // MIDI device instance information
 //
+#define LOCAL_DATA_SIZE 20
+typedef struct _LOCALMIDIHDR {
+    OVERLAPPED          Ovl;
+    DWORD               BytesReturned;
+    struct _LOCALMIDIHDR *lpNext;       
+    BOOL                Done;           
+    PVOID               pClient;        
+  //  MIDI_DD_INPUT_DATA  MidiData;       
+    BYTE                ExtraData[LOCAL_DATA_SIZE - sizeof(ULONG)];
+                                        
+} LOCALMIDIHDR, *PLOCALMIDIHDR;
+
+#define LOCAL_MIDI_BUFFERS 8
+
+typedef struct {
+    
+    BOOL                fMidiInStarted;
+    DWORD               dwMsg;         
+    DWORD               dwCurData;     
+    BYTE                status;        
+    BOOLEAN             fSysex;        
+    BOOLEAN             Bad;           
+    BYTE                bBytesLeft;    
+    BYTE                bBytePos;      
+    DWORD               dwCurTime;     
+    DWORD               dwMsgTime;     
+                                       
+                                       
+    PLOCALMIDIHDR       DeviceQueue;   
+                                       
+    LOCALMIDIHDR                       
+    Bufs[LOCAL_MIDI_BUFFERS];
+                                       
+                                       
+} LOCALMIDIDATA, *PLOCALMIDIDATA;
+
 
 typedef struct tag_MIDIALLOC {
     struct tag_MIDIALLOC *Next;         // Chain of devices
@@ -54,7 +90,7 @@ typedef struct tag_MIDIALLOC {
     HANDLE              AuxEvent2;      // Aux thread caller waits on this
     DWORD               AuxReturnCode;  // Return code from Aux task
     DWORD               dwFlags;        // Open flags
-//    PLOCALMIDIDATA      Mid;            // Extra midi input structures
+    PLOCALMIDIDATA      Mid;            // Extra midi input structures
     int                 l;              // Helper global for modMidiLength
 
 } MIDIALLOC, *PMIDIALLOC;
@@ -79,13 +115,24 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
             break;
         
         case MidiInDevice :
-            // TODO
+            pClient = (PMIDIALLOC) HeapAlloc(Heap, 0, sizeof(MIDIALLOC) + sizeof(LOCALMIDIDATA));
+			if ( pClient ) memset(pClient, 0, sizeof(MIDIALLOC) + sizeof(LOCALMIDIDATA));
             break;
     };
     
     if ( !pClient )
         return MMSYSERR_NOMEM;
-        
+    
+	if (DeviceType == MidiInDevice) 
+	{
+        int i;
+        pClient->Mid = (PLOCALMIDIDATA)(pClient + 1);
+        for (i = 0 ;i < LOCAL_MIDI_BUFFERS ; i++) 
+		{
+            pClient->Mid->Bufs[i].pClient = pClient;
+        }
+    }
+
     pClient->DeviceType = DeviceType;
     pClient->dwCallback = ((LPMIDIOPENDESC)Param1)->dwCallback;
     pClient->dwInstance = ((LPMIDIOPENDESC)Param1)->dwInstance;
@@ -108,11 +155,34 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
         return MMSYSERR_NOMEM;
     }
 
+	if (DeviceType == MidiInDevice) 
+	{
+        pClient->AuxEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (pClient->AuxEvent1 == NULL) 
+		{
+            // cleanup
+            return MMSYSERR_NOMEM;
+        }
+        
+		pClient->AuxEvent2 = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (pClient->AuxEvent2 == NULL) 
+		{
+            // cleanup
+            return MMSYSERR_NOMEM;
+        }
+
+        
+        // TaskCreate
+        
+       WaitForSingleObject(pClient->AuxEvent2, INFINITE);
+    }
+
     PMIDIALLOC *pUserHandle;
     pUserHandle = (PMIDIALLOC*) User;
     *pUserHandle = pClient;
     
-        // callback    
+    // callback    
+
     return MMSYSERR_NOERROR;
 }
 
@@ -183,11 +253,11 @@ APIENTRY DWORD midMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
     switch (dwMessage) {
         case MIDM_GETNUMDEVS:
             DPRINT("MIDM_GETNUMDEVS");
-            return 0;
+            return GetDeviceCount(MidiInDevice);
 
         case MIDM_GETDEVCAPS:
             DPRINT("MIDM_GETDEVCAPS");
-            return MMSYSERR_NOERROR;
+            return GetDeviceCapabilities(dwId, MidiInDevice, (LPBYTE)dwParam1, (DWORD)dwParam2);
 
         case MIDM_OPEN:
             DPRINT("MIDM_OPEN");

@@ -51,7 +51,7 @@ MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                   &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
 	}
 
-	else if (DeviceType == MidiOutDevice)
+	else if ((DeviceType == MidiInDevice) || (DeviceType == MidiOutDevice))
 	{
 	    Result = DeviceIoControl(DeviceHandle, IOCTL_MIDI_GET_CAPABILITIES,
                             NULL, 0, (LPVOID)pCaps, Size,
