@@ -171,7 +171,7 @@ static inline ErrorInfoImpl *impl_from_ISupportErrorInfo( ISupportErrorInfo *ifa
 #define _ICreateErrorInfo_(This)	(ICreateErrorInfo*)&(This->lpvtcei)
 #define _ISupportErrorInfo_(This)	(ISupportErrorInfo*)&(This->lpvtsei)
 
-IErrorInfo * IErrorInfoImpl_Constructor()
+IErrorInfo * IErrorInfoImpl_Constructor(void)
 {
 	ErrorInfoImpl * ei = HeapAlloc(GetProcessHeap(), 0, sizeof(ErrorInfoImpl));
 	if (ei)

@@ -49,7 +49,7 @@ static struct ifstub *stub_manager_ipid_to_ifstub(struct stub_manager *m, const 
 /* creates a new stub manager and adds it into the apartment. caller must
  * release stub manager when it is no longer required. the apartment and
  * external refs together take one implicit ref */
-struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object, MSHLFLAGS mshlflags)
+struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
 {
     struct stub_manager *sm;
 
@@ -79,15 +79,8 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object, MSHLFLAG
      */
     sm->extrefs = 0;
 
-    if (mshlflags & MSHLFLAGS_TABLESTRONG)
-        sm->state = STUBSTATE_TABLE_STRONG;
-    else if (mshlflags & MSHLFLAGS_TABLEWEAK)
-        sm->state = STUBSTATE_TABLE_WEAK_UNMARSHALED;
-    else
-        sm->state = STUBSTATE_NORMAL_MARSHALED;
-    
     EnterCriticalSection(&apt->cs);
-    sm->oid    = apt->oidc++;
+    sm->oid = apt->oidc++;
     list_add_head(&apt->stubmgrs, &sm->entry);
     LeaveCriticalSection(&apt->cs);
 
@@ -301,6 +294,25 @@ static struct ifstub *stub_manager_ipid_to_ifstub(struct stub_manager *m, const 
     return result;
 }
 
+struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHLFLAGS flags)
+{
+    struct ifstub  *result = NULL;
+    struct ifstub  *ifstub;
+
+    EnterCriticalSection(&m->lock);
+    LIST_FOR_EACH_ENTRY( ifstub, &m->ifstubs, struct ifstub, entry )
+    {
+        if (IsEqualIID(iid, &ifstub->iid) && (ifstub->flags == flags))
+        {
+            result = ifstub;
+            break;
+        }
+    }
+    LeaveCriticalSection(&m->lock);
+
+    return result;
+}
+
 /* gets the stub manager associated with an ipid - caller must have
  * a reference to the apartment while a reference to the stub manager is held.
  * it must also call release on the stub manager when it is no longer needed */
@@ -402,7 +414,7 @@ static inline HRESULT generate_ipid(struct stub_manager *m, IPID *ipid)
 }
 
 /* registers a new interface stub COM object with the stub manager and returns registration record */
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid)
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, MSHLFLAGS flags)
 {
     struct ifstub *stub;
 
@@ -417,11 +429,16 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
 
     IUnknown_AddRef(iptr);
     stub->iface = iptr;
-
+    stub->flags = flags;
     stub->iid = *iid;
 
-    /* FIXME: hack for IRemUnknown because we don't notify SCM of our IPID
-     * yet, so we need to use a well-known one */
+    /* 
+     * FIXME: this is a hack for marshalling IRemUnknown. In real
+     * DCOM, the IPID of the IRemUnknown interface is generated like
+     * any other and passed to the OXID resolver which then returns it
+     * when queried. We don't have an OXID resolver yet so instead we
+     * use a magic IPID reserved for IRemUnknown.
+     */
     if (IsEqualIID(iid, &IID_IRemUnknown))
     {
         stub->ipid.Data1 = 0xffffffff;
@@ -435,6 +452,8 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
 
     EnterCriticalSection(&m->lock);
     list_add_head(&m->ifstubs, &stub->entry);
+    /* every normal marshal is counted so we don't allow more than we should */
+    if (flags & MSHLFLAGS_NORMAL) m->norm_refs++;
     LeaveCriticalSection(&m->lock);
 
     TRACE("ifstub %p created with ipid %s\n", stub, debugstr_guid(&stub->ipid));
@@ -457,34 +476,29 @@ static void stub_manager_delete_ifstub(struct stub_manager *m, struct ifstub *if
 }
 
 /* returns TRUE if it is possible to unmarshal, FALSE otherwise. */
-BOOL stub_manager_notify_unmarshal(struct stub_manager *m)
+BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid)
 {
-    BOOL ret;
+    BOOL ret = TRUE;
+    struct ifstub *ifstub;
+
+    if (!(ifstub = stub_manager_ipid_to_ifstub(m, ipid)))
+    {
+        ERR("attempted unmarshal of unknown IPID %s\n", debugstr_guid(ipid));
+        return FALSE;
+    }
 
     EnterCriticalSection(&m->lock);
 
-    switch (m->state)
+    /* track normal marshals so we can enforce rules whilst in-process */
+    if (ifstub->flags & MSHLFLAGS_NORMAL)
     {
-    case STUBSTATE_TABLE_STRONG:
-    case STUBSTATE_TABLE_WEAK_MARSHALED:
-        /* no transition */
-        ret = TRUE;
-        break;
-    case STUBSTATE_TABLE_WEAK_UNMARSHALED:
-        m->state = STUBSTATE_TABLE_WEAK_MARSHALED;
-        ret = TRUE;
-        break;
-    case STUBSTATE_NORMAL_MARSHALED:
-        m->state = STUBSTATE_NORMAL_UNMARSHALED;
-        ret = TRUE;
-        break;
-    default:
-        WARN("object OID %s already unmarshaled\n",
-            wine_dbgstr_longlong(m->oid));
-        ret = TRUE; /* FIXME: the state management should be per-ifstub, so
-                     * it is disabled at the moment so that InstallShield
-                     * works again */
-        break;
+        if (m->norm_refs)
+            m->norm_refs--;
+        else
+        {
+            ERR("attempted invalid normal unmarshal, norm_refs is zero\n");
+            ret = FALSE;
+        }
     }
 
     LeaveCriticalSection(&m->lock);
@@ -492,42 +506,30 @@ BOOL stub_manager_notify_unmarshal(struct stub_manager *m)
     return ret;
 }
 
-void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs)
+/* handles refcounting for CoReleaseMarshalData */
+void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid)
 {
-    EnterCriticalSection(&m->lock);
-
-    switch (m->state)
-    {
-    case STUBSTATE_NORMAL_MARSHALED:
-    case STUBSTATE_NORMAL_UNMARSHALED: /* FIXME: check this */
-        /* nothing to change */
-        break;
-    case STUBSTATE_TABLE_WEAK_UNMARSHALED:
-    case STUBSTATE_TABLE_STRONG:
+    struct ifstub *ifstub;
+ 
+    if (!(ifstub = stub_manager_ipid_to_ifstub(m, ipid)))
+        return;
+ 
+    if (ifstub->flags & MSHLFLAGS_TABLEWEAK)
+        refs = 0;
+    else
         refs = 1;
-        break;
-    case STUBSTATE_TABLE_WEAK_MARSHALED:
-        refs = 0; /* like native */
-        break;
-    }
-
-    LeaveCriticalSection(&m->lock);
 
     stub_manager_ext_release(m, refs);
 }
 
 /* is an ifstub table marshaled? */
-BOOL stub_manager_is_table_marshaled(struct stub_manager *m)
+BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid)
 {
-    BOOL ret;
-
-    EnterCriticalSection(&m->lock);
-    ret = ((m->state == STUBSTATE_TABLE_STRONG) ||
-           (m->state == STUBSTATE_TABLE_WEAK_MARSHALED) ||
-           (m->state == STUBSTATE_TABLE_WEAK_UNMARSHALED));
-    LeaveCriticalSection(&m->lock);
-
-    return ret;
+    struct ifstub *ifstub = stub_manager_ipid_to_ifstub(m, ipid);
+ 
+    assert( ifstub );
+    
+    return ifstub->flags & (MSHLFLAGS_TABLESTRONG | MSHLFLAGS_TABLEWEAK);
 }
 
 

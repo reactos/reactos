@@ -149,10 +149,10 @@
 500 cdecl HGLOBALLockBytesImpl16_QueryInterface(segptr ptr ptr) HGLOBALLockBytesImpl16_QueryInterface
 501 cdecl HGLOBALLockBytesImpl16_AddRef(ptr) HGLOBALLockBytesImpl16_AddRef
 502 cdecl HGLOBALLockBytesImpl16_Release(ptr) HGLOBALLockBytesImpl16_Release
-503 cdecl HGLOBALLockBytesImpl16_ReadAt(ptr long long ptr long ptr) HGLOBALLockBytesImpl16_ReadAt
-504 cdecl HGLOBALLockBytesImpl16_WriteAt(ptr long long ptr long ptr) HGLOBALLockBytesImpl16_WriteAt
+503 cdecl HGLOBALLockBytesImpl16_ReadAt(ptr double ptr long ptr) HGLOBALLockBytesImpl16_ReadAt
+504 cdecl HGLOBALLockBytesImpl16_WriteAt(ptr double ptr long ptr) HGLOBALLockBytesImpl16_WriteAt
 505 cdecl HGLOBALLockBytesImpl16_Flush(ptr) HGLOBALLockBytesImpl16_Flush
-506 cdecl HGLOBALLockBytesImpl16_SetSize(ptr long long) HGLOBALLockBytesImpl16_SetSize
-507 cdecl HGLOBALLockBytesImpl16_LockRegion(ptr long long long long long) HGLOBALLockBytesImpl16_LockRegion
-508 cdecl HGLOBALLockBytesImpl16_UnlockRegion(ptr long long long long long) HGLOBALLockBytesImpl16_UnlockRegion
+506 cdecl HGLOBALLockBytesImpl16_SetSize(ptr double) HGLOBALLockBytesImpl16_SetSize
+507 cdecl HGLOBALLockBytesImpl16_LockRegion(ptr double double long) HGLOBALLockBytesImpl16_LockRegion
+508 cdecl HGLOBALLockBytesImpl16_UnlockRegion(ptr double double long) HGLOBALLockBytesImpl16_UnlockRegion
 509 cdecl HGLOBALLockBytesImpl16_Stat(ptr ptr long) HGLOBALLockBytesImpl16_Stat

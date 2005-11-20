@@ -98,8 +98,8 @@ LANGID WINAPI GetSystemDefaultLangID16(void)
 /******************************************************************************
  *		LCMapStringA	[OLE2NLS.6]
  */
-INT16 LCMapString16(LCID lcid, DWORD mapflags, LPCSTR srcstr, INT16 srclen,
-		    LPSTR dststr, INT16 dstlen)
+INT16 WINAPI LCMapString16(LCID lcid, DWORD mapflags, LPCSTR srcstr, INT16 srclen,
+			   LPSTR dststr, INT16 dstlen)
 {
     return LCMapStringA(lcid, mapflags, srcstr, srclen, dststr, dstlen);
 }
@@ -133,4 +133,3 @@ BOOL16 WINAPI RegisterNLSInfoChanged16(LPVOID lpNewNLSInfo) /* [???] FIXME */
 
 	return FALSE; /* ptr not set */
 }
-

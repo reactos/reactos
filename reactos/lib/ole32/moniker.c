@@ -641,16 +641,6 @@ RunningObjectTableImpl_EnumRunning(IRunningObjectTable* iface,
     return hr;
 }
 
-/******************************************************************************
- *		GetRunningObjectTable (OLE2.30)
- */
-HRESULT WINAPI
-GetRunningObjectTable16(DWORD reserved, LPRUNNINGOBJECTTABLE *pprot)
-{
-    FIXME("(%ld,%p),stub!\n",reserved,pprot);
-    return E_NOTIMPL;
-}
-
 /***********************************************************************
  *           GetRunningObjectTable (OLE32.@)
  */

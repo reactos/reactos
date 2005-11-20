@@ -42,7 +42,9 @@
 #include "winerror.h"
 #include "winreg.h"
 #include "wtypes.h"
+#include "excpt.h"
 #include "wine/unicode.h"
+#include "wine/exception.h"
 
 #include "compobj_private.h"
 
@@ -63,7 +65,7 @@ static CRITICAL_SECTION_DEBUG csRegIf_debug =
 {
     0, 0, &csRegIf,
     { &csRegIf_debug.ProcessLocksList, &csRegIf_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": dcom registered server interfaces") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": dcom registered server interfaces") }
 };
 static CRITICAL_SECTION csRegIf = { &csRegIf_debug, -1, 0, 0, 0, 0 };
 
@@ -105,7 +107,16 @@ struct dispatch_params
     IRpcChannelBuffer *chan; /* server channel buffer, if applicable */
     HANDLE             handle; /* handle that will become signaled when call finishes */
     RPC_STATUS         status; /* status (out) */
+    HRESULT            hr; /* hresult (out) */
 };
+
+static WINE_EXCEPTION_FILTER(ole_filter)
+{
+    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ||
+        GetExceptionCode() == EXCEPTION_PRIV_INSTRUCTION)
+        return EXCEPTION_CONTINUE_SEARCH;
+    return EXCEPTION_EXECUTE_HANDLER;
+}
 
 static HRESULT WINAPI RpcChannelBuffer_QueryInterface(LPRPCCHANNELBUFFER iface, REFIID riid, LPVOID *ppv)
 {
@@ -228,6 +239,7 @@ static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPC
     
     params->msg = olemsg;
     params->status = RPC_S_OK;
+    params->hr = S_OK;
 
     /* Note: this is an optimization in the Microsoft OLE runtime that we need
      * to copy, as shown by the test_no_couninitialize_client test. without
@@ -270,6 +282,8 @@ static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPC
     if (hr == S_OK)
         hr = CoWaitForMultipleHandles(0, INFINITE, 1, &params->handle, &index);
     CloseHandle(params->handle);
+
+    if (hr == S_OK) hr = params->hr;
 
     status = params->status;
     HeapFree(GetProcessHeap(), 0, params);
@@ -434,12 +448,19 @@ HRESULT RPC_CreateServerChannel(IRpcChannelBuffer **chan)
 }
 
 
-HRESULT RPC_ExecuteCall(struct dispatch_params *params)
+void RPC_ExecuteCall(struct dispatch_params *params)
 {
-    HRESULT hr = IRpcStubBuffer_Invoke(params->stub, params->msg, params->chan);
+    __TRY
+    {
+        params->hr = IRpcStubBuffer_Invoke(params->stub, params->msg, params->chan);
+    }
+    __EXCEPT(ole_filter)
+    {
+        params->hr = GetExceptionCode();
+    }
+    __ENDTRY
     IRpcStubBuffer_Release(params->stub);
     if (params->handle) SetEvent(params->handle);
-    return hr;
 }
 
 static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
@@ -600,30 +621,20 @@ static HRESULT create_server(REFCLSID rclsid)
 {
     static const WCHAR  wszLocalServer32[] = { 'L','o','c','a','l','S','e','r','v','e','r','3','2',0 };
     static const WCHAR  embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
-    HKEY                hkeyclsid;
     HKEY                key;
-    HRESULT             hres = E_UNEXPECTED;
-    WCHAR               exe[MAX_PATH+1];
-    DWORD               exelen = sizeof(exe);
+    HRESULT             hres;
     WCHAR               command[MAX_PATH+sizeof(embedding)/sizeof(WCHAR)];
+    DWORD               size = MAX_PATH+1 * sizeof(WCHAR);
     STARTUPINFOW        sinfo;
     PROCESS_INFORMATION pinfo;
 
-    hres = HRESULT_FROM_WIN32(COM_OpenKeyForCLSID(rclsid, KEY_READ, &hkeyclsid));
-    if (hres != S_OK) {
+    hres = COM_OpenKeyForCLSID(rclsid, wszLocalServer32, KEY_READ, &key);
+    if (FAILED(hres)) {
         ERR("class %s not registered\n", debugstr_guid(rclsid));
-        return REGDB_E_READREGDB;
+        return hres;
     }
 
-    hres = RegOpenKeyExW(hkeyclsid, wszLocalServer32, 0, KEY_READ, &key);
-
-    if (hres != ERROR_SUCCESS) {
-        WARN("class %s not registered as LocalServer32\n", debugstr_guid(rclsid));
-        return REGDB_E_READREGDB; /* Probably */
-    }
-
-    memset(exe,0,sizeof(exe));
-    hres= RegQueryValueExW(key, NULL, NULL, NULL, (LPBYTE)exe, &exelen);
+    hres = RegQueryValueExW(key, NULL, NULL, NULL, (LPBYTE)command, &size);
     RegCloseKey(key);
     if (hres) {
         WARN("No default value for LocalServer32 key\n");
@@ -633,17 +644,16 @@ static HRESULT create_server(REFCLSID rclsid)
     memset(&sinfo,0,sizeof(sinfo));
     sinfo.cb = sizeof(sinfo);
 
-    /* EXE servers are started with the -Embedding switch. MSDN also claims /Embedding is used,
-     * 9x does -Embedding, perhaps an 9x/NT difference?
-     */
+    /* EXE servers are started with the -Embedding switch. */
 
-    strcpyW(command, exe);
     strcatW(command, embedding);
 
     TRACE("activating local server %s for %s\n", debugstr_w(command), debugstr_guid(rclsid));
 
-    if (!CreateProcessW(exe, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
-        WARN("failed to run local server %s\n", debugstr_w(exe));
+    /* FIXME: Win2003 supports a ServerExecutable value that is passed into
+     * CreateProcess */
+    if (!CreateProcessW(NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
+        WARN("failed to run local server %s\n", debugstr_w(command));
         return HRESULT_FROM_WIN32(GetLastError());
     }
     CloseHandle(pinfo.hProcess);
@@ -694,7 +704,7 @@ static DWORD start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
  */
 static HRESULT create_local_service(REFCLSID rclsid)
 {
-    HRESULT hres = REGDB_E_READREGDB;
+    HRESULT hres;
     WCHAR buf[CHARS_IN_GUID], keyname[50];
     static const WCHAR szAppId[] = { 'A','p','p','I','d',0 };
     static const WCHAR szAppIdKey[] = { 'A','p','p','I','d','\\',0 };
@@ -707,11 +717,11 @@ static HRESULT create_local_service(REFCLSID rclsid)
     TRACE("Attempting to start Local service for %s\n", debugstr_guid(rclsid));
 
     /* read the AppID value under the class's key */
-    r = COM_OpenKeyForCLSID(rclsid, KEY_READ, &hkey);
-    if (r!=ERROR_SUCCESS)
+    hres = COM_OpenKeyForCLSID(rclsid, szAppId, KEY_READ, &hkey);
+    if (FAILED(hres))
         return hres;
     sz = sizeof buf;
-    r = RegQueryValueExW(hkey, szAppId, NULL, &type, (LPBYTE)buf, &sz);
+    r = RegQueryValueExW(hkey, NULL, NULL, &type, (LPBYTE)buf, &sz);
     RegCloseKey(hkey);
     if (r!=ERROR_SUCCESS || type!=REG_SZ)
         return hres;

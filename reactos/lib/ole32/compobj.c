@@ -56,23 +56,19 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winerror.h"
+#include "winreg.h"
 #include "winuser.h"
 #include "objbase.h"
 #include "ole2.h"
 #include "ole2ver.h"
-#include "rpc.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "wownt32.h"
-#include "wine/unicode.h"
-#include "objbase.h"
+
 #include "compobj_private.h"
 
+#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-
-typedef LPCSTR LPCOLESTR16;
 
 HINSTANCE OLE32_hInstance = 0; /* FIXME: make static ... */
 
@@ -97,7 +93,7 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &csApartment,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": csApartment") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": csApartment") }
 };
 static CRITICAL_SECTION csApartment = { &critsect_debug, -1, 0, 0, 0, 0 };
 
@@ -134,7 +130,7 @@ static CRITICAL_SECTION_DEBUG class_cs_debug =
 {
     0, 0, &csRegisteredClassList,
     { &class_cs_debug.ProcessLocksList, &class_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": csRegisteredClassList") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": csRegisteredClassList") }
 };
 static CRITICAL_SECTION csRegisteredClassList = { &class_cs_debug, -1, 0, 0, 0, 0 };
 
@@ -161,7 +157,7 @@ static CRITICAL_SECTION_DEBUG dll_cs_debug =
 {
     0, 0, &csOpenDllList,
     { &dll_cs_debug.ProcessLocksList, &dll_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": csOpenDllList") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": csOpenDllList") }
 };
 static CRITICAL_SECTION csOpenDllList = { &dll_cs_debug, -1, 0, 0, 0, 0 };
 
@@ -419,7 +415,8 @@ static LRESULT CALLBACK apartment_wndproc(HWND hWnd, UINT msg, WPARAM wParam, LP
     switch (msg)
     {
     case DM_EXECUTERPC:
-        return RPC_ExecuteCall((struct dispatch_params *)lParam);
+        RPC_ExecuteCall((struct dispatch_params *)lParam);
+        return 0;
     default:
         return DefWindowProcW(hWnd, msg, wParam, lParam);
     }
@@ -981,14 +978,36 @@ INT WINAPI StringFromGUID2(REFGUID id, LPOLESTR str, INT cmax)
   return MultiByteToWideChar( CP_ACP, 0, xguid, -1, str, cmax );
 }
 
-/* open HKCR\\CLSID\\{string form of clsid} key */
-DWORD COM_OpenKeyForCLSID(REFCLSID clsid, REGSAM access, HKEY *key)
+/* open HKCR\\CLSID\\{string form of clsid}\\{keyname} key */
+HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *subkey)
 {
     static const WCHAR wszCLSIDSlash[] = {'C','L','S','I','D','\\',0};
     WCHAR path[CHARS_IN_GUID + ARRAYSIZE(wszCLSIDSlash) - 1];
+    LONG res;
+    HKEY key;
+
     strcpyW(path, wszCLSIDSlash);
     StringFromGUID2(clsid, path + strlenW(wszCLSIDSlash), CHARS_IN_GUID);
-    return RegOpenKeyExW(HKEY_CLASSES_ROOT, path, 0, access, key);
+    res = RegOpenKeyExW(HKEY_CLASSES_ROOT, path, 0, keyname ? KEY_READ : access, &key);
+    if (res == ERROR_FILE_NOT_FOUND)
+        return REGDB_E_CLASSNOTREG;
+    else if (res != ERROR_SUCCESS)
+        return REGDB_E_READREGDB;
+
+    if (!keyname)
+    {
+        *subkey = key;
+        return S_OK;
+    }
+
+    res = RegOpenKeyExW(key, keyname, 0, access, subkey);
+    RegCloseKey(key);
+    if (res == ERROR_FILE_NOT_FOUND)
+        return REGDB_E_KEYMISSING;
+    else if (res != ERROR_SUCCESS)
+        return REGDB_E_READREGDB;
+
+    return S_OK;
 }
 
 /******************************************************************************
@@ -1007,24 +1026,14 @@ DWORD COM_OpenKeyForCLSID(REFCLSID clsid, REGSAM access, HKEY *key)
  */
 HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID)
 {
-  static const WCHAR wszProgID[] = {'P','r','o','g','I','D',0};
-  HKEY     hkey = NULL;
-  HKEY     hkey_clsid;
-  HRESULT  ret = S_OK;
-
-  if (ERROR_SUCCESS != COM_OpenKeyForCLSID(clsid, KEY_READ, &hkey_clsid))
-    ret = REGDB_E_CLASSNOTREG;
-
-  if (ret == S_OK)
-  {
-    if (RegOpenKeyExW(hkey_clsid, wszProgID, 0, KEY_READ, &hkey))
-      ret = REGDB_E_CLASSNOTREG;
-    RegCloseKey(hkey_clsid);
-  }
-
-  if (ret == S_OK)
-  {
+    static const WCHAR wszProgID[] = {'P','r','o','g','I','D',0};
+    HKEY     hkey;
+    HRESULT  ret;
     LONG progidlen = 0;
+
+    ret = COM_OpenKeyForCLSID(clsid, wszProgID, KEY_READ, &hkey);
+    if (FAILED(ret))
+        return ret;
 
     if (RegQueryValueW(hkey, NULL, NULL, &progidlen))
       ret = REGDB_E_CLASSNOTREG;
@@ -1040,46 +1049,9 @@ HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID)
       else
         ret = E_OUTOFMEMORY;
     }
-  }
 
-  RegCloseKey(hkey);
-  return ret;
-}
-
-/******************************************************************************
- *		CLSIDFromProgID [COMPOBJ.61]
- *
- * Converts a program ID into the respective GUID.
- *
- * PARAMS
- *  progid       [I] program id as found in registry
- *  riid         [O] associated CLSID
- *
- * RETURNS
- *	Success: S_OK
- *  Failure: CO_E_CLASSSTRING - the given ProgID cannot be found.
- */
-HRESULT WINAPI CLSIDFromProgID16(LPCOLESTR16 progid, LPCLSID riid)
-{
-	char	*buf,buf2[80];
-	LONG	buf2len;
-	HRESULT	err;
-	HKEY	xhkey;
-
-	buf = HeapAlloc(GetProcessHeap(),0,strlen(progid)+8);
-	sprintf(buf,"%s\\CLSID",progid);
-	if ((err=RegOpenKeyA(HKEY_CLASSES_ROOT,buf,&xhkey))) {
-		HeapFree(GetProcessHeap(),0,buf);
-                return CO_E_CLASSSTRING;
-	}
-	HeapFree(GetProcessHeap(),0,buf);
-	buf2len = sizeof(buf2);
-	if ((err=RegQueryValueA(xhkey,NULL,buf2,&buf2len))) {
-		RegCloseKey(xhkey);
-                return CO_E_CLASSSTRING;
-	}
-	RegCloseKey(xhkey);
-	return __CLSIDFromStringA(buf2,riid);
+    RegCloseKey(hkey);
+    return ret;
 }
 
 /******************************************************************************
@@ -1120,7 +1092,6 @@ HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID riid)
     RegCloseKey(xhkey);
     return CLSIDFromString(buf2,riid);
 }
-
 
 
 /*****************************************************************************
@@ -1388,7 +1359,14 @@ HRESULT WINAPI CoRegisterClassObject(
    */
   hr = COM_GetRegisteredClassObject(rclsid, dwClsContext, &foundObject);
   if (hr == S_OK) {
+    if (flags & REGCLS_MULTIPLEUSE) {
+      if (dwClsContext & CLSCTX_LOCAL_SERVER)
+        hr = CoLockObjectExternal(foundObject, TRUE, FALSE);
+      IUnknown_Release(foundObject);
+      return hr;
+    }
     IUnknown_Release(foundObject);
+    ERR("object already registered for class %s\n", debugstr_guid(rclsid));
     return CO_E_OBJISREG;
   }
 
@@ -1559,6 +1537,40 @@ HRESULT COM_RegReadPath(HKEY hkeyroot, const WCHAR *keyname, const WCHAR *valuen
 	return hres;
 }
 
+static HRESULT get_inproc_class_object(HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv)
+{
+    HINSTANCE hLibrary;
+    typedef HRESULT (CALLBACK *DllGetClassObjectFunc)(REFCLSID clsid, REFIID iid, LPVOID *ppv);
+    DllGetClassObjectFunc DllGetClassObject;
+    WCHAR dllpath[MAX_PATH+1];
+
+    if (COM_RegReadPath(hkeydll, NULL, NULL, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
+    {
+        /* failure: CLSID is not found in registry */
+        WARN("class %s not registered inproc\n", debugstr_guid(rclsid));
+        return REGDB_E_CLASSNOTREG;
+    }
+
+    if ((hLibrary = LoadLibraryExW(dllpath, 0, LOAD_WITH_ALTERED_SEARCH_PATH)) == 0)
+    {
+        /* failure: DLL could not be loaded */
+        ERR("couldn't load in-process dll %s\n", debugstr_w(dllpath));
+        return E_ACCESSDENIED; /* FIXME: or should this be CO_E_DLLNOTFOUND? */
+    }
+
+    if (!(DllGetClassObject = (DllGetClassObjectFunc)GetProcAddress(hLibrary, "DllGetClassObject")))
+    {
+        /* failure: the dll did not export DllGetClassObject */
+        ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(dllpath));
+        FreeLibrary( hLibrary );
+        return CO_E_DLLNOTFOUND;
+    }
+
+    /* OK: get the ClassObject */
+    COMPOBJ_DLLList_Add( hLibrary );
+    return DllGetClassObject(rclsid, riid, ppv);
+}
+
 /***********************************************************************
  *           CoGetClassObject [OLE32.@]
  *
@@ -1600,50 +1612,58 @@ HRESULT WINAPI CoGetClassObject(
       return hres;
     }
 
-    /* first try: in-process */
-    if ((CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER) & dwClsContext)
+    /* First try in-process server */
+    if (CLSCTX_INPROC_SERVER & dwClsContext)
     {
         static const WCHAR wszInprocServer32[] = {'I','n','p','r','o','c','S','e','r','v','e','r','3','2',0};
-        HINSTANCE hLibrary;
-        typedef HRESULT (CALLBACK *DllGetClassObjectFunc)(REFCLSID clsid, REFIID iid, LPVOID *ppv);
-        DllGetClassObjectFunc DllGetClassObject;
-        WCHAR dllpath[MAX_PATH+1];
         HKEY hkey;
 
-        if (ERROR_SUCCESS != COM_OpenKeyForCLSID(rclsid, KEY_READ, &hkey))
+        hres = COM_OpenKeyForCLSID(rclsid, wszInprocServer32, KEY_READ, &hkey);
+        if (FAILED(hres))
         {
-            ERR("class %s not registered\n", debugstr_guid(rclsid));
-            hres = REGDB_E_CLASSNOTREG;
+            if (hres == REGDB_E_CLASSNOTREG)
+                ERR("class %s not registered\n", debugstr_guid(rclsid));
+            else
+                WARN("class %s not registered as in-proc server\n", debugstr_guid(rclsid));
         }
 
-        if (COM_RegReadPath(hkey, wszInprocServer32, NULL, dllpath, ARRAYSIZE(dllpath)) != ERROR_SUCCESS)
+        if (SUCCEEDED(hres))
         {
-            /* failure: CLSID is not found in registry */
-            WARN("class %s not registered inproc\n", debugstr_guid(rclsid));
-            hres = REGDB_E_CLASSNOTREG;
+            hres = get_inproc_class_object(hkey, rclsid, iid, ppv);
+            RegCloseKey(hkey);
         }
-        else
+
+        /* return if we got a class, otherwise fall through to one of the
+         * other types */
+        if (SUCCEEDED(hres))
+            return hres;
+    }
+
+    /* Next try in-process handler */
+    if (CLSCTX_INPROC_HANDLER & dwClsContext)
+    {
+        static const WCHAR wszInprocHandler32[] = {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
+        HKEY hkey;
+
+        hres = COM_OpenKeyForCLSID(rclsid, wszInprocHandler32, KEY_READ, &hkey);
+        if (FAILED(hres))
         {
-            if ((hLibrary = LoadLibraryExW(dllpath, 0, LOAD_WITH_ALTERED_SEARCH_PATH)) == 0)
-            {
-                /* failure: DLL could not be loaded */
-                ERR("couldn't load InprocServer32 dll %s\n", debugstr_w(dllpath));
-                hres = E_ACCESSDENIED; /* FIXME: or should this be CO_E_DLLNOTFOUND? */
-            }
-            else if (!(DllGetClassObject = (DllGetClassObjectFunc)GetProcAddress(hLibrary, "DllGetClassObject")))
-            {
-                /* failure: the dll did not export DllGetClassObject */
-                ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(dllpath));
-                FreeLibrary( hLibrary );
-                hres = CO_E_DLLNOTFOUND;
-            }
+            if (hres == REGDB_E_CLASSNOTREG)
+                ERR("class %s not registered\n", debugstr_guid(rclsid));
             else
-            {
-                /* OK: get the ClassObject */
-                COMPOBJ_DLLList_Add( hLibrary );
-                return DllGetClassObject(rclsid, iid, ppv);
-            }
+                WARN("class %s not registered in-proc handler\n", debugstr_guid(rclsid));
         }
+
+        if (SUCCEEDED(hres))
+        {
+            hres = get_inproc_class_object(hkey, rclsid, iid, ppv);
+            RegCloseKey(hkey);
+        }
+
+        /* return if we got a class, otherwise fall through to one of the
+         * other types */
+        if (SUCCEEDED(hres))
+            return hres;
     }
 
     /* Next try out of process */
@@ -1659,25 +1679,12 @@ HRESULT WINAPI CoGetClassObject(
         hres = E_NOINTERFACE;
     }
 
+    if (FAILED(hres))
+        ERR("no class object %s could be created for for context 0x%lx\n",
+            debugstr_guid(rclsid), dwClsContext);
     return hres;
 }
 
-/***********************************************************************
- *           CoGetClassObject [COMPOBJ.7]
- *
- */
-HRESULT WINAPI CoGetClassObject16(
-    REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo,
-    REFIID iid, LPVOID *ppv)
-{
-    FIXME(", stub!\n\tCLSID:\t%s,\n\tIID:\t%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
-
-    if (pServerInfo) {
-	FIXME("\tpServerInfo: name=%s\n",debugstr_w(pServerInfo->pwszName));
-	FIXME("\t\tpAuthInfo=%p\n",pServerInfo->pAuthInfo);
-    }
-    return E_NOTIMPL;
-}
 /***********************************************************************
  *        CoResumeClassObjects (OLE32.@)
  *
@@ -1800,6 +1807,9 @@ HRESULT WINAPI CoCreateInstance(
   HRESULT hres;
   LPCLASSFACTORY lpclf = 0;
 
+  TRACE("(rclsid=%s, pUnkOuter=%p, dwClsContext=%08lx, riid=%s, ppv=%p)\n", debugstr_guid(rclsid),
+        pUnkOuter, dwClsContext, debugstr_guid(iid), ppv);
+
   if (!COM_CurrentApt()) return CO_E_NOTINITIALIZED;
 
   /*
@@ -1852,23 +1862,6 @@ HRESULT WINAPI CoCreateInstance(
 		debugstr_guid(iid), debugstr_guid(rclsid),hres);
 
 	return hres;
-}
-
-/***********************************************************************
- *           CoCreateInstance [COMPOBJ.13]
- */
-HRESULT WINAPI CoCreateInstance16(
-	REFCLSID rclsid,
-	LPUNKNOWN pUnkOuter,
-	DWORD dwClsContext,
-	REFIID iid,
-	LPVOID *ppv)
-{
-  FIXME("(%s, %p, %lx, %s, %p), stub!\n", 
-	debugstr_guid(rclsid), pUnkOuter, dwClsContext, debugstr_guid(iid),
-	ppv
-  );
-  return E_NOTIMPL;
 }
 
 /***********************************************************************
@@ -2207,16 +2200,12 @@ HRESULT WINAPI OleGetAutoConvert(REFCLSID clsidOld, LPCLSID pClsidNew)
     LONG len;
     HRESULT res = S_OK;
 
-    if (ERROR_SUCCESS != COM_OpenKeyForCLSID(clsidOld, KEY_READ, &hkey))
-    {
-        res = REGDB_E_CLASSNOTREG;
+    res = COM_OpenKeyForCLSID(clsidOld, wszAutoConvertTo, KEY_READ, &hkey);
+    if (FAILED(res))
         goto done;
-    }
 
     len = sizeof(buf);
-    /* we can just query for the default value of AutoConvertTo key like that,
-       without opening the AutoConvertTo key and querying for NULL (default) */
-    if (RegQueryValueW(hkey, wszAutoConvertTo, buf, &len))
+    if (RegQueryValueW(hkey, NULL, buf, &len))
     {
         res = REGDB_E_KEYMISSING;
         goto done;
@@ -2254,11 +2243,9 @@ HRESULT WINAPI CoTreatAsClass(REFCLSID clsidOld, REFCLSID clsidNew)
     LONG auto_treat_as_size = sizeof(auto_treat_as);
     CLSID id;
 
-    if (ERROR_SUCCESS != COM_OpenKeyForCLSID(clsidOld, KEY_READ | KEY_WRITE, &hkey))
-    {
-        res = REGDB_E_CLASSNOTREG;
-	goto done;
-    }
+    res = COM_OpenKeyForCLSID(clsidOld, NULL, KEY_READ | KEY_WRITE, &hkey);
+    if (FAILED(res))
+        goto done;
     if (!memcmp( clsidOld, clsidNew, sizeof(*clsidOld) ))
     {
        if (!RegQueryValueW(hkey, wszAutoTreatAs, auto_treat_as, &auto_treat_as_size) &&
@@ -2315,12 +2302,10 @@ HRESULT WINAPI CoGetTreatAsClass(REFCLSID clsidOld, LPCLSID clsidNew)
     FIXME("(%s,%p)\n", debugstr_guid(clsidOld), clsidNew);
     memcpy(clsidNew,clsidOld,sizeof(CLSID)); /* copy over old value */
 
-    if (COM_OpenKeyForCLSID(clsidOld, KEY_READ, &hkey))
-    {
-        res = REGDB_E_CLASSNOTREG;
-	goto done;
-    }
-    if (RegQueryValueW(hkey, wszTreatAs, szClsidNew, &len))
+    res = COM_OpenKeyForCLSID(clsidOld, wszTreatAs, KEY_READ, &hkey);
+    if (FAILED(res))
+        goto done;
+    if (RegQueryValueW(hkey, NULL, szClsidNew, &len))
     {
         res = S_FALSE;
 	goto done;
@@ -2688,6 +2673,12 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                 TRACE("received message whilst waiting for RPC: 0x%04x\n", msg.message);
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
+                if (msg.message == WM_QUIT)
+                {
+                    TRACE("resending WM_QUIT to outer message loop\n");
+                    PostQuitMessage(msg.wParam);
+                    goto done;
+                }
             }
         }
         else if ((res >= WAIT_OBJECT_0) && (res < WAIT_OBJECT_0 + cHandles))
@@ -2708,6 +2699,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
             break;
         }
     }
+done:
     TRACE("-- 0x%08lx\n", hr);
     return hr;
 }

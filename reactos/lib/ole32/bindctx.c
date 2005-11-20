@@ -170,7 +170,7 @@ BindCtxImpl_RegisterObjectBound(IBindCtx* iface,IUnknown* punk)
     if (lastIndex == This->bindCtxTableSize){ /* the table is full so it must be resized */
 
         if (This->bindCtxTableSize > (MAX_TAB_SIZE-BLOCK_TAB_SIZE)){
-            FIXME("This->bindCtxTableSize: %ld is out of data limite \n",This->bindCtxTableSize);
+            FIXME("This->bindCtxTableSize: %ld is out of data limite\n", This->bindCtxTableSize);
             return E_FAIL;
         }
 
@@ -351,7 +351,7 @@ BindCtxImpl_RegisterObjectParam(IBindCtx* iface,LPOLESTR pszkey, IUnknown* punk)
         This->bindCtxTableSize+=BLOCK_TAB_SIZE; /* new table size */
         if (This->bindCtxTableSize > (MAX_TAB_SIZE-BLOCK_TAB_SIZE))
         {
-            FIXME("This->bindCtxTableSize: %ld is out of data limite \n",This->bindCtxTableSize);
+            FIXME("This->bindCtxTableSize: %ld is out of data limite\n", This->bindCtxTableSize);
             return E_FAIL;
         }
         This->bindCtxTable = HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,This->bindCtxTable,
@@ -523,15 +523,6 @@ static HRESULT BindCtxImpl_Construct(BindCtxImpl* This)
         return E_OUTOFMEMORY;
 
     return S_OK;
-}
-
-/******************************************************************************
- *        CreateBindCtx16
- ******************************************************************************/
-HRESULT WINAPI CreateBindCtx16(DWORD reserved, LPBC * ppbc)
-{
-    FIXME("(%ld,%p),stub!\n",reserved,ppbc);
-    return E_NOTIMPL;
 }
 
 /******************************************************************************

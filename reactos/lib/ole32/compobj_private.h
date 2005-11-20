@@ -71,6 +71,7 @@ struct ifstub
     IID               iid;        /* RO */
     IPID              ipid;       /* RO */
     IUnknown         *iface;      /* RO */
+    MSHLFLAGS         flags;      /* so we can enforce process-local marshalling rules (RO) */
 };
 
 
@@ -87,7 +88,14 @@ struct stub_manager
     OID               oid;        /* apartment-scoped unique identifier (RO) */
     IUnknown         *object;     /* the object we are managing the stub for (RO) */
     ULONG             next_ipid;  /* currently unused (LOCK) */
-    STUB_STATE        state;      /* state machine (CS lock) */
+
+    /* We need to keep a count of the outstanding marshals, so we can enforce the
+     * marshalling rules (ie, you can only unmarshal normal marshals once). Note
+     * that these counts do NOT include unmarshalled interfaces, once a stream is
+     * unmarshalled and a proxy set up, this count is decremented.
+     */
+
+    ULONG             norm_refs;  /* refcount of normal marshals (CS lock) */
 };
 
 /* imported interface proxy */
@@ -163,22 +171,23 @@ extern void* StdGlobalInterfaceTableInstance;
 extern HRESULT WINE_StringFromCLSID(const CLSID *id,LPSTR idstr);
 HRESULT WINAPI __CLSIDFromStringA(LPCSTR idstr, CLSID *id);
 
-DWORD COM_OpenKeyForCLSID(REFCLSID clsid, REGSAM access, HKEY *key);
+HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *key);
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);
 
 /* Stub Manager */
 
 ULONG stub_manager_int_addref(struct stub_manager *This);
 ULONG stub_manager_int_release(struct stub_manager *This);
-struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object, MSHLFLAGS mshlflags);
+struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object);
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs);
 ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs);
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid);
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, MSHLFLAGS flags);
+struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHLFLAGS flags);
 struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid);
 struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object);
-BOOL stub_manager_notify_unmarshal(struct stub_manager *m);
-BOOL stub_manager_is_table_marshaled(struct stub_manager *m);
-void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs);
+BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid);
+BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid);
+void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid);
 HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret);
 IRpcStubBuffer *ipid_to_apt_and_stubbuffer(const IPID *ipid, APARTMENT **stub_apt);
 HRESULT start_apartment_remote_unknown(void);
@@ -191,7 +200,7 @@ struct dispatch_params;
 
 void    RPC_StartRemoting(struct apartment *apt);
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid, IRpcChannelBuffer **pipebuf);
-HRESULT RPC_ExecuteCall(struct dispatch_params *params);
+void    RPC_ExecuteCall(struct dispatch_params *params);
 HRESULT RPC_RegisterInterface(REFIID riid);
 void    RPC_UnregisterInterface(REFIID riid);
 void    RPC_StartLocalServer(REFCLSID clsid, IStream *stream);
@@ -247,13 +256,8 @@ static inline APARTMENT* COM_CurrentApt(void)
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
 
 /* helpers for debugging */
-#ifdef __i386__
-# define DEBUG_SET_CRITSEC_NAME(cs, name) (cs)->DebugInfo->Spare[1] = (DWORD)(__FILE__ ": " name)
-# define DEBUG_CLEAR_CRITSEC_NAME(cs) (cs)->DebugInfo->Spare[1] = 0
-#else
-# define DEBUG_SET_CRITSEC_NAME(cs, name)
-# define DEBUG_CLEAR_CRITSEC_NAME(cs)
-#endif
+# define DEBUG_SET_CRITSEC_NAME(cs, name) (cs)->DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": " name)
+# define DEBUG_CLEAR_CRITSEC_NAME(cs) (cs)->DebugInfo->Spare[0] = 0
 
 extern HINSTANCE OLE32_hInstance; /* FIXME: make static */
 

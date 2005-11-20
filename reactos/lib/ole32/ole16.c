@@ -204,6 +204,9 @@ IMalloc16_Constructor()
 
 /***********************************************************************
  *           CoGetMalloc    [COMPOBJ.4]
+ *
+ * Retrieve the current win16 IMalloc interface.
+ *
  * RETURNS
  *	The current win16 IMalloc
  */
@@ -344,43 +347,45 @@ HRESULT WINAPI StringFromCLSID16(
 
 /******************************************************************************
  * ProgIDFromCLSID [COMPOBJ.62]
+ *
  * Converts a class id into the respective Program ID. (By using a registry lookup)
- * RETURNS S_OK on success
- * riid associated with the progid
+ *
+ * RETURNS
+ *  S_OK on success
+ *  riid associated with the progid
  */
 HRESULT WINAPI ProgIDFromCLSID16(
   REFCLSID clsid, /* [in] class id as found in registry */
   LPOLESTR16 *lplpszProgID/* [out] associated Prog ID */
 ) {
   static const WCHAR wszProgID[] = {'P','r','o','g','I','D',0};
-  HKEY     xhkey;
   HKEY     hkey;
-  HRESULT  ret = S_OK;
+  HRESULT  ret;
+  LONG     len;
+  char    *buffer;
 
-  if (COM_OpenKeyForCLSID(clsid, KEY_READ, &hkey))
-    ret = REGDB_E_CLASSNOTREG;
+  ret = COM_OpenKeyForCLSID(clsid, wszProgID, KEY_READ, &hkey);
+  if (FAILED(ret))
+    return ret;
   
-  if ((ret == S_OK) &&
-      RegOpenKeyW(hkey, wszProgID, &xhkey))
-    ret = REGDB_E_CLASSNOTREG;
+  if (RegQueryValueA(hkey, NULL, NULL, &len))
+    ret = REGDB_E_READREGDB;
 
   if (ret == S_OK)
   {
-    LONG buf2len;
-    char *buf2 = HeapAlloc(GetProcessHeap(), 0, 255);
-    buf2len = 255;
-    if (RegQueryValueA(xhkey, NULL, buf2, &buf2len))
-      ret = REGDB_E_CLASSNOTREG;
+    buffer = HeapAlloc(GetProcessHeap(), 0, len);
+    if (RegQueryValueA(hkey, NULL, buffer, &len))
+      ret = REGDB_E_READREGDB;
 
     if (ret == S_OK)
     {
-      ret = _xmalloc16(buf2len+1, (SEGPTR*)lplpszProgID);
+      ret = _xmalloc16(len, (SEGPTR*)lplpszProgID);
       if (ret == S_OK)
-        strcpy(MapSL((SEGPTR)*lplpszProgID),buf2);
+        strcpy(MapSL((SEGPTR)*lplpszProgID),buffer);
     }
-    HeapFree(GetProcessHeap(), 0, buf2);
+    HeapFree(GetProcessHeap(), 0, buffer);
   }
-  RegCloseKey(xhkey);
+  RegCloseKey(hkey);
   return ret;
 }
 
@@ -516,4 +521,93 @@ SEGPTR WINAPI CoMemAlloc(DWORD size, DWORD dwMemContext, DWORD x) {
 	if (hres != S_OK)
 		return (SEGPTR)0;
 	return segptr;
+}
+
+/******************************************************************************
+ *		CLSIDFromProgID [COMPOBJ.61]
+ *
+ * Converts a program ID into the respective GUID.
+ *
+ * PARAMS
+ *  progid       [I] program id as found in registry
+ *  riid         [O] associated CLSID
+ *
+ * RETURNS
+ *	Success: S_OK
+ *  Failure: CO_E_CLASSSTRING - the given ProgID cannot be found.
+ */
+HRESULT WINAPI CLSIDFromProgID16(LPCOLESTR16 progid, LPCLSID riid)
+{
+	char	*buf,buf2[80];
+	LONG	buf2len;
+	HRESULT	err;
+	HKEY	xhkey;
+
+	buf = HeapAlloc(GetProcessHeap(),0,strlen(progid)+8);
+	sprintf(buf,"%s\\CLSID",progid);
+	if ((err=RegOpenKeyA(HKEY_CLASSES_ROOT,buf,&xhkey))) {
+		HeapFree(GetProcessHeap(),0,buf);
+                return CO_E_CLASSSTRING;
+	}
+	HeapFree(GetProcessHeap(),0,buf);
+	buf2len = sizeof(buf2);
+	if ((err=RegQueryValueA(xhkey,NULL,buf2,&buf2len))) {
+		RegCloseKey(xhkey);
+                return CO_E_CLASSSTRING;
+	}
+	RegCloseKey(xhkey);
+	return __CLSIDFromStringA(buf2,riid);
+}
+
+/***********************************************************************
+ *           CoGetClassObject [COMPOBJ.7]
+ *
+ */
+HRESULT WINAPI CoGetClassObject16(
+    REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo,
+    REFIID iid, LPVOID *ppv)
+{
+    FIXME(", stub!\n\tCLSID:\t%s,\n\tIID:\t%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
+
+    if (pServerInfo) {
+	FIXME("\tpServerInfo: name=%s\n",debugstr_w(pServerInfo->pwszName));
+	FIXME("\t\tpAuthInfo=%p\n",pServerInfo->pAuthInfo);
+    }
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *           CoCreateInstance [COMPOBJ.13]
+ */
+HRESULT WINAPI CoCreateInstance16(
+	REFCLSID rclsid,
+	LPUNKNOWN pUnkOuter,
+	DWORD dwClsContext,
+	REFIID iid,
+	LPVOID *ppv)
+{
+  FIXME("(%s, %p, %lx, %s, %p), stub!\n", 
+	debugstr_guid(rclsid), pUnkOuter, dwClsContext, debugstr_guid(iid),
+	ppv
+  );
+  return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *           DllGetClassObject                          [OLE2.4]
+ */
+HRESULT WINAPI DllGetClassObject16(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
+{
+  FIXME("(%s, %s, %p): stub\n", debugstr_guid(rclsid), debugstr_guid(iid), ppv);
+  return E_NOTIMPL;
+}
+
+/******************************************************************************
+ *		GetRunningObjectTable (OLE2.30)
+ */
+HRESULT WINAPI
+GetRunningObjectTable16(DWORD reserved, LPRUNNINGOBJECTTABLE *pprot)
+{
+    FIXME("(%ld,%p),stub!\n",reserved,pprot);
+    return E_NOTIMPL;
 }

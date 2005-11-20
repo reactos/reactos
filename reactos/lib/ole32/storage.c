@@ -2227,7 +2227,12 @@ HRESULT WINAPI StgOpenStorageOnILockBytes16(
  * the WriteClassStg.
  *
  * PARAMS
- *  pstg Segmented LPSTORAGE pointer.
+ *  pstg    [I] Segmented LPSTORAGE pointer.
+ *  pclsid  [O] Pointer to where the CLSID is written
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  */
 HRESULT WINAPI ReadClassStg16(SEGPTR pstg, CLSID *pclsid)
 {
