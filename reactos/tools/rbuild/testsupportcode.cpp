@@ -139,12 +139,27 @@ TestSupportCode::GetStubsFilename ( Module& module )
 }
 
 string
-GetImportSymbol ( const StubbedSymbol& symbol )
+GetLinkerSymbol ( const StubbedSymbol& symbol )
+{
+	if (symbol.symbol[0] == '@')
+		return symbol.symbol;
+	else
+		return "_" + symbol.symbol;
+}
+
+string
+GetLinkerImportSymbol ( const StubbedSymbol& symbol )
 {
 	if (symbol.symbol[0] == '@')
 		return "__imp_" + symbol.symbol;
 	else
 		return "__imp__" + symbol.symbol;
+}
+
+string
+GetIndirectCallTargetSymbol ( const StubbedSymbol& symbol )
+{
+	return GetLinkerSymbol ( symbol ) + "_";
 }
 
 char*
@@ -153,19 +168,27 @@ TestSupportCode::WriteStubbedSymbolToStubsFile ( char* buffer,
                                                  const StubbedSymbol& symbol,
                                                  int stubIndex )
 {
-	string importSymbol = GetImportSymbol( symbol );
-	buffer = buffer + sprintf ( buffer,
-	                            ".globl _%s\n",
-	                            symbol.symbol.c_str () );
+	string linkerSymbol = GetLinkerSymbol ( symbol );
+	string linkerImportSymbol = GetLinkerImportSymbol ( symbol );
+	string indirectCallTargetSymbol = GetIndirectCallTargetSymbol ( symbol );
 	buffer = buffer + sprintf ( buffer,
 	                            ".globl %s\n",
-	                            importSymbol.c_str () );
+	                            linkerSymbol.c_str () );
 	buffer = buffer + sprintf ( buffer,
-	                            "_%s:\n",
-	                            symbol.symbol.c_str () );
+	                            ".globl %s\n",
+	                            linkerImportSymbol.c_str () );
 	buffer = buffer + sprintf ( buffer,
 	                            "%s:\n",
-	                            importSymbol.c_str () );
+	                            linkerSymbol.c_str () );
+	buffer = buffer + sprintf ( buffer,
+	                            "%s:\n",
+	                            linkerImportSymbol.c_str () );
+	buffer = buffer + sprintf ( buffer,
+	                            "  .long %s\n",
+	                            indirectCallTargetSymbol.c_str () );
+	buffer = buffer + sprintf ( buffer,
+	                            "%s:\n",
+	                            indirectCallTargetSymbol.c_str () );
 	buffer = buffer + sprintf ( buffer,
 	                            "  pushl $%d\n",
 	                            stubIndex );
@@ -194,7 +217,7 @@ TestSupportCode::WriteStubsFile ( Module& module )
 	char* buf;
 	char* s;
 
-	buf = (char*) malloc ( 50*1024 );
+	buf = (char*) malloc ( 512*1024 );
 	if ( buf == NULL )
 		throw OutOfMemoryException ();
 
