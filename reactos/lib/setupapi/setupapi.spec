@@ -291,7 +291,7 @@
 @ stub SetupDiDeleteDevRegKey
 @ stdcall SetupDiDeleteDeviceInfo(long ptr)
 @ stub SetupDiDeleteDeviceInterfaceData
-@ stub SetupDiDestroyClassImageList
+@ stdcall SetupDiDestroyClassImageList(ptr)
 @ stdcall SetupDiDestroyDeviceInfoList(long)
 @ stdcall SetupDiDestroyDriverInfoList(long ptr long)
 @ stub SetupDiDrawMiniIcon
@@ -313,9 +313,9 @@
 @ stdcall SetupDiGetClassDevsExW(ptr wstr ptr long ptr wstr ptr)
 @ stdcall SetupDiGetClassDevsW(ptr ptr long long)
 @ stub SetupDiGetClassImageIndex
-@ stub SetupDiGetClassImageList
-@ stub SetupDiGetClassImageListExA
-@ stub SetupDiGetClassImageListExW
+@ stdcall SetupDiGetClassImageList(ptr)
+@ stdcall SetupDiGetClassImageListExA(ptr str ptr)
+@ stdcall SetupDiGetClassImageListExW(ptr wstr ptr)
 @ stub SetupDiGetClassInstallParamsA
 @ stub SetupDiGetClassInstallParamsW
 @ stub SetupDiGetDeviceInfoListClass

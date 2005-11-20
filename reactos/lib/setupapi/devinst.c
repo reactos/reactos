@@ -2774,7 +2774,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     else
     {
         ERR("Invalid Flags parameter!\n");
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_FLAGS);
         return INVALID_HANDLE_VALUE;
     }
 
@@ -3805,7 +3805,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     else if (CreationFlags & ~(DICD_GENERATE_ID | DICD_INHERIT_CLASSDRVS))
     {
         TRACE("Unknown flags: 0x%08lx\n", CreationFlags & ~(DICD_GENERATE_ID | DICD_INHERIT_CLASSDRVS));
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_FLAGS);
     }
     else
     {
@@ -4706,7 +4706,7 @@ SetupDiOpenDeviceInfoW(
     else if (OpenFlags & ~(DIOD_CANCEL_REMOVE | DIOD_INHERIT_CLASSDRVS))
     {
         TRACE("Unknown flags: 0x%08lx\n", OpenFlags & ~(DIOD_CANCEL_REMOVE | DIOD_INHERIT_CLASSDRVS));
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_FLAGS);
     }
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -4755,6 +4755,8 @@ SetupDiOpenDeviceInfoW(
             RegCloseKey(hEnumKey);
             if (rc != ERROR_SUCCESS)
             {
+                if (rc == ERROR_FILE_NOT_FOUND)
+                    rc = ERROR_NO_SUCH_DEVINST;
                 SetLastError(rc);
                 return FALSE;
             }

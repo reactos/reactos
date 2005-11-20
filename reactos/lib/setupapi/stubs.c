@@ -175,3 +175,48 @@ BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
     FIXME ("Stub %p\n",FileLogHandle);
     return TRUE;
 }
+
+
+/***********************************************************************
+ *		SetupDiGetClassImageList(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
+{
+    FIXME ("Stub %p\n", ClassImageListData);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *		SetupDiGetClassImageListExA(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageListExA(PSP_CLASSIMAGELIST_DATA ClassImageListData,
+                                        PCSTR MachineName, PVOID Reserved)
+{
+    FIXME ("Stub %p %s %p\n", ClassImageListData, debugstr_a(MachineName), Reserved);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *		SetupDiGetClassImageListExW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageListExW(PSP_CLASSIMAGELIST_DATA ClassImageListData,
+                                        PCWSTR MachineName, PVOID Reserved)
+{
+    FIXME ("Stub %p %s %p\n", ClassImageListData, debugstr_w(MachineName), Reserved);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *		SetupDiDestroyClassImageList(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
+{
+    FIXME ("Stub %p\n", ClassImageListData);
+    return TRUE;
+}
