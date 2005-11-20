@@ -16,12 +16,12 @@
 /*
  * @unimplemented
  */
-PDEBUG_BUFFER NTAPI
+PRTL_DEBUG_BUFFER NTAPI
 RtlCreateQueryDebugBuffer(IN ULONG Size,
                           IN BOOLEAN EventPair)
 {
    NTSTATUS Status;
-   PDEBUG_BUFFER Buf = NULL;
+   PRTL_DEBUG_BUFFER Buf = NULL;
    ULONG SectionSize  = 100 * PAGE_SIZE;
 
    Status = NtAllocateVirtualMemory( NtCurrentProcess(),
@@ -47,7 +47,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER Buf)
+RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_BUFFER Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -71,7 +71,7 @@ RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER Buf)
  */
 NTSTATUS NTAPI
 RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
-                              IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
+                              IN PRTL_PROCESS_MODULES ModuleInformation OPTIONAL,
                               IN ULONG Size OPTIONAL,
                               OUT PULONG ReturnedSize)
 {
@@ -81,7 +81,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
   PLIST_ENTRY pleListHead;
   PLIST_ENTRY pleCurEntry;
 
-  PDEBUG_MODULE_INFORMATION ModulePtr = NULL;
+  PRTL_PROCESS_MODULE_INFORMATION ModulePtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG UsedSize = sizeof(ULONG);
   ANSI_STRING AnsiString;
@@ -209,7 +209,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
           ModulePtr++;
           ModuleInformation->ModuleCount++;
         }
-      UsedSize += sizeof(DEBUG_MODULE_INFORMATION);
+      UsedSize += sizeof(RTL_PROCESS_MODULE_INFORMATION);
 
       /* address of the next module in the list */
       pleCurEntry = lmModule.InLoadOrderModuleList.Flink;
@@ -230,13 +230,13 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 NTSTATUS NTAPI
 RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN ULONG DebugInfoMask,
-                                IN OUT PDEBUG_BUFFER Buf)
+                                IN OUT PRTL_DEBUG_BUFFER Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Pid = (ULONG) NtCurrentTeb()->Cid.UniqueProcess;
 
    Buf->InfoClassMask = DebugInfoMask;
-   Buf->SizeOfInfo = sizeof(DEBUG_BUFFER);
+   Buf->SizeOfInfo = sizeof(RTL_DEBUG_BUFFER);
 
    DPRINT("QueryProcessDebugInformation Start\n");
 
@@ -252,13 +252,13 @@ if (ProcessId <= 1)
 else
 if (Pid == ProcessId)
   {
-   if (DebugInfoMask & PDI_MODULES)
+   if (DebugInfoMask & RTL_DEBUG_QUERY_MODULES)
      {
-    PMODULE_INFORMATION Mp;
+    PRTL_PROCESS_MODULES Mp;
     ULONG ReturnSize = 0;
     ULONG MSize;
 
-    Mp = (PMODULE_INFORMATION)(Buf + Buf->SizeOfInfo);
+    Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->SizeOfInfo);
 
     /* I like this better than the do & while loop. */
     Status = LdrQueryProcessModuleInformation( NULL,
@@ -272,22 +272,22 @@ if (Pid == ProcessId)
          return Status;
      }
 
-    MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
+    MSize = Mp->ModuleCount * (sizeof(RTL_PROCESS_MODULES) + 8);
     Buf->ModuleInformation = Mp;
     Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
 
-   if (DebugInfoMask & PDI_HEAPS)
+   if (DebugInfoMask & RTL_DEBUG_QUERY_HEAPS)
      {
-   PHEAP_INFORMATION Hp;
+   PRTL_PROCESS_HEAPS Hp;
    ULONG HSize;
 
-   Hp = (PHEAP_INFORMATION)(Buf + Buf->SizeOfInfo);
-   HSize = sizeof(HEAP_INFORMATION);
-        if (DebugInfoMask & PDI_HEAP_TAGS)
+   Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->SizeOfInfo);
+   HSize = sizeof(RTL_PROCESS_HEAPS);
+        if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_TAGS)
           {
           }
-        if (DebugInfoMask & PDI_HEAP_BLOCKS)
+        if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_BLOCKS)
           {
           }
    Buf->HeapInformation = Hp;
@@ -295,13 +295,13 @@ if (Pid == ProcessId)
 
      }
 
-   if (DebugInfoMask & PDI_LOCKS)
+   if (DebugInfoMask & RTL_DEBUG_QUERY_LOCKS)
      {
-   PLOCK_INFORMATION Lp;
+   PRTL_PROCESS_LOCKS Lp;
    ULONG LSize;
 
-   Lp = (PLOCK_INFORMATION)(Buf + Buf->SizeOfInfo);
-   LSize = sizeof(LOCK_INFORMATION);
+   Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->SizeOfInfo);
+   LSize = sizeof(RTL_PROCESS_LOCKS);
    Buf->LockInformation = Lp;
    Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
     }
@@ -334,13 +334,13 @@ else
            return Status;
          }
 
-   if (DebugInfoMask & PDI_MODULES)
+   if (DebugInfoMask & RTL_DEBUG_QUERY_MODULES)
      {
-    PMODULE_INFORMATION Mp;
+    PRTL_PROCESS_MODULES Mp;
     ULONG ReturnSize = 0;
     ULONG MSize;
 
-    Mp = (PMODULE_INFORMATION)(Buf + Buf->SizeOfInfo);
+    Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->SizeOfInfo);
 
     Status = RtlpQueryRemoteProcessModules( hProcess,
                                             NULL,
@@ -356,22 +356,22 @@ else
          return Status;
      }
 
-    MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
+    MSize = Mp->ModuleCount * (sizeof(RTL_PROCESS_MODULES) + 8);
     Buf->ModuleInformation = Mp;
     Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
 
-   if (DebugInfoMask & PDI_HEAPS)
+   if (DebugInfoMask & RTL_DEBUG_QUERY_HEAPS)
      {
-   PHEAP_INFORMATION Hp;
+   PRTL_PROCESS_HEAPS Hp;
    ULONG HSize;
 
-   Hp = (PHEAP_INFORMATION)(Buf + Buf->SizeOfInfo);
-   HSize = sizeof(HEAP_INFORMATION);
-        if (DebugInfoMask & PDI_HEAP_TAGS)
+   Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->SizeOfInfo);
+   HSize = sizeof(RTL_PROCESS_HEAPS);
+        if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_TAGS)
           {
           }
-        if (DebugInfoMask & PDI_HEAP_BLOCKS)
+        if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_BLOCKS)
           {
           }
    Buf->HeapInformation = Hp;
@@ -379,13 +379,13 @@ else
 
      }
 
-   if (DebugInfoMask & PDI_LOCKS)
+   if (DebugInfoMask & RTL_DEBUG_QUERY_LOCKS)
      {
-   PLOCK_INFORMATION Lp;
+   PRTL_PROCESS_LOCKS Lp;
    ULONG LSize;
 
-   Lp = (PLOCK_INFORMATION)(Buf + Buf->SizeOfInfo);
-   LSize = sizeof(LOCK_INFORMATION);
+   Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->SizeOfInfo);
+   LSize = sizeof(RTL_PROCESS_LOCKS);
    Buf->LockInformation = Lp;
    Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
     }

@@ -2643,14 +2643,14 @@ LdrShutdownThread (VOID)
  * @implemented
  */
 NTSTATUS NTAPI
-LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
+LdrQueryProcessModuleInformation(IN PRTL_PROCESS_MODULES ModuleInformation OPTIONAL,
                                  IN ULONG Size OPTIONAL,
                                  OUT PULONG ReturnedSize)
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
   PLDR_DATA_TABLE_ENTRY Module;
-  PDEBUG_MODULE_INFORMATION ModulePtr = NULL;
+  PRTL_PROCESS_MODULE_INFORMATION ModulePtr = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG UsedSize = sizeof(ULONG);
   ANSI_STRING AnsiString;
@@ -2710,7 +2710,7 @@ LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTION
           ModulePtr++;
           ModuleInformation->ModuleCount++;
         }
-      UsedSize += sizeof(DEBUG_MODULE_INFORMATION);
+      UsedSize += sizeof(RTL_PROCESS_MODULE_INFORMATION);
 
       Entry = Entry->Flink;
     }

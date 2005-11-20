@@ -26,7 +26,7 @@ List:
 		- Object Directory + implementation doesn't match NT (Alex) [obtypes.h]
 
 	Priority 3:
-	- Some RTL Structures need review (Alex) [rtltypes.h]
+	- FIXED: Some RTL Structures need review (Alex) [rtltypes.h]
 	- Pushlock support is needed to fix EPROCESS (Alex) [pstypes.h]
 	- MADDRESS_SPACE must be converted into the NT Type (Alex) [pstypes.h, mmtypes.h]
 

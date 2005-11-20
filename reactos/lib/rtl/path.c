@@ -498,7 +498,7 @@ static ULONG get_full_path_helper(
    ULONG size)
 {
     ULONG                       reqsize = 0, mark = 0, dep = 0, deplen;
-    DOS_PATHNAME_TYPE           type;
+    RTL_PATH_TYPE               type;
     LPWSTR                      ins_str = NULL;
     LPCWSTR                     ptr;
     const UNICODE_STRING*       cd;

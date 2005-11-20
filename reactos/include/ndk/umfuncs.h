@@ -212,7 +212,7 @@ LdrQueryImageFileExecutionOptions(
 NTSTATUS
 NTAPI
 LdrQueryProcessModuleInformation(
-    IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
+    IN PRTL_PROCESS_MODULES ModuleInformation OPTIONAL,
     IN ULONG Size OPTIONAL,
     OUT PULONG ReturnedSize
 );

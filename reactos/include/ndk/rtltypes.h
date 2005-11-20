@@ -34,7 +34,7 @@
 #define EXCEPTION_UNWINDING 0x02
 #define EXCEPTION_EXIT_UNWIND 0x04
 #define EXCEPTION_STACK_INVALID 0x8
-#define EXCEPTION_NESTED_CALL 0x10
+#define EXCEPTION_NESTED_CALL 0x10F
 #define EXCEPTION_TARGET_UNWIND 0x20
 #define EXCEPTION_COLLIDED_UNWIND 0x20
 
@@ -228,13 +228,13 @@ RemoveTailList(
                               ((L1)->LowPart  == (L2)->LowPart))
 #endif
 
-/* FIXME: Rename these */
-#define PDI_MODULES     0x01	/* The loaded modules of the process */
-#define PDI_BACKTRACE   0x02	/* The heap stack back traces */
-#define PDI_HEAPS       0x04	/* The heaps of the process */
-#define PDI_HEAP_TAGS   0x08	/* The heap tags */
-#define PDI_HEAP_BLOCKS 0x10	/* The heap blocks */
-#define PDI_LOCKS       0x20	/* The locks created by the process */
+/* RTL Debug Queries */
+#define RTL_DEBUG_QUERY_MODULES         0x01
+#define RTL_DEBUG_QUERY_BACKTRACES      0x02
+#define RTL_DEBUG_QUERY_HEAPS           0x04
+#define RTL_DEBUG_QUERY_HEAP_TAGS       0x08
+#define RTL_DEBUG_QUERY_HEAP_BLOCKS     0x10
+#define RTL_DEBUG_QUERY_LOCKS           0x20
 
 /* RTL Handle Flags */
 #define RTL_HANDLE_VALID        0x1
@@ -267,7 +267,7 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
 } RTL_GENERIC_COMPARE_RESULTS;
 #endif
 
-typedef enum
+typedef enum _RTL_PATH_TYPE
 {
     INVALID_PATH = 0,
     UNC_PATH,              /* "//foo" */
@@ -277,7 +277,7 @@ typedef enum
     RELATIVE_PATH,         /* "foo" */
     DEVICE_PATH,           /* "//./foo" */
     UNC_DOT_PATH           /* "//." */
-} DOS_PATHNAME_TYPE;
+} RTL_PATH_TYPE;
 
 /* FUNCTION TYPES ************************************************************/
 #ifndef NTOS_MODE_USER
@@ -426,24 +426,24 @@ typedef struct _RTL_BITMAP_RUN
 
 typedef struct _COMPRESSED_DATA_INFO
 {
-    USHORT  CompressionFormatAndEngine;
-    UCHAR   CompressionUnitShift;
-    UCHAR   ChunkShift;
-    UCHAR   ClusterShift;
-    UCHAR   Reserved;
-    USHORT  NumberOfChunks;
-    ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
+    USHORT CompressionFormatAndEngine;
+    UCHAR CompressionUnitShift;
+    UCHAR ChunkShift;
+    UCHAR ClusterShift;
+    UCHAR Reserved;
+    USHORT NumberOfChunks;
+    ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
 typedef struct _GENERATE_NAME_CONTEXT
 {
-    USHORT  Checksum;
+    USHORT Checksum;
     BOOLEAN CheckSumInserted;
-    UCHAR   NameLength;
-    WCHAR   NameBuffer[8];
-    ULONG   ExtensionLength;
-    WCHAR   ExtensionBuffer[4];
-    ULONG   LastIndexValue;
+    UCHAR NameLength;
+    WCHAR NameBuffer[8];
+    ULONG ExtensionLength;
+    WCHAR ExtensionBuffer[4];
+    ULONG LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
 typedef struct _RTL_SPLAY_LINKS
@@ -549,28 +549,7 @@ typedef struct _ACE
     ACCESS_MASK AccessMask;
 } ACE, *PACE;
 
-/* FIXME: Review definitions and give these guys a better name */
-typedef struct _DEBUG_BUFFER
-{
-    HANDLE SectionHandle;
-    PVOID SectionBase;
-    PVOID RemoteSectionBase;
-    ULONG SectionBaseDelta;
-    HANDLE EventPairHandle;
-    ULONG Unknown[2];
-    HANDLE RemoteThreadHandle;
-    ULONG InfoClassMask;
-    ULONG SizeOfInfo;
-    ULONG AllocatedSize;
-    ULONG SectionSize;
-    PVOID ModuleInformation;
-    PVOID BackTraceInformation;
-    PVOID HeapInformation;
-    PVOID LockInformation;
-    PVOID Reserved[8];
-} DEBUG_BUFFER, *PDEBUG_BUFFER;
-
-typedef struct _DEBUG_MODULE_INFORMATION
+typedef struct _RTL_PROCESS_MODULE_INFORMATION
 {
     ULONG Reserved[2];
     PVOID Base;
@@ -581,9 +560,15 @@ typedef struct _DEBUG_MODULE_INFORMATION
     USHORT LoadCount;
     USHORT ModuleNameOffset;
     CHAR ImageName[256];
-} DEBUG_MODULE_INFORMATION, *PDEBUG_MODULE_INFORMATION;
+} RTL_PROCESS_MODULE_INFORMATION, *PRTL_PROCESS_MODULE_INFORMATION;
 
-typedef struct _DEBUG_HEAP_INFORMATION
+typedef struct _RTL_PROCESS_MODULES
+{
+    ULONG ModuleCount;
+    RTL_PROCESS_MODULE_INFORMATION ModuleEntry[1];
+} RTL_PROCESS_MODULES, *PRTL_PROCESS_MODULES;
+
+typedef struct _RTL_PROCESS_HEAP_INFORMATION
 {
     PVOID Base;
     ULONG Flags;
@@ -596,9 +581,15 @@ typedef struct _DEBUG_HEAP_INFORMATION
     ULONG Reserved[7];
     PVOID Tags;
     PVOID Blocks;
-} DEBUG_HEAP_INFORMATION, *PDEBUG_HEAP_INFORMATION;
+} RTL_PROCESS_HEAP_INFORMATION, *PRTL_PROCESS_HEAP_INFORMATION;
 
-typedef struct _DEBUG_LOCK_INFORMATION
+typedef struct _RTL_PROCESS_HEAPS
+{
+    ULONG HeapCount;
+    RTL_PROCESS_HEAP_INFORMATION HeapEntry[1];
+} RTL_PROCESS_HEAPS, *PRTL_PROCESS_HEAPS;
+
+typedef struct _RTL_PROCESS_LOCK_INFORMATION
 {
     PVOID Address;
     USHORT Type;
@@ -610,7 +601,45 @@ typedef struct _DEBUG_LOCK_INFORMATION
     ULONG RecursionCount;
     ULONG NumberOfSharedWaiters;
     ULONG NumberOfExclusiveWaiters;
-} DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
+} RTL_PROCESS_LOCK_INFORMATION, *PRTL_PROCESS_LOCK_INFORMATION;
+
+typedef struct _RTL_PROCESS_LOCKS
+{
+    ULONG LockCount;
+    RTL_PROCESS_LOCK_INFORMATION LockEntry[1];
+} RTL_PROCESS_LOCKS, *PRTL_PROCESS_LOCKS;
+
+typedef struct _RTL_PROCESS_BACKTRACE_INFORMATION
+{
+    /* FIXME */
+    ULONG Unknown;
+} RTL_PROCESS_BACKTRACE_INFORMATION, *PRTL_PROCESS_BACKTRACE_INFORMATION;
+
+typedef struct _RTL_PROCESS_BACKTRACES
+{
+    ULONG BackTraceCount;
+    RTL_PROCESS_BACKTRACE_INFORMATION BackTraceEntry[1];
+} RTL_PROCESS_BACKTRACES, *PRTL_PROCESS_BACKTRACES;
+
+typedef struct _RTL_DEBUG_BUFFER
+{
+    HANDLE SectionHandle;
+    PVOID SectionBase;
+    PVOID RemoteSectionBase;
+    ULONG SectionBaseDelta;
+    HANDLE EventPairHandle;
+    ULONG Unknown[2];
+    HANDLE RemoteThreadHandle;
+    ULONG InfoClassMask;
+    ULONG SizeOfInfo;
+    ULONG AllocatedSize;
+    ULONG SectionSize;
+    PRTL_PROCESS_MODULES ModuleInformation;
+    PRTL_PROCESS_BACKTRACES BackTraceInformation;
+    PRTL_PROCESS_HEAPS HeapInformation;
+    PRTL_PROCESS_LOCKS LockInformation;
+    PVOID Reserved[8];
+} RTL_DEBUG_BUFFER, *PRTL_DEBUG_BUFFER;
 
 typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
@@ -628,25 +657,6 @@ typedef struct _RTL_HANDLE_TABLE
     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
-
-typedef struct _LOCK_INFORMATION
-{
-    ULONG LockCount;
-    DEBUG_LOCK_INFORMATION LockEntry[1];
-} LOCK_INFORMATION, *PLOCK_INFORMATION;
-
-typedef struct _HEAP_INFORMATION
-{
-    ULONG HeapCount;
-    DEBUG_HEAP_INFORMATION HeapEntry[1];
-} HEAP_INFORMATION, *PHEAP_INFORMATION;
-
-typedef struct _MODULE_INFORMATION
-{
-    ULONG ModuleCount;
-    DEBUG_MODULE_INFORMATION ModuleEntry[1];
-} MODULE_INFORMATION, *PMODULE_INFORMATION;
-/* END REVIEW AREA */
 
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
@@ -729,8 +739,8 @@ typedef struct _RTL_RESOURCE
     ULONG ExclusiveWaiters;
     LONG NumberActive;
     HANDLE OwningThread;
-    ULONG TimeoutBoost; /* ?? */
-    PVOID DebugInfo; /* ?? */
+    ULONG TimeoutBoost;
+    PVOID DebugInfo;
 } RTL_RESOURCE, *PRTL_RESOURCE;
 
 typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
@@ -757,7 +767,7 @@ typedef struct _NLS_FILE_HEADER
 {
     USHORT HeaderSize;
     USHORT CodePage;
-    USHORT MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
+    USHORT MaximumCharacterSize;
     USHORT DefaultChar;
     USHORT UniDefaultChar;
     USHORT TransDefaultChar;

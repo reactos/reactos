@@ -1703,7 +1703,7 @@ RtlGetCompressionWorkSpaceSize(
  * Debug Info Functions
  */
 NTSYSAPI
-PDEBUG_BUFFER
+PRTL_DEBUG_BUFFER
 NTAPI
 RtlCreateQueryDebugBuffer(
     IN ULONG Size,
@@ -1713,7 +1713,7 @@ RtlCreateQueryDebugBuffer(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
+RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_BUFFER DebugBuffer);
 
 NTSYSAPI
 NTSTATUS
@@ -1721,7 +1721,7 @@ NTAPI
 RtlQueryProcessDebugInformation(
     IN ULONG ProcessId,
     IN ULONG DebugInfoClassMask,
-    IN OUT PDEBUG_BUFFER DebugBuffer
+    IN OUT PRTL_DEBUG_BUFFER DebugBuffer
 );
 
 /*

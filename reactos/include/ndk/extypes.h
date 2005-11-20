@@ -12,7 +12,6 @@
 
 /* DEPENDENCIES **************************************************************/
 #include <cfg.h>
-/* FIXME: this needs be implemented in the w32api ddk */
 #if defined(_MSC_VER) && !defined(NTOS_MODE_USER)
 #include <ntimage.h>
 #endif
