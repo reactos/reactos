@@ -136,8 +136,13 @@ static const UNICODE_STRING __emptyUnicodeString = {0};
 #define ProbeForReadPointer(Ptr) ProbeForReadGenericType(Ptr, PVOID, NULL)
 #define ProbeForReadHandle(Ptr) ProbeForReadGenericType(Ptr, HANDLE, NULL)
 #define ProbeForReadLangid(Ptr) ProbeForReadGenericType(Ptr, LANGID, 0)
+#ifdef _MSC_VER
+#define ProbeForReadLargeInteger(Ptr) (*(volatile LARGE_INTEGER*)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
+#define ProbeForReadUlargeInteger(Ptr) (*(volatile ULARGE_INTEGER*)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
+#else
 #define ProbeForReadLargeInteger(Ptr) ((LARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
 #define ProbeForReadUlargeInteger(Ptr) ((ULARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
+#endif
 #define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType(Ptr, UNICODE_STRING, __emptyUnicodeString)
 
 /*
