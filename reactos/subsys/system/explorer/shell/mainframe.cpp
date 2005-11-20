@@ -453,6 +453,8 @@ void MainFrameBase::ExecuteCommandbar(LPCTSTR dir)
 				dir += 7;
 		}
 
+		///@todo use SHGetFileInfo() with SHGFI_EXETYPE flag to determine EXE type and open console window
+
 		HINSTANCE hinst = ShellExecute(_hwnd, NULL, p, NULL, dir, SW_SHOWNORMAL);
 
 		if ((int)hinst <= 32)

@@ -633,15 +633,16 @@ extern HRESULT path_from_pidlW(IShellFolder* folder, LPCITEMIDLIST pidl, LPWSTR 
 extern HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags);
 
 
-#if 0	// ILGetSize() was missing in previous versions of MinGW.
-extern "C" UINT STDCALL ILGetSize(LPCITEMIDLIST pidl);
+ // ILGetSize() was missing in previous versions of MinGW and is not exported from shell32.dll on Windows 2000.
+extern "C" UINT ILGetSize_local(LPCITEMIDLIST pidl);
+#define ILGetSize ILGetSize_local
 
-#ifdef UNICODE		// CFSTR_FILENAME is defined wrong in MinGW.
+#if 0
+#ifdef UNICODE		// CFSTR_FILENAME was defined wrong in previous versions of MinGW.
 #define CFSTR_FILENAMEW TEXT("FileNameW")
 #undef CFSTR_FILENAME
 #define CFSTR_FILENAME CFSTR_FILENAMEW
 #endif
-
 #endif
 
 

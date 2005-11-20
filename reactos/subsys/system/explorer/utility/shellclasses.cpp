@@ -369,7 +369,7 @@ void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolde
 		CHECKERROR(sf->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
 }
 
-#if 1	// ILCombine() was missing in previous versions of MinGW.
+#if 0	// ILCombine() was missing in previous versions of MinGW and is not exported from shell32.dll on Windows 2000.
 
  // convert an item id list from relative to absolute (=relative to the desktop) format
 ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
@@ -415,7 +415,10 @@ ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 	return p;
 }
 
-UINT ILGetSize(LPCITEMIDLIST pidl)
+#endif
+
+ // local implementation of ILGetSize() to replace missing export on Windows 2000
+UINT ILGetSize_local(LPCITEMIDLIST pidl)
 {
 	if (!pidl)
 		return 0;
@@ -429,8 +432,6 @@ UINT ILGetSize(LPCITEMIDLIST pidl)
 
 	return l;
 }
-
-#endif
 
 
 #ifndef	_SHFOLDER_H_
