@@ -30,7 +30,6 @@ void SetupOnce()
 
 /* Test types */
 #define TT_NORMAL         0
-#define TT_PERFORMANCE    1
 
 /* Valid values for return values of TestRoutine */
 #define TS_TIMEDOUT      ((DWORD)-2)
@@ -236,15 +235,6 @@ _GetCurrentProcess();
 
 HANDLE STDCALL
 _GetCurrentThread();
-
-BOOL STDCALL
-_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext);
-
-DWORD STDCALL
-_SuspendThread(HANDLE hThread);
-
-DWORD STDCALL
-_ResumeThread(HANDLE hThread);
 
 VOID STDCALL
 _Sleep(DWORD dwMilliseconds);
