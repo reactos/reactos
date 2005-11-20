@@ -600,7 +600,13 @@ HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
 /***********************************************************************
  *      GetWindowTheme                                      (UXTHEME.@)
  *
- * Retrieve the last theme opened for a window
+ * Retrieve the last theme opened for a window.
+ *
+ * PARAMS
+ *  hwnd  [I] window to retrieve the theme for
+ *
+ * RETURNS
+ *  The most recent theme.
  */
 HTHEME WINAPI GetWindowTheme(HWND hwnd)
 {
@@ -788,6 +794,10 @@ DWORD WINAPI QueryThemeServices()
  *     pszColorName        Color defined in the theme, eg. NormalColor
  *     pszSizeName         Size defined in the theme, eg. NormalSize
  *     hThemeFile          Handle to theme file
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: HRESULT error-code
  */
 HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName, LPCWSTR pszColorName,
                              LPCWSTR pszSizeName, HTHEMEFILE *hThemeFile,
@@ -806,6 +816,10 @@ HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName, LPCWSTR pszColorName,
  *
  * PARAMS
  *     hThemeFile           Handle to theme file
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: HRESULT error-code
  */
 HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile)
 {
@@ -823,6 +837,10 @@ HRESULT WINAPI CloseThemeFile(HTHEMEFILE hThemeFile)
  *     hThemeFile           Handle to theme file
  *     unknown              See notes
  *     hWnd                 Window requesting the theme change
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: HRESULT error-code
  *
  * NOTES
  * I'm not sure what the second parameter is (the datatype is likely wrong), other then this:
@@ -854,6 +872,10 @@ HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
  *     dwColorNameLen      Length, in characters, of color name buffer
  *     pszSizeName         Buffer to receive the default size name
  *     dwSizeNameLen       Length, in characters, of size name buffer
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: HRESULT error-code
  */
 HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
                                 DWORD dwColorNameLen, LPWSTR pszSizeName,
@@ -885,6 +907,10 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
  *     pszThemePath        Path containing themes
  *     callback            Called for each theme found in path
  *     lpData              Passed through to callback
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: HRESULT error-code
  */
 HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, EnumThemeProc callback,
                           LPVOID lpData)
@@ -1097,6 +1123,10 @@ HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,
  *
  * PARAMS
  *     pszIniFileName      Path to a theme file
+ *
+ * RETURNS
+ *     Success: S_OK
+ *     Failure: HRESULT error-code
  */
 HRESULT WINAPI CheckThemeSignature(LPCWSTR pszThemeFileName)
 {
