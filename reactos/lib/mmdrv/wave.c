@@ -320,17 +320,47 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 APIENTRY DWORD widMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
 {
     DPRINT("widMessage\n");
 
-    switch (dwMessage) {
-        case WIDM_GETNUMDEVS:
+    switch (dwMessage) 
+    {
+        case WIDM_GETNUMDEVS: 
+            DPRINT("WIDM_GETNUMDEVS");
             return GetDeviceCount(WaveInDevice);
+
+        case WIDM_GETDEVCAPS:
+            DPRINT("WODM_GETDEVCAPS");
+            return GetDeviceCapabilities(dwId, WaveInDevice, (LPBYTE)dwParam1, (DWORD)dwParam2);
+             
+        case WIDM_OPEN:
+            DPRINT("WIDM_OPEN");
+            return OpenWaveDevice(WaveInDevice, dwId, dwUser, dwParam1, dwParam2);
+
+        case WIDM_CLOSE:
+             return MMSYSERR_NOERROR;
+
+        case WIDM_ADDBUFFER:
+             return MMSYSERR_NOERROR;
+
+        case WIDM_STOP:
+             return MMSYSERR_NOERROR;
+
+        case WIDM_START:
+             return MMSYSERR_NOERROR;
+
+        case WIDM_RESET:
+             return MMSYSERR_NOERROR;
+
+        case WIDM_GETPOS:
+             return MMSYSERR_NOERROR;
+
+
         default :
-            return MMSYSERR_NOERROR;
+             return MMSYSERR_NOTSUPPORTED;
     }
 }
 
