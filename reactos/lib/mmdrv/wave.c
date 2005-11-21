@@ -17,17 +17,15 @@
 #define NDEBUG
 #include <debug.h>
 
-PWAVEALLOC WaveLists;   
+#define WHDR_COMPLETE 0x80000000
+PWAVEALLOC WaveLists; 
+
 
 /* ============================
  *  INTERNAL
  *  functions start here
  * ============================
  */
-static DWORD waveThread(LPVOID lpParameter)
-{
-  return MMSYSERR_NOERROR;
-}
 
 MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                                       LPBYTE pCaps, DWORD Size)
@@ -68,6 +66,126 @@ MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
 
     return Result;
 }
+
+static DWORD waveThread(LPVOID lpParameter)
+{
+
+    PWAVEALLOC pClient;
+    BOOL Terminate;
+
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    SetEvent(pClient->AuxEvent2);
+    WaitForSingleObject(pClient->AuxEvent1, INFINITE);
+
+    for (;;) 
+    {
+        switch (pClient->AuxFunction) 
+        {
+            case WaveThreadAddBuffer:
+                 DPRINT("UNIMPLMENENT WaveThreadAddBuffer ");
+                 break;
+
+            case WaveThreadSetState:
+                 DPRINT("UNIMPLMENENT WaveThreadSetState ");
+                 break;
+
+            case WaveThreadGetData:
+                 DPRINT("UNIMPLMENENT WaveThreadGetData ");
+                 break;
+
+            case WaveThreadSetData:
+                 DPRINT("UNIMPLMENENT WaveThreadGetData ");
+                 break;
+
+            case WaveThreadBreakLoop:
+                 pClient->AuxReturnCode = MMSYSERR_NOERROR;
+                 if (pClient->LoopHead)                 
+                    pClient->LoopCount = 0;                          
+                 break;
+
+            case WaveThreadClose:
+                 if (pClient->DeviceQueue != NULL)                  
+                    pClient->AuxReturnCode = WAVERR_STILLPLAYING;                 
+                 else                 
+                    pClient->AuxReturnCode = MMSYSERR_NOERROR;                
+                 break;
+
+            case WaveThreadTerminate:
+                 Terminate = TRUE;
+                 break;
+
+            default:
+                 DPRINT("WaveThread Error");
+                 break;
+
+        }
+
+        pClient->AuxFunction = WaveThreadInvalid;
+
+        while (pClient->DeviceQueue && (pClient->DeviceQueue->dwFlags & WHDR_COMPLETE)) 
+        {
+            PWAVEHDR pHdr;        
+            PWAVEALLOC pWav;
+
+            pHdr = pClient->DeviceQueue;        
+            pClient->DeviceQueue = pHdr->lpNext;
+    
+            pHdr->dwFlags &= ~WHDR_COMPLETE;
+            pHdr->dwFlags &= ~WHDR_INQUEUE;
+            pHdr->lpNext = NULL;
+            pHdr->dwFlags |= WHDR_DONE;
+
+            pWav = (PWAVEALLOC)pHdr->reserved;
+                
+            if (pWav->dwCallback)
+            {
+                DriverCallback(pWav->dwCallback, HIWORD(pWav->dwFlags), (HDRVR)pWav->hWave,  
+                           pClient->DeviceType == WaveOutDevice ? WOM_DONE : WIM_DATA, 
+                           pWav->dwInstance, (DWORD)pHdr, 0L); 
+            }
+        }
+
+        //waveStart;
+
+        if (Terminate) return 1; 
+        SetEvent(pClient->AuxEvent2);
+        while (WaitForSingleObjectEx(pClient->AuxEvent1, INFINITE, TRUE) == WAIT_IO_COMPLETION) 
+        {
+           while (pClient->DeviceQueue && (pClient->DeviceQueue->dwFlags & WHDR_COMPLETE)) 
+           {
+                PWAVEHDR pHdr;        
+                PWAVEALLOC pWav;
+
+                pHdr = pClient->DeviceQueue;        
+                pClient->DeviceQueue = pHdr->lpNext;
+    
+                pHdr->dwFlags &= ~WHDR_COMPLETE;
+                pHdr->dwFlags &= ~WHDR_INQUEUE;
+                pHdr->lpNext = NULL;
+                pHdr->dwFlags |= WHDR_DONE;
+
+                pWav = (PWAVEALLOC)pHdr->reserved;
+                
+                if (pWav->dwCallback)
+                {
+                    DriverCallback(pWav->dwCallback, HIWORD(pWav->dwFlags), (HDRVR)pWav->hWave,  
+                           pClient->DeviceType == WaveOutDevice ? WOM_DONE : WIM_DATA, 
+                           pWav->dwInstance, (DWORD)pHdr, 0L); 
+                }
+            }
+
+        //waveStart;
+        }
+    }
+
+
+  return MMSYSERR_NOERROR;
+}
+
+
+
+
+
 
 static MMRESULT OpenWaveDevice(UINT  DeviceType,
 								DWORD id,
