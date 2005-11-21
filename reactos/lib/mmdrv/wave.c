@@ -85,15 +85,11 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 	return MMSYSERR_NOERROR;
 }
 
-//FIXME: Params are MS-specific
-static MMRESULT ThreadCallWaveDevice(WAVETHREADFUNCTION Function, PWAVEALLOC pClient)
-{
-	return MMSYSERR_NOERROR;
-}
 
 //FIXME: Params are MS-specific
 static void CallbackWaveDevice(PWAVEALLOC pWave, DWORD msg, DWORD dw1)
 {
+
 }
 
 //FIXME: Params are MS-specific
@@ -162,6 +158,8 @@ MMRESULT soundGetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
  */
 APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
 {
+    PWAVEALLOC pTask = (PWAVEALLOC)dwUser;
+
     switch (dwMessage) {
         case WODM_GETNUMDEVS:
             DPRINT("WODM_GETNUMDEVS");
@@ -178,13 +176,16 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 
         case WODM_CLOSE:
 			{
-				MMRESULT Result;
-				PWAVEALLOC pTask = (PWAVEALLOC)dwUser;
+				MMRESULT Result;				
 				DPRINT("WODM_CLOSE");
 
 				// 1. Check if the task is ready to complete
-				Result = ThreadCallWaveDevice(WaveThreadClose, pTask);
-				if (Result != MMSYSERR_NOERROR) {
+                pTask->AuxFunction = WaveThreadClose;
+                SetEvent(pTask->AuxEvent1);
+                WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	            			
+				if ( pTask->AuxReturnCode != MMSYSERR_NOERROR) 
+                {
 				    return Result;
 				}
 				else
@@ -233,36 +234,57 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 				return WriteWaveDevice(pWaveHdr, (PWAVEALLOC)dwUser);
 			}
 
-
         case WODM_PAUSE:
+            
+
             DPRINT("WODM_PAUSE");
-            ((PWAVEALLOC)dwUser)->AuxParam.State = WAVE_DD_STOP;
-            return ThreadCallWaveDevice(WaveThreadSetState, (PWAVEALLOC)dwUser);
+            pTask->AuxParam.State = WAVE_DD_STOP;
+           
+            pTask->AuxFunction = WaveThreadSetState;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
 
         case WODM_RESTART:
             DPRINT("WODM_RESTART");
-            ((PWAVEALLOC)dwUser)->AuxParam.State = WAVE_DD_PLAY;
-            return ThreadCallWaveDevice(WaveThreadSetState, (PWAVEALLOC)dwUser);
+            pTask->AuxParam.State = WAVE_DD_PLAY;
+
+            pTask->AuxFunction = WaveThreadSetState;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;            
 
         case WODM_RESET:
             DPRINT("WODM_RESET");
-            ((PWAVEALLOC)dwUser)->AuxParam.State = WAVE_DD_RESET;
-            return ThreadCallWaveDevice(WaveThreadSetState, (PWAVEALLOC)dwUser);
+            pTask->AuxParam.State = WAVE_DD_RESET;
 
+            pTask->AuxFunction = WaveThreadSetState;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
+           
         case WODM_BREAKLOOP:
             DPRINT("WODM_BREAKLOOP");
-            return ThreadCallWaveDevice(WaveThreadBreakLoop, (PWAVEALLOC)dwUser);
+
+            pTask->AuxFunction = WaveThreadBreakLoop;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
 
         case WODM_GETPOS:
             DPRINT("WODM_GETPOS");
-            return GetPositionWaveDevice(((PWAVEALLOC)dwUser), (LPMMTIME)dwParam1, dwParam2);
+            return GetPositionWaveDevice(pTask, (LPMMTIME)dwParam1, dwParam2);
 
         case WODM_SETPITCH:
             DPRINT("WODM_SETPITCH");
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PITCH;
-            return ThreadCallWaveDevice(WaveThreadSetData, ((PWAVEALLOC)dwUser));
+            pTask->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
+            pTask->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            pTask->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PITCH;
+            
+            pTask->AuxFunction = WaveThreadSetData;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
 
         case WODM_SETVOLUME:
             DPRINT("WODM_SETVOLUME");
@@ -277,17 +299,26 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 
         case WODM_SETPLAYBACKRATE:
             DPRINT("WODM_SETPLAYBACKRATE");
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PLAYBACK_RATE;
-            return ThreadCallWaveDevice(WaveThreadSetData, (PWAVEALLOC)dwUser);
+            pTask->AuxParam.GetSetData.pData = (PBYTE)&dwParam1;
+            pTask->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            pTask->AuxParam.GetSetData.Function = IOCTL_WAVE_SET_PLAYBACK_RATE;
+            
+            pTask->AuxFunction = WaveThreadSetData;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
+
 
         case WODM_GETPITCH:
             DPRINT("WODM_GETPITCH");
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PITCH;
-            return ThreadCallWaveDevice(WaveThreadGetData, (PWAVEALLOC)dwUser);
+            pTask->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
+            pTask->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            pTask->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PITCH;
+            
+            pTask->AuxFunction = WaveThreadGetData;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
 
         case WODM_GETVOLUME:
             DPRINT("WODM_GETVOLUME");
@@ -306,10 +337,14 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 
         case WODM_GETPLAYBACKRATE:
             DPRINT("WODM_GETPLAYBACKRATE");
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.DataLen = sizeof(DWORD);
-            ((PWAVEALLOC)dwUser)->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PLAYBACK_RATE;
-            return ThreadCallWaveDevice(WaveThreadGetData, (PWAVEALLOC)dwUser);
+            pTask->AuxParam.GetSetData.pData = (PBYTE)dwParam1;
+            pTask->AuxParam.GetSetData.DataLen = sizeof(DWORD);
+            pTask->AuxParam.GetSetData.Function = IOCTL_WAVE_GET_PLAYBACK_RATE;
+                         
+            pTask->AuxFunction = WaveThreadGetData;
+            SetEvent(pTask->AuxEvent1);
+            WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+	        return pTask->AuxReturnCode;
 
         default:
             return MMSYSERR_NOTSUPPORTED;
