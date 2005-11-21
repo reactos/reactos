@@ -732,7 +732,19 @@ MMRESULT GetPositionWaveDevice(PWAVEALLOC pClient, LPMMTIME lpmmt, DWORD dwSize)
 MMRESULT soundSetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
                      ULONG Ioctl)
 {
-	return MMSYSERR_NOERROR;
+    HANDLE hDevcie;
+    MMRESULT Result;
+    DWORD BytesReturned;
+
+    Result = OpenDevice(DeviceType, DeviceId, &hDevcie, GENERIC_READ);
+    if (Result != MMSYSERR_NOERROR) 
+         return Result;
+
+    Result = DeviceIoControl(hDevcie, Ioctl, Data, Length, NULL, 0, &BytesReturned, NULL) ? 
+                             MMSYSERR_NOERROR : TranslateStatus();
+    CloseHandle(hDevcie);
+
+	return Result;
 }
 MMRESULT soundGetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
                      ULONG Ioctl)
