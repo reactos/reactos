@@ -684,14 +684,6 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 }
 
 
-
-
-//FIXME: Params are MS-specific
-static MMRESULT WriteWaveDevice(LPWAVEHDR pHdr, PWAVEALLOC pClient)
-{
-	return MMSYSERR_NOERROR;
-}
-
 //FIXME: MS-specific code, except for name of the func!
 MMRESULT GetPositionWaveDevice(PWAVEALLOC pClient, LPMMTIME lpmmt, DWORD dwSize)
 {
@@ -728,7 +720,6 @@ MMRESULT GetPositionWaveDevice(PWAVEALLOC pClient, LPMMTIME lpmmt, DWORD dwSize)
 
 
 
-//FIXME: Params are MS-specific
 MMRESULT soundSetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
                      ULONG Ioctl)
 {
@@ -746,6 +737,7 @@ MMRESULT soundSetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
 
 	return Result;
 }
+
 MMRESULT soundGetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
                      ULONG Ioctl)
 {
@@ -855,7 +847,15 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 				// save WAVEALLOC pointer in the WaveHeader
 				pWaveHdr->reserved = dwUser;
 
-				return WriteWaveDevice(pWaveHdr, (PWAVEALLOC)dwUser);
+				
+                pWaveHdr->dwFlags |= WHDR_INQUEUE;
+                pWaveHdr->dwFlags &= ~WHDR_DONE;
+                pTask->AuxParam.pHdr = pWaveHdr;
+                
+                pTask->AuxFunction = WaveThreadAddBuffer;
+                SetEvent(pTask->AuxEvent1);
+                WaitForSingleObject(pTask->AuxEvent2, INFINITE);
+                return pTask->AuxReturnCode;
 			}
 
         case WODM_PAUSE:
