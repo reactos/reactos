@@ -597,9 +597,12 @@ DoCommand (LPTSTR line)
 		}
 		*/
 
-		/* Skip over whitespace to rest of line */
-		while (_istspace (*rest))
+		/* Skip over whitespace to rest of line, exclude 'echo' command */
+		if (_tcsicmp (com, _T("echo"))) 
+		{
+			while (_istspace (*rest))
 			rest++;
+		}
 
 		/* Scan internal command table */
 		for (cmdptr = cmds;; cmdptr++)
