@@ -28,6 +28,7 @@ void wavePartialOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOve
 void waveOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
 void waveLoopOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
 void waveBreakOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
+static MMRESULT waveSetState(PWAVEALLOC pClient, ULONG State);
 
 /* ============================
  *  INTERNAL
@@ -94,7 +95,58 @@ static DWORD waveThread(LPVOID lpParameter)
                  break;
 
             case WaveThreadSetState:
-                 DPRINT("UNIMPLMENENT WaveThreadSetState ");
+                 pClient->AuxReturnCode = waveSetState(pClient, pClient->AuxParam.State);
+
+                 if (pClient->AuxParam.State == WAVE_DD_RESET) 
+                 {
+                    PWAVEHDR pHdr;
+              
+                    pClient->LoopHead = NULL;
+                    pClient->AuxReturnCode = MMSYSERR_NOERROR;                               
+                    for (pHdr = pClient->DeviceQueue; pHdr != NULL; pHdr = pHdr->lpNext) 
+                    {
+                        pHdr->dwFlags |= WHDR_COMPLETE;
+                    }
+        
+                    pClient->BufferPosition = 0;
+                    pClient->NextBuffer = NULL;                    
+                } 
+                else 
+                {
+                    if (pClient->DeviceType == WaveInDevice && pClient->AuxReturnCode == MMSYSERR_NOERROR) 
+                    {
+                        if (pClient->AuxParam.State == WAVE_DD_STOP) 
+                        {                        
+                            if (pClient->DeviceQueue) 
+                            {
+                                while (!(pClient->DeviceQueue->dwFlags & WHDR_COMPLETE) &&
+                                        pClient->BytesOutstanding != 0) 
+                                {
+                                    waveSetState(pClient, WAVE_DD_RECORD);
+                                    pClient->AuxReturnCode = waveSetState(pClient, WAVE_DD_STOP);
+                                    if (pClient->AuxReturnCode != MMSYSERR_NOERROR)                                     
+                                        break;
+                                    
+                                }
+                                if (pClient->AuxReturnCode == MMSYSERR_NOERROR) 
+                                {
+                                    pClient->DeviceQueue->dwFlags |= WHDR_COMPLETE;
+                                    if (pClient->NextBuffer == pClient->DeviceQueue) 
+                                    {
+                                        pClient->NextBuffer = pClient->DeviceQueue->lpNext;
+                                        pClient->BufferPosition = 0;
+                                    }
+                                }
+                            }
+                      } 
+                      else 
+                      {                      
+                        if (pClient->AuxParam.State == WAVE_DD_RECORD) 
+                                pClient->AuxReturnCode = waveReadWrite(pClient);                        
+                      }
+                    }
+                 }
+
                  break;
 
             case WaveThreadGetData:                 
@@ -382,6 +434,32 @@ static MMRESULT waveReadWrite(PWAVEALLOC pClient)
      }
     return MMSYSERR_NOERROR;
 }
+static MMRESULT waveSetState(PWAVEALLOC pClient, ULONG State)
+{    
+    OVERLAPPED Overlap;
+    DWORD BytesReturned;
+
+    memset((PVOID)&Overlap, 0, sizeof(Overlap));
+
+    Overlap.hEvent = pClient->Event;
+    
+    if (!DeviceIoControl(pClient->hDev, IOCTL_WAVE_SET_STATE, 
+                         &State,  sizeof(State), NULL, 0, &BytesReturned, &Overlap)) 
+    {
+         DWORD cbTransfer;        
+         if (GetLastError() == ERROR_IO_PENDING) 
+         {
+             if (!GetOverlappedResult(pClient->hDev, &Overlap, &cbTransfer, TRUE))             
+                  return TranslateStatus();             
+         } 
+         else              
+             return TranslateStatus();
+         
+    }
+
+    while (SleepEx(0, TRUE) == WAIT_IO_COMPLETION) {}
+    return MMSYSERR_NOERROR;
+}
 
 void wavePartialOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped)
 {
@@ -648,18 +726,29 @@ MMRESULT GetPositionWaveDevice(PWAVEALLOC pClient, LPMMTIME lpmmt, DWORD dwSize)
     return mErr;*/ return MMSYSERR_NOERROR;
 }
 
+
+
 //FIXME: Params are MS-specific
 MMRESULT soundSetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
                      ULONG Ioctl)
 {
 	return MMSYSERR_NOERROR;
 }
-
-//FIXME: Params are MS-specific
 MMRESULT soundGetData(UINT DeviceType, UINT DeviceId, UINT Length, PBYTE Data,
                      ULONG Ioctl)
 {
-	return MMSYSERR_NOERROR;
+	HANDLE hDevice;
+    MMRESULT Result;
+    DWORD BytesReturned;
+
+    Result = OpenDevice(DeviceType, DeviceId, &hDevice, GENERIC_READ);
+    if (Result != MMSYSERR_NOERROR)     
+         return Result;
+        
+    Result = DeviceIoControl(hDevice, Ioctl, NULL, 0, (LPVOID)Data, Length,
+                           &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
+    CloseHandle(hDevice);
+    return Result;
 }
 
 
