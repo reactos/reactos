@@ -52,6 +52,7 @@
 		<file>virtual.c</file>
 	</directory>
 	<directory name="misc">
+		<file>actctx.c</file>
 		<file>atom.c</file>
 		<file>chartype.c</file>
 		<file>comm.c</file>

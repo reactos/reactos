@@ -453,20 +453,6 @@ CancelDeviceWakeupRequest(
     return 0;
 }
 
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-CreateActCtxA(
-    PCACTCTXA pActCtx
-    )
-{
-    STUB;
-    return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -477,7 +463,7 @@ CreateActCtxW(
     )
 {
     STUB;
-    return 0;
+    return INVALID_HANDLE_VALUE;
 }
 
 /*
@@ -1050,7 +1036,7 @@ FindActCtxSectionStringW(
     )
 {
     STUB;
-    return 0;
+    return FALSE;
 }
 
 /*
@@ -1261,23 +1247,6 @@ DnsHostnameToComputerNameA (
     LPCSTR Hostname,
     LPSTR ComputerName,
     LPDWORD nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FindActCtxSectionStringA(
-    DWORD dwFlags,
-    const GUID *lpExtensionGuid,
-    ULONG ulSectionId,
-    LPCSTR lpStringToFind,
-    PACTCTX_SECTION_KEYED_DATA ReturnedData
     )
 {
     STUB;
