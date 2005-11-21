@@ -261,25 +261,20 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	if ( !lib && !exe ) fprintf ( OUT, "MTL=midl.exe\r\n" );
 	fprintf ( OUT, "RSC=rc.exe\r\n" );
 
-	int n = 0;
-
 	std::string output_dir;
 	for ( size_t icfg = 0; icfg < cfgs.size(); icfg++ )
 	{
 		std::string& cfg = cfgs[icfg];
-		if ( icfg )
+		if ( icfg == 0 )
 		{
-			if ( n == 0 )
-			{
-				fprintf ( OUT, "!IF  \"$(CFG)\" == \"%s\"\r\n", cfg.c_str() );
-				fprintf ( OUT, "\r\n" );
-			}
-			else
-			{
-				fprintf ( OUT, "\r\n" );
-				fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"%s\"\r\n", cfg.c_str() );
-				fprintf ( OUT, "\r\n" );
-			}
+			fprintf ( OUT, "!IF  \"$(CFG)\" == \"%s\"\r\n", cfg.c_str() );
+			fprintf ( OUT, "\r\n" );
+		}
+		else
+		{
+			fprintf ( OUT, "\r\n" );
+			fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"%s\"\r\n", cfg.c_str() );
+			fprintf ( OUT, "\r\n" );
 		}
 
 		bool debug = !strstr ( cfg.c_str(), "Release" );
@@ -569,8 +564,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			fprintf ( OUT, "# ADD BASE LIB32 /nologo\r\n" );
 			fprintf ( OUT, "# ADD LIB32 /nologo\r\n" );
 		}
-
-		n++;
 	}
 
 	if ( cfgs.size() != 0 )
