@@ -17,6 +17,9 @@
 <directory name="authz">
 	<xi:include href="authz/authz.xml" />
 </directory>
+<directory name="avifil32">
+	<xi:include href="avifil32/avifil32.xml" />
+</directory>
 <directory name="cabinet">
 	<xi:include href="cabinet/cabinet.xml" />
 </directory>

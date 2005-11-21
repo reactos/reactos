@@ -51,6 +51,7 @@
 <property name="BASEADDRESS_WINFAX" value="0x722C0000" />
 <property name="BASEADDRESS_WINSCARD" value="0x723D0000" />
 <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
+<property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
 <property name="BASEADDRESS_LZ32" value="0x73d80000" />
 <property name="BASEADDRESS_COREDLL" value="0x73d80000" />
 <property name="BASEADDRESS_USERENV" value="0x74850000" />

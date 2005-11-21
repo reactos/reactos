@@ -13,6 +13,9 @@
 #if !defined  (_OLE2_H) && !defined (__OBJC__)
 #include <ole2.h>
 #endif
+#if !defined NOMMREG
+#include <mmreg.h>
+#endif
 
 #define VFWAPI WINAPI
 #define VFWAPIV WINAPIV
@@ -22,6 +25,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct IAVIStream *PAVISTREAM;
+typedef struct IAVIFile *PAVIFILE;
+typedef struct IGetFrame *PGETFRAME;
+typedef struct IAVIEditStream *PAVIEDITSTREAM;
 
 #define	ICERR_OK	0
 #define	ICERR_DONTDRAW	1
@@ -640,7 +648,38 @@ DEFINE_AVIGUID(IID_IAVIStream,0x00020021,0,0);
 DEFINE_AVIGUID(IID_IAVIStreaming,0x00020022,0,0);
 DEFINE_AVIGUID(IID_IGetFrame,0x00020023,0,0);
 DEFINE_AVIGUID(IID_IAVIEditStream,0x00020024,0,0);
+DEFINE_AVIGUID(CLSID_AVISimpleUnMarshal,0x00020009, 0, 0);
 DEFINE_AVIGUID(CLSID_AVIFile,0x00020000,0,0);
+
+/*****************************************************************************
+ * IGetFrame interface
+ */
+#define INTERFACE IGetFrame
+DECLARE_INTERFACE_(IGetFrame,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IGetFrame methods ***/
+    STDMETHOD_(LPVOID,GetFrame)(THIS_ LONG lPos) PURE;
+    STDMETHOD(Begin)(THIS_ LONG lStart, LONG lEnd, LONG lRate) PURE;
+    STDMETHOD(End)(THIS) PURE;
+    STDMETHOD(SetFormat)(THIS_ LPBITMAPINFOHEADER lpbi, LPVOID lpBits, INT x, INT y, INT dx, INT dy) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IGetFrame_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IGetFrame_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IGetFrame_Release(p)            (p)->lpVtbl->Release(p)
+/*** IGetFrame methods ***/
+#define IGetFrame_GetFrame(p,a)            (p)->lpVtbl->GetFrame(p,a)
+#define IGetFrame_Begin(p,a,b,c)           (p)->lpVtbl->Begin(p,a,b,c)
+#define IGetFrame_End(p)                   (p)->lpVtbl->End(p)
+#define IGetFrame_SetFormat(p,a,b,c,d,e,f) (p)->lpVtbl->SetFormat(p,a,b,c,d,e,f)
+#endif
 
 #define INTERFACE IAVIStream
 DECLARE_INTERFACE_(IAVIStream, IUnknown)
@@ -662,17 +701,31 @@ DECLARE_INTERFACE_(IAVIStream, IUnknown)
 };
 typedef IAVIStream *PAVISTREAM;
 
+/*****************************************************************************
+ * IAVIStreaming interface
+ */
 #define INTERFACE IAVIStreaming
-DECLARE_INTERFACE_(IAVIStreaming, IUnknown)
+DECLARE_INTERFACE_(IAVIStreaming,IUnknown)
 {
-	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD(Begin)(THIS_ LONG,LONG,LONG) PURE;
-	STDMETHOD(End)(THIS) PURE;
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IAVIStreaming methods ***/
+    STDMETHOD(Begin)(IAVIStreaming*iface,LONG lStart,LONG lEnd,LONG lRate) PURE;
+    STDMETHOD(End)(IAVIStreaming*iface) PURE;
 };
 #undef INTERFACE
-typedef IAVIStreaming *PAVISTREAMING;
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IAVIStreaming_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IAVIStreaming_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IAVIStreaming_Release(p)            (p)->lpVtbl->Release(p)
+/*** IAVIStreaming methods ***/
+#define IAVIStreaming_Begin(p,a,b,c)        (p)->lpVtbl->Begin(p,a,b,c)
+#define IAVIStreaming_End(p)                (p)->lpVtbl->End(p)
+#endif
 
 #define INTERFACE IAVIEditStream
 DECLARE_INTERFACE_(IAVIEditStream, IUnknown)
@@ -705,19 +758,55 @@ DECLARE_INTERFACE_(IAVIFile, IUnknown)
 #undef INTERFACE
 typedef IAVIFile *PAVIFILE;
 
-#define INTERFACE IGetFrame
-DECLARE_INTERFACE_(IGetFrame, IUnknown)
-{
-	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD_(LPVOID,GetFrame)(THIS_ LONG) PURE;
-	STDMETHOD(Begin)(THIS_ LONG,LONG,LONG) PURE;
-	STDMETHOD(End)(THIS) PURE;
-	STDMETHOD(SetFormat)(THIS_ LPBITMAPINFOHEADER,LPVOID,INT,INT,INT,INT) PURE;
-};
-#undef INTERFACE
-typedef IGetFrame *PGETFRAME;
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IAVIFile_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IAVIFile_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IAVIFile_Release(p)            (p)->lpVtbl->Release(p)
+/*** IAVIFile methods ***/
+#define IAVIFile_Info(p,a,b)         (p)->lpVtbl->Info(p,a,b)
+#define IAVIFile_GetStream(p,a,b,c)  (p)->lpVtbl->GetStream(p,a,b,c)
+#define IAVIFile_CreateStream(p,a,b) (p)->lpVtbl->CreateStream(p,a,b)
+#define IAVIFile_WriteData(p,a,b,c)  (p)->lpVtbl->WriteData(p,a,b,c)
+#define IAVIFile_ReadData(p,a,b,c)   (p)->lpVtbl->ReadData(p,a,b,c)
+#define IAVIFile_EndRecord(p)        (p)->lpVtbl->EndRecord(p)
+#define IAVIFile_DeleteStream(p,a,b) (p)->lpVtbl->DeleteStream(p,a,b)
+#endif
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IAVIEditStream_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IAVIEditStream_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IAVIEditStream_Release(p)            (p)->lpVtbl->Release(p)
+/*** IAVIEditStream methods ***/
+#define IAVIEditStream_Cut(p,a,b,c)	     (p)->lpVtbl->Cut(p,a,b,c)
+#define IAVIEditStream_Copy(p,a,b,c)	     (p)->lpVtbl->Copy(p,a,b,c)
+#define IAVIEditStream_Paste(p,a,b,c,d,e)    (p)->lpVtbl->Paste(p,a,b,c,d,e)
+#define IAVIEditStream_Clone(p,a)	     (p)->lpVtbl->Clone(p,a)
+#define IAVIEditStream_SetInfo(p,a,b)	     (p)->lpVtbl->SetInfo(p,a,b)
+#endif
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IAVIStream_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IAVIStream_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IAVIStream_Release(p)            (p)->lpVtbl->Release(p)
+/*** IAVIStream methods ***/
+#define IAVIStream_Create(p,a,b)          (p)->lpVtbl->Create(p,a,b)
+#define IAVIStream_Info(p,a,b)            (p)->lpVtbl->Info(p,a,b)
+#define IAVIStream_FindSample(p,a,b)      (p)->lpVtbl->FindSample(p,a,b)
+#define IAVIStream_ReadFormat(p,a,b,c)    (p)->lpVtbl->ReadFormat(p,a,b,c)
+#define IAVIStream_SetFormat(p,a,b,c)     (p)->lpVtbl->SetFormat(p,a,b,c)
+#define IAVIStream_Read(p,a,b,c,d,e,f)    (p)->lpVtbl->Read(p,a,b,c,d,e,f)
+#define IAVIStream_Write(p,a,b,c,d,e,f,g) (p)->lpVtbl->Write(p,a,b,c,d,e,f,g)
+#define IAVIStream_Delete(p,a,b)          (p)->lpVtbl->Delete(p,a,b)
+#define IAVIStream_ReadData(p,a,b,c)      (p)->lpVtbl->ReadData(p,a,b,c)
+#define IAVIStream_WriteData(p,a,b,c)     (p)->lpVtbl->WriteData(p,a,b,c)
+#define IAVIStream_SetInfo(p,a,b)         (p)->lpVtbl->SetInfo(p,a,b)
+#endif
+
+#define AVISTREAMREAD_CONVENIENT	  (-1L)
+
 #endif /* !defined (__OBJC__) */
 
 DWORD VFWAPI VideoForWindowsVersion(VOID);
@@ -757,7 +846,7 @@ HRESULT WINAPI AVIStreamRead(PAVISTREAM,LONG,LONG,LPVOID,LONG,LONG*,LONG*);
 HRESULT WINAPI AVIStreamWrite(PAVISTREAM,LONG,LONG,LPVOID,LONG,DWORD,LONG*,LONG*);
 HRESULT WINAPI AVIStreamReadData(PAVISTREAM,DWORD,LPVOID,LONG*);
 HRESULT WINAPI AVIStreamWriteData(PAVISTREAM,DWORD,LPVOID,LONG);
-PGETFRAME WINAPI AVIStreamGetFrameOpen(PAVISTREAM,LPBITMAPINFOHEADER);
+PGETFRAME WINAPI AVIStreamGetFrameOpen(PAVISTREAM pavi,LPBITMAPINFOHEADER lpbiWanted);
 LPVOID WINAPI AVIStreamGetFrame(PGETFRAME,LONG);
 HRESULT WINAPI AVIStreamGetFrameClose(PGETFRAME);
 HRESULT WINAPI AVIMakeCompressedStream(PAVISTREAM*,PAVISTREAM,AVICOMPRESSOPTIONS*,CLSID*);
