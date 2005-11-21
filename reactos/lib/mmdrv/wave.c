@@ -17,6 +17,8 @@
 #define NDEBUG
 #include <debug.h>
 
+PWAVEALLOC WaveLists;   
+
 /* ============================
  *  INTERNAL
  *  functions start here
@@ -61,9 +63,6 @@ MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                   &BytesReturned, NULL) ? MMSYSERR_NOERROR : TranslateStatus();
 	}
 
-	
-		
-
     // Close the handle and return the result code
     CloseHandle(DeviceHandle);
 
@@ -78,16 +77,140 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 {
 	// TODO: Implement
     PWAVEALLOC     pClient = (PWAVEALLOC)dwUser;  
-    //MMRESULT mResult;
-    //BOOL Result;
-    //DWORD BytesReturned;
+    MMRESULT mResult;
+    BOOL Result;
+    DWORD BytesReturned;
     LPWAVEFORMATEX pFormats;
+    PWAVEALLOC *pUserHandle;
+    HANDLE hDevice;
 
     pFormats = (LPWAVEFORMATEX)((LPWAVEOPENDESC)dwParam1)->lpFormat;
 
+    if (dwParam2 & WAVE_FORMAT_QUERY) 
+    {        
+        mResult = OpenDevice(DeviceType, id, &hDevice, GENERIC_READ);
+        if (mResult != MMSYSERR_NOERROR) 
+            return mResult;
+        
+        Result = DeviceIoControl(hDevice, IOCTL_WAVE_QUERY_FORMAT, (PVOID)pFormats,
+                                 pFormats->wFormatTag == WAVE_FORMAT_PCM ?
+                                 sizeof(PCMWAVEFORMAT) : sizeof(WAVEFORMATEX) + pFormats->cbSize,                        
+                                 NULL, 0, &BytesReturned, NULL);
+        CloseHandle(hDevice);
+        return Result ? MMSYSERR_NOERROR : GetLastError() == ERROR_NOT_SUPPORTED ? WAVERR_BADFORMAT : TranslateStatus();
+    }
 
+    EnterCriticalSection(&CS);
+
+    for (pClient = WaveLists; pClient != NULL; pClient = pClient->Next) 
+    {
+        if (pClient->DeviceNumber == id && pClient->DeviceType == DeviceType) 
+        {        
+            if (pClient->hDev != INVALID_HANDLE_VALUE) 
+            {
+                LeaveCriticalSection(&CS);
+                return MMSYSERR_ALLOCATED;
+            }
+            break;
+        }
+    }
+
+    if (pClient == NULL) 
+    {
+        pClient = (PWAVEALLOC)HeapAlloc(Heap, HEAP_ZERO_MEMORY, sizeof(WAVEALLOC));
+        if (pClient == NULL) 
+        {
+            LeaveCriticalSection(&CS);
+            return MMSYSERR_NOMEM;
+        }
+        
+        pClient->DeviceNumber = id;
+        pClient->Next = WaveLists;
+        pClient->DeviceType = DeviceType;
+        
+        WaveLists = pClient;
+    }
+
+    pClient->hWave       = ((LPWAVEOPENDESC)dwParam1)->hWave;
+    pClient->dwInstance  = ((LPWAVEOPENDESC)dwParam1)->dwInstance;
+    pClient->dwFlags     = dwParam2;
+    pClient->dwCallback  = ((LPWAVEOPENDESC)dwParam1)->dwCallback;
+    pClient->hDev = INVALID_HANDLE_VALUE;
+    pClient->NextBuffer  = NULL;
+    pClient->DeviceQueue = NULL;
+    pClient->LoopHead    = NULL;
+    pClient->LoopCount   = 0;
+    pClient->BytesOutstanding = 0;
+    pClient->BufferPosition = 0;
     
-    mmTaskCreate((LPTASKCALLBACK)waveThread, &pClient->ThreadHandle, (DWORD)pClient);
+    
+    
+
+    mResult = OpenDevice(DeviceType, id, &pClient->hDev, (GENERIC_READ | GENERIC_WRITE));
+
+    if (mResult != MMSYSERR_NOERROR) 
+    {    
+        LeaveCriticalSection(&CS);
+        return mResult;
+    }
+
+     if (!DeviceIoControl(pClient->hDev,IOCTL_WAVE_SET_FORMAT, (PVOID)pFormats,
+                             pFormats->wFormatTag == WAVE_FORMAT_PCM ?
+                             sizeof(PCMWAVEFORMAT) : sizeof(WAVEFORMATEX) + pFormats->cbSize,
+                             NULL, 0, &BytesReturned, NULL))
+    {
+        CloseHandle(pClient->hDev);
+        pClient->hDev = INVALID_HANDLE_VALUE;
+        LeaveCriticalSection(&CS);
+        return GetLastError() == ERROR_NOT_SUPPORTED ? WAVERR_BADFORMAT : TranslateStatus();
+    }
+
+    LeaveCriticalSection(&CS);
+
+    if (!pClient->Event) 
+    {
+        pClient->Event = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (pClient->Event == NULL) 
+        {
+            // Cleanup
+            return MMSYSERR_NOMEM;
+        }
+
+        pClient->AuxEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (!pClient->AuxEvent1) 
+        {
+           // Cleanup
+            return MMSYSERR_NOMEM;
+        }
+
+        pClient->AuxEvent2 = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (!pClient->AuxEvent2) 
+        {
+            // Cleanup
+            return MMSYSERR_NOMEM;
+        }
+
+
+        mResult = mmTaskCreate((LPTASKCALLBACK)waveThread, &pClient->ThreadHandle, (DWORD)pClient);
+        if ( mResult != MMSYSERR_NOERROR) 
+        {
+            // Cleanup
+            return MMSYSERR_NOMEM;
+        }
+
+        WaitForSingleObject(pClient->AuxEvent2, INFINITE);
+     }
+     
+     *pUserHandle = pClient;
+      pUserHandle = (PWAVEALLOC *)dwUser;
+   
+
+     if (pClient->dwCallback)
+     {
+        DriverCallback(pClient->dwCallback, HIWORD(pClient->dwFlags),
+                       (HDRVR)pClient->hWave,  DeviceType == WaveOutDevice ? WOM_OPEN : WIM_OPEN, 
+                       pClient->dwInstance, 0L, 0L);                 
+     }
 
 	return MMSYSERR_NOERROR;
 }
