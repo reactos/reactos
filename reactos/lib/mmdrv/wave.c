@@ -97,8 +97,41 @@ static DWORD waveThread(LPVOID lpParameter)
                  DPRINT("UNIMPLMENENT WaveThreadSetState ");
                  break;
 
-            case WaveThreadGetData:
-                 DPRINT("UNIMPLMENENT WaveThreadGetData ");
+            case WaveThreadGetData:                 
+                 {
+                    OVERLAPPED Overlap;
+                    DWORD BytesReturned;
+
+                    // FIXME
+                    // Assert(hDev != NULL);
+
+                    memset(&Overlap, 0, sizeof(Overlap));
+
+                    Overlap.hEvent = pClient->Event;
+
+                    if (!DeviceIoControl(pClient->hDev, pClient->AuxParam.GetSetData.Function, NULL, 0,
+                         pClient->AuxParam.GetSetData.pData, pClient->AuxParam.GetSetData.DataLen,
+                         &BytesReturned, &Overlap)) 
+                    {
+                        DWORD cbTransfer;
+
+                        if (GetLastError() != ERROR_IO_PENDING) 
+                            pClient->AuxReturnCode = TranslateStatus();
+                        else
+                        {
+
+                            if (!GetOverlappedResult(pClient->hDev, &Overlap, &cbTransfer, TRUE))                         
+                                pClient->AuxReturnCode = TranslateStatus();                        
+                        } 
+                    }
+                    else
+                    {
+                        while (SetEvent(pClient->Event) && WaitForSingleObjectEx(pClient->Event, 0, TRUE) == 
+                            WAIT_IO_COMPLETION) {}
+
+                        pClient->AuxReturnCode = MMSYSERR_NOERROR;
+                    }
+                 }
                  break;
 
             case WaveThreadSetData:
