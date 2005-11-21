@@ -102,7 +102,33 @@ static DWORD waveThread(LPVOID lpParameter)
                  break;
 
             case WaveThreadSetData:
-                 DPRINT("UNIMPLMENENT WaveThreadGetData ");
+                 {
+                    OVERLAPPED Overlap;
+                    DWORD BytesReturned;
+                    memset((PVOID)&Overlap, 0, sizeof(Overlap));
+                    Overlap.hEvent = pClient->Event;
+    
+                    if (!DeviceIoControl(pClient->hDev, pClient->AuxParam.GetSetData.Function, 
+                                      pClient->AuxParam.GetSetData.pData, pClient->AuxParam.GetSetData.DataLen, 
+                                      NULL, 0, &BytesReturned, &Overlap)) 
+                    {
+                        DWORD cbTransfer;
+                        if (GetLastError() == ERROR_IO_PENDING) 
+                        {
+                            if (!GetOverlappedResult(pClient->hDev, &Overlap, &cbTransfer, TRUE))             
+                                pClient->AuxReturnCode = TranslateStatus();             
+                        } 
+                        else              
+                            pClient->AuxReturnCode = TranslateStatus();
+         
+                    }
+                    else
+                    { 
+                        while (SleepEx(0, TRUE) == WAIT_IO_COMPLETION) {}
+
+                        pClient->AuxReturnCode = MMSYSERR_NOERROR;
+                    }
+                 }                
                  break;
 
             case WaveThreadBreakLoop:
