@@ -28,7 +28,7 @@ char cSep;
 char cBadSep;
 
 
-VOID
+void
 InitializeEnvironment ()
 {
         char *SepValue, *ExePostfixValue, *ExePrefixValue;;

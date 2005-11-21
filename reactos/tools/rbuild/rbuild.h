@@ -801,7 +801,7 @@ public:
 };
 
 
-extern VOID
+extern void
 InitializeEnvironment ();
 
 extern std::string
