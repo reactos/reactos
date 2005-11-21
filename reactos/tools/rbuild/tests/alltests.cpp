@@ -196,6 +196,7 @@ private:
 		tests.push_back(new SourceFileTest());
 		tests.push_back(new CDFileTest());
 		tests.push_back(new SymbolTest());
+		tests.push_back(new CompilationUnitTest());
 	}
 };
 
@@ -203,6 +204,7 @@ private:
 int main(int argc,
          char** argv)
 {
+	InitializeEnvironment ();
 	TestDispatcher testDispatcher;
 	testDispatcher.Run();
 	return 0;

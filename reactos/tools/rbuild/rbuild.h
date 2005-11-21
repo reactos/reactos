@@ -91,6 +91,7 @@ class InstallFile;
 class PchFile;
 class StubbedComponent;
 class StubbedSymbol;
+class CompilationUnit;
 
 class SourceFileTest;
 
@@ -121,6 +122,7 @@ public:
 	                                                         const std::string& defaultValue );
 };
 
+
 class FileSupportCode
 {
 public:
@@ -128,9 +130,20 @@ public:
 	                             std::string filename );
 };
 
+
+class ParseContext
+{
+public:
+	If* ifData;
+	CompilationUnit* compilationUnit;
+	ParseContext ();
+};
+
+
 class IfableData
 {
 public:
+	std::vector<CompilationUnit*> compilationUnits;
 	std::vector<File*> files;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
@@ -177,7 +190,7 @@ private:
 	void ReadXml ();
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
-	                            If* pIf = NULL );
+	                            ParseContext& parseContext );
 
 	// disable copy semantics
 	Project ( const Project& );
@@ -277,7 +290,7 @@ private:
 	std::string GetDefaultModuleBaseaddress () const;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
-	                            If* pIf = NULL );
+	                            ParseContext& parseContext );
 };
 
 
@@ -770,6 +783,26 @@ public:
 private:
 	std::string StripSymbol ( std::string symbol );
 };
+
+
+class CompilationUnit
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	std::vector<File*> files;
+
+	CompilationUnit ( const Project& project,
+	                  const Module* module,
+	                  const XMLElement& node );
+	~CompilationUnit ();
+	void ProcessXML();
+};
+
+
+extern VOID
+InitializeEnvironment ();
 
 extern std::string
 Right ( const std::string& s, size_t n );

@@ -152,9 +152,11 @@ RBUILD_BACKEND_SOURCES = \
 RBUILD_COMMON_SOURCES = \
 	$(RBUILD_BACKEND_SOURCES) \
 	$(addprefix $(RBUILD_BASE_), \
+		global.cpp \
 		automaticdependency.cpp \
 		bootstrap.cpp \
 		cdfile.cpp \
+		compilationunit.cpp \
 		compilerflag.cpp \
 		configuration.cpp \
 		define.cpp \
@@ -219,6 +221,7 @@ RBUILD_HEADERS = \
 
 RBUILD_TESTS = \
 	tests$(SEP)cdfiletest.cpp \
+	tests$(SEP)compilationunittest.cpp \
 	tests$(SEP)definetest.cpp \
 	tests$(SEP)functiontest.cpp \
 	tests$(SEP)iftest.cpp \
@@ -256,6 +259,10 @@ $(RBUILD_TARGET): $(RBUILD_OBJECTS) | $(RBUILD_OUT)
 	$(ECHO_LD)
 	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
 
+$(RBUILD_INT_)global.o: $(RBUILD_BASE_)global.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_INT_)automaticdependency.o: $(RBUILD_BASE_)automaticdependency.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -265,6 +272,10 @@ $(RBUILD_INT_)bootstrap.o: $(RBUILD_BASE_)bootstrap.cpp $(RBUILD_HEADERS) | $(RB
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)cdfile.o: $(RBUILD_BASE_)cdfile.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)compilationunit.o: $(RBUILD_BASE_)compilationunit.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
@@ -377,6 +388,10 @@ $(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(RBUILD_HEADERS) | $(RBUILD_OUT)
 	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
 
 $(RBUILD_TESTS_INT_)cdfiletest.o: $(RBUILD_TESTS_BASE_)cdfiletest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_TESTS_INT_)compilationunittest.o: $(RBUILD_TESTS_BASE_)compilationunittest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
