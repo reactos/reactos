@@ -86,11 +86,7 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 }
 
 
-//FIXME: Params are MS-specific
-static void CallbackWaveDevice(PWAVEALLOC pWave, DWORD msg, DWORD dw1)
-{
 
-}
 
 //FIXME: Params are MS-specific
 static MMRESULT WriteWaveDevice(LPWAVEHDR pHdr, PWAVEALLOC pClient)
@@ -189,7 +185,15 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 				    return Result;
 				}
 				else
-					CallbackWaveDevice(pTask, WOM_CLOSE, 0L);
+					
+                {
+                    if (pTask->dwCallback)
+                    {
+                        DriverCallback(pTask->dwCallback, HIWORD(pTask->dwFlags), (HDRVR)pTask->hWave, 
+                                       WOM_CLOSE, pTask->dwInstance, 0L, 0L);                   
+                    }
+                }
+
 				
 				// 2. Close the device
 				if (pTask->hDev != INVALID_HANDLE_VALUE) {
@@ -235,8 +239,6 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 			}
 
         case WODM_PAUSE:
-            
-
             DPRINT("WODM_PAUSE");
             pTask->AuxParam.State = WAVE_DD_STOP;
            
