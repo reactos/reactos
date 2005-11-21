@@ -22,6 +22,10 @@
  *  functions start here
  * ============================
  */
+static DWORD waveThread(LPVOID lpParameter)
+{
+  return MMSYSERR_NOERROR;
+}
 
 MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
                                       LPBYTE pCaps, DWORD Size)
@@ -73,7 +77,7 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 								DWORD dwParam2)
 {
 	// TODO: Implement
-    //PWAVEALLOC     pClient;  
+    PWAVEALLOC     pClient;  
     //MMRESULT mResult;
     //BOOL Result;
     //DWORD BytesReturned;
@@ -81,6 +85,9 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 
     pFormats = (LPWAVEFORMATEX)((LPWAVEOPENDESC)dwParam1)->lpFormat;
 
+
+    
+    mmTaskCreate((LPTASKCALLBACK)waveThread, &pClient->ThreadHandle, (DWORD)pClient);
 
 	return MMSYSERR_NOERROR;
 }
