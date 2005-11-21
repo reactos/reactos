@@ -266,9 +266,11 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 #define Ke386GetPageTableDirectory(X) \
                                 __asm mov eax, cr3; \
                                 __asm mov X, eax;
-#define Ke386SetPageTableDirectory(X) \
-                                __asm mov eax, X; \
-	                        __asm mov cr3, eax;
+static __forceinline void Ke386SetPageTableDirectory(ULONG X)
+{
+    __asm mov eax, X
+    __asm mov cr3, eax
+}
 #else
 #error Unknown compiler for inline assembler
 #endif

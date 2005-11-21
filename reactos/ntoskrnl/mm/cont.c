@@ -16,7 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STATIC
+static VOID 
 MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)
@@ -93,7 +93,7 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
                                &MArea,
                                FALSE,
                                0,
-                               (PHYSICAL_ADDRESS)0LL);
+                               RtlConvertLongToLargeInteger(0));
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
    if (!NT_SUCCESS(Status))
@@ -158,9 +158,9 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
                             IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
    return MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
-                                                 (PHYSICAL_ADDRESS)0LL,
+                                                 RtlConvertLongToLargeInteger(0),
                                                  HighestAcceptableAddress,
-                                                 (PHYSICAL_ADDRESS)0LL,
+                                                 RtlConvertLongToLargeInteger(0),
                                                  MmCached);
 }
 

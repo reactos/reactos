@@ -170,10 +170,11 @@ INIT_FUNCTION
 NTAPI
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
-  DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
   PFN_TYPE PrcPfn;
   PKIPCR Pcr;
   PKIPCR BootPcr;
+
+  DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
 
   BootPcr = (PKIPCR)KPCR_BASE;
   Pcr = (PKIPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);

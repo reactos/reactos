@@ -27,7 +27,7 @@ static KSPIN_LOCK DispatcherDatabaseLock;
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-inline
+__inline
 FASTCALL
 KiCheckAlertability(BOOLEAN Alertable,
                     PKTHREAD CurrentThread,
@@ -771,7 +771,7 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
 }
 
 BOOLEAN
-inline
+__inline
 FASTCALL
 KiIsObjectSignaled(PDISPATCHER_HEADER Object,
                    PKTHREAD Thread)
@@ -802,7 +802,7 @@ KiIsObjectSignaled(PDISPATCHER_HEADER Object,
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock)
 {
@@ -819,7 +819,7 @@ KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
                              ULONG Type,
@@ -835,7 +835,7 @@ KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
 }
 
 KIRQL
-inline
+__inline
 FASTCALL
 KeAcquireDispatcherDatabaseLock(VOID)
 {
@@ -846,7 +846,7 @@ KeAcquireDispatcherDatabaseLock(VOID)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID)
 {
@@ -854,7 +854,7 @@ KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeInitializeDispatcher(VOID)
 {
@@ -863,7 +863,7 @@ KeInitializeDispatcher(VOID)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 {
@@ -882,7 +882,7 @@ KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID)
 {

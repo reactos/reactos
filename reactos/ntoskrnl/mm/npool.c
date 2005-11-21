@@ -1472,7 +1472,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    DPRINT("freeing block %x\n",blk);
 
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->hdr.Size,
-              block->Caller);
+              blk->Caller);
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
    VALIDATE_POOL;

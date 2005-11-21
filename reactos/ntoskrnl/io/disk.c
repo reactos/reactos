@@ -1070,7 +1070,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			      AUTO_DRIVE,
 			      DOSDEVICE_DRIVE_REMOVABLE,
                               0,
-                              (LARGE_INTEGER)0LL,
+                              RtlConvertLongToLargeInteger(0),
                               hKey);
 	    }
 	}
@@ -1101,7 +1101,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		      (i < 2) ? i : AUTO_DRIVE,
 		      DOSDEVICE_DRIVE_REMOVABLE,
                       0,
-                      (LARGE_INTEGER)0LL,
+                      RtlConvertLongToLargeInteger(0),
                       hKey);
     }
 
@@ -1121,7 +1121,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		      AUTO_DRIVE,
 		      DOSDEVICE_DRIVE_CDROM,
                       0,
-                      (LARGE_INTEGER)0LL,
+                      RtlConvertLongToLargeInteger(0),
                       hKey);
     }
 

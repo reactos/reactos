@@ -87,7 +87,7 @@ KdbpGetInstLength(
 
 /* from i386/kdb_help.S */
 
-STDCALL VOID
+VOID STDCALL
 KdbpStackSwitchAndCall(
    IN PVOID NewStack,
    IN VOID (*Function)(VOID));

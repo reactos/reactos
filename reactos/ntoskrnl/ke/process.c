@@ -36,7 +36,7 @@ KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES] = {
 
 /* FUNCTIONS *****************************************************************/
 
-static inline void
+static __inline void
 UpdatePageDirs(PKTHREAD Thread, PKPROCESS Process)
 {
     /*

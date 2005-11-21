@@ -496,7 +496,7 @@ RNextBlock ( PR_POOL pool, PR_FREE Block )
 	return NextBlock;
 }
 
-inline static void*
+static __inline void*
 RHdrToBody ( void* blk )
 /*
  * FUNCTION: Translate a block header address to the corresponding block
@@ -506,7 +506,7 @@ RHdrToBody ( void* blk )
 	return ( (void *) ((char*)blk + sizeof(R_USED) + R_RZ) );
 }
 
-inline static PR_USED
+static __inline PR_USED
 RBodyToHdr ( void* addr )
 {
 	return (PR_USED)

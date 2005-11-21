@@ -255,7 +255,7 @@ typedef struct _INFORMATION_CLASS_INFO
 #define ICI_SQ(SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags }
 
-static inline NTSTATUS
+static __inline NTSTATUS
 DefaultSetInfoBufferCheck(UINT Class,
                           const INFORMATION_CLASS_INFO *ClassList,
                           UINT ClassListEntries,
@@ -304,7 +304,7 @@ DefaultSetInfoBufferCheck(UINT Class,
     return Status;
 }
 
-static inline NTSTATUS
+static __inline NTSTATUS
 DefaultQueryInfoBufferCheck(UINT Class,
                             const INFORMATION_CLASS_INFO *ClassList,
                             UINT ClassListEntries,

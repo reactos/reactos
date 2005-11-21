@@ -559,7 +559,7 @@ KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
                         IN PLDR_DATA_TABLE_ENTRY Module)
 {
   /* Load symbols for the image if available */
-  DPRINT("Loading driver %wZ symbols (driver @ %08x)\n", Filename, Module->Base);
+  DPRINT("Loading driver %wZ symbols (driver @ %08x)\n", Filename, Module->DllBase);
 
   Module->PatchInformation = NULL;
 
@@ -664,7 +664,7 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         DPRINT("Installed symbols: %s@%08x-%08x %p\n",
 	       FileName,
 	       ModuleObject->DllBase,
-	       ModuleObject->SizeOfImage + ModuleObject->DllBase,
+	       ModuleObject->SizeOfImage + (ULONG)ModuleObject->DllBase,
 	       ModuleObject->PatchInformation);
      }
   }

@@ -310,8 +310,11 @@ IopSaveBootLogToFile(VOID)
       ExReleaseResourceLite(&IopBootLogResource);
       return;
     }
-
+#if defined (__GNUC__)
   Status = IopWriteLogFile(L"ReactOS "KERNEL_VERSION_STR);
+#elif defined (_MSC_VER)
+  Status = IopWriteLogFile("ReactOS "KERNEL_VERSION_STR);
+#endif
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("IopWriteLogFile() failed (Status %lx)\n", Status);

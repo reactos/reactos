@@ -263,9 +263,10 @@ STDCALL
 KdpPrintString(LPSTR String,
                ULONG Length)
 {
-    if (!KdpDebugMode.Value) return 0;
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
+
+    if (!KdpDebugMode.Value) return 0;
 
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;

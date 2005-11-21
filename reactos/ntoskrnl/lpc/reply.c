@@ -163,7 +163,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
    PreviousMode = ExGetPreviousMode();
 
    DPRINT("NtReplyWaitReceivePortEx(PortHandle %x, LpcReply %x, "
-	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
+	  "LpcMessage %x)\n", PortHandle, ReplyMessage, ReceiveMessage);
 
    if (PreviousMode != KernelMode)
      {

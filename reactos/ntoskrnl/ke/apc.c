@@ -1064,7 +1064,7 @@ NtQueueApcThread(HANDLE ThreadHandle,
     return Status;
 }
 
-static inline
+static __inline
 VOID RepairList(PLIST_ENTRY Original,
                 PLIST_ENTRY Copy,
                 KPROCESSOR_MODE Mode)

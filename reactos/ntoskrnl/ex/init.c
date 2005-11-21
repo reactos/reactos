@@ -220,7 +220,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     }
 }
 
-inline
+__inline
 VOID
 STDCALL
 ExecuteRuntimeAsserts(VOID)
@@ -255,7 +255,7 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
 }
 
-inline
+__inline
 VOID
 STDCALL
 ParseAndCacheLoadedModules(VOID)
@@ -303,7 +303,7 @@ ParseAndCacheLoadedModules(VOID)
     }
 }
 
-inline
+__inline
 VOID
 STDCALL
 ParseCommandLine(PULONG MaxMem,

@@ -27,7 +27,7 @@ PAGED_LOOKASIDE_LIST    LockLookaside;
 
 
 
-inline BOOLEAN
+__inline BOOLEAN
 IsOverlappingLock(
    PFILE_LOCK_INFO Lock,
    PLARGE_INTEGER StartOffset,
@@ -48,7 +48,7 @@ IsOverlappingLock(
 }
 
 
-inline BOOLEAN
+__inline BOOLEAN
 IsSurroundingLock(
    PFILE_LOCK_INFO Lock,
    PLARGE_INTEGER StartOffset,

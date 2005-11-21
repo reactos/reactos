@@ -81,9 +81,9 @@ VOID
 FASTCALL
 ExAcquireFastMutex(PFAST_MUTEX FastMutex)
 {
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
     KIRQL OldIrql;
-   
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
+
     /* Raise IRQL to APC */
     OldIrql = KfRaiseIrql(APC_LEVEL);
    
@@ -180,8 +180,8 @@ BOOLEAN
 FASTCALL
 ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
 {
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
     KIRQL OldIrql;
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
 
     /* Raise to APC_LEVEL */
     OldIrql = KfRaiseIrql(APC_LEVEL);
