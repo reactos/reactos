@@ -66,11 +66,6 @@ Environment::GetInstallPath ()
 	                                             "reactos" );
 }
 
-ParseContext::ParseContext ()
-	: ifData (NULL),
-	  compilationUnit (NULL)
-{
-}
 
 Project::Project ( const string& filename )
 	: xmlfile (filename),
@@ -259,10 +254,7 @@ Project::ProcessXML ( const string& path )
 
 	size_t i;
 	for ( i = 0; i < node->subElements.size (); i++ )
-	{
-		ParseContext parseContext;
-		ProcessXMLSubElement ( *node->subElements[i], path, parseContext );
-	}
+		ProcessXMLSubElement ( *node->subElements[i], path );
 	for ( i = 0; i < modules.size (); i++ )
 		modules[i]->ProcessXML ();
 	for ( i = 0; i < linkerFlags.size (); i++ )
@@ -277,13 +269,13 @@ Project::ProcessXML ( const string& path )
 void
 Project::ProcessXMLSubElement ( const XMLElement& e,
                                 const string& path,
-                                ParseContext& parseContext )
+                                If* pIf )
 {
 	bool subs_invalid = false;
 	string subpath(path);
 	if ( e.name == "module" )
 	{
-		if ( parseContext.ifData )
+		if ( pIf )
 			throw InvalidBuildFileException (
 				e.location,
 				"<module> is not a valid sub-element of <if>" );
@@ -318,8 +310,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "include" )
 	{
 		Include* include = new Include ( *this, &e );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.includes.push_back ( include );
+		if ( pIf )
+			pIf->data.includes.push_back ( include );
 		else
 			non_if_data.includes.push_back ( include );
 		subs_invalid = true;
@@ -327,8 +319,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "define" )
 	{
 		Define* define = new Define ( *this, e );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.defines.push_back ( define );
+		if ( pIf )
+			pIf->data.defines.push_back ( define );
 		else
 			non_if_data.defines.push_back ( define );
 		subs_invalid = true;
@@ -336,8 +328,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( *this, e );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.compilerFlags.push_back ( pCompilerFlag );
+		if ( pIf )
+			pIf->data.compilerFlags.push_back ( pCompilerFlag );
 		else
 			non_if_data.compilerFlags.push_back ( pCompilerFlag );
 		subs_invalid = true;
@@ -349,29 +341,29 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "if" )
 	{
-		If* pOldIf = parseContext.ifData;
-		parseContext.ifData = new If ( e, *this, NULL );
+		If* pOldIf = pIf;
+		pIf = new If ( e, *this, NULL );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( parseContext.ifData );
+			pOldIf->data.ifs.push_back ( pIf );
 		else
-			non_if_data.ifs.push_back ( parseContext.ifData );
+			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
 	else if ( e.name == "ifnot" )
 	{
-		If* pOldIf = parseContext.ifData;
-		parseContext.ifData = new If ( e, *this, NULL, true );
+		If* pOldIf = pIf;
+		pIf = new If ( e, *this, NULL, true );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( parseContext.ifData );
+			pOldIf->data.ifs.push_back ( pIf );
 		else
-			non_if_data.ifs.push_back ( parseContext.ifData );
+			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
 	else if ( e.name == "property" )
 	{
 		Property* property = new Property ( e, *this, NULL );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.properties.push_back ( property );
+		if ( pIf )
+			pIf->data.properties.push_back ( property );
 		else
 			non_if_data.properties.push_back ( property );
 	}
@@ -381,7 +373,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, pIf );
 }
 
 Module*
@@ -413,3 +405,5 @@ Project::GetProjectFilename () const
 {
 	return xmlfile;
 }
+
+	

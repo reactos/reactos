@@ -129,7 +129,7 @@ Value:
 	None.
 
 Elements:
-	bootstrap, component, compilationunit, define, dependency, directory, file, if, importlibrary, include, invoke, library, linkerscript, property.
+	bootstrap, component, define, dependency, directory, file, if, importlibrary, include, invoke, library, linkerscript, property.
 
 
 Module types
@@ -188,25 +188,6 @@ Value:
 
 Elements:
 	None.
-
-
-CompilationUnit element
------------------------
-A compilationunit element specifies that one or more source code files are to be compiled as a single compilation unit.
-
-Syntax:
-	<compilationunit>
-		...
-	</compilationunit>
-
-Attributes:
-	None.
-
-Value:
-	None.
-
-Elements:
-	directory, file, if.
 
 
 Component element
@@ -332,7 +313,7 @@ Value:
 	None.
 
 Elements:
-	compilationunit, compilerflag, define, directory, file, if, include, property.
+	compilerflag, define, directory, file, if, include, property.
 
 
 Importlibrary element
