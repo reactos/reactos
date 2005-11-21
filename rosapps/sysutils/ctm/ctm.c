@@ -10,7 +10,7 @@
    Localization features added by Hervé Poussineau (hpoussin@reactos.org)
 
    History:
-   24 October 2004 - added localization features
+    24 October 2004 - added localization features
 	09 April 2003 - v0.1, fixed bugs, added features, ported to mingw
    	20 March 2003 - v0.03, works good under ReactOS, and allows process
 			killing
@@ -50,7 +50,6 @@
 #include "ctm.h"
 #include "resource.h"
 
-#define MAX_PROC 17
 #define TIMES
 
 HANDLE hStdin;
@@ -73,7 +72,8 @@ TCHAR lpEmpty[80];
 TCHAR KEY_QUIT, KEY_KILL;
 TCHAR KEY_YES, KEY_NO;
 
-const int		ProcPerScreen = 17; // 17 processess are displayed on one page
+int			ProcPerScreen = 17; // 17 processess are displayed on one page
+int			ScreenLines=25;
 ULONG			ProcessCountOld = 0;
 ULONG			ProcessCount = 0;
 
@@ -92,6 +92,7 @@ int scrolled=0;		// offset from which process start showing
 int first = 0;		// first time in DisplayScreen
 SYSTEM_BASIC_INFORMATION    SystemBasicInfo;
 
+CONSOLE_SCREEN_BUFFER_INFO screenBufferInfo;
 #define NEW_CONSOLE
 
 // Functions that are needed by epsapi
@@ -138,32 +139,36 @@ void RestoreConsole()
 void DisplayScreen()
 {
 	COORD pos;
+	COORD size;
 	TCHAR lpStr[80];
 	DWORD numChars;
 	int lines;
 	int idx;
-
+	GetConsoleScreenBufferInfo(hStdout,&screenBufferInfo);
+	size=screenBufferInfo.dwSize;
+	ScreenLines=size.Y;
+	ProcPerScreen = ScreenLines-7;
 	if (first == 0)
 	{
 		// Header
-		pos.X = 2; pos.Y = 2;
+		pos.X = 1; pos.Y = 1;
 		WriteConsoleOutputCharacter(hStdout, lpTitle, _tcslen(lpTitle), pos, &numChars);
 
-		pos.X = 2; pos.Y = 3;
+		pos.X = 1; pos.Y = 2;
 		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
 
-		pos.X = 2; pos.Y = 4;
+		pos.X = 1; pos.Y = 3;
 		WriteConsoleOutputCharacter(hStdout, lpHeader, _tcslen(lpHeader), pos, &numChars);
 
-		pos.X = 2; pos.Y = 5;
+		pos.X = 1; pos.Y = 4;
 		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
 
 		// Footer
-		pos.X = 2; pos.Y = ProcPerScreen+6;
+		pos.X = 1; pos.Y = ScreenLines-2;
 		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
 
 		// Menu
-		pos.X = 2; pos.Y = ProcPerScreen+7;
+		pos.X = 1; pos.Y = ScreenLines-1;
 		WriteConsoleOutputCharacter(hStdout, lpEmpty, _tcslen(lpEmpty), pos, &numChars);
 		WriteConsoleOutputCharacter(hStdout, lpMenu, _tcslen(lpMenu), pos, &numChars);
 
@@ -172,11 +177,12 @@ void DisplayScreen()
 
 	// Processess
 	lines = ProcessCount;
-	if (lines > MAX_PROC)
-		lines = MAX_PROC;
-	for (idx=0; idx<MAX_PROC; idx++)
+	if (lines > ProcPerScreen)
+		lines = ProcPerScreen;
+	for (idx=0; idx<ProcPerScreen; idx++)
 	{
 		int len, i;
+		TCHAR lpNumber[5];
 		TCHAR lpPid[8];
 		TCHAR lpCpu[6];
 		TCHAR lpMemUsg[12];
@@ -189,6 +195,11 @@ void DisplayScreen()
 		// data
 		if (idx < lines && scrolled + idx < ProcessCount)
 		{
+
+			// number
+			_stprintf(lpNumber, _T("%3d"), idx+scrolled);
+			_tcsncpy(&lpStr[2], lpNumber, 3);
+
 			// image name
 #ifdef _UNICODE
 		   len = wcslen(pPerfData[scrolled+idx].ImageName);
@@ -197,45 +208,45 @@ void DisplayScreen()
 			               imgName, MAX_PATH, NULL, NULL);
 		   len = strlen(imgName);
 #endif
-			if (len > columnRightPositions[0])
+			if (len > columnRightPositions[1])
 			{
-				len = columnRightPositions[0];
+				len = columnRightPositions[1];
 			}
 #ifdef _UNICODE
-		   wcsncpy(&lpStr[2], pPerfData[scrolled+idx].ImageName, len);
+		   wcsncpy(&lpStr[columnRightPositions[0]+3], pPerfData[scrolled+idx].ImageName, len);
 #else
-		   strncpy(&lpStr[2], imgName, len);
+		   strncpy(&lpStr[columnRightPositions[0]+3], imgName, len);
 #endif
 
 			// PID
-		   _stprintf(lpPid, _T("%6ld"), pPerfData[scrolled+idx].ProcessId);
-		 	_tcsncpy(&lpStr[columnRightPositions[1] - 6], lpPid, 6);
+			_stprintf(lpPid, _T("%6ld"), pPerfData[scrolled+idx].ProcessId);
+			_tcsncpy(&lpStr[columnRightPositions[2] - 6], lpPid, 6);
 
 #ifdef TIMES
 			// CPU
 			_stprintf(lpCpu, _T("%3d%%"), pPerfData[scrolled+idx].CPUUsage);
-			_tcsncpy(&lpStr[columnRightPositions[2] - 4], lpCpu, 4);
+			_tcsncpy(&lpStr[columnRightPositions[3] - 4], lpCpu, 4);
 #endif
 
 			// Mem usage
 			 _stprintf(lpMemUsg, _T("%6ld %s"), pPerfData[scrolled+idx].WorkingSetSizeBytes / 1024, lpMemUnit);
-			 _tcsncpy(&lpStr[columnRightPositions[3] - 9], lpMemUsg, 9);
+			 _tcsncpy(&lpStr[columnRightPositions[4] - 9], lpMemUsg, 9);
 
 			// Page Fault
 			_stprintf(lpPageFaults, _T("%12ld"), pPerfData[scrolled+idx].PageFaultCount);
-			_tcsncpy(&lpStr[columnRightPositions[4] - 12], lpPageFaults, 12);
+			_tcsncpy(&lpStr[columnRightPositions[5] - 12], lpPageFaults, 12);
 		}
 
 		// columns
 		lpStr[0] = _T(' ');
 		lpStr[1] = _T('|');
-		for (i = 0; i < 5; i++)
+		for (i = 0; i < 6; i++)
 			lpStr[columnRightPositions[i] + 1] = _T('|');
-                pos.X = 1; pos.Y = 6+idx;
-		WriteConsoleOutputCharacter(hStdout, lpStr, 74, pos, &numChars);
+                pos.X = 0; pos.Y = 5+idx;
+		WriteConsoleOutputCharacter(hStdout, lpStr, 80, pos, &numChars);
 
 		// Attributes now...
-		pos.X = 3; pos.Y = 6+idx;
+		pos.X = columnRightPositions[0] + 1; pos.Y = 5+idx;
 		if (selection == idx)
 		{
 			wColor = BACKGROUND_GREEN |
@@ -254,7 +265,7 @@ void DisplayScreen()
 		FillConsoleOutputAttribute(
 			hStdout,          // screen buffer handle
 			wColor,           // color to fill with
-			columnRightPositions[0] - 1,	// number of cells to fill
+			columnRightPositions[1] - 4,	// number of cells to fill
 			pos,            // first cell to write to
 			&numChars);       // actual number written
 	}
@@ -279,7 +290,7 @@ int ProcessKeys(int numEvents)
 		COORD pos;
 		TCHAR lpStr[100];
 
-		pos.X = 2; pos.Y = 24;
+		pos.X = 1; pos.Y =ScreenLines-1;
 		if (LoadString(hInst, IDS_KILL_PROCESS, lpStr, 100))
 			WriteConsoleOutputCharacter(hStdout, lpStr, _tcslen(lpStr), pos, &numChars);
 
@@ -331,12 +342,53 @@ int ProcessKeys(int numEvents)
 	}
 	else if (key == VK_DOWN)
 	{
-		if ((selection < MAX_PROC-1) && (selection < ProcessCount-1))
+		if ((selection < ProcPerScreen-1) && (selection < ProcessCount-1))
 			selection++;
-		else if ((selection == MAX_PROC-1) && (selection+scrolled < ProcessCount-1))
+		else if ((selection == ProcPerScreen-1) && (selection+scrolled < ProcessCount-1))
 			scrolled++;
 	}
+	else if (key == VK_PRIOR)
+	{
+		if (scrolled>ProcPerScreen-1)
+			scrolled-=ProcPerScreen-1;
+		else
+		{
+			scrolled=0; //First
+			selection=0;
+		}
+		//selection=0;
+	}
+	else if (key == VK_NEXT)
+	{
+		scrolled+=ProcPerScreen-1;
+		if (scrolled>ProcessCount-ProcPerScreen)
+		{
+			scrolled=ProcessCount-ProcPerScreen; //End
+			selection=ProcPerScreen-1;
+		}
 
+		//selection=ProcPerScreen-1;
+		if (ProcessCount<=ProcPerScreen) //If there are less process than fits on the screen
+		{
+			scrolled=0;
+			selection=(ProcessCount%ProcPerScreen)-1;
+		}
+	}
+	else if  (key == VK_HOME)
+	{
+		selection=0;
+		scrolled=0;
+	}
+	else if  (key == VK_END)
+	{
+		selection=ProcPerScreen-1;
+		scrolled=ProcessCount-ProcPerScreen;
+		if (ProcessCount<=ProcPerScreen) //If there are less process than fits on the screen
+		{
+			scrolled=0;
+			selection=(ProcessCount%ProcPerScreen)-1;
+		}
+	}
 	return FALSE;
 }
 
@@ -561,43 +613,49 @@ int main(int argc, char **argv)
 
 	/* Initialize global variables */
 	hInst = 0 /* FIXME: which value? [used with LoadString(hInst, ..., ..., ...)] */;
-	if (LoadString(hInst, IDS_COLUMN_IMAGENAME, lpStr, 80))
+
+	if (LoadString(hInst, IDS_COLUMN_NUMBER, lpStr, 80))
 	{
-		columnRightPositions[0] = _tcslen(lpStr);
+		columnRightPositions[0] = _tcslen(lpStr) + 3;
 		_tcsncpy(&lpHeader[2], lpStr, _tcslen(lpStr));
 	}
-	if (LoadString(hInst, IDS_COLUMN_PID, lpStr, 80))
+	if (LoadString(hInst, IDS_COLUMN_IMAGENAME, lpStr, 80))
 	{
 		columnRightPositions[1] = columnRightPositions[0] + _tcslen(lpStr) + 3;
 		_tcsncpy(&lpHeader[columnRightPositions[0] + 2], lpStr, _tcslen(lpStr));
 	}
-	if (LoadString(hInst, IDS_COLUMN_CPU, lpStr, 80))
+	if (LoadString(hInst, IDS_COLUMN_PID, lpStr, 80))
 	{
 		columnRightPositions[2] = columnRightPositions[1] + _tcslen(lpStr) + 3;
 		_tcsncpy(&lpHeader[columnRightPositions[1] + 2], lpStr, _tcslen(lpStr));
 	}
-	if (LoadString(hInst, IDS_COLUMN_MEM, lpStr, 80))
+	if (LoadString(hInst, IDS_COLUMN_CPU, lpStr, 80))
 	{
 		columnRightPositions[3] = columnRightPositions[2] + _tcslen(lpStr) + 3;
 		_tcsncpy(&lpHeader[columnRightPositions[2] + 2], lpStr, _tcslen(lpStr));
 	}
-	if (LoadString(hInst, IDS_COLUMN_PF, lpStr, 80))
+	if (LoadString(hInst, IDS_COLUMN_MEM, lpStr, 80))
 	{
 		columnRightPositions[4] = columnRightPositions[3] + _tcslen(lpStr) + 3;
 		_tcsncpy(&lpHeader[columnRightPositions[3] + 2], lpStr, _tcslen(lpStr));
 	}
+	if (LoadString(hInst, IDS_COLUMN_PF, lpStr, 80))
+	{
+		columnRightPositions[5] = columnRightPositions[4] + _tcslen(lpStr) + 3;
+		_tcsncpy(&lpHeader[columnRightPositions[4] + 2], lpStr, _tcslen(lpStr));
+	}
 
-	for (i = 0; i < columnRightPositions[4]; i++)
+	for (i = 0; i < columnRightPositions[5]; i++)
 		lpSeparator[i] = _T('-');
 	lpHeader[0] = _T('|');
 	lpSeparator[0] = _T('+');
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 6; i++)
 	{
 		lpHeader[columnRightPositions[i]] = _T('|');
 		lpSeparator[columnRightPositions[i]] = _T('+');
 	}
-	lpSeparator[columnRightPositions[4] + 1] = _T('\0');
-	lpHeader[columnRightPositions[4] + 1] = _T('\0');
+	lpSeparator[columnRightPositions[5] + 1] = _T('\0');
+	lpHeader[columnRightPositions[5] + 1] = _T('\0');
 
 
 	if (!LoadString(hInst, IDS_APP_TITLE, lpTitle, 80))

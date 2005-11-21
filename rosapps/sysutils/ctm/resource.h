@@ -20,12 +20,13 @@
 
 #define IDS_APP_TITLE            0
 
-#define IDS_COLUMN_IMAGENAME     10
-#define IDS_COLUMN_PID           11
-#define IDS_COLUMN_CPU           12
-#define IDS_COLUMN_MEM           13
-#define IDS_COLUMN_MEM_UNIT		14
-#define IDS_COLUMN_PF            15
+#define IDS_COLUMN_NUMBER        10
+#define IDS_COLUMN_IMAGENAME     11
+#define IDS_COLUMN_PID           12
+#define IDS_COLUMN_CPU           13
+#define IDS_COLUMN_MEM           14
+#define IDS_COLUMN_MEM_UNIT      15
+#define IDS_COLUMN_PF            16
 
 #define IDS_IDLE_PROCESS         100
 #define IDS_YES                  101

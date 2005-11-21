@@ -1,0 +1,32 @@
+// German (Germany) resources
+
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APP_TITLE           "Console TaskManager v0.1 von Aleksey Bragin <aleksey@studiocerebral.com>"
+   
+   IDS_COLUMN_NUMBER       "# "
+   IDS_COLUMN_IMAGENAME    "Dateiname                   "
+   IDS_COLUMN_PID          "PID  "
+   IDS_COLUMN_CPU          "CPU"
+   IDS_COLUMN_MEM          "Speicher"
+   IDS_COLUMN_MEM_UNIT		"KB"
+   IDS_COLUMN_PF           "Seitenfehler"
+
+   IDS_IDLE_PROCESS        "Leerlaufprozess"
+   IDS_YES                 "J"
+   IDS_NO                  "N"
+   
+   IDS_MENU                "Tasten: q - beenden, k - Prozess beenden"
+   IDS_MENU_QUIT           "Q"
+   IDS_MENU_KILL_PROCESS   "K"
+   
+   IDS_KILL_PROCESS        "Sind Sie sicher diesen prozess beendenzu wollen (j/n)"
+   IDS_KILL_PROCESS_ERR1   "Fehler beim Beenden des Prozesses aufgetreten..."
+   IDS_KILL_PROCESS_ERR2   "Fehler beim Beenden des Prozesses %d aufgetreten (OpenProcess unmöglich)"
+   
+   IDS_CTM_GENERAL_ERR1    "ctm: Kann die Konsole nicht verwenden."
+   IDS_CTM_GENERAL_ERR2    "ctm: Kann GetConsoleMode() für die Eingabekonsole nicht verwenden."
+   IDS_CTM_GENERAL_ERR3    "ctm: Kann GetConsoleMode() für die Ausgabekonsole nicht verwenden."
+END
