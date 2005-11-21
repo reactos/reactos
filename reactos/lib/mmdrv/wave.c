@@ -18,8 +18,16 @@
 #include <debug.h>
 
 #define WHDR_COMPLETE 0x80000000
+#define MAX_BUFFER_SIZE           8192  
+#define MAX_WAVE_BYTES          5*MAX_BUFFER_SIZE  
+
 PWAVEALLOC WaveLists; 
 
+static MMRESULT waveReadWrite(PWAVEALLOC pClient);
+void wavePartialOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
+void waveOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
+void waveLoopOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
+void waveBreakOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped);
 
 /* ============================
  *  INTERNAL
@@ -145,7 +153,7 @@ static DWORD waveThread(LPVOID lpParameter)
             }
         }
 
-        //waveStart;
+        waveReadWrite(pClient);
 
         if (Terminate) return 1; 
         SetEvent(pClient->AuxEvent2);
@@ -174,7 +182,7 @@ static DWORD waveThread(LPVOID lpParameter)
                 }
             }
 
-        //waveStart;
+        waveReadWrite(pClient);
         }
     }
 
@@ -182,6 +190,211 @@ static DWORD waveThread(LPVOID lpParameter)
   return MMSYSERR_NOERROR;
 }
 
+
+static MMRESULT waveReadWrite(PWAVEALLOC pClient)
+{
+    DWORD dwSize;
+    BOOL Result;
+
+   
+    while (pClient->NextBuffer) 
+    {
+        PWAVEHDR pHdr;
+
+        pHdr = pClient->NextBuffer;
+        
+        //FIXME
+        //assert(!(pHdr->dwFlags & (WHDR_DONE | WHDR_COMPLETE)));
+        //assert(pClient->DeviceQueue != NULL);
+        
+
+        dwSize = pHdr->dwBufferLength - pClient->BufferPosition;
+        if (dwSize > MAX_BUFFER_SIZE)         
+            dwSize = MAX_BUFFER_SIZE;
+        
+
+        if (dwSize + pClient->BytesOutstanding <= MAX_WAVE_BYTES) 
+        {
+            PWAVEOVL pWaveOvl;
+
+            if (pClient->BufferPosition == 0) 
+            {
+                if (pClient->NextBuffer && (pClient->NextBuffer->dwFlags & WHDR_BEGINLOOP) &&
+                    pClient->NextBuffer != pClient->LoopHead) 
+                {
+                    pClient->LoopCount = pClient->NextBuffer->dwLoops;
+                    pClient->LoopHead = pClient->NextBuffer;                    
+                    if (pClient->LoopCount > 0)                     
+                        pClient->LoopCount--;                    
+                }
+                
+                if (pClient->LoopCount == 0)                 
+                    pClient->LoopHead = NULL;                
+            }
+
+            pWaveOvl = (PWAVEOVL)HeapAlloc(Heap, HEAP_ZERO_MEMORY, sizeof(*pWaveOvl));
+
+            if (pWaveOvl == NULL) 
+                return MMSYSERR_NOMEM;
+            
+            pWaveOvl->WaveHdr = pHdr;
+
+            if (pClient->DeviceType == WaveOutDevice) 
+            {
+                Result =  WriteFileEx(pClient->hDev, 
+                                      (PBYTE)pHdr->lpData + pClient->BufferPosition, 
+                                      dwSize,
+                                     (LPOVERLAPPED)pWaveOvl,
+                                     (LPOVERLAPPED_COMPLETION_ROUTINE)
+                                      (pHdr->dwBufferLength != 
+                                      pClient->BufferPosition + dwSize ? wavePartialOvl : NULL != pClient->LoopHead ?
+                                      waveLoopOvl : waveOvl));
+            } 
+            else if (pClient->DeviceType == WaveInDevice) 
+            {
+                Result =  ReadFileEx(pClient->hDev, (PBYTE)pHdr->lpData + pClient->BufferPosition,
+                                     dwSize, (LPOVERLAPPED)pWaveOvl, 
+                                     (LPOVERLAPPED_COMPLETION_ROUTINE)
+                                     (pHdr->dwBufferLength !=
+                                     pClient->BufferPosition + dwSize ? wavePartialOvl : NULL != pClient->LoopHead ?
+                                     waveLoopOvl :  waveOvl));
+            }
+
+            
+            if (!Result && GetLastError() != ERROR_IO_PENDING) 
+            {
+               HeapFree(Heap, 0, (LPSTR)pWaveOvl);
+               
+                if (pClient->BytesOutstanding == 0) 
+                {
+                    PWAVEHDR pHdr;
+                    for (pHdr = pClient->DeviceQueue; pHdr != NULL; pHdr = pHdr->lpNext) 
+                    {
+                        pHdr->dwFlags |= WHDR_COMPLETE;
+                    }
+        
+                    pClient->NextBuffer = NULL;
+                    pClient->BufferPosition = 0;
+                    
+                }
+                return TranslateStatus();
+
+            } 
+            else 
+            {
+                pClient->BufferPosition += dwSize;
+                pClient->BytesOutstanding += dwSize;                
+                if (pClient->BufferPosition == pHdr->dwBufferLength) 
+                {
+                
+                    if (!pClient->LoopHead || !(pHdr->dwFlags & WHDR_ENDLOOP))                     
+                        pClient->NextBuffer = pHdr->lpNext;                    
+                    else 
+                    {                    
+                        if (pClient->LoopCount != 0) 
+                        {                            
+                            pClient->NextBuffer = pClient->LoopHead;
+                            pClient->LoopCount--;
+                        } 
+                        else 
+                        {
+                            pClient->DummyWaveOvl.WaveHdr = pClient->LoopHead;
+
+                            Result = WriteFileEx(pClient->hDev, (PVOID)pHdr->lpData, 0,
+                                                 &pClient->DummyWaveOvl.Ovl, 
+                                                 (LPOVERLAPPED_COMPLETION_ROUTINE)waveBreakOvl);
+
+                            if (Result || GetLastError() == ERROR_IO_PENDING) 
+                            {
+                                pClient->NextBuffer = pHdr->lpNext;
+                                pClient->LoopHead = NULL;
+                                
+                            }
+                        }
+                    }
+                    pClient->BufferPosition = 0;
+                }
+            }
+            
+
+        } 
+        else                         
+          break;        
+     }
+    return MMSYSERR_NOERROR;
+}
+
+void wavePartialOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped)
+{
+    LPWAVEHDR pHdr;
+    PWAVEALLOC pClient;
+
+    pHdr = ((PWAVEOVL)pOverlapped)->WaveHdr;    
+    pClient = (PWAVEALLOC)pHdr->reserved;
+
+  
+    /* FIXME
+    Assert(pHdr->dwFlags & WHDR_INQUEUE);
+    Assert(!(pHdr->dwFlags & WHDR_COMPLETE));
+    */    
+
+    pClient->BytesOutstanding -= MAX_BUFFER_SIZE;
+
+    if (pClient->DeviceType == WaveInDevice)     
+        pHdr->dwBytesRecorded += BytesTransferred;
+    HeapFree(Heap, 0, (LPSTR)pOverlapped);
+}
+
+void waveBreakOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped)
+{
+    ((PWAVEOVL)pOverlapped)->WaveHdr->dwFlags |= WHDR_COMPLETE;
+}
+
+void waveLoopOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped)
+{
+    DWORD dwFlags;
+    PWAVEHDR pHdr;
+    
+    pHdr = ((PWAVEOVL)pOverlapped)->WaveHdr;
+    dwFlags = pHdr->dwFlags;
+    waveOvl(dwErrorCode, BytesTransferred, pOverlapped);
+    pHdr->dwFlags = dwFlags;
+}
+
+void waveOvl(DWORD dwErrorCode, DWORD BytesTransferred, LPOVERLAPPED pOverlapped)
+{
+    PWAVEHDR pHdr;
+    PWAVEALLOC pClient;
+
+    pHdr = ((PWAVEOVL)pOverlapped)->WaveHdr;    
+    pClient = (PWAVEALLOC)pHdr->reserved;
+
+    /* FIXME
+       Assert(pHdr->dwFlags & WHDR_INQUEUE);
+       Assert(!(pHdr->dwFlags & WHDR_COMPLETE));
+    */
+   
+    pHdr->dwFlags |= WHDR_COMPLETE;
+
+    if (pHdr->dwFlags & WHDR_BEGINLOOP) 
+    {
+        PWAVEHDR pHdrSearch;
+        for (pHdrSearch = pClient->DeviceQueue ; pHdrSearch != pHdr ; pHdrSearch = pHdrSearch->lpNext) 
+        {
+            //Assert(pHdrSearch != NULL);
+            pHdrSearch->dwFlags |= WHDR_COMPLETE;
+        }
+    }
+   
+    if (pHdr->dwBufferLength)     
+        pClient->BytesOutstanding -= (pHdr->dwBufferLength - 1) % MAX_BUFFER_SIZE + 1;
+    
+    if (pClient->DeviceType == WaveInDevice)     
+        pHdr->dwBytesRecorded += BytesTransferred;
+    
+    HeapFree(Heap, 0, (LPSTR)pOverlapped);
+
+}
 
 
 
