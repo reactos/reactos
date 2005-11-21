@@ -84,6 +84,8 @@ RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
 #define ExRaiseStatus RtlRaiseStatus
 
 static const UNICODE_STRING __emptyUnicodeString = {0};
+static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
+static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
 
 /*
  * NOTE: Alignment of the pointers is not verified!
@@ -120,7 +122,7 @@ static const UNICODE_STRING __emptyUnicodeString = {0};
     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
 	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
 	     ExRaiseStatus (STATUS_ACCESS_VIOLATION), Default :                    \
-	     *(volatile Type *)(Ptr))
+	     *(Type *)&(*(volatile Type *)(Ptr)))
 
 #define ProbeForReadBoolean(Ptr) ProbeForReadGenericType(Ptr, BOOLEAN, FALSE)
 #define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)
@@ -136,13 +138,8 @@ static const UNICODE_STRING __emptyUnicodeString = {0};
 #define ProbeForReadPointer(Ptr) ProbeForReadGenericType(Ptr, PVOID, NULL)
 #define ProbeForReadHandle(Ptr) ProbeForReadGenericType(Ptr, HANDLE, NULL)
 #define ProbeForReadLangid(Ptr) ProbeForReadGenericType(Ptr, LANGID, 0)
-#ifdef _MSC_VER
-#define ProbeForReadLargeInteger(Ptr) (*(volatile LARGE_INTEGER*)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
-#define ProbeForReadUlargeInteger(Ptr) (*(volatile ULARGE_INTEGER*)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
-#else
-#define ProbeForReadLargeInteger(Ptr) ((LARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
-#define ProbeForReadUlargeInteger(Ptr) ((ULARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
-#endif
+#define ProbeForReadLargeInteger(Ptr) ProbeForReadGenericType(Ptr, LARGE_INTEGER, __emptyLargeInteger)
+#define ProbeForReadUlargeInteger(Ptr) ProbeForReadGenericType(Ptr, ULARGE_INTEGER, __emptyULargeInteger)
 #define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType(Ptr, UNICODE_STRING, __emptyUnicodeString)
 
 /*
