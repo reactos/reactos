@@ -941,6 +941,8 @@ WaitNamedPipeA@8
 WaitNamedPipeW@8
 WideCharToMultiByte@32
 WinExec@8
+Wow64DisableWow64FsRedirection@4
+Wow64RevertWow64FsRedirection@4
 WriteConsoleA@20
 WriteConsoleInputA@16
 WriteConsoleInputVDMA@16

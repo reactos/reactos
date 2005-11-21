@@ -1603,3 +1603,19 @@ NlsGetCacheUpdateCount(VOID)
     STUB;
     return 0;
 }
+
+BOOL
+STDCALL
+Wow64DisableWow64FsRedirection (VOID ** pv)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+STDCALL
+Wow64RevertWow64FsRedirection (VOID * pv)
+{
+    STUB;
+    return FALSE;
+}
