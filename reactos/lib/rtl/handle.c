@@ -125,7 +125,7 @@ BOOLEAN NTAPI
 RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
 	      PRTL_HANDLE_TABLE_ENTRY Handle)
 {
-#if DBG
+#ifdef DBG
    /* check if handle is valid */
    if (RtlIsValidHandle(HandleTable, Handle))
      return FALSE;
