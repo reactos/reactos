@@ -77,7 +77,7 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
 								DWORD dwParam2)
 {
 	// TODO: Implement
-    PWAVEALLOC     pClient;  
+    PWAVEALLOC     pClient = (PWAVEALLOC)dwUser;  
     //MMRESULT mResult;
     //BOOL Result;
     //DWORD BytesReturned;
@@ -178,8 +178,7 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
             return OpenWaveDevice(WaveOutDevice, dwId, dwUser, dwParam1, dwParam2);
 
         case WODM_CLOSE:
-			{
-				MMRESULT Result;				
+			{	
 				DPRINT("WODM_CLOSE");
 
 				// 1. Check if the task is ready to complete
@@ -189,7 +188,7 @@ APIENTRY DWORD wodMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 	            			
 				if ( pTask->AuxReturnCode != MMSYSERR_NOERROR) 
                 {
-				    return Result;
+				    return pTask->AuxReturnCode;
 				}
 				else
 					
