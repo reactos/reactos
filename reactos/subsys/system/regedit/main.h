@@ -90,6 +90,7 @@ extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
 extern void SetupStatusBar(HWND hWnd, BOOL bResize);
 extern void UpdateStatusBar(void);
 extern BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName);
+extern BOOL ExportRegistryFile(HWND hWnd);
 
 /* listview.c */
 extern HWND CreateListView(HWND hwndParent, int id);

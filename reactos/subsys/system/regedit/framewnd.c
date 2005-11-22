@@ -344,7 +344,7 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
     return iResult;
 }
 
-static BOOL ExportRegistryFile(HWND hWnd)
+BOOL ExportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
     TCHAR ExportKeyPath[_MAX_PATH];

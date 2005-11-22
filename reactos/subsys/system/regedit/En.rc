@@ -135,8 +135,12 @@ BEGIN
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
         END
         MENUITEM "&Find",                           ID_EDIT_FIND, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Delete",                         ID_TREE_DELETE
         MENUITEM "&Rename",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Export",                         ID_TREE_EXPORT
+        MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name",                  ID_EDIT_COPYKEYNAME
   END

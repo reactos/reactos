@@ -145,6 +145,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 RefreshTreeItem(pChildWnd->hTreeWnd, hSelection); /* If delete failed; refresh to see partial results */
         }
         break;
+	case ID_TREE_EXPORT:
+        ExportRegistryFile(pChildWnd->hTreeWnd);
+        break;
     case ID_EDIT_COPYKEYNAME:
         hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
         keyPath = GetItemPath(pChildWnd->hTreeWnd, hSelection, &hRootKey);
