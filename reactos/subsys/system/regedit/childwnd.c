@@ -141,6 +141,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             if (RegDeleteKeyRecursive(hRootKey, keyPath) == ERROR_SUCCESS)
                 TreeView_DeleteItem(pChildWnd->hTreeWnd, hSelection);
+            else
+                RefreshTreeItem(pChildWnd->hTreeWnd, hSelection); /* If delete failed; refresh to see partial results */
         }
         break;
     case ID_EDIT_COPYKEYNAME:

@@ -101,6 +101,7 @@ extern BOOL IsDefaultValue(HWND hwndLV, int i);
 /* treeview.c */
 extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
 extern BOOL RefreshTreeView(HWND hWndTV);
+extern BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem);
 extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
 extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name);
