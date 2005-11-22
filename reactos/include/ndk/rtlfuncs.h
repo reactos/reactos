@@ -2230,7 +2230,7 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
 static __inline
 LARGE_INTEGER
 NTAPI_INLINE
-RtlConvertLongToLargeIntegerf(
+RtlConvertLongToLargeInteger(
     LONG SignedInteger
 )
 {
