@@ -20,10 +20,7 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
+#include "windows.h"
 #include "cards.h"
 
 HBITMAP g_CardBitmaps[MAX_CARD_BITMAPS];
@@ -79,7 +76,7 @@ BOOL WINAPI cdtDraw(HDC hdc, INT x, INT y, INT card, INT type, COLORREF color)
 /*
  * internal
  */
-inline VOID BltCard(HDC hdc, INT x, INT y, INT dx, INT dy, HDC hdcCard, DWORD dwRasterOp, BOOL bStretch)
+static __inline VOID BltCard(HDC hdc, INT x, INT y, INT dx, INT dy, HDC hdcCard, DWORD dwRasterOp, BOOL bStretch)
 {
 	if (bStretch)
 	{
