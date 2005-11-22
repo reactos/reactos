@@ -30,7 +30,7 @@ BEGIN
     BEGIN
         MENUITEM "&Beenden",                       ID_REGISTRY_EXIT
     END
-    POPUP "&Help"
+    POPUP "&Hilfe"
     BEGIN
         MENUITEM "&Über ...",                  ID_HELP_ABOUT
     END
@@ -89,9 +89,9 @@ BEGIN
     END
     POPUP "&Favoriten"
     BEGIN
-        MENUITEM "Zu den Favoriten &hinzugügen",          ID_FAVOURITES_ADDTOFAVOURITES
+        MENUITEM "Zu den Favoriten &hinzufügen",          ID_FAVOURITES_ADDTOFAVOURITES
         , GRAYED
-        MENUITEM "Von den Favoriten &löschen",           ID_FAVOURITES_REMOVEFAVOURITE
+        MENUITEM "Aus den Favoriten &löschen",           ID_FAVOURITES_REMOVEFAVOURITE
         , GRAYED
     END
     POPUP "&Hilfe"
