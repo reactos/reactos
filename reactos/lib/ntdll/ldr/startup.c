@@ -259,7 +259,7 @@ LdrpInit(PCONTEXT Context,
    DPRINT("LdrpInit()\n");
    if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
      {
-       Peb = (PPEB)(PEB_BASE);
+       Peb = NtCurrentPeb();
        DPRINT("Peb %x\n", Peb);
        ImageBase = Peb->ImageBaseAddress;
        DPRINT("ImageBase %x\n", ImageBase);
