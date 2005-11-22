@@ -79,8 +79,8 @@ MMRESULT GetDeviceCapabilities(DWORD ID, UINT DeviceType,
 static DWORD waveThread(LPVOID lpParameter)
 {
 
-    PWAVEALLOC pClient;
-    BOOL Terminate;
+    PWAVEALLOC pClient = (PWAVEALLOC)lpParameter;
+    BOOL Terminate = FALSE;
 
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     SetEvent(pClient->AuxEvent2);
@@ -305,7 +305,7 @@ static DWORD waveThread(LPVOID lpParameter)
 static MMRESULT waveReadWrite(PWAVEALLOC pClient)
 {
     DWORD dwSize;
-    BOOL Result;
+    BOOL Result = FALSE;
 
    
     while (pClient->NextBuffer) 
@@ -549,7 +549,7 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
     BOOL Result;
     DWORD BytesReturned;
     LPWAVEFORMATEX pFormats;
-    PWAVEALLOC *pUserHandle;
+    PWAVEALLOC *pUserHandle = &pClient;
     HANDLE hDevice;
 
     pFormats = (LPWAVEFORMATEX)((LPWAVEOPENDESC)dwParam1)->lpFormat;
