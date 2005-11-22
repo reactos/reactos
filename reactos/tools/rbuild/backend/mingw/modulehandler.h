@@ -45,6 +45,8 @@ public:
 		const std::string &f,
 		Directory* directoryTree );
 
+	static std::string PassThruCacheDirectory (const FileLocation* fileLocation );
+
 	static Directory* GetTargetDirectoryTree (
 		const Module& module );
 
@@ -84,8 +86,9 @@ protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
-	std::string GetActualSourceFilename ( const std::string& filename ) const;
+	FileLocation* GetActualSourceFilename ( const FileLocation* fileLocation ) const;
 	std::string GetExtraDependencies ( const std::string& filename ) const;
+	std::string MingwModuleHandler::GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
 	std::string GetModuleArchiveFilename () const;
 	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
@@ -96,7 +99,7 @@ protected:
 	void GetSourceFilenames ( string_list& list,
                                   bool includeGeneratedFiles ) const;
 	void GetSourceFilenamesWithoutGeneratedFiles ( string_list& list ) const;
-	std::string GetObjectFilename ( const std::string& sourceFilename,
+	std::string GetObjectFilename ( const FileLocation* sourceFileLocation,
 	                                string_list* pclean_files ) const;
 
 	std::string GetObjectFilenames ();
@@ -144,18 +147,18 @@ private:
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;
 	std::string MingwModuleHandler::GetPrecompiledHeaderFilename () const;
-	void GenerateGccCommand ( const std::string& sourceFilename,
+	void GenerateGccCommand ( const FileLocation* sourceFileLocation,
 	                          const std::string& extraDependencies,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
-	void GenerateGccAssemblerCommand ( const std::string& sourceFilename,
+	void GenerateGccAssemblerCommand ( const FileLocation* sourceFileLocation,
 	                                   const std::string& cc,
 	                                   const std::string& cflagsMacro );
-	void GenerateNasmCommand ( const std::string& sourceFilename,
+	void GenerateNasmCommand ( const FileLocation* sourceFileLocation,
 	                           const std::string& nasmflagsMacro );
-	void GenerateWindresCommand ( const std::string& sourceFilename,
+	void GenerateWindresCommand ( const FileLocation* sourceFileLocation,
 	                              const std::string& windresflagsMacro );
-	void GenerateWinebuildCommands ( const std::string& sourceFilename );
+	void GenerateWinebuildCommands ( const FileLocation* sourceFileLocation );
 	std::string GetWidlFlags ( const CompilationUnit& compilationUnit );
 	void GenerateWidlCommandsServer (
 		const CompilationUnit& compilationUnit,

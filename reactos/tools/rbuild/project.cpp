@@ -72,6 +72,15 @@ ParseContext::ParseContext ()
 {
 }
 
+
+FileLocation::FileLocation ( Directory* directory,
+                             std::string filename )
+                             : directory (directory),
+                               filename (filename)
+{
+}
+
+
 Project::Project ( const string& filename )
 	: xmlfile (filename),
 	  node (NULL),

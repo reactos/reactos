@@ -297,7 +297,8 @@ TestSupportCode::GetSourceFilenames ( string_list& list,
 	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
 	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
-		string filename = compilationUnits[i]->GetFilename();
+		FileLocation* sourceFileLocation = compilationUnits[i]->GetFilename ( NULL );
+		string filename = sourceFileLocation->filename;
 		if ( !compilationUnits[i]->IsGeneratedFile () && IsTestFile ( filename ) )
 			list.push_back ( filename );
 	}
@@ -316,7 +317,8 @@ TestSupportCode::GetSourceFilenames ( string_list& list,
 		for ( j = 0; j < compilationUnits.size (); j++ )
 		{
 			CompilationUnit& compilationUnit = *compilationUnits[j];
-			string filename = compilationUnits[j]->GetFilename();
+			FileLocation* sourceFileLocation = compilationUnits[j]->GetFilename ( NULL );
+			string filename = sourceFileLocation->filename;
 			if ( !compilationUnit.IsGeneratedFile () && IsTestFile ( filename ) )
 				list.push_back ( filename );
 		}

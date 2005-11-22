@@ -193,6 +193,7 @@ MingwBackend::ProcessNormal ()
 	GenerateDirectories ();
 	UnpackWineResources ();
 	GenerateTestSupportCode ();
+	GenerateCompilationUnitSupportCode ();
 	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -520,6 +521,15 @@ MingwBackend::GenerateTestSupportCode ()
 	printf ( "Generating test support code..." );
 	TestSupportCode testSupportCode ( ProjectNode );
 	testSupportCode.GenerateTestSupportCode ( configuration.Verbose );
+	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateCompilationUnitSupportCode ()
+{
+	printf ( "Generating compilation unit support code..." );
+	CompilationUnitSupportCode compilationUnitSupportCode ( ProjectNode );
+	compilationUnitSupportCode.Generate ( configuration.Verbose );
 	printf ( "done\n" );
 }
 

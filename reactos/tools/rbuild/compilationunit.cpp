@@ -28,6 +28,7 @@ CompilationUnit::CompilationUnit ( File* file )
 	  module(NULL),
 	  node(NULL)
 {
+	name = file->name;
 	files.push_back ( file );
 }
 
@@ -38,6 +39,9 @@ CompilationUnit::CompilationUnit ( const Project* project,
 	  module(module),
 	  node(node)
 {
+	const XMLAttribute* att = node->GetAttribute ( "name", true );
+	assert(att);
+	name = module->GetBasePath () + cSep + att->value;
 }
 
 CompilationUnit::~CompilationUnit ()
@@ -83,28 +87,25 @@ bool
 CompilationUnit::IsFirstFile () const
 {
 	if ( files.size () == 0 || files.size () > 1 )
-{
-printf("fs:'%d'\n", files.size ());
-		throw InvalidOperationException ( __FILE__, __LINE__ );
-}
+		return false;
 	File* file = files[0];
 	return file->first;
 }
 
-std::string
-CompilationUnit::GetFilename () const
+FileLocation*
+CompilationUnit::GetFilename ( Directory* intermediateDirectory ) const
 {
 	if ( files.size () == 0 || files.size () > 1 )
-		throw InvalidOperationException ( __FILE__, __LINE__ );
+		return new FileLocation ( intermediateDirectory, name );
 	File* file = files[0];
-	return file->name;
+	return new FileLocation ( NULL, file->name );
 }
 
 std::string
 CompilationUnit::GetSwitches () const
 {
 	if ( files.size () == 0 || files.size () > 1 )
-		throw InvalidOperationException ( __FILE__, __LINE__ );
+		return "";
 	File* file = files[0];
 	return file->switches;
 }

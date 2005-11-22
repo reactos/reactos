@@ -195,12 +195,12 @@ CompilationUnit element
 A compilationunit element specifies that one or more source code files are to be compiled as a single compilation unit.
 
 Syntax:
-	<compilationunit>
+	<compilationunit name="kernel32.c">
 		...
 	</compilationunit>
 
 Attributes:
-	None.
+	name - Name of generated source code file.
 
 Value:
 	None.

@@ -77,6 +77,7 @@ private:
 	std::string GetBin2ResExecutable ();
 	void UnpackWineResources ();
 	void GenerateTestSupportCode ();
+	void GenerateCompilationUnitSupportCode ();
 	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();

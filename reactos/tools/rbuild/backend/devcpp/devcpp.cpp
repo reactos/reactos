@@ -129,11 +129,11 @@ void DevCppBackend::ProcessModules()
 	{
 		Module &module = *ProjectNode.modules[i];
 
-		for(size_t k = 0; k < module.non_if_data.compilationUnits.size(); k++)
+		for(size_t k = 0; k < module.non_if_data.files.size(); k++)
 		{
-			CompilationUnit &compilationUnit = *module.non_if_data.compilationUnits[k];
-			string filename = compilationUnit.GetFilename();
-			ProcessFile(filename);
+			File &file = *module.non_if_data.files[k];
+			
+			ProcessFile(file.name);
 		}
 	}
 }

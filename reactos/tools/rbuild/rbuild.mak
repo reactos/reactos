@@ -157,6 +157,7 @@ RBUILD_COMMON_SOURCES = \
 		bootstrap.cpp \
 		cdfile.cpp \
 		compilationunit.cpp \
+		compilationunitsupportcode.cpp \
 		compilerflag.cpp \
 		configuration.cpp \
 		define.cpp \
@@ -277,6 +278,10 @@ $(RBUILD_INT_)cdfile.o: $(RBUILD_BASE_)cdfile.cpp $(RBUILD_HEADERS) | $(RBUILD_I
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)compilationunit.o: $(RBUILD_BASE_)compilationunit.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)compilationunitsupportcode.o: $(RBUILD_BASE_)compilationunitsupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

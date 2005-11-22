@@ -93,6 +93,7 @@ class PchFile;
 class StubbedComponent;
 class StubbedSymbol;
 class CompilationUnit;
+class FileLocation;
 
 class SourceFileTest;
 
@@ -817,6 +818,7 @@ public:
 	const Project* project;
 	const Module* module;
 	const XMLElement* node;
+	std::string name;
 	std::vector<File*> files;
 
 	CompilationUnit ( File* file );
@@ -828,8 +830,36 @@ public:
 	bool IsGeneratedFile () const;
 	bool HasFileWithExtension ( const std::string& extension ) const;
 	bool IsFirstFile () const;
-	std::string GetFilename () const;
+	FileLocation* GetFilename ( Directory* intermediateDirectory ) const;
 	std::string GetSwitches () const;
+};
+
+
+class CompilationUnitSupportCode
+{
+public:
+	const Project& project;
+
+	CompilationUnitSupportCode ( const Project& project );
+	~CompilationUnitSupportCode ();
+	void Generate ( bool verbose );
+private:
+	void GenerateForModule ( Module& module,
+	                         bool verbose );
+	std::string GetCompilationUnitFilename ( Module& module,
+	                                         CompilationUnit& compilationUnit );
+	void WriteCompilationUnitFile ( Module& module,
+	                                CompilationUnit& compilationUnit );
+};
+
+
+class FileLocation
+{
+public:
+	Directory* directory;
+	std::string filename;
+	FileLocation ( Directory* directory,
+	               std::string filename );
 };
 
 
