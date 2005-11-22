@@ -16,17 +16,15 @@
 
 #define DHCP_TIMEOUT 1000
 
-#define EXPORT __declspec(dllexport) WINAPI
-
-DWORD EXPORT DhcpCApiInitialize(LPDWORD Version) {
+DWORD APIENTRY DhcpCApiInitialize(LPDWORD Version) {
     *Version = 2;
     return 0;
 }
 
-VOID EXPORT DhcpCApiCleanup() {
+VOID APIENTRY DhcpCApiCleanup() {
 }
 
-DWORD EXPORT DhcpQueryHWInfo( DWORD AdapterIndex,
+DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
                                      PDWORD MediaType, 
                                      PDWORD Mtu, 
                                      PDWORD Speed ) {
@@ -51,7 +49,7 @@ DWORD EXPORT DhcpQueryHWInfo( DWORD AdapterIndex,
     }
 }
 
-DWORD EXPORT DhcpLeaseIpAddress( DWORD AdapterIndex ) {   
+DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex ) {   
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -67,7 +65,7 @@ DWORD EXPORT DhcpLeaseIpAddress( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD EXPORT DhcpReleaseIpAddressLease( DWORD AdapterIndex ) {
+DWORD APIENTRY DhcpReleaseIpAddressLease( DWORD AdapterIndex ) {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -83,7 +81,7 @@ DWORD EXPORT DhcpReleaseIpAddressLease( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD EXPORT DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
+DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -99,7 +97,7 @@ DWORD EXPORT DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD EXPORT DhcpStaticRefreshParams( DWORD AdapterIndex, 
+DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex, 
                                              DWORD Address, 
                                              DWORD Netmask ) {
     COMM_DHCP_REQ Req;
