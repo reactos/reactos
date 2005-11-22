@@ -1733,7 +1733,7 @@ NtUserGetMenuItemRect(
       lpPoints[i].y += YMove;
    }
 
-   Status = MmCopyToCaller(lprcItem, lpPoints, sizeof(POINT));
+   Status = MmCopyToCaller(lprcItem, lpPoints, sizeof(RECT));
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
