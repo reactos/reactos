@@ -1,18 +1,31 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/halfuncs.h
- * PURPOSE:         Prototypes for exported HAL Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    mmfuncs.h
+
+Abstract:
+
+    Functions definitions for the Memory Manager.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _MMFUNCS_H
 #define _MMFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-
-/* PROTOTYPES ****************************************************************/
+//
+// Section Functions
+//
 NTSTATUS
 NTAPI
 MmUnmapViewOfSection(

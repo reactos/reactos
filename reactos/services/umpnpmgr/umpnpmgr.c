@@ -30,7 +30,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <ndk/sysguid.h>
+#include <umpnpmgr/sysguid.h>
 #include <ddk/wdmguid.h>
 #include <ddk/cfgmgr32.h>
 

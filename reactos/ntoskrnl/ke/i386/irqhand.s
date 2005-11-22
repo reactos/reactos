@@ -1,4 +1,4 @@
-#include <ndk/i386/segment.h>
+#include <ndk/asm.h>
 #include <../hal/halx86/include/halirq.h>
 
 #ifdef CONFIG_SMP

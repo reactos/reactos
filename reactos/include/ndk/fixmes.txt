@@ -1,42 +1,8 @@
-NDK FIXMES
------------
+Complete list of NDK Fixmes before 1.0 Release (Nov 25th 2005)
+--------------------------------------------------------------
 
-Order:
-	* Priority 1 = Most important to fix.
-	* Priority 5 = Least important to fix.
 
-Format:
-	<Priority Level>
-	- FIXME Description (Assigned Fixer) [FIXME location(s)]
+List of ReactOS Applications compiling with the NDK
+--------------------------------------------------------------
 
-List:
-	Priority 1:
-	- FIXED: LDR_DATA_TABLE_ENTRY has a ROSSYM Hack (Alex) [ldrtypes.h]
-	- FIXED: LDR_FLAGS are not correct (Alex) [ldrtypes.h]
-	- FIXED: Remove extra Process Info classes from ddk (Alex) [zwtypes.h]
-	- FIXED: PsEstablishWin32Callouts + Parameters don't match NT (Alex) [obtypes.h]
-	- FIXED: PROCESS_SET_PORT was removed, ThomasW did a patch about this? (Thomas) [pstypes.h]
-	- FIXED: Some files need cleanup (Alex + Eric) [zwfuncs.h, rtlfuncs.h, rtltypes.h]
 
-	Priority 2:
-	- FIXED: DEVICE_NODE has 2 fields not part of NT's defintion (Alex) [iotypes.h]
-	- Object Callbacks don't match NT's (Alex) [obtypes.h]
-	- Remove Create Callback Hack (Alex) [obtypes.h]
-	- Object header doesn't match NT (Alex) [obtypes.h] blocks on ->
-		- Object Directory + implementation doesn't match NT (Alex) [obtypes.h]
-
-	Priority 3:
-	- FIXED: Some RTL Structures need review (Alex) [rtltypes.h]
-	- Pushlock support is needed to fix EPROCESS (Alex) [pstypes.h]
-	- MADDRESS_SPACE must be converted into the NT Type (Alex) [pstypes.h, mmtypes.h]
-
-	Priority 4:
-	- FIXED: Kernel and Memory Types are not architecture-specific (Eric) [ketypes.h, mmtypes.h]
-	- FIXED: Win32K Builds with windows.h (Filip) [extypes.h, ketypes.h]
-	- FIXED: Modify design of NDK so that all the types are in their respective files (Alex) [*.h]
-
-	Priority 5:
-	- FIXED: LPC Types are totally wrong. (Alex) [lpctypes.h]
-	- Missing System Info Classes [zwtypes.h]
-	- FIXED: Process Priority Classes are messed up (Alex) [pstypes.h]
-	

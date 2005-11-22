@@ -1,20 +1,36 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/lpctypes.h
- * PURPOSE:         Definitions for Local Procedure Call Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    lpctypes.h
+
+Abstract:
+
+    Type definitions for the Loader.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _LPCTYPES_H
 #define _LPCTYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-/* EXPORTED DATA *************************************************************/
+//
+// Maximum message size that can be sent through an LPC Port without a section
+//
+#define PORT_MAXIMUM_MESSAGE_LENGTH     256
 
-/* ENUMERATIONS **************************************************************/
-
+//
+// LPC Message Types
+//
 typedef enum _LPC_TYPE
 {
     LPC_NEW_MESSAGE,
@@ -32,16 +48,20 @@ typedef enum _LPC_TYPE
     LPC_MAXIMUM
 } LPC_TYPE;
 
+//
+// Information Classes for NtQueryInformationPort
+//
 typedef enum _PORT_INFORMATION_CLASS
 {
     PortNoInformation
 } PORT_INFORMATION_CLASS;
 
-/* TYPES *********************************************************************/
-
 #ifdef NTOS_MODE_USER
 
-#if defined(USE_LPC6432)
+//
+// Portable LPC Types for 32/64-bit compatibility
+//
+#ifdef USE_LPC6432
 #define LPC_CLIENT_ID CLIENT_ID64
 #define LPC_SIZE_T ULONGLONG
 #define LPC_PVOID ULONGLONG
@@ -53,6 +73,9 @@ typedef enum _PORT_INFORMATION_CLASS
 #define LPC_HANDLE HANDLE
 #endif
 
+//
+// LPC Port Message
+//
 typedef struct _PORT_MESSAGE
 {
     union
@@ -86,6 +109,9 @@ typedef struct _PORT_MESSAGE
     };
 } PORT_MESSAGE, *PPORT_MESSAGE;
 
+//
+// Local and Remove Port Views
+//
 typedef struct _PORT_VIEW
 {
     ULONG Length;
@@ -103,6 +129,9 @@ typedef struct _REMOTE_PORT_VIEW
     LPC_PVOID ViewBase;
 } REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
 
+//
+// LPC Kernel-Mode Message Structures defined for size only
+//
 typedef struct _LPCP_MESSAGE
 {
     UCHAR Data[0x14];
@@ -114,9 +143,11 @@ typedef struct _LPCP_CONNECTION_MESSAGE
     UCHAR Data[0x2C];
 } LPCP_CONNECTION_MESSAGE;
 
-/* Kernel-Mode Structures */
 #else
 
+//
+// LPC Paged and Non-Paged Port Queues
+//
 typedef struct _LPCP_NONPAGED_PORT_QUEUE
 {
     KSEMAPHORE Semaphore;
@@ -130,6 +161,9 @@ typedef struct _LPCP_PORT_QUEUE
     LIST_ENTRY ReceiveHead;
 } LPCP_PORT_QUEUE, *PLPCP_PORT_QUEUE;
 
+//
+// LPC Port Object
+//
 typedef struct _LPCP_PORT_OBJECT
 {
     ULONG Length;
@@ -150,6 +184,9 @@ typedef struct _LPCP_PORT_OBJECT
     LIST_ENTRY LpcDataInfoChainHead;
 } LPCP_PORT_OBJECT, *PLPCP_PORT_OBJECT;
 
+//
+// LPC Kernel-Mode Message Structures
+//
 typedef struct _LPCP_MESSAGE
 {
     union
@@ -174,8 +211,12 @@ typedef struct _LPCP_CONNECTION_MESSAGE
     PVOID SectionToMap;
     REMOTE_PORT_VIEW ServerView;
 } LPCP_CONNECTION_MESSAGE, *PLPCP_CONNECTION_MESSAGE;
+
 #endif
 
+//
+// Hard Error LPC Message (FIXME: should go in extypes.h?)
+//
 typedef struct _HARDERROR_MSG
 {
     PORT_MESSAGE h;
@@ -188,28 +229,36 @@ typedef struct _HARDERROR_MSG
     ULONG Parameters[MAXIMUM_HARDERROR_PARAMETERS];
 } HARDERROR_MSG, *PHARDERROR_MSG;
 
+//
+// Client Died LPC Message (FIXME: should go in pstypes.h?)
+//
 typedef struct _CLIENT_DIED_MSG
 {
     PORT_MESSAGE h;
     LARGE_INTEGER CreateTime;
 } CLIENT_DIED_MSG, *PCLIENT_DIED_MSG;
 
-/* CONSTANTS *****************************************************************/
-
-#define PORT_MAXIMUM_MESSAGE_LENGTH 256
-
+//
+// Maximum total Kernel-Mode LPC Message Structure Size
+//
 #define LPCP_MAX_MESSAGE_SIZE \
     ROUND_UP(PORT_MAXIMUM_MESSAGE_LENGTH + \
     sizeof(LPCP_MESSAGE) + \
     sizeof(LPCP_CONNECTION_MESSAGE), 16)
 
+//
+// Maximum actual LPC Message Length
+//
 #define LPC_MAX_MESSAGE_LENGTH \
     (LPCP_MAX_MESSAGE_SIZE - \
     FIELD_OFFSET(LPCP_MESSAGE, Request))
 
+//
+// Maximum actual size of LPC Message Data
+//
 #define LPC_MAX_DATA_LENGTH \
     (LPC_MAX_MESSAGE_LENGTH - \
     sizeof(PORT_MESSAGE) - \
     sizeof(LPCP_CONNECTION_MESSAGE))
 
-#endif
+#endif // _LPCTYPES_H

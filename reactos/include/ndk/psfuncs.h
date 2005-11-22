@@ -1,28 +1,49 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/psfuncs.h
- * PURPOSE:         Defintions for Process Manager Functions not documented in DDK/IFS.
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    psfuncs.h
+
+Abstract:
+
+    Function definitions for the Process Manager
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _PSFUNCS_H
 #define _PSFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 #include "pstypes.h"
 
-/* PROTOTYPES ****************************************************************/
+//
+// Win32K Process/Thread Functions
+//
+struct _W32THREAD*
+NTAPI
+PsGetWin32Thread(
+    VOID
+);
 
-struct _W32THREAD* NTAPI
-PsGetWin32Thread(VOID);
-
-struct _W32PROCESS* NTAPI
-PsGetWin32Process(VOID);
+struct _W32PROCESS*
+NTAPI
+PsGetWin32Process(
+    VOID
+);
 
 PVOID
 NTAPI
-PsGetProcessWin32Process(PEPROCESS Process);
+PsGetProcessWin32Process(
+    PEPROCESS Process
+);
 
 VOID
 NTAPI
@@ -40,32 +61,30 @@ PsSetThreadWin32Thread(
 
 PVOID
 NTAPI
-PsGetThreadWin32Thread(PETHREAD Thread);
-                       
-VOID
-NTAPI
-PsRevertThreadToSelf(
-    IN struct _ETHREAD* Thread
-);
-
-struct _W32THREAD*
-NTAPI
-PsGetWin32Thread(
-    VOID
-);
-
-struct _W32PROCESS*
-NTAPI
-PsGetWin32Process(
-    VOID
+PsGetThreadWin32Thread(
+    PETHREAD Thread
 );
 
 VOID 
 NTAPI
-PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData);
+PsEstablishWin32Callouts(
+    PW32_CALLOUT_DATA CalloutData
+);
 
+//
+// Process Impersonation Functions
+//
+VOID
+NTAPI
+PsRevertThreadToSelf(
+    IN PETHREAD Thread
+);
+
+//
+// Misc. Functions
+//
 HANDLE
 NTAPI
-PsGetProcessId(struct _EPROCESS *Process);
+PsGetProcessId(PEPROCESS Process);
 
 #endif

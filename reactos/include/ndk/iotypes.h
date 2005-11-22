@@ -1,110 +1,131 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/iotypes.h
- * PURPOSE:         Definitions for exported I/O Manager Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    iotypes.h
+
+Abstract:
+
+    Type definitions for the I/O Manager.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
 
 #ifndef _IOTYPES_H
 #define _IOTYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-/* EXPORTED DATA *************************************************************/
 #ifndef NTOS_MODE_USER
+
+//
+// Kernel Exported Object Types
+//
 extern POBJECT_TYPE NTSYSAPI IoAdapterObjectType;
 extern POBJECT_TYPE NTSYSAPI IoDeviceHandlerObjectType;
 extern POBJECT_TYPE NTSYSAPI IoDeviceObjectType;
 extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
+
+#else
+
+//
+// Symbolic Link Access Rights
+//
+#define SYMBOLIC_LINK_QUERY                     0x0001
+#define SYMBOLIC_LINK_ALL_ACCESS                STANDARD_RIGHTS_REQUIRED | 0x0001
 #endif
 
-/* CONSTANTS *****************************************************************/
+//
+// NtCreateFile Result Flags
+//
+#define FILE_SUPERSEDED                         0x00000000
+#define FILE_OPENED                             0x00000001
+#define FILE_CREATED                            0x00000002
+#define FILE_OVERWRITTEN                        0x00000003
+#define FILE_EXISTS                             0x00000004
+#define FILE_DOES_NOT_EXIST                     0x00000005
 
-#ifdef NTOS_MODE_USER
-/* Object Access Rights */
-#define SYMBOLIC_LINK_QUERY                 0x0001
-#define SYMBOLIC_LINK_ALL_ACCESS            STANDARD_RIGHTS_REQUIRED | 0x0001
-#endif
+//
+// Pipe Flags
+//
+#define FILE_PIPE_BYTE_STREAM_TYPE              0x00000000
+#define FILE_PIPE_MESSAGE_TYPE                  0x00000001
+#define FILE_PIPE_BYTE_STREAM_MODE              0x00000000
+#define FILE_PIPE_MESSAGE_MODE                  0x00000001
+#define FILE_PIPE_QUEUE_OPERATION               0x00000000
+#define FILE_PIPE_COMPLETE_OPERATION            0x00000001
+#define FILE_PIPE_INBOUND                       0x00000000
+#define FILE_PIPE_OUTBOUND                      0x00000001
+#define FILE_PIPE_FULL_DUPLEX                   0x00000002
+#define FILE_PIPE_CLIENT_END                    0x00000000
+#define FILE_PIPE_SERVER_END                    0x00000001
 
-/* File Result Flags */
-#define FILE_SUPERSEDED                     0x00000000
-#define FILE_OPENED                         0x00000001
-#define FILE_CREATED                        0x00000002
-#define FILE_OVERWRITTEN                    0x00000003
-#define FILE_EXISTS                         0x00000004
-#define FILE_DOES_NOT_EXIST                 0x00000005
+//
+// NtCreateFile Attributes
+//
+#define FILE_ATTRIBUTE_VALID_FLAGS              0x00007fb7
+#define FILE_ATTRIBUTE_VALID_SET_FLAGS          0x000031a7
 
-/* Pipe Flags */
-#define FILE_PIPE_BYTE_STREAM_TYPE          0x00000000
-#define FILE_PIPE_MESSAGE_TYPE              0x00000001
-#define FILE_PIPE_BYTE_STREAM_MODE          0x00000000
-#define FILE_PIPE_MESSAGE_MODE              0x00000001
-#define FILE_PIPE_QUEUE_OPERATION           0x00000000
-#define FILE_PIPE_COMPLETE_OPERATION        0x00000001
-#define FILE_PIPE_INBOUND                   0x00000000
-#define FILE_PIPE_OUTBOUND                  0x00000001
-#define FILE_PIPE_FULL_DUPLEX               0x00000002
-#define FILE_PIPE_CLIENT_END                0x00000000
-#define FILE_PIPE_SERVER_END                0x00000001
+//
+// NtCreateFile OpenType Flags
+//
+#define FILE_SUPERSEDE                          0x00000000
+#define FILE_OPEN                               0x00000001
+#define FILE_CREATE                             0x00000002
+#define FILE_OPEN_IF                            0x00000003
+#define FILE_OVERWRITE                          0x00000004
+#define FILE_OVERWRITE_IF                       0x00000005
+#define FILE_MAXIMUM_DISPOSITION                0x00000005
 
-/* File Attributes */
-#define FILE_ATTRIBUTE_VALID_FLAGS          0x00007fb7
-#define FILE_ATTRIBUTE_VALID_SET_FLAGS      0x000031a7
+//
+// NtCreateFile Flags
+//
+#define FILE_DIRECTORY_FILE                     0x00000001
+#define FILE_WRITE_THROUGH                      0x00000002
+#define FILE_SEQUENTIAL_ONLY                    0x00000004
+#define FILE_NO_INTERMEDIATE_BUFFERING          0x00000008
+#define FILE_SYNCHRONOUS_IO_ALERT               0x00000010
+#define FILE_SYNCHRONOUS_IO_NONALERT            0x00000020
+#define FILE_NON_DIRECTORY_FILE                 0x00000040
+#define FILE_CREATE_TREE_CONNECTION             0x00000080
+#define FILE_COMPLETE_IF_OPLOCKED               0x00000100
+#define FILE_NO_EA_KNOWLEDGE                    0x00000200
+#define FILE_OPEN_FOR_RECOVERY                  0x00000400
+#define FILE_RANDOM_ACCESS                      0x00000800
+#define FILE_DELETE_ON_CLOSE                    0x00001000
+#define FILE_OPEN_BY_FILE_ID                    0x00002000
+#define FILE_OPEN_FOR_BACKUP_INTENT             0x00004000
+#define FILE_NO_COMPRESSION                     0x00008000
+#define FILE_RESERVE_OPFILTER                   0x00100000
+#define FILE_OPEN_REPARSE_POINT                 0x00200000
+#define FILE_OPEN_NO_RECALL                     0x00400000
+#define FILE_OPEN_FOR_FREE_SPACE_QUERY          0x00800000
 
-/* File Flags */
-#define FILE_SUPERSEDE                      0x00000000
-#define FILE_OPEN                           0x00000001
-#define FILE_CREATE                         0x00000002
-#define FILE_OPEN_IF                        0x00000003
-#define FILE_OVERWRITE                      0x00000004
-#define FILE_OVERWRITE_IF                   0x00000005
-#define FILE_MAXIMUM_DISPOSITION            0x00000005
+//
+// Device Charactertics
+//
+#define FILE_REMOVABLE_MEDIA                    0x00000001
+#define FILE_REMOTE_DEVICE                      0x00000010
 
-/* File Types */
-#define FILE_DIRECTORY_FILE                 0x00000001
-#define FILE_WRITE_THROUGH                  0x00000002
-#define FILE_SEQUENTIAL_ONLY                0x00000004
-#define FILE_NO_INTERMEDIATE_BUFFERING      0x00000008
-#define FILE_SYNCHRONOUS_IO_ALERT           0x00000010
-#define FILE_SYNCHRONOUS_IO_NONALERT        0x00000020
-#define FILE_NON_DIRECTORY_FILE             0x00000040
-#define FILE_CREATE_TREE_CONNECTION         0x00000080
-#define FILE_COMPLETE_IF_OPLOCKED           0x00000100
-#define FILE_NO_EA_KNOWLEDGE                0x00000200
-#define FILE_OPEN_FOR_RECOVERY              0x00000400
-#define FILE_RANDOM_ACCESS                  0x00000800
-#define FILE_DELETE_ON_CLOSE                0x00001000
-#define FILE_OPEN_BY_FILE_ID                0x00002000
-#define FILE_OPEN_FOR_BACKUP_INTENT         0x00004000
-#define FILE_NO_COMPRESSION                 0x00008000
-#define FILE_RESERVE_OPFILTER               0x00100000
-#define FILE_OPEN_REPARSE_POINT             0x00200000
-#define FILE_OPEN_NO_RECALL                 0x00400000
-#define FILE_OPEN_FOR_FREE_SPACE_QUERY      0x00800000
+//
+// Device Object Extension Flags
+//
+#define DOE_UNLOAD_PENDING                      0x1
+#define DOE_DELETE_PENDING                      0x2
+#define DOE_REMOVE_PENDING                      0x4
+#define DOE_REMOVE_PROCESSED                    0x8
+#define DOE_START_PENDING                       0x10
 
-/* For DeviceMap DosDevice Type */
-#define DOSDEVICE_DRIVE_UNKNOWN             0
-#define DOSDEVICE_DRIVE_CALCULATE           1
-#define DOSDEVICE_DRIVE_REMOVABLE           2
-#define DOSDEVICE_DRIVE_FIXED               3
-#define DOSDEVICE_DRIVE_REMOTE              4
-#define DOSDEVICE_DRIVE_CDROM               5
-#define DOSDEVICE_DRIVE_RAMDISK             6
-
-/* Device Charactertics */
-#define FILE_REMOVABLE_MEDIA                0x00000001
-#define FILE_REMOTE_DEVICE                  0x00000010
-
-/* Device Object Extension Flags */
-#define DOE_UNLOAD_PENDING    0x1
-#define DOE_DELETE_PENDING    0x2
-#define DOE_REMOVE_PENDING    0x4
-#define DOE_REMOVE_PROCESSED  0x8
-#define DOE_START_PENDING     0x10
-
-/* Device Node Flags */
+//
+// Device Node Flags
+//
 #define DNF_PROCESSED                           0x00000001
 #define DNF_STARTED                             0x00000002
 #define DNF_START_FAILED                        0x00000004
@@ -137,18 +158,26 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DNF_HAS_BOOT_CONFIG                     0x20000000
 #define DNF_BOOT_CONFIG_RESERVED                0x40000000
 #define DNF_HAS_PROBLEM                         0x80000000 // ???
-/* For UserFlags field */
-#define DNUF_DONT_SHOW_IN_UI    0x0002
-#define DNUF_NOT_DISABLEABLE    0x0008
 
-/* ENUMERATIONS **************************************************************/
+//
+// Device Node User Flags
+//
+#define DNUF_DONT_SHOW_IN_UI                    0x0002
+#define DNUF_NOT_DISABLEABLE                    0x0008
 
+//
+// I/O Completion Information Class for NtQueryIoCompletionInformation
+//
 typedef enum _IO_COMPLETION_INFORMATION_CLASS
 {
     IoCompletionBasicInformation
 } IO_COMPLETION_INFORMATION_CLASS;
 
 #ifdef NTOS_MODE_USER
+
+//
+// Hardware Interface Type
+//
 typedef enum _INTERFACE_TYPE
 {
     InterfaceTypeUndefined = -1,
@@ -171,6 +200,9 @@ typedef enum _INTERFACE_TYPE
     MaximumInterfaceType
 }INTERFACE_TYPE, *PINTERFACE_TYPE;
 
+//
+// File Information Classes for NtQueryInformationFile
+//
 typedef enum _FILE_INFORMATION_CLASS
 {
     FileDirectoryInformation = 1,
@@ -216,6 +248,9 @@ typedef enum _FILE_INFORMATION_CLASS
     FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
+//
+// File Information Classes for NtQueryInformationFileSystem
+//
 typedef enum _FSINFOCLASS
 {
     FileFsVolumeInformation = 1,
@@ -229,8 +264,12 @@ typedef enum _FSINFOCLASS
     FileFsDriverPathInformation,
     FileFsMaximumInformation
 } FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
+
 #endif
 
+//
+// Device Node States
+//
 typedef enum _PNP_DEVNODE_STATE
 {
     DeviceNodeUnspecified = 0x300,
@@ -257,9 +296,11 @@ typedef enum _PNP_DEVNODE_STATE
     MaxDeviceNodeState = 0x315,
 } PNP_DEVNODE_STATE;
 
-/* TYPES *********************************************************************/
-
 #ifdef NTOS_MODE_USER
+
+//
+// File Information structures for NtQueryInformationFile
+//
 typedef struct _FILE_BASIC_INFORMATION
 {
     LARGE_INTEGER CreationTime;
@@ -440,6 +481,9 @@ typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION
     LARGE_INTEGER ValidDataLength;
 } FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
 
+//
+// File System Information structures for NtQueryInformationFile
+//
 typedef struct _FILE_FS_DEVICE_INFORMATION
 {
     DEVICE_TYPE DeviceType;
@@ -477,6 +521,9 @@ typedef struct _FILE_FS_VOLUME_INFORMATION
     WCHAR VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
+//
+// Pipe Structures for IOCTL_PIPE_XXX
+//
 typedef struct _FILE_PIPE_WAIT_FOR_BUFFER
 {
     LARGE_INTEGER Timeout;
@@ -494,6 +541,9 @@ typedef struct _FILE_PIPE_PEEK_BUFFER
     CHAR Data[1];
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
+//
+// I/O Status Block
+//
 typedef struct _IO_STATUS_BLOCK
 {
     union
@@ -504,6 +554,9 @@ typedef struct _IO_STATUS_BLOCK
     ULONG_PTR  Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
+//
+// I/O Error Log Structures
+//
 typedef struct _IO_ERROR_LOG_PACKET
 {
     UCHAR MajorFunctionCode;
@@ -530,29 +583,37 @@ typedef struct _IO_ERROR_LOG_MESSAGE
     ULONG DriverNameOffset;
     IO_ERROR_LOG_PACKET EntryData;
 } IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
+
 #endif
 
+//
+// Parameters for NtCreateMailslotFile/NtCreateNamedPipeFile
+//
 typedef struct _MAILSLOT_CREATE_PARAMETERS
 {
-    ULONG           MailslotQuota;
-    ULONG           MaximumMessageSize;
-    LARGE_INTEGER   ReadTimeout;
-    BOOLEAN         TimeoutSpecified;
+    ULONG MailslotQuota;
+    ULONG MaximumMessageSize;
+    LARGE_INTEGER ReadTimeout;
+    BOOLEAN TimeoutSpecified;
 } MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
 
 typedef struct _NAMED_PIPE_CREATE_PARAMETERS
 {
-    ULONG           NamedPipeType;
-    ULONG           ReadMode;
-    ULONG           CompletionMode;
-    ULONG           MaximumInstances;
-    ULONG           InboundQuota;
-    ULONG           OutboundQuota;
-    LARGE_INTEGER   DefaultTimeout;
-    BOOLEAN         TimeoutSpecified;
+    ULONG NamedPipeType;
+    ULONG ReadMode;
+    ULONG CompletionMode;
+    ULONG MaximumInstances;
+    ULONG InboundQuota;
+    ULONG OutboundQuota;
+    LARGE_INTEGER DefaultTimeout;
+    BOOLEAN TimeoutSpecified;
 } NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
 #ifndef NTOS_MODE_USER
+
+//
+// I/O Timer Object
+//
 typedef struct _IO_TIMER
 {
     USHORT Type;
@@ -563,6 +624,9 @@ typedef struct _IO_TIMER
     PDEVICE_OBJECT DeviceObject;
 } IO_TIMER, *PIO_TIMER;
 
+//
+// Device Node
+//
 typedef struct _DEVICE_NODE
 {
     struct _DEVICE_NODE *Parent;
@@ -626,6 +690,9 @@ typedef struct _DEVICE_NODE
     ULONG DeletedChidren;
 } DEVICE_NODE, *PDEVICE_NODE;
 
+//
+// Resource Aribtrer Entry
+//
 typedef struct _PI_RESOURCE_ARBITER_ENTRY
 {
     LIST_ENTRY DeviceArbiterList;
@@ -639,7 +706,10 @@ typedef struct _PI_RESOURCE_ARBITER_ENTRY
     UCHAR State;
     UCHAR ResourcesChanged;
 } PI_RESOURCE_ARBITER_ENTRY, *PPI_RESOURCE_ARBITER_ENTRY;
-  
+
+//
+// Extended Device Object Extension Structure
+//
 typedef struct _EXTENDED_DEVOBJ_EXTENSION
 {
     CSHORT Type;
@@ -656,6 +726,9 @@ typedef struct _EXTENDED_DEVOBJ_EXTENSION
     struct _VPB *Vpb;
 } EXTENDED_DEVOBJ_EXTENSION, *PEXTENDED_DEVOBJ_EXTENSION;
 
+//
+// Private Driver Extension Descriptor
+//
 typedef struct _PRIVATE_DRIVER_EXTENSIONS
 {
     struct _PRIVATE_DRIVER_EXTENSIONS *Link;
@@ -663,6 +736,9 @@ typedef struct _PRIVATE_DRIVER_EXTENSIONS
     CHAR Extension[1];
 } PRIVATE_DRIVER_EXTENSIONS, *PPRIVATE_DRIVER_EXTENSIONS;
 
+//
+// Extended I/O Stack Location Structure
+//
 #if !defined(_ALPHA_)
 #include <pshpack4.h>
 #endif
@@ -910,22 +986,26 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
 #endif
 #endif
 
-/* FUNCTION TYPES ************************************************************/
-
+//
+// APC Callback for NtCreateFile
+//
 typedef VOID
 (NTAPI *PIO_APC_ROUTINE)(
     IN PVOID ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG Reserved);
 
-/* I/O CONTROL CODES *********************************************************/
-
 #ifdef NTOS_MODE_USER
-/* Mailslots */
+
+//
+// Mailslot IOCTL Codes
+//
 #define FSCTL_MAILSLOT_PEEK             \
     CTL_CODE(FILE_DEVICE_MAILSLOT, 0, METHOD_NEITHER, FILE_READ_DATA)
 
-/* Pipes */
+//
+// Pipe IOCTL Codes
+//
 #define FSCTL_PIPE_ASSIGN_EVENT         \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_PIPE_DISCONNECT           \
@@ -955,7 +1035,9 @@ typedef VOID
 #define FSCTL_PIPE_INTERNAL_READ_OVFLOW \
     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2048, METHOD_BUFFERED, FILE_READ_DATA)
 
-/* Tapes */
+//
+// Tape IOCTL Codes
+//
 #define IOCTL_TAPE_ERASE                \
     CTL_CODE(FILE_DEVICE_TAPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #define IOCTL_TAPE_PREPARE              \
@@ -979,6 +1061,6 @@ typedef VOID
 #define IOCTL_TAPE_CREATE_PARTITION     \
     CTL_CODE(FILE_DEVICE_TAPE, 10, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
-#endif
-#endif
+#endif // NTOS_MODE_USER
 
+#endif

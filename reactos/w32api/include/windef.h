@@ -103,7 +103,6 @@ extern "C" {
 #define PASCAL _pascal
 #define CDECL _cdecl
 #define STDCALL __stdcall
-#define FASTCALL __fastcall
 #define WINAPI __stdcall
 #define WINAPIV __cdecl
 #define APIENTRY __stdcall

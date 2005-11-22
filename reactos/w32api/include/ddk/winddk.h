@@ -36,6 +36,7 @@ extern "C" {
 */
 #define DDKAPI __stdcall
 #define DDKFASTAPI __fastcall
+#define FASTCALL __fastcall
 #define DDKCDECLAPI __cdecl
 
 /* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */

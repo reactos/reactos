@@ -23,6 +23,10 @@
  * NOTE: The constants structs and typedefs below should be defined in the
  *       Win32 API headers.
  */
+#define EXCEPTION_EXECUTE_HANDLER       1
+#define EXCEPTION_CONTINUE_SEARCH       0
+#define EXCEPTION_CONTINUE_EXECUTION    -1
+
 #define	EH_NONCONTINUABLE	0x01
 #define	EH_UNWINDING		0x02
 #define	EH_EXIT_UNWIND		0x04

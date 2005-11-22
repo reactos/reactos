@@ -17,8 +17,6 @@
 #include <ddk/ntifs.h>
 #include <ddk/wdmguid.h>
 #include <ndk/ntndk.h>
-#include <ndk/sysguid.h>
-#include <ndk/asm.h>
 
 /* FIXME: Temporary until CC Ros is gone */
 #include <ccros.h>
@@ -40,6 +38,9 @@
 
 /* SEH support with PSEH */
 #include <pseh/pseh.h>
+
+/* PNP GUIDs */
+#include <umpnpmgr/sysguid.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

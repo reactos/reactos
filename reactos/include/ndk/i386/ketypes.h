@@ -1,37 +1,49 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/i386/ketypes.h
- * PURPOSE:         I386-specific definitions for Kernel Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    ketypes.h (X86)
+
+Abstract:
+
+    i386 Type definitions for the Kernel services.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _I386_KETYPES_H
 #define _I386_KETYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-/* CONSTANTS *****************************************************************/
+//
+// X86 80386 Segment Types
+//
+#define I386_TSS                0x9
+#define I386_ACTIVE_TSS         0xB
+#define I386_CALL_GATE          0xC
+#define I386_INTERRUPT_GATE     0xE
+#define I386_TRAP_GATE          0xF
 
-/* X86 80386 Segment Types */
-#define I386_TSS               0x9
-#define I386_ACTIVE_TSS        0xB
-#define I386_CALL_GATE         0xC
-#define I386_INTERRUPT_GATE    0xE
-#define I386_TRAP_GATE         0xF
-
+//
+// IPI Types
+//
 #define IPI_APC                 1
 #define IPI_DPC                 2
 #define IPI_FREEZE              3
 #define IPI_PACKET_READY        4
 #define IPI_SYNCH_REQUEST       10
 
-/* EXPORTED DATA *************************************************************/
-
-/* ENUMERATIONS **************************************************************/
-
-/* TYPES *********************************************************************/
-
+//
+// FN/FX (FPU) Save Area Structures
+//
 typedef struct _FNSAVE_FORMAT
 {
     ULONG ControlWord;
@@ -73,7 +85,9 @@ typedef struct _FX_SAVE_AREA
     ULONG Cr0NpxState;
 } FX_SAVE_AREA, *PFX_SAVE_AREA;
 
-/* FIXME: The names need to be fixed! */
+//
+// FIXME: Trap Frame Definition
+//
 typedef struct _KTRAP_FRAME
 {
     ULONG DebugEbp;
@@ -113,6 +127,9 @@ typedef struct _KTRAP_FRAME
     ULONG V86_Gs;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
+//
+// LDT Entry Definition
+//
 typedef struct _LDT_ENTRY
 {
     USHORT LimitLow;
@@ -142,6 +159,9 @@ typedef struct _LDT_ENTRY
     } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
 
+//
+// GDT Entry Definition
+//
 typedef struct _KGDTENTRY
 {
     USHORT LimitLow;
@@ -171,6 +191,9 @@ typedef struct _KGDTENTRY
     } HighWord;
 } KGDTENTRY, *PKGDTENTRY;
 
+//
+// IDT Entry Access Definition
+//
 typedef struct _KIDT_ACCESS
 {
     union
@@ -187,6 +210,9 @@ typedef struct _KIDT_ACCESS
     };
 } KIDT_ACCESS, *PKIDT_ACCESS;
 
+//
+// IDT Entry Definition
+//
 typedef struct _KIDTENTRY
 {
     USHORT Offset;
@@ -195,6 +221,9 @@ typedef struct _KIDTENTRY
     USHORT ExtendedOffset;
 } KIDTENTRY, *PKIDTENTRY;
 
+//
+// Page Table Entry Definition
+//
 typedef struct _HARDWARE_PTE_X86
 {
     ULONG Valid             : 1;
@@ -219,6 +248,9 @@ typedef struct _DESCRIPTOR
     ULONG Base;
 } KDESCRIPTOR, *PKDESCRIPTOR;
 
+//
+// Special Registers Structure (outside of CONTEXT)
+//
 typedef struct _KSPECIAL_REGISTERS
 {
     ULONG Cr0;
@@ -238,15 +270,19 @@ typedef struct _KSPECIAL_REGISTERS
     ULONG Reserved[6];
 } KSPECIAL_REGISTERS, *PKSPECIAL_REGISTERS;
 
+//
+// Processor State Data
+//
 #pragma pack(push,4)
-
 typedef struct _KPROCESSOR_STATE
 {
     PCONTEXT ContextFrame;
     KSPECIAL_REGISTERS SpecialRegisters;
 } KPROCESSOR_STATE;
 
-/* Processor Control Block */
+//
+// Processor Region Control Block
+//
 typedef struct _KPRCB
 {
     USHORT MinorVersion;
@@ -377,9 +413,9 @@ typedef struct _KPRCB
     PROCESSOR_POWER_STATE PowerState;
 } KPRCB, *PKPRCB;
 
-/*
- * This is the complete, internal KPCR structure
- */
+//
+// Processor Control Region
+//
 typedef struct _KIPCR
 {
     union
@@ -422,11 +458,12 @@ typedef struct _KIPCR
     UCHAR KernelReserved2[0x48]; /* D8 */
     KPRCB PrcbData;              /* 120 */
 } KIPCR, *PKIPCR;
-
 #pragma pack(pop)
 
+//
+// FIXME: TSS without I/O Privilege Map
+//
 #include <pshpack1.h>
-
 typedef struct _KTSSNOIOPM
 {
     USHORT PreviousTask;
@@ -471,30 +508,33 @@ typedef struct _KTSSNOIOPM
     UCHAR IoBitmap[1];
 } KTSSNOIOPM;
 
+//
+// TSS Definition
+//
 typedef struct _KTSS
 {
     USHORT PreviousTask;
     USHORT Reserved1;
-    ULONG  Esp0;
+    ULONG Esp0;
     USHORT Ss0;
     USHORT Reserved2;
-    ULONG  Esp1;
+    ULONG Esp1;
     USHORT Ss1;
     USHORT Reserved3;
-    ULONG  Esp2;
+    ULONG Esp2;
     USHORT Ss2;
     USHORT Reserved4;
-    ULONG  Cr3;
-    ULONG  Eip;
-    ULONG  Eflags;
-    ULONG  Eax;
-    ULONG  Ecx;
-    ULONG  Edx;
-    ULONG  Ebx;
-    ULONG  Esp;
-    ULONG  Ebp;
-    ULONG  Esi;
-    ULONG  Edi;
+    ULONG Cr3;
+    ULONG Eip;
+    ULONG Eflags;
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Esp;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
     USHORT Es;
     USHORT Reserved5;
     USHORT Cs;
@@ -512,12 +552,13 @@ typedef struct _KTSS
     USHORT Trap;
     USHORT IoMapBase;
     /* no interrupt redirection map */
-    UCHAR  IoBitmap[8193];
+    UCHAR IoBitmap[8193];
 } KTSS;
-
 #include <poppack.h>
 
-/* i386 Doesn't have Exception Frames */
+//
+// i386 CPUs don't have exception frames
+//
 typedef struct _KEXCEPTION_FRAME KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 #endif

@@ -1,20 +1,31 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/exfuncs.h
- * PURPOSE:         Prototypes for exported Executive Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    exfuncs.h
+
+Abstract:
+
+    Function definitions for the Executive.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _EXFUNCS_H
 #define _EXFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-/* FUNCTION TYPES ************************************************************/
-
-/* PROTOTYPES ****************************************************************/
-
+//
+// Fast Mutex functions
+//
 VOID
 FASTCALL
 ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex);

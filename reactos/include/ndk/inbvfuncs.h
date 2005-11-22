@@ -1,20 +1,31 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/haltypes.h
- * PURPOSE:         Prototypes for Boot Video Driver not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    inbvfuncs.h
+
+Abstract:
+
+    Function definitions for the Boot Video Driver.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _INBVFUNCS_H
 #define _INBVFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-/* FUNCTION TYPES ************************************************************/
-
-/* PROTOTYPES ****************************************************************/
-
+//
+// Ownership Functions
+//
 VOID
 NTAPI
 InbvAcquireDisplayOwnership(VOID);
@@ -23,21 +34,18 @@ BOOLEAN
 NTAPI
 InbvCheckDisplayOwnership(VOID);
 
-BOOLEAN
+VOID
 NTAPI
-InbvDisplayString(
-    IN PCHAR String
+InbvNotifyDisplayOwnershipLost(
+    IN PVOID Callback
 );
 
+//
+// Installation Functions
+//
 VOID
 NTAPI
 InbvEnableBootDriver(
-    IN BOOLEAN Enable
-);
-
-BOOLEAN
-NTAPI
-InbvEnableDisplayString(
     IN BOOLEAN Enable
 );
 
@@ -51,10 +59,19 @@ BOOLEAN
 NTAPI
 InbvIsBootDriverInstalled(VOID);
 
-VOID
+//
+// Display Functions
+//
+BOOLEAN
 NTAPI
-InbvNotifyDisplayOwnershipLost(
-    IN PVOID Callback
+InbvDisplayString(
+    IN PCHAR String
+);
+
+BOOLEAN
+NTAPI
+InbvEnableDisplayString(
+    IN BOOLEAN Enable
 );
 
 BOOLEAN
@@ -85,17 +102,5 @@ InbvSolidColorFill(
     IN ULONG Height,
     IN ULONG Color
 );
-
-VOID
-NTAPI
-VidCleanUp(VOID);
-
-BOOLEAN
-NTAPI
-VidResetDisplay(VOID);
-
-BOOLEAN
-NTAPI
-VidIsBootDriverInstalled(VOID);
 
 #endif

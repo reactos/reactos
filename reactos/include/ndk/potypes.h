@@ -1,24 +1,34 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/potypes.h
- * PURPOSE:         Defintions for Power Manager Types not documented in DDK/IFS.
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    potypes.h
+
+Abstract:
+
+    Type definitions for the Power Subystem
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _POTYPES_H
 #define _POTYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 #ifndef NTOS_MODE_USER
 #include <ntpoapi.h>
 #endif
 
-/* EXPORTED DATA *************************************************************/
-
-/* CONSTANTS *****************************************************************/
-
-/* ENUMERATIONS **************************************************************/
+//
+// Docking states
+//
 typedef enum _SYSTEM_DOCK_STATE
 {
     SystemDockStateUnknown,
@@ -26,9 +36,11 @@ typedef enum _SYSTEM_DOCK_STATE
     SystemDocked
 } SYSTEM_DOCK_STATE, *PSYSTEM_DOCK_STATE;
 
-/* TYPES *********************************************************************/
-
 #ifndef NTOS_MODE_USER
+
+//
+// Processor Power State Data
+//
 typedef struct _PROCESSOR_POWER_STATE
 {
     PVOID IdleFunction;
@@ -77,6 +89,9 @@ typedef struct _PROCESSOR_POWER_STATE
     ULONG Spare1[1];
 } PROCESSOR_POWER_STATE, *PPROCESSOR_POWER_STATE;
 
+//
+// Device Notification Structure
+//
 typedef struct _PO_DEVICE_NOTIFY
 {
     LIST_ENTRY Link;
@@ -90,5 +105,7 @@ typedef struct _PO_DEVICE_NOTIFY
     ULONG ChildCount;
     ULONG ActiveChild;
 } PO_DEVICE_NOTIFY, *PPO_DEVICE_NOTIFY;
-#endif
-#endif
+
+#endif // !NTOS_MODE_USER
+
+#endif // _POTYPES_H

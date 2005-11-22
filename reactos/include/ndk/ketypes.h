@@ -1,51 +1,94 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/ketypes.h
- * PURPOSE:         Definitions for Kernel Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    lpctypes.h
+
+Abstract:
+
+    Type definitions for the Loader.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _KETYPES_H
 #define _KETYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 #ifndef NTOS_MODE_USER
 #include <arc/arc.h>
 #include "arch/ketypes.h"
 #endif
 
-/* CONSTANTS *****************************************************************/
-#define SSDT_MAX_ENTRIES 4
-#define CONTEXT_DEBUGGER (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
+//
+// Context Record Flags
+//
+#define CONTEXT_DEBUGGER                (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
+
+//
+// Maximum System Descriptor Table Entries
+//
+#define SSDT_MAX_ENTRIES                4
 
 #ifdef NTOS_MODE_USER
-#define SharedUserData ((KUSER_SHARED_DATA * CONST) USER_SHARED_DATA)
-#define MAX_WOW64_SHARED_ENTRIES 16
-#define PROCESSOR_FEATURE_MAX 64
-#endif
 
-/* ENUMERATIONS **************************************************************/
+//
+// KPROCESSOR_MODE Type
+//
+typedef CCHAR KPROCESSOR_MODE;
 
-#ifdef NTOS_MODE_USER
+//
+// Dereferencable pointer to KUSER_SHARED_DATA in User-Mode
+//
+#define SharedUserData                  ((KUSER_SHARED_DATA *CONST)USER_SHARED_DATA)
+
+//
+// Maximum WOW64 Entries in KUSER_SHARED_DATA
+//
+#define MAX_WOW64_SHARED_ENTRIES        16
+
+//
+// Maximum Processor Features supported in KUSER_SHARED_DATA
+//
+#define PROCESSOR_FEATURE_MAX           64
+
+//
+// Event Types
+//
 typedef enum _EVENT_TYPE
 {
     NotificationEvent,
     SynchronizationEvent
 } EVENT_TYPE;
 
+//
+// Timer Types
+//
 typedef enum _TIMER_TYPE
 {
     NotificationTimer,
     SynchronizationTimer
 } TIMER_TYPE;
 
+//
+// Wait Types
+//
 typedef enum _WAIT_TYPE
 {
     WaitAll,
     WaitAny
 } WAIT_TYPE;
 
+//
+// Processor Execution Modes
+//
 typedef enum _MODE
 {
     KernelMode,
@@ -53,6 +96,9 @@ typedef enum _MODE
     MaximumMode
 } MODE;
 
+//
+// Wait Reasons
+//
 typedef enum _KWAIT_REASON
 {
     Executive,
@@ -92,6 +138,9 @@ typedef enum _KWAIT_REASON
     MaximumWaitReason
 } KWAIT_REASON;
 
+//
+// Profiling Sources
+//
 typedef enum _KPROFILE_SOURCE
 {
     ProfileTime,
@@ -121,6 +170,9 @@ typedef enum _KPROFILE_SOURCE
     ProfileMaximum
 } KPROFILE_SOURCE;
 
+//
+// NT Product and Architecture Types
+//
 typedef enum _NT_PRODUCT_TYPE
 {
     NtProductWinNt = 1,
@@ -134,8 +186,12 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
     NEC98x86,
     EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
+
 #endif
 
+//
+// Thread States
+//
 typedef enum _KTHREAD_STATE
 {
     Initialized,
@@ -148,6 +204,9 @@ typedef enum _KTHREAD_STATE
     DeferredReady,
 } KTHREAD_STATE, *PKTHREAD_STATE;
 
+//
+// Process States
+//
 typedef enum _KPROCESS_STATE
 {
     ProcessInMemory,
@@ -155,27 +214,31 @@ typedef enum _KPROCESS_STATE
     ProcessInTransition,
 } KPROCESS_STATE, *PKPROCESS_STATE;
 
-/* FUNCTION TYPES ************************************************************/
-
 #ifdef NTOS_MODE_USER
+
+//
+// APC Normal Routine
+//
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
-    IN PVOID  NormalContext,
-    IN PVOID  SystemArgument1,
-    IN PVOID  SystemArgument2);
+    IN PVOID NormalContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2
+);
 
+//
+// Timer Routine
+//
 typedef VOID
 (NTAPI *PTIMER_APC_ROUTINE)(
-    IN PVOID  TimerContext,
-    IN ULONG  TimerLowValue,
-    IN LONG  TimerHighValue);
-#endif
+    IN PVOID TimerContext,
+    IN ULONG TimerLowValue,
+    IN LONG TimerHighValue
+);
 
-/* TYPES *********************************************************************/
-
-#ifdef NTOS_MODE_USER
-typedef CCHAR KPROCESSOR_MODE;
-
+//
+// System Time Structure
+//
 typedef struct _KSYSTEM_TIME
 {
     ULONG LowPart;
@@ -183,6 +246,9 @@ typedef struct _KSYSTEM_TIME
     LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
+//
+// Shared Kernel User Data
+//
 typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;
@@ -231,9 +297,12 @@ typedef struct _KUSER_SHARED_DATA
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
     ULONG UserModeGlobalLogging;
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
-#endif
 
-#ifndef NTOS_MODE_USER
+#else
+
+//
+// ARC Component Data
+//
 typedef struct _CONFIGURATION_COMPONENT_DATA
 {
     struct _CONFIGURATION_COMPONENT_DATA *Parent;
@@ -242,6 +311,9 @@ typedef struct _CONFIGURATION_COMPONENT_DATA
     CONFIGURATION_COMPONENT Component;
 } CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
 
+//
+// APC Environment Types
+//
 typedef enum _KAPC_ENVIRONMENT
 {
     OriginalApcEnvironment,
@@ -249,20 +321,26 @@ typedef enum _KAPC_ENVIRONMENT
     CurrentApcEnvironment
 } KAPC_ENVIRONMENT;
 
+//
+// Kernel Memory Node (FIXME: mmtypes?
+//
 typedef struct _KNODE
 {
-   SLIST_HEADER DeadStackList;
-   SLIST_HEADER PfnDereferenceSListHead;
-   ULONG ProcessorMask;
-   ULONG Color;
-   UCHAR Seed;
-   UCHAR NodeNumber;
-   ULONG Flags;
-   ULONG MmShiftedColor;
-   ULONG FreeCount[2];
-   struct _SINGLE_LIST_ENTRY *PfnDeferredList;
+    SLIST_HEADER DeadStackList;
+    SLIST_HEADER PfnDereferenceSListHead;
+    ULONG ProcessorMask;
+    ULONG Color;
+    UCHAR Seed;
+    UCHAR NodeNumber;
+    ULONG Flags;
+    ULONG MmShiftedColor;
+    ULONG FreeCount[2];
+    struct _SINGLE_LIST_ENTRY *PfnDeferredList;
 } KNODE, *PKNODE;
 
+//
+// Kernel Profile Object (FIXME: Fix with new defs)
+//
 typedef struct _KPROFILE
 {
     CSHORT Type;
@@ -278,6 +356,9 @@ typedef struct _KPROFILE
     struct _KPROCESS *Process;
 } KPROFILE, *PKPROFILE;
 
+//
+// Kernel Interrupt Object (FIXME: Verify)
+//
 typedef struct _KINTERRUPT
 {
     CSHORT Type;
@@ -302,6 +383,9 @@ typedef struct _KINTERRUPT
     ULONG DispatchCode[106];
 } KINTERRUPT, *PKINTERRUPT;
 
+//
+// Kernel Event Pair Object
+//
 typedef struct _KEVENT_PAIR
 {
     CSHORT Type;
@@ -310,6 +394,9 @@ typedef struct _KEVENT_PAIR
     KEVENT HighEvent;
 } KEVENT_PAIR, *PKEVENT_PAIR;
 
+//
+// Kernel No Execute Options
+//
 typedef struct _KEXECUTE_OPTIONS
 {
     UCHAR ExecuteDisable:1;
@@ -321,6 +408,9 @@ typedef struct _KEXECUTE_OPTIONS
     UCHAR Spare:2;
 } KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
 
+//
+// Kernel Object Types
+//
 typedef enum _KOBJECTS
 {
     EventNotificationObject = 0,
@@ -351,8 +441,10 @@ typedef enum _KOBJECTS
     MaximumKernelObject = 25
 } KOBJECTS;
 
+//
+// Kernel Thread (KTHREAD)
+//
 #include <pshpack1.h>
-
 typedef struct _KTHREAD
 {
     DISPATCHER_HEADER DispatcherHeader;                 /* 00 */
@@ -528,9 +620,11 @@ typedef struct _KTHREAD
     LIST_ENTRY ThreadListEntry;                         /* 1A8 */
     PVOID SListFaultAddress;                            /* 1B0 */
 } KTHREAD;                                              /* sizeof: 1B4 */
-
 #include <poppack.h>
 
+//
+// Kernel Process (KPROCESS)
+//
 typedef struct _KPROCESS
 {
     DISPATCHER_HEADER     Header;                    /* 000 */
@@ -575,6 +669,9 @@ typedef struct _KPROCESS
     LIST_ENTRY            ProcessListEntry;          /* 070 */
 } KPROCESS;
 
+//
+// System Service Table Descriptor
+//
 typedef struct _KSERVICE_TABLE_DESCRIPTOR
 {
     PULONG_PTR Base;
@@ -585,21 +682,34 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
 #endif
     PUCHAR Number;
 } KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
-#endif /* !NTOS_MODE_USER */
 
-/* EXPORTED DATA *************************************************************/
-#ifndef NTOS_MODE_USER
-extern CHAR NTSYSAPI KeNumberProcessors;
+//
+// Exported Loader Parameter Block
+//
 extern LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
-extern ULONG NTSYSAPI KeDcacheFlushCount;
-extern ULONG NTSYSAPI KeIcacheFlushCount;
+
+//
+// Exported Hardware Data
+//
 extern KAFFINITY NTSYSAPI KeActiveProcessors;
-extern ULONG NTSYSAPI KiDmaIoCoherency; /* RISC Architectures only */
+extern CHAR NTSYSAPI KeNumberProcessors;
+extern ULONG NTSYSAPI KiDmaIoCoherency;
 extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;
+extern ULONG NTSYSAPI KeDcacheFlushCount;
+extern ULONG NTSYSAPI KeIcacheFlushCount;
+
+//
+// Exported NT Build Number (FIXME: move?)
+//
 extern ULONG NTSYSAPI NtBuildNumber;
+
+//
+// Exported System Service Descriptor Tables
+//
 extern KSERVICE_TABLE_DESCRIPTOR NTSYSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
 extern KSERVICE_TABLE_DESCRIPTOR NTSYSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
-#endif
 
-#endif
+#endif // !NTOS_MODE_USER
+
+#endif // _KETYPES_H

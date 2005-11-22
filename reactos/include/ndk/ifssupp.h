@@ -1,21 +1,23 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/ifssupp.h
- * PURPOSE:         Defintions present in IFS, required for NDK usage.
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 08/16/05
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    ifssupp.h
+
+Abstract:
+
+    NDK Support for usage without the IFS. Will be deprecated at WDK Release.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _NTIFS_
 #define _NTIFS_
-
-/* DEPENDENCIES **************************************************************/
-
-/* EXPORTED DATA *************************************************************/
-
-/* CONSTANTS *****************************************************************/
-
-/* TYPES *********************************************************************/
 
 typedef PVOID PRTL_HEAP_PARAMETERS;
 
@@ -126,5 +128,4 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
 
-#endif
-
+#endif // _NTIFS_

@@ -1,30 +1,40 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/ldrfuncs.h
- * PURPOSE:         Defintions for Loader Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    ldrfuncs.h
+
+Abstract:
+
+    Functions definitions for the Loader.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _LDRFUNCS_H
 #define _LDRFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 #include "ldrtypes.h"
-/* FIXME: this needs be implemented in the w32api ddk */
 #if defined(_MSC_VER) && !defined(NTOS_MODE_USER)
 #include <ntimage.h>
 #endif
 
-/* FUNCTION TYPES ************************************************************/
-
-/* PROTOTYPES ****************************************************************/
-
+//
+// Resource Functions
+//
 NTSTATUS
 NTAPI
 LdrAccessResource(
-    IN  PVOID BaseAddress,
-    IN  PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
+    IN PVOID BaseAddress,
+    IN PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
     OUT PVOID *Resource OPTIONAL,
     OUT PULONG Size OPTIONAL
 );
@@ -32,9 +42,9 @@ LdrAccessResource(
 NTSTATUS
 NTAPI
 LdrFindResource_U(
-    IN  PVOID BaseAddress,
-    IN  PLDR_RESOURCE_INFO ResourceInfo,
-    IN  ULONG Level,
+    IN PVOID BaseAddress,
+    IN PLDR_RESOURCE_INFO ResourceInfo,
+    IN ULONG Level,
     OUT PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry
 );
 
@@ -47,6 +57,9 @@ LdrFindResourceDirectory_U(
     OUT PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
 );
 
+//
+// Misc. Functions
+//
 NTSTATUS
 NTAPI
 LdrGetProcedureAddress(

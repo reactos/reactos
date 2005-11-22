@@ -1,20 +1,27 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/sefuncs.h
- * PURPOSE:         Defintions for Security Subsystem Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    sefuncs.h
+
+Abstract:
+
+    Function definitions for the security manager.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _SEFUNCS_H
 #define _SEFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
-
-/* FUNCTION TYPES ************************************************************/
-
-/* PROTOTYPES ****************************************************************/
-
+//
+// Security Descriptors
+//
 NTSTATUS
 NTAPI
 SeCaptureSecurityDescriptor(
@@ -27,6 +34,17 @@ SeCaptureSecurityDescriptor(
 
 NTSTATUS
 NTAPI
+SeReleaseSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
+    IN KPROCESSOR_MODE CurrentMode,
+    IN BOOLEAN CaptureIfKernelMode
+);
+
+//
+// Access States
+//
+NTSTATUS
+NTAPI
 SeCreateAccessState(
     PACCESS_STATE AccessState,
     PAUX_DATA AuxData,
@@ -36,16 +54,13 @@ SeCreateAccessState(
 
 VOID
 NTAPI
-SeDeleteAccessState(IN PACCESS_STATE AccessState);
-
-NTSTATUS
-NTAPI
-SeReleaseSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
-    IN KPROCESSOR_MODE CurrentMode,
-    IN BOOLEAN CaptureIfKernelMode
+SeDeleteAccessState(
+    IN PACCESS_STATE AccessState
 );
 
+//
+// Impersonation
+//
 SECURITY_IMPERSONATION_LEVEL
 NTAPI
 SeTokenImpersonationLevel(

@@ -47,6 +47,24 @@ extern "C" {
 #define UNALIGNED
 #endif
 
+#ifndef DECLSPEC_ADDRSAFE
+#if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
+#define DECLSPEC_ADDRSAFE __declspec(address_safe)
+#else
+#define DECLSPEC_ADDRSAFE
+#endif
+#endif
+
+#ifndef FORCEINLINE
+#if (_MSC_VER >= 1200)
+#define FORCEINLINE __forceinline
+#elif (_MSC_VER)
+#define FORCEINLINE __inline
+#else
+#define FORCEINLINE static __inline
+#endif
+#endif
+
 #ifndef VOID
 #define VOID void
 #endif
@@ -2455,6 +2473,11 @@ typedef struct _RTL_CRITICAL_SECTION {
 	ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION;
 #endif
+
+typedef LONG
+(NTAPI *PVECTORED_EXCEPTION_HANDLER)(
+    struct _EXCEPTION_POINTERS *ExceptionInfo
+);
 
 typedef struct _EVENTLOGRECORD {
 	DWORD Length;

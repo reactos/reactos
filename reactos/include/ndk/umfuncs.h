@@ -1,21 +1,33 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/umfuncs.h
- * PURPOSE:         Prototypes for NT Library Functions
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    umfuncs.h
+
+Abstract:
+
+    Function definitions for Native DLL (ntdll) APIs exclusive to User Mode.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _UMFUNCS_H
 #define _UMFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Don't force inclusion of csrss header, leave this opaque.
+//
 struct _CSR_API_MESSAGE;
 struct _CSR_CAPTURE_BUFFER;
 
-/* PROTOTYPES ****************************************************************/
-
-/*
- * CSR Functions
- */
+//
+// CSR Functions
+//
 PVOID
 NTAPI
 CsrAllocateCaptureBuffer(
@@ -27,17 +39,17 @@ ULONG
 NTAPI
 CsrAllocateMessagePointer(
     struct _CSR_CAPTURE_BUFFER *CaptureBuffer,
-	ULONG MessageLength,
-	PVOID *CaptureData
+    ULONG MessageLength,
+    PVOID *CaptureData
 );
 
 VOID
 NTAPI
 CsrCaptureMessageBuffer(
     struct _CSR_CAPTURE_BUFFER *CaptureBuffer,
-	PVOID MessageString,
-	ULONG StringLength,
-	PVOID *CapturedData
+    PVOID MessageString,
+    ULONG StringLength,
+    PVOID *CapturedData
 );
 
 NTSTATUS
@@ -61,11 +73,15 @@ CsrClientCallServer(
 
 NTSTATUS
 NTAPI
-CsrIdentifyAlertableThread(VOID);
+CsrIdentifyAlertableThread(
+    VOID
+);
 
 VOID
 NTAPI
-CsrFreeCaptureBuffer(struct _CSR_CAPTURE_BUFFER *CaptureBuffer);
+CsrFreeCaptureBuffer(
+    struct _CSR_CAPTURE_BUFFER *CaptureBuffer
+);
 
 NTSTATUS
 NTAPI
@@ -94,57 +110,56 @@ CsrProbeForWrite(
     IN ULONG Alignment
 );
 
-/*
- * Debug Functions
- */
-ULONG
-__cdecl
-DbgPrint(
-    IN PCH  Format,
-    IN ...
-);
-
-VOID
-NTAPI
-DbgBreakPoint(VOID);
-
+//
+// Debug Functions
+//
 NTSYSAPI
 VOID
 NTAPI
-DbgBreakPointWithStatus(IN ULONG Status);
+DbgBreakPointWithStatus(
+    IN ULONG Status
+);
 
 NTSTATUS
 NTAPI
-DbgUiConnectToDbg(VOID);
+DbgUiConnectToDbg(
+    VOID
+);
 
 NTSTATUS
 NTAPI
 DbgUiContinue(
-    PCLIENT_ID ClientId,
-    ULONG ContinueStatus
+    IN PCLIENT_ID ClientId,
+    IN ULONG ContinueStatus
 );
 
 NTSTATUS
 NTAPI
 DbgUiWaitStateChange(
-    PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
-    PLARGE_INTEGER TimeOut
+    IN PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
+    IN PLARGE_INTEGER TimeOut
 );
 
 VOID
 NTAPI
-DbgUiRemoteBreakin(VOID);
+DbgUiRemoteBreakin(
+    VOID
+);
 
 NTSTATUS
 NTAPI
-DbgUiIssueRemoteBreakin(HANDLE Process);
+DbgUiIssueRemoteBreakin(
+    IN HANDLE Process
+);
 
-/*
- * Loader Functions
- */
+//
+// Loader Functions
+//
 NTSTATUS
 NTAPI
-LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress);
+LdrDisableThreadCalloutsForDll(
+    IN PVOID BaseAddress
+);
 
 NTSTATUS
 NTAPI
@@ -219,15 +234,21 @@ LdrQueryProcessModuleInformation(
 
 NTSTATUS
 NTAPI
-LdrShutdownProcess(VOID);
+LdrShutdownProcess(
+    VOID
+);
 
 NTSTATUS
 NTAPI
-LdrShutdownThread(VOID);
+LdrShutdownThread(
+    VOID
+);
 
 NTSTATUS
 NTAPI
-LdrUnloadDll(IN PVOID BaseAddress);
+LdrUnloadDll(
+    IN PVOID BaseAddress
+);
 
 NTSTATUS
 NTAPI
@@ -239,4 +260,3 @@ LdrVerifyImageMatchesChecksum(
 );
 
 #endif
-/* EOF */

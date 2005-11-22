@@ -1,20 +1,28 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/iofuncs.h
- * PURPOSE:         Definitions for exported I/O Manager Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    iofuncs.h
+
+Abstract:
+
+    Function definitions for the I/O Manager.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
 
 #ifndef _IOFUNCS_H
 #define _IOFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 
-/* FUNCTION TYPES ************************************************************/
-
-/* PROTOTYPES ****************************************************************/
 
 #endif
 

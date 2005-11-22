@@ -1,256 +1,193 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/rtltypes.h
- * PURPOSE:         Defintions for Runtime Library Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    rtltypes.h
+
+Abstract:
+
+    Type definitions for the Run-Time Library
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _RTLTYPES_H
 #define _RTLTYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 #include "pstypes.h"
 
-/* CONSTANTS *****************************************************************/
-#define MAXIMUM_LEADBYTES 12
+//
+// Maximum Atom Length
+//
+#define RTL_MAXIMUM_ATOM_LENGTH                              255
 
-#define PPF_NORMALIZED             0x01
-#define PPF_PROFILE_USER           0x02
-#define PPF_PROFILE_SERVER         0x04
-#define PPF_PROFILE_KERNEL         0x08
+//
+// Process Parameters Flags (FIXME: Rename)
+//
+#define PPF_NORMALIZED                                       0x01
+#define PPF_PROFILE_USER                                     0x02
+#define PPF_PROFILE_SERVER                                   0x04
+#define PPF_PROFILE_KERNEL                                   0x08
+#define PPF_UNKNOWN                                          0x10
+#define PPF_RESERVE_1MB                                      0x20
+#define PPF_DISABLE_HEAP_CHECKS                              0x100
+#define PPF_PROCESS_OR_1                                     0x200
+#define PPF_PROCESS_OR_2                                     0x400
 
-#define PPF_RESERVE_1MB            0x20
-#define PPF_DISABLE_HEAP_CHECKS    0x100
-#define PPF_PROCESS_OR_1           0x200
-#define PPF_PROCESS_OR_2           0x400
+//
+// Exception Flags
+//
+#define EXCEPTION_CHAIN_END                                  ((PEXCEPTION_REGISTRATION_RECORD)-1)
+#define EXCEPTION_UNWINDING                                  0x02
+#define EXCEPTION_EXIT_UNWIND                                0x04
+#define EXCEPTION_STACK_INVALID                              0x08
+#define EXCEPTION_NESTED_CALL                                0x10
+#define EXCEPTION_TARGET_UNWIND                              0x20
+#define EXCEPTION_COLLIDED_UNWIND                            0x20
 
-#define PEB_BASE                   (0x7FFDF000)
+//
+// Range and Range List Flags
+//
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT                       0x00000001
+#define RTL_RANGE_LIST_ADD_SHARED                            0x00000002
 
-#define EXCEPTION_CHAIN_END           ((PEXCEPTION_REGISTRATION_RECORD)-1)
-#define EXCEPTION_CONTINUE_SEARCH     0
-#define EXCEPTION_EXECUTE_HANDLER     1
+#define RTL_RANGE_SHARED                                     0x01
+#define RTL_RANGE_CONFLICT                                   0x02
 
-#define EXCEPTION_UNWINDING 0x02
-#define EXCEPTION_EXIT_UNWIND 0x04
-#define EXCEPTION_STACK_INVALID 0x8
-#define EXCEPTION_NESTED_CALL 0x10
-#define EXCEPTION_TARGET_UNWIND 0x20
-#define EXCEPTION_COLLIDED_UNWIND 0x20
+//
+// Registry Keys
+//
+#define RTL_REGISTRY_ABSOLUTE                                0
+#define RTL_REGISTRY_SERVICES                                1
+#define RTL_REGISTRY_CONTROL                                 2
+#define RTL_REGISTRY_WINDOWS_NT                              3
+#define RTL_REGISTRY_DEVICEMAP                               4
+#define RTL_REGISTRY_USER                                    5
+#define RTL_REGISTRY_MAXIMUM                                 6
+#define RTL_REGISTRY_HANDLE                                  0x40000000
+#define RTL_REGISTRY_OPTIONAL                                0x80000000
+#define RTL_QUERY_REGISTRY_SUBKEY                            0x00000001
+#define RTL_QUERY_REGISTRY_TOPKEY                            0x00000002
+#define RTL_QUERY_REGISTRY_REQUIRED                          0x00000004
+#define RTL_QUERY_REGISTRY_NOVALUE                           0x00000008
+#define RTL_QUERY_REGISTRY_NOEXPAND                          0x00000010
+#define RTL_QUERY_REGISTRY_DIRECT                            0x00000020
+#define RTL_QUERY_REGISTRY_DELETE                            0x00000040
 
-#define EH_NONCONTINUABLE   0x01
-#define EH_UNWINDING        0x02
-#define EH_EXIT_UNWIND      0x04
-#define EH_STACK_INVALID    0x08
-#define EH_NESTED_CALL      0x10
+//
+// Versioning
+//
+#define VER_MINORVERSION                                     0x0000001
+#define VER_MAJORVERSION                                     0x0000002
+#define VER_BUILDNUMBER                                      0x0000004
+#define VER_PLATFORMID                                       0x0000008
+#define VER_SERVICEPACKMINOR                                 0x0000010
+#define VER_SERVICEPACKMAJOR                                 0x0000020
+#define VER_SUITENAME                                        0x0000040
+#define VER_PRODUCT_TYPE                                     0x0000080
+#define VER_PLATFORM_WIN32s                                  0
+#define VER_PLATFORM_WIN32_WINDOWS                           1
+#define VER_PLATFORM_WIN32_NT                                2
+#define VER_EQUAL                                            1
+#define VER_GREATER                                          2
+#define VER_GREATER_EQUAL                                    3
+#define VER_LESS                                             4
+#define VER_LESS_EQUAL                                       5
+#define VER_AND                                              6
+#define VER_OR                                               7
+#define VER_CONDITION_MASK                                   7
+#define VER_NUM_BITS_PER_CONDITION_MASK                      3
 
-#define RTL_RANGE_LIST_ADD_IF_CONFLICT  0x00000001
-#define RTL_RANGE_LIST_ADD_SHARED       0x00000002
+//
+// Timezone IDs
+//
+#define TIME_ZONE_ID_UNKNOWN                                 0
+#define TIME_ZONE_ID_STANDARD                                1
+#define TIME_ZONE_ID_DAYLIGHT                                2
+#define TIME_ZONE_ID_INVALID                                 0xFFFFFFFF
 
-#define RTL_RANGE_SHARED      0x01
-#define RTL_RANGE_CONFLICT    0x02
-
-/* Run-Time Library (RTL) Registry Constants */
-#define RTL_REGISTRY_ABSOLUTE       0
-#define RTL_REGISTRY_SERVICES       1
-#define RTL_REGISTRY_CONTROL        2
-#define RTL_REGISTRY_WINDOWS_NT     3
-#define RTL_REGISTRY_DEVICEMAP      4
-#define RTL_REGISTRY_USER           5
-#define RTL_REGISTRY_MAXIMUM        6
-#define RTL_REGISTRY_HANDLE         0x40000000
-#define RTL_REGISTRY_OPTIONAL       0x80000000
-#define RTL_QUERY_REGISTRY_SUBKEY   0x00000001
-#define RTL_QUERY_REGISTRY_TOPKEY   0x00000002
-#define RTL_QUERY_REGISTRY_REQUIRED 0x00000004
-#define RTL_QUERY_REGISTRY_NOVALUE  0x00000008
-#define RTL_QUERY_REGISTRY_NOEXPAND 0x00000010
-#define RTL_QUERY_REGISTRY_DIRECT   0x00000020
-#define RTL_QUERY_REGISTRY_DELETE   0x00000040
-
-/* Version Constants */
-#define VER_MINORVERSION                0x0000001
-#define VER_MAJORVERSION                0x0000002
-#define VER_BUILDNUMBER                 0x0000004
-#define VER_PLATFORMID                  0x0000008
-#define VER_SERVICEPACKMINOR            0x0000010
-#define VER_SERVICEPACKMAJOR            0x0000020
-#define VER_SUITENAME                   0x0000040
-#define VER_PRODUCT_TYPE                0x0000080
-#define VER_PLATFORM_WIN32s             0
-#define VER_PLATFORM_WIN32_WINDOWS      1
-#define VER_PLATFORM_WIN32_NT           2
-#define VER_EQUAL                       1
-#define VER_GREATER                     2
-#define VER_GREATER_EQUAL               3
-#define VER_LESS                        4
-#define VER_LESS_EQUAL                  5
-#define VER_AND                         6
-#define VER_OR                          7
-#define VER_CONDITION_MASK              7
-#define VER_NUM_BITS_PER_CONDITION_MASK 3
-
-#define RTL_CRITSECT_TYPE               0
-#define RTL_RESOURCE_TYPE               1
+//
+// RTL Lock Type (Critical Section or Resource)
+//
+#define RTL_CRITSECT_TYPE                                   0
+#define RTL_RESOURCE_TYPE                                   1
 
 #ifdef NTOS_MODE_USER
-/* RTL String Hash Algorithms */
-#define HASH_STRING_ALGORITHM_DEFAULT   0
-#define HASH_STRING_ALGORITHM_X65599    1
-#define HASH_STRING_ALGORITHM_INVALID   0xffffffff
 
-/* RtlDuplicateString settings */
-#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
-#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+//
+// String Hash Algorithms
+//
+#define HASH_STRING_ALGORITHM_DEFAULT                       0
+#define HASH_STRING_ALGORITHM_X65599                        1
+#define HASH_STRING_ALGORITHM_INVALID                       0xffffffff
 
-/* For Size conversion macros */
-#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
-#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
-#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
+//
+// RtlDuplicateString Flags
+//
+#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE         1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING   2
 
-#define MAX_ATOM_LEN              255 /* TCHARS not including nullterm */
-
-/* List Macros */
-static __inline
-VOID
-InitializeListHead(
-    IN PLIST_ENTRY  ListHead)
-{
-    ListHead->Flink = ListHead->Blink = ListHead;
-}
-
-static __inline
-VOID
-InsertHeadList(
-    IN PLIST_ENTRY  ListHead,
-    IN PLIST_ENTRY  Entry)
-{
-    PLIST_ENTRY OldFlink;
-    OldFlink = ListHead->Flink;
-    Entry->Flink = OldFlink;
-    Entry->Blink = ListHead;
-    OldFlink->Blink = Entry;
-    ListHead->Flink = Entry;
-}
-
-static __inline
-VOID
-InsertTailList(
-    IN PLIST_ENTRY  ListHead,
-    IN PLIST_ENTRY  Entry)
-{
-    PLIST_ENTRY OldBlink;
-    OldBlink = ListHead->Blink;
-    Entry->Flink = ListHead;
-    Entry->Blink = OldBlink;
-    OldBlink->Flink = Entry;
-    ListHead->Blink = Entry;
-}
-
-#define IsListEmpty(ListHead) \
-    ((ListHead)->Flink == (ListHead))
-
-#define PopEntryList(ListHead) \
-    (ListHead)->Next; \
-    { \
-        PSINGLE_LIST_ENTRY _FirstEntry; \
-        _FirstEntry = (ListHead)->Next; \
-        if (_FirstEntry != NULL) \
-            (ListHead)->Next = _FirstEntry->Next; \
-    }
-
-#define PushEntryList(_ListHead, _Entry) \
-    (_Entry)->Next = (_ListHead)->Next; \
-    (_ListHead)->Next = (_Entry); \
-
-static __inline
-BOOLEAN
-RemoveEntryList(
-    IN PLIST_ENTRY  Entry)
-{
-    PLIST_ENTRY OldFlink;
-    PLIST_ENTRY OldBlink;
-
-    OldFlink = Entry->Flink;
-    OldBlink = Entry->Blink;
-    OldFlink->Blink = OldBlink;
-    OldBlink->Flink = OldFlink;
-    return (BOOLEAN)(OldFlink == OldBlink);
-}
-
-static __inline
-PLIST_ENTRY
-RemoveHeadList(
-    IN PLIST_ENTRY  ListHead)
-{
-    PLIST_ENTRY Flink;
-    PLIST_ENTRY Entry;
-
-    Entry = ListHead->Flink;
-    Flink = Entry->Flink;
-    ListHead->Flink = Flink;
-    Flink->Blink = ListHead;
-    return Entry;
-}
-
-static __inline
-PLIST_ENTRY
-RemoveTailList(
-    IN PLIST_ENTRY  ListHead)
-{
-    PLIST_ENTRY Blink;
-    PLIST_ENTRY Entry;
-
-    Entry = ListHead->Blink;
-    Blink = Entry->Blink;
-    ListHead->Blink = Blink;
-    Blink->Flink = ListHead;
-    return Entry;
-}
-
-#define IsFirstEntry(ListHead, Entry) \
-    ((ListHead)->Flink == Entry)
-
-#define IsLastEntry(ListHead, Entry) \
-    ((ListHead)->Blink == Entry)
-
-/*
- * Constant String Macro
- */
-#define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
-{ \
-    sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
-    sizeof(__SOURCE_STRING__), \
-    (__SOURCE_STRING__) \
-}
-
-#define RtlEqualLuid(L1, L2) (((L1)->HighPart == (L2)->HighPart) && \
-                              ((L1)->LowPart  == (L2)->LowPart))
+//
+// Codepages
+//
+#define NLS_MB_CODE_PAGE_TAG                                NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG                            NlsMbOemCodePageTag
+#define NLS_OEM_LEAD_BYTE_INFO                              NlsOemLeadByteInfo
 #endif
+#define MAXIMUM_LEADBYTES                                   12
 
-/* RTL Debug Queries */
-#define RTL_DEBUG_QUERY_MODULES         0x01
-#define RTL_DEBUG_QUERY_BACKTRACES      0x02
-#define RTL_DEBUG_QUERY_HEAPS           0x04
-#define RTL_DEBUG_QUERY_HEAP_TAGS       0x08
-#define RTL_DEBUG_QUERY_HEAP_BLOCKS     0x10
-#define RTL_DEBUG_QUERY_LOCKS           0x20
+//
+// RTL Debug Queries
+//
+#define RTL_DEBUG_QUERY_MODULES                             0x01
+#define RTL_DEBUG_QUERY_BACKTRACES                          0x02
+#define RTL_DEBUG_QUERY_HEAPS                               0x04
+#define RTL_DEBUG_QUERY_HEAP_TAGS                           0x08
+#define RTL_DEBUG_QUERY_HEAP_BLOCKS                         0x10
+#define RTL_DEBUG_QUERY_LOCKS                               0x20
 
-/* RTL Handle Flags */
-#define RTL_HANDLE_VALID        0x1
+//
+// RTL Handle Flags
+//
+#define RTL_HANDLE_VALID                                    0x1
 
-/* RTL Atom Flags */
-#define RTL_ATOM_IS_PINNED      0x1
+//
+// RTL Atom Flags
+//
+#define RTL_ATOM_IS_PINNED                                  0x1
 
-/* EXPORTED DATA *************************************************************/
+//
+// Codepage Tags
+//
 #ifdef NTOS_MODE_USER
 extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
 extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
+
+//
+// Constant String Macro
+//
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__)                  \
+{                                                               \
+    sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+    sizeof(__SOURCE_STRING__),                                  \
+    (__SOURCE_STRING__)                                         \
+}
+
 #endif
 
-/* ENUMERATIONS **************************************************************/
-
 #ifdef NTOS_MODE_USER
+
+//
+// Table and Compare result types
+//
 typedef enum _TABLE_SEARCH_RESULT
 {
     TableEmptyTree,
@@ -265,26 +202,59 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericGreaterThan,
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
-#endif
-
-typedef enum _RTL_PATH_TYPE
-{
-    INVALID_PATH = 0,
-    UNC_PATH,              /* "//foo" */
-    ABSOLUTE_DRIVE_PATH,   /* "c:/foo" */
-    RELATIVE_DRIVE_PATH,   /* "c:foo" */
-    ABSOLUTE_PATH,         /* "/foo" */
-    RELATIVE_PATH,         /* "foo" */
-    DEVICE_PATH,           /* "//./foo" */
-    UNC_DOT_PATH           /* "//." */
-} RTL_PATH_TYPE;
-
-/* FUNCTION TYPES ************************************************************/
-#ifndef NTOS_MODE_USER
-typedef VOID (NTAPI *WAITORTIMERCALLBACKFUNC)(PVOID, BOOLEAN);
 
 #else
 
+//
+// ACL Query Information Classes
+//
+typedef enum _ACL_INFORMATION_CLASS
+{
+    AclRevisionInformation = 1,
+    AclSizeInformation
+} ACL_INFORMATION_CLASS;
+
+#endif
+
+//
+// RTL Path Types
+//
+typedef enum _RTL_PATH_TYPE
+{
+    INVALID_PATH = 0,
+    UNC_PATH,              // "//foo"
+    ABSOLUTE_DRIVE_PATH,   // "c:/foo"
+    RELATIVE_DRIVE_PATH,   // "c:foo"
+    ABSOLUTE_PATH,         // "/foo"
+    RELATIVE_PATH,         // "foo"
+    DEVICE_PATH,           // "//./foo"
+    UNC_DOT_PATH           // "//."
+} RTL_PATH_TYPE;
+
+#ifndef NTOS_MODE_USER
+
+//
+// Callback function for RTL Timers or Registered Waits
+//
+typedef VOID
+(NTAPI *WAITORTIMERCALLBACKFUNC)(
+    PVOID pvContext,
+    BOOLEAN fTimerOrWaitFired
+);
+
+//
+// Handler during Vectored RTL Exceptions
+//
+typedef LONG
+(NTAPI *PVECTORED_EXCEPTION_HANDLER)(
+    PEXCEPTION_POINTERS ExceptionPointers
+);
+
+#else
+
+//
+// Handler during regular RTL Exceptions
+//
 typedef EXCEPTION_DISPOSITION
 (NTAPI *PEXCEPTION_ROUTINE)(
     IN struct _EXCEPTION_RECORD *ExceptionRecord,
@@ -295,20 +265,18 @@ typedef EXCEPTION_DISPOSITION
 
 #endif
 
-struct _RTL_AVL_TABLE;
-struct _RTL_GENERIC_TABLE;
-struct _RTL_RANGE;
-
+//
+// Callback for RTL Heap Enumeration
+//
 typedef NTSTATUS
 (*PHEAP_ENUMERATION_ROUTINE)(
     IN PVOID HeapHandle,
     IN PVOID UserParam
 );
 
-typedef LONG (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
-    PEXCEPTION_POINTERS ExceptionPointers
-);
-
+//
+// Thread and Process Start Routines for RtlCreateUserThread/Process
+//
 typedef ULONG (NTAPI *PTHREAD_START_ROUTINE)(
     PVOID Parameter
 );
@@ -319,6 +287,18 @@ typedef VOID
     PVOID Parameter
 );
 
+//
+// Declare empty structure definitions so that they may be referenced by
+// routines before they are defined
+//
+struct _RTL_AVL_TABLE;
+struct _RTL_GENERIC_TABLE;
+struct _RTL_RANGE;
+typedef struct _COMPRESSED_DATA_INFO COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
+
+//
+// Routines and callbacks for the RTL AVL/Generic Table package
+//
 typedef NTSTATUS
 (NTAPI *PRTL_AVL_MATCH_FUNCTION)(
     struct _RTL_AVL_TABLE *Table,
@@ -364,6 +344,9 @@ typedef VOID
     PVOID Buffer
 );
 
+//
+// RTL Query Registry callback
+//
 typedef NTSTATUS
 (NTAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
     IN PWSTR ValueName,
@@ -374,6 +357,19 @@ typedef NTSTATUS
     IN PVOID EntryContext
 );
 
+//
+// RTL Range List callbacks
+//
+#ifdef NTOS_MODE_USER
+typedef BOOLEAN
+(NTAPI *PRTL_CONFLICT_RANGE_CALLBACK)(
+    PVOID Context,
+    struct _RTL_RANGE *Range
+);
+
+//
+// Custom Heap Commit Routine for RtlCreateHeap
+//
 typedef NTSTATUS
 (NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
     IN PVOID Base,
@@ -381,22 +377,23 @@ typedef NTSTATUS
     IN OUT PSIZE_T CommitSize
 );
 
-#ifdef NTOS_MODE_USER
-typedef BOOLEAN
-(NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
-    PVOID Context,
-    struct _RTL_RANGE *Range
-);
-#endif
-
-/* TYPES *********************************************************************/
-
-#ifdef NTOS_MODE_USER
+//
+// Version Info redefinitions
+//
 typedef OSVERSIONINFOW RTL_OSVERSIONINFOW;
 typedef LPOSVERSIONINFOW PRTL_OSVERSIONINFOW;
 typedef OSVERSIONINFOEXW RTL_OSVERSIONINFOEXW;
 typedef LPOSVERSIONINFOEXW PRTL_OSVERSIONINFOEXW;
 
+//
+// Simple pointer definitions
+//
+typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
+typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
+
+//
+// Parameters for RtlCreateHeap
+//
 typedef struct _RTL_HEAP_PARAMETERS
 {
     ULONG Length;
@@ -412,6 +409,9 @@ typedef struct _RTL_HEAP_PARAMETERS
     SIZE_T Reserved[2];
 } RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
 
+//
+// RTL Bitmap structures
+//
 typedef struct _RTL_BITMAP
 {
     ULONG SizeOfBitMap;
@@ -424,17 +424,9 @@ typedef struct _RTL_BITMAP_RUN
     ULONG NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
-typedef struct _COMPRESSED_DATA_INFO
-{
-    USHORT CompressionFormatAndEngine;
-    UCHAR CompressionUnitShift;
-    UCHAR ChunkShift;
-    UCHAR ClusterShift;
-    UCHAR Reserved;
-    USHORT NumberOfChunks;
-    ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
-} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
-
+//
+// RtlGenerateXxxName context
+//
 typedef struct _GENERATE_NAME_CONTEXT
 {
     USHORT Checksum;
@@ -446,6 +438,9 @@ typedef struct _GENERATE_NAME_CONTEXT
     ULONG LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
+//
+// RTL Splay and Balanced Links structures
+//
 typedef struct _RTL_SPLAY_LINKS
 {
     struct _RTL_SPLAY_LINKS *Parent;
@@ -453,9 +448,18 @@ typedef struct _RTL_SPLAY_LINKS
     struct _RTL_SPLAY_LINKS *RightChild;
 } RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
-typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
-typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
+typedef struct _RTL_BALANCED_LINKS
+{
+    struct _RTL_BALANCED_LINKS *Parent;
+    struct _RTL_BALANCED_LINKS *LeftChild;
+    struct _RTL_BALANCED_LINKS *RightChild;
+    CHAR Balance;
+    UCHAR Reserved[3];
+} RTL_BALANCED_LINKS, *PRTL_BALANCED_LINKS;
 
+//
+// RTL Avl/Generic Tables
+//
 typedef struct _RTL_GENERIC_TABLE
 {
     PRTL_SPLAY_LINKS TableRoot;
@@ -468,15 +472,6 @@ typedef struct _RTL_GENERIC_TABLE
     PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
     PVOID TableContext;
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
-
-typedef struct _RTL_BALANCED_LINKS
-{
-    struct _RTL_BALANCED_LINKS *Parent;
-    struct _RTL_BALANCED_LINKS *LeftChild;
-    struct _RTL_BALANCED_LINKS *RightChild;
-    CHAR Balance;
-    UCHAR Reserved[3];
-} RTL_BALANCED_LINKS, *PRTL_BALANCED_LINKS;
 
 typedef struct _RTL_AVL_TABLE
 {
@@ -493,6 +488,9 @@ typedef struct _RTL_AVL_TABLE
     PVOID TableContext;
 } RTL_AVL_TABLE, *PRTL_AVL_TABLE;
 
+//
+// RtlQueryRegistry Data
+//
 typedef struct _RTL_QUERY_REGISTRY_TABLE
 {
     PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
@@ -504,6 +502,9 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
     ULONG DefaultLength;
 } RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
 
+//
+// RTL Unicode Table Structures
+//
 typedef struct _UNICODE_PREFIX_TABLE_ENTRY
 {
     CSHORT NodeTypeCode;
@@ -522,6 +523,9 @@ typedef struct _UNICODE_PREFIX_TABLE
     PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
 } UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
 
+//
+// Time Structure for RTL Time calls
+//
 typedef struct _TIME_FIELDS
 {
     CSHORT Year;
@@ -535,20 +539,18 @@ typedef struct _TIME_FIELDS
 } TIME_FIELDS, *PTIME_FIELDS;
 #endif
 
-typedef EXCEPTION_DISPOSITION
-(*PEXCEPTION_HANDLER)(
-    struct _EXCEPTION_RECORD*,
-    PVOID,
-    struct _CONTEXT*,
-    PVOID
-);
-
+//
+// ACE Definition
+//
 typedef struct _ACE
 {
     ACE_HEADER Header;
     ACCESS_MASK AccessMask;
 } ACE, *PACE;
 
+//
+// Information Structures for RTL Debug Functions
+//
 typedef struct _RTL_PROCESS_MODULE_INFORMATION
 {
     ULONG Reserved[2];
@@ -641,6 +643,9 @@ typedef struct _RTL_DEBUG_BUFFER
     PVOID Reserved[8];
 } RTL_DEBUG_BUFFER, *PRTL_DEBUG_BUFFER;
 
+//
+// RTL Handle Structures
+//
 typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
     ULONG Flags;
@@ -658,12 +663,18 @@ typedef struct _RTL_HANDLE_TABLE
     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
+//
+// Exception Record
+//
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
     struct _EXCEPTION_REGISTRATION_RECORD *Next;
     PEXCEPTION_HANDLER Handler;
 } EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
+//
+// Current Directory Structures
+//
 typedef struct _CURDIR
 {
     UNICODE_STRING DosPath;
@@ -679,6 +690,10 @@ typedef struct RTL_DRIVE_LETTER_CURDIR
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
 
 #ifndef NTOS_MODE_USER
+
+//
+// RTL Critical Section Structures
+//
 typedef struct _RTL_CRITICAL_SECTION_DEBUG
 {
     USHORT Type;
@@ -699,13 +714,16 @@ typedef struct _RTL_CRITICAL_SECTION
     HANDLE LockSemaphore;
     ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
-#endif
 
-#ifdef NTOS_MODE_USER
+#else
+
+//
+// RTL Range List Structures
+//
 typedef struct _RTL_RANGE_LIST
 {
     LIST_ENTRY ListHead;
-    ULONG Flags;  /* RTL_RANGE_LIST_... flags */
+    ULONG Flags;
     ULONG Count;
     ULONG Stamp;
 } RTL_RANGE_LIST, *PRTL_RANGE_LIST;
@@ -717,7 +735,7 @@ typedef struct _RTL_RANGE
     PVOID UserData;
     PVOID Owner;
     UCHAR Attributes;
-    UCHAR Flags;  /* RTL_RANGE_... flags */
+    UCHAR Flags;
 } RTL_RANGE, *PRTL_RANGE;
 
 typedef struct _RANGE_LIST_ITERATOR
@@ -730,6 +748,9 @@ typedef struct _RANGE_LIST_ITERATOR
 
 #endif
 
+//
+// RTL Resource
+//
 typedef struct _RTL_RESOURCE
 {
     RTL_CRITICAL_SECTION Lock;
@@ -743,6 +764,9 @@ typedef struct _RTL_RESOURCE
     PVOID DebugInfo;
 } RTL_RESOURCE, *PRTL_RESOURCE;
 
+//
+// RTL Message Structures for PE Resources
+//
 typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
 {
     USHORT Length;
@@ -763,19 +787,9 @@ typedef struct _RTL_MESSAGE_RESOURCE_DATA
     RTL_MESSAGE_RESOURCE_BLOCK Blocks[1];
 } RTL_MESSAGE_RESOURCE_DATA, *PRTL_MESSAGE_RESOURCE_DATA;
 
-typedef struct _NLS_FILE_HEADER
-{
-    USHORT HeaderSize;
-    USHORT CodePage;
-    USHORT MaximumCharacterSize;
-    USHORT DefaultChar;
-    USHORT UniDefaultChar;
-    USHORT TransDefaultChar;
-    USHORT TransUniDefaultChar;
-    USHORT DBCSCodePage;
-    UCHAR LeadByte[MAXIMUM_LEADBYTES];
-} NLS_FILE_HEADER, *PNLS_FILE_HEADER;
-
+//
+// Structures for RtlCreateUserProcess
+//
 typedef struct _RTL_USER_PROCESS_PARAMETERS
 {
     ULONG MaximumLength;
@@ -817,6 +831,9 @@ typedef struct _RTL_USER_PROCESS_INFORMATION
     SECTION_IMAGE_INFORMATION ImageInformation;
 } RTL_USER_PROCESS_INFORMATION, *PRTL_USER_PROCESS_INFORMATION;
 
+//
+// RTL Atom Table Structures
+//
 typedef struct _RTL_ATOM_TABLE_ENTRY
 {
     struct _RTL_ATOM_TABLE_ENTRY *HashLink;
@@ -828,29 +845,34 @@ typedef struct _RTL_ATOM_TABLE_ENTRY
     WCHAR Name[1];
 } RTL_ATOM_TABLE_ENTRY, *PRTL_ATOM_TABLE_ENTRY;
 
-#ifdef NTOS_MODE_USER
-typedef RTL_CRITICAL_SECTION FAST_MUTEX;
-typedef RTL_HANDLE_TABLE HANDLE_TABLE, *PHANDLE_TABLE;
-#endif
 typedef struct _RTL_ATOM_TABLE
 {
     ULONG Signature;
     union
     {
+#ifdef NTOS_MODE_USER
         RTL_CRITICAL_SECTION CriticalSection;
+#else
         FAST_MUTEX FastMutex;
+#endif
     };
     union
     {
+#ifdef NTOS_MODE_USER
         RTL_HANDLE_TABLE RtlHandleTable;
+#else
         PHANDLE_TABLE ExHandleTable;
+#endif
     };
     ULONG NumberOfBuckets;
     PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
 #ifndef NTOS_MODE_USER
-    
+
+//
+// System Time and Timezone Structures
+//
 typedef struct _SYSTEMTIME
 {
     USHORT wYear;
@@ -874,16 +896,22 @@ typedef struct _TIME_ZONE_INFORMATION
     LONG DaylightBias;
 } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
 
-typedef enum _ACL_INFORMATION_CLASS
-{
-    AclRevisionInformation = 1,
-    AclSizeInformation
-} ACL_INFORMATION_CLASS;
-
-#define TIME_ZONE_ID_UNKNOWN 0
-#define TIME_ZONE_ID_STANDARD 1
-#define TIME_ZONE_ID_DAYLIGHT 2
-#define TIME_ZONE_ID_INVALID 0xFFFFFFFF
 #endif
+
+//
+// Header for NLS Files
+//
+typedef struct _NLS_FILE_HEADER
+{
+    USHORT HeaderSize;
+    USHORT CodePage;
+    USHORT MaximumCharacterSize;
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR LeadByte[MAXIMUM_LEADBYTES];
+} NLS_FILE_HEADER, *PNLS_FILE_HEADER;
 
 #endif

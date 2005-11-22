@@ -1,24 +1,36 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/zwfuncs.h
- * PURPOSE:         Defintions for Native Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    zwfuncs.h
+
+Abstract:
+
+    Function definitions for Native APIs (Nt/Zw).
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _ZWFUNCS_H
 #define _ZWFUNCS_H
-
-/* DEPENDENCIES **************************************************************/
 #define _WMIKM_
+
+//
+// Dependencies
+//
 #include <evntrace.h>
 #include "lpctypes.h"
 #include "dbgktypes.h"
 #include "kdtypes.h"
 
-/* FUNCTION TYPES ************************************************************/
-
-/* PROTOTYPES ****************************************************************/
+//
+// FIXME: Group these in logical groups.
+//
 
 NTSTATUS
 NTAPI
@@ -90,18 +102,18 @@ NtAccessCheckAndAuditAlarm(
 NTSTATUS
 NTAPI
 NtAddAtom(
-    IN     PWSTR  AtomName,
-    IN     ULONG AtomNameLength,
-    IN OUT PRTL_ATOM  Atom
+    IN PWSTR AtomName,
+    IN ULONG AtomNameLength,
+    IN OUT PRTL_ATOM Atom
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAddAtom(
-    IN     PWSTR  AtomName,
-    IN     ULONG AtomNameLength,
-    IN OUT PRTL_ATOM  Atom
+    IN PWSTR AtomName,
+    IN ULONG AtomNameLength,
+    IN OUT PRTL_ATOM Atom
 );
 
 NTSTATUS
@@ -124,11 +136,11 @@ NTSTATUS
 NTAPI
 NtAdjustGroupsToken(
     IN HANDLE TokenHandle,
-    IN BOOLEAN  ResetToDefault,
-    IN PTOKEN_GROUPS  NewState,
-    IN ULONG  BufferLength,
-    OUT PTOKEN_GROUPS  PreviousState OPTIONAL,
-    OUT PULONG  ReturnLength
+    IN BOOLEAN ResetToDefault,
+    IN PTOKEN_GROUPS NewState,
+    IN ULONG BufferLength,
+    OUT PTOKEN_GROUPS PreviousState OPTIONAL,
+    OUT PULONG ReturnLength
 );
 
 NTSYSAPI
@@ -136,22 +148,22 @@ NTSTATUS
 NTAPI
 ZwAdjustGroupsToken(
     IN HANDLE TokenHandle,
-    IN BOOLEAN  ResetToDefault,
-    IN PTOKEN_GROUPS  NewState,
-    IN ULONG  BufferLength,
-    OUT PTOKEN_GROUPS  PreviousState,
-    OUT PULONG  ReturnLength
+    IN BOOLEAN ResetToDefault,
+    IN PTOKEN_GROUPS NewState,
+    IN ULONG BufferLength,
+    OUT PTOKEN_GROUPS PreviousState,
+    OUT PULONG ReturnLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAdjustPrivilegesToken(
-    IN HANDLE  TokenHandle,
-    IN BOOLEAN  DisableAllPrivileges,
-    IN PTOKEN_PRIVILEGES  NewState,
-    IN ULONG  BufferLength,
-    OUT PTOKEN_PRIVILEGES  PreviousState,
+    IN HANDLE TokenHandle,
+    IN BOOLEAN DisableAllPrivileges,
+    IN PTOKEN_PRIVILEGES NewState,
+    IN ULONG BufferLength,
+    OUT PTOKEN_PRIVILEGES PreviousState,
     OUT PULONG ReturnLength
 );
 
@@ -159,11 +171,11 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAdjustPrivilegesToken(
-    IN HANDLE  TokenHandle,
-    IN BOOLEAN  DisableAllPrivileges,
-    IN PTOKEN_PRIVILEGES  NewState,
-    IN ULONG  BufferLength,
-    OUT PTOKEN_PRIVILEGES  PreviousState,
+    IN HANDLE TokenHandle,
+    IN BOOLEAN DisableAllPrivileges,
+    IN PTOKEN_PRIVILEGES NewState,
+    IN ULONG BufferLength,
+    OUT PTOKEN_PRIVILEGES PreviousState,
     OUT PULONG ReturnLength
 );
 
@@ -233,10 +245,10 @@ NTAPI
 NtAllocateVirtualMemory(
     IN HANDLE ProcessHandle,
     IN OUT PVOID *BaseAddress,
-    IN ULONG  ZeroBits,
-    IN OUT PULONG  RegionSize,
-    IN ULONG  AllocationType,
-    IN ULONG  Protect
+    IN ULONG ZeroBits,
+    IN OUT PULONG RegionSize,
+    IN ULONG AllocationType,
+    IN ULONG Protect
 );
 
 NTSYSAPI
@@ -245,10 +257,10 @@ NTAPI
 ZwAllocateVirtualMemory(
     IN HANDLE ProcessHandle,
     IN OUT PVOID *BaseAddress,
-    IN ULONG  ZeroBits,
-    IN OUT PULONG  RegionSize,
-    IN ULONG  AllocationType,
-    IN ULONG  Protect
+    IN ULONG ZeroBits,
+    IN OUT PULONG RegionSize,
+    IN ULONG AllocationType,
+    IN ULONG Protect
 );
 
 NTSTATUS
@@ -535,21 +547,21 @@ ZwCreateFile(
 NTSTATUS
 NTAPI
 NtCreateIoCompletion(
-    OUT PHANDLE             IoCompletionHandle,
-    IN  ACCESS_MASK         DesiredAccess,
-    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-    IN  ULONG               NumberOfConcurrentThreads
-    );
+    OUT PHANDLE IoCompletionHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG NumberOfConcurrentThreads
+);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateIoCompletion(
-   OUT PHANDLE             IoCompletionHandle,
-   IN  ACCESS_MASK         DesiredAccess,
-   IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-   IN  ULONG               NumberOfConcurrentThreads
-   );
+   OUT PHANDLE IoCompletionHandle,
+   IN ACCESS_MASK DesiredAccess,
+   IN POBJECT_ATTRIBUTES ObjectAttributes,
+   IN ULONG NumberOfConcurrentThreads
+);
 
 NTSTATUS
 NTAPI
@@ -827,13 +839,13 @@ NTSTATUS
 NTAPI
 NtCreateThread(
     OUT PHANDLE ThreadHandle,
-    IN  ACCESS_MASK DesiredAccess,
-    IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN  HANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN HANDLE ProcessHandle,
     OUT PCLIENT_ID ClientId,
-    IN  PCONTEXT ThreadContext,
-    IN  PINITIAL_TEB UserStack,
-    IN  BOOLEAN CreateSuspended
+    IN PCONTEXT ThreadContext,
+    IN PINITIAL_TEB UserStack,
+    IN BOOLEAN CreateSuspended
 );
 
 NTSYSAPI
@@ -1305,9 +1317,9 @@ NTSTATUS
 NTAPI
 NtFreeVirtualMemory(
     IN HANDLE ProcessHandle,
-    IN PVOID  *BaseAddress,
-    IN PULONG  RegionSize,
-    IN ULONG  FreeType
+    IN PVOID *BaseAddress,
+    IN PULONG RegionSize,
+    IN ULONG FreeType
 );
 
 NTSYSAPI
@@ -1315,9 +1327,9 @@ NTSTATUS
 NTAPI
 ZwFreeVirtualMemory(
     IN HANDLE ProcessHandle,
-    IN PVOID  *BaseAddress,
-    IN PULONG  RegionSize,
-    IN ULONG  FreeType
+    IN PVOID *BaseAddress,
+    IN PULONG RegionSize,
+    IN ULONG FreeType
 );
 
 NTSYSCALLAPI
@@ -1471,15 +1483,17 @@ ZwIsProcessInJob(
 
 NTSTATUS
 NTAPI
-NtListenPort(HANDLE PortHandle,
-             PPORT_MESSAGE ConnectionRequest
+NtListenPort(
+    HANDLE PortHandle,
+    PPORT_MESSAGE ConnectionRequest
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwListenPort(HANDLE PortHandle,
-             PPORT_MESSAGE ConnectionRequest
+ZwListenPort(
+    HANDLE PortHandle,
+    PPORT_MESSAGE ConnectionRequest
 );
 
 NTSTATUS
@@ -1531,16 +1545,16 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLockFile(
-    IN  HANDLE FileHandle,
-    IN  HANDLE Event OPTIONAL,
-    IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-    IN  PVOID ApcContext OPTIONAL,
+    IN HANDLE FileHandle,
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN  PLARGE_INTEGER ByteOffset,
-    IN  PLARGE_INTEGER Length,
-    IN  ULONG Key,
-    IN  BOOLEAN FailImmediatedly,
-    IN  BOOLEAN ExclusiveLock
+    IN PLARGE_INTEGER ByteOffset,
+    IN PLARGE_INTEGER Length,
+    IN ULONG Key,
+    IN BOOLEAN FailImmediatedly,
+    IN BOOLEAN ExclusiveLock
 );
 
 
@@ -1548,16 +1562,16 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockFile(
-    IN  HANDLE FileHandle,
-    IN  HANDLE Event OPTIONAL,
-    IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-    IN  PVOID ApcContext OPTIONAL,
+    IN HANDLE FileHandle,
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN  PLARGE_INTEGER ByteOffset,
-    IN  PLARGE_INTEGER Length,
-    IN  ULONG Key,
-    IN  BOOLEAN FailImmediatedly,
-    IN  BOOLEAN ExclusiveLock
+    IN PLARGE_INTEGER ByteOffset,
+    IN PLARGE_INTEGER Length,
+    IN ULONG Key,
+    IN BOOLEAN FailImmediatedly,
+    IN BOOLEAN ExclusiveLock
 );
 
 NTSTATUS
@@ -2305,26 +2319,26 @@ ZwQueryDirectoryFile(
 NTSTATUS
 NTAPI
 NtQueryDirectoryObject(
-    IN     HANDLE DirectoryHandle,
-    OUT    PVOID Buffer,
-    IN     ULONG BufferLength,
-    IN     BOOLEAN ReturnSingleEntry,
-    IN     BOOLEAN RestartScan,
+    IN HANDLE DirectoryHandle,
+    OUT PVOID Buffer,
+    IN ULONG BufferLength,
+    IN BOOLEAN ReturnSingleEntry,
+    IN BOOLEAN RestartScan,
     IN OUT PULONG Context,
-    OUT    PULONG ReturnLength OPTIONAL
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDirectoryObject(
-    IN     HANDLE DirectoryHandle,
-    OUT    PVOID Buffer,
-    IN     ULONG BufferLength,
-    IN     BOOLEAN ReturnSingleEntry,
-    IN     BOOLEAN RestartScan,
+    IN HANDLE DirectoryHandle,
+    OUT PVOID Buffer,
+    IN ULONG BufferLength,
+    IN BOOLEAN ReturnSingleEntry,
+    IN BOOLEAN RestartScan,
     IN OUT PULONG Context,
-    OUT    PULONG ReturnLength OPTIONAL
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSTATUS
@@ -2483,22 +2497,22 @@ ZwQueryInformationPort(
 NTSTATUS
 NTAPI
 NtQueryInformationProcess(
-    IN HANDLE  ProcessHandle,
-    IN PROCESSINFOCLASS  ProcessInformationClass,
-    OUT PVOID  ProcessInformation,
-    IN ULONG  ProcessInformationLength,
-    OUT PULONG  ReturnLength OPTIONAL
+    IN HANDLE ProcessHandle,
+    IN PROCESSINFOCLASS ProcessInformationClass,
+    OUT PVOID ProcessInformation,
+    IN ULONG ProcessInformationLength,
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationProcess(
-    IN HANDLE  ProcessHandle,
-    IN PROCESSINFOCLASS  ProcessInformationClass,
-    OUT PVOID  ProcessInformation,
-    IN ULONG  ProcessInformationLength,
-    OUT PULONG  ReturnLength OPTIONAL
+    IN HANDLE ProcessHandle,
+    IN PROCESSINFOCLASS ProcessInformationClass,
+    OUT PVOID ProcessInformation,
+    IN ULONG ProcessInformationLength,
+    OUT PULONG ReturnLength OPTIONAL
 );
 #endif
 
@@ -2576,10 +2590,10 @@ ZwQueryIntervalProfile(
 NTSTATUS
 NTAPI
 NtQueryIoCompletion(
-    IN  HANDLE IoCompletionHandle,
-    IN  IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
+    IN HANDLE IoCompletionHandle,
+    IN IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
     OUT PVOID IoCompletionInformation,
-    IN  ULONG IoCompletionInformationLength,
+    IN ULONG IoCompletionInformationLength,
     OUT PULONG ResultLength OPTIONAL
 );
 
@@ -2587,10 +2601,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryIoCompletion(
-    IN  HANDLE IoCompletionHandle,
-    IN  IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
+    IN HANDLE IoCompletionHandle,
+    IN IO_COMPLETION_INFORMATION_CLASS IoCompletionInformationClass,
     OUT PVOID IoCompletionInformation,
-    IN  ULONG IoCompletionInformationLength,
+    IN ULONG IoCompletionInformationLength,
     OUT PULONG ResultLength OPTIONAL
 );
 
@@ -2771,10 +2785,10 @@ ZwQuerySecurityObject(
 NTSTATUS
 NTAPI
 NtQuerySemaphore(
-    IN  HANDLE SemaphoreHandle,
-    IN  SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+    IN HANDLE SemaphoreHandle,
+    IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
     OUT PVOID SemaphoreInformation,
-    IN  ULONG Length,
+    IN ULONG Length,
     OUT PULONG ReturnLength
 );
 
@@ -2782,10 +2796,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySemaphore(
-    IN  HANDLE SemaphoreHandle,
-    IN  SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+    IN HANDLE SemaphoreHandle,
+    IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
     OUT PVOID SemaphoreInformation,
-    IN  ULONG Length,
+    IN ULONG Length,
     OUT PULONG ReturnLength
 );
 
@@ -2828,9 +2842,9 @@ ZwQuerySystemEnvironmentValue(
 NTSTATUS
 NTAPI
 NtQuerySystemInformation(
-    IN  SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     OUT PVOID SystemInformation,
-    IN  ULONG Length,
+    IN ULONG Length,
     OUT PULONG ResultLength
 );
 
@@ -2838,9 +2852,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemInformation(
-    IN  SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     OUT PVOID SystemInformation,
-    IN  ULONG Length,
+    IN ULONG Length,
     OUT PULONG ResultLength
 );
 
@@ -3112,7 +3126,7 @@ NtReadVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
     OUT PVOID Buffer,
-    IN ULONG  NumberOfBytesToRead,
+    IN ULONG NumberOfBytesToRead,
     OUT PULONG NumberOfBytesRead
 );
 
@@ -3123,7 +3137,7 @@ ZwReadVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
     OUT PVOID Buffer,
-    IN ULONG  NumberOfBytesToRead,
+    IN ULONG NumberOfBytesToRead,
     OUT PULONG NumberOfBytesRead
 );
 
@@ -3158,8 +3172,8 @@ ZwReleaseMutant(
 NTSTATUS
 NTAPI
 NtReleaseSemaphore(
-    IN  HANDLE SemaphoreHandle,
-    IN  LONG ReleaseCount,
+    IN HANDLE SemaphoreHandle,
+    IN LONG ReleaseCount,
     OUT PLONG PreviousCount
 );
 
@@ -3167,30 +3181,30 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseSemaphore(
-    IN  HANDLE SemaphoreHandle,
-    IN  LONG ReleaseCount,
+    IN HANDLE SemaphoreHandle,
+    IN LONG ReleaseCount,
     OUT PLONG PreviousCount
 );
 
 NTSTATUS
 NTAPI
 NtRemoveIoCompletion(
-    IN  HANDLE IoCompletionHandle,
+    IN HANDLE IoCompletionHandle,
     OUT PVOID *CompletionKey,
     OUT PVOID *CompletionContext,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN  PLARGE_INTEGER Timeout OPTIONAL
+    IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRemoveIoCompletion(
-    IN  HANDLE IoCompletionHandle,
+    IN HANDLE IoCompletionHandle,
     OUT PVOID *CompletionKey,
     OUT PVOID *CompletionContext,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN  PLARGE_INTEGER Timeout OPTIONAL
+    IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
 NTSTATUS
@@ -3213,114 +3227,115 @@ ZwReplaceKey(
 NTSTATUS
 NTAPI
 NtReplyPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE LpcReply
+    IN HANDLE PortHandle,
+    IN PPORT_MESSAGE LpcReply
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE LpcReply
+    IN HANDLE PortHandle,
+    IN PPORT_MESSAGE LpcReply
 );
 
 NTSTATUS
 NTAPI
 NtReplyWaitReceivePort(
-    HANDLE PortHandle,
-    PVOID *PortContext OPTIONAL,
-    PPORT_MESSAGE ReplyMessage OPTIONAL,
-    PPORT_MESSAGE ReceiveMessage
+    IN HANDLE PortHandle,
+    IN PVOID *PortContext OPTIONAL,
+    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+    OUT PPORT_MESSAGE ReceiveMessage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReceivePort(
-    HANDLE PortHandle,
-    PVOID *PortContext OPTIONAL,
-    PPORT_MESSAGE ReplyMessage,
-    PPORT_MESSAGE ReceiveMessage
+    IN HANDLE PortHandle,
+    IN PVOID *PortContext OPTIONAL,
+    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+    OUT PPORT_MESSAGE ReceiveMessage
 );
 
 NTSTATUS
 NTAPI
 NtReplyWaitReplyPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE ReplyMessage
+    IN HANDLE PortHandle,
+    OUT PPORT_MESSAGE ReplyMessage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReplyPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE ReplyMessage
+    IN HANDLE PortHandle,
+    OUT PPORT_MESSAGE ReplyMessage
 );
 
 NTSTATUS
 NTAPI
 NtRequestPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE LpcMessage);
+    IN HANDLE PortHandle,
+    IN PPORT_MESSAGE LpcMessage
+);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE LpcMessage
+    IN HANDLE PortHandle,
+    IN PPORT_MESSAGE LpcMessage
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestWaitReplyPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE LpcReply,
-    PPORT_MESSAGE LpcRequest
+    IN HANDLE PortHandle,
+    OUT PPORT_MESSAGE LpcReply,
+    IN PPORT_MESSAGE LpcRequest
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestWaitReplyPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE LpcReply,
-    PPORT_MESSAGE LpcRequest
+    IN HANDLE PortHandle,
+    OUT PPORT_MESSAGE LpcReply,
+    IN PPORT_MESSAGE LpcRequest
 );
 
 NTSTATUS
 NTAPI
 NtResetEvent(
-    HANDLE EventHandle,
-    PLONG NumberOfWaitingThreads OPTIONAL
+    IN HANDLE EventHandle,
+    OUT PLONG NumberOfWaitingThreads OPTIONAL
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResetEvent(
-    HANDLE EventHandle,
-    PLONG NumberOfWaitingThreads OPTIONAL
+    IN HANDLE EventHandle,
+    OUT PLONG NumberOfWaitingThreads OPTIONAL
 );
 
 NTSTATUS
 NTAPI
 NtRestoreKey(
-    HANDLE KeyHandle,
-    HANDLE FileHandle,
-    ULONG RestoreFlags
+    IN HANDLE KeyHandle,
+    IN HANDLE FileHandle,
+    IN ULONG RestoreFlags
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRestoreKey(
-    HANDLE KeyHandle,
-    HANDLE FileHandle,
-    ULONG RestoreFlags
+    IN HANDLE KeyHandle,
+    IN HANDLE FileHandle,
+    IN ULONG RestoreFlags
 );
 
 NTSTATUS
@@ -3985,27 +4000,27 @@ ZwSignalAndWaitForSingleObject(
 NTSTATUS
 NTAPI
 NtStartProfile(
-    HANDLE ProfileHandle
+    IN HANDLE ProfileHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStartProfile(
-    HANDLE ProfileHandle
+    IN HANDLE ProfileHandle
 );
 
 NTSTATUS
 NTAPI
 NtStopProfile(
-    HANDLE ProfileHandle
+    IN HANDLE ProfileHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStopProfile(
-    HANDLE ProfileHandle
+    IN HANDLE ProfileHandle
 );
 
 NTSTATUS

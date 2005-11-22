@@ -1,19 +1,32 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/kdfuncs.h
- * PURPOSE:         Prototypes for Kernel Debugger Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    kdfuncs.h
+
+Abstract:
+
+    Function definitions for the Kernel Debugger.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _KDFUNCS_H
 #define _KDFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
 #include "kdtypes.h"
 
-/* PROTOTYPES ****************************************************************/
-
+//
+// Port Functions
+//
 UCHAR
 NTAPI
 KdPollBreakIn(VOID);
