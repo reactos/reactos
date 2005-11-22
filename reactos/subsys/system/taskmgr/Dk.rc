@@ -3,7 +3,7 @@
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
-LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+LANGUAGE LANG_DANISH, SUBLANG_NEUTRAL
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////

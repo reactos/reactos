@@ -1,4 +1,4 @@
-LANGUAGE LANG_DUTCH, SUBLANG_DEFAULT  //vertaald door Lionel Lowie
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
 
 IDI_CPLACCESS ICON "resources/applet.ico"
 

@@ -11,7 +11,7 @@
 #include <reactos/version.rc>
 #endif
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 

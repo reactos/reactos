@@ -16,7 +16,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-LANGUAGE LANG_DUTCH, SUBLANG_DEFAULT  //vertaald door Lionel Lowie
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
 
 STRINGTABLE
 BEGIN
