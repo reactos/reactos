@@ -3609,6 +3609,16 @@ extern struct _TEB * NtCurrentTeb(void);
 
 #elif defined(_MSC_VER)
 
+#if (_MSC_FULL_VER >= 13012035)
+
+DWORD __readfsdword(DWORD);
+#pragma intrinsic(__readfsdword)
+
+__inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
+__inline struct _TEB * NtCurrentTeb(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x18); }
+
+#else
+
 static __inline PVOID GetCurrentFiber(void)
 {
     PVOID p;
@@ -3624,6 +3634,8 @@ static __inline struct _TEB * NtCurrentTeb(void)
 	__asm mov [p], eax
     return p;
 }
+
+#endif /* _MSC_FULL_VER */
 
 #endif /* __GNUC__/__WATCOMC__/_MSC_VER */
 

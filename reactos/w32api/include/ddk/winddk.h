@@ -140,38 +140,6 @@ typedef ULONG LOGICAL;
 */
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 
-static __inline struct _KPCR * KeGetCurrentKPCR(
-  VOID)
-{
-  ULONG Value;
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
-	  : "=r" (Value)
-    : /* no inputs */
-  );
-#elif defined(_MSC_VER)
-  __asm mov eax, fs:[1Ch]
-  __asm mov [Value], eax
-#endif
-  return (struct _KPCR *) Value;
-}
-
-static __inline struct _KPRCB * KeGetCurrentPrcb(
-  VOID)
-{
-  ULONG Value;
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
-	  : "=r" (Value)
-    : /* no inputs */
-  );
-#elif defined(_MSC_VER)
-  __asm mov eax, fs:[20h]
-  __asm mov [Value], eax
-#endif
-  return (struct _KPRCB *) Value;
-}
-
 /*
 ** Simple structures
 */
@@ -179,7 +147,6 @@ static __inline struct _KPRCB * KeGetCurrentPrcb(
 typedef LONG KPRIORITY;
 typedef UCHAR KIRQL, *PKIRQL;
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
-typedef ULONG KAFFINITY, *PKAFFINITY;
 typedef UCHAR KPROCESSOR_MODE;
 
 typedef enum _MODE {
@@ -4976,13 +4943,29 @@ DDKAPI
 KeGetCurrentIrql(
   VOID);
 
-/*
- * ULONG
- * KeGetCurrentProcessorNumber(
- *   VOID)
- */
-#define KeGetCurrentProcessorNumber() \
-  ((ULONG)KeGetCurrentKPCR()->Number)
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+#if defined(__GNUC__)
+  ULONG ret;
+  __asm__ __volatile__ (
+    "movl %%fs:%c1, %0\n"
+    : "=r" (ret)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return ret;
+#elif defined(_MSC_VER)
+#if _MSC_FULL_VER >= 13012035
+  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+#else
+  __asm { movzx eax, _PCR KPCR.Number }
+#endif
+#else
+#error Unknown compiler
+#endif
+}
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -8419,6 +8402,8 @@ DDKAPI
 KeLeaveCriticalRegion(
   VOID);
 
+#ifdef _X86_
+
 static __inline
 VOID
 KeMemoryBarrier(
@@ -8431,6 +8416,8 @@ KeMemoryBarrier(
   __asm xchg [Barrier], eax
 #endif
 }
+
+#endif
 
 NTOSAPI
 LONG

@@ -275,6 +275,38 @@ static __forceinline void Ke386SetPageTableDirectory(ULONG X)
 #error Unknown compiler for inline assembler
 #endif
 
+static __inline struct _KPCR * KeGetCurrentKPCR(
+  VOID)
+{
+  ULONG Value;
+#if defined(__GNUC__)
+  __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
+	  : "=r" (Value)
+    : /* no inputs */
+  );
+#elif defined(_MSC_VER)
+  __asm mov eax, fs:[1Ch]
+  __asm mov [Value], eax
+#endif
+  return (struct _KPCR *) Value;
+}
+
+static __inline struct _KPRCB * KeGetCurrentPrcb(
+  VOID)
+{
+  ULONG Value;
+#if defined(__GNUC__)
+  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
+	  : "=r" (Value)
+    : /* no inputs */
+  );
+#elif defined(_MSC_VER)
+  __asm mov eax, fs:[20h]
+  __asm mov [Value], eax
+#endif
+  return (struct _KPRCB *) Value;
+}
+
 #endif
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */
 
