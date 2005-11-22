@@ -72,6 +72,60 @@ static void resize_frame_client(HWND hWnd)
 
 /********************************************************************************/
 
+static void OnInitMenu(HWND hWnd)
+{
+    LONG lResult;
+    HKEY hKey = NULL;
+    DWORD dwIndex, cbValueName, cbValueData, dwType;
+    TCHAR szValueName[256];
+    BYTE abValueData[256];
+    int nFavoriteMenuPos = 3;
+    static int s_nFavoriteMenuSubPos = -1;
+    HMENU hMenu;
+    BOOL bDisplayedAny = FALSE;
+
+    /* Find Favorites menu and clear it out */
+    hMenu = GetSubMenu(GetMenu(hWnd), nFavoriteMenuPos);
+    if (!hMenu)
+        goto done;
+    if (s_nFavoriteMenuSubPos < 0)
+    {
+        s_nFavoriteMenuSubPos = GetMenuItemCount(hMenu);
+    }
+    else
+    {
+        while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION))
+            ;
+    }
+    
+    lResult = RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites"), &hKey);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+
+    dwIndex = 0;
+    do
+    {
+        cbValueName = sizeof(szValueName) / sizeof(szValueName[0]);
+        cbValueData = sizeof(abValueData);
+        lResult = RegEnumValue(hKey, dwIndex, szValueName, &cbValueName, NULL, &dwType, abValueData, &cbValueData);
+        if ((lResult == ERROR_SUCCESS) && (dwType == REG_SZ))
+        {
+            if (!bDisplayedAny)
+            {
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+                bDisplayedAny = TRUE;
+            }
+            AppendMenu(hMenu, MF_GRAYED, 0, szValueName);
+        }
+        dwIndex++;
+    }
+    while(lResult == ERROR_SUCCESS);
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
+}
+
 static void OnEnterMenuLoop(HWND hWnd)
 {
     int nParts;
@@ -940,6 +994,9 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         resize_frame_client(hWnd);
         break;
     case WM_TIMER:
+        break;
+    case WM_INITMENU:
+        OnInitMenu(hWnd);
         break;
     case WM_ENTERMENULOOP:
         OnEnterMenuLoop(hWnd);
