@@ -201,16 +201,12 @@ MmCreatePeb(PEPROCESS Process)
     NTSTATUS Status;
     KAFFINITY ProcessAffinityMask = 0;
     SectionOffset.QuadPart = (ULONGLONG)0;
-
     DPRINT("MmCreatePeb\n");
 
     /* Allocate the PEB */
-    Peb = MiCreatePebOrTeb(Process, MM_HIGHEST_VAD_ADDRESS);
-    if (Peb != MM_HIGHEST_VAD_ADDRESS)
-    {
-        DPRINT1("MiCreatePebOrTeb() returned %x\n", Peb);
-        return STATUS_UNSUCCESSFUL;
-    }
+    Peb = MiCreatePebOrTeb(Process,
+                           (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
+    ASSERT(Peb == (PVOID)0x7FFDF000)
 
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");
@@ -348,7 +344,8 @@ MmCreateTeb(PEPROCESS Process,
     }
 
     /* Allocate the TEB */
-    Teb = MiCreatePebOrTeb(Process, MM_HIGHEST_VAD_ADDRESS);
+    Teb = MiCreatePebOrTeb(Process,
+                           (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
 
     /* Initialize the PEB */
     RtlZeroMemory(Teb, sizeof(TEB));
