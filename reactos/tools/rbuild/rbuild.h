@@ -353,7 +353,6 @@ public:
 	       bool _isPreCompiledHeader );
 
 	void ProcessXML();
-	bool IsGeneratedFile () const;
 };
 
 
@@ -788,16 +787,22 @@ private:
 class CompilationUnit
 {
 public:
-	const Project& project;
+	const Project* project;
 	const Module* module;
-	const XMLElement& node;
+	const XMLElement* node;
 	std::vector<File*> files;
 
-	CompilationUnit ( const Project& project,
+	CompilationUnit ( File* file );
+	CompilationUnit ( const Project* project,
 	                  const Module* module,
-	                  const XMLElement& node );
+	                  const XMLElement* node );
 	~CompilationUnit ();
 	void ProcessXML();
+	bool IsGeneratedFile () const;
+	bool HasFileWithExtension ( const std::string& extension ) const;
+	bool IsFirstFile () const;
+	std::string GetFilename () const;
+	std::string GetSwitches () const;
 };
 
 

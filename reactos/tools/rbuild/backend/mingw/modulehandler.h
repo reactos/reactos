@@ -81,7 +81,7 @@ public:
 	void GenerateDependsTarget () const;
 	static bool ReferenceObjects ( const Module& module );
 protected:
-	virtual void GetModuleSpecificSourceFiles ( std::vector<File*>& sourceFiles );
+	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
@@ -156,16 +156,16 @@ private:
 	void GenerateWindresCommand ( const std::string& sourceFilename,
 	                              const std::string& windresflagsMacro );
 	void GenerateWinebuildCommands ( const std::string& sourceFilename );
-	std::string GetWidlFlags ( const File& file );
+	std::string GetWidlFlags ( const CompilationUnit& compilationUnit );
 	void GenerateWidlCommandsServer (
-		const File& file,
+		const CompilationUnit& compilationUnit,
 		const std::string& widlflagsMacro );
 	void GenerateWidlCommandsClient (
-		const File& file,
+		const CompilationUnit& compilationUnit,
 		const std::string& widlflagsMacro );
-	void GenerateWidlCommands ( const File& file,
+	void GenerateWidlCommands ( const CompilationUnit& compilationUnit,
 	                            const std::string& widlflagsMacro );
-	void GenerateCommands ( const File& file,
+	void GenerateCommands ( const CompilationUnit& compilationUnit,
 	                        const std::string& cc,
 	                        const std::string& cppc,
 	                        const std::string& cflagsMacro,
@@ -198,7 +198,7 @@ private:
 	static std::string RemoveVariables ( std::string path);
 	void GenerateBuildMapCode ();
 	void GenerateBuildNonSymbolStrippedCode ();
-	void CleanupFileVector ( std::vector<File*>& sourceFiles );
+	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );
 	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
 	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
 	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
@@ -420,7 +420,7 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 protected:
-	virtual void GetModuleSpecificSourceFiles ( std::vector<File*>& sourceFiles );
+	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 private:
 	void GenerateTestModuleTarget ();
 };

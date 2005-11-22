@@ -182,8 +182,6 @@ GetBooleanValue ( const string& value )
 IfableData::~IfableData()
 {
 	size_t i;
-	for ( i = 0; i < files.size (); i++ )
-		delete files[i];
 	for ( i = 0; i < includes.size (); i++ )
 		delete includes[i];
 	for ( i = 0; i < defines.size (); i++ )
@@ -203,8 +201,6 @@ IfableData::~IfableData()
 void IfableData::ProcessXML ()
 {
 	size_t i;
-	for ( i = 0; i < files.size (); i++ )
-		files[i]->ProcessXML ();
 	for ( i = 0; i < includes.size (); i++ )
 		includes[i]->ProcessXML ();
 	for ( i = 0; i < defines.size (); i++ )
@@ -478,12 +474,20 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		                         first,
 		                         switches,
 		                         false );
+		if ( parseContext.compilationUnit )
+			parseContext.compilationUnit->files.push_back ( pFile );
+		else
+		{
+			CompilationUnit* pCompilationUnit = new CompilationUnit ( pFile );
+			if ( parseContext.ifData )
+				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
+			else
+				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+		}
 		if ( parseContext.ifData )
 			parseContext.ifData->data.files.push_back ( pFile );
 		else
 			non_if_data.files.push_back ( pFile );
-		if ( parseContext.compilationUnit )
-			parseContext.compilationUnit->files.push_back ( pFile );
 		subs_invalid = true;
 	}
 	else if ( e.name == "library" && e.value.size () )
@@ -623,7 +627,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "compilationunit" )
 	{
-		CompilationUnit* pCompilationUnit = new CompilationUnit ( project, this, e );
+		CompilationUnit* pCompilationUnit = new CompilationUnit ( &project, this, &e );
 		if ( parseContext.ifData )
 			parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
 		else
@@ -925,11 +929,10 @@ Module::HasFileWithExtension (
 	const std::string& extension ) const
 {
 	size_t i;
-	for ( i = 0; i < data.files.size (); i++ )
+	for ( i = 0; i < data.compilationUnits.size (); i++ )
 	{
-		File& file = *data.files[i];
-		string file_ext = GetExtension ( file.name );
-		if ( !stricmp ( file_ext.c_str (), extension.c_str () ) )
+		CompilationUnit* compilationUnit = data.compilationUnits[i];
+		if ( compilationUnit->HasFileWithExtension ( extension ) )
 			return true;
 	}
 	for ( i = 0; i < data.ifs.size (); i++ )
@@ -969,13 +972,6 @@ File::File ( const string& _name, bool _first,
 void
 File::ProcessXML()
 {
-}
-
-bool
-File::IsGeneratedFile () const
-{
-	string extension = GetExtension ( name );
-	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
 

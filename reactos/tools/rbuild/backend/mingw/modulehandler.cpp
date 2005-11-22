@@ -388,13 +388,12 @@ MingwModuleHandler::GetSourceFilenames ( string_list& list,
 {
 	size_t i;
 
-	const vector<File*>& files = module.non_if_data.files;
-	for ( i = 0; i < files.size (); i++ )
+	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
-		if ( includeGeneratedFiles || !files[i]->IsGeneratedFile () )
+		if ( includeGeneratedFiles || !compilationUnits[i]->IsGeneratedFile () )
 		{
-			list.push_back (
-				GetActualSourceFilename ( files[i]->name ) );
+			list.push_back ( GetActualSourceFilename ( compilationUnits[i]->GetFilename () ) );
 		}
 	}
 	// intentionally make a copy so that we can append more work in
@@ -408,15 +407,12 @@ MingwModuleHandler::GetSourceFilenames ( string_list& list,
 		const vector<If*>& ifs = rIf.data.ifs;
 		for ( j = 0; j < ifs.size (); j++ )
 			v.push_back ( ifs[j] );
-		const vector<File*>& files = rIf.data.files;
-		for ( j = 0; j < files.size (); j++ )
+		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
+		for ( j = 0; j < compilationUnits.size (); j++ )
 		{
-			File& file = *files[j];
-			if ( includeGeneratedFiles || !file.IsGeneratedFile () )
-			{
-				list.push_back (
-					GetActualSourceFilename ( file.name ) );
-			}
+			CompilationUnit& compilationUnit = *compilationUnits[j];
+			if ( includeGeneratedFiles || !compilationUnit.IsGeneratedFile () )
+				list.push_back ( GetActualSourceFilename ( compilationUnit.GetFilename () ) );
 		}
 	}
 }
@@ -545,17 +541,16 @@ MingwModuleHandler::GenerateDependsTarget () const
 string
 MingwModuleHandler::GetObjectFilenames ()
 {
-	const vector<File*>& files = module.non_if_data.files;
-	if ( files.size () == 0 )
+	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+	if ( compilationUnits.size () == 0 )
 		return "";
 	
 	string objectFilenames ( "" );
-	for ( size_t i = 0; i < files.size (); i++ )
+	for ( size_t i = 0; i < compilationUnits.size (); i++ )
 	{
 		if ( objectFilenames.size () > 0 )
 			objectFilenames += " ";
-		objectFilenames +=
-			GetObjectFilename ( files[i]->name, NULL );
+		objectFilenames += GetObjectFilename ( compilationUnits[i]->GetFilename (), NULL );
 	}
 	return objectFilenames;
 }
@@ -804,7 +799,7 @@ MingwModuleHandler::GenerateMacros (
 		if ( rIf.data.defines.size()
 			|| rIf.data.includes.size()
 			|| rIf.data.libraries.size()
-			|| rIf.data.files.size()
+			|| rIf.data.compilationUnits.size()
 			|| rIf.data.compilerFlags.size()
 			|| rIf.data.ifs.size() )
 		{
@@ -826,14 +821,14 @@ MingwModuleHandler::GenerateMacros (
 }
 
 void
-MingwModuleHandler::CleanupFileVector ( vector<File*>& sourceFiles )
+MingwModuleHandler::CleanupCompilationUnitVector ( vector<CompilationUnit*>& compilationUnits )
 {
-	for (size_t i = 0; i < sourceFiles.size (); i++)
-		delete sourceFiles[i];
+	for (size_t i = 0; i < compilationUnits.size (); i++)
+		delete compilationUnits[i];
 }
 
 void
-MingwModuleHandler::GetModuleSpecificSourceFiles ( vector<File*>& sourceFiles )
+MingwModuleHandler::GetModuleSpecificCompilationUnits ( vector<CompilationUnit*>& compilationUnits )
 {
 }
 
@@ -845,19 +840,18 @@ MingwModuleHandler::GenerateObjectMacros (
 {
 	size_t i;
 
-	const vector<File*>& files = data.files;
-	if ( files.size () > 0 )
+	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
+	if ( compilationUnits.size () > 0 )
 	{
-		for ( i = 0; i < files.size (); i++ )
+		for ( i = 0; i < compilationUnits.size (); i++ )
 		{
-			File& file = *files[i];
-			if ( file.first )
+			CompilationUnit& compilationUnit = *compilationUnits[i];
+			if ( compilationUnit.IsFirstFile () )
 			{
 				fprintf ( fMakefile,
 					"%s := %s $(%s)\n",
 					objectsMacro.c_str(),
-					GetObjectFilename (
-						file.name, NULL ).c_str (),
+					GetObjectFilename ( compilationUnit.GetFilename (), NULL ).c_str (),
 					objectsMacro.c_str() );
 			}
 		}
@@ -866,17 +860,16 @@ MingwModuleHandler::GenerateObjectMacros (
 			"%s %s",
 			objectsMacro.c_str (),
 			assignmentOperation );
-		for ( i = 0; i < files.size(); i++ )
+		for ( i = 0; i < compilationUnits.size(); i++ )
 		{
-			File& file = *files[i];
-			if ( !file.first )
+			CompilationUnit& compilationUnit = *compilationUnits[i];
+			if ( !compilationUnit.IsFirstFile () )
 			{
 				fprintf (
 					fMakefile,
 					"%s%s",
 					( i%10 == 9 ? " \\\n\t" : " " ),
-					GetObjectFilename (
-						file.name, NULL ).c_str () );
+					GetObjectFilename ( compilationUnit.GetFilename (), NULL ).c_str () );
 			}
 		}
 		fprintf ( fMakefile, "\n" );
@@ -889,7 +882,7 @@ MingwModuleHandler::GenerateObjectMacros (
 		if ( rIf.data.defines.size()
 			|| rIf.data.includes.size()
 			|| rIf.data.libraries.size()
-			|| rIf.data.files.size()
+			|| rIf.data.compilationUnits.size()
 			|| rIf.data.compilerFlags.size()
 			|| rIf.data.ifs.size() )
 		{
@@ -909,18 +902,17 @@ MingwModuleHandler::GenerateObjectMacros (
 		}
 	}
 
-	vector<File*> sourceFiles;
-	GetModuleSpecificSourceFiles ( sourceFiles );
-	for ( i = 0; i < sourceFiles.size (); i++ )
+	vector<CompilationUnit*> sourceCompilationUnits;
+	GetModuleSpecificCompilationUnits ( sourceCompilationUnits );
+	for ( i = 0; i < sourceCompilationUnits.size (); i++ )
 	{
 		fprintf (
 			fMakefile,
 			"%s += %s\n",
 			objectsMacro.c_str(),
-			GetObjectFilename (
-				sourceFiles[i]->name, NULL ).c_str () );
+			GetObjectFilename ( sourceCompilationUnits[i]->GetFilename (), NULL ).c_str () );
 	}
-	CleanupFileVector ( sourceFiles );
+	CleanupCompilationUnitVector ( sourceCompilationUnits );
 }
 
 string
@@ -1104,9 +1096,9 @@ MingwModuleHandler::GenerateWinebuildCommands (
 }
 
 string
-MingwModuleHandler::GetWidlFlags ( const File& file )
+MingwModuleHandler::GetWidlFlags ( const CompilationUnit& compilationUnit )
 {
-	return file.switches;
+	return compilationUnit.GetSwitches ();
 }
 
 string
@@ -1118,13 +1110,14 @@ MingwModuleHandler::GetRpcServerHeaderFilename ( string basename ) const
 		
 void
 MingwModuleHandler::GenerateWidlCommandsServer (
-	const File& file,
+	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
 {
-	string dependencies = file.name;
+	string filename = compilationUnit.GetFilename ();
+	string dependencies = filename;
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	string basename = GetBasename ( file.name );
+	string basename = GetBasename ( filename );
 
 	string generatedHeaderFilename = GetRpcServerHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
@@ -1144,11 +1137,11 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	fprintf ( fMakefile,
 	          "\t%s %s %s -h -H %s -s -S %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( file ).c_str (),
+	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
 	          generatedHeaderFilename.c_str (),
 	          generatedServerFilename.c_str (),
-	          file.name.c_str () );
+	          filename.c_str () );
 }
 
 string
@@ -1160,13 +1153,14 @@ MingwModuleHandler::GetRpcClientHeaderFilename ( string basename ) const
 
 void
 MingwModuleHandler::GenerateWidlCommandsClient (
-	const File& file,
+	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
 {
-	string dependencies = file.name;
+	string filename = compilationUnit.GetFilename ();
+	string dependencies = filename;
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	string basename = GetBasename ( file.name );
+	string basename = GetBasename ( filename );
 
 	string generatedHeaderFilename = GetRpcClientHeaderFilename ( basename );
 	CLEAN_FILE(generatedHeaderFilename);
@@ -1186,29 +1180,29 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 	fprintf ( fMakefile,
 	          "\t%s %s %s -h -H %s -c -C %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
-	          GetWidlFlags ( file ).c_str (),
+	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
 	          generatedHeaderFilename.c_str (),
 	          generatedClientFilename.c_str (),
-	          file.name.c_str () );
+	          filename.c_str () );
 }
 
 void
 MingwModuleHandler::GenerateWidlCommands (
-	const File& file,
+	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
 {
 	if ( module.type == RpcServer )
-		GenerateWidlCommandsServer ( file,
+		GenerateWidlCommandsServer ( compilationUnit,
 		                             widlflagsMacro );
 	else
-		GenerateWidlCommandsClient ( file,
+		GenerateWidlCommandsClient ( compilationUnit,
 		                             widlflagsMacro );
 }
 
 void
 MingwModuleHandler::GenerateCommands (
-	const File& file,
+	const CompilationUnit& compilationUnit,
 	const string& cc,
 	const string& cppc,
 	const string& cflagsMacro,
@@ -1216,10 +1210,11 @@ MingwModuleHandler::GenerateCommands (
 	const string& windresflagsMacro,
 	const string& widlflagsMacro )
 {
-	string extension = GetExtension ( file.name );
+	string filename = compilationUnit.GetFilename ();
+	string extension = GetExtension ( filename );
 	if ( extension == ".c" || extension == ".C" )
 	{
-		GenerateGccCommand ( file.name,
+		GenerateGccCommand ( filename,
 		                     "",
 		                     cc,
 		                     cflagsMacro );
@@ -1229,7 +1224,7 @@ MingwModuleHandler::GenerateCommands (
 	          extension == ".cpp" || extension == ".CPP" ||
 	          extension == ".cxx" || extension == ".CXX" )
 	{
-		GenerateGccCommand ( file.name,
+		GenerateGccCommand ( filename,
 		                     "",
 		                     cppc,
 		                     cflagsMacro );
@@ -1237,27 +1232,27 @@ MingwModuleHandler::GenerateCommands (
 	}
 	else if ( extension == ".s" || extension == ".S" )
 	{
-		GenerateGccAssemblerCommand ( file.name,
+		GenerateGccAssemblerCommand ( filename,
 		                              cc,
 		                              cflagsMacro );
 		return;
 	}
 	else if ( extension == ".asm" || extension == ".ASM" )
 	{
-		GenerateNasmCommand ( file.name,
+		GenerateNasmCommand ( filename,
 		                      nasmflagsMacro );
 		return;
 	}
 	else if ( extension == ".rc" || extension == ".RC" )
 	{
-		GenerateWindresCommand ( file.name,
+		GenerateWindresCommand ( filename,
 		                         windresflagsMacro );
 		return;
 	}
 	else if ( extension == ".spec" || extension == ".SPEC" )
 	{
-		GenerateWinebuildCommands ( file.name );
-		GenerateGccCommand ( GetActualSourceFilename ( file.name ),
+		GenerateWinebuildCommands ( filename );
+		GenerateGccCommand ( GetActualSourceFilename ( filename ),
 		                     "",
 		                     cc,
 		                     cflagsMacro );
@@ -1265,10 +1260,10 @@ MingwModuleHandler::GenerateCommands (
 	}
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
-		GenerateWidlCommands ( file,
+		GenerateWidlCommands ( compilationUnit,
 		                       widlflagsMacro );
-		GenerateGccCommand ( GetActualSourceFilename ( file.name ),
-		                     GetExtraDependencies ( file.name ),
+		GenerateGccCommand ( GetActualSourceFilename ( filename ),
+		                     GetExtraDependencies ( filename ),
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1278,7 +1273,7 @@ MingwModuleHandler::GenerateCommands (
 	                                  __LINE__,
 	                                  "Unsupported filename extension '%s' in file '%s'",
 	                                  extension.c_str (),
-	                                  file.name.c_str () );
+	                                  filename.c_str () );
 }
 
 void
@@ -1371,10 +1366,10 @@ void
 MingwModuleHandler::GetObjectsVector ( const IfableData& data,
                                        vector<string>& objectFiles ) const
 {
-	for ( size_t i = 0; i < data.files.size (); i++ )
+	for ( size_t i = 0; i < data.compilationUnits.size (); i++ )
 	{
-		File& file = *data.files[i];
-		objectFiles.push_back ( GetObjectFilename ( file.name, NULL ) );
+		CompilationUnit& compilationUnit = *data.compilationUnits[i];
+		objectFiles.push_back ( GetObjectFilename ( compilationUnit.GetFilename (), NULL ) );
 	}
 }
 
@@ -1519,10 +1514,10 @@ MingwModuleHandler::GenerateObjectFileTargets (
 {
 	size_t i;
 	
-	const vector<File*>& files = data.files;
-	for ( i = 0; i < files.size (); i++ )
+	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
+	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
-		GenerateCommands ( *files[i],
+		GenerateCommands ( *compilationUnits[i],
 		                   cc,
 		                   cppc,
 		                   cflagsMacro,
@@ -1545,11 +1540,11 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		                            widlflagsMacro );
 	}
 
-	vector<File*> sourceFiles;
-	GetModuleSpecificSourceFiles ( sourceFiles );
-	for ( i = 0; i < sourceFiles.size (); i++ )
+	vector<CompilationUnit*> sourceCompilationUnits;
+	GetModuleSpecificCompilationUnits ( sourceCompilationUnits );
+	for ( i = 0; i < sourceCompilationUnits.size (); i++ )
 	{
-		GenerateCommands ( *sourceFiles[i],
+		GenerateCommands ( *sourceCompilationUnits[i],
 		                   cc,
 		                   cppc,
 		                   cflagsMacro,
@@ -1557,7 +1552,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		                   windresflagsMacro,
 		                   widlflagsMacro );
 	}
-	CleanupFileVector ( sourceFiles );
+	CleanupCompilationUnitVector ( sourceCompilationUnits );
 }
 
 void
@@ -1703,13 +1698,14 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 		if ( library.importedModule->type == RpcServer ||
 		     library.importedModule->type == RpcClient )
 		{
-			for ( size_t j = 0; j < library.importedModule->non_if_data.files.size (); j++ )
+			for ( size_t j = 0; j < library.importedModule->non_if_data.compilationUnits.size (); j++ )
 			{
-				File& file = *library.importedModule->non_if_data.files[j];
-				string extension = GetExtension ( file.name );
+				CompilationUnit& compilationUnit = *library.importedModule->non_if_data.compilationUnits[j];
+				string filename = compilationUnit.GetFilename ();
+				string extension = GetExtension ( filename );
 				if ( extension == ".idl" || extension == ".IDL" )
 				{
-					string basename = GetBasename ( file.name );
+					string basename = GetBasename ( filename );
 					if ( library.importedModule->type == RpcServer )
 						dependencies.push_back ( GetRpcServerHeaderFilename ( basename ) );
 					if ( library.importedModule->type == RpcClient )
@@ -1739,13 +1735,14 @@ MingwModuleHandler::GenerateOtherMacros ()
 	vector<string> s;
 	if ( module.importLibrary )
 	{
-		const vector<File*>& files = module.non_if_data.files;
-		for ( size_t i = 0; i < files.size (); i++ )
+		const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+		for ( size_t i = 0; i < compilationUnits.size (); i++ )
 		{
-			File& file = *files[i];
-			string extension = GetExtension ( file.name );
+			CompilationUnit& compilationUnit = *compilationUnits[i];
+			string filename = compilationUnit.GetFilename ();
+			string extension = GetExtension ( filename );
 			if ( extension == ".spec" || extension == ".SPEC" )
-				GetSpecObjectDependencies ( s, file.name );
+				GetSpecObjectDependencies ( s, filename );
 		}
 	}
 	if ( s.size () > 0 )
@@ -2093,19 +2090,16 @@ MingwModuleHandler::GetDefinitionDependencies (
 	string_list& dependencies ) const
 {
 	string dkNkmLibNoFixup = "dk/nkm/lib";
-	const vector<File*>& files = module.non_if_data.files;
-	for ( size_t i = 0; i < files.size (); i++ )
+	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+	for ( size_t i = 0; i < compilationUnits.size (); i++ )
 	{
-		File& file = *files[i];
-		string extension = GetExtension ( file.name );
+		CompilationUnit& compilationUnit = *compilationUnits[i];
+		string filename = compilationUnit.GetFilename ();
+		string extension = GetExtension ( filename );
 		if ( extension == ".spec" || extension == ".SPEC" )
-		{
-			GetSpecObjectDependencies ( dependencies, file.name );
-		}
+			GetSpecObjectDependencies ( dependencies, filename );
 		if ( extension == ".idl" || extension == ".IDL" )
-		{
-			GetWidlObjectDependencies ( dependencies, file.name );
-		}
+			GetWidlObjectDependencies ( dependencies, filename );
 	}
 }
 
@@ -2176,7 +2170,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2265,7 +2259,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2313,7 +2307,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2360,7 +2354,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 	
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2407,7 +2401,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 	
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2454,7 +2448,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2507,7 +2501,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -2560,7 +2554,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 
@@ -3043,12 +3037,12 @@ MingwTestModuleHandler::Process ()
 }
 
 void
-MingwTestModuleHandler::GetModuleSpecificSourceFiles ( vector<File*>& sourceFiles )
+MingwTestModuleHandler::GetModuleSpecificCompilationUnits ( vector<CompilationUnit*>& compilationUnits )
 {
 	string basePath = "$(INTERMEDIATE)" + sSep + module.GetBasePath ();
-	sourceFiles.push_back ( new File ( basePath + sSep + "_hooks.c", false, "", false ) );
-	sourceFiles.push_back ( new File ( basePath + sSep + "_stubs.S", false, "", false ) );
-	sourceFiles.push_back ( new File ( basePath + sSep + "_startup.c", false, "", false ) );
+	compilationUnits.push_back ( new CompilationUnit ( new File ( basePath + sSep + "_hooks.c", false, "", false ) ) );
+	compilationUnits.push_back ( new CompilationUnit ( new File ( basePath + sSep + "_stubs.S", false, "", false ) ) );
+	compilationUnits.push_back ( new CompilationUnit ( new File ( basePath + sSep + "_startup.c", false, "", false ) ) );
 }
 
 void
@@ -3062,7 +3056,7 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	if ( module.non_if_data.files.size () > 0 )
+	if ( module.non_if_data.compilationUnits.size () > 0 )
 	{
 		GenerateRules ();
 

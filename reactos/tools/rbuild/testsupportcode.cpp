@@ -294,11 +294,12 @@ TestSupportCode::GetSourceFilenames ( string_list& list,
 {
 	size_t i;
 
-	const vector<File*>& files = module.non_if_data.files;
-	for ( i = 0; i < files.size (); i++ )
+	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
-		if ( !files[i]->IsGeneratedFile () && IsTestFile ( files[i]->name ) )
-			list.push_back ( files[i]->name );
+		string filename = compilationUnits[i]->GetFilename();
+		if ( !compilationUnits[i]->IsGeneratedFile () && IsTestFile ( filename ) )
+			list.push_back ( filename );
 	}
 	// intentionally make a copy so that we can append more work in
 	// the middle of processing without having to go recursive
@@ -311,14 +312,13 @@ TestSupportCode::GetSourceFilenames ( string_list& list,
 		const vector<If*>& ifs = rIf.data.ifs;
 		for ( j = 0; j < ifs.size (); j++ )
 			v.push_back ( ifs[j] );
-		const vector<File*>& files = rIf.data.files;
-		for ( j = 0; j < files.size (); j++ )
+		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
+		for ( j = 0; j < compilationUnits.size (); j++ )
 		{
-			File& file = *files[j];
-			if ( !file.IsGeneratedFile () && IsTestFile ( file.name ) )
-			{
-				list.push_back ( file.name );
-			}
+			CompilationUnit& compilationUnit = *compilationUnits[j];
+			string filename = compilationUnits[j]->GetFilename();
+			if ( !compilationUnit.IsGeneratedFile () && IsTestFile ( filename ) )
+				list.push_back ( filename );
 		}
 	}
 }
