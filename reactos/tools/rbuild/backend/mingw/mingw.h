@@ -32,32 +32,6 @@ class MingwModuleHandler;
 extern std::string
 v2s ( const string_list& v, int wrap_at );
 
-typedef std::map<std::string,Directory*> directory_map;
-
-
-class Directory
-{
-public:
-	std::string name;
-	directory_map subdirs;
-	Directory ( const std::string& name );
-	void Add ( const char* subdir );
-	void GenerateTree ( const std::string& parent,
-	                    bool verbose );
-	std::string EscapeSpaces ( std::string path );
-	void CreateRule ( FILE* f,
-	                  const std::string& parent );
-private:
-	bool mkdir_p ( const char* path );
-	std::string ReplaceVariable ( std::string name,
-	                              std::string value,
-	                              std::string path );
-	std::string GetEnvironmentVariable ( const std::string& name );
-	void ResolveVariablesInPath ( char* buf,
-	                              std::string path );
-	bool CreateDirectory ( std::string path );
-};
-
 
 class MingwBackend : public Backend
 {

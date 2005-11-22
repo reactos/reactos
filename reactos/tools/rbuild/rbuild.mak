@@ -160,6 +160,7 @@ RBUILD_COMMON_SOURCES = \
 		compilerflag.cpp \
 		configuration.cpp \
 		define.cpp \
+		directory.cpp \
 		exception.cpp \
 		filesupportcode.cpp \
 		include.cpp \
@@ -288,6 +289,10 @@ $(RBUILD_INT_)configuration.o: $(RBUILD_BASE_)configuration.cpp $(RBUILD_HEADERS
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)define.o: $(RBUILD_BASE_)define.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)directory.o: $(RBUILD_BASE_)directory.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
