@@ -182,20 +182,22 @@ GetBooleanValue ( const string& value )
 IfableData::~IfableData()
 {
 	size_t i;
-	for ( i = 0; i < files.size(); i++ )
+	for ( i = 0; i < files.size (); i++ )
 		delete files[i];
-	for ( i = 0; i < includes.size(); i++ )
+	for ( i = 0; i < includes.size (); i++ )
 		delete includes[i];
-	for ( i = 0; i < defines.size(); i++ )
+	for ( i = 0; i < defines.size (); i++ )
 		delete defines[i];
-	for ( i = 0; i < libraries.size(); i++ )
+	for ( i = 0; i < libraries.size (); i++ )
 		delete libraries[i];
-	for ( i = 0; i < properties.size(); i++ )
+	for ( i = 0; i < properties.size (); i++ )
 		delete properties[i];
-	for ( i = 0; i < compilerFlags.size(); i++ )
+	for ( i = 0; i < compilerFlags.size (); i++ )
 		delete compilerFlags[i];
-	for ( i = 0; i < ifs.size(); i++ )
+	for ( i = 0; i < ifs.size (); i++ )
 		delete ifs[i];
+	for ( i = 0; i < compilationUnits.size (); i++ )
+		delete compilationUnits[i];
 }
 
 void IfableData::ProcessXML ()
@@ -215,6 +217,8 @@ void IfableData::ProcessXML ()
 		compilerFlags[i]->ProcessXML ();
 	for ( i = 0; i < ifs.size (); i++ )
 		ifs[i]->ProcessXML ();
+	for ( i = 0; i < compilationUnits.size (); i++ )
+		compilationUnits[i]->ProcessXML ();
 }
 
 Module::Module ( const Project& project,
@@ -413,7 +417,10 @@ Module::ProcessXML()
 
 	size_t i;
 	for ( i = 0; i < node.subElements.size(); i++ )
-		ProcessXMLSubElement ( *node.subElements[i], path );
+	{
+		ParseContext parseContext;
+		ProcessXMLSubElement ( *node.subElements[i], path, parseContext );
+	}
 	for ( i = 0; i < invocations.size(); i++ )
 		invocations[i]->ProcessXML ();
 	for ( i = 0; i < dependencies.size(); i++ )
@@ -434,8 +441,9 @@ Module::ProcessXML()
 void
 Module::ProcessXMLSubElement ( const XMLElement& e,
                                const string& path,
-                               If* pIf /*= NULL*/ )
+                               ParseContext& parseContext )
 {
+	If* pOldIf = parseContext.ifData;
 	bool subs_invalid = false;
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () > 0 )
@@ -470,17 +478,19 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		                         first,
 		                         switches,
 		                         false );
-		if ( pIf )
-			pIf->data.files.push_back ( pFile );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.files.push_back ( pFile );
 		else
 			non_if_data.files.push_back ( pFile );
+		if ( parseContext.compilationUnit )
+			parseContext.compilationUnit->files.push_back ( pFile );
 		subs_invalid = true;
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
 		Library* pLibrary = new Library ( e, *this, e.value );
-		if ( pIf )
-			pIf->data.libraries.push_back ( pLibrary );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.libraries.push_back ( pLibrary );
 		else
 			non_if_data.libraries.push_back ( pLibrary );
 		subs_invalid = true;
@@ -494,8 +504,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "include" )
 	{
 		Include* include = new Include ( project, this, &e );
-		if ( pIf )
-			pIf->data.includes.push_back ( include );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.includes.push_back ( include );
 		else
 			non_if_data.includes.push_back ( include );
 		subs_invalid = true;
@@ -503,15 +513,15 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "define" )
 	{
 		Define* pDefine = new Define ( project, this, e );
-		if ( pIf )
-			pIf->data.defines.push_back ( pDefine );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.defines.push_back ( pDefine );
 		else
 			non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
 	else if ( e.name == "invoke" )
 	{
-		if ( pIf )
+		if ( parseContext.ifData )
 			throw InvalidBuildFileException (
 				e.location,
 				"<invoke> is not a valid sub-element of <if>" );
@@ -520,7 +530,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "dependency" )
 	{
-		if ( pIf )
+		if ( parseContext.ifData )
 			throw InvalidBuildFileException (
 				e.location,
 				"<dependency> is not a valid sub-element of <if>" );
@@ -529,7 +539,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "importlibrary" )
 	{
-		if ( pIf )
+		if ( parseContext.ifData )
 			throw InvalidBuildFileException (
 				e.location,
 				"<importlibrary> is not a valid sub-element of <if>" );
@@ -542,29 +552,27 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "if" )
 	{
-		If* pOldIf = pIf;
-		pIf = new If ( e, project, this );
+		parseContext.ifData = new If ( e, project, this );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( parseContext.ifData );
 		else
-			non_if_data.ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( parseContext.ifData );
 		subs_invalid = false;
 	}
 	else if ( e.name == "ifnot" )
 	{
-		If* pOldIf = pIf;
-		pIf = new If ( e, project, this, true );
+		parseContext.ifData = new If ( e, project, this, true );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( parseContext.ifData );
 		else
-			non_if_data.ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( parseContext.ifData );
 		subs_invalid = false;
 	}
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( project, this, e );
-		if ( pIf )
-			pIf->data.compilerFlags.push_back ( pCompilerFlag );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.compilerFlags.push_back ( pCompilerFlag );
 		else
 			non_if_data.compilerFlags.push_back ( pCompilerFlag );
 		subs_invalid = true;
@@ -601,7 +609,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "pch" )
 	{
-		if ( pIf )
+		if ( parseContext.ifData )
 			throw InvalidBuildFileException (
 				e.location,
 				"<pch> is not a valid sub-element of <if>" );
@@ -613,13 +621,24 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			e, *this, File ( FixSeparator ( path + cSep + e.value ), false, "", true ) );
 		subs_invalid = true;
 	}
+	else if ( e.name == "compilationunit" )
+	{
+		CompilationUnit* pCompilationUnit = new CompilationUnit ( project, this, e );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
+		else
+			non_if_data.compilationUnits.push_back ( pCompilationUnit );
+		parseContext.compilationUnit = pCompilationUnit;
+		subs_invalid = false;
+	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException (
 			e.location,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath, pIf );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
+	parseContext.ifData = pOldIf;
 }
 
 ModuleType

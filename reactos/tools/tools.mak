@@ -5,9 +5,9 @@ TOOLS_INT_ = $(TOOLS_INT)$(SEP)
 TOOLS_OUT = $(OUTPUT_)$(TOOLS_BASE)
 TOOLS_OUT_ = $(TOOLS_OUT)$(SEP)
 
-TOOLS_CFLAGS = -Wall -Wpointer-arith -Wno-strict-aliasing
-TOOLS_CPPFLAGS = -Wall -Wpointer-arith
-TOOLS_LFLAGS =
+TOOLS_CFLAGS = $(CFLAGS) -Wall -Wpointer-arith -Wno-strict-aliasing
+TOOLS_CPPFLAGS = $(CPPFLAGS) -Wall -Wpointer-arith
+TOOLS_LFLAGS = $(LFLAGS)
 
 $(TOOLS_INT): | $(INTERMEDIATE)
 	$(ECHO_MKDIR)
