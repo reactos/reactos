@@ -38,13 +38,16 @@ END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Registry"
+    POPUP "&File"
     BEGIN
-        MENUITEM "&Import Registry File...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Import ...",    ID_REGISTRY_IMPORTREGISTRYFILE
 
-        MENUITEM "&Export Registry File...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Export...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
+		MENUITEM "Load Hive...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Unload Hive...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
         MENUITEM "&Connect Network Registry...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -67,6 +70,8 @@ BEGIN
             MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multi-String Value",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expandable String Value",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Permissions...",		ID_EDIT_PERMISSIONS

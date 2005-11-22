@@ -921,6 +921,13 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_NEW_DWORDVALUE:
         CreateNewValue(hKeyRoot, keyPath, REG_DWORD);
         break;
+	case ID_EDIT_NEW_MULTISTRINGVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_MULTI_SZ);
+        break;
+	case ID_EDIT_NEW_EXPANDABLESTRINGVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_EXPAND_SZ);
+        break;
+
     }
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, hKeyRoot, keyPath);
