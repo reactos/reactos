@@ -1,8 +1,135 @@
 Complete list of NDK Fixmes before 1.0 Release (Nov 25th 2005)
 --------------------------------------------------------------
+______________________________________________________________________________________
+[CRITICAL]	- Breaking compatibility with official structures.
+|pstypes.h	- EPROCESS has ReactOS only fields. Includes ReactOS Internal header.
+|pstypes.h	- W32_CALLOUT_DATA has ReactOS only fields.
+|obtypes.h	- Object callbacks are ReactOS only definitions.
+|obtypes.h	- Object Header includes ReactOS only type.
+|mmtypes.h	- _MADDRESS_SPACE is ReactOS only field.
+|ketypes.h	- _KPROFILE needs to be updated with new definitions.
+|ketypes.h	- _KINTERRUPT needs to be verified with new definitions.
+|haltypes.h	- Loader Parameter Block is ReactOS Version, not NT.
+|
+[MAJOR]		- Using incorrect, missing, or invalid names or definitions.
+|i386/ketypes.h	- _KTRAP_FRAME definition is broken.
+|i386/ketypes.h	- _KTSSNOIOPM is not an official type.
+|rtltypes.h	- PPF_ Defines don't seem to be the real names (try to find them).
+|rtltypes.h	- _RTL_PROCESS_BACKTRACE_INFORMATION isn't done.
+|haltypes.h	- Multi-Boot flags are ReactOS Only.
+|extypes.h	- SystemPowerInformation in SYSTEM_INFORMATION_CLASS causes conflict.
+|extypes.h	- _RUNDOWN_DESCRIPTOR is possibly incorrect/unofficial.
+|asm.h		- Selector names are not official.
+|extypes.h	- Class 42 (SYSTEM_POWER_INFORMATION causes conflict).
+|extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined.
+|
+[MINOR]		- Related to location of functions, comments, etc.
+|arch/ketypes.h	- _KDPC_DATA, PP_LOOKASIDE_LIST shouldn't be there.
+|zwfuncs.h	- APIs are not organized.
+|pstypes.h	- Check if _PAGEFAULT_HISTORY shouldn't go in mmtypes.h instead.
+|lpctypes.h	- Consider moving _HARDERROR_MSG to extypes.h?
+|lpctypes.h	- Consider moving _CLIENT_DIED_MSG to pstypes.h?
+|ketypes.h	- Consider moving KNODE to mmtypes.h?
+|ketypes.h	- Consider moving NtBuildNumber to extypes.h?
+|extypes.h	- consider moving PORT_ALL_ACCESS to lpctypes.h
+|GENERIC	- Make sure that all files can be included in standalone!
+|_____________________________________________________________________________________
 
 
 List of ReactOS Applications compiling with the NDK
+(verify, fix, and optimize their usage)
 --------------------------------------------------------------
 
-
+apps\utils\ps\ps.c: #include <ndk/ntndk.h>
+drivers\dd\blue\blue.c: #include <ndk/halfuncs.h>
+drivers\dd\bootvid\bootvid.c: #include <ndk/ldrfuncs.h>
+drivers\storage\diskdump\diskdump.c: #include <ndk/extypes.h>
+drivers\storage\diskdump\diskdump.c: #include <ndk/rtlfuncs.h>
+hal\hal\hal.c: #include <ndk/halfuncs.h>
+hal\hal\hal.c: #include <ndk/kdfuncs.h>
+lib\crt\except\unwind.c: #include <ndk/umtypes.h>
+lib\crt\except\unwind.c: #include <ndk/extypes.h>
+lib\crt\except\unwind.c: #include <ndk/rtlfuncs.h>
+lib\dnsapi\dnsapi\stubs.c: #include <ndk/ntndk.h>
+lib\epsapi\enum\drivers.c: #include <ndk/ntndk.h>
+lib\epsapi\enum\modules.c: #include <ndk/ntndk.h>
+lib\epsapi\enum\processes.c: #include <ndk/ntndk.h>
+lib\lsasrv\lsaport.c: #include <ndk/ntndk.h>
+lib\lsasrv\lsasrv.c: #include <ndk/ntndk.h>
+lib\nt\entry_point.c: #include <ndk/ntndk.h>
+lib\samlib\samlib.c: #include <ndk/ntndk.h>
+lib\samsrv\samsrv.c: #include <ndk/ntndk.h>
+lib\smdll\query.c: #include <ndk/ntndk.h>
+lib\string\mbstowcs.c: #include <ndk/umtypes.h>
+lib\string\mbstowcs.c: #include <ndk/rtlfuncs.h>
+lib\string\sscanf.c: #include <ndk/umtypes.h>
+lib\string\sscanf.c: #include <ndk/rtlfuncs.h>
+lib\string\wcstombs.c: #include <ndk/umtypes.h>
+lib\string\wcstombs.c: #include <ndk/rtlfuncs.h>
+lib\syssetup\install.c: #include <ndk/ntndk.h>
+lib\syssetup\logfile.c: #include <ndk/ntndk.h>
+lib\wdmguid\wdmguid.c: #include <ndk/sysguid.h>
+regtests\shared\regtests.c: #include <ndk/ntndk.h>
+services\umpnpmgr\umpnpmgr.c: #include <ndk/ntndk.h>
+subsys\csr\main.c: #include <ndk/ntndk.h>
+subsys\ntvdm\ntvdm.c: #include <ndk/ntndk.h>
+subsys\system\autochk\autochk.c: #include <ndk/ntndk.h>
+subsys\system\lsass\lsass.c: #include <ndk/ntndk.h>
+subsys\system\setup\setup.c: #include <ndk/ntndk.h>
+subsys\system\sm\sm.c: #include <ndk/ntndk.h>
+boot\freeldr\freeldr\include\freeldr.h: #include <ndk/ntndk.h>
+drivers\fs\ms\msfs.h: #include <ndk/ntndk.h>
+drivers\fs\np\npfs.h: #include <ndk/iotypes.h>
+drivers\fs\vfat\vfat.h: #include <ndk/ntndk.h>
+drivers\net\ndis\include\ndissys.h: #include <ndk/ntndk.h>
+drivers\net\tcpip\include\precomp.h: #include <ndk/ntndk.h>
+drivers\video\miniport\xboxvmp\xboxvmp.h: #include <ndk/ntndk.h>
+drivers\video\videoprt\videoprt.h: #include <ndk/ntndk.h>
+hal\halx86\include\hal.h: #include <ndk/ntndk.h>
+include\drivers\diskdump\diskdump.h: #include <ndk/ntndk.h>
+lib\advapi32\advapi32.h: #include <ndk/ntndk.h>
+lib\crt\precomp.h: #include <ndk/ntndk.h>
+lib\dbghelp\stackframe.h: #include <ndk/umtypes.h>
+lib\dbghelp\stackframe.h: #include <ndk/extypes.h>
+lib\dbghelp\stackframe.h: #include <ndk/rtlfuncs.h>
+lib\dnsapi\dnsapi\precomp.h: #include <ndk/ntndk.h>
+lib\fmifs\precomp.h: #include <ndk/ntndk.h>
+lib\fslib\vfatlib\vfatlib.h: #include <ndk/ntndk.h>
+lib\fslib\vfatxlib\vfatxlib.h: #include <ndk/ntndk.h>
+lib\gdi32\include\precomp.h: #include <ndk/ntndk.h>
+lib\imagehlp\precomp.h: #include <ndk/umtypes.h>
+lib\imagehlp\precomp.h: #include <ndk/rtlfuncs.h>
+lib\iphlpapi\iphlpapi_private.h: #include <ndk/ntndk.h>
+lib\kernel32\k32.h: #include <ndk/ntndk.h>
+lib\msafd\msafd.h: #include <ndk/ntndk.h>
+lib\ntdll\inc\ntdll.h: #include <ndk/ntndk.h>
+lib\opengl32\teb.h: #include <ndk/ntndk.h>
+lib\psapi\precomp.h: #include <ndk/ntndk.h>
+lib\rtl\rtl.h: #include <ndk/ntndk.h>
+lib\secur32\precomp.h: #include <ndk/ntndk.h>
+lib\setupapi\setupapi_private.h: #include <ndk/ntndk.h>
+lib\smlib\precomp.h: #include <ndk/ntndk.h>
+lib\user32\include\user32.h: #include <ndk/ntndk.h>
+lib\userenv\precomp.h: #include <ndk/ntndk.h>
+lib\ws2help\ws2help.h: #include <ndk/ntndk.h>
+lib\ws2_32\include\ws2_32.h: #include <ndk/ntndk.h>
+lib\wshirda\wshirda.h: #include <ndk/ntndk.h>
+ntoskrnl\include\ntoskrnl.h: #include <ndk/ntndk.h>
+ntoskrnl\include\internal\napi.h: #include <ndk/asm.h>
+services\dhcp\include\rosdhcp.h: #include <ndk/ntndk.h>
+services\eventlog\eventlog.h: #include <ndk/ntndk.h>
+services\rpcss\rpcss.h: #include <ndk/ntndk.h>
+subsys\csr\csrsrv\srv.h: #include <ndk/ntndk.h>
+subsys\csrss\csrss.h: #include <ndk/ntndk.h>
+subsys\csrss\include\api.h: #include <ndk/ntndk.h>
+subsys\csrss\win32csr\w32csr.h: #include <ndk/ntndk.h>
+subsys\smss\smss.h: #include <ndk/ntndk.h>
+subsys\system\cmd\precomp.h: #include <ndk/ntndk.h>
+subsys\system\services\services.h: #include <ndk/ntndk.h>
+subsys\system\taskmgr\precomp.h: #include <ndk/ntndk.h>
+subsys\system\usetup\usetup.h: #include <ndk/ntndk.h>
+subsys\system\winlogon\winlogon.h: #include <ndk/ntndk.h>
+subsys\win\basesrv\basesrv.h: #include <ndk/ntndk.h>
+subsys\win\winsrv\winsrv.h: #include <ndk/ntndk.h>
+subsys\win32k\w32k.h: #include <ndk/ntndk.h>
+subsys\win32k\include\napi.h: #include <ndk/asm.h>
