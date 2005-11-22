@@ -102,7 +102,7 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
     }
 }
 
-STATIC
+static
 VOID
 STDCALL
 ClientConnectionThread(HANDLE ServerPort)
