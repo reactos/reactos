@@ -25,7 +25,7 @@ typedef USHORT NODE_TYPE_CODE;
 
 /* FUNCTIONS ***************************************************************/
 
-STATIC
+static
 ULONG
 NTAPI
 ComputeUnicodeNameLength(IN PUNICODE_STRING UnicodeName)
@@ -44,8 +44,7 @@ ComputeUnicodeNameLength(IN PUNICODE_STRING UnicodeName)
     return NamesFound;
 }
 
-
-STATIC
+static
 RTL_GENERIC_COMPARE_RESULTS
 NTAPI
 CompareUnicodeStrings(IN PUNICODE_STRING Prefix,

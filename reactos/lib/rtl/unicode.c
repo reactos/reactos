@@ -1770,7 +1770,7 @@ NTAPI
 RtlStringFromGUID (IN REFGUID Guid,
                    OUT PUNICODE_STRING GuidString)
 {
-   STATIC CONST PWCHAR Hex = L"0123456789ABCDEF";
+   static CONST PWCHAR Hex = L"0123456789ABCDEF";
    WCHAR Buffer[40];
    PWCHAR BufferPtr;
    ULONG i;
