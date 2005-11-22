@@ -11,6 +11,7 @@
 
 	<define name="_M_IX86" />
 	<define name="_X86_" />
+	<define name="__i386__" />
 	<if property="MP" value="1">
 		<define name="CONFIG_SMP" value="1" />
 	</if>
