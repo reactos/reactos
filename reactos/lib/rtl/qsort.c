@@ -38,6 +38,8 @@
  * PROGRAMMER:        Adapted from CygWin newlib 2000-03-12.       
  */
 
+#include <stddef.h>
+
 #ifndef __GNUC__
 #define inline
 #endif
@@ -45,7 +47,6 @@
 /* FIXME: these types should be from the default includes */
 
 typedef int (* 	_pfunccmp_t) (char *, char *);
-typedef int size_t;
 
 #define min(a,b) ((a)<(b)?(a):(b))
 
