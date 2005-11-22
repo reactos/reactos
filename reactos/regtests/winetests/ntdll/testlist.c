@@ -12,6 +12,7 @@ extern void func_env(void);
 extern void func_error(void);
 extern void func_info(void);
 extern void func_large_int(void);
+extern void func_om(void);
 extern void func_path(void);
 extern void func_reg(void);
 extern void func_rtl(void);
@@ -34,6 +35,7 @@ const struct test winetest_testlist[] =
     { "error", func_error },
     { "info", func_info },
     { "large_int", func_large_int },
+    { "om", func_om },
     { "path", func_path },
     { "reg", func_reg },
     { "rtl", func_rtl },
