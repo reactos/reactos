@@ -40,7 +40,7 @@ extern VOID STDCALL PrivateCsrssAcquireOrReleaseInputOwnership(BOOL Release);
 
 /* FUNCTIONS *****************************************************************/
 
-STATIC NTSTATUS FASTCALL
+static NTSTATUS FASTCALL
 ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console)
 {
   if (NULL == ProcessData->Console)
@@ -97,7 +97,7 @@ ClearLineBuffer(PCSRSS_SCREEN_BUFFER Buff)
     }
 }
 
-STATIC NTSTATUS FASTCALL
+static NTSTATUS FASTCALL
 CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
                            PCSRSS_SCREEN_BUFFER Buffer)
 {
@@ -128,7 +128,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
   return STATUS_SUCCESS;
 }
 
-STATIC NTSTATUS STDCALL
+static NTSTATUS STDCALL
 CsrInitConsole(PCSRSS_CONSOLE Console)
 {
   NTSTATUS Status;
@@ -376,7 +376,7 @@ CSR_API(CsrFreeConsole)
   return STATUS_SUCCESS;
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, UINT *ScrolledLines)
 {
   /* slide the viewable screen */
@@ -405,7 +405,7 @@ ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, UINT *ScrolledLines)
   UpdateRect->bottom = Buff->CurrentY;
 }
 
-STATIC NTSTATUS FASTCALL
+static NTSTATUS FASTCALL
 ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                   CHAR *Buffer, DWORD Length, BOOL Attrib)
 {
@@ -816,7 +816,7 @@ inline BOOLEAN ConioSubtractRect(
   return TRUE;
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 ConioCopyRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
                 RECT *SrcRegion,
                 RECT *DstRegion)
@@ -864,7 +864,7 @@ ConioCopyRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
     }
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 ConioFillRegion(PCSRSS_CONSOLE Console,
                 PCSRSS_SCREEN_BUFFER ScreenBuffer,
                 RECT *Region,
@@ -904,7 +904,7 @@ ConioFillRegion(PCSRSS_CONSOLE Console,
     }
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 ConioInputEventToAnsi(PCSRSS_CONSOLE Console, PINPUT_RECORD InputEvent)
 {
   if (InputEvent->EventType == KEY_EVENT)
@@ -1059,7 +1059,7 @@ CsrInitConsoleSupport(VOID)
   /* Should call LoadKeyboardLayout */
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 ConioProcessChar(PCSRSS_CONSOLE Console,
                  ConsoleInput *KeyEventRecord)
 {
@@ -1244,7 +1244,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     }
 }
 
-STATIC DWORD FASTCALL
+static DWORD FASTCALL
 ConioGetShiftState(PBYTE KeyState)
 {
   DWORD ssOut = 0;
@@ -1531,7 +1531,7 @@ CSR_API(CsrSetCursor)
   return Request->Status = STATUS_SUCCESS;
 }
 
-STATIC FASTCALL VOID
+static FASTCALL VOID
 ConioComputeUpdateRect(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, COORD *Start, UINT Length)
 {
   if (Buff->MaxX <= Start->X + Length)
@@ -3044,7 +3044,7 @@ CSR_API(CsrWriteConsoleInput)
  *		ConsoleHwState has the correct size to be compatible
  *		with NT's, but values are not.
  */
-STATIC NTSTATUS FASTCALL
+static NTSTATUS FASTCALL
 SetConsoleHardwareState (PCSRSS_CONSOLE Console, DWORD ConsoleHwState)
 {
   DPRINT1("Console Hardware State: %d\n", ConsoleHwState);

@@ -185,13 +185,13 @@ TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
   return TRUE;
 }
 
-STATIC BOOL STDCALL
+static BOOL STDCALL
 TuiChangeTitle(PCSRSS_CONSOLE Console)
 {
   return TRUE;
 }
 
-STATIC VOID STDCALL
+static VOID STDCALL
 TuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
   EnterCriticalSection(&ActiveConsoleLock);

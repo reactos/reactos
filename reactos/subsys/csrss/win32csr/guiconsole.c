@@ -948,7 +948,7 @@ GuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
   Buffer->DefaultAttrib = 0x0f;
 }
 
-STATIC BOOL STDCALL
+static BOOL STDCALL
 GuiChangeTitle(PCSRSS_CONSOLE Console)
 {
   PWCHAR Buffer, Title;
@@ -974,7 +974,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
   return TRUE;
 }
 
-STATIC BOOL STDCALL
+static BOOL STDCALL
 GuiChangeIcon(PCSRSS_CONSOLE Console)
 {
   SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)Console->hWindowIcon);
