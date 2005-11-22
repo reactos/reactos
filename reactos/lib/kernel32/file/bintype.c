@@ -17,7 +17,6 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-
 /* FUNCTIONS ****************************************************************/
 
 /* Check whether a file is an OS/2 or a very old Windows executable
@@ -26,7 +25,7 @@
  * FIXME: is reading the module imports the only way of discerning
  *        old Windows binaries from OS/2 ones ? At least it seems so...
  */
-STATIC DWORD STDCALL
+static DWORD STDCALL
 InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
 {
   DWORD CurPos;
@@ -78,7 +77,7 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   return Ret;
 }
 
-STATIC DWORD STDCALL
+static DWORD STDCALL
 InternalGetBinaryType(HANDLE hFile)
 {
   union

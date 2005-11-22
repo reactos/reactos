@@ -379,9 +379,8 @@ GetForegroundWindow(VOID)
    return NtUserGetForegroundWindow();
 }
 
-
+static
 BOOL
-STATIC
 User32EnumWindows (
 	HDESK hDesktop,
 	HWND hWndparent,

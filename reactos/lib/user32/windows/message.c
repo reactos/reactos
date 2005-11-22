@@ -963,7 +963,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
     }
 }
 
-STATIC LRESULT FASTCALL
+static LRESULT FASTCALL
 IntCallWindowProcA(BOOL IsAnsiProc,
                    WNDPROC WndProc,
                    HWND hWnd,

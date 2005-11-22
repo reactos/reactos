@@ -70,7 +70,7 @@ LoadImageA(HINSTANCE hinst,
 }
 
 
-HANDLE STATIC
+static HANDLE
 LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 {
    HANDLE hResource;
@@ -249,7 +249,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 }
 
 
-HANDLE STATIC
+static HANDLE
 LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuLoad)
 {
   HANDLE hResource;
@@ -443,7 +443,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 }
 
 
-HANDLE STATIC
+static HANDLE
 LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 {
   HANDLE hResource;

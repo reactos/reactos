@@ -139,7 +139,7 @@ CallNextHookEx(
   return NtUserCallNextHookEx(Hook, Code, wParam, lParam);
 }
 
-STATIC
+static
 HHOOK
 FASTCALL
 IntSetWindowsHook(

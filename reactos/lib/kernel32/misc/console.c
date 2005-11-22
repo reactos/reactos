@@ -2898,7 +2898,7 @@ SetConsoleTextAttribute(
 }
 
 
-BOOL STATIC
+static BOOL
 AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 {
   if (HandlerRoutine == NULL)
@@ -2932,7 +2932,7 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 }
 
 
-BOOL STATIC
+static BOOL
 RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 {
   ULONG i;

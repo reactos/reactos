@@ -366,7 +366,7 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
 #define ON_BOTTOM_BORDER(hit) \
  (((hit) == HTBOTTOM) || ((hit) == HTBOTTOMLEFT) || ((hit) == HTBOTTOMRIGHT))
 
-VOID STATIC
+static VOID
 UserDrawWindowFrame(HDC hdc, const RECT *rect,
 		    ULONG width, ULONG height)
 {
@@ -394,7 +394,7 @@ UserDrawWindowFrame(HDC hdc, const RECT *rect,
   SelectObject( hdc, hbrush );
 }
 
-VOID STATIC
+static VOID
 UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe)
 {
   if(thickframe)
@@ -407,7 +407,7 @@ UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe)
   }
 }
 
-VOID STATIC
+static VOID
 DefWndDoSizeMove(HWND hwnd, WORD wParam)
 {
   HRGN DesktopRgn;
@@ -723,7 +723,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
  *
  * Track a mouse button press on the horizontal or vertical scroll-bar.
  */
-STATIC VOID
+static  VOID
 DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
 {
   INT ScrollBar;

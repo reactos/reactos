@@ -90,7 +90,7 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
      }
 
    Status = NtCreateEvent(&hEvent,
-			  STANDARD_RIGHTS_ALL | EVENT_READ_ACCESS | EVENT_WRITE_ACCESS,
+			  EVENT_ALL_ACCESS,
 			  &ObjectAttributes,
 			  (bManualReset ? NotificationEvent : SynchronizationEvent),
 			  bInitialState);
