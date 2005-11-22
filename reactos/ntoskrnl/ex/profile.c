@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
-/* This structure is a *GUESS* -- Alex */
+/* FIXME: NDK This structure is a *GUESS* -- Alex */
 typedef struct _EPROFILE {
     PEPROCESS Process;
     PVOID ImageBase;
@@ -30,7 +30,7 @@ typedef struct _EPROFILE {
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED ExProfileObjectType = NULL;
+POBJECT_TYPE ExProfileObjectType = NULL;
 
 static KMUTEX ExpProfileMutex;
 

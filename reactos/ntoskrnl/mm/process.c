@@ -18,6 +18,9 @@ extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
 extern ULONG NtGlobalFlag;
 
+#define MM_HIGHEST_VAD_ADDRESS \
+    (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
+
 /* FUNCTIONS *****************************************************************/
 
 PVOID
@@ -202,8 +205,8 @@ MmCreatePeb(PEPROCESS Process)
     DPRINT("MmCreatePeb\n");
 
     /* Allocate the PEB */
-    Peb = MiCreatePebOrTeb(Process, (PVOID)PEB_BASE);
-    if (Peb != (PVOID)PEB_BASE)
+    Peb = MiCreatePebOrTeb(Process, MM_HIGHEST_VAD_ADDRESS);
+    if (Peb != MM_HIGHEST_VAD_ADDRESS)
     {
         DPRINT1("MiCreatePebOrTeb() returned %x\n", Peb);
         return STATUS_UNSUCCESSFUL;
@@ -345,7 +348,7 @@ MmCreateTeb(PEPROCESS Process,
     }
 
     /* Allocate the TEB */
-    Teb = MiCreatePebOrTeb(Process, (PVOID)TEB_BASE);
+    Teb = MiCreatePebOrTeb(Process, MM_HIGHEST_VAD_ADDRESS);
 
     /* Initialize the PEB */
     RtlZeroMemory(Teb, sizeof(TEB));

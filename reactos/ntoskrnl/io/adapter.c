@@ -15,9 +15,9 @@
 
 /* DATA **********************************************************************/
 
-POBJECT_TYPE EXPORTED IoAdapterObjectType = NULL;	/* FIXME */
-POBJECT_TYPE EXPORTED IoDeviceHandlerObjectType = NULL;	/* FIXME */
-ULONG        EXPORTED IoDeviceHandlerObjectSize = 0;    /* FIXME */
+POBJECT_TYPE IoAdapterObjectType = NULL;	/* FIXME */
+POBJECT_TYPE IoDeviceHandlerObjectType = NULL;	/* FIXME */
+ULONG        IoDeviceHandlerObjectSize = 0;    /* FIXME */
 
 /* FUNCTIONS *****************************************************************/
 

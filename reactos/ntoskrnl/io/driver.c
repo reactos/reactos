@@ -15,7 +15,7 @@
 #include <internal/debug.h>
 
 /* ke/main.c */
-extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+extern LOADER_PARAMETER_BLOCK KeLoaderBlock;
 extern ULONG KeTickCount;
 extern BOOLEAN SetupMode;
 
@@ -73,7 +73,7 @@ static LIST_ENTRY ServiceListHead  = {NULL, NULL};
 static UNICODE_STRING IopHardwareDatabaseKey =
    RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
-POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
+POBJECT_TYPE IoDriverObjectType = NULL;
 
 /* DECLARATIONS ***************************************************************/
 

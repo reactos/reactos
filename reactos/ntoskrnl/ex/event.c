@@ -16,7 +16,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED ExEventObjectType = NULL;
+POBJECT_TYPE ExEventObjectType = NULL;
 
 static GENERIC_MAPPING ExpEventMapping = {
     STANDARD_RIGHTS_READ | SYNCHRONIZE | EVENT_QUERY_STATE,

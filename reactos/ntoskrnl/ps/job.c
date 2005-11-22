@@ -18,7 +18,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED PsJobType = NULL;
+POBJECT_TYPE PsJobType = NULL;
 
 LIST_ENTRY PsJobListHead;
 static FAST_MUTEX PsJobListLock;

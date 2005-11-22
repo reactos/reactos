@@ -15,8 +15,8 @@
 
 /* DATA **********************************************************************/
 
-POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
-POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
+POBJECT_TYPE ExWindowStationObjectType = NULL;
+POBJECT_TYPE ExDesktopObjectType = NULL;
 
 static GENERIC_MAPPING ExpWindowStationMapping = 
 {

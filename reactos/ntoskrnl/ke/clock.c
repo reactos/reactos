@@ -52,14 +52,8 @@ extern LIST_ENTRY KiTimerListHead;
  */
 #define CLOCK_INCREMENT (100000)
 
-#ifdef  __GNUC__
-ULONG EXPORTED KeMaximumIncrement = 100000;
-ULONG EXPORTED KeMinimumIncrement = 100000;
-#else
-/* Microsoft-style declarations */
-EXPORTED ULONG KeMaximumIncrement = 100000;
-EXPORTED ULONG KeMinimumIncrement = 100000;
-#endif
+ULONG KeMaximumIncrement = 100000;
+ULONG KeMinimumIncrement = 100000;
 
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)

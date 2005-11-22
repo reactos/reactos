@@ -64,7 +64,7 @@ typedef enum _DISK_MANAGER
   EZ_Drive
 } DISK_MANAGER;
 
-HAL_DISPATCH EXPORTED HalDispatchTable =
+HAL_DISPATCH HalDispatchTable =
 {
     HAL_DISPATCH_VERSION,
     (pHalQuerySystemInformation) NULL,	// HalQuerySystemInformation
@@ -90,7 +90,7 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
     (pHalMirrorVerify) NULL                //HalMirrorVerify;
 };
 
-HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
+HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
 {
     HAL_PRIVATE_DISPATCH_VERSION
 };

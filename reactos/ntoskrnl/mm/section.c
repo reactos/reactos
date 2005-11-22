@@ -66,7 +66,7 @@ MM_SECTION_PAGEOUT_CONTEXT;
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
+POBJECT_TYPE MmSectionObjectType = NULL;
 
 static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_READ | SECTION_MAP_READ | SECTION_QUERY,

@@ -13,11 +13,11 @@
 
 /* VARIABLES ***************************************************************/
 
-BOOLEAN EXPORTED KdDebuggerEnabled = FALSE;
-BOOLEAN EXPORTED KdEnteredDebugger = FALSE;
-BOOLEAN EXPORTED KdDebuggerNotPresent = TRUE;
-BOOLEAN EXPORTED KiEnableTimerWatchdog = FALSE;
-ULONG EXPORTED KiBugCheckData;
+BOOLEAN KdDebuggerEnabled = FALSE;
+BOOLEAN KdEnteredDebugger = FALSE;
+BOOLEAN KdDebuggerNotPresent = TRUE;
+BOOLEAN KiEnableTimerWatchdog = FALSE;
+ULONG KiBugCheckData;
 BOOLEAN KdpBreakPending;
 VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
 

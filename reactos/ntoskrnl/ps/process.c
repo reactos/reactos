@@ -16,9 +16,9 @@
 
 /* GLOBALS ******************************************************************/
 
-PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
+PEPROCESS PsInitialSystemProcess = NULL;
 PEPROCESS PsIdleProcess = NULL;
-POBJECT_TYPE EXPORTED PsProcessType = NULL;
+POBJECT_TYPE PsProcessType = NULL;
 extern PHANDLE_TABLE PspCidTable;
 
 EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
