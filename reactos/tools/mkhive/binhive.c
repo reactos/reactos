@@ -83,17 +83,18 @@ typedef struct _HIVE_HEADER
   /* When this hive file was last modified */
   FILETIME  DateModified;
 
-  /* Registry format version ? (1?) */
-  ULONG  Unused3;
+  /* Registry format major version (1) */
+  ULONG  MajorVersion;
 
-  /* Registry format version ? (3?) */
-  ULONG  Unused4;
+  /* Registry format minor version (3)
+     Version 3 added fast indexes, version 5 has large value optimizations */
+  ULONG  MinorVersion;
 
-  /* Registry format version ? (0?) */
-  ULONG  Unused5;
+  /* Registry file type (0 - Primary, 1 - Log) */
+  ULONG  Type;
 
-  /* Registry format version ? (1?) */
-  ULONG  Unused6;
+  /* Registry format (1 is the only defined value so far) */
+  ULONG  Format;
 
   /* Offset into file from the byte after the end of the base block.
      If the hive is volatile, this is the actual pointer to the KEY_CELL */
@@ -106,10 +107,9 @@ typedef struct _HIVE_HEADER
   ULONG  Unused7;
 
   /* Name of hive file */
-  WCHAR  FileName[64];
+  WCHAR  FileName[48];
 
-  /* ? */
-  ULONG  Unused8[83];
+  ULONG  Reserved[99];
 
   /* Checksum of first 0x200 bytes */
   ULONG  Checksum;
@@ -126,14 +126,13 @@ typedef struct _HBIN
   /* Size in bytes, multiple of the block size (4KB) */
   ULONG  BinSize;
 
-  /* ? */
-  ULONG  Unused1;
+  ULONG  Reserved[2];
 
   /* When this bin was last modified */
   FILETIME  DateModified;
 
-  /* ? */
-  ULONG  Unused2;
+  /* ? (In-memory only) */
+  ULONG  MemAlloc;
 } GCC_PACKED HBIN, *PHBIN;
 
 typedef struct _CELL_HEADER
@@ -292,14 +291,13 @@ CmiCreateDefaultHiveHeader (PHIVE_HEADER Header)
   Header->UpdateCounter1 = 0;
   Header->UpdateCounter2 = 0;
   Header->DateModified = 0;
-  Header->Unused3 = 1;
-  Header->Unused4 = 3;
-  Header->Unused5 = 0;
-  Header->Unused6 = 1;
+  Header->MajorVersion = 1;
+  Header->MinorVersion = 3;
+  Header->Type = 0;
+  Header->Format = 1;
   Header->Unused7 = 1;
   Header->RootKeyOffset = -1;
   Header->BlockSize = REG_BLOCK_SIZE;
-  Header->Unused6 = 1;
   Header->Checksum = 0;
 }
 
@@ -736,9 +734,8 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   tmpBin->BinOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
   RegistryHive->FileSize += BinSize;
   tmpBin->BinSize = BinSize;
-  tmpBin->Unused1 = 0;
   tmpBin->DateModified = 0;
-  tmpBin->Unused2 = 0;
+  tmpBin->MemAlloc = 0;
 
   /* Increase size of list of blocks */
   tmpBlockList = malloc (sizeof(PHBIN) * (RegistryHive->BlockListSize + BlockCount));

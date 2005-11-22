@@ -39,14 +39,13 @@ CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
   Header->UpdateCounter2 = 0;
   Header->DateModified.u.LowPart = 0;
   Header->DateModified.u.HighPart = 0;
-  Header->Unused3 = 1;
-  Header->Unused4 = 3;
-  Header->Unused5 = 0;
-  Header->Unused6 = 1;
+  Header->MajorVersion = 1;
+  Header->MinorVersion = 3;
+  Header->Type = 0;
+  Header->Format = 1;
   Header->Unused7 = 1;
   Header->RootKeyOffset = (BLOCK_OFFSET)-1;
   Header->BlockSize = REG_BLOCK_SIZE;
-  Header->Unused6 = 1;
   Header->Checksum = 0;
 }
 
@@ -297,32 +296,32 @@ CmiVerifyHiveHeader(PHIVE_HEADER Header)
       ASSERT(Header->BlockId == REG_HIVE_ID);
     }
 
-  if (Header->Unused3 != 1)
+  if (Header->MajorVersion != 1)
     {
-      DbgPrint("Unused3 is %.08x (must be 1)\n",
-        Header->Unused3);
-      ASSERT(Header->Unused3 == 1);
+      DbgPrint("MajorVersion is %.08x (must be 1)\n",
+        Header->MajorVersion);
+      ASSERT(Header->MajorVersion == 1);
     }
 
-  if (Header->Unused4 != 3)
+  if (Header->MinorVersion != 3)
     {
-      DbgPrint("Unused4 is %.08x (must be 3)\n",
-        Header->Unused4);
-      ASSERT(Header->Unused4 == 3);
+      DbgPrint("MinorVersion is %.08x (must be 3)\n",
+        Header->MajorVersion);
+      ASSERT(Header->MajorVersion == 3);
     }
 
-  if (Header->Unused5 != 0)
+  if (Header->Type != 0)
     {
-      DbgPrint("Unused5 is %.08x (must be 0)\n",
-        Header->Unused5);
-      ASSERT(Header->Unused5 == 0);
+      DbgPrint("Type is %.08x (must be 0)\n",
+        Header->Type);
+      ASSERT(Header->Type == 0);
     }
 
-  if (Header->Unused6 != 1)
+  if (Header->Format != 1)
     {
-      DbgPrint("Unused6 is %.08x (must be 1)\n",
-        Header->Unused6);
-      ASSERT(Header->Unused6 == 1);
+      DbgPrint("Format is %.08x (must be 1)\n",
+        Header->Format);
+      ASSERT(Header->Format == 1);
     }
 
   if (Header->Unused7 != 1)
@@ -3252,9 +3251,8 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   tmpBin->BinOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
   RegistryHive->FileSize += BinSize;
   tmpBin->BinSize = BinSize;
-  tmpBin->Unused1 = 0;
   KeQuerySystemTime(&tmpBin->DateModified);
-  tmpBin->Unused2 = 0;
+  tmpBin->MemAlloc = 0;
 
   DPRINT ("  BinOffset %lx  BinSize %lx\n", tmpBin->BinOffset,tmpBin->BinSize);
 
