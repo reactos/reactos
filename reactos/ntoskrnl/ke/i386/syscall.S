@@ -8,7 +8,6 @@
 #include <roscfg.h>
 #include <internal/i386/ke.h>
 #include <ndk/asm.h>
-#include <ndk/i386/segment.h>
 
 #define UserMode  (1)
 #define STATUS_INVALID_SYSTEM_SERVICE 0xC000001C

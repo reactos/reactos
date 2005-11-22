@@ -11,7 +11,6 @@
 #include <roscfg.h>
 #include <ndk/asm.h>
 #include <internal/i386/ke.h>
-#include <ndk/i386/segment.h>
 
 #define KernelMode 0
 #define UserMode 1

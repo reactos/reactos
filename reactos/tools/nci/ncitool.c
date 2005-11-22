@@ -537,8 +537,8 @@ int main(int argc, char* argv[])
     WriteFileHeader(Files[NtosKernelStubs], 
                     "System Call Stubs for Native API", 
                     argv[NtosKernelStubs + 1]);
-    fputs("#include <ndk/i386/segment.h>\n\n", Files[NtosKernelStubs]);
-    
+    fputs("#include <ndk/asm.h>\n\n", Files[NtosKernelStubs]);
+
     WriteFileHeader(Files[Win32kGdiStubs], 
                     "System Call Stubs for Native API", 
                     argv[Win32kGdiStubs + 1]);
@@ -546,7 +546,7 @@ int main(int argc, char* argv[])
     WriteFileHeader(Files[Win32kUserStubs], 
                     "System Call Stubs for Native API", 
                     argv[Win32kUserStubs + 1]);
-    
+
 
     /* Create the System Stubs */
     CreateStubs(Files[NativeSystemDb],

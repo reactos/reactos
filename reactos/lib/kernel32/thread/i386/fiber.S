@@ -7,7 +7,6 @@
  *              KJK::Hyperion <noog@libero.it>
  */
 
-#include <ndk/i386/segment.h>
 #include <ndk/asm.h>
 
 #define CONTEXT_FULL                    0x10007

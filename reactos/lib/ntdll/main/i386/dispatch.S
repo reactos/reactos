@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ndk/asm.h>
-#include <ndk/i386/segment.h>
 .intel_syntax noprefix
 
 #define EXCEPTION_NONCONTINUABLE    1

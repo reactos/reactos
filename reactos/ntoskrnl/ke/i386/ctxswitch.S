@@ -13,7 +13,6 @@
 #include <roscfg.h>
 #include <internal/i386/ke.h>
 #include <ndk/asm.h>
-#include <ndk/i386/segment.h>
 .intel_syntax noprefix
 
 #define Running 2 

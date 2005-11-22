@@ -1,5 +1,4 @@
 #include <ndk/asm.h>
-#include <ndk/i386/segment.h>
 
 .text
 
