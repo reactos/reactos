@@ -241,6 +241,13 @@ VBEInitialize(PVOID HwDeviceExtension)
          &VBEDeviceExtension->VbeInfo,
          sizeof(VBEDeviceExtension->VbeInfo));
 
+	  /* Verify VBE is found and not anýthing else */
+	  if (strncmp(VBEDeviceExtension->VbeInfo.Signature,"VESA",4) != 0)
+	  {
+         DPRINT("No VBE BIOS present\n");
+         return FALSE;
+	  }
+      
 	  /* Dectect Bad VBE BIOS some Graphice card report 0x200 when they are VBE 1.2 */
 	  if (VBEDeviceExtension->VbeInfo.OemVendorNamePtr == 0 && VBEDeviceExtension->VbeInfo.Version == 0x200)
 	  {
