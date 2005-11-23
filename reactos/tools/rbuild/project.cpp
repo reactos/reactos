@@ -81,11 +81,13 @@ FileLocation::FileLocation ( Directory* directory,
 }
 
 
-Project::Project ( const string& filename )
+Project::Project ( const Configuration& configuration,
+                   const string& filename )
 	: xmlfile (filename),
 	  node (NULL),
-	  head (NULL)
-{
+	  head (NULL),
+	  configuration (configuration)
+{  
 	ReadXml();
 }
 

@@ -133,6 +133,7 @@ public:
 	bool CleanAsYouGo;
 	bool AutomaticDependencies;
 	bool CheckDependenciesForModuleOnly;
+	bool CompilationUnitsEnabled;
 	std::string CheckDependenciesForModuleOnlyModule;
 	std::string VSProjectVersion;
 	bool MakeHandlesInstallDirectories;
@@ -189,6 +190,7 @@ class Project
 	std::string xmlfile;
 	XMLElement *node, *head;
 public:
+	const Configuration& configuration;
 	std::string name;
 	std::string makefile;
 	XMLIncludes xmlbuildfiles;
@@ -198,7 +200,8 @@ public:
 	std::vector<InstallFile*> installfiles;
 	IfableData non_if_data;
 
-	Project ( const std::string& filename );
+	Project ( const Configuration& configuration,
+	          const std::string& filename );
 	~Project ();
 	void WriteConfigurationFile ();
 	void ExecuteInvocations ();
@@ -871,6 +874,11 @@ Right ( const std::string& s, size_t n );
 
 extern std::string
 Replace ( const std::string& s, const std::string& find, const std::string& with );
+
+extern std::string
+ChangeSeparator ( const std::string& s,
+                  const char fromSeparator,
+                  const char toSeparator );
 
 extern std::string
 FixSeparator ( const std::string& s );

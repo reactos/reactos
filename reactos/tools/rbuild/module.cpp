@@ -52,16 +52,24 @@ Replace ( const string& s, const string& find, const string& with )
 }
 
 string
-FixSeparator ( const string& s )
+ChangeSeparator ( const string& s,
+                  const char fromSeparator,
+                  const char toSeparator )
 {
 	string s2(s);
-	char* p = strchr ( &s2[0], cBadSep );
+	char* p = strchr ( &s2[0], fromSeparator );
 	while ( p )
 	{
-		*p++ = cSep;
-		p = strchr ( p, cBadSep );
+		*p++ = toSeparator;
+		p = strchr ( p, fromSeparator );
 	}
 	return s2;
+}
+
+string
+FixSeparator ( const string& s )
+{
+	return ChangeSeparator ( s, cBadSep, cSep );
 }
 
 string
@@ -627,12 +635,15 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "compilationunit" )
 	{
-		CompilationUnit* pCompilationUnit = new CompilationUnit ( &project, this, &e );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
-		else
-			non_if_data.compilationUnits.push_back ( pCompilationUnit );
-		parseContext.compilationUnit = pCompilationUnit;
+		if ( project.configuration.CompilationUnitsEnabled )
+		{
+			CompilationUnit* pCompilationUnit = new CompilationUnit ( &project, this, &e );
+			if ( parseContext.ifData )
+				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
+			else
+				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+			parseContext.compilationUnit = pCompilationUnit;
+		}
 		subs_invalid = false;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )

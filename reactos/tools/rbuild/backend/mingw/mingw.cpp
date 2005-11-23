@@ -527,10 +527,13 @@ MingwBackend::GenerateTestSupportCode ()
 void
 MingwBackend::GenerateCompilationUnitSupportCode ()
 {
-	printf ( "Generating compilation unit support code..." );
-	CompilationUnitSupportCode compilationUnitSupportCode ( ProjectNode );
-	compilationUnitSupportCode.Generate ( configuration.Verbose );
-	printf ( "done\n" );
+	if ( configuration.CompilationUnitsEnabled )
+	{
+		printf ( "Generating compilation unit support code..." );
+		CompilationUnitSupportCode compilationUnitSupportCode ( ProjectNode );
+		compilationUnitSupportCode.Generate ( configuration.Verbose );
+		printf ( "done\n" );
+	}
 }
 
 string

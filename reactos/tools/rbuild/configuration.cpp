@@ -26,6 +26,7 @@ Configuration::Configuration ()
 	CleanAsYouGo = false;
 	AutomaticDependencies = true;
 	CheckDependenciesForModuleOnly = false;
+	CompilationUnitsEnabled = true;
 	MakeHandlesInstallDirectories = false;
 	GenerateProxyMakefilesInSourceTree = false;
 }
