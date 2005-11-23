@@ -7,11 +7,7 @@
  *      10-09-2001  CSH  Created
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <stdio.h>
-
-#include "pcidef.h"
+#define INITGUID
 #include "pci.h"
 
 #define NDEBUG

@@ -7,11 +7,6 @@
  *      10-09-2001  CSH  Created
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <initguid.h>
-#include <ddk/wdmguid.h>
-#include "pcidef.h"
 #include "pci.h"
 
 #define NDEBUG
@@ -1020,9 +1015,9 @@ CheckPciDevice(
   {
     return FALSE;
   }
-  if ((Parameters->Flags && PCI_USE_CLASS_SUBCLASS) && (
-    PciConfig->u.type0.SubVendorID != Parameters->SubVendorID ||
-    PciConfig->u.type0.SubSystemID != Parameters->SubSystemID))
+  if ((Parameters->Flags & PCI_USE_CLASS_SUBCLASS) && (
+    PciConfig->BaseClass != Parameters->BaseClass ||
+    PciConfig->SubClass != Parameters->SubClass))
   {
     return FALSE;
   }
@@ -1032,8 +1027,8 @@ CheckPciDevice(
     return FALSE;
   }
   if ((Parameters->Flags & PCI_USE_SUBSYSTEM_IDS) && (
-    PciConfig->Command != Parameters->SubVendorID ||
-    PciConfig->Status != Parameters->SubSystemID))
+    PciConfig->u.type0.SubVendorID != Parameters->SubVendorID ||
+    PciConfig->u.type0.SubSystemID != Parameters->SubSystemID))
   {
     return FALSE;
   }
@@ -1127,9 +1122,6 @@ PdoQueryInterface(
       BusInterface = (PBUS_INTERFACE_STANDARD)IrpSp->Parameters.QueryInterface.Interface;
       BusInterface->Size = sizeof(BUS_INTERFACE_STANDARD);
       BusInterface->Version = 1;
-      BusInterface->Context = DeviceObject;
-      BusInterface->InterfaceReference = InterfaceReference;
-      BusInterface->InterfaceDereference = InterfaceDereference;
       BusInterface->TranslateBusAddress = InterfaceBusTranslateBusAddress;
       BusInterface->GetDmaAdapter = InterfaceBusGetDmaAdapter;
       BusInterface->SetBusData = InterfaceBusSetBusData;
@@ -1151,9 +1143,6 @@ PdoQueryInterface(
       PciDevicePresentInterface = (PPCI_DEVICE_PRESENT_INTERFACE)IrpSp->Parameters.QueryInterface.Interface;
       PciDevicePresentInterface->Size = sizeof(PCI_DEVICE_PRESENT_INTERFACE);
       PciDevicePresentInterface->Version = 1;
-      PciDevicePresentInterface->Context = DeviceObject;
-      PciDevicePresentInterface->InterfaceReference = InterfaceReference;
-      PciDevicePresentInterface->InterfaceDereference = InterfaceDereference;
       PciDevicePresentInterface->IsDevicePresent = InterfacePciDevicePresent;
       PciDevicePresentInterface->IsDevicePresentEx = InterfacePciDevicePresentEx;
       Status = STATUS_SUCCESS;
@@ -1170,6 +1159,9 @@ PdoQueryInterface(
     /* Add a reference for the returned interface */
     PINTERFACE Interface;
     Interface = (PINTERFACE)IrpSp->Parameters.QueryInterface.Interface;
+    Interface->Context = DeviceObject;
+    Interface->InterfaceReference = InterfaceReference;
+    Interface->InterfaceDereference = InterfaceDereference;
     Interface->InterfaceReference(Interface->Context);
   }
 

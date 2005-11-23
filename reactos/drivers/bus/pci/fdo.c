@@ -7,9 +7,6 @@
  *      10-09-2001  CSH  Created
  */
 
-#include <ddk/ntddk.h>
-
-#include "pcidef.h"
 #include "pci.h"
 
 #define NDEBUG
