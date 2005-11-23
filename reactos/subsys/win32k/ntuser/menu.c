@@ -907,7 +907,9 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 
    pos = IntInsertMenuItemToList(MenuObject, MenuItem, pos);
 
-   return pos >= 0;
+    DPRINT("IntInsertMenuItemToList = %i\n", pos);
+
+   return (pos >= 0);
 }
 
 UINT FASTCALL
@@ -1561,11 +1563,13 @@ NtUserInsertMenuItem(
       SetLastNtError(Status);
       RETURN( FALSE);
    }
+   /* structure can be 44 bytes or 48 bytes in size
    if (ItemInfo.cbSize != sizeof(MENUITEMINFOW))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       RETURN( FALSE);
    }
+   */
 
    RETURN( IntInsertMenuItem(Menu, uItem, fByPosition, &ItemInfo));
 
