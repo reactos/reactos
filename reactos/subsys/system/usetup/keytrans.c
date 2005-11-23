@@ -53,11 +53,11 @@ static WORD KeyTable[] = {
 	VK_F2,		VK_F3,		VK_F4,		VK_F5,
 /* 0x40 */
 	VK_F6,		VK_F7,		VK_F8,		VK_F9,
-	VK_F10,		VK_NUMLOCK,	VK_SCROLL,	VK_NUMPAD7,
-	VK_NUMPAD8,	VK_NUMPAD9,	VK_SUBTRACT,	VK_NUMPAD4,
-	VK_NUMPAD5,	VK_NUMPAD6,	VK_ADD,		VK_NUMPAD1,
+	VK_F10,		VK_NUMLOCK,	VK_SCROLL,	VK_HOME,
+	VK_UP,		VK_PRIOR,	VK_SUBTRACT,	VK_LEFT,
+	0,		VK_RIGHT,	VK_ADD,		VK_END,
 /* 0x50 */
-	VK_NUMPAD2,	VK_NUMPAD3,	VK_NUMPAD0,	VK_SEPARATOR,
+	VK_DOWN,	VK_NEXT,	VK_INSERT,	VK_DELETE,
 	0,		0,		0,		VK_F11,
 	VK_F12,		0,		0,		0,
 	0,		0,		0,		0,
@@ -101,6 +101,56 @@ static WORD KeyTableEnhanced[] = {
 	0,		VK_RIGHT,	0,		VK_END,
 /* 0x50 */
 	VK_DOWN,	VK_NEXT,	VK_INSERT,	VK_DELETE,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+/* 0x60 */
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+/* 0x70 */
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0
+};
+
+/*
+ * Note how the keyboard lights are not handled, so while NUMLOCK_ON can
+ * be on, the light will never be. If this starts to be a problem it can be 
+ * fixed, but it's too much work for too little gain to do now. 
+ * Look in win32k/ntuser/input.c for an example.
+ */
+
+static WORD KeyTableNumlock[] = {
+/* 0x00 */
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+/* 0x10 */
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+/* 0x20 */
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+/* 0x30 */
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+	0,		0,		0,		0,
+/* 0x40 */
+	0,		0,		0,		0,
+	0,		0,		0,		VK_NUMPAD7,
+	VK_NUMPAD8,	VK_NUMPAD9,	0,		VK_NUMPAD4,
+	VK_NUMPAD5,	VK_NUMPAD6,	0,		VK_NUMPAD1,
+/* 0x50 */
+	VK_NUMPAD2,	VK_NUMPAD3,	VK_NUMPAD0,	0,
 	0,		0,		0,		0,
 	0,		0,		0,		0,
 	0,		0,		0,		0,
@@ -225,6 +275,11 @@ IntUpdateControlKeyState(LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
 				Value = LEFT_ALT_PRESSED;
 				break;
 
+			case 0x45:
+				Value = NUMLOCK_ON;
+				if (!(InputData->Flags & KEY_BREAK)) 
+					*State ^= Value;
+				return;
 			default:
 				return;
 		}
@@ -253,6 +308,12 @@ static DWORD
 IntVKFromKbdInput(PKEYBOARD_INPUT_DATA InputData, DWORD KeyState)
 {
 	if (!(KeyState & ENHANCED_KEY)) {
+		if ((KeyState & NUMLOCK_ON) &&
+		    KeyTableNumlock[InputData->MakeCode & 0x7f]) {
+			DPRINT("Numlock, using %x\n",
+			       InputData->MakeCode & 0x7f);
+			return KeyTableNumlock[InputData->MakeCode & 0x7f];
+		}
 		DPRINT("Not enhanced, using %x\n", InputData->MakeCode & 0x7f);
 		return KeyTable[InputData->MakeCode & 0x7f];
 	}
