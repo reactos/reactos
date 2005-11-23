@@ -28,7 +28,7 @@ static char sccsid[] = "@(#)main.c	based on 5.13 (Berkeley) 3/14/89";
 /*
  * FTP User Program -- Command Interface.
  */
-#if !defined(WIN32)
+#ifndef _WIN32
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>

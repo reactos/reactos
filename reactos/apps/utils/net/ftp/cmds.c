@@ -25,7 +25,7 @@ static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
 //#include <sys/param.h>
 //#include <sys/wait.h>
 #include <sys/stat.h>
-#if !defined(WIN32)
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <arpa/ftp.h>
 #include <netinet/in.h>

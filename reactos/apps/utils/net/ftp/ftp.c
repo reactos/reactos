@@ -25,7 +25,7 @@ static char sccsid[] = "@(#)ftp.c	5.28 (Berkeley) 4/20/89";
 
 #include <sys/stat.h>
 
-#if !defined(WIN32)
+#ifndef _WIN32
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>

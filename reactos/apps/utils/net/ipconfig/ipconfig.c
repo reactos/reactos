@@ -236,8 +236,9 @@ INT Release(TCHAR Index)
     if (Index == (TCHAR)NULL)
     {
         PIP_INTERFACE_INFO pInfo;
+        ULONG ulOutBufLen;
         pInfo = (IP_INTERFACE_INFO *) malloc(sizeof(IP_INTERFACE_INFO));
-        ULONG ulOutBufLen = 0;
+        ulOutBufLen = 0;
 
         /* Make an initial call to GetInterfaceInfo to get
          * the necessary size into the ulOutBufLen variable */
@@ -290,8 +291,9 @@ INT Renew(TCHAR Index)
     if (Index == (TCHAR)NULL)
     {
         PIP_INTERFACE_INFO pInfo;
+        ULONG ulOutBufLen;
         pInfo = (IP_INTERFACE_INFO *) malloc(sizeof(IP_INTERFACE_INFO));
-        ULONG ulOutBufLen = 0;
+        ulOutBufLen = 0;
 
         /* Make an initial call to GetInterfaceInfo to get
          * the necessary size into the ulOutBufLen variable */
@@ -335,9 +337,12 @@ VOID Info()
 {
      // Declare and initialize variables
     PIP_INTERFACE_INFO pInfo;
+    ULONG ulOutBufLen;
+    DWORD dwRetVal;
+
     pInfo = (IP_INTERFACE_INFO *) malloc( sizeof(IP_INTERFACE_INFO) );
-    ULONG ulOutBufLen = sizeof(IP_INTERFACE_INFO);
-    DWORD dwRetVal = 0;
+    ulOutBufLen = sizeof(IP_INTERFACE_INFO);
+    dwRetVal = 0;
 
 
     // Make an initial call to GetInterfaceInfo to get
