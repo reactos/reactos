@@ -657,6 +657,7 @@ CreateProcessInternalW(HANDLE hToken,
     ULONG RetVal;
     UINT Error = 0;
     BOOLEAN SearchDone = FALSE;
+    BOOLEAN Escape = FALSE;
     CLIENT_ID ClientId;
     PPEB OurPeb = NtCurrentPeb();
     PPEB RemotePeb;
@@ -745,6 +746,21 @@ CreateProcessInternalW(HANDLE hToken,
     PriorityClass.Foreground = FALSE;
     PriorityClass.PriorityClass = BasepConvertPriorityClass(dwCreationFlags);
 
+    if (lpCommandLine)
+    {
+        /* Serach for escape sequences */
+        ScanString = lpCommandLine;
+        while (NULL != (ScanString = wcschr(ScanString, L'^')))
+        {
+            ScanString++;
+            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\"')
+            {
+                Escape = TRUE;
+                break;
+            }
+        }
+    }
+
     /* Get the application name and do all the proper formating necessary */
 GetAppName:
     /* See if we have an application name (oh please let us have one!) */
@@ -775,7 +791,7 @@ GetAppName:
              /* Find the closing quote */
              while (*ScanString)
              {
-                 if (*ScanString == L'\"')
+                 if (*ScanString == L'\"' && *(ScanString - 1) != L'^')
                  {
                      /* Found it */
                      NullBuffer = ScanString;
@@ -1178,6 +1194,27 @@ GetAppName:
         
         DPRINT("Quoted CmdLine: %S\n", QuotedCmdLine);
     }
+
+    if (Escape)
+    {
+        if (QuotedCmdLine == NULL)
+        {
+            QuotedCmdLine = RtlAllocateHeap(GetProcessHeap(), 
+                                            0,
+                                            (wcslen(lpCommandLine) + 1) * sizeof(WCHAR));
+            wcscpy(QuotedCmdLine, lpCommandLine);
+        }
+
+        ScanString = QuotedCmdLine;
+        while (NULL != (ScanString = wcschr(ScanString, L'^')))
+        {
+            ScanString++;
+            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\\')
+            {
+                memmove(ScanString-1, ScanString, wcslen(ScanString) * sizeof(WCHAR) + sizeof(WCHAR));
+            }
+        }
+    }
     
     /* Get the Process Information */
     Status = NtQueryInformationProcess(hProcess,
@@ -1199,7 +1236,7 @@ GetAppName:
                                         RemotePeb,
                                         (LPWSTR)lpApplicationName,
                                         CurrentDirectory,
-                                        (QuotesNeeded || CmdLineIsAppName) ?
+                                        (QuotesNeeded || CmdLineIsAppName || Escape) ?
                                         QuotedCmdLine : lpCommandLine,
                                         lpEnvironment,
                                         EnvSize,
