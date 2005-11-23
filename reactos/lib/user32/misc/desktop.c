@@ -293,8 +293,8 @@ SystemParametersInfoW(UINT uiAction,
                          L"Control Panel\\Desktop",
                          0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
         {
-          Ret = RegSetValueExW(hKey, L"Wallpaper", 0, REG_SZ, (lpWallpaper != NULL ? (LPBYTE)lpWallpaper : (LPBYTE)L""),
-                               (lpWallpaper != NULL ? (lstrlenW(lpWallpaper) + 1) * sizeof(WCHAR) : sizeof(WCHAR)) == ERROR_SUCCESS);
+          Ret = (RegSetValueExW(hKey, L"Wallpaper", 0, REG_SZ, (lpWallpaper != NULL ? (LPBYTE)lpWallpaper : (LPBYTE)L""),
+                               (lpWallpaper != NULL ? (lstrlenW(lpWallpaper) + 1) * sizeof(WCHAR) : sizeof(WCHAR))) == ERROR_SUCCESS);
           RegCloseKey(hKey);
         }
       }
