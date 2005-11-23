@@ -13,7 +13,9 @@
 #define _M_     _KNJ_M /* Non-puntuation in Kana-set */
 #define _P_     _KNJ_P /* Punctuation of Kana-set */
 #define _12     (_1_|__2)
+#ifndef _M2
 #define _M2     (_M_|__2)
+#endif
 #define _P2     (_P_|__2)
 
 
