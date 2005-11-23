@@ -873,11 +873,14 @@ DevInstallW(
     DWORD config_flags;
     /*TCHAR buf[128];*/
 
-    if (!IsUserAdmin())
-    {
-        /* XP kills the process... */
-        ExitProcess(ERROR_ACCESS_DENIED);
-    }
+    /* FIXME: Nov 2005. umpnpmgr.exe is directly calling DevInstallW in
+     * SYSTEM context, which is not member of the Administrators group.
+     * So, just ignore the test at the moment... */
+    //if (!IsUserAdmin())
+    //{
+    //    /* XP kills the process... */
+    //    ExitProcess(ERROR_ACCESS_DENIED);
+    //}
 
     /* Clear devinst data */
     ZeroMemory(&DevInstData, sizeof(DEVINSTDATA));
