@@ -69,6 +69,8 @@ VOID FASTCALL DestroyClass(PWNDCLASS_OBJECT Class)
    ASSERT(Class->refs == 0);
    
    RemoveEntryList(&Class->ListEntry);
+   if (Class->hMenu)
+      UserDestroyMenu(Class->hMenu);
    RtlDeleteAtomFromAtomTable(gAtomTable, Class->Atom);
    ExFreePool(Class);
 }
@@ -149,7 +151,8 @@ IntRegisterClass(
    DWORD Flags,
    WNDPROC wpExtra,
    PUNICODE_STRING MenuName,
-   RTL_ATOM Atom)
+   RTL_ATOM Atom,
+   HMENU hMenu)
 {
    PWNDCLASS_OBJECT Class;
    ULONG  objectSize;
@@ -188,6 +191,7 @@ IntRegisterClass(
    Class->hInstance = lpwcx->hInstance;
    Class->hIcon = lpwcx->hIcon;
    Class->hCursor = lpwcx->hCursor;
+   Class->hMenu = hMenu;
    Class->hbrBackground = lpwcx->hbrBackground;
    Class->Unicode = !(Flags & REGISTERCLASS_ANSI);
    Class->Global = Global;
@@ -414,7 +418,8 @@ NtUserRegisterClassExWOW(
    PUNICODE_STRING MenuName,
    WNDPROC wpExtra,
    DWORD Flags,
-   DWORD Unknown7)
+   DWORD Unknown7,
+   HMENU hMenu)
 
 /*
  * FUNCTION:
@@ -495,7 +500,7 @@ NtUserRegisterClassExWOW(
       RETURN(0);
    }
 
-   if (!IntRegisterClass(&SafeClass, Flags, wpExtra, MenuName, Atom))
+   if (!IntRegisterClass(&SafeClass, Flags, wpExtra, MenuName, Atom, hMenu))
    {
       if (ClassName->Length)
       {

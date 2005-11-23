@@ -1170,7 +1170,8 @@ NtUserRegisterClassExWOW(
    PUNICODE_STRING MenuName,
    WNDPROC wpExtra,
    DWORD Flags,
-   DWORD Unknown7);
+   DWORD Unknown7,
+   HMENU hMenu);
 
 BOOL
 STDCALL

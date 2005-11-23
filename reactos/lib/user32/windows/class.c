@@ -574,8 +574,9 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
    WNDCLASSEXA WndClass;
    UNICODE_STRING ClassName;
    UNICODE_STRING MenuName;
+   HMENU hMenu;
 
-   if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXW) ||
+   if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXA) ||
        lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
        lpwcx->lpszClassName == NULL)
    {
@@ -601,31 +602,34 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
    if (lpwcx->hInstance == NULL)
       ((WNDCLASSEXA*)lpwcx)->hInstance = GetModuleHandleW(NULL);
 
-   RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
+   RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXA));
 
    if (NULL == WndClass.hIconSm)
    {
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
 
-   if (IS_ATOM(lpwcx->lpszMenuName) || lpwcx->lpszMenuName == 0)
+   if HIWORD(lpwcx->lpszMenuName)
+   {
+      hMenu = 0;
+      RtlCreateUnicodeStringFromAsciiz(&MenuName, WndClass.lpszMenuName);
+    }
+   else
    {
       MenuName.Length =
       MenuName.MaximumLength = 0;
-      MenuName.Buffer = (LPWSTR)lpwcx->lpszMenuName;
-   } else
-   {
-      RtlCreateUnicodeStringFromAsciiz(&MenuName, lpwcx->lpszMenuName);
+      MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
+      hMenu = LoadMenuA(WndClass.hInstance, lpwcx->lpszMenuName);
    }
-
-   if (IS_ATOM(lpwcx->lpszClassName))
+ 
+   if (IS_ATOM(WndClass.lpszClassName))
    {
       ClassName.Length =
       ClassName.MaximumLength = 0;
-      ClassName.Buffer = (LPWSTR)lpwcx->lpszClassName;
+      ClassName.Buffer = (LPWSTR)WndClass.lpszClassName;
    } else
    {
-      RtlCreateUnicodeStringFromAsciiz(&ClassName, lpwcx->lpszClassName);
+      RtlCreateUnicodeStringFromAsciiz(&ClassName, WndClass.lpszClassName);
    }
 
    Atom = NtUserRegisterClassExWOW(
@@ -635,11 +639,12 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       &MenuName,
       NULL,
       REGISTERCLASS_ANSI,
-      0);
+      0,
+      hMenu);
 
-   if (!IS_ATOM(lpwcx->lpszMenuName))
+   if (!IS_ATOM(WndClass.lpszMenuName))
       RtlFreeUnicodeString(&MenuName);
-   if (!IS_ATOM(lpwcx->lpszClassName))
+   if (!IS_ATOM(WndClass.lpszClassName))
       RtlFreeUnicodeString(&ClassName);
 
    return (ATOM)Atom;
@@ -654,6 +659,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
    WNDCLASSEXW WndClass;
    UNICODE_STRING ClassName;
    UNICODE_STRING MenuName;
+   HMENU hMenu;
 
    if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXW) ||
        lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
@@ -688,24 +694,27 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
 
-   if (IS_ATOM(lpwcx->lpszMenuName))
+   if HIWORD(lpwcx->lpszMenuName)
+   {
+      hMenu = 0;
+      RtlInitUnicodeString(&MenuName, WndClass.lpszMenuName);
+    }
+   else
    {
       MenuName.Length =
       MenuName.MaximumLength = 0;
-      MenuName.Buffer = (LPWSTR)lpwcx->lpszMenuName;
-   } else
-   {
-      RtlInitUnicodeString(&MenuName, lpwcx->lpszMenuName);
+      MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
+      hMenu = LoadMenuW(WndClass.hInstance, lpwcx->lpszMenuName);
    }
 
-   if (IS_ATOM(lpwcx->lpszClassName))
+   if (IS_ATOM(WndClass.lpszClassName))
    {
       ClassName.Length =
       ClassName.MaximumLength = 0;
-      ClassName.Buffer = (LPWSTR)lpwcx->lpszClassName;
+      ClassName.Buffer = (LPWSTR)WndClass.lpszClassName;
    } else
    {
-      RtlInitUnicodeString(&ClassName, lpwcx->lpszClassName);
+      RtlInitUnicodeString(&ClassName, WndClass.lpszClassName);
    }
 
    return (ATOM)NtUserRegisterClassExWOW(
@@ -715,7 +724,8 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       &MenuName,
       NULL,
       0,
-      0);
+      0,
+      hMenu);
 }
 
 /*
