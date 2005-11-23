@@ -38,17 +38,17 @@ END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Registry"
+    POPUP "&Datei"
     BEGIN
-        MENUITEM "Registry &importieren...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Importieren...",    ID_REGISTRY_IMPORTREGISTRYFILE
 
-        MENUITEM "Registry &exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-        MENUITEM "&Mit Netzwerkregistry verbinden...",
+        MENUITEM "&Mit Netzwerkregistrierung verbinden...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
-        MENUITEM "&Von Netzwerkregistry trennen...",
+        MENUITEM "&Von Netzwerkregistrierung trennen...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
@@ -67,6 +67,8 @@ BEGIN
             MENUITEM "&Zeichenkette",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärwert",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Wert",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Mehrteilige Zeichenkette",	ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Erweiterbare Zeichenkette",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Berechtigungen...",		ID_EDIT_PERMISSIONS
@@ -77,7 +79,7 @@ BEGIN
         MENUITEM "Schlüsselname &kopieren",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Suchen\tStrg+F",               ID_EDIT_FIND, GRAYED
-        MENUITEM "&Nächstes finden\tF3",              ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Weitersuchen\tF3",              ID_EDIT_FINDNEXT, GRAYED
     END
     POPUP "&Ansicht"
     BEGIN
@@ -91,14 +93,14 @@ BEGIN
     BEGIN
         MENUITEM "Zu den Favoriten &hinzufügen",          ID_FAVOURITES_ADDTOFAVOURITES
         , GRAYED
-        MENUITEM "Aus den Favoriten &löschen",           ID_FAVOURITES_REMOVEFAVOURITE
+        MENUITEM "Aus den Favoriten &entfernen",           ID_FAVOURITES_REMOVEFAVOURITE
         , GRAYED
     END
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "&Hilfethemen\tF1",            ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Über Registry Editor",      ID_HELP_ABOUT
+        MENUITEM "&Info",      ID_HELP_ABOUT
     END
 END
 
@@ -121,6 +123,8 @@ BEGIN
             MENUITEM "&Zeichenkette",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärwert",                  ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Wert",                 ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Mehrteilige Zeichenkette",	ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Erweiterbare Zeichenkette",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
 END
@@ -330,13 +334,49 @@ FONT 8, "MS Sans Serif"
 BEGIN
 END
 
-IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+CAPTION "Zu Favoriten hinzufügen"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
-    PUSHBUTTON      "Abbrechen",IDCANCEL,130,24,50,14
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "A&bbrechen",IDCANCEL,129,24,50,14
+    LTEXT           "&Favorite Name:",IDC_STATIC,7,7,70,10
+    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+END
+
+IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Favoriten entfernen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
+    PUSHBUTTON      "A&bbrechen",IDCANCEL,7,114,50,14
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST | 
+                    WS_BORDER | WS_TABSTOP,7,20,150,90
+    LTEXT           "Favorit(en) auswählen:",IDC_STATIC,7,7,99,12
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Weitersuchen",IDOK,197,7,50,14
+    PUSHBUTTON      "A&bbrechen",IDCANCEL,197,24,50,14
+    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
+    LTEXT           "Suche &nach:",IDC_STATIC,7,8,37,10
+    EDITTEXT        IDD_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    CONTROL         "&Schlüssel",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,36,35,8
+    CONTROL         "&Werte",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,48,36,8
+    CONTROL         "&Daten",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,60,42,8
+    CONTROL         "Nur &ganze Zeichenkette",IDC_MATCHSTRING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+    CONTROL         "Groß-/Kleinschreibung beachten",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,83,48,90,12
 END
 
 
