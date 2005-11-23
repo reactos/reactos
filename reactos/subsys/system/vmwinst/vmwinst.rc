@@ -31,4 +31,5 @@ IDR_VMWARE_INF RT_INF "vmware.inf"
 #include "Dk.rc"
 #include "Es.rc"
 #include "Ja.rc"
+#include "Ru.rc"
 
