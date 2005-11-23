@@ -1533,14 +1533,17 @@ NdisIDispatchPnp(
         break;
 
       case IRP_MN_STOP_DEVICE:
-        /* FIXME */
-        Status = STATUS_UNSUCCESSFUL;
-        break;
         Status = NdisIForwardIrpAndWait(Adapter, Irp);
         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
           {
             Status = NdisIPnPStopDevice(DeviceObject, Irp);
           }
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        break;
+
+      case IRP_MN_QUERY_DEVICE_RELATIONS:
+        Status = STATUS_NOT_SUPPORTED;
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
