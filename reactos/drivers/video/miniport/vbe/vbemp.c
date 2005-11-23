@@ -241,6 +241,13 @@ VBEInitialize(PVOID HwDeviceExtension)
          &VBEDeviceExtension->VbeInfo,
          sizeof(VBEDeviceExtension->VbeInfo));
 
+	  /* Dectect Bad VBE BIOS some Graphice card report 0x200 when they are VBE 1.2 */
+	  if (VBEDeviceExtension->VbeInfo.OemVendorNamePtr == 0 && VBEDeviceExtension->VbeInfo.Version == 0x200)
+	  {
+         VBEDeviceExtension->VbeInfo.Version = 0x102;
+	  }
+	  
+      
       DPRINT("VBE BIOS Present (%d.%d, %8ld Kb)\n",
          VBEDeviceExtension->VbeInfo.Version / 0x100,
          VBEDeviceExtension->VbeInfo.Version & 0xFF,
