@@ -267,18 +267,19 @@ DWORD WINAPI FormatMessageA(
                             else
                                 argliststart=(*(DWORD**)args)+insertnr-1;
 
-                                /* FIXME: precision and width components are not handled correctly */
-                            if ( (strcmp(fmtstr, "%ls") == 0) || (strcmp(fmtstr,"%S") == 0) ) {
-                                sz = WideCharToMultiByte( CP_ACP, 0, *(WCHAR**)argliststart, -1, NULL, 0, NULL, NULL);
+                            b = NULL;
+                            sz = 0;
+                            do {
+                                if (b) {
+                                    HeapFree(GetProcessHeap(), 0, b);
+                                }
+                                sz += 256;
                                 b = HeapAlloc(GetProcessHeap(), 0, sz);
-                                WideCharToMultiByte( CP_ACP, 0, *(WCHAR**)argliststart, -1, b, sz, NULL, NULL);
-                            } else {
-                                b = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz = 1000);
                                 /* CMF - This makes a BIG assumption about va_list */
-                                TRACE("A BIG assumption\n");
-                                _vsnprintf(b, sz, fmtstr, (va_list) argliststart);
-                            }
-                            for (x=b; *x; x++) ADD_TO_T(*x);
+                            } while (0 > _vsnprintf(b, sz, fmtstr, (va_list) argliststart));
+                            x=b;
+                            while(*x)
+                                ADD_TO_T(*x++);
 
                             HeapFree(GetProcessHeap(),0,b);
                         } else {
@@ -378,7 +379,7 @@ DWORD WINAPI FormatMessageW(
 #if defined(__i386__) || defined(__sparc__)
 /* This implementation is completely dependent on the format of the va_list on x86 CPUs */
     LPWSTR target,t;
-    DWORD talloced;
+    DWORD talloced,len;
     LPWSTR from,f;
     DWORD width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
     BOOL eos = FALSE;
@@ -411,6 +412,7 @@ DWORD WINAPI FormatMessageW(
             return 0;
         }
     }
+
     target = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 100 * sizeof(WCHAR) );
     t = target;
     talloced= 100;
@@ -434,10 +436,11 @@ DWORD WINAPI FormatMessageW(
             while (*f && !eos) {
                 if (*f=='%') {
                     int insertnr;
-                    WCHAR *fmtstr,*sprintfbuf,*x;
+                    WCHAR *fmtstr,*sprintfbuf,*x,*lastf;
                     DWORD *argliststart;
 
                     fmtstr = NULL;
+                    lastf = f;
                     f++;
                     if (!*f) {
                         ADD_TO_T('%');
@@ -477,32 +480,38 @@ DWORD WINAPI FormatMessageW(
                             fmtstr = HeapAlloc( GetProcessHeap(),0,3*sizeof(WCHAR));
                             strcpyW( fmtstr, FMTWSTR );
                         }
-                        if (dwFlags & FORMAT_MESSAGE_ARGUMENT_ARRAY)
-                            argliststart=args+insertnr-1;
-                        else
-                            argliststart=(*(DWORD**)args)+insertnr-1;
 
-                        if (fmtstr[strlenW(fmtstr)-1]=='s' && argliststart[0]) {
-                            DWORD xarr[3];
+                        if (args) {
+                            if (dwFlags & FORMAT_MESSAGE_ARGUMENT_ARRAY)
+                                argliststart=args+insertnr-1;
+                            else
+                                argliststart=(*(DWORD**)args)+insertnr-1;
 
-                            xarr[0]=*(argliststart+0);
-                            /* possible invalid pointers */
-                            xarr[1]=*(argliststart+1);
-                            xarr[2]=*(argliststart+2);
-                            sprintfbuf=HeapAlloc(GetProcessHeap(),0,(strlenW((LPWSTR)argliststart[0])*2+1)*sizeof(WCHAR));
-                            /* CMF - This makes a BIG assumption about va_list */
-                            _vsnwprintf(sprintfbuf,(strlenW((LPWSTR)argliststart[0])*2+1)*sizeof(WCHAR), fmtstr, (va_list) xarr);
+                            len = 0;
+                            sprintfbuf = NULL;
+                            do {
+                                if (sprintfbuf) {
+                                    HeapFree(GetProcessHeap(),0,sprintfbuf);
+                                }
+                                len += 256; 
+                                sprintfbuf=HeapAlloc(GetProcessHeap(),0,len*sizeof(WCHAR));
+                                /* CMF - This makes a BIG assumption about va_list */
+                            } while (0 > _vsnwprintf(sprintfbuf, len, fmtstr, (va_list) argliststart));
+                            x=sprintfbuf;
+                            while (*x) {
+                                ADD_TO_T(*x++);
+                            }
+                            HeapFree(GetProcessHeap(),0,sprintfbuf);
+
                         } else {
-                            sprintfbuf=HeapAlloc(GetProcessHeap(),0,100);
+                                /* NULL args - copy formatstr
+                                 * (probably wrong)
+                                 */
+                            while ((lastf<f)&&(*lastf)) {
+                                ADD_TO_T(*lastf++);
+                            }
+                        }
 
-                            /* CMF - This makes a BIG assumption about va_list */
-                            _vsnwprintf(sprintfbuf,(strlenW((LPWSTR)argliststart[0])*2+1)*sizeof(WCHAR), fmtstr, (va_list) argliststart);
-                        }
-                        x=sprintfbuf;
-                        while (*x) {
-                            ADD_TO_T(*x++);
-                        }
-                        HeapFree(GetProcessHeap(),0,sprintfbuf);
                         HeapFree(GetProcessHeap(),0,fmtstr);
                         break;
                     case 'n':
