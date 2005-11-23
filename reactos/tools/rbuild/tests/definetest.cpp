@@ -22,7 +22,8 @@ using std::string;
 void DefineTest::Run()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/define.xml" );
-	Project project ( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	ARE_EQUAL(1, project.non_if_data.defines.size());
 	Define& define1 = *project.non_if_data.defines[0];
 	ARE_EQUAL("define1", define1.name);

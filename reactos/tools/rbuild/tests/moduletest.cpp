@@ -22,7 +22,8 @@ using std::string;
 void ModuleTest::Run()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/module.xml" );
-	Project project ( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	ARE_EQUAL(2, project.modules.size());
 
 	Module& module1 = *project.modules[0];

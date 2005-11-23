@@ -22,7 +22,8 @@ using std::string;
 void CDFileTest::Run()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/cdfile.xml" );
-	Project project( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	ARE_EQUAL ( 3, project.cdfiles.size () );
 
 	CDFile& cdfile1 = *project.cdfiles[0];

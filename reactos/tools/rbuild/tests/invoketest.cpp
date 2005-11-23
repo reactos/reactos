@@ -22,7 +22,8 @@ using std::string;
 void InvokeTest::Run()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/invoke.xml" );
-	Project project ( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	ARE_EQUAL(1, project.modules.size());
 
 	Module& module1 = *project.modules[0];

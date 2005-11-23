@@ -22,7 +22,8 @@ using std::string;
 void LinkerFlagTest::Run()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/linkerflag.xml" );
-	Project project ( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	ARE_EQUAL(1, project.linkerFlags.size());
 	LinkerFlag& linkerFlag1 = *project.linkerFlags[0];
 	ARE_EQUAL("-lgcc1", linkerFlag1.flag);
