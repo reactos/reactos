@@ -90,7 +90,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         if (BlockEnvToEnvironW() < 0)
         {
-            FreeEnvironment((char**)_wenviron);
+            FreeEnvironment(_environ);
             return FALSE;
         }
 

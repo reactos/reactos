@@ -31,6 +31,8 @@ char **__initenv = NULL;     /* pointer to initial environment block */
 wchar_t **__winitenv = NULL; /* pointer to initial environment block */
 #undef _pgmptr
 char *_pgmptr = NULL;        /* pointer to program name */
+#undef _wpgmptr
+wchar_t *_wpgmptr = NULL;    /* pointer to program name */
 int __app_type = 0; //_UNKNOWN_APP; /* application type */
 int __mb_cur_max = 1;
 
@@ -271,8 +273,7 @@ int SetEnv(const wchar_t *option)
        * the environments are in sync and the option is at the
        * same position. */
       free(_environ[index]);
-      for (; _environ[index] != NULL; index++)
-         _environ[index] = _environ[index + 1];
+      memmove(&_environ[index], &_environ[index+1], (count - index) * sizeof(char*));
       _environ = realloc(_environ, count * sizeof(char*));
 
       result = SetEnvironmentVariableW(name, NULL) ? 0 : -1;
@@ -375,6 +376,14 @@ char **__p__acmdln(void)
 /*
  * @implemented
  */
+wchar_t **__p__wcmdln(void)
+{
+    return &_wcmdln;
+}
+
+/*
+ * @implemented
+ */
 char ***__p__environ(void)
 {
     return &_environ;
@@ -426,6 +435,14 @@ unsigned int *__p__osver(void)
 char **__p__pgmptr(void)
 {
     return &_pgmptr;
+}
+
+/*
+ * @implemented
+ */
+wchar_t **__p__wpgmptr(void)
+{
+    return &_wpgmptr;
 }
 
 /*
