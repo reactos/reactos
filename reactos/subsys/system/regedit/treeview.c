@@ -598,6 +598,10 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 	LPCTSTR s;
 	TVITEM tvi;
 
+    /* Total no-good hack */
+    if (!_tcsncmp(keyPath, _T("My Computer\\"), 12))
+        keyPath += 12;
+
 	hRoot = TreeView_GetRoot(hwndTV);
 	hItem = hRoot;
 

@@ -76,7 +76,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     BOOL AclUiAvailable;
     HMENU hEditMenu;
     TCHAR szBuffer[256];
-    LPCTSTR s;
 
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
@@ -168,10 +167,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         _T("LastKey"),
         szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
     {
-        s = szBuffer;
-        if (!_tcsncmp(s, _T("My Computer\\"), 12))
-            s += 12;
-        SelectNode(g_pChildWnd->hTreeWnd, s);
+        SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
     }
 
     ShowWindow(hFrameWnd, nCmdShow);

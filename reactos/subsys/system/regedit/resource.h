@@ -37,12 +37,14 @@
 #define IDR_REGEDIT_MENU                130
 #define IDD_EXPORTRANGE                 131
 #define IDI_OPEN_FILE                   132
-#define IDD_DIALOG2                     132
 #define IDI_CLOSED_FILE                 133
 #define IDI_ROOT                        134
 #define IDI_STRING                      135
 #define IDI_BIN                         136
 #define IDR_POPUP_MENUS                 137
+#define IDD_ADDFAVORITES                138
+#define IDD_REMOVEFAVORITES             139
+#define IDD_FIND                        140
 #define IDC_LICENSE_EDIT                1029
 #define ID_REGISTRY_EXIT                32770
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
@@ -187,5 +189,18 @@
 #define IDC_EXPORT_ALL          2008
 #define IDC_EXPORT_BRANCH       2009
 #define IDC_EXPORT_BRANCH_TEXT  2010
+
+
+#define IDC_FAVORITENAME                2011  
+#define IDC_FAVORITESLIST               2012
+#define IDD_FINDWHAT                    2013
+#define IDC_LOOKAT_KEYS                 2014
+#define IDC_LOOKAT_VALUES               2015
+#define IDC_LOOKAT_DATA                 2016
+#define IDC_MATCHSTRING                 2017
+#define IDC_MATCHCASE                   2018
+
+#define ID_FAVORITES_MIN                2100
+#define ID_FAVORITES_MAX                2999
 
 #define IDC_STATIC                      -1

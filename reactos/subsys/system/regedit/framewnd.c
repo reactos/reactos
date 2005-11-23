@@ -37,6 +37,10 @@
  * Global and Local Variables:
  */
 
+#define FAVORITES_MENU_POSITION 3
+
+static TCHAR s_szFavoritesRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites");
+
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
 
 /*******************************************************************************
@@ -79,13 +83,12 @@ static void OnInitMenu(HWND hWnd)
     DWORD dwIndex, cbValueName, cbValueData, dwType;
     TCHAR szValueName[256];
     BYTE abValueData[256];
-    int nFavoriteMenuPos = 3;
     static int s_nFavoriteMenuSubPos = -1;
     HMENU hMenu;
     BOOL bDisplayedAny = FALSE;
 
     /* Find Favorites menu and clear it out */
-    hMenu = GetSubMenu(GetMenu(hWnd), nFavoriteMenuPos);
+    hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
     if (!hMenu)
         goto done;
     if (s_nFavoriteMenuSubPos < 0)
@@ -98,7 +101,7 @@ static void OnInitMenu(HWND hWnd)
             ;
     }
     
-    lResult = RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites"), &hKey);
+    lResult = RegOpenKey(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
     if (lResult != ERROR_SUCCESS)
         goto done;
 
@@ -115,7 +118,7 @@ static void OnInitMenu(HWND hWnd)
                 AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
                 bDisplayedAny = TRUE;
             }
-            AppendMenu(hMenu, MF_GRAYED, 0, szValueName);
+            AppendMenu(hMenu, 0, ID_FAVORITES_MIN + GetMenuItemCount(hMenu), szValueName);
         }
         dwIndex++;
     }
@@ -522,6 +525,28 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     }
 #endif
     return TRUE;
+}
+
+static void ChooseFavorite(LPCTSTR pszFavorite)
+{
+    HKEY hKey = NULL;
+    TCHAR szFavoritePath[512];
+    DWORD cbData, dwType;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        goto done;
+
+    cbData = (sizeof(szFavoritePath) / sizeof(szFavoritePath[0])) - 1;
+    memset(szFavoritePath, 0, sizeof(szFavoritePath));
+    if (RegQueryValueEx(hKey, pszFavorite, NULL, &dwType, (LPBYTE) szFavoritePath, &cbData) != ERROR_SUCCESS)
+        goto done;
+
+    if (dwType == REG_SZ)
+        SelectNode(g_pChildWnd->hTreeWnd, szFavoritePath);
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
 }
 
 BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName)
@@ -962,7 +987,31 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
     default:
-        result = FALSE;
+        if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
+        {
+            HMENU hMenu;
+            MENUITEMINFO mii;
+            TCHAR szFavorite[512];
+
+            hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
+
+            memset(&mii, 0, sizeof(mii));
+            mii.cbSize = sizeof(mii);
+            mii.fMask = MIIM_TYPE;
+            mii.fType = MFT_STRING;
+            mii.dwTypeData = szFavorite;
+            mii.cch = sizeof(szFavorite) / sizeof(szFavorite[0]);
+
+            if (GetMenuItemInfo(hMenu, LOWORD(wParam) - ID_FAVORITES_MIN, TRUE, &mii))
+            {
+                ChooseFavorite(szFavorite);
+            }
+        }
+        else
+        {
+            result = FALSE;
+        }
+        break;
     }
 
     if(hKey)
