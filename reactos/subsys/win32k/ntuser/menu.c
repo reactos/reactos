@@ -907,7 +907,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 
    pos = IntInsertMenuItemToList(MenuObject, MenuItem, pos);
 
-    DPRINT("IntInsertMenuItemToList = %i\n", pos);
+   DPRINT("IntInsertMenuItemToList = %i\n", pos);
 
    return (pos >= 0);
 }
@@ -1554,24 +1554,37 @@ NtUserInsertMenuItem(
 
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
-      RETURN(0);
+      RETURN( FALSE);
    }
 
+   /* Try to copy the whole MENUITEMINFOW structure */
    Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, sizeof(MENUITEMINFOW));
-   if (! NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
    {
-      SetLastNtError(Status);
-      RETURN( FALSE);
+      if (sizeof(MENUITEMINFOW) != ItemInfo.cbSize
+         && FIELD_OFFSET(MENUITEMINFOW, hbmpItem) != ItemInfo.cbSize)
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         RETURN( FALSE);
+      }
+      RETURN( IntInsertMenuItem(Menu, uItem, fByPosition, &ItemInfo));
    }
-   /* structure can be 44 bytes or 48 bytes in size
-   if (ItemInfo.cbSize != sizeof(MENUITEMINFOW))
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      RETURN( FALSE);
-   }
-   */
 
-   RETURN( IntInsertMenuItem(Menu, uItem, fByPosition, &ItemInfo));
+   /* Try to copy without last field (not present in older versions) */
+   Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, FIELD_OFFSET(MENUITEMINFOW, hbmpItem));
+   if (NT_SUCCESS(Status))
+   {
+      if (FIELD_OFFSET(MENUITEMINFOW, hbmpItem) != ItemInfo.cbSize)
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         RETURN( FALSE);
+      }
+      ItemInfo.hbmpItem = (HBITMAP)0;
+      RETURN( IntInsertMenuItem(Menu, uItem, fByPosition, &ItemInfo));
+   }
+
+   SetLastNtError(Status);
+   RETURN( FALSE);
 
 CLEANUP:
    DPRINT("Leave NtUserInsertMenuItem, ret=%i\n",_ret_);
@@ -1955,7 +1968,7 @@ UserMenuItemInfo(
       return( FALSE);
    }
    if (sizeof(MENUITEMINFOW) != Size
-         && sizeof(MENUITEMINFOW) - sizeof(HBITMAP) != Size
+         && FIELD_OFFSET(MENUITEMINFOW, hbmpItem) != Size
          && sizeof(ROSMENUITEMINFO) != Size)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1969,7 +1982,7 @@ UserMenuItemInfo(
    }
    /* If this is a pre-0x0500 _WIN32_WINNT MENUITEMINFOW, you can't
       set/get hbmpItem */
-   if (sizeof(MENUITEMINFOW) - sizeof(HBITMAP) == Size
+   if (FIELD_OFFSET(MENUITEMINFOW, hbmpItem) == Size
          && 0 != (ItemInfo.fMask & MIIM_BITMAP))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
