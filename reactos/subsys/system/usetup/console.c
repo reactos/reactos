@@ -199,8 +199,7 @@ ConReadConsoleInput(PINPUT_RECORD Buffer)
 		      NULL,
 		      &Iosb,
                       &InputData,
-//		      &Buffer->Event.KeyEvent,
-		      sizeof(KEY_EVENT_RECORD),
+                      sizeof(KEYBOARD_INPUT_DATA),
 		      NULL,
 		      0);
 
