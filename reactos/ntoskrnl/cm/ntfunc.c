@@ -1902,10 +1902,10 @@ NtSetValueKey(IN HANDLE KeyHandle,
   BLOCK_OFFSET ValueCellOffset;
   PDATA_CELL DataCell;
   PDATA_CELL NewDataCell;
-  PHBIN pBin;
   ULONG DesiredAccess;
   REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
   REG_POST_OPERATION_INFORMATION PostOperationInfo;
+  ULONG DataCellSize;
 
   PAGED_CODE();
 
@@ -1979,14 +1979,25 @@ NtSetValueKey(IN HANDLE KeyHandle,
   DPRINT("ValueCell %p\n", ValueCell);
   DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
 
+  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
+      (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
+    {
+      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
+      DataCellSize = (DataCell->CellSize < 0 ? -DataCell->CellSize : DataCell->CellSize) - sizeof(CELL_HEADER);
+    }
+  else
+    {
+      DataCell = NULL;
+      DataCellSize = 0;
+    }
+
+
   if (DataSize <= sizeof(BLOCK_OFFSET))
     {
       /* If data size <= sizeof(BLOCK_OFFSET) then store data in the data offset */
       DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-      if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-	  (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
+      if (DataCell)
 	{
-	  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
 	  CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
 	}
 
@@ -1995,59 +2006,47 @@ NtSetValueKey(IN HANDLE KeyHandle,
       ValueCell->DataType = Type;
       CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
-  else if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-	   (DataSize <= (ValueCell->DataSize & REG_DATA_SIZE_MASK)))
+  else 
     {
-      /* If new data size is <= current then overwrite current data */
-      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset,&pBin);
-      RtlZeroMemory(DataCell->Data, ValueCell->DataSize);
+      if (DataSize > DataCellSize)
+        {
+         /*
+          * New data size is larger than the current, destroy current
+          * data block and allocate a new one.
+          */
+          BLOCK_OFFSET NewOffset;
+
+          DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+
+          Status = CmiAllocateCell (RegistryHive,
+				    sizeof(CELL_HEADER) + DataSize,
+				    (PVOID *)&NewDataCell,
+				    &NewOffset);
+          if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
+
+	      ExReleaseResourceLite(&CmiRegistryLock);
+	      KeLeaveCriticalRegion();
+              PostOperationInfo.Status = Status;
+              CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
+	      ObDereferenceObject(KeyObject);
+
+	      return Status;
+	    }
+
+          if (DataCell)
+	    {
+	      CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
+	    }
+
+          ValueCell->DataOffset = NewOffset;
+          DataCell = NewDataCell;
+        }
+
       RtlCopyMemory(DataCell->Data, Data, DataSize);
-      ValueCell->DataSize = DataSize;
-      ValueCell->DataType = Type;
-      CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
-      CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
-    }
-  else
-    {
-      /*
-       * New data size is larger than the current, destroy current
-       * data block and allocate a new one.
-       */
-      BLOCK_OFFSET NewOffset;
-
-      DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-
-      if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-	  (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
-	{
-	  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
-	  CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
-	  ValueCell->DataSize = 0;
-	  ValueCell->DataType = 0;
-	  ValueCell->DataOffset = (BLOCK_OFFSET)-1;
-	}
-
-      Status = CmiAllocateCell (RegistryHive,
-				sizeof(CELL_HEADER) + DataSize,
-				(PVOID *)&NewDataCell,
-				&NewOffset);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
-
-	  ExReleaseResourceLite(&CmiRegistryLock);
-	  KeLeaveCriticalRegion();
-          PostOperationInfo.Status = Status;
-          CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-	  ObDereferenceObject(KeyObject);
-
-	  return Status;
-	}
-
-      RtlCopyMemory(&NewDataCell->Data[0], Data, DataSize);
       ValueCell->DataSize = DataSize & REG_DATA_SIZE_MASK;
       ValueCell->DataType = Type;
-      ValueCell->DataOffset = NewOffset;
       CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
       CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
