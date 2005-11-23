@@ -75,7 +75,7 @@ RtlpExecuteHandlerForException(PEXCEPTION_RECORD ExceptionRecord,
                                PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
                                PCONTEXT Context,
                                PVOID DispatcherContext,
-                               PEXCEPTION_HANDLER ExceptionHandler);
+                               PEXCEPTION_ROUTINE ExceptionHandler);
 
 EXCEPTION_DISPOSITION
 NTAPI
@@ -83,7 +83,7 @@ RtlpExecuteHandlerForUnwind(PEXCEPTION_RECORD ExceptionRecord,
                             PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
                             PCONTEXT Context,
                             PVOID DispatcherContext,
-                            PEXCEPTION_HANDLER ExceptionHandler);
+                            PEXCEPTION_ROUTINE ExceptionHandler);
 
 VOID
 NTAPI

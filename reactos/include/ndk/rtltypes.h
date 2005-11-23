@@ -112,7 +112,6 @@ Author:
 #define TIME_ZONE_ID_UNKNOWN                                 0
 #define TIME_ZONE_ID_STANDARD                                1
 #define TIME_ZONE_ID_DAYLIGHT                                2
-#define TIME_ZONE_ID_INVALID                                 0xFFFFFFFF
 
 //
 // RTL Lock Type (Critical Section or Resource)
@@ -669,7 +668,7 @@ typedef struct _RTL_HANDLE_TABLE
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
     struct _EXCEPTION_REGISTRATION_RECORD *Next;
-    PEXCEPTION_HANDLER Handler;
+    PEXCEPTION_ROUTINE Handler;
 } EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
 //

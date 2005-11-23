@@ -553,6 +553,13 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
+typedef EXCEPTION_DISPOSITION
+(DDKAPI *PEXCEPTION_ROUTINE)(
+  IN struct _EXCEPTION_RECORD *ExceptionRecord,
+  IN PVOID EstablisherFrame,
+  IN OUT struct _CONTEXT *ContextRecord,
+  IN OUT PVOID DispatcherContext);
+
 typedef VOID
 (DDKAPI *PDRIVER_LIST_CONTROL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
