@@ -246,12 +246,11 @@ VBEInitialize(PVOID HwDeviceExtension)
 	  {
          VBEDeviceExtension->VbeInfo.Version = 0x102;
 	  }
-	  
-      
+	        
       DPRINT("VBE BIOS Present (%d.%d, %8ld Kb)\n",
          VBEDeviceExtension->VbeInfo.Version / 0x100,
          VBEDeviceExtension->VbeInfo.Version & 0xFF,
-         VBEDeviceExtension->VbeInfo.TotalMemory * 16);
+         VBEDeviceExtension->VbeInfo.TotalMemory * 64);
 
 #ifdef VBE12_SUPPORT
       if (VBEDeviceExtension->VbeInfo.Version < 0x102)
