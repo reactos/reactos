@@ -92,6 +92,7 @@ private:
 	void DetectNetwideAssembler ();
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
+	bool CanEnablePreCompiledHeaderSupportForModule ( const Module& module );
 	void ProcessModules ();
 	void CheckAutomaticDependenciesForModuleOnly ();
 	void ProcessNormal ();

@@ -32,8 +32,6 @@ MingwBackend*
 MingwModuleHandler::backend = NULL;
 FILE*
 MingwModuleHandler::fMakefile = NULL;
-bool
-MingwModuleHandler::use_pch = false;
 
 string
 PrefixFilename (
@@ -73,6 +71,7 @@ MingwModuleHandler::MingwModuleHandler (
 
 	: module(module_)
 {
+	use_pch = false;
 }
 
 MingwModuleHandler::~MingwModuleHandler()
@@ -91,10 +90,10 @@ MingwModuleHandler::SetMakefile ( FILE* f )
 	fMakefile = f;
 }
 
-/*static*/ void
-MingwModuleHandler::SetUsePch ( bool b )
+void
+MingwModuleHandler::EnablePreCompiledHeaderSupport ()
 {
-	use_pch = b;
+	use_pch = true;
 }
 
 /* static*/ string

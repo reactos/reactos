@@ -89,6 +89,42 @@ MingwBackend::AddDirectoryTarget ( const string& directory,
 	return directoryTree->name;
 }
 
+bool
+MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module )
+{
+	if ( !configuration.CompilationUnitsEnabled )
+		return true;
+
+	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+	size_t i;
+	for ( i = 0; i < compilationUnits.size (); i++ )
+	{
+ 		CompilationUnit& compilationUnit = *compilationUnits[i];
+		if ( compilationUnit.files.size () != 1 )
+			return false;
+	}
+	// intentionally make a copy so that we can append more work in
+	// the middle of processing without having to go recursive
+	vector<If*> v = module.non_if_data.ifs;
+	for ( i = 0; i < v.size (); i++ )
+	{
+		size_t j;
+		If& rIf = *v[i];
+		// check for sub-ifs to add to list
+		const vector<If*>& ifs = rIf.data.ifs;
+		for ( j = 0; j < ifs.size (); j++ )
+			v.push_back ( ifs[j] );
+		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
+		for ( j = 0; j < compilationUnits.size (); j++ )
+		{
+			CompilationUnit& compilationUnit = *compilationUnits[j];
+			if ( compilationUnit.files.size () != 1 )
+				return false;
+		}
+	}
+	return true;
+}
+
 void
 MingwBackend::ProcessModules ()
 {
@@ -104,6 +140,8 @@ MingwBackend::ProcessModules ()
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 			module,
 			this );
+		if ( use_pch && CanEnablePreCompiledHeaderSupportForModule ( module ) )
+			h->EnablePreCompiledHeaderSupport ();
 		if ( module.host == HostDefault )
 		{
 			module.host = h->DefaultHost();
@@ -207,7 +245,6 @@ MingwBackend::CreateMakefile ()
 		throw AccessDeniedException ( ProjectNode.makefile );
 	MingwModuleHandler::SetBackend ( this );
 	MingwModuleHandler::SetMakefile ( fMakefile );
-	MingwModuleHandler::SetUsePch ( use_pch );
 }
 
 void

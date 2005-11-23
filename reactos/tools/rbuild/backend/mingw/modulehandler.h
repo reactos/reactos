@@ -39,7 +39,7 @@ public:
 
 	static void SetBackend ( MingwBackend* backend_ );
 	static void SetMakefile ( FILE* f );
-	static void SetUsePch ( bool use_pch );
+	void EnablePreCompiledHeaderSupport ();
 
 	static std::string PassThruCacheDirectory (
 		const std::string &f,
@@ -125,7 +125,7 @@ protected:
 	std::string GetLinkingDependencies () const;
 	static MingwBackend* backend;
 	static FILE* fMakefile;
-	static bool use_pch;
+	bool use_pch;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
