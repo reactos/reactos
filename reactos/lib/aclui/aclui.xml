@@ -18,6 +18,7 @@
 	<library>uxtheme</library>
 	<file>aclui.c</file>
 	<file>checklist.c</file>
+	<file>guid.c</file>
 	<file>misc.c</file>
 	<file>aclui.rc</file>
 	<pch>precomp.h</pch>

@@ -26,10 +26,6 @@
  * UPDATE HISTORY:
  *      07/01/2005  Created
  */
-#define INITGUID
-#include <windows.h>
-#include <aclui.h>
-
 #include <precomp.h>
 
 static PCWSTR ObjectPickerAttributes[] =
