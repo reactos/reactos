@@ -219,6 +219,17 @@ ScmCheckAccess(SC_HANDLE Handle,
 }
 
 
+DWORD
+ScmAssignNewTag(LPWSTR lpServiceGroup,
+                LPDWORD lpdwTagId)
+{
+    /* FIXME */
+    DPRINT("Assigning new tag in group %S\n", lpServiceGroup);
+    *lpdwTagId = 0;
+    return ERROR_SUCCESS;
+}
+
+
 /* Function 0 */
 unsigned long
 ScmrCloseServiceHandle(handle_t BindingHandle,
@@ -599,7 +610,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
 
     /* Open the service key */
     dwError = ScmOpenServiceKey(lpService->szServiceName,
-                                KEY_WRITE,
+                                KEY_SET_VALUE,
                                 &hServiceKey);
     if (dwError != ERROR_SUCCESS)
         goto done;
@@ -614,6 +625,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                        REG_SZ,
                        (LPBYTE)lpDisplayName,
                        (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
+        /* FIXME: update lpService->lpDisplayName */
     }
 
     if (dwServiceType != SERVICE_NO_CHANGE)
@@ -627,6 +639,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
+        /* FIXME: lpService->dwType = dwServiceType; */
     }
 
     if (dwStartType != SERVICE_NO_CHANGE)
@@ -640,6 +653,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
+        lpService->dwStartType = dwStartType;
     }
 
     if (dwErrorControl != SERVICE_NO_CHANGE)
@@ -653,6 +667,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
+        lpService->dwErrorControl = dwErrorControl;
     }
 
 #if 0
@@ -700,11 +715,24 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
             goto done;
+        /* FIXME: update lpService->lpServiceGroup */
     }
 
     if (lpdwTagId != NULL)
     {
-        /* FIXME: Write tag */
+        dwError = ScmAssignNewTag(lpService->lpServiceGroup,
+                                  &lpService->dwTag);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"Tag",
+                                 0,
+                                 REG_DWORD,
+                                 (LPBYTE)&lpService->dwTag,
+                                 sizeof(DWORD));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+        *lpdwTagId = lpService->dwTag;
     }
 
     /* Write dependencies */
@@ -926,7 +954,18 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     if (lpdwTagId != NULL)
     {
-        /* FIXME: Write tag */
+        dwError = ScmAssignNewTag(lpService->lpServiceGroup,
+                                  &lpService->dwTag);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"Tag",
+                                 0,
+                                 REG_DWORD,
+                                 (LPBYTE)&lpService->dwTag,
+                                 sizeof(DWORD));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     /* Write dependencies */
@@ -964,7 +1003,7 @@ done:;
         *hService = (unsigned int)hServiceHandle;
 
         if (lpdwTagId != NULL)
-            *lpdwTagId = 0; /* FIXME */
+            *lpdwTagId = lpService->dwTag;
     }
     else
     {
