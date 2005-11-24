@@ -185,6 +185,11 @@ namespace ReactOS.CustomRevisionAction
 		                                                  string branch,
 		                                                  int revision)
 		{
+			string distributionFilename = GetDistributionFilename(branch,
+			                                                      revision);
+			string destinationFilename = Path.Combine(Path.GetDirectoryName(sourceFilename),
+			                                          distributionFilename);
+			File.Move(sourceFilename, distributionFilename);
 			string server;
 			string directory;
 			SplitRemotePublishPath(publishPath, out server, out directory);
@@ -196,7 +201,7 @@ namespace ReactOS.CustomRevisionAction
 			if (!ftpClient.DirectoryExists(branch))
 				ftpClient.MakeDir(branch);
 			ftpClient.ChangeDir(branch);
-			ftpClient.Upload(sourceFilename);
+			ftpClient.Upload(destinationFilename);
 			ftpClient.Close();
 		}
 
