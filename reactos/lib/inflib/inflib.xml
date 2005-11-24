@@ -1,0 +1,8 @@
+<module name="inflib" type="staticlibrary">
+	<include base="inflib">.</include>
+	<pch>inflib.h</pch>
+	<file>infcore.c</file>
+	<file>infget.c</file>
+	<file>infrosgen.c</file>
+	<file>infrosget.c</file>
+</module>

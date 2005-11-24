@@ -119,6 +119,9 @@
 <directory name="imm32">
 	<xi:include href="imm32/imm32.xml" />
 </directory>
+<directory name="inflib">
+	<xi:include href="inflib/inflib.xml" />
+</directory>
 <directory name="intrlck">
 	<xi:include href="intrlck/intrlck.xml" />
 </directory>
