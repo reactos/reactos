@@ -1,0 +1,15 @@
+; $Id: wdmaud.def 12852 2005-01-06 13:58:04Z mf $
+;
+; wdmaud.def
+;
+; ReactOS Operating System
+;
+LIBRARY wdmaud.drv
+EXPORTS
+DriverProc@20
+;widMessage@20
+wodMessage@20
+;midMessage@20
+;modMessage@20
+;mxdMessage@20
+;auxMessage@20
