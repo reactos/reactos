@@ -656,7 +656,7 @@ void my_kmem_cache_free(kmem_cache_t *co, void *ptr);
 #define dev_warn(x,f,arg...) do {} while (0)
 #define dev_err(x,f,arg...) do {} while (0)
 #define pr_debug(x,f,arg...) do {} while (0)
-#define usbprintk
+#define usbprintk(arg...) dev_printk(0,0,0,## arg)
 #endif
 
 

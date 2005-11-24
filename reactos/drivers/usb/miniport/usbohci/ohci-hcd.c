@@ -625,6 +625,7 @@ int ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
 
 /*-------------------------------------------------------------------------*/
 
+#ifdef DEBUG_MODE
 // HCFS itself
 static char *hcfs2string (int state)
 {
@@ -636,6 +637,7 @@ static char *hcfs2string (int state)
 	}
 	return "?";
 }
+#endif
 
 static void ohci_stop (struct usb_hcd *hcd)
 {	
