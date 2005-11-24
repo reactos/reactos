@@ -51,15 +51,6 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(HDEVINFO devinfo, PSP_DEVINFO_LIST_D
 }
 
 /***********************************************************************
- *		SetupDiGetDeviceInfoListDetailW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetDeviceInfoListDetailW(HDEVINFO devinfo, PSP_DEVINFO_LIST_DETAIL_DATA_W devinfo_data )
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
  *		SetupCopyOEMInfA  (SETUPAPI.@)
  */
 BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,

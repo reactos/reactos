@@ -3284,6 +3284,42 @@ BOOL WINAPI SetupDiCallClassInstaller(
 }
 
 /***********************************************************************
+ *		SetupDiGetDeviceInfoListDetailW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
+        IN HDEVINFO DeviceInfoSet,
+        OUT PSP_DEVINFO_LIST_DETAIL_DATA_W DeviceInfoListDetailData)
+{
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoListDetailData);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!DeviceInfoListDetailData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoListDetailData->cbSize != sizeof(SP_DEVINFO_LIST_DETAIL_DATA_W))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        memcpy(
+            &DeviceInfoListDetailData->ClassGuid,
+            &list->ClassGuid,
+            sizeof(GUID));
+        DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
+        DeviceInfoListDetailData->RemoteMachineName[0] = 0; /* FIXME */
+
+        ret = TRUE;
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
  *		SetupDiGetDeviceInstallParamsA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInstallParamsA(
@@ -5915,7 +5951,17 @@ SetupDiInstallDevice(
             NULL, 0,
             &RequiredSize);
         if (!Result)
-            goto nextfile;
+        {
+            if (GetLastError() == ERROR_INVALID_PARAMETER)
+            {
+                /* This first is probably missing. It is not
+                 * required, so ignore the error */
+                RequiredSize = 0;
+                Result = TRUE;
+            }
+            else
+                goto nextfile;
+        }
         if (RequiredSize > 0)
         {
             /* We got the needed size for the buffer */
@@ -5932,11 +5978,12 @@ SetupDiInstallDevice(
                 &RequiredSize);
             if (!Result)
                 goto nextfile;
+
+            SetLastError(ERROR_SUCCESS);
+            Result = SetupInstallServicesFromInfSectionExW(
+                SelectedDriver->InfFileDetails->hInf,
+                ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
         }
-        SetLastError(ERROR_SUCCESS);
-        Result = SetupInstallServicesFromInfSectionExW(
-            SelectedDriver->InfFileDetails->hInf,
-            ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
         if (Result && (Flags & SPSVCINST_ASSOCSERVICE))
         {
             AssociatedService = ServiceName;
@@ -5989,20 +6036,20 @@ nextfile:
 
     /* Write information to enum key */
     TRACE("Write information to enum key\n");
-    TRACE("Service         : '%S'\n", AssociatedService);
     TRACE("Class           : '%S'\n", ClassName);
     TRACE("ClassGUID       : '%S'\n", lpFullGuidString);
     TRACE("DeviceDesc      : '%S'\n", SelectedDriver->Info.Description);
     TRACE("Mfg             : '%S'\n", SelectedDriver->Info.MfgName);
-    rc = RegSetValueEx(hKey, L"Service", 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
-    if (rc == ERROR_SUCCESS)
-        rc = RegSetValueEx(hKey, L"Class", 0, REG_SZ, (const BYTE *)ClassName, (wcslen(ClassName) + 1) * sizeof(WCHAR));
+    TRACE("Service         : '%S'\n", AssociatedService);
+    rc = RegSetValueEx(hKey, L"Class", 0, REG_SZ, (const BYTE *)ClassName, (wcslen(ClassName) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, L"ClassGUID", 0, REG_SZ, (const BYTE *)lpFullGuidString, (wcslen(lpFullGuidString) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, L"DeviceDesc", 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (wcslen(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, L"Mfg", 0, REG_SZ, (const BYTE *)SelectedDriver->Info.MfgName, (wcslen(SelectedDriver->Info.MfgName) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS && *AssociatedService)
+        rc = RegSetValueEx(hKey, L"Service", 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
        SetLastError(rc);

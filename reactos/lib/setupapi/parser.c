@@ -1691,7 +1691,7 @@ BOOL WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer,
     unsigned int len;
 
     SetLastError(0);
-    if (!field) return FALSE;
+    if (!field) { SetLastError(ERROR_INVALID_PARAMETER); return FALSE; }
     len = PARSER_string_substA( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
     if (buffer)
@@ -1722,7 +1722,7 @@ BOOL WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer
     unsigned int len;
 
     SetLastError(0);
-    if (!field) return FALSE;
+    if (!field) { SetLastError(ERROR_INVALID_PARAMETER); return FALSE; }
     len = PARSER_string_substW( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
     if (buffer)
