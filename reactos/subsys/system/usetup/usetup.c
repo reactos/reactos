@@ -395,7 +395,7 @@ CheckUnattendedSetup(VOID)
 {
   WCHAR UnattendInfPath[MAX_PATH];
   UNICODE_STRING FileName;
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   HINF UnattendInf;
   ULONG ErrorLine;
   NTSTATUS Status;
@@ -429,14 +429,16 @@ CheckUnattendedSetup(VOID)
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"Signature", &Context))
     {
       DPRINT("InfFindFirstLine() failed for section 'Unattend'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
 
   /* Get pointer 'Signature' key */
-  if (!InfGetData(&Context, NULL, &Value))
+  if (!InfGetData(Context, NULL, &Value))
     {
       DPRINT("InfGetData() failed for key 'Signature'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
@@ -445,6 +447,7 @@ CheckUnattendedSetup(VOID)
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
       DPRINT("Signature not $ReactOS$\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
@@ -453,31 +456,37 @@ CheckUnattendedSetup(VOID)
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
       DPRINT("InfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
-  if (!InfGetIntField(&Context, 0, &IntValue))
+  if (!InfGetIntField(Context, 0, &IntValue))
     {
       DPRINT("InfGetIntField() failed for key 'DestinationDiskNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
   UnattendDestinationDiskNumber = IntValue;
+  InfFreeContext(Context);
 
   /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
     {
       DPRINT("InfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
-  if (!InfGetIntField(&Context, 0, &IntValue))
+  if (!InfGetIntField(Context, 0, &IntValue))
     {
       DPRINT("InfGetIntField() failed for key 'DestinationPartitionNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
   UnattendDestinationPartitionNumber = IntValue;
+  InfFreeContext(Context);
 
   /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
@@ -488,14 +497,16 @@ CheckUnattendedSetup(VOID)
     }
 
   /* Get pointer 'InstallationDirectory' key */
-  if (!InfGetData(&Context, NULL, &Value))
+  if (!InfGetData(Context, NULL, &Value))
     {
       DPRINT("InfGetData() failed for key 'InstallationDirectory'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
   wcscpy(UnattendInstallationDirectory, Value);
 
+  InfFreeContext(Context);
   InfCloseFile(UnattendInf);
 
   IsUnattendedSetup = TRUE;
@@ -516,7 +527,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   NTSTATUS Status;
   WCHAR FileNameBuffer[MAX_PATH];
   UNICODE_STRING FileName;
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   PWCHAR Value;
   ULONG ErrorLine;
   ULONG ReturnSize;
@@ -630,8 +641,9 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 
   /* Get pointer 'Signature' key */
-  if (!InfGetData (&Context, NULL, &Value))
+  if (!InfGetData (Context, NULL, &Value))
     {
+      InfFreeContext(Context);
       PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
 
@@ -649,6 +661,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   /* Check 'Signature' string */
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
+      InfFreeContext(Context);
       PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
 
@@ -662,6 +675,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
+  InfFreeContext(Context);
 
   CheckUnattendedSetup();
 
@@ -2565,7 +2579,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
   PPARTENTRY PartEntry;
   WCHAR InstallDir[51];
   PWCHAR DefaultPath;
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   ULONG Length;
 
   if (PartitionList == NULL ||
@@ -2598,7 +2612,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     }
 
   /* Read the 'DefaultPath' data */
-  if (InfGetData (&Context, NULL, &DefaultPath))
+  if (InfGetData (Context, NULL, &DefaultPath))
     {
       wcscpy(InstallDir, DefaultPath);
     }
@@ -2606,6 +2620,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     {
       wcscpy(InstallDir, L"\\ReactOS");
     }
+  InfFreeContext(Context);
   Length = wcslen(InstallDir);
 
   SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
@@ -2670,8 +2685,8 @@ AddSectionToCopyQueue(HINF InfFile,
 		       PWCHAR SourceCabinet,
 		       PINPUT_RECORD Ir)
 {
-  INFCONTEXT FilesContext;
-  INFCONTEXT DirContext;
+  PINFCONTEXT FilesContext;
+  PINFCONTEXT DirContext;
   PWCHAR FileKeyName;
   PWCHAR FileKeyValue;
   PWCHAR DirKeyValue;
@@ -2702,7 +2717,7 @@ AddSectionToCopyQueue(HINF InfFile,
   do
     {
       /* Get source file name and target directory id */
-      if (!InfGetData (&FilesContext, &FileKeyName, &FileKeyValue))
+      if (!InfGetData (FilesContext, &FileKeyName, &FileKeyValue))
 	{
 	  /* FIXME: Handle error! */
 	  DPRINT1("InfGetData() failed\n");
@@ -2710,7 +2725,7 @@ AddSectionToCopyQueue(HINF InfFile,
 	}
 
       /* Get optional target file name */
-      if (!InfGetDataField (&FilesContext, 2, &TargetFileName))
+      if (!InfGetDataField (FilesContext, 2, &TargetFileName))
 	TargetFileName = NULL;
 
       DPRINT ("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
@@ -2723,9 +2738,10 @@ AddSectionToCopyQueue(HINF InfFile,
 	  break;
 	}
 
-      if (!InfGetData (&DirContext, NULL, &DirKeyValue))
+      if (!InfGetData (DirContext, NULL, &DirKeyValue))
 	{
 	  /* FIXME: Handle error! */
+          InfFreeContext(DirContext);
 	  DPRINT1("InfGetData() failed\n");
 	  break;
 	}
@@ -2741,8 +2757,11 @@ AddSectionToCopyQueue(HINF InfFile,
 	  /* FIXME: Handle error! */
 	  DPRINT1("SetupQueueCopy() failed\n");
 	}
+      InfFreeContext(DirContext);
     }
-  while (InfFindNextLine(&FilesContext, &FilesContext));
+  while (InfFindNextLine(FilesContext, FilesContext));
+
+  InfFreeContext(FilesContext);
 
   return TRUE;
 }
@@ -2753,7 +2772,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 		       PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
-  INFCONTEXT DirContext;
+  PINFCONTEXT DirContext;
   PWCHAR AdditionalSectionName;
   PWCHAR KeyValue;
   ULONG Length;
@@ -2840,7 +2859,7 @@ PrepareCopyPageInfFile(HINF InfFile,
   /* Enumerate the directory values and create the subdirectories */
   do
     {
-      if (!InfGetData (&DirContext, NULL, &KeyValue))
+      if (!InfGetData (DirContext, NULL, &KeyValue))
 	{
 	  DPRINT1("break\n");
 	  break;
@@ -2883,7 +2902,9 @@ PrepareCopyPageInfFile(HINF InfFile,
 	    }
 	}
     }
-  while (InfFindNextLine (&DirContext, &DirContext));
+  while (InfFindNextLine (DirContext, DirContext));
+
+  InfFreeContext(DirContext);
 
   return(TRUE);
 }
@@ -2894,7 +2915,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 {
   HINF InfHandle;
   WCHAR PathBuffer[MAX_PATH];
-  INFCONTEXT CabinetsContext;
+  PINFCONTEXT CabinetsContext;
   ULONG InfFileSize;
   PWCHAR KeyValue;
   NTSTATUS Status;
@@ -2940,7 +2961,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
    */
   do
     {
-      if (!InfGetData (&CabinetsContext, NULL, &KeyValue))
+      if (!InfGetData (CabinetsContext, NULL, &KeyValue))
 	break;
 
       wcscpy(PathBuffer, SourcePath.Buffer);
@@ -3017,7 +3038,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
           return QUIT_PAGE;
         }
     }
-  while (InfFindNextLine (&CabinetsContext, &CabinetsContext));
+  while (InfFindNextLine (CabinetsContext, CabinetsContext));
+
+  InfFreeContext(CabinetsContext);
 
   return FILE_COPY_PAGE;
 }
@@ -3095,7 +3118,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
-  INFCONTEXT InfContext;
+  PINFCONTEXT InfContext;
   PWSTR Action;
   PWSTR File;
   PWSTR Section;
@@ -3164,9 +3187,9 @@ RegistryPage(PINPUT_RECORD Ir)
 
   do
     {
-      InfGetDataField (&InfContext, 0, &Action);
-      InfGetDataField (&InfContext, 1, &File);
-      InfGetDataField (&InfContext, 2, &Section);
+      InfGetDataField (InfContext, 0, &Action);
+      InfGetDataField (InfContext, 1, &File);
+      InfGetDataField (InfContext, 2, &Section);
 
       DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
@@ -3203,7 +3226,9 @@ RegistryPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  while (InfFindNextLine (&InfContext, &InfContext));
+  while (InfFindNextLine (InfContext, InfContext));
+
+  InfFreeContext(InfContext);
 
   /* Update display registry settings */
   SetStatusText("   Updating display registry settings...");
@@ -3647,6 +3672,7 @@ NtProcessStartup(PPEB Peb)
   RtlNormalizeProcessParams(Peb->ProcessParameters);
 
   ProcessHeap = Peb->ProcessHeap;
+  InfSetHeap(ProcessHeap);
 
   SignalInitEvent();
 
