@@ -149,23 +149,25 @@ INT ShowInfo(BOOL bAll)
 
     _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
+
+    if (bAll)
+    {
+        _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
+        _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : \n"));
+        _tprintf(_T("\tNode Type . . . . . . . . . . . . : %s\n"), GetNodeTypeName(pFixedInfo->NodeType));
+        if (pFixedInfo->EnableRouting)
+            _tprintf(_T("\tIP Routing Enabled. . . . . . . . : Yes\n"));
+        else
+            _tprintf(_T("\tIP Routing Enabled. . . . . . . . : No\n"));
+        if (pAdapter->HaveWins)
+            _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : Yes\n"));
+        else
+            _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : No\n"));
+        _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
+    }
+
 	while (pAdapter)
 	{
-        if (bAll)
-        {
-            _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
-            _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : \n"));
-            _tprintf(_T("\tNode Type . . . . . . . . . . . . : %s\n"), GetNodeTypeName(pFixedInfo->NodeType));
-            if (pFixedInfo->EnableRouting)
-                _tprintf(_T("\tIP Routing Enabled. . . . . . . . : Yes\n"));
-            else
-                _tprintf(_T("\tIP Routing Enabled. . . . . . . . : No\n"));
-            if (pAdapter->HaveWins)
-                _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : Yes\n"));
-            else
-                _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : No\n"));
-            _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
-        }
 
         _tprintf(_T("\n%s ...... : \n\n"), GetInterfaceTypeName(pAdapter->Type));
         
