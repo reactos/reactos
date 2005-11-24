@@ -1922,9 +1922,11 @@ IopActionConfigureChildServices(
   PDEVICE_NODE DeviceNode,
   PVOID Context)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
    PDEVICE_NODE ParentDeviceNode;
    PUNICODE_STRING Service;
+   UNICODE_STRING ClassGUID;
+   UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
    NTSTATUS Status;
 
    DPRINT("IopActionConfigureChildServices(%p, %p)\n", DeviceNode, Context);
@@ -1969,10 +1971,18 @@ IopActionConfigureChildServices(
 
       RtlZeroMemory(QueryTable, sizeof(QueryTable));
       RtlInitUnicodeString(Service, NULL);
+      RtlInitUnicodeString(&ClassGUID, NULL);
 
       QueryTable[0].Name = L"Service";
       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
       QueryTable[0].EntryContext = Service;
+
+      QueryTable[1].Name = L"ClassGUID";
+      QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+      QueryTable[1].EntryContext = &ClassGUID;
+      QueryTable[1].DefaultType = REG_SZ;
+      QueryTable[1].DefaultData = &NullString;
+      QueryTable[1].DefaultLength = 0;
 
       RtlAppendUnicodeToString(&RegKey, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
       RtlAppendUnicodeStringToString(&RegKey, &DeviceNode->InstancePath);
@@ -1993,6 +2003,15 @@ IopActionConfigureChildServices(
       if (Service->Buffer == NULL)
       {
          IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+
+         if (ClassGUID.Length != 0)
+         {
+            /* Device has a ClassGUID value, but no Service value.
+             * Suppose it is using the NULL driver, so state the
+             * device is started */
+            DPRINT("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
+            IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+         }
          return STATUS_SUCCESS;
       }
 
