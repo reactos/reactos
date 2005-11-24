@@ -193,7 +193,7 @@ namespace ReactOS.CustomRevisionAction
 			if (directory != "")
 				ftpClient.ChangeDir(directory);
 			/* Create destination directory if it does not already exist */
-			if (ftpClient.GetFileList(branch).Length < 1)
+			if (!ftpClient.DirectoryExists(branch))
 				ftpClient.MakeDir(branch);
 			ftpClient.ChangeDir(branch);
 			ftpClient.Upload(sourceFilename);

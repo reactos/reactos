@@ -354,7 +354,21 @@ namespace ReactOS.CustomRevisionAction
 
 			return msg;
 		}
-		
+
+		public bool DirectoryExists(string directory)
+		{
+			try
+			{
+				ChangeDir(directory);
+				ChangeDir("..");
+				return true;
+			}
+			catch (FtpException)
+			{
+				return false;
+			}
+		}
+	
 		/// <summary>
 		/// Return the size of a file.
 		/// </summary>
