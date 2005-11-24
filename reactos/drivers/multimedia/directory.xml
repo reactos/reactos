@@ -1,0 +1,24 @@
+<!--
+    Kernel Streaming
+
+    This is mostly incomplete at the moment.
+-->
+
+<directory name="portcls">
+    <xi:include href="portcls/portcls.xml" />
+</directory>
+
+<!--directory name="wdmaud">
+    <xi:include href="wdmaud/wdmaud.xml" />
+</directory-->
+
+<!--directory name="ks">
+	<xi:include href="ks/ks.xml" />
+</directory>
+<directory name="portcls">
+	<xi:include href="portcls/portcls.xml" />
+</directory>
+<directory name="avtest">
+	<xi:include href="avtest/avtest.xml" />
+</directory-->
+
