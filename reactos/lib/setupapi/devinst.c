@@ -149,13 +149,14 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
     LONG lError;
     DWORD dwGuidListIndex = 0;
 
-    TRACE("\n");
+    TRACE("0x%lx %p %lu %p %s %p\n", Flags, ClassGuidList,
+        ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
 
     if (RequiredSize != NULL)
 	*RequiredSize = 0;
 
     hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
-                                            KEY_ALL_ACCESS,
+                                            KEY_ENUMERATE_SUB_KEYS,
                                             DIOCR_INSTALLER,
                                             MachineName,
                                             Reserved);
@@ -178,12 +179,12 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 	TRACE("RegEnumKeyExW() returns %ld\n", lError);
 	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
 	{
-	    TRACE("Key name: %p\n", szKeyName);
+	    TRACE("Key name: %s\n", debugstr_w(szKeyName));
 
 	    if (RegOpenKeyExW(hClassesKey,
 			      szKeyName,
 			      0,
-			      KEY_ALL_ACCESS,
+			      KEY_QUERY_VALUE,
 			      &hClassKey))
 	    {
 		RegCloseKey(hClassesKey);
@@ -230,14 +231,14 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
 	    RegCloseKey(hClassKey);
 
-	    TRACE("Guid: %p\n", szKeyName);
+	    TRACE("Guid: %s\n", debugstr_w(szKeyName));
 	    if (dwGuidListIndex < ClassGuidListSize)
 	    {
 		if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
 		{
 		    szKeyName[37] = 0;
 		}
-		TRACE("Guid: %p\n", &szKeyName[1]);
+		TRACE("Guid: %s\n", debugstr_w(&szKeyName[1]));
 
 		UuidFromStringW(&szKeyName[1],
 				&ClassGuidList[dwGuidListIndex]);
@@ -355,6 +356,9 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
     LONG lError;
     DWORD dwGuidListIndex = 0;
 
+    TRACE("%s %p %lu %p %s %p\n", debugstr_w(ClassName), ClassGuidList,
+        ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
+
     if (RequiredSize != NULL)
 	*RequiredSize = 0;
 
@@ -382,7 +386,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 	TRACE("RegEnumKeyExW() returns %ld\n", lError);
 	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
 	{
-	    TRACE("Key name: %p\n", szKeyName);
+	    TRACE("Key name: %s\n", debugstr_w(szKeyName));
 
 	    if (RegOpenKeyExW(hClassesKey,
 			      szKeyName,
@@ -402,20 +406,20 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 				  (LPBYTE)szClassName,
 				  &dwLength))
 	    {
-		TRACE("Class name: %p\n", szClassName);
+		TRACE("Class name: %s\n", debugstr_w(szClassName));
 
 		if (strcmpiW(szClassName, ClassName) == 0)
 		{
 		    TRACE("Found matching class name\n");
 
-		    TRACE("Guid: %p\n", szKeyName);
+		    TRACE("Guid: %s\n", debugstr_w(szKeyName));
 		    if (dwGuidListIndex < ClassGuidListSize)
 		    {
 			if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
 			{
 			    szKeyName[37] = 0;
 			}
-			TRACE("Guid: %p\n", &szKeyName[1]);
+			TRACE("Guid: %s\n", debugstr_w(&szKeyName[1]));
 
 			UuidFromStringW(&szKeyName[1],
 					&ClassGuidList[dwGuidListIndex]);
@@ -520,6 +524,9 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
     DWORD dwLength;
     LONG rc;
 
+    TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassName,
+        ClassNameSize, RequiredSize, debugstr_w(MachineName), Reserved);
+
     hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
                                      KEY_QUERY_VALUE,
                                      DIOCR_INSTALLER,
@@ -590,7 +597,8 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
     LPWSTR MachineNameW = NULL;
     HDEVINFO hDevInfo;
 
-    TRACE("%p %p %s %p\n", ClassGuid, hwndParent, MachineName, Reserved);
+    TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
+      debugstr_a(MachineName), Reserved);
 
     if (MachineName)
     {
@@ -623,7 +631,8 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
   //CONFIGRET cr;
   HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
 
-  TRACE("%p %p %S %p\n", ClassGuid, hwndParent, MachineName, Reserved);
+  TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
+      debugstr_w(MachineName), Reserved);
 
   list = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoSet));
   if (!list)
@@ -817,6 +826,9 @@ BOOL WINAPI SetupDiGetActualSectionToInstallW(
     DWORD dwFullLength;
     LONG lLineCount = -1;
 
+    TRACE("%p %s %p %lu %p %p\n", InfHandle, debugstr_w(InfSectionName),
+        InfSectionWithExt, InfSectionWithExtSize, RequiredSize, Extension);
+
     lstrcpyW(szBuffer, InfSectionName);
     dwLength = lstrlenW(szBuffer);
 
@@ -977,8 +989,11 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
     HKEY hKey;
     DWORD dwLength;
 
+    TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassDescription,
+        ClassDescriptionSize, RequiredSize, debugstr_w(MachineName), Reserved);
+
     hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
-                                     KEY_ALL_ACCESS,
+                                     KEY_QUERY_VALUE,
                                      DIOCR_INSTALLER,
                                      MachineName,
                                      Reserved);
@@ -1967,7 +1982,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
     DWORD sizeW = 0, sizeA;
     BOOL ret = FALSE;
 
-    TRACE("(%p, %p, %p, %ld, %p, %p)\n", DeviceInfoSet,
+    TRACE("%p %p %p %lu %p %p\n", DeviceInfoSet,
         DeviceInterfaceData, DeviceInterfaceDetailData,
         DeviceInterfaceDetailDataSize, RequiredSize, DeviceInfoData);
 
@@ -2036,7 +2051,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
 
-    TRACE("(%p, %p, %p, %ld, %p, %p): stub\n", DeviceInfoSet,
+    TRACE("%p %p %p %lu %p %p\n", DeviceInfoSet,
         DeviceInterfaceData, DeviceInterfaceDetailData,
         DeviceInterfaceDetailDataSize, RequiredSize, DeviceInfoData);
 
@@ -2579,7 +2594,7 @@ static HKEY CreateClassKey(HINF hInf)
 			    0,
 			    NULL,
 			    REG_OPTION_NON_VOLATILE,
-			    KEY_ALL_ACCESS,
+			    KEY_SET_VALUE,
 			    NULL,
 			    &hClassKey,
              NULL))
@@ -2617,6 +2632,9 @@ BOOL WINAPI SetupDiInstallClassW(
     HINF hInf;
     BOOL bFileQueueCreated = FALSE;
     HKEY hClassKey;
+
+    TRACE("%p %s 0x%lx %p\n", hwndParent, debugstr_w(InfFileName),
+        Flags, FileQueue);
 
     FIXME("not fully implemented\n");
 
@@ -2763,6 +2781,9 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     DWORD rc;
     LPCWSTR lpKeyName;
 
+    TRACE("%s 0x%lx 0x%lx %s %p\n", debugstr_guid(ClassGuid), samDesired,
+        Flags, debugstr_w(MachineName), Reserved);
+
     if (Flags == DIOCR_INSTALLER)
     {
         lpKeyName = ControlClass;
@@ -2793,7 +2814,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     rc = RegOpenKeyExW(HKLM,
 		      lpKeyName,
 		      0,
-		      KEY_ALL_ACCESS,
+		      ClassGuid ? KEY_ENUMERATE_SUB_KEYS : samDesired,
 		      &hClassesKey);
     if (MachineName != NULL) RegCloseKey(HKLM);
     if (rc != ERROR_SUCCESS)
@@ -2829,7 +2850,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     rc = RegOpenKeyExW(hClassesKey,
 		      lpFullGuidString,
 		      0,
-		      KEY_ALL_ACCESS,
+		      samDesired,
 		      &hClassKey);
     if (rc != ERROR_SUCCESS)
     {
