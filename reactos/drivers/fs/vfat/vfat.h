@@ -478,10 +478,6 @@ BOOLEAN FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext);
 
-NTSTATUS VfatOpenFile (PDEVICE_EXTENSION DeviceExt,
-                       PFILE_OBJECT FileObject,
-		       PVFATFCB* parentFcb);
-
 NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
                    PVFATFCB Parent,
                    PUNICODE_STRING FileToFindU,
