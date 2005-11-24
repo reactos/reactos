@@ -9,3 +9,4 @@ These are a selection of services for the ReactOS kernel. They include
     loop = Allows accessing a file as a block device
     scramdisk = Filesystem encryption driver
     event = Sample driver demonstrating notifying a user thread using an event
+    multimedia = Multimedia drivers (sound/video) and kernel streaming
