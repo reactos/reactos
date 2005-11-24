@@ -20,7 +20,7 @@
 int _taccess( const _TCHAR *_path, int _amode )
 {
     DWORD Attributes = GetFileAttributes(_path);
-    DPRINT(MK_STR(_taccess)"('%"_TS"', %x)\n", _path, _amode);
+    DPRINT(MK_STR(_taccess)"('%"sT"', %x)\n", _path, _amode);
 
     if (Attributes == (DWORD)-1) {
     	_dosmaperr(GetLastError());
@@ -44,7 +44,7 @@ int _taccess( const _TCHAR *_path, int _amode )
 int access_dirT(const _TCHAR *_path)
 {
     DWORD Attributes = GetFileAttributes(_path);
-    DPRINT(MK_STR(is_dirT)"('%"_TS"')\n", _path);
+    DPRINT(MK_STR(is_dirT)"('%"sT"')\n", _path);
 
     if (Attributes == (DWORD)-1) {
          _dosmaperr(GetLastError());

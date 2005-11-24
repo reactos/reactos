@@ -7,7 +7,7 @@
 #include <malloc.h>
 #include <internal/file.h>
 
-#include <ntdef.h>
+#include <winnt.h>
 
 int _isnanl(double x);
 int _isinfl(double x);

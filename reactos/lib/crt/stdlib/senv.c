@@ -17,7 +17,7 @@ void _tsearchenv(const _TCHAR* file,const _TCHAR* var,_TCHAR* path)
     _TCHAR* y;
     _TCHAR* FilePart;
 
-    DPRINT(#_tsearchenv"()\n");
+    DPRINT(MK_STR(_tsearchenv)"()\n");
 
     x = _tcschr(env,'=');
     if ( x != NULL ) {

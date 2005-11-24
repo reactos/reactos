@@ -73,7 +73,7 @@ int _fstat(int fd, struct _stat* statbuf)
   else if (dwFileType == FILE_TYPE_PIPE)
   {
     statbuf->st_dev = fd;
-    statbuf->st_mode = S_IFIFO;
+    statbuf->st_mode = -1; //S_IFIFO;
   }
   else
   {

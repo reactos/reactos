@@ -9,7 +9,6 @@
  */
 
 #include "precomp.h"
-#include <process.h>
 
 /*
  * @implemented

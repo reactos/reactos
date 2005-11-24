@@ -20,7 +20,7 @@ int _tchmod(const _TCHAR* filename, mode_t mode)
     DWORD FileAttributes = 0;
     BOOLEAN Set = FALSE;
 
-    DPRINT(#_tchmod"('%"sT"', %x)\n", filename, mode);
+    DPRINT(MK_STR(_tchmod)"('%"sT"', %x)\n", filename, mode);
 
     FileAttributes = GetFileAttributes(filename);
     if ( FileAttributes == (DWORD)-1 ) {

@@ -8,19 +8,23 @@
 #include <stdlib.h>
 #include <internal/file.h>
 
+#if defined (_MSC_VER)
+#define UINT64_MAX	0xffffffffffffffff
+#endif
+
 /*
  * Convert a string to an unsigned long integer.
  *
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-uint64_t
+UINT64
 strtoull(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;
-  uint64_t acc;
+  UINT64 acc;
   int c;
-  uint64_t cutoff;
+  UINT64 cutoff;
   int neg = 0, any, cutlim;
 
   /*

@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <time.h>
+
 
 #include <windef.h>
 #include <winbase.h>

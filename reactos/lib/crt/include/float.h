@@ -15,15 +15,16 @@
  *       here.
  *
  */
-
-#include_next<float.h>
-
+#ifdef __GNUC__
+   #include_next <float.h>
+#endif
 #ifndef _MINGW_FLOAT_H_
 #define _MINGW_FLOAT_H_
 
 /* All the headers include this file. */
-#include <_mingw.h>
-
+#ifdef __GNUC__
+   #include <_mingw.h>
+#endif
 /*
  * Functions and definitions for controlling the FPU.
  */
@@ -90,11 +91,23 @@
 #define _FPE_STACKUNDERFLOW	0x8b
 #define _FPE_EXPLICITGEN	0x8c    /* raise( SIGFPE ); */
 
+#define DBL_MAX_10_EXP  308  
+#define S_IFIFO			-1
+#define UINT64_MAX	0xffffffffffffffff
+
 #ifndef RC_INVOKED
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+#ifndef _CRTIMP
+#ifdef  _DLL
+#define _CRTIMP __declspec(dllimport)
+#else   
+#define _CRTIMP
+#endif  /* _DLL */
+#endif 
 
 /* Set the FPU control word as cw = (cw & ~unMask) | (unNew & unMask),
  * i.e. change the bits in unMask to have the values they have in unNew,

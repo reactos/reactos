@@ -23,3 +23,4 @@ fputwc(wchar_t c, FILE *fp)
   return putwc(c,fp);
 }
 
+

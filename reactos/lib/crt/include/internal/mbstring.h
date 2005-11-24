@@ -18,5 +18,20 @@
 #endif
 #define _P2     (_P_|__2)
 
+#if defined (_MSC_VER)
+
+#undef _ismbbkana
+#undef _ismbbkpunct
+#undef _ismbbalpha
+#undef _ismbbalnum
+#undef _ismbbgraph
+#undef _ismbbkalnum
+#undef _ismbblead
+#undef _ismbbprint
+#undef _ismbbpunct
+#undef _ismbbtrail
+
+#endif
+
 
 #endif
