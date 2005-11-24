@@ -124,7 +124,7 @@ ClassGetClassByName(LPCWSTR ClassName, HINSTANCE hInstance)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed to lookup class atom!\n");
+      DPRINT1("Failed to lookup class atom (ClassName '%S')!\n", ClassName);
       return FALSE;
    }
 
