@@ -442,6 +442,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	      break;
 	   }
         }
+        ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
         if (Fcb->Pipe->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
         {
 	   DPRINT("Byte stream mode\n");
