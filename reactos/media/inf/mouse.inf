@@ -53,7 +53,7 @@ mouclass.sys
 
 [mouclass_Service_Inst]
 ServiceType   = 1
-StartType     = 3
+StartType     = 1
 ErrorControl  = 1
 ServiceBinary = %12%\mouclass.sys
 LoadOrderGroup = Pointer Class
