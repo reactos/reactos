@@ -14,6 +14,17 @@ namespace ReactOS.CustomRevisionAction
 		private static string publishPath;
 
 		/// <summary>
+		/// Whether or not to publish ISOs to a remote destination via FTP.
+		/// </summary>
+		private static bool PublishToRemoteFtpLocation
+		{
+			get
+			{
+				return publishPath.StartsWith("ftp://");
+			}
+		}
+
+		/// <summary>
 		/// Run the application.
 		/// </summary>
 		/// <param name="script">Script to run.</param>
@@ -138,6 +149,82 @@ namespace ReactOS.CustomRevisionAction
 			                     revision);
 		}
 
+		private static void SplitRemotePublishPath(string publishPath,
+		                                           out string server,
+		                                           out string directory)
+		{
+			string searchString = "://";
+			int index = publishPath.IndexOf(searchString);
+			if (index == -1)
+				throw new InvalidOperationException();
+			int endOfProtocolIndex = index + searchString.Length;
+			string withoutProtocol = publishPath.Remove(0, endOfProtocolIndex);
+			index = withoutProtocol.IndexOf("/");
+			if (index == -1)
+			{
+				server = withoutProtocol;
+				directory = "";
+			}
+			else
+			{
+				server = withoutProtocol.Substring(0, index);
+				directory = withoutProtocol.Remove(0, index + 1);
+			}
+		}
+
+		/// <summary>
+		/// Copy ISO to the (remote) destination.
+		/// </summary>
+		/// <param name="sourceFilename">Name of source ISO file to copy.</param>
+		/// <param name="branch">Branch.</param>
+		/// <param name="revision">Revision.</param>
+		/// <remarks>
+		/// Structure is ftp://ftp.server.com/whereever/<branch>/ReactOS-<branch>-r<revision>.iso.
+		/// </remarks>
+		private static void CopyISOToRemoteFtpDestination(string sourceFilename,
+		                                                  string branch,
+		                                                  int revision)
+		{
+			string server;
+			string directory;
+			SplitRemotePublishPath(publishPath, out server, out directory);
+			FtpClient ftpClient = new FtpClient(server, "anonymous", "sin@svn.reactos.com");
+			ftpClient.Login();
+			if (directory != "")
+				ftpClient.ChangeDir(directory);
+			/* Create destination directory if it does not already exist */
+			if (ftpClient.GetFileList(branch).Length < 1)
+				ftpClient.MakeDir(branch);
+			ftpClient.ChangeDir(branch);
+			ftpClient.Upload(sourceFilename);
+			ftpClient.Close();
+		}
+
+		/// <summary>
+		/// Copy ISO to the (local) destination.
+		/// </summary>
+		/// <param name="sourceFilename">Name of source ISO file to copy.</param>
+		/// <param name="branch">Branch.</param>
+		/// <param name="revision">Revision.</param>
+		/// <remarks>
+		/// Structure is <branch>\ReactOS-<branch>-r<revision>.iso.
+		/// </remarks>
+		private static void CopyISOToLocalDestination(string sourceFilename,
+		                                              string branch,
+		                                              int revision)
+		{
+			string distributionFilename = GetDistributionFilename(branch,
+			                                                      revision);
+			string destinationDirectory = Path.Combine(publishPath,
+			                                           branch);
+			string destinationFilename = Path.Combine(destinationDirectory,
+			                                          distributionFilename);
+			if (!Directory.Exists(destinationDirectory))
+				Directory.CreateDirectory(destinationDirectory);
+			File.Copy(sourceFilename,
+			          destinationFilename);
+		}
+
 		/// <summary>
 		/// Copy ISO to the destination.
 		/// </summary>
@@ -151,16 +238,10 @@ namespace ReactOS.CustomRevisionAction
 		                                         string branch,
 		                                         int revision)
 		{
-			string distributionFilename = GetDistributionFilename(branch,
-			                                                      revision);
-			string destinationDirectory = Path.Combine(publishPath,
-			                                           branch);
-			string destinationFilename = Path.Combine(destinationDirectory,
-			                                          distributionFilename);
-			if (!Directory.Exists(destinationDirectory))
-				Directory.CreateDirectory(destinationDirectory);
-			File.Copy(sourceFilename,
-			          destinationFilename);
+			if (PublishToRemoteFtpLocation)
+				CopyISOToRemoteFtpDestination(sourceFilename, branch, revision);
+			else
+				CopyISOToLocalDestination(sourceFilename, branch, revision);
 		}
 
 		/// <summary>
