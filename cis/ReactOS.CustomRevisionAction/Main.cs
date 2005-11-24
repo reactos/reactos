@@ -189,7 +189,7 @@ namespace ReactOS.CustomRevisionAction
 			                                                      revision);
 			string destinationFilename = Path.Combine(Path.GetDirectoryName(sourceFilename),
 			                                          distributionFilename);
-			File.Move(sourceFilename, distributionFilename);
+			File.Move(sourceFilename, destinationFilename);
 			string server;
 			string directory;
 			SplitRemotePublishPath(publishPath, out server, out directory);
