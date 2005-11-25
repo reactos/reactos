@@ -91,6 +91,7 @@ static DWORD waveThread(LPVOID lpParameter)
         switch (pClient->AuxFunction) 
         {
             case WaveThreadAddBuffer:
+                {
                  LPWAVEHDR *pHdrSearching;
 
                  if (pClient->DeviceType == WaveInDevice)             
@@ -113,7 +114,8 @@ static DWORD waveThread(LPVOID lpParameter)
 
                  *pHdrSearching = pClient->AuxParam.pHdr;
 
-                 pClient->AuxReturnCode = waveStart(pClient);
+                 pClient->AuxReturnCode = waveReadWrite(pClient);
+                }
                  break;
                  
             case WaveThreadSetState:
