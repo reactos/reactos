@@ -26,7 +26,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
 
-//#include <msvcrt/ctype.h>
 #ifndef WEOF
 #define WEOF    (wchar_t)(0xFFFF)
 #endif

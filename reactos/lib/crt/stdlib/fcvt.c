@@ -1,6 +1,5 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <float.h>
+#include "precomp.h"
 
 char *fcvtbuf (double, int, int *, int *, char *);
 

@@ -17,8 +17,6 @@
    Boston, MA 02111-1307, USA.  */
 
 #include "precomp.h"
-#include <ctype.h>
-#include <wchar.h>
 
 int
 STDCALL

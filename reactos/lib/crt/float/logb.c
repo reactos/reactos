@@ -20,8 +20,6 @@
 
 #include "precomp.h"
 
-#include <float.h>
-
 double _logb (double __x)
 {
   register double __val;

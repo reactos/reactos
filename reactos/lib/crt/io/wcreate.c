@@ -9,7 +9,6 @@
  */
 
 #include "precomp.h"
-#include <fcntl.h>
 
 #define NDEBUG
 #include <internal/debug.h>

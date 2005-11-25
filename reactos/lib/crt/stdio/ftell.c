@@ -3,9 +3,6 @@
 
 #include "precomp.h"
 
-#include <fcntl.h>
-#include <errno.h>
-
 /*
  * @implemented
  */

@@ -7,9 +7,9 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
+#include "precomp.h"
 #include <mbstring.h>
 #include <mbctype.h>
-#include <ctype.h>
 
 /*
  * @implemented

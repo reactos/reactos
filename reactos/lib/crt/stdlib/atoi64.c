@@ -1,6 +1,14 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/??????
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
+ * UPDATE HISTORY:
+ *              25/11/05: Added license header
+ */
 
-#include <ctype.h>
-#include <stdlib.h>
+#include "precomp.h"
 
 /*
  * @implemented

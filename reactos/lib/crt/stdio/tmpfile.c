@@ -4,7 +4,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
 
-#include <fcntl.h>
 #include <share.h>
 
 FILE *  __alloc_file(void);

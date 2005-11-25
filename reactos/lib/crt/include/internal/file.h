@@ -13,13 +13,12 @@
 #ifndef __CRT_INTERNAL_FILE_H
 #define __CRT_INTERNAL_FILE_H
 
-#include <stdio.h>
-#include <fcntl.h>
+#ifndef _CRT_PRECOMP_H
+#error DO NOT INCLUDE THIS HEADER DIRECTLY
+#endif
+
 #include <stdarg.h>
 #include <time.h>
-
-#include <windef.h>
-#include <winbase.h>
 
 #ifndef _IORMONCL
 #define _IORMONCL 004000  /* remove on close, for temp files */

@@ -59,7 +59,6 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <ctype.h>
 #include <math.h>
 #include <internal/ieee.h>
 

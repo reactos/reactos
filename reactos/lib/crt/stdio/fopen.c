@@ -27,13 +27,9 @@
 
 #include "precomp.h"
 
-#include <sys/types.h>
-#include <fcntl.h>
 #include <tchar.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
-
-
 
 FILE* _tfopen(const _TCHAR *file, const _TCHAR *mode)
 {

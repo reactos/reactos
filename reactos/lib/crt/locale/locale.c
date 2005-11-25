@@ -6,7 +6,6 @@
 
 #include "precomp.h"
 #include <locale.h>
-#include <limits.h>
 #include <internal/tls.h>
 
 #define NDEBUG

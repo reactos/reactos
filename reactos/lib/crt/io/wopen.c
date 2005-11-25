@@ -16,7 +16,6 @@
 #if !defined(NDEBUG) && defined(DBG)
 #include <stdarg.h>
 #endif
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <share.h>
 

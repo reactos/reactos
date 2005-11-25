@@ -37,7 +37,6 @@
 
 #include "precomp.h"
 
-#include <fcntl.h>
 #include "tzfile.h"
 #include "posixrul.h"
 

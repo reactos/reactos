@@ -4,8 +4,6 @@
 
 #include "precomp.h"
 
-#include <fcntl.h>
-
 /*
  * @implemented
  */

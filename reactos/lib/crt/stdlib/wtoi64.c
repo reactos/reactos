@@ -10,10 +10,6 @@
 
 #include "precomp.h"
 
-#include <ctype.h>
-#include <stdlib.h>
-
-
 /*
  * @implemented
  */

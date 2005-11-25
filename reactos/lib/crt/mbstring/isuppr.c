@@ -8,8 +8,7 @@
  *              12/04/99: Created
  */
 
-#include <mbctype.h>
-#include <ctype.h>
+#include "precomp.h"
 
 /*
  * code page 952 only
