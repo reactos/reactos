@@ -26,6 +26,8 @@
  *      05-01-2004  Created
  */
 #include <windows.h>
+#include <initguid.h>
+#include <devguid.h>
 #include <commctrl.h>
 #include <cpl.h>
 
