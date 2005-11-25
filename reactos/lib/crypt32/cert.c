@@ -347,6 +347,7 @@ static void CRYPT_InitCertRef(PWINE_CERT_CONTEXT_REF ref,
     memcpy(&ref->cert, context, sizeof(ref->cert));
     ref->context = context;
     InterlockedIncrement(&context->ref);
+    TRACE("%p's ref count is %ld\n", context, context->ref);
     ref->cert.hCertStore = store;
 }
 
@@ -356,6 +357,7 @@ static PWINE_CERT_CONTEXT_REF CRYPT_CreateCertRef(PWINE_CERT_CONTEXT context,
     PWINE_CERT_CONTEXT_REF pCertRef = CryptMemAlloc(
      sizeof(WINE_CERT_CONTEXT_REF));
 
+    TRACE("(%p, %p)\n", context, store);
     if (pCertRef)
         CRYPT_InitCertRef(pCertRef, context, store);
     return pCertRef;
@@ -461,6 +463,7 @@ static BOOL WINAPI CRYPT_MemAddCert(HCERTSTORE store, PCCERT_CONTEXT pCert,
     }
     else
         ret = FALSE;
+    TRACE("returning %d\n", ret);
     return ret;
 }
 
@@ -483,9 +486,12 @@ static PWINE_CERT_CONTEXT_REF CRYPT_MemEnumCert(PWINECRYPT_CERTSTORE store,
     if (listNext)
     {
         ret = CryptMemAlloc(sizeof(WINE_CERT_LIST_ENTRY));
-        memcpy(ret, LIST_ENTRY(listNext, WINE_CERT_LIST_ENTRY, entry),
-         sizeof(WINE_CERT_LIST_ENTRY));
-        InterlockedIncrement(&ret->cert.context->ref);
+        if (ret)
+        {
+            memcpy(ret, LIST_ENTRY(listNext, WINE_CERT_LIST_ENTRY, entry),
+             sizeof(WINE_CERT_LIST_ENTRY));
+            InterlockedIncrement(&ret->cert.context->ref);
+        }
     }
     else
     {
@@ -498,13 +504,15 @@ static PWINE_CERT_CONTEXT_REF CRYPT_MemEnumCert(PWINECRYPT_CERTSTORE store,
     return (PWINE_CERT_CONTEXT_REF)ret;
 }
 
+static void CRYPT_UnrefCertificateContext(PWINE_CERT_CONTEXT_REF ref);
+
 static BOOL WINAPI CRYPT_MemDeleteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT pCertContext, DWORD dwFlags)
 {
     WINE_MEMSTORE *store = (WINE_MEMSTORE *)hCertStore;
     WINE_CERT_CONTEXT_REF *ref = (WINE_CERT_CONTEXT_REF *)pCertContext;
     PWINE_CERT_LIST_ENTRY cert, next;
-    BOOL ret;
+    BOOL ret = TRUE;
 
     /* Find the entry associated with the passed-in context, since the
      * passed-in context may not be a list entry itself (e.g. if it came from
@@ -522,11 +530,16 @@ static BOOL WINAPI CRYPT_MemDeleteCert(HCERTSTORE hCertStore,
              * protected.
              */
             list_remove(&cert->entry);
+            /* FIXME: generally I should do the following, otherwise there is
+             * a memory leak.  But doing so when called by
+             * CertDeleteCertificateFromStore results in a double free, so
+             * leaving commented for now.
+            ret = CertFreeCertificateContext((PCCERT_CONTEXT)cert);
+             */
             cert->entry.prev = cert->entry.next = &store->certs;
             break;
         }
     }
-    ret = TRUE;
     LeaveCriticalSection(&store->cs);
     return ret;
 }
@@ -662,73 +675,41 @@ static PWINE_COLLECTION_CERT_CONTEXT CRYPT_CollectionAdvanceEnum(
 {
     PWINE_COLLECTION_CERT_CONTEXT ret;
     PWINE_CERT_CONTEXT_REF child;
+    struct list *storeNext = list_next(&store->stores, &storeEntry->entry);
 
     TRACE("(%p, %p, %p)\n", store, storeEntry, pPrev);
 
+    child = storeEntry->store->enumCert((HCERTSTORE)storeEntry->store,
+     pPrev ? pPrev->childContext : NULL);
     if (pPrev)
     {
-        child = storeEntry->store->enumCert((HCERTSTORE)storeEntry->store,
-         pPrev->childContext);
-        if (child)
+        pPrev->childContext = NULL;
+        CertFreeCertificateContext((PCCERT_CONTEXT)pPrev);
+        pPrev = NULL;
+    }
+    if (child)
+    {
+        ret = (PWINE_COLLECTION_CERT_CONTEXT)CRYPT_CollectionCreateCertRef(
+         child->context, store);
+        if (ret)
         {
-            ret = pPrev;
-            memcpy(&ret->cert, child, sizeof(WINE_CERT_CONTEXT_REF));
-            ret->cert.cert.hCertStore = (HCERTSTORE)store;
-            InterlockedIncrement(&ret->cert.context->ref);
+            ret->entry = storeEntry;
             ret->childContext = child;
         }
         else
-        {
-            struct list *storeNext = list_next(&store->stores,
-             &storeEntry->entry);
-
-            pPrev->childContext = NULL;
-            CertFreeCertificateContext((PCCERT_CONTEXT)pPrev);
-            if (storeNext)
-            {
-                storeEntry = LIST_ENTRY(storeNext, WINE_STORE_LIST_ENTRY,
-                 entry);
-                ret = CRYPT_CollectionAdvanceEnum(store, storeEntry, NULL);
-            }
-            else
-            {
-                SetLastError(CRYPT_E_NOT_FOUND);
-                ret = NULL;
-            }
-        }
+            CertFreeCertificateContext((PCCERT_CONTEXT)child);
     }
     else
     {
-        child = storeEntry->store->enumCert((HCERTSTORE)storeEntry->store,
-         NULL);
-        if (child)
+        if (storeNext)
         {
-            ret = (PWINE_COLLECTION_CERT_CONTEXT)CRYPT_CollectionCreateCertRef(
-             child->context, store);
-            if (ret)
-            {
-                ret->entry = storeEntry;
-                ret->childContext = child;
-            }
-            else
-                CertFreeCertificateContext((PCCERT_CONTEXT)child);
+            storeEntry = LIST_ENTRY(storeNext, WINE_STORE_LIST_ENTRY, entry);
+            ret = CRYPT_CollectionAdvanceEnum(store, storeEntry, NULL);
         }
         else
         {
-            struct list *storeNext = list_next(&store->stores,
-             &storeEntry->entry);
-
-            if (storeNext)
-            {
-                storeEntry = LIST_ENTRY(storeNext, WINE_STORE_LIST_ENTRY,
-                 entry);
-                ret = CRYPT_CollectionAdvanceEnum(store, storeEntry, NULL);
-            }
-            else
-            {
-                SetLastError(CRYPT_E_NOT_FOUND);
-                ret = NULL;
-            }
+            SetLastError(CRYPT_E_NOT_FOUND);
+            ret = NULL;
         }
     }
     TRACE("returning %p\n", ret);
@@ -923,11 +904,9 @@ static void CRYPT_RegReadSerializedFromReg(PWINE_REGSTORE store, HKEY key,
                                          CERT_STORE_ADD_REPLACE_EXISTING, NULL);
                                     }
                                     else
-                                    {
                                         TRACE("hash doesn't match, ignoring\n");
-                                        contextInterface->free(context);
-                                    }
                                 }
+                                contextInterface->free(context);
                             }
                         }
                     }
@@ -1139,8 +1118,7 @@ static BOOL WINAPI CRYPT_RegAddCert(HCERTSTORE hCertStore, PCCERT_CONTEXT cert,
 static PWINE_CERT_CONTEXT_REF CRYPT_RegCreateCertRef(
  PWINE_CERT_CONTEXT context, HCERTSTORE store)
 {
-    PWINE_REG_CERT_CONTEXT ret = CryptMemAlloc(
-     sizeof(WINE_REG_CERT_CONTEXT));
+    PWINE_REG_CERT_CONTEXT ret = CryptMemAlloc(sizeof(WINE_REG_CERT_CONTEXT));
 
     if (ret)
     {
@@ -1159,33 +1137,22 @@ static PWINE_CERT_CONTEXT_REF CRYPT_RegEnumCert(PWINECRYPT_CERTSTORE store,
 
     TRACE("(%p, %p)\n", store, pPrev);
 
-    if (pPrev)
+    child = rs->memStore->enumCert(rs->memStore, prev ? prev->childContext
+     : NULL);
+    if (prev)
     {
-        child = rs->memStore->enumCert(rs->memStore, prev->childContext);
-        if (child)
-        {
-            ret = (PWINE_REG_CERT_CONTEXT)pPrev;
-            memcpy(&ret->cert, child, sizeof(WINE_CERT_CONTEXT_REF));
-            ret->cert.cert.hCertStore = (HCERTSTORE)store;
-            ret->childContext = child;
-        }
+        prev->childContext = NULL;
+        CertFreeCertificateContext((PCCERT_CONTEXT)prev);
+        prev = NULL;
     }
-    else
+    if (child)
     {
-        child = rs->memStore->enumCert(rs->memStore, NULL);
-        if (child)
-        {
-            ret = CryptMemAlloc(sizeof(WINE_REG_CERT_CONTEXT));
-
-            if (ret)
-            {
-                memcpy(&ret->cert, child, sizeof(WINE_CERT_CONTEXT_REF));
-                ret->cert.cert.hCertStore = (HCERTSTORE)store;
-                ret->childContext = child;
-            }
-            else
-                CertFreeCertificateContext((PCCERT_CONTEXT)child);
-        }
+        ret = (PWINE_REG_CERT_CONTEXT)CRYPT_RegCreateCertRef(child->context,
+         store);
+        if (ret)
+            ret->childContext = child;
+        else
+            CertFreeCertificateContext((PCCERT_CONTEXT)child);
     }
     return (PWINE_CERT_CONTEXT_REF)ret;
 }
@@ -2349,7 +2316,8 @@ BOOL WINAPI CertDeleteCertificateFromStore(PCCERT_CONTEXT pCertContext)
         else
         {
             ret = hcs->deleteCert(hcs, pCertContext, 0);
-            CertFreeCertificateContext(pCertContext);
+            if (ret)
+                CertFreeCertificateContext(pCertContext);
         }
     }
     return ret;
@@ -2884,6 +2852,17 @@ BOOL WINAPI CertAddSerializedElementToStore(HCERTSTORE hCertStore,
     return ret;
 }
 
+static void CRYPT_UnrefCertificateContext(PWINE_CERT_CONTEXT_REF ref)
+{
+    if (InterlockedDecrement(&ref->context->ref) == 0)
+    {
+        TRACE("%p's ref count is 0, freeing\n", ref->context);
+        CRYPT_FreeCert(ref->context);
+    }
+    else
+        TRACE("%p's ref count is %ld\n", ref->context, ref->context->ref);
+}
+
 BOOL WINAPI CertFreeCertificateContext(PCCERT_CONTEXT pCertContext)
 {
     TRACE("(%p)\n", pCertContext);
@@ -2893,16 +2872,11 @@ BOOL WINAPI CertFreeCertificateContext(PCCERT_CONTEXT pCertContext)
         PWINE_CERT_CONTEXT_REF ref = (PWINE_CERT_CONTEXT_REF)pCertContext;
         PWINECRYPT_CERTSTORE store = (PWINECRYPT_CERTSTORE)ref->cert.hCertStore;
 
-        if (InterlockedDecrement(&ref->context->ref) == 0)
-        {
-            TRACE("%p's ref count is 0, freeing\n", ref->context);
-            CRYPT_FreeCert(ref->context);
-        }
-        else
-            TRACE("%p's ref count is %ld\n", ref->context, ref->context->ref);
+        CRYPT_UnrefCertificateContext(ref);
         if (store && store->dwMagic == WINE_CRYPTCERTSTORE_MAGIC &&
          store->freeCert)
             store->freeCert(ref);
+        TRACE("freeing %p\n", ref);
         CryptMemFree(ref);
     }
     return TRUE;

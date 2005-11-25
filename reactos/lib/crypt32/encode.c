@@ -46,6 +46,7 @@
 #include "snmp.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
+#include "crypt32_private.h"
 
 /* This is a bit arbitrary, but to set some limit: */
 #define MAX_ENCODED_LEN 0x02000000
@@ -1392,7 +1393,7 @@ static BOOL WINAPI CRYPT_AsnEncodeRdn(DWORD dwCertEncodingType, CERT_RDN *rdn,
     __EXCEPT(page_fault)
     {
         SetLastError(STATUS_ACCESS_VIOLATION);
-        return FALSE;
+        ret = FALSE;
     }
     __ENDTRY
     CryptMemFree(blobs);
