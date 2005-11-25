@@ -58,6 +58,7 @@ typedef struct _HARDWARE_PAGE_DATA
     HWND hWnd;
     HWND hWndDevList;
     HINSTANCE hComCtl32; /* only save this to keep track of the references */
+    INT DevListViewHeight;
     SP_CLASSIMAGELIST_DATA ClassImageListData;
     HWPAGE_DISPLAYMODE DisplayMode;
 
@@ -188,8 +189,6 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     if (HwNewDevInfo != NULL)
                     {
                         DevInfo->HwDevInfo = HwNewDevInfo;
-                        DevInfo->HwDevInfo[DevInfo->ItemCount].ClassDevInfo = DevInfo;
-                        DevInfo->HwDevInfo[DevInfo->ItemCount++].DevInfoData = DevInfoData;
                     }
                     else
                     {
@@ -203,17 +202,15 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     DevInfo->HwDevInfo = HeapAlloc(GetProcessHeap(),
                                                    0,
                                                    sizeof(HWDEVINFO));
-                    if (DevInfo->HwDevInfo != NULL)
-                    {
-                        DevInfo->HwDevInfo[DevInfo->ItemCount].ClassDevInfo = DevInfo;
-                        DevInfo->HwDevInfo[DevInfo->ItemCount++].DevInfoData = DevInfoData;
-                    }
-                    else
+                    if (DevInfo->HwDevInfo == NULL)
                     {
                         DPRINT1("Unable to allocate memory for a SP_DEVINFO_DATA structures!\n");
                         break;
                     }
                 }
+
+                DevInfo->HwDevInfo[DevInfo->ItemCount].ClassDevInfo = DevInfo;
+                DevInfo->HwDevInfo[DevInfo->ItemCount++].DevInfoData = DevInfoData;
 
                 if ((SetupDiGetDeviceRegistryProperty(DevInfo->hDevInfo,
                                                       &DevInfoData,
@@ -327,7 +324,7 @@ HardwareDlgResize(IN PHARDWARE_PAGE_DATA hpd,
 {
     HDWP dwp;
     HWND hControl, hButton;
-    INT Width, x, y, TopBias = 0;
+    INT Width, x, y;
     RECT rc, rcButton;
     POINT pt = {0};
     POINT ptMargin = {0};
@@ -368,19 +365,14 @@ HardwareDlgResize(IN PHARDWARE_PAGE_DATA hpd,
                         hpd->hWnd,
                         &pt,
                         1);
-        if (hpd->DisplayMode == HWPD_LARGELIST)
-        {
-            /* increase the size of the list view control by 2/3 */
-            TopBias = ((rc.bottom - rc.top) * 2) / 3;
-        }
-        y = pt.y + TopBias + rc.bottom - rc.top + ptMargin.y;
+        y = pt.y + hpd->DevListViewHeight + ptMargin.y;
         if (!(dwp = DeferWindowPos(dwp,
                                    hpd->hWndDevList,
                                    NULL,
                                    0,
                                    0,
                                    Width,
-                                   rc.bottom - rc.top + TopBias,
+                                   hpd->DevListViewHeight,
                                    SWP_NOMOVE | SWP_NOZORDER)))
         {
             return;
@@ -572,8 +564,21 @@ HardwareDlgProc(IN HWND hwndDlg,
 
                     SetupDiGetClassImageList(&hpd->ClassImageListData);
 
+                    /* calculate the size of the devices list view control */
                     hpd->hWndDevList = GetDlgItem(hwndDlg,
                                                   IDC_LV_DEVICES);
+                    if (hpd->hWndDevList != NULL)
+                    {
+                        RECT rcClient;
+                        GetClientRect(hpd->hWndDevList,
+                                      &rcClient);
+                        hpd->DevListViewHeight = rcClient.bottom;
+
+                        if (hpd->DisplayMode == HWPD_LARGELIST)
+                        {
+                            hpd->DevListViewHeight = (hpd->DevListViewHeight * 3) / 2;
+                        }
+                    }
 
                     /* subclass the parent window */
                     hWndParent = GetAncestor(hwndDlg,
@@ -790,7 +795,6 @@ Cleanup:
  * NOTE
  *
  */
-
 HWND
 WINAPI
 DeviceCreateHardwarePage(IN HWND hWndParent,
