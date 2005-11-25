@@ -29,15 +29,21 @@ void CompilationUnitTest::Run()
 	Module& module1 = *project.modules[0];
 	IS_TRUE ( module1.type == BuildTool );
 	
-	ARE_EQUAL ( 2, module1.non_if_data.files.size());
+	ARE_EQUAL ( 3, module1.non_if_data.files.size());
 	ARE_EQUAL ( "dir1" SSEP "file1.c", module1.non_if_data.files[0]->name );
 	ARE_EQUAL ( "dir1" SSEP "file2.c", module1.non_if_data.files[1]->name );
+	ARE_EQUAL ( "dir1" SSEP "file3.c", module1.non_if_data.files[2]->name );
 
-	ARE_EQUAL ( 1, module1.non_if_data.compilationUnits.size () );
+	ARE_EQUAL ( 2, module1.non_if_data.compilationUnits.size () );
 
 	CompilationUnit& compilationUnit1 = *module1.non_if_data.compilationUnits[0];
 	ARE_EQUAL ( 2, compilationUnit1.files.size () );
 
 	ARE_EQUAL ( "dir1" SSEP "file1.c", compilationUnit1.files[0]->name );
 	ARE_EQUAL ( "dir1" SSEP "file2.c", compilationUnit1.files[1]->name );
+
+	CompilationUnit& compilationUnit2 = *module1.non_if_data.compilationUnits[1];
+	ARE_EQUAL ( 1, compilationUnit2.files.size () );
+
+	ARE_EQUAL ( "dir1" SSEP "file3.c", compilationUnit2.files[0]->name );
 }

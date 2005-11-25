@@ -448,6 +448,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
                                ParseContext& parseContext )
 {
 	If* pOldIf = parseContext.ifData;
+	CompilationUnit* pOldCompilationUnit = parseContext.compilationUnit;
 	bool subs_invalid = false;
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () > 0 )
@@ -654,6 +655,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
 	parseContext.ifData = pOldIf;
+	parseContext.compilationUnit = pOldCompilationUnit;
 }
 
 ModuleType

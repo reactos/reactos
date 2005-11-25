@@ -6,6 +6,7 @@
 				<file>file1.c</file>
 				<file>file2.c</file>
 			</compilationunit>
+			<file>file3.c</file>
 		</module>
 	</directory>
 </project>
