@@ -106,6 +106,10 @@ extern "C" {
 #define CR_INVALID_INDEX                  0x0000003A
 #define CR_INVALID_STRUCTURE_SIZE         0x0000003B
 
+#define RegDisposition_OpenAlways         0x00000000
+#define RegDisposition_OpenExisting       0x00000001
+#define RegDisposition_Bits               0x00000001
+
 
 typedef DWORD RETURN_TYPE;
 typedef RETURN_TYPE CONFIGRET;
@@ -223,6 +227,12 @@ typedef RESOURCEID *PRESOURCEID;
 
 #define CM_DRP_MIN                         0x00000001
 #define CM_DRP_MAX                         0x00000017
+
+#define CM_REGISTRY_HARDWARE               0x00000000
+#define CM_REGISTRY_SOFTWARE               0x00000001
+#define CM_REGISTRY_USER                   0x00000100
+#define CM_REGISTRY_CONFIG                 0x00000200
+#define CM_REGISTRY_BITS                   0x00000301
 
 
 typedef struct BusNumber_Des_s {
