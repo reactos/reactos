@@ -8,7 +8,7 @@ Header Name:
 
 Abstract:
 
-    Type definitions for the Debug Subsystem.
+    Type definitions for the User Mode Debugging Facility.
 
 Author:
 
@@ -22,6 +22,8 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
+#include <lpctypes.h>
 
 //
 // Debug Object Access Masks

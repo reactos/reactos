@@ -1,4 +1,4 @@
-Complete list of NDK Fixmes before 1.0 Release (Nov 25th 2005)
+Complete list of NDK Fixmes before 1.0 Release (Nov 27th 2005)
 --------------------------------------------------------------
 ______________________________________________________________________________________
 [CRITICAL]	- Breaking compatibility with official structures.
@@ -22,17 +22,15 @@ ________________________________________________________________________________
 |asm.h		- Selector names are not official.
 |extypes.h	- Class 42 (SYSTEM_POWER_INFORMATION causes conflict).
 |extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined.
+|ntndk.h	- Incorrect rounding macro names
 |
 [MINOR]		- Related to location of functions, comments, etc.
 |arch/ketypes.h	- _KDPC_DATA, PP_LOOKASIDE_LIST shouldn't be there.
-|zwfuncs.h	- APIs are not organized.
 |pstypes.h	- Check if _PAGEFAULT_HISTORY shouldn't go in mmtypes.h instead.
-|lpctypes.h	- Consider moving _HARDERROR_MSG to extypes.h?
 |lpctypes.h	- Consider moving _CLIENT_DIED_MSG to pstypes.h?
 |ketypes.h	- Consider moving KNODE to mmtypes.h?
 |ketypes.h	- Consider moving NtBuildNumber to extypes.h?
 |extypes.h	- consider moving PORT_ALL_ACCESS to lpctypes.h
-|GENERIC	- Make sure that all files can be included in standalone!
 |_____________________________________________________________________________________
 
 
@@ -71,7 +69,6 @@ lib\syssetup\logfile.c: #include <ndk/ntndk.h>
 lib\wdmguid\wdmguid.c: #include <ndk/sysguid.h>
 regtests\shared\regtests.c: #include <ndk/ntndk.h>
 services\umpnpmgr\umpnpmgr.c: #include <ndk/ntndk.h>
-subsys\csr\main.c: #include <ndk/ntndk.h>
 subsys\ntvdm\ntvdm.c: #include <ndk/ntndk.h>
 subsys\system\autochk\autochk.c: #include <ndk/ntndk.h>
 subsys\system\lsass\lsass.c: #include <ndk/ntndk.h>
@@ -111,15 +108,12 @@ lib\setupapi\setupapi_private.h: #include <ndk/ntndk.h>
 lib\smlib\precomp.h: #include <ndk/ntndk.h>
 lib\user32\include\user32.h: #include <ndk/ntndk.h>
 lib\userenv\precomp.h: #include <ndk/ntndk.h>
-lib\ws2help\ws2help.h: #include <ndk/ntndk.h>
-lib\ws2_32\include\ws2_32.h: #include <ndk/ntndk.h>
 lib\wshirda\wshirda.h: #include <ndk/ntndk.h>
 ntoskrnl\include\ntoskrnl.h: #include <ndk/ntndk.h>
 ntoskrnl\include\internal\napi.h: #include <ndk/asm.h>
 services\dhcp\include\rosdhcp.h: #include <ndk/ntndk.h>
 services\eventlog\eventlog.h: #include <ndk/ntndk.h>
 services\rpcss\rpcss.h: #include <ndk/ntndk.h>
-subsys\csr\csrsrv\srv.h: #include <ndk/ntndk.h>
 subsys\csrss\csrss.h: #include <ndk/ntndk.h>
 subsys\csrss\include\api.h: #include <ndk/ntndk.h>
 subsys\csrss\win32csr\w32csr.h: #include <ndk/ntndk.h>
@@ -128,8 +122,3 @@ subsys\system\cmd\precomp.h: #include <ndk/ntndk.h>
 subsys\system\services\services.h: #include <ndk/ntndk.h>
 subsys\system\taskmgr\precomp.h: #include <ndk/ntndk.h>
 subsys\system\usetup\usetup.h: #include <ndk/ntndk.h>
-subsys\system\winlogon\winlogon.h: #include <ndk/ntndk.h>
-subsys\win\basesrv\basesrv.h: #include <ndk/ntndk.h>
-subsys\win\winsrv\winsrv.h: #include <ndk/ntndk.h>
-subsys\win32k\w32k.h: #include <ndk/ntndk.h>
-subsys\win32k\include\napi.h: #include <ndk/asm.h>

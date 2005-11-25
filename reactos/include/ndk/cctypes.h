@@ -22,6 +22,9 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
+
+#ifndef NTOS_MODE_USER
 
 //
 // Kernel Exported CcData
@@ -29,5 +32,6 @@ Author:
 extern ULONG NTSYSAPI CcFastReadNotPossible;
 extern ULONG NTSYSAPI CcFastReadWait;
 
+#endif
 #endif // _CCTYPES_H
 

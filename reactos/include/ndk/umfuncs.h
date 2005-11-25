@@ -20,6 +20,12 @@ Author:
 #define _UMFUNCS_H
 
 //
+// Dependencies
+//
+#include <umtypes.h>
+#include <dbgktypes.h>
+
+//
 // Don't force inclusion of csrss header, leave this opaque.
 //
 struct _CSR_API_MESSAGE;

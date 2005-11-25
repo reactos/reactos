@@ -22,6 +22,7 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
 
 //
 // Privilege constants

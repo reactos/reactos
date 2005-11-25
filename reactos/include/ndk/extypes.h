@@ -22,14 +22,15 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
 #include <cfg.h>
 #if defined(_MSC_VER) && !defined(NTOS_MODE_USER)
 #include <ntimage.h>
 #endif
-#include "cmtypes.h"
-#include "ketypes.h"
-#include "pstypes.h"
-#include "potypes.h"
+#include <cmtypes.h>
+#include <ketypes.h>
+#include <potypes.h>
+#include <lpctypes.h>
 
 //
 // Atom and Language IDs
@@ -329,6 +330,21 @@ typedef struct _HANDLE_TABLE
 } HANDLE_TABLE, *PHANDLE_TABLE;
 
 #endif
+
+//
+// Hard Error LPC Message
+//
+typedef struct _HARDERROR_MSG
+{
+    PORT_MESSAGE h;
+    NTSTATUS Status;
+    LARGE_INTEGER ErrorTime;
+    ULONG ValidResponseOptions;
+    ULONG Response;
+    ULONG NumberOfParameters;
+    ULONG UnicodeStringParameterMask;
+    ULONG Parameters[MAXIMUM_HARDERROR_PARAMETERS];
+} HARDERROR_MSG, *PHARDERROR_MSG;
 
 //
 // Information Structures for NtQueryMutant

@@ -20,6 +20,7 @@ Author:
 #define _NTDEF_
 #define _NTDEF_H
 #undef WIN32_NO_STATUS
+#define NTOS_MODE_USER
 
 //
 // Dependencies

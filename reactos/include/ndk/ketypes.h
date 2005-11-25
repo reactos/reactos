@@ -22,9 +22,13 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
 #ifndef NTOS_MODE_USER
 #include <arc/arc.h>
-#include "arch/ketypes.h"
+#include <haltypes.h>
+#include <potypes.h>
+#include <ifssupp.h>
+#include <arch/ketypes.h>
 #endif
 
 //

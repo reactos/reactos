@@ -22,7 +22,9 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
 
+#ifndef NTOS_MODE_USER
 //
 // Ownership Functions
 //
@@ -103,4 +105,5 @@ InbvSolidColorFill(
     IN ULONG Color
 );
 
+#endif
 #endif

@@ -22,8 +22,10 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
+#include <haltypes.h>
 
-#include "haltypes.h"
+#ifndef NTOS_MODE_USER
 
 //
 // Display Functions
@@ -169,5 +171,5 @@ HalSetEnvironmentVariable(
     IN PCH Value
 );
 
-
+#endif
 #endif

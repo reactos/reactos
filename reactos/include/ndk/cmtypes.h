@@ -22,8 +22,9 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
 #include <cfg.h>
-#include "iotypes.h"
+#include <iotypes.h>
 
 #define MAX_BUS_NAME 24
 
@@ -84,12 +85,6 @@ typedef enum _CM_SHARE_DISPOSITION
 #define CM_RESOURCE_PORT_POSITIVE_DECODE        0x0020
 #define CM_RESOURCE_PORT_PASSIVE_DECODE         0x0040
 #define CM_RESOURCE_PORT_WINDOW_DECODE          0x0080
-
-//
-// Interrupt Resource Descriptor Flags
-//
-#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE   0x0000
-#define CM_RESOURCE_INTERRUPT_LATCHED           0x0001
 
 //
 // Memory Resource Descriptor Flags

@@ -22,6 +22,9 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
+
+#ifndef NTOS_MODE_USER
 
 //
 // Multi-Boot Flags (FIXME)
@@ -104,5 +107,6 @@ extern PHAL_PRIVATE_DISPATCH NTSYSAPI HalPrivateDispatchTable;
 #endif
 extern ULONG NTSYSAPI KdComPortInUse;
 
+#endif
 #endif
 

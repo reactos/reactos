@@ -22,7 +22,10 @@ Author:
 //
 // Dependencies
 //
-#include "ketypes.h"
+#include <umtypes.h>
+#include <ketypes.h>
+
+#ifndef NTOS_MODE_USER
 
 //
 // APC Functions
@@ -246,4 +249,372 @@ KeRaiseUserException(
     IN NTSTATUS ExceptionCode
 );
 
+#endif
+
+//
+// Native Calls
+//
+NTSTATUS
+NTAPI
+NtContinue(
+    IN PCONTEXT Context,
+    IN BOOLEAN TestAlert
+);
+
+NTSTATUS
+NTAPI
+NtCallbackReturn(
+    PVOID Result,
+    ULONG ResultLength,
+    NTSTATUS Status
+);
+
+NTSTATUS
+NTAPI
+NtCreateProfile(
+    OUT PHANDLE ProfileHandle,
+    IN HANDLE ProcessHandle,
+    IN PVOID ImageBase,
+    IN ULONG ImageSize,
+    IN ULONG Granularity,
+    OUT PVOID Buffer,
+    IN ULONG ProfilingSize,
+    IN KPROFILE_SOURCE Source,
+    IN KAFFINITY ProcessorMask
+);
+
+NTSTATUS
+NTAPI
+NtDelayExecution(
+    IN BOOLEAN Alertable,
+    IN LARGE_INTEGER *Interval
+);
+
+NTSTATUS
+NTAPI
+NtFlushInstructionCache(
+    IN HANDLE ProcessHandle,
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytesToFlush
+);
+
+NTSTATUS
+NTAPI
+NtGetContextThread(
+    IN HANDLE ThreadHandle,
+    OUT PCONTEXT Context
+);
+
+ULONG
+NTAPI
+NtGetTickCount(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+NtQueryIntervalProfile(
+    IN  KPROFILE_SOURCE ProfileSource,
+    OUT PULONG Interval
+);
+
+NTSTATUS
+NTAPI
+NtQueryPerformanceCounter(
+    IN PLARGE_INTEGER Counter,
+    IN PLARGE_INTEGER Frequency
+);
+
+NTSTATUS
+NTAPI
+NtQuerySystemTime(
+    OUT PLARGE_INTEGER CurrentTime
+);
+
+NTSTATUS
+NTAPI
+NtQueryTimerResolution(
+    OUT PULONG MinimumResolution,
+    OUT PULONG MaximumResolution,
+    OUT PULONG ActualResolution
+);
+
+NTSTATUS
+NTAPI
+NtQueueApcThread(
+    HANDLE ThreadHandle,
+    PKNORMAL_ROUTINE ApcRoutine,
+    PVOID NormalContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2
+);
+
+NTSTATUS
+NTAPI
+NtRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN BOOLEAN SearchFrames
+);
+
+NTSTATUS
+NTAPI
+NtSetContextThread(
+    IN HANDLE ThreadHandle,
+    IN PCONTEXT Context
+);
+
+NTSTATUS
+NTAPI
+NtSetIntervalProfile(
+    ULONG Interval,
+    KPROFILE_SOURCE ClockSource
+);
+
+NTSTATUS
+NTAPI
+NtSetLdtEntries(
+    ULONG Selector1,
+    LDT_ENTRY LdtEntry1,
+    ULONG Selector2,
+    LDT_ENTRY LdtEntry2
+);
+
+NTSTATUS
+NTAPI
+NtSetSystemTime(
+    IN PLARGE_INTEGER SystemTime,
+    IN PLARGE_INTEGER NewSystemTime OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+NtSetTimerResolution(
+    IN ULONG RequestedResolution,
+    IN BOOLEAN SetOrUnset,
+    OUT PULONG ActualResolution
+);
+
+NTSTATUS
+NTAPI
+NtStartProfile(
+    IN HANDLE ProfileHandle
+);
+
+NTSTATUS
+NTAPI
+NtStopProfile(
+    IN HANDLE ProfileHandle
+);
+
+NTSTATUS
+NTAPI
+NtTestAlert(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+NtVdmControl(
+    ULONG ControlCode,
+    PVOID ControlData
+);
+
+NTSTATUS
+NTAPI
+NtW32Call(
+    IN ULONG RoutineIndex,
+    IN PVOID Argument,
+    IN ULONG ArgumentLength,
+    OUT PVOID* Result OPTIONAL,
+    OUT PULONG ResultLength OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+NtYieldExecution(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+ZwContinue(
+    IN PCONTEXT Context,
+    IN BOOLEAN TestAlert
+);
+
+NTSTATUS
+NTAPI
+ZwCallbackReturn(
+    PVOID Result,
+    ULONG ResultLength,
+    NTSTATUS Status
+);
+
+NTSTATUS
+NTAPI
+ZwCreateProfile(
+    OUT PHANDLE ProfileHandle,
+    IN HANDLE ProcessHandle,
+    IN PVOID ImageBase,
+    IN ULONG ImageSize,
+    IN ULONG Granularity,
+    OUT PVOID Buffer,
+    IN ULONG ProfilingSize,
+    IN KPROFILE_SOURCE Source,
+    IN KAFFINITY ProcessorMask
+);
+
+NTSTATUS
+NTAPI
+ZwDelayExecution(
+    IN BOOLEAN Alertable,
+    IN LARGE_INTEGER *Interval
+);
+
+NTSTATUS
+NTAPI
+ZwFlushInstructionCache(
+    IN HANDLE ProcessHandle,
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytesToFlush
+);
+
+NTSTATUS
+NTAPI
+ZwGetContextThread(
+    IN HANDLE ThreadHandle,
+    OUT PCONTEXT Context
+);
+
+ULONG
+NTAPI
+ZwGetTickCount(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+ZwQueryIntervalProfile(
+    IN  KPROFILE_SOURCE ProfileSource,
+    OUT PULONG Interval
+);
+
+NTSTATUS
+NTAPI
+ZwQueryPerformanceCounter(
+    IN PLARGE_INTEGER Counter,
+    IN PLARGE_INTEGER Frequency
+);
+
+NTSTATUS
+NTAPI
+ZwQuerySystemTime(
+    OUT PLARGE_INTEGER CurrentTime
+);
+
+NTSTATUS
+NTAPI
+ZwQueryTimerResolution(
+    OUT PULONG MinimumResolution,
+    OUT PULONG MaximumResolution,
+    OUT PULONG ActualResolution
+);
+
+NTSTATUS
+NTAPI
+ZwQueueApcThread(
+    HANDLE ThreadHandle,
+    PKNORMAL_ROUTINE ApcRoutine,
+    PVOID NormalContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2
+);
+
+NTSTATUS
+NTAPI
+ZwRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN BOOLEAN SearchFrames
+);
+
+NTSTATUS
+NTAPI
+ZwSetContextThread(
+    IN HANDLE ThreadHandle,
+    IN PCONTEXT Context
+);
+
+NTSTATUS
+NTAPI
+ZwSetIntervalProfile(
+    ULONG Interval,
+    KPROFILE_SOURCE ClockSource
+);
+
+NTSTATUS
+NTAPI
+ZwSetLdtEntries(
+    ULONG Selector1,
+    LDT_ENTRY LdtEntry1,
+    ULONG Selector2,
+    LDT_ENTRY LdtEntry2
+);
+
+NTSTATUS
+NTAPI
+ZwSetSystemTime(
+    IN PLARGE_INTEGER SystemTime,
+    IN PLARGE_INTEGER NewSystemTime OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+ZwSetTimerResolution(
+    IN ULONG RequestedResolution,
+    IN BOOLEAN SetOrUnset,
+    OUT PULONG ActualResolution
+);
+
+NTSTATUS
+NTAPI
+ZwStartProfile(
+    IN HANDLE ProfileHandle
+);
+
+NTSTATUS
+NTAPI
+ZwStopProfile(
+    IN HANDLE ProfileHandle
+);
+
+NTSTATUS
+NTAPI
+ZwTestAlert(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+ZwVdmControl(
+    ULONG ControlCode,
+    PVOID ControlData
+);
+
+NTSTATUS
+NTAPI
+ZwW32Call(
+    IN ULONG RoutineIndex,
+    IN PVOID Argument,
+    IN ULONG ArgumentLength,
+    OUT PVOID* Result OPTIONAL,
+    OUT PULONG ResultLength OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+ZwYieldExecution(
+    VOID
+);
 #endif

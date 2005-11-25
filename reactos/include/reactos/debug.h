@@ -21,6 +21,29 @@
 #define CHECKED
 #endif
 
+#if 0
+/* Define DbgPrint/RtlAssert unless the NDK is used */
+#if !defined(_NTNDK_) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
+
+ULONG
+__cdecl
+DbgPrint(
+    IN PCH  Format,
+    IN ...
+);
+
+VOID
+NTAPI
+RtlAssert(
+    PVOID FailedAssertion,
+    PVOID FileName,
+    ULONG LineNumber,
+    PCHAR Message
+);
+
+#endif
+#endif
+
 #ifndef assert
 #ifndef NASSERT
 #define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }

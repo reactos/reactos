@@ -22,7 +22,10 @@ Author:
 //
 // Dependencies
 //
-#include "kdtypes.h"
+#include <umtypes.h>
+#include <kdtypes.h>
+
+#ifndef NTOS_MODE_USER
 
 //
 // Port Functions
@@ -102,4 +105,64 @@ BOOLEAN
 NTAPI
 KdPortEnableInterrupts(VOID);
 
+#endif
+
+//
+// Native Calls
+//
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryDebugFilterState(
+     ULONG ComponentId,
+     ULONG Level
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetDebugFilterState(
+    ULONG ComponentId,
+    ULONG Level,
+    BOOLEAN State
+);
+
+NTSTATUS
+NTAPI
+NtSystemDebugControl(
+    DEBUG_CONTROL_CODE ControlCode,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    PULONG ReturnLength
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+ZwQueryDebugFilterState(
+     ULONG ComponentId,
+     ULONG Level
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetDebugFilterState(
+    ULONG ComponentId,
+    ULONG Level,
+    BOOLEAN State
+);
+
+NTSTATUS
+NTAPI
+ZwSystemDebugControl(
+    DEBUG_CONTROL_CODE ControlCode,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    PULONG ReturnLength
+);
 #endif

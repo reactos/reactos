@@ -15,8 +15,8 @@ Author:
     Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
 
 --*/
-
 #ifndef _NTIFS_
+#ifndef NTOS_MODE_USER
 #define _NTIFS_
 
 typedef PVOID PRTL_HEAP_PARAMETERS;
@@ -128,4 +128,5 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
 
+#endif // !NTOS_MODE_USER
 #endif // _NTIFS_

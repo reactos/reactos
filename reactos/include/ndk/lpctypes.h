@@ -22,6 +22,8 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
+#include <pstypes.h>
 
 //
 // Maximum message size that can be sent through an LPC Port without a section
@@ -213,21 +215,6 @@ typedef struct _LPCP_CONNECTION_MESSAGE
 } LPCP_CONNECTION_MESSAGE, *PLPCP_CONNECTION_MESSAGE;
 
 #endif
-
-//
-// Hard Error LPC Message (FIXME: should go in extypes.h?)
-//
-typedef struct _HARDERROR_MSG
-{
-    PORT_MESSAGE h;
-    NTSTATUS Status;
-    LARGE_INTEGER ErrorTime;
-    ULONG ValidResponseOptions;
-    ULONG Response;
-    ULONG NumberOfParameters;
-    ULONG UnicodeStringParameterMask;
-    ULONG Parameters[MAXIMUM_HARDERROR_PARAMETERS];
-} HARDERROR_MSG, *PHARDERROR_MSG;
 
 //
 // Client Died LPC Message (FIXME: should go in pstypes.h?)

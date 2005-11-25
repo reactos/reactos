@@ -37,7 +37,6 @@
 #undef WIN32_NO_STATUS
 #include "ntstatus.h"
 #include "winreg.h"
-#include "winternl.h"
 #include "ntsecapi.h"
 #include "netbios.h"
 #include "wine/debug.h"

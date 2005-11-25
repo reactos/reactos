@@ -31,8 +31,8 @@
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <rtlfuncs.h>
+#include <exfuncs.h>
 
 #include <reactos/winlogon.h>
 

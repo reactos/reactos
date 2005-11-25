@@ -22,9 +22,10 @@ Author:
 //
 // Dependencies
 //
+#include <umtypes.h>
 #include <ntnls.h>
-#include "extypes.h"
-#include "rtltypes.h"
+#include <extypes.h>
+#include <rtltypes.h>
 
 #ifdef NTOS_MODE_USER
 
