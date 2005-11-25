@@ -6,7 +6,7 @@
  * FILE:             subsys/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY:
- *       2003/05/22  Created
+ *       2003/05/22  CreatedStyleNum
  */
 
 #include <w32k.h>
@@ -928,7 +928,18 @@ IntSystemParametersInfo(
                         the current wallpaper bitmap */
                      HBITMAP hOldBitmap, hNewBitmap;
                      ASSERT(pvParam);
-
+                     UNICODE_STRING Key = RTL_CONSTANT_STRING(L"\\Registry\\User\\.Default\\Control Panel\\Desktop"); 
+                     UNICODE_STRING Tile = RTL_CONSTANT_STRING(L"TileWallpaper"); 
+                     UNICODE_STRING Style = RTL_CONSTANT_STRING(L"WallpaperStyle");
+                     OBJECT_ATTRIBUTES KeyAttributes;
+                     NTSTATUS Status;
+                     HANDLE KeyHandle = NULL;
+                     PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+                     ULONG Length = 0;
+                     ULONG ResLength = 0;
+                     ULONG TileNum = 0;
+                     ULONG StyleNum = 0;
+                     
                      hNewBitmap = *(HBITMAP*)pvParam;
                      if(hNewBitmap != NULL)
                      {
@@ -953,6 +964,96 @@ IntSystemParametersInfo(
                         /* delete the old wallpaper */
                         NtGdiDeleteObject(hOldBitmap);
                      }
+                     
+                     /* Set the style */
+
+                     /*default value is center */
+                     WinStaObject->WallpaperMode = wmCenter;
+                     
+                     /* find the tile value in the registry */
+                     InitializeObjectAttributes(&KeyAttributes, &Key, OBJ_CASE_INSENSITIVE,
+                              NULL, NULL);
+                     ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+
+                     Status = ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
+                                              0, 0, &ResLength);
+                            
+                     ResLength += sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+                     KeyValuePartialInfo = ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
+                     Length = ResLength;
+
+                     if(!KeyValuePartialInfo)
+                     {
+                        NtClose(KeyHandle);
+                        return 0;
+                     }
+
+                     Status = ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
+                                              (PVOID)KeyValuePartialInfo, Length, &ResLength);
+                     if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
+                     {
+                        NtClose(KeyHandle);
+                        ExFreePool(KeyValuePartialInfo);
+                        return 0;
+                     }
+                
+                     Tile.Length = KeyValuePartialInfo->DataLength;
+                     Tile.MaximumLength = KeyValuePartialInfo->DataLength;
+                     Tile.Buffer = (PWSTR)KeyValuePartialInfo->Data;
+                     
+                     Status = RtlUnicodeStringToInteger(&Tile, 0, &TileNum);
+                     if(!NT_SUCCESS(Status))
+                     {
+                        TileNum = 0;
+                     }
+                     ExFreePool(KeyValuePartialInfo);
+                     
+                     /* start over again and look for the style*/
+                     ResLength = 0;
+                     Status = ZwQueryValueKey(KeyHandle, &Style, KeyValuePartialInformation,
+                                              0, 0, &ResLength);
+                            
+                     ResLength += sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+                     KeyValuePartialInfo = ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
+                     Length = ResLength;
+
+                     if(!KeyValuePartialInfo)
+                     {
+                        NtClose(KeyHandle);
+                        return 0;
+                     }
+
+                     Status = ZwQueryValueKey(KeyHandle, &Style, KeyValuePartialInformation,
+                                              (PVOID)KeyValuePartialInfo, Length, &ResLength);
+                     if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
+                     {
+                        NtClose(KeyHandle);
+                        ExFreePool(KeyValuePartialInfo);
+                        return 0;
+                     }
+                
+                     Style.Length = KeyValuePartialInfo->DataLength;
+                     Style.MaximumLength = KeyValuePartialInfo->DataLength;
+                     Style.Buffer = (PWSTR)KeyValuePartialInfo->Data;
+                     
+                     Status = RtlUnicodeStringToInteger(&Style, 0, &StyleNum);
+                     if(!NT_SUCCESS(Status))
+                     {
+                        StyleNum = 0;
+                     }
+                     ExFreePool(KeyValuePartialInfo);
+                     
+                     /* Check the values we found in the registry */
+                     if(TileNum && !StyleNum)
+                     {
+                        WinStaObject->WallpaperMode = wmTile;                     
+                     }
+                     else if(!TileNum && StyleNum == 2)
+                     {
+                        WinStaObject->WallpaperMode = wmStretch;
+                     }
+                     
+                     NtClose(KeyHandle);
                      break;
                   }
                case SPI_GETDESKWALLPAPER:
