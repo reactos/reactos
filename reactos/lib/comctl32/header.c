@@ -813,11 +813,10 @@ HEADER_GetItemT (HWND hwnd, INT nItem, LPHDITEMW phdi, BOOL bUnicode)
 
     if (phdi->mask == 0)
 	return TRUE;
-
     if ((nItem < 0) || (nItem >= (INT)infoPtr->uNumItem))
-        lpItem = NULL;
-    else
-        lpItem = &infoPtr->items[nItem];
+        return FALSE;
+
+    lpItem = &infoPtr->items[nItem];
 
     if (phdi->mask & HDI_BITMAP)
 	phdi->hbm = (lpItem != NULL) ? lpItem->hbm : 0;

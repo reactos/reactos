@@ -1,7 +1,7 @@
 /*
  * SysLink control
  *
- * Copyright 2004 Thomas Weidenmueller <w3seek@reactos.com>
+ * Copyright 2004, 2005 Thomas Weidenmueller <w3seek@reactos.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,12 +25,6 @@
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- * 
- * TODO:
- * - Fix SHIFT+TAB and TAB issue (wrong link is selected when control gets the focus)
- * - Better string parsing
- * - Improve word wrapping
- *
  */
 
 #include <stdarg.h>
@@ -52,6 +46,7 @@ INT WINAPI StrCmpNIW(LPCWSTR,LPCWSTR,INT);
 typedef struct
 {
     int nChars;
+    int nSkip;
     RECT rc;
 } DOC_TEXTBLOCK, *PDOC_TEXTBLOCK;
 
@@ -78,7 +73,6 @@ typedef struct _DOC_ITEM
             UINT state;     /* Link state */
             WCHAR *szID;    /* Link ID string */
             WCHAR *szUrl;   /* Link URL string */
-            HRGN hRgn;      /* Region of the link */
         } Link;
         struct
         {
@@ -100,6 +94,7 @@ typedef struct
     COLORREF  TextColor;    /* Color of the text */
     COLORREF  LinkColor;    /* Color of links */
     COLORREF  VisitedColor; /* Color of visited links */
+    WCHAR     BreakChar;    /* Break Character for the current font */
 } SYSLINK_INFO;
 
 static const WCHAR SL_LINKOPEN[] =  { '<','a', 0 };
@@ -124,11 +119,6 @@ static VOID SYSLINK_FreeDocItem (PDOC_ITEM DocItem)
     {
         Free(DocItem->u.Link.szID);
         Free(DocItem->u.Link.szUrl);
-    }
-
-    if(DocItem->Type == slLink && DocItem->u.Link.hRgn != NULL)
-    {
-        DeleteObject(DocItem->u.Link.hRgn);
     }
 
     /* we don't free Text because it's just a pointer to a character in the
@@ -215,9 +205,8 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
             {
                 BOOL ValidParam = FALSE, ValidLink = FALSE;
 
-                switch (*(current + 2))
+                if(*(current + 2) == '>')
                 {
-                case '>':
                     /* we just have to deal with a <a> tag */
                     taglen = 3;
                     ValidLink = TRUE;
@@ -226,8 +215,8 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
                     linklen = 0;
                     lpID = NULL;
                     lpUrl = NULL;
-                    break;
-                case ' ':
+                }
+                else if(*(current + 2) == infoPtr->BreakChar)
                 {
                     /* we expect parameters, parse them */
                     LPCWSTR *CurrentParameter = NULL, tmp;
@@ -285,27 +274,22 @@ CheckParameter:
                          * 1. another parameter is coming, so expect a ' ' (space) character
                          * 2. the tag is being closed, so expect a '<' character
                          */
-                        switch(*tmp)
+                        if(*tmp == infoPtr->BreakChar)
                         {
-                        case ' ':
                             /* we expect another parameter, do the whole thing again */
                             taglen++;
                             tmp++;
                             goto CheckParameter;
-
-                        case '>':
+                        }
+                        else if(*tmp == '>')
+                        {
                             /* the tag is being closed, we're done */
                             ValidLink = TRUE;
                             taglen++;
-                            break;
-                        default:
-                            tmp++;
-                            break;
                         }
+                        else
+                            tmp++;
                     }
-                    
-                    break;
-                }
                 }
                 
                 if(ValidLink && ValidParam)
@@ -495,16 +479,26 @@ CheckParameter:
  */
 static VOID SYSLINK_RepaintLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
 {
+    PDOC_TEXTBLOCK bl;
+    int n;
+
     if(DocItem->Type != slLink)
     {
         ERR("DocItem not a link!\n");
         return;
     }
     
-    if(DocItem->u.Link.hRgn != NULL)
+    bl = DocItem->Blocks;
+    if (bl != NULL)
     {
-        /* repaint the region */
-        RedrawWindow(infoPtr->Self, NULL, DocItem->u.Link.hRgn, RDW_INVALIDATE | RDW_UPDATENOW);
+        n = DocItem->nText;
+        
+        while(n > 0)
+        {
+            InvalidateRect(infoPtr->Self, &bl->rc, TRUE);
+            n -= bl->nChars + bl->nSkip;
+            bl++;
+        }
     }
 }
 
@@ -615,7 +609,8 @@ static PDOC_ITEM SYSLINK_GetPrevLink (SYSLINK_INFO *infoPtr, PDOC_ITEM Current)
  * SYSLINK_WrapLine
  * Tries to wrap a line.
  */
-static BOOL SYSLINK_WrapLine (HDC hdc, LPWSTR Text, WCHAR BreakChar, int *LineLen, int nFit, LPSIZE Extent, int Width)
+static BOOL SYSLINK_WrapLine (HDC hdc, LPWSTR Text, WCHAR BreakChar, int *LineLen,
+                             int nFit, LPSIZE Extent, int Width)
 {
     WCHAR *Current;
 
@@ -659,7 +654,6 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
     PDOC_ITEM Current;
     HGDIOBJ hOldFont;
     int x, y, LineHeight;
-    TEXTMETRICW tm;
     
     GetClientRect(infoPtr->Self, &rc);
     rc.right -= SL_RIGHTMARGIN;
@@ -668,7 +662,6 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
     if(rc.right - SL_LEFTMARGIN < 0 || rc.bottom - SL_TOPMARGIN < 0) return;
     
     hOldFont = SelectObject(hdc, infoPtr->Font);
-    GetTextMetricsW(hdc, &tm);
     
     x = SL_LEFTMARGIN;
     y = SL_TOPMARGIN;
@@ -684,13 +677,18 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
         
         if(Current->nText == 0)
         {
-            ERR("DOC_ITEM with no text?!\n");
             continue;
         }
         
         tx = Current->Text;
         n = Current->nText;
-        bl = Current->Blocks;
+
+        if (Current->Blocks != NULL)
+        {
+            Free(Current->Blocks);
+            Current->Blocks = NULL;
+        }
+        bl = NULL;
         nBlocks = 0;
         
         if(Current->Type == slText)
@@ -704,41 +702,80 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
         
         while(n > 0)
         {
-            if(GetTextExtentExPointW(hdc, tx, n, rc.right - x, &nFit, NULL, &szDim))
+            int SkipChars = 0;
+
+            /* skip break characters unless they're the first of the doc item */
+            if(tx != Current->Text || x == SL_LEFTMARGIN)
+            {
+                while(n > 0 && (*tx) == infoPtr->BreakChar)
+                {
+                    tx++;
+                    SkipChars++;
+                    n--;
+                }
+            }
+
+            if((n == 0 && SkipChars != 0) ||
+               GetTextExtentExPointW(hdc, tx, n, rc.right - x, &nFit, NULL, &szDim))
             {
                 int LineLen = n;
-                BOOL Wrap = SYSLINK_WrapLine(hdc, tx, tm.tmBreakChar, &LineLen, nFit, &szDim, rc.right - x);
+                BOOL Wrap = FALSE;
                 
-                if(LineLen == 0)
+                if(n != 0)
                 {
-                    if(x > SL_LEFTMARGIN)
+                    Wrap = SYSLINK_WrapLine(hdc, tx, infoPtr->BreakChar, &LineLen, nFit, &szDim, rc.right - x);
+
+                    if(LineLen == 0)
                     {
-                        /* move one line down, the word didn't fit into the line */
-                        x = SL_LEFTMARGIN;
-                        y += LineHeight;
-                        LineHeight = 0;
-                        continue;
+                        if(x > SL_LEFTMARGIN)
+                        {
+                            /* move one line down, the word didn't fit into the line */
+                            x = SL_LEFTMARGIN;
+                            y += LineHeight;
+                            LineHeight = 0;
+                            continue;
+                        }
+                        else
+                        {
+                            /* the word starts at the beginning of the line and doesn't
+                               fit into the line, so break it at the last character that fits */
+                            LineLen = max(nFit, 1);
+                        }
                     }
-                    else
+
+                    if(LineLen != n)
                     {
-                        /* the word starts at the beginning of the line and doesn't
-                           fit into the line, so break it at the last character that fits */
-                        LineLen = max(nFit, 1);
+                        if(!GetTextExtentExPointW(hdc, tx, LineLen, rc.right - x, NULL, NULL, &szDim))
+                        {
+                            if(bl != NULL)
+                            {
+                                Free(bl);
+                                bl = NULL;
+                            }
+                            break;
+                        }
                     }
-                }
-                
-                if(LineLen != n)
-                {
-                    GetTextExtentExPointW(hdc, tx, LineLen, rc.right - x, NULL, NULL, &szDim);
                 }
                 
                 if(bl != NULL)
                 {
-                    bl = ReAlloc(bl, ++nBlocks * sizeof(DOC_TEXTBLOCK));
+                    PDOC_TEXTBLOCK nbl = ReAlloc(bl, (nBlocks + 1) * sizeof(DOC_TEXTBLOCK));
+                    if (nbl != NULL)
+                    {
+                        bl = nbl;
+                        nBlocks++;
+                    }
+                    else
+                    {
+                        Free(bl);
+                        bl = NULL;
+                    }
                 }
                 else
                 {
-                    bl = Alloc(++nBlocks * sizeof(DOC_TEXTBLOCK));
+                    bl = Alloc((nBlocks + 1) * sizeof(DOC_TEXTBLOCK));
+                    if (bl != NULL)
+                        nBlocks++;
                 }
                 
                 if(bl != NULL)
@@ -746,41 +783,23 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
                     cbl = bl + nBlocks - 1;
                     
                     cbl->nChars = LineLen;
+                    cbl->nSkip = SkipChars;
                     cbl->rc.left = x;
                     cbl->rc.top = y;
                     cbl->rc.right = x + szDim.cx;
                     cbl->rc.bottom = y + szDim.cy;
                     
-                    x += szDim.cx;
-                    LineHeight = max(LineHeight, szDim.cy);
-                    
-                    /* (re)calculate the link's region */
-                    if(Current->Type == slLink)
+                    if(LineLen != 0)
                     {
-                        if(nBlocks <= 1)
+                        x += szDim.cx;
+                        LineHeight = max(LineHeight, szDim.cy);
+
+                        if(Wrap)
                         {
-                            if(Current->u.Link.hRgn != NULL)
-                            {
-                                DeleteObject(Current->u.Link.hRgn);
-                            }
-                            /* initialize the link's hRgn */
-                            Current->u.Link.hRgn = CreateRectRgnIndirect(&cbl->rc);
+                            x = SL_LEFTMARGIN;
+                            y += LineHeight;
+                            LineHeight = 0;
                         }
-                        else if(Current->u.Link.hRgn != NULL)
-                        {
-                            HRGN hrgn;
-                            hrgn = CreateRectRgnIndirect(&cbl->rc);
-                            /* add the rectangle */
-                            CombineRgn(Current->u.Link.hRgn, Current->u.Link.hRgn, hrgn, RGN_OR);
-                            DeleteObject(hrgn);
-                        }
-                    }
-                    
-                    if(Wrap)
-                    {
-                        x = SL_LEFTMARGIN;
-                        y += LineHeight;
-                        LineHeight = 0;
                     }
                 }
                 else
@@ -793,11 +812,16 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
             }
             else
             {
-                ERR("GetTextExtentExPoint() failed?!\n");
                 n--;
             }
         }
-        Current->Blocks = bl;
+
+        if(nBlocks != 0)
+        {
+            Current->Blocks = bl;
+        }
+        else
+            Current->Blocks = NULL;
     }
     
     SelectObject(hdc, hOldFont);
@@ -849,6 +873,7 @@ static LRESULT SYSLINK_Draw (SYSLINK_INFO *infoPtr, HDC hdc)
 
             while(n > 0)
             {
+                tx += bl->nSkip;
                 ExtTextOutW(hdc, bl->rc.left, bl->rc.top, ETO_OPAQUE | ETO_CLIPPED, &bl->rc, tx, bl->nChars, NULL);
                 if((Current->Type == slLink) && (Current->u.Link.state & LIS_FOCUSED) && infoPtr->HasFocus)
                 {
@@ -858,7 +883,7 @@ static LRESULT SYSLINK_Draw (SYSLINK_INFO *infoPtr, HDC hdc)
                     SetBkColor(hdc, PrevColor);
                 }
                 tx += bl->nChars;
-                n -= bl->nChars;
+                n -= bl->nChars + bl->nSkip;
                 bl++;
             }
         }
@@ -896,6 +921,7 @@ static HFONT SYSLINK_SetFont (SYSLINK_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
 {
     HDC hdc;
     LOGFONTW lf;
+    TEXTMETRICW tm;
     HFONT hOldFont = infoPtr->Font;
     infoPtr->Font = hFont;
     
@@ -911,10 +937,12 @@ static HFONT SYSLINK_SetFont (SYSLINK_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
     if(hdc != NULL)
     {
         /* create a new underline font */
-        if(GetObjectW(infoPtr->Font, sizeof(LOGFONTW), &lf))
+        if(GetTextMetricsW(hdc, &tm) &&
+           GetObjectW(infoPtr->Font, sizeof(LOGFONTW), &lf))
         {
             lf.lfUnderline = TRUE;
             infoPtr->LinkFont = CreateFontIndirectW(&lf);
+            infoPtr->BreakChar = tm.tmBreakChar;
         }
         else
         {
@@ -1133,6 +1161,34 @@ static LRESULT SYSLINK_GetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
 }
 
 /***********************************************************************
+ *           SYSLINK_PtInDocItem
+ * Determines if a point is in the region of a document item
+ */
+static BOOL SYSLINK_PtInDocItem (PDOC_ITEM DocItem, POINT pt)
+{
+    PDOC_TEXTBLOCK bl;
+    int n;
+
+    bl = DocItem->Blocks;
+    if (bl != NULL)
+    {
+        n = DocItem->nText;
+
+        while(n > 0)
+        {
+            if (PtInRect(&bl->rc, pt))
+            {
+                return TRUE;
+            }
+            n -= bl->nChars + bl->nSkip;
+            bl++;
+        }
+    }
+    
+    return FALSE;
+}
+
+/***********************************************************************
  *           SYSLINK_HitTest
  * Determines the link the user clicked on.
  */
@@ -1145,8 +1201,7 @@ static LRESULT SYSLINK_HitTest (SYSLINK_INFO *infoPtr, PLHITTESTINFO HitTest)
     {
         if(Current->Type == slLink)
         {
-            if((Current->u.Link.hRgn != NULL) &&
-               PtInRegion(Current->u.Link.hRgn, HitTest->pt.x, HitTest->pt.y))
+            if(SYSLINK_PtInDocItem(Current, HitTest->pt))
             {
                 HitTest->item.mask = 0;
                 HitTest->item.iLink = id;
@@ -1252,25 +1307,13 @@ static LRESULT SYSLINK_SetFocus (SYSLINK_INFO *infoPtr, HWND PrevFocusWindow)
     
     infoPtr->HasFocus = TRUE;
 
-#if 1
-    /* FIXME - How to detect whether SHIFT+TAB or just TAB has been pressed?
-     *         The problem is we could get this message without keyboard input, too
-     */
-    Focus = SYSLINK_GetFocusLink(infoPtr, NULL);
-    
-    if(Focus == NULL && (Focus = SYSLINK_GetNextLink(infoPtr, NULL)))
-    {
-        SYSLINK_SetFocusLink(infoPtr, Focus);
-    }
-#else
-    /* This is a temporary hack since I'm not really sure how to detect which link to select.
-       See message above! */
+    /* We always select the first link, even if we activated the control using
+       SHIFT+TAB. This is the default behavior */
     Focus = SYSLINK_GetNextLink(infoPtr, NULL);
     if(Focus != NULL)
     {
         SYSLINK_SetFocusLink(infoPtr, Focus);
     }
-#endif
     
     SYSLINK_RepaintLink(infoPtr, Focus);
     
@@ -1307,8 +1350,7 @@ static PDOC_ITEM SYSLINK_LinkAtPt (SYSLINK_INFO *infoPtr, POINT *pt, int *LinkId
 
     for(Current = infoPtr->Items; Current != NULL; Current = Current->Next)
     {
-        if((Current->Type == slLink) && (Current->u.Link.hRgn != NULL) &&
-           PtInRegion(Current->u.Link.hRgn, pt->x, pt->y) &&
+        if((Current->Type == slLink) && SYSLINK_PtInDocItem(Current, *pt) &&
            (!MustBeEnabled || (MustBeEnabled && (Current->u.Link.state & LIS_ENABLED))))
         {
             if(LinkId != NULL)
@@ -1335,6 +1377,8 @@ static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, POINT 
     Current = SYSLINK_LinkAtPt(infoPtr, pt, &id, TRUE);
     if(Current != NULL)
     {
+      SetFocus(infoPtr->Self);
+
       Old = SYSLINK_SetFocusLink(infoPtr, Current);
       if(Old != NULL && Old != Current)
       {
@@ -1342,7 +1386,6 @@ static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, POINT 
       }
       infoPtr->MouseDownID = id;
       SYSLINK_RepaintLink(infoPtr, Current);
-      SetFocus(infoPtr->Self);
     }
 
     return 0;
@@ -1460,7 +1503,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     infoPtr = (SYSLINK_INFO *)GetWindowLongPtrW(hwnd, 0);
 
     if (!infoPtr && message != WM_CREATE)
-        return DefWindowProcW( hwnd, message, wParam, lParam );
+        goto HandleDefaultMessage;
 
     switch(message) {
     case WM_PRINTCLIENT:
@@ -1482,8 +1525,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
             return TRUE;
         }
         /* let the default window proc handle this message */
-        return DefWindowProcW(hwnd, message, wParam, lParam);
-
+        goto HandleDefaultMessage;
     }
 
     case WM_SIZE:
@@ -1505,7 +1547,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     case WM_SETTEXT:
         SYSLINK_SetText(infoPtr, (LPWSTR)lParam);
-        return DefWindowProcW(hwnd, message, wParam, lParam);
+        goto HandleDefaultMessage;
 
     case WM_LBUTTONDOWN:
     {
@@ -1536,7 +1578,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
             return 0;
         }
         }
-        return DefWindowProcW(hwnd, message, wParam, lParam);
+        goto HandleDefaultMessage;
     }
     
     case WM_GETDLGCODE:
@@ -1638,6 +1680,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         infoPtr->TextColor = GetSysColor(COLOR_WINDOWTEXT);
         infoPtr->LinkColor = GetSysColor(COLOR_HIGHLIGHT);
         infoPtr->VisitedColor = GetSysColor(COLOR_HIGHLIGHT);
+        infoPtr->BreakChar = ' ';
         TRACE("SysLink Ctrl creation, hwnd=%p\n", hwnd);
         SYSLINK_SetText(infoPtr, ((LPCREATESTRUCTW)lParam)->lpszName);
         return 0;
@@ -1652,8 +1695,11 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         return 0;
 
     default:
+HandleDefaultMessage:
         if ((message >= WM_USER) && (message < WM_APP))
-	    ERR("unknown msg %04x wp=%04x lp=%08lx\n", message, wParam, lParam );
+        {
+	        ERR("unknown msg %04x wp=%04x lp=%08lx\n", message, wParam, lParam );
+        }
         return DefWindowProcW(hwnd, message, wParam, lParam);
     }
 }

@@ -2131,9 +2131,9 @@ REBAR_CommonSetupBand (HWND hwnd, LPREBARBANDINFOA lprbbi, REBAR_BAND *lpBand)
 	    lpBand->hwndChild = lprbbi->hwndChild;
 	    lpBand->hwndPrevParent =
 		SetParent (lpBand->hwndChild, hwnd);
-	    /* below in trace fro WinRAR */
+	    /* below in trace from WinRAR */
 	    ShowWindow(lpBand->hwndChild, SW_SHOWNOACTIVATE | SW_SHOWNORMAL);
-	    /* above in trace fro WinRAR */
+	    /* above in trace from WinRAR */
 	}
 	else {
 	    TRACE("child: %p  prev parent: %p\n",

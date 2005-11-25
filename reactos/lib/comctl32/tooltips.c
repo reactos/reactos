@@ -1507,7 +1507,7 @@ TOOLTIPS_GetTextA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     /* NB this API is broken, there is no way for the app to determine
        what size buffer it requires nor a way to specify how long the
-       one it supplies is.  We'll assume it's upto INFOTIPSIZE */
+       one it supplies is.  We'll assume it's up to INFOTIPSIZE */
 
     WideCharToMultiByte(CP_ACP, 0, infoPtr->tools[nTool].lpszText, -1,
 			lpToolInfo->lpszText, INFOTIPSIZE, NULL, NULL);
