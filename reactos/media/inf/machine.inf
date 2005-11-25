@@ -26,6 +26,7 @@ HKR, , Icon,           0, "-27"
 %IntelMfg% = IntelMfg
 
 [GenericMfg]
+%*PNP0000.DeviceDesc% = NO_DRV,*PNP0000
 %*PNP0001.DeviceDesc% = NO_DRV,*PNP0001
 %*PNP0100.DeviceDesc% = NO_DRV,*PNP0100
 %*PNP0200.DeviceDesc% = NO_DRV,*PNP0200
@@ -42,6 +43,8 @@ HKR, , Icon,           0, "-27"
 %PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
 
 [IntelMfg]
+%PCI\VEN_8086&DEV_1237.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_1237
+%PCI\VEN_8086&DEV_7000.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7000
 %PCI\VEN_8086&DEV_7110.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7110
 %PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7113
 %PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
@@ -100,6 +103,7 @@ ReactOS = "ReactOS Team"
 SystemClassName = "System devices"
 
 GenericMfg = "(Generic system devices)"
+*PNP0000.DeviceDesc = "Programmable interrupt controller"
 *PNP0001.DeviceDesc = "EISA programmable interrupt controller"
 *PNP0100.DeviceDesc = "System timer"
 *PNP0200.DeviceDesc = "DMA controller"
@@ -115,6 +119,8 @@ PCI\CC_0601.DeviceDesc = "Standard PCI to ISA bridge"
 PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 
 IntelMfg = "Intel"
+PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]
+PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI to ISA Bridge"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI to ISA Bridge"
 PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller"
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI-Bridge"
