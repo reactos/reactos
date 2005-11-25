@@ -19,46 +19,6 @@
 
 #define FS_VOLUME_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_VOLUME_INFORMATION))
 
-/* STRUCTURES ***************************************************************/
-
-typedef struct _DISKENTRY
-{
-  LIST_ENTRY ListEntry;
-  ULONG DiskNumber;
-  ULONG Signature;
-  ULONG Checksum;
-  PDEVICE_OBJECT DeviceObject;
-} DISKENTRY, *PDISKENTRY; 
-
-#define  PARTITION_TBL_SIZE 4
-
-#include <pshpack1.h>
-
-typedef struct _PARTITION
-{
-  unsigned char   BootFlags;					/* bootable?  0=no, 128=yes  */
-  unsigned char   StartingHead;					/* beginning head number */
-  unsigned char   StartingSector;				/* beginning sector number */
-  unsigned char   StartingCylinder;				/* 10 bit nmbr, with high 2 bits put in begsect */
-  unsigned char   PartitionType;				/* Operating System type indicator code */
-  unsigned char   EndingHead;					/* ending head number */
-  unsigned char   EndingSector;					/* ending sector number */
-  unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
-  unsigned int  StartingBlock;					/* first sector relative to start of disk */
-  unsigned int  SectorCount;					/* number of sectors in partition */
-} PARTITION, *PPARTITION;
-
-typedef struct _PARTITION_SECTOR
-{
-  UCHAR BootCode[440];				/* 0x000 */
-  ULONG Signature;				/* 0x1B8 */
-  UCHAR Reserved[2];				/* 0x1BC */
-  PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
-  USHORT Magic;					/* 0x1FE */
-} PARTITION_SECTOR, *PPARTITION_SECTOR;
-
-#include <poppack.h>
-
 /* FUNCTIONS ****************************************************************/
 
 STATIC 

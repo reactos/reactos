@@ -32,7 +32,6 @@
  *
  */
 
-#define ResourceOwnedExclusive 0x80
 #define ResourceDisableBoost   0x08
 
 /* INCLUDES *****************************************************************/
