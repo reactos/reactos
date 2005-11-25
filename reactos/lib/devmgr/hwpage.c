@@ -502,6 +502,20 @@ HardwareDlgResize(IN PHARDWARE_PAGE_DATA hpd,
 }
 
 
+static VOID
+EnableTroubleShoot(PHARDWARE_PAGE_DATA hpd,
+                   BOOL Enable)
+{
+    HWND hBtnTroubleShoot = GetDlgItem(hpd->hWnd,
+                                       IDC_TROUBLESHOOT);
+
+    EnableWindow(hBtnTroubleShoot,
+                 Enable);
+    ShowWindow(hBtnTroubleShoot,
+               Enable ? SW_SHOW : SW_HIDE);
+}
+
+
 static INT_PTR
 CALLBACK
 HardwareDlgProc(IN HWND hwndDlg,
@@ -547,6 +561,14 @@ HardwareDlgProc(IN HWND hwndDlg,
                                   (INT)LOWORD(lParam),
                                   (INT)HIWORD(lParam));
                 break;            
+
+            case WM_SETTEXT:
+            {
+                LPCWSTR szWndText = (LPCWSTR)lParam;
+                EnableTroubleShoot(hpd,
+                                   (szWndText != NULL && szWndText[0] != L'\0'));
+                break;
+            }
 
             case WM_INITDIALOG:
             {
@@ -618,6 +640,10 @@ HardwareDlgProc(IN HWND hwndDlg,
 
                     /* fill the devices list view control */
                     FillDevicesList(hpd);
+
+                    /* decide whether to show or hide the troubleshoot button */
+                    EnableTroubleShoot(hpd,
+                                       GetWindowTextLength(hwndDlg) != 0);
                 }
                 break;
             }
