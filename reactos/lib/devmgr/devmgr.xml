@@ -13,7 +13,7 @@
 	<library>setupapi</library>
 	<library>user32</library>
 	<file>devmgr.rc</file>
-	<file>devmgr.c</file>
+	<file>hwpage.c</file>
 	<file>misc.c</file>
 	<file>stubs.c</file>
 	<pch>precomp.h</pch>

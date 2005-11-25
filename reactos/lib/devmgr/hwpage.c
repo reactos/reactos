@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS devmgr.dll
- * FILE:            lib/devmgr/devmgr.c
+ * FILE:            lib/devmgr/hwpage.c
  * PURPOSE:         ReactOS Device Manager
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
@@ -29,8 +29,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-HINSTANCE hDllInstance = NULL;
 
 typedef VOID (WINAPI *PINITCOMMONCONTROLS)(VOID);
 
@@ -430,7 +428,7 @@ HardwareDlgResize(IN PHARDWARE_PAGE_DATA hpd,
         {
             return;
         }
-        y += rc.bottom - rc.top + ptMargin.y;
+        y += rc.bottom - rc.top + (ptMargin.y / 2);
 
         /* resize the IDC_LOCATION label */
         hControl = GetDlgItem(hpd->hWnd,
@@ -448,7 +446,7 @@ HardwareDlgResize(IN PHARDWARE_PAGE_DATA hpd,
         {
             return;
         }
-        y += rc.bottom - rc.top + ptMargin.y;
+        y += rc.bottom - rc.top + (ptMargin.y / 2);
 
         /* measure the size of the buttons */
         hButton = GetDlgItem(hpd->hWnd,
@@ -494,7 +492,7 @@ HardwareDlgResize(IN PHARDWARE_PAGE_DATA hpd,
                              IDC_TROUBLESHOOT);
         GetWindowRect(hButton,
                       &rcButton);
-        x -= ptMargin.x + (rcButton.right - rcButton.left);
+        x -= (ptMargin.x / 2) + (rcButton.right - rcButton.left);
         if (!(dwp = DeferWindowPos(dwp,
                                    hButton,
                                    NULL,
@@ -687,10 +685,6 @@ HardwareDlgProc(IN HWND hwndDlg,
  * REVISIONS
  *   13-05-2005 first working version (Sebastian Gasiorek <zebasoftis@gmail.com>)
  *
- * NOTE
- *   uUnknown seems to be some kind of flag how the entries should be displayed,
- *   in Win it seems to be always 0x00000001
- *
  * TODO
  *   missing: device icon in list view, Troubleshoot button, device properties,
  *            status description,
@@ -806,22 +800,4 @@ DeviceCreateHardwarePage(IN HWND hWndParent,
                                       lpGuid,
                                       1,
                                       HWPD_LARGELIST);
-}
-
-
-BOOL
-STDCALL
-DllMain(IN HINSTANCE hinstDLL,
-        IN DWORD dwReason,
-	    IN LPVOID lpvReserved)
-{
-    switch (dwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            hDllInstance = hinstDLL;
-            break;
-    }
-
-    return TRUE;
 }

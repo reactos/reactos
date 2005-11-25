@@ -27,6 +27,8 @@
  */
 #include <precomp.h>
 
+HINSTANCE hDllInstance = NULL;
+
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
@@ -145,4 +147,21 @@ ListViewGetSelectedItemData(IN HWND hwnd)
     }
 
     return 0;
+}
+
+BOOL
+STDCALL
+DllMain(IN HINSTANCE hinstDLL,
+        IN DWORD dwReason,
+	    IN LPVOID lpvReserved)
+{
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            hDllInstance = hinstDLL;
+            break;
+    }
+
+    return TRUE;
 }
