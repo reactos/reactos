@@ -247,7 +247,7 @@
 @ stdcall NdrInterfacePointerMemorySize(ptr ptr)
 @ stdcall NdrInterfacePointerUnmarshall(ptr ptr ptr long)
 @ stub NdrIsAppDoneWithPipes
-@ stub NdrMapCommAndFaultStatus
+@ stdcall NdrMapCommAndFaultStatus(ptr ptr ptr long)
 @ stub NdrMarkNextActivePipe
 @ stub NdrMesProcEncodeDecode2
 @ stub NdrMesProcEncodeDecode
