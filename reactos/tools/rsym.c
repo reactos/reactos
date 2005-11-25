@@ -610,7 +610,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
             {
               RosSymOffset = CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData;
             }
-          if (Section == InRelocSectionIndex)
+          if (Section == (ULONG)InRelocSectionIndex)
             {
               OutRelocSection = CurrentSectionHeader;
             }
