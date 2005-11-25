@@ -93,7 +93,7 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
-  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
+  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_2));
   psh.pszCaption = Caption;
   psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
   psh.nStartPage = 0;
