@@ -19,7 +19,7 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Sound System
  *  PURPOSE:          Audio Port Class Functions
- *  FILE:             drivers/dd/sound/portcls/portcls.c
+ *  FILE:             drivers/multimedia/portcls/portcls.c
  *  PROGRAMMERS:
  *
  *  REVISION HISTORY:
