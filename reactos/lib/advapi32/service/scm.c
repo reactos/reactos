@@ -458,7 +458,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     {
         DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
-        return INVALID_HANDLE_VALUE;
+        return NULL;
     }
 
     return hService;
