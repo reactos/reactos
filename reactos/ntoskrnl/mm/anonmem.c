@@ -990,7 +990,7 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                PULONG ResultLength)
 {
    PMM_REGION Region;
-   PVOID RegionBase;
+   PVOID RegionBase = NULL;
 
    Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
 
