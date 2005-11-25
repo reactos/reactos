@@ -21,8 +21,11 @@ INFLIB_HOST_TARGET = \
 INFLIB_HOST_SOURCES = $(addprefix $(INFLIB_BASE_), \
 	infcore.c \
 	infget.c \
+	infput.c \
 	infhostgen.c \
 	infhostget.c \
+	infhostglue.c \
+	infhostput.c \
 	)
 
 INFLIB_HOST_OBJECTS = \
@@ -30,7 +33,7 @@ INFLIB_HOST_OBJECTS = \
 
 INFLIB_HOST_CFLAGS = -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
   -Wstrict-prototypes -Wmissing-prototypes -DINFLIB_HOST -D_M_IX86 \
-  -I$(INFLIB_BASE) -Iinclude/reactos
+  -I$(INFLIB_BASE) -Iinclude/reactos -DDBG
 
 $(INFLIB_HOST_TARGET): $(INFLIB_HOST_OBJECTS) | $(INFLIB_OUT)
 	$(ECHO_AR)
@@ -44,11 +47,23 @@ $(INFLIB_INT_)infget.o: $(INFLIB_BASE_)infget.c | $(INFLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
+$(INFLIB_INT_)infput.o: $(INFLIB_BASE_)infput.c | $(INFLIB_INT)
+	$(ECHO_CC)
+	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
+
 $(INFLIB_INT_)infhostgen.o: $(INFLIB_BASE_)infhostgen.c | $(INFLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 $(INFLIB_INT_)infhostget.o: $(INFLIB_BASE_)infhostget.c | $(INFLIB_INT)
+	$(ECHO_CC)
+	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
+
+$(INFLIB_INT_)infhostglue.o: $(INFLIB_BASE_)infhostglue.c | $(INFLIB_INT)
+	$(ECHO_CC)
+	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
+
+$(INFLIB_INT_)infhostput.o: $(INFLIB_BASE_)infhostput.c | $(INFLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 

@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infcache.h
- * PURPOSE:         INF file parser that caches contents of INF file in memory
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp <gvg@reactos.org>
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 #ifndef INFPRIV_H_INCLUDED
@@ -17,13 +15,6 @@
 #define INF_STATUS_SECTION_NAME_TOO_LONG   (0xC0700002)
 #define INF_STATUS_WRONG_INF_STYLE         (0xC0700003)
 #define INF_STATUS_NOT_ENOUGH_MEMORY       (0xC0700004)
-
-typedef struct _INFCONTEXT
-{
-  PVOID Inf;
-  PVOID Section;
-  PVOID Line;
-} INFCONTEXT;
 
 typedef struct _INFCACHEFIELD
 {
@@ -40,7 +31,7 @@ typedef struct _INFCACHELINE
 
   LONG FieldCount;
 
-  PTCHAR Key;
+  PTSTR Key;
 
   PINFCACHEFIELD FirstField;
   PINFCACHEFIELD LastField;
@@ -68,6 +59,13 @@ typedef struct _INFCACHE
   PINFCACHESECTION StringsSection;
 } INFCACHE, *PINFCACHE;
 
+typedef struct _INFCONTEXT
+{
+  PINFCACHE Inf;
+  PINFCACHESECTION Section;
+  PINFCACHELINE Line;
+} INFCONTEXT;
+
 typedef long INFSTATUS;
 
 /* FUNCTIONS ****************************************************************/
@@ -76,11 +74,24 @@ extern INFSTATUS InfpParseBuffer(PINFCACHE file,
                                  const CHAR *buffer,
                                  const CHAR *end,
                                  PULONG error_line);
-extern PINFCACHESECTION InfpCacheFreeSection(PINFCACHESECTION Section);
-extern PINFCACHELINE InfpCacheFindKeyLine(PINFCACHESECTION Section,
-                                          PTCHAR Key);
+extern PINFCACHESECTION InfpFreeSection(PINFCACHESECTION Section);
+extern PINFCACHESECTION InfpAddSection(PINFCACHE Cache,
+                                       PCTSTR Name);
+extern PINFCACHELINE InfpAddLine(PINFCACHESECTION Section);
+extern PVOID InfpAddKeyToLine(PINFCACHELINE Line,
+                              PCTSTR Key);
+extern PVOID InfpAddFieldToLine(PINFCACHELINE Line,
+                                PCTSTR Data);
+extern PINFCACHELINE InfpFindKeyLine(PINFCACHESECTION Section,
+                                     PCTSTR Key);
+extern PINFCACHESECTION InfpFindSection(PINFCACHE Cache,
+                                        PCTSTR Section);
 
-extern INFSTATUS InfpFindFirstLine(HINF InfHandle,
+extern INFSTATUS InfpBuildFileBuffer(PINFCACHE InfHandle,
+                                     char **Buffer,
+                                     unsigned long *BufferSize);
+
+extern INFSTATUS InfpFindFirstLine(PINFCACHE InfHandle,
                                    PCTSTR Section,
                                    PCTSTR Key,
                                    PINFCONTEXT *Context);
@@ -119,6 +130,13 @@ extern INFSTATUS InfpGetData(PINFCONTEXT Context,
 extern INFSTATUS InfpGetDataField(PINFCONTEXT Context,
                                   ULONG FieldIndex,
                                   PTCHAR *Data);
+
+extern INFSTATUS InfpFindOrAddSection(PINFCACHE Cache,
+                                      PCTSTR Section,
+                                      PINFCONTEXT *Context);
+extern INFSTATUS InfpAddLineWithKey(PINFCONTEXT Context, PCTSTR Key);
+extern INFSTATUS InfpAddField(PINFCONTEXT Context, PCTSTR Data);
+
 extern VOID InfpFreeContext(PINFCONTEXT Context);
 
 #endif /* INFPRIV_H_INCLUDED */

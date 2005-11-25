@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infrosget.c
- * PURPOSE:         Read .inf routines for use in ReactOS
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,19 +15,40 @@
 
 
 INFSTATUS
-InfpFindFirstLine(HINF InfHandle,
+InfpFindFirstLine(PINFCACHE Cache,
                   PCTSTR Section,
                   PCTSTR Key,
                   PINFCONTEXT *Context)
 {
-  PINFCACHE Cache;
   PINFCACHESECTION CacheSection;
   PINFCACHELINE CacheLine;
 
-  if (InfHandle == NULL || Section == NULL || Context == NULL)
+  if (Cache == NULL || Section == NULL || Context == NULL)
     {
-      DPRINT("Invalid parameter\n");
+      DPRINT1("Invalid parameter\n");
       return INF_STATUS_INVALID_PARAMETER;
+    }
+
+  CacheSection = InfpFindSection(Cache, Section);
+  if (NULL == CacheSection)
+    {
+      DPRINT("Section not found\n");
+      return INF_STATUS_NOT_FOUND;
+    }
+
+  if (Key != NULL)
+    {
+      CacheLine = InfpFindKeyLine(CacheSection, Key);
+    }
+  else
+    {
+      CacheLine = CacheSection->FirstLine;
+    }
+
+  if (NULL == CacheLine)
+    {
+      DPRINT("Key not found\n");
+      return INF_STATUS_NOT_FOUND;
     }
 
   *Context = MALLOC(sizeof(INFCONTEXT));
@@ -38,44 +57,11 @@ InfpFindFirstLine(HINF InfHandle,
       DPRINT1("MALLOC() failed\n");
       return INF_STATUS_NO_MEMORY;
     }
+  (*Context)->Inf = (PVOID)Cache;
+  (*Context)->Section = (PVOID)CacheSection;
+  (*Context)->Line = (PVOID)CacheLine;
 
-  Cache = (PINFCACHE)InfHandle;
-
-  /* Iterate through list of sections */
-  CacheSection = Cache->FirstSection;
-  while (CacheSection != NULL)
-    {
-      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
-
-      /* Are the section names the same? */
-      if (_tcsicmp(CacheSection->Name, Section) == 0)
-        {
-          if (Key != NULL)
-            {
-              CacheLine = InfpCacheFindKeyLine (CacheSection, (PTCHAR)Key);
-            }
-          else
-            {
-              CacheLine = CacheSection->FirstLine;
-            }
-
-          if (CacheLine == NULL)
-            return INF_STATUS_NOT_FOUND;
-
-          (*Context)->Inf = (PVOID)Cache;
-          (*Context)->Section = (PVOID)CacheSection;
-          (*Context)->Line = (PVOID)CacheLine;
-
-          return INF_STATUS_SUCCESS;
-        }
-
-      /* Get the next section */
-      CacheSection = CacheSection->Next;
-    }
-
-  DPRINT("Section not found\n");
-
-  return INF_STATUS_NOT_FOUND;
+  return INF_STATUS_SUCCESS;
 }
 
 

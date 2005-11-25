@@ -1,15 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infros.h
- * PURPOSE:         Public .inf routines for use on the host build system
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 #ifndef INFHOST_H_INCLUDED
 #define INFHOST_H_INCLUDED
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #include <infcommon.h>
 
@@ -18,8 +20,11 @@ extern int InfHostOpenBufferedFile(PHINF InfHandle,
                                    unsigned long BufferSize,
                                    unsigned long *ErrorLine);
 extern int InfHostOpenFile(PHINF InfHandle,
-                           char *FileName,
+                           const char *FileName,
                            unsigned long *ErrorLine);
+extern int InfHostWriteFile(HINF InfHandle,
+                            const char *FileName,
+                            const char *HeaderComment);
 extern void InfHostCloseFile(HINF InfHandle);
 extern int InfHostFindFirstLine(HINF InfHandle,
                                 const char *Section,
@@ -60,7 +65,16 @@ extern int InfHostGetData(PINFCONTEXT Context,
 extern int InfHostGetDataField(PINFCONTEXT Context,
                                unsigned long FieldIndex,
                                char **Data);
-extern VOID InfHostFreeContext(PINFCONTEXT Context);
+extern int InfHostFindOrAddSection(HINF InfHandle,
+                                   const char *Section,
+                                   PINFCONTEXT *Context);
+extern int InfHostAddLine(PINFCONTEXT Context, const char *Key);
+extern int InfHostAddField(PINFCONTEXT Context, const char *Data);
+extern void InfHostFreeContext(PINFCONTEXT Context);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* INFROS_H_INCLUDED */
 

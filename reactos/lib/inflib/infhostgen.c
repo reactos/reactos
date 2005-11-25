@@ -1,17 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infhostgen.c
- * PURPOSE:         General .inf routines for use on the host build system
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <stdio.h>
-#include <errno.h>
 #include "inflib.h"
 #include "infhost.h"
 
@@ -50,7 +46,7 @@ InfHostOpenBufferedFile(PHINF InfHandle,
   Cache = (PINFCACHE)MALLOC(sizeof(INFCACHE));
   if (Cache == NULL)
     {
-      DPRINT("MALLOC() failed\n");
+      DPRINT1("MALLOC() failed\n");
       FREE(FileBuffer);
       return(INF_STATUS_INSUFFICIENT_RESOURCES);
     }
@@ -81,7 +77,7 @@ InfHostOpenBufferedFile(PHINF InfHandle,
 
 int
 InfHostOpenFile(PHINF InfHandle,
-                char *FileName,
+                const char *FileName,
                 unsigned long *ErrorLine)
 {
   FILE *File;
@@ -97,7 +93,7 @@ InfHostOpenFile(PHINF InfHandle,
   File = fopen(FileName, "rb");
   if (NULL == File)
     {
-      DPRINT("fopen() failed (errno %d)\n", errno);
+      DPRINT1("fopen() failed (errno %d)\n", errno);
       return -1;
     }
 
@@ -106,7 +102,7 @@ InfHostOpenFile(PHINF InfHandle,
   /* Query file size */
   if (fseek(File, 0, SEEK_END))
     {
-      DPRINT("fseek() to EOF failed (errno %d)\n", errno);
+      DPRINT1("fseek() to EOF failed (errno %d)\n", errno);
       fclose(File);
       return -1;
     }
@@ -114,7 +110,7 @@ InfHostOpenFile(PHINF InfHandle,
   FileLength = ftell(File);
   if ((unsigned long) -1 == FileLength)
     {
-      DPRINT("ftell() failed (errno %d)\n", errno);
+      DPRINT1("ftell() failed (errno %d)\n", errno);
       fclose(File);
       return -1;
     }
@@ -123,7 +119,7 @@ InfHostOpenFile(PHINF InfHandle,
   /* Rewind */
   if (fseek(File, 0, SEEK_SET))
     {
-      DPRINT("fseek() to BOF failed (errno %d)\n", errno);
+      DPRINT1("fseek() to BOF failed (errno %d)\n", errno);
       fclose(File);
       return -1;
     }
@@ -140,7 +136,7 @@ InfHostOpenFile(PHINF InfHandle,
   /* Read file */
   if (FileLength != fread(FileBuffer, 1, FileLength, File))
     {
-      DPRINT("fread() failed (errno %d)\n", errno);
+      DPRINT1("fread() failed (errno %d)\n", errno);
       fclose(File);
       return -1;
     }
@@ -154,7 +150,7 @@ InfHostOpenFile(PHINF InfHandle,
   Cache = (PINFCACHE)MALLOC(sizeof(INFCACHE));
   if (Cache == NULL)
     {
-      DPRINT("MALLOC() failed\n");
+      DPRINT1("MALLOC() failed\n");
       FREE(FileBuffer);
       return -1;
     }
@@ -197,7 +193,7 @@ InfHostCloseFile(HINF InfHandle)
 
   while (Cache->FirstSection != NULL)
     {
-      Cache->FirstSection = InfpCacheFreeSection(Cache->FirstSection);
+      Cache->FirstSection = InfpFreeSection(Cache->FirstSection);
     }
   Cache->LastSection = NULL;
 

@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infcore.c
- * PURPOSE:         INF file parser that caches contents of INF file in memory
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -85,7 +83,7 @@ static const parser_state_func parser_funcs[NB_PARSER_STATES] =
 /* PRIVATE FUNCTIONS ********************************************************/
 
 static PINFCACHELINE
-InfpCacheFreeLine (PINFCACHELINE Line)
+InfpFreeLine (PINFCACHELINE Line)
 {
   PINFCACHELINE Next;
   PINFCACHEFIELD Field;
@@ -118,7 +116,7 @@ InfpCacheFreeLine (PINFCACHELINE Line)
 
 
 PINFCACHESECTION
-InfpCacheFreeSection (PINFCACHESECTION Section)
+InfpFreeSection (PINFCACHESECTION Section)
 {
   PINFCACHESECTION Next;
 
@@ -131,7 +129,7 @@ InfpCacheFreeSection (PINFCACHESECTION Section)
   Next = Section->Next;
   while (Section->FirstLine != NULL)
     {
-      Section->FirstLine = InfpCacheFreeLine (Section->FirstLine);
+      Section->FirstLine = InfpFreeLine (Section->FirstLine);
     }
   Section->LastLine = NULL;
 
@@ -141,9 +139,9 @@ InfpCacheFreeSection (PINFCACHESECTION Section)
 }
 
 
-static PINFCACHESECTION
-InfpCacheFindSection (PINFCACHE Cache,
-		      PCTSTR Name)
+PINFCACHESECTION
+InfpFindSection(PINFCACHE Cache,
+                PCTSTR Name)
 {
   PINFCACHESECTION Section = NULL;
 
@@ -157,9 +155,9 @@ InfpCacheFindSection (PINFCACHE Cache,
   while (Section != NULL)
     {
       if (_tcsicmp (Section->Name, Name) == 0)
-	{
-	  return Section;
-	}
+        {
+          return Section;
+        }
 
       /* get the next section*/
       Section = Section->Next;
@@ -169,9 +167,9 @@ InfpCacheFindSection (PINFCACHE Cache,
 }
 
 
-static PINFCACHESECTION
-InfpCacheAddSection (PINFCACHE Cache,
-		     PTCHAR Name)
+PINFCACHESECTION
+InfpAddSection(PINFCACHE Cache,
+               PCTSTR Name)
 {
   PINFCACHESECTION Section = NULL;
   ULONG Size;
@@ -213,8 +211,8 @@ InfpCacheAddSection (PINFCACHE Cache,
 }
 
 
-static PINFCACHELINE
-InfpCacheAddLine (PINFCACHESECTION Section)
+PINFCACHELINE
+InfpAddLine(PINFCACHESECTION Section)
 {
   PINFCACHELINE Line;
 
@@ -251,37 +249,47 @@ InfpCacheAddLine (PINFCACHESECTION Section)
 }
 
 
-static PVOID
-InfpAddKeyToLine (PINFCACHELINE Line,
-		  PTCHAR Key)
+PVOID
+InfpAddKeyToLine(PINFCACHELINE Line,
+                 PCTSTR Key)
 {
   if (Line == NULL)
-    return NULL;
+    {
+      DPRINT1("Invalid Line\n");
+      return NULL;
+    }
 
   if (Line->Key != NULL)
-    return NULL;
+    {
+      DPRINT1("Line already has a key\n");
+      return NULL;
+    }
 
-  Line->Key = (PTCHAR)MALLOC ((_tcslen (Key) + 1) * sizeof(TCHAR));
+  Line->Key = (PTCHAR)MALLOC((_tcslen(Key) + 1) * sizeof(TCHAR));
   if (Line->Key == NULL)
-    return NULL;
+    {
+      DPRINT1("MALLOC() failed\n");
+      return NULL;
+    }
 
-  _tcscpy (Line->Key, Key);
+  _tcscpy(Line->Key, Key);
 
   return (PVOID)Line->Key;
 }
 
 
-static PVOID
-InfpAddFieldToLine (PINFCACHELINE Line,
-		    PTCHAR Data)
+PVOID
+InfpAddFieldToLine(PINFCACHELINE Line,
+                   PCTSTR Data)
 {
   PINFCACHEFIELD Field;
   ULONG Size;
 
   Size = sizeof(INFCACHEFIELD) + (_tcslen(Data) * sizeof(TCHAR));
-  Field = (PINFCACHEFIELD)MALLOC (Size);
+  Field = (PINFCACHEFIELD)MALLOC(Size);
   if (Field == NULL)
     {
+      DPRINT1("MALLOC() failed\n");
       return NULL;
     }
   ZEROMEMORY (Field,
@@ -307,8 +315,8 @@ InfpAddFieldToLine (PINFCACHELINE Line,
 
 
 PINFCACHELINE
-InfpCacheFindKeyLine (PINFCACHESECTION Section,
-		      PTCHAR Key)
+InfpFindKeyLine(PINFCACHESECTION Section,
+                PCTSTR Key)
 {
   PINFCACHELINE Line;
 
@@ -316,9 +324,9 @@ InfpCacheFindKeyLine (PINFCACHESECTION Section,
   while (Line != NULL)
     {
       if (Line->Key != NULL && _tcsicmp (Line->Key, Key) == 0)
-	{
-	  return Line;
-	}
+        {
+          return Line;
+        }
 
       Line = Line->Next;
     }
@@ -363,9 +371,9 @@ inline static int is_eof( struct parser *parser, const CHAR *ptr )
 inline static int is_eol( struct parser *parser, const CHAR *ptr )
 {
   return (ptr >= parser->end ||
-	  *ptr == CONTROL_Z ||
-	  *ptr == '\n' ||
-	  (*ptr == '\r' && *(ptr + 1) == '\n'));
+          *ptr == CONTROL_Z ||
+          *ptr == '\n' ||
+          (*ptr == '\r' && *(ptr + 1) == '\n'));
 }
 
 
@@ -401,18 +409,18 @@ static PVOID add_section_from_token( struct parser *parser )
       return NULL;
     }
 
-  Section = InfpCacheFindSection (parser->file,
-				  parser->token);
+  Section = InfpFindSection(parser->file,
+                            parser->token);
   if (Section == NULL)
     {
       /* need to create a new one */
-      Section= InfpCacheAddSection (parser->file,
-				    parser->token);
+      Section= InfpAddSection(parser->file,
+                              parser->token);
       if (Section == NULL)
-	{
-	  parser->error = INF_STATUS_NOT_ENOUGH_MEMORY;
-	  return NULL;
-	}
+        {
+          parser->error = INF_STATUS_NOT_ENOUGH_MEMORY;
+          return NULL;
+        }
     }
 
   parser->token_len = 0;
@@ -430,14 +438,14 @@ static struct field *add_field_from_token( struct parser *parser, int is_key )
   if (!parser->line)  /* need to start a new line */
     {
       if (parser->cur_section == NULL)  /* got a line before the first section */
-	{
-	  parser->error = INF_STATUS_WRONG_INF_STYLE;
-	  return NULL;
-	}
+        {
+          parser->error = INF_STATUS_WRONG_INF_STYLE;
+          return NULL;
+        }
 
-      parser->line = InfpCacheAddLine (parser->cur_section);
+      parser->line = InfpAddLine(parser->cur_section);
       if (parser->line == NULL)
-	goto error;
+        goto error;
     }
   else
     {
@@ -481,34 +489,34 @@ static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
   for (p = pos; !is_eof( parser, p ); p++)
     {
       switch(*p)
-	{
-	  case '\r':
-	    continue;
+        {
+          case '\r':
+            continue;
 
-	  case '\n':
-	    parser->line_pos++;
-	    close_current_line( parser );
-	    break;
+          case '\n':
+            parser->line_pos++;
+            close_current_line( parser );
+            break;
 
-	  case ';':
-	    push_state( parser, LINE_START );
-	    set_state( parser, COMMENT );
-	    return p + 1;
+          case ';':
+            push_state( parser, LINE_START );
+            set_state( parser, COMMENT );
+            return p + 1;
 
-	  case '[':
-	    parser->start = p + 1;
-	    set_state( parser, SECTION_NAME );
-	    return p + 1;
+          case '[':
+            parser->start = p + 1;
+            set_state( parser, SECTION_NAME );
+            return p + 1;
 
-	  default:
-	    if (!isspace(*p))
-	      {
-		parser->start = p;
-		set_state( parser, KEY_NAME );
-		return p;
-	      }
-	    break;
-	}
+          default:
+            if (!isspace(*p))
+              {
+                parser->start = p;
+                set_state( parser, KEY_NAME );
+                return p;
+              }
+            break;
+        }
     }
   close_current_line( parser );
   return NULL;
@@ -523,14 +531,14 @@ static const CHAR *section_name_state( struct parser *parser, const CHAR *pos )
   for (p = pos; !is_eol( parser, p ); p++)
     {
       if (*p == ']')
-	{
-	  push_token( parser, p );
-	  if (add_section_from_token( parser ) == NULL)
-	    return NULL;
-	  push_state( parser, LINE_START );
-	  set_state( parser, COMMENT );  /* ignore everything else on the line */
-	  return p + 1;
-	}
+        {
+          push_token( parser, p );
+          if (add_section_from_token( parser ) == NULL)
+            return NULL;
+          push_state( parser, LINE_START );
+          set_state( parser, COMMENT );  /* ignore everything else on the line */
+          return p + 1;
+        }
     }
   parser->error = INF_STATUS_BAD_SECTION_NAME_LINE; /* unfinished section name */
   return NULL;
@@ -652,31 +660,31 @@ static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
   for (p = pos; !is_eof( parser, p ); p++)
     {
       switch(*p)
-	{
-	  case '\r':
-	    continue;
+        {
+          case '\r':
+            continue;
 
-	  case '\n':
-	    parser->line_pos++;
-	    parser->start = p + 1;
-	    set_state( parser, LEADING_SPACES );
-	    return p + 1;
+          case '\n':
+            parser->line_pos++;
+            parser->start = p + 1;
+            set_state( parser, LEADING_SPACES );
+            return p + 1;
 
-	  case '\\':
-	    continue;
+          case '\\':
+            continue;
 
-	  case ';':
-	    push_state( parser, EOL_BACKSLASH );
-	    set_state( parser, COMMENT );
-	    return p + 1;
+          case ';':
+            push_state( parser, EOL_BACKSLASH );
+            set_state( parser, COMMENT );
+            return p + 1;
 
-	  default:
-	    if (isspace(*p))
-	      continue;
-	    push_token( parser, p );
-	    pop_state( parser );
-	    return p;
-	}
+          default:
+            if (isspace(*p))
+              continue;
+            push_token( parser, p );
+            pop_state( parser );
+            return p;
+        }
     }
   parser->start = p;
   pop_state( parser );
@@ -693,21 +701,21 @@ static const CHAR *quotes_state( struct parser *parser, const CHAR *pos )
   for (p = pos; !is_eol( parser, p ); p++)
     {
       if (*p == '"')
-	{
-	  if (p+1 < parser->end && p[1] == '"')  /* double quotes */
-	    {
-	      push_token( parser, p + 1 );
-	      parser->start = token_end = p + 2;
-	      p++;
-	    }
-	  else  /* end of quotes */
-	    {
-	      push_token( parser, p );
-	      parser->start = p + 1;
-	      pop_state( parser );
-	      return p + 1;
-	    }
-	}
+        {
+          if (p+1 < parser->end && p[1] == '"')  /* double quotes */
+            {
+              push_token( parser, p + 1 );
+              parser->start = token_end = p + 2;
+              p++;
+            }
+          else  /* end of quotes */
+            {
+              push_token( parser, p );
+              parser->start = p + 1;
+              pop_state( parser );
+              return p + 1;
+            }
+        }
     }
   push_token( parser, p );
   pop_state( parser );
@@ -723,13 +731,13 @@ static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos 
   for (p = pos; !is_eol( parser, p ); p++)
     {
       if (*p == '\\')
-	{
-	  parser->start = p;
-	  set_state( parser, EOL_BACKSLASH );
-	  return p;
-	}
+        {
+          parser->start = p;
+          set_state( parser, EOL_BACKSLASH );
+          return p;
+        }
       if (!isspace(*p))
-	break;
+        break;
     }
   parser->start = p;
   pop_state( parser );
@@ -745,12 +753,12 @@ static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos
   for (p = pos; !is_eol( parser, p ); p++)
     {
       if (*p == '\\')
-	{
-	  set_state( parser, EOL_BACKSLASH );
-	  return p;
-	}
+        {
+          set_state( parser, EOL_BACKSLASH );
+          return p;
+        }
       if (!isspace(*p))
-	break;
+        break;
     }
   pop_state( parser );
   return p;
@@ -772,9 +780,9 @@ static const CHAR *comment_state( struct parser *parser, const CHAR *pos )
 /* parse a complete buffer */
 INFSTATUS
 InfpParseBuffer (PINFCACHE file,
-		 const CHAR *buffer,
-		 const CHAR *end,
-		 PULONG error_line)
+                 const CHAR *buffer,
+                 const CHAR *end,
+                 PULONG error_line)
 {
   struct parser parser;
   const CHAR *pos = buffer;
@@ -797,13 +805,13 @@ InfpParseBuffer (PINFCACHE file,
   if (parser.error)
     {
       if (error_line)
-	*error_line = parser.line_pos;
+        *error_line = parser.line_pos;
       return parser.error;
     }
 
   /* find the [strings] section */
-  file->StringsSection = InfpCacheFindSection (file,
-					       _T("Strings"));
+  file->StringsSection = InfpFindSection(file,
+                                         _T("Strings"));
 
   return INF_STATUS_SUCCESS;
 }

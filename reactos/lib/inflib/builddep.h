@@ -1,17 +1,20 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/builddep.h
- * PURPOSE:         Build dependent definitions
- * PROGRAMMER:      Ge van Geldorp <gvg@reactos.org>
+ * PROJECT:   .inf file parser
+ * LICENSE:   GPL - See COPYING in the top level directory
+ * COPYRIGHT: Copyright 2005 Ge van Geldorp <gvg@reactos.org>
  */
 
 #ifdef INFLIB_HOST
 
 /* Definitions native to the host on which we're building */
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#define FALSE 0
+#define TRUE  1
 
 #define FREE(Area) free(Area)
 #define MALLOC(Size) malloc(Size)
@@ -39,6 +42,7 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 #define _tcscpy strcpy
 #define _tcstoul strtoul
 #define _tcstol strtol
+#define STRFMT "%s"
 
 extern void DbgPrint(const char *Fmt, ...);
 
@@ -67,6 +71,8 @@ extern PVOID InfpHeap;
 #define INF_STATUS_NOT_FOUND         STATUS_NOT_FOUND
 #define INF_STATUS_BUFFER_OVERFLOW   STATUS_BUFFER_OVERFLOW
 #define INF_SUCCESS(x) (0 <= (x))
+
+#define STRFMT "%S"
 
 #endif /* INFLIB_HOST */
 

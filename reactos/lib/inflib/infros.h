@@ -1,15 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infros.h
- * PURPOSE:         Public .inf routines for use in ReactOS
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 #ifndef INFROS_H_INCLUDED
 #define INFROS_H_INCLUDED
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #include <infcommon.h>
 
@@ -21,6 +23,9 @@ extern NTSTATUS InfOpenBufferedFile(PHINF InfHandle,
 extern NTSTATUS InfOpenFile(PHINF InfHandle,
                             PUNICODE_STRING FileName,
                             PULONG ErrorLine);
+extern NTSTATUS InfWriteFile(HINF InfHandle,
+                             PUNICODE_STRING FileName,
+                             PUNICODE_STRING HeaderComment);
 extern VOID InfCloseFile(HINF InfHandle);
 extern BOOLEAN InfFindFirstLine(HINF InfHandle,
                                 PCWSTR Section,
@@ -61,7 +66,16 @@ extern BOOLEAN InfGetData(PINFCONTEXT Context,
 extern BOOLEAN InfGetDataField(PINFCONTEXT Context,
                                ULONG FieldIndex,
                                PWCHAR *Data);
+extern BOOLEAN InfFindOrAddSection(HINF InfHandle,
+                                   PCWSTR Section,
+                                   PINFCONTEXT *Context);
+extern BOOLEAN InfAddLine(PINFCONTEXT Context, PCWSTR Key);
+extern BOOLEAN InfAddField(PINFCONTEXT Context, PCWSTR Data);
 extern VOID InfFreeContext(PINFCONTEXT Context);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* INFROS_H_INCLUDED */
 

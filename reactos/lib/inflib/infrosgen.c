@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         .inf file parser
- * FILE:            lib/inflib/infrosgen.c
- * PURPOSE:         General .inf routines for use in ReactOS
- * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
- *                  Ge van Geldorp
+ * PROJECT:    .inf file parser
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Royce Mitchell III
+ *             Eric Kohl
+ *             Ge van Geldorp <gvg@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -248,7 +246,7 @@ InfCloseFile(HINF InfHandle)
 
   while (Cache->FirstSection != NULL)
     {
-      Cache->FirstSection = InfpCacheFreeSection(Cache->FirstSection);
+      Cache->FirstSection = InfpFreeSection(Cache->FirstSection);
     }
   Cache->LastSection = NULL;
 
