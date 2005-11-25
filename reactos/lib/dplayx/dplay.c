@@ -2664,7 +2664,7 @@ static HRESULT WINAPI DP_IF_GetPlayerName
   LPDPNAME    lpName = (LPDPNAME)lpData;
   DWORD       dwRequiredDataSize;
 
-  FIXME( "(%p)->(0x%08lx,%p,%p,%u): ANSI \n",
+  FIXME( "(%p)->(0x%08lx,%p,%p,%u): ANSI\n",
          This, idPlayer, lpData, lpdwDataSize, bAnsi );
 
   if( ( lpPList = DP_FindPlayer( This, idPlayer ) ) == NULL )
