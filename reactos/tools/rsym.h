@@ -179,9 +179,42 @@ typedef struct _STAB_ENTRY {
   ULONG n_value;        /* value of symbol */
 } STAB_ENTRY, *PSTAB_ENTRY;
 
-#define N_FUN 0x24
-#define N_SLINE 0x44
-#define N_SO 0x64
+/* http://www.math.utah.edu/docs/info/stabs_12.html */
+#define N_GYSM   0x20
+#define N_FNAME  0x22
+#define N_FUN    0x24
+#define N_STSYM  0x26
+#define N_LCSYM  0x28
+#define N_MAIN   0x2A
+#define N_PC     0x30
+#define N_NSYMS  0x32
+#define N_NOMAP  0x34
+#define N_RSYM   0x40
+#define N_M2C    0x42
+#define N_SLINE  0x44
+#define N_DSLINE 0x46
+#define N_BSLINE 0x48
+#define N_BROWS  0x48
+#define N_DEFD   0x4A
+#define N_EHDECL 0x50
+#define N_MOD2   0x50
+#define N_CATCH  0x54
+#define N_SSYM   0x60
+#define N_SO     0x64
+#define N_LSYM   0x80
+#define N_BINCL  0x82
+#define N_SOL    0x84
+#define N_PSYM   0xA0
+#define N_EINCL  0xA2
+#define N_ENTRY  0xA4
+#define N_LBRAC  0xC0
+#define N_EXCL   0xC2
+#define N_SCOPE  0xC4
+#define N_RBRAC  0xE0
+#define N_BCOMM  0xE2
+#define N_ECOMM  0xE4
+#define N_ECOML  0xE8
+#define N_LENG   0xFE
 
 /* COFF symbol table */
 
