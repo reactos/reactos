@@ -221,40 +221,42 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
     if (!name)
         return NULL;
 
+    /* source directories appear to always be at the root */
+    if (source)
+    {
+        path = msi_dup_property( package, cszSourceDir );
+        if (!path)
+        {
+            path = msi_dup_property( package, cszDatabase );
+            if (path)
+            {
+                p = strrchrW(path,'\\');
+                if (p)
+                    *(p+1) = 0;
+            }
+        }
+        if (folder)
+            *folder = get_loaded_folder( package, name );
+        return path;
+    }
+
     /* special resolving for Target and Source root dir */
     if (strcmpW(name,cszTargetDir)==0 || strcmpW(name,cszSourceDir)==0)
     {
-        if (!source)
+        LPWSTR check_path;
+        check_path = msi_dup_property( package, cszTargetDir );
+        if (!check_path)
         {
-            LPWSTR check_path;
-            check_path = msi_dup_property( package, cszTargetDir );
-            if (!check_path)
-            {
-                check_path = msi_dup_property( package, cszRootDrive );
-                if (set_prop)
-                    MSI_SetPropertyW(package,cszTargetDir,check_path);
-            }
+            check_path = msi_dup_property( package, cszRootDrive );
+            if (set_prop)
+                MSI_SetPropertyW(package,cszTargetDir,check_path);
+        }
 
-            /* correct misbuilt target dir */
-            path = build_directory_name(2, check_path, NULL);
-            if (strcmpiW(path,check_path)!=0)
-                MSI_SetPropertyW(package,cszTargetDir,path);
-            msi_free(check_path);
-        }
-        else
-        {
-            path = msi_dup_property( package, cszSourceDir );
-            if (!path)
-            {
-                path = msi_dup_property( package, cszDatabase );
-                if (path)
-                {
-                    p = strrchrW(path,'\\');
-                    if (p)
-                        *(p+1) = 0;
-                }
-            }
-        }
+        /* correct misbuilt target dir */
+        path = build_directory_name(2, check_path, NULL);
+        if (strcmpiW(path,check_path)!=0)
+            MSI_SetPropertyW(package,cszTargetDir,path);
+        msi_free(check_path);
         if (folder)
             *folder = get_loaded_folder( package, name );
         return path;
@@ -267,19 +269,13 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
     if (folder)
         *folder = f;
 
-    if (!source && f->ResolvedTarget)
+    if (f->ResolvedTarget)
     {
         path = strdupW( f->ResolvedTarget );
         TRACE("   already resolved to %s\n",debugstr_w(path));
         return path;
     }
-    else if (source && f->ResolvedSource)
-    {
-        path = strdupW( f->ResolvedSource );
-        TRACE("   (source)already resolved to %s\n",debugstr_w(path));
-        return path;
-    }
-    else if (!source && f->Property)
+    else if (f->Property)
     {
         path = build_directory_name( 2, f->Property, NULL );
                     
@@ -296,25 +292,13 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         TRACE(" ! Parent is %s\n", debugstr_w(parent));
 
         p = resolve_folder(package, parent, source, set_prop, NULL);
-        if (!source)
-        {
-            TRACE("   TargetDefault = %s\n", debugstr_w(f->TargetDefault));
+        TRACE("   TargetDefault = %s\n", debugstr_w(f->TargetDefault));
 
-            path = build_directory_name( 3, p, f->TargetDefault, NULL );
-            f->ResolvedTarget = strdupW( path );
-            TRACE("   resolved into %s\n",debugstr_w(path));
-            if (set_prop)
-                MSI_SetPropertyW(package,name,path);
-        }
-        else 
-        {
-            if (f->SourceDefault && f->SourceDefault[0]!='.')
-                path = build_directory_name( 3, p, f->SourceDefault, NULL );
-            else
-                path = strdupW(p);
-            TRACE("   (source)resolved into %s\n",debugstr_w(path));
-            f->ResolvedSource = strdupW( path );
-        }
+        path = build_directory_name( 3, p, f->TargetDefault, NULL );
+        f->ResolvedTarget = strdupW( path );
+        TRACE("   resolved into %s\n",debugstr_w(path));
+        if (set_prop)
+            MSI_SetPropertyW(package,name,path);
         msi_free(p);
     }
     return path;

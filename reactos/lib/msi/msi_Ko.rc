@@ -22,12 +22,12 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "path %s not found"
+	5 "%s  경로를 찾을수 없습니다"
 	9 "디스크 %s 삽입"
 	10 "절못된 매개변수"
-	11 "enter which folder contains %s"
-	12 "install source for feature missing"
-	13 "network drive for feature missing"
-	14 "feature from:"
-	15 "choose which folder contains %s"
+	11 "%s를 포함하는 폴더를 입력하세여"
+	12 "빠진 부분(feature)을 위한 설치 원본"
+	13 "빠진 부분(feature)을 위한 네트워크 드라이브"
+	14 "부분(feature)에서:"
+	15 " %s를 포함하는 폴더 선택"
 }

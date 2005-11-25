@@ -773,7 +773,7 @@ UINT WINAPI MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
                 awstring *lpQualBuf, DWORD* pcchQual,
                 awstring *lpAppBuf, DWORD* pcchAppBuf )
 {
-    DWORD name_sz, val_sz, type, ofs;
+    DWORD name_sz, val_sz, name_max, val_max, type, ofs;
     LPWSTR name = NULL, val = NULL;
     UINT r, r2;
     HKEY key;
@@ -789,40 +789,57 @@ UINT WINAPI MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
         return ERROR_UNKNOWN_COMPONENT;
 
     /* figure out how big the name is we want to return */
-    name_sz = 0;
-    if (pcchQual)
-    {
-        r = ERROR_OUTOFMEMORY;
-        name_sz = *pcchQual * 4;
-        name = msi_alloc( name_sz * sizeof(WCHAR) );
-        if (!name)
-            goto end;
-    }
-
-    /* figure out how big the value is */
-    type = 0;
-    val_sz = 0;
-    r = RegEnumValueW( key, iIndex, NULL, NULL,
-                       NULL, &type, NULL, &val_sz );
-    if (r != ERROR_SUCCESS)
+    name_max = 0x10;
+    r = ERROR_OUTOFMEMORY;
+    name = msi_alloc( name_max * sizeof(WCHAR) );
+    if (!name)
         goto end;
 
-    if (type != REG_MULTI_SZ)
-    {
-        ERR("component data has wrong type (%ld)\n", type);
-        goto end;
-    }
-
-    /* the value size is in bytes */
-    val_sz += sizeof(WCHAR);
-    val = msi_alloc( val_sz );
+    val_max = 0x10;
+    r = ERROR_OUTOFMEMORY;
+    val = msi_alloc( val_max );
     if (!val)
         goto end;
 
-    r = RegEnumValueW( key, iIndex, name, &name_sz,
-                       NULL, &type, (LPBYTE)val, &val_sz );
-    if (r != ERROR_SUCCESS)
+    /* loop until we allocate enough memory */
+    while (1)
+    {
+        name_sz = name_max;
+        val_sz = val_max;
+        r = RegEnumValueW( key, iIndex, name, &name_sz,
+                           NULL, &type, (LPBYTE)val, &val_sz );
+        if (r == ERROR_SUCCESS)
+            break;
+        if (r != ERROR_MORE_DATA)
+            goto end;
+ 
+        if (type != REG_MULTI_SZ)
+        {
+            ERR("component data has wrong type (%ld)\n", type);
+            goto end;
+        }
+
+        r = ERROR_OUTOFMEMORY;
+        if ((name_sz+1) >= name_max)
+        {
+            name_max *= 2;
+            msi_free( name );
+            name = msi_alloc( name_max * sizeof (WCHAR) );
+            if (!name)
+                goto end;
+            continue;
+        }
+        if (val_sz > val_max)
+        {
+            val_max = val_sz + sizeof (WCHAR);
+            val = msi_alloc( val_max * sizeof (WCHAR) );
+            if (!val)
+                goto end;
+            continue;
+        }
+        ERR("should be enough data, but isn't %ld %ld\n", name_sz, val_sz );
         goto end;
+    }
 
     ofs = 0;
     r = MsiDecomposeDescriptorW( val, NULL, NULL, NULL, &ofs );
