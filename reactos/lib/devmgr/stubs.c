@@ -15,12 +15,10 @@
  * UPDATE HISTORY:
  *      04-04-2004  Created
  */
-#include <windows.h>
-#include "devmgr.h"
+#include <precomp.h>
 
-#define UNIMPLEMENTED \
-  DbgPrint("DEVMGR:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
-
+#define NDEBUG
+#include <debug.h>
 
 /***************************************************************************
  * NAME                                                         EXPORTED
@@ -611,74 +609,6 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
 {
   UNIMPLEMENTED;
   return -1;
-}
-
-
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      DeviceCreateHardwarePage
- *
- * DESCRIPTION
- *   Creates a hardware page
- *
- * ARGUMENTS
- *   hWndParent: Handle to the parent window
- *   lpGuid:     Guid of the device
- *
- * RETURN VALUE
- *   Returns the handle of the hardware page window that has been created or
- *   NULL if it failed.
- *
- * REVISIONS
- *
- * NOTE
- *
- * @unimplemented
- */
-HWND
-WINAPI
-DeviceCreateHardwarePage(HWND hWndParent,
-                         LPGUID lpGuid)
-{
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      DeviceCreateHardwarePageEx
- *
- * DESCRIPTION
- *   Creates a hardware page
- *
- * ARGUMENTS
- *   hWndParent:     Handle to the parent window
- *   lpGuids:        An array of guids of devices that are to be listed
- *   uNumberOfGuids: Numbers of guids in the Guids array
- *   Unknown:        Unknown parameter, see NOTEs
- *
- * RETURN VALUE
- *   Returns the handle of the hardware page window that has been created or
- *   NULL if it failed.
- *
- * REVISIONS
- *
- * NOTE
- *   uUnknown seems to be some kind of flag how the entries should be displayed,
- *   in Win it seems to be always 0x00000001
- *
- * @unimplemented
- */
-HWND
-WINAPI
-DeviceCreateHardwarePageEx(HWND hWndParent,
-                           LPGUID lpGuids,
-                           UINT uNumberOfGuids,
-                           UINT Unknown)
-{
-  UNIMPLEMENTED;
-  return NULL;
 }
 
 

@@ -1,7 +1,15 @@
 #ifndef __DEVMGR_H
 #define __DEVMGR_H
 
+#include <windows.h>
+#include <setupapi.h>
+#include <cfgmgr32.h>
+#include <commctrl.h>
+#include "resource.h"
+
 extern HINSTANCE hDllInstance;
+
+ULONG DbgPrint(PCH Format,...);
 
 WINBOOL
 WINAPI
@@ -149,6 +157,17 @@ DevicePropertiesExW(HWND hWndParent,
                     LPCWSTR lpMachineName,
                     LPCWSTR lpDeviceID,
                     DWORD Unknown);
+
+/* MISC.C */
+
+DWORD
+LoadAndFormatString(IN HINSTANCE hInstance,
+                    IN UINT uID,
+                    OUT LPWSTR *lpTarget,
+                    ...);
+
+LPARAM
+ListViewGetSelectedItemData(IN HWND hwnd);
 
 #endif /* __DEVMGR_H */
 
