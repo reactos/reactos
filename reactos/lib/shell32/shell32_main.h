@@ -227,4 +227,7 @@ extern const GUID CLSID_UnixDosFolder;
 /* Default shell folder value registration */
 HRESULT SHELL_RegisterShellFolders(void);
 
+/* Detect Shell Links */
+BOOL SHELL_IsShortcut(LPCITEMIDLIST);
+
 #endif

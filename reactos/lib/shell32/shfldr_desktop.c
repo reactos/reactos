@@ -271,36 +271,37 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
     if (dwFlags & SHCONTF_FOLDERS)
     {
         HKEY hkey;
-        LONG r;
+        UINT i;
 
         /* create the pidl for This item */
         ret = AddToEnumList(list, _ILCreateMyComputer());
 
-        r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Desktop_NameSpaceW,
-                          0, KEY_READ, &hkey);
-        if (ret && ERROR_SUCCESS == r)
-        {
-            WCHAR iid[50];
-            int i=0;
-            BOOL moreKeys = TRUE;
-
-            while (ret && moreKeys)
+        for (i=0; i<2; i++) {
+            if (ret && !RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
+                                      Desktop_NameSpaceW, 0, KEY_READ, &hkey))
             {
-                DWORD size;
+                WCHAR iid[50];
+                int i=0;
 
-                size = sizeof (iid);
-                r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
-                if (ERROR_SUCCESS == r)
+                while (ret)
                 {
-                    ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
-                    i++;
+                    DWORD size;
+                    LONG r;
+
+                    size = sizeof (iid);
+                    r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
+                    if (ERROR_SUCCESS == r)
+                    {
+                        ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
+                        i++;
+                    }
+                    else if (ERROR_NO_MORE_ITEMS == r)
+                        break;
+                    else
+                        ret = FALSE;
                 }
-                else if (ERROR_NO_MORE_ITEMS == r)
-                    moreKeys = FALSE;
-                else
-                    ret = FALSE;
+                RegCloseKey(hkey);
             }
-            RegCloseKey(hkey);
         }
     }
 

@@ -96,6 +96,9 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
 	return 0;
 }
 
+/* declare SIC_LoadOverlayIcon() */
+static int SIC_LoadOverlayIcon(int idx);
+
 /*****************************************************************************
  * SIC_OverlayShortcutImage			[internal]
  *
@@ -103,7 +106,7 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
  *  Creates a new icon as a copy of the passed-in icon, overlayed with a
  *  shortcut image. 
  */
-static HICON SIC_OverlayShortcutImage(HICON SourceIcon)
+static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 {	ICONINFO SourceIconInfo, ShortcutIconInfo, TargetIconInfo;
 	HICON ShortcutIcon, TargetIcon;
 	BITMAP SourceBitmapInfo, ShortcutBitmapInfo;
@@ -115,15 +118,28 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon)
 	  OldShortcutBitmap = NULL,
 	  OldTargetBitmap = NULL;
 
+	static int s_imgListIdx = -1;
+
 	/* Get information about the source icon and shortcut overlay */
 	if (! GetIconInfo(SourceIcon, &SourceIconInfo)
 	    || 0 == GetObjectW(SourceIconInfo.hbmColor, sizeof(BITMAP), &SourceBitmapInfo))
 	{
 	  return NULL;
 	}
-	ShortcutIcon = LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_SHORTCUT),
-	                          IMAGE_ICON, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmWidth,
-	                          LR_SHARED);
+
+	/* search for the shortcut icon only once */
+	if (s_imgListIdx == -1)
+	    s_imgListIdx = SIC_LoadOverlayIcon(-IDI_SHELL_SHORTCUT);
+
+	if (s_imgListIdx != -1)
+	{
+	    if (large)
+	        ShortcutIcon = ImageList_GetIcon(ShellBigIconList, s_imgListIdx, ILD_TRANSPARENT);
+	    else
+	        ShortcutIcon = ImageList_GetIcon(ShellSmallIconList, s_imgListIdx, ILD_TRANSPARENT);
+	} else
+	    ShortcutIcon = NULL;
+
 	if (NULL == ShortcutIcon
 	    || ! GetIconInfo(ShortcutIcon, &ShortcutIconInfo)
 	    || 0 == GetObjectW(ShortcutIconInfo.hbmColor, sizeof(BITMAP), &ShortcutBitmapInfo))
@@ -313,8 +329,8 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
 
 	if (0 != (dwFlags & GIL_FORSHORTCUT))
 	{
-	  hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge);
-	  hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall);
+	  hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge, TRUE);
+	  hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall, FALSE);
 	  if (NULL != hiconLargeShortcut && NULL != hiconSmallShortcut)
 	  {
 	    hiconLarge = hiconLargeShortcut;
@@ -456,6 +472,52 @@ void SIC_Destroy(void)
 	LeaveCriticalSection(&SHELL32_SicCS);
 }
 
+/*****************************************************************************
+ * SIC_LoadOverlayIcon			[internal]
+ *
+ * Load a shell overlay icon and return its icon cache index.
+ */
+static int SIC_LoadOverlayIcon(int idx)
+{
+	WCHAR buffer[1024], wszIdx[8];
+	HKEY hKeyShellIcons;
+	LPCWSTR iconPath;
+	int iconIdx;
+
+	static const WCHAR wszShellIcons[] = {
+	    'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+	    'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+	    'E','x','p','l','o','r','e','r','\\','S','h','e','l','l',' ','I','c','o','n','s',0
+	}; 
+	static const WCHAR wszNumFmt[] = {'%','d',0};
+
+	iconPath = swShell32Name;	/* default: load icon from shell32.dll */
+	iconIdx = idx;
+
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszShellIcons, 0, KEY_READ, &hKeyShellIcons) == ERROR_SUCCESS)
+	{
+	    DWORD count = sizeof(buffer);
+
+	    sprintfW(wszIdx, wszNumFmt, idx);
+
+	    /* read icon path and index */
+	    if (RegQueryValueExW(hKeyShellIcons, wszIdx, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
+	    {
+		LPWSTR p = strchrW(buffer, ',');
+
+		if (p)
+		    *p++ = 0;
+
+		iconPath = buffer;
+		iconIdx = atoiW(p);
+	    }
+
+	    RegCloseKey(hKeyShellIcons);
+	}
+
+	return SIC_LoadIcon(iconPath, iconIdx, 0);
+}
+
 /*************************************************************************
  * Shell_GetImageList			[SHELL32.71]
  *
@@ -494,29 +556,15 @@ BOOL PidlToSicIndex (
 {
 	IExtractIconW	*ei;
 	WCHAR		szIconFile[MAX_PATH];	/* file containing the icon */
-	char		szTemp[MAX_PATH];
 	INT		iSourceIndex;		/* index or resID(negated) in this file */
 	BOOL		ret = FALSE;
 	UINT		dwFlags = 0;
-	HKEY		keyCls;
 	int		iShortcutDefaultIndex = INVALID_INDEX;
 
 	TRACE("sf=%p pidl=%p %s\n", sh, pidl, bBigIcon?"Big":"Small");
 
 	if (SUCCEEDED (IShellFolder_GetUIObjectOf(sh, 0, 1, &pidl, &IID_IExtractIconW, 0, (void **)&ei)))
 	{
-	  if (_ILGetExtension(pidl, szTemp, MAX_PATH) &&
-	      HCR_MapTypeToValueA(szTemp, szTemp, MAX_PATH, TRUE))
-	  {
-	    if (ERROR_SUCCESS == RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, KEY_QUERY_VALUE, &keyCls))
-	    {
-	      if (ERROR_SUCCESS == RegQueryValueExA(keyCls, "IsShortcut", NULL, NULL, NULL, NULL))
-	      {
-	        uFlags |= GIL_FORSHORTCUT;
-	      }
-	      RegCloseKey(keyCls);
-	    }
-	  }
 	  if (SUCCEEDED(IExtractIconW_GetIconLocation(ei, uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
 	  {
 	    *pIndex = SIC_GetIconIndex(szIconFile, iSourceIndex, uFlags);
@@ -560,15 +608,19 @@ int WINAPI SHMapPIDLToSystemImageListIndex(
 	int *pIndex)
 {
 	int Index;
+	UINT uGilFlags = 0;
 
 	TRACE("(SF=%p,pidl=%p,%p)\n",sh,pidl,pIndex);
 	pdump(pidl);
 
-	if (pIndex)
-	    if (!PidlToSicIndex ( sh, pidl, 1, 0, pIndex))
-		*pIndex = -1;	   
+	if (SHELL_IsShortcut(pidl))
+	    uGilFlags |= GIL_FORSHORTCUT;
 
-	if (!PidlToSicIndex ( sh, pidl, 0, 0, &Index))
+	if (pIndex)
+	    if (!PidlToSicIndex ( sh, pidl, 1, uGilFlags, pIndex))
+	        *pIndex = -1;
+
+	if (!PidlToSicIndex ( sh, pidl, 0, uGilFlags, &Index))
 	    return -1;
 
 	return Index;

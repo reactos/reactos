@@ -274,6 +274,7 @@ static BOOL CreateMyCompEnumList(IEnumIDList *list, DWORD dwFlags)
         WCHAR wszDriveName[] = {'A', ':', '\\', '\0'};
         DWORD dwDrivemap = GetLogicalDrives();
         HKEY hkey;
+        UINT i;
 
         while (ret && wszDriveName[0]<='Z')
         {
@@ -284,32 +285,34 @@ static BOOL CreateMyCompEnumList(IEnumIDList *list, DWORD dwFlags)
         }
 
         TRACE("-- (%p)-> enumerate (mycomputer shell extensions)\n",list);
-        if (ret && !RegOpenKeyExW(HKEY_LOCAL_MACHINE, MyComputer_NameSpaceW,
-         0, KEY_READ, &hkey))
-        {
-            WCHAR iid[50];
-            int i=0;
-
-            while (ret)
+        for (i=0; i<2; i++) {
+            if (ret && !RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
+                                      MyComputer_NameSpaceW, 0, KEY_READ, &hkey))
             {
-                DWORD size;
-                LONG r;
+                WCHAR iid[50];
+                int i=0;
 
-                size = sizeof(iid) / sizeof(iid[0]);
-                r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
-                if (ERROR_SUCCESS == r)
+                while (ret)
                 {
-                    /* FIXME: shell extensions, shouldn't the type be
-                     * PT_SHELLEXT? */
-                    ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
-                    i++;
+                    DWORD size;
+                    LONG r;
+
+                    size = sizeof(iid) / sizeof(iid[0]);
+                    r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
+                    if (ERROR_SUCCESS == r)
+                    {
+                        /* FIXME: shell extensions, shouldn't the type be
+                         * PT_SHELLEXT? */
+                        ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
+                        i++;
+                    }
+                    else if (ERROR_NO_MORE_ITEMS == r)
+                        break;
+                    else
+                        ret = FALSE;
                 }
-                else if (ERROR_NO_MORE_ITEMS == r)
-                    break;
-                else
-                    ret = FALSE;
+                RegCloseKey(hkey);
             }
-            RegCloseKey(hkey);
         }
     }
     return ret;

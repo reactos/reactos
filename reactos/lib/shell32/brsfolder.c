@@ -679,11 +679,11 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
     info.lpBrowseInfo = lpbi;
     info.hwndTreeView = NULL;
 
-    hr = CoInitialize(NULL);
+    hr = OleInitialize(NULL);
     r = DialogBoxParamW( shell32_hInstance, swBrowseTemplateName, lpbi->hwndOwner,
 	                 BrsFolderDlgProc, (LPARAM)&info );
     if (SUCCEEDED(hr)) 
-        CoUninitialize();
+        OleUninitialize();
     if (!r)
         return NULL;
 
