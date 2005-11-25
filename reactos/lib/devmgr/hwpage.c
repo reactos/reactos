@@ -49,6 +49,7 @@ typedef struct _HWCLASSDEVINFO
 {
     GUID Guid;
     HDEVINFO hDevInfo;
+    INT ImageIndex;
     INT ItemCount;
     PHWDEVINFO HwDevInfo;
 } HWCLASSDEVINFO, *PHWCLASSDEVINFO;
@@ -129,15 +130,164 @@ static VOID
 UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 {
     PHWDEVINFO HwDevInfo;
+    HWND hBtnTroubleShoot, hBtnProperties;
+    DWORD RegDataType;
+    
+    hBtnTroubleShoot = GetDlgItem(hpd->hWnd,
+                                  IDC_TROUBLESHOOT);
+    hBtnProperties = GetDlgItem(hpd->hWnd,
+                                IDC_PROPERTIES);
 
     HwDevInfo = (PHWDEVINFO)ListViewGetSelectedItemData(hpd->hWndDevList);
     if (HwDevInfo != NULL)
     {
-        /* FIXME - update static controls and enable buttons */
+        /* update static controls */
+        WCHAR szBuffer[256];
+        LPWSTR szFormatted = NULL;
+
+        if (!SetupDiGetDeviceRegistryProperty(HwDevInfo->ClassDevInfo->hDevInfo,
+                                              &HwDevInfo->DevInfoData,
+                                              SPDRP_MFG,
+                                              &RegDataType,
+                                              (PBYTE)szBuffer,
+                                              sizeof(szBuffer),
+                                              NULL) ||
+            RegDataType != REG_SZ)
+        {
+            /* FIXME - check string for NULL termination! */
+            szBuffer[0] = L'\0';
+        }
+        if (LoadAndFormatString(hDllInstance,
+                                IDS_MANUFACTURER,
+                                &szFormatted,
+                                szBuffer) != 0)
+        {
+            SetDlgItemText(hpd->hWnd,
+                           IDC_MANUFACTURER,
+                           szFormatted);
+            LocalFree((HLOCAL)szFormatted);
+        }
+
+        /* FIXME - Display location and status */
     }
     else
     {
-        /* FIXME - clear static controls and disable buttons */
+        /* clear static controls */
+        SetDlgItemText(hpd->hWnd,
+                       IDC_MANUFACTURER,
+                       NULL);
+        SetDlgItemText(hpd->hWnd,
+                       IDC_LOCATION,
+                       NULL);
+        SetDlgItemText(hpd->hWnd,
+                       IDC_STATUS,
+                       NULL);
+    }
+
+    EnableWindow(hBtnTroubleShoot,
+                 HwDevInfo != NULL);
+    EnableWindow(hBtnTroubleShoot,
+                 hBtnProperties != NULL);
+}
+
+static VOID
+FreeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
+{
+    PHWCLASSDEVINFO ClassDevInfo, LastClassDevInfo;
+
+    ClassDevInfo = hpd->ClassDevInfo;
+    LastClassDevInfo = ClassDevInfo + hpd->NumberOfGuids;
+
+    /* free the device info set handles */
+    while (ClassDevInfo != LastClassDevInfo)
+    {
+        if (ClassDevInfo->hDevInfo != INVALID_HANDLE_VALUE)
+        {
+            SetupDiDestroyDeviceInfoList(ClassDevInfo->hDevInfo);
+        }
+        ClassDevInfo->hDevInfo = NULL;
+        ClassDevInfo->ItemCount = 0;
+        ClassDevInfo->ImageIndex = 0;
+
+        if (ClassDevInfo->HwDevInfo != NULL)
+        {
+            HeapFree(GetProcessHeap(),
+                     0,
+                     ClassDevInfo->HwDevInfo);
+            ClassDevInfo->HwDevInfo = NULL;
+        }
+
+        ClassDevInfo++;
+    }
+}
+
+
+static VOID
+BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
+{
+    PHWCLASSDEVINFO ClassDevInfo, LastClassDevInfo;
+    SP_DEVINFO_DATA DevInfoData;
+
+    DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+
+    ClassDevInfo = hpd->ClassDevInfo;
+    LastClassDevInfo = ClassDevInfo + hpd->NumberOfGuids;
+
+    while (ClassDevInfo != LastClassDevInfo)
+    {
+        ClassDevInfo->ImageIndex = -1;
+        ClassDevInfo->hDevInfo = SetupDiGetClassDevs(&ClassDevInfo->Guid,
+                                                     NULL,
+                                                     hpd->hWnd,
+                                                     DIGCF_PRESENT);
+        if (ClassDevInfo->hDevInfo != INVALID_HANDLE_VALUE)
+        {
+            DWORD MemberIndex = 0;
+
+            SetupDiGetClassImageIndex(&hpd->ClassImageListData,
+                                      &ClassDevInfo->Guid,
+                                      &ClassDevInfo->ImageIndex);
+
+            while (SetupDiEnumDeviceInfo(ClassDevInfo->hDevInfo,
+                                         MemberIndex++,
+                                         &DevInfoData))
+            {
+                if (ClassDevInfo->HwDevInfo != NULL)
+                {
+                    PHWDEVINFO HwNewDevInfo = HeapReAlloc(GetProcessHeap(),
+                                                          0,
+                                                          ClassDevInfo->HwDevInfo,
+                                                          (ClassDevInfo->ItemCount + 1) *
+                                                              sizeof(HWDEVINFO));
+                    if (HwNewDevInfo != NULL)
+                    {
+                        ClassDevInfo->HwDevInfo = HwNewDevInfo;
+                    }
+                    else
+                    {
+                        DPRINT1("Unable to allocate memory for %d SP_DEVINFO_DATA structures!\n",
+                                ClassDevInfo->ItemCount + 1);
+                        break;
+                    }
+                }
+                else
+                {
+                    ClassDevInfo->HwDevInfo = HeapAlloc(GetProcessHeap(),
+                                                        0,
+                                                        sizeof(HWDEVINFO));
+                    if (ClassDevInfo->HwDevInfo == NULL)
+                    {
+                        DPRINT1("Unable to allocate memory for a SP_DEVINFO_DATA structures!\n");
+                        break;
+                    }
+                }
+
+                ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount].ClassDevInfo = ClassDevInfo;
+                ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount++].DevInfoData = DevInfoData;
+            }
+        }
+
+        ClassDevInfo++;
     }
 }
 
@@ -145,82 +295,38 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 static VOID
 FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
 {
-    PHWCLASSDEVINFO DevInfo, LastDevInfo;
-    SP_DEVINFO_DATA DevInfoData;
+    PHWCLASSDEVINFO ClassDevInfo, LastClassDevInfo;
+    PHWDEVINFO HwDevInfo, LastHwDevInfo;
     WCHAR szBuffer[255];
     INT ItemCount = 0;
 
-    DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+    BuildDevicesList(hpd);
 
-    DevInfo = hpd->ClassDevInfo;
-    LastDevInfo = DevInfo + hpd->NumberOfGuids;
+    ClassDevInfo = hpd->ClassDevInfo;
+    LastClassDevInfo = ClassDevInfo + hpd->NumberOfGuids;
 
-    while (DevInfo != LastDevInfo)
+    while (ClassDevInfo != LastClassDevInfo)
     {
-        INT ImageIndex = -1;
-
-        DevInfo->hDevInfo = SetupDiGetClassDevs(&DevInfo->Guid,
-                                                NULL,
-                                                hpd->hWnd,
-                                                DIGCF_PRESENT);
-        if (DevInfo->hDevInfo != INVALID_HANDLE_VALUE)
+        if (ClassDevInfo->HwDevInfo != NULL)
         {
-            LVITEM li;
-            DWORD MemberIndex = 0;
+            HwDevInfo = ClassDevInfo->HwDevInfo;
+            LastHwDevInfo = HwDevInfo + ClassDevInfo->ItemCount;
 
-            SetupDiGetClassImageIndex(&hpd->ClassImageListData,
-                                      &DevInfo->Guid,
-                                      &ImageIndex);
-
-            while (SetupDiEnumDeviceInfo(DevInfo->hDevInfo,
-                                         MemberIndex++,
-                                         &DevInfoData))
+            while (HwDevInfo != LastHwDevInfo)
             {
                 DWORD RegDataType;
                 INT iItem;
+                LVITEM li;
 
-                if (DevInfo->HwDevInfo != NULL)
-                {
-                    PHWDEVINFO HwNewDevInfo = HeapReAlloc(GetProcessHeap(),
-                                                          0,
-                                                          DevInfo->HwDevInfo,
-                                                          (DevInfo->ItemCount + 1) *
-                                                              sizeof(HWDEVINFO));
-                    if (HwNewDevInfo != NULL)
-                    {
-                        DevInfo->HwDevInfo = HwNewDevInfo;
-                    }
-                    else
-                    {
-                        DPRINT1("Unable to allocate memory for %d SP_DEVINFO_DATA structures!\n",
-                                DevInfo->ItemCount + 1);
-                        break;
-                    }
-                }
-                else
-                {
-                    DevInfo->HwDevInfo = HeapAlloc(GetProcessHeap(),
-                                                   0,
-                                                   sizeof(HWDEVINFO));
-                    if (DevInfo->HwDevInfo == NULL)
-                    {
-                        DPRINT1("Unable to allocate memory for a SP_DEVINFO_DATA structures!\n");
-                        break;
-                    }
-                }
-
-                DevInfo->HwDevInfo[DevInfo->ItemCount].ClassDevInfo = DevInfo;
-                DevInfo->HwDevInfo[DevInfo->ItemCount++].DevInfoData = DevInfoData;
-
-                if ((SetupDiGetDeviceRegistryProperty(DevInfo->hDevInfo,
-                                                      &DevInfoData,
+                if ((SetupDiGetDeviceRegistryProperty(ClassDevInfo->hDevInfo,
+                                                      &HwDevInfo->DevInfoData,
                                                       SPDRP_FRIENDLYNAME,
                                                       &RegDataType,
                                                       (PBYTE)szBuffer,
                                                       sizeof(szBuffer),
                                                       NULL) ||
-                     SetupDiGetDeviceRegistryProperty(DevInfo->hDevInfo,
-                                                      &DevInfoData,
+                     SetupDiGetDeviceRegistryProperty(ClassDevInfo->hDevInfo,
+                                                      &HwDevInfo->DevInfoData,
                                                       SPDRP_DEVICEDESC,
                                                       &RegDataType,
                                                       (PBYTE)szBuffer,
@@ -236,8 +342,8 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     li.state = (ItemCount == 0 ? LVIS_SELECTED : 0);
                     li.stateMask = LVIS_SELECTED;
                     li.pszText = szBuffer;
-                    li.iImage = ImageIndex;
-                    li.lParam = (LPARAM)&DevInfo->HwDevInfo[DevInfo->ItemCount - 1];
+                    li.iImage = ClassDevInfo->ImageIndex;
+                    li.lParam = (LPARAM)HwDevInfo;
 
                     iItem = ListView_InsertItem(hpd->hWndDevList,
                                                 &li);
@@ -245,7 +351,7 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     {
                         ItemCount++;
 
-                        if (SetupDiGetClassDescription(&DevInfo->Guid,
+                        if (SetupDiGetClassDescription(&ClassDevInfo->Guid,
                                                        szBuffer,
                                                        sizeof(szBuffer) / sizeof(szBuffer[0]),
                                                        NULL))
@@ -259,10 +365,12 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                         }
                     }
                 }
+
+                HwDevInfo++;
             }
         }
 
-        DevInfo++;
+        ClassDevInfo++;
     }
 
     /* update the controls */
@@ -509,8 +617,6 @@ EnableTroubleShoot(PHARDWARE_PAGE_DATA hpd,
     HWND hBtnTroubleShoot = GetDlgItem(hpd->hWnd,
                                        IDC_TROUBLESHOOT);
 
-    EnableWindow(hBtnTroubleShoot,
-                 Enable);
     ShowWindow(hBtnTroubleShoot,
                Enable ? SW_SHOW : SW_HIDE);
 }
@@ -650,21 +756,8 @@ HardwareDlgProc(IN HWND hwndDlg,
 
             case WM_DESTROY:
             {
-                UINT i;
-
-                /* free the device info set handles */
-                for (i = 0;
-                     i < hpd->NumberOfGuids;
-                     i++)
-                {
-                    SetupDiDestroyDeviceInfoList(hpd->ClassDevInfo[i].hDevInfo);
-                    if (hpd->ClassDevInfo[i].HwDevInfo != NULL)
-                    {
-                        HeapFree(GetProcessHeap(),
-                                 0,
-                                 hpd->ClassDevInfo[i].HwDevInfo);
-                    }
-                }
+                /* free devices list */
+                FreeDevicesList(hpd);
 
                 /* restore the old window proc of the subclassed parent window */
                 if (hpd->hWndParent != NULL && hpd->ParentOldWndProc != NULL)
