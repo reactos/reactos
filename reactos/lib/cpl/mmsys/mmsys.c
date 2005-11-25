@@ -36,11 +36,18 @@
 #include "mmsys.h"
 #include "resource.h"
 
+typedef enum
+{
+    HWPD_STANDARDLIST = 0,
+    HWPD_LARGELIST,
+    HWPD_MAX = HWPD_LARGELIST
+} HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
+
 HWND WINAPI
 DeviceCreateHardwarePageEx(HWND hWndParent,
                            LPGUID lpGuids,
                            UINT uNumberOfGuids,
-                           UINT Unknown);
+                           HWPAGE_DISPLAYMODE DisplayMode);
 
 #define NUM_APPLETS	(1)
 
@@ -73,7 +80,7 @@ HardwareDlgProc(HWND hwndDlg,
             DeviceCreateHardwarePageEx(hwndDlg,
                                        Guids,
                                        sizeof(Guids) / sizeof(Guids[0]),
-                                       1);
+                                       HWPD_LARGELIST);
             break;
         }
     }
