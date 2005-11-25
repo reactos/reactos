@@ -47,23 +47,24 @@ APIENTRY LONG DriverProc(
         case DRV_LOAD :
             DPRINT("DRV_LOAD\n");
             /* We should initialize the device list */
-            return DRV_OK; // dont need to do any more
+            return TRUE; // dont need to do any more
 
         case DRV_FREE :
             /* We should stop all wave and MIDI playback */
             DPRINT("DRV_FREE\n");
-            return DRV_OK;
+            return TRUE;
 
 		/*
 			DRV_OPEN is sent when WINMM wishes to open the driver. Param1
 			can specify configuration information, but we don't need any.
 		*/
         case DRV_OPEN :
-            return DRV_OK;
+            DPRINT("DRV_OPEN\n");
+            return TRUE;
 
         case DRV_CLOSE :
             DPRINT("DRV_CLOSE\n");
-            return DRV_OK;
+            return TRUE;
 
 		/*
             Enabling this driver causes the kernel-mode portion of WDMAUD to
@@ -84,7 +85,7 @@ APIENTRY LONG DriverProc(
         case DRV_DISABLE :
             DPRINT("DRV_DISABLE\n");
             DisableKernelInterface();
-            return DRV_OK;
+            return TRUE;
 
         /*
             We don't actually support configuration or installation, so these
@@ -155,7 +156,7 @@ APIENTRY DWORD widMessage(
 	
         case WIDM_GETDEVCAPS :
             DPRINT("WIDM_GETDEVCAPS\n");
-            return GetWaveInCapabilities(id, (WCHAR*) p2, (LPCOMMONCAPS) p1);
+            return GetWaveInCapabilities(id, (WCHAR*) p2, (LPMDEVICECAPSEX) p1);
    };
 
 	return MMSYSERR_NOERROR;
@@ -185,7 +186,7 @@ APIENTRY DWORD wodMessage(
 
 		case DRVM_EXIT :
             DPRINT("DRVM_EXIT\n");
-            return RemoveWaveInDevice((WCHAR*) p2); /* FIXME? */
+            return RemoveWaveOutDevice((WCHAR*) p2); /* FIXME? */
 
         /*
          *  WODM_GETNUMDEVS
@@ -203,7 +204,7 @@ APIENTRY DWORD wodMessage(
          */
         case WODM_GETDEVCAPS :
 			DPRINT("WODM_GETDEVCAPS\n");
-			return GetWaveOutCapabilities(id, (WCHAR*) p2, (LPCOMMONCAPS) p1);
+			return GetWaveOutCapabilities(id, (WCHAR*) p2, (LPMDEVICECAPSEX) p1);
 
         /*
          *  WODM_OPEN
@@ -264,7 +265,7 @@ APIENTRY DWORD midMessage(
     
         case MIDM_GETDEVCAPS :
             DPRINT("MIDM_GETDEVCAPS\n");
-            return GetMidiInCapabilities(id, (WCHAR*) p2, (LPCOMMONCAPS) p1);
+            return GetMidiInCapabilities(id, (WCHAR*) p2, (LPMDEVICECAPSEX) p1);
 	};
 
     DPRINT("* NOT IMPLEMENTED *\n");
@@ -297,7 +298,7 @@ APIENTRY DWORD modMessage(
     
         case MODM_GETDEVCAPS :
             DPRINT("MODM_GETDEVCAPS\n");
-            return GetMidiOutCapabilities(id, (WCHAR*) p2, (LPCOMMONCAPS) p1);
+            return GetMidiOutCapabilities(id, (WCHAR*) p2, (LPMDEVICECAPSEX) p1);
 	};
 
     DPRINT("* NOT IMPLEMENTED *\n");
@@ -330,7 +331,7 @@ APIENTRY DWORD mxdMessage(
 
         case MXDM_GETDEVCAPS :
             DPRINT("MXDM_GETDEVCAPS\n");
-            return GetMixerCapabilities(id, (WCHAR*) p2, (LPCOMMONCAPS) p1);
+            return GetMixerCapabilities(id, (WCHAR*) p2, (LPMDEVICECAPSEX) p1);
 
         /* ... */
 	};
@@ -359,7 +360,7 @@ APIENTRY DWORD auxMessage(DWORD id, DWORD message, DWORD user, DWORD p1, DWORD p
 
         case AUXDM_GETDEVCAPS :
             DPRINT("AUXDM_GETDEVCAPS\n");
-            return GetAuxCapabilities(id, (WCHAR*) p2, (LPCOMMONCAPS) p1);
+            return GetAuxCapabilities(id, (WCHAR*) p2, (LPMDEVICECAPSEX) p1);
 
         /* ... */
     };
@@ -379,6 +380,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
     else if (Reason == DLL_PROCESS_DETACH)
     {
+        DPRINT("*** wdmaud.drv is being closed ***\n");
+        ReportMem();
     }
 
     return TRUE;

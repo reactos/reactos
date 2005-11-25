@@ -16,5 +16,6 @@
 	<file>wavehdr.c</file>
 	<file>threads.c</file>
 	<file>helper.c</file>
+	<file>memtrack.c</file>
 	<file>wdmaud.rc</file>
 </module>

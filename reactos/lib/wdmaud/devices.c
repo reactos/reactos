@@ -17,6 +17,7 @@
 
 const char WDMAUD_DEVICE_INFO_SIG[4] = "WADI";
 const char WDMAUD_DEVICE_STATE_SIG[4] = "WADS";
+const char WDMAUD_NULL_SIGNATURE[4] = {0,0,0,0};
 
 
 BOOL IsValidDevicePath(WCHAR* path)
@@ -102,6 +103,8 @@ PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path)
     PWDMAUD_DEVICE_INFO device_data = 0;
     int path_size = 0;
 
+    DPRINT("Creating device data for device type %d\n", (int) device_type);
+
     if ( ! IsValidDevicePath(device_path) )
     {
         DPRINT1("No valid device interface given!\n");
@@ -110,7 +113,7 @@ PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path)
 
     /* Take into account this is a unicode string... */
     path_size = (lstrlen(device_path) + 1) * sizeof(WCHAR);
-    DPRINT("Size of path is %d\n", (int) path_size);
+    /* DPRINT("Size of path is %d\n", (int) path_size); */
 
     heap = GetProcessHeap();
 
@@ -123,10 +126,14 @@ PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path)
 
     DPRINT("Allocating %d bytes\n",
            path_size + sizeof(WDMAUD_DEVICE_INFO));
-
+/*
     device_data = (PWDMAUD_DEVICE_INFO) HeapAlloc(heap,
                                                   HEAP_ZERO_MEMORY,
                                                   path_size + sizeof(WDMAUD_DEVICE_INFO));
+*/
+
+    device_data = (PWDMAUD_DEVICE_INFO)
+        AllocMem(path_size + sizeof(WDMAUD_DEVICE_INFO));
 
     if ( ! device_data )
     {
@@ -151,6 +158,19 @@ PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path)
         return device_data;
     }
 }
+
+/*
+    CloneDeviceData
+
+    This isn't all that great... Maybe some macros would be better:
+    BEGIN_CLONING_STRUCT(source, target)
+        CLONE_MEMBER(member)
+    END_CLONING_STRUCT()
+
+    The main problem is that sometimes we'll want to copy more than
+    the data presented here. I guess we could blindly copy EVERYTHING
+    but that'd be excessive.
+*/
 
 PWDMAUD_DEVICE_INFO CloneDeviceData(PWDMAUD_DEVICE_INFO original)
 {
@@ -181,8 +201,33 @@ PWDMAUD_DEVICE_INFO CloneDeviceData(PWDMAUD_DEVICE_INFO original)
 
 void DeleteDeviceData(PWDMAUD_DEVICE_INFO device_data)
 {
+    HANDLE heap;
+
     ASSERT( device_data );
-    /* TODO */
+
+    /* Erase the signature to prevent any possible future mishaps */
+    *device_data->signature = *WDMAUD_NULL_SIGNATURE;
+
+    heap = GetProcessHeap();
+
+    if ( ! heap )
+    {
+        DPRINT1("Couldn't get the process heap (error %d)\n",
+                (int) GetLastError());
+        goto exit;
+    }
+
+    FreeMem(device_data);
+    /*
+    {
+        DPRINT1("Couldn't free device data memory (error %d)\n",
+                (int) GetLastError());
+    }
+    */
+
+    exit :
+        /* We just return */
+        return;
 }
 
 MMRESULT ModifyDevicePresence(
@@ -198,10 +243,8 @@ MMRESULT ModifyDevicePresence(
     DPRINT("ModifyDevicePresence - %s a device\n",
            adding ? "adding" : "removing");
 
-    DPRINT("Topology path %S\n", device_path);
-
-    /* FIXME: DeviceType! */
-    /* TODO: Assert on device type? */
+    /* DPRINT("Topology path %S\n", device_path); */
+    DPRINT("Devtype %d\n", (int) device_type);
 
     ASSERT( IsValidDeviceType(device_type) );
     ASSERT( device_path );
@@ -214,8 +257,6 @@ MMRESULT ModifyDevicePresence(
         result = MMSYSERR_NOMEM;
         goto cleanup;
     }
-
-/*    device_data->type = device_type; */
 
     ioctl = adding ? IOCTL_WDMAUD_ADD_DEVICE : IOCTL_WDMAUD_REMOVE_DEVICE;
 
@@ -268,7 +309,6 @@ DWORD GetDeviceCount(CHAR device_type, WCHAR* topology_path)
 
     DPRINT("Getting num devs\n");
 
-    /*device_data->type = device_type;*/
     device_data->with_critical_section = FALSE;
 
     if ( CallKernelDevice(device_data,
@@ -294,14 +334,19 @@ DWORD GetDeviceCount(CHAR device_type, WCHAR* topology_path)
 }
 
 /*
-    This is a bit messed up
+    GetDeviceCapabilities
+
+    This uses a different structure to the traditional documentation, because
+    we handle plug and play devices.
+
+    Much sleep was lost over implementing this.
 */
 
 MMRESULT GetDeviceCapabilities(
     CHAR device_type,
     DWORD device_id,
     WCHAR* device_path,
-    LPCOMMONCAPS caps
+    LPMDEVICECAPSEX caps
 )
 {
     PWDMAUD_DEVICE_INFO device = NULL;
@@ -309,38 +354,12 @@ MMRESULT GetDeviceCapabilities(
 
     DPRINT("Device path %S\n", device_path);
 
-    /* Hmm - caps->wMid seems to be 0x54 (84) from XP's winmm.dll */
-    if (caps->wMid == 0)
+    /* Is this right? */
+    if (caps->cbSize == 0)
     {
-        return MMSYSERR_NOERROR;
-
-        DPRINT("caps->wMid == 0\n");
-
-        DPRINT("Manufacturer: 0x%x (%d)\n", caps->wMid, caps->wMid);
-        DPRINT("Product: 0x%x (%d)\n", caps->wPid, caps->wPid);
-        DPRINT("Device is: %S\n", caps->szPname);
-
-        if ( IsWaveOutDeviceType(device_type) )
-        {
-        LPWAVEOUTCAPS woc = (LPWAVEOUTCAPS) caps;
-        DPRINT("Formats: %d\n", (int) woc->dwFormats);
-        DPRINT("Channels: %d\n", woc->wChannels);
-        DPRINT("Reserved: %d\n", woc->wReserved1);
-        DPRINT("Support: %d\n", (int) woc->dwSupport);
-        }
-
-        return MMSYSERR_NOERROR;
+        DPRINT1("We appear to have been given an invalid parameter\n");
+        return MMSYSERR_INVALPARAM;
     }
-
-#if 0
-    int i;
-    for (i = 0; i < 64; i ++)
-    {
-        DPRINT("0x%x\n", *(((UCHAR*)caps) + i));
-    }
-
-    return MMSYSERR_NOERROR;
-#endif
 
     DPRINT("Going to have to query the kernel-mode part\n");
 
@@ -356,23 +375,13 @@ MMRESULT GetDeviceCapabilities(
     device->id = device_id;
     device->with_critical_section = FALSE;
 
-    /* ? */
-    DPRINT("Caps wMid is 0x%x\n", (int) caps->wMid);
-    DPRINT("Driver version is 0x%x\n", (int) caps->vDriverVersion);
-
-    DPRINT("%S\n", (WCHAR*) caps->vDriverVersion);
-
-    LPWORD theword;
-    theword = (LPWORD) caps->vDriverVersion;
-    *theword = 0x43;
-    //caps->vDriverVersion=0x4300;
-
+    *(LPWORD)caps->pCaps = (WORD) 0x43;
 
     DPRINT("Calling kernel device\n");
     result = CallKernelDevice(device,
                               IOCTL_WDMAUD_GET_CAPABILITIES,
-                              (DWORD)caps->wMid,
-                              (DWORD)caps->vDriverVersion);
+                              (DWORD)caps->cbSize,
+                              (DWORD)caps->pCaps);
 
     if ( result != MMSYSERR_NOERROR )
     {
@@ -380,10 +389,7 @@ MMRESULT GetDeviceCapabilities(
         goto cleanup;
     }
 
-    
-
-    /* What do we return? */
-    /*return MMSYSERR_NOERROR; */ /* already set by now */
+    /* Return code will already be MMSYSERR_NOERROR by now */
 
     cleanup :
     {
@@ -515,7 +521,7 @@ MMRESULT OpenWaveDevice(
         DPRINT("You actually want me to open the device, huh?\n");
 
         /* Allocate memory for the "queue" critical section */
-        
+
         device->state->queue_critical_section =
             HeapAlloc(heap, HEAP_ZERO_MEMORY, sizeof(CRITICAL_SECTION));
 
@@ -526,7 +532,7 @@ MMRESULT OpenWaveDevice(
             result = MMSYSERR_NOMEM;
             goto cleanup;
         }
-        
+
         /* Initialize the critical section */
         InitializeCriticalSection(device->state->queue_critical_section);
 
@@ -537,7 +543,7 @@ MMRESULT OpenWaveDevice(
         /* Reset state */
         device->state->open_descriptor = NULL;
         device->state->unknown_24 = 0;
-        
+
         device->state->is_running = FALSE;
         device->state->is_paused =
             device->type == WDMAUD_WAVE_IN ? TRUE : FALSE;
@@ -547,7 +553,7 @@ MMRESULT OpenWaveDevice(
         DPRINT("All systems are go...\n");
 
         result = TryOpenDevice(device, open_details->lpFormat);
-        
+
         if ( result != MMSYSERR_NOERROR )
         {
             DPRINT1("Format not supported?\n");
@@ -585,7 +591,8 @@ MMRESULT OpenWaveDevice(
     }
 
     /*
-        This cleanup may need checking for memory leakage :/
+        This cleanup may need checking for memory leakage. It's not very pretty
+        to look at, either...
     */
 
     cleanup :
@@ -601,7 +608,7 @@ MMRESULT OpenWaveDevice(
                         DeleteCriticalSection(device->state->queue_critical_section);
                         HeapFree(heap, 0, device->state->queue_critical_section);
                     }
-                    
+
                     HeapFree(heap, 0, device->state);
                 }
 

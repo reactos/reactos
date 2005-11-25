@@ -31,48 +31,6 @@
 /* HACK! */
 #define DbgPrint printf
 
-/* TODO: Put elsewhere */
-#if 0
-typedef struct tagWAVEOUTCAPS2A {
-    WORD    wMid;                  /* manufacturer ID */
-    WORD    wPid;                  /* product ID */
-    MMVERSION vDriverVersion;      /* version of the driver */
-    CHAR    szPname[MAXPNAMELEN];  /* product name (NULL terminated string) */
-    DWORD   dwFormats;             /* formats supported */
-    WORD    wChannels;             /* number of sources supported */
-    WORD    wReserved1;            /* packing */
-    DWORD   dwSupport;             /* functionality supported by driver */
-    GUID    ManufacturerGuid;      /* for extensible MID mapping */
-    GUID    ProductGuid;           /* for extensible PID mapping */
-    GUID    NameGuid;              /* for name lookup in registry */
-} WAVEOUTCAPS2A, *PWAVEOUTCAPS2A, *NPWAVEOUTCAPS2A, *LPWAVEOUTCAPS2A;
-typedef struct tagWAVEOUTCAPS2W {
-    WORD    wMid;                  /* manufacturer ID */
-    WORD    wPid;                  /* product ID */
-    MMVERSION vDriverVersion;      /* version of the driver */
-    WCHAR   szPname[MAXPNAMELEN];  /* product name (NULL terminated string) */
-    DWORD   dwFormats;             /* formats supported */
-    WORD    wChannels;             /* number of sources supported */
-    WORD    wReserved1;            /* packing */
-    DWORD   dwSupport;             /* functionality supported by driver */
-    GUID    ManufacturerGuid;      /* for extensible MID mapping */
-    GUID    ProductGuid;           /* for extensible PID mapping */
-    GUID    NameGuid;              /* for name lookup in registry */
-} WAVEOUTCAPS2W, *PWAVEOUTCAPS2W, *NPWAVEOUTCAPS2W, *LPWAVEOUTCAPS2W;
-#ifdef UNICODE
-typedef WAVEOUTCAPS2W WAVEOUTCAPS2;
-typedef PWAVEOUTCAPS2W PWAVEOUTCAPS2;
-typedef NPWAVEOUTCAPS2W NPWAVEOUTCAPS2;
-typedef LPWAVEOUTCAPS2W LPWAVEOUTCAPS2;
-#else
-typedef WAVEOUTCAPS2A WAVEOUTCAPS2;
-typedef PWAVEOUTCAPS2A PWAVEOUTCAPS2;
-typedef NPWAVEOUTCAPS2A NPWAVEOUTCAPS2;
-typedef LPWAVEOUTCAPS2A LPWAVEOUTCAPS2;
-#endif // UNICODE
-#endif
-
-
 
 /*
     Handy macros
@@ -80,6 +38,10 @@ typedef LPWAVEOUTCAPS2A LPWAVEOUTCAPS2;
 
 #define REPORT_MM_RESULT(message, success) \
     DPRINT("%s %s\n", message, success == MMSYSERR_NOERROR ? "succeeded" : "failed")
+
+
+
+#define GOBAL_CALLBACKS_PATH L"Global\\WDMAUD_Callbacks"
 
 
 /*
@@ -201,19 +163,17 @@ enum
     of a device type.
 */
 
+/*
+    This is used as a general-purpose structure to retrieve capabilities
+    from the driver.
+*/
 typedef struct
 {
-    WORD wMid;
-    WORD wPid;
-    MMVERSION vDriverVersion;
-    WCHAR szPname[MAXPNAMELEN];
-} COMMONCAPSW, *LPCOMMONCAPSW;
+    DWORD cbSize;
+    LPVOID pCaps;
+} MDEVICECAPSEX, *LPMDEVICECAPSEX;
 
-/* Unicode, anyone? */
-typedef COMMONCAPSW COMMONCAPS;
-typedef LPCOMMONCAPSW LPCOMMONCAPS;
-
-/* More abstraction */
+/* Abstraction */
 typedef LPVOID PWDMAUD_HEADER;
 
 /*
@@ -440,20 +400,20 @@ MMRESULT GetDeviceCapabilities(
     CHAR device_type,
     DWORD device_id,
     WCHAR* device_path,
-    LPCOMMONCAPS caps);
+    LPMDEVICECAPSEX caps);
 
 #define GetWaveInCapabilities(id, device_path, caps) \
-        GetDeviceCapabilities(id, WDMAUD_WAVE_IN, device_path, caps);
+        GetDeviceCapabilities(WDMAUD_WAVE_IN, id, device_path, caps);
 #define GetWaveOutCapabilities(id, device_path, caps) \
-        GetDeviceCapabilities(id, WDMAUD_WAVE_OUT, device_path, caps);
+        GetDeviceCapabilities(WDMAUD_WAVE_OUT, id, device_path, caps);
 #define GetMidiInCapabilities(id, device_path, caps) \
-        GetDeviceCapabilities(id, WDMAUD_MIDI_IN, device_path, caps);
+        GetDeviceCapabilities(WDMAUD_MIDI_IN, id, device_path, caps);
 #define GetMidiOutCapabilities(id, device_path, caps) \
-        GetDeviceCapabilities(id, WDMAUD_MIDI_OUT, device_path, caps);
+        GetDeviceCapabilities(WDMAUD_MIDI_OUT, id, device_path, caps);
 #define GetMixerCapabilities(id, device_path, caps) \
-        GetDeviceCapabilities(id, WDMAUD_MIXER, device_path, caps);
+        GetDeviceCapabilities(WDMAUD_MIXER, id, device_path, caps);
 #define GetAuxCapabilities(id, device_path, caps) \
-        GetDeviceCapabilities(id, WDMAUD_AUX, device_path, caps);
+        GetDeviceCapabilities(WDMAUD_AUX, id, device_path, caps);
 
 MMRESULT OpenWaveDevice(
     CHAR device_type,
@@ -503,5 +463,16 @@ BOOL CreateCompletionThread(PWDMAUD_DEVICE_INFO device);
 
 
 /* MORE... */
+
+/*
+    DEBUGGING + RESOURCE TRACKING
+*/
+
+LPVOID AllocMem(DWORD size);
+VOID FreeMem(LPVOID pointer);
+VOID ReportMem();
+
+#define AutoAlloc(type) \
+    (type*) MemAlloc(sizeof(type));
 
 #endif
