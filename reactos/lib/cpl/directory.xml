@@ -16,6 +16,9 @@
 <directory name="main">
 	<xi:include href="main/main.xml" />
 </directory>
+<directory name="mmsys">
+	<xi:include href="mmsys/mmsys.xml" />
+</directory>
 <directory name="ncpa">
 	<xi:include href="ncpa/ncpa.xml" />
 </directory>

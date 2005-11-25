@@ -70,6 +70,7 @@ lib\cpl\control\control.exe             1
 lib\cpl\desk\desk.cpl                   1
 lib\cpl\intl\intl.cpl                   1
 lib\cpl\main\main.cpl                   1
+lib\cpl\mmsys\mmsys.cpl                 1
 lib\cpl\ncpa\ncpa.cpl                   1
 lib\cpl\sysdm\sysdm.cpl                 1
 lib\cpl\timedate\timedate.cpl           1
