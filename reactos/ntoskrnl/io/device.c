@@ -569,7 +569,8 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Cannot insert Device Object into Handle Table (status 0x%08lx)\n", Status);
+        DPRINT1("Cannot insert Device Object '%wZ' into Handle Table (status 0x%08lx)\n",
+            DeviceName, Status);
         *DeviceObject = NULL;
         return Status;
     }
