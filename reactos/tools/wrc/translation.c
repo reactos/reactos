@@ -205,7 +205,7 @@ static const char *get_language_name(int lid) {
 	PRETTYPRINTLANG(CORNISH)
 	PRETTYPRINTLANG(WELSH)
 	PRETTYPRINTLANG(BRETON)
-	return "Unkown language";
+	return "Unknown language";
 }
 #endif
 
@@ -981,7 +981,7 @@ void verify_translations(resource_t *top) {
 				add_resource(next);
 				break;
 			default:
-				fprintf(stderr, "Report this: unkown resource type parsed %08x\n", next->type);
+				fprintf(stderr, "Report this: unknown resource type parsed %08x\n", next->type);
 		}
 		next = next->next;
 	}
