@@ -637,7 +637,7 @@ static int find_property_offset(JoystickImpl *This, LPCDIPROPHEADER ph)
         return i;
       }
 
-      /* XXX - the following part wont work with LiveForSpeed
+      /* XXX - the following part won't work with LiveForSpeed
        * - the game sets the dwTypes to something else then
        * the ddoi.dwType set in EnumObjects
        */

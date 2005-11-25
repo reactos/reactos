@@ -823,7 +823,7 @@ HRESULT linuxinput_create_effect(
 	    HeapFree(GetProcessHeap(), 0, newEffect);
 	    return DIERR_INVALIDPARAM;
 	default:
-	    FIXME("Unkown force type.\n");
+	    FIXME("Unknown force type.\n");
             HeapFree(GetProcessHeap(), 0, newEffect);
 	    return DIERR_INVALIDPARAM;
     }

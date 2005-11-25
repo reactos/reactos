@@ -173,7 +173,7 @@ static const char *_dump_DIDEVTYPE_value(DWORD dwDevType) {
 	case DIDEVTYPE_KEYBOARD: return "DIDEVTYPE_KEYBOARD";
 	case DIDEVTYPE_JOYSTICK: return "DIDEVTYPE_JOYSTICK";
 	case DIDEVTYPE_DEVICE: return "DIDEVTYPE_DEVICE";
-	default: return "Unkown";
+	default: return "Unknown";
     }
 }
 
