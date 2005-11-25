@@ -1,12 +1,15 @@
-#include "precomp.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <io.h>
-#include <errno.h>
-#include <string.h>
-#include <internal/file.h>
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/??????
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
+ * UPDATE HISTORY:
+ *              25/11/05: Added license header
+ */
 
+#include "precomp.h"
+#include <sys/stat.h>
 
 /*
  * @implemented

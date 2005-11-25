@@ -10,11 +10,6 @@
  */
 #include "precomp.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <internal/file.h>
-
-
 // should be replace by a closure of the tmp files
 extern __file_rec *__file_rec_list;
 

@@ -4,12 +4,7 @@
 
 #include "precomp.h"
 
-#include <stdio.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <io.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

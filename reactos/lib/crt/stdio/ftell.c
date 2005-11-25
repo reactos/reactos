@@ -3,12 +3,8 @@
 
 #include "precomp.h"
 
-#include <stdio.h>
 #include <fcntl.h>
-#include <io.h>
 #include <errno.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

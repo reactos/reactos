@@ -10,7 +10,8 @@
  *              28/12/98: Created
  */
 
-#include <stdio.h>
+#include "precomp.h"
+
 #include <conio.h>
 #include <internal/console.h>
 

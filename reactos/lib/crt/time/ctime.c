@@ -36,19 +36,10 @@
 */
 
 #include "precomp.h"
+
 #include <fcntl.h>
-#include <time.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "tzfile.h"
-
-#include <io.h>
-
 #include "posixrul.h"
-
 
 #ifdef __cplusplus
 #define CPP_CONST const

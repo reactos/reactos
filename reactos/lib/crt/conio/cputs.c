@@ -10,10 +10,6 @@
 
 #include "precomp.h"
 #include <conio.h>
-#include <string.h>
-#include <stdio.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

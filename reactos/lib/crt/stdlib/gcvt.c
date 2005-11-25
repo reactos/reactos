@@ -1,7 +1,5 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "precomp.h"
 
 /*
  * @implemented

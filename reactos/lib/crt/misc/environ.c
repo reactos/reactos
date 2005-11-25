@@ -9,7 +9,6 @@
 #include <internal/tls.h>
 #include <stdlib.h>
 #include <string.h>
-#include <internal/file.h>
 
 #define NDEBUG
 #include <internal/debug.h>

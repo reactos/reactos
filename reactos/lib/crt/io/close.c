@@ -1,6 +1,4 @@
 #include "precomp.h"
-#include <io.h>
-#include <internal/file.h>
 
 #define NDEBUG
 #include <internal/debug.h>

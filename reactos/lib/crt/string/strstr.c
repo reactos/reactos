@@ -1,5 +1,15 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/??????
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
+ * UPDATE HISTORY:
+ *              25/11/05: Added license header
+ */
+
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
+#include "precomp.h"
 
 
 /*

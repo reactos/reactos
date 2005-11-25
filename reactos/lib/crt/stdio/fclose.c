@@ -1,13 +1,7 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
-#include <stdio.h>
-#include <stdarg.h>
-#include <io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <internal/file.h>
 
 
 // changed check for writable stream

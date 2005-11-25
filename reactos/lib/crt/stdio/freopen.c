@@ -3,13 +3,8 @@
 #include "precomp.h"
 
 #include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
-#include <io.h>
 #include <tchar.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

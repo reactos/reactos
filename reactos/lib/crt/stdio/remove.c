@@ -1,6 +1,4 @@
 #include "precomp.h"
-#include <stddef.h>
-#include <stdio.h>
 #include <tchar.h>
 
 #define NDEBUG

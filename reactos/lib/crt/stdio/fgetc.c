@@ -10,8 +10,6 @@
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
-#include <stdio.h>
-#include <internal/file.h>
 
 /*
  * @implemented

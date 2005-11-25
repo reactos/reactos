@@ -1,9 +1,16 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/??????
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
+ * UPDATE HISTORY:
+ *              25/11/05: Created
+ */
 
 #include "precomp.h"
-#include <io.h>
 #include <sys/stat.h>
 #include <tchar.h>
-#include <internal/file.h>
 
 #define NDEBUG
 #include <internal/debug.h>

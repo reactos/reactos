@@ -27,11 +27,7 @@
  */
 
 #include "precomp.h"
-#include <fcntl.h>
-#include <time.h>
-#include <wchar.h>
 #include "tzfile.h"
-
 
 /*
  * @implemented

@@ -3,9 +3,6 @@
 
 #include <limits.h>
 #include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <internal/file.h>
 
 /*
  * Convert a string to an unsigned long integer.

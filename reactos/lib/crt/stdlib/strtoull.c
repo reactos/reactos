@@ -4,9 +4,6 @@
 
 #include <limits.h>
 #include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <internal/file.h>
 
 #if defined (_MSC_VER)
 #define UINT64_MAX	0xffffffffffffffff

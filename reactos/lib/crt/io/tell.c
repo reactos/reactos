@@ -1,7 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <errno.h>
-#include <io.h>
-#include <stdio.h>
+#include "precomp.h"
+
 #include <sys/types.h>
 
 /*

@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <fcntl.h>
-#include <io.h>
+#include "precomp.h"
 
+#include <fcntl.h>
 
 int _fmode = O_TEXT;
 

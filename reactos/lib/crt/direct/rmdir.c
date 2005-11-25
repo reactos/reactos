@@ -1,6 +1,5 @@
 #include "precomp.h"
 #include <direct.h>
-#include <internal/file.h>
 #include <tchar.h>
 
 /*

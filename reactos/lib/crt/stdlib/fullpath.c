@@ -9,9 +9,7 @@
  */
 
 #include "precomp.h"
-#include <stdlib.h>
 #include <tchar.h>
-
 
 /*
  * @implemented

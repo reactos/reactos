@@ -2,13 +2,6 @@
 
 #include "precomp.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <internal/file.h>
-
-#include <winnt.h>
-
 int _isnanl(double x);
 int _isinfl(double x);
 int _isnan(double x);
@@ -66,14 +59,9 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <stdarg.h>
-
 #include <ctype.h>
-#include <string.h>
-#include <stdio.h>
 #include <math.h>
 #include <internal/ieee.h>
-
 
 #define ZEROPAD		1	/* pad with zero */
 #define SIGN		2	/* unsigned/signed long */

@@ -1,8 +1,4 @@
 #include "precomp.h"
-#include <io.h>
-#include <errno.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

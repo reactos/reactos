@@ -1,7 +1,4 @@
 #include "precomp.h"
-#include <errno.h>
-#include <process.h>
-#include <internal/file.h>
 
 #if 0
 /*

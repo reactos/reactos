@@ -16,10 +16,8 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <stdlib.h>
+#include "precomp.h"
 #include <wchar.h>
-#include <errno.h>
-#include <internal/file.h>
 
 #ifndef EILSEQ
 #define EILSEQ EINVAL

@@ -8,9 +8,7 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-
-#include <string.h>
-#include <ctype.h>
+#include "precomp.h"
 
 /*
  * @implemented

@@ -15,6 +15,7 @@
  * inflicting too much of a performance hit.
  *
  */
+#include "precomp.h"
 
 #include <float.h>
 #include <math.h>

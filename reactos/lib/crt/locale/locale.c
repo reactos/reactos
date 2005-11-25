@@ -5,12 +5,9 @@
  */
 
 #include "precomp.h"
-#include <stdio.h>
 #include <locale.h>
-#include <string.h>
 #include <limits.h>
 #include <internal/tls.h>
-#include <stdlib.h>
 
 #define NDEBUG
 #include <internal/debug.h>

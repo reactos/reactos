@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <internal/file.h>
 
 void _default_handler(int signal);
 

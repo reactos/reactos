@@ -1,11 +1,15 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/??????
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
+ * UPDATE HISTORY:
+ *              25/11/05: Created
+ */
+
 #include "precomp.h"
-
-#include <stdio.h>
-#include <io.h>
-#include <errno.h>
 #include <sys/utime.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

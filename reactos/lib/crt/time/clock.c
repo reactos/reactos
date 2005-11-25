@@ -9,8 +9,6 @@
  */
 
 #include "precomp.h"
-#include <time.h>
-#include <internal/file.h>
 
 /*
  * @implemented

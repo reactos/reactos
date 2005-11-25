@@ -23,33 +23,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
  
- 
-/*
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "msvcrt.h"
-*/
 #include "precomp.h"
 
-#include <stdarg.h>
 #include <wchar.h>
-#include <stdio.h>
 #include <conio.h>
 #include <ctype.h>
-#include <internal/file.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-//#include "wine/debug.h"
-
 #define WARN DPRINT1
-
-//WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 extern FILE _iob[];
 

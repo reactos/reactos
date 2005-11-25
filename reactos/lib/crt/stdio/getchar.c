@@ -25,9 +25,6 @@
  */
 #include "precomp.h"
 
-#include <stdio.h>
-#include <internal/file.h>
-
 #undef getchar
 #undef getwchar
 

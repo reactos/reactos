@@ -17,11 +17,7 @@
    Boston, MA 02111-1307, USA.  */
 
 #include "precomp.h"
-
-#include <stdlib.h>
 #include <wchar.h>
-#include <errno.h>
-#include <internal/file.h>
 
 #ifndef EILSEQ
 #define EILSEQ EINVAL

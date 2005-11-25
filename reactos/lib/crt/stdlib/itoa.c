@@ -10,10 +10,7 @@
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <errno.h>
-#include <stdlib.h>
-#include <internal/file.h>
-
+#include "precomp.h"
 
 /*
  * @implemented

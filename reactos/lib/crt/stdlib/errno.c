@@ -2,9 +2,7 @@
  *
  */
 #include "precomp.h"
-#include <errno.h>
 #include <internal/tls.h>
-#include <internal/file.h>
 
 #include "doserrmap.h"
 

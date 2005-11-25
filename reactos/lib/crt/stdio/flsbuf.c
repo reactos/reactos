@@ -1,13 +1,8 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
-#include <stdio.h>
 #include <wchar.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <io.h>
-#include <errno.h>
-#include <internal/file.h>
 
 int cntcr(char* bufp, int bufsiz);
 int convert(char* endp, int bufsiz, int n);

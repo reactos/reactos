@@ -18,10 +18,8 @@
 #include <stdarg.h>
 #include <time.h>
 
-
 #include <windef.h>
 #include <winbase.h>
-#include <winnt.h>
 
 #ifndef _IORMONCL
 #define _IORMONCL 004000  /* remove on close, for temp files */
@@ -194,3 +192,4 @@ wint_t _filwbuf(FILE *f);
 
 
 #endif /* __dj_include_libc_file_h__ */
+

@@ -2,14 +2,8 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
-#include <stdio.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <string.h>
-#include <io.h>
 #include <wchar.h>
-#include <errno.h>
-#include <internal/file.h>
 
 int _readcnv(int fn, void* buf, size_t siz);
 

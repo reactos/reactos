@@ -12,9 +12,7 @@
  *                          behavior for line-buffered streams (KJK::Hyperion)
  */
 
-#include <windows.h>
-#include <io.h>
-#include <internal/file.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <internal/debug.h>

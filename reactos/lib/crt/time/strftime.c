@@ -1,9 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
-#include <wchar.h>
 
+#include "precomp.h"
 
 #define TM_YEAR_BASE 1900
 

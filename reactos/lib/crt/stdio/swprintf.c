@@ -20,11 +20,9 @@ Cambridge, MA 02139, USA.  */
 
 #define UNICODE
 #define _UNICODE
-#include <stdarg.h>
-#include <stdio.h>
+#include "precomp.h"
 #include <wchar.h>
 #include <limits.h>
-#include <internal/file.h>
 #include <tchar.h>
 
 #undef sprintf

@@ -4,16 +4,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <fcntl.h>
-//#include <msvcrt/unistd.h>
-#include <io.h>
 #include <share.h>
-#include <internal/file.h>
-
 
 FILE *  __alloc_file(void);
 

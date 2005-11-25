@@ -10,8 +10,6 @@
 
 #include "precomp.h"
 #include <conio.h>
-#include <stdio.h>
-#include <io.h>
 #include <internal/console.h>
 
 

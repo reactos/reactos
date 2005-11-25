@@ -28,13 +28,8 @@
 #include "precomp.h"
 
 #include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <io.h>
 #include <fcntl.h>
 #include <tchar.h>
-#include <internal/file.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
 

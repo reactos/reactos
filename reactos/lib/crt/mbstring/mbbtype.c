@@ -8,7 +8,8 @@
  *              12/04/99: Created
  */
 
-#include <stdio.h>
+#include "precomp.h"
+
 #include <mbstring.h>
 #include <mbctype.h>
 

@@ -20,11 +20,8 @@ Cambridge, MA 02139, USA.  */
 
 #include "precomp.h"
 
-#include <stdarg.h>
-#include <stdio.h>
 #include <wchar.h>
 #include <limits.h>
-#include <internal/file.h>
 #include <tchar.h>
 
 #undef sprintf

@@ -1,12 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <internal/file.h>
-#include <ntdef.h>
-
 extern int __mb_cur_max;
 int __vfprintf(FILE*, const char*, va_list);
 
@@ -60,7 +54,6 @@ int vfprintf(FILE* f, const char* fmt, va_list ap)
 
 #include <ctype.h>
 #include <string.h>
-#include <stdio.h>
 #include <math.h>
 #include <internal/ieee.h>
 

@@ -22,10 +22,6 @@
  */
 
 #include "precomp.h"
-#include <stdio.h>
-#include <wchar.h>
-#include <errno.h>
-#include <internal/file.h>
 
 //getc can be a macro
 #undef getc

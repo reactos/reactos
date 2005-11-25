@@ -13,15 +13,10 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <io.h>
 #include <fcntl.h>
 #include <share.h>
 #include <tchar.h>
-#include <internal/file.h>
-
-
 
 
 /*
