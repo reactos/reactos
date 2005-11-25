@@ -5,5 +5,5 @@
 	<xi:include href="gui/packmgr.xml" />
 </directory>
 <directory name="lib">
-	<xi:include href="lib/packlib.xml" />
+	<xi:include href="lib/package.xml" />
 </directory>

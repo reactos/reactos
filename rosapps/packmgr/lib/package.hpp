@@ -72,7 +72,7 @@ typedef struct
 extern "C" 
 {
   void PML_Abort (void);
-  WCHAR* PML_TransError (int code);
+  WCHAR* PML_TransError (int code, WCHAR* string, INT maxchar);
 
   int PML_LoadTree (pTree*, char* url, PML_AddItem);
   int PML_FindItem (TREE* tree, const char* what);

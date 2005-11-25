@@ -167,8 +167,8 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	if(pack->depencies.size() && action)
 	{
 		UINT count = pack->depencies.size();
-		WCHAR buffer[2000], buffer2[200];
-		wcscpy(buffer, PML_TransError(ERR_DEP1));
+		WCHAR buffer[2000], buffer2[200], errbuf[2000];
+		PML_TransError(ERR_DEP1, (WCHAR*)buffer, sizeof(buffer)/sizeof(WCHAR));
 
 		for (i=0; i<pack->depencies.size(); i++)
 		{
@@ -187,7 +187,7 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 			wsprintf(buffer, L"%s - %s\n", buffer, buffer2);//
 		}
 
-		wcscat(buffer, PML_TransError(ERR_DEP2));
+		wcscat(buffer, PML_TransError(ERR_DEP2, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)));
 
 		if(count)
 		{

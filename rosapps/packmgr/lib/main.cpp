@@ -119,7 +119,9 @@ extern "C" int PML_DoIt (TREE* tree, PML_SetStatus SetStatus, PML_Ask Ask)
 
 	//ask
 	WCHAR buffer [2000];
-	wsprintf(buffer, PML_TransError(ERR_READY), tree->todo.size());
+	WCHAR errbuf [2000];
+
+	wsprintf(buffer, PML_TransError(ERR_READY, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)), tree->todo.size());
 
 	if(!Ask(buffer))
 		return ERR_GENERIC;
@@ -136,13 +138,11 @@ extern "C" int PML_DoIt (TREE* tree, PML_SetStatus SetStatus, PML_Ask Ask)
 }
 
 // Translates Errorcode into human language
-extern "C" WCHAR* PML_TransError (int code)
+extern "C" WCHAR* PML_TransError (int code, WCHAR *string, INT maxchar)
 {
-	// I know we, got a memory leak here
-	static WCHAR string [256];
 
-    if(!LoadString(GetModuleHandle(L"package"), code, string, 256))
-		return PML_TransError(ERR_GENERIC);
+	if(!LoadString(GetModuleHandle(L"package"), code, string, maxchar))
+		return PML_TransError(ERR_GENERIC, string, maxchar);
 
 	return string;
 }
