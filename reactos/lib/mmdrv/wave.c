@@ -91,9 +91,31 @@ static DWORD waveThread(LPVOID lpParameter)
         switch (pClient->AuxFunction) 
         {
             case WaveThreadAddBuffer:
-                 DPRINT("UNIMPLMENENT WaveThreadAddBuffer ");
-                 break;
+                 LPWAVEHDR *pHdrSearching;
 
+                 if (pClient->DeviceType == WaveInDevice)             
+                     pClient->AuxParam.pHdr->dwBytesRecorded = 0;
+            
+                 pHdrSearching = &pClient->DeviceQueue;
+                 pClient->AuxParam.pHdr->lpNext = NULL;
+                 
+                 while (*pHdrSearching) 
+                 {
+                    pHdrSearching = &(*pHdrSearching)->lpNext;
+                 }
+                   
+                 if (pClient->NextBuffer == NULL) 
+                 {
+                     pClient->BufferPosition = 0;
+                     pClient->NextBuffer = pClient->AuxParam.pHdr;
+                        
+                 }
+
+                 *pHdrSearching = pClient->AuxParam.pHdr;
+
+                 pClient->AuxReturnCode = waveStart(pClient);
+                 break;
+                 
             case WaveThreadSetState:
                  pClient->AuxReturnCode = waveSetState(pClient, pClient->AuxParam.State);
 
@@ -549,7 +571,7 @@ static MMRESULT OpenWaveDevice(UINT  DeviceType,
     BOOL Result;
     DWORD BytesReturned;
     LPWAVEFORMATEX pFormats;
-    PWAVEALLOC *pUserHandle = &pClient;
+    PWAVEALLOC *pUserHandle = NULL;
     HANDLE hDevice;
 
     pFormats = (LPWAVEFORMATEX)((LPWAVEOPENDESC)dwParam1)->lpFormat;
