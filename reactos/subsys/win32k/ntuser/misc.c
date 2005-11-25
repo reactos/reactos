@@ -6,7 +6,7 @@
  * FILE:             subsys/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY:
- *       2003/05/22  CreatedStyleNum
+ *       2003/05/22  Created
  */
 
 #include <w32k.h>
