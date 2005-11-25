@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef __K32_H
+#define __K32_H
+
 /* INCLUDES ******************************************************************/
 
 /* PSDK/NDK Headers */
@@ -37,4 +40,4 @@
 /* Helper Header */
 #include <reactos/helper.h>
 
-/* EOF */
+#endif

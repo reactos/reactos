@@ -32,6 +32,7 @@
 	</if>
 	<compilerflag>-Wpointer-arith</compilerflag>
 
+	<include>.</include>
 	<include>include</include>
 	<include>include/reactos</include>
 	<include>include/libs</include>

@@ -8,6 +8,7 @@
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="WINVER">0x0600</define>
 	<pch>k32.h</pch>
+	<compilationunit name="unit.c">
 	<directory name="debug">
 		<file>break.c</file>
 		<file>debugger.c</file>
@@ -64,13 +65,11 @@
 		<file>errormsg.c</file>
 		<file>handle.c</file>
 		<file>lang.c</file>
-		<file>lcformat.c</file>
 		<file>ldr.c</file>
 		<file>lzexpand_main.c</file>
 		<file>muldiv.c</file>
 		<file>nls.c</file>
 		<file>perfcnt.c</file>
-		<file>profile.c</file>
 		<file>recovery.c</file>
 		<file>res.c</file>
 		<file>stubs.c</file>
@@ -78,7 +77,6 @@
 		<file>time.c</file>
 		<file>timerqueue.c</file>
 		<file>toolhelp.c</file>
-        <file>utils.c</file>
 		<file>version.c</file>
 	</directory>
 	<directory name="process">
@@ -100,14 +98,22 @@
 		<file>wait.c</file>
 	</directory>
 	<directory name="thread">
-		<directory name="i386">
-			<file>fiber.S</file>
-            <file>thread.S</file>
-		</directory>
 		<file>fiber.c</file>
 		<file>fls.c</file>
 		<file>thread.c</file>
 		<file>tls.c</file>
+	</directory>
+	</compilationunit>
+	<directory name="misc">
+		<file>lcformat.c</file>
+		<file>profile.c</file>
+		<file>utils.c</file>
+	</directory>
+	<directory name="thread">
+		<directory name="i386">
+			<file>fiber.S</file>
+            		<file>thread.S</file>
+		</directory>
 	</directory>
 </module>
 <module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
