@@ -230,6 +230,10 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                          0,
                                          0,
                                          &LocalSystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
 
     /* check if the Administrators are the owner and at least a not-NULL DACL
        is present */
