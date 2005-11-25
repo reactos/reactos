@@ -367,7 +367,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NewRelSD,
                                          &RelSDSize);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
         goto Cleanup;
     }
