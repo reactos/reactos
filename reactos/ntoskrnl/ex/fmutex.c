@@ -106,7 +106,7 @@ VOID
 FASTCALL
 ExReleaseFastMutex (PFAST_MUTEX FastMutex)
 {
-    KIRQL oldIrql;
+    KIRQL OldIrql;
     ASSERT_IRQL(APC_LEVEL);
 
     /* Erase the owner */
