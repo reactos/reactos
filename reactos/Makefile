@@ -105,6 +105,7 @@
 #            -dm{module}  Check only automatic dependencies for this module.
 #            -mi          Let make handle creation of install directories. Rbuild will not generate the directories.
 #            -ps          Generate proxy makefiles in source tree instead of the output tree.
+#            -ud          Disable compilation units.
 
 # check for versions of make that don't have features we need...
 # the function "eval" is only available in 3.80+, which happens to be the minimum
