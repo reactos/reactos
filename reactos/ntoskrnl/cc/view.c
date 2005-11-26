@@ -115,7 +115,7 @@ FASTCALL
 CcTryToAcquireBrokenMutex(PFAST_MUTEX FastMutex)
 {
     KeEnterCriticalRegion();
-    if (InterlockedExchange(&FastMutex->Count, 0) == 1)
+    if (InterlockedCompareExchange(&FastMutex->Count, 0, 1) == 1)
     {
         FastMutex->Owner = KeGetCurrentThread();
         return(TRUE);
