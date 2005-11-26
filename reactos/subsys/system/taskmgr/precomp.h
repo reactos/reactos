@@ -1,3 +1,5 @@
+#ifndef __PRECOMP_H
+#define __PRECOMP_H
 #define _CRT_SECURE_NO_DEPRECATE
 
 #define WIN32_NO_STATUS
@@ -31,3 +33,4 @@
 #include "priority.h"
 #include "run.h"
 #include "trayicon.h"
+#endif /* __PRECOMP_H */
