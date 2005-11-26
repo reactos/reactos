@@ -3472,10 +3472,40 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdA(
         IN DWORD DeviceInstanceIdSize,
         OUT PDWORD RequiredSize)
 {
-    FIXME ("Stub %p %p %p %d %p\n",
-           DeviceInfoSet, DeviceInfoData, DeviceInstanceId, DeviceInstanceIdSize, RequiredSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    PWSTR DeviceInstanceIdW = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p %lu %p\n", DeviceInfoSet, DeviceInfoData,
+          DeviceInstanceId, DeviceInstanceIdSize, RequiredSize);
+
+    if (!DeviceInstanceId && DeviceInstanceIdSize > 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        if (DeviceInstanceIdSize != 0)
+        {
+            DeviceInstanceIdW = MyMalloc(DeviceInstanceIdSize * sizeof(WCHAR));
+            if (DeviceInstanceIdW == NULL)
+                return FALSE;
+        }
+
+        ret = SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData,
+                                          DeviceInstanceIdW, DeviceInstanceIdSize,
+                                          RequiredSize);
+
+        if (DeviceInstanceIdW != NULL)
+        {
+            if (WideCharToMultiByte(CP_ACP, 0, DeviceInstanceIdW, -1,
+                DeviceInstanceId, DeviceInstanceIdSize, NULL, NULL) == 0)
+            {
+                DeviceInstanceId[0] = '\0';
+                ret = FALSE;
+            }
+        }
+    }
+
+    TRACE("Returning 0x%p\n", ret);
+    return ret;
 }
 
 /***********************************************************************
