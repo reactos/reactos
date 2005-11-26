@@ -640,9 +640,9 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
 int
 WINAPI
 DevicePropertiesExA(HWND hWndParent,
-                    HINSTANCE hInst,
                     LPCSTR lpMachineName,
                     LPCSTR lpDeviceID,
+                    HINSTANCE hInst,
                     DWORD Unknown)
 {
   UNIMPLEMENTED;
@@ -678,9 +678,9 @@ DevicePropertiesExA(HWND hWndParent,
 int
 WINAPI
 DevicePropertiesExW(HWND hWndParent,
-                    HINSTANCE hInst,
                     LPCWSTR lpMachineName,
                     LPCWSTR lpDeviceID,
+                    HINSTANCE hInst,
                     DWORD Unknown)
 {
   UNIMPLEMENTED;

@@ -126,6 +126,70 @@ InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
 }
 
 
+static BOOL
+DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
+{
+    PHWDEVINFO HwDevInfo;
+    BOOL Ret = FALSE;
+
+    HwDevInfo = (PHWDEVINFO)ListViewGetSelectedItemData(hpd->hWndDevList);
+    if (HwDevInfo != NULL)
+    {
+        PWSTR szDeviceInstanceId = NULL;
+        DWORD DeviceInstanceIdLen = 0;
+
+        /* find out how much size is needed for the buffer */
+        if (SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
+                                       &HwDevInfo->DevInfoData,
+                                       NULL,
+                                       0,
+                                       &DeviceInstanceIdLen))
+        {
+            DPRINT1("SetupDiGetDeviceInterfaceDetail unexpectedly returned TRUE!\n");
+            goto Cleanup;
+        }
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            goto Cleanup;
+        }
+
+        szDeviceInstanceId = HeapAlloc(GetProcessHeap(),
+                                       0,
+                                       DeviceInstanceIdLen * sizeof(WCHAR));
+        if (szDeviceInstanceId == NULL)
+        {
+            goto Cleanup;
+        }
+
+        /* read the device instance id */
+        if (!SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
+                                        &HwDevInfo->DevInfoData,
+                                        szDeviceInstanceId,
+                                        DeviceInstanceIdLen,
+                                        &DeviceInstanceIdLen))
+        {
+            goto Cleanup;
+        }
+
+        /* display the properties dialog */
+        Ret = DeviceAdvancedProperties(hpd->hWnd,
+                                       NULL,
+                                       szDeviceInstanceId) >= 0;
+
+Cleanup:
+        if (szDeviceInstanceId != NULL)
+        {
+            HeapFree(GetProcessHeap(),
+                     0,
+                     szDeviceInstanceId);
+        }
+    }
+
+    return Ret;
+}
+
+
 static VOID
 UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 {
@@ -158,6 +222,10 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
             RegDataType != REG_SZ)
         {
             szBuffer[0] = L'\0';
+            LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       sizeof(szBuffer) / sizeof(szBuffer[0]));
         }
         /* FIXME - check string for NULL termination! */
         if (LoadAndFormatString(hDllInstance,
@@ -183,15 +251,10 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
             RegDataType != REG_SZ)
         {
             szBuffer[0] = L'\0';
-
-            if (cRet == CR_NO_SUCH_REGISTRY_KEY ||
-                cRet == CR_NO_SUCH_VALUE)
-            {
-                LoadString(hDllInstance,
-                           IDS_UNKNOWN,
-                           szBuffer,
-                           sizeof(szBuffer) / sizeof(szBuffer[0]));
-            }
+            LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       sizeof(szBuffer) / sizeof(szBuffer[0]));
         }
         /* FIXME - check string for NULL termination! */
 
@@ -756,8 +819,7 @@ HardwareDlgProc(IN HWND hwndDlg,
 
                     case IDC_PROPERTIES:
                     {
-                        /* FIXME - display the properties dialog for the currently
-                                   selected device */
+                        DisplaySelectedDeviceProperties(hpd);
                         break;
                     }
                 }

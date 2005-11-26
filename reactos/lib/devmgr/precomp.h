@@ -145,18 +145,40 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
 int
 WINAPI
 DevicePropertiesExA(HWND hWndParent,
-                    HINSTANCE hInst,
                     LPCSTR lpMachineName,
                     LPCSTR lpDeviceID,
+                    HINSTANCE hInst,
                     DWORD Unknown);
 
 int
 WINAPI
 DevicePropertiesExW(HWND hWndParent,
-                    HINSTANCE hInst,
                     LPCWSTR lpMachineName,
                     LPCWSTR lpDeviceID,
+                    HINSTANCE hInst,
                     DWORD Unknown);
+
+#ifdef UNICODE
+#define DeviceManager_Execute DeviceManager_ExecuteW
+#define DeviceProperties_RunDLL DeviceProperties_RunDLLW
+#define DeviceProperties DevicePropertiesW
+#define DeviceProblemText DeviceProblemTextW
+#define DeviceProblemWizard DeviceProblemWizardW
+#define DeviceProblemWizard_RunDLL DeviceProblemWizard_RunDLLW
+#define DeviceManagerPrint DeviceManagerPrintW
+#define DeviceAdvancedProperties DeviceAdvancedPropertiesW
+#define DevicePropertiesEx DevicePropertiesExW
+#else
+#define DeviceManager_Execute DeviceManager_ExecuteA
+#define DeviceProperties_RunDLL DeviceProperties_RunDLLA
+#define DeviceProperties DevicePropertiesA
+#define DeviceProblemText DeviceProblemTextA
+#define DeviceProblemWizard DeviceProblemWizardA
+#define DeviceProblemWizard_RunDLL DeviceProblemWizard_RunDLLA
+#define DeviceManagerPrint DeviceManagerPrintA
+#define DeviceAdvancedProperties DeviceAdvancedPropertiesA
+#define DevicePropertiesEx DevicePropertiesExA
+#endif
 
 /* MISC.C */
 
