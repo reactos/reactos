@@ -6,6 +6,8 @@
  * UPDATE HISTORY:
  *      06-07-2003  CSH  Created
  */
+#ifndef __REGTESTS_H
+#define __REGTESTS_H
 #include <stdio.h>
 #include <string.h>
 
@@ -378,3 +380,5 @@ _UnsetAllHooks()
       api->MockFunctionAddress = NULL;
     }
 }
+
+#endif /* __REGTESTS_H */
