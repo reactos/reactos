@@ -107,9 +107,19 @@
 #            -ps          Generate proxy makefiles in source tree instead of the output tree.
 
 # check for versions of make that don't have features we need...
-ifneq ($(filter 3.7%, $(shell $(MAKE) -v)),)
-$(error GNU Make $(filter 3.7%, $(shell $(MAKE) -v)) WILL NOT WORK - UPGRADE TO 3.80+)
+# the function "eval" is only available in 3.80+, which happens to be the minimum
+# version that has the features we use...
+# THIS CHECK IS BORROWED FROM THE "GMSL" PROJECT, AND IS COVERED BY THE GPL LICENSE
+# YOU CAN FIND OUT MORE ABOUT GMSL - A VERY COOL PROJECT - AT:
+# http://gmsl.sourceforge.net/
+
+__gmsl_have_eval :=
+__gmsl_ignore := $(eval __gmsl_have_eval := T)
+
+ifndef __gmsl_have_eval
+$(error ReactOS's makefiles use GNU Make 3.80+ features, you have $(MAKE_VERSION), you MUST UPGRADE in order to build ReactOS - Sorry)
 endif
+# END of code borrowed from GMSL ( http://gmsl.sourceforge.net/ )
 
 .PHONY: all
 .PHONY: clean
