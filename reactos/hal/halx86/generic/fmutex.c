@@ -56,8 +56,11 @@ VOID
 FASTCALL
 ExReleaseFastMutex(PFAST_MUTEX FastMutex)
 {
+    KIRQL OldIrql;
+
     /* Erase the owner */
     FastMutex->Owner = (PVOID)1;
+    OldIrql = FastMutex->OldIrql;
 
     /* Increase the count */
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
@@ -67,7 +70,7 @@ ExReleaseFastMutex(PFAST_MUTEX FastMutex)
     }
 
     /* Lower IRQL back */
-    KfLowerIrql(FastMutex->OldIrql);
+    KfLowerIrql(OldIrql);
 }
 
 BOOLEAN

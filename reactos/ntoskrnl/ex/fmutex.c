@@ -106,10 +106,12 @@ VOID
 FASTCALL
 ExReleaseFastMutex (PFAST_MUTEX FastMutex)
 {
+    KIRQL oldIrql;
     ASSERT_IRQL(APC_LEVEL);
 
     /* Erase the owner */
     FastMutex->Owner = NULL;
+    OldIrql = FastMutex->OldIrql;
 
     /* Increase the count */
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
@@ -119,7 +121,7 @@ ExReleaseFastMutex (PFAST_MUTEX FastMutex)
     }
 
     /* Lower IRQL back */
-    KfLowerIrql(FastMutex->OldIrql);
+    KfLowerIrql(OldIrql);
 }
 
 /*
