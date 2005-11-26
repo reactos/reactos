@@ -399,8 +399,6 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                                       0,
                                       &DevInfoData))
             {
-
-                /* create the image list */
                 Ret = DisplayDeviceAdvancedProperties(hWndParent,
                                                       hDevInfo,
                                                       &DevInfoData,
