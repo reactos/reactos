@@ -35,6 +35,7 @@
 #include "olectl.h"
 #include "shlobj.h"
 #include "exdisp.h"
+#include "mshtmhst.h"
 
 /**********************************************************************
  * IClassFactory declaration for SHDOCVW.DLL
@@ -75,6 +76,7 @@ typedef struct {
 
     const IOleClientSiteVtbl            *lpOleClientSiteVtbl;
     const IOleInPlaceSiteVtbl           *lpOleInPlaceSiteVtbl;
+    const IDocHostUIHandler2Vtbl        *lpDocHostUIHandlerVtbl;
 
     LONG ref;
 
@@ -92,6 +94,15 @@ typedef struct {
     RECT pos_rect;
     RECT clip_rect;
     OLEINPLACEFRAMEINFO frameinfo;
+
+    HWND doc_view_hwnd;
+    HWND shell_embedding_hwnd;
+
+    /* Connection points */
+
+    IConnectionPoint *cp_wbe2;
+    IConnectionPoint *cp_wbe;
+    IConnectionPoint *cp_pns;
 } WebBrowser;
 
 #define WEBBROWSER(x)   ((IWebBrowser*)                 &(x)->lpWebBrowser2Vtbl)
@@ -109,6 +120,8 @@ typedef struct {
 
 #define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
 #define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
+#define DOCHOSTUI(x)    ((IDocHostUIHandler*)           &(x)->lpDocHostUIHandlerVtbl)
+#define DOCHOSTUI2(x)   ((IDocHostUIHandler2*)          &(x)->lpDocHostUIHandlerVtbl)
 
 void WebBrowser_OleObject_Init(WebBrowser*);
 void WebBrowser_ViewObject_Init(WebBrowser*);
@@ -118,20 +131,12 @@ void WebBrowser_Misc_Init(WebBrowser*);
 void WebBrowser_Events_Init(WebBrowser*);
 
 void WebBrowser_ClientSite_Init(WebBrowser*);
+void WebBrowser_DocHost_Init(WebBrowser*);
 
 void WebBrowser_OleObject_Destroy(WebBrowser*);
+void WebBrowser_Events_Destroy(WebBrowser*);
 
 HRESULT WebBrowser_Create(IUnknown*,REFIID,void**);
-
-/**********************************************************************
- * IConnectionPoint declaration for SHDOCVW.DLL
- */
-typedef struct
-{
-    /* IUnknown fields */
-    const IConnectionPointVtbl *lpVtbl;
-    LONG ref;
-} IConnectionPointImpl;
 
 #define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
@@ -141,5 +146,7 @@ typedef struct
 extern LONG SHDOCVW_refCount;
 static inline void SHDOCVW_LockModule(void) { InterlockedIncrement( &SHDOCVW_refCount ); }
 static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_refCount ); }
+
+extern HINSTANCE shdocvw_hinstance;
 
 #endif /* __WINE_SHDOCVW_H */

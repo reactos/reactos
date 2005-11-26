@@ -27,10 +27,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-static IConnectionPointImpl SHDOCVW_ConnectionPoint;
+typedef struct {
+    const IConnectionPointVtbl *lpConnectionPointVtbl;
 
-static const GUID IID_INotifyDBEvents =
-    { 0xdb526cc0, 0xd188, 0x11cd, { 0xad, 0x48, 0x00, 0xaa, 0x00, 0x3c, 0x9c, 0xb6 } };
+    WebBrowser *webbrowser;
+
+    IID iid;
+} ConnectionPoint;
+
+#define CONPOINT(x)  ((IConnectionPoint*) &(x)->lpConnectionPointVtbl)
 
 /**********************************************************************
  * Implement the IConnectionPointContainer interface
@@ -70,27 +75,31 @@ static HRESULT WINAPI ConnectionPointContainer_FindConnectionPoint(IConnectionPo
 {
     WebBrowser *This = CONPTCONT_THIS(iface);
 
-    FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppCP);
-
-    /* For now, return the same IConnectionPoint object for both
-     * event interface requests.
-     */
-    if (IsEqualGUID (&IID_INotifyDBEvents, riid))
-    {
-        TRACE("Returning connection point %p for IID_INotifyDBEvents\n",
-              &SHDOCVW_ConnectionPoint);
-        *ppCP = (LPCONNECTIONPOINT)&SHDOCVW_ConnectionPoint;
-        return S_OK;
-    }
-    else if (IsEqualGUID (&IID_IPropertyNotifySink, riid))
-    {
-        TRACE("Returning connection point %p for IID_IPropertyNotifySink\n",
-              &SHDOCVW_ConnectionPoint);
-        *ppCP = (LPCONNECTIONPOINT)&SHDOCVW_ConnectionPoint;
-        return S_OK;
+    if(!ppCP) {
+        WARN("ppCP == NULL\n");
+        return E_POINTER;
     }
 
-    return E_FAIL;
+    *ppCP = NULL;
+
+    if(IsEqualGUID(&DIID_DWebBrowserEvents2, riid)) {
+        TRACE("(%p)->(DIID_DWebBrowserEvents2 %p)\n", This, ppCP);
+        *ppCP = This->cp_wbe2;
+    }else if(IsEqualGUID(&DIID_DWebBrowserEvents, riid)) {
+        TRACE("(%p)->(DIID_DWebBrowserEvents %p)\n", This, ppCP);
+        *ppCP = This->cp_wbe;
+    }else if(IsEqualGUID(&IID_IPropertyNotifySink, riid)) {
+        TRACE("(%p)->(IID_IPropertyNotifySink %p)\n", This, ppCP);
+        *ppCP = This->cp_pns;
+    }
+
+    if(*ppCP) {
+        IConnectionPoint_AddRef(*ppCP);
+        return S_OK;
+    }
+
+    WARN("Unsupported IID %s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
 }
 
 #undef CONPTCONT_THIS
@@ -109,97 +118,125 @@ static const IConnectionPointContainerVtbl ConnectionPointContainerVtbl =
  * Implement the IConnectionPoint interface
  */
 
-static HRESULT WINAPI WBCP_QueryInterface(LPCONNECTIONPOINT iface,
-                                          REFIID riid, LPVOID *ppobj)
-{
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+#define CONPOINT_THIS(iface) DEFINE_THIS(ConnectionPoint, ConnectionPoint, iface)
 
-    if (ppobj == NULL) return E_POINTER;
-    
+static HRESULT WINAPI ConnectionPoint_QueryInterface(IConnectionPoint *iface,
+                                                     REFIID riid, LPVOID *ppv)
+{
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+
+    *ppv = NULL;
+
+    if(IsEqualGUID(&IID_IUnknown, riid)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
+        *ppv = CONPOINT(This);
+    }else if(IsEqualGUID(&IID_IConnectionPoint, riid)) {
+        TRACE("(%p)->(IID_IConnectionPoint %p)\n", This, ppv);
+        *ppv = CONPOINT(This);
+    }
+
+    if(*ppv) {
+        IWebBrowser2_AddRef(WEBBROWSER(This->webbrowser));
+        return S_OK;
+    }
+
+    WARN("Unsupported interface %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI WBCP_AddRef(LPCONNECTIONPOINT iface)
+static ULONG WINAPI ConnectionPoint_AddRef(IConnectionPoint *iface)
 {
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+    return IWebBrowser2_AddRef(WEBBROWSER(This->webbrowser));
 }
 
-static ULONG WINAPI WBCP_Release(LPCONNECTIONPOINT iface)
+static ULONG WINAPI ConnectionPoint_Release(IConnectionPoint *iface)
 {
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+    return IWebBrowser2_Release(WEBBROWSER(This->webbrowser));
 }
 
-static HRESULT WINAPI WBCP_GetConnectionInterface(LPCONNECTIONPOINT iface, IID* pIId)
+static HRESULT WINAPI ConnectionPoint_GetConnectionInterface(IConnectionPoint *iface, IID *pIID)
 {
-    FIXME("stub: %s\n", debugstr_guid(pIId));
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", This, pIID);
+
+    memcpy(pIID, &This->iid, sizeof(IID));
     return S_OK;
 }
 
-/* Get this connection point's owning container */
-static HRESULT WINAPI
-WBCP_GetConnectionPointContainer(LPCONNECTIONPOINT iface,
-                                 LPCONNECTIONPOINTCONTAINER *ppCPC)
+static HRESULT WINAPI ConnectionPoint_GetConnectionPointContainer(IConnectionPoint *iface,
+        IConnectionPointContainer **ppCPC)
 {
-    FIXME("stub: IConnectionPointContainer = %p\n", *ppCPC);
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", This, ppCPC);
+
+    *ppCPC = CONPTCONT(This->webbrowser);
     return S_OK;
 }
 
-/* Connect the pUnkSink event-handling implementation (in the control site)
- * to this connection point.  Return a handle to this connection in
- * pdwCookie (for later use in Unadvise()).
- */
-static HRESULT WINAPI WBCP_Advise(LPCONNECTIONPOINT iface,
-                                  LPUNKNOWN pUnkSink, DWORD *pdwCookie)
+static HRESULT WINAPI ConnectionPoint_Advise(IConnectionPoint *iface, IUnknown *pUnkSink,
+                                             DWORD *pdwCookie)
 {
-    static int new_cookie;
-
-    FIXME("stub: IUnknown = %p, connection cookie = %ld\n", pUnkSink, *pdwCookie);
-
-    *pdwCookie = ++new_cookie;
-    TRACE ("Returning cookie = %ld\n", *pdwCookie);
-
-    return S_OK;
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pUnkSink, pdwCookie);
+    return E_NOTIMPL;
 }
 
-/* Disconnect this implementation from the connection point. */
-static HRESULT WINAPI WBCP_Unadvise(LPCONNECTIONPOINT iface,
-                                    DWORD dwCookie)
+static HRESULT WINAPI ConnectionPoint_Unadvise(IConnectionPoint *iface, DWORD dwCookie)
 {
-    FIXME("stub: cookie to disconnect = %lx\n", dwCookie);
-    return S_OK;
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+    FIXME("(%p)->(%ld)\n", This, dwCookie);
+    return E_NOTIMPL;
 }
 
-/* Get a list of connections in this connection point. */
-static HRESULT WINAPI WBCP_EnumConnections(LPCONNECTIONPOINT iface,
-                                           LPENUMCONNECTIONS *ppEnum)
+static HRESULT WINAPI ConnectionPoint_EnumConnections(IConnectionPoint *iface,
+                                                      IEnumConnections **ppEnum)
 {
-    FIXME("stub: IEnumConnections = %p\n", *ppEnum);
-    return S_OK;
+    ConnectionPoint *This = CONPOINT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, ppEnum);
+    return E_NOTIMPL;
 }
 
-/**********************************************************************
- * IConnectionPoint virtual function table for IE Web Browser component
- */
+#undef CONPOINT_THIS
 
-static const IConnectionPointVtbl WBCP_Vtbl =
+static const IConnectionPointVtbl ConnectionPointVtbl =
 {
-    WBCP_QueryInterface,
-    WBCP_AddRef,
-    WBCP_Release,
-    WBCP_GetConnectionInterface,
-    WBCP_GetConnectionPointContainer,
-    WBCP_Advise,
-    WBCP_Unadvise,
-    WBCP_EnumConnections
+    ConnectionPoint_QueryInterface,
+    ConnectionPoint_AddRef,
+    ConnectionPoint_Release,
+    ConnectionPoint_GetConnectionInterface,
+    ConnectionPoint_GetConnectionPointContainer,
+    ConnectionPoint_Advise,
+    ConnectionPoint_Unadvise,
+    ConnectionPoint_EnumConnections
 };
 
-static IConnectionPointImpl SHDOCVW_ConnectionPoint = {&WBCP_Vtbl};
+static void ConnectionPoint_Create(WebBrowser *wb, REFIID riid, IConnectionPoint **cp)
+{
+    ConnectionPoint *ret = HeapAlloc(GetProcessHeap(), 0, sizeof(ConnectionPoint));
+
+    ret->lpConnectionPointVtbl = &ConnectionPointVtbl;
+    ret->webbrowser = wb;
+    memcpy(&ret->iid, riid, sizeof(IID));
+
+    *cp = CONPOINT(ret);
+}
 
 void WebBrowser_Events_Init(WebBrowser *This)
 {
     This->lpConnectionPointContainerVtbl = &ConnectionPointContainerVtbl;
+
+    ConnectionPoint_Create(This, &DIID_DWebBrowserEvents2, &This->cp_wbe2);
+    ConnectionPoint_Create(This, &DIID_DWebBrowserEvents, &This->cp_wbe);
+    ConnectionPoint_Create(This, &IID_IPropertyNotifySink, &This->cp_pns);
+}
+
+void WebBrowser_Events_Destroy(WebBrowser *This)
+{
+    HeapFree(GetProcessHeap(), 0, This->cp_wbe2);
+    HeapFree(GetProcessHeap(), 0, This->cp_wbe);
+    HeapFree(GetProcessHeap(), 0, This->cp_pns);
 }

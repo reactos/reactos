@@ -30,7 +30,7 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE
 BEGIN
- 1001	"This application is requesting an ActiveX browser object\n" \
-        "but the Mozilla Active X control is currently not installed." \
-        "Do you wish to download and install it?"
+ 1001	"이 풀그림은 액티브엑스 브라우저 객체를 요구합니다.\n" \
+        "그러나 모질라 액티브 엑스 컨트롤이 현재 설치되어있지 않습니다." \
+        "당신은 다운로드해서 설치하겠습니까?"
 END

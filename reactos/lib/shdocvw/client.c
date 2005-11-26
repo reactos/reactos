@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define COBJMACROS
 #include "wine/debug.h"
 #include "shdocvw.h"
 
@@ -42,6 +41,12 @@ static HRESULT WINAPI ClientSite_QueryInterface(IOleClientSite *iface, REFIID ri
     }else if(IsEqualGUID(&IID_IOleInPlaceSite, riid)) {
         TRACE("(%p)->(IID_IOleInPlaceSite %p)\n", This, ppv);
         *ppv = INPLACESITE(This);
+    }else if(IsEqualGUID(&IID_IDocHostUIHandler, riid)) {
+        TRACE("(%p)->(IID_IDocHostUIHandler %p)\n", This, ppv);
+        *ppv = DOCHOSTUI(This);
+    }else if(IsEqualGUID(&IID_IDocHostUIHandler2, riid)) {
+        TRACE("(%p)->(IID_IDocHostUIHandler2 %p)\n", This, ppv);
+        *ppv = DOCHOSTUI2(This);
     }
 
     if(*ppv) {
@@ -146,8 +151,11 @@ static ULONG WINAPI InPlaceSite_Release(IOleInPlaceSite *iface)
 static HRESULT WINAPI InPlaceSite_GetWindow(IOleInPlaceSite *iface, HWND *phwnd)
 {
     WebBrowser *This = INPLACESITE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, phwnd);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, phwnd);
+
+    *phwnd = This->doc_view_hwnd;
+    return S_OK;
 }
 
 static HRESULT WINAPI InPlaceSite_ContextSensitiveHelp(IOleInPlaceSite *iface, BOOL fEnterMode)

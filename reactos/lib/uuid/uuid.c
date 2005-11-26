@@ -43,6 +43,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 #include "ocidl.h"
 
+#include "mshtmhst.h"
 #include "docobj.h"
 #include "exdisp.h"
 

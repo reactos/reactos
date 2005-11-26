@@ -23,12 +23,89 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define COBJMACROS
 #include <string.h>
 #include "wine/debug.h"
 #include "shdocvw.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
+static ATOM doc_view_atom = 0;
+static ATOM shell_embedding_atom = 0;
+
+static LRESULT WINAPI doc_view_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+static LRESULT WINAPI shell_embedding_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+static void create_doc_view_hwnd(WebBrowser *This)
+{
+    static const WCHAR wszShell_DocObject_View[] =
+        {'S','h','e','l','l',' ','D','o','c','O','b','j','e','c','t',' ','V','i','e','w',0};
+
+    if(!doc_view_atom) {
+        static WNDCLASSEXW wndclass = {
+            sizeof(wndclass),
+            CS_PARENTDC,
+            doc_view_proc,
+            0, 0 /* native uses 4*/, NULL, NULL, NULL,
+            (HBRUSH)COLOR_WINDOWFRAME, NULL,
+            wszShell_DocObject_View,
+            NULL
+        };
+
+        wndclass.hInstance = shdocvw_hinstance;
+
+        doc_view_atom = RegisterClassExW(&wndclass);
+    }
+
+    This->doc_view_hwnd = CreateWindowExW(0, wszShell_DocObject_View, NULL,
+         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | WS_MAXIMIZEBOX,
+         0, 0, 0, 0, This->shell_embedding_hwnd,
+         NULL, shdocvw_hinstance, This);
+}
+
+static void create_shell_embedding_hwnd(WebBrowser *This)
+{
+    IOleInPlaceSite *inplace;
+    HWND parent = NULL;
+    HRESULT hres;
+
+    static const WCHAR wszShellEmbedding[] =
+        {'S','h','e','l','l',' ','E','m','b','e','d','d','i','n','g',0};
+
+    if(!shell_embedding_atom) {
+        static WNDCLASSEXW wndclass = {
+            sizeof(wndclass),
+            CS_DBLCLKS,
+            shell_embedding_proc,
+            0, 0 /* native uses 8 */, NULL, NULL, NULL,
+            (HBRUSH)COLOR_WINDOWFRAME, NULL,
+            wszShellEmbedding,
+            NULL
+        };
+        wndclass.hInstance = shdocvw_hinstance;
+
+        RegisterClassExW(&wndclass);
+    }
+
+    hres = IOleClientSite_QueryInterface(This->client, &IID_IOleInPlaceSite, (void**)&inplace);
+    if(SUCCEEDED(hres)) {
+        IOleInPlaceSite_GetWindow(inplace, &parent);
+        IOleInPlaceSite_Release(inplace);
+    }
+
+    This->shell_embedding_hwnd = CreateWindowExW(0, wszShellEmbedding, NULL,
+         WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | WS_MAXIMIZEBOX,
+         0, 0, 0, 0, parent,
+         NULL, shdocvw_hinstance, This);
+
+    create_doc_view_hwnd(This);
+}
 
 /**********************************************************************
  * Implement the IOleObject interface for the WebBrowser control
@@ -63,13 +140,22 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
     if(This->client == pClientSite)
         return S_OK;
 
+    if(This->doc_view_hwnd)
+        DestroyWindow(This->doc_view_hwnd);
+    if(This->shell_embedding_hwnd)
+        DestroyWindow(This->shell_embedding_hwnd);
+
     if(This->client)
         IOleClientSite_Release(This->client);
 
-    if(pClientSite)
-        IOleClientSite_AddRef(pClientSite);
-
     This->client = pClientSite;
+    if(!pClientSite)
+        return S_OK;
+    
+    IOleClientSite_AddRef(pClientSite);
+
+    create_shell_embedding_hwnd(This);
+
     return S_OK;
 }
 
@@ -176,6 +262,7 @@ static HRESULT WINAPI OleObject_DoVerb(IOleObject *iface, LONG iVerb, struct tag
         IOleInPlaceSite_GetWindowContext(inplace, &This->frame, &This->uiwindow,
                                          &This->pos_rect, &This->clip_rect,
                                          &This->frameinfo);
+
 
         IOleInPlaceSite_Release(inplace);
 
@@ -508,7 +595,7 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
 void WebBrowser_OleObject_Destroy(WebBrowser *This)
 {
     if(This->client)
-        IOleClientSite_Release(This->client);
+        IOleObject_SetClientSite(OLEOBJ(This), NULL);
     if(This->container)
         IOleContainer_Release(This->container);
     if(This->frame)

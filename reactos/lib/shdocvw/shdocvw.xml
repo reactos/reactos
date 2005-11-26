@@ -19,6 +19,7 @@
 	<library>urlmon</library>
 	<file>classinfo.c</file>
 	<file>client.c</file>
+	<file>dochost.c</file>
 	<file>events.c</file>
 	<file>factory.c</file>
 	<file>misc.c</file>

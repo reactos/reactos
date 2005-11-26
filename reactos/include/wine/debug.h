@@ -3,8 +3,8 @@
 
 #include "../roscfg.h"
 #include <stdarg.h>
-#include <windows.h>
-#include <wchar.h>
+#include <windef.h>
+#include <winnt.h>
 
 /* Add ROS Master debug functions if not added yet */
 #ifndef __INTERNAL_DEBUG
