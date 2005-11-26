@@ -26,7 +26,7 @@
 <directory name="usb">
 	<xi:include href="usb/directory.xml" />
 </directory>
-<!--directory name="multimedia">
+<directory name="multimedia">
 	<xi:include href="multimedia/directory.xml" />
-</directory-->
+</directory>
 </group>

@@ -239,15 +239,18 @@ PcGetDeviceProperty(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONGLONG STDCALL
 PcGetTimeInterval(
   ULONGLONG  Timei
 )
 {
- UNIMPLEMENTED;
- return STATUS_UNSUCCESSFUL;
+    LARGE_INTEGER CurrentTime;
+    
+    KeQuerySystemTime( &CurrentTime);
+
+    return (Timei - CurrentTime.QuadPart);
 }
 
 /*

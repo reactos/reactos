@@ -16,8 +16,8 @@
  *    USBD_CreateConfigurationRequestEx (implemented)
  *    USBD_CreateConfigurationRequest
  *    USBD_GetInterfaceLength (implemented)
- *    USBD_ParseConfigurationDescriptorEx
- *    USBD_ParseDescriptors
+ *    USBD_ParseConfigurationDescriptorEx (implemented)
+ *    USBD_ParseDescriptors (implemented)
  *    USBD_GetPdoRegistryParameters (implemented)
  */
 
@@ -369,7 +369,7 @@ USBD_GetInterfaceLength(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PUSB_COMMON_DESCRIPTOR STDCALL
 USBD_ParseDescriptors(
@@ -394,7 +394,7 @@ USBD_ParseDescriptors(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PUSB_INTERFACE_DESCRIPTOR STDCALL
 USBD_ParseConfigurationDescriptorEx(
