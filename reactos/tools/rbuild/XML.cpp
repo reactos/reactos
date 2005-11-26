@@ -348,6 +348,13 @@ XMLFile::get_token(string& token)
 	return true;
 }
 
+bool
+XMLFile::get_token ( string& token, string& location )
+{
+	location = Location();
+	return get_token ( token );
+}
+
 string
 XMLFile::Location() const
 {
@@ -547,8 +554,8 @@ XMLParse ( XMLFile& f,
            const Path& path,
            bool* pend_tag = NULL )
 {
-	string token;
-	if ( !f.get_token(token) )
+	string token, location;
+	if ( !f.get_token(token,location) )
 		return NULL;
 	bool end_tag, is_include = false;
 
@@ -557,15 +564,15 @@ XMLParse ( XMLFile& f,
 	        || !strncmp ( token.c_str (), "<?", 2 ) )
 	{
 		if ( token[0] != '<' )
-			throw XMLSyntaxErrorException ( f.Location (),
+			throw XMLSyntaxErrorException ( location,
 			                                "expecting xml tag, not '%s'",
 			                                token.c_str () );
-		if ( !f.get_token(token) )
+		if ( !f.get_token(token,location) )
 			return NULL;
 	}
 
 	XMLElement* e = new XMLElement ( &f,
-	                                 f.Location () );
+	                                 location );
 	bool bNeedEnd = e->Parse ( token, end_tag );
 
 	if ( e->name == "xi:include" && includes )
@@ -586,7 +593,7 @@ XMLParse ( XMLFile& f,
 		else if ( end_tag )
 		{
 			delete e;
-			throw XMLSyntaxErrorException ( f.Location (),
+			throw XMLSyntaxErrorException ( location,
 			                                "end tag '%s' not expected",
 			                                token.c_str() );
 			return NULL;
@@ -598,27 +605,27 @@ XMLParse ( XMLFile& f,
 	{
 		if ( f.next_is_text () )
 		{
-			if ( !f.get_token ( token ) || token.size () == 0 )
+			if ( !f.get_token ( token, location ) || token.size () == 0 )
 			{
 				throw InvalidBuildFileException (
-					f.Location(),
+					location,
 					"internal tool error - get_token() failed when more_tokens() returned true" );
 				break;
 			}
 			if ( e->subElements.size() && !bThisMixingErrorReported )
 			{
-				throw XMLSyntaxErrorException ( f.Location (),
+				throw XMLSyntaxErrorException ( location,
 				                                "mixing of inner text with sub elements" );
 				bThisMixingErrorReported = true;
 			}
 			if ( strchr ( token.c_str (), '>' ) )
 			{
-				throw XMLSyntaxErrorException ( f.Location (),
+				throw XMLSyntaxErrorException ( location,
 				                                "invalid symbol '>'" );
 			}
 			if ( e->value.size() > 0 )
 			{
-				throw XMLSyntaxErrorException ( f.Location (),
+				throw XMLSyntaxErrorException ( location,
 				                                "multiple instances of inner text" );
 				e->value += " " + token;
 			}
@@ -628,20 +635,33 @@ XMLParse ( XMLFile& f,
 		else
 		{
 			XMLElement* e2 = XMLParse ( f, is_include ? NULL : includes, path, &end_tag );
+			if ( e->name == "project" && e2->name == "1" )
+				e = e;
 			if ( !e2 )
 			{
+				string e_location = e->location;
+				string e_name = e->name;
+				delete e;
 				throw InvalidBuildFileException (
-					e->location,
-					"end of file found looking for end tag" );
+					e_location,
+					"end of file found looking for end tag: </%s>",
+					e_name.c_str() );
 				break;
 			}
 			if ( end_tag )
 			{
 				if ( e->name != e2->name )
 				{
+					string e2_location = e2->location;
+					string e_name = e->name;
+					string e2_name = e2->name;
+					delete e;
 					delete e2;
-					throw XMLSyntaxErrorException ( f.Location (),
-					                                "end tag name mismatch" );
+					throw XMLSyntaxErrorException (
+						e2_location,
+						"end tag name mismatch - found </%s> but was expecting </%s>",
+						e2_name.c_str(),
+						e_name.c_str() );
 					break;
 				}
 				delete e2;
@@ -649,7 +669,9 @@ XMLParse ( XMLFile& f,
 			}
 			if ( e->value.size () > 0 && !bThisMixingErrorReported )
 			{
-				throw XMLSyntaxErrorException ( f.Location (),
+				string e_location = e->location;
+				delete e;
+				throw XMLSyntaxErrorException ( e_location,
 				                                "mixing of inner text with sub elements" );
 				bThisMixingErrorReported = true;
 			}

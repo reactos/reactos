@@ -81,7 +81,8 @@ public:
 	void next_token();
 	bool next_is_text();
 	bool more_tokens();
-	bool get_token(std::string& token);
+	bool get_token ( std::string& token );
+	bool get_token ( std::string& token, std::string& location );
 	const std::string& filename() { return _filename; }
 	std::string Location() const;
 

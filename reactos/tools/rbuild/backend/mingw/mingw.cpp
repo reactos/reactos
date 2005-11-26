@@ -21,6 +21,11 @@
 #include <assert.h>
 #include "modulehandler.h"
 
+#ifdef _MSC_VER
+#define popen _popen
+#define pclose _pclose
+#endif//_MSC_VER
+
 using std::string;
 using std::vector;
 using std::set;

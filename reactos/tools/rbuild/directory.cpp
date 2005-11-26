@@ -19,10 +19,7 @@
 #include <assert.h>
 
 #include "rbuild.h"
-#ifdef _MSC_VER
-#define popen _popen
-#define pclose _pclose
-#else
+#ifndef _MSC_VER
 #include <dirent.h>
 #endif//_MSC_VER
 

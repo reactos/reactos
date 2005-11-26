@@ -181,6 +181,14 @@ SOURCE=.\cdfile.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\compilationunit.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\compilationunitsupportcode.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\compilerflag.cpp
 # End Source File
 # Begin Source File
@@ -193,11 +201,19 @@ SOURCE=.\define.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\directory.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\exception.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\filesupportcode.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\global.cpp
 # End Source File
 # Begin Source File
 
@@ -210,6 +226,10 @@ SOURCE=.\installfile.cpp
 # Begin Source File
 
 SOURCE=.\linkerflag.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\linkerscript.cpp
 # End Source File
 # Begin Source File
 
