@@ -5,9 +5,6 @@
 #define IDC_CPLICON_1	1
 #define IDC_CPLICON_2	2
 
-#define IDD_PROPPAGE1	100
-#define IDD_PROPPAGE2	101
-#define IDD_PROPPAGE3	102
 #define IDD_KEYBSPEED	103
 #define IDD_HARDWARE	104
 

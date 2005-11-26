@@ -33,59 +33,6 @@
 #include "resource.h"
 
 
-
-/* Property page dialog callback */
-static INT_PTR CALLBACK
-Page1Proc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
-}
-
-/* Property page dialog callback */
-static INT_PTR CALLBACK
-Page2Proc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
-}
-
-/* Property page dialog callback */
-static INT_PTR CALLBACK
-Page3Proc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
-}
-
-
 /* Property page dialog callback */
 static INT_PTR CALLBACK
 MouseHardwareProc(IN HWND hwndDlg,
@@ -117,7 +64,7 @@ MouseHardwareProc(IN HWND hwndDlg,
 LONG APIENTRY
 MouseApplet(HWND hwnd, UINT uMsg, LONG lParam1, LONG lParam2)
 {
-  PROPSHEETPAGE psp[4];
+  PROPSHEETPAGE psp[1];
   PROPSHEETHEADER psh;
   TCHAR Caption[256];
 
@@ -134,10 +81,7 @@ MouseApplet(HWND hwnd, UINT uMsg, LONG lParam1, LONG lParam2)
   psh.nStartPage = 0;
   psh.ppsp = psp;
 
-  InitPropSheetPage(&psp[0], IDD_PROPPAGE1, Page1Proc);
-  InitPropSheetPage(&psp[1], IDD_PROPPAGE2, Page2Proc);
-  InitPropSheetPage(&psp[2], IDD_PROPPAGE3, Page3Proc);
-  InitPropSheetPage(&psp[3], IDD_HARDWARE, MouseHardwareProc);
+  InitPropSheetPage(&psp[0], IDD_HARDWARE, MouseHardwareProc);
 
   return (LONG)(PropertySheet(&psh) != -1);
 }
