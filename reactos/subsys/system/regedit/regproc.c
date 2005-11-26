@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <tchar.h>
 #include <malloc.h>
+#include <shlwapi.h>
 #include "regproc.h"
 
 #define REG_VAL_BUF_SIZE        4096
@@ -1503,33 +1504,6 @@ const CHAR *getAppName(void)
     return app_name;
 }
 
-LONG RegDeleteKeyRecursive(HKEY hKey, LPCTSTR lpSubKey)
-{
-    LONG lResult;
-    HKEY hSubKey = NULL;
-    DWORD dwIndex, cbName;
-    TCHAR szSubKey[256];
-    FILETIME ft;
-
-    lResult = RegOpenKeyEx(hKey, lpSubKey, 0, KEY_ALL_ACCESS, &hSubKey);
-    if (lResult == ERROR_SUCCESS)
-    {
-        dwIndex = 0;
-        do
-        {
-            cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
-            lResult = RegEnumKeyEx(hSubKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
-            if (lResult == ERROR_SUCCESS)
-                RegDeleteKeyRecursive(hSubKey, szSubKey);
-        }
-        while(lResult == ERROR_SUCCESS);
-
-        RegCloseKey(hSubKey);
-    }
-
-    return RegDeleteKey(hKey, lpSubKey);
-}
-
 LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
 {
     LONG lResult;
@@ -1597,7 +1571,7 @@ done:
     if (hDestSubKey)
         RegCloseKey(hDestSubKey);
     if (lResult != ERROR_SUCCESS)
-        RegDeleteKeyRecursive(hDestKey, lpDestSubKey);
+        SHDeleteKey(hDestKey, lpDestSubKey);
     return lResult;
 
 }
@@ -1611,7 +1585,7 @@ LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrc
 
     lResult = RegCopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
     if (lResult == ERROR_SUCCESS)
-        RegDeleteKeyRecursive(hSrcKey, lpSrcSubKey);
+        SHDeleteKey(hSrcKey, lpSrcSubKey);
 
     return lResult;
 }

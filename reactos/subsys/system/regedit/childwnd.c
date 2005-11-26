@@ -108,8 +108,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     HTREEITEM hSelection;
     HKEY hRootKey;
     LPCTSTR keyPath, s;
-    TCHAR szConfirmTitle[256];
-    TCHAR szConfirmText[256];
     WORD wID = LOWORD(wParam);
 
     switch (wID) {
@@ -134,16 +132,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
         keyPath = GetItemPath(pChildWnd->hTreeWnd, hSelection, &hRootKey);
 
-        LoadString(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, szConfirmTitle, sizeof(szConfirmTitle) / sizeof(szConfirmTitle[0]));
-        LoadString(hInst, IDS_QUERY_DELETE_KEY_ONE, szConfirmText, sizeof(szConfirmText) / sizeof(szConfirmText[0]));
-
-        if (MessageBox(pChildWnd->hWnd, szConfirmText, szConfirmTitle, MB_YESNO) == IDYES)
+        if (keyPath == 0 || *keyPath == 0)
         {
-            if (RegDeleteKeyRecursive(hRootKey, keyPath) == ERROR_SUCCESS)
-                TreeView_DeleteItem(pChildWnd->hTreeWnd, hSelection);
-            else
-                RefreshTreeItem(pChildWnd->hTreeWnd, hSelection); /* If delete failed; refresh to see partial results */
-        }
+           MessageBeep(MB_ICONHAND); 
+        } else 
+        if (DeleteKey(hWnd, hRootKey, keyPath))
+          DeleteNode(g_pChildWnd->hTreeWnd, 0);
         break;
 	case ID_TREE_EXPORT:
         ExportRegistryFile(pChildWnd->hTreeWnd);

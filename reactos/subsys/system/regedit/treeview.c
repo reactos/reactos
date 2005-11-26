@@ -107,6 +107,13 @@ LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     return pathBuffer;
 }
 
+BOOL DeleteNode(HWND hwndTV, HTREEITEM hItem)
+{
+    if (!hItem) hItem = TreeView_GetSelection(hwndTV);
+    if (!hItem) return FALSE;
+    return TreeView_DeleteItem(hwndTV, hItem);
+}
+
 /* Add an entry to the tree. Only give hKey for root nodes (HKEY_ constants) */
 static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HKEY hKey, DWORD dwChildren)
 {

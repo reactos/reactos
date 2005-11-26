@@ -282,6 +282,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Error"
     IDS_WARNING		    "Warning"
+    IDS_BAD_KEY             "Can't query key '%s'"
     IDS_BAD_VALUE           "Can't query value '%s'"
     IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
     IDS_TOO_BIG_VALUE       "Value is too big (%ld)"

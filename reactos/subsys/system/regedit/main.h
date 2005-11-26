@@ -105,6 +105,7 @@ extern BOOL RefreshTreeView(HWND hWndTV);
 extern BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem);
 extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
+extern BOOL DeleteNode(HWND hwndTV, HTREEITEM hItem);
 extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name);
 extern HWND StartKeyRename(HWND hwndTV);
 extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
@@ -115,5 +116,6 @@ extern void DestroyMainMenu( void );
 
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
+extern BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath);
 
 #endif /* __MAIN_H__ */

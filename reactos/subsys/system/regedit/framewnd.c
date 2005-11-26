@@ -905,36 +905,48 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_EDIT_DELETE:
     {
-        UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
-        if(nSelected >= 1)
+	if (GetFocus() == g_pChildWnd->hListWnd)
         {
-          TCHAR msg[128], caption[128];
-          LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
-          LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
-          if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
+          UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
+          if(nSelected >= 1)
           {
-            int ni, errs;
-
-	    item = -1;
-	    errs = 0;
-            while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
+            TCHAR msg[128], caption[128];
+            LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
+            LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
+            if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
             {
-              valueName = GetValueName(g_pChildWnd->hListWnd, item);
-              if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+              int ni, errs;
+
+              item = -1;
+              errs = 0;
+              while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
               {
-                errs++;
+                valueName = GetValueName(g_pChildWnd->hListWnd, item);
+                if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+                {
+                  errs++;
+                }
+                item = ni;
               }
-	      item = ni;
-            }
 
-            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
-            if(errs > 0)
-            {
-              LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-              LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
-              MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
+              RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+              if(errs > 0)
+              {
+                LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+                LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
+                MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
+              }
             }
           }
+        } else 
+        if (GetFocus() == g_pChildWnd->hTreeWnd)
+        {
+          if (keyPath == 0 || *keyPath == 0)
+          {
+             MessageBeep(MB_ICONHAND); 
+          } else
+          if (DeleteKey(hWnd, hKeyRoot, keyPath))
+            DeleteNode(g_pChildWnd->hTreeWnd, 0);
         }
 	break;
     case ID_EDIT_NEW_STRINGVALUE:
