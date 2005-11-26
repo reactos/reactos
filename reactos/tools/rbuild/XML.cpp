@@ -635,8 +635,6 @@ XMLParse ( XMLFile& f,
 		else
 		{
 			XMLElement* e2 = XMLParse ( f, is_include ? NULL : includes, path, &end_tag );
-			if ( e->name == "project" && e2->name == "1" )
-				e = e;
 			if ( !e2 )
 			{
 				string e_location = e->location;
