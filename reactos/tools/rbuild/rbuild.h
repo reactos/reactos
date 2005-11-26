@@ -38,6 +38,7 @@
 #include "ssprintf.h"
 #include "exception.h"
 #include "XML.h"
+#include <infhost.h>
 
 typedef std::vector<std::string> string_list;
 
@@ -94,6 +95,7 @@ class StubbedComponent;
 class StubbedSymbol;
 class CompilationUnit;
 class FileLocation;
+class AutoRegister;
 
 class SourceFileTest;
 
@@ -276,6 +278,7 @@ public:
 	bool mangledSymbols;
 	bool isUnicode;
 	Bootstrap* bootstrap;
+	AutoRegister* autoRegister;
 	IfableData non_if_data;
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
@@ -866,6 +869,48 @@ public:
 };
 
 
+enum AutoRegisterType
+{
+	DllRegisterServer,
+	DllInstall,
+	Both
+};
+
+class AutoRegister
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	std::string infSection;
+	AutoRegisterType type;
+	AutoRegister ( const Project& project_,
+	               const Module* module_,
+	               const XMLElement& node_ );
+	~AutoRegister ();
+	void ProcessXML();
+private:
+	bool IsSupportedModuleType ( ModuleType type );
+	AutoRegisterType GetAutoRegisterType( std::string type );
+	void Initialize ();
+};
+
+
+class SysSetupGenerator
+{
+public:
+	const Project& project;
+	SysSetupGenerator ( const Project& project );
+	~SysSetupGenerator ();
+	void Generate ();
+private:
+	std::string GetDirectoryId ( const Module& module );
+	std::string GetFlags ( const Module& module );
+	void Generate ( HINF inf,
+	                const Module& module );
+};
+
+
 extern void
 InitializeEnvironment ();
 
@@ -911,5 +956,8 @@ GetFilename ( const std::string& filename );
 
 extern std::string
 NormalizeFilename ( const std::string& filename );
+
+extern std::string
+ToLower ( std::string filename );
 
 #endif /* __RBUILD_H */

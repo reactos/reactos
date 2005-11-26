@@ -187,6 +187,14 @@ GetBooleanValue ( const string& value )
 		return false;
 }
 
+string
+ToLower ( string filename )
+{
+	for ( size_t i = 1; i < filename.length (); i++ )
+		filename[i] = tolower ( filename[i] );
+	return filename;
+}
+
 IfableData::~IfableData()
 {
 	size_t i;
@@ -232,6 +240,7 @@ Module::Module ( const Project& project,
 	  node (moduleNode),
 	  importLibrary (NULL),
 	  bootstrap (NULL),
+	  autoRegister(NULL),
 	  linkerScript (NULL),
 	  pch (NULL),
 	  cplusplus (false),
@@ -440,6 +449,8 @@ Module::ProcessXML()
 		linkerScript->ProcessXML();
 	if ( pch )
 		pch->ProcessXML();
+	if ( autoRegister )
+		autoRegister->ProcessXML();
 }
 
 void
@@ -646,6 +657,17 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			parseContext.compilationUnit = pCompilationUnit;
 		}
 		subs_invalid = false;
+	}
+	else if ( e.name == "autoregister" )
+	{
+		if ( autoRegister != NULL)
+		{
+			throw InvalidBuildFileException ( e.location,
+			                                  "there can be only one <%s> element for a module",
+			                                  e.name.c_str() );
+		}
+		autoRegister = new AutoRegister ( project, this, e );
+		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException (
@@ -1258,5 +1280,87 @@ PchFile::PchFile (
 
 void
 PchFile::ProcessXML()
+{
+}
+
+
+AutoRegister::AutoRegister ( const Project& project_,
+                             const Module* module_,
+                             const XMLElement& node_ )
+	: project(project_),
+	  module(module_),
+	  node(node_)
+{
+	Initialize();
+}
+
+AutoRegister::~AutoRegister ()
+{
+}
+
+bool
+AutoRegister::IsSupportedModuleType ( ModuleType type )
+{
+	switch ( type )
+	{
+		case Win32DLL:
+			return true;
+		case Kernel:
+		case KernelModeDLL:
+		case NativeDLL:
+		case NativeCUI:
+		case Win32CUI:
+		case Win32GUI:
+		case KernelModeDriver:
+		case BootSector:
+		case BootLoader:
+		case BuildTool:
+		case StaticLibrary:
+		case ObjectLibrary:
+		case Iso:
+		case LiveIso:
+		case Test:
+		case RpcServer:
+		case RpcClient:
+		case Alias:
+			return false;
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+AutoRegisterType
+AutoRegister::GetAutoRegisterType( string type )
+{
+	if ( type == "DllRegisterServer" )
+		return DllRegisterServer;
+	if ( type == "DllInstall" )
+		return DllInstall;
+	if ( type == "Both" )
+		return Both;
+	throw InvalidBuildFileException (
+		node.location,
+		"<autoregister> type attribute must be DllRegisterServer, DllInstall or Both." );
+}
+
+void
+AutoRegister::Initialize ()
+{
+	if ( !IsSupportedModuleType ( module->type ) )
+	{
+		throw InvalidBuildFileException (
+			node.location,
+			"<autoregister> is not applicable for this module type." );
+	}
+
+	const XMLAttribute* att = node.GetAttribute ( "infsection", true );
+	infSection = att->value;
+
+	att = node.GetAttribute ( "type", true );
+	type = GetAutoRegisterType ( att->value );
+}
+
+void
+AutoRegister::ProcessXML()
 {
 }

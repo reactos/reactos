@@ -237,6 +237,7 @@ MingwBackend::ProcessNormal ()
 	UnpackWineResources ();
 	GenerateTestSupportCode ();
 	GenerateCompilationUnitSupportCode ();
+	GenerateSysSetup ();
 	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -576,6 +577,15 @@ MingwBackend::GenerateCompilationUnitSupportCode ()
 		compilationUnitSupportCode.Generate ( configuration.Verbose );
 		printf ( "done\n" );
 	}
+}
+
+void
+MingwBackend::GenerateSysSetup ()
+{
+	printf ( "Generating syssetup.inf..." );
+	SysSetupGenerator sysSetupGenerator ( ProjectNode );
+	sysSetupGenerator.Generate ();
+	printf ( "done\n" );
 }
 
 string

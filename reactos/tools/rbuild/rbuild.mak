@@ -172,6 +172,7 @@ RBUILD_COMMON_SOURCES = \
 		project.cpp \
 		ssprintf.cpp \
 		stubbedcomponent.cpp \
+		syssetupgenerator.cpp \
 		testsupportcode.cpp \
 		wineresource.cpp \
 		XML.cpp \
@@ -250,16 +251,16 @@ RBUILD_TEST_OBJECTS = \
 	$(RBUILD_COMMON_OBJECTS) \
 	$(RBUILD_TEST_SPECIAL_OBJECTS)
 
-RBUILD_HOST_CXXFLAGS = -I$(RBUILD_BASE) $(TOOLS_CPPFLAGS)
+RBUILD_HOST_CXXFLAGS = -I$(RBUILD_BASE) -I$(INFLIB_BASE) $(TOOLS_CPPFLAGS)
 
 RBUILD_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 .PHONY: rbuild
 rbuild: $(RBUILD_TARGET)
 
-$(RBUILD_TARGET): $(RBUILD_OBJECTS) | $(RBUILD_OUT)
+$(RBUILD_TARGET): $(RBUILD_OBJECTS) $(INFLIB_HOST_TARGET) | $(RBUILD_OUT)
 	$(ECHO_LD)
-	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
+	${host_gpp} $(RBUILD_OBJECTS) $(INFLIB_HOST_TARGET) $(RBUILD_HOST_LFLAGS) -o $@
 
 $(RBUILD_INT_)global.o: $(RBUILD_BASE_)global.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
@@ -345,6 +346,10 @@ $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_H
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
+$(RBUILD_INT_)syssetupgenerator.o: $(RBUILD_BASE_)syssetupgenerator.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_INT_)wineresource.o: $(RBUILD_BASE_)wineresource.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -379,7 +384,7 @@ $(RBUILD_DEVCPP_INT_)devcpp.o: $(RBUILD_DEVCPP_BASE_)devcpp.cpp $(RBUILD_HEADERS
 
 $(RBUILD_MSVC_INT_)genguid.o: $(RBUILD_MSVC_BASE_)genguid.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_CC)
-	${host_gpp} $(RBUILD_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MSVC_INT_)msvc.o: $(RBUILD_MSVC_BASE_)msvc.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_CC)
@@ -393,9 +398,9 @@ $(RBUILD_MSVC_INT_)vcprojmaker.o: $(RBUILD_MSVC_BASE_)vcprojmaker.cpp $(RBUILD_H
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(RBUILD_HEADERS) | $(RBUILD_OUT)
+$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(INFLIB_HOST_TARGET) $(RBUILD_HEADERS) | $(RBUILD_OUT)
 	$(ECHO_LD)
-	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
+	${host_gpp} $(RBUILD_TEST_OBJECTS) $(INFLIB_HOST_TARGET) $(RBUILD_HOST_LFLAGS) -o $@
 
 $(RBUILD_TESTS_INT_)cdfiletest.o: $(RBUILD_TESTS_BASE_)cdfiletest.cpp $(RBUILD_HEADERS) | $(RBUILD_TESTS_INT)
 	$(ECHO_CC)

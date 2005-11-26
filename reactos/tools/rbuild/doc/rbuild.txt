@@ -129,7 +129,7 @@ Value:
 	None.
 
 Elements:
-	bootstrap, component, compilationunit, define, dependency, directory, file, if, importlibrary, include, invoke, library, linkerscript, property.
+	autoregister, bootstrap, component, compilationunit, define, dependency, directory, file, if, importlibrary, include, invoke, library, linkerscript, property.
 
 
 Module types
@@ -152,6 +152,24 @@ The module type determines the actions that is to be carried out to process the 
 	rpcserver - Generates and builds server code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	rpcclient - Generates and builds client code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	alias - Module is an alias for another module. This module type is the only module type for which the aliasof attribute is applicable. Only the module install functionality is aliased.
+
+
+Autoregister element
+--------------------
+An autoregister element specifies that the generated executable should be registered in the registry during second stage setup.
+
+Syntax:
+	<autoregister infsection="OleControlDlls" type="Both" />
+
+Attributes:
+	infsection - Name of section in syssetup.inf.
+	type - Type of registration. Can be either DllRegisterServer, DllInstall, or Both.
+
+Value:
+	None.
+
+Elements:
+	None.
 
 
 Bootstrap element

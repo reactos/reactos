@@ -78,6 +78,7 @@ private:
 	void UnpackWineResources ();
 	void GenerateTestSupportCode ();
 	void GenerateCompilationUnitSupportCode ();
+	void GenerateSysSetup ();
 	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();
