@@ -199,9 +199,9 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
         {
             /* convert the string to an integer value and create a
                formatted string */
-            unsigned long ulLocation = wcstoul(szBuffer,
-                                               NULL,
-                                               10);
+            ULONG ulLocation = (ULONG)wcstoul(szBuffer,
+                                              NULL,
+                                              10);
             if (LoadAndFormatString(hDllInstance,
                                     IDS_LOCATIONSTR,
                                     &szFormatted,
@@ -227,7 +227,22 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
             LocalFree((HLOCAL)szFormatted);
         }
 
-        /* FIXME - Display the device status */
+        /* FIXME - get the device status text */
+        LoadString(hDllInstance,
+                   IDS_UNKNOWN,
+                   szBuffer,
+                   sizeof(szBuffer) / sizeof(szBuffer[0]));
+
+        if (LoadAndFormatString(hDllInstance,
+                                IDS_STATUS,
+                                &szFormatted,
+                                szBuffer) != 0)
+        {
+            SetDlgItemText(hpd->hWnd,
+                           IDC_STATUS,
+                           szFormatted);
+            LocalFree((HLOCAL)szFormatted);
+        }
     }
     else
     {
@@ -249,6 +264,7 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
                  HwDevInfo != NULL);
 }
 
+
 static VOID
 FreeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
 {
@@ -257,14 +273,15 @@ FreeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
     ClassDevInfo = hpd->ClassDevInfo;
     LastClassDevInfo = ClassDevInfo + hpd->NumberOfGuids;
 
-    /* free the device info set handles */
+    /* free the device info set handles and structures */
     while (ClassDevInfo != LastClassDevInfo)
     {
         if (ClassDevInfo->hDevInfo != INVALID_HANDLE_VALUE)
         {
             SetupDiDestroyDeviceInfoList(ClassDevInfo->hDevInfo);
+            ClassDevInfo->hDevInfo = INVALID_HANDLE_VALUE;
         }
-        ClassDevInfo->hDevInfo = NULL;
+
         ClassDevInfo->ItemCount = 0;
         ClassDevInfo->ImageIndex = 0;
 
@@ -295,6 +312,8 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
     while (ClassDevInfo != LastClassDevInfo)
     {
         ClassDevInfo->ImageIndex = -1;
+
+        /* open a class device handle for the GUID we're processing */
         ClassDevInfo->hDevInfo = SetupDiGetClassDevs(&ClassDevInfo->Guid,
                                                      NULL,
                                                      hpd->hWnd,
@@ -307,6 +326,7 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                                       &ClassDevInfo->Guid,
                                       &ClassDevInfo->ImageIndex);
 
+            /* enumerate all devices in the class */
             while (SetupDiEnumDeviceInfo(ClassDevInfo->hDevInfo,
                                          MemberIndex++,
                                          &DevInfoData))
@@ -341,6 +361,7 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     }
                 }
 
+                /* save all information for the current device */
                 ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount].ClassDevInfo = ClassDevInfo;
                 ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount++].DevInfoData = DevInfoData;
             }
@@ -352,7 +373,7 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
 
 
 static VOID
-FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
+FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
 {
     PHWCLASSDEVINFO ClassDevInfo, LastClassDevInfo;
     PHWDEVINFO HwDevInfo, LastHwDevInfo;
@@ -377,6 +398,7 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                 INT iItem;
                 LVITEM li;
 
+                /* get the device name */
                 if ((SetupDiGetDeviceRegistryProperty(ClassDevInfo->hDevInfo,
                                                       &HwDevInfo->DevInfoData,
                                                       SPDRP_FRIENDLYNAME,
@@ -410,6 +432,7 @@ FillDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     {
                         ItemCount++;
 
+                        /* get the device type for the second column */
                         if (SetupDiGetClassDescription(&ClassDevInfo->Guid,
                                                        szBuffer,
                                                        sizeof(szBuffer) / sizeof(szBuffer[0]),
@@ -721,6 +744,26 @@ HardwareDlgProc(IN HWND hwndDlg,
                 break;
             }
 
+            case WM_COMMAND:
+            {
+                switch (LOWORD(wParam))
+                {
+                    case IDC_TROUBLESHOOT:
+                    {
+                        /* FIXME - start the help using the command in the window text */
+                        break;
+                    }
+
+                    case IDC_PROPERTIES:
+                    {
+                        /* FIXME - display the properties dialog for the currently
+                                   selected device */
+                        break;
+                    }
+                }
+                break;
+            }
+
             case WM_SIZE:
                 HardwareDlgResize(hpd,
                                   (INT)LOWORD(lParam),
@@ -804,7 +847,7 @@ HardwareDlgProc(IN HWND hwndDlg,
                     InitializeDevicesList(hpd);
 
                     /* fill the devices list view control */
-                    FillDevicesList(hpd);
+                    FillDevicesListViewControl(hpd);
 
                     /* decide whether to show or hide the troubleshoot button */
                     EnableTroubleShoot(hpd,
@@ -859,20 +902,11 @@ HardwareDlgProc(IN HWND hwndDlg,
  *   hWndParent:     Handle to the parent window
  *   lpGuids:        An array of guids of devices that are to be listed
  *   uNumberOfGuids: Numbers of guids in the Guids array
- *   Unknown:        Unknown parameter, see NOTEs
+ *   DisplayMode:    Sets the size of the device list view control
  *
  * RETURN VALUE
  *   Returns the handle of the hardware page window that has been created or
  *   NULL if it failed.
- *
- * REVISIONS
- *   13-05-2005 first working version (Sebastian Gasiorek <zebasoftis@gmail.com>)
- *
- * TODO
- *   missing: device icon in list view, Troubleshoot button, device properties,
- *            status description,
- *            devices should be visible afer PSN_SETACTIVE message
- *
  */
 HWND
 WINAPI
@@ -905,6 +939,7 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
              i < uNumberOfGuids;
              i++)
         {
+            hpd->ClassDevInfo[i].hDevInfo = INVALID_HANDLE_VALUE;
             hpd->ClassDevInfo[i].Guid = lpGuids[i];
         }
 
