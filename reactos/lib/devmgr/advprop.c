@@ -19,7 +19,7 @@
 /* $Id: hwpage.c 19599 2005-11-26 02:12:58Z weiden $
  *
  * PROJECT:         ReactOS devmgr.dll
- * FILE:            lib/devmgr/hwpage.c
+ * FILE:            lib/devmgr/advprop.c
  * PURPOSE:         ReactOS Device Manager
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
@@ -119,6 +119,7 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
 
             psh.dwSize = sizeof(PROPSHEETHEADER);
             psh.dwFlags =  PSH_PROPTITLE;
+            psh.hwndParent = hWndParent;
             psh.pszCaption = szDevName;
 
             /* find out how many property sheets we need */
