@@ -3004,7 +3004,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
 {
     BOOL ret = FALSE;
 
-    TRACE("%ld %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
+    TRACE("%u %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -3063,7 +3063,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
                 DefaultHandler = SetupDiSelectBestCompatDrv;
                 break;
             default:
-                ERR("Install function %lu not supported\n", InstallFunction);
+                ERR("Install function %u not supported\n", InstallFunction);
                 SetLastError(ERROR_NOT_SUPPORTED);
         }
 
@@ -3459,6 +3459,71 @@ BOOL WINAPI SetupDiSetDeviceInstallParamsW(
     }
 
     TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceInstanceIdA(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInstanceIdA(
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData,
+        OUT PSTR DeviceInstanceId,
+        IN DWORD DeviceInstanceIdSize,
+        OUT PDWORD RequiredSize)
+{
+    FIXME ("Stub %p %p %p %d %p\n",
+           DeviceInfoSet, DeviceInfoData, DeviceInstanceId, DeviceInstanceIdSize, RequiredSize);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceInstanceIdW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInstanceIdW(
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData,
+        OUT PWSTR DeviceInstanceId,
+        IN DWORD DeviceInstanceIdSize,
+        OUT PDWORD RequiredSize)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p %lu %p\n", DeviceInfoSet, DeviceInfoData,
+          DeviceInstanceId, DeviceInstanceIdSize, RequiredSize);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (!DeviceInstanceId && DeviceInstanceIdSize > 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInstanceId && DeviceInstanceIdSize == 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        DWORD required;
+
+        required = (wcslen(DevInfo->DeviceName) + 1) * sizeof(WCHAR);
+        if (RequiredSize)
+            *RequiredSize = required;
+
+        if (required <= DeviceInstanceIdSize)
+        {
+            wcscpy(DeviceInstanceId, DevInfo->DeviceName);
+            ret = TRUE;
+        }
+        else
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
+
+    TRACE("Returning 0x%p\n", ret);
     return ret;
 }
 

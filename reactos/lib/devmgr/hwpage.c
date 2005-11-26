@@ -143,7 +143,7 @@ DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
                                        0,
                                        &DeviceInstanceIdLen))
         {
-            DPRINT1("SetupDiGetDeviceInterfaceDetail unexpectedly returned TRUE!\n");
+            DPRINT1("SetupDiGetDeviceInstanceId unexpectedly returned TRUE!\n");
             goto Cleanup;
         }
 

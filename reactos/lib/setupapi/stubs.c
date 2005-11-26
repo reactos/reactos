@@ -225,31 +225,6 @@ BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListD
     return TRUE;
 }
 
-/***********************************************************************
- *		SetupDiGetDeviceInstanceIdA(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetDeviceInstanceIdA(HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData,
-                                        PSTR DeviceInstanceId, DWORD DeviceInstanceIdSize,
-                                        PDWORD RequiredSize)
-{
-    FIXME ("Stub %p %p %p %d %p\n",
-           DeviceInfoSet, DeviceInfoData, DeviceInstanceId, DeviceInstanceIdSize, RequiredSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-/***********************************************************************
- *		SetupDiGetDeviceInstanceIdW(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetDeviceInstanceIdW(HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData,
-                                        PWSTR DeviceInstanceId, DWORD DeviceInstanceIdSize,
-                                        PDWORD RequiredSize)
-{
-    FIXME ("Stub %p %p %p %d %p\n",
-           DeviceInfoSet, DeviceInfoData, DeviceInstanceId, DeviceInstanceIdSize, RequiredSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
 
 /***********************************************************************
  *		SetupDiGetClassDevPropertySheetsA(SETUPAPI.@)
