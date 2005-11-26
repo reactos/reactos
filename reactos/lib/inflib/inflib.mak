@@ -31,7 +31,7 @@ INFLIB_HOST_SOURCES = $(addprefix $(INFLIB_BASE_), \
 INFLIB_HOST_OBJECTS = \
 	$(subst $(INFLIB_BASE), $(INFLIB_INT), $(INFLIB_HOST_SOURCES:.c=.o))
 
-INFLIB_HOST_CFLAGS = -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
+INFLIB_HOST_CFLAGS = -O3 -Wall -Wpointer-arith -Wconversion \
   -Wstrict-prototypes -Wmissing-prototypes -DINFLIB_HOST -D_M_IX86 \
   -I$(INFLIB_BASE) -Iinclude/reactos -DDBG
 

@@ -44,7 +44,7 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 #define _tcstol strtol
 #define STRFMT "%s"
 
-extern void DbgPrint(const char *Fmt, ...);
+extern unsigned long DbgPrint(char *Fmt, ...);
 
 #else /* ! defined(INFLIB_HOST) */
 

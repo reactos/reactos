@@ -11,14 +11,16 @@
 #define NDEBUG
 #include <debug.h>
 
-void
-DbgPrint(const char *Fmt, ...)
+unsigned long
+DbgPrint(char *Fmt, ...)
 {
   va_list Args;
 
   va_start(Args, Fmt);
   vfprintf(stderr, Fmt, Args);
   va_end(Args);
+
+  return 0;
 }
 
 /* EOF */
