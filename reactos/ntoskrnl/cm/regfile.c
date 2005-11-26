@@ -3417,6 +3417,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 	{
 	  NewCell = (PCELL_HEADER) ((ULONG_PTR) NewCell + CellSize);
 	  NewCell->CellSize = ((PCELL_HEADER) (*Cell))->CellSize - CellSize;
+	  ((PCELL_HEADER) (*Cell))->CellSize = CellSize;
 	  CmiAddFree(RegistryHive,
 		     NewCell,
 		     *CellOffset + CellSize,
