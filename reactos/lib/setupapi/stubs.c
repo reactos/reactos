@@ -255,3 +255,13 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(HDEVINFO DeviceInfoSet, PSP_DEVINF
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+/***********************************************************************
+ *		SetupDiLoadClassIcon(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiLoadClassIcon(CONST GUID *ClassGuid, HICON *LargeIcon, PINT MiniIconIndex)
+{
+    FIXME ("Stub %p %p %p\n", ClassGuid, LargeIcon, MiniIconIndex);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}

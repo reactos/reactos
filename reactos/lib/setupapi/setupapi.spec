@@ -354,7 +354,7 @@
 @ stdcall SetupDiInstallDevice(ptr ptr)
 @ stdcall SetupDiInstallDeviceInterfaces(ptr ptr)
 @ stdcall SetupDiInstallDriverFiles(ptr ptr)
-@ stub SetupDiLoadClassIcon
+@ stdcall SetupDiLoadClassIcon(ptr ptr ptr)
 @ stub SetupDiMoveDuplicateDevice
 @ stdcall SetupDiOpenClassRegKey(ptr long)
 @ stdcall SetupDiOpenClassRegKeyExA(ptr long long str ptr)
