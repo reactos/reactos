@@ -323,8 +323,8 @@
 @ stdcall SetupDiGetDeviceInfoListDetailW(ptr ptr)
 @ stdcall SetupDiGetDeviceInstallParamsA(ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInstallParamsW(ptr ptr ptr)
-@ stub SetupDiGetDeviceInstanceIdA
-@ stub SetupDiGetDeviceInstanceIdW
+@ stdcall SetupDiGetDeviceInstanceIdA(ptr ptr str long ptr)
+@ stdcall SetupDiGetDeviceInstanceIdW(ptr ptr wstr long ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyW(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDriverInfoDetailA(ptr ptr ptr ptr long ptr)
