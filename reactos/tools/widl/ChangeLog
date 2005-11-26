@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-11-26 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Allocate another 4 bytes for unique pointers to simple types.
+
 2005-10-16 ekohl
 
    tools/widl/client.c

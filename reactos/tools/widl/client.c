@@ -731,6 +731,9 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
                                   __FUNCTION__,__LINE__, var->type->type);
                             return;
                         }
+
+                        if (unique_attr)
+                            size += 4;
                     }
                     else
                     {
