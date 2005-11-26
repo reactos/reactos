@@ -142,7 +142,7 @@ InfHostGetIntField(PINFCONTEXT Context,
 {
   INFSTATUS Status;
 
-  Status = InfpGetIntField(Context, FieldIndex, IntegerValue);
+  Status = InfpGetIntField(Context, FieldIndex, (PLONG)IntegerValue);
   if (INF_SUCCESS(Status))
     {
       return 0;
