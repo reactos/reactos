@@ -118,13 +118,13 @@ DeviceManagerPrintW(LPCWSTR lpMachineName,
                     UINT uNumberOfGuids,
                     LPGUID lpGuids);
 
-int
+INT_PTR
 WINAPI
 DeviceAdvancedPropertiesA(HWND hWndParent,
                           LPCSTR lpMachineName,
                           LPCSTR lpDeviceID);
 
-int
+INT_PTR
 WINAPI
 DeviceAdvancedPropertiesW(HWND hWndParent,
                           LPCWSTR lpMachineName,
@@ -179,6 +179,14 @@ DevicePropertiesExW(HWND hWndParent,
 #define DeviceAdvancedProperties DeviceAdvancedPropertiesA
 #define DevicePropertiesEx DevicePropertiesExA
 #endif
+
+/* ADVPROP.C */
+
+INT_PTR
+DisplayDeviceAdvancedProperties(IN HWND hWndParent,
+                                IN HDEVINFO DeviceInfoSet,
+                                IN PSP_DEVINFO_DATA DeviceInfoData,
+                                IN HINSTANCE hComCtl32);
 
 /* MISC.C */
 

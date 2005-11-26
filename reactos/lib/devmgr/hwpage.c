@@ -133,55 +133,10 @@ DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
     HwDevInfo = (PHWDEVINFO)ListViewGetSelectedItemData(hpd->hWndDevList);
     if (HwDevInfo != NULL)
     {
-        PWSTR szDeviceInstanceId = NULL;
-        DWORD DeviceInstanceIdLen = 0;
-
-        /* find out how much size is needed for the buffer */
-        if (SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
-                                       &HwDevInfo->DevInfoData,
-                                       NULL,
-                                       0,
-                                       &DeviceInstanceIdLen))
-        {
-            DPRINT1("SetupDiGetDeviceInstanceId unexpectedly returned TRUE!\n");
-            goto Cleanup;
-        }
-
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            goto Cleanup;
-        }
-
-        szDeviceInstanceId = HeapAlloc(GetProcessHeap(),
-                                       0,
-                                       DeviceInstanceIdLen * sizeof(WCHAR));
-        if (szDeviceInstanceId == NULL)
-        {
-            goto Cleanup;
-        }
-
-        /* read the device instance id */
-        if (!SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
-                                        &HwDevInfo->DevInfoData,
-                                        szDeviceInstanceId,
-                                        DeviceInstanceIdLen,
-                                        &DeviceInstanceIdLen))
-        {
-            goto Cleanup;
-        }
-
-        /* display the properties dialog */
-        Ret = DeviceAdvancedProperties(hpd->hWnd,
-                                       NULL,
-                                       szDeviceInstanceId) >= 0;
-
-Cleanup:
-        if (szDeviceInstanceId != NULL)
-        {
-            HeapFree(GetProcessHeap(),
-                     0,
-                     szDeviceInstanceId);
-        }
+        Ret = DisplayDeviceAdvancedProperties(hpd->hWnd,
+                                              HwDevInfo->ClassDevInfo->hDevInfo,
+                                              &HwDevInfo->DevInfoData,
+                                              hpd->hComCtl32) != -1;
     }
 
     return Ret;
