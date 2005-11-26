@@ -89,6 +89,7 @@ lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
 lib\dnsapi\dnsapi.dll                   1
 lib\dplay\dplay.dll                     1
+lib\dplayx\dplayx.dll                   1
 lib\dsound\dsound.dll                   1
 lib\dxdiagn\dxdiagn.dll                 1
 lib\fmifs\fmifs.dll                     1
