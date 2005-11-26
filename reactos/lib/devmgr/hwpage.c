@@ -967,6 +967,8 @@ HardwareDlgProc(IN HWND hwndDlg,
  * RETURN VALUE
  *   Returns the handle of the hardware page window that has been created or
  *   NULL if it failed.
+ *
+ * @implemented
  */
 HWND
 WINAPI
@@ -1053,10 +1055,7 @@ Cleanup:
  *   Returns the handle of the hardware page window that has been created or
  *   NULL if it failed.
  *
- * REVISIONS
- *
- * NOTE
- *
+ * @implemented
  */
 HWND
 WINAPI

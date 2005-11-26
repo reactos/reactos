@@ -52,7 +52,7 @@ typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
  *
  * NOTE
  *
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
@@ -128,7 +128,8 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                                                  &psh,
                                                  0,
                                                  &nPropSheets,
-                                                 DIGCDP_FLAG_ADVANCED))
+                                                 DIGCDP_FLAG_ADVANCED) &&
+                nPropSheets != 0)
             {
                 DPRINT1("SetupDiGetClassDevPropertySheets unexpectedly returned TRUE!\n");
                 goto Cleanup;
@@ -147,6 +148,8 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                 goto Cleanup;
             }
 
+            /* FIXME - add the "General" and "Driver" pages */
+
             if (!SetupDiGetClassDevPropertySheets(hDevInfo,
                                                   &DevInfoData,
                                                   &psh,
@@ -156,8 +159,6 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
             {
                 goto Cleanup;
             }
-
-            /* FIXME - add "General" and "Driver" page */
 
             Ret = pPropertySheetW(&psh);
         }
@@ -194,7 +195,7 @@ Cleanup:
  *
  * NOTE
  *
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
