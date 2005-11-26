@@ -306,8 +306,8 @@
 @ stdcall SetupDiGetClassDescriptionExA(ptr str long ptr str ptr)
 @ stdcall SetupDiGetClassDescriptionExW(ptr wstr long ptr wstr ptr)
 @ stdcall SetupDiGetClassDescriptionW(ptr wstr long ptr)
-@ stub SetupDiGetClassDevPropertySheetsA
-@ stub SetupDiGetClassDevPropertySheetsW
+@ stdcall SetupDiGetClassDevPropertySheetsA(ptr ptr ptr long ptr long)
+@ stdcall SetupDiGetClassDevPropertySheetsW(ptr ptr ptr long ptr long)
 @ stdcall SetupDiGetClassDevsA(ptr ptr long long)
 @ stdcall SetupDiGetClassDevsExA(ptr str ptr long ptr str ptr)
 @ stdcall SetupDiGetClassDevsExW(ptr wstr ptr long ptr wstr ptr)

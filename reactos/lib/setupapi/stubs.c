@@ -250,3 +250,33 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdW(HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+/***********************************************************************
+ *		SetupDiGetClassDevPropertySheetsA(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassDevPropertySheetsA(HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData,
+                                              LPPROPSHEETHEADERA PropertySheetHeader,
+                                              DWORD PropertySheetHeaderPageListSize, PDWORD RequiredSize,
+                                              DWORD PropertySheetType)
+{
+    FIXME ("Stub %p %p %p %d %p %d\n",
+           DeviceInfoSet, DeviceInfoData, PropertySheetHeader, PropertySheetHeaderPageListSize,
+           RequiredSize, PropertySheetType);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevPropertySheetsW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassDevPropertySheetsW(HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData,
+                                              LPPROPSHEETHEADERW PropertySheetHeader,
+                                              DWORD PropertySheetHeaderPageListSize, PDWORD RequiredSize,
+                                              DWORD PropertySheetType)
+{
+    FIXME ("Stub %p %p %p %d %p %d\n",
+           DeviceInfoSet, DeviceInfoData, PropertySheetHeader, PropertySheetHeaderPageListSize,
+           RequiredSize, PropertySheetType);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
