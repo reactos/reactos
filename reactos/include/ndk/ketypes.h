@@ -28,7 +28,6 @@ Author:
 #include <haltypes.h>
 #include <potypes.h>
 #include <ifssupp.h>
-#include <arch/ketypes.h>
 #endif
 
 //
@@ -305,6 +304,41 @@ typedef struct _KUSER_SHARED_DATA
 #else
 
 //
+// APC Environment Types
+//
+typedef enum _KAPC_ENVIRONMENT
+{
+    OriginalApcEnvironment,
+    AttachedApcEnvironment,
+    CurrentApcEnvironment
+} KAPC_ENVIRONMENT;
+
+//
+// PRCB DPC Data
+//
+typedef struct _KDPC_DATA
+{
+    LIST_ENTRY DpcListHead;
+    ULONG DpcLock;
+    ULONG DpcQueueDepth;
+    ULONG DpcCount;
+} KDPC_DATA, *PKDPC_DATA;
+
+//
+// Per-Processor Lookaside List
+//
+typedef struct _PP_LOOKASIDE_LIST
+{
+    struct _GENERAL_LOOKASIDE *P;
+    struct _GENERAL_LOOKASIDE *L;
+} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
+
+//
+// Architectural Types
+//
+#include <arch/ketypes.h>
+
+//
 // ARC Component Data
 //
 typedef struct _CONFIGURATION_COMPONENT_DATA
@@ -314,16 +348,6 @@ typedef struct _CONFIGURATION_COMPONENT_DATA
     struct _CONFIGURATION_COMPONENT_DATA *Sibling;
     CONFIGURATION_COMPONENT Component;
 } CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
-
-//
-// APC Environment Types
-//
-typedef enum _KAPC_ENVIRONMENT
-{
-    OriginalApcEnvironment,
-    AttachedApcEnvironment,
-    CurrentApcEnvironment
-} KAPC_ENVIRONMENT;
 
 //
 // Kernel Memory Node (FIXME: mmtypes?
@@ -702,11 +726,6 @@ extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;
 extern ULONG NTSYSAPI KeDcacheFlushCount;
 extern ULONG NTSYSAPI KeIcacheFlushCount;
-
-//
-// Exported NT Build Number (FIXME: move?)
-//
-extern ULONG NTSYSAPI NtBuildNumber;
 
 //
 // Exported System Service Descriptor Tables

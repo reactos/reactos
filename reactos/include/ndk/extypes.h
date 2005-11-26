@@ -48,6 +48,11 @@ extern POBJECT_TYPE NTSYSAPI ExMutantObjectType;
 extern POBJECT_TYPE NTSYSAPI ExTimerType;
 
 //
+// Exported NT Build Number
+//
+extern ULONG NTSYSAPI NtBuildNumber;
+
+//
 // Invalid Handle Value Constant
 //
 #define INVALID_HANDLE_VALUE            (HANDLE)-1
@@ -78,11 +83,6 @@ extern POBJECT_TYPE NTSYSAPI ExTimerType;
 //
 #define SEMAPHORE_QUERY_STATE           0x0001
 #endif
-
-//
-// Port Object Access Masks (FIXME: lpctypes.h?)
-//
-#define PORT_ALL_ACCESS                 0x1
 
 //
 // Event Pair Access Masks

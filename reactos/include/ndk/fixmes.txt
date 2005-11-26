@@ -23,14 +23,6 @@ ________________________________________________________________________________
 |extypes.h	- Class 42 (SYSTEM_POWER_INFORMATION causes conflict).
 |extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined.
 |ntndk.h	- Incorrect rounding macro names
-|
-[MINOR]		- Related to location of functions, comments, etc.
-|arch/ketypes.h	- _KDPC_DATA, PP_LOOKASIDE_LIST shouldn't be there.
-|pstypes.h	- Check if _PAGEFAULT_HISTORY shouldn't go in mmtypes.h instead.
-|lpctypes.h	- Consider moving _CLIENT_DIED_MSG to pstypes.h?
-|ketypes.h	- Consider moving KNODE to mmtypes.h?
-|ketypes.h	- Consider moving NtBuildNumber to extypes.h?
-|extypes.h	- consider moving PORT_ALL_ACCESS to lpctypes.h
 |_____________________________________________________________________________________
 
 

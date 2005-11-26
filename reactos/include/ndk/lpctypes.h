@@ -31,6 +31,11 @@ Author:
 #define PORT_MAXIMUM_MESSAGE_LENGTH     256
 
 //
+// Port Object Access Masks
+//
+#define PORT_ALL_ACCESS                 0x1
+
+//
 // LPC Message Types
 //
 typedef enum _LPC_TYPE
