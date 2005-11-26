@@ -106,6 +106,11 @@
 #            -mi          Let make handle creation of install directories. Rbuild will not generate the directories.
 #            -ps          Generate proxy makefiles in source tree instead of the output tree.
 
+# check for versions of make that don't have features we need...
+ifneq ($(filter 3.7%, $(shell $(MAKE) -v)),)
+$(error GNU Make $(filter 3.7%, $(shell $(MAKE) -v)) WILL NOT WORK - UPGRADE TO 3.80+)
+endif
+
 .PHONY: all
 .PHONY: clean
 all: makefile.auto
