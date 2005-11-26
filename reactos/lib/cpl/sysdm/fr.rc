@@ -137,5 +137,5 @@ END
 STRINGTABLE 
 BEGIN
   IDS_CPLSYSTEMNAME "Système"
-  IDS_CPLSYSTEMDESCRIPTION "Afficher les informations sur votre odrinateur et changer les paramètres du système et du matériel."
+  IDS_CPLSYSTEMDESCRIPTION "Affiche des informations sur votre ordinateur et permet de change les paramètres du système et du matériel."
 END
