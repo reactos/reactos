@@ -115,7 +115,8 @@ all: makefile.auto
 
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
-ifeq ($(OSTYPE),msys)
+ifeq ($(findstring msys,$(-shell sh --version)),msys)
+export OSTYPE = msys
 HOST=mingw32-linux
 else
 HOST=mingw32-windows
