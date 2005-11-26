@@ -456,6 +456,9 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 			  LONG lResult;
 			  keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
 			  lResult = RegRenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
+                          if (lineinfo->name)
+                            LocalFree(lineinfo->name);
+                          lineinfo->name = _tcsdup(Info->item.pszText);
 		      *Result = TRUE;
 		      return (lResult == ERROR_SUCCESS);
 			}
