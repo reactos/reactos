@@ -158,30 +158,15 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
     if (HwDevInfo != NULL)
     {
         /* update static controls */
-        CONFIGRET cRet;
-        DWORD RegDataType;
-        ULONG DataSize;
         WCHAR szBuffer[256];
         LPWSTR szFormatted = NULL;
 
         /* get the manufacturer string */
-        if (!SetupDiGetDeviceRegistryProperty(HwDevInfo->ClassDevInfo->hDevInfo,
-                                              &HwDevInfo->DevInfoData,
-                                              SPDRP_MFG,
-                                              &RegDataType,
-                                              (PBYTE)szBuffer,
-                                              sizeof(szBuffer),
-                                              NULL) ||
-            RegDataType != REG_SZ)
-        {
-            szBuffer[0] = L'\0';
-            LoadString(hDllInstance,
-                       IDS_UNKNOWN,
-                       szBuffer,
-                       sizeof(szBuffer) / sizeof(szBuffer[0]));
-        }
-        /* FIXME - check string for NULL termination! */
-        if (LoadAndFormatString(hDllInstance,
+        if (GetDeviceManufacturerString(HwDevInfo->ClassDevInfo->hDevInfo,
+                                        &HwDevInfo->DevInfoData,
+                                        szBuffer,
+                                        sizeof(szBuffer) / sizeof(szBuffer[0])) &&
+            LoadAndFormatString(hDllInstance,
                                 IDS_MANUFACTURER,
                                 &szFormatted,
                                 szBuffer) != 0)
@@ -193,46 +178,10 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
         }
 
         /* get the location string */
-        DataSize = sizeof(szBuffer);
-        cRet = CM_Get_DevNode_Registry_Property(HwDevInfo->DevInfoData.DevInst,
-                                                CM_DRP_LOCATION_INFORMATION,
-                                                &RegDataType,
-                                                szBuffer,
-                                                &DataSize,
-                                                0);
-        if (cRet != CR_SUCCESS ||
-            RegDataType != REG_SZ)
-        {
-            szBuffer[0] = L'\0';
-            LoadString(hDllInstance,
-                       IDS_UNKNOWN,
-                       szBuffer,
-                       sizeof(szBuffer) / sizeof(szBuffer[0]));
-        }
-        /* FIXME - check string for NULL termination! */
-
-        if (szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
-        {
-            /* convert the string to an integer value and create a
-               formatted string */
-            ULONG ulLocation = (ULONG)wcstoul(szBuffer,
-                                              NULL,
-                                              10);
-            if (LoadAndFormatString(hDllInstance,
-                                    IDS_LOCATIONSTR,
-                                    &szFormatted,
-                                    ulLocation,
-                                    szBuffer) != 0)
-            {
-                wcsncpy(szBuffer,
-                        szFormatted,
-                        (sizeof(szBuffer) / sizeof(szBuffer[0])) - 1);
-                szBuffer[(sizeof(szBuffer) / sizeof(szBuffer[0])) - 1] = L'\0';
-                LocalFree((HLOCAL)szFormatted);
-            }
-        }
-
-        if (LoadAndFormatString(hDllInstance,
+        if (GetDeviceLocationString(HwDevInfo->DevInfoData.DevInst,
+                                    szBuffer,
+                                    sizeof(szBuffer) / sizeof(szBuffer[0])) &&
+            LoadAndFormatString(hDllInstance,
                                 IDS_LOCATION,
                                 &szFormatted,
                                 szBuffer) != 0)
@@ -243,13 +192,11 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
             LocalFree((HLOCAL)szFormatted);
         }
 
-        /* FIXME - get the device status text */
-        LoadString(hDllInstance,
-                   IDS_UNKNOWN,
-                   szBuffer,
-                   sizeof(szBuffer) / sizeof(szBuffer[0]));
-
-        if (LoadAndFormatString(hDllInstance,
+        if (GetDeviceStatusString(HwDevInfo->ClassDevInfo->hDevInfo,
+                                  &HwDevInfo->DevInfoData,
+                                  szBuffer,
+                                  sizeof(szBuffer) / sizeof(szBuffer[0])) &&
+            LoadAndFormatString(hDllInstance,
                                 IDS_STATUS,
                                 &szFormatted,
                                 szBuffer) != 0)
@@ -449,10 +396,9 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
                         ItemCount++;
 
                         /* get the device type for the second column */
-                        if (SetupDiGetClassDescription(&ClassDevInfo->Guid,
-                                                       szBuffer,
-                                                       sizeof(szBuffer) / sizeof(szBuffer[0]),
-                                                       NULL))
+                        if (GetDeviceTypeString(&HwDevInfo->DevInfoData,
+                                                szBuffer,
+                                                sizeof(szBuffer) / sizeof(szBuffer[0])))
                         {
                             li.mask = LVIF_TEXT;
                             li.iItem = iItem;

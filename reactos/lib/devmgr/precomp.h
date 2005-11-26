@@ -206,6 +206,28 @@ ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
 HINSTANCE
 LoadAndInitComctl32(VOID);
 
+BOOL
+GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
+                            IN PSP_DEVINFO_DATA DeviceInfoData,
+                            OUT LPWSTR szBuffer,
+                            IN DWORD BufferSize);
+
+BOOL
+GetDeviceLocationString(IN DEVINST dnDevInst,
+                        OUT LPWSTR szBuffer,
+                        IN DWORD BufferSize);
+
+BOOL
+GetDeviceStatusString(IN HDEVINFO DeviceInfoSet,
+                      IN PSP_DEVINFO_DATA DeviceInfoData,
+                      OUT LPWSTR szBuffer,
+                      IN DWORD BufferSize);
+
+BOOL
+GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD BufferSize);
+
 #endif /* __DEVMGR_H */
 
 /* EOF */

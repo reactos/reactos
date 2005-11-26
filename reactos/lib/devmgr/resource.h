@@ -2,10 +2,18 @@
 #define __DEVMGR_RESOURCE_H
 
 #define IDI_DEVMGR		100
-#define IDD_HARDWARE		100
 
-/* control IDs *must* match, some windows components
-   seem to use them... */
+#define IDD_HARDWARE		100
+#define IDD_DEVICEGENERAL	101
+
+#define IDC_DEVICON		0x57B
+#define IDC_DEVNAME		0x57C
+#define IDC_DEVTYPE		0x57D
+#define IDC_DEVMANUFACTURER	0x57E
+#define IDC_DEVLOCATION		0x57F
+#define IDC_DEVSTATUSGROUP	0x580
+#define IDC_DEVSTATUS		0x581
+#define IDC_DEVUSAGE		0x582
 #define IDC_DEVICES		0x583
 #define IDC_LV_DEVICES		0x584
 #define IDC_PROPERTIESGROUP	0x585

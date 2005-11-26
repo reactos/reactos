@@ -31,6 +31,130 @@
 #include <debug.h>
 
 typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
+typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);
+typedef BOOL (WINAPI *PDESTROYPROPERTYSHEETPAGE)(HPROPSHEETPAGE);
+
+typedef struct _DEVADVPROP_INFO
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    HINSTANCE hComCtl32;
+    WCHAR szDevName[255];
+    WCHAR szTemp[255];
+} DEVADVPROP_INFO, *PDEVADVPROP_INFO;
+
+
+static INT_PTR
+CALLBACK
+AdvPropGeneralDlgProc(IN HWND hwndDlg,
+                      IN UINT uMsg,
+                      IN WPARAM wParam,
+                      IN LPARAM lParam)
+{
+    PDEVADVPROP_INFO dap;
+
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
+                                             DWL_USER);
+
+    if (dap != NULL || uMsg == WM_INITDIALOG)
+    {
+        switch (uMsg)
+        {
+            case WM_INITDIALOG:
+            {
+                dap = (PDEVADVPROP_INFO)((LPPROPSHEETPAGE)lParam)->lParam;
+                if (dap != NULL)
+                {
+                    HICON hIcon;
+
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_USER,
+                                     (DWORD_PTR)dap);
+
+                    /* set the device image */
+                    if (SetupDiLoadClassIcon(&dap->DeviceInfoData->ClassGuid,
+                                             &hIcon,
+                                             NULL))
+                    {
+                        SendDlgItemMessage(hwndDlg,
+                                           IDC_DEVICON,
+                                           STM_SETICON,
+                                           (WPARAM)hIcon,
+                                           0);
+                    }
+
+                    /* set the device name edit control text */
+                    SetDlgItemText(hwndDlg,
+                                   IDC_DEVNAME,
+                                   dap->szDevName);
+
+                    /* set the device type edit control text */
+                    if (GetDeviceTypeString(dap->DeviceInfoData,
+                                            dap->szTemp,
+                                            sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+                    {
+                        SetDlgItemText(hwndDlg,
+                                       IDC_DEVTYPE,
+                                       dap->szTemp);
+                    }
+
+                    /* set the device manufacturer edit control text */
+                    if (GetDeviceManufacturerString(dap->DeviceInfoSet,
+                                                    dap->DeviceInfoData,
+                                                    dap->szTemp,
+                                                    sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+                    {
+                        SetDlgItemText(hwndDlg,
+                                       IDC_DEVMANUFACTURER,
+                                       dap->szTemp);
+                    }
+
+                    /* set the device location edit control text */
+                    if (GetDeviceLocationString(dap->DeviceInfoData->DevInst,
+                                                dap->szTemp,
+                                                sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+                    {
+                        SetDlgItemText(hwndDlg,
+                                       IDC_DEVLOCATION,
+                                       dap->szTemp);
+                    }
+
+                    /* set the device status edit control text */
+                    if (GetDeviceStatusString(dap->DeviceInfoSet,
+                                              dap->DeviceInfoData,
+                                              dap->szTemp,
+                                              sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+                    {
+                        SetDlgItemText(hwndDlg,
+                                       IDC_DEVSTATUS,
+                                       dap->szTemp);
+                    }
+                }
+                break;
+            }
+
+            case WM_DESTROY:
+            {
+                HICON hDevIcon;
+
+                /* destroy the device icon */
+                hDevIcon = (HICON)SendDlgItemMessage(hwndDlg,
+                                                     IDC_DEVICON,
+                                                     STM_GETICON,
+                                                     0,
+                                                     0);
+                if (hDevIcon != NULL)
+                {
+                    DestroyIcon(hDevIcon);
+                }
+                break;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
 
 INT_PTR
 DisplayDeviceAdvancedProperties(IN HWND hWndParent,
@@ -38,34 +162,74 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
                                 IN HINSTANCE hComCtl32)
 {
-    WCHAR szDevName[255];
     DWORD RegDataType;
     PROPSHEETHEADER psh = {0};
+    PROPSHEETPAGE pspGeneral = {0};
     DWORD nPropSheets = 0;
+    DWORD nDevSheetsStart = 0;
     PPROPERTYSHEETW pPropertySheetW;
+    PCREATEPROPERTYSHEETPAGEW pCreatePropertySheetPageW;
+    PDESTROYPROPERTYSHEETPAGE pDestroyPropertySheetPage;
+    PDEVADVPROP_INFO DevAdvPropInfo;
+    UINT nPages = 0;
+    union
+    {
+        ULONG Mask;
+        struct
+        {
+            ULONG General : 1;
+            ULONG Device : 1;
+        } Page;
+    } DelPropSheets = {0};
     INT_PTR Ret = -1;
 
-    pPropertySheetW = (PPROPERTYSHEETW)GetProcAddress(hComCtl32,
-                                                      "PropertySheetW");
-    if (pPropertySheetW == NULL)
+    /* we don't want to statically link against comctl32, so find the
+       functions we need dynamically */
+    pPropertySheetW =
+        (PPROPERTYSHEETW)GetProcAddress(hComCtl32,
+                                        "PropertySheetW");
+    pCreatePropertySheetPageW =
+        (PCREATEPROPERTYSHEETPAGEW)GetProcAddress(hComCtl32,
+                                                  "CreatePropertySheetPageW");
+    pDestroyPropertySheetPage =
+        (PDESTROYPROPERTYSHEETPAGE)GetProcAddress(hComCtl32,
+                                                  "DestroyPropertySheetPage");
+    if (pPropertySheetW == NULL ||
+        pCreatePropertySheetPageW == NULL ||
+        pDestroyPropertySheetPage == NULL)
     {
         return -1;
     }
+
+    /* create the internal structure associated with the "General",
+       "Driver", ... pages */
+    DevAdvPropInfo = HeapAlloc(GetProcessHeap(),
+                               0,
+                               sizeof(DEVADVPROP_INFO));
+    if (DevAdvPropInfo == NULL)
+    {
+        return -1;
+    }
+
+    DevAdvPropInfo->DeviceInfoSet = DeviceInfoSet;
+    DevAdvPropInfo->DeviceInfoData = DeviceInfoData;
+    DevAdvPropInfo->hComCtl32 = hComCtl32;
+    DevAdvPropInfo->szDevName[0] = L'\0';
 
     /* get the device name */
     if ((SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
                                           DeviceInfoData,
                                           SPDRP_FRIENDLYNAME,
                                           &RegDataType,
-                                          (PBYTE)szDevName,
-                                          sizeof(szDevName),
+                                          (PBYTE)DevAdvPropInfo->szDevName,
+                                          sizeof(DevAdvPropInfo->szDevName),
                                           NULL) ||
          SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
                                           DeviceInfoData,
                                           SPDRP_DEVICEDESC,
                                           &RegDataType,
-                                          (PBYTE)szDevName,
-                                          sizeof(szDevName),
+                                          (PBYTE)DevAdvPropInfo->szDevName,
+                                          sizeof(DevAdvPropInfo->szDevName),
                                           NULL)) &&
         RegDataType == REG_SZ)
     {
@@ -74,7 +238,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
         psh.dwSize = sizeof(PROPSHEETHEADER);
         psh.dwFlags =  PSH_PROPTITLE;
         psh.hwndParent = hWndParent;
-        psh.pszCaption = szDevName;
+        psh.pszCaption = DevAdvPropInfo->szDevName;
 
         /* find out how many property sheets we need */
         if (SetupDiGetClassDevPropertySheets(DeviceInfoSet,
@@ -89,41 +253,99 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
             goto Cleanup;
         }
 
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        if (nPropSheets != 0 && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
             goto Cleanup;
         }
 
         psh.phpage = HeapAlloc(GetProcessHeap(),
-                               0,
-                               nPropSheets * sizeof(HPROPSHEETPAGE));
+                               HEAP_ZERO_MEMORY,
+                               (nPropSheets + 1) * sizeof(HPROPSHEETPAGE));
         if (psh.phpage == NULL)
         {
             goto Cleanup;
         }
 
-        /* FIXME - add the "General" and "Driver" pages */
-
-        if (!SetupDiGetClassDevPropertySheets(DeviceInfoSet,
-                                              DeviceInfoData,
-                                              &psh,
-                                              nPropSheets,
-                                              NULL,
-                                              DIGCDP_FLAG_ADVANCED))
+        /* add the "General" property sheet */
+        pspGeneral.dwSize = sizeof(PROPSHEETPAGE);
+        pspGeneral.dwFlags = PSP_DEFAULT;
+        pspGeneral.hInstance = hDllInstance;
+        pspGeneral.pszTemplate = (LPCWSTR)MAKEINTRESOURCE(IDD_DEVICEGENERAL);
+        pspGeneral.pfnDlgProc = AdvPropGeneralDlgProc;
+        pspGeneral.lParam = (LPARAM)DevAdvPropInfo;
+        psh.phpage[0] = pCreatePropertySheetPageW(&pspGeneral);
+        if (psh.phpage[0] != NULL)
         {
-            goto Cleanup;
+            DelPropSheets.Page.General = TRUE;
+            nDevSheetsStart++;
+            nPages++;
         }
+
+        if (nPropSheets != 0)
+        {
+            /* create the device property sheets but don't overwrite
+               the "General" property sheet handle */
+            psh.phpage += nDevSheetsStart;
+            if (!SetupDiGetClassDevPropertySheets(DeviceInfoSet,
+                                                  DeviceInfoData,
+                                                  &psh,
+                                                  nPropSheets,
+                                                  NULL,
+                                                  DIGCDP_FLAG_ADVANCED))
+            {
+                goto Cleanup;
+            }
+            psh.phpage -= nDevSheetsStart;
+
+            DelPropSheets.Page.Device = TRUE;
+            nPages += nPropSheets;
+        }
+
+        psh.nPages = nPages;
+
+        /* FIXME - add the "Driver" property sheet if necessary */
 
         Ret = pPropertySheetW(&psh);
 
+        /* no need to destroy the property sheets anymore */
+        DelPropSheets.Mask = 0;
+
 Cleanup:
+        /* in case of failure the property sheets must be destroyed */
+        if (DelPropSheets.Mask != 0)
+        {
+            if (DelPropSheets.Page.General && psh.phpage[0] != NULL)
+            {
+                pDestroyPropertySheetPage(psh.phpage[0]);
+            }
+
+            if (DelPropSheets.Page.Device)
+            {
+                UINT i;
+                for (i = 0;
+                     i < nPropSheets;
+                     i++)
+                {
+                    if (psh.phpage[i + 1] != NULL)
+                    {
+                        pDestroyPropertySheetPage(psh.phpage[i + 1]);
+                    }
+                }
+            }
+        }
+
         HeapFree(GetProcessHeap(),
                  0,
                  psh.phpage);
     }
 
+    HeapFree(GetProcessHeap(),
+             0,
+             DevAdvPropInfo);
+
     return Ret;
 }
+
 
 /***************************************************************************
  * NAME                                                         EXPORTED
@@ -177,6 +399,8 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                                       0,
                                       &DevInfoData))
             {
+
+                /* create the image list */
                 Ret = DisplayDeviceAdvancedProperties(hWndParent,
                                                       hDevInfo,
                                                       &DevInfoData,
@@ -185,11 +409,13 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
 
             SetupDiDestroyDeviceInfoList(hDevInfo);
         }
+
         FreeLibrary(hComCtl32);
     }
 
     return Ret;
 }
+
 
 /***************************************************************************
  * NAME                                                         EXPORTED

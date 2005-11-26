@@ -29,6 +29,7 @@
 
 HINSTANCE hDllInstance = NULL;
 
+
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
@@ -65,6 +66,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
     return -1;
 }
 
+
 static INT
 AllocAndLoadString(OUT LPWSTR *lpTarget,
                    IN HINSTANCE hInst,
@@ -90,6 +92,7 @@ AllocAndLoadString(OUT LPWSTR *lpTarget,
     }
     return 0;
 }
+
 
 DWORD
 LoadAndFormatString(IN HINSTANCE hInstance,
@@ -123,6 +126,7 @@ LoadAndFormatString(IN HINSTANCE hInstance,
     return Ret;
 }
 
+
 LPARAM
 ListViewGetSelectedItemData(IN HWND hwnd)
 {
@@ -148,6 +152,7 @@ ListViewGetSelectedItemData(IN HWND hwnd)
 
     return 0;
 }
+
 
 LPWSTR
 ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
@@ -187,6 +192,151 @@ ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
     return lpUnicodeStr;
 }
 
+
+BOOL
+GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
+                            IN PSP_DEVINFO_DATA DeviceInfoData,
+                            OUT LPWSTR szBuffer,
+                            IN DWORD BufferSize)
+{
+    DWORD RegDataType;
+    BOOL Ret = FALSE;
+
+    if (!SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_MFG,
+                                          &RegDataType,
+                                          (PBYTE)szBuffer,
+                                          BufferSize * sizeof(WCHAR),
+                                          NULL) ||
+        RegDataType != REG_SZ)
+    {
+        szBuffer[0] = L'\0';
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
+    }
+    else
+    {
+        /* FIXME - check string for NULL termination! */
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+GetDeviceLocationString(IN DEVINST dnDevInst,
+                        OUT LPWSTR szBuffer,
+                        IN DWORD BufferSize)
+{
+    DWORD RegDataType;
+    ULONG DataSize;
+    CONFIGRET cRet;
+    BOOL Ret = FALSE;
+
+    DataSize = BufferSize * sizeof(WCHAR);
+    cRet = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                            CM_DRP_LOCATION_INFORMATION,
+                                            &RegDataType,
+                                            szBuffer,
+                                            &DataSize,
+                                            0);
+    if (cRet != CR_SUCCESS ||
+        RegDataType != REG_SZ)
+    {
+        szBuffer[0] = L'\0';
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
+    }
+    else
+    {
+        /* FIXME - check string for NULL termination! */
+        Ret = TRUE;
+    }
+
+    if (szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
+    {
+        /* convert the string to an integer value and create a
+           formatted string */
+        LPWSTR szFormatted;
+        ULONG ulLocation = (ULONG)wcstoul(szBuffer,
+                                          NULL,
+                                          10);
+        if (LoadAndFormatString(hDllInstance,
+                                IDS_LOCATIONSTR,
+                                &szFormatted,
+                                ulLocation,
+                                szBuffer) != 0)
+        {
+            wcsncpy(szBuffer,
+                    szFormatted,
+                    BufferSize - 1);
+            szBuffer[BufferSize - 1] = L'\0';
+            LocalFree((HLOCAL)szFormatted);
+        }
+        else
+            Ret = FALSE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+GetDeviceStatusString(IN HDEVINFO DeviceInfoSet,
+                      IN PSP_DEVINFO_DATA DeviceInfoData,
+                      OUT LPWSTR szBuffer,
+                      IN DWORD BufferSize)
+{
+    return LoadString(hDllInstance,
+                      IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize) != 0;
+}
+
+
+BOOL
+GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD BufferSize)
+{
+    BOOL Ret = FALSE;
+
+    if (!SetupDiGetClassDescription(&DeviceInfoData->ClassGuid,
+                                    szBuffer,
+                                    BufferSize,
+                                    NULL))
+    {
+        szBuffer[0] = L'\0';
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
+    }
+    else
+    {
+        /* FIXME - check string for NULL termination! */
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
 HINSTANCE
 LoadAndInitComctl32(VOID)
 {
@@ -211,6 +361,7 @@ LoadAndInitComctl32(VOID)
 
     return hComCtl32;
 }
+
 
 BOOL
 STDCALL
