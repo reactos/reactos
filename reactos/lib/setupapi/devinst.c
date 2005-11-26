@@ -3493,7 +3493,7 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdA(
                                           DeviceInstanceIdW, DeviceInstanceIdSize,
                                           RequiredSize);
 
-        if (DeviceInstanceIdW != NULL)
+        if (ret && DeviceInstanceIdW != NULL)
         {
             if (WideCharToMultiByte(CP_ACP, 0, DeviceInstanceIdW, -1,
                 DeviceInstanceId, DeviceInstanceIdSize, NULL, NULL) == 0)
