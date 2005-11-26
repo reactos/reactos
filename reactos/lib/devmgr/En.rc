@@ -9,6 +9,8 @@ BEGIN
     IDS_MANUFACTURER "Manufacturer: %1"
     IDS_LOCATION "Location: %1"
     IDS_STATUS "Device Status: %1"
+    IDS_UNKNOWN "Unknown"
+    IDS_LOCATIONSTR "Location %1!u! (%2)"
 END
 
 IDD_HARDWARE DIALOG DISCARDABLE  0, 0, 300, 400

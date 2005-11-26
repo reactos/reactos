@@ -131,7 +131,6 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 {
     PHWDEVINFO HwDevInfo;
     HWND hBtnTroubleShoot, hBtnProperties;
-    DWORD RegDataType;
     
     hBtnTroubleShoot = GetDlgItem(hpd->hWnd,
                                   IDC_TROUBLESHOOT);
@@ -142,9 +141,13 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
     if (HwDevInfo != NULL)
     {
         /* update static controls */
+        CONFIGRET cRet;
+        DWORD RegDataType;
+        ULONG DataSize;
         WCHAR szBuffer[256];
         LPWSTR szFormatted = NULL;
 
+        /* get the manufacturer string */
         if (!SetupDiGetDeviceRegistryProperty(HwDevInfo->ClassDevInfo->hDevInfo,
                                               &HwDevInfo->DevInfoData,
                                               SPDRP_MFG,
@@ -154,9 +157,9 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
                                               NULL) ||
             RegDataType != REG_SZ)
         {
-            /* FIXME - check string for NULL termination! */
             szBuffer[0] = L'\0';
         }
+        /* FIXME - check string for NULL termination! */
         if (LoadAndFormatString(hDllInstance,
                                 IDS_MANUFACTURER,
                                 &szFormatted,
@@ -168,7 +171,63 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
             LocalFree((HLOCAL)szFormatted);
         }
 
-        /* FIXME - Display location and status */
+        /* get the location string */
+        DataSize = sizeof(szBuffer);
+        cRet = CM_Get_DevNode_Registry_Property(HwDevInfo->DevInfoData.DevInst,
+                                                CM_DRP_LOCATION_INFORMATION,
+                                                &RegDataType,
+                                                szBuffer,
+                                                &DataSize,
+                                                0);
+        if (cRet != CR_SUCCESS ||
+            RegDataType != REG_SZ)
+        {
+            szBuffer[0] = L'\0';
+
+            if (cRet == CR_NO_SUCH_REGISTRY_KEY ||
+                cRet == CR_NO_SUCH_VALUE)
+            {
+                LoadString(hDllInstance,
+                           IDS_UNKNOWN,
+                           szBuffer,
+                           sizeof(szBuffer) / sizeof(szBuffer[0]));
+            }
+        }
+        /* FIXME - check string for NULL termination! */
+
+        if (szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
+        {
+            /* convert the string to an integer value and create a
+               formatted string */
+            unsigned long ulLocation = wcstoul(szBuffer,
+                                               NULL,
+                                               10);
+            if (LoadAndFormatString(hDllInstance,
+                                    IDS_LOCATIONSTR,
+                                    &szFormatted,
+                                    ulLocation,
+                                    szBuffer) != 0)
+            {
+                wcsncpy(szBuffer,
+                        szFormatted,
+                        (sizeof(szBuffer) / sizeof(szBuffer[0])) - 1);
+                szBuffer[(sizeof(szBuffer) / sizeof(szBuffer[0])) - 1] = L'\0';
+                LocalFree((HLOCAL)szFormatted);
+            }
+        }
+
+        if (LoadAndFormatString(hDllInstance,
+                                IDS_LOCATION,
+                                &szFormatted,
+                                szBuffer) != 0)
+        {
+            SetDlgItemText(hpd->hWnd,
+                           IDC_LOCATION,
+                           szFormatted);
+            LocalFree((HLOCAL)szFormatted);
+        }
+
+        /* FIXME - Display the device status */
     }
     else
     {
@@ -186,8 +245,8 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 
     EnableWindow(hBtnTroubleShoot,
                  HwDevInfo != NULL);
-    EnableWindow(hBtnTroubleShoot,
-                 hBtnProperties != NULL);
+    EnableWindow(hBtnProperties,
+                 HwDevInfo != NULL);
 }
 
 static VOID

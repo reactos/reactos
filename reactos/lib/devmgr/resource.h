@@ -21,7 +21,8 @@
 #define IDS_MANUFACTURER	0x102
 #define IDS_LOCATION		0x103
 #define IDS_STATUS		0x104
-
+#define IDS_UNKNOWN		0x105
+#define IDS_LOCATIONSTR		0x106
 
 #endif /* __DEVMGR_RESOURCE_H */
 
