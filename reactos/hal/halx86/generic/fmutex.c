@@ -84,6 +84,7 @@ ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
     {
         /* We have, set us as owners */
         FastMutex->Owner = KeGetCurrentThread();
+        FastMutex->OldIrql = OldIrql;
         return TRUE;
     }
     else
