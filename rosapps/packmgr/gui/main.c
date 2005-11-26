@@ -79,7 +79,7 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 	
 	if(error)
 	{
-		MessageBox(0,PML_TransError(error, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)),0,0);
+		MessageBox(0,PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)),0,0);
 		return 0;
 	}
 	
@@ -161,7 +161,7 @@ void InitControls (HWND hwnd)
 	hTree = CreateWindowEx(0, WC_TREEVIEW, L"TreeView", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS, 
 							0, 0, 0, 0, hwnd, NULL, hinst, NULL);
 
-	hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, L"edit", PML_TransError(IDS_LOAD, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)), WS_CHILD|WS_VISIBLE|ES_MULTILINE, 
+	hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, L"edit", PML_TransError(IDS_LOAD, errbuf, sizeof(errbuf)/sizeof(WCHAR)), WS_CHILD|WS_VISIBLE|ES_MULTILINE, 
 							0, 0, 100, 100, hwnd, NULL, hinst, NULL);
 	
 	hPopup = LoadMenu(hinst, MAKEINTRESOURCE(IDR_POPUP));
@@ -410,7 +410,7 @@ int SetStatus (int status1, int status2, WCHAR* text)
 	if(status1==1000)
 	{
 		EndDialog(hStatus, TRUE);
-		MessageBox(0,PML_TransError(status2, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)),0,0);
+		MessageBox(0,PML_TransError(status2, errbuf, sizeof(errbuf)/sizeof(WCHAR)),0,0);
 	}
 
 	return 0;

@@ -121,7 +121,7 @@ int SetStatus (int status1, int status2, WCHAR* text)
 	// If the Status is 1000 things are done
 	if(status1==1000)
 	{
-		wprintf(L"%s\n", PML_TransError(status2, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)));
+		wprintf(L"%s\n", PML_TransError(status2, errbuf, sizeof(errbuf)/sizeof(WCHAR)));
 		done = TRUE;
 	}
 
@@ -139,7 +139,7 @@ int Install (void)
 	if(error)
 	{
 
-		wprintf(PML_TransError(error, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)));
+		wprintf(PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)));
 		return 0;
 	}
 		
@@ -163,7 +163,7 @@ int Install (void)
 	if(error)
 	{
 
-		wprintf(PML_TransError(error, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)));
+		wprintf(PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)));
 		PML_CloseTree (tree);
 		return 0;
 	}
@@ -188,7 +188,7 @@ int Show (void)
 	error = PML_LoadTree (&tree, "tree.xml", NULL);
 	if(error)
 	{
-		wprintf(PML_TransError(error, (WCHAR*)errbuf, sizeof(errbuf)/sizeof(WCHAR)));
+		wprintf(PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)));
 		return 0;
 	}
 
