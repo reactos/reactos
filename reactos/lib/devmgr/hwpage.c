@@ -701,6 +701,12 @@ HardwareDlgProc(IN HWND hwndDlg,
                             }
                             break;
                         }
+
+                        case NM_DBLCLK:
+                        {
+                            DisplaySelectedDeviceProperties(hpd);
+                            break;
+                        }
                     }
                 }
                 break;
