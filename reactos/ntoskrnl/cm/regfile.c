@@ -3431,7 +3431,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 
       RtlZeroMemory(*Cell,
 		    CellSize);
-      ((PCELL_HEADER) (*Cell))->CellSize = -CellSize;
+      ((PCELL_HEADER) (*Cell))->CellSize *= -1;
     }
 
   return STATUS_SUCCESS;
