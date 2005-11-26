@@ -840,7 +840,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
     }
 
   memset(*Block, 0, CellSize);
-  ((PCELL_HEADER)(*Block))->CellSize = -CellSize;
+  ((PCELL_HEADER)(*Block))->CellSize *= -1;
 
   return TRUE;
 }
