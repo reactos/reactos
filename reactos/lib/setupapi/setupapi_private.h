@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <share.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #include <windows.h>
