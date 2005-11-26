@@ -191,6 +191,13 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 LPARAM
 ListViewGetSelectedItemData(IN HWND hwnd);
 
+LPWSTR
+ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
+                          IN UINT uCodePage);
+
+HINSTANCE
+LoadAndInitComctl32(VOID);
+
 #endif /* __DEVMGR_H */
 
 /* EOF */

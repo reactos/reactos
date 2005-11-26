@@ -149,6 +149,69 @@ ListViewGetSelectedItemData(IN HWND hwnd)
     return 0;
 }
 
+LPWSTR
+ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
+                          IN UINT uCodePage)
+{
+    LPWSTR lpUnicodeStr;
+    INT nLength;
+
+    nLength = MultiByteToWideChar(uCodePage,
+                                  0,
+                                  lpMultiByteStr,
+                                  -1,
+                                  NULL,
+                                  0);
+    if (nLength == 0)
+        return NULL;
+
+    lpUnicodeStr = HeapAlloc(GetProcessHeap(),
+                             0,
+                             nLength * sizeof(WCHAR));
+    if (lpUnicodeStr == NULL)
+        return NULL;
+
+    if (!MultiByteToWideChar(uCodePage,
+                             0,
+                             lpMultiByteStr,
+                             nLength,
+                             lpUnicodeStr,
+                             nLength))
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpUnicodeStr);
+        return NULL;
+    }
+
+    return lpUnicodeStr;
+}
+
+HINSTANCE
+LoadAndInitComctl32(VOID)
+{
+    typedef VOID (WINAPI *PINITCOMMONCONTROLS)(VOID);
+    PINITCOMMONCONTROLS pInitCommonControls;
+    HINSTANCE hComCtl32;
+
+    hComCtl32 = LoadLibrary(L"comctl32.dll");
+    if (hComCtl32 != NULL)
+    {
+        /* initialize the common controls */
+        pInitCommonControls = (PINITCOMMONCONTROLS)GetProcAddress(hComCtl32,
+                                                                  "InitCommonControls");
+        if (pInitCommonControls == NULL)
+        {
+            FreeLibrary(hComCtl32);
+            return NULL;
+        }
+
+        pInitCommonControls();
+    }
+
+    return hComCtl32;
+}
+
 BOOL
 STDCALL
 DllMain(IN HINSTANCE hinstDLL,

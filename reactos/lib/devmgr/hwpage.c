@@ -30,8 +30,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef VOID (WINAPI *PINITCOMMONCONTROLS)(VOID);
-
 typedef enum
 {
     HWPD_STANDARDLIST = 0,
@@ -978,7 +976,6 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
                            IN HWPAGE_DISPLAYMODE DisplayMode)
 {
     PHARDWARE_PAGE_DATA hpd;
-    PINITCOMMONCONTROLS pInitCommonControls;
 
     /* allocate the HARDWARE_PAGE_DATA structure. Make sure it is
        zeroed because the initialization code assumes that in
@@ -1006,20 +1003,11 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
         }
 
         /* load comctl32.dll dynamically */
-        hpd->hComCtl32 = LoadLibrary(TEXT("comctl32.dll"));
+        hpd->hComCtl32 = LoadAndInitComctl32();
         if (hpd->hComCtl32 == NULL)
         {
             goto Cleanup;
         }
-
-        /* initialize the common controls */
-        pInitCommonControls = (PINITCOMMONCONTROLS)GetProcAddress(hpd->hComCtl32,
-                                                                  "InitCommonControls");
-        if (pInitCommonControls == NULL)
-        {
-            goto Cleanup;
-        }
-        pInitCommonControls();
 
         /* create the dialog */
         hWnd = CreateDialogParam(hDllInstance,
