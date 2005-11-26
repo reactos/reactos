@@ -829,7 +829,6 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
     {
       NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock + CellSize);
       NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - CellSize;
-      ((PCELL_HEADER) (*Block))->CellSize = CellSize;
       CmiAddFree (RegistryHive,
 		  NewBlock,
 		  *pBlockOffset + CellSize,
@@ -841,7 +840,7 @@ CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
     }
 
   memset(*Block, 0, CellSize);
-  ((PCELL_HEADER)(*Block))->CellSize *= -1;
+  ((PCELL_HEADER)(*Block))->CellSize = -CellSize;
 
   return TRUE;
 }
