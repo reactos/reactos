@@ -985,11 +985,22 @@ IntSystemParametersInfo(
                      InitializeObjectAttributes(&KeyAttributes, &Key, OBJ_CASE_INSENSITIVE,
                               CurrentUserKey, NULL);
                      ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
-                     NtClose(CurrentUserKey);
+                     ZwClose(CurrentUserKey);
                      
                      /* read the tile value in the registry */
                      Status = ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
                                               0, 0, &ResLength);
+
+                     /* fall back to .DEFAULT if we didnt find values */
+                     if(Status == STATUS_INVALID_HANDLE)
+                     {
+                        RtlInitUnicodeString (&KeyPath,L"\\Registry\\User\\.Default\\Control Panel\\Desktop");
+                        InitializeObjectAttributes(&KeyAttributes, &KeyPath, OBJ_CASE_INSENSITIVE,
+                                                   NULL, NULL);
+                        ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+                        ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
+                                        0, 0, &ResLength);
+                     }
 
                      ResLength += sizeof(KEY_VALUE_PARTIAL_INFORMATION);
                      KeyValuePartialInfo = ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
@@ -1005,7 +1016,7 @@ IntSystemParametersInfo(
                                               (PVOID)KeyValuePartialInfo, Length, &ResLength);
                      if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
                      {
-                        NtClose(KeyHandle);
+                        ZwClose(KeyHandle);
                         ExFreePool(KeyValuePartialInfo);
                         return 0;
                      }
@@ -1032,7 +1043,7 @@ IntSystemParametersInfo(
 
                      if(!KeyValuePartialInfo)
                      {
-                        NtClose(KeyHandle);
+                        ZwClose(KeyHandle);
                         return 0;
                      }
 
@@ -1040,7 +1051,7 @@ IntSystemParametersInfo(
                                               (PVOID)KeyValuePartialInfo, Length, &ResLength);
                      if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
                      {
-                        NtClose(KeyHandle);
+                        ZwClose(KeyHandle);
                         ExFreePool(KeyValuePartialInfo);
                         return 0;
                      }
@@ -1066,7 +1077,7 @@ IntSystemParametersInfo(
                         WinStaObject->WallpaperMode = wmStretch;
                      }
                      
-                     NtClose(KeyHandle);
+                     ZwClose(KeyHandle);
                      break;
                   }
                case SPI_GETDESKWALLPAPER:
