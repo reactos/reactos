@@ -15,8 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/ncpa.c
  * PURPOSE:         ReactOS Network Control Panel
@@ -53,9 +52,8 @@
 #include <iphlpapi.h>
 #include <commctrl.h>
 #include <cpl.h>
-//#ifdef __REACTOS__
-//#include <Netcfgn.h>
-//#endif
+
+#include <debug.h>
 
 #include "resource.h"
 #include "ncpa.h"
@@ -90,11 +88,9 @@ EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tps
 	TCHAR tpszName[MAX_PATH];
 	DWORD dwNameLen = sizeof(tpszName);
 
-	if(RegOpenKeyEx(hBaseKey,tpszRegPath,0,KEY_ALL_ACCESS,&hKey)!=ERROR_SUCCESS)
+	if(RegOpenKeyEx(hBaseKey,tpszRegPath,0,KEY_ENUMERATE_SUB_KEYS,&hKey)!=ERROR_SUCCESS)
 	{
-		OutputDebugString(_T("EnumRegKeys failed (key not found)\r\n"));
-		OutputDebugString(tpszRegPath);
-		OutputDebugString(_T("\r\n"));
+		DPRINT("EnumRegKeys failed (key not found): %S\n", tpszRegPath);
 		return;
 	}
 
@@ -104,14 +100,12 @@ EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tps
 		ret = RegEnumKeyEx(hKey,i,tpszName,&dwNameLen,NULL,NULL,NULL,NULL);
 		if(ret != ERROR_SUCCESS)
 		{
-			OutputDebugString(_T("EnumRegKeys: RegEnumKeyEx failed for\r\n"));
-			OutputDebugString(tpszName);
-			OutputDebugString(_T("\r\n"));
+			DPRINT("EnumRegKeys: RegEnumKeyEx failed for %S (rc 0x%lx)\n", tpszName, ret);
 			break;
 		}
 
 		_stprintf(pszNewPath,_T("%s\\%s"),tpszRegPath,tpszName);
-		OutputDebugString(_T("EnumRegKeys: Calling user supplied enum function\r\n"));
+		DPRINT("EnumRegKeys: Calling user supplied enum function\n");
 		pCallback(pCookie,hBaseKey,pszNewPath);
 
 		dwNameLen = sizeof(tpszName);
@@ -146,7 +140,7 @@ FindNICClassKeyForCfgInstance(TCHAR *tpszCfgInst,TCHAR *tpszSubKeyOut)
 	for (i = 0; i < 100; i++)
 	{
 		_stprintf(tpszSubKey,_T("SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%04d"),i);
-		if(RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
+		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 			continue;
 		dwType = REG_SZ;
 		dwSize = sizeof(tpszCfgInst2);
@@ -181,7 +175,7 @@ NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 //	INetCfgComponentPropertyUi *pNetCfgPropUI;
 	hwndDlg = (HWND)pCookie;
 
-	if(RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 		return;
 
 	dwType = REG_DWORD;
@@ -200,7 +194,7 @@ NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	if(RegQueryValueEx(hKey,_T("Description"),NULL,&dwType,(BYTE*)tpszDescription,&dwSize)!= ERROR_SUCCESS)
 		return;
 
-	RegOpenKey(hKey,_T("Ndi"),&hNDIKey);
+	RegOpenKeyEx(hKey,_T("Ndi"),0,KEY_QUERY_VALUE,&hNDIKey);
 	dwType = REG_SZ;
 	dwSize = sizeof(tpszNotifyObjectCLSID);
 	if(RegQueryValueEx(hNDIKey,_T("ClsId"),NULL,&dwType,(BYTE*)tpszNotifyObjectCLSID,&dwSize)!= ERROR_SUCCESS)
@@ -258,7 +252,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				MessageBox(hwndDlg,tpszCfgInstanceID,tpszSubKey,MB_ICONSTOP);
 			}
 
-			if(RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
+			if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 				return 0;
 			dwType = REG_SZ;
 			dwSize = sizeof(tpszDisplayName);
@@ -293,7 +287,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				_stprintf(tpszHelpKey,_T("%s\\Ndi"),tpszSubKey);
 
-				RegOpenKey(HKEY_LOCAL_MACHINE,tpszHelpKey,&hNDIKey);
+				RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszHelpKey,0,KEY_QUERY_VALUE,&hNDIKey);
 				dwType = REG_SZ;
 				dwSize = sizeof(tpszHelpText);
 				if(RegQueryValueEx(hNDIKey,_T("HelpText"),NULL,&dwType,(BYTE*)tpszHelpText,&dwSize)!= ERROR_SUCCESS)
@@ -320,10 +314,9 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					break;
 				_stprintf(tpszNDIKey,_T("%s\\Ndi"),tpszSubKey);
 
-				RegOpenKey(HKEY_LOCAL_MACHINE,tpszNDIKey,&hNDIKey);
-				dwType = REG_SZ;
+				RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszNDIKey,0,KEY_QUERY_VALUE,&hNDIKey);
 				dwSize = sizeof(tpszClsIDText);
-				if(RegQueryValueEx(hNDIKey,_T("ClsId"),NULL,&dwType,(BYTE*)tpszClsIDText,&dwSize)!= ERROR_SUCCESS)
+				if(RegQueryValueEx(hNDIKey,_T("ClsId"),NULL,&dwType,(BYTE*)tpszClsIDText,&dwSize)!= ERROR_SUCCESS || dwType != REG_SZ)
 					;//return;
 				RegCloseKey(hNDIKey);
 
@@ -342,16 +335,14 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					{
 						TCHAR tpszAdatperName[MAX_PATH];
 						swprintf(tpszAdatperName,L"%S",pAdapter->AdapterName);
-						OutputDebugString(_T("IPHLPAPI returned:\r\n"));
-						OutputDebugString(tpszAdatperName);
-						OutputDebugString(_T("\r\n"));
+						DPRINT("IPHLPAPI returned: %S\n", tpszAdatperName);
 						if(_tcscmp(tpszAdatperName,tpszCfgInstanceID)==0)
 						{
 							DisplayTCPIPProperties(hwndDlg,pAdapter);
 							break;
 						} else
 						{
-							OutputDebugString(_T("... which is not the TCPIP property sheet\r\n"));
+							DPRINT("... which is not the TCPIP property sheet\n");
 						}
 						pAdapter = pAdapter->Next;
 						if(!pAdapter)
@@ -387,7 +378,7 @@ DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 
 	// Get the "Name" for this Connection
 	_stprintf(tpszSubKey,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection"),tpszCfgInstanceID);
-	if(RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 		return;
 	if(RegQueryValueEx(hKey,_T("Name"),NULL,&dwType,(BYTE*)tpszName,&dwSize)!=ERROR_SUCCESS)
 		_stprintf(tpszName,_T("[ERROR]"));
@@ -457,7 +448,7 @@ DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 
 	// Get the "Name" for this Connection
 	_stprintf(tpszSubKey,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection"),tpszCfgInstanceID);
-	if (RegOpenKey(HKEY_LOCAL_MACHINE,tpszSubKey,&hKey)!=ERROR_SUCCESS)
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 		return;
 
 	if (RegQueryValueEx(hKey,_T("Name"),NULL,&dwType,(BYTE*)tpszName,&dwSize)!=ERROR_SUCCESS)
@@ -532,13 +523,11 @@ NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	HWND hwndDlg = (HWND)pCookie;
 	DWORD dwCharacteristics;
 
-	OutputDebugString(_T("NetAdapterCallback\r\n"));
-	OutputDebugString(tpszSubKey);
-	OutputDebugString(_T("\r\n"));
-	if(RegOpenKeyEx(hBaseKey,tpszSubKey,0,KEY_ALL_ACCESS,&hKey)!=ERROR_SUCCESS)
+	DPRINT("NetAdapterCallback: %S\n", tpszSubKey);
+	if(RegOpenKeyEx(hBaseKey,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 		return;
 
-	OutputDebugString(_T("NetAdapterCallback: Reading Characteristics\r\n"));
+	DPRINT("NetAdapterCallback: Reading Characteristics\n");
 	dwType = REG_DWORD;
 	dwSize = sizeof(dwCharacteristics);
 	if(RegQueryValueEx(hKey,_T("Characteristics"),NULL,&dwType,(BYTE*)&dwCharacteristics,&dwSize)!=ERROR_SUCCESS)
@@ -550,7 +539,7 @@ NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 //	if (!(dwCharacteristics & NCF_HAS_UI))
 //		return;
 
-	OutputDebugString(_T("NetAdapterCallback: Reading DriverDesc\r\n"));
+	DPRINT("NetAdapterCallback: Reading DriverDesc\n");
 	dwType = REG_SZ;
 	dwSize = sizeof(tpszDisplayName);
 	if (RegQueryValueEx(hKey,_T("DriverDesc"),NULL,&dwType,(BYTE*)tpszDisplayName,&dwSize)!= ERROR_SUCCESS)
