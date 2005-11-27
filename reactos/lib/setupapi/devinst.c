@@ -632,6 +632,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
 {
   struct DeviceInfoSet *list;
   LPWSTR UNCServerName = NULL;
+  DWORD size;
   DWORD rc;
   //CONFIGRET cr;
   HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
@@ -639,7 +640,10 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
   TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
       debugstr_w(MachineName), Reserved);
 
-  list = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoSet));
+  size = sizeof(struct DeviceInfoSet);
+  if (MachineName)
+    size += (wcslen(MachineName) + 3) * sizeof(WCHAR);
+  list = HeapAlloc(GetProcessHeap(), 0, size);
   if (!list)
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -671,6 +675,9 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     }
     
     strcpyW(UNCServerName + 2, MachineName);
+    list->szData[0] = list->szData[1] = '\\';
+    strcpyW(list->szData + 2, MachineName);
+    list->MachineName = list->szData;
   }
   else
   {
@@ -684,6 +691,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
     }
     if (!GetComputerNameW(UNCServerName + 2, &Size))
       goto cleanup;
+    list->MachineName = NULL;
   }
 #if 0
   UNCServerName[0] = UNCServerName[1] = '\\';
@@ -3336,7 +3344,10 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
             &list->ClassGuid,
             sizeof(GUID));
         DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
-        DeviceInfoListDetailData->RemoteMachineName[0] = 0; /* FIXME */
+        if (list->MachineName)
+            strcpyW(DeviceInfoListDetailData->RemoteMachineName, list->MachineName + 2);
+        else
+            DeviceInfoListDetailData->RemoteMachineName[0] = 0;
 
         ret = TRUE;
     }
@@ -3639,8 +3650,8 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
             hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_QUERY_VALUE);
         else
         {
-            /* FIXME: what if DeviceInfoSet is a remote device info set? */
-            hKey = SetupDiOpenClassRegKey(&list->ClassGuid, KEY_QUERY_VALUE);
+            hKey = SetupDiOpenClassRegKeyExW(&list->ClassGuid, KEY_QUERY_VALUE,
+                DIOCR_INSTALLER, list->MachineName + 2, NULL);
         }
         if (hKey == INVALID_HANDLE_VALUE)
             goto cleanup;

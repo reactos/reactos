@@ -144,6 +144,12 @@ struct DeviceInfoSet /* HDEVINFO */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
 
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
+
+    /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
+     * or NULL if related to local machine. Points into szData field at the
+     * end of the structure */
+    PCWSTR MachineName;
+    WCHAR szData[0];
 };
 
 extern HINSTANCE hInstance;
