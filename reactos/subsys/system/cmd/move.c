@@ -53,7 +53,7 @@ enum
 	MOVE_PATHS_ON_DIF_VOL = 0x080 /* source and destination paths are on different volume */
 };
 
-static INT Overwrite (LPTSTR fn)
+static INT MoveOverwrite (LPTSTR fn)
 {
 	/*ask the user if they want to override*/
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -412,7 +412,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			continue;
 		if(!(dwFlags & MOVE_OVER_YES) &&
 		    (dwMoveStatusFlags & MOVE_DEST_EXISTS))
-			nOverwrite = Overwrite (szFullDestPath);
+			nOverwrite = MoveOverwrite (szFullDestPath);
 		if (nOverwrite == PROMPT_NO || nOverwrite == PROMPT_BREAK)
 			continue;
 		if (nOverwrite == PROMPT_ALL)

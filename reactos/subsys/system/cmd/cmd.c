@@ -176,10 +176,45 @@ WORD wDefColor;           /* default color */
 #endif
 
 /*
- *  is character a delimeter when used on first word?
+ * convert
+ *
+ * insert commas into a number
+ */
+INT
+ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperator)
+{
+	TCHAR temp[32];
+	INT c = 0;
+	INT n = 0;
+
+	if (num.QuadPart == 0)
+	{
+		des[0] = _T('0');
+		des[1] = _T('\0');
+		n = 1;
+	}
+	else
+	{
+		temp[31] = 0;
+		while (num.QuadPart > 0)
+		{
+			if ((((c + 1) % (nNumberGroups + 1)) == 0) && (bPutSeperator))
+				temp[30 - c++] = cThousandSeparator;
+                        temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
+			num.QuadPart /= 10;
+		}
+
+		for (n = 0; n <= c; n++)
+			des[n] = temp[31 - c + n];
+	}
+
+	return n;
+}
+
+/*
+ * is character a delimeter when used on first word?
  *
  */
-
 static BOOL IsDelimiter (TCHAR c)
 {
 	return (c == _T('/') || c == _T('=') || c == _T('\0') || _istspace (c));

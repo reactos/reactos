@@ -324,7 +324,7 @@ copy (TCHAR source[MAX_PATH],
 }
  
  
-static INT Overwrite (LPTSTR fn)
+static INT CopyOverwrite (LPTSTR fn)
 {
 	/*ask the user if they want to override*/
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -844,7 +844,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 
 			/* Handle any overriding / prompting that needs to be done */
 			if(((!(dwFlags & COPY_NO_PROMPT) && IsExistingFile (tmpDestPath)) || dwFlags & COPY_PROMPT) && !bTouch)
-				nOverwrite = Overwrite(tmpDestPath);
+				nOverwrite = CopyOverwrite(tmpDestPath);
 			if(nOverwrite == PROMPT_NO || nOverwrite == PROMPT_BREAK)
 				continue;
 			if(nOverwrite == PROMPT_ALL || (nOverwrite == PROMPT_YES && bAppend))
