@@ -44,6 +44,10 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 #define _tcstol strtol
 #define STRFMT "%s"
 
+#ifdef _MSC_VER
+#define strcasecmp stricmp
+#endif
+
 extern unsigned long DbgPrint(char *Fmt, ...);
 
 #else /* ! defined(INFLIB_HOST) */
