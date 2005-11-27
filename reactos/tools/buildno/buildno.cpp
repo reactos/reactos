@@ -29,7 +29,6 @@
 #include <string.h>
 #include "version.h"
 #include "xml.h"
-#include "exception.h"
 
 #define FALSE 0
 #define TRUE  1
@@ -179,20 +178,19 @@ GetRev(void)
 
   try
     {
-      Path path;
       XMLElement *head;
 
       try
         {
-          head = XMLLoadFile(".svn/entries", path);
+          head = XMLLoadFile(".svn/entries");
         }
-      catch(FileNotFoundException)
+      catch(XMLFileNotFoundException)
         {
-          head = XMLLoadFile("_svn/entries", path);
+          head = XMLLoadFile("_svn/entries");
         }
       XMLElement *entries = head->subElements[0];
       for (size_t i = 0; i < entries->subElements.size(); i++)
-	{
+      {
           XMLElement *entry = entries->subElements[i];
           if ("entry" == entry->name)
             {

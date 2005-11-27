@@ -64,7 +64,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "../../lib/inflib" /I "../../include/reactos" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "INFLIB_HOST" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I ".." /I "../../lib/inflib" /I "../../include/reactos" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "INFLIB_HOST" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -245,10 +245,6 @@ SOURCE=.\rbuild.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ssprintf.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\stubbedcomponent.cpp
 # End Source File
 # Begin Source File
@@ -262,10 +258,6 @@ SOURCE=.\testsupportcode.cpp
 # Begin Source File
 
 SOURCE=.\wineresource.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\XML.cpp
 # End Source File
 # End Group
 # Begin Group "rbuild_headers"
@@ -285,15 +277,7 @@ SOURCE=.\rbuild.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ssprintf.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\test.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\XML.h
 # End Source File
 # End Group
 # Begin Group "inflib"
@@ -346,6 +330,26 @@ SOURCE=..\..\lib\inflib\infpriv.h
 # Begin Source File
 
 SOURCE=..\..\lib\inflib\infput.c
+# End Source File
+# End Group
+# Begin Group "tools"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\ssprintf.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\ssprintf.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\xml.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\xml.h
 # End Source File
 # End Group
 # End Target

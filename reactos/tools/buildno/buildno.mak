@@ -20,35 +20,23 @@ BUILDNO_TARGET = \
 
 BUILDNO_SOURCES = $(addprefix $(BUILDNO_BASE_), \
 	buildno.cpp \
-	exception.cpp \
-	ssprintf.cpp \
-	xml.cpp \
 	)
 
 BUILDNO_OBJECTS = \
-  $(addprefix $(INTERMEDIATE_), $(BUILDNO_SOURCES:.cpp=.o))
+	$(addprefix $(INTERMEDIATE_), $(BUILDNO_SOURCES:.cpp=.o))
 
-BUILDNO_HOST_CXXFLAGS = -Iinclude/reactos $(TOOLS_CPPFLAGS)
+BUILDNO_HOST_CXXFLAGS = -I$(TOOLS_BASE) -Iinclude/reactos $(TOOLS_CPPFLAGS)
 
 BUILDNO_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
-$(BUILDNO_TARGET): $(BUILDNO_OBJECTS) | $(BUILDNO_OUT)
+.PHONY: buildno
+buildno: $(BUILDNO_TARGET)
+
+$(BUILDNO_TARGET): $(BUILDNO_OBJECTS) $(XML_SSPRINTF_OBJECTS) | $(BUILDNO_OUT)
 	$(ECHO_LD)
-	${host_gpp} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $@
+	${host_gpp} $^ $(BUILDNO_HOST_LFLAGS) -o $@
 
 $(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp | $(BUILDNO_INT)
-	$(ECHO_CC)
-	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
-
-$(BUILDNO_INT_)exception.o: $(BUILDNO_BASE_)exception.cpp | $(BUILDNO_INT)
-	$(ECHO_CC)
-	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
-
-$(BUILDNO_INT_)ssprintf.o: $(BUILDNO_BASE_)ssprintf.cpp | $(BUILDNO_INT)
-	$(ECHO_CC)
-	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
-
-$(BUILDNO_INT_)xml.o: $(BUILDNO_BASE_)xml.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
 

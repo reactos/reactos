@@ -170,12 +170,10 @@ RBUILD_COMMON_SOURCES = \
 		linkerscript.cpp \
 		module.cpp \
 		project.cpp \
-		ssprintf.cpp \
 		stubbedcomponent.cpp \
 		syssetupgenerator.cpp \
 		testsupportcode.cpp \
 		wineresource.cpp \
-		xml.cpp \
 		)
 
 RBUILD_SPECIAL_SOURCES = \
@@ -216,11 +214,10 @@ RBUILD_HEADERS = \
 		exception.h \
 		pch.h \
 		rbuild.h \
-		ssprintf.h \
 		test.h \
-		xml.h \
 		$(addprefix backend$(SEP), $(RBUILD_BACKEND_HEADERS)) \
-	)
+	) \
+	$(XML_SSPRINTF_HEADERS)
 
 RBUILD_TESTS = \
 	tests$(SEP)cdfiletest.cpp \
@@ -251,16 +248,16 @@ RBUILD_TEST_OBJECTS = \
 	$(RBUILD_COMMON_OBJECTS) \
 	$(RBUILD_TEST_SPECIAL_OBJECTS)
 
-RBUILD_HOST_CXXFLAGS = -I$(RBUILD_BASE) -I$(INFLIB_BASE) $(TOOLS_CPPFLAGS)
+RBUILD_HOST_CXXFLAGS = -I$(RBUILD_BASE) -I$(TOOLS_BASE) -I$(INFLIB_BASE) $(TOOLS_CPPFLAGS)
 
 RBUILD_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 .PHONY: rbuild
 rbuild: $(RBUILD_TARGET)
 
-$(RBUILD_TARGET): $(RBUILD_OBJECTS) $(INFLIB_HOST_OBJECTS) | $(RBUILD_OUT)
+$(RBUILD_TARGET): $(RBUILD_OBJECTS) $(XML_SSPRINTF_OBJECTS) $(INFLIB_HOST_OBJECTS) | $(RBUILD_OUT)
 	$(ECHO_LD)
-	${host_gpp} $(RBUILD_OBJECTS) $(INFLIB_HOST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
+	${host_gpp} $^ $(RBUILD_HOST_LFLAGS) -o $@
 
 $(RBUILD_INT_)global.o: $(RBUILD_BASE_)global.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
@@ -338,10 +335,6 @@ $(RBUILD_INT_)rbuild.o: $(RBUILD_BASE_)rbuild.cpp $(RBUILD_HEADERS) | $(RBUILD_I
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-$(RBUILD_INT_)ssprintf.o: $(RBUILD_BASE_)ssprintf.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
-	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
-
 $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -355,10 +348,6 @@ $(RBUILD_INT_)wineresource.o: $(RBUILD_BASE_)wineresource.cpp $(RBUILD_HEADERS) 
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)testsupportcode.o: $(RBUILD_BASE_)testsupportcode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
-	$(ECHO_CC)
-	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
-
-$(RBUILD_INT_)xml.o: $(RBUILD_BASE_)xml.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

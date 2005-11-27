@@ -19,6 +19,26 @@ $(TOOLS_OUT): | $(OUTPUT)
 	${mkdir} $@
 endif
 
+XML_SSPRINTF_SOURCES = $(addprefix $(TOOLS_BASE_), \
+	ssprintf.cpp \
+	xml.cpp \
+	)
+
+XML_SSPRINTF_HEADERS = $(addprefix $(TOOLS_BASE_), \
+	ssprintf.h \
+	xml.h \
+	)
+
+XML_SSPRINTF_OBJECTS = \
+	$(addprefix $(INTERMEDIATE_), $(XML_SSPRINTF_SOURCES:.cpp=.o))
+
+$(TOOLS_INT_)ssprintf.o: $(TOOLS_BASE_)ssprintf.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
+	$(ECHO_CC)
+	${host_gcc} $(TOOLS_CPPFLAGS) -c $< -o $@
+
+$(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
+	$(ECHO_CC)
+	${host_gcc} $(TOOLS_CPPFLAGS) -c $< -o $@
 
 include tools/bin2c.mak
 include tools/rsym.mak
