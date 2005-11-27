@@ -581,13 +581,19 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     }
     else
     {
-       if (Fcb->LastCluster > 0 &&
-           (Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize) > Fcb->LastOffset)
+       if (Fcb->LastCluster > 0)
        {
-          Status = OffsetToCluster(DeviceExt, Fcb->LastCluster,
-                                   Fcb->RFCB.AllocationSize.u.LowPart -
-                                   ClusterSize - Fcb->LastOffset,
-                                   &Cluster, FALSE);
+          if (Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize == Fcb->LastOffset)
+          {
+             Cluster = Fcb->LastCluster;
+             Status = STATUS_SUCCESS;
+          }
+          else
+          {
+             Status = OffsetToCluster(DeviceExt, Fcb->LastCluster,
+                                      Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize - Fcb->LastOffset,
+                                      &Cluster, FALSE);
+          }
        }
        else
        {
@@ -595,15 +601,22 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
                                    Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize,
                                    &Cluster, FALSE);
        }
+       if (!NT_SUCCESS(Status))
+       {
+          return Status;
+       }
 
-       Fcb->LastCluster = Cluster;
-       Fcb->LastOffset = Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize;
+       if (Fcb->LastCluster == 0)
+       {
+          Fcb->LastCluster = Cluster;
+          Fcb->LastOffset = Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize;
+       }
 
        /* FIXME: Check status */
        /* Cluster points now to the last cluster within the chain */
-       Status = OffsetToCluster(DeviceExt, FirstCluster,
-	         ROUND_DOWN(NewSize - 1, ClusterSize),
-                 &NCluster, TRUE);
+       Status = OffsetToCluster(DeviceExt, Cluster,
+	                        ROUND_DOWN(NewSize - 1, ClusterSize) - Fcb->LastOffset,
+                                &NCluster, TRUE);
        if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
        {
 	  /* disk is full */
