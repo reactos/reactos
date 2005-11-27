@@ -1,44 +1,54 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
- * PURPOSE:           System setup
- * FILE:              lib/syssetup/wizard.c
- * PROGRAMER:         Eric Kohl
+ * PROJECT:    System setup
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * PROGRAMMER: Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include <tchar.h>
 #include <string.h>
 #include <setupapi.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include <syssetup/syssetup.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #include "globals.h"
 #include "resource.h"
 
 #define VMWINST
+
+#define PM_REGISTRATION_NOTIFY (WM_APP + 1)
+  /* Private Message used to communicate progress from the background
+     registration thread to the main thread.
+     wParam = 0 Registration in progress
+            = 1 Registration completed
+     lParam = Pointer to a REGISTRATIONNOTIFY structure */
+
+typedef struct _REGISTRATIONNOTIFY
+{
+  ULONG Progress;
+  UINT ActivityID;
+  LPCWSTR CurrentItem;
+  LPCWSTR ErrorMessage;
+} REGISTRATIONNOTIFY, *PREGISTRATIONNOTIFY;
+
+typedef struct _REGISTRATIONDATA
+{
+  HWND hwndDlg;
+  ULONG DllCount;
+  ULONG Registered;
+  PVOID DefaultContext;
+} REGISTRATIONDATA, *PREGISTRATIONDATA;
 
 /* GLOBALS ******************************************************************/
 
@@ -1292,6 +1302,248 @@ DateTimePageDlgProc(HWND hwndDlg,
 }
 
 
+static UINT CALLBACK
+RegistrationNotificationProc(PVOID Context,
+                             UINT Notification,
+                             UINT_PTR Param1,
+                             UINT_PTR Param2)
+{
+  PREGISTRATIONDATA RegistrationData;
+  REGISTRATIONNOTIFY RegistrationNotify;
+  PSP_REGISTER_CONTROL_STATUSW StatusInfo;
+  UINT MessageID;
+  WCHAR ErrorMessage[128];
+
+  RegistrationData = (PREGISTRATIONDATA) Context;
+
+  if (SPFILENOTIFY_STARTREGISTRATION == Notification ||
+      SPFILENOTIFY_ENDREGISTRATION == Notification)
+    {
+      StatusInfo = (PSP_REGISTER_CONTROL_STATUSW) Param1;
+      RegistrationNotify.CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
+      if (NULL == RegistrationNotify.CurrentItem)
+        {
+          RegistrationNotify.CurrentItem = StatusInfo->FileName;
+        }
+      else
+        {
+          RegistrationNotify.CurrentItem++;
+        }
+
+      if (SPFILENOTIFY_STARTREGISTRATION == Notification)
+        {
+          DPRINT("Received SPFILENOTIFY_STARTREGISTRATION notification for %S\n",
+                 StatusInfo->FileName);
+          RegistrationNotify.ErrorMessage = NULL;
+          RegistrationNotify.Progress = RegistrationData->Registered;
+        }
+      else
+        {
+          DPRINT("Received SPFILENOTIFY_ENDREGISTRATION notification for %S\n",
+                 StatusInfo->FileName);
+          DPRINT("Win32Error %u FailureCode %u\n", StatusInfo->Win32Error,
+                 StatusInfo->FailureCode);
+          if (SPREG_SUCCESS != StatusInfo->FailureCode)
+            {
+              switch(StatusInfo->FailureCode)
+                {
+                case SPREG_LOADLIBRARY:
+                  MessageID = IDS_LOADLIBRARY_FAILED;
+                  break;
+                case SPREG_GETPROCADDR:
+                  MessageID = IDS_GETPROCADDR_FAILED;
+                  break;
+                case SPREG_REGSVR:
+                  MessageID = IDS_REGSVR_FAILED;
+                  break;
+                case SPREG_DLLINSTALL:
+                  MessageID = IDS_DLLINSTALL_FAILED;
+                  break;
+                case SPREG_TIMEOUT:
+                  MessageID = IDS_TIMEOUT;
+                  break;
+                default:
+                  MessageID = IDS_REASON_UNKNOWN;
+                  break;
+                }
+              if (0 == LoadStringW(hDllInstance, MessageID,
+                                   ErrorMessage,
+                                   sizeof(ErrorMessage) /
+                                   sizeof(ErrorMessage[0])))
+                {
+                  ErrorMessage[0] = L'\0';
+                }
+              if (SPREG_TIMEOUT != StatusInfo->FailureCode)
+                {
+                  FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+                                 StatusInfo->Win32Error, 0, 
+                                 ErrorMessage + wcslen(ErrorMessage),
+                                 sizeof(ErrorMessage) / sizeof(ErrorMessage[0]) -
+                                 wcslen(ErrorMessage), NULL);
+                }
+              RegistrationNotify.ErrorMessage = ErrorMessage;
+            }
+          else
+            {
+              RegistrationNotify.ErrorMessage = NULL;
+            }
+          if (RegistrationData->Registered < RegistrationData->DllCount)
+            {
+              RegistrationData->Registered++;
+            }
+        }
+
+      RegistrationNotify.Progress = RegistrationData->Registered;
+      RegistrationNotify.ActivityID = IDS_REGISTERING_COMPONENTS;
+      SendMessage(RegistrationData->hwndDlg, PM_REGISTRATION_NOTIFY,
+                  0, (LPARAM) &RegistrationNotify);
+
+      return FILEOP_DOIT;
+    }
+  else
+    {
+      DPRINT1("Received unexpected notification %u\n", Notification);
+      return SetupDefaultQueueCallback(RegistrationData->DefaultContext,
+                                       Notification, Param1, Param2);
+    }
+}
+
+
+static DWORD CALLBACK
+RegistrationProc(LPVOID Parameter)
+{
+  PREGISTRATIONDATA RegistrationData;
+  REGISTRATIONNOTIFY RegistrationNotify;
+  DWORD LastError;
+  WCHAR UnknownError[84];
+
+  RegistrationData = (PREGISTRATIONDATA) Parameter;
+  RegistrationData->Registered = 0;
+  RegistrationData->DefaultContext = SetupInitDefaultQueueCallback(RegistrationData->hwndDlg);
+
+  if (SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
+                                  hSysSetupInf,
+                                  L"RegistrationPhase2",
+                                  SPINST_REGISTRY |
+                                  SPINST_REGISTERCALLBACKAWARE  |
+                                  SPINST_REGSVR,
+                                  0,
+                                  NULL,
+                                  0,
+                                  RegistrationNotificationProc,
+                                  RegistrationData,
+                                  NULL,
+                                  NULL))
+    {
+      RegistrationNotify.ErrorMessage = NULL;
+    }
+  else
+    {
+      LastError = GetLastError();
+      DPRINT1("SetupInstallFromInfSection failed with error %u\n",
+              LastError);
+      if (0 == FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                              FORMAT_MESSAGE_FROM_SYSTEM, NULL, LastError, 0,
+                              (LPWSTR) &RegistrationNotify.ErrorMessage, 0,
+                              NULL))
+        {
+          if (0 == LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
+                               UnknownError,
+                               sizeof(UnknownError) / sizeof(UnknownError[0] -
+                               20)))
+            {
+              wcscpy(UnknownError, L"Unknown error");
+            }
+          wcscat(UnknownError, L" ");
+          _ultow(LastError, UnknownError + wcslen(UnknownError), 10);
+          RegistrationNotify.ErrorMessage = UnknownError;
+        }
+    }
+
+  RegistrationNotify.Progress = RegistrationData->DllCount;
+  RegistrationNotify.ActivityID = IDS_REGISTERING_COMPONENTS;
+  RegistrationNotify.CurrentItem = NULL;
+  SendMessage(RegistrationData->hwndDlg, PM_REGISTRATION_NOTIFY,
+              1, (LPARAM) &RegistrationNotify);
+  if (NULL != RegistrationNotify.ErrorMessage &&
+      UnknownError != RegistrationNotify.ErrorMessage)
+    {
+      LocalFree((PVOID) RegistrationNotify.ErrorMessage);
+    }
+
+  SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
+  HeapFree(GetProcessHeap(), 0, RegistrationData);
+
+  return 0;
+}
+
+
+static BOOL
+StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
+{
+  HANDLE RegistrationThread;
+  LONG DllCount;
+  INFCONTEXT Context;
+  WCHAR SectionName[512];
+  PREGISTRATIONDATA RegistrationData;
+  
+  DllCount = -1;
+  if (! SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
+                            L"RegisterDlls", &Context))
+    {
+      DPRINT1("No RegistrationPhase2 section found\n");
+      return FALSE;
+    }
+  if (! SetupGetStringFieldW(&Context, 1, SectionName,
+                             sizeof(SectionName) / sizeof(SectionName[0]),
+                             NULL))
+    {
+      DPRINT1("Unable to retrieve section name\n");
+      return FALSE;
+    }
+  DllCount = SetupGetLineCountW(hSysSetupInf, SectionName);
+  DPRINT("SectionName %S DllCount %ld\n", SectionName, DllCount);
+  if (DllCount < 0)
+    {
+      SetLastError(STATUS_NOT_FOUND);
+      return FALSE;
+    }
+
+  *MaxProgress = (ULONG) DllCount;
+
+  /*
+   * Create a background thread to do the actual registrations, so the
+   * main thread can just run its message loop.
+   */
+  RegistrationThread = NULL;
+  RegistrationData = HeapAlloc(GetProcessHeap(), 0,
+                               sizeof(REGISTRATIONDATA));
+  if (NULL != RegistrationData)
+    {
+      RegistrationData->hwndDlg = hwndDlg;
+      RegistrationData->DllCount = DllCount;
+      RegistrationThread = CreateThread(NULL, 0, RegistrationProc,
+                                        (LPVOID) RegistrationData, 0, NULL);
+      if (NULL != RegistrationThread)
+        {
+          CloseHandle(RegistrationThread);
+        }
+      else
+        {
+          DPRINT1("CreateThread failed, error %u\n", GetLastError());
+          return FALSE;
+        }
+    }
+  else
+    {
+      DPRINT1("HeapAlloc() failed, error %u\n", GetLastError());
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+
 static INT_PTR CALLBACK
 ProcessPageDlgProc(HWND hwndDlg,
                    UINT uMsg,
@@ -1299,6 +1551,8 @@ ProcessPageDlgProc(HWND hwndDlg,
                    LPARAM lParam)
 {
   PSETUPDATA SetupData;
+  PREGISTRATIONNOTIFY RegistrationNotify;
+  WCHAR Title[64];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -1313,39 +1567,10 @@ ProcessPageDlgProc(HWND hwndDlg,
         }
         break;
 
-      case WM_TIMER:
-         {
-           INT Position;
-           HWND hWndProgress;
-
-           hWndProgress = GetDlgItem(hwndDlg, IDC_PROCESSPROGRESS);
-           Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
-           if (Position == 2)
-           {
-             KillTimer(hwndDlg, 1);
-
-             /* Enable the Back and Next buttons */
-             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
-             PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
-           }
-           else
-           {
-#ifdef VMWINST
-             if (Position == 1)
-             {
-                KillTimer(hwndDlg, 1);
-                RunVMWInstall(GetParent(hwndDlg));
-                SetTimer(hwndDlg, 1, 50, NULL);
-             }
-#endif
-             SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
-           }
-         }
-         return TRUE;
-
       case WM_NOTIFY:
         {
           LPNMHDR lpnm = (LPNMHDR)lParam;
+          ULONG MaxProgress;
 
           switch (lpnm->code)
             {
@@ -1353,9 +1578,12 @@ ProcessPageDlgProc(HWND hwndDlg,
                 /* Disable the Back and Next buttons */
                 PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
 
-                SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0,
-                                   MAKELPARAM(0, 2));
-                SetTimer(hwndDlg, 1, 50, NULL);
+                StartComponentRegistration(hwndDlg, &MaxProgress);
+
+                SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE,
+                                   0, MAKELPARAM(0, MaxProgress));
+                SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS,
+                                   0, 0);
                 break;
 
               case PSN_WIZNEXT:
@@ -1366,6 +1594,47 @@ ProcessPageDlgProc(HWND hwndDlg,
             }
         }
         break;
+
+      case PM_REGISTRATION_NOTIFY:
+        {
+          WCHAR Activity[64];
+          RegistrationNotify = (PREGISTRATIONNOTIFY) lParam;
+          if (0 != LoadStringW(hDllInstance, RegistrationNotify->ActivityID,
+                               Activity,
+                               sizeof(Activity) / sizeof(Activity[0])))
+            {
+              SendDlgItemMessageW(hwndDlg, IDC_ACTIVITY, WM_SETTEXT,
+                                  0, (LPARAM) Activity);
+            }
+          SendDlgItemMessageW(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
+                              (LPARAM)(NULL == RegistrationNotify->CurrentItem ?
+                                       L"" : RegistrationNotify->CurrentItem));
+          SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS,
+                             RegistrationNotify->Progress, 0);
+          if (NULL != RegistrationNotify->ErrorMessage)
+            {
+              if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
+                                   Title, sizeof(Title) / sizeof(Title[0])))
+                {
+                  wcscpy(Title, L"ReactOS Setup");
+                }
+              MessageBoxW(hwndDlg, RegistrationNotify->ErrorMessage,
+                          Title, MB_ICONERROR | MB_OK);
+
+            }
+
+          if (wParam)
+            {
+#ifdef VMWINST
+              RunVMWInstall(GetParent(hwndDlg));
+#endif
+
+              /* Enable the Back and Next buttons */
+              PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+              PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
+            }
+         }
+         return TRUE;
 
       default:
         break;

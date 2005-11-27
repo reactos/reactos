@@ -24,3 +24,6 @@ NET_NIC.inf
 ports.inf
 scsi.inf
 usbport.inf
+
+[RegistrationPhase2]
+RegisterDlls=OleControlDlls

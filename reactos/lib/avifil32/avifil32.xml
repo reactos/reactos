@@ -1,4 +1,5 @@
 <module name="avifil32" type="win32dll" baseaddress="${BASEADDRESS_AVIFIL32}" installbase="system32" installname="avifil32.dll">
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="avifil32.spec.def" />
 	<include base="avifil32">.</include>
 	<include base="ReactOS">include/wine</include>

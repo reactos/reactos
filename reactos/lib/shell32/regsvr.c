@@ -642,11 +642,13 @@ static const WCHAR wszSlash[] = { '/', 0 };
 static const WCHAR wszMyDocuments[] = { 'M','y',' ','D','o','c','u','m','e','n','t','s', 0 };
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
+#if 0
     {   
         &CLSID_MyDocuments,
         wszDesktop,
         wszMyDocuments
     },
+#endif
     { NULL }
 };
 

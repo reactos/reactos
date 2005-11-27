@@ -1,4 +1,5 @@
 <module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}" installbase="system32" installname="oleaut32.dll" allowwarnings="true">
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="oleaut32.spec.def" />
 	<include base="oleaut32">.</include>
 	<include base="ReactOS">include/wine</include>

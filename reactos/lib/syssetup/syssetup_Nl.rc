@@ -27,7 +27,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Welkom bij de Reactos installatiewizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Deze wizard zal Reactos op je computer installeren. De wizard "\
-          "heeft informatie over u en uw computer nodig "\
+          "heeft informatie over jou en jouw computer nodig "\
           "om Reactos correct in te stellen.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klik op Volgende om voort te gaan met de installatie.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -132,8 +132,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Some text...", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "Some more text...", IDC_STATIC, 53, 29, 253, 20
+    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
+    LTEXT "", IDC_ITEM, 53, 29, 253, 20
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
             PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
