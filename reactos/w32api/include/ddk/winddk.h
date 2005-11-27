@@ -98,6 +98,21 @@ extern "C" {
 #endif
 
 /*
+ * Alignment Macros
+ */
+#define ALIGN_DOWN(s, t) \
+    ((ULONG)(s) & ~(sizeof(t) - 1))
+
+#define ALIGN_UP(s, t) \
+    (ALIGN_DOWN(((ULONG)(s) + sizeof(t) - 1), t))
+
+#define ALIGN_DOWN_POINTER(p, t) \
+    ((PVOID)((ULONG_PTR)(p) & ~((ULONG_PTR)sizeof(t) - 1)))
+
+#define ALIGN_UP_POINTER(p, t) \
+    (ALIGN_DOWN_POINTER(((ULONG_PTR)(p) + sizeof(t) - 1), t))
+
+/*
 ** Forward declarations
 */
 

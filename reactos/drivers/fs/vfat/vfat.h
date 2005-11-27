@@ -1,6 +1,7 @@
 #include <debug.h>
 #include <ntifs.h>
 #include <ntdddisk.h>
+#include <reactos/helper.h>
 
 #ifdef __GNUC__
 #include <ndk/ntndk.h>

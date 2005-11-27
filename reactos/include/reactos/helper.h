@@ -1,20 +1,22 @@
 #ifndef _HELPER_H
 #define _HELPER_H
 
-#ifndef ROUNDUP
-#define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
-#endif
-
-#ifndef ROUNDUP
-#define ROUNDDOWN(a,b)	(((a)/(b))*(b))
-#endif
-
 #ifndef ROUND_UP
-#define ROUND_UP ROUNDUP
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 #endif
 
 #ifndef ROUND_DOWN
-#define ROUND_DOWN ROUNDDOWN
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+#endif
+
+#ifndef ROUNDUP
+#define ROUNDUP ROUND_UP
+#endif
+
+#ifndef ROUNDDOWN
+#define ROUNDDOWN ROUND_DOWN
 #endif
 
 #ifndef PAGE_ROUND_DOWN

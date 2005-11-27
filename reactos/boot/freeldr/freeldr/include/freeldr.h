@@ -70,6 +70,7 @@
 /* Externals */
 #include <reactos/rossym.h>
 #include <reactos/buildno.h>
+#include <reactos/helper.h>
 /* Needed if debuging is enabled */
 #include <comm.h>
 

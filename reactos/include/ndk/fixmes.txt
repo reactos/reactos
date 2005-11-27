@@ -17,12 +17,8 @@ ________________________________________________________________________________
 |rtltypes.h	- PPF_ Defines don't seem to be the real names (try to find them).
 |rtltypes.h	- _RTL_PROCESS_BACKTRACE_INFORMATION isn't done.
 |haltypes.h	- Multi-Boot flags are ReactOS Only.
-|extypes.h	- SystemPowerInformation in SYSTEM_INFORMATION_CLASS causes conflict.
 |extypes.h	- _RUNDOWN_DESCRIPTOR is possibly incorrect/unofficial.
-|asm.h		- Selector names are not official.
-|extypes.h	- Class 42 (SYSTEM_POWER_INFORMATION causes conflict).
 |extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined.
-|ntndk.h	- Incorrect rounding macro names
 |_____________________________________________________________________________________
 
 

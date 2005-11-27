@@ -178,7 +178,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemPrioritySeperation,
     SystemPlugPlayBusInformation,
     SystemDockInformation,
-    _SystemPowerInformation, // FIXME 
+    SystemPowerInformationNative,
     SystemProcessorSpeedInformation,
     SystemCurrentTimeZoneInformation,
     SystemLookasideInformation,
@@ -988,8 +988,7 @@ typedef struct _SYSTEM_DOCK_INFORMATION
 } SYSTEM_DOCK_INFORMATION, *PSYSTEM_DOCK_INFORMATION;
 
 // Class 42
-// FIXME: Conflict with WINNT.H 
-typedef struct __SYSTEM_POWER_INFORMATION
+typedef struct _SYSTEM_POWER_INFORMATION_NATIVE
 {
     BOOLEAN SystemSuspendSupported;
     BOOLEAN SystemHibernateSupported;
@@ -1001,7 +1000,7 @@ typedef struct __SYSTEM_POWER_INFORMATION
     BOOLEAN SystemAcOrDc;
     BOOLEAN PowerDownDisabled;
     LARGE_INTEGER SpindownDrives;
-} _SYSTEM_POWER_INFORMATION, *P_SYSTEM_POWER_INFORMATION;
+} SYSTEM_POWER_INFORMATION_NATIVE, *PSYSTEM_POWER_INFORMATION_NATIVE;
 
 // Class 43
 typedef struct _SYSTEM_LEGACY_DRIVER_INFORMATION

@@ -23,6 +23,7 @@
 #include <ndk/ntndk.h>
 
 /* Internal RTL header */
+#include <reactos/helper.h>
 #include "rtlp.h"
 
 /* EOF */

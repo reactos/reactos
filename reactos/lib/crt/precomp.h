@@ -16,10 +16,11 @@
 #include <math.h>
 #include <limits.h>
 
+/* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windows.h>
-#define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <reactos/helper.h>
 
 #if !defined(_MSC_VER)
   #include <stdint.h>

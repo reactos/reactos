@@ -19,14 +19,6 @@ Author:
 #ifndef _NTNDK_
 #define _NTNDK_
 
-//
-// FIXME: Rounding Macros
-//
-#define ROUNDUP(a,b)        ((((a)+(b)-1)/(b))*(b))
-#define ROUNDDOWN(a,b)      (((a)/(b))*(b))
-#define ROUND_UP            ROUNDUP
-#define ROUND_DOWN          ROUNDDOWN
-
 #include <stdarg.h>         // C Standard Header
 #include <umtypes.h>        // General Definitions
 

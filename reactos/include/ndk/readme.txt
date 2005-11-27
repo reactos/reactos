@@ -116,6 +116,55 @@ you would like to be credited for it.
 
 3. USAGE
 
-3.1 TODO (COPY FROM WIKI)
+3.1 ORGANIZATION
 
-... TODO ... (COPY FROM WIKI)
+   * The NDK is organized in a main folder (include/ndk) with arch-specific subfolders (ex: include/ndk/i386). 
+   * The NDK is structured by NT Subsystem Component (ex: ex, ps, rtl, etc). 
+   * The NDK can either be included on-demand (#include <ndk/xxxxx.h>) or globally (#include <ndk/ntndk.h>).
+     The former is recommended to reduce compile time. 
+   * The NDK is structured by function and type. Every Subsystem Component has an associated "xxfuncs.h" and
+    "xxtypes.h" header, where "xx" is the Subsystem (ex: iofuncs.h, iotypes.h) 
+   * The NDK has a special file called "umtypes.h" which exports to User-Mode or Native-Mode Applications the
+     basic NT types which are present in ntdef.h. This file cannot be included since it would conflict with
+     winnt.h and/or windef.h. Thus, umtypes.h provides the missing types. This file is automatically included
+     in a User-Mode NDK project. 
+   * The NDK also includes a file called "umfuncs.h" which exports to User-Mode or Native-Mode Applications
+     undocumented functions which can only be accessed from ntdll.dll. 
+   * The NDK has another special file called "ifssupp.h", which exports to Kernel-Mode drivers a few types which
+     are only documented in the IFS kit, and are part of some native definitions. It will be deprecated next year
+     with the release of the WDK. 
+
+3.2 USING IN YOUR PROJECT
+
+    *  User Mode Application requiring Native Types: 
+
+       #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
+       #include <windows.h>      /* Declare Windows Headers like you normally would */
+       #include <ntndk.h>        /* Declare the NDK Headers */
+
+    * Native Mode Application: 
+
+       #include <windows.h>      /* Declare Windows Headers for basic types. NEEDED UNTIL NDK 1.5 */
+       #include <ntndk.h>        /* Declare the NDK Headers */
+
+    * Kernel Mode Driver: 
+
+       #include <ntddk.h>       /* Declare DDK Headers like you normally would */
+       #include <ntndk.h>       /* Declare the NDK Headers */
+
+    * You may also include only the files you need (example for User-Mode application):
+
+       #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
+       #include <windows.h>      /* Declare Windows Headers like you normally would */
+       #include <rtlfuncs.h>     /* Declare the Rtl* Functions */
+
+3.3 CAVEATS
+
+    * winternl.h: This header, part of the PSDK, was released by Microsoft as part of one of the governmen
+      lawsuits against it, and documents a certain (minimal) part of the Native API and/or types. Unforunately,
+      Microsoft decided to hack the Native Types and to define them incorrectly, replacing real members by "reserved"
+      ones. As such, you 'cannot include winternl.h in any project that uses the NDK. Note however, that the NDK fully
+      replaces it and retains compatibility with any project that used it.
+    * Native programs: Native programs must include "windows.h" until the next release of the NDK (1.5). The upcoming
+      version will automatically detect the lack of missing types and include them. Note however that you will still need
+      to have the PSDK installed.

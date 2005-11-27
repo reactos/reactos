@@ -234,9 +234,9 @@ typedef struct _CLIENT_DIED_MSG
 // Maximum total Kernel-Mode LPC Message Structure Size
 //
 #define LPCP_MAX_MESSAGE_SIZE \
-    ROUND_UP(PORT_MAXIMUM_MESSAGE_LENGTH + \
+    ALIGN_UP(PORT_MAXIMUM_MESSAGE_LENGTH + \
     sizeof(LPCP_MESSAGE) + \
-    sizeof(LPCP_CONNECTION_MESSAGE), 16)
+    sizeof(LPCP_CONNECTION_MESSAGE), sizeof(ULONGLONG) * 2)
 
 //
 // Maximum actual LPC Message Length
