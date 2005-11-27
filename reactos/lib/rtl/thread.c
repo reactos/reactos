@@ -278,11 +278,11 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
     
     /* Set the Selectors */
     ThreadContext->SegGs = 0;
-    ThreadContext->SegFs = TEB_SELECTOR;
-    ThreadContext->SegEs = USER_DS;
-    ThreadContext->SegDs = USER_DS;
-    ThreadContext->SegCs = USER_CS;
-    ThreadContext->SegSs = USER_DS;
+    ThreadContext->SegFs = KGDT_R3_TEB | RPL_MASK;
+    ThreadContext->SegEs = KGDT_R3_DATA | RPL_MASK;
+    ThreadContext->SegDs = KGDT_R3_DATA | RPL_MASK;
+    ThreadContext->SegCs = KGDT_R3_CODE | RPL_MASK;
+    ThreadContext->SegSs = KGDT_R3_DATA | RPL_MASK;
     
     /* Enable Interrupts */
     ThreadContext->EFlags = 0x200; /*X86_EFLAGS_IF */

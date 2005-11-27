@@ -119,7 +119,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 
   /* Initialize the boot TSS. */
   Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + MM_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  Tss->Ss0 = KERNEL_DS;
+  Tss->Ss0 = KGDT_R0_DATA;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   Tss->IoBitmap[8192] = 0xFF;
   Tss->Ldt = 0;
@@ -130,23 +130,23 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   base = (ULONG)Tss;
   length = sizeof(KTSS) - 1;
 
-  Gdt[(TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
-  Gdt[(TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
-  Gdt[(TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
-  Gdt[(TSS_SELECTOR / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
+  Gdt[(KGDT_TSS / 2) + 0] = (USHORT)(length & 0xFFFF);
+  Gdt[(KGDT_TSS / 2) + 1] = (USHORT)(base & 0xFFFF);
+  Gdt[(KGDT_TSS / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
+  Gdt[(KGDT_TSS / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16));
 
   /* Initialize the TSS used for handling double faults. */
   TrapTss->Eflags = 0;
   TrapTss->Esp0 = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  TrapTss->Ss0 = KERNEL_DS;
+  TrapTss->Ss0 = KGDT_R0_DATA;
   TrapTss->Esp = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  TrapTss->Cs = KERNEL_CS;
+  TrapTss->Cs = KGDT_R0_CODE;
   TrapTss->Eip = (ULONG)KiTrap8;
-  TrapTss->Ss = KERNEL_DS;
-  TrapTss->Ds = KERNEL_DS;
-  TrapTss->Es = KERNEL_DS;
-  TrapTss->Fs = PCR_SELECTOR;
+  TrapTss->Ss = KGDT_R0_DATA;
+  TrapTss->Ds = KGDT_R0_DATA;
+  TrapTss->Es = KGDT_R0_DATA;
+  TrapTss->Fs = KGDT_R0_PCR;
   TrapTss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   TrapTss->IoBitmap[0] = 0xFF;
   TrapTss->Ldt = 0;
@@ -158,10 +158,10 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   base = (ULONG)TrapTss;
   length = sizeof(KTSSNOIOPM) - 1;
 
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
+  Gdt[(KGDT_DF_TSS / 2) + 0] = (USHORT)(length & 0xFFFF);
+  Gdt[(KGDT_DF_TSS / 2) + 1] = (USHORT)(base & 0xFFFF);
+  Gdt[(KGDT_DF_TSS / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
+  Gdt[(KGDT_DF_TSS / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16));
 
   /*
@@ -170,9 +170,9 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 #if defined(__GNUC__)
   __asm__("ltr %%ax"
 	  : /* no output */
-	  : "a" (TSS_SELECTOR));
+	  : "a" (KGDT_TSS));
 #elif defined(_MSC_VER)
-  __asm mov ax, TSS_SELECTOR
+  __asm mov ax, KGDT_TSS
   __asm ltr ax
 #else
 #error Unknown compiler for inline assembler
@@ -195,11 +195,11 @@ Ki386BootInitializeTSS(VOID)
 
   /* Initialize the boot TSS. */
   KiBootTss.Esp0 = (ULONG)init_stack_top - sizeof(FX_SAVE_AREA);
-  KiBootTss.Ss0 = KERNEL_DS;
+  KiBootTss.Ss0 = KGDT_R0_DATA;
   //   KiBootTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
   KiBootTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
   KiBootTss.IoBitmap[8192] = 0xFF;
-  KiBootTss.Ldt = LDT_SELECTOR;
+  KiBootTss.Ldt = KGDT_LDT;
 
   /*
    * Initialize a descriptor for the TSS
@@ -207,23 +207,23 @@ Ki386BootInitializeTSS(VOID)
   base = (unsigned int)&KiBootTss;
   length = sizeof(KiBootTss) - 1;
 
-  KiBootGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  KiBootGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  KiBootGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-  KiBootGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+  KiBootGdt[(KGDT_TSS / 2) + 0] = (length & 0xFFFF);
+  KiBootGdt[(KGDT_TSS / 2) + 1] = (base & 0xFFFF);
+  KiBootGdt[(KGDT_TSS / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+  KiBootGdt[(KGDT_TSS / 2) + 3] = ((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16);
 
   /* Initialize the TSS used for handling double faults. */
   KiBootTrapTss.Eflags = 0;
   KiBootTrapTss.Esp0 = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  KiBootTrapTss.Ss0 = KERNEL_DS;
+  KiBootTrapTss.Ss0 = KGDT_R0_DATA;
   KiBootTrapTss.Esp = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  KiBootTrapTss.Cs = KERNEL_CS;
+  KiBootTrapTss.Cs = KGDT_R0_CODE;
   KiBootTrapTss.Eip = (ULONG)KiTrap8;
-  KiBootTrapTss.Ss = KERNEL_DS;
-  KiBootTrapTss.Ds = KERNEL_DS;
-  KiBootTrapTss.Es = KERNEL_DS;
-  KiBootTrapTss.Fs = PCR_SELECTOR;
+  KiBootTrapTss.Ss = KGDT_R0_DATA;
+  KiBootTrapTss.Ds = KGDT_R0_DATA;
+  KiBootTrapTss.Es = KGDT_R0_DATA;
+  KiBootTrapTss.Fs = KGDT_R0_PCR;
   KiBootTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
   KiBootTrapTss.IoBitmap[0] = 0xFF;
   KiBootTrapTss.Ldt = 0x0;
@@ -235,10 +235,10 @@ Ki386BootInitializeTSS(VOID)
   base = (unsigned int)&KiBootTrapTss;
   length = sizeof(KiBootTrapTss) - 1;
 
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+  KiBootGdt[(KGDT_DF_TSS / 2) + 0] = (length & 0xFFFF);
+  KiBootGdt[(KGDT_DF_TSS / 2) + 1] = (base & 0xFFFF);
+  KiBootGdt[(KGDT_DF_TSS / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+  KiBootGdt[(KGDT_DF_TSS / 2) + 3] = ((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16);
 
   /*
@@ -247,9 +247,9 @@ Ki386BootInitializeTSS(VOID)
 #if defined(__GNUC__)
   __asm__("ltr %%ax"
 	  : /* no output */
-	  : "a" (TSS_SELECTOR));
+	  : "a" (KGDT_TSS));
 #elif defined(_MSC_VER)
-  __asm mov ax, TSS_SELECTOR
+  __asm mov ax, KGDT_TSS
   __asm ltr ax
 #else
 #error Unknown compiler for inline assembler

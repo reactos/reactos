@@ -614,10 +614,10 @@ GspGetRegisters(PCHAR Address,
                 Value = (ULONG_PTR) (KernelStack + 8);
                 break;
               case CS:
-                Value = KERNEL_CS;
+                Value = KGDT_R0_CODE;
                 break;
               case DS:
-                Value = KERNEL_DS;
+                Value = KGDT_R0_DATA;
                 break;
               default:
                 Value = 0;

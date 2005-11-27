@@ -919,7 +919,7 @@ SetInterruptGate(ULONG index, ULONG address)
   
   idt = (KIDTENTRY*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(KIDTENTRY));
   idt->Offset = address & 0xffff;
-  idt->Selector = KERNEL_CS;
+  idt->Selector = KGDT_R0_CODE;
   idt->Access = Access.Value;
   idt->ExtendedOffset = address >> 16;
 }

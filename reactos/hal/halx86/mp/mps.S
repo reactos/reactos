@@ -22,11 +22,11 @@
   pushl %es; \
   pushl %fs; \
   pushl %gs; \
-  movl  $(KERNEL_DS), %eax; \
+  movl  $(KGDT_R0_DATA), %eax; \
   movl  %eax, %ds; \
   movl  %eax, %es; \
   movl  %eax, %gs; \
-  movl  $(PCR_SELECTOR), %eax; \
+  movl  $(KGDT_R0_PCR), %eax; \
   movl  %eax, %fs;
   
 #define AFTER \
@@ -85,11 +85,11 @@ _MpsTimerInterrupt:
   	pushl	%gs
   	movl	$0xceafbeef,%eax
   	pushl 	%eax
-  	movl	$(KERNEL_DS),%eax
+  	movl	$(KGDT_R0_DATA),%eax
   	movl	%eax,%ds
   	movl	%eax,%es
   	movl	%eax,%gs
-  	movl	$(PCR_SELECTOR),%eax
+  	movl	$(KGDT_R0_PCR),%eax
   	movl	%eax,%fs
   	pushl 	%esp
   	pushl 	%ebx

@@ -29,11 +29,11 @@ _KiCommonInterrupt:
 	pushl %gs
 	movl	$0xceafbeef,%eax
 	pushl %eax
-	movl	$KERNEL_DS,%eax
+	movl	$KGDT_R0_DATA,%eax
 	movl	%eax,%ds
 	movl	%eax,%es
 	movl %eax,%gs
-	movl	$PCR_SELECTOR,%eax
+	movl	$KGDT_R0_PCR,%eax
 	movl	%eax,%fs
 	pushl %esp
 	pushl %ebx
@@ -66,11 +66,11 @@ _irq_handler_0:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 0)
@@ -93,11 +93,11 @@ _irq_handler_1:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 1)
@@ -120,11 +120,11 @@ _irq_handler_2:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 2)
@@ -147,11 +147,11 @@ _irq_handler_3:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 3)
@@ -174,11 +174,11 @@ _irq_handler_4:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 4)
@@ -201,11 +201,11 @@ _irq_handler_5:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 5)
@@ -228,11 +228,11 @@ _irq_handler_6:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 6)
@@ -255,11 +255,11 @@ _irq_handler_7:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 7)
@@ -282,11 +282,11 @@ _irq_handler_8:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 8)
@@ -309,11 +309,11 @@ _irq_handler_9:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 9)
@@ -336,11 +336,11 @@ _irq_handler_10:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 10)
@@ -363,11 +363,11 @@ _irq_handler_11:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 11)
@@ -390,11 +390,11 @@ _irq_handler_12:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 12)
@@ -417,11 +417,11 @@ _irq_handler_13:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 13)
@@ -444,11 +444,11 @@ _irq_handler_14:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 14)
@@ -471,11 +471,11 @@ _irq_handler_15:
 	pushl	%gs
 	movl	$0xceafbeef,%eax
 	pushl	%eax
-	movw	$KERNEL_DS,%ax
+	movw	$KGDT_R0_DATA,%ax
 	movw	%ax,%ds
 	movw	%ax,%es
 	movw	%ax,%gs
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 	pushl	%esp
 	pushl	$(IRQ_BASE + 15)

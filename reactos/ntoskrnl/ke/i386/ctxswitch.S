@@ -196,12 +196,12 @@ NoAddressSpaceSwitch:
     /* Write the LDT Selector */
     mov ebp, [ebx+KPCR_GDT]
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
-    mov [ebp+LDT_SELECTOR], eax
+    mov [ebp+KGDT_LDT], eax
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
-    mov [ebp+LDT_SELECTOR+4], eax
+    mov [ebp+KGDT_LDT+4], eax
     
     /* Save LDT Selector */
-    mov eax, LDT_SELECTOR
+    mov eax, KGDT_LDT
         
 NoLdt:
     

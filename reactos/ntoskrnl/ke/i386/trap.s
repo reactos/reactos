@@ -104,7 +104,7 @@ _KiTrapProlog2:
 	pushl	%ebp		/* XXX: DebugEBP */	
 	
 	/* Load the segment registers */
-	movl	$KERNEL_DS, %eax
+	movl	$KGDT_R0_DATA, %eax
 	movl	%eax, %ds
 	movl	%eax, %es
 	movl	%eax, %gs
@@ -113,7 +113,7 @@ _KiTrapProlog2:
 	movl	%esp, %ebp		
 	
 	/* Load the PCR selector into fs */
-	movl	$PCR_SELECTOR, %eax
+	movl	$KGDT_R0_PCR, %eax
 	movl	%eax, %fs
 
 	/* Save the old exception list */

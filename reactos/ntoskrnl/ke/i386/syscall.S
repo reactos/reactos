@@ -102,10 +102,10 @@ BadStack:
     push 0
 
     /* Generate interrupt stack for Trap 6 */
-    push USER_DS
+    push KGDT_R3_DATA + RPL_MASK
     push 0
     push 0x20202
-    push USER_CS
+    push KGDT_R3_CODE + RPL_MASK
     push 0
     jmp _KiTrap6
 
@@ -113,11 +113,11 @@ _KiFastCallEntry:
 
 // ==================== UNIQUE SYSENTER STUB. DO NOT DUPLICATE ============//
     /* Set FS to PCR */
-    mov ecx, PCR_SELECTOR
+    mov ecx, KGDT_R0_PCR
     mov fs, cx
 
     /* Set DS/ES to Kernel Selector */
-    mov ecx, KERNEL_DS
+    mov ecx, KGDT_R0_DATA
     mov ds, cx
     mov es, cx
 
@@ -126,14 +126,14 @@ _KiFastCallEntry:
     mov esp, ss:[ecx+KTSS_ESP0]
 
     /* Set up a fake INT Stack. */
-    push USER_DS
+    push KGDT_R3_DATA + RPL_MASK
     push edx                            /* Ring 3 SS:ESP */
     pushf                               /* Ring 3 EFLAGS */
     push 2                              /* Ring 0 EFLAGS */
     add edx, 8                          /* Skip user parameter list */
     popf                                /* Set our EFLAGS */
     or dword ptr [esp], X86_EFLAGS_IF   /* Re-enable IRQs in EFLAGS, to fake INT */
-    push USER_CS
+    push KGDT_R3_CODE + RPL_MASK
     push KUSER_SHARED_SYSCALL_RET
 
     /* Setup the Trap Frame stack */
@@ -142,7 +142,7 @@ _KiFastCallEntry:
     push ebx
     push esi
     push edi
-    push TEB_SELECTOR
+    push KGDT_R3_TEB + RPL_MASK
 
     /* Save pointer to our PCR */
     mov ebx, [fs:KPCR_SELF]
@@ -163,10 +163,10 @@ _KiFastCallEntry:
 .att_syntax
     /* Save other registers */
     sub $0xC, %esp                                                    // + 0x70
-    pushl $USER_DS                                                          // + 0x40
-    pushl $USER_DS                                                          // + 0x44
+    pushl $KGDT_R3_DATA + RPL_MASK                                    // + 0x40
+    pushl $KGDT_R3_DATA + RPL_MASK                                    // + 0x44
     pushl $0                                                          // + 0x48
-    sub $0x30, %esp                                                    // + 0x70
+    sub $0x30, %esp                                                   // + 0x70
 .intel_syntax noprefix
 
     /* Make space for us on the stack */
@@ -201,7 +201,7 @@ _KiSystemService:
     push fs
 
     /* Load PCR Selector into fs */
-    mov ebx, PCR_SELECTOR
+    mov ebx, KGDT_R0_PCR
     mov fs, bx
 
     /* Get a pointer to the current thread */
@@ -410,9 +410,9 @@ ApcLoop:
 // ================= PRESENT ONLY IF VOLATILES NEEDED ============//
     /* Save some stuff that raising IRQL will kill */
     mov [ebx+KTRAP_FRAME_EAX], eax
-    mov dword ptr [ebx+KTRAP_FRAME_FS], TEB_SELECTOR
-    mov dword ptr [ebx+KTRAP_FRAME_DS], USER_DS
-    mov dword ptr [ebx+KTRAP_FRAME_ES], USER_DS
+    mov dword ptr [ebx+KTRAP_FRAME_FS], KGDT_R3_TEB + RPL_MASK
+    mov dword ptr [ebx+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    mov dword ptr [ebx+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
     mov dword ptr [ebx+KTRAP_FRAME_GS], 0
 // ============= END PRESENT ONLY IF VOLATILES NEEDED ============//
 
@@ -464,7 +464,7 @@ V86_Exit_Return:
 
 // ==================== ONLY IF FULL RESTORE NEEDED ===================//
     /* Check the old mode */
-    cmp word ptr [esp+KTRAP_FRAME_CS], USER_CS
+    cmp word ptr [esp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
     bt word ptr [esp+KTRAP_FRAME_CS], 0
     cmc
     ja RestoreAll
@@ -524,7 +524,7 @@ FastRet:
     jnz IntRet
 
     /* Restore FS to TIB */
-    mov ecx, TEB_SELECTOR
+    mov ecx, KGDT_R3_TEB + RPL_MASK
     mov fs, ecx
     
     /* We will be cleaning up the stack ourselves */
@@ -702,7 +702,7 @@ V86_Exit_Return2:
     mov eax, [esp+KTRAP_FRAME_EAX]
 
     /* Check if it was kernel */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KERNEL_CS
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz CommonStackClean2
 
     /* Skip registers */
@@ -787,7 +787,7 @@ _KiDebugService:
     push fs
 
     /* Switch to correct FS */
-    mov bx, PCR_SELECTOR
+    mov bx, KGDT_R0_PCR
     mov fs, bx
 
     /* Save Exception List */
@@ -806,7 +806,7 @@ _KiDebugService:
     sub esp, 0x30
 
     /* Switch Segments to Kernel */
-    mov ax, KERNEL_DS
+    mov ax, KGDT_R0_DATA
     mov ds, ax
     mov es, ax
 
@@ -853,7 +853,7 @@ _KiDebugService:
     /* Check if this is kernel or user-mode */
     test byte ptr [ebp+KTRAP_FRAME_CS], 1
     jz CallDispatch
-    cmp word ptr [ebp+KTRAP_FRAME_CS], USER_CS
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
     jnz NotUserMode
 
     /* Re-enable interrupts */
@@ -952,7 +952,7 @@ V86_Exit_Return3:
     mov eax, [esp+KTRAP_FRAME_EAX]
 
     /* Check if it was kernel */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KERNEL_CS
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz CommonStackClean3
 
     /* Skip registers */

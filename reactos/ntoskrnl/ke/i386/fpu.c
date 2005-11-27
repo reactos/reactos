@@ -485,7 +485,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         }
         KeLowerIrql(OldIrql);
 
-        PreviousMode = ((Tf->Cs & 0xffff) == USER_CS) ? (UserMode) : (KernelMode);
+        PreviousMode = ((Tf->Cs & 0xffff) == (KGDT_R3_CODE | RPL_MASK)) ? (UserMode) : (KernelMode);
         DPRINT("Math/Xmm fault happened! (PreviousMode = %s)\n",
                (PreviousMode != KernelMode) ? ("UserMode") : ("KernelMode"));
 

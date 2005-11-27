@@ -72,7 +72,7 @@
 #define KernelModeStub_x86  "    movl $0x%x, %%eax\n" \
                             "    leal 4(%%esp), %%edx\n" \
                             "    pushfl\n" \
-                            "    pushl $KERNEL_CS\n" \
+                            "    pushl $KGDT_R0_CODE\n" \
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
 #elif defined(_MSC_VER)
@@ -80,7 +80,7 @@
                             "        mov eax, %xh\n" \
                             "        lea edx, [esp+4]\n" \
                             "        pushf\n" \
-                            "        push KERNEL_CS\n" \
+                            "        push KGDT_R0_CODE\n" \
                             "        call _KiSystemService\n" \
                             "        ret %xh\n" \
                             "    }\n"

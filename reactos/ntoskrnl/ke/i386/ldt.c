@@ -119,16 +119,16 @@ NtSetLdtEntries (ULONG Selector1,
     LdtDescriptor[3] = (USHORT)(((NewLdtSize & 0xf0000) >> 16) |
                                 ((NewLdtBase & 0xff000000) >> 16));
 
-    KeSetGdtSelector(LDT_SELECTOR,
+    KeSetGdtSelector(KGDT_LDT,
                      ((PULONG) LdtDescriptor)[0],
                      ((PULONG) LdtDescriptor)[1]);
 
 #if defined(__GNUC__)
     __asm__("lldtw %%ax"
             : /* no output */
-            : "a" (LDT_SELECTOR));
+            : "a" (KGDT_LDT));
 #elif defined(_MSC_VER)
-    __asm mov ax, LDT_SELECTOR
+    __asm mov ax, KGDT_LDT
     __asm lldt ax
 #else
 #error Unknown compiler for inline assembler
@@ -171,9 +171,9 @@ Ki386InitializeLdt(VOID)
    */
   base = length = 0;
 
-  Gdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  Gdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  Gdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
-  Gdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+  Gdt[(KGDT_LDT / 2) + 0] = (length & 0xFFFF);
+  Gdt[(KGDT_LDT / 2) + 1] = (base & 0xFFFF);
+  Gdt[(KGDT_LDT / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
+  Gdt[(KGDT_LDT / 2) + 3] = ((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16);
 }

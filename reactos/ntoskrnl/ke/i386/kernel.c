@@ -244,7 +244,7 @@ KeApplicationProcessorInit(VOID)
      extern void KiFastCallEntry(void);
 
      /* CS Selector of the target segment. */
-     Ke386Wrmsr(0x174, KERNEL_CS, 0);
+     Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
      /* Target ESP. */
      Ke386Wrmsr(0x175, 0, 0);
      /* Target EIP. */
@@ -400,7 +400,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       extern void KiFastCallEntry(void);
 
       /* CS Selector of the target segment. */
-      Ke386Wrmsr(0x174, KERNEL_CS, 0);
+      Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
       /* Target ESP. */
       Ke386Wrmsr(0x175, 0, 0);
       /* Target EIP. */

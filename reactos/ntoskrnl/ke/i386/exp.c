@@ -274,7 +274,7 @@ KiDoubleFaultHandler(VOID)
    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\nESP: %.8x ", OldTss->Edx,
 	    OldTss->Ebp, OldTss->Esi, Esp0);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ", OldTss->Edi, OldTss->Eflags);
-   if (OldTss->Cs == KERNEL_CS)
+   if (OldTss->Cs == KGDT_R0_CODE)
      {
 	DbgPrint("kESP %.8x ", Esp0);
 	if (PsGetCurrentThread() != NULL)
@@ -288,7 +288,7 @@ KiDoubleFaultHandler(VOID)
      {
 	DbgPrint("User ESP %.8x\n", OldTss->Esp);
      }
-  if ((OldTss->Cs & 0xffff) == KERNEL_CS)
+  if ((OldTss->Cs & 0xffff) == KGDT_R0_CODE)
     {
       if (PsGetCurrentThread() != NULL)
 	{
@@ -448,7 +448,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", Tf->Edx,
 	    Tf->Ebp, Tf->Esi, Esp0);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->Eflags);
-   if ((Tf->Cs&0xffff) == KERNEL_CS)
+   if ((Tf->Cs&0xffff) == KGDT_R0_CODE)
      {
 	DbgPrint("kESP %.8x ", Esp0);
 	if (PsGetCurrentThread() != NULL)
@@ -561,7 +561,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /*
     * Handle user exceptions differently
     */
-   if ((Tf->Cs & 0xFFFF) == USER_CS)
+   if ((Tf->Cs & 0xFFFF) == (KGDT_R3_CODE | RPL_MASK))
      {
        return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
      }
@@ -605,7 +605,7 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     ULONG Previous = KiEspFromTrapFrame(TrapFrame);
 
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->Cs & 1) || (TrapFrame->Eflags & X86_EFLAGS_VM))
+    if ((TrapFrame->Cs & MODE_MASK) || (TrapFrame->Eflags & X86_EFLAGS_VM))
     {
         /* Write it directly */
         TrapFrame->Esp = Esp;
@@ -650,15 +650,15 @@ KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
         /* Just return it */
         return TrapFrame->Ss;
     }
-    else if (TrapFrame->Cs & 1)
+    else if (TrapFrame->Cs & MODE_MASK)
     {
         /* Usermode, return the User SS */
-        return TrapFrame->Ss | 3;
+        return TrapFrame->Ss | RPL_MASK;
     }
     else
     {
         /* Kernel mode */
-        return KERNEL_DS;
+        return KGDT_R0_DATA;
     }
 }
 
@@ -676,10 +676,10 @@ KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
         /* Just write it */
         TrapFrame->Ss = Ss;
     }
-    else if (TrapFrame->Cs & 1)
+    else if (TrapFrame->Cs & MODE_MASK)
     {
         /* Usermode, save the User SS */
-        TrapFrame->Ss = Ss | 3;
+        TrapFrame->Ss = Ss | RPL_MASK;
     }
 }
 
@@ -722,10 +722,10 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             TrapFrame->Cs = Context->SegCs;
 
             /* Don't let it under 8, that's invalid */
-            if ((PreviousMode !=KernelMode) && (TrapFrame->Cs < 8))
+            if ((PreviousMode != KernelMode) && (TrapFrame->Cs < 8))
             {
                 /* Force it to User CS */
-                TrapFrame->Cs = USER_CS;
+                TrapFrame->Cs = (KGDT_R3_CODE | RPL_MASK);
             }
         }
 
@@ -762,11 +762,11 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             TrapFrame->V86_Fs = Context->SegFs;
             TrapFrame->V86_Gs = Context->SegGs;
         }
-        else if (!(TrapFrame->Cs & 1))
+        else if (!(TrapFrame->Cs & MODE_MASK))
         {
             /* For user mode, write the values directly */
-            TrapFrame->Ds = USER_DS;
-            TrapFrame->Es = USER_DS;
+            TrapFrame->Ds = KGDT_R3_DATA | RPL_MASK;
+            TrapFrame->Es = KGDT_R3_DATA | RPL_MASK;
             TrapFrame->Fs = Context->SegFs;
             TrapFrame->Gs = 0;
         }
@@ -778,7 +778,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             TrapFrame->Fs = Context->SegFs;
 
             /* Handle GS specially */
-            if (TrapFrame->Cs == USER_CS)
+            if (TrapFrame->Cs == (KGDT_R3_CODE | RPL_MASK))
             {
                 /* Don't use it, if user */
                 TrapFrame->Gs = 0;
@@ -863,13 +863,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         else
         {
             /* Check if this was a Kernel Trap */
-            if (TrapFrame->Cs == KERNEL_CS)
+            if (TrapFrame->Cs == KGDT_R0_CODE)
             {
                 /* Set valid selectors */
                 TrapFrame->Gs = 0;
-                TrapFrame->Fs = PCR_SELECTOR;
-                TrapFrame->Es = USER_DS;
-                TrapFrame->Ds = USER_DS;
+                TrapFrame->Fs = KGDT_R0_PCR;
+                TrapFrame->Es = KGDT_R3_DATA | RPL_MASK;
+                TrapFrame->Ds = KGDT_R3_DATA | RPL_MASK;
             }
 
             /* Return the segments */
@@ -1083,7 +1083,7 @@ set_system_call_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("sel %x %d\n",sel,sel);
    KiIdt[sel].a = (((int)func)&0xffff) +
-     (KERNEL_CS << 16);
+     (KGDT_R0_CODE << 16);
    KiIdt[sel].b = 0xef00 + (((int)func)&0xffff0000);
    DPRINT("idt[sel].b %x\n",KiIdt[sel].b);
 }
@@ -1092,7 +1092,7 @@ static void set_interrupt_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("set_interrupt_gate(sel %d, func %x)\n",sel,func);
    KiIdt[sel].a = (((int)func)&0xffff) +
-     (KERNEL_CS << 16);
+     (KGDT_R0_CODE << 16);
    KiIdt[sel].b = 0x8e00 + (((int)func)&0xffff0000);
 }
 
@@ -1101,7 +1101,7 @@ static void set_trap_gate(unsigned int sel, unsigned int func, unsigned int dpl)
    DPRINT("set_trap_gate(sel %d, func %x, dpl %d)\n",sel, func, dpl);
    ASSERT(dpl <= 3);
    KiIdt[sel].a = (((int)func)&0xffff) +
-     (KERNEL_CS << 16);
+     (KGDT_R0_CODE << 16);
    KiIdt[sel].b = 0x8f00 + (dpl << 13) + (((int)func)&0xffff0000);
 }
 
@@ -1135,7 +1135,7 @@ KeInitExceptions(VOID)
    set_trap_gate(5, (ULONG)KiTrap5, 0);
    set_trap_gate(6, (ULONG)KiTrap6, 0);
    set_trap_gate(7, (ULONG)KiTrap7, 0);
-   set_task_gate(8, TRAP_TSS_SELECTOR);
+   set_task_gate(8, KGDT_DF_TSS);
    set_trap_gate(9, (ULONG)KiTrap9, 0);
    set_trap_gate(10, (ULONG)KiTrap10, 0);
    set_trap_gate(11, (ULONG)KiTrap11, 0);

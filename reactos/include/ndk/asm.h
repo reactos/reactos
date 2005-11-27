@@ -20,17 +20,19 @@ Author:
 #define _ASM_H
 
 //
-// FIXME: Use real names.
+// Selector Names
 //
-#define KERNEL_CS                               (0x8)
-#define KERNEL_DS                               (0x10)
-#define USER_CS                                 (0x18 + 0x3)
-#define USER_DS                                 (0x20 + 0x3)
-#define TSS_SELECTOR                            (0x28)
-#define PCR_SELECTOR                            (0x30)
-#define TEB_SELECTOR                            (0x38 + 0x3)
-#define LDT_SELECTOR                            (0x48)
-#define TRAP_TSS_SELECTOR                       (0x50)
+#define RPL_MASK                                0x0003
+#define MODE_MASK                               0x0001
+#define KGDT_R0_CODE                            (0x8)
+#define KGDT_R0_DATA                            (0x10)
+#define KGDT_R3_CODE                            (0x18)
+#define KGDT_R3_DATA                            (0x20)
+#define KGDT_TSS                                (0x28)
+#define KGDT_R0_PCR                             (0x30)
+#define KGDT_R3_TEB                             (0x38)
+#define KGDT_LDT                                (0x48)
+#define KGDT_DF_TSS                             (0x50)
 
 //
 // KV86M_REGISTERS Offsets
@@ -172,7 +174,6 @@ Author:
 #define KUSER_SHARED_SYSCALL                    KERNEL_USER_SHARED_DATA + 0x300
 #define KUSER_SHARED_SYSCALL_RET                KERNEL_USER_SHARED_DATA + 0x304
 #define PROCESSOR_FEATURE_FXSR                  KUSER_SHARED_PROCESSOR_FEATURES + 0x4
-
 
 //
 // CONTEXT Offsets

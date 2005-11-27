@@ -12,7 +12,7 @@ _NtProcessStartup:
     lidt _KiIdtDescriptor
 
     /* Load the PCR selector */
-    movl $PCR_SELECTOR, %eax
+    movl $KGDT_R0_PCR, %eax
     movl %eax, %fs
     
     cmpl $AP_MAGIC, %ecx

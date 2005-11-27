@@ -150,7 +150,7 @@ KeInitInterrupts (VOID)
     */
    for (i=0;i<NR_IRQS;i++)
      {
-        KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
+        KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KGDT_R0_CODE<<16);
         KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
                             I486_INTERRUPT_GATE;
 #ifdef CONFIG_SMP
@@ -308,7 +308,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386DisableInterrupts();
 
-   if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)
+   if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KGDT_R0_CODE)
      {
        HalEndSystemInterrupt (APC_LEVEL, 0);
 
