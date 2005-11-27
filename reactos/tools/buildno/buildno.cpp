@@ -28,7 +28,7 @@
 #include <time.h>
 #include <string.h>
 #include "version.h"
-#include "XML.h"
+#include "xml.h"
 #include "exception.h"
 
 #define FALSE 0

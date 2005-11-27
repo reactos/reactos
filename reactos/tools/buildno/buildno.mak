@@ -22,7 +22,7 @@ BUILDNO_SOURCES = $(addprefix $(BUILDNO_BASE_), \
 	buildno.cpp \
 	exception.cpp \
 	ssprintf.cpp \
-	XML.cpp \
+	xml.cpp \
 	)
 
 BUILDNO_OBJECTS = \
@@ -48,7 +48,7 @@ $(BUILDNO_INT_)ssprintf.o: $(BUILDNO_BASE_)ssprintf.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
 
-$(BUILDNO_INT_)XML.o: $(BUILDNO_BASE_)XML.cpp | $(BUILDNO_INT)
+$(BUILDNO_INT_)xml.o: $(BUILDNO_BASE_)xml.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
 

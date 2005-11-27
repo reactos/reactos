@@ -1,4 +1,4 @@
-// XML.cpp
+// xml.cpp
 
 #include "pch.h"
 
@@ -15,7 +15,7 @@
 #endif
 #include <assert.h>
 
-#include "XML.h"
+#include "xml.h"
 #include "exception.h"
 #include "ssprintf.h"
 

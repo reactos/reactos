@@ -29,7 +29,7 @@
 #endif
 #include <assert.h>
 
-#include "XML.h"
+#include "xml.h"
 #include "ssprintf.h"
 
 #ifndef MAX_PATH

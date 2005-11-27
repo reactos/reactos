@@ -37,7 +37,7 @@
 
 #include "ssprintf.h"
 #include "exception.h"
-#include "XML.h"
+#include "xml.h"
 #include <infhost.h>
 
 typedef std::vector<std::string> string_list;

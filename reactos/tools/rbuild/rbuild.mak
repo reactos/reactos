@@ -175,7 +175,7 @@ RBUILD_COMMON_SOURCES = \
 		syssetupgenerator.cpp \
 		testsupportcode.cpp \
 		wineresource.cpp \
-		XML.cpp \
+		xml.cpp \
 		)
 
 RBUILD_SPECIAL_SOURCES = \
@@ -218,7 +218,7 @@ RBUILD_HEADERS = \
 		rbuild.h \
 		ssprintf.h \
 		test.h \
-		XML.h \
+		xml.h \
 		$(addprefix backend$(SEP), $(RBUILD_BACKEND_HEADERS)) \
 	)
 
@@ -358,7 +358,7 @@ $(RBUILD_INT_)testsupportcode.o: $(RBUILD_BASE_)testsupportcode.cpp $(RBUILD_HEA
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-$(RBUILD_INT_)XML.o: $(RBUILD_BASE_)XML.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+$(RBUILD_INT_)xml.o: $(RBUILD_BASE_)xml.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

@@ -19,7 +19,7 @@
 #define __EXCEPTION_H
 
 #include "pch.h"
-#include "XML.h"
+#include "xml.h"
 
 class Exception
 {
