@@ -1570,7 +1570,7 @@ ProcessPageDlgProc(HWND hwndDlg,
       case WM_NOTIFY:
         {
           LPNMHDR lpnm = (LPNMHDR)lParam;
-          ULONG MaxProgress;
+          ULONG MaxProgress = 0;
 
           switch (lpnm->code)
             {
