@@ -40,7 +40,7 @@
 #include "ifenum.h"
 #include <assert.h>
 
-#define NDEBUG
+#define DEBUG
 #include "debug.h"
 
 /* Globals */
@@ -95,7 +95,9 @@ NTSTATUS openTcpFile(PHANDLE tcpFile) {
     /* String does not need to be freed: it points to the constant
      * string we provided */
 
-    TRACE("returning %08x\n", (int)status);
+    if (!NT_SUCCESS(status)) {
+        DPRINT1("openTcpFile for <%wZ> failed: 0x%lx\n", &fileName, status);
+    }
 
     return status;
 }
@@ -356,9 +358,13 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
     BOOL interfaceInfoComplete;
     int curInterf = 0, i;
 
-    if( NT_SUCCESS(status) )
-        infoSetInt = HeapAlloc( GetProcessHeap(), 0, 
-                                sizeof(IFInfo) * numEntities );
+    if (!NT_SUCCESS(status)) {
+        DPRINT1("getInterfaceInfoSet: tdiGetEntityIDSet() failed: 0x%lx\n", status);
+        return status;
+    }
+
+    infoSetInt = HeapAlloc( GetProcessHeap(), 0, 
+                            sizeof(IFInfo) * numEntities );
     
     if( infoSetInt ) {
         for( i = 0; i < numEntities; i++ ) {
@@ -643,6 +649,11 @@ NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
         name ? 
         getInterfaceInfoByName( tcpFile, name, ifInfo ) :
         getInterfaceInfoByIndex( tcpFile, index, ifInfo );
+
+    if (!NT_SUCCESS(status)) {
+        DPRINT1("getIPAddrEntryForIf returning %lx\n", status);
+    }
+
     return status;
 }
 
@@ -848,10 +859,14 @@ NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex,
       *NteInstance = Data.NewAddress;
   }
 
+  if (!NT_SUCCESS(status)) {
+      DPRINT1("addIPAddress for if %d returning 0x%lx\n", IfIndex, status);
+  }
+
   switch( status ) {
-  case STATUS_SUCCESS: return ERROR_SUCCESS;
-  case STATUS_DEVICE_DOES_NOT_EXIST: return ERROR_DEV_NOT_EXIST;
-  default: return status;
+      case STATUS_SUCCESS: return ERROR_SUCCESS;
+      case STATUS_DEVICE_DOES_NOT_EXIST: return ERROR_DEV_NOT_EXIST;
+      default: return status;
   }
 }
 
@@ -878,6 +893,13 @@ NTSTATUS deleteIpAddress( ULONG NteContext )
 
   closeTcpFile( tcpFile );
 
-  if( NT_SUCCESS(status) ) return ERROR_SUCCESS;
-  else return ERROR_GEN_FAILURE;
+  if (!NT_SUCCESS(status)) {
+      DPRINT1("deleteIpAddress(%lu) returning 0x%lx\n", NteContext, status);
+  }
+
+
+  if( NT_SUCCESS(status) ) 
+	  return ERROR_SUCCESS;
+  else 
+	  return ERROR_GEN_FAILURE;
 }

@@ -37,7 +37,7 @@
 # include <resolv.h>
 #endif
 
-
+#define DEBUG
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -84,7 +84,7 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  */
 DWORD WINAPI AddIPAddress(IPAddr Address, IPMask Netmask, DWORD IfIndex, PULONG NteContext, PULONG NteInstance)
 {
-    return addIPAddress( Address, Netmask, IfIndex, NteContext, NteInstance );
+    return RtlNtStatusToDosError(addIPAddress(Address, Netmask, IfIndex, NteContext, NteInstance));
 }
 
 
@@ -402,7 +402,7 @@ DWORD WINAPI CreateProxyArpEntry(DWORD dwAddress, DWORD dwMask, DWORD dwIfIndex)
 DWORD WINAPI DeleteIPAddress(ULONG NTEContext)
 {
   TRACE("NTEContext %ld\n", NTEContext);
-  return deleteIpAddress( NTEContext );
+  return RtlNtStatusToDosError(deleteIpAddress(NTEContext));
 }
 
 
@@ -613,7 +613,7 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
                 winsEnabled = TRUE;
               RegCloseKey(hKey);
             }
-
+			TRACE("num of index is %lu\n", table->numIndexes);
             for (ndx = 0; ndx < table->numIndexes; ndx++) {
               PIP_ADAPTER_INFO ptr = &pAdapterInfo[ndx];
               DWORD addrLen = sizeof(ptr->Address), type;
