@@ -928,11 +928,14 @@ IntSystemParametersInfo(
                         the current wallpaper bitmap */
                      HBITMAP hOldBitmap, hNewBitmap;
                      ASSERT(pvParam);
-                     UNICODE_STRING Key = RTL_CONSTANT_STRING(L"\\Registry\\User\\.Default\\Control Panel\\Desktop"); 
+                     UNICODE_STRING Key = RTL_CONSTANT_STRING(L"Control Panel\\Desktop"); 
                      UNICODE_STRING Tile = RTL_CONSTANT_STRING(L"TileWallpaper"); 
                      UNICODE_STRING Style = RTL_CONSTANT_STRING(L"WallpaperStyle");
+                     UNICODE_STRING KeyPath;
                      OBJECT_ATTRIBUTES KeyAttributes;
+                     OBJECT_ATTRIBUTES ObjectAttributes;
                      NTSTATUS Status;
+                     HANDLE CurrentUserKey = NULL;
                      HANDLE KeyHandle = NULL;
                      PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
                      ULONG Length = 0;
@@ -970,14 +973,24 @@ IntSystemParametersInfo(
                      /*default value is center */
                      WinStaObject->WallpaperMode = wmCenter;
                      
-                     /* find the tile value in the registry */
-                     InitializeObjectAttributes(&KeyAttributes, &Key, OBJ_CASE_INSENSITIVE,
-                              NULL, NULL);
-                     ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+                     
+                     
+                     /* Get a handle to the current users settings */
+                     RtlFormatCurrentUserKeyPath(&KeyPath);
+                     InitializeObjectAttributes(&ObjectAttributes,&KeyPath,OBJ_CASE_INSENSITIVE,NULL,NULL);
+                     ZwOpenKey(&CurrentUserKey, KEY_READ, &ObjectAttributes);
+                     RtlFreeUnicodeString(&KeyPath);
 
+                     /* open up the settings to read the values */
+                     InitializeObjectAttributes(&KeyAttributes, &Key, OBJ_CASE_INSENSITIVE,
+                              CurrentUserKey, NULL);
+                     ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+                     NtClose(CurrentUserKey);
+                     
+                     /* read the tile value in the registry */
                      Status = ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
                                               0, 0, &ResLength);
-                            
+
                      ResLength += sizeof(KEY_VALUE_PARTIAL_INFORMATION);
                      KeyValuePartialInfo = ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
                      Length = ResLength;
