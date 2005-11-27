@@ -1755,6 +1755,8 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
 
       /* Initialize the Port */
       KdPortInitializeEx(&GdbPortInfo, 0, 0);
+
+      KdpPort = GdbPortInfo.ComPort;
     }
   else if (BootPhase == 1)
     {
