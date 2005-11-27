@@ -67,8 +67,124 @@ typedef struct _HAL_PRIVATE_DISPATCH
     ULONG Version;
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
 
+#ifndef _REACTOS_
 //
-// Loader Parameter Block Structures (FIXME)
+// NLS Data Block
+//
+typedef struct _NLS_TABLE_DATA
+{
+    PVOID AnsiCodePageData;
+    PVOID OemCodePageData;
+    PVOID UnicodeCodePageData;
+} NLS_TABLE_DATA, *PNLS_TABLE_DATA;
+
+//
+// Subsystem Specific Loader Blocks
+//
+typedef struct _PROFILE_PARAMETER_BLOCK
+{
+    USHORT DockData0;
+    USHORT DockData1;
+    USHORT DockData2;
+    USHORT DockData3;
+    ULONG DockData3;
+    ULONG DockData4;
+} PROFILE_PARAMETER_BLOCK, *PPROFILE_PARAMETER_BLOCK;
+
+typedef struct _HEADLESS_LOADER_BLOCK
+{
+    UCHAR Unknown[0xC];
+} HEADLESS_LOADER_BLOCK, *PHEADLESS_LOADER_BLOCK;
+
+typedef struct _NETWORK_LOADER_BLOCK
+{
+    UCHAR Unknown[0xC];
+} NETWORK_LOADER_BLOCK, *PNETWORK_LOADER_BLOCK;
+
+//
+// Extended Loader Parameter Block
+//
+typedef struct _LOADER_PARAMETER_EXTENSION
+{
+    ULONG Size;
+    PROFILE_PARAMETER_BLOCK ProfileParameterBlock;
+    ULONG MajorVersion;
+    ULONG MinorVersion;
+    PVOID SpecialConfigInfFile;
+    ULONG SpecialConfigInfSize;
+    PVOID TriageDumpData;
+    //
+    // NT 5.1
+    //
+    ULONG NumberOfPages;
+    PHEADLESS_LOADER_BLOCK HeadlessLoaderBlock;
+    PVOID Unknown1;
+    PVOID PrefetchDatabaseBase;
+    ULONG PrefetchDatabaseSize;
+    PNETWORK_LOADER_BLOCK NetworkLoaderBlock;
+    //
+    // NT 5.2+
+    //
+    PVOID Reserved[2];
+    LIST_ENTRY FirmwareListEntry;
+    PVOID AcpiTableBase;
+    ULONG AcpiTableSize;
+} LOADER_PARAMETER_EXTENSION, *PLOADER_PARAMETER_EXTENSION;
+
+//
+// Architecture specific Loader Parameter Blocks
+//
+typedef struct _I386_LOADER_BLOCK
+{
+    PVOID CommonDataArea;
+    ULONG MachineType;
+    ULONG Reserved;
+} I386_LOADER_BLOCK, *PI386_LOADER_BLOCK;
+
+//
+// Setup Loader Parameter Block
+//
+typedef struct _SETUP_LOADER_BLOCK
+{
+    ULONG Unknown[139];
+    ULONG Flags;
+} SETUP_LOADER_BLOCK, *PSETUP_LOADER_BLOCK;
+
+//
+// Loader Parameter Block
+//
+typedef struct _LOADER_PARAMETER_BLOCK
+{
+    LIST_ENTRY LoadOrderListHead;
+    LIST_ENTRY MemoryDescriptorListHead;
+    LIST_ENTRY DriverList;
+    PVOID KernelStack;
+    PVOID Prcb;
+    PVOID Process;
+    PVOID Thread;
+    ULONG RegistryLength;
+    PVOID RegistryBase;
+    PCONFIGURATION_COMPONENT_DATA ConfigurationRoot;
+    LPSTR ArcBootDeviceName;
+    LPSTR ArcHalDeviceName;
+    LPSTR SystemRoot;
+    LPSTR BootRoot;
+    LPSTR CommandLine;
+    PNLS_TABLE_DATA NlsTables;
+    PARC_DISK_INFORMATION ArcDevices;
+    PVOID OEMFont;
+    PSETUP_LOADER_BLOCK SetupLdrBlock;
+    PLOADER_PARAMETER_EXTENSION LpbExtension;
+    union
+    {
+        I386_LOADER_BLOCK I386;
+    } u;
+} LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
+
+#else
+
+//
+// FIXME: ReactOS ONLY
 //
 typedef struct _LOADER_MODULE
 {
@@ -77,7 +193,6 @@ typedef struct _LOADER_MODULE
     ULONG String;
     ULONG Reserved;
 } LOADER_MODULE, *PLOADER_MODULE;
-
 typedef struct _LOADER_PARAMETER_BLOCK
 {
     ULONG Flags;
@@ -98,6 +213,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
     ULONG PageDirectoryEnd;
     ULONG KernelBase;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
+#endif
 
 //
 // Kernel Exports

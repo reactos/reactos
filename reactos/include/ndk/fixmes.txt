@@ -1,15 +1,3 @@
-Complete list of NDK Fixmes before 1.0 Release (Nov 27th 2005)
---------------------------------------------------------------
-______________________________________________________________________________________
-[CRITICAL]	- Breaking compatibility with official structures.
-|obtypes.h	- Object callbacks are ReactOS only definitions.         IFDEF-OUT ADDREAL
-|haltypes.h	- Loader Parameter Block is ReactOS Version, not NT.     IFDEF-OUT ADDREAL
-|
-[MAJOR]		- Using incorrect, missing, or invalid names or definitions.
-|extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined. WONTFIX
-|_____________________________________________________________________________________
-
-
 List of ReactOS Applications compiling with the NDK
 (verify, fix, and optimize their usage)
 --------------------------------------------------------------

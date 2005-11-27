@@ -117,12 +117,89 @@ typedef enum _OBJECT_INFORMATION_CLASS
     ObjectHandleInformation
 } OBJECT_INFORMATION_CLASS;
 
-/* FUNCTION TYPES ************************************************************/
+//
+// Dump Control Structure for Object Debugging
+//
+typedef struct _OBJECT_DUMP_CONTROL
+{
+    PVOID Stream;
+    ULONG Detail;
+} OBJECT_DUMP_CONTROL, *POBJECT_DUMP_CONTROL;
 
 #ifndef NTOS_MODE_USER
+#ifndef _REACTOS_
 
 //
-// FIXME: Object Callbacks
+// Object Type Callbacks
+//
+typedef VOID
+(NTAPI *OB_DUMP_METHOD)(
+    IN PVOID Object,
+    IN POB_DUMP_CONTROL Control OPTIONAL
+);
+
+typedef NTSTATUS
+(NTAPI *OB_OPEN_METHOD)(
+    IN OB_OPEN_REASON Reason,
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID ObjectBody,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG HandleCount
+);
+
+typedef VOID
+(NTAPI *OB_CLOSE_METHOD)(
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID Object,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG ProcessHandleCount,
+    IN ULONG SystemHandleCount
+);
+
+typedef VOID
+(NTAPI *OB_DELETE_METHOD)(
+    IN PVOID Object
+);
+
+typedef NTSTATUS
+(NTAPI *OB_PARSE_METHOD)(
+    IN PVOID ParseObject,
+    IN PVOID ObjectType,
+    IN OUT PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG Attributes,
+    IN OUT PUNICODE_STRING CompleteName,
+    IN OUT PUNICODE_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    OUT PVOID *Object
+);
+
+typedef NTSTATUS
+(NTAPI *OB_SECURITY_METHOD)(
+    IN PVOID Object,
+    IN SECURITY_OPERATION_CODE OperationType,
+    IN SECURITY_INFORMATION SecurityInformation,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN OUT PULONG CapturedLength,
+    IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
+    IN POOL_TYPE PoolType,
+    IN PGENERIC_MAPPING GenericMapping
+);
+
+typedef NTSTATUS
+(NTAPI *OB_QUERYNAME_METHOD)(
+    IN PVOID Object,
+    IN BOOLEAN HasObjectName,
+    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength
+);
+
+#else
+
+//
+// FIXME: ReactOS ONLY Object Callbacks
 //
 typedef NTSTATUS
 (NTAPI *OB_OPEN_METHOD)(
@@ -197,6 +274,8 @@ typedef NTSTATUS
     PWSTR RemainingPath,
     struct _OBJECT_ATTRIBUTES* ObjectAttributes
 );
+
+#endif
 
 #else
 

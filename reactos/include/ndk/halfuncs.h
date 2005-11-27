@@ -30,24 +30,28 @@ Author:
 //
 // Display Functions
 //
+NTHALAPI
 BOOLEAN
 NTAPI
 HalQueryDisplayOwnership(
     VOID
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalDisplayString(
     IN PCHAR String
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalQueryDisplayOwnership(
     VOID
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalReleaseDisplayOwnership(
@@ -57,12 +61,14 @@ HalReleaseDisplayOwnership(
 //
 // Initialization Functions
 //
+NTHALAPI
 BOOLEAN
 NTAPI
 HalAllProcessorsStarted(
     VOID
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalInitializeProcessor(
@@ -70,6 +76,7 @@ HalInitializeProcessor(
     PVOID ProcessorStack
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalInitSystem(
@@ -77,12 +84,14 @@ HalInitSystem(
     PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalReturnToFirmware(
     FIRMWARE_REENTRY Action
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalStartNextProcessor(
@@ -93,6 +102,7 @@ HalStartNextProcessor(
 //
 // Interrupt Functions
 //
+NTHALAPI
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
@@ -101,6 +111,7 @@ HalBeginSystemInterrupt(
     PKIRQL OldIrql
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalDisableSystemInterrupt(
@@ -108,6 +119,7 @@ HalDisableSystemInterrupt(
     KIRQL Irql
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalEnableSystemInterrupt(
@@ -116,6 +128,7 @@ HalEnableSystemInterrupt(
     KINTERRUPT_MODE InterruptMode
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalEndSystemInterrupt(
@@ -123,6 +136,7 @@ HalEndSystemInterrupt(
     ULONG Vector
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalGetEnvironmentVariable(
@@ -131,18 +145,21 @@ HalGetEnvironmentVariable(
     USHORT ValueLength
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalReportResourceUsage(
     VOID
 );
 
+NTHALAPI
 VOID
 FASTCALL
 HalRequestSoftwareInterrupt(
     KIRQL SoftwareInterruptRequested
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalRequestIpi(
@@ -152,6 +169,7 @@ HalRequestIpi(
 //
 // I/O Functions
 //
+NTHALAPI
 VOID
 NTAPI
 IoAssignDriveLetters(
@@ -164,6 +182,7 @@ IoAssignDriveLetters(
 //
 // Environment Functions
 //
+NTHALAPI
 BOOLEAN
 NTAPI
 HalSetEnvironmentVariable(
