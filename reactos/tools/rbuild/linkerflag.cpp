@@ -56,7 +56,7 @@ LinkerFlag::ProcessXML ()
 {
 	if ( node.value.size () == 0 )
 	{
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"<linkerflag> is empty." );
 	}

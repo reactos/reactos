@@ -62,10 +62,12 @@ LinkerScript::ProcessXML()
 			}
 		}
 		if ( !referenceResolved )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				node.location,
 				"<linkerscript> attribute 'base' references non-existant project or module '%s'",
 				att->value.c_str() );
+		}
 		directory = NormalizeFilename ( basePath + sSep + node.value );
 	}
 	else

@@ -18,7 +18,9 @@
 #ifndef XML_H
 #define XML_H
 
-#include "pch.h"
+#include <string>
+#include <vector>
+#include <stdarg.h>
 
 class XMLElement;
 
@@ -34,6 +36,75 @@ unsigned long long
 #endif
 filelen ( FILE* f );
 
+class XMLException
+{
+public:
+	XMLException ( const std::string& location, const char* format, ... );
+	const std::string& operator *() { return _e; }
+
+protected:
+	XMLException() {}
+	void SetExceptionV ( const std::string& location, const char* format, va_list args );
+	void SetException ( const std::string& location, const char* format, ... );
+
+private:
+	std::string _e;
+};
+
+class XMLSyntaxErrorException : public XMLException
+{
+public:
+	XMLSyntaxErrorException (
+		const std::string& location,
+		const char* format, ... )
+	{
+		va_list args;
+		va_start ( args, format );
+		SetExceptionV ( location, format, args );
+		va_end ( args );
+	}
+};
+
+class XMLRequiredAttributeNotFoundException : public XMLException
+{
+public:
+	XMLRequiredAttributeNotFoundException (
+		const std::string& location,
+		const std::string& attributeName,
+		const std::string& elementName )
+	{
+		SetException ( location, "Required attribute '%s' not found in element '%s'",
+			attributeName.c_str(),
+			elementName.c_str() );
+	}
+};
+
+class XMLInvalidBuildFileException : public XMLException
+{
+public:
+	XMLInvalidBuildFileException (
+		const std::string& location,
+		const char* format,
+		... )
+	{
+		va_list args;
+		va_start ( args, format );
+		SetExceptionV ( location, format, args );
+		va_end ( args );
+	}
+};
+
+class XMLFileNotFoundException : public XMLException
+{
+public:
+	XMLFileNotFoundException (
+		const std::string& location,
+		const std::string& filename )
+	{
+		SetException ( location, "Can't open file '%s'", filename.c_str() );
+	}
+};
+
 class Path
 {
 	std::vector<std::string> path;
@@ -46,9 +117,10 @@ public:
 	static std::string RelativeFromWorkingDirectory ( const std::string& path );
 	static std::string RelativeFromDirectory ( const std::string& path, const std::string& base_directory);
 
-	static void Split ( std::vector<std::string>& out,
-	                    const std::string& path,
-	                    bool include_last );
+	static void Split (
+		std::vector<std::string>& out,
+		const std::string& path,
+		bool include_last );
 };
 
 class XMLInclude
@@ -59,8 +131,13 @@ public:
 	std::string topIncludeFilename;
 	bool fileExists;
 
-	XMLInclude ( XMLElement* e_, const Path& path_, const std::string topIncludeFilename_ )
-		: e ( e_ ), path ( path_ ), topIncludeFilename ( topIncludeFilename_ )
+	XMLInclude (
+		XMLElement* e_,
+		const Path& path_,
+		const std::string topIncludeFilename_ )
+		: e ( e_ ),
+		path ( path_ ),
+		topIncludeFilename ( topIncludeFilename_ )
 	{
 	}
 };
@@ -117,21 +194,43 @@ public:
 	std::vector<XMLElement*> subElements;
 	std::string value;
 
-	XMLElement ( XMLFile* xmlFile,
-	             const std::string& location );
+	XMLElement (
+		XMLFile* xmlFile,
+		const std::string& location );
+
 	~XMLElement();
-	bool Parse(const std::string& token,
-	           bool& end_tag);
+
+	bool Parse (
+		const std::string& token,
+		bool& end_tag);
+
 	void AddSubElement ( XMLElement* e );
-	XMLAttribute* GetAttribute ( const std::string& attribute,
-	                             bool required);
-	const XMLAttribute* GetAttribute ( const std::string& attribute,
-	                                   bool required) const;
+
+	XMLAttribute* GetAttribute (
+		const std::string& attribute,
+		bool required);
+
+	const XMLAttribute* GetAttribute (
+		const std::string& attribute,
+		bool required ) const;
+
+	int FindElement (
+		const std::string& type,
+		int prev = -1 ) const;
+
+	int GetElements (
+		const std::string& type,
+		std::vector<XMLElement*>& v );
+
+	int GetElements (
+		const std::string& type,
+		std::vector<const XMLElement*>& v ) const;
 };
 
 XMLElement*
-XMLLoadFile ( const std::string& filename,
-	          const Path& path,
-	          XMLIncludes& includes );
+XMLLoadFile (
+	const std::string& filename,
+	const Path& path,
+	XMLIncludes& includes );
 
 #endif // XML_H

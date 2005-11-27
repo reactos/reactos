@@ -15,11 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "pch.h"
 
-#ifndef MAX_PATH
-#define MAX_PATH _MAX_PATH
-#endif
+#ifdef _MSC_VER
+#pragma warning ( disable : 4786 )
+#endif//_MSC_VER
 
 #ifdef WIN32
 #	include <direct.h>
@@ -31,8 +30,11 @@
 #include <assert.h>
 
 #include "XML.h"
-#include "exception.h"
 #include "ssprintf.h"
+
+#ifndef MAX_PATH
+#define MAX_PATH _MAX_PATH
+#endif
 
 using std::string;
 using std::vector;
@@ -46,6 +48,29 @@ static const char* WSEQ = " =\t\r\n";
 
 string working_directory;
 
+XMLException::XMLException (
+	const std::string& location,
+	const char* format, ... )
+{
+	va_list args;
+	va_start ( args, format );
+	SetExceptionV ( location, format, args );
+	va_end ( args );
+}
+
+void XMLException::SetExceptionV ( const std::string& location, const char* format, va_list args )
+{
+	_e = location + ": " + ssvprintf(format,args);
+}
+
+void XMLException::SetException ( const std::string& location, const char* format, ... )
+{
+	va_list args;
+	va_start ( args, format );
+	SetExceptionV ( location, format, args );
+	va_end ( args );
+}
+
 XMLIncludes::~XMLIncludes()
 {
 	for ( size_t i = 0; i < this->size(); i++ )
@@ -56,7 +81,7 @@ void
 InitWorkingDirectory()
 {
 	// store the current directory for path calculations
-	working_directory.resize ( _MAX_PATH );
+	working_directory.resize ( MAX_PATH );
 	working_directory[0] = 0;
 	getcwd ( &working_directory[0], working_directory.size() );
 	working_directory.resize ( strlen ( working_directory.c_str() ) );
@@ -70,18 +95,17 @@ unsigned long long
 filelen ( FILE* f )
 {
 #ifdef WIN32
-        return _filelengthi64 ( _fileno(f) );
+	return _filelengthi64 ( _fileno(f) );
 #else
 # ifdef __FreeBSD__
-        struct stat file_stat;
-        if ( fstat(fileno(f), &file_stat) != 0 )
+	struct stat file_stat;
+	if ( fstat(fileno(f), &file_stat) != 0 )
 # else
-        struct stat64 file_stat;
-        if ( fstat64(fileno(f), &file_stat) != 0 )
+	struct stat64 file_stat;
+	if ( fstat64(fileno(f), &file_stat) != 0 )
 # endif // __FreeBSD__
-                return 0;
-        return file_stat.st_size;
-
+		return 0;
+	return file_stat.st_size;
 #endif // WIN32
 }
 
@@ -227,9 +251,10 @@ Path::RelativeFromDirectory (
 }
 
 void
-Path::Split ( vector<string>& out,
-              const string& path,
-              bool include_last )
+Path::Split (
+	vector<string>& out,
+	const string& path,
+	bool include_last )
 {
 	string s ( path );
 	const char* prev = strtok ( &s[0], "/\\" );
@@ -263,7 +288,7 @@ XMLFile::close()
 }
 
 bool
-XMLFile::open(const string& filename_)
+XMLFile::open ( const string& filename_ )
 {
 	close();
 	FILE* f = fopen ( filename_.c_str(), "rb" );
@@ -297,7 +322,7 @@ XMLFile::next_is_text()
 }
 
 bool
-XMLFile::more_tokens()
+XMLFile::more_tokens ()
 {
 	return _p != _end;
 }
@@ -305,7 +330,7 @@ XMLFile::more_tokens()
 // get_token() is used to return a token, and move the pointer
 // past the token
 bool
-XMLFile::get_token(string& token)
+XMLFile::get_token ( string& token )
 {
 	const char* tokend;
 	if ( !strncmp ( _p, "<!--", 4 ) )
@@ -372,8 +397,9 @@ XMLAttribute::XMLAttribute()
 {
 }
 
-XMLAttribute::XMLAttribute(const string& name_,
-                           const string& value_)
+XMLAttribute::XMLAttribute(
+	const string& name_,
+	const string& value_ )
 	: name(name_), value(value_)
 {
 }
@@ -391,8 +417,9 @@ XMLAttribute& XMLAttribute::operator = ( const XMLAttribute& src )
 	return *this;
 }
 
-XMLElement::XMLElement ( XMLFile* xmlFile,
-                         const string& location )
+XMLElement::XMLElement (
+	XMLFile* xmlFile,
+	const string& location )
 	: xmlFile ( xmlFile ),
 	  location ( location ),
 	  parentElement ( NULL )
@@ -422,8 +449,9 @@ XMLElement::AddSubElement ( XMLElement* e )
 // Return Value: returns true if you need to look for a </tag> for
 // the one it just parsed...
 bool
-XMLElement::Parse(const string& token,
-                  bool& end_tag)
+XMLElement::Parse (
+	const string& token,
+	bool& end_tag )
 {
 	const char* p = token.c_str();
 	assert ( *p == '<' );
@@ -493,8 +521,9 @@ XMLElement::Parse(const string& token,
 		}
 		else if ( name[0] != '!' )
 		{
-			throw XMLSyntaxErrorException ( location,
-			                                "attributes must have values" );
+			throw XMLSyntaxErrorException (
+				location,
+				"attributes must have values" );
 		}
 		attributes.push_back ( new XMLAttribute ( attribute, value ) );
 	}
@@ -502,8 +531,9 @@ XMLElement::Parse(const string& token,
 }
 
 XMLAttribute*
-XMLElement::GetAttribute ( const string& attribute,
-                           bool required )
+XMLElement::GetAttribute (
+	const string& attribute,
+	bool required )
 {
 	// this would be faster with a tree-based container, but our attribute
 	// lists are likely to stay so short as to not be an issue.
@@ -514,16 +544,18 @@ XMLElement::GetAttribute ( const string& attribute,
 	}
 	if ( required )
 	{
-		throw RequiredAttributeNotFoundException ( location,
-		                                           attribute,
-		                                           name );
+		throw XMLRequiredAttributeNotFoundException (
+			location,
+			attribute,
+			name );
 	}
 	return NULL;
 }
 
 const XMLAttribute*
-XMLElement::GetAttribute ( const string& attribute,
-                           bool required ) const
+XMLElement::GetAttribute (
+	const string& attribute,
+	bool required ) const
 {
 	// this would be faster with a tree-based container, but our attribute
 	// lists are likely to stay so short as to not be an issue.
@@ -534,11 +566,55 @@ XMLElement::GetAttribute ( const string& attribute,
 	}
 	if ( required )
 	{
-		throw RequiredAttributeNotFoundException ( location,
-		                                           attribute,
-		                                           name );
+		throw XMLRequiredAttributeNotFoundException (
+			location,
+			attribute,
+			name );
 	}
 	return NULL;
+}
+
+int
+XMLElement::FindElement ( const std::string& type, int prev ) const
+{
+	int done = subElements.size();
+	while ( ++prev < done )
+	{
+		XMLElement* e = subElements[prev];
+		if ( e->name == type )
+			return prev;
+	}
+	return -1;
+}
+
+int
+XMLElement::GetElements (
+	const std::string& type,
+	std::vector<XMLElement*>& v )
+{
+	int find = FindElement ( type );
+	v.resize ( 0 );
+	while ( find != -1 )
+	{
+		v.push_back ( subElements[find] );
+		find = FindElement ( type, find );
+	}
+	return v.size();
+}
+
+int
+XMLElement::GetElements (
+	const std::string& type,
+	std::vector<const XMLElement*>& v ) const
+{
+	int find = FindElement ( type );
+	v.resize ( 0 );
+	while ( find != -1 )
+	{
+		v.push_back ( subElements[find] );
+		find = FindElement ( type, find );
+	}
+	return v.size();
 }
 
 // XMLParse()
@@ -549,30 +625,38 @@ XMLElement::GetAttribute ( const string& attribute,
 // it's parsed data. Keep calling this function until it returns NULL
 // (no more data)
 XMLElement*
-XMLParse ( XMLFile& f,
-           XMLIncludes* includes,
-           const Path& path,
-           bool* pend_tag = NULL )
+XMLParse (
+	XMLFile& f,
+	XMLIncludes* includes,
+	const Path& path,
+	bool* pend_tag = NULL )
 {
 	string token, location;
 	if ( !f.get_token(token,location) )
 		return NULL;
 	bool end_tag, is_include = false;
 
-	while ( token[0] != '<'
-	        || !strncmp ( token.c_str (), "<!--", 4 )
-	        || !strncmp ( token.c_str (), "<?", 2 ) )
+	while
+	(
+		token[0] != '<'
+		|| !strncmp ( token.c_str (), "<!--", 4 )
+		|| !strncmp ( token.c_str (), "<?", 2 )
+	)
 	{
 		if ( token[0] != '<' )
-			throw XMLSyntaxErrorException ( location,
-			                                "expecting xml tag, not '%s'",
-			                                token.c_str () );
-		if ( !f.get_token(token,location) )
+		{
+			throw XMLSyntaxErrorException (
+				location,
+				"expecting xml tag, not '%s'",
+				token.c_str () );
+		}
+		if ( !f.get_token ( token, location ) )
 			return NULL;
 	}
 
-	XMLElement* e = new XMLElement ( &f,
-	                                 location );
+	XMLElement* e = new XMLElement (
+		&f,
+		location );
 	bool bNeedEnd = e->Parse ( token, end_tag );
 
 	if ( e->name == "xi:include" && includes )
@@ -581,8 +665,10 @@ XMLParse ( XMLFile& f,
 		att = e->GetAttribute ( "href", true );
 		assert ( att );
 		string includeFile ( path.Fixup ( att->value, true ) );
-		string topIncludeFile ( Path::RelativeFromWorkingDirectory ( includeFile ) );
-		includes->push_back ( new XMLInclude ( e, path, topIncludeFile ) );
+		string topIncludeFile (
+			Path::RelativeFromWorkingDirectory ( includeFile ) );
+		includes->push_back (
+			new XMLInclude ( e, path, topIncludeFile ) );
 		is_include = true;
 	}
 
@@ -593,9 +679,10 @@ XMLParse ( XMLFile& f,
 		else if ( end_tag )
 		{
 			delete e;
-			throw XMLSyntaxErrorException ( location,
-			                                "end tag '%s' not expected",
-			                                token.c_str() );
+			throw XMLSyntaxErrorException (
+				location,
+				"end tag '%s' not expected",
+				token.c_str() );
 			return NULL;
 		}
 		return e;
@@ -607,26 +694,29 @@ XMLParse ( XMLFile& f,
 		{
 			if ( !f.get_token ( token, location ) || token.size () == 0 )
 			{
-				throw InvalidBuildFileException (
+				throw XMLInvalidBuildFileException (
 					location,
 					"internal tool error - get_token() failed when more_tokens() returned true" );
 				break;
 			}
 			if ( e->subElements.size() && !bThisMixingErrorReported )
 			{
-				throw XMLSyntaxErrorException ( location,
-				                                "mixing of inner text with sub elements" );
+				throw XMLSyntaxErrorException (
+					location,
+					"mixing of inner text with sub elements" );
 				bThisMixingErrorReported = true;
 			}
 			if ( strchr ( token.c_str (), '>' ) )
 			{
-				throw XMLSyntaxErrorException ( location,
-				                                "invalid symbol '>'" );
+				throw XMLSyntaxErrorException (
+					location,
+					"invalid symbol '>'" );
 			}
 			if ( e->value.size() > 0 )
 			{
-				throw XMLSyntaxErrorException ( location,
-				                                "multiple instances of inner text" );
+				throw XMLSyntaxErrorException (
+					location,
+					"multiple instances of inner text" );
 				e->value += " " + token;
 			}
 			else
@@ -634,13 +724,14 @@ XMLParse ( XMLFile& f,
 		}
 		else
 		{
-			XMLElement* e2 = XMLParse ( f, is_include ? NULL : includes, path, &end_tag );
+			XMLElement* e2 = XMLParse (
+				f, is_include ? NULL : includes, path, &end_tag );
 			if ( !e2 )
 			{
 				string e_location = e->location;
 				string e_name = e->name;
 				delete e;
-				throw InvalidBuildFileException (
+				throw XMLInvalidBuildFileException (
 					e_location,
 					"end of file found looking for end tag: </%s>",
 					e_name.c_str() );
@@ -669,8 +760,9 @@ XMLParse ( XMLFile& f,
 			{
 				string e_location = e->location;
 				delete e;
-				throw XMLSyntaxErrorException ( e_location,
-				                                "mixing of inner text with sub elements" );
+				throw XMLSyntaxErrorException (
+					e_location,
+					"mixing of inner text with sub elements" );
 				bThisMixingErrorReported = true;
 			}
 			e->AddSubElement ( e2 );
@@ -680,7 +772,11 @@ XMLParse ( XMLFile& f,
 }
 
 void
-XMLReadFile ( XMLFile& f, XMLElement& head, XMLIncludes& includes, const Path& path )
+XMLReadFile (
+	XMLFile& f,
+	XMLElement& head,
+	XMLIncludes& includes,
+	const Path& path )
 {
 	for ( ;; )
 	{
@@ -692,8 +788,9 @@ XMLReadFile ( XMLFile& f, XMLElement& head, XMLIncludes& includes, const Path& p
 }
 
 XMLElement*
-XMLLoadInclude ( XMLInclude& include,
-	             XMLIncludes& includes )
+XMLLoadInclude (
+	XMLInclude& include,
+	XMLIncludes& includes )
 {
 	XMLAttribute* att;
 	att = include.e->GetAttribute("href", true);
@@ -720,13 +817,17 @@ XMLLoadInclude ( XMLInclude& include,
 					{
 						att = e3->GetAttribute ( "href", true );
 						assert ( att );
-						string includeFile ( include.path.Fixup ( att->value, true ) );
-						string topIncludeFile ( Path::RelativeFromWorkingDirectory ( includeFile ) );
-						XMLInclude* fallbackInclude = new XMLInclude ( e3, include.path, topIncludeFile );
-						return XMLLoadInclude ( *fallbackInclude, includes );
+						string includeFile (
+							include.path.Fixup ( att->value, true ) );
+						string topIncludeFile (
+							Path::RelativeFromWorkingDirectory ( includeFile ) );
+						XMLInclude* fallbackInclude =
+							new XMLInclude ( e3, include.path, topIncludeFile );
+						return XMLLoadInclude (
+							*fallbackInclude, includes );
 					}
 				}
-				throw InvalidBuildFileException (
+				throw XMLInvalidBuildFileException (
 					e2->location,
 					"<xi:fallback> must have a <xi:include> sub-element" );
 				return NULL;
@@ -737,8 +838,9 @@ XMLLoadInclude ( XMLInclude& include,
 	else
 	{
 		include.fileExists = true;
-		XMLElement* new_e = new XMLElement ( fInc,
-		                                     include.e->location );
+		XMLElement* new_e = new XMLElement (
+			fInc,
+			include.e->location );
 		new_e->name = "xi:included";
 		Path path2 ( include.path, att->value );
 		XMLReadFile ( *fInc, *new_e, includes, path2 );
@@ -754,10 +856,12 @@ XMLLoadFile ( const string& filename,
 	XMLFile* f = new XMLFile();
 
 	if ( !f->open ( filename ) )
-		throw FileNotFoundException ( filename );
+	{
+		throw XMLFileNotFoundException ( "(virtual)", filename );
+		return NULL;
+	}
 
-	XMLElement* head = new XMLElement ( f,
-	                                    "(virtual)" );
+	XMLElement* head = new XMLElement ( f, "(virtual)" );
 
 	XMLReadFile ( *f, *head, includes, path );
 
@@ -767,17 +871,17 @@ XMLLoadFile ( const string& filename,
 		XMLElement* e2 = XMLLoadInclude ( *includes[i], includes );
 		if ( !e2 )
 		{
-			throw FileNotFoundException (
-				ssprintf ( "%s (referenced from %s)",
-					e->GetAttribute ( "top_href", true )->value.c_str (),
-					f->Location ().c_str () ) );
+			throw XMLFileNotFoundException (
+				f->Location(),
+				e->GetAttribute ( "top_href", true )->value );
 		}
 		XMLElement* parent = e->parentElement;
 		XMLElement** parent_container = NULL;
 		if ( !parent )
 		{
+			string location = e->location;
 			delete e;
-			throw Exception ( "internal tool error: xi:include doesn't have a parent" );
+			throw XMLException ( location, "internal tool error: xi:include doesn't have a parent" );
 			return NULL;
 		}
 		for ( size_t j = 0; j < parent->subElements.size (); j++ )
@@ -790,8 +894,9 @@ XMLLoadFile ( const string& filename,
 		}
 		if ( !parent_container )
 		{
+			string location = e->location;
 			delete e;
-			throw Exception ( "internal tool error: couldn't find xi:include in parent's sub-elements" );
+			throw XMLException ( location, "internal tool error: couldn't find xi:include in parent's sub-elements" );
 			return NULL;
 		}
 		// replace inclusion tree with the imported tree

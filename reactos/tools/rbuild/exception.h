@@ -19,6 +19,7 @@
 #define __EXCEPTION_H
 
 #include "pch.h"
+#include "XML.h"
 
 class Exception
 {
@@ -26,11 +27,15 @@ public:
 	Exception ( const std::string& message );
 	Exception ( const char* format,
 	            ...);
-	std::string Message;
+	const std::string& operator *() { return _e; }
+
 protected:
 	Exception ();
-	void SetMessage ( const char* message,
-	                  va_list args );
+	void SetMessage ( const char* message, ... );
+	void SetMessageV ( const char* message, va_list args );
+
+private:
+	std::string _e;
 };
 
 
@@ -68,30 +73,8 @@ public:
 	std::string Filename;
 };
 
-class InvalidBuildFileException : public Exception
-{
-public:
-	InvalidBuildFileException ( const std::string& location,
-	                            const char* message,
-	                            ...);
-	void SetLocationMessage ( const std::string& location,
-	                          const char* message,
-	                          va_list args );
-protected:
-	InvalidBuildFileException ();
-};
 
-
-class XMLSyntaxErrorException : public InvalidBuildFileException
-{
-public:
-	XMLSyntaxErrorException ( const std::string& location,
-	                          const char* message,
-	                          ... );
-};
-
-
-class RequiredAttributeNotFoundException : public InvalidBuildFileException
+class RequiredAttributeNotFoundException : public XMLInvalidBuildFileException
 {
 public:
 	RequiredAttributeNotFoundException ( const std::string& location,
@@ -100,7 +83,7 @@ public:
 };
 
 
-class InvalidAttributeValueException : public InvalidBuildFileException
+class InvalidAttributeValueException : public XMLInvalidBuildFileException
 {
 public:
 	InvalidAttributeValueException ( const std::string& location,
@@ -122,7 +105,7 @@ public:
 	UnknownBackendException ( const std::string& name );
 };
 
-class UnknownModuleTypeException : public InvalidBuildFileException
+class UnknownModuleTypeException : public XMLInvalidBuildFileException
 {
 public:
 	UnknownModuleTypeException ( const std::string& location,

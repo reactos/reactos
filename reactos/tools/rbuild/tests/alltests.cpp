@@ -167,10 +167,14 @@ public:
 				if (test.Failed)
 					numberOfFailedTests++;
 			}
-			catch (Exception& ex)
+			catch ( Exception& ex )
 			{
-				printf("%s\n",
-				       ex.Message.c_str());
+				printf ( "%s\n", (*ex).c_str () );
+				numberOfFailedTests++;
+			}
+			catch ( XMLException& ex )
+			{
+				printf ( "%s\n", (*ex).c_str () );
 				numberOfFailedTests++;
 			}
 		}

@@ -51,7 +51,7 @@ CompilerFlag::Initialize ()
 {
 	if (node.value.size () == 0)
 	{
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"<compilerflag> is empty." );
 	}

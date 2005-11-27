@@ -36,8 +36,9 @@ static string RootXmlFile = "ReactOS.xml";
 static Configuration configuration;
 
 bool
-ParseAutomaticDependencySwitch ( char switchChar2,
-	                             char* switchStart )
+ParseAutomaticDependencySwitch (
+	char switchChar2,
+	char* switchStart )
 {
 	switch ( switchChar2 )
 	{
@@ -62,8 +63,9 @@ ParseAutomaticDependencySwitch ( char switchChar2,
 }
 
 bool
-ParseCompilationUnitSwitch ( char switchChar2,
-	                     char* switchStart )
+ParseCompilationUnitSwitch (
+	char switchChar2,
+	char* switchStart )
 {
 	switch ( switchChar2 )
 	{
@@ -79,8 +81,9 @@ ParseCompilationUnitSwitch ( char switchChar2,
 }
 
 bool
-ParseVCProjectSwitch ( char switchChar2,
-	               char* switchStart )
+ParseVCProjectSwitch (
+	char switchChar2,
+	char* switchStart )
 {
 	switch ( switchChar2 )
 	{
@@ -153,8 +156,11 @@ ParseSwitch ( int argc, char** argv, int index )
 	{
 		case 'v':
 			if (switchChar2 == 's')
-				return ParseVCProjectSwitch ( switchChar2,
-			                                      argv[index] );
+			{
+				return ParseVCProjectSwitch (
+					switchChar2,
+					argv[index] );
+			}
 			else
 				configuration.Verbose = true;
 			break;
@@ -162,11 +168,13 @@ ParseSwitch ( int argc, char** argv, int index )
 			configuration.CleanAsYouGo = true;
 			break;
 		case 'd':
-			return ParseAutomaticDependencySwitch ( switchChar2,
-			                                        argv[index] );
+			return ParseAutomaticDependencySwitch (
+				switchChar2,
+				argv[index] );
 		case 'u':
-			return ParseCompilationUnitSwitch ( switchChar2,
-			                                    argv[index] );
+			return ParseCompilationUnitSwitch (
+				switchChar2,
+				argv[index] );
 		case 'r':
 			RootXmlFile = string(&argv[index][2]);
 			break;
@@ -175,8 +183,9 @@ ParseSwitch ( int argc, char** argv, int index )
 		case 'p':
 			return ParseProxyMakefileSwitch ( switchChar2 );
 		default:
-			printf ( "Unknown switch -%c\n",
-			         switchChar );
+			printf (
+				"Unknown switch -%c\n",
+				switchChar );
 			return false;
 	}
 	return true;
@@ -239,18 +248,23 @@ main ( int argc, char** argv )
 		printf ( "done\n" );
 		project.WriteConfigurationFile ();
 		project.ExecuteInvocations ();
-		Backend* backend = Backend::Factory::Create ( BuildSystem,
-		                                              project,
-		                                              configuration );
+		Backend* backend = Backend::Factory::Create (
+			BuildSystem,
+			project,
+			configuration );
 		backend->Process ();
 		delete backend;
 
 		return 0;
 	}
-	catch (Exception& ex)
+	catch ( Exception& ex )
 	{
-		printf ( "%s\n",
-		         ex.Message.c_str () );
+		printf ( "%s\n", (*ex).c_str () );
+		return 1;
+	}
+	catch ( XMLException& ex )
+	{
+		printf ( "%s\n", (*ex).c_str () );
 		return 1;
 	}
 }

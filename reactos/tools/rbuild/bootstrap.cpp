@@ -72,7 +72,7 @@ Bootstrap::Initialize ()
 {
 	if ( !IsSupportedModuleType ( module->type ) )
 	{
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"<bootstrap> is not applicable for this module type." );
 	}

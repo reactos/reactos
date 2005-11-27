@@ -246,7 +246,7 @@ Project::ReadXml ()
 	if (node == NULL)
 		node = head->subElements[0];
 
-	throw InvalidBuildFileException (
+	throw XMLInvalidBuildFileException (
 		node->location,
 		"Document contains no 'project' tag." );
 }
@@ -295,12 +295,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	if ( e.name == "module" )
 	{
 		if ( parseContext.ifData )
-			throw InvalidBuildFileException (
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"<module> is not a valid sub-element of <if>" );
 		Module* module = new Module ( *this, e, path );
 		if ( LocateModule ( module->name ) )
-			throw InvalidBuildFileException (
+			throw XMLInvalidBuildFileException (
 				node->location,
 				"module name conflict: '%s' (originally defined at %s)",
 				module->name.c_str(),
@@ -387,10 +387,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.properties.push_back ( property );
 	}
 	if ( subs_invalid && e.subElements.size() )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			e.location,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
+	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
 }

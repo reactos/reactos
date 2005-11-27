@@ -1944,8 +1944,9 @@ MingwModuleHandler::GenerateInvocations () const
 
 		if ( invoke.invokeModule->type != BuildTool )
 		{
-			throw InvalidBuildFileException ( module.node.location,
-			                                  "Only modules of type buildtool can be invoked." );
+			throw XMLInvalidBuildFileException (
+				module.node.location,
+				"Only modules of type buildtool can be invoked." );
 		}
 
 		string invokeTarget = module.GetInvocationTarget ( i );
