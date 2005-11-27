@@ -244,21 +244,34 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
       current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
 				  DirtySegmentListEntry);
       current_entry = current_entry->Flink;
+    
+//      Locked = current->Bcb->Callbacks.AcquireForLazyWrite(current->Bcb->Context, FALSE);
+      Locked = ExTryToAcquireResourceExclusiveLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
+      if (!Locked)
+        {
+          continue;
+        }
       Locked = CcTryToAcquireBrokenMutex(&current->Lock);
       if (!Locked)
 	{
+//          current->Bcb->Callbacks.ReleaseFromLazyWrite(current->Bcb->Context);
+          ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
 	  continue;
 	}
       ASSERT(current->Dirty);
       if (current->ReferenceCount > 1)
 	{
 	  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&current->Lock);
+//          current->Bcb->Callbacks.ReleaseFromLazyWrite(current->Bcb->Context);
+          ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
 	  continue;
 	}
       ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ViewLock);
       PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
       Status = CcRosFlushCacheSegment(current);
       ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&current->Lock);
+//      current->Bcb->Callbacks.ReleaseFromLazyWrite(current->Bcb->Context);
+      ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
       if (!NT_SUCCESS(Status) &&  (Status != STATUS_END_OF_FILE))
       {
 	 DPRINT1("CC: Failed to flush cache segment.\n");
@@ -443,7 +456,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
       if (current->FileOffset <= FileOffset &&
 	  (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
 	{
-      CcRosCacheSegmentIncRefCount(current);
+          CcRosCacheSegmentIncRefCount(current);
 	  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
           ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&current->Lock);
 	  return(current);
