@@ -116,7 +116,7 @@ _KiRaiseUserExceptionDispatcher@0:
     sub esp, SIZEOF_EXCEPTION_RECORD
 
     /* Fill out the record */
-    mov eax, [fs:TEB_SELECTOR]
+    mov eax, [fs:KPCR_TEB]
     mov eax, [eax+TEB_EXCEPTION_CODE]
     mov [esp+EXCEPTION_RECORD_EXCEPTION_CODE], eax
     mov dword ptr [esp+EXCEPTION_RECORD_EXCEPTION_FLAGS], 0
