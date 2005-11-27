@@ -10,11 +10,7 @@
  * ====================================================
  */
 
-#include <float.h>
-#include <math.h>
-#include <internal/ieee.h>
-#include <internal/math.h>
-
+#include "precomp.h"
 
 //static const double one = 1.0;
 

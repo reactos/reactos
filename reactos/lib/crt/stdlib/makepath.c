@@ -1,5 +1,6 @@
 /* $Id$
  */
+#include "precomp.h"
 #include <stdlib.h>
 #include <string.h>
 

@@ -2,8 +2,6 @@
  *
  */
 #include "precomp.h"
-#include <internal/tls.h>
-
 #include "doserrmap.h"
 
 /*

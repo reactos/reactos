@@ -12,11 +12,6 @@
 
 #include "precomp.h"
 
-#include <conio.h>
-#include <internal/console.h>
-
-
-
 int char_avail = 0;
 int ungot_char = 0;
 

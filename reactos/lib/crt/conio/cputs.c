@@ -9,7 +9,6 @@
  */
 
 #include "precomp.h"
-#include <conio.h>
 
 /*
  * @implemented

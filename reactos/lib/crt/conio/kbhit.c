@@ -9,9 +9,6 @@
  */
 
 #include "precomp.h"
-#include <conio.h>
-#include <internal/console.h>
-
 
 /*
  * FIXME PeekConsoleInput returns more than keyboard hits

@@ -1,9 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include "precomp.h"
 
-#include <errno.h>
-
-
 #ifdef perror
 #undef perror
 void perror(const char *s);

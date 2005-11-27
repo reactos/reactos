@@ -1,5 +1,4 @@
 #include "precomp.h"
-#include <errno.h>
 #include <tchar.h>
 
 #define NDEBUG

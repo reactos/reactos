@@ -26,7 +26,6 @@
 #include "precomp.h"
 
 #include <wchar.h>
-#include <conio.h>
 #include <ctype.h>
 
 #define NDEBUG

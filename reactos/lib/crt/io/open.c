@@ -42,7 +42,6 @@
 #include <stdarg.h>
 #endif
 
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <share.h>

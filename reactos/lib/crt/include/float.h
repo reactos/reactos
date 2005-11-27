@@ -91,9 +91,13 @@
 #define _FPE_STACKUNDERFLOW	0x8b
 #define _FPE_EXPLICITGEN	0x8c    /* raise( SIGFPE ); */
 
-#ifndef __GNUC__
-#define DBL_MAX_10_EXP  308  
+#ifndef DBL_MAX_10_EXP
+#define DBL_MAX_10_EXP  308
+#endif
+#ifndef S_IFIFO
 #define S_IFIFO			-1
+#endif
+#ifndef UINT64_MAX
 #define UINT64_MAX	0xffffffffffffffff
 #endif
 

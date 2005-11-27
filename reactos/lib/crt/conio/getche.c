@@ -10,9 +10,7 @@
  *              28/12/98: Created
  */
 
-#include <conio.h>
-#include <internal/console.h>
-
+#include "precomp.h"
 
 int _getche(void)
 {

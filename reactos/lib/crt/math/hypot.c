@@ -17,10 +17,6 @@
  */
 #include "precomp.h"
 
-#include <float.h>
-#include <math.h>
-#include <errno.h>
-
 /* Approximate square roots of DBL_MAX and DBL_MIN.  Numbers
    between these two shouldn't neither overflow nor underflow
    when squared.  */

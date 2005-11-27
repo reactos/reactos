@@ -2,7 +2,6 @@
 
 #include <signal.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 
 void _default_handler(int signal);

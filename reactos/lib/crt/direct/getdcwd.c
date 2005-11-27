@@ -2,7 +2,6 @@
 #include <direct.h>
 #include <internal/debug.h>
 #include <tchar.h>
-#include <errno.h>
 
 /*
  * @implemented

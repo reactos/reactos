@@ -8,8 +8,6 @@
 
 #include "precomp.h"
 
-#include <conio.h>
-
 /*
  * @unimplemented
  */

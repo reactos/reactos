@@ -22,7 +22,6 @@
  */
 
 #include "precomp.h"
-#include <conio.h>
 
 int _fgetchar(void)
 {

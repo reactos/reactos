@@ -23,7 +23,6 @@
 
 #include "precomp.h"
 
-#include <errno.h>
 #include <malloc.h>
 #include <stdlib.h>
 #include <internal/mtdll.h>

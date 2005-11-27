@@ -2,12 +2,6 @@
 
 #include "precomp.h"
 
-int _isnanl(double x);
-int _isinfl(double x);
-int _isnan(double x);
-int _isinf(double x);
-
-
 int
 __vfwprintf(FILE *fp, const wchar_t *fmt0, va_list argp);
 

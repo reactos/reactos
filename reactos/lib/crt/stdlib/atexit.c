@@ -1,6 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <internal/atexit.h>
+#include "precomp.h"
 
 void _atexit_cleanup(void)
 {
