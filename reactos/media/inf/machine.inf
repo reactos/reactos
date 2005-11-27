@@ -36,6 +36,7 @@ HKR, , Icon,           0, "-27"
 %*PNP0A05.DeviceDesc% = NO_DRV,*PNP0A05
 %*PNP0B00.DeviceDesc% = NO_DRV,*PNP0B00
 %*PNP0C02.DeviceDesc% = NO_DRV,*PNP0C02
+%*PNP0C04.DeviceDesc% = NO_DRV,*PNP0C04
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
@@ -112,6 +113,7 @@ GenericMfg = "(Generic system devices)"
 *PNP0A05.DeviceDesc = "Generic ACPI bus"
 *PNP0B00.DeviceDesc = "AT real-time clock"
 *PNP0C02.DeviceDesc = "Motherboard resources"
+*PNP0C04.DeviceDesc = "Math coprocessor"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 ACPI\FixedButton.DeviceDesc ="ACPI Fixed Feature Button"
 PCI\CC_0600.DeviceDesc = "Standard CPU to PCI bridge"
