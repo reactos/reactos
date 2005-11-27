@@ -863,11 +863,8 @@ NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex,
       DPRINT1("addIPAddress for if %d returning 0x%lx\n", IfIndex, status);
   }
 
-  switch( status ) {
-      case STATUS_SUCCESS: return ERROR_SUCCESS;
-      case STATUS_DEVICE_DOES_NOT_EXIST: return ERROR_DEV_NOT_EXIST;
-      default: return status;
-  }
+  return status;
+
 }
 
 NTSTATUS deleteIpAddress( ULONG NteContext ) 
@@ -897,9 +894,5 @@ NTSTATUS deleteIpAddress( ULONG NteContext )
       DPRINT1("deleteIpAddress(%lu) returning 0x%lx\n", NteContext, status);
   }
 
-
-  if( NT_SUCCESS(status) ) 
-	  return ERROR_SUCCESS;
-  else 
-	  return ERROR_GEN_FAILURE;
+  return status;
 }
