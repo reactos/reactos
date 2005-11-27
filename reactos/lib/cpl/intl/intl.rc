@@ -26,5 +26,7 @@ IDC_FLAGS ICON "resources/flags.ico"
 #include "de.rc"
 #include "nl.rc"
 #include "sv.rc"
+#include "es.rc"
 #include "Ja.rc"
 #include "hu.rc"
+

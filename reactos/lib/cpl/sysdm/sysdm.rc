@@ -22,5 +22,7 @@ IDI_DEVMGR ICON "resources/devmgr.ico"
 #include "fr.rc"
 #include "nl.rc"
 #include "sv.rc"
+#include "es.rc"
 #include "Ja.rc"
 #include "hu.rc"
+

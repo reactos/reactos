@@ -20,4 +20,6 @@
 #include "Nl.rc"
 #include "Pl.rc"
 #include "Sv.rc"
+#include "Es.rc"
 #include "Hu.rc"
+

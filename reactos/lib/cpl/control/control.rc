@@ -41,4 +41,6 @@ IDI_MAINICON            ICON    DISCARDABLE     "resources/config.ico"
 #include "Pl.rc"
 #include "Ru.rc"
 #include "Sv.rc"
+#include "Es.rc"
 #include "Hu.rc"
+
