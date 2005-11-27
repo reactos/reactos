@@ -64,6 +64,7 @@ Author:
 #define KTSS_CR3                                0x1C
 #define KTSS_EFLAGS                             0x24
 #define KTSS_IOMAPBASE                          0x66
+#define KTSS_IO_MAPS                            0x68
 
 //
 // KTHREAD Offsets

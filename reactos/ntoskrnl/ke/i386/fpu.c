@@ -373,7 +373,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
         (void) cr0;
         ASSERT((cr0 & X86_CR0_TS) == X86_CR0_TS);
-        ASSERT((Tf->Eflags & X86_EFLAGS_VM) == 0);
+        ASSERT((Tf->EFlags & X86_EFLAGS_VM) == 0);
         ASSERT((cr0 & X86_CR0_EM) == 0);
 
         /* disable scheduler, clear TS in cr0 */
@@ -485,7 +485,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         }
         KeLowerIrql(OldIrql);
 
-        PreviousMode = ((Tf->Cs & 0xffff) == (KGDT_R3_CODE | RPL_MASK)) ? (UserMode) : (KernelMode);
+        PreviousMode = ((Tf->SegCs & 0xffff) == (KGDT_R3_CODE | RPL_MASK)) ? (UserMode) : (KernelMode);
         DPRINT("Math/Xmm fault happened! (PreviousMode = %s)\n",
                (PreviousMode != KernelMode) ? ("UserMode") : ("KernelMode"));
 

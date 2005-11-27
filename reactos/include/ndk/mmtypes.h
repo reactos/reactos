@@ -202,6 +202,7 @@ typedef struct _SECTION_IMAGE_INFORMATION
 //
 // FIXME: REACTOS SPECIFIC HACK IN EPROCESS
 //
+#ifdef _REACTOS_
 typedef struct _MADDRESS_SPACE
 {
     struct _MEMORY_AREA *MemoryAreaRoot;
@@ -211,6 +212,7 @@ typedef struct _MADDRESS_SPACE
     PUSHORT PageTableRefCountTable;
     ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
+#endif
 
 //
 // Generic Address Range Structure

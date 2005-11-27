@@ -16,6 +16,11 @@
 
 /* GLOBALS *******************************************************************/
 
+typedef struct _KTSSNOIOPM
+{
+    UCHAR TssData[KTSS_IO_MAPS];
+} KTSSNOIOPM;
+
 static KTSS* Ki386TssArray[MAXIMUM_PROCESSORS];
 PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 static KTSSNOIOPM* Ki386TrapTssArray[MAXIMUM_PROCESSORS];
@@ -38,7 +43,7 @@ Ke386IoSetAccessProcess(PEPROCESS Process, BOOL EnableDisable)
   USHORT Offset;
 
   if(EnableDisable > 1) return FALSE;
-  Offset = (EnableDisable) ? (USHORT) FIELD_OFFSET(KTSS, IoBitmap) : 0xffff;
+  Offset = (EnableDisable) ? (USHORT) FIELD_OFFSET(KTSS, IoMaps) : 0xffff;
 
   oldIrql = KeRaiseIrqlToSynchLevel();
   Process->Pcb.IopmOffset = Offset;
@@ -62,7 +67,7 @@ Ke386SetIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
 
   oldIrql = KeRaiseIrqlToSynchLevel();
 
-  memcpy(&KeGetCurrentKPCR()->TSS->IoBitmap[0],
+  memcpy(&KeGetCurrentKPCR()->TSS->IoMaps[0],
          IOMapStart,
          0x2000);
 
@@ -85,7 +90,7 @@ Ke386QueryIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
   oldIrql = KeRaiseIrqlToSynchLevel();
 
   memcpy(IOMapStart,
-         &KeGetCurrentKPCR()->TSS->IoBitmap[0],
+         &KeGetCurrentKPCR()->TSS->IoMaps[0],
          0x2000);
 
   KeLowerIrql(oldIrql);
@@ -96,8 +101,8 @@ VOID
 Ki386ApplicationProcessorInitializeTSS(VOID)
 {
   ULONG cr3_;
-  KTSS* Tss;
-  KTSSNOIOPM* TrapTss;
+  PKTSS Tss;
+  PKTSS TrapTss;
   PVOID TrapStack;
   ULONG Id;
   PUSHORT Gdt;
@@ -113,7 +118,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   TrapStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
 
   Ki386TssArray[Id] = Tss;
-  Ki386TrapTssArray[Id] = TrapTss;
+  Ki386TrapTssArray[Id] = (KTSSNOIOPM*)TrapTss;
   Ki386TrapStackArray[Id] = TrapStack;
   KeGetCurrentKPCR()->TSS = Tss;
 
@@ -121,8 +126,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + MM_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
   Tss->Ss0 = KGDT_R0_DATA;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  Tss->IoBitmap[8192] = 0xFF;
-  Tss->Ldt = 0;
+  Tss->LDT = 0;
 
   /*
    * Initialize a descriptor for the TSS
@@ -137,20 +141,16 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
     ((base & 0xFF000000) >> 16));
 
   /* Initialize the TSS used for handling double faults. */
-  TrapTss->Eflags = 0;
+  TrapTss->Flags = 0;
   TrapTss->Esp0 = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
   TrapTss->Ss0 = KGDT_R0_DATA;
-  TrapTss->Esp = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
   TrapTss->Cs = KGDT_R0_CODE;
   TrapTss->Eip = (ULONG)KiTrap8;
-  TrapTss->Ss = KGDT_R0_DATA;
   TrapTss->Ds = KGDT_R0_DATA;
   TrapTss->Es = KGDT_R0_DATA;
   TrapTss->Fs = KGDT_R0_PCR;
   TrapTss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  TrapTss->IoBitmap[0] = 0xFF;
-  TrapTss->Ldt = 0;
-  TrapTss->Cr3 = cr3_;
+  TrapTss->LDT = 0;
 
   /*
    * Initialize a descriptor for the trap TSS.
@@ -185,6 +185,7 @@ Ki386BootInitializeTSS(VOID)
   ULONG cr3_;
   extern unsigned int trap_stack, trap_stack_top;
   unsigned int base, length;
+  PKTSS Tss;
 
   Ke386GetPageTableDirectory(cr3_);
 
@@ -196,10 +197,8 @@ Ki386BootInitializeTSS(VOID)
   /* Initialize the boot TSS. */
   KiBootTss.Esp0 = (ULONG)init_stack_top - sizeof(FX_SAVE_AREA);
   KiBootTss.Ss0 = KGDT_R0_DATA;
-  //   KiBootTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
   KiBootTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTss.IoBitmap[8192] = 0xFF;
-  KiBootTss.Ldt = KGDT_LDT;
+  KiBootTss.LDT = KGDT_LDT;
 
   /*
    * Initialize a descriptor for the TSS
@@ -214,20 +213,17 @@ Ki386BootInitializeTSS(VOID)
     ((base & 0xFF000000) >> 16);
 
   /* Initialize the TSS used for handling double faults. */
-  KiBootTrapTss.Eflags = 0;
-  KiBootTrapTss.Esp0 = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  KiBootTrapTss.Ss0 = KGDT_R0_DATA;
-  KiBootTrapTss.Esp = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  KiBootTrapTss.Cs = KGDT_R0_CODE;
-  KiBootTrapTss.Eip = (ULONG)KiTrap8;
-  KiBootTrapTss.Ss = KGDT_R0_DATA;
-  KiBootTrapTss.Ds = KGDT_R0_DATA;
-  KiBootTrapTss.Es = KGDT_R0_DATA;
-  KiBootTrapTss.Fs = KGDT_R0_PCR;
-  KiBootTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTrapTss.IoBitmap[0] = 0xFF;
-  KiBootTrapTss.Ldt = 0x0;
-  KiBootTrapTss.Cr3 = cr3_;
+  Tss = (PKTSS)&KiBootTrapTss;
+  Tss->Flags = 0;
+  Tss->Esp0 = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
+  Tss->Ss0 = KGDT_R0_DATA;
+  Tss->Cs = KGDT_R0_CODE;
+  Tss->Eip = (ULONG)KiTrap8;
+  Tss->Ds = KGDT_R0_DATA;
+  Tss->Es = KGDT_R0_DATA;
+  Tss->Fs = KGDT_R0_PCR;
+  Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
+  Tss->LDT = 0x0;
 
   /*
    * Initialize a descriptor for the trap TSS.

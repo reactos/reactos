@@ -2,13 +2,7 @@ Complete list of NDK Fixmes before 1.0 Release (Nov 27th 2005)
 --------------------------------------------------------------
 ______________________________________________________________________________________
 [CRITICAL]	- Breaking compatibility with official structures.
-|pstypes.h	- EPROCESS has ReactOS only fields. Includes ReactOS Internal header. IFDEF_OUT
-|pstypes.h	- W32_CALLOUT_DATA has ReactOS only fields.              IFDEF-OUT
 |obtypes.h	- Object callbacks are ReactOS only definitions.         IFDEF-OUT ADDREAL
-|obtypes.h	- Object Header includes ReactOS only type.              IFDEF-OUT
-|mmtypes.h	- _MADDRESS_SPACE is ReactOS only field.                 IFDEF-OUT
-|ketypes.h	- _KPROFILE needs to be updated with new definitions.    FIXFIX
-|ketypes.h	- _KINTERRUPT needs to be verified with new definitions. FIXFIX
 |haltypes.h	- Loader Parameter Block is ReactOS Version, not NT.     IFDEF-OUT ADDREAL
 |
 [MAJOR]		- Using incorrect, missing, or invalid names or definitions.

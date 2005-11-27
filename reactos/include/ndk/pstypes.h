@@ -529,10 +529,6 @@ typedef struct _THREAD_BASIC_INFORMATION
 } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
 
 #ifndef NTOS_MODE_USER
-/* FIXME: see note in mmtypes.h */
-#ifdef _NTOSKRNL_
-#include <internal/mm.h>
-#endif
 
 //
 // EPROCESS Quota Structures
@@ -690,6 +686,10 @@ typedef struct _ETHREAD
     UCHAR                          ActiveFaultCount;            /* 24E */
 } ETHREAD;
 
+#if defined(_NTOSKRNL_)
+    #include <internal/mm.h>
+#endif
+
 //
 // Executive Process (EPROCESS)
 //
@@ -818,16 +818,15 @@ typedef struct _EPROCESS
     MM_AVL_TABLE          VadRoot;                      /* 250 */
     ULONG                 Cookie;                       /* 270 */
 
-/***************************************************************
- *                REACTOS SPECIFIC START
- ***************************************************************/
-    /* FIXME WILL BE DEPRECATED WITH PUSHLOCK SUPPORT IN 0.3.0 */
+#ifdef _REACTOS_
+    /* FIXME: WILL BE DEPRECATED WITH PUSHLOCK SUPPORT IN 0.3.0*/
     KEVENT                LockEvent;                    /* 274 */
     ULONG                 LockCount;                    /* 284 */
     struct _KTHREAD       *LockOwner;                   /* 288 */
 
-    /* FIXME MOVE TO AVL TREES                                 */
+    /* FIXME: MOVE TO AVL TREES                                */
     MADDRESS_SPACE        AddressSpace;                 /* 28C */
+#endif
 } EPROCESS;
 #include <poppack.h>
 
@@ -919,11 +918,12 @@ typedef struct _W32_CALLOUT_DATA
     OB_DELETE_METHOD WinStaDelete;
     OB_PARSE_METHOD WinStaParse;
     OB_OPEN_METHOD WinStaOpen;
-    
-    /* FIXME: These are ROS-ONLY and are fixed in a future local patch */
+#ifdef _REACTOS_
+    /* FIXME: REACTOS ONLY */
     OB_FIND_METHOD WinStaFind;
     OB_OPEN_METHOD WinStaCreate;
     OB_CREATE_METHOD DesktopCreate;
+#endif
 } W32_CALLOUT_DATA, *PW32_CALLOUT_DATA;
 
 #endif // !NTOS_MODE_USER

@@ -167,7 +167,7 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
     {
       Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
       Er.NumberParameters = 2;
-      Er.ExceptionInformation[0] = Tf->ErrorCode & 0x1;
+      Er.ExceptionInformation[0] = Tf->ErrCode & 0x1;
       Er.ExceptionInformation[1] = (ULONG)Cr2;
     }
   else
@@ -194,6 +194,7 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 VOID
 KiDoubleFaultHandler(VOID)
 {
+#if 0
   unsigned int cr2;
   ULONG StackLimit;
   ULONG StackBase;
@@ -212,7 +213,7 @@ KiDoubleFaultHandler(VOID)
 #endif
 
   OldTss = KeGetCurrentKPCR()->TSS;
-  Esp0 = OldTss->Esp;
+  Esp0 = OldTss->Esp0;
 
   /* Get CR2 */
   cr2 = Ke386GetCr2();
@@ -394,7 +395,7 @@ KiDoubleFaultHandler(VOID)
 	}
 #endif
     }
-
+#endif
    DbgPrint("\n");
    for(;;);
 }
@@ -406,8 +407,8 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
   ULONG cr3_;
   ULONG StackLimit;
   ULONG Esp0;
-  ULONG ExceptionNr = (ULONG)Tf->DebugArgMark;
-  ULONG cr2 = (ULONG)Tf->DebugPointer;
+  ULONG ExceptionNr = (ULONG)Tf->DbgArgMark;
+  ULONG cr2 = (ULONG)Tf->DbgArgPointer;
 
   Esp0 = (ULONG)Tf;
 
@@ -417,14 +418,14 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    if (ExceptionNr < ARRAY_SIZE(ExceptionTypeStrings))
      {
 	DbgPrint("%s Exception: %d(%x)\n", ExceptionTypeStrings[ExceptionNr],
-		 ExceptionNr, Tf->ErrorCode&0xffff);
+		 ExceptionNr, Tf->ErrCode&0xffff);
      }
    else
      {
-	DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrorCode&0xffff);
+	DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrCode&0xffff);
      }
    DbgPrint("Processor: %d CS:EIP %x:%x ", KeGetCurrentProcessorNumber(),
-	    Tf->Cs&0xffff, Tf->Eip);
+	    Tf->SegCs&0xffff, Tf->Eip);
    KeRosPrintAddress((PVOID)Tf->Eip);
    DbgPrint("\n");
    Ke386GetPageTableDirectory(cr3_);
@@ -442,13 +443,13 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
    DbgPrint("\n");
-   DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->Ds&0xffff, Tf->Es&0xffff,
-	    Tf->Fs&0xffff, Tf->Gs&0xfff);
+   DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->SegDs&0xffff, Tf->SegEs&0xffff,
+	    Tf->SegFs&0xffff, Tf->SegGs&0xfff);
    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", Tf->Eax, Tf->Ebx, Tf->Ecx);
    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", Tf->Edx,
 	    Tf->Ebp, Tf->Esi, Esp0);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->Eflags);
-   if ((Tf->Cs&0xffff) == KGDT_R0_CODE)
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->EFlags);
+   if ((Tf->SegCs&0xffff) == KGDT_R0_CODE)
      {
 	DbgPrint("kESP %.8x ", Esp0);
 	if (PsGetCurrentThread() != NULL)
@@ -490,21 +491,21 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    ASSERT(ExceptionNr != 14);
 
    /* Store the exception number in an unused field in the trap frame. */
-   Tf->DebugArgMark = ExceptionNr;
+   Tf->DbgArgMark = ExceptionNr;
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
 
    /* Get CR2 */
    cr2 = Ke386GetCr2();
-   Tf->DebugPointer = cr2;
+   Tf->DbgArgPointer = cr2;
 
    /*
     * If this was a V86 mode exception then handle it specially
     */
-   if (Tf->Eflags & (1 << 17))
+   if (Tf->EFlags & (1 << 17))
      {
-       DPRINT("Tf->Eflags, %x, Tf->Eip %x, ExceptionNr: %d\n", Tf->Eflags, Tf->Eip, ExceptionNr);
+       DPRINT("Tf->Eflags, %x, Tf->Eip %x, ExceptionNr: %d\n", Tf->EFlags, Tf->Eip, ExceptionNr);
        return(KeV86Exception(ExceptionNr, Tf, cr2));
      }
 
@@ -561,7 +562,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /*
     * Handle user exceptions differently
     */
-   if ((Tf->Cs & 0xFFFF) == (KGDT_R3_CODE | RPL_MASK))
+   if ((Tf->SegCs & 0xFFFF) == (KGDT_R3_CODE | RPL_MASK))
      {
        return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
      }
@@ -576,15 +577,15 @@ NTAPI
 KiEspFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->Cs & 1) || (TrapFrame->Eflags & X86_EFLAGS_VM))
+    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & X86_EFLAGS_VM))
     {
         /* Return it directly */
-        return TrapFrame->Esp;
+        return TrapFrame->HardwareEsp;
     }
     else
     {
         /* Edited frame */
-        if (!(TrapFrame->Cs & FRAME_EDITED))
+        if (!(TrapFrame->SegCs & FRAME_EDITED))
         {
             /* Return edited value */
             return TrapFrame->TempEsp;
@@ -592,7 +593,7 @@ KiEspFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
         else
         {
             /* Virgin frame, calculate */
-            return (ULONG)&TrapFrame->Esp;
+            return (ULONG)&TrapFrame->HardwareEsp;
         }
     }
 }
@@ -605,10 +606,10 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     ULONG Previous = KiEspFromTrapFrame(TrapFrame);
 
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->Cs & MODE_MASK) || (TrapFrame->Eflags & X86_EFLAGS_VM))
+    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & X86_EFLAGS_VM))
     {
         /* Write it directly */
-        TrapFrame->Esp = Esp;
+        TrapFrame->HardwareEsp = Esp;
     }
     else
     {
@@ -619,7 +620,7 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
         }
 
         /* Create an edit frame, check if it was alrady */
-        if (!(TrapFrame->Cs & FRAME_EDITED))
+        if (!(TrapFrame->SegCs & FRAME_EDITED))
         {
             /* Update the value */
             TrapFrame->TempEsp = Esp;
@@ -630,8 +631,8 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
             if (Previous != Esp)
             {
                 /* Save CS */
-                TrapFrame->TempCs = TrapFrame->Cs;
-                TrapFrame->Cs &= ~FRAME_EDITED;
+                TrapFrame->TempSegCs = TrapFrame->SegCs;
+                TrapFrame->SegCs &= ~FRAME_EDITED;
 
                 /* Save ESP */
                 TrapFrame->TempEsp = Esp;
@@ -645,15 +646,15 @@ NTAPI
 KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
     /* If this was V86 Mode */
-    if (TrapFrame->Eflags & X86_EFLAGS_VM)
+    if (TrapFrame->EFlags & X86_EFLAGS_VM)
     {
         /* Just return it */
-        return TrapFrame->Ss;
+        return TrapFrame->HardwareSegSs;
     }
-    else if (TrapFrame->Cs & MODE_MASK)
+    else if (TrapFrame->SegCs & MODE_MASK)
     {
         /* Usermode, return the User SS */
-        return TrapFrame->Ss | RPL_MASK;
+        return TrapFrame->HardwareSegSs | RPL_MASK;
     }
     else
     {
@@ -671,15 +672,15 @@ KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     Ss &= 0xFFFF;
 
     /* If this was V86 Mode */
-    if (TrapFrame->Eflags & X86_EFLAGS_VM)
+    if (TrapFrame->EFlags & X86_EFLAGS_VM)
     {
         /* Just write it */
-        TrapFrame->Ss = Ss;
+        TrapFrame->HardwareSegSs = Ss;
     }
-    else if (TrapFrame->Cs & MODE_MASK)
+    else if (TrapFrame->SegCs & MODE_MASK)
     {
         /* Usermode, save the User SS */
-        TrapFrame->Ss = Ss | RPL_MASK;
+        TrapFrame->HardwareSegSs = Ss | RPL_MASK;
     }
 }
 
@@ -697,35 +698,35 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     {
         /* Check if we went through a V86 switch */
         if ((Context->EFlags & X86_EFLAGS_VM) !=
-            (TrapFrame->Eflags & X86_EFLAGS_VM))
+            (TrapFrame->EFlags & X86_EFLAGS_VM))
         {
             /* We did, remember this for later */
             V86Switch = TRUE;
         }
 
         /* Copy EFLAGS. FIXME: Needs to be sanitized */
-        TrapFrame->Eflags = Context->EFlags;
+        TrapFrame->EFlags = Context->EFlags;
 
         /* Copy EBP and EIP */
         TrapFrame->Ebp = Context->Ebp;
         TrapFrame->Eip = Context->Eip;
 
         /* Check if we were in V86 Mode */
-        if (TrapFrame->Eflags & X86_EFLAGS_VM)
+        if (TrapFrame->EFlags & X86_EFLAGS_VM)
         {
             /* Simply copy the CS value */
-            TrapFrame->Cs = Context->SegCs;
+            TrapFrame->SegCs = Context->SegCs;
         }
         else
         {
             /* We weren't in V86, so sanitize the CS (FIXME!) */
-            TrapFrame->Cs = Context->SegCs;
+            TrapFrame->SegCs = Context->SegCs;
 
             /* Don't let it under 8, that's invalid */
-            if ((PreviousMode != KernelMode) && (TrapFrame->Cs < 8))
+            if ((PreviousMode != KernelMode) && (TrapFrame->SegCs < 8))
             {
                 /* Force it to User CS */
-                TrapFrame->Cs = (KGDT_R3_CODE | RPL_MASK);
+                TrapFrame->SegCs = (KGDT_R3_CODE | RPL_MASK);
             }
         }
 
@@ -754,39 +755,39 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Check if we were in V86 Mode */
-        if (TrapFrame->Eflags & X86_EFLAGS_VM)
+        if (TrapFrame->EFlags & X86_EFLAGS_VM)
         {
             /* Copy the V86 Segments directlry */
-            TrapFrame->V86_Ds = Context->SegDs;
-            TrapFrame->V86_Es = Context->SegEs;
-            TrapFrame->V86_Fs = Context->SegFs;
-            TrapFrame->V86_Gs = Context->SegGs;
+            TrapFrame->V86Ds = Context->SegDs;
+            TrapFrame->V86Es = Context->SegEs;
+            TrapFrame->V86Fs = Context->SegFs;
+            TrapFrame->V86Gs = Context->SegGs;
         }
-        else if (!(TrapFrame->Cs & MODE_MASK))
+        else if (!(TrapFrame->SegCs & MODE_MASK))
         {
             /* For user mode, write the values directly */
-            TrapFrame->Ds = KGDT_R3_DATA | RPL_MASK;
-            TrapFrame->Es = KGDT_R3_DATA | RPL_MASK;
-            TrapFrame->Fs = Context->SegFs;
-            TrapFrame->Gs = 0;
+            TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
+            TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
+            TrapFrame->SegFs = Context->SegFs;
+            TrapFrame->SegGs = 0;
         }
         else
         {
             /* For kernel-mode, return the values */
-            TrapFrame->Ds = Context->SegDs;
-            TrapFrame->Es = Context->SegEs;
-            TrapFrame->Fs = Context->SegFs;
+            TrapFrame->SegDs = Context->SegDs;
+            TrapFrame->SegEs = Context->SegEs;
+            TrapFrame->SegFs = Context->SegFs;
 
             /* Handle GS specially */
-            if (TrapFrame->Cs == (KGDT_R3_CODE | RPL_MASK))
+            if (TrapFrame->SegCs == (KGDT_R3_CODE | RPL_MASK))
             {
                 /* Don't use it, if user */
-                TrapFrame->Gs = 0;
+                TrapFrame->SegGs = 0;
             }
             else
             {
                 /* Copy it if kernel */
-                TrapFrame->Gs = Context->SegGs;
+                TrapFrame->SegGs = Context->SegGs;
             }
         }
     }
@@ -828,19 +829,19 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         /* EBP, EIP and EFLAGS */
         Context->Ebp = TrapFrame->Ebp;
         Context->Eip = TrapFrame->Eip;
-        Context->EFlags = TrapFrame->Eflags;
+        Context->EFlags = TrapFrame->EFlags;
 
         /* Return the correct CS */
-        if (!(TrapFrame->Cs & FRAME_EDITED) &&
-            !(TrapFrame->Eflags & X86_EFLAGS_VM))
+        if (!(TrapFrame->SegCs & FRAME_EDITED) &&
+            !(TrapFrame->EFlags & X86_EFLAGS_VM))
         {
             /* Get it from the Temp location */
-            Context->SegCs = TrapFrame->TempCs & 0xFFFF;
+            Context->SegCs = TrapFrame->TempSegCs & 0xFFFF;
         }
         else
         {
             /* Return it directly */
-            Context->SegCs = TrapFrame->Cs & 0xFFFF;
+            Context->SegCs = TrapFrame->SegCs & 0xFFFF;
         }
 
         /* Get the Ss and ESP */
@@ -852,31 +853,31 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Do V86 Mode first */
-        if (TrapFrame->Eflags & X86_EFLAGS_VM)
+        if (TrapFrame->EFlags & X86_EFLAGS_VM)
         {
             /* Return from the V86 location */
-            Context->SegGs = TrapFrame->V86_Gs & 0xFFFF;
-            Context->SegFs = TrapFrame->V86_Fs & 0xFFFF;
-            Context->SegEs = TrapFrame->V86_Es & 0xFFFF;
-            Context->SegDs = TrapFrame->V86_Ds & 0xFFFF;
+            Context->SegGs = TrapFrame->V86Gs & 0xFFFF;
+            Context->SegFs = TrapFrame->V86Fs & 0xFFFF;
+            Context->SegEs = TrapFrame->V86Es & 0xFFFF;
+            Context->SegDs = TrapFrame->V86Ds & 0xFFFF;
         }
         else
         {
             /* Check if this was a Kernel Trap */
-            if (TrapFrame->Cs == KGDT_R0_CODE)
+            if (TrapFrame->SegCs == KGDT_R0_CODE)
             {
                 /* Set valid selectors */
-                TrapFrame->Gs = 0;
-                TrapFrame->Fs = KGDT_R0_PCR;
-                TrapFrame->Es = KGDT_R3_DATA | RPL_MASK;
-                TrapFrame->Ds = KGDT_R3_DATA | RPL_MASK;
+                TrapFrame->SegGs = 0;
+                TrapFrame->SegFs = KGDT_R0_PCR;
+                TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
+                TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
             }
 
             /* Return the segments */
-            Context->SegGs = TrapFrame->Gs & 0xFFFF;
-            Context->SegFs = TrapFrame->Fs & 0xFFFF;
-            Context->SegEs = TrapFrame->Es & 0xFFFF;
-            Context->SegDs = TrapFrame->Ds & 0xFFFF;
+            Context->SegGs = TrapFrame->SegGs & 0xFFFF;
+            Context->SegFs = TrapFrame->SegFs & 0xFFFF;
+            Context->SegEs = TrapFrame->SegEs & 0xFFFF;
+            Context->SegDs = TrapFrame->SegDs & 0xFFFF;
         }
     }
 

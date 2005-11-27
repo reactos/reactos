@@ -350,7 +350,7 @@ typedef struct _CONFIGURATION_COMPONENT_DATA
 } CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
 
 //
-// Kernel Memory Node (FIXME: mmtypes?
+// Kernel Memory Node
 //
 typedef struct _KNODE
 {
@@ -367,25 +367,26 @@ typedef struct _KNODE
 } KNODE, *PKNODE;
 
 //
-// Kernel Profile Object (FIXME: Fix with new defs)
+// Kernel Profile Object
 //
 typedef struct _KPROFILE
 {
     CSHORT Type;
     CSHORT Size;
-    LIST_ENTRY ListEntry;
-    PVOID RegionStart;
-    PVOID RegionEnd;
+    LIST_ENTRY ProfileListEntry;
+    PKPROCESS Process;
+    PVOID RangeBase;
+    PVOID RangeLimit;
     ULONG BucketShift;
     PVOID Buffer;
+    ULONG Segment;
+    KAFFINITY Affinity;
     KPROFILE_SOURCE Source;
-    ULONG Affinity;
-    BOOLEAN Active;
-    struct _KPROCESS *Process;
+    BOOLEAN Started;
 } KPROFILE, *PKPROFILE;
 
 //
-// Kernel Interrupt Object (FIXME: Verify)
+// Kernel Interrupt Object
 //
 typedef struct _KINTERRUPT
 {

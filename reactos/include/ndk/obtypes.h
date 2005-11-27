@@ -341,11 +341,13 @@ typedef struct _OBJECT_HEADER_CREATOR_INFO
 } OBJECT_HEADER_CREATOR_INFO, *POBJECT_HEADER_CREATOR_INFO;
 
 //
-// FIXME: Object Header
+// Object Header
 //
 typedef struct _OBJECT_HEADER
 {
-    LIST_ENTRY Entry;
+#ifdef _REACTOS_
+    LIST_ENTRY Entry; // FIXME: REACTOS ONLY
+#endif
     LONG PointerCount;
     union
     {

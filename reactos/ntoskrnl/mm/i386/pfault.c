@@ -36,14 +36,14 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    ASSERT(ExceptionNr == 14);
    
    /* Store the exception number in an unused field in the trap frame. */
-   Tf->DebugArgMark = 14;
+   Tf->DbgArgMark = 14;
 
    /* get the faulting address */
    cr2 = Ke386GetCr2();
-   Tf->DebugPointer = cr2;
+   Tf->DbgArgPointer = cr2;
 
    /* it's safe to enable interrupts after cr2 has been saved */
-   if (Tf->Eflags & (X86_EFLAGS_VM|X86_EFLAGS_IF))
+   if (Tf->EFlags & (X86_EFLAGS_VM|X86_EFLAGS_IF))
    {
       Ke386EnableInterrupts();
    }
@@ -51,22 +51,22 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    if (cr2 >= (ULONG_PTR)MmSystemRangeStart)
    {
       /* check for an invalid page directory in kernel mode */
-      if (!(Tf->ErrorCode & 0x5) && Mmi386MakeKernelPageTableGlobal((PVOID)cr2))
+      if (!(Tf->ErrCode & 0x5) && Mmi386MakeKernelPageTableGlobal((PVOID)cr2))
       {
          return 0;
       }
 
       /* check for non executable memory in kernel mode */
-      if (Ke386NoExecute && Tf->ErrorCode & 0x10)
+      if (Ke386NoExecute && Tf->ErrCode & 0x10)
       {
          KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
       }
    }
 
-   Mode = Tf->ErrorCode & 0x4 ? UserMode : KernelMode;
+   Mode = Tf->ErrCode & 0x4 ? UserMode : KernelMode;
 
    /* handle the fault */
-   if (Tf->ErrorCode & 0x1)
+   if (Tf->ErrCode & 0x1)
    {
       Status = MmAccessFault(Mode, cr2, FALSE);
    }
@@ -76,7 +76,7 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    }
    
    /* handle the return for v86 mode */
-   if (Tf->Eflags & X86_EFLAGS_VM)
+   if (Tf->EFlags & X86_EFLAGS_VM)
    {
       if (!NT_SUCCESS(Status))
       {
