@@ -35,6 +35,7 @@ HKR, , Icon,           0, "-27"
 %*PNP0A03.DeviceDesc% = PCI_Inst,*PNP0A03
 %*PNP0A05.DeviceDesc% = NO_DRV,*PNP0A05
 %*PNP0B00.DeviceDesc% = NO_DRV,*PNP0B00
+%*PNP0C01.DeviceDesc% = NO_DRV,*PNP0C01
 %*PNP0C02.DeviceDesc% = NO_DRV,*PNP0C02
 %*PNP0C04.DeviceDesc% = NO_DRV,*PNP0C04
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
@@ -44,7 +45,9 @@ HKR, , Icon,           0, "-27"
 %PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
 
 [IntelMfg]
+%*INT0800.DeviceDesc% = NO_DRV,*INT0800
 %PCI\VEN_8086&DEV_1237.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_1237
+%PCI\VEN_8086&DEV_2413.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_2413
 %PCI\VEN_8086&DEV_7000.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7000
 %PCI\VEN_8086&DEV_7110.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7110
 %PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7113
@@ -112,6 +115,7 @@ GenericMfg = "(Generic system devices)"
 *PNP0A03.DeviceDesc = "PCI bus"
 *PNP0A05.DeviceDesc = "Generic ACPI bus"
 *PNP0B00.DeviceDesc = "AT real-time clock"
+*PNP0C01.DeviceDesc = "System board"
 *PNP0C02.DeviceDesc = "Motherboard resources"
 *PNP0C04.DeviceDesc = "Math coprocessor"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
@@ -121,7 +125,9 @@ PCI\CC_0601.DeviceDesc = "Standard PCI to ISA bridge"
 PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 
 IntelMfg = "Intel"
-PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]
+*INT0800.DeviceDesc = "Intel 82802 Firmware Hub Device"
+PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
+PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
 PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 PCI to ISA Bridge"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI to ISA Bridge"
 PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller"
