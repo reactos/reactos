@@ -772,21 +772,21 @@ VOID
 MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
 			   PKTRAP_FRAME TrapFrame)
 {
-   TrapFrame->Gs     = (USHORT)IrqTrapFrame->Gs;
-   TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
-   TrapFrame->Es     = (USHORT)IrqTrapFrame->Es;
-   TrapFrame->Ds     = (USHORT)IrqTrapFrame->Ds;
+   TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
+   TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
+   TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
+   TrapFrame->SegDs     = (USHORT)IrqTrapFrame->Ds;
    TrapFrame->Eax    = IrqTrapFrame->Eax;
    TrapFrame->Ecx    = IrqTrapFrame->Ecx;
    TrapFrame->Edx    = IrqTrapFrame->Edx;
    TrapFrame->Ebx    = IrqTrapFrame->Ebx;
-   TrapFrame->Esp    = IrqTrapFrame->Esp;
+   TrapFrame->HardwareEsp    = IrqTrapFrame->Esp;
    TrapFrame->Ebp    = IrqTrapFrame->Ebp;
    TrapFrame->Esi    = IrqTrapFrame->Esi;
    TrapFrame->Edi    = IrqTrapFrame->Edi;
    TrapFrame->Eip    = IrqTrapFrame->Eip;
-   TrapFrame->Cs     = IrqTrapFrame->Cs;
-   TrapFrame->Eflags = IrqTrapFrame->Eflags;
+   TrapFrame->SegCs     = IrqTrapFrame->Cs;
+   TrapFrame->EFlags = IrqTrapFrame->Eflags;
 }
 
 VOID

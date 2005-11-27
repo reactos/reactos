@@ -271,13 +271,13 @@ typedef struct _EX_FAST_REF
 } EX_FAST_REF, *PEX_FAST_REF;
 
 //
-// FIXME
+// Executive Fast Reference Wait Block
 //
-typedef struct _RUNDOWN_DESCRIPTOR
+typedef struct _EX_RUNDOWN_WAIT_BLOCK
 {
-    ULONG_PTR References;
+    ULONG_PTR Count;
     KEVENT RundownEvent;
-} RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
+} EX_RUNDOWN_WAIT_BLOCK, *PEX_RUNDOWN_WAIT_BLOCK;
 
 //
 // Callback Object

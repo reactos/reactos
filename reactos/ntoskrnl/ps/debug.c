@@ -56,7 +56,7 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     Event = &GetSetContext->Event;
     Mode = GetSetContext->Mode;
 
-    if (TrapFrame->Cs == KGDT_R0_CODE && Mode != KernelMode)
+    if (TrapFrame->SegCs == KGDT_R0_CODE && Mode != KernelMode)
     {
         GetSetContext->Status = STATUS_ACCESS_DENIED;
     }

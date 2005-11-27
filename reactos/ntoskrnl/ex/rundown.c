@@ -123,7 +123,7 @@ ExReleaseRundownProtectionEx (
         if (Current & EX_RUNDOWN_ACTIVE)
         {
             /* Get Pointer */
-            PRUNDOWN_DESCRIPTOR RundownDescriptor = (PRUNDOWN_DESCRIPTOR)(Current & ~EX_RUNDOWN_ACTIVE);
+            PEX_RUNDOWN_WAIT_BLOCK RundownDescriptor = (PEX_RUNDOWN_WAIT_BLOCK)(Current & ~EX_RUNDOWN_ACTIVE);
 
             if (RundownDescriptor == NULL)
             {
@@ -131,9 +131,9 @@ ExReleaseRundownProtectionEx (
                 break;
             }
 
-            Current = RundownDescriptor->References;
+            Current = RundownDescriptor->Count;
 
-            /* Decrease RundownDescriptor->References by Count references */
+            /* Decrease RundownDescriptor->Count by Count Count */
             for (;;)
             {
                 ULONG_PTR PrevCount, NewCount;
@@ -144,12 +144,12 @@ ExReleaseRundownProtectionEx (
                 }
                 else
                 {
-                    NewCount = ((RundownDescriptor->References - (Count >> EX_RUNDOWN_COUNT_SHIFT)) << EX_RUNDOWN_COUNT_SHIFT) | EX_RUNDOWN_ACTIVE;
+                    NewCount = ((RundownDescriptor->Count - (Count >> EX_RUNDOWN_COUNT_SHIFT)) << EX_RUNDOWN_COUNT_SHIFT) | EX_RUNDOWN_ACTIVE;
                 }
 #ifdef _WIN64
-                PrevCount = (ULONG_PTR)InterlockedCompareExchange64((LONGLONG*)&RundownDescriptor->References, (LONGLONG)NewCount, (LONGLONG)Current);
+                PrevCount = (ULONG_PTR)InterlockedCompareExchange64((LONGLONG*)&RundownDescriptor->Count, (LONGLONG)NewCount, (LONGLONG)Current);
 #else
-                PrevCount = (ULONG_PTR)InterlockedCompareExchange((LONG*)&RundownDescriptor->References, (LONG)NewCount, (LONG)Current);
+                PrevCount = (ULONG_PTR)InterlockedCompareExchange((LONG*)&RundownDescriptor->Count, (LONG)NewCount, (LONG)Current);
 #endif
                 if (PrevCount == Current)
                 {
@@ -227,7 +227,7 @@ ExWaitForRundownProtectionRelease (
     )
 {
     ULONG_PTR PrevCount, NewPtr, PrevPtr;
-    RUNDOWN_DESCRIPTOR RundownDescriptor;
+    EX_RUNDOWN_WAIT_BLOCK RundownDescriptor;
 
     PAGED_CODE();
 
@@ -236,9 +236,9 @@ ExWaitForRundownProtectionRelease (
     if (PrevCount != 0 && !(PrevCount & EX_RUNDOWN_ACTIVE))
     {
         /* save the reference counter */
-        RundownDescriptor.References = PrevCount >> EX_RUNDOWN_COUNT_SHIFT;
+        RundownDescriptor.Count = PrevCount >> EX_RUNDOWN_COUNT_SHIFT;
 
-        /* Pending references... wait on them to be closed with an event */
+        /* Pending Count... wait on them to be closed with an event */
         KeInitializeEvent(&RundownDescriptor.RundownEvent, NotificationEvent, FALSE);
 
         ASSERT(!((ULONG_PTR)&RundownDescriptor & EX_RUNDOWN_ACTIVE));
@@ -267,7 +267,7 @@ ExWaitForRundownProtectionRelease (
             PrevCount = PrevPtr;
 
             /* save the changed reference counter and try again */
-            RundownDescriptor.References = PrevCount >> EX_RUNDOWN_COUNT_SHIFT;
+            RundownDescriptor.Count = PrevCount >> EX_RUNDOWN_COUNT_SHIFT;
         }
     }
 }

@@ -27,8 +27,9 @@ Author:
 #ifndef NTOS_MODE_USER
 
 //
-// Multi-Boot Flags (FIXME)
+// Multi-Boot Flags (REMOVE ME)
 //
+#ifdef _REACTOS_
 #define MB_FLAGS_MEM_INFO                   (0x1)
 #define MB_FLAGS_BOOT_DEVICE                (0x2)
 #define MB_FLAGS_COMMAND_LINE               (0x4)
@@ -42,6 +43,7 @@ Author:
 #define MB_FLAGS_APM_TABLE                  (0x400)
 #define MB_FLAGS_GRAPHICS_TABLE             (0x800)
 #define MB_FLAGS_ACPI_TABLE                 (0x1000)
+#endif
 
 //
 // HalShutdownSystem Types

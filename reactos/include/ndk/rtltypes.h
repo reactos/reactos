@@ -31,17 +31,17 @@ Author:
 #define RTL_MAXIMUM_ATOM_LENGTH                              255
 
 //
-// Process Parameters Flags (FIXME: Rename)
+// Process Parameters Flags
 //
-#define PPF_NORMALIZED                                       0x01
-#define PPF_PROFILE_USER                                     0x02
-#define PPF_PROFILE_SERVER                                   0x04
-#define PPF_PROFILE_KERNEL                                   0x08
-#define PPF_UNKNOWN                                          0x10
-#define PPF_RESERVE_1MB                                      0x20
-#define PPF_DISABLE_HEAP_CHECKS                              0x100
-#define PPF_PROCESS_OR_1                                     0x200
-#define PPF_PROCESS_OR_2                                     0x400
+#define RTL_USER_PROCESS_PARAMETERS_NORMALIZED               0x01
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_USER             0x02
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER           0x04
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL           0x08
+#define RTL_USER_PROCESS_PARAMETERS_UNKNOWN                  0x10
+#define RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB              0x20
+#define RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS      0x100
+#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1             0x200
+#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2             0x400
 
 //
 // Exception Flags
@@ -613,14 +613,20 @@ typedef struct _RTL_PROCESS_LOCKS
 
 typedef struct _RTL_PROCESS_BACKTRACE_INFORMATION
 {
-    /* FIXME */
-    ULONG Unknown;
+    PVOID SymbolicBackTrace;
+    ULONG TraceCount;
+    USHORT Index;
+    USHORT Depth;
+    PVOID BackTrace[16];
 } RTL_PROCESS_BACKTRACE_INFORMATION, *PRTL_PROCESS_BACKTRACE_INFORMATION;
 
 typedef struct _RTL_PROCESS_BACKTRACES
 {
-    ULONG BackTraceCount;
-    RTL_PROCESS_BACKTRACE_INFORMATION BackTraceEntry[1];
+    ULONG CommittedMemory;
+    ULONG ReservedMemory;
+    ULONG NumberOfBackTraceLookups;
+    ULONG NumberOfBackTraces;
+    RTL_PROCESS_BACKTRACE_INFORMATION BackTraces[1];
 } RTL_PROCESS_BACKTRACES, *PRTL_PROCESS_BACKTRACES;
 
 typedef struct _RTL_DEBUG_BUFFER

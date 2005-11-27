@@ -207,9 +207,9 @@ KeUserModeCallback(IN ULONG RoutineIndex,
                 Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(ULONG)));
   NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
   /* We need the stack pointer to remain 4-byte aligned */
-  NewFrame->Esp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
+  NewFrame->HardwareEsp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
   NewFrame->Eip = (ULONG)KeUserCallbackDispatcher;
-  UserEsp = (PULONG)NewFrame->Esp;
+  UserEsp = (PULONG)NewFrame->HardwareEsp;
   UserEsp[0] = 0;     /* Return address. */
   UserEsp[1] = RoutineIndex;
   UserEsp[2] = (ULONG)&UserEsp[4];

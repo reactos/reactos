@@ -90,11 +90,11 @@ typedef struct _FX_SAVE_AREA
 //
 typedef struct _KTRAP_FRAME
 {
-    ULONG DebugEbp;
-    ULONG DebugEip;
-    ULONG DebugArgMark;
-    ULONG DebugPointer;
-    ULONG TempCs;
+    ULONG DbgEbp;
+    ULONG DbgEip;
+    ULONG DbgArgMark;
+    ULONG DbgArgPointer;
+    ULONG TempSegCs;
     ULONG TempEsp;
     ULONG Dr0;
     ULONG Dr1;
@@ -102,29 +102,29 @@ typedef struct _KTRAP_FRAME
     ULONG Dr3;
     ULONG Dr6;
     ULONG Dr7;
-    ULONG Gs;
-    ULONG Es;
-    ULONG Ds;
+    ULONG SegGs;
+    ULONG SegEs;
+    ULONG SegDs;
     ULONG Edx;
     ULONG Ecx;
     ULONG Eax;
-    ULONG PreviousMode;
-    PVOID ExceptionList;
-    ULONG Fs;
+    ULONG PreviousPreviousMode;
+    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+    ULONG SegFs;
     ULONG Edi;
     ULONG Esi;
     ULONG Ebx;
     ULONG Ebp;
-    ULONG ErrorCode;
+    ULONG ErrCode;
     ULONG Eip;
-    ULONG Cs;
-    ULONG Eflags;
-    ULONG Esp;
-    ULONG Ss;
-    ULONG V86_Es;
-    ULONG V86_Ds;
-    ULONG V86_Fs;
-    ULONG V86_Gs;
+    ULONG SegCs;
+    ULONG EFlags;
+    ULONG HardwareEsp;
+    ULONG HardwareSegSs;
+    ULONG V86Es;
+    ULONG V86Ds;
+    ULONG V86Fs;
+    ULONG V86Gs;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 //
@@ -461,99 +461,45 @@ typedef struct _KIPCR
 #pragma pack(pop)
 
 //
-// FIXME: TSS without I/O Privilege Map
-//
-#include <pshpack1.h>
-typedef struct _KTSSNOIOPM
-{
-    USHORT PreviousTask;
-    USHORT Reserved1;
-    ULONG  Esp0;
-    USHORT Ss0;
-    USHORT Reserved2;
-    ULONG  Esp1;
-    USHORT Ss1;
-    USHORT Reserved3;
-    ULONG  Esp2;
-    USHORT Ss2;
-    USHORT Reserved4;
-    ULONG  Cr3;
-    ULONG  Eip;
-    ULONG  Eflags;
-    ULONG  Eax;
-    ULONG  Ecx;
-    ULONG  Edx;
-    ULONG  Ebx;
-    ULONG  Esp;
-    ULONG  Ebp;
-    ULONG  Esi;
-    ULONG  Edi;
-    USHORT Es;
-    USHORT Reserved5;
-    USHORT Cs;
-    USHORT Reserved6;
-    USHORT Ss;
-    USHORT Reserved7;
-    USHORT Ds;
-    USHORT Reserved8;
-    USHORT Fs;
-    USHORT Reserved9;
-    USHORT Gs;
-    USHORT Reserved10;
-    USHORT Ldt;
-    USHORT Reserved11;
-    USHORT Trap;
-    USHORT IoMapBase;
-    /* no interrupt redirection map */
-    UCHAR IoBitmap[1];
-} KTSSNOIOPM;
-
-//
 // TSS Definition
 //
+typedef struct _KiIoAccessMap
+{
+    UCHAR DirectionMap[32];
+    UCHAR IoMap[8196];
+} KIIO_ACCESS_MAP;
+
+#include <pshpack1.h>
 typedef struct _KTSS
 {
-    USHORT PreviousTask;
-    USHORT Reserved1;
+    USHORT Backlink;
+    USHORT Reserved0;
     ULONG Esp0;
     USHORT Ss0;
-    USHORT Reserved2;
-    ULONG Esp1;
-    USHORT Ss1;
-    USHORT Reserved3;
-    ULONG Esp2;
-    USHORT Ss2;
-    USHORT Reserved4;
-    ULONG Cr3;
+    USHORT Reserved1;
+    ULONG NotUsed1[4];
+    ULONG CR3;
     ULONG Eip;
-    ULONG Eflags;
-    ULONG Eax;
-    ULONG Ecx;
-    ULONG Edx;
-    ULONG Ebx;
-    ULONG Esp;
-    ULONG Ebp;
-    ULONG Esi;
-    ULONG Edi;
+    ULONG NotUsed2[9];
     USHORT Es;
-    USHORT Reserved5;
+    USHORT Reserved2;
     USHORT Cs;
-    USHORT Reserved6;
+    USHORT Reserved3;
     USHORT Ss;
-    USHORT Reserved7;
+    USHORT Reserved4;
     USHORT Ds;
-    USHORT Reserved8;
+    USHORT Reserved5;
     USHORT Fs;
-    USHORT Reserved9;
+    USHORT Reserved6;
     USHORT Gs;
-    USHORT Reserved10;
-    USHORT Ldt;
-    USHORT Reserved11;
-    USHORT Trap;
+    USHORT Reserved7;
+    USHORT LDT;
+    USHORT Reserved8;
+    USHORT Flags;
     USHORT IoMapBase;
-    /* no interrupt redirection map */
-    UCHAR IoBitmap[8193];
-} KTSS;
+    KIIO_ACCESS_MAP IoMaps[1];
+    UCHAR IntDirectionMap[32];
+} KTSS, *PKTSS;
 #include <poppack.h>
 
 //

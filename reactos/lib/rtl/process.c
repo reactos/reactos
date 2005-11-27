@@ -80,7 +80,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
             ProcessHandle, Peb, ProcessParameters);
             
     /* Give the caller 1MB if he requested it */
-    if (ProcessParameters->Flags & PPF_RESERVE_1MB)
+    if (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB)
     {
         /* Give 1MB starting at 0x4 */
         BaseAddress = (PVOID)4;

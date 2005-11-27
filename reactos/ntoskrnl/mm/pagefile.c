@@ -544,7 +544,7 @@ MmDumpToPagingFile(ULONG BugCode,
    Headers->Type = MmCoreDumpType;
    if (TrapFrame != NULL)
    {
-      if (!(TrapFrame->Eflags & (1 << 17)))
+      if (!(TrapFrame->EFlags & (1 << 17)))
       {
          memcpy(&Headers->TrapFrame, TrapFrame,
                 sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));

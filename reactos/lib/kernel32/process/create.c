@@ -580,13 +580,13 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     /* Handle some Parameter Flags */
     ProcessParameters->ConsoleFlags = (CreationFlags & CREATE_NEW_PROCESS_GROUP);
     ProcessParameters->Flags |= (CreationFlags & PROFILE_USER) ?
-                                 PPF_PROFILE_USER : 0;
+                                 RTL_USER_PROCESS_PARAMETERS_PROFILE_USER : 0;
     ProcessParameters->Flags |= (CreationFlags & PROFILE_KERNEL) ? 
-                                 PPF_PROFILE_KERNEL : 0;    
+                                 RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL : 0;    
     ProcessParameters->Flags |= (CreationFlags & PROFILE_SERVER) ?
-                                 PPF_PROFILE_SERVER : 0;
+                                 RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER : 0;
     ProcessParameters->Flags |= (NtCurrentPeb()->ProcessParameters->Flags &
-                                 PPF_DISABLE_HEAP_CHECKS);
+                                 RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS);
     
     /* Write the Parameter Block */
     Status = NtWriteVirtualMemory(ProcessHandle,

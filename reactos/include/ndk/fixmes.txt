@@ -2,23 +2,17 @@ Complete list of NDK Fixmes before 1.0 Release (Nov 27th 2005)
 --------------------------------------------------------------
 ______________________________________________________________________________________
 [CRITICAL]	- Breaking compatibility with official structures.
-|pstypes.h	- EPROCESS has ReactOS only fields. Includes ReactOS Internal header.
-|pstypes.h	- W32_CALLOUT_DATA has ReactOS only fields.
-|obtypes.h	- Object callbacks are ReactOS only definitions.
-|obtypes.h	- Object Header includes ReactOS only type.
-|mmtypes.h	- _MADDRESS_SPACE is ReactOS only field.
-|ketypes.h	- _KPROFILE needs to be updated with new definitions.
-|ketypes.h	- _KINTERRUPT needs to be verified with new definitions.
-|haltypes.h	- Loader Parameter Block is ReactOS Version, not NT.
+|pstypes.h	- EPROCESS has ReactOS only fields. Includes ReactOS Internal header. IFDEF_OUT
+|pstypes.h	- W32_CALLOUT_DATA has ReactOS only fields.              IFDEF-OUT
+|obtypes.h	- Object callbacks are ReactOS only definitions.         IFDEF-OUT ADDREAL
+|obtypes.h	- Object Header includes ReactOS only type.              IFDEF-OUT
+|mmtypes.h	- _MADDRESS_SPACE is ReactOS only field.                 IFDEF-OUT
+|ketypes.h	- _KPROFILE needs to be updated with new definitions.    FIXFIX
+|ketypes.h	- _KINTERRUPT needs to be verified with new definitions. FIXFIX
+|haltypes.h	- Loader Parameter Block is ReactOS Version, not NT.     IFDEF-OUT ADDREAL
 |
 [MAJOR]		- Using incorrect, missing, or invalid names or definitions.
-|i386/ketypes.h	- _KTRAP_FRAME definition is broken.
-|i386/ketypes.h	- _KTSSNOIOPM is not an official type.
-|rtltypes.h	- PPF_ Defines don't seem to be the real names (try to find them).
-|rtltypes.h	- _RTL_PROCESS_BACKTRACE_INFORMATION isn't done.
-|haltypes.h	- Multi-Boot flags are ReactOS Only.
-|extypes.h	- _RUNDOWN_DESCRIPTOR is possibly incorrect/unofficial.
-|extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined.
+|extypes.h	- Classes 13, 20, 30, 31, 49, 51, 52, 54+ are undefined. WONTFIX
 |_____________________________________________________________________________________
 
 

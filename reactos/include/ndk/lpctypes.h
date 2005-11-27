@@ -26,6 +26,12 @@ Author:
 #include <pstypes.h>
 
 //
+// Internal helper macro
+//
+#define N_ROUND_UP(x,s) \
+    (((ULONG)(x)+(s)-1) & ~((ULONG)(s)-1))
+
+//
 // Maximum message size that can be sent through an LPC Port without a section
 //
 #define PORT_MAXIMUM_MESSAGE_LENGTH     256
@@ -234,9 +240,9 @@ typedef struct _CLIENT_DIED_MSG
 // Maximum total Kernel-Mode LPC Message Structure Size
 //
 #define LPCP_MAX_MESSAGE_SIZE \
-    ALIGN_UP(PORT_MAXIMUM_MESSAGE_LENGTH + \
+    N_ROUND_UP(PORT_MAXIMUM_MESSAGE_LENGTH + \
     sizeof(LPCP_MESSAGE) + \
-    sizeof(LPCP_CONNECTION_MESSAGE), sizeof(ULONGLONG) * 2)
+    sizeof(LPCP_CONNECTION_MESSAGE), 16)
 
 //
 // Maximum actual LPC Message Length

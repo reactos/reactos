@@ -260,8 +260,8 @@ KeUpdateRunTime(
     * Cs bit 0 is always set for user mode if we are in protected mode.
     * V86 mode is counted as user time.
     */
-   if (TrapFrame->Cs & 0x1 ||
-       TrapFrame->Eflags & X86_EFLAGS_VM)
+   if (TrapFrame->SegCs & MODE_MASK ||
+       TrapFrame->EFlags & X86_EFLAGS_VM)
    {
       InterlockedIncrementUL(&CurrentThread->UserTime);
       InterlockedIncrementUL(&CurrentProcess->UserTime);
