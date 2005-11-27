@@ -442,7 +442,6 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	PVFATFCB ParentFcb;
 	PWCHAR c, last;
 	BOOLEAN PagingFileCreate = FALSE;
-	LARGE_INTEGER AllocationSize;
 	BOOLEAN Dots;
 	UNICODE_STRING FileNameU;
         UNICODE_STRING PathNameU;
@@ -565,9 +564,9 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	if (!NT_SUCCESS (Status))
 	{
 		if (RequestedDisposition == FILE_CREATE ||
-			RequestedDisposition == FILE_OPEN_IF ||
-			RequestedDisposition == FILE_OVERWRITE_IF ||
-			RequestedDisposition == FILE_SUPERSEDE)
+		    RequestedDisposition == FILE_OPEN_IF ||
+		    RequestedDisposition == FILE_OVERWRITE_IF ||
+		    RequestedDisposition == FILE_SUPERSEDE)
 		{
 			ULONG Attributes;
 			Attributes = Stack->Parameters.Create.FileAttributes;
@@ -586,7 +585,6 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 				}
 
 				Irp->IoStatus.Information = FILE_CREATED;
-
 				VfatSetAllocationSizeInformation(FileObject,
 					pFcb,
 					DeviceExt,
@@ -691,13 +689,15 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 
 
 		if (RequestedDisposition == FILE_OVERWRITE ||
-			RequestedDisposition == FILE_OVERWRITE_IF)
+		    RequestedDisposition == FILE_OVERWRITE_IF ||
+		    RequestedDisposition == FILE_SUPERSEDE)
 		{
-			AllocationSize.QuadPart = 0;
+                        ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);
 			Status = VfatSetAllocationSizeInformation (FileObject,
-				pFcb,
-				DeviceExt,
-				&AllocationSize);
+				                                   pFcb,
+				                                   DeviceExt,
+				                                   &Irp->Overlay.AllocationSize);
+                        ExReleaseResourceLite(&(pFcb->MainResource));
 			if (!NT_SUCCESS (Status))
 			{
 				VfatCloseFile (DeviceExt, FileObject);
@@ -705,15 +705,12 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 			}
 		}
 
-
-		/* Supersede the file */
 		if (RequestedDisposition == FILE_SUPERSEDE)
 		{
-			AllocationSize.QuadPart = 0;
-			VfatSetAllocationSizeInformation(FileObject, pFcb, DeviceExt, &AllocationSize);
 			Irp->IoStatus.Information = FILE_SUPERSEDED;
 		}
-		else if (RequestedDisposition == FILE_OVERWRITE || RequestedDisposition == FILE_OVERWRITE_IF)
+		else if (RequestedDisposition == FILE_OVERWRITE || 
+		         RequestedDisposition == FILE_OVERWRITE_IF)
 		{
 			Irp->IoStatus.Information = FILE_OVERWRITTEN;
 		}
