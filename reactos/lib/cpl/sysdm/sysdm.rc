@@ -1,4 +1,3 @@
-
 #include "resource.h"
 #include "windows.h"
 
@@ -16,11 +15,12 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 IDI_DEVMGR ICON "resources/devmgr.ico"
 
+#include "en.rc"
 #include "cz.rc"
 #include "de.rc"
 #include "dk.rc"
-#include "en.rc"
 #include "fr.rc"
-#include "Ja.rc"
 #include "nl.rc"
 #include "sv.rc"
+#include "Ja.rc"
+#include "hu.rc"

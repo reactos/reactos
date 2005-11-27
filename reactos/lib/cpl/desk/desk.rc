@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <commctrl.h>
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -16,9 +15,10 @@ IDC_DESK_ICON ICON "resources/applet.ico"
 #include "en.rc"
 #include "cz.rc"
 #include "de.rc"
-#include "es.rc"
+#include "nl.rc"
 #include "gr.rc"
 #include "Ja.rc"
-#include "nl.rc"
 #include "pl.rc"
 #include "sv.rc"
+#include "es.rc"
+#include "hu.rc"

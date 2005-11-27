@@ -8,3 +8,5 @@
 #include "En.rc"
 #include "De.rc"
 #include "Ja.rc"
+#include "Hu.rc"
+

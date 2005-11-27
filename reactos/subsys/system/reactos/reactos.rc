@@ -22,5 +22,6 @@ IDI_MAIN ICON "res/reactos.ico"
 #include "Sv.rc"
 #include "It.rc"
 #include "Ja.rc"
+#include "Hu.rc"
 
 /* EOF */

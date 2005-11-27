@@ -1,0 +1,10 @@
+// Hungarian (HU) resource by Robert Horvath (talley at cubeclub.hu)
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_VERSION_STR REACTOS_STR_PRODUCT_VERSION
+    IDS_IBROWSER_VERSION_STR "A ReactOS %s webböngészõ"
+END
+

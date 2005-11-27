@@ -19,4 +19,4 @@ IDB_HEADER    BITMAP "resources/header.bmp"
 #include "dk.rc"
 #include "Ja.rc"
 #include "sv.rc"
-
+#include "hu.rc"

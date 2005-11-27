@@ -16,5 +16,6 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 #include "En.rc"
+#include "Hu.rc"
 #include "Ja.rc"
 #include "Pl.rc"

@@ -14,4 +14,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_DEVMGR ICON "resources/devmgr.ico"
 
 #include "En.rc"
+#include "Hu.rc"
 #include "Pl.rc"

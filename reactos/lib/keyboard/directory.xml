@@ -14,6 +14,9 @@
 	<directory name="kbdgr">
 		<xi:include href="kbdgr/kbdgr.xml" />
 	</directory>
+	<directory name="kbdhu">
+		<xi:include href="kbdhu/kbdhu.xml" />
+	</directory>
 	<directory name="kbdru">
 		<xi:include href="kbdru/kbdru.xml" />
 	</directory>

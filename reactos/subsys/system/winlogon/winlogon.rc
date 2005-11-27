@@ -19,3 +19,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #include "Ja.rc"
 #include "Pl.rc"
 #include "Sv.rc"
+#include "Hu.rc"

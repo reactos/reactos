@@ -9,5 +9,6 @@
 
 #include "En.rc"
 #include "Ja.rc"
+#include "Hu.rc"
 #include "Nl.rc"
 #include "Pl.rc"

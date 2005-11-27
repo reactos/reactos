@@ -38,3 +38,4 @@
 #include "mpr_Pt.rc"
 #include "mpr_Ru.rc"
 #include "mpr_Sv.rc"
+#include "mpr_Hu.rc"

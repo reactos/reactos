@@ -2,6 +2,7 @@
  * Hungarian resources for oleaut32
  *
  * Copyright 2003 Jon Griffiths
+ * Hungarian translation by ???
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
