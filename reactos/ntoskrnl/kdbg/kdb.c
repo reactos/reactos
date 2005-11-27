@@ -128,9 +128,9 @@ STATIC VOID
 KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFrame)
 {
    /* Copy the TrapFrame only up to Eflags and zero the rest*/
-   RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, Esp));
-   RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, Esp)),
-                 sizeof (KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, Esp));
+   RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+   RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
+                 sizeof (KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
    asm volatile(
       "movl %%cr0, %0"    "\n\t"
       "movl %%cr2, %1"    "\n\t"
@@ -139,8 +139,8 @@ KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFram
       : "=r"(KdbTrapFrame->Cr0), "=r"(KdbTrapFrame->Cr2),
         "=r"(KdbTrapFrame->Cr3), "=r"(KdbTrapFrame->Cr4));
 
-    KdbTrapFrame->Tf.Esp = KiEspFromTrapFrame(TrapFrame);
-    KdbTrapFrame->Tf.Ss = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
+    KdbTrapFrame->Tf.HardwareEsp = KiEspFromTrapFrame(TrapFrame);
+    KdbTrapFrame->Tf.HardwareSegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
 
 
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
@@ -150,12 +150,12 @@ STATIC VOID
 KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFrame)
 {
    /* Copy the TrapFrame only up to Eflags and zero the rest*/
-   RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, Esp));
+   RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
    
    /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
    
-    KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.Ss);
-    KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.Esp);
+    KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareSegSs);
+    KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareEsp);
    
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
@@ -330,7 +330,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
       IntVect = 3;
    else if (Mem[0] == 0xcd)
       IntVect = Mem[1];
-   else if (Mem[0] == 0xce && KdbCurrentTrapFrame->Tf.Eflags & (1<<11)) /* 1 << 11 is the overflow flag */
+   else if (Mem[0] == 0xce && KdbCurrentTrapFrame->Tf.EFlags & (1<<11)) /* 1 << 11 is the overflow flag */
       IntVect = 4;
    else
       return FALSE;
@@ -1177,7 +1177,7 @@ KdbEnterDebuggerException(
    IN OUT PKTRAP_FRAME TrapFrame,
    IN BOOLEAN FirstChance)
 {
-   ULONG ExpNr = (ULONG)TrapFrame->DebugArgMark;
+   ULONG ExpNr = (ULONG)TrapFrame->DbgArgMark;
    KDB_ENTER_CONDITION EnterCondition;
    KD_CONTINUE_TYPE ContinueType = kdHandleException;
    PKDB_BREAKPOINT BreakPoint;
@@ -1245,7 +1245,7 @@ KdbEnterDebuggerException(
       else if (BreakPoint->Type == KdbBreakPointTemporary &&
                BreakPoint->Process == KdbCurrentProcess)
       {
-         ASSERT((TrapFrame->Eflags & X86_EFLAGS_TF) == 0);
+         ASSERT((TrapFrame->EFlags & X86_EFLAGS_TF) == 0);
 
          /*
           * Delete the temporary breakpoint which was used to step over or into the instruction.
@@ -1257,7 +1257,7 @@ KdbEnterDebuggerException(
             if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
                 (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Eip)))
             {
-               TrapFrame->Eflags |= X86_EFLAGS_TF;
+               TrapFrame->EFlags |= X86_EFLAGS_TF;
             }
             goto continue_execution; /* return */
          }
@@ -1273,7 +1273,7 @@ KdbEnterDebuggerException(
                BreakPoint->Type == KdbBreakPointTemporary)
       {
          ASSERT(ExpNr == 3);
-         TrapFrame->Eflags |= X86_EFLAGS_TF;
+         TrapFrame->EFlags |= X86_EFLAGS_TF;
          KdbBreakPointToReenable = BreakPoint;
       }
 
@@ -1307,7 +1307,7 @@ KdbEnterDebuggerException(
       if (BreakPoint->Type == KdbBreakPointSoftware)
       {
          DbgPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
-                  KdbLastBreakPointNr, TrapFrame->Cs & 0xffff, TrapFrame->Eip);
+                  KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
       }
       else if (BreakPoint->Type == KdbBreakPointHardware)
       {
@@ -1346,7 +1346,7 @@ KdbEnterDebuggerException(
 
          /* Unset TF if we are no longer single stepping. */
          if (KdbNumSingleSteps == 0)
-            TrapFrame->Eflags &= ~X86_EFLAGS_TF;
+            TrapFrame->EFlags &= ~X86_EFLAGS_TF;
          goto continue_execution; /* return */
       }
 
@@ -1359,16 +1359,16 @@ KdbEnterDebuggerException(
             if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Eip)) ||
                 (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Eip)))
             {
-               TrapFrame->Eflags &= ~X86_EFLAGS_TF;
+               TrapFrame->EFlags &= ~X86_EFLAGS_TF;
             }
             else
             {
-               TrapFrame->Eflags |= X86_EFLAGS_TF;
+               TrapFrame->EFlags |= X86_EFLAGS_TF;
             }
             goto continue_execution; /* return */
          }
 
-         TrapFrame->Eflags &= ~X86_EFLAGS_TF;
+         TrapFrame->EFlags &= ~X86_EFLAGS_TF;
          KdbEnteredOnSingleStep = TRUE;
       }
       else
@@ -1393,7 +1393,7 @@ KdbEnterDebuggerException(
       }
 
       DbgPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
-               TrapFrame->Cs & 0xffff, TrapFrame->Eip - 1);
+               TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
    }
    else
    {
@@ -1414,7 +1414,7 @@ KdbEnterDebuggerException(
          ULONG_PTR Cr2;
          ULONG Err;
          asm volatile("movl %%cr2, %0" : "=r"(Cr2));
-         Err = TrapFrame->ErrorCode;
+         Err = TrapFrame->ErrCode;
          DbgPrint("Memory at 0x%p could not be %s: ", Cr2, (Err & (1 << 1)) ? "written" : "read");
          if ((Err & (1 << 0)) == 0)
             DbgPrint("Page not present.\n");
@@ -1459,12 +1459,12 @@ KdbEnterDebuggerException(
       if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
           (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
       {
-         ASSERT((KdbCurrentTrapFrame->Tf.Eflags & X86_EFLAGS_TF) == 0);
-         /*KdbCurrentTrapFrame->Tf.Eflags &= ~X86_EFLAGS_TF;*/
+         ASSERT((KdbCurrentTrapFrame->Tf.EFlags & X86_EFLAGS_TF) == 0);
+         /*KdbCurrentTrapFrame->Tf.EFlags &= ~X86_EFLAGS_TF;*/
       }
       else
       {
-         KdbCurrentTrapFrame->Tf.Eflags |= X86_EFLAGS_TF;
+         KdbCurrentTrapFrame->Tf.EFlags |= X86_EFLAGS_TF;
       }
    }
 
@@ -1496,7 +1496,7 @@ continue_execution:
       /* Set the RF flag so we don't trigger the same breakpoint again. */
       if (Resume)
       {
-         TrapFrame->Eflags |= X86_EFLAGS_RF;
+         TrapFrame->EFlags |= X86_EFLAGS_RF;
       }
 
       /* Clear dr6 status flags. */
