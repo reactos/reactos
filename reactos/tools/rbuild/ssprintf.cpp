@@ -13,7 +13,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "pch.h"
 
 #ifdef __FreeBSD__
 # include <stdlib.h>
@@ -305,7 +304,7 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 		double*  __n;
 		ieee_double_t*  n;
 	} n;
-	
+
 	n.__n = &__n;
 
 	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
@@ -496,7 +495,7 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 		double*  __n;
 		ieee_double_t*  n;
 	} n;
-	
+
 	n.__n = &__n;
 
 	if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' ) {
@@ -708,7 +707,7 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 
 	if ( exp_sign == 'g' || exp_sign == 'G' ) {
 		type |= ZEROTRUNC;
-		if ( exponent < -4 || fabs(exponent) >= precision ) 
+		if ( exponent < -4 || fabs(exponent) >= precision )
 			exp_sign -= 2; // g -> e and G -> E
 		else
 			exp_sign = 'f';
@@ -739,7 +738,7 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 
 	if ( exp_sign == 'f' )
 	{
-		
+
 		buf = (char*)alloca(4096);
 		if (type & LEFT)
 		{
@@ -912,7 +911,7 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 
 	if ( exp_sign == L'g' || exp_sign == L'G' ) {
 		type |= ZEROTRUNC;
-		if ( exponent < -4 || fabs(exponent) >= precision ) 
+		if ( exponent < -4 || fabs(exponent) >= precision )
 			exp_sign -= 2; // g -> e and G -> E
 		else
 			exp_sign = 'f';
@@ -943,7 +942,7 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 
 	if ( exp_sign == L'f' )
 	{
-		
+
 		buf = (wchar_t*)alloca(4096*sizeof(wchar_t));
 		if (type & LEFT)
 		{
@@ -1486,7 +1485,7 @@ ssvprintf ( const char *fmt, va_list args )
 		case 'G':
 			if (qualifier == 'l' || qualifier == 'L' ) {
 				_ldouble = va_arg(args, long double);
-			
+
 				if ( _isnanl(_ldouble) )
 				{
 					f += "Nan";
@@ -1810,7 +1809,7 @@ sswvprintf ( const wchar_t* fmt, va_list args )
 			if (qualifier == L'l' || qualifier == L'L' )
 			{
 				_ldouble = va_arg(args, long double);
-			
+
 				if ( _isnanl(_ldouble) )
 				{
 					f += L"Nan";
