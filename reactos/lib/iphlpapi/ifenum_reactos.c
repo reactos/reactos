@@ -40,7 +40,7 @@
 #include "ifenum.h"
 #include <assert.h>
 
-#define DEBUG
+#define NDEBUG
 #include "debug.h"
 
 /* Globals */
