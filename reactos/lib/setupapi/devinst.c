@@ -66,12 +66,17 @@ typedef BOOL
 (WINAPI* DEFAULT_CLASS_INSTALL_PROC) (
     IN HDEVINFO DeviceInfoSet,
     IN OUT PSP_DEVINFO_DATA DeviceInfoData);
-typedef DWORD 
+typedef DWORD
 (CALLBACK* COINSTALLER_PROC) (
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN OUT PCOINSTALLER_CONTEXT_DATA Context);
+typedef BOOL
+(WINAPI* PROPERTY_PAGE_PROVIDER) (
+    IN PSP_PROPSHEETPAGE_REQUEST PropPageRequest,
+    IN LPFNADDPROPSHEETPAGE fAddFunc,
+    IN LPARAM lParam);
 
 struct CoInstallerElement
 {
@@ -3468,9 +3473,9 @@ BOOL WINAPI SetupDiSetDeviceInstallParamsW(
 BOOL WINAPI SetupDiGetDeviceInstanceIdA(
         IN HDEVINFO DeviceInfoSet,
         IN PSP_DEVINFO_DATA DeviceInfoData,
-        OUT PSTR DeviceInstanceId,
+        OUT PSTR DeviceInstanceId OPTIONAL,
         IN DWORD DeviceInstanceIdSize,
-        OUT PDWORD RequiredSize)
+        OUT PDWORD RequiredSize OPTIONAL)
 {
     PWSTR DeviceInstanceIdW = NULL;
     BOOL ret = FALSE;
@@ -3504,7 +3509,7 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdA(
         }
     }
 
-    TRACE("Returning 0x%p\n", ret);
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -3514,9 +3519,9 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdA(
 BOOL WINAPI SetupDiGetDeviceInstanceIdW(
         IN HDEVINFO DeviceInfoSet,
         IN PSP_DEVINFO_DATA DeviceInfoData,
-        OUT PWSTR DeviceInstanceId,
+        OUT PWSTR DeviceInstanceId OPTIONAL,
         IN DWORD DeviceInstanceIdSize,
-        OUT PDWORD RequiredSize)
+        OUT PDWORD RequiredSize OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -3553,7 +3558,146 @@ BOOL WINAPI SetupDiGetDeviceInstanceIdW(
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
     }
 
-    TRACE("Returning 0x%p\n", ret);
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevPropertySheetsA(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassDevPropertySheetsA(
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+        IN LPPROPSHEETHEADERA PropertySheetHeader,
+        IN DWORD PropertySheetHeaderPageListSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        IN DWORD PropertySheetType)
+{
+    FIXME ("Stub %p %p %p %d %p %d\n",
+           DeviceInfoSet, DeviceInfoData, PropertySheetHeader, PropertySheetHeaderPageListSize,
+           RequiredSize, PropertySheetType);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+static BOOL WINAPI GetClassDevPropertySheetsCallback(
+        IN HPROPSHEETPAGE hPropSheetPage,
+        LPARAM lParam)
+{
+    FIXME("Need to add a property page!\n");
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevPropertySheetsW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+        IN LPPROPSHEETHEADERW PropertySheetHeader,
+        IN DWORD PropertySheetHeaderPageListSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        IN DWORD PropertySheetType)
+{
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p 0%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
+        PropertySheetHeader, PropertySheetHeaderPageListSize,
+        RequiredSize, PropertySheetType);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!PropertySheetHeader)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (!DeviceInfoData && IsEqualIID(&list->ClassGuid, &GUID_NULL))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (!PropertySheetHeader)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (PropertySheetType != DIGCDP_FLAG_ADVANCED
+          && PropertySheetType != DIGCDP_FLAG_BASIC
+          /* FIXME: && PropertySheetType != DIGCDP_FLAG_REMOTE_ADVANCED
+          && PropertySheetType != DIGCDP_FLAG_REMOTE_BASIC*/)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        HKEY hKey = INVALID_HANDLE_VALUE;
+        SP_PROPSHEETPAGE_REQUEST Request;
+        LPWSTR PropPageProvider = NULL;
+        HMODULE hModule = NULL;
+        PROPERTY_PAGE_PROVIDER pPropPageProvider = NULL;
+        DWORD dwLength, dwRegType;
+        DWORD rc;
+
+        if (DeviceInfoData)
+            hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_QUERY_VALUE);
+        else
+        {
+            /* FIXME: what if DeviceInfoSet is a remote device info set? */
+            hKey = SetupDiOpenClassRegKey(&list->ClassGuid, KEY_QUERY_VALUE);
+        }
+        if (hKey == INVALID_HANDLE_VALUE)
+            goto cleanup;
+
+        rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, &dwRegType, NULL, &dwLength);
+        if (rc == ERROR_FILE_NOT_FOUND)
+        {
+            /* No registry key. As it is optional, don't say it's a bad error */
+            if (RequiredSize)
+                *RequiredSize = 0;
+            ret = TRUE;
+            goto cleanup;
+        }
+        else if (rc != ERROR_SUCCESS && dwRegType != REG_SZ)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+
+        PropPageProvider = HeapAlloc(GetProcessHeap(), 0, dwLength + sizeof(WCHAR));
+        if (!PropPageProvider)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, NULL, (LPBYTE)PropPageProvider, &dwLength);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        PropPageProvider[dwLength / sizeof(WCHAR)] = 0;
+
+        rc = GetFunctionPointer(PropPageProvider, &hModule, (PVOID*)&pPropPageProvider);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+
+        Request.cbSize = sizeof(SP_PROPSHEETPAGE_REQUEST);
+        Request.PageRequested = SPPSR_ENUM_ADV_DEVICE_PROPERTIES;
+        Request.DeviceInfoSet = DeviceInfoSet;
+        Request.DeviceInfoData = DeviceInfoData;
+        if (RequiredSize)
+            *RequiredSize = 0; /* FIXME */
+        pPropPageProvider(&Request, GetClassDevPropertySheetsCallback, (LPARAM)0);
+        ret = TRUE;
+
+cleanup:
+        if (hKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hKey);
+        HeapFree(GetProcessHeap(), 0, PropPageProvider);
+        FreeFunctionPointer(hModule, pPropPageProvider);
+    }
+
+    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -4289,7 +4433,6 @@ cleanup:
         HeapFree(GetProcessHeap(), 0, ProviderName);
     HeapFree(GetProcessHeap(), 0, DriverVer);
 
-    TRACE("Returning %d\n", ret);
     return ret;
 }
 
@@ -5719,7 +5862,7 @@ SetupDiRegisterCoDeviceInstallers(
         DWORD DoAction;
         WCHAR SectionName[MAX_PATH];
         DWORD SectionNameLength = 0;
-        HKEY hKey = INVALID_HANDLE_VALUE;;
+        HKEY hKey = INVALID_HANDLE_VALUE;
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
         Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
