@@ -94,8 +94,17 @@ RtlAssert(
 #else
 
     /* On non-debug builds, we never show these */
+#ifdef _MSC_VER
+static __inline void DPRINT1 ( const char* fmt, ... )
+{
+}
+static __inline void DPRINT ( const char* fmt, ... )
+{
+}
+#else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+#endif
     #define CHECKPOINT1
     #define CHECKPOINT
     #define UNIMPLEMENTED
