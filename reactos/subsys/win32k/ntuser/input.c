@@ -910,7 +910,7 @@ IntMouseInput(MOUSEINPUT *mi)
       {
          MK_LBUTTON, MK_RBUTTON
       };
-   POINT MousePos, OrgPos;
+   POINT MousePos = {0}, OrgPos;
    PSYSTEM_CURSORINFO CurInfo;
    PWINSTATION_OBJECT WinSta;
    BOOL DoMove, SwapButtons;

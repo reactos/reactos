@@ -2773,7 +2773,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 {
   WCHAR PathBuffer[MAX_PATH];
   PINFCONTEXT DirContext;
-  PWCHAR AdditionalSectionName;
+  PWCHAR AdditionalSectionName = NULL;
   PWCHAR KeyValue;
   ULONG Length;
   NTSTATUS Status;
