@@ -849,9 +849,10 @@ XMLLoadInclude (
 }
 
 XMLElement*
-XMLLoadFile ( const string& filename,
-	          const Path& path,
-	          XMLIncludes& includes )
+XMLLoadFile (
+	const string& filename,
+	const Path& path,
+	XMLIncludes& includes )
 {
 	XMLFile* f = new XMLFile();
 
@@ -908,4 +909,12 @@ XMLLoadFile ( const string& filename,
 		delete e;
 	}
 	return head;
+}
+
+XMLElement*
+XMLLoadFile ( const string& filename )
+{
+	Path path;
+	XMLIncludes includes;
+	return XMLLoadFile ( filename, path, includes );
 }

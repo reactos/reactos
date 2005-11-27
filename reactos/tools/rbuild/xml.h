@@ -233,4 +233,7 @@ XMLLoadFile (
 	const Path& path,
 	XMLIncludes& includes );
 
+XMLElement*
+XMLLoadFile ( const std::string& filename );
+
 #endif // XML_H
