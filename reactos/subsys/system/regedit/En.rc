@@ -81,8 +81,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Find\tCtrl+F",               ID_EDIT_FIND, GRAYED
-        MENUITEM "Find Ne&xt\tF3",              ID_EDIT_FINDNEXT, GRAYED
+        MENUITEM "&Find\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "Find Ne&xt\tF3",              ID_EDIT_FINDNEXT
     END
     POPUP "&View"
     BEGIN
@@ -139,7 +139,7 @@ BEGIN
             MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
         END
-        MENUITEM "&Find",                           ID_EDIT_FIND, GRAYED
+        MENUITEM "&Find",                           ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Delete",                         ID_TREE_DELETE
         MENUITEM "&Rename",                         ID_TREE_RENAME
@@ -351,6 +351,7 @@ BEGIN
   IDS_EXPAND                     "&Expand"
   IDS_COLLAPSE                   "&Collapse"
   IDS_GOTO_SUGGESTED_KEY         "&Go to '%s'"
+  IDS_FINISHEDFIND               "Finished searching through the registry."
 END
 
 /*****************************************************************/
@@ -403,7 +404,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,197,24,50,14
     GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
     LTEXT           "Fi&nd what:",IDC_STATIC,7,8,37,10
-    EDITTEXT        IDD_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "&Keys",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,14,36,35,8
     CONTROL         "&Values",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
@@ -414,6 +415,17 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
     CONTROL         "Match &case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,83,48,90,12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "&Cancel",IDCANCEL,93,29,45,14
+    LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
 END
 
 /*

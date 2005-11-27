@@ -45,6 +45,7 @@
 #define IDD_ADDFAVORITES                138
 #define IDD_REMOVEFAVORITES             139
 #define IDD_FIND                        140
+#define IDD_FINDING                     141
 #define IDC_LICENSE_EDIT                1029
 #define ID_REGISTRY_EXIT                32770
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
@@ -194,12 +195,13 @@
 
 #define IDC_FAVORITENAME                2011  
 #define IDC_FAVORITESLIST               2012
-#define IDD_FINDWHAT                    2013
+#define IDC_FINDWHAT                    2013
 #define IDC_LOOKAT_KEYS                 2014
 #define IDC_LOOKAT_VALUES               2015
 #define IDC_LOOKAT_DATA                 2016
 #define IDC_MATCHSTRING                 2017
 #define IDC_MATCHCASE                   2018
+#define IDS_FINISHEDFIND                2019
 
 #define ID_FAVORITES_MIN                2100
 #define ID_FAVORITES_MAX                2999

@@ -79,11 +79,17 @@ extern TCHAR szTitle[];
 extern TCHAR szFrameClass[];
 extern TCHAR szChildClass[];
 
+extern const TCHAR g_szGeneralRegKey[];
+
 /* about.c */
 extern void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+
+/* find.c */
+extern void FindDialog(HWND hWnd);
+extern BOOL FindNext(HWND hWnd);
 
 /* framewnd.c */
 extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);

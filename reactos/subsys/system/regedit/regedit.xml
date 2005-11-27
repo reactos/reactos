@@ -19,6 +19,7 @@
 	<file>about.c</file>
 	<file>childwnd.c</file>
 	<file>edit.c</file>
+	<file>find.c</file>
 	<file>framewnd.c</file>
 	<file>hexedit.c</file>
 	<file>listview.c</file>

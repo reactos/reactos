@@ -50,6 +50,7 @@ HMENU hMenuFrame;
 HMENU hPopupMenus = 0;
 UINT nClipboardFormat;
 LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
+const TCHAR g_szGeneralRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit");
 
 
 #define MAX_LOADSTRING  100
@@ -162,8 +163,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     }
 
     /* Restore position */
-    if (RegQueryStringValue(HKEY_CURRENT_USER,
-        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
+    if (RegQueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey,
         _T("LastKey"),
         szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
     {

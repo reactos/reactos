@@ -85,7 +85,6 @@ BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR
 /*
  * Processing
  */
-LONG RegDeleteKeyRecursive(HKEY hKey, LPCTSTR lpSubKey);
 LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
 LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
 LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName);
@@ -95,6 +94,16 @@ LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTST
 /*
  * Miscellaneous
  */
+#define RSF_WHOLESTRING    0x00000001
+#define RSF_LOOKATKEYS	   0x00000002
+#define RSF_LOOKATVALUES   0x00000004
+#define RSF_LOOKATDATA     0x00000008
+#define RSF_MATCHCASE      0x00010000
+
+LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
+    LPCTSTR pszSearchString, DWORD dwValueIndex,	
+    DWORD dwSearchFlags, BOOL (*pfnCallback)(LPVOID), LPVOID lpParam);
+
 BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);
 
 /* EOF */

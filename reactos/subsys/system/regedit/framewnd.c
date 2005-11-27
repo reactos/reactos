@@ -905,7 +905,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_EDIT_DELETE:
     {
-	if (GetFocus() == g_pChildWnd->hListWnd)
+        if (GetFocus() == g_pChildWnd->hListWnd)
         {
           UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
           if(nSelected >= 1)
@@ -966,6 +966,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     }
+    case ID_EDIT_FIND:
+        FindDialog(hWnd);
+        break;
+    case ID_EDIT_FINDNEXT:
+        FindNext(hWnd);
+        break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, hKeyRoot, keyPath);
         break;
