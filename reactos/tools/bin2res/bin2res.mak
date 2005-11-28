@@ -46,6 +46,6 @@ $(BIN2RES_INT_)mkstemps.o: $(BIN2RES_BASE_)mkstemps.c | $(BIN2RES_INT)
 bin2res: $(BIN2RES_TARGET)
 
 .PHONY: bin2res_clean
-bin2res_clean: $(BIN2RES_TARGET)
+bin2res_clean:
 	-@$(rm) $(BIN2RES_TARGET) $(BIN2RES_OBJECTS) 2>$(NUL)
 clean: bin2res_clean

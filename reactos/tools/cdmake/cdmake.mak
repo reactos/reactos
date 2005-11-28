@@ -46,6 +46,6 @@ $(CDMAKE_INT_)llmosrt.o: $(CDMAKE_BASE_)llmosrt.c | $(CDMAKE_INT)
 	${host_gcc} $(CDMAKE_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: cdmake_clean
-cdmake_clean: $(CDMAKE_TARGET)
+cdmake_clean:
 	-@$(rm) $(CDMAKE_TARGET) $(CDMAKE_OBJECTS) 2>$(NUL)
 clean: cdmake_clean

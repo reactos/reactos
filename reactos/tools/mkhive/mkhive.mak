@@ -56,6 +56,6 @@ $(MKHIVE_INT_)registry.o: $(MKHIVE_BASE_)registry.c | $(MKHIVE_INT)
 	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: mkhive_clean
-mkhive_clean: $(MKHIVE_TARGET)
+mkhive_clean:
 	-@$(rm) $(MKHIVE_TARGET) $(MKHIVE_OBJECTS) 2>$(NUL)
 clean: mkhive_clean
