@@ -273,8 +273,7 @@ int main()
 		                  (WNDENUMPROC) EnumThreadProc,
 		                  (LPARAM)(LPTSTR) szWindowName );
 	   }
-typedef __attribute__((mode (__pointer__))) unsigned long ULONG_PTRX;
-CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTRX)CurrentProcess + 1);
+
 	   CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess +
 	                     (ULONG_PTR)CurrentProcess->NextEntryOffset);
 	} 
