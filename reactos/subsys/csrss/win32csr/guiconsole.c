@@ -488,7 +488,7 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
   PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
   LONG CursorEndX, CursorEndY;
-  RECT Source, ScrollRect;
+  RECT ScrollRect;
 
   if (NULL == Console->hWindow || NULL == GuiData)
     {
@@ -497,16 +497,19 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
 
   if (0 != ScrolledLines)
     {
-      Source.left = 0;
-      Source.top = ScrolledLines;
-      Source.right = Console->Size.X - 1;
-      Source.bottom = ScrolledLines + Region->top - 1;
       ScrollRect.left = 0;
       ScrollRect.top = 0;
       ScrollRect.right = Console->Size.X * GuiData->CharWidth;
       ScrollRect.bottom = Region->top * GuiData->CharHeight;
 
-      InvalidateRect(Console->hWindow, &ScrollRect, FALSE);
+      ScrollWindowEx(Console->hWindow,
+                     0,
+                     -(ScrolledLines * GuiData->CharHeight),
+                     &ScrollRect,
+                     NULL,
+                     NULL,
+                     NULL,
+                     SW_INVALIDATE);
     }
 
   GuiIntDrawRegion(GuiData, Console->hWindow, Region);
