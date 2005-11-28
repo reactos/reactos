@@ -12,3 +12,4 @@ BEGIN
     IDS_CPLNAME "Sound and Audio Devices"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
 END
+
