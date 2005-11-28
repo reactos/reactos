@@ -209,7 +209,7 @@ std::string
 MSVCBackend::DspFileName ( const Module& module ) const
 {
 	return DosSeparator(
-		ReplaceExtension ( module.GetPath(), ".dsp" )
+		ReplaceExtension ( module.GetPath(), "_auto.dsp" )
 		);
 }
 
@@ -217,6 +217,6 @@ std::string
 MSVCBackend::VcprojFileName ( const Module& module ) const
 {
 	return DosSeparator(
-		ReplaceExtension ( module.GetPath(), ".vcproj" )
+		ReplaceExtension ( module.GetPath(), "_auto.vcproj" )
 		);
 }
