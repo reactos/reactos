@@ -30,7 +30,7 @@ reactos/tools/unicode		# Synced to Wine-0_9_2
 reactos/tools/wpp		# Synced to Wine-0_9_2
 reactos/tools/bin2res		# Resource to binary converter
 reactos/tools/winebuild		# Synced to Wine-0_9_2
-reactos/tools/wmc		# Wine Message Compiler
+reactos/tools/wmc		# Synced to Wine-0_9_2
 reactos/tools/wrc		# Synced to Wine-0_9_2
 reactos/tools/widl		# Forked at Wine-20050930
 
