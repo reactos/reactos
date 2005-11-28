@@ -12,8 +12,9 @@
 #define _NTSYSTEM_
 #define _NTDLLBUILD_
 #define WIN32_NO_STATUS
-#define NTOS_MODE_USER
 #define _INC_SWPRINTF_INL_
+#define _CRT_SECURE_NO_DEPRECATE
+#define NO_RTL_INLINES
 
 /* C Headers */
 #include <stdio.h>

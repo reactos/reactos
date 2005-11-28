@@ -37,8 +37,7 @@
  * FILE:              lib/rtl/qsort.c
  * PROGRAMMER:        Adapted from CygWin newlib 2000-03-12.       
  */
-
-#include <stddef.h>
+#include <rtl.h>
 
 #ifndef __GNUC__
 #define inline
@@ -46,7 +45,7 @@
 
 /* FIXME: these types should be from the default includes */
 
-typedef int (* 	_pfunccmp_t) (char *, char *);
+typedef int (* 	_pfunccmp_t) (const void *, const void *);
 
 #define min(a,b) ((a)<(b)?(a):(b))
 

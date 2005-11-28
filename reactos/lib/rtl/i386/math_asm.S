@@ -28,7 +28,7 @@
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * OR SERVICES// LOSS OF USE, DATA, OR PROFITS// OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
@@ -48,12 +48,32 @@
 .globl __alldiv
 .globl __aulldvrm
 .globl __alldvrm
+.globl _atan
+.globl _ceil
+.globl _cos
+.globl _fabs
+.globl _floor
+.globl _log
+.globl _pow
+.globl _sin
+.globl _sqrt
+.globl _tan
+.globl __fltused
+
+/* DATA ********************************************************************/
+
+fzero:
+        .long   0                       // Floating point zero
+        .long   0                       // Floating point zero
+
+__fltused:
+        .long 0x9875
 
 /* FUNCTIONS ***************************************************************/
 
 /*
  * long long
- * __alldiv(long long Dividend, long long Divisor);
+ * __alldiv(long long Dividend, long long Divisor)//
  *
  * Parameters:
  *   [ESP+04h] - long long Dividend
@@ -71,7 +91,7 @@ __alldiv:
 
 /*
  * long long
- * __allmul(long long Multiplier, long long Multiplicand);
+ * __allmul(long long Multiplier, long long Multiplicand)//
  *
  * Parameters:
  *   [ESP+04h] - long long Multiplier
@@ -114,7 +134,7 @@ __allmul:
 
 /*
  * unsigned long long
- * __aullrem(unsigned long long Dividend, unsigned long long Divisor);
+ * __aullrem(unsigned long long Dividend, unsigned long long Divisor)//
  *
  * Parameters:
  *   [ESP+04h] - unsigned long long Dividend
@@ -132,7 +152,7 @@ __aullrem:
 
 /*
  * long long
- * __allshl(long long Value, unsigned char Shift);
+ * __allshl(long long Value, unsigned char Shift)//
  *
  * Parameters:
  *   EDX:EAX - signed long long value to be shifted left
@@ -154,7 +174,7 @@ __allshl:
 
 /*
  * long long
- * __allshr(long long Value, unsigned char Shift);
+ * __allshr(long long Value, unsigned char Shift)//
  *
  * Parameters:
  *   EDX:EAX - signed long long value to be shifted right
@@ -176,7 +196,7 @@ __allshr:
 
 /*
  * unsigned long long
- * __aulldiv(unsigned long long Dividend, unsigned long long Divisor);
+ * __aulldiv(unsigned long long Dividend, unsigned long long Divisor)//
  *
  * Parameters:
  *   [ESP+04h] - unsigned long long Dividend
@@ -194,7 +214,7 @@ __aulldiv:
 
 /*
  * unsigned long long
- * __aullshr(unsigned long long Value, unsigned char Shift);
+ * __aullshr(unsigned long long Value, unsigned char Shift)//
  *
  * Parameters:
  *   EDX:EAX - unsigned long long value to be shifted right
@@ -215,7 +235,7 @@ __aullshr:
 	
 /*
  * long long
- * __allrem(long long Dividend, long long Divisor);
+ * __allrem(long long Dividend, long long Divisor)//
  *
  * Parameters:
  *   [ESP+04h] - long long Dividend
@@ -629,3 +649,188 @@ __aulldvrm:
 
         ret     16
 
+_atan:
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fld1                            // Load constant 1
+        fpatan                          // Take the arctangent
+        pop     ebp
+        ret
+
+_ceil:
+        push    ebp
+        mov     ebp,esp
+        sub     esp,4                   // Allocate temporary space
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fstcw   [ebp-2]                 // Save control word
+        fclex                           // Clear exceptions
+        mov     word ptr [ebp-4],0xb63  // Rounding control word
+        fldcw   [ebp-4]                 // Set new rounding control
+        frndint                         // Round to integer
+        fclex                           // Clear exceptions
+        fldcw   [ebp-2]                 // Restore control word
+        mov     esp,ebp                 // Deallocate temporary space
+        pop     ebp
+        ret
+
+_cos:
+        push    ebp
+        mov     ebp,esp                 // Point to the stack frame
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fcos                            // Take the cosine
+        pop     ebp
+        ret
+
+_fabs:
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fabs                            // Take the absolute value
+        pop     ebp
+        ret
+
+_floor:
+        push    ebp
+        mov     ebp,esp
+        sub     esp,4                   // Allocate temporary space
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fstcw   [ebp-2]                 // Save control word
+        fclex                           // Clear exceptions
+        mov     word ptr [ebp-4],0x763  // Rounding control word
+        fldcw   [ebp-4]                 // Set new rounding control
+        frndint                         // Round to integer
+        fclex                           // Clear exceptions
+        fldcw   [ebp-2]                 // Restore control word
+        mov     esp,ebp
+        pop     ebp
+        ret
+
+_log:
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fldln2                          // Load log base e of 2
+        fxch    st(1)                   // Exchange st, st(1)
+        fyl2x                           // Compute the natural log(x)
+        pop     ebp
+        ret
+
+_pow:
+        push    ebp
+        mov     ebp,esp
+        sub     esp,12                  // Allocate temporary space
+        push    edi                     // Save register edi
+        push    eax                     // Save register eax
+        mov     dword ptr [ebp-12],0    // Set negation flag to zero
+        fld     qword ptr [ebp+16]      // Load real from stack
+        fld     qword ptr [ebp+8]       // Load real from stack
+        mov     edi,offset flat:fzero   // Point to real zero
+        fcom    qword ptr [edi]         // Compare x with zero
+        fstsw   ax                      // Get the FPU status word
+        mov     al,ah                   // Move condition flags to AL
+        lahf                            // Load Flags into AH
+        and     al,    0b01000101       // Isolate  C0, C2 and C3
+        and     ah,not 0b01000101       // Turn off CF, PF and ZF
+        or      ah,al                   // Set new  CF, PF and ZF
+        sahf                            // Store AH into Flags
+        jb      __fpow1                 // Re-direct if x < 0
+        ja      __fpow3                 // Re-direct if x > 0
+        fxch                            // Swap st, st(1)
+        fcom    qword ptr [edi]         // Compare y with zero
+        fxch                            // Restore x as top of stack
+        fstsw   ax                      // Get the FPU status word
+        mov     al,ah                   // Move condition flags to AL
+        lahf                            // Load Flags into AH
+        and     al,    0b01000101       // Isolate  C0, C2 and C3
+        and     ah,not 0b01000101       // Turn off CF, PF and ZF
+        or      ah,al                   // Set new  CF, PF and ZF
+        sahf                            // Store AH into Flags
+        ja      __fpow3                 // Re-direct if y > 0
+        fstp    st(1)                   // Set new stack top and pop
+        mov     eax,1                   // Set domain error (EDOM)
+        jmp     __fpow5                 // End of case
+__fpow1:        fxch                            // Put y on top of stack
+        fld    st                       // Duplicate y as st(1)
+        frndint                         // Round to integer
+        fxch                            // Put y on top of stack
+        fcomp                           // y = int(y) ?
+        fstsw   ax                      // Get the FPU status word
+        mov     al,ah                   // Move condition flags to AL
+        lahf                            // Load Flags into AH
+        and     al,    0b01000101       // Isolate  C0, C2 and C3
+        and     ah,not 0b01000101       // Turn off CF, PF and ZF
+        or      ah,al                   // Set new  CF, PF and ZF
+        sahf                            // Store AH into Flags
+        je      __fpow2                 // Proceed if y = int(y)
+        fstp    st(1)                   // Set new stack top and pop
+        fldz                            // Set result to zero
+        fstp    st(1)                   // Set new stack top and pop
+        mov     eax,1                   // Set domain error (EDOM)
+        jmp     __fpow5                 // End of case
+__fpow2:        fist    dword ptr [ebp-12]      // Store y as integer
+        and     dword ptr [ebp-12],1    // Set bit if y is odd
+        fxch                            // Put x on top of stack
+        fabs                            // x = |x|
+__fpow3:        fldln2                          // Load log base e of 2
+        fxch    st(1)                   // Exchange st, st(1)
+        fyl2x                           // Compute the natural log(x)
+        fmulp                           // Compute y * ln(x)
+        fldl2e                          // Load log base 2(e)
+        fmulp   st(1),st                // Multiply x * log base 2(e)
+        fst     st(1)                   // Push result
+        frndint                         // Round to integer
+        fsub    st(1),st                // Subtract
+        fxch                            // Exchange st, st(1)
+        f2xm1                           // Compute 2 to the (x - 1)
+        fld1                            // Load real number 1
+        faddp                           // 2 to the x
+        fscale                          // Scale by power of 2
+        fstp    st(1)                   // Set new stack top and pop
+        test    dword ptr [ebp-12],1    // Negation required ?
+        jz      __fpow4                 // No, re-direct
+        fchs                            // Negate the result
+__fpow4:        fstp    qword ptr [ebp-8]       // Save (double)pow(x, y)
+        fld     qword ptr [ebp-8]       // Load (double)pow(x, y)
+        fxam                            // Examine st
+        fstsw   ax                      // Get the FPU status word
+        cmp     ah,5                    // Infinity ?
+        jne     __fpow6                 // No, end of case
+        mov     eax,2                   // Set range error (ERANGE)
+                                        // Get errno pointer offset
+__fpow5:        int     3
+        mov     edi,0                   // TODO: offset flat:__crt_errno
+        mov     edi,[edi]               // Get C errno variable pointer
+        mov     dword ptr [edi],eax     // Set errno
+__fpow6:        pop     eax                     // Restore register eax
+        pop     edi                     // Restore register edi
+        mov     esp,ebp                 // Deallocate temporary space
+        pop     ebp
+        ret
+
+_sin:
+        push    ebp                     // Save register bp
+        mov     ebp,esp                 // Point to the stack frame
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fsin                            // Take the sine
+        pop     ebp                     // Restore register bp
+        ret
+
+_sqrt:
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fsqrt                           // Take the square root
+        pop     ebp
+        ret
+
+_tan:
+        push    ebp
+        mov     ebp,esp
+        sub     esp,4                   // Allocate temporary space
+        fld     qword ptr [ebp+8]       // Load real from stack
+        fptan                           // Take the tangent
+        fstp    dword ptr [ebp-4]       // Throw away the constant 1
+        mov     esp,ebp                 // Deallocate temporary space
+        pop     ebp
+        ret

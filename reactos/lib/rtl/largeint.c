@@ -7,7 +7,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NO_RTL_INLINES
 #include <rtl.h>
 
 #define NDEBUG

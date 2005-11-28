@@ -34,7 +34,6 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
-	<file>math.c</file>
 	<file>mem.c</file>
 	<file>message.c</file>
 	<file>largeint.c</file>
