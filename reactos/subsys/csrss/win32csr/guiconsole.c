@@ -502,6 +502,25 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
       ScrollRect.right = Console->Size.X * GuiData->CharWidth;
       ScrollRect.bottom = Region->top * GuiData->CharHeight;
 
+      if (GuiData->Selection.left != -1)
+      {
+          /* scroll the selection */
+          if (GuiData->Selection.top > ScrolledLines)
+          {
+              GuiData->Selection.top -= ScrolledLines;
+              GuiData->Selection.bottom -= ScrolledLines;
+          }
+          else if (GuiData->Selection.bottom < ScrolledLines)
+          {
+              GuiData->Selection.left = -1;
+          }
+          else
+          {
+              GuiData->Selection.top = 0;
+              GuiData->Selection.bottom -= ScrolledLines;
+          }
+      }
+
       ScrollWindowEx(Console->hWindow,
                      0,
                      -(ScrolledLines * GuiData->CharHeight),
