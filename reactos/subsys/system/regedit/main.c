@@ -242,11 +242,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
-    hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_REGEDIT);
+    hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
     /* Main message loop */
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)
+        if (!TranslateAccelerator(hFrameWnd, hAccel, &msg)
             && !TranslateChildTabMessage(&msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

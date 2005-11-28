@@ -206,4 +206,6 @@
 #define ID_FAVORITES_MIN                2100
 #define ID_FAVORITES_MAX                2999
 
+#define ID_ACCEL                        3000
+
 #define IDC_STATIC                      -1
