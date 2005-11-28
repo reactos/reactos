@@ -67,11 +67,10 @@ wchar_t *_wcsupr(wchar_t *x)
  */
 size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 {
-	wchar_t *s;
-	wchar_t *t;
-	s=(wchar_t *)str;
+	const wchar_t *t;
+        const wchar_t *s = str;
 	do {
-		t=(wchar_t *)reject;
+		t=reject;
 		while (*t) {
 			if (*t==*s)
 				break;
@@ -97,7 +96,7 @@ wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2)
     for (scanp = s2; (sc = *scanp++) != 0;)
       if (sc == c)
       {
-        return (wchar_t *)(--s1);
+        return (wchar_t *)((size_t)(--s1));
       }
   }
   return 0;
@@ -108,11 +107,10 @@ wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2)
  */
 size_t wcsspn(const wchar_t *str,const wchar_t *accept)
 {
-	wchar_t  *s;
-	wchar_t  *t;
-	s=(wchar_t *)str;
+	const wchar_t *t;
+	const wchar_t *s = str;
 	do {
-		t=(wchar_t *)accept;
+		t=accept;
 		while (*t) {
 			if (*t==*s)
 				break;
@@ -131,20 +129,19 @@ size_t wcsspn(const wchar_t *str,const wchar_t *accept)
  */
 wchar_t *wcsstr(const wchar_t *s,const wchar_t *b)
 {
-	wchar_t *x;
-	wchar_t *y;
-	wchar_t *c;
-	x=(wchar_t *)s;
+	const wchar_t *y;
+	const wchar_t *c;
+	const wchar_t *x = s;
 	while (*x) {
 		if (*x==*b) {
 			y=x;
-			c=(wchar_t *)b;
+			c=b;
 			while (*y && *c && *y==*c) {
 				c++;
 				y++;
 			}
 			if (!*c)
-				return x;
+				return (wchar_t *)((size_t)x);
 		}
 		x++;
 	}

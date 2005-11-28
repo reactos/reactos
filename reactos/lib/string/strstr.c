@@ -20,5 +20,5 @@ strstr(const char *s, const char *find)
     } while (strncmp(s, find, len) != 0);
     s--;
   }
-  return (char *)s;
+  return (char *)((size_t)s);
 }

@@ -4,11 +4,11 @@
  */
 void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext)
 {
-    char* tmp_drive;
-    char* tmp_dir;
-    char* tmp_ext;
+    const char* tmp_drive;
+    const char* tmp_dir;
+    const char* tmp_ext;
 
-    tmp_drive = (char*)strchr(path,':');
+    tmp_drive = strchr(path,':');
     if (drive) {
 	if (tmp_drive) {
 	    strncpy(drive,tmp_drive-1,2);
@@ -18,7 +18,7 @@ void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext
 	}
     }
     if (!tmp_drive) {
-	tmp_drive = (char*)path - 1;
+	tmp_drive = path - 1;
     }
 
     tmp_dir = (char*)strrchr(path,'\\');
@@ -31,9 +31,9 @@ void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext
 	}
     }
 
-    tmp_ext = (char*)strrchr(path,'.');
+    tmp_ext = strrchr(path,'.');
     if (!tmp_ext) {
-	tmp_ext = (char*)path+strlen(path);
+	tmp_ext = path+strlen(path);
     }
     if (ext) {
         strcpy(ext,tmp_ext);

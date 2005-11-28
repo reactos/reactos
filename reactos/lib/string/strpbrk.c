@@ -34,17 +34,17 @@ char* strpbrk(const char *s1, const char *s2)
     else
     {
        unsigned long char_map[(1 << CHAR_BIT) / BIT_SIZE] = {0, };
-       register unsigned char* str = (unsigned char*)s1;
+       const unsigned char* str = (const unsigned char*)s1;
        while (*s2)
        {
-          char_map[*(unsigned char*)s2 / BIT_SIZE] |= (1 << (*(unsigned char*)s2 % BIT_SIZE));
+          char_map[*(const unsigned char*)s2 / BIT_SIZE] |= (1 << (*(const unsigned char*)s2 % BIT_SIZE));
           s2++;
        }
        while (*str)
        {
           if (char_map[*str / BIT_SIZE] & (1 << (*str % BIT_SIZE)))
           {
-             return (char*)str;
+             return (char*)((size_t)str);
           }
           str++;
        }
