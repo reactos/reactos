@@ -70,7 +70,7 @@ static const WCHAR SDDL_AUDIT_FAILURE[]      = {'F','A',0};
 
 /* set last error code from NT status and get the proper boolean return value */
 /* used for functions that are a simple wrapper around the corresponding ntdll API */
-static inline BOOL set_ntstatus( NTSTATUS status )
+static __inline BOOL set_ntstatus( NTSTATUS status )
 {
     if (status) SetLastError( RtlNtStatusToDosError( status ));
     return !status;

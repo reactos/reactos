@@ -596,7 +596,7 @@ main (int argc, char *argv[])
  * Static functions.
  */
 
-static inline int
+static __inline int
 is_prefix (char *prefix, char *str)
 {
   int i;

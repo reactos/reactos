@@ -740,7 +740,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
  * to GDI32. I dunno. Write a test and let me know.
  */
 
-static inline BYTE
+static __inline BYTE
 SwapROP3_SrcDst(BYTE bRop3)
 {
 	return (bRop3 & 0x99) | ((bRop3 & 0x22) << 1) | ((bRop3 & 0x44) >> 1);

@@ -191,17 +191,17 @@ extern CPU_INFO CPUMap[MAX_CPU];	/* Map of all CPUs in the system */
 
 /* Prototypes */
 
-inline VOID APICWrite(ULONG Offset, ULONG Value);
-inline ULONG APICRead(ULONG Offset);
+__inline VOID APICWrite(ULONG Offset, ULONG Value);
+__inline ULONG APICRead(ULONG Offset);
 VOID APICSendIPI(ULONG Target, ULONG Mode); 
 VOID APICSetup(VOID);
 VOID HaliInitBSP(VOID);
 VOID APICSyncArbIDs(VOID);
-inline VOID APICSendEOI(VOID);
+__inline VOID APICSendEOI(VOID);
 VOID APICCalibrateTimer(ULONG CPU);
 VOID HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack);
 
-static inline ULONG ThisCPU(VOID)
+static __inline ULONG ThisCPU(VOID)
 {
     return (APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
 }

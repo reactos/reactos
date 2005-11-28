@@ -76,7 +76,7 @@ FunctionName(int Command) \
 #define _Dispatcher(FunctionName, TestName) \
   _DispatcherTimeout(FunctionName, TestName, 5000)
 
-static inline void
+static __inline void
 AppendAssertion(char *message)
 {
   if (strlen(_Buffer) != 0)
@@ -242,7 +242,7 @@ VOID STDCALL
 _Sleep(DWORD dwMilliseconds);
 
 
-static inline PCHAR
+static __inline PCHAR
 FrameworkGetExportedFunctionNameInternal(_PAPI_DESCRIPTION ApiDescription)
 {
   if (ApiDescription->ForwardedFunctionName != NULL)
@@ -255,7 +255,7 @@ FrameworkGetExportedFunctionNameInternal(_PAPI_DESCRIPTION ApiDescription)
     }
 }
 
-static inline PVOID
+static __inline PVOID
 FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
 {
   HANDLE hModule;
@@ -281,7 +281,7 @@ FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
   return function;
 }
 
-static inline PVOID
+static __inline PVOID
 FrameworkGetHookInternal(ULONG index)
 {
   PVOID address;
@@ -316,7 +316,7 @@ FrameworkGetHookInternal(ULONG index)
 }
 
 
-static inline VOID
+static __inline VOID
 _SetHook(PCHAR name,
   PVOID address)
 {
@@ -340,7 +340,7 @@ typedef struct __HOOK
   PVOID FunctionAddress;
 } _HOOK, *_PHOOK;
 
-static inline VOID
+static __inline VOID
 _SetHooks(_PHOOK hookTable)
 {
   _PHOOK hook;
@@ -354,7 +354,7 @@ _SetHooks(_PHOOK hookTable)
     }
 }
 
-static inline VOID
+static __inline VOID
 _UnsetHooks(_PHOOK hookTable)
 {
   _PHOOK hook;
@@ -368,7 +368,7 @@ _UnsetHooks(_PHOOK hookTable)
     }
 }
 
-static inline VOID
+static __inline VOID
 _UnsetAllHooks()
 {
   _PAPI_DESCRIPTION api;

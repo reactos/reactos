@@ -96,7 +96,7 @@ unregister_block (MemDebug *b)
 }
 
 
-static inline int
+static __inline int
 check_fail ()
 {
   return alloc_fail != 0 && ++alloc_count >= alloc_fail;

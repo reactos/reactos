@@ -27,7 +27,7 @@ struct _RECURSIVE_MUTEX;
  *	Entry = Pointer to the entry that is inserted in the lookaside list
  */
 static
-inline
+__inline
 VOID
 ExFreeToNPagedLookasideList (
 	IN	PNPAGED_LOOKASIDE_LIST	Lookaside,
@@ -54,7 +54,7 @@ ExFreeToNPagedLookasideList (
  *	Address of the allocated list entry
  */
 static
-inline
+__inline
 PVOID
 ExAllocateFromNPagedLookasideList (
 	IN	PNPAGED_LOOKASIDE_LIST	Lookaside

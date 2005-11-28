@@ -396,7 +396,7 @@ return TRUE;
 typedef unsigned short PIXEL;
 
 /* 16-bit HiColor (565 format) */
-inline PIXEL average16(PIXEL a, PIXEL b)
+__inline PIXEL average16(PIXEL a, PIXEL b)
 {
 // This one doesn't work
 /*

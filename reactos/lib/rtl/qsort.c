@@ -39,10 +39,6 @@
  */
 #include <rtl.h>
 
-#ifndef __GNUC__
-#define inline
-#endif
-
 /* FIXME: these types should be from the default includes */
 
 typedef int (* 	_pfunccmp_t) (const void *, const void *);
@@ -66,7 +62,7 @@ typedef int (* 	_pfunccmp_t) (const void *, const void *);
 #define SWAPINIT(a, es) swaptype = ((char *)a - (char *)0) % sizeof(long) || \
 	es % sizeof(long) ? 2 : es == sizeof(long)? 0 : 1;
 
-static inline void
+static __inline void
 swapfunc (
 	char	* a,
 	char	* b,
@@ -90,7 +86,7 @@ swapfunc (
 
 #define vecswap(a, b, n) 	if ((n) > 0) swapfunc(a, b, n, swaptype)
 
-static inline char *
+static __inline char *
 med3 (
 	char		* a,
 	char		* b,

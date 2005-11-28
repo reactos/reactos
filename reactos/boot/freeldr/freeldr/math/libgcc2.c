@@ -60,7 +60,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #if defined (L_negdi2) || defined (L_divdi3) || defined (L_moddi3)
 #if defined (L_divdi3) || defined (L_moddi3)
-static inline
+static __inline
 #endif
 DWtype
 __negdi2 (DWtype u)
@@ -514,7 +514,7 @@ const UQItype __clz_tab[] =
 
 #if (defined (L_udivdi3) || defined (L_divdi3) || \
      defined (L_umoddi3) || defined (L_moddi3))
-static inline
+static __inline
 #endif
 UDWtype
 __udivmoddi4 (UDWtype n, UDWtype d, UDWtype *rp)

@@ -181,7 +181,7 @@ VOID EnableApicMode(VOID)
 }
 
 /* Disable symetric I/O mode ie. go to PIC mode */
-inline VOID DisableSMPMode(VOID)
+__inline VOID DisableSMPMode(VOID)
 {
    /*
     * Put the board back into PIC mode (has an effect
@@ -221,7 +221,7 @@ VOID APICDisable(VOID)
 }
 
 
-inline ULONG _APICRead(ULONG Offset)
+__inline ULONG _APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -230,7 +230,7 @@ inline ULONG _APICRead(ULONG Offset)
 }
 
 #if 0
-inline VOID APICWrite(ULONG Offset,
+__inline VOID APICWrite(ULONG Offset,
 		      ULONG Value)
 {
    PULONG p;
@@ -240,7 +240,7 @@ inline VOID APICWrite(ULONG Offset,
    *p = Value;
 }
 #else
-inline VOID APICWrite(ULONG Offset,
+__inline VOID APICWrite(ULONG Offset,
 		      ULONG Value)
 {
    PULONG p;
@@ -257,7 +257,7 @@ inline VOID APICWrite(ULONG Offset,
 
 
 #if 0
-inline ULONG APICRead(ULONG Offset)
+__inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -265,7 +265,7 @@ inline ULONG APICRead(ULONG Offset)
    return *p;
 }
 #else
-inline ULONG APICRead(ULONG Offset)
+__inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
    ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
@@ -280,7 +280,7 @@ inline ULONG APICRead(ULONG Offset)
 }
 #endif
 
-inline VOID APICSendEOI(VOID)
+__inline VOID APICSendEOI(VOID)
 {
   // Send the EOI
   APICWrite(APIC_EOI, 0);

@@ -35,10 +35,10 @@ CleanupClassImpl(VOID);
 
 void FASTCALL DestroyProcessClasses(PW32PROCESS Process );
 
-inline VOID FASTCALL 
+__inline VOID FASTCALL 
 ClassDerefObject(PWNDCLASS_OBJECT Class);
 
-inline VOID FASTCALL 
+__inline VOID FASTCALL 
 ClassRefObject(PWNDCLASS_OBJECT Class);
 
 PWNDCLASS_OBJECT FASTCALL

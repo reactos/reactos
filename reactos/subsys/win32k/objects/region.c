@@ -402,7 +402,7 @@ typedef struct _ScanLineListBlock {
 /*
  *   Check to see if there is enough memory in the present region.
  */
-static inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
+static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 	if ( (reg->rdh.nCount+1)*sizeof( RECT ) >= reg->rdh.nRgnSize ) {
 		PRECT temp;
 		temp = ExAllocatePoolWithTag( PagedPool, (2 * (reg->rdh.nRgnSize)), TAG_REGION);

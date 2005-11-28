@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static inline int
+static __inline int
 CompareRightDown(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -66,7 +66,7 @@ CompareRightDown(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static inline int
+static __inline int
 CompareRightUp(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -100,7 +100,7 @@ CompareRightUp(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static inline int
+static __inline int
 CompareLeftDown(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -134,7 +134,7 @@ CompareLeftDown(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static inline int
+static __inline int
 CompareLeftUp(const PRECT r1, const PRECT r2)
 {
   int Cmp;
@@ -168,7 +168,7 @@ CompareLeftUp(const PRECT r1, const PRECT r2)
   return Cmp;
 }
 
-static inline int
+static __inline int
 CompareSpans(const PSPAN Span1, const PSPAN Span2)
 {
   int Cmp;

@@ -52,7 +52,7 @@ static NTSTATUS OpenCurrentConfigKey(PHANDLE KeyHandle);
 
 /* FUNCTIONS ****************************************************************/
 /* check if value type needs string conversion (Ansi<->Unicode) */
-inline static int is_string( DWORD type )
+__inline static int is_string( DWORD type )
 {
     return (type == REG_SZ) || (type == REG_EXPAND_SZ) || (type == REG_MULTI_SZ);
 }

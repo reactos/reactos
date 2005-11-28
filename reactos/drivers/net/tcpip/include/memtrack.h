@@ -40,12 +40,12 @@ VOID TrackDumpFL( PCHAR File, DWORD Line );
 #define TrackDump() TrackDumpFL(__FILE__,__LINE__)
 VOID TrackTag( DWORD Tag );
 
-static inline PVOID ExAllocatePoolX( POOL_TYPE type, SIZE_T size, PCHAR File, ULONG Line ) {
+static __inline PVOID ExAllocatePoolX( POOL_TYPE type, SIZE_T size, PCHAR File, ULONG Line ) {
     PVOID Out = PoolAllocateBuffer( size );
     if( Out ) TrackWithTag( EXALLOC_TAG, Out, File, Line );
     return Out;
 }
-static inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
+static __inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
     UntrackFL(File, Line, Data);
     PoolFreeBuffer(Data);
 }

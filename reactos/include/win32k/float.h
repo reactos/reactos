@@ -15,7 +15,7 @@ typedef struct tagFLOAT_POINT
  * transformation process is done in floating point internally. This function
  * is then used to round these coordinates to integer values.
  */
-static inline INT GDI_ROUND(FLOAT val)
+static __inline INT GDI_ROUND(FLOAT val)
 {
    return (int)floor(val + 0.5);
 }
@@ -23,7 +23,7 @@ static inline INT GDI_ROUND(FLOAT val)
 /* Performs a world-to-viewport transformation on the specified point (which
  * is in floating point format).
  */
-static inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
+static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
 {
     FLOAT x, y;
 
@@ -42,7 +42,7 @@ static inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
  * is in integer format). Returns TRUE if successful, else FALSE.
  */
 #if 0
-static inline BOOL INTERNAL_DPTOLP(DC *dc, LPPOINT point)
+static __inline BOOL INTERNAL_DPTOLP(DC *dc, LPPOINT point)
 {
     FLOAT_POINT floatPoint;
 
@@ -62,7 +62,7 @@ static inline BOOL INTERNAL_DPTOLP(DC *dc, LPPOINT point)
 /* Performs a world-to-viewport transformation on the specified point (which
  * is in integer format).
  */
-static inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
+static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
 {
     FLOAT_POINT floatPoint;
 

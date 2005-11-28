@@ -28,9 +28,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static inline BOOL is_sep(char ch) {return ch == '/' || ch == '\\';}
+static __inline BOOL is_sep(char ch) {return ch == '/' || ch == '\\';}
 
-static inline char* file_name(char* str)
+static __inline char* file_name(char* str)
 {
     char*       p;
 

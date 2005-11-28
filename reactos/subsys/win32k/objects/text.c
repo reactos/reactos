@@ -2858,7 +2858,7 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
   return Score;
 }
 
-static inline VOID
+static __inline VOID
 FindBestFontFromList(FONTOBJ **FontObj, UINT *MatchScore, LOGFONTW *LogFont,
                      PUNICODE_STRING FaceName, PLIST_ENTRY Head)
 {
@@ -2885,7 +2885,7 @@ FindBestFontFromList(FONTOBJ **FontObj, UINT *MatchScore, LOGFONTW *LogFont,
     }
 }
 
-static inline BOOLEAN
+static __inline BOOLEAN
 SubstituteFontFamilyKey(PUNICODE_STRING FaceName,
                         LPCWSTR Key)
 {
@@ -2921,7 +2921,7 @@ SubstituteFontFamilyKey(PUNICODE_STRING FaceName,
   return NT_SUCCESS(Status);
 }
 
-static inline void
+static __inline void
 SubstituteFontFamily(PUNICODE_STRING FaceName, UINT Level)
 {
   if (10 < Level) /* Enough is enough */
