@@ -24,6 +24,15 @@
 #include <assert.h>
 #include "ssprintf.h"
 
+#ifndef WIN32
+#define _finite __finite
+#define _isnan __isnan
+inline int iswdigit ( wchar_t c )
+{
+	return ( c >= L'0' && c <= L'9' );
+}
+#endif//WIN32
+
 #ifdef __FreeBSD__
 # define __isnan isnan
 # define __finite finite
