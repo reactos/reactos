@@ -24,10 +24,11 @@ Author:
 //
 #include <umtypes.h>
 
+#ifdef NTOS_MODE_USER
+
 //
 // Privilege constants
 //
-#ifdef NTOS_MODE_USER
 #define SE_MIN_WELL_KNOWN_PRIVILEGE       (2L)
 #define SE_CREATE_TOKEN_PRIVILEGE         (2L)
 #define SE_ASSIGNPRIMARYTOKEN_PRIVILEGE   (3L)
@@ -54,12 +55,11 @@ Author:
 #define SE_CHANGE_NOTIFY_PRIVILEGE        (23L)
 #define SE_REMOTE_SHUTDOWN_PRIVILEGE      (24L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE       (SE_REMOTE_SHUTDOWN_PRIVILEGE)
-#endif
+#else
 
 //
-// Policy types
+// Audit and Policy Structures
 //
-#ifndef NTOS_MODE_USER
 typedef struct _SEP_AUDIT_POLICY_CATEGORIES
 {
     UCHAR System:4;

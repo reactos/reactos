@@ -1,3 +1,5 @@
+#define _WINBASE_
+#define _WINDOWS_H
 #include <windef.h>
 #include <wingdi.h>
 #include <ddk/ntddk.h>

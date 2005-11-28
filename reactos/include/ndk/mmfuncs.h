@@ -260,6 +260,7 @@ ZwLockVirtualMemory(
     PULONG NumberOfBytesLocked
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMapViewOfSection(
@@ -275,6 +276,7 @@ ZwMapViewOfSection(
     IN ULONG AccessProtection
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSection(
@@ -333,6 +335,7 @@ ZwUnlockVirtualMemory(
     OUT PULONG NumberOfBytesUnlocked OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnmapViewOfSection(

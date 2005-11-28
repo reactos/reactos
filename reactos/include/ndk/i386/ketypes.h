@@ -86,7 +86,7 @@ typedef struct _FX_SAVE_AREA
 } FX_SAVE_AREA, *PFX_SAVE_AREA;
 
 //
-// FIXME: Trap Frame Definition
+// Trap Frame Definition
 //
 typedef struct _KTRAP_FRAME
 {

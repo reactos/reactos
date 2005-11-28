@@ -19,7 +19,16 @@ Author:
 #ifndef NTOS_MODE_USER
 #define _NTIFS_
 
+#define TOKEN_SOURCE_LENGTH               8
+
+typedef enum _TOKEN_TYPE
+{
+    TokenPrimary = 1,
+    TokenImpersonation
+} TOKEN_TYPE, *PTOKEN_TYPE;
+
 typedef PVOID PRTL_HEAP_PARAMETERS;
+typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
 typedef struct _RTL_SPLAY_LINKS
 {
@@ -93,7 +102,7 @@ typedef struct _REMOTE_PORT_VIEW
 typedef struct _KAPC_STATE
 {
     LIST_ENTRY ApcListHead[2];
-    PKPROCESS Process;
+    struct _KPROCESS *Process;
     BOOLEAN KernelApcInProgress;
     BOOLEAN KernelApcPending;
     BOOLEAN UserApcPending;
@@ -108,8 +117,39 @@ typedef struct _KQUEUE
     LIST_ENTRY ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
-typedef PVOID EX_RUNDOWN_REF;
 typedef PVOID EX_PUSH_LOCK;
+
+typedef enum _RTL_GENERIC_COMPARE_RESULTS
+{
+    GenericLessThan,
+    GenericGreaterThan,
+    GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
+typedef struct _SID_IDENTIFIER_AUTHORITY
+{
+    UCHAR Value[6];
+} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY;
+
+typedef struct _SID_AND_ATTRIBUTES
+{
+    PSID Sid;
+    ULONG Attributes;
+} SID_AND_ATTRIBUTES, * PSID_AND_ATTRIBUTES;
+
+typedef struct _TOKEN_SOURCE
+{
+    CHAR SourceName[TOKEN_SOURCE_LENGTH];
+    LUID SourceIdentifier;
+} TOKEN_SOURCE, *PTOKEN_SOURCE;
+
+typedef struct _TOKEN_CONTROL
+{
+    LUID TokenId;
+    LUID AuthenticationId;
+    LUID ModifiedId;
+    TOKEN_SOURCE TokenSource;
+} TOKEN_CONTROL, *PTOKEN_CONTROL;
 
 typedef struct _SECURITY_CLIENT_CONTEXT
 {
@@ -121,12 +161,79 @@ typedef struct _SECURITY_CLIENT_CONTEXT
     TOKEN_CONTROL ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
-typedef enum _RTL_GENERIC_COMPARE_RESULTS
+typedef struct _SECURITY_DESCRIPTOR_RELATIVE
 {
-    GenericLessThan,
-    GenericGreaterThan,
-    GenericEqual
-} RTL_GENERIC_COMPARE_RESULTS;
+    UCHAR Revision;
+    UCHAR Sbz1;
+    SECURITY_DESCRIPTOR_CONTROL Control;
+    ULONG Owner;
+    ULONG Group;
+    ULONG Sacl;
+    ULONG Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
+typedef struct _TOKEN_GROUPS
+{
+    ULONG GroupCount;
+    SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
+} TOKEN_GROUPS, *PTOKEN_GROUPS;
+
+typedef struct _TOKEN_PRIVILEGES
+{
+    ULONG PrivilegeCount;
+    LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
+} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;
+
+typedef struct _TOKEN_USER
+{
+    SID_AND_ATTRIBUTES User;
+} TOKEN_USER, *PTOKEN_USER;
+
+typedef enum _TOKEN_INFORMATION_CLASS
+{
+    TokenUser = 1,
+    TokenGroups,
+    TokenPrivileges,
+    TokenOwner,
+    TokenPrimaryGroup,
+    TokenDefaultDacl,
+    TokenSource,
+    TokenType,
+    TokenImpersonationLevel,
+    TokenStatistics,
+    TokenRestrictedSids,
+    TokenSessionId,
+    TokenGroupsAndPrivileges,
+    TokenSessionReference,
+    TokenSandBoxInert,
+    TokenAuditPolicy,
+    TokenOrigin,
+    TokenElevationType,
+    TokenLinkedToken,
+    TokenElevation,
+    TokenIsRestricted,
+    TokenAccessInformation,
+    TokenVirtualization,
+    TokenIntegrityLevel,
+    TokenIntegrityLevelDesktop,
+    TokenMandatoryPolicy,
+    MaxTokenInfoClass
+} TOKEN_INFORMATION_CLASS, *PTOKEN_INFORMATION_CLASS;
+
+typedef struct _TOKEN_OWNER
+{
+    PSID Owner;
+} TOKEN_OWNER, *PTOKEN_OWNER;
+
+typedef struct _TOKEN_PRIMARY_GROUP
+{
+    PSID PrimaryGroup;
+} TOKEN_PRIMARY_GROUP, *PTOKEN_PRIMARY_GROUP;
+
+typedef struct _TOKEN_DEFAULT_DACL
+{
+    PACL DefaultDacl;
+} TOKEN_DEFAULT_DACL, *PTOKEN_DEFAULT_DACL;
 
 #endif // !NTOS_MODE_USER
 #endif // _NTIFS_

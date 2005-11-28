@@ -339,17 +339,6 @@ typedef struct _PP_LOOKASIDE_LIST
 #include <arch/ketypes.h>
 
 //
-// ARC Component Data
-//
-typedef struct _CONFIGURATION_COMPONENT_DATA
-{
-    struct _CONFIGURATION_COMPONENT_DATA *Parent;
-    struct _CONFIGURATION_COMPONENT_DATA *Child;
-    struct _CONFIGURATION_COMPONENT_DATA *Sibling;
-    CONFIGURATION_COMPONENT Component;
-} CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
-
-//
 // Kernel Memory Node
 //
 typedef struct _KNODE
@@ -374,7 +363,7 @@ typedef struct _KPROFILE
     CSHORT Type;
     CSHORT Size;
     LIST_ENTRY ProfileListEntry;
-    PKPROCESS Process;
+    struct _KPROCESS *Process;
     PVOID RangeBase;
     PVOID RangeLimit;
     ULONG BucketShift;
@@ -696,7 +685,7 @@ typedef struct _KPROCESS
     KEXECUTE_OPTIONS      Flags;                     /* 06B */
     ULONG                 StackCount;                /* 06C */
     LIST_ENTRY            ProcessListEntry;          /* 070 */
-} KPROCESS;
+} KPROCESS, *PKPROCESS;
 
 //
 // System Service Table Descriptor

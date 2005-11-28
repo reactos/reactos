@@ -617,11 +617,13 @@ ZwFsControlFile(
     IN ULONG OutputBufferSize
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwLoadDriver(
     IN PUNICODE_STRING DriverServiceName
 );
+#endif
 
 NTSYSCALLAPI
 NTSTATUS
@@ -891,6 +893,7 @@ ZwTranslateFilePath(
     ULONG Unknown3
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnloadDriver(

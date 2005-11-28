@@ -7,7 +7,9 @@
 #ifndef __WSHTCPIP_H
 #define __WSHTCPIP_H
 
-#include <ddk/ntddk.h>
+#define WIN32_NO_STATUS
+#include <windows.h>
+#include <rtlfuncs.h>
 #include <wsahelp.h>
 
 #define EXPORT STDCALL

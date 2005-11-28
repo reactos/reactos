@@ -336,7 +336,7 @@ CmiObjectDelete(PVOID DeletedObject)
 static NTSTATUS
 CmiQuerySecurityDescriptor(PKEY_OBJECT KeyObject,
 			   SECURITY_INFORMATION SecurityInformation,
-			   PSECURITY_DESCRIPTOR SecurityDescriptor,
+			   PISECURITY_DESCRIPTOR SecurityDescriptor,
 			   PULONG BufferLength)
 {
   ULONG_PTR Current;

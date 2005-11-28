@@ -1,8 +1,16 @@
-#include <ddk/ntddk.h>
+#define WIN32_NO_STATUS
 #include <windows.h>
 
+#define DDKAPI __stdcall
 #define _HIDPI_
 #define _HIDPI_NO_FUNCTION_MACROS_
+typedef VOID
+(DDKAPI *PINTERFACE_REFERENCE)(
+  PVOID  Context);
+typedef VOID
+(DDKAPI *PINTERFACE_DEREFERENCE)(
+  PVOID  Context);
+#include <ntndk.h>
 #include <ddk/hidusage.h>
 #include <ddk/hidclass.h>
 #include <ddk/hidpi.h>

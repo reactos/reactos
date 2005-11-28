@@ -126,7 +126,7 @@ Cleanup:
 
 static NTSTATUS
 RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
-                                IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+                                IN PISECURITY_DESCRIPTOR SecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR RelSD = NULL;
     PSECURITY_DESCRIPTOR NewRelSD = NULL;
@@ -549,7 +549,7 @@ RtlCreateSystemVolumeInformationFolder(
     HANDLE hDirectory;
     UNICODE_STRING DirectoryName, NewPath;
     ULONG PathLen;
-    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    PISECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     PSID SystemSid = NULL;
     BOOLEAN AddSep = FALSE;
     NTSTATUS Status;

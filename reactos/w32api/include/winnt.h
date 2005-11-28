@@ -1530,11 +1530,14 @@ typedef struct _GENERIC_MAPPING {
 	ACCESS_MASK GenericExecute;
 	ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
+/* Sigh..when will they learn... */
+#ifndef __NTDDK_H
 typedef struct _ACE_HEADER {
 	BYTE AceType;
 	BYTE AceFlags;
 	WORD AceSize;
 } ACE_HEADER, *PACE_HEADER;
+
 typedef struct _ACCESS_ALLOWED_ACE {
 	ACE_HEADER Header;
 	ACCESS_MASK Mask;
@@ -1588,6 +1591,7 @@ typedef struct _SYSTEM_ALARM_OBJECT_ACE {
 	GUID InheritedObjectType;
 	DWORD SidStart;
 } SYSTEM_ALARM_OBJECT_ACE,*PSYSTEM_ALARM_OBJECT_ACE;
+#endif
 typedef struct _ACL {
 	BYTE AclRevision;
 	BYTE Sbz1;
@@ -2217,6 +2221,8 @@ typedef struct _SE_IMPERSONATION_STATE {
 	BOOLEAN EffectiveOnly;
 	SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE,*PSE_IMPERSONATION_STATE;
+/* Steven you are my hero when you fix the w32api ddk! */
+#if !defined(__NTDDK_H)
 typedef struct _SID_IDENTIFIER_AUTHORITY {
 	BYTE Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
@@ -2321,6 +2327,7 @@ typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
 	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
 } TOKEN_INFORMATION_CLASS;
+#endif
 typedef enum _SID_NAME_USE {
 	SidTypeUser=1,SidTypeGroup,SidTypeDomain,SidTypeAlias,
 	SidTypeWellKnownGroup,SidTypeDeletedAccount,SidTypeInvalid,
@@ -3225,6 +3232,8 @@ typedef struct _JOBOBJECT_BASIC_PROCESS_ID_LIST {
 typedef struct _JOBOBJECT_BASIC_UI_RESTRICTIONS {
 	DWORD UIRestrictionsClass;
 } JOBOBJECT_BASIC_UI_RESTRICTIONS,*PJOBOBJECT_BASIC_UI_RESTRICTIONS;
+/* Steven you are my hero when you fix the w32api ddk! */
+#ifndef __NTDDK_H
 typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	DWORD SecurityLimitFlags;
 	HANDLE JobToken;
@@ -3232,6 +3241,7 @@ typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	PTOKEN_PRIVILEGES PrivilegesToDelete;
 	PTOKEN_GROUPS RestrictedSids;
 } JOBOBJECT_SECURITY_LIMIT_INFORMATION,*PJOBOBJECT_SECURITY_LIMIT_INFORMATION;
+#endif
 typedef struct _JOBOBJECT_END_OF_JOB_TIME_INFORMATION {
 	DWORD EndOfJobTimeAction;
 } JOBOBJECT_END_OF_JOB_TIME_INFORMATION,*PJOBOBJECT_END_OF_JOB_TIME_INFORMATION;

@@ -230,6 +230,7 @@ NtUnloadKey(
     IN POBJECT_ATTRIBUTES KeyObjectAttributes
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwCreateKey(
@@ -241,6 +242,7 @@ ZwCreateKey(
     IN ULONG CreateOptions,
     IN PULONG Disposition OPTIONAL
 );
+
 
 NTSTATUS
 NTAPI
@@ -426,6 +428,7 @@ ZwSetValueKey(
     IN PVOID Data,
     IN ULONG DataSize
 );
+#endif
 
 NTSTATUS
 NTAPI

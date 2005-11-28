@@ -87,8 +87,8 @@ typedef struct _PROFILE_PARAMETER_BLOCK
     USHORT DockData1;
     USHORT DockData2;
     USHORT DockData3;
-    ULONG DockData3;
     ULONG DockData4;
+    ULONG DockData5;
 } PROFILE_PARAMETER_BLOCK, *PPROFILE_PARAMETER_BLOCK;
 
 typedef struct _HEADLESS_LOADER_BLOCK

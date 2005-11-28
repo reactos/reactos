@@ -25,8 +25,6 @@
  *  REVISION HISTORY:
  *       21 November 2005   Created James Tabor
  */
-#include <ddk/ntddk.h>
-#include <windows.h>
 #include "portcls.h"
 
 

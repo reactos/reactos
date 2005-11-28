@@ -263,7 +263,7 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
                         IN ULONG RefBias)
 {
     /* HACK: Return the same descriptor back */
-    PSECURITY_DESCRIPTOR SdCopy;
+    PISECURITY_DESCRIPTOR SdCopy;
     DPRINT1("ObLogSecurityDescriptor is not implemented!\n", InputSecurityDescriptor);
 
     SdCopy = ExAllocatePool(PagedPool, sizeof(*SdCopy));

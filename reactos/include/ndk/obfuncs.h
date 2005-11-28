@@ -269,6 +269,7 @@ ZwCloseObjectAuditAlarm(
     IN BOOLEAN GenerateOnClose
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateDirectoryObject(
@@ -313,6 +314,7 @@ ZwMakePermanentObject(
     IN HANDLE Object
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakeTemporaryObject(
@@ -335,6 +337,7 @@ ZwOpenJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSymbolicLinkObject(
@@ -376,6 +379,7 @@ ZwQuerySecurityObject(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySymbolicLinkObject(

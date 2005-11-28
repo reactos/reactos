@@ -537,11 +537,18 @@ typedef struct _TIME_FIELDS
     CSHORT Milliseconds;
     CSHORT Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
-#endif
 
+#else
 //
-// ACE Definition
+// ACE Definitions
 //
+typedef struct _ACE_HEADER
+{
+    UCHAR AceType;
+    UCHAR AceFlags;
+    USHORT AceSize;
+} ACE_HEADER, *PACE_HEADER;
+#endif
 typedef struct _ACE
 {
     ACE_HEADER Header;

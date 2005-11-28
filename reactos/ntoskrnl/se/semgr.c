@@ -196,16 +196,17 @@ VOID SepDeReferenceLogonSession(PLUID AuthenticationId)
 NTSTATUS
 STDCALL
 SeDefaultObjectMethod(PVOID Object,
-                      SECURITY_OPERATION_CODE OperationType,                         
+                      SECURITY_OPERATION_CODE OperationType,
                       SECURITY_INFORMATION SecurityInformation,
-                      PSECURITY_DESCRIPTOR SecurityDescriptor,
+                      PSECURITY_DESCRIPTOR _SecurityDescriptor,
                       PULONG ReturnLength,
                       PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
                       POOL_TYPE PoolType,
                       PGENERIC_MAPPING GenericMapping)
 {
-  PSECURITY_DESCRIPTOR ObjectSd;
-  PSECURITY_DESCRIPTOR NewSd;
+  PISECURITY_DESCRIPTOR ObjectSd;
+  PISECURITY_DESCRIPTOR NewSd;
+  PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
   POBJECT_HEADER Header = BODY_TO_HEADER(Object);
   PSID Owner = 0;
   PSID Group = 0;
@@ -541,15 +542,17 @@ SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
  * @implemented
  */
 NTSTATUS STDCALL
-SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-		 PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
+SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
+		 PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
 		 PSECURITY_DESCRIPTOR *NewDescriptor,
 		 BOOLEAN IsDirectoryObject,
 		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
 		 PGENERIC_MAPPING GenericMapping,
 		 POOL_TYPE PoolType)
 {
-  PSECURITY_DESCRIPTOR Descriptor;
+  PISECURITY_DESCRIPTOR ParentDescriptor = _ParentDescriptor;
+  PISECURITY_DESCRIPTOR ExplicitDescriptor = _ExplicitDescriptor;
+  PISECURITY_DESCRIPTOR Descriptor;
   PTOKEN Token;
   ULONG OwnerLength = 0;
   ULONG GroupLength = 0;

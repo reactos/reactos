@@ -619,17 +619,6 @@ typedef struct _COMPRESSED_DATA_INFO {
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
-#define EX_RUNDOWN_ACTIVE               0x1
-#define EX_RUNDOWN_COUNT_SHIFT          0x1
-#define EX_RUNDOWN_COUNT_INC            (1 << EX_RUNDOWN_COUNT_SHIFT)
-
-typedef struct _EX_RUNDOWN_REF {
-    _ANONYMOUS_UNION union {
-        ULONG Count;
-        PVOID Ptr;
-    } DUMMYUNIONNAME;
-} EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
-
 #define EX_PUSH_LOCK_LOCK_V          ((ULONG_PTR)0x0)
 #define EX_PUSH_LOCK_LOCK            ((ULONG_PTR)0x1)
 #define EX_PUSH_LOCK_WAITING         ((ULONG_PTR)0x2)
@@ -654,6 +643,111 @@ typedef struct _EX_PUSH_LOCK
         PVOID Ptr;
     };
 } EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
+typedef struct _SID_IDENTIFIER_AUTHORITY {
+	BYTE Value[6];
+} SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
+typedef PVOID PSID;
+typedef struct _SID {
+   BYTE  Revision;
+   BYTE  SubAuthorityCount;
+   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+   DWORD SubAuthority[ANYSIZE_ARRAY];
+} SID, *PISID;
+typedef struct _SID_AND_ATTRIBUTES {
+	PSID Sid;
+	DWORD Attributes;
+} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
+typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
+typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
+typedef struct _TOKEN_SOURCE {
+	CHAR SourceName[TOKEN_SOURCE_LENGTH];
+	LUID SourceIdentifier;
+} TOKEN_SOURCE,*PTOKEN_SOURCE;
+typedef struct _TOKEN_CONTROL {
+	LUID TokenId;
+	LUID AuthenticationId;
+	LUID ModifiedId;
+	TOKEN_SOURCE TokenSource;
+} TOKEN_CONTROL,*PTOKEN_CONTROL;
+typedef struct _TOKEN_DEFAULT_DACL {
+	PACL DefaultDacl;
+} TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
+typedef struct _TOKEN_GROUPS {
+	DWORD GroupCount;
+	SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
+} TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
+typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
+	ULONG SidCount;
+	ULONG SidLength;
+	PSID_AND_ATTRIBUTES Sids;
+	ULONG RestrictedSidCount;
+	ULONG RestrictedSidLength;
+	PSID_AND_ATTRIBUTES RestrictedSids;
+	ULONG PrivilegeCount;
+	ULONG PrivilegeLength;
+	PLUID_AND_ATTRIBUTES Privileges;
+	LUID AuthenticationId;
+} TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
+typedef struct _TOKEN_ORIGIN {
+	LUID OriginatingLogonSession;
+} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
+typedef struct _TOKEN_OWNER {
+	PSID Owner;
+} TOKEN_OWNER,*PTOKEN_OWNER;
+typedef struct _TOKEN_PRIMARY_GROUP {
+	PSID PrimaryGroup;
+} TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
+typedef struct _TOKEN_PRIVILEGES {
+	DWORD PrivilegeCount;
+	LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
+} TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
+typedef enum tagTOKEN_TYPE {
+	TokenPrimary = 1,
+	TokenImpersonation
+} TOKEN_TYPE,*PTOKEN_TYPE;
+typedef struct _TOKEN_STATISTICS {
+	LUID TokenId;
+	LUID AuthenticationId;
+	LARGE_INTEGER ExpirationTime;
+	TOKEN_TYPE TokenType;
+	SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+	DWORD DynamicCharged;
+	DWORD DynamicAvailable;
+	DWORD GroupCount;
+	DWORD PrivilegeCount;
+	LUID ModifiedId;
+} TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+typedef struct _TOKEN_USER {
+	SID_AND_ATTRIBUTES User;
+} TOKEN_USER, *PTOKEN_USER;
+typedef DWORD SECURITY_INFORMATION,*PSECURITY_INFORMATION;
+typedef WORD SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
+typedef struct _SECURITY_DESCRIPTOR {
+	BYTE Revision;
+	BYTE Sbz1;
+	SECURITY_DESCRIPTOR_CONTROL Control;
+	PSID Owner;
+	PSID Group;
+	PACL Sacl;
+	PACL Dacl;
+} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
+typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
+    BYTE Revision;
+    BYTE Sbz1;
+    SECURITY_DESCRIPTOR_CONTROL Control;
+    DWORD Owner;
+    DWORD Group;
+    DWORD Sacl;
+    DWORD Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+typedef enum _TOKEN_INFORMATION_CLASS {
+	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
+	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
+	TokenImpersonationLevel,TokenStatistics,TokenRestrictedSids,
+	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
+	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
+} TOKEN_INFORMATION_CLASS;
 
 typedef struct _FILE_ACCESS_INFORMATION {
     ACCESS_MASK AccessFlags;
@@ -830,6 +924,17 @@ typedef struct _FILE_GET_QUOTA_INFORMATION {
     ULONG   SidLength;
     SID     Sid;
 } FILE_GET_QUOTA_INFORMATION, *PFILE_GET_QUOTA_INFORMATION;
+
+typedef struct _FILE_QUOTA_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG SidLength;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER QuotaUsed;
+    LARGE_INTEGER QuotaThreshold;
+    LARGE_INTEGER QuotaLimit;
+    SID Sid;
+} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
 
 typedef struct _FILE_INTERNAL_INFORMATION {
     LARGE_INTEGER IndexNumber;

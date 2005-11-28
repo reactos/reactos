@@ -120,11 +120,11 @@ typedef enum _OBJECT_INFORMATION_CLASS
 //
 // Dump Control Structure for Object Debugging
 //
-typedef struct _OBJECT_DUMP_CONTROL
+typedef struct _OB_DUMP_CONTROL
 {
     PVOID Stream;
     ULONG Detail;
-} OBJECT_DUMP_CONTROL, *POBJECT_DUMP_CONTROL;
+} OB_DUMP_CONTROL, *POB_DUMP_CONTROL;
 
 #ifndef NTOS_MODE_USER
 #ifndef _REACTOS_
@@ -194,6 +194,11 @@ typedef NTSTATUS
     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
     IN ULONG Length,
     OUT PULONG ReturnLength
+);
+
+typedef NTSTATUS
+(NTAPI *OB_OKAYTOCLOSE_METHOD)(
+    VOID
 );
 
 #else

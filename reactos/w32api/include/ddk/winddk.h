@@ -134,6 +134,10 @@ struct _SCATTER_GATHER_LIST;
 struct _DRIVE_LAYOUT_INFORMATION;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
 
+typedef PVOID PSECURITY_DESCRIPTOR;
+typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
+typedef PVOID PSID;
+
 DECLARE_INTERNAL_OBJECT(ADAPTER_OBJECT)
 DECLARE_INTERNAL_OBJECT(DMA_ADAPTER)
 DECLARE_INTERNAL_OBJECT(IO_STATUS_BLOCK)
@@ -211,6 +215,10 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64
+
+#define EX_RUNDOWN_ACTIVE                 0x1
+#define EX_RUNDOWN_COUNT_SHIFT            0x1
+#define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
 
 #define METHOD_BUFFERED                   0
 #define METHOD_IN_DIRECT                  1
@@ -1113,6 +1121,15 @@ typedef struct _FAST_MUTEX
     KEVENT Gate;
     ULONG OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
+
+typedef struct _EX_RUNDOWN_REF
+{
+    union
+    {
+        ULONG_PTR Count;
+        PVOID Ptr;
+    };
+} EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
 typedef struct _KGATE
 {
@@ -2556,7 +2573,7 @@ typedef struct {
   pHalMirrorVerify  HalMirrorVerify;
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_)
+#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
 extern DECL_IMPORT PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
@@ -2680,16 +2697,6 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
 typedef struct _FILE_DISPOSITION_INFORMATION {
   BOOLEAN  DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
-
-typedef struct _FILE_QUOTA_INFORMATION {
-    ULONG NextEntryOffset;
-    ULONG SidLength;
-    LARGE_INTEGER ChangeTime;
-    LARGE_INTEGER QuotaUsed;
-    LARGE_INTEGER QuotaThreshold;
-    LARGE_INTEGER QuotaLimit;
-    SID Sid;
-} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
 
 typedef struct _FILE_END_OF_FILE_INFORMATION {
   LARGE_INTEGER  EndOfFile;
@@ -10247,7 +10254,7 @@ DbgSetDebugFilterState(
 
 #endif /* !DBG */
 
-#if defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
+#if defined(_NTDDK_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
 
 extern NTOSAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTOSAPI PBOOLEAN KdDebuggerEnabled;

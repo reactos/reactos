@@ -13,7 +13,6 @@
 extern "C" {
 #endif
 
-#include <windef.h>
 #include <ddk/ntddk.h>
 
 #define PORTCLASSAPI extern

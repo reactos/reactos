@@ -417,12 +417,14 @@ ZwAddAtom(
     IN OUT PRTL_ATOM Atom
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwCancelTimer(
     IN HANDLE TimerHandle,
     OUT PBOOLEAN CurrentState OPTIONAL
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -467,6 +469,7 @@ ZwCreateSemaphore(
     IN LONG MaximumCount
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwCreateTimer(
@@ -475,6 +478,7 @@ ZwCreateTimer(
     IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
     IN TIMER_TYPE TimerType
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -528,6 +532,7 @@ ZwOpenSemaphore(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwOpenTimer(
@@ -535,6 +540,7 @@ ZwOpenTimer(
     IN ACCESS_MASK DesiredAccess,
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -728,6 +734,7 @@ ZwSetSystemInformation(
     IN ULONG SystemInformationLength
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwSetTimer(
@@ -739,6 +746,7 @@ ZwSetTimer(
     IN LONG Period OPTIONAL,
     OUT PBOOLEAN PreviousState OPTIONAL
 );
+#endif
 
 NTSTATUS
 NTAPI
