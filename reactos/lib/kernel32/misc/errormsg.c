@@ -383,7 +383,7 @@ DWORD WINAPI FormatMessageW(
     LPWSTR from,f;
     DWORD width = dwFlags & FORMAT_MESSAGE_MAX_WIDTH_MASK;
     BOOL eos = FALSE;
-    CHAR ch;
+    WCHAR ch;
 
     TRACE("(0x%lx,%p,%ld,0x%lx,%p,%ld,%p)\n",
           dwFlags,lpSource,dwMessageId,dwLanguageId,lpBuffer,nSize,args);

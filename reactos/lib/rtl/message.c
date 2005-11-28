@@ -85,17 +85,20 @@ RtlFindMessage(PVOID BaseAddress,
 	  }
      }
 
+   if (MessageTable->NumberOfBlocks <= i)
+     {
+	return STATUS_MESSAGE_NOT_FOUND;
+     }
+
    MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((PUCHAR)MessageTable + MessageTable->Blocks[i].OffsetToEntries);
 
    DPRINT("EntryOffset 0x%08lx\n", EntryOffset);
    DPRINT("IdOffset 0x%08lx\n", IdOffset);
 
    DPRINT("MessageEntry: %p\n", MessageEntry);
-   
-   for (i = 0; i < MessageTable->NumberOfBlocks; i++)
+   for (i = 0; i < IdOffset; i++)
      {
-         if (MessageId >= MessageTable->Blocks[i].LowId && MessageId <= MessageTable->Blocks[i].HighId)
-	        MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((char *)MessageEntry + MessageEntry->Length);
+	MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((PUCHAR)MessageEntry + (ULONG)MessageEntry->Length);
      }
 
    if (MessageEntry->Flags == 0)
