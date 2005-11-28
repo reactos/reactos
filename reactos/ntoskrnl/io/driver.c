@@ -19,11 +19,6 @@ extern LOADER_PARAMETER_BLOCK KeLoaderBlock;
 extern ULONG KeTickCount;
 extern BOOLEAN SetupMode;
 
-NTSTATUS
-LdrProcessModule(PVOID ModuleLoadBase,
-		 PUNICODE_STRING ModuleName,
-		 PLDR_DATA_TABLE_ENTRY *ModuleObject);
-
 typedef struct _SERVICE_GROUP
 {
   LIST_ENTRY GroupListEntry;
@@ -79,6 +74,41 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 
 VOID STDCALL
 IopDeleteDriver(PVOID ObjectBody);
+
+NTSTATUS
+LdrProcessModule(PVOID ModuleLoadBase,
+		 PUNICODE_STRING ModuleName,
+		 PLDR_DATA_TABLE_ENTRY *ModuleObject);
+
+VOID 
+FASTCALL
+INIT_FUNCTION
+IopDisplayLoadingMessage(PVOID ServiceName, 
+                         BOOLEAN Unicode);
+
+static VOID INIT_FUNCTION
+MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length);
+
+NTSTATUS FASTCALL INIT_FUNCTION
+IopInitializeBuiltinDriver(
+   PDEVICE_NODE ModuleDeviceNode,
+   PVOID ModuleLoadBase,
+   PCHAR FileName,
+   ULONG ModuleLength);
+
+static INIT_FUNCTION NTSTATUS
+IopLoadDriver(PSERVICE Service);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IopInitDriverImplementation)
+#pragma alloc_text(INIT, IopDisplayLoadingMessage)
+#pragma alloc_text(INIT, IoCreateDriverList)
+#pragma alloc_text(INIT, IoDestroyDriverList)
+#pragma alloc_text(INIT, MiFreeBootDriverMemory)
+#pragma alloc_text(INIT, IopInitializeBuiltinDriver)
+#pragma alloc_text(INIT, IopLoadDriver)
+#endif
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -1153,7 +1183,7 @@ IoDestroyDriverList(VOID)
   return(STATUS_SUCCESS);
 }
 
-VOID STATIC INIT_FUNCTION
+static VOID INIT_FUNCTION
 MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
 {
    ULONG i;

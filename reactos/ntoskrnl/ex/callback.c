@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeCallbacks)
+#endif
+
+
 /* TYPES ********************************************************************/
 
 /* Mapping for Callback Object */

@@ -14,6 +14,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeTimerImplementation)
+#endif
+
+
 /* TYPES ********************************************************************/
 
 /* Executive Timer Object */

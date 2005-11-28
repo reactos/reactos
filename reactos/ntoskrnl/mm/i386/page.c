@@ -14,6 +14,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
+#pragma alloc_text(INIT, MiInitPageDirectoryMap)
+#endif
+
+
 /* GLOBALS *****************************************************************/
 
 #define PA_BIT_PRESENT   (0)

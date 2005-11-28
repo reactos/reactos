@@ -15,6 +15,38 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+static NTSTATUS 
+STDCALL INIT_FUNCTION 
+DiskQueryRoutine(PWSTR ValueName, 
+                 ULONG ValueType, 
+                 PVOID ValueData, 
+                 ULONG ValueLength,
+                 PVOID Context,
+                 PVOID EntryContext);
+
+static VOID INIT_FUNCTION
+IopEnumerateBiosDisks(PLIST_ENTRY ListHead);
+
+static VOID INIT_FUNCTION
+IopEnumerateDisks(PLIST_ENTRY ListHead);
+
+static NTSTATUS INIT_FUNCTION
+IopAssignArcNamesToDisk(PDEVICE_OBJECT DeviceObject, ULONG RDisk, ULONG DiskNumber);
+
+static NTSTATUS INIT_FUNCTION
+IopCheckCdromDevices(PULONG DeviceNumber);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, DiskQueryRoutine)
+#pragma alloc_text(INIT, IopEnumerateBiosDisks)
+#pragma alloc_text(INIT, IopEnumerateDisks)
+#pragma alloc_text(INIT, IopAssignArcNamesToDisk)
+#pragma alloc_text(INIT, IoCreateArcNames)
+#pragma alloc_text(INIT, IopCheckCdromDevices)
+#pragma alloc_text(INIT, IoCreateSystemRootLink)
+#endif
+
+
 /* MACROS *******************************************************************/
 
 #define FS_VOLUME_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_VOLUME_INFORMATION))

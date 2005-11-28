@@ -13,6 +13,10 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, FsRtlpInitNotifyImplementation)
+#endif
+
 
 PAGED_LOOKASIDE_LIST    NotifyEntryLookaside;
 
@@ -61,7 +65,7 @@ FsRtlpInitNotifyImplementation(VOID)
 
 
 static
-inline
+__inline
 BOOLEAN
 FsRtlpIsUnicodePath(
    PSTRING Path
@@ -593,7 +597,7 @@ FsRtlpGetNextIrp(PNOTIFY_ENTRY NotifyEntry)
 
 
 static
-inline
+__inline
 VOID
 FsRtlpCopyName(
    PFILE_NOTIFY_INFORMATION CurrentEntry,

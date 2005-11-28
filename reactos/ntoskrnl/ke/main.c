@@ -64,6 +64,12 @@ PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 extern unsigned int _image_base__;
 ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
 
+VOID INIT_FUNCTION _main(ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, _main)
+#endif
+
 /* FUNCTIONS ****************************************************************/
 
 /*

@@ -39,6 +39,15 @@ ULONG MiNonPagedPoolLength;
 extern ULONG init_stack;
 extern ULONG init_stack_top;
 
+VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitVirtualMemory)
+#pragma alloc_text(INIT, MmInit1)
+#pragma alloc_text(INIT, MmInit2)
+#pragma alloc_text(INIT, MmInit3)
+#endif
+
 /* FUNCTIONS ****************************************************************/
 
 /*

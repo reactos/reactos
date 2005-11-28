@@ -206,7 +206,7 @@ MmCreatePeb(PEPROCESS Process)
     /* Allocate the PEB */
     Peb = MiCreatePebOrTeb(Process,
                            (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
-    ASSERT(Peb == (PVOID)0x7FFDF000)
+    ASSERT(Peb == (PVOID)0x7FFDF000);
 
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");

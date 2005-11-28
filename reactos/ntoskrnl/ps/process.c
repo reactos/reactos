@@ -193,8 +193,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PHYSICAL_ADDRESS DirectoryTableBase;
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
-    DirectoryTableBase.QuadPart = (ULONGLONG)0;
     BOOLEAN ProcessCreated = FALSE;
+
+	DirectoryTableBase.QuadPart = (ULONGLONG)0;
 
     DPRINT("PspCreateProcess(ObjectAttributes %x)\n", ObjectAttributes);
 

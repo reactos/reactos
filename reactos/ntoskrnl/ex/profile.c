@@ -13,6 +13,10 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeProfileImplementation)
+#endif
+
 /* FIXME: NDK This structure is a *GUESS* -- Alex */
 typedef struct _EPROFILE {
     PEPROCESS Process;

@@ -21,8 +21,13 @@
 /* GLOBALS *******************************************************************/
 
 BOOLEAN STDCALL MmIsFileAPagingFile(PFILE_OBJECT FileObject);
+VOID STDCALL INIT_FUNCTION RtlpInitializeResources(VOID);
 static ULONG FsRtlpAllocatedResources = 0;
 static PERESOURCE FsRtlpResources;
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, RtlpInitializeResources)
+#endif
 
 /* PRIVATE FUNCTIONS**********************************************************/
 

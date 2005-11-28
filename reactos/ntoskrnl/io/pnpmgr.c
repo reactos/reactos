@@ -97,6 +97,15 @@ ULONG crc32Table[256] =
 	0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 };
 
+static NTSTATUS INIT_FUNCTION
+IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IopSetRootDeviceInstanceData)
+#pragma alloc_text(INIT, PnpInit)
+#pragma alloc_text(INIT, PnpInit2)
+#endif
+
 
 /* FUNCTIONS *****************************************************************/
 

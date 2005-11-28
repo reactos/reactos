@@ -14,6 +14,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitializePageOp)
+#endif
+ 
+
 /* GLOBALS *******************************************************************/
 
 #define PAGEOP_HASH_TABLE_SIZE       (32)

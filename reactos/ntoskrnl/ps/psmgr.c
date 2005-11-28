@@ -46,6 +46,17 @@ PVOID PspSystemDllSection = NULL;
 PVOID PspSystemDllEntryPoint = NULL;
 PHANDLE_TABLE PspCidTable = NULL;
 VOID STDCALL PspKillMostProcesses();
+VOID INIT_FUNCTION NTAPI PsInitClientIDManagment(VOID);
+NTSTATUS STDCALL INIT_FUNCTION PspLookupKernelUserEntryPoints(VOID);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, PiInitProcessManager)
+#pragma alloc_text(INIT, PsInitClientIDManagment)
+#pragma alloc_text(INIT, PsInitThreadManagment)
+#pragma alloc_text(INIT, PsInitProcessManagment)
+#pragma alloc_text(INIT, PspLookupKernelUserEntryPoints)
+#pragma alloc_text(INIT, PsLocateSystemDll)
+#endif
 
 /* FUNCTIONS ***************************************************************/
 

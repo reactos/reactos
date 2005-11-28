@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, PsInitialiseW32Call)
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 #if ALEX_CB_REWRITE

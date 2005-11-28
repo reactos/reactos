@@ -40,6 +40,18 @@ extern POBJECT_TYPE IoAdapterObjectType;
 NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
 NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 
+VOID INIT_FUNCTION IopInitLookasideLists(VOID);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IoInitCancelHandling)
+#pragma alloc_text(INIT, IoInitShutdownNotification)
+#pragma alloc_text(INIT, IopInitLookasideLists)
+#pragma alloc_text(INIT, IoInit)
+#pragma alloc_text(INIT, IoInit2)
+#pragma alloc_text(INIT, IoInit3)
+#endif
+
+
 /* INIT FUNCTIONS ************************************************************/
 
 VOID

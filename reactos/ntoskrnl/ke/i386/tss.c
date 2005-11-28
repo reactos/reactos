@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, Ki386BootInitializeTSS)
+#endif
+
 /* GLOBALS *******************************************************************/
 
 typedef struct _KTSSNOIOPM

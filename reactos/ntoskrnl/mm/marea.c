@@ -47,6 +47,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitMemoryAreas)
+#endif
+
 /* #define VALIDATE_MEMORY_AREAS */
 
 /* FUNCTIONS *****************************************************************/

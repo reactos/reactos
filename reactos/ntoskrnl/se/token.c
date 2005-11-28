@@ -15,6 +15,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, SepInitializeTokenImplementation)
+#endif
+
+
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE SepTokenObjectType = NULL;

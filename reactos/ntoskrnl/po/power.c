@@ -13,6 +13,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, PoInit)
+#endif
+
+
 typedef struct _REQUEST_POWER_ITEM
 {
   PREQUEST_POWER_COMPLETE CompletionRoutine;

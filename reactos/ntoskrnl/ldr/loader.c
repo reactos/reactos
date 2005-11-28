@@ -34,6 +34,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, LdrInit1)
+#pragma alloc_text(INIT, LdrInitModuleManagement)
+#pragma alloc_text(INIT, LdrSafePEProcessModule)
+#endif
+
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY ModuleListHead;

@@ -16,6 +16,13 @@
 
 #include "cm.h"
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, CmInitHives)
+#pragma alloc_text(INIT, CmInitializeRegistry)
+#pragma alloc_text(INIT, CmInit2)
+#endif
+
+
 /* GLOBALS ******************************************************************/
 
 POBJECT_TYPE  CmiKeyType = NULL;

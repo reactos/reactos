@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IopInitBootLog)
+#pragma alloc_text(INIT, IopStartBootLog()
+#endif
 
 /* GLOBALS ******************************************************************/
 

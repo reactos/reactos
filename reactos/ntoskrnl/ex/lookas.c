@@ -15,6 +15,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitLookasideLists)
+#endif
+
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY ExpNonPagedLookasideListHead;

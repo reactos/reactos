@@ -26,6 +26,11 @@ static ERESOURCE SepSubjectContextLock;
 
 static BOOLEAN SepInitExports(VOID);
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, SeInit1)
+#pragma alloc_text(INIT, SeInit2)
+#pragma alloc_text(INIT, SepInitExports)
+#endif
 
 /* FUNCTIONS ****************************************************************/
 

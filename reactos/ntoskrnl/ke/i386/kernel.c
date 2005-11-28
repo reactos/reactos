@@ -29,9 +29,20 @@ ULONG KiFastSystemCallDisable = 1;
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 extern ULONG IdleProcessorMask;
 
+static VOID INIT_FUNCTION Ki386GetCpuId(VOID);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, Ki386GetCpuId)
+#pragma alloc_text(INIT, KeCreateApplicationProcessorIdleThread)
+#pragma alloc_text(INIT, KePrepareForApplicationProcessorInit)
+#pragma alloc_text(INIT, KeInit1)
+#pragma alloc_text(INIT, KeInit2)
+#pragma alloc_text(INIT, Ki386SetProcessorFeatures)
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
-VOID INIT_FUNCTION STATIC
+static VOID INIT_FUNCTION
 Ki386GetCpuId(VOID)
 {
    ULONG OrigFlags, Flags, FinalFlags;

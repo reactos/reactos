@@ -32,6 +32,18 @@ BOOLEAN SetupMode = TRUE;
 
 VOID PspPostInitSystemProcess(VOID);
 
+static VOID INIT_FUNCTION InitSystemSharedUserPage (PCSZ ParameterLine);
+VOID INIT_FUNCTION ExpDisplayNotice(VOID);
+INIT_FUNCTION NTSTATUS ExpLoadInitialProcess(PHANDLE ProcessHandle, PHANDLE ThreadHandle);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, InitSystemSharedUserPage)
+#pragma alloc_text(INIT, ExpDisplayNotice)
+#pragma alloc_text(INIT, ExpLoadInitialProcess)
+#pragma alloc_text(INIT, ExpInitializeExecutive)
+#pragma alloc_text(INIT, ExInit2)
+#endif
+
 /* FUNCTIONS ****************************************************************/
 
 static

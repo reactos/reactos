@@ -15,6 +15,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitializePageList)
+#pragma alloc_text(INIT, MmInitZeroPageThread)
+#endif
+
+
 /* TYPES *******************************************************************/
 
 #define MM_PHYSICAL_PAGE_FREE    (0x1)
