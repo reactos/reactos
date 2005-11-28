@@ -61,7 +61,7 @@ MiCreatePebOrTeb(PEPROCESS Process,
     } while (Status != STATUS_SUCCESS);
 
     /* Initialize the Region */
-    MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
+    MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
                        PAGE_SIZE,
                        MEM_COMMIT,
                        PAGE_READWRITE);
@@ -194,7 +194,7 @@ MmCreatePeb(PEPROCESS Process)
 {
     PPEB Peb = NULL;
     LARGE_INTEGER SectionOffset;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PVOID TableBase = NULL;
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_LOAD_CONFIG_DIRECTORY ImageConfigData;
@@ -385,7 +385,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     PVOID BaseAddress;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
     BoundaryAddressMultiple.QuadPart = 0;
 

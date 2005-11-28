@@ -747,7 +747,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                       (ULONG_PTR)MemoryArea->StartingAddress;
 
-   MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
+   MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
                       MemoryAreaLength, Type, Protect);
 
    if ((AllocationType & MEM_COMMIT) &&

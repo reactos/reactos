@@ -22,12 +22,12 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
 {
    NTSTATUS Status;
    PRTL_DEBUG_BUFFER Buf = NULL;
-   ULONG SectionSize  = 100 * PAGE_SIZE;
+   SIZE_T SectionSize = 100 * PAGE_SIZE;
 
    Status = NtAllocateVirtualMemory( NtCurrentProcess(),
-                                    (PVOID)&Buf,
+                                    (PVOID*)&Buf,
                                      0,
-                                    &SectionSize,
+                                     &SectionSize,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
    if (!NT_SUCCESS(Status))

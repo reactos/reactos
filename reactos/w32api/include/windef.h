@@ -249,7 +249,9 @@ typedef CONST void *PCVOID,*LPCVOID;
 typedef int INT;
 typedef unsigned int UINT,*PUINT,*LPUINT;
 
+#ifndef NT_INCLUDED
 #include <winnt.h>
+#endif
 
 typedef UINT_PTR WPARAM;
 typedef LONG_PTR LPARAM;

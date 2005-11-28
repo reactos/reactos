@@ -291,10 +291,10 @@ HEAP_Commit(SUBHEAP *subheap,
             PVOID ptr,
             ULONG flags)
 {
-   ULONG size = (ULONG)((char *)ptr - (char *)subheap);
+   SIZE_T size = (SIZE_T)((char *)ptr - (char *)subheap);
    NTSTATUS Status;
    PVOID address;
-   ULONG commitsize;
+   SIZE_T commitsize;
 
    size = (size + COMMIT_MASK) & ~COMMIT_MASK;
    if (size > subheap->size)
@@ -516,7 +516,7 @@ static void HEAP_ShrinkBlock(SUBHEAP *subheap, ARENA_INUSE *pArena, ULONG size)
  *           HEAP_InitSubHeap
  */
 static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
-                                 ULONG commitSize, ULONG totalSize,
+                                 SIZE_T commitSize, ULONG totalSize,
                                  PRTL_HEAP_PARAMETERS Parameters )
 {
    SUBHEAP *subheap = (SUBHEAP *)address;
@@ -611,7 +611,7 @@ static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
 static PSUBHEAP
 HEAP_CreateSubHeap(PVOID BaseAddress,
                    HEAP *heap, ULONG flags,
-                   ULONG commitSize, ULONG totalSize,
+                   SIZE_T commitSize, ULONG totalSize,
                    PRTL_HEAP_PARAMETERS Parameters )
 {
    PVOID address;
@@ -671,7 +671,7 @@ HEAP_CreateSubHeap(PVOID BaseAddress,
  * Find a free block at least as large as the requested size, and make sure
  * the requested size is committed.
  */
-static ARENA_FREE *HEAP_FindFreeBlock( HEAP *heap, ULONG size,
+static ARENA_FREE *HEAP_FindFreeBlock( HEAP *heap, SIZE_T size,
                                        SUBHEAP **ppSubHeap )
 {
    SUBHEAP *subheap;

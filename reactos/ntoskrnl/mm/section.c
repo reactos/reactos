@@ -3488,7 +3488,7 @@ MmMapViewOfSegment(PMADDRESS_SPACE AddressSpace,
                    PSECTION_OBJECT Section,
                    PMM_SECTION_SEGMENT Segment,
                    PVOID* BaseAddress,
-                   ULONG ViewSize,
+                   SIZE_T ViewSize,
                    ULONG Protect,
                    ULONG ViewOffset,
                    ULONG AllocationType)
@@ -3521,7 +3521,7 @@ MmMapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    MArea->Data.SectionData.Section = Section;
    MArea->Data.SectionData.ViewOffset = ViewOffset;
    MArea->Data.SectionData.WriteCopyView = FALSE;
-   MmInitialiseRegion(&MArea->Data.SectionData.RegionListHead,
+   MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
                       ViewSize, 0, Protect);
 
    return(STATUS_SUCCESS);
@@ -3584,14 +3584,14 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                    IN ULONG ZeroBits  OPTIONAL,
                    IN ULONG CommitSize,
                    IN OUT PLARGE_INTEGER SectionOffset  OPTIONAL,
-                   IN OUT PULONG ViewSize,
+                   IN OUT PSIZE_T ViewSize,
                    IN SECTION_INHERIT InheritDisposition,
                    IN ULONG AllocationType  OPTIONAL,
                    IN ULONG Protect)
 {
    PVOID SafeBaseAddress;
    LARGE_INTEGER SafeSectionOffset;
-   ULONG SafeViewSize;
+   SIZE_T SafeViewSize;
    PSECTION_OBJECT Section;
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
@@ -3642,7 +3642,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
          ProbeForWriteLargeInteger(SectionOffset);
          SafeSectionOffset = *SectionOffset;
        }
-       ProbeForWriteUlong(ViewSize);
+       ProbeForWriteSize_t(ViewSize);
        SafeViewSize = *ViewSize;
      }
      _SEH_HANDLE
@@ -4404,7 +4404,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                    IN ULONG ZeroBits,
                    IN ULONG CommitSize,
                    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-                   IN OUT PULONG ViewSize,
+                   IN OUT PSIZE_T ViewSize,
                    IN SECTION_INHERIT InheritDisposition,
                    IN ULONG AllocationType,
                    IN ULONG Protect)

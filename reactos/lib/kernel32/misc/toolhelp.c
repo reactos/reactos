@@ -95,7 +95,7 @@ static VOID
 TH32FreeAllocatedResources(PRTL_DEBUG_BUFFER HeapDebug,
                            PRTL_DEBUG_BUFFER ModuleDebug,
                            PVOID ProcThrdInfo,
-                           ULONG ProcThrdInfoSize)
+                           SIZE_T ProcThrdInfoSize)
 {
   if(HeapDebug != NULL)
   {
@@ -121,7 +121,7 @@ TH32CreateSnapshot(DWORD dwFlags,
                    PRTL_DEBUG_BUFFER *HeapDebug,
                    PRTL_DEBUG_BUFFER *ModuleDebug,
                    PVOID *ProcThrdInfo,
-                   ULONG *ProcThrdInfoSize)
+                   SIZE_T *ProcThrdInfoSize)
 {
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1115,7 +1115,7 @@ CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {
   PRTL_DEBUG_BUFFER HeapDebug, ModuleDebug;
   PVOID ProcThrdInfo;
-  ULONG ProcThrdInfoSize;
+  SIZE_T ProcThrdInfoSize;
   NTSTATUS Status;
   HANDLE hSnapShotSection = NULL;
 

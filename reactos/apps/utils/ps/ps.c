@@ -269,12 +269,14 @@ int main()
 		          statt->desc , waitt->desc);
         	WriteFile(stdout, buf1, lstrlen(buf1), &r, NULL);
 
-		EnumThreadWindows((DWORD)CurrentProcess->Threads[ti].ClientId.UniqueThread,
+		EnumThreadWindows(PtrToUlong(CurrentProcess->Threads[ti].ClientId.UniqueThread),
 		                  (WNDENUMPROC) EnumThreadProc,
 		                  (LPARAM)(LPTSTR) szWindowName );
 	   }
+typedef __attribute__((mode (__pointer__))) unsigned long ULONG_PTRX;
+CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTRX)CurrentProcess + 1);
 	   CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess +
-	                     CurrentProcess->NextEntryOffset);
+	                     (ULONG_PTR)CurrentProcess->NextEntryOffset);
 	} 
   	return (0);
 }

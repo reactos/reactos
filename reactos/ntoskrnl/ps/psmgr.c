@@ -400,7 +400,7 @@ PspMapSystemDll(PEPROCESS Process,
                 PVOID *DllBase)
 {
     NTSTATUS Status;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
 
     /* Map the System DLL */

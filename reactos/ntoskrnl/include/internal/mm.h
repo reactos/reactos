@@ -1277,9 +1277,9 @@ MmAlterRegion(
 
 VOID
 NTAPI
-MmInitialiseRegion(
+MmInitializeRegion(
     PLIST_ENTRY RegionListHead,
-    ULONG Length,
+    SIZE_T Length,
     ULONG Type,
     ULONG Protect
 );

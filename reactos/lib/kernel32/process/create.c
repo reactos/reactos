@@ -366,7 +366,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
     NTSTATUS Status;
     PWCHAR ScanChar;
     ULONG EnviroSize;
-    ULONG Size;
+    SIZE_T Size;
     UNICODE_STRING Desktop, Shell, Runtime, Title;
     PPEB OurPeb = NtCurrentPeb();
     LPVOID Environment = lpEnvironment;

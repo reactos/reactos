@@ -48,7 +48,7 @@ NtAllocateVirtualMemory(
     IN HANDLE ProcessHandle,
     IN OUT PVOID *BaseAddress,
     IN ULONG ZeroBits,
-    IN OUT PULONG RegionSize,
+    IN OUT PSIZE_T RegionSize,
     IN ULONG AllocationType,
     IN ULONG Protect
 );
@@ -97,7 +97,7 @@ NTAPI
 NtFreeVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID *BaseAddress,
-    IN PULONG RegionSize,
+    IN PSIZE_T RegionSize,
     IN ULONG FreeType
 );
 
@@ -119,7 +119,7 @@ NtMapViewOfSection(
     IN ULONG ZeroBits,
     IN ULONG CommitSize,
     IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PULONG ViewSize,
+    IN OUT PSIZE_T ViewSize,
     IN SECTION_INHERIT InheritDisposition,
     IN ULONG AllocationType,
     IN ULONG AccessProtection
@@ -207,7 +207,7 @@ ZwAllocateVirtualMemory(
     IN HANDLE ProcessHandle,
     IN OUT PVOID *BaseAddress,
     IN ULONG ZeroBits,
-    IN OUT PULONG RegionSize,
+    IN OUT PSIZE_T RegionSize,
     IN ULONG AllocationType,
     IN ULONG Protect
 );
@@ -247,7 +247,7 @@ NTAPI
 ZwFreeVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID *BaseAddress,
-    IN PULONG RegionSize,
+    IN PSIZE_T RegionSize,
     IN ULONG FreeType
 );
 
@@ -270,7 +270,7 @@ ZwMapViewOfSection(
     IN ULONG ZeroBits,
     IN ULONG CommitSize,
     IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PULONG ViewSize,
+    IN OUT PSIZE_T ViewSize,
     IN SECTION_INHERIT InheritDisposition,
     IN ULONG AllocationType,
     IN ULONG AccessProtection

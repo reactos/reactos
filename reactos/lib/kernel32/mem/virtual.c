@@ -22,7 +22,7 @@
 LPVOID STDCALL
 VirtualAllocEx(HANDLE hProcess,
 	       LPVOID lpAddress,
-	       DWORD dwSize,
+	       SIZE_T dwSize,
 	       DWORD flAllocationType,
 	       DWORD flProtect)
 {
@@ -31,7 +31,7 @@ VirtualAllocEx(HANDLE hProcess,
   Status = NtAllocateVirtualMemory(hProcess,
 				   (PVOID *)&lpAddress,
 				   0,
-				   (PULONG)&dwSize,
+				   &dwSize,
 				   flAllocationType,
 				   flProtect);
   if (!NT_SUCCESS(Status))
@@ -48,7 +48,7 @@ VirtualAllocEx(HANDLE hProcess,
  */
 LPVOID STDCALL
 VirtualAlloc(LPVOID lpAddress,
-	     DWORD dwSize,
+	     SIZE_T dwSize,
 	     DWORD flAllocationType,
 	     DWORD flProtect)
 {
@@ -66,7 +66,7 @@ VirtualAlloc(LPVOID lpAddress,
 BOOL STDCALL
 VirtualFreeEx(HANDLE hProcess,
 	      LPVOID lpAddress,
-	      DWORD dwSize,
+	      SIZE_T dwSize,
 	      DWORD dwFreeType)
 {
   NTSTATUS Status;
@@ -89,7 +89,7 @@ VirtualFreeEx(HANDLE hProcess,
  */
 BOOL STDCALL
 VirtualFree(LPVOID lpAddress,
-	    DWORD dwSize,
+	    SIZE_T dwSize,
 	    DWORD dwFreeType)
 {
   return(VirtualFreeEx(GetCurrentProcess(),
@@ -104,7 +104,7 @@ VirtualFree(LPVOID lpAddress,
  */
 BOOL STDCALL
 VirtualProtect(LPVOID lpAddress,
-	       DWORD dwSize,
+	       SIZE_T dwSize,
 	       DWORD flNewProtect,
 	       PDWORD lpflOldProtect)
 {
@@ -122,7 +122,7 @@ VirtualProtect(LPVOID lpAddress,
 BOOL STDCALL
 VirtualProtectEx(HANDLE hProcess,
 		 LPVOID lpAddress,
-		 DWORD dwSize,
+		 SIZE_T dwSize,
 		 DWORD flNewProtect,
 		 PDWORD lpflOldProtect)
 {
@@ -147,7 +147,7 @@ VirtualProtectEx(HANDLE hProcess,
  */
 BOOL STDCALL
 VirtualLock(LPVOID lpAddress,
-	    DWORD dwSize)
+	    SIZE_T dwSize)
 {
   ULONG BytesLocked;
   NTSTATUS Status;
@@ -171,7 +171,7 @@ VirtualLock(LPVOID lpAddress,
 DWORD STDCALL
 VirtualQuery(LPCVOID lpAddress,
 	     PMEMORY_BASIC_INFORMATION lpBuffer,
-	     DWORD dwLength)
+	     SIZE_T dwLength)
 {
   return(VirtualQueryEx(NtCurrentProcess(),
 			lpAddress,
@@ -187,7 +187,7 @@ DWORD STDCALL
 VirtualQueryEx(HANDLE hProcess,
 	       LPCVOID lpAddress,
 	       PMEMORY_BASIC_INFORMATION lpBuffer,
-	       DWORD dwLength)
+	       SIZE_T dwLength)
 {
   NTSTATUS Status;
   ULONG ResultLength;
@@ -212,7 +212,7 @@ VirtualQueryEx(HANDLE hProcess,
  */
 BOOL STDCALL
 VirtualUnlock(LPVOID lpAddress,
-	      DWORD dwSize)
+	      SIZE_T dwSize)
 {
   ULONG BytesLocked;
   NTSTATUS Status;
