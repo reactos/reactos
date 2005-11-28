@@ -1205,8 +1205,12 @@ NtUserPaintDesktop(HDC hDC)
    IntGdiGetClipBox(hDC, &Rect);
 
    hWndDesktop = IntGetDesktopWindow();
-   if (!(WndDesktop = UserGetWindowObject(hWndDesktop)))
+   
+   WndDesktop = UserGetWindowObject(hWndDesktop);
+   if (!WndDesktop)
+   {
       RETURN(FALSE);
+   }
 
    DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE); //fixme: verify retval
 
@@ -1215,11 +1219,13 @@ NtUserPaintDesktop(HDC hDC)
     * Paint desktop background
     */
 
-   if(WinSta->hbmWallpaper != NULL)
+   if (WinSta->hbmWallpaper != NULL)
    {
       PWINDOW_OBJECT DeskWin;
 
-      if((DeskWin = UserGetWindowObject(hWndDesktop)))
+      DeskWin = UserGetWindowObject(hWndDesktop);
+      
+      if (DeskWin)
       {
          SIZE sz;
          int x, y;
@@ -1228,14 +1234,15 @@ NtUserPaintDesktop(HDC hDC)
          sz.cx = DeskWin->WindowRect.right - DeskWin->WindowRect.left;
          sz.cy = DeskWin->WindowRect.bottom - DeskWin->WindowRect.top;
  
-         if(WinSta->WallpaperMode == wmStretch ||
-            WinSta->WallpaperMode == wmTile)
+         if (WinSta->WallpaperMode == wmStretch ||
+             WinSta->WallpaperMode == wmTile)
          {
             x = 0;
             y = 0;
          }
          else
          {
+            /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
             x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
             y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
          }
@@ -1245,7 +1252,8 @@ NtUserPaintDesktop(HDC hDC)
          {
             HBITMAP hOldBitmap;
  
-            if(x > 0 || y > 0)
+            /* fill in the area that the bitmap is not going to cover */
+            if (x > 0 || y > 0)
             {
                /* FIXME - clip out the bitmap 
                                             can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
@@ -1255,82 +1263,55 @@ NtUserPaintDesktop(HDC hDC)
               NtGdiSelectObject(hDC, PreviousBrush);
             }
  
-            //Do not fill the background after it is painted no matter the size of the picture
+            /*Do not fill the background after it is painted no matter the size of the picture */
             doPatBlt = FALSE;
  
             hOldBitmap = NtGdiSelectObject(hWallpaperDC, WinSta->hbmWallpaper);
  
-            if(WinSta->WallpaperMode == wmStretch)
+            if (WinSta->WallpaperMode == wmStretch)
             {
-#if 0 //Broken Stretch Code
-                /* Fix me, stretch the bitmap to fit the screen.  I'm not smart enough to do this  :( */
-                BITMAPINFO bmINFO;
-                LPVOID pBits;
-                bmINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-                /* Get bits */
-                NtGdiGetDIBits(hDC,
-                               WinSta->hbmWallpaper,
-                               0,
-                               WinSta->cyWallpaper,
-                               NULL, // what goes here?
-                               &bmINFO,
-                               DIB_RGB_COLORS);
-                               
-                bmINFO.bmiHeader.biCompression = BI_RGB;
-                
-                pBits = ExAllocatePool(PagedPool,bmINFO.bmiHeader.biSizeImage);
-                
-                if(pBits == NULL)
-                {
-                    doPatBlt = TRUE;                
-                }
-                else
-                {
-                
-                    NtGdiGetDIBits(hDC,
-                                   WinSta->hbmWallpaper,
-                                   0,
-                                   WinSta->cyWallpaper,
-                                   (LPVOID)pBits, // what goes here?
-                                   &bmINFO,
-                                   DIB_RGB_COLORS);
-                    DPRINT1("Before Draw\n");               
-                    
-                    /* Stretch it to fit the screen */
-                    NtGdiStretchDIBits(hDC,
-                                       0,
-                                       0,
-                                       Rect.right, 
-                                       Rect.bottom,
-                                       0,
-                                       0,
-                                       WinSta->cxWallpaper, 
-                                       WinSta->cyWallpaper,
-                                       (LPVOID)pBits, // get this from NtGdiGetDiBits?
-                                       &bmINFO, // get this from NtGdiGetDiBits?
-                                       DIB_RGB_COLORS,
-                                       SRCCOPY);
-                    ExFreePool(pBits);
-                }
-#else
-                /* Draw nothing */
-                doPatBlt = TRUE;
-#endif //Broken Stretch Code
+                NtGdiStretchBlt(hDC, 
+                                x, 
+                                y, 
+                                Rect.right, 
+                                Rect.bottom, 
+                                hWallpaperDC, 
+                                0, 
+                                0, 
+                                WinSta->cxWallpaper, 
+                                WinSta->cyWallpaper, 
+                                SRCCOPY);
             }
-            else if(WinSta->WallpaperMode == wmTile)
+            else if (WinSta->WallpaperMode == wmTile)
             {
-            
+                /* paint the bitmap across the screen then down */
                 for(y = 0; y < Rect.bottom; y += WinSta->cyWallpaper)
                 {
                     for(x = 0; x < Rect.right; x += WinSta->cxWallpaper)
                     {
-                        NtGdiBitBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, hWallpaperDC, 0, 0, SRCCOPY);
+                        NtGdiBitBlt(hDC, 
+                                    x, 
+                                    y, 
+                                    WinSta->cxWallpaper, 
+                                    WinSta->cyWallpaper, 
+                                    hWallpaperDC, 
+                                    0, 
+                                    0, 
+                                    SRCCOPY);
                     }
                 }
             }
             else
             {
-                NtGdiBitBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, hWallpaperDC, 0, 0, SRCCOPY);
+                NtGdiBitBlt(hDC, 
+                            x, 
+                            y, 
+                            WinSta->cxWallpaper, 
+                            WinSta->cyWallpaper, 
+                            hWallpaperDC, 
+                            0, 
+                            0, 
+                            SRCCOPY);
             } 
             NtGdiSelectObject(hWallpaperDC, hOldBitmap); 
             NtGdiDeleteDC(hWallpaperDC);
@@ -1356,9 +1337,13 @@ NtUserPaintDesktop(HDC hDC)
       RECT rect;
 
       if (*s_wszVersion)
+      {
          len = wcslen(s_wszVersion);
+      }
       else
+      {
          len = GetSystemVersionString(s_wszVersion);
+      }
 
       if (len)
       {
