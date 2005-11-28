@@ -1077,16 +1077,18 @@ SecurityPageProc(IN HWND hwndDlg,
                  IN LPARAM lParam)
 {
     PSECURITY_PAGE sp;
+    INT_PTR Ret = FALSE;
 
-    switch (uMsg)
+    sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
+                                          DWL_USER);
+    if (sp != NULL || uMsg == WM_INITDIALOG)
     {
-        case WM_NOTIFY:
+        switch (uMsg)
         {
-            NMHDR *pnmh = (NMHDR*)lParam;
-            sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
-                                                  DWL_USER);
-            if (sp != NULL)
+            case WM_NOTIFY:
             {
+                NMHDR *pnmh = (NMHDR*)lParam;
+
                 if (pnmh->hwndFrom == sp->hWndPrincipalsList)
                 {
                     switch (pnmh->code)
@@ -1123,170 +1125,179 @@ SecurityPageProc(IN HWND hwndDlg,
                         }
                     }
                 }
+                break;
             }
-            break;
-        }
-        
-        case WM_COMMAND:
-        {
-            switch (LOWORD(wParam))
+            
+            case WM_COMMAND:
             {
-                case IDC_ADD_PRINCIPAL:
+                switch (LOWORD(wParam))
                 {
-                    HRESULT hRet;
-                    
-                    sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
-                                                          DWL_USER);
-                    
-                    hRet = InitializeObjectPicker(sp->ServerName,
-                                                  &sp->ObjectInfo,
-                                                  &sp->pDsObjectPicker);
-                    if (SUCCEEDED(hRet))
+                    case IDC_ADD_PRINCIPAL:
                     {
-                        hRet = InvokeObjectPickerDialog(sp->pDsObjectPicker,
-                                                        hwndDlg,
-                                                        AddSelectedPrincipal,
-                                                        sp);
-                        if (FAILED(hRet))
+                        HRESULT hRet;
+                        
+                        hRet = InitializeObjectPicker(sp->ServerName,
+                                                      &sp->ObjectInfo,
+                                                      &sp->pDsObjectPicker);
+                        if (SUCCEEDED(hRet))
                         {
-                            MessageBox(hwndDlg, L"InvokeObjectPickerDialog failed!\n", NULL, 0);
+                            hRet = InvokeObjectPickerDialog(sp->pDsObjectPicker,
+                                                            hwndDlg,
+                                                            AddSelectedPrincipal,
+                                                            sp);
+                            if (FAILED(hRet))
+                            {
+                                MessageBox(hwndDlg, L"InvokeObjectPickerDialog failed!\n", NULL, 0);
+                            }
+                            
+                            /* delete the instance */
+                            FreeObjectPicker(sp->pDsObjectPicker);
+                            
+                            /* reload the principal list */
+                            FillPrincipalsList(sp);
                         }
-                        
-                        /* delete the instance */
-                        FreeObjectPicker(sp->pDsObjectPicker);
-                        
-                        /* reload the principal list */
-                        FillPrincipalsList(sp);
+                        else
+                        {
+                            MessageBox(hwndDlg, L"InitializeObjectPicker failed!\n", NULL, 0);
+                        }
+                        break;
                     }
-                    else
+
+                    case IDC_REMOVE_PRINCIPAL:
                     {
-                        MessageBox(hwndDlg, L"InitializeObjectPicker failed!\n", NULL, 0);
+                        PPRINCIPAL_LISTITEM SelectedPrincipal;
+
+                        SelectedPrincipal = (PPRINCIPAL_LISTITEM)ListViewGetSelectedItemData(sp->hWndPrincipalsList);
+                        if (SelectedPrincipal != NULL)
+                        {
+                            /* FIXME */
+                        }
+                        break;
                     }
-                    break;
                 }
+                break;
             }
-            break;
-        }
-        
-        case WM_SIZE:
-        {
-            sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
-                                                  DWL_USER);
-
-            ResizeControls(sp,
-                           (INT)LOWORD(lParam),
-                           (INT)HIWORD(lParam));
-            break;
-        }
-        
-        case WM_INITDIALOG:
-        {
-            sp = (PSECURITY_PAGE)((LPPROPSHEETPAGE)lParam)->lParam;
-            if(sp != NULL)
+            
+            case WM_SIZE:
             {
-                LV_COLUMN lvc;
-                RECT rcLvClient;
-                
-                sp->hWnd = hwndDlg;
-                sp->hWndPrincipalsList = GetDlgItem(hwndDlg, IDC_PRINCIPALS);
-                sp->hBtnAdd = GetDlgItem(hwndDlg, IDC_ADD_PRINCIPAL);
-                sp->hBtnRemove = GetDlgItem(hwndDlg, IDC_REMOVE_PRINCIPAL);
-                sp->hBtnAdvanced = GetDlgItem(hwndDlg, IDC_ADVANCED);
-                sp->hAceCheckList = GetDlgItem(hwndDlg, IDC_ACE_CHECKLIST);
-                sp->hPermissionsForLabel = GetDlgItem(hwndDlg, IDC_LABEL_PERMISSIONS_FOR);
-                
-                sp->SpecialPermCheckIndex = -1;
-                
-                if ((sp->ObjectInfo.dwFlags & SI_SERVER_IS_DC) &&
-                    sp->ObjectInfo.pszServerName != NULL &&
-                    sp->ObjectInfo.pszServerName[0] != L'\0')
+                ResizeControls(sp,
+                               (INT)LOWORD(lParam),
+                               (INT)HIWORD(lParam));
+                break;
+            }
+            
+            case WM_INITDIALOG:
+            {
+                sp = (PSECURITY_PAGE)((LPPROPSHEETPAGE)lParam)->lParam;
+                if(sp != NULL)
                 {
-                    sp->ServerName = sp->ObjectInfo.pszServerName;
-                }
+                    LV_COLUMN lvc;
+                    RECT rcLvClient;
+                    
+                    sp->hWnd = hwndDlg;
+                    sp->hWndPrincipalsList = GetDlgItem(hwndDlg, IDC_PRINCIPALS);
+                    sp->hBtnAdd = GetDlgItem(hwndDlg, IDC_ADD_PRINCIPAL);
+                    sp->hBtnRemove = GetDlgItem(hwndDlg, IDC_REMOVE_PRINCIPAL);
+                    sp->hBtnAdvanced = GetDlgItem(hwndDlg, IDC_ADVANCED);
+                    sp->hAceCheckList = GetDlgItem(hwndDlg, IDC_ACE_CHECKLIST);
+                    sp->hPermissionsForLabel = GetDlgItem(hwndDlg, IDC_LABEL_PERMISSIONS_FOR);
+                    
+                    sp->SpecialPermCheckIndex = -1;
+                    
+                    if ((sp->ObjectInfo.dwFlags & SI_SERVER_IS_DC) &&
+                        sp->ObjectInfo.pszServerName != NULL &&
+                        sp->ObjectInfo.pszServerName[0] != L'\0')
+                    {
+                        sp->ServerName = sp->ObjectInfo.pszServerName;
+                    }
 
-                /* save the pointer to the structure */
-                SetWindowLongPtr(hwndDlg,
-                                 DWL_USER,
-                                 (DWORD_PTR)sp);
+                    /* save the pointer to the structure */
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_USER,
+                                     (DWORD_PTR)sp);
 
-                sp->hiPrincipals = ImageList_LoadBitmap(hDllInstance,
-                                                        MAKEINTRESOURCE(IDB_USRGRPIMAGES),
-                                                        16,
-                                                        3,
-                                                        RGB(255,
-                                                            0,
-                                                            255));
-
-                /* setup the listview control */
-                if (sp->hiPrincipals != NULL)
-                {
                     ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
                                                         LVS_EX_FULLROWSELECT,
                                                         LVS_EX_FULLROWSELECT);
-                    ListView_SetImageList(sp->hWndPrincipalsList,
-                                          sp->hiPrincipals,
-                                          LVSIL_SMALL);
+
+                    sp->hiPrincipals = ImageList_LoadBitmap(hDllInstance,
+                                                            MAKEINTRESOURCE(IDB_USRGRPIMAGES),
+                                                            16,
+                                                            3,
+                                                            RGB(255,
+                                                                0,
+                                                                255));
+
+                    /* setup the listview control */
+                    if (sp->hiPrincipals != NULL)
+                    {
+                        ListView_SetImageList(sp->hWndPrincipalsList,
+                                              sp->hiPrincipals,
+                                              LVSIL_SMALL);
+                    }
+
+                    GetClientRect(sp->hWndPrincipalsList,
+                                  &rcLvClient);
+                    
+                    /* add a column to the list view */
+                    lvc.mask = LVCF_FMT | LVCF_WIDTH;
+                    lvc.fmt = LVCFMT_LEFT;
+                    lvc.cx = rcLvClient.right;
+                    ListView_InsertColumn(sp->hWndPrincipalsList,
+                                          0,
+                                          &lvc);
+                    
+                    ReloadPrincipalsList(sp);
+
+                    FillPrincipalsList(sp);
+                    
+                    ListViewSelectItem(sp->hWndPrincipalsList,
+                                       0);
+
+                    /* calculate the columns of the allow/deny checkboxes */
+                    SetAceCheckListColumns(sp->hAceCheckList,
+                                           CLB_ALLOW,
+                                           GetDlgItem(hwndDlg, IDC_LABEL_ALLOW));
+                    SetAceCheckListColumns(sp->hAceCheckList,
+                                           CLB_DENY,
+                                           GetDlgItem(hwndDlg, IDC_LABEL_DENY));
+
+                    LoadPermissionsList(sp,
+                                        NULL,
+                                        SI_ACCESS_GENERAL |
+                                        ((sp->ObjectInfo.dwFlags & SI_CONTAINER) ? SI_ACCESS_CONTAINER : 0),
+                                        &sp->DefaultAccess);
+
+                    /* hide controls in case the flags aren't present */
+                    if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
+                    {
+                        /* editing the permissions is least the user can do when
+                           the advanced button is showed */
+                        sp->ObjectInfo.dwFlags |= SI_EDIT_PERMS;
+                    }
+                    else
+                    {
+                        ShowWindow(sp->hBtnAdvanced,
+                                   SW_HIDE);
+                        ShowWindow(GetDlgItem(hwndDlg, IDC_LABEL_ADVANCED),
+                                   SW_HIDE);
+                    }
+                    
+                    /* enable quicksearch for the permissions checklist control */
+                    SendMessage(sp->hAceCheckList,
+                                CLM_ENABLEQUICKSEARCH,
+                                TRUE,
+                                0);
+
+                    UpdateControlStates(sp);
                 }
 
-                GetClientRect(sp->hWndPrincipalsList,
-                              &rcLvClient);
-                
-                /* add a column to the list view */
-                lvc.mask = LVCF_FMT | LVCF_WIDTH;
-                lvc.fmt = LVCFMT_LEFT;
-                lvc.cx = rcLvClient.right;
-                ListView_InsertColumn(sp->hWndPrincipalsList,
-                                      0,
-                                      &lvc);
-                
-                ReloadPrincipalsList(sp);
-
-                FillPrincipalsList(sp);
-                
-                ListViewSelectItem(sp->hWndPrincipalsList,
-                                   0);
-
-                /* calculate the columns of the allow/deny checkboxes */
-                SetAceCheckListColumns(sp->hAceCheckList,
-                                       CLB_ALLOW,
-                                       GetDlgItem(hwndDlg, IDC_LABEL_ALLOW));
-                SetAceCheckListColumns(sp->hAceCheckList,
-                                       CLB_DENY,
-                                       GetDlgItem(hwndDlg, IDC_LABEL_DENY));
-
-                LoadPermissionsList(sp,
-                                    NULL,
-                                    SI_ACCESS_GENERAL |
-                                    ((sp->ObjectInfo.dwFlags & SI_CONTAINER) ? SI_ACCESS_CONTAINER : 0),
-                                    &sp->DefaultAccess);
-
-                /* hide controls in case the flags aren't present */
-                if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
-                {
-                    /* editing the permissions is least the user can do when
-                       the advanced button is showed */
-                    sp->ObjectInfo.dwFlags |= SI_EDIT_PERMS;
-                }
-                else
-                {
-                    ShowWindow(sp->hBtnAdvanced,
-                               SW_HIDE);
-                    ShowWindow(GetDlgItem(hwndDlg, IDC_LABEL_ADVANCED),
-                               SW_HIDE);
-                }
-                
-                /* enable quicksearch for the permissions checklist control */
-                SendMessage(sp->hAceCheckList,
-                            CLM_ENABLEQUICKSEARCH,
-                            TRUE,
-                            0);
-
-                UpdateControlStates(sp);
+                Ret = TRUE;
+                break;
             }
-            break;
         }
     }
-    return 0;
+    return Ret;
 }
 
 

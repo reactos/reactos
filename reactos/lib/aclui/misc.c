@@ -338,6 +338,19 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                 }
 
                 GlobalUnlock(stm.hGlobal);
+
+                if (SUCCEEDED(hRet))
+                {
+                    /* return S_OK instead of possible other success codes if
+                       everything went well */
+                    hRet = S_OK;
+                }
+            }
+            else
+            {
+                /* unable to translate the selection pointer handle, indicate
+                   failure */
+                hRet = E_FAIL;
             }
 
             ReleaseStgMedium(&stm);

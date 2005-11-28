@@ -1498,14 +1498,17 @@ CheckListWndProc(IN HWND hwnd,
             {
                 hdc = (wParam != 0 ? (HDC)wParam : BeginPaint(hwnd, &ps));
 
-                PaintControl(infoPtr,
-                             hdc,
-                             &rcUpdate);
-
-                if (wParam == 0)
+                if (hdc != NULL)
                 {
-                    EndPaint(hwnd,
-                             &ps);
+                    PaintControl(infoPtr,
+                                 hdc,
+                                 &rcUpdate);
+
+                    if (wParam == 0)
+                    {
+                        EndPaint(hwnd,
+                                 &ps);
+                    }
                 }
             }
             break;
