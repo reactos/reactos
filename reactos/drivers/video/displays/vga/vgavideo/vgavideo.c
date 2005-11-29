@@ -1,10 +1,22 @@
+#define _WINBASE_
+#define _WINDOWS_H
+#include <stdarg.h>
 #include <windef.h>
+#include <guiddef.h>
 #include <wingdi.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntddvdeo.h>
 #include <ddk/winddi.h>
+#include <winioctl.h>
+#include <ddk/ntddvdeo.h>
 #include <stdlib.h>
 #include "vgavideo.h"
+
+#define DDKAPI __stdcall
+#define DDKFASTAPI __fastcall
+#define FASTCALL __fastcall
+#define DDKCDECLAPI __cdecl
+
+VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR  Port, IN UCHAR  Value);
+VOID DDKAPI WRITE_PORT_USHORT(IN PUSHORT  Port, IN USHORT  Value);
 
 UCHAR PreCalcReverseByte[256];
 int maskbit[640];

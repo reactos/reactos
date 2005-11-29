@@ -1,10 +1,61 @@
 #define _WINBASE_
 #define _WINDOWS_H
+#include <stdarg.h>
 #include <windef.h>
+#include <guiddef.h>
 #include <wingdi.h>
-#include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+#include <winioctl.h>
 #include <ddk/ntddvdeo.h>
+
+/* FIXME - what a headers mess.... */
+
+#define DDKAPI __stdcall
+#define DDKFASTAPI __fastcall
+#define FASTCALL __fastcall
+#define DDKCDECLAPI __cdecl
+
+ULONG DbgPrint(PCH Format,...);
+VOID DDKAPI DbgBreakPoint(VOID);
+VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR  Port, IN UCHAR  Value);
+VOID DDKAPI WRITE_REGISTER_UCHAR(IN PUCHAR  Register, IN UCHAR  Value);
+UCHAR DDKAPI READ_REGISTER_UCHAR(IN PUCHAR  Register);
+
+static __inline BOOLEAN
+RemoveEntryList(
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (OldFlink == OldBlink);
+}
+
+static __inline VOID
+InsertHeadList(
+  IN PLIST_ENTRY  ListHead,
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  OldFlink = ListHead->Flink;
+  Entry->Flink = OldFlink;
+  Entry->Blink = ListHead;
+  OldFlink->Blink = Entry;
+  ListHead->Flink = Entry;
+}
+
+static __inline VOID
+InitializeListHead(
+  IN PLIST_ENTRY  ListHead)
+{
+  ListHead->Flink = ListHead->Blink = ListHead;
+}
+
+/***********************************************************/
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
