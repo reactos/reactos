@@ -2618,11 +2618,8 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         }
     }
 
-    /* don't dereference the event anymore! */
-    Event = NULL;
 
-    /* don't free the search pattern string */
-    SearchPattern = NULL;
+    return Status;
 
 Cleanup:
     if (FileObject != NULL)
