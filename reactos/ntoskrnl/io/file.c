@@ -2399,6 +2399,20 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                   FileInformation);
 }
 
+static NTSTATUS NTAPI
+IopQueryDirectoryFileCompletion(IN PDEVICE_OBJECT DeviceObject,
+				IN PIRP Irp,
+				IN PVOID Context)
+{
+    ASSERT (Context);
+
+    DPRINT("IopQueryDirectoryFileCompletion was called for \'%wZ\'\n", Context);
+
+    ExFreePool(Context);
+
+    return STATUS_SUCCESS;
+}
+
 
 /*
  * @implemented
@@ -2450,6 +2464,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN LocalEvent = FALSE;
     PKEVENT Event = NULL;
+    PUNICODE_STRING SearchPattern = NULL;
 
     DPRINT("NtQueryDirectoryFile()\n");
     PAGED_CODE();
@@ -2465,6 +2480,24 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
             ProbeForWrite(FileInformation,
                           Length,
                           sizeof(ULONG));
+            if (FileName)
+            {
+                ProbeForRead(FileName, 
+                             sizeof(UNICODE_STRING),
+                             1);
+                ProbeForRead(FileName->Buffer,
+                             FileName->MaximumLength,
+                             1);
+                SearchPattern = ExAllocatePool(NonPagedPool, FileName->Length + sizeof(WCHAR) + sizeof(UNICODE_STRING));
+                if (SearchPattern == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    _SEH_LEAVE;
+                }
+                SearchPattern->Buffer = (PWCHAR)((ULONG_PTR)SearchPattern + sizeof(UNICODE_STRING));
+                SearchPattern->MaximumLength = FileName->Length + sizeof(WCHAR);
+                RtlCopyUnicodeString(SearchPattern, FileName);
+            }
         }
         _SEH_HANDLE
         {
@@ -2472,7 +2505,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        if(!NT_SUCCESS(Status)) 
+        {
+            if (SearchPattern)
+            {
+                ExFreePool(SearchPattern);
+            }
+            return Status;
+        }
     }
 
     /* Get File Object */
@@ -2482,7 +2522,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                        PreviousMode,
                                        (PVOID *)&FileObject,
                                        NULL);
-    if (Status != STATUS_SUCCESS) return(Status);
+    if (!NT_SUCCESS(Status))
+    {
+    	if (SearchPattern)
+    	{
+            ExFreePool(SearchPattern);
+        }
+        return Status;
+    }
 
     /* Get Event Object */
     if (PEvent)
@@ -2493,7 +2540,15 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                            PreviousMode,
                                            (PVOID *)&Event,
                                            NULL);
-        if (Status != STATUS_SUCCESS) return(Status);
+        if (NT_SUCCESS(Status)) 
+        {
+            ObDereferenceObject(FileObject);
+            if (SearchPattern)
+            {
+            	ExFreePool(SearchPattern);
+            }
+            return(Status);
+        }
         KeClearEvent(Event);
     }
 
@@ -2522,6 +2577,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
         ObDereferenceObject(FileObject);
+        if (PEvent)
+        {
+            ObDereferenceObject(Event);
+        }
+        if (SearchPattern)
+        {
+            ExFreePool(SearchPattern);
+        }
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -2543,12 +2606,22 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
 
     /* Set Parameters */
     StackPtr->Parameters.QueryDirectory.FileInformationClass = FileInformationClass;
-    StackPtr->Parameters.QueryDirectory.FileName = FileName;
+    StackPtr->Parameters.QueryDirectory.FileName = SearchPattern ? SearchPattern : FileName;
     StackPtr->Parameters.QueryDirectory.FileIndex = 0;
     StackPtr->Parameters.QueryDirectory.Length = Length;
     StackPtr->Flags = 0;
     if (RestartScan) StackPtr->Flags = SL_RESTART_SCAN;
     if (ReturnSingleEntry) StackPtr->Flags |= SL_RETURN_SINGLE_ENTRY;
+
+    if (SearchPattern)
+    {
+        IoSetCompletionRoutine(Irp,
+                               IopQueryDirectoryFileCompletion,
+			       SearchPattern,
+			       TRUE,
+			       TRUE,
+			       TRUE);
+    }
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
