@@ -407,7 +407,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 			bookmark._name = DecodeXMLString(name);
 
 			entry->get_path(path, COUNTOF(path));
-			_tsplitpath(path, NULL, NULL, NULL, ext);
+			_tsplitpath_s(path, NULL, 0, NULL, 0, NULL, 0, ext, COUNTOF(ext));
 
 			if (!_tcsicmp(ext, TEXT(".url"))) {
 				bookmark.read_url(path);

@@ -1021,7 +1021,7 @@ int MDIMainFrame::Command(int id, int code)
 		if (activate_drive_window(root))
 			return 0;
 
-		_tsplitpath(root, drv, 0, 0, 0);
+		_tsplitpath_s(root, drv, COUNTOF(drv), 0, 0, 0, 0, 0, 0);
 
 		if (!SetCurrentDirectory(drv)) {
 			display_error(_hwnd, GetLastError());
@@ -1073,7 +1073,7 @@ int MDIMainFrame::Command(int id, int code)
 		TCHAR path[MAX_PATH];
 		FileChildWindow* child;
 
-		getcwd(path, MAX_PATH);
+		getcwd(path, COUNTOF(path));
 
 		if (activate_child_window(TEXT("unixfs")))
 			break;
@@ -1251,14 +1251,14 @@ bool MDIMainFrame::activate_drive_window(LPCTSTR path)
 	TCHAR drv1[_MAX_DRIVE], drv2[_MAX_DRIVE];
 	HWND child_wnd;
 
-	_tsplitpath(path, drv1, 0, 0, 0);
+	_tsplitpath_s(path, drv1, COUNTOF(drv1), 0, 0, 0, 0, 0, 0);
 
 	 // search for a already open window for the same drive
 	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
 		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
 
 		if (child) {
-			_tsplitpath(child->get_root()._path, drv2, 0, 0, 0);
+			_tsplitpath_s(child->get_root()._path, drv2, COUNTOF(drv2), 0, 0, 0, 0, 0, 0);
 
 			if (!lstrcmpi(drv2, drv1)) {
 				SendMessage(_hmdiclient, WM_MDIACTIVATE, (WPARAM)child_wnd, 0);

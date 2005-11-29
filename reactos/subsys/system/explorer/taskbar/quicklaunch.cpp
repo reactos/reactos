@@ -100,7 +100,7 @@ void QuickLaunchBar::AddShortcuts()
 
 		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);	///@todo perhaps also look into CSIDL_COMMON_APPDATA ?
 
-		_stprintf(path, TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
+		_stprintf_s1(path, COUNTOF(path), TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 
 		RecursiveCreateDirectory(path);
 		_dir = new ShellDirectory(GetDesktopFolder(), path, _hwnd);

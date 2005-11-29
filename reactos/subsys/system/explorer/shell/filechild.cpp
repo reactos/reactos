@@ -106,7 +106,7 @@ INT_PTR CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPA
 		int id = (int)wparam;
 
 		if (id == IDOK) {
-			GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
+			GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, COUNTOF(dlg->cmd));
 			dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
 											SW_SHOWMINIMIZED: SW_SHOWNORMAL;
 			EndDialog(hwnd, id);
@@ -168,7 +168,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		_root._drive_type = DRIVE_UNKNOWN;
 		_root._sort_order = SORT_NAME;
 
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		_tsplitpath_s(info._path, drv, COUNTOF(drv), NULL, 0, NULL, 0, NULL, 0);
 		lstrcat(drv, TEXT("\\"));
 		lstrcpy(_root._volname, TEXT("NT Object Namespace"));
 		lstrcpy(_root._fs, TEXT("NTOBJ"));
@@ -181,7 +181,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		_root._drive_type = DRIVE_UNKNOWN;
 		_root._sort_order = SORT_NONE;
 
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		_tsplitpath_s(info._path, drv, COUNTOF(drv), NULL, 0, NULL, 0, NULL, 0);
 		lstrcat(drv, TEXT("\\"));
 		lstrcpy(_root._volname, TEXT("Registry"));
 		lstrcpy(_root._fs, TEXT("Registry"));
@@ -194,7 +194,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		_root._drive_type = DRIVE_UNKNOWN;
 		_root._sort_order = SORT_NONE;
 
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		_tsplitpath_s(info._path, drv, COUNTOF(drv), NULL, 0, NULL, 0, NULL, 0);
 		lstrcat(drv, TEXT("\\"));
 		lstrcpy(_root._volname, TEXT("FAT XXX"));	//@@
 		lstrcpy(_root._fs, TEXT("FAT"));
@@ -211,9 +211,9 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		_root._drive_type = GetDriveType(info._path);
 		_root._sort_order = SORT_NAME;
 
-		_tsplitpath(info._path, drv, NULL, NULL, NULL);
+		_tsplitpath_s(info._path, drv, COUNTOF(drv), NULL, 0, NULL, 0, NULL, 0);
 		lstrcat(drv, TEXT("\\"));
-		GetVolumeInformation(drv, _root._volname, _MAX_FNAME, 0, 0, &_root._fs_flags, _root._fs, _MAX_DIR);
+		GetVolumeInformation(drv, _root._volname, _MAX_FNAME, 0, 0, &_root._fs_flags, _root._fs, COUNTOF(_root._fs));
 		lstrcpy(_root._path, drv);
 		_root._entry = new WinDirectory(_root._path);
 		entry = _root.read_tree(info._path+_tcslen(_root._path));

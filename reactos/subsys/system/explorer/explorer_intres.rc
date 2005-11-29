@@ -102,7 +102,9 @@ BEGIN
     "#endif\r\n"
     "END\r\n"
     "#endif\r\n"
+	"#ifndef _DEBUG\r\n"
     "CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE ""explorer.exe.manifest""\r\n"
+    "#endif\r\n"
     "\r\n"
     "#include ""explorer-en.rc""\r\n"
     "#include ""explorer-de.rc""\r\n"
@@ -186,7 +188,9 @@ IDS_EXPLORER_VERSION_STR "ROS Explorer Ansi%0s"
 #endif
 END
 #endif
+#ifndef _DEBUG
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.manifest"
+#endif
 
 #include "explorer-en.rc"
 #include "explorer-de.rc"

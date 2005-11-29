@@ -248,10 +248,10 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 	TCHAR dir_path[MAX_PATH];
 
 	if (!ignore.empty()) {
-		_tsplitpath(ignore, ignore_path, ignore_dir, ignore_name, ignore_ext);
+		_tsplitpath_s(ignore, ignore_path, COUNTOF(ignore_path), ignore_dir, COUNTOF(ignore_dir), ignore_name, COUNTOF(ignore_name), ignore_ext, COUNTOF(ignore_ext));
 
-		_tcscat(ignore_path, ignore_dir);
-		_tcscat(ignore_name, ignore_ext);
+		_tcscat_s(ignore_path, COUNTOF(ignore_path), ignore_dir);
+		_tcscat_s(ignore_name, COUNTOF(ignore_path), ignore_ext);
 
 		dir.get_path(dir_path, COUNTOF(dir_path));
 

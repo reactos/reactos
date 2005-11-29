@@ -158,11 +158,20 @@ String Context::getStackTrace() const
 
 BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 {
+#ifdef __STDC_WANT_SECURE_LIB__
+	SYSTEMTIME stime;
+	struct tm tm_;
+	struct tm* tm = &tm_;
+
+	if (gmtime_s(tm, t) != 0)
+		return FALSE;
+#else
 	struct tm* tm = gmtime(t);
 	SYSTEMTIME stime;
 
 	if (!tm)
 		return FALSE;
+#endif
 
 	stime.wYear = tm->tm_year+1900;
 	stime.wMonth = tm->tm_mon+1;
@@ -384,7 +393,7 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 {
 	TCHAR path[MAX_PATH], hole_path[MAX_PATH];
 
-	_tcscpy(hole_path, path_in);
+	_tcscpy_s(hole_path, COUNTOF(hole_path), path_in);
 
 	int drv_len = 0;
 	LPCTSTR d;
@@ -409,7 +418,7 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 	HANDLE hFind = FindFirstFile(hole_path, &w32fd);
 
 	if (hFind == INVALID_HANDLE_VALUE) {
-		_tcsncpy(path, hole_path, drv_len);
+		_tcsncpy_s(path, COUNTOF(path), hole_path, drv_len);
 		int i = drv_len;
 
 		for(p=dir; *p=='/'||*p=='\\'; p++)
@@ -504,15 +513,15 @@ bool SplitFileSysURL(LPCTSTR url, String& dir_out, String& fname_out)
 		TCHAR path[_MAX_PATH];
 
 		 // convert slashes to back slashes
-		GetFullPathName(url, _MAX_PATH, path, NULL);
+		GetFullPathName(url, COUNTOF(path), path, NULL);
 
 		if (GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY)
 			fname_out.erase();
 		else {
 			TCHAR drv[_MAX_DRIVE], dir[_MAX_DIR], fname[_MAX_FNAME], ext[_MAX_EXT];
 
-			_tsplitpath(path, drv, dir, fname, ext);
-			_stprintf(path, TEXT("%s%s"), drv, dir);
+			_tsplitpath_s(path, drv, COUNTOF(drv), dir, COUNTOF(dir), fname, COUNTOF(fname), ext, COUNTOF(ext));
+			_stprintf_s2(path, COUNTOF(path), TEXT("%s%s"), drv, dir);
 
 			fname_out.printf(TEXT("%s%s"), fname, ext);
 		}

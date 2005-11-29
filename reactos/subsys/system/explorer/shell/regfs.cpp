@@ -40,14 +40,15 @@ void RegDirectory::read_directory(int scan_flags)
 
 	TCHAR buffer[MAX_PATH];
 
-	_tcscpy(buffer, (LPCTSTR)_path);
+	_tcscpy_s(buffer, COUNTOF(buffer), (LPCTSTR)_path);
 	LPTSTR pname = buffer + _tcslen(buffer);
+	int plen = MAX_PATH - _tcslen(buffer);
 
 	HKEY hkey;
 
 	if (!RegOpenKeyEx(_hKeyRoot, *buffer=='\\'?buffer+1:buffer, 0, STANDARD_RIGHTS_READ|KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS, &hkey)) {
 		if (pname[-1] != '\\')
-			*pname++ = '\\';
+			*pname++ = '\\', plen--;
 
 		TCHAR name[MAX_PATH], class_name[MAX_PATH];
 		WIN32_FIND_DATA w32fd;
@@ -64,9 +65,9 @@ void RegDirectory::read_directory(int scan_flags)
 				break;
 
 			w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-			_tcsncpy(w32fd.cFileName, name, name_len);
+			_tcsncpy_s(w32fd.cFileName, COUNTOF(w32fd.cFileName), name, name_len);
 
-			_tcscpy(pname, name);
+			_tcscpy_s(pname, plen, name);
 			entry = new RegDirectory(this, buffer, _hKeyRoot);
 
 			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
@@ -152,7 +153,7 @@ void RegDirectory::read_directory(int scan_flags)
 					entry->_content = _tcsdup(value);
 				else if (type == REG_DWORD) {
 					TCHAR b[32];
-					_stprintf(b, TEXT("%ld"), *(DWORD*)&value);
+					_stprintf_s1(b, COUNTOF(b), TEXT("%ld"), *(DWORD*)&value);
 					entry->_content = _tcsdup(b);
 				}
 			}
@@ -253,49 +254,49 @@ void RegistryRoot::read_directory(int scan_flags)
 	_data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_CURRENT_USER);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_CURRENT_USER"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_CURRENT_USER"));
 	entry->_level = level;
 
 	first_entry = entry;
 	last = entry;
 
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_LOCAL_MACHINE);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_LOCAL_MACHINE"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_LOCAL_MACHINE"));
 	entry->_level = level;
 
 	last->_next = entry;
 	last = entry;
 
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_CLASSES_ROOT);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_CLASSES_ROOT"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_CLASSES_ROOT"));
 	entry->_level = level;
 
 	last->_next = entry;
 	last = entry;
 
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_USERS);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_USERS"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_USERS"));
 	entry->_level = level;
 
 	last->_next = entry;
 	last = entry;
 /*
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_PERFORMANCE_DATA);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_PERFORMANCE_DATA"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_PERFORMANCE_DATA"));
 	entry->_level = level;
 
 	last->_next = entry;
 	last = entry;
 */
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_CURRENT_CONFIG);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_CURRENT_CONFIG"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_CURRENT_CONFIG"));
 	entry->_level = level;
 
 	last->_next = entry;
 	last = entry;
 /*
 	entry = new RegDirectory(this, TEXT("\\"), HKEY_DYN_DATA);
-	_tcscpy(entry->_data.cFileName, TEXT("HKEY_DYN_DATA"));
+	_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), TEXT("HKEY_DYN_DATA"));
 	entry->_level = level;
 
 	last->_next = entry;

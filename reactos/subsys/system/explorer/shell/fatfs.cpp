@@ -83,10 +83,12 @@ void FATDirectory::read_directory(int scan_flags)
 
 	TCHAR buffer[MAX_PATH];
 
-	_tcscpy(buffer, (LPCTSTR)_path);
+	_tcscpy_s(buffer, COUNTOF(buffer), (LPCTSTR)_path);
 	LPTSTR pname = buffer + _tcslen(buffer);
+	int plen = COUNTOF(buffer) - _tcslen(buffer);
 
 	*pname++ = '\\';
+	--plen;
 
 	for(Kette*p=_alloc; p; p=p->Vorw) {
 		memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
@@ -167,7 +169,7 @@ void FATDirectory::read_directory(int scan_flags)
 				Entry* entry;
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-					_tcscpy(pname, w32fd.cFileName);
+					_tcscpy_s(pname, plen, w32fd.cFileName);
 					entry = new FATDirectory(_drive, this, buffer, e.fclus);
 				} else
 					entry = new FATEntry(this, e.fclus);

@@ -92,6 +92,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "utility/utility.h"	// for strcpy_s()
+
 /************************************************************************
  *
  * external low-level support routines
@@ -897,7 +899,7 @@ handle_exception (int exceptionVector)
 		  break;
 		case 'G':				/* set the value of the CPU registers - return OK */
 		  hex2mem (ptr, (char *) registers, NUMREGBYTES, 0);
-		  strcpy (remcomOutBuffer, "OK");
+		  strcpy_s(remcomOutBuffer, BUFMAX, "OK");
 		  break;
 		case 'P':				/* set the value of a single CPU register - return OK */
 		  {
@@ -907,11 +909,11 @@ handle_exception (int exceptionVector)
 			  if (regno >= 0 && regno < NUMREGS)
 				{
 				  hex2mem (ptr, (char *) &registers[regno], 4, 0);
-				  strcpy (remcomOutBuffer, "OK");
+				  strcpy_s(remcomOutBuffer, BUFMAX, "OK");
 				  break;
 				}
 
-			strcpy (remcomOutBuffer, "E01");
+			strcpy_s(remcomOutBuffer, BUFMAX, "E01");
 			break;
 		  }
 
@@ -927,14 +929,14 @@ handle_exception (int exceptionVector)
 				  mem2hex ((char *) addr, remcomOutBuffer, length, 1);
 				  if (mem_err)
 					{
-					  strcpy (remcomOutBuffer, "E03");
+					  strcpy_s(remcomOutBuffer, BUFMAX, "E03");
 					  debug_error ("memory fault");
 					}
 				}
 
 		  if (ptr)
 			{
-			  strcpy (remcomOutBuffer, "E01");
+			  strcpy_s(remcomOutBuffer, BUFMAX, "E01");
 			}
 		  break;
 
@@ -951,19 +953,19 @@ handle_exception (int exceptionVector)
 
 					if (mem_err)
 					  {
-						strcpy (remcomOutBuffer, "E03");
+						strcpy_s(remcomOutBuffer, BUFMAX, "E03");
 						debug_error ("memory fault");
 					  }
 					else
 					  {
-						strcpy (remcomOutBuffer, "OK");
+						strcpy_s(remcomOutBuffer, BUFMAX, "OK");
 					  }
 
 					ptr = 0;
 				  }
 		  if (ptr)
 			{
-			  strcpy (remcomOutBuffer, "E02");
+			  strcpy_s(remcomOutBuffer, BUFMAX, "E02");
 			}
 		  break;
 

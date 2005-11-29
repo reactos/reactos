@@ -54,7 +54,7 @@ bool NotifyHook::ModulePathCopyData(LPARAM lparam, HWND* phwnd, String& path)
 {
 	char buffer[MAX_PATH];
 
-	int l = GetWindowModulePathCopyData(lparam, phwnd, buffer, MAX_PATH);
+	int l = GetWindowModulePathCopyData(lparam, phwnd, buffer, COUNTOF(buffer));
 
 	if (l) {
 		path.assign(buffer, l);
@@ -190,7 +190,7 @@ bool NotifyInfo::modify(NOTIFYICONDATA* pnid)
 
 	 // avoid to send WM_GETTEXT messages to the own process
 	if (pid != GetCurrentProcessId())
-		if (GetWindowText(_hWnd, title, MAX_PATH)) {
+		if (GetWindowText(_hWnd, title, COUNTOF(title))) {
 			if (_windowTitle != title) {
 				_windowTitle = title;
 				changes = true;
@@ -1282,10 +1282,10 @@ HWND ClockWindow::Create(HWND hwndParent)
 	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 
 	RECT rect = {0, 0, 0, 0};
-	TCHAR buffer[16];
+	TCHAR buffer[8];
 
 	if (!GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, NULL, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
-		_tcscpy(buffer, TEXT("00:00"));
+		_tcscpy_s(buffer, COUNTOF(buffer), TEXT("00:00"));
 
 	DrawText(canvas, buffer, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 	int clockwindowWidth = rect.right-rect.left + 4;
@@ -1324,7 +1324,7 @@ int ClockWindow::Notify(int id, NMHDR* pnmh)
 		GetLocalTime(&systime);
 
 		if (GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &systime, NULL, buffer, 64))
-			_tcscpy(pdi->szText, buffer);
+			_tcscpy_s(pdi->szText, COUNTOF(pdi->szText), buffer);
 		else
 			pdi->szText[0] = '\0';
 	}
@@ -1344,7 +1344,7 @@ bool ClockWindow::FormatTime()
 
 	if (GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, NULL, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
 		if (_tcscmp(buffer, _time)) {
-			_tcscpy(_time, buffer);
+			_tcscpy_s(_time, COUNTOF(_time), buffer);
 			return true;	// The text to display has changed.
 		}
 

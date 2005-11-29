@@ -22,7 +22,6 @@ CFG=explorer - Win32 WineDll
 !MESSAGE "explorer - Win32 Debug Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 Unicode Debug" (based on "Win32 (x86) Console Application")
-!MESSAGE "explorer - Win32 _NO_COMUTIL" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 WineRelease" (based on "Win32 (x86) Console Application")
 !MESSAGE "explorer - Win32 WineDll" (based on "Win32 (x86) Console Application")
@@ -128,7 +127,7 @@ LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "UNICODE" /D "_ROS_" /YX /FD /c
 # ADD CPP /nologo /MD /W3 /GR /GX /O2 /D "NDEBUG" /D "UNICODE" /D "WIN32" /D _WIN32_IE=0x0600 /D _WIN32_WINNT=0x0501 /Yu"precomp.h" /FD /c
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
-# ADD RSC /l 0x407 /d "NDEBUG"
+# ADD RSC /l 0x407 /d "NDEBUG" /d "UNICODE"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -154,40 +153,13 @@ LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "UNICODE" /D "_ROS_" /FR /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "UNICODE" /D "WIN32" /D _WIN32_IE=0x0600 /D _WIN32_WINNT=0x0501 /FR /Yu"precomp.h" /FD /GZ /c
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
+# ADD RSC /l 0x407 /d "_DEBUG" /d "UNICODE"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 shell32.lib comctl32.lib gdi32.lib user32.lib advapi32.lib ole32.lib delayimp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /libpath:"Debug" /delayload:oleaut32.dll /delayload:wsock32.dll
-# SUBTRACT LINK32 /pdb:none
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "explorer___Win32__NO_COMUTIL"
-# PROP BASE Intermediate_Dir "explorer___Win32__NO_COMUTIL"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "_NO_COMUTIL"
-# PROP Intermediate_Dir "_NO_COMUTIL"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_ROS_" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /D "_DEBUG" /D "_NO_COMUTIL" /D "WIN32" /D _WIN32_IE=0x0600 /D _WIN32_WINNT=0x0501 /FR /Yu"precomp.h" /FD /GZ /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib ole32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 shell32.lib comctl32.lib gdi32.lib user32.lib advapi32.lib ole32.lib delayimp.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept /delayload:oleaut32.dll /delayload:wsock32.dll
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "explorer - Win32"
@@ -280,7 +252,6 @@ LINK32=link.exe
 # Name "explorer - Win32 Debug Release"
 # Name "explorer - Win32 Unicode Release"
 # Name "explorer - Win32 Unicode Debug"
-# Name "explorer - Win32 _NO_COMUTIL"
 # Name "explorer - Win32"
 # Name "explorer - Win32 WineRelease"
 # Name "explorer - Win32 WineDll"
@@ -422,6 +393,11 @@ SOURCE=".\explorer-es.rc"
 # Begin Source File
 
 SOURCE=".\explorer-fr.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-hu.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

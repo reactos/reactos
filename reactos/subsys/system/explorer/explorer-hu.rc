@@ -1,19 +1,24 @@
+//Microsoft Developer Studio generated resource script.
+//
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
 #include <windows.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Hungarian (HU.) resources by Robert Horvath - talley at cubeclub.hu
+// Hungarian (unknown sub-lang: 0x0) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_HUN)
 #ifdef _WIN32
-LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
-#pragma code_page(1252)
+LANGUAGE LANG_HUNGARIAN, 0x0
+#pragma code_page(1250)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -25,26 +30,26 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Futtatás...",                 ID_EXECUTE
+        MENUITEM "&Futtatás...",                ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Kilépés",                       ID_FILE_EXIT
+        MENUITEM "&Kilépés",                    ID_FILE_EXIT
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Eszköztár",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Eszköztár",                  ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR
-        MENUITEM "&Állapot sor",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Állapot sor",                ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Frissít\tF5",                ID_REFRESH
-        MENUITEM "T&eljes képernyõ\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "T&eljes képernyõ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "SDI",                         ID_VIEW_SDI
     END
     POPUP "&Ablak"
     BEGIN
-        MENUITEM "Új &Ablak",                 ID_WINDOW_NEW
-        MENUITEM "Lépcsõzetes\tShift+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Új &Ablak",                   ID_WINDOW_NEW
+        MENUITEM "Lépcsõzetes\tShift+F5",       ID_WINDOW_CASCADE
         MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
         MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
         MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
@@ -52,13 +57,13 @@ BEGIN
     END
     POPUP "&Eszközök"
     BEGIN
-        MENUITEM "&Beállítások",                    ID_TOOLS_OPTIONS
+        MENUITEM "&Beállítások",                ID_TOOLS_OPTIONS
     END
-    POPUP "&Súgó"
+    POPUP "&Súgóó"
     BEGIN
-        MENUITEM "Explorer &GYIK...",            ID_EXPLORER_FAQ
-        MENUITEM "Explorer &névjegye...",          ID_ABOUT_EXPLORER
-        MENUITEM "Az &OS névjegye...",                ID_ABOUT_WINDOWS
+        MENUITEM "Explorer &GYIK...",           ID_EXPLORER_FAQ
+        MENUITEM "Explorer &névjegye...",       ID_ABOUT_EXPLORER
+        MENUITEM "Az &OS névjegye...",          ID_ABOUT_WINDOWS
     END
 END
 
@@ -66,10 +71,10 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Beállítások...",                ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Feladatkezelõ...",            ID_TASKMGR
+        MENUITEM "&Beállítások...",             ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Feladatkezelõ...",           ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Explorer névjegye...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Explorer névjegye...",       ID_ABOUT_EXPLORER
     END
 END
 
@@ -78,7 +83,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "Hangerõ beállítások",         ID_TRAY_VOLUME
-        MENUITEM "Hangrendszer tulajdonságai",     ID_VOLUME_PROPERTIES
+        MENUITEM "Hangrendszer tulajdonságai",  ID_VOLUME_PROPERTIES
     END
 END
 
@@ -86,12 +91,12 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Rejtett ikonok megjelenítése",          ID_SHOW_HIDDEN_ICONS
+        MENUITEM "&Rejtett ikonok megjelenítése", ID_SHOW_HIDDEN_ICONS
         MENUITEM "Show Icon &Button",           ID_SHOW_ICON_BUTTON
         MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Dátum és idõ beállításai...",        ID_CONFIG_TIME
+        MENUITEM "Dátum és idõ beállításai...", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Explorer névjegye...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Explorer névjegye...",       ID_ABOUT_EXPLORER
     END
 END
 
@@ -99,29 +104,29 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Futtatás...",                 ID_EXECUTE
+        MENUITEM "&Futtatás...",                ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bezárás",                      ID_FILE_EXIT
+        MENUITEM "&Bezárás",                    ID_FILE_EXIT
     END
     POPUP "&Nézet"
     BEGIN
-        MENUITEM "&Eszköztár",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Eszköztár",                  ID_VIEW_TOOL_BAR
         MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Állapot sor",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Állapot sor",                ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Frissítés\tF5",                ID_REFRESH
-        MENUITEM "T&eljes képernyõ\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&Frissítés\tF5",              ID_REFRESH
+        MENUITEM "T&eljes képernyõ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "&Eszközök"
     BEGIN
-        MENUITEM "&Beállítások",                    ID_TOOLS_OPTIONS
+        MENUITEM "&Beállítások",                ID_TOOLS_OPTIONS
     END
-    POPUP "&Súgó"
+    POPUP "&Súgóó"
     BEGIN
-        MENUITEM "Explorer &GYIK...",            ID_EXPLORER_FAQ
-        MENUITEM "&Az Explorer névjegye...",          ID_ABOUT_EXPLORER
-        MENUITEM "Az &OS névjegye...",                ID_ABOUT_WINDOWS
+        MENUITEM "Explorer &GYIK...",           ID_EXPLORER_FAQ
+        MENUITEM "&Az Explorer névjegye...",    ID_ABOUT_EXPLORER
+        MENUITEM "Az &OS névjegye...",          ID_ABOUT_WINDOWS
     END
 END
 
@@ -377,12 +382,17 @@ BEGIN
     IDS_TASKBAR             "Taskbar"
 END
 
-#endif    // Hungarian (HU.) resources
+#endif    // Hungarian (unknown sub-lang: 0x0) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 
 #ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

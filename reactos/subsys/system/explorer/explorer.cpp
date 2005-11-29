@@ -901,7 +901,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		 // install ROS Explorer into the registry
 		TCHAR path[MAX_PATH];
 
-		int l = GetModuleFileName(0, path, MAX_PATH);
+		int l = GetModuleFileName(0, path, COUNTOF(path));
 		if (l) {
 			HKEY hkey;
 

@@ -683,7 +683,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		WCHAR b[MAX_PATH];
 
 		if (path) {
-			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
+			MultiByteToWideChar(CP_ACP, 0, path, -1, b, COUNTOF(b));
 			CHECKERROR(folder->ParseDisplayName(0, NULL, b, NULL, &_p, NULL));
 		} else
 			_p = NULL;
@@ -696,7 +696,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		WCHAR b[MAX_PATH];
 
 		if (path) {
-			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
+			MultiByteToWideChar(CP_ACP, 0, path, -1, b, COUNTOF(b));
 			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, NULL, b, NULL, &_p, NULL));
 		} else
 			_p = NULL;

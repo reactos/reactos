@@ -184,7 +184,7 @@ void FindProgramDlg::collect_programs_callback(Entry* entry, void* param)
 			WIN32_FIND_DATA wfd;
 			TCHAR path[MAX_PATH];
 
-			hr = pShellLink->GetPath(path, MAX_PATH-1, &wfd, SLGP_UNCPRIORITY);
+			hr = pShellLink->GetPath(path, COUNTOF(path)-1, &wfd, SLGP_UNCPRIORITY);
 
 			if (SUCCEEDED(hr)) {
 				TCHAR entry_path[MAX_PATH];
