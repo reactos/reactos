@@ -237,7 +237,7 @@ protected:
 
 	int Notify(int id, NMHDR* pnmh)
 	{
-		if (&*_shellBrowser)
+		if (_shellBrowser.get())
 			switch(pnmh->code) {
 			  case TVN_GETDISPINFO:		_shellBrowser->OnTreeGetDispInfo(id, pnmh);					break;
 			  case TVN_SELCHANGED:		_shellBrowser->OnTreeItemSelected(id, (LPNMTREEVIEW)pnmh);	break;
