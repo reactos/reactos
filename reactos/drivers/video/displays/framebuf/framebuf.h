@@ -21,12 +21,18 @@
 #ifndef FRAMEBUF_H
 #define FRAMEBUF_H
 
+#include <stdarg.h>
 #include <windef.h>
+#include <guiddef.h>
 #include <wingdi.h>
-#include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+#include <winioctl.h>
 #include <ddk/ntddvdeo.h>
 
+#define DDKAPI __stdcall
+#define DDKFASTAPI __fastcall
+#define FASTCALL __fastcall
+#define DDKCDECLAPI __cdecl
 //#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
 
 typedef struct _PDEV
