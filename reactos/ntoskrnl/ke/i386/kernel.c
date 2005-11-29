@@ -527,7 +527,7 @@ Ki386SetProcessorFeatures(VOID)
    if(Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE)
    {
        /* Replace the ret by a nop */
-       *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+       /* FIXME - *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90; */
    }
 
    /* Does the CPU Support Fast System Call? */   
