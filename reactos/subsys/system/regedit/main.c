@@ -144,7 +144,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         DWORD dwError = GetLastError();
     } */
 
-    hFrameWnd = CreateWindowEx(WS_EX_WINDOWEDGE, (LPCTSTR)(int)hFrameWndClass, szTitle,
+    hFrameWnd = CreateWindowEx(WS_EX_WINDOWEDGE, (LPCTSTR)(UlongToPtr(hFrameWndClass)), szTitle,
                                WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                NULL, hMenuFrame, hInstance, NULL/*lpParam*/);

@@ -474,7 +474,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 }
 
 
-HWND CreateListView(HWND hwndParent, int id)
+HWND CreateListView(HWND hwndParent, HMENU id)
 {
     RECT rcClient;
     HWND hwndLV;
@@ -484,7 +484,7 @@ HWND CreateListView(HWND hwndParent, int id)
     hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"),
                             WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_EDITLABELS,
                             0, 0, rcClient.right, rcClient.bottom,
-                            hwndParent, (HMENU)id, hInst, NULL);
+                            hwndParent, id, hInst, NULL);
     if (!hwndLV) return NULL;
 
     /* Initialize the image list, and add items to the control.  */

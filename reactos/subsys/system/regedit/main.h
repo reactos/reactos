@@ -99,14 +99,14 @@ extern BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName);
 extern BOOL ExportRegistryFile(HWND hWnd);
 
 /* listview.c */
-extern HWND CreateListView(HWND hwndParent, int id);
+extern HWND CreateListView(HWND hwndParent, HMENU id);
 extern BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath);
 extern LPCTSTR GetValueName(HWND hwndLV, int iStartAt);
 extern BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
 extern BOOL IsDefaultValue(HWND hwndLV, int i);
 
 /* treeview.c */
-extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
+extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, HMENU id);
 extern BOOL RefreshTreeView(HWND hWndTV);
 extern BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem);
 extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
