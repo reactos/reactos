@@ -22,6 +22,7 @@ static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386CpuidExMisc;
 ULONG Ke386CacheAlignment;
 CHAR Ke386CpuidModel[49] = {0,};
 ULONG Ke386L1CacheSize;
+ULONG Ke386CacheGranularity = 0x40;      /* FIXME: Default to 64 bytes for RtlPrefetchMemoryNonTemporal(), need real size */
 BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
@@ -476,6 +477,7 @@ KeInit2(VOID)
    DPRINT("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
    if (Ke386L1CacheSize)
    {
+
       DPRINT("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
    }
    if (Pcr->L2CacheSize)
@@ -497,7 +499,7 @@ Ki386SetProcessorFeatures(VOID)
    KEY_VALUE_PARTIAL_INFORMATION ValueData;
    NTSTATUS Status;
    ULONG FastSystemCallDisable = 0;
-
+   
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
@@ -515,6 +517,13 @@ Ki386SetProcessorFeatures(VOID)
    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
+
+   /* Does the CPU Support 'prefetchnta' (SSE)  */
+   if(Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE)
+   {
+       /* Replace the ret by a nop */
+       *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+   }
 
    /* Does the CPU Support Fast System Call? */
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {

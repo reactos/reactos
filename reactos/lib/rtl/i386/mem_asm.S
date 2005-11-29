@@ -1,11 +1,11 @@
 /* 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:  mem.asm
+ * FILE:            mem_asm.S
  * PURPOSE:         Memory functions
- * PROGRAMMER:      Magnus Olsen (magnusolsen@greatlord.com)
- * UPDATE HISTORY:
- *        Created 27/07/2005
+ * PROGRAMMERS:     Patrick Baggett (baggett.patrick@gmail.com)
+ *                  Alex Ionescu (alex@relsoft.net)
+ *                  Magnus Olsen (magnusolsen@greatlord.com)
  */
 
 .intel_syntax noprefix
@@ -17,6 +17,7 @@
 .globl  _RtlFillMemory@12         // [4]  (no bug)
 .globl  _RtlCompareMemoryUlong@12 // [5]  (no bug)  
 .globl  _RtlCompareMemory@12      // [4]  (no bug)
+.globl  @RtlPrefetchMemoryNonTemporal@8
 
 /* FUNCTIONS ***************************************************************/
 
@@ -145,3 +146,18 @@ _RtlCompareMemory@12:
      pop edi   
 3:	  
      ret 12  // return count
+
+
+@RtlPrefetchMemoryNonTemporal@8:
+	ret         /* Overwritten by ntoskrnl/ke/i386/kernel.c if SSE is supported (see Ki386SetProcessorFeatures() ) */
+
+	mov eax, [_Ke386CacheGranularity]    // Get cache line size
+
+	// This is fastcall, so ecx = address, edx = size
+	fetch_next_line:
+	prefetchnta byte ptr [ecx]  // prefechnta(address)
+	sub edx, eax                // count = count - cache_line_size
+	add ecx, eax                // address = address + cache_line_size
+	cmp edx, 0                  // if(count) <= 0
+	ja fetch_next_line          //     goto fetch_next_line
+	ret
