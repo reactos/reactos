@@ -130,7 +130,7 @@ INT ScControl(LPTSTR MachineName,   // remote machine name
     else if (_tcsicmp(Command, _T("control")) == 0)
     {
         if (ServiceName)
-            Control((DWORD)NULL, ServiceName, ServiceArgs);
+            Control(0, ServiceName, ServiceArgs);
         else
             ContinueUsage();
     }
