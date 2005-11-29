@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -334,7 +334,7 @@ void Entry::extract_icon(bool big_icons)
 			unsigned flags;
 			int idx;
 
-			if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, MAX_PATH, &idx, &flags))) {
+			if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, COUNTOF(path), &idx, &flags))) {
 				if (flags & GIL_NOTFILENAME)
 					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx, big_icons);
 				else {
@@ -403,6 +403,67 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
+ // local replacement implementation for SHBindToParent()
+ // (derived from http://www.geocities.com/SiliconValley/2060/articles/shell-helpers.html)
+static HRESULT my_SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, VOID** ppv, LPCITEMIDLIST* ppidlLast)
+{
+	HRESULT hr;
+
+	if (!ppv)
+		return E_POINTER;
+
+	// There must be at least one item ID.
+	if (!pidl || !pidl->mkid.cb)
+		return E_INVALIDARG;
+
+	 // Get the desktop folder as root.
+	ShellFolder desktop;
+/*	IShellFolderPtr desktop;
+	hr = SHGetDesktopFolder(&desktop);
+	if (FAILED(hr))
+		return hr; */
+
+	// Walk to the penultimate item ID.
+	LPCITEMIDLIST marker = pidl;
+	for (;;)
+	{
+		LPCITEMIDLIST next = reinterpret_cast<LPCITEMIDLIST>(
+			marker->mkid.abID - sizeof(marker->mkid.cb) + marker->mkid.cb);
+		if (!next->mkid.cb)
+			break;
+		marker = next;
+	}
+
+	if (marker == pidl)
+	{
+		// There was only a single item ID, so bind to the root folder.
+		hr = desktop->QueryInterface(riid, ppv);
+	}
+	else
+	{
+		// Copy the ID list, truncating the last item.
+		int length = marker->mkid.abID - pidl->mkid.abID;
+		if (LPITEMIDLIST parent_id = reinterpret_cast<LPITEMIDLIST>(
+			malloc(length + sizeof(pidl->mkid.cb))))
+		{
+			LPBYTE raw_data = reinterpret_cast<LPBYTE>(parent_id);
+			memcpy(raw_data, pidl, length);
+			memset(raw_data + length, 0, sizeof(pidl->mkid.cb));
+			hr = desktop->BindToObject(parent_id, 0, riid, ppv);
+			free(parent_id);
+		}
+		else
+			return E_OUTOFMEMORY;
+	}
+
+	// Return a pointer to the last item ID.
+	if (ppidlLast)
+		*ppidlLast = marker;
+
+	return hr;
+}
+#define USE_MY_SHBINDTOPARENT
+
 HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& cm_ifs)
 {
 	ShellPath shell_path = create_absolute_pidl();
@@ -411,6 +472,21 @@ HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& c
 	if (!pidl_abs)
 		return S_FALSE;	// no action for registry entries, etc.
 
+#ifdef USE_MY_SHBINDTOPARENT
+	IShellFolder* parentFolder;
+	LPCITEMIDLIST pidlLast;
+
+	 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
+	HRESULT hr = my_SHBindToParent(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast);
+
+	if (SUCCEEDED(hr)) {
+		hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pos.x, pos.y, cm_ifs);
+
+		parentFolder->Release();
+	}
+
+	return hr;
+#else
 	static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
 
 	if (SHBindToParent) {
@@ -446,6 +522,7 @@ HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& c
 		*/
 		return ShellFolderContextMenu(GetDesktopFolder(), hwnd, 1, &pidl_abs, pos.x, pos.y, cm_ifs);
 	}
+#endif
 }
 
 
@@ -489,7 +566,7 @@ HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 	LPWSTR wname = _data.cFileName;
 #else
 	WCHAR wname[MAX_PATH];
-	MultiByteToWideChar(CP_ACP, 0, _data.cFileName, -1, wname, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, _data.cFileName, -1, wname, COUNTOF(wname));
 #endif
 
 	LPITEMIDLIST pidl_last = NULL;
