@@ -2458,7 +2458,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
 {
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
-    PFILE_OBJECT FileObject;
+    PFILE_OBJECT FileObject = NULL;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
@@ -2482,21 +2482,21 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                           sizeof(ULONG));
             if (FileName)
             {
-                ProbeForRead(FileName, 
-                             sizeof(UNICODE_STRING),
+                UNICODE_STRING CapturedFileName;
+
+                CapturedFileName = ProbeForReadUnicodeString(FileName);
+                ProbeForRead(CapturedFileName.Buffer,
+                             CapturedFileName.MaximumLength,
                              1);
-                ProbeForRead(FileName->Buffer,
-                             FileName->MaximumLength,
-                             1);
-                SearchPattern = ExAllocatePool(NonPagedPool, FileName->Length + sizeof(WCHAR) + sizeof(UNICODE_STRING));
+                SearchPattern = ExAllocatePool(NonPagedPool, CapturedFileName.Length + sizeof(WCHAR) + sizeof(UNICODE_STRING));
                 if (SearchPattern == NULL)
                 {
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     _SEH_LEAVE;
                 }
                 SearchPattern->Buffer = (PWCHAR)((ULONG_PTR)SearchPattern + sizeof(UNICODE_STRING));
-                SearchPattern->MaximumLength = FileName->Length + sizeof(WCHAR);
-                RtlCopyUnicodeString(SearchPattern, FileName);
+                SearchPattern->MaximumLength = CapturedFileName.Length + sizeof(WCHAR);
+                RtlCopyUnicodeString(SearchPattern, &CapturedFileName);
             }
         }
         _SEH_HANDLE
@@ -2507,11 +2507,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
 
         if(!NT_SUCCESS(Status)) 
         {
-            if (SearchPattern)
-            {
-                ExFreePool(SearchPattern);
-            }
-            return Status;
+            goto Cleanup;
         }
     }
 
@@ -2524,11 +2520,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-    	if (SearchPattern)
-    	{
-            ExFreePool(SearchPattern);
-        }
-        return Status;
+    	goto Cleanup;
     }
 
     /* Get Event Object */
@@ -2540,15 +2532,11 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                            PreviousMode,
                                            (PVOID *)&Event,
                                            NULL);
-        if (NT_SUCCESS(Status)) 
+        if (!NT_SUCCESS(Status)) 
         {
-            ObDereferenceObject(FileObject);
-            if (SearchPattern)
-            {
-            	ExFreePool(SearchPattern);
-            }
-            return(Status);
+            goto Cleanup;
         }
+
         KeClearEvent(Event);
     }
 
@@ -2576,16 +2564,8 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     /* Allocate the IRP */
     if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
     {
-        ObDereferenceObject(FileObject);
-        if (PEvent)
-        {
-            ObDereferenceObject(Event);
-        }
-        if (SearchPattern)
-        {
-            ExFreePool(SearchPattern);
-        }
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
     }
 
     /* Set up the IRP */
@@ -2636,6 +2616,26 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                   NULL);
             Status = FileObject->FinalStatus;
         }
+    }
+
+    /* don't dereference the event anymore! */
+    Event = NULL;
+
+    /* don't free the search pattern string */
+    SearchPattern = NULL;
+
+Cleanup:
+    if (FileObject != NULL)
+    {
+        ObDereferenceObject(FileObject);
+    }
+    if (Event != NULL)
+    {
+        ObDereferenceObject(Event);
+    }
+    if (SearchPattern != NULL)
+    {
+        ExFreePool(SearchPattern);
     }
 
     /* Return the Status */
