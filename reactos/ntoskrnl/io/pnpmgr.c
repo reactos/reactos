@@ -221,7 +221,7 @@ IoGetDeviceProperty(
 
         /* Query the device caps */
         Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
-        if (NT_SUCCESS(Status) && (DeviceCaps.Address != -1))
+        if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
         {
             /* Return length */
             *ResultLength = sizeof(ULONG);

@@ -123,7 +123,7 @@ static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
 	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
 	     ExRaiseStatus (STATUS_ACCESS_VIOLATION), Default :                    \
-	     *(Type *)&(*(volatile Type *)(Ptr)))
+	     *(Type *)(Ptr))
 
 #define ProbeForReadBoolean(Ptr) ProbeForReadGenericType(Ptr, BOOLEAN, FALSE)
 #define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)

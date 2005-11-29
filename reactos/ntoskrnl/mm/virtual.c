@@ -989,20 +989,20 @@ ProbeForRead (IN CONST VOID *Address,
               IN ULONG Length,
               IN ULONG Alignment)
 {
-   ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+    if (Length != 0)
+    {
+        ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
-   if (Length == 0)
-      return;
-
-   if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
-   {
-      ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
-   }
-   else if ((ULONG_PTR)Address + Length - 1 < (ULONG_PTR)Address ||
-            (ULONG_PTR)Address + Length - 1 >= (ULONG_PTR)MmUserProbeAddress)
-   {
-      ExRaiseStatus (STATUS_ACCESS_VIOLATION);
-   }
+        if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
+        {
+            ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
+        }
+        else if ((ULONG_PTR)Address + Length - 1 < (ULONG_PTR)Address ||
+                 (ULONG_PTR)Address + Length - 1 >= (ULONG_PTR)MmUserProbeAddress)
+        {
+            ExRaiseStatus (STATUS_ACCESS_VIOLATION);
+        }
+    }
 }
 
 
@@ -1010,39 +1010,39 @@ ProbeForRead (IN CONST VOID *Address,
  * @implemented
  */
 VOID STDCALL
-ProbeForWrite (IN CONST VOID *Address,
+ProbeForWrite (IN PVOID Address,
                IN ULONG Length,
                IN ULONG Alignment)
 {
-   volatile CHAR *Current;
-   PCHAR Last;
+    volatile CHAR *Current;
+    PCHAR Last;
 
-   ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+    if (Length != 0)
+    {
+        ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
-   if (Length == 0)
-      return;
+        if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
+        {
+            ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
+        }
 
-   if (((ULONG_PTR)Address & (Alignment - 1)) != 0)
-   {
-      ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
-   }
+        Last = (PCHAR)((ULONG_PTR)Address + Length - 1);
+        if ((ULONG_PTR)Last < (ULONG_PTR)Address ||
+            (ULONG_PTR)Last >= (ULONG_PTR)MmUserProbeAddress)
+        {
+            ExRaiseStatus (STATUS_ACCESS_VIOLATION);
+        }
 
-   Last = (CHAR*)((ULONG_PTR)Address + Length - 1);
-   if ((ULONG_PTR)Last < (ULONG_PTR)Address ||
-       (ULONG_PTR)Last >= (ULONG_PTR)MmUserProbeAddress)
-   {
-      ExRaiseStatus (STATUS_ACCESS_VIOLATION);
-   }
-
-   /* Check for accessible pages */
-   Current = (CHAR*)Address;
-   *Current = *Current;
-   Current = (PCHAR)((ULONG_PTR)PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
-   while (Current <= Last)
-   {
-     *Current = *Current;
-     Current = (CHAR*)((ULONG_PTR)Current + PAGE_SIZE);
-   } 
+        /* Check for accessible pages, do *not* touch any memory outside of the
+           range!*/
+        Current = (volatile CHAR*)Address;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            *Current = *Current;
+            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
+        } while (Current <= Last);
+    }
 }
 
 /* EOF */

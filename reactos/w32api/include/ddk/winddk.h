@@ -6738,7 +6738,7 @@ NTOSAPI
 VOID
 DDKAPI
 ProbeForWrite(
-  IN CONST VOID  *Address,
+  IN PVOID  Address,
   IN ULONG  Length,
   IN ULONG  Alignment);
 

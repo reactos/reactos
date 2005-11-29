@@ -45,7 +45,7 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
      }
 
    Size = sizeof(QUEUEDMESSAGE);
-   if (LpcReply && LpcReply->u1.s1.TotalLength > sizeof(PORT_MESSAGE))
+   if (LpcReply && LpcReply->u1.s1.TotalLength > (CSHORT)sizeof(PORT_MESSAGE))
      {
        Size += LpcReply->u1.s1.TotalLength - sizeof(PORT_MESSAGE);
      }

@@ -2744,8 +2744,8 @@ __cdecl
 MmspCompareSegments(const void * x,
                     const void * y)
 {
-   PMM_SECTION_SEGMENT Segment1 = (PMM_SECTION_SEGMENT)x;
-   PMM_SECTION_SEGMENT Segment2 = (PMM_SECTION_SEGMENT)y;
+   const MM_SECTION_SEGMENT *Segment1 = (const MM_SECTION_SEGMENT *)x;
+   const MM_SECTION_SEGMENT *Segment2 = (const MM_SECTION_SEGMENT *)y;
 
    return
       (Segment1->VirtualAddress - Segment2->VirtualAddress) >>

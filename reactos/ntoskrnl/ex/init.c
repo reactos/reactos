@@ -89,7 +89,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
     /* Create local parameter line copy */
     ParamBuffer = ExAllocatePool(PagedPool, 256);
-    strcpy (ParamBuffer, (char *)ParameterLine);
+    strcpy (ParamBuffer, (const char *)ParameterLine);
     DPRINT("%s\n", ParamBuffer);
 
     /* Cut options off */
