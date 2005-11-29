@@ -548,7 +548,7 @@ int FileChildWindow::Command(int id, int code)
 }
 
 
-void FileChildWindow::activate_entry(Pane* pane)	///@todo enable using <RETURN> key accelerator
+void FileChildWindow::activate_entry(Pane* pane)	///@todo enable using RETURN key accelerator
 {
 	Entry* entry = pane->_cur;
 

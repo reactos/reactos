@@ -985,7 +985,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		_dup2(_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), 0), 1);
 		_dup2(_open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), 0), 2);
 
-		g_Globals._log = fdopen(1, "w");
+		g_Globals._log = _fdopen(1, "w");
 		setvbuf(g_Globals._log, 0, _IONBF, 0);
 
 		LOG(TEXT("starting explorer debug log\n"));

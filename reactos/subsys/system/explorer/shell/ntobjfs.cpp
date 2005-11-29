@@ -328,7 +328,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 #else
 			char type_name[32];
 			WideCharToMultiByte(CP_ACP, 0, info->type.string_ptr, info->type.string_len, type_name, 32, 0, 0);
-			entry->_type_name = strdup(type_name);
+			entry->_type_name = _strdup(type_name);
 #endif
 
 			if (!first_entry)

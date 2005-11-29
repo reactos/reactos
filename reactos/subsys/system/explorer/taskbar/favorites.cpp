@@ -72,9 +72,9 @@ bool Bookmark::read_url(LPCTSTR path)
 			while(isspace(*cont))
 				++cont;
 
-			if (!strnicmp(keyword, "URL", 3))
+			if (!_strnicmp(keyword, "URL", 3))
 				_url = DecodeURLString(cont);
-			else if (!strnicmp(keyword, "IconFile", 8))
+			else if (!_strnicmp(keyword, "IconFile", 8))
 				_icon_path = DecodeURLString(cont);
 		}
 	}
