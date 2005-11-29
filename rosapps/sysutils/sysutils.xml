@@ -31,10 +31,6 @@
 	<xi:include href="regexpl/regexpl.xml" />
 </directory>
 
-<directory name="shutdown">
-	<xi:include href="shutdown/shutdown.xml" />
-</directory>
-
 <directory name="tcat">
 	<xi:include href="tcat/cat.xml" />
 </directory>
