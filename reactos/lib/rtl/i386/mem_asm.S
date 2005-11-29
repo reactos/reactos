@@ -158,6 +158,6 @@ _RtlCompareMemory@12:
 	prefetchnta byte ptr [ecx]  // prefechnta(address)
 	sub edx, eax                // count = count - cache_line_size
 	add ecx, eax                // address = address + cache_line_size
-	cmp edx, 0                  // if(count) <= 0
+	cmp edx, 0                  // if(count) > 0
 	ja fetch_next_line          //     goto fetch_next_line
 	ret
