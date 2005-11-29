@@ -496,7 +496,12 @@ Ki386SetProcessorFeatures(VOID)
    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"FastSystemCallDisable");
    HANDLE KeyHandle;
    ULONG ResultLength;
-   KEY_VALUE_PARTIAL_INFORMATION ValueData;
+   struct
+   {
+       KEY_VALUE_PARTIAL_INFORMATION Info;
+       UCHAR Buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                                 Data[0]) + sizeof(ULONG)];
+   } ValueData;
    NTSTATUS Status;
    ULONG FastSystemCallDisable = 0;
    
@@ -525,7 +530,7 @@ Ki386SetProcessorFeatures(VOID)
        *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
    }
 
-   /* Does the CPU Support Fast System Call? */
+   /* Does the CPU Support Fast System Call? */   
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
 
         /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
@@ -536,20 +541,29 @@ Ki386SetProcessorFeatures(VOID)
                                    OBJ_CASE_INSENSITIVE,
                                    NULL,
                                    NULL);
-        Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+        Status = ZwOpenKey(&KeyHandle,
+                           KEY_QUERY_VALUE,
+                           &ObjectAttributes);
 
         if (NT_SUCCESS(Status)) {
 
             /* Read the Value then Close the Key */
-            Status = NtQueryValueKey(KeyHandle,
+            Status = ZwQueryValueKey(KeyHandle,
                                      &ValueName,
                                      KeyValuePartialInformation,
                                      &ValueData,
                                      sizeof(ValueData),
                                      &ResultLength);
-            RtlMoveMemory(&FastSystemCallDisable, ValueData.Data, sizeof(ULONG));
+            if (NT_SUCCESS(Status))
+            {
+                if (ResultLength == sizeof(ValueData) &&
+                    ValueData.Info.Type == REG_DWORD)
+                {
+                    FastSystemCallDisable = *(PULONG)ValueData.Info.Data != 0;
+                }
 
-            NtClose(KeyHandle);
+                ZwClose(KeyHandle);
+            }
         }
 
     } else {
