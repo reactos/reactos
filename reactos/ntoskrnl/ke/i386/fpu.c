@@ -110,7 +110,7 @@ KiTagWordFxsaveToFnsave(PFXSAVE_FORMAT FxSave)
 
 
 STATIC VOID
-KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, CONST PFNSAVE_FORMAT FnSave)
+KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, PFNSAVE_FORMAT FnSave)
 {
     INT i;
 
@@ -138,7 +138,7 @@ KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, CONST PFNSAVE_FORMAT FnSave)
 }
 
 STATIC VOID
-KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, CONST PFXSAVE_FORMAT FxSave)
+KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, PFXSAVE_FORMAT FxSave)
 {
     INT i;
 
@@ -158,7 +158,7 @@ KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, CONST PFXSAVE_FORMAT FxSave)
 
 
 STATIC VOID
-KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_AREA *FloatingSaveArea)
+KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, FLOATING_SAVE_AREA *FloatingSaveArea)
 {
     if (FxsrSupport)
     {
