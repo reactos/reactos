@@ -69,189 +69,890 @@ fzero:
 __fltused:
         .long 0x9875
 
+.intel_syntax noprefix
+
 /* FUNCTIONS ***************************************************************/
 
-/*
- * long long
- * __alldiv(long long Dividend, long long Divisor)//
- *
- * Parameters:
- *   [ESP+04h] - long long Dividend
- *   [ESP+0Ch] - long long Divisor
- * Registers:
- *   Unknown
- * Returns:
- *   EDX:EAX - long long quotient (Dividend/Divisor)
- * Notes:
- *   Routine removes the arguments from the stack.
- */
+//
+// lldiv - signed long divide
+//
+// Purpose:
+//       Does a signed long divide of the arguments.  Arguments are
+//       not changed.
+//
+// Entry:
+//       Arguments are passed on the stack:
+//               1st pushed: divisor (QWORD)
+//               2nd pushed: dividend (QWORD)
+//
+// Exit:
+//       EDX:EAX contains the quotient (dividend/divisor)
+//       NOTE: this routine removes the parameters from the stack.
+//
+// Uses:
+//       ECX
+//
+
 __alldiv:
-	call	___divdi3
-	ret		$0x10
 
-/*
- * long long
- * __allmul(long long Multiplier, long long Multiplicand)//
- *
- * Parameters:
- *   [ESP+04h] - long long Multiplier
- *   [ESP+0Ch] - long long Multiplicand
- * Registers:
- *   Unknown
- * Returns:
- *   EDX:EAX - long long product (Multiplier*Multiplicand)
- * Notes:
- *   Routine removes the arguments from the stack.
- */
+        push    edi
+        push    esi
+        push    ebx
+
+// Set up the local stack and save the index registers.  When this is done
+// the stack frame will look as follows (assuming that the expression a/b will
+// generate a call to lldiv(a, b)):
+//
+//               -----------------
+//               |               |
+//               |---------------|
+//               |               |
+//               |--divisor (b)--|
+//               |               |
+//               |---------------|
+//               |               |
+//               |--dividend (a)-|
+//               |               |
+//               |---------------|
+//               | return addr** |
+//               |---------------|
+//               |      EDI      |
+//               |---------------|
+//               |      ESI      |
+//               |---------------|
+//       ESP---->|      EBX      |
+//               -----------------
+//
+
+#define DVNDLO  [esp + 16]       // stack address of dividend (a)
+#define DVNDHI  [esp + 20]       // stack address of dividend (a)
+#define DVSRLO  [esp + 24]      // stack address of divisor (b)
+#define DVSRHI  [esp + 28]      // stack address of divisor (b)
+
+// Determine sign of the result (edi = 0 if result is positive, non-zero
+// otherwise) and make operands positive.
+
+        xor     edi,edi         // result sign assumed positive
+
+        mov     eax,DVNDHI // hi word of a
+        or      eax,eax         // test to see if signed
+        jge     short L1        // skip rest if a is already positive
+        inc     edi             // complement result sign flag
+        mov     edx,DVNDLO // lo word of a
+        neg     eax             // make a positive
+        neg     edx
+        sbb     eax,0
+        mov     DVNDHI,eax // save positive value
+        mov     DVNDLO,edx
+L1:
+        mov     eax,DVSRHI // hi word of b
+        or      eax,eax         // test to see if signed
+        jge     short L2        // skip rest if b is already positive
+        inc     edi             // complement the result sign flag
+        mov     edx,DVSRLO // lo word of a
+        neg     eax             // make b positive
+        neg     edx
+        sbb     eax,0
+        mov     DVSRHI,eax // save positive value
+        mov     DVSRLO,edx
+L2:
+
+//
+// Now do the divide.  First look to see if the divisor is less than 4194304K.
+// If so, then we can use a simple algorithm with word divides, otherwise
+// things get a little more complex.
+//
+// NOTE - eax currently contains the high order word of DVSR
+//
+
+        or      eax,eax         // check to see if divisor < 4194304K
+        jnz     short L3        // nope, gotta do this the hard way
+        mov     ecx,DVSRLO // load divisor
+        mov     eax,DVNDHI // load high word of dividend
+        xor     edx,edx
+        div     ecx             // eax <- high order bits of quotient
+        mov     ebx,eax         // save high bits of quotient
+        mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
+        div     ecx             // eax <- low order bits of quotient
+        mov     edx,ebx         // edx:eax <- quotient
+        jmp     short L4        // set sign, restore stack and return
+
+//
+// Here we do it the hard way.  Remember, eax contains the high word of DVSR
+//
+
+L3:
+        mov     ebx,eax         // ebx:ecx <- divisor
+        mov     ecx,DVSRLO
+        mov     edx,DVNDHI // edx:eax <- dividend
+        mov     eax,DVNDLO
+L5:
+        shr     ebx,1           // shift divisor right one bit
+        rcr     ecx,1
+        shr     edx,1           // shift dividend right one bit
+        rcr     eax,1
+        or      ebx,ebx
+        jnz     short L5        // loop until divisor < 4194304K
+        div     ecx             // now divide, ignore remainder
+        mov     esi,eax         // save quotient
+
+//
+// We may be off by one, so to check, we will multiply the quotient
+// by the divisor and check the result against the orignal dividend
+// Note that we must also check for overflow, which can occur if the
+// dividend is close to 2**64 and the quotient is off by 1.
+//
+
+        mul     dword ptr DVSRHI // QUOT * DVSRHI
+        mov     ecx,eax
+        mov     eax,DVSRLO
+        mul     esi             // QUOT * DVSRLO
+        add     edx,ecx         // EDX:EAX = QUOT * DVSR
+        jc      short L6        // carry means Quotient is off by 1
+
+//
+// do long compare here between original dividend and the result of the
+// multiply in edx:eax.  If original is larger or equal, we are ok, otherwise
+// subtract one (1) from the quotient.
+//
+
+        cmp     edx,DVNDHI // compare hi words of result and original
+        ja      short L6        // if result > original, do subtract
+        jb      short L7        // if result < original, we are ok
+        cmp     eax,DVNDLO // hi words are equal, compare lo words
+        jbe     short L7        // if less or equal we are ok, else subtract
+L6:
+        dec     esi             // subtract 1 from quotient
+L7:
+        xor     edx,edx         // edx:eax <- quotient
+        mov     eax,esi
+
+//
+// Just the cleanup left to do.  edx:eax contains the quotient.  Set the sign
+// according to the save value, cleanup the stack, and return.
+//
+
+L4:
+        dec     edi             // check to see if result is negative
+        jnz     short L8        // if EDI == 0, result should be negative
+        neg     edx             // otherwise, negate the result
+        neg     eax
+        sbb     edx,0
+
+//
+// Restore the saved registers and return.
+//
+
+L8:
+        pop     ebx
+        pop     esi
+        pop     edi
+
+        ret     16
+
+//
+// llmul - long multiply routine
+//
+// Purpose:
+//       Does a long multiply (same for signed/unsigned)
+//       Parameters are not changed.
+//
+// Entry:
+//       Parameters are passed on the stack:
+//               1st pushed: multiplier (QWORD)
+//               2nd pushed: multiplicand (QWORD)
+//
+// Exit:
+//       EDX:EAX - product of multiplier and multiplicand
+//       NOTE: parameters are removed from the stack
+//
+// Uses:
+//       ECX
+//
+
 __allmul:
-	pushl	%ebp
-	movl	%esp, %ebp
-	pushl	%edi
-	pushl	%esi
-	pushl	%ebx
-	subl	$12, %esp
-	movl	16(%ebp), %ebx
-	movl	8(%ebp), %eax
-	mull	%ebx
-	movl	20(%ebp), %ecx
-	movl	%eax, -24(%ebp)
-	movl	8(%ebp), %eax
-	movl	%edx, %esi
-	imull	%ecx, %eax
-	addl	%eax, %esi
-	movl	12(%ebp), %eax
-	imull	%eax, %ebx
-	leal	(%ebx,%esi), %eax
-	movl	%eax, -20(%ebp)
-	movl	-24(%ebp), %eax
-	movl	-20(%ebp), %edx
-	addl	$12, %esp
-	popl	%ebx
-	popl	%esi
-	popl	%edi
-	popl	%ebp
-	ret		$0x10
 
-/*
- * unsigned long long
- * __aullrem(unsigned long long Dividend, unsigned long long Divisor)//
- *
- * Parameters:
- *   [ESP+04h] - unsigned long long Dividend
- *   [ESP+0Ch] - unsigned long long Divisor
- * Registers:
- *   Unknown
- * Returns:
- *   EDX:EAX - unsigned long long remainder (Dividend%Divisor)
- * Notes:
- *   Routine removes the arguments from the stack.
- */
-__aullrem:
-	call	___umoddi3
-	ret	$16
+#define ALO  [esp + 4]       // stack address of a
+#define AHI  [esp + 8]       // stack address of a
+#define BLO  [esp + 12]      // stack address of b
+#define BHI  [esp + 16]      // stack address of b
 
-/*
- * long long
- * __allshl(long long Value, unsigned char Shift)//
- *
- * Parameters:
- *   EDX:EAX - signed long long value to be shifted left
- *   CL      - number of bits to shift by
- * Registers:
- *   Destroys CL
- * Returns:
- *   EDX:EAX - shifted value
- */
+//
+//       AHI, BHI : upper 32 bits of A and B
+//       ALO, BLO : lower 32 bits of A and B
+//
+//             ALO * BLO
+//       ALO * BHI
+// +     BLO * AHI
+// ---------------------
+//
+
+        mov     eax,AHI
+        mov     ecx,BHI
+        or      ecx,eax         //test for both hiwords zero.
+        mov     ecx,BLO
+        jnz     short hard      //both are zero, just mult ALO and BLO
+
+        mov     eax,AHI
+        mul     ecx
+
+        ret     16              // callee restores the stack
+
+hard:
+        push    ebx
+
+// must redefine A and B since esp has been altered
+
+#define A2LO  [esp + 4]       // stack address of a
+#define A2HI  [esp + 8]       // stack address of a
+#define B2LO  [esp + 12]      // stack address of b
+#define B2HI  [esp + 16]      // stack address of b
+
+        mul     ecx             //eax has AHI, ecx has BLO, so AHI * BLO
+        mov     ebx,eax         //save result
+
+        mov     eax,A2LO
+        mul     dword ptr B2HI //ALO * BHI
+        add     ebx,eax         //ebx = ((ALO * BHI) + (AHI * BLO))
+
+        mov     eax,A2LO  //ecx = BLO
+        mul     ecx             //so edx:eax = ALO*BLO
+        add     edx,ebx         //now edx has all the LO*HI stuff
+
+        pop     ebx
+
+        ret     16              // callee restores the stack
+
+//
+// llrem - signed long remainder
+//
+// Purpose:
+//       Does a signed long remainder of the arguments.  Arguments are
+//       not changed.
+//
+// Entry:
+//       Arguments are passed on the stack:
+//               1st pushed: divisor (QWORD)
+//               2nd pushed: dividend (QWORD)
+//
+// Exit:
+//       EDX:EAX contains the remainder (dividend%divisor)
+//       NOTE: this routine removes the parameters from the stack.
+//
+// Uses:
+//       ECX
+//
+
+__allrem :
+
+        push    ebx
+        push    edi
+
+// Set up the local stack and save the index registers.  When this is done
+// the stack frame will look as follows (assuming that the expression a%b will
+// generate a call to lrem(a, b)):
+//
+//               -----------------
+//               |               |
+//               |---------------|
+//               |               |
+//               |--divisor (b)--|
+//               |               |
+//               |---------------|
+//               |               |
+//               |--dividend (a)-|
+//               |               |
+//               |---------------|
+//               | return addr** |
+//               |---------------|
+//               |       EBX     |
+//               |---------------|
+//       ESP---->|       EDI     |
+//               -----------------
+//
+
+#undef DVNDLO
+#undef DVNDHI
+#undef DVSRLO
+#undef DVSRHI
+#define DVNDLO  [esp + 12]       // stack address of dividend (a)
+#define DVNDHI  [esp + 16]       // stack address of dividend (a)
+#define DVSRLO  [esp + 20]      // stack address of divisor (b)
+#define DVSRHI  [esp + 24]      // stack address of divisor (b)
+
+// Determine sign of the result (edi = 0 if result is positive, non-zero
+// otherwise) and make operands positive.
+
+        xor     edi,edi         // result sign assumed positive
+
+        mov     eax,DVNDHI // hi word of a
+        or      eax,eax         // test to see if signed
+        jge     short .L1        // skip rest if a is already positive
+        inc     edi             // complement result sign flag bit
+        mov     edx,DVNDLO // lo word of a
+        neg     eax             // make a positive
+        neg     edx
+        sbb     eax,0
+        mov     DVNDHI,eax // save positive value
+        mov     DVNDLO,edx
+.L1:
+        mov     eax,DVSRHI // hi word of b
+        or      eax,eax         // test to see if signed
+        jge     short .L2        // skip rest if b is already positive
+        mov     edx,DVSRLO // lo word of b
+        neg     eax             // make b positive
+        neg     edx
+        sbb     eax,0
+        mov     DVSRHI,eax // save positive value
+        mov     DVSRLO,edx
+.L2:
+
+//
+// Now do the divide.  First look to see if the divisor is less than 4194304K.
+// If so, then we can use a simple algorithm with word divides, otherwise
+// things get a little more complex.
+//
+// NOTE - eax currently contains the high order word of DVSR
+//
+
+        or      eax,eax         // check to see if divisor < 4194304K
+        jnz     short .L3        // nope, gotta do this the hard way
+        mov     ecx,DVSRLO // load divisor
+        mov     eax,DVNDHI // load high word of dividend
+        xor     edx,edx
+        div     ecx             // edx <- remainder
+        mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
+        div     ecx             // edx <- final remainder
+        mov     eax,edx         // edx:eax <- remainder
+        xor     edx,edx
+        dec     edi             // check result sign flag
+        jns     short .L4        // negate result, restore stack and return
+        jmp     short .L8        // result sign ok, restore stack and return
+
+//
+// Here we do it the hard way.  Remember, eax contains the high word of DVSR
+//
+
+.L3:
+        mov     ebx,eax         // ebx:ecx <- divisor
+        mov     ecx,DVSRLO
+        mov     edx,DVNDHI // edx:eax <- dividend
+        mov     eax,DVNDLO
+.L5:
+        shr     ebx,1           // shift divisor right one bit
+        rcr     ecx,1
+        shr     edx,1           // shift dividend right one bit
+        rcr     eax,1
+        or      ebx,ebx
+        jnz     short .L5        // loop until divisor < 4194304K
+        div     ecx             // now divide, ignore remainder
+
+//
+// We may be off by one, so to check, we will multiply the quotient
+// by the divisor and check the result against the orignal dividend
+// Note that we must also check for overflow, which can occur if the
+// dividend is close to 2**64 and the quotient is off by 1.
+//
+
+        mov     ecx,eax         // save a copy of quotient in ECX
+        mul     dword ptr DVSRHI
+        xchg    ecx,eax         // save product, get quotient in EAX
+        mul     dword ptr DVSRLO
+        add     edx,ecx         // EDX:EAX = QUOT * DVSR
+        jc      short .L6        // carry means Quotient is off by 1
+
+//
+// do long compare here between original dividend and the result of the
+// multiply in edx:eax.  If original is larger or equal, we are ok, otherwise
+// subtract the original divisor from the result.
+//
+
+        cmp     edx,DVNDHI // compare hi words of result and original
+        ja      short .L6        // if result > original, do subtract
+        jb      short .L7        // if result < original, we are ok
+        cmp     eax,DVNDLO // hi words are equal, compare lo words
+        jbe     short .L7        // if less or equal we are ok, else subtract
+.L6:
+        sub     eax,DVSRLO // subtract divisor from result
+        sbb     edx,DVSRHI
+.L7:
+
+//
+// Calculate remainder by subtracting the result from the original dividend.
+// Since the result is already in a register, we will do the subtract in the
+// opposite direction and negate the result if necessary.
+//
+
+        sub     eax,DVNDLO // subtract dividend from result
+        sbb     edx,DVNDHI
+
+//
+// Now check the result sign flag to see if the result is supposed to be positive
+// or negative.  It is currently negated (because we subtracted in the 'wrong'
+// direction), so if the sign flag is set we are done, otherwise we must negate
+// the result to make it positive again.
+//
+
+        dec     edi             // check result sign flag
+        jns     short .L8        // result is ok, restore stack and return
+.L4:
+        neg     edx             // otherwise, negate the result
+        neg     eax
+        sbb     edx,0
+
+//
+// Just the cleanup left to do.  edx:eax contains the quotient.
+// Restore the saved registers and return.
+//
+
+.L8:
+        pop     edi
+        pop     ebx
+
+        ret     16
+
+//
+// llshl - long shift left
+//
+// Purpose:
+//       Does a Long Shift Left (signed and unsigned are identical)
+//       Shifts a long left any number of bits.
+//
+// Entry:
+//       EDX:EAX - long value to be shifted
+//       CL      - number of bits to shift by
+//
+// Exit:
+//       EDX:EAX - shifted value
+//
+// Uses:
+//       CL is destroyed.
+//
+
 __allshl:
-	shldl	%cl, %eax, %edx
-	sall	%cl, %eax
-	andl	$32, %ecx
-	je		1f
-	movl	%eax, %edx
-	xorl	%eax, %eax
-1:
-	ret
 
-/*
- * long long
- * __allshr(long long Value, unsigned char Shift)//
- *
- * Parameters:
- *   EDX:EAX - signed long long value to be shifted right
- *   CL      - number of bits to shift by
- * Registers:
- *   Destroys CL
- * Returns:
- *   EDX:EAX - shifted value
- */
+//
+// Handle shifts of 64 or more bits (all get 0)
+//
+        cmp     cl, 64
+        jae     short RETZERO
+
+//
+// Handle shifts of between 0 and 31 bits
+//
+        cmp     cl, 32
+        jae     short MORE32
+        shld    edx,eax,cl
+        shl     eax,cl
+        ret
+
+//
+// Handle shifts of between 32 and 63 bits
+//
+MORE32:
+        mov     edx,eax
+        xor     eax,eax
+        and     cl,31
+        shl     edx,cl
+        ret
+
+//
+// return 0 in edx:eax
+//
+RETZERO:
+        xor     eax,eax
+        xor     edx,edx
+        ret
+
+//
+// llshr - long shift right
+//
+// Purpose:
+//       Does a signed Long Shift Right
+//       Shifts a long right any number of bits.
+//
+// Entry:
+//       EDX:EAX - long value to be shifted
+//       CL      - number of bits to shift by
+//
+// Exit:
+//       EDX:EAX - shifted value
+//
+// Uses:
+//       CL is destroyed.
+//
+
 __allshr:
-	shrdl	%cl, %edx, %eax
-	sarl	%cl, %edx
-	andl	$32, %ecx
-	je		1f
-	movl	%edx, %eax
-	sarl	$31, %edx
-1:
-	ret
 
-/*
- * unsigned long long
- * __aulldiv(unsigned long long Dividend, unsigned long long Divisor)//
- *
- * Parameters:
- *   [ESP+04h] - unsigned long long Dividend
- *   [ESP+0Ch] - unsigned long long Divisor
- * Registers:
- *   Unknown
- * Returns:
- *   EDX:EAX - unsigned long long quotient (Dividend/Divisor)
- * Notes:
- *   Routine removes the arguments from the stack.
- */
+//
+// Handle shifts of 64 bits or more (if shifting 64 bits or more, the result
+// depends only on the high order bit of edx).
+//
+        cmp     cl,64
+        jae     short .RETSIGN
+
+//
+// Handle shifts of between 0 and 31 bits
+//
+        cmp     cl, 32
+        jae     short .MORE32
+        shrd    eax,edx,cl
+        sar     edx,cl
+        ret
+
+//
+// Handle shifts of between 32 and 63 bits
+//
+.MORE32:
+        mov     eax,edx
+        sar     edx,31
+        and     cl,31
+        sar     eax,cl
+        ret
+
+//
+// Return double precision 0 or -1, depending on the sign of edx
+//
+.RETSIGN:
+        sar     edx,31
+        mov     eax,edx
+        ret
+
+//
+// ulldiv - unsigned long divide
+//
+// Purpose:
+//       Does a unsigned long divide of the arguments.  Arguments are
+//       not changed.
+//
+// Entry:
+//       Arguments are passed on the stack:
+//               1st pushed: divisor (QWORD)
+//               2nd pushed: dividend (QWORD)
+//
+// Exit:
+//       EDX:EAX contains the quotient (dividend/divisor)
+//       NOTE: this routine removes the parameters from the stack.
+//
+// Uses:
+//       ECX
+//
+
 __aulldiv:
-	call	___udivdi3
-	ret	$16
 
-/*
- * unsigned long long
- * __aullshr(unsigned long long Value, unsigned char Shift)//
- *
- * Parameters:
- *   EDX:EAX - unsigned long long value to be shifted right
- *   CL      - number of bits to shift by
- * Registers:
- *   Destroys CL
- * Returns:
- *   EDX:EAX - shifted value
- */
+        push    ebx
+        push    esi
+
+// Set up the local stack and save the index registers.  When this is done
+// the stack frame will look as follows (assuming that the expression a/b will
+// generate a call to uldiv(a, b)):
+//
+//               -----------------
+//               |               |
+//               |---------------|
+//               |               |
+//               |--divisor (b)--|
+//               |               |
+//               |---------------|
+//               |               |
+//               |--dividend (a)-|
+//               |               |
+//               |---------------|
+//               | return addr** |
+//               |---------------|
+//               |      EBX      |
+//               |---------------|
+//       ESP---->|      ESI      |
+//               -----------------
+//
+
+#undef DVNDLO
+#undef DVNDHI
+#undef DVSRLO
+#undef DVSRHI
+#define DVNDLO  [esp + 12]       // stack address of dividend (a)
+#define DVNDHI  [esp + 16]       // stack address of dividend (a)
+#define DVSRLO  [esp + 20]      // stack address of divisor (b)
+#define DVSRHI  [esp + 24]      // stack address of divisor (b)
+
+//
+// Now do the divide.  First look to see if the divisor is less than 4194304K.
+// If so, then we can use a simple algorithm with word divides, otherwise
+// things get a little more complex.
+//
+
+        mov     eax,DVSRHI // check to see if divisor < 4194304K
+        or      eax,eax
+        jnz     short ..L1        // nope, gotta do this the hard way
+        mov     ecx,DVSRLO // load divisor
+        mov     eax,DVNDHI // load high word of dividend
+        xor     edx,edx
+        div     ecx             // get high order bits of quotient
+        mov     ebx,eax         // save high bits of quotient
+        mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
+        div     ecx             // get low order bits of quotient
+        mov     edx,ebx         // edx:eax <- quotient hi:quotient lo
+        jmp     short ..L2        // restore stack and return
+
+//
+// Here we do it the hard way.  Remember, eax contains DVSRHI
+//
+
+..L1:
+        mov     ecx,eax         // ecx:ebx <- divisor
+        mov     ebx,DVSRLO
+        mov     edx,DVNDHI // edx:eax <- dividend
+        mov     eax,DVNDLO
+..L3:
+        shr     ecx,1           // shift divisor right one bit// hi bit <- 0
+        rcr     ebx,1
+        shr     edx,1           // shift dividend right one bit// hi bit <- 0
+        rcr     eax,1
+        or      ecx,ecx
+        jnz     short ..L3        // loop until divisor < 4194304K
+        div     ebx             // now divide, ignore remainder
+        mov     esi,eax         // save quotient
+
+//
+// We may be off by one, so to check, we will multiply the quotient
+// by the divisor and check the result against the orignal dividend
+// Note that we must also check for overflow, which can occur if the
+// dividend is close to 2**64 and the quotient is off by 1.
+//
+
+        mul     dword ptr DVSRHI // QUOT * DVSRHI
+        mov     ecx,eax
+        mov     eax,DVSRLO
+        mul     esi             // QUOT * DVSRLO
+        add     edx,ecx         // EDX:EAX = QUOT * DVSR
+        jc      short ..L4        // carry means Quotient is off by 1
+
+//
+// do long compare here between original dividend and the result of the
+// multiply in edx:eax.  If original is larger or equal, we are ok, otherwise
+// subtract one (1) from the quotient.
+//
+
+        cmp     edx,DVNDHI // compare hi words of result and original
+        ja      short ..L4        // if result > original, do subtract
+        jb      short ..L5        // if result < original, we are ok
+        cmp     eax,DVNDLO // hi words are equal, compare lo words
+        jbe     short ..L5        // if less or equal we are ok, else subtract
+..L4:
+        dec     esi             // subtract 1 from quotient
+..L5:
+        xor     edx,edx         // edx:eax <- quotient
+        mov     eax,esi
+
+//
+// Just the cleanup left to do.  edx:eax contains the quotient.
+// Restore the saved registers and return.
+//
+
+..L2:
+
+        pop     esi
+        pop     ebx
+
+        ret     16
+
+//
+// ullshr - long shift right
+//
+// Purpose:
+//       Does a unsigned Long Shift Right
+//       Shifts a long right any number of bits.
+//
+// Entry:
+//       EDX:EAX - long value to be shifted
+//       CL      - number of bits to shift by
+//
+// Exit:
+//       EDX:EAX - shifted value
+//
+// Uses:
+//       CL is destroyed.
+//
+
 __aullshr:
-	shrdl	%cl, %edx, %eax
-	shrl	%cl, %edx
-	andl	$32, %ecx
-	je		1f
-	movl	%edx, %eax
-1:
-	ret
-	
-/*
- * long long
- * __allrem(long long Dividend, long long Divisor)//
- *
- * Parameters:
- *   [ESP+04h] - long long Dividend
- *   [ESP+0Ch] - long long Divisor
- * Registers:
- *   Unknown
- * Returns:
- *   EDX:EAX - long long remainder (Dividend/Divisor)
- * Notes:
- *   Routine removes the arguments from the stack.
- */
-__allrem:
-	call	___moddi3
-	ret		$16
-	
-.intel_syntax noprefix
+
+//
+// Handle shifts of 64 bits or more (if shifting 64 bits or more, the result
+// depends only on the high order bit of edx).
+//
+        cmp     cl,64
+        jae     short ..RETZERO
+
+//
+// Handle shifts of between 0 and 31 bits
+//
+        cmp     cl, 32
+        jae     short ..MORE32
+        shrd    eax,edx,cl
+        shr     edx,cl
+        ret
+
+//
+// Handle shifts of between 32 and 63 bits
+//
+..MORE32:
+        mov     eax,edx
+        xor     edx,edx
+        and     cl,31
+        shr     eax,cl
+        ret
+
+//
+// return 0 in edx:eax
+//
+..RETZERO:
+        xor     eax,eax
+        xor     edx,edx
+        ret
+
+//
+// ullrem - unsigned long remainder
+//
+// Purpose:
+//       Does a unsigned long remainder of the arguments.  Arguments are
+//       not changed.
+//
+// Entry:
+//       Arguments are passed on the stack:
+//               1st pushed: divisor (QWORD)
+//               2nd pushed: dividend (QWORD)
+//
+// Exit:
+//       EDX:EAX contains the remainder (dividend%divisor)
+//       NOTE: this routine removes the parameters from the stack.
+//
+// Uses:
+//       ECX
+//
+
+__aullrem:
+
+        push    ebx
+
+// Set up the local stack and save the index registers.  When this is done
+// the stack frame will look as follows (assuming that the expression a%b will
+// generate a call to ullrem(a, b)):
+//
+//               -----------------
+//               |               |
+//               |---------------|
+//               |               |
+//               |--divisor (b)--|
+//               |               |
+//               |---------------|
+//               |               |
+//               |--dividend (a)-|
+//               |               |
+//               |---------------|
+//               | return addr** |
+//               |---------------|
+//       ESP---->|      EBX      |
+//               -----------------
+//
+
+#undef DVNDLO
+#undef DVNDHI
+#undef DVSRLO
+#undef DVSRHI
+#define DVNDLO  [esp + 8]       // stack address of dividend (a)
+#define DVNDHI  [esp + 8]       // stack address of dividend (a)
+#define DVSRLO  [esp + 16]      // stack address of divisor (b)
+#define DVSRHI  [esp + 20]      // stack address of divisor (b)
+
+// Now do the divide.  First look to see if the divisor is less than 4194304K.
+// If so, then we can use a simple algorithm with word divides, otherwise
+// things get a little more complex.
+//
+
+        mov     eax,DVSRHI // check to see if divisor < 4194304K
+        or      eax,eax
+        jnz     short ...L1        // nope, gotta do this the hard way
+        mov     ecx,DVSRLO // load divisor
+        mov     eax,DVNDHI // load high word of dividend
+        xor     edx,edx
+        div     ecx             // edx <- remainder, eax <- quotient
+        mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
+        div     ecx             // edx <- final remainder
+        mov     eax,edx         // edx:eax <- remainder
+        xor     edx,edx
+        jmp     short ...L2        // restore stack and return
+
+//
+// Here we do it the hard way.  Remember, eax contains DVSRHI
+//
+
+...L1:
+        mov     ecx,eax         // ecx:ebx <- divisor
+        mov     ebx,DVSRLO
+        mov     edx,DVNDHI // edx:eax <- dividend
+        mov     eax,DVNDLO
+...L3:
+        shr     ecx,1           // shift divisor right one bit// hi bit <- 0
+        rcr     ebx,1
+        shr     edx,1           // shift dividend right one bit// hi bit <- 0
+        rcr     eax,1
+        or      ecx,ecx
+        jnz     short ...L3        // loop until divisor < 4194304K
+        div     ebx             // now divide, ignore remainder
+
+//
+// We may be off by one, so to check, we will multiply the quotient
+// by the divisor and check the result against the orignal dividend
+// Note that we must also check for overflow, which can occur if the
+// dividend is close to 2**64 and the quotient is off by 1.
+//
+
+        mov     ecx,eax         // save a copy of quotient in ECX
+        mul     dword ptr DVSRHI
+        xchg    ecx,eax         // put partial product in ECX, get quotient in EAX
+        mul     dword ptr DVSRLO
+        add     edx,ecx         // EDX:EAX = QUOT * DVSR
+        jc      short ...L4        // carry means Quotient is off by 1
+
+//
+// do long compare here between original dividend and the result of the
+// multiply in edx:eax.  If original is larger or equal, we're ok, otherwise
+// subtract the original divisor from the result.
+//
+
+        cmp     edx,DVNDHI // compare hi words of result and original
+        ja      short ...L4        // if result > original, do subtract
+        jb      short ...L5        // if result < original, we're ok
+        cmp     eax,DVNDLO // hi words are equal, compare lo words
+        jbe     short ...L5        // if less or equal we're ok, else subtract
+...L4:
+        sub     eax,DVSRLO // subtract divisor from result
+        sbb     edx,DVSRHI
+...L5:
+
+//
+// Calculate remainder by subtracting the result from the original dividend.
+// Since the result is already in a register, we will perform the subtract in
+// the opposite direction and negate the result to make it positive.
+//
+
+        sub     eax,DVNDLO // subtract original dividend from result
+        sbb     edx,DVNDHI
+        neg     edx             // and negate it
+        neg     eax
+        sbb     edx,0
+
+//
+// Just the cleanup left to do.  dx:ax contains the remainder.
+// Restore the saved registers and return.
+//
+
+...L2:
+
+        pop     ebx
+
+        ret     16
+
 
 /*
  * This routine is called by MSVC-generated code to convert from floating point
@@ -315,6 +1016,10 @@ __alldvrm:
 //               -----------------
 //
 
+#undef DVNDLO
+#undef DVNDHI
+#undef DVSRLO
+#undef DVSRHI
 #define DVNDLO  [esp + 16]       // stack address of dividend (a)
 #define DVNDHI  [esp + 20]       // stack address of dividend (a)
 #define DVSRLO  [esp + 24]      // stack address of divisor (b)
@@ -329,7 +1034,7 @@ __alldvrm:
 
         mov     eax,DVNDHI // hi word of a
         or      eax,eax         // test to see if signed
-        jge     short L1        // skip rest if a is already positive
+        jge     short ....L1        // skip rest if a is already positive
         inc     edi             // complement result sign flag
         inc     ebp             // complement result sign flag
         mov     edx,DVNDLO // lo word of a
@@ -338,10 +1043,10 @@ __alldvrm:
         sbb     eax,0
         mov     DVNDHI,eax // save positive value
         mov     DVNDLO,edx
-L1:
+....L1:
         mov     eax,DVSRHI // hi word of b
         or      eax,eax         // test to see if signed
-        jge     short L2        // skip rest if b is already positive
+        jge     short ....L2        // skip rest if b is already positive
         inc     edi             // complement the result sign flag
         mov     edx,DVSRLO // lo word of a
         neg     eax             // make b positive
@@ -349,7 +1054,7 @@ L1:
         sbb     eax,0
         mov     DVSRHI,eax // save positive value
         mov     DVSRLO,edx
-L2:
+....L2:
 
 //
 // Now do the divide.  First look to see if the divisor is less than 4194304K.
@@ -360,7 +1065,7 @@ L2:
 //
 
         or      eax,eax         // check to see if divisor < 4194304K
-        jnz     short L3        // nope, gotta do this the hard way
+        jnz     short ....L3        // nope, gotta do this the hard way
         mov     ecx,DVSRLO // load divisor
         mov     eax,DVNDHI // load high word of dividend
         xor     edx,edx
@@ -378,24 +1083,24 @@ L2:
         mov     eax,esi         // set up low word of quotient
         mul     dword ptr DVSRLO // LOWORD(QUOT) * DVSR
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jmp     short L4        // complete remainder calculation
+        jmp     short ....L4        // complete remainder calculation
 
 //
 // Here we do it the hard way.  Remember, eax contains the high word of DVSR
 //
 
-L3:
+....L3:
         mov     ebx,eax         // ebx:ecx <- divisor
         mov     ecx,DVSRLO
         mov     edx,DVNDHI // edx:eax <- dividend
         mov     eax,DVNDLO
-L5:
+....L5:
         shr     ebx,1           // shift divisor right one bit
         rcr     ecx,1
         shr     edx,1           // shift dividend right one bit
         rcr     eax,1
         or      ebx,ebx
-        jnz     short L5        // loop until divisor < 4194304K
+        jnz     short ....L5        // loop until divisor < 4194304K
         div     ecx             // now divide, ignore remainder
         mov     esi,eax         // save quotient
 
@@ -411,7 +1116,7 @@ L5:
         mov     eax,DVSRLO
         mul     esi             // QUOT * DVSRLO
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jc      short L6        // carry means Quotient is off by 1
+        jc      short ....L6        // carry means Quotient is off by 1
 
 //
 // do long compare here between original dividend and the result of the
@@ -420,18 +1125,18 @@ L5:
 //
 
         cmp     edx,DVNDHI // compare hi words of result and original
-        ja      short L6        // if result > original, do subtract
-        jb      short L7        // if result < original, we are ok
+        ja      short ....L6        // if result > original, do subtract
+        jb      short ....L7        // if result < original, we are ok
         cmp     eax,DVNDLO // hi words are equal, compare lo words
-        jbe     short L7        // if less or equal we are ok, else subtract
-L6:
+        jbe     short ....L7        // if less or equal we are ok, else subtract
+....L6:
         dec     esi             // subtract 1 from quotient
         sub     eax,DVSRLO // subtract divisor from result
         sbb     edx,DVSRHI
-L7:
+....L7:
         xor     ebx,ebx         // ebx:esi <- quotient
 
-L4:
+....L4:
 //
 // Calculate remainder by subtracting the result from the original dividend.
 // Since the result is already in a register, we will do the subtract in the
@@ -449,7 +1154,7 @@ L4:
 //
 
         dec     ebp             // check result sign flag
-        jns     short L9        // result is ok, set up the quotient
+        jns     short ....L9        // result is ok, set up the quotient
         neg     edx             // otherwise, negate the result
         neg     eax
         sbb     edx,0
@@ -457,7 +1162,7 @@ L4:
 //
 // Now we need to get the quotient into edx:eax and the remainder into ebx:ecx.
 //
-L9:
+....L9:
         mov     ecx,edx
         mov     edx,ebx
         mov     ebx,ecx
@@ -470,7 +1175,7 @@ L9:
 //
 
         dec     edi             // check to see if result is negative
-        jnz     short L8        // if EDI == 0, result should be negative
+        jnz     short ....L8        // if EDI == 0, result should be negative
         neg     edx             // otherwise, negate the result
         neg     eax
         sbb     edx,0
@@ -479,7 +1184,7 @@ L9:
 // Restore the saved registers and return.
 //
 
-L8:
+....L8:
         pop     ebp
         pop     esi
         pop     edi
@@ -547,7 +1252,7 @@ __aulldvrm:
 
         mov     eax,DVSRHI // check to see if divisor < 4194304K
         or      eax,eax
-        jnz     short .L1        // nope, gotta do this the hard way
+        jnz     short .....L1        // nope, gotta do this the hard way
         mov     ecx,DVSRLO // load divisor
         mov     eax,DVNDHI // load high word of dividend
         xor     edx,edx
@@ -566,24 +1271,24 @@ __aulldvrm:
         mov     eax,esi         // set up low word of quotient
         mul     dword ptr DVSRLO // LOWORD(QUOT) * DVSR
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jmp     short .L2        // complete remainder calculation
+        jmp     short .....L2        // complete remainder calculation
 
 //
 // Here we do it the hard way.  Remember, eax contains DVSRHI
 //
 
-.L1:
+.....L1:
         mov     ecx,eax         // ecx:ebx <- divisor
         mov     ebx,DVSRLO
         mov     edx,DVNDHI // edx:eax <- dividend
         mov     eax,DVNDLO
-.L3:
+.....L3:
         shr     ecx,1           // shift divisor right one bit// hi bit <- 0
         rcr     ebx,1
         shr     edx,1           // shift dividend right one bit// hi bit <- 0
         rcr     eax,1
         or      ecx,ecx
-        jnz     short .L3        // loop until divisor < 4194304K
+        jnz     short .....L3        // loop until divisor < 4194304K
         div     ebx             // now divide, ignore remainder
         mov     esi,eax         // save quotient
 
@@ -599,7 +1304,7 @@ __aulldvrm:
         mov     eax,DVSRLO
         mul     esi             // QUOT * DVSRLO
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jc      short .L4        // carry means Quotient is off by 1
+        jc      short .....L4        // carry means Quotient is off by 1
 
 //
 // do long compare here between original dividend and the result of the
@@ -608,18 +1313,18 @@ __aulldvrm:
 //
 
         cmp     edx,DVNDHI // compare hi words of result and original
-        ja      short .L4        // if result > original, do subtract
-        jb      short .L5        // if result < original, we are ok
+        ja      short .....L4        // if result > original, do subtract
+        jb      short .....L5        // if result < original, we are ok
         cmp     eax,DVNDLO // hi words are equal, compare lo words
-        jbe     short .L5        // if less or equal we are ok, else subtract
-.L4:
+        jbe     short .....L5        // if less or equal we are ok, else subtract
+.....L4:
         dec     esi             // subtract 1 from quotient
         sub     eax,DVSRLO // subtract divisor from result
         sbb     edx,DVSRHI
-.L5:
+.....L5:
         xor     ebx,ebx         // ebx:esi <- quotient
 
-.L2:
+.....L2:
 //
 // Calculate remainder by subtracting the result from the original dividend.
 // Since the result is already in a register, we will do the subtract in the

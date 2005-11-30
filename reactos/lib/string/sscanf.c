@@ -1,8 +1,6 @@
 /**/
 #define WIN32_NO_STATUS
 #include <windows.h>
-#define NTOS_MODE_USER
-#define _NTSYSTEM_
 #include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
 #include <stdlib.h>
