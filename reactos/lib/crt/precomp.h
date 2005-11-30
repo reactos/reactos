@@ -1,10 +1,8 @@
 #ifndef _CRT_PRECOMP_H
 #define _CRT_PRECOMP_H
 
-/* Some global constants to hack around the msvc build */
-/* These will go away or be moved soon enough */
-#define _CRT_NON_CONFORMING_SWPRINTFS
-#define _CRT_SECURE_NO_DEPRECATE
+/* We don't want to use the Microsoft CRT inline functions
+   so we hack around them in msvc build */
 #define _INC_WTIME_INL
 #define _INC_UTIME_INL
 #define _INC_TIME_INL
