@@ -48,18 +48,6 @@ Author:
 #define NTAPI_INLINE
 #endif
 
-#if !defined(_NTSYSTEM_)
-#define NTSYSAPI                DECLSPEC_IMPORT
-#define NTSYSCALLAPI            DECLSPEC_IMPORT
-#else
-#define NTSYSAPI
-#if defined(_NTDLLBUILD_)
-#define NTSYSCALLAPI
-#else
-#define NTSYSCALLAPI            DECLSPEC_ADDRSAFE
-#endif
-#endif
-
 //
 // Alignment Macros
 //

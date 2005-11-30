@@ -43,8 +43,6 @@
 
 typedef int (* 	_pfunccmp_t) (const void *, const void *);
 
-#define min(a,b) ((a)<(b)?(a):(b))
-
 /*
  * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
  */
