@@ -426,6 +426,7 @@ GetDeviceStatusString(IN DEVINST DevInst,
 {
     CONFIGRET cr;
     ULONG Status, ProblemNumber;
+    UINT MessageId = IDS_UNKNOWN;
     BOOL Ret = FALSE;
 
     if (hMachine != NULL)
@@ -446,23 +447,13 @@ GetDeviceStatusString(IN DEVINST DevInst,
 
     if (cr == CR_SUCCESS)
     {
-        UINT MessageId;
-
         if (ProblemNumber < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
             MessageId = ProblemStringId[ProblemNumber];
-        else
-            MessageId = IDS_UNKNOWN;
 
         szBuffer[0] = L'\0';
         if (ProblemNumber == 0)
         {
-            if (LoadString(hDllInstance,
-                           MessageId,
-                           szBuffer,
-                           BufferSize))
-            {
-                Ret = TRUE;
-            }
+            goto UnknownProblem;
         }
         else
         {
@@ -483,6 +474,17 @@ GetDeviceStatusString(IN DEVINST DevInst,
 
                 Ret = TRUE;
             }
+        }
+    }
+    else
+    {
+UnknownProblem:
+        if (LoadString(hDllInstance,
+                       MessageId,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
         }
     }
 
