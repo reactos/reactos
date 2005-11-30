@@ -148,6 +148,9 @@ int _isinf(double x);
 #define  _IORW 0x0080 /* opened as "r+w" */
 #endif
 
+#ifndef F_OK
+#define	F_OK	0	/* Check for file existence */
+#endif
 #ifndef W_OK
 #define	W_OK	2	/* Check for write permission */
 #endif
