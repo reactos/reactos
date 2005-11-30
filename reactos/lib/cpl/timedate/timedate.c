@@ -462,7 +462,7 @@ GetAutoDaylightInfo(HWND hwnd)
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 		    L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
 		    0,
-		    KEY_SET_VALUE,
+		    KEY_QUERY_VALUE,
 		    &hKey))
     return;
 
