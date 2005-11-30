@@ -147,6 +147,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	cfgs.push_back ( "Debug" );
 	cfgs.push_back ( "Release" );
+    cfgs.push_back ( "Speed" );
 
 	if (!no_cpp)
 	{
@@ -198,7 +199,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	string path = Path::RelativeFromDirectory ( ProjectNode.name, module.GetBasePath() );
 	path.erase(path.find(ProjectNode.name, 0), ProjectNode.name.size() + 1);
 
-	fprintf ( OUT, "\t\t\tRelativePath=\"%s/gccasm.rules\"/>\r\n", path.c_str() );
+	fprintf ( OUT, "\t\t\tRelativePath=\"%sgccasm.rules\"/>\r\n", path.c_str() );
 	fprintf ( OUT, "\t</ToolFiles>\r\n" );
 
 	int n = 0;
@@ -329,16 +330,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			else if ( exe )
 			{
-				if( module.non_if_data.compilationUnits.size () > 0 ) /* native apps */
-				{
-					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /SECTION:INIT,D /ALIGN:4096 /FORCE:MULTIPLE\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
-				}
-				else /* non native apps */
-				{
-					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
-				}
-				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint.c_str ());
+				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
 			}
 			else if ( dll)
@@ -397,29 +389,32 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t<File\r\n" );
 		fprintf ( OUT, "\t\t\t\tRelativePath=\"%s\">\r\n", source_file.c_str() );
 
-		source_file.erase(0,2);
-		source_file = _replace_str(source_file, "\\", "-");
-		string src_string = source_file.substr(0, source_file.find("."));
-		for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
-		{
-			std::string& config = cfgs[iconfig];
-			fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
-			fprintf ( OUT, "\t\t\t\t\tName=\"" );
-			fprintf ( OUT, config.c_str() );
-			fprintf ( OUT, "|Win32\">\r\n" );
-			fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
-			if (source_file.at(source_file.size() - 1) == 'c' || source_file.find(".cpp") != string::npos)
+		if (configuration.VSProjectVersion < "8.00") {
+			for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
 			{
-				fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
-				fprintf ( OUT, "\t\t\t\t\t\tObjectFile=\"$(OutDir)\\%s.obj\"/>\r\n", src_string.c_str());
+				std::string& config = cfgs[iconfig];
+
+				if ((source_file.find(".idl") != string::npos) || ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's')))
+				{
+					fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
+					fprintf ( OUT, "\t\t\t\t\tName=\"" );
+					fprintf ( OUT, config.c_str() );
+					fprintf ( OUT, "|Win32\">\r\n" );
+					fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
+					if (source_file.find(".idl") != string::npos)
+					{
+						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\(InputName).obj\"/>\r\n" );
+					}
+					else if ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
+					{
+						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\(InputName).obj&quot;\"\r\n",include_string.c_str() );
+						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\(InputName).obj\"/>\r\n" );
+					}
+					fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
+				}
 			}
-			else if (configuration.VSProjectVersion < "8.00" && (source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
-			{
-				fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
-				fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\%s.obj&quot;\"\r\n",include_string.c_str(), src_string.c_str() );
-				fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\%s.obj\"/>\r\n",src_string.c_str() );
-			}
-			fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
 		}
 		fprintf ( OUT, "\t\t\t</File>\r\n" );
 	}
