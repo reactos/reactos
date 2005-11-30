@@ -3591,11 +3591,28 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsA(
     return FALSE;
 }
 
+struct ClassDevPropertySheetsData
+{
+    HPROPSHEETPAGE *PropertySheetPages;
+    DWORD MaximumNumberOfPages;
+    DWORD NumberOfPages;
+};
+
 static BOOL WINAPI GetClassDevPropertySheetsCallback(
         IN HPROPSHEETPAGE hPropSheetPage,
-        LPARAM lParam)
+        IN OUT LPARAM lParam)
 {
-    FIXME("Need to add a property page!\n");
+    struct ClassDevPropertySheetsData *PropPageData;
+
+    PropPageData = (struct ClassDevPropertySheetsData *)lParam;
+
+    if (PropPageData->NumberOfPages < PropPageData->MaximumNumberOfPages)
+    {
+        *PropPageData->PropertySheetPages = hPropSheetPage;
+        PropPageData->PropertySheetPages++;
+    }
+
+    PropPageData->NumberOfPages++;
     return TRUE;
 }
 
@@ -3605,7 +3622,7 @@ static BOOL WINAPI GetClassDevPropertySheetsCallback(
 BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         IN HDEVINFO DeviceInfoSet,
         IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
-        IN LPPROPSHEETHEADERW PropertySheetHeader,
+        IN OUT LPPROPSHEETHEADERW PropertySheetHeader,
         IN DWORD PropertySheetHeaderPageListSize,
         OUT PDWORD RequiredSize OPTIONAL,
         IN DWORD PropertySheetType)
@@ -3633,8 +3650,8 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (PropertySheetType != DIGCDP_FLAG_ADVANCED
           && PropertySheetType != DIGCDP_FLAG_BASIC
-          /* FIXME: && PropertySheetType != DIGCDP_FLAG_REMOTE_ADVANCED
-          && PropertySheetType != DIGCDP_FLAG_REMOTE_BASIC*/)
+          && PropertySheetType != DIGCDP_FLAG_REMOTE_ADVANCED
+          && PropertySheetType != DIGCDP_FLAG_REMOTE_BASIC)
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
@@ -3643,6 +3660,7 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         LPWSTR PropPageProvider = NULL;
         HMODULE hModule = NULL;
         PROPERTY_PAGE_PROVIDER pPropPageProvider = NULL;
+        struct ClassDevPropertySheetsData PropPageData;
         DWORD dwLength, dwRegType;
         DWORD rc;
 
@@ -3696,10 +3714,25 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         Request.PageRequested = SPPSR_ENUM_ADV_DEVICE_PROPERTIES;
         Request.DeviceInfoSet = DeviceInfoSet;
         Request.DeviceInfoData = DeviceInfoData;
+        PropPageData.PropertySheetPages = &PropertySheetHeader->phpage[PropertySheetHeader->nPages];
+        PropPageData.MaximumNumberOfPages = PropertySheetHeaderPageListSize;
+        PropPageData.NumberOfPages = 0;
+        ret = pPropPageProvider(&Request, GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
+        if (!ret)
+            goto cleanup;
+
         if (RequiredSize)
-            *RequiredSize = 0; /* FIXME */
-        pPropPageProvider(&Request, GetClassDevPropertySheetsCallback, (LPARAM)0);
-        ret = TRUE;
+            *RequiredSize = PropPageData.NumberOfPages;
+        if (PropPageData.NumberOfPages <= PropPageData.MaximumNumberOfPages)
+        {
+            PropertySheetHeader->nPages += PropPageData.NumberOfPages;
+            ret = TRUE;
+        }
+        else
+        {
+            PropertySheetHeader->nPages += PropPageData.MaximumNumberOfPages;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        }
 
 cleanup:
         if (hKey != INVALID_HANDLE_VALUE)
