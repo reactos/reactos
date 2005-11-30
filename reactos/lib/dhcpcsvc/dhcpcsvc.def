@@ -1,10 +1,10 @@
 ; $Id: dhcpcapi.def 14337 2005-03-26 22:10:04Z $
 ;
-; dhcpcapi.def
+; dhcpcsvc.def
 ;
 ; ReactOS Operating System
 ;
-LIBRARY dhcpcapi.dll
+LIBRARY dhcpcsvc.dll
 EXPORTS
 DhcpCApiInitialize@4
 DhcpCApiCleanup@0

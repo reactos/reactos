@@ -62,8 +62,8 @@
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.xml" />
 </directory>
-<directory name="dhcpcapi">
-	<xi:include href="dhcpcapi/dhcpcapi.xml" />
+<directory name="dhcpcsvc">
+	<xi:include href="dhcpcsvc/dhcpcsvc.xml" />
 </directory>
 <directory name="dinput">
 	<xi:include href="dinput/dinput.xml" />

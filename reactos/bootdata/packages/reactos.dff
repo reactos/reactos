@@ -84,7 +84,7 @@ lib\dbghelp\dbghelp.dll                 1
 lib\ddraw\ddraw.dll                     1
 lib\devenum\devenum.dll                 1
 lib\devmgr\devmgr.dll                   1
-lib\dhcpcapi\dhcpcapi.dll               1
+lib\dhcpcsvc\dhcpcsvc.dll               1
 lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
 lib\dnsapi\dnsapi.dll                   1
