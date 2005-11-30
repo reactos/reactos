@@ -1436,7 +1436,7 @@ _pow:
         mov     al,ah                   // Move condition flags to AL
         lahf                            // Load Flags into AH
         and     al,    0b01000101       // Isolate  C0, C2 and C3
-        and     ah,not 0b01000101       // Turn off CF, PF and ZF
+        and     ah,    0b10111010       // Turn off CF, PF and ZF
         or      ah,al                   // Set new  CF, PF and ZF
         sahf                            // Store AH into Flags
         jb      __fpow1                 // Re-direct if x < 0
@@ -1448,7 +1448,7 @@ _pow:
         mov     al,ah                   // Move condition flags to AL
         lahf                            // Load Flags into AH
         and     al,    0b01000101       // Isolate  C0, C2 and C3
-        and     ah,not 0b01000101       // Turn off CF, PF and ZF
+        and     ah,    0b10111010       // Turn off CF, PF and ZF
         or      ah,al                   // Set new  CF, PF and ZF
         sahf                            // Store AH into Flags
         ja      __fpow3                 // Re-direct if y > 0
@@ -1464,7 +1464,7 @@ __fpow1:        fxch                            // Put y on top of stack
         mov     al,ah                   // Move condition flags to AL
         lahf                            // Load Flags into AH
         and     al,    0b01000101       // Isolate  C0, C2 and C3
-        and     ah,not 0b01000101       // Turn off CF, PF and ZF
+        and     ah,    0b10111010       // Turn off CF, PF and ZF
         or      ah,al                   // Set new  CF, PF and ZF
         sahf                            // Store AH into Flags
         je      __fpow2                 // Proceed if y = int(y)
