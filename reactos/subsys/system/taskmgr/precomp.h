@@ -1,6 +1,5 @@
 #ifndef __PRECOMP_H
 #define __PRECOMP_H
-#define _CRT_SECURE_NO_DEPRECATE
 
 #define WIN32_NO_STATUS
 #include <windows.h>
