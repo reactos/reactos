@@ -39,6 +39,7 @@ typedef struct _DEVADVPROP_INFO
     HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
     HINSTANCE hComCtl32;
+    HANDLE hMachine;
     WCHAR szDevName[255];
     WCHAR szTemp[255];
 } DEVADVPROP_INFO, *PDEVADVPROP_INFO;
@@ -52,6 +53,7 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
                       IN LPARAM lParam)
 {
     PDEVADVPROP_INFO dap;
+    INT_PTR Ret = FALSE;
 
     dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
                                              DWL_USER);
@@ -120,8 +122,8 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
                     }
 
                     /* set the device status edit control text */
-                    if (GetDeviceStatusString(dap->DeviceInfoSet,
-                                              dap->DeviceInfoData,
+                    if (GetDeviceStatusString(dap->DeviceInfoData->DevInst,
+                                              dap->hMachine,
                                               dap->szTemp,
                                               sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
                     {
@@ -130,6 +132,7 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
                                        dap->szTemp);
                     }
                 }
+                Ret = TRUE;
                 break;
             }
 
@@ -152,7 +155,7 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
         }
     }
 
-    return FALSE;
+    return Ret;
 }
 
 
@@ -160,9 +163,9 @@ INT_PTR
 DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                 IN HDEVINFO DeviceInfoSet,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
-                                IN HINSTANCE hComCtl32)
+                                IN HINSTANCE hComCtl32,
+                                IN LPCWSTR lpMachineName)
 {
-    DWORD RegDataType;
     PROPSHEETHEADER psh = {0};
     PROPSHEETPAGE pspGeneral = {0};
     DWORD nPropSheets = 0;
@@ -171,6 +174,8 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     PCREATEPROPERTYSHEETPAGEW pCreatePropertySheetPageW;
     PDESTROYPROPERTYSHEETPAGE pDestroyPropertySheetPage;
     PDEVADVPROP_INFO DevAdvPropInfo;
+    DWORD PropertySheetType;
+    HANDLE hMachine = NULL;
     UINT nPages = 0;
     union
     {
@@ -201,6 +206,16 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
         return -1;
     }
 
+    if (lpMachineName != NULL)
+    {
+        CONFIGRET cr = CM_Connect_Machine(lpMachineName,
+                                          &hMachine);
+        if (cr != CR_SUCCESS)
+        {
+            return -1;
+        }
+    }
+
     /* create the internal structure associated with the "General",
        "Driver", ... pages */
     DevAdvPropInfo = HeapAlloc(GetProcessHeap(),
@@ -208,37 +223,29 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                sizeof(DEVADVPROP_INFO));
     if (DevAdvPropInfo == NULL)
     {
-        return -1;
+        goto Cleanup;
     }
 
     DevAdvPropInfo->DeviceInfoSet = DeviceInfoSet;
     DevAdvPropInfo->DeviceInfoData = DeviceInfoData;
     DevAdvPropInfo->hComCtl32 = hComCtl32;
+    DevAdvPropInfo->hMachine = hMachine;
     DevAdvPropInfo->szDevName[0] = L'\0';
 
     /* get the device name */
-    if ((SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
-                                          DeviceInfoData,
-                                          SPDRP_FRIENDLYNAME,
-                                          &RegDataType,
-                                          (PBYTE)DevAdvPropInfo->szDevName,
-                                          sizeof(DevAdvPropInfo->szDevName),
-                                          NULL) ||
-         SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
-                                          DeviceInfoData,
-                                          SPDRP_DEVICEDESC,
-                                          &RegDataType,
-                                          (PBYTE)DevAdvPropInfo->szDevName,
-                                          sizeof(DevAdvPropInfo->szDevName),
-                                          NULL)) &&
-        RegDataType == REG_SZ)
+    if (GetDeviceDescriptionString(DeviceInfoSet,
+                                   DeviceInfoData,
+                                   DevAdvPropInfo->szDevName,
+                                   sizeof(DevAdvPropInfo->szDevName) / sizeof(DevAdvPropInfo->szDevName[0])))
     {
-        /* FIXME - check string for NULL termination! */
-
         psh.dwSize = sizeof(PROPSHEETHEADER);
         psh.dwFlags =  PSH_PROPTITLE;
         psh.hwndParent = hWndParent;
         psh.pszCaption = DevAdvPropInfo->szDevName;
+
+        PropertySheetType = lpMachineName != NULL ?
+                                DIGCDP_FLAG_REMOTE_ADVANCED :
+                                DIGCDP_FLAG_ADVANCED;
 
         /* find out how many property sheets we need */
         if (SetupDiGetClassDevPropertySheets(DeviceInfoSet,
@@ -246,7 +253,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                              &psh,
                                              0,
                                              &nPropSheets,
-                                             DIGCDP_FLAG_ADVANCED) &&
+                                             PropertySheetType) &&
             nPropSheets != 0)
         {
             DPRINT1("SetupDiGetClassDevPropertySheets unexpectedly returned TRUE!\n");
@@ -291,7 +298,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                                   &psh,
                                                   nPropSheets,
                                                   NULL,
-                                                  DIGCDP_FLAG_ADVANCED))
+                                                  PropertySheetType))
             {
                 goto Cleanup;
             }
@@ -343,6 +350,11 @@ Cleanup:
              0,
              DevAdvPropInfo);
 
+    if (hMachine != NULL)
+    {
+        CM_Disconnect_Machine(hMachine);
+    }
+
     return Ret;
 }
 
@@ -380,16 +392,23 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
     HINSTANCE hComCtl32;
     INT_PTR Ret = -1;
 
-    /* FIXME - handle remote device properties */
-
-    UNREFERENCED_PARAMETER(lpMachineName);
-
     /* dynamically load comctl32 */
     hComCtl32 = LoadAndInitComctl32();
     if (hComCtl32 != NULL)
     {
-        hDevInfo = SetupDiCreateDeviceInfoList(NULL,
-                                               hWndParent);
+        if (lpMachineName != NULL)
+        {
+            hDevInfo = SetupDiCreateDeviceInfoListEx(NULL,
+                                                     hWndParent,
+                                                     lpMachineName,
+                                                     NULL);
+        }
+        else
+        {
+            hDevInfo = SetupDiCreateDeviceInfoList(NULL,
+                                                   hWndParent);
+        }
+
         if (hDevInfo != INVALID_HANDLE_VALUE)
         {
             DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
@@ -402,7 +421,8 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                 Ret = DisplayDeviceAdvancedProperties(hWndParent,
                                                       hDevInfo,
                                                       &DevInfoData,
-                                                      hComCtl32);
+                                                      hComCtl32,
+                                                      lpMachineName);
             }
 
             SetupDiDestroyDeviceInfoList(hDevInfo);
@@ -469,12 +489,18 @@ DeviceAdvancedPropertiesA(HWND hWndParent,
                                     lpDeviceIDW);
 
 Cleanup:
-    HeapFree(GetProcessHeap(),
-             0,
-             lpMachineNameW);
-    HeapFree(GetProcessHeap(),
-             0,
-             lpDeviceIDW);
+    if (lpMachineNameW != NULL)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpMachineNameW);
+    }
+    if (lpDeviceIDW != NULL)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpDeviceIDW);
+    }
 
     return Ret;
 }

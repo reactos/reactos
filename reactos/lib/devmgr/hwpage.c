@@ -136,7 +136,8 @@ DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
         Ret = DisplayDeviceAdvancedProperties(hpd->hWnd,
                                               HwDevInfo->ClassDevInfo->hDevInfo,
                                               &HwDevInfo->DevInfoData,
-                                              hpd->hComCtl32) != -1;
+                                              hpd->hComCtl32,
+                                              NULL) != -1;
     }
 
     return Ret;
@@ -192,8 +193,8 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
             LocalFree((HLOCAL)szFormatted);
         }
 
-        if (GetDeviceStatusString(HwDevInfo->ClassDevInfo->hDevInfo,
-                                  &HwDevInfo->DevInfoData,
+        if (GetDeviceStatusString(HwDevInfo->DevInfoData.DevInst,
+                                  NULL,
                                   szBuffer,
                                   sizeof(szBuffer) / sizeof(szBuffer[0])) &&
             LoadAndFormatString(hDllInstance,
@@ -357,29 +358,15 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
 
             while (HwDevInfo != LastHwDevInfo)
             {
-                DWORD RegDataType;
                 INT iItem;
                 LVITEM li;
 
                 /* get the device name */
-                if ((SetupDiGetDeviceRegistryProperty(ClassDevInfo->hDevInfo,
-                                                      &HwDevInfo->DevInfoData,
-                                                      SPDRP_FRIENDLYNAME,
-                                                      &RegDataType,
-                                                      (PBYTE)szBuffer,
-                                                      sizeof(szBuffer),
-                                                      NULL) ||
-                     SetupDiGetDeviceRegistryProperty(ClassDevInfo->hDevInfo,
-                                                      &HwDevInfo->DevInfoData,
-                                                      SPDRP_DEVICEDESC,
-                                                      &RegDataType,
-                                                      (PBYTE)szBuffer,
-                                                      sizeof(szBuffer),
-                                                      NULL)) &&
-                    RegDataType == REG_SZ)
+                if (GetDeviceDescriptionString(ClassDevInfo->hDevInfo,
+                                               &HwDevInfo->DevInfoData,
+                                               szBuffer,
+                                               sizeof(szBuffer) / sizeof(szBuffer[0])))
                 {
-                    /* FIXME - check string for NULL termination! */
-
                     li.mask = LVIF_PARAM | LVIF_STATE | LVIF_TEXT | LVIF_IMAGE;
                     li.iItem = ItemCount;
                     li.iSubItem = 0;
@@ -405,7 +392,7 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
                             li.iSubItem = 1;
 
                             ListView_SetItem(hpd->hWndDevList,
-                                             &li);                  
+                                             &li);
                         }
                     }
                 }
@@ -674,6 +661,7 @@ HardwareDlgProc(IN HWND hwndDlg,
                 IN LPARAM lParam)
 {
     PHARDWARE_PAGE_DATA hpd;
+    INT_PTR Ret = FALSE;
 
     hpd = (PHARDWARE_PAGE_DATA)GetWindowLongPtr(hwndDlg,
                                                 DWL_USER);
@@ -820,6 +808,7 @@ HardwareDlgProc(IN HWND hwndDlg,
                     EnableTroubleShoot(hpd,
                                        GetWindowTextLength(hwndDlg) != 0);
                 }
+                Ret = TRUE;
                 break;
             }
 
@@ -854,7 +843,7 @@ HardwareDlgProc(IN HWND hwndDlg,
         }
     }
 
-    return FALSE;
+    return Ret;
 }
 
 

@@ -186,7 +186,8 @@ INT_PTR
 DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                 IN HDEVINFO DeviceInfoSet,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
-                                IN HINSTANCE hComCtl32);
+                                IN HINSTANCE hComCtl32,
+                                IN LPCWSTR lpMachineName);
 
 /* MISC.C */
 
@@ -195,6 +196,13 @@ LoadAndFormatString(IN HINSTANCE hInstance,
                     IN UINT uID,
                     OUT LPWSTR *lpTarget,
                     ...);
+
+DWORD
+LoadAndFormatStringsCat(IN HINSTANCE hInstance,
+                        IN UINT uID1,
+                        IN UINT uID2,
+                        OUT LPWSTR *lpTarget,
+                        ...);
 
 LPARAM
 ListViewGetSelectedItemData(IN HWND hwnd);
@@ -218,8 +226,8 @@ GetDeviceLocationString(IN DEVINST dnDevInst,
                         IN DWORD BufferSize);
 
 BOOL
-GetDeviceStatusString(IN HDEVINFO DeviceInfoSet,
-                      IN PSP_DEVINFO_DATA DeviceInfoData,
+GetDeviceStatusString(IN DEVINST DevInst,
+                      IN HANDLE hMachine,
                       OUT LPWSTR szBuffer,
                       IN DWORD BufferSize);
 
@@ -227,6 +235,12 @@ BOOL
 GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
                     OUT LPWSTR szBuffer,
                     IN DWORD BufferSize);
+
+BOOL
+GetDeviceDescriptionString(IN HDEVINFO DeviceInfoSet,
+                           IN PSP_DEVINFO_DATA DeviceInfoData,
+                           OUT LPWSTR szBuffer,
+                           IN DWORD BufferSize);
 
 #endif /* __DEVMGR_H */
 

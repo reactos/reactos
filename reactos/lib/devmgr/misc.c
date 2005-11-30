@@ -94,6 +94,41 @@ AllocAndLoadString(OUT LPWSTR *lpTarget,
 }
 
 
+static INT
+AllocAndLoadStringsCat(OUT LPWSTR *lpTarget,
+                       IN HINSTANCE hInst,
+                       IN UINT uID1,
+                       IN UINT uID2)
+{
+    INT ln;
+
+    ln = LengthOfStrResource(hInst,
+                             uID1);
+    ln += LengthOfStrResource(hInst,
+                              uID2);
+    if (ln++ > 0)
+    {
+        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                         ln * sizeof(WCHAR));
+        if ((*lpTarget) != NULL)
+        {
+            INT Ret, Ret2 = 0;
+            if (!(Ret = LoadStringW(hInst, uID1, *lpTarget, ln)))
+            {
+                LocalFree((HLOCAL)(*lpTarget));
+            }
+            else if (!(Ret2 = LoadStringW(hInst, uID2, *lpTarget + Ret, ln - Ret)))
+            {
+                LocalFree((HLOCAL)(*lpTarget));
+                Ret = 0;
+            }
+            return Ret + Ret2;
+        }
+    }
+    return 0;
+}
+
+
 DWORD
 LoadAndFormatString(IN HINSTANCE hInstance,
                     IN UINT uID,
@@ -107,6 +142,41 @@ LoadAndFormatString(IN HINSTANCE hInstance,
     if (AllocAndLoadString(&lpFormat,
                            hInstance,
                            uID) > 0)
+    {
+        va_start(lArgs, lpTarget);
+        /* let's use FormatMessage to format it because it has the ability to allocate
+           memory automatically */
+        Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                             lpFormat,
+                             0,
+                             0,
+                             (LPWSTR)lpTarget,
+                             0,
+                             &lArgs);
+        va_end(lArgs);
+
+        LocalFree((HLOCAL)lpFormat);
+    }
+
+    return Ret;
+}
+
+
+DWORD
+LoadAndFormatStringsCat(IN HINSTANCE hInstance,
+                        IN UINT uID1,
+                        IN UINT uID2,
+                        OUT LPWSTR *lpTarget,
+                        ...)
+{
+    DWORD Ret = 0;
+    LPWSTR lpFormat;
+    va_list lArgs;
+
+    if (AllocAndLoadStringsCat(&lpFormat,
+                               hInstance,
+                               uID1,
+                               uID2) > 0)
     {
         va_start(lArgs, lpTarget);
         /* let's use FormatMessage to format it because it has the ability to allocate
@@ -293,16 +363,130 @@ GetDeviceLocationString(IN DEVINST dnDevInst,
 }
 
 
+static const UINT ProblemStringId[] =
+{
+    IDS_DEV_NO_PROBLEM,
+    IDS_DEV_NOT_CONFIGURED,
+    IDS_DEV_OUT_OF_MEMORY,
+    IDS_DEV_ENTRY_IS_WRONG_TYPE,
+    IDS_DEV_LACKED_ARBITRATOR,
+    IDS_DEV_BOOT_CONFIG_CONFLICT,
+    IDS_DEV_FAILED_FILTER,
+    IDS_DEV_DEVLOADER_NOT_FOUND,
+    IDS_DEV_INVALID_DATA,
+    IDS_DEV_FAILED_START,
+    IDS_DEV_LIAR,
+    IDS_DEV_NORMAL_CONFLICT,
+    IDS_DEV_NOT_VERIFIED,
+    IDS_DEV_NEED_RESTART,
+    IDS_DEV_REENUMERATION,
+    IDS_DEV_PARTIAL_LOG_CONF,
+    IDS_DEV_UNKNOWN_RESOURCE,
+    IDS_DEV_REINSTALL,
+    IDS_DEV_REGISTRY,
+    IDS_UNKNOWN, /* CM_PROB_VXDLDR, not used on NT */
+    IDS_DEV_WILL_BE_REMOVED,
+    IDS_DEV_DISABLED,
+    IDS_DEV_DEVLOADER_NOT_READY,
+    IDS_DEV_DEVICE_NOT_THERE,
+    IDS_DEV_MOVED,
+    IDS_DEV_TOO_EARLY,
+    IDS_DEV_NO_VALID_LOG_CONF,
+    IDS_DEV_FAILED_INSTALL,
+    IDS_DEV_HARDWARE_DISABLED,
+    IDS_DEV_CANT_SHARE_IRQ,
+    IDS_DEV_FAILED_ADD,
+    IDS_DEV_DISABLED_SERVICE,
+    IDS_DEV_TRANSLATION_FAILED,
+    IDS_DEV_NO_SOFTCONFIG,
+    IDS_DEV_BIOS_TABLE,
+    IDS_DEV_IRQ_TRANSLATION_FAILED,
+    IDS_DEV_FAILED_DRIVER_ENTRY,
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD,
+    IDS_DEV_DRIVER_FAILED_LOAD,
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID,
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES,
+    IDS_DEV_DUPLICATE_DEVICE,
+    IDS_DEV_FAILED_POST_START,
+    IDS_DEV_HALTED,
+    IDS_DEV_PHANTOM,
+    IDS_DEV_SYSTEM_SHUTDOWN,
+    IDS_DEV_HELD_FOR_EJECT,
+    IDS_DEV_DRIVER_BLOCKED,
+    IDS_DEV_REGISTRY_TOO_LARGE,
+    IDS_DEV_SETPROPERTIES_FAILED,
+};
+
+
 BOOL
-GetDeviceStatusString(IN HDEVINFO DeviceInfoSet,
-                      IN PSP_DEVINFO_DATA DeviceInfoData,
+GetDeviceStatusString(IN DEVINST DevInst,
+                      IN HANDLE hMachine,
                       OUT LPWSTR szBuffer,
                       IN DWORD BufferSize)
 {
-    return LoadString(hDllInstance,
-                      IDS_UNKNOWN,
-                       szBuffer,
-                       BufferSize) != 0;
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    if (hMachine != NULL)
+    {
+        cr = CM_Get_DevNode_Status_Ex(&Status,
+                                      &ProblemNumber,
+                                      DevInst,
+                                      0,
+                                      hMachine);
+    }
+    else
+    {
+        cr = CM_Get_DevNode_Status(&Status,
+                                   &ProblemNumber,
+                                   DevInst,
+                                   0);
+    }
+
+    if (cr == CR_SUCCESS)
+    {
+        UINT MessageId;
+
+        if (ProblemNumber < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
+            MessageId = ProblemStringId[ProblemNumber];
+        else
+            MessageId = IDS_UNKNOWN;
+
+        szBuffer[0] = L'\0';
+        if (ProblemNumber == 0)
+        {
+            if (LoadString(hDllInstance,
+                           MessageId,
+                           szBuffer,
+                           BufferSize))
+            {
+                Ret = TRUE;
+            }
+        }
+        else
+        {
+            LPWSTR szProblem;
+
+            if (LoadAndFormatStringsCat(hDllInstance,
+                                        MessageId,
+                                        IDS_DEVCODE,
+                                        &szProblem,
+                                        ProblemNumber))
+            {
+                wcsncpy(szBuffer,
+                        szProblem,
+                        BufferSize - 1);
+                szBuffer[BufferSize - 1] = L'\0';
+
+                LocalFree((HLOCAL)szProblem);
+
+                Ret = TRUE;
+            }
+        }
+    }
+
+    return Ret;
 }
 
 
@@ -331,6 +515,50 @@ GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
     {
         /* FIXME - check string for NULL termination! */
         Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+GetDeviceDescriptionString(IN HDEVINFO DeviceInfoSet,
+                           IN PSP_DEVINFO_DATA DeviceInfoData,
+                           OUT LPWSTR szBuffer,
+                           IN DWORD BufferSize)
+{
+    DWORD RegDataType;
+    BOOL Ret = FALSE;
+
+    if ((SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_FRIENDLYNAME,
+                                          &RegDataType,
+                                          (PBYTE)szBuffer,
+                                          BufferSize * sizeof(WCHAR),
+                                          NULL) ||
+         SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_DEVICEDESC,
+                                          &RegDataType,
+                                          (PBYTE)szBuffer,
+                                          BufferSize * sizeof(WCHAR),
+                                          NULL)) &&
+        RegDataType == REG_SZ)
+    {
+        /* FIXME - check string for NULL termination! */
+        Ret = TRUE;
+    }
+    else
+    {
+        szBuffer[0] = L'\0';
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
     }
 
     return Ret;
