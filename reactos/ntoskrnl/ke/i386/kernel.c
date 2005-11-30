@@ -22,7 +22,6 @@ static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386CpuidExMisc;
 ULONG Ke386CacheAlignment;
 CHAR Ke386CpuidModel[49] = {0,};
 ULONG Ke386L1CacheSize;
-ULONG Ke386CacheGranularity = 0x40;      /* FIXME: Default to 64 bytes for RtlPrefetchMemoryNonTemporal(), need real size */
 BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
@@ -418,6 +417,18 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       /* Target EIP. */
       Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
    }
+
+   /* Does the CPU Support 'prefetchnta' (SSE)  */
+   if(KPCR->PrcbData.FeatureBits & X86_FEATURE_SSE)
+   {
+       ULONG Protect;
+
+       Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
+       MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
+       /* Replace the ret by a nop */
+       *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+       MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
+   }
 }
 
 VOID
@@ -522,13 +533,6 @@ Ki386SetProcessorFeatures(VOID)
    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
-
-   /* Does the CPU Support 'prefetchnta' (SSE)  */
-   if(Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE)
-   {
-       /* Replace the ret by a nop */
-       /* FIXME - *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90; */
-   }
 
    /* Does the CPU Support Fast System Call? */   
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
