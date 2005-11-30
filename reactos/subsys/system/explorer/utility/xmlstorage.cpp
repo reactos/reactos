@@ -464,7 +464,7 @@ std::string XMLReaderBase::get_error_string() const
 std::string EncodeXMLString(const XS_String& str)
 {
 	LPCXSSTR s = str.c_str();
-	LPXSSTR buffer = (LPXSSTR)alloca(5*sizeof(XS_CHAR)*XS_len(s));	// worst case. "&amp;"
+	LPXSSTR buffer = (LPXSSTR)alloca(6*sizeof(XS_CHAR)*XS_len(s));	// worst case "&quot;" / "&apos;"
 	LPXSSTR o = buffer;
 
 	for(LPCXSSTR p=s; *p; ++p)
@@ -492,7 +492,7 @@ std::string EncodeXMLString(const XS_String& str)
 		  default:
 			if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n') {
 				char b[16];
-				sprintf(b, "&%d;", (unsigned)*p);
+				sprintf_s1(b, COUNTOF(b), "&%d;", (unsigned)*p);
 				for(const char*q=b; *q; )
 					*o++ = *q++;
 			} else

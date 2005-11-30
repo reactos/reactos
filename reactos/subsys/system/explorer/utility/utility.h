@@ -166,6 +166,7 @@ BOOL exists_path(LPCTSTR path);
 #endif
 
 
+ // secure CRT functions
 #ifdef __STDC_WANT_SECURE_LIB__	// for VS 2005: _MSC_VER>=1400
 
 #undef _vsntprintf

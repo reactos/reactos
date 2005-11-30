@@ -71,6 +71,14 @@
 namespace XMLStorage {
 
 
+ // secure CRT functions
+#ifdef __STDC_WANT_SECURE_LIB__	// VS 2005
+#define sprintf_s1 sprintf_s
+#else
+#define sprintf_s1(b, l, f, p1) sprintf(b, f, p1)
+#endif
+
+
 #ifndef XS_String
 
 #ifdef XS_STRING_UTF8
