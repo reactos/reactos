@@ -330,8 +330,17 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			else if ( exe )
 			{
-				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
-				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
+				if ( module.type == Kernel || module.type == NativeCUI)
+ 				{
+ 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /SECTION:INIT,D /ALIGN:4096 /FORCE:MULTIPLE\"\r\n" );
+ 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint.c_str ());
+					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
+ 				}
+				else if ( module.type == Win32CUI || module.type == Win32GUI )
+ 				{
+ 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
+ 				}
 			}
 			else if ( dll)
 			{
