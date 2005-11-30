@@ -86,6 +86,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	ifs_list.push_back ( &module.non_if_data );
 
 	// this is a define in MinGW w32api, but not Microsoft's headers
+	defines.push_back ( "_CRT_SECURE_NO_DEPRECATE" );
+	defines.push_back ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 	defines.push_back ( "STDCALL=__stdcall" );
 
 	while ( ifs_list.size() )
