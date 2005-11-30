@@ -490,7 +490,13 @@ std::string EncodeXMLString(const XS_String& str)
 			break;
 
 		  default:
-			*o++ = *p;
+			if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n') {
+				char b[16];
+				sprintf(b, "&%d;", (unsigned)*p);
+				for(const char*q=b; *q; )
+					*o++ = *q++;
+			} else
+				*o++ = *p;
 		}
 
 #ifdef XS_STRING_UTF8
