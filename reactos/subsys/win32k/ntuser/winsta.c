@@ -915,17 +915,31 @@ NtUserSetObjectInformation(
 HWINSTA FASTCALL
 UserGetProcessWindowStation(VOID)
 {
+   NTSTATUS Status;
+   HWINSTA WinSta;
+
    if(PsGetCurrentProcess() != CsrProcess)
    {
       return PsGetCurrentProcess()->Win32WindowStation;
    }
    else
    {
-      /* FIXME - get the pointer to the window station by querying the parent of
-                 the desktop of the calling thread (which is a window station),
-                 then use ObFindHandleForObject() to find a suitable handle */
-      DPRINT1("CSRSS called NtUserGetProcessWindowStation()!!! returned NULL!\n");
-      return NULL;
+      DPRINT1("Should use ObFindHandleForObject\n");
+      Status = ObOpenObjectByPointer(PsGetWin32Thread()->Desktop->WindowStation,
+                                     0,
+                                     NULL,
+                                     WINSTA_ALL_ACCESS,
+                                     ExWindowStationObjectType,
+                                     UserMode,
+                                     (PHANDLE) &WinSta);
+      if (! NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         DPRINT1("Unable to open handle for CSRSSs winsta, status 0x%08x\n",
+                 Status);
+         return NULL;
+      }
+      return WinSta;
    }
 }
 
