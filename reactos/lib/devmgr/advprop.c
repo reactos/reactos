@@ -169,23 +169,12 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     PROPSHEETHEADER psh = {0};
     PROPSHEETPAGE pspGeneral = {0};
     DWORD nPropSheets = 0;
-    DWORD nDevSheetsStart = 0;
     PPROPERTYSHEETW pPropertySheetW;
     PCREATEPROPERTYSHEETPAGEW pCreatePropertySheetPageW;
     PDESTROYPROPERTYSHEETPAGE pDestroyPropertySheetPage;
     PDEVADVPROP_INFO DevAdvPropInfo;
     DWORD PropertySheetType;
     HANDLE hMachine = NULL;
-    UINT nPages = 0;
-    union
-    {
-        ULONG Mask;
-        struct
-        {
-            ULONG General : 1;
-            ULONG Device : 1;
-        } Page;
-    } DelPropSheets = {0};
     INT_PTR Ret = -1;
 
     /* we don't want to statically link against comctl32, so find the
@@ -283,60 +272,44 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
         psh.phpage[0] = pCreatePropertySheetPageW(&pspGeneral);
         if (psh.phpage[0] != NULL)
         {
-            DelPropSheets.Page.General = TRUE;
-            nDevSheetsStart++;
-            nPages++;
+            psh.nPages++;
         }
 
         if (nPropSheets != 0)
         {
-            /* create the device property sheets but don't overwrite
-               the "General" property sheet handle */
-            psh.phpage += nDevSheetsStart;
+            /* create the device property sheets */
             if (!SetupDiGetClassDevPropertySheets(DeviceInfoSet,
                                                   DeviceInfoData,
                                                   &psh,
-                                                  nPropSheets,
+                                                  nPropSheets + psh.nPages,
                                                   NULL,
                                                   PropertySheetType))
             {
                 goto Cleanup;
             }
-            psh.phpage -= nDevSheetsStart;
-
-            DelPropSheets.Page.Device = TRUE;
-            nPages += nPropSheets;
         }
-
-        psh.nPages = nPages;
 
         /* FIXME - add the "Driver" property sheet if necessary */
 
-        Ret = pPropertySheetW(&psh);
+        if (psh.nPages != 0)
+        {
+            Ret = pPropertySheetW(&psh);
 
-        /* no need to destroy the property sheets anymore */
-        DelPropSheets.Mask = 0;
+            /* NOTE: no need to destroy the property sheets anymore! */
+        }
+        else
+        {
+            UINT i;
 
 Cleanup:
-        /* in case of failure the property sheets must be destroyed */
-        if (DelPropSheets.Mask != 0)
-        {
-            if (DelPropSheets.Page.General && psh.phpage[0] != NULL)
+            /* in case of failure the property sheets must be destroyed */
+            for (i = 0;
+                 i < psh.nPages;
+                 i++)
             {
-                pDestroyPropertySheetPage(psh.phpage[0]);
-            }
-
-            if (DelPropSheets.Page.Device)
-            {
-                UINT i;
-                for (i = 0;
-                     i < nPropSheets;
-                     i++)
+                if (psh.phpage[i] != NULL)
                 {
-                    if (psh.phpage[i + 1] != NULL)
-                    {
-                        pDestroyPropertySheetPage(psh.phpage[i + 1]);
-                    }
+                    pDestroyPropertySheetPage(psh.phpage[i]);
                 }
             }
         }
