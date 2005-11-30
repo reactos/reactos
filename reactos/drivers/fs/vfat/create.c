@@ -532,11 +532,6 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
         }
         if (PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[PathNameU.Length/sizeof(WCHAR)-1] == L'\\')
         {
-            if (!(RequestedOptions & FILE_DIRECTORY_FILE))
-            {
-                /* FIXME: Is this the right error message? */
-                return(STATUS_OBJECT_NAME_INVALID);
-            }
             PathNameU.Length -= sizeof(WCHAR);
         }
 
