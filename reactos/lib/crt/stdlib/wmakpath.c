@@ -10,7 +10,7 @@
 
 /* $Id$
  */
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @implemented

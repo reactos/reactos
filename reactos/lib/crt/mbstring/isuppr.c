@@ -8,7 +8,7 @@
  *              12/04/99: Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * code page 952 only

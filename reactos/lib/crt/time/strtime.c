@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @implemented

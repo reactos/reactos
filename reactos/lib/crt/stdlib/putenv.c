@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              25/11/05: Added license header
  */
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <internal/debug.h>

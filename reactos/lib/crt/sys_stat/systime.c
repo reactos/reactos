@@ -8,7 +8,7 @@
  *              25/11/05: Added license header
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 int month[12] = { 31,28,31,30,31,30,31,31,30,31,30,31};
 

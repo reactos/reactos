@@ -8,7 +8,7 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 static char *__rt_err_msg[] =
 {

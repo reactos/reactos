@@ -8,7 +8,7 @@
  *              25/11/05: Added license header
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /* Compare S1 and S2, returning less than, equal to or
    greater than zero if the collated form of S1 is lexicographically

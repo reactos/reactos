@@ -8,7 +8,7 @@
  *              25/11/05: Added license header
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>

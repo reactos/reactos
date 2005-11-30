@@ -16,7 +16,7 @@
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
  * Cambridge, MA 02139, USA.  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * Write the word (int) W to STREAM.

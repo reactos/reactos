@@ -6,7 +6,7 @@
  * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @unimplemented

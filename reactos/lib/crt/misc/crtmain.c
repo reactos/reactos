@@ -3,7 +3,7 @@
  * ReactOS MSVCRT.DLL Compatibility Library
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <internal/debug.h>

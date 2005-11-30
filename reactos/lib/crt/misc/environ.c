@@ -5,7 +5,7 @@
  * ReactOS MSVCRT.DLL Compatibility Library
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <internal/tls.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,6 +1,6 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include "precomp.h"
+#include <precomp.h>
 #include <wchar.h>
 
 int cntcr(char* bufp, int bufsiz);

@@ -8,7 +8,7 @@
  *              25/11/05: Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <sys/stat.h>
 #include <tchar.h>
 

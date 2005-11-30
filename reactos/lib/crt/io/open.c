@@ -36,7 +36,7 @@
 
 // possibly store extra information at the handle
 
-#include "precomp.h"
+#include <precomp.h>
 
 #if !defined(NDEBUG) && defined(DBG)
 #include <stdarg.h>

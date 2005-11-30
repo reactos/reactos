@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 
 #include <signal.h>
 #include <stdlib.h>

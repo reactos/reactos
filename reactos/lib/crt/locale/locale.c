@@ -4,7 +4,7 @@
  * Copyright 2000 Jon Griffiths
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <locale.h>
 #include <internal/tls.h>
 

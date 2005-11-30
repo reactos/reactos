@@ -8,7 +8,7 @@
  *                  Created 19/01/99
  * NOTE		    Not tested.
  */
-#include "precomp.h"
+#include <precomp.h>
 
 // should be replace by a closure of the tmp files
 extern __file_rec *__file_rec_list;

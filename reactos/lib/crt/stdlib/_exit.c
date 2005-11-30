@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 #include <internal/atexit.h>
 
 struct __atexit *__atexit_ptr = 0;

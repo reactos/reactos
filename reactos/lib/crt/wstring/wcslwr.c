@@ -8,7 +8,7 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @implemented

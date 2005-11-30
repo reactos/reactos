@@ -1,7 +1,7 @@
 /* $Id$
  *
  */
-#include "precomp.h"
+#include <precomp.h>
 #include "doserrmap.h"
 
 /*

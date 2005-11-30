@@ -14,7 +14,7 @@
  * Copyright 1996 Alexandre Julliard
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
 

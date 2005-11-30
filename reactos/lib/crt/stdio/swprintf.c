@@ -20,7 +20,7 @@ Cambridge, MA 02139, USA.  */
 
 #define UNICODE
 #define _UNICODE
-#include "precomp.h"
+#include <precomp.h>
 #include <wchar.h>
 #include <tchar.h>
 

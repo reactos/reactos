@@ -12,7 +12,7 @@
 // rember to interlock the allocation of fileno when making this thread safe
 // possibly store extra information at the handle
 
-#include "precomp.h"
+#include <precomp.h>
 #if !defined(NDEBUG) && defined(DBG)
 #include <stdarg.h>
 #endif

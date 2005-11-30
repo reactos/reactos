@@ -35,7 +35,7 @@
 ** (guy@auspex.com).
 */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include "tzfile.h"
 #include "posixrul.h"

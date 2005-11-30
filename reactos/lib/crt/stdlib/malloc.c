@@ -21,7 +21,7 @@
  *       handler and non atomic heap operations
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <stdlib.h>
 #include <malloc.h>
 

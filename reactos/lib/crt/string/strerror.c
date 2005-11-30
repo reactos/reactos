@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include "precomp.h"
+#include <precomp.h>
 
 char __syserr00[] = "No Error";
 char __syserr01[] = "Operation not permitted (EPERM)";

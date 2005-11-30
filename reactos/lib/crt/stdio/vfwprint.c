@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include "precomp.h"
+#include <precomp.h>
 
 int
 __vfwprintf(FILE *fp, const wchar_t *fmt0, va_list argp);
