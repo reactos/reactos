@@ -213,7 +213,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	{
 		std::string& cfg = cfgs[icfg];
 
-		bool debug = !strstr ( cfg.c_str(), "Release" );
+		bool debug = strstr ( cfg.c_str(), "Debug" );
+		bool speed = strstr ( cfg.c_str(), "Speed" );
+		bool release = (!debug && !speed );
+
 		//bool msvc_headers = ( 0 != strstr ( cfg.c_str(), "MSVC Headers" ) );
 
 		fprintf ( OUT, "\t\t<Configuration\r\n" );
@@ -248,28 +251,20 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		if ( debug )
 		{
 			defines.push_back ( "_DEBUG" );
-			if ( lib || exe )
-			{
-				defines.push_back ( "_LIB" );
-			}
-			else
-			{
-				defines.push_back ( "_WINDOWS" );
-				defines.push_back ( "_USRDLL" );
-			}
 		}
 		else
 		{
 			defines.push_back ( "NDEBUG" );
-			if ( lib || exe )
-			{
-				defines.push_back ( "_LIB" );
-			}
-			else
-			{
-				defines.push_back ( "_WINDOWS" );
-				defines.push_back ( "_USRDLL" );
-			}
+		}
+
+		if ( lib || exe )
+		{
+			defines.push_back ( "_LIB" );
+		}
+		else
+		{
+			defines.push_back ( "_WINDOWS" );
+			defines.push_back ( "_USRDLL" );
 		}
 
 		fprintf ( OUT, "\t\t\t\tPreprocessorDefinitions=\"" );
@@ -284,14 +279,28 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\"\r\n" );
 
 		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"TRUE\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"3\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", debug ? "3" : "0" );
 		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"5\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
 		fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
-		fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"0\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tWarningLevel=\"1\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"TRUE\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"4\"/>\r\n" );
+		
+		if ( module.pch != NULL )
+		{
+			fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"2\"\r\n" );
+			string pch_path = Path::RelativeFromDirectory (
+				module.pch->file.name,
+				module.GetBasePath() );
+			fprintf ( OUT, "\t\t\t\tPrecompiledHeaderThrough=\"%s\"\r\n", pch_path.c_str() );
+		}
+		else
+		{
+			fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"0\"\r\n" );
+		}
+
+		fprintf ( OUT, "\t\t\t\tWholeProgramOptimization=\"%s\"\r\n", release ? "TRUE" : "FALSE");
+		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", release ? "0" : "4" );
+		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", release ? "FALSE" : "TRUE");
+		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : "4");
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCustomBuildTool\"/>\r\n" );
@@ -318,7 +327,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
 			fprintf ( OUT, "\t\t\t\tLinkIncremental=\"%d\"\r\n", debug ? 2 : 1 );
-			fprintf ( OUT, "\t\t\t\tGenerateDebugInformation=\"TRUE\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tGenerateDebugInformation=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
 
 			if ( debug )
 				fprintf ( OUT, "\t\t\t\tProgramDatabaseFile=\"$(OutDir)/%s.pdb\"\r\n", module.name.c_str() );
@@ -351,7 +360,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
  					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
  				}
 			}
-			else if ( dll)
+			else if ( dll )
 			{
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DllMain" : module.entrypoint.c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress == "" ? "0x40000" : module.baseaddress.c_str ());
@@ -407,11 +416,24 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t<File\r\n" );
 		fprintf ( OUT, "\t\t\t\tRelativePath=\"%s\">\r\n", source_file.c_str() );
 
-		if (configuration.VSProjectVersion < "8.00") {
-			for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
-			{
-				std::string& config = cfgs[iconfig];
+		for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
+		{
+			std::string& config = cfgs[iconfig];
 
+			if ( isrcfile == 0 )
+			{
+				/* little hack to speed up PCH */
+				fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
+				fprintf ( OUT, "\t\t\t\t\tName=\"" );
+				fprintf ( OUT, config.c_str() );
+				fprintf ( OUT, "|Win32\">\r\n" );
+				fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
+				fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
+				fprintf ( OUT, "\t\t\t\t\t\tUsePrecompiledHeader=\"1\"/>\r\n" );
+				fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
+			}
+
+			if (configuration.VSProjectVersion < "8.00") {
 				if ((source_file.find(".idl") != string::npos) || ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's')))
 				{
 					fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
