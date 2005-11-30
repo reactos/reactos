@@ -228,7 +228,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", debug ? 0 : 2 );
+		fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", release ? 2 : 0 );
 
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
 		bool multiple_includes = false;
@@ -278,7 +278,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		}
 		fprintf ( OUT, "\"\r\n" );
 
-		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"TRUE\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
 		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", debug ? "3" : "0" );
 		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"5\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
@@ -298,6 +298,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		}
 
 		fprintf ( OUT, "\t\t\t\tWholeProgramOptimization=\"%s\"\r\n", release ? "TRUE" : "FALSE");
+		if ( release )
+		{
+			fprintf ( OUT, "\t\t\t\tFavorSizeOrSpeed=\"1\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tStringPooling=\"true\"\r\n" );
+		}
+
+		fprintf ( OUT, "\t\t\t\tEnablePREfast=\"%s\"\r\n", debug ? "TRUE" : "FALSE");
+		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", release ? "0" : "4" );
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", release ? "FALSE" : "TRUE");
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : "4");
