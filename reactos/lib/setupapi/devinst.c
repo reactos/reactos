@@ -3584,11 +3584,27 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsA(
         OUT PDWORD RequiredSize OPTIONAL,
         IN DWORD PropertySheetType)
 {
-    FIXME ("Stub %p %p %p %d %p %d\n",
-           DeviceInfoSet, DeviceInfoData, PropertySheetHeader, PropertySheetHeaderPageListSize,
-           RequiredSize, PropertySheetType);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    PROPSHEETHEADERW psh;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p 0%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
+        PropertySheetHeader, PropertySheetHeaderPageListSize,
+        RequiredSize, PropertySheetType);
+
+    psh.dwFlags = PropertySheetHeader->dwFlags;
+    psh.phpage = PropertySheetHeader->phpage;
+    psh.nPages = PropertySheetHeader->nPages;
+
+    ret = SetupDiGetClassDevPropertySheetsW(DeviceInfoSet, DeviceInfoData, PropertySheetHeader ? &psh : NULL,
+                                            PropertySheetHeaderPageListSize, RequiredSize,
+                                            PropertySheetType);
+    if (ret)
+    {
+        PropertySheetHeader->nPages = psh.nPages;
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 struct ClassDevPropertySheetsData
@@ -3642,6 +3658,8 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!PropertySheetHeader)
         SetLastError(ERROR_INVALID_PARAMETER);
+    else if (PropertySheetHeader->dwFlags & PSH_PROPSHEETPAGE)
+        SetLastError(ERROR_INVALID_FLAGS);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else if (!DeviceInfoData && IsEqualIID(&list->ClassGuid, &GUID_NULL))
