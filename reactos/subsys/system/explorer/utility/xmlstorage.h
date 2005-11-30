@@ -269,14 +269,37 @@ typedef __gnu_cxx::stdio_filebuf<char> STDIO_FILEBUF;
 typedef std::filebuf STDIO_FILEBUF;
 #endif
 
+
+struct FileHolder
+{
+	FileHolder(LPCTSTR path, LPCTSTR mode)
+	{
+#ifdef __STDC_WANT_SECURE_LIB__	// VS2005
+		if (_tfopen_s(&_pfile, path, mode) != 0)
+			_pfile = NULL;
+#else
+		_pfile = _tfopen(path, mode);
+#endif
+	}
+
+	~FileHolder()
+	{
+		if (_pfile)
+			fclose(_pfile);
+	}
+
+protected:
+	FILE*	_pfile;
+};
+
  /// input file stream with ANSI/UNICODE file names
-struct tifstream : public std::istream
+struct tifstream : public std::istream, FileHolder
 {
 	typedef std::istream super;
 
 	tifstream(LPCTSTR path)
 	 :	super(&_buf),
-		_pfile(_tfopen(path, TEXT("r"))),
+		FileHolder(path, TEXT("r")),
 #ifdef __GNUC__
 		_buf(_pfile, ios::in)
 #else
@@ -285,25 +308,18 @@ struct tifstream : public std::istream
 	{
 	}
 
-	~tifstream()
-	{
-		if (_pfile)
-			fclose(_pfile);
-	}
-
 protected:
-	FILE*	_pfile;
 	STDIO_FILEBUF _buf;
 };
 
  /// output file stream with ANSI/UNICODE file names
-struct tofstream : public std::ostream
+struct tofstream : public std::ostream, FileHolder
 {
 	typedef std::ostream super;
 
 	tofstream(LPCTSTR path)
 	 :	super(&_buf),
-		_pfile(_tfopen(path, TEXT("w"))),
+		FileHolder(path, TEXT("w")),
 #ifdef __GNUC__
 		_buf(_pfile, ios::out)
 #else
@@ -315,13 +331,9 @@ struct tofstream : public std::ostream
 	~tofstream()
 	{
 		flush();
-
-		if (_pfile)
-			fclose(_pfile);
 	}
 
 protected:
-	FILE*	_pfile;
 	STDIO_FILEBUF _buf;
 };
 
