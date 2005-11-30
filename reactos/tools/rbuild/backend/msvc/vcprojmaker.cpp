@@ -325,20 +325,27 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			if ( sys )
 			{
-				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /DRIVER /ALIGN:0x20 /subsystem:NATIVE /SECTION:INIT,D /FORCE:MULTIPLE /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /DRIVER /ALIGN:0x20 /SUBSYSTEM:NATIVE /SECTION:INIT,D /NODEFAULTLIB /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DriverEntry" : module.entrypoint.c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress == "" ? "0x10000" : module.baseaddress.c_str ());	
 			}
 			else if ( exe )
 			{
-				if ( module.type == Kernel || module.type == NativeCUI)
+				if ( module.type == Kernel )
  				{
- 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /SECTION:INIT,D /ALIGN:4096 /FORCE:MULTIPLE\"\r\n" );
+ 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /NODEFAULTLIB /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
  					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint.c_str ());
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
  				}
+				else if ( module.type == NativeCUI )
+				{
+ 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /NODEFAULTLIB /ALIGN:0x20\"\r\n" );
+ 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
+				}
 				else if ( module.type == Win32CUI || module.type == Win32GUI )
  				{
  					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
