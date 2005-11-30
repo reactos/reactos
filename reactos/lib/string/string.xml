@@ -1,5 +1,6 @@
 <module name="string" type="staticlibrary">
 	<define name="__NO_CTYPE_INLINES" />
+	<define name="_CTYPE_DISABLE_MACROS" />
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>memchr_asm.s</file>
