@@ -492,7 +492,7 @@ std::string EncodeXMLString(const XS_String& str)
 		  default:
 			if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n') {
 				char b[16];
-				sprintf_s1(b, COUNTOF(b), "&%d;", (unsigned)*p);
+				sprintf(b, "&%d;", (unsigned)*p);
 				for(const char*q=b; *q; )
 					*o++ = *q++;
 			} else

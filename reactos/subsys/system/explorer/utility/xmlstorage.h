@@ -71,14 +71,6 @@
 namespace XMLStorage {
 
 
- // secure CRT functions
-#ifdef __STDC_WANT_SECURE_LIB__	// VS 2005
-#define sprintf_s1 sprintf_s
-#else
-#define sprintf_s1(b, l, f, p1) sprintf(b, f, p1)
-#endif
-
-
 #ifndef XS_String
 
 #ifdef XS_STRING_UTF8
@@ -282,7 +274,7 @@ struct FileHolder
 {
 	FileHolder(LPCTSTR path, LPCTSTR mode)
 	{
-#ifdef __STDC_WANT_SECURE_LIB__	// VS2005
+#ifdef __STDC_WANT_SECURE_LIB__	// secure CRT functions using VS 2005
 		if (_tfopen_s(&_pfile, path, mode) != 0)
 			_pfile = NULL;
 #else

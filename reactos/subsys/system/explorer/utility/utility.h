@@ -69,7 +69,11 @@ extern "C" {
 
 #define	for if (0) {} else for
 
+#ifdef _countof
+#define COUNTOF _countof
+#else
 #define	COUNTOF(x)	(sizeof(x)/sizeof(x[0]))
+#endif
 
 
 #define	BUFFER_LEN				2048
@@ -169,12 +173,6 @@ BOOL exists_path(LPCTSTR path);
  // secure CRT functions
 #ifdef __STDC_WANT_SECURE_LIB__	// for VS 2005: _MSC_VER>=1400
 
-#undef _vsntprintf
-#define _vsntprintf(b, s, f, l) _vsntprintf_s(b, s, s, f, l)
-
-#undef _sntprintf
-#define _sntprintf(b, s, f, l) _sntprintf_s(b, s, s, f, l)
-
 #define _stprintf_s1 _stprintf_s
 #define _stprintf_s2 _stprintf_s
 
@@ -182,9 +180,7 @@ BOOL exists_path(LPCTSTR path);
 
 #define strcpy_s(d, l, s) strcpy(d, s)
 #define _tcscpy_s(d, l, s) _tcscpy(d, s)
-#define _tcscat_s(d, l, s) _tcscat(d, s)
 #define wcsncpy_s(d, l, s, n) wcsncpy(d, s, n)
-#define _tcsncpy_s(d, l, s, n) _tcsncpy(d, s, n)
 #define _stprintf_s1(b, l, f, p1) _stprintf(b, f, p1)
 #define _stprintf_s2(b, l, f, p1,p2) _stprintf(b, f, p1,p2)
 #define _tsplitpath_s(f, d,dl, p,pl, n,nl, e,el) _tsplitpath(f, d, p, n, e)

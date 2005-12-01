@@ -83,7 +83,7 @@ void FATDirectory::read_directory(int scan_flags)
 
 	TCHAR buffer[MAX_PATH];
 
-	_tcscpy_s(buffer, COUNTOF(buffer), (LPCTSTR)_path);
+	_tcscpy(buffer, (LPCTSTR)_path);
 	LPTSTR pname = buffer + _tcslen(buffer);
 	int plen = COUNTOF(buffer) - _tcslen(buffer);
 

@@ -501,7 +501,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 	if (visible_cols & COL_SIZE) {
 		ULONGLONG size = ((ULONGLONG)entry->_data.nFileSizeHigh << 32) | entry->_data.nFileSizeLow;
 
-		_stprintf_s1(buffer, BUFFER_LEN, TEXT("%") LONGLONGARG TEXT("d"), size);
+		_stprintf(buffer, TEXT("%") LONGLONGARG TEXT("d"), size);
 
 		if (calcWidthCol == -1)
 			_out_wrkr.output_number(dis, _positions, col, buffer);
@@ -539,7 +539,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		ULONGLONG index = ((ULONGLONG)entry->_bhfi.nFileIndexHigh << 32) | entry->_bhfi.nFileIndexLow;
 
 		if (visible_cols & COL_INDEX) {
-			_stprintf_s1(buffer, BUFFER_LEN, TEXT("%") LONGLONGARG TEXT("X"), index);
+			_stprintf(buffer, TEXT("%") LONGLONGARG TEXT("X"), index);
 
 			if (calcWidthCol == -1)
 				_out_wrkr.output_text(dis, _positions, col, buffer, DT_RIGHT);

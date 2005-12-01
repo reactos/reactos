@@ -393,7 +393,7 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 {
 	TCHAR path[MAX_PATH], hole_path[MAX_PATH];
 
-	_tcscpy_s(hole_path, COUNTOF(hole_path), path_in);
+	_tcscpy(hole_path, path_in);
 
 	int drv_len = 0;
 	LPCTSTR d;
@@ -418,7 +418,7 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 	HANDLE hFind = FindFirstFile(hole_path, &w32fd);
 
 	if (hFind == INVALID_HANDLE_VALUE) {
-		_tcsncpy_s(path, COUNTOF(path), hole_path, drv_len);
+		_tcsncpy(path, hole_path, drv_len);
 		int i = drv_len;
 
 		for(p=dir; *p=='/'||*p=='\\'; p++)
@@ -521,7 +521,7 @@ bool SplitFileSysURL(LPCTSTR url, String& dir_out, String& fname_out)
 			TCHAR drv[_MAX_DRIVE], dir[_MAX_DIR], fname[_MAX_FNAME], ext[_MAX_EXT];
 
 			_tsplitpath_s(path, drv, COUNTOF(drv), dir, COUNTOF(dir), fname, COUNTOF(fname), ext, COUNTOF(ext));
-			_stprintf_s2(path, COUNTOF(path), TEXT("%s%s"), drv, dir);
+			_stprintf(path, TEXT("%s%s"), drv, dir);
 
 			fname_out.printf(TEXT("%s%s"), fname, ext);
 		}

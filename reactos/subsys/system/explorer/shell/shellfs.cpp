@@ -61,7 +61,7 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 				if (path) {
 					 // fill with drive names "C:", ...
 					assert(_tcslen(path) < GlobalSize(medium.UNION_MEMBER(hGlobal)));
-					_tcscpy_s(pw32fdata->cFileName, COUNTOF(pw32fdata->cFileName), path);
+					_tcscpy(pw32fdata->cFileName, path);
 
 					UINT sem_org = SetErrorMode(SEM_FAILCRITICALERRORS);
 
@@ -412,7 +412,7 @@ void ShellDirectory::read_directory(int scan_flags)
 
 					if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, COUNTOF(name), SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
 						if (!entry->_data.cFileName[0])
-							_tcscpy_s(entry->_data.cFileName, COUNTOF(entry->_data.cFileName), name);
+							_tcscpy(entry->_data.cFileName, name);
 						else if (_tcscmp(entry->_display_name, name))
 							entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
 					}
