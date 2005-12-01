@@ -3733,14 +3733,14 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         Request.DeviceInfoSet = DeviceInfoSet;
         Request.DeviceInfoData = DeviceInfoData;
         PropPageData.PropertySheetPages = &PropertySheetHeader->phpage[PropertySheetHeader->nPages];
-        PropPageData.MaximumNumberOfPages = PropertySheetHeaderPageListSize;
+        PropPageData.MaximumNumberOfPages = PropertySheetHeaderPageListSize - PropertySheetHeader->nPages;
         PropPageData.NumberOfPages = 0;
         ret = pPropPageProvider(&Request, GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
         if (!ret)
             goto cleanup;
 
         if (RequiredSize)
-            *RequiredSize = PropPageData.NumberOfPages;
+            *RequiredSize = PropPageData.NumberOfPages + PropertySheetHeader->nPages;
         if (PropPageData.NumberOfPages <= PropPageData.MaximumNumberOfPages)
         {
             PropertySheetHeader->nPages += PropPageData.NumberOfPages;
