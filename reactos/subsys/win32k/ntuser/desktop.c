@@ -948,6 +948,7 @@ NtUserOpenDesktop(
    ACCESS_MASK dwDesiredAccess)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
+   HWINSTA WinSta;
    PWINSTATION_OBJECT WinStaObject;
    UNICODE_STRING DesktopName;
    NTSTATUS Status;
@@ -962,16 +963,16 @@ NtUserOpenDesktop(
     * qualified desktop name
     */
 
+   WinSta = UserGetProcessWindowStation();
    Status = IntValidateWindowStationHandle(
-               PsGetCurrentProcess()->Win32WindowStation,
+               WinSta,
                KernelMode,
                0,
                &WinStaObject);
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed validation of window station handle (0x%X)\n",
-              PsGetCurrentProcess()->Win32WindowStation);
+      DPRINT1("Failed validation of window station handle (0x%X)\n", WinSta);
       SetLastNtError(Status);
       RETURN( 0);
    }
@@ -986,7 +987,7 @@ NtUserOpenDesktop(
 
    ObDereferenceObject(WinStaObject);
 
-   DPRINT1("Trying to open desktop (%wZ)\n", &DesktopName);
+   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
 
    /* Initialize ObjectAttributes for the desktop object */
    InitializeObjectAttributes(
@@ -1000,7 +1001,7 @@ NtUserOpenDesktop(
                &ObjectAttributes,
                ExDesktopObjectType,
                NULL,
-               UserMode,
+               KernelMode,
                dwDesiredAccess,
                NULL,
                (HANDLE*)&Desktop);
