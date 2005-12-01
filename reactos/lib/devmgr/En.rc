@@ -15,6 +15,7 @@ BEGIN
     IDS_ENABLEDEVICE "Use this device (enable)"
     IDS_DISABLEDEVICE "Do not use this device (disable)"
     IDS_UNKNOWNDEVICE "Unknown device"
+    IDS_NODRIVERLOADED "No drivers are installed for this device."
 END
 
 STRINGTABLE

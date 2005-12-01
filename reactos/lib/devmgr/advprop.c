@@ -30,8 +30,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define DPN_DEVICEUPDATE    (WM_USER + 0x1000)
-
 typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
 typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);
 typedef BOOL (WINAPI *PDESTROYPROPERTYSHEETPAGE)(HPROPSHEETPAGE);
@@ -437,21 +435,18 @@ UpdateDevInfo(IN HWND hwndDlg,
     dap->CanDisable = FALSE;
     dap->DeviceEnabled = FALSE;
 
-    if (dap->DeviceInfoSet != INVALID_HANDLE_VALUE)
+    if (CanDisableDevice(dap->DeviceInfoData.DevInst,
+                         dap->hMachine,
+                         &bFlag))
     {
-        if (CanDisableDevice(dap->DeviceInfoData.DevInst,
-                             dap->hMachine,
-                             &bFlag))
-        {
-            dap->CanDisable = bFlag;
-        }
+        dap->CanDisable = bFlag;
+    }
 
-        if (IsDeviceEnabled(dap->DeviceInfoData.DevInst,
-                            dap->hMachine,
-                            &bFlag))
-        {
-            dap->DeviceEnabled = bFlag;
-        }
+    if (IsDeviceEnabled(dap->DeviceInfoData.DevInst,
+                        dap->hMachine,
+                        &bFlag))
+    {
+        dap->DeviceEnabled = bFlag;
     }
 
     /* enable/disable the device usage controls */

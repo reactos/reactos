@@ -452,6 +452,11 @@ GetDeviceStatusString(IN DEVINST DevInst,
         szBuffer[0] = L'\0';
         if (ProblemNumber == 0)
         {
+            if (!(Status & DN_DRIVER_LOADED))
+            {
+                MessageId = IDS_NODRIVERLOADED;
+            }
+
             goto UnknownProblem;
         }
         else
