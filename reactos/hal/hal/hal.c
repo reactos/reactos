@@ -342,9 +342,8 @@ HalInitSystem(
 
 VOID
 NTAPI
-HalInitializeProcessor(
-  ULONG ProcessorNumber,
-  PVOID ProcessorStack)
+HalInitializeProcessor(ULONG ProcessorNumber,
+                       PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 }

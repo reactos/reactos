@@ -22,7 +22,7 @@
 
 VOID STDCALL
 HalInitializeProcessor(ULONG ProcessorNumber,
-		       PVOID /*PLOADER_PARAMETER_BLOCK*/ LoaderBlock)
+                       PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   DPRINT("HalInitializeProcessor(%x %x)\n", ProcessorNumber, LoaderBlock);
 }
