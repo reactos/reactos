@@ -37,6 +37,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* Helper Header */
 #include <reactos/helper.h>
 
+/* Probe and capture */
+#include <reactos/probe.h>
+
 /* External Win32K Header */
 #include <win32k/win32k.h>
 
