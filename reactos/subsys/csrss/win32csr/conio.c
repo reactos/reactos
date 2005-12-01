@@ -56,7 +56,7 @@ ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Con
 }
 
 VOID FASTCALL
-ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
+ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData, DWORD Timeout)
 {
   HANDLE Thread;
 
@@ -73,8 +73,15 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
           DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
           return;
         }
+      WaitForSingleObject(Thread, Timeout);
       CloseHandle(Thread);
     }
+}
+
+VOID FASTCALL
+ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
+{
+  ConioConsoleCtrlEventTimeout(Event, ProcessData, INFINITE);
 }
 
 #define GET_CELL_BUFFER(b,o)\

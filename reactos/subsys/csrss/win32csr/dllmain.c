@@ -143,9 +143,16 @@ Win32CsrUnlockObject(Object_t *Object)
 
 NTSTATUS FASTCALL
 Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
-                     HANDLE Object)
+                      HANDLE Object)
 {
   return (CsrExports.CsrReleaseObjectProc)(ProcessData, Object);
+}
+
+NTSTATUS FASTCALL
+Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
+                      PVOID Context)
+{
+  return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
 }
 
 static BOOL STDCALL

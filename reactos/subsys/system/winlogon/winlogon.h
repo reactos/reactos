@@ -140,6 +140,7 @@ typedef struct _WLSESSION
   HDESK WinlogonDesktop;
   HDESK ScreenSaverDesktop;
   LUID LogonId;
+  HANDLE UserToken;
 } WLSESSION, *PWLSESSION;
 
 extern HINSTANCE hAppInstance;
