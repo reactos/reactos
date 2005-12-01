@@ -14,6 +14,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <setupapi.h>
+#include <pseh/pseh.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
@@ -1421,25 +1422,42 @@ RegistrationProc(LPVOID Parameter)
   RegistrationData->Registered = 0;
   RegistrationData->DefaultContext = SetupInitDefaultQueueCallback(RegistrationData->hwndDlg);
 
-  if (SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
-                                  hSysSetupInf,
-                                  L"RegistrationPhase2",
-                                  SPINST_REGISTRY |
-                                  SPINST_REGISTERCALLBACKAWARE  |
-                                  SPINST_REGSVR,
-                                  0,
-                                  NULL,
-                                  0,
-                                  RegistrationNotificationProc,
-                                  RegistrationData,
-                                  NULL,
-                                  NULL))
+  _SEH_TRY
+    {
+      if (SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
+                                      hSysSetupInf,
+                                      L"RegistrationPhase2",
+                                      SPINST_REGISTRY |
+                                      SPINST_REGISTERCALLBACKAWARE  |
+                                      SPINST_REGSVR,
+                                      0,
+                                      NULL,
+                                      0,
+                                      RegistrationNotificationProc,
+                                      RegistrationData,
+                                      NULL,
+                                      NULL))
+        {
+          LastError = NO_ERROR;
+        }
+      else
+        {
+          LastError = GetLastError();
+        }
+    }
+  _SEH_HANDLE
+    {
+      DPRINT("Catching exception\n");
+      LastError = RtlNtStatusToDosError(_SEH_GetExceptionCode());
+    }
+  _SEH_END;
+
+  if (NO_ERROR == LastError)
     {
       RegistrationNotify.ErrorMessage = NULL;
     }
   else
     {
-      LastError = GetLastError();
       DPRINT1("SetupInstallFromInfSection failed with error %u\n",
               LastError);
       if (0 == FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
