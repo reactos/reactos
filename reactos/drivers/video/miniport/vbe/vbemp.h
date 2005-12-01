@@ -28,6 +28,9 @@
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define TAG_VBE TAG('V', 'B', 'E', ' ')
+
 /*
  * Compile-time define to get VBE 1.2 support. The implementation
  * is far from complete now and so it's left undefined.

@@ -27,7 +27,9 @@
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
-#include <debug.h>
+
+#define UNIMPLEMENTED \
+   VideoPortDebugPrint(Error, "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
 void
 InitVGAMode();

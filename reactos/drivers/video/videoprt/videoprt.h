@@ -39,6 +39,8 @@
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
 
+#define DPFLTR_IHVVIDEO_ID 0 /* FIXME */
+
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {
    LIST_ENTRY List;

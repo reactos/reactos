@@ -658,7 +658,7 @@ VideoPortDebugPrint(
    vsprintf(Buffer, DebugMessage, ap);
    va_end(ap);
 
-   DbgPrint(Buffer);
+   DbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, Buffer);
 }
 
 /*

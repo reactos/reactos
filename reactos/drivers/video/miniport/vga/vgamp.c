@@ -526,7 +526,7 @@ BOOL  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
     InitVGAMode();
     return TRUE;
   } else {
-    DPRINT1("Unrecognised mode for VGASetCurrentMode\n");
+    VideoPortDebugPrint(Warn, "Unrecognised mode for VGASetCurrentMode\n");
     return FALSE;
   }
 }
