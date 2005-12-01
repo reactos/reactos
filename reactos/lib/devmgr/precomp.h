@@ -199,8 +199,8 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 
 DWORD
 LoadAndFormatStringsCat(IN HINSTANCE hInstance,
-                        IN UINT uID1,
-                        IN UINT uID2,
+                        IN UINT *uID,
+                        IN UINT nIDs,
                         OUT LPWSTR *lpTarget,
                         ...);
 
@@ -230,6 +230,11 @@ GetDeviceStatusString(IN DEVINST DevInst,
                       IN HANDLE hMachine,
                       OUT LPWSTR szBuffer,
                       IN DWORD BufferSize);
+
+BOOL
+IsDeviceHidden(IN DEVINST DevInst,
+               IN HANDLE hMachine,
+               OUT BOOL *IsHidden);
 
 BOOL
 GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,

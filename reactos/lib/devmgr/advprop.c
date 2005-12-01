@@ -228,7 +228,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                    sizeof(DevAdvPropInfo->szDevName) / sizeof(DevAdvPropInfo->szDevName[0])))
     {
         psh.dwSize = sizeof(PROPSHEETHEADER);
-        psh.dwFlags =  PSH_PROPTITLE;
+        psh.dwFlags = PSH_PROPTITLE;
         psh.hwndParent = hWndParent;
         psh.pszCaption = DevAdvPropInfo->szDevName;
 

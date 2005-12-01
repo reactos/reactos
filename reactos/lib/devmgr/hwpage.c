@@ -41,6 +41,7 @@ typedef struct _HWDEVINFO
 {
     struct _HWCLASSDEVINFO *ClassDevInfo;
     SP_DEVINFO_DATA DevInfoData;
+    BOOL HideDevice;
 } HWDEVINFO, *PHWDEVINFO;
 
 typedef struct _HWCLASSDEVINFO
@@ -281,7 +282,7 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
         ClassDevInfo->hDevInfo = SetupDiGetClassDevs(&ClassDevInfo->Guid,
                                                      NULL,
                                                      hpd->hWnd,
-                                                     DIGCF_PRESENT);
+                                                     DIGCF_PRESENT | DIGCF_PROFILE);
         if (ClassDevInfo->hDevInfo != INVALID_HANDLE_VALUE)
         {
             DWORD MemberIndex = 0;
@@ -295,6 +296,8 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                                          MemberIndex++,
                                          &DevInfoData))
             {
+                BOOL HideDevice = FALSE;
+
                 if (ClassDevInfo->HwDevInfo != NULL)
                 {
                     PHWDEVINFO HwNewDevInfo = HeapReAlloc(GetProcessHeap(),
@@ -325,9 +328,15 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                     }
                 }
 
+                /* Find out if the device should be hidden by default */
+                IsDeviceHidden(DevInfoData.DevInst,
+                               NULL,
+                               &HideDevice);
+
                 /* save all information for the current device */
                 ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount].ClassDevInfo = ClassDevInfo;
-                ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount++].DevInfoData = DevInfoData;
+                ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount].DevInfoData = DevInfoData;
+                ClassDevInfo->HwDevInfo[ClassDevInfo->ItemCount++].HideDevice = HideDevice;
             }
         }
 
@@ -362,7 +371,8 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
                 LVITEM li;
 
                 /* get the device name */
-                if (GetDeviceDescriptionString(ClassDevInfo->hDevInfo,
+                if (!HwDevInfo->HideDevice &&
+                    GetDeviceDescriptionString(ClassDevInfo->hDevInfo,
                                                &HwDevInfo->DevInfoData,
                                                szBuffer,
                                                sizeof(szBuffer) / sizeof(szBuffer[0])))

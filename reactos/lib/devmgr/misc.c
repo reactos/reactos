@@ -97,32 +97,42 @@ AllocAndLoadString(OUT LPWSTR *lpTarget,
 static INT
 AllocAndLoadStringsCat(OUT LPWSTR *lpTarget,
                        IN HINSTANCE hInst,
-                       IN UINT uID1,
-                       IN UINT uID2)
+                       IN UINT *uID,
+                       IN UINT nIDs)
 {
-    INT ln;
+    INT ln = 0;
+    UINT i;
 
-    ln = LengthOfStrResource(hInst,
-                             uID1);
-    ln += LengthOfStrResource(hInst,
-                              uID2);
-    if (ln++ > 0)
+    for (i = 0;
+         i != nIDs;
+         i++)
+    {
+        ln += LengthOfStrResource(hInst,
+                                  uID[i]);
+    }
+
+    if (ln != 0)
     {
         (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                         ln * sizeof(WCHAR));
+                                         (ln + 1) * sizeof(WCHAR));
         if ((*lpTarget) != NULL)
         {
-            INT Ret, Ret2 = 0;
-            if (!(Ret = LoadStringW(hInst, uID1, *lpTarget, ln)))
+            LPWSTR s = *lpTarget;
+            INT Ret = 0;
+
+            for (i = 0;
+                 i != nIDs;
+                 i++)
             {
-                LocalFree((HLOCAL)(*lpTarget));
+                if (!(Ret = LoadStringW(hInst, uID[i], s, ln)))
+                {
+                    LocalFree((HLOCAL)(*lpTarget));
+                }
+
+                s += Ret;
             }
-            else if (!(Ret2 = LoadStringW(hInst, uID2, *lpTarget + Ret, ln - Ret)))
-            {
-                LocalFree((HLOCAL)(*lpTarget));
-                Ret = 0;
-            }
-            return Ret + Ret2;
+
+            return s - *lpTarget;
         }
     }
     return 0;
@@ -141,7 +151,7 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 
     if (AllocAndLoadString(&lpFormat,
                            hInstance,
-                           uID) > 0)
+                           uID) != 0)
     {
         va_start(lArgs, lpTarget);
         /* let's use FormatMessage to format it because it has the ability to allocate
@@ -164,8 +174,8 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 
 DWORD
 LoadAndFormatStringsCat(IN HINSTANCE hInstance,
-                        IN UINT uID1,
-                        IN UINT uID2,
+                        IN UINT *uID,
+                        IN UINT nIDs,
                         OUT LPWSTR *lpTarget,
                         ...)
 {
@@ -175,8 +185,8 @@ LoadAndFormatStringsCat(IN HINSTANCE hInstance,
 
     if (AllocAndLoadStringsCat(&lpFormat,
                                hInstance,
-                               uID1,
-                               uID2) > 0)
+                               uID,
+                               nIDs) != 0)
     {
         va_start(lArgs, lpTarget);
         /* let's use FormatMessage to format it because it has the ability to allocate
@@ -458,10 +468,15 @@ GetDeviceStatusString(IN DEVINST DevInst,
         else
         {
             LPWSTR szProblem;
+            UINT StringIDs[] =
+            {
+                MessageId,
+                IDS_DEVCODE,
+            };
 
             if (LoadAndFormatStringsCat(hDllInstance,
-                                        MessageId,
-                                        IDS_DEVCODE,
+                                        StringIDs,
+                                        sizeof(StringIDs) / sizeof(StringIDs[0]),
                                         &szProblem,
                                         ProblemNumber))
             {
@@ -486,6 +501,41 @@ UnknownProblem:
         {
             Ret = TRUE;
         }
+    }
+
+    return Ret;
+}
+
+
+BOOL
+IsDeviceHidden(IN DEVINST DevInst,
+               IN HANDLE hMachine,
+               OUT BOOL *IsHidden)
+{
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    if (hMachine != NULL)
+    {
+        cr = CM_Get_DevNode_Status_Ex(&Status,
+                                      &ProblemNumber,
+                                      DevInst,
+                                      0,
+                                      hMachine);
+    }
+    else
+    {
+        cr = CM_Get_DevNode_Status(&Status,
+                                   &ProblemNumber,
+                                   DevInst,
+                                   0);
+    }
+
+    if (cr == CR_SUCCESS)
+    {
+        *IsHidden = ((Status & DN_NO_SHOW_IN_DM) != 0);
+        Ret = TRUE;
     }
 
     return Ret;
