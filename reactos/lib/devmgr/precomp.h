@@ -237,6 +237,16 @@ IsDeviceHidden(IN DEVINST DevInst,
                OUT BOOL *IsHidden);
 
 BOOL
+CanDisableDevice(IN DEVINST DevInst,
+                 IN HANDLE hMachine,
+                 OUT BOOL *CanDisable);
+
+BOOL
+IsDeviceEnabled(IN DEVINST DevInst,
+                IN HANDLE hMachine,
+                OUT BOOL *IsEnabled);
+
+BOOL
 GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
                     OUT LPWSTR szBuffer,
                     IN DWORD BufferSize);

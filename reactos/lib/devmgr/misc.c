@@ -439,22 +439,11 @@ GetDeviceStatusString(IN DEVINST DevInst,
     UINT MessageId = IDS_UNKNOWN;
     BOOL Ret = FALSE;
 
-    if (hMachine != NULL)
-    {
-        cr = CM_Get_DevNode_Status_Ex(&Status,
-                                      &ProblemNumber,
-                                      DevInst,
-                                      0,
-                                      hMachine);
-    }
-    else
-    {
-        cr = CM_Get_DevNode_Status(&Status,
-                                   &ProblemNumber,
-                                   DevInst,
-                                   0);
-    }
-
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
     if (cr == CR_SUCCESS)
     {
         if (ProblemNumber < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
@@ -516,25 +505,62 @@ IsDeviceHidden(IN DEVINST DevInst,
     ULONG Status, ProblemNumber;
     BOOL Ret = FALSE;
 
-    if (hMachine != NULL)
-    {
-        cr = CM_Get_DevNode_Status_Ex(&Status,
-                                      &ProblemNumber,
-                                      DevInst,
-                                      0,
-                                      hMachine);
-    }
-    else
-    {
-        cr = CM_Get_DevNode_Status(&Status,
-                                   &ProblemNumber,
-                                   DevInst,
-                                   0);
-    }
-
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
     if (cr == CR_SUCCESS)
     {
         *IsHidden = ((Status & DN_NO_SHOW_IN_DM) != 0);
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+CanDisableDevice(IN DEVINST DevInst,
+                 IN HANDLE hMachine,
+                 OUT BOOL *CanDisable)
+{
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
+    if (cr == CR_SUCCESS)
+    {
+        *CanDisable = ((Status & DN_DISABLEABLE) != 0);
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+IsDeviceEnabled(IN DEVINST DevInst,
+                IN HANDLE hMachine,
+                OUT BOOL *IsEnabled)
+{
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
+    if (cr == CR_SUCCESS)
+    {
+        *IsEnabled = ((Status & DN_STARTED) != 0);
         Ret = TRUE;
     }
 
@@ -605,7 +631,7 @@ GetDeviceDescriptionString(IN HDEVINFO DeviceInfoSet,
     {
         szBuffer[0] = L'\0';
         if (LoadString(hDllInstance,
-                       IDS_UNKNOWN,
+                       IDS_UNKNOWNDEVICE,
                        szBuffer,
                        BufferSize))
         {
