@@ -23,7 +23,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 
-#define WINSTA_ALL_ACCESS           0x037f// fixme
 #define DESKTOP_ALL_ACCESS 0x01ff
 
 static void print_object( HANDLE obj )
