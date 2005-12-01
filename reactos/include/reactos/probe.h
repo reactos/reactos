@@ -1,6 +1,10 @@
 #ifndef INCLUDE_REACTOS_CAPTURE_H
 #define INCLUDE_REACTOS_CAPTURE_H
 
+#if ! defined(_NTOSKRNL_) && ! defined(_WIN32K_)
+#error Header intended for use by NTOSKRNL/WIN32K only!
+#endif
+
 static const UNICODE_STRING __emptyUnicodeString = {0};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
