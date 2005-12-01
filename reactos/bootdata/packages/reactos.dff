@@ -352,6 +352,5 @@ modules\rosapps\sysutils\lsdd\lsdd.exe  1        optional
 modules\rosapps\sysutils\man\man.exe    1        optional
 modules\rosapps\sysutils\pedump\pedump.exe     1 optional
 modules\rosapps\sysutils\regexpl\regexpl.exe   1 optional
-modules\rosapps\sysutils\shutdown\shutdown.exe 1 optional
 modules\rosapps\sysutils\tcat\cat.exe          1 optional
 modules\rosapps\sysutils\tlist\tlist.exe       1 optional
