@@ -1415,7 +1415,7 @@ RegistrationProc(LPVOID Parameter)
 {
   PREGISTRATIONDATA RegistrationData;
   REGISTRATIONNOTIFY RegistrationNotify;
-  DWORD LastError;
+  DWORD LastError = NO_ERROR;
   WCHAR UnknownError[84];
 
   RegistrationData = (PREGISTRATIONDATA) Parameter;
@@ -1424,23 +1424,19 @@ RegistrationProc(LPVOID Parameter)
 
   _SEH_TRY
     {
-      if (SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
-                                      hSysSetupInf,
-                                      L"RegistrationPhase2",
-                                      SPINST_REGISTRY |
-                                      SPINST_REGISTERCALLBACKAWARE  |
-                                      SPINST_REGSVR,
-                                      0,
-                                      NULL,
-                                      0,
-                                      RegistrationNotificationProc,
-                                      RegistrationData,
-                                      NULL,
-                                      NULL))
-        {
-          LastError = NO_ERROR;
-        }
-      else
+      if (!SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
+                                       hSysSetupInf,
+                                       L"RegistrationPhase2",
+                                       SPINST_REGISTRY |
+                                       SPINST_REGISTERCALLBACKAWARE  |
+                                       SPINST_REGSVR,
+                                       0,
+                                       NULL,
+                                       0,
+                                       RegistrationNotificationProc,
+                                       RegistrationData,
+                                       NULL,
+                                       NULL))
         {
           LastError = GetLastError();
         }
