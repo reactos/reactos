@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * reactos/subsys/csrss/api/process.c
  *
  * "\windows\ApiPort" port process management functions
@@ -115,6 +114,14 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
    {
       DPRINT1("CsrCreateProcessData() failed\n");
    }
+   else
+   {
+      pProcessData->Terminated = FALSE;
+
+      /* Set default shutdown parameters */
+      pProcessData->ShutdownLevel = 0x280;
+      pProcessData->ShutdownFlags = 0;
+   }
    return pProcessData;
 }
 
@@ -185,6 +192,34 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
    return STATUS_INVALID_PARAMETER;
 }
 
+NTSTATUS STDCALL
+CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context)
+{
+  UINT Hash;
+  PCSRSS_PROCESS_DATA pProcessData;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  LOCK;
+
+  for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+    {
+      pProcessData = ProcessData[Hash];
+      while (NULL != pProcessData)
+        {
+          Status = EnumProc(pProcessData, Context);
+          if (STATUS_SUCCESS != Status)
+            {
+              UNLOCK;
+              return Status;
+            }
+          pProcessData = pProcessData->next;
+        }
+    }
+
+  UNLOCK;
+
+  return Status;
+}
 
 /**********************************************************************
  *	CSRSS API
@@ -233,6 +268,7 @@ CSR_API(CsrTerminateProcess)
       return(Request->Status = STATUS_INVALID_PARAMETER);
    }
 
+   ProcessData->Terminated = TRUE;
    Request->Status = STATUS_SUCCESS;
    return STATUS_SUCCESS;
 }
@@ -373,6 +409,13 @@ CSR_API(CsrDuplicateHandle)
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
+  if (NULL == ProcessData || ProcessData->Terminated)
+    {
+      DPRINT1("Invalid source process %d\n", Request->Data.DuplicateHandleRequest.ProcessId);
+      Request->Status = STATUS_INVALID_PARAMETER;
+      return Request->Status;
+    }
+
   Request->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
   if (! NT_SUCCESS(Request->Status))
     {

@@ -50,6 +50,7 @@ typedef struct _CSRSS_PROCESS_DATA
   struct _CSRSS_PROCESS_DATA * next;
   LIST_ENTRY ProcessEntry;
   PCONTROLDISPATCHER CtrlDispatcher;
+  BOOL Terminated;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 typedef VOID (STDCALL *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
@@ -110,10 +111,13 @@ extern HANDLE CsrssApiHeap;
 VOID STDCALL CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
+typedef NTSTATUS (STDCALL *CSRSS_ENUM_PROCESS_PROC)(PCSRSS_PROCESS_DATA ProcessData,
+                                                    PVOID Context);
 VOID STDCALL CsrInitProcessData(VOID);
 PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId);
 PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId);
 NTSTATUS STDCALL CsrFreeProcessData( HANDLE Pid );
+NTSTATUS STDCALL CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
 
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);

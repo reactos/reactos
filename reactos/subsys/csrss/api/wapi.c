@@ -13,6 +13,8 @@
 #include <csrss.h>
 
 #define NDEBUG
+
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -128,8 +130,8 @@ ClientConnectionThread(HANDLE ServerPort)
                                         &Request->Header);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
-            break;
+          DPRINT1("NtReplyWaitReceivePort failed\n");
+          break;
         }
         
         /* If the connection was closed, handle that */
@@ -147,10 +149,16 @@ ClientConnectionThread(HANDLE ServerPort)
         ProcessData = CsrGetProcessData(Request->Header.ClientId.UniqueProcess);
         if (ProcessData == NULL)
         {
-            DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
+            DPRINT1("Message %d: Unable to find data for process 0x%x\n",
                     Request->Header.u2.s2.Type,
                     Request->Header.ClientId.UniqueProcess);
             break;
+        }
+        if (ProcessData->Terminated)
+        {
+            DPRINT1("Message %d: process %d already terminated\n",
+	            Request->Type, (ULONG)Request->Header.ClientId.UniqueProcess);
+            continue;
         }
 
         /* Call the Handler */

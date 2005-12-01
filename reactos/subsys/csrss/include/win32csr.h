@@ -11,6 +11,7 @@
 #define WIN32CSR_H_INCLUDED
 
 #include <windows.h>
+#include <commctrl.h>
 
 extern HANDLE Win32CsrApiHeap;
 extern HINSTANCE Win32CsrDllHandle;
@@ -24,13 +25,13 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                                      long Type);
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
 
-#ifndef TODO
 NTSTATUS FASTCALL Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                                     HANDLE Handle,
                                     Object_t **Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                                         HANDLE Object);
-#endif
+NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
+                                        PVOID Context);
 
 #endif /* WIN32CSR_H_INCLUDED */
 
