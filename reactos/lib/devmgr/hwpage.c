@@ -135,6 +135,7 @@ DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
     if (HwDevInfo != NULL)
     {
         Ret = DisplayDeviceAdvancedProperties(hpd->hWnd,
+                                              NULL,
                                               HwDevInfo->ClassDevInfo->hDevInfo,
                                               &HwDevInfo->DevInfoData,
                                               hpd->hComCtl32,

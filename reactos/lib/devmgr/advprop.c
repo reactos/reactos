@@ -51,6 +51,8 @@ typedef struct _DEVADVPROP_INFO
     BOOL DeviceEnabled;
     WCHAR szDevName[255];
     WCHAR szTemp[255];
+    WCHAR szDeviceID[1];
+    /* struct may be dynamically expanded here! */
 } DEVADVPROP_INFO, *PDEVADVPROP_INFO;
 
 
@@ -188,10 +190,24 @@ ApplyGeneralSettings(IN HWND hwndDlg,
 
 static VOID
 UpdateDevInfo(IN HWND hwndDlg,
-              IN PDEVADVPROP_INFO dap)
+              IN PDEVADVPROP_INFO dap,
+              IN BOOL ReOpenDevice)
 {
     HICON hIcon;
     HWND hDevUsage;
+
+    if (ReOpenDevice)
+    {
+        /* note, we ignore the fact that SetupDiOpenDeviceInfo could fail here,
+           in case of failure we're still going to query information from it even
+           though those calls are going to fail. But they return readable strings
+           even in that case. */
+        SetupDiOpenDeviceInfo(dap->DeviceInfoSet,
+                              dap->szDeviceID,
+                              hwndDlg,
+                              0,
+                              dap->DeviceInfoData);
+    }
 
     /* get the device name */
     if (GetDeviceDescriptionString(dap->DeviceInfoSet,
@@ -367,7 +383,8 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
                                      (DWORD_PTR)dap);
 
                     UpdateDevInfo(hwndDlg,
-                                  dap);
+                                  dap,
+                                  FALSE);
                 }
                 Ret = TRUE;
                 break;
@@ -377,7 +394,8 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
             {
                 /* FIXME - don't call UpdateDevInfo in all events */
                 UpdateDevInfo(hwndDlg,
-                              dap);
+                              dap,
+                              TRUE);
                 break;
             }
 
@@ -406,6 +424,7 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
 
 INT_PTR
 DisplayDeviceAdvancedProperties(IN HWND hWndParent,
+                                IN LPCWSTR lpDeviceID  OPTIONAL,
                                 IN HDEVINFO DeviceInfoSet,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
                                 IN HINSTANCE hComCtl32,
@@ -420,6 +439,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     PDEVADVPROP_INFO DevAdvPropInfo;
     DWORD PropertySheetType;
     HANDLE hMachine = NULL;
+    DWORD DevIdSize = 0;
     INT_PTR Ret = -1;
 
     /* we don't want to statically link against comctl32, so find the
@@ -440,6 +460,29 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
         return -1;
     }
 
+    if (lpDeviceID == NULL)
+    {
+        /* find out how much size is needed for the device id */
+        if (SetupDiGetDeviceInstanceId(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       NULL,
+                                       0,
+                                       &DevIdSize))
+        {
+            DPRINT1("SetupDiGetDeviceInterfaceDetail unexpectedly returned TRUE!\n");
+            return -1;
+        }
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        DevIdSize = (DWORD)wcslen(lpDeviceID) + 1;
+    }
+
     if (lpMachineName != NULL)
     {
         CONFIGRET cr = CM_Connect_Machine(lpMachineName,
@@ -454,10 +497,25 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
        "Driver", ... pages */
     DevAdvPropInfo = HeapAlloc(GetProcessHeap(),
                                0,
-                               sizeof(DEVADVPROP_INFO));
+                               FIELD_OFFSET(DEVADVPROP_INFO,
+                                            szDeviceID) +
+                                   (DevIdSize * sizeof(WCHAR)));
     if (DevAdvPropInfo == NULL)
     {
         goto Cleanup;
+    }
+
+    if (lpDeviceID == NULL)
+    {
+        /* read the device instance id */
+        if (!SetupDiGetDeviceInstanceId(DeviceInfoSet,
+                                        DeviceInfoData,
+                                        DevAdvPropInfo->szDeviceID,
+                                        DevIdSize,
+                                        NULL))
+        {
+            goto Cleanup;
+        }
     }
 
     DevAdvPropInfo->DeviceInfoSet = DeviceInfoSet;
@@ -630,6 +688,7 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                                       &DevInfoData))
             {
                 Ret = DisplayDeviceAdvancedProperties(hWndParent,
+                                                      lpDeviceID,
                                                       hDevInfo,
                                                       &DevInfoData,
                                                       hComCtl32,

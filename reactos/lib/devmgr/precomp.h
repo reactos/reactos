@@ -184,6 +184,7 @@ DevicePropertiesExW(HWND hWndParent,
 
 INT_PTR
 DisplayDeviceAdvancedProperties(IN HWND hWndParent,
+                                IN LPCWSTR lpDeviceID  OPTIONAL,
                                 IN HDEVINFO DeviceInfoSet,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
                                 IN HINSTANCE hComCtl32,
