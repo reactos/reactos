@@ -85,6 +85,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
 {
     LIST_ENTRY ListEntry;
+    DEVINST dnDevInst; /* Used in CM_* functions */
 
     /* Reserved Field points to a struct DriverInfoElement */
     SP_DEVINSTALL_PARAMS_W InstallParams;

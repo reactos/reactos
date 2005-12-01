@@ -621,6 +621,22 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
     return hDevInfo;
 }
 
+static DWORD
+GetErrorCodeFromCrCode(const IN CONFIGRET cr)
+{
+  switch (cr)
+  {
+    case CR_INVALID_MACHINENAME: return ERROR_INVALID_COMPUTERNAME;
+    case CR_OUT_OF_MEMORY: return ERROR_NOT_ENOUGH_MEMORY;
+    case CR_SUCCESS: return ERROR_SUCCESS;
+    default:
+      /* FIXME */
+      return ERROR_GEN_FAILURE;
+  }
+  
+  /* Does not happen */
+}
+
 /***********************************************************************
  *		SetupDiCreateDeviceInfoListExW (SETUPAPI.@)
  */
@@ -698,13 +714,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
   cr = CM_Connect_MachineW(UNCServerName, &list->hMachine);
   if (cr != CR_SUCCESS)
   {
-    switch (cr)
-    {
-      case CR_OUT_OF_MEMORY: rc = ERROR_NOT_ENOUGH_MEMORY; break;
-      case CR_INVALID_MACHINENAME: rc = ERROR_INVALID_COMPUTERNAME; break;
-      default: rc = ERROR_GEN_FAILURE; break;
-    }
-    SetLastError(rc);
+    SetLastError(GetErrorCodeFromCrCode(cr));
     goto cleanup;
   }
 #endif
@@ -758,7 +768,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
                 memcpy(&DeviceInfoData->ClassGuid,
                     &DevInfo->ClassGuid,
                     sizeof(GUID));
-                DeviceInfoData->DevInst = (DWORD)list->hMachine;
+                DeviceInfoData->DevInst = DevInfo->dnDevInst;
                 DeviceInfoData->Reserved = (ULONG_PTR)DevInfo;
                 ret = TRUE;
             }
@@ -1124,11 +1134,13 @@ end:
 
 static BOOL
 CreateDeviceInfoElement(
+    IN struct DeviceInfoSet *list,
     IN LPCWSTR InstancePath,
     IN LPCGUID pClassGuid,
     OUT struct DeviceInfoElement **pDeviceInfo)
 {
     DWORD size;
+    CONFIGRET cr;
     struct DeviceInfoElement *deviceInfo;
 
     *pDeviceInfo = NULL;
@@ -1141,6 +1153,14 @@ CreateDeviceInfoElement(
         return FALSE;
     }
     memset(deviceInfo, 0, size);
+
+    cr = CM_Locate_DevNode_ExW(&deviceInfo->dnDevInst, (DEVINSTID_W)InstancePath, CM_LOCATE_DEVNODE_PHANTOM, list->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
     deviceInfo->InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
     wcscpy(deviceInfo->Data, InstancePath);
     deviceInfo->DeviceName = deviceInfo->Data;
@@ -1281,7 +1301,7 @@ static LONG SETUP_CreateDevListFromEnumerator(
             }
 
             /* Add the entry to the list */
-            if (!CreateDeviceInfoElement(InstancePath, &KeyGuid, &deviceInfo))
+            if (!CreateDeviceInfoElement(list, InstancePath, &KeyGuid, &deviceInfo))
             {
                 RegCloseKey(hDeviceIdKey);
                 return GetLastError();
@@ -1440,7 +1460,7 @@ static LONG SETUP_CreateSerialDeviceList(
             struct DeviceInterface *interfaceInfo;
             TRACE("Adding %s to list\n", debugstr_w(ptr));
             /* Step 1. Create a device info element */
-            if (!CreateDeviceInfoElement(ptr, &GUID_SERENUM_BUS_ENUMERATOR, &deviceInfo))
+            if (!CreateDeviceInfoElement(list, ptr, &GUID_SERENUM_BUS_ENUMERATOR, &deviceInfo))
             {
                 if (devices != buf)
                     HeapFree(GetProcessHeap(), 0, devices);
@@ -1664,7 +1684,7 @@ static LONG SETUP_CreateInterfaceList(
 
             /* We have found a device */
             /* Step 1. Create a device info element */
-            if (!CreateDeviceInfoElement(InstancePath, &ClassGuid, &deviceInfo))
+            if (!CreateDeviceInfoElement(list, InstancePath, &ClassGuid, &deviceInfo))
             {
                 RegCloseKey(hReferenceKey);
                 RegCloseKey(hDeviceInstanceKey);
@@ -2061,7 +2081,6 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
       PDWORD RequiredSize,
       PSP_DEVINFO_DATA DeviceInfoData)
 {
-    struct DeviceInfoSet *list;
     BOOL ret = FALSE;
 
     TRACE("%p %p %p %lu %p %p\n", DeviceInfoSet,
@@ -2072,7 +2091,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInterfaceData->cbSize != sizeof(SP_DEVICE_INTERFACE_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -2106,7 +2125,7 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(
                 memcpy(&DeviceInfoData->ClassGuid,
                     &deviceInterface->DeviceInfo->ClassGuid,
                     sizeof(GUID));
-                DeviceInfoData->DevInst = (DWORD)list->hMachine;
+                DeviceInfoData->DevInst = deviceInterface->DeviceInfo->dnDevInst;
                 DeviceInfoData->Reserved = (ULONG_PTR)deviceInterface->DeviceInfo;
             }
             ret = TRUE;
@@ -4199,7 +4218,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
             {
                 struct DeviceInfoElement *deviceInfo;
 
-                if (CreateDeviceInfoElement(DeviceName, ClassGuid, &deviceInfo))
+                if (CreateDeviceInfoElement(list, DeviceName, ClassGuid, &deviceInfo))
                 {
                     InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
@@ -4214,7 +4233,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
                         else
                         {
                             memcpy(&DeviceInfoData->ClassGuid, ClassGuid, sizeof(GUID));
-                            DeviceInfoData->DevInst = (DWORD)list->hMachine;
+                            DeviceInfoData->DevInst = deviceInfo->dnDevInst;
                             DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
                             ret = TRUE;
                         }
@@ -5121,7 +5140,7 @@ SetupDiOpenDeviceInfoW(
             /* FIXME: try to get ClassGUID from registry, instead of
              * sending GUID_NULL to CreateDeviceInfoElement
              */
-            if (!CreateDeviceInfoElement(DeviceInstanceId, &GUID_NULL, &deviceInfo))
+            if (!CreateDeviceInfoElement(list, DeviceInstanceId, &GUID_NULL, &deviceInfo))
             {
                 RegCloseKey(hKey);
                 return FALSE;
@@ -5135,7 +5154,7 @@ SetupDiOpenDeviceInfoW(
         if (ret && deviceInfo && DeviceInfoData)
         {
             memcpy(&DeviceInfoData->ClassGuid, &deviceInfo->ClassGuid, sizeof(GUID));
-            DeviceInfoData->DevInst = (DWORD)list->hMachine;
+            DeviceInfoData->DevInst = deviceInfo->dnDevInst;
             DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
         }
     }
