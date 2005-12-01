@@ -278,7 +278,7 @@ static DWORD WINAPI
 SendQueryEndSession(LPVOID Parameter)
 {
   PMESSAGE_CONTEXT Context = (PMESSAGE_CONTEXT) Parameter;
-  LRESULT Result;
+  DWORD_PTR Result;
 
   if (SendMessageTimeoutW(Context->Wnd, WM_QUERYENDSESSION, Context->wParam,
                           Context->lParam, SMTO_NORMAL, Context->Timeout,
@@ -294,7 +294,7 @@ static DWORD WINAPI
 SendEndSession(LPVOID Parameter)
 {
   PMESSAGE_CONTEXT Context = (PMESSAGE_CONTEXT) Parameter;
-  LRESULT Result;
+  DWORD_PTR Result;
 
   if (Context->wParam)
     {
