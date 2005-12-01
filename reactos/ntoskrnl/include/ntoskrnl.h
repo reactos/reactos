@@ -21,12 +21,6 @@
 /* FIXME: Temporary until CC Ros is gone */
 #include <ccros.h>
 
-/* ReactOS Headers */
-#include <reactos/version.h>
-#include <reactos/resource.h>
-#include <reactos/bugcodes.h>
-#include <reactos/rossym.h>
-
 /* Disk Dump Driver Header */
 #include <diskdump/diskdump.h>
 
@@ -38,6 +32,14 @@
 
 /* SEH support with PSEH */
 #include <pseh/pseh.h>
+
+/* ReactOS Headers */
+#include <reactos/version.h>
+#include <reactos/resource.h>
+#include <reactos/bugcodes.h>
+#include <reactos/rossym.h>
+#define ExRaiseStatus RtlRaiseStatus
+#include <reactos/probe.h>
 
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
