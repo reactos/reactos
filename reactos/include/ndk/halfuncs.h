@@ -73,7 +73,7 @@ VOID
 NTAPI
 HalInitializeProcessor(
     ULONG ProcessorNumber,
-    PVOID ProcessorStack
+    PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 NTHALAPI
@@ -163,6 +163,13 @@ NTHALAPI
 VOID
 NTAPI
 HalRequestIpi(
+    ULONG Unknown
+);
+
+NTHALAPI
+VOID
+NTAPI
+HalHandleNMI(
     ULONG Unknown
 );
 

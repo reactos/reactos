@@ -23,6 +23,8 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#include <pstypes.h>
+#include <extypes.h>
 
 //
 // Don't include WMI headers just for one define

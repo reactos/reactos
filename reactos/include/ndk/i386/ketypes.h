@@ -26,6 +26,7 @@ Author:
 //
 // X86 80386 Segment Types
 //
+#define I386_TASK_GATE          0x5
 #define I386_TSS                0x9
 #define I386_ACTIVE_TSS         0xB
 #define I386_CALL_GATE          0xC
@@ -439,8 +440,13 @@ typedef struct _KIPCR
     ULONG IrrActive;             /* 2C */
     ULONG IDR;                   /* 30 */
     PVOID KdVersionBlock;        /* 34 */
+#ifdef _REACTOS_
     PUSHORT IDT;                 /* 38 */
     PUSHORT GDT;                 /* 3C */
+#else
+    PKIDTENTRY IDT;              /* 38 */
+    PKGDTENTRY GDT;              /* 3C */
+#endif
     struct _KTSS *TSS;           /* 40 */
     USHORT MajorVersion;         /* 44 */
     USHORT MinorVersion;         /* 46 */

@@ -33,6 +33,7 @@ Author:
 #define KGDT_R3_TEB                             (0x38)
 #define KGDT_LDT                                (0x48)
 #define KGDT_DF_TSS                             (0x50)
+#define KGDT_NMI_TSS                            (0x58)
 
 //
 // KV86M_REGISTERS Offsets
@@ -101,12 +102,29 @@ Author:
 #define KPCR_EXCEPTION_LIST                     0x0
 #define KPCR_INITIAL_STACK                      0x4
 #define KPCR_STACK_LIMIT                        0x8
+#define KPCR_SET_MEMBER_COPY                    0x14
 #define KPCR_TEB                                0x18
 #define KPCR_SELF                               0x1C
+#define KPCR_PRCB                               0x20
+#define KPCR_KD_VERSION_BLOCK                   0x34
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
+#define KPCR_SET_MEMBER                         0x48
 #define KPCR_CURRENT_THREAD                     0x124
+#define KPCR_PROCESSOR_NUMBER                   0x130
+#define KPCR_PRCB_SET_MEMBER                    0x134
 #define KPCR_NPX_THREAD                         0x2F4
+#define KPCR_DR6                                0x428
+#define KPCR_DR7                                0x42C
+
+//
+// KGDTENTRY Offsets
+//
+#define KGDT_BASE_LOW                           0x2
+#define KGDT_BASE_MID                           0x4
+#define KGDT_BASE_HI                            0x7
+#define KGDT_LIMIT_HI                           0x6
+#define KGDT_LIMIT_LOW                          0x0
 
 //
 // FPU Save Area Offsets
@@ -117,6 +135,7 @@ Author:
 #define FN_DATA_SELECTOR                        0x18
 #define FN_CR0_NPX_STATE                        0x20C
 #define SIZEOF_FX_SAVE_AREA                     528
+#define NPX_FRAME_LENGTH                        0x210
 
 //
 // Trap Frame Offsets
@@ -166,6 +185,8 @@ Author:
 #define KTRAP_FRAME_V86_GS                      0x88
 #define KTRAP_FRAME_RESERVED9                   0x8A
 #define KTRAP_FRAME_SIZE                        0x8C
+#define KTRAP_FRAME_LENGTH                      0x8C
+#define KTRAP_FRAME_ALIGN                       0x04
 
 //
 // KUSER_SHARED_DATA Offsets
@@ -257,5 +278,35 @@ Author:
 #define FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD   FIBER_CONTEXT + CONTEXT_FLOAT_SAVE_CONTROL_WORD
 #define FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD       FIBER_CONTEXT + CONTEXT_FLOAT_SAVE_TAG_WORD
 
+//
+// EFLAGS
+//
+#define EFLAGS_TF                               0x100
+#define EFLAGS_INTERRUPT_MASK                   0x200
+#define EFLAGS_NESTED_TASK                      0x4000
+#define EFLAGS_V86_MASK                         0x20000
+#define EFLAGS_ALIGN_CHECK                      0x40000
+#define EFLAGS_VIF                              0x80000
+#define EFLAGS_VIP                              0x100000
+
+//
+// CR0
+//
+#define CR0_PE                                  0x1
+#define CR0_MP                                  0x2
+#define CR0_EM                                  0x4
+#define CR0_TS                                  0x8
+#define CR0_ET                                  0x10
+#define CR0_NE                                  0x20
+#define CR0_WP                                  0x10000
+#define CR0_AM                                  0x40000
+#define CR0_NW                                  0x20000000
+#define CR0_CD                                  0x40000000
+#define CR0_PG                                  0x80000000
+
+//
+// Generic Definitions
+//
+#define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
 
