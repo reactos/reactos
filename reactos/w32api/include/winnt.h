@@ -1677,7 +1677,7 @@ typedef struct _CONTEXT {
 #define CONTEXT_INTEGER	4L
 #define CONTEXT_DEBUG_REGISTERS	8L
 #define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_FLOATING_POINT|CONTEXT_INTEGER)
-typedef struct {
+typedef struct _CONTEXT {
 	double Fpr0;
 	double Fpr1;
 	double Fpr2;
