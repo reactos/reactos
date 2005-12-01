@@ -16,8 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id$
- *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          Window stations
@@ -435,6 +433,7 @@ NtUserCreateWindowStation(
 {
    PSYSTEM_CURSORINFO CurInfo;
    UNICODE_STRING WindowStationName;
+   UNICODE_STRING FullWindowStationName;
    PWINSTATION_OBJECT WindowStationObject;
    HWINSTA WindowStation;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -443,10 +442,21 @@ NtUserCreateWindowStation(
    /*
     * Generate full window station name
     */
-
-   if (!IntGetFullWindowStationName(&WindowStationName, lpszWindowStationName,
+   Status = ProbeAndCaptureUnicodeString(&WindowStationName,
+                                         UserMode,
+                                         lpszWindowStationName);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed to capture window station name (status 0x%08x)\n",
+              Status);
+      SetLastNtError(Status);
+      return 0;
+   }
+   if (!IntGetFullWindowStationName(&FullWindowStationName,
+                                    &WindowStationName,
                                     NULL))
    {
+      ReleaseCapturedUnicodeString(&WindowStationName, UserMode);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
@@ -455,12 +465,12 @@ NtUserCreateWindowStation(
     * Try to open already existing window station
     */
 
-   DPRINT("Trying to open window station (%wZ)\n", &WindowStationName);
+   DPRINT("Trying to open window station (%wZ)\n", &FullWindowStationName);
 
    /* Initialize ObjectAttributes for the window station object */
    InitializeObjectAttributes(
       &ObjectAttributes,
-      &WindowStationName,
+      &FullWindowStationName,
       0,
       NULL,
       NULL);
@@ -476,8 +486,10 @@ NtUserCreateWindowStation(
 
    if (NT_SUCCESS(Status))
    {
-      DPRINT("Successfully opened window station (%wZ)\n", WindowStationName);
-      ExFreePool(WindowStationName.Buffer);
+      DPRINT("Successfully opened window station (%wZ)\n",
+             FullWindowStationName);
+      ExFreePool(FullWindowStationName.Buffer);
+      ReleaseCapturedUnicodeString(&WindowStationName, UserMode);
       return (HWINSTA)WindowStation;
    }
 
@@ -485,7 +497,7 @@ NtUserCreateWindowStation(
     * No existing window station found, try to create new one
     */
 
-   DPRINT("Creating window station (%wZ)\n", &WindowStationName);
+   DPRINT("Creating window station (%wZ)\n", &FullWindowStationName);
 
    Status = ObCreateObject(
                KernelMode,
@@ -500,13 +512,14 @@ NtUserCreateWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed creating window station (%wZ)\n", &WindowStationName);
-      ExFreePool(WindowStationName.Buffer);
+      DPRINT1("Failed creating window station (%wZ)\n", &FullWindowStationName);
+      ExFreePool(FullWindowStationName.Buffer);
+      ReleaseCapturedUnicodeString(&WindowStationName, UserMode);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
 
-   WindowStationObject->Name = *lpszWindowStationName;
+   WindowStationObject->Name = WindowStationName;
 
    Status = ObInsertObject(
                (PVOID)WindowStationObject,
@@ -518,7 +531,8 @@ NtUserCreateWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed creating window station (%wZ)\n", &WindowStationName);
+      DPRINT1("Failed creating window station (%wZ)\n", &FullWindowStationName);
+      ExFreePool(FullWindowStationName.Buffer);
       ExFreePool(WindowStationName.Buffer);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WindowStationObject);
@@ -531,7 +545,7 @@ NtUserCreateWindowStation(
 
    if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
    {
-      ExFreePool(WindowStationName.Buffer);
+      ExFreePool(FullWindowStationName.Buffer);
       /* FIXME - Delete window station object */
       ObDereferenceObject(WindowStationObject);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
@@ -557,10 +571,11 @@ NtUserCreateWindowStation(
    {
       DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");
       /* FIXME: Complain more loudly? */
+      ExFreePool(FullWindowStationName.Buffer);
    }
 
-   DPRINT("Window station successfully created (%wZ)\n", lpszWindowStationName);
-   ExFreePool(WindowStationName.Buffer);
+   DPRINT("Window station successfully created (%wZ)\n", FullWindowStationName);
+   ExFreePool(FullWindowStationName.Buffer);
    return WindowStation;
 }
 
