@@ -23,7 +23,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <ndk/ldrfuncs.h>
 #include "bootvid.h"
 #include "ntbootvid.h"

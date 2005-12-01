@@ -19,7 +19,7 @@
 
 /* This includes ntsecapi.h so it needs to come after the NDK */
 #include <wsahelp.h>
-#include <ddk/tdi.h>
+#include <tdi.h>
 #include <afd/shared.h>
 #include <helpers.h>
 

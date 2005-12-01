@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 #include <debug.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #include <windows.h>
 #include <mmsystem.h>

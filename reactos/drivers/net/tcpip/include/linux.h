@@ -1,7 +1,7 @@
 #ifndef _LINUX_TYPES_H
 #define _LINUX_TYPES_H
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #ifndef NULL
 #define NULL (void*)0

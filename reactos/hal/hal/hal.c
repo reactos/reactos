@@ -11,7 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <ndk/halfuncs.h>
 #include <ndk/kdfuncs.h>
 

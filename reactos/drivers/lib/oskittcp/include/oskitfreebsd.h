@@ -1,7 +1,7 @@
 #ifndef _OSKITFREEBSD_H
 #define _OSKITFREEBSD_H
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #ifdef linux
 #include <netinet/in.h>

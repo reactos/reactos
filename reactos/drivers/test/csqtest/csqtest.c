@@ -7,7 +7,7 @@
  * Please refer to reactos/include/ddk/csq.h and reactos/drivers/lib/csq.
  */
 #include <ntddk.h>
-#include <ddk/csq.h>
+#include <csq.h>
 
 /* XXX shortcomings in our headers... */
 #define assert(x)

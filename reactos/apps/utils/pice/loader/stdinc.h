@@ -3,9 +3,9 @@
 #include <malloc.h>
 #include <io.h>
 
-//#include <ddk/winnt.h>
+//#include <winnt.h>
 #include <windows.h>
-#include <ddk/kefuncs.h>
+#include <kefuncs.h>
 
 //#include <winnt.h>
 #include <sys/types.h>

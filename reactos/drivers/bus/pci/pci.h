@@ -1,8 +1,8 @@
 #ifndef __PCI_H
 #define __PCI_H
 
-#include <ddk/ntifs.h>
-#include <ddk/wdmguid.h>
+#include <ntifs.h>
+#include <wdmguid.h>
 #include <stdio.h>
 
 typedef struct _PCI_DEVICE

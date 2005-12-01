@@ -32,9 +32,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntdddisk.h>
-#include <ddk/scsi.h>
+#include <ntddk.h>
+#include <ntdddisk.h>
+#include <scsi.h>
 #include <include/class2.h>
 #include <stdio.h>
 

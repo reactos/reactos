@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 //#define DUMP_DATA
 #define DUMP_SIZE_INFO

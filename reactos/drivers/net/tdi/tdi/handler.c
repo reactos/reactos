@@ -2,8 +2,8 @@
  *
  * DESCRIPTION: Default TDI event handlers.
  */
-#include <ddk/ntddk.h>
-#include <ddk/tdi.h>
+#include <ntddk.h>
+#include <tdi.h>
 
 
 /*

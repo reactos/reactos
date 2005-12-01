@@ -3,7 +3,7 @@
    by Aleksey Bragin (aleksey@reactos.com)
 */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <debug.h>
 #include "../miniport/usb_wrapper.h"
 

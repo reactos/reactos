@@ -25,12 +25,12 @@
 #define VIDEOPRT_H
 
 #include <stdio.h>
-#include <ddk/ntddk.h>
-#include <ddk/miniport.h>
-#include <ddk/video.h>
-#include <ddk/ntddvdeo.h>
-#include <ddk/ntagp.h>
-#include <ddk/ntifs.h>
+#include <ntddk.h>
+#include <miniport.h>
+#include <video.h>
+#include <ntddvdeo.h>
+#include <ntagp.h>
+#include <ntifs.h>
 #include <ndk/ntndk.h>
 #include <reactos/helper.h>
 

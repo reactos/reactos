@@ -5,7 +5,7 @@
 #ifndef __DDK_D3DNTHAL_H
 #define __DDK_D3DNTHAL_H
 
-#include <ddk/ddrawint.h>
+#include <ddrawint.h>
 #include <d3dtypes.h>
 #include <d3dcaps.h>
 

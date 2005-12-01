@@ -1,7 +1,7 @@
 /* $Id$
  *
  */
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 
 /*

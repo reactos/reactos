@@ -8,7 +8,7 @@
  * UPDATE HISTORY:
  *      01-05-2001  CSH  Created
  */
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <isapnp.h>
 
 #define NDEBUG

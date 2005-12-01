@@ -7,7 +7,7 @@
 #ifndef __NE2000_H
 #define __NE2000_H
 
-#include <ddk/ndis.h>
+#include <ndis.h>
 #include <8390.h>
 #include <debug.h>
 

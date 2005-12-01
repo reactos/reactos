@@ -13,7 +13,7 @@
 #ifndef __INCLUDE_ACPI_TYPES_H
 #define __INCLUDE_ACPI_TYPES_H
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <stdio.h>
 
 typedef UCHAR                              UINT8;

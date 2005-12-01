@@ -11,9 +11,9 @@ typedef VOID
 (DDKAPI *PINTERFACE_DEREFERENCE)(
   PVOID  Context);
 #include <ntndk.h>
-#include <ddk/hidusage.h>
-#include <ddk/hidclass.h>
-#include <ddk/hidpi.h>
+#include <hidusage.h>
+#include <hidclass.h>
+#include <hidpi.h>
 
 extern HINSTANCE hDllInstance;
 extern const GUID HidClassGuid;

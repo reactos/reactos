@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <conio.h>
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #include <pshpack1.h>
 

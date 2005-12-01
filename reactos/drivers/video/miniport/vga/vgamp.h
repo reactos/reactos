@@ -23,10 +23,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/miniport.h>
-#include <ddk/video.h>
-#include <ddk/ntddvdeo.h>
+#include <ntddk.h>
+#include <miniport.h>
+#include <video.h>
+#include <ntddvdeo.h>
 
 #define UNIMPLEMENTED \
    VideoPortDebugPrint(Error, "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);

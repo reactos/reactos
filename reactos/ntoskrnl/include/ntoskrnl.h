@@ -13,9 +13,9 @@
 #define _NTSYSTEM_
 
 /* DDK/IFS/NDK Headers */
-#include <ddk/ntifs.h>
-#include <ddk/ntddk.h>
-#include <ddk/wdmguid.h>
+#include <ntifs.h>
+#include <ntddk.h>
+#include <wdmguid.h>
 #include <ndk/ntndk.h>
 
 /* FIXME: Temporary until CC Ros is gone */

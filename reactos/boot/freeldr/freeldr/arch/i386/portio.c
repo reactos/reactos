@@ -9,7 +9,7 @@
  *                  Created 18/10/99
  */
 
-//#include <ddk/ntddk.h>
+//#include <ntddk.h>
 #include <freeldr.h>
 
 

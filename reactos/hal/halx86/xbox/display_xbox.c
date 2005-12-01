@@ -12,7 +12,7 @@
 
 /* For an explanation about display ownership see generic/display.c */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <hal.h>
 #include "halxbox.h"
 

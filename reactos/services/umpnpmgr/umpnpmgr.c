@@ -31,8 +31,8 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <umpnpmgr/sysguid.h>
-#include <ddk/wdmguid.h>
-#include <ddk/cfgmgr32.h>
+#include <wdmguid.h>
+#include <cfgmgr32.h>
 
 #include <rpc.h>
 #include <rpcdce.h>

@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <ndk/ntndk.h>
 #include <arch.h>
 #include <rtl.h>

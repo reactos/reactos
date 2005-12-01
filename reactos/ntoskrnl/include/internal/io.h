@@ -1,7 +1,7 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 
-#include <ddk/ntdddisk.h>
+#include <ntdddisk.h>
 
 /* STRUCTURES ***************************************************************/
 

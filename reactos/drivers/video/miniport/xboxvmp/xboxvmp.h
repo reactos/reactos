@@ -25,10 +25,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/miniport.h>
-#include <ddk/video.h>
-#include <ddk/ntddvdeo.h>
+#include <ntddk.h>
+#include <miniport.h>
+#include <video.h>
+#include <ntddvdeo.h>
 #include <ndk/ntndk.h>
 
 #define NDEBUG

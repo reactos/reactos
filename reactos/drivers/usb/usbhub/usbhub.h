@@ -1,7 +1,7 @@
 #include <debug.h>
 
-#include <ddk/ntddk.h>
-#include <ddk/usbioctl.h>
+#include <ntddk.h>
+#include <usbioctl.h>
 
 #include "../miniport/usb_wrapper.h"
 #include "../usbport/hub.h"

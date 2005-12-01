@@ -30,7 +30,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <w32k.h>
-#include <ddk/ntddkbd.h>
+#include <ntddkbd.h>
 
 #define NDEBUG
 #include <debug.h>

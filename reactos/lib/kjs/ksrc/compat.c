@@ -1,4 +1,4 @@
-#include "ddk/ntddk.h"
+#include "ntddk.h"
 #include "ctype.h"
 #include "jsconfig.h"
 

@@ -1,6 +1,6 @@
-#include <ddk/ntddk.h>
-#include <ddk/usbdi.h>
-#include <ddk/usbiodef.h>
+#include <ntddk.h>
+#include <usbdi.h>
+#include <usbiodef.h>
 #include <initguid.h>
 #include <debug.h>
 

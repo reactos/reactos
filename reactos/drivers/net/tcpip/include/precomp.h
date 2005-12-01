@@ -1,6 +1,6 @@
 #include <roscfg.h>
 #include <limits.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <../recmutex/recmutex.h>
 #include <roscfg.h>
 #include <tcpip.h>

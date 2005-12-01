@@ -37,11 +37,11 @@
 #ifndef _BT958_H_
 #define _BT958_H_
 
-#include <ddk/ntddk.h>
-#include <ddk/srb.h>
-#include <ddk/scsi.h>
-#include <ddk/ntddscsi.h>
-#include <ddk/scsiwmi.h>
+#include <ntddk.h>
+#include <srb.h>
+#include <scsi.h>
+#include <ntddscsi.h>
+#include <scsiwmi.h>
 //#include <ntos/kefuncs.h>
 
 

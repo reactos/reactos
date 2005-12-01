@@ -9,9 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 /* DDK/NDK/SDK Headers */
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ddk/ntifs.h>
+#include <ntddk.h>
+#include <ntddmou.h>
+#include <ntifs.h>
 #include <ndk/ntndk.h>
 
 /* Win32 Headers */

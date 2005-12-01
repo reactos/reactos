@@ -25,9 +25,9 @@
 #include <windef.h>
 #include <guiddef.h>
 #include <wingdi.h>
-#include <ddk/winddi.h>
+#include <winddi.h>
 #include <winioctl.h>
-#include <ddk/ntddvdeo.h>
+#include <ntddvdeo.h>
 
 #define DDKAPI __stdcall
 #define DDKFASTAPI __fastcall

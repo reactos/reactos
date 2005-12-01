@@ -4,7 +4,7 @@
 #define COM_NO_WINDOWS_H
 #include "initguid.h"
 
-#include <ddk/wdmguid.h>
+#include <wdmguid.h>
 #include <umpnpmgr/sysguid.h>
 
 /* EOF */

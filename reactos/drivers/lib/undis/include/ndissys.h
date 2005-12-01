@@ -13,7 +13,7 @@
 #define NDIS50 1    /* Use NDIS 5.0 structures by default */
 
 //#include <basetsd.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 //#include <windef.h>
 #include <ndisfake.h>
 

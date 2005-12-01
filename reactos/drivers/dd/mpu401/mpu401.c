@@ -12,8 +12,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-//#include <ddk/ntddbeep.h>
+#include <ntddk.h>
+//#include <ntddbeep.h>
 
 //#define NDEBUG
 #include <debug.h>

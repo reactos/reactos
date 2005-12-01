@@ -39,8 +39,8 @@ Copyright notice:
 
 //#include <asm/system.h>
 
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
+#include <ntddkbd.h>
+#include <ntdd8042.h>
 #include <rosrtl/string.h>
 
 ////////////////////////////////////////////////////

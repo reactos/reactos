@@ -31,10 +31,10 @@ Copyright notice:
 #define FRAMEBUFFER_SIZE (0x8000)
 #define LINES_IN_BUFFER (2048)
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <ntos/types.h>
-#include <ddk/types.h>
-//#include <ddk/i386/tss.h>
+#include <types.h>
+//#include <i386/tss.h>
 #include <internal/ob.h>
 #include <internal/i386/segment.h>
 #include <defines.h>

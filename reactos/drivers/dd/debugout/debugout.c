@@ -22,7 +22,7 @@
  */
 
 /* INCLUDES */
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);

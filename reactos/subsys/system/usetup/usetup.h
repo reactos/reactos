@@ -43,7 +43,7 @@
 #include <fslib/vfatlib.h>
 
 /* DDK Disk Headers */
-#include <ddk/ntddscsi.h>
+#include <ntddscsi.h>
 
 /* Blue Driver Header */
 #include <blue/ntddblue.h>

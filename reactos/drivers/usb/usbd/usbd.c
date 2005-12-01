@@ -21,8 +21,8 @@
  *    USBD_GetPdoRegistryParameters (implemented)
  */
 
-#include <ddk/ntddk.h>
-#include <ddk/usbdi.h>
+#include <ntddk.h>
+#include <usbdi.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2
 #endif

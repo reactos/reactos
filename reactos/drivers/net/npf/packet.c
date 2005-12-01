@@ -25,8 +25,8 @@
 #include "ntiologc.h"
 #include "ndis.h"
 #else
-#include <ddk/ntddk.h>
-#include <ddk/ndis.h>
+#include <ntddk.h>
+#include <ndis.h>
 #endif
 
 #include "ntddpack.h"

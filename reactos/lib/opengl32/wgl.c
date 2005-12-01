@@ -15,7 +15,7 @@
 #define NTOS_MODE_USER
 #include <ddraw.h>
 #include <ddrawi.h>
-#include <ddk/winddi.h>
+#include <winddi.h>
 
 #include <stdio.h>
 #include <stdlib.h>

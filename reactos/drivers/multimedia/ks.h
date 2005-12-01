@@ -16,7 +16,7 @@
 #ifndef __INCLUDES_REACTOS_KS_H__
 #define __INCLUDES_REACTOS_KS_H__
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 /* What's this meant to be?! */
 #define KSDDKAPI

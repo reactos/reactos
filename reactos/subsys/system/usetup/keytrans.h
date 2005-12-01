@@ -27,7 +27,7 @@
 #ifndef __KEYTRANS_H__
 #define __KEYTRANS_H__
 
-#include <ddk/ntddkbd.h>
+#include <ntddkbd.h>
 
 NTSTATUS
 IntTranslateKey(PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event);

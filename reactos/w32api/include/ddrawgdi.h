@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <ddk/d3dhal.h>
+#include <d3dhal.h>
  
 /* Define the real export names */
 #define DdCreateDirectDrawObject            GdiEntry1
