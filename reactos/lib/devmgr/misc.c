@@ -439,6 +439,7 @@ GetDeviceStatusString(IN DEVINST DevInst,
     UINT MessageId = IDS_UNKNOWN;
     BOOL Ret = FALSE;
 
+    szBuffer[0] = L'\0';
     cr = CM_Get_DevNode_Status_Ex(&Status,
                                   &ProblemNumber,
                                   DevInst,
@@ -446,48 +447,58 @@ GetDeviceStatusString(IN DEVINST DevInst,
                                   hMachine);
     if (cr == CR_SUCCESS)
     {
-        if (ProblemNumber < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
-            MessageId = ProblemStringId[ProblemNumber];
+        if (Status & DN_HAS_PROBLEM)
+        {
+            if (ProblemNumber < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
+                MessageId = ProblemStringId[ProblemNumber];
 
-        szBuffer[0] = L'\0';
-        if (ProblemNumber == 0)
+            if (ProblemNumber == 0)
+            {
+                goto GeneralMessage;
+            }
+            else
+            {
+                LPWSTR szProblem;
+                UINT StringIDs[] =
+                {
+                    MessageId,
+                    IDS_DEVCODE,
+                };
+
+                if (LoadAndFormatStringsCat(hDllInstance,
+                                            StringIDs,
+                                            sizeof(StringIDs) / sizeof(StringIDs[0]),
+                                            &szProblem,
+                                            ProblemNumber))
+                {
+                    wcsncpy(szBuffer,
+                            szProblem,
+                            BufferSize - 1);
+                    szBuffer[BufferSize - 1] = L'\0';
+
+                    LocalFree((HLOCAL)szProblem);
+
+                    Ret = TRUE;
+                }
+            }
+        }
+        else
         {
             if (!(Status & (DN_DRIVER_LOADED | DN_STARTED)))
             {
                 MessageId = IDS_NODRIVERLOADED;
             }
-
-            goto GeneralProblem;
-        }
-        else
-        {
-            LPWSTR szProblem;
-            UINT StringIDs[] =
+            else
             {
-                MessageId,
-                IDS_DEVCODE,
-            };
-
-            if (LoadAndFormatStringsCat(hDllInstance,
-                                        StringIDs,
-                                        sizeof(StringIDs) / sizeof(StringIDs[0]),
-                                        &szProblem,
-                                        ProblemNumber))
-            {
-                wcsncpy(szBuffer,
-                        szProblem,
-                        BufferSize - 1);
-                szBuffer[BufferSize - 1] = L'\0';
-
-                LocalFree((HLOCAL)szProblem);
-
-                Ret = TRUE;
+                MessageId = IDS_DEV_NO_PROBLEM;
             }
+
+            goto GeneralMessage;
         }
     }
     else
     {
-GeneralProblem:
+GeneralMessage:
         if (LoadString(hDllInstance,
                        MessageId,
                        szBuffer,
