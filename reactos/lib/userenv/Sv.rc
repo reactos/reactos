@@ -43,5 +43,5 @@ BEGIN
     IDS_CACHE          "Lokala inställningar\\Temporary Internet Files"
     IDS_HISTORY        "Lokala inställningar\\Tidigare"
     IDS_COOKIES        "Cookies"
-    IDS_PROGRAMFILES   "%SystemDrive%\\Program files"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Program"
 END
