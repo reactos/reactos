@@ -66,8 +66,8 @@ PciIdeXGetBusData(
 	IN ULONG BufferLength)
 {
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-	ULONG BytesRead = 0;
-	NTSTATUS Status = STATUS_IO_DEVICE_ERROR;
+	ULONG BytesRead;
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
 	DPRINT("PciIdeXGetBusData(%p %p 0x%lx 0x%lx)\n",
 		DeviceExtension, Buffer, ConfigDataOffset, BufferLength);
@@ -97,8 +97,47 @@ PciIdeXSetBusData(
 	IN ULONG ConfigDataOffset,
 	IN ULONG BufferLength)
 {
-	DPRINT1("PciIdeXSetBusData(%p %p %p 0x%lx 0x%lx)\n",
+	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+	PBYTE CurrentBuffer = NULL;
+	ULONG i, BytesWritten;
+	NTSTATUS Status;
+
+	DPRINT("PciIdeXSetBusData(%p %p %p 0x%lx 0x%lx)\n",
 		DeviceExtension, Buffer, DataMask, ConfigDataOffset, BufferLength);
 
-	return STATUS_NOT_IMPLEMENTED;
+	CurrentBuffer = ExAllocatePool(NonPagedPool, BufferLength);
+	if (!CurrentBuffer)
+	{
+		Status = STATUS_INSUFFICIENT_RESOURCES;
+		goto cleanup;
+	}
+
+	Status = PciIdeXGetBusData(DeviceExtension, Buffer, ConfigDataOffset, BufferLength);
+	if (!NT_SUCCESS(Status))
+		goto cleanup;
+
+	for (i = 0; i < BufferLength; i++)
+		CurrentBuffer[i] = (CurrentBuffer[i] & ~((PBYTE)DataMask)[i]) | (((PBYTE)DataMask)[i] & ((PBYTE)Buffer)[i]);
+
+	FdoDeviceExtension = CONTAINING_RECORD(DeviceExtension, FDO_DEVICE_EXTENSION, MiniControllerExtension);
+	if (!FdoDeviceExtension->BusInterface)
+	{
+		Status = STATUS_UNSUCCESSFUL;
+		goto cleanup;
+	}		
+
+	BytesWritten = (*FdoDeviceExtension->BusInterface->SetBusData)(
+		FdoDeviceExtension->BusInterface->Context,
+		PCI_WHICHSPACE_CONFIG,
+		CurrentBuffer,
+		ConfigDataOffset,
+		BufferLength);
+	if (BytesWritten == BufferLength)
+		Status = STATUS_SUCCESS;
+	else
+		Status = STATUS_UNSUCCESSFUL;
+
+cleanup:
+	ExFreePool(CurrentBuffer);
+	return Status;
 }
