@@ -502,23 +502,30 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
     MSG msg;
     INT retval;
     HWND ownerMsg = GetAncestor( owner, GA_ROOT );
+    BOOL bFirstEmpty;
+
     if (!(dlgInfo = GETDLGINFO(hwnd))) return -1;
 
+    bFirstEmpty = TRUE;
     if (!(dlgInfo->flags & DF_END)) /* was EndDialog called in WM_INITDIALOG ? */
     {
-        ShowWindow( hwnd, SW_SHOW );
         for (;;)
         {
-            if (!(GetWindowLongW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
+            if (!PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
             {
-                if (!PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
+                if (bFirstEmpty)
                 {
+                    /* ShowWindow the first time the queue goes empty */
+                    ShowWindow( hwnd, SW_SHOWNORMAL );
+                    bFirstEmpty = FALSE;
+                }
+                if (!(GetWindowLongW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
+               {
                     /* No message present -> send ENTERIDLE and wait */
                     SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
-                    if (!GetMessageW( &msg, 0, 0, 0 )) break;
                 }
+                if (!GetMessageW( &msg, 0, 0, 0 )) break;
             }
-            else if (!GetMessageW( &msg, 0, 0, 0 )) break;
 
             if (!IsWindow( hwnd )) return -1;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
@@ -889,13 +896,16 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
 
     if (IsIconic( hwnd )) return;
     if (!(infoPtr = GETDLGINFO(hwnd))) return;
-    if (!IsWindow( infoPtr->hwndFocus )) return;
     /* Don't set the focus back to controls if EndDialog is already called.*/
-    if (!(infoPtr->flags & DF_END))
-    {
-        DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
-        return;
+    if (infoPtr->flags & DF_END) return;
+    if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
+        /* If no saved focus control exists, set focus to the first visible,
+           non-disabled, WS_TABSTOP control in the dialog */
+        infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+       if (!IsWindow( infoPtr->hwndFocus )) return;
     }
+    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
+
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
 }
