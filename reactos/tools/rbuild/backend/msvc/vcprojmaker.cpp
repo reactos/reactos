@@ -90,6 +90,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	defines.push_back ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 	defines.push_back ( "STDCALL=__stdcall" );
 
+	string baseaddr;
+
 	while ( ifs_list.size() )
 	{
 		const IfableData& data = *ifs_list.back();
@@ -137,6 +139,12 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				defines.push_back ( defs[i]->name + "=" + defs[i]->value );
 			else
 				defines.push_back ( defs[i]->name );
+		}
+		for ( i = 0; i < data.properties.size(); i++ )
+		{
+			Property& prop = *data.properties[i];
+			if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
+				baseaddr = prop.value;
 		}
 	}
 
@@ -345,7 +353,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /DRIVER /ALIGN:0x20 /SUBSYSTEM:NATIVE /SECTION:INIT,D /NODEFAULTLIB /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DriverEntry" : module.entrypoint.c_str ());
-				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress == "" ? "0x10000" : module.baseaddress.c_str ());	
+				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());	
 			}
 			else if ( exe )
 			{
@@ -354,14 +362,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
  					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /NODEFAULTLIB /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
  					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
+					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
  				}
 				else if ( module.type == NativeCUI )
 				{
  					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /NODEFAULTLIB /ALIGN:0x20\"\r\n" );
  					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress.c_str ());	
+					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
 				}
 				else if ( module.type == Win32CUI || module.type == Win32GUI )
  				{
@@ -371,7 +379,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			else if ( dll )
 			{
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DllMain" : module.entrypoint.c_str ());
-				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", module.baseaddress == "" ? "0x40000" : module.baseaddress.c_str ());
+				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
 		}
