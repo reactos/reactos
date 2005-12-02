@@ -825,7 +825,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     {
         /* Send initialisation messages and set focus */
 
-        if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param ))
+        if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param ) &&
+            ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
         {
             /* By returning TRUE, app has requested a default focus assignment */
             dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE);
@@ -1911,6 +1912,7 @@ GetDlgItemTextA(
   LPSTR lpString,
   int nMaxCount)
 {
+  if (lpString && (lpString > 0)) lpString[0] = '\0';
   return (UINT)SendDlgItemMessageA( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
 
@@ -1926,6 +1928,7 @@ GetDlgItemTextW(
   LPWSTR lpString,
   int nMaxCount)
 {
+  if (lpString && (lpString > 0)) lpString[0] = '\0';
   return (UINT)SendDlgItemMessageW( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
 
