@@ -60,7 +60,7 @@ _KiThreadStartup@156:
      * expect any static data (like some badly coded usermode/win9x apps do)
      */
     xor ebx, ebx
-    xor esi, edi
+    xor esi, esi
     xor edi, edi
     xor ebp, ebp
     
