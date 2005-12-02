@@ -428,7 +428,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			std::string& config = cfgs[iconfig];
 
-			if ( isrcfile == 0 )
+			if (( isrcfile == 0 ) && ( module.pch != NULL ))
 			{
 				/* little hack to speed up PCH */
 				fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
