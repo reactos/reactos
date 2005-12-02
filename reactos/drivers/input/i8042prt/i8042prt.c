@@ -538,7 +538,7 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 	}
 
 	// Wait longer?
-	Counter = 3;
+	Counter = 10;
 	do {
 		Status = I8042ReadDataWait(DevExt, &Value);
 	} while ((Counter--) && (STATUS_IO_TIMEOUT == Status));
