@@ -1094,44 +1094,30 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
         if(!hChildFirst)
         {
             if(GetParent(hwndCtrl) != hwndMain)
+                /* i.e. if we are not at the top level of the recursion */
                 hChildFirst = GetWindow(GetParent(hwndCtrl),wndSearch);
             else
-            {
-                if(fPrevious)
-                    hChildFirst = GetWindow(hwndCtrl,GW_HWNDLAST);
-                else
-                    hChildFirst = GetWindow(hwndCtrl,GW_HWNDFIRST);
-            }
+                hChildFirst = GetWindow(hwndCtrl, fPrevious ? GW_HWNDLAST : GW_HWNDFIRST);
         }
     }
 
     while(hChildFirst)
     {
-        BOOL bCtrl = FALSE;
-        while(hChildFirst)
+        dsStyle = GetWindowLongA(hChildFirst,GWL_STYLE);
+        exStyle = GetWindowLongA(hChildFirst,GWL_EXSTYLE);
+        if( (exStyle & WS_EX_CONTROLPARENT) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
         {
-            dsStyle = GetWindowLongA(hChildFirst,GWL_STYLE);
-            exStyle = GetWindowLongA(hChildFirst,GWL_EXSTYLE);
-            if( (dsStyle & DS_CONTROL || exStyle & WS_EX_CONTROLPARENT) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
-            {
-                bCtrl=TRUE;
-                break;
-            }
-            else if( (dsStyle & WS_TABSTOP) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
-                break;
-            hChildFirst = GetWindow(hChildFirst,wndSearch);
+            HWND retWnd;
+            retWnd = DIALOG_GetNextTabItem(hwndMain,hChildFirst,NULL,fPrevious );
+            if (retWnd) return (retWnd);
         }
-        if(hChildFirst)
+        else if( (dsStyle & WS_TABSTOP) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
         {
-            if(bCtrl)
-                retWnd = DIALOG_GetNextTabItem(hwndMain,hChildFirst,NULL,fPrevious );
-            else
-                retWnd = hChildFirst;
+            return (hChildFirst);
         }
-        if(retWnd) break;
         hChildFirst = GetWindow(hChildFirst,wndSearch);
     }
-    if(!retWnd && hwndCtrl)
+    if(hwndCtrl)
     {
         HWND hParent = GetParent(hwndCtrl);
         while(hParent)
@@ -1144,7 +1130,8 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
         if(!retWnd)
             retWnd = DIALOG_GetNextTabItem(hwndMain,hwndMain,NULL,fPrevious );
     }
-    return retWnd;
+    return retWnd ? retWnd : hwndCtrl;
+
 }
 
 /**********************************************************************
@@ -1942,7 +1929,6 @@ GetDlgItemTextW(
   return (UINT)SendDlgItemMessageW( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
 
-
 /*
  * @implemented
  */
@@ -1953,54 +1939,110 @@ GetNextDlgGroupItem(
   HWND hCtl,
   BOOL bPrevious)
 {
-	HWND hwnd, retvalue;
+    HWND hwnd, hwndNext, retvalue, hwndLastGroup = 0;
+    BOOL fLooped=FALSE;
+    BOOL fSkipping=FALSE;
 
-    if(hCtl)
-    {
+    if (hDlg == hCtl) hCtl = NULL;
+    if (!hCtl && bPrevious) return 0;
+
         /* if the hwndCtrl is the child of the control in the hwndDlg,
          * then the hwndDlg has to be the parent of the hwndCtrl */
-        if(GetParent(hCtl) != hDlg && GetParent(GetParent(hCtl)) == hDlg)
-            hDlg = GetParent(hCtl);
-    }
 
     if (hCtl)
     {
+        if (!IsChild (hDlg, hCtl)) return 0;
         /* Make sure hwndCtrl is a top-level child */
-        HWND parent = GetParent( hCtl );
-        while (parent && parent != hDlg) parent = GetParent(parent);
-        if (parent != hDlg) return 0;
+
     }
     else
     {
         /* No ctrl specified -> start from the beginning */
         if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
-        if (bPrevious) hCtl = GetWindow( hCtl, GW_HWNDLAST );
+        /* MSDN is wrong. fPrevious does not result in the last child */
+
+        /* No ctrl specified -> start from the beginning */
+        if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
+
+        /* MSDN is wrong. fPrevious does not result in the last child */
+
+        /* Maybe that first one is valid.  If so then we don't want to skip it*/
+        if ((GetWindowLongW( hCtl, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
+        {
+            return hCtl;
+        }
+
     }
 
+    /* Always go forward around the group and list of controls; for the 
+     * previous control keep track; for the next break when you find one
+     */
     retvalue = hCtl;
-    hwnd = GetWindow( hCtl, GW_HWNDNEXT );
-    while (1)
+    hwnd = hCtl;
+    while (hwndNext = GetWindow (hwnd, GW_HWNDNEXT),
+           1)
     {
-        if (!hwnd || (GetWindowLongW( hwnd, GWL_STYLE ) & WS_GROUP))
+        while (!hwndNext)
         {
-            /* Wrap-around to the beginning of the group */
-            HWND tmp;
-
-            hwnd = GetWindow( hDlg, GW_CHILD );
-            for (tmp = hwnd; tmp; tmp = GetWindow( tmp, GW_HWNDNEXT ) )
+            /* Climb out until there is a next sibling of the ancestor or we
+             * reach the top (in which case we loop back to the start)
+             */
+            if (hDlg == GetParent (hwnd))
             {
-                if (GetWindowLongW( tmp, GWL_STYLE ) & WS_GROUP) hwnd = tmp;
-                if (tmp == hCtl) break;
+                /* Wrap around to the beginning of the list, within the same
+                 * group. (Once only)
+                 */
+                if (fLooped) goto end;
+                fLooped = TRUE;
+                hwndNext = GetWindow (hDlg, GW_CHILD);
+            }
+            else
+            {
+                hwnd = GetParent (hwnd);
+                hwndNext = GetWindow (hwnd, GW_HWNDNEXT);
             }
         }
-        if (hwnd == hCtl) break;
-        if ((GetWindowLongW( hwnd, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
+        hwnd = hwndNext;
+
+        /* Wander down the leading edge of controlparents */
+        while ( (GetWindowLongW (hwnd, GWL_EXSTYLE) & WS_EX_CONTROLPARENT) &&
+                ((GetWindowLongW (hwnd, GWL_STYLE) & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE) &&
+                (hwndNext = GetWindow (hwnd, GW_CHILD)))
+            hwnd = hwndNext;
+        /* Question.  If the control is a control parent but either has no
+         * children or is not visible/enabled then if it has a WS_GROUP does
+         * it count?  For that matter does it count anyway?
+         * I believe it doesn't count.
+         */
+
+        if ((GetWindowLongW (hwnd, GWL_STYLE) & WS_GROUP))
+        {
+            hwndLastGroup = hwnd;
+            if (!fSkipping)
+            {
+                /* Look for the beginning of the group */
+                fSkipping = TRUE;
+            }
+        }
+
+        if (hwnd == hCtl)
+        {
+            if (!fSkipping) break;
+            if (hwndLastGroup == hwnd) break;
+            hwnd = hwndLastGroup;
+            fSkipping = FALSE;
+            fLooped = FALSE;
+        }
+
+        if (!fSkipping &&
+            (GetWindowLongW (hwnd, GWL_STYLE) & (WS_VISIBLE|WS_DISABLED)) ==
+             WS_VISIBLE)
         {
             retvalue = hwnd;
             if (!bPrevious) break;
         }
-        hwnd = GetWindow( hwnd, GW_HWNDNEXT );
     }
+end:
     return retvalue;
 }
 
@@ -2015,8 +2057,18 @@ GetNextDlgTabItem(
   HWND hCtl,
   BOOL bPrevious)
 {
+	/* Undocumented but tested under Win2000 and WinME */
+	if (hDlg == hCtl) hCtl = NULL;
+
+	/* Contrary to MSDN documentation, tested under Win2000 and WinME
+	* NB GetLastError returns whatever was set before the function was
+	* called.
+	*/
+	if (!hCtl && bPrevious) return 0;
+
 	return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
 }
+
 
 #if 0
 BOOL
