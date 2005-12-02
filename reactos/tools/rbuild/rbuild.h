@@ -35,10 +35,13 @@
 #endif/*WIN32*/
 #endif/*_MSC_VER*/
 
+#include <infhost.h>
+
 #include "ssprintf.h"
 #include "exception.h"
 #include "xml.h"
-#include <infhost.h>
+
+class Backend; // forward declaration
 
 typedef std::vector<std::string> string_list;
 
@@ -191,6 +194,7 @@ class Project
 {
 	std::string xmlfile;
 	XMLElement *node, *head;
+	Backend* _backend;
 public:
 	const Configuration& configuration;
 	std::string name;
@@ -205,8 +209,11 @@ public:
 	Project ( const Configuration& configuration,
 	          const std::string& filename );
 	~Project ();
+	void SetBackend ( Backend* backend ) { _backend = backend; }
+	Backend& GetBackend() { return *_backend; }
 	void WriteConfigurationFile ();
 	void ExecuteInvocations ();
+
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;

@@ -243,17 +243,19 @@ main ( int argc, char** argv )
 	try
 	{
 		string projectFilename ( RootXmlFile );
+
 		printf ( "Reading build files..." );
 		Project project ( configuration, projectFilename );
 		printf ( "done\n" );
-		project.WriteConfigurationFile ();
-		project.ExecuteInvocations ();
-		Backend* backend = Backend::Factory::Create (
+
+		project.SetBackend ( Backend::Factory::Create (
 			BuildSystem,
 			project,
-			configuration );
-		backend->Process ();
-		delete backend;
+			configuration ) );
+
+		project.WriteConfigurationFile ();
+		project.ExecuteInvocations ();
+		project.GetBackend().Process();
 
 		return 0;
 	}

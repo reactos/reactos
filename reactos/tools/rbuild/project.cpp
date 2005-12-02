@@ -19,6 +19,7 @@
 #include <assert.h>
 
 #include "rbuild.h"
+#include "backend/backend.h"
 
 using std::string;
 using std::vector;
@@ -87,13 +88,15 @@ Project::Project ( const Configuration& configuration,
 	  node (NULL),
 	  head (NULL),
 	  configuration (configuration)
-{  
+{
 	ReadXml();
 }
 
 Project::~Project ()
 {
 	size_t i;
+	if ( _backend )
+		delete _backend;
 	for ( i = 0; i < modules.size (); i++ )
 		delete modules[i];
 	for ( i = 0; i < linkerFlags.size (); i++ )
