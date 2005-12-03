@@ -818,7 +818,7 @@ RemoveFontResourceA(
  */
 DWORD
 STDCALL
-GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, DWORD *height)
+GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 {
     SIZE sz;
     static const WCHAR alphabet[] = {
