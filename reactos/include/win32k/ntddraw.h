@@ -10,11 +10,13 @@ BOOL STDCALL NtGdiD3dContextCreate(
     HANDLE hDirectDrawLocal,
     HANDLE hSurfColor,
     HANDLE hSurfZ,
-    PD3DNTHAL_CONTEXTCREATEDATA pdcci
+    /* Is msdn wrong on D3DNTHAL_CONTEXTCREATEDATA ?? */
+    D3DNTHAL_CONTEXTCREATEDATA *pdcci
 );
 
+
 DWORD STDCALL NtGdiD3dContextDestroy(      
-    PD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
+    LPD3DNTHAL_CONTEXTDESTROYDATA  pContextDestroyData
 );
 
 DWORD STDCALL NtGdiD3dContextDestroyAll(VOID);
@@ -22,15 +24,16 @@ DWORD STDCALL NtGdiD3dContextDestroyAll(VOID);
 DWORD STDCALL NtGdiD3dDrawPrimitives2(      
     HANDLE hCmdBuf,
     HANDLE hVBuf,
-    PD3DNTHAL_DRAWPRIMITIVES2DATA pded,
+    LPD3DNTHAL_DRAWPRIMITIVES2DATA pded,
     FLATPTR *pfpVidMemCmd,
     DWORD *pdwSizeCmd,
     FLATPTR *pfpVidMemVtx,
     DWORD *pdwSizeVtx
+
 );
 
 DWORD STDCALL NtGdiD3dValidateTextureStageState(      
-    PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
+    LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
 );
 
 DWORD STDCALL NtGdiDdAddAttachedSurface(      
@@ -233,8 +236,8 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     HANDLE hDirectDrawLocal,
     DD_HALINFO *pHalInfo,
     DWORD *pCallBackFlags,
-    PD3DNTHAL_CALLBACKS puD3dCallbacks,
-    PD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
+    LPD3DNTHAL_CALLBACKS puD3dCallbacks,
+    LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
     PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
     LPDDSURFACEDESC puD3dTextureFormats,
     DWORD *puNumHeaps,
