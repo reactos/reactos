@@ -20,9 +20,9 @@
  */
 
 #include "config.h"
-#include "dxdiag_private.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+#include "dxdiag_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
@@ -120,21 +120,73 @@ HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(PDXDIAGCONTAINER iface, LP
   return E_INVALIDARG;
 }
 
-HRESULT WINAPI IDxDiagContainerImpl_GetNumberOfProps(PDXDIAGCONTAINER iface, DWORD* pdwCount) {
-  /* IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface; */
-  FIXME("(%p, %p): stub\n", iface, pdwCount);
+HRESULT WINAPI IDxDiagContainerImpl_GetNumberOfProps(PDXDIAGCONTAINER iface, DWORD* pdwCount) 
+{
+  IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface;   
+    
+         
+  *pdwCount = This->nSubpProperty;
+
+   TRACE("(%p)->(%ld)\n", iface, *pdwCount); 
+   
   return S_OK;
 }
 
 HRESULT WINAPI IDxDiagContainerImpl_EnumPropNames(PDXDIAGCONTAINER iface, DWORD dwIndex, LPWSTR pwszPropName, DWORD cchPropName) {
-  /* IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface; */
-  FIXME("(%p, %lu, %s, %lu): stub\n", iface, dwIndex, debugstr_w(pwszPropName), cchPropName);
-  return S_OK;
+   
+    IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface; 
+    
+    if (This->pProperty == NULL)
+    {
+        
+        This->pProperty = (Contain_Property *)HeapAlloc(GetProcessHeap(), 
+                                                        HEAP_ZERO_MEMORY, 
+                                                        sizeof(Contain_Property) *(dwIndex+1));        
+
+        This->nSubpProperty = dwIndex+1;                                                    
+    }                                                        
+    else
+    {
+      if (dwIndex>=This->nSubpProperty)
+      {       
+         This->pProperty = (Contain_Property *) HeapReAlloc(GetProcessHeap(), 
+                                                            HEAP_ZERO_MEMORY, This->pProperty,
+                                                            sizeof(Contain_Property) *(dwIndex+1));        
+        This->nSubpProperty = dwIndex+1; 
+      }
+          
+    }   
+                                                                                                                             
+    lstrcpynW(pwszPropName, This->pProperty[dwIndex].pwszPropName, cchPropName);
+
+    TRACE("(%p)->(%s)\n", iface, debugstr_w(This->pProperty[dwIndex].pwszPropName));
+    return S_OK;
 }
 
-HRESULT WINAPI IDxDiagContainerImpl_GetProp(PDXDIAGCONTAINER iface, LPCWSTR pwszPropName, VARIANT* pvarProp) {
-  /* IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface; */
-  FIXME("(%p, %s, %p): stub\n", iface, debugstr_w(pwszPropName), pvarProp);
+HRESULT WINAPI IDxDiagContainerImpl_GetProp(PDXDIAGCONTAINER iface, LPCWSTR pwszPropName, VARIANT* pvarProp) 
+{
+  IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface; 
+  Contain_Property *propert = This->pProperty;
+  TRACE("(%p)->(%s, %p)\n", iface, debugstr_w(pwszPropName), pvarProp); 
+      
+    while (propert->pwszPropName && lstrcmpW(propert->pwszPropName, pwszPropName))
+    {
+       propert += sizeof(Contain_Property);         
+    }
+
+    if (!propert->pwszPropName)
+        return E_INVALIDARG;
+
+    /* FIXME
+    if (property->pvarProp == VT_EMPTY)
+        return E_INVALIDARG;
+        
+    if (property->pvarProp.vt == VT_ERROR)
+        return E_INVALIDARG;
+    */
+    
+    memcpy(pvarProp,&propert->pvarProp, sizeof(VARIANT));
+            
   return S_OK;
 }
 

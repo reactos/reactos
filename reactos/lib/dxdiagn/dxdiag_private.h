@@ -48,6 +48,12 @@ extern IDxDiagProviderVtbl DxDiagProvider_Vtbl;
 /*****************************************************************************
  * IDxDiagProvider implementation structure
  */
+typedef struct Contain_Property
+{
+    WCHAR *pwszPropName;
+    VARIANT pvarProp;    
+} Contain_Property;
+
 struct IDxDiagProviderImpl {
   /* IUnknown fields */
   IDxDiagProviderVtbl *lpVtbl;
@@ -92,6 +98,8 @@ struct IDxDiagContainerImpl {
   /* IDxDiagContainer fields */
   IDxDiagContainerImpl_SubContainer* subContainers;
   DWORD nSubContainers;
+  Contain_Property* pProperty;
+  DWORD nSubpProperty;
 };
 
 /* IUnknown: */

@@ -1,5 +1,6 @@
 <module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll">
-	<importlibrary definition="ddraw.def" />
+  <autoregister infsection="OleControlDlls" type="DllRegisterServer" />
+  <importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
 	<define name="UNICODE" />
 	<define name="__USE_W32API" />
