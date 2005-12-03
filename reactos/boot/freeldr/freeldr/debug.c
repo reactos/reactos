@@ -231,9 +231,9 @@ VOID DebugPrintHeader(ULONG Mask)
 
 VOID DebugPrint(ULONG Mask, char *format, ...)
 {
-	int *dataptr = (int *) &format;
-        char Buffer[4096];
-        char *ptr = Buffer;
+	va_list ap;
+	char Buffer[4096];
+	char *ptr = Buffer;
 
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))
@@ -248,24 +248,28 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 		DebugStartOfLine = FALSE;
 	}
 
-        vsprintf(Buffer, format, (PVOID)(++dataptr));
-        while (*ptr)
-        {
-            DebugPrintChar(*ptr++);
-        }
+	va_start(ap, format);
+	vsprintf(Buffer, format, ap);
+	va_end(ap);
+	while (*ptr)
+	{
+		DebugPrintChar(*ptr++);
+	}
 }
 
 VOID DebugPrint1(char *format, ...)
 {
-	int *dataptr = (int *) &format;
-        char Buffer[4096];
-        char *ptr = Buffer;
+	va_list ap;
+	char Buffer[4096];
+	char *ptr = Buffer;
 
-        vsprintf(Buffer, format, (PVOID)(++dataptr));
-        while (*ptr)
-        {
-            DebugPrintChar(*ptr++);
-        }
+	va_start(ap, format);
+	vsprintf(Buffer, format, ap);
+	va_end(ap);
+	while (*ptr)
+	{
+		DebugPrintChar(*ptr++);
+	}
 }
 
 VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
