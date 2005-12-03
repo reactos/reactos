@@ -218,8 +218,10 @@ UpdateDevInfo(IN HWND hwndDlg,
               IN BOOL ReOpen)
 {
     HICON hIcon;
-    HWND hDevUsage;
-    HWND hPropSheetDlg;
+    HWND hDevUsage, hPropSheetDlg, hDevProbBtn;
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    UINT TroubleShootStrId = IDS_TROUBLESHOOTDEV;
     BOOL bFlag;
     DWORD i;
     HDEVINFO DeviceInfoSet = NULL;
@@ -458,6 +460,31 @@ GetParentNode:
                        dap->szTemp);
     }
 
+    /* set the device troubleshoot button text and disable it if necessary */
+    hDevProbBtn = GetDlgItem(hwndDlg,
+                             IDC_DEVPROBLEM);
+    EnableWindow(hDevProbBtn,
+                 dap->IsAdmin);
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DeviceInfoData->DevInst,
+                                  0,
+                                  dap->hMachine);
+    if (cr == CR_SUCCESS &&
+        (Status & DN_HAS_PROBLEM) && ProblemNumber == CM_PROB_DISABLED)
+    {
+        TroubleShootStrId = IDS_ENABLEDEV;
+    }
+
+    if (LoadString(hDllInstance,
+                   TroubleShootStrId,
+                   dap->szTemp,
+                   sizeof(dap->szTemp) / sizeof(dap->szTemp[0])) != 0)
+    {
+        SetWindowText(hDevProbBtn,
+                      dap->szTemp);
+    }
+
     /* check if the device can be enabled/disabled */
     hDevUsage = GetDlgItem(hwndDlg,
                            IDC_DEVUSAGE);
@@ -576,6 +603,19 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
                             PropSheet_Changed(GetParent(hwndDlg),
                                               hwndDlg);
                             dap->DeviceUsageChanged = TRUE;
+                        }
+                        break;
+                    }
+
+                    case IDC_DEVPROBLEM:
+                    {
+                        if (dap->IsAdmin)
+                        {
+                            /* display the device problem wizard */
+                            ShowDeviceProblemWizard(hwndDlg,
+                                                    dap->DeviceInfoSet,
+                                                    &dap->DeviceInfoData,
+                                                    dap->hMachine);
                         }
                         break;
                     }
@@ -959,6 +999,12 @@ DeviceAdvancedPropertiesW(IN HWND hWndParent  OPTIONAL,
     HINSTANCE hComCtl32;
     INT_PTR Ret = -1;
 
+    if (lpDeviceID == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* dynamically load comctl32 */
     hComCtl32 = LoadAndInitComctl32();
     if (hComCtl32 != NULL)
@@ -1072,7 +1118,8 @@ Cleanup:
  * ARGUMENTS
  *   hWndParent:    Handle to the parent window
  *   lpMachineName: Machine Name, NULL is the local machine
- *   lpDeviceID:    Specifies the device whose properties are to be shown
+ *   lpDeviceID:    Specifies the device whose properties are to be shown, optional if
+ *                  bShowDevMgr is nonzero
  *   dwFlags:       This parameter can be a combination of the following flags:
  *                  * DPF_DEVICE_STATUS_ACTION: Only valid if bShowDevMgr, causes
  *                                              the default device status action button
@@ -1150,7 +1197,8 @@ Cleanup:
  * ARGUMENTS
  *   hWndParent:    Handle to the parent window
  *   lpMachineName: Machine Name, NULL is the local machine
- *   lpDeviceID:    Specifies the device whose properties are to be shown
+ *   lpDeviceID:    Specifies the device whose properties are to be shown, optional if
+ *                  bShowDevMgr is nonzero
  *   dwFlags:       This parameter can be a combination of the following flags:
  *                  * DPF_DEVICE_STATUS_ACTION: Only valid if bShowDevMgr, causes
  *                                              the default device status action button

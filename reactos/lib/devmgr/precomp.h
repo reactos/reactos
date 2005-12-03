@@ -71,18 +71,18 @@ DeviceProblemTextW(PVOID Unknown1,
                    LPWSTR lpString,
                    UINT uMaxString);
 
-WINBOOL
+BOOL
 WINAPI
-DeviceProblemWizardA(HWND hWndParent,
-                     LPCSTR lpMachineName,
-                     LPCSTR lpDeviceID);
+DeviceProblemWizardA(IN HWND hWndParent  OPTIONAL,
+                     IN LPCSTR lpMachineName  OPTIONAL,
+                     IN LPCSTR lpDeviceID);
 
 
-WINBOOL
+BOOL
 WINAPI
-DeviceProblemWizardW(HWND hWndParent,
-                     LPCWSTR lpMachineName,
-                     LPCWSTR lpDeviceID);
+DeviceProblemWizardW(IN HWND hWndParent  OPTIONAL,
+                     IN LPCWSTR lpMachineName  OPTIONAL,
+                     IN LPCWSTR lpDeviceID);
 
 VOID
 WINAPI
@@ -199,6 +199,14 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                 IN HINSTANCE hComCtl32,
                                 IN LPCWSTR lpMachineName,
                                 IN DWORD dwFlags);
+
+/* DEVPRBLM.C */
+
+BOOL
+ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
+                        IN HDEVINFO hDevInfo,
+                        IN PSP_DEVINFO_DATA DevInfoData,
+                        IN HMACHINE hMachine  OPTIONAL);
 
 /* MISC.C */
 

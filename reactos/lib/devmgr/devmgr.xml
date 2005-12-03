@@ -15,6 +15,7 @@
 	<library>user32</library>
 	<file>devmgr.rc</file>
 	<file>advprop.c</file>
+	<file>devprblm.c</file>
 	<file>hwpage.c</file>
 	<file>misc.c</file>
 	<file>stubs.c</file>
