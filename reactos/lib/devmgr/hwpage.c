@@ -30,13 +30,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef enum
-{
-    HWPD_STANDARDLIST = 0,
-    HWPD_LARGELIST,
-    HWPD_MAX = HWPD_LARGELIST
-} HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
-
 typedef struct _HWDEVINFO
 {
     struct _HWCLASSDEVINFO *ClassDevInfo;
@@ -139,7 +132,8 @@ DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
                                               HwDevInfo->ClassDevInfo->hDevInfo,
                                               &HwDevInfo->DevInfoData,
                                               hpd->hComCtl32,
-                                              NULL) != -1;
+                                              NULL,
+                                              0) != -1;
     }
 
     return Ret;

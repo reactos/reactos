@@ -67,6 +67,7 @@ typedef struct _DEVADVPROP_INFO
     BOOL DeviceUsageChanged : 1;
     BOOL CloseDevInst : 1;
     BOOL IsAdmin : 1;
+    BOOL DoDefaultDevAction : 1;
 
     WCHAR szDevName[255];
     WCHAR szTemp[255];
@@ -682,7 +683,8 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                 IN HDEVINFO DeviceInfoSet,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
                                 IN HINSTANCE hComCtl32,
-                                IN LPCWSTR lpMachineName)
+                                IN LPCWSTR lpMachineName,
+                                IN DWORD dwFlags)
 {
     PROPSHEETHEADER psh = {0};
     PROPSHEETPAGE pspGeneral = {0};
@@ -755,6 +757,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                    (DevIdSize * sizeof(WCHAR)));
     if (DevAdvPropInfo == NULL)
     {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto Cleanup;
     }
 
@@ -788,6 +791,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     DevAdvPropInfo->hComCtl32 = hComCtl32;
 
     DevAdvPropInfo->IsAdmin = IsUserAdmin();
+    DevAdvPropInfo->DoDefaultDevAction = ((dwFlags & DPF_DEVICE_STATUS_ACTION) != 0);
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_PROPTITLE | PSH_NOAPPLYNOW;
@@ -940,19 +944,15 @@ Cleanup:
  *   lpDeviceID:    Specifies the device whose properties are to be shown
  *
  * RETURN VALUE
- *   -1: if errors occured
- *
- * REVISIONS
- *
- * NOTE
+ *   Always returns -1, a call to GetLastError returns 0 if successful
  *
  * @implemented
  */
 INT_PTR
 WINAPI
-DeviceAdvancedPropertiesW(HWND hWndParent,
-                          LPCWSTR lpMachineName,
-                          LPCWSTR lpDeviceID)
+DeviceAdvancedPropertiesW(IN HWND hWndParent  OPTIONAL,
+                          IN LPCWSTR lpMachineName  OPTIONAL,
+                          IN LPCWSTR lpDeviceID)
 {
     HDEVINFO hDevInfo;
     SP_DEVINFO_DATA DevInfoData;
@@ -981,7 +981,8 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
                                                       hDevInfo,
                                                       &DevInfoData,
                                                       hComCtl32,
-                                                      lpMachineName);
+                                                      lpMachineName,
+                                                      0);
             }
 
             SetupDiDestroyDeviceInfoList(hDevInfo);
@@ -1008,19 +1009,15 @@ DeviceAdvancedPropertiesW(HWND hWndParent,
  *   lpDeviceID:    Specifies the device whose properties are to be shown
  *
  * RETURN VALUE
- *   -1: if errors occured
- *
- * REVISIONS
- *
- * NOTE
+ *   Always returns -1, a call to GetLastError returns 0 if successful
  *
  * @implemented
  */
 INT_PTR
 WINAPI
-DeviceAdvancedPropertiesA(HWND hWndParent,
-                          LPCSTR lpMachineName,
-                          LPCSTR lpDeviceID)
+DeviceAdvancedPropertiesA(IN HWND hWndParent  OPTIONAL,
+                          IN LPCSTR lpMachineName  OPTIONAL,
+                          IN LPCSTR lpDeviceID)
 {
     LPWSTR lpMachineNameW = NULL;
     LPWSTR lpDeviceIDW = NULL;
@@ -1059,6 +1056,181 @@ Cleanup:
         HeapFree(GetProcessHeap(),
                  0,
                  lpDeviceIDW);
+    }
+
+    return Ret;
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DevicePropertiesExA
+ *
+ * DESCRIPTION
+ *   Invokes the extended device properties dialog
+ *
+ * ARGUMENTS
+ *   hWndParent:    Handle to the parent window
+ *   lpMachineName: Machine Name, NULL is the local machine
+ *   lpDeviceID:    Specifies the device whose properties are to be shown
+ *   dwFlags:       This parameter can be a combination of the following flags:
+ *                  * DPF_DEVICE_STATUS_ACTION: Only valid if bShowDevMgr, causes
+ *                                              the default device status action button
+ *                                              to be clicked (Troubleshoot, Enable
+ *                                              Device, etc)
+ *   bShowDevMgr:   If non-zero it displays the device manager instead of
+ *                  the advanced device property dialog
+ *
+ * RETURN VALUE
+ *   1:  if bShowDevMgr is non-zero and no error occured
+ *   -1: a call to GetLastError returns 0 if successful
+ *
+ * @implemented
+ */
+INT_PTR
+WINAPI
+DevicePropertiesExA(IN HWND hWndParent  OPTIONAL,
+                    IN LPCSTR lpMachineName  OPTIONAL,
+                    IN LPCSTR lpDeviceID  OPTIONAL,
+                    IN DWORD dwFlags  OPTIONAL,
+                    IN BOOL bShowDevMgr)
+{
+    LPWSTR lpMachineNameW = NULL;
+    LPWSTR lpDeviceIDW = NULL;
+    INT_PTR Ret = -1;
+
+    if (lpMachineName != NULL)
+    {
+        if (!(lpMachineNameW = ConvertMultiByteToUnicode(lpMachineName,
+                                                         CP_ACP)))
+        {
+            goto Cleanup;
+        }
+    }
+    if (lpDeviceID != NULL)
+    {
+        if (!(lpDeviceIDW = ConvertMultiByteToUnicode(lpDeviceID,
+                                                      CP_ACP)))
+        {
+            goto Cleanup;
+        }
+    }
+
+    Ret = DevicePropertiesExW(hWndParent,
+                              lpMachineNameW,
+                              lpDeviceIDW,
+                              dwFlags,
+                              bShowDevMgr);
+
+Cleanup:
+    if (lpMachineNameW != NULL)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpMachineNameW);
+    }
+    if (lpDeviceIDW != NULL)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpDeviceIDW);
+    }
+
+    return Ret;
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DevicePropertiesExW
+ *
+ * DESCRIPTION
+ *   Invokes the extended device properties dialog
+ *
+ * ARGUMENTS
+ *   hWndParent:    Handle to the parent window
+ *   lpMachineName: Machine Name, NULL is the local machine
+ *   lpDeviceID:    Specifies the device whose properties are to be shown
+ *   dwFlags:       This parameter can be a combination of the following flags:
+ *                  * DPF_DEVICE_STATUS_ACTION: Only valid if bShowDevMgr, causes
+ *                                              the default device status action button
+ *                                              to be clicked (Troubleshoot, Enable
+ *                                              Device, etc)
+ *   bShowDevMgr:   If non-zero it displays the device manager instead of
+ *                  the advanced device property dialog
+ *
+ * RETURN VALUE
+ *   1:  if bShowDevMgr is non-zero and no error occured
+ *   -1: a call to GetLastError returns 0 if successful
+ *
+ * @unimplemented
+ */
+INT_PTR
+WINAPI
+DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
+                    IN LPCWSTR lpMachineName  OPTIONAL,
+                    IN LPCWSTR lpDeviceID  OPTIONAL,
+                    IN DWORD dwFlags  OPTIONAL,
+                    IN BOOL bShowDevMgr)
+{
+    INT_PTR Ret = -1;
+
+    if (dwFlags & ~(DPF_UNKNOWN | DPF_DEVICE_STATUS_ACTION))
+    {
+        DPRINT1("DevPropertiesExW: Invalid flags: 0x%x\n",
+                dwFlags & ~(DPF_UNKNOWN | DPF_DEVICE_STATUS_ACTION));
+        SetLastError(ERROR_INVALID_FLAGS);
+        return -1;
+    }
+
+    if (bShowDevMgr)
+    {
+        DPRINT("DevPropertiesExW doesn't support bShowDevMgr!\n");
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+    else
+    {
+        HDEVINFO hDevInfo;
+        SP_DEVINFO_DATA DevInfoData;
+        HINSTANCE hComCtl32;
+
+        if (lpDeviceID == NULL)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return -1;
+        }
+
+        /* dynamically load comctl32 */
+        hComCtl32 = LoadAndInitComctl32();
+        if (hComCtl32 != NULL)
+        {
+            hDevInfo = SetupDiCreateDeviceInfoListEx(NULL,
+                                                     hWndParent,
+                                                     lpMachineName,
+                                                     NULL);
+            if (hDevInfo != INVALID_HANDLE_VALUE)
+            {
+                DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+                if (SetupDiOpenDeviceInfo(hDevInfo,
+                                          lpDeviceID,
+                                          hWndParent,
+                                          0,
+                                          &DevInfoData))
+                {
+                    Ret = DisplayDeviceAdvancedProperties(hWndParent,
+                                                          lpDeviceID,
+                                                          hDevInfo,
+                                                          &DevInfoData,
+                                                          hComCtl32,
+                                                          lpMachineName,
+                                                          dwFlags);
+                }
+
+                SetupDiDestroyDeviceInfoList(hDevInfo);
+            }
+
+            FreeLibrary(hComCtl32);
+        }
     }
 
     return Ret;

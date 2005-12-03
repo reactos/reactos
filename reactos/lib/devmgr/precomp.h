@@ -120,15 +120,22 @@ DeviceManagerPrintW(LPCWSTR lpMachineName,
 
 INT_PTR
 WINAPI
-DeviceAdvancedPropertiesA(HWND hWndParent,
-                          LPCSTR lpMachineName,
-                          LPCSTR lpDeviceID);
+DeviceAdvancedPropertiesA(IN HWND hWndParent  OPTIONAL,
+                          IN LPCSTR lpMachineName  OPTIONAL,
+                          IN LPCSTR lpDeviceID);
 
 INT_PTR
 WINAPI
-DeviceAdvancedPropertiesW(HWND hWndParent,
-                          LPCWSTR lpMachineName,
-                          LPCWSTR lpDeviceID);
+DeviceAdvancedPropertiesW(IN HWND hWndParent  OPTIONAL,
+                          IN LPCWSTR lpMachineName  OPTIONAL,
+                          IN LPCWSTR lpDeviceID);
+
+typedef enum
+{
+    HWPD_STANDARDLIST = 0,
+    HWPD_LARGELIST,
+    HWPD_MAX = HWPD_LARGELIST
+} HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
 
 HWND
 WINAPI
@@ -137,26 +144,28 @@ DeviceCreateHardwarePage(HWND hWndParent,
 
 HWND
 WINAPI
-DeviceCreateHardwarePageEx(HWND hWndParent,
-                           LPGUID lpGuids,
-                           UINT uNumberOfGuids,
-                           UINT Unknown);
+DeviceCreateHardwarePageEx(IN HWND hWndParent,
+                           IN LPGUID lpGuids,
+                           IN UINT uNumberOfGuids,
+                           IN HWPAGE_DISPLAYMODE DisplayMode);
 
-int
+#define DPF_UNKNOWN (0x1)
+#define DPF_DEVICE_STATUS_ACTION    (0x2)
+INT_PTR
 WINAPI
-DevicePropertiesExA(HWND hWndParent,
-                    LPCSTR lpMachineName,
-                    LPCSTR lpDeviceID,
-                    HINSTANCE hInst,
-                    DWORD Unknown);
+DevicePropertiesExA(IN HWND hWndParent  OPTIONAL,
+                    IN LPCSTR lpMachineName  OPTIONAL,
+                    IN LPCSTR lpDeviceID  OPTIONAL,
+                    IN DWORD dwFlags  OPTIONAL,
+                    IN BOOL bShowDevMgr);
 
-int
+INT_PTR
 WINAPI
-DevicePropertiesExW(HWND hWndParent,
-                    LPCWSTR lpMachineName,
-                    LPCWSTR lpDeviceID,
-                    HINSTANCE hInst,
-                    DWORD Unknown);
+DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
+                    IN LPCWSTR lpMachineName  OPTIONAL,
+                    IN LPCWSTR lpDeviceID  OPTIONAL,
+                    IN DWORD dwFlags  OPTIONAL,
+                    IN BOOL bShowDevMgr);
 
 #ifdef UNICODE
 #define DeviceManager_Execute DeviceManager_ExecuteW
@@ -188,7 +197,8 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
                                 IN HDEVINFO DeviceInfoSet,
                                 IN PSP_DEVINFO_DATA DeviceInfoData,
                                 IN HINSTANCE hComCtl32,
-                                IN LPCWSTR lpMachineName);
+                                IN LPCWSTR lpMachineName,
+                                IN DWORD dwFlags);
 
 /* MISC.C */
 

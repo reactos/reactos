@@ -254,7 +254,10 @@ ConvertMultiByteToUnicode(IN LPCSTR lpMultiByteStr,
                              0,
                              nLength * sizeof(WCHAR));
     if (lpUnicodeStr == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
+    }
 
     if (!MultiByteToWideChar(uCodePage,
                              0,
