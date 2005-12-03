@@ -564,6 +564,11 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
 			ULONG Attributes;
+			if (ParentFcb == NULL)
+			{
+				ParentFcb = vfatOpenRootFCB (DeviceExt);
+				ASSERT(ParentFcb != NULL);
+			}
 			Attributes = Stack->Parameters.Create.FileAttributes;
 
 			vfatSplitPathName(&PathNameU, NULL, &FileNameU);
@@ -600,7 +605,10 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		}
 		else
 		{
-			vfatReleaseFCB (DeviceExt, ParentFcb);
+			if (ParentFcb)
+			{
+				vfatReleaseFCB (DeviceExt, ParentFcb);
+			}
 			return(Status);
 		}
 	}
