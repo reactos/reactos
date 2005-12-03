@@ -222,29 +222,30 @@ GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
                             IN DWORD BufferSize);
 
 BOOL
-GetDeviceLocationString(IN DEVINST dnDevInst,
+GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
+                        IN DEVINST dnParentDevInst  OPTIONAL,
                         OUT LPWSTR szBuffer,
                         IN DWORD BufferSize);
 
 BOOL
 GetDeviceStatusString(IN DEVINST DevInst,
-                      IN HANDLE hMachine,
+                      IN HMACHINE hMachine,
                       OUT LPWSTR szBuffer,
                       IN DWORD BufferSize);
 
 BOOL
 IsDeviceHidden(IN DEVINST DevInst,
-               IN HANDLE hMachine,
+               IN HMACHINE hMachine,
                OUT BOOL *IsHidden);
 
 BOOL
 CanDisableDevice(IN DEVINST DevInst,
-                 IN HANDLE hMachine,
+                 IN HMACHINE hMachine,
                  OUT BOOL *CanDisable);
 
 BOOL
 IsDeviceEnabled(IN DEVINST DevInst,
-                IN HANDLE hMachine,
+                IN HMACHINE hMachine,
                 OUT BOOL *IsEnabled);
 
 BOOL

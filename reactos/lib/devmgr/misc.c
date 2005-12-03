@@ -311,62 +311,87 @@ GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
 
 
 BOOL
-GetDeviceLocationString(IN DEVINST dnDevInst,
+GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
+                        IN DEVINST dnParentDevInst  OPTIONAL,
                         OUT LPWSTR szBuffer,
                         IN DWORD BufferSize)
 {
     DWORD RegDataType;
     ULONG DataSize;
     CONFIGRET cRet;
+    LPWSTR szFormatted;
     BOOL Ret = FALSE;
 
     DataSize = BufferSize * sizeof(WCHAR);
-    cRet = CM_Get_DevNode_Registry_Property(dnDevInst,
-                                            CM_DRP_LOCATION_INFORMATION,
-                                            &RegDataType,
-                                            szBuffer,
-                                            &DataSize,
-                                            0);
-    if (cRet != CR_SUCCESS ||
-        RegDataType != REG_SZ)
+    szBuffer[0] = L'\0';
+    if (dnParentDevInst != 0)
     {
-        szBuffer[0] = L'\0';
-        if (LoadString(hDllInstance,
-                       IDS_UNKNOWN,
-                       szBuffer,
-                       BufferSize))
-        {
-            Ret = TRUE;
-        }
-    }
-    else
-    {
-        /* FIXME - check string for NULL termination! */
-        Ret = TRUE;
-    }
-
-    if (szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
-    {
-        /* convert the string to an integer value and create a
-           formatted string */
-        LPWSTR szFormatted;
-        ULONG ulLocation = (ULONG)wcstoul(szBuffer,
-                                          NULL,
-                                          10);
-        if (LoadAndFormatString(hDllInstance,
-                                IDS_LOCATIONSTR,
-                                &szFormatted,
-                                ulLocation,
-                                szBuffer) != 0)
+        /* query the parent node name */
+        if (CM_Get_DevNode_Registry_Property(dnParentDevInst,
+                                             CM_DRP_DEVICEDESC,
+                                             &RegDataType,
+                                             szBuffer,
+                                             &DataSize,
+                                             0) == CR_SUCCESS &&
+             RegDataType == REG_SZ &&
+             LoadAndFormatString(hDllInstance,
+                                 IDS_DEVONPARENT,
+                                 &szFormatted,
+                                 szBuffer) != 0)
         {
             wcsncpy(szBuffer,
                     szFormatted,
                     BufferSize - 1);
             szBuffer[BufferSize - 1] = L'\0';
             LocalFree((HLOCAL)szFormatted);
+            Ret = TRUE;
         }
-        else
-            Ret = FALSE;
+    }
+    else if (dnDevInst != 0)
+    {
+        cRet = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                                CM_DRP_LOCATION_INFORMATION,
+                                                &RegDataType,
+                                                szBuffer,
+                                                &DataSize,
+                                                0);
+        if (cRet == CR_SUCCESS && RegDataType == REG_SZ)
+        {
+            /* FIXME - check string for NULL termination! */
+            Ret = TRUE;
+        }
+
+        if (Ret && szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
+        {
+            /* convert the string to an integer value and create a
+               formatted string */
+            ULONG ulLocation = (ULONG)wcstoul(szBuffer,
+                                              NULL,
+                                              10);
+            if (LoadAndFormatString(hDllInstance,
+                                    IDS_LOCATIONSTR,
+                                    &szFormatted,
+                                    ulLocation,
+                                    szBuffer) != 0)
+            {
+                wcsncpy(szBuffer,
+                        szFormatted,
+                        BufferSize - 1);
+                szBuffer[BufferSize - 1] = L'\0';
+                LocalFree((HLOCAL)szFormatted);
+            }
+            else
+                Ret = FALSE;
+        }
+    }
+
+    if (!Ret &&
+        LoadString(hDllInstance,
+                   IDS_UNKNOWN,
+                   szBuffer,
+                   BufferSize))
+    {
+        Ret = TRUE;
     }
 
     return Ret;
@@ -430,7 +455,7 @@ static const UINT ProblemStringId[] =
 
 BOOL
 GetDeviceStatusString(IN DEVINST DevInst,
-                      IN HANDLE hMachine,
+                      IN HMACHINE hMachine,
                       OUT LPWSTR szBuffer,
                       IN DWORD BufferSize)
 {
@@ -514,7 +539,7 @@ GeneralMessage:
 
 BOOL
 IsDeviceHidden(IN DEVINST DevInst,
-               IN HANDLE hMachine,
+               IN HMACHINE hMachine,
                OUT BOOL *IsHidden)
 {
     CONFIGRET cr;
@@ -538,7 +563,7 @@ IsDeviceHidden(IN DEVINST DevInst,
 
 BOOL
 CanDisableDevice(IN DEVINST DevInst,
-                 IN HANDLE hMachine,
+                 IN HMACHINE hMachine,
                  OUT BOOL *CanDisable)
 {
     CONFIGRET cr;
@@ -562,7 +587,7 @@ CanDisableDevice(IN DEVINST DevInst,
 
 BOOL
 IsDeviceEnabled(IN DEVINST DevInst,
-                IN HANDLE hMachine,
+                IN HMACHINE hMachine,
                 OUT BOOL *IsEnabled)
 {
     CONFIGRET cr;

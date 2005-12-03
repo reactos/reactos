@@ -49,7 +49,10 @@ typedef struct _DEVADVPROP_INFO
 
     HDEVINFO DeviceInfoSet;
     SP_DEVINFO_DATA DeviceInfoData;
-    HANDLE hMachine;
+    HDEVINFO CurrentDeviceInfoSet;
+    SP_DEVINFO_DATA CurrentDeviceInfoData;
+    DEVINST ParentDevInst;
+    HMACHINE hMachine;
     LPCWSTR lpMachineName;
 
     HINSTANCE hComCtl32;
@@ -62,7 +65,8 @@ typedef struct _DEVADVPROP_INFO
     BOOL CanDisable : 1;
     BOOL DeviceEnabled : 1;
     BOOL DeviceUsageChanged : 1;
-    BOOL CreatedDevInfoSet : 1;
+    BOOL CloseDevInst : 1;
+    BOOL IsAdmin : 1;
 
     WCHAR szDevName[255];
     WCHAR szTemp[255];
@@ -170,7 +174,7 @@ static VOID
 ApplyGeneralSettings(IN HWND hwndDlg,
                      IN PDEVADVPROP_INFO dap)
 {
-    if (dap->DeviceUsageChanged)
+    if (dap->DeviceUsageChanged && dap->IsAdmin)
     {
         DEVENABLEACTION SelectedUsageAction;
 
@@ -217,13 +221,14 @@ UpdateDevInfo(IN HWND hwndDlg,
     HWND hPropSheetDlg;
     BOOL bFlag;
     DWORD i;
+    HDEVINFO DeviceInfoSet = NULL;
+    PSP_DEVINFO_DATA DeviceInfoData = NULL;
 
     hPropSheetDlg = GetParent(hwndDlg);
 
     if (ReOpen)
     {
         PROPSHEETHEADER psh;
-        HDEVINFO hOldDevInfo;
 
         /* switch to the General page */
         PropSheet_SetCurSelByID(hPropSheetDlg,
@@ -254,46 +259,56 @@ UpdateDevInfo(IN HWND hwndDlg,
         dap->nDevPropSheets = 0;
 
         /* create a new device info set and re-open the device */
-        hOldDevInfo = dap->DeviceInfoSet;
-        dap->DeviceInfoSet = SetupDiCreateDeviceInfoListEx(NULL,
-                                                           hwndDlg,
-                                                           dap->lpMachineName,
-                                                           NULL);
-        if (dap->DeviceInfoSet != INVALID_HANDLE_VALUE)
+        if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
         {
-            if (SetupDiOpenDeviceInfo(dap->DeviceInfoSet,
+            SetupDiDestroyDeviceInfoList(dap->CurrentDeviceInfoSet);
+        }
+
+        dap->ParentDevInst = 0;
+        dap->CurrentDeviceInfoSet = SetupDiCreateDeviceInfoListEx(NULL,
+                                                                  hwndDlg,
+                                                                  dap->lpMachineName,
+                                                                  NULL);
+        if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+        {
+            if (SetupDiOpenDeviceInfo(dap->CurrentDeviceInfoSet,
                                       dap->szDeviceID,
                                       hwndDlg,
                                       0,
-                                      &dap->DeviceInfoData))
+                                      &dap->CurrentDeviceInfoData))
             {
-                if (dap->CreatedDevInfoSet)
+                if (dap->CloseDevInst)
                 {
-                    SetupDiDestroyDeviceInfoList(hOldDevInfo);
+                    SetupDiDestroyDeviceInfoList(dap->DeviceInfoSet);
                 }
 
-                dap->CreatedDevInfoSet = TRUE;
+                dap->CloseDevInst = TRUE;
+                dap->DeviceInfoSet = dap->CurrentDeviceInfoSet;
+                dap->DeviceInfoData = dap->CurrentDeviceInfoData;
+                dap->CurrentDeviceInfoSet = INVALID_HANDLE_VALUE;
             }
             else
-            {
-                SetupDiDestroyDeviceInfoList(dap->DeviceInfoSet);
-                dap->DeviceInfoSet = INVALID_HANDLE_VALUE;
-                dap->CreatedDevInfoSet = FALSE;
-            }
+                goto GetParentNode;
         }
         else
         {
-            /* oops, something went wrong, restore the old device info set */
-            dap->DeviceInfoSet = hOldDevInfo;
+GetParentNode:
+            /* get the parent node from the initial devinst */
+            CM_Get_Parent_Ex(&dap->ParentDevInst,
+                             dap->DeviceInfoData.DevInst,
+                             0,
+                             dap->hMachine);
+        }
 
-            if (dap->DeviceInfoSet != INVALID_HANDLE_VALUE)
-            {
-                SetupDiOpenDeviceInfo(dap->DeviceInfoSet,
-                                      dap->szDeviceID,
-                                      hwndDlg,
-                                      0,
-                                      &dap->DeviceInfoData);
-            }
+        if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+        {
+            DeviceInfoSet = dap->CurrentDeviceInfoSet;
+            DeviceInfoData = &dap->CurrentDeviceInfoData;
+        }
+        else
+        {
+            DeviceInfoSet = dap->DeviceInfoSet;
+            DeviceInfoData = &dap->DeviceInfoData;
         }
 
         /* find out how many new device property sheets to add.
@@ -303,8 +318,8 @@ UpdateDevInfo(IN HWND hwndDlg,
         psh.dwFlags = 0;
         psh.nPages = 0;
 
-        if (!SetupDiGetClassDevPropertySheets(dap->DeviceInfoSet,
-                                              &dap->DeviceInfoData,
+        if (!SetupDiGetClassDevPropertySheets(DeviceInfoSet,
+                                              DeviceInfoData,
                                               &psh,
                                               0,
                                               &dap->nDevPropSheets,
@@ -319,8 +334,8 @@ UpdateDevInfo(IN HWND hwndDlg,
                 psh.phpage = dap->DevPropSheets;
 
                 /* query the new property sheet pages to add */
-                if (SetupDiGetClassDevPropertySheets(dap->DeviceInfoSet,
-                                                     &dap->DeviceInfoData,
+                if (SetupDiGetClassDevPropertySheets(DeviceInfoSet,
+                                                     DeviceInfoData,
                                                      &psh,
                                                      dap->nDevPropSheets,
                                                      NULL,
@@ -353,10 +368,23 @@ UpdateDevInfo(IN HWND hwndDlg,
                 dap->nDevPropSheets = 0;
         }
     }
+    else
+    {
+        if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+        {
+            DeviceInfoSet = dap->CurrentDeviceInfoSet;
+            DeviceInfoData = &dap->CurrentDeviceInfoData;
+        }
+        else
+        {
+            DeviceInfoSet = dap->DeviceInfoSet;
+            DeviceInfoData = &dap->DeviceInfoData;
+        }
+    }
 
     /* get the device name */
-    if (GetDeviceDescriptionString(dap->DeviceInfoSet,
-                                   &dap->DeviceInfoData,
+    if (GetDeviceDescriptionString(DeviceInfoSet,
+                                   DeviceInfoData,
                                    dap->szDevName,
                                    sizeof(dap->szDevName) / sizeof(dap->szDevName[0])))
     {
@@ -366,7 +394,7 @@ UpdateDevInfo(IN HWND hwndDlg,
     }
 
     /* set the device image */
-    if (SetupDiLoadClassIcon(&dap->DeviceInfoData.ClassGuid,
+    if (SetupDiLoadClassIcon(&DeviceInfoData->ClassGuid,
                              &hIcon,
                              NULL))
     {
@@ -387,7 +415,7 @@ UpdateDevInfo(IN HWND hwndDlg,
                    dap->szDevName);
 
     /* set the device type edit control text */
-    if (GetDeviceTypeString(&dap->DeviceInfoData,
+    if (GetDeviceTypeString(DeviceInfoData,
                             dap->szTemp,
                             sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
     {
@@ -397,8 +425,8 @@ UpdateDevInfo(IN HWND hwndDlg,
     }
 
     /* set the device manufacturer edit control text */
-    if (GetDeviceManufacturerString(dap->DeviceInfoSet,
-                                    &dap->DeviceInfoData,
+    if (GetDeviceManufacturerString(DeviceInfoSet,
+                                    DeviceInfoData,
                                     dap->szTemp,
                                     sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
     {
@@ -408,7 +436,8 @@ UpdateDevInfo(IN HWND hwndDlg,
     }
 
     /* set the device location edit control text */
-    if (GetDeviceLocationString(dap->DeviceInfoData.DevInst,
+    if (GetDeviceLocationString(DeviceInfoData->DevInst,
+                                dap->ParentDevInst,
                                 dap->szTemp,
                                 sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
     {
@@ -418,7 +447,7 @@ UpdateDevInfo(IN HWND hwndDlg,
     }
 
     /* set the device status edit control text */
-    if (GetDeviceStatusString(dap->DeviceInfoData.DevInst,
+    if (GetDeviceStatusString(DeviceInfoData->DevInst,
                               dap->hMachine,
                               dap->szTemp,
                               sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
@@ -435,14 +464,14 @@ UpdateDevInfo(IN HWND hwndDlg,
     dap->CanDisable = FALSE;
     dap->DeviceEnabled = FALSE;
 
-    if (CanDisableDevice(dap->DeviceInfoData.DevInst,
+    if (CanDisableDevice(DeviceInfoData->DevInst,
                          dap->hMachine,
                          &bFlag))
     {
         dap->CanDisable = bFlag;
     }
 
-    if (IsDeviceEnabled(dap->DeviceInfoData.DevInst,
+    if (IsDeviceEnabled(DeviceInfoData->DevInst,
                         dap->hMachine,
                         &bFlag))
     {
@@ -452,9 +481,9 @@ UpdateDevInfo(IN HWND hwndDlg,
     /* enable/disable the device usage controls */
     EnableWindow(GetDlgItem(hwndDlg,
                             IDC_DEVUSAGELABEL),
-                 dap->CanDisable);
+                 dap->CanDisable && dap->IsAdmin);
     EnableWindow(hDevUsage,
-                 dap->CanDisable);
+                 dap->CanDisable && dap->IsAdmin);
 
     /* clear the combobox */
     SendMessage(hDevUsage,
@@ -662,7 +691,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     PCREATEPROPERTYSHEETPAGEW pCreatePropertySheetPageW;
     PDESTROYPROPERTYSHEETPAGE pDestroyPropertySheetPage;
     PDEVADVPROP_INFO DevAdvPropInfo;
-    HANDLE hMachine = NULL;
+    HMACHINE hMachine = NULL;
     DWORD DevIdSize = 0;
     INT_PTR Ret = -1;
 
@@ -750,10 +779,15 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
 
     DevAdvPropInfo->DeviceInfoSet = DeviceInfoSet;
     DevAdvPropInfo->DeviceInfoData = *DeviceInfoData;
+    DevAdvPropInfo->CurrentDeviceInfoSet = INVALID_HANDLE_VALUE;
+    DevAdvPropInfo->CurrentDeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+
     DevAdvPropInfo->hMachine = hMachine;
     DevAdvPropInfo->lpMachineName = lpMachineName;
     DevAdvPropInfo->szDevName[0] = L'\0';
     DevAdvPropInfo->hComCtl32 = hComCtl32;
+
+    DevAdvPropInfo->IsAdmin = IsUserAdmin();
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_PROPTITLE | PSH_NOAPPLYNOW;
@@ -860,10 +894,15 @@ Cleanup:
                      DevAdvPropInfo->DevPropSheets);
         }
 
-        if (DevAdvPropInfo->CreatedDevInfoSet)
+        if (DevAdvPropInfo->CloseDevInst)
         {
             /* close the device info set in case a new one was created */
             SetupDiDestroyDeviceInfoList(DevAdvPropInfo->DeviceInfoSet);
+        }
+
+        if (DevAdvPropInfo->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+        {
+            SetupDiDestroyDeviceInfoList(DevAdvPropInfo->CurrentDeviceInfoSet);
         }
 
         HeapFree(GetProcessHeap(),

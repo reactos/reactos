@@ -182,6 +182,7 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 
         /* get the location string */
         if (GetDeviceLocationString(HwDevInfo->DevInfoData.DevInst,
+                                    0,
                                     szBuffer,
                                     sizeof(szBuffer) / sizeof(szBuffer[0])) &&
             LoadAndFormatString(hDllInstance,

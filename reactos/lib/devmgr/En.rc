@@ -16,6 +16,7 @@ BEGIN
     IDS_DISABLEDEVICE "Do not use this device (disable)"
     IDS_UNKNOWNDEVICE "Unknown device"
     IDS_NODRIVERLOADED "No drivers are installed for this device."
+    IDS_DEVONPARENT "on %1"
 END
 
 STRINGTABLE
