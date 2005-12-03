@@ -1,9 +1,7 @@
-/* 
- * $Id$
- */
-
 /*
  * void *memcpy (void *to, const void *from, size_t count)
+ *
+ * Some optimization research can be found in media/doc/memcpy_optimize.txt
  */
 
 .globl	_memcpy
