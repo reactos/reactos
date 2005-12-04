@@ -769,9 +769,12 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
          RGNDATA_UnlockRgn(Rgn);
          IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->ClientRect);
-         IntGdiOffsetRect(&Ps.rcPaint,
-                          -Window->ClientRect.left,
-                          -Window->ClientRect.top);
+         if (! IntGdiIsEmptyRect(&Ps.rcPaint))
+         {
+            IntGdiOffsetRect(&Ps.rcPaint,
+                             -Window->ClientRect.left,
+                             -Window->ClientRect.top);
+         }
       }
       else
       {
