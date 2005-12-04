@@ -47,16 +47,28 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	FILE* OUT = fopen ( vcproj_file.c_str(), "wb" );
 
 	vector<string> imports;
-	for ( i = 0; i < module.non_if_data.libraries.size(); i++ )
-	{
-		imports.push_back ( module.non_if_data.libraries[i]->name );
-	}
-
 	string module_type = GetExtension(module.GetTargetName());
 	bool lib = (module.type == ObjectLibrary) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe");
 	bool sys = (module_type == ".sys");
+
+	string path_basedir = module.GetPathToBaseDir ();
+	string intenv = Environment::GetIntermediatePath ();
+	string outenv = Environment::GetOutputPath ();
+	string outdir;
+	string intdir;
+	
+	if ( intenv == "obj-i386" )
+		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
+	else
+		intdir = intenv;
+
+	if ( outenv == "output-i386" )
+		outdir = path_basedir + "output-i386";
+	else
+		outdir = outenv;
+
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
 	bool console = exe && (module.type == Win32CUI);
@@ -130,7 +142,19 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
 		{
-			libraries.push_back ( libs[i]->name + ".lib" );
+#if 0
+			// this code is deactivated untill the tree builds fine with msvc
+			// --- is appended to each library path which is later
+			// replaced by the configuration
+			// i.e. ../output-i386/lib/rtl/---/rtl.lib becomes
+			//      ../output-i386/lib/rtl/Debug/rtl.lib 
+			// etc
+			libs[i]->importedModule->
+			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath() + "\\---\\" + libs[i]->name + ".lib";
+			libraries.push_back ( libpath );
+#else
+		libraries.push_back ( libs[i]->name + ".lib" );
+#endif
 		}
 		const vector<Define*>& defs = data.defines;
 		for ( i = 0; i < defs.size(); i++ )
@@ -229,8 +253,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t<Configuration\r\n" );
 		fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.c_str() );
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\"\r\n", cfg.c_str() );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\"\r\n", cfg.c_str() );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.c_str() );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), cfg.c_str() );
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
 		fprintf ( OUT, "\t\t\tCharacterSet=\"2\">\r\n" );
 
@@ -316,6 +340,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", release ? "0" : "4" );
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", release ? "FALSE" : "TRUE");
+		if ( !module.cplusplus )
+			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : "4");
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
@@ -337,7 +363,17 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			{
 				if ( i > 0 )
 					fprintf ( OUT, " " );
+#if 0 
+				// this code is deactivated untill 
+				// msvc can build the whole tree
+				string libpath = libraries[i].c_str();
+				libpath.replace (libpath.find("---"), //See HACK
+					             3,
+								 cfg);
+				fprintf ( OUT, "%s", libpath.c_str() );
+#else
 				fprintf ( OUT, "%s", libraries[i].c_str() );
+#endif
 			}
 			fprintf ( OUT, "\"\r\n" );
 

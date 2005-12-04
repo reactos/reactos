@@ -322,6 +322,7 @@ public:
 	std::string GetBasePath () const; // "path"
 	std::string GetPath () const; // "path/foo.exe"
 	std::string GetPathWithPrefix ( const std::string& prefix ) const; // "path/prefixfoo.exe"
+	std::string GetPathToBaseDir() const; // "../" offset to rootdirectory
 	void GetTargets ( string_list& ) const;
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;

@@ -997,6 +997,19 @@ Module::GetPathWithPrefix ( const string& prefix ) const
 }
 
 string
+Module::GetPathToBaseDir () const
+{
+	string temp_path = path;
+	string result = "..\\";
+	while(temp_path.find ('\\') != string::npos)
+	{
+		temp_path.erase (0, temp_path.find('\\')+1);
+		result += "..\\";
+	}
+	return result;
+}
+
+string
 Module::GetInvocationTarget ( const int index ) const
 {
 	return ssprintf ( "%s_invoke_%d",
