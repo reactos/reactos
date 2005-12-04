@@ -254,6 +254,7 @@ typedef struct _CLIENT_ID
 //
 // Descriptor Table Entry Definition
 //
+#define _DESCRIPTOR_TABLE_ENTRY_DEFINED
 typedef struct _DESCRIPTOR_TABLE_ENTRY
 {
     ULONG Selector;

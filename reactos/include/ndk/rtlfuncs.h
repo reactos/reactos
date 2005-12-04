@@ -2282,6 +2282,45 @@ RtlIpv4StringToAddressW(
     OUT PULONG IpAddr
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressA(
+    IN LPSTR Name,
+    OUT PULONG Unknown,
+    OUT PVOID IpAddr
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressW(
+    IN LPWSTR Name,
+    OUT PULONG Unknown,
+    OUT PVOID IpAddr
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressExA(
+    IN LPSTR AddressName,
+    IN PVOID Address,
+    IN PULONG ScopeId,
+    IN PWORD Port
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressExW(
+    IN LPWSTR AddressName,
+    IN PVOID Address,
+    IN PULONG ScopeId,
+    IN PWORD Port
+);
+
+
 //
 // Time Functions
 //

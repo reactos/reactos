@@ -233,15 +233,12 @@ RtlIpv6AddressToStringExW(
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressA(
-	IN LPSTR IpString,
-	IN ULONG Base,
-	OUT PVOID PtrToIpAddr,
-	OUT ULONG IpAddr
-	)
+RtlIpv6StringToAddressA(IN LPSTR Name,
+                        OUT PULONG Unknown,
+                        OUT PVOID IpAddr)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -249,15 +246,13 @@ RtlIpv6StringToAddressA(
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressExA(
-	IN LPSTR IpString,
-	IN ULONG Base,
-	OUT PULONG IpAddr,
-	OUT PULONG Port
-	)
+RtlIpv6StringToAddressExA(IN LPSTR AddressName,
+                          IN PVOID Address,
+                          IN PULONG ScopeId,
+                          IN PWORD Port)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -265,15 +260,12 @@ RtlIpv6StringToAddressExA(
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressW(
-	IN LPWSTR IpString,
-	IN ULONG Base,
-	OUT PVOID PtrToIpAddr,
-	OUT ULONG IpAddr
-	)
+RtlIpv6StringToAddressW(IN LPWSTR Name,
+                        OUT PULONG Unknown,
+                        OUT PVOID IpAddr)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -281,16 +273,13 @@ RtlIpv6StringToAddressW(
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressExW(
-	IN LPWSTR IpString,
-	IN ULONG Base,
-	OUT PULONG IpAddr,
-	OUT PULONG Port
-	)
+RtlIpv6StringToAddressExW(IN LPWSTR AddressName,
+                          IN PVOID Address,
+                          IN PULONG ScopeId,
+                          IN PWORD Port)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */

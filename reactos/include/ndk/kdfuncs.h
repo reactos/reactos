@@ -105,6 +105,12 @@ BOOLEAN
 NTAPI
 KdPortEnableInterrupts(VOID);
 
+BOOLEAN
+NTAPI
+KdDebuggerInitialize0(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 #endif
 
 //

@@ -110,6 +110,7 @@ Author:
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
 #define KPCR_SET_MEMBER                         0x48
+#define KPCR_NUMBER                             0x51
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134

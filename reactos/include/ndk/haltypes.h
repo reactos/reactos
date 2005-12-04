@@ -61,10 +61,29 @@ typedef enum _FIRMWARE_ENTRY
 //
 // Hal Private dispatch Table
 //
-#define HAL_PRIVATE_DISPATCH_VERSION        1
+#define HAL_PRIVATE_DISPATCH_VERSION        2
 typedef struct _HAL_PRIVATE_DISPATCH
 {
     ULONG Version;
+    PVOID HalHandlerForBus;
+    PVOID HalHandlerForBus2;
+    PVOID HalLocateHiberRanges;
+    PVOID HalRegisterBusHandler;
+    PVOID HalSetWakeEnable;
+    PVOID HalSetWakeAlarm;
+    PVOID HalTranslateBusAddress;
+    PVOID HalTranslateBusAddress2;
+    PVOID HalHaltSystem;
+    PVOID Null;
+    PVOID Null2;
+    PVOID HalAllocateMapRegisters;
+    PVOID KdSetupPciDeviceForDebugging;
+    PVOID KdReleasePciDeviceforDebugging;
+    PVOID KdGetAcpiTablePhase0;
+    PVOID HalReferenceHandler;
+    PVOID HalVectorToIDTEntry;
+    PVOID MatchAll;
+    PVOID KdUnmapVirtualAddress;
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
 
 #ifndef _REACTOS_
