@@ -166,4 +166,5 @@
 #define E_PROP_ID_UNSUPPORTED                    ((HRESULT)0x80070490)
 
 #endif
+#endif
 
