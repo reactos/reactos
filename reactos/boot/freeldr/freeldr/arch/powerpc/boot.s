@@ -1,3 +1,3 @@
 	.extern PpcInit
 _start:
-	b	PpcInit
+	b	PpcInit+4

@@ -61,9 +61,10 @@ _begin:
 	li      %r9,0x12             /* BATL(0, BAT_M, BAT_PP_RW) */
 	mtibatl 0,%r9           
 	mtdbatl 0,%r9           
-	li      %r9,0x1ffe           /* BATU(0, BAT_BL_256M, BAT_Vs) */
-	mtibatu 0,%r9           
-	mtdbatu 0,%r9           
+	li      %r10,0x1ffe          /* BATU(0, BAT_BL_256M, BAT_Vs) */
+	mtibatu 0,%r10           
+	mtdbatu 0,%r10
+
 	isync                   
 
 	li	%r8,0x3030
@@ -92,6 +93,8 @@ _begin:
 	bl	ofw_print_string
 
 	bl	ofw_print_eol
+
+	bl	setup_exc
 
 	/* Zero CTR */
 	mtcr	%r31
@@ -630,6 +633,53 @@ ofw_finddevice:
 	/* Return */
 	blr
 
+ofw_open:
+	/* Reserve stack space ...
+	 * 20 bytes for the ofw call,
+	 * r8, r9, and lr */
+	subi	%r1,%r1,32
+
+	/* Store r8, r9, lr */
+	stw	%r8,20(%r1)
+	stw	%r9,24(%r1)
+	mflr	%r8
+	stw	%r8,28(%r1)
+	
+	/* Get open name */
+	lis	%r8,0xe00000@ha
+	addi	%r9,%r8,ofw_open_name - _start
+	stw	%r9,0(%r1)
+
+	/* 1 Argument and 1 return */
+	li	%r9,1
+	stw	%r9,4(%r1)
+	stw	%r9,8(%r1)
+
+	stw	%r3,12(%r1)
+
+	/* Load up the call address */
+	lwz	%r9,ofw_call_addr - _start(%r8)
+	mtlr	%r9
+
+	/* Set argument */
+	mr	%r3,%r1
+	
+	/* Fire */
+	blrl
+	
+	lwz	%r3,16(%r1)
+	
+	/* Restore registers */
+	lwz	%r8,28(%r1)
+	mtlr	%r8
+	lwz	%r9,24(%r1)
+	lwz	%r8,20(%r1)
+	
+	addi	%r1,%r1,32
+	
+	/* Return */
+	blr
+
 ofw_getprop_hook:
 	/* Reserve stack space:
 	 * 32 bytes for the ofw call
@@ -889,7 +939,224 @@ ofw_exit_loop:
 	/* Fire */
 	blrl
 	/* No return from exit */
+
+ofw_child:
+	/* Reserve stack space ...
+	 * 20 bytes for the ofw call,
+	 * r8, r9, and lr */
+	subi	%r1,%r1,32
+
+	/* Store r8, r9, lr */
+	stw	%r8,20(%r1)
+	stw	%r9,24(%r1)
+	mflr	%r8
+	stw	%r8,28(%r1)
+	
+	/* Get child name */
+	lis	%r8,0xe00000@ha
+	addi	%r9,%r8,ofw_child_name - _start
+	stw	%r9,0(%r1)
+
+	/* 1 Argument and 1 return */
+	li	%r9,1
+	stw	%r9,4(%r1)
+	stw	%r9,8(%r1)
+
+	stw	%r3,12(%r1)
+
+	/* Load up the call address */
+	lwz	%r9,ofw_call_addr - _start(%r8)
+	mtlr	%r9
+
+	/* Set argument */
+	mr	%r3,%r1
+	
+	/* Fire */
+	blrl
+	
+	lwz	%r3,16(%r1)
+	
+	/* Restore registers */
+	lwz	%r8,28(%r1)
+	mtlr	%r8
+	lwz	%r9,24(%r1)
+	lwz	%r8,20(%r1)
+	
+	addi	%r1,%r1,32
+	
+	/* Return */
+	blr
+	
+ofw_peer:
+	/* Reserve stack space ...
+	 * 20 bytes for the ofw call,
+	 * r8, r9, and lr */
+	subi	%r1,%r1,32
+
+	/* Store r8, r9, lr */
+	stw	%r8,20(%r1)
+	stw	%r9,24(%r1)
+	mflr	%r8
+	stw	%r8,28(%r1)
+	
+	/* Get peer name */
+	lis	%r8,0xe00000@ha
+	addi	%r9,%r8,ofw_peer_name - _start
+	stw	%r9,0(%r1)
+
+	/* 1 Argument and 1 return */
+	li	%r9,1
+	stw	%r9,4(%r1)
+	stw	%r9,8(%r1)
+
+	stw	%r3,12(%r1)
+
+	/* Load up the call address */
+	lwz	%r9,ofw_call_addr - _start(%r8)
+	mtlr	%r9
+
+	/* Set argument */
+	mr	%r3,%r1
+	
+	/* Fire */
+	blrl
+	
+	lwz	%r3,16(%r1)
+	
+	/* Restore registers */
+	lwz	%r8,28(%r1)
+	mtlr	%r8
+	lwz	%r9,24(%r1)
+	lwz	%r8,20(%r1)
+	
+	addi	%r1,%r1,32
+	
+	/* Return */
+	blr
+				
+ofw_seek:
+	/* Reserve stack space ...
+	 * 20 bytes for the ofw call,
+	 * r8, r9, and lr */
+	subi	%r1,%r1,32
+
+	/* Store r8, r9, lr */
+	stw	%r8,20(%r1)
+	stw	%r9,24(%r1)
+	mflr	%r8
+	stw	%r8,28(%r1)
+	
+	/* Get peer name */
+	lis	%r8,0xe00000@ha
+	addi	%r9,%r8,ofw_seek_name - _start
+	stw	%r9,0(%r1)
+
+	/* 3 Arguments and 1 return */
+	li	%r9,3
+	stw	%r9,4(%r1)
+	li	%r9,1
+	stw	%r9,8(%r1)
+
+	stw	%r3,12(%r1)
+	stw	%r4,16(%r1)
+	stw	%r5,20(%r1)
+
+	/* Load up the call address */
+	lwz	%r9,ofw_call_addr - _start(%r8)
+	mtlr	%r9
+
+	/* Set argument */
+	mr	%r3,%r1
+	
+	/* Fire */
+	blrl
+	
+	lwz	%r3,16(%r1)
+	
+	/* Restore registers */
+	lwz	%r8,28(%r1)
+	mtlr	%r8
+	lwz	%r9,24(%r1)
+	lwz	%r8,20(%r1)
+	
+	addi	%r1,%r1,32
+	
+	/* Return */
+	blr
+
+
+setup_exc:
+	subi	%r1,%r1,32
+
+	stw	%r3,0(%r1)
+	mflr	%r3
+	stw	%r3,4(%r1)
+	stw	%r8,8(%r1)
+	stw	%r9,12(%r1)
+	stw	%r10,16(%r1)
+	stw	%r12,20(%r1)
+	
+	lis	%r8,0xe00000@ha
+	xor	%r12,%r12,%r12
+	addi	%r12,%r12,0x300
+	addi	%r9,%r8,dsi_exc - _start
+	addi	%r10,%r8,dsi_end - _start
+
+copy_loop:	
+	cmp	0,0,%r9,%r10
+	beq	ret_setup_exc
+
+	mr	%r3,%r12
+	bl	ofw_print_number
+	bl	ofw_print_space
+	
+	lwz	%r3,0(%r9)
+	stw	%r3,0(%r12)
+
+	bl	ofw_print_number
+	bl	ofw_print_eol
+
+	addi	%r12,%r12,4
+	addi	%r9,%r9,4
+	b	copy_loop
+	
+ret_setup_exc:
+	mfmsr	%r12
+	andi.	%r12,%r12,0xffbf 
+	mtmsr	%r12
+	
+	lwz	%r12,20(%r1)
+	lwz	%r10,16(%r1)
+	lwz	%r9,12(%r1)
+	lwz	%r8,8(%r1)
+
+	lwz	%r3,4(%r1)
+	mtlr	%r3
+	lwz	%r3,0(%r1)
+	
+	blr
+
+dsi_exc:
+	subi	%r1,%r1,16
+	
+	stw	%r0,0(%r1)
+	stw	%r3,4(%r1)
+
+	mfsrr0	%r3
+	addi	%r3,%r3,4
+	mtsrr0	%r3
+
+	/* mfsrr1	%r3 */
+	/* ori	%r3,%r3,2 */
+	/* mtsrr1	%r3 */
 		
+	lwz	%r3,4(%r1)
+	lwz	%r0,0(%r1)
+
+	addi	%r1,%r1,16
+	rfi
+dsi_end:	
+					
 	.org	0x1000
 freeldr_banner:
 	.ascii	"ReactOS OpenFirmware Boot Program\r\n\0"
@@ -899,7 +1166,6 @@ freeldr_halt:
 
 freeldr_reg_init:
 	.ascii	"r\0"
-
 freeldr_reg_lr:	
 	.ascii	"lr \0"
 freeldr_reg_cr:	
@@ -933,6 +1199,18 @@ ofw_read_name:
 ofw_exit_name:
 	.ascii	"exit\0"
 
+ofw_open_name:
+	.ascii	"open\0"
+
+ofw_child_name:
+	.ascii	"child\0"
+
+ofw_peer_name:
+	.ascii	"peer\0"
+		
+ofw_seek_name:
+	.ascii	"seek\0"
+	
 ofw_chosen_name:
 	.ascii	"/chosen\0"
 
@@ -954,6 +1232,10 @@ ofw_functions:
 	.long	ofw_print_regs
 	.long	ofw_print_string
 	.long	ofw_print_number
+	.long	ofw_open
+	.long	ofw_child
+	.long	ofw_peer
+	.long   ofw_seek
 	
 	.org	0x2000
 stack:
