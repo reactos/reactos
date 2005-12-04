@@ -8,8 +8,8 @@ extern "C" {
 
 DECLARE_INTERFACE_(IAMParse, IUnknown) 
 {
- STDMETHOD(GetParseTime) (THIS_REFERENCE_TIME *prtCurrent) PURE;
- STDMETHOD(SetParseTime) (THIS_REFERENCE_TIME rtCurrent) PURE;
+ STDMETHOD(GetParseTime) (THIS_ REFERENCE_TIME *prtCurrent) PURE;
+ STDMETHOD(SetParseTime) (THIS_ REFERENCE_TIME rtCurrent) PURE;
  STDMETHOD(Flush) (THIS) PURE;
 };
 
