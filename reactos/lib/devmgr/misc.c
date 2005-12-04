@@ -401,7 +401,7 @@ GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
 }
 
 
-static const UINT ProblemStringId[] =
+static const UINT ProblemStringId[NUM_CM_PROB] =
 {
     IDS_DEV_NO_PROBLEM,
     IDS_DEV_NOT_CONFIGURED,
