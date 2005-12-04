@@ -208,12 +208,12 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
       KeSetEvent(&OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
       if (Server)
       {
-         ExReleaseFastMutex(&Fcb->DataListLock);
 	 ExReleaseFastMutex(&OtherSide->DataListLock);
+         ExReleaseFastMutex(&Fcb->DataListLock);
       }
       else
       {
-	 ExReleaseFastMutex(&OtherSide->DataListLock);
+         ExReleaseFastMutex(&Fcb->DataListLock);
 	 ExReleaseFastMutex(&OtherSide->DataListLock);
       }
       Status = STATUS_SUCCESS;
