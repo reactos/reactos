@@ -178,18 +178,24 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Acknowledgements"
-    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
-    IDS_OWNERTITLE       "Personalize your Software"
-    IDS_OWNERSUBTITLE    "Setup uses this information about yourself to personalize ReactOS."
-    IDS_COMPUTERTITLE    "Számítógép név és rendszergazda jelszó"
-    IDS_COMPUTERSUBTITLE "Muszáj megadnod egy számítógép nevet és jelszavat."
+    IDS_ACKTITLE         "Köszönetnyílvánítás"
+    IDS_ACKSUBTITLE      "Akik nélkül nem jöhetett volna létre a ReactOS, és licensz információk"
+    IDS_OWNERTITLE       "A ReactOS testreszabása"
+    IDS_OWNERSUBTITLE    "Ezt az információt felfogja használni a ReactOS, hogy személyessé tegye a rendszert."
+    IDS_COMPUTERTITLE    "Számítógép név és rendszergazda jelszava"
+    IDS_COMPUTERSUBTITLE "Muszáj megadnod egy számítógép nevet és a rendszergazda jelszavát."
     IDS_LOCALETITLE      "Területi beállítások"
     IDS_LOCALESUBTITLE   "Beállíthatod, hogy a ReactOS milyen területi és nyelvibeállításokkal mûködjön."
     IDS_DATETIMETITLE    "Dátum és idõ"
-    IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
+    IDS_DATETIMESUBTITLE "Beállíthatod a számítógép dátumát és óráját."
     IDS_PROCESSTITLE     "Process page title"
     IDS_PROCESSSUBTITLE  "Process page subtitle"
+END
+
+STRINGTABLE
+BEGIN
+   IDS_CMT_WINEFILE    "Winefile indítása"
+   IDS_CMT_IBROWSER    "iBrowser indítása"
 END
 
 STRINGTABLE
@@ -197,16 +203,27 @@ BEGIN
     IDS_ACCESSORIES     "Kellékek"
     IDS_CMT_CMD         "Parancssor megnyitása"
     IDS_CMT_EXPLORER    "Explorer indítása"
-    IDS_CMT_WINEFILE    "Winefile indítása"
     IDS_CMT_NOTEPAD     "Text Editor indítása"
     IDS_CMT_REGEDIT     "Registry Editor indítása"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Játékok"
+    IDS_GAMES		"Játékok"
     IDS_CMT_SOLITAIRE	"Pasziánsz"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP           "ReactOS Telepítõ"
+    IDS_UNKNOWN_ERROR           "Hiba lépett fel, de nemtudni annak okát"
+    IDS_REGISTERING_COMPONENTS  "Komponensek regisztrációja..."
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary hiba: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr hiba: "
+    IDS_REGSVR_FAILED           "DllRegisterServer hiba: "
+    IDS_DLLINSTALL_FAILED       "DllInstall hiba: "
+    IDS_TIMEOUT                 "A regisztráció túllépte az idõkorlátot"
+    IDS_REASON_UNKNOWN          ""
+END
 
 /* EOF */
