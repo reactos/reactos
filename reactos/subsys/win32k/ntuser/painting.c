@@ -320,6 +320,19 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    BOOL HasPaintMessage, HasNCPaintMessage;
 
    /*
+    * If the nonclient is not to be redrawn, clip the region to the client
+    * rect
+    */
+   if (0 != (Flags & RDW_INVALIDATE) && 0 == (Flags & RDW_FRAME))
+   {
+      HRGN hRgnClient;
+
+      hRgnClient = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+      RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnClient, RGN_AND);
+      NtGdiDeleteObject(hRgnClient);
+   }
+
+   /*
     * Clip the given region with window rectangle (or region)
     */
 
