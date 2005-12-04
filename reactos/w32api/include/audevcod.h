@@ -22,7 +22,7 @@ typedef enum _tagSND_DEVICE_ERROR
     SNDDEV_ERROR_Stop             =11,
     SNDDEV_ERROR_Start            =12,
     SNDDEV_ERROR_AddBuffer        =13,
-    SNDDEV_ERROR_Query            =14,
+    SNDDEV_ERROR_Query            =14
 
 } SNDDEV_ERR;
 #endif // __AUDEVCOD__
