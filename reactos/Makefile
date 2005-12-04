@@ -106,6 +106,11 @@
 #            -mi          Let make handle creation of install directories. Rbuild will not generate the directories.
 #            -ps          Generate proxy makefiles in source tree instead of the output tree.
 #            -ud          Disable compilation units.
+#            -r           Input XML
+#
+#    ROS_AUTOMAKE
+#        Alternate name of makefile.auto
+#
 
 # check for versions of make that don't have features we need...
 # the function "eval" is only available in 3.80+, which happens to be the minimum
@@ -124,7 +129,12 @@ endif
 
 .PHONY: all
 .PHONY: clean
-all: makefile.auto
+
+ifeq ($(ROS_AUTOMAKE),)
+ROS_AUTOMAKE=makefile.auto
+endif
+
+all: $(ROS_AUTOMAKE)
 
 
 .SUFFIXES:
@@ -336,7 +346,7 @@ ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
--include makefile.auto
+-include $(ROS_AUTOMAKE)
 
 PREAUTO := \
 	$(BIN2C_TARGET) \
@@ -349,7 +359,7 @@ PREAUTO := \
 	$(NCI_SERVICE_FILES) \
 	$(GENDIB_DIB_FILES)
 
-makefile.auto: $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
+$(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) mingw
 
@@ -388,7 +398,7 @@ msvc8: $(RBUILD_TARGET)
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
-	-@$(rm) makefile.auto $(PREAUTO) 2>$(NUL)
+	-@$(rm) $(ROS_AUTOMAKE) $(PREAUTO) 2>$(NUL)
 
 .PHONY: clean
 clean: makefile_auto_clean
