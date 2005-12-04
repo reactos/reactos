@@ -24,6 +24,8 @@ Author:
 //
 #ifdef _M_IX86
 #include <i386/mmtypes.h>
+#elif defined(_M_PPC)
+#include <powerpc/mmtypes.h>
 #else
 #error "Unknown processor"
 #endif

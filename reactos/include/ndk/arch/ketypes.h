@@ -24,6 +24,8 @@ Author:
 //
 #ifdef _M_IX86
 #include <i386/ketypes.h>
+#elif defined(_M_PPC)
+#include <powerpc/ketypes.h>
 #else
 #error "Unknown processor"
 #endif
