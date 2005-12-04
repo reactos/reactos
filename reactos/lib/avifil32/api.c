@@ -35,6 +35,7 @@
 #include "ole2.h"
 #include "shellapi.h"
 #include "shlobj.h"
+#include "mmreg.h"
 #include "vfw.h"
 #include "msacm.h"
 

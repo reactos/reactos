@@ -24,6 +24,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "windowsx.h"
+#include "mmreg.h"
 #include "vfw.h"
 
 #include "wine/debug.h"

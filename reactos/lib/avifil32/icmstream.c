@@ -29,6 +29,7 @@
 #include "windowsx.h"
 #include "mmsystem.h"
 #include "vfw.h"
+#include "mmreg.h"
 #include "msacm.h"
 
 #include "avifile_private.h"

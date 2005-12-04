@@ -30,6 +30,7 @@
 #include "winerror.h"
 
 #include "ole2.h"
+#include "mmreg.h"
 #include "vfw.h"
 
 #include "wine/debug.h"

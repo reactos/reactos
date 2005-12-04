@@ -30,6 +30,7 @@
 #include "winerror.h"
 
 #include "mmsystem.h"
+#include "mmreg.h"
 #include "vfw.h"
 #include "avifile_private.h"
 

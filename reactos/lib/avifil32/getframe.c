@@ -26,7 +26,9 @@
 #include "windowsx.h"
 #include "wingdi.h"
 #include "winuser.h"
+
 #include "vfw.h"
+#include "mmreg.h"
 
 #include "avifile_private.h"
 
