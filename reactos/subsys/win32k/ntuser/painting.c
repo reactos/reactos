@@ -995,7 +995,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       }
    }
 
-   RETURN(Window->UpdateRegion != NULL);
+   RETURN(!IntGdiIsEmptyRect(&Rect));
 
 CLEANUP:
    DPRINT("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
