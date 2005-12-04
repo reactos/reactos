@@ -439,7 +439,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	ULONG RequestedDisposition, RequestedOptions;
 	PVFATCCB pCcb;
 	PVFATFCB pFcb = NULL;
-	PVFATFCB ParentFcb;
+	PVFATFCB ParentFcb = NULL;
 	PWCHAR c, last;
 	BOOLEAN PagingFileCreate = FALSE;
 	BOOLEAN Dots;
@@ -543,8 +543,8 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	 * fail immediately
 	 */
 	if (Status == STATUS_OBJECT_PATH_NOT_FOUND ||
-		Status == STATUS_INVALID_PARAMETER ||
-		Status == STATUS_DELETE_PENDING)
+            Status == STATUS_INVALID_PARAMETER ||
+	    Status == STATUS_DELETE_PENDING)
 	{
 		if (ParentFcb)
 		{
@@ -552,6 +552,11 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		}
 		return(Status);
 	}
+        if (!NT_SUCCESS(Status) && ParentFcb == NULL)
+        {
+                DPRINT1("VfatOpenFile faild for '%wZ', status %x\n", &PathNameU, Status);
+                return Status;
+        }
 
 	/*
 	 * If the file open failed then create the required file
@@ -564,11 +569,6 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
 			ULONG Attributes;
-			if (ParentFcb == NULL)
-			{
-				ParentFcb = vfatOpenRootFCB (DeviceExt);
-				ASSERT(ParentFcb != NULL);
-			}
 			Attributes = Stack->Parameters.Create.FileAttributes;
 
 			vfatSplitPathName(&PathNameU, NULL, &FileNameU);
