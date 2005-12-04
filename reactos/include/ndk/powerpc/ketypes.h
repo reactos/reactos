@@ -37,32 +37,75 @@ Author:
 //
 typedef struct _KTRAP_FRAME
 {
-	ULONG R[32];
-	ULONG SRR0, SRR1;
-	ULONG LR, CTR;
+    PVOID TrapFrame;
+    UCHAR OldIrql;
+    UCHAR PreviousMode;
+    UCHAR SavedApcStateIndex;
+    UCHAR SavedKernelApcDisable;
+    UCHAR ExceptionRecord[ROUND_UP(sizeof(EXCEPTION_RECORD), ULONGLONG];
+    ULONG FILL2;
+    ULONG Gpr0;
+    ULONG Gpr1;
+    ULONG Gpr2;
+    ULONG Gpr3;
+    ULONG Gpr4;
+    ULONG Gpr5;
+    ULONG Gpr6;
+    ULONG Gpr7;
+    ULONG Gpr8;
+    ULONG Gpr9;
+    ULONG Gpr10;
+    ULONG Gpr11;
+    ULONG Gpr12;
+    DOUBLE Fpr0;
+    DOUBLE Fpr1;
+    DOUBLE Fpr2;
+    DOUBLE Fpr3;
+    DOUBLE Fpr4;
+    DOUBLE Fpr5;
+    DOUBLE Fpr6;
+    DOUBLE Fpr7;
+    DOUBLE Fpr8;
+    DOUBLE Fpr9;
+    DOUBLE Fpr10;
+    DOUBLE Fpr11;
+    DOUBLE Fpr12;
+    DOUBLE Fpr13;
+    DOUBLE Fpscr;
+    ULONG Cr;
+    ULONG Xer;
+    ULONG Msr;
+    ULONG Iar;
+    ULONG Lr;
+    ULONG Ctr;
+    ULONG Dr0;
+    ULONG Dr1;
+    ULONG Dr2;
+    ULONG Dr3;
+    ULONG Dr4;
+    ULONG Dr5;
+    ULONG Dr6;
+    ULONG Dr7;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 //
 // Page Table Entry Definition
 //
-// I'll use the same table format
-//
-typedef struct _SOFTWARE_PTE_PPC
+typedef struct _HARDWARE_PTE_PPC
 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} SOFTWARE_PTE_X86, *PSOFTWARE_PTE_PPC;
+    ULONG Dirty:2;
+    ULONG Valid:1;
+    ULONG GuardedStorage:1;
+    ULONG MemoryCoherence:1;
+    ULONG CacheDisable:1;
+    ULONG WriteThrough:1;
+    ULONG Change:1;
+    ULONG Reference:1;
+    ULONG Write:1;
+    ULONG CopyOnWrite:1;
+    ULONG rsvd1:1;
+    ULONG PageFrameNumber:20;
+} HARDWARE_PTE_PPC, *PHARDWARE_PTE_PPC;
 
 typedef struct _DESCRIPTOR
 {
@@ -76,9 +119,50 @@ typedef struct _DESCRIPTOR
 //
 typedef struct _KSPECIAL_REGISTERS
 {
-	ULONG MSR, SDR0, SDR1;
-	ULONG BATU[4], BATL[4];
-	ULONG SR[8];
+    ULONG KernelDr0;
+    ULONG KernelDr1;
+    ULONG KernelDr2;
+    ULONG KernelDr3;
+    ULONG KernelDr4;
+    ULONG KernelDr5;
+    ULONG KernelDr6;
+    ULONG KernelDr7;
+    ULONG Sprg0;
+    ULONG Sprg1;
+    ULONG Sr0;
+    ULONG Sr1;
+    ULONG Sr2;
+    ULONG Sr3;
+    ULONG Sr4;
+    ULONG Sr5;
+    ULONG Sr6;
+    ULONG Sr7;
+    ULONG Sr8;
+    ULONG Sr9;
+    ULONG Sr10;
+    ULONG Sr11;
+    ULONG Sr12;
+    ULONG Sr13;
+    ULONG Sr14;
+    ULONG Sr15;
+    ULONG DBAT0L;
+    ULONG DBAT0U;
+    ULONG DBAT1L;
+    ULONG DBAT1U;
+    ULONG DBAT2L;
+    ULONG DBAT2U;
+    ULONG DBAT3L;
+    ULONG DBAT3U;
+    ULONG IBAT0L;
+    ULONG IBAT0U;
+    ULONG IBAT1L;
+    ULONG IBAT1U;
+    ULONG IBAT2L;
+    ULONG IBAT2U;
+    ULONG IBAT3L;
+    ULONG IBAT3U;
+    ULONG Sdr1;
+    ULONG Reserved[9];
 } KSPECIAL_REGISTERS, *PKSPECIAL_REGISTERS;
 
 //
@@ -229,73 +313,141 @@ typedef struct _KPRCB
 //
 typedef struct _KIPCR
 {
+    USHORT MinorVersion;
+    USHORT MajorVersion;
+    PKINTERRUPT_ROUTINE InterruptRoutine[MAXIMUM_VECTOR];
+    ULONG PcrPage2;
+    ULONG Kseg0Top;
+    ULONG Spare7[30];
+    ULONG FirstLevelDcacheSize;
+    ULONG FirstLevelDcacheFillSize;
+    ULONG FirstLevelIcacheSize;
+    ULONG FirstLevelIcacheFillSize;
+    ULONG SecondLevelDcacheSize;
+    ULONG SecondLevelDcacheFillSize;
+    ULONG SecondLevelIcacheSize;
+    ULONG SecondLevelIcacheFillSize;
+    struct _KPRCB *Prcb;
+    PVOID Teb;
+    ULONG DcacheAlignment;
+    ULONG DcacheFillSize;
+    ULONG IcacheAlignment;
+    ULONG IcacheFillSize;
+    ULONG ProcessorVersion;
+    ULONG ProcessorRevision;
+    ULONG ProfileInterval;
+    ULONG ProfileCount;
+    ULONG StallExecutionCount;
+    ULONG StallScaleFactor;
+    ULONG Spare;
     union
     {
-        NT_TIB NtTib;
-        struct 
+        ULONG CachePolicy;
+        struct
         {
-            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
-            PVOID Used_StackBase;
-            PVOID PerfGlobalGroupMask;
-            PVOID TssCopy;
-            ULONG ContextSwitches;
-            KAFFINITY SetMemberCopy;
-            PVOID Used_Self;
+            UCHAR IcacheMode;
+            UCHAR DcacheMode;
+            USHORT ModeSpare;
         };
     };
-    struct _KPCR *Self;          /* 1C */
-    struct _KPRCB *Prcb;         /* 20 */
-    KIRQL Irql;                  /* 24 */
-    ULONG IRR;                   /* 28 */
-    ULONG IrrActive;             /* 2C */
-    ULONG IDR;                   /* 30 */
-    PVOID KdVersionBlock;        /* 34 */
-    struct _KTSS *TSS;           /* 40 */
-    USHORT MajorVersion;         /* 44 */
-    USHORT MinorVersion;         /* 46 */
-    KAFFINITY SetMember;         /* 48 */
-    ULONG StallScaleFactor;      /* 4C */
-    UCHAR SparedUnused;          /* 50 */
-    UCHAR Number;                /* 51 */
-    UCHAR Reserved;              /* 52 */
-    UCHAR L2CacheAssociativity;  /* 53 */
-    ULONG VdmAlert;              /* 54 */
-    ULONG KernelReserved[14];    /* 58 */
-    ULONG L2CacheSize;           /* 90 */
-    ULONG HalReserved[16];       /* 94 */
-    ULONG InterruptMode;         /* D4 */
-    UCHAR KernelReserved2[0x48]; /* D8 */
-    KPRCB PrcbData;              /* 120 */
+    UCHAR IrqlMask[32];
+    UCHAR IrqlTable[9];
+    UCHAR CurrentIrql;
+    CCHAR Number;
+    KAFFINITY SetMember;
+    ULONG ReservedVectors;
+    struct _KTHREAD *CurrentThread;
+    ULONG AlignedCachePolicy;
+    union
+    {
+        ULONG SoftwareInterrupt;
+        struct
+        {
+            UCHAR ApcInterrupt;
+            UCHAR DispatchInterrupt;
+            UCHAR Spare4;
+            UCHAR Spare5;
+        };
+    };
+    KAFFINITY NotMember;
+    ULONG SystemReserved[16];
+    ULONG HalReserved[16];
+    ULONG FirstLevelActive;
+    ULONG SystemServiceDispatchStart;
+    ULONG SystemServiceDispatchEnd;
+    ULONG InterruptStack;
+    ULONG QuantumEnd;
+    PVOID InitialStack;
+    PVOID PanicStack;
+    ULONG BadVaddr;
+    PVOID StackLimit;
+    PVOID SavedStackLimit;
+    ULONG SavedV0;
+    ULONG SavedV1;
+    UCHAR DebugActive;
+    UCHAR Spare6[3];
+    ULONG GprSave[6];
+    ULONG SiR0;
+    ULONG SiR2;
+    ULONG SiR3;
+    ULONG SiR4;
+    ULONG SiR5;
+    ULONG Spare0;
+    ULONG Spare8;
+    ULONG PgDirRa;
+    ULONG OnInterruptStack;
+    ULONG SavedInitialStack;
 } KIPCR, *PKIPCR;
 #pragma pack(pop)
 
 //
 // TSS Definition
 //
-typedef struct _KiIoAccessMap
-{
-    UCHAR DirectionMap[32];
-    UCHAR IoMap[8196];
-} KIIO_ACCESS_MAP;
-
-#include <pshpack1.h>
-typedef struct _KTSS
-{
-    USHORT Backlink;
-    USHORT Reserved0;
-
-    KTRAP_FRAME Registers;
-
-    KIIO_ACCESS_MAP IoMaps[1];
-    UCHAR IntDirectionMap[32];
-} KTSS, *PKTSS;
-#include <poppack.h>
+typedef struct _KTSS, KTSS, *PKTSS;
 
 //
 // PowerPC Exception Frame
 //
-typedef struct _KEXCEPTION_FRAME {
-	
+typedef struct _KEXCEPTION_FRAME
+{
+    ULONG Fill1;
+    ULONG Gpr13;
+    ULONG Gpr14;
+    ULONG Gpr15;
+    ULONG Gpr16;
+    ULONG Gpr17;
+    ULONG Gpr18;
+    ULONG Gpr19;
+    ULONG Gpr20;
+    ULONG Gpr21;
+    ULONG Gpr22;
+    ULONG Gpr23;
+    ULONG Gpr24;
+    ULONG Gpr25;
+    ULONG Gpr26;
+    ULONG Gpr27;
+    ULONG Gpr28;
+    ULONG Gpr29;
+    ULONG Gpr30;
+    ULONG Gpr31;
+    DOUBLE Fpr14;
+    DOUBLE Fpr15;
+    DOUBLE Fpr16;
+    DOUBLE Fpr17;
+    DOUBLE Fpr18;
+    DOUBLE Fpr19;
+    DOUBLE Fpr20;
+    DOUBLE Fpr21;
+    DOUBLE Fpr22;
+    DOUBLE Fpr23;
+    DOUBLE Fpr24;
+    DOUBLE Fpr25;
+    DOUBLE Fpr26;
+    DOUBLE Fpr27;
+    DOUBLE Fpr28;
+    DOUBLE Fpr29;
+    DOUBLE Fpr30;
+    DOUBLE Fpr31;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 #endif

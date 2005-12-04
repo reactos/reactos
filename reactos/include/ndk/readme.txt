@@ -90,6 +90,7 @@ located through the Internet or purchased or licensed for lawful use.
 
 Additionally, the following people contributed to the NDK:
 
+- Art Yerkes
 - Eric Kohl
 - Filip Navara
 - Steven Edwards

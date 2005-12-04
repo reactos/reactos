@@ -1,7 +1,6 @@
 /*++ NDK Version: 0095
 
 Copyright (c) Alex Ionescu.  All rights reserved.
-Modified for PowerPC by Art Yerkes
 
 Header Name:
 
@@ -13,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Art Yerkes (ayerkes@speakeasy.net)   04-Dec-2005
 
 --*/
 
