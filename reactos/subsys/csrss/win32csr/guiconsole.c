@@ -360,65 +360,56 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 static VOID FASTCALL
 GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
 {
-    RECT rcUpdate;
     HDC hDC;
     PAINTSTRUCT ps;
     PCSRSS_CONSOLE Console;
     PGUI_CONSOLE_DATA GuiData;
 
-    if (GetUpdateRect(hWnd,
-                      &rcUpdate,
-                      FALSE))
+    hDC = BeginPaint(hWnd, &ps);
+    if (hDC != NULL &&
+        ps.rcPaint.left < ps.rcPaint.right &&
+        ps.rcPaint.top < ps.rcPaint.bottom)
     {
-        hDC = (hDCPaint != NULL ? hDCPaint : BeginPaint(hWnd,
-                                                        &ps));
-        if (hDC != NULL)
+        GuiConsoleGetDataPointers(hWnd,
+                                  &Console,
+                                  &GuiData);
+        if (Console != NULL && GuiData != NULL &&
+            Console->ActiveBuffer != NULL)
         {
-            GuiConsoleGetDataPointers(hWnd,
-                                      &Console,
-                                      &GuiData);
-            if (Console != NULL && GuiData != NULL &&
-                Console->ActiveBuffer != NULL)
+            EnterCriticalSection(&GuiData->Lock);
+
+            GuiConsolePaint(Console,
+                            GuiData,
+                            hDC,
+                            &ps.rcPaint);
+
+            if (GuiData->Selection.left != -1)
             {
-                EnterCriticalSection(&GuiData->Lock);
+                RECT rc = GuiData->Selection;
 
-                GuiConsolePaint(Console,
-                                GuiData,
-                                hDC,
-                                &rcUpdate);
+                rc.left *= GuiData->CharWidth;
+                rc.top *= GuiData->CharHeight;
+                rc.right *= GuiData->CharWidth;
+                rc.bottom *= GuiData->CharHeight;
 
-                if (GuiData->Selection.left != -1)
+                /* invert the selection */
+                if (IntersectRect(&rc,
+                                  &ps.rcPaint,
+                                  &rc))
                 {
-                    RECT rc = GuiData->Selection;
-
-                    rc.left *= GuiData->CharWidth;
-                    rc.top *= GuiData->CharHeight;
-                    rc.right *= GuiData->CharWidth;
-                    rc.bottom *= GuiData->CharHeight;
-
-                    /* invert the selection */
-                    if (IntersectRect(&rc,
-                                      &rcUpdate,
-                                      &rc))
-                    {
-                        PatBlt(hDC,
-                               rc.left,
-                               rc.top,
-                               rc.right - rc.left,
-                               rc.bottom - rc.top,
-                               DSTINVERT);
-                    }
+                    PatBlt(hDC,
+                           rc.left,
+                           rc.top,
+                           rc.right - rc.left,
+                           rc.bottom - rc.top,
+                           DSTINVERT);
                 }
-
-                LeaveCriticalSection(&GuiData->Lock);
             }
 
-            if (hDCPaint == NULL)
-            {
-                EndPaint(hWnd,
-                         &ps);
-            }
+            LeaveCriticalSection(&GuiData->Lock);
         }
+
+        EndPaint(hWnd, &ps);
     }
 }
 
