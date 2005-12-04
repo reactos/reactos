@@ -106,8 +106,8 @@ typedef struct tagAnalogVideoInfo
 #define DIBSIZE(BI)       ((BI).biHeight < 0 ? (-1)*(_DIBSIZE(BI)) : _DIBSIZE(BI))
 
 #define BIT_MASKS_MATCH(PBMIH1,PBMIH2)                                \
-        ((PBMIH2)->dwBitMasks[iGREEN] == (PBMIH1)->dwBitMasks[iGREEN]) &&    \
-        (((PBMIH2)->dwBitMasks[iRED] == (PBMIH1)->dwBitMasks[iRED]) &&        \     
+        ((PBMIH2)->dwBitMasks[iGREEN] == (PBMIH1)->dwBitMasks[iGREEN]) && \
+        (((PBMIH2)->dwBitMasks[iRED] == (PBMIH1)->dwBitMasks[iRED]) &&        \
         ((PBMIH2)->dwBitMasks[iBLUE] == (PBMIH1)->dwBitMasks[iBLUE]))
 
 #define    RESET_MASKS(PBMIH)            (ZeroMemory((PVOID)(PBMIH)->dwBitFields,SIZE_MASKS))
@@ -257,3 +257,4 @@ typedef struct _AM_FRAMESTEP_STEP
 }
 #endif
 #endif 
+

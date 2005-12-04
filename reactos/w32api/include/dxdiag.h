@@ -61,44 +61,8 @@ DEFINE_GUID(IID_IDxDiagProvider,    0x9C6B4CB0, 0x23F8, 0x49CC, 0xA3, 0xED, 0x45
 DEFINE_GUID(IID_IDxDiagContainer,   0x7D0F462F, 0x4064, 0x4862, 0xBC, 0x7F, 0x93, 0x3E, 0x50, 0x58, 0xC1, 0x0F);
 
 /* typedef definitions */
-//typedef struct IDxDiagProvider      IDxDiagProvider,   *LPDXDIAGPROVIDER,   *PDXDIAGPROVIDER;
-//typedef struct IDxDiagContainer     IDxDiagContainer,  *LPDXDIAGCONTAINER,  *PDXDIAGCONTAINER;
-typedef struct IDxDiagProvider *LPDXDIAGPROVIDER, *PDXDIAGPROVIDER;
-typedef struct IDxDiagContainer *LPDXDIAGCONTAINER, *PDXDIAGCONTAINER;
-
-/*****************************************************************************
- * IDxDiagProvider interface
- */
-#define INTERFACE IDxDiagProvider
-DECLARE_INTERFACE_(IDxDiagProvider,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDxDiagProvider methods ***/
-    STDMETHOD(Initialize)(THIS_ DXDIAG_INIT_PARAMS* pParams) PURE;
-    STDMETHOD(GetRootContainer)(THIS_ LPDXDIAGCONTAINER* ppInstance) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define	IDxDiagProvider_QueryInterface(p,a,b)                (p)->lpVtbl->QueryInterface(p,a,b)
-#define	IDxDiagProvider_AddRef(p)                            (p)->lpVtbl->AddRef(p)
-#define	IDxDiagProvider_Release(p)                           (p)->lpVtbl->Release(p)
-/*** IDxDiagProvider methods ***/
-#define IDxDiagProvider_Initialize(p,a,b)                    (p)->lpVtbl->Initialize(p,a,b)
-#define IDxDiagProvider_GetRootContainer(p,a)                (p)->lpVtbl->GetRootContainer(p,a)
-#else
-/*** IUnknown methods ***/
-#define	IDxDiagProvider_QueryInterface(p,a,b)                (p)->QueryInterface(a,b)
-#define	IDxDiagProvider_AddRef(p)                            (p)->AddRef()
-#define	IDxDiagProvider_Release(p)                           (p)->Release()
-/*** IDxDiagProvider methods ***/
-#define IDxDiagProvider_Initialize(p,a,b)                    (p)->Initialize(a,b)
-#define IDxDiagProvider_GetRootContainer(p,a)                (p)->GetRootContainer(a)
-#endif
+typedef struct IDxDiagProvider *LPDXDIAGPROVIDER,   *PDXDIAGPROVIDER;
+typedef struct IDxDiagContainer *LPDXDIAGCONTAINER,  *PDXDIAGCONTAINER;
 
 /*****************************************************************************
  * IDxDiagContainer interface
@@ -134,7 +98,7 @@ DECLARE_INTERFACE_(IDxDiagContainer,IUnknown)
 #define IDxDiagContainer_EnumChildContainerNames(p,a,b,c)    (p)->lpVtbl->EnumChildContainerNames(p,a,b,c)
 #define IDxDiagContainer_GetChildContainer(p,a,b)            (p)->lpVtbl->GetChildContainer(p,a,b)
 #define IDxDiagContainer_GetNumberOfProps(p,a)               (p)->lpVtbl->GetNumberOfProps(p,a)
-#define IDxDiagContainer_EnumProps(p,a,b)                    (p)->lpVtbl->EnumProps(p,a,b,c)
+#define IDxDiagContainer_EnumPropNames(p,a,b,c)              (p)->lpVtbl->EnumPropNames(p,a,b,c)
 #define IDxDiagContainer_GetProp(p,a,b)                      (p)->lpVtbl->GetProp(p,a,b)
 #else
 /*** IUnknown methods ***/
@@ -146,8 +110,42 @@ DECLARE_INTERFACE_(IDxDiagContainer,IUnknown)
 #define IDxDiagContainer_EnumChildContainerNames(p,a,b,c)    (p)->EnumChildContainerNames(a,b,c)
 #define IDxDiagContainer_GetChildContainer(p,a,b)            (p)->GetChildContainer(a,b)
 #define IDxDiagContainer_GetNumberOfProps(p,a)               (p)->GetNumberOfProps(a)
-#define IDxDiagContainer_EnumProps(p,a,b)                    (p)->EnumProps(a,b,c)
+#define IDxDiagContainer_EnumPropNames(p,a,b,c)              (p)->EnumPropNames(a,b,c)
 #define IDxDiagContainer_GetProp(p,a,b)                      (p)->GetProp(a,b)
+#endif
+
+/*****************************************************************************
+ * IDxDiagProvider interface
+ */
+#define INTERFACE IDxDiagProvider
+DECLARE_INTERFACE_(IDxDiagProvider,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDxDiagProvider methods ***/
+    STDMETHOD(Initialize)(THIS_ DXDIAG_INIT_PARAMS* pParams) PURE;
+    STDMETHOD(GetRootContainer)(THIS_ IDxDiagContainer** ppInstance) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define	IDxDiagProvider_QueryInterface(p,a,b)                (p)->lpVtbl->QueryInterface(p,a,b)
+#define	IDxDiagProvider_AddRef(p)                            (p)->lpVtbl->AddRef(p)
+#define	IDxDiagProvider_Release(p)                           (p)->lpVtbl->Release(p)
+/*** IDxDiagProvider methods ***/
+#define IDxDiagProvider_Initialize(p,a)                      (p)->lpVtbl->Initialize(p,a)
+#define IDxDiagProvider_GetRootContainer(p,a)                (p)->lpVtbl->GetRootContainer(p,a)
+#else
+/*** IUnknown methods ***/
+#define	IDxDiagProvider_QueryInterface(p,a,b)                (p)->QueryInterface(a,b)
+#define	IDxDiagProvider_AddRef(p)                            (p)->AddRef()
+#define	IDxDiagProvider_Release(p)                           (p)->Release()
+/*** IDxDiagProvider methods ***/
+#define IDxDiagProvider_Initialize(p,a)                      (p)->Initialize(a)
+#define IDxDiagProvider_GetRootContainer(p,a)                (p)->GetRootContainer(a)
 #endif
 
 #ifdef __cplusplus
