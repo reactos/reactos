@@ -414,6 +414,7 @@ InstallReactOS (HINSTANCE hInstance)
 
   /* create program startmenu shortcuts */  
   CreateShortcut(CSIDL_PROGRAMS, NULL, _T("winefile.lnk"), _T("winefile.exe"), IDS_CMT_WINEFILE);
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("ibrowser.lnk"), _T("ibrowser.exe"), IDS_CMT_IBROWSER);
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
