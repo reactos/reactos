@@ -18,6 +18,7 @@
 #define NTOS_MODE_USER
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <winuser.h>
 #include <windowsx.h>
 #include <winnls32.h>
 #include <ndk/ntndk.h>
