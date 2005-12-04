@@ -725,7 +725,15 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
   rc.left = GuiData->SelectionStart.x;
   rc.top = GuiData->SelectionStart.y;
   rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
+  if (Console->Size.X < rc.right)
+  {
+    rc.right = Console->Size.X;
+  }
   rc.bottom = (pt.y >= 0 ? (pt.y / GuiData->CharHeight) + 1 : 0);
+  if (Console->Size.Y < rc.bottom)
+  {
+    rc.bottom = Console->Size.Y;
+  }
 
   /* exchange left/top with right/bottom if required */
   if(rc.left >= rc.right)
