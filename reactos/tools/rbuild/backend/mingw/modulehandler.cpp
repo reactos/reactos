@@ -230,6 +230,9 @@ MingwModuleHandler::InstanciateHandler (
 		case BootSector:
 			handler = new MingwBootSectorModuleHandler ( module );
 			break;
+		case BootProgram:
+			handler = new MingwBootProgramModuleHandler ( module );
+			break;
 		case Iso:
 			handler = new MingwIsoModuleHandler ( module );
 			break;
@@ -2701,6 +2704,69 @@ MingwBootSectorModuleHandler::GenerateBootSectorModuleTarget ()
 	          "%s: %s\n",
 	          module.name.c_str (),
 	          objectsMacro.c_str () );
+}
+
+
+MingwBootProgramModuleHandler::MingwBootProgramModuleHandler (
+	const Module& module_ )
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwBootProgramModuleHandler::Process ()
+{
+	GenerateBootProgramModuleTarget ();
+}
+
+void
+MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
+{
+	string targetName ( module.GetTargetName () );
+	string targetMacro ( GetTargetMacro (module) );
+	string workingDirectory = GetWorkingDirectory ();
+	string junk_tmp = ros_temp + module.name + ".junk.tmp";
+	string junk_elf = ros_temp + module.name + ".junk.elf";
+	string junk_cpy = ros_temp + module.name + ".junk.cpy";
+	CLEAN_FILE ( junk_tmp );
+	CLEAN_FILE ( junk_elf );
+	CLEAN_FILE ( junk_cpy );
+	string objectsMacro = GetObjectsMacro ( module );
+	string linkDepsMacro = GetLinkingDependenciesMacro ();
+	string libsMacro = GetLibsMacro ();
+	const Module *payload = module.project.LocateModule ( module.payload );
+
+	GenerateRules ();
+
+	fprintf ( fMakefile, "%s: %s %s %s | %s\n",
+	          targetMacro.c_str (),
+	          objectsMacro.c_str (),
+	          linkDepsMacro.c_str (),
+		  payload->name.c_str (),
+	          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
+	
+	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
+
+	fprintf ( fMakefile, "\t$(BOOTPROG_PREPARE) $(OUTPUT)$(SEP)%s %s\n",
+		  NormalizeFilename( payload->GetPath() ).c_str (),
+		junk_cpy.c_str () );
+
+	fprintf ( fMakefile, "\t${objcopy} $(BOOTPROG_FLATFORMAT) %s %s\n",
+		junk_cpy.c_str (),
+		junk_tmp.c_str () );
+
+	fprintf ( fMakefile, "\t${ld} $(BOOTPROG_LINKFORMAT) %s %s -g -o %s\n",
+		linkDepsMacro.c_str (),
+		junk_tmp.c_str (),
+		junk_elf.c_str () );
+
+	fprintf ( fMakefile, "\t${objcopy} $(BOOTPROG_COPYFORMAT) %s %s\n",
+		junk_elf.c_str (),
+		module.GetPath().c_str () );
+
+	fprintf ( fMakefile,
+	          "\t-@${rm} %s %s %s 2>$(NUL)\n",
+	          junk_tmp.c_str (), junk_elf.c_str (), junk_cpy.c_str () );
 }
 
 

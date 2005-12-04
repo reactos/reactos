@@ -71,6 +71,7 @@ public:
 MingwBackend::MingwBackend ( Project& project,
                              Configuration& configuration )
 	: Backend ( project, configuration ),
+	  manualBinutilsSetting( false ),
 	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
 	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
 	  installDirectory ( new Directory ( "$(INSTALL)" ) )
@@ -137,6 +138,7 @@ MingwBackend::ProcessModules ()
 
 	vector<MingwModuleHandler*> v;
 	size_t i;
+
 	for ( i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -752,6 +754,7 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 bool
 MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 {
+	if ( manualBinutilsSetting ) return true;
 	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
 	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
     	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
@@ -767,11 +770,13 @@ MingwBackend::DetectBinutils ()
 
 	bool detectedBinutils = false;
 	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+
 	if ( ROS_PREFIXValue.length () > 0 )
 	{
 		binutilsPrefix = ROS_PREFIXValue;
 		binutilsCommand = binutilsPrefix + "-ld";
-		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+		manualBinutilsSetting = true;
+		detectedBinutils = true;
 	}
 #if defined(WIN32)
 	if ( !detectedBinutils )
@@ -802,6 +807,7 @@ MingwBackend::DetectBinutils ()
 	}
 	else
 		printf ( "not detected\n" );
+
 }
 
 void

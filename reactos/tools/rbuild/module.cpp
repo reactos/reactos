@@ -195,6 +195,13 @@ ToLower ( string filename )
 	return filename;
 }
 
+void IfableData::ExtractModules( std::vector<Module*> &modules )
+{
+	size_t i;
+	for ( i = 0; i < this->modules.size (); i++ )
+		modules.push_back(this->modules[i]);
+}
+
 IfableData::~IfableData()
 {
 	size_t i;
@@ -208,6 +215,8 @@ IfableData::~IfableData()
 		delete properties[i];
 	for ( i = 0; i < compilerFlags.size (); i++ )
 		delete compilerFlags[i];
+	for ( i = 0; i < modules.size(); i++ )
+		delete modules[i];
 	for ( i = 0; i < ifs.size (); i++ )
 		delete ifs[i];
 	for ( i = 0; i < compilationUnits.size (); i++ )
@@ -388,6 +397,12 @@ Module::Module ( const Project& project,
 		aliasedModuleName = att->value;
 	else
 		aliasedModuleName = "";
+
+	if ( type == BootProgram )
+	{
+		att = moduleNode.GetAttribute ( "payload", true );
+		payload = att->value;
+	}
 }
 
 Module::~Module ()
@@ -732,6 +747,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BootLoader;
 	if ( attribute.value == "bootsector" )
 		return BootSector;
+	if ( attribute.value == "bootprogram" )
+		return BootProgram;
 	if ( attribute.value == "iso" )
 		return Iso;
 	if ( attribute.value == "liveiso" )
@@ -785,6 +802,8 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Alias:
 			return "";
+		case BootProgram:
+			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -828,6 +847,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case BootProgram:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -863,6 +883,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case BootProgram:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -895,6 +916,7 @@ Module::IsDLL () const
 		case ObjectLibrary:
 		case BootLoader:
 		case BootSector:
+		case BootProgram:
 		case Iso:
 		case LiveIso:
 		case RpcServer:
@@ -923,6 +945,7 @@ Module::GenerateInOutputTree () const
 		case BuildTool:
 		case BootLoader:
 		case BootSector:
+		case BootProgram:
 		case Iso:
 		case LiveIso:
 			return true;
@@ -1289,6 +1312,7 @@ If::~If ()
 void
 If::ProcessXML()
 {
+	
 }
 
 
@@ -1358,6 +1382,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 		case KernelModeDriver:
 		case BootSector:
 		case BootLoader:
+		case BootProgram:
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:

@@ -48,7 +48,7 @@ public:
 	std::string nasmCommand;
 	std::string binutilsPrefix;
 	std::string binutilsCommand;
-	bool usePipe;
+	bool usePipe, manualBinutilsSetting;
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
 	Directory* installDirectory;

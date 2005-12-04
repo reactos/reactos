@@ -375,6 +375,19 @@ private:
 };
 
 
+class MingwBootProgramModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwBootProgramModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+	std::string GetProgTextAddrMacro ();
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
+private:
+	void GenerateBootProgramModuleTarget ();
+};
+
+
 class MingwIsoModuleHandler : public MingwModuleHandler
 {
 public:

@@ -51,6 +51,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case KernelModeDriver:
 		case BootSector:
 		case BootLoader:
+		case BootProgram:
 			return true;
 		case BuildTool:
 		case StaticLibrary:

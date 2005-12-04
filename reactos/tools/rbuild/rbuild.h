@@ -183,11 +183,13 @@ public:
 	std::vector<Define*> defines;
 	std::vector<Library*> libraries;
 	std::vector<Property*> properties;
+	std::vector<Module*> modules;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<If*> ifs;
 
 	~IfableData();
 	void ProcessXML();
+	void ExtractModules( std::vector<Module*> &modules );
 };
 
 class Project
@@ -200,10 +202,10 @@ public:
 	std::string name;
 	std::string makefile;
 	XMLIncludes xmlbuildfiles;
-	std::vector<Module*> modules;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<CDFile*> cdfiles;
 	std::vector<InstallFile*> installfiles;
+	std::vector<Module*> modules;
 	IfableData non_if_data;
 
 	Project ( const Configuration& configuration,
@@ -258,7 +260,8 @@ enum ModuleType
 	Test = 15,
 	RpcServer = 16,
 	RpcClient = 17,
-	Alias = 18
+	Alias = 18,
+	BootProgram = 19
 };
 
 enum HostType
@@ -279,6 +282,7 @@ public:
 	std::string extension;
 	std::string entrypoint;
 	std::string baseaddress;
+	std::string payload;
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
