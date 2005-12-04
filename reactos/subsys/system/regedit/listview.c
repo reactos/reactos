@@ -552,12 +552,10 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL,
                               &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
 
-    #define BUF_HEAD_SPACE 2 /* FIXME: check why this is required with ROS ??? */
-
     if (errCode == ERROR_SUCCESS) {
-        TCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(TCHAR) + BUF_HEAD_SPACE);
+        TCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(TCHAR));
         DWORD dwValNameLen = max_val_name_len;
-        BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, ++max_val_size/* + BUF_HEAD_SPACE*/);
+        BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, max_val_size + sizeof(TCHAR));
         DWORD dwValSize = max_val_size;
         DWORD dwIndex = 0L;
         DWORD dwValType;
@@ -566,7 +564,8 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         /*                } */
         /*                dwValSize = max_val_size; */
         while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
-            ValBuf[dwValSize] = 0;
+            /* Add a terminating 0 character. Usually this is only necessary for strings. */
+            ((TCHAR*)ValBuf)[dwValSize/sizeof(TCHAR)] = 0;
             AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
