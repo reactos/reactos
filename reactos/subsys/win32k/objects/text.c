@@ -1631,6 +1631,7 @@ NtGdiExtTextOut(
    FontGDI = ObjToGDI(FontObj, FONT);
    ASSERT(FontGDI);
 
+   IntLockFreeType;
    face = FontGDI->face;
    if (face->charmap == NULL)
    {
@@ -1651,10 +1652,8 @@ NtGdiExtTextOut(
       {
          DPRINT1("WARNING: Could not find desired charmap!\n");
       }
-      IntLockFreeType;
       error = FT_Set_Charmap(face, found);
-      IntUnLockFreeType;
-      if (error)
+         if (error)
       {
          DPRINT1("WARNING: Could not set the charmap!\n");
       }
@@ -1666,7 +1665,6 @@ NtGdiExtTextOut(
    else
       RenderMode = FT_RENDER_MODE_MONO;
 
-   IntLockFreeType;
    error = FT_Set_Pixel_Sizes(
       face,
       TextObj->logfont.lfWidth,
@@ -1674,10 +1672,10 @@ NtGdiExtTextOut(
       (TextObj->logfont.lfHeight < 0 ?
       - TextObj->logfont.lfHeight :
       TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
-   IntUnLockFreeType;
    if (error)
    {
       DPRINT1("Error in setting pixel sizes: %u\n", error);
+      IntUnLockFreeType;
       goto fail;
    }
 
@@ -1722,10 +1720,8 @@ NtGdiExtTextOut(
 
       for (i = Start; i < Count; i++)
       {
-         IntLockFreeType;
          glyph_index = FT_Get_Char_Index(face, *TempText);
          error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-         IntUnLockFreeType;
 
          if (error)
          {
@@ -1738,9 +1734,7 @@ NtGdiExtTextOut(
          if (use_kerning && previous && glyph_index)
          {
             FT_Vector delta;
-            IntLockFreeType;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            IntUnLockFreeType;
             TextWidth += delta.x;
          }
 
@@ -1772,14 +1766,13 @@ NtGdiExtTextOut(
 
    for (i = 0; i < Count; i++)
    {
-      IntLockFreeType;
       glyph_index = FT_Get_Char_Index(face, *String);
       error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      IntUnLockFreeType;
 
       if (error)
       {
          DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+	 IntUnLockFreeType;
          goto fail;
       }
 
@@ -1789,17 +1782,13 @@ NtGdiExtTextOut(
       if (use_kerning && previous && glyph_index && NULL == Dx)
       {
          FT_Vector delta;
-         IntLockFreeType;
          FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-         IntUnLockFreeType;
          TextLeft += delta.x;
       }
 
       if (glyph->format == ft_glyph_format_outline)
       {
-         IntLockFreeType;
          error = FT_Render_Glyph(glyph, RenderMode);
-         IntUnLockFreeType;
          if (error)
          {
             DPRINT1("WARNING: Failed to render glyph!\n");
@@ -1856,6 +1845,7 @@ NtGdiExtTextOut(
       if ( !HSourceGlyph )
       {
         DPRINT1("WARNING: EngLockSurface() failed!\n");
+	IntUnLockFreeType;
         goto fail;
       }
       SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
@@ -1863,6 +1853,7 @@ NtGdiExtTextOut(
       {
         EngDeleteSurface((HSURF)HSourceGlyph);
         DPRINT1("WARNING: EngLockSurface() failed!\n");
+	IntUnLockFreeType;
         goto fail;
       }
 
@@ -1914,6 +1905,8 @@ NtGdiExtTextOut(
 
       String++;
    }
+
+   IntUnLockFreeType;
 
    EngDeleteXlate(XlateObj);
    EngDeleteXlate(XlateObj2);
