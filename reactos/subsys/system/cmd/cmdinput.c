@@ -409,8 +409,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 
 #endif
 				break;
-
+            
             case _T('M'):
+            case _T('C'):
                 /* ^M does the same as return */
                 if(!(ir.Event.KeyEvent.dwControlKeyState &
                    (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
@@ -513,10 +514,12 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 			}
 #ifdef _UNICODE
             ch = ir.Event.KeyEvent.uChar.UnicodeChar;
-            if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
+            if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)) &&
+                !(ir.Event.KeyEvent.dwControlKeyState & (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
 #else
             ch = ir.Event.KeyEvent.uChar.AsciiChar;
-            if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)))
+            if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)) && 
+                !(ir.Event.KeyEvent.dwControlKeyState & (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
 #endif /* _UNICODE */
             {
                 /* insert character into string... */

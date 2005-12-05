@@ -1449,7 +1449,7 @@ ProcessInput (BOOL bFlag)
 			ConOutPuts (commandline);
 		}
 
-		if (*commandline)
+		if (*commandline && !CheckCtrlBreak(BREAK_INPUT))
 		{
 			ParseCommandLine (commandline);
 			if (bEcho && !bIgnoreEcho && (!bIsBatch || bEchoThisLine))
@@ -1469,8 +1469,25 @@ ProcessInput (BOOL bFlag)
 BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 {
 
+	DWORD			dwWritten;
+	INPUT_RECORD	rec;
 	static BOOL SelfGenerated = FALSE;
+    
+    rec.EventType = KEY_EVENT;
+    rec.Event.KeyEvent.bKeyDown = TRUE;
+    rec.Event.KeyEvent.wRepeatCount = 1;
+    rec.Event.KeyEvent.wVirtualKeyCode = _T('C');
+    rec.Event.KeyEvent.wVirtualScanCode = _T('C') - 35;
+    rec.Event.KeyEvent.uChar.AsciiChar = _T('C');
+    rec.Event.KeyEvent.uChar.UnicodeChar = _T('C');
+    rec.Event.KeyEvent.dwControlKeyState = RIGHT_CTRL_PRESSED; 
 
+    WriteConsoleInput(
+        hIn,
+        &rec,
+        1,
+		&dwWritten);
+        
 	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
 	{
