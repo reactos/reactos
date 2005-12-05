@@ -13,9 +13,6 @@
 #if !defined  (_OLE2_H) && !defined (__OBJC__)
 #include <ole2.h>
 #endif
-#if !defined NOMMREG
-#include <mmreg.h>
-#endif
 
 #define VFWAPI WINAPI
 #define VFWAPIV WINAPIV
