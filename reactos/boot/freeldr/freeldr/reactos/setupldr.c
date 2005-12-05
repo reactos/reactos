@@ -598,30 +598,6 @@ for(;;);
   /* Load buslogic.sys (depends on hardware detection) */
   if (!LoadDriver(SourcePath, "buslogic.sys"))
     return;
-  /*
-   * Load aic78u2.sys (depends on hardware detection)
-   */
-  if (!LoadDriver(SourcePath, "aic78u2.sys"))
-     /*return*/;
-  
-  /*
-   * Load trm390w.sys (depends on hardware detection)
-   */
-  if (!LoadDriver(SourcePath, "trm390w.sys"))
-     /*return*/;
-
-  /*
-   * Load hpt3xx.sys (depends on hardware detection)
-   */
-  if (!LoadDriver(SourcePath, "hpt3xx.sys"))
-     /*return*/;
-
-  /*
-   * Load inia100.sys (depends on hardware detection)
-   */
-  if (!LoadDriver(SourcePath, "inia100.sys"))
-     /*return*/;
-     
 
   /* Load class2.sys */
   if (!LoadDriver(SourcePath, "class2.sys"))
