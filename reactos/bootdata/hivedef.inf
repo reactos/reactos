@@ -22,6 +22,16 @@ HKCU,"Environment","TMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
 HKCU,"SOFTWARE",,0x00000012
 HKCU,"SOFTWARE\Microsoft",,0x00000012
 
+; DirectX version report as DirectX 9.0
+HKCU,"SOFTWARE\Microsoft\DirectX","Debug",0x00010001,0x00000000
+HKCU,"SOFTWARE\Microsoft\DirectX","InstalledVersion",0x00000001,0x00,0x00,0x00,0x09,0x00,0x00,0x00,0x00
+HKCU,"SOFTWARE\Microsoft\DirectX","InstallMDX",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\DirectX","RC",0x00010001,0x00000000
+HKCU,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
+
+
+
+
 ; Current user shell folder settings
 HKCU,"SOFTWARE\Microsoft\Windows",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
