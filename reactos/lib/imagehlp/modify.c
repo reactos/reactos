@@ -1020,6 +1020,21 @@ RemoveRelocations(PCHAR ImageName)
 }
 
 /*
+ * @unimplemented
+ */
+BOOL
+IMAGEAPI
+SplitSymbols(LPSTR ImageName,
+             LPSTR SymbolsPath,
+             LPSTR SymbolFilePath,
+             DWORD Flags)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
  * @implemented
  */
 BOOL

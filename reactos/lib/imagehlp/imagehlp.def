@@ -42,7 +42,7 @@ ReBaseImage @37
 RemoveRelocations @1
 SearchTreeForFile=Dbghelp.SearchTreeForFile @40
 SetImageConfigInformation @41
-;SplitSymbols @42
+SplitSymbols @42
 StackWalk=Dbghelp.StackWalk @43
 StackWalk64=Dbghelp.StackWalk64 @44
 SymCleanup=Dbghelp.SymCleanup @45
