@@ -2952,6 +2952,20 @@ BOOL WINAPI SetupDiSetClassInstallParamsA(
     return FALSE;
 }
 
+/***********************************************************************
+ *		SetupDiSetClassInstallParamsW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiSetClassInstallParamsW(
+       HDEVINFO  DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData,
+       PSP_CLASSINSTALL_HEADER ClassInstallParams,
+       DWORD ClassInstallParamsSize)
+{
+    FIXME("%p %p %x %lu\n",DeviceInfoSet, DeviceInfoData,
+          ClassInstallParams->InstallFunction, ClassInstallParamsSize);
+    return FALSE;
+}
+
 static DWORD
 GetFunctionPointer(
         IN PWSTR InstallerName,
