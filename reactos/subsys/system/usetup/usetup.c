@@ -35,7 +35,6 @@ typedef enum _PAGE_NUMBER
   START_PAGE,
   INTRO_PAGE,
   LICENSE_PAGE,
-  WARNING_PAGE,
   INSTALL_INTRO_PAGE,
 
 //  SCSI_CONTROLLER_PAGE,
@@ -701,6 +700,9 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(8, 19, "\x07  Press L to view the ReactOS Licensing Terms and Conditions");
   SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
 
+  SetTextXY(6, 23, "For more information on ReactOS, please visit:");
+  SetHighlightedTextXY(6, 24, "http://www.reactos.org");
+
   SetStatusText("   ENTER = Continue  R = Repair F3 = Quit");
 
   if (IsUnattendedSetup)
@@ -721,7 +723,7 @@ IntroPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return WARNING_PAGE;
+	  return INSTALL_INTRO_PAGE;
       break;
 	}
       else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
@@ -747,22 +749,28 @@ IntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LicensePage(PINPUT_RECORD Ir)
 {
-  SetHighlightedTextXY(6, 8, "Licensing:");
+  SetHighlightedTextXY(6, 6, "Licensing:");
 
-  SetTextXY(8, 11, "The ReactOS System is licensed under the terms of the");
-  SetTextXY(8, 12, "GNU GPL with parts containing code from other compatible");
-  SetTextXY(8, 13, "licenses such as the X11 or BSD and GNU LGPL licenses.");
-  SetTextXY(8, 14, "All software that is part of the ReactOS system is");
-  SetTextXY(8, 15, "therefore released under the GNU GPL as well as maintaining");
-  SetTextXY(8, 16, "the original license.");
+  SetTextXY(8, 8, "The ReactOS System is licensed under the terms of the");
+  SetTextXY(8, 9, "GNU GPL with parts containing code from other compatible");
+  SetTextXY(8, 10, "licenses such as the X11 or BSD and GNU LGPL licenses.");
+  SetTextXY(8, 11, "All software that is part of the ReactOS system is");
+  SetTextXY(8, 12, "therefore released under the GNU GPL as well as maintaining");
+  SetTextXY(8, 13, "the original license.");
 
-  SetTextXY(8, 18, "This software comes with NO WARRANTY or restrictions on usage");
-  SetTextXY(8, 19, "save applicable local and international law. The licensing of");
-  SetTextXY(8, 20, "ReactOS only covers distribution to third parties.");
+  SetTextXY(8, 15, "This software comes with NO WARRANTY or restrictions on usage");
+  SetTextXY(8, 16, "save applicable local and international law. The licensing of");
+  SetTextXY(8, 17, "ReactOS only covers distribution to third parties.");
 
-  SetTextXY(8, 22, "If for some reason you did not receive a copy of the");
-  SetTextXY(8, 23, "GNU General Public License with ReactOS please visit");
-  SetHighlightedTextXY(8, 25, "http://www.gnu.org/licenses/licenses.html");
+  SetTextXY(8, 18, "If for some reason you did not receive a copy of the");
+  SetTextXY(8, 19, "GNU General Public License with ReactOS please visit");
+  SetHighlightedTextXY(8, 20, "http://www.gnu.org/licenses/licenses.html");
+
+  SetHighlightedTextXY(6, 22, "Warranty:");
+
+  SetTextXY(8, 24, "This is free software; see the source for copying conditions.");
+  SetTextXY(8, 25, "There is NO warranty; not even for MERCHANTABILITY or");
+  SetTextXY(8, 26, "FITNESS FOR A PARTICULAR PURPOSE");
 
   SetStatusText("   ENTER = Return");
 
@@ -775,46 +783,6 @@ LicensePage(PINPUT_RECORD Ir)
           return INTRO_PAGE;
           break;
       }
-    }
-
-  return LICENSE_PAGE;
-}
-
-/*
- * Warning Page
- * RETURNS
- *	Continues to setup
- */
-static PAGE_NUMBER
-WarningPage(PINPUT_RECORD Ir)
-{
-  SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Warranty Statement");
-  SetHighlightedTextXY(6, 8, "Warranty:");
-
-  SetTextXY(8, 11, "This is free software; see the source for copying conditions.");
-  SetTextXY(8, 12, "There is NO warranty; not even for MERCHANTABILITY or");
-  SetTextXY(8, 13, "FITNESS FOR A PARTICULAR PURPOSE");
-
-  SetTextXY(8, 15, "For more information on ReactOS, please visit:");
-  SetHighlightedTextXY(8, 16, "http://www.reactos.org");
-
-  SetStatusText("   F8 = Continue   ESC = Exit");
-
-  while (TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F8)) /* F8 */
-	{
-	    return INSTALL_INTRO_PAGE;
-	  break;
-	}
-      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
-	{
-	  return QUIT_PAGE;
-	}
     }
 
   return LICENSE_PAGE;
@@ -3718,11 +3686,6 @@ NtProcessStartup(PPEB Peb)
 	  /* License page */
 	  case LICENSE_PAGE:
 	    Page = LicensePage(&Ir);
-	    break;
-        
-	  /* Warning page */
-	  case WARNING_PAGE:
-	    Page = WarningPage(&Ir);
 	    break;
 
 	  /* Intro page */
