@@ -19,6 +19,7 @@ BEGIN
     IDS_DEVONPARENT "on %1"
     IDS_TROUBLESHOOTDEV "&Troubleshoot..."
     IDS_ENABLEDEV "E&nable Device"
+    IDS_REINSTALLDRV "Re&install Driver"
 END
 
 STRINGTABLE

@@ -470,10 +470,18 @@ GetParentNode:
                                   DeviceInfoData->DevInst,
                                   0,
                                   dap->hMachine);
-    if (cr == CR_SUCCESS &&
-        (Status & DN_HAS_PROBLEM) && ProblemNumber == CM_PROB_DISABLED)
+    if (cr == CR_SUCCESS && (Status & DN_HAS_PROBLEM))
     {
-        TroubleShootStrId = IDS_ENABLEDEV;
+        switch (ProblemNumber)
+        {
+            case CM_PROB_DISABLED:
+                TroubleShootStrId = IDS_ENABLEDEV;
+                break;
+
+            case CM_PROB_FAILED_INSTALL:
+                TroubleShootStrId = IDS_REINSTALLDRV;
+                break;
+        }
     }
 
     if (LoadString(hDllInstance,

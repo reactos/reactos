@@ -56,6 +56,12 @@ ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
                 break;
             }
 
+            case CM_PROB_FAILED_INSTALL:
+            {
+                /* FIXME - display the driver installation wizard */
+                break;
+            }
+
             default:
             {
                 /* FIXME - troubleshoot the device */
