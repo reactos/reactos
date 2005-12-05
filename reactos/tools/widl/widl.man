@@ -4,7 +4,7 @@ widl \- Wine Interface Definition Language Compiler
 .SH SYNOPSIS
 .BR "widl "\fI[options]\fR " \fIinfile.idl\fR"
 .SH DESCRIPTION
-.B widl 
+.B widl
 is a Wine tool which purpose is to compile Interface Definition Language (IDL) files.
 .PP
 .SH OPTIONS
@@ -14,6 +14,8 @@ No options are used.
 The program prints the help info and then exits.
 .PP
 .B General options:
+.IP \fB--oldnames\fR
+Use old naming conventions.
 .IP \fB-V\fR
 Print version number and exits from the program.
 .PP
@@ -28,7 +30,7 @@ filename is infile.h.
 .IP \fB-t\fR
 Generate a type library.
 .IP "\fB-T \fIfile\fR"
-Define the name of the type library to be generated. 
+Define the name of the type library to be generated.
 The default filename is infile.tlb.
 .PP
 .B Proxy/stub generation options:
@@ -47,7 +49,7 @@ Name of server stub file (default is infile_s.c)
 .PP
 .B Preprocessor options:
 .IP "\fB-I \fIpath\fR"
-Add a header search dir to path. Multiple search 
+Add a header search dir to path. Multiple search
 dirs are allowed.
 .IP "\fB-D \fIid[=val]\fR"
 Define preprocessor identifier id value.
@@ -61,7 +63,7 @@ Do not preprocess input.
 Enable pedantic warnings.
 .IP "\fB-d \fIn\fR"
 .nf
-Set debug level to n. 
+Set debug level to n.
 n may be '0x01', '0x02', '0x04', '0x08', '0x10' or '0x20'.
 (See section \fBDebug\fR)
 .PP

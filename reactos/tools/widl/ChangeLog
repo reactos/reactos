@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-12-05 ekohl
+
+   tools/widl/widl.c
+   tools/widl/widl.man
+
+- Change oldnames option from '-o' to '--oldnames'.
+
 2005-11-26 ekohl
 
    tools/widl/client.c
