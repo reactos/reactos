@@ -679,10 +679,11 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
 
             case WM_DEVICECHANGE:
             {
-                /* FIXME - don't call UpdateDevInfo in all events */
+                /* FIXME - don't call UpdateDevInfo for all events */
                 UpdateDevInfo(hwndDlg,
                               dap,
                               TRUE);
+                Ret = TRUE;
                 break;
             }
 

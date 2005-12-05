@@ -122,15 +122,21 @@ static BOOL
 DisplaySelectedDeviceProperties(IN PHARDWARE_PAGE_DATA hpd)
 {
     PHWDEVINFO HwDevInfo;
+    SP_DEVINFO_DATA DevInfoData;
     BOOL Ret = FALSE;
 
     HwDevInfo = (PHWDEVINFO)ListViewGetSelectedItemData(hpd->hWndDevList);
     if (HwDevInfo != NULL)
     {
+        /* make a copy of the SP_DEVINFO_DATA structure on the stack, it may
+           become invalid in case the devices are updated */
+        DevInfoData = HwDevInfo->DevInfoData;
+
+        /* display the advanced properties */
         Ret = DisplayDeviceAdvancedProperties(hpd->hWnd,
                                               NULL,
                                               HwDevInfo->ClassDevInfo->hDevInfo,
-                                              &HwDevInfo->DevInfoData,
+                                              &DevInfoData,
                                               hpd->hComCtl32,
                                               NULL,
                                               0) != -1;
@@ -341,12 +347,59 @@ BuildDevicesList(IN PHARDWARE_PAGE_DATA hpd)
 }
 
 
+static BOOL
+DeviceIdMatch(IN HDEVINFO DeviceInfoSet,
+              IN PSP_DEVINFO_DATA DeviceInfoData,
+              IN LPCWSTR lpDeviceId)
+{
+    DWORD DevIdLen;
+    LPWSTR lpQueriedDeviceId;
+    BOOL Ret = FALSE;
+
+    if (!SetupDiGetDeviceInstanceId(DeviceInfoSet,
+                                    DeviceInfoData,
+                                    NULL,
+                                    0,
+                                    &DevIdLen) &&
+        GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        if (DevIdLen == wcslen(lpDeviceId) + 1)
+        {
+            lpQueriedDeviceId = HeapAlloc(GetProcessHeap(),
+                                          0,
+                                          DevIdLen * sizeof(WCHAR));
+            if (lpQueriedDeviceId != NULL)
+            {
+                if (SetupDiGetDeviceInstanceId(DeviceInfoSet,
+                                               DeviceInfoData,
+                                               lpQueriedDeviceId,
+                                               DevIdLen,
+                                               NULL))
+                {
+                    Ret = (wcscmp(lpDeviceId,
+                                  lpQueriedDeviceId) == 0);
+                }
+
+                HeapFree(GetProcessHeap(),
+                         0,
+                         lpQueriedDeviceId);
+            }
+        }
+    }
+
+    return Ret;
+}
+
+
 static VOID
-FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
+FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd,
+                           IN LPCWSTR lpSelectDeviceId  OPTIONAL,
+                           IN GUID *SelectedClassGuid  OPTIONAL)
 {
     PHWCLASSDEVINFO ClassDevInfo, LastClassDevInfo;
     PHWDEVINFO HwDevInfo, LastHwDevInfo;
     WCHAR szBuffer[255];
+    BOOL SelectedInClass;
     INT ItemCount = 0;
 
     BuildDevicesList(hpd);
@@ -361,10 +414,13 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
             HwDevInfo = ClassDevInfo->HwDevInfo;
             LastHwDevInfo = HwDevInfo + ClassDevInfo->ItemCount;
 
+            SelectedInClass = (SelectedClassGuid != NULL &&
+                               IsEqualGUID(SelectedClassGuid,
+                                           &ClassDevInfo->Guid));
             while (HwDevInfo != LastHwDevInfo)
             {
                 INT iItem;
-                LVITEM li;
+                LVITEM li = {0};
 
                 /* get the device name */
                 if (!HwDevInfo->HideDevice &&
@@ -375,8 +431,14 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
                 {
                     li.mask = LVIF_PARAM | LVIF_STATE | LVIF_TEXT | LVIF_IMAGE;
                     li.iItem = ItemCount;
-                    li.iSubItem = 0;
-                    li.state = (ItemCount == 0 ? LVIS_SELECTED : 0);
+                    if ((ItemCount == 0 && lpSelectDeviceId == NULL) ||
+                        (SelectedInClass &&
+                         DeviceIdMatch(ClassDevInfo->hDevInfo,
+                                       &HwDevInfo->DevInfoData,
+                                       lpSelectDeviceId)))
+                    {
+                        li.state = LVIS_SELECTED;
+                    }
                     li.stateMask = LVIS_SELECTED;
                     li.pszText = szBuffer;
                     li.iImage = ClassDevInfo->ImageIndex;
@@ -415,6 +477,67 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
 }
 
 
+static VOID
+UpdateDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
+{
+    PHWDEVINFO HwDevInfo;
+    GUID SelectedClassGuid = {0};
+    LPWSTR lpDeviceId = NULL;
+
+    /* if a device currently is selected, remember the device id so we can
+       select the device after the update if still present */
+    HwDevInfo = (PHWDEVINFO)ListViewGetSelectedItemData(hpd->hWndDevList);
+    if (HwDevInfo != NULL)
+    {
+        DWORD DevIdLen;
+        if (!SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
+                                        &HwDevInfo->DevInfoData,
+                                        NULL,
+                                        0,
+                                        &DevIdLen) &&
+            GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            SelectedClassGuid = HwDevInfo->DevInfoData.ClassGuid;
+            lpDeviceId = HeapAlloc(GetProcessHeap(),
+                                   0,
+                                   DevIdLen * sizeof(WCHAR));
+            if (lpDeviceId != NULL &&
+                !SetupDiGetDeviceInstanceId(HwDevInfo->ClassDevInfo->hDevInfo,
+                                            &HwDevInfo->DevInfoData,
+                                            lpDeviceId,
+                                            DevIdLen,
+                                            NULL))
+            {
+                HeapFree(GetProcessHeap(),
+                         0,
+                         lpDeviceId);
+                lpDeviceId = NULL;
+            }
+        }
+    }
+
+    /* clear the devices list view control */
+    ListView_DeleteAllItems(hpd->hWndDevList);
+
+    /* free the device list */
+    FreeDevicesList(hpd);
+
+    /* build rebuild the device list and fill the list box again */
+    FillDevicesListViewControl(hpd,
+                               lpDeviceId,
+                               (lpDeviceId != NULL ?
+                                    &SelectedClassGuid :
+                                    NULL));
+
+    if (lpDeviceId != NULL)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpDeviceId);
+    }
+}
+
+
 static LRESULT
 CALLBACK
 ParentSubWndProc(IN HWND hwnd,
@@ -438,6 +561,16 @@ ParentSubWndProc(IN HWND hwnd,
                          LOWORD(lParam),
                          HIWORD(lParam),
                          SWP_NOZORDER);
+        }
+        else if (uMsg == WM_DEVICECHANGE && IsWindowVisible(hpd->hWnd))
+        {
+            /* forward a WM_DEVICECHANGE message to the hardware
+               page which wouldn't get the message itself as it is
+               a child window */
+            SendMessage(hpd->hWnd,
+                        WM_DEVICECHANGE,
+                        wParam,
+                        lParam);
         }
 
         /* pass the message the the old window proc */
@@ -739,6 +872,14 @@ HardwareDlgProc(IN HWND hwndDlg,
                 break;
             }
 
+            case WM_DEVICECHANGE:
+            {
+                /* FIXME - don't call UpdateDevicesListViewControl for all events */
+                UpdateDevicesListViewControl(hpd);
+                Ret = TRUE;
+                break;
+            }
+
             case WM_INITDIALOG:
             {
                 hpd = (PHARDWARE_PAGE_DATA)lParam;
@@ -808,7 +949,9 @@ HardwareDlgProc(IN HWND hwndDlg,
                     InitializeDevicesList(hpd);
 
                     /* fill the devices list view control */
-                    FillDevicesListViewControl(hpd);
+                    FillDevicesListViewControl(hpd,
+                                               NULL,
+                                               NULL);
 
                     /* decide whether to show or hide the troubleshoot button */
                     EnableTroubleShoot(hpd,
