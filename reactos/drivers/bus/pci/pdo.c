@@ -858,16 +858,14 @@ InterfaceBusTranslateBusAddress(
   OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
-  PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 
   DPRINT("InterfaceBusTranslateBusAddress(%p %p 0x%lx %p %p)\n",
     Context, BusAddress, Length, AddressSpace, TranslatedAddress);
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
-  FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
 
   return HalTranslateBusAddress(
-    PCIBus, FdoDeviceExtension->BusNumber,
+    PCIBus, DeviceExtension->PciDevice->BusNumber,
     BusAddress, AddressSpace, TranslatedAddress);
 }
 
