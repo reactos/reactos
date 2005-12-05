@@ -267,6 +267,13 @@ IsDeviceEnabled(IN DEVINST DevInst,
                 OUT BOOL *IsEnabled);
 
 BOOL
+EnableDevice(IN HDEVINFO DeviceInfoSet,
+             IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
+             IN BOOL bEnable,
+             IN DWORD HardwareProfile  OPTIONAL,
+             OUT BOOL *bNeedReboot  OPTIONAL);
+
+BOOL
 GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
                     OUT LPWSTR szBuffer,
                     IN DWORD BufferSize);

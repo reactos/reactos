@@ -34,13 +34,6 @@ typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
 typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);
 typedef BOOL (WINAPI *PDESTROYPROPERTYSHEETPAGE)(HPROPSHEETPAGE);
 
-typedef enum
-{
-    DEA_DISABLE = 0,
-    DEA_ENABLE,
-    DEA_UNKNOWN
-} DEVENABLEACTION;
-
 typedef struct _DEVADVPROP_INFO
 {
     HWND hWndGeneralPage;
@@ -83,14 +76,10 @@ InitDevUsageActions(IN HWND hwndDlg,
 {
     INT Index;
     UINT i;
-    struct
+    UINT Actions[] =
     {
-        UINT szId;
-        DEVENABLEACTION Action;
-    } Actions[] =
-    {
-        {IDS_ENABLEDEVICE, DEA_ENABLE},
-        {IDS_DISABLEDEVICE, DEA_DISABLE},
+        IDS_ENABLEDEVICE,
+        IDS_DISABLEDEVICE,
     };
 
     for (i = 0;
@@ -99,7 +88,7 @@ InitDevUsageActions(IN HWND hwndDlg,
     {
         /* fill in the device usage combo box */
         if (LoadString(hDllInstance,
-                       Actions[i].szId,
+                       Actions[i],
                        dap->szTemp,
                        sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
         {
@@ -112,11 +101,11 @@ InitDevUsageActions(IN HWND hwndDlg,
                 SendMessage(hComboBox,
                             CB_SETITEMDATA,
                             (WPARAM)Index,
-                            (LPARAM)Actions[i].Action);
+                            (LPARAM)Actions[i]);
 
-                switch (Actions[i].Action)
+                switch (Actions[i])
                 {
-                    case DEA_ENABLE:
+                    case IDS_ENABLEDEVICE:
                         if (dap->DeviceEnabled)
                         {
                             SendMessage(hComboBox,
@@ -126,7 +115,7 @@ InitDevUsageActions(IN HWND hwndDlg,
                         }
                         break;
 
-                    case DEA_DISABLE:
+                    case IDS_DISABLEDEVICE:
                         if (!dap->DeviceEnabled)
                         {
                             SendMessage(hComboBox,
@@ -145,11 +134,11 @@ InitDevUsageActions(IN HWND hwndDlg,
 }
 
 
-static DEVENABLEACTION
+static UINT
 GetSelectedUsageAction(IN HWND hComboBox)
 {
     INT Index;
-    DEVENABLEACTION Ret = DEA_UNKNOWN;
+    UINT Ret = 0;
 
     Index = (INT)SendMessage(hComboBox,
                              CB_GETCURSEL,
@@ -161,9 +150,9 @@ GetSelectedUsageAction(IN HWND hComboBox)
                                CB_GETITEMDATA,
                                (WPARAM)Index,
                                0);
-        if (iRet != CB_ERR && iRet < (INT)DEA_UNKNOWN)
+        if (iRet != CB_ERR)
         {
-            Ret = (DEVENABLEACTION)iRet;
+            Ret = (UINT)iRet;
         }
     }
 
@@ -171,44 +160,70 @@ GetSelectedUsageAction(IN HWND hComboBox)
 }
 
 
-static VOID
+static BOOL
 ApplyGeneralSettings(IN HWND hwndDlg,
                      IN PDEVADVPROP_INFO dap)
 {
+    BOOL Ret = FALSE;
+
     if (dap->DeviceUsageChanged && dap->IsAdmin)
     {
-        DEVENABLEACTION SelectedUsageAction;
+        UINT SelectedUsageAction;
+        BOOL NeedReboot = FALSE;
 
         SelectedUsageAction = GetSelectedUsageAction(GetDlgItem(hwndDlg,
                                                                 IDC_DEVUSAGE));
-        if (SelectedUsageAction != DEA_UNKNOWN)
+        switch (SelectedUsageAction)
         {
-            switch (SelectedUsageAction)
+            case IDS_ENABLEDEVICE:
+                if (!dap->DeviceEnabled)
+                {
+                    Ret = EnableDevice(dap->DeviceInfoSet,
+                                       &dap->DeviceInfoData,
+                                       TRUE,
+                                       0,
+                                       &NeedReboot);
+                }
+                break;
+
+            case IDS_DISABLEDEVICE:
+                if (dap->DeviceEnabled)
+                {
+                    Ret = EnableDevice(dap->DeviceInfoSet,
+                                       &dap->DeviceInfoData,
+                                       FALSE,
+                                       0,
+                                       &NeedReboot);
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        if (Ret)
+        {
+            if (NeedReboot)
             {
-                case DEA_ENABLE:
-                    if (!dap->DeviceEnabled)
-                    {
-                        /* FIXME - enable device */
-                    }
-                    break;
-
-                case DEA_DISABLE:
-                    if (dap->DeviceEnabled)
-                    {
-                        /* FIXME - disable device */
-                    }
-                    break;
-
-                default:
-                    break;
+                /* make PropertySheet() return PSM_REBOOTSYSTEM */
+                PropSheet_RebootSystem(hwndDlg);
             }
         }
+        else
+        {
+            /* FIXME - display an error message */
+            DPRINT1("Failed to enable/disable device! LastError: %d\n",
+                    GetLastError());
+        }
     }
+    else
+        Ret = !dap->DeviceUsageChanged;
 
     /* disable the apply button */
     PropSheet_UnChanged(GetParent(hwndDlg),
                         hwndDlg);
     dap->DeviceUsageChanged = FALSE;
+    return Ret;
 }
 
 

@@ -613,6 +613,71 @@ IsDeviceEnabled(IN DEVINST DevInst,
 
 
 BOOL
+EnableDevice(IN HDEVINFO DeviceInfoSet,
+             IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
+             IN BOOL bEnable,
+             IN DWORD HardwareProfile  OPTIONAL,
+             OUT BOOL *bNeedReboot  OPTIONAL)
+{
+    SP_PROPCHANGE_PARAMS pcp;
+    SP_DEVINSTALL_PARAMS dp;
+    DWORD LastErr;
+    BOOL Ret = FALSE;
+
+    pcp.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+    pcp.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+    pcp.HwProfile = HardwareProfile;
+
+    if (bEnable)
+    {
+        /* try to enable/disable the device on the global profile */
+        pcp.StateChange = DICS_ENABLE;
+        pcp.Scope = DICS_FLAG_GLOBAL;
+
+        /* ignore errors */
+        LastErr = GetLastError();
+        if (SetupDiSetClassInstallParams(DeviceInfoSet,
+                                         DevInfoData,
+                                         &pcp.ClassInstallHeader,
+                                         sizeof(SP_PROPCHANGE_PARAMS)))
+        {
+            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                      DeviceInfoSet,
+                                      DevInfoData);
+        }
+        SetLastError(LastErr);
+    }
+
+    /* try config-specific */
+    pcp.StateChange = (bEnable ? DICS_ENABLE : DICS_DISABLE);
+    pcp.Scope = DICS_FLAG_CONFIGSPECIFIC;
+
+    if (SetupDiSetClassInstallParams(DeviceInfoSet,
+                                     DevInfoData,
+                                     &pcp.ClassInstallHeader,
+                                     sizeof(SP_PROPCHANGE_PARAMS)) &&
+        SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                  DeviceInfoSet,
+                                  DevInfoData))
+    {
+        dp.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+        if (SetupDiGetDeviceInstallParams(DeviceInfoSet,
+                                          DevInfoData,
+                                          &dp))
+        {
+            if (bNeedReboot != NULL)
+            {
+                *bNeedReboot = ((dp.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT)) != 0);
+            }
+
+            Ret = TRUE;
+        }
+    }
+    return Ret;
+}
+
+
+BOOL
 GetDeviceTypeString(IN PSP_DEVINFO_DATA DeviceInfoData,
                     OUT LPWSTR szBuffer,
                     IN DWORD BufferSize)
