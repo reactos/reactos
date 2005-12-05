@@ -3679,7 +3679,9 @@ NtProcessStartup(PPEB Peb)
   Status = AllocConsole();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("AllocConsole() failed (Status = 0x%08lx)\n", Status);
+      PrintString("Unable to open the console (Status = 0x%08lx)\n\n", Status);
+      PrintString("The most common cause of this is using an USB keyboard\n");
+      PrintString("USB keyboards are not fully supported yet\n");
 
       /* Raise a hard error (crash the system/BSOD) */
       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
