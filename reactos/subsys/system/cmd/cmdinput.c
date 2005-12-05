@@ -138,6 +138,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	WORD   wLastKey = 0;
 	TCHAR  ch;
 	BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
+    BOOL bReturn = FALSE;
 	TCHAR szPath[MAX_PATH];
 
 	/* get screen size */
@@ -156,6 +157,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 
 	do
 	{
+    
+        bReturn = FALSE;
+        
 		ConInKey (&ir);
 
 		if (ir.Event.KeyEvent.dwControlKeyState &
@@ -406,6 +410,14 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 #endif
 				break;
 
+            case _T('M'):
+                /* ^M does the same as return */
+                if(!(ir.Event.KeyEvent.dwControlKeyState &
+                   (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
+                {
+                    break;
+                }
+                    
 			case VK_RETURN:
 				/* end input, return to main */
 #ifdef FEATURE_HISTORY
@@ -415,6 +427,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 #endif
 				ConInDummy ();
 				ConOutChar (_T('\n'));
+                bReturn = TRUE;
 				break;
 
 			case VK_ESCAPE:
@@ -497,65 +510,57 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 				break;
 
-			default:
+			}
 #ifdef _UNICODE
-				ch = ir.Event.KeyEvent.uChar.UnicodeChar;
-				if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
+            ch = ir.Event.KeyEvent.uChar.UnicodeChar;
+            if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
 #else
-				ch = ir.Event.KeyEvent.uChar.AsciiChar;
-				if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)))
+            ch = ir.Event.KeyEvent.uChar.AsciiChar;
+            if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)))
 #endif /* _UNICODE */
-				{
-					/* insert character into string... */
-					if (bInsert && current != charcount)
-					{
-					        /* If this character insertion will cause screen scrolling,
-					         * adjust the saved origin of the command prompt. */
-					        tempscreen = _tcslen(str + current) + curx;
-						if ((tempscreen % maxx) == (maxx - 1) &&
-						    (tempscreen / maxx) + cury == (maxy - 1))
-						{
-							orgy--;
-							cury--;
-						}
+            {
+                /* insert character into string... */
+                if (bInsert && current != charcount)
+                {
+                        /* If this character insertion will cause screen scrolling,
+                                                                 * adjust the saved origin of the command prompt. */
+                        tempscreen = _tcslen(str + current) + curx;
+                    if ((tempscreen % maxx) == (maxx - 1) &&
+                        (tempscreen / maxx) + cury == (maxy - 1))
+                    {
+                        orgy--;
+                        cury--;
+                    }
 
-						for (count = charcount; count > current; count--)
-							str[count] = str[count - 1];
-						str[current++] = ch;
-						if (curx == maxx - 1)
-							curx = 0, cury++;
-						else
-							curx++;
-						ConOutPrintf (_T("%s"), &str[current - 1]);
-						SetCursorXY (curx, cury);
-						charcount++;
-					}
-					else
-					{
-						if (current == charcount)
-							charcount++;
-						str[current++] = ch;
-						if (GetCursorX () == maxx - 1 && GetCursorY () == maxy - 1)
-							orgy--, cury--;
-						if (GetCursorX () == maxx - 1)
-							curx = 0, cury++;
-						else
-							curx++;
-						ConOutChar (ch);
-					}
-				}
-#if 0
-				else
-				{
-					MessageBeep (-1);
-				}
-#endif
-				break;
-
-		}
+                    for (count = charcount; count > current; count--)
+                        str[count] = str[count - 1];
+                    str[current++] = ch;
+                    if (curx == maxx - 1)
+                        curx = 0, cury++;
+                    else
+                        curx++;
+                    ConOutPrintf (_T("%s"), &str[current - 1]);
+                    SetCursorXY (curx, cury);
+                    charcount++;
+                }
+                else
+                {
+                    if (current == charcount)
+                        charcount++;
+                    str[current++] = ch;
+                    if (GetCursorX () == maxx - 1 && GetCursorY () == maxy - 1)
+                        orgy--, cury--;
+                    if (GetCursorX () == maxx - 1)
+                        curx = 0, cury++;
+                    else
+                        curx++;
+                    ConOutChar (ch);
+                }
+            }
+		
 		wLastKey = ir.Event.KeyEvent.wVirtualKeyCode;
 	}
-	while (ir.Event.KeyEvent.wVirtualKeyCode != VK_RETURN);
+	while (!bReturn);
 
 	SetCursorType (bInsert, TRUE);
 }
