@@ -2,6 +2,7 @@
 #include <commctrl.h>
 #include <regstr.h>
 #include <setupapi.h>
+#include <cfgmgr32.h>
 #include <tchar.h>
 
 #include <stdio.h>

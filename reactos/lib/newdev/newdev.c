@@ -22,6 +22,118 @@ static DEVINSTDATA DevInstData;
 HINSTANCE hDllInstance;
 HANDLE hThread;
 
+BOOL
+CanDisableDevice(IN DEVINST DevInst,
+                 IN HMACHINE hMachine,
+                 OUT BOOL *CanDisable)
+{
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
+    if (cr == CR_SUCCESS)
+    {
+        *CanDisable = ((Status & DN_DISABLEABLE) != 0);
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+IsDeviceEnabled(IN DEVINST DevInst,
+                IN HMACHINE hMachine,
+                OUT BOOL *IsEnabled)
+{
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
+    if (cr == CR_SUCCESS)
+    {
+        *IsEnabled = ((Status & DN_STARTED) != 0);
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
+EnableDevice(IN HDEVINFO DeviceInfoSet,
+             IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
+             IN BOOL bEnable,
+             IN DWORD HardwareProfile  OPTIONAL,
+             OUT BOOL *bNeedReboot  OPTIONAL)
+{
+    SP_PROPCHANGE_PARAMS pcp;
+    SP_DEVINSTALL_PARAMS dp;
+    DWORD LastErr;
+    BOOL Ret = FALSE;
+
+    pcp.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+    pcp.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+    pcp.HwProfile = HardwareProfile;
+
+    if (bEnable)
+    {
+        /* try to enable the device on the global profile */
+        pcp.StateChange = DICS_ENABLE;
+        pcp.Scope = DICS_FLAG_GLOBAL;
+
+        /* ignore errors */
+        LastErr = GetLastError();
+        if (SetupDiSetClassInstallParams(DeviceInfoSet,
+                                         DevInfoData,
+                                         &pcp.ClassInstallHeader,
+                                         sizeof(SP_PROPCHANGE_PARAMS)))
+        {
+            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                      DeviceInfoSet,
+                                      DevInfoData);
+        }
+        SetLastError(LastErr);
+    }
+
+    /* try config-specific */
+    pcp.StateChange = (bEnable ? DICS_ENABLE : DICS_DISABLE);
+    pcp.Scope = DICS_FLAG_CONFIGSPECIFIC;
+
+    if (SetupDiSetClassInstallParams(DeviceInfoSet,
+                                     DevInfoData,
+                                     &pcp.ClassInstallHeader,
+                                     sizeof(SP_PROPCHANGE_PARAMS)) &&
+        SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                  DeviceInfoSet,
+                                  DevInfoData))
+    {
+        dp.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+        if (SetupDiGetDeviceInstallParams(DeviceInfoSet,
+                                          DevInfoData,
+                                          &dp))
+        {
+            if (bNeedReboot != NULL)
+            {
+                *bNeedReboot = ((dp.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT)) != 0);
+            }
+
+            Ret = TRUE;
+        }
+    }
+    return Ret;
+}
+
 /*
 * @unimplemented
 */
@@ -390,6 +502,7 @@ FindDriverProc(
     size_t nType;
     DWORD dwDrives;
     PDEVINSTDATA DevInstData;
+    DWORD config_flags;
     UINT i = 1;
 
     DevInstData = (PDEVINSTDATA)lpParam;
@@ -417,6 +530,23 @@ FindDriverProc(
             }
         }
         i <<= 1;
+    }
+
+    /* update device configuration */
+    if(SetupDiGetDeviceRegistryProperty(DevInstData->hDevInfo,
+        &DevInstData->devInfoData,
+        SPDRP_CONFIGFLAGS,
+        NULL,
+        (BYTE *)&config_flags,
+        sizeof(config_flags),
+        NULL))
+    {
+        config_flags |= CONFIGFLAG_FAILEDINSTALL;
+        SetupDiSetDeviceRegistryProperty(
+            DevInstData->hDevInfo,
+            &DevInstData->devInfoData,
+            SPDRP_CONFIGFLAGS,
+            NULL, 0 );
     }
 
     PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
@@ -515,6 +645,7 @@ InstFailDlgProc(
     case WM_INITDIALOG:
         {
             HWND hwndControl;
+            BOOL DisableableDevice = FALSE;
 
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
@@ -529,14 +660,21 @@ InstFailDlgProc(
                 WM_SETFONT,
                 (WPARAM)DevInstData->hTitleFont,
                 (LPARAM)TRUE);
+
+            /* disable the "do not show this dialog anymore" checkbox
+               if the device cannot be disabled */
+            CanDisableDevice(DevInstData->devInfoData.DevInst,
+                             NULL,
+                             &DisableableDevice);
+            EnableWindow(GetDlgItem(hwndDlg,
+                                    IDC_DONOTSHOWDLG),
+                         DisableableDevice);
         }
         break;
 
     case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
-            DWORD config_flags;
-            BOOL ret;
 
             switch (lpnm->code)
             {
@@ -551,28 +689,29 @@ InstFailDlgProc(
                 break;
 
             case PSN_WIZFINISH:
-                /* Handle a Finish button click, if necessary */
-                if (SendDlgItemMessage(hwndDlg, IDC_DONOTSHOWDLG, BM_GETCHECK, (WPARAM) 0, (LPARAM) 0) == BST_CHECKED)
+            {
+                BOOL DisableableDevice = FALSE;
+                BOOL IsEnabled = FALSE;
+
+                if (CanDisableDevice(DevInstData->devInfoData.DevInst,
+                                     NULL,
+                                     &DisableableDevice) &&
+                    DisableableDevice &&
+                    IsDeviceEnabled(DevInstData->devInfoData.DevInst,
+                                    NULL,
+                                    &IsEnabled) &&
+                    IsEnabled &&
+                    SendDlgItemMessage(hwndDlg, IDC_DONOTSHOWDLG, BM_GETCHECK, (WPARAM) 0, (LPARAM) 0) == BST_CHECKED)
                 {
-
-                    if(SetupDiGetDeviceRegistryProperty(DevInstData->hDevInfo,
-                        &DevInstData->devInfoData,
-                        SPDRP_CONFIGFLAGS,
-                        NULL,
-                        (BYTE *)&config_flags,
-                        sizeof(config_flags),
-                        NULL))
-                    {
-                        config_flags |= CONFIGFLAG_FAILEDINSTALL;
-                        ret = SetupDiSetDeviceRegistryProperty(
-                            DevInstData->hDevInfo,
-                            &DevInstData->devInfoData,
-                            SPDRP_CONFIGFLAGS,
-                            NULL, 0 );
-                    }
-
+                    /* disable the device */
+                    EnableDevice(DevInstData->hDevInfo,
+                                 &DevInstData->devInfoData,
+                                 FALSE,
+                                 0,
+                                 NULL);
                 }
                 break;
+            }
 
             default:
                 break;
