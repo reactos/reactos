@@ -74,6 +74,13 @@ PsEstablishWin32Callouts(
     PW32_CALLOUT_DATA CalloutData
 );
 
+VOID
+NTAPI
+PsReturnProcessNonPagedPoolQuota(
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+);
+
 //
 // Process Impersonation Functions
 //

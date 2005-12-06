@@ -588,11 +588,11 @@ typedef struct _TERMINATION_PORT
 #include <pshpack4.h>
 typedef struct _ETHREAD
 {
-    KTHREAD                        Tcb;                         /* 1C0 */
-    LARGE_INTEGER                  CreateTime;                  /* 1C0 */
-    LARGE_INTEGER                  ExitTime;                    /* 1C0 */
+    KTHREAD                        Tcb;                         /* 1B8 */
+    LARGE_INTEGER                  CreateTime;                  /* 1B8 */
     union
     {
+        LARGE_INTEGER              ExitTime;                    /* 1C0 */
         LIST_ENTRY                 LpcReplyChain;               /* 1C0 */
         LIST_ENTRY                 KeyedWaitChain;              /* 1C0 */
     };
@@ -609,12 +609,12 @@ typedef struct _ETHREAD
         PVOID                      KeyedWaitValue;              /* 1D4 */
     };
     KSPIN_LOCK                     ActiveTimerListLock;         /* 1D8 */
-    LIST_ENTRY                     ActiveTimerListHead;         /* 1D8 */
-    CLIENT_ID                      Cid;                         /* 1E0 */
+    LIST_ENTRY                     ActiveTimerListHead;         /* 1DC */
+    CLIENT_ID                      Cid;                         /* 1E4 */
     union
     {
-        KSEMAPHORE                 LpcReplySemaphore;           /* 1E4 */
-        KSEMAPHORE                 KeyedReplySemaphore;         /* 1E4 */
+        KSEMAPHORE                 LpcReplySemaphore;           /* 1EC */
+        KSEMAPHORE                 KeyedReplySemaphore;         /* 1EC */
     };
     union
     {
@@ -747,7 +747,7 @@ typedef struct _EPROCESS
     LIST_ENTRY            ThreadListHead;               /* 184 */
     PVOID                 SecurityPort;                 /* 188 */
     PVOID                 PaeTop;                       /* 18C */
-    ULONG                 ActiveThreds;                 /* 190 */
+    ULONG                 ActiveThreads;                /* 190 */
     ACCESS_MASK           GrantedAccess;                /* 194 */
     ULONG                 DefaultHardErrorProcessing;   /* 198 */
     NTSTATUS              LastThreadExitStatus;         /* 19C */
