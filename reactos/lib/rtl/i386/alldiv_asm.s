@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
- * FILE:              lib/rtl/i386/math.S
+ * FILE:              lib/rtl/i386/alldiv_asm.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  *                    Eric Kohl (ekohl@rz-online.de)
  *
@@ -36,12 +36,9 @@
  */
  
  .globl __alldiv
+ .globl __fltused
  
  /* DATA ********************************************************************/
-
-fzero:
-        .long   0                       // Floating point zero
-        .long   0                       // Floating point zero
 
 __fltused:
         .long 0x9875

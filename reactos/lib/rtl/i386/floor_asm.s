@@ -37,15 +37,6 @@
  
 .globl _floor
  
- /* DATA ********************************************************************/
-
-fzero:
-        .long   0                       // Floating point zero
-        .long   0                       // Floating point zero
-
-__fltused:
-        .long 0x9875
-
 .intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/

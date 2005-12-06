@@ -17,6 +17,7 @@
 			<file>atan_asm.s</file>
 			<file>aulldvrm_asm.s</file>
 			<file>aullrem_asm.s</file>
+			<file>aullshr_asm.s</file>
 			<file>ceil_asm.s</file>
 			<file>chkstk_asm.s</file>
 			<file>comparememory_asm.s</file>
@@ -36,8 +37,7 @@
 			<file>prefetchmemory_asm.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
-			<file>tan_asm.s</file>
-			<file>uallshr_asm.s</file>
+			<file>tan_asm.s</file>			
 			<file>zeromemory_asm.s</file>
 		</directory>
 	</if>

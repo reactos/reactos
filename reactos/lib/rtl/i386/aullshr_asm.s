@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
- * FILE:              lib/rtl/i386/ullshr.S
+ * FILE:              lib/rtl/i386/uallshr.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  *                    Eric Kohl (ekohl@rz-online.de)
  *
@@ -35,17 +35,8 @@
  * SUCH DAMAGE.
  */
  
-.globl __ullshr
+.globl __aullshr
  
- /* DATA ********************************************************************/
-
-fzero:
-        .long   0                       // Floating point zero
-        .long   0                       // Floating point zero
-
-__fltused:
-        .long 0x9875
-
 .intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/
