@@ -463,6 +463,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
       KEBUGCHECK(0);
    }
    MmSetRmapListHeadPage(Page, NULL);
+   ExReleaseFastMutex(&RmapListLock);
    while (current_entry != NULL)
    {
       previous_entry = current_entry;
@@ -483,7 +484,6 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
          InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
       }
    }
-   ExReleaseFastMutex(&RmapListLock);
 }
 
 VOID
