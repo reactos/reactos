@@ -15,6 +15,7 @@
 			<file>allshl_asm.s</file>
 			<file>allshr_asm.s</file>
 			<file>atan_asm.s</file>
+			<file>aulldiv_asm.s</file>
 			<file>aulldvrm_asm.s</file>
 			<file>aullrem_asm.s</file>
 			<file>aullshr_asm.s</file>
