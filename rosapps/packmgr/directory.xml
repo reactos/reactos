@@ -1,9 +1,0 @@
-<directory name="cmd-line">
-	<xi:include href="cmd-line/rosget.xml" />
-</directory>
-<directory name="gui">
-	<xi:include href="gui/packmgr.xml" />
-</directory>
-<directory name="lib">
-	<xi:include href="lib/package.xml" />
-</directory>
