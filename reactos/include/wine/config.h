@@ -55,7 +55,7 @@
 #define HAVE_DAYLIGHT 1
 
 /* Define to 1 if you have the <direct.h> header file. */
-#define HAVE_DIRECT_H 1
+//#define HAVE_DIRECT_H 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
@@ -217,7 +217,7 @@
 /* #undef HAVE_IOKIT_IOKITLIB_H */
 
 /* Define to 1 if you have the <io.h> header file. */
-#define HAVE_IO_H 1
+//#define HAVE_IO_H 1
 
 /* Define to 1 if you have the <jack/jack.h> header file. */
 /* #undef HAVE_JACK_JACK_H */
@@ -454,7 +454,7 @@
 /* #undef HAVE_PREAD */
 
 /* Define to 1 if you have the <process.h> header file. */
-#define HAVE_PROCESS_H 1
+// #define HAVE_PROCESS_H 1
 
 /* Define to 1 if you have the `pthread_getattr_np' function. */
 /* #undef HAVE_PTHREAD_GETATTR_NP */
@@ -853,7 +853,7 @@
 #define HAVE__SPAWNVP 1
 
 /* Define to 1 if you have the `_stricmp' function. */
-#define HAVE__STRICMP 1
+//#define HAVE__STRICMP 1
 
 /* Define to 1 if you have the `_strnicmp' function. */
 #define HAVE__STRNICMP 1
