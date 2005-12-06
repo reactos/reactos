@@ -81,7 +81,7 @@ CPlApplet(HWND hwndCpl,
       CPLINFO *CPlInfo = (CPLINFO*)lParam2;
       UINT uAppIndex = (UINT)lParam1;
 
-      CPlInfo->lData = 0;
+      CPlInfo->lData = lParam1;
       CPlInfo->idIcon = Applets[uAppIndex].idIcon;
       CPlInfo->idName = Applets[uAppIndex].idName;
       CPlInfo->idInfo = Applets[uAppIndex].idDescription;
