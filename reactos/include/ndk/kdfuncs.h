@@ -97,6 +97,14 @@ VOID
 NTAPI
 KdPortSave (VOID);
 
+VOID
+NTAPI
+KdRestore(VOID);
+
+VOID
+NTAPI
+KdSave (VOID);
+
 BOOLEAN
 NTAPI
 KdPortDisableInterrupts(VOID);

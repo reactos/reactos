@@ -2307,7 +2307,7 @@ RtlIpv6StringToAddressExA(
     IN LPSTR AddressName,
     IN PVOID Address,
     IN PULONG ScopeId,
-    IN PWORD Port
+    IN PUSHORT Port
 );
 
 NTSYSAPI
@@ -2317,7 +2317,7 @@ RtlIpv6StringToAddressExW(
     IN LPWSTR AddressName,
     IN PVOID Address,
     IN PULONG ScopeId,
-    IN PWORD Port
+    IN PUSHORT Port
 );
 
 
