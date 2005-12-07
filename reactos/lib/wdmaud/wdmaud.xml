@@ -13,7 +13,8 @@
 	<file>user.c</file>
 	<file>kernel.c</file>
 	<file>devices.c</file>
-	<file>wavehdr.c</file>
+    <file>midi.c</file>
+	<file>wave.c</file>
 	<file>threads.c</file>
 	<file>helper.c</file>
 	<file>memtrack.c</file>

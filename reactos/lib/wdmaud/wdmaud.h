@@ -39,6 +39,11 @@
 #define REPORT_MM_RESULT(message, success) \
     DPRINT("%s %s\n", message, success == MMSYSERR_NOERROR ? "succeeded" : "failed")
 
+#define MM_SUCCESS(value) \
+    ( value == MMSYSERR_NOERROR )
+
+#define MM_FAILURE(value) \
+    ( value != MMSYSERR_NOERROR )
 
 
 #define GOBAL_CALLBACKS_PATH L"Global\\WDMAUD_Callbacks"
@@ -65,55 +70,57 @@
 #define IOCTL_WDMAUD_HELLO \
 	CTL_CODE(FILE_DEVICE_SOUND, 0x0000, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 
-#define IOCTL_WDMAUD_ADD_DEVICE			0x1d8004
-#define IOCTL_WDMAUD_REMOVE_DEVICE		0x1d8008
-#define IOCTL_WDMAUD_GET_CAPABILITIES	0x1d800c
-#define IOCTL_WDMAUD_GET_DEVICE_COUNT	0x1d8010
-#define IOCTL_WDMAUD_OPEN_DEVICE		0x1d8014
-#define IOCTL_WDMAUD_CLOSE_DEVICE		0x1d8018
-#define IOCTL_WDMAUD_AUX_GET_VOLUME		0x1d801c
-#define IOCTL_WDMAUD_AUX_SET_VOLUME		0x1d8020
+#define IOCTL_WDMAUD_ADD_DEVICE         0x1d8004
+#define IOCTL_WDMAUD_REMOVE_DEVICE      0x1d8008
+#define IOCTL_WDMAUD_GET_CAPABILITIES   0x1d800c
+#define IOCTL_WDMAUD_GET_DEVICE_COUNT   0x1d8010
+#define IOCTL_WDMAUD_OPEN_DEVICE        0x1d8014
+#define IOCTL_WDMAUD_CLOSE_DEVICE       0x1d8018
+#define IOCTL_WDMAUD_AUX_GET_VOLUME     0x1d801c
+#define IOCTL_WDMAUD_AUX_SET_VOLUME     0x1d8020
 
 /* 0x1d8024 */
 #define IOCTL_WDMAUD_GOODBYE \
 	CTL_CODE(FILE_DEVICE_SOUND, 0x0009, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 
-#define IOCTL_WDMAUD_SET_PREFERRED		0x1d8028
+#define IOCTL_WDMAUD_SET_PREFERRED      0x1d8028
 
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN1	0x1d8100
-#define IOCTL_WDMAUD_WAVE_OUT_START     0x1d8104    /* Reset wave in? */
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN3	0x1d8108    /* Start wave in? */
+#define IOCTL_WDMAUD_WAVE_OUT_STOP      0x1d8100
+#define IOCTL_WDMAUD_WAVE_OUT_START     0x1d8104
+#define IOCTL_WDMAUD_WAVE_OUT_RESET     0x1d8108
 #define IOCTL_WDMAUD_BREAK_LOOP         0x1d810c
 
-#define IOCTL_WDMAUD_GET_WAVE_OUT_POS	0x1d8110	/* Does something funky */
-#define IOCTL_WDMAUD_SET_VOLUME			0x1d8114	/* Hasn't this already been covered? */
-#define IOCTL_WDMAUD_UNKNOWN1			0x1d8018	/* Not used by wdmaud.drv */
-#define IOCTL_WDMAUD_SUBMIT_WAVE_HDR	0x1d811c
+#define IOCTL_WDMAUD_GET_WAVE_OUT_POS   0x1d8110	/* Does something funky */
+#define IOCTL_WDMAUD_SET_VOLUME         0x1d8114	/* Already been covered? */
+#define IOCTL_WDMAUD_UNKNOWN1           0x1d8118	/* Not used by wdmaud.drv */
+#define IOCTL_WDMAUD_SUBMIT_WAVE_OUT_HDR 0x1d811c
 
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN4	0x1d8140
-#define IOCTL_WDMAUD_WAVE_IN_START      0x1d8144    /* Reset wave out? */
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN6	0x1d8148    /* Start wave out? */
+#define IOCTL_WDMAUD_WAVE_IN_STOP       0x1d8140
+#define IOCTL_WDMAUD_WAVE_IN_START      0x1d8144
+#define IOCTL_WDMAUD_WAVE_IN_RESET      0x1d8148
+
+#define IOCTL_WDMAUD_SUBMIT_WAVE_IN_HDR 0x1d8150    /* FIXME: Unsure about this */
 
 #define IOCTL_WDMAUD_MIDI_OUT_SHORT_MESSAGE \
                                         0x1d8204	/* Wrong description? */
 
-#define IOCTL_WDMAUD_UNKNOWN2			0x1d8208
+#define IOCTL_WDMAUD_UNKNOWN2           0x1d8208
 
 #define IOCTL_WDMAUD_MIDI_OUT_LONG_MESSAGE \
                                         0x1d820c
 
-#define IOCTL_WDMAUD_SUBMIT_MIDI_HDR	0x1d8210
+#define IOCTL_WDMAUD_SUBMIT_MIDI_HDR    0x1d8210
 
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN7	0x1d8240
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN8	0x1d8244
-#define IOCTL_WDMAUD_SET_STATE_UNKNOWN9	0x1d8248
+#define IOCTL_WDMAUD_MIDI_IN_STOP       0x1d8240
+#define IOCTL_WDMAUD_MIDI_IN_START      0x1d8244
+#define IOCTL_WDMAUD_MIDI_IN_RESET      0x1d8248
 
-#define IOCTL_WDMAUD_READ_MIDI_DATA		0x1d824c
-#define IOCTL_WDMAUD_MIDI_MESSAGE		0x1d8300	/* Wrong description? */
+#define IOCTL_WDMAUD_READ_MIDI_DATA     0x1d824c
+#define IOCTL_WDMAUD_MIDI_MESSAGE       0x1d8300	/* Wrong description? */
 
-#define IOCTL_WDMAUD_MIXER_UNKNOWN1		0x1d8310
-#define IOCTL_WDMAUD_MIXER_UNKNOWN2		0x1d8314
-#define IOCTL_WDMAUD_MIXER_UNKNOWN3		0x1d8318
+#define IOCTL_WDMAUD_MIXER_UNKNOWN1     0x1d8310
+#define IOCTL_WDMAUD_MIXER_UNKNOWN2     0x1d8314
+#define IOCTL_WDMAUD_MIXER_UNKNOWN3     0x1d8318
 
 
 /*
@@ -180,6 +187,8 @@ typedef LPVOID PWDMAUD_HEADER;
     There are also various "opendesc" structures, but these don't have any
     common members. Regardless, this typedef simply serves as a placeholder
     to indicate that to access the members, it should be cast accordingly.
+
+    TODO: Maybe have a generic OPEN routine that uses this?
 */
 typedef struct OPENDESC *LPOPENDESC;
 
@@ -188,41 +197,56 @@ typedef struct
     DWORD sample_size;
     HANDLE thread;
     DWORD thread_id;
+
     union
     {
-        LPWAVEOPENDESC open_descriptor;
-        LPWAVEHDR wave_header;
+        LPWAVEHDR current_wave_header;
+        LPMIDIHDR current_midi_header;
     };
+
     DWORD unknown_10;   /* pointer to something */
     DWORD unknown_14;
-    LPCRITICAL_SECTION queue_critical_section;
+
+    LPCRITICAL_SECTION device_queue_guard;
     HANDLE queue_event;
     HANDLE exit_thread_event;
+
     DWORD unknown_24;
+
     DWORD is_paused;
     DWORD is_running;
+
     DWORD unknown_30;
-    DWORD unknown_34;
-    DWORD unknown_38;
+    LPVOID midi_buffer;  /* for output ? */
+    DWORD running_status;
+
     char signature[4];
 } WDMAUD_DEVICE_STATE, *PWDMAUD_DEVICE_STATE;
 
 typedef struct
 {
-    DWORD unknown_00;
+    DWORD next_device;
+
     DWORD id;
     DWORD type;
-    HWAVE wave_handle;
+
+    HWAVE handle;
+
     DWORD client_instance;
     DWORD client_callback;
+
     DWORD unknown_18;
+
     DWORD flags;
     DWORD ioctl_param2;
     DWORD ioctl_param1;
     DWORD with_critical_section;
     DWORD string_2c;
+
     DWORD unknown_30;
+
     DWORD playing_notes;
+
     DWORD unknown_38;
     DWORD unknown_3c;
     DWORD unknown_40;
@@ -230,6 +254,7 @@ typedef struct
     DWORD unknown_48;
     DWORD unknown_4C;
     DWORD unknown_50;
+
     DWORD beef;
     PWDMAUD_DEVICE_STATE state;
     char signature[4];
@@ -317,37 +342,63 @@ MMRESULT TranslateWinError(DWORD error);
 
 
 /* user.c */
-void NotifyClient(
+
+void
+NotifyClient(
     PWDMAUD_DEVICE_INFO device,
     DWORD message,
     DWORD p1,
-    DWORD p2);
-
-/* #define NotifyClient(device, message, p1, p2) ? */
+    DWORD p2
+);
 
 
 /* kernel.c */
 
-BOOL EnableKernelInterface();
-BOOL DisableKernelInterface();
-HANDLE GetKernelInterface();
+BOOL
+EnableKernelInterface();
 
-MMRESULT CallKernelDevice(
+BOOL
+DisableKernelInterface();
+
+HANDLE
+GetKernelInterface();
+
+MMRESULT
+CallKernelDevice(
     PWDMAUD_DEVICE_INFO device,
     DWORD ioctl_code,
     DWORD param1,
     DWORD param2);
 
 /* devices.c */
-BOOL IsValidDevicePath(WCHAR* path);
-MMRESULT ValidateDeviceInfo(PWDMAUD_DEVICE_INFO info);
+
+BOOL
+IsValidDevicePath(WCHAR* path);
+
+MMRESULT
+ValidateDeviceData(
+    PWDMAUD_DEVICE_INFO device_data,
+    BOOL require_state
+);
+/*
 MMRESULT ValidateDeviceState(PWDMAUD_DEVICE_STATE state);
 MMRESULT ValidateDeviceStateEvents(PWDMAUD_DEVICE_STATE state);
 MMRESULT ValidateDeviceInfoAndState(PWDMAUD_DEVICE_INFO device_info);
+*/
 
-PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path);
-PWDMAUD_DEVICE_INFO CloneDeviceData(PWDMAUD_DEVICE_INFO original);
-void DeleteDeviceData(PWDMAUD_DEVICE_INFO device_data);
+/* TODO: Add ID parameter */
+
+PWDMAUD_DEVICE_INFO
+CreateDeviceData(
+    CHAR device_type,
+    DWORD device_id,
+    WCHAR* device_path,
+    BOOL with_state
+);
+
+void
+DeleteDeviceData(PWDMAUD_DEVICE_INFO device_data);
+
 /* mixer ... */
 
 MMRESULT ModifyDevicePresence(
@@ -388,7 +439,9 @@ MMRESULT ModifyDevicePresence(
         RemoveDevice(WDMAUD_AUX, device_path)
 
 
-DWORD GetDeviceCount(CHAR device_type, WCHAR* device_path);
+DWORD
+GetDeviceCount(CHAR device_type, WCHAR* device_path);
+
 #define GetWaveInCount(device_path)  GetDeviceCount(WDMAUD_WAVE_IN,  device_path)
 #define GetWaveOutCount(device_path) GetDeviceCount(WDMAUD_WAVE_OUT, device_path)
 #define GetMidiInCount(device_path)  GetDeviceCount(WDMAUD_MIDI_IN,  device_path)
@@ -396,11 +449,13 @@ DWORD GetDeviceCount(CHAR device_type, WCHAR* device_path);
 #define GetMixerCount(device_path)   GetDeviceCount(WDMAUD_MIXER,    device_path)
 #define GetAuxCount(device_path)     GetDeviceCount(WDMAUD_AUX,      device_path)
 
-MMRESULT GetDeviceCapabilities(
+MMRESULT
+GetDeviceCapabilities(
     CHAR device_type,
     DWORD device_id,
     WCHAR* device_path,
-    LPMDEVICECAPSEX caps);
+    LPMDEVICECAPSEX caps
+);
 
 #define GetWaveInCapabilities(id, device_path, caps) \
         GetDeviceCapabilities(WDMAUD_WAVE_IN, id, device_path, caps);
@@ -415,22 +470,48 @@ MMRESULT GetDeviceCapabilities(
 #define GetAuxCapabilities(id, device_path, caps) \
         GetDeviceCapabilities(WDMAUD_AUX, id, device_path, caps);
 
-MMRESULT OpenWaveDevice(
+MMRESULT
+OpenDeviceViaKernel(
+    PWDMAUD_DEVICE_INFO device,
+    LPWAVEFORMATEX format
+);
+
+MMRESULT
+OpenDevice(
+    CHAR device_type,
+    DWORD device_id,
+    LPVOID open_descriptor,
+    DWORD flags,
+    PWDMAUD_DEVICE_INFO* user_data
+);
+
+
+/* wave.c */
+#if 0
+MMRESULT
+OpenWaveDevice(
     CHAR device_type,
     DWORD device_id,
     LPWAVEOPENDESC open_details,
     DWORD flags,
-    DWORD user_data);
+    DWORD user_data
+);
+#endif
 
-#define OpenWaveOut(id, open_details, flags, user_data) \
-        OpenWaveDevice(WDMAUD_WAVE_OUT, id, open_details, flags, user_data);
+#define OpenWaveInDevice(id, open_details, flags, user_data) \
+        OpenDevice(WDMAUD_WAVE_IN, id, open_details, flags, user_data);
+#define OpenWaveOutDevice(id, open_details, flags, user_data) \
+        OpenDevice(WDMAUD_WAVE_OUT, id, open_details, flags, user_data);
+#define OpenMidiInDevice(id, open_details, flags, user_data) \
+        OpenDevice(WDMAUD_MIDI_IN, id, open_details, flags, user_data);
+#define OpenMidiOutDevice(id, open_details, flags, user_data) \
+        OpenDevice(WDMAUD_MIDI_OUT, id, open_details, flags, user_data);
 
-MMRESULT CloseDevice(
+
+MMRESULT
+CloseWaveDevice(
     PWDMAUD_DEVICE_INFO device
 );
-
-
-/* wavehdr.h */
 
 #define SET_WAVEHDR_FLAG(header, flag) \
     header->dwFlags |= flag
@@ -438,23 +519,66 @@ MMRESULT CloseDevice(
 #define CLEAR_WAVEHDR_FLAG(header, flag) \
     header->dwFlags &= ~flag
 
-MMRESULT ValidateWavePreparationData(PWDMAUD_WAVE_PREPARATION_DATA prep_data);
+#define IS_WAVEHDR_FLAG_SET(header, flag) \
+    ( header->dwFlags & flag )
 
-MMRESULT ValidateWaveHeader(PWAVEHDR header);
+MMRESULT
+ValidateWavePreparationData(PWDMAUD_WAVE_PREPARATION_DATA prep_data);
 
-MMRESULT PrepareWaveHeader(
+MMRESULT
+ValidateWaveHeader(PWAVEHDR header);
+
+MMRESULT
+PrepareWaveHeader(
     PWDMAUD_DEVICE_INFO device,
     PWAVEHDR header
 );
 
-MMRESULT UnprepareWaveHeader(PWAVEHDR header);
+MMRESULT
+UnprepareWaveHeader(PWAVEHDR header);
 
 #define IsHeaderPrepared(header) \
     ( header->reserved != 0 )
 
-MMRESULT CompleteWaveHeader(PWAVEHDR header);
+MMRESULT
+CompleteWaveHeader(PWAVEHDR header);
 
-MMRESULT WriteWaveData(PWDMAUD_DEVICE_INFO device, PWAVEHDR header);
+MMRESULT
+WriteWaveData(PWDMAUD_DEVICE_INFO device, PWAVEHDR header);
+
+
+/* midi.c */
+
+#if 0
+MMRESULT
+OpenMidiDevice(
+    CHAR device_type,
+    DWORD device_id,
+    LPMIDIOPENDESC open_details,
+    DWORD flags,
+    DWORD user_data
+);
+#endif
+
+MMRESULT
+CloseMidiDevice(
+    PWDMAUD_DEVICE_INFO device
+);
+
+MMRESULT
+WriteMidiShort(
+    PWDMAUD_DEVICE_INFO device,
+    DWORD message
+);
+
+/* FIXME: Bad params */
+MMRESULT
+WriteMidiBuffer(PWDMAUD_DEVICE_INFO device);
+
+MMRESULT
+ResetMidiDevice(PWDMAUD_DEVICE_INFO device);
+
+
 
 
 /* threads.c */

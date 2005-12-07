@@ -66,10 +66,9 @@ MMRESULT CallKernelDevice(
          ( ! IsAuxDeviceType(device->type) ) &&
          ( device->with_critical_section ) )
     {
-        /* this seems to crash under some conditions */
         ASSERT(device->state);
         using_critical_section = TRUE;
-        EnterCriticalSection(device->state->queue_critical_section);
+        EnterCriticalSection(device->state->device_queue_guard);
     }
 
     DPRINT("Calling DeviceIoControl with IOCTL %x\n", (int) ioctl_code);
@@ -110,7 +109,7 @@ MMRESULT CallKernelDevice(
     {
         /* Leave the critical section */
         if ( using_critical_section )
-            LeaveCriticalSection(device->state->queue_critical_section);
+            LeaveCriticalSection(device->state->device_queue_guard);
 
         if ( overlap.hEvent )
             CloseHandle(overlap.hEvent);
@@ -128,7 +127,7 @@ static BOOL ChangeKernelDeviceState(BOOL enable)
 
     ioctl_code = enable ? IOCTL_WDMAUD_HELLO : IOCTL_WDMAUD_GOODBYE;
 
-    device = CreateDeviceData(WDMAUD_AUX, L"");
+    device = CreateDeviceData(WDMAUD_AUX, 0, L"", FALSE);
 
     if ( ! device )
     {
@@ -136,9 +135,6 @@ static BOOL ChangeKernelDeviceState(BOOL enable)
         return FALSE;
     }
 
-    DPRINT("Setting device type and disabling critical section\n");
-
-    device->type = WDMAUD_AUX;
     device->with_critical_section = FALSE;
 
     DPRINT("Calling kernel device\n");
@@ -318,33 +314,6 @@ BOOL EnableKernelInterface()
 BOOL DisableKernelInterface()
 {
     return ChangeKernelDeviceState(FALSE);
-
-#if 0 /* OLD CODE */
-    PWDMAUD_DEVICE_INFO device = NULL;
-    
-    ASSERT(kernel_device_handle);
-
-    /* Say goodbyte to wdmaud.sys */
-    device = CreateDeviceData(WDMAUD_AUX, L"");
-
-    ASSERT(device);
-
-    DPRINT("Setting device type and disabling critical section\n");
-
-    device->type = WDMAUD_AUX;
-    device->with_critical_section = FALSE;
-
-    DPRINT("Calling kernel device\n");
-
-    ASSERT( CallKernelDevice(device, IOCTL_WDMAUD_GOODBYE, 0, 0) == MMSYSERR_NOERROR );
-    ASSERT( CloseHandle(kernel_device_handle) );
-
-    DPRINT("Kernel interface now disabled\n");
-
-    kernel_device_handle = NULL;
-
-    DeleteDeviceData(device);
-#endif
 }
 
 

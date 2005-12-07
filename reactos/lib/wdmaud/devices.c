@@ -17,8 +17,14 @@
 
 const char WDMAUD_DEVICE_INFO_SIG[4] = "WADI";
 const char WDMAUD_DEVICE_STATE_SIG[4] = "WADS";
-const char WDMAUD_NULL_SIGNATURE[4] = {0,0,0,0};
 
+
+/*
+    IsValidDevicePath
+
+    Just checks to see if the string containing the path to the device path
+    (object) is a valid, readable string.
+*/
 
 BOOL IsValidDevicePath(WCHAR* path)
 {
@@ -33,43 +39,93 @@ BOOL IsValidDevicePath(WCHAR* path)
     return TRUE;
 }
 
-MMRESULT ValidateDeviceInfo(PWDMAUD_DEVICE_INFO device_info)
-{
-    if ( IsBadWritePtr(device_info, sizeof(WDMAUD_DEVICE_INFO)) )
-        return MMSYSERR_INVALPARAM;
+/*
+    ValidateDeviceData
 
-    if ( *device_info->signature != *WDMAUD_DEVICE_INFO_SIG )
+    Checks that the memory pointed at by the device data pointer is writable,
+    and that it has a valid signature.
+
+    If the "state" member isn't NULL, the state structure is also validated
+    in the same way. If the "require_state" parameter is TRUE and the "state"
+    member is NULL, an error code is returned. Otherwise the "state" member
+    isn't validated and no error occurs.
+*/
+
+MMRESULT ValidateDeviceData(
+    PWDMAUD_DEVICE_INFO device,
+    BOOL require_state
+)
+{
+    if ( IsBadWritePtr(device, sizeof(WDMAUD_DEVICE_INFO)) )
+    {
+        DPRINT1("Device data structure not writable\n");
         return MMSYSERR_INVALPARAM;
+    }
+
+    if ( strncmp(device->signature, WDMAUD_DEVICE_INFO_SIG, 4) != 0 )
+    {
+        DPRINT1("Device signature is invalid\n");
+        return MMSYSERR_INVALPARAM;
+    }
+
+    if ( ! IsValidDeviceType(device->type) )
+    {
+        DPRINT1("Invalid device type\n");
+        return MMSYSERR_INVALPARAM;
+    }
+
+    if ( device->id > 100 )
+    {
+        DPRINT1("Device ID is out of range\n");
+        return MMSYSERR_INVALPARAM;
+    }
+
+    /* Now we validate the device state (if present) */
+
+    if ( device->state )
+    {
+        if ( IsBadWritePtr(device->state, sizeof(WDMAUD_DEVICE_INFO)) )
+        {
+            DPRINT1("Device state structure not writable\n");
+            return MMSYSERR_INVALPARAM;
+        }
+
+        if ( strncmp(device->state->signature,
+                     WDMAUD_DEVICE_STATE_SIG,
+                     4) != 0 )
+        {
+            DPRINT1("Device state signature is invalid\n");
+            return MMSYSERR_INVALPARAM;
+        }
+
+        /* TODO: Validate state events */
+    }
+    else if ( require_state )
+    {
+        return MMSYSERR_INVALPARAM;
+    }
 
     return MMSYSERR_NOERROR;
 }
 
-MMRESULT ValidateDeviceState(PWDMAUD_DEVICE_STATE state)
-{
-    if ( IsBadWritePtr(state, sizeof(WDMAUD_DEVICE_INFO)) )
-        return MMSYSERR_INVALPARAM;
-
-    if ( *state->signature != *WDMAUD_DEVICE_STATE_SIG )
-        return MMSYSERR_INVALPARAM;
-
-    return MMSYSERR_NOERROR;
-}
 
 /*
     ValidateDeviceStateEvents should be used in conjunction with the standard
-    state validation routine.
-*/
+    state validation routine (NOT on its own!)
 
+    FIXME: The tests are wrong
+*/
+/*
 MMRESULT ValidateDeviceStateEvents(PWDMAUD_DEVICE_STATE state)
 {
-    if ( ( (DWORD) state->exit_thread_event == 0x00000000 ) &&
+    if ( ( (DWORD) state->exit_thread_event != 0x00000000 ) &&
          ( (DWORD) state->exit_thread_event != 0x48484848 ) )
     {
         DPRINT1("Bad exit thread event\n");
         return MMSYSERR_INVALPARAM;
     }
 
-    if ( ( (DWORD) state->queue_event == 0x00000000 ) &&
+    if ( ( (DWORD) state->queue_event != 0x00000000 ) &&
          ( (DWORD) state->queue_event != 0x42424242 ) &&
          ( (DWORD) state->queue_event != 0x43434343 ) )
     {
@@ -79,28 +135,32 @@ MMRESULT ValidateDeviceStateEvents(PWDMAUD_DEVICE_STATE state)
 
     return MMSYSERR_NOERROR;
 }
+*/
 
-MMRESULT ValidateDeviceInfoAndState(PWDMAUD_DEVICE_INFO device_info)
+/*
+    CreateDeviceData
+
+    This is a glorified memory allocation routine, which acts as a primitive
+    constructor for a device data structure.
+
+    It validates the device path given, allocates memory for both the device
+    data and the device state data, copies the signatures over and sets the
+    device type accordingly.
+
+    In some cases, a state structure isn't required, so the creation of one can
+    be avoided by passing FALSE for the "with_state" parameter.
+*/
+
+PWDMAUD_DEVICE_INFO
+CreateDeviceData(
+    CHAR device_type,
+    DWORD device_id,
+    WCHAR* device_path,
+    BOOL with_state
+)
 {
-    MMRESULT result;
-
-    result = ValidateDeviceInfo(device_info);
-
-    if ( result != MMSYSERR_NOERROR )
-        return result;
-
-    result = ValidateDeviceState(device_info->state);
-
-    if ( result != MMSYSERR_NOERROR )
-        return result;
-
-    return MMSYSERR_NOERROR;
-}
-
-PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path)
-{
-    HANDLE heap = 0;
-    PWDMAUD_DEVICE_INFO device_data = 0;
+    BOOL success = FALSE;
+    PWDMAUD_DEVICE_INFO device = 0;
     int path_size = 0;
 
     DPRINT("Creating device data for device type %d\n", (int) device_type);
@@ -115,120 +175,118 @@ PWDMAUD_DEVICE_INFO CreateDeviceData(CHAR device_type, WCHAR* device_path)
     path_size = (lstrlen(device_path) + 1) * sizeof(WCHAR);
     /* DPRINT("Size of path is %d\n", (int) path_size); */
 
-    heap = GetProcessHeap();
-
-    if ( ! heap )
-    {
-        DPRINT1("Couldn't get the process heap (error %d)\n",
-                (int) GetLastError());
-        goto cleanup;
-    }
-
-    DPRINT("Allocating %d bytes\n",
+    DPRINT("Allocating %d bytes for device data\n",
            path_size + sizeof(WDMAUD_DEVICE_INFO));
-/*
-    device_data = (PWDMAUD_DEVICE_INFO) HeapAlloc(heap,
-                                                  HEAP_ZERO_MEMORY,
-                                                  path_size + sizeof(WDMAUD_DEVICE_INFO));
-*/
 
-    device_data = (PWDMAUD_DEVICE_INFO)
+    device = (PWDMAUD_DEVICE_INFO)
         AllocMem(path_size + sizeof(WDMAUD_DEVICE_INFO));
 
-    if ( ! device_data )
+    if ( ! device )
     {
         DPRINT1("Unable to allocate memory for device data (error %d)\n",
                 (int) GetLastError());
         goto cleanup;
     }
 
-    DPRINT("Copying signature\n");
-    memcpy(device_data->signature, WDMAUD_DEVICE_INFO_SIG, 4);
+    /* Copy the signature and device path */
+    memcpy(device->signature, WDMAUD_DEVICE_INFO_SIG, 4);
+    lstrcpy(device->path, device_path);
 
-    DPRINT("Copying path (0x%x)\n", (int)device_path);
-    lstrcpy(device_data->path, device_path);
+    /* Initialize these common members */
+    device->id = device_id;
+    device->type = device_type;
 
-    device_data->type = device_type;
+    if ( with_state )
+    {
+        /* Allocate device state structure */
+        device->state = AllocMem(sizeof(WDMAUD_DEVICE_STATE));
+
+        if ( ! device->state )
+        {
+            DPRINT1("Couldn't allocate memory for device state (error %d)\n",
+                    (int) GetLastError());
+            goto cleanup;
+        }
+
+        /* Copy the signature */
+        memcpy(device->state->signature, WDMAUD_DEVICE_STATE_SIG, 4);
+    }
+
+    success = TRUE;
 
     cleanup :
     {
-        /* No cleanup needed (no failures possible after allocation.) */
-        DPRINT("Performing cleanup\n");
+        if ( ! success )
+        {
+            if ( device )
+            {
+                if ( device->state )
+                {
+                    ZeroMemory(device->state->signature, 4);
+                    FreeMem(device->state);
+                }
 
-        return device_data;
+                ZeroMemory(device->signature, 4);
+                FreeMem(device);
+            }
+        }
+
+        return (success ? device : NULL);
     }
 }
+
 
 /*
-    CloneDeviceData
+    DeleteDeviceData
 
-    This isn't all that great... Maybe some macros would be better:
-    BEGIN_CLONING_STRUCT(source, target)
-        CLONE_MEMBER(member)
-    END_CLONING_STRUCT()
+    Blanks out the device and device state structures, and frees the memory
+    associated with the structures.
 
-    The main problem is that sometimes we'll want to copy more than
-    the data presented here. I guess we could blindly copy EVERYTHING
-    but that'd be excessive.
+    TODO: Free critical sections / events if set?
 */
-
-PWDMAUD_DEVICE_INFO CloneDeviceData(PWDMAUD_DEVICE_INFO original)
-{
-    PWDMAUD_DEVICE_INFO clone = NULL;
-
-    if ( ValidateDeviceInfo(original) != MMSYSERR_NOERROR)
-    {
-        DPRINT1("Original device data was invalid\n");
-        return NULL;
-    }
-
-    /* This will set the type and path, so we can forget about those */
-    clone = CreateDeviceData(original->type, original->path);
-
-    if ( ! clone )
-    {
-        DPRINT1("Clone creation failed\n");
-        return NULL;
-    }
-
-    clone->id = original->id;
-    clone->wave_handle = original->wave_handle; /* ok? */
-
-    /* TODO: Maybe we should copy some more? */
-
-    return clone;
-}
 
 void DeleteDeviceData(PWDMAUD_DEVICE_INFO device_data)
 {
-    HANDLE heap;
+    DPRINT("Deleting device data\n");
 
     ASSERT( device_data );
 
-    /* Erase the signature to prevent any possible future mishaps */
-    *device_data->signature = *WDMAUD_NULL_SIGNATURE;
-
-    heap = GetProcessHeap();
-
-    if ( ! heap )
-    {
-        DPRINT1("Couldn't get the process heap (error %d)\n",
-                (int) GetLastError());
-        goto exit;
-    }
-
-    FreeMem(device_data);
-    /*
-    {
-        DPRINT1("Couldn't free device data memory (error %d)\n",
-                (int) GetLastError());
-    }
-    */
-
-    exit :
-        /* We just return */
+    /* We don't really care if the structure is valid or not */
+    if ( ! device_data )
         return;
+
+    if ( device_data->state )
+    {
+        /* We DON'T want these to be set - should we clean up? */
+        ASSERT ( ! device_data->state->device_queue_guard );
+        ASSERT ( ! device_data->state->queue_event );
+        ASSERT ( ! device_data->state->exit_thread_event );
+
+        /* Insert a cow (not sure if this is right or not) */
+        device_data->state->sample_size = 0xDEADBEEF;
+
+        /* Overwrite the structure with zeroes and free it */
+        ZeroMemory(device_data->state, sizeof(WDMAUD_DEVICE_STATE));
+        FreeMem(device_data->state);
+    }
+
+    /* Overwrite the structure with zeroes and free it */
+    ZeroMemory(device_data, sizeof(WDMAUD_DEVICE_INFO));
+    FreeMem(device_data);
 }
+
+/*
+    ModifyDevicePresence
+
+    Use this to add or remove devices in the kernel-mode driver. If the
+    "adding" parameter is TRUE, the device is added, otherwise it is removed.
+
+    "device_type" is WDMAUD_WAVE_IN, WDMAUD_WAVE_OUT, etc...
+
+    "device_path" specifies the NT object path of the device.
+
+    (I'm not sure what happens to devices that are added but never removed.)
+*/
 
 MMRESULT ModifyDevicePresence(
     CHAR device_type,
@@ -249,7 +307,7 @@ MMRESULT ModifyDevicePresence(
     ASSERT( IsValidDeviceType(device_type) );
     ASSERT( device_path );
 
-    device_data = CreateDeviceData(device_type, device_path);
+    device_data = CreateDeviceData(device_type, 0, device_path, FALSE);
 
     if ( ! device_data )
     {
@@ -292,6 +350,16 @@ MMRESULT ModifyDevicePresence(
     }
 }
 
+/*
+    GetDeviceCount
+
+    Pretty straightforward - pass the device type (WDMAUD_WAVE_IN, ...) and
+    a topology device (NT object path) to obtain the number of devices
+    present in that topology of that particular type.
+
+    The topology path is supplied to us by winmm.
+*/
+
 DWORD GetDeviceCount(CHAR device_type, WCHAR* topology_path)
 {
     PWDMAUD_DEVICE_INFO device_data;
@@ -299,7 +367,7 @@ DWORD GetDeviceCount(CHAR device_type, WCHAR* topology_path)
 
     DPRINT("Topology path %S\n", topology_path);
 
-    device_data = CreateDeviceData(device_type, topology_path);
+    device_data = CreateDeviceData(device_type, 0, topology_path, FALSE);
 
     if (! device_data)
     {
@@ -339,7 +407,8 @@ DWORD GetDeviceCount(CHAR device_type, WCHAR* topology_path)
     This uses a different structure to the traditional documentation, because
     we handle plug and play devices.
 
-    Much sleep was lost over implementing this.
+    Much sleep was lost over implementing this. I got the ID and type
+    parameters the wrong way round!
 */
 
 MMRESULT GetDeviceCapabilities(
@@ -363,7 +432,7 @@ MMRESULT GetDeviceCapabilities(
 
     DPRINT("Going to have to query the kernel-mode part\n");
 
-    device = CreateDeviceData(device_type, device_path);
+    device = CreateDeviceData(device_type, device_id, device_path, FALSE);
 
     if ( ! device )
     {
@@ -372,8 +441,9 @@ MMRESULT GetDeviceCapabilities(
         goto cleanup;
     }
 
-    device->id = device_id;
-    device->with_critical_section = FALSE;
+    /* These are not needed as they're already initialized */
+    ASSERT( device_id == device->id );
+    ASSERT( ! device->with_critical_section );
 
     *(LPWORD)caps->pCaps = (WORD) 0x43;
 
@@ -400,305 +470,224 @@ MMRESULT GetDeviceCapabilities(
     }
 }
 
-MMRESULT TryOpenDevice(
+
+/*
+    OpenDeviceViaKernel
+
+    Internal function to rub the kernel mode part of wdmaud the right way
+    so it opens a device on our behalf.
+*/
+
+MMRESULT
+OpenDeviceViaKernel(
     PWDMAUD_DEVICE_INFO device,
     LPWAVEFORMATEX format
 )
 {
-    if ( device->id > 0x64 )    /* FIXME */
+    DWORD format_struct_len = 0;
+
+    DPRINT("Opening device via kernel\n");
+
+    if ( format->wFormatTag == 1 )  /* FIXME */
     {
-        DPRINT1("device->id > 0x64 ! ???\n");
-        return MMSYSERR_BADDEVICEID; /* OK? */
-    }
+        /* Standard PCM format */
+        DWORD sample_size;
 
-    /* We'll only have a format set for wave devices */
-    if ( format )
-    {
-        if ( format->wFormatTag == 1 )
-        {
-            DWORD sample_size;
+        DPRINT("Standard (PCM) format\n");
 
-            DPRINT("Standard (PCM) format\n");
-            sample_size = format->nChannels * format->wBitsPerSample;
-            device->state->sample_size = sample_size;
+        sample_size = format->nChannels * format->wBitsPerSample;
 
-            if ( CallKernelDevice(device,
-                                  IOCTL_WDMAUD_OPEN_DEVICE,
-                                  0x10,
-                                  (DWORD)format)
-                            != MMSYSERR_NOERROR )
-            {
-                DPRINT("Call failed\n");
-                /* FIXME */
-                return MMSYSERR_NOTSUPPORTED;   /* WAVERR_BADFORMAT? */
-            }
-        }
-        else
-        {
-            /* FIXME */
-            DPRINT("Non-PCM format\n");
-            return MMSYSERR_NOTSUPPORTED;
-        }
-    }
+        device->state->sample_size = sample_size;
 
-    /* If we got this far without error, the format is supported! */
-    return MMSYSERR_NOERROR;
-}
-
-MMRESULT OpenWaveDevice(
-    CHAR device_type,
-    DWORD device_id,
-    LPWAVEOPENDESC open_details,
-    DWORD flags,
-    DWORD user_data
-)
-{
-    HANDLE heap = 0;
-    PWDMAUD_DEVICE_INFO device = NULL;
-    WCHAR* device_path = NULL;
-    MMRESULT result = MMSYSERR_ERROR;
-
-    /* ASSERT(open_details); */
-
-    heap = GetProcessHeap();
-
-    if ( ! heap )
-    {
-        DPRINT1("Couldn't get the process heap (error %d)\n",
-                (int) GetLastError());
-        result = MMSYSERR_ERROR;
-        goto cleanup;
-    }
-
-    DPRINT("OpenDevice called\n");
-
-    device_path = (WCHAR*) open_details->dnDevNode;
-    device = CreateDeviceData(device_type, device_path);
-
-    if ( ! device )
-    {
-        DPRINT1("Couldn't create device data\n");
-        result = MMSYSERR_NOMEM;
-        goto cleanup;
-    }
-
-    DPRINT("Allocated device data, allocating device state\n");
-
-    device->state = HeapAlloc(heap,
-                              HEAP_ZERO_MEMORY,
-                              sizeof(WDMAUD_DEVICE_STATE));
-
-    if ( ! device->state )
-    {
-        DPRINT1("Couldn't allocate memory for device state (error %d)\n",
-                (int) GetLastError());
-        result = MMSYSERR_NOMEM;
-        goto cleanup;
-    }
-
-    /* FIXME: ok here ? */
-    device->type = device_type;
-    device->id = device_id;
-    device->flags = flags;
-
-    if ( flags & WAVE_FORMAT_QUERY )
-    {
-        DPRINT("Do I support this format? Hmm...\n");
-
-        result = TryOpenDevice(device, open_details->lpFormat);
-
-        if ( result != MMSYSERR_NOERROR )
-        {
-            DPRINT("Format not supported\n");
-            goto cleanup;
-        }
-
-        DPRINT("Yes, I do support this format!\n");
+        format_struct_len = 16; /* FIXME */
     }
     else
     {
-
-        DPRINT("You actually want me to open the device, huh?\n");
-
-        /* Allocate memory for the "queue" critical section */
-
-        device->state->queue_critical_section =
-            HeapAlloc(heap, HEAP_ZERO_MEMORY, sizeof(CRITICAL_SECTION));
-
-        if ( ! device->state->queue_critical_section )
-        {
-            DPRINT1("Couldn't allocate memory for queue critical section (error %d)\n",
-                    (int) GetLastError());
-            result = MMSYSERR_NOMEM;
-            goto cleanup;
-        }
-
-        /* Initialize the critical section */
-        InitializeCriticalSection(device->state->queue_critical_section);
-
-        /* We need these so we can contact the client later */
-        device->client_instance = open_details->dwInstance;
-        device->client_callback = open_details->dwCallback;
-
-        /* Reset state */
-        device->state->open_descriptor = NULL;
-        device->state->unknown_24 = 0;
-
-        device->state->is_running = FALSE;
-        device->state->is_paused =
-            device->type == WDMAUD_WAVE_IN ? TRUE : FALSE;
-
-        memcpy(device->state->signature, WDMAUD_DEVICE_STATE_SIG, 4);
-
-        DPRINT("All systems are go...\n");
-
-        result = TryOpenDevice(device, open_details->lpFormat);
-
-        if ( result != MMSYSERR_NOERROR )
-        {
-            DPRINT1("Format not supported?\n");
-            goto cleanup; /* no need to set result - already done */
-        }
-
-        /* Enter the critical section while updating the device list */
-        EnterCriticalSection(device->state->queue_critical_section);
-        /* ... */
-        LeaveCriticalSection(device->state->queue_critical_section);
-
-        /* The wave device handle is actually our structure. Neat, eh? */
-        open_details->hWave = (HWAVE) device;
-
-        /* We also need to set our "user data" for winmm */
-        LPVOID* ud = (LPVOID*) user_data;   /* FIXME */
-        *ud = device;
-
-        if (device->client_callback)
-        {
-            DWORD message;
-
-            message = (device->type == WDMAUD_WAVE_IN ? WIM_OPEN :
-                                       WDMAUD_WAVE_OUT ? WOM_OPEN : -1);
-
-            DPRINT("About to call the client callback\n");
-
-            /* Call the callback */
-            NotifyClient(device, message, 0, 0);
-
-            DPRINT("...it is done!\n");
-        }
-
-        result = MMSYSERR_NOERROR;
+        /* Non-standard format */
+        return MMSYSERR_NOTSUPPORTED; /* TODO */
     }
 
-    /*
-        This cleanup may need checking for memory leakage. It's not very pretty
-        to look at, either...
-    */
-
-    cleanup :
-    {
-        if ( ( result != MMSYSERR_NOERROR ) && ( heap ) )
-        {
-            if ( device )
-            {
-                if ( device->state )
-                {
-                    if ( device->state->queue_critical_section )
-                    {
-                        DeleteCriticalSection(device->state->queue_critical_section);
-                        HeapFree(heap, 0, device->state->queue_critical_section);
-                    }
-
-                    HeapFree(heap, 0, device->state);
-                }
-
-                DeleteDeviceData(device);
-            }
-        }
-
-        DPRINT("Returning %d\n", (int) result);
-
-        return result;
-    }
+    return CallKernelDevice(device,
+                            IOCTL_WDMAUD_OPEN_DEVICE,
+                            format_struct_len,
+                            (DWORD)format);
 }
 
-MMRESULT CloseDevice(
-    PWDMAUD_DEVICE_INFO device
+
+/* MOVEME */
+LPCRITICAL_SECTION CreateCriticalSection()
+{
+    LPCRITICAL_SECTION cs;
+
+    cs = AllocMem(sizeof(CRITICAL_SECTION));
+
+    if ( ! cs )
+        return NULL;
+
+    InitializeCriticalSection(cs);
+
+    return cs;
+}
+
+
+/*
+    OpenDevice
+
+    A generic "open device" function, which makes use of the above function
+    once parameters have been checked. This is capable of handling both
+    MIDI and wave devices, which is an improvement over the previous
+    implementation (which had a lot of duplicate functionality.)
+*/
+
+MMRESULT
+OpenDevice(
+    CHAR device_type,
+    DWORD device_id,
+    LPVOID open_descriptor,
+    DWORD flags,
+    PWDMAUD_DEVICE_INFO* user_data
 )
 {
     MMRESULT result = MMSYSERR_ERROR;
+    WCHAR* device_path;
+    PWDMAUD_DEVICE_INFO device;
+    LPWAVEFORMATEX format;
 
-    DPRINT("CloseDevice()\n");
+    /* As we support both types */
+    LPWAVEOPENDESC wave_opendesc = (LPWAVEOPENDESC) open_descriptor;
+    LPMIDIOPENDESC midi_opendesc = (LPMIDIOPENDESC) open_descriptor;
 
-    DUMP_WDMAUD_DEVICE_INFO(device);
+    /* FIXME: Does this just apply to wave, or MIDI also? */
+    if ( device_id > 100 )
+        return MMSYSERR_BADDEVICEID;
 
-    if ( ValidateDeviceInfo(device) != MMSYSERR_NOERROR )
+    /* Copy the appropriate dnDevNode value */
+    if ( IsWaveDeviceType(device_type) )
+        device_path = (WCHAR*) wave_opendesc->dnDevNode;
+    else if ( IsMidiDeviceType(device_type) )
+        device_path = (WCHAR*) midi_opendesc->dnDevNode;
+    else
+        return MMSYSERR_INVALPARAM;
+
+    device = CreateDeviceData(device_type, device_id, device_path, TRUE);
+
+    if ( ! device )
     {
-        DPRINT1("Invalid device info passed to CloseDevice\n");
-        result = MMSYSERR_INVALHANDLE;
+        DPRINT1("Couldn't allocate memory for device data\n");
+        result = MMSYSERR_NOMEM;
         goto cleanup;
     }
 
-    /* TODO: Check state! */
+    device->flags = flags;
 
-    if ( device->id > 0x64 ) /* FIXME ? */
+    if ( ( IsWaveDeviceType(device->type) ) &&
+         ( device->flags & WAVE_FORMAT_QUERY ) )
     {
-        DPRINT1("??\n");
-        goto cleanup;
-    }
+        result = OpenDeviceViaKernel(device, wave_opendesc->lpFormat);
 
-    switch(device->type)
-    {
-        case WDMAUD_WAVE_OUT :
+        if ( result != MMSYSERR_NOERROR )
         {
-            if ( device->state->open_descriptor )
-            {
-                DPRINT1("Device is still playing!\n");
-                result = WAVERR_STILLPLAYING;
-                goto cleanup;
-            }
-
-            /* TODO: Destroy completion thread */
-            
-            break;
+            DPRINT1("Format not supported (mmsys error %d)\n", (int) result);
+            result = WAVERR_BADFORMAT;
         }
-        
-        default :
+        else
         {
-            DPRINT1("Sorry, device type %d not supported yet!\n", (int) device->type);
+            DPRINT("Format supported\n");
+            result = MMSYSERR_NOERROR;
+        }
+
+        goto cleanup;
+    }
+
+    device->state->device_queue_guard = CreateCriticalSection();
+
+    if ( ! device->state->device_queue_guard )
+    {
+        DPRINT1("Couldn't create queue cs\n");
+        result = MMSYSERR_NOMEM;
+        goto cleanup;
+    }
+
+    /* Set up the callbacks */
+    device->client_instance = IsWaveDeviceType(device->type)
+                              ? wave_opendesc->dwInstance
+                              : midi_opendesc->dwInstance;
+
+    device->client_callback = IsWaveDeviceType(device->type)
+                              ? wave_opendesc->dwCallback
+                              : midi_opendesc->dwCallback;
+
+    /*
+        The device state will be stopped and unpaused already, but in some
+        cases this isn't the desired behaviour.
+    */
+
+    /* FIXME: What do our friends MIDI in and out need? */
+    device->state->is_paused = IsWaveOutDeviceType(device->type) ? TRUE : FALSE;
+
+    if ( IsMidiOutDeviceType(device->type) )
+    {
+        device->state->midi_buffer = AllocMem(2048);
+
+        if ( ! device->state->midi_buffer )
+        {
+            DPRINT1("Couldn't allocate MIDI buffer\n");
+            result = MMSYSERR_NOMEM;
             goto cleanup;
         }
     }
 
-    result = CallKernelDevice(device, IOCTL_WDMAUD_CLOSE_DEVICE, 0, 0);
+    /* Format is only for wave devices */
+    format = IsWaveDeviceType(device->type) ? wave_opendesc->lpFormat : NULL;
 
-    if ( result != MMSYSERR_NOERROR )
+    result = OpenDeviceViaKernel(device, format);
+
+    if ( MM_FAILURE(result) )
     {
-        DPRINT1("Couldn't close the device!\n");
+        DPRINT1("FAILED to open device - mm error %d\n", (int) result);
         goto cleanup;
     }
 
-    if (device->client_callback)
+    EnterCriticalSection(device->state->device_queue_guard);
+    /* TODO */
+    LeaveCriticalSection(device->state->device_queue_guard);
+
+    if ( IsWaveDeviceType(device->type) )
+        wave_opendesc->hWave = (HWAVE) device;
+    else
+        midi_opendesc->hMidi = (HMIDI) device;
+
+    /* Our "user data" is actually the device information */
+    *user_data = device;
+
+    if ( device->client_callback )
     {
-        DWORD message;
+        DWORD message = IsWaveInDeviceType(device->type)    ? WIM_OPEN :
+                        IsWaveOutDeviceType(device->type)   ? WOM_OPEN :
+                        IsMidiInDeviceType(device->type)    ? MIM_OPEN :
+                                                              MOM_OPEN;
 
-        message = (device->type == WDMAUD_WAVE_IN ? WIM_CLOSE :
-                                   WDMAUD_WAVE_OUT ? WOM_CLOSE :
-                                   WDMAUD_MIDI_IN ? MIM_CLOSE :
-                                   WDMAUD_MIDI_OUT ? MOM_CLOSE : -1);
-
-        DPRINT("About to call the client callback\n");
-
-        /* Call the callback */
+        DPRINT("Calling client with message %d\n", (int) message);
         NotifyClient(device, message, 0, 0);
-
-        DPRINT("...it is done!\n");
     }
 
-    /* Result was set earlier by CallKernelDevice */
+    result = MMSYSERR_NOERROR;
 
     cleanup :
-    {
         return result;
-    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
