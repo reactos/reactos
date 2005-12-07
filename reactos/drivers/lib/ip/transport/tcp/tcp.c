@@ -647,4 +647,8 @@ NTSTATUS TCPGetPeerAddress
     return STATUS_SUCCESS;
 }
 
+void TCPMarkForDisconnect( PCONNECTION_ENDPOINT Context, BOOLEAN Marked ) {
+    Context->Disconnecting = Marked;
+}
+
 /* EOF */

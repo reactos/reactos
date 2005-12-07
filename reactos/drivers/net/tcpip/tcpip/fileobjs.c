@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 /* List of all address file objects managed by this driver */
 LIST_ENTRY AddressFileListHead;
 KSPIN_LOCK AddressFileListLock;
@@ -352,6 +351,7 @@ NTSTATUS FileCloseAddress(
   KIRQL OldIrql;
   PADDRESS_FILE AddrFile;
   NTSTATUS Status = STATUS_SUCCESS;
+  PCANCEL_REQUEST CancelReq;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -369,8 +369,16 @@ NTSTATUS FileCloseAddress(
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener )
-	TCPClose( AddrFile->Listener );
+    if( AddrFile->Listener ) {
+	CancelReq = ExAllocatePoolWithTag
+	    ( sizeof(CANCEL_REQUEST), NonPagedPool, FOURCC('T','c','l','s') );
+	if( CancelReq ) {
+	    CancelReq->Type = TCP_CANCEL_CLOSE;
+	    CancelReq->Context = AddrFile->Listener;
+	    AddrFile->Listener = NULL;
+	    ExQueueWorkItem( &CancelQueueWork, CriticalWorkQueue );
+	}
+    }
     break;
 
   case IPPROTO_UDP:
@@ -466,15 +474,19 @@ NTSTATUS FileCloseConnection(
 {
   PCONNECTION_ENDPOINT Connection;
   NTSTATUS Status = STATUS_SUCCESS;
+  PCANCEL_REQUEST CancelReq;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   Connection = Request->Handle.ConnectionContext;
 
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-  TCPClose(Connection);
-  DeleteConnectionEndpoint(Connection);
-  TcpipRecursiveMutexLeave( &TCPLock );
+  CancelReq = ExAllocatePoolWithTag
+      ( sizeof(CANCEL_REQUEST), NonPagedPool, FOURCC('T','c','l','s') );
+  if( CancelReq ) {
+      CancelReq->Type = TCP_CANCEL_CLOSE;
+      CancelReq->Context = Connection;
+      ExQueueWorkItem( &CancelQueueWork, CriticalWorkQueue );
+  }
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
