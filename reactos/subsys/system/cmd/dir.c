@@ -1130,11 +1130,14 @@ PrintSummary(LPTSTR szPath,
 		return 1;
 	}
 
+
 	/* In bare format we don't print results */
 	if (lpFlags->bBareFormat)
 		return 0;
 
 	/* Print recursive specific results */
+	
+    /* Take this code offline to fix /S does not print duoble info */
 	if (lpFlags->bRecursive)
 	{
 		ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
@@ -1144,8 +1147,22 @@ PrintSummary(LPTSTR szPath,
 		   ConOutPrintfPaging(FALSE,szMsg,ulFiles, szBuffer);
 		else
 		   ConOutPrintf(szMsg,ulFiles, szBuffer);
-	}
+		   
+		   if (ulFiles > 0)
+	{
+		ConvertULargeInteger(u64Bytes, szBuffer, 20, lpFlags->bTSeperator);
+		LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
+		if(lpFlags->bPause)
+		   ConOutPrintfPaging(FALSE,szMsg,ulFiles, szBuffer);
+		else
+		   ConOutPrintf(szMsg,ulFiles, szBuffer);
 
+	}
+	
+	}
+     else
+     {
+     
 	/* Print File Summary */
 	/* Condition to print summary is:
 	   If we are not in bare format and if we have results! */
@@ -1159,7 +1176,8 @@ PrintSummary(LPTSTR szPath,
 		   ConOutPrintf(szMsg,ulFiles, szBuffer);
 
 	}
-
+	
+}
 	/* Print total directories and freespace */
 	szRoot[0] = szPath[0];
 	GetUserDiskFreeSpace(szRoot, &uliFree);
