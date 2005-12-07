@@ -404,6 +404,7 @@ GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
 static const UINT ProblemStringId[NUM_CM_PROB] =
 {
     IDS_DEV_NO_PROBLEM,
+    IDS_DEV_DEVLOADER_FAILED,
     IDS_DEV_NOT_CONFIGURED,
     IDS_DEV_OUT_OF_MEMORY,
     IDS_DEV_ENTRY_IS_WRONG_TYPE,
@@ -452,7 +453,7 @@ static const UINT ProblemStringId[NUM_CM_PROB] =
     IDS_DEV_HELD_FOR_EJECT,
     IDS_DEV_DRIVER_BLOCKED,
     IDS_DEV_REGISTRY_TOO_LARGE,
-    IDS_DEV_SETPROPERTIES_FAILED,
+    IDS_DEV_SETPROPERTIES_FAILED
 };
 
 
@@ -486,18 +487,89 @@ GetDeviceStatusString(IN DEVINST DevInst,
             }
             else
             {
-                LPWSTR szProblem;
+                LPWSTR szProblem, szInfo = NULL;
+                DWORD dwRet;
+                BOOL AdvFormat = FALSE;
                 UINT StringIDs[] =
                 {
                     MessageId,
                     IDS_DEVCODE,
                 };
 
-                if (LoadAndFormatStringsCat(hDllInstance,
-                                            StringIDs,
-                                            sizeof(StringIDs) / sizeof(StringIDs[0]),
-                                            &szProblem,
-                                            ProblemNumber))
+                switch (ProblemNumber)
+                {
+                    case CM_PROB_DEVLOADER_FAILED:
+                    {
+                        /* FIXME - if not a root bus devloader then use IDS_DEV_DEVLOADER_FAILED2 */
+                        /* FIXME - get the type string (ie. ISAPNP, PCI or BIOS for root bus devloaders,
+                                   or FLOP, ESDI, SCSI, etc for others */
+                        AdvFormat = (szInfo != NULL);
+                        break;
+                    }
+
+                    case CM_PROB_DEVLOADER_NOT_FOUND:
+                    {
+                        /* FIXME - 4 cases:
+                           1) if it's a missing system devloader:
+                              - get the system devloader name
+                           2) if it's not a system devloader but still missing:
+                              - get the devloader name (file name?)
+                           3) if it's not a system devloader but the file can be found:
+                              - use IDS_DEV_DEVLOADER_NOT_FOUND2
+                           4) if it's a missing or empty software key
+                              - use IDS_DEV_DEVLOADER_NOT_FOUND3
+                              - AdvFormat = FALSE!
+                         */
+                        AdvFormat = (szInfo != NULL);
+                        break;
+                    }
+
+                    case CM_PROB_INVALID_DATA:
+                        /* FIXME - if the device isn't enumerated by the BIOS/ACPI use IDS_DEV_INVALID_DATA2 */
+                        AdvFormat = FALSE;
+                        break;
+
+                    case CM_PROB_NORMAL_CONFLICT:
+                        /* FIXME - get resource type (IRQ, DMA, Memory or I/O) */
+                        AdvFormat = (szInfo != NULL);
+                        break;
+
+                    case CM_PROB_UNKNOWN_RESOURCE:
+                        /* FIXME - get the .inf file name */
+                        AdvFormat = (szInfo != NULL);
+                        break;
+
+                    case CM_PROB_DISABLED:
+                        /* FIXME - if the device was disabled by the system use IDS_DEV_DISABLED2 */
+                        break;
+
+                    case CM_PROB_FAILED_ADD:
+                        /* FIXME - get the name of the sub-device with the error */
+                        AdvFormat = (szInfo != NULL);
+                        break;
+                }
+
+                if (AdvFormat)
+                {
+                    StringIDs[1] = IDS_DEVCODE2;
+                    dwRet = LoadAndFormatStringsCat(hDllInstance,
+                                                    StringIDs,
+                                                    sizeof(StringIDs) / sizeof(StringIDs[0]),
+                                                    &szProblem,
+                                                    szInfo,
+                                                    ProblemNumber);
+                    LocalFree((HLOCAL)szInfo);
+                }
+                else
+                {
+                    dwRet = LoadAndFormatStringsCat(hDllInstance,
+                                                    StringIDs,
+                                                    sizeof(StringIDs) / sizeof(StringIDs[0]),
+                                                    &szProblem,
+                                                    ProblemNumber);
+                }
+
+                if (dwRet != 0)
                 {
                     wcsncpy(szBuffer,
                             szProblem,
@@ -630,7 +702,7 @@ EnableDevice(IN HDEVINFO DeviceInfoSet,
 
     if (bEnable)
     {
-        /* try to enable/disable the device on the global profile */
+        /* try to enable the device on the global profile */
         pcp.StateChange = DICS_ENABLE;
         pcp.Scope = DICS_FLAG_GLOBAL;
 
