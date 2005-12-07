@@ -225,23 +225,15 @@ RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
    return (AtomTable->ExHandleTable != NULL);
 }
 
-static VOID STDCALL
-AtomDeleteHandleCallback(PHANDLE_TABLE HandleTable,
-                         PVOID Object,
-                         ULONG GrantedAccess,
-                         PVOID Context)
-{
-   return;
-}
-
 VOID
 RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->ExHandleTable)
    {
-      ExDestroyHandleTable(AtomTable->ExHandleTable,
-                           AtomDeleteHandleCallback,
-                           AtomTable);
+      ExSweepHandleTable(AtomTable->ExHandleTable,
+                         NULL,
+                         NULL);
+      ExDestroyHandleTable(AtomTable->ExHandleTable);
       AtomTable->ExHandleTable = NULL;
    }
 }

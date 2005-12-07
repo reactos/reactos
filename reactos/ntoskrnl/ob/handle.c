@@ -504,10 +504,10 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 }
 
 static VOID STDCALL
-DeleteHandleCallback(PHANDLE_TABLE HandleTable,
-                     PVOID Object,
-                     ULONG GrantedAccess,
-                     PVOID Context)
+SweepHandleCallback(PHANDLE_TABLE HandleTable,
+                    PVOID Object,
+                    ULONG GrantedAccess,
+                    PVOID Context)
 {
   POBJECT_HEADER ObjectHeader;
   PVOID ObjectBody;
@@ -580,9 +580,12 @@ ObKillProcess(PEPROCESS Process)
 {
    PAGED_CODE();
 
-   ExDestroyHandleTable(Process->ObjectTable,
-                        DeleteHandleCallback,
-                        Process);
+   /* FIXME - Temporary hack: sweep and destroy here, needs to be fixed!!! */
+   ExSweepHandleTable(Process->ObjectTable,
+                      SweepHandleCallback,
+                      Process);
+   ExDestroyHandleTable(Process->ObjectTable);
+   Process->ObjectTable = NULL;
 }
 
 

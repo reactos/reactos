@@ -91,7 +91,7 @@ ExpInitializeProfileImplementation(VOID);
                                    EX_HANDLE_ENTRY_INHERITABLE |               \
                                    EX_HANDLE_ENTRY_AUDITONCLOSE)
 
-typedef VOID (STDCALL PEX_DESTROY_HANDLE_CALLBACK)(
+typedef VOID (STDCALL PEX_SWEEP_HANDLE_CALLBACK)(
     PHANDLE_TABLE HandleTable, 
     PVOID Object, 
     ULONG GrantedAccess, 
@@ -118,8 +118,13 @@ ExCreateHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL);
 
 VOID
 ExDestroyHandleTable(
+    IN PHANDLE_TABLE HandleTable
+);
+
+VOID
+ExSweepHandleTable(
     IN PHANDLE_TABLE HandleTable,
-    IN PEX_DESTROY_HANDLE_CALLBACK DestroyHandleCallback  OPTIONAL,
+    IN PEX_SWEEP_HANDLE_CALLBACK SweepHandleCallback  OPTIONAL,
     IN PVOID Context  OPTIONAL
 );
 
