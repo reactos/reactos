@@ -987,7 +987,9 @@ NtGdiCreateDC(PUNICODE_STRING Driver,
     }
   }
 
-  Ret = IntGdiCreateDC(&SafeDriver, &SafeDevice, NULL, &SafeInitData, FALSE);
+  Ret = IntGdiCreateDC(NULL == Driver ? NULL : &SafeDriver,
+                       NULL == Device ? NULL : &SafeDevice, NULL,
+                       NULL == InitData ? NULL : &SafeInitData, FLASE);
 
   return Ret;
 }
