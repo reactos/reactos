@@ -1586,10 +1586,11 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       {
          /* Add information from parent bus device to InstancePath */
          wcscat(InstancePath, ParentIdPrefix.Buffer);
-         if (*(PWSTR)IoStatusBlock.Information)
+         if (IoStatusBlock.Information && *(PWSTR)IoStatusBlock.Information)
             wcscat(InstancePath, L"&");
       }
-      wcscat(InstancePath, (PWSTR)IoStatusBlock.Information);
+      if (IoStatusBlock.Information)
+         wcscat(InstancePath, (PWSTR)IoStatusBlock.Information);
 
       /*
        * FIXME: Check for valid characters, if there is invalid characters
@@ -1701,7 +1702,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_ID,
       &Stack);
-   if (NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       /*
       * FIXME: Check for valid characters, if there is invalid characters
@@ -1730,7 +1731,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
          (TotalLength + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
       {
-         DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
+         DPRINT1("ZwSetValueKey() failed (Status %lx) or no Compatible ID returned\n", Status);
       }
    }
    else
@@ -1748,10 +1749,13 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_DEVICE_TEXT,
       &Stack);
-   if (NT_SUCCESS(Status))
+   /* This key is mandatory, so even if the Irp fails, we still write it */
+   RtlInitUnicodeString(&ValueName, L"DeviceDesc");
+   if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
    {
-      RtlInitUnicodeString(&ValueName, L"DeviceDesc");
-      if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
+      if (NT_SUCCESS(IoStatusBlock.Status) &&
+         IoStatusBlock.Information &&
+         (*(PWSTR)IoStatusBlock.Information != 0))
       {
          /* This key is overriden when a driver is installed. Don't write the
           * new description if another one already exists */
@@ -1762,14 +1766,25 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 (PVOID)IoStatusBlock.Information,
                                 (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       }
-      if (!NT_SUCCESS(Status))
+      else
       {
-         DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
+         UNICODE_STRING DeviceDesc;
+         RtlInitUnicodeString(&DeviceDesc, L"Unknown Device");
+         DPRINT("Driver didn't return DeviceDesc (Status %x), so place unknown device there\n", Status);
+
+         Status = ZwSetValueKey(InstanceKey,
+            &ValueName,
+            0,
+            REG_SZ,
+            &DeviceDesc,
+            (wcslen((PWSTR)&DeviceDesc) + 1) * sizeof(WCHAR));
+
+         if (!NT_SUCCESS(Status))
+         {
+            DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
+         }
+
       }
-   }
-   else
-   {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
 
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
@@ -1781,7 +1796,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_DEVICE_TEXT,
       &Stack);
-   if (NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       DPRINT("LocationInformation: %S\n", (PWSTR)IoStatusBlock.Information);
       RtlInitUnicodeString(&ValueName, L"LocationInformation");
@@ -1798,7 +1813,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    }
    else
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
    }
 
    DPRINT("Sending IRP_MN_QUERY_BUS_INFORMATION to device stack\n");
@@ -1808,7 +1823,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_BUS_INFORMATION,
       NULL);
-   if (NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       PPNP_BUS_INFORMATION BusInformation =
          (PPNP_BUS_INFORMATION)IoStatusBlock.Information;
@@ -1820,7 +1835,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    }
    else
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
 
       DeviceNode->ChildBusNumber = 0xFFFFFFF0;
       DeviceNode->ChildInterfaceType = InterfaceTypeUndefined;
@@ -1834,7 +1849,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_RESOURCES,
       NULL);
-   if (NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       DeviceNode->BootResources =
          (PCM_RESOURCE_LIST)IoStatusBlock.Information;
