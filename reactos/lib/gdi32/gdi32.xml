@@ -35,6 +35,7 @@
 		<file>region.c</file>
 		<file>text.c</file>
 		<file>utils.c</file>
+		<file>path.c</file>
 	</directory>
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>

@@ -31,6 +31,7 @@
 BOOL FASTCALL PATH_AddEntry (GdiPath *pPath, const POINT *pPoint, BYTE flags);
 BOOL FASTCALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
 BOOL FASTCALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
+BOOL FASTCALL PATH_FillPath( PDC dc, GdiPath *pPath );
 BOOL FASTCALL PATH_FlattenPath (GdiPath *pPath);
 VOID FASTCALL PATH_GetPathFromDC (PDC dc, GdiPath **ppPath);
 VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
@@ -46,16 +47,47 @@ BOOL
 STDCALL
 NtGdiAbortPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+
+  PATH_EmptyPath( pPath );
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
 STDCALL
-NtGdiBeginPath(HDC  hDC)
+NtGdiBeginPath( HDC  hDC )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+      
+  /* If path is already open, do nothing */
+  if ( pPath->state != PATH_Open )
+  {
+    /* Make sure that path is empty */
+    PATH_EmptyPath( pPath );
+
+    /* Initialize variables for new path */
+    pPath->newStroke = TRUE;
+    pPath->state = PATH_Open;
+  }
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
@@ -86,16 +118,50 @@ BOOL
 STDCALL
 NtGdiEndPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if ( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+
+  /* Check that path is currently being constructed */
+  if( pPath->state != PATH_Open )
+  {
+    ret = FALSE;
+  }
+  /* Set flag to indicate that path is finished */
+  else pPath->state = PATH_Closed;
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
 STDCALL
 NtGdiFillPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if ( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+  
+  ret = PATH_FillPath( dc, pPath );
+  if( ret ) 
+  {
+    /* FIXME: Should the path be emptied even if conversion
+       failed? */
+    PATH_EmptyPath( pPath );
+  }
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
@@ -169,9 +235,29 @@ NtGdiWidenPath(HDC  hDC)
    return FALSE;
 }
 
+
+
 /***********************************************************************
  * Exported functions
  */
+
+
+/* PATH_FillPath
+ * unimplemented
+ * 
+ */
+BOOL
+FASTCALL 
+PATH_FillPath( PDC dc, GdiPath *pPath )
+{
+  if( pPath->state != PATH_Closed )
+  {
+    return FALSE;
+  }
+    
+  UNIMPLEMENTED;
+  return FALSE;
+}
 
 /* PATH_InitGdiPath
  *
