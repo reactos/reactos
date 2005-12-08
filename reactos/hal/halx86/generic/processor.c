@@ -24,7 +24,7 @@ VOID STDCALL
 HalInitializeProcessor(ULONG ProcessorNumber,
                        PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  DPRINT("HalInitializeProcessor(%x %x)\n", ProcessorNumber, LoaderBlock);
+  DPRINT("HalInitializeProcessor(%lu %p)\n", ProcessorNumber, LoaderBlock);
 }
 
 BOOLEAN STDCALL
@@ -39,7 +39,7 @@ BOOLEAN STDCALL
 HalStartNextProcessor(ULONG Unknown1,
 		      ULONG ProcessorStack)
 {
-  DPRINT("HalStartNextProcessor(%x %x)\n", Unknown1, ProcessorStack);
+  DPRINT("HalStartNextProcessor(0x%lx 0x%lx)\n", Unknown1, ProcessorStack);
 
   return TRUE;
 }
