@@ -1108,7 +1108,11 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   if (palGDI->Mode != PAL_INDEXED)
     {
       PALETTE_UnlockPalette(palGDI);
-      return NULL;
+      palGDI = PALETTE_LockPalette(dc->PalIndexed);
+      if (palGDI->Mode != PAL_INDEXED)
+        {
+          return NULL;
+        }
     }
 
   nNumColors = 1 << lpbmi->bmiHeader.biBitCount;
