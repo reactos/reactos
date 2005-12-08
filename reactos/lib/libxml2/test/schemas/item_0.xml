@@ -1,0 +1,6 @@
+<Item partNum="926-AA" shipBy="air">
+<productName>foo</productName>
+<quantity>2</quantity>
+<USPrice>1.0</USPrice>
+<comment>No comment !</comment>
+</Item>

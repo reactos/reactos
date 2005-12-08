@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+The <function>geteuid</function> function returns a <type>uid_t</type> that
+contains the user's <emphasis>effective</emphasis> user id.
+</para>

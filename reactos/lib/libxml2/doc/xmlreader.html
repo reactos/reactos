@@ -1,0 +1,475 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <style type="text/css"></style>
+<!--
+TD {font-family: Verdana,Arial,Helvetica}
+BODY {font-family: Verdana,Arial,Helvetica; margin-top: 2em; margin-left: 0em; margin-right: 0em}
+H1 {font-family: Verdana,Arial,Helvetica}
+H2 {font-family: Verdana,Arial,Helvetica}
+H3 {font-family: Verdana,Arial,Helvetica}
+A:link, A:visited, A:active { text-decoration: underline }
+  </style>
+-->
+  <title>Libxml2 XmlTextReader Interface tutorial</title>
+</head>
+
+<body bgcolor="#fffacd" text="#000000">
+<h1 align="center">Libxml2 XmlTextReader Interface tutorial</h1>
+
+<p></p>
+
+<p>This document describes the use of the XmlTextReader streaming API added
+to libxml2 in version 2.5.0 . This API is closely modeled after the <a
+href="http://dotgnu.org/pnetlib-doc/System/Xml/XmlTextReader.html">XmlTextReader</a>
+and <a
+href="http://dotgnu.org/pnetlib-doc/System/Xml/XmlReader.html">XmlReader</a>
+classes of the C# language.</p>
+
+<p>This tutorial will present the key points of this API, and working
+examples using both C and the Python bindings:</p>
+
+<p>Table of content:</p>
+<ul>
+  <li><a href="#Introducti">Introduction: why a new API</a></li>
+  <li><a href="#Walking">Walking a simple tree</a></li>
+  <li><a href="#Extracting">Extracting informations for the current
+  node</a></li>
+  <li><a href="#Extracting1">Extracting informations for the
+  attributes</a></li>
+  <li><a href="#Validating">Validating a document</a></li>
+  <li><a href="#Entities">Entities substitution</a></li>
+  <li><a href="#L1142">Relax-NG Validation</a></li>
+  <li><a href="#Mixing">Mixing the reader and tree or XPath
+  operations</a></li>
+</ul>
+
+<p></p>
+
+<h2><a name="Introducti">Introduction: why a new API</a></h2>
+
+<p>Libxml2 <a href="http://xmlsoft.org/html/libxml-tree.html">main API is
+tree based</a>, where the parsing operation results in a document loaded
+completely in memory, and expose it as a tree of nodes all availble at the
+same time. This is very simple and quite powerful, but has the major
+limitation that the size of the document that can be hamdled is limited by
+the size of the memory available. Libxml2 also provide a <a
+href="http://www.saxproject.org/">SAX</a> based API, but that version was
+designed upon one of the early <a
+href="http://www.jclark.com/xml/expat.html">expat</a> version of SAX, SAX is
+also not formally defined for C. SAX basically work by registering callbacks
+which are called directly by the parser as it progresses through the document
+streams. The problem is that this programming model is relatively complex,
+not well standardized, cannot provide validation directly, makes entity,
+namespace and base processing relatively hard.</p>
+
+<p>The <a
+href="http://dotgnu.org/pnetlib-doc/System/Xml/XmlTextReader.html">XmlTextReader
+API from C#</a> provides a far simpler programming model. The API acts as a
+cursor going forward on the document stream and stopping at each node in the
+way. The user's code keeps control of the progress and simply calls a
+Read() function repeatedly to progress to each node in sequence in document
+order. There is direct support for namespaces, xml:base, entity handling and
+adding DTD validation on top of it was relatively simple. This API is really
+close to the <a href="http://www.w3.org/TR/DOM-Level-2-Core/">DOM Core
+specification</a> This provides a far more standard, easy to use and powerful
+API than the existing SAX. Moreover integrating extension features based on
+the tree seems relatively easy.</p>
+
+<p>In a nutshell the XmlTextReader API provides a simpler, more standard and
+more extensible interface to handle large documents than the existing SAX
+version.</p>
+
+<h2><a name="Walking">Walking a simple tree</a></h2>
+
+<p>Basically the XmlTextReader API is a forward only tree walking interface.
+The basic steps are:</p>
+<ol>
+  <li>prepare a reader context operating on some input</li>
+  <li>run a loop iterating over all nodes in the document</li>
+  <li>free up the reader context</li>
+</ol>
+
+<p>Here is a basic C sample doing this:</p>
+<pre>#include &lt;libxml/xmlreader.h&gt;
+
+void processNode(xmlTextReaderPtr reader) {
+    /* handling of a node in the tree */
+}
+
+int streamFile(char *filename) {
+    xmlTextReaderPtr reader;
+    int ret;
+
+    reader = xmlNewTextReaderFilename(filename);
+    if (reader != NULL) {
+        ret = xmlTextReaderRead(reader);
+        while (ret == 1) {
+            processNode(reader);
+            ret = xmlTextReaderRead(reader);
+        }
+        xmlFreeTextReader(reader);
+        if (ret != 0) {
+            printf("%s : failed to parse\n", filename);
+        }
+    } else {
+        printf("Unable to open %s\n", filename);
+    }
+}</pre>
+
+<p>A few things to notice:</p>
+<ul>
+  <li>the include file needed : <code>libxml/xmlreader.h</code></li>
+  <li>the creation of the reader using a filename</li>
+  <li>the repeated call to xmlTextReaderRead() and how any return value
+    different from 1 should stop the loop</li>
+  <li>that a negative return means a parsing error</li>
+  <li>how xmlFreeTextReader() should be used to free up the resources used by
+    the reader.</li>
+</ul>
+
+<p>Here is similar code in python for exactly the same processing:</p>
+<pre>import libxml2
+
+def processNode(reader):
+    pass
+
+def streamFile(filename):
+    try:
+        reader = libxml2.newTextReaderFilename(filename)
+    except:
+        print "unable to open %s" % (filename)
+        return
+
+    ret = reader.Read()
+    while ret == 1:
+        processNode(reader)
+        ret = reader.Read()
+
+    if ret != 0:
+        print "%s : failed to parse" % (filename)</pre>
+
+<p>The only things worth adding are that the <a
+href="http://dotgnu.org/pnetlib-doc/System/Xml/XmlTextReader.html">xmlTextReader
+is abstracted as a class like in C#</a> with the same method names (but the
+properties are currently accessed with methods) and that one doesn't need to
+free the reader at the end of the processing. It will get garbage collected
+once all references have disapeared.</p>
+
+<h2><a name="Extracting">Extracting information for the current node</a></h2>
+
+<p>So far the example code did not indicate how information was extracted
+from the reader. It was abstrated as a call to the processNode() routine,
+with the reader as the argument. At each invocation, the parser is stopped on
+a given node and the reader can be used to query those node properties. Each
+<em>Property</em> is available at the C level as a function taking a single
+xmlTextReaderPtr argument whose name is
+<code>xmlTextReader</code><em>Property</em> , if the return type is an
+<code>xmlChar *</code> string then it must be deallocated with
+<code>xmlFree()</code> to avoid leaks. For the Python interface, there is a
+<em>Property</em> method to the reader class that can be called on the
+instance. The list of the properties is based on the <a
+href="http://dotgnu.org/pnetlib-doc/System/Xml/XmlTextReader.html">C#
+XmlTextReader class</a> set of properties and methods:</p>
+<ul>
+  <li><em>NodeType</em>: The node type, 1 for start element, 15 for end of
+    element, 2 for attributes, 3 for text nodes, 4 for CData sections, 5 for
+    entity references, 6 for entity declarations, 7 for PIs, 8 for comments,
+    9 for the document nodes, 10 for DTD/Doctype nodes, 11 for document
+    fragment and 12 for notation nodes.</li>
+  <li><em>Name</em>: the <a
+    href="http://www.w3.org/TR/REC-xml-names/#ns-qualnames">qualified
+    name</a> of the node, equal to (<em>Prefix</em>:)<em>LocalName</em>.</li>
+  <li><em>LocalName</em>: the <a
+    href="http://www.w3.org/TR/REC-xml-names/#NT-LocalPart">local name</a> of
+    the node.</li>
+  <li><em>Prefix</em>: a  shorthand reference to the <a
+    href="http://www.w3.org/TR/REC-xml-names/">namespace</a> associated with
+    the node.</li>
+  <li><em>NamespaceUri</em>: the URI defining the <a
+    href="http://www.w3.org/TR/REC-xml-names/">namespace</a> associated with
+    the node.</li>
+  <li><em>BaseUri:</em> the base URI of the node. See the <a
+    href="http://www.w3.org/TR/xmlbase/">XML Base W3C specification</a>.</li>
+  <li><em>Depth:</em> the depth of the node in the tree, starts at 0 for the
+    root node.</li>
+  <li><em>HasAttributes</em>: whether the node has attributes.</li>
+  <li><em>HasValue</em>: whether the node can have a text value.</li>
+  <li><em>Value</em>: provides the text value of the node if present.</li>
+  <li><em>IsDefault</em>: whether an Attribute  node was generated from the
+    default value defined in the DTD or schema (<em>unsupported
+  yet</em>).</li>
+  <li><em>XmlLang</em>: the <a
+    href="http://www.w3.org/TR/REC-xml#sec-lang-tag">xml:lang</a> scope
+    within which the node resides.</li>
+  <li><em>IsEmptyElement</em>: check if the current node is empty, this is a
+    bit bizarre in the sense that <code>&lt;a/&gt;</code> will be considered
+    empty while <code>&lt;a&gt;&lt;/a&gt;</code> will not.</li>
+  <li><em>AttributeCount</em>: provides the number of attributes of the
+    current node.</li>
+</ul>
+
+<p>Let's look first at a small example to get this in practice by redefining
+the processNode() function in the Python example:</p>
+<pre>def processNode(reader):
+    print "%d %d %s %d" % (reader.Depth(), reader.NodeType(),
+                           reader.Name(), reader.IsEmptyElement())</pre>
+
+<p>and look at the result of calling streamFile("tst.xml") for various
+content of the XML test file.</p>
+
+<p>For the minimal document "<code>&lt;doc/&gt;</code>" we get:</p>
+<pre>0 1 doc 1</pre>
+
+<p>Only one node is found, its depth is 0, type 1 indicate an element start,
+of name "doc" and it is empty. Trying now with
+"<code>&lt;doc&gt;&lt;/doc&gt;</code>" instead leads to:</p>
+<pre>0 1 doc 0
+0 15 doc 0</pre>
+
+<p>The document root node is not flagged as empty anymore and both a start
+and an end of element are detected. The following document shows how
+character data are reported:</p>
+<pre>&lt;doc&gt;&lt;a/&gt;&lt;b&gt;some text&lt;/b&gt;
+&lt;c/&gt;&lt;/doc&gt;</pre>
+
+<p>We modifying the processNode() function to also report the node Value:</p>
+<pre>def processNode(reader):
+    print "%d %d %s %d %s" % (reader.Depth(), reader.NodeType(),
+                              reader.Name(), reader.IsEmptyElement(),
+                              reader.Value())</pre>
+
+<p>The result of the test is:</p>
+<pre>0 1 doc 0 None
+1 1 a 1 None
+1 1 b 0 None
+2 3 #text 0 some text
+1 15 b 0 None
+1 3 #text 0
+
+1 1 c 1 None
+0 15 doc 0 None</pre>
+
+<p>There are a few things to note:</p>
+<ul>
+  <li>the increase of the depth value (first row) as children nodes are
+    explored</li>
+  <li>the text node child of the b element, of type 3 and its content</li>
+  <li>the text node containing the line return between elements b and c</li>
+  <li>that elements have the Value None (or NULL in C)</li>
+</ul>
+
+<p>The equivalent routine for <code>processNode()</code> as used by
+<code>xmllint --stream --debug</code> is the following and can be found in
+the xmllint.c module in the source distribution:</p>
+<pre>static void processNode(xmlTextReaderPtr reader) {
+    xmlChar *name, *value;
+
+    name = xmlTextReaderName(reader);
+    if (name == NULL)
+        name = xmlStrdup(BAD_CAST "--");
+    value = xmlTextReaderValue(reader);
+
+    printf("%d %d %s %d",
+            xmlTextReaderDepth(reader),
+            xmlTextReaderNodeType(reader),
+            name,
+            xmlTextReaderIsEmptyElement(reader));
+    xmlFree(name);
+    if (value == NULL)
+        printf("\n");
+    else {
+        printf(" %s\n", value);
+        xmlFree(value);
+    }
+}</pre>
+
+<h2><a name="Extracting1">Extracting information for the attributes</a></h2>
+
+<p>The previous examples don't indicate how attributes are processed. The
+simple test "<code>&lt;doc a="b"/&gt;</code>" provides the following
+result:</p>
+<pre>0 1 doc 1 None</pre>
+
+<p>This proves that attribute nodes are not traversed by default. The
+<em>HasAttributes</em> property allow to detect their presence. To check
+their content the API has special instructions. Basically two kinds of operations
+are possible:</p>
+<ol>
+  <li>to move the reader to the attribute nodes of the current element, in
+    that case the cursor is positionned on the attribute node</li>
+  <li>to directly query the element node for the attribute value</li>
+</ol>
+
+<p>In both case the attribute can be designed either by its position in the
+list of attribute (<em>MoveToAttributeNo</em> or <em>GetAttributeNo</em>) or
+by their name (and namespace):</p>
+<ul>
+  <li><em>GetAttributeNo</em>(no): provides the value of the attribute with
+    the specified index no relative to the containing element.</li>
+  <li><em>GetAttribute</em>(name): provides the value of the attribute with
+    the specified qualified name.</li>
+  <li>GetAttributeNs(localName, namespaceURI): provides the value of the
+    attribute with the specified local name and namespace URI.</li>
+  <li><em>MoveToAttributeNo</em>(no): moves the position of the current
+    instance to the attribute with the specified index relative to the
+    containing element.</li>
+  <li><em>MoveToAttribute</em>(name): moves the position of the current
+    instance to the attribute with the specified qualified name.</li>
+  <li><em>MoveToAttributeNs</em>(localName, namespaceURI): moves the position
+    of the current instance to the attribute with the specified local name
+    and namespace URI.</li>
+  <li><em>MoveToFirstAttribute</em>: moves the position of the current
+    instance to the first attribute associated with the current node.</li>
+  <li><em>MoveToNextAttribute</em>: moves the position of the current
+    instance to the next attribute associated with the current node.</li>
+  <li><em>MoveToElement</em>: moves the position of the current instance to
+    the node that contains the current Attribute  node.</li>
+</ul>
+
+<p>After modifying the processNode() function to show attributes:</p>
+<pre>def processNode(reader):
+    print "%d %d %s %d %s" % (reader.Depth(), reader.NodeType(),
+                              reader.Name(), reader.IsEmptyElement(),
+                              reader.Value())
+    if reader.NodeType() == 1: # Element
+        while reader.MoveToNextAttribute():
+            print "-- %d %d (%s) [%s]" % (reader.Depth(), reader.NodeType(),
+                                          reader.Name(),reader.Value())</pre>
+
+<p>The output for the same input document reflects the attribute:</p>
+<pre>0 1 doc 1 None
+-- 1 2 (a) [b]</pre>
+
+<p>There are a couple of things to note on the attribute processing:</p>
+<ul>
+  <li>Their depth is the one of the carrying element plus one.</li>
+  <li>Namespace declarations are seen as attributes, as in DOM.</li>
+</ul>
+
+<h2><a name="Validating">Validating a document</a></h2>
+
+<p>Libxml2 implementation adds some extra features on top of the XmlTextReader
+API. The main one is the ability to DTD validate the parsed document
+progressively. This is simply the activation of the associated feature of the
+parser used by the reader structure. There are a few options available
+defined as the enum xmlParserProperties in the libxml/xmlreader.h header
+file:</p>
+<ul>
+  <li>XML_PARSER_LOADDTD: force loading the DTD (without validating)</li>
+  <li>XML_PARSER_DEFAULTATTRS: force attribute defaulting (this also imply
+    loading the DTD)</li>
+  <li>XML_PARSER_VALIDATE: activate DTD validation (this also imply loading
+    the DTD)</li>
+  <li>XML_PARSER_SUBST_ENTITIES: substitute entities on the fly, entity
+    reference nodes are not generated and are replaced by their expanded
+    content.</li>
+  <li>more settings might be added, those were the one available at the 2.5.0
+    release...</li>
+</ul>
+
+<p>The GetParserProp() and SetParserProp() methods can then be used to get
+and set the values of those parser properties of the reader. For example</p>
+<pre>def parseAndValidate(file):
+    reader = libxml2.newTextReaderFilename(file)
+    reader.SetParserProp(libxml2.PARSER_VALIDATE, 1)
+    ret = reader.Read()
+    while ret == 1:
+        ret = reader.Read()
+    if ret != 0:
+        print "Error parsing and validating %s" % (file)</pre>
+
+<p>This routine will parse and validate the file. Error messages can be
+captured by registering an error handler. See python/tests/reader2.py for
+more complete Python examples. At the C level the equivalent call to cativate
+the validation feature is just:</p>
+<pre>ret = xmlTextReaderSetParserProp(reader, XML_PARSER_VALIDATE, 1)</pre>
+
+<p>and a return value of 0 indicates success.</p>
+
+<h2><a name="Entities">Entities substitution</a></h2>
+
+<p>By default the xmlReader will report entities as such and not replace them
+with their content. This default behaviour can however be overriden using:</p>
+
+<p><code>reader.SetParserProp(libxml2.PARSER_SUBST_ENTITIES,1)</code></p>
+
+<h2><a name="L1142">Relax-NG Validation</a></h2>
+
+<p style="font-size: 10pt">Introduced in version 2.5.7</p>
+
+<p>Libxml2 can now validate the document being read using the xmlReader using
+Relax-NG schemas. While the Relax NG validator can't always work in a
+streamable mode, only subsets which cannot be reduced to regular expressions
+need to have their subtree expanded for validation. In practice it means
+that, unless the schemas for the top level element content is not expressable
+as a regexp, only chunk of the document needs to be parsed while
+validating.</p>
+
+<p>The steps to do so are:</p>
+<ul>
+  <li>create a reader working on a document as usual</li>
+  <li>before any call to read associate it to a Relax NG schemas, either the
+    preparsed schemas or the URL to the schemas to use</li>
+  <li>errors will be reported the usual way, and the validity status can be
+    obtained using the IsValid() interface of the reader like for DTDs.</li>
+</ul>
+
+<p>Example, assuming the reader has already being created and that the schema
+string contains the Relax-NG schemas:</p>
+<pre><code>rngp = libxml2.relaxNGNewMemParserCtxt(schema, len(schema))<br>
+rngs = rngp.relaxNGParse()<br>
+reader.RelaxNGSetSchema(rngs)<br>
+ret = reader.Read()<br>
+while ret == 1:<br>
+    ret = reader.Read()<br>
+if ret != 0:<br>
+    print "Error parsing the document"<br>
+if reader.IsValid() != 1:<br>
+    print "Document failed to validate"</code><br>
+</pre>
+
+<p>See <code>reader6.py</code> in the sources or documentation for a complete
+example.</p>
+
+<h2><a name="Mixing">Mixing the reader and tree or XPath operations</a></h2>
+
+<p style="font-size: 10pt">Introduced in version 2.5.7</p>
+
+<p>While the reader is a streaming interface, its underlying implementation
+is based on the DOM builder of libxml2. As a result it is relatively simple
+to mix operations based on both models under some constraints. To do so the
+reader has an Expand() operation allowing to grow the subtree under the
+current node. It returns a pointer to a standard node which can be
+manipulated in the usual ways. The node will get all its ancestors and the
+full subtree available. Usual operations like XPath queries can be used on
+that reduced view of the document. Here is an example extracted from
+reader5.py in the sources which extract and prints the bibliography for the
+"Dragon" compiler book from the XML 1.0 recommendation:</p>
+<pre>f = open('../../test/valid/REC-xml-19980210.xml')
+input = libxml2.inputBuffer(f)
+reader = input.newTextReader("REC")
+res=""
+while reader.Read():
+    while reader.Name() == 'bibl':
+        node = reader.Expand()            # expand the subtree
+        if node.xpathEval("@id = 'Aho'"): # use XPath on it
+            res = res + node.serialize()
+        if reader.Next() != 1:            # skip the subtree
+            break;</pre>
+
+<p>Note, however that the node instance returned by the Expand() call is only
+valid until the next Read() operation. The Expand() operation does not
+affects the Read() ones, however usually once processed the full subtree is
+not useful anymore, and the Next() operation allows to skip it completely and
+process to the successor or return 0 if the document end is reached.</p>
+
+<p><a href="mailto:veillard@redhat.com">Daniel Veillard</a></p>
+
+<p>$Id: xmlreader.html,v 1.8 2003/11/05 04:15:16 jfleck Exp $</p>
+
+<p></p>
+</body>
+</html>

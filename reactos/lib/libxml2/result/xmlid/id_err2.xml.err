@@ -1,0 +1,3 @@
+./test/xmlid/id_err2.xml:3: validity error : xml:id : attribute type should be ID
+<!ATTLIST foo xml:id CDATA #IMPLIED>
+                                   ^

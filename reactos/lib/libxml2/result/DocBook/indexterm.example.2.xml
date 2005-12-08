@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<chapter><title>Example Chapter</title><!-- index term for "Example Chapter" is a span --><indexterm id="idxexchap" class="startofrange"><primary>Example Chapter</primary></indexterm><!-- index term for "Example Chapter" also cross references the 
+     "Examples" entry in the index --><indexterm><primary>Example Chapter</primary><seealso>Examples</seealso></indexterm><!-- index term for "Chapter, Example" refers the reader to the entry
+     under which the index term is actually listed, "Example Chapter" --><indexterm><primary>Chapter</primary><secondary>Example</secondary><see>Example Chapter</see></indexterm><!-- other content --><!-- index term, end of "Example Chapter" span --><indexterm startref="idxexchap" class="endofrange"><para>some content</para></indexterm></chapter>

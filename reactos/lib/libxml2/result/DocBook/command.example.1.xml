@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+In <acronym>UNIX</acronym>,
+<command>ls</command> is used to get a directory listing.
+</para>

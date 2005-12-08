@@ -1,0 +1,168 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(doc, , )
+SAX.attributeDecl(normId, attr, 8, 3, NULL, ...)
+SAX.externalSubset(doc, , )
+SAX.startElement(doc)
+SAX.characters(
+  , 3)
+SAX.comment( no normalization )
+SAX.characters(
+  , 3)
+SAX.startElement(norm, attr='   ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.startElement(norm, attr='   foo bar   ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.startElement(norm, attr='  foobar')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.startElement(norm, attr=' foo bar ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.startElement(norm, attr='foobar  ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(norm, attr=' &#38; ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(norm, attr='   foo&#38;bar   ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(norm, attr='  foobar&#38;')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(norm, attr='&#38;foo bar ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(norm, attr='foobar  &#38;')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(norm, attr=' < ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(norm, attr='   foo<bar   ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(norm, attr='  foobar<')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(norm, attr='<foo bar ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(norm, attr='foobar  <')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.startElement(norm, attr='  
+	 ')
+SAX.endElement(norm)
+SAX.characters(
+  , 3)
+SAX.comment( normalization )
+SAX.characters(
+  , 3)
+SAX.startElement(normId, attr='   ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.startElement(normId, attr='   foo bar   ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.startElement(normId, attr='  foobar')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.startElement(normId, attr=' foo bar ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.startElement(normId, attr='foobar  ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(normId, attr=' &#38; ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(normId, attr='   foo&#38;bar   ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(normId, attr='  foobar&#38;')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(normId, attr='&#38;foo bar ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(normId, attr='foobar  &#38;')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(normId, attr=' < ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(normId, attr='   foo<bar   ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(normId, attr='  foobar<')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(normId, attr='<foo bar ')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElement(normId, attr='foobar  <')
+SAX.endElement(normId)
+SAX.characters(
+  , 3)
+SAX.startElement(normId, attr=' 
+	 ')
+SAX.endElement(normId)
+SAX.characters( , 1)
+SAX.comment( PBM serializing back )
+SAX.characters(
+, 1)
+SAX.endElement(doc)
+SAX.endDocument()

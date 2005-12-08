@@ -1,0 +1,31 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://www.wapforum.org/DTD/wml_1.1.xml)
+SAX.externalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://www.wapforum.org/DTD/wml_1.1.xml)
+SAX.startElementNs(wml, NULL, NULL, 0, 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(card, NULL, NULL, 0, 2, 0, id='card...', 5, title='Rubr...', 15)
+SAX.characters(
+	, 2)
+SAX.startElementNs(p, NULL, NULL, 0, 0, 0)
+SAX.characters(
+		, 3)
+SAX.startElementNs(a, NULL, NULL, 0, 1, 0, href='rubm...', 30)
+SAX.characters(Cin, 3)
+SAX.characters(é, 2)
+SAX.characters(ma, 2)
+SAX.endElementNs(a, NULL, NULL)
+SAX.startElementNs(br, NULL, NULL, 0, 0, 0)
+SAX.endElementNs(br, NULL, NULL)
+SAX.characters(
+	, 2)
+SAX.endElementNs(p, NULL, NULL)
+SAX.characters(
+
+, 2)
+SAX.endElementNs(card, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(wml, NULL, NULL)
+SAX.endDocument()

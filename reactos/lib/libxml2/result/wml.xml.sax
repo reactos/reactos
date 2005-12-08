@@ -1,0 +1,31 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://www.wapforum.org/DTD/wml_1.1.xml)
+SAX.externalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://www.wapforum.org/DTD/wml_1.1.xml)
+SAX.startElement(wml)
+SAX.characters(
+  , 3)
+SAX.startElement(card, id='card1', title='Rubriques 75008')
+SAX.characters(
+	, 2)
+SAX.startElement(p)
+SAX.characters(
+		, 3)
+SAX.startElement(a, href='rubmenu.asp?CP=75008&#38;RB=01')
+SAX.characters(Cin, 3)
+SAX.characters(é, 2)
+SAX.characters(ma, 2)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+	, 2)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.endElement(card)
+SAX.characters(
+, 1)
+SAX.endElement(wml)
+SAX.endDocument()

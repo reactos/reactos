@@ -1,0 +1,517 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(ultramode, NULL, NULL, 0, 0, 0)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(100 Mbit/s on Fibre to the hom, 31)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-06 14:39:59, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(CmdrTaco, 8)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(wouldn't-it-be-nice, 19)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(internet, 8)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(20, 2)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicinternet.jpg, 17)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Gimp 1.2 Preview, 16)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-06 14:38:40, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(CmdrTaco, 8)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(stuff-to-read, 13)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(gimp, 4)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(12, 2)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicgimp.gif, 13)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Sony's AIBO robot Sold Out, 26)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-06 14:32:51, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(CmdrTaco, 8)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(stuff-to-see, 12)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(tech, 4)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(10, 2)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topictech2.jpg, 14)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Ask Slashdot: Another Word for, 40)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/askslashdo, 54)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-05 20:00:00, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(Cliff, 5)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(hacker-vs-cracker, 17)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(news, 4)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(385, 3)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(askslashdot, 11)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicnews.gif, 13)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Corel Linux FAQ, 15)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-05 18:42:06, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(CmdrTaco, 8)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(stuff-to-read, 13)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(corel, 5)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(164, 3)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topiccorel.gif, 14)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Upside downsides MP3.COM., 25)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-05 15:56:45, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(CmdrTaco, 8)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(stuff-to-think-about, 20)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(music, 5)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(48, 2)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicmusic.gif, 14)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(2 Terabits of Bandwidth, 23)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-05 15:53:43, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(CmdrTaco, 8)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(faster-porn, 11)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(internet, 8)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(66, 2)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicinternet.jpg, 17)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Suppression of cold fusion res, 36)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-04 23:12:29, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(Hemos, 5)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(possibly-probably, 17)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(science, 7)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(217, 3)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicscience.gif, 16)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(California Gov. Halts Wage Inf, 36)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 50)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-04 23:05:34, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(Hemos, 5)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(woo-hoo!, 8)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(usa, 3)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(16, 2)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicus.gif, 11)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+ , 2)
+SAX.startElementNs(story, NULL, NULL, 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, NULL, 0, 0, 0)
+SAX.characters(Red Hat Announces IPO, 21)
+SAX.endElementNs(title, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, NULL, 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(url, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(time, NULL, NULL, 0, 0, 0)
+SAX.characters(1999-06-04 19:30:18, 19)
+SAX.endElementNs(time, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(author, NULL, NULL, 0, 0, 0)
+SAX.characters(Justin, 6)
+SAX.endElementNs(author, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(department, NULL, NULL, 0, 0, 0)
+SAX.characters(details-sketchy, 15)
+SAX.endElementNs(department, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(topic, NULL, NULL, 0, 0, 0)
+SAX.characters(redhat, 6)
+SAX.endElementNs(topic, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(comments, NULL, NULL, 0, 0, 0)
+SAX.characters(155, 3)
+SAX.endElementNs(comments, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(section, NULL, NULL, 0, 0, 0)
+SAX.characters(articles, 8)
+SAX.endElementNs(section, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.startElementNs(image, NULL, NULL, 0, 0, 0)
+SAX.characters(topicredhat.gif, 15)
+SAX.endElementNs(image, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(story, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(ultramode, NULL, NULL)
+SAX.endDocument()

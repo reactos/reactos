@@ -1,0 +1,11 @@
+0 1 x 0 0
+1 14 #text 0 1 
+   
+1 8 #comment 0 1  Simple test of including another text document 
+1 14 #text 0 1 
+   
+1 3 #text 0 1 test with accents in ISO-8859-1: À Á é è
+
+1 14 #text 0 1 
+
+0 15 x 0 0

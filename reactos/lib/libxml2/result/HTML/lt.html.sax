@@ -1,0 +1,19 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, name='Author', content='Root &lt;root@aol.com&gt;')
+SAX.endElement(meta)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

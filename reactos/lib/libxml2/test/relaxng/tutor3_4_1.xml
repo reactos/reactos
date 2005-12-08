@@ -1,0 +1,4 @@
+<addressBook>
+  <card name="foo" email="bar"/>
+  <card givenName="d" familyName="v" email="bar"/>
+</addressBook>

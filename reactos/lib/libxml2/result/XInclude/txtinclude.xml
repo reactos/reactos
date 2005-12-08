@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<x xmlns:xinclude="http://www.w3.org/2001/XInclude">
+   <!-- Simple test of including another text document -->
+   this is some text in ASCII
+
+</x>

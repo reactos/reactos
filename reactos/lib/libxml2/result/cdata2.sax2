@@ -1,0 +1,18 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(collection, NULL, NULL, 0, 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(test, NULL, NULL, 0, 0, 0)
+SAX.pcdata(
+    <![CDATA[abc], 18)
+SAX.characters(], 1)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.pcdata(
+  , 3)
+SAX.endElementNs(test, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(collection, NULL, NULL)
+SAX.endDocument()

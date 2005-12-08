@@ -1,0 +1,192 @@
+--------------------------------------------------------------------------
+GLOBALS.C
+
+105a106
+> int xmlDoValidityCheckingDefaultValue = 0;
+111,121c112,113
+< #if defined(VMS) || defined(__VMS)
+<   #define PLATFORM_VMS
+< /* int xmlDoValidityCheckingDefaultVal = 0;
+<  * int xmlSubstituteEntitiesDefaultVal = 0;
+<  */
+<   #define xmlDoValidityCheckingDefaultValue xmlDoValidityCheckingDefaultVal 
+<   #define xmlSubstituteEntitiesDefaultValue xmlSubstituteEntitiesDefaultVal 
+< #else
+<   int xmlDoValidityCheckingDefaultValue = 0;
+<   int xmlSubstituteEntitiesDefaultValue = 0;
+< #endif
+---
+> int xmlSubstituteEntitiesDefaultValue = 0;
+> 
+289,291d280
+< #ifdef PLATFORM_VMS
+<     gs->xmlDoValidityCheckingDefaultVal = 0;
+< #else
+293,294d281
+< #endif
+< 
+316,318d302
+< #ifdef PLATFORM_VMS
+<     gs->xmlSubstituteEntitiesDefaultVal = 0;
+< #else
+320d303
+< #endif
+404,419c387,390
+< #ifdef PLATFORM_VMS
+<   extern int xmlDoValidityCheckingDefaultVal;
+<   #undef     xmlDoValidityCheckingDefaultVal
+<   int *
+<   __xmlDoValidityCheckingDefVal(void) {
+<     if (IS_MAIN_THREAD)
+< 	return (&xmlDoValidityCheckingDefaultVal);
+<     else
+< 	return (&xmlGetGlobalState()->xmlDoValidityCheckingDefaultVal);
+<   }
+<   #define __xmlDoValidityCheckingDefaultValue __xmlDoValidityCheckingDefVal
+< #else
+<   extern int xmlDoValidityCheckingDefaultValue;
+<   #undef	xmlDoValidityCheckingDefaultValue
+<   int *
+<   __xmlDoValidityCheckingDefaultValue(void) {
+---
+> extern int xmlDoValidityCheckingDefaultValue;
+> #undef	xmlDoValidityCheckingDefaultValue
+> int *
+> __xmlDoValidityCheckingDefaultValue(void) {
+424,425c395
+<   }
+< #endif
+---
+> }
+577,592c547,550
+< #ifdef PLATFORM_VMS
+<   extern int xmlSubstituteEntitiesDefaultVal;
+<   #undef     xmlSubstituteEntitiesDefaultVal
+<   int *
+<   __xmlSubsEntitiesDefaultValue(void) {
+<     if (IS_MAIN_THREAD)
+< 	return (&xmlSubstituteEntitiesDefaultVal);
+<     else
+< 	return (&xmlGetGlobalState()->xmlSubstituteEntitiesDefaultVal);
+<   }
+<   #define __xmlSubstituteEntitiesDefaultValue __xmlSubsEntitiesDefaultValue
+< #else
+<   extern int xmlSubstituteEntitiesDefaultValue;
+<   #undef	xmlSubstituteEntitiesDefaultValue
+<   int *
+<   __xmlSubstituteEntitiesDefaultValue(void) {
+---
+> extern int xmlSubstituteEntitiesDefaultValue;
+> #undef	xmlSubstituteEntitiesDefaultValue
+> int *
+> __xmlSubstituteEntitiesDefaultValue(void) {
+597,598c555
+<   }
+< #endif
+---
+> }
+
+
+--------------------------------------------------------------------------
+TRIO.C
+113,116d112
+< #if defined(VMS) || defined(__VMS)
+< # include <unistd.h>
+< #endif /* Platform is VMS */
+< 
+123d118
+< 
+
+
+--------------------------------------------------------------------------
+GLOBALS.H
+78,86c78,79
+< #if defined(VMS) || defined(__VMS)
+<         int xmlSubstituteEntitiesDefaultVal;    /* 31 character name limit */
+<         int xmlDoValidityCheckingDefaultVal;
+< #define xmlSubstituteEntitiesDefaultValue       xmlSubstituteEntitiesDefaultVal
+< #define xmlDoValidityCheckingDefaultValue       xmlDoValidityCheckingDefaultVal
+< #else
+<         int xmlSubstituteEntitiesDefaultValue;
+<         int xmlDoValidityCheckingDefaultValue;
+< #endif
+---
+> 	int xmlSubstituteEntitiesDefaultValue;
+> 	int xmlDoValidityCheckingDefaultValue;
+211,226c204,209
+< #if defined(VMS) || defined(__VMS)
+<   #ifdef LIBXML_THREAD_ENABLED
+<   extern int *__xmlDoValidityCheckingDefaultVal(void);
+<   #define xmlDoValidityCheckingDefaultVal \
+<   (*(__xmlDoValidityCheckingDefaultVal()))
+<   #else
+<   LIBXML_DLL_IMPORT extern int xmlDoValidityCheckingDefaultVal;
+<   #endif
+< #else
+<   #ifdef LIBXML_THREAD_ENABLED
+<   extern int *__xmlDoValidityCheckingDefaultValue(void);
+<   #define xmlDoValidityCheckingDefaultValue \
+<   (*(__xmlDoValidityCheckingDefaultValue()))
+<   #else
+<   LIBXML_DLL_IMPORT extern int xmlDoValidityCheckingDefaultValue;
+<   #endif
+---
+> #ifdef LIBXML_THREAD_ENABLED
+> extern int *__xmlDoValidityCheckingDefaultValue(void);
+> #define xmlDoValidityCheckingDefaultValue \
+> (*(__xmlDoValidityCheckingDefaultValue()))
+> #else
+> LIBXML_DLL_IMPORT extern int xmlDoValidityCheckingDefaultValue;
+317,332c300,305
+< #if defined(VMS) || defined(__VMS)
+<   #ifdef LIBXML_THREAD_ENABLED
+<   extern int *__xmlSubsEntitiesDefaultValue(void);
+<   #define xmlSubsEntitiesDefaultValue \
+<   (*(__xmlSubsEntitiesDefaultValue()))
+<   #else
+<   LIBXML_DLL_IMPORT extern int xmlSubsEntitiesDefaultValue;
+<   #endif
+< #else
+<   #ifdef LIBXML_THREAD_ENABLED
+<   extern int *__xmlSubstituteEntitiesDefaultValue(void);
+<   #define xmlSubstituteEntitiesDefaultValue \
+<   (*(__xmlSubstituteEntitiesDefaultValue()))
+<   #else
+<   LIBXML_DLL_IMPORT extern int xmlSubstituteEntitiesDefaultValue;
+<   #endif
+---
+> #ifdef LIBXML_THREAD_ENABLED
+> extern int *__xmlSubstituteEntitiesDefaultValue(void);
+> #define xmlSubstituteEntitiesDefaultValue \
+> (*(__xmlSubstituteEntitiesDefaultValue()))
+> #else
+> LIBXML_DLL_IMPORT extern int xmlSubstituteEntitiesDefaultValue;
+
+
+--------------------------------------------------------------------------
+XMLIO.H
+79,82d78
+< #if defined(VMS) || defined(__VMS)
+< void	xmlRegisterDefInputCallbacks		(void);
+< #define xmlRegisterDefaultInputCallbacks xmlRegisterDefInputCallbacks
+< #else
+84d79
+< #endif
+130,133d124
+< #if defined(VMS) || defined(__VMS)
+< void	xmlRegisterDefOutputCallbacks(void);
+< #define xmlRegisterDefaultOutputCallbacks xmlRegisterDefOutputCallbacks
+< #else
+135,136d125
+< #endif
+< 
+
+--------------------------------------------------------------------------
+XPATHINTERNALS.H
+433,436d432
+< #if defined(VMS) || defined(__VMS)
+< void		   xmlXPathRegisteredVarsCleanup(xmlXPathContextPtr ctxt);
+< #define xmlXPathRegisteredVariablesCleanup xmlXPathRegisteredVarsCleanup
+< #else
+438d433
+< #endif

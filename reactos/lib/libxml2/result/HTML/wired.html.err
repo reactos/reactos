@@ -1,0 +1,249 @@
+./test/HTML/wired.html:6: HTML parser error : htmlParseEntityRef: expecting ';'
+<FORM METHOD=GET ACTION="http://nsads.hotwired.com/event.ng/Type=click&ProfileID
+                                                                               ^
+./test/HTML/wired.html:6: HTML parser error : htmlParseEntityRef: expecting ';'
+D=GET ACTION="http://nsads.hotwired.com/event.ng/Type=click&ProfileID=9688&RunID
+                                                                               ^
+./test/HTML/wired.html:6: HTML parser error : htmlParseEntityRef: expecting ';'
+N="http://nsads.hotwired.com/event.ng/Type=click&ProfileID=9688&RunID=14074&AdID
+                                                                               ^
+./test/HTML/wired.html:6: HTML parser error : htmlParseEntityRef: expecting ';'
+s.hotwired.com/event.ng/Type=click&ProfileID=9688&RunID=14074&AdID=22584&GroupID
+                                                                               ^
+./test/HTML/wired.html:6: HTML parser error : htmlParseEntityRef: expecting ';'
+com/event.ng/Type=click&ProfileID=9688&RunID=14074&AdID=22584&GroupID=1&FamilyID
+                                                                               ^
+./test/HTML/wired.html:6: HTML parser error : htmlParseEntityRef: expecting ';'
+pe=click&ProfileID=9688&RunID=14074&AdID=22584&GroupID=1&FamilyID=2684&TagValues
+                                                                               ^
+./test/HTML/wired.html:52: HTML parser error : htmlParseEntityRef: expecting ';'
+" align="RIGHT"><a href="http://nsads.hotwired.com/event.ng/Type=click&ProfileID
+                                                                               ^
+./test/HTML/wired.html:52: HTML parser error : htmlParseEntityRef: expecting ';'
+GHT"><a href="http://nsads.hotwired.com/event.ng/Type=click&ProfileID=5597&RunID
+                                                                               ^
+./test/HTML/wired.html:52: HTML parser error : htmlParseEntityRef: expecting ';'
+f="http://nsads.hotwired.com/event.ng/Type=click&ProfileID=5597&RunID=17167&AdID
+                                                                               ^
+./test/HTML/wired.html:52: HTML parser error : htmlParseEntityRef: expecting ';'
+s.hotwired.com/event.ng/Type=click&ProfileID=5597&RunID=17167&AdID=22588&GroupID
+                                                                               ^
+./test/HTML/wired.html:52: HTML parser error : htmlParseEntityRef: expecting ';'
+com/event.ng/Type=click&ProfileID=5597&RunID=17167&AdID=22588&GroupID=1&FamilyID
+                                                                               ^
+./test/HTML/wired.html:52: HTML parser error : htmlParseEntityRef: expecting ';'
+pe=click&ProfileID=5597&RunID=17167&AdID=22588&GroupID=1&FamilyID=3228&TagValues
+                                                                               ^
+./test/HTML/wired.html:70: HTML parser error : Tag nobr invalid
+<td bgcolor="#FF0000" align="left" valign="center"><nobr><img src="http://static
+                                                        ^
+./test/HTML/wired.html:89: HTML parser error : htmlParseEntityRef: expecting ';'
+on value="http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&Filter
+                                                                               ^
+./test/HTML/wired.html:89: HTML parser error : htmlParseEntityRef: expecting ';'
+d.com/search97/s97.vts?Action=FilterSearch&Filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:89: HTML parser error : htmlParseEntityRef: expecting ';'
+ction=FilterSearch&Filter=docs_filter.hts&ResultTemplate=vignette.hts&Collection
+                                                                               ^
+./test/HTML/wired.html:89: HTML parser error : htmlParseEntityRef: expecting ';'
+Filter=docs_filter.hts&ResultTemplate=vignette.hts&Collection=vignette&QueryMode
+                                                                               ^
+./test/HTML/wired.html:89: HTML parser error : htmlParseEntityRef: expecting ';'
+ter.hts&ResultTemplate=vignette.hts&Collection=vignette&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:90: HTML parser error : htmlParseEntityRef: expecting ';'
+on value="http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&Filter
+                                                                               ^
+./test/HTML/wired.html:90: HTML parser error : htmlParseEntityRef: expecting ';'
+d.com/search97/s97.vts?Action=FilterSearch&Filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:90: HTML parser error : htmlParseEntityRef: expecting ';'
+tion=FilterSearch&Filter=docs_filter.hts&ResultTemplate=webmonkey.hts&Collection
+                                                                               ^
+./test/HTML/wired.html:90: HTML parser error : htmlParseEntityRef: expecting ';'
+lter=docs_filter.hts&ResultTemplate=webmonkey.hts&Collection=webmonkey&QueryMode
+                                                                               ^
+./test/HTML/wired.html:90: HTML parser error : htmlParseEntityRef: expecting ';'
+r.hts&ResultTemplate=webmonkey.hts&Collection=webmonkey&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:91: HTML parser error : htmlParseEntityRef: expecting ';'
+="http://search.hotwired.com/search97/s97.vts?collection=webmonkey_guides&Action
+                                                                               ^
+./test/HTML/wired.html:91: HTML parser error : htmlParseEntityRef: expecting ';'
+ired.com/search97/s97.vts?collection=webmonkey_guides&Action=FilterSearch&filter
+                                                                               ^
+./test/HTML/wired.html:91: HTML parser error : htmlParseEntityRef: expecting ';'
+ction=webmonkey_guides&Action=FilterSearch&filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:91: HTML parser error : htmlParseEntityRef: expecting ';'
+ilterSearch&filter=docs_filter.hts&ResultTemplate=webmonkey_guides.hts&QueryMode
+                                                                               ^
+./test/HTML/wired.html:91: HTML parser error : htmlParseEntityRef: expecting ';'
+ter=docs_filter.hts&ResultTemplate=webmonkey_guides.hts&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:92: HTML parser error : htmlParseEntityRef: expecting ';'
+on value="http://search.hotwired.com/search97/s97.vts?collection=hotwired&Action
+                                                                               ^
+./test/HTML/wired.html:92: HTML parser error : htmlParseEntityRef: expecting ';'
+rch.hotwired.com/search97/s97.vts?collection=hotwired&Action=FilterSearch&filter
+                                                                               ^
+./test/HTML/wired.html:92: HTML parser error : htmlParseEntityRef: expecting ';'
+ts?collection=hotwired&Action=FilterSearch&filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:92: HTML parser error : htmlParseEntityRef: expecting ';'
+ilterSearch&filter=docs_filter.hts&ResultTemplate=hotwired_archive.hts&QueryMode
+                                                                               ^
+./test/HTML/wired.html:92: HTML parser error : htmlParseEntityRef: expecting ';'
+ter=docs_filter.hts&ResultTemplate=hotwired_archive.hts&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:93: HTML parser error : htmlParseEntityRef: expecting ';'
+on value="http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&Filter
+                                                                               ^
+./test/HTML/wired.html:93: HTML parser error : htmlParseEntityRef: expecting ';'
+d.com/search97/s97.vts?Action=FilterSearch&Filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:93: HTML parser error : htmlParseEntityRef: expecting ';'
+ction=FilterSearch&Filter=docs_filter.hts&ResultTemplate=magazine.hts&Collection
+                                                                               ^
+./test/HTML/wired.html:93: HTML parser error : htmlParseEntityRef: expecting ';'
+Filter=docs_filter.hts&ResultTemplate=magazine.hts&Collection=magazine&QueryMode
+                                                                               ^
+./test/HTML/wired.html:93: HTML parser error : htmlParseEntityRef: expecting ';'
+ter.hts&ResultTemplate=magazine.hts&Collection=magazine&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:94: HTML parser error : htmlParseEntityRef: expecting ';'
+on value="http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&Filter
+                                                                               ^
+./test/HTML/wired.html:94: HTML parser error : htmlParseEntityRef: expecting ';'
+d.com/search97/s97.vts?Action=FilterSearch&Filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:94: HTML parser error : htmlParseEntityRef: expecting ';'
+tion=FilterSearch&Filter=docs_filter.hts&ResultTemplate=animation.hts&Collection
+                                                                               ^
+./test/HTML/wired.html:94: HTML parser error : htmlParseEntityRef: expecting ';'
+lter=docs_filter.hts&ResultTemplate=animation.hts&Collection=animation&QueryMode
+                                                                               ^
+./test/HTML/wired.html:94: HTML parser error : htmlParseEntityRef: expecting ';'
+r.hts&ResultTemplate=animation.hts&Collection=animation&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:95: HTML parser error : htmlParseEntityRef: expecting ';'
+option value="http://search.hotwired.com/search97/s97.vts?collection=suck&Action
+                                                                               ^
+./test/HTML/wired.html:95: HTML parser error : htmlParseEntityRef: expecting ';'
+/search.hotwired.com/search97/s97.vts?collection=suck&Action=FilterSearch&filter
+                                                                               ^
+./test/HTML/wired.html:95: HTML parser error : htmlParseEntityRef: expecting ';'
+97.vts?collection=suck&Action=FilterSearch&filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:95: HTML parser error : htmlParseEntityRef: expecting ';'
+uck&Action=FilterSearch&filter=docs_filter.hts&ResultTemplate=suck.hts&QueryMode
+                                                                               ^
+./test/HTML/wired.html:95: HTML parser error : htmlParseEntityRef: expecting ';'
+erSearch&filter=docs_filter.hts&ResultTemplate=suck.hts&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:96: HTML parser error : htmlParseEntityRef: expecting ';'
+lue="http://search.hotwired.com/search97/s97.vts?collection=uber_hotwired&Action
+                                                                               ^
+./test/HTML/wired.html:96: HTML parser error : htmlParseEntityRef: expecting ';'
+otwired.com/search97/s97.vts?collection=uber_hotwired&Action=FilterSearch&filter
+                                                                               ^
+./test/HTML/wired.html:96: HTML parser error : htmlParseEntityRef: expecting ';'
+llection=uber_hotwired&Action=FilterSearch&filter=docs_filter.hts&ResultTemplate
+                                                                               ^
+./test/HTML/wired.html:96: HTML parser error : htmlParseEntityRef: expecting ';'
+n=FilterSearch&filter=docs_filter.hts&ResultTemplate=uber_hotwired.hts&QueryMode
+                                                                               ^
+./test/HTML/wired.html:96: HTML parser error : htmlParseEntityRef: expecting ';'
+filter=docs_filter.hts&ResultTemplate=uber_hotwired.hts&QueryMode=Internet&Query
+                                                                               ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+ <option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&O
+                                               ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+ <option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&O
+                                                    ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+ <option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&O
+                                                           ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+ <option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&O
+                                                                 ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+ <option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&O
+                                                                       ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+ <option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&O
+                                                                            ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+option value="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&OPs
+                                                                               ^
+./test/HTML/wired.html:97: HTML parser error : htmlParseEntityRef: expecting ';'
+lue="http://www.hotbot.com/?SM=MC&DV=0&LG=any&RD=RG&DC=10&DE=2&_v=2&OPs=MDRTP&MT
+                                                                               ^
+./test/HTML/wired.html:170: HTML parser error : Unexpected end tag : form
+	</tr>    </form>
+	                ^
+./test/HTML/wired.html:248: HTML parser error : htmlParseEntityRef: expecting ';'
+MG SRC="http://barnesandnoble.bfast.com/booklink/serve?sourceid=383471&is_search
+                                                                               ^
+./test/HTML/wired.html:265: HTML parser error : Unexpected end tag : form
+        </tr>  </form>
+                      ^
+./test/HTML/wired.html:346: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:374: HTML parser error : htmlParseEntityRef: no name
+a, sans-serif"><b><a href="/news/commentarySection/0,1292,31926,00.html">Rants &
+                                                                               ^
+./test/HTML/wired.html:374: HTML parser error : Opening and ending tag mismatch: td and font
+Readers on Apple's G4 ... AOL's passwords ... MS vs. Linux.</font><br><br>  </td
+                                                                               ^
+./test/HTML/wired.html:374: HTML parser error : Opening and ending tag mismatch: td and font
+Readers on Apple's G4 ... AOL's passwords ... MS vs. Linux.</font><br><br>  </td
+                                                                               ^
+./test/HTML/wired.html:402: HTML parser error : Opening and ending tag mismatch: a and font
+w.vignette.com/" style="text-decoration:none"><font color="#000000">Vignette</a>
+                                                                               ^
+./test/HTML/wired.html:407: HTML parser error : htmlParseEntityRef: expecting ';'
+ervlet/appservlet?from=/wired/sprint/&template=/security/security.html&SITE=
+                                              ^
+./test/HTML/wired.html:407: HTML parser error : htmlParseEntityRef: expecting ';'
+ervlet/appservlet?from=/wired/sprint/&template=/security/security.html&SITE=
+                                                                           ^
+./test/HTML/wired.html:408: HTML parser error : htmlParseEntityRef: expecting ';'
+wired.com&BANNER=Sprint" style="text-decoration:none"><font color="#000000">Spri
+                ^
+./test/HTML/wired.html:408: HTML parser error : Opening and ending tag mismatch: a and font
+com&BANNER=Sprint" style="text-decoration:none"><font color="#000000">Sprint</a>
+                                                                               ^
+./test/HTML/wired.html:408: HTML parser error : End tag : expected '>'
+=Sprint" style="text-decoration:none"><font color="#000000">Sprint</a></i></font
+                                                                               ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:414: HTML parser error : Opening and ending tag mismatch: td and font
+</td>
+     ^
+./test/HTML/wired.html:432: HTML parser error : htmlParseEntityRef: expecting ';'
+href="http://www.lycos.com/news/flash/hitlerbunker.html?v=wn1015&lpv=1">Lycos</a
+                                                                    ^

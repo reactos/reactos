@@ -1,0 +1,169 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(doc, , )
+SAX.attributeDecl(normId, attr, 8, 3, NULL, ...)
+SAX.externalSubset(doc, , )
+SAX.startElementNs(doc, NULL, NULL, 0, 0, 0)
+SAX.characters(
+  , 3)
+SAX.comment( no normalization )
+SAX.characters(
+  , 3)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='   '...', 3)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='   f...', 13)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='  fo...', 8)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr=' foo...', 9)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='foob...', 8)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr=' &#3...', 7)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='   f...', 17)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='  fo...', 13)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='&#38...', 13)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='foob...', 13)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr=' < ...', 3)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='   f...', 13)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='  fo...', 9)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='<foo...', 9)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='foob...', 9)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(norm, NULL, NULL, 0, 1, 0, attr='  
+...', 6)
+SAX.endElementNs(norm, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.comment( normalization )
+SAX.characters(
+  , 3)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr=''/>
+...', 0)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foo ...', 7)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foob...', 6)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foo ...', 7)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foob...', 6)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='&#38...', 5)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foo&...', 11)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foob...', 11)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='&#38...', 12)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foob...', 12)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='<...', 1)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foo<...', 7)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foob...', 7)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='<foo...', 8)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.getEntity(lt)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='foob...', 8)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(normId, NULL, NULL, 0, 1, 0, attr='
+	...', 3)
+SAX.endElementNs(normId, NULL, NULL)
+SAX.characters( , 1)
+SAX.comment( PBM serializing back )
+SAX.characters(
+, 1)
+SAX.endElementNs(doc, NULL, NULL)
+SAX.endDocument()

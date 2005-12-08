@@ -1,0 +1,3 @@
+./test/VC/ElementValid:3: validity error : Validation failed: no DTD found !
+<doc/>
+    ^

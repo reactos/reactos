@@ -1,0 +1,38 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(HTML, -//W3C//DTD HTML 4.0 Transitional//EN, http://www.w3.org/TR/REC-html40/loose.dtd)
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+  , 3)
+SAX.startElement(title)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(ul)
+SAX.characters(
+, 1)
+SAX.startElement(li)
+SAX.characters(First item
+, 11)
+SAX.endElement(li)
+SAX.startElement(li)
+SAX.characters(Second item, closes the first , 34)
+SAX.endElement(li)
+SAX.endElement(ul)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.endElement(body)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<ELEMENTS xmlns="urn:test:foo"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  	xsi:schemaLocation="urn:test:foo union_1.xsd">
+	5
+</ELEMENTS>

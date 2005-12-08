@@ -1,0 +1,53 @@
+
+========================
+Expression: /1/2/3
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT image
+    ATTRIBUTE href
+      TEXT
+        content=linus.gif
+
+========================
+Expression: element(/1/2/3)
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT image
+    ATTRIBUTE href
+      TEXT
+        content=linus.gif
+
+========================
+Expression: element(foo)element(/1/2/3)
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT image
+    ATTRIBUTE href
+      TEXT
+        content=linus.gif
+
+========================
+Expression: element(/1/2/3)element(foo)
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT image
+    ATTRIBUTE href
+      TEXT
+        content=linus.gif
+
+========================
+Expression: chapter1/3
+Object is a Node Set :
+Set contains 0 nodes:
+
+========================
+Expression: element(chapter1/3)
+Object is empty (NULL)
+
+========================
+Expression: element(foo)element(chapter1/3)
+Object is empty (NULL)
+
+========================
+Expression: element(chapter1/3)element(foo)
+Object is empty (NULL)

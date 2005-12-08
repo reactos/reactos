@@ -1,0 +1,3 @@
+./test/xmlid/id_tst2.xml:1: namespace error : Namespace prefix n on foo is not defined
+<n:foo xml:id="bar"/>
+                   ^

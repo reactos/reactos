@@ -1,0 +1,613 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(svg, -//W3C//DTD SVG April 1999//EN, http://www.w3.org/Graphics/SVG/svg-19990412.dtd)
+SAX.externalSubset(svg, -//W3C//DTD SVG April 1999//EN, http://www.w3.org/Graphics/SVG/svg-19990412.dtd)
+SAX.startElementNs(svg, NULL, NULL, 0, 2, 0, width='242p...', 5, height='383p...', 5)
+SAX.characters(
+, 1)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='stro...', 15)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 69,...', 337)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 142...', 190)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 127...', 71)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 178...', 128)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 56,...', 273)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 74,...', 203)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 212...', 448)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 151...', 208)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 78,...', 106)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 21,...', 90)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 71,...', 150)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 139...', 101)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 105...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 141...', 70)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 98,...', 156)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 97,...', 156)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 147...', 238)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 85,...', 69)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 86,...', 217)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 93,...', 65)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 144...', 70)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 57,...', 294)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 83,...', 194)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 109...', 70)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 122...', 80)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 78,...', 156)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 82,...', 284)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 142...', 239)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 115...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 114...', 80)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 102...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 51,...', 154)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 2,3...', 120)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 7,3...', 154)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 11,...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 13,...', 97)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 202...', 152)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 151...', 168)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 91,...', 202)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 31,...', 96)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 147...', 76)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 181...', 91)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 132...', 80)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 146...', 80)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 99,...', 78)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 20,...', 105)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 78,...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 93,...', 92)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 105...', 70)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 122...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 115...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 116...', 260)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 74,...', 245)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 133...', 104)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 133...', 64)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 121...', 334)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 79,...', 70)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 91,...', 80)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 110...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 126...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 30,...', 266)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 44,...', 319)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 13,...', 84)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 10,...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 9,2...', 45)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 33,...', 385)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 7,3...', 51)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 44,...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 32,...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 139...', 128)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 208...', 360)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 106...', 152)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 107...', 93)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 148...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 80,...', 192)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 87,...', 55)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 85,...', 55)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 115...', 119)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 145...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 26,...', 60)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 160...', 91)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.startElementNs(g, NULL, NULL, 0, 1, 0, style='fill...', 13)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 98,...', 265)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 146...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 148...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 106...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 108...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 106...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 50,...', 144)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 147...', 231)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 155...', 102)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 112...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 78,...', 195)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 67,...', 109)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 56,...', 276)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 101...', 307)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 41,...', 116)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 32,...', 245)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 134...', 136)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 173...', 280)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 165...', 88)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 99,...', 124)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 117...', 64)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 117...', 64)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 122...', 64)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 69,...', 262)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 100...', 54)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 115...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 127...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 5,2...', 218)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 10,...', 48)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 25,...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 37,...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 49,...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 130...', 88)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 106...', 49)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 139...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 25,...', 91)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 98,...', 92)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 83,...', 56)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 155...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 153...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 152...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 68,...', 58)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 105...', 68)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 108...', 65)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 85,...', 156)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 140...', 126)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 146...', 237)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 150...', 320)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 147...', 64)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 157...', 72)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+   , 5)
+SAX.startElementNs(polyline, NULL, NULL, 0, 1, 0, verts=' 99,...', 63)
+SAX.endElementNs(polyline, NULL, NULL)
+SAX.characters( 
+, 2)
+SAX.endElementNs(g, NULL, NULL)
+SAX.endElementNs(svg, NULL, NULL)
+SAX.endDocument()

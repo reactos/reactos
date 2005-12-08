@@ -1,0 +1,5 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(doc, NULL, NULL, 0, 1, 0, attr='to n...', 27)
+SAX.endElementNs(doc, NULL, NULL)
+SAX.endDocument()

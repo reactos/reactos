@@ -1,0 +1,75 @@
+0 1 D:multistatus 0 0
+1 14 #text 0 1 
+  
+1 1 D:response 0 0
+2 14 #text 0 1 
+    
+2 1 D:prop 0 0
+3 14 #text 0 1 
+      
+3 1 D:lockdiscovery 0 0
+4 14 #text 0 1 
+        
+4 1 D:activelock 0 0
+5 14 #text 0 1 
+          
+5 1 D:locktype 0 0
+6 3 #text 0 1 write
+5 15 D:locktype 0 0
+5 14 #text 0 1 
+          
+5 1 D:lockscope 0 0
+6 3 #text 0 1 exclusive
+5 15 D:lockscope 0 0
+5 14 #text 0 1 
+          
+5 1 D:addlocks 0 0
+6 14 #text 0 1 
+            
+6 1 D:href 0 0
+7 3 #text 0 1 http://foo.com/doc/
+6 15 D:href 0 0
+6 14 #text 0 1 
+          
+5 15 D:addlocks 0 0
+5 14 #text 0 1 
+          
+5 1 D:owner 0 0
+6 3 #text 0 1 Jane Smith
+5 15 D:owner 0 0
+5 14 #text 0 1 
+          
+5 1 D:timeout 0 0
+6 3 #text 0 1 Infinite
+5 15 D:timeout 0 0
+5 14 #text 0 1 
+          
+5 1 D:locktoken 0 0
+6 14 #text 0 1 
+            
+6 1 D:href 0 0
+7 3 #text 0 1 iamuri:unique!!!!!
+6 15 D:href 0 0
+6 14 #text 0 1 
+          
+5 15 D:locktoken 0 0
+5 14 #text 0 1 
+        
+4 15 D:activelock 0 0
+4 14 #text 0 1 
+      
+3 15 D:lockdiscovery 0 0
+3 14 #text 0 1 
+    
+2 15 D:prop 0 0
+2 14 #text 0 1 
+    
+2 1 D:status 0 0
+3 3 #text 0 1 HTTP/1.1 200 OK
+2 15 D:status 0 0
+2 14 #text 0 1 
+  
+1 15 D:response 0 0
+1 14 #text 0 1 
+
+0 15 D:multistatus 0 0

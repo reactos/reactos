@@ -1,0 +1,3 @@
+./test/xmlid/id_tst4.xml:3: element err: validity error : ID bar already defined
+<err xml:id="bar"/>
+                 ^

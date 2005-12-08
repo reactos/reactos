@@ -1,0 +1,10 @@
+./test/schemas/hexbinary_1.xml:6: element hex: Schemas validity error : Element 'hex': '0' is not a valid value of the atomic type 'xs:hexBinary'.
+./test/schemas/hexbinary_1.xml:7: element hex: Schemas validity error : Element 'hex': '0123456789ABCDEFGH' is not a valid value of the atomic type 'xs:hexBinary'.
+./test/schemas/hexbinary_1.xml:8: element hex: Schemas validity error : Element 'hex': '+abcdef0123456789' is not a valid value of the atomic type 'xs:hexBinary'.
+./test/schemas/hexbinary_1.xml:9: element hex: Schemas validity error : Element 'hex': '-0123456789abcdef' is not a valid value of the atomic type 'xs:hexBinary'.
+./test/schemas/hexbinary_1.xml:11: element hex2: Schemas validity error : Element 'hex2': [facet 'maxLength'] The value has a length of '9'; this exceeds the allowed maximum length of '8'.
+./test/schemas/hexbinary_1.xml:11: element hex2: Schemas validity error : Element 'hex2': '112233445566778899' is not a valid value of the local atomic type.
+./test/schemas/hexbinary_1.xml:13: element hex3: Schemas validity error : Element 'hex3': [facet 'length'] The value has a length of '1'; this differs from the allowed length of '2'.
+./test/schemas/hexbinary_1.xml:13: element hex3: Schemas validity error : Element 'hex3': 'ab' is not a valid value of the local atomic type.
+./test/schemas/hexbinary_1.xml:14: element hex3: Schemas validity error : Element 'hex3': [facet 'length'] The value has a length of '3'; this differs from the allowed length of '2'.
+./test/schemas/hexbinary_1.xml:14: element hex3: Schemas validity error : Element 'hex3': '00fedc' is not a valid value of the local atomic type.

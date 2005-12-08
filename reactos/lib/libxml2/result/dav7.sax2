@@ -1,0 +1,60 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(multistatus, d, 'http://www.ietf.org/standards/dav/', 1, xmlns:d='http://www.ietf.org/standards/dav/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(href, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://www.foo.bar/container/r, 38)
+SAX.endElementNs(href, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(href, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://www.foo.bar/container/r, 38)
+SAX.endElementNs(href, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 200 OK, 15)
+SAX.endElementNs(status, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(href, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://www.foo.bar/container/, 29)
+SAX.endElementNs(href, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 420 Method Failure, 27)
+SAX.endElementNs(status, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(href, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://www.foo.bar/container/r, 38)
+SAX.endElementNs(href, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, d, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 412 Precondition Fail, 32)
+SAX.endElementNs(status, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, d, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+, 1)
+SAX.endElementNs(multistatus, d, 'http://www.ietf.org/standards/dav/')
+SAX.endDocument()

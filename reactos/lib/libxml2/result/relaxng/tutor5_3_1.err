@@ -1,0 +1,2 @@
+./test/relaxng/tutor5_3.rng:1: element element: Relax-NG parser error : Element bad has a content type error
+Relax-NG schema ./test/relaxng/tutor5_3.rng failed to compile

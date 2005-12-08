@@ -1,0 +1,64 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(RDF:RDF, xmlns:p3p='http://www.w3.org/TR/1998/WD-P3P10-syntax#proposal.DTD', xmlns:RDF='http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.characters(
+, 1)
+SAX.startElement(PROP, realm='http://www.CoolCatalog.com/catalogue/', entity='CoolCatalog', agreeID='94df1293a3e519bb', assurance='http://www.TrustUs.org')
+SAX.characters(
+  , 3)
+SAX.startElement(USES)
+SAX.characters(
+  , 3)
+SAX.startElement(STATEMENT, purp='2,3', recpnt='0', id='0', consq='a site with clothes you'd appreciate.')
+SAX.characters(
+    , 5)
+SAX.startElement(WITH)
+SAX.startElement(PREFIX, name='User.')
+SAX.characters(
+     , 6)
+SAX.startElement(REF, name='Name.First')
+SAX.endElement(REF)
+SAX.characters(
+     , 6)
+SAX.startElement(REF, name='Bdate.Year', optional='1')
+SAX.endElement(REF)
+SAX.characters(
+     , 6)
+SAX.startElement(REF, name='Gender')
+SAX.endElement(REF)
+SAX.characters(
+    , 5)
+SAX.endElement(PREFIX)
+SAX.endElement(WITH)
+SAX.characters(
+  , 3)
+SAX.endElement(STATEMENT)
+SAX.characters(
+  , 3)
+SAX.endElement(USES)
+SAX.characters(
+  , 3)
+SAX.startElement(USES)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElement(STATEMENT, action='read&#38;write', purp='0', recpnt='0', id='1')
+SAX.characters(
+    , 5)
+SAX.startElement(REF, name='User.Shipping.')
+SAX.endElement(REF)
+SAX.characters(
+  , 3)
+SAX.endElement(STATEMENT)
+SAX.characters(
+  , 3)
+SAX.endElement(USES)
+SAX.characters(
+  , 3)
+SAX.startElement(DISCLOSURE, discURI='http://www.CoolCatalog.com/PrivacyPractice.html', access='3', other='0,1')
+SAX.endElement(DISCLOSURE)
+SAX.characters(
+, 1)
+SAX.endElement(PROP)
+SAX.endElement(RDF:RDF)
+SAX.endDocument()

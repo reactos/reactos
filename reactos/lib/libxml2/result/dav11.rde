@@ -1,0 +1,60 @@
+0 1 D:prop 0 0
+1 14 #text 0 1 
+  
+1 1 D:lockdiscovery 0 0
+2 14 #text 0 1 
+    
+2 1 D:activelock 0 0
+3 14 #text 0 1 
+      
+3 1 D:locktype 0 0
+4 3 #text 0 1 write
+3 15 D:locktype 0 0
+3 14 #text 0 1 
+      
+3 1 D:lockscope 0 0
+4 3 #text 0 1 exclusive
+3 15 D:lockscope 0 0
+3 14 #text 0 1 
+      
+3 1 D:addlocks 1 0
+3 14 #text 0 1 
+      
+3 1 D:owner 0 0
+4 14 #text 0 1 
+        
+4 1 D:href 0 0
+5 3 #text 0 1 
+		http://www.ics.uci.edu/~ejw/contact.html
+		
+4 15 D:href 0 0
+4 14 #text 0 1 
+      
+3 15 D:owner 0 0
+3 14 #text 0 1 
+      
+3 1 D:timeout 0 0
+4 3 #text 0 1 Second-604800
+3 15 D:timeout 0 0
+3 14 #text 0 1 
+      
+3 1 D:locktoken 0 0
+4 14 #text 0 1 
+        
+4 1 D:href 0 0
+5 3 #text 0 1 
+	   opaquelocktoken:xyz122393481230912asdfa09s8df09s7df
+		
+4 15 D:href 0 0
+4 14 #text 0 1 
+      
+3 15 D:locktoken 0 0
+3 14 #text 0 1 
+    
+2 15 D:activelock 0 0
+2 14 #text 0 1 
+  
+1 15 D:lockdiscovery 0 0
+1 14 #text 0 1 
+
+0 15 D:prop 0 0

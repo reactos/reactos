@@ -1,0 +1,3 @@
+./test/relaxng/compare0_0.xml:2: element number: Relax-NG validity error : failed to compare type integer
+./test/relaxng/compare0_0.xml:2: element number: Relax-NG validity error : Element number failed to validate attributes
+./test/relaxng/compare0_0.xml fails to validate

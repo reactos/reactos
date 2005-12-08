@@ -1,0 +1,12 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.comment( test of hyphen and line break handling
+     some text - interrupted -
+- - - - - - - - - - - - - - - - - - - - - -
+                      this should stop here^
+
+
+)
+SAX.startElementNs(doc, NULL, NULL, 0, 0, 0)
+SAX.endElementNs(doc, NULL, NULL)
+SAX.endDocument()

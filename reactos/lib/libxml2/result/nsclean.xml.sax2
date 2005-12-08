@@ -1,0 +1,13 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(article, NULL, 'tag:foofoofoofoofoofoofoofoo', 3, xmlns='tag:foofoofoofoofoofoofoofoo', xmlns:dc='http://purl.org/dc/elements/1.1/', xmlns:dcterms='http://purl.org/dc/terms/', 0, 0)
+SAX.characters(
+, 1)
+SAX.startElementNs(content, foop, 'tag:foofoofoofoofoofoofoofoo', 2, xmlns='http://www.w3.org/1999/xhtml', xmlns:foop='tag:foofoofoofoofoofoofoofoo', 0, 0)
+SAX.characters(
+, 1)
+SAX.endElementNs(content, foop, 'tag:foofoofoofoofoofoofoofoo')
+SAX.characters(
+, 1)
+SAX.endElementNs(article, NULL, 'tag:foofoofoofoofoofoofoofoo')
+SAX.endDocument()

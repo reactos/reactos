@@ -1,0 +1,28 @@
+0 1 x 0 0
+1 14 #text 0 1 
+   
+1 8 #comment 0 1  Simple test of including another XML document 
+1 14 #text 0 1 
+   
+1 1 doc 0 0
+2 14 #text 0 1 
+
+2 1 p 0 0
+3 3 #text 0 1 something
+2 15 p 0 0
+2 14 #text 0 1 
+
+2 1 p 0 0
+3 3 #text 0 1 really
+2 15 p 0 0
+2 14 #text 0 1 
+
+2 1 p 0 0
+3 3 #text 0 1 simple
+2 15 p 0 0
+2 14 #text 0 1 
+
+1 15 doc 0 0
+1 14 #text 0 1 
+
+0 15 x 0 0

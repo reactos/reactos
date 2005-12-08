@@ -1,0 +1,5 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(diagram, testattr='test', xml:lang='en', xml:link='simple', xml:space='preserve')
+SAX.endElement(diagram)
+SAX.endDocument()

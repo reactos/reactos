@@ -1,0 +1,7 @@
+<e6 xmlns:a="http://www.w3.org" test="../baz">
+       <e7 xmlns="http://www.ietf.org">
+           <e8 xmlns="" a:foo="bar">
+               <e9 xmlns:a="http://www.ietf.org" attr="default"></e9>
+           </e8>
+       </e7>
+   </e6>

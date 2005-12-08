@@ -1,0 +1,27 @@
+
+========================
+Expression: xpointer(id("chapter1"))
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter1
+
+========================
+Expression: xpointer(//*[@id="chapter1"])
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter1
+
+========================
+Expression: xpointer(id("chapter1"))xpointer(//*[@id="chapter1"])
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter1

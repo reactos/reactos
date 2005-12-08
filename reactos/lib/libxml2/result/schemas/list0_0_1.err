@@ -1,0 +1,1 @@
+./test/schemas/list0_1.xml:1: element test: Schemas validity error : Element 'test': Missing child element(s). Expected is ( string ).

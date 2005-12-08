@@ -1,0 +1,221 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(RDF, rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 2, xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#', xmlns='http://my.netscape.com/rdf/simple/0.9/', 0, 0)
+SAX.characters(
+
+  , 4)
+SAX.startElementNs(channel, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Slashdot:News for Nerds. Stuff, 44)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/, 20)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(description, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(News for Nerds.  Stuff that Ma, 35)
+SAX.endElementNs(description, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(channel, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+
+  , 4)
+SAX.startElementNs(image, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Slashdot, 8)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(url, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/images/sla, 41)
+SAX.endElementNs(url, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org, 19)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(image, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(100 Mbit/s on Fibre to the hom, 31)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Gimp 1.2 Preview, 16)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Sony's AIBO robot Sold Out, 26)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Ask Slashdot: Another Word for, 40)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/askslashdo, 54)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Corel Linux FAQ, 15)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Upside downsides MP3.COM., 25)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(2 Terabits of Bandwidth, 23)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Suppression of cold fusion res, 36)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(California Gov. Halts Wage Inf, 36)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 50)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  
+  , 6)
+SAX.startElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(Red Hat Announces IPO, 21)
+SAX.endElementNs(title, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/', 0, 0, 0)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElementNs(link, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(item, NULL, 'http://my.netscape.com/rdf/simple/0.9/')
+SAX.characters(
+, 1)
+SAX.endElementNs(RDF, rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+SAX.endDocument()

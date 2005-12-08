@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<glossary><title>Example Glossary</title><para>
+This is not a real glossary, it's just an example.
+</para><!-- ... --><glossdiv><title>E</title><glossentry id="xml"><glossterm>Extensible Markup Language</glossterm><acronym>XML</acronym><glossdef><para>Some reasonable definition here.</para><glossseealso otherterm="sgml"/></glossdef></glossentry></glossdiv><!-- ... --><glossdiv><title>S</title><glossentry><glossterm>SGML</glossterm><glosssee otherterm="sgml"/></glossentry><glossentry id="sgml"><glossterm>Standard Generalized
+  Markup Language</glossterm><acronym>SGML</acronym><abbrev>ISO 8879:1986</abbrev><glossdef><para>Some reasonable definition here.</para><glossseealso otherterm="xml"/></glossdef></glossentry></glossdiv></glossary>

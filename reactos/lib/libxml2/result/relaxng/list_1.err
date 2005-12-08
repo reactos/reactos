@@ -1,0 +1,2 @@
+./test/relaxng/list_1.xml:1: element elem1: Relax-NG validity error : Element elem1 failed to validate attributes
+./test/relaxng/list_1.xml fails to validate

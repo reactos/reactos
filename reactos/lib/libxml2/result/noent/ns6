@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<root>
+  <foo xmlns="http://abc"/>
+  <bar/>
+</root>

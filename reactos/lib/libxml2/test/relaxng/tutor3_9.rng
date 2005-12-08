@@ -1,0 +1,5 @@
+<element name="card" xmlns="http://relaxng.org/ns/structure/1.0">
+  <attribute name="email">
+    <text/>
+  </attribute>
+</element>

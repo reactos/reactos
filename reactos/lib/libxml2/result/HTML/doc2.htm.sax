@@ -1,0 +1,69 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(HTML, -//W3C//DTD HTML 4.0 Transitional//EN, )
+SAX.comment( saved from url=(0016)http://intranet/ )
+SAX.comment( BEGIN Naviscope Javascript )
+SAX.startElement(html)
+SAX.startElement(head)
+SAX.startElement(title)
+SAX.characters(Welcome to Copernic.com, 23)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(script, language='javascript')
+SAX.cdata(
+          NS_ActualOpen=windo, 194)
+SAX.endElement(script)
+SAX.ignorableWhitespace(
+, 1)
+SAX.comment( END Naviscope Javascript )
+SAX.error: Misplaced DOCTYPE declaration
+SAX.internalSubset(HTML, -//W3C//DTD HTML 4.0 Transitional//EN, )
+SAX.comment( saved from url=(0027)http://www.agents-tech.com/ )
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, content='text/html; charset=iso-8859-1', http-equiv='Content-Type')
+SAX.endElement(meta)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, content='Copernic.com Inc. develops innovative agent technology solutions to efficiently access and manage the overwhelming quantity of information available on the Internet and intranets.', name='DESCRIPTION')
+SAX.endElement(meta)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, content='agent,technology,intranet,extranet,management,filtering,ranking,solution,service,intelligent,intelligence,client,server,architecture,developer,development,information,telecommunication,announcement,press,product,profile,contact,multi-agent,meta-search,metasearch,multi-thread,mobile,wireless,shopping,robot,PCS,Copernic,engine,toolkit,CDK,EDK', name='KEYWORDS')
+SAX.endElement(meta)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, content='MSHTML 5.00.3103.1000', name='GENERATOR')
+SAX.endElement(meta)
+SAX.endElement(head)
+SAX.startElement(frameset, border='false', cols='172,*', frameborder='0', framespacing='0')
+SAX.startElement(frame, marginheight='0', marginwidth='0', name='left', noresize, scrolling='no', src='doc2_files/side.htm', target='rtop')
+SAX.endElement(frame)
+SAX.startElement(frameset, rows='43,*')
+SAX.startElement(frame, marginheight='0', marginwidth='0', name='rtop', noresize, scrolling='no', src='doc2_files/top.htm', target='rbottom')
+SAX.endElement(frame)
+SAX.startElement(frame, name='rbottom', noresize, src='doc2_files/contents.htm', target='_top')
+SAX.endElement(frame)
+SAX.endElement(frameset)
+SAX.startElement(noframes)
+SAX.characters(
+
+  , 4)
+SAX.startElement(body, bgcolor='#FFFFFF', text='#000000', link='#000080', vlink='#000080', alink='#000080', topmargin='0', leftmargin='0', marginheight='0', marginwidth='0')
+SAX.ignorableWhitespace(
+  , 3)
+SAX.startElement(p)
+SAX.characters(This page uses frames, but you, 61)
+SAX.endElement(p)
+SAX.ignorableWhitespace(
+  , 3)
+SAX.endElement(body)
+SAX.characters(
+  , 3)
+SAX.endElement(noframes)
+SAX.endElement(frameset)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

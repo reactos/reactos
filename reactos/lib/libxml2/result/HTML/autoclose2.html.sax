@@ -1,0 +1,11 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.startElement(body)
+SAX.startElement(p)
+SAX.characters(toto
+, 5)
+SAX.endElement(p)
+SAX.endElement(body)
+SAX.endElement(html)
+SAX.endDocument()

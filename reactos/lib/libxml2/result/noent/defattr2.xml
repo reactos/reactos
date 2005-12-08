@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+<!ELEMENT doc EMPTY>
+<!ATTLIST doc defatt (0 | 1) "0">
+<!ATTLIST doc xmlns:tst CDATA #FIXED "http://example.org">
+<!ATTLIST doc tst:att (0 | 1) "1">
+]>
+<doc xmlns:tst="http://example.org" att="1"/>

@@ -1,0 +1,95 @@
+0 10 html 0 0
+0 8 #comment 0 1  3.1.1 3/ 
+0 1 html 0 0
+1 14 #text 0 1 
+  
+1 1 head 0 0
+2 14 #text 0 1 
+    
+2 1 title 0 0
+3 3 #text 0 1 Virtual Library
+2 15 title 0 0
+2 14 #text 0 1 
+  
+1 15 head 0 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  4.8 
+1 14 #text 0 1 
+  
+1 1 script 0 0
+2 3 #text 0 1 
+  ... unescaped script content ...
+  
+1 15 script 0 0
+1 14 #text 0 1 
+  
+1 1 body 0 0
+2 14 #text 0 1 
+    
+2 1 p 0 0
+3 3 #text 0 1 Moved to 
+3 1 a 0 0
+4 3 #text 0 1 example.org
+3 15 a 0 0
+3 3 #text 0 1 .
+2 15 p 0 0
+2 14 #text 0 1 
+  
+1 15 body 0 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  C2 
+1 14 #text 0 1 
+  
+1 1 img 1 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  C3 
+1 14 #text 0 1 
+  
+1 1 p 1 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  C7 
+1 14 #text 0 1 
+  
+1 1 p 0 0
+2 3 #text 0 1 coucou
+1 15 p 0 0
+1 14 #text 0 1 
+  
+1 1 p 0 0
+2 3 #text 0 1 salut
+1 15 p 0 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  C8 
+1 14 #text 0 1 
+  
+1 1 p 0 0
+2 3 #text 0 1 test
+1 15 p 0 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  4.5 
+1 14 #text 0 1 
+  
+1 1 dl 0 0
+2 14 #text 0 1 
+  
+2 1 dt 0 0
+3 3 #text 0 1 Internet Engineering Task Force
+2 15 dt 0 0
+2 14 #text 0 1 
+  
+2 1 dd 0 0
+3 3 #text 0 1 An organization which establishes technical standards for the Internet
+2 15 dd 0 0
+2 14 #text 0 1 
+  
+1 15 dl 0 0
+1 14 #text 0 1 
+
+
+0 15 html 0 0

@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE graphicco PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<graphicco><areaspec units="calspair"><areaset id="oneway" coords=""><area id="oneway1" coords="300 400"/><area id="oneway2" coords="325 340"/></areaset><area id="myhouse" coords="425 590"/></areaspec><graphic fileref="http://somemap.site.com/EARTH?USA?MA?AMHERST"/></graphicco>

@@ -1,0 +1,81 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(multistatus, D, 'http://www.ietf.org/standards/dav/', 2, xmlns:D='http://www.ietf.org/standards/dav/', xmlns:R='http://www.foo.bar/boxschema', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(bigbox, R, 'http://www.foo.bar/boxschema', 0, 0, 0)
+SAX.characters(
+        , 9)
+SAX.startElementNs(BoxType, R, 'http://www.foo.bar/boxschema', 0, 0, 0)
+SAX.characters(Box type A, 10)
+SAX.endElementNs(BoxType, R, 'http://www.foo.bar/boxschema')
+SAX.characters(
+      , 7)
+SAX.endElementNs(bigbox, R, 'http://www.foo.bar/boxschema')
+SAX.characters(
+      , 7)
+SAX.startElementNs(author, R, 'http://www.foo.bar/boxschema', 0, 0, 0)
+SAX.characters(
+        , 9)
+SAX.startElementNs(Name, R, 'http://www.foo.bar/boxschema', 0, 0, 0)
+SAX.characters(J.J. Dingleheimerschmidt, 24)
+SAX.endElementNs(Name, R, 'http://www.foo.bar/boxschema')
+SAX.characters(
+      , 7)
+SAX.endElementNs(author, R, 'http://www.foo.bar/boxschema')
+SAX.characters(
+    , 5)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 200 OK, 15)
+SAX.endElementNs(status, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(DingALing, R, 'http://www.foo.bar/boxschema', 0, 0, 0)
+SAX.endElementNs(DingALing, R, 'http://www.foo.bar/boxschema')
+SAX.characters(
+      , 7)
+SAX.startElementNs(Random, R, 'http://www.foo.bar/boxschema', 0, 0, 0)
+SAX.endElementNs(Random, R, 'http://www.foo.bar/boxschema')
+SAX.characters(
+    , 5)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 403 Forbidden, 22)
+SAX.endElementNs(status, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(responsedescription, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters( The user does not have access, 64)
+SAX.endElementNs(responsedescription, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(responsedescription, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters( There has been an access viol, 44)
+SAX.endElementNs(responsedescription, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+, 1)
+SAX.endElementNs(multistatus, D, 'http://www.ietf.org/standards/dav/')
+SAX.endDocument()

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+For a complete methodology for DTD creation, see
+<citetitle pubwork="book">Developing SGML DTDs: From Text to Model
+to Markup</citetitle> by Eve Maler and Jeanne El Andaloussi.
+</para>

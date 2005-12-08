@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+Finally, here is the list rendered vertically:
+<simplelist type="vert" columns="3"><member>A</member><member>B</member><member>C</member><member>D</member><member>E</member><member>F</member><member>G</member></simplelist></para>

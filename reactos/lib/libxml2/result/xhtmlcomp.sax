@@ -1,0 +1,23 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(html, -//W3C//DTD XHTML 1.0 Strict//EN, http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd)
+SAX.externalSubset(html, -//W3C//DTD XHTML 1.0 Strict//EN, http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd)
+SAX.startElement(html)
+SAX.characters(
+  , 3)
+SAX.startElement(body)
+SAX.characters(
+    , 5)
+SAX.startElement(h1)
+SAX.startElement(abbr)
+SAX.characters(a, 1)
+SAX.endElement(abbr)
+SAX.characters( b, 2)
+SAX.endElement(h1)
+SAX.characters(
+  , 3)
+SAX.endElement(body)
+SAX.characters(
+, 1)
+SAX.endElement(html)
+SAX.endDocument()

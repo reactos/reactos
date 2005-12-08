@@ -1,0 +1,8 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(select, NULL, NULL, 0, 1, 0, onclick='aaaa...', 17)
+SAX.characters(f, 1)
+SAX.characters( , 2)
+SAX.characters(oo, 2)
+SAX.endElementNs(select, NULL, NULL)
+SAX.endDocument()

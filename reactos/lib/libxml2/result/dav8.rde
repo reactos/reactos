@@ -1,0 +1,51 @@
+0 1 d:multistatus 0 0
+1 14 #text 0 1 
+  
+1 1 d:response 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/othercontainer/resource1
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/othercontainer/resource2
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/othercontainer/
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/othercontainer/R2/D2
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:status 0 0
+3 3 #text 0 1 HTTP/1.1 201 Created
+2 15 d:status 0 0
+2 14 #text 0 1 
+  
+1 15 d:response 0 0
+1 14 #text 0 1 
+  
+1 1 d:response 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/othercontainer/R2/
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:status 0 0
+3 3 #text 0 1 HTTP/1.1 412 Precondition Failed
+2 15 d:status 0 0
+2 14 #text 0 1 
+  
+1 15 d:response 0 0
+1 14 #text 0 1 
+
+0 15 d:multistatus 0 0

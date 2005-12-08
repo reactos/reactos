@@ -1,0 +1,4 @@
+./test/relaxng/tutor7_3_4.xml:1: element path: Relax-NG validity error : Extra data in list: 5.6
+./test/relaxng/tutor7_3_4.xml:1: element path: Relax-NG validity error : Error validating list
+./test/relaxng/tutor7_3_4.xml:1: element path: Relax-NG validity error : Element path failed to validate content
+./test/relaxng/tutor7_3_4.xml fails to validate

@@ -1,0 +1,3 @@
+./test/VC/NS2:9: element doc: validity error : No declaration for attribute attr of element doc
+<ns:doc ns:attr="val" xmlns:ns="http://www.example.org/test/">
+                                                             ^

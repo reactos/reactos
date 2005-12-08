@@ -1,0 +1,1 @@
+./test/schemas/element-minmax-err_0.xsd:6: element element: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}element', attribute 'maxOccurs': The value must be greater than or equal to 1.

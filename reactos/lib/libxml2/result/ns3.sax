@@ -1,0 +1,5 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(dia:diagram, dia:testattr='test', xmlns:dia='http://www.lysator.liu.se/~alla/dia/')
+SAX.endElement(dia:diagram)
+SAX.endDocument()

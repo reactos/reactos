@@ -1,0 +1,4 @@
+PUBLIC "-//Davenport//DTD DocBook V3.0//EN" "docbook.dtd"
+PUBLIC "-//USA-DOD//DTD Table Model 951010//EN" "cals-tbl.dtd"
+PUBLIC "-//Davenport//ELEMENTS DocBook Information Pool V3.0//EN" "dbpool.mod"
+PUBLIC "-//Davenport//ELEMENTS DocBook Document Hierarchy V3.0//EN" "dbhier.mod"PUBLIC "-//Davenport//ENTITIES DocBook Additional General Entities V3.0//EN" "dbgenent.mod"

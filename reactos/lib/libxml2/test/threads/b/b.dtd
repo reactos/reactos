@@ -1,0 +1,2 @@
+<!ELEMENT b (#PCDATA)>
+<!ENTITY bent "the b entity">

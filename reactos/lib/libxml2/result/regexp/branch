@@ -1,0 +1,14 @@
+Regexp: a|b(d|e(g|h|i)|f)|c
+a: Ok
+c: Ok
+bd: Ok
+bf: Ok
+beg: Ok
+beh: Ok
+bei: Ok
+b: Fail
+be: Fail
+bi: Fail
+f: Fail
+ab: Fail
+ac: Fail

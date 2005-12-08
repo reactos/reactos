@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+<!ELEMENT doc ANY>
+]>
+<doc>This is a valid document !</doc>

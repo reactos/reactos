@@ -1,0 +1,54 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(d:multistatus, xmlns:d='http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElement(d:response)
+SAX.characters(
+    , 5)
+SAX.startElement(d:href)
+SAX.characters(http://www.foo.bar/othercontai, 43)
+SAX.endElement(d:href)
+SAX.characters(
+    , 5)
+SAX.startElement(d:href)
+SAX.characters(http://www.foo.bar/othercontai, 43)
+SAX.endElement(d:href)
+SAX.characters(
+    , 5)
+SAX.startElement(d:href)
+SAX.characters(http://www.foo.bar/othercontai, 34)
+SAX.endElement(d:href)
+SAX.characters(
+    , 5)
+SAX.startElement(d:href)
+SAX.characters(http://www.foo.bar/othercontai, 39)
+SAX.endElement(d:href)
+SAX.characters(
+    , 5)
+SAX.startElement(d:status)
+SAX.characters(HTTP/1.1 201 Created, 20)
+SAX.endElement(d:status)
+SAX.characters(
+  , 3)
+SAX.endElement(d:response)
+SAX.characters(
+  , 3)
+SAX.startElement(d:response)
+SAX.characters(
+    , 5)
+SAX.startElement(d:href)
+SAX.characters(http://www.foo.bar/othercontai, 37)
+SAX.endElement(d:href)
+SAX.characters(
+    , 5)
+SAX.startElement(d:status)
+SAX.characters(HTTP/1.1 412 Precondition Fail, 32)
+SAX.endElement(d:status)
+SAX.characters(
+  , 3)
+SAX.endElement(d:response)
+SAX.characters(
+, 1)
+SAX.endElement(d:multistatus)
+SAX.endDocument()

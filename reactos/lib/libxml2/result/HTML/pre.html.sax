@@ -1,0 +1,23 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(pre)
+SAX.startElement(a, href='toto')
+SAX.endElement(a)
+SAX.startElement(img, src='titi')
+SAX.endElement(img)
+SAX.endElement(pre)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

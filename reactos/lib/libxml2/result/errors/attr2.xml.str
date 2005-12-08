@@ -1,0 +1,10 @@
+./test/errors/attr2.xml:2: parser error : AttValue: ' expected
+
+^
+./test/errors/attr2.xml:2: parser error : attributes construct error
+
+^
+./test/errors/attr2.xml:2: parser error : Couldn't find end of Start Tag foo
+
+^
+./test/errors/attr2.xml : failed to parse

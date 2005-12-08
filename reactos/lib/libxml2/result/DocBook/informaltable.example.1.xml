@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE informaltable PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<informaltable frame="none"><tgroup cols="2"><colspec colwidth="0.5in"/><colspec colwidth="0.5in"/><tbody><row><entry>1</entry><entry>1</entry></row><row><entry>2</entry><entry>4</entry></row><row><entry>3</entry><entry>9</entry></row></tbody></tgroup></informaltable>

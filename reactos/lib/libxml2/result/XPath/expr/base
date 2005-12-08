@@ -1,0 +1,20 @@
+
+========================
+Expression: 1
+Object is a number : 1
+
+========================
+Expression: 1+2
+Object is a number : 3
+
+========================
+Expression: 2*3
+Object is a number : 6
+
+========================
+Expression: 1+2*3+4
+Object is a number : 11
+
+========================
+Expression: (1+2)*(3+4)
+Object is a number : 21

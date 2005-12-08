@@ -1,0 +1,4 @@
+<!ENTITY % local.p.class        "">
+<!ENTITY % p.class              "p
+                                %local.p.class;">
+

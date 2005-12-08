@@ -1,0 +1,12 @@
+Node /a matches pattern a
+Node /a/b matches pattern b
+Node /a/b matches pattern b
+Node /a matches pattern /a
+Node /a/b matches pattern a/b
+Node /a/b/c matches pattern a/b/c
+Node /a matches pattern //a
+Node /a/b matches pattern //b
+Node /a/b/c matches pattern //c
+Node /a/b matches pattern a//b
+Node /a/b/c matches pattern a//c
+Node /a/b/c matches pattern b//c

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+Select a region of text by dragging the mouse pointer with the
+<mousebutton>left</mousebutton> mouse button depressed.  Copy the
+selected text to a new location by placing the mouse pointer at the
+desired position and pressing the <mousebutton>middle</mousebutton>
+button.
+</para>

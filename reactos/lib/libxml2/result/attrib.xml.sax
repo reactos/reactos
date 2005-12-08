@@ -1,0 +1,6 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.getEntity(apos)
+SAX.startElement(item, title='Icrontic.com - Warning: Breakdancing midget with tourette's syndrome on-board                                                ', url='http://www.icrontic.com/', first_time='985034339', last_time='985034339', visits='1')
+SAX.endElement(item)
+SAX.endDocument()

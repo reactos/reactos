@@ -1,0 +1,4 @@
+./test/relaxng/tutor7_1_3.xml:1: element vector: Relax-NG validity error : Extra data in list: 5.6
+./test/relaxng/tutor7_1_3.xml:1: element vector: Relax-NG validity error : Error validating list
+./test/relaxng/tutor7_1_3.xml:1: element vector: Relax-NG validity error : Element vector failed to validate content
+./test/relaxng/tutor7_1_3.xml fails to validate

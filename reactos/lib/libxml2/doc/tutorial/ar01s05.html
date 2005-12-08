@@ -1,0 +1,55 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Using XPath to Retrieve Element Content</title><meta name="generator" content="DocBook XSL Stylesheets V1.61.2"><link rel="home" href="index.html" title="Libxml Tutorial"><link rel="up" href="index.html" title="Libxml Tutorial"><link rel="previous" href="ar01s04.html" title="Retrieving Element Content"><link rel="next" href="ar01s06.html" title="Writing element content"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Using XPath to Retrieve Element Content</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ar01s04.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="ar01s06.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="xmltutorialxpath"></a>Using XPath to Retrieve Element Content</h2></div></div><div></div></div><p>In addition to walking the document tree to find an element,
+    <span class="application">Libxml2</span> includes support for
+      use of <span class="application">XPath</span> expressions to retrieve sets of
+      nodes that match a specified criteria. Full documentation of the
+      <span class="application">XPath</span> <span class="acronym">API</span> is <a href="http://xmlsoft.org/html/libxml-xpath.html" target="_top">here</a>.
+    </p><p><span class="application">XPath</span> allows searching through a document
+    for nodes that match specified criteria. In the example below we search
+      through a document for the contents of all <tt class="varname">keyword</tt>
+    elements.
+      </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td colspan="2" align="left" valign="top"><p>A full discussion of <span class="application">XPath</span> is beyond
+	  the scope of this document. For details on its use, see the <a href="http://www.w3.org/TR/xpath" target="_top">XPath specification</a>.</p></td></tr></table></div><p>
+      Full code for this example is at <a href="apd.html" title="D. Code for XPath Example">Appendix D, <i>Code for XPath Example</i></a>.
+    </p><p>Using <span class="application">XPath</span> requires setting up an
+      xmlXPathContext and then supplying the <span class="application">XPath</span>
+      expression and the context to the
+      <tt class="function">xmlXPathEvalExpression</tt> function. The function returns
+      an xmlXPathObjectPtr, which includes the set of nodes satisfying the
+      <span class="application">XPath</span> expression.</p><p>
+      </p><pre class="programlisting">
+	xmlXPathObjectPtr
+	getnodeset (xmlDocPtr doc, xmlChar *xpath){
+	
+	<a name="cocontext"></a><img src="images/callouts/1.png" alt="1" border="0">xmlXPathContextPtr context;
+	xmlXPathObjectPtr result;
+
+	<a name="cocreatecontext"></a><img src="images/callouts/2.png" alt="2" border="0">context = xmlXPathNewContext(doc);
+	<a name="corunxpath"></a><img src="images/callouts/3.png" alt="3" border="0">result = xmlXPathEvalExpression(xpath, context);
+	<a name="cocheckxpathresult"></a><img src="images/callouts/4.png" alt="4" border="0">if(xmlXPathNodeSetIsEmpty(result-&gt;nodesetval)){
+		xmlXPathFreeObject(result);
+                printf("No result\n");
+		return NULL;
+      </pre><p>
+      </p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><a href="#cocontext"><img src="images/callouts/1.png" alt="1" border="0"></a> </td><td valign="top" align="left"><p>First we declare our variables.</p></td></tr><tr><td width="5%" valign="top" align="left"><a href="#cocreatecontext"><img src="images/callouts/2.png" alt="2" border="0"></a> </td><td valign="top" align="left"><p>Initialize the <tt class="varname">context</tt> variable.</p></td></tr><tr><td width="5%" valign="top" align="left"><a href="#corunxpath"><img src="images/callouts/3.png" alt="3" border="0"></a> </td><td valign="top" align="left"><p>Apply the <span class="application">XPath</span> expression.</p></td></tr><tr><td width="5%" valign="top" align="left"><a href="#cocheckxpathresult"><img src="images/callouts/4.png" alt="4" border="0"></a> </td><td valign="top" align="left"><p>Check the result and free the memory allocated to
+	    <tt class="varname">result</tt> if no result is found.</p></td></tr></table></div><p>
+    </p><p>The xmlPathObjectPtr returned by the function contains a set of nodes
+    and other information needed to iterate through the set and act on the
+      results. For this example, our functions returns the
+    <tt class="varname">xmlXPathObjectPtr</tt>. We use it to print the contents of
+      <tt class="varname">keyword</tt> nodes in our document. The node set object
+      includes the number of elements in the set (<tt class="varname">nodeNr</tt>) and
+      an array of nodes (<tt class="varname">nodeTab</tt>):
+      </p><pre class="programlisting">
+	<a name="conodesetcounter"></a><img src="images/callouts/1.png" alt="1" border="0">for (i=0; i &lt; nodeset-&gt;nodeNr; i++) {
+	<a name="coprintkeywords"></a><img src="images/callouts/2.png" alt="2" border="0">keyword = xmlNodeListGetString(doc, nodeset-&gt;nodeTab[i]-&gt;xmlChildrenNode, 1);
+		printf("keyword: %s\n", keyword);
+	        xmlFree(keyword);
+	}
+      </pre><p>
+      </p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><a href="#conodesetcounter"><img src="images/callouts/1.png" alt="1" border="0"></a> </td><td valign="top" align="left"><p>The value of <tt class="varname">nodeset-&gt;Nr</tt> holds the number of
+	  elements in the node set. Here we use it to iterate through the array.</p></td></tr><tr><td width="5%" valign="top" align="left"><a href="#coprintkeywords"><img src="images/callouts/2.png" alt="2" border="0"></a> </td><td valign="top" align="left"><p>Here we print the contents of each of the nodes returned.
+	    </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="images/note.png"></td><th align="left">Note</th></tr><tr><td colspan="2" align="left" valign="top"><p>Note that we are printing the child node of the node that is
+		returned, because the contents of the <tt class="varname">keyword</tt>
+		element are a child text node.</p></td></tr></table></div><p>
+	  </p></td></tr></table></div><p>
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s04.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ar01s06.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Retrieving Element Content </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Writing element content</td></tr></table></div></body></html>

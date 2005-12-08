@@ -1,0 +1,2848 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.comment( Vignette StoryServer 4 Fri Oct 15 11:37:12 1999 )
+SAX.startElement(html)
+SAX.startElement(head)
+SAX.startElement(title)
+SAX.characters(Top Stories News from Wired Ne, 32)
+SAX.endElement(title)
+SAX.endElement(head)
+SAX.startElement(body, bgcolor='#FFFFFF', text='#000000', link='#333399', vlink='#660066', alink='#666699')
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(table, border='0', width='600', cellspacing='0', cellpadding='0')
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(td, valign='top', align='LEFT')
+SAX.startElement(table, border='0', cellpadding='0', cellspacing='0', width='468', height='60', bgcolor='#FFFFFF')
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(form, method='GET', action='http://nsads.hotwired.com/event.ng/Type=click&amp;ProfileID=9688&amp;RunID=14074&amp;AdID=22584&amp;GroupID=1&amp;FamilyID=2684&amp;TagValues=8.25.156.159.166.171.172.174.179.180.181.182.183.196.197.199.208.389.412.436.2041.6750.78456.79630.81880&amp;Redirect=http://www.springstreet.com/aa/citysearch.htm', id='form1', name='form1')
+SAX.characters(
+, 2)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#330099')
+SAX.startElement(input, name='city', type='text', size='7', maxlength='20', value='Seattle')
+SAX.endElement(input)
+SAX.endElement(td)
+SAX.characters(
+, 2)
+SAX.startElement(td, rowspan='2', align='LEFT', bgcolor='FFFFFF')
+SAX.startElement(input, type='IMAGE', src='http://static.wired.com/advertising/blipverts/allapartments/990625jpa_ssthome.gif', width='375', height='60', border='0', value='search', hspace='0', alt='Search over 6,000,000 Apts with SpringStreet')
+SAX.endElement(input)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.characters(
+, 2)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#330099')
+SAX.characters(
+, 2)
+SAX.startElement(select, name='state')
+SAX.characters(
+, 2)
+SAX.startElement(option, value='WA', selected)
+SAX.characters(WA
+, 4)
+SAX.endElement(option)
+SAX.startElement(option, value='AL')
+SAX.characters(AL, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='AK')
+SAX.characters(AK, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='AZ')
+SAX.characters(AZ, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='AR')
+SAX.characters(AR, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='CA')
+SAX.characters(CA, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='CO')
+SAX.characters(CO, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='CT')
+SAX.characters(CT, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='DE')
+SAX.characters(DE, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='DC')
+SAX.characters(DC, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='FL')
+SAX.characters(FL, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='GA')
+SAX.characters(GA, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='HI')
+SAX.characters(HI, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='ID')
+SAX.characters(ID, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='IL')
+SAX.characters(IL, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='IN')
+SAX.characters(IN, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='IA')
+SAX.characters(IA, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='KS')
+SAX.characters(KS, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='KY')
+SAX.characters(KY, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='LA')
+SAX.characters(LA, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='ME')
+SAX.characters(ME, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='MD')
+SAX.characters(MD, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='MA')
+SAX.characters(MA, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='MI')
+SAX.characters(MI, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='MN')
+SAX.characters(MN, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='MS')
+SAX.characters(MS, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='MO')
+SAX.characters(MO, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='MT')
+SAX.characters(MT, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='NE')
+SAX.characters(NE, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='NV')
+SAX.characters(NV, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='NH')
+SAX.characters(NH, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='NJ')
+SAX.characters(NJ, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='NM')
+SAX.characters(NM, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='NY')
+SAX.characters(NY, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='NC')
+SAX.characters(NC, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='ND')
+SAX.characters(ND, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='OH')
+SAX.characters(OH, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='OK')
+SAX.characters(OK, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='OR')
+SAX.characters(OR, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='PA')
+SAX.characters(PA, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='PR')
+SAX.characters(PR, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='RI')
+SAX.characters(RI, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='SC')
+SAX.characters(SC, 2)
+SAX.endElement(option)
+SAX.characters( 
+, 3)
+SAX.startElement(option, value='SD')
+SAX.characters(SD, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='TN')
+SAX.characters(TN, 2)
+SAX.endElement(option)
+SAX.startElement(option, value='TX')
+SAX.characters(TX, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='UT')
+SAX.characters(UT, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='VT')
+SAX.characters(VT, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='VA')
+SAX.characters(VA, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='WA')
+SAX.characters(WA, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='WV')
+SAX.characters(WV, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='WI')
+SAX.characters(WI, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.startElement(option, value='WY')
+SAX.characters(WY, 2)
+SAX.endElement(option)
+SAX.characters(
+, 2)
+SAX.endElement(select)
+SAX.startElement(input, type='hidden', name='source', value='2hb8bhc059')
+SAX.endElement(input)
+SAX.characters(
+, 2)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.endElement(form)
+SAX.characters(
+, 2)
+SAX.endElement(table)
+SAX.endElement(td)
+SAX.characters(
+    , 5)
+SAX.startElement(td, valign='top', align='RIGHT')
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(a, href='http://nsads.hotwired.com/event.ng/Type=click&amp;ProfileID=5597&amp;RunID=17167&amp;AdID=22588&amp;GroupID=1&amp;FamilyID=3228&amp;TagValues=8.25.159.171.172.174.179.180.181.182.183.196.197.199.208.241.389.412.436.2035.6749.6750.70367.78456.79630.81880&amp;Redirect=http:%2F%2Fwww.hp.com%2Fgo%2Foriginal%20', target='_top')
+SAX.startElement(img, src='http://static.wired.com/advertising/blipverts/hp_colorinkjet/hp_970c_120x60_6.gif', border='1', height='60', width='120', alt='True to the Original')
+SAX.endElement(img)
+SAX.endElement(a)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.endElement(table)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.comment( WIRED NEWS header )
+SAX.ignorableWhitespace(
+, 1)
+SAX.comment( CMD_HOST = scoop.hotwired.com )
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(a, name='#')
+SAX.endElement(a)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(table, border='0', width='600', cellspacing='0', cellpadding='0')
+SAX.characters(
+
+  , 4)
+SAX.startElement(tr)
+SAX.startElement(td)
+SAX.endElement(td)
+SAX.startElement(td, colspan='2')
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='5', width='447', alt='')
+SAX.endElement(img)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters( 
+
+ , 4)
+SAX.startElement(tr)
+SAX.characters( 
+      , 8)
+SAX.startElement(td, valign='BOTTOM', align='RIGHT', class='wired', bgcolor='#FFFFFF')
+SAX.startElement(a, href='/news/0,1287,,00.html')
+SAX.startElement(img, src='http://static.wired.com/news/images/wired_000000.gif', width='153', height='30', border='0')
+SAX.endElement(img)
+SAX.endElement(a)
+SAX.endElement(td)
+SAX.characters(
+      , 7)
+SAX.startElement(td, bgcolor='#FF0000', valign='BOTTOM', align='LEFT', width='97')
+SAX.startElement(a, href='/news/0,1287,,00.html')
+SAX.startElement(img, src='http://static.wired.com/news/images/news_ffffff.gif', width='103', height='30', border='0')
+SAX.endElement(img)
+SAX.endElement(a)
+SAX.endElement(td)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(td, bgcolor='#FF0000', align='left', valign='center')
+SAX.startElement(nobr)
+SAX.error: Tag nobr invalid
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', width='344', height='1')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='1', face='Verdana, Arial, Geneva, sans-serif', color='#FFFFFF')
+SAX.characters(&nbsp;, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(b)
+SAX.characters(updated 10:15 a.m., 18)
+SAX.characters(&nbsp;, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(15.Oct.99.PDT, 13)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(nobr)
+SAX.endElement(td)
+SAX.characters(
+
+
+        , 11)
+SAX.endElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(tr)
+SAX.characters( 
+      , 8)
+SAX.startElement(td, valign='MIDDLE', align='RIGHT', bgcolor='#FFFFFF')
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', width='1', height='30')
+SAX.endElement(img)
+SAX.endElement(td)
+SAX.characters(
+      
+      , 14)
+SAX.startElement(td, colspan='2', bgcolor='#999999')
+SAX.characters(
+
+       , 9)
+SAX.startElement(table, border='0', cellspacing='0', cellpadding='5')
+SAX.characters(
+, 1)
+SAX.startElement(form, name='RedirectSearch', action='http://redirect.wired.com/search')
+SAX.characters(
+                , 17)
+SAX.startElement(tr)
+SAX.characters(  
+            , 15)
+SAX.startElement(td)
+SAX.characters( 
+, 2)
+SAX.startElement(font, face='courier', size='1')
+SAX.startElement(input, type='TEXT', name='query', size='20', value='')
+SAX.endElement(input)
+SAX.endElement(font)
+SAX.characters(
+            , 13)
+SAX.endElement(td)
+SAX.characters(
+
+            , 14)
+SAX.startElement(td)
+SAX.characters(
+, 1)
+SAX.startElement(select, name='url')
+SAX.characters(
+
+  , 4)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&amp;Filter=docs_filter.hts&amp;ResultTemplate=vignette.hts&amp;Collection=vignette&amp;QueryMode=Internet&amp;Query=', selected)
+SAX.characters(Wired News, 10)
+SAX.endElement(option)
+SAX.characters(
+  , 3)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&amp;Filter=docs_filter.hts&amp;ResultTemplate=webmonkey.hts&amp;Collection=webmonkey&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(Webmonkey, 9)
+SAX.endElement(option)
+SAX.characters(
+ , 2)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?collection=webmonkey_guides&amp;Action=FilterSearch&amp;filter=docs_filter.hts&amp;ResultTemplate=webmonkey_guides.hts&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(Webmonkey Guides, 16)
+SAX.endElement(option)
+SAX.characters(
+ , 2)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?collection=hotwired&amp;Action=FilterSearch&amp;filter=docs_filter.hts&amp;ResultTemplate=hotwired_archive.hts&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(HotWired Archives, 17)
+SAX.endElement(option)
+SAX.characters(
+  , 3)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&amp;Filter=docs_filter.hts&amp;ResultTemplate=magazine.hts&amp;Collection=magazine&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(Wired Magazine, 14)
+SAX.endElement(option)
+SAX.characters(
+  , 3)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?Action=FilterSearch&amp;Filter=docs_filter.hts&amp;ResultTemplate=animation.hts&amp;Collection=animation&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(Animation Express, 17)
+SAX.endElement(option)
+SAX.characters( 
+ , 3)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?collection=suck&amp;Action=FilterSearch&amp;filter=docs_filter.hts&amp;ResultTemplate=suck.hts&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(Suck.com, 8)
+SAX.endElement(option)
+SAX.characters(
+ , 2)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://search.hotwired.com/search97/s97.vts?collection=uber_hotwired&amp;Action=FilterSearch&amp;filter=docs_filter.hts&amp;ResultTemplate=uber_hotwired.hts&amp;QueryMode=Internet&amp;Query=')
+SAX.characters(All of HotWired, 15)
+SAX.endElement(option)
+SAX.characters(
+ , 2)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(option, value='http://www.hotbot.com/?SM=MC&amp;DV=0&amp;LG=any&amp;RD=RG&amp;DC=10&amp;DE=2&amp;_v=2&amp;OPs=MDRTP&amp;MT=')
+SAX.characters(The Web -&gt; HotBot, 17)
+SAX.endElement(option)
+SAX.characters(
+, 1)
+SAX.endElement(select)
+SAX.characters(
+
+
+
+            , 16)
+SAX.endElement(td)
+SAX.characters(
+            , 13)
+SAX.startElement(td)
+SAX.characters( 
+              , 16)
+SAX.startElement(input, type='SUBMIT', name='SUBMIT', value='SEARCH')
+SAX.endElement(input)
+SAX.characters(
+            , 13)
+SAX.endElement(td)
+SAX.characters(
+          , 11)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.endElement(form)
+SAX.characters(        
+       , 16)
+SAX.endElement(table)
+SAX.characters(
+          , 11)
+SAX.endElement(td)
+SAX.characters(
+        , 9)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( 
+<TR>
+<td></td>
+<TD valign="TOP" align="LEFT" colspan="3" bgcolor="#F0F0F0"><img src="http://static.wired.com/news/images/spacer.gif" height=1 width=15 alt=""><br>
+<i><font face="Verdana, Arial, Geneva, sans-serif" size="2">Sponsored by<a href="#">Sun Microsystems.</a> We're the dot in .com</font></i><i></i></TD>
+</TR>
+)
+SAX.characters(
+, 1)
+SAX.endElement(table)
+SAX.ignorableWhitespace(
+, 1)
+SAX.comment( end WIRED NEWS header )
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.comment( begin upper left side Navigation )
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(table, border='0', cellpadding='3', cellspacing='0', align='LEFT', bgcolor='#FFFFFF')
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#FF0000')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.characters( 
+      , 8)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', width='147', height='1', border='0')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(b)
+SAX.characters(SECTIONS, 8)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/business/0,1367,,00.html')
+SAX.characters(Business, 8)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/culture/0,1284,,00.html')
+SAX.characters(Culture, 7)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/technology/0,1282,,00.html')
+SAX.characters(Technology, 10)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/politics/0,1283,,00.html')
+SAX.characters(Politics, 8)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.startElement(tr)
+SAX.characters(
+, 1)
+SAX.startElement(td, bgcolor='#FF0000')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.characters(
+, 1)
+SAX.startElement(b)
+SAX.characters(WIRE SERVICE NEWS, 17)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.characters(
+, 1)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/news/reuters/')
+SAX.characters(Top Headlines, 13)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.characters(
+, 1)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/news/reuters/sports/')
+SAX.characters(Sports, 6)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.characters(
+, 1)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='/news/news/reuters/business/')
+SAX.characters(Finance, 7)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( End upper left nav )
+SAX.comment( Begin lower Left Nav )
+SAX.characters(
+    , 5)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#FF0000')
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.characters( 
+      , 8)
+SAX.startElement(b)
+SAX.startElement(font, size='1')
+SAX.characters(FREE DELIVERY, 13)
+SAX.endElement(font)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+    , 5)
+SAX.endElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.characters(
+, 1)
+SAX.startElement(table, cellspacing='0', cellpadding='0', border='0')
+SAX.characters(
+		, 3)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.characters(
+		 , 4)
+SAX.startElement(form, action='http://r.hotwired.com/r/hw_wm_r_nav_nwsltr/http://perl.hotwired.com/massmail/cgiParser.cgi', method='get', target='_top')
+SAX.characters(
+
+ , 3)
+SAX.startElement(input, type='hidden', name='success_page', value='http://www.hotwired.com/email/signup/wirednews-ascii.html')
+SAX.endElement(input)
+SAX.characters(
+ 
+, 3)
+SAX.startElement(input, type='hidden', name='failure_page', value='http://www.hotwired.com/email/signup/wirednews-ascii.html')
+SAX.endElement(input)
+SAX.characters(
+ 
+, 3)
+SAX.startElement(input, type='hidden', name='LIST', value='wn_ascii')
+SAX.endElement(input)
+SAX.characters(
+, 1)
+SAX.startElement(input, type='hidden', name='SOURCE', value='other')
+SAX.endElement(input)
+SAX.characters(
+ , 2)
+SAX.startElement(input, type='hidden', name='ACTION', value='subscribe')
+SAX.endElement(input)
+SAX.characters(
+ 
+, 3)
+SAX.startElement(input, type='TEXT', name='from', size='10', value='enter email')
+SAX.endElement(input)
+SAX.characters(&nbsp;, 2)
+SAX.characters(
+, 1)
+SAX.endElement(form)
+SAX.endElement(td)
+SAX.characters( 
+		, 4)
+SAX.startElement(td, valign='top', bgcolor='#99FF99')
+SAX.characters(
+		, 3)
+SAX.startElement(input, type='SUBMIT', name='SUBMIT', value='GO')
+SAX.endElement(input)
+SAX.characters( 
+
+  , 5)
+SAX.endElement(td)
+SAX.characters(
+	, 2)
+SAX.endElement(tr)
+SAX.characters(    , 4)
+SAX.error: Unexpected end tag : form
+SAX.characters(
+, 1)
+SAX.endElement(table)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#FF0000')
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.characters( 
+      , 8)
+SAX.startElement(b)
+SAX.startElement(font, size='1')
+SAX.characters(STOCKS, 6)
+SAX.endElement(font)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.characters(Get Quote:, 10)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(td, bgcolor='#99FF99', marginwidth='0', marginheight='0')
+SAX.startElement(form, method='get', action='http://r.wired.com/r/10020/http://stocks.wired.com/stocks_quotes.asp')
+SAX.startElement(input, type='TEXT', name='Symbol', size='12')
+SAX.endElement(input)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(input, type='SUBMIT', name='submit', value='GO')
+SAX.endElement(input)
+SAX.endElement(form)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( BEGIN BUTTON ADS )
+SAX.characters(
+  
+ , 5)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.characters(
+, 1)
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.characters(Financial Services, 18)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(center)
+SAX.characters(
+, 1)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='3', width='5', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(img, src='http://static.wired.com/news/images/button_ads_news10.gif', width='143', height='56', border='0', alt='', usemap='#buttons', hspace='0', vspace='0')
+SAX.endElement(img)
+SAX.characters(
+, 1)
+SAX.endElement(center)
+SAX.characters(
+
+, 2)
+SAX.startElement(map, name='buttons')
+SAX.characters(
+        , 9)
+SAX.startElement(area, shape='RECT', alt='Datek', coords='0,0,69,24', href='http://r.wired.com/r/1649/http://ads16.focalink.com/SmartBanner/page/1266.631')
+SAX.endElement(area)
+SAX.characters(
+        , 9)
+SAX.startElement(area, shape='RECT', alt='Wired Index Fund', coords='73,0,142,24', href='http://r.wired.com/r/227/http://www.gffunds.com/wired')
+SAX.endElement(area)
+SAX.characters(
+        , 9)
+SAX.startElement(area, shape='RECT', alt='internet.com Index Fund', coords='73,31,142,55', href='http://r.wired.com/r/298/http://www.gffunds.com/isdex/')
+SAX.endElement(area)
+SAX.characters(
+        , 9)
+SAX.startElement(area, shape='RECT', alt='GetSmart&apos;s MortgageFinder', coords='0,31,69,55', href='http://r.wired.com/r/294/http://www.getsmartinc.com/mortgage/HomeBanner?BANNERNAME=www.getsmartinc.com/mwired001m6075x25')
+SAX.endElement(area)
+SAX.endElement(map)
+SAX.characters(
+        , 9)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters( , 1)
+SAX.comment( END BUTTON ADS )
+SAX.characters(
+  
+  , 6)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='http://redirect.wired.com/redir/51/http://stocks.wired.com/')
+SAX.characters(Today's Summary, 15)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='http://r.wired.com/r/hb_fin_r_wn_top/http://stocks.wired.com/stocks_indexes_detail.asp?Symbol=$WIRED')
+SAX.characters(Wired Index, 11)
+SAX.endElement(a)
+SAX.characters( | , 3)
+SAX.startElement(a, href='http://redirect.wired.com/redir/52/http://stocks.wired.com/stocks_indexes.asp ')
+SAX.characters(All Indexes, 11)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#99FF99')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(a, href='http://redirect.wired.com/redir/53/http://stocks.wired.com/stocks_portfolios.asp')
+SAX.characters(Portfolios, 10)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.comment( BEGIN B&N spot )
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.characters( 
+ , 3)
+SAX.startElement(td, bgcolor='#FF0000')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.startElement(b)
+SAX.characters(FIND A BOOK, 11)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.characters(
+, 1)
+SAX.startElement(table, cellspacing='0', cellpadding='0', border='0', width='145')
+SAX.characters(
+                , 17)
+SAX.startElement(tr)
+SAX.startElement(td, bgcolor='#CCFFCC')
+SAX.characters(
+                , 17)
+SAX.startElement(form, action='http://r.wired.com/r/wn_nav_c_bn/http://barnesandnoble.bfast.com/booklink/click')
+SAX.characters(
+, 1)
+SAX.startElement(input, type='hidden', name='sourceid', value='383471')
+SAX.endElement(input)
+SAX.characters(
+, 1)
+SAX.startElement(input, type='hidden', name='categoryid', value='categorydropdown')
+SAX.endElement(input)
+SAX.characters(
+                , 17)
+SAX.startElement(font, size='2')
+SAX.characters(
+                , 17)
+SAX.startElement(select, name='Subjects', size='4')
+SAX.characters(
+, 1)
+SAX.startElement(option, value='301')
+SAX.characters(Business Top 20
+, 16)
+SAX.endElement(option)
+SAX.startElement(option, value='500')
+SAX.characters(Computers
+, 10)
+SAX.endElement(option)
+SAX.startElement(option, value='503')
+SAX.characters(Computer Games
+, 15)
+SAX.endElement(option)
+SAX.startElement(option, value='1604')
+SAX.characters(Current Affairs
+, 16)
+SAX.endElement(option)
+SAX.startElement(option, value='511')
+SAX.characters(Cyberculture
+, 13)
+SAX.endElement(option)
+SAX.startElement(option, value='510')
+SAX.characters(Internet/Web
+, 13)
+SAX.endElement(option)
+SAX.startElement(option, value='303')
+SAX.characters(Investing
+, 10)
+SAX.endElement(option)
+SAX.startElement(option, value='1606')
+SAX.characters(Law
+, 4)
+SAX.endElement(option)
+SAX.startElement(option, value='513')
+SAX.characters(Multimedia
+
+, 12)
+SAX.endElement(option)
+SAX.startElement(option, value='1605')
+SAX.characters(Newsmakers
+, 11)
+SAX.endElement(option)
+SAX.startElement(option, value='1607')
+SAX.characters(Politics/Govt.
+
+ , 17)
+SAX.endElement(option)
+SAX.startElement(option, value='315')
+SAX.characters( Web Business
+  , 16)
+SAX.endElement(option)
+SAX.startElement(option, value='2800')
+SAX.characters( Bargain Books
+               , 40)
+SAX.endElement(option)
+SAX.startElement(option, value='4')
+SAX.characters(Other 
+
+
+
+ 
+
+ , 14)
+SAX.endElement(option)
+SAX.endElement(select)
+SAX.endElement(font)
+SAX.endElement(form)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.characters(
+ , 2)
+SAX.startElement(tr, align='left', valign='top')
+SAX.characters(
+                , 17)
+SAX.startElement(td, valign='top', bgcolor='#CCFFCC')
+SAX.characters( , 1)
+SAX.startElement(input, type='submit', value='GO')
+SAX.endElement(input)
+SAX.characters(
+
+, 2)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(img, src='http://barnesandnoble.bfast.com/booklink/serve?sourceid=383471&amp;is_search=Y', border='0', align='top')
+SAX.endElement(img)
+SAX.characters(
+, 1)
+SAX.comment(
+<IMG SRC="http://www.wired.com/partner/bn/trackingimg/ot_wn_nav_c_bn.gif" border=0 width=1 height=1 align=top>
+)
+SAX.characters(
+, 1)
+SAX.endElement(td)
+SAX.characters(
+                 
+           , 35)
+SAX.endElement(tr)
+SAX.characters(
+                , 17)
+SAX.startElement(tr, align='left', valign='top')
+SAX.characters(
+ 
+        , 11)
+SAX.startElement(td, align='left', valign='top', colspan='2', rowspan='1', bgcolor='#CCFFCC')
+SAX.characters(
+, 1)
+SAX.startElement(p)
+SAX.characters(
+        , 9)
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, ', color='#000000')
+SAX.characters(Powered by , 11)
+SAX.startElement(a, href='http://r.wired.com/r/wn_nav_c_bn/http://barnesandnoble.bfast.com/booklink/click?sourceid=383471')
+SAX.characters(barnesandnoble.com, 18)
+SAX.endElement(a)
+SAX.characters(
+ , 2)
+SAX.endElement(font)
+SAX.characters(
+, 1)
+SAX.startElement(br, clear='all')
+SAX.endElement(br)
+SAX.characters(
+
+
+, 3)
+SAX.endElement(p)
+SAX.endElement(td)
+SAX.characters(
+        , 9)
+SAX.endElement(tr)
+SAX.characters(  , 2)
+SAX.error: Unexpected end tag : form
+SAX.characters(
+        , 9)
+SAX.endElement(table)
+SAX.characters(
+
+, 2)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.characters(
+ , 2)
+SAX.comment( END B&N spot )
+SAX.characters(   
+  
+, 7)
+SAX.comment( BEGIN MAGAZINE SPOT )
+SAX.characters(
+
+ , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#000000')
+SAX.startElement(font, color='#FFFFFF', face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(b)
+SAX.characters(WIRED 
+      MAGAZINE , 22)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.startElement(tr)
+SAX.characters( 
+, 2)
+SAX.startElement(td, bgcolor='#FFFF99', align='CENTER')
+SAX.characters(
+, 1)
+SAX.startElement(font, face='verdana, arial, helvetica, sans-serif', size='1')
+SAX.characters(
+, 1)
+SAX.startElement(b)
+SAX.characters(
+, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.startElement(a, href='http://www.wired.com/wired/')
+SAX.startElement(img, src='http://static.wired.com/news/images/wiredcover.gif', width='91', height='109', border='0', alt='Wired Magazine')
+SAX.endElement(img)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.endElement(b)
+SAX.characters(
+
+Issue 7.11
+, 13)
+SAX.endElement(font)
+SAX.characters(
+, 1)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.characters( 
+, 2)
+SAX.startElement(td, bgcolor='#FFFF99', align='center')
+SAX.characters(
+, 1)
+SAX.startElement(font, face='verdana, arial, helvetica, sans-serif', size='1')
+SAX.characters( 
+
+, 3)
+SAX.startElement(a, href='http://www.wired.com/wired/subscribe/special/79WN')
+SAX.characters(Subscribe to Wired., 19)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(Special offer!, 14)
+SAX.endElement(a)
+SAX.characters(
+
+
+, 3)
+SAX.endElement(font)
+SAX.characters(
+, 1)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( END MAGAZINE SPOT )
+SAX.characters(
+
+  , 4)
+SAX.startElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(td, bgcolor='#000000')
+SAX.characters( 
+    , 6)
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.startElement(b)
+SAX.characters(HOTWIRED, 8)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#FFFF99')
+SAX.characters( , 1)
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.hotwired.com/')
+SAX.characters(Frontdoor, 9)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.hotwired.com/webmonkey/')
+SAX.characters(Webmonkey, 9)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.hotwired.com/webmonkey/guides/index.html')
+SAX.characters(Webmonkey Guides, 16)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.hotwired.com/rgb/')
+SAX.characters(RGB Gallery, 11)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.hotwired.com/animation/')
+SAX.characters(Animation Express, 17)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://go.suck.com/su_wnfd')
+SAX.characters(Suck.com, 8)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  
+    , 8)
+SAX.startElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(td, bgcolor='#000000')
+SAX.characters( 
+    , 6)
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.startElement(b)
+SAX.characters(HOTBOT, 6)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters( 
+    , 6)
+SAX.startElement(td, bgcolor='#FFFF99')
+SAX.characters( , 1)
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#000000')
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://redirect.wired.com/redir/54/http://www.hotbot.com/')
+SAX.characters(Search, 6)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://shop.hotbot.com/')
+SAX.characters(Shopping, 8)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+  
+  , 6)
+SAX.startElement(tr)
+SAX.startElement(td)
+SAX.characters(
+  , 3)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+  , 3)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.characters(
+  , 3)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.characters(
+  Wired News , 14)
+SAX.startElement(a, href='/news/who/0,1362,,00.html')
+SAX.characters(staff, 5)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+  , 4)
+SAX.comment( Wired News is <a href="http://www.wired.com/news/jobs.html">hiring</a><br><br> )
+SAX.characters(
+
+  , 4)
+SAX.startElement(b)
+SAX.startElement(a, href='/news/feedback/0,1364,,00.html')
+SAX.characters(Contact us, 10)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.characters(
+
+  
+  , 7)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+  
+  , 6)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.characters(Wired News  delivered, 21)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(by , 3)
+SAX.startElement(a, href='/news/palmpilot/0,1365,,00.html')
+SAX.characters(PalmPilot, 9)
+SAX.endElement(a)
+SAX.characters(,, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(a, href='http://www.hotwired.com/email/signup/wn_outlook.html')
+SAX.characters(Outlook  Express, 16)
+SAX.endElement(a)
+SAX.characters(,, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(a, href='http://redirect.wired.com/redir/55/http://form.netscape.com/ibd/html/ibd_frameset.html')
+SAX.characters(In-Box Direct, 13)
+SAX.endElement(a)
+SAX.characters(,, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+or , 4)
+SAX.startElement(a, href='/news/pointcast/0,1366,,00.html')
+SAX.characters(PointCast, 9)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.comment( TRACKING )
+SAX.characters(
+, 1)
+SAX.startElement(img, src='http://www.wired.com/special/modx/news.gif', height='1', width='1', alt='')
+SAX.endElement(img)
+SAX.characters(
+, 1)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.endElement(table)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.comment( end lower left side Navigation )
+SAX.ignorableWhitespace(
+, 1)
+SAX.comment( CONTENT TABLE )
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(table, border='0', width='447', cellspacing='0', cellpadding='0', bordercolor='#66FF00')
+SAX.characters(
+ , 2)
+SAX.startElement(tr)
+SAX.characters(
+  , 3)
+SAX.startElement(td, valign='TOP', align='LEFT', rowspan='2')
+SAX.characters(
+   , 4)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='1', width='15', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+  , 3)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.startElement(td, colspan='3', valign='TOP', align='LEFT')
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='7', width='432', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+
+, 3)
+SAX.comment( SQL query for Package here )
+SAX.characters(
+
+, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.startElement(b)
+SAX.startElement(i)
+SAX.characters(Nomad's Land, 12)
+SAX.endElement(i)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(img, src='http://static.wired.com/news/images/pix155.gif', height='10', width='155', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT: Homeless, but ID'd, in Seattle )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='5')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/politics/0,1283,31911,00.html')
+SAX.characters(Homeless, but ID'd, in Seattle, 30)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='1', face='Verdana, Arial, Geneva, sans-serif', color='#FF0000')
+SAX.characters(8:15 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(The city council approves a pl, 180)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/politics/0,1283,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Politics, 8)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(table, bgcolor='#F0F0F0', cellpadding='0', cellspacing='0', border='0', width='147', align='RIGHT')
+SAX.characters(
+ , 2)
+SAX.comment( Commentary Frag Begin )
+SAX.characters(
+        , 9)
+SAX.startElement(tr)
+SAX.characters(
+          , 11)
+SAX.startElement(td, bgcolor='#000000')
+SAX.characters(&nbsp;, 2)
+SAX.endElement(td)
+SAX.characters(
+          , 11)
+SAX.startElement(td, bgcolor='#000000')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.startElement(b)
+SAX.characters(HITS , 5)
+SAX.characters(&amp;, 1)
+SAX.characters( MISC., 6)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+        , 9)
+SAX.endElement(tr)
+SAX.characters(
+        , 9)
+SAX.startElement(tr)
+SAX.characters(
+          , 11)
+SAX.startElement(td)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(td)
+SAX.characters(
+          , 11)
+SAX.startElement(td)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='5', width='5', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+		, 4)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/commentarySection/0,1292,31664,00.html')
+SAX.characters(Calendar of E-Vents, 19)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Ongoing goings-on. , 19)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/commentarySection/0,1292,31926,00.html')
+SAX.characters(Rants , 6)
+SAX.error: htmlParseEntityRef: no name
+SAX.characters(&amp;, 1)
+SAX.characters( Raves, 6)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Readers on Apple's G4 ... AOL', 59)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(  , 2)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+        , 9)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( Commentary Frag End )
+SAX.characters(
+, 1)
+SAX.startElement(tr)
+SAX.characters( 
+, 2)
+SAX.startElement(td, align='left', bgcolor='#000000')
+SAX.characters(&nbsp;, 2)
+SAX.endElement(td)
+SAX.characters( 
+, 2)
+SAX.startElement(td, bgcolor='#000000')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.startElement(b)
+SAX.characters(CURRENT HOO-HA, 14)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+
+, 2)
+SAX.startElement(tr)
+SAX.characters( 
+, 2)
+SAX.startElement(td)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.startElement(td)
+SAX.characters(
+, 1)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='5', width='5', alt='')
+SAX.endElement(img)
+SAX.characters(
+, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/mp3/0,1285,,00.html')
+SAX.characters(MP3 Rocks the Web, 17)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Download the sound.  , 21)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.startElement(a, href='http://r.hotwired.com/r/wn_fd_mp3_r_mscm_txt/http://webfarm.mediaplex.com/click_thru_request/164-1361b-1052', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(Musicmaker, 10)
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/wireless/0,1382,,00.html')
+SAX.characters(The Wireless World, 18)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Networking gets unplugged.  , 28)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.startElement(a, href='http://www.ericsson.se/get/internet/default.shtml', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(Ericsson, 8)
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/digiwood/0,1412,,00.html')
+SAX.characters(Digital Hollywood, 17)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(The buzz of tech., 17)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/ipo/0,1350,,00.html')
+SAX.characters(IPO Outlook, 11)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Deals in the pipeline.  , 24)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.startElement(a, href='http://r.hotwired.com/r/wn_ipo_r_sun_txt/http://sun.com/ads/smi/brand/hotwired.html', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(Sun, 3)
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/ebiz/0,1272,,00.html')
+SAX.characters(E-Biz, 5)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Business unusual.  , 19)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.startElement(a, href='http://r.wired.com/r/wn_fd_r_ebiz_ibm_txt/http://www.ibm.com', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(IBM, 3)
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/medtech/0,1286,,00.html')
+SAX.characters(Med-Tech Center, 15)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(From the bleeding edge., 23)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by WebMD, 18)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/linux/0,1411,,00.html')
+SAX.characters(The Linux Effect, 16)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Not just for geeks., 19)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( , 1)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='7', width='5', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/exec/0,1370,,00.html')
+SAX.characters(Executive Summary, 17)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='1', face='Arial, Helvetica, sans-serif', color='#000000')
+SAX.characters(CEOs, COOs, CIOs unite.  , 25)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.startElement(a, href='http://r.wired.com/r/wn_exec_r_vign/http://www.vignette.com/', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(Vignette, 8)
+SAX.error: Opening and ending tag mismatch: a and font
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/school/0,1383,,00.html')
+SAX.characters(Making the Grade, 16)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Reading, writing, and ROM.  , 28)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.startElement(a, href='http://r.hotwired.com/r/wn_sch_r_nav_uop/http://ads25.focalink.com/SmartBanner/page?12630.53', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(U of Phoenix, 12)
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/infostructure/0,1377,,00.html')
+SAX.characters(Infostructure, 13)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='1', face='Arial, Helvetica, sans-serif', color='#000000')
+SAX.characters(An IS/IT resource , 18)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(i)
+SAX.characters(Sponsored by , 13)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(a, href='http://r.wired.com/r/wn_is_r_ssec/http://ad.doubleclick.net/clk;653163;3599571;s?http://www.sprintbiz.com/s
+ervlet/appservlet?from=/wired/sprint/&amp;template=/security/security.html&amp;SITE=
+wired.com&amp;BANNER=Sprint', style='text-decoration:none')
+SAX.startElement(font, color='#000000')
+SAX.characters(Sprint, 6)
+SAX.error: Opening and ending tag mismatch: a and font
+SAX.endElement(font)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.error: End tag : expected '>'
+SAX.endElement(font)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, size='2', face='Arial,Helvetica, sans-serif')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/y2k/0,1360,,00.html')
+SAX.characters(Y2K Watch, 9)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif')
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.characters(Tick... Tick... Tick..., 23)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters( 
+
+, 3)
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='2')
+SAX.startElement(b)
+SAX.startElement(i)
+SAX.startElement(a, href='/news/special_reports/1,1293,,00.html')
+SAX.characters(More Hoo-Ha, 11)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.error: Opening and ending tag mismatch: td and font
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+, 1)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( start of Gen News )
+SAX.characters(
+                , 17)
+SAX.startElement(tr)
+SAX.characters( 
+                  , 20)
+SAX.startElement(td, bgcolor='#000000')
+SAX.characters(&nbsp;, 2)
+SAX.endElement(td)
+SAX.characters(
+          , 11)
+SAX.startElement(td, bgcolor='#000000')
+SAX.startElement(font, size='1', face='Verdana, Arial, Helvetica, sans-serif', color='#FFFFFF')
+SAX.startElement(b)
+SAX.characters(MEANWHILE..., 12)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.endElement(td)
+SAX.characters(
+        , 9)
+SAX.endElement(tr)
+SAX.characters(
+
+        , 10)
+SAX.startElement(tr)
+SAX.characters( 
+          , 12)
+SAX.startElement(td)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(td)
+SAX.characters(
+          , 11)
+SAX.startElement(td, align='left', valign='top')
+SAX.characters(
+          , 11)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='5', width='5', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+
+, 3)
+SAX.comment( 31942 )
+SAX.characters(
+, 1)
+SAX.startElement(font, size='2', face='Arial, Helvetica, sans-serif', color='#000000')
+SAX.startElement(b)
+SAX.characters(F&uuml;hrer Furor, 13)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='1', face='Arial, Geneva, sans-serif', color='#000000')
+SAX.startElement(p)
+SAX.characters(
+Contruction workers in Berli, 637)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.endElement(p)
+SAX.startElement(li)
+SAX.characters(More from , 10)
+SAX.error: htmlParseEntityRef: expecting ';'
+SAX.startElement(a, href='http://www.lycos.com/news/flash/hitlerbunker.html?v=wn1015&amp;lpv=1')
+SAX.characters(Lycos, 5)
+SAX.endElement(a)
+SAX.endElement(li)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+ , 2)
+SAX.endElement(td)
+SAX.characters(
+        , 9)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.comment( end of Gen News )
+SAX.characters(
+, 1)
+SAX.endElement(table)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(font, size='1')
+SAX.characters(&nbsp;, 2)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.endElement(font)
+SAX.characters(
+
+, 2)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.startElement(b)
+SAX.startElement(i)
+SAX.characters(Other Top Stories, 17)
+SAX.endElement(i)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(img, src='http://static.wired.com/news/images/pix155.gif', height='10', width='155', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.comment( SQL query here )
+SAX.characters(
+, 1)
+SAX.comment( IBD_SUBJECT:Wall Street Keeps Reeling )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/reuters/0,1349,31934,00.html')
+SAX.characters(Wall Street Keeps Reeling, 25)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(10:15 a.m., 10)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(The Dow and Nasdaq suffer size, 180)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/reuters/0,1349,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Reuters, 7)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:The Market's Madness )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/reuters/0,1349,31935,00.html')
+SAX.characters(The Market's Madness, 20)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(9:10 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(The bulls and the bears are in, 128)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/reuters/0,1349,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Reuters, 7)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:'Want a Loan? What's Your Race?' )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/politics/0,1283,31533,00.html')
+SAX.characters('Want a Loan? What's Your Race, 32)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(The Federal Reserve is in the , 184)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/politics/0,1283,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Politics, 8)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:Music Regs: A Bagful of Noise )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/business/0,1367,31832,00.html')
+SAX.characters(Music Regs: A Bagful of Noise, 29)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(The struggle to come up with a, 171)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/business/0,1367,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Business, 8)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:Can't Beat 'Em? Green 'Em )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/technology/0,1282,31927,00.html')
+SAX.characters(Can't Beat 'Em? Green 'Em, 25)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(High-tech companies are notori, 186)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/technology/0,1282,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Technology, 10)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:Y2K Cloud Over MS Office )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/business/0,1367,31932,00.html')
+SAX.characters(Y2K Cloud Over MS Office, 24)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(Windows NT sales remain strong, 165)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/business/0,1367,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Business, 8)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#FF0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(Med-Tech, 8)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:Biochips for Custom Chemo )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/technology/0,1282,31914,00.html')
+SAX.characters(Biochips for Custom Chemo, 25)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(Different cancer patients need, 207)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/technology/0,1282,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Technology, 10)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:High Stakes in Priceline Suit )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/business/0,1367,31916,00.html')
+SAX.characters(High Stakes in Priceline Suit, 29)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(It's not just another round of, 196)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/business/0,1367,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Business, 8)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( IBD_SUBJECT:Biodiversity Merges Online )
+SAX.startElement(font, face='Arial, Helvetica, sans-serif', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='/news/technology/0,1282,31918,00.html')
+SAX.characters(Biodiversity Merges Online, 26)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, color='#ff0000', face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(3:00 a.m., 9)
+SAX.endElement(font)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.characters(The far-flung databases on glo, 196)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='Verdana, Arial, Helvetica, sans-serif', size='1')
+SAX.startElement(i)
+SAX.startElement(a, href='/news/technology/0,1282,,00.html')
+SAX.characters(in, 2)
+SAX.characters(&nbsp;, 2)
+SAX.characters(Technology, 10)
+SAX.endElement(a)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( SQL above )
+SAX.characters(
+
+
+        
+, 12)
+SAX.comment(----TRADES-------)
+SAX.characters(
+, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='2')
+SAX.startElement(b)
+SAX.startElement(i)
+SAX.characters(Elsewhere Today, 15)
+SAX.endElement(i)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(img, src='http://static.wired.com/news/images/pix155.gif', height='10', width='155', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.comment( SQL query here )
+SAX.characters(
+, 1)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.thestandard.com/articles/display/0,1449,6975,00.html?home.tf')
+SAX.characters(FCC: Hands-Off on Broadband, 27)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.startElement(cite)
+SAX.characters(The Industry Standard, 21)
+SAX.endElement(cite)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://news.lycos.com/stories/TopNews/19991014RTNEWS-ARMS-TREATY.asp')
+SAX.characters(White House Lashes Out on Trea, 32)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.characters(Lycos, 5)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.pathfinder.com/time/magazine/articles/0,3266,32207,00.html')
+SAX.characters(Steve Jobs at 44, 16)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.startElement(cite)
+SAX.characters(Time, 4)
+SAX.endElement(cite)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.zdnet.com/zdnn/stories/news/0,4586,2353608,00.html')
+SAX.characters(Computers May Run on Gas, 24)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.characters(ZDNN, 4)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.nytimes.com/library/tech/99/10/biztech/articles/14free.html')
+SAX.characters(Much Is Free in the Wired Worl, 31)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.startElement(cite)
+SAX.characters(The New York Times, 18)
+SAX.endElement(cite)
+SAX.characters( (Registration Required), 24)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.usatoday.com/life/cyber/nb/nb4.htm')
+SAX.characters(Melissa: I'm Baaaack, 20)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.startElement(cite)
+SAX.characters(USA Today, 9)
+SAX.endElement(cite)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.msnbc.com/news/322926.asp')
+SAX.characters(Domain Owners Surrender Privac, 31)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.characters(MSNBC, 5)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.washingtonpost.com/wp-srv/business/longterm/tech/techthursday/download/download.htm')
+SAX.characters(Dividing to Conquer in VC Game, 30)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.startElement(cite)
+SAX.characters(The Washington Post, 19)
+SAX.endElement(cite)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://www.salon.com/tech/books/1999/10/14/redhat_book/index.html')
+SAX.characters(The Red Hat Diaries, 19)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.characters(Salon, 5)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='helvetica, arial', size='3')
+SAX.startElement(b)
+SAX.startElement(a, href='http://news.bbc.co.uk/hi/english/sci/tech/newsid_473000/473856.stm')
+SAX.characters(Screensaver to Predict Climate, 30)
+SAX.endElement(a)
+SAX.endElement(b)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, face='geneva, arial', size='2')
+SAX.characters(BBC News, 8)
+SAX.endElement(font)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.comment( SQL above )
+SAX.characters(
+
+
+
+, 4)
+SAX.comment( - - - - - - - - - - - - )
+SAX.characters(
+ 
+   , 6)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+
+  , 4)
+SAX.startElement(tr)
+SAX.characters(
+   , 4)
+SAX.startElement(td, valign='TOP', align='LEFT')
+SAX.characters(
+
+    , 6)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='1', width='280', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+	
+    , 7)
+SAX.comment( FOOTER )
+SAX.characters(
+
+, 2)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(img, src='http://static.wired.com/news/images/pix155.gif', height='10', width='155', border='0', usemap='#navstrip.map', alt='')
+SAX.endElement(img)
+SAX.characters(
+, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.startElement(img, src='http://static.wired.com/news/images/navstrip_off.gif', height='17', width='126', usemap='#navstrip.map', border='0', alt='')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.startElement(font, face='Verdana, Arial, Geneva, sans-serif', size='1')
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.wired.com/news/feedback.html')
+SAX.characters(Send us feedback, 16)
+SAX.endElement(a)
+SAX.characters(
+, 1)
+SAX.characters(&nbsp;, 2)
+SAX.characters(|, 1)
+SAX.characters(&nbsp;, 2)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.hotwired.com/jobs/')
+SAX.characters(Work at Wired Digital, 21)
+SAX.endElement(a)
+SAX.characters(
+, 1)
+SAX.characters(&nbsp;, 2)
+SAX.characters(|, 1)
+SAX.characters(&nbsp;, 2)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://home.wired.com/advertising/')
+SAX.characters(Advertise with us, 17)
+SAX.endElement(a)
+SAX.characters(
+, 1)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://home.wired.com/')
+SAX.characters(About Wired Digital, 19)
+SAX.endElement(a)
+SAX.characters(
+, 1)
+SAX.characters(&nbsp;, 2)
+SAX.characters(|, 1)
+SAX.characters(&nbsp;, 2)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://www.wired.com/home/digital/privacy/')
+SAX.characters(Our Privacy Policy, 18)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.characters(
+
+
+, 3)
+SAX.endElement(p)
+SAX.startElement(p)
+SAX.startElement(font, face='Verdana, Arial, Geneva', size='1')
+SAX.startElement(a, href='http://www.wired.com/home/copyright.html')
+SAX.characters(Copyright, 9)
+SAX.endElement(a)
+SAX.characters( , 1)
+SAX.characters(&copy;, 2)
+SAX.characters( 1994-99 Wired Digital Inc. Al, 48)
+SAX.endElement(font)
+SAX.characters(
+
+, 2)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.comment( TRACKING )
+SAX.characters(
+, 1)
+SAX.startElement(img, src='http://www.wired.com/special/modx/news.gif', height='1', width='1', alt='')
+SAX.endElement(img)
+SAX.characters(
+
+, 2)
+SAX.startElement(map, name='navstrip.map')
+SAX.characters(
+, 1)
+SAX.startElement(area, shape='rect', coords='0,0,14,16', href='/news')
+SAX.endElement(area)
+SAX.characters(
+, 1)
+SAX.startElement(area, shape='rect', coords='15,0 31,16', href='/news/business/')
+SAX.endElement(area)
+SAX.characters(
+, 1)
+SAX.startElement(area, shape='rect', coords='32,0,48,16', href='/news/culture/')
+SAX.endElement(area)
+SAX.characters(
+, 1)
+SAX.startElement(area, shape='rect', coords='49,0,65,16', href='/news/technology/')
+SAX.endElement(area)
+SAX.characters(
+, 1)
+SAX.startElement(area, shape='rect', coords='66,0,83,16', href='/news/politics/')
+SAX.endElement(area)
+SAX.characters(
+, 1)
+SAX.endElement(map)
+SAX.characters(
+ , 2)
+SAX.endElement(p)
+SAX.endElement(td)
+SAX.characters(
+   , 4)
+SAX.startElement(td, valign='TOP', align='LEFT')
+SAX.characters(
+    , 5)
+SAX.startElement(img, src='http://static.wired.com/news/images/spacer.gif', height='1', width='5', alt='')
+SAX.endElement(img)
+SAX.characters(
+   , 4)
+SAX.endElement(td)
+SAX.characters(
+   , 4)
+SAX.startElement(td, valign='TOP', align='LEFT')
+SAX.characters(
+   , 4)
+SAX.endElement(td)
+SAX.characters(
+  , 3)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.endElement(table)
+SAX.ignorableWhitespace(
+
+
+, 3)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.endDocument()

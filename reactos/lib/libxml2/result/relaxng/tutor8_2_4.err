@@ -1,0 +1,3 @@
+Relax-NG validity error : Extra element title in interleave
+./test/relaxng/tutor8_2_4.xml:5: element title: Relax-NG validity error : Element head failed to validate content
+./test/relaxng/tutor8_2_4.xml fails to validate

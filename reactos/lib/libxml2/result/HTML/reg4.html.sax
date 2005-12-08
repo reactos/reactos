@@ -1,0 +1,43 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(title)
+SAX.characters(Regression test 4, 17)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(h1)
+SAX.characters(Regression test 4, 17)
+SAX.endElement(h1)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(p)
+SAX.characters(
+Wrong close of tag P
+, 22)
+SAX.endElement(p)
+SAX.startElement(hr)
+SAX.endElement(hr)
+SAX.ignorableWhitespace(
+, 1)
+SAX.error: Unexpected end tag : p
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

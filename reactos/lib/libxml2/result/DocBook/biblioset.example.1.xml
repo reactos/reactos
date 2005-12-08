@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE biblioentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<biblioentry><abbrev>Walsh97</abbrev><biblioset relation="journal"><title>XML: Principles, Tools, and Techniques</title><publisher><publishername>O'Reilly &amp; Associates, Inc.</publishername></publisher><issn>1085-2301</issn><editor><firstname>Dan</firstname><surname>Connolly</surname></editor></biblioset><biblioset relation="article"><title>A Guide to XML</title><author><surname>Walsh</surname><firstname>Norman</firstname></author><copyright><year>1997</year><holder>ArborText, Inc.</holder></copyright><pagenums>97-108</pagenums></biblioset></biblioentry>

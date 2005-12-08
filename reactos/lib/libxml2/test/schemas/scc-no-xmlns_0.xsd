@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!-- C.4 Schema Component Constraints: no-xmlns -->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://foo" xmlns:foo="http://foo">
+	
+  <element name="foo">
+  	  <complexType>
+  	  	<attribute name="xmlns" type="string" />
+  	  </complexType>    
+  </element>  
+
+</schema>

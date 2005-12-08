@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+Einstien's most famous equation,
+<inlineequation><inlinemediaobject><imageobject><imagedata fileref="figures/emc2.gif"/></imageobject><textobject><phrase>E=mc<superscript>2</superscript></phrase></textobject></inlinemediaobject></inlineequation>, expresses the relationship between matter
+and energy.
+</para>

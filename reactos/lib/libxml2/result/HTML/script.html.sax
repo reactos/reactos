@@ -1,0 +1,32 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.startElement(title)
+SAX.characters(Script tests, 12)
+SAX.endElement(title)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(script, language='javascript')
+SAX.cdata(
+    if (window.open&lt;max) ;, 28)
+SAX.endElement(script)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(input, onclick='if(window.open&lt;max);')
+SAX.endElement(input)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

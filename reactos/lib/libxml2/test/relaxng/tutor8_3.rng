@@ -1,0 +1,9 @@
+<element name="content" xmlns="http://relaxng.org/ns/structure/1.0">
+  <interleave>
+    <text/>
+    <element name="p">
+      <text/>
+    </element>
+  </interleave>
+</element>
+

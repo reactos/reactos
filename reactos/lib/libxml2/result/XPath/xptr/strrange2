@@ -1,0 +1,64 @@
+
+========================
+Expression: xpointer(string-range(//p, 'test', 2))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 11 in node
+    TEXT
+      content=a simple test
+  To index 13 in node
+    TEXT
+      content=a simple test
+
+2 :   Object is a range :
+  From index 11 in node
+    TEXT
+      content=multiple tests
+  To index 13 in node
+    TEXT
+      content=multiple tests
+
+3 :   Object is a range :
+  From index 8 in node
+    TEXT
+      content=anced test
+  To index 10 in node
+    TEXT
+      content=anced test
+
+
+========================
+Expression: xpointer(string-range(//p, 'test', 2, 2))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 11 in node
+    TEXT
+      content=a simple test
+  To index 12 in node
+    TEXT
+      content=a simple test
+
+2 :   Object is a range :
+  From index 11 in node
+    TEXT
+      content=multiple tests
+  To index 12 in node
+    TEXT
+      content=multiple tests
+
+3 :   Object is a range :
+  From index 8 in node
+    TEXT
+      content=anced test
+  To index 9 in node
+    TEXT
+      content=anced test
+
+
+========================
+Expression: xpointer(string-range(//p, 'difficult', 1, 0))
+Object is a Location Set:
+1 :   Object is a collapsed range :
+  index 3 in node
+    TEXT
+      content=a diff

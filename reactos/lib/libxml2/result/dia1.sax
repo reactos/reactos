@@ -1,0 +1,323 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(dia:diagram, xmlns:dia='http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+  , 3)
+SAX.startElement(dia:diagramdata)
+SAX.characters(
+    , 5)
+SAX.startElement(dia:attribute, name='background')
+SAX.characters(
+      , 7)
+SAX.startElement(dia:color, val='#ffffff')
+SAX.endElement(dia:color)
+SAX.characters(
+    , 5)
+SAX.endElement(dia:attribute)
+SAX.characters(
+  , 3)
+SAX.endElement(dia:diagramdata)
+SAX.characters(
+  , 3)
+SAX.startElement(dia:layer, name='Background', visible='true')
+SAX.characters(
+    , 5)
+SAX.startElement(dia:object, type='Standard - Line', version='0', id='O0')
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='obj_pos')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:point, val='1.95,6.85')
+SAX.endElement(dia:point)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='obj_bb')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:rectangle, val='1.9,6.8;11,8.55')
+SAX.endElement(dia:rectangle)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='conn_endpoints')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:point, val='1.95,6.85')
+SAX.endElement(dia:point)
+SAX.characters(
+        , 9)
+SAX.startElement(dia:point, val='10.95,8.5')
+SAX.endElement(dia:point)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='line_color')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:color, val='#000000')
+SAX.endElement(dia:color)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='line_width')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:real, val='0.1')
+SAX.endElement(dia:real)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='line_style')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:enum, val='0')
+SAX.endElement(dia:enum)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='start_arrow')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:enum, val='0')
+SAX.endElement(dia:enum)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='end_arrow')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:enum, val='0')
+SAX.endElement(dia:enum)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:connections)
+SAX.characters(
+        , 9)
+SAX.startElement(dia:connection, handle='1', to='O2', connection='3')
+SAX.endElement(dia:connection)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:connections)
+SAX.characters(
+    , 5)
+SAX.endElement(dia:object)
+SAX.characters(
+    , 5)
+SAX.startElement(dia:object, type='Standard - Text', version='0', id='O1')
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='obj_pos')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:point, val='4.8,4.75')
+SAX.endElement(dia:point)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='obj_bb')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:rectangle, val='2.579,3.96359;7.021,4.96359')
+SAX.endElement(dia:rectangle)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='text')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:composite, type='text')
+SAX.characters(
+          , 11)
+SAX.startElement(dia:attribute, name='string')
+SAX.characters(
+            , 13)
+SAX.startElement(dia:string, val='sdfsdfg')
+SAX.endElement(dia:string)
+SAX.characters(
+          , 11)
+SAX.endElement(dia:attribute)
+SAX.characters(
+          , 11)
+SAX.startElement(dia:attribute, name='font')
+SAX.characters(
+            , 13)
+SAX.startElement(dia:font, name='Courier')
+SAX.endElement(dia:font)
+SAX.characters(
+          , 11)
+SAX.endElement(dia:attribute)
+SAX.characters(
+          , 11)
+SAX.startElement(dia:attribute, name='height')
+SAX.characters(
+            , 13)
+SAX.startElement(dia:real, val='1')
+SAX.endElement(dia:real)
+SAX.characters(
+          , 11)
+SAX.endElement(dia:attribute)
+SAX.characters(
+          , 11)
+SAX.startElement(dia:attribute, name='pos')
+SAX.characters(
+            , 13)
+SAX.startElement(dia:point, val='4.8,4.75')
+SAX.endElement(dia:point)
+SAX.characters(
+          , 11)
+SAX.endElement(dia:attribute)
+SAX.characters(
+          , 11)
+SAX.startElement(dia:attribute, name='color')
+SAX.characters(
+            , 13)
+SAX.startElement(dia:color, val='#000000')
+SAX.endElement(dia:color)
+SAX.characters(
+          , 11)
+SAX.endElement(dia:attribute)
+SAX.characters(
+          , 11)
+SAX.startElement(dia:attribute, name='alignment')
+SAX.characters(
+            , 13)
+SAX.startElement(dia:enum, val='1')
+SAX.endElement(dia:enum)
+SAX.characters(
+          , 11)
+SAX.endElement(dia:attribute)
+SAX.characters(
+        , 9)
+SAX.endElement(dia:composite)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+    , 5)
+SAX.endElement(dia:object)
+SAX.characters(
+    , 5)
+SAX.startElement(dia:object, type='Standard - Box', version='0', id='O2')
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='obj_pos')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:point, val='10.95,7.5')
+SAX.endElement(dia:point)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='obj_bb')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:rectangle, val='10.9,7.45;13.05,9.55')
+SAX.endElement(dia:rectangle)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='elem_corner')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:point, val='10.95,7.5')
+SAX.endElement(dia:point)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='elem_width')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:real, val='2.05')
+SAX.endElement(dia:real)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='elem_height')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:real, val='2')
+SAX.endElement(dia:real)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='border_width')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:real, val='0.1')
+SAX.endElement(dia:real)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='border_color')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:color, val='#000000')
+SAX.endElement(dia:color)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='inner_color')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:color, val='#ffffff')
+SAX.endElement(dia:color)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+      , 7)
+SAX.startElement(dia:attribute, name='line_style')
+SAX.characters(
+        , 9)
+SAX.startElement(dia:enum, val='0')
+SAX.endElement(dia:enum)
+SAX.characters(
+      , 7)
+SAX.endElement(dia:attribute)
+SAX.characters(
+    , 5)
+SAX.endElement(dia:object)
+SAX.characters(
+  , 3)
+SAX.endElement(dia:layer)
+SAX.characters(
+, 1)
+SAX.endElement(dia:diagram)
+SAX.endDocument()

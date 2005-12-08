@@ -1,0 +1,100 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(html, -//W3C//DTD XHTML 1.0 Strict//EN, http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd)
+SAX.externalSubset(html, -//W3C//DTD XHTML 1.0 Strict//EN, http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd)
+SAX.comment( 3.1.1 3/ )
+SAX.startElement(html, xml:lang='en', lang='en')
+SAX.characters(
+  , 3)
+SAX.startElement(head)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Virtual Library, 15)
+SAX.endElement(title)
+SAX.characters(
+  , 3)
+SAX.endElement(head)
+SAX.characters(
+  , 3)
+SAX.comment( 4.8 )
+SAX.characters(
+  , 3)
+SAX.startElement(script, type='text/javascript')
+SAX.characters(
+  ... unescaped script conten, 38)
+SAX.endElement(script)
+SAX.characters(
+  , 3)
+SAX.startElement(body)
+SAX.characters(
+    , 5)
+SAX.startElement(p)
+SAX.characters(Moved to , 9)
+SAX.startElement(a, href='http://example.org/')
+SAX.characters(example.org, 11)
+SAX.endElement(a)
+SAX.characters(., 1)
+SAX.endElement(p)
+SAX.characters(
+  , 3)
+SAX.endElement(body)
+SAX.characters(
+  , 3)
+SAX.comment( C2 )
+SAX.characters(
+  , 3)
+SAX.startElement(img, src='foo.gif', alt='foo')
+SAX.endElement(img)
+SAX.characters(
+  , 3)
+SAX.comment( C3 )
+SAX.characters(
+  , 3)
+SAX.startElement(p)
+SAX.endElement(p)
+SAX.characters(
+  , 3)
+SAX.comment( C7 )
+SAX.characters(
+  , 3)
+SAX.startElement(p, lang='fr')
+SAX.characters(coucou, 6)
+SAX.endElement(p)
+SAX.characters(
+  , 3)
+SAX.startElement(p, xml:lang='fr')
+SAX.characters(salut, 5)
+SAX.endElement(p)
+SAX.characters(
+  , 3)
+SAX.comment( C8 )
+SAX.characters(
+  , 3)
+SAX.startElement(p, name='fragid')
+SAX.characters(test, 4)
+SAX.endElement(p)
+SAX.characters(
+  , 3)
+SAX.comment( 4.5 )
+SAX.characters(
+  , 3)
+SAX.startElement(dl, compact='')
+SAX.characters(
+  , 3)
+SAX.startElement(dt)
+SAX.characters(Internet Engineering Task Forc, 31)
+SAX.endElement(dt)
+SAX.characters(
+  , 3)
+SAX.startElement(dd)
+SAX.characters(An organization which establis, 70)
+SAX.endElement(dd)
+SAX.characters(
+  , 3)
+SAX.endElement(dl)
+SAX.characters(
+
+, 2)
+SAX.endElement(html)
+SAX.endDocument()

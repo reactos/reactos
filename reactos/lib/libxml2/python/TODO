@@ -1,0 +1,57 @@
+             TODO for the libxml2 Python wrappers
+
+         $Id: TODO,v 1.8 2002/02/06 16:06:57 veillard Exp $
+
+Things to do:
+-------------
+
+- SAX interfaces
+  - push is done but no generic interface
+  - elementDecl need some work
+  - need more testing and check full callbacks for xmllib/sgmlop replacement
+- enums -> libxml.py
+- access to XPath variables
+- xmlBuffer exposure
+- xpathContext, being able to set/get info and clean it up
+- more work needed on context handling for function lookup
+  and use of an hash table.
+- add regression tests
+   - SAX flow
+- DTD element and attributes content accesses
+   - attribute handled in SAX
+   - element needed in both
+
+
+Done:
+-----
+- class hierarchy:
+  + make specific node type inherit from xmlNode
+    done, had to sort the classes in the output
+  + get the generator to output a classes.txt description
+    done libxml2class.txt
+- add regression tests
+   - tests/Makefile.am: export the Python class path
+   - xpath queries
+   - xpath extension
+   - check memory
+   - build tree
+   - saving
+- extensions based on a python.xml description of the new specific
+  interfaces
+   file libxml2-python-api.xml , first entry is xmlRegisterXPathFunction
+- spec file: automatically generate for pythonX.Y if found
+  Done, a bit ugly by running new makes in %install for each level
+  found.
+- error redirections and preformat
+- handling of node.content
+- access to xmlParserCtxt and push mode
+   - needed for SAX too
+   - entry points
+   - wrappers
+   - decent interface for setting/getting behaviour
+- memory debug interfaces
+- SAX interfaces
+   - basic stuff with push is available
+   - basic xmllib replacement
+
+Daniel Veillard

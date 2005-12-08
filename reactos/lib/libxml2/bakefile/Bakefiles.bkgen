@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<!-- $Id: Bakefiles.bkgen,v 1.1 2005/01/27 23:59:14 veillard Exp $ -->
+
+<bakefile-gen>
+    
+    <disable-formats>gnu,dmars,cbx_unix,cbuilderx</disable-formats>
+    <input>libxml2.bkl</input>
+
+    <!-- List of output formats to generate: -->
+    <add-formats>
+        borland,dmars,mingw,msvc,msvc6prj,watcom,cbuilderx,cbx_unix,gnu
+    </add-formats>
+
+
+</bakefile-gen>

@@ -1,0 +1,2 @@
+./test/relaxng/choice0_4.xml:1: element device: Relax-NG validity error : Element device failed to validate content
+./test/relaxng/choice0_4.xml fails to validate

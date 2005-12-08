@@ -1,0 +1,23 @@
+0 1 rec 0 0
+1 14 #text 0 1 
+
+1 1 eg 0 0
+2 4 #cdata-section 0 1 <!ENTITY % pub    "&#xc9;ditions Gallimard" >
+<!ENTITY   rights "All rights reserved" >
+<!ENTITY   book   "La Peste: Albert Camus, 
+&#xA9; 1947 %pub;. &rights;" >
+1 15 eg 0 0
+1 3 #text 0 1 
+then the replacement text for the entity "
+1 1 code 0 0
+2 3 #text 0 1 book
+1 15 code 0 0
+1 3 #text 0 1 " is:
+
+1 1 eg 0 0
+2 3 #text 0 1 La Peste: Albert Camus, 
+© 1947 Éditions Gallimard. &rights;
+1 15 eg 0 0
+1 14 #text 0 1 
+
+0 15 rec 0 0

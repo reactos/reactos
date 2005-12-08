@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>There are several undocumented settings for <varname>debug</varname>,
+among them <literal>3.27</literal> to enable a complete trace and
+<literal>3.8</literal> to debug the spell checker. For a complete
+list of the possible settings,
+see <filename class="headerfile">edit/debug.h</filename>.</para>

@@ -1,0 +1,275 @@
+Start validating ref pattern on element
+ Start validating def pattern on element
+  Start validating choice on element
+   Start validating element element on element
+    Start validating choice on text
+     Start validating attribute name on text
+xmlRelaxNGValidateAttribute(name): 0
+     Validating attribute name suceeded
+    Validating choice suceeded
+    Start validating ref common-atts on text
+     Start validating def common-atts on text
+      Start validating optional on text
+       Start validating attribute ns on text
+       Validating attribute ns failed
+      Validating optional suceeded
+      Start validating optional on text
+       Start validating attribute datatypeLibrary on text
+       Validating attribute datatypeLibrary failed
+      Validating optional suceeded
+      Start validating zeroOrMore on text
+       Start validating attribute on text
+       Validating attribute failed
+      Validating zeroOrMore suceeded
+     Validating def common-atts suceeded
+    Validating ref common-atts suceeded
+    Start validating ref open-patterns on text
+     Start validating def open-patterns on text
+      Start validating interleave on text
+       Start validating oneOrMore on zeroOrMore
+        Start validating ref pattern on zeroOrMore
+         Start validating def pattern on zeroOrMore
+          Start validating choice on zeroOrMore
+           Start validating element element on zeroOrMore
+           Validating element element failed
+           Start validating element attribute on zeroOrMore
+           Validating element attribute failed
+           Start validating element group on zeroOrMore
+           Validating element group failed
+           Start validating element interleave on zeroOrMore
+           Validating element interleave failed
+           Start validating element choice on zeroOrMore
+           Validating element choice failed
+           Start validating element optional on zeroOrMore
+           Validating element optional failed
+           Start validating element zeroOrMore on zeroOrMore
+            Start validating ref common-atts on text
+             Start validating def common-atts on text
+              Start validating optional on text
+               Start validating attribute ns on text
+               Validating attribute ns failed
+              Validating optional suceeded
+              Start validating optional on text
+               Start validating attribute datatypeLibrary on text
+               Validating attribute datatypeLibrary failed
+              Validating optional suceeded
+              Start validating zeroOrMore on text
+               Start validating attribute on text
+               Validating attribute failed
+              Validating zeroOrMore suceeded
+             Validating def common-atts suceeded
+            Validating ref common-atts suceeded
+            Start validating ref open-patterns on text
+             Start validating def open-patterns on text
+              Start validating interleave on text
+               Start validating oneOrMore on element
+                Start validating ref pattern on element
+                 Start validating def pattern on element
+                  Start validating choice on element
+                   Start validating element element on element
+                    Start validating choice on text
+                     Start validating attribute name on text
+xmlRelaxNGValidateAttribute(name): 0
+                     Validating attribute name suceeded
+                    Validating choice suceeded
+                    Start validating ref common-atts on text
+                     Start validating def common-atts on text
+                      Start validating optional on text
+                       Start validating attribute ns on text
+                       Validating attribute ns failed
+                      Validating optional suceeded
+                      Start validating optional on text
+                       Start validating attribute datatypeLibrary on text
+                       Validating attribute datatypeLibrary failed
+                      Validating optional suceeded
+                      Start validating zeroOrMore on text
+                       Start validating attribute on text
+                       Validating attribute failed
+                      Validating zeroOrMore suceeded
+                     Validating def common-atts suceeded
+                    Validating ref common-atts suceeded
+                    Start validating ref open-patterns on text
+                     Start validating def open-patterns on text
+                      Start validating interleave on text
+                       Start validating ref other 
+                        Start validating def other 
+                         Start validating zeroOrMore 
+                         Validating zeroOrMore suceeded
+                        Validating def other suceeded
+                       Validating ref other suceeded
+                       Start validating oneOrMore 
+                        Start validating ref pattern 
+                         Start validating def pattern 
+                          Start validating choice 
+                           Start validating element element 
+                           Validating element element failed
+                           Start validating element attribute 
+                           Validating element attribute failed
+                           Start validating element group 
+                           Validating element group failed
+                           Start validating element interleave 
+                           Validating element interleave failed
+                           Start validating element choice 
+                           Validating element choice failed
+                           Start validating element optional 
+                           Validating element optional failed
+                           Start validating element zeroOrMore 
+                           Validating element zeroOrMore failed
+                           Start validating element oneOrMore 
+                           Validating element oneOrMore failed
+                           Start validating element list 
+                           Validating element list failed
+                           Start validating element mixed 
+                           Validating element mixed failed
+                           Start validating element ref 
+                           Validating element ref failed
+                           Start validating element parentRef 
+                           Validating element parentRef failed
+                           Start validating element empty 
+                           Validating element empty failed
+                           Start validating element text 
+                           Validating element text failed
+                           Start validating element value 
+                           Validating element value failed
+                           Start validating element data 
+                           Validating element data failed
+                           Start validating element notAllowed 
+                           Validating element notAllowed failed
+                           Start validating element externalRef 
+                           Validating element externalRef failed
+                           Start validating element grammar 
+                           Validating element grammar failed
+                          Validating choice failed
+                         Validating def pattern failed
+                        Validating ref pattern failed
+                       Validating oneOrMore failed
+                      Validating interleave failed
+                     Validating def open-patterns failed
+                    Validating ref open-patterns failed
+E: Element element failed to validate element content
+E: Element element has extra content: documentation
+xmlRelaxNGValidateDefinition(): validated element : -1: done
+                   Validating element element failed
+                   Start validating element attribute on element
+                   Validating element attribute failed
+                   Start validating element group on element
+                   Validating element group failed
+                   Start validating element interleave on element
+                   Validating element interleave failed
+                   Start validating element choice on element
+                   Validating element choice failed
+                   Start validating element optional on element
+                   Validating element optional failed
+                   Start validating element zeroOrMore on element
+                   Validating element zeroOrMore failed
+                   Start validating element oneOrMore on element
+                   Validating element oneOrMore failed
+                   Start validating element list on element
+                   Validating element list failed
+                   Start validating element mixed on element
+                   Validating element mixed failed
+                   Start validating element ref on element
+                   Validating element ref failed
+                   Start validating element parentRef on element
+                   Validating element parentRef failed
+                   Start validating element empty on element
+                   Validating element empty failed
+                   Start validating element text on element
+                   Validating element text failed
+                   Start validating element value on element
+                   Validating element value failed
+                   Start validating element data on element
+                   Validating element data failed
+                   Start validating element notAllowed on element
+                   Validating element notAllowed failed
+                   Start validating element externalRef on element
+                   Validating element externalRef failed
+                   Start validating element grammar on element
+                   Validating element grammar failed
+                  Validating choice failed
+                 Validating def pattern failed
+                Validating ref pattern failed
+               Validating oneOrMore failed
+              Validating interleave failed
+             Validating def open-patterns failed
+            Validating ref open-patterns failed
+E: Element zeroOrMore failed to validate element content
+E: Element zeroOrMore has extra content: element
+xmlRelaxNGValidateDefinition(): validated zeroOrMore : -1: done
+           Validating element zeroOrMore failed
+           Start validating element oneOrMore on zeroOrMore
+           Validating element oneOrMore failed
+           Start validating element list on zeroOrMore
+           Validating element list failed
+           Start validating element mixed on zeroOrMore
+           Validating element mixed failed
+           Start validating element ref on zeroOrMore
+           Validating element ref failed
+           Start validating element parentRef on zeroOrMore
+           Validating element parentRef failed
+           Start validating element empty on zeroOrMore
+           Validating element empty failed
+           Start validating element text on zeroOrMore
+           Validating element text failed
+           Start validating element value on zeroOrMore
+           Validating element value failed
+           Start validating element data on zeroOrMore
+           Validating element data failed
+           Start validating element notAllowed on zeroOrMore
+           Validating element notAllowed failed
+           Start validating element externalRef on zeroOrMore
+           Validating element externalRef failed
+           Start validating element grammar on zeroOrMore
+           Validating element grammar failed
+          Validating choice failed
+         Validating def pattern failed
+        Validating ref pattern failed
+       Validating oneOrMore failed
+      Validating interleave failed
+     Validating def open-patterns failed
+    Validating ref open-patterns failed
+E: Element element failed to validate element content
+E: Element element has extra content: zeroOrMore
+xmlRelaxNGValidateDefinition(): validated element : -1: done
+   Validating element element failed
+   Start validating element attribute on element
+   Validating element attribute failed
+   Start validating element group on element
+   Validating element group failed
+   Start validating element interleave on element
+   Validating element interleave failed
+   Start validating element choice on element
+   Validating element choice failed
+   Start validating element optional on element
+   Validating element optional failed
+   Start validating element zeroOrMore on element
+   Validating element zeroOrMore failed
+   Start validating element oneOrMore on element
+   Validating element oneOrMore failed
+   Start validating element list on element
+   Validating element list failed
+   Start validating element mixed on element
+   Validating element mixed failed
+   Start validating element ref on element
+   Validating element ref failed
+   Start validating element parentRef on element
+   Validating element parentRef failed
+   Start validating element empty on element
+   Validating element empty failed
+   Start validating element text on element
+   Validating element text failed
+   Start validating element value on element
+   Validating element value failed
+   Start validating element data on element
+   Validating element data failed
+   Start validating element notAllowed on element
+   Validating element notAllowed failed
+   Start validating element externalRef on element
+   Validating element externalRef failed
+   Start validating element grammar on element
+   Validating element grammar failed
+  Validating choice failed
+ Validating def pattern failed
+Validating ref pattern failed
+error detected at relaxng.c:7308
+extra data on the document

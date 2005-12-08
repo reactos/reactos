@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE funcsynopsis PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<funcsynopsis><funcprototype><funcdef>int <function>max</function></funcdef><paramdef>int <parameter>int1</parameter></paramdef><paramdef>int <parameter>int2</parameter></paramdef></funcprototype></funcsynopsis>

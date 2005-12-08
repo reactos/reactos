@@ -1,0 +1,12 @@
+./test/HTML/entities.html:1: HTML parser error : htmlParseEntityRef: expecting ';'
+<p tst="a&amp;b" tst2="a&b" tst3="a & b">
+                          ^
+./test/HTML/entities.html:1: HTML parser error : htmlParseEntityRef: no name
+<p tst="a&amp;b" tst2="a&b" tst3="a & b">
+                                     ^
+./test/HTML/entities.html:3: HTML parser error : htmlParseEntityRef: expecting ';'
+a&b
+   ^
+./test/HTML/entities.html:4: HTML parser error : htmlParseEntityRef: no name
+a & b
+   ^

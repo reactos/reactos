@@ -1,0 +1,6 @@
+./test/valid/xlink.xml:450: element termdef: validity error : ID dt-arc already defined
+	<p><termdef id="dt-arc" term="Arc">An <term>arc</term> is contained within an e
+	                                  ^
+./test/valid/xlink.xml:530: element termref: validity error : IDREF attribute def references an unknown ID "dt-xlg"
+
+^

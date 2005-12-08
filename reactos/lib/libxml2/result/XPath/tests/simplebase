@@ -1,0 +1,73 @@
+
+========================
+Expression: /child::*
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT EXAMPLE
+    ATTRIBUTE prop1
+      TEXT
+        content=gnome is great
+    ATTRIBUTE prop2
+      TEXT
+        content=& linux too
+
+========================
+Expression: /child::EXAMPLE
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT EXAMPLE
+    ATTRIBUTE prop1
+      TEXT
+        content=gnome is great
+    ATTRIBUTE prop2
+      TEXT
+        content=& linux too
+
+========================
+Expression: /child::EXAMPLE/child::head
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT head
+
+========================
+Expression: /child::EXAMPLE/child::*
+Object is a Node Set :
+Set contains 2 nodes:
+1  ELEMENT head
+2  ELEMENT chapter
+
+========================
+Expression: /child::EXAMPLE/child::head/child::title
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT title
+
+========================
+Expression: /child::EXAMPLE/child::head/child::title/child::text()
+Object is a Node Set :
+Set contains 1 nodes:
+1  TEXT
+    content=Welcome to Gnome
+
+========================
+Expression: /child::EXAMPLE/child::head/node()
+Object is a Node Set :
+Set contains 3 nodes:
+1  TEXT
+    content=    
+2  ELEMENT title
+3  TEXT
+    content=   
+
+========================
+Expression: /descendant::title
+Object is a Node Set :
+Set contains 2 nodes:
+1  ELEMENT title
+2  ELEMENT title
+
+========================
+Expression: /descendant::p/ancestor::chapter
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT chapter

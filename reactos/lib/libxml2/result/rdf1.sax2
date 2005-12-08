@@ -1,0 +1,190 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(RDF, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 2, xmlns:RPM='http://www.rpm.org/', xmlns:RDF='http://www.w3.org/TR/WD-rdf-syntax#', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(Description, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 0, 1, 0, HREF='ftp:...', 78)
+SAX.characters(
+    , 5)
+SAX.startElementNs(Name, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(rpm, 3)
+SAX.endElementNs(Name, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Version, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(2.5, 3)
+SAX.endElementNs(Version, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Release, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(2, 1)
+SAX.endElementNs(Release, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Arch, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(i386, 4)
+SAX.endElementNs(Arch, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Os, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Linux, 5)
+SAX.endElementNs(Os, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Distribution, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Manhattan , 10)
+SAX.endElementNs(Distribution, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Vendor, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Red Hat Software, 16)
+SAX.endElementNs(Vendor, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Packager, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Red Hat Software , 17)
+SAX.getEntity(lt)
+SAX.characters(<, 1)
+SAX.characters(bugs@redhat.com, 15)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.endElementNs(Packager, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Group, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Utilities/System, 16)
+SAX.endElementNs(Group, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Summary, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Red Hat Package Manager, 23)
+SAX.endElementNs(Summary, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Description, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(RPM is a powerful package mana, 248)
+SAX.endElementNs(Description, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Copyright, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(GPL, 3)
+SAX.endElementNs(Copyright, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Changelog, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(* Sun May 10 1998 Prospector S, 36)
+SAX.getEntity(lt)
+SAX.characters(<, 1)
+SAX.characters(bugs@redhat.com, 15)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.characters(
+  - translations modified for, 42)
+SAX.endElementNs(Changelog, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Sources, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(rpm-2.5-2.src.rpm, 17)
+SAX.endElementNs(Sources, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(SourcesFtp, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(ftp://ftp.redhat.com/pub/redha, 48)
+SAX.endElementNs(SourcesFtp, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(BuildDate, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Sun May 10 14:52:32 1998, 24)
+SAX.endElementNs(BuildDate, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Date, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(894826352, 9)
+SAX.endElementNs(Date, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Size, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(850599, 6)
+SAX.endElementNs(Size, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(BuildHost, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(porky.redhat.com, 16)
+SAX.endElementNs(BuildHost, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Provides, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(Bag, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 0, 0, 0)
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(rpm, 3)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(Bag, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.characters(
+    , 5)
+SAX.endElementNs(Provides, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Requires, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(Bag, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 0, 0, 0)
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(/bin/sh, 7)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(ld-linux.so.2, 13)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(libc.so.6, 9)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(libdb.so.2, 10)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(libz.so.1, 9)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(/bin/bash, 9)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(/bin/sh, 7)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(Bag, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.characters(
+    , 5)
+SAX.endElementNs(Requires, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Files, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(/bin/rpm
+/usr/bin/find-provide, 885)
+SAX.endElementNs(Files, RPM, 'http://www.rpm.org/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(Description, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.characters(
+, 1)
+SAX.endElementNs(RDF, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.endDocument()

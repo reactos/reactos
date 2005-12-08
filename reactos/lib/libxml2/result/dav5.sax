@@ -1,0 +1,54 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(D:multistatus, xmlns:D='http://www.ietf.org/standards/dav/', xmlns:Z='http://www.w3.com/standards/z39.50/')
+SAX.characters(
+  , 3)
+SAX.startElement(D:response)
+SAX.characters(
+    , 5)
+SAX.startElement(D:prop)
+SAX.characters(
+      , 7)
+SAX.startElement(Z:Authors)
+SAX.endElement(Z:Authors)
+SAX.characters(
+    , 5)
+SAX.endElement(D:prop)
+SAX.characters(
+    , 5)
+SAX.startElement(D:status)
+SAX.characters(HTTP/1.1 420 Method Failure, 27)
+SAX.endElement(D:status)
+SAX.characters(
+  , 3)
+SAX.endElement(D:response)
+SAX.characters(
+  , 3)
+SAX.startElement(D:response)
+SAX.characters(
+    , 5)
+SAX.startElement(D:prop)
+SAX.characters(
+      , 7)
+SAX.startElement(Z:Copyright-Owner)
+SAX.endElement(Z:Copyright-Owner)
+SAX.characters(
+    , 5)
+SAX.endElement(D:prop)
+SAX.characters(
+    , 5)
+SAX.startElement(D:status)
+SAX.characters(HTTP/1.1 409 Conflict, 21)
+SAX.endElement(D:status)
+SAX.characters(
+  , 3)
+SAX.endElement(D:response)
+SAX.characters(
+  , 3)
+SAX.startElement(D:responsedescription)
+SAX.characters( Copyright Owner can not be de, 47)
+SAX.endElement(D:responsedescription)
+SAX.characters(
+, 1)
+SAX.endElement(D:multistatus)
+SAX.endDocument()

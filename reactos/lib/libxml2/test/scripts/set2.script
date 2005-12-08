@@ -1,0 +1,3 @@
+cd a
+set <!-- test multiple children --> <b/> <c/>
+save -

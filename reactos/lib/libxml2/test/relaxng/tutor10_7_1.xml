@@ -1,0 +1,3 @@
+<addressBook xmlns="http://www.example.com">
+  <card name="John Smith" email="js@example.com"/>
+</addressBook>

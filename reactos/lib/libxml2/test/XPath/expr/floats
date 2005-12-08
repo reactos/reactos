@@ -1,0 +1,61 @@
+1
+123
+1.23
+0.123
+4.
+.4
+1.23e3
+1.23e-3
+1 div 0
+-1 div 0
+0 div 0
+1 div -0
+(1 div 0) > 0
+(1 div 0) < 0
+(-1 div 0) > 0
+(-1 div 0) < 0
+(0 div 0) > 0
+(0 div 0) < 0
+(1 div -0) > 0
+(1 div -0) < 0
+0 div 0 = 0 div 0
+0 div 0 != 0 div 0
+0 div 0 > 0 div 0
+0 div 0 < 0 div 0
+0 div 0 >= 0 div 0
+0 div 0 <= 0 div 0
+1 div 0 = -1 div 0
+1 div 0 != -1 div 0
+1 div 0 > -1 div 0
+1 div 0 < -1 div 0
+1 div 0 >= -1 div 0
+1 div 0 <= -1 div 0
+1 div 0 = 1 div 0
+1 div 0 != 1 div 0
+1 div 0 > 1 div 0
+1 div 0 < 1 div 0
+1 div 0 >= -1 div 0
+1 div 0 <= -1 div 0
+-2 div 0 = -1 div 0
+1 div floor(0.1)
+1 div floor(-0.1)
+1 div floor(-0)
+1 div floor(0)
+1 div ceiling(0.1)
+1 div ceiling(-0.1)
+1 div ceiling(-0)
+1 div ceiling(0)
+1 div round(0.1)
+1 div round(-0.1)
+1 div round(-0)
+1 div round(0)
+1 div number('f')
+number('f') div 1
+1 div (1 div 0)
+(1 div 0) div 1
+-(1 div 0) div 1
+5 mod 2
+5 mod -2
+-5 mod 2
+-5 mod -2
+8 mod 3 = 2

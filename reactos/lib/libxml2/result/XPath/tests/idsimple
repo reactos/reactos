@@ -1,0 +1,33 @@
+
+========================
+Expression: //*[@id="root"]
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT EXAMPLE
+    ATTRIBUTE id
+      TEXT
+        content=root
+    ATTRIBUTE prop1
+      TEXT
+        content=gnome is great
+    ATTRIBUTE prop2
+      TEXT
+        content=& linux too
+
+========================
+Expression: //*[@id="chapter2"]
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter2
+
+========================
+Expression: //*[@id="chapter5"]
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter5

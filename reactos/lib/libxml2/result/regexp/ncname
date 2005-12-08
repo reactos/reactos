@@ -1,0 +1,6 @@
+Regexp: [\i-[:]][\c-[:]]*
+a: Ok
+abc: Ok
+abc1d: Ok
+1ac: Fail
+a1b:c: Fail

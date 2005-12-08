@@ -1,0 +1,39 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+  , 3)
+SAX.startElement(title)
+SAX.characters(This service is temporary down, 30)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(body, bgcolor='#FFFFFF')
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(h1, align='center')
+SAX.characters(Sorry, this service is tempora, 37)
+SAX.endElement(h1)
+SAX.startElement(p)
+SAX.characters(
+We are doing our best to get , 48)
+SAX.endElement(p)
+SAX.startElement(p)
+SAX.characters(The W3C system administrators, 29)
+SAX.endElement(p)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

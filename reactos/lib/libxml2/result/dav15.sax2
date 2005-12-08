@@ -1,0 +1,76 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 2, xmlns:D='http://www.ietf.org/standards/dav/', xmlns:F='http://www.foocorp.com/Project/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(Source, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(projfiles, F, 'http://www.foocorp.com/Project/', 0, 0, 0)
+SAX.characters(Source, 6)
+SAX.endElementNs(projfiles, F, 'http://www.foocorp.com/Project/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(src, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://foo.bar/program, 22)
+SAX.endElementNs(src, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(dst, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://foo.bar/src/main.c, 25)
+SAX.endElementNs(dst, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(link, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(projfiles, F, 'http://www.foocorp.com/Project/', 0, 0, 0)
+SAX.characters(Library, 7)
+SAX.endElementNs(projfiles, F, 'http://www.foocorp.com/Project/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(src, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://foo.bar/program, 22)
+SAX.endElementNs(src, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(dst, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://foo.bar/src/main.lib, 27)
+SAX.endElementNs(dst, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(link, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(link, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(projfiles, F, 'http://www.foocorp.com/Project/', 0, 0, 0)
+SAX.characters(Makefile, 8)
+SAX.endElementNs(projfiles, F, 'http://www.foocorp.com/Project/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(src, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://foo.bar/program, 22)
+SAX.endElementNs(src, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(dst, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://foo.bar/src/makefile, 27)
+SAX.endElementNs(dst, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(link, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(Source, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+, 1)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.endDocument()

@@ -1,0 +1,721 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(ultramode)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(100 Mbit/s on Fibre to the hom, 31)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-06 14:39:59, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(wouldn't-it-be-nice, 19)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(internet, 8)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(20, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicinternet.jpg, 17)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Gimp 1.2 Preview, 16)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-06 14:38:40, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(stuff-to-read, 13)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(gimp, 4)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(12, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicgimp.gif, 13)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Sony's AIBO robot Sold Out, 26)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-06 14:32:51, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(stuff-to-see, 12)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(tech, 4)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(10, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topictech2.jpg, 14)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Ask Slashdot: Another Word for, 40)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/askslashdo, 54)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-05 20:00:00, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(Cliff, 5)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(hacker-vs-cracker, 17)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(news, 4)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(385, 3)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(askslashdot, 11)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicnews.gif, 13)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+  , 3)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(100 Mbit/s on Fibre to the hom, 31)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-06 14:39:59, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(wouldn't-it-be-nice, 19)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(internet, 8)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(20, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicinternet.jpg, 17)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Gimp 1.2 Preview, 16)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-06 14:38:40, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(stuff-to-read, 13)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(gimp, 4)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(12, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicgimp.gif, 13)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Sony's AIBO robot Sold Out, 26)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-06 14:32:51, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(stuff-to-see, 12)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(tech, 4)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(10, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topictech2.jpg, 14)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Ask Slashdot: Another Word for, 40)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/askslashdo, 54)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-05 20:00:00, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(Cliff, 5)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(hacker-vs-cracker, 17)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(news, 4)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(385, 3)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(askslashdot, 11)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicnews.gif, 13)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+, 1)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Corel Linux FAQ, 15)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-05 18:42:06, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(stuff-to-read, 13)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(corel, 5)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(164, 3)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topiccorel.gif, 14)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Upside downsides MP3.COM., 25)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-05 15:56:45, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(stuff-to-think-about, 20)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(music, 5)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(48, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicmusic.gif, 14)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(2 Terabits of Bandwidth, 23)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-05 15:53:43, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(CmdrTaco, 8)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(faster-porn, 11)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(internet, 8)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(66, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicinternet.jpg, 17)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Suppression of cold fusion res, 36)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-04 23:12:29, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(Hemos, 5)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(possibly-probably, 17)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(science, 7)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(217, 3)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicscience.gif, 16)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(California Gov. Halts Wage Inf, 36)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 50)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-04 23:05:34, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(Hemos, 5)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(woo-hoo!, 8)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(usa, 3)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(16, 2)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicus.gif, 11)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+ , 2)
+SAX.startElement(story)
+SAX.characters(
+    , 5)
+SAX.startElement(title)
+SAX.characters(Red Hat Announces IPO, 21)
+SAX.endElement(title)
+SAX.characters(
+    , 5)
+SAX.startElement(url)
+SAX.characters(http://slashdot.org/articles/9, 51)
+SAX.endElement(url)
+SAX.characters(
+    , 5)
+SAX.startElement(time)
+SAX.characters(1999-06-04 19:30:18, 19)
+SAX.endElement(time)
+SAX.characters(
+    , 5)
+SAX.startElement(author)
+SAX.characters(Justin, 6)
+SAX.endElement(author)
+SAX.characters(
+    , 5)
+SAX.startElement(department)
+SAX.characters(details-sketchy, 15)
+SAX.endElement(department)
+SAX.characters(
+    , 5)
+SAX.startElement(topic)
+SAX.characters(redhat, 6)
+SAX.endElement(topic)
+SAX.characters(
+    , 5)
+SAX.startElement(comments)
+SAX.characters(155, 3)
+SAX.endElement(comments)
+SAX.characters(
+    , 5)
+SAX.startElement(section)
+SAX.characters(articles, 8)
+SAX.endElement(section)
+SAX.characters(
+    , 5)
+SAX.startElement(image)
+SAX.characters(topicredhat.gif, 15)
+SAX.endElement(image)
+SAX.characters(
+  , 3)
+SAX.endElement(story)
+SAX.characters(
+, 1)
+SAX.endElement(ultramode)
+SAX.endDocument()

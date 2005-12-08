@@ -1,0 +1,24 @@
+<grammar>
+
+  <start>
+    <element name="addressBook">
+      <zeroOrMore>
+	<element name="card">
+	  <ref name="card.attlist"/>
+	</element>
+      </zeroOrMore>
+    </element>
+  </start>
+
+  <define name="card.attlist">
+    <group>
+      <attribute name="name">
+	<text/>
+      </attribute>
+      <attribute name="email">
+	<text/>
+      </attribute>
+    </group>
+  </define>
+
+</grammar>

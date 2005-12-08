@@ -1,0 +1,3 @@
+./test/relaxng/choice0_7.xml:1: element device: Relax-NG validity error : Did not expect element unknown-element there
+./test/relaxng/choice0_7.xml:1: element device: Relax-NG validity error : Element device failed to validate content
+./test/relaxng/choice0_7.xml fails to validate

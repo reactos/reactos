@@ -1,0 +1,8 @@
+0 10 test 0 0
+0 1 test 0 0
+1 1 p 0 0
+2 3 #text 0 1 An ampersand (&) may be escaped
+ numerically (&#38;) or with a general entity
+  (&amp;).
+1 15 p 0 0
+0 15 test 0 0

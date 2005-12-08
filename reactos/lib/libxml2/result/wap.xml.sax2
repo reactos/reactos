@@ -1,0 +1,87 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://dark.wapit.com/vswap/tests/wap/DTD/wml11.dtd)
+SAX.externalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://dark.wapit.com/vswap/tests/wap/DTD/wml11.dtd)
+SAX.comment( (C) 1999, 2000 WAP Forum Ltd.  All rights reserved )
+SAX.startElementNs(wml, NULL, NULL, 0, 0, 0)
+SAX.characters(
+, 1)
+SAX.startElementNs(card, NULL, NULL, 0, 1, 0, id='card...', 5)
+SAX.characters(
+, 1)
+SAX.startElementNs(onevent, NULL, NULL, 0, 1, 0, type='onen...', 14)
+SAX.characters(
+, 1)
+SAX.startElementNs(go, NULL, NULL, 0, 1, 0, href='/vsw...', 21)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='var"...', 3, value='$tes...', 5)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='v" v...', 1, value='dark...', 4)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='ts" ...', 2, value='0003...', 4)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='tp" ...', 2, value='wml/...', 29)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='ti" ...', 2, value='1"/>...', 1)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='expe...', 8, value='var:...', 8)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(go, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(onevent, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.startElementNs(p, NULL, NULL, 0, 0, 0)
+SAX.characters(If automatic testing failed, s, 36)
+SAX.startElementNs(anchor, NULL, NULL, 0, 0, 0)
+SAX.characters(Failed, 6)
+SAX.startElementNs(go, NULL, NULL, 0, 1, 0, href='/vsw...', 21)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='SUBM...', 6, value='No"/...', 2)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='v"
+v...', 1, value='dark...', 4)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='ts" ...', 2, value='0003...', 4)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='tp" ...', 2, value='wml/...', 29)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='ti" ...', 2, value='1"/>...', 1)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.characters(
+        , 9)
+SAX.startElementNs(postfield, NULL, NULL, 0, 2, 0, name='expe...', 8, value='var:...', 8)
+SAX.endElementNs(postfield, NULL, NULL)
+SAX.endElementNs(go, NULL, NULL)
+SAX.endElementNs(anchor, NULL, NULL)
+SAX.characters(., 1)
+SAX.endElementNs(p, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(card, NULL, NULL)
+SAX.characters(
+
+, 2)
+SAX.endElementNs(wml, NULL, NULL)
+SAX.endDocument()

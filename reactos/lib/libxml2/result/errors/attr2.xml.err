@@ -1,0 +1,6 @@
+./test/errors/attr2.xml:2: parser error : AttValue: ' expected
+
+^
+./test/errors/attr2.xml:2: parser error : Extra content at the end of the document
+<foo foo=">ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ ^

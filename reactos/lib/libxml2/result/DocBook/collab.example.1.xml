@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book><bookinfo><title>DocBook: The Definitive Guide</title><authorgroup><collab><collabname>Lenny Muellner</collabname></collab><collab><collabname>Norman Walsh</collabname></collab></authorgroup></bookinfo><chapter><title>Just an Example</title><para>
+This is just an example, in real life, Lenny and Norm are both
+<sgmltag>Author</sgmltag>s.
+</para></chapter></book>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /><link rel="SHORTCUT ICON" href="/favicon.ico" /><style type="text/css">
+TD {font-family: Verdana,Arial,Helvetica}
+BODY {font-family: Verdana,Arial,Helvetica; margin-top: 2em; margin-left: 0em; margin-right: 0em}
+H1 {font-family: Verdana,Arial,Helvetica}
+H2 {font-family: Verdana,Arial,Helvetica}
+H3 {font-family: Verdana,Arial,Helvetica}
+A:link, A:visited, A:active { text-decoration: underline }
+</style><title>FAQ</title></head><body bgcolor="#8b7765" text="#000000" link="#a06060" vlink="#000000"><table border="0" width="100%" cellpadding="5" cellspacing="0" align="center"><tr><td width="120"><a href="http://swpat.ffii.org/"><img src="epatents.png" alt="Action against software patents" /></a></td><td width="180"><a href="http://www.gnome.org/"><img src="gnome2.png" alt="Gnome2 Logo" /></a><a href="http://www.w3.org/Status"><img src="w3c.png" alt="W3C Logo" /></a><a href="http://www.redhat.com/"><img src="redhat.gif" alt="Red Hat Logo" /></a><div align="left"><a href="http://xmlsoft.org/"><img src="Libxml2-Logo-180x168.gif" alt="Made with Libxml2 Logo" /></a></div></td><td><table border="0" width="90%" cellpadding="2" cellspacing="0" align="center" bgcolor="#000000"><tr><td><table width="100%" border="0" cellspacing="1" cellpadding="3" bgcolor="#fffacd"><tr><td align="center"><h1>The XML C parser and toolkit of Gnome</h1><h2>FAQ</h2></td></tr></table></td></tr></table></td></tr></table><table border="0" cellpadding="4" cellspacing="0" width="100%" align="center"><tr><td bgcolor="#8b7765"><table border="0" cellspacing="0" cellpadding="2" width="100%"><tr><td valign="top" width="200" bgcolor="#8b7765"><table border="0" cellspacing="0" cellpadding="1" width="100%" bgcolor="#000000"><tr><td><table width="100%" border="0" cellspacing="1" cellpadding="3"><tr><td colspan="1" bgcolor="#eecfa1" align="center"><center><b>Main Menu</b></center></td></tr><tr><td bgcolor="#fffacd"><form action="search.php" enctype="application/x-www-form-urlencoded" method="get"><input name="query" type="text" size="20" value="" /><input name="submit" type="submit" value="Search ..." /></form><ul><li><a href="index.html">Home</a></li><li><a href="http://xmlsoft.org/wiki">Wiki</a></li><li><a href="html/index.html">Reference Manual</a></li><li><a href="intro.html">Introduction</a></li><li><a href="FAQ.html">FAQ</a></li><li><a href="docs.html" style="font-weight:bold">Developer Menu</a></li><li><a href="bugs.html">Reporting bugs and getting help</a></li><li><a href="help.html">How to help</a></li><li><a href="downloads.html">Downloads</a></li><li><a href="news.html">Releases</a></li><li><a href="XMLinfo.html">XML</a></li><li><a href="XSLT.html">XSLT</a></li><li><a href="xmldtd.html">Validation &amp; DTDs</a></li><li><a href="encoding.html">Encodings support</a></li><li><a href="catalog.html">Catalog support</a></li><li><a href="namespaces.html">Namespaces</a></li><li><a href="contribs.html">Contributions</a></li><li><a href="examples/index.html" style="font-weight:bold">Code Examples</a></li><li><a href="html/index.html" style="font-weight:bold">API Menu</a></li><li><a href="guidelines.html">XML Guidelines</a></li><li><a href="ChangeLog.html">Recent Changes</a></li></ul></td></tr></table><table width="100%" border="0" cellspacing="1" cellpadding="3"><tr><td colspan="1" bgcolor="#eecfa1" align="center"><center><b>Related links</b></center></td></tr><tr><td bgcolor="#fffacd"><ul><li><a href="http://mail.gnome.org/archives/xml/">Mail archive</a></li><li><a href="http://xmlsoft.org/XSLT/">XSLT libxslt</a></li><li><a href="http://phd.cs.unibo.it/gdome2/">DOM gdome2</a></li><li><a href="http://www.aleksey.com/xmlsec/">XML-DSig xmlsec</a></li><li><a href="ftp://xmlsoft.org/">FTP</a></li><li><a href="http://www.zlatkovic.com/projects/libxml/">Windows binaries</a></li><li><a href="http://www.blastwave.org/packages.php/libxml2">Solaris binaries</a></li><li><a href="http://www.explain.com.au/oss/libxml2xslt.html">MacOsX binaries</a></li><li><a href="http://libxmlplusplus.sourceforge.net/">C++ bindings</a></li><li><a href="http://www.zend.com/php5/articles/php5-xmlphp.php#Heading4">PHP bindings</a></li><li><a href="http://sourceforge.net/projects/libxml2-pas/">Pascal bindings</a></li><li><a href="http://rubyforge.org/projects/xml-tools/">Ruby bindings</a></li><li><a href="http://tclxml.sourceforge.net/">Tcl bindings</a></li><li><a href="http://bugzilla.gnome.org/buglist.cgi?product=libxml2">Bug Tracker</a></li></ul></td></tr></table></td></tr></table></td><td valign="top" bgcolor="#8b7765"><table border="0" cellspacing="0" cellpadding="1" width="100%"><tr><td><table border="0" cellspacing="0" cellpadding="1" width="100%" bgcolor="#000000"><tr><td><table border="0" cellpadding="3" cellspacing="1" width="100%"><tr><td bgcolor="#fffacd"><p>Table of Contents:</p><ul><li><a href="FAQ.html#License">License(s)</a></li>
+  <li><a href="FAQ.html#Installati">Installation</a></li>
+  <li><a href="FAQ.html#Compilatio">Compilation</a></li>
+  <li><a href="FAQ.html#Developer">Developer corner</a></li>
+</ul><h3><a name="License" id="License">License</a>(s)</h3><ol><li><em>Licensing Terms for libxml</em>
+    <p>libxml2 is released under the <a href="http://www.opensource.org/licenses/mit-license.html">MIT
+    License</a>; see the file Copyright in the distribution for the precise
+    wording</p>
+  </li>
+  <li><em>Can I embed libxml2 in a proprietary application ?</em>
+    <p>Yes. The MIT License allows you to keep proprietary the changes you
+    made to libxml, but it would be graceful to send-back bug fixes and
+    improvements as patches for possible incorporation in the main
+    development tree.</p>
+  </li>
+</ol><h3><a name="Installati" id="Installati">Installation</a></h3><ol><li><strong><span style="background-color: #FF0000">Do Not Use
+    libxml1</span></strong>, use libxml2</li>
+  <li><em>Where can I get libxml</em> ?
+    <p>The original distribution comes from <a href="ftp://rpmfind.net/pub/libxml/">rpmfind.net</a> or <a href="ftp://ftp.gnome.org/pub/GNOME/sources/libxml2/2.6/">gnome.org</a></p>
+    <p>Most Linux and BSD distributions include libxml, this is probably the
+    safer way for end-users to use libxml.</p>
+    <p>David Doolin provides precompiled Windows versions at <a href="http://www.ce.berkeley.edu/~doolin/code/libxmlwin32/         ">http://www.ce.berkeley.edu/~doolin/code/libxmlwin32/</a></p>
+  </li>
+  <li><em>I see libxml and libxml2 releases, which one should I install ?</em>
+    <ul><li>If you are not constrained by backward compatibility issues with
+        existing applications, install libxml2 only</li>
+      <li>If you are not doing development, you can safely install both.
+        Usually the packages <a href="http://rpmfind.net/linux/RPM/libxml.html">libxml</a> and <a href="http://rpmfind.net/linux/RPM/libxml2.html">libxml2</a> are
+        compatible (this is not the case for development packages).</li>
+      <li>If you are a developer and your system provides separate packaging
+        for shared libraries and the development components, it is possible
+        to install libxml and libxml2, and also <a href="http://rpmfind.net/linux/RPM/libxml-devel.html">libxml-devel</a>
+        and <a href="http://rpmfind.net/linux/RPM/libxml2-devel.html">libxml2-devel</a>
+        too for libxml2 &gt;= 2.3.0</li>
+      <li>If you are developing a new application, please develop against
+        libxml2(-devel)</li>
+    </ul></li>
+  <li><em>I can't install the libxml package, it conflicts with libxml0</em>
+    <p>You probably have an old libxml0 package used to provide the shared
+    library for libxml.so.0, you can probably safely remove it. The libxml
+    packages provided on <a href="ftp://rpmfind.net/pub/libxml/">rpmfind.net</a> provide
+    libxml.so.0</p>
+  </li>
+  <li><em>I can't install the libxml(2) RPM package due to failed
+    dependencies</em>
+    <p>The most generic solution is to re-fetch the latest src.rpm , and
+    rebuild it locally with</p>
+    <p><code>rpm --rebuild libxml(2)-xxx.src.rpm</code>.</p>
+    <p>If everything goes well it will generate two binary rpm packages (one
+    providing the shared libs and xmllint, and the other one, the -devel
+    package, providing includes, static libraries and scripts needed to build
+    applications with libxml(2)) that you can install locally.</p>
+  </li>
+</ol><h3><a name="Compilatio" id="Compilatio">Compilation</a></h3><ol><li><em>What is the process to compile libxml2 ?</em>
+    <p>As most UNIX libraries libxml2 follows the "standard":</p>
+    <p><code>gunzip -c xxx.tar.gz | tar xvf -</code></p>
+    <p><code>cd libxml-xxxx</code></p>
+    <p><code>./configure --help</code></p>
+    <p>to see the options, then the compilation/installation proper</p>
+    <p><code>./configure [possible options]</code></p>
+    <p><code>make</code></p>
+    <p><code>make install</code></p>
+    <p>At that point you may have to rerun ldconfig or a similar utility to
+    update your list of installed shared libs.</p>
+  </li>
+  <li><em>What other libraries are needed to compile/install libxml2 ?</em>
+    <p>Libxml2 does not require any other library, the normal C ANSI API
+    should be sufficient (please report any violation to this rule you may
+    find).</p>
+    <p>However if found at configuration time libxml2 will detect and use the
+    following libs:</p>
+    <ul><li><a href="http://www.info-zip.org/pub/infozip/zlib/">libz</a> : a
+        highly portable and available widely compression library.</li>
+      <li>iconv: a powerful character encoding conversion library. It is
+        included by default in recent glibc libraries, so it doesn't need to
+        be installed specifically on Linux. It now seems a <a href="http://www.opennc.org/onlinepubs/7908799/xsh/iconv.html">part
+        of the official UNIX</a> specification. Here is one <a href="http://www.gnu.org/software/libiconv/">implementation of the
+        library</a> which source can be found <a href="ftp://ftp.ilog.fr/pub/Users/haible/gnu/">here</a>.</li>
+    </ul></li>
+  <li><em>Make check fails on some platforms</em>
+    <p>Sometimes the regression tests' results don't completely match the
+    value produced by the parser, and the makefile uses diff to print the
+    delta. On some platforms the diff return breaks the compilation process;
+    if the diff is small this is probably not a serious problem.</p>
+    <p>Sometimes (especially on Solaris) make checks fail due to limitations
+    in make. Try using GNU-make instead.</p>
+  </li>
+  <li><em>I use the CVS version and there is no configure script</em>
+    <p>The configure script (and other Makefiles) are generated. Use the
+    autogen.sh script to regenerate the configure script and Makefiles,
+    like:</p>
+    <p><code>./autogen.sh --prefix=/usr --disable-shared</code></p>
+  </li>
+  <li><em>I have troubles when running make tests with gcc-3.0</em>
+    <p>It seems the initial release of gcc-3.0 has a problem with the
+    optimizer which miscompiles the URI module. Please use another
+    compiler.</p>
+  </li>
+</ol><h3><a name="Developer" id="Developer">Developer</a> corner</h3><ol><li><em>Troubles compiling or linking programs using libxml2</em>
+    <p>Usually the problem comes from the fact that the compiler doesn't get
+    the right compilation or linking flags. There is a small shell script
+    <code>xml2-config</code> which is installed as part of libxml2 usual
+    install process which provides those flags. Use</p>
+    <p><code>xml2-config --cflags</code></p>
+    <p>to get the compilation flags and</p>
+    <p><code>xml2-config --libs</code></p>
+    <p>to get the linker flags. Usually this is done directly from the
+    Makefile as:</p>
+    <p><code>CFLAGS=`xml2-config --cflags`</code></p>
+    <p><code>LIBS=`xml2-config --libs`</code></p>
+  </li>
+  <li><em>I want to install my own copy of libxml2 in my home directory and link
+    my programs against it, but it doesn't work</em>
+    <p>There are many different ways to accomplish this.  Here is one way to
+      do this under Linux.  Suppose your home directory is <code>/home/user.
+      </code>Then:</p>
+    <ul><li>Create a subdirectory, let's call it <code>myxml</code></li>
+      <li>unpack the libxml2 distribution into that subdirectory</li>
+      <li>chdir into the unpacked distribution (<code>/home/user/myxml/libxml2
+        </code>)</li>
+      <li>configure the library using the "<code>--prefix</code>" switch,
+      specifying an installation subdirectory in <code>/home/user/myxml</code>,
+      e.g.
+      <p><code>./configure --prefix /home/user/myxml/xmlinst</code> {other
+      configuration options}</p></li>
+      <li>now run <code>make</code> followed by <code>make install</code></li>
+      <li>At this point, the installation subdirectory contains the complete
+      "private" include files, library files and binary program files (e.g.
+      xmllint), located in
+      <p> <code>/home/user/myxml/xmlinst/lib, /home/user/myxml/xmlinst/include
+      </code> and <code> /home/user/myxml/xmlinst/bin</code></p>
+      respectively.</li>
+      <li>In order to use this "private" library, you should first add it
+      to the beginning of your default PATH (so that your own private
+      program files such as xmllint will be used instead of the normal
+      system ones).  To do this, the Bash command would be
+      <p><code>export PATH=/home/user/myxml/xmlinst/bin:$PATH</code></p></li>
+      <li>Now suppose you have a program <code>test1.c</code> that you would
+      like to compile with your "private" library.  Simply compile it
+      using the command <p><code>gcc `xml2-config --cflags --libs` -o test
+      test.c</code></p>  Note that, because your PATH has been set with <code>
+      /home/user/myxml/xmlinst/bin</code> at the beginning, the
+      xml2-config program which you just installed will be used instead of
+      the system default one, and this will <em>automatically</em> get the
+      correct libraries linked with your program.</li></ul></li><p></p>
+  <li><em>xmlDocDump() generates output on one line.</em>
+    <p>Libxml2 will not <strong>invent</strong> spaces in the content of a
+    document since <strong>all spaces in the content of a document are
+    significant</strong>. If you build a tree from the API and want
+    indentation:</p>
+    <ol><li>the correct way is to generate those yourself too.</li>
+      <li>the dangerous way is to ask libxml2 to add those blanks to your
+        content <strong>modifying the content of your document in the
+        process</strong>. The result may not be what you expect. There is
+        <strong>NO</strong> way to guarantee that such a modification won't
+        affect other parts of the content of your document. See <a href="http://xmlsoft.org/html/libxml-parser.html#xmlKeepBlanksDefault">xmlKeepBlanksDefault
+        ()</a> and <a href="http://xmlsoft.org/html/libxml-tree.html#xmlSaveFormatFile">xmlSaveFormatFile
+        ()</a></li>
+    </ol></li>
+  <li>Extra nodes in the document:
+    <p><em>For a XML file as below:</em></p>
+    <pre>&lt;?xml version="1.0"?&gt;
+&lt;PLAN xmlns="http://www.argus.ca/autotest/1.0/"&gt;
+&lt;NODE CommFlag="0"/&gt;
+&lt;NODE CommFlag="1"/&gt;
+&lt;/PLAN&gt;</pre>
+    <p><em>after parsing it with the function
+    pxmlDoc=xmlParseFile(...);</em></p>
+    <p><em>I want to the get the content of the first node (node with the
+    CommFlag="0")</em></p>
+    <p><em>so I did it as following;</em></p>
+    <pre>xmlNodePtr pnode;
+pnode=pxmlDoc-&gt;children-&gt;children;</pre>
+    <p><em>but it does not work. If I change it to</em></p>
+    <pre>pnode=pxmlDoc-&gt;children-&gt;children-&gt;next;</pre>
+    <p><em>then it works.  Can someone explain it to me.</em></p>
+    <p></p>
+    <p>In XML all characters in the content of the document are significant
+    <strong>including blanks and formatting line breaks</strong>.</p>
+    <p>The extra nodes you are wondering about are just that, text nodes with
+    the formatting spaces which are part of the document but that people tend
+    to forget. There is a function <a href="http://xmlsoft.org/html/libxml-parser.html">xmlKeepBlanksDefault
+    ()</a>  to remove those at parse time, but that's an heuristic, and its
+    use should be limited to cases where you are certain there is no
+    mixed-content in the document.</p>
+  </li>
+  <li><em>I get compilation errors of existing code like when accessing
+    <strong>root</strong> or <strong>child fields</strong> of nodes.</em>
+    <p>You are compiling code developed for libxml version 1 and using a
+    libxml2 development environment. Either switch back to libxml v1 devel or
+    even better fix the code to compile with libxml2 (or both) by <a href="upgrade.html">following the instructions</a>.</p>
+  </li>
+  <li><em>I get compilation errors about non existing
+    <strong>xmlRootNode</strong> or <strong>xmlChildrenNode</strong>
+    fields.</em>
+    <p>The source code you are using has been <a href="upgrade.html">upgraded</a> to be able to compile with both libxml
+    and libxml2, but you need to install a more recent version:
+    libxml(-devel) &gt;= 1.8.8 or libxml2(-devel) &gt;= 2.1.0</p>
+  </li>
+  <li><em>XPath implementation looks seriously broken</em>
+    <p>XPath implementation prior to 2.3.0 was really incomplete. Upgrade to
+    a recent version, there are no known bugs in the current version.</p>
+  </li>
+  <li><em>The example provided in the web page does not compile.</em>
+    <p>It's hard to maintain the documentation in sync with the code
+    &lt;grin/&gt; ...</p>
+    <p>Check the previous points 1/ and 2/ raised before, and please send
+    patches.</p>
+  </li>
+  <li><em>Where can I get more examples and information than provided on the
+    web page?</em>
+    <p>Ideally a libxml2 book would be nice. I have no such plan ... But you
+    can:</p>
+    <ul><li>check more deeply the <a href="html/libxml-lib.html">existing
+        generated doc</a></li>
+      <li>have a look at <a href="examples/index.html">the set of
+        examples</a>.</li>
+      <li>look for examples of use for libxml2 function using the Gnome code.
+        For example the following will query the full Gnome CVS base for the
+        use of the <strong>xmlAddChild()</strong> function:
+        <p><a href="http://cvs.gnome.org/lxr/search?string=xmlAddChild">http://cvs.gnome.org/lxr/search?string=xmlAddChild</a></p>
+        <p>This may be slow, a large hardware donation to the gnome project
+        could cure this :-)</p>
+      </li>
+      <li><a href="http://cvs.gnome.org/bonsai/rview.cgi?cvsroot=/cvs/gnome&amp;dir=gnome-xml">Browse
+        the libxml2 source</a> , I try to write code as clean and documented
+        as possible, so looking at it may be helpful. In particular the code
+        of xmllint.c and of the various testXXX.c test programs should
+        provide good examples of how to do things with the library.</li>
+    </ul></li>
+  <li>What about C++ ?
+    <p>libxml2 is written in pure C in order to allow easy reuse on a number
+    of platforms, including embedded systems. I don't intend to convert to
+    C++.</p>
+    <p>There is however a C++ wrapper which may fulfill your needs:</p>
+    <ul><li>by Ari Johnson &lt;ari@btigate.com&gt;:
+        <p>Website: <a href="http://libxmlplusplus.sourceforge.net/">http://libxmlplusplus.sourceforge.net/</a></p>
+        <p>Download: <a href="http://sourceforge.net/project/showfiles.php?group_id=12999">http://sourceforge.net/project/showfiles.php?group_id=12999</a></p>
+      </li>
+      <!-- Website is currently unavailable as of 2003-08-02
+      <li>by Peter Jones &lt;pjones@pmade.org&gt;
+      <p>Website: <a
+      href="http://pmade.org/pjones/software/xmlwrapp/">http://pmade.org/pjones/software/xmlwrapp/</a></p>
+      </li>
+      -->
+    </ul></li>
+  <li>How to validate a document a posteriori ?
+    <p>It is possible to validate documents which had not been validated at
+    initial parsing time or documents which have been built from scratch
+    using the API. Use the <a href="http://xmlsoft.org/html/libxml-valid.html#xmlValidateDtd">xmlValidateDtd()</a>
+    function. It is also possible to simply add a DTD to an existing
+    document:</p>
+    <pre>xmlDocPtr doc; /* your existing document */
+xmlDtdPtr dtd = xmlParseDTD(NULL, filename_of_dtd); /* parse the DTD */
+
+        dtd-&gt;name = xmlStrDup((xmlChar*)"root_name"); /* use the given root */
+
+        doc-&gt;intSubset = dtd;
+        if (doc-&gt;children == NULL) xmlAddChild((xmlNodePtr)doc, (xmlNodePtr)dtd);
+        else xmlAddPrevSibling(doc-&gt;children, (xmlNodePtr)dtd);
+          </pre>
+  </li>
+  <li>So what is this funky "xmlChar" used all the time?
+    <p>It is a null terminated sequence of utf-8 characters. And only utf-8!
+    You need to convert strings encoded in different ways to utf-8 before
+    passing them to the API.  This can be accomplished with the iconv library
+    for instance.</p>
+  </li>
+  <li>etc ...</li>
+</ol><p></p><p><a href="bugs.html">Daniel Veillard</a></p></td></tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></body></html>

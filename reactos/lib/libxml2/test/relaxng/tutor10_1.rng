@@ -1,0 +1,4 @@
+<element name="foo" ns="http://www.example.com"
+         xmlns="http://relaxng.org/ns/structure/1.0">
+  <empty/>
+</element>

@@ -1,0 +1,145 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(HTML, -//W3C//DTD HTML 4.0 Transitional//EN, http://www.w3.org/TR/REC-html40/loose.dtd)
+SAX.startElement(html)
+SAX.startElement(head)
+SAX.ignorableWhitespace( , 1)
+SAX.startElement(title)
+SAX.characters(Linux Today, 11)
+SAX.endElement(title)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body, bgcolor='White', link='Blue', text='Black', vlink='Black', alink='Red')
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(center)
+SAX.characters(
+, 1)
+SAX.startElement(table, border='0', width='100%', cellspacing='0', cellpadding='0')
+SAX.characters(
+        , 9)
+SAX.startElement(tr, bgcolor='#FFFFFF')
+SAX.characters(
+                , 17)
+SAX.startElement(td, height='90')
+SAX.characters(
+, 1)
+SAX.startElement(a, href='http://linuxtoday.com/cgi-bin/click.pl?adnum=49')
+SAX.startElement(img, src='/pics/door_linux.gif', border='0', width='468', height='60', alt='Atipa Linux solutions. Your reliable cluster, server, and workstation solution. Win a Free Celeron Linux Workstation!')
+SAX.endElement(img)
+SAX.endElement(a)
+SAX.characters(
+
+                , 18)
+SAX.endElement(td)
+SAX.characters(
+    , 5)
+SAX.startElement(td)
+SAX.startElement(img, src='/pics/lt.gif', vspace='5', alt='Linux Today Logo')
+SAX.endElement(img)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.startElement(font, size='-1')
+SAX.startElement(a, href='http://linux.com')
+SAX.characters(linux.com, 9)
+SAX.endElement(a)
+SAX.characters( partner, 8)
+SAX.endElement(font)
+SAX.startElement(p)
+SAX.endElement(p)
+SAX.endElement(td)
+SAX.characters(
+
+        , 10)
+SAX.endElement(tr)
+SAX.characters(
+, 1)
+SAX.endElement(table)
+SAX.characters(
+, 1)
+SAX.startElement(font, size='2', face='Helvetica')
+SAX.characters(
+[ , 3)
+SAX.startElement(a, href='http://linuxtoday.com/')
+SAX.characters(headlines, 9)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://features.linuxtoday.com/')
+SAX.characters(features, 8)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://commercial.linuxtoday.com/')
+SAX.characters(commercial, 10)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://security.linuxtoday.com/')
+SAX.characters(security, 8)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://jobs.linuxtoday.com/')
+SAX.characters(jobs, 4)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/volt/')
+SAX.characters(volt, 4)
+SAX.endElement(a)
+SAX.characters( | 
+, 4)
+SAX.startElement(a, href='http://linuxtoday.com/contrib.pl')
+SAX.characters(contribute/submit, 17)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/advertise/')
+SAX.characters(advertise, 9)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/search.html')
+SAX.characters(search, 6)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/digests/')
+SAX.characters(site digests, 12)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/mail-lists')
+SAX.characters(mailing lists, 13)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/about/')
+SAX.characters(about us, 8)
+SAX.endElement(a)
+SAX.characters( |
+, 3)
+SAX.startElement(a, href='http://linuxtoday.com/linkus.html')
+SAX.characters(link us, 7)
+SAX.endElement(a)
+SAX.characters( ], 2)
+SAX.endElement(font)
+SAX.characters(
+, 1)
+SAX.endElement(center)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(p)
+SAX.characters(
+, 1)
+SAX.endElement(p)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

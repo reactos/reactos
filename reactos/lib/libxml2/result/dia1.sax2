@@ -1,0 +1,323 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(diagram, dia, 'http://www.lysator.liu.se/~alla/dia/', 1, xmlns:dia='http://www.lysator.liu.se/~alla/dia/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(diagramdata, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='back...', 10)
+SAX.characters(
+      , 7)
+SAX.startElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='#fff...', 7)
+SAX.endElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(diagramdata, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(layer, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 2, 0, name='Back...', 10, visible='true...', 4)
+SAX.characters(
+    , 5)
+SAX.startElementNs(object, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 3, 0, type='Stan...', 15, version='0" i...', 1, id='O0">...', 2)
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='obj_...', 7)
+SAX.characters(
+        , 9)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='1.95...', 9)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='obj_...', 6)
+SAX.characters(
+        , 9)
+SAX.startElementNs(rectangle, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='1.9,...', 15)
+SAX.endElementNs(rectangle, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='conn...', 14)
+SAX.characters(
+        , 9)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='1.95...', 9)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='10.9...', 9)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='line...', 10)
+SAX.characters(
+        , 9)
+SAX.startElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='#000...', 7)
+SAX.endElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='line...', 10)
+SAX.characters(
+        , 9)
+SAX.startElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='0.1"...', 3)
+SAX.endElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='line...', 10)
+SAX.characters(
+        , 9)
+SAX.startElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='0"/>...', 1)
+SAX.endElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='star...', 11)
+SAX.characters(
+        , 9)
+SAX.startElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='0"/>...', 1)
+SAX.endElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='end_...', 9)
+SAX.characters(
+        , 9)
+SAX.startElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='0"/>...', 1)
+SAX.endElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(connections, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 0, 0)
+SAX.characters(
+        , 9)
+SAX.startElementNs(connection, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 3, 0, handle='1" t...', 1, to='O2" ...', 2, connection='3"/>...', 1)
+SAX.endElementNs(connection, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(connections, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(object, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(object, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 3, 0, type='Stan...', 15, version='0" i...', 1, id='O1">...', 2)
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='obj_...', 7)
+SAX.characters(
+        , 9)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='4.8,...', 8)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='obj_...', 6)
+SAX.characters(
+        , 9)
+SAX.startElementNs(rectangle, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='2.57...', 27)
+SAX.endElementNs(rectangle, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='text...', 4)
+SAX.characters(
+        , 9)
+SAX.startElementNs(composite, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, type='text...', 4)
+SAX.characters(
+          , 11)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='stri...', 6)
+SAX.characters(
+            , 13)
+SAX.startElementNs(string, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='sdfs...', 7)
+SAX.endElementNs(string, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='font...', 4)
+SAX.characters(
+            , 13)
+SAX.startElementNs(font, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='Cour...', 7)
+SAX.endElementNs(font, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='heig...', 6)
+SAX.characters(
+            , 13)
+SAX.startElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='1"/>...', 1)
+SAX.endElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='pos"...', 3)
+SAX.characters(
+            , 13)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='4.8,...', 8)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='colo...', 5)
+SAX.characters(
+            , 13)
+SAX.startElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='#000...', 7)
+SAX.endElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='alig...', 9)
+SAX.characters(
+            , 13)
+SAX.startElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='1"/>...', 1)
+SAX.endElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+          , 11)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+        , 9)
+SAX.endElementNs(composite, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(object, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(object, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 3, 0, type='Stan...', 14, version='0" i...', 1, id='O2">...', 2)
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='obj_...', 7)
+SAX.characters(
+        , 9)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='10.9...', 9)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='obj_...', 6)
+SAX.characters(
+        , 9)
+SAX.startElementNs(rectangle, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='10.9...', 20)
+SAX.endElementNs(rectangle, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='elem...', 11)
+SAX.characters(
+        , 9)
+SAX.startElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='10.9...', 9)
+SAX.endElementNs(point, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='elem...', 10)
+SAX.characters(
+        , 9)
+SAX.startElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='2.05...', 4)
+SAX.endElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='elem...', 11)
+SAX.characters(
+        , 9)
+SAX.startElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='2"/>...', 1)
+SAX.endElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='bord...', 12)
+SAX.characters(
+        , 9)
+SAX.startElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='0.1"...', 3)
+SAX.endElementNs(real, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='bord...', 12)
+SAX.characters(
+        , 9)
+SAX.startElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='#000...', 7)
+SAX.endElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='inne...', 11)
+SAX.characters(
+        , 9)
+SAX.startElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='#fff...', 7)
+SAX.endElementNs(color, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, name='line...', 10)
+SAX.characters(
+        , 9)
+SAX.startElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, val='0"/>...', 1)
+SAX.endElementNs(enum, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(attribute, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(object, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(layer, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+, 1)
+SAX.endElementNs(diagram, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.endDocument()

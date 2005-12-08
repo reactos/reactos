@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+A presentation system using TeX as a back end might allow you
+to insert inline markup, such as <markup role="tex">$x^2$</markup>,
+using TeX syntax directly.
+</para>

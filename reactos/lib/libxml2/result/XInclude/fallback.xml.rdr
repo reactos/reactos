@@ -1,0 +1,12 @@
+0 1 x 0 0
+1 14 #text 0 1 
+   
+1 8 #comment 0 1  Simple test of a fallback on unavailble URI 
+1 14 #text 0 1 
+   
+1 1 warning 0 0
+2 3 #text 0 1 Inclusion failed
+1 15 warning 0 0
+1 14 #text 0 1 
+
+0 15 x 0 0

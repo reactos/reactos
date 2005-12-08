@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE doc [
+<!ENTITY YN '"Yes"'>
+<!ENTITY WhatHeSaid "He said &YN;">
+]>
+<doc>&WhatHeSaid;</doc>

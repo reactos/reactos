@@ -1,0 +1,67 @@
+0 1 d:multistatus 0 0
+1 14 #text 0 1 
+  
+1 1 d:response 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/container/resource1
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/container/resource2
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/container/
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/container/C2/R2
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:status 0 0
+3 3 #text 0 1 HTTP/1.1 201 Created
+2 15 d:status 0 0
+2 14 #text 0 1 
+  
+1 15 d:response 0 0
+1 14 #text 0 1 
+  
+1 1 d:response 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/container/C2
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:status 0 0
+3 3 #text 0 1 HTTP/1.1 420 Method Failure
+2 15 d:status 0 0
+2 14 #text 0 1 
+  
+1 15 d:response 0 0
+1 14 #text 0 1 
+  
+1 1 d:response 0 0
+2 14 #text 0 1 
+    
+2 1 d:href 0 0
+3 3 #text 0 1 http://www.foo.bar/othercontainer/C2
+2 15 d:href 0 0
+2 14 #text 0 1 
+    
+2 1 d:status 0 0
+3 3 #text 0 1 HTTP/1.1 409 Conflict
+2 15 d:status 0 0
+2 14 #text 0 1 
+  
+1 15 d:response 0 0
+1 14 #text 0 1 
+
+0 15 d:multistatus 0 0

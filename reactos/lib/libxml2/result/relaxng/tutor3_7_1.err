@@ -1,0 +1,2 @@
+./test/relaxng/tutor3_7.rng:1: element element: Relax-NG parser error : xmlRelaxNGParseElement: element has no content
+Relax-NG schema ./test/relaxng/tutor3_7.rng failed to compile

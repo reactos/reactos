@@ -1,0 +1,15 @@
+0 10 EXAMPLE 0 0
+0 1 EXAMPLE 0 0
+1 14 #text 0 1 
+  
+
+1 1 title 0 0
+2 3 #text 0 1 my title
+1 15 title 0 0
+1 3 #text 0 1 
+
+  This text is about XML, the Extensible Markup Language and this is an embedded 
+1 1 IMG 1 0
+1 14 #text 0 1 
+
+0 15 EXAMPLE 0 0

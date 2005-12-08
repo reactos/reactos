@@ -1,0 +1,22 @@
+0 1 ino:response 0 0
+1 1 xql:query 0 0
+2 3 #text 0 1 /bsk:DocPart[@docId='20040308152601345236' and @docPartNo=1]
+1 15 xql:query 0 0
+1 1 ino:message 0 0
+2 1 ino:messageline 0 0
+3 3 #text 0 1 XQL Request processing
+2 15 ino:messageline 0 0
+1 15 ino:message 0 0
+1 1 xql:result 0 0
+2 1 bsk:DocPart 0 0
+3 1 bsk:File 0 0
+4 14 #text 0 1  
+3 15 bsk:File 0 0
+2 15 bsk:DocPart 0 0
+1 15 xql:result 0 0
+1 1 ino:message 0 0
+2 1 ino:messageline 0 0
+3 3 #text 0 1 XQL Request processed
+2 15 ino:messageline 0 0
+1 15 ino:message 0 0
+0 15 ino:response 0 0

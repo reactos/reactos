@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	attributeFormDefault="qualified"
+	xmlns:foo="http://FOO"
+	targetNamespace="http://FOO">
+
+	<xsd:attribute name="id" type="xsd:ID"/>
+
+	<xsd:complexType name="typeIDAttr">
+    		<xsd:attribute ref="foo:id"/>
+	</xsd:complexType>
+
+	<xsd:simpleType name="fooID">
+    		<xsd:restriction base="xsd:ID">
+      			<xsd:pattern value="b\d{10}"/>
+    		</xsd:restriction>
+  	</xsd:simpleType>
+
+	<xsd:element name="foo">
+    		<xsd:complexType>
+      			<xsd:complexContent>
+        			<xsd:restriction base="foo:typeIDAttr">         
+          				<xsd:attribute name="id" type="foo:fooID"/>
+        			</xsd:restriction>
+      			</xsd:complexContent>
+    		</xsd:complexType>
+  	</xsd:element>
+
+
+</xsd:schema>

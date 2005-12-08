@@ -1,0 +1,6 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(a, test='passed')
+SAX.characters(content, 7)
+SAX.endElement(a)
+SAX.endDocument()

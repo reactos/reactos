@@ -1,0 +1,4 @@
+<doc attrExtEnt="entExt">
+   Hello, world!
+</doc>
+<!-- Let world.txt contain "world" (excluding the quotes) -->

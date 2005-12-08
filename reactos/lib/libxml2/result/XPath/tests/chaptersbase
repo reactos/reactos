@@ -1,0 +1,115 @@
+
+========================
+Expression: /child::EXAMPLE
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT EXAMPLE
+    ATTRIBUTE prop1
+      TEXT
+        content=gnome is great
+    ATTRIBUTE prop2
+      TEXT
+        content=& linux too
+
+========================
+Expression: /child::*
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT EXAMPLE
+    ATTRIBUTE prop1
+      TEXT
+        content=gnome is great
+    ATTRIBUTE prop2
+      TEXT
+        content=& linux too
+
+========================
+Expression: /child::EXAMPLE/child::head
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT head
+
+========================
+Expression: /child::EXAMPLE/child::*
+Object is a Node Set :
+Set contains 6 nodes:
+1  ELEMENT head
+2  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter1
+3  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter2
+4  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter3
+5  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter4
+6  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter5
+
+========================
+Expression: /child::EXAMPLE/child::head/child::title
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT title
+
+========================
+Expression: /child::EXAMPLE/child::head/child::title/child::text()
+Object is a Node Set :
+Set contains 1 nodes:
+1  TEXT
+    content=Welcome to Gnome
+
+========================
+Expression: /child::EXAMPLE/child::head/node()
+Object is a Node Set :
+Set contains 3 nodes:
+1  TEXT
+    content=    
+2  ELEMENT title
+3  TEXT
+    content=   
+
+========================
+Expression: /descendant::title
+Object is a Node Set :
+Set contains 6 nodes:
+1  ELEMENT title
+2  ELEMENT title
+3  ELEMENT title
+4  ELEMENT title
+5  ELEMENT title
+6  ELEMENT title
+
+========================
+Expression: /descendant::p/ancestor::chapter
+Object is a Node Set :
+Set contains 5 nodes:
+1  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter1
+2  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter2
+3  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter3
+4  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter4
+5  ELEMENT chapter
+    ATTRIBUTE id
+      TEXT
+        content=chapter5

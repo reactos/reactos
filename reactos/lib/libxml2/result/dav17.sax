@@ -1,0 +1,78 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(D:multistatus, xmlns:D='http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElement(D:response)
+SAX.characters(
+    , 5)
+SAX.startElement(D:prop)
+SAX.characters(
+      , 7)
+SAX.startElement(D:lockdiscovery)
+SAX.characters(
+        , 9)
+SAX.startElement(D:activelock)
+SAX.characters(
+          , 11)
+SAX.startElement(D:locktype)
+SAX.characters(write, 5)
+SAX.endElement(D:locktype)
+SAX.characters(
+          , 11)
+SAX.startElement(D:lockscope)
+SAX.characters(exclusive, 9)
+SAX.endElement(D:lockscope)
+SAX.characters(
+          , 11)
+SAX.startElement(D:addlocks)
+SAX.characters(
+            , 13)
+SAX.startElement(D:href)
+SAX.characters(http://foo.com/doc/, 19)
+SAX.endElement(D:href)
+SAX.characters(
+          , 11)
+SAX.endElement(D:addlocks)
+SAX.characters(
+          , 11)
+SAX.startElement(D:owner)
+SAX.characters(Jane Smith, 10)
+SAX.endElement(D:owner)
+SAX.characters(
+          , 11)
+SAX.startElement(D:timeout)
+SAX.characters(Infinite, 8)
+SAX.endElement(D:timeout)
+SAX.characters(
+          , 11)
+SAX.startElement(D:locktoken)
+SAX.characters(
+            , 13)
+SAX.startElement(D:href)
+SAX.characters(iamuri:unique!!!!!, 18)
+SAX.endElement(D:href)
+SAX.characters(
+          , 11)
+SAX.endElement(D:locktoken)
+SAX.characters(
+        , 9)
+SAX.endElement(D:activelock)
+SAX.characters(
+      , 7)
+SAX.endElement(D:lockdiscovery)
+SAX.characters(
+    , 5)
+SAX.endElement(D:prop)
+SAX.characters(
+    , 5)
+SAX.startElement(D:status)
+SAX.characters(HTTP/1.1 200 OK, 15)
+SAX.endElement(D:status)
+SAX.characters(
+  , 3)
+SAX.endElement(D:response)
+SAX.characters(
+, 1)
+SAX.endElement(D:multistatus)
+SAX.endDocument()

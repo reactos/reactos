@@ -1,0 +1,96 @@
+
+========================
+Expression: xpointer(string-range(//p, 'simple'))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 3 in node
+    TEXT
+      content=a simple test
+  To index 8 in node
+    TEXT
+      content=a simple test
+
+
+========================
+Expression: xpointer(string-range(//p, 'test'))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 10 in node
+    TEXT
+      content=a simple test
+  To index 13 in node
+    TEXT
+      content=a simple test
+
+2 :   Object is a range :
+  From index 10 in node
+    TEXT
+      content=multiple tests
+  To index 13 in node
+    TEXT
+      content=multiple tests
+
+3 :   Object is a range :
+  From index 7 in node
+    TEXT
+      content=anced test
+  To index 10 in node
+    TEXT
+      content=anced test
+
+
+========================
+Expression: xpointer(string-range(//p, 'difficult'))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 3 in node
+    TEXT
+      content=a diff
+  To index 4 in node
+    TEXT
+      content=cult one
+
+
+========================
+Expression: xpointer(string-range(//p, 'spanning'))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 3 in node
+    TEXT
+      content=a span
+  To index 3 in node
+    TEXT
+      content=ing one
+
+
+========================
+Expression: xpointer(string-range(//p, 'unbalanced'))
+Object is a Location Set:
+1 :   Object is a range :
+  From index 8 in node
+    TEXT
+      content=and an unbal
+  To index 5 in node
+    TEXT
+      content=anced test
+
+
+========================
+Expression: xpointer(string-range(//seq, ''))
+Object is a Location Set:
+1 :   Object is a collapsed range :
+  index 1 in node
+    TEXT
+      content=123
+2 :   Object is a collapsed range :
+  index 2 in node
+    TEXT
+      content=123
+3 :   Object is a collapsed range :
+  index 3 in node
+    TEXT
+      content=123
+4 :   Object is a collapsed range :
+  index 4 in node
+    TEXT
+      content=123

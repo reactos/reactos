@@ -1,0 +1,2 @@
+./test/relaxng/tutor4_4.rng:25: element ref: Relax-NG parser error : Detected a cycle in inline references
+Relax-NG schema ./test/relaxng/tutor4_4.rng failed to compile

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema targetNamespace="http://www.newport-networks.com/cli" 
+	xmlns:nnl="http://www.newport-networks.com/NNL" 
+	xmlns:cli="http://www.newport-networks.com/cli" 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	elementFormDefault="qualified" attributeFormDefault="unqualified" 
+	version="1.00">
+	<xs:import namespace="http://www.newport-networks.com/NNL" schemaLocation="bug143951.imp"/>
+	<xs:element name="MenuDefinitionFile">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="nnl:schema2group"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
+

@@ -1,0 +1,2 @@
+./test/relaxng/tutor3_2_1.xml:1: element email: Relax-NG validity error : Did not expect element email there
+./test/relaxng/tutor3_2_1.xml fails to validate

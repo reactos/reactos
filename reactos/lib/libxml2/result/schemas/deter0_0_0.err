@@ -1,0 +1,1 @@
+./test/schemas/deter0_0.xsd:6: element complexType: Schemas parser error : local complex type: The content model is not determinist.

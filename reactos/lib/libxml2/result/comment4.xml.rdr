@@ -1,0 +1,4 @@
+0 8 #comment 0 1  test of non ascii comments like là et très 
+0 8 #comment 0 1 à another one 
+0 8 #comment 0 1  another one à
+0 1 doc 1 0

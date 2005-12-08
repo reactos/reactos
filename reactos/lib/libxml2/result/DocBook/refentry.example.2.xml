@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id="printf"><refmeta><refentrytitle>printf</refentrytitle><manvolnum>3S</manvolnum></refmeta><refnamediv><refname>printf</refname><refname>fprintf</refname><refname>sprintf</refname><refpurpose>print formatted output</refpurpose></refnamediv><refsynopsisdiv><funcsynopsis><funcsynopsisinfo>
+#include &lt;stdio.h&gt;</funcsynopsisinfo><funcprototype><funcdef>int <function>printf</function></funcdef><paramdef>const char *<parameter>format</parameter></paramdef><paramdef>...</paramdef></funcprototype><funcprototype><funcdef>int <function>fprintf</function></funcdef><paramdef>FILE *<parameter>strm</parameter></paramdef><paramdef>const char *<parameter>format</parameter></paramdef><paramdef>...</paramdef></funcprototype><funcprototype><funcdef>int <function>sprintf</function></funcdef><paramdef>char *<parameter>s</parameter></paramdef><paramdef>const char *<parameter>format</parameter></paramdef><paramdef>...</paramdef></funcprototype></funcsynopsis></refsynopsisdiv><refsect1><title>Description</title><para><function>printf</function> places output on the standard
+output stream stdout.
+</para><para>…</para></refsect1></refentry>

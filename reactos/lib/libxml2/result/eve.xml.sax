@@ -1,0 +1,11 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(spec, -//testspec//, dtds/eve.dtd)
+SAX.entityDecl(iso6.doc.date, 1, (null), (null), 29-May-1999)
+SAX.getEntity(iso6.doc.date)
+SAX.externalSubset(spec, -//testspec//, dtds/eve.dtd)
+SAX.startElement(spec)
+SAX.characters(
+, 1)
+SAX.endElement(spec)
+SAX.endDocument()

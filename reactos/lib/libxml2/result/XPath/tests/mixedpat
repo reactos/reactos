@@ -1,0 +1,101 @@
+
+========================
+Expression: s
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+
+========================
+Expression: s|p1/s
+Object is a Node Set :
+Set contains 2 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+2  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p1
+
+========================
+Expression: s|/root/p1/s
+Object is a Node Set :
+Set contains 2 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+2  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p1
+
+========================
+Expression: /root/p1/s|s
+Object is a Node Set :
+Set contains 2 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+2  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p1
+
+========================
+Expression: //s
+Object is a Node Set :
+Set contains 3 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+2  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p1
+3  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p2
+
+========================
+Expression: //s|p1
+Object is a Node Set :
+Set contains 4 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+2  ELEMENT p1
+3  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p1
+4  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p2
+
+========================
+Expression: p1|//s
+Object is a Node Set :
+Set contains 4 nodes:
+1  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=root
+2  ELEMENT p1
+3  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p1
+4  ELEMENT s
+    ATTRIBUTE p
+      TEXT
+        content=p2

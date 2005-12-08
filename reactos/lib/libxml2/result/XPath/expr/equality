@@ -1,0 +1,104 @@
+
+========================
+Expression: 1=1
+Object is a Boolean : true
+
+========================
+Expression: 1!=1
+Object is a Boolean : false
+
+========================
+Expression: 1=0
+Object is a Boolean : false
+
+========================
+Expression: 1!=0
+Object is a Boolean : true
+
+========================
+Expression: true()=true()
+Object is a Boolean : true
+
+========================
+Expression: true()!=true()
+Object is a Boolean : false
+
+========================
+Expression: true()=false()
+Object is a Boolean : false
+
+========================
+Expression: false()!=true()
+Object is a Boolean : true
+
+========================
+Expression: 'test'='test'
+Object is a Boolean : true
+
+========================
+Expression: 'test'!='test'
+Object is a Boolean : false
+
+========================
+Expression: 'test2'='test'
+Object is a Boolean : false
+
+========================
+Expression: 'test2'!='test'
+Object is a Boolean : true
+
+========================
+Expression: false()=0
+Object is a Boolean : true
+
+========================
+Expression: false()!=0
+Object is a Boolean : false
+
+========================
+Expression: false()=1
+Object is a Boolean : false
+
+========================
+Expression: false()!=1
+Object is a Boolean : true
+
+========================
+Expression: 0=true()
+Object is a Boolean : false
+
+========================
+Expression: 0!=true()
+Object is a Boolean : true
+
+========================
+Expression: 1=true()
+Object is a Boolean : true
+
+========================
+Expression: 1!=true()
+Object is a Boolean : false
+
+========================
+Expression: true()='test'
+Object is a Boolean : true
+
+========================
+Expression: false()='test'
+Object is a Boolean : false
+
+========================
+Expression: 'test'!=true()
+Object is a Boolean : false
+
+========================
+Expression: 'test'!=false()
+Object is a Boolean : true
+
+========================
+Expression: 'a'=0.0
+Object is a Boolean : false
+
+========================
+Expression: 'a'!=0.0
+Object is a Boolean : true

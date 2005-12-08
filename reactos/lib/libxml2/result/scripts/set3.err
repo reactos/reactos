@@ -1,0 +1,3 @@
+./test/scripts/set3.xml:1: parser warning : xmlns: URI bar is not absolute
+<a xmlns="bar">foo</a>
+              ^

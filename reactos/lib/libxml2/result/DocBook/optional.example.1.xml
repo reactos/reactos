@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<!DOCTYPE synopsis PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<synopsis>
+ls <optional><option>-abcCdfFgilLmnopqrRstux1</option></optional><optional>names</optional></synopsis>

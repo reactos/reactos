@@ -1,0 +1,1 @@
+./test/schemas/ns0_2.xml:1: element foo: Schemas validity error : Element 'foo': No matching global declaration available for the validation root.

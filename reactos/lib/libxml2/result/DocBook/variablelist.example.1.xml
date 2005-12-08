@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE variablelist PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<variablelist><title>Font Filename Extensions</title><varlistentry><term><filename>TTF</filename></term><listitem><para>
+TrueType fonts.
+</para></listitem></varlistentry><varlistentry><term><filename>PFA</filename></term><term><filename>PFB</filename></term><listitem><para>
+PostScript fonts.  <filename>PFA</filename> files are common on 
+<acronym>UNIX</acronym> systems, <filename>PFB</filename> files
+are more common on Windows systems.
+</para></listitem></varlistentry></variablelist>

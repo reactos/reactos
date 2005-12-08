@@ -1,0 +1,13 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.processingInstruction(document-start, doc)
+SAX.startElement(doc)
+SAX.characters(
+, 1)
+SAX.startElement(empty)
+SAX.endElement(empty)
+SAX.characters(
+, 1)
+SAX.endElement(doc)
+SAX.processingInstruction(document-end, doc)
+SAX.endDocument()

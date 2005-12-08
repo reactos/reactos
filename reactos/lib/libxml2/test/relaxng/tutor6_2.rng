@@ -1,0 +1,14 @@
+<element name="card" xmlns="http://relaxng.org/ns/structure/1.0">
+  <element name="name">
+    <text/>
+  </element>
+  <element name="email">
+    <text/>
+  </element>
+  <element name="preferredFormat">
+    <choice>
+      <value>html</value>
+      <value>text</value>
+    </choice>
+  </element>
+</element>

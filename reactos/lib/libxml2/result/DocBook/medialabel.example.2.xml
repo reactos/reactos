@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+The weekly incremental backup tape is labelled
+<medialabel>Backup <replaceable>nn</replaceable></medialabel>, where
+<replaceable>nn</replaceable> is the week number.
+</para>

@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<!DOCTYPE cmdsynopsis PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<cmdsynopsis><command>chgrp</command><arg>-R 
+    <group><arg>-H</arg><arg>-L</arg><arg>-P</arg></group></arg><arg>-f</arg><arg choice="plain"><replaceable>group</replaceable></arg><arg rep="repeat" choice="plain"><replaceable>file</replaceable></arg></cmdsynopsis>

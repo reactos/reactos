@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE mediaobject PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<mediaobject><imageobject><imagedata fileref="figures/eiffeltower.eps" format="eps"/></imageobject><imageobject><imagedata fileref="figures/eiffeltower.gif" format="gif"/></imageobject><textobject><phrase>The Eiffel Tower</phrase></textobject><caption><para>Designed by Gustave Eiffel in 1889, The Eiffel Tower is one of the
+most widely recognized buildings in the world.
+</para></caption></mediaobject>

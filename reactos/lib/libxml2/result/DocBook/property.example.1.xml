@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+When Emacs is running under X Windows, the <property>borderWidth</property>
+resource controls the width of the external border.
+</para>

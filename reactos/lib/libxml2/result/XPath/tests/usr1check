@@ -1,0 +1,12 @@
+
+========================
+Expression: //ITEM[1]
+Object is a Node Set :
+Set contains 1 nodes:
+1  ELEMENT ITEM
+    ATTRIBUTE monto
+      TEXT
+        content=50.12
+    ATTRIBUTE divisa
+      TEXT
+        content=DOL

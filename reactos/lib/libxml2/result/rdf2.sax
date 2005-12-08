@@ -1,0 +1,197 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(RDF:RDF, xmlns:RDF='http://www.w3.org/TR/WD-rdf-syntax#', xmlns:RPM='http://www.rpm.org/')
+SAX.characters(
+  , 3)
+SAX.startElement(RDF:Description, about='ftp://rufus.w3.org/linux/dld/5.4/i386/RPMS/i386/ncurses4-4.2-3.i386.rpm')
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Name)
+SAX.characters(ncurses4, 8)
+SAX.endElement(RPM:Name)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Version)
+SAX.characters(4.2, 3)
+SAX.endElement(RPM:Version)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Release)
+SAX.characters(3, 1)
+SAX.endElement(RPM:Release)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Arch)
+SAX.characters(i386, 4)
+SAX.endElement(RPM:Arch)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Os)
+SAX.characters(Linux, 5)
+SAX.endElement(RPM:Os)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Distribution)
+SAX.characters(DLD, 3)
+SAX.endElement(RPM:Distribution)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Vendor)
+SAX.characters(delix Computer GmbH, 19)
+SAX.endElement(RPM:Vendor)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Packager)
+SAX.characters(Till Bubeck , 12)
+SAX.getEntity(lt)
+SAX.characters(<, 1)
+SAX.characters(bubeck@delix.de, 15)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.characters(, Ngo Than , 11)
+SAX.getEntity(lt)
+SAX.characters(<, 1)
+SAX.characters(than@delix.de, 13)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.endElement(RPM:Packager)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Group)
+SAX.characters(Libraries, 9)
+SAX.endElement(RPM:Group)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Summary)
+SAX.characters(Bibliothek zur Ansteuerung von, 40)
+SAX.endElement(RPM:Summary)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Description)
+SAX.characters(Diese Library stellt dem Progr, 57)
+SAX.characters(ä, 2)
+SAX.characters(ngige
+Routinen zur Ansteuerung, 57)
+SAX.characters(ü, 2)
+SAX.characters(gung, die
+speziell optimiert s, 57)
+SAX.getEntity(apos)
+SAX.characters(', 1)
+SAX.characters(new curses, 10)
+SAX.getEntity(apos)
+SAX.characters(', 1)
+SAX.characters( (ncurses) Variante und ist de, 51)
+SAX.characters(ü, 2)
+SAX.characters(r die klassische Curses-Librar, 70)
+SAX.endElement(RPM:Description)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Copyright)
+SAX.characters(GPL, 3)
+SAX.endElement(RPM:Copyright)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Sources)
+SAX.characters(ncurses4-4.2-3.src.rpm, 22)
+SAX.endElement(RPM:Sources)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:BuildDate)
+SAX.characters(Tue May 12 19:30:26 1998, 24)
+SAX.endElement(RPM:BuildDate)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Date)
+SAX.characters(895015826, 9)
+SAX.endElement(RPM:Date)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Size)
+SAX.characters(1373513, 7)
+SAX.endElement(RPM:Size)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:BuildHost)
+SAX.characters(erdbeere.delix.de, 17)
+SAX.endElement(RPM:BuildHost)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Provides)
+SAX.characters(
+      , 7)
+SAX.startElement(RDF:Bag)
+SAX.characters(
+        , 9)
+SAX.startElement(RPM:Resource, href='../../../../../resources/ncurses4.rdf')
+SAX.characters(ncurses4, 8)
+SAX.endElement(RPM:Resource)
+SAX.characters(
+        , 9)
+SAX.startElement(RPM:Resource, href='../../../../../resources/libpanel.so.4.rdf')
+SAX.characters(libpanel.so.4, 13)
+SAX.endElement(RPM:Resource)
+SAX.characters(
+        , 9)
+SAX.startElement(RPM:Resource, href='../../../../../resources/libncurses.so.4.rdf')
+SAX.characters(libncurses.so.4, 15)
+SAX.endElement(RPM:Resource)
+SAX.characters(
+        , 9)
+SAX.startElement(RPM:Resource, href='../../../../../resources/libmenu.so.4.rdf')
+SAX.characters(libmenu.so.4, 12)
+SAX.endElement(RPM:Resource)
+SAX.characters(
+        , 9)
+SAX.startElement(RPM:Resource, href='../../../../../resources/libform.so.4.rdf')
+SAX.characters(libform.so.4, 12)
+SAX.endElement(RPM:Resource)
+SAX.characters(
+        , 9)
+SAX.startElement(RPM:Resource, href='../../../../../resources/ncurses.rdf')
+SAX.characters(ncurses, 7)
+SAX.endElement(RPM:Resource)
+SAX.characters(
+      , 7)
+SAX.endElement(RDF:Bag)
+SAX.characters(
+    , 5)
+SAX.endElement(RPM:Provides)
+SAX.characters(
+    , 5)
+SAX.startElement(RPM:Files)
+SAX.characters(/lib/libncurses.so.4
+/lib/libn, 2008)
+SAX.characters(/share/ncurses4/terminfo/P/P14, 4000)
+SAX.characters(es4/terminfo/a/alt7pc
+/usr/sha, 4000)
+SAX.characters(/a/att4415-w
+/usr/share/ncurse, 4000)
+SAX.characters(ses4/terminfo/b/bee
+/usr/share, 4000)
+SAX.characters(r/share/ncurses4/terminfo/c/co, 4000)
+SAX.characters(/usr/share/ncurses4/terminfo/d, 4000)
+SAX.characters(sr/share/ncurses4/terminfo/g/g, 4000)
+SAX.characters(/terminfo/h/hp2626-12x40
+/usr/, 4000)
+SAX.characters(e/ncurses4/terminfo/i/intertub, 4000)
+SAX.characters(rses4/terminfo/m/mskermit22714, 4000)
+SAX.characters(are/ncurses4/terminfo/p/p12-m
+, 4000)
+SAX.characters(pt100w
+/usr/share/ncurses4/ter, 4000)
+SAX.characters(sr/share/ncurses4/terminfo/s/s, 4000)
+SAX.characters(usr/share/ncurses4/terminfo/t/, 4000)
+SAX.characters(share/ncurses4/terminfo/v/vi55, 4000)
+SAX.characters(are/ncurses4/terminfo/w/wy160-, 4000)
+SAX.characters(/wy99gt-vb
+/usr/share/ncurses4, 4000)
+SAX.characters(/w/wyse99gt
+/usr/share/ncurses, 2907)
+SAX.endElement(RPM:Files)
+SAX.characters(
+  , 3)
+SAX.endElement(RDF:Description)
+SAX.characters(
+, 1)
+SAX.endElement(RDF:RDF)
+SAX.endDocument()

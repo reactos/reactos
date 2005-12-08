@@ -1,0 +1,66 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(RDF, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 2, xmlns:p3p='http://www.w3.org/TR/1998/WD-P3P10-syntax#proposal.DTD', xmlns:RDF='http://www.w3.org/TR/WD-rdf-syntax#', 0, 0)
+SAX.characters(
+, 1)
+SAX.startElementNs(PROP, NULL, NULL, 0, 4, 0, realm='http...', 37, entity='Cool...', 11, agreeID='94df...', 16, assurance='http...', 22)
+SAX.characters(
+  , 3)
+SAX.startElementNs(USES, NULL, NULL, 0, 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(STATEMENT, NULL, NULL, 0, 4, 0, purp='2,3"...', 3, recpnt='0" i...', 1, id='0"
+ ...', 1, consq='a si...', 37)
+SAX.characters(
+    , 5)
+SAX.startElementNs(WITH, NULL, NULL, 0, 0, 0)
+SAX.startElementNs(PREFIX, NULL, NULL, 0, 1, 0, name='User...', 5)
+SAX.characters(
+     , 6)
+SAX.startElementNs(REF, NULL, NULL, 0, 1, 0, name='Name...', 10)
+SAX.endElementNs(REF, NULL, NULL)
+SAX.characters(
+     , 6)
+SAX.startElementNs(REF, NULL, NULL, 0, 2, 0, name='Bdat...', 10, optional='1"/>...', 1)
+SAX.endElementNs(REF, NULL, NULL)
+SAX.characters(
+     , 6)
+SAX.startElementNs(REF, NULL, NULL, 0, 1, 0, name='Gend...', 6)
+SAX.endElementNs(REF, NULL, NULL)
+SAX.characters(
+    , 5)
+SAX.endElementNs(PREFIX, NULL, NULL)
+SAX.endElementNs(WITH, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(STATEMENT, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(USES, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(USES, NULL, NULL, 0, 0, 0)
+SAX.characters(
+  , 3)
+SAX.getEntity(amp)
+SAX.startElementNs(STATEMENT, NULL, NULL, 0, 4, 0, action='read...', 14, purp='0" r...', 1, recpnt='0" i...', 1, id='1">
+...', 1)
+SAX.characters(
+    , 5)
+SAX.startElementNs(REF, NULL, NULL, 0, 1, 0, name='User...', 14)
+SAX.endElementNs(REF, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(STATEMENT, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(USES, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.startElementNs(DISCLOSURE, NULL, NULL, 0, 3, 0, discURI='http...', 47, access='3" o...', 1, other='0,1"...', 3)
+SAX.endElementNs(DISCLOSURE, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(PROP, NULL, NULL)
+SAX.endElementNs(RDF, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.endDocument()

@@ -1,0 +1,14 @@
+0 10 rnode 0 0
+0 1 rnode 0 0
+1 14 #text 0 1 
+   
+   
+1 1 f 0 0
+2 3 #text 0 1 
+   hello world
+   
+1 15 f 0 0
+1 14 #text 0 1 
+   
+
+0 15 rnode 0 0

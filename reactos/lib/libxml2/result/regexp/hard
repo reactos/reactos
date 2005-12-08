@@ -1,0 +1,7 @@
+Regexp: ((a|b|\p{Nd}){1,2}|aaa|bbbb){1,2}
+bab: Ok
+aaca: Fail
+aaabbbb: Ok
+a0b: Ok
+aa0aaa: Fail
+b0aaa: Ok

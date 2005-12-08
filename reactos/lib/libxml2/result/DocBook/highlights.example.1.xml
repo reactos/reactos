@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<chapter><title>Example Chapter</title><highlights><para>
+This chapter will teach you
+<itemizedlist><listitem><para>
+How to disassemble an automobile.
+</para></listitem><listitem><para>
+How to properly carry the component pieces.
+</para></listitem><listitem><para>
+How to reassemble an automobile in a standard telephone booth.
+</para></listitem></itemizedlist></para></highlights><para>…</para></chapter>

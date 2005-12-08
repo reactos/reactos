@@ -1,0 +1,109 @@
+0 10 doc 0 0
+0 1 doc 0 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  no normalization 
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 1 norm 1 0
+1 14 #text 0 1 
+  
+1 8 #comment 0 1  normalization 
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1 
+  
+1 1 normId 1 0
+1 14 #text 0 1  
+1 8 #comment 0 1  PBM serializing back 
+1 14 #text 0 1 
+
+0 15 doc 0 0

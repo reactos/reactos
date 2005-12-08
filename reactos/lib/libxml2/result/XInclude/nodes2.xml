@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<x xmlns:xinclude="http://www.w3.org/2003/XInclude">
+   <!-- Simple test of including a set of nodes from an XML document -->
+   <p xml:base="../ents/something.xml">something</p><p xml:base="../ents/something.xml">really</p><p xml:base="../ents/something.xml">simple</p>
+</x>

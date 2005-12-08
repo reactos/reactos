@@ -1,0 +1,11 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(diagram, dia, 'http://www.lysator.liu.se/~alla/dia/', 1, xmlns:dia='http://www.lysator.liu.se/~alla/dia/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(diagramdata, dia, 'http://www.lysator.liu.se/~alla/dia/', 0, 1, 0, dia:testattr='test...', 4)
+SAX.endElementNs(diagramdata, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.characters(
+, 1)
+SAX.endElementNs(diagram, dia, 'http://www.lysator.liu.se/~alla/dia/')
+SAX.endDocument()

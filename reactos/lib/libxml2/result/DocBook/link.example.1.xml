@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE sect1 PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<sect1><title>Examples of <sgmltag>Link</sgmltag></title><para>
+In this sentence <link linkend="nextsect">this</link> word is
+hot and points to the following section.
+</para><para>
+There is also a link to the section called
+<quote><link linkend="nextsect" endterm="nextsect.title"/></quote>
+in this sentence.
+</para><sect2 id="nextsect"><title id="nextsect.title">A Subsection</title><para>
+This section only exists to be the target of a couple of links.
+</para></sect2></sect1>

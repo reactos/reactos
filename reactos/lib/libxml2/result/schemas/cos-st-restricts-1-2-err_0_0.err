@@ -1,0 +1,2 @@
+./test/schemas/cos-st-restricts-1-2-err_0.xml:3: element foo: Schemas validity error : Element '{http://FOO}foo': [facet 'length'] The value has a length of '2'; this differs from the allowed length of '3'.
+./test/schemas/cos-st-restricts-1-2-err_0.xml:3: element foo: Schemas validity error : Element '{http://FOO}foo': '1 2' is not a valid value of the list type '{http://FOO}type.A'.

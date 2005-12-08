@@ -1,0 +1,15 @@
+./test/errors/webdav.xml:2: parser warning : xmlns: DAV: not a valid URI
+<propfind xmlns="DAV:"><prop>
+                      ^
+./test/errors/webdav.xml:3: parser warning : xmlns: DAV: not a valid URI
+<getcontentlength xmlns="DAV:"/>
+                              ^
+./test/errors/webdav.xml:4: parser warning : xmlns: DAV: not a valid URI
+<getlastmodified xmlns="DAV:"/>
+                             ^
+./test/errors/webdav.xml:5: parser warning : xmlns: DAV: not a valid URI
+<displayname xmlns="DAV:"/>
+                         ^
+./test/errors/webdav.xml:7: parser warning : xmlns: DAV: not a valid URI
+<resourcetype xmlns="DAV:"/>
+                          ^

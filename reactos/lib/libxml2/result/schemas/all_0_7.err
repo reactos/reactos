@@ -1,0 +1,1 @@
+./test/schemas/all_7.xml:1: element doc: Schemas validity error : Element 'doc': Missing child element(s). Expected is ( c ).

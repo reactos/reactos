@@ -1,0 +1,5 @@
+<card>
+  <name>John Smith</name>
+  <email>js@example.com</email>
+  <preferredFormat>html</preferredFormat>
+</card>

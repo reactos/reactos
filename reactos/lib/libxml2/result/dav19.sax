@@ -1,0 +1,62 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(D:multistatus, xmlns:D='http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElement(D:response)
+SAX.characters(
+    , 5)
+SAX.startElement(D:prop)
+SAX.characters(
+      , 7)
+SAX.startElement(D:supportedlock)
+SAX.characters(
+        , 9)
+SAX.startElement(D:LockEntry)
+SAX.characters(
+          , 11)
+SAX.startElement(D:locktype)
+SAX.characters(Write, 5)
+SAX.endElement(D:locktype)
+SAX.characters(
+          , 11)
+SAX.startElement(D:lockscope)
+SAX.characters(Exclusive, 9)
+SAX.endElement(D:lockscope)
+SAX.characters(
+        , 9)
+SAX.endElement(D:LockEntry)
+SAX.characters(
+        , 9)
+SAX.startElement(D:LockEntry)
+SAX.characters(
+          , 11)
+SAX.startElement(D:locktype)
+SAX.characters(Write, 5)
+SAX.endElement(D:locktype)
+SAX.characters(
+          , 11)
+SAX.startElement(D:lockscope)
+SAX.characters(Shared, 6)
+SAX.endElement(D:lockscope)
+SAX.characters(
+        , 9)
+SAX.endElement(D:LockEntry)
+SAX.characters(
+      , 7)
+SAX.endElement(D:supportedlock)
+SAX.characters(
+    , 5)
+SAX.endElement(D:prop)
+SAX.characters(
+    , 5)
+SAX.startElement(D:status)
+SAX.characters(HTTP/1.1 200 OK, 15)
+SAX.endElement(D:status)
+SAX.characters(
+  , 3)
+SAX.endElement(D:response)
+SAX.characters(
+, 1)
+SAX.endElement(D:multistatus)
+SAX.endDocument()

@@ -1,0 +1,3 @@
+./test/namespaces/err_3.xml:1: namespace error : Failed to parse QName ':foo'
+<:foo/>
+     ^

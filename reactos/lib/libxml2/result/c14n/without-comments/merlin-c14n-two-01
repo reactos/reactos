@@ -1,0 +1,9 @@
+<bar:Something xmlns:bar="http://example.org/bar" xml:lang="en-ie">
+     <foo:Something xmlns:foo="http://example.org/foo">
+        <bar:Something xmlns:bar="http://example.org/bar">
+           <foo:Something xmlns:foo="http://example.org/foo">
+             <baz:Something xmlns:baz="http://example.org/baz"></baz:Something>
+           </foo:Something>
+        </bar:Something>
+     </foo:Something>
+  </bar:Something>

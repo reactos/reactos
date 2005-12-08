@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+  <xs:simpleType name="myDouble">
+    <xs:union memberTypes="xs:double">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+	  <xs:pattern value="\s*(N/A)?\s*"/>
+	</xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+  <xs:element name="element1" type="myDouble"/>
+  <xs:element name="element2">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="myDouble">
+	  <xs:attribute name="att" type="xs:string"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

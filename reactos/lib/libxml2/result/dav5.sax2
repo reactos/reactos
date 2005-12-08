@@ -1,0 +1,54 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(multistatus, D, 'http://www.ietf.org/standards/dav/', 2, xmlns:D='http://www.ietf.org/standards/dav/', xmlns:Z='http://www.w3.com/standards/z39.50/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(Authors, Z, 'http://www.w3.com/standards/z39.50/', 0, 0, 0)
+SAX.endElementNs(Authors, Z, 'http://www.w3.com/standards/z39.50/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 420 Method Failure, 27)
+SAX.endElementNs(status, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(Copyright-Owner, Z, 'http://www.w3.com/standards/z39.50/', 0, 0, 0)
+SAX.endElementNs(Copyright-Owner, Z, 'http://www.w3.com/standards/z39.50/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP/1.1 409 Conflict, 21)
+SAX.endElementNs(status, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(responsedescription, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters( Copyright Owner can not be de, 47)
+SAX.endElementNs(responsedescription, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+, 1)
+SAX.endElementNs(multistatus, D, 'http://www.ietf.org/standards/dav/')
+SAX.endDocument()

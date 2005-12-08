@@ -1,0 +1,86 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://dark.wapit.com/vswap/tests/wap/DTD/wml11.dtd)
+SAX.externalSubset(wml, -//WAPFORUM//DTD WML 1.1//EN, http://dark.wapit.com/vswap/tests/wap/DTD/wml11.dtd)
+SAX.comment( (C) 1999, 2000 WAP Forum Ltd.  All rights reserved )
+SAX.startElement(wml)
+SAX.characters(
+, 1)
+SAX.startElement(card, id='card1')
+SAX.characters(
+, 1)
+SAX.startElement(onevent, type='onenterforward')
+SAX.characters(
+, 1)
+SAX.startElement(go, href='/vswap/run/result.eml')
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='var', value='$test')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='v', value='dark')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='ts', value='0003')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='tp', value='wml/state/variables/parsing/1')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='ti', value='1')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='expected', value='var:pass')
+SAX.endElement(postfield)
+SAX.characters(
+, 1)
+SAX.endElement(go)
+SAX.characters(
+, 1)
+SAX.endElement(onevent)
+SAX.characters(
+, 1)
+SAX.startElement(p)
+SAX.characters(If automatic testing failed, s, 36)
+SAX.startElement(anchor)
+SAX.characters(Failed, 6)
+SAX.startElement(go, href='/vswap/run/result.eml')
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='SUBMIT', value='No')
+SAX.endElement(postfield)
+SAX.startElement(postfield, name='v', value='dark')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='ts', value='0003')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='tp', value='wml/state/variables/parsing/1')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='ti', value='1')
+SAX.endElement(postfield)
+SAX.characters(
+        , 9)
+SAX.startElement(postfield, name='expected', value='var:pass')
+SAX.endElement(postfield)
+SAX.endElement(go)
+SAX.endElement(anchor)
+SAX.characters(., 1)
+SAX.endElement(p)
+SAX.characters(
+, 1)
+SAX.endElement(card)
+SAX.characters(
+
+, 2)
+SAX.endElement(wml)
+SAX.endDocument()

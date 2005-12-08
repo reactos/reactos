@@ -1,0 +1,15 @@
+/bar
+bar
+bar
+bar
+baz
+
+foo/
+foo
+foo
+../foo./
+../foo/
+/foo
+../foo
+../../foo
+../../../foo

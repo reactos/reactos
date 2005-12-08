@@ -1,0 +1,197 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(RDF, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 2, xmlns:RDF='http://www.w3.org/TR/WD-rdf-syntax#', xmlns:RPM='http://www.rpm.org/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(Description, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 0, 1, 0, about='ftp:...', 71)
+SAX.characters(
+    , 5)
+SAX.startElementNs(Name, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(ncurses4, 8)
+SAX.endElementNs(Name, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Version, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(4.2, 3)
+SAX.endElementNs(Version, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Release, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(3, 1)
+SAX.endElementNs(Release, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Arch, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(i386, 4)
+SAX.endElementNs(Arch, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Os, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Linux, 5)
+SAX.endElementNs(Os, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Distribution, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(DLD, 3)
+SAX.endElementNs(Distribution, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Vendor, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(delix Computer GmbH, 19)
+SAX.endElementNs(Vendor, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Packager, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Till Bubeck , 12)
+SAX.getEntity(lt)
+SAX.characters(<, 1)
+SAX.characters(bubeck@delix.de, 15)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.characters(, Ngo Than , 11)
+SAX.getEntity(lt)
+SAX.characters(<, 1)
+SAX.characters(than@delix.de, 13)
+SAX.getEntity(gt)
+SAX.characters(>, 1)
+SAX.endElementNs(Packager, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Group, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Libraries, 9)
+SAX.endElementNs(Group, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Summary, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Bibliothek zur Ansteuerung von, 40)
+SAX.endElementNs(Summary, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Description, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Diese Library stellt dem Progr, 57)
+SAX.characters(ä, 2)
+SAX.characters(ngige
+Routinen zur Ansteuerung, 57)
+SAX.characters(ü, 2)
+SAX.characters(gung, die
+speziell optimiert s, 57)
+SAX.getEntity(apos)
+SAX.characters(', 1)
+SAX.characters(new curses, 10)
+SAX.getEntity(apos)
+SAX.characters(', 1)
+SAX.characters( (ncurses) Variante und ist de, 51)
+SAX.characters(ü, 2)
+SAX.characters(r die klassische Curses-Librar, 70)
+SAX.endElementNs(Description, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Copyright, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(GPL, 3)
+SAX.endElementNs(Copyright, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Sources, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(ncurses4-4.2-3.src.rpm, 22)
+SAX.endElementNs(Sources, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(BuildDate, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(Tue May 12 19:30:26 1998, 24)
+SAX.endElementNs(BuildDate, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Date, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(895015826, 9)
+SAX.endElementNs(Date, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Size, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(1373513, 7)
+SAX.endElementNs(Size, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(BuildHost, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(erdbeere.delix.de, 17)
+SAX.endElementNs(BuildHost, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Provides, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(Bag, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#', 0, 0, 0)
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 1, 0, href='../....', 37)
+SAX.characters(ncurses4, 8)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 1, 0, href='../....', 42)
+SAX.characters(libpanel.so.4, 13)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 1, 0, href='../....', 44)
+SAX.characters(libncurses.so.4, 15)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 1, 0, href='../....', 41)
+SAX.characters(libmenu.so.4, 12)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 1, 0, href='../....', 41)
+SAX.characters(libform.so.4, 12)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+        , 9)
+SAX.startElementNs(Resource, RPM, 'http://www.rpm.org/', 0, 1, 0, href='../....', 36)
+SAX.characters(ncurses, 7)
+SAX.endElementNs(Resource, RPM, 'http://www.rpm.org/')
+SAX.characters(
+      , 7)
+SAX.endElementNs(Bag, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.characters(
+    , 5)
+SAX.endElementNs(Provides, RPM, 'http://www.rpm.org/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(Files, RPM, 'http://www.rpm.org/', 0, 0, 0)
+SAX.characters(/lib/libncurses.so.4
+/lib/libn, 2008)
+SAX.characters(/share/ncurses4/terminfo/P/P14, 4000)
+SAX.characters(es4/terminfo/a/alt7pc
+/usr/sha, 4000)
+SAX.characters(/a/att4415-w
+/usr/share/ncurse, 4000)
+SAX.characters(ses4/terminfo/b/bee
+/usr/share, 4000)
+SAX.characters(r/share/ncurses4/terminfo/c/co, 4000)
+SAX.characters(/usr/share/ncurses4/terminfo/d, 4000)
+SAX.characters(sr/share/ncurses4/terminfo/g/g, 4000)
+SAX.characters(/terminfo/h/hp2626-12x40
+/usr/, 4000)
+SAX.characters(e/ncurses4/terminfo/i/intertub, 4000)
+SAX.characters(rses4/terminfo/m/mskermit22714, 4000)
+SAX.characters(are/ncurses4/terminfo/p/p12-m
+, 4000)
+SAX.characters(pt100w
+/usr/share/ncurses4/ter, 4000)
+SAX.characters(sr/share/ncurses4/terminfo/s/s, 4000)
+SAX.characters(usr/share/ncurses4/terminfo/t/, 4000)
+SAX.characters(share/ncurses4/terminfo/v/vi55, 4000)
+SAX.characters(are/ncurses4/terminfo/w/wy160-, 4000)
+SAX.characters(/wy99gt-vb
+/usr/share/ncurses4, 4000)
+SAX.characters(/w/wyse99gt
+/usr/share/ncurses, 2907)
+SAX.endElementNs(Files, RPM, 'http://www.rpm.org/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(Description, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.characters(
+, 1)
+SAX.endElementNs(RDF, RDF, 'http://www.w3.org/TR/WD-rdf-syntax#')
+SAX.endDocument()

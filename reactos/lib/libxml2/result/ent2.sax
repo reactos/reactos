@@ -1,0 +1,25 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(EXAMPLE, , example.dtd)
+SAX.entityDecl(xml, 1, (null), (null), Extensible Markup Language)
+SAX.getEntity(xml)
+SAX.entityDecl(title, 2, -//MY-TITLE//FR, title.xml, (null))
+SAX.unparsedEntityDecl(image, (null), img.gif, GIF)
+SAX.externalSubset(EXAMPLE, , example.dtd)
+SAX.startElement(EXAMPLE)
+SAX.characters(
+  , 3)
+SAX.getEntity(title)
+SAX.error: Entity 'title' not defined
+SAX.characters(
+  This text is about XML, the, 31)
+SAX.getEntity(xml)
+SAX.characters(Extensible Markup Language, 26)
+SAX.reference(xml)
+SAX.characters( and this is an embedded , 25)
+SAX.startElement(IMG, src='image')
+SAX.endElement(IMG)
+SAX.characters(
+, 1)
+SAX.endElement(EXAMPLE)
+SAX.endDocument()

@@ -1,0 +1,7 @@
+./test/schemas/annot-err_0.xsd:7: element annotation: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}annotation': The attribute 'death' is not allowed.
+./test/schemas/annot-err_0.xsd:7: element annotation: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}annotation': The content is not valid. Expected is (appinfo | documentation)*.
+./test/schemas/annot-err_0.xsd:10: element appinfo: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}appinfo': The attribute 'id' is not allowed.
+./test/schemas/annot-err_0.xsd:10: element appinfo: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}appinfo': The attribute 'fun' is not allowed.
+./test/schemas/annot-err_0.xsd:14: element documentation: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}documentation': The attribute 'id' is not allowed.
+./test/schemas/annot-err_0.xsd:14: element documentation: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}documentation': The attribute 'mothers' is not allowed.
+./test/schemas/annot-err_0.xsd:14: element documentation: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}documentation', attribute '{http://www.w3.org/XML/1998/namespace}lang': '*' is not a valid value of the atomic type 'xs:language'.

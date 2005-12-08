@@ -1,0 +1,63 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(multistatus, D, 'http://www.ietf.org/standards/dav/', 2, xmlns:D='http://www.ietf.org/standards/dav/', xmlns:R='http://www.foo.bar/boxschema/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(href, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://www.foo.bar/container/, 29)
+SAX.endElementNs(href, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(bigbox, R, 'http://www.foo.bar/boxschema/', 0, 0, 0)
+SAX.endElementNs(bigbox, R, 'http://www.foo.bar/boxschema/')
+SAX.characters(
+      , 7)
+SAX.startElementNs(author, R, 'http://www.foo.bar/boxschema/', 0, 0, 0)
+SAX.endElementNs(author, R, 'http://www.foo.bar/boxschema/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP 1.1 200 OK, 15)
+SAX.endElementNs(status, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElementNs(response, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(href, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(http://www.foo.bar/container/i, 39)
+SAX.endElementNs(href, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+      , 7)
+SAX.startElementNs(bigbox, R, 'http://www.foo.bar/boxschema/', 0, 0, 0)
+SAX.endElementNs(bigbox, R, 'http://www.foo.bar/boxschema/')
+SAX.characters(
+    , 5)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+    , 5)
+SAX.startElementNs(status, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(HTTP 1.1 200 OK, 15)
+SAX.endElementNs(status, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.endElementNs(response, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+, 1)
+SAX.endElementNs(multistatus, D, 'http://www.ietf.org/standards/dav/')
+SAX.endDocument()

@@ -1,0 +1,66 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(D:multistatus, xmlns:D='http://www.ietf.org/standards/dav/')
+SAX.characters(
+  , 3)
+SAX.startElement(D:response)
+SAX.characters(
+    , 5)
+SAX.startElement(D:href)
+SAX.characters(http://www.microsoft.com/user/, 55)
+SAX.endElement(D:href)
+SAX.characters(
+    , 5)
+SAX.startElement(D:prop)
+SAX.characters(
+      , 7)
+SAX.startElement(D:resourcetype)
+SAX.characters(
+        , 9)
+SAX.startElement(D:collection)
+SAX.endElement(D:collection)
+SAX.characters(
+      , 7)
+SAX.endElement(D:resourcetype)
+SAX.characters(
+    , 5)
+SAX.endElement(D:prop)
+SAX.characters(
+    , 5)
+SAX.startElement(D:status)
+SAX.characters(HTTP 1.1 200 OK, 15)
+SAX.endElement(D:status)
+SAX.characters(
+  , 3)
+SAX.endElement(D:response)
+SAX.characters(
+  , 3)
+SAX.startElement(D:response)
+SAX.characters(
+    , 5)
+SAX.startElement(D:href)
+SAX.characters(
+      http://www.microsoft.co, 66)
+SAX.endElement(D:href)
+SAX.characters(
+    , 5)
+SAX.startElement(D:prop)
+SAX.characters(
+      , 7)
+SAX.startElement(D:resourcetype)
+SAX.endElement(D:resourcetype)
+SAX.characters(
+    , 5)
+SAX.endElement(D:prop)
+SAX.characters(
+    , 5)
+SAX.startElement(D:status)
+SAX.characters(HTTP 1.1 200 OK, 15)
+SAX.endElement(D:status)
+SAX.characters(
+  , 3)
+SAX.endElement(D:response)
+SAX.characters(
+, 1)
+SAX.endElement(D:multistatus)
+SAX.endDocument()

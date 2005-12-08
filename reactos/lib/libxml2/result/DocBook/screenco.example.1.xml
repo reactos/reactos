@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE informalexample PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<informalexample><screen>
+ Volume in drive C is SYSTEM         Serial number is 2350:717C
+ Directory of  C:\
+
+10/17/97   9:04         &lt;DIR&gt;    bin
+10/16/97  14:11         &lt;DIR&gt;    DOS            <co id="dos"/>
+10/16/97  14:40         &lt;DIR&gt;    Program Files
+10/16/97  14:46         &lt;DIR&gt;    TEMP
+10/17/97   9:04         &lt;DIR&gt;    tmp
+10/16/97  14:37         &lt;DIR&gt;    WINNT
+10/16/97  14:25             119  AUTOEXEC.BAT   <co id="autoexec.bat"/>
+ 2/13/94   6:21          54,619  COMMAND.COM    <co id="command.com"/>
+10/16/97  14:25             115  CONFIG.SYS     <co id="config.sys"/>
+11/16/97  17:17      61,865,984  pagefile.sys
+ 2/13/94   6:21           9,349  WINA20.386     <co id="wina20.386"/></screen><calloutlist><callout arearefs="dos"><para>
+This directory holds <trademark>MS-DOS</trademark>, the
+operating system that was installed before <trademark>Windows
+NT</trademark>.
+</para></callout><callout arearefs="autoexec.bat command.com config.sys"><para>
+System startup code for DOS.
+</para></callout><callout arearefs="wina20.386"><para>
+Some sort of <trademark>Windows 3.1</trademark> hack for some 386 processors,
+as I recall.
+</para></callout></calloutlist></informalexample>

@@ -1,0 +1,463 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(html, -//IETF//DTD HTML//EN, )
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, name='GENERATOR', content='Microsoft FrontPage 4.0')
+SAX.endElement(meta)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(title)
+SAX.characters(README - Microsoft FrontPage 2, 51)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(meta, name='Microsoft Theme', content='none')
+SAX.endElement(meta)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(font, face='Verdana')
+SAX.characters(
+, 1)
+SAX.startElement(h1)
+SAX.startElement(a, name='top')
+SAX.characters(Microsoft FrontPage 2000 Serve, 48)
+SAX.endElement(a)
+SAX.endElement(h1)
+SAX.characters(
+
+, 2)
+SAX.startElement(font, size='2')
+SAX.startElement(i)
+SAX.characters(&copy; Copyright Microsoft Cor, 40)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(i)
+SAX.endElement(font)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p)
+SAX.characters(The FrontPage Server Extension, 88)
+SAX.endElement(p)
+SAX.startElement(ul)
+SAX.characters(
+  , 3)
+SAX.startElement(li)
+SAX.characters(Authoring FrontPage webs, 24)
+SAX.endElement(li)
+SAX.characters(
+  , 3)
+SAX.startElement(li)
+SAX.characters(Administering FrontPage webs, 28)
+SAX.endElement(li)
+SAX.characters(
+  , 3)
+SAX.startElement(li)
+SAX.characters(Browse-time FrontPage web func, 39)
+SAX.endElement(li)
+SAX.characters(
+, 1)
+SAX.endElement(ul)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(h2)
+SAX.characters(Contents, 8)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(h2)
+SAX.characters(
+
+, 2)
+SAX.startElement(a, href='#relnotes')
+SAX.characters(Release Notes, 13)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='#moreinfo')
+SAX.characters(Resources for More Information, 30)
+SAX.endElement(a)
+SAX.characters(
+, 1)
+SAX.startElement(p)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(p)
+SAX.characters(
+, 1)
+SAX.startElement(hr)
+SAX.endElement(hr)
+SAX.characters(
+, 1)
+SAX.startElement(h2)
+SAX.startElement(a, name='relnotes')
+SAX.characters(Release Notes, 13)
+SAX.endElement(a)
+SAX.endElement(h2)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(This section provides compleme, 136)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.startElement(a, href='#apache')
+SAX.characters(Apache 1.3.4 Support, 20)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='#upgrading')
+SAX.characters(Upgrading from previous versio, 62)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='#executables')
+SAX.characters(Uploading files into executabl, 39)
+SAX.endElement(a)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#top')
+SAX.characters(Top of Page, 11)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(h3)
+SAX.startElement(a, name='apache')
+SAX.characters(Apache 1.3.4 Support, 20)
+SAX.endElement(a)
+SAX.endElement(h3)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(You need to take some special , 360)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.endElement(font)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(blockquote)
+SAX.characters(
+  , 3)
+SAX.startElement(font, face='Courier New')
+SAX.characters(
+ResourceConfig /dev/null, 25)
+SAX.characters(&nbsp;, 2)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+AccessConfig /dev/null, 23)
+SAX.endElement(font)
+SAX.characters(
+, 1)
+SAX.endElement(blockquote)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(font, face='Verdana')
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p)
+SAX.characters(If you have some settings stor, 90)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(You must stop and restart the , 86)
+SAX.endElement(p)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#relnotes')
+SAX.characters(Top of Section, 14)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(h3)
+SAX.startElement(a, name='upgrading')
+SAX.characters(Upgrading from previous versio, 62)
+SAX.endElement(a)
+SAX.endElement(h3)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(Custom entries in frontpage.cn, 67)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(When you install FrontPage 200, 359)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(Do not overwrite the FrontPage, 141)
+SAX.endElement(p)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#relnotes')
+SAX.characters(Top of Section, 14)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(h3)
+SAX.startElement(a, name='executables')
+SAX.characters(Uploading files into executabl, 39)
+SAX.endElement(a)
+SAX.endElement(h3)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p)
+SAX.characters(After upgrading to FrontPage 2, 385)
+SAX.endElement(p)
+SAX.characters( 
+
+, 3)
+SAX.startElement(p)
+SAX.characters(To allow FrontPage authors to , 249)
+SAX.startElement(a, href='http://officeupdate.microsoft.com/frontpage/wpp/serk/')
+SAX.characters(http://officeupdate.microsoft., 53)
+SAX.endElement(a)
+SAX.characters(., 1)
+SAX.endElement(p)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#relnotes')
+SAX.characters(Top of Section, 14)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(hr)
+SAX.endElement(hr)
+SAX.characters(
+
+
+
+, 4)
+SAX.startElement(h2)
+SAX.startElement(a, name='moreinfo')
+SAX.characters(Resources for More Information, 30)
+SAX.endElement(a)
+SAX.endElement(h2)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(This section lists sources of , 85)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.startElement(a, href='#serk')
+SAX.characters(Server Extensions Resource Kit, 30)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='#serkupdate')
+SAX.characters(Server Extensions Resource Kit, 37)
+SAX.endElement(a)
+SAX.startElement(br)
+SAX.endElement(br)
+SAX.characters(
+, 1)
+SAX.startElement(a, href='#kb')
+SAX.characters(Knowledge Base, 14)
+SAX.endElement(a)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#top')
+SAX.characters(Top of Page, 11)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(h3)
+SAX.startElement(a, name='serk')
+SAX.characters(Server Extensions Resource Kit, 30)
+SAX.endElement(a)
+SAX.endElement(h3)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(The FrontPage 2000 Server Exte, 339)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(The Server Extensions Resource, 312)
+SAX.endElement(p)
+SAX.characters(
+
+, 2)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#moreinfo')
+SAX.characters(Top of Section, 14)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(h3)
+SAX.startElement(a, name='serkupdate')
+SAX.characters(Server Extensions Resource Kit, 37)
+SAX.endElement(a)
+SAX.endElement(h3)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(For updated information about , 157)
+SAX.startElement(a, href='http://officeupdate.microsoft.com/frontpage/wpp/serk/')
+SAX.characters(http://officeupdate.microsoft., 53)
+SAX.endElement(a)
+SAX.characters(., 1)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#moreinfo')
+SAX.characters(Top of Section, 14)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(h3)
+SAX.startElement(a, name='kb')
+SAX.characters(Microsoft Knowledge Base, 24)
+SAX.endElement(a)
+SAX.endElement(h3)
+SAX.characters(
+
+, 2)
+SAX.startElement(p)
+SAX.characters(For further technical informat, 254)
+SAX.error: htmlParseEntityRef: no name
+SAX.characters(&amp;, 1)
+SAX.characters( troubleshooters to find 
+fast, 302)
+SAX.startElement(a, href='http://support.microsoft.com/support/')
+SAX.characters(http://support.microsoft.com/s, 37)
+SAX.endElement(a)
+SAX.characters(., 1)
+SAX.endElement(p)
+SAX.characters(  
+
+, 4)
+SAX.startElement(p, align='right')
+SAX.startElement(font, size='1')
+SAX.startElement(a, href='#moreinfo')
+SAX.characters(Top of Section, 14)
+SAX.endElement(a)
+SAX.endElement(font)
+SAX.endElement(p)
+SAX.characters(
+
+
+, 3)
+SAX.startElement(p)
+SAX.characters(&nbsp;, 2)
+SAX.endElement(p)
+SAX.characters(  
+
+, 4)
+SAX.endElement(font)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

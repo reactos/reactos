@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<para>
+The <keycap>F1</keycap> key on an IBM PC keyboard generates the
+scan code <keycode>0x3B</keycode> when pressed.  This value
+is defined as <keysym>KEY_F1</keysym> in 
+<filename class="headerfile">keyboard.h</filename>.
+</para>

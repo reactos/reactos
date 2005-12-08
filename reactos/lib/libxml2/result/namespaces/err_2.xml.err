@@ -1,0 +1,3 @@
+./test/namespaces/err_2.xml:1: namespace error : Failed to parse QName ':'
+<:/>
+  ^

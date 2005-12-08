@@ -1,0 +1,64 @@
+
+========================
+Expression: xpointer(//chapter[position() = 2]/range-to(following::chapter[1]))
+Object is a Location Set:
+1 :   Object is a range :
+  From node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter2
+  To node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter3
+
+
+========================
+Expression: xpointer(//chapter[position() <= 2]/range-to(following::chapter[1]))
+Object is a Location Set:
+1 :   Object is a range :
+  From node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter1
+  To node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter2
+
+2 :   Object is a range :
+  From node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter2
+  To node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter3
+
+
+========================
+Expression: xpointer(//chapter[position() = last()]/range-to(following::chapter[1]))
+Object is empty (NULL)
+
+========================
+Expression: xpointer(//chapter[position() = 3]/range-to(/.//chapter[position() = 1]))
+Object is a Location Set:
+1 :   Object is a range :
+  From node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter1
+  To node
+    ELEMENT chapter
+      ATTRIBUTE id
+        TEXT
+          content=chapter3
+

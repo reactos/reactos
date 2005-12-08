@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<chapter><title>Example Chapter</title><indexterm zone="a1"><primary>Network Configuration</primary></indexterm><!-- other content here --><sect1 id="a1"><title>Configuring Your Network</title><para>…</para></sect1></chapter>

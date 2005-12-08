@@ -1,0 +1,24 @@
+
+                  XML toolkit from the GNOME project
+
+Full documentation is available on-line at
+    http://xmlsoft.org/
+
+This code is released under the MIT Licence see the Copyright file.
+
+To report bugs, follow the instructions at: 
+  http://xmlsoft.org/bugs.html
+
+A mailing-list xml@gnome.org is available, to subscribe:
+    http://mail.gnome.org/mailman/listinfo/xml
+
+The list archive is at:
+    http://mail.gnome.org/archives/xml/
+
+All technical answers asked privately will be automatically answered on
+the list and archived for public access unless pricacy is explicitely
+required and justified.
+
+Daniel Veillard
+
+$Id: README.docs,v 1.1 2003/09/01 04:58:15 wbrack Exp $

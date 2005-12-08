@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE note PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<note><title>Upcoming Changes</title><para>
+Future versions of this feature may not be backward-compatible.
+Consider implementing the revised interface now.
+</para></note>

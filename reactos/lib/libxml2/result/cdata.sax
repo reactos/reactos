@@ -1,0 +1,10 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(doc)
+SAX.characters(
+, 1)
+SAX.pcdata(<greeting>Hello, wor, 34)
+SAX.characters(
+, 1)
+SAX.endElement(doc)
+SAX.endDocument()

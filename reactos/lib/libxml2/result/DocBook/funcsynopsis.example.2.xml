@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<!DOCTYPE funcsynopsis PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<funcsynopsis><funcsynopsisinfo>
+#include &lt;varargs.h&gt;</funcsynopsisinfo><funcprototype><funcdef>int <function>max</function></funcdef><varargs/></funcprototype></funcsynopsis>

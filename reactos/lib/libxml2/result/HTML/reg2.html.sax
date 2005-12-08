@@ -1,0 +1,41 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(title)
+SAX.characters(Regression test 2, 17)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(h1)
+SAX.characters(Regression test 2, 17)
+SAX.endElement(h1)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(p)
+SAX.characters(
+Autoclose of tag P
+, 20)
+SAX.endElement(p)
+SAX.startElement(p)
+SAX.characters(
+Ok file no problem
+, 20)
+SAX.endElement(p)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endDocument()

@@ -1,0 +1,1 @@
+./test/schemas/attruse_0_2.xml:6: element barC: Schemas validity error : Element 'barC', attribute 'attr': The attribute 'attr' is not allowed.

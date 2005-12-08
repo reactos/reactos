@@ -1,0 +1,12 @@
+<rng:element name="addressBook" xmlns:rng="http://relaxng.org/ns/structure/1.0">
+  <rng:zeroOrMore>
+    <rng:element name="card">
+      <rng:element name="name">
+        <rng:text/>
+      </rng:element>
+      <rng:element name="email">
+        <rng:text/>
+      </rng:element>
+    </rng:element>
+  </rng:zeroOrMore>
+</rng:element>

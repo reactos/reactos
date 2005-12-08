@@ -1,0 +1,5 @@
+<!ENTITY % percent "&#x25;">
+<!ENTITY%percent;def "ghi">
+<!ENTITY abc "%def;">
+<!ELEMENT root (#PCDATA)>
+

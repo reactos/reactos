@@ -1,0 +1,17 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(propfind, D, 'http://www.ietf.org/standards/dav/', 1, xmlns:D='http://www.ietf.org/standards/dav/', 0, 0)
+SAX.characters(
+  , 3)
+SAX.startElementNs(prop, D, 'http://www.ietf.org/standards/dav/', 0, 0, 0)
+SAX.characters(
+    , 5)
+SAX.startElementNs(supportedlock, NULL, NULL, 0, 0, 0)
+SAX.endElementNs(supportedlock, NULL, NULL)
+SAX.characters(
+  , 3)
+SAX.endElementNs(prop, D, 'http://www.ietf.org/standards/dav/')
+SAX.characters(
+, 1)
+SAX.endElementNs(propfind, D, 'http://www.ietf.org/standards/dav/')
+SAX.endDocument()

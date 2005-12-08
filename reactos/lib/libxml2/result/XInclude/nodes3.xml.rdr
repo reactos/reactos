@@ -1,0 +1,10 @@
+0 1 x 0 0
+1 14 #text 0 1 
+   
+1 8 #comment 0 1  Simple test of including a set of nodes from an XML document 
+1 14 #text 0 1 
+   
+1 1 xinclude:include 1 0
+1 14 #text 0 1 
+
+0 15 x 0 0

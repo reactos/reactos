@@ -1,0 +1,3 @@
+test/VC/dtds/a.dtd:1: validity error : Redefinition of element a
+<!ELEMENT a (#PCDATA | b | c)*>
+                               ^

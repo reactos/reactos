@@ -1,0 +1,6 @@
+xpointer(string-range(//p, 'simple'))
+xpointer(string-range(//p, 'test'))
+xpointer(string-range(//p, 'difficult'))
+xpointer(string-range(//p, 'spanning'))
+xpointer(string-range(//p, 'unbalanced'))
+xpointer(string-range(//seq, ''))

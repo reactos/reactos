@@ -1,0 +1,30 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.startElementNs(rec, NULL, NULL, 0, 0, 0)
+SAX.characters(
+, 1)
+SAX.startElementNs(eg, NULL, NULL, 0, 0, 0)
+SAX.pcdata(<!ENTITY % pub    "&, 162)
+SAX.endElementNs(eg, NULL, NULL)
+SAX.characters(
+then the replacement text for, 43)
+SAX.startElementNs(code, NULL, NULL, 0, 0, 0)
+SAX.characters(book, 4)
+SAX.endElementNs(code, NULL, NULL)
+SAX.characters(" is:
+, 6)
+SAX.startElementNs(eg, NULL, NULL, 0, 0, 0)
+SAX.characters(La Peste: Albert Camus, 
+, 25)
+SAX.characters(©, 2)
+SAX.characters( 1947 , 6)
+SAX.characters(É, 2)
+SAX.characters(ditions Gallimard. , 19)
+SAX.getEntity(amp)
+SAX.characters(&, 1)
+SAX.characters(rights;, 7)
+SAX.endElementNs(eg, NULL, NULL)
+SAX.characters(
+, 1)
+SAX.endElementNs(rec, NULL, NULL)
+SAX.endDocument()

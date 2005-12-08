@@ -1,0 +1,69 @@
+./test/HTML/doc3.htm:10: HTML parser error : Misplaced DOCTYPE declaration
+<!-- END Naviscope Javascript --><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN
+                                 ^
+./test/HTML/doc3.htm:52: HTML parser error : htmlParseEntityRef: expecting ';'
+ href="http://ads.gamesquad.net/addclick.exe/adclick.cgi?REGION=game|tech|ent&id
+                                                                               ^
+./test/HTML/doc3.htm:52: HTML parser error : htmlParseEntityRef: expecting ';'
+_top"><img src="http://ads.gamesquad.net/addclick.exe/adcycle.cgi?group=52&media
+                                                                               ^
+./test/HTML/doc3.htm:52: HTML parser error : htmlParseEntityRef: expecting ';'
+><img src="http://ads.gamesquad.net/addclick.exe/adcycle.cgi?group=52&media=1&id
+                                                                               ^
+./test/HTML/doc3.htm:145: HTML parser error : error parsing attribute name
+                        width=70 Gentus?.?></A><BR><A 
+                                       ^
+./test/HTML/doc3.htm:148: HTML parser error : Unexpected end tag : p
+  </P></TD></TR></TBODY></TABLE></CENTER></TD></TR></TBODY></TABLE></CENTER></P>
+                                                                               ^
+./test/HTML/doc3.htm:236: HTML parser error : Unexpected end tag : font
+            Specials<BR><BR></FONT></A><BR></FONT></A><B><FONT color=yellow 
+                                                  ^
+./test/HTML/doc3.htm:236: HTML parser error : Unexpected end tag : a
+            Specials<BR><BR></FONT></A><BR></FONT></A><B><FONT color=yellow 
+                                                      ^
+./test/HTML/doc3.htm:747: HTML parser error : htmlParseEntityRef: expecting ';'
+er=0 alt="Advertisement" src="http://ads.adflight.com/ad_static.asp?pid=2097&sid
+                                                                               ^
+./test/HTML/doc3.htm:747: HTML parser error : htmlParseEntityRef: expecting ';'
+Advertisement" src="http://ads.adflight.com/ad_static.asp?pid=2097&sid=1881&asid
+                                                                               ^
+./test/HTML/doc3.htm:747: HTML parser error : Unexpected end tag : li
+light.com/ad_static.asp?pid=2097&sid=1881&asid=7708"></a></IFRAME></CENTER></LI>
+                                                                               ^
+./test/HTML/doc3.htm:747: HTML parser error : Unexpected end tag : font
+om/ad_static.asp?pid=2097&sid=1881&asid=7708"></a></IFRAME></CENTER></LI></FONT>
+                                                                               ^
+./test/HTML/doc3.htm:747: HTML parser error : Unexpected end tag : p
+=7708"></a></IFRAME></CENTER></LI></FONT></TD></TR></TBODY></TABLE></CENTER></P>
+                                                                               ^
+./test/HTML/doc3.htm:772: HTML parser error : Unexpected end tag : form
+            archive</A></FONT> </FORM></CENTER></TD></TR></TBODY></TABLE><!--			
+                                      ^
+./test/HTML/doc3.htm:820: HTML parser error : Unexpected end tag : a
+            </A></A></B><B></NOSCRIPT></B><B><!-- END GoTo.com Search Box --></B
+                    ^
+./test/HTML/doc3.htm:820: HTML parser error : Unexpected end tag : noscript
+            </A></A></B><B></NOSCRIPT></B><B><!-- END GoTo.com Search Box --></B
+                                      ^
+./test/HTML/doc3.htm:826: HTML parser error : Opening and ending tag mismatch: form and center
+            </FORM><!-- Pricewatch Search Box --><A 
+                   ^
+./test/HTML/doc3.htm:833: HTML parser error : Unexpected end tag : p
+            Special<BR>Code:BP6-hd</FONT></A> </P></CENTER></TD></TR></TBODY></T
+                                                  ^
+./test/HTML/doc3.htm:833: HTML parser error : Opening and ending tag mismatch: center and td
+            Special<BR>Code:BP6-hd</FONT></A> </P></CENTER></TD></TR></TBODY></T
+                                                           ^
+./test/HTML/doc3.htm:839: HTML parser error : Unexpected end tag : p
+width="100%">&nbsp;</TD></TR></TBODY></TABLE></P></CENTER></TR></TBODY></TABLE><
+                                                 ^
+./test/HTML/doc3.htm:840: HTML parser error : Unexpected end tag : td
+<CENTER></CENTER></TD></TR><TR><TD COLSPAN="3" VALIGN="TOP" 
+                      ^
+./test/HTML/doc3.htm:840: HTML parser error : Unexpected end tag : tr
+<CENTER></CENTER></TD></TR><TR><TD COLSPAN="3" VALIGN="TOP" 
+                           ^
+./test/HTML/doc3.htm:841: HTML parser error : Unexpected end tag : table
+HEIGHT="70">&nbsp;</TD> </TR></TABLE>
+                                     ^

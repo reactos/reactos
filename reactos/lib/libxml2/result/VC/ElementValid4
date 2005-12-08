@@ -1,0 +1,3 @@
+./test/VC/ElementValid4:7: element doc: validity error : Element c is not declared in doc list of possible children
+<doc> This <b>seems</b> Ok <a/> but this <c>was not declared</c></doc>
+                                                                      ^

@@ -1,0 +1,69 @@
+SAX.setDocumentLocator()
+SAX.startDocument()
+SAX.internalSubset(HTML, -//W3C//DTD HTML 4.0 Transitional//EN, http://www.w3.org/TR/REC-html40/strict.dtd)
+SAX.startElement(html)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(title)
+SAX.characters(gnome-xml push mode bug, 23)
+SAX.endElement(title)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(head)
+SAX.ignorableWhitespace(
+, 1)
+SAX.startElement(body)
+SAX.ignorableWhitespace(
+
+, 2)
+SAX.startElement(table, border='4')
+SAX.characters(
+  , 3)
+SAX.startElement(tr)
+SAX.characters(
+    , 5)
+SAX.startElement(td, bgcolor='white')
+SAX.characters(
+	Foo1
+	, 8)
+SAX.startElement(table, border='4')
+SAX.characters(
+	  , 4)
+SAX.startElement(tr)
+SAX.characters(
+	    , 6)
+SAX.startElement(td)
+SAX.characters(Foo2, 4)
+SAX.startElement(p)
+SAX.endElement(p)
+SAX.startElement(p)
+SAX.endElement(p)
+SAX.endElement(td)
+SAX.endElement(tr)
+SAX.endElement(table)
+SAX.characters(
+    , 5)
+SAX.endElement(td)
+SAX.characters(
+    , 5)
+SAX.startElement(td, bgcolor='blue')
+SAX.characters(Foo3, 4)
+SAX.endElement(td)
+SAX.characters(
+   , 4)
+SAX.endElement(tr)
+SAX.characters(
+  , 3)
+SAX.endElement(table)
+SAX.ignorableWhitespace(
+  , 3)
+SAX.endElement(body)
+SAX.ignorableWhitespace(
+, 1)
+SAX.endElement(html)
+SAX.ignorableWhitespace(  
+, 3)
+SAX.endDocument()
