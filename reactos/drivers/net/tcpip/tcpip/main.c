@@ -35,12 +35,6 @@ KDPC IPTimeoutDpc;
 KSPIN_LOCK IpWorkLock;
 WORK_QUEUE_ITEM IpWorkItem;
 
-/* Cancel Queue */
-LIST_ENTRY CancelQueue;
-KSPIN_LOCK CancelQueueLock;
-WORK_QUEUE_ITEM CancelQueueWork;
-extern VOID DDKAPI CancelQueuePassiveHandler( PVOID Context );
-
 VOID TiWriteErrorLog(
     PDRIVER_OBJECT DriverContext,
     NTSTATUS ErrorCode,
@@ -814,11 +808,6 @@ DriverEntry(
   /* Initialize interface list and protecting spin lock */
   InitializeListHead(&InterfaceListHead);
   KeInitializeSpinLock(&InterfaceListLock);
-
-  /* Initialize cancellation queue */
-  InitializeListHead(&CancelQueue);
-  KeInitializeSpinLock(&CancelQueueLock);
-  ExInitializeWorkItem( &CancelQueueWork, CancelQueuePassiveHandler, NULL );
 
   /* Initialize network level protocol subsystem */
   IPStartup(RegistryPath);

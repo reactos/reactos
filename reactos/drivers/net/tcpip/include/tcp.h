@@ -38,9 +38,6 @@ typedef struct TCPv4_HEADER {
 
 #define TCPOPTLEN_MAX_SEG_SIZE  0x4
 
-#define TCP_CANCEL_DISCONNECT 0
-#define TCP_CANCEL_CLOSE      1
-
 /* Data offset; 32-bit words (leftmost 4 bits); convert to bytes */
 #define TCP_DATA_OFFSET(DataOffset)(((DataOffset) & 0xF0) >> (4-2))
 
@@ -59,13 +56,6 @@ typedef struct _SLEEPING_THREAD {
     PVOID SleepToken;
     KEVENT Event;
 } SLEEPING_THREAD, *PSLEEPING_THREAD;
-
-typedef struct _CANCEL_REQUEST {
-    LIST_ENTRY Entry;
-    PVOID Context;
-    PIRP  Irp;
-    UINT  Flags, Type;
-} CANCEL_REQUEST, *PCANCEL_REQUEST;
 
 /* Retransmission timeout constants */
 
@@ -185,8 +175,5 @@ NTSTATUS TCPStartup(
 
 NTSTATUS TCPShutdown(
   VOID);
-
-void TCPMarkForDisconnect( 
-  PCONNECTION_ENDPOINT Connection, BOOLEAN Marked );
 
 #endif /* __TCP_H */

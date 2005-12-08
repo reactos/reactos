@@ -521,8 +521,6 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
  *     IPPacket = Pointer to IP packet
  */
 {
-    IP_ADDRESS Address;
-
     TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
 
     IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
@@ -564,16 +562,7 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 
     /* FIXME: Should we allow packets to be received on the wrong interface? */
     /* XXX Find out if this packet is destined for us */
-
-    if( AddrLocateADEv4( IPPacket->DstAddr.Address.IPv4Address, &Address ) ) {
-	ProcessFragment( IF, IPPacket );
-    } else {
-	PNEIGHBOR_CACHE_ENTRY NCE;
-
-	if((NCE = RouteGetRouteToDestination( &IPPacket->DstAddr ))) {
-	    IPSendDatagram( IPPacket, NCE, NULL, NULL );
-	}
-    }
+    ProcessFragment(IF, IPPacket);
 #if 0
     } else {
 	/* This packet is not destined for us. If we are a router,

@@ -12,8 +12,6 @@
 #include "precomp.h"
 #include <pseh/pseh.h>
 
-extern VOID DeleteConnectionEndpoint( PCONNECTION_ENDPOINT Endpoint );
-
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,
     PIRP Irp,
@@ -137,55 +135,6 @@ VOID DispDataRequestComplete(
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
 
-VOID DDKAPI CancelQueuePassiveHandler( PVOID CancelRequestVoid ) 
-{
-    KIRQL OldIrql;
-    PCANCEL_REQUEST CancelReq;
-    PLIST_ENTRY CqEntry;
-
-    KeAcquireSpinLock( &CancelQueueLock, &OldIrql );
-
-    TI_DbgPrint(DEBUG_IRP,("CANCEL QUEUE: Starting\n"));
-
-    for( CqEntry = CancelQueue.Flink;
-	 CqEntry != &CancelQueue;
-	) {
-	CancelReq = CONTAINING_RECORD(CqEntry, CANCEL_REQUEST, Entry);
-	ExInterlockedRemoveHeadList( &CancelQueue, &CancelQueueLock );
-	CqEntry = CancelQueue.Flink;
-
-	KeReleaseSpinLock( &CancelQueueLock, OldIrql );
-
-	TI_DbgPrint(DEBUG_IRP,("CANCEL QUEUE: Executing %x\n", CancelReq));
-
-	switch( CancelReq->Type ) {
-	case TCP_CANCEL_DISCONNECT:
-	    TCPDisconnect
-		( CancelReq->Context,
-		  CancelReq->Flags,
-		  NULL,
-		  NULL,
-		  DispDataRequestComplete,
-		  CancelReq->Irp );
-	    break;
-
-	case TCP_CANCEL_CLOSE:
-	    TCPClose( CancelReq->Context );
-	    DeleteConnectionEndpoint( CancelReq->Context );
-	    break;
-	}
-
-	TCPMarkForDisconnect( CancelReq->Context, FALSE );
-
-	ExFreePool( CancelReq );
-
-	KeAcquireSpinLock( &CancelQueueLock, &OldIrql );
-    }
-
-    TI_DbgPrint(DEBUG_IRP,("CANCEL QUEUE: Ending\n"));
-
-    KeReleaseSpinLock( &CancelQueueLock, OldIrql );
-}
 
 VOID DDKAPI DispCancelRequest(
     PDEVICE_OBJECT Device,
@@ -201,7 +150,6 @@ VOID DDKAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
-    PCANCEL_REQUEST CancelRequest;
     /*NTSTATUS Status = STATUS_SUCCESS;*/
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
@@ -221,21 +169,23 @@ VOID DDKAPI DispCancelRequest(
     /* Try canceling the request */
     switch(MinorFunction) {
     case TDI_SEND:
+        TCPDisconnect
+            ( TranContext->Handle.ConnectionContext,
+              TDI_DISCONNECT_RELEASE,
+              NULL,
+              NULL,
+              DispDataRequestComplete,
+              Irp );
+        break;
+
     case TDI_RECEIVE:
-	CancelRequest = ExAllocatePoolWithTag
-	    ( sizeof(CANCEL_REQUEST), NonPagedPool, FOURCC('T','c','k','O') );
-	TCPMarkForDisconnect( TranContext->Handle.ConnectionContext, TRUE );
-	if( CancelRequest ) {
-	    TI_DbgPrint(DEBUG_IRP,("CANCEL QUEUE:-> %x\n", CancelRequest));
-	    CancelRequest->Flags = TDI_DISCONNECT_RELEASE |
-		(MinorFunction == TDI_RECEIVE) ? TDI_DISCONNECT_ABORT : 0;
-	    CancelRequest->Context = TranContext->Handle.ConnectionContext;
-	    CancelRequest->Irp = Irp;
-	    CancelRequest->Type = TCP_CANCEL_DISCONNECT;
-	    ExInterlockedInsertTailList
-		( &CancelQueue, &CancelRequest->Entry, &CancelQueueLock );
-	    ExQueueWorkItem( &CancelQueueWork, CriticalWorkQueue );
-	}
+        TCPDisconnect
+            ( TranContext->Handle.ConnectionContext,
+              TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE,
+              NULL,
+              NULL,
+              DispDataRequestComplete,
+              Irp );
         break;
 
     case TDI_SEND_DATAGRAM:

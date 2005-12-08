@@ -308,8 +308,6 @@ typedef struct _CONNECTION_ENDPOINT {
 				* notification service to the client */
     UINT    SignalState;       /* Active signals from oskit */
     BOOLEAN Signalled;         /* Are we a member of the signal list */
-    BOOLEAN Disconnecting;     /* Cancelling an irp .. we need to leave it 
-				* alone for now */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 
