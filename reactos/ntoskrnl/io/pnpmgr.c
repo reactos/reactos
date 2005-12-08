@@ -1857,7 +1857,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    }
    else
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
       DeviceNode->BootResources = NULL;
    }
 
@@ -1868,14 +1868,14 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_RESOURCE_REQUIREMENTS,
       NULL);
-   if (NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       DeviceNode->ResourceRequirements =
          (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
    }
    else
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
       DeviceNode->ResourceRequirements = NULL;
    }
 
