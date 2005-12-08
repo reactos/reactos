@@ -932,6 +932,7 @@ static int compare_unicode_string(
                return c1 - c2;
         }
       }
+      return (int) len1 - (int) len2;
     }
     return 0;
 }
