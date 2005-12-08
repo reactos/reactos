@@ -449,6 +449,8 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    PDEVICE_NODE DeviceNode = NULL;
    NTSTATUS Status;
 
+   DPRINT("IoOpenDeviceRegistryKey() called\n");
+
    if ((DevInstKeyType & (PLUGPLAY_REGKEY_DEVICE | PLUGPLAY_REGKEY_DRIVER)) == 0)
       return STATUS_INVALID_PARAMETER;
 
@@ -539,7 +541,10 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
     */
 
    if ((DevInstKeyType & PLUGPLAY_REGKEY_DRIVER) || !NT_SUCCESS(Status))
+   {
+      DPRINT1("IoOpenDeviceRegistryKey(): Base key doesn't exist, exiting...\n");
       return Status;
+   }
 
    /*
     * Let's go further. For device key we must open "Device Parameters"
