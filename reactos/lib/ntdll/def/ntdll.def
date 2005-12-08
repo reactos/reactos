@@ -36,7 +36,7 @@ KiUserCallbackDispatcher@12
 KiUserExceptionDispatcher@8
 LdrAccessResource@16
 LdrDisableThreadCalloutsForDll@4
-;LdrEnumResources@20
+LdrEnumResources@20
 LdrFindEntryForAddress@8
 LdrFindResourceDirectory_U@16
 LdrFindResource_U@16

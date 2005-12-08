@@ -328,3 +328,105 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    return NULL;
 }
 
+
+/*
+ * Ldr Resource support code
+ */
+
+IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
+                                              LPCWSTR name, void *root,
+                                              int want_dir );
+IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( IMAGE_RESOURCE_DIRECTORY *dir,
+                                            WORD id, void *root, int want_dir );
+IMAGE_RESOURCE_DIRECTORY *find_first_entry( IMAGE_RESOURCE_DIRECTORY *dir,
+                                            void *root, int want_dir );
+int push_language( USHORT *list, ULONG pos, WORD lang );
+
+/**********************************************************************
+ *  find_entry
+ *
+ * Find a resource entry
+ */
+NTSTATUS find_entry( PVOID BaseAddress, LDR_RESOURCE_INFO *info,
+                     ULONG level, void **ret, int want_dir )
+{
+    ULONG size;
+    void *root;
+    IMAGE_RESOURCE_DIRECTORY *resdirptr;
+    USHORT list[9];  /* list of languages to try */
+    int i, pos = 0;
+    LCID user_lcid, system_lcid;
+
+    root = RtlImageDirectoryEntryToData( BaseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &size );
+    if (!root) return STATUS_RESOURCE_DATA_NOT_FOUND;
+    resdirptr = root;
+
+    if (!level--) goto done;
+    if (!(*ret = find_entry_by_name( resdirptr, (LPCWSTR)info->Type, root, want_dir || level )))
+        return STATUS_RESOURCE_TYPE_NOT_FOUND;
+    if (!level--) return STATUS_SUCCESS;
+
+    resdirptr = *ret;
+    if (!(*ret = find_entry_by_name( resdirptr, (LPCWSTR)info->Name, root, want_dir || level )))
+        return STATUS_RESOURCE_NAME_NOT_FOUND;
+    if (!level--) return STATUS_SUCCESS;
+    if (level) return STATUS_INVALID_PARAMETER;  /* level > 3 */
+
+    /* 1. specified language */
+    pos = push_language( list, pos, info->Language );
+
+    /* 2. specified language with neutral sublanguage */
+    pos = push_language( list, pos, MAKELANGID( PRIMARYLANGID(info->Language), SUBLANG_NEUTRAL ) );
+
+    /* 3. neutral language with neutral sublanguage */
+    pos = push_language( list, pos, MAKELANGID( LANG_NEUTRAL, SUBLANG_NEUTRAL ) );
+
+    /* if no explicitly specified language, try some defaults */
+    if (PRIMARYLANGID(info->Language) == LANG_NEUTRAL)
+    {
+        /* user defaults, unless SYS_DEFAULT sublanguage specified  */
+        if (SUBLANGID(info->Language) != SUBLANG_SYS_DEFAULT)
+        {
+            /* 4. current thread locale language */
+            pos = push_language( list, pos, LANGIDFROMLCID(NtCurrentTeb()->CurrentLocale) );
+
+            if (NT_SUCCESS(NtQueryDefaultLocale(TRUE, &user_lcid)))
+            {
+                /* 5. user locale language */
+                pos = push_language( list, pos, LANGIDFROMLCID(user_lcid) );
+
+                /* 6. user locale language with neutral sublanguage  */
+                pos = push_language( list, pos, MAKELANGID( PRIMARYLANGID(user_lcid), SUBLANG_NEUTRAL ) );
+            }
+        }
+
+        /* now system defaults */
+
+        if (NT_SUCCESS(NtQueryDefaultLocale(FALSE, &system_lcid)))
+        {
+            /* 7. system locale language */
+            pos = push_language( list, pos, LANGIDFROMLCID( system_lcid ) );
+
+            /* 8. system locale language with neutral sublanguage */
+            pos = push_language( list, pos, MAKELANGID( PRIMARYLANGID(system_lcid), SUBLANG_NEUTRAL ) );
+        }
+
+        /* 9. English */
+        pos = push_language( list, pos, MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT ) );
+    }
+
+    resdirptr = *ret;
+    for (i = 0; i < pos; i++)
+        if ((*ret = find_entry_by_id( resdirptr, list[i], root, want_dir ))) return STATUS_SUCCESS;
+
+    /* if no explicitly specified language, return the first entry */
+    if (PRIMARYLANGID(info->Language) == LANG_NEUTRAL)
+    {
+        if ((*ret = find_first_entry( resdirptr, root, want_dir ))) return STATUS_SUCCESS;
+    }
+    return STATUS_RESOURCE_LANG_NOT_FOUND;
+
+done:
+    *ret = resdirptr;
+    return STATUS_SUCCESS;
+}

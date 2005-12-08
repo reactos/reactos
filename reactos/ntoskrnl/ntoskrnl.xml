@@ -226,7 +226,6 @@
 	<directory name="ldr">
 		<compilationunit name="ldr.c">
 			<file>loader.c</file>
-			<file>resource.c</file>
 			<file>rtl.c</file>
 		</compilationunit>
 	</directory>

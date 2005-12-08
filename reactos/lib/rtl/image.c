@@ -80,7 +80,7 @@ RtlImageDirectoryEntryToData (
 		return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
 	/* image mapped as ordinary file, we must find raw pointer */
-	return (PVOID)RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
+	return RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
 }
 
 
@@ -117,7 +117,7 @@ RtlImageRvaToSection (
 /*
  * @implemented
  */
-ULONG
+PVOID
 NTAPI
 RtlImageRvaToVa (
 	PIMAGE_NT_HEADERS	NtHeader,
@@ -143,7 +143,7 @@ RtlImageRvaToVa (
 			*SectionHeader = Section;
 	}
 
-	return (ULONG)((ULONG_PTR)BaseAddress +
+	return (PVOID)((ULONG_PTR)BaseAddress +
 	               Rva +
 	               Section->PointerToRawData -
 	               (ULONG_PTR)Section->VirtualAddress);

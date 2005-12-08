@@ -5,6 +5,7 @@
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
+	<define name="_SEH_NO_NATIVE_NLG" />
 	<include base="rtl">.</include>
 	<if property="ARCH" value="i386">
 		<directory name="i386">
@@ -36,6 +37,7 @@
 			<file>random_asm.S</file>
 			<file>pow_asm.s</file>
 			<file>prefetchmemory_asm.s</file>
+			<file>res_asm.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>			
@@ -76,6 +78,7 @@
 	<file>random.c</file>
 	<file>rangelist.c</file>
 	<file>registry.c</file>
+	<file>res.c</file>
 	<file>resource.c</file>
 	<file>sd.c</file>
 	<file>security.c</file>

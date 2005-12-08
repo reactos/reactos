@@ -2092,7 +2092,7 @@ RtlImageDirectoryEntryToData(
 );
 
 NTSYSAPI
-ULONG
+PVOID
 NTAPI
 RtlImageRvaToVa(
     PIMAGE_NT_HEADERS NtHeader,
