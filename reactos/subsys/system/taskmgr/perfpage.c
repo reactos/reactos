@@ -118,6 +118,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
 		GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
+		break;
 
 	case WM_INITDIALOG:
 
