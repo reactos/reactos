@@ -72,7 +72,7 @@ RtlRaiseStatus(NTSTATUS Status)
 {
     EXCEPTION_RECORD ExceptionRecord;
     CONTEXT Context;
-    DPRINT1("RtlRaiseStatus(Status 0x%.08x)\n", Status);
+    DPRINT1("RtlRaiseStatus(Status 0x%.08lx)\n", Status);
 
      /* Capture the context */
     RtlCaptureContext(&Context);

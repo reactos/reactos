@@ -206,7 +206,7 @@ HEAP_GetPtr(HANDLE heap) /* [in] Handle to the heap */
    HEAP *heapPtr = (HEAP *)heap;
    if (!heapPtr || (heapPtr->magic != HEAP_MAGIC))
    {
-      DPRINT("Invalid heap %08x!\n", heap );
+      DPRINT("Invalid heap %p!\n", heap );
       return NULL;
    }
    if (TRACE_ON(heap) && !HEAP_IsRealArena( heap, 0, NULL, NOISY ))
@@ -821,7 +821,7 @@ static BOOLEAN HEAP_ValidateFreeArena( SUBHEAP *subheap, ARENA_FREE *pArena )
       if (*((ARENA_FREE **)((char *)(pArena + 1) +
                             (pArena->size & ARENA_SIZE_MASK)) - 1) != pArena)
       {
-         DPRINT("Heap %p: arena %p has wrong back ptr %p\n",
+         DPRINT("Heap %p: arena %p has wrong back ptr %lx\n",
                 subheap->heap, pArena,
                 *((PULONG)((char *)(pArena+1)+ (pArena->size & ARENA_SIZE_MASK)) - 1));
          return FALSE;
@@ -994,7 +994,7 @@ static BOOLEAN HEAP_IsRealArena(
 
    if (!heapPtr || (heapPtr->magic != HEAP_MAGIC))
    {
-      DPRINT("Invalid heap %08x!\n", heap );
+      DPRINT("Invalid heap %p!\n", heap );
       return FALSE;
    }
 
@@ -1138,7 +1138,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
    ULONG flags;
    HEAP **pptr;
 
-   DPRINT("%08x\n", heap );
+   DPRINT("%p\n", heap );
    if (!heapPtr)
       return heap;
 
@@ -1216,7 +1216,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
 
    if (!(pArena = HEAP_FindFreeBlock( heapPtr, size, &subheap )))
    {
-      DPRINT("(%08x,%08lx,%08lx): returning NULL\n",
+      DPRINT("(%p,%08lx,%08lx): returning NULL\n",
             heap, flags, size  );
       if (!(flags & HEAP_NO_SERIALIZE))
          RtlLeaveHeapLock( &heapPtr->critSection );
@@ -1250,7 +1250,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
    if (!(flags & HEAP_NO_SERIALIZE))
       RtlLeaveHeapLock( &heapPtr->critSection );
 
-   DPRINT("(%08x,%08lx,%08lx): returning %p\n",
+   DPRINT("(%p,%08lx,%08lx): returning %p\n",
          heap, flags, size, (PVOID)(pInUse + 1) );
    return (PVOID)(pInUse + 1);
 }
@@ -1280,7 +1280,7 @@ BOOLEAN NTAPI RtlFreeHeap(
       return FALSE;
    if (!ptr)  /* Freeing a NULL ptr is doesn't indicate an error in Win2k */
    {
-      DPRINT("(%08x,%08lx,%p): asked to free NULL\n",
+      DPRINT("(%p,%08lx,%p): asked to free NULL\n",
            heap, flags, ptr );
       return TRUE;
    }
@@ -1293,7 +1293,7 @@ BOOLEAN NTAPI RtlFreeHeap(
    {
       if (!(flags & HEAP_NO_SERIALIZE))
          RtlLeaveHeapLock( &heapPtr->critSection );
-      DPRINT("(%08x,%08lx,%p): returning FALSE\n",
+      DPRINT("(%p,%08lx,%p): returning FALSE\n",
             heap, flags, ptr );
       return FALSE;
    }
@@ -1307,7 +1307,7 @@ BOOLEAN NTAPI RtlFreeHeap(
    if (!(flags & HEAP_NO_SERIALIZE))
       RtlLeaveHeapLock( &heapPtr->critSection );
 
-   DPRINT("(%08x,%08lx,%p): returning TRUE\n",
+   DPRINT("(%p,%08lx,%p): returning TRUE\n",
          heap, flags, ptr );
    return TRUE;
 }
@@ -1359,7 +1359,7 @@ PVOID NTAPI RtlReAllocateHeap(
    {
       if (!(Flags & HEAP_NO_SERIALIZE))
          RtlLeaveHeapLock( &heapPtr->critSection );
-      DPRINT("(%08x,%08lx,%p,%08lx): returning NULL\n",
+      DPRINT("(%p,%08lx,%p,%08lx): returning NULL\n",
             Heap, Flags, Ptr, Size );
       if (Flags & HEAP_GENERATE_EXCEPTIONS)
          RtlRaiseStatus( STATUS_NO_MEMORY );
@@ -1452,7 +1452,7 @@ PVOID NTAPI RtlReAllocateHeap(
    if (!(Flags & HEAP_NO_SERIALIZE))
       RtlLeaveHeapLock( &heapPtr->critSection );
 
-   DPRINT("(%08x,%08lx,%p,%08lx): returning %p\n",
+   DPRINT("(%p,%08lx,%p,%08lx): returning %p\n",
          Heap, Flags, Ptr, Size, (PVOID)(pArena + 1) );
    return (PVOID)(pArena + 1);
 }
@@ -1561,7 +1561,7 @@ RtlSizeHeap(
    if (!(Flags & HEAP_NO_SERIALIZE))
       RtlLeaveHeapLock( &heapPtr->critSection );
 
-   DPRINT("(%08x,%08lx,%p): returning %08lx\n",
+   DPRINT("(%p,%08lx,%p): returning %08lx\n",
          Heap, Flags, Ptr, ret );
    return ret;
 }

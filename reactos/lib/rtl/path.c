@@ -205,7 +205,7 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 	    cd->DosPath.Buffer[Length - 2] != L':')
 		Length--;
 
-	DPRINT ("cd->DosPath.Buffer %S Length %d\n",
+	DPRINT ("cd->DosPath.Buffer %S Length %lu\n",
 	        cd->DosPath.Buffer, Length);
 
 	if (MaximumLength / sizeof(WCHAR) > Length)

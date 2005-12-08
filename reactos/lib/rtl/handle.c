@@ -168,12 +168,12 @@ RtlIsValidIndexHandle(IN PRTL_HANDLE_TABLE HandleTable,
 {
    PRTL_HANDLE_TABLE_ENTRY InternalHandle;
 
-   DPRINT("RtlIsValidIndexHandle(HandleTable %p Index %x Handle %p)\n", HandleTable, Index, Handle);
+   DPRINT("RtlIsValidIndexHandle(HandleTable %p Index 0x%lx Handle %p)\n", HandleTable, Index, Handle);
 
    if (HandleTable == NULL)
      return FALSE;
 
-   DPRINT("Handles %p HandleSize %x\n",
+   DPRINT("Handles %p HandleSize 0x%lx\n",
 	  HandleTable->CommittedHandles, HandleTable->SizeOfHandleTableEntry);
 
    InternalHandle = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)HandleTable->CommittedHandles +

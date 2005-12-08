@@ -175,7 +175,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     /* Loop every entry which has valid entries */
     while (CurrentEntry->NameLength)
     {
-        DPRINT("CurrentEntry->NameLength %lx\n", CurrentEntry->NameLength);
+        DPRINT("CurrentEntry->NameLength 0x%x\n", CurrentEntry->NameLength);
 
         /* Get the splay links and loop */
         SplayLinks = &CurrentEntry->Links;
@@ -189,7 +189,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 
             /* Do the comparison */
             Result = CompareUnicodeStrings(Entry->Prefix, FullName, 0);
-            DPRINT("Result %lx\n", Result);
+            DPRINT("Result 0x%x\n", Result);
             if (Result == GenericGreaterThan)
             {
                 /* Prefix is greater, so restart on the left child */

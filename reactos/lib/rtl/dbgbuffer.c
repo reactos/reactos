@@ -38,7 +38,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
    Buf->SectionBase = Buf;
    Buf->SectionSize = SectionSize;
 
-   DPRINT("RtlCQDB: BA: %x BS: %d\n", Buf->SectionBase, Buf->SectionSize);
+   DPRINT("RtlCQDB: BA: %p BS: 0x%lx\n", Buf->SectionBase, Buf->SectionSize);
 
    return Buf;
 }
@@ -99,7 +99,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
   if (!NT_SUCCESS(Status))
     {
        /* failure */
-       DPRINT("NtQueryInformationProcess 1 &x \n", Status);
+       DPRINT("NtQueryInformationProcess 1 0x%lx \n", Status);
        return Status;
     }
 
@@ -124,7 +124,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
   if (!NT_SUCCESS(Status))
     {
        /* failure */
-       DPRINT("NtReadVirtualMemory 1 %x \n", Status);
+       DPRINT("NtReadVirtualMemory 1 0x%lx \n", Status);
        return Status;
     }
 
@@ -142,7 +142,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
         /* failure */
-        DPRINT("NtReadVirtualMemory 2 %x \n", Status);
+        DPRINT("NtReadVirtualMemory 2 0x%lx \n", Status);
         return Status;
      }
 
@@ -173,7 +173,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
         /* failure */
-        DPRINT( "NtReadVirtualMemory 3 %x \n", Status);
+        DPRINT( "NtReadVirtualMemory 3 0x%lx \n", Status);
         return Status;
      }
 
@@ -307,7 +307,7 @@ if (Pid == ProcessId)
     }
 
    DPRINT("QueryProcessDebugInformation end \n");
-   DPRINT("QueryDebugInfo : %d\n", Buf->SizeOfInfo);
+   DPRINT("QueryDebugInfo : 0x%lx\n", Buf->SizeOfInfo);
 }
 else
 {
@@ -391,7 +391,7 @@ else
     }
 
    DPRINT("QueryProcessDebugInformation end \n");
-   DPRINT("QueryDebugInfo : %d\n", Buf->SizeOfInfo);
+   DPRINT("QueryDebugInfo : 0x%lx\n", Buf->SizeOfInfo);
 }
    return Status;
 
