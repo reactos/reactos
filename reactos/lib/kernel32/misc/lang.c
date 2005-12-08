@@ -1,10 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT: See COPYING in the top level directory
- * PROJECT  : ReactOS user mode libraries
- * MODULE   : kernel32.dll
- * FILE     : reactos/lib/kernel32/misc/lang.c
- * AUTHOR   : ???
+/*
+ * PROJECT:     ReactOS user mode libraries
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        reactos/lib/kernel32/misc/lang.c
+ * PURPOSE:
+ * PROGRAMMERS: ???
  */
 
 #include <k32.h>
@@ -932,6 +931,7 @@ static int compare_unicode_string(
                return c1 - c2;
         }
       }
+      return (int) len1 - (int) len2;
     }
     return 0;
 }
