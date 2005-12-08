@@ -100,6 +100,8 @@ typedef struct _DC
   INT  saveLevel;
   BOOL IsIC;
 
+  HPALETTE PalIndexed;
+
   WIN_DC_INFO  w;
 } DC, *PDC;
 

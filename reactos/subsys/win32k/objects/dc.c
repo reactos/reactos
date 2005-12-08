@@ -222,6 +222,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->w.hFirstBitmap = hBitmap;
   NewDC->GDIDevice      = OrigDC->GDIDevice;
 
+  NewDC->PalIndexed = OrigDC->PalIndexed;
   NewDC->w.hPalette = OrigDC->w.hPalette;
   NewDC->w.textColor = OrigDC->w.textColor;
   NewDC->w.textAlign = OrigDC->w.textAlign;
@@ -905,6 +906,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   if (! CreateAsIC)
   {
+    NewDC->PalIndexed = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
     NewDC->w.ROPmode = R2_COPYPEN;
 
@@ -1315,6 +1317,7 @@ NtGdiGetDCState(HDC  hDC)
 #if 0
   newdc->w.hDevice          = dc->w.hDevice;
 #endif
+  newdc->PalIndexed         = dc->PalIndexed;
   newdc->w.hPalette         = dc->w.hPalette;
   newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
@@ -1440,6 +1443,7 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	dc->vportOrgY          = dcs->vportOrgY;
 	dc->vportExtX          = dcs->vportExtX;
 	dc->vportExtY          = dcs->vportExtY;
+        dc->PalIndexed         = dcs->PalIndexed;
 
 	if (!(dc->w.flags & DC_MEMORY))
 	{

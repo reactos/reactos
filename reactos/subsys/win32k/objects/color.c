@@ -509,6 +509,12 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
               oldPal = dc->w.hPalette;
               dc->w.hPalette = hpal;
             }
+          else if (8 < dc->w.bitsPerPixel && PAL_INDEXED == PalGDI->Mode)
+            {
+              PALETTE_UnlockPalette(PalGDI);
+              oldPal = dc->PalIndexed;
+              dc->PalIndexed = hpal;
+            }
           else
             {
               PALETTE_UnlockPalette(PalGDI);
