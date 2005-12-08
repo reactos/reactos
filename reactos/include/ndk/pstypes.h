@@ -89,6 +89,18 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL     6
 
 //
+// NtCreateProcessEx flags
+//
+#define PS_REQUEST_BREAKAWAY                    1
+#define PS_NO_DEBUG_INHERIT                     2
+#define PS_INHERIT_HANDLES                      4
+#define PS_UNKNOWN_VALUE                        8
+#define PS_ALL_FLAGS                            (PS_REQUEST_BREAKAWAY | \
+                                                 PS_NO_DEBUG_INHERIT |  \
+                                                 PS_INHERIT_HANDLES |   \
+                                                 PS_UNKNOWN_VALUE)      
+
+//
 // Process base priorities
 //
 #define PROCESS_PRIORITY_IDLE                   3
