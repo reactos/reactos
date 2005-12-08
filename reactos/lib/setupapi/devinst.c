@@ -3757,7 +3757,7 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         rc = GetFunctionPointer(PropPageProvider, &hModule, (PVOID*)&pPropPageProvider);
         if (rc != ERROR_SUCCESS)
         {
-            SetLastError(rc);
+            SetLastError(ERROR_INVALID_PROPPAGE_PROVIDER);
             goto cleanup;
         }
 
