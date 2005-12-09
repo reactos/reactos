@@ -50,7 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 LONG SHDOCVW_refCount = 0;
 
 static const WCHAR szMozDlPath[] = {
-    'S','o','f','t','w','a','r','e','\\','W','i','n','e','\\',
+    'S','o','f','t','w','a','r','e','\\','R','e','a','c','t','O','S','\\',
     's','h','d','o','c','v','w',0
 };
 
@@ -321,7 +321,7 @@ static DWORD WINAPI ThreadFunc( LPVOID info )
     /* find the name of the thing to download */
     szUrl[0] = 0;
     /* @@ Wine registry key: HKCU\Software\Wine\shdocvw */
-    r = RegOpenKeyW( HKEY_CURRENT_USER, szMozDlPath, &hkey );
+    r = RegOpenKeyW( HKEY_LOCAL_MACHINE, szMozDlPath, &hkey );
     if( r == ERROR_SUCCESS )
     {
         sz = MAX_PATH;
@@ -404,7 +404,7 @@ static BOOL SHDOCVW_TryDownloadMozillaControl(void)
 {
     DWORD r;
     WCHAR buf[0x100];
-    static const WCHAR szWine[] = { 'W','i','n','e',0 };
+    static const WCHAR szTitle[] = { 'R','e','a','c','t','O','S',0 };
     HANDLE hsem;
 
     SetLastError( ERROR_SUCCESS );
@@ -412,7 +412,7 @@ static BOOL SHDOCVW_TryDownloadMozillaControl(void)
     if( GetLastError() != ERROR_ALREADY_EXISTS )
     {
         LoadStringW( shdocvw_hinstance, 1001, buf, sizeof buf/sizeof(WCHAR) );
-        r = MessageBoxW(NULL, buf, szWine, MB_YESNO | MB_ICONQUESTION);
+        r = MessageBoxW(NULL, buf, szTitle, MB_YESNO | MB_ICONQUESTION);
         if( r != IDYES )
             return FALSE;
 
@@ -445,7 +445,7 @@ static BOOL SHDOCVW_TryLoadMozillaControl(void)
         if( bTried )
         {
             MESSAGE("You need to install the Mozilla ActiveX control to\n");
-            MESSAGE("use Wine's builtin CLSID_WebBrowser from SHDOCVW.DLL\n");
+            MESSAGE("use ReactOS's builtin CLSID_WebBrowser from SHDOCVW.DLL\n");
             return FALSE;
         }
         SHDOCVW_TryDownloadMozillaControl();
