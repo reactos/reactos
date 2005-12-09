@@ -77,6 +77,7 @@
 @ stub CertSetEnhancedKeyUsage
 @ stub CertStrToNameA
 @ stub CertStrToNameW
+@ stub CertVerifyCertificateChainPolicy
 @ stub CertVerifyCRLRevocation
 @ stub CertVerifyCRLTimeValidity
 @ stub CertVerifyCTLUsage
