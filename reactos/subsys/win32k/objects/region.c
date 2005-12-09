@@ -405,7 +405,11 @@ typedef struct _ScanLineListBlock {
 static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 	if ( (reg->rdh.nCount+1)*sizeof( RECT ) >= reg->rdh.nRgnSize ) {
 		PRECT temp;
-		temp = ExAllocatePoolWithTag( PagedPool, (2 * (reg->rdh.nRgnSize)), TAG_REGION);
+		DWORD NewSize = 2 * reg->rdh.nRgnSize;
+		if (NewSize < (reg->rdh.nCount + 1) * sizeof(RECT)) {
+			NewSize = (reg->rdh.nCount + 1) * sizeof(RECT);
+		}
+		temp = ExAllocatePoolWithTag( PagedPool, NewSize, TAG_REGION);
 
 		if (temp == 0)
 		    return 0;
@@ -413,7 +417,7 @@ static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
                 /* copy the rectangles */
                 COPY_RECTS(temp, *firstrect, reg->rdh.nCount);
 
-		reg->rdh.nRgnSize *= 2;
+		reg->rdh.nRgnSize = NewSize;
 		if (*firstrect != &reg->rdh.rcBound)
 		    ExFreePool( *firstrect );
 		*firstrect = temp;
