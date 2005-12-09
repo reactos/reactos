@@ -1,0 +1,315 @@
+Full local changelog:
+
+Revision: 81
+Author: 
+Date: 7:33:27 PM, December 5, 2005
+Message:
+- Fix DNSLIB top-level source header.
+- Add include files instead of relying on ReactOS Tree
+- Update some include files for the new paths.
+----
+
+Revision: 80
+Author: 
+Date: 3:51:09 PM, December 5, 2005
+Message:
+- Implement AcsHlpSendCommand
+- Add @implemented tags
+- Add NDK usage
+- Define IOCTLs
+----
+
+Revision: 79
+Author: 
+Date: 3:24:10 PM, December 5, 2005
+Message:
+- Add Autodial Command Type
+- Implement AcsHlpAttemptConnection and AcsHlpNoteNewConnection
+----
+
+Revision: 78
+Author: 
+Date: 3:14:40 PM, December 5, 2005
+Message:
+- Add types for Autodial Connections
+- Implement WSNoteSuccessfulHostentLookup
+----
+
+Revision: 77
+Author: 
+Date: 2:30:53 PM, December 5, 2005
+Message:
+- Convert the IP to lower-case before doing inet_addr.
+----
+
+Revision: 76
+Author: 
+Date: 2:27:59 PM, December 5, 2005
+Message:
+- Implement WSAttemptAutodialName
+----
+
+Revision: 75
+Author: 
+Date: 2:14:51 PM, December 5, 2005
+Message:
+- Implement WSAttemptAutodialAddr
+- Add AUTODIAL_FAMILY and AUTODIAL_ADDR types.
+----
+
+Revision: 74
+Author: 
+Date: 1:53:21 PM, December 5, 2005
+Message:
+- Implement DllMain
+----
+
+Revision: 73
+Author: 
+Date: 1:48:20 PM, December 5, 2005
+Message:
+- Add rasadhlp
+----
+
+Revision: 72
+Author: 
+Date: 11:33:18 PM, December 4, 2005
+Message:
+- Implement Dns_Ip4ReverseNameToAddress_W
+- Fix a bug in Dns_Ip4AddressToReverseName_W
+- Implement Rnr_DoDnsLookup
+- Stub Rnr_NbtResolveName
+- Implement GetDnsQueryTypeFromGuid
+All DNS Code is now "code-complete" barring any fixes due to bugs that will appear during testing.
+----
+
+Revision: 71
+Author: 
+Date: 9:24:01 PM, December 4, 2005
+Message:
+- Implement DnsAddr_BuildFromAtm, DnsAddr_BuildFromDnsRecord.
+- Implement SaBlob_WriteAddress, SaBlob_WriteRecords.
+----
+
+Revision: 70
+Author: 
+Date: 5:35:28 PM, December 3, 2005
+Message:
+- Fix DnsAddr_BuildFromIp4
+- Implement DnsAddr_BuildFromIp6
+- Implement SaBlob_IsSupportedAddrType, SaBlob_CreateFromRecords, SaBlob_Query
+- Implement Dns_StringToDnsAddrEx, Dns_ReverseNameToDnsAddr_W
+- Fix DNS_ADDRESS structure definition.
+- Fix call to SaBlob_Query in Rnr_GetHostByAddr
+----
+
+Revision: 69
+Author: 
+Date: 2:17:38 AM, December 3, 2005
+Message:
+- Fix more build issues due to latest NDK
+- Implement SaBlob_WriteNameOrAlias
+- Stub Dns_Ip6AddressToReverseName_W, Dns_Ip4ReverseNameToAddress_A, Dns_Ip6ReverseNameToAddress_A
+- Implement Dns_StringToAddressW, Dns_StringToAddressEx, Dns_Ip4StringToAddress_W, Dns_Ip4StringToAddress_A, Dns_Ip6StringToAddress_W, Dns_Ip6StringToAddress_A, Dns_Ip4AddressToReverseName_W.
+- Implement Rnr_DoHostnameLookup, Rnr_GetHostByAddr, Rnr_CheckIfUseNbt.
+- Stub Rnr_NbtResolveAddr, Rnr_DoDnsLookup
+- Fix bug in Dns_NSPStartup
+----
+
+Revision: 68
+Author: 
+Date: 11:43:00 PM, December 2, 2005
+Message:
+- Make it all build again.
+- Correct some formatting issues.
+----
+
+Revision: 67
+Author: 
+Date: 3:52:20 AM, November 12, 2005
+Message:
+- Implement RNRPROV_SockEnterApi
+- Implement Rnr_ThreadInit
+- Add RNR_TEB_DATA structure and update WINSOCK_TEB_DATA to link with it.
+- Stub WSM_NSPStartup. We won't support NLA for a loooong time.
+----
+
+Revision: 66
+Author: 
+Date: 1:58:28 AM, November 12, 2005
+Message:
+- Implement Hostent_Init, Hostent_ConvertToOffets, Dns_PtrArrayToOffsetArray
+----
+
+Revision: 65
+Author: 
+Date: 1:37:19 AM, November 12, 2005
+Message:
+- Implement Dns_StringCopy
+----
+
+Revision: 64
+Author: 
+Date: 9:48:59 PM, November 11, 2005
+Message:
+- Implement FlatBuf_Arg_ReserveAlignPointer
+- Implement Dns_CreateStringCopy_W and Dns_GetBufferLengthForStringCopy
+- Add old code of Dns_StringCopy, with some formatting changes. Still disabled until review.
+----
+
+Revision: 63
+Author: 
+Date: 8:55:06 PM, November 11, 2005
+Message:
+- Implement DnsAddrArray_AddAddr and add DnsAddrArray_ContainsAddr stub.
+- Update headers and some prototypes.
+----
+
+Revision: 62
+Author: 
+Date: 7:00:20 PM, November 11, 2005
+Message:
+- Fix DNS_ADDRESS defintion
+- Implement DnsAddrArray_Create, DnsAddrArray_Free, DnsAddrArray_AddIp4, DnsAddr_BuildFromIp4.
+- Update headers.
+----
+
+Revision: 61
+Author: 
+Date: 6:21:15 PM, November 11, 2005
+Message:
+- Use the correct information in the Address family Table
+----
+
+Revision: 60
+Author: 
+Date: 6:16:41 PM, November 11, 2005
+Message:
+- Cleanup ATM-related header issues
+- Implement FamilyInfo_GetForFamily and the family tables.
+----
+
+Revision: 59
+Author: 
+Date: 6:04:00 PM, November 11, 2005
+Message:
+- Implement Dns_Free and Dns_AllocZero
+----
+
+Revision: 58
+Author: 
+Date: 5:58:27 PM, November 11, 2005
+Message:
+- Fix up PDNS_FAMILY_INFO
+- Finish implementing SaBlob_CreateHostent
+----
+
+Revision: 57
+Author: 
+Date: 3:09:54 PM, November 11, 2005
+Message:
+- Write aliases and name in SaBlob_CreateHostent
+----
+
+Revision: 56
+Author: 
+Date: 3:01:22 PM, November 11, 2005
+Message:
+- Write most of SaBlob_CreateHostent's general implementation and update headers with new required functions.
+----
+
+Revision: 55
+Author: 
+Date: 5:10:38 AM, November 11, 2005
+Message:
+- Implement SaBlob_CreateFromIp4, SaBlob_Free, SaBlob_Create.
+- Update stubs/headers.
+----
+
+Revision: 54
+Author: 
+Date: 4:03:28 AM, November 11, 2005
+Message:
+- Implement Flat Buffer functions.
+- Use 64-bit compatible types.
+----
+
+Revision: 53
+Author: 
+Date: 3:30:50 AM, November 11, 2005
+Message:
+- Implement Dns_NSPInstallServiceClass, Dns_NSPRemoveServiceClass, Dns_NSPGetServiceClassInfo, Dns_NSPSetService.
+----
+
+Revision: 52
+Author: 
+Date: 3:25:01 AM, November 11, 2005
+Message:
+- Implement Dns_NSPCleanup
+----
+
+Revision: 51
+Author: 
+Date: 3:22:55 AM, November 11, 2005
+Message:
+- Implement Dns_NSPLookupServiceEnd
+----
+
+Revision: 50
+Author: 
+Date: 2:51:44 AM, November 11, 2005
+Message:
+- Finish generic implementation of Dns_NSPLookupServiceNext and update headers. Now it's time to implement the helper functions themselves.
+----
+
+Revision: 49
+Author: 
+Date: 1:58:03 AM, November 11, 2005
+Message:
+- Continue work on Dns_NSPLookupServiceNext and update headers/sources accordingly.
+----
+
+Revision: 48
+Author: 
+Date: 10:20:48 PM, November 10, 2005
+Message:
+- Continue refactoring of NSPLookupServiceNext.
+- Continue header cleanups.
+----
+
+Revision: 47
+Author: 
+Date: 7:38:58 PM, November 10, 2005
+Message:
+- Fix DNSLIB build
+----
+
+Revision: 46
+Author: 
+Date: 7:31:34 PM, November 10, 2005
+Message:
+- Major cleanup in preparation for RNR20LIB implementation.
+- Add a lot of missing files to dnslib and rnr20lib
+- Cleanup the headers a bit and finalize the header architecture.
+- Refactored NSPLookupServiceBegin and started NSPLookupServiceNext.
+- Implemented NSPStartup and DNS_NSPStartup 
+- Prepared for architectural separation between NBT, NLA and DNS.
+- Other misc design cleanups.
+(NOTE: Code compiles but probably doesn't work at all for now).
+----
+
+Revision: 45
+Author: 
+Date: 2:30:25 AM, November 10, 2005
+Message:
+update layout
+----
+
+Revision: 44
+Author: 
+Date: 2:27:37 AM, November 10, 2005
+Message:
+- Fix name
+----
+
+
