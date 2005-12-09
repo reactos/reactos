@@ -1,7 +1,0 @@
-<!ENTITY % a SYSTEM "http://example.org/a/a.dtd">
-%a;
-<!ENTITY % c SYSTEM "http://example.org/c/c.dtd">
-%c;
-<!ENTITY % b SYSTEM "http://example.org/b/b.dtd">
-%b;
-<!ELEMENT acb (a, c, b)>

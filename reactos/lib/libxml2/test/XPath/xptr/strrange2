@@ -1,3 +1,0 @@
-xpointer(string-range(//p, 'test', 2))
-xpointer(string-range(//p, 'test', 2, 2))
-xpointer(string-range(//p, 'difficult', 1, 0))

@@ -1,4 +1,0 @@
-xpointer(string-range(//p, 'test', 1, 0))
-xpointer(string-range(//*, 'test', 1, 0))
-xpointer(string-range(//p, 'test', 1, 0)[2])
-xpointer(string-range(//*, 'test', 1, 0)[2])

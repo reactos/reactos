@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<element name="number" xmlns="http://relaxng.org/ns/structure/1.0"
-        datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
-  <attribute name="att1">
-     <value type="integer"> 1 </value>
-  </attribute>
-</element>
-

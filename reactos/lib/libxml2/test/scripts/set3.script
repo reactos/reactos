@@ -1,5 +1,0 @@
-cd *
-xpath //*[namespace-uri()="bar"]
-set <b/>
-xpath //*[namespace-uri()="bar"]
-save -

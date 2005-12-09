@@ -1,6 +1,0 @@
-xpointer(//chapitre[2])
-xpointer(//chapter[2]) 
-xpointer(//chapitre[2])xpointer(//chapter[2]) 
-xpointer(id("chapter1"))
-xpointer(//*[@id="chapter1"])
-xpointer(id("chapter1"))xpointer(//*[@id="chapter1"])

@@ -1,7 +1,0 @@
-<!DOCTYPE abc SYSTEM "http://example.org/abc.dtd">
-<abc>
-  <a>Let's use predefined entites &amp; &lt; &gt;</a>
-  <b>Let's use a DTD defined entity &bent;</b>
-  <c/>
-</abc>
-

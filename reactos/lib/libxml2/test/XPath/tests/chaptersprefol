@@ -1,8 +1,0 @@
-/following::*
-/preceding::*
-/child::EXAMPLE/preceding::*
-/child::EXAMPLE/following::*
-/child::EXAMPLE/child::chapter[3]/preceding::*
-/child::EXAMPLE/child::chapter[3]/following::*
-/child::EXAMPLE/child::chapter[1]/image/preceding::*
-/child::EXAMPLE/child::chapter[1]/image/following::*
