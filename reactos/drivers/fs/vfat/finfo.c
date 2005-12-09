@@ -252,6 +252,7 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
                                          FILE_ATTRIBUTE_HIDDEN |
                                          FILE_ATTRIBUTE_READONLY)))
   {
+    DPRINT("Synthesizing FILE_ATTRIBUTE_NORMAL\n");
     BasicInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
   }
   DPRINT("Getting attributes 0x%02x\n", BasicInfo->FileAttributes);
@@ -428,6 +429,16 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
       NetworkInfo->EndOfFile = Fcb->RFCB.FileSize;
     }
   NetworkInfo->FileAttributes = *Fcb->Attributes & 0x3f;
+  /* Synthesize FILE_ATTRIBUTE_NORMAL */
+  if (0 == (NetworkInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
+                                           FILE_ATTRIBUTE_ARCHIVE |
+                                           FILE_ATTRIBUTE_SYSTEM |
+                                           FILE_ATTRIBUTE_HIDDEN |
+                                           FILE_ATTRIBUTE_READONLY)))
+  {
+    DPRINT("Synthesizing FILE_ATTRIBUTE_NORMAL\n");
+    NetworkInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
+  }
 
   *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
   return STATUS_SUCCESS;
