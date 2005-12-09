@@ -30,7 +30,7 @@
 HINSTANCE hDllInstance = NULL;
 
 
-static INT
+INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
 {
@@ -401,62 +401,6 @@ GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
 }
 
 
-static const UINT ProblemStringId[NUM_CM_PROB] =
-{
-    IDS_DEV_NO_PROBLEM,
-    IDS_DEV_DEVLOADER_FAILED,
-    IDS_DEV_NOT_CONFIGURED,
-    IDS_DEV_OUT_OF_MEMORY,
-    IDS_DEV_ENTRY_IS_WRONG_TYPE,
-    IDS_DEV_LACKED_ARBITRATOR,
-    IDS_DEV_BOOT_CONFIG_CONFLICT,
-    IDS_DEV_FAILED_FILTER,
-    IDS_DEV_DEVLOADER_NOT_FOUND,
-    IDS_DEV_INVALID_DATA,
-    IDS_DEV_FAILED_START,
-    IDS_DEV_LIAR,
-    IDS_DEV_NORMAL_CONFLICT,
-    IDS_DEV_NOT_VERIFIED,
-    IDS_DEV_NEED_RESTART,
-    IDS_DEV_REENUMERATION,
-    IDS_DEV_PARTIAL_LOG_CONF,
-    IDS_DEV_UNKNOWN_RESOURCE,
-    IDS_DEV_REINSTALL,
-    IDS_DEV_REGISTRY,
-    IDS_UNKNOWN, /* CM_PROB_VXDLDR, not used on NT */
-    IDS_DEV_WILL_BE_REMOVED,
-    IDS_DEV_DISABLED,
-    IDS_DEV_DEVLOADER_NOT_READY,
-    IDS_DEV_DEVICE_NOT_THERE,
-    IDS_DEV_MOVED,
-    IDS_DEV_TOO_EARLY,
-    IDS_DEV_NO_VALID_LOG_CONF,
-    IDS_DEV_FAILED_INSTALL,
-    IDS_DEV_HARDWARE_DISABLED,
-    IDS_DEV_CANT_SHARE_IRQ,
-    IDS_DEV_FAILED_ADD,
-    IDS_DEV_DISABLED_SERVICE,
-    IDS_DEV_TRANSLATION_FAILED,
-    IDS_DEV_NO_SOFTCONFIG,
-    IDS_DEV_BIOS_TABLE,
-    IDS_DEV_IRQ_TRANSLATION_FAILED,
-    IDS_DEV_FAILED_DRIVER_ENTRY,
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD,
-    IDS_DEV_DRIVER_FAILED_LOAD,
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID,
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES,
-    IDS_DEV_DUPLICATE_DEVICE,
-    IDS_DEV_FAILED_POST_START,
-    IDS_DEV_HALTED,
-    IDS_DEV_PHANTOM,
-    IDS_DEV_SYSTEM_SHUTDOWN,
-    IDS_DEV_HELD_FOR_EJECT,
-    IDS_DEV_DRIVER_BLOCKED,
-    IDS_DEV_REGISTRY_TOO_LARGE,
-    IDS_DEV_SETPROPERTIES_FAILED
-};
-
-
 BOOL
 GetDeviceStatusString(IN DEVINST DevInst,
                       IN HMACHINE hMachine,
@@ -478,109 +422,15 @@ GetDeviceStatusString(IN DEVINST DevInst,
     {
         if (Status & DN_HAS_PROBLEM)
         {
-            if (ProblemNumber < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
-                MessageId = ProblemStringId[ProblemNumber];
+            UINT uRet;
 
-            if (ProblemNumber == 0)
-            {
-                goto GeneralMessage;
-            }
-            else
-            {
-                LPWSTR szProblem, szInfo = NULL;
-                DWORD dwRet;
-                BOOL AdvFormat = FALSE;
-                UINT StringIDs[] =
-                {
-                    MessageId,
-                    IDS_DEVCODE,
-                };
+            uRet = DeviceProblemText(hMachine,
+                                     DevInst,
+                                     ProblemNumber,
+                                     szBuffer,
+                                     (BufferSize != 0 ? BufferSize : BufferSize - 1));
 
-                switch (ProblemNumber)
-                {
-                    case CM_PROB_DEVLOADER_FAILED:
-                    {
-                        /* FIXME - if not a root bus devloader then use IDS_DEV_DEVLOADER_FAILED2 */
-                        /* FIXME - get the type string (ie. ISAPNP, PCI or BIOS for root bus devloaders,
-                                   or FLOP, ESDI, SCSI, etc for others */
-                        AdvFormat = (szInfo != NULL);
-                        break;
-                    }
-
-                    case CM_PROB_DEVLOADER_NOT_FOUND:
-                    {
-                        /* FIXME - 4 cases:
-                           1) if it's a missing system devloader:
-                              - get the system devloader name
-                           2) if it's not a system devloader but still missing:
-                              - get the devloader name (file name?)
-                           3) if it's not a system devloader but the file can be found:
-                              - use IDS_DEV_DEVLOADER_NOT_FOUND2
-                           4) if it's a missing or empty software key
-                              - use IDS_DEV_DEVLOADER_NOT_FOUND3
-                              - AdvFormat = FALSE!
-                         */
-                        AdvFormat = (szInfo != NULL);
-                        break;
-                    }
-
-                    case CM_PROB_INVALID_DATA:
-                        /* FIXME - if the device isn't enumerated by the BIOS/ACPI use IDS_DEV_INVALID_DATA2 */
-                        AdvFormat = FALSE;
-                        break;
-
-                    case CM_PROB_NORMAL_CONFLICT:
-                        /* FIXME - get resource type (IRQ, DMA, Memory or I/O) */
-                        AdvFormat = (szInfo != NULL);
-                        break;
-
-                    case CM_PROB_UNKNOWN_RESOURCE:
-                        /* FIXME - get the .inf file name */
-                        AdvFormat = (szInfo != NULL);
-                        break;
-
-                    case CM_PROB_DISABLED:
-                        /* FIXME - if the device was disabled by the system use IDS_DEV_DISABLED2 */
-                        break;
-
-                    case CM_PROB_FAILED_ADD:
-                        /* FIXME - get the name of the sub-device with the error */
-                        AdvFormat = (szInfo != NULL);
-                        break;
-                }
-
-                if (AdvFormat)
-                {
-                    StringIDs[1] = IDS_DEVCODE2;
-                    dwRet = LoadAndFormatStringsCat(hDllInstance,
-                                                    StringIDs,
-                                                    sizeof(StringIDs) / sizeof(StringIDs[0]),
-                                                    &szProblem,
-                                                    szInfo,
-                                                    ProblemNumber);
-                    LocalFree((HLOCAL)szInfo);
-                }
-                else
-                {
-                    dwRet = LoadAndFormatStringsCat(hDllInstance,
-                                                    StringIDs,
-                                                    sizeof(StringIDs) / sizeof(StringIDs[0]),
-                                                    &szProblem,
-                                                    ProblemNumber);
-                }
-
-                if (dwRet != 0)
-                {
-                    wcsncpy(szBuffer,
-                            szProblem,
-                            BufferSize - 1);
-                    szBuffer[BufferSize - 1] = L'\0';
-
-                    LocalFree((HLOCAL)szProblem);
-
-                    Ret = TRUE;
-                }
-            }
+            Ret = (uRet != 0 && uRet < BufferSize);
         }
         else
         {
@@ -599,13 +449,10 @@ GetDeviceStatusString(IN DEVINST DevInst,
     else
     {
 GeneralMessage:
-        if (LoadString(hDllInstance,
-                       MessageId,
-                       szBuffer,
-                       BufferSize))
-        {
-            Ret = TRUE;
-        }
+        Ret = LoadString(hDllInstance,
+                         MessageId,
+                         szBuffer,
+                         (int)BufferSize);
     }
 
     return Ret;

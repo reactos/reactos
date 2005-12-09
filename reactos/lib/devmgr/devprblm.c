@@ -321,3 +321,286 @@ DeviceProblemWizardW(IN HWND hWndParent  OPTIONAL,
 
     return Ret;
 }
+
+
+static const UINT ProblemStringId[NUM_CM_PROB] =
+{
+    IDS_DEV_NO_PROBLEM,
+    IDS_DEV_DEVLOADER_FAILED,
+    IDS_DEV_NOT_CONFIGURED,
+    IDS_DEV_OUT_OF_MEMORY,
+    IDS_DEV_ENTRY_IS_WRONG_TYPE,
+    IDS_DEV_LACKED_ARBITRATOR,
+    IDS_DEV_BOOT_CONFIG_CONFLICT,
+    IDS_DEV_FAILED_FILTER,
+    IDS_DEV_DEVLOADER_NOT_FOUND,
+    IDS_DEV_INVALID_DATA,
+    IDS_DEV_FAILED_START,
+    IDS_DEV_LIAR,
+    IDS_DEV_NORMAL_CONFLICT,
+    IDS_DEV_NOT_VERIFIED,
+    IDS_DEV_NEED_RESTART,
+    IDS_DEV_REENUMERATION,
+    IDS_DEV_PARTIAL_LOG_CONF,
+    IDS_DEV_UNKNOWN_RESOURCE,
+    IDS_DEV_REINSTALL,
+    IDS_DEV_REGISTRY,
+    IDS_UNKNOWN, /* CM_PROB_VXDLDR, not used on NT */
+    IDS_DEV_WILL_BE_REMOVED,
+    IDS_DEV_DISABLED,
+    IDS_DEV_DEVLOADER_NOT_READY,
+    IDS_DEV_DEVICE_NOT_THERE,
+    IDS_DEV_MOVED,
+    IDS_DEV_TOO_EARLY,
+    IDS_DEV_NO_VALID_LOG_CONF,
+    IDS_DEV_FAILED_INSTALL,
+    IDS_DEV_HARDWARE_DISABLED,
+    IDS_DEV_CANT_SHARE_IRQ,
+    IDS_DEV_FAILED_ADD,
+    IDS_DEV_DISABLED_SERVICE,
+    IDS_DEV_TRANSLATION_FAILED,
+    IDS_DEV_NO_SOFTCONFIG,
+    IDS_DEV_BIOS_TABLE,
+    IDS_DEV_IRQ_TRANSLATION_FAILED,
+    IDS_DEV_FAILED_DRIVER_ENTRY,
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD,
+    IDS_DEV_DRIVER_FAILED_LOAD,
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID,
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES,
+    IDS_DEV_DUPLICATE_DEVICE,
+    IDS_DEV_FAILED_POST_START,
+    IDS_DEV_HALTED,
+    IDS_DEV_PHANTOM,
+    IDS_DEV_SYSTEM_SHUTDOWN,
+    IDS_DEV_HELD_FOR_EJECT,
+    IDS_DEV_DRIVER_BLOCKED,
+    IDS_DEV_REGISTRY_TOO_LARGE,
+    IDS_DEV_SETPROPERTIES_FAILED
+};
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DeviceProblemTextA
+ *
+ * DESCRIPTION
+ *   Gets the problem text from a problem number displayed in the properties dialog
+ *
+ * ARGUMENTS
+ *   hMachine:   Machine handle or NULL for the local machine
+ *   DevInst:    Device instance handle
+ *   uProblemId: Specifies the problem ID
+ *   lpString:   Pointer to a buffer where the string is to be copied to. If the buffer
+ *               is too small, the return value is the required string length in characters,
+ *               excluding the NULL-termination.
+ *   uMaxString: Size of the buffer in characters
+ *
+ * RETURN VALUE
+ *   The return value is the length of the string in characters.
+ *   It returns 0 if an error occured.
+ *
+ * @implemented
+ */
+UINT
+WINAPI
+DeviceProblemTextA(IN HMACHINE hMachine  OPTIONAL,
+                   IN DEVINST dnDevInst,
+                   IN ULONG uProblemId,
+                   OUT LPSTR lpString,
+                   IN UINT uMaxString)
+{
+    LPWSTR lpBuffer = NULL;
+    UINT Ret = 0;
+
+    if (uMaxString != 0)
+    {
+        lpBuffer = HeapAlloc(GetProcessHeap(),
+                             0,
+                             (uMaxString + 1) * sizeof(WCHAR));
+        if (lpBuffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+    }
+
+    Ret = DeviceProblemTextW(hMachine,
+                             dnDevInst,
+                             uProblemId,
+                             lpBuffer,
+                             uMaxString);
+
+    if (lpBuffer != NULL)
+    {
+        if (Ret)
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpBuffer,
+                                (int)Ret,
+                                lpString,
+                                (int)uMaxString,
+                                NULL,
+                                NULL);
+        }
+
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpBuffer);
+    }
+
+    return Ret;
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DeviceProblemTextW
+ *
+ * DESCRIPTION
+ *   Gets the problem text from a problem number displayed in the properties dialog
+ *
+ * ARGUMENTS
+ *   hMachine:   Machine handle or NULL for the local machine
+ *   DevInst:    Device instance handle
+ *   uProblemId: Specifies the problem ID
+ *   lpString:   Pointer to a buffer where the string is to be copied to. If the buffer
+ *               is too small, the return value is the required string length in characters,
+ *               excluding the NULL-termination.
+ *   uMaxString: Size of the buffer in characters
+ *
+ * RETURN VALUE
+ *   The return value is the length of the string in characters.
+ *   It returns 0 if an error occured.
+ *
+ * @implemented
+ */
+UINT
+WINAPI
+DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
+                   IN DEVINST dnDevInst,
+                   IN ULONG uProblemId,
+                   OUT LPWSTR lpString,
+                   IN UINT uMaxString)
+{
+    UINT MessageId = IDS_UNKNOWN;
+    UINT Ret = 0;
+
+    if (uProblemId < sizeof(ProblemStringId) / sizeof(ProblemStringId[0]))
+        MessageId = ProblemStringId[uProblemId];
+
+    if (uProblemId == 0)
+    {
+        if (uMaxString != 0)
+        {
+            Ret = LoadString(hDllInstance,
+                             MessageId,
+                             lpString,
+                             (int)uMaxString);
+        }
+        else
+        {
+            Ret = (UINT)LengthOfStrResource(hDllInstance,
+                                            MessageId);
+        }
+    }
+    else
+    {
+        LPWSTR szProblem, szInfo = NULL;
+        DWORD dwRet;
+        BOOL AdvFormat = FALSE;
+        UINT StringIDs[] =
+        {
+            MessageId,
+            IDS_DEVCODE,
+        };
+
+        switch (uProblemId)
+        {
+            case CM_PROB_DEVLOADER_FAILED:
+            {
+                /* FIXME - if not a root bus devloader then use IDS_DEV_DEVLOADER_FAILED2 */
+                /* FIXME - get the type string (ie. ISAPNP, PCI or BIOS for root bus devloaders,
+                           or FLOP, ESDI, SCSI, etc for others */
+                AdvFormat = (szInfo != NULL);
+                break;
+            }
+
+            case CM_PROB_DEVLOADER_NOT_FOUND:
+            {
+                /* FIXME - 4 cases:
+                   1) if it's a missing system devloader:
+                      - get the system devloader name
+                   2) if it's not a system devloader but still missing:
+                      - get the devloader name (file name?)
+                   3) if it's not a system devloader but the file can be found:
+                      - use IDS_DEV_DEVLOADER_NOT_FOUND2
+                   4) if it's a missing or empty software key
+                      - use IDS_DEV_DEVLOADER_NOT_FOUND3
+                      - AdvFormat = FALSE!
+                 */
+                AdvFormat = (szInfo != NULL);
+                break;
+            }
+
+            case CM_PROB_INVALID_DATA:
+                /* FIXME - if the device isn't enumerated by the BIOS/ACPI use IDS_DEV_INVALID_DATA2 */
+                AdvFormat = FALSE;
+                break;
+
+            case CM_PROB_NORMAL_CONFLICT:
+                /* FIXME - get resource type (IRQ, DMA, Memory or I/O) */
+                AdvFormat = (szInfo != NULL);
+                break;
+
+            case CM_PROB_UNKNOWN_RESOURCE:
+                /* FIXME - get the .inf file name */
+                AdvFormat = (szInfo != NULL);
+                break;
+
+            case CM_PROB_DISABLED:
+                /* FIXME - if the device was disabled by the system use IDS_DEV_DISABLED2 */
+                break;
+
+            case CM_PROB_FAILED_ADD:
+                /* FIXME - get the name of the sub-device with the error */
+                AdvFormat = (szInfo != NULL);
+                break;
+        }
+
+        if (AdvFormat)
+        {
+            StringIDs[1] = IDS_DEVCODE2;
+            dwRet = LoadAndFormatStringsCat(hDllInstance,
+                                            StringIDs,
+                                            sizeof(StringIDs) / sizeof(StringIDs[0]),
+                                            &szProblem,
+                                            szInfo,
+                                            uProblemId);
+            LocalFree((HLOCAL)szInfo);
+        }
+        else
+        {
+            dwRet = LoadAndFormatStringsCat(hDllInstance,
+                                            StringIDs,
+                                            sizeof(StringIDs) / sizeof(StringIDs[0]),
+                                            &szProblem,
+                                            uProblemId);
+        }
+
+        if (dwRet != 0)
+        {
+            if (uMaxString != 0 && uMaxString >= dwRet)
+            {
+                wcscpy(lpString,
+                       szProblem);
+            }
+
+            LocalFree((HLOCAL)szProblem);
+
+            Ret = dwRet;
+        }
+    }
+
+    return Ret;
+}

@@ -57,19 +57,19 @@ DevicePropertiesW(HWND hWndParent,
 
 UINT
 WINAPI
-DeviceProblemTextA(PVOID Unknown1,
-                   PVOID Unknown2,
-                   UINT uProblemId,
-                   LPSTR lpString,
-                   UINT uMaxString);
+DeviceProblemTextA(IN HMACHINE hMachine  OPTIONAL,
+                   IN DEVINST dnDevInst,
+                   IN ULONG uProblemId,
+                   OUT LPSTR lpString,
+                   IN UINT uMaxString);
 
 UINT
 WINAPI
-DeviceProblemTextW(PVOID Unknown1,
-                   PVOID Unknown2,
-                   UINT uProblemId,
-                   LPWSTR lpString,
-                   UINT uMaxString);
+DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
+                   IN DEVINST dnDevInst,
+                   IN ULONG uProblemId,
+                   OUT LPWSTR lpString,
+                   IN UINT uMaxString);
 
 BOOL
 WINAPI
@@ -209,6 +209,11 @@ ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
                         IN HMACHINE hMachine  OPTIONAL);
 
 /* MISC.C */
+
+
+INT
+LengthOfStrResource(IN HINSTANCE hInst,
+                    IN UINT uID);
 
 DWORD
 LoadAndFormatString(IN HINSTANCE hInstance,
