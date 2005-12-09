@@ -11,3 +11,4 @@
 IDI_CPLICON ICON "resources/mmsys.ico"
 
 #include "En.rc"
+#include "De.rc"
