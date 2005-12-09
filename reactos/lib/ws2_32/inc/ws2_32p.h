@@ -857,23 +857,23 @@ VOID
 WSAAPI
 WsAsyncGlobalInitialize(VOID);
 
+FORCEINLINE
 PWSPROCESS
-STATIC __inline
 WsGetProcess()
 {
     return CurrentWsProcess;
 }
 
+FORCEINLINE
 DWORD
-STATIC __inline
 WsQuickProlog()
 {
     /* Try to see if we're initialized. If not, do the full prolog */
     return WsGetProcess() ? ERROR_SUCCESS : WsSlowProlog();
 }
 
+FORCEINLINE
 DWORD
-STATIC __inline
 WsQuickPrologTid(LPWSATHREADID *Tid)
 {
     /* Try to see if we're initialized. If not, do the full prolog */

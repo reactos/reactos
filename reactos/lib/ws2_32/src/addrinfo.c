@@ -40,7 +40,7 @@ Dns_SplitHostFromDomainNameW(IN LPWSTR DomainName)
     /* FIXME */
 }
 
-STATIC
+static
 INT
 WINAPI
 ConvertAddrinfoFromUnicodeToAnsi(IN PADDRINFOW Addrinfo)
@@ -81,7 +81,7 @@ ConvertAddrinfoFromUnicodeToAnsi(IN PADDRINFOW Addrinfo)
     return ERROR_SUCCESS;
 }
 
-STATIC
+static
 BOOL
 WINAPI
 ParseV4Address(IN PCWSTR AddressString,
@@ -98,13 +98,13 @@ ParseV4Address(IN PCWSTR AddressString,
     return FALSE;
 }
 
-STATIC
+static
 PADDRINFOW
 WINAPI
 NewAddrInfo(IN INT SocketType,
             IN INT Protocol,
             IN WORD Port,
-            IN DWORD Address)   
+            IN DWORD Address)
 {
     PADDRINFOW AddrInfo;
     PSOCKADDR_IN SockAddress;
@@ -141,10 +141,10 @@ NewAddrInfo(IN INT SocketType,
     return AddrInfo;
 }
 
-STATIC
+static
 INT
 WINAPI
-CloneAddrInfo(IN WORD Port,      
+CloneAddrInfo(IN WORD Port,
               IN PADDRINFOW ptResult)
 {
     PADDRINFOW Next = NULL;
@@ -173,13 +173,13 @@ CloneAddrInfo(IN WORD Port,
     return 0;
 }
 
-STATIC
+static
 INT
 WINAPI
 QueryDNS(IN LPCSTR NodeName,
          IN INT SocketType,
-         IN INT Protocol,  
-         IN WORD Port,      
+         IN INT Protocol,
+         IN WORD Port,
          OUT CHAR Alias[NI_MAXHOST],
          OUT PADDRINFOW *pptResult)
 {
@@ -233,7 +233,7 @@ QueryDNS(IN LPCSTR NodeName,
     }
 }
 
-STATIC
+static
 INT
 WINAPI
 LookupNodeByAddr(IN LPWSTR pNodeBuffer,
@@ -347,7 +347,7 @@ LookupNodeByAddr(IN LPWSTR pNodeBuffer,
     return ErrorCode;
 }
 
-STATIC
+static
 INT
 WINAPI
 GetServiceNameForPort(IN LPWSTR pServiceBuffer,
@@ -358,13 +358,13 @@ GetServiceNameForPort(IN LPWSTR pServiceBuffer,
     return ERROR_SUCCESS;
 }
 
-STATIC
+static
 INT
 WINAPI
 LookupAddressForName(IN LPCSTR NodeName,
                      IN INT SocketType,
-                     IN INT Protocol,  
-                     IN WORD Port,      
+                     IN INT Protocol,
+                     IN WORD Port,
                      IN BOOL bAI_CANONNAME,
                      OUT PADDRINFOW *pptResult)
 {

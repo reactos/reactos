@@ -151,7 +151,7 @@ getxyDataEnt(IN OUT PCHAR *Results,
                 else 
                 {
                     /* Check if this was a Hostname lookup */
-                    if (Type == &HostNameGuid)
+                    if (Type == &HostnameGuid)
                     {
                         /* Return the name anyways */
                         if(NewName) *NewName = WsaQuery->lpszServiceInstanceName;
@@ -397,7 +397,7 @@ gethostname(OUT char FAR * name,
     DPRINT("gethostname: %p\n", name);
 
     /* Get the Hostname in a String */
-    if(getxyDataEnt(&Results, RNR_BUFFER_SIZE, NULL, &HostNameGuid, &Name))
+    if(getxyDataEnt(&Results, RNR_BUFFER_SIZE, NULL, &HostnameGuid, &Name))
     {
         /* Copy it */
         strcpy((LPSTR)name, Name);
