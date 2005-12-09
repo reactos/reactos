@@ -45,7 +45,7 @@
  *   Set to Write Mode 2 and Read Mode 0.
  */
 
-static VGA_REGISTERS Mode12Regs =
+static const VGA_REGISTERS Mode12Regs =
 {
    /* CRT Controller Registers */
    {0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0x0B, 0x3E, 0x00, 0x40, 0x00, 0x00,
@@ -68,6 +68,9 @@ long maskbit[640];
 
 static CLIENT_ID BitmapThreadId;
 static PUCHAR BootimageBitmap;
+
+static ULONG ShutdownNotify;
+static KEVENT ShutdownCompleteEvent;
 
 /* DATA **********************************************************************/
 
@@ -156,7 +159,7 @@ vgaPreCalc()
 
 
 STATIC VOID FASTCALL
-vgaSetRegisters(PVGA_REGISTERS Registers)
+vgaSetRegisters(const VGA_REGISTERS *Registers)
 {
    UINT i;
 
@@ -237,6 +240,9 @@ static VOID STDCALL
 VidCleanUp(VOID)
 {
    InbvUnmapVideoMemory();
+   InterlockedIncrement(&ShutdownNotify);
+   KeWaitForSingleObject(&ShutdownCompleteEvent, Executive, KernelMode,
+                         FALSE, NULL);
 }
 
 
@@ -495,7 +501,7 @@ InbvFadeUpPalette()
       FaderPaletteDelta[i].b = ((Palette[i].rgbBlue << 8) / PALETTE_FADE_STEPS);
    }
 
-   for (i = 0; i < PALETTE_FADE_STEPS; i++)
+   for (i = 0; i < PALETTE_FADE_STEPS && !ShutdownNotify; i++)
    {
       /* Disable screen and enable palette access. */
       READ_PORT_UCHAR(STATUS);
@@ -548,6 +554,7 @@ InbvBitmapThreadMain(PVOID Ignored)
    {
       DbgPrint("Warning: Cannot find boot image\n");
    }
+   KeSetEvent(&ShutdownCompleteEvent, 0, FALSE);
 }
 
 
@@ -638,6 +645,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    NTSTATUS Status;
 
    BootVidDriverObject = DriverObject;
+
+   ShutdownNotify = 0;
+   KeInitializeEvent(&ShutdownCompleteEvent, NotificationEvent, FALSE);
 
    /* Register driver routines */
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatch;
