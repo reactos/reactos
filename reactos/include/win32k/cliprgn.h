@@ -6,6 +6,14 @@ INT WINAPI SelectVisRgn(HDC hdc, HRGN hrgn);
 
 int
 STDCALL
+IntGdiExtSelectClipRgn (
+        PDC     dc,
+        HRGN    hrgn, 
+        int     fnMode
+        );
+
+int
+STDCALL
 NtGdiExcludeClipRect (
 	HDC	hDC,
 	int	LeftRect,
