@@ -1,3 +1,0 @@
-./test/relaxng/tutor9_5_2.xml:2: element card: Relax-NG validity error : Invalid sequence in interleave
-./test/relaxng/tutor9_5_2.xml:2: element card: Relax-NG validity error : Element card failed to validate attributes
-./test/relaxng/tutor9_5_2.xml fails to validate

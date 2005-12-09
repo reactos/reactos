@@ -1,1 +1,0 @@
-./test/schemas/src-attribute2_0.xsd:9: element attribute: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}attribute', attribute 'use': The value must be 'optional' if the attribute 'default' is present as well.

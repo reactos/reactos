@@ -1,3 +1,0 @@
-./test/namespaces/err_6.xml:1: namespace error : Failed to parse QName 'f:a:'
-<f:a:b xmlns:f="http://example.com/foo"/>
-    ^

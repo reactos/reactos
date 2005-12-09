@@ -1,3 +1,0 @@
-./test/schemas/derivation-ok-restriction-4-1-err_0.xsd:33: element complexType: Schemas parser error : complex type 'type.A': The type has an attribute wildcard, but the base type complex type 'base.type.A' does not have one.
-./test/schemas/derivation-ok-restriction-4-1-err_0.xsd:45: element complexType: Schemas parser error : complex type 'type.B': The attribute wildcard is not a valid subset of the wildcard in the base type complex type 'base.type.B'.
-./test/schemas/derivation-ok-restriction-4-1-err_0.xsd:57: element complexType: Schemas parser error : complex type 'type.C': The 'process contents' of the attribute wildcard is weaker than the one in the base type complex type 'base.type.C'.

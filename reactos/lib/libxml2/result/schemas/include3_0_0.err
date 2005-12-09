@@ -1,1 +1,0 @@
-./test/schemas/include3_0.xsd:7: element element: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}element': A global element declaration with the name 'bar' does already exist.

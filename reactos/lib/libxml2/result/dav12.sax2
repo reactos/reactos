@@ -1,6 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElementNs(href, D, 'http://www.ietf.org/standards/dav/', 1, xmlns:D='http://www.ietf.org/standards/dav/', 0, 0)
-SAX.characters(http://www.ics.uci.edu/~ejw/co, 40)
-SAX.endElementNs(href, D, 'http://www.ietf.org/standards/dav/')
-SAX.endDocument()

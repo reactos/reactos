@@ -1,2 +1,0 @@
-./test/relaxng/tutor10_1_4.xml:1: element foo: Relax-NG validity error : Expecting a namespace for element foo
-./test/relaxng/tutor10_1_4.xml fails to validate

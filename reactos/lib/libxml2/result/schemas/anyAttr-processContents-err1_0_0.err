@@ -1,2 +1,0 @@
-./test/schemas/anyAttr-processContents-err1_0.xml:11: element elem.lax: Schemas validity error : Element '{http://FOO}elem.lax', attribute '{http://FOO}bar': 'o o' is not a valid value of the atomic type 'xs:language'.
-./test/schemas/anyAttr-processContents-err1_0.xml:12: element elem.strict: Schemas validity error : Element '{http://FOO}elem.strict', attribute '{http://FOO}barB': No matching global attribute declaration available, but demanded by the strict wildcard.

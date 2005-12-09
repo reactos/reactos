@@ -1,2 +1,0 @@
-./test/schemas/vdv-first4_2.xml:24: element born: Schemas validity error : Element 'born': [facet 'pattern'] The value '2000-01-20Z' is not accepted by the pattern '[^:Z]*'.
-./test/schemas/vdv-first4_2.xml:24: element born: Schemas validity error : Element 'born': '2000-01-20Z' is not a valid value of the atomic type 'date'.

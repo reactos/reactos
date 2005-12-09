@@ -1,3 +1,0 @@
-./test/VC/ElementValid8:7: validity error : Content model of doc is not determinist: ((a , b) | (a , c))
-<doc><a/><c> doc is non-deterministic </c></doc>
-                                                ^

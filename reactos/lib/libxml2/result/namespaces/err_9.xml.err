@@ -1,3 +1,0 @@
-./test/namespaces/err_9.xml:2: namespace error : Namespaced Attribute err in 'http://example.com/' redefined
-     a:err="1" b:err="2"/>
-                        ^

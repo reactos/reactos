@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<para>
-The component suffered from three failings:
-<itemizedlist><listitem><para>It was slow</para></listitem><listitem><para>It ran hot</para></listitem><listitem><para>It didn't actually work</para></listitem></itemizedlist>
-Of these three, the last was probably the most important.
-</para>

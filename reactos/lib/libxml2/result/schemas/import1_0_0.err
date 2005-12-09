@@ -1,2 +1,0 @@
-./test/schemas/import1_0.xsd:10: element import: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}import': The XML document 'test/schemas/import-bad-1_0.imp' to be imported is not a XML schema document.
-I/O warning : failed to load external entity "test/schemas/import1_0bc.imp"

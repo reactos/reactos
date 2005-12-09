@@ -1,1 +1,0 @@
-./test/schemas/src-attribute1_0.xsd:9: element attribute: Schemas parser error : attribute decl. 'bar': The attributes 'default' and 'fixed' are mutually exclusive.

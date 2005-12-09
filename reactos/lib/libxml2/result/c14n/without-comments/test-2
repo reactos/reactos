@@ -1,3 +1,0 @@
-<n1:elem2 xmlns:n0="foo://bar" xmlns:n1="http://example.net" xmlns:n3="ftp://example.org" xml:lang="en">
-	<n3:stuff></n3:stuff>
-    </n1:elem2>

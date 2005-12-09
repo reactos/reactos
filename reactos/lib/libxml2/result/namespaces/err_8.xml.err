@@ -1,3 +1,0 @@
-./test/namespaces/err_8.xml:1: namespace error : xml namespace prefix mapped to wrong URI
-<tst xmlns:xml="http://example.com/"/>
-                                    ^

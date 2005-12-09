@@ -1,1 +1,0 @@
-./test/schemas/scc-no-xsi_0.xsd:7: element attribute: Schemas parser error : attribute decl. '{http://www.w3.org/2001/XMLSchema-instance}bar': The target namespace must not match 'http://www.w3.org/2001/XMLSchema-instance'.

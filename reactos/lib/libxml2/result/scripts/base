@@ -1,4 +1,0 @@
-/ > ./test/scripts/base.xml
-/ > e > http://example.com/base/
-e > img > http://example.com/base/images/
-img > 

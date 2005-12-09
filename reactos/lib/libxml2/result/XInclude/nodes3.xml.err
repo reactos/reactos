@@ -1,1 +1,0 @@
-./test/XInclude/docs/nodes3.xml:3: element include: XInclude error : Invalid fragment identifier in URI test/XInclude/ents/something.xml#xpointer(//p) use the xpointer attribute

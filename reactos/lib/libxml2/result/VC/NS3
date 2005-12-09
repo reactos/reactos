@@ -1,9 +1,0 @@
-./test/VC/NS3:9: element foo: validity error : Value for attribute xmlns of foo is different from default "http://example.com/fooo"
-xmlns="http://example.com/foo" xmlns:foo="http://example.com/fo" foo:info="toto"
-                                                                               ^
-./test/VC/NS3:9: element foo: validity error : Value for attribute xmlns of foo must be "http://example.com/fooo"
-xmlns="http://example.com/foo" xmlns:foo="http://example.com/fo" foo:info="toto"
-                                                                               ^
-./test/VC/NS3:9: element foo: validity error : Element foo namespace name for default namespace does not match the DTD
-mlns="http://example.com/foo" xmlns:foo="http://example.com/fo" foo:info="toto"/
-                                                                               ^

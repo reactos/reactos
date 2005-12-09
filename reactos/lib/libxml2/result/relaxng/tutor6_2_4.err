@@ -1,3 +1,0 @@
-./test/relaxng/tutor6_2_4.xml:4: element preferredFormat: Relax-NG validity error : Error validating value 
-./test/relaxng/tutor6_2_4.xml:4: element preferredFormat: Relax-NG validity error : Element preferredFormat failed to validate content
-./test/relaxng/tutor6_2_4.xml fails to validate

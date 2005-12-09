@@ -1,3 +1,0 @@
-./test/VC/DuplicateType:3: validity error : Definition of a has duplicate references of c
-<!ELEMENT a (#PCDATA | b | c | d | c)*>
-                                       ^

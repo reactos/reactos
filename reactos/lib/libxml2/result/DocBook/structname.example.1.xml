@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<para>
-The <structname>tm</structname> structure, returned by
-<function>_get_tm</function>, contains complete information
-about the current time of day.
-</para>

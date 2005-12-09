@@ -1,8 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.comment( test of non ascii comments like là et très )
-SAX.comment(à another one )
-SAX.comment( another one à)
-SAX.startElement(doc)
-SAX.endElement(doc)
-SAX.endDocument()

@@ -1,3 +1,0 @@
-./test/VC/ElementValid3:4: element doc: validity error : Element doc was declared EMPTY this one has content
-<doc>Oops, this element was declared EMPTY</doc>
-                                                ^

@@ -1,1 +1,0 @@
-./test/schemas/changelog093_0.xml:7: element description: Schemas validity error : Element '{http://www.blackperl.com/XML/ChangeLog}description': Duplicate key-sequence ['PL'].

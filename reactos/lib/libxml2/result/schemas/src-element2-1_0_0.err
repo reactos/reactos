@@ -1,1 +1,0 @@
-./test/schemas/src-element2-1_0.xsd:12: element element: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}element': The attributes 'ref' and 'name' are mutually exclusive.

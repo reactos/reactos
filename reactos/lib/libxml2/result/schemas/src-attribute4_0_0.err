@@ -1,1 +1,0 @@
-./test/schemas/src-attribute4_0.xsd:8: element simpleType: Schemas parser error : attribute decl. '{http://foo}bar': The attribute 'type' and the <simpleType> child are mutually exclusive.

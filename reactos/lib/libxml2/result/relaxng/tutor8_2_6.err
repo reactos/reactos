@@ -1,3 +1,0 @@
-Relax-NG validity error : Extra element base in interleave
-./test/relaxng/tutor8_2_6.xml:4: element base: Relax-NG validity error : Element head failed to validate content
-./test/relaxng/tutor8_2_6.xml fails to validate

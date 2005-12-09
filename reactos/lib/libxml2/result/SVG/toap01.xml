@@ -1,8 +1,0 @@
-<?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG April 1999//EN" "http://www.w3.org/Graphics/SVG/svg-19990412.dtd">
-<svg width="4in" height="3in">
-  <desc>Simple text on a path
-  </desc>
-  <path id="MyPath" style="visibility: hidden" d="M 100 100 C 125 125 175 125 200 100"/>
-  <text><textpath href="#MyPath"/>Text on path</text>
-</svg>

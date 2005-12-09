@@ -1,2 +1,0 @@
-./test/relaxng/tutor11_2_2.xml:3: element card: Relax-NG validity error : Invalid attribute foo for element card
-./test/relaxng/tutor11_2_2.xml fails to validate

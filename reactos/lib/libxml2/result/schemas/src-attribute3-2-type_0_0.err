@@ -1,1 +1,0 @@
-./test/schemas/src-attribute3-2-type_0.xsd:10: element attribute: Schemas parser error : attribute use '{http://foo}bar': The attribute 'type' is not allowed.

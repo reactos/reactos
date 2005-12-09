@@ -1,3 +1,0 @@
-./test/errors/attr3.xml:4: validity warning : Attribute a1 of element doc: already defined
-<!ATTLIST doc a1 CDATA "z1">
-                           ^

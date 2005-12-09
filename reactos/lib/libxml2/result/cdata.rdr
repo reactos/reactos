@@ -1,7 +1,0 @@
-0 1 doc 0 0
-1 14 #text 0 1 
-
-1 4 #cdata-section 0 1 <greeting>Hello, world!</greeting>
-1 14 #text 0 1 
-
-0 15 doc 0 0

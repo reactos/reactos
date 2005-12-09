@@ -1,3 +1,0 @@
-./test/namespaces/err_11.xml:1: parser error : Attribute xmlns:a redefined
-<tst xmlns:a="http://example.com/" xmlns:a="http://example.com/"/>
-                                                                ^

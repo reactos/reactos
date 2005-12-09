@@ -1,9 +1,0 @@
-<bar:Something>
-     <foo:Something xmlns="http://example.org/">
-        <bar:Something xmlns="">
-           <foo:Something xmlns="http://example.org/">
-             <baz:Something xmlns=""></baz:Something>
-           </foo:Something>
-        </bar:Something>
-     </foo:Something>
-  </bar:Something>

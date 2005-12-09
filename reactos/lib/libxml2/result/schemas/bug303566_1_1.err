@@ -1,1 +1,0 @@
-./test/schemas/bug303566_1.xml:5: element Country: Schemas validity error : Element 'Country': No match found for key-sequence ['B'] of key reference 'PartRefCountryDummy'.

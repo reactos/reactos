@@ -1,5 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElementNs(diagram, NULL, NULL, 0, 4, 0, testattr='test...', 4, xml:lang='en" ...', 2, xml:link='simp...', 6, xml:space='pres...', 8)
-SAX.endElementNs(diagram, NULL, NULL)
-SAX.endDocument()

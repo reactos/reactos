@@ -1,6 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElementNs(a, NULL, NULL, 0, 1, 0, test='pass...', 6)
-SAX.characters(content, 7)
-SAX.endElementNs(a, NULL, NULL)
-SAX.endDocument()

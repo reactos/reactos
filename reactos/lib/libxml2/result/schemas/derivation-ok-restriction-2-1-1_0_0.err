@@ -1,6 +1,0 @@
-./test/schemas/derivation-ok-restriction-2-1-1_0.xsd:16: element attribute: Schemas parser error : local complex type, attribute decl. 'barB_1': The 'optional' use is inconsistent with a matching 'required' use of the base type.
-./test/schemas/derivation-ok-restriction-2-1-1_0.xsd:6: element complexType: Schemas parser error : local complex type: A matching attribute use for the 'required' attribute use 'barB_3' of the base type is missing.
-./test/schemas/derivation-ok-restriction-2-1-1_0.xsd:23: element attribute: Schemas parser error : local complex type, attribute decl. 'barC_1': Neither a matching attribute use, nor a matching wildcard in the base type does exist.
-./test/schemas/derivation-ok-restriction-2-1-1_0.xsd:25: element attribute: Schemas parser error : local complex type, attribute decl. 'barC_2': Neither a matching attribute use, nor a matching wildcard in the base type does exist.
-./test/schemas/derivation-ok-restriction-2-1-1_0.xsd:30: element attribute: Schemas parser error : local complex type, attribute decl. 'barD_1': Neither a matching attribute use, nor a matching wildcard in the base type does exist.
-./test/schemas/derivation-ok-restriction-2-1-1_0.xsd:32: element attribute: Schemas parser error : local complex type, attribute decl. 'barD_2': Neither a matching attribute use, nor a matching wildcard in the base type does exist.

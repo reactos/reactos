@@ -1,3 +1,0 @@
-./test/VC/AttributeNmtokens:6: element test: validity error : Syntax of value for attribute attr1 of test is not valid
-<test attr1=" a&#x9;b "/>
-                       ^

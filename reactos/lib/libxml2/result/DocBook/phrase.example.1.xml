@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<para>
-Effectivity attributes can be used to keep track of modifications
-to a document <phrase revisionflag="deleted">at the word or
-sentence level</phrase><phrase revisionflag="added"> as long as the number
-and complexity of changes is not too high</phrase>.
-</para>

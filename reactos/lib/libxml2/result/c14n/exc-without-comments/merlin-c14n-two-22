@@ -1,9 +1,0 @@
-<bar:Something>
-     <foo:Something>
-        <bar:Something>
-           <foo:Something>
-             <baz:Something></baz:Something>
-           </foo:Something>
-        </bar:Something>
-     </foo:Something>
-  </bar:Something>

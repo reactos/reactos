@@ -1,1 +1,0 @@
-./test/schemas/ns0_4.xml:2: element foo: Schemas validity error : Element '{http://example.com/xsd/ns}foo', attribute '{http://example.com/xsd/ns}id': The attribute '{http://example.com/xsd/ns}id' is not allowed.

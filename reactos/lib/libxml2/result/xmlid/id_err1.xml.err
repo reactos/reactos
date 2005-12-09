@@ -1,3 +1,0 @@
-./test/xmlid/id_err1.xml:1: validity error : xml:id : attribute value 0bar is not an NCName
-<foo xml:id="0bar"/>
-                  ^

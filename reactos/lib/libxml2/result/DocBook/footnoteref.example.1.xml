@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE informaltable PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<informaltable><tgroup cols="2"><tbody><row><entry>foo<footnote id="fnrex1a"><para>A meaningless
-word</para></footnote></entry><entry>3<footnote id="fnrex1b"><para>A meaningless
-number</para></footnote></entry></row><row><entry>bar<footnoteref linkend="fnrex1a"/></entry><entry>5<footnoteref linkend="fnrex1b"/></entry></row></tbody></tgroup></informaltable>

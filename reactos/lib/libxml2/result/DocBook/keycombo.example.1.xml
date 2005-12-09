@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<para>
-To move a highlighted region, use 
-<keycombo action="simul"><keycap>Shift</keycap><mousebutton>Button1</mousebutton></keycombo>
-and drag the text to the new location.
-</para>

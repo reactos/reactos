@@ -1,3 +1,0 @@
-./test/relaxng/tutor3_5_2.xml:2: element email: Relax-NG validity error : Expecting element name, got email
-./test/relaxng/tutor3_5_2.xml:2: element email: Relax-NG validity error : Element card failed to validate content
-./test/relaxng/tutor3_5_2.xml fails to validate

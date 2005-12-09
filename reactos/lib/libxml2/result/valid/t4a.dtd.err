@@ -1,6 +1,0 @@
-./test/valid/t4a.dtd:1: parser error : StartTag: invalid element name
-<!ENTITY % percent "&#x25;">
- ^
-./test/valid/t4a.dtd:1: parser error : Extra content at the end of the document
-<!ENTITY % percent "&#x25;">
- ^

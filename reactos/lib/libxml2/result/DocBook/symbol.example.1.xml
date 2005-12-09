@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<para>
-No filename may be more than <symbol class="limit">MAXPATHLEN</symbol>
-characters long.
-</para>

@@ -1,3 +1,0 @@
-./test/schemas/union2_1.xml:4: element ELEMENTS: Schemas validity error : Element '{urn:test:foo}ELEMENTS': '
-	5
-' is not a valid value of the local union type.

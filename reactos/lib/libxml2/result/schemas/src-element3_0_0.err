@@ -1,2 +1,0 @@
-./test/schemas/src-element3_0.xsd:8: element complexType: Schemas parser error : element decl. '{http://foo}foo': The attribute 'type' and the <complexType> child are mutually exclusive.
-./test/schemas/src-element3_0.xsd:16: element simpleType: Schemas parser error : element decl. '{http://foo}bar': The attribute 'type' and the <simpleType> child are mutually exclusive.

@@ -1,5 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElement(doc, attr='to normalize   with a space')
-SAX.endElement(doc)
-SAX.endDocument()

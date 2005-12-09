@@ -1,6 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElement(title)
-SAX.characters(my title, 8)
-SAX.endElement(title)
-SAX.endDocument()

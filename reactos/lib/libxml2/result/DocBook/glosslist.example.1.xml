@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE glosslist PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<glosslist><glossentry><glossterm>C</glossterm><glossdef><para>
-A procedural programming language invented by K&amp;R.
-</para></glossdef></glossentry><glossentry><glossterm>Pascal</glossterm><glossdef><para>
-A procedural programming language invented by Niklaus Wirth.
-</para></glossdef></glossentry></glosslist>

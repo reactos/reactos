@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE msgset PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<msgset><msgentry><msg><msgmain><msgtext><para>Record failed CRC</para></msgtext></msgmain><msgsub><msgtext><para>Record <replaceable>n</replaceable>
-                    in <replaceable>database</replaceable></para></msgtext></msgsub><msgrel><msgtext><para>File read error on 
-                   <replaceable>database</replaceable></para></msgtext></msgrel><msgrel><msgtext><para>Panic! Corrupt record!</para></msgtext></msgrel></msg><msginfo><msglevel>severe</msglevel><msgorig>server</msgorig><msgaud>all</msgaud></msginfo><msgexplan><para>
-        Indicates that some sort of error occurred while attempting to load
-        a record from the database.  Retry.  If failure persists,
-        contact the database administrator.
-        </para></msgexplan></msgentry><!-- more entries --></msgset>

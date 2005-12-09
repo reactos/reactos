@@ -1,1 +1,0 @@
-./test/schemas/src-attribute3-1_0.xsd:9: element attribute: Schemas parser error : attribute use '{http://foo}bar': The attributes 'ref' and 'name' are mutually exclusive.

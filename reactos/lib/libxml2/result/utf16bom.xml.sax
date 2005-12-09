@@ -1,7 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElement(repository, repositroy_id='test')
-SAX.startElement(namespace, name='test')
-SAX.endElement(namespace)
-SAX.endElement(repository)
-SAX.endDocument()

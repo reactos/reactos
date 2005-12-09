@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE informaltable PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<!-- entrytbl not supported, fake it in descrip.1 -->
-<informaltable frame="all"><tgroup cols="3"><tbody><row><entry>a1</entry><entry>b1</entry><entry>c1</entry></row><row><entry>a2</entry><entrytbl cols="3"><tbody><row><entry>b2a1</entry><entry>b2b1</entry><entry>b2c1</entry></row><row><entry>b2a2</entry><entry>b2b2</entry><entry>b2c2</entry></row><row><entry>b2a3</entry><entry>b2b3</entry><entry>b2c3</entry></row></tbody></entrytbl><entry>c2</entry></row><row><entry>a3</entry><entry>b3</entry><entry>c3</entry></row></tbody></tgroup></informaltable>

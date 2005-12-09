@@ -1,1 +1,0 @@
-./test/schemas/any3_0.xml:12: element bar.A: Schemas validity error : Element 'bar.A': This element is not expected. Expected is one of ( {##other:http://FOO}* ).

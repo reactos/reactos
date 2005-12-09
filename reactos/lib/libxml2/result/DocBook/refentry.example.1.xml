@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<refentry id="ls"><refmeta><refentrytitle>ls</refentrytitle><manvolnum>1</manvolnum></refmeta><refnamediv><refname>ls</refname><refpurpose>list contents of a directory</refpurpose></refnamediv><refsynopsisdiv><cmdsynopsis><command>/usr/bin/ls</command><arg choice="opt"><option>aAbcCdfFgilLmnopqrRstux1</option></arg><arg choice="opt" rep="repeat">file</arg></cmdsynopsis><refsect1><title>Description</title><para>
-For each file that is a directory, <command>ls</command> lists the contents of
-the directory; for each file that is an ordinary file, <command>ls</command>
-repeats its name and any other information requested.
-</para><para>…</para></refsect1></refsynopsisdiv></refentry>

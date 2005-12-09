@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE doc [
-<!ELEMENT doc (a | b)*>
-<!ELEMENT a (#PCDATA)>
-<!ELEMENT b (#PCDATA)>
-]>
-<doc><a>This</a><b> is a valid</b><a> document</a></doc>

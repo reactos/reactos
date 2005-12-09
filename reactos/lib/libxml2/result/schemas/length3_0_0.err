@@ -1,1 +1,0 @@
-./test/schemas/length3_0.xsd:5: element element: Schemas parser error : element decl. 'size', attribute 'type': The QName value '{http://www.w3.org/2001/XMLSchema}non-positive-integer' does not resolve to a(n) type definition.

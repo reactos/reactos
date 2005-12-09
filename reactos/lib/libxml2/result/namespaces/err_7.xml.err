@@ -1,3 +1,0 @@
-./test/namespaces/err_7.xml:1: namespace error : Namespace prefix f on foo is not defined
-<f:foo/>
-      ^

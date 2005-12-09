@@ -1,2 +1,0 @@
-./test/relaxng/tutor6_1_3.xml:1: element card: Relax-NG validity error : Element card failed to validate attributes
-./test/relaxng/tutor6_1_3.xml fails to validate

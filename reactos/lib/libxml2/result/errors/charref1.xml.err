@@ -1,3 +1,0 @@
-./test/errors/charref1.xml:1: parser error : xmlParseCharRef: invalid xmlChar value 60
-<bla>&#010100000000000000000000000000000000000000000000000060;</bla>
-                                                              ^

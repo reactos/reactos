@@ -1,3 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE cmdsynopsis PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<cmdsynopsis><command>cal</command><arg>-j</arg><arg>-y</arg><arg>month <arg>year</arg></arg></cmdsynopsis>

@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE para PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<para>
-In GNU Emacs, the <guimenuitem>Print Buffer</guimenuitem> command is
-located off of the <guisubmenu>Print</guisubmenu> submenu of the
-<guimenu>Tools</guimenu> menu.
-</para>

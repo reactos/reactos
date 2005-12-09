@@ -1,4 +1,0 @@
-./test/errors/cdata.xml:2: parser error : Input is not proper UTF-8, indicate encoding !
-Bytes: 0xE1 0x72 0x5D 0x5D
-<A><![CDATA[Cár]]></A>
-             ^

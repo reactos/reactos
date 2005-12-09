@@ -1,9 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.startElement(select, onclick='aaaa
-      bbbb ')
-SAX.characters(f, 1)
-SAX.characters( , 2)
-SAX.characters(oo, 2)
-SAX.endElement(select)
-SAX.endDocument()

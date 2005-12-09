@@ -1,2 +1,0 @@
-./test/relaxng/tutor11_3.rng:1: element element: Relax-NG parser error : Attributes conflicts in group
-Relax-NG schema ./test/relaxng/tutor11_3.rng failed to compile

@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<chapter><docinfo><modespec id="s1query">query in sect*, title return link text title</modespec></docinfo><title>Printing</title><para>
-Blah, blah, blah.
-</para><sect1><title>See Also</title><para>
-For more information <olink targetdocent="refbook" linkmode="s1query" localinfo="print or printing">about printing</olink>, consult
-the <ulink url="refbook.sgm">reference manual</ulink>.
-</para></sect1></chapter>

@@ -1,3 +1,0 @@
-./test/namespaces/err_1.xml:1: namespace error : Failed to parse QName 'xmlns:'
-<foo xmlns:="http://example.com/"/>
-           ^

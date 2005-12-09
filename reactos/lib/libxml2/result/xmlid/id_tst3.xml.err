@@ -1,6 +1,0 @@
-./test/xmlid/id_tst3.xml:1: namespace error : Failed to parse QName 'f:o:'
-<f:o:o xml:id="bar"/>
-    ^
-./test/xmlid/id_tst3.xml:1: namespace error : Namespace prefix f on o:o is not defined
-<f:o:o xml:id="bar"/>
-                   ^

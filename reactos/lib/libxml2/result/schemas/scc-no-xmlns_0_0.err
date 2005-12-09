@@ -1,1 +1,0 @@
-./test/schemas/scc-no-xmlns_0.xsd:7: element attribute: Schemas parser error : Element '{http://www.w3.org/2001/XMLSchema}attribute', attribute 'name': The value of type 'xs:NCName' must not match 'xmlns'.

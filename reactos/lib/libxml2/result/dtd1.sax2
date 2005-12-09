@@ -1,9 +1,0 @@
-SAX.setDocumentLocator()
-SAX.startDocument()
-SAX.internalSubset(MEMO, -//SGMLSOURCE//DTD MEMO//EN, http://www.sgmlsource.com/dtds/memo.dtd)
-SAX.externalSubset(MEMO, -//SGMLSOURCE//DTD MEMO//EN, http://www.sgmlsource.com/dtds/memo.dtd)
-SAX.startElementNs(MEMO, NULL, NULL, 0, 0, 0)
-SAX.characters(
-, 1)
-SAX.endElementNs(MEMO, NULL, NULL)
-SAX.endDocument()
