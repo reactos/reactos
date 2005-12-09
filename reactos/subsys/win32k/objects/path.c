@@ -249,8 +249,10 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
 
  /* Check that path is closed */
  if( pPath->state != PATH_Closed )
+ {
    SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
    return FALSE;
+ }
  /* Construct a region from the path */
  else if( PATH_PathToRegion( pPath, dc->w.polyFillMode, &hrgnPath ) )
  {
