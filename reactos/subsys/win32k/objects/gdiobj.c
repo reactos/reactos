@@ -103,6 +103,12 @@ static LARGE_INTEGER ShortDelay;
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
 
+#ifdef GDI_DEBUG
+BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
+VOID STDCALL KeRosDumpStackFrames(PULONG Frame, ULONG FrameCount);
+ULONG STDCALL KeRosGetStackFrames(PULONG Frames, ULONG FrameCount);
+#endif
+
 /*!
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
