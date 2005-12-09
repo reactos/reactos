@@ -52,6 +52,8 @@
 @ stub CertGetEnhancedKeyUsage
 @ stub CertGetIntendedKeyUsage
 @ stub CertGetIssuerCertificateFromStore
+@ stub CertGetNameStringA
+@ stub CertGetNameStringW
 @ stub CertGetPublicKeyLength
 @ stub CertGetSubjectCertificateFromStore
 @ stub CertIsRDNAttrsInCertificateName
