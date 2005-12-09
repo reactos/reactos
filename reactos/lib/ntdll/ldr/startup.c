@@ -110,7 +110,7 @@ LoadImageFileExecutionOptions(PPEB Peb)
             if (NT_SUCCESS(Status))
               {
                 Peb->NtGlobalFlag |= Value;
-	        DPRINT("GlobalFlag: Key='%S', Value=%08x\n", ValueBuffer, Value);
+	        DPRINT("GlobalFlag: Key='%S', Value=0x%lx\n", ValueBuffer, Value);
               }
 	  }
         /*
@@ -260,9 +260,9 @@ LdrpInit(PCONTEXT Context,
    if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
      {
        Peb = NtCurrentPeb();
-       DPRINT("Peb %x\n", Peb);
+       DPRINT("Peb %p\n", Peb);
        ImageBase = Peb->ImageBaseAddress;
-       DPRINT("ImageBase %x\n", ImageBase);
+       DPRINT("ImageBase %p\n", ImageBase);
        if (ImageBase <= (PVOID)0x1000)
          {
            DPRINT("ImageBase is null\n");
@@ -271,7 +271,7 @@ LdrpInit(PCONTEXT Context,
 
        /*  If MZ header exists  */
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
-       DPRINT("PEDosHeader %x\n", PEDosHeader);
+       DPRINT("PEDosHeader %p\n", PEDosHeader);
 
        if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
            PEDosHeader->e_lfanew == 0L ||

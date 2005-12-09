@@ -534,7 +534,7 @@ LdrpMapKnownDll(IN PUNICODE_STRING DllName,
                          &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenSection() failed for '%wZ' (Status %lx)\n", DllName, Status);
+      DPRINT("NtOpenSection() failed for '%wZ' (Status 0x%08lx)\n", DllName, Status);
       return Status;
     }
 
@@ -639,7 +639,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                       FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Dll open of %wZ failed: Status = 0x%08x\n",
+      DPRINT1("Dll open of %wZ failed: Status = 0x%08lx\n",
                &FullNtFileName, Status);
       RtlFreeUnicodeString (&FullNtFileName);
       return Status;
@@ -657,7 +657,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Dll header read failed: Status = 0x%08x\n", Status);
+      DPRINT("Dll header read failed: Status = 0x%08lx\n", Status);
       NtClose(FileHandle);
       return Status;
     }
@@ -694,7 +694,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NTDLL create section failed: Status = 0x%08x\n", Status);
+      DPRINT("NTDLL create section failed: Status = 0x%08lx\n", Status);
       return Status;
     }
 
@@ -1031,7 +1031,7 @@ LdrGetExportByOrdinal (
                         ExportDir->AddressOfFunctions
                         );
         DPRINT(
-                "LdrGetExportByOrdinal(Ordinal %d) = %p\n",
+                "LdrGetExportByOrdinal(Ordinal %lu) = %p\n",
                 Ordinal,
                 RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
                 );
@@ -1083,7 +1083,7 @@ LdrGetExportByName(PVOID BaseAddress,
    LONG minn, maxn;
    ULONG ExportDirSize;
 
-   DPRINT("LdrGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
+   DPRINT("LdrGetExportByName %p %s %hu\n", BaseAddress, SymbolName, Hint);
 
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
      RtlImageDirectoryEntryToData(BaseAddress,
@@ -1453,7 +1453,7 @@ LdrpProcessImportDirectory(
    PCHAR Name;
    ULONG Size;
 
-   DPRINT("LdrpProcessImportDirectory(%x '%wZ', '%s')\n",
+   DPRINT("LdrpProcessImportDirectory(%p '%wZ', '%s')\n",
           Module, &Module->BaseDllName, ImportedName);
 
 
@@ -1507,7 +1507,7 @@ LdrpAdjustImportDirectory(PLDR_DATA_TABLE_ENTRY Module,
    PCHAR Name;
    ULONG Size;
 
-   DPRINT("LdrpAdjustImportDirectory(Module %x '%wZ', %x '%wZ', %x '%s')\n",
+   DPRINT("LdrpAdjustImportDirectory(Module %p '%wZ', %p '%wZ', '%s')\n",
           Module, &Module->BaseDllName, ImportedModule, &ImportedModule->BaseDllName, ImportedName);
 
    ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
@@ -1626,7 +1626,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    PCHAR ImportedName;
    ULONG Size;
 
-   DPRINT("LdrFixupImports(SearchPath %x, Module %x)\n", SearchPath, Module);
+   DPRINT("LdrFixupImports(SearchPath %S, Module %p)\n", SearchPath, Module);
 
    /* Check for tls data */
    TlsDirectory = (PIMAGE_TLS_DIRECTORY)
@@ -1669,7 +1669,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
      }
    if (BoundImportDescriptor)
      {
-       DPRINT("BoundImportDescriptor %x\n", BoundImportDescriptor);
+       DPRINT("BoundImportDescriptor %p\n", BoundImportDescriptor);
 
        BoundImportDescriptorCurrent = BoundImportDescriptor;
        while (BoundImportDescriptorCurrent->OffsetModuleName)
@@ -1794,7 +1794,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
      }
    else if (ImportModuleDirectory)
      {
-       DPRINT("ImportModuleDirectory %x\n", ImportModuleDirectory);
+       DPRINT("ImportModuleDirectory %p\n", ImportModuleDirectory);
 
        ImportModuleDirectoryCurrent = ImportModuleDirectory;
        while (ImportModuleDirectoryCurrent->Name)
@@ -1873,8 +1873,8 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    PIMAGE_NT_HEADERS    NTHeaders;
    PLDR_DATA_TABLE_ENTRY tmpModule;
 
-   DPRINT("LdrPEStartup(ImageBase %x SectionHandle %x)\n",
-           ImageBase, (ULONG)SectionHandle);
+   DPRINT("LdrPEStartup(ImageBase %p SectionHandle %p)\n",
+           ImageBase, SectionHandle);
 
    /*
     * Overlay DOS and WNT headers structures
@@ -1952,14 +1952,14 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    /*
     * Compute the DLL's entry point's address.
     */
-   DPRINT("ImageBase = %x\n",(ULONG)ImageBase);
-   DPRINT("AddressOfEntryPoint = %x\n",(ULONG)NTHeaders->OptionalHeader.AddressOfEntryPoint);
+   DPRINT("ImageBase = %p\n", ImageBase);
+   DPRINT("AddressOfEntryPoint = 0x%lx\n",(ULONG)NTHeaders->OptionalHeader.AddressOfEntryPoint);
    if (NTHeaders->OptionalHeader.AddressOfEntryPoint != 0)
      {
         EntryPoint = (PEPFUNC) ((ULONG_PTR)ImageBase
                            + NTHeaders->OptionalHeader.AddressOfEntryPoint);
      }
-   DPRINT("LdrPEStartup() = %x\n",EntryPoint);
+   DPRINT("LdrPEStartup() = %p\n",EntryPoint);
    return EntryPoint;
 }
 
@@ -2032,7 +2032,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     PAGE_READONLY);
         if (!NT_SUCCESS(Status))
           {
-            DPRINT1("map view of section failed (Status %x)\n", Status);
+            DPRINT1("map view of section failed (Status 0x%08lx)\n", Status);
             RtlFreeUnicodeString(&FullDosName);
             NtClose(SectionHandle);
             return(Status);
@@ -2069,7 +2069,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
          * relocation. */
         if (ImageBase != (PVOID) NtHeaders->OptionalHeader.ImageBase)
           {
-            DPRINT1("Relocating (%x -> %x) %wZ\n",
+            DPRINT1("Relocating (%lx -> %p) %wZ\n",
               NtHeaders->OptionalHeader.ImageBase, ImageBase, &FullDosName);
             Status = LdrPerformRelocations(NtHeaders, ImageBase);
             if (!NT_SUCCESS(Status))
@@ -2254,7 +2254,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
     PLDR_DATA_TABLE_ENTRY Module;
     NTSTATUS Status;
 
-    DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %x)\n", BaseAddress);
+    DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %p)\n", BaseAddress);
 
     Status = STATUS_DLL_NOT_FOUND;
     RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
@@ -2264,7 +2264,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
       {
         Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-        DPRINT("BaseDllName %wZ BaseAddress %x\n", &Module->BaseDllName, Module->DllBase);
+        DPRINT("BaseDllName %wZ BaseAddress %p\n", &Module->BaseDllName, Module->DllBase);
 
         if (Module->DllBase == BaseAddress)
           {
@@ -2300,7 +2300,7 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
     if (DllName == NULL)
       {
         *DllHandle = ExeModule->DllBase;
-        DPRINT("BaseAddress %x\n", *DllHandle);
+        DPRINT("BaseAddress 0x%lx\n", *DllHandle);
         return STATUS_SUCCESS;
       }
 
@@ -2335,7 +2335,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
        TRACE_LDR("LdrGetProcedureAddress by ORDINAL - %d\n", Ordinal);
      }
 
-   DPRINT("LdrGetProcedureAddress (BaseAddress %x Name %Z Ordinal %lu ProcedureAddress %x)\n",
+   DPRINT("LdrGetProcedureAddress (BaseAddress %p Name %Z Ordinal %lu ProcedureAddress %p)\n",
           BaseAddress, Name, Ordinal, ProcedureAddress);
 
    if (Name && Name->Length)
@@ -2357,7 +2357,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
          {
            return STATUS_SUCCESS;
          }
-       DPRINT("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
+       DPRINT("LdrGetProcedureAddress: Can't resolve symbol @%lu\n", Ordinal);
      }
    return STATUS_PROCEDURE_NOT_FOUND;
 }
