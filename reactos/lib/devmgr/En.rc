@@ -49,7 +49,7 @@ BEGIN
     IDS_DEV_NOT_VERIFIED "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_NEED_RESTART "This device cannot work properly until you restart your computer."
     IDS_DEV_REENUMERATION "This device is causing a resource conflict."
-    IDS_DEV_PARTIAL_LOG_CONF "Windows could not identify all the resources this device uses."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS could not identify all the resources this device uses."
     IDS_DEV_UNKNOWN_RESOURCE "The driver information file $1 is telling this child device to use a resource that the parent device does not have or recognize."
     IDS_DEV_REINSTALL "The drivers for this device need to be reinstalled."
     IDS_DEV_REGISTRY "Your registry may be bad."
