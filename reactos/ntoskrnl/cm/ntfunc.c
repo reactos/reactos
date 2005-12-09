@@ -246,7 +246,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                                       &ObjectName);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+      DPRINT1("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
       goto Cleanup;
     }
 
@@ -271,7 +271,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       PostCreateKeyInfo.Status = Status;
       CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
 
-      DPRINT("CmpFindObject failed, Status: 0x%x\n", Status);
+      DPRINT1("CmpFindObject failed, Status: 0x%x\n", Status);
       goto Cleanup;
     }
 
@@ -286,7 +286,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
           PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
           CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
 
-	  DPRINT("Object marked for delete!\n");
+	  DPRINT1("Object marked for delete!\n");
 	  Status = STATUS_UNSUCCESSFUL;
 	  goto Cleanup;
 	}
@@ -297,7 +297,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			      TRUE,
 			      &hKey);
 
-      DPRINT("ObpCreateHandle failed Status 0x%x\n", Status);
+      if (!NT_SUCCESS(Status))
+        DPRINT1("ObpCreateHandle failed Status 0x%x\n", Status);
 
       PostCreateKeyInfo.Object = NULL;
       PostCreateKeyInfo.Status = Status;
@@ -395,7 +396,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			CreateOptions);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("CmiAddSubKey() failed (Status %lx)\n", Status);
+      DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
       /* Release hive lock */
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
