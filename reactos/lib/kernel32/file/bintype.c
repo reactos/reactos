@@ -122,7 +122,7 @@ InternalGetBinaryType(HANDLE hFile)
 
   /* Mach-o File with Endian set to Big Endian  or Little Endian*/
   if(Header.macho.magic == 0xFEEDFACE ||
-     Header.macho.magic == 0xECAFDEEF)
+     Header.macho.magic == 0xCEFAEDFE)
   {
     switch(Header.macho.filetype)
     {
