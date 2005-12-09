@@ -210,7 +210,7 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 	
 	if (pDirectDraw == NULL) 
 	{
-        DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED\n");
+        DPRINT1("Can not lock DirectDraw handle \n");
 		return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -799,7 +799,11 @@ BOOL STDCALL NtGdiDdDeleteSurfaceObject(
 )
 {
     DPRINT1("NtGdiDdDeleteSurfaceObject\n");
-	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
+    /* FIXME add right GDI_OBJECT_TYPE_ for everthing for now 
+       we are using same type */
+	/* return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE); */
+	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	
 }
 
 
