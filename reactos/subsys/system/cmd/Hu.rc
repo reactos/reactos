@@ -458,8 +458,8 @@ STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version.\n"
 
-STRING_VERSION_HELP5, "\nHibákról E-Maileket ide küldhetsz: <ros-dev@reactos.com>.\n\
-Frissítések és egyéb információk: http://www.reactos.com"
+STRING_VERSION_HELP5, "\nHibákról E-Maileket ide küldhetsz: <ros-dev@reactos.org>.\n\
+Frissítések és egyéb információk: http://www.reactos.org"
 
 STRING_VERSION_HELP6, "\nA FreeDOS készítõi:\n"
 

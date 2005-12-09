@@ -473,8 +473,8 @@ STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version."
 
-STRING_VERSION_HELP5, "\nEnvoyer les rapports d'erreur à <ros-dev@reactos.com>.\n\
-Les mises à jour sont disponibles à : http://www.reactos.com"
+STRING_VERSION_HELP5, "\nEnvoyer les rapports d'erreur à <ros-dev@reactos.org>.\n\
+Les mises à jour sont disponibles à : http://www.reactos.org"
 
 STRING_VERSION_HELP6, "\nVersion FreeDOS écrite par:\n"
 

@@ -474,8 +474,8 @@ STRING_VERSION_HELP4, "\n Este programa es un software gratuito; puedes redistri
  la Fundación de Software Libre; tanto en la versión 2 de la Licencia, o\n\
  (según tu elección) cualquier otra posterior.\n"
 
-STRING_VERSION_HELP5, "\nManda los informes de bugs a <ros-dev@reactos.com>.\n\
-Actualizaciones disponibles en: http://www.reactos.com"
+STRING_VERSION_HELP5, "\nManda los informes de bugs a <ros-dev@reactos.org>.\n\
+Actualizaciones disponibles en: http://www.reactos.org"
 
 STRING_VERSION_HELP6, "\nFreeDOS version escrita por:\n"
 

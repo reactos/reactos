@@ -482,8 +482,8 @@ STRING_VERSION_HELP4, "\n ‚±‚ÌƒvƒƒOƒ‰ƒ€‚ÍƒtƒŠ[ƒ\\ƒtƒgƒEƒFƒA‚Å‚·B‚ ‚È‚½‚Í‚±‚ê‚
  Šó–]‚É‚æ‚Á‚Ä‚Í‚»‚êˆÈ~‚Ìƒo[ƒWƒ‡ƒ“‚Ì‚¤‚¿‚Ç‚ê‚©) ‚Ì’è‚ß‚éðŒ‚Ì‰º‚ÅÄ”Ð\n\
  •z‚Ü‚½‚Í‰ü•Ï‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B\n"
 
-STRING_VERSION_HELP5, "\nƒoƒO•ñ‚Í <ros-dev@reactos.com> ‚Ö‘—‚Á‚Ä‚­‚¾‚³‚¢B\n\
-ÅV‚Ìƒo[ƒWƒ‡ƒ“‚ÍŽŸ‚Ìƒy[ƒW‚©‚ç“üŽè‚Å‚«‚Ü‚·: http://www.reactos.com"
+STRING_VERSION_HELP5, "\nƒoƒO•ñ‚Í <ros-dev@reactos.org> ‚Ö‘—‚Á‚Ä‚­‚¾‚³‚¢B\n\
+ÅV‚Ìƒo[ƒWƒ‡ƒ“‚ÍŽŸ‚Ìƒy[ƒW‚©‚ç“üŽè‚Å‚«‚Ü‚·: http://www.reactos.org"
 
 STRING_VERSION_HELP6, "\nFreeDOS version written by:\n"
 
