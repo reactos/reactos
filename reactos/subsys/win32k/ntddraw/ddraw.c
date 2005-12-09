@@ -71,6 +71,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 
 	if (!success)
 	{
+        DPRINT1("DirectDraw creation failed\n"); 
 		// DirectDraw creation failed
 		DC_UnlockDc(pDC);
 		return NULL;
@@ -80,6 +81,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!hDirectDraw)
 	{
 		/* No more memmory */
+		DPRINT1("No more memmory\n"); 
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
@@ -88,6 +90,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!pDirectDraw)
 	{
 		/* invalid handle */
+		DPRINT1("invalid handle\n"); 
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
@@ -140,7 +143,11 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 	DPRINT1("NtGdiDdQueryDirectDrawObject\n");
 	
 	if (!pDirectDraw)
+	{
+        /* Fail to Lock DirectDraw handle */
+        DPRINT1(" Fail to Lock DirectDraw handle \n");        
 		return FALSE;
+    }
 
 	BOOL success = pDirectDraw->DrvGetDirectDrawInfo(
 		pDirectDraw->Global.dhpdev,
@@ -152,29 +159,38 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 
 	if (!success)
 	{
+        DPRINT1(" Fail to get DirectDraw driver info \n");
 		GDIOBJ_UnlockObjByPtr(pDirectDraw);
 		return FALSE;
 	}
 
 	if (pHalInfo)
 	{
+       DPRINT1("Found DirectDraw CallBack for 2D Hal\n");
        RtlMoveMemory(&pDirectDraw->Hal, pHalInfo, sizeof(DD_HALINFO));
 
 	   if (pHalInfo->lpD3DHALCallbacks)
-	   {
+	   {    
+         DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
 		 RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof(D3DNTHAL_CALLBACKS));		
 	   }
 
 	   if (pHalInfo->lpD3DGlobalDriverData)
 	   {
+         DPRINT1("Found DirectDraw CallBack for 3D Hal Private  \n");
 		 RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
 	   }
 	   if (pHalInfo->lpD3DBufCallbacks)
 	   {
+         DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");
 		 RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
 	   }
-       	   	
-	 }
+       	   	                           	   	
+	 }	 
+     else
+	 {
+	   DPRINT1("No DirectDraw Hal info have been found, it did not fail, it did gather some other info \n");
+    }
         
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
@@ -193,10 +209,16 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 	DPRINT1("NtGdiDdGetDriverInfo\n");
 	
 	if (pDirectDraw == NULL) 
+	{
+        DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED\n");
 		return DDHAL_DRIVER_NOTHANDLED;
+    }
 
 	if   (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
+	{
+         DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED\n");
 	     ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    }
 	else
 	     ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
    
