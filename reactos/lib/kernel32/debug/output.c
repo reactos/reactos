@@ -397,10 +397,10 @@ VOID WINAPI OutputDebugStringA(LPCSTR _OutputString)
        nRoundLen = nOutputStringLen;
 
       /* copy the current block into the buffer */
-      memcpy(pDBMonBuffer->Buffer, _OutputString, nOutputStringLen);
+      memcpy(pDBMonBuffer->Buffer, _OutputString, nRoundLen);
 
       /* null-terminate the current block */
-      pDBMonBuffer->Buffer[nOutputStringLen] = 0;
+      pDBMonBuffer->Buffer[nRoundLen] = 0;
 
       /* signal that the data contains meaningful data and can be read */
       SetEvent(hDBMonDataReady);
