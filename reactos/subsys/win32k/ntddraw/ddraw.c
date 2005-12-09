@@ -48,7 +48,13 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	RtlZeroMemory(&palette_callbacks, sizeof(DD_PALETTECALLBACKS));
 	palette_callbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
-	
+	/* FIXME hdc can be zero for d3d9 */
+    /* we need create it, if in that case */
+	if (hdc == NULL)
+	{
+	    return NULL;
+    }
+    
 	DC *pDC = DC_LockDc(hdc);
 	if (!pDC)
 		return NULL;
