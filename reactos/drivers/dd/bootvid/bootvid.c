@@ -69,7 +69,7 @@ long maskbit[640];
 static CLIENT_ID BitmapThreadId;
 static PUCHAR BootimageBitmap;
 
-static ULONG ShutdownNotify;
+static LONG ShutdownNotify;
 static KEVENT ShutdownCompleteEvent;
 
 /* DATA **********************************************************************/
