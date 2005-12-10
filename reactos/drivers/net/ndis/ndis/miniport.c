@@ -377,7 +377,9 @@ VOID NTAPI
 MiniSendResourcesAvailable(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
+/*
     UNIMPLEMENTED
+*/
 }
 
 
