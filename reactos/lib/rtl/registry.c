@@ -44,7 +44,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 NtCurrentProcess(),
 				 KeyHandle,
 				 0,
-				 FALSE,
+				 0,
 				 DUPLICATE_SAME_ACCESS);
 #ifndef NDEBUG
       if(!NT_SUCCESS(Status))

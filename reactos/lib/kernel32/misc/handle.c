@@ -232,7 +232,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 			      hTargetProcessHandle,
 			      lpTargetHandle,
 			      dwDesiredAccess,
-			      (BOOLEAN)bInheritHandle,
+			      bInheritHandle ? OBJ_INHERIT : 0,
 			      dwOptions);
    if (!NT_SUCCESS(Status))
      {

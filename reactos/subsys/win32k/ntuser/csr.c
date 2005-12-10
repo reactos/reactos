@@ -121,7 +121,7 @@ CsrInsertObject(HANDLE ObjectHandle,
                                  CsrProcessHandle,
                                  Handle,
                                  DesiredAccess,
-                                 TRUE,
+                                 OBJ_INHERIT,
                                  0);
 
       /* Close our handle to CSRSS */
