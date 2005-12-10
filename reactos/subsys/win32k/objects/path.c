@@ -1021,7 +1021,7 @@ PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
 {
   int    numStrokes, iStroke, i;
   INT  *pNumPointsInStroke;
-  HRGN hrgn;
+  HRGN hrgn = 0;
 
   assert ( pPath!=NULL );
   assert ( pHrgn!=NULL );
