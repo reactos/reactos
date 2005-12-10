@@ -20,15 +20,16 @@
 BOOL INTERNAL_CALL
 DD_Cleanup(PVOID ObjectBody)
 {
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(ObjectBody, GDI_OBJECT_TYPE_DIRECTDRAW);
+    if (ObjectBody == NULL)
+        return FALSE;
+        
+	PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
 	DPRINT1("DD_Cleanup\n");
 	
 	if (!pDirectDraw)
 		return FALSE;
 
 	pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
-
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	return TRUE;
 }
 
@@ -203,7 +204,7 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
     PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = 0;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	DPRINT1("NtGdiDdGetDriverInfo\n");
@@ -214,9 +215,19 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 		return DDHAL_DRIVER_NOTHANDLED;
     }
 
-	if   (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
+    
+    /* it exsist two version of NtGdiDdGetDriverInfo we need check for both flags */
+    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
+         ddRVal++;
+         
+    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFO2))
+         ddRVal++;
+                    
+    
+    /* Now we are doing the call to drv DrvGetDriverInfo */
+	if   (ddRVal == 2)
 	{
-         DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED\n");
+         DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");         
 	     ddRVal = DDHAL_DRIVER_NOTHANDLED;
     }
 	else
@@ -249,8 +260,11 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
+	{
+       	DPRINT1("Can not lock the DirectDraw handle\n");
 		return DDHAL_DRIVER_NOTHANDLED;
-
+    }
+	
 	/* backup the orignal PDev and info */
 	lgpl = puCreateSurfaceData->lpDD;
 
@@ -259,7 +273,10 @@ DWORD STDCALL NtGdiDdCreateSurface(
 	
 	/* make the call */
 	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
+	{
+        DPRINT1("DirectDraw HAL does not support Create Surface"); 
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    }
 	else
 	{	  
 	   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	 
@@ -802,7 +819,7 @@ BOOL STDCALL NtGdiDdDeleteSurfaceObject(
     /* FIXME add right GDI_OBJECT_TYPE_ for everthing for now 
        we are using same type */
 	/* return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE); */
-	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
 	
 }
 
