@@ -196,8 +196,8 @@ I2cSetFrontpanelLed(UCHAR b)
 // r = Red, g = Green, o = Orange, x = Off
 // This func is taken from cromwell, all credits goes for them
 void
-XboxSetLED(UCHAR *pattern) {
-	char *x = pattern;
+XboxSetLED(PCSTR pattern) {
+	const char *x = pattern;
 	int r, g;
 	
 	if(strlen(pattern) == 4) {
