@@ -1031,6 +1031,25 @@ QueryServiceConfigW(
     }
 }
 
+/**********************************************************************
+ *  QueryServiceConfig2W
+ *
+ * @unimplemented
+ */
+BOOL
+STDCALL
+QueryServiceConfig2W
+(
+    SC_HANDLE       hService,
+    DWORD           dwInfo,
+    LPBYTE          lpBuffer,
+    DWORD           cbBufSize,
+    LPDWORD         pcbBytesNeeded)
+{
+    DPRINT1("QueryServiceConfigW2 is unimplemented\n");
+    return FALSE;
+}
+
 
 /**********************************************************************
  *  QueryServiceLockStatusA
