@@ -1256,7 +1256,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   UNICODE_STRING RemainingPath;
   KPROCESSOR_MODE PreviousMode;
   PVOID Object = NULL;
-  HANDLE hKey;
+  HANDLE hKey = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
@@ -1333,8 +1333,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
-      Status = STATUS_INVALID_HANDLE; /* Because CmpFindObject returns STATUS_UNSUCCESSFUL */
-      hKey = *KeyHandle; /* Preserve hkResult value */
+      Status = STATUS_INVALID_HANDLE; /* Because ObFindObject returns STATUS_UNSUCCESSFUL */
       goto openkey_cleanup;
     }
 
@@ -1346,7 +1345,6 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     {
       RtlFreeUnicodeString(&RemainingPath);
       Status = STATUS_OBJECT_NAME_NOT_FOUND;
-      hKey = NULL;
       goto openkey_cleanup;
     }
 
@@ -1356,7 +1354,6 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
     {
       Status = STATUS_UNSUCCESSFUL;
-      hKey = NULL;
       goto openkey_cleanup;
     }
 
@@ -1364,9 +1361,6 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 			   DesiredAccess,
 			   ObjectCreateInfo.Attributes,
 			   &hKey);
-
-  if (!NT_SUCCESS(Status))
-     hKey = NULL;
 
 openkey_cleanup:
 
@@ -1381,15 +1375,18 @@ openkey_cleanup:
       ObDereferenceObject(Object);
     }
 
-  _SEH_TRY
+  if (NT_SUCCESS(Status))
   {
-    *KeyHandle = hKey;
+    _SEH_TRY
+    {
+      *KeyHandle = hKey;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
   }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
 
   return Status;
 }
