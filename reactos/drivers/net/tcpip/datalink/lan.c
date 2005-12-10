@@ -386,7 +386,8 @@ VOID LanSubmitReceiveWork(
 	TI_DbgPrint(DEBUG_DATALINK,
 		    ("Work item inserted %x %x\n", &LanWorkItem, WQItem));
     } else {
-	DbgPrint("LAN WORKER BUSY %x %x\n", &LanWorkItem, WQItem);
+	TI_DbgPrint(DEBUG_DATALINK,
+                    ("LAN WORKER BUSY %x %x\n", &LanWorkItem, WQItem));
     }
     TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
 }
