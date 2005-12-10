@@ -17,7 +17,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * FIXME: roll up in Netscape 3.01.
+ * NOTES
+ *
+ * This code was audited for completeness against the documented features
+ * of Comctl32.dll version 6.0 on Oct. 4, 2004, by Dimitrie O. Paun.
+ * 
+ * Unless otherwise noted, we believe this code to be complete, as per
+ * the specification mentioned above.
+ * If you discover missing features, or bugs, please note them below.
+ * 
+ * TODO:
+ *   - ComboBox_[GS]etMinVisible()
+ *   - CB_GETMINVISIBLE, CB_SETMINVISIBLE
+ *   - CB_LIMITTEXT
+ *   - CB_SETTOPINDEX
  */
 
 #include <user32.h>
@@ -36,7 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(combo);
 
 #define CB_NOTIFY( lphc, code ) \
     (SendMessageW((lphc)->owner, WM_COMMAND, \
-                  MAKEWPARAM(GetWindowLongA((lphc)->self,GWL_ID), (code)), (LPARAM)(lphc)->self))
+                  MAKEWPARAM(GetWindowLongPtrW((lphc)->self,GWLP_ID), (code)), (LPARAM)(lphc)->self))
 
 #define CB_DISABLED( lphc )   (!IsWindowEnabled((lphc)->self))
 #define CB_OWNERDRAWN( lphc ) ((lphc)->dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE))
@@ -136,23 +149,23 @@ static LRESULT COMBO_NCCreate(HWND hwnd, LONG style)
     if (COMBO_Init() && (lphc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HEADCOMBO))) )
     {
         lphc->self = hwnd;
-        SetWindowLongA( hwnd, 0, (LONG)lphc );
+        SetWindowLongW( hwnd, 0, (LONG)lphc );
 
        /* some braindead apps do try to use scrollbar/border flags */
 
 	lphc->dwStyle = style & ~(WS_BORDER | WS_HSCROLL | WS_VSCROLL);
-        SetWindowLongA( hwnd, GWL_STYLE, style & ~(WS_BORDER | WS_HSCROLL | WS_VSCROLL) );
+        SetWindowLongW( hwnd, GWL_STYLE, style & ~(WS_BORDER | WS_HSCROLL | WS_VSCROLL) );
 
 	/*
 	 * We also have to remove the client edge style to make sure
 	 * we don't end-up with a non client area.
 	 */
-        SetWindowLongA( hwnd, GWL_EXSTYLE,
-                        GetWindowLongA( hwnd, GWL_EXSTYLE ) & ~WS_EX_CLIENTEDGE );
+        SetWindowLongW( hwnd, GWL_EXSTYLE,
+                        GetWindowLongW( hwnd, GWL_EXSTYLE ) & ~WS_EX_CLIENTEDGE );
 
 	if( !(style & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) )
               lphc->dwStyle |= CBS_HASSTRINGS;
-	if( !(GetWindowLongA( hwnd, GWL_EXSTYLE ) & WS_EX_NOPARENTNOTIFY) )
+	if( !(GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_NOPARENTNOTIFY) )
 	      lphc->wState |= CBF_NOTIFY;
 
         TRACE("[%p], style = %08x\n", lphc, lphc->dwStyle );
@@ -174,7 +187,7 @@ static LRESULT COMBO_NCDestroy( LPHEADCOMBO lphc )
        if( (CB_GETTYPE(lphc) != CBS_SIMPLE) && lphc->hWndLBox )
    	   DestroyWindow( lphc->hWndLBox );
 
-       SetWindowLongA( lphc->self, 0, 0 );
+       SetWindowLongPtrW( lphc->self, 0, 0 );
        HeapFree( GetProcessHeap(), 0, lphc );
    }
    return 0;
@@ -240,7 +253,7 @@ static INT CBGetTextAreaHeight(
     MEASUREITEMSTRUCT measureItem;
     RECT              clientRect;
     INT               originalItemHeight = iTextItemHeight;
-    UINT id = GetWindowLongA( lphc->self, GWL_ID );
+    UINT id = GetWindowLongPtrW( lphc->self, GWLP_ID );
 
     /*
      * We use the client rect for the width of the item.
@@ -542,8 +555,11 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
 	if( CB_GETTYPE(lphc) == CBS_DROPDOWN )
 	  lphc->droppedRect.left += COMBO_EDITBUTTONSPACE();
 
-	ClientToScreen(hwnd, (LPPOINT)&lphc->droppedRect);
-	ClientToScreen(hwnd, (LPPOINT)&lphc->droppedRect.right);
+        if (lphc->droppedRect.bottom < lphc->droppedRect.top)
+            lphc->droppedRect.bottom = lphc->droppedRect.top;
+        if (lphc->droppedRect.right < lphc->droppedRect.left)
+            lphc->droppedRect.right = lphc->droppedRect.left;
+        MapWindowPoints( hwnd, 0, (LPPOINT)&lphc->droppedRect, 2 );
       }
 
       /* create listbox popup */
@@ -583,7 +599,7 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
                                            lphc->droppedRect.right - lphc->droppedRect.left,
                                            lphc->droppedRect.bottom - lphc->droppedRect.top,
                                            hwnd, (HMENU)ID_CB_LISTBOX,
-                                           (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ), lphc );
+                                           (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE ), lphc );
       else
           lphc->hWndLBox = CreateWindowExA(lbeExStyle, "ComboLBox", NULL, lbeStyle,
                                            lphc->droppedRect.left,
@@ -591,7 +607,7 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
                                            lphc->droppedRect.right - lphc->droppedRect.left,
                                            lphc->droppedRect.bottom - lphc->droppedRect.top,
                                            hwnd, (HMENU)ID_CB_LISTBOX,
-                                           (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ), lphc );
+                                           (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE ), lphc );
 
       if( lphc->hWndLBox )
       {
@@ -617,14 +633,14 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
                                                    lphc->textRect.right - lphc->textRect.left,
                                                    lphc->textRect.bottom - lphc->textRect.top,
                                                    hwnd, (HMENU)ID_CB_EDIT,
-                                                   (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ), NULL );
+                                                   (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE ), NULL );
               else
                   lphc->hWndEdit = CreateWindowExA(0, "Edit", NULL, lbeStyle,
                                                    lphc->textRect.left, lphc->textRect.top,
                                                    lphc->textRect.right - lphc->textRect.left,
                                                    lphc->textRect.bottom - lphc->textRect.top,
                                                    hwnd, (HMENU)ID_CB_EDIT,
-                                                   (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ), NULL );
+                                                   (HINSTANCE)GetWindowLongPtrW( hwnd, GWLP_HINSTANCE ), NULL );
 
 	      if( !lphc->hWndEdit )
 		bEdit = FALSE;
@@ -736,7 +752,7 @@ static void CBPaintText(
      {
        DRAWITEMSTRUCT dis;
        HRGN           clipRegion;
-       UINT ctlid = GetWindowLongA( lphc->self, GWL_ID );
+       UINT ctlid = (UINT)GetWindowLongPtrW( lphc->self, GWLP_ID );
 
        /* setup state for DRAWITEM message. Owner will highlight */
        if ( (lphc->wState & CBF_FOCUSED) &&
@@ -1047,8 +1063,7 @@ static void CBUpdateEdit( LPHEADCOMBO lphc , INT index )
    if( lphc->wState & CBF_FOCUSED )
       SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, (LPARAM)(-1));
 
-   if( pText )
-       HeapFree( GetProcessHeap(), 0, pText );
+   HeapFree( GetProcessHeap(), 0, pText );
 }
 
 /***********************************************************************
@@ -1399,7 +1414,7 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 static LRESULT COMBO_ItemOp( LPHEADCOMBO lphc, UINT msg, LPARAM lParam )
 {
    HWND hWnd = lphc->self;
-   UINT id = GetWindowLongA( hWnd, GWL_ID );
+   UINT id = (UINT)GetWindowLongPtrW( hWnd, GWLP_ID );
 
    TRACE("[%p]: ownerdraw op %04x\n", lphc->self, msg );
 
@@ -1506,7 +1521,7 @@ static LRESULT COMBO_GetTextA( LPHEADCOMBO lphc, INT count, LPSTR buf )
     if (!count || !buf) return 0;
     if( lphc->hWndLBox )
     {
-        INT idx = SendMessageA(lphc->hWndLBox, LB_GETCURSEL, 0, 0);
+        INT idx = SendMessageW(lphc->hWndLBox, LB_GETCURSEL, 0, 0);
         if (idx == LB_ERR) goto error;
         length = SendMessageA(lphc->hWndLBox, LB_GETTEXTLEN, idx, 0 );
         if (length == LB_ERR) goto error;
@@ -1809,6 +1824,36 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
    }
 }
 
+static LRESULT COMBO_GetComboBoxInfo(LPHEADCOMBO lphc, COMBOBOXINFO *pcbi)
+{
+    if (!pcbi || (pcbi->cbSize < sizeof(COMBOBOXINFO)))
+        return FALSE;
+
+    pcbi->rcItem = lphc->textRect;
+    pcbi->rcButton = lphc->buttonRect;
+    pcbi->stateButton = 0;
+    if (lphc->wState & CBF_BUTTONDOWN)
+        pcbi->stateButton |= STATE_SYSTEM_PRESSED;
+    if (IsRectEmpty(&lphc->buttonRect))
+        pcbi->stateButton |= STATE_SYSTEM_INVISIBLE;
+    pcbi->hwndCombo = lphc->self;
+    pcbi->hwndItem = lphc->hWndEdit;
+    pcbi->hwndList = lphc->hWndLBox;
+    return TRUE;
+}
+
+static char *strdupA(LPCSTR str)
+{
+    char *ret;
+    DWORD len;
+
+    if(!str) return NULL;
+
+    len = strlen(str);
+    ret = HeapAlloc(GetProcessHeap(), 0, len + 1);
+    memcpy(ret, str, len + 1);
+    return ret;
+}
 
 /***********************************************************************
  *           ComboWndProc_common
@@ -1818,7 +1863,7 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
 static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                                     WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
-      LPHEADCOMBO lphc = (LPHEADCOMBO)GetWindowLongA( hwnd, 0 );
+      LPHEADCOMBO lphc = (LPHEADCOMBO)GetWindowLongPtrW( hwnd, 0 );
 
       //TRACE("[%p]: msg %s wp %08x lp %08lx\n",
       //      hwnd, SPY_GetMsgName(message, hwnd), wParam, lParam );
@@ -2045,13 +2090,24 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                         struprW((LPWSTR)lParam);
                     return SendMessageW(lphc->hWndLBox, LB_ADDSTRING, 0, lParam);
                 }
-                else
+                else /* unlike the unicode version, the ansi version does not overwrite
+                        the string if converting case */
                 {
+                    char *string = NULL;
+                    LRESULT ret;
                     if( lphc->dwStyle & CBS_LOWERCASE )
-                        _strlwr((LPSTR)lParam);
+                    {
+                        string = strdupA((LPSTR)lParam);
+                        _strlwr(string);
+                    }
                     else if( lphc->dwStyle & CBS_UPPERCASE )
-                        _strupr((LPSTR)lParam);
-                    return SendMessageA(lphc->hWndLBox, LB_ADDSTRING, 0, lParam);
+                    {
+                        string = strdupA((LPSTR)lParam);
+                        _strupr(string);
+                    }
+                    ret = SendMessageA(lphc->hWndLBox, LB_ADDSTRING, 0, string ? (LPARAM)string : lParam);
+                    HeapFree(GetProcessHeap(), 0, string);
+                    return ret;
                 }
 #ifndef __REACTOS__
 	case CB_INSERTSTRING16:
@@ -2291,6 +2347,8 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 #endif
 	case CB_GETEXTENDEDUI:
 		return  (lphc->wState & CBF_EUI) ? TRUE : FALSE;
+	case CB_GETCOMBOBOXINFO:
+		return COMBO_GetComboBoxInfo(lphc, (COMBOBOXINFO *)lParam);
 
 	default:
 		if (message >= WM_USER)
@@ -2329,7 +2387,5 @@ static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPA
 BOOL WINAPI GetComboBoxInfo(HWND hwndCombo,      /* [in] handle to combo box */
 			    PCOMBOBOXINFO pcbi   /* [in/out] combo box information */)
 {
-    FIXME("\n");
-    return FALSE;
-
+    return SendMessageW(hwndCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi);
 }
