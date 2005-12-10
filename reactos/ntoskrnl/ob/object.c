@@ -316,7 +316,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
       ObReferenceObjectByPointer(NameSpaceRoot,
 				 DIRECTORY_TRAVERSE,
 				 NULL,
-				 UserMode);
+				 ObjectCreateInfo->ProbeMode);
       CurrentObject = NameSpaceRoot;
     }
   else
@@ -324,7 +324,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
       Status = ObReferenceObjectByHandle(ObjectCreateInfo->RootDirectory,
 					 0,
 					 NULL,
-					 UserMode,
+					 ObjectCreateInfo->ProbeMode,
 					 &CurrentObject,
 					 NULL);
       if (!NT_SUCCESS(Status))
@@ -398,7 +398,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 	     ObReferenceObjectByPointer(NextObject,
 					DIRECTORY_TRAVERSE,
 					NULL,
-					UserMode);
+					ObjectCreateInfo->ProbeMode);
 	  }
 
 	if (NextObject == NULL)
@@ -926,11 +926,10 @@ ObOpenObjectByPointer(IN PVOID Object,
 	return Status;
      }
 
-   Status = ObpCreateHandle(PsGetCurrentProcess(),
-			   Object,
-			   DesiredAccess,
-			   (BOOLEAN)(HandleAttributes & OBJ_INHERIT),
-			   Handle);
+   Status = ObpCreateHandle(Object,
+			    DesiredAccess,
+			    HandleAttributes,
+			    Handle);
 
    ObDereferenceObject(Object);
 

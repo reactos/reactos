@@ -247,7 +247,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-      goto Cleanup;
+      return Status;
     }
 
   PostCreateKeyInfo.CompleteName = &ObjectName;
@@ -255,7 +255,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreCreateKey, &PreCreateKeyInfo);
   if (!NT_SUCCESS(Status))
     {
-      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
       goto Cleanup;
     }
     
@@ -264,7 +263,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                         (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (!NT_SUCCESS(Status))
     {
       PostCreateKeyInfo.Object = NULL;
@@ -291,11 +289,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	  goto Cleanup;
 	}
 
-      Status = ObpCreateHandle(PsGetCurrentProcess(),
-			      Object,
-			      DesiredAccess,
-			      TRUE,
-			      &hKey);
+      Status = ObpCreateHandle(Object,
+			       DesiredAccess,
+			       ObjectCreateInfo.Attributes,
+			       &hKey);
 
       if (!NT_SUCCESS(Status))
         DPRINT1("ObpCreateHandle failed Status 0x%x\n", Status);
@@ -466,6 +463,7 @@ SuccessReturn:
   _SEH_END;
 
 Cleanup:
+  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (Class != NULL)
   {
     ReleaseCapturedUnicodeString(&CapturedClass,
@@ -1332,7 +1330,6 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	                (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
@@ -1363,17 +1360,17 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       goto openkey_cleanup;
     }
 
-  Status = ObpCreateHandle(PsGetCurrentProcess(),
-			  Object,
-			  DesiredAccess,
-			  TRUE,
-			  &hKey);
+  Status = ObpCreateHandle(Object,
+			   DesiredAccess,
+			   ObjectCreateInfo.Attributes,
+			   &hKey);
 
   if (!NT_SUCCESS(Status))
      hKey = NULL;
 
 openkey_cleanup:
 
+  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
   PostOpenKeyInfo.Status = Status;
   CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);

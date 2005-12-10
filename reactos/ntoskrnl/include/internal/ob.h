@@ -51,6 +51,8 @@ typedef struct _SYMLINK_OBJECT
    ((ProcessorMode) == KernelMode))
 #define ObKernelHandleToHandle(Handle)                                         \
   (HANDLE)((ULONG_PTR)(Handle) & ~KERNEL_HANDLE_FLAG)
+#define ObMarkHandleAsKernelHandle(Handle)                                     \
+  (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
 
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
@@ -75,10 +77,9 @@ ObInitSymbolicLinkImplementation(VOID);
 NTSTATUS
 NTAPI
 ObpCreateHandle(
-    struct _EPROCESS* Process,
     PVOID ObjectBody,
     ACCESS_MASK GrantedAccess,
-    BOOLEAN Inherit,
+    ULONG HandleAttributes,
     PHANDLE Handle
 );
 
@@ -134,7 +135,7 @@ ObDuplicateObject(
     HANDLE SourceHandle,
     PHANDLE TargetHandle,
     ACCESS_MASK DesiredAccess,
-    BOOLEAN InheritHandle,
+    ULONG HandleAttributes,
     ULONG Options
 );
 
