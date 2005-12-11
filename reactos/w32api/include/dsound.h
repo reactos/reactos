@@ -19,6 +19,10 @@
 #ifndef __WINE_DSOUND_H
 #define __WINE_DSOUND_H
 
+#if __GNUC__ >= 3
+#pragma GCC system_header
+#endif
+
 #ifndef DIRECTSOUND_VERSION
 #define DIRECTSOUND_VERSION 0x0900
 #endif
