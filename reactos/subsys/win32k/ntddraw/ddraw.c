@@ -19,16 +19,19 @@
 
 BOOL INTERNAL_CALL
 DD_Cleanup(PVOID ObjectBody)
-{
-    if (ObjectBody == NULL)
-        return FALSE;
-        
+{       
 	PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
 	DPRINT1("DD_Cleanup\n");
 	
 	if (!pDirectDraw)
 		return FALSE;
-
+    
+    if (pDirectDraw->Global.dhpdev == NULL)
+        return FALSE;
+        
+    if (pDirectDraw->DrvDisableDirectDraw == NULL)
+        return FALSE;
+        
 	pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
 	return TRUE;
 }
