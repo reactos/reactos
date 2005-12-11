@@ -1369,6 +1369,10 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
         if (urlComponents.nPort == INTERNET_INVALID_PORT_NUMBER)
             urlComponents.nPort = INTERNET_DEFAULT_HTTP_PORT;
 
+        if (sizeof(path) / sizeof(path[0]) <= strlenW(path) + strlenW(extra))
+            return FALSE;
+        strcatW(path, extra);
+
 #if 0
         /*
          * This upsets redirects to binary files on sourceforge.net 
