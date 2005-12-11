@@ -740,6 +740,6 @@ HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartGUI",0x00010001
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 
 ; Where to download the Mozilla ActiveX control
-HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://source.winehq.org/mozactivex"
+HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://links.reactos.org/mozactivex"
 
 ; EOF
