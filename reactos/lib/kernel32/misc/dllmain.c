@@ -348,6 +348,10 @@ DllMain(HANDLE hDll,
         SystemDirectory.Buffer = RtlAllocateHeap(hProcessHeap,
                                                  0,
                                                  SystemDirectory.MaximumLength);
+        if(SystemDirectory.Buffer == NULL)
+        {
+           return FALSE;
+        }
         wcscpy(SystemDirectory.Buffer, WindowsDirectory.Buffer);
         wcscat(SystemDirectory.Buffer, L"\\System32");
 
