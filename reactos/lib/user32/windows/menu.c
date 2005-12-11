@@ -4030,7 +4030,7 @@ InsertMenuA(
     mii.fMask |= MIIM_ID;
     mii.wID = (UINT)uIDNewItem;
   }
-  return InsertMenuItemA(hMenu, uPosition, (BOOL)!(MF_BYPOSITION & uFlags), &mii);
+  return InsertMenuItemA(hMenu, uPosition, (BOOL)((MF_BYPOSITION & uFlags) > 0), &mii);
 }
 
 
@@ -4189,7 +4189,7 @@ InsertMenuW(
     mii.fMask |= MIIM_ID;
     mii.wID = (UINT)uIDNewItem;
   }
-  return InsertMenuItemW(hMenu, uPosition, (BOOL)!(MF_BYPOSITION & uFlags), &mii);
+  return InsertMenuItemW(hMenu, uPosition, (BOOL)((MF_BYPOSITION & uFlags) > 0), &mii);
 }
 
 
