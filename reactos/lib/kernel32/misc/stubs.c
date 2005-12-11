@@ -194,7 +194,13 @@ GetSystemPowerStatus (
     )
 {
     STUB;
-    return 0;
+    PowerStatus->ACLineStatus = 1;
+    PowerStatus->BatteryFlag = 128;
+    PowerStatus->BatteryLifePercent = 255;
+    PowerStatus->Reserved1 = 0;
+    PowerStatus->BatteryLifeTime = -1;
+    PowerStatus->BatteryFullLifeTime = -1;
+    return TRUE;
 }
 
 
