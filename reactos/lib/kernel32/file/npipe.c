@@ -924,6 +924,11 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
+    if (UserNameW.Buffer == NULL)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
 
     UserNameA.Buffer = lpUserName;
     UserNameA.Length = 0;
