@@ -17,6 +17,7 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>ole32</library>
+      <library>oleaut32</library>
 	<library>dxguid</library>
 	<library>strmiids</library>
 	<file>container.c</file>
