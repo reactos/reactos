@@ -1872,13 +1872,14 @@ static BOOL GetIconIndex(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
-    Buffer[dwLength / sizeof(WCHAR)] = 0;
     rc = RegQueryValueExW(hClassKey, L"Icon", NULL, NULL, (LPBYTE)Buffer, &dwLength);
     if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
         goto cleanup;
     }
+    /* make sure the returned buffer is NULL-terminated */
+    Buffer[dwLength / sizeof(WCHAR)] = 0;
 
     /* Transform "Icon" value to a INT */
     *ImageIndex = atoiW(Buffer);
@@ -2065,7 +2066,7 @@ BOOL WINAPI SetupDiLoadClassIcon(
             rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
             if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
             {
-                Buffer = MyMalloc(dwLength);
+                Buffer = MyMalloc(dwLength + sizeof(WCHAR));
                 if (Buffer == NULL)
                 {
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2077,12 +2078,14 @@ BOOL WINAPI SetupDiLoadClassIcon(
                     SetLastError(rc);
                     goto cleanup;
                 }
+                /* make sure the returned buffer is NULL-terminated */
+                Buffer[dwLength / sizeof(WCHAR)] = 0;
             }
             else if
                 (ERROR_SUCCESS == (rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, &dwRegType, NULL, &dwLength))
                 && dwRegType == REG_SZ)
             {
-                Buffer = MyMalloc(dwLength);
+                Buffer = MyMalloc(dwLength + sizeof(WCHAR));
                 if (Buffer == NULL)
                 {
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2094,6 +2097,8 @@ BOOL WINAPI SetupDiLoadClassIcon(
                     SetLastError(rc);
                     goto cleanup;
                 }
+                /* make sure the returned buffer is NULL-terminated */
+                Buffer[dwLength / sizeof(WCHAR)] = 0;
             }
             else
             {
@@ -2108,6 +2113,7 @@ BOOL WINAPI SetupDiLoadClassIcon(
                 goto cleanup;
             }
             *Comma = '\0';
+            DllName = Buffer;
         }
         else
         {
