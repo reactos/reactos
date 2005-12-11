@@ -633,7 +633,7 @@ GetErrorCodeFromCrCode(const IN CONFIGRET cr)
       /* FIXME */
       return ERROR_GEN_FAILURE;
   }
-  
+
   /* Does not happen */
 }
 
@@ -689,7 +689,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       goto cleanup;
     }
-    
+
     strcpyW(UNCServerName + 2, MachineName);
     list->szData[0] = list->szData[1] = '\\';
     strcpyW(list->szData + 2, MachineName);
@@ -750,7 +750,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
     else if (DeviceInfoSet && DeviceInfoSet != (HDEVINFO)INVALID_HANDLE_VALUE)
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
-        
+
         if (list->magic != SETUP_DEV_INFO_SET_MAGIC)
             SetLastError(ERROR_INVALID_HANDLE);
         else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
@@ -1186,7 +1186,8 @@ CreateDeviceInterface(
 
     *pDeviceInterface = NULL;
 
-    deviceInterface = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInterface) + (wcslen(SymbolicLink) + 1) * sizeof(WCHAR));
+    deviceInterface = HeapAlloc(GetProcessHeap(), 0,
+        FIELD_OFFSET(struct DeviceInterface, SymbolicLink) + (wcslen(SymbolicLink) + 1) * sizeof(WCHAR));
     if (!deviceInterface)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -1215,7 +1216,7 @@ static LONG SETUP_CreateDevListFromEnumerator(
     DWORD i = 0, j;
     DWORD dwLength, dwRegType;
     DWORD rc;
-    
+
     /* Enumerate device IDs (subkeys of hEnumeratorKey) */
     while (TRUE)
     {
@@ -1632,7 +1633,7 @@ static LONG SETUP_CreateInterfaceList(
             RegCloseKey(hDeviceInstanceKey);
             continue;
         }
-        
+
         /* Enumerate subkeys of hDeviceInstanceKey (ie "#ReferenceString" in IoRegisterDeviceInterface). Skip entries that don't start with '#' */
         j = 0;
         while (TRUE)
@@ -2568,7 +2569,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
             {
                 LPCWSTR RegistryPropertyName;
                 DWORD BufferSize;
-                
+
                 switch (Property)
                 {
                     case SPDRP_CAPABILITIES:
@@ -4657,6 +4658,7 @@ AddDriverToList(
         driverInfo->Details.DrvDescription, InfFile, InfInstallSection, Rank);
 
     driverInfo->DriverRank = Rank;
+    memcpy(&driverInfo->DriverDate, &DriverDate, sizeof(FILETIME));
     memcpy(&driverInfo->ClassGuid, ClassGuid, sizeof(GUID));
     driverInfo->Info.DriverType = DriverType;
     driverInfo->Info.Reserved = (ULONG_PTR)driverInfo;
@@ -4680,7 +4682,10 @@ AddDriverToList(
     PreviousEntry = DriverListHead->Flink;
     while (PreviousEntry != DriverListHead)
     {
-        if (((struct DriverInfoElement *)PreviousEntry)->DriverRank >= Rank)
+        struct DriverInfoElement *CurrentDriver;
+        CurrentDriver = CONTAINING_RECORD(PreviousEntry, struct DriverInfoElement, ListEntry);
+        if (CurrentDriver->DriverRank > Rank ||
+            (CurrentDriver->DriverRank == Rank && CurrentDriver->DriverDate.QuadPart > driverInfo->DriverDate.QuadPart))
         {
             /* Insert before the current item */
             InsertHeadList(PreviousEntry, &driverInfo->ListEntry);
@@ -4816,7 +4821,36 @@ GetVersionInformationFromInfFile(
     }
     /* Get driver version. Invalid version = 0.0.0.0 */
     *DriverVersion = 0;
-    /* FIXME: use pVersion to fill DriverVersion variable */
+    if (pVersion)
+    {
+        WORD Major, Minor = 0, Revision = 0, Build = 0;
+        LPWSTR pMinor = NULL, pRevision = NULL, pBuild = NULL;
+        LARGE_INTEGER fullVersion;
+
+        pMinor = strchrW(pVersion, '.');
+        if (pMinor)
+        {
+            *pMinor = 0;
+            pRevision = strchrW(++pMinor, '.');
+            Minor = atoiW(pMinor);
+        }
+        if (pRevision)
+        {
+            *pRevision = 0;
+            pBuild = strchrW(++pRevision, '.');
+            Revision = atoiW(pRevision);
+        }
+        if (pBuild)
+        {
+            *pBuild = 0;
+            pBuild++;
+            Build = atoiW(pBuild);
+        }
+        Major = atoiW(pVersion);
+        fullVersion.u.HighPart = Major << 16 | Minor;
+        fullVersion.u.LowPart = Revision << 16 | Build;
+        memcpy(DriverVersion, &fullVersion, sizeof(LARGE_INTEGER));
+    }
 
     ret = TRUE;
 
@@ -5881,7 +5915,7 @@ SetupDiGetDriverInfoDetailA(
     DWORD BufSize = 0;
     DWORD HardwareIDLen = 0;
     BOOL ret = FALSE;
-    
+
     /* do some sanity checks, the unicode version might do more thorough checks */
     if (DriverInfoData == NULL ||
         (DriverInfoDetailData == NULL && DriverInfoDetailDataSize != 0) ||
@@ -5909,7 +5943,7 @@ SetupDiGetDriverInfoDetailA(
     }
     DriverInfoDataW.DriverType = DriverInfoData->DriverType;
     DriverInfoDataW.Reserved = DriverInfoData->Reserved;
-    
+
     /* convert the strings to unicode */
     if (MultiByteToWideChar(CP_ACP,
                             0,
@@ -6055,7 +6089,7 @@ SetupDiGetDriverInfoDetailA(
             }
         }
     }
-    
+
 Cleanup:
     if (DriverInfoDetailDataW != NULL)
     {
@@ -6403,6 +6437,7 @@ SetupDiInstallDevice(
     HKEY hKey = INVALID_HANDLE_VALUE;
     HKEY hClassKey = INVALID_HANDLE_VALUE;
     BOOL NeedtoCopyFile;
+    LARGE_INTEGER fullVersion;
     LONG rc;
     BOOL ret = FALSE; /* Return value */
 
@@ -6515,10 +6550,11 @@ SetupDiInstallDevice(
 
     /* Write information to driver key */
     *pSectionName = UNICODE_NULL;
+    memcpy(&fullVersion, &SelectedDriver->Info.DriverVersion, sizeof(LARGE_INTEGER));
     TRACE("Write information to driver key\n");
     TRACE("DriverDate      : '%u-%u-%u'\n", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
     TRACE("DriverDesc      : '%S'\n", SelectedDriver->Info.Description);
-    TRACE("DriverVersion   : '%u.%u.%u.%u'\n", SelectedDriver->Info.DriverVersion & 0xff, (SelectedDriver->Info.DriverVersion >> 8) & 0xff, (SelectedDriver->Info.DriverVersion >> 16) & 0xff, (SelectedDriver->Info.DriverVersion >> 24) & 0xff);
+    TRACE("DriverVersion   : '%u.%u.%u.%u'\n", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
     TRACE("InfPath         : '%S'\n", SelectedDriver->Details.InfFileName);
     TRACE("InfSection      : '%S'\n", SelectedDriver->Details.SectionName);
     TRACE("InfSectionExt   : '%S'\n", &SectionName[wcslen(SelectedDriver->Details.SectionName)]);
@@ -6532,7 +6568,7 @@ SetupDiInstallDevice(
         rc = RegSetValueEx(hKey, L"DriverDesc", 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (wcslen(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
     {
-        swprintf(Buffer, L"%u.%u.%u.%u", SelectedDriver->Info.DriverVersion & 0xff, (SelectedDriver->Info.DriverVersion >> 8) & 0xff, (SelectedDriver->Info.DriverVersion >> 16) & 0xff, (SelectedDriver->Info.DriverVersion >> 24) & 0xff);
+        swprintf(Buffer, L"%u.%u.%u.%u", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
         rc = RegSetValueEx(hKey, L"DriverVersion", 0, REG_SZ, (const BYTE *)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
     }
     if (rc == ERROR_SUCCESS)

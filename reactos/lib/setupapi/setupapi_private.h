@@ -57,7 +57,7 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
      */
     DWORD Flags;
 
-    WCHAR SymbolicLink[0]; /* \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
+    WCHAR SymbolicLink[ANYSIZE_ARRAY]; /* \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
 };
 
 /* We don't want to open the .inf file to read only one information in it, so keep a handle to it once it
@@ -68,7 +68,7 @@ struct InfFileDetails
     LONG References;
 
     /* May contain no directory if the file is already in %SYSTEMROOT%\Inf */
-    WCHAR FullInfFileName[0];
+    WCHAR FullInfFileName[ANYSIZE_ARRAY];
 };
 
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */
@@ -76,6 +76,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
     LIST_ENTRY ListEntry;
 
     DWORD DriverRank;
+    ULARGE_INTEGER DriverDate;
     SP_DRVINFO_DATA_V2_W Info;
     SP_DRVINFO_DETAIL_DATA_W Details;
     GUID ClassGuid;
@@ -129,7 +130,7 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
     /* List of interfaces implemented by this device */
     LIST_ENTRY InterfaceListHead; /* List of struct DeviceInterface */
 
-    WCHAR Data[0];
+    WCHAR Data[ANYSIZE_ARRAY];
 };
 
 struct DeviceInfoSet /* HDEVINFO */
@@ -151,7 +152,7 @@ struct DeviceInfoSet /* HDEVINFO */
      * or NULL if related to local machine. Points into szData field at the
      * end of the structure */
     PCWSTR MachineName;
-    WCHAR szData[0];
+    WCHAR szData[ANYSIZE_ARRAY];
 };
 
 struct ClassImageList
@@ -162,7 +163,7 @@ struct ClassImageList
      * or NULL if related to local machine. Points into szData field at the
      * end of the structure */
     PCWSTR MachineName;
-    WCHAR szData[0];
+    WCHAR szData[ANYSIZE_ARRAY];
 };
 
 extern HINSTANCE hInstance;
