@@ -19,7 +19,7 @@ display.inf
 hdc.inf
 keyboard.inf
 machine.inf
-mouse.inf
+msmouse.inf
 NET_NIC.inf
 ports.inf
 scsi.inf

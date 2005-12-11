@@ -6,7 +6,7 @@
 <installfile base="inf">keyboard.inf</installfile>
 <installfile base="inf">layout.inf</installfile>
 <installfile base="inf">machine.inf</installfile>
-<installfile base="inf">mouse.inf</installfile>
+<installfile base="inf">msmouse.inf</installfile>
 <installfile base="inf">NET_NIC.inf</installfile>
 <installfile base="inf">netamd.inf</installfile>
 <installfile base="inf">netisa.inf</installfile>
