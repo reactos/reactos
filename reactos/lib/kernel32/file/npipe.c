@@ -353,6 +353,16 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         return FALSE;
     }
 
+    /* Now calculate the total length of the structure and allocate it */
+    WaitPipeInfoSize = FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name[0]) +
+                       NewName.Length;
+    WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
+    if (WaitPipeInfo == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
     /* Initialize the object attributes */
     DPRINT("Opening: %wZ\n", &DevicePath);
     InitializeObjectAttributes(&ObjectAttributes,
@@ -374,13 +384,9 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         DPRINT1("Status: %lx\n", Status);
         SetLastErrorByStatus(Status);
         RtlFreeUnicodeString(&NamedPipeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
         return(FALSE);
     }
-
-    /* Now calculate the total length of the structure and allocate it */
-    WaitPipeInfoSize = FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name[0]) +
-                       NewName.Length;
-    WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
 
     /* Check what timeout we got */
     if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
@@ -1022,6 +1028,11 @@ PeekNamedPipe(HANDLE hNamedPipe,
     /* Calculate the buffer space that we'll need and allocate it */
     BufferSize = nBufferSize + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+    if (Buffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     /* Tell the driver to seek */
     Status = NtFsControlFile(hNamedPipe,

@@ -444,7 +444,7 @@ GetVolumeInformationA(
 	)
 {
   UNICODE_STRING FileSystemNameU;
-  UNICODE_STRING VolumeNameU;
+  UNICODE_STRING VolumeNameU = {0};
   ANSI_STRING VolumeName;
   ANSI_STRING FileSystemName;
   PWCHAR RootPathNameW;
@@ -455,11 +455,14 @@ GetVolumeInformationA(
 
   if (lpVolumeNameBuffer)
     {
-      VolumeNameU.Length = 0;
       VolumeNameU.MaximumLength = nVolumeNameSize * sizeof(WCHAR);
       VolumeNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                    0,
 	                                    VolumeNameU.MaximumLength);
+      if (VolumeNameU.Buffer == NULL)
+      {
+          goto FailNoMem;
+      }
     }
 
   if (lpFileSystemNameBuffer)
@@ -469,6 +472,19 @@ GetVolumeInformationA(
       FileSystemNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                        0,
 	                                        FileSystemNameU.MaximumLength);
+      if (FileSystemNameU.Buffer == NULL)
+      {
+          if (VolumeNameU.Buffer != NULL)
+          {
+              RtlFreeHeap(RtlGetProcessHeap(),
+                          0,
+                          VolumeNameU.Buffer);
+          }
+
+FailNoMem:
+          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+          return FALSE;
+      }
     }
 
   Result = GetVolumeInformationW (RootPathNameW,
@@ -724,6 +740,11 @@ SetVolumeLabelW(
 			       0,
 			       sizeof(FILE_FS_LABEL_INFORMATION) +
 			       LabelLength);
+   if (LabelInfo == NULL)
+   {
+       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+       return FALSE;
+   }
    LabelInfo->VolumeLabelLength = LabelLength;
    memcpy(LabelInfo->VolumeLabel,
 	  lpVolumeName,
