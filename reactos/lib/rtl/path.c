@@ -290,72 +290,6 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
       handle = 0;
    }
 
-
-/* What the heck is this all about??? It looks like its getting the long path,
- * and if does, ITS WRONG! If current directory is set with a short path,
- * GetCurrentDir should return a short path.
- * If anyone agrees with me, remove this stuff.
- * -Gunnar
- */
-#if 0
-   filenameinfo = RtlAllocateHeap(RtlGetProcessHeap(),
-              0,
-              MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
-
-   Status = ZwQueryInformationFile(handle,
-               &iosb,
-               filenameinfo,
-               MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),
-               FileNameInformation);
-   if (!NT_SUCCESS(Status))
-     {
-   RtlFreeHeap(RtlGetProcessHeap(),
-          0,
-          filenameinfo);
-   RtlFreeHeap(RtlGetProcessHeap(),
-          0,
-          buf);
-   RtlFreeHeap(RtlGetProcessHeap(),
-          0,
-          full.Buffer);
-   RtlReleasePebLock();
-   return(Status);
-     }
-
-   /* If it's just "\", we need special handling */
-   if (filenameinfo->FileNameLength > sizeof(WCHAR))
-     {
-   wcs = buf + size / sizeof(WCHAR) - 1;
-   if (*wcs == L'\\')
-     {
-       *(wcs) = 0;
-       wcs--;
-       size -= sizeof(WCHAR);
-     }
-
-   for (Index = 0;
-        Index < filenameinfo->FileNameLength / sizeof(WCHAR);
-        Index++)
-     {
-        if (filenameinfo->FileName[Index] == '\\') backslashcount++;
-     }
-
-   DPRINT("%d \n",backslashcount);
-   for (;backslashcount;wcs--)
-     {
-        if (*wcs=='\\') backslashcount--;
-     }
-   wcs++;
-
-   RtlCopyMemory(wcs, filenameinfo->FileName, filenameinfo->FileNameLength);
-   wcs[filenameinfo->FileNameLength / sizeof(WCHAR)] = 0;
-
-   size = (wcs - buf) * sizeof(WCHAR) + filenameinfo->FileNameLength;
-     }
-#endif
-
-
-
    if (cd->Handle)
       ZwClose(cd->Handle);
    cd->Handle = handle;
@@ -547,6 +481,11 @@ static ULONG get_full_path_helper(
             val.Length = 0;
             val.MaximumLength = size;
             val.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
+            if (val.Buffer == NULL)
+            {
+                reqsize = 0;
+                goto done;
+            }
 
             switch (RtlQueryEnvironmentVariable_U(NULL, &var, &val))
             {
@@ -713,6 +652,8 @@ DWORD NTAPI RtlGetFullPathName_U(
     if (reqsize > size)
     {
         LPWSTR tmp = RtlAllocateHeap(RtlGetProcessHeap(), 0, reqsize);
+        if (tmp == NULL)
+            return 0;
         reqsize = get_full_path_helper(name, tmp, reqsize);
         if (reqsize > size)  /* it may have worked the second time */
         {
