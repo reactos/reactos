@@ -177,6 +177,10 @@ DWORD WINAPI FormatMessageA(
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING)
     {
         from = HeapAlloc( GetProcessHeap(), 0, strlen((LPCSTR)lpSource)+1 );
+        if (form == NULL)
+        {
+            return 0;
+        }
         strcpy( from, (LPCSTR)lpSource );
     }
     else {
