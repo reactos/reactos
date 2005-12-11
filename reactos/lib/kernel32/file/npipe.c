@@ -905,15 +905,19 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 			 LPSTR lpUserName,
 			 DWORD nMaxUserNameSize)
 {
-  UNICODE_STRING UserNameW;
+  UNICODE_STRING UserNameW = {0};
   ANSI_STRING UserNameA;
   BOOL Ret;
 
   if(lpUserName != NULL)
   {
-    UserNameW.Length = 0;
     UserNameW.MaximumLength = nMaxUserNameSize * sizeof(WCHAR);
-    UserNameW.Buffer = HeapAlloc(GetCurrentProcess(), 0, UserNameW.MaximumLength);
+    UserNameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UserNameW.MaximumLength);
+    if (UserNameW.Buffer == NULL)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
 
     UserNameA.Buffer = lpUserName;
     UserNameA.Length = 0;
@@ -930,7 +934,10 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 
   if(Ret && lpUserName != NULL)
   {
-    NTSTATUS Status = RtlUnicodeStringToAnsiString(&UserNameA, &UserNameW, FALSE);
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&UserNameW, UserNameW.Buffer);
+    Status = RtlUnicodeStringToAnsiString(&UserNameA, &UserNameW, FALSE);
     if(!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -940,7 +947,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 
   if(UserNameW.Buffer != NULL)
   {
-    HeapFree(GetCurrentProcess(), 0, UserNameW.Buffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, UserNameW.Buffer);
   }
 
   return Ret;
