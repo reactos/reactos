@@ -473,6 +473,70 @@ ReleaseListViewItems(HWND hwndDlg,
   }
 }
 
+VOID
+SetAllVars(HWND hwndDlg,
+           INT iDlgItem)
+{
+   HWND hwndListView;
+   PVARIABLE_DATA VarData;
+   LV_ITEM lvi;
+   INT iItem;
+   HKEY hk;
+   DWORD Type = 0;
+
+   memset(&lvi, 0x00, sizeof(lvi));
+
+   /* Get the handle to the list box with all system vars in it */
+   hwndListView = GetDlgItem(hwndDlg, iDlgItem);
+   /* first item is 0 */
+   iItem = 0;
+   /* set up struct to retreive item */
+   lvi.mask = LVIF_PARAM;
+   lvi.iItem = iItem;
+
+   /* Open or create the key */
+   if (RegCreateKeyEx((iDlgItem == IDC_SYSTEM_VARIABLE_LIST ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER), 
+       (iDlgItem == IDC_SYSTEM_VARIABLE_LIST ? _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment") : _T("Environment")), 
+       0, 
+       NULL, 
+       REG_OPTION_NON_VOLATILE,
+       KEY_WRITE | KEY_READ, 
+       NULL, 
+       &hk, 
+       NULL)) 
+   {
+      return;
+   }
+
+   /* loop through all system variables */
+   while(ListView_GetItem(hwndListView, &lvi))
+   {
+      /* Get the data in each item */
+      VarData = (PVARIABLE_DATA)lvi.lParam;
+      if (VarData != NULL)
+      {
+         /* Get the type */
+         RegQueryValueEx(hk,VarData->lpName,NULL,&Type,NULL,NULL);
+
+         /* Set the new value */
+         if (RegSetValueEx(hk,
+             VarData->lpName,
+             0,
+             Type,
+             (LPBYTE) VarData->lpRawValue,
+             (DWORD) (_tcsclen(VarData->lpRawValue)* sizeof(TCHAR))+1))
+         {
+            RegCloseKey(hk); 
+            return;
+         }
+      }
+      /* Fill struct for next item */
+      lvi.mask = LVIF_PARAM;
+      lvi.iItem = ++iItem;
+   }
+
+   RegCloseKey(hk);
+}
 
 /* Environment dialog procedure */
 INT_PTR CALLBACK
@@ -515,7 +579,8 @@ EnvironmentDlgProc(HWND hwndDlg,
           return TRUE;
 
         case IDOK:
-          /* FIXME: Set environment variables in the registry */
+          SetAllVars(hwndDlg, IDC_USER_VARIABLE_LIST);
+          SetAllVars(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
 
         case IDCANCEL:
           ReleaseListViewItems(hwndDlg, IDC_USER_VARIABLE_LIST);
