@@ -4,6 +4,14 @@
 #pragma GCC system_header
 #endif
 
+#ifndef _W64
+#if defined(_MSC_VER) && !defined(MIDL_PASS) && _MSC_VER >= 1300
+#define _W64 __w64
+#else
+#define _W64
+#endif
+#endif
+
 #ifdef __GNUC__
 #ifndef __int64
 #define __int64 long long
@@ -56,11 +64,11 @@ typedef unsigned int DWORD32, *PDWORD32;
 typedef unsigned int UINT32, *PUINT32;
 
 #if defined(_WIN64)
-typedef __int64 INT_PTR, *PINT_PTR;
-typedef unsigned __int64 UINT_PTR, *PUINT_PTR;
-typedef __int64 LONG_PTR, *PLONG_PTR;
-typedef unsigned __int64 ULONG_PTR, *PULONG_PTR;
-typedef unsigned __int64 HANDLE_PTR;
+typedef _W64 __int64 INT_PTR, *PINT_PTR;
+typedef _W64 unsigned __int64 UINT_PTR, *PUINT_PTR;
+typedef _W64 __int64 LONG_PTR, *PLONG_PTR;
+typedef _W64 unsigned __int64 ULONG_PTR, *PULONG_PTR;
+typedef _W64 unsigned __int64 HANDLE_PTR;
 typedef unsigned int UHALF_PTR, *PUHALF_PTR;
 typedef int HALF_PTR, *PHALF_PTR;
 
@@ -94,18 +102,18 @@ inline void* ULongToPtr( const unsigned long ul )
 #endif /* 0_ */
 
 #else /*  !_WIN64 */
-typedef  int INT_PTR, *PINT_PTR;
-typedef  unsigned int UINT_PTR, *PUINT_PTR;
-typedef  long LONG_PTR, *PLONG_PTR;
-typedef  unsigned long ULONG_PTR, *PULONG_PTR;
+typedef _W64 int INT_PTR, *PINT_PTR;
+typedef _W64 unsigned int UINT_PTR, *PUINT_PTR;
+typedef _W64 long LONG_PTR, *PLONG_PTR;
+typedef _W64 unsigned long ULONG_PTR, *PULONG_PTR;
 typedef unsigned short UHALF_PTR, *PUHALF_PTR;
 typedef short HALF_PTR, *PHALF_PTR;
-typedef unsigned long HANDLE_PTR;
+typedef _W64 unsigned long HANDLE_PTR;
 #endif /* !_WIN64 */
 
-typedef ULONG_PTR SIZE_T, *PSIZE_T;
-typedef LONG_PTR SSIZE_T, *PSSIZE_T;
-typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+typedef _W64 ULONG_PTR SIZE_T, *PSIZE_T;
+typedef _W64 LONG_PTR SSIZE_T, *PSSIZE_T;
+typedef _W64 ULONG_PTR DWORD_PTR, *PDWORD_PTR;
 typedef __int64 LONG64, *PLONG64;
 typedef __int64 INT64,  *PINT64;
 typedef unsigned __int64 ULONG64, *PULONG64;
