@@ -41,6 +41,7 @@
 #include "resource.h"
 
 #define SETUP_DEV_INFO_SET_MAGIC 0xd00ff057
+#define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
 
 struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
 {
@@ -145,6 +146,17 @@ struct DeviceInfoSet /* HDEVINFO */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
 
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
+
+    /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
+     * or NULL if related to local machine. Points into szData field at the
+     * end of the structure */
+    PCWSTR MachineName;
+    WCHAR szData[0];
+};
+
+struct ClassImageList
+{
+    DWORD magic; /* SETUP_CLASS_IMAGE_LIST_MAGIC */
 
     /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
      * or NULL if related to local machine. Points into szData field at the

@@ -656,7 +656,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
   TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
       debugstr_w(MachineName), Reserved);
 
-  size = sizeof(struct DeviceInfoSet);
+  size = FIELD_OFFSET(struct DeviceInfoSet, szData);
   if (MachineName)
     size += (wcslen(MachineName) + 3) * sizeof(WCHAR);
   list = HeapAlloc(GetProcessHeap(), 0, size);
@@ -1145,7 +1145,7 @@ CreateDeviceInfoElement(
 
     *pDeviceInfo = NULL;
 
-    size = sizeof(struct DeviceInfoElement) + (wcslen(InstancePath) + 1) * sizeof(WCHAR);
+    size = FIELD_OFFSET(struct DeviceInfoElement, Data) + (wcslen(InstancePath) + 1) * sizeof(WCHAR);
     deviceInfo = HeapAlloc(GetProcessHeap(), 0, size);
     if (!deviceInfo)
     {
@@ -1839,6 +1839,303 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
         }
         return hDeviceInfo;
     }
+}
+
+/***********************************************************************
+ *		SetupDiGetClassImageIndex (SETUPAPI.@)
+ */
+
+static BOOL GetIconIndex(
+       IN HKEY hClassKey,
+       OUT PINT ImageIndex)
+{
+    LPWSTR Buffer = NULL;
+    DWORD dwRegType, dwLength;
+    LONG rc;
+    BOOL ret = FALSE;
+
+    /* Read "Icon" registry key */
+    rc = RegQueryValueExW(hClassKey, L"Icon", NULL, &dwRegType, NULL, &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    } else if (dwRegType != REG_SZ)
+    {
+        SetLastError(ERROR_INVALID_INDEX);
+        goto cleanup;
+    }
+    Buffer = MyMalloc(dwLength + sizeof(WCHAR));
+    if (!Buffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    Buffer[dwLength / sizeof(WCHAR)] = 0;
+    rc = RegQueryValueExW(hClassKey, L"Icon", NULL, NULL, (LPBYTE)Buffer, &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+
+    /* Transform "Icon" value to a INT */
+    *ImageIndex = atoiW(Buffer);
+    ret = TRUE;
+
+cleanup:
+    MyFree(Buffer);
+    return ret;
+}
+
+BOOL WINAPI SetupDiGetClassImageIndex(
+       IN PSP_CLASSIMAGELIST_DATA ClassImageListData,
+       IN CONST GUID *ClassGuid,
+       OUT PINT ImageIndex)
+{
+    struct ClassImageList *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %s %p\n", ClassImageListData, debugstr_guid(ClassGuid), ImageIndex);
+
+    if (!ClassImageListData || !ClassGuid || !ImageIndex)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (ClassImageListData->cbSize != sizeof(SP_CLASSIMAGELIST_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if ((list = (struct ClassImageList *)ClassImageListData->Reserved) == NULL)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (list->magic != SETUP_CLASS_IMAGE_LIST_MAGIC)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (!ImageIndex)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        HKEY hKey = INVALID_HANDLE_VALUE;
+        INT iconIndex;
+
+        /* Read Icon registry entry into Buffer */
+        hKey = SetupDiOpenClassRegKeyExW(ClassGuid, KEY_QUERY_VALUE, DIOCR_INTERFACE, list->MachineName, NULL);
+        if (hKey == INVALID_HANDLE_VALUE)
+            goto cleanup;
+        if (!GetIconIndex(hKey, &iconIndex))
+            goto cleanup;
+
+        if (iconIndex >= 0)
+        {
+            SetLastError(ERROR_INVALID_INDEX);
+            goto cleanup;
+        }
+
+        *ImageIndex = -iconIndex;
+        ret = TRUE;
+
+cleanup:
+        if (hKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hKey);
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetClassImageList(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageList(
+       OUT PSP_CLASSIMAGELIST_DATA ClassImageListData)
+{
+    return SetupDiGetClassImageListExW(ClassImageListData, NULL, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetClassImageListExA(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageListExA(
+       OUT PSP_CLASSIMAGELIST_DATA ClassImageListData,
+       IN PCSTR MachineName OPTIONAL,
+       IN PVOID Reserved)
+{
+    PWSTR MachineNameW = NULL;
+    BOOL ret;
+
+    if (MachineName)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (MachineNameW == NULL)
+            return FALSE;
+    }
+
+    ret = SetupDiGetClassImageListExW(ClassImageListData, MachineNameW, Reserved);
+
+    if (MachineNameW)
+        MyFree(MachineNameW);
+
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetClassImageListExW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetClassImageListExW(
+       OUT PSP_CLASSIMAGELIST_DATA ClassImageListData,
+       IN PCWSTR MachineName OPTIONAL,
+       IN PVOID Reserved)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p\n", ClassImageListData, debugstr_w(MachineName), Reserved);
+
+    if (!ClassImageListData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (ClassImageListData->cbSize != sizeof(SP_CLASSIMAGELIST_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (Reserved)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        struct ClassImageList *list = NULL;
+        DWORD size;
+
+        size = FIELD_OFFSET(struct ClassImageList, szData);
+        if (MachineName)
+            size += (wcslen(MachineName) + 3) * sizeof(WCHAR);
+        list = HeapAlloc(GetProcessHeap(), 0, size);
+        if (!list)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        list->magic = SETUP_CLASS_IMAGE_LIST_MAGIC;
+        if (MachineName)
+        {
+            list->szData[0] = list->szData[1] = '\\';
+            strcpyW(list->szData + 2, MachineName);
+            list->MachineName = list->szData;
+        }
+        else
+        {
+            list->MachineName = NULL;
+        }
+
+        ClassImageListData->Reserved = (DWORD)list; /* FIXME: 64 bit portability issue */
+        ret = TRUE;
+
+cleanup:
+        if (!ret)
+            MyFree(list);
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiLoadClassIcon(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiLoadClassIcon(
+       IN CONST GUID *ClassGuid,
+       OUT HICON *LargeIcon OPTIONAL,
+       OUT PINT MiniIconIndex OPTIONAL)
+{
+    BOOL ret = FALSE;
+
+    if (!ClassGuid)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        LPWSTR Buffer = NULL;
+        LPCWSTR DllName;
+        INT iconIndex;
+        HKEY hKey = INVALID_HANDLE_VALUE;
+
+        hKey = SetupDiOpenClassRegKey(ClassGuid, KEY_QUERY_VALUE);
+        if (hKey == INVALID_HANDLE_VALUE)
+            goto cleanup;
+
+        if (!GetIconIndex(hKey, &iconIndex))
+            goto cleanup;
+
+        if (iconIndex > 0)
+        {
+            /* Look up icon in dll specified by Installer32 or EnumPropPages32 key */
+            PWCHAR Comma;
+            LONG rc;
+            DWORD dwRegType, dwLength;
+            rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
+            if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
+            {
+                Buffer = MyMalloc(dwLength);
+                if (Buffer == NULL)
+                {
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto cleanup;
+                }
+                rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)Buffer, &dwLength);
+                if (rc != ERROR_SUCCESS)
+                {
+                    SetLastError(rc);
+                    goto cleanup;
+                }
+            }
+            else if
+                (ERROR_SUCCESS == (rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, &dwRegType, NULL, &dwLength))
+                && dwRegType == REG_SZ)
+            {
+                Buffer = MyMalloc(dwLength);
+                if (Buffer == NULL)
+                {
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto cleanup;
+                }
+                rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, NULL, (LPBYTE)Buffer, &dwLength);
+                if (rc != ERROR_SUCCESS)
+                {
+                    SetLastError(rc);
+                    goto cleanup;
+                }
+            }
+            else
+            {
+                /* Unable to find where to load the icon */
+                SetLastError(ERROR_FILE_NOT_FOUND);
+                goto cleanup;
+            }
+            Comma = strchrW(Buffer, ',');
+            if (!Comma)
+            {
+                SetLastError(ERROR_GEN_FAILURE);
+                goto cleanup;
+            }
+            *Comma = '\0';
+        }
+        else
+        {
+            /* Look up icon in setupapi.dll */
+            DllName = L"setupapi.dll";
+            iconIndex = -iconIndex;
+        }
+
+        TRACE("Icon index %d, dll name %s\n", iconIndex, debugstr_w(DllName));
+        if (LargeIcon)
+        {
+            if (1 != ExtractIconEx(DllName, iconIndex, LargeIcon, NULL, 1))
+            {
+                SetLastError(ERROR_INVALID_INDEX);
+                goto cleanup;
+            }
+        }
+        if (MiniIconIndex)
+            *MiniIconIndex = iconIndex;
+        ret = TRUE;
+
+cleanup:
+        if (hKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hKey);
+        MyFree(Buffer);
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 /***********************************************************************
@@ -2766,10 +3063,10 @@ HKEY WINAPI SetupDiOpenClassRegKey(
  *		SetupDiOpenClassRegKeyExA  (SETUPAPI.@)
  */
 HKEY WINAPI SetupDiOpenClassRegKeyExA(
-        const GUID* ClassGuid,
+        const GUID* ClassGuid OPTIONAL,
         REGSAM samDesired,
         DWORD Flags,
-        PCSTR MachineName,
+        PCSTR MachineName OPTIONAL,
         PVOID Reserved)
 {
     PWSTR MachineNameW = NULL;
@@ -2798,10 +3095,10 @@ HKEY WINAPI SetupDiOpenClassRegKeyExA(
  *		SetupDiOpenClassRegKeyExW  (SETUPAPI.@)
  */
 HKEY WINAPI SetupDiOpenClassRegKeyExW(
-        const GUID* ClassGuid,
+        const GUID* ClassGuid OPTIONAL,
         REGSAM samDesired,
         DWORD Flags,
-        PCWSTR MachineName,
+        PCWSTR MachineName OPTIONAL,
         PVOID Reserved)
 {
     LPWSTR lpGuidString;
@@ -4205,7 +4502,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
         if (CreationFlags & DICD_GENERATE_ID)
         {
             /* Generate a new unique ID for this device */
-            SetLastError(ERROR_GEN_FAILURE);
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
             FIXME("not implemented\n");
         }
         else
@@ -4948,7 +5245,7 @@ SetupDiDeleteDeviceInfo(
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
     FIXME("not implemented\n");
-    SetLastError(ERROR_GEN_FAILURE);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 

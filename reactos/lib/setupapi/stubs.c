@@ -169,53 +169,6 @@ BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
 
 
 /***********************************************************************
- *		SetupDiGetClassImageList(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
-{
-    FIXME ("Stub %p\n", ClassImageListData);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/***********************************************************************
- *		SetupDiGetClassImageListExA(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetClassImageListExA(PSP_CLASSIMAGELIST_DATA ClassImageListData,
-                                        PCSTR MachineName, PVOID Reserved)
-{
-    FIXME ("Stub %p %s %p\n", ClassImageListData, debugstr_a(MachineName), Reserved);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/***********************************************************************
- *		SetupDiGetClassImageListExW(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetClassImageListExW(PSP_CLASSIMAGELIST_DATA ClassImageListData,
-                                        PCWSTR MachineName, PVOID Reserved)
-{
-    FIXME ("Stub %p %s %p\n", ClassImageListData, debugstr_w(MachineName), Reserved);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/***********************************************************************
- *		SetupDiGetClassImageIndex(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetClassImageIndex(PSP_CLASSIMAGELIST_DATA ClassImageListData,
-                                      CONST GUID *ClassGuid, PINT ImageIndex)
-{
-    FIXME ("Stub %p %p %p\n", ClassImageListData, ClassGuid, ImageIndex);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/***********************************************************************
  *		SetupDiDestroyClassImageList(SETUPAPI.@)
  */
 BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
@@ -225,13 +178,3 @@ BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListD
     return TRUE;
 }
 
-
-/***********************************************************************
- *		SetupDiLoadClassIcon(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiLoadClassIcon(CONST GUID *ClassGuid, HICON *LargeIcon, PINT MiniIconIndex)
-{
-    FIXME ("Stub %p %p %p\n", ClassGuid, LargeIcon, MiniIconIndex);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}

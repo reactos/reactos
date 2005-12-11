@@ -278,7 +278,10 @@ LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
 
     lpUnicodeStr = MyMalloc(nLength * sizeof(WCHAR));
     if (lpUnicodeStr == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
+    }
 
     if (!MultiByteToWideChar(uCodePage, 0, lpMultiByteStr,
                              nLength, lpUnicodeStr, nLength))
