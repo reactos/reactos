@@ -1,6 +1,5 @@
 <module name="usbhub" type="kernelmodedriver" installbase="system32/drivers" installname="usbhub.sys">
 	<define name="__USE_W32API" />
-	<define name="DEBUG_MODE" />
 	<include>../miniport/linux</include>
 	<library>sys_base</library>
 	<library>ntoskrnl</library>
