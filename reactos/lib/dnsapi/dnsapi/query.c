@@ -34,8 +34,10 @@
 char *xstrsave(const char *str) {
   char *p;
   
-  p= RtlAllocateHeap( RtlGetProcessHeap(), 0, strlen(str)+1 );
-  strcpy(p,str);
+  p = RtlAllocateHeap( RtlGetProcessHeap(), 0, strlen(str)+1 );
+  if ( NULL != p ) {
+    strcpy(p,str);
+  }
   return p;
 }
 
@@ -50,6 +52,8 @@ DNS_STATUS WINAPI DnsQuery_A
   int quflags = 0;
   int adns_error;
   adns_answer *answer;
+  LPSTR CurrentName;
+  unsigned CNameLoop;
 
   *QueryResultSet = 0;
 
@@ -64,31 +68,78 @@ DNS_STATUS WINAPI DnsQuery_A
       return DnsIntTranslateAdnsToDNS_STATUS( adns_error );
     }
 
-    adns_error = adns_synchronous( astate, 
-				   Name, 
-				   adns_r_addr, 
-				   quflags, 
-				   &answer );
-				   
-    if( adns_error != adns_s_ok ) {
-      adns_finish( astate );
-      return DnsIntTranslateAdnsToDNS_STATUS( adns_error );
-    }
+    /*
+     * adns doesn't resolve chained CNAME records (a CNAME which points to
+     * another CNAME pointing to another... pointing to an A record), according
+     * to a mailing list thread the authors believe that chained CNAME records
+     * are invalid and the DNS entries should be fixed. That's a nice academic
+     * standpoint, but there certainly are chained CNAME records out there,
+     * even some fairly major ones (at the time of this writing
+     * download.mozilla.org is a chained CNAME). Everyone else seems to resolve
+     * these fine, so we should too. So we loop here to try to resolve CNAME
+     * chains ourselves. Of course, there must be a limit to protect against
+     * CNAME loops.
+     */
 
-    if( answer && answer->rrs.addr ) {
-	*QueryResultSet = 
-	    (PDNS_RECORD)RtlAllocateHeap( RtlGetProcessHeap(), 0,
-					  sizeof( DNS_RECORD ) );
-	(*QueryResultSet)->pNext = NULL;
-	(*QueryResultSet)->wType = Type;
-	(*QueryResultSet)->pName = xstrsave( Name );
-	(*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
-	(*QueryResultSet)->Data.A.IpAddress = 
-	    answer->rrs.addr->addr.inet.sin_addr.s_addr;
-	adns_finish( astate );
-	return ERROR_SUCCESS;
-    } else
-	return ERROR_FILE_NOT_FOUND;
+#define CNAME_LOOP_MAX 16
+
+    CurrentName = (LPSTR) Name;
+    for ( CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++ ) {
+      adns_error = adns_synchronous( astate, 
+                                     CurrentName, 
+                                     adns_r_addr, 
+                                     quflags, 
+                                     &answer );
+				   
+      if( adns_error != adns_s_ok ) {
+        adns_finish( astate );
+        if ( CurrentName != Name ) {
+          RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+        }
+        return DnsIntTranslateAdnsToDNS_STATUS( adns_error );
+      }
+
+      if( answer && answer->rrs.addr ) {
+        if ( CurrentName != Name ) {
+          RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+        }
+        *QueryResultSet = 
+          (PDNS_RECORD)RtlAllocateHeap( RtlGetProcessHeap(), 0,
+                                        sizeof( DNS_RECORD ) );
+        if ( NULL == *QueryResultSet ) {
+          adns_finish( astate );
+          return ERROR_OUTOFMEMORY;
+        }
+        (*QueryResultSet)->pNext = NULL;
+        (*QueryResultSet)->wType = Type;
+        (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
+        (*QueryResultSet)->Data.A.IpAddress = 
+            answer->rrs.addr->addr.inet.sin_addr.s_addr;
+        adns_finish( astate );
+        (*QueryResultSet)->pName = xstrsave( Name );
+        return NULL != (*QueryResultSet)->pName ? ERROR_SUCCESS :
+                                                  ERROR_OUTOFMEMORY;
+      }
+      if ( NULL == answer || adns_s_prohibitedcname != answer->status ||
+           NULL == answer->cname ) {
+        adns_finish( astate );
+        if ( CurrentName != Name ) {
+          RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+        }
+        return ERROR_FILE_NOT_FOUND;
+      }
+      if ( CurrentName != Name ) {
+        RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+      }
+      CurrentName = xstrsave( answer->cname );
+      if ( NULL == CurrentName ) {
+        adns_finish( astate );
+        return ERROR_OUTOFMEMORY;
+      }
+    }
+    adns_finish( astate );
+    RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
+    return ERROR_FILE_NOT_FOUND;
   default:
     return ERROR_OUTOFMEMORY; /* XXX arty: find a better error code. */
   }
