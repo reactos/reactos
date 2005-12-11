@@ -294,14 +294,23 @@ INT WINAPI GetExpandedNameA( LPSTR in, LPSTR out )
 INT WINAPI GetExpandedNameW( LPWSTR in, LPWSTR out )
 {
     INT ret;
-    DWORD len = WideCharToMultiByte( CP_ACP, 0, in, -1, NULL, 0, NULL, NULL );
-    char *xin = RtlAllocateHeap( GetProcessHeap(), 0, len );
-    char *xout = RtlAllocateHeap( GetProcessHeap(), 0, len+3 );
+    DWORD len;
+    char *xin, *xout;
+    len = WideCharToMultiByte( CP_ACP, 0, in, -1, NULL, 0, NULL, NULL );
+    xin = RtlAllocateHeap( RtlGetProcessHeap(), 0, len );
+    if (xin == NULL)
+        return LZERROR_BADVALUE;
+    xout = RtlAllocateHeap( RtlGetProcessHeap(), 0, len+3 );
+    if (xout == NULL)
+    {
+        RtlFreeHeap( RtlGetProcessHeap(), 0, xin );
+        return LZERROR_BADVALUE;
+    }
     WideCharToMultiByte( CP_ACP, 0, in, -1, xin, len, NULL, NULL );
     if ((ret = GetExpandedNameA( xin, xout )) > 0)
         MultiByteToWideChar( CP_ACP, 0, xout, -1, out, wcslen(in)+4 );
-    RtlFreeHeap( GetProcessHeap(), 0, xin );
-    RtlFreeHeap( GetProcessHeap(), 0, xout );
+    RtlFreeHeap( RtlGetProcessHeap(), 0, xin );
+    RtlFreeHeap( RtlGetProcessHeap(), 0, xout );
     return ret;
 }
 
