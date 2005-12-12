@@ -517,6 +517,11 @@ HRESULT WINAPI IDirectInputDevice2AImpl_QueryInterface(
 	*ppobj = This;
 	return DI_OK;
     }
+    if (IsEqualGUID(&IID_IDirectInputDevice8A,riid)) {
+	IDirectInputDevice8_AddRef(iface);
+	*ppobj = This;
+	return DI_OK;
+    }
     TRACE("Unsupported interface !\n");
     return E_FAIL;
 }
@@ -545,6 +550,11 @@ HRESULT WINAPI IDirectInputDevice2WImpl_QueryInterface(
     }
     if (IsEqualGUID(&IID_IDirectInputDevice7W,riid)) {
 	IDirectInputDevice7_AddRef(iface);
+	*ppobj = This;
+	return DI_OK;
+    }
+    if (IsEqualGUID(&IID_IDirectInputDevice8W,riid)) {
+	IDirectInputDevice8_AddRef(iface);
 	*ppobj = This;
 	return DI_OK;
     }
