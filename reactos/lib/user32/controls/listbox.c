@@ -2650,6 +2650,8 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         /* fall through */
 #endif
     case LB_ADDSTRING:
+    case LB_ADDSTRING_LOWER:
+    case LB_ADDSTRING_UPPER:
     {
         INT ret;
         LPWSTR textW;
@@ -2662,6 +2664,12 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             if((textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
                 MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
         }
+        /* in the unicode the version, the string is really overwritten
+           during the converting case */
+        if (msg == LB_ADDSTRING_LOWER)
+            strlwrW(textW);
+        else if (msg == LB_ADDSTRING_UPPER)
+            struprW(textW);
         wParam = LISTBOX_FindStringPos( descr, textW, FALSE );
         ret = LISTBOX_InsertString( descr, wParam, textW );
         if (!unicode && HAS_STRINGS(descr))
@@ -2676,6 +2684,8 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         /* fall through */
 #endif
     case LB_INSERTSTRING:
+    case LB_INSERTSTRING_UPPER:
+    case LB_INSERTSTRING_LOWER:
     {
         INT ret;
         LPWSTR textW;
@@ -2688,6 +2698,12 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             if((textW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR))))
                 MultiByteToWideChar(CP_ACP, 0, textA, -1, textW, countW);
         }
+        /* in the unicode the version, the string is really overwritten
+           during the converting case */
+        if (msg == LB_INSERTSTRING_LOWER)
+            strlwrW(textW);
+        else if (msg == LB_INSERTSTRING_UPPER)
+            struprW(textW);
         ret = LISTBOX_InsertString( descr, wParam, textW );
         if(!unicode && HAS_STRINGS(descr))
             HeapFree(GetProcessHeap(), 0, textW);

@@ -1842,19 +1842,6 @@ static LRESULT COMBO_GetComboBoxInfo(LPHEADCOMBO lphc, COMBOBOXINFO *pcbi)
     return TRUE;
 }
 
-static char *strdupA(LPCSTR str)
-{
-    char *ret;
-    DWORD len;
-
-    if(!str) return NULL;
-
-    len = strlen(str);
-    ret = HeapAlloc(GetProcessHeap(), 0, len + 1);
-    memcpy(ret, str, len + 1);
-    return ret;
-}
-
 /***********************************************************************
  *           ComboWndProc_common
  *
@@ -2082,33 +2069,14 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		/* fall through */
 #endif
 	case CB_ADDSTRING:
-		if( unicode )
-                {
-                    if( lphc->dwStyle & CBS_LOWERCASE )
-                        strlwrW((LPWSTR)lParam);
-                    else if( lphc->dwStyle & CBS_UPPERCASE )
-                        struprW((LPWSTR)lParam);
-                    return SendMessageW(lphc->hWndLBox, LB_ADDSTRING, 0, lParam);
-                }
-                else /* unlike the unicode version, the ansi version does not overwrite
-                        the string if converting case */
-                {
-                    char *string = NULL;
-                    LRESULT ret;
-                    if( lphc->dwStyle & CBS_LOWERCASE )
-                    {
-                        string = strdupA((LPSTR)lParam);
-                        _strlwr(string);
-                    }
-                    else if( lphc->dwStyle & CBS_UPPERCASE )
-                    {
-                        string = strdupA((LPSTR)lParam);
-                        _strupr(string);
-                    }
-                    ret = SendMessageA(lphc->hWndLBox, LB_ADDSTRING, 0, string ? (LPARAM)string : lParam);
-                    HeapFree(GetProcessHeap(), 0, string);
-                    return ret;
-                }
+	{
+	        UINT msg = LB_ADDSTRING;
+                if( lphc->dwStyle & CBS_LOWERCASE )
+                    msg = LB_ADDSTRING_LOWER;
+                else if( lphc->dwStyle & CBS_UPPERCASE )
+                    msg = LB_ADDSTRING_UPPER;
+                return SendMessageW(lphc->hWndLBox, msg, 0, lParam);
+        }
 #ifndef __REACTOS__
 	case CB_INSERTSTRING16:
 		wParam = (INT)(INT16)wParam;
@@ -2116,22 +2084,14 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		/* fall through */
 #endif
 	case CB_INSERTSTRING:
-		if( unicode )
-                {
-                    if( lphc->dwStyle & CBS_LOWERCASE )
-                        strlwrW((LPWSTR)lParam);
-                    else if( lphc->dwStyle & CBS_UPPERCASE )
-                        struprW((LPWSTR)lParam);
-                    return SendMessageW(lphc->hWndLBox, LB_INSERTSTRING, wParam, lParam);
-                }
-                else
-                {
-                    if( lphc->dwStyle & CBS_LOWERCASE )
-                        _strlwr((LPSTR)lParam);
-                    else if( lphc->dwStyle & CBS_UPPERCASE )
-                        _strupr((LPSTR)lParam);
-                    return SendMessageA(lphc->hWndLBox, LB_INSERTSTRING, wParam, lParam);
-                }
+	{
+	        UINT msg = LB_INSERTSTRING;
+                if( lphc->dwStyle & CBS_LOWERCASE )
+                    msg = LB_INSERTSTRING_LOWER;
+                else if( lphc->dwStyle & CBS_UPPERCASE )
+                    msg = LB_INSERTSTRING_UPPER;
+                return SendMessageW(lphc->hWndLBox, msg, 0, lParam);
+        }
 #ifndef __REACTOS__
 	case CB_DELETESTRING16:
 #endif
