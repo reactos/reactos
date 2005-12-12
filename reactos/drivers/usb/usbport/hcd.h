@@ -458,7 +458,10 @@ static inline void usbfs_add_device(struct usb_device *dev)
 	if (dev->parent)
 	{
 		PDEVICE_OBJECT Pdo = (PDEVICE_OBJECT)dev->parent->dev.dev_ext;
-		IoInvalidateDeviceRelations(Pdo, BusRelations);
+		if (Pdo)
+			IoInvalidateDeviceRelations(Pdo, BusRelations);
+		else
+			DPRINT1("Pdo == NULL, not sending IoInvalidateDeviceRelations()!");
 	}
 }
 static inline void usbfs_remove_device(struct usb_device *dev) {}

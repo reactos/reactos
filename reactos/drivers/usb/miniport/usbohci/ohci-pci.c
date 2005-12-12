@@ -312,7 +312,7 @@ ohci_dbg (ohci, "sleeping = %d, disabled = %d\n",
 
 /*-------------------------------------------------------------------------*/
 
-static const struct hc_driver ohci_pci_hc_driver = {
+static struct hc_driver ohci_pci_hc_driver = {
 	.description =		hcd_name,
 
 	/*
