@@ -176,9 +176,15 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
    IconDIR = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
    CloseHandle(hSection);
-   if (IconDIR == NULL || 0 != IconDIR->idReserved
-       || (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
+   if (IconDIR == NULL)
    {
+      return NULL;
+   }
+
+   if (0 != IconDIR->idReserved ||
+       (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
+   {
+      UnmapViewOfFile(IconDIR);
       return NULL;
    }
 
@@ -213,11 +219,17 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    if (!dirEntry)
    {
       UnmapViewOfFile(IconDIR);
-      return(NULL);
+      return NULL;
    }
 
    SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes);
+   if (SafeIconImage == NULL)
+   {
+      UnmapViewOfFile(IconDIR);
+      return NULL;
+   }
    memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
+   UnmapViewOfFile(IconDIR);
 
    /* at this point we have a copy of the icon image to play with */
 
@@ -351,9 +363,9 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 			 0,
 			 NULL);
       if (hFile == NULL)
-	  {
-	    return(NULL);
-	  }
+      {
+          return NULL;
+      }
 
       hSection = CreateFileMappingW(hFile,
 				   NULL,
@@ -362,43 +374,42 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 				   0,
 				   NULL);
 
+      CloseHandle(hFile);
       if (hSection == NULL)
-	  {
-	    CloseHandle(hFile);
-	    return(NULL);
-	  }
+      {
+          return NULL;
+      }
+
       IconDIR = MapViewOfFile(hSection,
 				 FILE_MAP_READ,
 				 0,
 				 0,
 				 0);
-
-      if (IconDIR == NULL || 0 != IconDIR->idReserved
-          || (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
-	  {
-	    CloseHandle(hFile);
-	    CloseHandle(hSection);
-	    return(NULL);
-	  }
+      CloseHandle(hSection);
+      if (IconDIR == NULL)
+      {
+          return NULL;
+      }
+      
+      if (0 != IconDIR->idReserved ||
+          (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
+      {
+          UnmapViewOfFile(IconDIR);
+          return NULL;
+      }
 
       //pick the best size.
       dirEntry = (CURSORICONDIRENTRY *)  CURSORICON_FindBestIcon( IconDIR, width, height, 1);
-
-
       if (!dirEntry)
-	  {
-	       CloseHandle(hFile);
-	       CloseHandle(hSection);
-	       UnmapViewOfFile(IconDIR);
-	       return(NULL);
-	  }
+      {
+          UnmapViewOfFile(IconDIR);
+          return NULL;
+      }
 
       SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes);
 
       memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
-
-      CloseHandle(hFile);
-      CloseHandle(hSection);
+      UnmapViewOfFile(IconDIR);
   }
 
   //at this point we have a copy of the icon image to play with
@@ -430,10 +441,9 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   if (hScreenDc == NULL)
   {
       if (fuLoad & LR_LOADFROMFILE)
-	  {
-	  	RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
-        UnmapViewOfFile(IconDIR);
-	  }
+      {
+         RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
+      }
       return(NULL);
   }
 
@@ -684,6 +694,11 @@ CopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 				if ((res = CreateBitmapIndirect(&bm)))
 				{
                     char *buf = HeapAlloc(GetProcessHeap(), 0, bm.bmWidthBytes * bm.bmHeight);
+					if (buf == NULL)
+					{
+						DeleteObject(res);
+						return NULL;
+					}
 					GetBitmapBits(hnd, bm.bmWidthBytes * bm.bmHeight, buf);
 					SetBitmapBits(res, bm.bmWidthBytes * bm.bmHeight, buf);
 					HeapFree(GetProcessHeap(), 0, buf);
