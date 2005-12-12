@@ -1753,7 +1753,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    RtlInitUnicodeString(&ValueName, L"DeviceDesc");
    if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
    {
-      if (NT_SUCCESS(IoStatusBlock.Status) &&
+      if (NT_SUCCESS(Status) &&
          IoStatusBlock.Information &&
          (*(PWSTR)IoStatusBlock.Information != 0))
       {
@@ -1768,16 +1768,15 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       }
       else
       {
-         UNICODE_STRING DeviceDesc;
-         RtlInitUnicodeString(&DeviceDesc, L"Unknown Device");
-         DPRINT("Driver didn't return DeviceDesc (Status %x), so place unknown device there\n", Status);
+         UNICODE_STRING DeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
+         DPRINT("Driver didn't return DeviceDesc (Status 0x%08lx), so place unknown device there\n", Status);
 
          Status = ZwSetValueKey(InstanceKey,
             &ValueName,
             0,
             REG_SZ,
-            &DeviceDesc,
-            (wcslen((PWSTR)&DeviceDesc) + 1) * sizeof(WCHAR));
+            DeviceDesc.Buffer,
+            DeviceDesc.MaximumLength);
 
          if (!NT_SUCCESS(Status))
          {
@@ -2014,6 +2013,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
              * device is started */
             DPRINT("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
             IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+            DeviceNode->Flags |= DN_STARTED;
          }
          return STATUS_SUCCESS;
       }
@@ -2095,8 +2095,11 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
       {
          if (Status != STATUS_IMAGE_ALREADY_LOADED)
+         {
+            DeviceNode->Flags |= DN_DRIVER_LOADED;
             Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
                &DeviceNode->ServiceName, FALSE, &DriverObject);
+         }
          else
          {
             /* get existing DriverObject pointer */

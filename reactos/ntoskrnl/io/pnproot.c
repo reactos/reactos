@@ -579,7 +579,7 @@ PnpRootFdoReadDeviceInfo(
 
   if (!NT_SUCCESS(Status))
   {
-    /* FIXME: */
+    Device->DeviceDescription.Buffer = NULL;
   }
 
   DPRINT("Got device description: %S\n", DeviceDesc->Buffer);
@@ -1184,8 +1184,8 @@ PnpRootDriverEntry(
 {
   DPRINT("Called\n");
 
-  DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH) PnpRootPnpControl;
-  DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH) PnpRootPowerControl;
+  DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;
+  DriverObject->MajorFunction[IRP_MJ_POWER] = PnpRootPowerControl;
   DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
   return STATUS_SUCCESS;

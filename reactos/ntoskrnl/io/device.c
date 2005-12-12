@@ -163,7 +163,10 @@ IopStartDevice(
    }
 
    ObDereferenceObject(Fdo);
-   
+
+   if (NT_SUCCESS(Status))
+       DeviceNode->Flags |= DN_STARTED;
+
    return Status;
 }
 
