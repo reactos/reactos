@@ -23,3 +23,4 @@
 1 ICON  "firefox.ico"
 
 #include "En.rc"
+#include "De.rc"
