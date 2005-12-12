@@ -2,6 +2,9 @@
 <directory name="net">
 	<xi:include href="net/directory.xml" />
 </directory>
+<directory name="getfirefox">
+	<xi:include href="getfirefox/getfirefox.xml" />
+</directory>
 <directory name="shutdown">
 	<xi:include href="shutdown/shutdown.xml" />
 </directory>

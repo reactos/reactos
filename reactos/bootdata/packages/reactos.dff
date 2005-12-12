@@ -227,6 +227,7 @@ apps\utils\net\whois\whois.exe          1
 apps\utils\ps\ps.exe                    1
 apps\utils\rosperf\rosperf.exe          1
 apps\utils\shutdown\shutdown.exe        1
+apps\utils\getfirefox\getfirefox.exe    1
 media\fonts\c0419bt_.ttf                3
 media\fonts\c0582bt_.ttf                3
 media\fonts\c0583bt_.ttf                3
