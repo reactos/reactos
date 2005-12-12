@@ -107,6 +107,8 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
 		nlen = 0;
 	size = sizeof(WINHELP) + nlen + dsize;
 	hwh = GlobalAlloc(0,size);
+	if (hwh == NULL)
+		return FALSE;
 	lpwh = GlobalLock(hwh);
 	lpwh->size = size;
 	lpwh->command = uCommand;
