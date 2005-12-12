@@ -241,8 +241,8 @@ extern "C" {
 #define VK_PROCESSKEY 0x0E5
 #endif
 #define STYLE_DESCRIPTION_SIZE 32
-typedef DWORD HIMC;
-typedef DWORD HIMCC;
+typedef HANDLE HIMC;
+typedef HANDLE HIMCC;
 typedef HKL *LPHKL;
 typedef struct tagCOMPOSITIONFORM {
 	DWORD dwStyle;
