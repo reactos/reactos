@@ -252,6 +252,7 @@ IDB_FONT                BITMAP  DISCARDABLE res/font.bmp
 #include "De.rc"
 #include "Dk.rc"
 #include "Es.rc"
+#include "Fr.rc"
 #include "Ja.rc"
 #include "Sv.rc"
 #include "Hu.rc"
