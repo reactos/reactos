@@ -2,6 +2,7 @@
  * RichEdit - functions dealing with editor object
  *
  * Copyright 2004 by Krzysztof Foltman
+ * Copyright 2005 by Cihan Altinay
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -208,6 +209,7 @@
  * - full justification
  * - hyphenation
  * - tables
+ * - ListBox & ComboBox not implemented
  *
  * Bugs that are probably fixed, but not so easy to verify:
  * - EN_UPDATE/EN_CHANGE are handled very incorrectly (should be OK now)
@@ -234,6 +236,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 int me_debug = 0;
 HANDLE me_heap = NULL;
+
+static BOOL ME_ListBoxRegistered = FALSE;
+static BOOL ME_ComboBoxRegistered = FALSE;
 
 static ME_TextBuffer *ME_MakeText(void) {
   
@@ -934,6 +939,8 @@ void ME_DestroyEditor(ME_TextEditor *editor)
 
 static WCHAR wszClassName[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2', '0', 'W', 0};
 static WCHAR wszClassName50[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
+static WCHAR wszClassNameListBox[] = {'R','E','L','i','s','t','B','o','x','2','0','W', 0};
+static WCHAR wszClassNameComboBox[] = {'R','E','C','o','m','b','o','B','o','x','2','0','W', 0};
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -951,6 +958,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       UnregisterClassW(wszClassName50, 0);
       UnregisterClassA("RichEdit20A", 0);
       UnregisterClassA("RichEdit50A", 0);
+      if (ME_ListBoxRegistered)
+          UnregisterClassW(wszClassNameListBox, 0);
+      if (ME_ComboBoxRegistered)
+          UnregisterClassW(wszClassNameComboBox, 0);
       HeapDestroy (me_heap);
       me_heap = NULL;
       break;
@@ -2167,12 +2178,62 @@ HRESULT WINAPI CreateTextServices(IUnknown *punkOuter, void *pITextHost,
   return E_FAIL; /* E_NOTIMPL isn't allowed by MSDN */
 }
 
+LRESULT WINAPI REComboWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  /* FIXME: Not implemented */
+  TRACE("hWnd %p msg %04x (%s) %08x %08lx\n",
+        hWnd, msg, get_msg_name(msg), wParam, lParam);
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+LRESULT WINAPI REListWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  /* FIXME: Not implemented */
+  TRACE("hWnd %p msg %04x (%s) %08x %08lx\n",
+        hWnd, msg, get_msg_name(msg), wParam, lParam);
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
 /******************************************************************
  *        REExtendedRegisterClass (RICHED20.8)
  *
  * FIXME undocumented
+ * Need to check for errors and implement controls and callbacks 
  */
-void WINAPI REExtendedRegisterClass(void)
+LRESULT WINAPI REExtendedRegisterClass(void)
 {
-  FIXME("stub\n");
+  WNDCLASSW wcW;
+  UINT result;
+
+  FIXME("semi stub\n");
+
+  wcW.cbClsExtra = 0;
+  wcW.cbWndExtra = 4;
+  wcW.hInstance = NULL;
+  wcW.hIcon = NULL;
+  wcW.hCursor = NULL;
+  wcW.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+  wcW.lpszMenuName = NULL;
+
+  if (!ME_ListBoxRegistered)
+  {
+      wcW.style = CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS;
+      wcW.lpfnWndProc = REListWndProc;
+      wcW.lpszClassName = wszClassNameListBox;
+      if (RegisterClassW(&wcW)) ME_ListBoxRegistered = TRUE;
+  }
+
+  if (!ME_ComboBoxRegistered)
+  {
+      wcW.style = CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
+      wcW.lpfnWndProc = REComboWndProc;
+      wcW.lpszClassName = wszClassNameComboBox;
+      if (RegisterClassW(&wcW)) ME_ComboBoxRegistered = TRUE;  
+  }
+
+  result = 0;
+  if (ME_ListBoxRegistered)
+      result += 1;
+  if (ME_ComboBoxRegistered)
+      result += 2;
+
+  return result;
 }
