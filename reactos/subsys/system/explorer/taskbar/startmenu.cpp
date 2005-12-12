@@ -1546,7 +1546,7 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 
 
 StartMenuRoot::StartMenuRoot(HWND hwnd)
- :	super(hwnd, true)	///@todo big icons in start menu root
+ :	super(hwnd, false)	///@todo big icons in start menu root
 {
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCOMMONGROUPS))
