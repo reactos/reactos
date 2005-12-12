@@ -266,7 +266,7 @@ LdrpInit(PCONTEXT Context,
        if (ImageBase <= (PVOID)0x1000)
          {
            DPRINT("ImageBase is null\n");
-           ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
          }
 
        /*  If MZ header exists  */
@@ -278,7 +278,7 @@ LdrpInit(PCONTEXT Context,
            *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_NT_SIGNATURE)
          {
            DPRINT1("Image has bad header\n");
-           ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
          }
 
        /* normalize process parameters */
@@ -321,7 +321,7 @@ LdrpInit(PCONTEXT Context,
        if (Peb->ProcessHeap == 0)
          {
            DPRINT1("Failed to create process heap\n");
-           ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
          }
 
        /* initialized vectored exception handling */
@@ -345,6 +345,11 @@ LdrpInit(PCONTEXT Context,
          RtlAllocateHeap(RtlGetProcessHeap(),
                          0,
                          sizeof(PVOID) * (USER32_CALLBACK_MAXIMUM + 1));
+       if (Peb->KernelCallbackTable == NULL)
+         {
+           DPRINT1("Failed to create callback table\n");
+           ZwTerminateProcess(NtCurrentProcess(),STATUS_INSUFFICIENT_RESOURCES);
+         }
 
        /* initalize loader lock */
        RtlInitializeCriticalSection (&LoaderLock);
@@ -357,7 +362,7 @@ LdrpInit(PCONTEXT Context,
        if (Peb->Ldr == NULL)
          {
            DPRINT1("Failed to create loader data\n");
-           ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
          }
        Peb->Ldr->Length = sizeof(PEB_LDR_DATA);
        Peb->Ldr->Initialized = FALSE;
@@ -383,7 +388,7 @@ LdrpInit(PCONTEXT Context,
        if (NtModule == NULL)
          {
            DPRINT1("Failed to create loader module entry (NTDLL)\n");
-           ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
 	 }
        memset(NtModule, 0, sizeof(LDR_DATA_TABLE_ENTRY));
 
@@ -422,7 +427,7 @@ LdrpInit(PCONTEXT Context,
        if (ExeModule == NULL)
          {
            DPRINT1("Failed to create loader module infomation\n");
-           ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
          }
        ExeModule->DllBase = Peb->ImageBaseAddress;
 
@@ -473,7 +478,7 @@ LdrpInit(PCONTEXT Context,
        if (EntryPoint == NULL)
          {
            DPRINT1("Failed to initialize image\n");
-           ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+           ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
          }
      }
    /* attach the thread */

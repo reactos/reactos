@@ -2986,6 +2986,11 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
   KeyInfo = RtlAllocateHeap (RtlGetProcessHeap(),
                              HEAP_ZERO_MEMORY,
                              KeyInfoSize);
+  if (KeyInfo == NULL)
+    {
+      NtClose (KeyHandle);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
   RtlInitUnicodeString (&ValueNameString,
                         (PWSTR)ValueName);
@@ -3007,7 +3012,7 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
       if (KeyInfo == NULL)
         {
           NtClose (KeyHandle);
-          return Status;
+          return STATUS_INSUFFICIENT_RESOURCES;
         }
 
       Status = NtQueryValueKey (KeyHandle,

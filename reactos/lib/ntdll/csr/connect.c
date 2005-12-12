@@ -203,6 +203,10 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
 
     /* Allocate a buffer for it */
     PortName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, PortNameLength);
+    if (PortName.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Create the name */
     RtlAppendUnicodeToString(&PortName, ObjectDirectory );
@@ -255,6 +259,13 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
                                           0,
                                           0,
                                           &SystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure */
+        DPRINT1("Couldn't allocate SID\n");
+        NtClose(CsrSectionHandle);
+        return Status;
+    }
 
     /* Connect to the port */
     Status = NtSecureConnectPort(&CsrApiPort,
@@ -293,6 +304,12 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
                                 PAGE_SIZE,
                                 0,
                                 0);
+    if (CsrPortHeap == NULL)
+    {
+        NtClose(CsrApiPort);
+        CsrApiPort = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -399,6 +416,10 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
         /* Setup a buffer for the connection info */
         CaptureBuffer = CsrAllocateCaptureBuffer(1,
                                                  ClientConnect->ConnectionInfoSize);
+        if (CaptureBuffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
         /* Allocate a pointer for the connection info*/
         CsrAllocateMessagePointer(CaptureBuffer,
