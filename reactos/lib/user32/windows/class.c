@@ -41,7 +41,7 @@ static BOOL GetClassInfoExCommon(
 
         if ( !str )
         {
-          SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+          SetLastError (ERROR_OUTOFMEMORY);
           return FALSE;
         }
     }
@@ -69,7 +69,7 @@ static BOOL GetClassInfoExCommon(
   str2.Buffer = (PWSTR)HEAP_alloc ( str2.MaximumLength * sizeof(WCHAR) );
   if ( !str2.Buffer )
   {
-    SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    SetLastError (ERROR_OUTOFMEMORY);
     if ( !IS_ATOM(str) )
       HEAP_free ( str );
     return FALSE;
@@ -78,7 +78,7 @@ static BOOL GetClassInfoExCommon(
   str3.Buffer = (PWSTR)HEAP_alloc ( str3.MaximumLength * sizeof(WCHAR) );
   if ( !str3.Buffer )
   {
-    SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    SetLastError (ERROR_OUTOFMEMORY);
     HEAP_free ( str2.Buffer );
     if ( !IS_ATOM(str) )
       HEAP_free ( str );
