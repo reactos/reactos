@@ -22,6 +22,7 @@
 <property name="BASEADDRESS_HID" value="0x688F0000" />
 <property name="BASEADDRESS_PSXDLL" value="0x68eb0000" />
 <property name="BASEADDRESS_PSAPI" value="0x68f70000" />
+<property name="BASEADDRESS_OLEACC" value="0x69640000" />
 <property name="BASEADDRESS_MSIMG32" value="0x69cc0000" />
 <property name="BASEADDRESS_NETPLWIZ" value="0x6a240000" />
 <property name="BASEADDRESS_UNICODE" value="0x6b200000" />
