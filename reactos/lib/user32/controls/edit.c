@@ -4060,7 +4060,7 @@ static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
 static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 {
 #ifdef __REACTOS__
-	HMENU menu = LoadMenuA(GetModuleHandleA("USER32"), "EDITMENU");
+	HMENU menu = LoadMenuA(User32Instance, "EDITMENU");
 #else
 	HMENU menu = LoadMenuA(user32_module, "EDITMENU");
 #endif
