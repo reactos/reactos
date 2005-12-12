@@ -38,7 +38,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
 {
     switch (fdwReason)
     {
+        case DLL_PROCESS_ATTACH:
+            CRYPT_InitFunctionSets();
+            break;
         case DLL_PROCESS_DETACH:
+            CRYPT_FreeFunctionSets();
             if (hDefProv) CryptReleaseContext(hDefProv, 0);
             break;
     }
@@ -53,30 +57,37 @@ HCRYPTPROV CRYPT_GetDefaultProvider(void)
     return hDefProv;
 }
 
-/* this function is called by Internet Explorer when it is about to verify a downloaded component */
-BOOL WINAPI I_CryptCreateLruCache(DWORD x, DWORD y)
+typedef void * HLRUCACHE;
+
+/* this function is called by Internet Explorer when it is about to verify a
+ * downloaded component.  The first parameter appears to be a pointer to an
+ * unknown type, native fails unless it points to a buffer of at least 20 bytes.
+ * The second parameter appears to be an out parameter, whatever it's set to is
+ * passed (by cryptnet.dll) to I_CryptFlushLruCache.
+ */
+BOOL WINAPI I_CryptCreateLruCache(void *unknown, HLRUCACHE *out)
 {
-    FIXME("stub!\n");
+    FIXME("(%p, %p): stub!\n", unknown, out);
+    *out = (void *)0xbaadf00d;
+    return TRUE;
+}
+
+BOOL WINAPI I_CryptFindLruEntryData(DWORD unk0, DWORD unk1, DWORD unk2)
+{
+    FIXME("(%08lx, %08lx, %08lx): stub!\n", unk0, unk1, unk2);
     return FALSE;
 }
 
-/* these functions all have an unknown number of args */
-BOOL WINAPI I_CryptFindLruEntryData(DWORD x)
+DWORD WINAPI I_CryptFlushLruCache(HLRUCACHE h, DWORD unk0, DWORD unk1)
 {
-    FIXME("stub!\n");
-    return FALSE;
+    FIXME("(%p, %08lx, %08lx): stub!\n", h, unk0, unk1);
+    return 0;
 }
 
-BOOL WINAPI I_CryptFlushLruCache(DWORD x)
+HLRUCACHE WINAPI I_CryptFreeLruCache(HLRUCACHE h, DWORD unk0, DWORD unk1)
 {
-    FIXME("stub!\n");
-    return FALSE;
-}
-
-BOOL WINAPI I_CryptFreeLruCache(DWORD x)
-{
-    FIXME("stub!\n");
-    return FALSE;
+    FIXME("(%p, %08lx, %08lx): stub!\n", h, unk0, unk1);
+    return h;
 }
 
 BOOL WINAPI CryptSIPRemoveProvider(GUID *pgProv)
@@ -203,15 +214,6 @@ BOOL WINAPI CryptSIPLoad
        (const GUID *pgSubject, DWORD dwFlags, SIP_DISPATCH_INFO *pSipDispatch)
 {
     FIXME("stub!\n");
-    return FALSE;
-}
-
-BOOL WINAPI CryptRegisterDefaultOIDFunction(DWORD dwEncodingType,
-                                     LPCSTR pszFuncName, DWORD dwIndex,
-				     LPCWSTR pwszDll)
-{
-    FIXME("(%lx,%s,%lx,%s) stub!\n", dwEncodingType, pszFuncName, dwIndex,
-          debugstr_w(pwszDll));
     return FALSE;
 }
 

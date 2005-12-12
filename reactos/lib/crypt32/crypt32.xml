@@ -11,6 +11,7 @@
 	<file>main.c</file>
 	<file>encode.c</file>
 	<file>cert.c</file>
+	<file>oid.c</file>
 	<file>protectdata.c</file>
 	<file>crypt32.rc</file>
 	<file>crypt32.spec</file>

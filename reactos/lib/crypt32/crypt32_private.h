@@ -24,4 +24,7 @@
  */
 HCRYPTPROV CRYPT_GetDefaultProvider(void);
 
+void CRYPT_InitFunctionSets(void);
+void CRYPT_FreeFunctionSets(void);
+
 #endif

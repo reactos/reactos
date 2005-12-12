@@ -105,13 +105,13 @@
 @ stdcall CryptExportPublicKeyInfoEx(long long long str long ptr ptr ptr)
 @ stub CryptFindOIDInfo
 @ stub CryptFormatObject
-@ stub CryptFreeOIDFunctionAddress
+@ stdcall CryptFreeOIDFunctionAddress(long long)
 @ stub CryptGetAsyncParam
-@ stub CryptGetDefaultOIDDllList
-@ stub CryptGetDefaultOIDFunctionAddress
+@ stdcall CryptGetDefaultOIDDllList(long long ptr ptr)
+@ stdcall CryptGetDefaultOIDFunctionAddress(long long wstr long ptr ptr)
 @ stub CryptGetMessageCertificates
 @ stub CryptGetMessageSignerCount
-@ stub CryptGetOIDFunctionAddress
+@ stdcall CryptGetOIDFunctionAddress(long long str long ptr ptr)
 @ stdcall CryptGetOIDFunctionValue(long str str wstr ptr ptr ptr)
 @ stdcall CryptHashCertificate(long long long ptr long ptr ptr)
 @ stub CryptHashMessage
@@ -121,7 +121,7 @@
 @ stdcall CryptImportPublicKeyInfo(long long ptr ptr)
 @ stdcall CryptImportPublicKeyInfoEx(long long ptr long long ptr ptr)
 @ stdcall CryptInitOIDFunctionSet(str long)
-@ stub CryptInstallOIDFunctionAddress
+@ stdcall CryptInstallOIDFunctionAddress(ptr long str long ptr long)
 @ stub CryptLoadSip
 @ stdcall CryptMemAlloc(long)
 @ stdcall CryptMemFree(ptr)
@@ -165,16 +165,16 @@
 @ stub CryptVerifyDetachedMessageHash
 @ stub CryptVerifyDetachedMessageSignature
 @ stub CryptVerifyMessageHash
-@ stub CryptVerifyMessageSignature
+@ stdcall CryptVerifyMessageSignature(ptr long ptr long ptr ptr ptr)
 @ stub CryptVerifyMessageSignatureWithKey
 @ stub CryptVerifySignatureU
 @ stdcall I_CryptAllocTls()
-@ stdcall I_CryptCreateLruCache(long long)
+@ stdcall I_CryptCreateLruCache(ptr ptr)
 @ stub I_CryptCreateLruEntry
 @ stdcall I_CryptDetachTls(long)
-@ stdcall I_CryptFindLruEntryData(long)
-@ stdcall I_CryptFlushLruCache(long)
-@ stdcall I_CryptFreeLruCache(long)
+@ stdcall I_CryptFindLruEntryData(long long long)
+@ stdcall I_CryptFlushLruCache(ptr long long)
+@ stdcall I_CryptFreeLruCache(ptr long long)
 @ stdcall I_CryptFreeTls(long long)
 @ stub I_CryptGetDefaultCryptProv
 @ stub I_CryptGetDefaultCryptProvForEncrypt

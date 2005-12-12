@@ -967,6 +967,8 @@ static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] =
 #define CRYPT_UNICODE_NAME_DECODE_DISABLE_IE4_UTF8_FLAG \
  CERT_RDN_DISABLE_IE4_UTF8_FLAG
 
+#define CRYPT_GET_INSTALLED_OID_FUNC_FLAG  0x1
+
 /* types for CertOpenStore dwEncodingType */
 #define CERT_ENCODING_TYPE_MASK 0x0000ffff
 #define CMSG_ENCODING_TYPE_MASK 0xffff0000
@@ -1699,6 +1701,16 @@ typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_SET_CTL_PROPERTY)(
 typedef BOOL (WINAPI *PFN_CERT_STORE_PROV_CONTROL)(HCERTSTOREPROV hStoreProv,
  DWORD dwFlags, DWORD dwCtrlType, void const *pvCtrlPara);
 
+typedef struct _CRYPT_OID_FUNC_ENTRY {
+    LPCSTR pszOID;
+    void  *pvFuncAddr;
+} CRYPT_OID_FUNC_ENTRY, *PCRYPT_OID_FUNC_ENTRY;
+
+typedef BOOL (WINAPI *PFN_CRYPT_ENUM_OID_FUNC)(DWORD dwEncodingType,
+ LPCSTR pszFuncName, LPCSTR pszOID, DWORD cValue, const DWORD rgdwValueType[],
+ LPCWSTR const rgpwszValueName[], const BYTE * const rgpbValueData[],
+ const DWORD rgcbValueData[], void *pvArg);
+
 /* subject types for CryptVerifyCertificateSignatureEx */
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB 1
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_CERT 2
@@ -1816,6 +1828,34 @@ BOOL WINAPI CryptSetProviderExA(LPCSTR,DWORD,DWORD*,DWORD);
 BOOL WINAPI CryptSetProviderExW(LPCWSTR,DWORD,DWORD*,DWORD);
 BOOL WINAPI CryptEncodeObject(DWORD dwCertEncodingType, LPCSTR lpszStructType, const void *pvStructInfo, BYTE *pbEncoded, DWORD *pcbEncoded);
 BOOL WINAPI CryptEncodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType, const void *pvStructInfo, DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, void *pvEncoded, DWORD *pcbEncoded);
+
+BOOL WINAPI CryptRegisterDefaultOIDFunction(DWORD,LPCSTR,DWORD,LPCWSTR);
+BOOL WINAPI CryptRegisterOIDFunction(DWORD,LPCSTR,LPCSTR,LPCWSTR,LPCSTR);
+BOOL WINAPI CryptGetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
+                                     LPCSTR pszOID, LPCWSTR szValueName, DWORD *pdwValueType,
+                                     BYTE *pbValueData, DWORD *pcbValueData);
+BOOL WINAPI CryptSetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
+                                     LPCSTR pszOID, LPCWSTR pwszValueName, DWORD dwValueType,
+                                     const BYTE *pbValueData, DWORD cbValueData);
+BOOL WINAPI CryptUnregisterDefaultOIDFunction(DWORD,LPCSTR,LPCWSTR);
+BOOL WINAPI CryptUnregisterOIDFunction(DWORD,LPCSTR,LPCSTR);
+BOOL WINAPI CryptEnumOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
+ LPCSTR pszOID, DWORD dwFlags, void *pvArg,
+ PFN_CRYPT_ENUM_OID_FUNC pfnEnumOIDFunc);
+HCRYPTOIDFUNCSET WINAPI CryptInitOIDFunctionSet(LPCSTR,DWORD);
+BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
+ DWORD dwEncodingType, LPWSTR pwszDllList, DWORD *pcchDllList);
+BOOL WINAPI CryptGetDefaultOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
+ DWORD dwEncodingType, LPCWSTR pwszDll, DWORD dwFlags, void *ppvFuncAddr,
+ HCRYPTOIDFUNCADDR *phFuncAddr);
+BOOL WINAPI CryptGetOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
+ DWORD dwEncodingType, LPCSTR pszOID, DWORD dwFlags, void **ppvFuncAddr,
+ HCRYPTOIDFUNCADDR *phFuncAddr);
+BOOL WINAPI CryptFreeOIDFunctionAddress(HCRYPTOIDFUNCADDR hFuncAddr,
+ DWORD dwFlags);
+BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
+ DWORD dwEncodingType, LPCSTR pszFuncName, DWORD cFuncEntry,
+ const CRYPT_OID_FUNC_ENTRY rgFuncEntry[], DWORD dwFlags);
 
 #ifdef UNICODE
 #define CertNameToStr CertNameToStrW
