@@ -285,7 +285,7 @@ static int get_function_argsize( const ORDDEF *odp )
 static void output_call16_function( FILE *outfile, ORDDEF *odp )
 {
     char name[256];
-    int i, pos;
+    int i, pos, stack_words;
     const char *args = odp->u.func.arg_types;
     int argsize = get_function_argsize( odp );
     int needs_ldt = strchr( args, 'p' ) || strchr( args, 't' );
@@ -297,18 +297,24 @@ static void output_call16_function( FILE *outfile, ORDDEF *odp )
     fprintf( outfile, "%s:\n", name );
     fprintf( outfile, "\tpushl %%ebp\n" );
     fprintf( outfile, "\tmovl %%esp,%%ebp\n" );
+    stack_words = 2;
     if (needs_ldt)
     {
         fprintf( outfile, "\tpushl %%esi\n" );
+        stack_words++;
         if (UsePIC)
         {
-            fprintf( outfile, "\tcall 1f\n" );
-            fprintf( outfile, "1:\tpopl %%eax\n" );
-            fprintf( outfile, "\tmovl wine_ldt_copy_ptr-1b(%%eax),%%esi\n" );
+            fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+            fprintf( outfile, "1:\tmovl wine_ldt_copy_ptr-1b(%%eax),%%esi\n" );
         }
         else
             fprintf( outfile, "\tmovl $%s,%%esi\n", asm_name("wine_ldt_copy") );
     }
+
+    /* preserve 16-byte stack alignment */
+    stack_words += strlen(args);
+    if ((odp->flags & FLAG_REGISTER) || (odp->type == TYPE_VARARGS)) stack_words++;
+    if (stack_words % 4) fprintf( outfile, "\tsubl $%d,%%esp\n", 16 - 4 * (stack_words % 4) );
 
     if (args[0] || odp->type == TYPE_VARARGS)
         fprintf( outfile, "\tmovl 12(%%ebp),%%ecx\n" );  /* args */
@@ -455,6 +461,7 @@ static void output_init_code( FILE *outfile, const DLLSPEC *spec, const char *he
     fprintf( outfile, "\t.align 4\n" );
     fprintf( outfile, "\t%s\n", func_declaration(name) );
     fprintf( outfile, "%s:\n", name );
+    fprintf( outfile, "subl $4,%%esp\n" );
     if (UsePIC)
     {
         fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
@@ -469,7 +476,7 @@ static void output_init_code( FILE *outfile, const DLLSPEC *spec, const char *he
         fprintf( outfile, "\tpushl $%s\n", header_name );
     }
     fprintf( outfile, "\tcall %s\n", asm_name("__wine_dll_register_16") );
-    fprintf( outfile, "\taddl $8,%%esp\n" );
+    fprintf( outfile, "\taddl $12,%%esp\n" );
     fprintf( outfile, "\tret\n" );
     output_function_size( outfile, name );
 
@@ -478,6 +485,7 @@ static void output_init_code( FILE *outfile, const DLLSPEC *spec, const char *he
     fprintf( outfile, "\t.align 4\n" );
     fprintf( outfile, "\t%s\n", func_declaration(name) );
     fprintf( outfile, "%s:\n", name );
+    fprintf( outfile, "subl $8,%%esp\n" );
     if (UsePIC)
     {
         fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
@@ -489,7 +497,7 @@ static void output_init_code( FILE *outfile, const DLLSPEC *spec, const char *he
         fprintf( outfile, "\tpushl $%s\n", header_name );
     }
     fprintf( outfile, "\tcall %s\n", asm_name("__wine_dll_unregister_16") );
-    fprintf( outfile, "\taddl $4,%%esp\n" );
+    fprintf( outfile, "\taddl $12,%%esp\n" );
     fprintf( outfile, "\tret\n" );
     output_function_size( outfile, name );
 
