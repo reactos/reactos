@@ -355,7 +355,9 @@ VerLanguageNameA (
     )
 {
     STUB;
-    return 0;
+    szLang = "Language Neutral\0";
+    nSize = sizeof(szLang) * sizeof(CHAR);
+    return sizeof(szLang) - 1;
 }
 
 
@@ -371,7 +373,9 @@ VerLanguageNameW (
     )
 {
     STUB;
-    return 0;
+    szLang = L"Language Neutral\0";
+    nSize = sizeof(szLang) * sizeof(WCHAR);
+    return sizeof(szLang) - 1;
 }
 
 
