@@ -304,12 +304,12 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
  */
 static int _nroffuncs(ITypeInfo *tinfo) {
     int 	n, max = 0;
-    FUNCDESC	*fdesc;
+    const FUNCDESC *fdesc;
     HRESULT	hres;
 
     n=0;
     while (1) {
-	hres = ITypeInfo_GetFuncDesc(tinfo,n,&fdesc);
+	hres = ITypeInfoImpl_GetInternalFuncDesc(tinfo,n,&fdesc);
 	if (hres)
 	    return max+1;
 	if (fdesc->oVft/4 > max)
@@ -1053,6 +1053,7 @@ deserialize_param(
 			    (DWORD*)(((LPBYTE)*arg)+vdesc->u.oInst),
 			    buf
 			);
+                        ITypeInfo2_ReleaseVarDesc(tinfo2, vdesc);
 		        if (debugout && (i<tattr->cVars-1)) TRACE_(olerelay)(",");
 		    }
 		    if (debugout) TRACE_(olerelay)("}");
@@ -1108,7 +1109,7 @@ deserialize_param(
 /* Searches function, also in inherited interfaces */
 static HRESULT
 _get_funcdesc(
-    ITypeInfo *tinfo, int iMethod, ITypeInfo **tactual, FUNCDESC **fdesc, BSTR *iname, BSTR *fname)
+    ITypeInfo *tinfo, int iMethod, ITypeInfo **tactual, const FUNCDESC **fdesc, BSTR *iname, BSTR *fname)
 {
     int i = 0, j = 0;
     HRESULT hres;
@@ -1120,7 +1121,8 @@ _get_funcdesc(
     ITypeInfo_AddRef(*tactual);
 
     while (1) {
-	hres = ITypeInfo_GetFuncDesc(tinfo, i, fdesc);
+	hres = ITypeInfoImpl_GetInternalFuncDesc(tinfo, i, fdesc);
+
 	if (hres) {
 	    ITypeInfo	*tinfo2;
 	    HREFTYPE	href;
@@ -1164,7 +1166,7 @@ static DWORD
 xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 {
     DWORD		*args = ((DWORD*)&tpinfo)+1, *xargs;
-    FUNCDESC		*fdesc;
+    const FUNCDESC	*fdesc;
     HRESULT		hres;
     int			i, relaydeb = TRACE_ON(olerelay);
     marshal_state	buf;
@@ -1451,7 +1453,7 @@ PSFacBuf_CreateProxy(
     HRESULT	hres;
     ITypeInfo	*tinfo;
     int		i, nroffuncs;
-    FUNCDESC	*fdesc;
+    const FUNCDESC *fdesc;
     TMProxyImpl	*proxy;
     TYPEATTR	*typeattr;
 
@@ -1647,7 +1649,7 @@ TMStubImpl_Invoke(
     LPRPCSTUBBUFFER iface, RPCOLEMESSAGE* xmsg,IRpcChannelBuffer*rpcchanbuf)
 {
     int		i;
-    FUNCDESC	*fdesc;
+    const FUNCDESC *fdesc;
     TMStubImpl *This = (TMStubImpl *)iface;
     HRESULT	hres;
     DWORD	*args, res, *xargs, nrofargs;
