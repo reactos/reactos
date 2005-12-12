@@ -2120,5 +2120,37 @@ void __RPC_STUB IMultiQI_QueryMultipleInterfaces_Stub(
 
 #endif  /* __IMultiQI_INTERFACE_DEFINED__ */
 
+typedef struct _GDI_OBJECT {
+    DWORD ObjectType;
+    union {
+        wireHBITMAP hBitmap;
+        wireHPALETTE hPalette;
+        wireHGLOBAL hGeneric;
+    } u;
+} GDI_OBJECT;
+typedef struct _userSTGMEDIUM {
+    struct {
+        DWORD tymed;
+        union {
+            wireHMETAFILEPICT hMetaFilePict;
+            wireHENHMETAFILE hHEnhMetaFile;
+            GDI_OBJECT *hGdiHandle;
+            wireHGLOBAL hGlobal;
+            LPOLESTR lpszFileName;
+            BYTE_BLOB *pstm;
+            BYTE_BLOB *pstg;
+        } u;
+    } DUMMYSTRUCTNAME;
+    IUnknown *pUnkForRelease;
+} userSTGMEDIUM;
+typedef userSTGMEDIUM *wireSTGMEDIUM;
+typedef userSTGMEDIUM *wireASYNC_STGMEDIUM;
+typedef STGMEDIUM ASYNC_STGMEDIUM;
+typedef STGMEDIUM *LPSTGMEDIUM;
+typedef struct _FLAG_STGMEDIUM {
+    long ContextFlags;
+    long fPassOwnership;
+    STGMEDIUM Stgmed;
+} FLAG_STGMEDIUM;
 
 #endif  /* __WINE_OBJIDL_H */

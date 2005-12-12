@@ -624,7 +624,7 @@ static HRESULT create_server(REFCLSID rclsid)
     HKEY                key;
     HRESULT             hres;
     WCHAR               command[MAX_PATH+sizeof(embedding)/sizeof(WCHAR)];
-    DWORD               size = MAX_PATH+1 * sizeof(WCHAR);
+    DWORD               size = (MAX_PATH+1) * sizeof(WCHAR);
     STARTUPINFOW        sinfo;
     PROCESS_INFORMATION pinfo;
 

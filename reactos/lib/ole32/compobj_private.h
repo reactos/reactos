@@ -263,4 +263,8 @@ extern HINSTANCE OLE32_hInstance; /* FIXME: make static */
 
 #define CHARS_IN_GUID 39 /* including NULL */
 
+/* Exported non-interface Data Advise Holder functions */
+HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate);
+void DataAdviseHolder_OnDisconnect(IDataAdviseHolder *iface);
+
 #endif /* __WINE_OLE_COMPOBJ_H */

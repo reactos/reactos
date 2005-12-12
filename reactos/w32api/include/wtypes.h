@@ -191,6 +191,133 @@ typedef struct {
         } ByObjectId;
     } tagged_union;
 } uCLSSPEC;
+
+#define WDT_INPROC_CALL (0x48746457)
+
+#define WDT_REMOTE_CALL (0x52746457)
+
+#define WDT_INPROC64_CALL (0x50746457)
+
+typedef struct _userCLIPFORMAT {
+    long fContext;
+    union {
+        DWORD dwValue;
+        LPWSTR pwszName;
+    } u;
+} userCLIPFORMAT;
+typedef userCLIPFORMAT *wireCLIPFORMAT;
+typedef WORD CLIPFORMAT;
+
+typedef struct _RemotableHandle {
+    long fContext;
+    union {
+        long hInproc;
+        long hRemote;
+    } u;
+} RemotableHandle;
+typedef RemotableHandle *wireHACCEL;
+typedef RemotableHandle *wireHBRUSH;
+typedef RemotableHandle *wireHDC;
+typedef RemotableHandle *wireHFONT;
+typedef RemotableHandle *wireHICON;
+typedef RemotableHandle *wireHMENU;
+typedef RemotableHandle *wireHWND;
+
+typedef struct _BYTE_BLOB {
+    unsigned long clSize;
+    byte abData[1];
+} BYTE_BLOB;
+typedef BYTE_BLOB *UP_BYTE_BLOB;
+typedef struct _FLAGGED_BYTE_BLOB {
+    unsigned long fFlags;
+    unsigned long clSize;
+    byte abData[1];
+} FLAGGED_BYTE_BLOB;
+typedef FLAGGED_BYTE_BLOB *UP_FLAGGED_BYTE_BLOB;
+
+typedef struct _userHENHMETAFILE {
+    long fContext;
+    union {
+        long hInproc;
+        BYTE_BLOB *hRemote;
+        long hGlobal;
+    } u;
+} userHENHMETAFILE;
+typedef userHENHMETAFILE *wireHENHMETAFILE;
+typedef struct tagRemHMETAFILEPICT {
+    long mm;
+    long xExt;
+    long yExt;
+    unsigned long cbData;
+    byte data[1];
+} RemHMETAFILEPICT;
+typedef struct _userHMETAFILE {
+    long fContext;
+    union {
+        long hInproc;
+        BYTE_BLOB *hRemote;
+        long hGlobal;
+    } u;
+} userHMETAFILE;
+typedef userHMETAFILE *wireHMETAFILE;
+typedef struct _remoteMETAFILEPICT {
+    long mm;
+    long xExt;
+    long yExt;
+    userHMETAFILE *hMF;
+} remoteMETAFILEPICT;
+typedef struct _userHMETAFILEPICT {
+    long fContext;
+    union {
+        long hInproc;
+        remoteMETAFILEPICT *hRemote;
+        long hGlobal;
+    } u;
+} userHMETAFILEPICT;
+typedef userHMETAFILEPICT *wireHMETAFILEPICT;
+typedef struct _userBITMAP {
+    LONG bmType;
+    LONG bmWidth;
+    LONG bmHeight;
+    LONG bmWidthBytes;
+    WORD bmPlanes;
+    WORD bmBitsPixel;
+    ULONG cbSize;
+    byte pBuffer[1];
+} userBITMAP;
+typedef struct _userHBITMAP {
+    long fContext;
+    union {
+        long hInproc;
+        userBITMAP *hRemote;
+        long hGlobal;
+    } u;
+} userHBITMAP;
+typedef userHBITMAP *wireHBITMAP;
+typedef struct tagrpcLOGPALETTE {
+    WORD palVersion;
+    WORD palNumEntries;
+    PALETTEENTRY palPalEntry[1];
+} rpcLOGPALETTE;
+typedef struct _userHPALETTE {
+    long fContext;
+    union {
+        long hInproc;
+        rpcLOGPALETTE *hRemote;
+        long hGlobal;
+    } u;
+} userHPALETTE;
+typedef userHPALETTE *wireHPALETTE;
+typedef struct _userHGLOBAL {
+    long fContext;
+    union {
+        long hInproc;
+        FLAGGED_BYTE_BLOB *hRemote;
+        long hGlobal;
+    } u;
+} userHGLOBAL;
+typedef userHGLOBAL *wireHGLOBAL;
+
 #ifdef __cplusplus
 }
 #endif

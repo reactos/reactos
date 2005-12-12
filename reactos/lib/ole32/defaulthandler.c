@@ -55,8 +55,11 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "winerror.h"
-#include "wine/unicode.h"
 #include "ole2.h"
+
+#include "compobj_private.h"
+
+#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -108,6 +111,8 @@ struct DefaultHandler
   IOleObject *pOleDelegate;
   /* IPersistStorage delegate */
   IPersistStorage *pPSDelegate;
+  /* IDataObject delegate */
+  IDataObject *pDataDelegate;
 
   /* connection cookie for the advise on the delegate OLE object */
   DWORD dwAdvConn;
@@ -307,8 +312,12 @@ static HRESULT WINAPI DefaultHandler_SetClientSite(
 	    IOleClientSite*    pClientSite)
 {
   DefaultHandler *This = impl_from_IOleObject(iface);
+  HRESULT hr = S_OK;
 
   TRACE("(%p, %p)\n", iface, pClientSite);
+
+  if (This->pOleDelegate)
+    hr = IOleObject_SetClientSite(This->pOleDelegate, pClientSite);
 
   /*
    * Make sure we release the previous client site if there
@@ -371,6 +380,9 @@ static HRESULT WINAPI DefaultHandler_SetHostNames(
 	debugstr_w(szContainerApp),
 	debugstr_w(szContainerObj));
 
+  if (This->pOleDelegate)
+    IOleObject_SetHostNames(This->pOleDelegate, szContainerApp, szContainerObj);
+
   /* Be sure to cleanup before re-assinging the strings. */
   HeapFree( GetProcessHeap(), 0, This->containerApp );
   This->containerApp = NULL;
@@ -404,6 +416,12 @@ static void WINAPI DefaultHandler_Stop(DefaultHandler *This)
 
   /* FIXME: call IOleCache_OnStop */
 
+  DataAdviseHolder_OnDisconnect(This->dataAdviseHolder);
+  if (This->pDataDelegate)
+  {
+     IDataObject_Release(This->pDataDelegate);
+     This->pDataDelegate = NULL;
+  }
   if (This->pPSDelegate)
   {
      IPersistStorage_Release(This->pPSDelegate);
@@ -452,10 +470,15 @@ static HRESULT WINAPI DefaultHandler_SetMoniker(
 	    DWORD              dwWhichMoniker,
 	    IMoniker*          pmk)
 {
+  DefaultHandler *This = impl_from_IOleObject(iface);
+
   TRACE("(%p, %ld, %p)\n",
 	iface,
 	dwWhichMoniker,
 	pmk);
+
+  if (This->pOleDelegate)
+    return IOleObject_SetMoniker(This->pOleDelegate, dwWhichMoniker, pmk);
 
   return S_OK;
 }
@@ -478,6 +501,11 @@ static HRESULT WINAPI DefaultHandler_GetMoniker(
   TRACE("(%p, %ld, %ld, %p)\n",
 	iface, dwAssign, dwWhichMoniker, ppmk);
 
+  if (This->pOleDelegate)
+    return IOleObject_GetMoniker(This->pOleDelegate, dwAssign, dwWhichMoniker,
+                                 ppmk);
+
+  /* FIXME: dwWhichMoniker == OLEWHICHMK_CONTAINER only? */
   if (This->clientSite)
   {
     return IOleClientSite_GetMoniker(This->clientSite,
@@ -503,9 +531,14 @@ static HRESULT WINAPI DefaultHandler_InitFromData(
 	    BOOL               fCreation,
 	    DWORD              dwReserved)
 {
+  DefaultHandler *This = impl_from_IOleObject(iface);
+
   TRACE("(%p, %p, %d, %ld)\n",
 	iface, pDataObject, fCreation, dwReserved);
 
+  if (This->pOleDelegate)
+    return IOleObject_InitFromData(This->pOleDelegate, pDataObject, fCreation,
+		                   dwReserved);
   return OLE_E_NOTRUNNING;
 }
 
@@ -521,8 +554,14 @@ static HRESULT WINAPI DefaultHandler_GetClipboardData(
 	    DWORD              dwReserved,
 	    IDataObject**      ppDataObject)
 {
+  DefaultHandler *This = impl_from_IOleObject(iface);
+
   TRACE("(%p, %ld, %p)\n",
 	iface, dwReserved, ppDataObject);
+
+  if (This->pOleDelegate)
+    return IOleObject_GetClipboardData(This->pOleDelegate, dwReserved,
+                                       ppDataObject);
 
   return OLE_E_NOTRUNNING;
 }
@@ -536,8 +575,17 @@ static HRESULT WINAPI DefaultHandler_DoVerb(
 	    HWND               hwndParent,
 	    LPCRECT            lprcPosRect)
 {
-  FIXME(": Stub\n");
-  return E_NOTIMPL;
+  DefaultHandler *This = impl_from_IOleObject(iface);
+  IRunnableObject *pRunnableObj = (IRunnableObject *)&This->lpvtblIRunnableObject;
+  HRESULT hr;
+
+  TRACE("(%ld, %p, %p, %ld, %p, %s)\n", iVerb, lpmsg, pActiveSite, lindex, hwndParent, wine_dbgstr_rect(lprcPosRect));
+
+  hr = IRunnableObject_Run(pRunnableObj, NULL);
+  if (FAILED(hr)) return hr;
+
+  return IOleObject_DoVerb(This->pOleDelegate, iVerb, lpmsg, pActiveSite,
+                           lindex, hwndParent, lprcPosRect);
 }
 
 /************************************************************************
@@ -650,8 +698,14 @@ static HRESULT WINAPI DefaultHandler_SetExtent(
 	    DWORD              dwDrawAspect,
 	    SIZEL*             psizel)
 {
+  DefaultHandler *This = impl_from_IOleObject(iface);
+
   TRACE("(%p, %lx, (%ld x %ld))\n", iface,
         dwDrawAspect, psizel->cx, psizel->cy);
+
+  if (This->pOleDelegate)
+    IOleObject_SetExtent(This->pOleDelegate, dwDrawAspect, psizel);
+
   return OLE_E_NOTRUNNING;
 }
 
@@ -676,8 +730,10 @@ static HRESULT WINAPI DefaultHandler_GetExtent(
 
   TRACE("(%p, %lx, %p)\n", iface, dwDrawAspect, psizel);
 
-  hres = IUnknown_QueryInterface(This->dataCache, &IID_IViewObject2, (void**)&cacheView);
+  if (This->pOleDelegate)
+    return IOleObject_GetExtent(This->pOleDelegate, dwDrawAspect, psizel);
 
+  hres = IUnknown_QueryInterface(This->dataCache, &IID_IViewObject2, (void**)&cacheView);
   if (FAILED(hres))
     return E_UNEXPECTED;
 
@@ -824,7 +880,7 @@ static HRESULT WINAPI DefaultHandler_GetMiscStatus(
 }
 
 /************************************************************************
- * DefaultHandler_SetExtent (IOleObject)
+ * DefaultHandler_SetColorScheme (IOleObject)
  *
  * This method is meaningless if the server is not running
  *
@@ -834,7 +890,13 @@ static HRESULT WINAPI DefaultHandler_SetColorScheme(
 	    IOleObject*           iface,
 	    struct tagLOGPALETTE* pLogpal)
 {
+  DefaultHandler *This = impl_from_IOleObject(iface);
+
   TRACE("(%p, %p))\n", iface, pLogpal);
+
+  if (This->pOleDelegate)
+    return IOleObject_SetColorScheme(This->pOleDelegate, pLogpal);
+
   return OLE_E_NOTRUNNING;
 }
 
@@ -1212,24 +1274,29 @@ static HRESULT WINAPI DefaultHandler_Run(
   if (This->pOleDelegate)
     return S_OK;
 
-  hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER, &IID_IOleObject, (void **)&This->pOleDelegate);
+  hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER,
+                        &IID_IOleObject, (void **)&This->pOleDelegate);
   if (FAILED(hr))
     return hr;
 
-  hr = IOleObject_Advise(This->pOleDelegate, (IAdviseSink *)&This->lpvtblIAdviseSink, &This->dwAdvConn);
+  hr = IOleObject_Advise(This->pOleDelegate,
+                         (IAdviseSink *)&This->lpvtblIAdviseSink,
+                         &This->dwAdvConn);
 
   if (SUCCEEDED(hr) && This->clientSite)
     hr = IOleObject_SetClientSite(This->pOleDelegate, This->clientSite);
 
   if (SUCCEEDED(hr))
   {
-    IOleObject_QueryInterface(This->pOleDelegate, &IID_IPersistStorage, (void **)&This->pPSDelegate);
+    IOleObject_QueryInterface(This->pOleDelegate, &IID_IPersistStorage,
+                              (void **)&This->pPSDelegate);
     if (This->pPSDelegate)
       hr = IPersistStorage_InitNew(This->pPSDelegate, NULL);
   }
 
   if (SUCCEEDED(hr) && This->containerApp)
-    hr = IOleObject_SetHostNames(This->pOleDelegate, This->containerApp, This->containerObj);
+    hr = IOleObject_SetHostNames(This->pOleDelegate, This->containerApp,
+                                 This->containerObj);
 
   /* FIXME: do more stuff here:
    * - IOleObject_GetMiscStatus
@@ -1237,7 +1304,15 @@ static HRESULT WINAPI DefaultHandler_Run(
    * - IOleCache_OnRun
    */
 
-  /* FIXME: if we failed, Close the object */
+  if (SUCCEEDED(hr))
+    hr = IOleObject_QueryInterface(This->pOleDelegate, &IID_IDataObject,
+                                   (void **)&This->pDataDelegate);
+
+  if (SUCCEEDED(hr) && This->dataAdviseHolder)
+    hr = DataAdviseHolder_OnConnect(This->dataAdviseHolder, This->pDataDelegate);
+
+  if (FAILED(hr))
+    DefaultHandler_Stop(This);
 
   return hr;
 }
@@ -1510,6 +1585,7 @@ static DefaultHandler* DefaultHandler_Construct(
   This->containerObj = NULL;
   This->pOleDelegate = NULL;
   This->pPSDelegate = NULL;
+  This->pDataDelegate = NULL;
 
   This->dwAdvConn = 0;
 
