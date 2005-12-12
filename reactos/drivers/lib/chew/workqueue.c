@@ -1,16 +1,15 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/main.c
- * PURPOSE:     Common Highlevel Executive Worker
- * PROGRAMMERS: Art Yerkes
- * REVISIONS:
- *   CSH 10/12-2005 Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            drivers/lib/chew/workqueue.c
+ * PURPOSE:         Common Highlevel Executive Worker
+ *
+ * PROGRAMMERS:     arty (ayerkes@speakeasy.net)
  */
 #include <ntddk.h>
 #include <chew/chew.h>
 
-//#define NDEBUG
+#define NDEBUG
 
 #define FOURCC(w,x,y,z) (((w) << 24) | ((x) << 16) | ((y) << 8) | (z))
 
@@ -51,6 +50,8 @@ VOID ChewShutdown() {
 VOID STDCALL ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
     PWORK_ITEM WorkItem = ChewItem;
 
+    RemoveEntryList( &WorkItem->Entry );
+
     if( WorkItem->Worker ) 
 	WorkItem->Worker( WorkItem->UserSpace );
 
@@ -61,8 +62,10 @@ VOID STDCALL ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
 BOOLEAN ChewCreate
 ( PVOID *ItemPtr, UINT Bytes, VOID (*Worker)( PVOID ), PVOID UserSpace ) {
     PWORK_ITEM Item;
+    
     if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
-	*ItemPtr = NULL;
+	if( ItemPtr )
+	    *ItemPtr = NULL;
 	Worker(UserSpace);
 	return TRUE;
     } else {
@@ -85,12 +88,14 @@ BOOLEAN ChewCreate
 		( &WorkQueue, &Item->Entry, &WorkQueueLock );
 	    IoQueueWorkItem
 		( Item->WorkItem, ChewWorkItem, CriticalWorkQueue, Item );
-
-	    *ItemPtr = Item;
+	    
+	    if( ItemPtr ) 
+		*ItemPtr = Item;
 
 	    return TRUE;
-	} else
+	} else {
 	    return FALSE;
+	}
     }
 }
 
