@@ -349,7 +349,7 @@ static BOOL MDI_MenuDeleteItem( HWND client, HWND hWndChild )
     if (clientInfo->nActiveChildren - 1 > MDI_MOREWINDOWSLIMIT)
     {
         WCHAR szTmp[50];
-        LoadStringW(GetModuleHandleA("USER32"), IDS_MDI_MOREWINDOWS, szTmp, sizeof(szTmp)/sizeof(szTmp[0]));
+        LoadStringW(User32Instance, IDS_MDI_MOREWINDOWS, szTmp, sizeof(szTmp)/sizeof(szTmp[0]));
         AppendMenuW(clientInfo->hWindowMenu, MF_STRING, clientInfo->idFirstChild + MDI_MOREWINDOWSLIMIT, szTmp);
     }
     return TRUE;
@@ -680,7 +680,7 @@ static HWND MDICreateChild( HWND parent, MDICLIENTINFO *ci,
         if (ci->nActiveChildren == MDI_MOREWINDOWSLIMIT + 1)
         {
             WCHAR szTmp[50];
-            LoadStringW(GetModuleHandleA("USER32"), IDS_MDI_MOREWINDOWS, szTmp, sizeof(szTmp)/sizeof(szTmp[0]));
+            LoadStringW(User32Instance, IDS_MDI_MOREWINDOWS, szTmp, sizeof(szTmp)/sizeof(szTmp[0]));
 
             ModifyMenuW(ci->hWindowMenu,
                         ci->idFirstChild + MDI_MOREWINDOWSLIMIT,
@@ -2391,12 +2391,12 @@ static HWND MDI_MoreWindowsDialog(HWND hwnd)
     HRSRC hRes;
     HANDLE hDlgTmpl;
 
-    hRes = FindResourceA(GetModuleHandleA("USER32"), "MDI_MOREWINDOWS", (LPSTR)RT_DIALOG);
+    hRes = FindResourceA(User32Instance, "MDI_MOREWINDOWS", (LPSTR)RT_DIALOG);
 
     if (hRes == 0)
         return 0;
 
-    hDlgTmpl = LoadResource(GetModuleHandleA("USER32"), hRes );
+    hDlgTmpl = LoadResource(User32Instance, hRes);
 
     if (hDlgTmpl == 0)
         return 0;
@@ -2406,7 +2406,7 @@ static HWND MDI_MoreWindowsDialog(HWND hwnd)
     if (template == 0)
         return 0;
 
-    return (HWND) DialogBoxIndirectParamA(GetModuleHandleA("USER32"),
+    return (HWND) DialogBoxIndirectParamA(User32Instance,
                                           (LPDLGTEMPLATE) template,
                                           hwnd, MDI_MoreWindowsDlgProc, (LPARAM) hwnd);
 }

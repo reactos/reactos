@@ -1043,9 +1043,7 @@ NTSTATUS STDCALL
 User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   LRESULT Result;
-  HMODULE hUser32;
-  hUser32 = GetModuleHandleW(L"USER32");
-  Result = (LRESULT)LoadMenuW(hUser32, L"SYSMENU");
+  Result = (LRESULT)LoadMenuW(User32Instance, L"SYSMENU");
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
