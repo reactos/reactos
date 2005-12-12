@@ -17,6 +17,7 @@
 	<file>access.c</file>
 	<file>apibuf.c</file>
 	<file>browsr.c</file>
+	<file>ds.c</file>
 	<file>nbcmdqueue.c</file>
 	<file>nbnamecache.c</file>
 	<file>nbt.c</file>

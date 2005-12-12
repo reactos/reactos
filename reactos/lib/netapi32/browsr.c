@@ -25,6 +25,7 @@
 #include "winerror.h"
 #include "lmcons.h"
 #include "lmbrowsr.h"
+#include "lmshare.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);

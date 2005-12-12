@@ -1,3 +1,18 @@
+@ stub DsAddressToSiteNames
+@ stub DsAddressToSiteNamesEx
+@ stub DsDeregisterDnsHostRecords
+@ stub DsEnumerateDomainTrusts
+@ stub DsGetDcClose
+@ stub DsGetDcName
+@ stub DsGetDcNext
+@ stub DsGetDcOpen
+@ stub DsGetDcSiteCoverage
+@ stub DsGetForestTrustInformationW
+@ stub DsGetSiteName
+@ stub DsMergeForestTrustInformationW
+@ stdcall DsRoleFreeMemory(ptr)
+@ stdcall DsRoleGetPrimaryDomainInformation(wstr long ptr)
+@ stub DsValidateSubnetName
 @ stub I_BrowserDebugCall
 @ stub I_BrowserDebugTrace
 @ stdcall I_BrowserQueryEmulatedDomains(wstr ptr ptr)
