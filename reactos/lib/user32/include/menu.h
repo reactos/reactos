@@ -13,6 +13,8 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw);
 BOOL
 MenuInit(VOID);
 VOID
+MenuCleanup(VOID);
+VOID
 MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID
 MenuTrackKbdMenuBar(HWND hWnd, ULONG wParam, ULONG Key);

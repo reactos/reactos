@@ -2107,12 +2107,20 @@ MsgWaitForMultipleObjects(
 }
 
 
-BOOL FASTCALL MessageInit()
+BOOL FASTCALL MessageInit(VOID)
 {
   InitializeCriticalSection(&DdeCrst);
   InitializeCriticalSection(&MsgConversionCrst);
+  InitializeCriticalSection(&gcsMPH);
 
   return TRUE;
+}
+
+VOID FASTCALL MessageCleanup(VOID)
+{
+  DeleteCriticalSection(&DdeCrst);
+  DeleteCriticalSection(&MsgConversionCrst);
+  DeleteCriticalSection(&gcsMPH);
 }
 
 /***********************************************************************

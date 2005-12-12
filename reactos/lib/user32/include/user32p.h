@@ -127,5 +127,10 @@ DEVMODEW *
 STDCALL
 GdiConvertToDevmodeW(DEVMODEA *dm);
 
+/* FIXME: Belongs to some header. */
+BOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
+void InitStockObjects(void);
+VOID DeleteFrameBrushes(VOID);
+
 #endif
 /* EOF */

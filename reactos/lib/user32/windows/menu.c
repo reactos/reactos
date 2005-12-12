@@ -1077,12 +1077,32 @@ MenuInit(VOID)
     if(hMenuFontBold == NULL)
     {
       DbgPrint("MenuInit(): CreateFontIndirectW(hMenuFontBold) failed!\n");
+      DeleteObject(hMenuFont);
+      hMenuFont = NULL;
       return FALSE;
     }
   }
 
   return TRUE;
 }
+
+
+VOID
+MenuCleanup(VOID)
+{
+  if (hMenuFont)
+  {
+    DeleteObject(hMenuFont);
+    hMenuFont = NULL;
+  }
+
+  if (hMenuFontBold)
+  {
+    DeleteObject(hMenuFontBold);
+    hMenuFontBold = NULL;
+  }
+}
+
 
 
 /***********************************************************************
