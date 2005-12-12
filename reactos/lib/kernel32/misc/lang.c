@@ -1474,3 +1474,34 @@ SetUserGeoID(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+VerLanguageNameA (
+    DWORD   wLang,
+    LPSTR   szLang,
+    DWORD   nSize
+    )
+{
+   return GetLocaleInfoA( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+VerLanguageNameW (
+    DWORD   wLang,
+    LPWSTR  szLang,
+    DWORD   nSize
+    )
+{
+    return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
+}
+

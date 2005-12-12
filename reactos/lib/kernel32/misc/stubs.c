@@ -342,43 +342,6 @@ VDMOperationStarted (
     return 0;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-VerLanguageNameA (
-    DWORD   wLang,
-    LPSTR   szLang,
-    DWORD   nSize
-    )
-{
-    STUB;
-    szLang = "Language Neutral\0";
-    nSize = sizeof(szLang) * sizeof(CHAR);
-    return sizeof(szLang) - 1;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-VerLanguageNameW (
-    DWORD   wLang,
-    LPWSTR  szLang,
-    DWORD   nSize
-    )
-{
-    STUB;
-    szLang = L"Language Neutral\0";
-    nSize = sizeof(szLang) * sizeof(WCHAR);
-    return sizeof(szLang) - 1;
-}
-
-
 /*
  * @unimplemented
  */
