@@ -143,7 +143,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Пример",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
     LTEXT           "&Азбука:",stc7 ,98,114,40,9
-    COMBOBOX        cmb5,98,124,120,10,CBS_DROPDOWNLIST |CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
@@ -406,9 +406,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY                    "Недостиг на памет."
     PD32_GENERIC_ERROR                    "Появи се грешка."
     PD32_DRIVER_UNKNOWN                   "Непознат драйвер за принтера."
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Преди да можете да извършвате опареции, \
+свързани с печат като настройка на страницата или разпечатване на документ, \
+само ако имате инсталиран принтер. Инсталирайте принтер и опитайте отново."
 
     PD32_DEFAULT_PRINTER                  "Принтер по подразбиране; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Има %d документа в опашката"

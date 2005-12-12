@@ -2096,14 +2096,6 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
 		lppd->hDevMode = GlobalAlloc(GMEM_MOVEABLE,
 					lpdm->dmSize + lpdm->dmDriverExtra);
 	    } else {
-	        WORD locks;
-		if((locks = (GlobalFlags(lppd->hDevMode) & GMEM_LOCKCOUNT))) {
-		    WARN("hDevMode has %d locks on it. Unlocking it now\n", locks);
-		    while(locks--) {
-		        GlobalUnlock(lppd->hDevMode);
-			TRACE("Now got %d locks\n", locks);
-		    }
-		}
 		lppd->hDevMode = GlobalReAlloc(lppd->hDevMode,
 					       lpdm->dmSize + lpdm->dmDriverExtra,
 					       GMEM_MOVEABLE);
@@ -2111,14 +2103,6 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
 	    lpdmReturn = GlobalLock(lppd->hDevMode);
 	    memcpy(lpdmReturn, lpdm, lpdm->dmSize + lpdm->dmDriverExtra);
 
-	    if (lppd->hDevNames != 0) {
-	        WORD locks;
-		if((locks = (GlobalFlags(lppd->hDevNames) & GMEM_LOCKCOUNT))) {
-		    WARN("hDevNames has %d locks on it. Unlocking it now\n", locks);
-		    while(locks--)
-		        GlobalUnlock(lppd->hDevNames);
-		}
-	    }
 	    PRINTDLG_CreateDevNames(&(lppd->hDevNames),
 		    di->pDriverPath,
 		    pi->pPrinterName,

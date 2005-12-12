@@ -142,7 +142,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Forhåndsvisning",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
     LTEXT           "Skr&ipt:",stc7 ,98,114,40,9
-    COMBOBOX        cmb5,98,124,120,10,CBS_DROPDOWNLIST |CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
@@ -401,9 +401,9 @@ Oppgi en verdi mellom %d og %d."
     PD32_OUT_OF_MEMORY                    "Ikke mer minne."
     PD32_GENERIC_ERROR                    "En feil har oppstått."
     PD32_DRIVER_UNKNOWN                   "Ukjent skriverdriver."
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Du må installere en skriver før du \
+    kan gjøre skriver-relaterte oppgaver som å endre \ sideoppsettet og skrive ut et dokument. \
+    Installer en og prøv på nytt."
 
     PD32_DEFAULT_PRINTER                  "Standardskriver; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Det er %d dokumenter i køen"
