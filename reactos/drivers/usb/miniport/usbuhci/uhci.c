@@ -14,8 +14,7 @@ struct pci_device_id* pci_ids = &uhci_pci_ids[0];
 NTSTATUS
 InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
-
+	NTSTATUS Status;
 	PUSBMP_DEVICE_EXTENSION DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
 	/* Create generic linux structure */
@@ -26,8 +25,10 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	/* Initialize generic linux structure */
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
-	dev->dev.dev_ext = (PVOID)DeviceObject;
+	dev->dev.dev_ext = DeviceObject;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_UHCI_TAG); // 128 max len for slot name
+
+	/* Init wrapper */
 	init_wrapper(dev);
 	
 	strcpy(dev->dev.name, "UnivHCI PCI-USB Controller");
@@ -49,7 +50,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	/* Probe device with real id now */
 	uhci_pci_driver.probe(dev, uhci_pci_ids);
 
-	return Status; 
+	return STATUS_SUCCESS; 
 }
 
 VOID STDCALL 
