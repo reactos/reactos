@@ -502,9 +502,9 @@ UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL creat
  *
  * PARAMS
  *   szDescriptor  [I]  the descriptor to decompose
- *   szProduct     [O]  buffer of MAX_FEATURE_CHARS for the product guid
- *   szFeature     [O]  buffer of MAX_FEATURE_CHARS for the feature code
- *   szComponent   [O]  buffer of MAX_FEATURE_CHARS for the component guid
+ *   szProduct     [O]  buffer of MAX_FEATURE_CHARS+1 for the product guid
+ *   szFeature     [O]  buffer of MAX_FEATURE_CHARS+1 for the feature code
+ *   szComponent   [O]  buffer of MAX_FEATURE_CHARS+1 for the component guid
  *   pUsed         [O]  the length of the descriptor
  *
  * RETURNS

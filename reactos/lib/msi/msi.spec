@@ -102,7 +102,7 @@
 106 stdcall MsiProvideComponentFromDescriptorW(wstr ptr ptr ptr)
 107 stub MsiProvideComponentW
 108 stdcall MsiProvideQualifiedComponentA(str str long ptr ptr)
-109 stdcall MsiProvideQualifiedComponentW(str str long ptr ptr)
+109 stdcall MsiProvideQualifiedComponentW(wstr wstr long ptr ptr)
 110 stdcall MsiQueryFeatureStateA(str str)
 111 stdcall MsiQueryFeatureStateW(wstr wstr)
 112 stdcall MsiQueryProductStateA(str)
