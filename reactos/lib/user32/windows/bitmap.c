@@ -81,7 +81,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    HANDLE hSection;
    CURSORICONDIR *IconDIR;
    HDC hScreenDc;
-   HANDLE hIcon;
+   HICON hIcon;
    ULONG HeaderSize;
    ULONG ColorCount;
    PVOID Data;
@@ -104,7 +104,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       if (fuLoad & LR_SHARED)
       {
          /* FIXME - pass size! */
-         hIcon = (HANDLE)NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, 0, 0);
+         hIcon = NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, 0, 0);
          if (hIcon)
             return hIcon;
       }
@@ -117,12 +117,14 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       if (IconResDir == NULL)
          return NULL;
 
-      /* Find the best fitting in the IconResDir for this resolution. */
-      id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, TRUE,
-         32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      /*
+       * Find the best fitting in the IconResDir for this resolution
+       */
 
-      h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id),
-         MAKEINTRESOURCEW(RT_CURSOR));
+      id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, TRUE, 32, 32,
+                                       fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+
+      h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id), MAKEINTRESOURCEW(RT_CURSOR));
 
       hResource = LoadResource(hinst, h2Resource);
       if (hResource == NULL)
@@ -132,9 +134,10 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       if (ResIcon == NULL)
          return NULL;
 
-      hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE)ResIcon,
-         SizeofResource(hinst, h2Resource), FALSE, 0x00030000,
-         32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      hIcon = CreateIconFromResourceEx((PBYTE)ResIcon,
+                                       SizeofResource(hinst, h2Resource),
+                                       FALSE, 0x00030000, 32, 32,
+                                       fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
          NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes,
@@ -146,7 +149,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
    if (fuLoad & LR_SHARED)
    {
-      DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
+      DbgPrint("FIXME: need LR_SHARED support for loading cursor images from files\n");
    }
 
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -175,7 +178,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
     * Get a handle to the screen dc, the icon we create is going to be
     * compatable with it.
     */
-   hScreenDc = CreateCompatibleDC(NULL);
+   hScreenDc = CreateICW(NULL, NULL, NULL, NULL);
    if (hScreenDc == NULL)
    {
       UnmapViewOfFile(IconDIR);
@@ -214,7 +217,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
    UnmapViewOfFile(IconDIR);
 
-   /* at this point we have a copy of the icon image to play with */
+   /* At this point we have a copy of the icon image to play with. */
 
    SafeIconImage->icHeader.biHeight = SafeIconImage->icHeader.biHeight /2;
 
@@ -232,7 +235,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
    }
 
-   /* make data point to the start of the XOR image data */
+   /* Make data point to the start of the XOR image data. */
    Data = (PBYTE)SafeIconImage + HeaderSize;
 
    hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
@@ -251,7 +254,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
    HANDLE hfRes;
    HANDLE hFile;
    HANDLE hSection;
-   CURSORICONDIR* IconDIR;
+   CURSORICONDIR *IconDIR;
    HDC hScreenDc;
    HICON hIcon;
    ULONG HeaderSize;
@@ -327,44 +330,44 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 
    if (fuLoad & LR_SHARED)
    {
-     DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
+      DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
    }
 
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
                        OPEN_EXISTING, 0, NULL);
    if (hFile == NULL)
-       return NULL;
+      return NULL;
 
    hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
    CloseHandle(hFile);
    if (hSection == NULL)
-       return NULL;
+      return NULL;
 
    IconDIR = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
    CloseHandle(hSection);
    if (IconDIR == NULL)
-       return NULL;
-   
+      return NULL;
+
    if (0 != IconDIR->idReserved ||
        (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
    {
-       UnmapViewOfFile(IconDIR);
-       return NULL;
+      UnmapViewOfFile(IconDIR);
+      return NULL;
    }
 
    /* Pick the best size. */
    dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, width, height, 1);
    if (!dirEntry)
    {
-       UnmapViewOfFile(IconDIR);
-       return NULL;
+      UnmapViewOfFile(IconDIR);
+      return NULL;
    }
 
    SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes);
    if (SafeIconImage == NULL)
    {
-       UnmapViewOfFile(IconDIR);
-       return NULL;
+      UnmapViewOfFile(IconDIR);
+      return NULL;
    }
 
    memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
@@ -393,7 +396,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 
    /* Get a handle to the screen dc, the icon we create is going to be
     * compatable with this. */
-   hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+   hScreenDc = CreateICW(NULL, NULL, NULL, NULL);
    if (hScreenDc == NULL)
    {
       if (fuLoad & LR_LOADFROMFILE)
@@ -403,6 +406,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 
    hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, width, height, width/2, height/2);
    RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
+   DeleteDC(hScreenDc);
 
    return hIcon;
 }
