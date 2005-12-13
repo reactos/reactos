@@ -1254,17 +1254,15 @@ NtUserGetKeyboardLayoutList(
    return 0;
 }
 
-DWORD
+BOOL
 STDCALL
 NtUserGetKeyboardLayoutName(
-   DWORD lpszName)
+   LPWSTR lpszName)
 {
    UNIMPLEMENTED
 
    return 0;
 }
-
-
 
 HKL FASTCALL
 UserGetKeyboardLayout(
