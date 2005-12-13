@@ -878,6 +878,27 @@ VOID NTAPI MiniportDpc(
 }
 
 
+VOID
+NTAPI
+MiniStatus(
+    IN NDIS_HANDLE  MiniportHandle,
+    IN NDIS_STATUS  GeneralStatus,
+    IN PVOID  StatusBuffer,
+    IN UINT  StatusBufferSize)
+{
+    UNIMPLEMENTED
+}
+
+
+VOID
+NTAPI
+MiniStatusComplete(
+    IN NDIS_HANDLE  MiniportAdapterHandle)
+{
+    UNIMPLEMENTED
+}
+
+
 /*
  * @unimplemented
  */
@@ -1406,6 +1427,8 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.ResetCompleteHandler = MiniResetComplete;
   Adapter->NdisMiniportBlock.TDCompleteHandler    = MiniTransferDataComplete;
   Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
+  Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
+  Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
 
   Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
 
