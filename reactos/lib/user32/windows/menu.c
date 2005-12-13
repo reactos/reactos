@@ -4334,8 +4334,6 @@ ModifyMenuA(
   mii.fType = 0;
   mii.fState = MFS_ENABLED;
 
-  UNIMPLEMENTED;
-
   if(!GetMenuItemInfoA( hMnu,
                         uPosition,
                        (BOOL)(MF_BYPOSITION & uFlags),
@@ -4430,8 +4428,6 @@ ModifyMenuW(
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
   mii.fState = MFS_ENABLED;
-
-  UNIMPLEMENTED;
 
   if(!NtUserMenuItemInfo( hMnu,
                           uPosition,
