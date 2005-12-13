@@ -354,7 +354,7 @@ dlProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
       if (wParam == IDCANCEL)
         {
           SetWindowLongPtrW(Dlg, GWLP_USERDATA, 1);
-		  PostMessage(Dlg, WM_CLOSE, 0, 0);
+          PostMessage(Dlg, WM_CLOSE, 0, 0);
         }
       return FALSE;
 
