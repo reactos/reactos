@@ -22,14 +22,6 @@
 
 /* INCLUDES *******************************************************************/
 
-/*
- * Define this to get the code working on ReactOS. It should be removed later.
- */
-/*
-Already defined in makefile now.
-#define __REACTOS__
-*/
-
 #include <user32.h>
 #define NDEBUG
 #include <debug.h>
