@@ -70,14 +70,6 @@
 #define ITEM_PREV		-1
 #define ITEM_NEXT		 1
 
-#ifndef MF_END
-#define MF_END             (0x0080)
-#endif
-
-#ifndef MIIM_STRING
-#define MIIM_STRING      (0x00000040)
-#endif
-
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
 #define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
 #define POPUPMENU_CLASS_ATOMA   MAKEINTATOMA(32768)  /* PopupMenu */
