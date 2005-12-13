@@ -359,14 +359,10 @@ dlProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
 
     case WM_CLOSE:
-        DestroyWindow(Dlg);
+        EndDialog(Dlg, 0);
         return TRUE;
 
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return TRUE;
-
-    default:
+	default:
       return FALSE;
     }
 }
