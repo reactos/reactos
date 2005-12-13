@@ -51,16 +51,6 @@
 #define IDI_WINLOGOA       MAKEINTRESOURCEA(32517)
 #define IDI_WINLOGOW       MAKEINTRESOURCEW(32517)
 
-#ifndef MB_TYPEMASK
-#define MB_TYPEMASK             0x0000000F
-#endif
-#ifndef MB_ICONMASK
-#define MB_ICONMASK             0x000000F0
-#endif
-#ifndef MB_DEFMASK
-#define MB_DEFMASK              0x00000F00
-#endif
-
 #define BTN_CX (75)
 #define BTN_CY (23)
 
