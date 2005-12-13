@@ -344,7 +344,8 @@ VBEInitialize(PVOID HwDeviceExtension)
           VbeModeInfo->XResolution >= 640 &&
           VbeModeInfo->YResolution >= 480 &&
           (VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_PACKEDPIXEL ||
-           VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_DIRECTCOLOR))
+           VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_DIRECTCOLOR) &&
+          VbeModeInfo->PhysBasePtr != 0)
       {
          if (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR)
          {
