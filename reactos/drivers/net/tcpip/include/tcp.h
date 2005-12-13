@@ -176,4 +176,6 @@ NTSTATUS TCPStartup(
 NTSTATUS TCPShutdown(
   VOID);
 
+VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
+
 #endif /* __TCP_H */

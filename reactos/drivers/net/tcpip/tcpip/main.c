@@ -619,6 +619,8 @@ VOID STDCALL TiUnload(
   }
   TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 #endif
+  ChewShutdown();
+
   /* Cancel timer */
   KeCancelTimer(&IPTimer);
 
@@ -733,6 +735,8 @@ DriverEntry(
     TI_DbgPrint(MIN_TRACE, ("Failed to create IP device object. Status (0x%X).\n", Status));
     return Status;
   }
+
+  ChewInit( IPDeviceObject );
 
   /* Create RawIP device object */
   Status = IoCreateDevice(DriverObject, 0, &strRawDeviceName,
