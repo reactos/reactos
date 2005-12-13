@@ -730,7 +730,12 @@ namespace ReactOS.CustomRevisionAction
 
 			this.sendCommand( "CWD " + dirName );
 
-			if ( this.resultCode != 250 ) throw new FtpException(result.Substring(4));
+			if ( this.resultCode != 250 )
+			{
+				if (this.resultCode == 550)
+					throw new FtpException(String.Format("Access denied to {0}", this.remotePath + "/" + dirName));
+				throw new FtpException(result.Substring(4));
+			}
 
 			this.sendCommand( "PWD" );
 
