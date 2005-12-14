@@ -1111,6 +1111,10 @@ DevInstallW(
     if ((!FindDriver(&DevInstData)) && (Show != SW_HIDE))
     {
 
+#if 1 /* Yes, I know I'm creating dead code here, problem is that you'll get
+         warnings about unused variables/code if you just #ifdef the code */
+      if (0) {
+#endif
         /* Create the Welcome page */
         ZeroMemory (&psp, sizeof(PROPSHEETPAGE));
         psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -1163,6 +1167,14 @@ DevInstallW(
         PropertySheet(&psh);
 
         DeleteObject(DevInstData.hTitleFont);
+#if 1
+      }
+      else
+      {
+        DPRINT1("No driver found for %S (%S), skipping installation screens\n",
+                DevInstData.buffer, InstanceId);
+      }
+#endif
 
     }
     else
