@@ -133,6 +133,10 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
                                    const CLSID *pclsid,
                                    CStdPSFactoryBuffer *pPSFactoryBuffer)
 {
+  TRACE("(%s, %s, %p, %p, %s, %p)\n", debugstr_guid(rclsid),
+    debugstr_guid(iid), ppv, pProxyFileList, debugstr_guid(pclsid),
+    pPSFactoryBuffer);
+
   *ppv = NULL;
   if (!pPSFactoryBuffer->lpVtbl) {
     pPSFactoryBuffer->lpVtbl = &CStdPSFactory_Vtbl;
@@ -141,7 +145,17 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
   }
   if (IsEqualGUID(rclsid, pclsid))
     return IPSFactoryBuffer_QueryInterface((LPPSFACTORYBUFFER)pPSFactoryBuffer, iid, ppv);
-  return CLASS_E_CLASSNOTAVAILABLE;
+  else {
+    const ProxyFileInfo *info;
+    int index;
+    /* otherwise, the dll may be using the iid as the clsid, so
+     * search for it in the proxy file list */
+    if (FindProxyInfo(pProxyFileList, rclsid, &info, &index))
+      return IPSFactoryBuffer_QueryInterface((LPPSFACTORYBUFFER)pPSFactoryBuffer, iid, ppv);
+
+    WARN("class %s not available\n", debugstr_guid(rclsid));
+    return CLASS_E_CLASSNOTAVAILABLE;
+  }
 }
 
 /***********************************************************************

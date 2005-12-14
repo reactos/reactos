@@ -177,3 +177,9 @@ void WINAPI CStdStubBuffer_DebugServerRelease(LPRPCSTUBBUFFER iface,
   CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->DebugServerRelease(%p)\n",This,pv);
 }
+
+const MIDL_SERVER_INFO *CStdStubBuffer_GetServerInfo(IRpcStubBuffer *iface)
+{
+  CStdStubBuffer *This = (CStdStubBuffer *)iface;
+  return STUB_HEADER(This).pServerInfo;
+}
