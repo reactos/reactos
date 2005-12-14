@@ -134,6 +134,18 @@ namespace TechBot.Console
 			}
 		}
 
+		private static string WmXml
+		{
+			get
+			{
+				string optionName = "WmXml";
+				string s = ConfigurationSettings.AppSettings[optionName];
+				VerifyRequiredOption(optionName,
+				                     s);
+				return s;
+			}
+		}
+
 		private static string SvnCommand
 		{
 			get
@@ -157,6 +169,7 @@ namespace TechBot.Console
 			                                       NtstatusXml,
 			                                       WinerrorXml,
 			                                       HresultXml,
+			                                       WmXml,
 			                                       SvnCommand);
 			ircService.Run();
 		}
@@ -176,6 +189,7 @@ namespace TechBot.Console
 			                                            NtstatusXml,
 			                                            WinerrorXml,
 			                                            HresultXml,
+			                                            WmXml,
 			                                            SvnCommand);
 			service.Run();
 			while (true)

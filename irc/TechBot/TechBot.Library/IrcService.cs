@@ -16,6 +16,7 @@ namespace TechBot.Library
 		private string ntstatusXml;
 		private string winerrorXml;
 		private string hresultXml;
+		private string wmXml;
 		private string svnCommand;
 		private IrcClient client;
 		private ArrayList channels = new ArrayList(); /* IrcChannel */
@@ -31,18 +32,20 @@ namespace TechBot.Library
 		                  string ntstatusXml,
 		                  string winerrorXml,
 		                  string hresultXml,
+		                  string wmXml,
 		                  string svnCommand)
 		{
 			this.hostname = hostname;
 			this.port = port;
 			this.channelnames = channelnames;
-		    this.botname = botname;
-		    this.chmPath = chmPath;
-		    this.mainChm = mainChm;
-		    this.ntstatusXml = ntstatusXml;
-		    this.winerrorXml = winerrorXml;
-		    this.hresultXml = hresultXml;
-		    this.svnCommand = svnCommand;
+			this.botname = botname;
+			this.chmPath = chmPath;
+			this.mainChm = mainChm;
+			this.ntstatusXml = ntstatusXml;
+			this.winerrorXml = winerrorXml;
+			this.hresultXml = hresultXml;
+			this.wmXml = wmXml;
+			this.svnCommand = svnCommand;
 		}
 
 		public void Run()
@@ -53,6 +56,7 @@ namespace TechBot.Library
 			                             ntstatusXml,
 			                             winerrorXml,
 			                             hresultXml,
+			                             wmXml,
 			                             svnCommand);
 			service.Run();
 
