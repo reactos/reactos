@@ -23,6 +23,7 @@
 	<file>dochost.c</file>
 	<file>events.c</file>
 	<file>factory.c</file>
+	<file>frame.c</file>
 	<file>misc.c</file>
 	<file>oleobject.c</file>
 	<file>persist.c</file>

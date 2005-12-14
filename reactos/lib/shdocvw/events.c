@@ -27,13 +27,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-typedef struct {
+struct ConnectionPoint {
     const IConnectionPointVtbl *lpConnectionPointVtbl;
 
     WebBrowser *webbrowser;
 
+    IDispatch **sinks;
+    DWORD sinks_size;
+
     IID iid;
-} ConnectionPoint;
+};
 
 #define CONPOINT(x)  ((IConnectionPoint*) &(x)->lpConnectionPointVtbl)
 
@@ -84,13 +87,13 @@ static HRESULT WINAPI ConnectionPointContainer_FindConnectionPoint(IConnectionPo
 
     if(IsEqualGUID(&DIID_DWebBrowserEvents2, riid)) {
         TRACE("(%p)->(DIID_DWebBrowserEvents2 %p)\n", This, ppCP);
-        *ppCP = This->cp_wbe2;
+        *ppCP = CONPOINT(This->cp_wbe2);
     }else if(IsEqualGUID(&DIID_DWebBrowserEvents, riid)) {
         TRACE("(%p)->(DIID_DWebBrowserEvents %p)\n", This, ppCP);
-        *ppCP = This->cp_wbe;
+        *ppCP = CONPOINT(This->cp_wbe);
     }else if(IsEqualGUID(&IID_IPropertyNotifySink, riid)) {
         TRACE("(%p)->(IID_IPropertyNotifySink %p)\n", This, ppCP);
-        *ppCP = This->cp_pns;
+        *ppCP = CONPOINT(This->cp_pns);
     }
 
     if(*ppCP) {
@@ -181,15 +184,53 @@ static HRESULT WINAPI ConnectionPoint_Advise(IConnectionPoint *iface, IUnknown *
                                              DWORD *pdwCookie)
 {
     ConnectionPoint *This = CONPOINT_THIS(iface);
-    FIXME("(%p)->(%p %p)\n", This, pUnkSink, pdwCookie);
-    return E_NOTIMPL;
+    IDispatch *disp;
+    DWORD i;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p %p)\n", This, pUnkSink, pdwCookie);
+
+    hres = IUnknown_QueryInterface(pUnkSink, &This->iid, (void**)&disp);
+    if(FAILED(hres)) {
+        hres = IUnknown_QueryInterface(pUnkSink, &IID_IDispatch, (void**)&disp);
+        if(FAILED(hres))
+            return CONNECT_E_CANNOTCONNECT;
+    }
+
+    if(This->sinks) {
+        for(i=0; i<This->sinks_size; i++) {
+            if(!This->sinks[i])
+                break;
+        }
+
+        if(i == This->sinks_size)
+            This->sinks = HeapReAlloc(GetProcessHeap(), 0, This->sinks,
+                                      (++This->sinks_size)*sizeof(*This->sinks));
+    }else {
+        This->sinks = HeapAlloc(GetProcessHeap(), 0, sizeof(*This->sinks));
+        This->sinks_size = 1;
+        i = 0;
+    }
+
+    This->sinks[i] = disp;
+    *pdwCookie = i+1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ConnectionPoint_Unadvise(IConnectionPoint *iface, DWORD dwCookie)
 {
     ConnectionPoint *This = CONPOINT_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, dwCookie);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%ld)\n", This, dwCookie);
+
+    if(!dwCookie || dwCookie > This->sinks_size || !This->sinks[dwCookie-1])
+        return CONNECT_E_NOCONNECTION;
+
+    IDispatch_Release(This->sinks[dwCookie-1]);
+    This->sinks[dwCookie-1] = NULL;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ConnectionPoint_EnumConnections(IConnectionPoint *iface,
@@ -214,15 +255,43 @@ static const IConnectionPointVtbl ConnectionPointVtbl =
     ConnectionPoint_EnumConnections
 };
 
-static void ConnectionPoint_Create(WebBrowser *wb, REFIID riid, IConnectionPoint **cp)
+void call_sink(ConnectionPoint *This, DISPID dispid, DISPPARAMS *dispparams)
+{
+    DWORD i;
+
+    for(i=0; i<This->sinks_size; i++) {
+        if(This->sinks[i])
+            IDispatch_Invoke(This->sinks[i], dispid, &IID_NULL, LOCALE_SYSTEM_DEFAULT,
+                             DISPATCH_METHOD, dispparams, NULL, NULL, NULL);
+    }
+}
+
+static void ConnectionPoint_Create(WebBrowser *wb, REFIID riid, ConnectionPoint **cp)
 {
     ConnectionPoint *ret = HeapAlloc(GetProcessHeap(), 0, sizeof(ConnectionPoint));
 
     ret->lpConnectionPointVtbl = &ConnectionPointVtbl;
     ret->webbrowser = wb;
+
+    ret->sinks = NULL;
+    ret->sinks_size = 0;
+
     memcpy(&ret->iid, riid, sizeof(IID));
 
-    *cp = CONPOINT(ret);
+    *cp = ret;
+}
+
+static void ConnectionPoint_Destroy(ConnectionPoint *This)
+{
+    int i;
+
+    for(i=0; i<This->sinks_size; i++) {
+        if(This->sinks[i])
+            IDispatch_Release(This->sinks[i]);
+    }
+
+    HeapFree(GetProcessHeap(), 0, This->sinks);
+    HeapFree(GetProcessHeap(), 0, This);
 }
 
 void WebBrowser_Events_Init(WebBrowser *This)
@@ -236,7 +305,7 @@ void WebBrowser_Events_Init(WebBrowser *This)
 
 void WebBrowser_Events_Destroy(WebBrowser *This)
 {
-    HeapFree(GetProcessHeap(), 0, This->cp_wbe2);
-    HeapFree(GetProcessHeap(), 0, This->cp_wbe);
-    HeapFree(GetProcessHeap(), 0, This->cp_pns);
+    ConnectionPoint_Destroy(This->cp_wbe2);
+    ConnectionPoint_Destroy(This->cp_wbe);
+    ConnectionPoint_Destroy(This->cp_pns);
 }

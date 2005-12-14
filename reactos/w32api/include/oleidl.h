@@ -318,6 +318,21 @@ DECLARE_INTERFACE_(IOleInPlaceObject,IOleWindow)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IOleInPlaceObject_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleInPlaceObject_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IOleInPlaceObject_Release(p) (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IOleInPlaceObject_GetWindow(p,a) (p)->lpVtbl->GetWindow(p,a)
+#define IOleInPlaceObject_ContextSensitiveHelp(p,a) (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IOleInPlaceObject methods ***/
+#define IOleInPlaceObject_InPlaceDeactivate(p) (p)->lpVtbl->InPlaceDeactivate(p)
+#define IOleInPlaceObject_UIDeactivate(p) (p)->lpVtbl->UIDeactivate(p)
+#define IOleInPlaceObject_SetObjectRects(p,a,b) (p)->lpVtbl->SetObjectRects(p,a,b)
+#define IOleInPlaceObject_ReactivateAndUndo(p) (p)->lpVtbl->ReactivateAndUndo(p)
+#endif
+
 EXTERN_C const IID IID_IOleInPlaceActiveObject;
 #define INTERFACE IOleInPlaceActiveObject
 DECLARE_INTERFACE_(IOleInPlaceActiveObject,IOleWindow)

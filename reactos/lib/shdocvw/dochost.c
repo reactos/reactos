@@ -18,8 +18,141 @@
 
 #include "wine/debug.h"
 #include "shdocvw.h"
+#include "hlink.h"
+#include "exdispid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
+static ATOM doc_view_atom = 0;
+
+static void navigate_complete(WebBrowser *This)
+{
+    IDispatch *disp = NULL;
+    DISPPARAMS dispparams;
+    VARIANTARG params[2];
+    VARIANT url;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IDispatch, (void**)&disp);
+    if(FAILED(hres))
+        FIXME("Could not get IDispatch interface\n");
+
+    dispparams.cArgs = 2;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = params;
+
+    V_VT(params) = (VT_BYREF|VT_VARIANT);
+    V_BYREF(params) = &url;
+
+    V_VT(params+1) = VT_DISPATCH;
+    V_DISPATCH(params+1) = disp;
+
+    V_VT(&url) = VT_BSTR;
+    V_BSTR(&url) = This->url;
+
+    call_sink(This->cp_wbe2, DISPID_NAVIGATECOMPLETE2, &dispparams);
+    call_sink(This->cp_wbe2, DISPID_DOCUMENTCOMPLETE, &dispparams);
+
+    if(disp)
+        IDispatch_Release(disp);
+}
+
+static LRESULT navigate2(WebBrowser *This)
+{
+    IHlinkTarget *hlink;
+    HRESULT hres;
+
+    TRACE("(%p)\n", This);
+
+    if(!This->document) {
+        WARN("document == NULL\n");
+        return 0;
+    }
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IHlinkTarget, (void**)&hlink);
+    if(FAILED(hres)) {
+        FIXME("Could not get IHlinkTarget interface\n");
+        return 0;
+    }
+
+    hres = IHlinkTarget_Navigate(hlink, 0, NULL);
+    IHlinkTarget_Release(hlink);
+    if(FAILED(hres)) {
+        FIXME("Navigate failed\n");
+        return 0;
+    }
+
+    navigate_complete(This);
+
+    return 0;
+}
+
+static LRESULT resize_document(WebBrowser *This, LONG width, LONG height)
+{
+    RECT rect = {0, 0, width, height};
+
+    TRACE("(%p)->(%ld %ld)\n", This, width, height);
+
+    if(This->view)
+        IOleDocumentView_SetRect(This->view, &rect);
+
+    return 0;
+}
+
+static LRESULT WINAPI doc_view_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    WebBrowser *This;
+
+    static const WCHAR wszTHIS[] = {'T','H','I','S',0};
+
+    if(msg == WM_CREATE) {
+        This = *(WebBrowser**)lParam;
+        SetPropW(hwnd, wszTHIS, This);
+    }else {
+        This = GetPropW(hwnd, wszTHIS);
+    }
+
+    switch(msg) {
+    case WM_SIZE:
+        return resize_document(This, LOWORD(lParam), HIWORD(lParam));
+    case WB_WM_NAVIGATE2:
+        return navigate2(This);
+    }
+
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+void create_doc_view_hwnd(WebBrowser *This)
+{
+    RECT rect;
+
+    static const WCHAR wszShell_DocObject_View[] =
+        {'S','h','e','l','l',' ','D','o','c','O','b','j','e','c','t',' ','V','i','e','w',0};
+
+    if(!doc_view_atom) {
+        static WNDCLASSEXW wndclass = {
+            sizeof(wndclass),
+            CS_PARENTDC,
+            doc_view_proc,
+            0, 0 /* native uses 4*/, NULL, NULL, NULL,
+            (HBRUSH)COLOR_WINDOWFRAME, NULL,
+            wszShell_DocObject_View,
+            NULL
+        };
+
+        wndclass.hInstance = shdocvw_hinstance;
+
+        doc_view_atom = RegisterClassExW(&wndclass);
+    }
+
+    GetWindowRect(This->shell_embedding_hwnd, &rect);
+    This->doc_view_hwnd = CreateWindowExW(0, wszShell_DocObject_View,
+         wszShell_DocObject_View,
+         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | WS_MAXIMIZEBOX,
+         rect.left, rect.top, rect.right, rect.bottom, This->shell_embedding_hwnd,
+         NULL, shdocvw_hinstance, This);
+}
 
 #define DOCHOSTUI_THIS(iface) DEFINE_THIS(WebBrowser, DocHostUIHandler, iface)
 
@@ -143,8 +276,23 @@ static HRESULT WINAPI DocHostUIHandler_GetOptionKeyPath(IDocHostUIHandler2 *ifac
         LPOLESTR *pchKey, DWORD dw)
 {
     WebBrowser *This = DOCHOSTUI_THIS(iface);
-    FIXME("(%p)->(%p %ld)\n", This, pchKey, dw);
-    return E_NOTIMPL;
+    IDocHostUIHandler *handler;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p %ld)\n", This, pchKey, dw);
+
+    if(!This->client)
+        return S_OK;
+
+    hres = IOleClientSite_QueryInterface(This->client, &IID_IDocHostUIHandler,
+                                         (void**)&handler);
+    if(SUCCEEDED(hres)) {
+        hres = IDocHostUIHandler_GetOptionKeyPath(handler, pchKey, dw);
+        IDocHostUIHandler_Release(handler);
+        return hres;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI DocHostUIHandler_GetDropTarget(IDocHostUIHandler2 *iface,
@@ -183,8 +331,23 @@ static HRESULT WINAPI DocHostUIHandler_GetOverrideKeyPath(IDocHostUIHandler2 *if
         LPOLESTR *pchKey, DWORD dw)
 {
     WebBrowser *This = DOCHOSTUI_THIS(iface);
-    FIXME("(%p)->(%p %ld)\n", This, pchKey, dw);
-    return E_NOTIMPL;
+    IDocHostUIHandler2 *handler;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p %ld)\n", This, pchKey, dw);
+
+    if(!This->client)
+        return S_OK;
+
+    hres = IOleClientSite_QueryInterface(This->client, &IID_IDocHostUIHandler2,
+                                         (void**)&handler);
+    if(SUCCEEDED(hres)) {
+        hres = IDocHostUIHandler2_GetOverrideKeyPath(handler, pchKey, dw);
+        IDocHostUIHandler2_Release(handler);
+        return hres;
+    }
+
+    return S_OK;
 }
 
 #undef DOCHOSTUI_THIS
@@ -214,4 +377,6 @@ static const IDocHostUIHandler2Vtbl DocHostUIHandler2Vtbl = {
 void WebBrowser_DocHost_Init(WebBrowser *This)
 {
     This->lpDocHostUIHandlerVtbl = &DocHostUIHandler2Vtbl;
+
+    This->doc_view_hwnd = NULL;
 }

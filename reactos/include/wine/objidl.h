@@ -94,10 +94,6 @@ typedef struct tagRemSTGMEDIUM {
 	unsigned long cbData;
 	BYTE data[1];
 } RemSTGMEDIUM;
-typedef struct tagHLITEM {
-	ULONG uHLID;
-	LPWSTR pwzFriendlyName;
-} HLITEM;
 typedef struct tagSTATDATA {
 	FORMATETC formatetc;
 	DWORD grfAdvf;
@@ -430,7 +426,6 @@ EXTERN_C const FMTID FMTID_DocSummaryInformation;
 EXTERN_C const FMTID FMTID_UserDefinedProperties;
 
 DECLARE_ENUMERATOR(FORMATETC);
-DECLARE_ENUMERATOR(HLITEM);
 DECLARE_ENUMERATOR(STATDATA);
 DECLARE_ENUMERATOR(STATPROPSETSTG);
 DECLARE_ENUMERATOR(STATPROPSTG);

@@ -47,6 +47,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "docobj.h"
 #include "exdisp.h"
 
+#include "hlink.h"
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shldisp.h"

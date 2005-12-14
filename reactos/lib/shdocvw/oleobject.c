@@ -29,44 +29,36 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-static ATOM doc_view_atom = 0;
 static ATOM shell_embedding_atom = 0;
 
-static LRESULT WINAPI doc_view_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT resize_window(WebBrowser *This, LONG width, LONG height)
 {
-    return DefWindowProcA(hwnd, msg, wParam, lParam);
+    if(This->doc_view_hwnd)
+        SetWindowPos(This->doc_view_hwnd, NULL, 0, 0, width, height,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+
+    return 0;
 }
 
 static LRESULT WINAPI shell_embedding_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    return DefWindowProcA(hwnd, msg, wParam, lParam);
-}
+    WebBrowser *This;
 
-static void create_doc_view_hwnd(WebBrowser *This)
-{
-    static const WCHAR wszShell_DocObject_View[] =
-        {'S','h','e','l','l',' ','D','o','c','O','b','j','e','c','t',' ','V','i','e','w',0};
+    static const WCHAR wszTHIS[] = {'T','H','I','S',0};
 
-    if(!doc_view_atom) {
-        static WNDCLASSEXW wndclass = {
-            sizeof(wndclass),
-            CS_PARENTDC,
-            doc_view_proc,
-            0, 0 /* native uses 4*/, NULL, NULL, NULL,
-            (HBRUSH)COLOR_WINDOWFRAME, NULL,
-            wszShell_DocObject_View,
-            NULL
-        };
-
-        wndclass.hInstance = shdocvw_hinstance;
-
-        doc_view_atom = RegisterClassExW(&wndclass);
+    if(msg == WM_CREATE) {
+        This = *(WebBrowser**)lParam;
+        SetPropW(hwnd, wszTHIS, This);
+    }else {
+        This = GetPropW(hwnd, wszTHIS);
     }
 
-    This->doc_view_hwnd = CreateWindowExW(0, wszShell_DocObject_View, NULL,
-         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | WS_MAXIMIZEBOX,
-         0, 0, 0, 0, This->shell_embedding_hwnd,
-         NULL, shdocvw_hinstance, This);
+    switch(msg) {
+    case WM_SIZE:
+        return resize_window(This, LOWORD(lParam), HIWORD(lParam));
+    }
+
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
 static void create_shell_embedding_hwnd(WebBrowser *This)
@@ -99,12 +91,10 @@ static void create_shell_embedding_hwnd(WebBrowser *This)
         IOleInPlaceSite_Release(inplace);
     }
 
-    This->shell_embedding_hwnd = CreateWindowExW(0, wszShellEmbedding, NULL,
+    This->shell_embedding_hwnd = CreateWindowExW(0, wszShellEmbedding, wszShellEmbedding,
          WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | WS_MAXIMIZEBOX,
          0, 0, 0, 0, parent,
          NULL, shdocvw_hinstance, This);
-
-    create_doc_view_hwnd(This);
 }
 
 /**********************************************************************
@@ -151,7 +141,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
     This->client = pClientSite;
     if(!pClientSite)
         return S_OK;
-    
+
     IOleClientSite_AddRef(pClientSite);
 
     create_shell_embedding_hwnd(This);
@@ -227,11 +217,14 @@ static HRESULT WINAPI OleObject_DoVerb(IOleObject *iface, LONG iVerb, struct tag
     WebBrowser *This = OLEOBJ_THIS(iface);
     HRESULT hres;
 
+    static const WCHAR wszitem[] = {'i','t','e','m',0};
+
     TRACE("(%p)->(%ld %p %p %ld %p %p)\n", This, iVerb, lpmsg, pActiveSite, lindex, hwndParent,
             lprcPosRect);
 
     switch (iVerb)
     {
+    case OLEIVERB_SHOW:
     case OLEIVERB_INPLACEACTIVATE: {
         IOleInPlaceSite *inplace;
 
@@ -264,7 +257,14 @@ static HRESULT WINAPI OleObject_DoVerb(IOleObject *iface, LONG iVerb, struct tag
                                          &This->frameinfo);
 
 
-        IOleInPlaceSite_Release(inplace);
+        if(iVerb == OLEIVERB_INPLACEACTIVATE)
+            IOleInPlaceSite_Release(inplace);
+
+        SetWindowPos(This->shell_embedding_hwnd, NULL,
+                     This->pos_rect.left, This->pos_rect.top,
+                     This->pos_rect.right-This->pos_rect.left,
+                     This->pos_rect.bottom-This->pos_rect.top,
+                     SWP_NOZORDER | SWP_SHOWWINDOW);
 
         if(This->client) {
             IOleClientSite_ShowObject(This->client);
@@ -273,6 +273,20 @@ static HRESULT WINAPI OleObject_DoVerb(IOleObject *iface, LONG iVerb, struct tag
 
         if(This->frame)
             IOleInPlaceFrame_GetWindow(This->frame, &This->frame_hwnd);
+
+        if(iVerb == OLEIVERB_INPLACEACTIVATE)
+            return S_OK;
+
+        TRACE("OLEIVERB_SHOW\n");
+
+        IOleInPlaceSite_OnUIActivate(inplace);
+        IOleInPlaceSite_Release(inplace);
+
+        IOleInPlaceFrame_SetActiveObject(This->frame, ACTIVEOBJ(This), wszitem);
+
+        /* TODO:
+         * IOleInPlaceFrmae_SetMenu
+         */
 
         return S_OK;
     }
@@ -482,8 +496,18 @@ static HRESULT WINAPI OleInPlaceObject_SetObjectRects(IOleInPlaceObject *iface,
         LPCRECT lprcPosRect, LPCRECT lprcClipRect)
 {
     WebBrowser *This = INPLACEOBJ_THIS(iface);
-    FIXME("(%p)->(%p %p)\n", This, lprcPosRect, lprcClipRect);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p %p)\n", This, lprcPosRect, lprcClipRect);
+
+    if(This->shell_embedding_hwnd) {
+        SetWindowPos(This->shell_embedding_hwnd, NULL,
+                     lprcPosRect->left, lprcPosRect->top,
+                     lprcPosRect->right-lprcPosRect->left,
+                     lprcPosRect->bottom-lprcPosRect->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI OleInPlaceObject_ReactivateAndUndo(IOleInPlaceObject *iface)
@@ -574,11 +598,102 @@ static const IOleControlVtbl OleControlVtbl =
     OleControl_FreezeEvents
 };
 
+#define ACTIVEOBJ_THIS(iface) DEFINE_THIS(WebBrowser, OleInPlaceActiveObject, iface)
+
+static HRESULT WINAPI InPlaceActiveObject_QueryInterface(IOleInPlaceActiveObject *iface,
+                                                            REFIID riid, void **ppv)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    return IWebBrowser2_QueryInterface(WEBBROWSER2(This), riid, ppv);
+}
+
+static ULONG WINAPI InPlaceActiveObject_AddRef(IOleInPlaceActiveObject *iface)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    return IWebBrowser2_AddRef(WEBBROWSER2(This));
+}
+
+static ULONG WINAPI InPlaceActiveObject_Release(IOleInPlaceActiveObject *iface)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    return IWebBrowser2_Release(WEBBROWSER2(This));
+}
+
+static HRESULT WINAPI InPlaceActiveObject_GetWindow(IOleInPlaceActiveObject *iface,
+                                                    HWND *phwnd)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    return IOleInPlaceObject_GetWindow(INPLACEOBJ(This), phwnd);
+}
+
+static HRESULT WINAPI InPlaceActiveObject_ContextSensitiveHelp(IOleInPlaceActiveObject *iface,
+                                                               BOOL fEnterMode)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    return IOleInPlaceObject_ContextSensitiveHelp(INPLACEOBJ(This), fEnterMode);
+}
+
+static HRESULT WINAPI InPlaceActiveObject_TranslateAccelerator(IOleInPlaceActiveObject *iface,
+                                                               LPMSG lpmsg)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, lpmsg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InPlaceActiveObject_OnFrameWindowActivate(IOleInPlaceActiveObject *iface,
+                                                                BOOL fActivate)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    FIXME("(%p)->(%x)\n", This, fActivate);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InPlaceActiveObject_OnDocWindowActivate(IOleInPlaceActiveObject *iface,
+                                                              BOOL fActivate)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    FIXME("(%p)->(%x)\n", This, fActivate);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InPlaceActiveObject_ResizeBorder(IOleInPlaceActiveObject *iface,
+        LPCRECT lprcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fFrameWindow)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    FIXME("(%p)->(%p %p %x)\n", This, lprcBorder, pUIWindow, fFrameWindow);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI InPlaceActiveObject_EnableModeless(IOleInPlaceActiveObject *iface,
+                                                         BOOL fEnable)
+{
+    WebBrowser *This = ACTIVEOBJ_THIS(iface);
+    FIXME("(%p)->(%x)\n", This, fEnable);
+    return E_NOTIMPL;
+}
+
+#undef ACTIVEOBJ_THIS
+
+static const IOleInPlaceActiveObjectVtbl OleInPlaceActiveObjectVtbl = {
+    InPlaceActiveObject_QueryInterface,
+    InPlaceActiveObject_AddRef,
+    InPlaceActiveObject_Release,
+    InPlaceActiveObject_GetWindow,
+    InPlaceActiveObject_ContextSensitiveHelp,
+    InPlaceActiveObject_TranslateAccelerator,
+    InPlaceActiveObject_OnFrameWindowActivate,
+    InPlaceActiveObject_OnDocWindowActivate,
+    InPlaceActiveObject_ResizeBorder,
+    InPlaceActiveObject_EnableModeless
+};
+
 void WebBrowser_OleObject_Init(WebBrowser *This)
 {
-    This->lpOleObjectVtbl        = &OleObjectVtbl;
-    This->lpOleInPlaceObjectVtbl = &OleInPlaceObjectVtbl;
-    This->lpOleControlVtbl       = &OleControlVtbl;
+    This->lpOleObjectVtbl              = &OleObjectVtbl;
+    This->lpOleInPlaceObjectVtbl       = &OleInPlaceObjectVtbl;
+    This->lpOleControlVtbl             = &OleControlVtbl;
+    This->lpOleInPlaceActiveObjectVtbl = &OleInPlaceActiveObjectVtbl;
 
     This->client = NULL;
     This->container = NULL;
@@ -586,6 +701,7 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
     This->frame_hwnd = NULL;
     This->frame = NULL;
     This->uiwindow = NULL;
+    This->shell_embedding_hwnd = NULL;
 
     memset(&This->pos_rect, 0, sizeof(RECT));
     memset(&This->clip_rect, 0, sizeof(RECT));

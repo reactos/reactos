@@ -47,6 +47,9 @@ static HRESULT WINAPI ClientSite_QueryInterface(IOleClientSite *iface, REFIID ri
     }else if(IsEqualGUID(&IID_IDocHostUIHandler2, riid)) {
         TRACE("(%p)->(IID_IDocHostUIHandler2 %p)\n", This, ppv);
         *ppv = DOCHOSTUI2(This);
+    }else if(IsEqualGUID(&IID_IOleDocumentSite, riid)) {
+        TRACE("(%p)->(IID_IOleDocumentSite %p)\n", This, ppv);
+        *ppv = DOCSITE(This);
     }
 
     if(*ppv) {
@@ -168,15 +171,21 @@ static HRESULT WINAPI InPlaceSite_ContextSensitiveHelp(IOleInPlaceSite *iface, B
 static HRESULT WINAPI InPlaceSite_CanInPlaceActivate(IOleInPlaceSite *iface)
 {
     WebBrowser *This = INPLACESITE_THIS(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)\n", This);
+
+    /* Nothing to do here */
+    return S_OK;
 }
 
 static HRESULT WINAPI InPlaceSite_OnInPlaceActivate(IOleInPlaceSite *iface)
 {
     WebBrowser *This = INPLACESITE_THIS(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)\n", This);
+
+    /* Nothing to do here */
+    return S_OK;
 }
 
 static HRESULT WINAPI InPlaceSite_OnUIActivate(IOleInPlaceSite *iface)
@@ -191,9 +200,23 @@ static HRESULT WINAPI InPlaceSite_GetWindowContext(IOleInPlaceSite *iface,
         LPRECT lprcClipRect, LPOLEINPLACEFRAMEINFO lpFrameInfo)
 {
     WebBrowser *This = INPLACESITE_THIS(iface);
-    FIXME("(%p)->(%p %p %p %p %p)\n", This, ppFrame, ppDoc, lprcPosRect,
+
+    TRACE("(%p)->(%p %p %p %p %p)\n", This, ppFrame, ppDoc, lprcPosRect,
           lprcClipRect, lpFrameInfo);
-    return E_NOTIMPL;
+
+    *ppFrame = INPLACEFRAME(This);
+    *ppDoc = NULL;
+
+    GetClientRect(This->doc_view_hwnd, lprcPosRect);
+    memcpy(lprcClipRect, lprcPosRect, sizeof(RECT));
+
+    lpFrameInfo->cb = sizeof(*lpFrameInfo);
+    lpFrameInfo->fMDIApp = FALSE;
+    lpFrameInfo->hwndFrame = This->shell_embedding_hwnd;
+    lpFrameInfo->haccel = NULL;
+    lpFrameInfo->cAccelEntries = 0; /* FIXME: should be 5 */
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InPlaceSite_Scroll(IOleInPlaceSite *iface, SIZE scrollExtent)
@@ -259,8 +282,72 @@ static const IOleInPlaceSiteVtbl OleInPlaceSiteVtbl = {
     InPlaceSite_OnPosRectChange
 };
 
+#define DOCSITE_THIS(iface) DEFINE_THIS(WebBrowser, OleDocumentSite, iface)
+
+static HRESULT WINAPI OleDocumentSite_QueryInterface(IOleDocumentSite *iface,
+                                                     REFIID riid, void **ppv)
+{
+    WebBrowser *This = DOCSITE_THIS(iface);
+    return IOleClientSite_QueryInterface(CLIENTSITE(This), riid, ppv);
+}
+
+static ULONG WINAPI OleDocumentSite_AddRef(IOleDocumentSite *iface)
+{
+    WebBrowser *This = DOCSITE_THIS(iface);
+    return IOleClientSite_AddRef(CLIENTSITE(This));
+}
+
+static ULONG WINAPI OleDocumentSite_Release(IOleDocumentSite *iface)
+{
+    WebBrowser *This = DOCSITE_THIS(iface);
+    return IOleClientSite_Release(CLIENTSITE(This));
+}
+
+static HRESULT WINAPI OleDocumentSite_ActivateMe(IOleDocumentSite *iface,
+                                                 IOleDocumentView *pViewToActivate)
+{
+    WebBrowser *This = DOCSITE_THIS(iface);
+    IOleDocument *oledoc;
+    RECT rect;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, pViewToActivate);
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IOleDocument, (void**)&oledoc);
+    if(FAILED(hres))
+        return hres;
+
+    IOleDocument_CreateView(oledoc, INPLACESITE(This), NULL, 0, &This->view);
+    IOleDocument_Release(oledoc);
+
+    GetClientRect(This->doc_view_hwnd, &rect);
+    IOleDocumentView_SetRect(This->view, &rect);
+
+    hres = IOleDocumentView_Show(This->view, TRUE);
+
+    return hres;
+}
+
+#undef DOCSITE_THIS
+
+static const IOleDocumentSiteVtbl OleDocumentSiteVtbl = {
+    OleDocumentSite_QueryInterface,
+    OleDocumentSite_AddRef,
+    OleDocumentSite_Release,
+    OleDocumentSite_ActivateMe
+};
+
 void WebBrowser_ClientSite_Init(WebBrowser *This)
 {
     This->lpOleClientSiteVtbl   = &OleClientSiteVtbl;
     This->lpOleInPlaceSiteVtbl  = &OleInPlaceSiteVtbl;
+    This->lpOleDocumentSiteVtbl = &OleDocumentSiteVtbl;
+
+    This->view = NULL;
+}
+
+void WebBrowser_ClientSite_Destroy(WebBrowser *This)
+{
+    if(This->view)
+        IOleDocumentView_Release(This->view);
 }
