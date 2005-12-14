@@ -9,6 +9,7 @@
 	<library>oskittcp</library>
 	<library>ndis</library>
 	<library>pseh</library>
+	<library>chew</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="include">

@@ -51,11 +51,6 @@ BOOLEAN ProtocolRegistered     = FALSE;
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
 
-/* Work around being called back into afd at Dpc level */
-KSPIN_LOCK LanWorkLock;
-LIST_ENTRY LanWorkList;
-WORK_QUEUE_ITEM LanWorkItem;
-
 /* Double complete protection */
 KSPIN_LOCK LanSendCompleteLock;
 LIST_ENTRY LanSendCompleteList;
@@ -289,10 +284,9 @@ VOID STDCALL ProtocolSendComplete(
     }
 }
 
-VOID STDCALL LanReceiveWorker( PVOID Context ) {
+VOID LanReceiveWorker( PVOID Context ) {
     UINT PacketType;
-    PLIST_ENTRY ListEntry;
-    PLAN_WQ_ITEM WorkItem;
+    PLAN_WQ_ITEM WorkItem = (PLAN_WQ_ITEM)Context;
     PNDIS_PACKET Packet;
     PLAN_ADAPTER Adapter;
     UINT BytesTransferred;
@@ -301,60 +295,49 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
-    while( (ListEntry =
-	    ExInterlockedRemoveHeadList( &LanWorkList, &LanWorkLock )) ) {
-	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
-
-	TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
-
-	Packet = WorkItem->Packet;
-	Adapter = WorkItem->Adapter;
-	BytesTransferred = WorkItem->BytesTransferred;
-
-	ExFreePool( WorkItem );
-
-        IPPacket.NdisPacket = Packet;
-
-        NdisGetFirstBufferFromPacket(Packet,
-                                     &NdisBuffer,
-                                     &IPPacket.Header,
-                                     &IPPacket.ContigSize,
-                                     &IPPacket.TotalSize);
-
-	IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
-        /* Determine which upper layer protocol that should receive
-           this packet and pass it to the correct receive handler */
-
-	TI_DbgPrint(MID_TRACE,
-		    ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
-		     IPPacket.ContigSize, IPPacket.TotalSize,
-		     BytesTransferred));
-
-        PacketType = PC(IPPacket.NdisPacket)->PacketType;
-	IPPacket.Position = 0;
-
-	TI_DbgPrint
-            (DEBUG_DATALINK,
-             ("Ether Type = %x ContigSize = %d Total = %d\n",
-              PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
-
-        switch (PacketType) {
-        case ETYPE_IPv4:
-        case ETYPE_IPv6:
-            TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
-            IPReceive(Adapter->Context, &IPPacket);
-            break;
-        case ETYPE_ARP:
-            TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
-            ARPReceive(Adapter->Context, &IPPacket);
-        default:
-            break;
-        }
-
-	FreeNdisPacket( Packet );
+    Packet = WorkItem->Packet;
+    Adapter = WorkItem->Adapter;
+    BytesTransferred = WorkItem->BytesTransferred;
+    
+    IPPacket.NdisPacket = Packet;
+    
+    NdisGetFirstBufferFromPacket(Packet,
+				 &NdisBuffer,
+				 &IPPacket.Header,
+				 &IPPacket.ContigSize,
+				 &IPPacket.TotalSize);
+    
+    IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
+    /* Determine which upper layer protocol that should receive
+       this packet and pass it to the correct receive handler */
+    
+    TI_DbgPrint(MID_TRACE,
+		("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
+		 IPPacket.ContigSize, IPPacket.TotalSize,
+		 BytesTransferred));
+    
+    PacketType = PC(IPPacket.NdisPacket)->PacketType;
+    IPPacket.Position = 0;
+    
+    TI_DbgPrint
+	(DEBUG_DATALINK,
+	 ("Ether Type = %x ContigSize = %d Total = %d\n",
+	  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
+    
+    switch (PacketType) {
+    case ETYPE_IPv4:
+    case ETYPE_IPv6:
+	TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
+	IPReceive(Adapter->Context, &IPPacket);
+	break;
+    case ETYPE_ARP:
+	TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
+	ARPReceive(Adapter->Context, &IPPacket);
+    default:
+	break;
     }
-    TI_DbgPrint(DEBUG_DATALINK, ("Leaving\n"));
-    LanReceiveWorkerBusy = FALSE;
+    
+    FreeNdisPacket( Packet );
 }
 
 VOID LanSubmitReceiveWork(
@@ -362,34 +345,19 @@ VOID LanSubmitReceiveWork(
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
     UINT BytesTransferred) {
-    PLAN_WQ_ITEM WQItem;
+    LAN_WQ_ITEM WQItem;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
-    KIRQL OldIrql;
+    PVOID LanWorkItem;
 
     TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
-    TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
+    WQItem.Packet = Packet;
+    WQItem.Adapter = Adapter;
+    WQItem.BytesTransferred = BytesTransferred;
 
-    WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
-    if( !WQItem ) {
-	TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
-	return;
-    }
-
-    WQItem->Packet = Packet;
-    WQItem->Adapter = Adapter;
-    WQItem->BytesTransferred = BytesTransferred;
-    InsertTailList( &LanWorkList, &WQItem->ListEntry );
-    if( !LanReceiveWorkerBusy ) {
-	LanReceiveWorkerBusy = TRUE;
-	ExQueueWorkItem( &LanWorkItem, CriticalWorkQueue );
-	TI_DbgPrint(DEBUG_DATALINK,
-		    ("Work item inserted %x %x\n", &LanWorkItem, WQItem));
-    } else {
-	TI_DbgPrint(DEBUG_DATALINK,
-                    ("LAN WORKER BUSY %x %x\n", &LanWorkItem, WQItem));
-    }
-    TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
+    if( !ChewCreate
+	( &LanWorkItem, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
+	ASSERT(0);
 }
 
 VOID STDCALL ProtocolTransferDataComplete(
@@ -452,7 +420,6 @@ NDIS_STATUS STDCALL ProtocolReceive(
     PNDIS_PACKET NdisPacket;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
     PETH_HEADER EHeader  = (PETH_HEADER)HeaderBuffer;
-    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called. (packetsize %d)\n",PacketSize));
 
@@ -490,12 +457,9 @@ NDIS_STATUS STDCALL ProtocolReceive(
     TI_DbgPrint(DEBUG_DATALINK, ("Adapter: %x (MTU %d)\n",
 				 Adapter, Adapter->MTU));
 
-    TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
-
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL,
                                            PacketSize + HeaderBufferSize );
     if( NdisStatus != NDIS_STATUS_SUCCESS ) {
-	TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
 
@@ -534,7 +498,6 @@ NDIS_STATUS STDCALL ProtocolReceive(
             BytesTransferred = 0;
         }
     }
-    TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 
     if (NdisStatus != NDIS_STATUS_PENDING)
@@ -1369,25 +1332,14 @@ VOID LANUnregisterProtocol(
 }
 
 VOID LANStartup() {
-    InitializeListHead( &LanWorkList );
     InitializeListHead( &LanSendCompleteList );
     KeInitializeSpinLock( &LanSendCompleteLock );
-    ExInitializeWorkItem( &LanWorkItem, LanReceiveWorker, NULL );
 }
 
 VOID LANShutdown() {
     KIRQL OldIrql;
     PLAN_WQ_ITEM WorkItem;
     PLIST_ENTRY ListEntry;
-
-    TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
-    while( !IsListEmpty( &LanWorkList ) ) {
-	ListEntry = RemoveHeadList( &LanWorkList );
-	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
-	FreeNdisPacket( WorkItem->Packet );
-	ExFreePool( WorkItem );
-    }
-    TcpipReleaseSpinLock( &LanWorkLock, OldIrql );
 
     KeAcquireSpinLock( &LanSendCompleteLock, &OldIrql );
     while( !IsListEmpty( &LanSendCompleteList ) ) {

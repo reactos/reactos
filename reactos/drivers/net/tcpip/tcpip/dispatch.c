@@ -135,6 +135,30 @@ VOID DispDataRequestComplete(
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
 
+typedef struct _DISCONNECT_TYPE {
+    UINT Type;
+    PVOID Context;
+    PIRP Irp;
+    PFILE_OBJECT FileObject;
+} DISCONNECT_TYPE, *PDISCONNECT_TYPE;
+
+VOID DispDoDisconnect( PVOID Data ) {
+    PDISCONNECT_TYPE DisType = (PDISCONNECT_TYPE)Data;
+
+    TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect\n"));
+    TCPDisconnect
+	( DisType->Context,
+	  DisType->Type,
+	  NULL,
+	  NULL,
+	  DispDataRequestComplete,
+	  DisType->Irp );
+    TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect done\n"));
+
+    DispDataRequestComplete(DisType->Irp, STATUS_CANCELLED, 0);
+
+    DispCancelComplete(DisType->FileObject);
+}
 
 VOID DDKAPI DispCancelRequest(
     PDEVICE_OBJECT Device,
@@ -150,6 +174,8 @@ VOID DDKAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
+    DISCONNECT_TYPE DisType;
+    PVOID WorkItem;
     /*NTSTATUS Status = STATUS_SUCCESS;*/
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
@@ -161,6 +187,8 @@ VOID DDKAPI DispCancelRequest(
 
     TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
 
+    Irp->IoStatus.Status = STATUS_PENDING;
+
 #ifdef DBG
     if (!Irp->Cancel)
         TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
@@ -169,26 +197,22 @@ VOID DDKAPI DispCancelRequest(
     /* Try canceling the request */
     switch(MinorFunction) {
     case TDI_SEND:
-        TCPDisconnect
-            ( TranContext->Handle.ConnectionContext,
-              TDI_DISCONNECT_RELEASE,
-              NULL,
-              NULL,
-              DispDataRequestComplete,
-              Irp );
-        break;
-
     case TDI_RECEIVE:
-        TCPDisconnect
-            ( TranContext->Handle.ConnectionContext,
-              TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE,
-              NULL,
-              NULL,
-              DispDataRequestComplete,
-              Irp );
+	DisType.Type = TDI_DISCONNECT_RELEASE | 
+	    ((MinorFunction == TDI_RECEIVE) ? TDI_DISCONNECT_ABORT : 0);
+	DisType.Context = TranContext->Handle.ConnectionContext;
+	DisType.Irp = Irp;
+	DisType.FileObject = FileObject;
+	
+	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
+
+	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE), 
+			 DispDoDisconnect, &DisType ) )
+	    ASSERT(0);
         break;
 
     case TDI_SEND_DATAGRAM:
+	Irp->IoStatus.Status = STATUS_CANCELLED;
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
             break;
@@ -198,6 +222,7 @@ VOID DDKAPI DispCancelRequest(
         break;
 
     case TDI_RECEIVE_DATAGRAM:
+	Irp->IoStatus.Status = STATUS_CANCELLED;
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
             break;
@@ -211,9 +236,10 @@ VOID DDKAPI DispCancelRequest(
         break;
     }
 
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
+    if( Irp->IoStatus.Status == STATUS_PENDING )
+	IoMarkIrpPending(Irp);
 
-    DispCancelComplete(FileObject);
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }

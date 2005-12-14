@@ -10,3 +10,6 @@
 <directory name="oskittcp">
 	<xi:include href="oskittcp/oskittcp.xml" />
 </directory>
+<directory name="chew">
+	<xi:include href="chew/chew.xml" />
+</directory>
