@@ -933,7 +933,7 @@ static BOOL create_full_pathW(const WCHAR *path)
     return ret;
 }
 
-BOOL static do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style)
+static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style)
 {
     BOOL rc = FALSE;
     BOOL docopy = TRUE;
