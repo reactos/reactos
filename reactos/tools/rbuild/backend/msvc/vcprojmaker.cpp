@@ -90,9 +90,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	//$progress_current++;
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
-	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	string vcproj_path = module.GetBasePath();
-	vector<string> c_srcs, source_files, resource_files, includes, libraries, defines;
+	vector<string> source_files, resource_files, includes, libraries, defines;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
@@ -117,9 +116,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			// TODO FIXME - do we want the full path of the file here?
 			string file = string(".") + &files[i]->name[vcproj_path.size()];
 
-			source_files.push_back ( file );
 			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )
-				c_srcs.push_back ( file );
+				source_files.push_back ( file );
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
 		}
@@ -529,7 +527,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "\t\t<Filter\r\n" );
 	fprintf ( OUT, "\t\t\tName=\"Resource Files\"\r\n" );
 	fprintf ( OUT, "\t\t\tFilter=\"ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe\">\r\n" );
-	for ( i = 0; i < header_files.size(); i++ )
+	for ( i = 0; i < resource_files.size(); i++ )
 	{
 		const string& resource_file = resource_files[i];
 		fprintf ( OUT, "\t\t\t<File\r\n" );
