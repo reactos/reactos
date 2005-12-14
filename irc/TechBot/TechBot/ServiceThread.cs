@@ -18,6 +18,7 @@ namespace TechBot
 		private string WmXml;
 		private string WinerrorXml;
 		private string SvnCommand;
+		private string BugUrl;
 		private EventLog eventLog;
 		
 		public ServiceThread(EventLog eventLog)
@@ -38,6 +39,7 @@ namespace TechBot
 			WmXml = ConfigurationSettings.AppSettings["WmXml"];
 			WinerrorXml = ConfigurationSettings.AppSettings["WinerrorXml"];
 			SvnCommand = ConfigurationSettings.AppSettings["SvnCommand"];
+			BugUrl = ConfigurationSettings.AppSettings["BugUrl"];
 		}
 		
 		public void Run()
@@ -55,7 +57,8 @@ namespace TechBot
 			                                       WinerrorXml,
 			                                       HresultXml,
 			                                       WmXml,
-			                                       SvnCommand);
+			                                       SvnCommand,
+			                                       BugUrl);
 			ircService.Run();
 		}
 		

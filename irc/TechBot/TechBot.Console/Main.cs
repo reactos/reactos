@@ -158,6 +158,18 @@ namespace TechBot.Console
 			}
 		}
 
+		private static string BugUrl
+		{
+			get
+			{
+				string optionName = "BugUrl";
+				string s = ConfigurationSettings.AppSettings[optionName];
+				VerifyRequiredOption(optionName,
+				                     s);
+				return s;
+			}
+		}
+
 		private static void RunIrcService()
 		{
 			IrcService ircService = new IrcService(IRCServerHostName,
@@ -170,7 +182,8 @@ namespace TechBot.Console
 			                                       WinerrorXml,
 			                                       HresultXml,
 			                                       WmXml,
-			                                       SvnCommand);
+			                                       SvnCommand,
+			                                       BugUrl);
 			ircService.Run();
 		}
 		
@@ -190,7 +203,8 @@ namespace TechBot.Console
 			                                            WinerrorXml,
 			                                            HresultXml,
 			                                            WmXml,
-			                                            SvnCommand);
+			                                            SvnCommand,
+			                                            BugUrl);
 			service.Run();
 			while (true)
 			{

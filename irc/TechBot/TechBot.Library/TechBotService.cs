@@ -17,6 +17,7 @@ namespace TechBot.Library
 		private string hresultXml;
 		private string wmXml;
 		private string svnCommand;
+		private string bugUrl;
 		private ArrayList commands = new ArrayList();
 		
 		public TechBotService(IServiceOutput serviceOutput,
@@ -26,7 +27,8 @@ namespace TechBot.Library
 		                      string winerrorXml,
 		                      string hresultXml,
 		                      string wmXml,
-		                      string svnCommand)
+		                      string svnCommand,
+		                      string bugUrl)
 		{
 			this.serviceOutput = serviceOutput;
 			this.chmPath = chmPath;
@@ -36,6 +38,7 @@ namespace TechBot.Library
 			this.hresultXml = hresultXml;
 			this.wmXml = wmXml;
 			this.svnCommand = svnCommand;
+			this.bugUrl = bugUrl;
 		}
 		
 		public void Run()
@@ -55,6 +58,8 @@ namespace TechBot.Library
 			                           wmXml));
 			commands.Add(new SvnCommand(serviceOutput,
 			                            svnCommand));
+			commands.Add(new BugCommand(serviceOutput,
+			                            bugUrl));
 		}
 		
 		public void InjectMessage(MessageContext context,
