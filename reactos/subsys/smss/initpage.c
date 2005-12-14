@@ -28,163 +28,66 @@
 #define NDEBUG
 #include <debug.h>
 
-#define GIGABYTE (1024 * 1024 * 1024) /* One Gigabyte */
-
 static NTSTATUS STDCALL
 SmpPagingFilesQueryRoutine(PWSTR ValueName,
-			                  ULONG ValueType,
-			                  PVOID ValueData,
-			                  ULONG ValueLength,
-			                  PVOID Context,
-			                  PVOID EntryContext)
+			  ULONG ValueType,
+			  PVOID ValueData,
+			  ULONG ValueLength,
+			  PVOID Context,
+			  PVOID EntryContext)
 {
-   UNICODE_STRING FileName;
-   LARGE_INTEGER InitialSize;
-   LARGE_INTEGER MaximumSize;
-   NTSTATUS Status = STATUS_SUCCESS;
-   LPWSTR p;
-   WCHAR RootDriveLetter[5];
+  UNICODE_STRING FileName;
+  LARGE_INTEGER InitialSize;
+  LARGE_INTEGER MaximumSize;
+  NTSTATUS Status;
+  LPWSTR p;
 
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
-   DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-   DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
+  if (ValueType != REG_SZ)
+    {
+      return(STATUS_SUCCESS);
+    }
 
-   if (ValueType != REG_SZ)
-   {
-      return STATUS_INVALID_PARAMETER_2;
-   }
-
-   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)ValueData,
-      &FileName,
-      NULL,
-      NULL))
-   {
-      return STATUS_OBJECT_PATH_NOT_FOUND;
-   }
-   /*
+  /*
    * Format: "<path>[ <initial_size>[ <maximum_size>]]"
    */
-   if ((p = wcschr(ValueData, ' ')) != NULL)
-   {
+  if ((p = wcschr(ValueData, ' ')) != NULL)
+    {
       *p = L'\0';
       InitialSize.QuadPart = wcstoul(p + 1, &p, 0) * 256 * 4096;
       if (*p == ' ')
-      {
-         MaximumSize.QuadPart = wcstoul(p + 1, NULL, 0) * 256 * 4096;
-      }
+	{
+	  MaximumSize.QuadPart = wcstoul(p + 1, NULL, 0) * 256 * 4096;
+	}
       else
-         MaximumSize = InitialSize;
-   }
+	MaximumSize = InitialSize;
+    }
+  else
+    {
+      InitialSize.QuadPart = 50 * 4096;
+      MaximumSize.QuadPart = 80 * 4096;
+    }
 
-   /* If there is only a file name or if initial and max are both 0
-      the system will pick the sizes.  10% and 20% for initial and max
-      respectivly.  There is a max of 1 gig before it doesnt make it
-      bigger. */
-   if((InitialSize.QuadPart == 0 && MaximumSize.QuadPart == 0) || p == NULL)
-   {
-      FILE_FS_SIZE_INFORMATION FileFsSize;
-      IO_STATUS_BLOCK IoStatusBlock;
-      HANDLE hFile;
-      UNICODE_STRING NtPathU;
-      LARGE_INTEGER FreeBytes;
-      OBJECT_ATTRIBUTES ObjectAttributes;
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)ValueData,
+				     &FileName,
+				     NULL,
+				     NULL))
+    {
+      return (STATUS_SUCCESS);
+    }
 
-      DPRINT("System managed pagefile...\n");
-      /* Make sure the path that is given for the file actually has the drive in it.
-         At this point if there is not file name, no sizes will be set therefore no page
-         file will be created */
-      if (wcslen(((PWSTR)ValueData)) > 2 && 
-          ((PWSTR)ValueData)[1] == L':' && 
-          ((PWSTR)ValueData)[2] == L'\\')
-      {
-         /* copy the drive letter, the colon and the slash,
-            tack a null on the end */
-         p = ((PWSTR)ValueData);
-         wcsncpy(RootDriveLetter,p,3);
-         wcscat(RootDriveLetter,L"\0");
-         DPRINT("At least X:\\...%S\n",RootDriveLetter);
+  DPRINT("SMSS: Created paging file %wZ with size %dKB\n",
+	 &FileName, InitialSize.QuadPart / 1024);
+  Status = NtCreatePagingFile(&FileName,
+			      &InitialSize,
+			      &MaximumSize,
+			      0);
 
-         if (!RtlDosPathNameToNtPathName_U((LPWSTR)RootDriveLetter,
-                                           &NtPathU,
-                                           NULL,
-                                           NULL))
-         {
-            DPRINT("Invalid path\n");
-            return STATUS_OBJECT_PATH_NOT_FOUND;
-         }
+  RtlFreeUnicodeString(&FileName);
 
-         InitializeObjectAttributes(&ObjectAttributes,
-                                    &NtPathU,
-                                    FILE_READ_ATTRIBUTES,
-                                    NULL,
-                                    NULL);
-
-         /* Get a handle to the root to find the free space on the drive */
-         Status = NtCreateFile (&hFile,
-                                FILE_GENERIC_READ,
-                                &ObjectAttributes,
-                                &IoStatusBlock,
-                                NULL,
-                                0,
-                                FILE_SHARE_READ,
-                                FILE_OPEN,
-                                0,
-                                NULL,
-                                0);
-
-         RtlFreeUnicodeString(&NtPathU);
-
-         if (!NT_SUCCESS(Status))
-         {
-             DPRINT ("Invalid handle\n");
-             return Status;
-         }
-
-         Status = NtQueryVolumeInformationFile(hFile,
-                                               &IoStatusBlock,
-                                               &FileFsSize,
-                                               sizeof(FILE_FS_SIZE_INFORMATION),
-                                               FileFsSizeInformation);
-
-         FreeBytes.QuadPart = FileFsSize.BytesPerSector * 
-                              FileFsSize.SectorsPerAllocationUnit * 
-                              FileFsSize.AvailableAllocationUnits.QuadPart;
-
-         DPRINT ("Free:%d\n",FreeBytes.QuadPart);
-
-         /* Set by percentage */
-         InitialSize.QuadPart = FreeBytes.QuadPart / 10;
-         MaximumSize.QuadPart = FreeBytes.QuadPart / 5;
-
-         /* The page file is more then a gig, size it down */
-         if (InitialSize.QuadPart > GIGABYTE)
-         {
-             InitialSize.QuadPart = GIGABYTE;
-             MaximumSize.QuadPart = GIGABYTE;
-         }
-
-         ZwClose(hFile);
-      }
-      else
-      {
-         /* No page file will be created, 
-            but we return succes because that 
-            is what the setting wants */
-         return (STATUS_SUCCESS);
-      }
-   }
-
-   DPRINT("SMSS: Created paging file %wZ with size %dKB\n",
-          &FileName, InitialSize.QuadPart / 1024);
-
-   Status = NtCreatePagingFile(&FileName,
-                               &InitialSize,
-                               &MaximumSize,
-                               0);
-
-   RtlFreeUnicodeString(&FileName);
-
-   return Status;
+  return(STATUS_SUCCESS);
 }
 
 
