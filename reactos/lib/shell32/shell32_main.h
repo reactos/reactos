@@ -121,9 +121,9 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	};
 
 #define KeyStateToDropEffect(kst)\
-	(((kst) & MK_CONTROL) ?\
-	(((kst) & MK_SHIFT) ? DROPEFFECT_LINK : DROPEFFECT_COPY):\
-	DROPEFFECT_MOVE)
+    ((((kst)&(MK_CONTROL|MK_SHIFT))==(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_LINK :\
+    (((kst)&(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_COPY :\
+    DROPEFFECT_MOVE))
 
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
 HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);

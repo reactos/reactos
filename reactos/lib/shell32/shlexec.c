@@ -1156,15 +1156,15 @@ static LONG ShellExecute_FromContextMenu( LPSHELLEXECUTEINFOW sei )
             r = RegEnumKeyW( hkeycm, i++, szguid, 39 );
             if ( r != ERROR_SUCCESS )
                 break;
-            r = ERROR_FUNCTION_FAILED;
+
             hr = CLSIDFromString( szguid, &guid );
-            if ( FAILED( hr ) )
-                break;
-            r = ERROR_SUCCESS;
-            /* stop at the first one that succeeds in running */
-            hr = shellex_load_object_and_run( hkey, &guid, sei );
-            if ( SUCCEEDED( hr ) )
-                break;
+            if (SUCCEEDED(hr))
+            {
+                /* stop at the first one that succeeds in running */
+                hr = shellex_load_object_and_run( hkey, &guid, sei );
+                if ( SUCCEEDED( hr ) )
+                    break;
+            }
         }
         RegCloseKey( hkeycm );
     }

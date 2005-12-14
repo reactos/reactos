@@ -428,6 +428,9 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
     static const DWORD dwDesktopAttributes = 
         SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
+    static const DWORD dwMyComputerAttributes = 
+        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET |
+        SFGAO_DROPTARGET | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08lx))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -447,6 +450,8 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
             pdump (*apidl);
             if (_ILIsDesktop(*apidl)) { 
                 *rgfInOut &= dwDesktopAttributes;
+            } else if (_ILIsMyComputer(*apidl)) {
+                *rgfInOut &= dwMyComputerAttributes;
             } else {
                 SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
             }

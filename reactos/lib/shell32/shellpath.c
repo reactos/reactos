@@ -1808,12 +1808,15 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_RECENT,
      CSIDL_SENDTO,
      CSIDL_STARTMENU,
+     CSIDL_MYMUSIC,
+     CSIDL_MYVIDEO,
      CSIDL_DESKTOPDIRECTORY,
      CSIDL_NETHOOD,
      CSIDL_TEMPLATES,
      CSIDL_PRINTHOOD,
      CSIDL_COOKIES,
      CSIDL_HISTORY,
+     CSIDL_MYPICTURES
     };
     WCHAR userShellFolderPath[MAX_PATH], shellFolderPath[MAX_PATH];
     LPCWSTR pUserShellFolderPath, pShellFolderPath;
