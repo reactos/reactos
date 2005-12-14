@@ -28,6 +28,7 @@
 #include "shlwapi_De.rc"
 #include "shlwapi_En.rc"
 #include "shlwapi_Es.rc"
+#include "shlwapi_Hu.rc"
 #include "shlwapi_Ko.rc"
 #include "shlwapi_Nl.rc"
 #include "shlwapi_No.rc"
