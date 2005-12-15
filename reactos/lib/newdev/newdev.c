@@ -27,6 +27,10 @@ CanDisableDevice(IN DEVINST DevInst,
                  IN HMACHINE hMachine,
                  OUT BOOL *CanDisable)
 {
+#if 0
+    /* hpoussin, Dec 2005. I've disabled this code because
+     * ntoskrnl never sets the DN_DISABLEABLE flag.
+     */
     CONFIGRET cr;
     ULONG Status, ProblemNumber;
     BOOL Ret = FALSE;
@@ -43,11 +47,15 @@ CanDisableDevice(IN DEVINST DevInst,
     }
 
     return Ret;
+#else
+    *CanDisable = TRUE;
+    return TRUE;
+#endif
 }
 
 
 BOOL
-IsDeviceEnabled(IN DEVINST DevInst,
+IsDeviceStarted(IN DEVINST DevInst,
                 IN HMACHINE hMachine,
                 OUT BOOL *IsEnabled)
 {
@@ -71,11 +79,11 @@ IsDeviceEnabled(IN DEVINST DevInst,
 
 
 BOOL
-EnableDevice(IN HDEVINFO DeviceInfoSet,
-             IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
-             IN BOOL bEnable,
-             IN DWORD HardwareProfile  OPTIONAL,
-             OUT BOOL *bNeedReboot  OPTIONAL)
+StartDevice(IN HDEVINFO DeviceInfoSet,
+            IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
+            IN BOOL bEnable,
+            IN DWORD HardwareProfile  OPTIONAL,
+            OUT BOOL *bNeedReboot  OPTIONAL)
 {
     SP_PROPCHANGE_PARAMS pcp;
     SP_DEVINSTALL_PARAMS dp;
@@ -546,7 +554,7 @@ FindDriverProc(
             DevInstData->hDevInfo,
             &DevInstData->devInfoData,
             SPDRP_CONFIGFLAGS,
-            NULL, 0 );
+            (BYTE *)&config_flags, sizeof(config_flags) );
     }
 
     PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
@@ -691,24 +699,24 @@ InstFailDlgProc(
             case PSN_WIZFINISH:
             {
                 BOOL DisableableDevice = FALSE;
-                BOOL IsEnabled = FALSE;
+                BOOL IsStarted = FALSE;
 
                 if (CanDisableDevice(DevInstData->devInfoData.DevInst,
                                      NULL,
                                      &DisableableDevice) &&
                     DisableableDevice &&
-                    IsDeviceEnabled(DevInstData->devInfoData.DevInst,
+                    IsDeviceStarted(DevInstData->devInfoData.DevInst,
                                     NULL,
-                                    &IsEnabled) &&
-                    IsEnabled &&
+                                    &IsStarted) &&
+                    !IsStarted &&
                     SendDlgItemMessage(hwndDlg, IDC_DONOTSHOWDLG, BM_GETCHECK, (WPARAM) 0, (LPARAM) 0) == BST_CHECKED)
                 {
                     /* disable the device */
-                    EnableDevice(DevInstData->hDevInfo,
-                                 &DevInstData->devInfoData,
-                                 FALSE,
-                                 0,
-                                 NULL);
+                    StartDevice(DevInstData->hDevInfo,
+                                &DevInstData->devInfoData,
+                                FALSE,
+                                0,
+                                NULL);
                 }
                 break;
             }
