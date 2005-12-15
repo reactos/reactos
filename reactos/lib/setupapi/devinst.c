@@ -1619,10 +1619,10 @@ static LONG SETUP_CreateInterfaceList(
 
         /* Find class GUID associated to the device instance */
         rc = RegOpenKeyExW(
-            HKEY_LOCAL_MACHINE,
+            list->HKLM,
             REGSTR_PATH_SYSTEMENUM,
             0, /* Options */
-            KEY_ENUMERATE_SUB_KEYS,
+            0,
             &hEnumKey);
         if (rc != ERROR_SUCCESS)
         {
@@ -2670,7 +2670,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                     list->HKLM,
                     REGSTR_PATH_SYSTEMENUM,
                     0, /* Options */
-                    KEY_ENUMERATE_SUB_KEYS,
+                    0,
                     &hEnumKey);
                 if (rc != ERROR_SUCCESS)
                 {
@@ -3198,7 +3198,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     rc = RegOpenKeyExW(HKLM,
 		      lpKeyName,
 		      0,
-		      ClassGuid ? KEY_ENUMERATE_SUB_KEYS : samDesired,
+		      ClassGuid ? 0 : samDesired,
 		      &hClassesKey);
     if (MachineName != NULL) RegCloseKey(HKLM);
     if (rc != ERROR_SUCCESS)
@@ -4304,6 +4304,63 @@ HKEY WINAPI SetupDiCreateDevRegKeyA(
     return ret;
 }
 
+static HKEY
+OpenHardwareProfileKey(
+        IN HKEY HKLM,
+        IN DWORD HwProfile,
+        IN DWORD samDesired)
+{
+    HKEY hHWProfilesKey = INVALID_HANDLE_VALUE;
+    HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
+    HKEY ret = INVALID_HANDLE_VALUE;
+    LONG rc;
+
+    rc = RegOpenKeyExW(HKLM,
+        REGSTR_PATH_HWPROFILES,
+        0,
+        0,
+        &hHWProfilesKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+    if (HwProfile == 0)
+    {
+        rc = RegOpenKeyExW(
+            hHWProfilesKey,
+            REGSTR_KEY_CURRENT,
+            0,
+            KEY_CREATE_SUB_KEY,
+            &hHWProfileKey);
+    }
+    else
+    {
+        WCHAR subKey[5];
+        snprintfW(subKey, 4, L"%04lu", HwProfile);
+        subKey[4] = '\0';
+        rc = RegOpenKeyExW(
+            hHWProfilesKey,
+            subKey,
+            0,
+            KEY_CREATE_SUB_KEY,
+            &hHWProfileKey);
+    }
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+    ret = hHWProfileKey;
+
+cleanup:
+    if (hHWProfilesKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hHWProfilesKey);
+    if (hHWProfileKey != INVALID_HANDLE_VALUE && hHWProfileKey != ret)
+        RegCloseKey(hHWProfileKey);
+    return ret;
+}
+
 /***********************************************************************
  *		SetupDiCreateDevRegKeyW (SETUPAPI.@)
  */
@@ -4345,7 +4402,6 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
         LPWSTR pDeviceInstance; /* Points into DriverKey, on the Index field */
         DWORD Index; /* Index used in the DriverKey name */
         DWORD rc;
-        HKEY hHWProfilesKey = INVALID_HANDLE_VALUE;
         HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
         HKEY hEnumKey = INVALID_HANDLE_VALUE;
         HKEY hClassKey = INVALID_HANDLE_VALUE;
@@ -4357,42 +4413,9 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
             RootKey = list->HKLM;
         else /* Scope == DICS_FLAG_CONFIGSPECIFIC */
         {
-            rc = RegOpenKeyExW(list->HKLM,
-                REGSTR_PATH_HWPROFILES,
-                0,
-                0,
-                &hHWProfilesKey);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
+            hHWProfileKey = OpenHardwareProfileKey(list->HKLM, HwProfile, KEY_CREATE_SUB_KEY);
+            if (hHWProfileKey == INVALID_HANDLE_VALUE)
                 goto cleanup;
-            }
-            if (HwProfile == 0)
-            {
-                rc = RegOpenKeyExW(
-                    hHWProfilesKey,
-                    REGSTR_KEY_CURRENT,
-                    0,
-                    KEY_CREATE_SUB_KEY,
-                    &hHWProfileKey);
-            }
-            else
-            {
-                WCHAR subKey[5];
-                snprintfW(subKey, 4, L"%04lu", HwProfile);
-                subKey[4] = '\0';
-                rc = RegOpenKeyExW(
-                    hHWProfilesKey,
-                    subKey,
-                    0,
-                    KEY_CREATE_SUB_KEY,
-                    &hHWProfileKey);
-            }
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
             RootKey = hHWProfileKey;
         }
 
@@ -4522,8 +4545,6 @@ cleanup:
         if (lpGuidString)
             RpcStringFreeW(&lpGuidString);
         HeapFree(GetProcessHeap(), 0, DriverKey);
-        if (hHWProfilesKey != INVALID_HANDLE_VALUE)
-            RegCloseKey(hHWProfilesKey);
         if (hHWProfileKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hHWProfileKey);
         if (hEnumKey != INVALID_HANDLE_VALUE)
@@ -4571,104 +4592,113 @@ HKEY WINAPI SetupDiOpenDevRegKey(
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-        HKEY hKey = INVALID_HANDLE_VALUE;
-        HKEY hRootKey = INVALID_HANDLE_VALUE;
         struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
         LPWSTR DriverKey = NULL;
         DWORD dwLength = 0;
         DWORD dwRegType;
         DWORD rc;
+        HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
+        HKEY hEnumKey = INVALID_HANDLE_VALUE;
+        HKEY hKey = INVALID_HANDLE_VALUE;
+        HKEY RootKey;
 
-        if (Scope == DICS_FLAG_CONFIGSPECIFIC)
+        if (Scope == DICS_FLAG_GLOBAL)
+            RootKey = list->HKLM;
+        else /* Scope == DICS_FLAG_CONFIGSPECIFIC */
         {
-            FIXME("DICS_FLAG_CONFIGSPECIFIC case unimplemented\n");
+            hHWProfileKey = OpenHardwareProfileKey(list->HKLM, HwProfile, 0);
+            if (hHWProfileKey == INVALID_HANDLE_VALUE)
+                goto cleanup;
+            RootKey = hHWProfileKey;
         }
-        else /* Scope == DICS_FLAG_GLOBAL */
+
+        rc = RegOpenKeyExW(
+            RootKey,
+            REGSTR_PATH_SYSTEMENUM,
+            0, /* Options */
+            0,
+            &hEnumKey);
+        if (rc != ERROR_SUCCESS)
         {
-            rc = RegOpenKeyExW(
-                list->HKLM,
-                REGSTR_PATH_SYSTEMENUM,
-                0, /* Options */
-                KEY_ENUMERATE_SUB_KEYS,
-                &hRootKey);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            rc = RegOpenKeyExW(
-                hRootKey,
-                deviceInfo->DeviceName,
-                0, /* Options */
-                KeyType == DIREG_DEV ? samDesired : KEY_QUERY_VALUE,
-                &hKey);
-            RegCloseKey(hRootKey);
-            hRootKey = INVALID_HANDLE_VALUE;
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            if (KeyType == DIREG_DEV)
-            {
-                /* We're done. Just return the hKey handle */
-                ret = hKey;
-                goto cleanup;
-            }
-            /* Read the 'Driver' key */
-            rc = RegQueryValueExW(hKey, REGSTR_VAL_DRIVER, NULL, &dwRegType, NULL, &dwLength);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            if (dwRegType != REG_SZ)
-            {
-                SetLastError(ERROR_GEN_FAILURE);
-                goto cleanup;
-            }
-            DriverKey = HeapAlloc(GetProcessHeap(), 0, dwLength);
-            if (!DriverKey)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto cleanup;
-            }
-            rc = RegQueryValueExW(hKey, REGSTR_VAL_DRIVER, NULL, &dwRegType, (LPBYTE)DriverKey, &dwLength);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            RegCloseKey(hKey);
-            hKey = INVALID_HANDLE_VALUE;
-            /* Need to open the driver key */
-            rc = RegOpenKeyExW(
-                list->HKLM,
-                REGSTR_PATH_CLASS_NT,
-                0, /* Options */
-                KEY_ENUMERATE_SUB_KEYS,
-                &hRootKey);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            rc = RegOpenKeyExW(
-                hRootKey,
-                DriverKey,
-                0, /* Options */
-                samDesired,
-                &hKey);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
+            SetLastError(rc);
+            goto cleanup;
+        }
+        rc = RegOpenKeyExW(
+            hEnumKey,
+            deviceInfo->DeviceName,
+            0, /* Options */
+            KeyType == DIREG_DEV ? samDesired : KEY_QUERY_VALUE,
+            &hKey);
+        RegCloseKey(hEnumKey);
+        hEnumKey = INVALID_HANDLE_VALUE;
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        if (KeyType == DIREG_DEV)
+        {
+            /* We're done. Just return the hKey handle */
+            CHECKPOINT1;
             ret = hKey;
+            goto cleanup;
         }
+        /* Read the 'Driver' key */
+        rc = RegQueryValueExW(hKey, REGSTR_VAL_DRIVER, NULL, &dwRegType, NULL, &dwLength);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        else if (dwRegType != REG_SZ)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
+        }
+        DriverKey = HeapAlloc(GetProcessHeap(), 0, dwLength);
+        if (!DriverKey)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        rc = RegQueryValueExW(hKey, REGSTR_VAL_DRIVER, NULL, &dwRegType, (LPBYTE)DriverKey, &dwLength);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        RegCloseKey(hKey);
+        hKey = INVALID_HANDLE_VALUE;
+        /* Need to open the driver key */
+        rc = RegOpenKeyExW(
+            RootKey,
+            REGSTR_PATH_CLASS_NT,
+            0, /* Options */
+            0,
+            &hEnumKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        rc = RegOpenKeyExW(
+            hEnumKey,
+            DriverKey,
+            0, /* Options */
+            samDesired,
+            &hKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        ret = hKey;
+
 cleanup:
-        if (hRootKey != INVALID_HANDLE_VALUE)
-            RegCloseKey(hRootKey);
+        if (hHWProfileKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hHWProfileKey);
+        if (hEnumKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hEnumKey);
         if (hKey != INVALID_HANDLE_VALUE && hKey != ret)
             RegCloseKey(hKey);
     }
@@ -5717,7 +5747,7 @@ SetupDiOpenDeviceInfoW(
                 list->HKLM,
                 REGSTR_PATH_SYSTEMENUM,
                 0, /* Options */
-                KEY_ENUMERATE_SUB_KEYS,
+                0,
                 &hEnumKey);
             if (rc != ERROR_SUCCESS)
             {
@@ -6461,11 +6491,39 @@ cleanup:
     return hwProfile;
 }
 
+static BOOL
+ResetDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+    NTSTATUS Status;
+
+    if (((struct DeviceInfoSet *)DeviceInfoSet)->HKLM != HKEY_LOCAL_MACHINE)
+    {
+        /* At the moment, I only know how to start local devices */
+        SetLastError(ERROR_INVALID_COMPUTERNAME);
+        return FALSE;
+    }
+
+    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, deviceInfo->DeviceName);
+    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+    SetLastError(RtlNtStatusToDosError(Status));
+    return NT_SUCCESS(Status);
+}
+
+static BOOL StopDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
+    return TRUE;
+}
+
 /***********************************************************************
  *		SetupDiChangeState (SETUPAPI.@)
  */
-static BOOL StartDevice(VOID) { FIXME("Stub"); return TRUE; }
-static BOOL StopDevice(VOID) { FIXME("Stub"); return TRUE; }
 BOOL WINAPI
 SetupDiChangeState(
     IN HDEVINFO DeviceInfoSet,
@@ -6503,7 +6561,7 @@ SetupDiChangeState(
             /* Enable/disable device in registry */
             hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, PropChange->Scope, PropChange->HwProfile, DIREG_DEV, KEY_QUERY_VALUE | KEY_SET_VALUE);
             if (hKey == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_NOT_FOUND)
-                hKey = SetupDiCreateDevRegKey(DeviceInfoSet, DeviceInfoData, PropChange->Scope, PropChange->HwProfile, DIREG_DEV, NULL, NULL);
+                hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, PropChange->Scope, PropChange->HwProfile, DIREG_DEV, NULL, NULL);
             if (hKey == INVALID_HANDLE_VALUE)
                 break;
             dwLength = sizeof(DWORD);
@@ -6547,9 +6605,9 @@ SetupDiChangeState(
                 || PropChange->HwProfile == GetCurrentHwProfile(DeviceInfoSet))
             {
                 if (PropChange->StateChange == DICS_ENABLE)
-                    ret = StartDevice();
+                    ret = ResetDevice(DeviceInfoSet, DeviceInfoData);
                 else
-                    ret = StopDevice();
+                    ret = StopDevice(DeviceInfoSet, DeviceInfoData);
             }
             else
                 ret = TRUE;
@@ -6557,7 +6615,7 @@ SetupDiChangeState(
         }
         case DICS_PROPCHANGE:
         {
-            ret = StopDevice() && StartDevice();
+            ret = ResetDevice(DeviceInfoSet, DeviceInfoData);
             break;
         }
         default:
@@ -6837,7 +6895,6 @@ SetupDiInstallDevice(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
-    struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
     SP_DEVINSTALL_PARAMS_W InstallParams;
     struct DriverInfoElement *SelectedDriver;
     SYSTEMTIME DriverDate;
@@ -7166,13 +7223,7 @@ nextservice:
 
     /* Start the device */
     if (!RebootRequired && !(InstallParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT | DI_DONOTCALLCONFIGMG)))
-    {
-        PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
-        NTSTATUS Status;
-        RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, DevInfo->DeviceName);
-        Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
-        ret = NT_SUCCESS(Status);
-    }
+        ret = ResetDevice(DeviceInfoSet, DeviceInfoData);
     else
         ret = TRUE;
 
