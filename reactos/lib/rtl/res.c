@@ -144,7 +144,7 @@ IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
     {
         pos = (min + max) / 2;
         str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const char *)root + entry[pos].NameOffset);
-        res = wcsncmp( name, str->NameString, str->Length );
+        res = _wcsnicmp( name, str->NameString, str->Length );
         if (!res && namelen == str->Length)
         {
             if (!entry[pos].DataIsDirectory == !want_dir)
