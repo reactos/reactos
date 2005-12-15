@@ -346,6 +346,11 @@ NetClassInstaller(
 		goto cleanup;
 	}
 
+	/* HACK: hpoussin, Dec 2005. TCP/IP driver is not able to manage devices
+	 * which are installed after its startup. So, we have to reboot to take
+	 * this new netcard into account.
+	 */
+	MessageBox(NULL, TEXT("You need to reboot to finish the installation of your network card."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
 	rc = ERROR_SUCCESS;
 
 cleanup:
