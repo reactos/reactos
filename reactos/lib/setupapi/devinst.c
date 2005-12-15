@@ -30,30 +30,11 @@ static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
-static const WCHAR NoDisplayClass[]  = {'N','o','D','i','s','p','l','a','y','C','l','a','s','s',0};
-static const WCHAR NoInstallClass[]  = {'N','o','I','s','t','a','l','l','C','l','a','s','s',0};
-static const WCHAR NoUseClass[]  = {'N','o','U','s','e','C','l','a','s','s',0};
 static const WCHAR NtExtension[]  = {'.','N','T',0};
 static const WCHAR NtPlatformExtension[]  = {'.','N','T','x','8','6',0};
 static const WCHAR SymbolicLink[]  = {'S','y','m','b','o','l','i','c','L','i','n','k',0};
 static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
 static const WCHAR WinExtension[]  = {'.','W','i','n',0};
-
-/* Registry key and value names */
-static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
-                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-                                  'C','o','n','t','r','o','l','\\',
-                                  'C','l','a','s','s',0};
-
-static const WCHAR DeviceClasses[] = {'S','y','s','t','e','m','\\',
-                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-                                  'C','o','n','t','r','o','l','\\',
-                                  'D','e','v','i','c','e','C','l','a','s','s','e','s',0};
-
-static const WCHAR EnumKeyName[] = {'S','y','s','t','e','m','\\',
-                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-                                  'E','n','u','m',0};
-
 
 /* FIXME: header mess */
 DEFINE_GUID(GUID_NULL,
@@ -256,7 +237,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 	    }
 
 	    if (!RegQueryValueExW(hClassKey,
-				  NoUseClass,
+				  REGSTR_VAL_NOUSECLASS,
 				  NULL,
 				  NULL,
 				  NULL,
@@ -269,7 +250,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
 	    if ((Flags & DIBCI_NOINSTALLCLASS) &&
 		(!RegQueryValueExW(hClassKey,
-				   NoInstallClass,
+				   REGSTR_VAL_NOINSTALLCLASS,
 				   NULL,
 				   NULL,
 				   NULL,
@@ -282,7 +263,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
 	    if ((Flags & DIBCI_NODISPLAYCLASS) &&
 		(!RegQueryValueExW(hClassKey,
-				   NoDisplayClass,
+				   REGSTR_VAL_NODISPLAYCLASS,
 				   NULL,
 				   NULL,
 				   NULL,
@@ -1401,7 +1382,7 @@ static LONG SETUP_CreateDevList(
         HKLM = HKEY_LOCAL_MACHINE;
 
     rc = RegOpenKeyExW(HKLM,
-        EnumKeyName,
+        REGSTR_PATH_SYSTEMENUM,
         0,
         KEY_ENUMERATE_SUB_KEYS,
         &hEnumKey);
@@ -1639,7 +1620,7 @@ static LONG SETUP_CreateInterfaceList(
         /* Find class GUID associated to the device instance */
         rc = RegOpenKeyExW(
             HKEY_LOCAL_MACHINE,
-            EnumKeyName,
+            REGSTR_PATH_SYSTEMENUM,
             0, /* Options */
             KEY_ENUMERATE_SUB_KEYS,
             &hEnumKey);
@@ -1914,8 +1895,8 @@ static BOOL GetIconIndex(
     LONG rc;
     BOOL ret = FALSE;
 
-    /* Read "Icon" registry key */
-    rc = RegQueryValueExW(hClassKey, L"Icon", NULL, &dwRegType, NULL, &dwLength);
+    /* Read icon registry key */
+    rc = RegQueryValueExW(hClassKey, REGSTR_VAL_INSICON, NULL, &dwRegType, NULL, &dwLength);
     if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
@@ -1931,7 +1912,7 @@ static BOOL GetIconIndex(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
-    rc = RegQueryValueExW(hClassKey, L"Icon", NULL, NULL, (LPBYTE)Buffer, &dwLength);
+    rc = RegQueryValueExW(hClassKey, REGSTR_VAL_INSICON, NULL, NULL, (LPBYTE)Buffer, &dwLength);
     if (rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
@@ -1940,7 +1921,7 @@ static BOOL GetIconIndex(
     /* make sure the returned buffer is NULL-terminated */
     Buffer[dwLength / sizeof(WCHAR)] = 0;
 
-    /* Transform "Icon" value to a INT */
+    /* Transform icon value to a INT */
     *ImageIndex = atoiW(Buffer);
     ret = TRUE;
 
@@ -2122,7 +2103,7 @@ BOOL WINAPI SetupDiLoadClassIcon(
             PWCHAR Comma;
             LONG rc;
             DWORD dwRegType, dwLength;
-            rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
+            rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, &dwRegType, NULL, &dwLength);
             if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
             {
                 Buffer = MyMalloc(dwLength + sizeof(WCHAR));
@@ -2131,7 +2112,7 @@ BOOL WINAPI SetupDiLoadClassIcon(
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                     goto cleanup;
                 }
-                rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)Buffer, &dwLength);
+                rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, NULL, (LPBYTE)Buffer, &dwLength);
                 if (rc != ERROR_SUCCESS)
                 {
                     SetLastError(rc);
@@ -2141,7 +2122,7 @@ BOOL WINAPI SetupDiLoadClassIcon(
                 Buffer[dwLength / sizeof(WCHAR)] = 0;
             }
             else if
-                (ERROR_SUCCESS == (rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, &dwRegType, NULL, &dwLength))
+                (ERROR_SUCCESS == (rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, &dwRegType, NULL, &dwLength))
                 && dwRegType == REG_SZ)
             {
                 Buffer = MyMalloc(dwLength + sizeof(WCHAR));
@@ -2150,7 +2131,7 @@ BOOL WINAPI SetupDiLoadClassIcon(
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                     goto cleanup;
                 }
-                rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, NULL, (LPBYTE)Buffer, &dwLength);
+                rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, NULL, (LPBYTE)Buffer, &dwLength);
                 if (rc != ERROR_SUCCESS)
                 {
                     SetLastError(rc);
@@ -2646,39 +2627,39 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                 switch (Property)
                 {
                     case SPDRP_CAPABILITIES:
-                        RegistryPropertyName = L"Capabilities"; break;
+                        RegistryPropertyName = REGSTR_VAL_CAPABILITIES; break;
                     case SPDRP_CLASS:
-                        RegistryPropertyName = L"Class"; break;
+                        RegistryPropertyName = REGSTR_VAL_CLASS; break;
                     case SPDRP_CLASSGUID:
-                        RegistryPropertyName = L"ClassGUID"; break;
+                        RegistryPropertyName = REGSTR_VAL_CLASSGUID; break;
                     case SPDRP_COMPATIBLEIDS:
-                        RegistryPropertyName = L"CompatibleIDs"; break;
+                        RegistryPropertyName = REGSTR_VAL_COMPATIBLEIDS; break;
                     case SPDRP_CONFIGFLAGS:
-                        RegistryPropertyName = L"ConfigFlags"; break;
+                        RegistryPropertyName = REGSTR_VAL_CONFIGFLAGS; break;
                     case SPDRP_DEVICEDESC:
-                        RegistryPropertyName = L"DeviceDesc"; break;
+                        RegistryPropertyName = REGSTR_VAL_DEVDESC; break;
                     case SPDRP_DRIVER:
-                        RegistryPropertyName = L"Driver"; break;
+                        RegistryPropertyName = REGSTR_VAL_DRIVER; break;
                     case SPDRP_FRIENDLYNAME:
-                        RegistryPropertyName = L"FriendlyName"; break;
+                        RegistryPropertyName = REGSTR_VAL_FRIENDLYNAME; break;
                     case SPDRP_HARDWAREID:
-                        RegistryPropertyName = L"HardwareID"; break;
+                        RegistryPropertyName = REGSTR_VAL_HARDWAREID; break;
                     case SPDRP_LOCATION_INFORMATION:
-                        RegistryPropertyName = L"LocationInformation"; break;
+                        RegistryPropertyName = REGSTR_VAL_LOCATION_INFORMATION; break;
                     case SPDRP_LOWERFILTERS:
-                        RegistryPropertyName = L"LowerFilters"; break;
+                        RegistryPropertyName = REGSTR_VAL_LOWERFILTERS; break;
                     case SPDRP_MFG:
-                        RegistryPropertyName = L"Mfg"; break;
+                        RegistryPropertyName = REGSTR_VAL_MFG; break;
                     case SPDRP_SECURITY:
                         RegistryPropertyName = L"Security"; break;
                     case SPDRP_SERVICE:
-                        RegistryPropertyName = L"Service"; break;
+                        RegistryPropertyName = REGSTR_VAL_SERVICE; break;
                     case SPDRP_UI_NUMBER:
-                        RegistryPropertyName = L"UINumber"; break;
+                        RegistryPropertyName = REGSTR_VAL_UI_NUMBER; break;
                     case SPDRP_UI_NUMBER_DESC_FORMAT:
                         RegistryPropertyName = L"UINumberDescFormat"; break;
                     case SPDRP_UPPERFILTERS:
-                        RegistryPropertyName = L"UpperFilters"; break;
+                        RegistryPropertyName = REGSTR_VAL_UPPERFILTERS; break;
                     default:
                         /* Should not happen */
                         RegistryPropertyName = NULL; break;
@@ -2687,7 +2668,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                 /* Open registry key name */
                 rc = RegOpenKeyExW(
                     list->HKLM,
-                    EnumKeyName,
+                    REGSTR_PATH_SYSTEMENUM,
                     0, /* Options */
                     KEY_ENUMERATE_SUB_KEYS,
                     &hEnumKey);
@@ -2846,27 +2827,27 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
                 switch (Property)
                 {
                     case SPDRP_COMPATIBLEIDS:
-                        RegistryPropertyName = L"CompatibleIDs";
+                        RegistryPropertyName = REGSTR_VAL_COMPATIBLEIDS;
                         RegistryDataType = REG_MULTI_SZ;
                         break;
                     case SPDRP_CONFIGFLAGS:
-                        RegistryPropertyName = L"ConfigFlags";
+                        RegistryPropertyName = REGSTR_VAL_CONFIGFLAGS;
                         RegistryDataType = REG_DWORD;
                         break;
                     case SPDRP_FRIENDLYNAME:
-                        RegistryPropertyName = L"FriendlyName";
+                        RegistryPropertyName = REGSTR_VAL_FRIENDLYNAME;
                         RegistryDataType = REG_SZ;
                         break;
                     case SPDRP_HARDWAREID:
-                        RegistryPropertyName = L"HardwareID";
+                        RegistryPropertyName = REGSTR_VAL_HARDWAREID;
                         RegistryDataType = REG_MULTI_SZ;
                         break;
                     case SPDRP_LOCATION_INFORMATION:
-                        RegistryPropertyName = L"LocationInformation";
+                        RegistryPropertyName = REGSTR_VAL_LOCATION_INFORMATION;
                         RegistryDataType = REG_SZ;
                         break;
                     case SPDRP_LOWERFILTERS:
-                        RegistryPropertyName = L"LowerFilters";
+                        RegistryPropertyName = REGSTR_VAL_LOWERFILTERS;
                         RegistryDataType = REG_MULTI_SZ;
                         break;
                     case SPDRP_SECURITY:
@@ -2874,7 +2855,7 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
                         RegistryDataType = REG_BINARY;
                         break;
                     case SPDRP_SERVICE:
-                        RegistryPropertyName = L"Service";
+                        RegistryPropertyName = REGSTR_VAL_SERVICE;
                         RegistryDataType = REG_SZ;
                         break;
                     case SPDRP_UI_NUMBER_DESC_FORMAT:
@@ -2882,7 +2863,7 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
                         RegistryDataType = REG_SZ;
                         break;
                     case SPDRP_UPPERFILTERS:
-                        RegistryPropertyName = L"UpperFilters";
+                        RegistryPropertyName = REGSTR_VAL_UPPERFILTERS;
                         RegistryDataType = REG_MULTI_SZ;
                         break;
                     default:
@@ -2976,7 +2957,7 @@ static HKEY CreateClassKey(HINF hInf)
         return INVALID_HANDLE_VALUE;
     }
 
-    lstrcpyW(FullBuffer, ControlClass);
+    lstrcpyW(FullBuffer, REGSTR_PATH_CLASS_NT);
     lstrcatW(FullBuffer, Buffer);
 
 
@@ -3189,11 +3170,11 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 
     if (Flags == DIOCR_INSTALLER)
     {
-        lpKeyName = ControlClass;
+        lpKeyName = REGSTR_PATH_CLASS_NT;
     }
     else if (Flags == DIOCR_INTERFACE)
     {
-        lpKeyName = DeviceClasses;
+        lpKeyName = REGSTR_PATH_DEVICE_CLASSES;
     }
     else
     {
@@ -3630,13 +3611,13 @@ BOOL WINAPI SetupDiCallClassInstaller(
                 hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_QUERY_VALUE);
                 if (hKey != INVALID_HANDLE_VALUE)
                 {
-                    rc = RegQueryValueExW(hKey, L"CoInstallers32", NULL, &dwRegType, NULL, &dwLength);
+                    rc = RegQueryValueExW(hKey, REGSTR_VAL_COINSTALLERS_32, NULL, &dwRegType, NULL, &dwLength);
                     if (rc == ERROR_SUCCESS && dwRegType == REG_MULTI_SZ)
                     {
                         LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
                         if (KeyBuffer != NULL)
                         {
-                            rc = RegQueryValueExW(hKey, L"CoInstallers32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                            rc = RegQueryValueExW(hKey, REGSTR_VAL_COINSTALLERS_32, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
                             if (rc == ERROR_SUCCESS)
                             {
                                 LPWSTR ptr;
@@ -3665,7 +3646,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
             {
                 rc = RegOpenKeyEx(
                     HKEY_LOCAL_MACHINE,
-                    L"SYSTEM\\CurrentControlSet\\Control\\CoDeviceInstallers",
+                    REGSTR_PATH_CODEVICEINSTALLERS,
                     0, /* Options */
                     KEY_QUERY_VALUE,
                     &hKey);
@@ -3712,13 +3693,13 @@ BOOL WINAPI SetupDiCallClassInstaller(
                 hKey = SetupDiOpenClassRegKey(&DeviceInfoData->ClassGuid, KEY_QUERY_VALUE);
                 if (hKey != INVALID_HANDLE_VALUE)
                 {
-                    rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
+                    rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, &dwRegType, NULL, &dwLength);
                     if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
                     {
                         LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
                         if (KeyBuffer != NULL)
                         {
-                            rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                            rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
                             if (rc == ERROR_SUCCESS)
                             {
                                 /* Get ClassInstaller function pointer */
@@ -4217,7 +4198,7 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
         if (hKey == INVALID_HANDLE_VALUE)
             goto cleanup;
 
-        rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, &dwRegType, NULL, &dwLength);
+        rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, &dwRegType, NULL, &dwLength);
         if (rc == ERROR_FILE_NOT_FOUND)
         {
             /* No registry key. As it is optional, don't say it's a bad error */
@@ -4238,7 +4219,7 @@ BOOL WINAPI SetupDiGetClassDevPropertySheetsW(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
-        rc = RegQueryValueExW(hKey, L"EnumPropPages32", NULL, NULL, (LPBYTE)PropPageProvider, &dwLength);
+        rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, NULL, (LPBYTE)PropPageProvider, &dwLength);
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
@@ -4377,7 +4358,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
         else /* Scope == DICS_FLAG_CONFIGSPECIFIC */
         {
             rc = RegOpenKeyExW(list->HKLM,
-                L"SYSTEM\\CurrentControlSet\\Hardware Profiles",
+                REGSTR_PATH_HWPROFILES,
                 0,
                 0,
                 &hHWProfilesKey);
@@ -4421,7 +4402,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
 
             rc = RegCreateKeyExW(
                 RootKey,
-                EnumKeyName,
+                REGSTR_PATH_SYSTEMENUM,
                 0,
                 NULL,
                 REG_OPTION_NON_VOLATILE,
@@ -4470,7 +4451,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
             wcscat(DriverKey, L"}\\");
             pDeviceInstance = &DriverKey[wcslen(DriverKey)];
             rc = RegOpenKeyExW(RootKey,
-                ControlClass,
+                REGSTR_PATH_CLASS_NT,
                 0,
                 KEY_CREATE_SUB_KEY,
                 &hClassKey);
@@ -4521,7 +4502,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
             hDeviceKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, Scope, HwProfile, DIREG_DEV, KEY_SET_VALUE);
             if (hDeviceKey == INVALID_HANDLE_VALUE)
                 goto cleanup;
-            rc = RegSetValueEx(hDeviceKey, L"Driver", 0, REG_SZ, (const BYTE *)DriverKey, (wcslen(DriverKey) + 1) * sizeof(WCHAR));
+            rc = RegSetValueEx(hDeviceKey, REGSTR_VAL_DRIVER, 0, REG_SZ, (const BYTE *)DriverKey, (wcslen(DriverKey) + 1) * sizeof(WCHAR));
             if (rc != ERROR_SUCCESS)
             {
                 SetLastError(rc);
@@ -4606,7 +4587,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
         {
             rc = RegOpenKeyExW(
                 list->HKLM,
-                EnumKeyName,
+                REGSTR_PATH_SYSTEMENUM,
                 0, /* Options */
                 KEY_ENUMERATE_SUB_KEYS,
                 &hRootKey);
@@ -4635,7 +4616,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
                 goto cleanup;
             }
             /* Read the 'Driver' key */
-            rc = RegQueryValueExW(hKey, L"Driver", NULL, &dwRegType, NULL, &dwLength);
+            rc = RegQueryValueExW(hKey, REGSTR_VAL_DRIVER, NULL, &dwRegType, NULL, &dwLength);
             if (rc != ERROR_SUCCESS)
             {
                 SetLastError(rc);
@@ -4652,7 +4633,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 goto cleanup;
             }
-            rc = RegQueryValueExW(hKey, L"Driver", NULL, &dwRegType, (LPBYTE)DriverKey, &dwLength);
+            rc = RegQueryValueExW(hKey, REGSTR_VAL_DRIVER, NULL, &dwRegType, (LPBYTE)DriverKey, &dwLength);
             if (rc != ERROR_SUCCESS)
             {
                 SetLastError(rc);
@@ -4663,7 +4644,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
             /* Need to open the driver key */
             rc = RegOpenKeyExW(
                 list->HKLM,
-                ControlClass,
+                REGSTR_PATH_CLASS_NT,
                 0, /* Options */
                 KEY_ENUMERATE_SUB_KEYS,
                 &hRootKey);
@@ -5734,7 +5715,7 @@ SetupDiOpenDeviceInfoW(
             /* Open supposed registry key */
             rc = RegOpenKeyExW(
                 list->HKLM,
-                EnumKeyName,
+                REGSTR_PATH_SYSTEMENUM,
                 0, /* Options */
                 KEY_ENUMERATE_SUB_KEYS,
                 &hEnumKey);
@@ -7168,15 +7149,15 @@ nextservice:
     TRACE("DeviceDesc      : '%S'\n", SelectedDriver->Info.Description);
     TRACE("Mfg             : '%S'\n", SelectedDriver->Info.MfgName);
     TRACE("Service         : '%S'\n", AssociatedService);
-    rc = RegSetValueEx(hKey, L"Class", 0, REG_SZ, (const BYTE *)ClassName, (wcslen(ClassName) + 1) * sizeof(WCHAR));
+    rc = RegSetValueEx(hKey, REGSTR_VAL_CLASS, 0, REG_SZ, (const BYTE *)ClassName, (wcslen(ClassName) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
-        rc = RegSetValueEx(hKey, L"ClassGUID", 0, REG_SZ, (const BYTE *)lpFullGuidString, (wcslen(lpFullGuidString) + 1) * sizeof(WCHAR));
+        rc = RegSetValueEx(hKey, REGSTR_VAL_CLASSGUID, 0, REG_SZ, (const BYTE *)lpFullGuidString, (wcslen(lpFullGuidString) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
-        rc = RegSetValueEx(hKey, L"DeviceDesc", 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (wcslen(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
+        rc = RegSetValueEx(hKey, REGSTR_VAL_DEVDESC, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (wcslen(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
-        rc = RegSetValueEx(hKey, L"Mfg", 0, REG_SZ, (const BYTE *)SelectedDriver->Info.MfgName, (wcslen(SelectedDriver->Info.MfgName) + 1) * sizeof(WCHAR));
+        rc = RegSetValueEx(hKey, REGSTR_VAL_MFG, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.MfgName, (wcslen(SelectedDriver->Info.MfgName) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS && *AssociatedService)
-        rc = RegSetValueEx(hKey, L"Service", 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
+        rc = RegSetValueEx(hKey, REGSTR_VAL_SERVICE, 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
        SetLastError(rc);
