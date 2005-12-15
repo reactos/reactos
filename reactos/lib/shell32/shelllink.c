@@ -2549,7 +2549,7 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 
     memset( &sei, 0, sizeof sei );
     sei.cbSize = sizeof sei;
-    sei.fMask = SEE_MASK_UNICODE | SEE_MASK_NOCLOSEPROCESS;
+    sei.fMask = SEE_MASK_UNICODE;
     sei.lpFile = path;
     sei.nShow = This->iShowCmd;
     sei.lpIDList = This->pPidl;
@@ -2557,15 +2557,8 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     sei.lpParameters = args;
     sei.lpVerb = szOpen;
 
-    if( ShellExecuteExW( &sei ) )
-    {
-        if ( sei.hProcess )
-        {
-            WaitForSingleObject( sei.hProcess, 10000 );
-            CloseHandle( sei.hProcess );
-        }
+    if ( ShellExecuteExW( &sei ) && sei.hInstApp > 32 )
         r = S_OK;
-    }
     else
         r = E_FAIL;
 
