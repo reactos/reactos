@@ -1824,7 +1824,7 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 
 	PatBlt(canvas, _logo_size.cx, 0, 1, clnt.bottom, WHITENESS);
 
-	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
+    BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, ( h<_logo_size.cy ? _logo_size.cy-h : 0) , SRCCOPY);
 
 	super::Paint(canvas);
 }
