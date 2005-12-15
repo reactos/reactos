@@ -79,7 +79,7 @@ typedef BOOL
     IN LPFNADDPROPSHEETPAGE fAddFunc,
     IN LPARAM lParam);
 typedef BOOL
-(CALLBACK* UPDATE_CLASS_PARAM_HANDLER) (
+(*UPDATE_CLASS_PARAM_HANDLER) (
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
@@ -94,6 +94,13 @@ struct CoInstallerElement
     BOOL DoPostProcessing;
     PVOID PrivateData;
 };
+
+static BOOL
+PropertyChangeHandler(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+    IN DWORD ClassInstallParamsSize);
 
 static UPDATE_CLASS_PARAM_HANDLER UpdateClassInstallParamHandlers[] = {
     NULL, /* DIF_SELECTDEVICE */
@@ -113,7 +120,7 @@ static UPDATE_CLASS_PARAM_HANDLER UpdateClassInstallParamHandlers[] = {
     NULL, /* DIF_DETECT */
     NULL, /* DIF_INSTALLWIZARD */
     NULL, /* DIF_DESTROYWIZARDDATA */
-    NULL, /* DIF_PROPERTYCHANGE */
+    PropertyChangeHandler, /* DIF_PROPERTYCHANGE */
     NULL, /* DIF_ENABLECLASS */
     NULL, /* DIF_DETECTVERIFY */
     NULL, /* DIF_INSTALLDEVICEFILES */
@@ -2292,6 +2299,12 @@ static BOOL DestroyDriverInfoElement(struct DriverInfoElement* driverInfo)
     return TRUE;
 }
 
+static BOOL DestroyClassInstallParams(struct ClassInstallParams* installParams)
+{
+    HeapFree(GetProcessHeap(), 0, installParams->PropChange);
+    return TRUE;
+}
+
 static BOOL DestroyDeviceInfoElement(struct DeviceInfoElement* deviceInfo)
 {
     PLIST_ENTRY ListEntry;
@@ -2309,6 +2322,7 @@ static BOOL DestroyDeviceInfoElement(struct DeviceInfoElement* deviceInfo)
         ListEntry = RemoveHeadList(&deviceInfo->InterfaceListHead);
         HeapFree(GetProcessHeap(), 0, ListEntry);
     }
+    DestroyClassInstallParams(&deviceInfo->ClassInstallParams);
     HeapFree(GetProcessHeap(), 0, deviceInfo);
     return TRUE;
 }
@@ -2328,6 +2342,7 @@ static BOOL DestroyDeviceInfoSet(struct DeviceInfoSet* list)
     if (list->HKLM != HKEY_LOCAL_MACHINE)
         RegCloseKey(list->HKLM);
     CM_Disconnect_Machine(list->hMachine);
+    DestroyClassInstallParams(&list->ClassInstallParams);
     HeapFree(GetProcessHeap(), 0, list);
     return TRUE;
 }
@@ -3358,7 +3373,7 @@ BOOL WINAPI SetupDiSetClassInstallParamsW(
             }
             else if (UpdateClassInstallParamHandlers[ClassInstallParams->InstallFunction - DIF_SELECTDEVICE] == NULL)
             {
-                FIXME("InstallFunction code is valid, but no associated update handler\n");
+                FIXME("InstallFunction %u is valid, but has no associated update handler\n", ClassInstallParams->InstallFunction);
                 SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
                 goto done;
             }
@@ -3377,6 +3392,63 @@ BOOL WINAPI SetupDiSetClassInstallParamsW(
 
 done:
     TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+static BOOL PropertyChangeHandler(
+       IN HDEVINFO DeviceInfoSet,
+       IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+       IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+       IN DWORD ClassInstallParamsSize)
+{
+    PSP_PROPCHANGE_PARAMS PropChangeParams = (PSP_PROPCHANGE_PARAMS)ClassInstallParams;
+    BOOL ret = FALSE;
+
+    if (ClassInstallParamsSize != sizeof(SP_PROPCHANGE_PARAMS))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (PropChangeParams && PropChangeParams->StateChange != DICS_ENABLE
+        && PropChangeParams->StateChange != DICS_DISABLE && PropChangeParams->StateChange != DICS_PROPCHANGE
+        && PropChangeParams->StateChange != DICS_START && PropChangeParams->StateChange != DICS_STOP)
+        SetLastError(ERROR_INVALID_FLAGS);
+    else if (PropChangeParams && PropChangeParams->Scope != DICS_FLAG_GLOBAL
+        && PropChangeParams->Scope != DICS_FLAG_CONFIGSPECIFIC)
+        SetLastError(ERROR_INVALID_FLAGS);
+    else if (PropChangeParams
+        && (PropChangeParams->StateChange == DICS_START || PropChangeParams->StateChange == DICS_STOP)
+        && PropChangeParams->Scope != DICS_FLAG_CONFIGSPECIFIC)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        PSP_PROPCHANGE_PARAMS *CurrentPropChangeParams;
+        if (!DeviceInfoData)
+        {
+            struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
+            CurrentPropChangeParams = &list->ClassInstallParams.PropChange;
+        }
+        else
+        {
+            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            CurrentPropChangeParams = &deviceInfo->ClassInstallParams.PropChange;
+        }
+        if (*CurrentPropChangeParams)
+        {
+            MyFree(*CurrentPropChangeParams);
+            *CurrentPropChangeParams = NULL;
+        }
+        if (PropChangeParams)
+        {
+            *CurrentPropChangeParams = MyMalloc(sizeof(SP_PROPCHANGE_PARAMS));
+            if (!*CurrentPropChangeParams)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto done;
+            }
+            memcpy(*CurrentPropChangeParams, PropChangeParams, sizeof(SP_PROPCHANGE_PARAMS));
+        }
+        ret = TRUE;
+    }
+
+done:
     return ret;
 }
 
@@ -6280,10 +6352,29 @@ SetupDiGetDriverInfoDetailW(
 BOOL WINAPI
 SetupDiChangeState(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData)
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
+    PSP_PROPCHANGE_PARAMS PropChange;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    if (!DeviceInfoData)
+        PropChange = ((struct DeviceInfoSet *)DeviceInfoSet)->ClassInstallParams.PropChange;
+    else
+        PropChange = ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->ClassInstallParams.PropChange;
+    if (!PropChange)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+    }
+
     FIXME("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+done:
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 /***********************************************************************

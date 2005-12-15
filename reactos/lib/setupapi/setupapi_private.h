@@ -84,6 +84,11 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
     struct InfFileDetails *InfFileDetails;
 };
 
+struct ClassInstallParams
+{
+    PSP_PROPCHANGE_PARAMS PropChange;
+};
+
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
 {
     LIST_ENTRY ListEntry;
@@ -130,6 +135,9 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
     /* List of interfaces implemented by this device */
     LIST_ENTRY InterfaceListHead; /* List of struct DeviceInterface */
 
+    /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
+    struct ClassInstallParams ClassInstallParams;
+
     WCHAR Data[ANYSIZE_ARRAY];
 };
 
@@ -147,6 +155,9 @@ struct DeviceInfoSet /* HDEVINFO */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
 
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
+
+    /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
+    struct ClassInstallParams ClassInstallParams;
 
     /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
      * or NULL if related to local machine. Points into szData field at the
