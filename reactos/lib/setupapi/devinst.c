@@ -3397,14 +3397,16 @@ done:
 
 static BOOL PropertyChangeHandler(
        IN HDEVINFO DeviceInfoSet,
-       IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+       IN PSP_DEVINFO_DATA DeviceInfoData,
        IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
        IN DWORD ClassInstallParamsSize)
 {
     PSP_PROPCHANGE_PARAMS PropChangeParams = (PSP_PROPCHANGE_PARAMS)ClassInstallParams;
     BOOL ret = FALSE;
 
-    if (ClassInstallParamsSize != sizeof(SP_PROPCHANGE_PARAMS))
+    if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (ClassInstallParamsSize != sizeof(SP_PROPCHANGE_PARAMS))
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (PropChangeParams && PropChangeParams->StateChange != DICS_ENABLE
         && PropChangeParams->StateChange != DICS_DISABLE && PropChangeParams->StateChange != DICS_PROPCHANGE
@@ -4362,25 +4364,101 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
         LPWSTR pDeviceInstance; /* Points into DriverKey, on the Index field */
         DWORD Index; /* Index used in the DriverKey name */
         DWORD rc;
+        HKEY hHWProfilesKey = INVALID_HANDLE_VALUE;
+        HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
+        HKEY hEnumKey = INVALID_HANDLE_VALUE;
         HKEY hClassKey = INVALID_HANDLE_VALUE;
         HKEY hDeviceKey = INVALID_HANDLE_VALUE;
         HKEY hKey = INVALID_HANDLE_VALUE;
+        HKEY RootKey;
 
-        if (Scope == DICS_FLAG_CONFIGSPECIFIC)
+        if (Scope == DICS_FLAG_GLOBAL)
+            RootKey = list->HKLM;
+        else /* Scope == DICS_FLAG_CONFIGSPECIFIC */
         {
-            FIXME("DICS_FLAG_CONFIGSPECIFIC case unimplemented\n");
-            goto cleanup;
+            rc = RegOpenKeyExW(list->HKLM,
+                L"SYSTEM\\CurrentControlSet\\Hardware Profiles",
+                0,
+                0,
+                &hHWProfilesKey);
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+            if (HwProfile == 0)
+            {
+                rc = RegOpenKeyExW(
+                    hHWProfilesKey,
+                    REGSTR_KEY_CURRENT,
+                    0,
+                    KEY_CREATE_SUB_KEY,
+                    &hHWProfileKey);
+            }
+            else
+            {
+                WCHAR subKey[5];
+                snprintfW(subKey, 4, L"%04lu", HwProfile);
+                subKey[4] = '\0';
+                rc = RegOpenKeyExW(
+                    hHWProfilesKey,
+                    subKey,
+                    0,
+                    KEY_CREATE_SUB_KEY,
+                    &hHWProfileKey);
+            }
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+            RootKey = hHWProfileKey;
         }
 
         if (KeyType == DIREG_DEV)
         {
-            FIXME("DIREG_DEV case unimplemented\n");
+            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+
+            rc = RegCreateKeyExW(
+                RootKey,
+                EnumKeyName,
+                0,
+                NULL,
+                REG_OPTION_NON_VOLATILE,
+                KEY_CREATE_SUB_KEY,
+                NULL,
+                &hEnumKey,
+                NULL);
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+            rc = RegCreateKeyExW(
+                hEnumKey,
+                deviceInfo->DeviceName,
+                0,
+                NULL,
+                REG_OPTION_NON_VOLATILE,
+#if _WIN32_WINNT >= 0x502
+                KEY_READ | KEY_WRITE,
+#else
+                KEY_ALL_ACCESS,
+#endif
+                NULL,
+                &hKey,
+                NULL);
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
         }
         else /* KeyType == DIREG_DRV */
         {
             if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) != RPC_S_OK)
                 goto cleanup;
-            /* The driver key is in HKLM\System\CurrentControlSet\Control\Class\{GUID}\Index */
+            /* The driver key is in \System\CurrentControlSet\Control\Class\{GUID}\Index */
             DriverKey = HeapAlloc(GetProcessHeap(), 0, (wcslen(lpGuidString) + 7) * sizeof(WCHAR) + sizeof(UNICODE_STRING));
             if (!DriverKey)
             {
@@ -4391,7 +4469,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
             wcscat(DriverKey, lpGuidString);
             wcscat(DriverKey, L"}\\");
             pDeviceInstance = &DriverKey[wcslen(DriverKey)];
-            rc = RegOpenKeyExW(list->HKLM,
+            rc = RegOpenKeyExW(RootKey,
                 ControlClass,
                 0,
                 KEY_CREATE_SUB_KEY,
@@ -4463,6 +4541,12 @@ cleanup:
         if (lpGuidString)
             RpcStringFreeW(&lpGuidString);
         HeapFree(GetProcessHeap(), 0, DriverKey);
+        if (hHWProfilesKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hHWProfilesKey);
+        if (hHWProfileKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hHWProfileKey);
+        if (hEnumKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hEnumKey);
         if (hClassKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hClassKey);
         if (hDeviceKey != INVALID_HANDLE_VALUE)
@@ -6346,15 +6430,71 @@ SetupDiGetDriverInfoDetailW(
     return ret;
 }
 
+/* Return the current hardware profile id, or -1 if error */
+static DWORD
+GetCurrentHwProfile(
+    IN HDEVINFO DeviceInfoSet)
+{
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    DWORD dwRegType, dwLength;
+    DWORD hwProfile;
+    LONG rc;
+    DWORD ret = (DWORD)-1;
+
+    rc = RegOpenKeyExW(
+        ((struct DeviceInfoSet *)DeviceInfoSet)->HKLM,
+        REGSTR_PATH_IDCONFIGDB,
+        0, /* Options */
+        KEY_QUERY_VALUE,
+        &hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+
+    dwLength = sizeof(DWORD);
+    rc = RegQueryValueExW(
+        hKey,
+        REGSTR_VAL_CURRENTCONFIG,
+        NULL,
+        &dwRegType,
+        (LPBYTE)&hwProfile, &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+    else if (dwRegType != REG_DWORD || dwLength != sizeof(DWORD))
+    {
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
+    }
+
+    ret = hwProfile;
+
+cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+
+    return hwProfile;
+}
+
 /***********************************************************************
  *		SetupDiChangeState (SETUPAPI.@)
  */
+static BOOL StartDevice(VOID) { FIXME("Stub"); return TRUE; }
+static BOOL StopDevice(VOID) { FIXME("Stub"); return TRUE; }
 BOOL WINAPI
 SetupDiChangeState(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     PSP_PROPCHANGE_PARAMS PropChange;
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    LPCWSTR RegistryValueName;
+    DWORD dwConfigFlags, dwLength, dwRegType;
+    LONG rc;
     BOOL ret = FALSE;
 
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
@@ -6366,13 +6506,90 @@ SetupDiChangeState(
     if (!PropChange)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        goto done;
+        goto cleanup;
     }
 
-    FIXME("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if (PropChange->Scope == DICS_FLAG_GLOBAL)
+        RegistryValueName = REGSTR_VAL_CONFIGFLAGS;
+    else
+        RegistryValueName = REGSTR_VAL_CSCONFIGFLAGS;
 
-done:
+    switch (PropChange->StateChange)
+    {
+        case DICS_ENABLE:
+        case DICS_DISABLE:
+        {
+            /* Enable/disable device in registry */
+            hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, PropChange->Scope, PropChange->HwProfile, DIREG_DEV, KEY_QUERY_VALUE | KEY_SET_VALUE);
+            if (hKey == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_NOT_FOUND)
+                hKey = SetupDiCreateDevRegKey(DeviceInfoSet, DeviceInfoData, PropChange->Scope, PropChange->HwProfile, DIREG_DEV, NULL, NULL);
+            if (hKey == INVALID_HANDLE_VALUE)
+                break;
+            dwLength = sizeof(DWORD);
+            rc = RegQueryValueExW(
+                hKey,
+                RegistryValueName,
+                NULL,
+                &dwRegType,
+                (LPBYTE)&dwConfigFlags, &dwLength);
+            if (rc == ERROR_FILE_NOT_FOUND)
+                dwConfigFlags = 0;
+            else if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+            else if (dwRegType != REG_DWORD || dwLength != sizeof(DWORD))
+            {
+                SetLastError(ERROR_GEN_FAILURE);
+                goto cleanup;
+            }
+            if (PropChange->StateChange == DICS_ENABLE)
+                dwConfigFlags &= ~(PropChange->Scope == DICS_FLAG_GLOBAL ? CONFIGFLAG_DISABLED : CSCONFIGFLAG_DISABLED);
+            else
+                dwConfigFlags |= (PropChange->Scope == DICS_FLAG_GLOBAL ? CONFIGFLAG_DISABLED : CSCONFIGFLAG_DISABLED);
+            rc = RegSetValueEx(
+                hKey,
+                RegistryValueName,
+                0,
+                REG_DWORD,
+                (LPBYTE)&dwConfigFlags, sizeof(DWORD));
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+
+            /* Enable/disable device if needed */
+            if (PropChange->Scope == DICS_FLAG_GLOBAL
+                || PropChange->HwProfile == 0
+                || PropChange->HwProfile == GetCurrentHwProfile(DeviceInfoSet))
+            {
+                if (PropChange->StateChange == DICS_ENABLE)
+                    ret = StartDevice();
+                else
+                    ret = StopDevice();
+            }
+            else
+                ret = TRUE;
+            break;
+        }
+        case DICS_PROPCHANGE:
+        {
+            ret = StopDevice() && StartDevice();
+            break;
+        }
+        default:
+        {
+            FIXME("Unknown StateChange 0x%lx\n", PropChange->StateChange);
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        }
+    }
+
+cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+
     TRACE("Returning %d\n", ret);
     return ret;
 }

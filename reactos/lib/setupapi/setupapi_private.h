@@ -29,6 +29,7 @@
 #include <windows.h>
 #include <cfgmgr32.h>
 #include <fdi.h>
+#include <regstr.h>
 #include <setupapi.h>
 #include <shlobj.h>
 #include <wine/debug.h>
