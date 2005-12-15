@@ -1112,6 +1112,8 @@ IopAssignDeviceResources(PDEVICE_NODE DeviceNode)
       return STATUS_SUCCESS;
    }
 
+   IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
+
    /* FIXME: that's here that PnP arbiter should go */
    /* Actually, simply use resource list #0 as assigned resource list */
    ResourceList = &DeviceNode->ResourceRequirements->List[0];
@@ -1315,6 +1317,8 @@ IopAssignDeviceResources(PDEVICE_NODE DeviceNode)
    DeviceNode->ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
    DeviceNode->ResourceListTranslated->List[0].PartialResourceList.Count = NumberOfResources;
 
+   IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
+   IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_ASSIGNED);
    return STATUS_SUCCESS;
 
 ByeBye:
@@ -1329,6 +1333,7 @@ ByeBye:
       DeviceNode->ResourceListTranslated = NULL;
    }
 
+   IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
    return Status;
 }
 
@@ -1867,14 +1872,18 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       &IoStatusBlock,
       IRP_MN_QUERY_RESOURCE_REQUIREMENTS,
       NULL);
-   if (NT_SUCCESS(Status) && IoStatusBlock.Information)
+   if (NT_SUCCESS(Status))
    {
       DeviceNode->ResourceRequirements =
          (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
+      if (IoStatusBlock.Information)
+         IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_REPORTED);
+      else
+         IopDeviceNodeSetFlag(DeviceNode, DNF_NO_RESOURCE_REQUIRED);
    }
    else
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
+      DPRINT("IopInitiatePnpIrp() failed (Status %08lx)\n", Status);
       DeviceNode->ResourceRequirements = NULL;
    }
 
