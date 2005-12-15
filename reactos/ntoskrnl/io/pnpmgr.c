@@ -996,7 +996,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
    UNICODE_STRING KeyName;
    HANDLE LogConfKey;
    ULONG ResCount;
-   ULONG ListSize;
+   ULONG ListSize, ResultLength;
    NTSTATUS Status;
 
    DPRINT("IopSetDeviceInstanceData() called\n");
@@ -1050,6 +1050,26 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 
       ZwClose(LogConfKey);
    }
+
+   /* Set the 'ConfigFlags' value */
+   RtlInitUnicodeString(&KeyName, L"ConfigFlags");
+   Status = ZwQueryValueKey(InstanceKey,
+                            &KeyName,
+                            KeyValueBasicInformation,
+                            NULL,
+                            0,
+                            &ResultLength);
+  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+  {
+    /* Write the default value */
+    ULONG DefaultConfigFlags = 0;
+    Status = ZwSetValueKey(InstanceKey,
+                           &KeyName,
+                           0,
+                           REG_DWORD,
+                           &DefaultConfigFlags,
+                           sizeof(DefaultConfigFlags));
+  }
 
 #if 0
   if (DeviceNode->PhysicalDeviceObject != NULL)
