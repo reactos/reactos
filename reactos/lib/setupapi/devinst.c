@@ -29,6 +29,7 @@ static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
+static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR NoDisplayClass[]  = {'N','o','D','i','s','p','l','a','y','C','l','a','s','s',0};
 static const WCHAR NoInstallClass[]  = {'N','o','I','s','t','a','l','l','C','l','a','s','s',0};
 static const WCHAR NoUseClass[]  = {'N','o','U','s','e','C','l','a','s','s',0};
@@ -77,6 +78,12 @@ typedef BOOL
     IN PSP_PROPSHEETPAGE_REQUEST PropPageRequest,
     IN LPFNADDPROPSHEETPAGE fAddFunc,
     IN LPARAM lParam);
+typedef BOOL
+(CALLBACK* UPDATE_CLASS_PARAM_HANDLER) (
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+    IN DWORD ClassInstallParamsSize);
 
 struct CoInstallerElement
 {
@@ -86,6 +93,51 @@ struct CoInstallerElement
     COINSTALLER_PROC Function;
     BOOL DoPostProcessing;
     PVOID PrivateData;
+};
+
+static UPDATE_CLASS_PARAM_HANDLER UpdateClassInstallParamHandlers[] = {
+    NULL, /* DIF_SELECTDEVICE */
+    NULL, /* DIF_INSTALLDEVICE */
+    NULL, /* DIF_ASSIGNRESOURCES */
+    NULL, /* DIF_PROPERTIES */
+    NULL, /* DIF_REMOVE */
+    NULL, /* DIF_FIRSTTIMESETUP */
+    NULL, /* DIF_FOUNDDEVICE */
+    NULL, /* DIF_SELECTCLASSDRIVERS */
+    NULL, /* DIF_VALIDATECLASSDRIVERS */
+    NULL, /* DIF_INSTALLCLASSDRIVERS */
+    NULL, /* DIF_CALCDISKSPACE */
+    NULL, /* DIF_DESTROYPRIVATEDATA */
+    NULL, /* DIF_VALIDATEDRIVER */
+    NULL, /* DIF_MOVEDEVICE */
+    NULL, /* DIF_DETECT */
+    NULL, /* DIF_INSTALLWIZARD */
+    NULL, /* DIF_DESTROYWIZARDDATA */
+    NULL, /* DIF_PROPERTYCHANGE */
+    NULL, /* DIF_ENABLECLASS */
+    NULL, /* DIF_DETECTVERIFY */
+    NULL, /* DIF_INSTALLDEVICEFILES */
+    NULL, /* DIF_UNREMOVE */
+    NULL, /* DIF_SELECTBESTCOMPATDRV */
+    NULL, /* DIF_ALLOW_INSTALL */
+    NULL, /* DIF_REGISTERDEVICE */
+    NULL, /* DIF_NEWDEVICEWIZARD_PRESELECT */
+    NULL, /* DIF_NEWDEVICEWIZARD_SELECT */
+    NULL, /* DIF_NEWDEVICEWIZARD_PREANALYZE */
+    NULL, /* DIF_NEWDEVICEWIZARD_POSTANALYZE */
+    NULL, /* DIF_NEWDEVICEWIZARD_FINISHINSTALL */
+    NULL, /* DIF_UNUSED1 */
+    NULL, /* DIF_INSTALLINTERFACES */
+    NULL, /* DIF_DETECTCANCEL */
+    NULL, /* DIF_REGISTER_COINSTALLERS */
+    NULL, /* DIF_ADDPROPERTYPAGE_ADVANCED */
+    NULL, /* DIF_ADDPROPERTYPAGE_BASIC */
+    NULL, /* DIF_RESERVED1 */
+    NULL, /* DIF_TROUBLESHOOTER */
+    NULL, /* DIF_POWERMESSAGEWAKE */
+    NULL, /* DIF_ADDREMOTEPROPERTYPAGE_ADVANCED */
+    NULL, /* DIF_UPDATEDRIVER_UI */
+    NULL  /* DIF_RESERVED2 */
 };
 
 /***********************************************************************
@@ -2752,7 +2804,7 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
         SetLastError(ERROR_INVALID_HANDLE);
     else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (DeviceInfoData)
+    else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -3042,7 +3094,7 @@ BOOL WINAPI SetupDiInstallClassW(
 				INVALID_HANDLE_VALUE,
 				NULL);
 
-    /* FIXME: More code! */
+    /* FIXME: Process InterfaceInstall32 section */
 
     if (bFileQueueCreated)
 	SetupCloseFileQueue(FileQueue);
@@ -3260,14 +3312,72 @@ BOOL WINAPI SetupDiSetClassInstallParamsA(
  *		SetupDiSetClassInstallParamsW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiSetClassInstallParamsW(
-       HDEVINFO  DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       PSP_CLASSINSTALL_HEADER ClassInstallParams,
-       DWORD ClassInstallParamsSize)
+       IN HDEVINFO DeviceInfoSet,
+       IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+       IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
+       IN DWORD ClassInstallParamsSize)
 {
-    FIXME("%p %p %x %lu\n",DeviceInfoSet, DeviceInfoData,
-          ClassInstallParams->InstallFunction, ClassInstallParamsSize);
-    return FALSE;
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p %lu\n", DeviceInfoSet, DeviceInfoData,
+        ClassInstallParams, ClassInstallParamsSize);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (ClassInstallParams && ClassInstallParams->cbSize != sizeof(SP_CLASSINSTALL_HEADER))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (ClassInstallParams && ClassInstallParamsSize < sizeof(SP_CLASSINSTALL_HEADER))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (!ClassInstallParams && ClassInstallParamsSize != 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        SP_DEVINSTALL_PARAMS_W InstallParams;
+        BOOL Result;
+
+        InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+        Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+        if (!Result)
+            goto done;
+
+        if (ClassInstallParams)
+        {
+            /* Check parameters in ClassInstallParams */
+            if (ClassInstallParams->InstallFunction < DIF_SELECTDEVICE
+                || ClassInstallParams->InstallFunction - DIF_SELECTDEVICE >= sizeof(UpdateClassInstallParamHandlers)/sizeof(UpdateClassInstallParamHandlers[0]))
+            {
+                SetLastError(ERROR_INVALID_USER_BUFFER);
+                goto done;
+            }
+            else if (UpdateClassInstallParamHandlers[ClassInstallParams->InstallFunction - DIF_SELECTDEVICE] == NULL)
+            {
+                FIXME("InstallFunction code is valid, but no associated update handler\n");
+                SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+                goto done;
+            }
+            ret = UpdateClassInstallParamHandlers[ClassInstallParams->InstallFunction - DIF_SELECTDEVICE](DeviceInfoSet, DeviceInfoData, ClassInstallParams, ClassInstallParamsSize);
+            if (!ret)
+                goto done;
+            InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
+        }
+        else
+        {
+            InstallParams.Flags &= ~DI_CLASSINSTALLPARAMS;
+        }
+
+        ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+    }
+
+done:
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 static DWORD
@@ -3403,6 +3513,10 @@ BOOL WINAPI SetupDiCallClassInstaller(
                 break;
             case DIF_NEWDEVICEWIZARD_PREANALYZE:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_PROPERTYCHANGE:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiChangeState;
                 break;
             case DIF_REGISTER_COINSTALLERS:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
@@ -6161,6 +6275,18 @@ SetupDiGetDriverInfoDetailW(
 }
 
 /***********************************************************************
+ *		SetupDiChangeState (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiChangeState(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
  *		SetupDiSelectBestCompatDrv (SETUPAPI.@)
  */
 BOOL WINAPI
@@ -6611,7 +6737,7 @@ SetupDiInstallDevice(
             NULL, 0,
             &RequiredSize);
         if (!Result)
-            goto nextfile;
+            goto nextservice;
         if (RequiredSize > 0)
         {
             /* We got the needed size for the buffer */
@@ -6619,7 +6745,7 @@ SetupDiInstallDevice(
             if (!ServiceName)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto nextfile;
+                goto nextservice;
             }
             Result = SetupGetStringFieldW(
                 &ContextService,
@@ -6627,7 +6753,7 @@ SetupDiInstallDevice(
                 ServiceName, RequiredSize,
                 &RequiredSize);
             if (!Result)
-                goto nextfile;
+                goto nextservice;
         }
         Result = SetupGetIntField(
             &ContextService,
@@ -6653,7 +6779,7 @@ SetupDiInstallDevice(
                 Result = TRUE;
             }
             else
-                goto nextfile;
+                goto nextservice;
         }
         if (RequiredSize > 0)
         {
@@ -6662,7 +6788,7 @@ SetupDiInstallDevice(
             if (!ServiceSection)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto nextfile;
+                goto nextservice;
             }
             Result = SetupGetStringFieldW(
                 &ContextService,
@@ -6670,7 +6796,7 @@ SetupDiInstallDevice(
                 ServiceSection, RequiredSize,
                 &RequiredSize);
             if (!Result)
-                goto nextfile;
+                goto nextservice;
 
             SetLastError(ERROR_SUCCESS);
             Result = SetupInstallServicesFromInfSectionExW(
@@ -6684,7 +6810,7 @@ SetupDiInstallDevice(
             if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
                 RebootRequired = TRUE;
         }
-nextfile:
+nextservice:
         HeapFree(GetProcessHeap(), 0, ServiceName);
         HeapFree(GetProcessHeap(), 0, ServiceSection);
         if (!Result)

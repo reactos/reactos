@@ -467,12 +467,6 @@ BOOL WINAPI EnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
  */
 BOOL WINAPI DelayedMove(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName)
 {
-    if (OsVersionInfo.dwPlatformId != VER_PLATFORM_WIN32_NT)
-    {
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
-    }
-
     return MoveFileExW(lpExistingFileName, lpNewFileName,
                        MOVEFILE_REPLACE_EXISTING | MOVEFILE_DELAY_UNTIL_REBOOT);
 }

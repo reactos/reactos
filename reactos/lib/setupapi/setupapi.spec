@@ -272,7 +272,7 @@
 @ stdcall SetupDiBuildDriverInfoList(long ptr long)
 @ stdcall SetupDiCallClassInstaller(long ptr ptr)
 @ stub SetupDiCancelDriverInfoSearch
-@ stub SetupDiChangeState
+@ stdcall SetupDiChangeState(ptr ptr)
 @ stdcall SetupDiClassGuidsFromNameA(str ptr long ptr)
 @ stdcall SetupDiClassGuidsFromNameExA(str ptr long ptr str ptr)
 @ stdcall SetupDiClassGuidsFromNameExW(wstr ptr long ptr wstr ptr)
