@@ -353,6 +353,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	if (first == NULL)
 	{
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -361,6 +362,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	{
 		free (first);
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -370,6 +372,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		free (first);
 		free (rest);
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -380,6 +383,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		free (rest);
 		free (full);
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -450,7 +454,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		free (rest);
 		free (full);
 		free (szFullName);
-
+                nErrorLevel = 1;
 		return;
 	}
 
@@ -463,6 +467,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 			free (rest);
 			free (full);
 			free (szFullName);
+                        nErrorLevel = 1;
 			return;
 
 	}
@@ -525,6 +530,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 				GetExitCodeProcess (prci.hProcess, &dwExitCode);
 				nErrorLevel = (INT)dwExitCode;
 			}
+                        else
+                        {
+                            nErrorLevel = 0;
+                        }
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
 		}
@@ -540,7 +549,12 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 				DebugPrintf (_T("[ShellExecute failed!: %s]\n"), full);
 #endif
 				error_bad_command ();
+                                nErrorLevel = 1;
 			}
+                        else
+                        {
+                                nErrorLevel = 0;
+                        }
 		}
 		// restore console mode
 		SetConsoleMode (
@@ -1331,7 +1345,7 @@ ProcessInput (BOOL bFlag)
 		if (!(ip = ReadBatchLine (&bEchoThisLine)))
 		{
 			if (bFlag)
-				return 0;
+				return nErrorLevel;
 
 			ReadCommand (readline, CMDLINE_LENGTH);
 			ip = readline;
@@ -1457,7 +1471,7 @@ ProcessInput (BOOL bFlag)
 	}
 	while (!bCanExit || !bExit);
 
-	return 0;
+	return nErrorLevel;
 }
 
 
