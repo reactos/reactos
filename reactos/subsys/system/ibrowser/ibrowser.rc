@@ -1,5 +1,3 @@
-/* $Id: ibrowser.rc 12752 2005-01-03 11:25:40Z mf $ */
-
 #include <windows.h>
 
 #include "ibrowser_intres.rc"
@@ -15,5 +13,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #define IDS_IBROWSER_VERSION_STR    5001
 
 #include "En.rc"
+#include "Es.rc"
 #include "Ja.rc"
 
