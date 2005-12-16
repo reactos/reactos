@@ -16,7 +16,7 @@ STRING_HELP,  "Használat: %S kötet: [-FS:állományrendszer] [-V:címke] [-Q] [-A:m
   -A:méret         Felülbírálja az alapértelmezett szektorcsoport-\n\
                    méretet. Általános használathoz az alapértelmezett\n\
                    értékek ajánlottak.\n\
-                   Az NTFS a következõ értékeket támogatja: 512, 1024, 2048,\n\ 
+                   Az NTFS a következõ értékeket támogatja: 512, 1024, 2048,\n\
                    4096, 8192, 16K, 32K, 64K.\n\
                    A FAT a következõ értékeket támogatja: 8192, 16K, 32K, 64K,\n\
                    128K, 256K.\n\
