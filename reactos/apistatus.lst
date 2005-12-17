@@ -15,7 +15,6 @@ ole32.dll reactos/lib/ole32
 oleaut32.dll reactos/lib/oleaut32
 rpcrt4.dll reactos/lib/rpcrt4
 secur32.dll reactos/lib/secur32
-shell32.dll reactos/lib/shell32
 snmpapi.dll reactos/lib/snmpapi
 user32.dll reactos/lib/user32
 version.dll reactos/lib/version
