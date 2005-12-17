@@ -267,9 +267,9 @@ CanDisableDevice(IN DEVINST DevInst,
                  OUT BOOL *CanDisable);
 
 BOOL
-IsDeviceEnabled(IN DEVINST DevInst,
+IsDeviceStarted(IN DEVINST DevInst,
                 IN HMACHINE hMachine,
-                OUT BOOL *IsEnabled);
+                OUT BOOL *IsStarted);
 
 BOOL
 EnableDevice(IN HDEVINFO DeviceInfoSet,

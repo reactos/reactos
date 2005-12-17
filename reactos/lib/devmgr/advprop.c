@@ -56,7 +56,7 @@ typedef struct _DEVADVPROP_INFO
 
     BOOL FreeDevPropSheets : 1;
     BOOL CanDisable : 1;
-    BOOL DeviceEnabled : 1;
+    BOOL DeviceStarted : 1;
     BOOL DeviceUsageChanged : 1;
     BOOL CloseDevInst : 1;
     BOOL IsAdmin : 1;
@@ -106,7 +106,7 @@ InitDevUsageActions(IN HWND hwndDlg,
                 switch (Actions[i])
                 {
                     case IDS_ENABLEDEVICE:
-                        if (dap->DeviceEnabled)
+                        if (dap->DeviceStarted)
                         {
                             SendMessage(hComboBox,
                                         CB_SETCURSEL,
@@ -116,7 +116,7 @@ InitDevUsageActions(IN HWND hwndDlg,
                         break;
 
                     case IDS_DISABLEDEVICE:
-                        if (!dap->DeviceEnabled)
+                        if (!dap->DeviceStarted)
                         {
                             SendMessage(hComboBox,
                                         CB_SETCURSEL,
@@ -176,7 +176,7 @@ ApplyGeneralSettings(IN HWND hwndDlg,
         switch (SelectedUsageAction)
         {
             case IDS_ENABLEDEVICE:
-                if (!dap->DeviceEnabled)
+                if (!dap->DeviceStarted)
                 {
                     Ret = EnableDevice(dap->DeviceInfoSet,
                                        &dap->DeviceInfoData,
@@ -187,7 +187,7 @@ ApplyGeneralSettings(IN HWND hwndDlg,
                 break;
 
             case IDS_DISABLEDEVICE:
-                if (dap->DeviceEnabled)
+                if (dap->DeviceStarted)
                 {
                     Ret = EnableDevice(dap->DeviceInfoSet,
                                        &dap->DeviceInfoData,
@@ -606,7 +606,7 @@ GetParentNode:
                            IDC_DEVUSAGE);
 
     dap->CanDisable = FALSE;
-    dap->DeviceEnabled = FALSE;
+    dap->DeviceStarted = FALSE;
 
     if (CanDisableDevice(DeviceInfoData->DevInst,
                          dap->hMachine,
@@ -615,11 +615,11 @@ GetParentNode:
         dap->CanDisable = bFlag;
     }
 
-    if (IsDeviceEnabled(DeviceInfoData->DevInst,
+    if (IsDeviceStarted(DeviceInfoData->DevInst,
                         dap->hMachine,
                         &bFlag))
     {
-        dap->DeviceEnabled = bFlag;
+        dap->DeviceStarted = bFlag;
     }
 
     /* enable/disable the device usage controls */

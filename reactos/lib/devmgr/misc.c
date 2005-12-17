@@ -508,9 +508,9 @@ CanDisableDevice(IN DEVINST DevInst,
 
 
 BOOL
-IsDeviceEnabled(IN DEVINST DevInst,
+IsDeviceStarted(IN DEVINST DevInst,
                 IN HMACHINE hMachine,
-                OUT BOOL *IsEnabled)
+                OUT BOOL *IsStarted)
 {
     CONFIGRET cr;
     ULONG Status, ProblemNumber;
@@ -523,7 +523,7 @@ IsDeviceEnabled(IN DEVINST DevInst,
                                   hMachine);
     if (cr == CR_SUCCESS)
     {
-        *IsEnabled = ((Status & DN_STARTED) != 0);
+        *IsStarted = ((Status & DN_STARTED) != 0);
         Ret = TRUE;
     }
 
