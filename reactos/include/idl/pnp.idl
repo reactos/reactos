@@ -30,6 +30,9 @@ interface pnp
                                [out] unsigned long *State,
                                [in] unsigned long Flags);
 
+  /* Function 4 */
+  CONFIGRET PNP_InitDetection(handle_t BindingHandle);
+
   /* Function 6 */
   CONFIGRET PNP_ValidateDeviceInstance(handle_t BindingHandle,
                                        [in, string] wchar_t *DeviceInstance,
@@ -106,6 +109,13 @@ interface pnp
                           [in] unsigned long DesiredAccess,
                           [in] unsigned long Flags);
 
+  /* Function 17 */
+  CONFIGRET PNP_DeleteRegistryKey(handle_t BindingHandle,
+                                  [in, string] wchar_t *DeviceId,
+                                  [in, string] wchar_t *ParentKey,
+                                  [in, string] wchar_t *ChildKey,
+                                  [in] unsigned long Flags);
+
   /* Function 19 */
   CONFIGRET PNP_GetClassName(handle_t BindingHandle,
                              [in, string] wchar_t *ClassGuid,
@@ -117,6 +127,13 @@ interface pnp
   CONFIGRET PNP_DeleteClassKey(handle_t BindingHandle,
                                [in, string] wchar_t *ClassGuid,
                                [in] unsigned long Flags);
+
+  /* Function 29 */
+  CONFIGRET PNP_DeviceInstanceAction(handle_t BindingHandle,
+                                     [in] unsigned long MajorAction,
+                                     [in] unsigned long MinorAction,
+                                     [in, unique, string] wchar_t *DeviceInstance1,
+                                     [in, unique, string] wchar_t *DeviceInstance2);
 
   /* Function 30 */
   CONFIGRET PNP_GetDeviceStatus(handle_t BindingHandle,
@@ -137,4 +154,8 @@ interface pnp
 
   /* Function 39 */
   CONFIGRET PNP_RequestEjectPC(handle_t BindingHandle);
+
+  /* Function 58 */
+  CONFIGRET PNP_RunDetection(handle_t BindingHandle,
+                             [in] unsigned long Flags);
 }

@@ -32,12 +32,12 @@
 @ stub CM_Delete_Range
 @ stub CM_Detect_Resource_Conflict
 @ stub CM_Detect_Resource_Conflict_Ex
-@ stub CM_Disable_DevNode
-@ stub CM_Disable_DevNode_Ex
+@ stdcall CM_Disable_DevNode(long long)
+@ stdcall CM_Disable_DevNode_Ex(long long ptr)
 @ stdcall CM_Disconnect_Machine(long)
 @ stub CM_Dup_Range_List
-@ stub CM_Enable_DevNode
-@ stub CM_Enable_DevNode_Ex
+@ stdcall CM_Enable_DevNode(long long)
+@ stdcall CM_Enable_DevNode_Ex(long long ptr)
 @ stdcall CM_Enumerate_Classes(long ptr long)
 @ stdcall CM_Enumerate_Classes_Ex(long ptr long ptr)
 @ stdcall CM_Enumerate_EnumeratorsA(long str ptr long)
@@ -151,8 +151,8 @@
 @ stub CM_Query_Arbitrator_Free_Size_Ex
 @ stub CM_Query_Remove_SubTree
 @ stub CM_Query_Remove_SubTree_Ex
-@ stub CM_Reenumerate_DevNode
-@ stub CM_Reenumerate_DevNode_Ex
+@ stdcall CM_Reenumerate_DevNode(long long)
+@ stdcall CM_Reenumerate_DevNode_Ex(long long long)
 @ stub CM_Register_Device_Driver
 @ stub CM_Register_Device_Driver_Ex
 @ stub CM_Register_Device_InterfaceA
@@ -165,12 +165,12 @@
 @ stub CM_Remove_Unmarked_Children_Ex
 @ stub CM_Request_Device_EjectA
 @ stub CM_Request_Device_EjectW
-@ stub CM_Request_Eject_PC
-@ stub CM_Request_Eject_PC_Ex
+@ stdcall CM_Request_Eject_PC()
+@ stdcall CM_Request_Eject_PC_Ex(long)
 @ stub CM_Reset_Children_Marks
 @ stub CM_Reset_Children_Marks_Ex
-@ stub CM_Run_Detection
-@ stub CM_Run_Detection_Ex
+@ stdcall CM_Run_Detection(long)
+@ stdcall CM_Run_Detection_Ex(long long)
 @ stdcall CM_Set_DevNode_Problem(long long long)
 @ stdcall CM_Set_DevNode_Problem_Ex(long long long long)
 @ stdcall CM_Set_DevNode_Registry_PropertyA(long long ptr long long)

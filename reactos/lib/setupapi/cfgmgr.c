@@ -174,6 +174,66 @@ CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
 
 
 /***********************************************************************
+ * CM_Disable_DevNode [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Disable_DevNode(
+    DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%p %lx\n", dnDevInst, ulFlags);
+    return CM_Disable_DevNode_Ex(dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Disable_DevNode_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Disable_DevNode_Ex(
+    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
+
+//    if (!IsUserAdmin())
+//        return CR_ACCESS_DENIED;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_DeviceInstanceAction(BindingHandle,
+                                    5,
+                                    ulFlags,
+                                    lpDevInst,
+                                    NULL);
+}
+
+
+/***********************************************************************
  * CM_Disconnect_Machine [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
@@ -195,6 +255,66 @@ CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
     HeapFree(GetProcessHeap(), 0, pMachine);
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Enable_DevNode [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enable_DevNode(
+    DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%p %lx\n", dnDevInst, ulFlags);
+    return CM_Enable_DevNode_Ex(dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Enable_DevNode_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enable_DevNode_Ex(
+    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
+
+//    if (!IsUserAdmin())
+//        return CR_ACCESS_DENIED;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_DeviceInstanceAction(BindingHandle,
+                                    4,
+                                    ulFlags,
+                                    lpDevInst,
+                                    NULL);
 }
 
 
@@ -1875,6 +1995,64 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
 
 
 /***********************************************************************
+ * CM_Reenumerate_DevNode [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Reenumerate_DevNode(
+    DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%lx %lx\n", dnDevInst, ulFlags);
+    return CM_Reenumerate_DevNode_Ex(dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Reenumerate_DevNode_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI
+CM_Reenumerate_DevNode_Ex(
+    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    FIXME("%lx %lx %lx\n", dnDevInst, ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_REENUMERATE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_DeviceInstanceAction(BindingHandle,
+                                    7,
+                                    ulFlags,
+                                    lpDevInst,
+                                    NULL);
+}
+
+
+/***********************************************************************
  * CM_Request_Eject_PC [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Request_Eject_PC(VOID)
@@ -1907,6 +2085,50 @@ CONFIGRET WINAPI CM_Request_Eject_PC_Ex(
     }
 
     return PNP_RequestEjectPC(BindingHandle);
+}
+
+
+/***********************************************************************
+ * CM_Run_Detection [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Run_Detection(
+    ULONG ulFlags)
+{
+    TRACE("%lx\n", ulFlags);
+    return CM_Run_Detection_Ex(ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Run_Detection_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Run_Detection_Ex(
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%lx %lx\n", ulFlags, hMachine);
+
+//    if (!IsUserAdmin())
+//        return CR_ACCESS_DENIED;
+
+    if (ulFlags & ~CM_DETECT_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_RunDetection(BindingHandle,
+                            ulFlags);
 }
 
 
