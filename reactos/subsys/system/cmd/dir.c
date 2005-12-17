@@ -1270,13 +1270,16 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
 
     /* Print the line */
     if(lpFlags->bPause)
-		ConOutPrintfPaging(FALSE,_T("%10s  %-8s    %*s%s %s\n"),
+	{
+		if (ConOutPrintfPaging(FALSE,_T("%10s  %-8s    %*s%s %s\n"),
 							szDate,
 							szTime,
 							iSizeFormat,
 							szSize,
 							szShortName,
-							ptrFiles[i]->cFileName);
+							ptrFiles[i]->cFileName) == 1)
+			return ;
+	}
 	else
 		ConOutPrintf(_T("%10s  %-8s    %*s%s %s\n"),
 							szDate,
@@ -1463,13 +1466,18 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 
 		/* Print the line */
 		if(lpFlags->bPause)
-		   ConOutPrintfPaging(FALSE,_T("%-8s %-3s  %*s %s  %s\n"),
+		{
+		   if (ConOutPrintfPaging(FALSE,_T("%-8s %-3s  %*s %s  %s\n"),
 								szName,			/* The file's 8.3 name */
 								szExt,			/* The file's 8.3 extension */
 								iSizeFormat,	/* print format for size column */
 								szSize,			/* The size of file or "<DIR>" for dirs */
 								szDate,			/* The date of file/dir */
-								szTime);		/* The time of file/dir */
+								szTime) == 1)		/* The time of file/dir */
+			{
+				return ;
+			}
+		}
 		else
 		   ConOutPrintf(_T("%-8s %-3s  %*s %s  %s\n"),
 								szName,			/* The file's 8.3 name */
@@ -1509,7 +1517,12 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 			_tcscpy(szFullName, lpCurPath);
 			_tcscat(szFullName, ptrFiles[i]->cFileName);
 			if(lpFlags->bPause)
-			   ConOutPrintfPaging(FALSE,_T("%s\n"), szFullName);
+			{
+			   if (ConOutPrintfPaging(FALSE,_T("%s\n"), szFullName) == 1)
+				{
+					return ;
+				}
+			}
 			else
 			   ConOutPrintf(_T("%s\n"), szFullName);
 		}
@@ -1517,7 +1530,12 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 		{
 			/* if we are not in recursive mode we print the file names */
 			if(lpFlags->bPause)
-			   ConOutPrintfPaging(FALSE,_T("%s\n"),ptrFiles[i]->cFileName);
+			{
+			   if (ConOutPrintfPaging(FALSE,_T("%s\n"),ptrFiles[i]->cFileName) == 1)
+				{
+					return ;
+				}
+			}
 			else
 			   ConOutPrintf(_T("%s\n"),ptrFiles[i]->cFileName);
 		}
@@ -1552,7 +1570,12 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 	{
 		LoadString(CMD_ModuleHandle, STRING_DIR_HELP7, szMsg, RC_STRING_MAX_SIZE);
 		if(lpFlags->bPause)
-		   ConOutPrintfPaging(FALSE,szMsg, szTemp);
+		{
+		   if (ConOutPrintfPaging(FALSE,szMsg, szTemp) == 1)
+			{
+				return ;
+			}
+		}
 		else
 		   ConOutPrintf(szMsg, szTemp);
 	}
@@ -1896,6 +1919,9 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Free array */
 	free(ptrFileArray);
+	if (CheckCtrlBreak(BREAK_INPUT))
+		return 1;
+
 
 	/* Add statistics to recursive statistics*/
 	recurse_dir_cnt += dwCountDirs;
@@ -1924,7 +1950,10 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 					_tcscpy(szFullFileSpec, szFullPath);
 					_tcscat(szFullFileSpec, wfdFileInfo.cFileName);
 					/* We do the same for tha folder */
-					DirList(szFullFileSpec, szFilespec, pLine,lpFlags);
+					if (DirList(szFullFileSpec, szFilespec, pLine,lpFlags) != 0)
+					{
+						return 1;
+					}
 				}
 			}
 		}while(FindNextFile(hRecSearch,&wfdFileInfo));
