@@ -104,7 +104,7 @@ CONFIGRET WINAPI CMP_Report_LogOn(
     if (!PnpGetLocalHandles(&BindingHandle, NULL))
         return CR_FAILURE;
 
-    bAdmin = TRUE; //IsUserAdmin();
+    bAdmin = IsUserAdmin();
 
     for (i = 0; i < 30; i++)
     {
@@ -256,8 +256,8 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
 
     FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
 
-//    if (!IsUserAdmin())
-//        return CR_ACCESS_DENIED;
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVINST;
@@ -341,8 +341,8 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
 
     FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
 
-//    if (!IsUserAdmin())
-//        return CR_ACCESS_DENIED;
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVINST;
@@ -1921,8 +1921,8 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     FIXME("%lx %lx %lx %lx\n",
           dnFromDevInst, dnToDevInst, ulFlags, hMachine);
 
-//    if (!IsUserAdmin())
-//        return CR_ACCESS_DENIED;
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
 
     if (dnFromDevInst == 0 || dnToDevInst == 0)
         return CR_INVALID_DEVNODE;
@@ -2236,8 +2236,8 @@ CONFIGRET WINAPI CM_Run_Detection_Ex(
 
     TRACE("%lx %lx\n", ulFlags, hMachine);
 
-//    if (!IsUserAdmin())
-//        return CR_ACCESS_DENIED;
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
 
     if (ulFlags & ~CM_DETECT_BITS)
         return CR_INVALID_FLAG;
@@ -2616,8 +2616,8 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
 
     FIXME("%lx %lx %lx\n", dnDevInst, ulFlags, hMachine);
 
-//    if (!IsUserAdmin())
-//        return CR_ACCESS_DENIED;
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;

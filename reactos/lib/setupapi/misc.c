@@ -234,7 +234,7 @@ BOOL WINAPI IsUserAdmin(VOID)
 
     for (i = 0; i < lpGroups->GroupCount; i++)
     {
-        if (EqualSid(lpSid, &lpGroups->Groups[i].Sid))
+        if (EqualSid(lpSid, lpGroups->Groups[i].Sid))
         {
             bResult = TRUE;
             break;
