@@ -66,7 +66,7 @@ LoadImageA(HINSTANCE hinst,
       Handle = LoadImageW(hinst, (LPCWSTR)lpszName, uType, cxDesired,
 			  cyDesired, fuLoad);
    }
- 
+
    return Handle;
 }
 
@@ -130,7 +130,7 @@ LoadCursorIconImage(
 
       id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, Icon, width, height,
                                        fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
-  
+
       h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id),
                                  Icon ? MAKEINTRESOURCEW(RT_ICON) :
                                  MAKEINTRESOURCEW(RT_CURSOR));
@@ -171,7 +171,7 @@ LoadCursorIconImage(
 
    hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
                        OPEN_EXISTING, 0, NULL);
-   if (hFile == NULL)
+   if (hFile == INVALID_HANDLE_VALUE)
       return NULL;
 
    hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -298,7 +298,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    {
       hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
                           OPEN_EXISTING, 0, NULL);
-      if (hFile == NULL)
+      if (hFile == INVALID_HANDLE_VALUE)
          return NULL;
 
       hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -411,7 +411,7 @@ LoadImageW(
       default:
          break;
    }
- 
+
    return NULL;
 }
 
@@ -501,6 +501,6 @@ CopyImage(
             return CopyCursor(hnd);
          }
    }
-   
+
    return NULL;
 }
