@@ -1109,21 +1109,6 @@ GetModuleHandleExW(
  */
 BOOL
 STDCALL
-GetVolumeNameForVolumeMountPointW(
-    LPCWSTR lpszVolumeMountPoint,
-    LPWSTR lpszVolumeName,
-    DWORD cchBufferLength
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 GetVolumePathNameW(
     LPCWSTR lpszFileName,
     LPWSTR lpszVolumePathName,

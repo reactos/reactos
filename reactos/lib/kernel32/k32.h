@@ -30,6 +30,8 @@
 /* DDK Driver Headers */
 #include <ntddbeep.h>
 #include <ntddser.h>
+#include <mountmgr.h>
+#include <mountdev.h>
 
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"
