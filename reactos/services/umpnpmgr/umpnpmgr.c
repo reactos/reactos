@@ -58,6 +58,10 @@ static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
 static HKEY hEnumKey = NULL;
 static HKEY hClassKey = NULL;
 
+static HANDLE hUserToken = NULL;
+static HANDLE hInstallEvent = NULL;
+
+
 /* FUNCTIONS *****************************************************************/
 
 static DWORD WINAPI
@@ -155,6 +159,42 @@ CONFIGRET
 PNP_InitDetection(handle_t BindingHandle)
 {
     DPRINT("PNP_InitDetection() called\n");
+    return CR_SUCCESS;
+}
+
+
+/* Function 5 */
+CONFIGRET
+PNP_ReportLogOn(handle_t BindingHandle,
+                unsigned long Admin,
+                unsigned long ProcessId)
+{
+    HANDLE hProcess;
+
+    DPRINT1("PNP_ReportLogOn(%lu, %lu) called\n", Admin, ProcessId);
+
+    /* Get the users token */
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS,
+                           TRUE,
+                           ProcessId);
+    if (hProcess != NULL)
+    {
+        if (hUserToken != NULL)
+        {
+            CloseHandle(hUserToken);
+            hUserToken = NULL;
+        }
+
+        OpenProcessToken(hProcess,
+                         TOKEN_ALL_ACCESS,
+                         &hUserToken);
+        CloseHandle(hProcess);
+    }
+
+    /* Trigger the installer thread */
+    if (hInstallEvent != NULL)
+        SetEvent(hInstallEvent);
+
     return CR_SUCCESS;
 }
 
@@ -684,6 +724,23 @@ PNP_SetDeviceRegProp(handle_t BindingHandle,
 }
 
 
+/* Function 15 */
+CONFIGRET
+PNP_GetClassInstance(handle_t BindingHandle,
+                     wchar_t *DeviceId, /* in */
+                     wchar_t *Buffer, /* out */
+                     unsigned long Length)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_Get_Class_Instance() called\n");
+
+    DPRINT("PNP_Get_Class_Instance() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 16 */
 CONFIGRET
 PNP_CreateKey(handle_t BindingHandle,
@@ -849,16 +906,34 @@ PNP_DeviceInstanceAction(handle_t BindingHandle,
 
     switch (MajorAction)
     {
+        case 2:
+            DPRINT("Move device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
+        case 3:
+            DPRINT("Setup device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
         case 4:
             DPRINT("Enable device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
         case 5:
             DPRINT("Disable device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
         case 7:
             DPRINT("Reenumerate device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
         default:
@@ -909,6 +984,7 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
 }
 
 
+/* Function 31 */
 CONFIGRET
 PNP_SetDeviceProblem(handle_t BindingHandle,
                      wchar_t *DeviceInstance,
@@ -922,6 +998,24 @@ PNP_SetDeviceProblem(handle_t BindingHandle,
     /* FIXME */
 
     DPRINT1("PNP_SetDeviceProblem() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 33 */
+CONFIGRET
+PNP_UninstallDevInst(handle_t BindingHandle,
+                     wchar_t *DeviceInstance,
+                     DWORD Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_UninstallDevInst() called\n");
+
+    /* FIXME */
+
+    DPRINT1("PNP_UninstallDevInst() done (returns %lx)\n", ret);
 
     return ret;
 }
@@ -1183,6 +1277,14 @@ main(int argc, char *argv[])
     DWORD dwError;
 
     DPRINT("Umpnpmgr: main() started\n");
+
+    hInstallEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (hInstallEvent == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the Install Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",

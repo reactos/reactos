@@ -65,9 +65,67 @@ static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 
 
 /***********************************************************************
+ * CMP_Init_Detection [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CMP_Init_Detection(
+    DWORD dwMagic)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%lu\n", dwMagic);
+
+    if (dwMagic != CMP_MAGIC)
+        return CR_INVALID_DATA;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    return PNP_InitDetection(BindingHandle);
+}
+
+
+/***********************************************************************
+ * CMP_Report_LogOn [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CMP_Report_LogOn(
+    DWORD dwMagic,
+    DWORD dwProcessId)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+    BOOL bAdmin;
+    DWORD i;
+
+    TRACE("%lu\n", dwMagic);
+
+    if (dwMagic != CMP_MAGIC)
+        return CR_INVALID_DATA;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    bAdmin = TRUE; //IsUserAdmin();
+
+    for (i = 0; i < 30; i++)
+    {
+        ret = PNP_ReportLogOn(BindingHandle,
+                              bAdmin,
+                              dwProcessId);
+        if (ret == CR_SUCCESS)
+            break;
+
+        Sleep(5000);
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
  * CM_Connect_MachineA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Connect_MachineA(PCSTR UNCServerName, PHMACHINE phMachine)
+CONFIGRET WINAPI CM_Connect_MachineA(
+    PCSTR UNCServerName, PHMACHINE phMachine)
 {
     PWSTR pServerNameW;
     CONFIGRET ret;
@@ -91,7 +149,8 @@ CONFIGRET WINAPI CM_Connect_MachineA(PCSTR UNCServerName, PHMACHINE phMachine)
 /***********************************************************************
  * CM_Connect_MachineW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Connect_MachineW(PCWSTR UNCServerName, PHMACHINE phMachine)
+CONFIGRET WINAPI CM_Connect_MachineW(
+    PCWSTR UNCServerName, PHMACHINE phMachine)
 {
     PMACHINE_INFO pMachine;
 
@@ -128,7 +187,8 @@ CONFIGRET WINAPI CM_Connect_MachineW(PCWSTR UNCServerName, PHMACHINE phMachine)
 /***********************************************************************
  * CM_Delete_Class_Key [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Delete_Class_Key(LPGUID ClassGuid, ULONG ulFlags)
+CONFIGRET WINAPI CM_Delete_Class_Key(
+    LPGUID ClassGuid, ULONG ulFlags)
 {
     TRACE("%p %lx\n", ClassGuid, ulFlags);
     return CM_Delete_Class_Key_Ex(ClassGuid, ulFlags, NULL);
@@ -1836,6 +1896,73 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
 
 
 /***********************************************************************
+ * CM_Move_DevNode [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Move_DevNode(
+    DEVINST dnFromDevInst, DEVINST dnToDevInst, ULONG ulFlags)
+{
+    TRACE("%lx %lx %lx\n", dnFromDevInst, dnToDevInst, ulFlags);
+    return CM_Move_DevNode_Ex(dnFromDevInst, dnToDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Move_DevNode_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Move_DevNode_Ex(
+    DEVINST dnFromDevInst, DEVINST dnToDevInst, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpFromDevInst;
+    LPWSTR lpToDevInst;
+
+    FIXME("%lx %lx %lx %lx\n",
+          dnFromDevInst, dnToDevInst, ulFlags, hMachine);
+
+//    if (!IsUserAdmin())
+//        return CR_ACCESS_DENIED;
+
+    if (dnFromDevInst == 0 || dnToDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpFromDevInst = StringTableStringFromId(StringTable, dnFromDevInst);
+    if (lpFromDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    lpToDevInst = StringTableStringFromId(StringTable, dnToDevInst);
+    if (lpToDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_DeviceInstanceAction(BindingHandle,
+                                    2,
+                                    ulFlags,
+                                    lpFromDevInst,
+                                    lpToDevInst);
+}
+
+
+/***********************************************************************
  * CM_Open_Class_KeyA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Open_Class_KeyA(
@@ -2462,5 +2589,120 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
                                 ulType,
                                 (char *)Buffer,
                                 ulLength,
+                                ulFlags);
+}
+
+
+/***********************************************************************
+ * CM_Setup_DevNode [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Setup_DevNode(
+    DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%lx %lx\n", dnDevInst, ulFlags);
+    return CM_Setup_DevNode_Ex(dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Setup_DevNode_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Setup_DevNode_Ex(
+    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    FIXME("%lx %lx %lx\n", dnDevInst, ulFlags, hMachine);
+
+//    if (!IsUserAdmin())
+//        return CR_ACCESS_DENIED;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_SETUP_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_DeviceInstanceAction(BindingHandle,
+                                    3,
+                                    ulFlags,
+                                    lpDevInst,
+                                    NULL);
+}
+
+
+/***********************************************************************
+ * CM_Uninstall_DevNode [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Uninstall_DevNode(
+    DEVINST dnPhantom, ULONG ulFlags)
+{
+    TRACE("%lx %lx\n", dnPhantom, ulFlags);
+    return CM_Uninstall_DevNode_Ex(dnPhantom, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Uninstall_DevNode_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Uninstall_DevNode_Ex(
+    DEVINST dnPhantom, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    TRACE("%lx %lx %lx\n", dnPhantom, ulFlags, hMachine);
+
+    if (dnPhantom == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnPhantom);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_UninstallDevInst(BindingHandle,
+                                lpDevInst,
                                 ulFlags);
 }

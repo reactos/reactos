@@ -5,6 +5,7 @@
 #define WORD unsigned short
 #define DWORD unsigned long
 #define CONFIGRET unsigned long
+#define BOOL unsigned long
 #define PBOOL unsigned long *
 
 [
@@ -32,6 +33,11 @@ interface pnp
 
   /* Function 4 */
   CONFIGRET PNP_InitDetection(handle_t BindingHandle);
+
+  /* Function 5 */
+  CONFIGRET PNP_ReportLogOn(handle_t BindingHandle,
+                            [in] BOOL Admin,
+                            [in] DWORD ProcessId);
 
   /* Function 6 */
   CONFIGRET PNP_ValidateDeviceInstance(handle_t BindingHandle,
@@ -103,6 +109,12 @@ interface pnp
                                  [in] unsigned long Length,
                                  [in] unsigned long Flags);
 
+  /* Function 15 */
+  CONFIGRET PNP_GetClassInstance(handle_t BindingHandle,
+                                 [in, string] wchar_t *DeviceId,
+                                 [out, string, size_is(Length)] wchar_t *Buffer,
+                                 [in] unsigned long Length);
+
   /* Function 16 */
   CONFIGRET PNP_CreateKey(handle_t BindingHandle,
                           [in, string] wchar_t *SubKey,
@@ -146,6 +158,11 @@ interface pnp
   CONFIGRET PNP_SetDeviceProblem(handle_t BindingHandle,
                                  [in, string] wchar_t *DeviceInstance,
                                  [in] unsigned long Problem,
+                                 [in] DWORD Flags);
+
+  /* Function 33 */
+  CONFIGRET PNP_UninstallDevInst(handle_t BindingHandle,
+                                 [in, string] wchar_t *DeviceInstance,
                                  [in] DWORD Flags);
 
   /* Function 38 */
