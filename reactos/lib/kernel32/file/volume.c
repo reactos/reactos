@@ -946,6 +946,7 @@ GetVolumeNameForVolumeMountPointW(
          else if (!NT_SUCCESS(Status))
          {
             RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+            NtClose(FileHandle);
             SetLastErrorByStatus(Status);
             return FALSE;
          }
