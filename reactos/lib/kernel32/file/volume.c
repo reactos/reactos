@@ -826,7 +826,7 @@ GetVolumeNameForVolumeMountPointW(
     * an NT acceptable name.
     */
 
-   if (!RtlDosPathNameToNtPathName_U(VolumeName, &NtFileName, NULL, NULL))
+   if (!RtlDosPathNameToNtPathName_U(VolumeMountPoint, &NtFileName, NULL, NULL))
    {
       SetLastError(ERROR_PATH_NOT_FOUND);
       return FALSE;
