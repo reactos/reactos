@@ -2586,7 +2586,7 @@ RegLoadKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U (lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))
@@ -3858,7 +3858,7 @@ RegReplaceKeyW (HKEY hKey,
     }
 
   /* Convert new file name */
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFile,
+  if (!RtlDosPathNameToNtPathName_U (lpNewFile,
 				     &NewFileName,
 				     NULL,
 				     NULL))
@@ -3878,7 +3878,7 @@ RegReplaceKeyW (HKEY hKey,
 			      NULL);
 
   /* Convert old file name */
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpOldFile,
+  if (!RtlDosPathNameToNtPathName_U (lpOldFile,
 				     &OldFileName,
 				     NULL,
 				     NULL))
@@ -3977,7 +3977,7 @@ RegRestoreKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U (lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))
@@ -4070,7 +4070,7 @@ RegSaveKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((PWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U (lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))

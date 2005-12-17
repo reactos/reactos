@@ -221,7 +221,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
       AccessMask |= ACCESS_SYSTEM_SECURITY;
     }
 
-  if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName,
+  if (!RtlDosPathNameToNtPathName_U(lpFileName,
 				    &FileName,
 				    NULL,
 				    NULL))
@@ -365,7 +365,7 @@ SetFileSecurityW (LPCWSTR lpFileName,
       AccessMask |= ACCESS_SYSTEM_SECURITY;
     }
 
-  if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName,
+  if (!RtlDosPathNameToNtPathName_U(lpFileName,
 				    &FileName,
 				    NULL,
 				    NULL))

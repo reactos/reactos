@@ -105,7 +105,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
      }
 
    /* validate & translate the filename */
-   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+   if (!RtlDosPathNameToNtPathName_U (lpFileName,
 				      &NtPathU,
 				      NULL,
 				      NULL))
@@ -437,7 +437,7 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
     case DEVICE_PATH:
     case UNC_DOT_PATH:
     default:
-        if(!RtlDosPathNameToNtPathName_U((LPWSTR)lpTargetFileName, &TargetFileName, NULL, NULL))
+        if(!RtlDosPathNameToNtPathName_U(lpTargetFileName, &TargetFileName, NULL, NULL))
         {
             dwErr = ERROR_INVALID_PARAMETER;
             goto Cleanup;
@@ -475,7 +475,7 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
     if(bRelativePath)
         pReparseData->SymbolicLinkReparseBuffer.Flags |= 1; // TODO! give this lone flag a name
 
-    if(!RtlDosPathNameToNtPathName_U((LPWSTR)lpSymlinkFileName, &SymlinkFileName, NULL, NULL))
+    if(!RtlDosPathNameToNtPathName_U(lpSymlinkFileName, &SymlinkFileName, NULL, NULL))
     {
         dwErr = ERROR_PATH_NOT_FOUND;
         goto Cleanup;

@@ -90,7 +90,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     if (nMaxInstances == PIPE_UNLIMITED_INSTANCES) nMaxInstances = -1;
 
     /* Convert the name */
-    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
+    Result = RtlDosPathNameToNtPathName_U(lpName,
                                            &NamedPipeName,
                                            NULL,
                                            NULL);
@@ -464,7 +464,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
    HANDLE FileHandle;
    IO_STATUS_BLOCK Iosb;
 
-   r = RtlDosPathNameToNtPathName_U((LPWSTR)lpNamedPipeName,
+   r = RtlDosPathNameToNtPathName_U(lpNamedPipeName,
 				    &NamedPipeName,
 				    NULL,
 				    NULL);

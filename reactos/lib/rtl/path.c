@@ -675,10 +675,10 @@ DWORD NTAPI RtlGetFullPathName_U(
  * @implemented
  */
 BOOLEAN NTAPI
-RtlDosPathNameToNtPathName_U(PWSTR dosname,
-			     PUNICODE_STRING ntname,
-			     PWSTR *FilePart,
-			     PCURDIR nah)
+RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
+			     OUT PUNICODE_STRING NtPathName,
+			     OUT PCWSTR *NtFileNamePart,
+			     OUT CURDIR *DirectoryInfo)
 {
 	UNICODE_STRING  us;
 	PCURDIR cd;
@@ -693,7 +693,7 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 
 	RtlAcquirePebLock ();
 
-	RtlInitUnicodeString (&us, dosname);
+	RtlInitUnicodeString (&us, DosPathName);
 	if (us.Length > 8)
 	{
 		Buffer = us.Buffer;
@@ -721,10 +721,10 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 		return FALSE;
 	}
 
-	Size = RtlGetFullPathName_U (dosname,
+	Size = RtlGetFullPathName_U (DosPathName,
 	                             sizeof(fullname),
 	                             fullname,
-	                             FilePart);
+	                             (PWSTR*)NtFileNamePart);
 	if (Size == 0 || Size > MAX_PATH * sizeof(WCHAR))
 	{
 		RtlFreeHeap (RtlGetProcessHeap (),
@@ -763,18 +763,18 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	}
 
 	/* set NT filename */
-	ntname->Length        = Length * sizeof(WCHAR);
-	ntname->MaximumLength = sizeof(fullname) + MAX_PFX_SIZE;
-	ntname->Buffer        = Buffer;
+	NtPathName->Length        = Length * sizeof(WCHAR);
+	NtPathName->MaximumLength = sizeof(fullname) + MAX_PFX_SIZE;
+	NtPathName->Buffer        = Buffer;
 
 	/* set pointer to file part if possible */
-	if (FilePart && *FilePart)
-		*FilePart = Buffer + Length - wcslen (*FilePart);
+	if (NtFileNamePart && *NtFileNamePart)
+		*NtFileNamePart = Buffer + Length - wcslen (*NtFileNamePart);
 
 	/* Set name and handle structure if possible */
-	if (nah)
+	if (DirectoryInfo)
 	{
-		memset (nah, 0, sizeof(CURDIR));
+		memset (DirectoryInfo, 0, sizeof(CURDIR));
 		cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
 		if (Type == 5 && cd->Handle)
 		{
@@ -782,10 +782,10 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 		    if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
 		    {
 			Length = ((cd->DosPath.Length / sizeof(WCHAR)) - Offset) + ((Type == 1) ? 8 : 4);
-			nah->DosPath.Buffer = Buffer + Length;
-			nah->DosPath.Length = ntname->Length - (Length * sizeof(WCHAR));
-			nah->DosPath.MaximumLength = nah->DosPath.Length;
-			nah->Handle = cd->Handle;
+			DirectoryInfo->DosPath.Buffer = Buffer + Length;
+			DirectoryInfo->DosPath.Length = NtPathName->Length - (Length * sizeof(WCHAR));
+			DirectoryInfo->DosPath.MaximumLength = DirectoryInfo->DosPath.Length;
+			DirectoryInfo->Handle = cd->Handle;
 		    }
 		}
 	}

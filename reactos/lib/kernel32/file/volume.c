@@ -38,7 +38,7 @@ InternalOpenDirW(LPCWSTR DirName,
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE hFile;
 
-  if (!RtlDosPathNameToNtPathName_U((LPWSTR)DirName,
+  if (!RtlDosPathNameToNtPathName_U(DirName,
 				    &NtPathU,
 				    NULL,
 				    NULL))

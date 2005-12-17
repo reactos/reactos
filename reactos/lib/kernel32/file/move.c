@@ -91,13 +91,13 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
 
     DPRINT("Add support to smss for keys created by MOVEFILE_DELAY_UNTIL_REBOOT\n");
 
-    if (!RtlDosPathNameToNtPathName_U( (LPWSTR)source, &source_name, NULL, NULL ))
+    if (!RtlDosPathNameToNtPathName_U( source, &source_name, NULL, NULL ))
     {
         SetLastError( ERROR_PATH_NOT_FOUND );
         return FALSE;
     }
     dest_name.Buffer = NULL;
-    if (dest && !RtlDosPathNameToNtPathName_U( (LPWSTR)dest, &dest_name, NULL, NULL ))
+    if (dest && !RtlDosPathNameToNtPathName_U( dest, &dest_name, NULL, NULL ))
     {
         RtlFreeUnicodeString( &source_name );
         SetLastError( ERROR_PATH_NOT_FOUND );
@@ -224,7 +224,7 @@ MoveFileWithProgressW (
 
 	
         /* validate & translate the filename */
-        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFileName,
+        if (!RtlDosPathNameToNtPathName_U (lpNewFileName,
 				           &DstPathU,
 				           NULL,
 				           NULL))

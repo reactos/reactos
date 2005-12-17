@@ -70,7 +70,7 @@ FindFirstChangeNotificationW (
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE hDir;
 
-   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpPathName,
+   if (!RtlDosPathNameToNtPathName_U (lpPathName,
                                           &NtPathU,
                                           NULL,
                                           NULL))

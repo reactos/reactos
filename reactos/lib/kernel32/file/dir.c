@@ -100,7 +100,7 @@ CreateDirectoryW (
         DPRINT ("lpPathName %S lpSecurityAttributes %p\n",
                 lpPathName, lpSecurityAttributes);
 
-        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpPathName,
+        if (!RtlDosPathNameToNtPathName_U (lpPathName,
                                            &NtPathU,
                                            NULL,
                                            NULL))
@@ -182,7 +182,7 @@ CreateDirectoryExW (
          * Translate the template directory path
          */
 
-        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpTemplateDirectory,
+        if (!RtlDosPathNameToNtPathName_U (lpTemplateDirectory,
                                            &NtTemplatePathU,
                                            NULL,
                                            NULL))
@@ -239,7 +239,7 @@ OpenTemplateDir:
          * Translate the new directory path and check if they're the same
          */
         
-        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewDirectory,
+        if (!RtlDosPathNameToNtPathName_U (lpNewDirectory,
                                            &NtPathU,
                                            NULL,
                                            NULL))
@@ -526,7 +526,7 @@ RemoveDirectoryW (
 
         DPRINT("lpPathName %S\n", lpPathName);
 
-        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpPathName,
+        if (!RtlDosPathNameToNtPathName_U (lpPathName,
                                            &NtPathU,
                                            NULL,
                                            NULL))

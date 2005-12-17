@@ -1639,10 +1639,10 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlDosPathNameToNtPathName_U(
-    PWSTR DosName,
-    PUNICODE_STRING NtName,
-    PWSTR *ShortName,
-    PCURDIR CurrentDirectory
+    IN PCWSTR DosPathName,
+    OUT PUNICODE_STRING NtPathName,
+    OUT PCWSTR *NtFileNamePart,
+    OUT CURDIR *DirectoryInfo
 );
 
 NTSYSAPI
