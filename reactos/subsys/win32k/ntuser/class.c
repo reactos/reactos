@@ -66,6 +66,16 @@ ClassRefObject(PWNDCLASS_OBJECT Class)
 
 VOID FASTCALL DestroyClass(PWNDCLASS_OBJECT Class)
 {
+#if defined(DBG) || defined(KDBG)
+   if ( Class->refs != 0 )
+   {
+      WCHAR AtomName[256];
+      ULONG AtomNameLen = sizeof(AtomName);
+      RtlQueryAtomInAtomTable ( gAtomTable, Class->Atom,
+         NULL, NULL, AtomName, &AtomNameLen );
+      DPRINT1("DestroyClass(): can't delete class = '%ws', b/c refs = %lu\n", AtomName, Class->refs );
+   }
+#endif
    ASSERT(Class->refs == 0);
    
    RemoveEntryList(&Class->ListEntry);
