@@ -1987,6 +1987,7 @@ int StartMenuHandler::Command(int id, int code)
 #endif
 		break;}
 
+#if 0	///@todo use printer start menu folder per default and allow opening "printers" cabinet window using the context menu
 	  case IDC_PRINTERS_MENU:
 		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
 /*		StartMenuFolders new_folders;
@@ -1998,6 +1999,7 @@ int StartMenuHandler::Command(int id, int code)
 
 		CreateSubmenu(id, new_folders, ResString(IDS_PRINTERS));*/
 		break;
+#endif
 
 	  case IDC_ADMIN:
 #ifndef ROSSHELL
@@ -2146,10 +2148,10 @@ void SettingsMenu::AddEntries()
 	super::AddEntries();
 
 #if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
+//TODO	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
+//TODO	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, true, IDC_CONNECTIONS);
 #endif
 	AddButton(ResString(IDS_ADMIN),				ICID_CONFIG, true, IDC_ADMIN);
