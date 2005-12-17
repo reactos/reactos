@@ -826,10 +826,17 @@ GetVolumeNameForVolumeMountPointW(
     * an NT acceptable name.
     */
 
-   RtlDosPathNameToNtPathName_U(L"e:\\", &NtFileName, NULL, NULL);
+   if (!RtlDosPathNameToNtPathName_U(VolumeName, &NtFileName, NULL, NULL))
+   {
+      SetLastError(ERROR_PATH_NOT_FOUND);
+      return FALSE;
+   }
+
    if (NtFileName.Length > sizeof(WCHAR) &&
        NtFileName.Buffer[(NtFileName.Length / sizeof(WCHAR)) - 1] == '\\')
+   {
       NtFileName.Length -= sizeof(WCHAR);
+   }
 
    /*
     * Query mount point device name which we will later use for determining
@@ -852,17 +859,26 @@ GetVolumeNameForVolumeMountPointW(
    do
    {
       MountDevName = Buffer = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
+      if (Buffer == NULL)
+      {
+         NtClose(FileHandle);
+         SetLastErrorByStatus(Status);
+         return FALSE;
+      }
+
       Status = NtDeviceIoControlFile(FileHandle, NULL, NULL, NULL, &Iosb,
                                      IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
                                      NULL, 0, Buffer, BufferLength);
       if (Status == STATUS_BUFFER_OVERFLOW)
       {
          BufferLength = sizeof(MOUNTDEV_NAME) + MountDevName->NameLength;
+         RtlFreeHeap(GetProcessHeap(), 0, Buffer);
          continue;
       }
       else if (!NT_SUCCESS(Status))
       {
          RtlFreeHeap(GetProcessHeap(), 0, Buffer);
+         NtClose(FileHandle);
          SetLastErrorByStatus(Status);
          return FALSE;
       }
@@ -877,6 +893,12 @@ GetVolumeNameForVolumeMountPointW(
 
    MountPointSize = MountDevName->NameLength + sizeof(MOUNTMGR_MOUNT_POINT);
    MountPoint = RtlAllocateHeap(GetProcessHeap(), 0, MountPointSize);
+   if (MountPoint == NULL)
+   {
+      RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
    RtlZeroMemory(MountPoint, sizeof(MOUNTMGR_MOUNT_POINT));
    MountPoint->DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
    MountPoint->DeviceNameLength = MountDevName->NameLength;
@@ -899,6 +921,14 @@ GetVolumeNameForVolumeMountPointW(
    do
    {
       MountPoints = Buffer = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
+      if (Buffer == NULL)
+      {
+         RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+         NtClose(FileHandle);
+         SetLastErrorByStatus(Status);
+         return FALSE;
+      }
+
       Status = NtDeviceIoControlFile(FileHandle, NULL, NULL, NULL, &Iosb,
                                      IOCTL_MOUNTMGR_QUERY_POINTS,
                                      MountPoint, MountPointSize,
@@ -906,6 +936,7 @@ GetVolumeNameForVolumeMountPointW(
       if (Status == STATUS_BUFFER_OVERFLOW)
       {
          BufferLength = MountPoints->Size;
+         RtlFreeHeap(GetProcessHeap(), 0, Buffer);
          continue;
       }
       else if (!NT_SUCCESS(Status))
@@ -938,7 +969,7 @@ GetVolumeNameForVolumeMountPointW(
 
       if (MountPoint->SymbolicLinkNameLength == 48 * sizeof(WCHAR) ||
           (MountPoint->SymbolicLinkNameLength == 49 * sizeof(WCHAR) &&
-           SymbolicLinkName[49] == L'\\'))
+           SymbolicLinkName[48] == L'\\'))
       {
          if (RtlCompareMemory(SymbolicLinkName, L"\\??\\Volume{",
                               11 * sizeof(WCHAR)) == 11 * sizeof(WCHAR) &&
