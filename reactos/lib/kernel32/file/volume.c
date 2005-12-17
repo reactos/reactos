@@ -991,10 +991,11 @@ GetVolumeNameForVolumeMountPointW(
             }
             else
             {
-               RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
                SetLastError(ERROR_FILENAME_EXCED_RANGE);
                Result = FALSE;
             }
+
+            RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
 
             return Result;
          }
