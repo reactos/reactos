@@ -811,7 +811,6 @@ GetVolumeNameForVolumeMountPointW(
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    IO_STATUS_BLOCK Iosb;
-   PVOID Buffer;
    ULONG BufferLength;
    PMOUNTDEV_NAME MountDevName;
    PMOUNTMGR_MOUNT_POINT MountPoint;
@@ -819,6 +818,7 @@ GetVolumeNameForVolumeMountPointW(
    PMOUNTMGR_MOUNT_POINTS MountPoints;
    ULONG Index;
    PUCHAR SymbolicLinkName;
+   BOOL Result;
    NTSTATUS Status;
 
    /*
@@ -858,29 +858,31 @@ GetVolumeNameForVolumeMountPointW(
    BufferLength = sizeof(MOUNTDEV_NAME) + 50 * sizeof(WCHAR);
    do
    {
-      MountDevName = Buffer = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
-      if (Buffer == NULL)
+      MountDevName = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
+      if (MountDevName == NULL)
       {
          NtClose(FileHandle);
-         SetLastErrorByStatus(Status);
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
          return FALSE;
       }
 
       Status = NtDeviceIoControlFile(FileHandle, NULL, NULL, NULL, &Iosb,
                                      IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                     NULL, 0, Buffer, BufferLength);
-      if (Status == STATUS_BUFFER_OVERFLOW)
+                                     NULL, 0, MountDevName, BufferLength);
+      if (!NT_SUCCESS(Status))
       {
-         BufferLength = sizeof(MOUNTDEV_NAME) + MountDevName->NameLength;
-         RtlFreeHeap(GetProcessHeap(), 0, Buffer);
-         continue;
-      }
-      else if (!NT_SUCCESS(Status))
-      {
-         RtlFreeHeap(GetProcessHeap(), 0, Buffer);
-         NtClose(FileHandle);
-         SetLastErrorByStatus(Status);
-         return FALSE;
+         RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
+         if (Status == STATUS_BUFFER_OVERFLOW)
+         {
+            BufferLength = sizeof(MOUNTDEV_NAME) + MountDevName->NameLength;
+            continue;
+         }
+         else 
+         {
+            NtClose(FileHandle);
+            SetLastErrorByStatus(Status);
+            return FALSE;
+         }
       }
    }
    while (!NT_SUCCESS(Status));
@@ -920,31 +922,33 @@ GetVolumeNameForVolumeMountPointW(
    BufferLength = sizeof(MOUNTMGR_MOUNT_POINTS);
    do
    {
-      MountPoints = Buffer = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
-      if (Buffer == NULL)
+      MountPoints = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
+      if (MountPoints == NULL)
       {
          RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
          NtClose(FileHandle);
-         SetLastErrorByStatus(Status);
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
          return FALSE;
       }
 
       Status = NtDeviceIoControlFile(FileHandle, NULL, NULL, NULL, &Iosb,
                                      IOCTL_MOUNTMGR_QUERY_POINTS,
                                      MountPoint, MountPointSize,
-                                     Buffer, BufferLength);
-      if (Status == STATUS_BUFFER_OVERFLOW)
+                                     MountPoints, BufferLength);
+      if (!NT_SUCCESS(Status))
       {
-         BufferLength = MountPoints->Size;
-         RtlFreeHeap(GetProcessHeap(), 0, Buffer);
-         continue;
-      }
-      else if (!NT_SUCCESS(Status))
-      {
-         RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
-         RtlFreeHeap(GetProcessHeap(), 0, Buffer);
-         SetLastErrorByStatus(Status);
-         return FALSE;
+         RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
+         if (Status == STATUS_BUFFER_OVERFLOW)
+         {
+            BufferLength = MountPoints->Size;
+            continue;
+         }
+         else if (!NT_SUCCESS(Status))
+         {
+            RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+            SetLastErrorByStatus(Status);
+            return FALSE;
+         }
       }
    }
    while (!NT_SUCCESS(Status));
@@ -983,14 +987,16 @@ GetVolumeNameForVolumeMountPointW(
                              (PUCHAR)MountPoints + MountPoint->SymbolicLinkNameOffset,
                              MountPoint->SymbolicLinkNameLength);
                VolumeName[1] = L'\\';
+               Result = TRUE;
+            }
+            else
+            {
                RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
-               return TRUE;
+               SetLastError(ERROR_FILENAME_EXCED_RANGE);
+               Result = FALSE;
             }
 
-            RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
-            SetLastError(ERROR_FILENAME_EXCED_RANGE);
-
-            return FALSE;
+            return Result;
          }
       }
    }
