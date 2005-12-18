@@ -172,7 +172,7 @@ SermouseDeviceWorker(
 		for (i = 0; i < ioStatus.Information; i++)
 		{
 			ReceivedByte = Buffer[i];
-			DPRINT1("ReceivedByte 0x%02x\n", ReceivedByte);
+			DPRINT("ReceivedByte 0x%02x\n", ReceivedByte);
 
 			/* Synchronize */
 			if ((ReceivedByte & 0x40) == 0x40)

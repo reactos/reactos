@@ -115,8 +115,6 @@ cleanup:
 	Fdo->Flags |= DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	/* FIXME: create registry entry in HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP */
-
 	ExFreePool(DeviceNameU.Buffer);
 
 	return STATUS_SUCCESS;
@@ -124,6 +122,8 @@ cleanup:
 cleanupFDO:
 	if (DeviceExtension)
 	{
+		if (DeviceExtension->LowerDevice)
+			IoDetachDevice(DeviceExtension->LowerDevice);
 		ExFreePool(DeviceExtension->MouseInputData[0]);
 		ExFreePool(DeviceExtension->MouseInputData[1]);
 	}
@@ -177,7 +177,7 @@ SermouseStartDevice(
 		/* Override the number of buttons */
 		DeviceExtension->AttributesInformation.NumberOfButtons = DeviceExtension->DriverExtension->NumberOfButtons;
 
-	DeviceExtension->AttributesInformation.SampleRate = 1200 / 8;
+	DeviceExtension->AttributesInformation.SampleRate = DeviceExtension->DriverExtension->SampleRate / 8;
 	DeviceExtension->AttributesInformation.InputDataQueueLength = DeviceExtension->DriverExtension->MouseDataQueueSize;
 	DeviceExtension->MouseType = MouseType;
 	DeviceExtension->PnpState = dsStarted;
