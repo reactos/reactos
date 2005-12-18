@@ -18,7 +18,6 @@ secur32.dll reactos/lib/secur32
 snmpapi.dll reactos/lib/snmpapi
 user32.dll reactos/lib/user32
 version.dll reactos/lib/version
-winmm.dll reactos/lib/winmm
 winspool.dll reactos/lib/winspool
 ws2_32.dll reactos/lib/ws2_32
 wsock32.dll reactos/lib/wsock32
