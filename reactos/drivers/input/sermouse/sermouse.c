@@ -42,7 +42,7 @@ ReadRegistryEntries(
 	ULONG DefaultMouseDataQueueSize = 0x64;
 	ULONG DefaultNumberOfButtons = 0;
 	UNICODE_STRING DefaultPointerDeviceBaseName = RTL_CONSTANT_STRING(L"PointerPort");
-	ULONG DefaultSampleRate = SERIAL_BAUD_1200;
+	ULONG DefaultSampleRate = 1200;
 
 	ParametersRegistryKey.Length = 0;
 	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
