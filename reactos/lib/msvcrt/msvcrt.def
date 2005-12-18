@@ -746,7 +746,7 @@ mbstowcs=NTDLL.mbstowcs
 mbtowc
 memchr
 memcmp
-memcpy
+memcpy=memmove
 memmove
 memset
 mktime
