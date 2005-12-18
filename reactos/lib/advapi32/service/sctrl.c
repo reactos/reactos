@@ -134,7 +134,54 @@ ScServiceMainStub(LPVOID Context)
     }
   else
     {
-      (lpService->Main.lpFuncA)(0, NULL);
+      LPSTR *lpArgVector;
+      LPSTR Ptr;
+      LPSTR AnsiString;
+      DWORD AnsiLength;
+
+      AnsiLength = WideCharToMultiByte(CP_ACP,
+				       0,
+				       lpService->Arguments,
+				       dwLength,
+				       NULL,
+				       0,
+				       NULL,
+				       NULL);
+      AnsiString = HeapAlloc(GetProcessHeap(),
+			     0,
+			     AnsiLength);
+      WideCharToMultiByte(CP_ACP,
+			  0,
+			  lpService->Arguments,
+			  dwLength,
+			  AnsiString,
+			  AnsiLength,
+			  NULL,
+			  NULL);
+
+      lpArgVector = HeapAlloc(GetProcessHeap(),
+			      0,
+			      (dwArgCount + 1) * sizeof(LPSTR));
+
+      dwArgCount = 0;
+      Ptr = AnsiString;
+      while (*Ptr)
+	{
+	  lpArgVector[dwArgCount] = Ptr;
+
+	  dwArgCount++;
+	  Ptr += (strlen(Ptr) + 1);
+	}
+      lpArgVector[dwArgCount] = NULL;
+
+      (lpService->Main.lpFuncA)(dwArgCount, lpArgVector);
+
+      HeapFree(GetProcessHeap(),
+	       0,
+	       lpArgVector);
+      HeapFree(GetProcessHeap(),
+	       0,
+	       AnsiString);
     }
 
   return ERROR_SUCCESS;
@@ -255,7 +302,7 @@ ScServiceDispatcher(HANDLE hPipe,
 			 NULL);
       if (bResult == FALSE)
         {
-          DPRINT1("Pipe read failed\n");
+          DPRINT1("Pipe read failed (Error: %lu)\n", GetLastError());
           return FALSE;
         }
 
@@ -401,21 +448,6 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
 	       DWORD dwServiceBits,
 	       BOOL bSetBitsOn,
 	       BOOL bUpdateImmediately)
-{
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-
-/**********************************************************************
- *	SetServiceObjectSecurity
- *
- * @unimplemented
- */
-BOOL STDCALL
-SetServiceObjectSecurity(SC_HANDLE hService,
-			 SECURITY_INFORMATION dwSecurityInformation,
-			 PSECURITY_DESCRIPTOR lpSecurityDescriptor)
 {
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;

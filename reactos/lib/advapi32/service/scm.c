@@ -1223,6 +1223,21 @@ QueryServiceStatusEx(SC_HANDLE  hService,
 
 
 /**********************************************************************
+ *  SetServiceObjectSecurity
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+SetServiceObjectSecurity(SC_HANDLE hService,
+			 SECURITY_INFORMATION dwSecurityInformation,
+			 PSECURITY_DESCRIPTOR lpSecurityDescriptor)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+
+/**********************************************************************
  *  StartServiceA
  *
  * @unimplemented
