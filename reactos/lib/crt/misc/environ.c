@@ -259,7 +259,7 @@ int SetEnv(const wchar_t *option)
       if (!found)
       {
          free(name);
-         return -1;
+         return 0;
       }
 
       /* Remove the option from wide character environment. */
