@@ -3060,16 +3060,16 @@ void calc_buffer_display(CALC *calc) {
 
             if (old_base != calc->numBase)
             {
-            if (calc->buffer[0]==_T('\0'))
-            {
-                real = 0;
-            }
-            else
-            {
-                real = calc_atof(calc->buffer, old_base);
-            }           
-            _stprintf(calc->display, _T("%.f"), real);   
-            _stprintf(calc->buffer, _T("%.f"), real);               
+                if (calc->buffer[0]==_T('\0'))
+                {
+                    real = 0;
+                }
+                else
+                {
+                    real = calc_atof(calc->buffer, old_base);
+                }           
+                _stprintf(calc->display, _T("%.f"), real);   
+                _stprintf(calc->buffer, _T("%.f"), real);               
             }                              
 
             _tcscpy(s,calc->buffer);
