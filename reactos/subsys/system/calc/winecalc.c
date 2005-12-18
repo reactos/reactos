@@ -2941,19 +2941,29 @@ void calc_buffer_display(CALC *calc) {
     TCHAR s[CALC_BUF_SIZE];
     int point=0;
     calcfloat real;
+    static int old_base = NBASE_DECIMAL;
 
+   
     switch (calc->numBase) {
-    case NBASE_HEX:
-        real = calc_atof(calc->buffer, calc->numBase);
-        _stprintf(calc->display, TEXT("%lx"), (long)real);
+    case NBASE_HEX:      
+        real = calc_atof(calc->buffer, old_base);
+        _stprintf(calc->display, _T("%lx"), (long)real);   
+        _stprintf(calc->buffer, _T("%lx"), (long)real);         
+        old_base = NBASE_HEX;        
         break;
 
-    case NBASE_OCTAL:
-        _stprintf(calc->display, TEXT("%lo"), (long)calc->buffer);
+    case NBASE_OCTAL:  
+         real = calc_atof(calc->buffer, old_base);
+        _stprintf(calc->display, TEXT("%lo"), (long)real);
+        _stprintf(calc->buffer, TEXT("%lo"), (long)real);
+        old_base = NBASE_OCTAL;
         break;
 
     case NBASE_BINARY:
-        _stprintf(calc->display, TEXT("%lx"), (long)calc->buffer);
+        real = calc_atof(calc->buffer, old_base);
+
+        _stprintf(calc->display, TEXT("%lx"), (long)real);
+        old_base = NBASE_BINARY;
         break;
 
     case NBASE_DECIMAL:
@@ -3031,7 +3041,9 @@ void calc_buffer_display(CALC *calc) {
                 calc->display[0] = 0;
             _tcscat(calc->display, s);
         }
+        old_base = NBASE_DECIMAL;
     }
+   
     InvalidateRect(calc->hWnd, NULL, FALSE);
     UpdateWindow(calc->hWnd);
 }
