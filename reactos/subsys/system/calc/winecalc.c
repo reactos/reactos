@@ -2960,14 +2960,52 @@ void calc_buffer_display(CALC *calc) {
         break;
 
     case NBASE_BINARY:
-        real = calc_atof(calc->buffer, old_base);
+        {
+          int buf=0;          
+          int t;
 
-        _stprintf(calc->display, TEXT("%lx"), (long)real);
-        old_base = NBASE_BINARY;
+          if (calc->buffer[0]==_T('\0'))
+          {
+            real=0;
+          }
+          else
+          {
+            real = calc_atof(calc->buffer, old_base);
+          }
+          
+          calc->display[buf]=_T('0');
+          calc->buffer[buf]=_T('0');
+          for (t=31;t>=0;t--)
+          {                  
+            if (((((long)real)>>t) & ~0xFFFFFFFE)==0)
+            {
+                calc->display[buf]=_T('0');
+                calc->buffer[buf]=_T('0');
+                buf++;
+            }
+            else
+            {
+                calc->display[buf]=_T('1');
+                calc->buffer[buf]=_T('1');
+                buf++;
+            }
+            
+          }
+        
+          if (buf==0) 
+          {
+              buf++;
+          }
+         
+          calc->buffer[buf]=_T('\0');
+          calc->display[buf]=_T('\0');          
+          old_base = NBASE_BINARY;
+        }
         break;
 
     case NBASE_DECIMAL:
-        calc_buffer_format(calc);
+
+       calc_buffer_format(calc);
 
         if (calc->displayMode) {
             if (!_tcscmp(calc->buffer, TEXT("0")) || !calc->buffer[0]) {
@@ -2978,7 +3016,7 @@ void calc_buffer_display(CALC *calc) {
                 int lz = 0;
                 int exp = 0;
 
-                real = calc_atof(calc->buffer, calc->numBase);
+                real = calc_atof(calc->buffer,old_base);
                 _stprintf(s, FMT_DESC_EXP, real);
                 // remove leading zeros in exponent
                 p = s;
