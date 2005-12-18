@@ -1107,6 +1107,13 @@ GetAppName:
         SetLastError(ERROR_BAD_EXE_FORMAT);
         goto Cleanup;
     }
+    
+    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo.SubsystemType)
+    {
+        /* Do not create a console for GUI applications */
+        dwCreationFlags &= ~CREATE_NEW_CONSOLE;
+        dwCreationFlags |= DETACHED_PROCESS;
+    }
 
     /* Initialize the process object attributes */
     ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes, 
@@ -1332,7 +1339,6 @@ GetAppName:
         goto Cleanup;
     }
 
-    
     /* Notify CSRSS */
     Status = BasepNotifyCsrOfCreation(dwCreationFlags,
                                       (HANDLE)ProcessBasicInfo.UniqueProcessId,
