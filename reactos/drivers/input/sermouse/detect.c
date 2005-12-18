@@ -186,7 +186,7 @@ SermouseDetectLegacyDevice(
 		&Fcr, sizeof(Fcr), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Set serial port speed */
-	BaudRate = SERIAL_BAUD_1200;
+	BaudRate = 1200;
 	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;

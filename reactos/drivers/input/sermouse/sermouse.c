@@ -150,7 +150,7 @@ DriverEntry(
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SermouseAddDevice;
 
-	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = IrpStub;
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = SermouseCreate;
