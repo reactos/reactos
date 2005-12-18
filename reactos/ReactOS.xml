@@ -25,11 +25,7 @@
 		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-ftracer</compilerflag>
 		<compilerflag>-momit-leaf-frame-pointer</compilerflag>
-		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-            <compilerflag>-fforce-addr</compilerflag>
-            <compilerflag>-fmerge-all-constants</compilerflag>
-            <compilerflag>-fmove-all-movables</compilerflag>
-            <compilerflag>-funit-at-a-time</compilerflag>
+		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>            
 	</if>
 	<if property="KDBG" value="1">
 		<define name="KDBG" value="1" />
