@@ -3016,6 +3016,8 @@ void calc_buffer_display(CALC *calc) {
                 int lz = 0;
                 int exp = 0;
 
+                       
+
                 real = calc_atof(calc->buffer,old_base);
                 _stprintf(s, FMT_DESC_EXP, real);
                 // remove leading zeros in exponent
@@ -3055,6 +3057,20 @@ void calc_buffer_display(CALC *calc) {
             // if digitGrouping, embed separators
             // add point if missing
             // display
+
+            if (old_base != calc->numBase)
+            {
+            if (calc->buffer[0]==_T('\0'))
+            {
+                real = 0;
+            }
+            else
+            {
+                real = calc_atof(calc->buffer, old_base);
+            }           
+            _stprintf(calc->display, _T("%.f"), real);   
+            _stprintf(calc->buffer, _T("%.f"), real);               
+            }                              
 
             _tcscpy(s,calc->buffer);
             p = s;
