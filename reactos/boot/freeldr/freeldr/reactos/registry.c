@@ -31,6 +31,7 @@ RegInitializeRegistry (VOID)
 {
 #if 0
   FRLDRHKEY TestKey;
+  WCHAR szTestString[] = L"TestString";
 #endif
 
   /* Create root key */
@@ -85,8 +86,8 @@ RegInitializeRegistry (VOID)
   RegSetValue (TestKey,
 	       L"TestValue",
 	       REG_SZ,
-	       (PUCHAR)"TestString",
-	       11);
+	       szTestString,
+	       sizeof(szTestString));
 #endif
 }
 
