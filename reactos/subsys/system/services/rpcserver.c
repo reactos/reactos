@@ -856,7 +856,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
         *lpDisplayName != 0 &&
         wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
     {
-        lpService->lpDisplayName = HeapAlloc(GetProcessHeap, 0,
+        lpService->lpDisplayName = HeapAlloc(GetProcessHeap(), 0,
                                              (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpService->lpDisplayName == NULL)
         {
