@@ -48,7 +48,7 @@ RtlpSysVolCreateSecurityDescriptor(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
                                TAG('S', 'e', 'S', 'd'));
     if (AbsSD == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -66,7 +66,7 @@ RtlpSysVolCreateSecurityDescriptor(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
                               TAG('S', 'e', 'A', 'c'));
     if (Dacl == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -165,7 +165,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                TAG('S', 'e', 'S', 'd'));
     if (RelSD == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -300,7 +300,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                    TAG('S', 'e', 'S', 'd'));
         if (AbsSD == NULL)
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_NO_MEMORY;
             goto Cleanup;
         }
 
@@ -360,6 +360,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                   TAG('S', 'e', 'S', 'd'));
     if (NewRelSD == NULL)
     {
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
