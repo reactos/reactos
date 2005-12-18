@@ -50,7 +50,7 @@ PciIdeXInitialize(
 
 	DriverObject->DriverExtension->AddDevice = PciIdeXAddDevice;
 
-	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = ForwardIrpAndForget;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = PciIdeXPnpDispatch;
 

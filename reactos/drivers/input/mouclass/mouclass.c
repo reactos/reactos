@@ -136,6 +136,7 @@ IrpStub(
 		/* Forward some IRPs to lower device */
 		switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
 		{
+			case IRP_MJ_PNP:
 			case IRP_MJ_INTERNAL_DEVICE_CONTROL:
 				return ForwardIrpAndForget(DeviceObject, Irp);
 			default:
@@ -788,7 +789,7 @@ DriverEntry(
 	DriverObject->DriverExtension->AddDevice = ClassAddDevice;
 	DriverObject->DriverUnload = DriverUnload;
 
-	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = IrpStub;
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE]         = ClassCreate;
