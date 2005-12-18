@@ -42,12 +42,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(seh);
 
 #ifdef __i386__  /* CxxFrameHandler is not supported on non-i386 */
-#define CONTEXT86 CONTEXT //Mingw Hack
 
 static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame,
                                 PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch,
                                 cxx_function_descr *descr, EXCEPTION_REGISTRATION_RECORD* nested_frame,
-                                int nested_trylevel, CONTEXT86 *context );
+                                int nested_trylevel );
 
 /* call a function with a given ebp */
 __inline static void *call_ebp_func( void *func, void *ebp )
@@ -255,7 +254,7 @@ static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REG
         TRACE( "got nested exception in catch function\n" );
         return cxx_frame_handler( rec, nested_frame->cxx_frame, context,
                                   NULL, nested_frame->descr, &nested_frame->frame,
-                                  nested_frame->trylevel, context );
+                                  nested_frame->trylevel );
     }
 }
 
@@ -332,10 +331,11 @@ __inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_fra
 static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame,
                                 PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch,
                                 cxx_function_descr *descr, EXCEPTION_REGISTRATION_RECORD* nested_frame,
-                                int nested_trylevel, CONTEXT86 *context )
+                                int nested_trylevel )
 {
     cxx_exception_type *exc_type;
     void *next_ip;
+    PEXCEPTION_RECORD orig_rec = rec;
 
     if (descr->magic != CXX_FRAME_MAGIC)
     {
@@ -375,10 +375,10 @@ static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* fram
     next_ip = call_catch_block( rec, frame, descr, frame->trylevel, exc_type );
 
     if (!next_ip) return ExceptionContinueSearch;
-    rec->ExceptionFlags &= ~EH_NONCONTINUABLE;
-    context->Eip = (DWORD)next_ip;
-    context->Ebp = (DWORD)&frame->ebp;
-    context->Esp = ((DWORD*)frame)[-1];
+    orig_rec->ExceptionFlags &= ~EH_NONCONTINUABLE;
+    exc_context->Eip = (DWORD)next_ip;
+    exc_context->Ebp = (DWORD)&frame->ebp;
+    exc_context->Esp = ((DWORD*)frame)[-1];
     return ExceptionContinueExecution;
 }
 
@@ -386,16 +386,15 @@ static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* fram
 /*********************************************************************
  *		__CxxFrameHandler (MSVCRT.@)
  */
-void __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
-                              PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch,
-                              CONTEXT86 *context )
+DWORD __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
+                              PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch )
 {
-    cxx_function_descr *descr = (cxx_function_descr *)context->Eax;
-    context->Eax = cxx_frame_handler( rec, (cxx_exception_frame *)frame,
-                                      exc_context, dispatch, descr, NULL, 0, context );
+    cxx_function_descr *descr;
+
+    __asm__ __volatile__("mov %%eax, %0\n" : "=m"(descr));
+    return cxx_frame_handler(rec, (cxx_exception_frame *)frame,
+                             exc_context, dispatch, descr, NULL, 0 );
 }
-//DEFINE_REGS_ENTRYPOINT( __CxxFrameHandler, MSVCRT__CxxFrameHandler, 16, 0 );
-// ROS
 #endif  /* __i386__ */
 
 /*********************************************************************
