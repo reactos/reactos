@@ -16,6 +16,7 @@ typedef struct _SERVICE
     LPWSTR lpDisplayName;
     LPWSTR lpServiceGroup;
     BOOL bDeleted;
+    DWORD dwResumeCount;
 
     SERVICE_STATUS Status;
     DWORD dwStartType;
@@ -71,6 +72,7 @@ VOID ScmAutoStartServices(VOID);
 
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
+PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
 DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);

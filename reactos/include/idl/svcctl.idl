@@ -5,6 +5,7 @@
 //#include <windef.h>
 //#include <winsvc.h>
 
+#define BYTE unsigned char
 #define DWORD unsigned long
 #define BOOL unsigned long
 #define SC_HANDLE unsigned int
@@ -113,6 +114,25 @@ cpp_quote("#endif")
                            [in] DWORD dwPasswordLength,
                            [out] SC_HANDLE *hService);
 
+  /* Function 13 */
+  DWORD ScmrEnumDependentServicesW([in] handle_t BindingHandle,
+                                   [in] SC_HANDLE hService,
+                                   [in] DWORD dwServiceState,
+                                   [out, size_is(cbBufSize)] BYTE *lpServices,
+                                   [in] DWORD cbBufSize,
+                                   [out] LPDWORD pcbBytesNeeded,
+                                   [out] LPDWORD lpServicesReturned);
+
+  /* Function 14 */
+  DWORD ScmrEnumServicesStatusW([in] handle_t BindingHandle,
+                                [in] SC_HANDLE hSCManager,
+                                [in] DWORD dwServiceType,
+                                [in] DWORD dwServiceState,
+                                [out, size_is(dwBufSize)] BYTE *lpServices,
+                                [in] DWORD dwBufSize,
+                                [out] LPDWORD pcbBytesNeeded,
+                                [out] LPDWORD lpServicesReturned,
+                                [in, out] LPDWORD lpResumeHandle); /* FIXME: unique */
 
   /* Function 15 */
   DWORD ScmrOpenSCManagerW([in] handle_t BindingHandle,
@@ -127,6 +147,13 @@ cpp_quote("#endif")
                              [in, string] LPCWSTR lpServiceName,
                              [in] DWORD dwDesiredAccess,
                              [out] SC_HANDLE *hScm);
+
+  /* Function 17 */
+  DWORD ScmrQueryServiceConfigW([in] handle_t BindingHandle,
+                                [in] SC_HANDLE hService,
+                                [out, unique, size_is(cbBufSize)] BYTE *lpServiceConfig,
+                                [in] DWORD cbBufSize,
+                                [out] DWORD *pcbBytesNeeded);
 
 
   /* Function 20 */

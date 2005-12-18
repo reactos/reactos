@@ -639,7 +639,8 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
-        /* FIXME: lpService->dwType = dwServiceType; */
+
+        lpService->Status.dwServiceType = dwServiceType;
     }
 
     if (dwStartType != SERVICE_NO_CHANGE)
@@ -653,6 +654,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
+
         lpService->dwStartType = dwStartType;
     }
 
@@ -667,6 +669,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
+
         lpService->dwErrorControl = dwErrorControl;
     }
 
@@ -1032,6 +1035,92 @@ done:;
 }
 
 
+/* Function 13 */
+unsigned long
+ScmrEnumDependentServicesW(handle_t BindingHandle,
+                           unsigned int hService,
+                           unsigned long dwServiceState,
+                           unsigned char *lpServices,
+                           unsigned long cbBufSize,
+                           unsigned long *pcbBytesNeeded,
+                           unsigned long *lpServicesReturned)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT1("ScmrEnumDependentServicesW() called\n");
+
+    DPRINT1("ScmrEnumDependentServicesW() done (Error %lu)\n", dwError);
+
+    return dwError;
+}
+
+
+/* Function 14 */
+unsigned long
+ScmrEnumServicesStatusW(handle_t BindingHandle,
+                        unsigned int hSCManager,
+                        unsigned long dwServiceType,
+                        unsigned long dwServiceState,
+                        unsigned char *lpServices,
+                        unsigned long dwBufSize,
+                        unsigned long *pcbBytesNeeded,
+                        unsigned long *lpServicesReturned,
+                        unsigned long *lpResumeHandle)
+{
+    PMANAGER_HANDLE hManager;
+    PSERVICE lpService;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT1("ScmrEnumServicesStatusW() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT1("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n",
+                hManager->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
+
+    /* Lock the service list shared */
+
+    lpService = ScmGetServiceEntryByResumeCount(*lpResumeHandle);
+    if (lpService == NULL)
+    {
+        dwError = ERROR_MORE_DATA; /* Hack! */
+        goto done;
+    }
+
+    DPRINT1("Service name: %S\n", lpService->lpServiceName);
+
+//    DPRINT1("Display name: %S\n", lpService->lpDisplayName);
+
+
+    *lpResumeHandle = lpService->dwResumeCount;
+
+done:;
+    /* Unlock the service list */
+
+
+    DPRINT1("ScmrEnumServicesStatusW() done (Error %lu)\n", dwError);
+
+    return dwError;
+}
+
+
 /* Function 15 */
 unsigned long
 ScmrOpenSCManagerW(handle_t BindingHandle,
@@ -1147,6 +1236,149 @@ ScmrOpenServiceW(handle_t BindingHandle,
 }
 
 
+/* Function 17 */
+unsigned long
+ScmrQueryServiceConfigW(handle_t BindingHandle,
+                        unsigned int hService,
+                        unsigned char *lpServiceConfig, /* [out, unique, size_is(cbBufSize)] */
+                        unsigned long cbBufSize,        /* [in] */
+                        unsigned long *pcbBytesNeeded)  /* [out] */
+{
+    DWORD dwError = ERROR_SUCCESS;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+    HKEY hServiceKey = NULL;
+    LPWSTR lpImagePath = NULL;
+    DWORD dwRequiredSize;
+    LPQUERY_SERVICE_CONFIGW lpConfig;
+    LPWSTR lpStr;
+
+    DPRINT1("ScmrQueryServiceConfigW() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SERVICE_QUERY_CONFIG))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* FIXME: Lock the service database shared */
+
+    dwError = ScmOpenServiceKey(lpService->lpServiceName,
+                                KEY_READ,
+                                &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        goto Done;
+
+    dwError = ScmReadString(hServiceKey,
+                            L"ImagePath",
+                            &lpImagePath);
+    if (dwError != ERROR_SUCCESS)
+        goto Done;
+
+    dwRequiredSize = sizeof(QUERY_SERVICE_CONFIGW);
+
+    if (lpImagePath != NULL)
+        dwRequiredSize += ((wcslen(lpImagePath) + 1) * sizeof(WCHAR));
+
+    if (lpService->lpServiceGroup  != NULL)
+        dwRequiredSize += ((wcslen(lpService->lpServiceGroup) + 1) * sizeof(WCHAR));
+
+    /* FIXME: Add Dependencies length*/
+
+    /* FIXME: Add ServiceStartName length*/
+
+    if (lpService->lpDisplayName != NULL)
+        dwRequiredSize += ((wcslen(lpService->lpDisplayName) + 1) * sizeof(WCHAR));
+
+    if (lpServiceConfig == NULL || cbBufSize < dwRequiredSize)
+    {
+        dwError = ERROR_INSUFFICIENT_BUFFER;
+    }
+    else
+    {
+        lpConfig = (LPQUERY_SERVICE_CONFIGW)lpServiceConfig;
+        lpConfig->dwServiceType = lpService->Status.dwServiceType;
+        lpConfig->dwStartType = lpService->dwStartType;
+        lpConfig->dwErrorControl = lpService->dwErrorControl;
+        lpConfig->dwTagId = lpService->dwTag;
+
+        lpStr = (LPWSTR)(lpConfig + 1);
+
+        if (lpImagePath != NULL)
+        {
+            wcscpy(lpStr, lpImagePath);
+            lpConfig->lpBinaryPathName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+            lpStr += (wcslen(lpImagePath) + 1);
+        }
+        else
+        {
+            lpConfig->lpBinaryPathName = NULL;
+        }
+
+        if (lpService->lpServiceGroup != NULL)
+        {
+            wcscpy(lpStr, lpService->lpServiceGroup);
+            lpConfig->lpLoadOrderGroup = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+            lpStr += (wcslen(lpService->lpServiceGroup) + 1);
+        }
+        else
+        {
+            lpConfig->lpLoadOrderGroup = NULL;
+        }
+
+        /* FIXME: Append Dependencies */
+        lpConfig->lpDependencies = NULL;
+
+        /* FIXME: Append ServiceStartName */
+        lpConfig->lpServiceStartName = NULL;
+
+        if (lpService->lpDisplayName != NULL)
+        {
+            wcscpy(lpStr, lpService->lpDisplayName);
+            lpConfig->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        }
+        else
+        {
+            lpConfig->lpDisplayName = NULL;
+        }
+    }
+
+    if (pcbBytesNeeded != NULL)
+        *pcbBytesNeeded = dwRequiredSize;
+
+Done:;
+    if (lpImagePath != NULL)
+        HeapFree(GetProcessHeap(), 0, lpImagePath);
+
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    /* FIXME: Unlock the service database */
+
+    DPRINT1("ScmrQueryServiceConfigW() done\n");
+
+    return dwError;
+}
+
+
 /* Function 20 */
 unsigned long
 ScmrGetServiceDisplayNameW(handle_t BindingHandle,
@@ -1160,11 +1392,11 @@ ScmrGetServiceDisplayNameW(handle_t BindingHandle,
     DWORD dwLength;
     DWORD dwError;
 
-    DPRINT1("ScmrGetServiceDisplayNameW() called\n");
-    DPRINT1("hSCManager = %x\n", hSCManager);
-    DPRINT1("lpServiceName: %S\n", lpServiceName);
-    DPRINT1("lpDisplayName: %p\n", lpDisplayName);
-    DPRINT1("*lpcchBuffer: %lu\n", *lpcchBuffer);
+    DPRINT("ScmrGetServiceDisplayNameW() called\n");
+    DPRINT("hSCManager = %x\n", hSCManager);
+    DPRINT("lpServiceName: %S\n", lpServiceName);
+    DPRINT("lpDisplayName: %p\n", lpDisplayName);
+    DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
 
 //    hManager = (PMANAGER_HANDLE)hSCManager;
 //    if (hManager->Handle.Tag != MANAGER_TAG)
@@ -1210,11 +1442,11 @@ ScmrGetServiceKeyNameW(handle_t BindingHandle,
     DWORD dwLength;
     DWORD dwError;
 
-    DPRINT1("ScmrGetServiceKeyNameW() called\n");
-    DPRINT1("hSCManager = %x\n", hSCManager);
-    DPRINT1("lpDisplayName: %S\n", lpDisplayName);
-    DPRINT1("lpServiceName: %p\n", lpServiceName);
-    DPRINT1("*lpcchBuffer: %lu\n", *lpcchBuffer);
+    DPRINT("ScmrGetServiceKeyNameW() called\n");
+    DPRINT("hSCManager = %x\n", hSCManager);
+    DPRINT("lpDisplayName: %S\n", lpDisplayName);
+    DPRINT("lpServiceName: %p\n", lpServiceName);
+    DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
 
 //    hManager = (PMANAGER_HANDLE)hSCManager;
 //    if (hManager->Handle.Tag != MANAGER_TAG)
@@ -1311,7 +1543,6 @@ ScmrOpenServiceA(handle_t BindingHandle,
 
     return dwError;
 }
-
 
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
