@@ -320,7 +320,7 @@
 @ stdcall SetupDiGetClassImageListExW(ptr wstr ptr)
 @ stub SetupDiGetClassInstallParamsA
 @ stub SetupDiGetClassInstallParamsW
-@ stub SetupDiGetDeviceInfoListClass
+@ stdcall SetupDiGetDeviceInfoListClass(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailA(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailW(ptr ptr)
 @ stdcall SetupDiGetDeviceInstallParamsA(ptr ptr ptr)

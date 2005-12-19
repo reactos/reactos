@@ -64,6 +64,8 @@ static const WCHAR UpdateIniFields[] = {'U','p','d','a','t','e','I','n','i','F',
 static const WCHAR RegisterDlls[]    = {'R','e','g','i','s','t','e','r','D','l','l','s',0};
 static const WCHAR UnregisterDlls[]  = {'U','n','r','e','g','i','s','t','e','r','D','l','l','s',0};
 static const WCHAR ProfileItems[]    = {'P','r','o','f','i','l','e','I','t','e','m','s',0};
+static const WCHAR Include[]         = {'I','n','c','l','u','d','e',0};
+static const WCHAR Needs[]           = {'N','e','e','d','s',0};
 
 
 /***********************************************************************
@@ -789,6 +791,67 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
                                          PSP_FILE_CALLBACK_W callback, PVOID context,
                                          HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data )
 {
+    INFCONTEXT include_context;
+
+    /* Parse 'Include' line */
+    if (SetupFindFirstLineW( hinf, section, Include, &include_context ))
+    {
+        DWORD index = 1;
+        while (TRUE)
+        {
+            static WCHAR szBuffer[MAX_PATH];
+            PWSTR pBuffer = NULL;
+            DWORD required;
+            BOOL ok;
+
+            ok = SetupGetStringFieldW( &include_context, index, szBuffer, MAX_PATH, &required );
+            if (!ok && GetLastError() == ERROR_INVALID_PARAMETER)
+                break;
+            else if (!ok && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                pBuffer = MyMalloc(required);
+                ok = SetupGetStringFieldW( &include_context, index, pBuffer, required, &required );
+            }
+            if (ok)
+                ok = SetupOpenAppendInfFileW( pBuffer ? pBuffer : szBuffer, hinf, NULL );
+
+            MyFree(pBuffer);
+            if (!ok) return FALSE;
+            index++;
+        }
+    }
+
+    /* Parse 'Needs' line */
+    if (SetupFindFirstLineW( hinf, section, Needs, &include_context ))
+    {
+        DWORD index = 1;
+        while (TRUE)
+        {
+            static WCHAR szBuffer[MAX_PATH];
+            PWSTR pBuffer = NULL;
+            DWORD required;
+            BOOL ok;
+
+            ok = SetupGetStringFieldW( &include_context, index, szBuffer, MAX_PATH, &required );
+            if (!ok && GetLastError() == ERROR_INVALID_PARAMETER)
+                break;
+            else if (!ok && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                pBuffer = MyMalloc(required);
+                ok = SetupGetStringFieldW( &include_context, index, pBuffer, required, &required );
+            }
+            if (ok)
+            {
+                ok = SetupInstallFromInfSectionW( owner, hinf, pBuffer ? pBuffer : szBuffer,
+                    flags, key_root, src_root, copy_flags, callback, context, devinfo, devinfo_data );
+            }
+
+            MyFree(pBuffer);
+            if (!ok) return FALSE;
+            index++;
+        }
+    }
+
     if (flags & SPINST_FILES)
     {
         struct files_callback_info info;

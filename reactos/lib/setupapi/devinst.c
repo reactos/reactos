@@ -3184,9 +3184,69 @@ InstallServicesSection(
         OUT PBOOL pRebootRequired OPTIONAL)
 {
     INFCONTEXT ContextService;
+    INFCONTEXT ContextInclude;
     DWORD RequiredSize;
     INT Flags;
     BOOL ret = FALSE;
+
+    /* Parse 'Include' line */
+    if (SetupFindFirstLineW(hInf, SectionName, L"Include", &ContextInclude))
+    {
+        DWORD Index = 1;
+        while (TRUE)
+        {
+            static WCHAR szBuffer[MAX_PATH];
+            PWSTR pBuffer = NULL;
+            DWORD required;
+
+            ret = SetupGetStringFieldW(&ContextInclude, Index, szBuffer, MAX_PATH, &required);
+            if (!ret && GetLastError() == ERROR_INVALID_PARAMETER)
+                break;
+            else if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                pBuffer = MyMalloc(required);
+                ret = SetupGetStringFieldW(&ContextInclude, Index, pBuffer, required, &required);
+            }
+            if (ret)
+                ret = SetupOpenAppendInfFileW(pBuffer ? pBuffer : szBuffer, hInf, NULL);
+
+            MyFree(pBuffer);
+            if (!ret)
+                goto done;
+            Index++;
+        }
+    }
+
+    /* Parse 'Needs' line */
+    if (SetupFindFirstLineW(hInf, SectionName, L"Needs", &ContextInclude))
+    {
+        DWORD Index = 1;
+        while (TRUE)
+        {
+            static WCHAR szBuffer[MAX_PATH];
+            PWSTR pBuffer = NULL;
+            DWORD required;
+
+            ret = SetupGetStringFieldW(&ContextInclude, Index, szBuffer, MAX_PATH, &required);
+            if (!ret && GetLastError() == ERROR_INVALID_PARAMETER)
+                break;
+            else if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                pBuffer = MyMalloc(required);
+                ret = SetupGetStringFieldW(&ContextInclude, Index, pBuffer, required, &required);
+            }
+            if (ret)
+            {
+                ret = InstallServicesSection(hInf, pBuffer ? pBuffer : szBuffer,
+                    DeviceInfoSet, DeviceInfoData, pAssociatedService, pRebootRequired);
+            }
+
+            MyFree(pBuffer);
+            if (!ret)
+                goto done;
+            Index++;
+        }
+    }
 
     ret = SetupFindFirstLineW(hInf, SectionName, NULL, &ContextService);
     while (ret)
@@ -4126,6 +4186,35 @@ BOOL WINAPI SetupDiCallClassInstaller(
 
             ret = (rc == NO_ERROR);
         }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceInfoListClass  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInfoListClass(
+        IN HDEVINFO DeviceInfoSet,
+        OUT LPGUID ClassGuid)
+{
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p\n", DeviceInfoSet, ClassGuid);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (IsEqualIID(&list->ClassGuid, &GUID_NULL))
+        SetLastError(ERROR_NO_ASSOCIATED_CLASS);
+    else
+    {
+        memcpy(&ClassGuid, &list->ClassGuid, sizeof(GUID));
+
+        ret = TRUE;
     }
 
     TRACE("Returning %d\n", ret);
