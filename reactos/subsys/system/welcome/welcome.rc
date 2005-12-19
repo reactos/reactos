@@ -47,14 +47,16 @@ END
 
 
 /* Language-specific resources */
-#include "En.rc"
+#include "Bg.rc"
 #include "Cz.rc"
 #include "De.rc"
-#include "Bg.rc"
 #include "Dk.rc"
+#include "En.rc"
 #include "Es.rc"
+#include "Fr.rc"
+#include "Hu.rc"
 #include "Ja.rc"
 #include "Sv.rc"
-#include "Hu.rc"
+
 
 /* EOF */
