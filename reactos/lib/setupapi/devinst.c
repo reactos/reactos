@@ -2913,30 +2913,66 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
     return ret;
 }
 
+
 /***********************************************************************
  *		SetupDiInstallClassA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiInstallClassA(
-        HWND hwndParent,
-        PCSTR InfFileName,
-        DWORD Flags,
-        HSPFILEQ FileQueue)
+        IN HWND hwndParent OPTIONAL,
+        IN PCSTR InfFileName,
+        IN DWORD Flags,
+        IN HSPFILEQ FileQueue OPTIONAL)
 {
-    UNICODE_STRING FileNameW;
+    return SetupDiInstallClassExA(hwndParent, InfFileName, Flags, FileQueue, NULL, NULL, NULL);
+}
+
+
+/***********************************************************************
+ *		SetupDiInstallClassW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiInstallClassW(
+        IN HWND hwndParent OPTIONAL,
+        IN PCWSTR InfFileName,
+        IN DWORD Flags,
+        IN HSPFILEQ FileQueue OPTIONAL)
+{
+    return SetupDiInstallClassExW(hwndParent, InfFileName, Flags, FileQueue, NULL, NULL, NULL);
+}
+
+
+/***********************************************************************
+ *		SetupDiInstallClassExA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiInstallClassExA(
+        IN HWND hwndParent OPTIONAL,
+        IN PCSTR InfFileName OPTIONAL,
+        IN DWORD Flags,
+        IN HSPFILEQ FileQueue OPTIONAL,
+        IN const GUID* InterfaceClassGuid OPTIONAL,
+        IN PVOID Reserved1,
+        IN PVOID Reserved2)
+{
+    PWSTR InfFileNameW = NULL;
     BOOL Result;
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&FileNameW, InfFileName))
+    if (InfFileName)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        InfFileNameW = MultiByteToUnicode(InfFileName, CP_ACP);
+        if (InfFileNameW == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
     }
 
-    Result = SetupDiInstallClassW(hwndParent, FileNameW.Buffer, Flags, FileQueue);
+    Result = SetupDiInstallClassExW(hwndParent, InfFileNameW, Flags,
+        FileQueue, InterfaceClassGuid, Reserved1, Reserved2);
 
-    RtlFreeUnicodeString(&FileNameW);
+    MyFree(InfFileNameW);
 
     return Result;
 }
+
 
 static HKEY CreateClassKey(HINF hInf)
 {
@@ -3002,103 +3038,131 @@ static HKEY CreateClassKey(HINF hInf)
     return hClassKey;
 }
 
+
 /***********************************************************************
- *		SetupDiInstallClassW (SETUPAPI.@)
+ *		SetupDiInstallClassExW (SETUPAPI.@)
  */
-BOOL WINAPI SetupDiInstallClassW(
-        HWND hwndParent,
-        PCWSTR InfFileName,
-        DWORD Flags,
-        HSPFILEQ FileQueue)
+BOOL WINAPI SetupDiInstallClassExW(
+        IN HWND hwndParent OPTIONAL,
+        IN PCWSTR InfFileName OPTIONAL,
+        IN DWORD Flags,
+        IN HSPFILEQ FileQueue OPTIONAL,
+        IN const GUID* InterfaceClassGuid OPTIONAL,
+        IN PVOID Reserved1,
+        IN PVOID Reserved2)
 {
-    WCHAR SectionName[MAX_PATH];
-    DWORD SectionNameLength = 0;
-    HINF hInf;
-    BOOL bFileQueueCreated = FALSE;
-    HKEY hClassKey;
+    BOOL ret = FALSE;
 
-    TRACE("%p %s 0x%lx %p\n", hwndParent, debugstr_w(InfFileName),
-        Flags, FileQueue);
+    TRACE("%p %s 0x%lx %p %s %p %p\n", hwndParent, debugstr_w(InfFileName), Flags,
+        FileQueue, debugstr_guid(InterfaceClassGuid), Reserved1, Reserved2);
 
-    FIXME("not fully implemented\n");
-
-    if ((Flags & DI_NOVCP) && (FileQueue == NULL || FileQueue == INVALID_HANDLE_VALUE))
+    if (!InfFileName && !InterfaceClassGuid)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (InfFileName && InterfaceClassGuid)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL))
     {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
+        TRACE("Unknown flags: 0x%08lx\n", Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL));
+        SetLastError(ERROR_INVALID_FLAGS);
+    }
+    else if ((Flags & DI_NOVCP) && FileQueue == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (Reserved1 != NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (Reserved2 != NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        WCHAR SectionName[MAX_PATH];
+        HINF hInf = INVALID_HANDLE_VALUE;
+        HKEY hClassKey = INVALID_HANDLE_VALUE;
+        PVOID callback_context = NULL;
+
+        if (InterfaceClassGuid)
+        {
+            /* Retrieve the actual section name */
+            ret = SetupDiGetActualSectionToInstallW(hInf,
+                InterfaceInstall32,
+                SectionName,
+                MAX_PATH,
+                NULL,
+                NULL);
+            if (!ret)
+                goto cleanup;
+
+            FIXME("Installing an interface is not implemented\n");
+        }
+        else
+        {
+            if (Flags & DI_NOVCP)
+                FIXME("FileQueue argument ignored\n");
+            if (Flags & (DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL))
+                FIXME("Flags 0x%lx ignored\n", Flags & (DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL));
+
+            /* Open the .inf file */
+            hInf = SetupOpenInfFileW(
+                InfFileName,
+                NULL,
+                INF_STYLE_WIN4,
+                NULL);
+            if (hInf == INVALID_HANDLE_VALUE)
+                goto cleanup;
+
+            /* Create or open the class registry key 'HKLM\CurrentControlSet\Class\{GUID}' */
+            hClassKey = CreateClassKey(hInf);
+            if (hClassKey == INVALID_HANDLE_VALUE)
+                goto cleanup;
+
+            /* Try to append a layout file */
+            ret = SetupOpenAppendInfFileW(NULL, hInf, NULL);
+            if (!ret)
+                goto cleanup;
+
+            /* Retrieve the actual section name */
+            ret = SetupDiGetActualSectionToInstallW(
+                hInf,
+                ClassInstall32,
+                SectionName,
+                MAX_PATH,
+                NULL,
+                NULL);
+            if (!ret)
+                goto cleanup;
+
+            callback_context = SetupInitDefaultQueueCallback(hwndParent);
+            if (!callback_context)
+                goto cleanup;
+
+            ret = SetupInstallFromInfSectionW(
+                hwndParent,
+                hInf,
+                SectionName,
+                SPINST_REGISTRY | SPINST_FILES | SPINST_BITREG | SPINST_INIFILES | SPINST_INI2REG,
+                hClassKey,
+                NULL, /* SourceRootPath */
+                0, /* CopyFlags */
+                SetupDefaultQueueCallbackW,
+                callback_context,
+                NULL,
+                NULL);
+            if (!ret)
+                goto cleanup;
+
+            /* FIXME: Install .Services section */
+
+            ret = TRUE;
+        }
+
+cleanup:
+        if (hInf != INVALID_HANDLE_VALUE)
+            SetupCloseInfFile(hInf);
+        if (hClassKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hClassKey);
+        SetupTermDefaultQueueCallback(callback_context);
     }
 
-    /* Open the .inf file */
-    hInf = SetupOpenInfFileW(InfFileName,
-			     NULL,
-			     INF_STYLE_WIN4,
-			     NULL);
-    if (hInf == INVALID_HANDLE_VALUE)
-    {
-
-	return FALSE;
-    }
-
-    /* Create or open the class registry key 'HKLM\\CurrentControlSet\\Class\\{GUID}' */
-    hClassKey = CreateClassKey(hInf);
-    if (hClassKey == INVALID_HANDLE_VALUE)
-    {
-	SetupCloseInfFile(hInf);
-	return FALSE;
-    }
-
-
-
-    /* Try to append a layout file */
-#if 0
-    SetupOpenAppendInfFileW(NULL, hInf, NULL);
-#endif
-
-    /* Retrieve the actual section name */
-    SetupDiGetActualSectionToInstallW(hInf,
-				      ClassInstall32,
-				      SectionName,
-				      MAX_PATH,
-				      &SectionNameLength,
-				      NULL);
-
-#if 0
-    if (!(Flags & DI_NOVCP))
-    {
-	FileQueue = SetupOpenFileQueue();
-	if (FileQueue == INVALID_HANDLE_VALUE)
-	{
-	    SetupCloseInfFile(hInf);
-       RegCloseKey(hClassKey);
-	    return FALSE;
-	}
-
-	bFileQueueCreated = TRUE;
-
-    }
-#endif
-
-    SetupInstallFromInfSectionW(NULL,
-				hInf,
-				SectionName,
-				SPINST_REGISTRY,
-				hClassKey,
-				NULL,
-				0,
-				NULL,
-				NULL,
-				INVALID_HANDLE_VALUE,
-				NULL);
-
-    /* FIXME: Process InterfaceInstall32 section */
-
-    if (bFileQueueCreated)
-	SetupCloseFileQueue(FileQueue);
-
-    SetupCloseInfFile(hInf);
-
-    RegCloseKey(hClassKey);
-    return TRUE;
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 
@@ -4639,7 +4703,6 @@ HKEY WINAPI SetupDiOpenDevRegKey(
         if (KeyType == DIREG_DEV)
         {
             /* We're done. Just return the hKey handle */
-            CHECKPOINT1;
             ret = hKey;
             goto cleanup;
         }
@@ -7213,7 +7276,7 @@ nextservice:
         rc = RegSetValueEx(hKey, REGSTR_VAL_DEVDESC, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (wcslen(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, REGSTR_VAL_MFG, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.MfgName, (wcslen(SelectedDriver->Info.MfgName) + 1) * sizeof(WCHAR));
-    if (rc == ERROR_SUCCESS && *AssociatedService)
+    if (rc == ERROR_SUCCESS && AssociatedService && *AssociatedService)
         rc = RegSetValueEx(hKey, REGSTR_VAL_SERVICE, 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {

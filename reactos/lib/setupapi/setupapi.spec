@@ -348,8 +348,8 @@
 @ stdcall SetupDiGetSelectedDriverW(ptr ptr ptr)
 @ stub SetupDiGetWizardPage
 @ stdcall SetupDiInstallClassA(long str long ptr)
-@ stub SetupDiInstallClassExA
-@ stub SetupDiInstallClassExW
+@ stdcall SetupDiInstallClassExA(long str long ptr ptr ptr ptr)
+@ stdcall SetupDiInstallClassExW(long wstr long ptr ptr ptr ptr)
 @ stdcall SetupDiInstallClassW(long wstr long ptr)
 @ stdcall SetupDiInstallDevice(ptr ptr)
 @ stdcall SetupDiInstallDeviceInterfaces(ptr ptr)
