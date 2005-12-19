@@ -151,7 +151,7 @@ static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key,
     {
         sz++;
         value = msi_alloc(sz * sizeof(WCHAR));
-        GetEnvironmentVariableW(&key[1],value,sz);
+        GetEnvironmentVariableW(key,value,sz);
         *chunk = (strlenW(value)) * sizeof(WCHAR);
     }
     else
