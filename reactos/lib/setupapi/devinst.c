@@ -29,6 +29,7 @@ static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
+static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR NtExtension[]  = {'.','N','T',0};
 static const WCHAR NtPlatformExtension[]  = {'.','N','T','x','8','6',0};
@@ -3039,6 +3040,122 @@ static HKEY CreateClassKey(HINF hInf)
 }
 
 
+static BOOL
+InstallServicesSection(
+        IN HINF hInf,
+        IN PCWSTR SectionName,
+        IN HDEVINFO DeviceInfoSet OPTIONAL,
+        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+        OUT PCWSTR* pAssociatedService OPTIONAL,
+        OUT PBOOL pRebootRequired OPTIONAL)
+{
+    INFCONTEXT ContextService;
+    DWORD RequiredSize;
+    INT Flags;
+    BOOL ret = FALSE;
+
+    ret = SetupFindFirstLineW(hInf, SectionName, NULL, &ContextService);
+    while (ret)
+    {
+        LPWSTR ServiceName = NULL;
+        LPWSTR ServiceSection = NULL;
+
+        ret = SetupGetStringFieldW(
+            &ContextService,
+            1, /* Field index */
+            NULL, 0,
+            &RequiredSize);
+        if (!ret)
+            goto nextservice;
+        if (RequiredSize > 0)
+        {
+            /* We got the needed size for the buffer */
+            ServiceName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+            if (!ServiceName)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto nextservice;
+            }
+            ret = SetupGetStringFieldW(
+                &ContextService,
+                1, /* Field index */
+                ServiceName, RequiredSize,
+                &RequiredSize);
+            if (!ret)
+                goto nextservice;
+        }
+        ret = SetupGetIntField(
+            &ContextService,
+            2, /* Field index */
+            &Flags);
+        if (!ret)
+        {
+            /* The field may be empty. Ignore the error */
+            Flags = 0;
+        }
+        ret = SetupGetStringFieldW(
+            &ContextService,
+            3, /* Field index */
+            NULL, 0,
+            &RequiredSize);
+        if (!ret)
+        {
+            if (GetLastError() == ERROR_INVALID_PARAMETER)
+            {
+                /* This first is probably missing. It is not
+                 * required, so ignore the error */
+                RequiredSize = 0;
+                ret = TRUE;
+            }
+            else
+                goto nextservice;
+        }
+        if (RequiredSize > 0)
+        {
+            /* We got the needed size for the buffer */
+            ServiceSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+            if (!ServiceSection)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto nextservice;
+            }
+            ret = SetupGetStringFieldW(
+                &ContextService,
+                3, /* Field index */
+                ServiceSection, RequiredSize,
+                &RequiredSize);
+            if (!ret)
+                goto nextservice;
+
+            SetLastError(ERROR_SUCCESS);
+            ret = SetupInstallServicesFromInfSectionExW(
+                hInf,
+                ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
+        }
+        if (ret && (Flags & SPSVCINST_ASSOCSERVICE))
+        {
+            if (pAssociatedService)
+            {
+                *pAssociatedService = ServiceName;
+                ServiceName = NULL;
+            }
+            if (pRebootRequired && GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
+                *pRebootRequired = TRUE;
+        }
+nextservice:
+        HeapFree(GetProcessHeap(), 0, ServiceName);
+        HeapFree(GetProcessHeap(), 0, ServiceSection);
+        if (!ret)
+            goto done;
+        ret = SetupFindNextLine(&ContextService, &ContextService);
+    }
+
+    ret = TRUE;
+
+done:
+    return ret;
+}
+
 /***********************************************************************
  *		SetupDiInstallClassExW (SETUPAPI.@)
  */
@@ -3057,8 +3174,6 @@ BOOL WINAPI SetupDiInstallClassExW(
         FileQueue, debugstr_guid(InterfaceClassGuid), Reserved1, Reserved2);
 
     if (!InfFileName && !InterfaceClassGuid)
-        SetLastError(ERROR_INVALID_PARAMETER);
-    else if (InfFileName && InterfaceClassGuid)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL))
     {
@@ -3080,17 +3195,9 @@ BOOL WINAPI SetupDiInstallClassExW(
 
         if (InterfaceClassGuid)
         {
-            /* Retrieve the actual section name */
-            ret = SetupDiGetActualSectionToInstallW(hInf,
-                InterfaceInstall32,
-                SectionName,
-                MAX_PATH,
-                NULL,
-                NULL);
-            if (!ret)
-                goto cleanup;
-
+            /* SetupDiCreateDeviceInterface??? */
             FIXME("Installing an interface is not implemented\n");
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         }
         else
         {
@@ -3123,7 +3230,7 @@ BOOL WINAPI SetupDiInstallClassExW(
                 hInf,
                 ClassInstall32,
                 SectionName,
-                MAX_PATH,
+                MAX_PATH - wcslen(DotServices),
                 NULL,
                 NULL);
             if (!ret)
@@ -3148,7 +3255,11 @@ BOOL WINAPI SetupDiInstallClassExW(
             if (!ret)
                 goto cleanup;
 
-            /* FIXME: Install .Services section */
+            /* Install .Services section */
+            lstrcatW(SectionName, DotServices);
+            ret = InstallServicesSection(hInf, SectionName, NULL, NULL, NULL, NULL);
+            if (!ret)
+                goto cleanup;
 
             ret = TRUE;
         }
@@ -6965,8 +7076,6 @@ SetupDiInstallDevice(
     WCHAR Buffer[32];
     DWORD SectionNameLength = 0;
     BOOL Result = FALSE;
-    INFCONTEXT ContextService;
-    INT Flags;
     ULONG DoAction;
     DWORD RequiredSize;
     LPCWSTR AssociatedService = NULL;
@@ -7025,7 +7134,7 @@ SetupDiInstallDevice(
         SelectedDriver->InfFileDetails->hInf,
         SelectedDriver->Details.SectionName,
         SectionName, MAX_PATH, &SectionNameLength, NULL);
-    if (!Result || SectionNameLength > MAX_PATH - 9)
+    if (!Result || SectionNameLength > MAX_PATH - wcslen(DotServices))
         goto cleanup;
     pSectionName = &SectionName[wcslen(SectionName)];
 
@@ -7133,99 +7242,16 @@ SetupDiInstallDevice(
     /* FIXME: Process .LogConfigOverride section */
 
     /* Install .Services section */
-    wcscpy(pSectionName, L".Services");
-    Result = SetupFindFirstLineW(SelectedDriver->InfFileDetails->hInf, SectionName, NULL, &ContextService);
-    while (Result)
-    {
-        LPWSTR ServiceName = NULL;
-        LPWSTR ServiceSection = NULL;
-
-        Result = SetupGetStringFieldW(
-            &ContextService,
-            1, /* Field index */
-            NULL, 0,
-            &RequiredSize);
-        if (!Result)
-            goto nextservice;
-        if (RequiredSize > 0)
-        {
-            /* We got the needed size for the buffer */
-            ServiceName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
-            if (!ServiceName)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto nextservice;
-            }
-            Result = SetupGetStringFieldW(
-                &ContextService,
-                1, /* Field index */
-                ServiceName, RequiredSize,
-                &RequiredSize);
-            if (!Result)
-                goto nextservice;
-        }
-        Result = SetupGetIntField(
-            &ContextService,
-            2, /* Field index */
-            &Flags);
-        if (!Result)
-        {
-            /* The field may be empty. Ignore the error */
-            Flags = 0;
-        }
-        Result = SetupGetStringFieldW(
-            &ContextService,
-            3, /* Field index */
-            NULL, 0,
-            &RequiredSize);
-        if (!Result)
-        {
-            if (GetLastError() == ERROR_INVALID_PARAMETER)
-            {
-                /* This first is probably missing. It is not
-                 * required, so ignore the error */
-                RequiredSize = 0;
-                Result = TRUE;
-            }
-            else
-                goto nextservice;
-        }
-        if (RequiredSize > 0)
-        {
-            /* We got the needed size for the buffer */
-            ServiceSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
-            if (!ServiceSection)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto nextservice;
-            }
-            Result = SetupGetStringFieldW(
-                &ContextService,
-                3, /* Field index */
-                ServiceSection, RequiredSize,
-                &RequiredSize);
-            if (!Result)
-                goto nextservice;
-
-            SetLastError(ERROR_SUCCESS);
-            Result = SetupInstallServicesFromInfSectionExW(
-                SelectedDriver->InfFileDetails->hInf,
-                ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
-        }
-        if (Result && (Flags & SPSVCINST_ASSOCSERVICE))
-        {
-            AssociatedService = ServiceName;
-            ServiceName = NULL;
-            if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
-                RebootRequired = TRUE;
-        }
-nextservice:
-        HeapFree(GetProcessHeap(), 0, ServiceName);
-        HeapFree(GetProcessHeap(), 0, ServiceSection);
-        if (!Result)
-            goto cleanup;
-        Result = SetupFindNextLine(&ContextService, &ContextService);
-    }
+    wcscpy(pSectionName, DotServices);
+    Result = InstallServicesSection(
+        SelectedDriver->InfFileDetails->hInf,
+        SectionName,
+        DeviceInfoSet,
+        DeviceInfoData,
+        &AssociatedService,
+        &RebootRequired);
+    if (!Result)
+        goto cleanup;
 
     /* Copy .inf file to Inf\ directory (if needed) */
     Result = InfIsFromOEMLocation(SelectedDriver->InfFileDetails->FullInfFileName, &NeedtoCopyFile);
