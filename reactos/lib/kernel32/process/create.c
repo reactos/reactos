@@ -668,6 +668,11 @@ CreateProcessInternalW(HANDLE hToken,
     SIZE_T EnvSize = 0;
     BOOL Ret = FALSE;
     
+    /* FIXME should process
+     * HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
+     * key (see http://blogs.msdn.com/oldnewthing/archive/2005/12/19/505449.aspx)
+     */
+
     DPRINT("CreateProcessW: lpApplicationName: %S lpCommandLine: %S"
            " lpEnvironment: %p lpCurrentDirectory: %S dwCreationFlags: %lx\n",
            lpApplicationName, lpCommandLine, lpEnvironment, lpCurrentDirectory,
