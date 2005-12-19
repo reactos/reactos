@@ -31,11 +31,8 @@ static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a',
 static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
-static const WCHAR NtExtension[]  = {'.','N','T',0};
-static const WCHAR NtPlatformExtension[]  = {'.','N','T','x','8','6',0};
 static const WCHAR SymbolicLink[]  = {'S','y','m','b','o','l','i','c','L','i','n','k',0};
 static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
-static const WCHAR WinExtension[]  = {'.','W','i','n',0};
 
 /* FIXME: header mess */
 DEFINE_GUID(GUID_NULL,
@@ -823,16 +820,53 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
 /***********************************************************************
  *		SetupDiGetActualSectionToInstallA (SETUPAPI.@)
  */
-BOOL WINAPI SetupDiGetActualSectionToInstallA(
-        HINF InfHandle,
-        PCSTR InfSectionName,
-        PSTR InfSectionWithExt,
-        DWORD InfSectionWithExtSize,
-        PDWORD RequiredSize,
-        PSTR *Extension)
+BOOL WINAPI
+SetupDiGetActualSectionToInstallA(
+        IN HINF InfHandle,
+        IN PCSTR InfSectionName,
+        OUT PSTR InfSectionWithExt OPTIONAL,
+        IN DWORD InfSectionWithExtSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PSTR *Extension OPTIONAL)
+{
+    return SetupDiGetActualSectionToInstallExA(InfHandle, InfSectionName,
+        NULL, InfSectionWithExt, InfSectionWithExtSize, RequiredSize,
+        Extension, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetActualSectionToInstallW (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetActualSectionToInstallW(
+        IN HINF InfHandle,
+        IN PCWSTR InfSectionName,
+        OUT PWSTR InfSectionWithExt OPTIONAL,
+        IN DWORD InfSectionWithExtSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PWSTR *Extension OPTIONAL)
+{
+    return SetupDiGetActualSectionToInstallExW(InfHandle, InfSectionName,
+        NULL, InfSectionWithExt, InfSectionWithExtSize, RequiredSize,
+        Extension, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetActualSectionToInstallExA  (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetActualSectionToInstallExA(
+        IN HINF InfHandle,
+        IN PCSTR InfSectionName,
+        IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo OPTIONAL,
+        OUT PSTR InfSectionWithExt OPTIONAL,
+        IN DWORD InfSectionWithExtSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PSTR* Extension OPTIONAL,
+        IN PVOID Reserved)
 {
     LPWSTR InfSectionNameW = NULL;
-    PWSTR InfSectionWithExtW = NULL;
+    LPWSTR InfSectionWithExtW = NULL;
     PWSTR ExtensionW;
     BOOL bResult = FALSE;
 
@@ -841,18 +875,23 @@ BOOL WINAPI SetupDiGetActualSectionToInstallA(
     if (InfSectionName)
     {
         InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
-        if (InfSectionNameW == NULL) goto end;
+        if (InfSectionNameW == NULL)
+            goto cleanup;
     }
     if (InfSectionWithExt)
     {
-        InfSectionWithExtW = HeapAlloc(GetProcessHeap(), 0, InfSectionWithExtSize * sizeof(WCHAR));
-        if (InfSectionWithExtW == NULL) goto end;
+        InfSectionWithExtW = MyMalloc(InfSectionWithExtSize * sizeof(WCHAR));
+        if (InfSectionWithExtW == NULL)
+            goto cleanup;
     }
 
-    bResult = SetupDiGetActualSectionToInstallW(InfHandle, InfSectionNameW,
-                                                InfSectionWithExt ? InfSectionNameW : NULL,
-                                                InfSectionWithExtSize, RequiredSize,
-                                                Extension ? &ExtensionW : NULL);
+    bResult = SetupDiGetActualSectionToInstallExW(
+        InfHandle, InfSectionNameW, AlternatePlatformInfo,
+        InfSectionWithExt ? InfSectionWithExtW : NULL,
+        InfSectionWithExtSize,
+        RequiredSize,
+        Extension ? &ExtensionW : NULL,
+        Reserved);
 
     if (bResult && InfSectionWithExt)
     {
@@ -867,92 +906,187 @@ BOOL WINAPI SetupDiGetActualSectionToInstallA(
             *Extension = &InfSectionWithExt[ExtensionW - InfSectionWithExtW];
     }
 
-end:
-    if (InfSectionNameW) MyFree(InfSectionNameW);
-    if (InfSectionWithExtW) HeapFree(GetProcessHeap(), 0, InfSectionWithExtW);
+cleanup:
+    MyFree(InfSectionNameW);
+    MyFree(InfSectionWithExtW);
 
     return bResult;
 }
 
 /***********************************************************************
- *		SetupDiGetActualSectionToInstallW (SETUPAPI.@)
+ *		SetupDiGetActualSectionToInstallExW (SETUPAPI.@)
  */
-BOOL WINAPI SetupDiGetActualSectionToInstallW(
-        HINF InfHandle,
-        PCWSTR InfSectionName,
-        PWSTR InfSectionWithExt,
-        DWORD InfSectionWithExtSize,
-        PDWORD RequiredSize,
-        PWSTR *Extension)
+BOOL WINAPI
+SetupDiGetActualSectionToInstallExW(
+        IN HINF InfHandle,
+        IN PCWSTR InfSectionName,
+        IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo OPTIONAL,
+        OUT PWSTR InfSectionWithExt OPTIONAL,
+        IN DWORD InfSectionWithExtSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PWSTR* Extension OPTIONAL,
+        IN PVOID Reserved)
 {
-    WCHAR szBuffer[MAX_PATH];
-    DWORD dwLength;
-    DWORD dwFullLength;
-    LONG lLineCount = -1;
+    BOOL ret = FALSE;
 
-    TRACE("%p %s %p %lu %p %p\n", InfHandle, debugstr_w(InfSectionName),
-        InfSectionWithExt, InfSectionWithExtSize, RequiredSize, Extension);
+    TRACE("%p %s %p %p %lu %p %p %p\n", InfHandle, debugstr_w(InfSectionName),
+        AlternatePlatformInfo, InfSectionWithExt, InfSectionWithExtSize,
+        RequiredSize, Extension, Reserved);
 
-    lstrcpyW(szBuffer, InfSectionName);
-    dwLength = lstrlenW(szBuffer);
-
-    if (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
-    {
-	/* Test section name with '.NTx86' extension */
-	lstrcpyW(&szBuffer[dwLength], NtPlatformExtension);
-	lLineCount = SetupGetLineCountW(InfHandle, szBuffer);
-
-	if (lLineCount == -1)
-	{
-	    /* Test section name with '.NT' extension */
-	    lstrcpyW(&szBuffer[dwLength], NtExtension);
-	    lLineCount = SetupGetLineCountW(InfHandle, szBuffer);
-	}
-    }
+    if (!InfHandle || InfHandle == (HINF)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!InfSectionName)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (AlternatePlatformInfo && AlternatePlatformInfo->cbSize != sizeof(SP_ALTPLATFORM_INFO))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (Reserved != NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-	/* Test section name with '.Win' extension */
-	lstrcpyW(&szBuffer[dwLength], WinExtension);
-	lLineCount = SetupGetLineCountW(InfHandle, szBuffer);
+        static SP_ALTPLATFORM_INFO CurrentPlatform = { 0, };
+        PSP_ALTPLATFORM_INFO pPlatformInfo = &CurrentPlatform;
+        LPCWSTR pExtensionPlatform, pExtensionArchitecture;
+        WCHAR SectionName[LINE_LEN + 1];
+        LONG lLineCount = -1;
+        DWORD dwFullLength;
+
+        /* Fill platform info if needed */
+        if (AlternatePlatformInfo)
+            pPlatformInfo = AlternatePlatformInfo;
+        else if (CurrentPlatform.cbSize != sizeof(SP_ALTPLATFORM_INFO))
+        {
+            /* That's the first time we go here. We need to fill in the structure */
+            OSVERSIONINFO VersionInfo;
+            SYSTEM_INFO SystemInfo;
+            VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+            ret = GetVersionEx(&VersionInfo);
+            if (!ret)
+                goto done;
+            GetSystemInfo(&SystemInfo);
+            CurrentPlatform.cbSize = sizeof(SP_ALTPLATFORM_INFO);
+            CurrentPlatform.Platform = VersionInfo.dwPlatformId;
+            CurrentPlatform.MajorVersion = VersionInfo.dwMajorVersion;
+            CurrentPlatform.MinorVersion = VersionInfo.dwMinorVersion;
+            CurrentPlatform.ProcessorArchitecture = SystemInfo.wProcessorArchitecture;
+            CurrentPlatform.Reserved = 0;
+        }
+
+static const WCHAR ExtensionPlatformNone[]  = {'.',0};
+static const WCHAR ExtensionPlatformNT[]  = {'.','N','T',0};
+static const WCHAR ExtensionPlatformWindows[]  = {'.','W','i','n',0};
+
+static const WCHAR ExtensionArchitectureNone[]  = {0};
+static const WCHAR ExtensionArchitectureamd64[]  = {'a','m','d','6','4',0};
+static const WCHAR ExtensionArchitectureppc[]  = {'p','p','c',0};
+static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
+
+        /* Set various extensions values */
+        switch (pPlatformInfo->Platform)
+        {
+            case VER_PLATFORM_WIN32_WINDOWS:
+                pExtensionPlatform = ExtensionPlatformWindows;
+                break;
+            case VER_PLATFORM_WIN32_NT:
+                pExtensionPlatform = ExtensionPlatformNT;
+                break;
+            default:
+                pExtensionPlatform = ExtensionPlatformNone;
+                break;
+        }
+        switch (pPlatformInfo->ProcessorArchitecture)
+        {
+            case PROCESSOR_ARCHITECTURE_AMD64:
+                pExtensionArchitecture = ExtensionArchitectureamd64;
+                break;
+            case PROCESSOR_ARCHITECTURE_INTEL:
+                pExtensionArchitecture = ExtensionArchitecturex86;
+                break;
+            case PROCESSOR_ARCHITECTURE_PPC:
+                pExtensionArchitecture = ExtensionArchitectureppc;
+                break;
+            default:
+                ERR("Unknown processor architecture 0x%x\n", pPlatformInfo->ProcessorArchitecture);
+            case PROCESSOR_ARCHITECTURE_UNKNOWN:
+                pExtensionArchitecture = ExtensionArchitectureNone;
+                break;
+        }
+
+        SectionName[LINE_LEN] = UNICODE_NULL;
+
+        /* Test with platform.architecture.major.minor extension */
+        snprintfW(SectionName, LINE_LEN, L"%s%s%s.%lu.%lu", InfSectionName,
+            pExtensionPlatform, pExtensionArchitecture, pPlatformInfo->MajorVersion, pPlatformInfo->MinorVersion);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* Test with platform.major.minor extension */
+        snprintfW(SectionName, LINE_LEN, L"%s%s.%lu.%lu", InfSectionName,
+            pExtensionPlatform, pPlatformInfo->MajorVersion, pPlatformInfo->MinorVersion);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* Test with platform.architecture.major extension */
+        snprintfW(SectionName, LINE_LEN, L"%s%s%s.%lu", InfSectionName,
+            pExtensionPlatform, pExtensionArchitecture, pPlatformInfo->MajorVersion);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* Test with platform.major extension */
+        snprintfW(SectionName, LINE_LEN, L"%s%s.%lu", InfSectionName,
+            pExtensionPlatform, pPlatformInfo->MajorVersion);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* Test with platform.architecture extension */
+        snprintfW(SectionName, LINE_LEN, L"%s%s%s", InfSectionName,
+            pExtensionPlatform, pExtensionArchitecture);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* Test with platform extension */
+        snprintfW(SectionName, LINE_LEN, L"%s%s", InfSectionName,
+            pExtensionPlatform);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* Test without extension */
+        snprintfW(SectionName, LINE_LEN, L"%s", InfSectionName);
+        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
+        if (lLineCount != -1) goto sectionfound;
+
+        /* No appropriate section found */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+
+sectionfound:
+        dwFullLength = lstrlenW(SectionName);
+        if (InfSectionWithExt != NULL && InfSectionWithExtSize != 0)
+        {
+            if (InfSectionWithExtSize < (dwFullLength + 1))
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                goto done;
+            }
+
+            lstrcpyW(InfSectionWithExt, SectionName);
+            if (Extension != NULL)
+            {
+                DWORD dwLength = lstrlenW(SectionName);
+                *Extension = (dwLength == dwFullLength) ? NULL : &InfSectionWithExt[dwLength];
+            }
+        }
+
+        if (RequiredSize != NULL)
+            *RequiredSize = dwFullLength + 1;
+
+        ret = TRUE;
     }
 
-    if (lLineCount == -1)
-    {
-	/* Test section name without extension */
-	szBuffer[dwLength] = 0;
-	lLineCount = SetupGetLineCountW(InfHandle, szBuffer);
-    }
-
-    if (lLineCount == -1)
-    {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-    }
-
-    dwFullLength = lstrlenW(szBuffer);
-
-    if (InfSectionWithExt != NULL && InfSectionWithExtSize != 0)
-    {
-	if (InfSectionWithExtSize < (dwFullLength + 1))
-	{
-	    SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	    return FALSE;
-	}
-
-	lstrcpyW(InfSectionWithExt, szBuffer);
-	if (Extension != NULL)
-	{
-	    *Extension = (dwLength == dwFullLength) ? NULL : &InfSectionWithExt[dwLength];
-	}
-    }
-
-    if (RequiredSize != NULL)
-    {
-	*RequiredSize = dwFullLength + 1;
-    }
-
-    return TRUE;
+done:
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
+
 
 /***********************************************************************
  *		SetupDiGetClassDescriptionA  (SETUPAPI.@)

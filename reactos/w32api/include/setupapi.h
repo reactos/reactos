@@ -1200,6 +1200,8 @@ WINSETUPAPI BOOL WINAPI SetupDiEnumDeviceInterfaces(HDEVINFO,PSP_DEVINFO_DATA,CO
 WINSETUPAPI BOOL WINAPI SetupDiEnumDriverInfoA(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,PSP_DRVINFO_DATA_A);
 WINSETUPAPI BOOL WINAPI SetupDiEnumDriverInfoW(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,PSP_DRVINFO_DATA_W);
 WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallA(HINF,PCSTR,PSTR,DWORD,PDWORD,PSTR*);
+WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallExA(HINF,PCSTR,PSP_ALTPLATFORM_INFO,PSTR,DWORD,PDWORD,PSTR*,PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallExW(HINF,PCWSTR,PSP_ALTPLATFORM_INFO,PWSTR,DWORD,PDWORD,PWSTR*,PVOID);
 WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallW(HINF,PCWSTR,PWSTR,DWORD,PDWORD,PWSTR*);
 WINSETUPAPI BOOL WINAPI SetupDiGetClassBitmapIndex(CONST GUID*,PINT);
 WINSETUPAPI BOOL WINAPI SetupDiGetClassDescriptionA(CONST GUID*,PSTR,DWORD,PDWORD);
@@ -1475,6 +1477,7 @@ WINSETUPAPI BOOL WINAPI UnmapAndCloseFile(HANDLE, HANDLE, PVOID);
 #define SetupDiCreateDevRegKey	SetupDiCreateDevRegKeyW
 #define SetupDiEnumDriverInfo	SetupDiEnumDriverInfoW
 #define SetupDiGetActualSectionToInstall	SetupDiGetActualSectionToInstallW
+#define SetupDiGetActualSectionToInstallEx	SetupDiGetActualSectionToInstallExW
 #define SetupDiGetClassDescriptionEx	SetupDiGetClassDescriptionExW
 #define SetupDiGetClassDescription	SetupDiGetClassDescriptionW
 #define SetupDiGetClassDevPropertySheets	SetupDiGetClassDevPropertySheetsW
@@ -1595,6 +1598,7 @@ WINSETUPAPI BOOL WINAPI UnmapAndCloseFile(HANDLE, HANDLE, PVOID);
 #define SetupDiDeleteInterfaceDeviceData	SetupDiDeleteDeviceInterfaceData
 #define SetupDiEnumDriverInfo	SetupDiEnumDriverInfoA
 #define SetupDiGetActualSectionToInstall	SetupDiGetActualSectionToInstallA
+#define SetupDiGetActualSectionToInstallEx	SetupDiGetActualSectionToInstallExA
 #define SetupDiGetClassDescription	SetupDiGetClassDescriptionA
 #define SetupDiGetClassDescriptionEx	SetupDiGetClassDescriptionExA
 #define SetupDiGetClassDevPropertySheets	SetupDiGetClassDevPropertySheetsA
