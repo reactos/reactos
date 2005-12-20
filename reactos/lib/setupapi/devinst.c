@@ -5655,40 +5655,64 @@ SetupDiBuildDriverInfoList(
                 goto done;
         }
 
-        /* Enumerate .inf files */
-        Result = FALSE;
-        RequiredSize = 32768; /* Initial buffer size */
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        if (InstallParams.Flags & DI_ENUMSINGLEINF)
         {
-            HeapFree(GetProcessHeap(), 0, Buffer);
+            /* InstallParams.DriverPath contains the name of a .inf file */
+            RequiredSize = wcslen(InstallParams.DriverPath) + 2;
             Buffer = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
             if (!Buffer)
             {
-                Result = FALSE;
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                break;
+                goto done;
             }
-            Result = SetupGetInfFileListW(
-                *InstallParams.DriverPath ? InstallParams.DriverPath : NULL,
-                INF_STYLE_WIN4,
-                Buffer, RequiredSize,
-                &RequiredSize);
+            wcscpy(Buffer, InstallParams.DriverPath);
+            ((LPWSTR)Buffer)[RequiredSize - 1] = 0;
+            Result = TRUE;
         }
-        if (!Result && GetLastError() == ERROR_FILE_NOT_FOUND)
+        else
         {
-            /* No .inf file in specified directory. So, we should
-             * success as we created an empty driver info list.
-             */
-            ret = TRUE;
-            goto done;
+            /* Enumerate .inf files */
+            Result = FALSE;
+            RequiredSize = 32768; /* Initial buffer size */
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                HeapFree(GetProcessHeap(), 0, Buffer);
+                Buffer = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+                if (!Buffer)
+                {
+                    Result = FALSE;
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    break;
+                }
+                Result = SetupGetInfFileListW(
+                    *InstallParams.DriverPath ? InstallParams.DriverPath : NULL,
+                    INF_STYLE_WIN4,
+                    Buffer, RequiredSize,
+                    &RequiredSize);
+            }
+            if (!Result && GetLastError() == ERROR_FILE_NOT_FOUND)
+            {
+                /* No .inf file in specified directory. So, we should
+                 * success as we created an empty driver info list.
+                 */
+                ret = TRUE;
+                goto done;
+            }
         }
         if (Result)
         {
             LPCWSTR filename;
             LPWSTR pFullFilename;
 
-            if (*InstallParams.DriverPath)
+            if (InstallParams.Flags & DI_ENUMSINGLEINF)
+            {
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+                if (!FullInfFileName)
+                    goto done;
+                pFullFilename = &FullInfFileName[0];
+            }
+            else if (*InstallParams.DriverPath)
             {
                 DWORD len;
                 len = GetFullPathNameW(InstallParams.DriverPath, 0, NULL, NULL);
@@ -6324,6 +6348,44 @@ SetupDiEnumDriverInfoW(
 
 
 /***********************************************************************
+ *		SetupDiGetSelectedDevice (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetSelectedDevice(
+    IN HDEVINFO DeviceInfoSet,
+    OUT PSP_DEVINFO_DATA DeviceInfoData)
+{
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (list->SelectedDevice == NULL)
+        SetLastError(ERROR_NO_DEVICE_SELECTED);
+    else if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        memcpy(&DeviceInfoData->ClassGuid,
+            &list->SelectedDevice->ClassGuid,
+            sizeof(GUID));
+        DeviceInfoData->DevInst = list->SelectedDevice->dnDevInst;
+        DeviceInfoData->Reserved = (ULONG_PTR)list->SelectedDevice;
+        ret = TRUE;
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+
+/***********************************************************************
  *		SetupDiGetSelectedDriverA (SETUPAPI.@)
  */
 BOOL WINAPI
@@ -6426,6 +6488,40 @@ SetupDiGetSelectedDriverW(
                 ret = TRUE;
             }
         }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+
+/***********************************************************************
+ *		SetupDiSetSelectedDevice (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSetSelectedDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DeviceInfoData->Reserved == 0)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        list->SelectedDevice = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        ret = TRUE;
     }
 
     TRACE("Returning %d\n", ret);

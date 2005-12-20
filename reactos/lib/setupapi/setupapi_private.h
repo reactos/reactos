@@ -156,6 +156,7 @@ struct DeviceInfoSet /* HDEVINFO */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
 
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
+    struct DeviceInfoElement *SelectedDevice;
 
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;

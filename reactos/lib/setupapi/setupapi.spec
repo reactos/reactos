@@ -345,7 +345,7 @@
 @ stub SetupDiGetHwProfileListExW
 @ stdcall SetupDiGetINFClassA(str ptr ptr long ptr)
 @ stdcall SetupDiGetINFClassW(wstr ptr ptr long ptr)
-@ stub SetupDiGetSelectedDevice
+@ stdcall SetupDiGetSelectedDevice(ptr ptr)
 @ stdcall SetupDiGetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiGetSelectedDriverW(ptr ptr ptr)
 @ stub SetupDiGetWizardPage
@@ -382,7 +382,7 @@
 @ stdcall SetupDiSetDeviceRegistryPropertyW(ptr ptr long ptr long)
 @ stub SetupDiSetDriverInstallParamsA
 @ stub SetupDiSetDriverInstallParamsW
-@ stub SetupDiSetSelectedDevice
+@ stdcall SetupDiSetSelectedDevice(ptr ptr)
 @ stdcall SetupDiSetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)
 @ stub SetupDiUnremoveDevice
