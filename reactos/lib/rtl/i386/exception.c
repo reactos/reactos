@@ -333,7 +333,10 @@ RtlUnwind(PVOID RegistrationFrame OPTIONAL,
             RegistrationFrame2 = RegistrationFrame2->Next;
 
             /* Remove this handler */
-            RtlpSetExceptionList(OldFrame);
+            if (RegistrationFrame2 != RegistrationFrame)
+            {
+                RtlpSetExceptionList(OldFrame);
+            }
         }
     }
 
