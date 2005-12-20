@@ -1,34 +1,10 @@
 /*
- *  ReactOS Win32 Applications
- *  Copyright (C) 2005 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-
-/*
- * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS netstat utility
+ * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        apps/utils/net/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 19/09/05 Created
- *              Some ideas/code taken from Rob Dickinson's original app
- *
+ * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
-
 /*
  * TODO:
  * sort function return values.
@@ -588,14 +564,15 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
                 (nIpAddr >> 8) & 0xFF,
                 (nIpAddr) & 0xFF);
         } else {
-            gethostname(Name, NameLen);
+            if (gethostname(Name, NameLen) != 0)
+                DoFormatMessage(WSAGetLastError());
         }
     } else if (IpAddr == 0x0100007f) {
         if (Local) {
             if (gethostname(Name, NameLen) != 0)
                 DoFormatMessage(WSAGetLastError());
         } else {
-            strcpy(Name, "localhost");
+            _tcsncpy(Name, _T("localhost"), 10);
         }
 //  } else if (phostent = gethostbyaddr((char*)&ipaddr, sizeof(nipaddr), PF_INET)) {
 //      strcpy(name, phostent->h_name);
