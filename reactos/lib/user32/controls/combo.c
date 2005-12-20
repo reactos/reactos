@@ -2075,7 +2075,10 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                     msg = LB_ADDSTRING_LOWER;
                 else if( lphc->dwStyle & CBS_UPPERCASE )
                     msg = LB_ADDSTRING_UPPER;
-                return SendMessageW(lphc->hWndLBox, msg, 0, lParam);
+                if( unicode )
+                    return SendMessageW(lphc->hWndLBox, msg, 0, lParam);
+                else
+                    return SendMessageA(lphc->hWndLBox, msg, 0, lParam);
         }
 #ifndef __REACTOS__
 	case CB_INSERTSTRING16:
@@ -2090,7 +2093,10 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                     msg = LB_INSERTSTRING_LOWER;
                 else if( lphc->dwStyle & CBS_UPPERCASE )
                     msg = LB_INSERTSTRING_UPPER;
-                return SendMessageW(lphc->hWndLBox, msg, 0, lParam);
+                if( unicode )
+                    return SendMessageW(lphc->hWndLBox, msg, 0, lParam);
+                else
+                    return SendMessageA(lphc->hWndLBox, msg, 0, lParam);
         }
 #ifndef __REACTOS__
 	case CB_DELETESTRING16:
