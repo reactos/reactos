@@ -5311,13 +5311,18 @@ AddDriverToList(
         NULL);
 
     /* Copy MatchingId information */
-    driverInfo->MatchingId = HeapAlloc(GetProcessHeap(), 0, (wcslen(MatchingId) + 1) * sizeof(WCHAR));
-    if (!driverInfo->MatchingId)
+    if (MatchingId)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        driverInfo->MatchingId = HeapAlloc(GetProcessHeap(), 0, (wcslen(MatchingId) + 1) * sizeof(WCHAR));
+        if (!driverInfo->MatchingId)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        RtlCopyMemory(driverInfo->MatchingId, MatchingId, (wcslen(MatchingId) + 1) * sizeof(WCHAR));
     }
-    RtlCopyMemory(driverInfo->MatchingId, MatchingId, (wcslen(MatchingId) + 1) * sizeof(WCHAR));
+    else
+        driverInfo->MatchingId = NULL;
 
     /* Get inf install section */
     Result = FALSE;
@@ -6313,10 +6318,12 @@ SetupDiEnumDriverInfoW(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        struct DeviceInfoElement *devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        struct DeviceInfoElement *devInfo = NULL;
         PLIST_ENTRY ItemList;
+        if (DeviceInfoData)
+            devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
         if (DriverType == SPDIT_CLASSDRIVER ||
-            devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS)
+            (devInfo && devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS))
         {
             ListHead = &((struct DeviceInfoSet *)DeviceInfoSet)->DriverListHead;
         }
