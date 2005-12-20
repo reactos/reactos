@@ -7,6 +7,7 @@
 /* command line options */
 BOOL bNoOptions        = FALSE; // print default
 BOOL bDoShowAllCons    = FALSE; // -a
+BOOL bDoShowProcName   = FALSE; // -b
 BOOL bDoShowEthStats   = FALSE; // -e
 BOOL bDoShowNumbers    = FALSE; // -n
 BOOL bDoShowProtoCons  = FALSE; // -p

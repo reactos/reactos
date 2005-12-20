@@ -125,6 +125,9 @@ BOOL ParseCmdline(int argc, char* argv[])
                     case 'a' :
                         bDoShowAllCons = TRUE;
                         break;
+                    case 'b' :
+                        bDoShowProcName = TRUE;
+                        break;
                     case 'e' :
                         bDoShowEthStats = TRUE;
                         break;
@@ -198,9 +201,9 @@ BOOL DisplayOutput()
 
     if (bDoShowRouteTable)
     {
+        /* mingw doesn't have lib for _tsystem */
         if (system("route print") == -1)
         {
-            //mingw doesn't have lib for _tsystem
             _tprintf(_T("cannot find 'route.exe'\n"));
             return EXIT_FAILURE;
         }
@@ -574,7 +577,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
         return Name;
     }
 
-    Name[0] = L'\0';
+    Name[0] = _T('\0');
 
     // Try to translate to a name
     if (!IpAddr) {
@@ -585,11 +588,12 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
                 (nIpAddr >> 8) & 0xFF,
                 (nIpAddr) & 0xFF);
         } else {
-            //gethostname(name, namelen);
+            gethostname(Name, NameLen);
         }
     } else if (IpAddr == 0x0100007f) {
         if (Local) {
-            //gethostname(name, namelen);
+            if (gethostname(Name, NameLen) != 0)
+                DoFormatMessage(WSAGetLastError());
         } else {
             strcpy(Name, "localhost");
         }
@@ -627,7 +631,6 @@ VOID Usage()
 
 
 
-
 /*
  *
  * Parse command line parameters and set any options
@@ -636,6 +639,14 @@ VOID Usage()
  */
 int main(int argc, char *argv[])
 {
+    WSADATA wsaData;
+
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        _tprintf(_T("WSAStartup() failed : %d\n"), WSAGetLastError());
+        return -1;
+    }
+
     if (ParseCmdline(argc, argv))
         return -1;
 
