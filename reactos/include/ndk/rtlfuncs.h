@@ -734,6 +734,14 @@ NTAPI
 RtlLengthSid(IN PSID Sid);
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMakeSelfRelativeSD(
+    IN PSECURITY_DESCRIPTOR AbsoluteSD,
+    OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
+    IN OUT PULONG BufferLength);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlMapGenericMask(
@@ -1471,7 +1479,7 @@ NTAPI
 RtlPinAtomInAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN RTL_ATOM Atom
-);  	
+);
 
 NTSYSAPI
 NTSTATUS
