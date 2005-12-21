@@ -425,8 +425,8 @@ RtlGetGroupSecurityDescriptor(PISECURITY_DESCRIPTOR SecurityDescriptor,
  * @implemented
  */
 NTSTATUS NTAPI
-RtlMakeSelfRelativeSD(PISECURITY_DESCRIPTOR AbsSD,
-		      PISECURITY_DESCRIPTOR_RELATIVE RelSD,
+RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR _AbsSD,
+		      PSECURITY_DESCRIPTOR _RelSD,
 		      PULONG BufferLength)
 {
    PSID Owner;
@@ -439,7 +439,9 @@ RtlMakeSelfRelativeSD(PISECURITY_DESCRIPTOR AbsSD,
    ULONG DaclLength;
    ULONG TotalLength;
    ULONG_PTR Current;
-
+   PISECURITY_DESCRIPTOR AbsSD = (PISECURITY_DESCRIPTOR)_AbsSD;
+   PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)_RelSD;
+ 
    PAGED_CODE_RTL();
 
    RtlpQuerySecurityDescriptor(AbsSD,
@@ -522,7 +524,7 @@ RtlAbsoluteToSelfRelativeSD(PISECURITY_DESCRIPTOR AbsSD,
       return STATUS_BAD_DESCRIPTOR_FORMAT;
    }
 
-   return RtlMakeSelfRelativeSD(AbsSD, (PISECURITY_DESCRIPTOR_RELATIVE)RelSD, BufferLength);
+   return RtlMakeSelfRelativeSD(AbsSD, (PSECURITY_DESCRIPTOR)RelSD, BufferLength);
 }
 
 
