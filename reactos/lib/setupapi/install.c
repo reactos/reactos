@@ -1396,7 +1396,7 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         struct needs_callback_info needs_info;
         LPWSTR ServiceName = NULL;
         LPWSTR ServiceSection = NULL;
-        UINT ServiceFlags;
+        INT ServiceFlags;
         INFCONTEXT ContextService;
         BOOL bNeedReboot = FALSE;
 
