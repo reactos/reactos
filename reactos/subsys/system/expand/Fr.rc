@@ -10,7 +10,7 @@ STRINGTABLE DISCARDABLE
 
 IDS_Copy, "ReactOS Utilitaire de décompression de fichiers Version 1.0\n\
 Copyright Victor Schneider 1997\n\n\
-Utilisation : %s fichierd'entrée [fichierdesortie]\n"
+Utilisation : %s FichierEntrée [fichierdesortie]\n"
 
-IDS_FAILS "LZCopy a echoué : code de retourné : %ld\n"
+IDS_FAILS "LZCopy a echoué : code d'erreur retourné : %ld\n"
 }
