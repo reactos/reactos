@@ -216,4 +216,6 @@ extern OSVERSIONINFOW OsVersionInfo;
 
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 
+BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value);
+
 #endif /* __SETUPAPI_PRIVATE_H */

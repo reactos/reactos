@@ -1109,7 +1109,7 @@ static BOOL GetIntField( HINF hinf, PCWSTR section_name, PCWSTR key_name, INT *v
 }
 
 
-static BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value)
+BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value)
 {
     DWORD RequiredSize;
     BOOL ret;

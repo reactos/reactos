@@ -7154,6 +7154,24 @@ cleanup:
     return ret;
 }
 
+static BOOL
+InstallOneInterface(
+    IN LPGUID InterfaceGuid,
+    IN LPCWSTR ReferenceString,
+    IN LPCWSTR InterfaceSection,
+    IN UINT InterfaceFlags)
+{
+    if (InterfaceFlags != 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    FIXME("Need to AddInterface(%s %s %s %u)\n", debugstr_guid(InterfaceGuid),
+        debugstr_w(ReferenceString), debugstr_w(InterfaceSection), InterfaceFlags);
+    return TRUE;
+}
+
 /***********************************************************************
  *		SetupDiInstallDeviceInterfaces (SETUPAPI.@)
  */
@@ -7162,12 +7180,122 @@ SetupDiInstallDeviceInterfaces(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
+    struct DeviceInfoSet *list = NULL;
+    BOOL ret = FALSE;
+
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
-    FIXME("SetupDiInstallDeviceInterfaces not implemented. Doing nothing\n");
-    //SetLastError(ERROR_GEN_FAILURE);
-    //return FALSE;
-    return TRUE;
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        struct DriverInfoElement *SelectedDriver;
+        SP_DEVINSTALL_PARAMS_W InstallParams;
+        WCHAR SectionName[MAX_PATH];
+        DWORD SectionNameLength = 0;
+        INFCONTEXT ContextInterface;
+        LPWSTR InterfaceGuidString = NULL;
+        LPWSTR ReferenceString = NULL;
+        LPWSTR InterfaceSection = NULL;
+        UINT InterfaceFlags;
+        GUID InterfaceGuid;
+        BOOL Result;
+
+        InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+        Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+        if (!Result)
+            goto cleanup;
+
+        SelectedDriver = (struct DriverInfoElement *)InstallParams.Reserved;
+        if (SelectedDriver == NULL)
+        {
+            SetLastError(ERROR_NO_DRIVER_SELECTED);
+            ret = FALSE;
+            goto cleanup;
+        }
+
+        /* Get .Interfaces section name */
+        Result = SetupDiGetActualSectionToInstallW(
+            SelectedDriver->InfFileDetails->hInf,
+            SelectedDriver->Details.SectionName,
+            SectionName, MAX_PATH, &SectionNameLength, NULL);
+        if (!Result || SectionNameLength > MAX_PATH - wcslen(L".Interfaces") - 1)
+            goto cleanup;
+        wcscat(SectionName, L".Interfaces");
+
+        ret = TRUE;
+        Result = SetupFindFirstLineW(
+            SelectedDriver->InfFileDetails->hInf,
+            SectionName,
+            L"AddInterface",
+            &ContextInterface);
+        while (ret && Result)
+        {
+            ret = GetStringField(&ContextInterface, 1, &InterfaceGuidString);
+            if (!ret)
+                goto cleanup;
+            else if (strlenW(InterfaceGuidString) != MAX_GUID_STRING_LEN - 1)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                ret = FALSE;
+                goto cleanup;
+            }
+
+            InterfaceGuidString[MAX_GUID_STRING_LEN - 2] = '\0'; /* Replace the } by a NULL character */
+            if (UuidFromStringW(&InterfaceGuidString[1], &InterfaceGuid) != RPC_S_OK)
+            {
+                /* Bad GUID, skip the entry */
+                SetLastError(ERROR_INVALID_PARAMETER);
+                ret = FALSE;
+                goto cleanup;
+            }
+
+            ret = GetStringField(&ContextInterface, 2, &ReferenceString);
+            if (!ret)
+                goto cleanup;
+
+            ret = GetStringField(&ContextInterface, 3, &InterfaceSection);
+            if (!ret)
+                goto cleanup;
+
+            ret = SetupGetIntField(
+                &ContextInterface,
+                4, /* Field index */
+                &InterfaceFlags);
+            if (!ret)
+            {
+                if (GetLastError() == ERROR_INVALID_PARAMETER)
+                {
+                    /* The field may be empty. Ignore the error */
+                    InterfaceFlags = 0;
+                    ret = TRUE;
+                }
+                else
+                    goto cleanup;
+            }
+
+            /* Install Interface */
+            ret = InstallOneInterface(&InterfaceGuid, ReferenceString, InterfaceSection, InterfaceFlags);
+
+cleanup:
+            MyFree(InterfaceGuidString);
+            MyFree(ReferenceString);
+            MyFree(InterfaceSection);
+            InterfaceGuidString = ReferenceString = InterfaceSection = NULL;
+            Result = SetupFindNextMatchLineW(&ContextInterface, L"AddInterface", &ContextInterface);
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 BOOL
