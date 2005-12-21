@@ -3174,182 +3174,6 @@ static HKEY CreateClassKey(HINF hInf)
 }
 
 
-static BOOL
-InstallServicesSection(
-        IN HINF hInf,
-        IN PCWSTR SectionName,
-        IN HDEVINFO DeviceInfoSet OPTIONAL,
-        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
-        OUT PCWSTR* pAssociatedService OPTIONAL,
-        OUT PBOOL pRebootRequired OPTIONAL)
-{
-    INFCONTEXT ContextService;
-    INFCONTEXT ContextInclude;
-    DWORD RequiredSize;
-    INT Flags;
-    BOOL ret = FALSE;
-
-    /* Parse 'Include' line */
-    if (SetupFindFirstLineW(hInf, SectionName, L"Include", &ContextInclude))
-    {
-        DWORD Index = 1;
-        while (TRUE)
-        {
-            static WCHAR szBuffer[MAX_PATH];
-            PWSTR pBuffer = NULL;
-            DWORD required;
-
-            ret = SetupGetStringFieldW(&ContextInclude, Index, szBuffer, MAX_PATH, &required);
-            if (!ret && GetLastError() == ERROR_INVALID_PARAMETER)
-                break;
-            else if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-            {
-                pBuffer = MyMalloc(required);
-                ret = SetupGetStringFieldW(&ContextInclude, Index, pBuffer, required, &required);
-            }
-            if (ret)
-                ret = SetupOpenAppendInfFileW(pBuffer ? pBuffer : szBuffer, hInf, NULL);
-
-            MyFree(pBuffer);
-            if (!ret)
-                goto done;
-            Index++;
-        }
-    }
-
-    /* Parse 'Needs' line */
-    if (SetupFindFirstLineW(hInf, SectionName, L"Needs", &ContextInclude))
-    {
-        DWORD Index = 1;
-        while (TRUE)
-        {
-            static WCHAR szBuffer[MAX_PATH];
-            PWSTR pBuffer = NULL;
-            DWORD required;
-
-            ret = SetupGetStringFieldW(&ContextInclude, Index, szBuffer, MAX_PATH, &required);
-            if (!ret && GetLastError() == ERROR_INVALID_PARAMETER)
-                break;
-            else if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-            {
-                pBuffer = MyMalloc(required);
-                ret = SetupGetStringFieldW(&ContextInclude, Index, pBuffer, required, &required);
-            }
-            if (ret)
-            {
-                ret = InstallServicesSection(hInf, pBuffer ? pBuffer : szBuffer,
-                    DeviceInfoSet, DeviceInfoData, pAssociatedService, pRebootRequired);
-            }
-
-            MyFree(pBuffer);
-            if (!ret)
-                goto done;
-            Index++;
-        }
-    }
-
-    ret = SetupFindFirstLineW(hInf, SectionName, NULL, &ContextService);
-    while (ret)
-    {
-        LPWSTR ServiceName = NULL;
-        LPWSTR ServiceSection = NULL;
-
-        ret = SetupGetStringFieldW(
-            &ContextService,
-            1, /* Field index */
-            NULL, 0,
-            &RequiredSize);
-        if (!ret)
-            goto nextservice;
-        if (RequiredSize > 0)
-        {
-            /* We got the needed size for the buffer */
-            ServiceName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
-            if (!ServiceName)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto nextservice;
-            }
-            ret = SetupGetStringFieldW(
-                &ContextService,
-                1, /* Field index */
-                ServiceName, RequiredSize,
-                &RequiredSize);
-            if (!ret)
-                goto nextservice;
-        }
-        ret = SetupGetIntField(
-            &ContextService,
-            2, /* Field index */
-            &Flags);
-        if (!ret)
-        {
-            /* The field may be empty. Ignore the error */
-            Flags = 0;
-        }
-        ret = SetupGetStringFieldW(
-            &ContextService,
-            3, /* Field index */
-            NULL, 0,
-            &RequiredSize);
-        if (!ret)
-        {
-            if (GetLastError() == ERROR_INVALID_PARAMETER)
-            {
-                /* This first is probably missing. It is not
-                 * required, so ignore the error */
-                RequiredSize = 0;
-                ret = TRUE;
-            }
-            else
-                goto nextservice;
-        }
-        if (RequiredSize > 0)
-        {
-            /* We got the needed size for the buffer */
-            ServiceSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
-            if (!ServiceSection)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto nextservice;
-            }
-            ret = SetupGetStringFieldW(
-                &ContextService,
-                3, /* Field index */
-                ServiceSection, RequiredSize,
-                &RequiredSize);
-            if (!ret)
-                goto nextservice;
-
-            SetLastError(ERROR_SUCCESS);
-            ret = SetupInstallServicesFromInfSectionExW(
-                hInf,
-                ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
-        }
-        if (ret && (Flags & SPSVCINST_ASSOCSERVICE))
-        {
-            if (pAssociatedService)
-            {
-                *pAssociatedService = ServiceName;
-                ServiceName = NULL;
-            }
-            if (pRebootRequired && GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
-                *pRebootRequired = TRUE;
-        }
-nextservice:
-        HeapFree(GetProcessHeap(), 0, ServiceName);
-        HeapFree(GetProcessHeap(), 0, ServiceSection);
-        if (!ret)
-            goto done;
-        ret = SetupFindNextLine(&ContextService, &ContextService);
-    }
-
-    ret = TRUE;
-
-done:
-    return ret;
-}
-
 /***********************************************************************
  *		SetupDiInstallClassExW (SETUPAPI.@)
  */
@@ -3451,7 +3275,7 @@ BOOL WINAPI SetupDiInstallClassExW(
 
             /* Install .Services section */
             lstrcatW(SectionName, DotServices);
-            ret = InstallServicesSection(hInf, SectionName, NULL, NULL, NULL, NULL);
+            ret = SetupInstallServicesFromInfSectionW(hInf, SectionName, 0);
             if (!ret)
                 goto cleanup;
 
@@ -5585,8 +5409,6 @@ SetupDiBuildDriverInfoList(
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DriverType != SPDIT_CLASSDRIVER && DriverType != SPDIT_COMPATDRIVER)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DriverType == SPDIT_CLASSDRIVER && DeviceInfoData)
-        SetLastError(ERROR_INVALID_PARAMETER);
     else if (DriverType == SPDIT_COMPATDRIVER && !DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
@@ -7404,7 +7226,6 @@ SetupDiInstallDevice(
     BOOL Result = FALSE;
     ULONG DoAction;
     DWORD RequiredSize;
-    LPCWSTR AssociatedService = NULL;
     LPWSTR pSectionName = NULL;
     WCHAR ClassName[MAX_CLASS_NAME_LEN];
     GUID ClassGuid;
@@ -7569,15 +7390,18 @@ SetupDiInstallDevice(
 
     /* Install .Services section */
     wcscpy(pSectionName, DotServices);
-    Result = InstallServicesSection(
+    Result = SetupInstallServicesFromInfSectionExW(
         SelectedDriver->InfFileDetails->hInf,
         SectionName,
+        0,
         DeviceInfoSet,
         DeviceInfoData,
-        &AssociatedService,
-        &RebootRequired);
+        NULL,
+        NULL);
     if (!Result)
         goto cleanup;
+    if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
+        RebootRequired = TRUE;
 
     /* Copy .inf file to Inf\ directory (if needed) */
     Result = InfIsFromOEMLocation(SelectedDriver->InfFileDetails->FullInfFileName, &NeedtoCopyFile);
@@ -7620,7 +7444,6 @@ SetupDiInstallDevice(
     TRACE("ClassGUID       : '%S'\n", lpFullGuidString);
     TRACE("DeviceDesc      : '%S'\n", SelectedDriver->Info.Description);
     TRACE("Mfg             : '%S'\n", SelectedDriver->Info.MfgName);
-    TRACE("Service         : '%S'\n", AssociatedService);
     rc = RegSetValueEx(hKey, REGSTR_VAL_CLASS, 0, REG_SZ, (const BYTE *)ClassName, (wcslen(ClassName) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, REGSTR_VAL_CLASSGUID, 0, REG_SZ, (const BYTE *)lpFullGuidString, (wcslen(lpFullGuidString) + 1) * sizeof(WCHAR));
@@ -7628,8 +7451,6 @@ SetupDiInstallDevice(
         rc = RegSetValueEx(hKey, REGSTR_VAL_DEVDESC, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (wcslen(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, REGSTR_VAL_MFG, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.MfgName, (wcslen(SelectedDriver->Info.MfgName) + 1) * sizeof(WCHAR));
-    if (rc == ERROR_SUCCESS && AssociatedService && *AssociatedService)
-        rc = RegSetValueEx(hKey, REGSTR_VAL_SERVICE, 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
        SetLastError(rc);
@@ -7650,7 +7471,6 @@ cleanup:
         RegCloseKey(hKey);
     if (lpGuidString)
         RpcStringFreeW(&lpGuidString);
-    HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
     HeapFree(GetProcessHeap(), 0, lpFullGuidString);
 
     TRACE("Returning %d\n", ret);

@@ -47,9 +47,28 @@ struct register_dll_info
     BOOL                unregister;
 };
 
+/* info passed to callback functions dealing with Needs directives */
+struct needs_callback_info
+{
+    UINT type;
+
+    HWND             owner;
+    UINT             flags;
+    HKEY             key_root;
+    LPCWSTR          src_root;
+    UINT             copy_flags;
+    PVOID            callback;
+    PVOID            context;
+    HDEVINFO         devinfo;
+    PSP_DEVINFO_DATA devinfo_data;
+    PVOID            reserved1;
+    PVOID            reserved2;
+};
+
 typedef BOOL (*iterate_fields_func)( HINF hinf, PCWSTR field, void *arg );
 
 /* Unicode constants */
+static const WCHAR AddService[] = {'A','d','d','S','e','r','v','i','c','e',0};
 static const WCHAR CopyFiles[]  = {'C','o','p','y','F','i','l','e','s',0};
 static const WCHAR DelFiles[]   = {'D','e','l','F','i','l','e','s',0};
 static const WCHAR RenFiles[]   = {'R','e','n','F','i','l','e','s',0};
@@ -784,6 +803,42 @@ BOOL WINAPI SetupInstallFromInfSectionA( HWND owner, HINF hinf, PCSTR section, U
 
 
 /***********************************************************************
+ *            include_callback
+ *
+ * Called once for each Include entry in a given section.
+ */
+static BOOL include_callback( HINF hinf, PCWSTR field, void *arg )
+{
+    return SetupOpenAppendInfFileW( field, hinf, NULL );
+}
+
+
+/***********************************************************************
+ *            needs_callback
+ *
+ * Called once for each Needs entry in a given section.
+ */
+static BOOL needs_callback( HINF hinf, PCWSTR field, void *arg )
+{
+    struct needs_callback_info *info = arg;
+
+    switch (info->type)
+    {
+        case 0:
+            return SetupInstallFromInfSectionW(info->owner, hinf, field, info->flags,
+               info->key_root, info->src_root, info->copy_flags, info->callback,
+               info->context, info->devinfo, info->devinfo_data);
+        case 1:
+            return SetupInstallServicesFromInfSectionExW(hinf, field, info->flags,
+                info->devinfo, info->devinfo_data, info->reserved1, info->reserved2);
+        default:
+            ERR("Unknown info type %ld\n", info->type);
+            return FALSE;
+    }
+}
+
+
+/***********************************************************************
  *            SetupInstallFromInfSectionW   (SETUPAPI.@)
  */
 BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, UINT flags,
@@ -791,66 +846,21 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
                                          PSP_FILE_CALLBACK_W callback, PVOID context,
                                          HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data )
 {
-    INFCONTEXT include_context;
+    struct needs_callback_info needs_info;
 
-    /* Parse 'Include' line */
-    if (SetupFindFirstLineW( hinf, section, Include, &include_context ))
-    {
-        DWORD index = 1;
-        while (TRUE)
-        {
-            static WCHAR szBuffer[MAX_PATH];
-            PWSTR pBuffer = NULL;
-            DWORD required;
-            BOOL ok;
-
-            ok = SetupGetStringFieldW( &include_context, index, szBuffer, MAX_PATH, &required );
-            if (!ok && GetLastError() == ERROR_INVALID_PARAMETER)
-                break;
-            else if (!ok && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-            {
-                pBuffer = MyMalloc(required);
-                ok = SetupGetStringFieldW( &include_context, index, pBuffer, required, &required );
-            }
-            if (ok)
-                ok = SetupOpenAppendInfFileW( pBuffer ? pBuffer : szBuffer, hinf, NULL );
-
-            MyFree(pBuffer);
-            if (!ok) return FALSE;
-            index++;
-        }
-    }
-
-    /* Parse 'Needs' line */
-    if (SetupFindFirstLineW( hinf, section, Needs, &include_context ))
-    {
-        DWORD index = 1;
-        while (TRUE)
-        {
-            static WCHAR szBuffer[MAX_PATH];
-            PWSTR pBuffer = NULL;
-            DWORD required;
-            BOOL ok;
-
-            ok = SetupGetStringFieldW( &include_context, index, szBuffer, MAX_PATH, &required );
-            if (!ok && GetLastError() == ERROR_INVALID_PARAMETER)
-                break;
-            else if (!ok && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-            {
-                pBuffer = MyMalloc(required);
-                ok = SetupGetStringFieldW( &include_context, index, pBuffer, required, &required );
-            }
-            if (ok)
-            {
-                ok = SetupInstallFromInfSectionW( owner, hinf, pBuffer ? pBuffer : szBuffer,
-                    flags, key_root, src_root, copy_flags, callback, context, devinfo, devinfo_data );
-            }
-
-            MyFree(pBuffer);
-            if (!ok) return FALSE;
-            index++;
-        }
-    }
+    /* Parse 'Include' and 'Needs' directives */
+    iterate_section_fields( hinf, section, Include, include_callback, NULL);
+    needs_info.type = 0;
+    needs_info.owner = owner;
+    needs_info.flags = flags;
+    needs_info.key_root = key_root;
+    needs_info.src_root = src_root;
+    needs_info.copy_flags = copy_flags;
+    needs_info.callback = callback;
+    needs_info.context = context;
+    needs_info.devinfo = devinfo;
+    needs_info.devinfo_data = devinfo_data;
+    iterate_section_fields( hinf, section, Needs, needs_callback, &needs_info);
 
     if (flags & SPINST_FILES)
     {
@@ -1099,258 +1109,368 @@ static BOOL GetIntField( HINF hinf, PCWSTR section_name, PCWSTR key_name, INT *v
 }
 
 
-/***********************************************************************
- *		SetupInstallServicesFromInfSectionExW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname, DWORD flags, HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData, PVOID reserved1, PVOID reserved2 )
+static BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value)
+{
+    DWORD RequiredSize;
+    BOOL ret;
+
+    ret = SetupGetStringFieldW(
+        context,
+        index,
+        NULL, 0,
+        &RequiredSize);
+    if (!ret)
+        return FALSE;
+    else if (RequiredSize == 0)
+    {
+        *value = NULL;
+        return TRUE;
+    }
+
+    /* We got the needed size for the buffer */
+    *value = MyMalloc(RequiredSize * sizeof(WCHAR));
+    if (!*value)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    ret = SetupGetStringFieldW(
+        context,
+        index,
+        *value, RequiredSize, NULL);
+    if (!ret)
+        MyFree(*value);
+
+    return ret;
+}
+
+
+static BOOL InstallOneService(
+    struct DeviceInfoSet *list,
+    IN HINF hInf,
+    IN LPCWSTR ServiceSection,
+    IN LPCWSTR ServiceName,
+    IN UINT ServiceFlags)
 {
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
     LPDWORD GroupOrder = NULL;
     LPQUERY_SERVICE_CONFIG ServiceConfig = NULL;
-    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
+    HKEY hGroupOrderListKey = INVALID_HANDLE_VALUE;
+    LPWSTR ServiceBinary = NULL;
+    LPWSTR LoadOrderGroup = NULL;
+    LPWSTR DisplayName = NULL;
+    LPWSTR Description = NULL;
+    LPWSTR Dependencies = NULL;
+    INT ServiceType, StartType, ErrorControl;
+    DWORD dwRegType;
+    DWORD tagId = (DWORD)-1;
+    BOOL useTag;
+
+    if (!GetIntField(hInf, ServiceSection, L"ServiceType", &ServiceType))
+        goto cleanup;
+    if (!GetIntField(hInf, ServiceSection, L"StartType", &StartType))
+        goto cleanup;
+    if (!GetIntField(hInf, ServiceSection, L"ErrorControl", &ErrorControl))
+        goto cleanup;
+    useTag = (ServiceType == SERVICE_BOOT_START || ServiceType == SERVICE_SYSTEM_START);
+
+    hSCManager = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CREATE_SERVICE);
+    if (hSCManager == NULL)
+        goto cleanup;
+
+    if (!GetLineText(hInf, ServiceSection, L"ServiceBinary", &ServiceBinary))
+        goto cleanup;
+
+    /* Don't check return value, as these fields are optional and
+     * GetLineText initialize output parameter even on failure */
+    GetLineText(hInf, ServiceSection, L"LoadOrderGroup", &LoadOrderGroup);
+    GetLineText(hInf, ServiceSection, L"DisplayName", &DisplayName);
+    GetLineText(hInf, ServiceSection, L"Description", &Description);
+    GetLineText(hInf, ServiceSection, L"Dependencies", &Dependencies);
+
+    hService = OpenServiceW(
+        hSCManager,
+        ServiceName,
+        GENERIC_READ | GENERIC_WRITE);
+    if (hService == NULL && GetLastError() != ERROR_SERVICE_DOES_NOT_EXIST)
+        goto cleanup;
+
+    if (hService && (ServiceFlags & SPSVCINST_DELETEEVENTLOGENTRY))
+    {
+        ret = DeleteService(hService);
+        if (!ret && GetLastError() != ERROR_SERVICE_MARKED_FOR_DELETE)
+            goto cleanup;
+    }
+
+    if (hService == NULL)
+    {
+        /* Create new service */
+        hService = CreateServiceW(
+            hSCManager,
+            ServiceName,
+            DisplayName,
+            0,
+            ServiceType,
+            StartType,
+            ErrorControl,
+            ServiceBinary,
+            LoadOrderGroup,
+            useTag ? &tagId : NULL,
+            Dependencies,
+            NULL, NULL);
+        if (hService == NULL)
+            goto cleanup;
+    }
+    else
+    {
+        DWORD bufferSize;
+        /* Read current configuration */
+        if (!QueryServiceConfigW(hService, NULL, 0, &bufferSize))
+        {
+            if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+                goto cleanup;
+            ServiceConfig = MyMalloc(bufferSize);
+            if (!ServiceConfig)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto cleanup;
+            }
+            if (!QueryServiceConfigW(hService, ServiceConfig, bufferSize, &bufferSize))
+                goto cleanup;
+        }
+        tagId = ServiceConfig->dwTagId;
+
+        /* Update configuration */
+        ret = ChangeServiceConfigW(
+            hService,
+            ServiceType,
+            (ServiceFlags & SPSVCINST_NOCLOBBER_STARTTYPE) ? SERVICE_NO_CHANGE : StartType,
+            (ServiceFlags & SPSVCINST_NOCLOBBER_ERRORCONTROL) ? SERVICE_NO_CHANGE : ErrorControl,
+            ServiceBinary,
+            (ServiceFlags & SPSVCINST_NOCLOBBER_LOADORDERGROUP && ServiceConfig->lpLoadOrderGroup) ? NULL : LoadOrderGroup,
+            useTag ? &tagId : NULL,
+            (ServiceFlags & SPSVCINST_NOCLOBBER_DEPENDENCIES && ServiceConfig->lpDependencies) ? NULL : Dependencies,
+            NULL, NULL,
+            (ServiceFlags & SPSVCINST_NOCLOBBER_DISPLAYNAME && ServiceConfig->lpDisplayName) ? NULL : DisplayName);
+        if (!ret)
+            goto cleanup;
+    }
+
+    /* FIXME: use Description and SPSVCINST_NOCLOBBER_DESCRIPTION */
+
+    if (useTag)
+    {
+        /* Add the tag to SYSTEM\CurrentControlSet\Control\GroupOrderList key */
+        LONG rc;
+        LPCWSTR lpLoadOrderGroup;
+        DWORD bufferSize;
+
+        lpLoadOrderGroup = LoadOrderGroup;
+        if ((ServiceFlags & SPSVCINST_NOCLOBBER_LOADORDERGROUP) && ServiceConfig && ServiceConfig->lpLoadOrderGroup)
+            lpLoadOrderGroup = ServiceConfig->lpLoadOrderGroup;
+
+        rc = RegOpenKey(
+            list ? list->HKLM : HKEY_LOCAL_MACHINE,
+            L"SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
+            &hGroupOrderListKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        rc = RegQueryValueExW(hGroupOrderListKey, lpLoadOrderGroup, NULL, &dwRegType, NULL, &bufferSize);
+        if (rc == ERROR_FILE_NOT_FOUND)
+            bufferSize = sizeof(DWORD);
+        else if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        else if (dwRegType != REG_BINARY || bufferSize == 0 || bufferSize % sizeof(DWORD) != 0)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
+        }
+        /* Allocate buffer to store existing data + the new tag */
+        GroupOrder = MyMalloc(bufferSize + sizeof(DWORD));
+        if (!GroupOrder)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        if (rc == ERROR_SUCCESS)
+        {
+            /* Read existing data */
+            rc = RegQueryValueExW(
+                hGroupOrderListKey,
+                lpLoadOrderGroup,
+                NULL,
+                NULL,
+                (BYTE*)GroupOrder,
+                &bufferSize);
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+            if (ServiceFlags & SPSVCINST_TAGTOFRONT)
+                memmove(&GroupOrder[2], &GroupOrder[1], bufferSize - sizeof(DWORD));
+        }
+        else
+        {
+            GroupOrder[0] = 0;
+        }
+        GroupOrder[0]++;
+        if (ServiceFlags & SPSVCINST_TAGTOFRONT)
+            GroupOrder[1] = tagId;
+        else
+            GroupOrder[bufferSize / sizeof(DWORD)] = tagId;
+
+        rc = RegSetValueExW(
+            hGroupOrderListKey,
+            lpLoadOrderGroup,
+            0,
+            REG_BINARY,
+            (BYTE*)GroupOrder,
+            bufferSize + sizeof(DWORD));
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+    }
+
+    ret = TRUE;
+
+cleanup:
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+    if (hService != NULL)
+        CloseServiceHandle(hService);
+    if (hGroupOrderListKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hGroupOrderListKey);
+    MyFree(ServiceConfig);
+    MyFree(ServiceBinary);
+    MyFree(LoadOrderGroup);
+    MyFree(DisplayName);
+    MyFree(Description);
+    MyFree(Dependencies);
+    MyFree(GroupOrder);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionExW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname, DWORD flags, HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData, PVOID reserved1, PVOID reserved2 )
+{
+    struct DeviceInfoSet *list = NULL;
     BOOL ret = FALSE;
 
     TRACE("%p, %s, 0x%lx, %p, %p, %p, %p\n", hinf, debugstr_w(sectionname),
         flags, DeviceInfoSet, DeviceInfoData, reserved1, reserved2);
 
-    if (!DeviceInfoSet)
+    if (!sectionname)
         SetLastError(ERROR_INVALID_PARAMETER);
+    else if (flags & ~(SPSVCINST_TAGTOFRONT | SPSVCINST_DELETEEVENTLOGENTRY | SPSVCINST_NOCLOBBER_DISPLAYNAME | SPSVCINST_NOCLOBBER_STARTTYPE | SPSVCINST_NOCLOBBER_ERRORCONTROL | SPSVCINST_NOCLOBBER_LOADORDERGROUP | SPSVCINST_NOCLOBBER_DEPENDENCIES | SPSVCINST_STOPSERVICE))
+    {
+        TRACE("Unknown flags: 0x%08lx\n", flags & ~(SPSVCINST_TAGTOFRONT | SPSVCINST_DELETEEVENTLOGENTRY | SPSVCINST_NOCLOBBER_DISPLAYNAME | SPSVCINST_NOCLOBBER_STARTTYPE | SPSVCINST_NOCLOBBER_ERRORCONTROL | SPSVCINST_NOCLOBBER_LOADORDERGROUP | SPSVCINST_NOCLOBBER_DEPENDENCIES | SPSVCINST_STOPSERVICE));
+        SetLastError(ERROR_INVALID_FLAGS);
+    }
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (DeviceInfoSet && (list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (!reserved1)
-    {
-        /* FIXME: I don't know how to get the service name. ATM, just fail the call */
-        /* Maybe find it in DeviceInfoSet/DeviceInfoData? */
-        FIXME("Service name not specified!\n");
-        SetLastError(ERROR_GEN_FAILURE);
-        goto cleanup;
-    }
+    else if (reserved1 != NULL || reserved2 != NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-        HKEY hGroupOrderListKey = INVALID_HANDLE_VALUE;
-        LPWSTR ServiceBinary = NULL;
-        LPWSTR LoadOrderGroup = NULL;
-        LPWSTR DisplayName = NULL;
-        LPWSTR Description = NULL;
-        LPWSTR Dependencies = NULL;
-        INT ServiceType, StartType, ErrorControl;
-        DWORD dwRegType;
-        DWORD tagId = (DWORD)-1;
-        BOOL useTag;
+        struct needs_callback_info needs_info;
+        LPWSTR ServiceName = NULL;
+        LPWSTR ServiceSection = NULL;
+        UINT ServiceFlags;
+        INFCONTEXT ContextService;
+        BOOL bNeedReboot = FALSE;
 
-        if (!GetIntField(hinf, sectionname, L"ServiceType", &ServiceType))
-            goto cleanup;
-        if (!GetIntField(hinf, sectionname, L"StartType", &StartType))
-            goto cleanup;
-        if (!GetIntField(hinf, sectionname, L"ErrorControl", &ErrorControl))
-            goto cleanup;
-        useTag = (ServiceType == SERVICE_BOOT_START || ServiceType == SERVICE_SYSTEM_START);
+        /* Parse 'Include' and 'Needs' directives */
+        iterate_section_fields( hinf, sectionname, Include, include_callback, NULL);
+        needs_info.type = 1;
+        needs_info.flags = flags;
+        needs_info.devinfo = DeviceInfoSet;
+        needs_info.devinfo_data = DeviceInfoData;
+        needs_info.reserved1 = reserved1;
+        needs_info.reserved2 = reserved2;
+        iterate_section_fields( hinf, sectionname, Needs, needs_callback, &needs_info);
 
-        hSCManager = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CREATE_SERVICE);
-        if (hSCManager == NULL)
-            goto cleanup;
-
-        if (!GetLineText(hinf, sectionname, L"ServiceBinary", &ServiceBinary))
-            goto cleanup;
-
-        /* Don't check return value, as these fields are optional and
-         * GetLineText initialize output parameter even on failure */
-        GetLineText(hinf, sectionname, L"LoadOrderGroup", &LoadOrderGroup);
-        GetLineText(hinf, sectionname, L"DisplayName", &DisplayName);
-        GetLineText(hinf, sectionname, L"Description", &Description);
-        GetLineText(hinf, sectionname, L"Dependencies", &Dependencies);
-
-        hService = OpenServiceW(
-            hSCManager,
-            reserved1,
-            GENERIC_READ | GENERIC_WRITE);
-        if (hService == NULL && GetLastError() != ERROR_SERVICE_DOES_NOT_EXIST)
-            goto cleanup;
-
-        if (flags & (SPSVCINST_STOPSERVICE | SPSVCINST_DELETEEVENTLOGENTRY))
+        if (flags & SPSVCINST_STOPSERVICE)
         {
-            if (hService == NULL)
+            FIXME("Stopping the device not implemented\n");
+            /* This may lead to require a reboot */
+            /* bNeedReboot = TRUE; */
+#if 0
+            SERVICE_STATUS ServiceStatus;
+            ret = ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus);
+            if (!ret && GetLastError() != ERROR_SERVICE_NOT_ACTIVE)
+                goto cleanup;
+            if (ServiceStatus.dwCurrentState != SERVICE_STOP_PENDING && ServiceStatus.dwCurrentState != SERVICE_STOPPED)
             {
-                SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
+                SetLastError(ERROR_INSTALL_SERVICE_FAILURE);
                 goto cleanup;
             }
-            if (flags & SPSVCINST_STOPSERVICE)
-            {
-                SERVICE_STATUS ServiceStatus;
-                ret = ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus);
-                if (!ret && GetLastError() != ERROR_SERVICE_NOT_ACTIVE)
-                    goto cleanup;
-                if (ServiceStatus.dwCurrentState != SERVICE_STOP_PENDING && ServiceStatus.dwCurrentState != SERVICE_STOPPED)
-                {
-                    SetLastError(ERROR_INSTALL_SERVICE_FAILURE);
-                    goto cleanup;
-                }
-            }
-            if (flags & SPSVCINST_DELETEEVENTLOGENTRY)
-            {
-                ret = DeleteService(hService);
-                if (!ret)
-                    goto cleanup;
-            }
-            ret = FALSE;
+#endif
+            flags &= ~SPSVCINST_STOPSERVICE;
         }
 
-        if (hService == NULL)
+        ret = SetupFindFirstLineW(hinf, sectionname, AddService, &ContextService);
+        while (ret)
         {
-            /* Create new service */
-            hService = CreateServiceW(
-                hSCManager,
-                reserved1,
-                DisplayName,
-                0,
-                ServiceType,
-                StartType,
-                ErrorControl,
-                ServiceBinary,
-                LoadOrderGroup,
-                useTag ? &tagId : NULL,
-                Dependencies,
-                NULL, NULL);
-            if (hService == NULL)
-                goto cleanup;
-        }
-        else
-        {
-            DWORD bufferSize;
-            /* Read current configuration */
-            if (!QueryServiceConfigW(hService, NULL, 0, &bufferSize))
-            {
-                if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-                    goto cleanup;
-                ServiceConfig = HeapAlloc(GetProcessHeap(), 0, bufferSize);
-                if (!ServiceConfig)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-                if (!QueryServiceConfigW(hService, ServiceConfig, bufferSize, &bufferSize))
-                    goto cleanup;
-            }
-            tagId = ServiceConfig->dwTagId;
+            if (!GetStringField(&ContextService, 1, &ServiceName))
+                goto nextservice;
 
-            /* Update configuration */
-            ret = ChangeServiceConfigW(
-                hService,
-                ServiceType,
-                (flags & SPSVCINST_NOCLOBBER_STARTTYPE) ? SERVICE_NO_CHANGE : StartType,
-                (flags & SPSVCINST_NOCLOBBER_ERRORCONTROL) ? SERVICE_NO_CHANGE : ErrorControl,
-                ServiceBinary,
-                (flags & SPSVCINST_NOCLOBBER_LOADORDERGROUP && ServiceConfig->lpLoadOrderGroup) ? NULL : LoadOrderGroup,
-                useTag ? &tagId : NULL,
-                (flags & SPSVCINST_NOCLOBBER_DEPENDENCIES && ServiceConfig->lpDependencies) ? NULL : Dependencies,
-                NULL, NULL,
-                (flags & SPSVCINST_NOCLOBBER_DISPLAYNAME && ServiceConfig->lpDisplayName) ? NULL : DisplayName);
+            ret = SetupGetIntField(
+                &ContextService,
+                2, /* Field index */
+                &ServiceFlags);
             if (!ret)
-                goto cleanup;
+            {
+                /* The field may be empty. Ignore the error */
+                ServiceFlags = 0;
+            }
+
+            if (!GetStringField(&ContextService, 3, &ServiceSection))
+                goto nextservice;
+
+            ret = InstallOneService(list, hinf, ServiceSection, ServiceName, (ServiceFlags & ~SPSVCINST_ASSOCSERVICE) | flags);
+            if (!ret)
+                goto nextservice;
+
+            if (ServiceFlags & SPSVCINST_ASSOCSERVICE)
+            {
+                ret = SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet, DeviceInfoData, SPDRP_SERVICE, (LPBYTE)ServiceName, (strlenW(ServiceName) + 1) * sizeof(WCHAR));
+                if (!ret)
+                    goto nextservice;
+            }
+
+nextservice:
+            HeapFree(GetProcessHeap(), 0, ServiceName);
+            HeapFree(GetProcessHeap(), 0, ServiceSection);
+            ServiceName = ServiceSection = NULL;
+            ret = SetupFindNextMatchLineW(&ContextService, AddService, &ContextService);
         }
 
-        /* FIXME: use Description and SPSVCINST_NOCLOBBER_DESCRIPTION */
-
-        if (useTag)
-        {
-            /* Add the tag to SYSTEM\CurrentControlSet\Control\GroupOrderList key */
-            LONG rc;
-            LPCWSTR lpLoadOrderGroup;
-            DWORD bufferSize;
-
-            lpLoadOrderGroup = LoadOrderGroup;
-            if ((flags & SPSVCINST_NOCLOBBER_LOADORDERGROUP) && ServiceConfig && ServiceConfig->lpLoadOrderGroup)
-                lpLoadOrderGroup = ServiceConfig->lpLoadOrderGroup;
-
-            rc = RegOpenKey(list->HKLM, L"SYSTEM\\CurrentControlSet\\Control\\GroupOrderList", &hGroupOrderListKey);
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            rc = RegQueryValueExW(hGroupOrderListKey, lpLoadOrderGroup, NULL, &dwRegType, NULL, &bufferSize);
-            if (rc == ERROR_FILE_NOT_FOUND)
-                bufferSize = sizeof(DWORD);
-            else if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-            else if (dwRegType != REG_BINARY || bufferSize == 0 || bufferSize % sizeof(DWORD) != 0)
-            {
-                SetLastError(ERROR_GEN_FAILURE);
-                goto cleanup;
-            }
-            /* Allocate buffer to store existing data + the new tag */
-            GroupOrder = HeapAlloc(GetProcessHeap(), 0, bufferSize + sizeof(DWORD));
-            if (!GroupOrder)
-            {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto cleanup;
-            }
-            if (rc == ERROR_SUCCESS)
-            {
-                /* Read existing data */
-                rc = RegQueryValueExW(
-                    hGroupOrderListKey,
-                    lpLoadOrderGroup,
-                    NULL,
-                    NULL,
-                    (BYTE*)GroupOrder,
-                    &bufferSize);
-                if (rc != ERROR_SUCCESS)
-                {
-                    SetLastError(rc);
-                    goto cleanup;
-                }
-                if (flags & SPSVCINST_TAGTOFRONT)
-                    memmove(&GroupOrder[2], &GroupOrder[1], bufferSize - sizeof(DWORD));
-            }
-            else
-            {
-                GroupOrder[0] = 0;
-            }
-            GroupOrder[0]++;
-            if (flags & SPSVCINST_TAGTOFRONT)
-                GroupOrder[1] = tagId;
-            else
-                GroupOrder[bufferSize / sizeof(DWORD)] = tagId;
-
-            rc = RegSetValueExW(
-                hGroupOrderListKey,
-                lpLoadOrderGroup,
-                0,
-                REG_BINARY,
-                (BYTE*)GroupOrder,
-                bufferSize + sizeof(DWORD));
-            if (rc != ERROR_SUCCESS)
-            {
-                SetLastError(rc);
-                goto cleanup;
-            }
-        }
-
+        if (bNeedReboot)
+            SetLastError(ERROR_SUCCESS_REBOOT_REQUIRED);
+        else
+            SetLastError(ERROR_SUCCESS);
         ret = TRUE;
-
-cleanup:
-        if (hSCManager != NULL)
-            CloseServiceHandle(hSCManager);
-        if (hService != NULL)
-            CloseServiceHandle(hService);
-        if (hGroupOrderListKey != INVALID_HANDLE_VALUE)
-            RegCloseKey(hGroupOrderListKey);
-        HeapFree(GetProcessHeap(), 0, ServiceConfig);
-        HeapFree(GetProcessHeap(), 0, ServiceBinary);
-        HeapFree(GetProcessHeap(), 0, LoadOrderGroup);
-        HeapFree(GetProcessHeap(), 0, DisplayName);
-        HeapFree(GetProcessHeap(), 0, Description);
-        HeapFree(GetProcessHeap(), 0, Dependencies);
-        HeapFree(GetProcessHeap(), 0, GroupOrder);
     }
 
     TRACE("Returning %d\n", ret);
