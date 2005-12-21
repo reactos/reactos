@@ -591,16 +591,16 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCreateSecurityDescriptor(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    ULONG Revision
+    OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN ULONG Revision
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCreateSecurityDescriptorRelative(
-    PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
-    ULONG Revision
+    OUT PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
+    IN ULONG Revision
 );
 
 NTSYSAPI
@@ -653,9 +653,9 @@ RtlGetAce(
 NTSTATUS
 NTAPI
 RtlGetControlSecurityDescriptor(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PSECURITY_DESCRIPTOR_CONTROL Control,
-    PULONG Revision
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    OUT PSECURITY_DESCRIPTOR_CONTROL Control,
+    OUT PULONG Revision
 );
 
 NTSYSAPI
@@ -672,10 +672,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetSaclSecurityDescriptor(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PBOOLEAN SaclPresent,
-    PACL* Sacl,
-    PBOOLEAN SaclDefaulted
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    OUT PBOOLEAN SaclPresent,
+    OUT PACL* Sacl,
+    OUT PBOOLEAN SaclDefaulted
 );
 
 NTSYSAPI
@@ -700,8 +700,8 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlGetSecurityDescriptorRMControl(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PUCHAR RMControl
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    OUT PUCHAR RMControl
 );
 
 NTSYSAPI
@@ -787,6 +787,15 @@ RtlSelfRelativeToAbsoluteSD2(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlSetAttributesSecurityDescriptor(
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN SECURITY_DESCRIPTOR_CONTROL Control,
+    OUT PULONG Revision
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlSetControlSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
@@ -797,10 +806,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSetDaclSecurityDescriptor (
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    BOOLEAN DaclPresent,
-    PACL Dacl,
-    BOOLEAN DaclDefaulted
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN BOOLEAN DaclPresent,
+    IN PACL Dacl,
+    IN BOOLEAN DaclDefaulted
 );
 
 NTSYSAPI
@@ -845,8 +854,8 @@ NTSYSAPI
 VOID
 NTAPI
 RtlSetSecurityDescriptorRMControl(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PUCHAR RMControl
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PUCHAR RMControl
 );
 
 NTSYSAPI
