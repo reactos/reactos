@@ -20,3 +20,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #include "Pl.rc"
 #include "Sv.rc"
 #include "Hu.rc"
+#include "Fr.rc"
