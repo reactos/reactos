@@ -368,7 +368,11 @@ static int numberf(FILE * f, double __n, wchar_t exp_sign,  int size, int precis
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
 			j = 0;
-			while ( j < i && ( *tmp == L'0' || *tmp == L'.' )) {
+			while ( j < i && *tmp == L'0' ) {
+					tmp++;
+					i--;
+			}
+			if ( j < i && *tmp == L'.' ) {
 					tmp++;
 					i--;
 			}
