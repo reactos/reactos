@@ -91,6 +91,6 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Képek (*.bmp;*.jpg;*.dib;*.png)\0*.bmp;*.jpg;*.jpeg;*.dib;*.png\0"
-    IDS_SUPPORTED_EXT "*.jpg;*.jpeg;*.bmp;*.dib;*.png"
+    IDS_BACKGROUND_COMDLG_FILTER "Képek (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_SUPPORTED_EXT "*.bmp;*.dib"
 END
