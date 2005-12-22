@@ -56,7 +56,6 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     ULONG AllocatedPort;
     ULONG Next;
 
-__asm__("int $3\n");
     if (PortSet->StartingPort + PortSet->PortsToOversee <=
         PortSet->LastAllocatedPort + 1) {
 	Next = PortSet->StartingPort;
