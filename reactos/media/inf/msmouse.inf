@@ -79,14 +79,14 @@ LoadOrderGroup = Pointer Port
 
 ;------------------------------ PS/2 DRIVER -----------------------------
 
-[PS2_Inst.NT]
+[PS2_Inst]
 CopyFiles = PS2_CopyFiles.NT, Mouclass_CopyFiles.NT
 AddReg = PS2_AddReg
 
 [PS2_CopyFiles.NT]
 i8042prt.sys
 
-[PS2_Inst.NT.Services]
+[PS2_Inst.Services]
 ;DO NOT INSTALL i8042prt driver, as long as it is not PnP-compatible
 ;AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
 AddService = , 0x00000002
