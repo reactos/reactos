@@ -108,7 +108,8 @@ VOID LoopSubmitReceiveWork(
 	TI_DbgPrint(DEBUG_DATALINK,
 		    ("Work item inserted %x %x\n", &LoopWorkItem, WQItem));
     } else {
-        DbgPrint("LOOP WORKER BUSY %x %x\n", &LoopWorkItem, WQItem);
+        TI_DbgPrint(DEBUG_DATALINK,
+                    ("LOOP WORKER BUSY %x %x\n", &LoopWorkItem, WQItem));
     }
     TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
 }
