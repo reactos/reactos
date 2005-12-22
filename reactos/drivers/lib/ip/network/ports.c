@@ -15,6 +15,8 @@ VOID PortsStartup( PPORT_SET PortSet,
 		   UINT PortsToManage ) {
     PortSet->StartingPort = StartingPort;
     PortSet->PortsToOversee = PortsToManage;
+    PortSet->LastAllocatedPort = PortSet->StartingPort +
+                                 PortSet->PortsToOversee - 1;
     PortSet->ProtoBitBuffer =
 	PoolAllocateBuffer( (PortSet->PortsToOversee + 7) / 8 );
     RtlInitializeBitMap( &PortSet->ProtoBitmap,
@@ -52,12 +54,23 @@ BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
 
 ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     ULONG AllocatedPort;
+    ULONG Next;
+
+__asm__("int $3\n");
+    if (PortSet->StartingPort + PortSet->PortsToOversee <=
+        PortSet->LastAllocatedPort + 1) {
+	Next = PortSet->StartingPort;
+    } else {
+	Next = PortSet->LastAllocatedPort + 1;
+    }
+    Next -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
     AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, 0 );
     if( AllocatedPort != (ULONG)-1 ) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
+	PortSet->LastAllocatedPort = AllocatedPort;
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
@@ -68,16 +81,28 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
 
 ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     ULONG AllocatedPort;
+    ULONG Next;
 
+    if (PortSet->StartingPort + PortSet->PortsToOversee <=
+        PortSet->LastAllocatedPort + 1) {
+	Next = PortSet->StartingPort;
+    } else {
+	Next = PortSet->LastAllocatedPort + 1;
+    }
+    if (Next < Lowest || Highest <= Next) {
+	Next = Lowest;
+    }
+    Next -= PortSet->StartingPort;
     Lowest -= PortSet->StartingPort;
     Highest -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
-    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Lowest );
+    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Next );
     if( AllocatedPort != (ULONG)-1 && AllocatedPort >= Lowest &&
         AllocatedPort <= Highest) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
+	PortSet->LastAllocatedPort = AllocatedPort;
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
