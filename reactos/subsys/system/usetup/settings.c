@@ -521,12 +521,14 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       return FALSE;
     }
 
+  /* Enable the right driver */
   if (!InfGetDataField(Context, 3, &ServiceName))
     {
       DPRINT("InfGetDataField() failed\n");
       return FALSE;
     }
 
+  ASSERT(wcslen(ServiceName) < 10);
   DPRINT("Service name: %S\n", ServiceName);
 
   StartValue = 1;
@@ -536,12 +538,74 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
 				 REG_DWORD,
 				 &StartValue,
 				 sizeof(ULONG));
-  InfFreeContext(Context);
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
       return FALSE;
     }
+
+  /* Set the resolution */
+  WCHAR RegPath [255];
+  swprintf(RegPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\%s\\Device0", ServiceName);
+
+  PWCHAR Buffer;
+  if (!InfGetDataField(Context, 4, &Buffer))
+    {
+      DPRINT("InfGetDataField() failed\n");
+      return FALSE;
+    }
+  ULONG Width = wcstoul(Buffer, NULL, 10);
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 RegPath, 
+				 L"DefaultSettings.XResolution",
+				 REG_DWORD,
+				 &Width,
+				 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  
+  if (!InfGetDataField(Context, 5, &Buffer))
+    {
+      DPRINT("InfGetDataField() failed\n");
+      return FALSE;
+    }
+  ULONG Hight = wcstoul(Buffer, 0, 0);
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 RegPath,
+				 L"DefaultSettings.YResolution",
+				 REG_DWORD,
+				 &Hight,
+				 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  if (!InfGetDataField(Context, 6, &Buffer))
+    {
+      DPRINT("InfGetDataField() failed\n");
+      return FALSE;
+    }
+  ULONG Bpp = wcstoul(Buffer, 0, 0);
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 RegPath,
+				 L"DefaultSettings.BitsPerPel",
+				 REG_DWORD,
+				 &Bpp,
+				 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  InfFreeContext(Context);
 
   DPRINT("ProcessDisplayRegistry() done\n");
 
