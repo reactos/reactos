@@ -366,8 +366,17 @@ sendit:
 #ifdef __REACTOS__
 	    if( OtcpEvent.PacketSend ) {
 		struct mbuf *new_m;
-		MGET( new_m, M_DONTWAIT, 0 );
+		new_m = m_get( M_DONTWAIT, 0 );
+		if ( NULL == new_m ) {
+		    error = ENOBUFS;
+		    goto done;
+		}
 		MCLGET( new_m, M_DONTWAIT );
+		if (0 == (new_m->m_flags & M_EXT)) {
+		    m_free( new_m );
+		    error = ENOBUFS;
+		    goto done;
+		}
 		m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
 		new_m->m_len = htons(ip->ip_len);
 		error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
@@ -498,7 +507,16 @@ sendorfree:
 	if( error == 0 && OtcpEvent.PacketSend ) {
 	    struct mbuf *new_m;
 	    MGET( new_m, M_DONTWAIT, 0 );
+	    if ( NULL == new_m ) {
+		error = ENOBUFS;
+		goto done;
+	    }
 	    MCLGET( new_m, M_DONTWAIT );
+	    if (0 == (new_m->m_flags & M_EXT)) {
+		m_free( new_m );
+		error = ENOBUFS;
+		goto done;
+	    }
 	    m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
 	    new_m->m_len = htons(ip->ip_len);
 	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
