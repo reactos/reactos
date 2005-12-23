@@ -25,6 +25,8 @@ typedef struct _SERVICE
 
     ULONG Flags;
 
+    PSECURITY_DESCRIPTOR lpSecurityDescriptor;
+
     BOOLEAN ServiceVisited;
 
     HANDLE ControlPipeHandle;

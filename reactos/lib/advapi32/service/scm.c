@@ -1035,8 +1035,7 @@ QueryServiceConfigA(
  *
  * @implemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 QueryServiceConfigW(SC_HANDLE hService,
                     LPQUERY_SERVICE_CONFIGW lpServiceConfig,
                     DWORD cbBufSize,
@@ -1095,21 +1094,39 @@ QueryServiceConfigW(SC_HANDLE hService,
 
 
 /**********************************************************************
- *  QueryServiceConfig2W
+ *  QueryServiceConfig2A
  *
  * @unimplemented
  */
 BOOL
 STDCALL
-QueryServiceConfig2W
-(
+QueryServiceConfig2A(
     SC_HANDLE       hService,
     DWORD           dwInfo,
     LPBYTE          lpBuffer,
     DWORD           cbBufSize,
     LPDWORD         pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceConfigW2 is unimplemented\n");
+    DPRINT1("QueryServiceConfig2A is unimplemented\n");
+    return FALSE;
+}
+
+
+/**********************************************************************
+ *  QueryServiceConfig2W
+ *
+ * @unimplemented
+ */
+BOOL
+STDCALL
+QueryServiceConfig2W(
+    SC_HANDLE       hService,
+    DWORD           dwInfo,
+    LPBYTE          lpBuffer,
+    DWORD           cbBufSize,
+    LPDWORD         pcbBytesNeeded)
+{
+    DPRINT1("QueryServiceConfig2W is unimplemented\n");
     return FALSE;
 }
 
@@ -1155,20 +1172,37 @@ QueryServiceLockStatusW(
 /**********************************************************************
  *  QueryServiceObjectSecurity
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceObjectSecurity(
-    SC_HANDLE       hService,
-    SECURITY_INFORMATION    dwSecurityInformation,
-    PSECURITY_DESCRIPTOR    lpSecurityDescriptor,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceObjectSecurity(SC_HANDLE hService,
+                           SECURITY_INFORMATION dwSecurityInformation,
+                           PSECURITY_DESCRIPTOR lpSecurityDescriptor,
+                           DWORD cbBufSize,
+                           LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceObjectSecurity is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceObjectSecurity(%p, %lu, %p)\n",
+           hService, dwSecurityInformation, lpSecurityDescriptor);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceObjectSecurity(BindingHandle,
+                                             (unsigned int)hService,
+                                             dwSecurityInformation,
+                                             (unsigned char *)lpSecurityDescriptor,
+                                             cbBufSize,
+                                             pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -1225,15 +1259,64 @@ QueryServiceStatusEx(SC_HANDLE  hService,
 /**********************************************************************
  *  SetServiceObjectSecurity
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 SetServiceObjectSecurity(SC_HANDLE hService,
-			 SECURITY_INFORMATION dwSecurityInformation,
-			 PSECURITY_DESCRIPTOR lpSecurityDescriptor)
+                         SECURITY_INFORMATION dwSecurityInformation,
+                         PSECURITY_DESCRIPTOR lpSecurityDescriptor)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+    PSECURITY_DESCRIPTOR SelfRelativeSD = NULL;
+    ULONG Length;
+    NTSTATUS Status;
+    DWORD dwError;
+
+    Length = 0;
+    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
+                                   SelfRelativeSD,
+                                   &Length);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    SelfRelativeSD = HeapAlloc(GetProcessHeap(), 0, Length);
+    if (SelfRelativeSD == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
+                                   SelfRelativeSD,
+                                   &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrSetServiceObjectSecurity(BindingHandle,
+                                           (unsigned int)hService,
+                                           dwSecurityInformation,
+                                           (unsigned char *)SelfRelativeSD,
+                                           Length);
+
+    HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 

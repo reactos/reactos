@@ -449,7 +449,7 @@ PrivilegedServiceAuditAlarmW@20
 ;QueryAllTracesA
 ;QueryAllTracesW
 QueryRecoveryAgentsOnEncryptedFile@8
-;QueryServiceConfig2A@20
+QueryServiceConfig2A@20
 QueryServiceConfig2W@20
 QueryServiceConfigA@16
 QueryServiceConfigW@16

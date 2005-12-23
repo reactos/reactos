@@ -10,6 +10,7 @@
 #define BOOL unsigned long
 #define SC_HANDLE unsigned int
 #define SC_LOCK unsigned int
+#define SERVICE_STATUS_HANDLE unsigned long
 #define LPSTR char*
 #define LPCSTR char*
 #define LPWSTR wchar_t*
@@ -57,10 +58,19 @@ cpp_quote("#endif")
                                 [out] SC_LOCK *hLock);
 
   /* Function 4 */
-  DWORD ScmrQueryServiceObjectSecurity([in] handle_t BindingHandle); /* FIXME */
+  DWORD ScmrQueryServiceObjectSecurity([in] handle_t BindingHandle,
+                                       [in] SC_HANDLE hService,
+                                       [in] DWORD dwSecurityInformation,
+                                       [out, size_is(dwSecuityDescriptorSize)] unsigned char *lpSecurityDescriptor,
+                                       [in] DWORD dwSecuityDescriptorSize,
+                                       [out] LPDWORD pcbBytesNeeded);
 
   /* Function 5 */
-  DWORD ScmrSetServiceObjectSecurity([in] handle_t BindingHandle); /* FIXME */
+  DWORD ScmrSetServiceObjectSecurity([in] handle_t BindingHandle,
+                                     [in] SC_HANDLE hService,
+                                     [in] DWORD dwSecurityInformation,
+                                     [in, size_is(dwSecuityDescriptorSize)] unsigned char *lpSecurityDescriptor,
+                                     [in] DWORD dwSecuityDescriptorSize);
 
   /* Function 6 */
   DWORD ScmrQueryServiceStatus([in] handle_t BindingHandle,
@@ -68,7 +78,8 @@ cpp_quote("#endif")
                                [out] LPSERVICE_STATUS lpServiceStatus);
 
   /* Function 7 */
-  DWORD ScmrSetServiceStatus([in] handle_t BindingHandle); /* FIXME */
+  DWORD ScmrSetServiceStatus([in] handle_t BindingHandle,
+                             [in] SERVICE_STATUS_HANDLE hServiceStatus); /* FIXME */
 
   /* Function 8 */
   DWORD ScmrUnlockServiceDatabase([in] handle_t BindingHandle,
@@ -78,6 +89,13 @@ cpp_quote("#endif")
   DWORD ScmrNotifyBootConfigStatus([in] handle_t BindingHandle,
                                    [in] BOOL BootAcceptable);
 
+  /* Function 10 */
+  DWORD ScmrI_ScSetServiceBitsW([in] handle_t BindingHandle,
+                                [in] SERVICE_STATUS_HANDLE hServiceStatus,
+                                [in] DWORD dwServiceBits,
+                                [in] BOOL bSetBitsOn,
+                                [in] BOOL bUpdateImmediately,
+                                [in, string, unique] LPWSTR lpString);
 
   /* Function 11 */
   DWORD ScmrChangeServiceConfigW([in] handle_t BindingHandle,
@@ -132,7 +150,7 @@ cpp_quote("#endif")
                                 [in] DWORD dwBufSize,
                                 [out] LPDWORD pcbBytesNeeded,
                                 [out] LPDWORD lpServicesReturned,
-                                [in, out] LPDWORD lpResumeHandle); /* FIXME: unique */
+                                [in, out, unique] LPDWORD lpResumeHandle);
 
   /* Function 15 */
   DWORD ScmrOpenSCManagerW([in] handle_t BindingHandle,

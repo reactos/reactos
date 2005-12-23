@@ -453,16 +453,91 @@ ScmrLockServiceDatabase(handle_t BindingHandle,
 
 /* Function 4 */
 unsigned long
-ScmrQueryServiceObjectSecurity(handle_t BindingHandle)
+ScmrQueryServiceObjectSecurity(handle_t BindingHandle,
+                               unsigned int hService,
+                               unsigned long dwSecurityInformation,
+                               unsigned char *lpSecurityDescriptor,
+                               unsigned long dwSecuityDescriptorSize,
+                               unsigned long *pcbBytesNeeded)
 {
-    DPRINT1("ScmrQueryServiceSecurity() is unimplemented\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService;
+    ULONG DesiredAccess = 0;
+    NTSTATUS Status;
+    DWORD dwBytesNeeded;
+    DWORD dwError;
+
+    DPRINT("ScmrQueryServiceSecurity() called\n");
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (dwSecurityInformation & (DACL_SECURITY_INFORMATION ||
+                                 GROUP_SECURITY_INFORMATION ||
+                                 OWNER_SECURITY_INFORMATION))
+        DesiredAccess |= READ_CONTROL;
+
+    if (dwSecurityInformation & SACL_SECURITY_INFORMATION)
+        DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  DesiredAccess))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* FIXME: Lock the service list */
+
+    Status = RtlQuerySecurityObject(lpService->lpSecurityDescriptor,
+                                    dwSecurityInformation,
+                                    (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
+                                    dwSecuityDescriptorSize,
+                                    &dwBytesNeeded);
+
+    /* FIXME: Unlock the service list */
+
+    if (NT_SUCCESS(Status))
+    {
+        *pcbBytesNeeded = dwBytesNeeded;
+        dwError = STATUS_SUCCESS;
+    }
+    else if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        *pcbBytesNeeded = dwBytesNeeded;
+        dwError = ERROR_INSUFFICIENT_BUFFER;
+    }
+    else if (Status == STATUS_BAD_DESCRIPTOR_FORMAT)
+    {
+        dwError = ERROR_GEN_FAILURE;
+    }
+    else
+    {
+        dwError = RtlNtStatusToDosError(Status);
+    }
+
+    return dwError;
 }
 
 
 /* Function 5 */
 unsigned long
-ScmrSetServiceObjectSecurity(handle_t BindingHandle)
+ScmrSetServiceObjectSecurity(handle_t BindingHandle,
+                             unsigned int hService,
+                             unsigned long dwSecurityInformation,
+                             unsigned char *lpSecurityDescriptor,
+                             unsigned long dwSecuityDescriptorSize)
 {
     DPRINT1("ScmrSetServiceSecurity() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -515,7 +590,8 @@ ScmrQueryServiceStatus(handle_t BindingHandle,
 
 /* Function 7 */
 unsigned long
-ScmrSetServiceStatus(handle_t BindingHandle)
+ScmrSetServiceStatus(handle_t BindingHandle,
+                     unsigned long hServiceStatus) /* FIXME */
 {
     DPRINT1("ScmrSetServiceStatus() is unimplemented\n");
     /* FIXME */
@@ -540,6 +616,21 @@ ScmrNotifyBootConfigStatus(handle_t BindingHandle,
                            unsigned long BootAcceptable)
 {
     DPRINT1("ScmrNotifyBootConfigStatus() called\n");
+    /* FIXME */
+    return ERROR_SUCCESS;
+}
+
+
+/* Function 10 */
+unsigned long
+ScmrI_ScSetServiceBitsW(handle_t BindingHandle,
+                        unsigned long hServiceStatus,
+                        unsigned long dwServiceBits,
+                        unsigned long bSetBitsOn,
+                        unsigned long bUpdateImmediately,
+                        wchar_t *lpString)
+{
+    DPRINT1("ScmrI_ScSetServiceBitsW() called\n");
     /* FIXME */
     return ERROR_SUCCESS;
 }
