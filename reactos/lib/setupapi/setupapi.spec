@@ -3,9 +3,9 @@
 @ stub AddTagToGroupOrderListEntry
 @ stub AppendStringToMultiSz
 @ stdcall AssertFail(str long str)
-@ stub CMP_Init_Detection
+@ stdcall CMP_Init_Detection(long)
 @ stub CMP_RegisterNotification
-@ stub CMP_Report_LogOn
+@ stdcall CMP_Report_LogOn(long long)
 @ stub CMP_UnregisterNotification
 @ stub CMP_WaitNoPendingInstallEvents
 @ stub CMP_WaitServicesAvailable
@@ -136,8 +136,8 @@
 @ stub CM_Merge_Range_List
 @ stub CM_Modify_Res_Des
 @ stub CM_Modify_Res_Des_Ex
-@ stub CM_Move_DevNode
-@ stub CM_Move_DevNode_Ex
+@ stdcall CM_Move_DevNode(long long long)
+@ stdcall CM_Move_DevNode_Ex(long long long long)
 @ stub CM_Next_Range
 @ stdcall CM_Open_Class_KeyA(ptr str long long ptr long)
 @ stdcall CM_Open_Class_KeyW(ptr wstr long long ptr long)
@@ -183,11 +183,11 @@
 @ stub CM_Set_HW_Prof_FlagsW
 @ stub CM_Set_HW_Prof_Flags_ExA
 @ stub CM_Set_HW_Prof_Flags_ExW
-@ stub CM_Setup_DevNode
-@ stub CM_Setup_DevNode_Ex
+@ stdcall CM_Setup_DevNode(long long)
+@ stdcall CM_Setup_DevNode_Ex(long long long)
 @ stub CM_Test_Range_Available
-@ stub CM_Uninstall_DevNode
-@ stub CM_Uninstall_DevNode_Ex
+@ stdcall CM_Uninstall_DevNode(long long)
+@ stdcall CM_Uninstall_DevNode_Ex(long long long)
 @ stub CM_Unregister_Device_InterfaceA
 @ stub CM_Unregister_Device_InterfaceW
 @ stub CM_Unregister_Device_Interface_ExA
