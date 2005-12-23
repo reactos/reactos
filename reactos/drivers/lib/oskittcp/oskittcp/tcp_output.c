@@ -66,6 +66,9 @@
 extern struct mbuf *m_copypack();
 #endif
 
+#define IS_LOOPBACK_ADDR(addr) \
+  ((ntohl(addr) & IN_CLASSA_NET) == (IN_LOOPBACKNET << IN_CLASSA_NSHIFT))
+
 
 /*
  * Tcp output routine: figure out what should be sent and send it.
@@ -215,8 +218,8 @@ again:
 	win = sbspace(&so->so_rcv);
 
 	/*
-	 * Sender silly window avoidance.  If connection is idle
-	 * and can send all data, a maximum segment,
+	 * Sender silly window avoidance.  If connection is idle or using
+	 * the loopback interface and can send all data, a maximum segment,
 	 * at least a maximum default-size segment do it,
 	 * or are forced, do it; otherwise don't bother.
 	 * If peer's buffer is tiny, then send
@@ -227,7 +230,8 @@ again:
 	if (len) {
 		if (len == tp->t_maxseg)
 			goto send;
-		if ((idle || tp->t_flags & TF_NODELAY) &&
+		if ((idle || tp->t_flags & TF_NODELAY ||
+                     IS_LOOPBACK_ADDR(tp->t_inpcb->inp_laddr.s_addr)) &&
 		    (tp->t_flags & TF_NOPUSH) == 0 &&
 		    len + off >= so->so_snd.sb_cc)
 			goto send;
