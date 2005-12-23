@@ -66,9 +66,13 @@ void InitOskitTCP() {
 void DeinitOskitTCP() {
 }
 
-void TimerOskitTCP() {
-    tcp_slowtimo();
-    tcp_fasttimo();
+void TimerOskitTCP( int FastTimer, int SlowTimer ) {
+    if ( SlowTimer ) {
+        tcp_slowtimo();
+    }
+    if ( FastTimer ) {
+        tcp_fasttimo();
+    }
 }
 
 void RegisterOskitTCPEventHandlers( POSKITTCP_EVENT_HANDLERS EventHandlers ) {

@@ -105,7 +105,7 @@ extern OSKITTCP_EVENT_HANDLERS OtcpEvent;
 
 extern void InitOskitTCP();
 extern void DeinitOskitTCP();
-extern void TimerOskitTCP();
+extern void TimerOskitTCP( int FastTimer, int SlowTimer );
 extern void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len );
 extern int  OskitTCPShutdown( void *socket, int disconn_type );
 extern int  OskitTCPSocket( void *Connection, void **ConnectionContext,

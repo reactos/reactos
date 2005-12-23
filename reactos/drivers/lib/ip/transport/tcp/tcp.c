@@ -307,6 +307,68 @@ OSKITTCP_EVENT_HANDLERS EventHandlers = {
     TCPWakeup         /* Wakeup */
 };
 
+static KEVENT TimerLoopEvent;
+static HANDLE TimerThreadHandle;
+
+/*
+ * We are running 2 timers here, one with a 200ms interval (fast) and the other
+ * with a 500ms interval (slow). So we need to time out at 200, 400, 500, 600,
+ * 800, 1000 and process the "fast" events at 200, 400, 600, 800, 1000 and the
+ * "slow" events at 500 and 1000.
+ */
+static VOID DDKAPI
+TimerThread(PVOID Context)
+{
+    LARGE_INTEGER Timeout;
+    NTSTATUS Status;
+    unsigned Current, NextFast, NextSlow, Next;
+
+    Current = 0;
+    Next = 0;
+    NextFast = 0;
+    NextSlow = 0;
+    while ( 1 ) {
+        if (Next == NextFast) {
+            NextFast += 2;
+        }
+        if (Next == NextSlow) {
+            NextSlow += 5;
+        }
+        Next = min(NextFast, NextSlow);
+        Timeout.QuadPart = (LONGLONG) (Next - Current) * -1000000; /* 100 ms */
+        Status = KeWaitForSingleObject(&TimerLoopEvent, Executive, KernelMode,
+                                       FALSE, &Timeout);
+        if (STATUS_SUCCESS == Status) {
+            PsTerminateSystemThread(STATUS_SUCCESS);
+        }
+        ASSERT(STATUS_TIMEOUT == Status);
+
+        TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+        TimerOskitTCP( Next == NextFast, Next == NextSlow );
+        if (Next == NextSlow) {
+            DrainSignals();
+        }
+        TcpipRecursiveMutexLeave( &TCPLock );
+
+        Current = Next;
+        if (10 <= Current) {
+            Current = 0;
+            Next = 0;
+            NextFast = 0;
+            NextSlow = 0;
+        }
+    }
+}
+
+static VOID
+StartTimer(VOID)
+{
+    KeInitializeEvent(&TimerLoopEvent, NotificationEvent, FALSE);
+    PsCreateSystemThread(&TimerThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0,
+                         TimerThread, NULL);
+}
+
+
 NTSTATUS TCPStartup(VOID)
 /*
  * FUNCTION: Initializes the TCP subsystem
@@ -336,6 +398,8 @@ NTSTATUS TCPStartup(VOID)
 	TAG('T','C','P','S'),           /* Tag */
 	0);                             /* Depth */
 
+    StartTimer();
+
     TCPInitialized = TRUE;
 
     return STATUS_SUCCESS;
@@ -349,8 +413,15 @@ NTSTATUS TCPShutdown(VOID)
  *     Status of operation
  */
 {
+    LARGE_INTEGER WaitForThread;
+
     if (!TCPInitialized)
 	return STATUS_SUCCESS;
+
+    WaitForThread.QuadPart = -2500000; /* 250 ms */
+    KeSetEvent(&TimerLoopEvent, IO_NO_INCREMENT, TRUE);
+    KeWaitForSingleObject(&TimerThreadHandle, Executive, KernelMode,
+                          FALSE, &WaitForThread);
 
     /* Deregister this protocol with IP layer */
     IPRegisterProtocol(IPPROTO_TCP, NULL);
@@ -598,13 +669,7 @@ NTSTATUS TCPSendData
 }
 
 VOID TCPTimeout(VOID) {
-    static int Times = 0;
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-    if( (Times++ % 5) == 0 ) {
-	TimerOskitTCP();
-    }
-    DrainSignals();
-    TcpipRecursiveMutexLeave( &TCPLock );
+    /* Now handled by TimerThread */
 }
 
 UINT TCPAllocatePort( UINT HintPort ) {
