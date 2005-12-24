@@ -18,10 +18,10 @@
 extern LDR_DATA_TABLE_ENTRY NtoskrnlModuleObject;
 extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
-ULONG EXPORTED MmUserProbeAddress = 0;
-PVOID EXPORTED MmHighestUserAddress = NULL;
-PBOOLEAN EXPORTED Mm64BitPhysicalAddress = FALSE;
-PVOID EXPORTED MmSystemRangeStart = NULL;
+ULONG MmUserProbeAddress = 0;
+PVOID MmHighestUserAddress = NULL;
+PBOOLEAN Mm64BitPhysicalAddress = FALSE;
+PVOID MmSystemRangeStart = NULL;
 
 MM_STATS MmStats;
 

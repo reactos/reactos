@@ -100,11 +100,13 @@ NetClassInstaller(
 {
 	RPC_STATUS RpcStatus;
 	UUID Uuid;
+	LPWSTR InstanceId = NULL;
 	LPWSTR UuidRpcString = NULL;
 	LPWSTR UuidString = NULL;
 	LPWSTR DeviceName = NULL;
 	LPWSTR ExportName = NULL;
 	LONG rc;
+	DWORD dwShowIcon, dwLength;
 	HKEY hKey = INVALID_HANDLE_VALUE;
 	HKEY hLinkageKey = INVALID_HANDLE_VALUE;
 	HKEY hNetworkKey = INVALID_HANDLE_VALUE;
@@ -114,6 +116,27 @@ NetClassInstaller(
 		return ERROR_DI_DO_DEFAULT;
 
 	DPRINT("%lu %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
+
+	/* Get Instance ID */
+	if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
+	{
+		DPRINT("SetupDiGetDeviceInstanceIdW() returned TRUE. FALSE expected\n");
+		rc = ERROR_GEN_FAILURE;
+		goto cleanup;
+	}
+	InstanceId = HeapAlloc(GetProcessHeap(), 0, dwLength);
+	if (!InstanceId)
+	{
+		DPRINT("HeapAlloc() failed\n");
+		rc = ERROR_NOT_ENOUGH_MEMORY;
+		goto cleanup;
+	}
+	if (!SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, InstanceId, dwLength, NULL))
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
 
 	/* Create a new UUID */
 	RpcStatus = UuidCreate(&Uuid);
@@ -210,7 +233,13 @@ NetClassInstaller(
 	hKey = INVALID_HANDLE_VALUE;
 
 	/* Write 'Linkage' key in hardware key */
-	hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
+#if _WIN32_WINNT >= 0x502
+	hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ | KEY_WRITE);
+#else
+	hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_ALL_ACCESS);
+#endif
+	if (hKey == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_NOT_FOUND)
+		hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
 	if (hKey == INVALID_HANDLE_VALUE)
 	{
 		rc = GetLastError();
@@ -257,20 +286,39 @@ NetClassInstaller(
 		DPRINT("RegCreateKeyExW() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
-	rc = RegCreateKeyExW(hNetworkKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
+	rc = RegCreateKeyExW(hNetworkKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hKey, NULL);
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegCreateKeyExW() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
-	rc = RegSetValueExW(hKey, L"Name", 0, REG_SZ, (const BYTE*)L"Network connection", (wcslen(L"Network connection") + 1) * sizeof(WCHAR));
+	rc = RegCreateKeyExW(hKey, L"Connection", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hConnectionKey, NULL);
+	RegCloseKey(hKey);
+	hKey = INVALID_HANDLE_VALUE;
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)L"Network connection", (wcslen(L"Network connection") + 1) * sizeof(WCHAR));
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
-	RegCloseKey(hKey);
-	hKey = INVALID_HANDLE_VALUE;
+	rc = RegSetValueExW(hConnectionKey, L"PnpInstanceId", 0, REG_SZ, (const BYTE*)InstanceId, (wcslen(InstanceId) + 1) * sizeof(WCHAR));
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	dwShowIcon = 1;
+	rc = RegSetValueExW(hConnectionKey, L"ShowIcon", 0, REG_DWORD, (const BYTE*)&dwShowIcon, sizeof(dwShowIcon));
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
 
 	/* Write linkage information in Tcpip service */
 	rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Linkage", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, NULL, &hKey, NULL);
@@ -298,11 +346,17 @@ NetClassInstaller(
 		goto cleanup;
 	}
 
+	/* HACK: hpoussin, Dec 2005. TCP/IP driver is not able to manage devices
+	 * which are installed after its startup. So, we have to reboot to take
+	 * this new netcard into account.
+	 */
+	MessageBox(NULL, TEXT("You need to reboot to finish the installation of your network card."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
 	rc = ERROR_SUCCESS;
 
 cleanup:
 	if (UuidRpcString != NULL)
 		RpcStringFreeW(&UuidRpcString);
+	HeapFree(GetProcessHeap(), 0, InstanceId);
 	HeapFree(GetProcessHeap(), 0, UuidString);
 	HeapFree(GetProcessHeap(), 0, DeviceName);
 	HeapFree(GetProcessHeap(), 0, ExportName);

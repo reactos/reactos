@@ -103,6 +103,12 @@ static LARGE_INTEGER ShortDelay;
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
 
+#ifdef GDI_DEBUG
+BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
+VOID STDCALL KeRosDumpStackFrames(PULONG Frame, ULONG FrameCount);
+ULONG STDCALL KeRosGetStackFrames(PULONG Frames, ULONG FrameCount);
+#endif
+
 /*!
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
@@ -156,7 +162,7 @@ GDIOBJ_iAllocHandleTable(VOID)
   return handleTable;
 }
 
-static inline PPAGED_LOOKASIDE_LIST
+static __inline PPAGED_LOOKASIDE_LIST
 FindLookasideList(DWORD ObjectType)
 {
   int Index;
@@ -174,7 +180,7 @@ FindLookasideList(DWORD ObjectType)
   return NULL;
 }
 
-static inline BOOL
+static __inline BOOL
 RunCleanupCallback(PGDIOBJ pObj, DWORD ObjectType)
 {
   int Index;
@@ -191,7 +197,7 @@ RunCleanupCallback(PGDIOBJ pObj, DWORD ObjectType)
   return TRUE;
 }
 
-static inline ULONG
+static __inline ULONG
 GetObjectSize(DWORD ObjectType)
 {
   int Index;

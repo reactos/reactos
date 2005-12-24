@@ -17,7 +17,7 @@
  * 		Added -r option.
  */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>

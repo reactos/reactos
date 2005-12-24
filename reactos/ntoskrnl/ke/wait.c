@@ -1,11 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS project
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ke/wait.c
- * PURPOSE:         Manages non-busy waiting
- *
- * PROGRAMMERS:     Alex Ionescu - Fixes and optimization.
- *                  Gunnar Dalsnes - Implementation
+ * PURPOSE:         Manages dispatch level wait-related code
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gunnar Dalsnes
  */
 
 /* INCLUDES ******************************************************************/
@@ -28,7 +27,7 @@ static KSPIN_LOCK DispatcherDatabaseLock;
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-inline
+__inline
 FASTCALL
 KiCheckAlertability(BOOLEAN Alertable,
                     PKTHREAD CurrentThread,
@@ -756,8 +755,23 @@ KiAbortWaitThread(PKTHREAD Thread,
     KiUnblockThread(Thread, &WaitStatus, 0);
 }
 
+VOID
+FASTCALL
+KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
+{
+    /* Increase contention count */
+    FastMutex->Contention++;
+
+    /* Wait for the event */
+    KeWaitForSingleObject(&FastMutex->Gate,
+                          WrMutex,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+}
+
 BOOLEAN
-inline
+__inline
 FASTCALL
 KiIsObjectSignaled(PDISPATCHER_HEADER Object,
                    PKTHREAD Thread)
@@ -788,7 +802,7 @@ KiIsObjectSignaled(PDISPATCHER_HEADER Object,
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock)
 {
@@ -805,7 +819,7 @@ KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
                              ULONG Type,
@@ -821,7 +835,7 @@ KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
 }
 
 KIRQL
-inline
+__inline
 FASTCALL
 KeAcquireDispatcherDatabaseLock(VOID)
 {
@@ -832,7 +846,7 @@ KeAcquireDispatcherDatabaseLock(VOID)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID)
 {
@@ -840,7 +854,7 @@ KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeInitializeDispatcher(VOID)
 {
@@ -849,7 +863,7 @@ KeInitializeDispatcher(VOID)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 {
@@ -868,7 +882,7 @@ KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
 }
 
 VOID
-inline
+__inline
 FASTCALL
 KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID)
 {

@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 1998-2005  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v2.0"
-#define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
+#define VERSION			"FreeLoader v2.1"
+#define COPYRIGHT		"Copyright (C) 1998-2005 Brian Palmer <brianp@sginet.com>"
 #define AUTHOR_EMAIL	"<brianp@sginet.com>"
 #define BY_AUTHOR		"by Brian Palmer"
 
@@ -35,7 +35,7 @@
 // If you add major functionality then you increment the major version and zero the minor & patch versions
 //
 #define FREELOADER_MAJOR_VERSION	2
-#define FREELOADER_MINOR_VERSION	0
+#define FREELOADER_MINOR_VERSION	1
 #define FREELOADER_PATCH_VERSION	0
 
 

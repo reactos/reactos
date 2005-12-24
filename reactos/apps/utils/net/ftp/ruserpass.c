@@ -50,7 +50,7 @@ static	FILE *cfile;
 static char tokval[100];
 
 static struct toktab {
-	char *tokstr;
+	const char *tokstr;
 	int tval;
 } toktab[]= {
 	{"default",	DEFAULT},
@@ -66,10 +66,11 @@ static struct toktab {
 extern char *hostname;
 static int token(void);
 
-int ruserpass(char *host, char **aname, char **apass, char **aacct)
+int ruserpass(const char *host, char **aname, char **apass, char **aacct)
 {
-	char *hdir, buf[BUFSIZ], *tmp;
-	char myname[MAXHOSTNAMELEN], *mydomain;
+	const char *hdir, *mydomain;
+    char buf[BUFSIZ], *tmp;
+	char myname[MAXHOSTNAMELEN];
 	int t, i, c, usedefault = 0;
 	struct stat stb;
 	extern int errno;

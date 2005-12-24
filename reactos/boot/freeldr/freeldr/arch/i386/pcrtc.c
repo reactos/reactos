@@ -17,10 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "arch.h"
-#include "machine.h"
-#include "machpc.h"
+#include <freeldr.h>
 
 #define BCD_INT(bcd) (((bcd & 0xf0) >> 4) * 10 + (bcd &0x0f))
 

@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, SepInitPrivileges)
+#endif
+
 
 /* GLOBALS *******************************************************************/
 
@@ -246,14 +250,17 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
   ULONG PrivilegeCount;
   ULONG PrivilegeControl;
   ULONG Length;
+  KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
 
   PAGED_CODE();
 
+  PreviousMode = KeGetPreviousMode();
+
   Status = ObReferenceObjectByHandle (ClientToken,
-				      0,
+				      TOKEN_QUERY,
 				      SepTokenObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Token,
 				      NULL);
   if (!NT_SUCCESS(Status))

@@ -181,7 +181,7 @@ VOID EnableApicMode(VOID)
 }
 
 /* Disable symetric I/O mode ie. go to PIC mode */
-inline VOID DisableSMPMode(VOID)
+__inline VOID DisableSMPMode(VOID)
 {
    /*
     * Put the board back into PIC mode (has an effect
@@ -221,7 +221,7 @@ VOID APICDisable(VOID)
 }
 
 
-inline ULONG _APICRead(ULONG Offset)
+__inline ULONG _APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -230,7 +230,7 @@ inline ULONG _APICRead(ULONG Offset)
 }
 
 #if 0
-inline VOID APICWrite(ULONG Offset,
+__inline VOID APICWrite(ULONG Offset,
 		      ULONG Value)
 {
    PULONG p;
@@ -240,7 +240,7 @@ inline VOID APICWrite(ULONG Offset,
    *p = Value;
 }
 #else
-inline VOID APICWrite(ULONG Offset,
+__inline VOID APICWrite(ULONG Offset,
 		      ULONG Value)
 {
    PULONG p;
@@ -257,7 +257,7 @@ inline VOID APICWrite(ULONG Offset,
 
 
 #if 0
-inline ULONG APICRead(ULONG Offset)
+__inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -265,7 +265,7 @@ inline ULONG APICRead(ULONG Offset)
    return *p;
 }
 #else
-inline ULONG APICRead(ULONG Offset)
+__inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
    ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
@@ -280,7 +280,7 @@ inline ULONG APICRead(ULONG Offset)
 }
 #endif
 
-inline VOID APICSendEOI(VOID)
+__inline VOID APICSendEOI(VOID)
 {
   // Send the EOI
   APICWrite(APIC_EOI, 0);
@@ -772,21 +772,21 @@ VOID
 MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
 			   PKTRAP_FRAME TrapFrame)
 {
-   TrapFrame->Gs     = (USHORT)IrqTrapFrame->Gs;
-   TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
-   TrapFrame->Es     = (USHORT)IrqTrapFrame->Es;
-   TrapFrame->Ds     = (USHORT)IrqTrapFrame->Ds;
+   TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
+   TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
+   TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
+   TrapFrame->SegDs     = (USHORT)IrqTrapFrame->Ds;
    TrapFrame->Eax    = IrqTrapFrame->Eax;
    TrapFrame->Ecx    = IrqTrapFrame->Ecx;
    TrapFrame->Edx    = IrqTrapFrame->Edx;
    TrapFrame->Ebx    = IrqTrapFrame->Ebx;
-   TrapFrame->Esp    = IrqTrapFrame->Esp;
+   TrapFrame->HardwareEsp    = IrqTrapFrame->Esp;
    TrapFrame->Ebp    = IrqTrapFrame->Ebp;
    TrapFrame->Esi    = IrqTrapFrame->Esi;
    TrapFrame->Edi    = IrqTrapFrame->Edi;
    TrapFrame->Eip    = IrqTrapFrame->Eip;
-   TrapFrame->Cs     = IrqTrapFrame->Cs;
-   TrapFrame->Eflags = IrqTrapFrame->Eflags;
+   TrapFrame->SegCs     = IrqTrapFrame->Cs;
+   TrapFrame->EFlags = IrqTrapFrame->Eflags;
 }
 
 VOID
@@ -919,7 +919,7 @@ SetInterruptGate(ULONG index, ULONG address)
   
   idt = (KIDTENTRY*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(KIDTENTRY));
   idt->Offset = address & 0xffff;
-  idt->Selector = KERNEL_CS;
+  idt->Selector = KGDT_R0_CODE;
   idt->Access = Access.Value;
   idt->ExtendedOffset = address >> 16;
 }

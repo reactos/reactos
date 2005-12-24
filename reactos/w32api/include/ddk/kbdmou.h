@@ -23,8 +23,8 @@
 #ifndef __KBDMOU_H
 #define __KBDMOU_H
 
-#include <ddk/ntddkbd.h>
-#include <ddk/ntddmou.h>
+#include <ntddkbd.h>
+#include <ntddmou.h>
 
 #define DD_KEYBOARD_PORT_DEVICE_NAME      "\\Device\\KeyboardPort"
 #define DD_KEYBOARD_PORT_DEVICE_NAME_U    L"\\Device\\KeyboardPort"

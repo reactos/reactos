@@ -423,6 +423,36 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 
 #ifdef INCLUDE_CMD_MKDIR
+
+/* Helper funtion for mkdir to make directories in a path.  
+Dont use the api to decrease depence on libs */
+BOOL 
+MakeFullPath(TCHAR * DirPath)
+{
+    TCHAR path[MAX_PATH];
+    TCHAR *p = DirPath;
+    INT  n;
+
+    if (p[0] && p[1] == _T(':')) 
+        p += 2;
+    while (*p == _T('\\')) 
+        p++; /* skip drive root */
+    while ((p = _tcschr(p, _T('\\'))) != NULL)
+    {
+       n = p - DirPath + 1;
+       memcpy(path, DirPath, n);
+       path[n] = _T('\0');
+       if( !CreateDirectory(path, NULL) &&
+           (GetLastError() != ERROR_ALREADY_EXISTS))
+           return FALSE;
+       p++;
+    }
+    if (GetLastError() == ERROR_ALREADY_EXISTS)
+       SetLastError(ERROR_SUCCESS);
+
+    return TRUE;
+}
+
 /*
  * MD / MKDIR
  *
@@ -478,28 +508,24 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
-		dir[_tcslen(dir) - 1] = _T('\0');
+	/* Add a \ at the end of the path is there isnt on already */
+	if (dir[_tcslen (dir) - 1] != _T('\\'))
+		_tcscat(dir,_T("\\"));
 
-	if (!CreateDirectory (dir, NULL))
-	{
-		if(GetLastError() == ERROR_ALREADY_EXISTS)
-		{
-			ConErrResPuts(STRING_MD_ERROR);
-		}
-		else if(GetLastError() == ERROR_PATH_NOT_FOUND)
-		{
-			ConErrResPuts(STRING_MD_ERROR2);
-		}
-		else
-		{
-			ErrorMessage (GetLastError(), _T("MD"));
-		}
-		nErrorLevel = 1;
-		freep (p);
-		return 1;
-	}
+    if (!MakeFullPath(dir))
+    {
+        if(GetLastError() == ERROR_PATH_NOT_FOUND)
+        {
+            ConErrResPuts(STRING_MD_ERROR2);
+        }
+        else
+        {
+            ErrorMessage (GetLastError(), _T("MD"));
+        }
+        nErrorLevel = 1;
+        freep (p);
+        return 1;
+    }
 
 	freep (p);
 

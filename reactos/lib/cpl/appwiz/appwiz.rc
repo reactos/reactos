@@ -11,7 +11,7 @@
 #include <reactos/version.rc>
 #endif
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 
@@ -26,5 +26,11 @@ IDI_CPLSYSTEM ICON "resources/applet.ico"
 #include "Cz.rc"
 #include "De.rc"
 #include "Dk.rc"
+#include "Gr.rc"
+#include "Hu.rc"
 #include "Nl.rc"
 #include "Ru.rc"
+#include "Pl.rc"
+#include "Es.rc"
+#include "Fr.rc"
+

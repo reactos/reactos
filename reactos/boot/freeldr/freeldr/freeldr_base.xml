@@ -1,9 +1,11 @@
-<module name="freeldr_base" type="objectlibrary" allowwarnings="true">
+<module name="freeldr_base" type="objectlibrary">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />
-	<compilerflag>-nostdlib</compilerflag>
+<!--	
+	<define name="DEBUG" />
+-->	
 	<compilerflag>-ffreestanding</compilerflag>
 	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>
@@ -23,17 +25,18 @@
 				<file>i386rtl.c</file>
 				<file>i386vid.c</file>
 				<file>machpc.c</file>
-				<file>machxbox.c</file>
 				<file>pccons.c</file>
 				<file>pcdisk.c</file>
 				<file>pcmem.c</file>
 				<file>pcrtc.c</file>
 				<file>pcvideo.c</file>
 				<file>portio.c</file>
+				<file>machxbox.c</file>
 				<file>xboxcons.c</file>
 				<file>xboxdisk.c</file>
 				<file>xboxfont.c</file>
 				<file>xboxhw.c</file>
+				<file>xboxi2c.c</file>
 				<file>xboxmem.c</file>
 				<file>xboxrtc.c</file>
 				<file>xboxvideo.c</file>
@@ -72,21 +75,14 @@
 		<file>mm.c</file>
 	</directory>
 	<directory name="reactos">
+		<file>registry.c</file>
 		<file>arcname.c</file>
 		<file>binhive.c</file>
 		<file>loader.c</file>
 		<file>reactos.c</file>
-		<file>registry.c</file>
 	</directory>
 	<directory name="rtl">
 		<file>list.c</file>
-		<file>memcmp.c</file>
-		<file>memcpy.c</file>
-		<file>memmove.c</file>
-		<file>memset.c</file>
-		<file>print.c</file>
-		<file>stdlib.c</file>
-		<file>string.c</file>
 	</directory>
 	<directory name="ui">
 		<file>gui.c</file>
@@ -106,4 +102,5 @@
 	<file>version.c</file>
 	<file>cmdline.c</file>
 	<file>machine.c</file>
+	<pch>include/freeldr.h</pch>
 </module>

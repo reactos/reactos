@@ -250,6 +250,7 @@ static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
     LPCVOID template;
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
+    HRESULT hr;
 
     /* test for missing functionality */
     if (fodInfos->ofnInfos->Flags & UNIMPLEMENTED_FLAGS)
@@ -281,11 +282,16 @@ static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
       fodInfos->HookMsg.sharevistring = RegisterWindowMessageA(SHAREVISTRINGA);
     }
 
+    /* Some shell namespace extensions depend on COM being initialized. */
+    hr = OleInitialize(NULL);
+
     lRes = DialogBoxIndirectParamA(COMDLG32_hInstance,
                                   (LPDLGTEMPLATEA) template,
                                   fodInfos->ofnInfos->hwndOwner,
                                   FileOpenDlgProc95,
                                   (LPARAM) fodInfos);
+    if (SUCCEEDED(hr)) 
+        OleUninitialize();
 
     /* Unable to create the dialog */
     if( lRes == -1)
@@ -695,10 +701,6 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
     /* finally use fixed parent size */
     rectParent.bottom -= help_fixup;
 
-    /* save the size of the parent's client area */
-    rectChild.right = rectParent.right;
-    rectChild.bottom = rectParent.bottom;
-
     /* set the size of the parent dialog */
     AdjustWindowRectEx(&rectParent, GetWindowLongW(hwndParentDlg, GWL_STYLE),
                        FALSE, GetWindowLongW(hwndParentDlg, GWL_EXSTYLE));
@@ -707,10 +709,6 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
                  rectParent.right - rectParent.left,
                  rectParent.bottom - rectParent.top,
                  SWP_NOMOVE | SWP_NOZORDER);
-
-    /* set the size of the child dialog */
-    SetWindowPos(hwndChildDlg, HWND_BOTTOM,
-                 0, 0, rectChild.right, rectChild.bottom, SWP_NOACTIVATE);
 }
 
 static INT_PTR CALLBACK FileOpenDlgProcUserTemplate(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1026,8 +1024,28 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          FILEDLG95_InitControls(hwnd);
 
          if (fodInfos->DlgInfos.hwndCustomDlg)
+         {
+             RECT rc;
+             UINT flags = SWP_NOACTIVATE;
+
              ArrangeCtrlPositions(fodInfos->DlgInfos.hwndCustomDlg, hwnd,
                  (fodInfos->ofnInfos->Flags & (OFN_HIDEREADONLY | OFN_SHOWHELP)) == OFN_HIDEREADONLY);
+
+             /* resize the custom dialog to the parent size */
+             if (fodInfos->ofnInfos->Flags & (OFN_ENABLETEMPLATE | OFN_ENABLETEMPLATEHANDLE))
+                 GetClientRect(hwnd, &rc);
+             else
+             {
+                 /* our own fake template is zero sized and doesn't have
+                  * children, so there is no need to resize it.
+                  * Picasa depends on it.
+                  */
+                 flags |= SWP_NOSIZE;
+                 SetRectEmpty(&rc);
+             }
+             SetWindowPos(fodInfos->DlgInfos.hwndCustomDlg, HWND_BOTTOM,
+                          0, 0, rc.right, rc.bottom, flags);
+         }
 
       	 FILEDLG95_FillControls(hwnd, wParam, lParam);
 
@@ -3776,6 +3794,8 @@ BOOL WINAPI GetOpenFileNameA(
 {
     BOOL win16look = FALSE;
 
+    TRACE("flags %08lx\n", ofn->Flags);
+
     /* OFN_FILEMUSTEXIST implies OFN_PATHMUSTEXIST */
     if (ofn->Flags & OFN_FILEMUSTEXIST)
         ofn->Flags |= OFN_PATHMUSTEXIST;
@@ -3803,6 +3823,12 @@ BOOL WINAPI GetOpenFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
     BOOL win16look = FALSE;
+
+    TRACE("flags %08lx\n", ofn->Flags);
+
+    /* OFN_FILEMUSTEXIST implies OFN_PATHMUSTEXIST */
+    if (ofn->Flags & OFN_FILEMUSTEXIST)
+        ofn->Flags |= OFN_PATHMUSTEXIST;
 
     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
         win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;

@@ -18,6 +18,7 @@
 	<library>shlwapi</library>
 	<library>cabinet</library>
 	<library>wininet</library>
+	<file>binding.c</file>
 	<file>file.c</file>
 	<file>format.c</file>
 	<file>ftp.c</file>

@@ -69,7 +69,11 @@ extern "C" {
 
 #define	for if (0) {} else for
 
+#ifdef _countof
+#define COUNTOF _countof
+#else
 #define	COUNTOF(x)	(sizeof(x)/sizeof(x[0]))
+#endif
 
 
 #define	BUFFER_LEN				2048
@@ -166,6 +170,24 @@ BOOL exists_path(LPCTSTR path);
 #endif
 
 
+ // secure CRT functions
+#ifdef __STDC_WANT_SECURE_LIB__	// for VS 2005: _MSC_VER>=1400
+
+#define _stprintf_s1 _stprintf_s
+#define _stprintf_s2 _stprintf_s
+
+#else	// __STDC_WANT_SECURE_LIB__
+
+#define strcpy_s(d, l, s) strcpy(d, s)
+#define _tcscpy_s(d, l, s) _tcscpy(d, s)
+#define wcsncpy_s(d, l, s, n) wcsncpy(d, s, n)
+#define _stprintf_s1(b, l, f, p1) _stprintf(b, f, p1)
+#define _stprintf_s2(b, l, f, p1,p2) _stprintf(b, f, p1,p2)
+#define _tsplitpath_s(f, d,dl, p,pl, n,nl, e,el) _tsplitpath(f, d, p, n, e)
+
+#endif	// __STDC_WANT_SECURE_LIB__
+
+
 #ifdef __cplusplus
 
 #ifdef _MSC_VER
@@ -185,9 +207,11 @@ using namespace std;
 #include <vector>
 
 
+/* not necessary with correct include file order for comdef.h (path "...\Program Files\Microsoft SDK\include" first)
 #if _MSC_VER>=1300	// VS.Net
-#define _NO_COMUTIL	//@@
+#define _NO_COMUTIL
 #endif
+*/
 
 #if defined(_MSC_VER) && !defined(_NO_COMUTIL)
 

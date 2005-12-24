@@ -260,6 +260,10 @@ CreateIconFromResourceEx(
 
   /* get an safe copy of the icon data */
   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, cbIconBits);
+  if (SafeIconImage == NULL)
+    {
+      return NULL;
+    }
   memcpy(SafeIconImage, pbIconBits, cbIconBits);
 
   /* take into acount the origonal height was for both the AND and XOR images */

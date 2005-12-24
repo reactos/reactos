@@ -37,6 +37,10 @@
  * Global and Local Variables:
  */
 
+#define FAVORITES_MENU_POSITION 3
+
+static TCHAR s_szFavoritesRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites");
+
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
 
 /*******************************************************************************
@@ -71,6 +75,59 @@ static void resize_frame_client(HWND hWnd)
 }
 
 /********************************************************************************/
+
+static void OnInitMenu(HWND hWnd)
+{
+    LONG lResult;
+    HKEY hKey = NULL;
+    DWORD dwIndex, cbValueName, cbValueData, dwType;
+    TCHAR szValueName[256];
+    BYTE abValueData[256];
+    static int s_nFavoriteMenuSubPos = -1;
+    HMENU hMenu;
+    BOOL bDisplayedAny = FALSE;
+
+    /* Find Favorites menu and clear it out */
+    hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
+    if (!hMenu)
+        goto done;
+    if (s_nFavoriteMenuSubPos < 0)
+    {
+        s_nFavoriteMenuSubPos = GetMenuItemCount(hMenu);
+    }
+    else
+    {
+        while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION))
+            ;
+    }
+    
+    lResult = RegOpenKey(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+
+    dwIndex = 0;
+    do
+    {
+        cbValueName = sizeof(szValueName) / sizeof(szValueName[0]);
+        cbValueData = sizeof(abValueData);
+        lResult = RegEnumValue(hKey, dwIndex, szValueName, &cbValueName, NULL, &dwType, abValueData, &cbValueData);
+        if ((lResult == ERROR_SUCCESS) && (dwType == REG_SZ))
+        {
+            if (!bDisplayedAny)
+            {
+                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+                bDisplayedAny = TRUE;
+            }
+            AppendMenu(hMenu, 0, ID_FAVORITES_MIN + GetMenuItemCount(hMenu), szValueName);
+        }
+        dwIndex++;
+    }
+    while(lResult == ERROR_SUCCESS);
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
+}
 
 static void OnEnterMenuLoop(HWND hWnd)
 {
@@ -344,7 +401,7 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
     return iResult;
 }
 
-static BOOL ExportRegistryFile(HWND hWnd)
+BOOL ExportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
     TCHAR ExportKeyPath[_MAX_PATH];
@@ -468,6 +525,28 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     }
 #endif
     return TRUE;
+}
+
+static void ChooseFavorite(LPCTSTR pszFavorite)
+{
+    HKEY hKey = NULL;
+    TCHAR szFavoritePath[512];
+    DWORD cbData, dwType;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        goto done;
+
+    cbData = (sizeof(szFavoritePath) / sizeof(szFavoritePath[0])) - 1;
+    memset(szFavoritePath, 0, sizeof(szFavoritePath));
+    if (RegQueryValueEx(hKey, pszFavorite, NULL, &dwType, (LPBYTE) szFavoritePath, &cbData) != ERROR_SUCCESS)
+        goto done;
+
+    if (dwType == REG_SZ)
+        SelectNode(g_pChildWnd->hTreeWnd, szFavoritePath);
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
 }
 
 BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName)
@@ -826,36 +905,48 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_EDIT_DELETE:
     {
-        UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
-        if(nSelected >= 1)
+        if (GetFocus() == g_pChildWnd->hListWnd)
         {
-          TCHAR msg[128], caption[128];
-          LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
-          LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
-          if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
+          UINT nSelected = ListView_GetSelectedCount(g_pChildWnd->hListWnd);
+          if(nSelected >= 1)
           {
-            int ni, errs;
-
-	    item = -1;
-	    errs = 0;
-            while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
+            TCHAR msg[128], caption[128];
+            LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
+            LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
+            if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
             {
-              valueName = GetValueName(g_pChildWnd->hListWnd, item);
-              if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+              int ni, errs;
+
+              item = -1;
+              errs = 0;
+              while((ni = ListView_GetNextItem(g_pChildWnd->hListWnd, item, LVNI_SELECTED)) > -1)
               {
-                errs++;
+                valueName = GetValueName(g_pChildWnd->hListWnd, item);
+                if(RegDeleteValue(hKey, valueName) != ERROR_SUCCESS)
+                {
+                  errs++;
+                }
+                item = ni;
               }
-	      item = ni;
-            }
 
-            RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
-            if(errs > 0)
-            {
-              LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-              LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
-              MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
+              RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
+              if(errs > 0)
+              {
+                LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+                LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
+                MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
+              }
             }
           }
+        } else 
+        if (GetFocus() == g_pChildWnd->hTreeWnd)
+        {
+          if (keyPath == 0 || *keyPath == 0)
+          {
+             MessageBeep(MB_ICONHAND); 
+          } else
+          if (DeleteKey(hWnd, hKeyRoot, keyPath))
+            DeleteNode(g_pChildWnd->hTreeWnd, 0);
         }
 	break;
     case ID_EDIT_NEW_STRINGVALUE:
@@ -867,7 +958,20 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_NEW_DWORDVALUE:
         CreateNewValue(hKeyRoot, keyPath, REG_DWORD);
         break;
+	case ID_EDIT_NEW_MULTISTRINGVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_MULTI_SZ);
+        break;
+	case ID_EDIT_NEW_EXPANDABLESTRINGVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_EXPAND_SZ);
+        break;
+
     }
+    case ID_EDIT_FIND:
+        FindDialog(hWnd);
+        break;
+    case ID_EDIT_FINDNEXT:
+        FindNext(hWnd);
+        break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, hKeyRoot, keyPath);
         break;
@@ -901,7 +1005,31 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
     default:
-        result = FALSE;
+        if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
+        {
+            HMENU hMenu;
+            MENUITEMINFO mii;
+            TCHAR szFavorite[512];
+
+            hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
+
+            memset(&mii, 0, sizeof(mii));
+            mii.cbSize = sizeof(mii);
+            mii.fMask = MIIM_TYPE;
+            mii.fType = MFT_STRING;
+            mii.dwTypeData = szFavorite;
+            mii.cch = sizeof(szFavorite) / sizeof(szFavorite[0]);
+
+            if (GetMenuItemInfo(hMenu, LOWORD(wParam) - ID_FAVORITES_MIN, TRUE, &mii))
+            {
+                ChooseFavorite(szFavorite);
+            }
+        }
+        else
+        {
+            result = FALSE;
+        }
+        break;
     }
 
     if(hKey)
@@ -940,6 +1068,9 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         resize_frame_client(hWnd);
         break;
     case WM_TIMER:
+        break;
+    case WM_INITMENU:
+        OnInitMenu(hWnd);
         break;
     case WM_ENTERMENULOOP:
         OnEnterMenuLoop(hWnd);

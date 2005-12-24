@@ -70,7 +70,7 @@ NtfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
 
 
 PFCB
-NtfsCreateFCB(PWSTR FileName)
+NtfsCreateFCB(PCWSTR FileName)
 {
   PFCB Fcb;
 
@@ -180,7 +180,7 @@ NtfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
 
 PFCB
 NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
-		     PWSTR FileName)
+		     PCWSTR FileName)
 {
   KIRQL  oldIrql;
   PFCB Fcb;

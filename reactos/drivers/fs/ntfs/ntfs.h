@@ -1,9 +1,9 @@
 #ifndef NTFS_H
 #define NTFS_H
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <ddk/ntdddisk.h>
+#include <ntddk.h>
+#include <ntifs.h>
+#include <ntdddisk.h>
 #include <ccros.h>
 
 #define USE_ROS_CC_AND_FS
@@ -355,7 +355,7 @@ NtfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 /* fcb.c */
 
 PFCB
-NtfsCreateFCB(PWCHAR FileName);
+NtfsCreateFCB(PCWSTR FileName);
 
 VOID
 NtfsDestroyFCB(PFCB Fcb);
@@ -380,7 +380,7 @@ NtfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
 
 PFCB
 NtfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
-		     PWSTR FileName);
+		     PCWSTR FileName);
 
 NTSTATUS
 NtfsFCBInitializeCache(PVCB Vcb,

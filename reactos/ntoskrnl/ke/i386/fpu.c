@@ -110,7 +110,7 @@ KiTagWordFxsaveToFnsave(PFXSAVE_FORMAT FxSave)
 
 
 STATIC VOID
-KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, CONST PFNSAVE_FORMAT FnSave)
+KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, PFNSAVE_FORMAT FnSave)
 {
     INT i;
 
@@ -138,7 +138,7 @@ KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, CONST PFNSAVE_FORMAT FnSave)
 }
 
 STATIC VOID
-KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, CONST PFXSAVE_FORMAT FxSave)
+KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, PFXSAVE_FORMAT FxSave)
 {
     INT i;
 
@@ -158,7 +158,7 @@ KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, CONST PFXSAVE_FORMAT FxSave)
 
 
 STATIC VOID
-KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_AREA *FloatingSaveArea)
+KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, FLOATING_SAVE_AREA *FloatingSaveArea)
 {
     if (FxsrSupport)
     {
@@ -373,7 +373,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
         (void) cr0;
         ASSERT((cr0 & X86_CR0_TS) == X86_CR0_TS);
-        ASSERT((Tf->Eflags & X86_EFLAGS_VM) == 0);
+        ASSERT((Tf->EFlags & X86_EFLAGS_VM) == 0);
         ASSERT((cr0 & X86_CR0_EM) == 0);
 
         /* disable scheduler, clear TS in cr0 */
@@ -485,7 +485,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         }
         KeLowerIrql(OldIrql);
 
-        PreviousMode = ((Tf->Cs & 0xffff) == USER_CS) ? (UserMode) : (KernelMode);
+        PreviousMode = ((Tf->SegCs & 0xffff) == (KGDT_R3_CODE | RPL_MASK)) ? (UserMode) : (KernelMode);
         DPRINT("Math/Xmm fault happened! (PreviousMode = %s)\n",
                (PreviousMode != KernelMode) ? ("UserMode") : ("KernelMode"));
 

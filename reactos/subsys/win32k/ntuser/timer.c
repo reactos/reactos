@@ -47,10 +47,10 @@ static ULONG          HintIndex = 0;
 
 
 #define IntLockWindowlessTimerBitmap() \
-  ExAcquireFastMutex(&Mutex)
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Mutex)
 
 #define IntUnlockWindowlessTimerBitmap() \
-  ExReleaseFastMutex(&Mutex)
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
 

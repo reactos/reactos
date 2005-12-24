@@ -15,6 +15,30 @@
  *        Define NASSERT before including this header to disable assertions
  */
 
+#ifdef CHECKPOINT
+#undef CHECKPOINT
+#endif
+
+#ifdef DPRINT
+#undef DPRINT
+#endif
+
+#ifndef NDEBUG
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
+#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#else
+#define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
+#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
+#else /* NDEBUG */
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
+#define DPRINT(args...)
+#else
+#define DPRINT
+#endif
+#define CHECKPOINT
+#endif /* NDEBUG */
+
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
@@ -35,8 +59,8 @@
 /* Assert only on "checked" version */
 #ifndef NASSERT
 #ifdef CONFIG_SMP
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->Number), DbgBreakPoint(); }
-#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->Number), DbgBreakPoint(); }
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber()), DbgBreakPoint(); }
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber()), DbgBreakPoint(); }
 #else
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
 #define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
@@ -93,23 +117,6 @@
 #endif /* DBG */
 
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
-
-#ifndef NDEBUG
-#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
-#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
-#else
-#define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
-#endif
-#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
-#else /* NDEBUG */
-#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
-#define DPRINT(args...)
-#else
-#define DPRINT
-#endif
-#define CHECKPOINT
-#endif /* NDEBUG */
-
 
 /*
  * FUNCTION: Assert a maximum value for the current irql

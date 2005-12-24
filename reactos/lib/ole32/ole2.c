@@ -47,19 +47,12 @@
 #include "wownt32.h"
 
 #include "wine/unicode.h"
-#include "wine/winbase16.h"
-#include "wine/wingdi16.h"
-#include "wine/winuser16.h"
 #include "compobj_private.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(accel);
-
-#define HICON_16(h32)		(LOWORD(h32))
-#define HICON_32(h16)		((HICON)(ULONG_PTR)(h16))
-#define HINSTANCE_32(h16)	((HINSTANCE)(ULONG_PTR)(h16))
 
 /******************************************************************************
  * These are static/global variables and internal data structures that the
@@ -672,6 +665,258 @@ HRESULT WINAPI OleRegGetMiscStatus(
   RegCloseKey(clsidKey);
 
   return S_OK;
+}
+
+static HRESULT EnumOLEVERB_Construct(HKEY hkeyVerb, ULONG index, IEnumOLEVERB **ppenum);
+
+typedef struct
+{
+    const IEnumOLEVERBVtbl *lpvtbl;
+    LONG ref;
+
+    HKEY hkeyVerb;
+    ULONG index;
+} EnumOLEVERB;
+
+static HRESULT WINAPI EnumOLEVERB_QueryInterface(
+    IEnumOLEVERB *iface, REFIID riid, void **ppv)
+{
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IEnumOLEVERB))
+    {
+        IUnknown_AddRef(iface);
+        *ppv = iface;
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI EnumOLEVERB_AddRef(
+    IEnumOLEVERB *iface)
+{
+    EnumOLEVERB *This = (EnumOLEVERB *)iface;
+    TRACE("()\n");
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI EnumOLEVERB_Release(
+    IEnumOLEVERB *iface)
+{
+    EnumOLEVERB *This = (EnumOLEVERB *)iface;
+    LONG refs = InterlockedDecrement(&This->ref);
+    TRACE("()\n");
+    if (!refs)
+    {
+        RegCloseKey(This->hkeyVerb);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+    return refs;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Next(
+    IEnumOLEVERB *iface, ULONG celt, LPOLEVERB rgelt,
+    ULONG *pceltFetched)
+{
+    EnumOLEVERB *This = (EnumOLEVERB *)iface;
+    HRESULT hr = S_OK;
+
+    TRACE("(%ld, %p, %p)\n", celt, rgelt, pceltFetched);
+
+    if (pceltFetched)
+        *pceltFetched = 0;
+
+    for (; celt; celt--, rgelt++)
+    {
+        WCHAR wszSubKey[20];
+        LONG cbData;
+        LPWSTR pwszOLEVERB;
+        LPWSTR pwszMenuFlags;
+        LPWSTR pwszAttribs;
+        LONG res = RegEnumKeyW(This->hkeyVerb, This->index, wszSubKey, sizeof(wszSubKey)/sizeof(wszSubKey[0]));
+        if (res == ERROR_NO_MORE_ITEMS)
+        {
+            hr = S_FALSE;
+            break;
+        }
+        else if (res != ERROR_SUCCESS)
+        {
+            ERR("RegEnumKeyW failed with error %ld\n", res);
+            hr = REGDB_E_READREGDB;
+            break;
+        }
+        res = RegQueryValueW(This->hkeyVerb, wszSubKey, NULL, &cbData);
+        if (res != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueW failed with error %ld\n", res);
+            hr = REGDB_E_READREGDB;
+            break;
+        }
+        pwszOLEVERB = CoTaskMemAlloc(cbData);
+        if (!pwszOLEVERB)
+        {
+            hr = E_OUTOFMEMORY;
+            break;
+        }
+        res = RegQueryValueW(This->hkeyVerb, wszSubKey, pwszOLEVERB, &cbData);
+        if (res != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueW failed with error %ld\n", res);
+            hr = REGDB_E_READREGDB;
+            CoTaskMemFree(pwszOLEVERB);
+            break;
+        }
+
+        TRACE("verb string: %s\n", debugstr_w(pwszOLEVERB));
+        pwszMenuFlags = strchrW(pwszOLEVERB, ',');
+        if (!pwszMenuFlags)
+        {
+            hr = OLEOBJ_E_INVALIDVERB;
+            CoTaskMemFree(pwszOLEVERB);
+            break;
+        }
+        /* nul terminate the name string and advance to first character */
+        *pwszMenuFlags = '\0';
+        pwszMenuFlags++;
+        pwszAttribs = strchrW(pwszMenuFlags, ',');
+        if (!pwszAttribs)
+        {
+            hr = OLEOBJ_E_INVALIDVERB;
+            CoTaskMemFree(pwszOLEVERB);
+            break;
+        }
+        /* nul terminate the menu string and advance to first character */
+        *pwszAttribs = '\0';
+        pwszAttribs++;
+
+        /* fill out structure for this verb */
+        rgelt->lVerb = atolW(wszSubKey);
+        rgelt->lpszVerbName = pwszOLEVERB; /* user should free */
+        rgelt->fuFlags = atolW(pwszMenuFlags);
+        rgelt->grfAttribs = atolW(pwszAttribs);
+
+        if (pceltFetched)
+            *pceltFetched++;
+        This->index++;
+    }
+    return hr;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Skip(
+    IEnumOLEVERB *iface, ULONG celt)
+{
+    EnumOLEVERB *This = (EnumOLEVERB *)iface;
+
+    TRACE("(%ld)\n", celt);
+
+    This->index += celt;
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Reset(
+    IEnumOLEVERB *iface)
+{
+    EnumOLEVERB *This = (EnumOLEVERB *)iface;
+
+    TRACE("()\n");
+
+    This->index = 0;
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumOLEVERB_Clone(
+    IEnumOLEVERB *iface,
+    IEnumOLEVERB **ppenum)
+{
+    EnumOLEVERB *This = (EnumOLEVERB *)iface;
+    HKEY hkeyVerb;
+    TRACE("(%p)\n", ppenum);
+    if (!DuplicateHandle(GetCurrentProcess(), This->hkeyVerb, GetCurrentProcess(), (HANDLE *)&hkeyVerb, 0, FALSE, DUPLICATE_SAME_ACCESS))
+        return HRESULT_FROM_WIN32(GetLastError());
+    return EnumOLEVERB_Construct(hkeyVerb, This->index, ppenum);
+}
+
+static const IEnumOLEVERBVtbl EnumOLEVERB_VTable =
+{
+    EnumOLEVERB_QueryInterface,
+    EnumOLEVERB_AddRef,
+    EnumOLEVERB_Release,
+    EnumOLEVERB_Next,
+    EnumOLEVERB_Skip,
+    EnumOLEVERB_Reset,
+    EnumOLEVERB_Clone
+};
+
+static HRESULT EnumOLEVERB_Construct(HKEY hkeyVerb, ULONG index, IEnumOLEVERB **ppenum)
+{
+    EnumOLEVERB *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (!This)
+    {
+        RegCloseKey(hkeyVerb);
+        return E_OUTOFMEMORY;
+    }
+    This->lpvtbl = &EnumOLEVERB_VTable;
+    This->ref = 1;
+    This->index = index;
+    This->hkeyVerb = hkeyVerb;
+    *ppenum = (IEnumOLEVERB *)&This->lpvtbl;
+    return S_OK;    
+}
+
+/***********************************************************************
+ *           OleRegEnumVerbs    [OLE32.@]
+ *
+ * Enumerates verbs associated with a class stored in the registry.
+ *
+ * PARAMS
+ *  clsid  [I] Class ID to enumerate the verbs for.
+ *  ppenum [O] Enumerator.
+ *
+ * RETURNS
+ *  S_OK: Success.
+ *  REGDB_E_CLASSNOTREG: The specified class does not have a key in the registry.
+ *  REGDB_E_READREGDB: The class key could not be opened for some other reason.
+ *  OLE_E_REGDB_KEY: The Verb subkey for the class is not present.
+ *  OLEOBJ_E_NOVERBS: The Verb subkey for the class is empty.
+ */
+HRESULT WINAPI OleRegEnumVerbs (REFCLSID clsid, LPENUMOLEVERB* ppenum)
+{
+    LONG res;
+    HKEY hkeyVerb;
+    DWORD dwSubKeys;
+    static const WCHAR wszVerb[] = {'V','e','r','b',0};
+
+    TRACE("(%s, %p)\n", debugstr_guid(clsid), ppenum);
+
+    res = COM_OpenKeyForCLSID(clsid, wszVerb, KEY_READ, &hkeyVerb);
+    if (FAILED(res))
+    {
+        if (res == REGDB_E_CLASSNOTREG)
+            ERR("CLSID %s not registered\n", debugstr_guid(clsid));
+        else if (res == REGDB_E_KEYMISSING)
+            ERR("no Verbs key for class %s\n", debugstr_guid(clsid));
+        else
+            ERR("failed to open Verbs key for CLSID %s with error %ld\n",
+                debugstr_guid(clsid), res);
+        return res;
+    }
+
+    res = RegQueryInfoKeyW(hkeyVerb, NULL, NULL, NULL, &dwSubKeys, NULL,
+                          NULL, NULL, NULL, NULL, NULL, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        ERR("failed to get subkey count with error %ld\n", GetLastError());
+        return REGDB_E_READREGDB;
+    }
+
+    if (!dwSubKeys)
+    {
+        WARN("class %s has no verbs\n", debugstr_guid(clsid));
+        RegCloseKey(hkeyVerb);
+        return OLEOBJ_E_NOVERBS;
+    }
+
+    return EnumOLEVERB_Construct(hkeyVerb, 0, ppenum);
 }
 
 /******************************************************************************
@@ -1308,21 +1553,23 @@ HRESULT WINAPI OleDestroyMenuDescriptor(
 
 /***********************************************************************
  * OleSetMenuDescriptor [OLE32.@]
- * Installs or removes OLE dispatching code for the containers frame window
- * FIXME: The lpFrame and lpActiveObject parameters are currently ignored
- * OLE should install context sensitive help F1 filtering for the app when
- * these are non null.
+ * Installs or removes OLE dispatching code for the containers frame window.
  *
- * PARAMS:
+ * PARAMS
  *     hOleMenu         Handle to composite menu descriptor
  *     hwndFrame        Handle to containers frame window
  *     hwndActiveObject Handle to objects in-place activation window
  *     lpFrame          Pointer to IOleInPlaceFrame on containers window
  *     lpActiveObject   Pointer to IOleInPlaceActiveObject on active in-place object
  *
- * RETURNS:
+ * RETURNS
  *      S_OK                               - menu installed correctly
  *      E_FAIL, E_INVALIDARG, E_UNEXPECTED - failure
+ *
+ * FIXME
+ *      The lpFrame and lpActiveObject parameters are currently ignored
+ *      OLE should install context sensitive help F1 filtering for the app when
+ *      these are non null.
  */
 HRESULT WINAPI OleSetMenuDescriptor(
   HOLEMENU               hOleMenu,
@@ -1339,8 +1586,8 @@ HRESULT WINAPI OleSetMenuDescriptor(
 
   if ( lpFrame || lpActiveObject )
   {
-     FIXME("(%x, %p, %p, %p, %p), Context sensitive help filtering not implemented!\n",
-	(unsigned int)hOleMenu,
+     FIXME("(%p, %p, %p, %p, %p), Context sensitive help filtering not implemented!\n",
+	hOleMenu,
 	hwndFrame,
 	hwndActiveObject,
 	lpFrame,
@@ -2286,7 +2533,7 @@ HRESULT WINAPI OleCreate(
 
     *ppvObj = pUnk;
 
-    TRACE("-- %p \n", pUnk);
+    TRACE("-- %p\n", pUnk);
     return hres;
 }
 
@@ -2302,11 +2549,9 @@ HRESULT WINAPI OleSetAutoConvert(REFCLSID clsidOld, REFCLSID clsidNew)
 
     TRACE("(%s,%s)\n", debugstr_guid(clsidOld), debugstr_guid(clsidNew));
     
-    if (COM_OpenKeyForCLSID(clsidOld, KEY_READ | KEY_WRITE, &hkey))
-    {
-        res = REGDB_E_CLASSNOTREG;
-	goto done;
-    }
+    res = COM_OpenKeyForCLSID(clsidOld, NULL, KEY_READ | KEY_WRITE, &hkey);
+    if (FAILED(res))
+        goto done;
     StringFromGUID2(clsidNew, szClsidNew, CHARS_IN_GUID);
     if (RegSetValueW(hkey, wszAutoConvertTo, REG_SZ, szClsidNew, (strlenW(szClsidNew)+1) * sizeof(WCHAR)))
     {
@@ -2329,12 +2574,22 @@ HRESULT WINAPI OleDoAutoConvert(LPSTORAGE pStg, LPCLSID pClsidNew)
 }
 
 /******************************************************************************
- *              OleDoAutoConvert        [OLE2.79]
+ *              OleIsRunning        [OLE32.@]
  */
-HRESULT WINAPI OleDoAutoConvert16(LPSTORAGE pStg, LPCLSID pClsidNew)
+BOOL WINAPI OleIsRunning(LPOLEOBJECT pObject)
 {
-    FIXME("(%p,%p) : stub\n",pStg,pClsidNew);
-    return E_NOTIMPL;
+    IRunnableObject *pRunnable;
+    HRESULT hr;
+    BOOL running;
+
+    TRACE("(%p)\n", pObject);
+
+    hr = IOleObject_QueryInterface(pObject, &IID_IRunnableObject, (void **)&pRunnable);
+    if (FAILED(hr))
+        return FALSE;
+    running = IRunnableObject_IsRunning(pRunnable);
+    IRunnableObject_Release(pRunnable);
+    return running;
 }
 
 /***********************************************************************

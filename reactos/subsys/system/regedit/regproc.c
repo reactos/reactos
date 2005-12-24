@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <tchar.h>
 #include <malloc.h>
+#include <shlwapi.h>
 #include "regproc.h"
 
 #define REG_VAL_BUF_SIZE        4096
@@ -1503,33 +1504,6 @@ const CHAR *getAppName(void)
     return app_name;
 }
 
-LONG RegDeleteKeyRecursive(HKEY hKey, LPCTSTR lpSubKey)
-{
-    LONG lResult;
-    HKEY hSubKey = NULL;
-    DWORD dwIndex, cbName;
-    TCHAR szSubKey[256];
-    FILETIME ft;
-
-    lResult = RegOpenKeyEx(hKey, lpSubKey, 0, KEY_ALL_ACCESS, &hSubKey);
-    if (lResult == ERROR_SUCCESS)
-    {
-        dwIndex = 0;
-        do
-        {
-            cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
-            lResult = RegEnumKeyEx(hSubKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
-            if (lResult == ERROR_SUCCESS)
-                RegDeleteKeyRecursive(hSubKey, szSubKey);
-        }
-        while(lResult == ERROR_SUCCESS);
-
-        RegCloseKey(hSubKey);
-    }
-
-    return RegDeleteKey(hKey, lpSubKey);
-}
-
 LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
 {
     LONG lResult;
@@ -1597,7 +1571,7 @@ done:
     if (hDestSubKey)
         RegCloseKey(hDestSubKey);
     if (lResult != ERROR_SUCCESS)
-        RegDeleteKeyRecursive(hDestKey, lpDestSubKey);
+        SHDeleteKey(hDestKey, lpDestSubKey);
     return lResult;
 
 }
@@ -1611,7 +1585,7 @@ LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrc
 
     lResult = RegCopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
     if (lResult == ERROR_SUCCESS)
-        RegDeleteKeyRecursive(hSrcKey, lpSrcSubKey);
+        SHDeleteKey(hSrcKey, lpSrcSubKey);
 
     return lResult;
 }
@@ -1620,7 +1594,7 @@ LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
 {
     LPCTSTR s;
     LPTSTR lpNewSubKey = NULL;
-	LONG Ret = 0;
+    LONG Ret = 0;
 
     s = _tcsrchr(lpSubKey, _T('\\'));
     if (s)
@@ -1710,6 +1684,145 @@ done:
     if (hSubKey)
         RegCloseKey(hSubKey);
     return lResult;
+}
+
+/******************************************************************************
+ * Searching
+ */
+
+static LONG RegNextKey(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength)
+{
+    LONG lResult;
+    LPTSTR s;
+    LPCTSTR pszOriginalKey;
+    TCHAR szKeyName[256];
+    HKEY hSubKey, hBaseKey;
+    DWORD dwIndex = 0;
+    DWORD cbName;
+    FILETIME ft;
+    BOOL bFoundKey = FALSE;
+
+    /* Try accessing a subkey */
+    if (RegOpenKeyEx(hKey, lpSubKey, 0, KEY_ALL_ACCESS, &hSubKey) == ERROR_SUCCESS)
+    {
+        cbName = iSubKeyLength - _tcslen(lpSubKey) - 1;
+        lResult = RegEnumKeyEx(hSubKey, 0, lpSubKey + _tcslen(lpSubKey) + 1,
+            &cbName, NULL, NULL, NULL, &ft);
+        RegCloseKey(hSubKey);
+        
+        if (lResult == ERROR_SUCCESS)
+        {
+            lpSubKey[_tcslen(lpSubKey)] = '\\';
+            bFoundKey = TRUE;
+        }
+    }
+
+    if (!bFoundKey)
+    {
+        /* Go up and find the next sibling key */
+        do
+        {
+            s = _tcsrchr(lpSubKey, '\\');
+            if (s)
+            {
+                *s = '\0';
+                pszOriginalKey = s + 1;
+
+                hBaseKey = NULL;
+                RegOpenKeyEx(hKey, lpSubKey, 0, KEY_ALL_ACCESS, &hBaseKey);
+            }
+            else
+            {
+                pszOriginalKey = lpSubKey;
+                hBaseKey = hKey;
+            }
+
+            if (hBaseKey)
+            {
+                dwIndex = 0;
+                do
+                {
+                    lResult = RegEnumKey(hBaseKey, dwIndex++, szKeyName, sizeof(szKeyName) / sizeof(szKeyName[0]));
+                }
+                while((lResult == ERROR_SUCCESS) && _tcscmp(szKeyName, pszOriginalKey));
+
+                if (lResult == ERROR_SUCCESS)
+                {
+                    lResult = RegEnumKey(hBaseKey, dwIndex++, szKeyName, sizeof(szKeyName) / sizeof(szKeyName[0]));
+                    if (lResult == ERROR_SUCCESS)
+                    {
+                        bFoundKey = TRUE;
+                        _sntprintf(lpSubKey + _tcslen(lpSubKey), iSubKeyLength - _tcslen(lpSubKey), _T("\\%s"), szKeyName);
+                    }
+                }
+                RegCloseKey(hBaseKey);
+            }
+        }
+        while(!bFoundKey);
+    }
+    return bFoundKey ? ERROR_SUCCESS : ERROR_NO_MORE_ITEMS;
+}
+
+static BOOL RegSearchCompare(LPCTSTR s1, LPCTSTR s2, DWORD dwSearchFlags)
+{
+    BOOL bResult;
+    if (dwSearchFlags & RSF_WHOLESTRING)
+    {
+        if (dwSearchFlags & RSF_MATCHCASE)
+            bResult = !_tcscmp(s1, s2);
+        else
+            bResult = !_tcsicmp(s1, s2);
+    }
+    else
+    {
+        if (dwSearchFlags & RSF_MATCHCASE)
+            bResult = (_tcsstr(s1, s2) != NULL);
+        else
+        {
+            /* My kingdom for _tcsistr() */
+            bResult = FALSE;
+            while(*s1)
+            {
+                if (!_tcsnicmp(s1, s2, _tcslen(s2)))
+                {
+                    bResult = TRUE;
+                    break;
+                }
+                s1++;
+            }
+        }
+    }
+    return bResult;
+}
+
+LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
+    LPCTSTR pszSearchString, DWORD dwValueIndex,    
+    DWORD dwSearchFlags, BOOL (*pfnCallback)(LPVOID), LPVOID lpParam)
+{
+    LONG lResult;
+    LPCTSTR s;
+
+    if (dwSearchFlags & (RSF_LOOKATVALUES | RSF_LOOKATDATA))
+        return ERROR_CALL_NOT_IMPLEMENTED;    /* NYI */
+
+    do
+    {
+        if (pfnCallback)
+        {
+            if (pfnCallback(lpParam))
+                return ERROR_OPERATION_ABORTED;
+        }
+
+        lResult = RegNextKey(hKey, lpSubKey, iSubKeyLength);
+        if (lResult != ERROR_SUCCESS)
+            return lResult;
+
+        s = _tcsrchr(lpSubKey, '\\');
+        s = s ? s + 1 : lpSubKey;
+    }
+    while(!(dwSearchFlags & RSF_LOOKATKEYS) || !RegSearchCompare(s, pszSearchString, dwSearchFlags));
+
+    return ERROR_SUCCESS;
 }
 
 /******************************************************************************

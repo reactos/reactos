@@ -293,7 +293,7 @@ void ProcessBootParams(void)
 // bNoCtrlKeys()
 //
 //*************************************************************************
-BOOLEAN inline bNoCtrlKeys(void)
+BOOLEAN __inline bNoCtrlKeys(void)
 {
     return (!bControl && !bAlt && !bShift);
 }

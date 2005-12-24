@@ -16,37 +16,11 @@
 
 /* LOCAL MACROS and TYPES ***************************************************/
 
-#define  AUTO_DRIVE         ((ULONG)-1)
+#define AUTO_DRIVE         ((ULONG)-1)
 
-#define  PARTITION_MAGIC    0xaa55
-
-#define  PARTITION_TBL_SIZE 4
+#define PARTITION_MAGIC    0xaa55
 
 #include <pshpack1.h>
-
-typedef struct _PARTITION
-{
-  unsigned char   BootFlags;					/* bootable?  0=no, 128=yes  */
-  unsigned char   StartingHead;					/* beginning head number */
-  unsigned char   StartingSector;				/* beginning sector number */
-  unsigned char   StartingCylinder;				/* 10 bit nmbr, with high 2 bits put in begsect */
-  unsigned char   PartitionType;				/* Operating System type indicator code */
-  unsigned char   EndingHead;					/* ending head number */
-  unsigned char   EndingSector;					/* ending sector number */
-  unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
-  unsigned int  StartingBlock;					/* first sector relative to start of disk */
-  unsigned int  SectorCount;					/* number of sectors in partition */
-} PARTITION, *PPARTITION;
-
-
-typedef struct _PARTITION_SECTOR
-{
-  UCHAR BootCode[440];				/* 0x000 */
-  ULONG Signature;				/* 0x1B8 */
-  UCHAR Reserved[2];				/* 0x1BC */
-  PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
-  USHORT Magic;					/* 0x1FE */
-} PARTITION_SECTOR, *PPARTITION_SECTOR;
 
 typedef struct _REG_DISK_MOUNT_INFO
 {
@@ -56,7 +30,6 @@ typedef struct _REG_DISK_MOUNT_INFO
 
 #include <poppack.h>
 
-
 typedef enum _DISK_MANAGER
 {
   NoDiskManager,
@@ -64,7 +37,7 @@ typedef enum _DISK_MANAGER
   EZ_Drive
 } DISK_MANAGER;
 
-HAL_DISPATCH EXPORTED HalDispatchTable =
+HAL_DISPATCH HalDispatchTable =
 {
     HAL_DISPATCH_VERSION,
     (pHalQuerySystemInformation) NULL,	// HalQuerySystemInformation
@@ -90,7 +63,7 @@ HAL_DISPATCH EXPORTED HalDispatchTable =
     (pHalMirrorVerify) NULL                //HalMirrorVerify;
 };
 
-HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
+HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
 {
     HAL_PRIVATE_DISPATCH_VERSION
 };
@@ -1070,7 +1043,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			      AUTO_DRIVE,
 			      DOSDEVICE_DRIVE_REMOVABLE,
                               0,
-                              (LARGE_INTEGER)0LL,
+                              RtlConvertLongToLargeInteger(0),
                               hKey);
 	    }
 	}
@@ -1101,7 +1074,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		      (i < 2) ? i : AUTO_DRIVE,
 		      DOSDEVICE_DRIVE_REMOVABLE,
                       0,
-                      (LARGE_INTEGER)0LL,
+                      RtlConvertLongToLargeInteger(0),
                       hKey);
     }
 
@@ -1121,7 +1094,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 		      AUTO_DRIVE,
 		      DOSDEVICE_DRIVE_CDROM,
                       0,
-                      (LARGE_INTEGER)0LL,
+                      RtlConvertLongToLargeInteger(0),
                       hKey);
     }
 

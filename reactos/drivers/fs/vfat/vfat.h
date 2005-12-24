@@ -1,6 +1,7 @@
 #include <debug.h>
 #include <ntifs.h>
 #include <ntdddisk.h>
+#include <reactos/helper.h>
 
 #ifdef __GNUC__
 #include <ndk/ntndk.h>
@@ -477,10 +478,6 @@ BOOLEAN FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
 /*  --------------------------------------------------------  create.c  */
 
 NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext);
-
-NTSTATUS VfatOpenFile (PDEVICE_EXTENSION DeviceExt,
-                       PFILE_OBJECT FileObject,
-		       PVFATFCB* parentFcb);
 
 NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
                    PVFATFCB Parent,

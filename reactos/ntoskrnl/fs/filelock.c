@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, FsRtlpInitFileLockingImplementation)
+#endif
+
+
 /*
 NOTE:
 I'm not using resource syncronization here, since FsRtlFastCheckLockForRead/Write
@@ -27,7 +32,7 @@ PAGED_LOOKASIDE_LIST    LockLookaside;
 
 
 
-inline BOOLEAN
+__inline BOOLEAN
 IsOverlappingLock(
    PFILE_LOCK_INFO Lock,
    PLARGE_INTEGER StartOffset,
@@ -48,7 +53,7 @@ IsOverlappingLock(
 }
 
 
-inline BOOLEAN
+__inline BOOLEAN
 IsSurroundingLock(
    PFILE_LOCK_INFO Lock,
    PLARGE_INTEGER StartOffset,

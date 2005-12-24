@@ -110,4 +110,9 @@ typedef struct
 
 extern BOOL COMBO_FlipListbox( LPHEADCOMBO, BOOL, BOOL );
 
+#define LB_INSERTSTRING_UPPER     0x1AA
+#define LB_INSERTSTRING_LOWER     0x1AB
+#define LB_ADDSTRING_UPPER        0x1AC
+#define LB_ADDSTRING_LOWER        0x1AD
+
 #endif /* _ROS_CONTROLS_H */

@@ -50,7 +50,6 @@
  *   - WM_LBUTTONDBLCLK
  *   - WM_MEASUREITEM
  *   - WM_PALETTECHANGED
- *   - WM_PRINTCLIENT
  *   - WM_QUERYNEWPALETTE
  *   - WM_RBUTTONDOWN
  *   - WM_RBUTTONUP
@@ -2132,9 +2131,9 @@ REBAR_CommonSetupBand (HWND hwnd, LPREBARBANDINFOA lprbbi, REBAR_BAND *lpBand)
 	    lpBand->hwndChild = lprbbi->hwndChild;
 	    lpBand->hwndPrevParent =
 		SetParent (lpBand->hwndChild, hwnd);
-	    /* below in trace fro WinRAR */
+	    /* below in trace from WinRAR */
 	    ShowWindow(lpBand->hwndChild, SW_SHOWNOACTIVATE | SW_SHOWNORMAL);
-	    /* above in trace fro WinRAR */
+	    /* above in trace from WinRAR */
 	}
 	else {
 	    TRACE("child: %p  prev parent: %p\n",
@@ -4768,11 +4767,11 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_NOTIFYFORMAT:
 	    return REBAR_NotifyFormat (infoPtr, wParam, lParam);
 
+	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    return REBAR_Paint (infoPtr, wParam, lParam);
 
 /*      case WM_PALETTECHANGED: supported according to ControlSpy */
-/*      case WM_PRINTCLIENT:    supported according to ControlSpy */
 /*      case WM_QUERYNEWPALETTE:supported according to ControlSpy */
 /*      case WM_RBUTTONDOWN:    supported according to ControlSpy */
 /*      case WM_RBUTTONUP:      supported according to ControlSpy */

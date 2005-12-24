@@ -50,6 +50,7 @@ HMENU hMenuFrame;
 HMENU hPopupMenus = 0;
 UINT nClipboardFormat;
 LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
+const TCHAR g_szGeneralRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit");
 
 
 #define MAX_LOADSTRING  100
@@ -76,7 +77,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     BOOL AclUiAvailable;
     HMENU hEditMenu;
     TCHAR szBuffer[256];
-    LPCTSTR s;
 
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
@@ -144,7 +144,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         DWORD dwError = GetLastError();
     } */
 
-    hFrameWnd = CreateWindowEx(WS_EX_WINDOWEDGE, (LPCTSTR)(int)hFrameWndClass, szTitle,
+    hFrameWnd = CreateWindowEx(WS_EX_WINDOWEDGE, (LPCTSTR)(UlongToPtr(hFrameWndClass)), szTitle,
                                WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
@@ -163,15 +163,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     }
 
     /* Restore position */
-    if (RegQueryStringValue(HKEY_CURRENT_USER,
-        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
+    if (RegQueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey,
         _T("LastKey"),
         szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
     {
-        s = szBuffer;
-        if (!_tcsncmp(s, _T("My Computer\\"), 12))
-            s += 12;
-        SelectNode(g_pChildWnd->hTreeWnd, s);
+        SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
     }
 
     ShowWindow(hFrameWnd, nCmdShow);
@@ -246,11 +242,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
-    hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_REGEDIT);
+    hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
 
     /* Main message loop */
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)
+        if (!TranslateAccelerator(hFrameWnd, hAccel, &msg)
             && !TranslateChildTabMessage(&msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

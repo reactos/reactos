@@ -29,7 +29,6 @@
 
 #include "dbghelp_private.h"
 #include "winreg.h"
-#include "ntstatus.h"
 #include "thread.h" /* FIXME: must be included before winternl.h */
 #include "wine/debug.h"
 #include "stackframe.h"

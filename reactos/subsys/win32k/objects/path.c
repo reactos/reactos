@@ -31,10 +31,11 @@
 BOOL FASTCALL PATH_AddEntry (GdiPath *pPath, const POINT *pPoint, BYTE flags);
 BOOL FASTCALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
 BOOL FASTCALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
+BOOL FASTCALL PATH_FillPath( PDC dc, GdiPath *pPath );
 BOOL FASTCALL PATH_FlattenPath (GdiPath *pPath);
 VOID FASTCALL PATH_GetPathFromDC (PDC dc, GdiPath **ppPath);
 VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
-BOOL FASTCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
+BOOL FASTCALL PATH_PathToRegion (GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
 BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
 VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
 
@@ -46,16 +47,47 @@ BOOL
 STDCALL
 NtGdiAbortPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+
+  PATH_EmptyPath( pPath );
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
 STDCALL
-NtGdiBeginPath(HDC  hDC)
+NtGdiBeginPath( HDC  hDC )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+      
+  /* If path is already open, do nothing */
+  if ( pPath->state != PATH_Open )
+  {
+    /* Make sure that path is empty */
+    PATH_EmptyPath( pPath );
+
+    /* Initialize variables for new path */
+    pPath->newStroke = TRUE;
+    pPath->state = PATH_Open;
+  }
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
@@ -86,16 +118,50 @@ BOOL
 STDCALL
 NtGdiEndPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if ( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+
+  /* Check that path is currently being constructed */
+  if( pPath->state != PATH_Open )
+  {
+    ret = FALSE;
+  }
+  /* Set flag to indicate that path is finished */
+  else pPath->state = PATH_Closed;
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
 STDCALL
 NtGdiFillPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  GdiPath *pPath;
+  BOOL ret = TRUE;
+  PDC dc = DC_LockDc ( hDC );
+
+  if ( !dc ) return FALSE;
+
+  /* Get pointer to path */
+  PATH_GetPathFromDC ( dc, &pPath );
+  
+  ret = PATH_FillPath( dc, pPath );
+  if( ret ) 
+  {
+    /* FIXME: Should the path be emptied even if conversion
+       failed? */
+    PATH_EmptyPath( pPath );
+  }
+
+  DC_UnlockDc ( dc );
+  return ret;
 }
 
 BOOL
@@ -169,9 +235,118 @@ NtGdiWidenPath(HDC  hDC)
    return FALSE;
 }
 
+BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
+                         int  Mode)
+{
+ GdiPath *pPath;
+ HRGN  hrgnPath;
+ BOOL  success = FALSE;
+ PDC dc = DC_LockDc ( hDC );
+
+ if( !dc ) return FALSE;
+
+ PATH_GetPathFromDC ( dc, &pPath );
+
+ /* Check that path is closed */
+ if( pPath->state != PATH_Closed )
+ {
+   SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+   return FALSE;
+ }
+ /* Construct a region from the path */
+ else if( PATH_PathToRegion( pPath, dc->w.polyFillMode, &hrgnPath ) )
+ {
+   success = IntGdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
+   NtGdiDeleteObject( hrgnPath );
+
+   /* Empty the path */
+   if( success )
+     PATH_EmptyPath( pPath );
+   /* FIXME: Should this function delete the path even if it failed? */
+ }
+
+ DC_UnlockDc ( dc );
+ return success;
+}
+
 /***********************************************************************
  * Exported functions
  */
+
+
+/* PATH_FillPath
+ * 
+ * 
+ */
+BOOL
+FASTCALL 
+PATH_FillPath( PDC dc, GdiPath *pPath )
+{
+  INT   mapMode, graphicsMode;
+  SIZE  ptViewportExt, ptWindowExt;
+  POINT ptViewportOrg, ptWindowOrg;
+  XFORM xform;
+  HRGN  hrgn;
+
+  if( pPath->state != PATH_Closed )
+  {
+    SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+    return FALSE;
+  }
+    
+  if( PATH_PathToRegion( pPath, dc->w.polyFillMode, &hrgn ))
+  {
+    /* Since PaintRgn interprets the region as being in logical coordinates
+     * but the points we store for the path are already in device
+     * coordinates, we have to set the mapping mode to MM_TEXT temporarily.
+     * Using SaveDC to save information about the mapping mode / world
+     * transform would be easier but would require more overhead, especially
+     * now that SaveDC saves the current path.
+     */
+
+    /* Save the information about the old mapping mode */
+    mapMode = NtGdiGetMapMode( dc->hSelf );
+    NtGdiGetViewportExtEx( dc->hSelf, &ptViewportExt );
+    NtGdiGetViewportOrgEx( dc->hSelf, &ptViewportOrg );
+    NtGdiGetWindowExtEx( dc->hSelf, &ptWindowExt );
+    NtGdiGetWindowOrgEx( dc->hSelf, &ptWindowOrg );
+
+    /* Save world transform
+     * NB: The Windows documentation on world transforms would lead one to
+     * believe that this has to be done only in GM_ADVANCED; however, my
+     * tests show that resetting the graphics mode to GM_COMPATIBLE does
+     * not reset the world transform.
+     */
+    NtGdiGetWorldTransform( dc->hSelf, &xform );
+
+    /* Set MM_TEXT */
+    NtGdiSetMapMode( dc->hSelf, MM_TEXT );
+    NtGdiSetViewportOrgEx( dc->hSelf, 0, 0, NULL );
+    NtGdiSetWindowOrgEx( dc->hSelf, 0, 0, NULL );
+    graphicsMode = NtGdiGetGraphicsMode( dc->hSelf );
+    NtGdiSetGraphicsMode( dc->hSelf, GM_ADVANCED );
+    NtGdiModifyWorldTransform( dc->hSelf, &xform, MWT_IDENTITY );
+    NtGdiSetGraphicsMode( dc->hSelf, graphicsMode );
+
+    /* Paint the region */
+    NtGdiPaintRgn( dc->hSelf, hrgn );
+    NtGdiDeleteObject( hrgn );
+    /* Restore the old mapping mode */
+    NtGdiSetMapMode( dc->hSelf, mapMode );
+    NtGdiSetViewportExtEx( dc->hSelf, ptViewportExt.cx, ptViewportExt.cy, NULL );
+    NtGdiSetViewportOrgEx( dc->hSelf, ptViewportOrg.x, ptViewportOrg.y, NULL );
+    NtGdiSetWindowExtEx( dc->hSelf, ptWindowExt.cx, ptWindowExt.cy, NULL );
+    NtGdiSetWindowOrgEx( dc->hSelf, ptWindowOrg.x, ptWindowOrg.y, NULL );
+
+    /* Go to GM_ADVANCED temporarily to restore the world transform */
+    graphicsMode = NtGdiGetGraphicsMode( dc->hSelf );
+    NtGdiSetGraphicsMode( dc->hSelf, GM_ADVANCED );
+    NtGdiSetWorldTransform( dc->hSelf, &xform );
+    NtGdiSetGraphicsMode( dc->hSelf, graphicsMode );
+    return TRUE;
+  }
+  return FALSE;
+}
 
 /* PATH_InitGdiPath
  *
@@ -838,19 +1013,15 @@ PATH_FlattenPath(GdiPath *pPath)
  * error occurs, SetLastError is called with the appropriate value and
  * FALSE is returned.
  */
-#if 0
-// FIXME - don't reenable this function until you deal with the
-// const pPath being given to PATH_FlattenPath() - which is
-// expecting a non-const*. Since this function isn't being called
-// at the moment, I'm commenting it out until the issue needs to
-// be addressed.
+
+
 BOOL
 FASTCALL
-PATH_PathToRegion ( const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
+PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
 {
   int    numStrokes, iStroke, i;
   INT  *pNumPointsInStroke;
-  HRGN hrgn;
+  HRGN hrgn = 0;
 
   assert ( pPath!=NULL );
   assert ( pHrgn!=NULL );
@@ -904,7 +1075,6 @@ PATH_PathToRegion ( const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
   *pHrgn=hrgn;
   return TRUE;
 }
-#endif
 
 /* PATH_EmptyPath
  *

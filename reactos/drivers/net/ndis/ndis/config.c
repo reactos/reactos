@@ -180,7 +180,7 @@ NdisOpenConfiguration(
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
     *Status = ZwDuplicateObject(NtCurrentProcess(), RootKeyHandle,
-                                NtCurrentProcess(), &KeyHandle, 0, FALSE,
+                                NtCurrentProcess(), &KeyHandle, 0, 0,
                                 DUPLICATE_SAME_ACCESS);
     if(!NT_SUCCESS(*Status))
     {

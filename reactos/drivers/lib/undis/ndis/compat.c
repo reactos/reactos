@@ -73,7 +73,7 @@ ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 }
 
 static
-inline
+__inline
 PSINGLE_LIST_ENTRY
  PopEntrySList(
 	PSLIST_HEADER	ListHead
@@ -93,7 +93,7 @@ PSINGLE_LIST_ENTRY
 
 
 static
-inline
+__inline
 VOID
 PushEntrySList (
 	PSLIST_HEADER	ListHead,

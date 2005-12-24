@@ -545,7 +545,7 @@ int write_nls_files()
 	/*{20106, FALSE, "", "IA5 German"},*/
 	/*{20107, FALSE, "", "IA5 Swedish"},*/
 	/*{20108, FALSE, "", "IA5 Norwegian"},*/
-	/*{20127, FALSE, "", "US ASCII"},*/
+	/*{20127, FALSE, "", "US ASCII"}, */
 	/*{20261, FALSE, "", "T.61"},*/
 	/*{20269, FALSE, "", "ISO 6937 NonSpacing Accent"},*/
 	/*{20273, FALSE, "", "IBM EBCDIC Germany"},*/
@@ -557,11 +557,11 @@ int write_nls_files()
 	/*{20290, FALSE, "", "IBM EBCDIC Japanese Katakana Extended"},*/
 	/*{20297, FALSE, "", "IBM EBCDIC France"},*/
 	/*{20420, FALSE, "", "IBM EBCDIC Arabic"},*/
-	/*{20423, FALSE, "", "IBM EBCDIC Greek"},*/
+	/*{20423, FALSE, "IBM869.TXT", "IBM EBCDIC Greek"},*/
 	/*{20424, FALSE, "", "IBM EBCDIC Hebrew"},*/
 	/*{20833, FALSE, "", "IBM EBCDIC Korean Extended"},*/
 	/*{20838, FALSE, "", "IBM EBCDIC Thai"},*/
-	/*{20871, FALSE, "", "IBM EBCDIC Icelandic"},*/
+	{20871, FALSE, "ReactOS/IBMCP861.TXT", "IBM EBCDIC Icelandic"},
 	/*{20880, FALSE, "", "IBM EBCDIC Cyrillic (Russian)"},*/
 	{20866, FALSE, LIBDIR"MAPPINGS/VENDORS/MISC/KOI8-R.TXT", "Russian KOI8"},
 	/*{20905, FALSE, "", "IBM EBCDIC Turkish"},*/

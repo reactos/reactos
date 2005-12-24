@@ -26,25 +26,28 @@ Exception::Exception ()
 
 Exception::Exception ( const string& message )
 {
-	Message = message;
+	_e = message;
 }
 
-Exception::Exception ( const char* format,
-                       ...)
+Exception::Exception ( const char* format, ...)
 {
 	va_list args;
-	va_start ( args,
-	           format);
-	Message = ssvprintf ( format,
-	                      args);
+	va_start ( args, format);
+	_e = ssvprintf ( format, args);
 	va_end ( args );
 }
 
-void Exception::SetMessage ( const char* message,
-                             va_list args)
+void Exception::SetMessage ( const char* format, ...)
 {
-	Message = ssvprintf ( message,
-	                      args);
+	va_list args;
+	va_start ( args, format);
+	_e = ssvprintf ( format, args);
+	va_end ( args );
+}
+
+void Exception::SetMessageV ( const char* message, va_list args )
+{
+	_e = ssvprintf ( message, args);
 }
 
 
@@ -54,30 +57,29 @@ OutOfMemoryException::OutOfMemoryException ()
 }
 
 
-InvalidOperationException::InvalidOperationException ( const char* filename,
-                                                       const int linenumber )
+InvalidOperationException::InvalidOperationException (
+	const char* filename,
+	const int linenumber )
+	: Exception ( "%s:%d", filename, linenumber )
 {
-	Message = ssprintf ( "%s:%d",
-	                     filename,
-	                     linenumber );
 }
 
-InvalidOperationException::InvalidOperationException ( const char* filename,
-                                                       const int linenumber,
-                                                       const char* message,
-                                                       ... )
+InvalidOperationException::InvalidOperationException (
+	const char* filename,
+	const int linenumber,
+	const char* message,
+	... )
 {
 	string errorMessage;
 	va_list args;
-	va_start ( args,
-	           message );
-	errorMessage = ssvprintf ( message,
-	                           args );
+	va_start ( args, message );
+	errorMessage = ssvprintf ( message, args );
 	va_end ( args );
-	Message = ssprintf ( "%s:%d %s",
-	                     filename,
-	                     linenumber,
-	                     errorMessage.c_str () );
+	SetMessage (
+		"%s:%d %s",
+		filename,
+		linenumber,
+		errorMessage.c_str () );
 }
 
 
@@ -97,49 +99,15 @@ AccessDeniedException::AccessDeniedException ( const string& filename)
 }
 
 
-InvalidBuildFileException::InvalidBuildFileException ( const string& location,
-                                                       const char* message,
-                                                       ...)
-{
-	va_list args;
-	va_start ( args,
-	           message );
-	SetLocationMessage ( location, message, args );
-	va_end ( args );
-}
-
-InvalidBuildFileException::InvalidBuildFileException ()
-{
-}
-
-void
-InvalidBuildFileException::SetLocationMessage ( const std::string& location,
-                                                const char* message,
-                                                va_list args )
-{
-	Message = location + ": " + ssvprintf ( message, args );
-}
-
-XMLSyntaxErrorException::XMLSyntaxErrorException ( const string& location,
-	                                               const char* message,
-	                                               ... )
-{
-	va_list args;
-	va_start ( args,
-	          message );
-	SetLocationMessage ( location, message, args );
-	va_end ( args );
-}
-
-
 RequiredAttributeNotFoundException::RequiredAttributeNotFoundException (
 	const string& location,
 	const string& attributeName,
 	const string& elementName )
-	: InvalidBuildFileException ( location,
-	                              "Required attribute '%s' not found on '%s'.",
-	                              attributeName.c_str (),
-	                              elementName.c_str ())
+	: XMLInvalidBuildFileException (
+		location,
+		"Required attribute '%s' not found on '%s'.",
+		attributeName.c_str (),
+		elementName.c_str ())
 {
 }
 
@@ -147,10 +115,11 @@ InvalidAttributeValueException::InvalidAttributeValueException (
 	const string& location,
 	const string& name,
 	const string& value )
-	: InvalidBuildFileException ( location,
-	                              "Attribute '%s' has an invalid value '%s'.",
-	                              name.c_str (),
-	                              value.c_str () )
+	: XMLInvalidBuildFileException (
+		location,
+		"Attribute '%s' has an invalid value '%s'.",
+		name.c_str (),
+		value.c_str () )
 {
 	
 }
@@ -171,9 +140,10 @@ UnknownBackendException::UnknownBackendException ( const string& name )
 
 UnknownModuleTypeException::UnknownModuleTypeException ( const string& location,
                                                          int moduletype )
-	: InvalidBuildFileException ( location,
-	                              "module type requested: %i",
-	                              moduletype )
+	: XMLInvalidBuildFileException (
+		location,
+		"module type requested: %i",
+		moduletype )
 {
 }
 

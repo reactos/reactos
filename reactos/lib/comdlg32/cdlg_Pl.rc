@@ -144,7 +144,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Przyk³ad",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
     LTEXT           "Skr&ypt:",stc7 ,98,114,40,9
-    COMBOBOX        cmb5,98,124,120,10,CBS_DROPDOWNLIST |CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
@@ -402,6 +402,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY       "Za ma³o pamiêci dla tej operacji."
     PD32_GENERIC_ERROR       "Podczas tej operacji wyst¹pi³ b³¹d."
     PD32_DRIVER_UNKNOWN      "Nieznany sterownik drukarki."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Domyœlna Drukarka; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "W kolejce znajduj¹ siê %d dokumenty"

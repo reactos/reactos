@@ -6,6 +6,9 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
+#ifndef __K32_H
+#define __K32_H
+
 /* INCLUDES ******************************************************************/
 
 /* PSDK/NDK Headers */
@@ -27,6 +30,8 @@
 /* DDK Driver Headers */
 #include <ntddbeep.h>
 #include <ntddser.h>
+#include <mountmgr.h>
+#include <mountdev.h>
 
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"
@@ -37,4 +42,4 @@
 /* Helper Header */
 #include <reactos/helper.h>
 
-/* EOF */
+#endif

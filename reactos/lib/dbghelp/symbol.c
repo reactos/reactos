@@ -54,14 +54,14 @@ struct line_info
     } u;
 };
 
-inline static int cmp_addr(ULONG64 a1, ULONG64 a2)
+__inline static int cmp_addr(ULONG64 a1, ULONG64 a2)
 {
     if (a1 > a2) return 1;
     if (a1 < a2) return -1;
     return 0;
 }
 
-inline static int cmp_sorttab_addr(const struct module* module, int idx, ULONG64 addr)
+__inline static int cmp_sorttab_addr(const struct module* module, int idx, ULONG64 addr)
 {
     ULONG64     ref;
 
@@ -80,7 +80,7 @@ int symt_cmp_addr(const void* p1, const void* p2)
     return cmp_addr(a1, a2);
 }
 
-static inline void re_append(char** mask, unsigned* len, char ch)
+static __inline void re_append(char** mask, unsigned* len, char ch)
 {
     *mask = HeapReAlloc(GetProcessHeap(), 0, *mask, ++(*len));
     (*mask)[*len - 2] = ch;

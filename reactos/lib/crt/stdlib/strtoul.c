@@ -1,9 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <limits.h>
+#include <precomp.h>
 #include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <internal/file.h>
 
 /*
  * Convert a string to an unsigned long integer.

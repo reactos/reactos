@@ -35,9 +35,13 @@
 #endif/*WIN32*/
 #endif/*_MSC_VER*/
 
+#include <infhost.h>
+
 #include "ssprintf.h"
 #include "exception.h"
-#include "XML.h"
+#include "xml.h"
+
+class Backend; // forward declaration
 
 typedef std::vector<std::string> string_list;
 
@@ -66,6 +70,7 @@ extern char cBadSep;
 
 #define MS_VS_DEF_VERSION "7.10"
 
+class Directory;
 class Project;
 class IfableData;
 class Module;
@@ -91,8 +96,37 @@ class InstallFile;
 class PchFile;
 class StubbedComponent;
 class StubbedSymbol;
+class CompilationUnit;
+class FileLocation;
+class AutoRegister;
 
 class SourceFileTest;
+
+
+typedef std::map<std::string,Directory*> directory_map;
+
+class Directory
+{
+public:
+	std::string name;
+	directory_map subdirs;
+	Directory ( const std::string& name );
+	void Add ( const char* subdir );
+	void GenerateTree ( const std::string& parent,
+	                    bool verbose );
+	std::string EscapeSpaces ( std::string path );
+	void CreateRule ( FILE* f,
+	                  const std::string& parent );
+private:
+	bool mkdir_p ( const char* path );
+	std::string ReplaceVariable ( std::string name,
+	                              std::string value,
+	                              std::string path );
+	std::string GetEnvironmentVariable ( const std::string& name );
+	void ResolveVariablesInPath ( char* buf,
+	                              std::string path );
+	bool CreateDirectory ( std::string path );
+};
 
 
 class Configuration
@@ -104,6 +138,7 @@ public:
 	bool CleanAsYouGo;
 	bool AutomaticDependencies;
 	bool CheckDependenciesForModuleOnly;
+	bool CompilationUnitsEnabled;
 	std::string CheckDependenciesForModuleOnlyModule;
 	std::string VSProjectVersion;
 	bool MakeHandlesInstallDirectories;
@@ -121,6 +156,7 @@ public:
 	                                                         const std::string& defaultValue );
 };
 
+
 class FileSupportCode
 {
 public:
@@ -128,39 +164,58 @@ public:
 	                             std::string filename );
 };
 
+
+class ParseContext
+{
+public:
+	If* ifData;
+	CompilationUnit* compilationUnit;
+	ParseContext ();
+};
+
+
 class IfableData
 {
 public:
+	std::vector<CompilationUnit*> compilationUnits;
 	std::vector<File*> files;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
 	std::vector<Library*> libraries;
 	std::vector<Property*> properties;
+	std::vector<Module*> modules;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<If*> ifs;
 
 	~IfableData();
 	void ProcessXML();
+	void ExtractModules( std::vector<Module*> &modules );
 };
 
 class Project
 {
 	std::string xmlfile;
 	XMLElement *node, *head;
+	Backend* _backend;
 public:
+	const Configuration& configuration;
 	std::string name;
 	std::string makefile;
 	XMLIncludes xmlbuildfiles;
-	std::vector<Module*> modules;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<CDFile*> cdfiles;
 	std::vector<InstallFile*> installfiles;
+	std::vector<Module*> modules;
 	IfableData non_if_data;
 
-	Project ( const std::string& filename );
+	Project ( const Configuration& configuration,
+	          const std::string& filename );
 	~Project ();
+	void SetBackend ( Backend* backend ) { _backend = backend; }
+	Backend& GetBackend() { return *_backend; }
 	void WriteConfigurationFile ();
 	void ExecuteInvocations ();
+
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
@@ -177,7 +232,7 @@ private:
 	void ReadXml ();
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
-	                            If* pIf = NULL );
+	                            ParseContext& parseContext );
 
 	// disable copy semantics
 	Project ( const Project& );
@@ -205,7 +260,8 @@ enum ModuleType
 	Test = 15,
 	RpcServer = 16,
 	RpcClient = 17,
-	Alias = 18
+	Alias = 18,
+	BootProgram = 19
 };
 
 enum HostType
@@ -226,12 +282,14 @@ public:
 	std::string extension;
 	std::string entrypoint;
 	std::string baseaddress;
+	std::string payload;
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
 	bool isUnicode;
 	Bootstrap* bootstrap;
+	AutoRegister* autoRegister;
 	IfableData non_if_data;
 	std::vector<Invoke*> invocations;
 	std::vector<Dependency*> dependencies;
@@ -264,6 +322,7 @@ public:
 	std::string GetBasePath () const; // "path"
 	std::string GetPath () const; // "path/foo.exe"
 	std::string GetPathWithPrefix ( const std::string& prefix ) const; // "path/prefixfoo.exe"
+	std::string GetPathToBaseDir() const; // "../" offset to rootdirectory
 	void GetTargets ( string_list& ) const;
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
@@ -277,7 +336,7 @@ private:
 	std::string GetDefaultModuleBaseaddress () const;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
-	                            If* pIf = NULL );
+	                            ParseContext& parseContext );
 };
 
 
@@ -340,7 +399,6 @@ public:
 	       bool _isPreCompiledHeader );
 
 	void ProcessXML();
-	bool IsGeneratedFile () const;
 };
 
 
@@ -771,11 +829,113 @@ private:
 	std::string StripSymbol ( std::string symbol );
 };
 
+
+class CompilationUnit
+{
+public:
+	const Project* project;
+	const Module* module;
+	const XMLElement* node;
+	std::string name;
+	std::vector<File*> files;
+
+	CompilationUnit ( File* file );
+	CompilationUnit ( const Project* project,
+	                  const Module* module,
+	                  const XMLElement* node );
+	~CompilationUnit ();
+	void ProcessXML();
+	bool IsGeneratedFile () const;
+	bool HasFileWithExtension ( const std::string& extension ) const;
+	bool IsFirstFile () const;
+	FileLocation* GetFilename ( Directory* intermediateDirectory ) const;
+	std::string GetSwitches () const;
+};
+
+
+class CompilationUnitSupportCode
+{
+public:
+	const Project& project;
+
+	CompilationUnitSupportCode ( const Project& project );
+	~CompilationUnitSupportCode ();
+	void Generate ( bool verbose );
+private:
+	void GenerateForModule ( Module& module,
+	                         bool verbose );
+	std::string GetCompilationUnitFilename ( Module& module,
+	                                         CompilationUnit& compilationUnit );
+	void WriteCompilationUnitFile ( Module& module,
+	                                CompilationUnit& compilationUnit );
+};
+
+
+class FileLocation
+{
+public:
+	Directory* directory;
+	std::string filename;
+	FileLocation ( Directory* directory,
+	               std::string filename );
+};
+
+
+enum AutoRegisterType
+{
+	DllRegisterServer,
+	DllInstall,
+	Both
+};
+
+class AutoRegister
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	std::string infSection;
+	AutoRegisterType type;
+	AutoRegister ( const Project& project_,
+	               const Module* module_,
+	               const XMLElement& node_ );
+	~AutoRegister ();
+	void ProcessXML();
+private:
+	bool IsSupportedModuleType ( ModuleType type );
+	AutoRegisterType GetAutoRegisterType( std::string type );
+	void Initialize ();
+};
+
+
+class SysSetupGenerator
+{
+public:
+	const Project& project;
+	SysSetupGenerator ( const Project& project );
+	~SysSetupGenerator ();
+	void Generate ();
+private:
+	std::string GetDirectoryId ( const Module& module );
+	std::string GetFlags ( const Module& module );
+	void Generate ( HINF inf,
+	                const Module& module );
+};
+
+
+extern void
+InitializeEnvironment ();
+
 extern std::string
 Right ( const std::string& s, size_t n );
 
 extern std::string
 Replace ( const std::string& s, const std::string& find, const std::string& with );
+
+extern std::string
+ChangeSeparator ( const std::string& s,
+                  const char fromSeparator,
+                  const char toSeparator );
 
 extern std::string
 FixSeparator ( const std::string& s );
@@ -808,5 +968,8 @@ GetFilename ( const std::string& filename );
 
 extern std::string
 NormalizeFilename ( const std::string& filename );
+
+extern std::string
+ToLower ( std::string filename );
 
 #endif /* __RBUILD_H */

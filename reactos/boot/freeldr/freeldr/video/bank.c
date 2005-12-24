@@ -18,12 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <video.h>
-#include <comm.h>
-#include <rtl.h>
-#include <debug.h>
-#include <machine.h>
-
 
 #if 0 /* This stuff isn't used and as far as I'm concerned it can go - GvG */
 U32		CurrentMemoryBank = 0;

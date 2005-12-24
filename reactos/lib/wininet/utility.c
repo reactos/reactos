@@ -42,7 +42,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 #define TIME_STRING_LEN  30
-#define CP_UNIXCP     65010 /* Wine extension */
 
 
 time_t ConvertTimeString(LPCWSTR asctime)
@@ -151,9 +150,9 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     else
         len = strlenW(lpszServerName);
 
-    sz = WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, NULL, 0, NULL, NULL );
+    sz = WideCharToMultiByte( CP_THREAD_ACP, 0, lpszServerName, len, NULL, 0, NULL, NULL );
     name = HeapAlloc(GetProcessHeap(), 0, sz+1);
-    WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, name, sz, NULL, NULL );
+    WideCharToMultiByte( CP_THREAD_ACP, 0, lpszServerName, len, name, sz, NULL, NULL );
     name[sz] = 0;
     *phe = gethostbyname(name);
     HeapFree( GetProcessHeap(), 0, name );

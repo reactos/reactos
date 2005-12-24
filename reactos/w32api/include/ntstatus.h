@@ -18,16 +18,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __WINE_NTSTATUS_H
-#define __WINE_NTSTATUS_H
+#ifndef _NTSTATUS_
+#define _NTSTATUS_
 
 #ifndef WIN32_NO_STATUS
+
 /*
  * Debug codes
  */
-#define DBG_PRINTEXCEPTION_C             ((NTSTATUS)0x40010006L)
-#define DBG_CONTROL_C                    ((NTSTATUS)0x40010005L)
-#define DBG_CONTROL_BREAK                ((NTSTATUS)0x40010008L)
+
+#define DBG_EXCEPTION_HANDLED            ((NTSTATUS)0x00010001)
+#define DBG_CONTINUE                     ((NTSTATUS)0x00010002)
+#define DBG_REPLY_LATER                  ((NTSTATUS)0x40010001)
+#define DBG_UNABLE_TO_PROVIDE_HANDLE     ((NTSTATUS)0x40010002)
+#define DBG_TERMINATE_THREAD             ((NTSTATUS)0x40010003)
+#define DBG_TERMINATE_PROCESS            ((NTSTATUS)0x40010004)
+#define DBG_CONTROL_C                    ((NTSTATUS)0x40010005)
+#define DBG_PRINTEXCEPTION_C             ((NTSTATUS)0x40010006)
+#define DBG_RIPEXCEPTION                 ((NTSTATUS)0x40010007)
+#define DBG_CONTROL_BREAK                ((NTSTATUS)0x40010008)
+#define DBG_COMMAND_EXCEPTION            ((NTSTATUS)0x40010009)
+#define DBG_EXCEPTION_NOT_HANDLED        ((NTSTATUS)0x80010001)
+#define DBG_NO_STATE_CHANGE              ((NTSTATUS)0xC0010001)
+#define DBG_APP_NOT_IDLE                 ((NTSTATUS)0xC0010002)
 
 /*
  * Exception codes
@@ -1108,4 +1121,4 @@
 
 #endif /* WIN32_NO_STATUS */
 
-#endif /* __WINE_NTSTATUS_H */
+#endif /* _NTSTATUS_ */

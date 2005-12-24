@@ -97,7 +97,7 @@ static __inline BOOLEAN Intsafe_CanOffsetPointer(IN CONST VOID * Pointer, IN SIZ
 
 #ifndef RTL_CONTAINS_FIELD
 #define RTL_CONTAINS_FIELD(P_, SIZE_, FIELD_) \
- ((((char *)(P_)) + (SIZE_)) > (((char *)(&((P_)->FIELD_))) + sizeof((P_)->FIELD_)))
+  ((ULONG_PTR)(P_) + (ULONG_PTR)(SIZE_) > (ULONG_PTR)&((P_)->FIELD_) + sizeof((P_)->FIELD_))
 #endif
 
 static __inline BOOLEAN IsPowerOf2(IN ULONG Number)

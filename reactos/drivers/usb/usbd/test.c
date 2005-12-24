@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <windows.h>
-#include <ddk/usbdi.h>
+#include <usbdi.h>
 
 typedef ULONG STDCALL
 (*USBD_GetInterfaceLengthTYPE)(

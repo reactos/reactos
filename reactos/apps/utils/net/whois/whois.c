@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	struct hostent *hp;
 	struct servent *sp;
 	int s;
-	char *host;
+	const char *host;
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	int err;

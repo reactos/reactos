@@ -2,6 +2,7 @@
  * RichEdit - functions dealing with editor object
  *
  * Copyright 2004 by Krzysztof Foltman
+ * Copyright 2005 by Cihan Altinay
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -83,7 +84,7 @@
   - EM_PASTESPECIAL
   + EM_POSFROMCHAR
   + EM_REDO 2.0
-  - EM_REQUESTRESIZE
+  + EM_REQUESTRESIZE
   + EM_REPLACESEL (proper style?) ANSI&Unicode
   - EM_SCROLL
   - EM_SCROLLCARET
@@ -153,7 +154,7 @@
   - EN_MSGFILTER
   - EN_OLEOPFAILED
   - EN_PROTECTED
-  - EN_REQUESTRESIZE
+  + EN_REQUESTRESIZE
   - EN_SAVECLIPBOARD
   + EN_SELCHANGE 
   + EN_SETFOCUS
@@ -208,6 +209,7 @@
  * - full justification
  * - hyphenation
  * - tables
+ * - ListBox & ComboBox not implemented
  *
  * Bugs that are probably fixed, but not so easy to verify:
  * - EN_UPDATE/EN_CHANGE are handled very incorrectly (should be OK now)
@@ -234,6 +236,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 int me_debug = 0;
 HANDLE me_heap = NULL;
+
+static BOOL ME_ListBoxRegistered = FALSE;
+static BOOL ME_ComboBoxRegistered = FALSE;
 
 static ME_TextBuffer *ME_MakeText(void) {
   
@@ -633,6 +638,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   }
   ME_MoveCaret(editor);
   ME_SendSelChange(editor);
+  ME_SendRequestResize(editor, FALSE);
 
   return 0;
 }
@@ -820,6 +826,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->nUDArrowX = -1;
   ed->nSequence = 0;
   ed->rgbBackColor = -1;
+  ed->hbrBackground = GetSysColorBrush(COLOR_WINDOW);
   ed->bCaretAtEnd = FALSE;
   ed->nEventMask = 0;
   ed->nModifyStep = 0;
@@ -925,12 +932,15 @@ void ME_DestroyEditor(ME_TextEditor *editor)
     if (editor->pFontCache[i].hFont)
       DeleteObject(editor->pFontCache[i].hFont);
   }
-    
+  DeleteObject(editor->hbrBackground);
+
   FREE_OBJ(editor);
 }
 
 static WCHAR wszClassName[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '2', '0', 'W', 0};
 static WCHAR wszClassName50[] = {'R', 'i', 'c', 'h', 'E', 'd', 'i', 't', '5', '0', 'W', 0};
+static WCHAR wszClassNameListBox[] = {'R','E','L','i','s','t','B','o','x','2','0','W', 0};
+static WCHAR wszClassNameComboBox[] = {'R','E','C','o','m','b','o','B','o','x','2','0','W', 0};
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -948,6 +958,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       UnregisterClassW(wszClassName50, 0);
       UnregisterClassA("RichEdit20A", 0);
       UnregisterClassA("RichEdit50A", 0);
+      if (ME_ListBoxRegistered)
+          UnregisterClassW(wszClassNameListBox, 0);
+      if (ME_ComboBoxRegistered)
+          UnregisterClassW(wszClassNameComboBox, 0);
       HeapDestroy (me_heap);
       me_heap = NULL;
       break;
@@ -1134,7 +1148,6 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_HIDESELECTION)
   UNSUPPORTED_MSG(EM_LIMITTEXT) /* also known as EM_SETLIMITTEXT */
   UNSUPPORTED_MSG(EM_PASTESPECIAL)
-  UNSUPPORTED_MSG(EM_REQUESTRESIZE)
   UNSUPPORTED_MSG(EM_SCROLL)
   UNSUPPORTED_MSG(EM_SCROLLCARET)
   UNSUPPORTED_MSG(EM_SELECTIONTYPE)
@@ -1265,10 +1278,18 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_SETBKGNDCOLOR:
   {
     LRESULT lColor = ME_GetBackColor(editor);
+    if (editor->rgbBackColor != -1)
+      DeleteObject(editor->hbrBackground);
     if (wParam)
+    {
       editor->rgbBackColor = -1;
+      editor->hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+    }
     else
+    {
       editor->rgbBackColor = lParam;
+      editor->hbrBackground = CreateSolidBrush(editor->rgbBackColor);
+    }
     if (editor->bRedraw)
     {
       InvalidateRect(hWnd, NULL, TRUE);
@@ -1792,12 +1813,9 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     {
       HDC hDC = (HDC)wParam;
       RECT rc;
-      COLORREF rgbBG = ME_GetBackColor(editor);
       if (GetUpdateRect(hWnd,&rc,TRUE))
       {
-        HBRUSH hbr = CreateSolidBrush(rgbBG);
-        FillRect(hDC, &rc, hbr);
-        DeleteObject(hbr);
+        FillRect(hDC, &rc, editor->hbrBackground);
       }
     }
     return 1;
@@ -1974,6 +1992,9 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       ME_RewrapRepaint(editor);
     return 0;
   }
+  case EM_REQUESTRESIZE:
+    ME_SendRequestResize(editor, TRUE);
+    return 0;
   case WM_SETREDRAW:
     editor->bRedraw = wParam;
     return 0;
@@ -2157,12 +2178,62 @@ HRESULT WINAPI CreateTextServices(IUnknown *punkOuter, void *pITextHost,
   return E_FAIL; /* E_NOTIMPL isn't allowed by MSDN */
 }
 
+LRESULT WINAPI REComboWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  /* FIXME: Not implemented */
+  TRACE("hWnd %p msg %04x (%s) %08x %08lx\n",
+        hWnd, msg, get_msg_name(msg), wParam, lParam);
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+LRESULT WINAPI REListWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  /* FIXME: Not implemented */
+  TRACE("hWnd %p msg %04x (%s) %08x %08lx\n",
+        hWnd, msg, get_msg_name(msg), wParam, lParam);
+  return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
 /******************************************************************
  *        REExtendedRegisterClass (RICHED20.8)
  *
  * FIXME undocumented
+ * Need to check for errors and implement controls and callbacks 
  */
-void WINAPI REExtendedRegisterClass(void)
+LRESULT WINAPI REExtendedRegisterClass(void)
 {
-  FIXME("stub\n");
+  WNDCLASSW wcW;
+  UINT result;
+
+  FIXME("semi stub\n");
+
+  wcW.cbClsExtra = 0;
+  wcW.cbWndExtra = 4;
+  wcW.hInstance = NULL;
+  wcW.hIcon = NULL;
+  wcW.hCursor = NULL;
+  wcW.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+  wcW.lpszMenuName = NULL;
+
+  if (!ME_ListBoxRegistered)
+  {
+      wcW.style = CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS;
+      wcW.lpfnWndProc = REListWndProc;
+      wcW.lpszClassName = wszClassNameListBox;
+      if (RegisterClassW(&wcW)) ME_ListBoxRegistered = TRUE;
+  }
+
+  if (!ME_ComboBoxRegistered)
+  {
+      wcW.style = CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
+      wcW.lpfnWndProc = REComboWndProc;
+      wcW.lpszClassName = wszClassNameComboBox;
+      if (RegisterClassW(&wcW)) ME_ComboBoxRegistered = TRUE;  
+  }
+
+  result = 0;
+  if (ME_ListBoxRegistered)
+      result += 1;
+  if (ME_ComboBoxRegistered)
+      result += 2;
+
+  return result;
 }

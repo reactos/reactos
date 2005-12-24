@@ -18,7 +18,7 @@
 VOID STDCALL
 HalRequestIpi(ULONG ProcessorNo)
 {
-  DPRINT("HalRequestIpi(ProcessorNo %d)\n", ProcessorNo);
+  DPRINT("HalRequestIpi(ProcessorNo %lu)\n", ProcessorNo);
 }
 
 /* EOF */

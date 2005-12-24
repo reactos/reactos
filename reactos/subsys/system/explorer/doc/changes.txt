@@ -165,3 +165,4 @@ If you search for more information, look into the Subversion repository.
 09.10.2005	m. fuchs	Fix for Bugzilla Entry 330: Correctly handle WM_COMMAND messages in web windows without web control
 			m. fuchs	replace "search computer" start menu entry by a "not yet implemented" message
 01.11.2005	m. fuchs	String::str(), String::toLower() to allow conventient and WINE compatible string conversions
+29.11.2005	m. fuchs	Adjustments for Visual Studio 2005: use new secure CT functions, COUNTOF for buffer sizes

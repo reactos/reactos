@@ -35,6 +35,7 @@
 #include "olectl.h"
 #include "shlobj.h"
 #include "exdisp.h"
+#include "mshtmhst.h"
 
 /**********************************************************************
  * IClassFactory declaration for SHDOCVW.DLL
@@ -48,11 +49,21 @@ typedef struct
 
 extern IClassFactoryImpl SHDOCVW_ClassFactory;
 
+/**********************************************************************
+ * Shell Instance Objects
+ */
+extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid, 
+    REFIID riid, LPVOID *ppvClassObj);
 
 /**********************************************************************
  * WebBrowser declaration for SHDOCVW.DLL
  */
+
+typedef struct ConnectionPoint ConnectionPoint;
+
 typedef struct {
+    /* Interfaces available via WebBrowser object */
+
     const IWebBrowser2Vtbl              *lpWebBrowser2Vtbl;
     const IOleObjectVtbl                *lpOleObjectVtbl;
     const IOleInPlaceObjectVtbl         *lpOleInPlaceObjectVtbl;
@@ -62,10 +73,48 @@ typedef struct {
     const IProvideClassInfo2Vtbl        *lpProvideClassInfoVtbl;
     const IQuickActivateVtbl            *lpQuickActivateVtbl;
     const IConnectionPointContainerVtbl *lpConnectionPointContainerVtbl;
+    const IViewObject2Vtbl              *lpViewObjectVtbl;
+    const IOleInPlaceActiveObjectVtbl   *lpOleInPlaceActiveObjectVtbl;
+
+    /* Interfaces available for embeded document */
+
+    const IOleClientSiteVtbl            *lpOleClientSiteVtbl;
+    const IOleInPlaceSiteVtbl           *lpOleInPlaceSiteVtbl;
+    const IDocHostUIHandler2Vtbl        *lpDocHostUIHandlerVtbl;
+    const IOleDocumentSiteVtbl          *lpOleDocumentSiteVtbl;
+
+    /* Interfaces of InPlaceFrame object */
+
+    const IOleInPlaceFrameVtbl          *lpOleInPlaceFrameVtbl;
 
     LONG ref;
 
+    IUnknown *document;
+
     IOleClientSite *client;
+    IOleContainer *container;
+    IOleDocumentView *view;
+
+    LPOLESTR url;
+
+    /* window context */
+
+    HWND iphwnd;
+    HWND frame_hwnd;
+    IOleInPlaceFrame *frame;
+    IOleInPlaceUIWindow *uiwindow;
+    RECT pos_rect;
+    RECT clip_rect;
+    OLEINPLACEFRAMEINFO frameinfo;
+
+    HWND doc_view_hwnd;
+    HWND shell_embedding_hwnd;
+
+    /* Connection points */
+
+    ConnectionPoint *cp_wbe2;
+    ConnectionPoint *cp_wbe;
+    ConnectionPoint *cp_pns;
 } WebBrowser;
 
 #define WEBBROWSER(x)   ((IWebBrowser*)                 &(x)->lpWebBrowser2Vtbl)
@@ -78,24 +127,40 @@ typedef struct {
 #define CLASSINFO(x)    ((IProvideClassInfo2*)          &(x)->lpProvideClassInfoVtbl)
 #define QUICKACT(x)     ((IQuickActivate*)              &(x)->lpQuickActivateVtbl)
 #define CONPTCONT(x)    ((IConnectionPointContainer*)   &(x)->lpConnectionPointContainerVtbl)
+#define VIEWOBJ(x)      ((IViewObject*)                 &(x)->lpViewObjectVtbl);
+#define VIEWOBJ2(x)     ((IViewObject2*)                &(x)->lpViewObjectVtbl);
+#define ACTIVEOBJ(x)    ((IOleInPlaceActiveObject*)     &(x)->lpOleInPlaceActiveObjectVtbl)
+
+#define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
+#define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
+#define DOCHOSTUI(x)    ((IDocHostUIHandler*)           &(x)->lpDocHostUIHandlerVtbl)
+#define DOCHOSTUI2(x)   ((IDocHostUIHandler2*)          &(x)->lpDocHostUIHandlerVtbl)
+#define DOCSITE(x)      ((IOleDocumentSite*)            &(x)->lpOleDocumentSiteVtbl)
+
+#define INPLACEFRAME(x) ((IOleInPlaceFrame*)            &(x)->lpOleInPlaceFrameVtbl)
 
 void WebBrowser_OleObject_Init(WebBrowser*);
+void WebBrowser_ViewObject_Init(WebBrowser*);
 void WebBrowser_Persist_Init(WebBrowser*);
 void WebBrowser_ClassInfo_Init(WebBrowser*);
 void WebBrowser_Misc_Init(WebBrowser*);
 void WebBrowser_Events_Init(WebBrowser*);
 
+void WebBrowser_ClientSite_Init(WebBrowser*);
+void WebBrowser_DocHost_Init(WebBrowser*);
+
+void WebBrowser_Frame_Init(WebBrowser*);
+
+void WebBrowser_OleObject_Destroy(WebBrowser*);
+void WebBrowser_Events_Destroy(WebBrowser*);
+void WebBrowser_ClientSite_Destroy(WebBrowser*);
+
 HRESULT WebBrowser_Create(IUnknown*,REFIID,void**);
 
-/**********************************************************************
- * IConnectionPoint declaration for SHDOCVW.DLL
- */
-typedef struct
-{
-    /* IUnknown fields */
-    const IConnectionPointVtbl *lpVtbl;
-    LONG ref;
-} IConnectionPointImpl;
+void create_doc_view_hwnd(WebBrowser *This);
+void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*);
+
+#define WB_WM_NAVIGATE2 (WM_USER+100)
 
 #define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
@@ -105,5 +170,7 @@ typedef struct
 extern LONG SHDOCVW_refCount;
 static inline void SHDOCVW_LockModule(void) { InterlockedIncrement( &SHDOCVW_refCount ); }
 static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_refCount ); }
+
+extern HINSTANCE shdocvw_hinstance;
 
 #endif /* __WINE_SHDOCVW_H */

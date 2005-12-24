@@ -12,7 +12,7 @@
 
 /* FUNCTIONS **************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #include "parallel.h"
 

@@ -37,12 +37,12 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
   ULONG i = 0;
   BOOL Exit = FALSE;
 
-  ip = (PUCHAR)((Tf->Cs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
-  sp = (PUSHORT)((Tf->Ss & 0xFFFF) * 16 + (Tf->Esp & 0xFFFF));
+  ip = (PUCHAR)((Tf->SegCs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
+  sp = (PUSHORT)((Tf->HardwareSegSs & 0xFFFF) * 16 + (Tf->HardwareEsp & 0xFFFF));
   dsp = (PULONG)sp;
 
   DPRINT("KeV86GPF handling %x at %x:%x ss:sp %x:%x Flags %x\n",
-	 ip[0], Tf->Cs, Tf->Eip, Tf->Ss, Tf->Esp, VTf->regs->Flags);
+	 ip[0], Tf->SegCs, Tf->Eip, Tf->Ss, Tf->HardwareEsp, VTf->regs->Flags);
 
   while (!Exit)
     {
@@ -113,9 +113,9 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      Tf->Eip++;
 	      if (!BigAddressPrefix)
 		{
-		  Tf->Esp = Tf->Esp - 2;
+		  Tf->HardwareEsp = Tf->HardwareEsp - 2;
 		  sp = sp - 1;
-		  sp[0] = (USHORT)(Tf->Eflags & 0xFFFF);
+		  sp[0] = (USHORT)(Tf->EFlags & 0xFFFF);
 		  if (VTf->regs->Vif == 1)
 		    {
 		      sp[0] = (USHORT)(sp[0] | INTERRUPT_FLAG);
@@ -127,9 +127,9 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		}
 	      else
 		{
-		  Tf->Esp = Tf->Esp - 4;
+		  Tf->HardwareEsp = Tf->HardwareEsp - 4;
 		  dsp = dsp - 1;
-		  dsp[0] = Tf->Eflags;
+		  dsp[0] = Tf->EFlags;
 		  dsp[0] = dsp[0] & VALID_FLAGS;
 		  if (VTf->regs->Vif == 1)
 		    {
@@ -157,9 +157,9 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      Tf->Eip++;
 	      if (!BigAddressPrefix)
 		{
-		  Tf->Eflags = Tf->Eflags & (~0xFFFF);
-		  Tf->Eflags = Tf->Eflags | (sp[0] & VALID_FLAGS);
-		  if (Tf->Eflags & INTERRUPT_FLAG)
+		  Tf->EFlags = Tf->EFlags & (~0xFFFF);
+		  Tf->EFlags = Tf->EFlags | (sp[0] & VALID_FLAGS);
+		  if (Tf->EFlags & INTERRUPT_FLAG)
 		    {
 		      VTf->regs->Vif = 1;
 		    }
@@ -167,12 +167,12 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		    {
 		      VTf->regs->Vif = 0;
 		    }
-		  Tf->Eflags = Tf->Eflags | INTERRUPT_FLAG;
-		  Tf->Esp = Tf->Esp + 2;
+		  Tf->EFlags = Tf->EFlags | INTERRUPT_FLAG;
+		  Tf->HardwareEsp = Tf->HardwareEsp + 2;
 		}
 	      else
 		{
-		  Tf->Eflags = Tf->Eflags | (dsp[0] & VALID_FLAGS);
+		  Tf->EFlags = Tf->EFlags | (dsp[0] & VALID_FLAGS);
 		  if (dsp[0] & INTERRUPT_FLAG)
 		    {
 		      VTf->regs->Vif = 1;
@@ -181,8 +181,8 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		    {
 		      VTf->regs->Vif = 0;
 		    }
-		  Tf->Eflags = Tf->Eflags | INTERRUPT_FLAG;
-		  Tf->Esp = Tf->Esp + 2;
+		  Tf->EFlags = Tf->EFlags | INTERRUPT_FLAG;
+		  Tf->HardwareEsp = Tf->HardwareEsp + 2;
 		}
 	      return(0);
 	    }
@@ -199,10 +199,10 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  if (VTf->regs->Flags & KV86M_EMULATE_CLI_STI)
 	    {
 	      Tf->Eip = sp[0];
-	      Tf->Cs = sp[1];
-	      Tf->Eflags = Tf->Eflags & (~0xFFFF);
-	      Tf->Eflags = Tf->Eflags | sp[2];
-	      if (Tf->Eflags & INTERRUPT_FLAG)
+	      Tf->SegCs = sp[1];
+	      Tf->EFlags = Tf->EFlags & (~0xFFFF);
+	      Tf->EFlags = Tf->EFlags | sp[2];
+	      if (Tf->EFlags & INTERRUPT_FLAG)
 		{
 		  VTf->regs->Vif = 1;
 		}
@@ -210,8 +210,8 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		{
 		  VTf->regs->Vif = 0;
 		}
-	      Tf->Eflags = Tf->Eflags & (~INTERRUPT_FLAG);
-	      Tf->Esp = Tf->Esp + 6;
+	      Tf->EFlags = Tf->EFlags & (~INTERRUPT_FLAG);
+	      Tf->HardwareEsp = Tf->HardwareEsp + 6;
 	      return(0);
 	    }
 	  Exit = TRUE;
@@ -433,11 +433,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		{
 		  Offset = Offset & 0xFFFF;
 		}
-	      Buffer = (PUCHAR)((Tf->Es * 16) + Offset);
+	      Buffer = (PUCHAR)((Tf->SegEs * 16) + Offset);
 	      for (; Count > 0; Count--)
 		{
 		  WRITE_PORT_UCHAR(Port, *Buffer);
-		  if (Tf->Eflags & DIRECTION_FLAG)
+		  if (Tf->EFlags & DIRECTION_FLAG)
 		    {
 		      Buffer++;
 		    }
@@ -480,11 +480,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		}
 	      if (BigDataPrefix)
 		{
-		  BufferL = (PULONG)((Tf->Es * 16) + Offset);
+		  BufferL = (PULONG)((Tf->SegEs * 16) + Offset);
 		}
 	      else
 		{
-		  BufferS = (PUSHORT)((Tf->Es * 16) + Offset);
+		  BufferS = (PUSHORT)((Tf->SegEs * 16) + Offset);
 		}
 	      for (; Count > 0; Count--)
 		{
@@ -496,7 +496,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		    {
 		      WRITE_PORT_USHORT((PUSHORT)Port, *BufferS);
 		    }
-		  if (Tf->Eflags & DIRECTION_FLAG)
+		  if (Tf->EFlags & DIRECTION_FLAG)
 		    {
 		      if (BigDataPrefix)
 			{
@@ -550,11 +550,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		{
 		  Offset = Offset & 0xFFFF;
 		}
-	      Buffer = (PUCHAR)((Tf->Es * 16) + Offset);
+	      Buffer = (PUCHAR)((Tf->SegEs * 16) + Offset);
 	      for (; Count > 0; Count--)
 		{
 		  *Buffer = READ_PORT_UCHAR(Port);
-		  if (Tf->Eflags & DIRECTION_FLAG)
+		  if (Tf->EFlags & DIRECTION_FLAG)
 		    {
 		      Buffer++;
 		    }
@@ -597,11 +597,11 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		}
 	      if (BigDataPrefix)
 		{
-		  BufferL = (PULONG)((Tf->Es * 16) + Offset);
+		  BufferL = (PULONG)((Tf->SegEs * 16) + Offset);
 		}
 	      else
 		{
-		  BufferS = (PUSHORT)((Tf->Es * 16) + Offset);
+		  BufferS = (PUSHORT)((Tf->SegEs * 16) + Offset);
 		}
 	      for (; Count > 0; Count--)
 		{
@@ -613,7 +613,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		    {
 		      *BufferS = READ_PORT_USHORT((PUSHORT)Port);
 		    }
-		  if (Tf->Eflags & DIRECTION_FLAG)
+		  if (Tf->EFlags & DIRECTION_FLAG)
 		    {
 		      if (BigDataPrefix)
 			{
@@ -651,20 +651,20 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    inum = ip[1];
 	    entry = ((unsigned int *)0)[inum];
 
-	    Tf->Esp = Tf->Esp - 6;
+	    Tf->HardwareEsp = Tf->HardwareEsp - 6;
 	    sp = sp - 3;
 
 	    sp[0] = (USHORT)((Tf->Eip & 0xFFFF) + 2);
-	    sp[1] = (USHORT)(Tf->Cs & 0xFFFF);
-	    sp[2] = (USHORT)(Tf->Eflags & 0xFFFF);
+	    sp[1] = (USHORT)(Tf->SegCs & 0xFFFF);
+	    sp[2] = (USHORT)(Tf->EFlags & 0xFFFF);
 	    if (VTf->regs->Vif == 1)
 	      {
 		sp[2] = (USHORT)(sp[2] | INTERRUPT_FLAG);
 	      }
 	    DPRINT("sp[0] %x sp[1] %x sp[2] %x\n", sp[0], sp[1], sp[2]);
 	    Tf->Eip = entry & 0xFFFF;
-	    Tf->Cs = entry >> 16;
-	    Tf->Eflags = Tf->Eflags & (~TRAP_FLAG);
+	    Tf->SegCs = entry >> 16;
+	    Tf->EFlags = Tf->EFlags & (~TRAP_FLAG);
 
 	    return(0);
 	  }
@@ -701,16 +701,16 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
   /*
    * Check if we have reached the recovery instruction
    */
-  Ip = (PUCHAR)((Tf->Cs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
+  Ip = (PUCHAR)((Tf->SegCs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
   
-  DPRINT("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->Cs %x "
-	 "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->Cs,
+  DPRINT("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->SegCs %x "
+	 "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->SegCs,
 	 Tf->Eip);
   DPRINT("VTf %x VTf->regs %x\n", VTf, VTf->regs);
 
   if (ExceptionNr == 6 &&
       memcmp(Ip, VTf->regs->RecoveryInstruction, 4) == 0 &&
-      (Tf->Cs * 16 + Tf->Eip) == VTf->regs->RecoveryAddress)
+      (Tf->SegCs * 16 + Tf->Eip) == VTf->regs->RecoveryAddress)
     {
       *VTf->regs->PStatus = STATUS_SUCCESS;
       return(1);

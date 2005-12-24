@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by explorer_intres.rc
+// Used by explorer-hu.rc
 //
 #define IDS_TITLE                       1
 #define MANIFEST_RESOURCE_ID            1

@@ -20,11 +20,10 @@
  */
 
 #include <freeldr.h>
-#include <comm.h>
-#include <portio.h>
-
 
 /* MACROS *******************************************************************/
+
+#ifdef DEBUG
 
 #define DEFAULT_BAUD_RATE    19200
 
@@ -274,4 +273,15 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 		;
 
 	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
+}
+
+#endif
+
+BOOL Rs232PortInUse(ULONG Base)
+{
+#ifdef DEBUG
+    return PortInitialized && Rs232PortBase == (PUCHAR)Base ? TRUE : FALSE;
+#else
+    return FALSE;
+#endif
 }

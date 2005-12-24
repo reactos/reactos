@@ -21,7 +21,7 @@ extern PEPROCESS PsIdleProcess;
 extern PVOID PspSystemDllEntryPoint;
 extern PHANDLE_TABLE PspCidTable;
 
-POBJECT_TYPE EXPORTED PsThreadType = NULL;
+POBJECT_TYPE PsThreadType = NULL;
 
 /* FUNCTIONS ***************************************************************/
 

@@ -4,13 +4,9 @@
  * Copyright 2000 Jon Griffiths
  */
 
-#include "precomp.h"
-#include <stdio.h>
+#include <precomp.h>
 #include <locale.h>
-#include <string.h>
-#include <limits.h>
 #include <internal/tls.h>
-#include <stdlib.h>
 
 #define NDEBUG
 #include <internal/debug.h>

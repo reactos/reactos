@@ -68,7 +68,7 @@
 
 /* GLOBAL VARIABLES *********************************************************/
 
-ULONG EXPORTED KdComPortInUse = 0;
+ULONG KdComPortInUse = 0;
 
 
 /* STATIC VARIABLES *********************************************************/

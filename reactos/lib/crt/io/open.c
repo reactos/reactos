@@ -36,20 +36,15 @@
 
 // possibly store extra information at the handle
 
-#include "precomp.h"
+#include <precomp.h>
 
 #if !defined(NDEBUG) && defined(DBG)
 #include <stdarg.h>
 #endif
 
-#include <io.h>
-#include <fcntl.h>
 #include <sys/stat.h>
-#include <stdlib.h>
 #include <string.h>
 #include <share.h>
-#include <errno.h>
-#include <internal/file.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -80,7 +75,7 @@ static int g_fdend = 3; /* highest allocated fd */
  * INTERNAL
  */
  /*
-static inline FD_INFO* fdinfo(int fd)
+static __inline FD_INFO* fdinfo(int fd)
 {
    FD_INFO* bucket = __pioinfo[fd >> FDINFO_ENTRIES_PER_BUCKET_SHIFT];
    if (!bucket){
@@ -94,7 +89,7 @@ static inline FD_INFO* fdinfo(int fd)
 /*
  * INTERNAL
  */
-inline BOOL is_valid_fd(int fd)
+__inline BOOL is_valid_fd(int fd)
 {
    BOOL b = (fd >= 0 && fd < g_fdend && (fdinfo(fd)->fdflags & FOPEN));
 

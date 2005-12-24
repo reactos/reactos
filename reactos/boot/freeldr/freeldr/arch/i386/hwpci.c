@@ -19,14 +19,9 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
-#include <debug.h>
-#include <mm.h>
-#include <portio.h>
 
-#include "../../reactos/registry.h"
-#include "hardware.h"
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _ROUTING_SLOT
 {
@@ -160,7 +155,7 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
       DbgPrint((DPRINT_HWDETECT, "Table size: %u\n", Table->Size));
 
       Error = RegCreateKey(BusKey,
-			   "RealModeIrqRoutingTable\\0",
+			   L"RealModeIrqRoutingTable\\0",
 			   &TableKey);
       if (Error != ERROR_SUCCESS)
 	{
@@ -176,10 +171,10 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 
       /* Set 'Identifier' value */
       Error = RegSetValue(TableKey,
-			  "Identifier",
+			  L"Identifier",
 			  REG_SZ,
-			  "PCI Real-mode IRQ Routing Table",
-			  32);
+			  (PCHAR)L"PCI Real-mode IRQ Routing Table",
+			  32 * sizeof(WCHAR));
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -214,7 +209,7 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 
       /* Set 'Configuration Data' value */
       Error = RegSetValue(TableKey,
-			  "Configuration Data",
+			  L"Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
 			  (PCHAR) FullResourceDescriptor,
 			  Size);
@@ -235,21 +230,22 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   CM_PCI_BUS_DATA BusData;
-  char Buffer[80];
+  WCHAR Buffer[80];
   FRLDRHKEY BiosKey;
   ULONG Size;
   LONG Error;
 #if 0
   FRLDRHKEY BusKey;
   ULONG i;
+  WCHAR szPci[] = L"PCI";
 #endif
 
   /* Report the PCI BIOS */
   if (FindPciBios(&BusData))
     {
       /* Create new bus key */
-      sprintf(Buffer,
-	      "MultifunctionAdapter\\%u", *BusNumber);
+      swprintf(Buffer,
+	      L"MultifunctionAdapter\\%u", *BusNumber);
       Error = RegCreateKey(SystemKey,
 			   Buffer,
 			   &BiosKey);
@@ -270,10 +266,10 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
       /* Set 'Identifier' value */
       Error = RegSetValue(BiosKey,
-			  "Identifier",
+			  L"Identifier",
 			  REG_SZ,
-			  "PCI BIOS",
-			  9);
+			  (PCHAR)L"PCI BIOS",
+			  9 * sizeof(WCHAR));
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
@@ -299,7 +295,7 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
       /* Set 'Configuration Data' value */
       Error = RegSetValue(BiosKey,
-			  "Configuration Data",
+			  L"Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
 			  (PCHAR) FullResourceDescriptor,
 			  Size);
@@ -324,8 +320,8 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       /* Report PCI buses */
       for (i = 0; i < (ULONG)BusData.BusCount; i++)
 	{
-	  sprintf(Buffer,
-		  "MultifunctionAdapter\\%u", *BusNumber);
+	  swprintf(Buffer,
+		   L"MultifunctionAdapter\\%u", *BusNumber);
 	  Error = RegCreateKey(SystemKey,
 			       Buffer,
 			       &BusKey);
@@ -348,10 +344,10 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
 	  /* Set 'Identifier' value */
 	  Error = RegSetValue(BusKey,
-			      "Identifier",
+			      L"Identifier",
 			      REG_SZ,
-			      (PUCHAR)"PCI",
-			      4);
+			      (PCSTR)szPci,
+			      sizeof(szPci));
 	  if (Error != ERROR_SUCCESS)
 	    {
 	      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));

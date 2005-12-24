@@ -1,8 +1,8 @@
 @ stdcall BindMoniker(ptr long ptr ptr)
-@ stub CLIPFORMAT_UserFree
-@ stub CLIPFORMAT_UserMarshal
-@ stub CLIPFORMAT_UserSize
-@ stub CLIPFORMAT_UserUnmarshal
+@ stdcall CLIPFORMAT_UserFree(ptr ptr)
+@ stdcall CLIPFORMAT_UserMarshal(ptr ptr ptr)
+@ stdcall CLIPFORMAT_UserSize(ptr long ptr)
+@ stdcall CLIPFORMAT_UserUnmarshal(ptr ptr ptr)
 @ stdcall CLSIDFromProgID(wstr ptr)
 @ stdcall CLSIDFromString(wstr ptr)
 @ stdcall CoAddRefServerProcess()
@@ -107,30 +107,34 @@
 @ stdcall GetHGlobalFromStream(ptr ptr)
 @ stub GetHookInterface
 @ stdcall GetRunningObjectTable(long ptr)
-@ stub HACCEL_UserFree
-@ stub HACCEL_UserMarshal
-@ stub HACCEL_UserSize
-@ stub HACCEL_UserUnmarshal
-@ stub HBITMAP_UserFree
-@ stub HBITMAP_UserMarshal
-@ stub HBITMAP_UserSize
-@ stub HBITMAP_UserUnmarshal
+@ stdcall HACCEL_UserFree(ptr ptr)
+@ stdcall HACCEL_UserMarshal(ptr ptr ptr)
+@ stdcall HACCEL_UserSize(ptr long ptr)
+@ stdcall HACCEL_UserUnmarshal(ptr ptr ptr)
+@ stdcall HBITMAP_UserFree(ptr ptr)
+@ stdcall HBITMAP_UserMarshal(ptr ptr ptr)
+@ stdcall HBITMAP_UserSize(ptr long ptr)
+@ stdcall HBITMAP_UserUnmarshal(ptr ptr ptr)
 @ stub HBRUSH_UserFree
 @ stub HBRUSH_UserMarshal
 @ stub HBRUSH_UserSize
 @ stub HBRUSH_UserUnmarshal
-@ stub HENHMETAFILE_UserFree
-@ stub HENHMETAFILE_UserMarshal
-@ stub HENHMETAFILE_UserSize
-@ stub HENHMETAFILE_UserUnmarshal
-@ stub HGLOBAL_UserFree
-@ stub HGLOBAL_UserMarshal
-@ stub HGLOBAL_UserSize
-@ stub HGLOBAL_UserUnmarshal
-@ stub HMENU_UserFree
-@ stub HMENU_UserMarshal
-@ stub HMENU_UserSize
-@ stub HMENU_UserUnmarshal
+@ stdcall HDC_UserFree(ptr ptr)
+@ stdcall HDC_UserMarshal(ptr ptr ptr)
+@ stdcall HDC_UserSize(ptr long ptr)
+@ stdcall HDC_UserUnmarshal(ptr ptr ptr)
+@ stdcall HENHMETAFILE_UserFree(ptr ptr)
+@ stdcall HENHMETAFILE_UserMarshal(ptr ptr ptr)
+@ stdcall HENHMETAFILE_UserSize(ptr long ptr)
+@ stdcall HENHMETAFILE_UserUnmarshal(ptr ptr ptr)
+@ stdcall HGLOBAL_UserFree(ptr ptr)
+@ stdcall HGLOBAL_UserMarshal(ptr ptr ptr)
+@ stdcall HGLOBAL_UserSize(ptr long ptr)
+@ stdcall HGLOBAL_UserUnmarshal(ptr ptr ptr)
+@ stdcall HMENU_UserFree(ptr ptr)
+@ stdcall HMENU_UserMarshal(ptr ptr ptr)
+@ stdcall HMENU_UserSize(ptr long ptr)
+@ stdcall HMENU_UserUnmarshal(ptr ptr ptr)
 @ stub HMETAFILEPICT_UserFree
 @ stub HMETAFILEPICT_UserMarshal
 @ stub HMETAFILEPICT_UserSize
@@ -139,14 +143,14 @@
 @ stub HMETAFILE_UserMarshal
 @ stub HMETAFILE_UserSize
 @ stub HMETAFILE_UserUnmarshal
-@ stub HPALETTE_UserFree
-@ stub HPALETTE_UserMarshal
-@ stub HPALETTE_UserSize
-@ stub HPALETTE_UserUnmarshal
-@ stub HWND_UserFree
-@ stub HWND_UserMarshal
-@ stub HWND_UserSize
-@ stub HWND_UserUnmarshal
+@ stdcall HPALETTE_UserFree(ptr ptr)
+@ stdcall HPALETTE_UserMarshal(ptr ptr ptr)
+@ stdcall HPALETTE_UserSize(ptr long ptr)
+@ stdcall HPALETTE_UserUnmarshal(ptr ptr ptr)
+@ stdcall HWND_UserFree(ptr ptr)
+@ stdcall HWND_UserMarshal(ptr ptr ptr)
+@ stdcall HWND_UserSize(ptr long ptr)
+@ stdcall HWND_UserUnmarshal(ptr ptr ptr)
 @ stdcall IIDFromString(wstr ptr) CLSIDFromString
 @ stub I_RemoteMain
 @ stdcall IsAccelerator(long long ptr long)
@@ -227,14 +231,14 @@
 @ stdcall RegisterDragDrop(long ptr)
 @ stdcall ReleaseStgMedium(ptr)
 @ stdcall RevokeDragDrop(long)
-@ stub SNB_UserFree
-@ stub SNB_UserMarshal
-@ stub SNB_UserSize
-@ stub SNB_UserUnmarshal
-@ stub STGMEDIUM_UserFree
-@ stub STGMEDIUM_UserMarshal
-@ stub STGMEDIUM_UserSize
-@ stub STGMEDIUM_UserUnmarshal
+@ stdcall SNB_UserFree(ptr ptr)
+@ stdcall SNB_UserMarshal(ptr ptr ptr)
+@ stdcall SNB_UserSize(ptr long ptr)
+@ stdcall SNB_UserUnmarshal(ptr ptr ptr)
+@ stdcall STGMEDIUM_UserFree(ptr ptr)
+@ stdcall STGMEDIUM_UserMarshal(ptr ptr ptr)
+@ stdcall STGMEDIUM_UserSize(ptr long ptr)
+@ stdcall STGMEDIUM_UserUnmarshal(ptr ptr ptr)
 @ stdcall SetConvertStg(ptr long)
 @ stub SetDocumentBitStg
 @ stdcall SetErrorInfo(long ptr)

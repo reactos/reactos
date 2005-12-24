@@ -83,4 +83,6 @@ extern unsigned char *CRYPT_DESkey8to7( unsigned char *dst, const unsigned char 
 extern unsigned char *CRYPT_DEShash( unsigned char *dst, const unsigned char *key,
                                      const unsigned char *src );
 
+extern VOID byteReverse(unsigned char *buf, unsigned longs);
+
 #endif /* __WINE_CRYPT_H_ */

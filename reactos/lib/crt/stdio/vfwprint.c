@@ -1,19 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include "precomp.h"
-
-#include <stdarg.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <internal/file.h>
-
-#include <ntdef.h>
-
-int _isnanl(double x);
-int _isinfl(double x);
-int _isnan(double x);
-int _isinf(double x);
-
+#include <precomp.h>
 
 int
 __vfwprintf(FILE *fp, const wchar_t *fmt0, va_list argp);
@@ -66,14 +53,8 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <stdarg.h>
-
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
 #include <math.h>
 #include <internal/ieee.h>
-
 
 #define ZEROPAD		1	/* pad with zero */
 #define SIGN		2	/* unsigned/signed long */
@@ -387,7 +368,11 @@ static int numberf(FILE * f, double __n, wchar_t exp_sign,  int size, int precis
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
 			j = 0;
-			while ( j < i && ( *tmp == L'0' || *tmp == L'.' )) {
+			while ( j < i && *tmp == L'0' ) {
+					tmp++;
+					i--;
+			}
+			if ( j < i && *tmp == L'.' ) {
 					tmp++;
 					i--;
 			}

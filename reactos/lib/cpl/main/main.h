@@ -1,6 +1,19 @@
 #ifndef __CPL_MAIN_H
 #define __CPL_MAIN_H
 
+typedef enum
+{
+    HWPD_STANDARDLIST = 0,
+    HWPD_LARGELIST,
+    HWPD_MAX = HWPD_LARGELIST
+} HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
+
+HWND WINAPI
+DeviceCreateHardwarePageEx(HWND hWndParent,
+                           LPGUID lpGuids,
+                           UINT uNumberOfGuids,
+                           HWPAGE_DISPLAYMODE DisplayMode);
+
 //typedef LONG (CALLBACK *APPLET_PROC)(VOID);
 
 typedef struct _APPLET

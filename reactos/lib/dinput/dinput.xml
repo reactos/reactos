@@ -1,4 +1,5 @@
 <module name="dinput" type="win32dll" baseaddress="${BASEADDRESS_DINPUT}" installbase="system32" installname="dinput.dll" allowwarnings ="true">
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput.spec.def" />
 	<include base="dinput">.</include>
 	<include base="ReactOS">include/wine</include>

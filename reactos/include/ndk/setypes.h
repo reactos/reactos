@@ -1,20 +1,34 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/setypes.h
- * PURPOSE:         Defintions for Security Subsystem Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    setypes.h
+
+Abstract:
+
+    Type definitions for the security manager.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _SETYPES_H
 #define _SETYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
+#include <umtypes.h>
 
-/* EXPORTED DATA *************************************************************/
-
-/* CONSTANTS *****************************************************************/
 #ifdef NTOS_MODE_USER
+
+//
+// Privilege constants
+//
 #define SE_MIN_WELL_KNOWN_PRIVILEGE       (2L)
 #define SE_CREATE_TOKEN_PRIVILEGE         (2L)
 #define SE_ASSIGNPRIMARYTOKEN_PRIVILEGE   (3L)
@@ -41,13 +55,11 @@
 #define SE_CHANGE_NOTIFY_PRIVILEGE        (23L)
 #define SE_REMOTE_SHUTDOWN_PRIVILEGE      (24L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE       (SE_REMOTE_SHUTDOWN_PRIVILEGE)
-#endif
+#else
 
-/* ENUMERATIONS **************************************************************/
-
-/* TYPES *********************************************************************/
-
-#ifndef NTOS_MODE_USER
+//
+// Audit and Policy Structures
+//
 typedef struct _SEP_AUDIT_POLICY_CATEGORIES
 {
     UCHAR System:4;
@@ -77,6 +89,14 @@ typedef struct _SEP_AUDIT_POLICY
     };
 } SEP_AUDIT_POLICY, *PSEP_AUDIT_POLICY;
 
+typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
+{
+    POBJECT_NAME_INFORMATION ImageFileName;
+} SE_AUDIT_PROCESS_CREATION_INFO, *PSE_AUDIT_PROCESS_CREATION_INFO;
+
+//
+// Token and auxiliary data
+//
 typedef struct _TOKEN
 {
     TOKEN_SOURCE TokenSource;                         /* 0x00 */
@@ -117,11 +137,6 @@ typedef struct _AUX_DATA
     GENERIC_MAPPING GenericMapping;
     ULONG Reserved;
 } AUX_DATA, *PAUX_DATA;
-
-typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
-{
-    POBJECT_NAME_INFORMATION ImageFileName;
-} SE_AUDIT_PROCESS_CREATION_INFO, *PSE_AUDIT_PROCESS_CREATION_INFO;
 
 #endif
 #endif

@@ -405,7 +405,6 @@ DoLogonUser (PWCHAR Name,
   STARTUPINFO StartupInfo;
   WCHAR CommandLine[MAX_PATH];
   WCHAR CurrentDirectory[MAX_PATH];
-  HANDLE hToken;
   PROFILEINFOW ProfileInfo;
   BOOL Result;
   LPVOID lpEnvironment = NULL;
@@ -416,7 +415,7 @@ DoLogonUser (PWCHAR Name,
 		       Password,
 		       LOGON32_LOGON_INTERACTIVE,
 		       LOGON32_PROVIDER_DEFAULT,
-		       &hToken);
+		       &WLSession->UserToken);
   if (!Result)
     {
       DbgPrint ("WL: LogonUserW() failed\n");
@@ -434,24 +433,24 @@ DoLogonUser (PWCHAR Name,
   ProfileInfo.lpPolicyPath = NULL;
   ProfileInfo.hProfile = NULL;
 
-  if (!LoadUserProfileW (hToken,
+  if (!LoadUserProfileW (WLSession->UserToken,
 			 &ProfileInfo))
     {
       DbgPrint ("WL: LoadUserProfileW() failed\n");
-      CloseHandle (hToken);
+      CloseHandle (WLSession->UserToken);
       RtlDestroyEnvironment (lpEnvironment);
       return FALSE;
     }
 
   if (!CreateEnvironmentBlock (&lpEnvironment,
-			       hToken,
+			       WLSession->UserToken,
 			       TRUE))
     {
       DbgPrint ("WL: CreateEnvironmentBlock() failed\n");
       return FALSE;
     }
 
-  if (ImpersonateLoggedOnUser(hToken))
+  if (ImpersonateLoggedOnUser(WLSession->UserToken))
     {
       UpdatePerUserSystemParameters(0, TRUE);
       RevertToSelf();
@@ -467,7 +466,7 @@ DoLogonUser (PWCHAR Name,
   StartupInfo.cbReserved2 = 0;
   StartupInfo.lpReserved2 = 0;
 
-  Result = CreateProcessAsUserW (hToken,
+  Result = CreateProcessAsUserW (WLSession->UserToken,
 				 NULL,
 				 GetUserInit (CommandLine),
 				 NULL,
@@ -481,14 +480,14 @@ DoLogonUser (PWCHAR Name,
   if (!Result)
     {
       DbgPrint ("WL: Failed to execute user shell %s\n", CommandLine);
-      if (ImpersonateLoggedOnUser(hToken))
+      if (ImpersonateLoggedOnUser(WLSession->UserToken))
         {
           UpdatePerUserSystemParameters(0, FALSE);
           RevertToSelf();
         }
-      UnloadUserProfile (hToken,
+      UnloadUserProfile (WLSession->UserToken,
 			 ProfileInfo.hProfile);
-      CloseHandle (hToken);
+      CloseHandle (WLSession->UserToken);
       DestroyEnvironmentBlock (lpEnvironment);
       return FALSE;
     }
@@ -511,17 +510,17 @@ DoLogonUser (PWCHAR Name,
   CloseHandle (ProcessInformation.hProcess);
   CloseHandle (ProcessInformation.hThread);
 
-  if (ImpersonateLoggedOnUser(hToken))
+  if (ImpersonateLoggedOnUser(WLSession->UserToken))
     {
       UpdatePerUserSystemParameters(0, FALSE);
       RevertToSelf();
     }
 
   /* Unload user profile */
-  UnloadUserProfile (hToken,
+  UnloadUserProfile (WLSession->UserToken,
 		     ProfileInfo.hProfile);
 
-  CloseHandle (hToken);
+  CloseHandle (WLSession->UserToken);
 
   RtlDestroyEnvironment (lpEnvironment);
 

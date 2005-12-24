@@ -84,7 +84,7 @@ inline static HRESULT get_facbuf_for_iid(REFIID riid, IPSFactoryBuffer **facbuf)
         &IID_IPSFactoryBuffer, (LPVOID*)facbuf);
 }
 
-/* creates a new stub manager */
+/* marshals an object into a STDOBJREF structure */
 HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *object, MSHLFLAGS mshlflags)
 {
     struct stub_manager *manager;
@@ -135,15 +135,13 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
     else
         stdobjref->flags = SORF_NULL;
 
-    /* FIXME: what happens if we register an interface twice with different
-     * marshaling flags? */
     if ((manager = get_stub_manager_from_object(apt, object)))
         TRACE("registering new ifstub on pre-existing manager\n");
     else
     {
         TRACE("constructing new stub manager\n");
 
-        manager = new_stub_manager(apt, object, mshlflags);
+        manager = new_stub_manager(apt, object);
         if (!manager)
         {
             if (stub) IRpcStubBuffer_Release(stub);
@@ -155,15 +153,20 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
 
     tablemarshal = ((mshlflags & MSHLFLAGS_TABLESTRONG) || (mshlflags & MSHLFLAGS_TABLEWEAK));
 
-    ifstub = stub_manager_new_ifstub(manager, stub, iobject, riid);
-    IUnknown_Release(iobject);
-    if (stub) IRpcStubBuffer_Release(stub);
+    /* make sure ifstub that we are creating is unique */
+    ifstub = stub_manager_find_ifstub(manager, riid, mshlflags);
     if (!ifstub)
     {
-        stub_manager_int_release(manager);
-        /* FIXME: should we do another release to completely destroy the
-         * stub manager? */
-        return E_OUTOFMEMORY;
+        ifstub = stub_manager_new_ifstub(manager, stub, iobject, riid, mshlflags);
+        IUnknown_Release(iobject);
+        if (stub) IRpcStubBuffer_Release(stub);
+        if (!ifstub)
+        {
+            stub_manager_int_release(manager);
+            /* FIXME: should we do another release to completely destroy the
+             * stub manager? */
+            return E_OUTOFMEMORY;
+        }
     }
 
     if (!tablemarshal)
@@ -625,6 +628,7 @@ static HRESULT proxy_manager_create_ifproxy(
     if (IsEqualIID(riid, &IID_IUnknown))
     {
         ifproxy->iface = (void *)&This->lpVtbl;
+        IMultiQI_AddRef((IMultiQI *)&This->lpVtbl);
         hr = S_OK;
     }
     else
@@ -699,18 +703,19 @@ static void proxy_manager_disconnect(struct proxy_manager * This)
     TRACE("oxid = %s, oid = %s\n", wine_dbgstr_longlong(This->oxid),
         wine_dbgstr_longlong(This->oid));
 
+    EnterCriticalSection(&This->cs);
+
     /* SORFP_NOLIFTIMEMGMT proxies (for IRemUnknown) shouldn't be
      * disconnected - it won't do anything anyway, except cause
      * problems for other objects that depend on this proxy always
      * working */
-    if (This->sorflags & SORFP_NOLIFETIMEMGMT) return;
-
-    EnterCriticalSection(&This->cs);
-
-    LIST_FOR_EACH(cursor, &This->interfaces)
+    if (!(This->sorflags & SORFP_NOLIFETIMEMGMT))
     {
-        struct ifproxy * ifproxy = LIST_ENTRY(cursor, struct ifproxy, entry);
-        ifproxy_disconnect(ifproxy);
+        LIST_FOR_EACH(cursor, &This->interfaces)
+        {
+            struct ifproxy * ifproxy = LIST_ENTRY(cursor, struct ifproxy, entry);
+            ifproxy_disconnect(ifproxy);
+        }
     }
 
     /* apartment is being destroyed so don't keep a pointer around to it */
@@ -983,12 +988,11 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt, REFI
                 hr = proxy_manager_create_ifproxy(proxy_manager, stdobjref,
                                                   riid, chanbuf, &ifproxy);
         }
+        else
+            IUnknown_AddRef((IUnknown *)ifproxy->iface);
 
         if (hr == S_OK)
-        {
-            ClientIdentity_AddRef((IMultiQI*)&proxy_manager->lpVtbl);
             *object = ifproxy->iface;
-        }
     }
 
     /* release our reference to the proxy manager - the client/apartment
@@ -1020,7 +1024,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
 
     /* read STDOBJREF from wire */
     hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
-    if (hres) return hres;
+    if (hres) return STG_E_READFAULT;
 
     hres = apartment_getoxid(apt, &oxid);
     if (hres) return hres;
@@ -1034,7 +1038,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
         hres = IUnknown_QueryInterface(stubmgr->object, riid, ppv);
       
         /* unref the ifstub. FIXME: only do this on success? */
-        if (!stub_manager_is_table_marshaled(stubmgr))
+        if (!stub_manager_is_table_marshaled(stubmgr, &stdobjref.ipid))
             stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs);
 
         stub_manager_int_release(stubmgr);
@@ -1050,7 +1054,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
     {
         if ((stubmgr = get_stub_manager(stub_apt, stdobjref.oid)))
         {
-            if (!stub_manager_notify_unmarshal(stubmgr))
+            if (!stub_manager_notify_unmarshal(stubmgr, &stdobjref.ipid))
                 hres = CO_E_OBJNOTCONNECTED;
 
             stub_manager_int_release(stubmgr);
@@ -1090,7 +1094,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
     TRACE("iface=%p, pStm=%p\n", iface, pStm);
     
     hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
-    if (hres) return hres;
+    if (hres) return STG_E_READFAULT;
 
     TRACE("oxid = %s, oid = %s, ipid = %s\n",
         wine_dbgstr_longlong(stdobjref.oxid),
@@ -1106,12 +1110,12 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
 
     if (!(stubmgr = get_stub_manager(apt, stdobjref.oid)))
     {
-        ERR("could not map MID to stub manager, oxid=%s, oid=%s\n",
+        ERR("could not map object ID to stub manager, oxid=%s, oid=%s\n",
             wine_dbgstr_longlong(stdobjref.oxid), wine_dbgstr_longlong(stdobjref.oid));
         return RPC_E_INVALID_OBJREF;
     }
 
-    stub_manager_release_marshal_data(stubmgr, stdobjref.cPublicRefs);
+    stub_manager_release_marshal_data(stubmgr, stdobjref.cPublicRefs, &stdobjref.ipid);
 
     stub_manager_int_release(stubmgr);
     apartment_release(apt);
@@ -1343,6 +1347,18 @@ HRESULT WINAPI CoGetMarshalSizeMax(ULONG *pulSize, REFIID riid, IUnknown *pUnk,
 }
 
 
+static void dump_MSHLFLAGS(MSHLFLAGS flags)
+{
+    if (flags & MSHLFLAGS_TABLESTRONG)
+        TRACE(" MSHLFLAGS_TABLESTRONG");
+    if (flags & MSHLFLAGS_TABLEWEAK)
+        TRACE(" MSHLFLAGS_TABLEWEAK");
+    if (!(flags & (MSHLFLAGS_TABLESTRONG|MSHLFLAGS_TABLEWEAK)))
+        TRACE(" MSHLFLAGS_NORMAL");
+    if (flags & MSHLFLAGS_NOPING)
+        TRACE(" MSHLFLAGS_NOPING");
+}
+
 /***********************************************************************
  *		CoMarshalInterface	[OLE32.@]
  *
@@ -1384,8 +1400,10 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
     OBJREF objref;
     LPMARSHAL pMarshal;
 
-    TRACE("(%p, %s, %p, %lx, %p, %lx)\n", pStream, debugstr_guid(riid), pUnk,
-        dwDestContext, pvDestContext, mshlFlags);
+    TRACE("(%p, %s, %p, %lx, %p,", pStream, debugstr_guid(riid), pUnk,
+        dwDestContext, pvDestContext);
+    dump_MSHLFLAGS(mshlFlags);
+    TRACE(")\n");
 
     if (pUnk == NULL)
         return E_INVALIDARG;
@@ -1603,13 +1621,20 @@ HRESULT WINAPI CoMarshalInterThreadInterfaceInStream(
 
     TRACE("(%s, %p, %p)\n",debugstr_guid(riid), pUnk, ppStm);
 
-    hres = CreateStreamOnHGlobal(0, TRUE, ppStm);
+    hres = CreateStreamOnHGlobal(NULL, TRUE, ppStm);
     if (FAILED(hres)) return hres;
     hres = CoMarshalInterface(*ppStm, riid, pUnk, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
 
-    /* FIXME: is this needed? */
-    memset(&seekto,0,sizeof(seekto));
-    IStream_Seek(*ppStm,seekto,SEEK_SET,&xpos);
+    if (SUCCEEDED(hres))
+    {
+        memset(&seekto, 0, sizeof(seekto));
+        IStream_Seek(*ppStm, seekto, SEEK_SET, &xpos);
+    }
+    else
+    {
+        IStream_Release(*ppStm);
+        *ppStm = NULL;
+    }
 
     return hres;
 }

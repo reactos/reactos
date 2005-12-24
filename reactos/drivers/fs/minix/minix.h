@@ -1,5 +1,5 @@
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+#include <ntddk.h>
+#include <ntifs.h>
 
 #define MINIX_ROOT_INO 1
 

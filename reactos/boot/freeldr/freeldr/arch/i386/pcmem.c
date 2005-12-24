@@ -20,13 +20,10 @@
  *       was Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>
  */
 
-#include "freeldr.h"
-#include "arch.h"
-#include "debug.h"
-#include "machine.h"
-#include "machpc.h"
-#include "portio.h"
-#include "rtl.h"
+#include <freeldr.h>
+
+#define NDEBUG
+#include <debug.h>
 
 static ULONG
 PcMemGetExtendedMemorySize(VOID)

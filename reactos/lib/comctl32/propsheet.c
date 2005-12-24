@@ -3455,6 +3455,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TRUE;
     }
 
+    case WM_PRINTCLIENT:
     case WM_PAINT:
       PROPSHEET_Paint(hwnd, (HDC)wParam);
       return TRUE;

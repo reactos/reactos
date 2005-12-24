@@ -49,8 +49,13 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
 #include <reactos/exeformat.h>
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmCreatePhysicalMemorySection)
+#pragma alloc_text(INIT, MmInitSectionImplementation)
+#endif
+
 
 /* TYPES *********************************************************************/
 
@@ -66,7 +71,7 @@ MM_SECTION_PAGEOUT_CONTEXT;
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
+POBJECT_TYPE MmSectionObjectType = NULL;
 
 static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_READ | SECTION_MAP_READ | SECTION_QUERY,
@@ -1605,7 +1610,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
          {
             Status = MmCreateVirtualMapping(AddressSpace->Process,
                                             Address,
-                                            MemoryArea->Attributes,
+                                            MemoryArea->Protect,
                                             &Page,
                                             1);
             MmSetDirtyPage(AddressSpace->Process, Address);
@@ -1622,7 +1627,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
              */
             Status = MmCreateVirtualMapping(AddressSpace->Process,
                                             Address,
-                                            MemoryArea->Attributes,
+                                            MemoryArea->Protect,
                                             &Page,
                                             1);
             MmSetDirtyPage(AddressSpace->Process, Address);
@@ -1656,7 +1661,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
       {
          Status = MmCreateVirtualMapping(AddressSpace->Process,
                                          Address,
-                                         MemoryArea->Attributes,
+                                         MemoryArea->Protect,
                                          &Page,
                                          1);
          MmSetDirtyPage(AddressSpace->Process, Address);
@@ -1668,7 +1673,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
       {
          Status = MmCreateVirtualMapping(AddressSpace->Process,
                                          Address,
-                                         MemoryArea->Attributes,
+                                         MemoryArea->Protect,
                                          &Page,
                                          1);
          MmSetDirtyPage(AddressSpace->Process, Address);
@@ -1952,6 +1957,13 @@ MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
    Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
                          BaseAddress, NULL);
+   if ((MemoryArea->Flags & SEC_NO_CHANGE) &&
+       Region->Protect != Protect)
+   {
+      CHECKPOINT1;
+      return STATUS_INVALID_PAGE_PROTECTION;
+   }
+
    *OldProtect = Region->Protect;
    Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
                           &MemoryArea->Data.SectionData.RegionListHead,
@@ -1993,7 +2005,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
       Info->Type = MEM_MAPPED;
    }
    Info->BaseAddress = RegionBaseAddress;
-   Info->AllocationProtect = MemoryArea->Attributes;
+   Info->AllocationProtect = MemoryArea->Protect;
    Info->RegionSize = Region->Length;
    Info->State = MEM_COMMIT;
    Info->Protect = Region->Protect;
@@ -2732,8 +2744,8 @@ __cdecl
 MmspCompareSegments(const void * x,
                     const void * y)
 {
-   PMM_SECTION_SEGMENT Segment1 = (PMM_SECTION_SEGMENT)x;
-   PMM_SECTION_SEGMENT Segment2 = (PMM_SECTION_SEGMENT)y;
+   const MM_SECTION_SEGMENT *Segment1 = (const MM_SECTION_SEGMENT *)x;
+   const MM_SECTION_SEGMENT *Segment2 = (const MM_SECTION_SEGMENT *)y;
 
    return
       (Segment1->VirtualAddress - Segment2->VirtualAddress) >>
@@ -3377,15 +3389,6 @@ NtCreateSection (OUT PHANDLE SectionHandle,
      }
    }
 
-   /*
-    * Check the protection
-    */
-   if ((SectionPageProtection & PAGE_FLAGS_VALID_FROM_USER_MODE) !=
-         SectionPageProtection)
-   {
-      return(STATUS_INVALID_PAGE_PROTECTION);
-   }
-
    Status = MmCreateSection(&SectionObject,
                             DesiredAccess,
                             ObjectAttributes,
@@ -3481,15 +3484,14 @@ NtOpenSection(PHANDLE   SectionHandle,
 }
 
 NTSTATUS STATIC
-MmMapViewOfSegment(PEPROCESS Process,
-                   PMADDRESS_SPACE AddressSpace,
+MmMapViewOfSegment(PMADDRESS_SPACE AddressSpace,
                    PSECTION_OBJECT Section,
                    PMM_SECTION_SEGMENT Segment,
                    PVOID* BaseAddress,
-                   ULONG ViewSize,
+                   SIZE_T ViewSize,
                    ULONG Protect,
                    ULONG ViewOffset,
-                   BOOL TopDown)
+                   ULONG AllocationType)
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
@@ -3497,15 +3499,14 @@ MmMapViewOfSegment(PEPROCESS Process,
 
    BoundaryAddressMultiple.QuadPart = 0;
 
-   Status = MmCreateMemoryArea(Process,
-                               AddressSpace,
+   Status = MmCreateMemoryArea(AddressSpace,
                                MEMORY_AREA_SECTION_VIEW,
                                BaseAddress,
                                ViewSize,
                                Protect,
                                &MArea,
                                FALSE,
-                               TopDown,
+                               AllocationType,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
@@ -3514,16 +3515,13 @@ MmMapViewOfSegment(PEPROCESS Process,
       return(Status);
    }
 
+   ObReferenceObject((PVOID)Section);
 
-   ObReferenceObjectByPointer((PVOID)Section,
-                              SECTION_MAP_READ,
-                              NULL,
-                              ExGetPreviousMode());
    MArea->Data.SectionData.Segment = Segment;
    MArea->Data.SectionData.Section = Section;
    MArea->Data.SectionData.ViewOffset = ViewOffset;
    MArea->Data.SectionData.WriteCopyView = FALSE;
-   MmInitialiseRegion(&MArea->Data.SectionData.RegionListHead,
+   MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
                       ViewSize, 0, Protect);
 
    return(STATUS_SUCCESS);
@@ -3586,19 +3584,43 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                    IN ULONG ZeroBits  OPTIONAL,
                    IN ULONG CommitSize,
                    IN OUT PLARGE_INTEGER SectionOffset  OPTIONAL,
-                   IN OUT PULONG ViewSize,
+                   IN OUT PSIZE_T ViewSize,
                    IN SECTION_INHERIT InheritDisposition,
                    IN ULONG AllocationType  OPTIONAL,
                    IN ULONG Protect)
 {
    PVOID SafeBaseAddress;
    LARGE_INTEGER SafeSectionOffset;
-   ULONG SafeViewSize;
+   SIZE_T SafeViewSize;
    PSECTION_OBJECT Section;
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    PMADDRESS_SPACE AddressSpace;
    NTSTATUS Status = STATUS_SUCCESS;
+   ULONG tmpProtect;
+
+   /*
+    * Check the protection
+    */
+   if (Protect & ~PAGE_FLAGS_VALID_FROM_USER_MODE)
+   {
+     CHECKPOINT1;
+     return STATUS_INVALID_PARAMETER_10;
+   }
+
+   tmpProtect = Protect & ~(PAGE_GUARD|PAGE_NOCACHE);
+   if (tmpProtect != PAGE_NOACCESS &&
+       tmpProtect != PAGE_READONLY &&
+       tmpProtect != PAGE_READWRITE &&
+       tmpProtect != PAGE_WRITECOPY &&
+       tmpProtect != PAGE_EXECUTE &&
+       tmpProtect != PAGE_EXECUTE_READ &&
+       tmpProtect != PAGE_EXECUTE_READWRITE &&
+       tmpProtect != PAGE_EXECUTE_WRITECOPY)
+   {
+     CHECKPOINT1;
+     return STATUS_INVALID_PAGE_PROTECTION;
+   }
 
    PreviousMode = ExGetPreviousMode();
 
@@ -3620,7 +3642,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
          ProbeForWriteLargeInteger(SectionOffset);
          SafeSectionOffset = *SectionOffset;
        }
-       ProbeForWriteUlong(ViewSize);
+       ProbeForWriteSize_t(ViewSize);
        SafeViewSize = *ViewSize;
      }
      _SEH_HANDLE
@@ -4285,15 +4307,14 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
    AddressSpace = MmGetKernelAddressSpace();
    Result = BaseAddress;
    MmLockAddressSpace(AddressSpace);
-   Status = MmCreateMemoryArea (NULL,
-                                AddressSpace,
+   Status = MmCreateMemoryArea (AddressSpace,
                                 MEMORY_AREA_SYSTEM,
                                 &Result,
                                 Length,
                                 0,
                                 &marea,
                                 FALSE,
-                                FALSE,
+                                0,
                                 BoundaryAddressMultiple);
    MmUnlockAddressSpace(AddressSpace);
 
@@ -4383,7 +4404,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                    IN ULONG ZeroBits,
                    IN ULONG CommitSize,
                    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-                   IN OUT PULONG ViewSize,
+                   IN OUT PSIZE_T ViewSize,
                    IN SECTION_INHERIT InheritDisposition,
                    IN ULONG AllocationType,
                    IN ULONG Protect)
@@ -4395,8 +4416,23 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    ASSERT(Process);
 
+   if (Protect != PAGE_READONLY &&
+       Protect != PAGE_READWRITE &&
+       Protect != PAGE_WRITECOPY &&
+       Protect != PAGE_EXECUTE &&
+       Protect != PAGE_EXECUTE_READ &&
+       Protect != PAGE_EXECUTE_READWRITE &&
+       Protect != PAGE_EXECUTE_WRITECOPY)
+   {
+      CHECKPOINT1;
+      return STATUS_INVALID_PAGE_PROTECTION;
+   }
+
+
    Section = (PSECTION_OBJECT)SectionObject;
    AddressSpace = &Process->AddressSpace;
+
+   AllocationType |= (Section->AllocationAttributes & SEC_NO_CHANGE);
 
    MmLockAddressSpace(AddressSpace);
 
@@ -4458,15 +4494,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].VirtualAddress);
             MmLockSectionSegment(&SectionSegments[i]);
-            Status = MmMapViewOfSegment(Process,
-                                        AddressSpace,
+            Status = MmMapViewOfSegment(AddressSpace,
                                         Section,
                                         &SectionSegments[i],
                                         &SBaseAddress,
                                         SectionSegments[i].Length,
                                         SectionSegments[i].Protection,
                                         0,
-                                        FALSE);
+                                        0);
             MmUnlockSectionSegment(&SectionSegments[i]);
             if (!NT_SUCCESS(Status))
             {
@@ -4480,6 +4515,28 @@ MmMapViewOfSection(IN PVOID SectionObject,
    }
    else
    {
+      /* check for write access */
+      if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
+          !(Section->SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
+      {
+         CHECKPOINT1;
+         return STATUS_SECTION_PROTECTION;
+      }
+      /* check for read access */
+      if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
+          !(Section->SectionPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
+      {
+         CHECKPOINT1;
+         return STATUS_SECTION_PROTECTION;
+      }
+      /* check for execute access */
+      if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
+          !(Section->SectionPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
+      {
+         CHECKPOINT1;
+         return STATUS_SECTION_PROTECTION;
+      }
+
       if (ViewSize == NULL)
       {
          /* Following this pointer would lead to us to the dark side */
@@ -4512,15 +4569,14 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       MmLockSectionSegment(Section->Segment);
-      Status = MmMapViewOfSegment(Process,
-                                  AddressSpace,
+      Status = MmMapViewOfSegment(AddressSpace,
                                   Section,
                                   Section->Segment,
                                   BaseAddress,
                                   *ViewSize,
                                   Protect,
                                   ViewOffset,
-                                  (AllocationType & MEM_TOP_DOWN) == MEM_TOP_DOWN);
+                                  AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE));
       MmUnlockSectionSegment(Section->Segment);
       if (!NT_SUCCESS(Status))
       {
@@ -4624,15 +4680,14 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    MmLockSectionSegment(Section->Segment);
 
 
-   Status = MmMapViewOfSegment(NULL,
-                               AddressSpace,
+   Status = MmMapViewOfSegment(AddressSpace,
                                Section,
                                Section->Segment,
                                MappedBase,
                                *ViewSize,
                                PAGE_READWRITE,
                                0,
-                               FALSE);
+                               0);
 
    MmUnlockSectionSegment(Section->Segment);
    MmUnlockAddressSpace(AddressSpace);
@@ -4768,6 +4823,25 @@ MmCreateSection (OUT PSECTION_OBJECT  * SectionObject,
                  IN HANDLE   FileHandle   OPTIONAL,
                  IN PFILE_OBJECT  File      OPTIONAL)
 {
+   ULONG Protection;
+
+   /*
+    * Check the protection
+    */
+   Protection = SectionPageProtection & ~(PAGE_GUARD|PAGE_NOCACHE);
+   if (Protection != PAGE_NOACCESS &&
+       Protection != PAGE_READONLY &&
+       Protection != PAGE_READWRITE &&
+       Protection != PAGE_WRITECOPY &&
+       Protection != PAGE_EXECUTE &&
+       Protection != PAGE_EXECUTE_READ &&
+       Protection != PAGE_EXECUTE_READWRITE &&
+       Protection != PAGE_EXECUTE_WRITECOPY)
+   {
+     CHECKPOINT1;
+     return STATUS_INVALID_PAGE_PROTECTION;
+   }
+
    if (AllocationAttributes & SEC_IMAGE)
    {
       return(MmCreateImageSection(SectionObject,

@@ -143,7 +143,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Ejemplo",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZzÑñ",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
     LTEXT           "Codificación:",stc7 ,98,114,80,9
-    COMBOBOX        cmb5,98,124,120,10,CBS_DROPDOWNLIST |CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
@@ -406,6 +406,9 @@ defecto."
     PD32_GENERIC_ERROR                    "Ocurrió un error."
     PD32_DRIVER_UNKNOWN                   "Manejador de la impresora \
 desconocido."
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Impresora por defecto; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Hay %d documentos en la cola"

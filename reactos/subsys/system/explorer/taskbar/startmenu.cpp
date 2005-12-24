@@ -248,7 +248,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 	TCHAR dir_path[MAX_PATH];
 
 	if (!ignore.empty()) {
-		_tsplitpath(ignore, ignore_path, ignore_dir, ignore_name, ignore_ext);
+		_tsplitpath_s(ignore, ignore_path, COUNTOF(ignore_path), ignore_dir, COUNTOF(ignore_dir), ignore_name, COUNTOF(ignore_name), ignore_ext, COUNTOF(ignore_ext));
 
 		_tcscat(ignore_path, ignore_dir);
 		_tcscat(ignore_name, ignore_ext);
@@ -391,7 +391,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (_arrow_btns) {
 				RECT rect_up, rect_down;
 
-				GetArrowButtonRects(&rect_up, &rect_down);
+				GetArrowButtonRects(&rect_up, &rect_down, _big_icons);
 
 				SCROLL_MODE scroll_mode = SCROLL_NOT;
 
@@ -837,21 +837,24 @@ void StartMenu::DrawArrows(HDC hdc, bool big_icons)
 	DrawIconEx(hdc, clnt.right/2-cx/2, clnt.bottom-cy-1, arrowDownIcon, cx, cy, 0, 0, DI_NORMAL);
 }
 
-void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down)
+void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, bool big_icons)
 {
+	int cx = big_icons? 16: 8;
+	int cy = big_icons? 8: 4;
+
 	GetClientRect(_hwnd, prect_up);
 	*prect_down = *prect_up;
 
-//	prect_up->left = prect_up->right/2 - 4;
-//	prect_up->right = prect_up->left + 8;
-	prect_up->right -= 8;
-	prect_up->top = _floating_btn? 3: 1;
-	prect_up->bottom = prect_up->top + 4;
+//	prect_up->left = prect_up->right/2 - cx/2;
+//	prect_up->right = prect_up->left + cy;
+	prect_up->right -= cx;
+	prect_up->top = _floating_btn? cy-1: 1;
+	prect_up->bottom = prect_up->top + cy;
 
-//	prect_down->left = prect_down->right/2 - 4;
-//	prect_down->right = prect_down->left + 8;
-	prect_down->right -= 8;
-	prect_down->top = prect_down->bottom - 5;
+//	prect_down->left = prect_down->right/2 - cx/2;
+//	prect_down->right = prect_down->left + cy;
+	prect_down->right -= cx;
+	prect_down->top = prect_down->bottom - cy - 1;
 }
 
 
@@ -1543,7 +1546,7 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 
 
 StartMenuRoot::StartMenuRoot(HWND hwnd)
- :	super(hwnd, true)	///@todo big icons in start menu root
+ :	super(hwnd, false)	///@todo big icons in start menu root
 {
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCOMMONGROUPS))
@@ -1821,7 +1824,7 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 
 	PatBlt(canvas, _logo_size.cx, 0, 1, clnt.bottom, WHITENESS);
 
-	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
+    BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, ( h<_logo_size.cy ? _logo_size.cy-h : 0) , SRCCOPY);
 
 	super::Paint(canvas);
 }
@@ -1984,6 +1987,7 @@ int StartMenuHandler::Command(int id, int code)
 #endif
 		break;}
 
+#if 0	///@todo use printer start menu folder per default and allow opening "printers" cabinet window using the context menu
 	  case IDC_PRINTERS_MENU:
 		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
 /*		StartMenuFolders new_folders;
@@ -1995,6 +1999,7 @@ int StartMenuHandler::Command(int id, int code)
 
 		CreateSubmenu(id, new_folders, ResString(IDS_PRINTERS));*/
 		break;
+#endif
 
 	  case IDC_ADMIN:
 #ifndef ROSSHELL
@@ -2143,10 +2148,10 @@ void SettingsMenu::AddEntries()
 	super::AddEntries();
 
 #if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
+//TODO	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
+//TODO	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, true, IDC_CONNECTIONS);
 #endif
 	AddButton(ResString(IDS_ADMIN),				ICID_CONFIG, true, IDC_ADMIN);

@@ -4,7 +4,7 @@
     http://www.cae.wisc.edu/~brodskye/sb16doc/sb16doc.html
 */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "sndblst.h"
 
 VOID SetOutputSampleRate(UINT BasePort, UINT SampleRate)

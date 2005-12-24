@@ -91,7 +91,7 @@ interface ObjectRpcBaseTypes
 
   typedef struct tagSTRINGBINDING {
     unsigned short wTowerId;
-    [string] unsigned short aNetworkAddr[];
+    [string] WCHAR aNetworkAddr[];
   } STRINGBINDING;
 
   const unsigned short COM_C_AUTHZ_NONE = 0xffff;
@@ -99,7 +99,7 @@ interface ObjectRpcBaseTypes
   typedef struct tagSECURITYBINDING {
     unsigned short wAuthnSvc;
     unsigned short wAuthzSvc;
-    [string] unsigned short aPrincName[];
+    [string] WCHAR aPrincName[];
   } SECURITYBINDING;
 
   typedef struct tagDUALSTRINGARRAY {

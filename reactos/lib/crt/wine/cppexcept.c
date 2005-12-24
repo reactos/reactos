@@ -42,15 +42,14 @@
 WINE_DEFAULT_DEBUG_CHANNEL(seh);
 
 #ifdef __i386__  /* CxxFrameHandler is not supported on non-i386 */
-#define CONTEXT86 CONTEXT //Mingw Hack
 
 static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame,
                                 PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch,
                                 cxx_function_descr *descr, EXCEPTION_REGISTRATION_RECORD* nested_frame,
-                                int nested_trylevel, CONTEXT86 *context );
+                                int nested_trylevel );
 
 /* call a function with a given ebp */
-inline static void *call_ebp_func( void *func, void *ebp )
+__inline static void *call_ebp_func( void *func, void *ebp )
 {
     void *ret;
     __asm__ __volatile__ ("pushl %%ebp; movl %2,%%ebp; call *%%eax; popl %%ebp" \
@@ -59,7 +58,7 @@ inline static void *call_ebp_func( void *func, void *ebp )
 }
 
 /* call a copy constructor */
-inline static void call_copy_ctor( void *func, void *this, void *src, int has_vbase )
+__inline static void call_copy_ctor( void *func, void *this, void *src, int has_vbase )
 {
     TRACE( "calling copy ctor %p object %p src %p\n", func, this, src );
     if (has_vbase)
@@ -72,7 +71,7 @@ inline static void call_copy_ctor( void *func, void *this, void *src, int has_vb
 }
 
 /* call the destructor of the exception object */
-inline static void call_dtor( void *func, void *object )
+__inline static void call_dtor( void *func, void *object )
 {
     __asm__ __volatile__("call *%0" : : "r" (func), "c" (object) : "eax", "edx", "memory" );
 }
@@ -255,13 +254,13 @@ static DWORD catch_function_nested_handler( EXCEPTION_RECORD *rec, EXCEPTION_REG
         TRACE( "got nested exception in catch function\n" );
         return cxx_frame_handler( rec, nested_frame->cxx_frame, context,
                                   NULL, nested_frame->descr, &nested_frame->frame,
-                                  nested_frame->trylevel, context );
+                                  nested_frame->trylevel );
     }
 }
 
 /* find and call the appropriate catch block for an exception */
 /* returns the address to continue execution to after the catch block was called */
-inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame *frame,
+__inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame *frame,
                                       cxx_function_descr *descr, int nested_trylevel,
                                       cxx_exception_type *info )
 {
@@ -303,7 +302,7 @@ inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame
             /* setup an exception block for nested exceptions */
 
             //nested_frame.frame.Handler = catch_function_nested_handler;
-            nested_frame.frame.handler = (PEXCEPTION_HANDLER)catch_function_nested_handler;
+            nested_frame.frame.Handler = (PEXCEPTION_HANDLER)catch_function_nested_handler;
             nested_frame.prev_rec  = thread_data->exc_record;
             nested_frame.cxx_frame = frame;
             nested_frame.descr     = descr;
@@ -332,10 +331,11 @@ inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame
 static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame,
                                 PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch,
                                 cxx_function_descr *descr, EXCEPTION_REGISTRATION_RECORD* nested_frame,
-                                int nested_trylevel, CONTEXT86 *context )
+                                int nested_trylevel )
 {
     cxx_exception_type *exc_type;
     void *next_ip;
+    PEXCEPTION_RECORD orig_rec = rec;
 
     if (descr->magic != CXX_FRAME_MAGIC)
     {
@@ -375,10 +375,10 @@ static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* fram
     next_ip = call_catch_block( rec, frame, descr, frame->trylevel, exc_type );
 
     if (!next_ip) return ExceptionContinueSearch;
-    rec->ExceptionFlags &= ~EH_NONCONTINUABLE;
-    context->Eip = (DWORD)next_ip;
-    context->Ebp = (DWORD)&frame->ebp;
-    context->Esp = ((DWORD*)frame)[-1];
+    orig_rec->ExceptionFlags &= ~EH_NONCONTINUABLE;
+    exc_context->Eip = (DWORD)next_ip;
+    exc_context->Ebp = (DWORD)&frame->ebp;
+    exc_context->Esp = ((DWORD*)frame)[-1];
     return ExceptionContinueExecution;
 }
 
@@ -386,16 +386,15 @@ static DWORD cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* fram
 /*********************************************************************
  *		__CxxFrameHandler (MSVCRT.@)
  */
-void __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
-                              PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch,
-                              CONTEXT86 *context )
+DWORD __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRATION_RECORD* frame,
+                              PCONTEXT exc_context, EXCEPTION_REGISTRATION_RECORD** dispatch )
 {
-    cxx_function_descr *descr = (cxx_function_descr *)context->Eax;
-    context->Eax = cxx_frame_handler( rec, (cxx_exception_frame *)frame,
-                                      exc_context, dispatch, descr, NULL, 0, context );
+    cxx_function_descr *descr;
+
+    __asm__ __volatile__("mov %%eax, %0\n" : "=m"(descr));
+    return cxx_frame_handler(rec, (cxx_exception_frame *)frame,
+                             exc_context, dispatch, descr, NULL, 0 );
 }
-//DEFINE_REGS_ENTRYPOINT( __CxxFrameHandler, MSVCRT__CxxFrameHandler, 16, 0 );
-// ROS
 #endif  /* __i386__ */
 
 /*********************************************************************

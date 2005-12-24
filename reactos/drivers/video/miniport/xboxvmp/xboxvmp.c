@@ -72,7 +72,7 @@ XboxVmpFindAdapter(
   VIDEO_ACCESS_RANGE AccessRanges[3];
   VP_STATUS Status;
 
-  DPRINT("XboxVmpFindAdapter\n");
+  VideoPortDebugPrint(Trace, "XboxVmpFindAdapter\n");
 
   XboxVmpDeviceExtension = (PXBOXVMP_DEVICE_EXTENSION) HwDeviceExtension;
   Status = VideoPortGetAccessRanges(HwDeviceExtension, 0, NULL, 3, AccessRanges,
@@ -102,7 +102,7 @@ XboxVmpInitialize(PVOID HwDeviceExtension)
   ULONG inIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
   ULONG Length;
 
-  DPRINT("XboxVmpInitialize\n");
+  VideoPortDebugPrint(Trace, "XboxVmpInitialize\n");
 
   XboxVmpDeviceExtension = (PXBOXVMP_DEVICE_EXTENSION) HwDeviceExtension;
 
@@ -113,10 +113,10 @@ XboxVmpInitialize(PVOID HwDeviceExtension)
                                      &Length, &inIoSpace,
                                      &XboxVmpDeviceExtension->VirtControlStart))
     {
-      DPRINT1("Failed to map control memory\n");
+      VideoPortDebugPrint(Error, "Failed to map control memory\n");
       return FALSE;
     }
-  DPRINT("Mapped 0x%x bytes of control mem at 0x%x to virt addr 0x%x\n",
+  VideoPortDebugPrint(Info, "Mapped 0x%x bytes of control mem at 0x%x to virt addr 0x%x\n",
          XboxVmpDeviceExtension->ControlLength,
          XboxVmpDeviceExtension->PhysControlStart.u.LowPart,
          XboxVmpDeviceExtension->VirtControlStart);
@@ -142,7 +142,7 @@ XboxVmpStartIO(
   switch (RequestPacket->IoControlCode)
     {
       case IOCTL_VIDEO_SET_CURRENT_MODE:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_SET_CURRENT_MODE\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_SET_CURRENT_MODE\n");
         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
@@ -155,14 +155,14 @@ XboxVmpStartIO(
         break;
 
       case IOCTL_VIDEO_RESET_DEVICE:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_RESET_DEVICE\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_RESET_DEVICE\n");
         Result = XboxVmpResetDevice(
             (PXBOXVMP_DEVICE_EXTENSION)HwDeviceExtension,
             RequestPacket->StatusBlock);
         break;
 
       case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_MAP_VIDEO_MEMORY\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_MAP_VIDEO_MEMORY\n");
         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
             RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
           {
@@ -177,7 +177,7 @@ XboxVmpStartIO(
         break;
 
       case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_UNMAP_VIDEO_MEMORY\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_UNMAP_VIDEO_MEMORY\n");
         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
@@ -190,7 +190,7 @@ XboxVmpStartIO(
         break;
 
       case IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES\n");
         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
@@ -203,7 +203,7 @@ XboxVmpStartIO(
         break;
 
       case IOCTL_VIDEO_QUERY_AVAIL_MODES:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_QUERY_AVAIL_MODES\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_QUERY_AVAIL_MODES\n");
         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
@@ -216,7 +216,7 @@ XboxVmpStartIO(
         break;
 
       case IOCTL_VIDEO_QUERY_CURRENT_MODE:
-        DPRINT("XboxVmpStartIO IOCTL_VIDEO_QUERY_CURRENT_MODE\n");
+        VideoPortDebugPrint(Trace, "XboxVmpStartIO IOCTL_VIDEO_QUERY_CURRENT_MODE\n");
         if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
           {
             RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
@@ -229,7 +229,7 @@ XboxVmpStartIO(
         break;
 
       default:
-        DPRINT("XboxVmpStartIO 0x%x not implemented\n");
+        VideoPortDebugPrint(Warn, "XboxVmpStartIO 0x%x not implemented\n");
         RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
         return FALSE;
     }
@@ -254,7 +254,7 @@ XboxVmpResetHw(
    ULONG Columns,
    ULONG Rows)
 {
-  DPRINT("XboxVmpResetHw\n");
+  VideoPortDebugPrint(Trace, "XboxVmpResetHw\n");
 
   if (! XboxVmpResetDevice((PXBOXVMP_DEVICE_EXTENSION) DeviceExtension, NULL))
     {
@@ -276,7 +276,7 @@ XboxVmpGetPowerState(
    ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
-  DPRINT1("XboxVmpGetPowerState is not supported\n");
+  VideoPortDebugPrint(Error, "XboxVmpGetPowerState is not supported\n");
 
   return ERROR_NOT_SUPPORTED;
 }
@@ -293,7 +293,7 @@ XboxVmpSetPowerState(
    ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
-  DPRINT1("XboxVmpSetPowerState not supported\n");
+  VideoPortDebugPrint(Error, "XboxVmpSetPowerState not supported\n");
 
   return ERROR_NOT_SUPPORTED;
 }
@@ -368,7 +368,7 @@ XboxVmpMapVideoMemory(
     }
   else
     {
-      DPRINT1("ZwQueryBasicInformation failed, assuming 64MB total memory\n");
+      VideoPortDebugPrint(Error, "ZwQueryBasicInformation failed, assuming 64MB total memory\n");
       FrameBuffer.u.LowPart = 60 * 1024 * 1024;
     }
 
@@ -385,7 +385,7 @@ XboxVmpMapVideoMemory(
   /* Tell the nVidia controller about the framebuffer */
   *((PULONG)((char *) DeviceExtension->VirtControlStart + CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = FrameBuffer.u.LowPart;
 
-  DPRINT("Mapped 0x%x bytes of phys mem at 0x%x to virt addr 0x%x\n",
+  VideoPortDebugPrint(Info, "Mapped 0x%x bytes of phys mem at 0x%lx to virt addr 0x%p\n",
           MapInformation->VideoRamLength, FrameBuffer.u.LowPart, MapInformation->VideoRamBase);
 
   return TRUE;
@@ -435,7 +435,7 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 {
   int nRetriesToLive=50;
 
-  while (0 != (READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0)) & 0x0800))
+  while (0 != (VideoPortReadPortUshort((PUSHORT) (I2C_IO_BASE + 0)) & 0x0800))
     {
       ;  /* Franz's spin while bus busy with any master traffic */
     }
@@ -445,22 +445,22 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
       UCHAR b;
       int temp;
 
-      WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 4), (Address << 1) | 1);
-      WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 8), bRegister);
+      VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 4), (Address << 1) | 1);
+      VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 8), bRegister);
 
-      temp = READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0));
-      WRITE_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0), temp);  /* clear down all preexisting errors */
+      temp = VideoPortReadPortUshort((PUSHORT) (I2C_IO_BASE + 0));
+      VideoPortWritePortUshort((PUSHORT) (I2C_IO_BASE + 0), temp);  /* clear down all preexisting errors */
 
       switch (Size)
         {
           case 4:
-            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0d);      /* DWORD modus ? */
+            VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 2), 0x0d);      /* DWORD modus ? */
             break;
           case 2:
-            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0b);      /* WORD modus */
+            VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 2), 0x0b);      /* WORD modus */
             break;
           default:
-            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0a);      // BYTE
+            VideoPortWritePortUchar((PUCHAR) (I2C_IO_BASE + 2), 0x0a);      // BYTE
             break;
         }
 
@@ -468,7 +468,7 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 
       while (0 == (b & 0x36))
         {
-          b = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 0));
+          b = VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 0));
         }
 
       if (0 != (b & 0x24))
@@ -485,17 +485,17 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
           switch (Size)
             {
               case 4:
-                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
-                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
-                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
-                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
-                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 6));
+                VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
+                VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
+                VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
+                VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 9));
                 break;
               case 2:
-                *Data_to_smbus = READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 6));
+                *Data_to_smbus = VideoPortReadPortUshort((PUSHORT) (I2C_IO_BASE + 6));
                 break;
               default:
-                *Data_to_smbus = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
+                *Data_to_smbus = VideoPortReadPortUchar((PUCHAR) (I2C_IO_BASE + 6));
                 break;
             }
 

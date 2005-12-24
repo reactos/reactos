@@ -19,7 +19,7 @@
 
 #define NDEBUG
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <hal.h>
 #include <bus.h>
 #include "halxbox.h"

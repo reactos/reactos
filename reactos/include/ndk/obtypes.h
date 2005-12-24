@@ -1,68 +1,78 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/obtypes.h
- * PURPOSE:         Defintions for Object Manager Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    obtypes.h
+
+Abstract:
+
+    Type definitions for the Object Manager
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _OBTYPES_H
 #define _OBTYPES_H
 
-/* DEPENDENCIES **************************************************************/
-
-/* CONSTANTS *****************************************************************/
+//
+// Dependencies
+//
+#include <umtypes.h>
 
 #ifdef NTOS_MODE_USER
-/* Definitions for Object Creation */
-#define OBJ_INHERIT 2L
-#define OBJ_PERMANENT 16L
-#define OBJ_EXCLUSIVE 32L
-#define OBJ_CASE_INSENSITIVE 64L
-#define OBJ_OPENIF 128L
-#define OBJ_OPENLINK 256L
-#define OBJ_VALID_ATTRIBUTES 498L
+
+//
+// Definitions for Object Creation
+//
+#define OBJ_INHERIT                             0x00000002L
+#define OBJ_PERMANENT                           0x00000010L
+#define OBJ_EXCLUSIVE                           0x00000020L
+#define OBJ_CASE_INSENSITIVE                    0x00000040L
+#define OBJ_OPENIF                              0x00000080L
+#define OBJ_OPENLINK                            0x00000100L
+#define OBJ_KERNEL_HANDLE                       0x00000200L
+#define OBJ_FORCE_ACCESS_CHECK                  0x00000400L
+#define OBJ_VALID_ATTRIBUTES                    0x000007F2L
+
 #define InitializeObjectAttributes(p,n,a,r,s) { \
-    (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
-    (p)->RootDirectory = (r); \
-    (p)->Attributes = (a); \
-    (p)->ObjectName = (n); \
-    (p)->SecurityDescriptor = (s); \
-    (p)->SecurityQualityOfService = NULL; \
+    (p)->Length = sizeof(OBJECT_ATTRIBUTES);    \
+    (p)->RootDirectory = (r);                   \
+    (p)->Attributes = (a);                      \
+    (p)->ObjectName = (n);                      \
+    (p)->SecurityDescriptor = (s);              \
+    (p)->SecurityQualityOfService = NULL;       \
 }
 
-/* Directory Object Access Rights */
-#define DIRECTORY_QUERY                 0x0001
-#define DIRECTORY_TRAVERSE              0x0002
-#define DIRECTORY_CREATE_OBJECT         0x0004
-#define DIRECTORY_CREATE_SUBDIRECTORY   0x0008
-#define DIRECTORY_ALL_ACCESS            (STANDARD_RIGHTS_REQUIRED | 0xF)
-#endif
+//
+// Directory Object Access Rights
+//
+#define DIRECTORY_QUERY                         0x0001
+#define DIRECTORY_TRAVERSE                      0x0002
+#define DIRECTORY_CREATE_OBJECT                 0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY           0x0008
+#define DIRECTORY_ALL_ACCESS                    (STANDARD_RIGHTS_REQUIRED | 0xF)
 
-/* Duplication Flags */
-#define DUPLICATE_SAME_ATTRIBUTES       0x00000004
+#else
 
-/* Values for DosDeviceDriveType */
-#define DOSDEVICE_DRIVE_UNKNOWN		0
-#define DOSDEVICE_DRIVE_CALCULATE	1
-#define DOSDEVICE_DRIVE_REMOVABLE	2
-#define DOSDEVICE_DRIVE_FIXED		3
-#define DOSDEVICE_DRIVE_REMOTE		4
-#define DOSDEVICE_DRIVE_CDROM		5
-#define DOSDEVICE_DRIVE_RAMDISK		6
+//
+// Object Flags
+//
+#define OB_FLAG_CREATE_INFO                     0x01
+#define OB_FLAG_KERNEL_MODE                     0x02
+#define OB_FLAG_CREATOR_INFO                    0x04
+#define OB_FLAG_EXCLUSIVE                       0x08
+#define OB_FLAG_PERMANENT                       0x10
+#define OB_FLAG_SECURITY                        0x20
+#define OB_FLAG_SINGLE_PROCESS                  0x40
 
-#ifndef NTOS_MODE_USER
-/* Object Flags */
-#define OB_FLAG_CREATE_INFO    0x01
-#define OB_FLAG_KERNEL_MODE    0x02
-#define OB_FLAG_CREATOR_INFO   0x04
-#define OB_FLAG_EXCLUSIVE      0x08
-#define OB_FLAG_PERMANENT      0x10
-#define OB_FLAG_SECURITY       0x20
-#define OB_FLAG_SINGLE_PROCESS 0x40
-
-/* ENUMERATIONS **************************************************************/
-
+//
+// Reasons for Open Callback
+//
 typedef enum _OB_OPEN_REASON
 {
     ObCreateHandle,
@@ -71,8 +81,33 @@ typedef enum _OB_OPEN_REASON
     ObInheritHandle,
     ObMaxOpenReason
 } OB_OPEN_REASON;
+
 #endif
 
+//
+// Object Duplication Flags
+//
+#define DUPLICATE_SAME_ATTRIBUTES               0x00000004
+
+//
+// Number of hash entries in an Object Directory
+//
+#define NUMBER_HASH_BUCKETS                     37
+
+//
+// Types for DosDeviceDriveType
+//
+#define DOSDEVICE_DRIVE_UNKNOWN                 0
+#define DOSDEVICE_DRIVE_CALCULATE               1
+#define DOSDEVICE_DRIVE_REMOVABLE               2
+#define DOSDEVICE_DRIVE_FIXED                   3
+#define DOSDEVICE_DRIVE_REMOTE                  4
+#define DOSDEVICE_DRIVE_CDROM                   5
+#define DOSDEVICE_DRIVE_RAMDISK                 6
+
+//
+// Object Information Classes for NtQueryInformationObject
+//
 typedef enum _OBJECT_INFORMATION_CLASS
 {
     ObjectBasicInformation,
@@ -82,51 +117,140 @@ typedef enum _OBJECT_INFORMATION_CLASS
     ObjectHandleInformation
 } OBJECT_INFORMATION_CLASS;
 
-/* FUNCTION TYPES ************************************************************/
+//
+// Dump Control Structure for Object Debugging
+//
+typedef struct _OB_DUMP_CONTROL
+{
+    PVOID Stream;
+    ULONG Detail;
+} OB_DUMP_CONTROL, *POB_DUMP_CONTROL;
 
 #ifndef NTOS_MODE_USER
-/* Object Callbacks FIXME: Update these soon */
+#ifndef _REACTOS_
+
+//
+// Object Type Callbacks
+//
+typedef VOID
+(NTAPI *OB_DUMP_METHOD)(
+    IN PVOID Object,
+    IN POB_DUMP_CONTROL Control OPTIONAL
+);
+
 typedef NTSTATUS
 (NTAPI *OB_OPEN_METHOD)(
-    OB_OPEN_REASON  Reason,
-    PVOID  ObjectBody,
-    PEPROCESS  Process,
-    ULONG  HandleCount,
-    ACCESS_MASK  GrantedAccess
-);
-
-typedef NTSTATUS
-(NTAPI *OB_PARSE_METHOD)(
-    PVOID  Object,
-    PVOID  *NextObject,
-    PUNICODE_STRING  FullPath,
-    PWSTR  *Path,
-    ULONG  Attributes
-);
-
-typedef VOID
-(NTAPI *OB_DELETE_METHOD)(
-    PVOID  DeletedObject
+    IN OB_OPEN_REASON Reason,
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID ObjectBody,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG HandleCount
 );
 
 typedef VOID
 (NTAPI *OB_CLOSE_METHOD)(
-    PVOID  ClosedObject,
-    ULONG  HandleCount
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID Object,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG ProcessHandleCount,
+    IN ULONG SystemHandleCount
 );
 
 typedef VOID
-(NTAPI *OB_DUMP_METHOD)(VOID);
+(NTAPI *OB_DELETE_METHOD)(
+    IN PVOID Object
+);
 
 typedef NTSTATUS
-(NTAPI *OB_OKAYTOCLOSE_METHOD)(VOID);
+(NTAPI *OB_PARSE_METHOD)(
+    IN PVOID ParseObject,
+    IN PVOID ObjectType,
+    IN OUT PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG Attributes,
+    IN OUT PUNICODE_STRING CompleteName,
+    IN OUT PUNICODE_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    OUT PVOID *Object
+);
+
+typedef NTSTATUS
+(NTAPI *OB_SECURITY_METHOD)(
+    IN PVOID Object,
+    IN SECURITY_OPERATION_CODE OperationType,
+    IN SECURITY_INFORMATION SecurityInformation,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN OUT PULONG CapturedLength,
+    IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
+    IN POOL_TYPE PoolType,
+    IN PGENERIC_MAPPING GenericMapping
+);
 
 typedef NTSTATUS
 (NTAPI *OB_QUERYNAME_METHOD)(
-    PVOID  ObjectBody,
-    POBJECT_NAME_INFORMATION  ObjectNameInfo,
-    ULONG  Length,
-    PULONG  ReturnLength
+    IN PVOID Object,
+    IN BOOLEAN HasObjectName,
+    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength
+);
+
+typedef NTSTATUS
+(NTAPI *OB_OKAYTOCLOSE_METHOD)(
+    VOID
+);
+
+#else
+
+//
+// FIXME: ReactOS ONLY Object Callbacks
+//
+typedef NTSTATUS
+(NTAPI *OB_OPEN_METHOD)(
+    OB_OPEN_REASON Reason,
+    PVOID ObjectBody,
+    PEPROCESS Process,
+    ULONG HandleCount,
+    ACCESS_MASK GrantedAccess
+);
+
+typedef NTSTATUS
+(NTAPI *OB_PARSE_METHOD)(
+    PVOID Object,
+    PVOID *NextObject,
+    PUNICODE_STRING FullPath,
+    PWSTR *Path,
+    ULONG Attributes
+);
+
+typedef VOID
+(NTAPI *OB_DELETE_METHOD)(
+    PVOID DeletedObject
+);
+
+typedef VOID
+(NTAPI *OB_CLOSE_METHOD)(
+    PVOID ClosedObject,
+    ULONG HandleCount
+);
+
+typedef VOID
+(NTAPI *OB_DUMP_METHOD)(
+    VOID
+);
+
+typedef NTSTATUS
+(NTAPI *OB_OKAYTOCLOSE_METHOD)(
+    VOID
+);
+
+typedef NTSTATUS
+(NTAPI *OB_QUERYNAME_METHOD)(
+    PVOID ObjectBody,
+    POBJECT_NAME_INFORMATION ObjectNameInfo,
+    ULONG Length,
+    PULONG ReturnLength
 );
 
 typedef PVOID
@@ -148,23 +272,26 @@ typedef NTSTATUS
     PGENERIC_MAPPING GenericMapping
 );
 
-/* FIXME: TEMPORARY HACK */
 typedef NTSTATUS
 (NTAPI *OB_CREATE_METHOD)(
-    PVOID  ObjectBody,
-    PVOID  Parent,
-    PWSTR  RemainingPath,
-    struct _OBJECT_ATTRIBUTES*  ObjectAttributes
+    PVOID ObjectBody,
+    PVOID Parent,
+    PWSTR RemainingPath,
+    struct _OBJECT_ATTRIBUTES* ObjectAttributes
 );
+
 #endif
 
-/* TYPES *********************************************************************/
+#else
 
-#ifdef NTOS_MODE_USER
+//
+// Object Information Types for NtQueryInformationObject
+//
 typedef struct _OBJECT_NAME_INFORMATION
 {
     UNICODE_STRING Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+
 #endif
 
 typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
@@ -180,6 +307,7 @@ typedef struct _OBJECT_DIRECTORY_INFORMATION
 } OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
 #ifndef NTOS_MODE_USER
+
 typedef struct _OBJECT_BASIC_INFORMATION
 {
     ULONG Attributes;
@@ -195,15 +323,6 @@ typedef struct _OBJECT_BASIC_INFORMATION
     LARGE_INTEGER CreateTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 
-typedef struct _OBJECT_HEADER_NAME_INFO
-{
-    struct _DIRECTORY_OBJECT *Directory;
-    UNICODE_STRING Name;
-    ULONG QueryReferences;
-    ULONG Reserved2;
-    ULONG DbgReferenceCount;
-} OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
-
 typedef struct _OBJECT_CREATE_INFORMATION
 {
     ULONG Attributes;
@@ -218,6 +337,9 @@ typedef struct _OBJECT_CREATE_INFORMATION
     SECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
 } OBJECT_CREATE_INFORMATION, *POBJECT_CREATE_INFORMATION;
 
+//
+// Object Type Initialize for ObCreateObjectType
+//
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
     USHORT Length;
@@ -242,6 +364,9 @@ typedef struct _OBJECT_TYPE_INITIALIZER
     OB_OKAYTOCLOSE_METHOD OkayToCloseProcedure;
 } OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
 
+//
+// Object Type Object
+//
 typedef struct _OBJECT_TYPE
 {
     ERESOURCE Mutex;
@@ -257,6 +382,18 @@ typedef struct _OBJECT_TYPE
     ULONG Key;
     ERESOURCE ObjectLocks[4];
 } OBJECT_TYPE;
+
+//
+// Object Header Addon Information
+//
+typedef struct _OBJECT_HEADER_NAME_INFO
+{
+    struct _DIRECTORY_OBJECT *Directory;
+    UNICODE_STRING Name;
+    ULONG QueryReferences;
+    ULONG Reserved2;
+    ULONG DbgReferenceCount;
+} OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
 
 typedef struct _OBJECT_HANDLE_COUNT_ENTRY
 {
@@ -287,9 +424,14 @@ typedef struct _OBJECT_HEADER_CREATOR_INFO
     USHORT Reserved;
 } OBJECT_HEADER_CREATOR_INFO, *POBJECT_HEADER_CREATOR_INFO;
 
+//
+// Object Header
+//
 typedef struct _OBJECT_HEADER
 {
-    LIST_ENTRY Entry; /* FIXME: REMOVE THIS SOON */
+#ifdef _REACTOS_
+    LIST_ENTRY Entry; // FIXME: REACTOS ONLY
+#endif
     LONG PointerCount;
     union
     {
@@ -310,11 +452,9 @@ typedef struct _OBJECT_HEADER
     QUAD Body;
 } OBJECT_HEADER, *POBJECT_HEADER;
 
-/*
- * FIXME: These will eventually become centerfold in the compliant Ob Manager
- * For now, they are only here so Device Map is properly defined before the header
- * changes
- */
+//
+// Object Directory Structures
+//
 typedef struct _OBJECT_DIRECTORY_ENTRY
 {
     struct _OBJECT_DIRECTORY_ENTRY *ChainLink;
@@ -322,7 +462,6 @@ typedef struct _OBJECT_DIRECTORY_ENTRY
     ULONG HashValue;
 } OBJECT_DIRECTORY_ENTRY, *POBJECT_DIRECTORY_ENTRY;
 
-#define NUMBER_HASH_BUCKETS 37
 typedef struct _OBJECT_DIRECTORY
 {
     struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
@@ -331,6 +470,9 @@ typedef struct _OBJECT_DIRECTORY
     ULONG SessionId;
 } OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
 
+//
+// Device Map
+//
 typedef struct _DEVICE_MAP
 {
     POBJECT_DIRECTORY   DosDevicesDirectory;
@@ -340,10 +482,12 @@ typedef struct _DEVICE_MAP
     UCHAR               DriveType[32];
 } DEVICE_MAP, *PDEVICE_MAP;
 
-/* EXPORTED DATA *************************************************************/
-
+//
+// Kernel Exports
+//
 extern POBJECT_TYPE NTSYSAPI ObDirectoryType;
 extern PDEVICE_MAP NTSYSAPI ObSystemDeviceMap;
-#endif
 
-#endif
+#endif // !NTOS_MODE_USER
+
+#endif // _OBTYPES_H

@@ -660,6 +660,8 @@ vfatGetFCBForFile (
 	PVFATFCB  parentFCB;
 	UNICODE_STRING NameU;
 	UNICODE_STRING RootNameU = RTL_CONSTANT_STRING(L"\\");
+        UNICODE_STRING FileNameU;
+        WCHAR NameBuffer[260];
 	PWCHAR curr, prev, last;
 	ULONG Length;
 	
@@ -668,13 +670,17 @@ vfatGetFCBForFile (
 		pParentFCB,
 		pFCB,
 		pFileNameU);
+
+        FileNameU.Buffer = NameBuffer;
+        FileNameU.MaximumLength = sizeof(NameBuffer);
+        RtlCopyUnicodeString(&FileNameU, pFileNameU);
 	
 	parentFCB = *pParentFCB;
 	
 	if (parentFCB == NULL)
 	{
 		//  Trivial case, open of the root directory on volume
-		if (RtlEqualUnicodeString(pFileNameU, &RootNameU, FALSE))
+		if (RtlEqualUnicodeString(&FileNameU, &RootNameU, FALSE))
 		{
 			DPRINT ("returning root FCB\n");
 			
@@ -686,7 +692,7 @@ vfatGetFCBForFile (
 		}
 		
 		/* Check for an existing FCB */
-		FCB = vfatGrabFCBFromTable (pVCB, pFileNameU);
+		FCB = vfatGrabFCBFromTable (pVCB, &FileNameU);
 		if (FCB)
 		{
 			*pFCB = FCB;
@@ -695,34 +701,34 @@ vfatGetFCBForFile (
 			return STATUS_SUCCESS;
 		}
 		
-		last = curr = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
-		while (*curr != L'\\' && curr > pFileNameU->Buffer)
+		last = curr = FileNameU.Buffer + FileNameU.Length / sizeof(WCHAR) - 1;
+		while (*curr != L'\\' && curr > FileNameU.Buffer)
 		{
 			curr--;
 		}
 		
-		if (curr > pFileNameU->Buffer)
+		if (curr > FileNameU.Buffer)
 		{
-			NameU.Buffer = pFileNameU->Buffer;
-			NameU.MaximumLength = NameU.Length = (curr - pFileNameU->Buffer) * sizeof(WCHAR);
+			NameU.Buffer = FileNameU.Buffer;
+			NameU.MaximumLength = NameU.Length = (curr - FileNameU.Buffer) * sizeof(WCHAR);
 			FCB = vfatGrabFCBFromTable(pVCB, &NameU);
 			if (FCB)
 			{
-				Length = (curr - pFileNameU->Buffer) * sizeof(WCHAR);
+				Length = (curr - FileNameU.Buffer) * sizeof(WCHAR);
 				if (Length != FCB->PathNameU.Length)
 				{
-					if (pFileNameU->Length + FCB->PathNameU.Length - Length > pFileNameU->MaximumLength)
+					if (FileNameU.Length + FCB->PathNameU.Length - Length > FileNameU.MaximumLength)
 					{
 						vfatReleaseFCB (pVCB, FCB);
 						return STATUS_OBJECT_NAME_INVALID;
 					}
-					RtlMoveMemory(pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR),
-						curr, pFileNameU->Length - Length);
-					pFileNameU->Length += (USHORT)(FCB->PathNameU.Length - Length);
-					curr = pFileNameU->Buffer + FCB->PathNameU.Length / sizeof(WCHAR);
-					last = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
+					RtlMoveMemory(FileNameU.Buffer + FCB->PathNameU.Length / sizeof(WCHAR),
+						curr, FileNameU.Length - Length);
+					FileNameU.Length += (USHORT)(FCB->PathNameU.Length - Length);
+					curr = FileNameU.Buffer + FCB->PathNameU.Length / sizeof(WCHAR);
+					last = FileNameU.Buffer + FileNameU.Length / sizeof(WCHAR) - 1;
 				}
-				RtlCopyMemory(pFileNameU->Buffer, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
+				RtlCopyMemory(FileNameU.Buffer, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
 			}
 		}
 		else
@@ -733,7 +739,7 @@ vfatGetFCBForFile (
 		if (FCB == NULL)
 		{
 			FCB = vfatOpenRootFCB(pVCB);
-			curr = pFileNameU->Buffer;
+			curr = FileNameU.Buffer;
 		}
 		
 		parentFCB = NULL;
@@ -743,8 +749,8 @@ vfatGetFCBForFile (
 	{
 		FCB = parentFCB;
 		parentFCB = NULL;
-		prev = curr = pFileNameU->Buffer - 1;
-		last = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
+		prev = curr = FileNameU.Buffer - 1;
+		last = FileNameU.Buffer + FileNameU.Length / sizeof(WCHAR) - 1;
 	}
 	
 	while (curr <= last)
@@ -772,16 +778,16 @@ vfatGetFCBForFile (
 			Length = (curr - prev) * sizeof(WCHAR);
 			if (Length != parentFCB->LongNameU.Length)
 			{
-				if (pFileNameU->Length + parentFCB->LongNameU.Length - Length > pFileNameU->MaximumLength)
+				if (FileNameU.Length + parentFCB->LongNameU.Length - Length > FileNameU.MaximumLength)
 				{
 					vfatReleaseFCB (pVCB, parentFCB);
 					return STATUS_OBJECT_NAME_INVALID;
 				}
 				RtlMoveMemory(prev + parentFCB->LongNameU.Length / sizeof(WCHAR), curr,
-					pFileNameU->Length - (curr - pFileNameU->Buffer) * sizeof(WCHAR));
-				pFileNameU->Length += (USHORT)(parentFCB->LongNameU.Length - Length);
+					FileNameU.Length - (curr - FileNameU.Buffer) * sizeof(WCHAR));
+				FileNameU.Length += (USHORT)(parentFCB->LongNameU.Length - Length);
 				curr = prev + parentFCB->LongNameU.Length / sizeof(WCHAR);
-				last = pFileNameU->Buffer + pFileNameU->Length / sizeof(WCHAR) - 1;
+				last = FileNameU.Buffer + FileNameU.Length / sizeof(WCHAR) - 1;
 			}
 			RtlCopyMemory(prev, parentFCB->LongNameU.Buffer, parentFCB->LongNameU.Length);
 		}
@@ -791,9 +797,9 @@ vfatGetFCBForFile (
 		{
 			curr++;
 		}
-		NameU.Buffer = pFileNameU->Buffer;
+		NameU.Buffer = FileNameU.Buffer;
 		NameU.Length = (curr - NameU.Buffer) * sizeof(WCHAR);
-		NameU.MaximumLength = pFileNameU->MaximumLength;
+		NameU.MaximumLength = FileNameU.MaximumLength;
 		DPRINT("%wZ\n", &NameU);
 		FCB = vfatGrabFCBFromTable(pVCB, &NameU);
 		if (FCB == NULL)

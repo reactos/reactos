@@ -79,30 +79,39 @@ extern TCHAR szTitle[];
 extern TCHAR szFrameClass[];
 extern TCHAR szChildClass[];
 
+extern const TCHAR g_szGeneralRegKey[];
+
 /* about.c */
 extern void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 
+/* find.c */
+extern void FindDialog(HWND hWnd);
+extern BOOL FindNext(HWND hWnd);
+
 /* framewnd.c */
 extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
 extern void SetupStatusBar(HWND hWnd, BOOL bResize);
 extern void UpdateStatusBar(void);
 extern BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName);
+extern BOOL ExportRegistryFile(HWND hWnd);
 
 /* listview.c */
-extern HWND CreateListView(HWND hwndParent, int id);
+extern HWND CreateListView(HWND hwndParent, HMENU id);
 extern BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath);
 extern LPCTSTR GetValueName(HWND hwndLV, int iStartAt);
 extern BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result);
 extern BOOL IsDefaultValue(HWND hwndLV, int i);
 
 /* treeview.c */
-extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
+extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, HMENU id);
 extern BOOL RefreshTreeView(HWND hWndTV);
+extern BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem);
 extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
+extern BOOL DeleteNode(HWND hwndTV, HTREEITEM hItem);
 extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name);
 extern HWND StartKeyRename(HWND hwndTV);
 extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
@@ -113,5 +122,6 @@ extern void DestroyMainMenu( void );
 
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
+extern BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath);
 
 #endif /* __MAIN_H__ */

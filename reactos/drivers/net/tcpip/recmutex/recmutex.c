@@ -1,4 +1,4 @@
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "recmutex.h"
 
 VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {

@@ -112,8 +112,11 @@ SetHandleInformation (HANDLE hObject,
 			  &BytesWritten);
   if (NT_SUCCESS(Status))
   {
-    HandleInfo.Inherit = (dwFlags & HANDLE_FLAG_INHERIT) != 0;
-    HandleInfo.ProtectFromClose = (dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE) != 0;
+    if (dwMask & HANDLE_FLAG_INHERIT)
+      HandleInfo.Inherit = (dwFlags & HANDLE_FLAG_INHERIT) != 0;
+    if (dwMask & HANDLE_FLAG_PROTECT_FROM_CLOSE)
+      HandleInfo.ProtectFromClose = (dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE) != 0;
+
     Status = NtSetInformationObject (hObject,
 				     ObjectHandleInformation,
 				     &HandleInfo,
@@ -229,7 +232,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 			      hTargetProcessHandle,
 			      lpTargetHandle,
 			      dwDesiredAccess,
-			      (BOOLEAN)bInheritHandle,
+			      bInheritHandle ? OBJ_INHERIT : 0,
 			      dwOptions);
    if (!NT_SUCCESS(Status))
      {

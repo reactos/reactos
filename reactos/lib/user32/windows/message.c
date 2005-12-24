@@ -963,7 +963,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
     }
 }
 
-STATIC LRESULT FASTCALL
+static LRESULT FASTCALL
 IntCallWindowProcA(BOOL IsAnsiProc,
                    WNDPROC WndProc,
                    HWND hWnd,
@@ -2107,10 +2107,70 @@ MsgWaitForMultipleObjects(
 }
 
 
-BOOL FASTCALL MessageInit()
+BOOL FASTCALL MessageInit(VOID)
 {
   InitializeCriticalSection(&DdeCrst);
   InitializeCriticalSection(&MsgConversionCrst);
+  InitializeCriticalSection(&gcsMPH);
 
   return TRUE;
+}
+
+VOID FASTCALL MessageCleanup(VOID)
+{
+  DeleteCriticalSection(&DdeCrst);
+  DeleteCriticalSection(&MsgConversionCrst);
+  DeleteCriticalSection(&gcsMPH);
+}
+
+/***********************************************************************
+ *		map_wparam_AtoW
+ *
+ * Convert the wparam of an ASCII message to Unicode.
+ */
+static WPARAM
+map_wparam_AtoW( UINT message, WPARAM wparam )
+{
+    switch(message)
+    {
+    case WM_CHARTOITEM:
+    case EM_SETPASSWORDCHAR:
+    case WM_CHAR:
+    case WM_DEADCHAR:
+    case WM_SYSCHAR:
+    case WM_SYSDEADCHAR:
+    case WM_MENUCHAR:
+        {
+            char ch[2];
+            WCHAR wch[2];
+            ch[0] = (wparam & 0xff);
+            ch[1] = (wparam >> 8);
+            MultiByteToWideChar(CP_ACP, 0, ch, 2, wch, 2);
+            wparam = MAKEWPARAM(wch[0], wch[1]);
+        }
+        break;
+    case WM_IME_CHAR:
+        {
+            char ch[2];
+            WCHAR wch;
+            ch[0] = (wparam >> 8);
+            ch[1] = (wparam & 0xff);
+            if (ch[0]) MultiByteToWideChar(CP_ACP, 0, ch, 2, &wch, 1);
+            else MultiByteToWideChar(CP_ACP, 0, &ch[1], 1, &wch, 1);
+            wparam = MAKEWPARAM( wch, HIWORD(wparam) );
+        }
+        break;
+    }
+    return wparam;
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+IsDialogMessageA( HWND hwndDlg, LPMSG pmsg )
+{
+    MSG msg = *pmsg;
+    msg.wParam = map_wparam_AtoW( msg.message, msg.wParam );
+    return IsDialogMessageW( hwndDlg, &msg );
 }

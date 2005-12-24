@@ -1,5 +1,6 @@
 /*
  * Copyright 1996 Bang Jun Young
+ * Copyright 2005 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -85,7 +86,7 @@ FONT 9, "MS Shell Dlg"
  LTEXT "인쇄 품질(&Q):", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  CHECKBOX "파일로 인쇄(&L)", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Condensed", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX " 폭이 좁은", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -117,76 +118,76 @@ FONT 9, "MS Shell Dlg"
 PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Print"
+CAPTION "인쇄"
 FONT 9, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Cancel", IDCANCEL, 232,164, 48,14, WS_GROUP
-    PUSHBUTTON      "&Help",  pshHelp,  50, 161, 48,14, WS_GROUP
+    DEFPUSHBUTTON   "확인",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "취소", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "도움말(&H)",  pshHelp,  50, 161, 48,14, WS_GROUP
 
-    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "Print to fi&le", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
-    PUSHBUTTON      "&Properties",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Name:",         stc6,  16, 20,  36,8
+    GROUPBOX        "프린터",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "파일로 인쇄(&l)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    PUSHBUTTON      "속성(&P)",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "이름(&N):",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Where:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Comment:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Remark",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "상태:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "더미 상태",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "타입:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "더미 타입",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "어디?:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "더미 위치", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "설명:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "더미 설명",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Copies",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "Number of &copies:",stc5,168,108,68,8
+    GROUPBOX        "복사본",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "복사본 갯수(&c):",stc5,168,108,68,8
     ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "C&ollate",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
+    CONTROL         "합치기(&o)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
     EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Print range",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&All",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "Pa&ges",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Selection",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "인쇄 범위",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "모두(&A)",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "페이지(&g)",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "선택영역(&S)",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&from:",         stc2,  52,124,  20,8
-    RTEXT           "&to:",           stc3, 100,124,  16,8
+    RTEXT           "여기서부터(&f):",         stc2,  52,124,  20,8
+    RTEXT           "여기까지(&t):",           stc3, 100,124,  16,8
 }
 
 PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Print Setup"
+CAPTION "인쇄 설정"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,232,156,48,14
-/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+    DEFPUSHBUTTON   "확인",IDOK,180,156,48,14,WS_GROUP
+    PUSHBUTTON      "취소",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "네트워크...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "Printer",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Properties",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Name:",         stc6,  16, 20,  36,8
+    GROUPBOX        "프린터",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "속성(&P)",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "이름(&N):",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Status:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Where:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Comment:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Remark",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "상태:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "더비 상태",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "타입:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "더미 타입",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "어디?:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "더미 위치", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "설명:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "더미 설명",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Paper",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "Si&ze:",         stc2,  16,108,  36, 8
+    GROUPBOX        "종이",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "크기(&z):",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Source:",       stc3,  16,128,  36, 8
+    LTEXT           "원본(&S):",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
-    GROUPBOX        "Orientation",    grp1, 180, 92, 100,56, WS_GROUP
+    GROUPBOX        "방향",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "P&ortrait",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "L&andscape",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "가로(&o)",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "세로(&a)",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 

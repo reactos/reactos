@@ -103,7 +103,7 @@ UsbhubFdoQueryBusRelations(
 		PdoExtension->IsFDO = FALSE;
 		PdoExtension->dev = dev->children[i];
 		
-		sprintf(Buffer[0], "%lu", i + 1);
+		sprintf(Buffer[0], "%lu", i);
 		Status = UsbhubInitMultiSzString(
 			&PdoExtension->InstanceId,
 			Buffer[0], NULL);

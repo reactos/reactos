@@ -6,22 +6,6 @@
 
 #include <windows.h>
 
-// Mingw32 doesn't use winsock.h (Paul Brannan 9/4/98)
-#ifdef __MINGW32__
-#ifdef __CYGWIN__
-#include <winsock.h>
-#else
-// #include <Windows32/sockets.h> Removed for ReactOS
-#endif
-#else
-#include <winsock.h>
-#endif
-
-// ReactOS uses winsock2.h (Steven Edwards 12-31-01)
-#ifdef __REACTOS__
-#include <winsock2.h>
-#endif
-
 enum NetworkType {TN_NETSOCKET, TN_NETPIPE};
 
 typedef int(*Naws_func_t)(char *, int, int);

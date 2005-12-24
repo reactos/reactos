@@ -27,8 +27,6 @@ typedef struct GUI_CONSOLE_DATA_TAG
   BOOL CursorBlinkOn;
   BOOL ForceCursorOff;
   CRITICAL_SECTION Lock;
-  HDC MemoryDC;
-  HBITMAP MemoryBitmap;
   RECT Selection;
   POINT SelectionStart;
   BOOL MouseDown;
@@ -121,15 +119,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->CharWidth = Metrics.tmMaxCharWidth;
   GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
   SelectObject(Dc, OldFont);
-
-  GuiData->MemoryDC = CreateCompatibleDC(Dc);
-  GuiData->MemoryBitmap = CreateCompatibleBitmap(Dc,
-                                                 Console->Size.X * GuiData->CharWidth,
-						 Console->Size.Y * GuiData->CharHeight);
-  /* NOTE: Don't delete the "first bitmap", it's done in DeleteDC. */
-  SelectObject(GuiData->MemoryDC, GuiData->MemoryBitmap);
-  /* NOTE: Don't delete stock font. */
-  SelectObject(GuiData->MemoryDC, GuiData->Font);
 
   ReleaseDC(hWnd, Dc);
   GuiData->CursorBlinkOn = TRUE;
@@ -249,149 +238,178 @@ GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
 }
 
 
-VOID FASTCALL
-GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
+static VOID FASTCALL
+GuiConsolePaint(PCSRSS_CONSOLE Console,
+                PGUI_CONSOLE_DATA GuiData,
+                HDC hDC,
+                PRECT rc)
 {
-  PCSRSS_CONSOLE Console;
-  PGUI_CONSOLE_DATA GuiData;
-  PCSRSS_SCREEN_BUFFER Buff;
-  HDC Dc;
-  ULONG TopLine, BottomLine, LeftChar, RightChar;
-  ULONG Line, Char, Start;
-  PBYTE From;
-  PWCHAR To;
-  BYTE LastAttribute, Attribute;
-  ULONG CursorX, CursorY, CursorHeight;
-  HBRUSH CursorBrush, OldBrush;
+    PCSRSS_SCREEN_BUFFER Buff;
+    ULONG TopLine, BottomLine, LeftChar, RightChar;
+    ULONG Line, Char, Start;
+    PBYTE From;
+    PWCHAR To;
+    BYTE LastAttribute, Attribute;
+    ULONG CursorX, CursorY, CursorHeight;
+    HBRUSH CursorBrush, OldBrush;
+    HFONT OldFont;
 
-  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-  if (NULL != Console && NULL != GuiData && NULL != Console->ActiveBuffer)
+    Buff = Console->ActiveBuffer;
+
+    TopLine = rc->top / GuiData->CharHeight;
+    BottomLine = (rc->bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1;
+    LeftChar = rc->left / GuiData->CharWidth;
+    RightChar = (rc->right + (GuiData->CharWidth - 1)) / GuiData->CharWidth - 1;
+    LastAttribute = Buff->Buffer[(TopLine * Buff->MaxX + LeftChar) * 2 + 1];
+
+    GuiConsoleSetTextColors(hDC,
+                            LastAttribute);
+
+    EnterCriticalSection(&Buff->Header.Lock);
+
+    OldFont = SelectObject(hDC,
+                           GuiData->Font);
+
+    for (Line = TopLine; Line <= BottomLine; Line++)
     {
-      Buff = Console->ActiveBuffer;
-      EnterCriticalSection(&Buff->Header.Lock);
-      Dc = GetDC(hWnd);
-      if (rc.right <= rc.left || rc.bottom <= rc.top)
+        if (Line + Buff->ShowY < Buff->MaxY)
         {
-          ReleaseDC(hWnd, Dc);
-          LeaveCriticalSection(&Buff->Header.Lock);
-          return;
+            From = Buff->Buffer + ((Line + Buff->ShowY) * Buff->MaxX + LeftChar) * 2;
         }
-
-      EnterCriticalSection(&GuiData->Lock);
-
-      TopLine = rc.top / GuiData->CharHeight;
-      BottomLine = (rc.bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1;
-      LeftChar = rc.left / GuiData->CharWidth;
-      RightChar = (rc.right + (GuiData->CharWidth - 1)) / GuiData->CharWidth - 1;
-      LastAttribute = Buff->Buffer[(TopLine * Buff->MaxX + LeftChar) * 2 + 1];
-      GuiConsoleSetTextColors(GuiData->MemoryDC, LastAttribute);
-
-      for (Line = TopLine; Line <= BottomLine; Line++)
+        else
         {
-          if (Line + Buff->ShowY < Buff->MaxY)
+            From = Buff->Buffer +
+                   ((Line - (Buff->MaxY - Buff->ShowY)) * Buff->MaxX + LeftChar) * 2;
+        }
+        Start = LeftChar;
+        To = GuiData->LineBuffer;
+
+        for (Char = LeftChar; Char <= RightChar; Char++)
+        {
+            if (*(From + 1) != LastAttribute)
             {
-              From = Buff->Buffer + ((Line + Buff->ShowY) * Buff->MaxX + LeftChar) * 2;
-            }
-          else
-            {
-              From = Buff->Buffer +
-                     ((Line - (Buff->MaxY - Buff->ShowY)) * Buff->MaxX + LeftChar) * 2;
-            }
-          Start = LeftChar;
-          To = GuiData->LineBuffer;
-          for (Char = LeftChar; Char <= RightChar; Char++)
-            {
-              if (*(From + 1) != LastAttribute)
+                TextOutW(hDC,
+                         Start * GuiData->CharWidth,
+                         Line * GuiData->CharHeight,
+                         GuiData->LineBuffer,
+                         Char - Start);
+                Start = Char;
+                To = GuiData->LineBuffer;
+                Attribute = *(From + 1);
+                if (Attribute != LastAttribute)
                 {
-                  TextOutW(GuiData->MemoryDC, Start * GuiData->CharWidth, Line * GuiData->CharHeight,
-                           GuiData->LineBuffer, Char - Start);
-                  Start = Char;
-                  To = GuiData->LineBuffer;
-                  Attribute = *(From + 1);
-                  if (Attribute != LastAttribute)
-                    {
-                      GuiConsoleSetTextColors(GuiData->MemoryDC, Attribute);
-                      LastAttribute = Attribute;
-                    }
+                    GuiConsoleSetTextColors(hDC,
+                                            Attribute);
+                    LastAttribute = Attribute;
                 }
-              MultiByteToWideChar(Console->OutputCodePage, 0, (PCHAR)From, 1, To, 1);
-              To++;
-              From += 2;
             }
-          TextOutW(GuiData->MemoryDC, Start * GuiData->CharWidth, Line * GuiData->CharHeight,
-                   GuiData->LineBuffer, RightChar - Start + 1);
+
+            MultiByteToWideChar(Console->OutputCodePage,
+                                0,
+                                (PCHAR)From,
+                                1,
+                                To,
+                                1);
+            To++;
+            From += 2;
         }
 
-      if (Buff->CursorInfo.bVisible && GuiData->CursorBlinkOn
-          &&! GuiData->ForceCursorOff)
+        TextOutW(hDC,
+                 Start * GuiData->CharWidth,
+                 Line * GuiData->CharHeight,
+                 GuiData->LineBuffer,
+                 RightChar - Start + 1);
+    }
+
+    if (Buff->CursorInfo.bVisible && GuiData->CursorBlinkOn &&
+        !GuiData->ForceCursorOff)
+    {
+        GuiConsoleGetLogicalCursorPos(Buff,
+                                      &CursorX,
+                                      &CursorY);
+        if (LeftChar <= CursorX && CursorX <= RightChar &&
+            TopLine <= CursorY && CursorY <= BottomLine)
         {
-          GuiConsoleGetLogicalCursorPos(Buff, &CursorX, &CursorY);
-          if (LeftChar <= CursorX && CursorX <= RightChar &&
-              TopLine <= CursorY && CursorY <= BottomLine)
+            CursorHeight = (GuiData->CharHeight * Buff->CursorInfo.dwSize) / 100;
+            if (CursorHeight < 1)
             {
-              CursorHeight = (GuiData->CharHeight * Buff->CursorInfo.dwSize) / 100;
-              if (CursorHeight < 1)
-                {
-                  CursorHeight = 1;
-                }
-              From = Buff->Buffer + (Buff->CurrentY * Buff->MaxX + Buff->CurrentX) * 2 + 1;
-              CursorBrush = CreateSolidBrush(GuiConsoleRGBFromAttribute(*From));
-              OldBrush = SelectObject(GuiData->MemoryDC, CursorBrush);
-              PatBlt(GuiData->MemoryDC, CursorX * GuiData->CharWidth,
-                     CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
-                     GuiData->CharWidth, CursorHeight, PATCOPY);
-              SelectObject(GuiData->MemoryDC, OldBrush);
-              DeleteObject(CursorBrush);
+                CursorHeight = 1;
             }
+            From = Buff->Buffer + (Buff->CurrentY * Buff->MaxX + Buff->CurrentX) * 2 + 1;
+            CursorBrush = CreateSolidBrush(GuiConsoleRGBFromAttribute(*From));
+            OldBrush = SelectObject(hDC,
+                                    CursorBrush);
+            PatBlt(hDC,
+                   CursorX * GuiData->CharWidth,
+                   CursorY * GuiData->CharHeight + (GuiData->CharHeight - CursorHeight),
+                   GuiData->CharWidth,
+                   CursorHeight,
+                   PATCOPY);
+            SelectObject(hDC,
+                         OldBrush);
+            DeleteObject(CursorBrush);
         }
+    }
 
-      LeaveCriticalSection(&GuiData->Lock);
-      ReleaseDC(hWnd, Dc);
-      LeaveCriticalSection(&Buff->Header.Lock);
-      InvalidateRect(hWnd, &rc, FALSE);
-   }
+    LeaveCriticalSection(&Buff->Header.Lock);
+
+    SelectObject(hDC,
+                 OldFont);
 }
 
-VOID FASTCALL
-GuiConsoleHandlePaint(HWND hWnd)
+static VOID FASTCALL
+GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
 {
-  PAINTSTRUCT Ps;
-  HDC Dc;
-  PCSRSS_CONSOLE Console;
-  PGUI_CONSOLE_DATA GuiData;
+    HDC hDC;
+    PAINTSTRUCT ps;
+    PCSRSS_CONSOLE Console;
+    PGUI_CONSOLE_DATA GuiData;
 
-  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-  if (NULL != Console && NULL != GuiData)
+    hDC = BeginPaint(hWnd, &ps);
+    if (hDC != NULL &&
+        ps.rcPaint.left < ps.rcPaint.right &&
+        ps.rcPaint.top < ps.rcPaint.bottom)
     {
-      EnterCriticalSection(&GuiData->Lock);
-      Dc = BeginPaint (hWnd, &Ps);
-      BitBlt(Dc, Ps.rcPaint.left, Ps.rcPaint.top,
-             Ps.rcPaint.right - Ps.rcPaint.left + 1,
-             Ps.rcPaint.bottom - Ps.rcPaint.top + 1, GuiData->MemoryDC,
-             Ps.rcPaint.left, Ps.rcPaint.top, SRCCOPY);
-
-      if (GuiData->Selection.left != -1)
-      {
-        RECT rc = GuiData->Selection;
-
-        rc.left *= GuiData->CharWidth;
-        rc.top *= GuiData->CharHeight;
-        rc.right *= GuiData->CharWidth;
-        rc.bottom *= GuiData->CharHeight;
-
-        if (IntersectRect(&rc, &Ps.rcPaint, &rc))
+        GuiConsoleGetDataPointers(hWnd,
+                                  &Console,
+                                  &GuiData);
+        if (Console != NULL && GuiData != NULL &&
+            Console->ActiveBuffer != NULL)
         {
-          PatBlt(Dc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, DSTINVERT);
-        }
-      }
+            EnterCriticalSection(&GuiData->Lock);
 
-      EndPaint (hWnd, &Ps);
-      LeaveCriticalSection(&GuiData->Lock);
-    }
-  else
-    {
-      Dc = BeginPaint (hWnd, &Ps);
-      EndPaint (hWnd, &Ps);
+            GuiConsolePaint(Console,
+                            GuiData,
+                            hDC,
+                            &ps.rcPaint);
+
+            if (GuiData->Selection.left != -1)
+            {
+                RECT rc = GuiData->Selection;
+
+                rc.left *= GuiData->CharWidth;
+                rc.top *= GuiData->CharHeight;
+                rc.right *= GuiData->CharWidth;
+                rc.bottom *= GuiData->CharHeight;
+
+                /* invert the selection */
+                if (IntersectRect(&rc,
+                                  &ps.rcPaint,
+                                  &rc))
+                {
+                    PatBlt(hDC,
+                           rc.left,
+                           rc.top,
+                           rc.right - rc.left,
+                           rc.bottom - rc.top,
+                           DSTINVERT);
+                }
+            }
+
+            LeaveCriticalSection(&GuiData->Lock);
+        }
+
+        EndPaint(hWnd, &ps);
     }
 }
 
@@ -427,7 +445,7 @@ GuiIntDrawRegion(PGUI_CONSOLE_DATA GuiData, HWND Wnd, RECT *Region)
   RegionRect.right = (Region->right + 1) * GuiData->CharWidth;
   RegionRect.bottom = (Region->bottom + 1) * GuiData->CharHeight;
 
-  GuiConsoleUpdateBitmap(Wnd, RegionRect);
+  InvalidateRect(Wnd, &RegionRect, FALSE);
 }
 
 static VOID STDCALL
@@ -435,12 +453,10 @@ GuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
 {
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
 
-  if (NULL == Console->hWindow || NULL == GuiData)
+  if (NULL != Console->hWindow && NULL != GuiData)
     {
-      return;
+      GuiIntDrawRegion(GuiData, Console->hWindow, Region);
     }
-
-  GuiIntDrawRegion(GuiData, Console->hWindow, Region);
 }
 
 static VOID FASTCALL
@@ -463,7 +479,7 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
   PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
   LONG CursorEndX, CursorEndY;
-  RECT Source, Dest;
+  RECT ScrollRect;
 
   if (NULL == Console->hWindow || NULL == GuiData)
     {
@@ -472,16 +488,38 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
 
   if (0 != ScrolledLines)
     {
-      Source.left = 0;
-      Source.top = ScrolledLines;
-      Source.right = Console->Size.X - 1;
-      Source.bottom = ScrolledLines + Region->top - 1;
-      Dest.left = 0;
-      Dest.top = 0;
-      Dest.right = Console->Size.X - 1;
-      Dest.bottom = Region->top - 1;
+      ScrollRect.left = 0;
+      ScrollRect.top = 0;
+      ScrollRect.right = Console->Size.X * GuiData->CharWidth;
+      ScrollRect.bottom = Region->top * GuiData->CharHeight;
 
-      GuiConsoleCopyRegion(Console->hWindow, &Source, &Dest);
+      if (GuiData->Selection.left != -1)
+      {
+          /* scroll the selection */
+          if (GuiData->Selection.top > ScrolledLines)
+          {
+              GuiData->Selection.top -= ScrolledLines;
+              GuiData->Selection.bottom -= ScrolledLines;
+          }
+          else if (GuiData->Selection.bottom < ScrolledLines)
+          {
+              GuiData->Selection.left = -1;
+          }
+          else
+          {
+              GuiData->Selection.top = 0;
+              GuiData->Selection.bottom -= ScrolledLines;
+          }
+      }
+
+      ScrollWindowEx(Console->hWindow,
+                     0,
+                     -(ScrolledLines * GuiData->CharHeight),
+                     &ScrollRect,
+                     NULL,
+                     NULL,
+                     NULL,
+                     SW_INVALIDATE);
     }
 
   GuiIntDrawRegion(GuiData, Console->hWindow, Region);
@@ -595,7 +633,6 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   KillTimer(hWnd, 1);
   Console->PrivateData = NULL;
-  DeleteDC(GuiData->MemoryDC);
   DeleteCriticalSection(&GuiData->Lock);
   HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
@@ -688,7 +725,15 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
   rc.left = GuiData->SelectionStart.x;
   rc.top = GuiData->SelectionStart.y;
   rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
+  if (Console->Size.X < rc.right)
+  {
+    rc.right = Console->Size.X;
+  }
   rc.bottom = (pt.y >= 0 ? (pt.y / GuiData->CharHeight) + 1 : 0);
+  if (Console->Size.Y < rc.bottom)
+  {
+    rc.bottom = Console->Size.Y;
+  }
 
   /* exchange left/top with right/bottom if required */
   if(rc.left >= rc.right)
@@ -742,7 +787,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         Result = (LRESULT) GuiConsoleHandleNcCreate(hWnd, (CREATESTRUCTW *) lParam);
         break;
       case WM_PAINT:
-        GuiConsoleHandlePaint(hWnd);
+        GuiConsoleHandlePaint(hWnd, (HDC)wParam);
         break;
       case WM_KEYDOWN:
       case WM_KEYUP:
@@ -948,7 +993,7 @@ GuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
   Buffer->DefaultAttrib = 0x0f;
 }
 
-STATIC BOOL STDCALL
+static BOOL STDCALL
 GuiChangeTitle(PCSRSS_CONSOLE Console)
 {
   PWCHAR Buffer, Title;
@@ -974,7 +1019,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
   return TRUE;
 }
 
-STATIC BOOL STDCALL
+static BOOL STDCALL
 GuiChangeIcon(PCSRSS_CONSOLE Console)
 {
   SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)Console->hWindowIcon);
@@ -1056,32 +1101,6 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
   PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
 
   return STATUS_SUCCESS;
-}
-
-VOID STDCALL
-GuiConsoleCopyRegion(HWND hWnd,
-                     RECT *Source,
-                     RECT *Dest)
-{
-  RECT ScrollRect;
-  PGUI_CONSOLE_DATA GuiData;
-  PCSRSS_CONSOLE Console;
-
-
-  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-
-  ScrollRect.left = Dest->left * GuiData->CharWidth;
-  ScrollRect.right = (Dest->right + 1) * GuiData->CharWidth;
-  ScrollRect.top = Dest->top * GuiData->CharHeight;
-  ScrollRect.bottom = (Dest->bottom + 1) * GuiData->CharHeight;
-  EnterCriticalSection(&GuiData->Lock);
-  BitBlt(GuiData->MemoryDC, ScrollRect.left, ScrollRect.top,
-         ScrollRect.right - ScrollRect.left, ScrollRect.bottom - ScrollRect.top,
-	 GuiData->MemoryDC, Source->left * GuiData->CharWidth, Source->top * GuiData->CharHeight, SRCCOPY);
-
-  LeaveCriticalSection(&GuiData->Lock);
-
-  InvalidateRect(hWnd, &ScrollRect, FALSE);
 }
 
 /* EOF */

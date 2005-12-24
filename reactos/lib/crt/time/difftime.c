@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <time.h>
+#include <precomp.h>
 
 /*
  * @implemented

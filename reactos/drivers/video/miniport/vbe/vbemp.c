@@ -29,9 +29,6 @@
 
 #include "vbemp.h"
 
-#define NDEBUG
-#include <debug.h>
-
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
 VP_STATUS STDCALL
@@ -80,7 +77,7 @@ VBEFindAdapter(
 static int
 VBESortModesCallback(PVBE_MODEINFO VbeModeInfoA, PVBE_MODEINFO VbeModeInfoB)
 {
-   DPRINT("VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
+   VideoPortDebugPrint(Info, "VBESortModesCallback: %dx%dx%d / %dx%dx%d\n",
       VbeModeInfoA->XResolution, VbeModeInfoA->YResolution,
       VbeModeInfoA->BitsPerPixel,
       VbeModeInfoB->XResolution, VbeModeInfoB->YResolution,
@@ -190,7 +187,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    if (Status != NO_ERROR)
    {
-      DPRINT1("Failed to get Int 10 service functions (Status %x)\n", Status);
+      VideoPortDebugPrint(Error, "Failed to get Int 10 service functions (Status %x)\n", Status);
       return FALSE;
    }
 
@@ -209,7 +206,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    if (Status != NO_ERROR)
    {
-      DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
+      VideoPortDebugPrint(Error, "Failed to allocate virtual memory (Status %x)\n", Status);
       return FALSE;
    }
 
@@ -241,10 +238,17 @@ VBEInitialize(PVOID HwDeviceExtension)
          &VBEDeviceExtension->VbeInfo,
          sizeof(VBEDeviceExtension->VbeInfo));
 
-      DPRINT("VBE BIOS Present (%d.%d, %8ld Kb)\n",
+      /* Verify the VBE signature. */
+      if (VideoPortCompareMemory(VBEDeviceExtension->VbeInfo.Signature, "VESA", 4) != 4)
+      {
+         VideoPortDebugPrint(Warn, "No VBE BIOS present\n");
+         return FALSE;
+      }
+      
+      VideoPortDebugPrint(Trace, "VBE BIOS Present (%d.%d, %8ld Kb)\n",
          VBEDeviceExtension->VbeInfo.Version / 0x100,
          VBEDeviceExtension->VbeInfo.Version & 0xFF,
-         VBEDeviceExtension->VbeInfo.TotalMemory * 16);
+         VBEDeviceExtension->VbeInfo.TotalMemory * 64);
 
 #ifdef VBE12_SUPPORT
       if (VBEDeviceExtension->VbeInfo.Version < 0x102)
@@ -252,13 +256,13 @@ VBEInitialize(PVOID HwDeviceExtension)
       if (VBEDeviceExtension->VbeInfo.Version < 0x200)
 #endif
       {
-         DPRINT("VBE BIOS present, but incompatible version.\n");
+         VideoPortDebugPrint(Warn, "VBE BIOS present, but incompatible version.\n");
          return FALSE;
       }
    }
    else
    {
-      DPRINT("No VBE BIOS found.\n");
+      VideoPortDebugPrint(Warn, "No VBE BIOS found.\n");
       return FALSE;
    }
 
@@ -295,9 +299,9 @@ VBEInitialize(PVOID HwDeviceExtension)
     */
 
    VBEDeviceExtension->ModeInfo =
-      ExAllocatePool(PagedPool, ModeCount * sizeof(VBE_MODEINFO));
+      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(VBE_MODEINFO), TAG_VBE);
    VBEDeviceExtension->ModeNumbers =
-      ExAllocatePool(PagedPool, ModeCount * sizeof(WORD));
+      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(WORD), TAG_VBE);
 
    /*
     * Get the actual mode infos.
@@ -340,7 +344,8 @@ VBEInitialize(PVOID HwDeviceExtension)
           VbeModeInfo->XResolution >= 640 &&
           VbeModeInfo->YResolution >= 480 &&
           (VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_PACKEDPIXEL ||
-           VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_DIRECTCOLOR))
+           VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_DIRECTCOLOR) &&
+          VbeModeInfo->PhysBasePtr != 0)
       {
          if (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR)
          {
@@ -359,7 +364,7 @@ VBEInitialize(PVOID HwDeviceExtension)
 
    if (SuitableModeCount == 0)
    {
-      DPRINT("VBEMP: No video modes supported\n");
+      VideoPortDebugPrint(Warn, "VBEMP: No video modes supported\n");
       return FALSE;
    }
 
@@ -375,17 +380,15 @@ VBEInitialize(PVOID HwDeviceExtension)
     * Print the supported video modes when NDEBUG is not set.
     */
 
-#ifndef NDEBUG
    for (CurrentMode = 0;
         CurrentMode < SuitableModeCount;
         CurrentMode++)
    {
-      DPRINT("%dx%dx%d\n",
+      VideoPortDebugPrint(Trace, "%dx%dx%d\n",
          VBEDeviceExtension->ModeInfo[CurrentMode].XResolution,
          VBEDeviceExtension->ModeInfo[CurrentMode].YResolution,
          VBEDeviceExtension->ModeInfo[CurrentMode].BitsPerPixel);
    }
-#endif
 
    return TRUE;
 }
@@ -733,7 +736,7 @@ VBESetCurrentMode(
    }
    else
    {
-      DPRINT1("VBEMP: VBESetCurrentMode failed (%x)\n", BiosRegisters.Eax);
+      VideoPortDebugPrint(Error, "VBEMP: VBESetCurrentMode failed (%x)\n", BiosRegisters.Eax);
       DeviceExtension->CurrentMode = -1;
    }
 

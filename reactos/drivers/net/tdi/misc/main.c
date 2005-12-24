@@ -2,7 +2,7 @@
  *
  * DESCRIPTION: Entry point for TDI.SYS
  */
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 NTSTATUS
 STDCALL

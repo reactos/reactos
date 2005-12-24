@@ -21,6 +21,29 @@
 #define CHECKED
 #endif
 
+#if 0
+/* Define DbgPrint/RtlAssert unless the NDK is used */
+#if !defined(_NTNDK_) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
+
+ULONG
+__cdecl
+DbgPrint(
+    IN PCH  Format,
+    IN ...
+);
+
+VOID
+NTAPI
+RtlAssert(
+    PVOID FailedAssertion,
+    PVOID FileName,
+    ULONG LineNumber,
+    PCHAR Message
+);
+
+#endif
+#endif
+
 #ifndef assert
 #ifndef NASSERT
 #define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
@@ -59,9 +82,10 @@
         #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
     
     #else
-		#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+        #ifdef __GNUC__
+            #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+        #endif
         #define CHECKPOINT
-    
     #endif
 
     #define UNIMPLEMENTED \
@@ -70,8 +94,17 @@
 #else
 
     /* On non-debug builds, we never show these */
+#ifdef _MSC_VER
+static __inline void DPRINT1 ( const char* fmt, ... )
+{
+}
+static __inline void DPRINT ( const char* fmt, ... )
+{
+}
+#else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+#endif
     #define CHECKPOINT1
     #define CHECKPOINT
     #define UNIMPLEMENTED

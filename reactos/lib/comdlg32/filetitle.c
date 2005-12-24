@@ -40,6 +40,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 /***********************************************************************
  *	GetFileTitleA		(COMDLG32.@)
  *
+ * See GetFileTitleW.
  */
 short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, WORD cbBuf)
 {
@@ -60,12 +61,22 @@ short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, WORD cbBuf)
 /***********************************************************************
  *	GetFileTitleW		(COMDLG32.@)
  *
+ * Get the name of a file.
+ *
+ * PARAMS
+ *  lpFile  [I] name and location of file
+ *  lpTitle [O] returned file name
+ *  cbBuf   [I] buffer size of lpTitle
+ *
+ * RETURNS
+ *  Success: zero
+ *  Failure: negative number.
  */
 short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, WORD cbBuf)
 {
 	int i, len;
         static const WCHAR brkpoint[] = {'*','[',']',0};
-	TRACE("(%p %p %d); \n", lpFile, lpTitle, cbBuf);
+	TRACE("(%p %p %d);\n", lpFile, lpTitle, cbBuf);
 
 	if(lpFile == NULL || lpTitle == NULL)
 		return -1;
@@ -95,7 +106,7 @@ short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, WORD cbBuf)
 	if(i == -1)
 		i++;
 
-	TRACE("---> '%s' \n", debugstr_w(&lpFile[i]));
+	TRACE("---> '%s'\n", debugstr_w(&lpFile[i]));
 
 	len = strlenW(lpFile+i)+1;
 	if(cbBuf < len)

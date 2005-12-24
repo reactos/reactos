@@ -17,10 +17,10 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "debug.h"
-#include "i386.h"
-#include "fsrec.h"
+#include <freeldr.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -451,7 +451,7 @@ i386DiskGetBootPath(char *BootPath, unsigned Size)
 	static char Path[] = "multi(0)disk(0)";
 	char Device[4];
 
-	itoa(i386BootDrive, Device, 10);
+	_itoa(i386BootDrive, Device, 10);
 	if (Size <= sizeof(Path) + 6 + strlen(Device))
 	{
 		return FALSE;
@@ -491,7 +491,7 @@ i386DiskNormalizeSystemPath(char *SystemPath, unsigned Size)
 	}
 
 	p = SystemPath;
-	while ('\0' != *p && 0 != strnicmp(p, "partition(", 10)) {
+	while ('\0' != *p && 0 != _strnicmp(p, "partition(", 10)) {
 		p++;
 	}
 	p = strchr(p, ')');

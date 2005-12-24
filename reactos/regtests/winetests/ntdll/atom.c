@@ -25,8 +25,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "windows.h"
 #include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windows.h"
 #include "wine/test.h"
 #include "wine/unicode.h"
 #include "winternl.h"

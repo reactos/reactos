@@ -17,15 +17,10 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "disk.h"
-#include "rtl.h"
-#include "arch.h"
-#include "debug.h"
-#include "portio.h"
-#include "machine.h"
-#include "machpc.h"
+#include <freeldr.h>
 
+#define NDEBUG
+#include <debug.h>
 
 typedef struct
 {

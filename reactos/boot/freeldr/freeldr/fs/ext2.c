@@ -18,17 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include "ext2.h"
-#include <disk.h>
-#include <rtl.h>
-#include <ui.h>
-#include <arch.h>
-#include <mm.h>
-#include <debug.h>
-#include <cache.h>
-#include <machine.h>
 
+#define NDEBUG
+#include <debug.h>
 
 GEOMETRY			Ext2DiskGeometry;				// Ext2 file system disk geometry
 
@@ -87,7 +79,7 @@ BOOL Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* Ext2OpenFile(PCHAR FileName)
+FILE* Ext2OpenFile(PCSTR FileName)
 {
 	EXT2_FILE_INFO		TempExt2FileInfo;
 	PEXT2_FILE_INFO		FileHandle;
@@ -190,7 +182,7 @@ FILE* Ext2OpenFile(PCHAR FileName)
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-BOOL Ext2LookupFile(PCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
+BOOL Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 {
 	UINT				i;
 	ULONG				NumberOfPathParts;
@@ -314,7 +306,7 @@ BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize
 		DbgPrint((DPRINT_FILESYSTEM, "Dumping directory entry at offset %d:\n", CurrentOffset));
 		DbgDumpBuffer(DPRINT_FILESYSTEM, CurrentDirectoryEntry, CurrentDirectoryEntry->rec_len);
 
-		if ((strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->name_len) == 0) &&
+		if ((_strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->name_len) == 0) &&
 			(strlen(FileName) == CurrentDirectoryEntry->name_len))
 		{
 			RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT2_DIR_ENTRY));

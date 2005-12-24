@@ -4390,19 +4390,6 @@ enum {
 #ifndef _WINGDI_
 
 
-typedef struct _RGNDATAHEADER {
-    DWORD dwSize;
-    DWORD iType;
-    DWORD nCount;
-    DWORD nRgnSize;
-    RECT rcBound;
-} RGNDATAHEADER;
-
-
-typedef struct _RGNDATA {
-    RGNDATAHEADER rdh;
-    char Buffer[1];
-} RGNDATA;
 
 #endif /* _WINGDI_ for wine */
 #endif

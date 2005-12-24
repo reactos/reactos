@@ -10,3 +10,5 @@
 #include "En.rc"
 #include "Ja.rc"
 #include "Sv.rc"
+#include "Hu.rc"
+#include "Es.rc"

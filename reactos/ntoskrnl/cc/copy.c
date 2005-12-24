@@ -29,9 +29,9 @@ void* _alloca(size_t size);
 #error Unknown compiler for alloca intrinsic stack allocation "function"
 #endif
 
-ULONG EXPORTED CcFastMdlReadWait;
-ULONG EXPORTED CcFastReadNotPossible;
-ULONG EXPORTED CcFastReadWait;
+ULONG CcFastMdlReadWait;
+ULONG CcFastReadNotPossible;
+ULONG CcFastReadWait;
 ULONG CcFastReadNoWait;
 ULONG CcFastReadResourceMiss;
 

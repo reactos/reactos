@@ -1,14 +1,14 @@
 //#include <stdlib.h>
 //#include <ntos/types.h>
-//#include <ddk/extypes.h>
+//#include <extypes.h>
 
 /*
   TODO: Do a major cleanup of this file!
         Lots of definitions should go to corresponding files
 */
 
-#include <ddk/ntifs.h>
-#include <ddk/kbdmou.h>
+#include <ntifs.h>
+#include <kbdmou.h>
 #include <debug.h>
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))

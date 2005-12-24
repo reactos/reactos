@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __WINE_D3DHAL_H
-#define __WINE_D3DHAL_H
+#ifndef _D3DHAL_H_
+#define _D3DHAL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -522,4 +522,4 @@ typedef struct _D3DHAL_DP2SETTEXLOD {
 } /* extern "C" */
 #endif
 
-#endif /* __WINE_DDRAWI_H */
+#endif /* _D3DHAL_H_ */

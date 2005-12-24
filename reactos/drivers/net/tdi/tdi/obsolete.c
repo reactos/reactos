@@ -2,7 +2,7 @@
  *
  */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 /*
  * @unimplemented

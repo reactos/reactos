@@ -1,0 +1,143 @@
+Issues in porting libxml to VMS
+===============================
+
+Here's a summary of the issues I encountered when building LIBXML under
+VMS.  There was some VMS support in the version I got, but it was a little
+out of date with the result that some newer files had problems.
+
+I present this list "as is" to hopefully act as a guide to anyone having
+problems in the future.
+
+That's it.  Good luck!
+
+John A Fotheringham (jaf@jafsoft.com)
+October 2001
+
+Updated October 2002 by Craig A Berry (craigberry@mac.com)
+
+Installation kit
+----------------
+
+- File attributes.  Having downloaded essentially a Unix distribution, some
+  of the file attributes weren't correct... especially those in the [.VMS]
+  subdirectory.  In EDT you could see line feeds and carriage returns as
+  <LF><CR> etc.  To correct this use the command
+
+	$ set file <filespec> /attr=rfm=stm
+
+  This sets the record format to be "stream".  Other variants may be used
+  instead depending on how you got the files onto your system.  Files will 
+  look okay in an EDT editor once the attributes are set.  Without
+  this the command file may not run correctly, since it may be interpreted
+  as a single line.
+
+- VMS-specific files are in a [.VMS] directory.  If you've found this file
+  then you already know this :-)  This directory contains
+
+      BUILD_LIBXML.COM	- a build command file, which I've radically re-worked
+      CONFIG.VMS	- a configuration file to replace config.h
+
+- Don't execute BUILD_LIBXML.COM until you've done all the following
+
+  - read these notes
+  - reviewed the configuration section of BUILD_LIBXML.COM, and in particular
+    updated the module lists in line with MAKEFILE
+  - identified the location of the include files, so that you can manually
+    set the LIBXML logical if need be.
+  - re-read these notes :-p
+
+  instructions for all these steps are below.
+
+- the file [.vms]config.vms is used in lieu of a Configure-generated config.h.  
+  This file contains a number of define statements that identify the software 
+  options required under VMS
+
+- The include files are in a [.INCLUDE.LIBXML] subdirectory.  You need
+  a logical "libxml" to point to this so that include statements of the
+  form
+
+	#include <libxml/parser.h>
+
+  will work correctly.  The source files are mostly two levels above this
+  directory, although there are some .h files there as well.
+
+- The command file BUILD_LIBXML.COM will do the following
+
+  - setup some logicals
+  - set def to the source directory
+  - compile modules and place them into a LIBXML.OLB library
+  - compile and link a number of self-test programs
+  - compile and link a number of utilities and test programs
+  - set def back to the original directory (i.e. if it fails you might not be
+    where you started :-)
+
+  before running this command file review the configuration segment at
+  the top.  In particular compare the lists of modules with those in the
+  most recent version of the Unix MAKEFILE.  Instructions are contained
+  in the command file itself.
+
+  The command file will attempt to set two logicals
+
+  - xml_srcdir.  The directory containing the source files
+  - libxml.  The include file directory.
+
+  It attempts this by looking for modules globals.c and globals.h in
+  nearby directories.  If this logic fails, you'll need to manually define
+  these logicals.
+
+
+The TRIO package
+----------------
+- A sub-package TRIO is used to provide some functions not naturally available
+  under VMS.  These include support for infinite and undefined numbers,
+  and specialised print functions like "snprintf"
+
+  I had to make several changes to trionan.c in discussion with the author
+  (hopefully these are now included in the distro, so I won't list them here)
+
+  To build this software we need to add
+
+	/IEEE_MODE=UNDERFLOW_TO_ZERO/FLOAT=IEEE 
+
+  to the compile command for xpath.c and trio.c, and to any main program
+  that uses this functionality.  BUILD_LIBXML.COM should do this for you.
+
+- to build in trio support you need the define WITH_TRIO to be set.  This
+  is done by default for VMS in xmlversion.h 
+
+
+Compiler and linker errors
+--------------------------
+- the DEC C compiler may produce a number of warnings when compiling the
+  C code.  These include
+
+    - Implicit function warnings.  These indicate functions whose type is
+      not defined in a .h file.  This will probably only happen if your
+      configuration is not correct (e.g. for "snprintf" if you haven't
+      edited xmlversion.h to set WITH_TRIO
+
+    - uninitialised variables.  Not usually a problem.  You can solve this
+      by editing the code to initialise the variables affected
+
+Changes made to the codebase
+----------------------------
+- I changed all dummy declarations in trio.c to be 
+
+    va_list dummy = NULL;
+
+  to prevent compiler whinge in TRIO.C about uninitialised variables
+
+- I had to add the following to nanoftp.c
+
+    #if defined(VMS) || defined(__VMS)
+      #define SOCKLEN_T unsigned int
+    #endif
+
+  This matches similar lines already added to nanohttp.c
+
+- Several variables and function names exceed the 31 character limit 
+  of the VMS linker. The solution adopted has been to use the
+  /NAMES=SHORTENED compiler option, which requires DEC/Compaq C 5.7
+  or later.  For a complete list of the names that needed shortening
+  and the short names generated by the compiler, see [.vms]config.vms.
+

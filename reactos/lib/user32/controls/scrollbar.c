@@ -210,7 +210,7 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
    SelectObject(hDC, hSaveBrush);
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 IntDrawScrollArrows(HDC hDC, PSCROLLBARINFO ScrollBarInfo, BOOL Vertical)
 {
   RECT RectLT, RectRB;
@@ -253,7 +253,7 @@ IntDrawScrollArrows(HDC hDC, PSCROLLBARINFO ScrollBarInfo, BOOL Vertical)
    DrawFrameControl(hDC, &RectRB, DFC_SCROLL, ScrollDirFlagRB);
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 IntScrollDrawMovingThumb(HDC Dc, PSCROLLBARINFO ScrollBarInfo, BOOL Vertical)
 {
   INT Pos = ScrollTrackingPos;
@@ -291,7 +291,7 @@ IntScrollDrawMovingThumb(HDC Dc, PSCROLLBARINFO ScrollBarInfo, BOOL Vertical)
   ScrollMovingThumb = ! ScrollMovingThumb;
 }
 
-STATIC LONG FASTCALL
+static LONG FASTCALL
 IntScrollGetObjectId(INT SBType)
 {
   if (SB_VERT == SBType)
@@ -306,7 +306,7 @@ IntScrollGetObjectId(INT SBType)
   return OBJID_CLIENT;
 }
 
-STATIC BOOL FASTCALL
+static BOOL FASTCALL
 IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
 {
   ScrollBarInfo->cbSize = sizeof(SCROLLBARINFO);
@@ -382,7 +382,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
     }
 }
 
-STATIC BOOL FASTCALL
+static BOOL FASTCALL
 IntScrollPtInRectEx(LPRECT Rect, POINT Pt, BOOL Vertical)
 {
   RECT TempRect = *Rect;
@@ -400,7 +400,7 @@ IntScrollPtInRectEx(LPRECT Rect, POINT Pt, BOOL Vertical)
    return PtInRect(&TempRect, Pt);
 }
 
-STATIC DWORD FASTCALL
+static DWORD FASTCALL
 IntScrollHitTest(PSCROLLBARINFO ScrollBarInfo, BOOL Vertical, POINT Pt, BOOL Dragging)
 {
   INT ArrowSize, ThumbSize, ThumbPos;
@@ -479,7 +479,7 @@ IntScrollHitTest(PSCROLLBARINFO ScrollBarInfo, BOOL Vertical, POINT Pt, BOOL Dra
  * relative to the left or to the top.
  * Return TRUE if the scrollbar is vertical, FALSE if horizontal.
  */
-STATIC BOOL FASTCALL
+static BOOL FASTCALL
 IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
                           INT *ArrowSize, INT *ThumbSize,
                           INT *ThumbPos)
@@ -629,7 +629,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
  * Compute the current scroll position based on the thumb position in pixels
  * from the top of the scroll-bar.
  */
-STATIC UINT FASTCALL
+static UINT FASTCALL
 IntScrollGetThumbVal(HWND Wnd, INT SBType, PSCROLLBARINFO ScrollBarInfo,
                      BOOL Vertical, INT Pos)
 {
@@ -676,7 +676,7 @@ IntScrollGetThumbVal(HWND Wnd, INT SBType, PSCROLLBARINFO ScrollBarInfo,
 /***********************************************************************
  *           IntScrollClipPos
  */
-STATIC POINT IntScrollClipPos(PRECT Rect, POINT Pt)
+static POINT IntScrollClipPos(PRECT Rect, POINT Pt)
 {
   if (Pt.x < Rect->left)
     {
@@ -704,7 +704,7 @@ STATIC POINT IntScrollClipPos(PRECT Rect, POINT Pt)
  *
  *  Draw the size grip.
  */
-STATIC void FASTCALL
+static void FASTCALL
 IntScrollDrawSizeGrip(HWND Wnd, HDC Dc)
 {
   RECT Rect;
@@ -723,7 +723,7 @@ IntScrollDrawSizeGrip(HWND Wnd, HDC Dc)
  *
  * Handle a keyboard event (only for SB_CTL scrollbars with focus).
  */
-STATIC void FASTCALL
+static void FASTCALL
 IntScrollHandleKbdEvent(
   HWND Wnd /* [in] Handle of window with scrollbar(s) */,
   WPARAM wParam /* [in] Variable input including enable state */,
@@ -778,7 +778,7 @@ IntScrollHandleKbdEvent(
  * Handle a mouse or timer event for the scrollbar.
  * 'Pt' is the location of the mouse event in drawing coordinates
  */
-STATIC VOID FASTCALL
+static VOID FASTCALL
 IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
 {
   static POINT PrevPt;           /* Previous mouse position for timer events */
@@ -1136,7 +1136,7 @@ static void IntScrollCreateScrollBar(
     }
 }
 
-STATIC INT FASTCALL
+static INT FASTCALL
 IntScrollGetScrollPos(HWND Wnd, INT Bar)
 {
   SCROLLINFO ScrollInfo;
@@ -1151,7 +1151,7 @@ IntScrollGetScrollPos(HWND Wnd, INT Bar)
   return ScrollInfo.nPos;
 }
 
-STATIC BOOL FASTCALL
+static BOOL FASTCALL
 IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 {
   BOOL Result;

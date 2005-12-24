@@ -9,7 +9,7 @@
  *                       Sept 28, 2003: Created
  */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "sndblst.h"
 
 BOOLEAN WaitToSend(UINT BasePort)

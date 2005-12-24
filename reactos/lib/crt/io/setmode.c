@@ -8,10 +8,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
-#include <io.h>
-#include <stdio.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <internal/debug.h>

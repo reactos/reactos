@@ -22,15 +22,15 @@
 ULONG NtMajorVersion = 5;
 ULONG NtMinorVersion = 0;
 ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(6, 0);
-EXPORTED ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
-EXPORTED ULONG NtGlobalFlag = 0;
-EXPORTED CHAR  KeNumberProcessors;
-EXPORTED KAFFINITY KeActiveProcessors = 1;
-EXPORTED LOADER_PARAMETER_BLOCK KeLoaderBlock;
-EXPORTED ULONG KeDcacheFlushCount = 0;
-EXPORTED ULONG KeIcacheFlushCount = 0;
-EXPORTED ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
-EXPORTED ULONG InitSafeBootMode = 0; /* KB83764 */
+ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+ULONG NtGlobalFlag = 0;
+CHAR  KeNumberProcessors;
+KAFFINITY KeActiveProcessors = 1;
+LOADER_PARAMETER_BLOCK KeLoaderBlock;
+ULONG KeDcacheFlushCount = 0;
+ULONG KeIcacheFlushCount = 0;
+ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
+ULONG InitSafeBootMode = 0; /* KB83764 */
 
 LOADER_MODULE KeLoaderModules[64];
 static CHAR KeLoaderModuleStrings[64][256];
@@ -63,6 +63,12 @@ PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
 extern unsigned int _image_base__;
 ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
+
+VOID INIT_FUNCTION _main(ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, _main)
+#endif
 
 /* FUNCTIONS ****************************************************************/
 

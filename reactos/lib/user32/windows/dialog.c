@@ -502,23 +502,30 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
     MSG msg;
     INT retval;
     HWND ownerMsg = GetAncestor( owner, GA_ROOT );
+    BOOL bFirstEmpty;
+
     if (!(dlgInfo = GETDLGINFO(hwnd))) return -1;
 
+    bFirstEmpty = TRUE;
     if (!(dlgInfo->flags & DF_END)) /* was EndDialog called in WM_INITDIALOG ? */
     {
-        ShowWindow( hwnd, SW_SHOW );
         for (;;)
         {
-            if (!(GetWindowLongW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
+            if (!PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
             {
-                if (!PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
+                if (bFirstEmpty)
                 {
+                    /* ShowWindow the first time the queue goes empty */
+                    ShowWindow( hwnd, SW_SHOWNORMAL );
+                    bFirstEmpty = FALSE;
+                }
+                if (!(GetWindowLongW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
+               {
                     /* No message present -> send ENTERIDLE and wait */
                     SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
-                    if (!GetMessageW( &msg, 0, 0, 0 )) break;
                 }
+                if (!GetMessageW( &msg, 0, 0, 0 )) break;
             }
-            else if (!GetMessageW( &msg, 0, 0, 0 )) break;
 
             if (!IsWindow( hwnd )) return -1;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
@@ -825,7 +832,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     {
         /* Send initialisation messages and set focus */
 
-        if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param ))
+        if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param ) &&
+            ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
         {
             /* By returning TRUE, app has requested a default focus assignment */
             dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE);
@@ -840,8 +848,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         return hwnd;
     }
 
-    if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
+    if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     return 0;
 }
 
@@ -888,13 +896,16 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
 
     if (IsIconic( hwnd )) return;
     if (!(infoPtr = GETDLGINFO(hwnd))) return;
-    if (!IsWindow( infoPtr->hwndFocus )) return;
     /* Don't set the focus back to controls if EndDialog is already called.*/
-    if (!(infoPtr->flags & DF_END))
-    {
-        DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
-        return;
+    if (infoPtr->flags & DF_END) return;
+    if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
+        /* If no saved focus control exists, set focus to the first visible,
+           non-disabled, WS_TABSTOP control in the dialog */
+        infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+       if (!IsWindow( infoPtr->hwndFocus )) return;
     }
+    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
+
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
 }
@@ -906,14 +917,57 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
  */
 static HWND DEFDLG_FindDefButton( HWND hwndDlg )
 {
-    HWND hwndChild = GetWindow( hwndDlg, GW_CHILD );
+    HWND hwndChild, hwndTmp;
+
+    hwndChild = GetWindow( hwndDlg, GW_CHILD );
     while (hwndChild)
     {
         if (SendMessageW( hwndChild, WM_GETDLGCODE, 0, 0 ) & DLGC_DEFPUSHBUTTON)
             break;
+
+        /* Recurse into WS_EX_CONTROLPARENT controls */
+        if (GetWindowLongW( hwndChild, GWL_EXSTYLE ) & WS_EX_CONTROLPARENT)
+        {
+            LONG dsStyle = GetWindowLongW( hwndChild, GWL_STYLE );
+            if ((dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED) &&
+                (hwndTmp = DEFDLG_FindDefButton(hwndChild)) != NULL)
+           return hwndTmp;
+        }
         hwndChild = GetWindow( hwndChild, GW_HWNDNEXT );
     }
     return hwndChild;
+}
+
+/***********************************************************************
+ *           DEFDLG_SetDefId
+ *
+ * Set the default button id.
+ */
+static BOOL DEFDLG_SetDefId( HWND hwndDlg, DIALOGINFO *dlgInfo, WPARAM wParam)
+{
+    DWORD dlgcode=0; /* initialize just to avoid a warning */
+    HWND hwndOld, hwndNew = GetDlgItem(hwndDlg, wParam);
+    INT old_id = dlgInfo->idResult;
+
+    dlgInfo->idResult = wParam;
+    if (hwndNew &&
+        !((dlgcode=SendMessageW(hwndNew, WM_GETDLGCODE, 0, 0 ))
+            & (DLGC_UNDEFPUSHBUTTON | DLGC_BUTTON)))
+        return FALSE;  /* Destination is not a push button */
+
+    /* Make sure the old default control is a valid push button ID */
+    hwndOld = GetDlgItem( hwndDlg, old_id );
+    if (!hwndOld || !(SendMessageA( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
+        hwndOld = DEFDLG_FindDefButton( hwndDlg );
+    if (hwndOld && hwndOld != hwndNew)
+        SendMessageA( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+
+    if (hwndNew)
+    {
+        if(dlgcode & DLGC_UNDEFPUSHBUTTON)
+            SendMessageA( hwndNew, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+    }
+    return TRUE;
 }
 
 /***********************************************************************
@@ -921,28 +975,35 @@ static HWND DEFDLG_FindDefButton( HWND hwndDlg )
  *
  * Set the new default button to be hwndNew.
  */
-static BOOL DEFDLG_SetDefButton( HWND hwndDlg, DIALOGINFO *dlgInfo,
-                                 HWND hwndNew )
+static BOOL DEFDLG_SetDefButton( HWND hwndDlg, DIALOGINFO *dlgInfo, HWND hwndNew )
 {
     DWORD dlgcode=0; /* initialize just to avoid a warning */
+    HWND hwndOld = GetDlgItem( hwndDlg, dlgInfo->idResult );
+
     if (hwndNew &&
         !((dlgcode=SendMessageW(hwndNew, WM_GETDLGCODE, 0, 0 ))
-            & (DLGC_UNDEFPUSHBUTTON | DLGC_BUTTON)))
-        return FALSE;  /* Destination is not a push button */
-
-    if (dlgInfo->idResult)  /* There's already a default pushbutton */
+            & (DLGC_UNDEFPUSHBUTTON | DLGC_DEFPUSHBUTTON)))
     {
-        HWND hwndOld = GetDlgItem( hwndDlg, dlgInfo->idResult );
-        if (SendMessageA( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON)
-            SendMessageA( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+        /**
+         * Need to draw only default push button rectangle.
+         * Since the next control is not a push button, need to draw the push
+         * button rectangle for the default control.
+         */
+        hwndNew = hwndOld;
+        dlgcode = SendMessageW(hwndNew, WM_GETDLGCODE, 0, 0 );
     }
+
+    /* Make sure the old default control is a valid push button ID */
+    if (!hwndOld || !(SendMessageA( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
+        hwndOld = DEFDLG_FindDefButton( hwndDlg );
+    if (hwndOld && hwndOld != hwndNew)
+        SendMessageA( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+
     if (hwndNew)
     {
-        if(dlgcode==DLGC_UNDEFPUSHBUTTON)
+        if(dlgcode & DLGC_UNDEFPUSHBUTTON)
             SendMessageA( hwndNew, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
-        dlgInfo->idResult = GetDlgCtrlID( hwndNew );
     }
-    else dlgInfo->idResult = 0;
     return TRUE;
 }
 
@@ -1002,7 +1063,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
 
         case DM_SETDEFID:
             if (dlgInfo && !(dlgInfo->flags & DF_END))
-                DEFDLG_SetDefButton( hwnd, dlgInfo, wParam ? GetDlgItem( hwnd, wParam ) : 0 );
+                DEFDLG_SetDefId( hwnd, dlgInfo, wParam );
             return 1;
 
         case DM_GETDEFID:
@@ -1094,44 +1155,30 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
         if(!hChildFirst)
         {
             if(GetParent(hwndCtrl) != hwndMain)
+                /* i.e. if we are not at the top level of the recursion */
                 hChildFirst = GetWindow(GetParent(hwndCtrl),wndSearch);
             else
-            {
-                if(fPrevious)
-                    hChildFirst = GetWindow(hwndCtrl,GW_HWNDLAST);
-                else
-                    hChildFirst = GetWindow(hwndCtrl,GW_HWNDFIRST);
-            }
+                hChildFirst = GetWindow(hwndCtrl, fPrevious ? GW_HWNDLAST : GW_HWNDFIRST);
         }
     }
 
     while(hChildFirst)
     {
-        BOOL bCtrl = FALSE;
-        while(hChildFirst)
+        dsStyle = GetWindowLongA(hChildFirst,GWL_STYLE);
+        exStyle = GetWindowLongA(hChildFirst,GWL_EXSTYLE);
+        if( (exStyle & WS_EX_CONTROLPARENT) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
         {
-            dsStyle = GetWindowLongA(hChildFirst,GWL_STYLE);
-            exStyle = GetWindowLongA(hChildFirst,GWL_EXSTYLE);
-            if( (dsStyle & DS_CONTROL || exStyle & WS_EX_CONTROLPARENT) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
-            {
-                bCtrl=TRUE;
-                break;
-            }
-            else if( (dsStyle & WS_TABSTOP) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
-                break;
-            hChildFirst = GetWindow(hChildFirst,wndSearch);
+            HWND retWnd;
+            retWnd = DIALOG_GetNextTabItem(hwndMain,hChildFirst,NULL,fPrevious );
+            if (retWnd) return (retWnd);
         }
-        if(hChildFirst)
+        else if( (dsStyle & WS_TABSTOP) && (dsStyle & WS_VISIBLE) && !(dsStyle & WS_DISABLED))
         {
-            if(bCtrl)
-                retWnd = DIALOG_GetNextTabItem(hwndMain,hChildFirst,NULL,fPrevious );
-            else
-                retWnd = hChildFirst;
+            return (hChildFirst);
         }
-        if(retWnd) break;
         hChildFirst = GetWindow(hChildFirst,wndSearch);
     }
-    if(!retWnd && hwndCtrl)
+    if(hwndCtrl)
     {
         HWND hParent = GetParent(hwndCtrl);
         while(hParent)
@@ -1144,7 +1191,8 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
         if(!retWnd)
             retWnd = DIALOG_GetNextTabItem(hwndMain,hwndMain,NULL,fPrevious );
     }
-    return retWnd;
+    return retWnd ? retWnd : hwndCtrl;
+
 }
 
 /**********************************************************************
@@ -1924,6 +1972,7 @@ GetDlgItemTextA(
   LPSTR lpString,
   int nMaxCount)
 {
+  if (lpString && (lpString > 0)) lpString[0] = '\0';
   return (UINT)SendDlgItemMessageA( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
 
@@ -1939,9 +1988,9 @@ GetDlgItemTextW(
   LPWSTR lpString,
   int nMaxCount)
 {
+  if (lpString && (lpString > 0)) lpString[0] = '\0';
   return (UINT)SendDlgItemMessageW( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
-
 
 /*
  * @implemented
@@ -1953,54 +2002,110 @@ GetNextDlgGroupItem(
   HWND hCtl,
   BOOL bPrevious)
 {
-	HWND hwnd, retvalue;
+    HWND hwnd, hwndNext, retvalue, hwndLastGroup = 0;
+    BOOL fLooped=FALSE;
+    BOOL fSkipping=FALSE;
 
-    if(hCtl)
-    {
+    if (hDlg == hCtl) hCtl = NULL;
+    if (!hCtl && bPrevious) return 0;
+
         /* if the hwndCtrl is the child of the control in the hwndDlg,
          * then the hwndDlg has to be the parent of the hwndCtrl */
-        if(GetParent(hCtl) != hDlg && GetParent(GetParent(hCtl)) == hDlg)
-            hDlg = GetParent(hCtl);
-    }
 
     if (hCtl)
     {
+        if (!IsChild (hDlg, hCtl)) return 0;
         /* Make sure hwndCtrl is a top-level child */
-        HWND parent = GetParent( hCtl );
-        while (parent && parent != hDlg) parent = GetParent(parent);
-        if (parent != hDlg) return 0;
+
     }
     else
     {
         /* No ctrl specified -> start from the beginning */
         if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
-        if (bPrevious) hCtl = GetWindow( hCtl, GW_HWNDLAST );
+        /* MSDN is wrong. fPrevious does not result in the last child */
+
+        /* No ctrl specified -> start from the beginning */
+        if (!(hCtl = GetWindow( hDlg, GW_CHILD ))) return 0;
+
+        /* MSDN is wrong. fPrevious does not result in the last child */
+
+        /* Maybe that first one is valid.  If so then we don't want to skip it*/
+        if ((GetWindowLongW( hCtl, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
+        {
+            return hCtl;
+        }
+
     }
 
+    /* Always go forward around the group and list of controls; for the 
+     * previous control keep track; for the next break when you find one
+     */
     retvalue = hCtl;
-    hwnd = GetWindow( hCtl, GW_HWNDNEXT );
-    while (1)
+    hwnd = hCtl;
+    while (hwndNext = GetWindow (hwnd, GW_HWNDNEXT),
+           1)
     {
-        if (!hwnd || (GetWindowLongW( hwnd, GWL_STYLE ) & WS_GROUP))
+        while (!hwndNext)
         {
-            /* Wrap-around to the beginning of the group */
-            HWND tmp;
-
-            hwnd = GetWindow( hDlg, GW_CHILD );
-            for (tmp = hwnd; tmp; tmp = GetWindow( tmp, GW_HWNDNEXT ) )
+            /* Climb out until there is a next sibling of the ancestor or we
+             * reach the top (in which case we loop back to the start)
+             */
+            if (hDlg == GetParent (hwnd))
             {
-                if (GetWindowLongW( tmp, GWL_STYLE ) & WS_GROUP) hwnd = tmp;
-                if (tmp == hCtl) break;
+                /* Wrap around to the beginning of the list, within the same
+                 * group. (Once only)
+                 */
+                if (fLooped) goto end;
+                fLooped = TRUE;
+                hwndNext = GetWindow (hDlg, GW_CHILD);
+            }
+            else
+            {
+                hwnd = GetParent (hwnd);
+                hwndNext = GetWindow (hwnd, GW_HWNDNEXT);
             }
         }
-        if (hwnd == hCtl) break;
-        if ((GetWindowLongW( hwnd, GWL_STYLE ) & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE)
+        hwnd = hwndNext;
+
+        /* Wander down the leading edge of controlparents */
+        while ( (GetWindowLongW (hwnd, GWL_EXSTYLE) & WS_EX_CONTROLPARENT) &&
+                ((GetWindowLongW (hwnd, GWL_STYLE) & (WS_VISIBLE | WS_DISABLED)) == WS_VISIBLE) &&
+                (hwndNext = GetWindow (hwnd, GW_CHILD)))
+            hwnd = hwndNext;
+        /* Question.  If the control is a control parent but either has no
+         * children or is not visible/enabled then if it has a WS_GROUP does
+         * it count?  For that matter does it count anyway?
+         * I believe it doesn't count.
+         */
+
+        if ((GetWindowLongW (hwnd, GWL_STYLE) & WS_GROUP))
+        {
+            hwndLastGroup = hwnd;
+            if (!fSkipping)
+            {
+                /* Look for the beginning of the group */
+                fSkipping = TRUE;
+            }
+        }
+
+        if (hwnd == hCtl)
+        {
+            if (!fSkipping) break;
+            if (hwndLastGroup == hwnd) break;
+            hwnd = hwndLastGroup;
+            fSkipping = FALSE;
+            fLooped = FALSE;
+        }
+
+        if (!fSkipping &&
+            (GetWindowLongW (hwnd, GWL_STYLE) & (WS_VISIBLE|WS_DISABLED)) ==
+             WS_VISIBLE)
         {
             retvalue = hwnd;
             if (!bPrevious) break;
         }
-        hwnd = GetWindow( hwnd, GW_HWNDNEXT );
     }
+end:
     return retvalue;
 }
 
@@ -2015,8 +2120,18 @@ GetNextDlgTabItem(
   HWND hCtl,
   BOOL bPrevious)
 {
+	/* Undocumented but tested under Win2000 and WinME */
+	if (hDlg == hCtl) hCtl = NULL;
+
+	/* Contrary to MSDN documentation, tested under Win2000 and WinME
+	* NB GetLastError returns whatever was set before the function was
+	* called.
+	*/
+	if (!hCtl && bPrevious) return 0;
+
 	return DIALOG_GetNextTabItem(hDlg, hDlg, hCtl, bPrevious);
 }
+
 
 #if 0
 BOOL
@@ -2029,98 +2144,69 @@ IsDialogMessage(
 }
 #endif
 
-
-/*
- * @implemented
+/***********************************************************************
+ *              DIALOG_FixOneChildOnChangeFocus
+ *
+ * Callback helper for DIALOG_FixChildrenOnChangeFocus
  */
-BOOL
-STDCALL
-IsDialogMessageA(
-  HWND hDlg,
-  LPMSG lpMsg)
+
+static BOOL CALLBACK DIALOG_FixOneChildOnChangeFocus (HWND hwndChild,
+        LPARAM lParam)
 {
-     INT dlgCode = 0;
-
-     // FIXME: hooks
-     if (CallMsgFilterA( lpMsg, MSGF_DIALOGBOX )) return TRUE;
-
-     if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
-
-     hDlg = DIALOG_FindMsgDestination(hDlg);
-
-     switch(lpMsg->message)
-     {
-     case WM_KEYDOWN:
-        dlgCode = SendMessageA( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
-         if (dlgCode & DLGC_WANTMESSAGE) break;
-
-         switch(lpMsg->wParam)
-         {
-         case VK_TAB:
-             if (!(dlgCode & DLGC_WANTTAB))
-             {
-                 SendMessageA( hDlg, WM_NEXTDLGCTL, (GetKeyState(VK_SHIFT) & 0x8000), 0 );
-                 return TRUE;
-             }
-             break;
-
-         case VK_RIGHT:
-         case VK_DOWN:
-         case VK_LEFT:
-         case VK_UP:
-             if (!(dlgCode & DLGC_WANTARROWS))
-             {
-                 BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
-                 HWND hwndNext = GetNextDlgGroupItem (hDlg, GetFocus(), fPrevious );
-                 SendMessageA( hDlg, WM_NEXTDLGCTL, (WPARAM)hwndNext, 1 );
-                 return TRUE;
-             }
-             break;
-
-         case VK_CANCEL:
-         case VK_ESCAPE:
-             SendMessageA( hDlg, WM_COMMAND, IDCANCEL, (LPARAM)GetDlgItem( hDlg, IDCANCEL ) );
-             return TRUE;
-
-         case VK_EXECUTE:
-         case VK_RETURN:
-             {
-                 DWORD dw = SendMessageA( hDlg, DM_GETDEFID, 0, 0 );
-                 if (HIWORD(dw) == DC_HASDEFID)
-                 {
-                     SendMessageA( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
-                                     (LPARAM)GetDlgItem(hDlg, LOWORD(dw)));
-                 }
-                 else
-                 {
-                     SendMessageA( hDlg, WM_COMMAND, IDOK, (LPARAM)GetDlgItem( hDlg, IDOK ) );
-
-                 }
-             }
-             return TRUE;
-         }
-         break;
-
-     case WM_CHAR:
-         dlgCode = SendMessageA( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
-         if (dlgCode & (DLGC_WANTCHARS|DLGC_WANTMESSAGE)) break;
-         if (lpMsg->wParam == '\t' && (dlgCode & DLGC_WANTTAB)) break;
-         /* drop through */
-
-     case WM_SYSCHAR:
-         if (DIALOG_IsAccelerator( lpMsg->hwnd, hDlg, lpMsg->wParam ))
-         {
-             /* don't translate or dispatch */
-             return TRUE;
-         }
-         break;
-     }
-
-     TranslateMessage( lpMsg );
-     DispatchMessageA( lpMsg );
-     return TRUE;
+    /* If a default pushbutton then no longer default */
+    if (DLGC_DEFPUSHBUTTON & SendMessageW (hwndChild, WM_GETDLGCODE, 0, 0))
+        SendMessageW (hwndChild, BM_SETSTYLE, BS_PUSHBUTTON, TRUE);
+    return TRUE;
 }
 
+/***********************************************************************
+ *              DIALOG_FixChildrenOnChangeFocus
+ *
+ * Following the change of focus that occurs for example after handling
+ * a WM_KEYDOWN VK_TAB in IsDialogMessage, some tidying of the dialog's
+ * children may be required.
+ */
+static void DIALOG_FixChildrenOnChangeFocus (HWND hwndDlg, HWND hwndNext)
+{
+    INT dlgcode_next = SendMessageW (hwndNext, WM_GETDLGCODE, 0, 0);
+    /* INT dlgcode_dlg  = SendMessageW (hwndDlg, WM_GETDLGCODE, 0, 0); */
+    /* Windows does ask for this.  I don't know why yet */
+
+    EnumChildWindows (hwndDlg, DIALOG_FixOneChildOnChangeFocus, 0);
+
+    /* If the button that is getting the focus WAS flagged as the default
+     * pushbutton then ask the dialog what it thinks the default is and
+     * set that in the default style.
+     */
+    if (dlgcode_next & DLGC_DEFPUSHBUTTON)
+    {
+        DWORD def_id = SendMessageW (hwndDlg, DM_GETDEFID, 0, 0);
+        if (HIWORD(def_id) == DC_HASDEFID)
+        {
+            HWND hwndDef;
+            def_id = LOWORD(def_id);
+            hwndDef = GetDlgItem (hwndDlg, def_id);
+            if (hwndDef)
+            {
+                INT dlgcode_def = SendMessageW (hwndDef, WM_GETDLGCODE, 0, 0);
+                /* I know that if it is a button then it should already be a
+                 * UNDEFPUSHBUTTON, since we have just told the buttons to 
+                 * change style.  But maybe they ignored our request
+                 */
+                if ((dlgcode_def & DLGC_BUTTON) &&
+                        (dlgcode_def &  DLGC_UNDEFPUSHBUTTON))
+                {
+                    SendMessageW (hwndDef, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE);
+                }
+            }
+        }
+    }
+    else if ((dlgcode_next & DLGC_BUTTON) && (dlgcode_next & DLGC_UNDEFPUSHBUTTON))
+    {
+        SendMessageW (hwndNext, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE);
+        /* I wonder why it doesn't send a DM_SETDEFID */
+    }
+}
 
 /*
  * @implemented
@@ -2149,12 +2235,52 @@ IsDialogMessageW(
          switch(lpMsg->wParam)
          {
          case VK_TAB:
-             if (!(dlgCode & DLGC_WANTTAB))
-             {
-                 SendMessageW( hDlg, WM_NEXTDLGCTL, (GetKeyState(VK_SHIFT) & 0x8000), 0 );
-                 return TRUE;
-             }
-             break;
+            if (!(dlgCode & DLGC_WANTTAB))
+            {
+                /* I am not sure under which circumstances the TAB is handled
+                 * each way.  All I do know is that it does not always simply
+                 * send WM_NEXTDLGCTL.  (Personally I have never yet seen it
+                 * do so but I presume someone has)
+                 */
+                if (GETDLGINFO(hDlg))
+                    SendMessageW( hDlg, WM_NEXTDLGCTL, (GetKeyState(VK_SHIFT) & 0x8000), 0 );
+                else
+                {
+                    /* It would appear that GetNextDlgTabItem can handle being
+                     * passed hwndDlg rather than NULL but that is undocumented
+                     * so let's do it properly
+                     */
+                    HWND hwndFocus = GetFocus();
+                    HWND hwndNext = GetNextDlgTabItem (hDlg,
+                            hwndFocus == hDlg ? NULL : hwndFocus,
+                            GetKeyState (VK_SHIFT) & 0x8000);
+                    if (hwndNext)
+                    {
+                        dlgCode = SendMessageW (hwndNext, WM_GETDLGCODE,
+                                lpMsg->wParam, (LPARAM)lpMsg);
+                        if (dlgCode & DLGC_HASSETSEL)
+                        {
+                            INT maxlen = 1 + SendMessageW (hwndNext, WM_GETTEXTLENGTH, 0, 0);
+                            WCHAR *buffer = HeapAlloc (GetProcessHeap(), 0, maxlen * sizeof(WCHAR));
+                            if (buffer)
+                            {
+                                INT length;
+                                SendMessageW (hwndNext, WM_GETTEXT, maxlen, (LPARAM) buffer);
+                                length = wcslen (buffer);
+                                HeapFree (GetProcessHeap(), 0, buffer);
+                                SendMessageW (hwndNext, EM_SETSEL, 0, length);
+                            }
+                        }
+                        SetFocus (hwndNext);
+                        DIALOG_FixChildrenOnChangeFocus (hDlg, hwndNext);
+                    }
+                    else
+                        return FALSE;
+                }
+                return TRUE;
+
+            }
+            break;
 
          case VK_RIGHT:
          case VK_DOWN:
@@ -2176,9 +2302,14 @@ IsDialogMessageW(
 
          case VK_EXECUTE:
          case VK_RETURN:
-             {
-                 DWORD dw = SendMessageW( hDlg, DM_GETDEFID, 0, 0 );
-                 if (HIWORD(dw) == DC_HASDEFID)
+              {
+                 DWORD dw;
+                 if ((GetFocus() == lpMsg->hwnd) &&
+                     (SendMessageW (lpMsg->hwnd, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
+                 {
+                     SendMessageW (hDlg, WM_COMMAND, MAKEWPARAM (GetDlgCtrlID(lpMsg->hwnd),BN_CLICKED), (LPARAM)lpMsg->hwnd); 
+                 }
+                 else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
                      SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
                                      (LPARAM)GetDlgItem(hDlg, LOWORD(dw)));
@@ -2384,4 +2515,3 @@ CheckRadioButton(
 
   return EnumChildWindows(hDlg, CheckRB, (LPARAM)&radioGroup);
 }
-

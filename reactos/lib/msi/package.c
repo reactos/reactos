@@ -31,7 +31,6 @@
 #include "wine/debug.h"
 #include "msi.h"
 #include "msiquery.h"
-#include "msipriv.h"
 #include "objidl.h"
 #include "wincrypt.h"
 #include "winuser.h"
@@ -39,15 +38,10 @@
 #include "wine/unicode.h"
 #include "objbase.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msi);
+#include "msipriv.h"
+#include "action.h"
 
-/*
- * The MSVC headers define the MSIDBOPEN_* macros cast to LPCTSTR,
- *  which is a problem because LPCTSTR isn't defined when compiling wine.
- * To work around this problem, we need to define LPCTSTR as LPCWSTR here,
- *  and make sure to only use it in W functions.
- */
-#define LPCTSTR LPCWSTR
+WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 static void MSI_FreePackage( MSIOBJECTHDR *arg)
 {
@@ -126,6 +120,30 @@ static UINT clone_properties(MSIDATABASE *db)
     msiobj_release(&view->hdr);
     
     return rc;
+}
+
+/*
+ * set_installed_prop
+ *
+ * Sets the "Installed" property to indicate that
+ *  the product is installed for the current user.
+ */
+static UINT set_installed_prop( MSIPACKAGE *package )
+{
+    static const WCHAR szInstalled[] = {
+        'I','n','s','t','a','l','l','e','d',0 };
+    WCHAR val[2] = { '1', 0 };
+    HKEY hkey = 0;
+    UINT r;
+
+    r = MSIREG_OpenUninstallKey( package->ProductCode, &hkey, FALSE );
+    if (r == ERROR_SUCCESS)
+    {
+        RegCloseKey( hkey );
+        MSI_SetPropertyW( package, szInstalled, val );
+    }
+
+    return r;
 }
 
 /*
@@ -211,29 +229,14 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szColorBits[] = {'C','o','l','o','r','B','i','t','s',0};
     static const WCHAR szScreenFormat[] = {'%','d',0};
 
-/*
- * Other things I notice set
- *
-SystemLanguageID
-ComputerName
-UserLanguageID
-LogonUser
-VirtualMemory
-Intel
-ShellAdvSupport
-DefaultUIFont
-VersionDatabase
-PackagecodeChanging
-ProductState
-CaptionHeight
-BorderTop
-BorderSide
-TextHeight
-RedirectedDllSupport
-Time
-Date
-Privileged
-*/
+    /*
+     * Other things that probably should be set:
+     *
+     * SystemLanguageID ComputerName UserLanguageID LogonUser VirtualMemory
+     * Intel ShellAdvSupport DefaultUIFont VersionDatabase PackagecodeChanging
+     * ProductState CaptionHeight BorderTop BorderSide TextHeight
+     * RedirectedDllSupport Time Date Privileged
+     */
 
     SHGetFolderPathW(NULL,CSIDL_PROGRAM_FILES_COMMON,NULL,0,pth);
     strcatW(pth,cszbs);
@@ -365,6 +368,8 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
 {
     static const WCHAR szLevel[] = { 'U','I','L','e','v','e','l',0 };
     static const WCHAR szpi[] = {'%','i',0};
+    static const WCHAR szProductCode[] = {
+        'P','r','o','d','u','c','t','C','o','d','e',0};
     MSIPACKAGE *package = NULL;
     WCHAR uilevel[10];
 
@@ -401,6 +406,9 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
         set_installer_properties(package);
         sprintfW(uilevel,szpi,gUILevel);
         MSI_SetPropertyW(package, szLevel, uilevel);
+
+        package->ProductCode = msi_dup_property( package, szProductCode );
+        set_installed_prop( package );
     }
 
     return package;
@@ -439,8 +447,6 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIDATABASE *db = NULL;
     MSIPACKAGE *package;
     MSIHANDLE handle;
-    DWORD size;
-    static const WCHAR szProductCode[]= {'P','r','o','d','u','c','t','C','o','d','e',0};
     UINT r;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
@@ -486,13 +492,6 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         MSI_SetPropertyW( package, Database, szPackage );
     }
 
-    /* this property must exist */
-    size  = 0;
-    MSI_GetPropertyW(package,szProductCode,NULL,&size);
-    size ++;
-    package->ProductCode = msi_alloc(size * sizeof(WCHAR));
-    MSI_GetPropertyW(package,szProductCode,package->ProductCode, &size);
-    
     *pPackage = package;
 
     return ERROR_SUCCESS;
@@ -577,7 +576,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     char *msg;
     int len;
 
-    TRACE("%x \n",eMessageType);
+    TRACE("%x\n", eMessageType);
     rc = 0;
 
     if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ERROR)
@@ -605,8 +604,8 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     {
         LPWSTR tmp;
         WCHAR number[3];
-        const static WCHAR format[] = { '%','i',':',' ',0};
-        const static WCHAR space[] = { ' ',0};
+        static const WCHAR format[] = { '%','i',':',' ',0};
+        static const WCHAR space[] = { ' ',0};
         sz = 0;
         MSI_RecordGetStringW(record,i,NULL,&sz);
         sz+=4;
@@ -690,32 +689,26 @@ out:
 }
 
 /* property code */
-UINT WINAPI MsiSetPropertyA( MSIHANDLE hInstall, LPCSTR szName, LPCSTR szValue)
+UINT WINAPI MsiSetPropertyA( MSIHANDLE hInstall, LPCSTR szName, LPCSTR szValue )
 {
     LPWSTR szwName = NULL, szwValue = NULL;
-    UINT hr = ERROR_INSTALL_FAILURE;
+    UINT r = ERROR_OUTOFMEMORY;
 
-    if( szName )
-    {
-        szwName = strdupAtoW( szName );
-        if( !szwName )
-            goto end;
-    }
+    szwName = strdupAtoW( szName );
+    if( szName && !szwName )
+        goto end;
 
-    if( szValue )
-    {
-        szwValue = strdupAtoW( szValue );
-        if( !szwValue)
-            goto end;
-    }
+    szwValue = strdupAtoW( szValue );
+    if( szValue && !szwValue )
+        goto end;
 
-    hr = MsiSetPropertyW( hInstall, szwName, szwValue);
+    r = MsiSetPropertyW( hInstall, szwName, szwValue);
 
 end:
     msi_free( szwName );
     msi_free( szwValue );
 
-    return hr;
+    return r;
 }
 
 UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
@@ -736,8 +729,14 @@ UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
 ,'e','r','t','y','`',' ','=',' ','\'','%','s','\'',0};
     WCHAR Query[1024];
 
-    TRACE("Setting property (%s %s)\n",debugstr_w(szName),
-          debugstr_w(szValue));
+    TRACE("%p %s %s\n", package, debugstr_w(szName), debugstr_w(szValue));
+
+    if (!szName)
+        return ERROR_INVALID_PARAMETER;
+
+    /* this one is weird... */
+    if (!szName[0])
+        return szValue ? ERROR_FUNCTION_FAILED : ERROR_SUCCESS;
 
     rc = MSI_GetPropertyW(package,szName,0,&sz);
     if (rc==ERROR_MORE_DATA || rc == ERROR_SUCCESS)
@@ -775,11 +774,6 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
     MSIPACKAGE *package;
     UINT ret;
 
-    if (NULL == szName)
-        return ERROR_INVALID_PARAMETER;
-    if (NULL == szValue)
-        return ERROR_INVALID_PARAMETER;
-
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( !package )
         return ERROR_INVALID_HANDLE;
@@ -788,51 +782,33 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
     return ret;
 }
 
-static UINT MSI_GetPropertyRow(MSIPACKAGE *package, LPCWSTR szName, MSIRECORD **row)
+static MSIRECORD *MSI_GetPropertyRow( MSIPACKAGE *package, LPCWSTR name )
 {
-    MSIQUERY *view;
-    UINT rc, sz;
-    static const WCHAR select[]=
+    static const WCHAR query[]=
     {'S','E','L','E','C','T',' ','`','V','a','l','u','e','`',' ',
      'F','R','O','M',' ' ,'`','_','P','r','o','p','e','r','t','y','`',
      ' ','W','H','E','R','E',' ' ,'`','_','P','r','o','p','e','r','t','y','`',
      '=','\'','%','s','\'',0};
-    LPWSTR query;
 
-    if (!szName)
-        return ERROR_INVALID_PARAMETER;
+    if (!name || !name[0])
+        return NULL;
 
-    sz = sizeof select + strlenW(szName)*sizeof(WCHAR);
-    query = msi_alloc( sz);
-    sprintfW(query,select,szName);
-
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
-    msi_free(query);
-    if (rc == ERROR_SUCCESS)
-    {
-        rc = MSI_ViewExecute(view, 0);
-        if (rc == ERROR_SUCCESS)
-            rc = MSI_ViewFetch(view,row);
-
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
-    }
-
-    return rc;
+    return MSI_QueryGetRecord( package->db, query, name );
 }
-
-UINT MSI_GetPropertyW(MSIPACKAGE *package, LPCWSTR szName, 
-                           LPWSTR szValueBuf, DWORD* pchValueBuf)
+ 
+/* internal function, not compatible with MsiGetPropertyW */
+UINT MSI_GetPropertyW( MSIPACKAGE *package, LPCWSTR szName, 
+                       LPWSTR szValueBuf, DWORD* pchValueBuf )
 {
     MSIRECORD *row;
-    UINT rc;
+    UINT rc = ERROR_FUNCTION_FAILED;
 
-    rc = MSI_GetPropertyRow(package, szName, &row);
+    row = MSI_GetPropertyRow( package, szName );
 
     if (*pchValueBuf > 0)
         szValueBuf[0] = 0;
 
-    if (rc == ERROR_SUCCESS)
+    if (row)
     {
         rc = MSI_RecordGetStringW(row,1,szValueBuf,pchValueBuf);
         msiobj_release(&row->hdr);
@@ -853,106 +829,67 @@ UINT MSI_GetPropertyW(MSIPACKAGE *package, LPCWSTR szName,
     return rc;
 }
 
-UINT MSI_GetPropertyA(MSIPACKAGE *package, LPCSTR szName, 
-                           LPSTR szValueBuf, DWORD* pchValueBuf)
+static UINT MSI_GetProperty( MSIHANDLE handle, LPCWSTR name, 
+                             awstring *szValueBuf, DWORD* pchValueBuf )
 {
-    MSIRECORD *row;
-    UINT rc;
-    LPWSTR szwName = NULL;
-
-    if (*pchValueBuf > 0)
-        szValueBuf[0] = 0;
-    
-    if( szName )
-    {
-        szwName = strdupAtoW( szName );
-        if (!szwName)
-            return ERROR_NOT_ENOUGH_MEMORY;
-    }
-
-    rc = MSI_GetPropertyRow(package, szwName, &row);
-    if (rc == ERROR_SUCCESS)
-    {
-        rc = MSI_RecordGetStringA(row,1,szValueBuf,pchValueBuf);
-        msiobj_release(&row->hdr);
-    }
-
-    if (rc == ERROR_SUCCESS)
-        TRACE("returning %s for property %s\n", debugstr_a(szValueBuf),
-            debugstr_a(szName));
-    else if (rc == ERROR_MORE_DATA)
-        TRACE("need %ld sized buffer for %s\n", *pchValueBuf,
-            debugstr_a(szName));
-    else
-    {
-        *pchValueBuf = 0;
-        TRACE("property not found\n");
-    }
-    msi_free( szwName );
-
-    return rc;
-}
-
-UINT WINAPI MsiGetPropertyA(MSIHANDLE hInstall, LPCSTR szName, LPSTR szValueBuf, DWORD* pchValueBuf) 
-{
+    static const WCHAR empty[] = {0};
     MSIPACKAGE *package;
-    UINT ret;
+    MSIRECORD *row = NULL;
+    UINT r;
+    LPCWSTR val = NULL;
 
-    TRACE("%lu %s %p\n", hInstall, debugstr_a(szName), pchValueBuf);
+    TRACE("%lu %s %p %p\n", handle, debugstr_w(name),
+          szValueBuf->str.w, pchValueBuf );
 
-    if (0 == hInstall)
-        return ERROR_INVALID_HANDLE;
-    if (NULL == szName)
+    if (!name)
         return ERROR_INVALID_PARAMETER;
-    if (NULL != szValueBuf && NULL == pchValueBuf)
-        return ERROR_INVALID_PARAMETER;
 
-    /* This was tested against native msi */
-    if (NULL == szValueBuf && NULL != pchValueBuf)
-        *pchValueBuf = 0;
-
-    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
+    package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE );
     if (!package)
         return ERROR_INVALID_HANDLE;
-    ret = MSI_GetPropertyA(package, szName, szValueBuf, pchValueBuf );
+
+    row = MSI_GetPropertyRow( package, name );
+    if (row)
+        val = MSI_RecordGetString( row, 1 );
+
+    if (!val)
+        val = empty;
+
+    r = msi_strcpy_to_awstring( val, szValueBuf, pchValueBuf );
+
+    if (row)
+        msiobj_release( &row->hdr );
     msiobj_release( &package->hdr );
 
-    /* MsiGetProperty does not return error codes on missing properties */
-    if (ret != ERROR_MORE_DATA)
-        ret = ERROR_SUCCESS;
-
-    return ret;
+    return r;
 }
 
+UINT WINAPI MsiGetPropertyA( MSIHANDLE hInstall, LPCSTR szName,
+                             LPSTR szValueBuf, DWORD* pchValueBuf )
+{
+    awstring val;
+    LPWSTR name;
+    UINT r;
+
+    val.unicode = FALSE;
+    val.str.a = szValueBuf;
+
+    name = strdupAtoW( szName );
+    if (szName && !name)
+        return ERROR_OUTOFMEMORY;
+
+    r = MSI_GetProperty( hInstall, name, &val, pchValueBuf );
+    msi_free( name );
+    return r;
+}
   
-UINT WINAPI MsiGetPropertyW(MSIHANDLE hInstall, LPCWSTR szName, 
-                           LPWSTR szValueBuf, DWORD* pchValueBuf)
+UINT WINAPI MsiGetPropertyW( MSIHANDLE hInstall, LPCWSTR szName,
+                             LPWSTR szValueBuf, DWORD* pchValueBuf )
 {
-    MSIPACKAGE *package;
-    UINT ret;
+    awstring val;
 
-    TRACE("%lu %s %p\n", hInstall, debugstr_w(szName), pchValueBuf);
+    val.unicode = TRUE;
+    val.str.w = szValueBuf;
 
-    if (0 == hInstall)
-        return ERROR_INVALID_HANDLE;
-    if (NULL == szName)
-        return ERROR_INVALID_PARAMETER;
-    if (NULL != szValueBuf && NULL == pchValueBuf)
-        return ERROR_INVALID_PARAMETER;
-
-    /* This was tested against native msi */
-    if (NULL == szValueBuf && NULL != pchValueBuf)
-        *pchValueBuf = 0;
-
-    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
-    if (!package)
-        return ERROR_INVALID_HANDLE;
-    ret = MSI_GetPropertyW(package, szName, szValueBuf, pchValueBuf );
-    msiobj_release( &package->hdr );
-
-    /* MsiGetProperty does not return error codes on missing properties */
-    if (ret != ERROR_MORE_DATA)
-        ret = ERROR_SUCCESS;
-
-    return ret;
+    return MSI_GetProperty( hInstall, szName, &val, pchValueBuf );
 }

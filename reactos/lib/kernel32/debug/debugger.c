@@ -77,7 +77,7 @@ ContinueDebugEvent (
 /*
  * NOTE: I'm not sure if the function is complete.
  *
- * @unmplemented
+ * @unimplemented
  */
 BOOL
 WINAPI

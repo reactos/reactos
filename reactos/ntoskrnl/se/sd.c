@@ -13,6 +13,11 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, SepInitSDs)
+#endif
+
+
 /* GLOBALS ******************************************************************/
 
 PSECURITY_DESCRIPTOR SePublicDefaultSd = NULL;
@@ -113,7 +118,7 @@ SepInitSDs(VOID)
 NTSTATUS
 STDCALL
 SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
-                             PSECURITY_DESCRIPTOR SecurityDescriptor,
+                             PISECURITY_DESCRIPTOR SecurityDescriptor,
                              PULONG BufferLength)
 {
   ULONG_PTR Current;
@@ -356,15 +361,16 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
 NTSTATUS
 STDCALL
 SeCaptureSecurityDescriptor(
-	IN PSECURITY_DESCRIPTOR OriginalSecurityDescriptor,
+	IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
 	IN KPROCESSOR_MODE CurrentMode,
 	IN POOL_TYPE PoolType,
 	IN BOOLEAN CaptureIfKernel,
 	OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
 	)
 {
+  PISECURITY_DESCRIPTOR OriginalSecurityDescriptor = _OriginalSecurityDescriptor;
   SECURITY_DESCRIPTOR DescriptorCopy;
-  PSECURITY_DESCRIPTOR NewDescriptor;
+  PISECURITY_DESCRIPTOR NewDescriptor;
   ULONG OwnerSAC = 0, GroupSAC = 0;
   ULONG OwnerSize = 0, GroupSize = 0;
   ULONG SaclSize = 0, DaclSize = 0;
@@ -678,7 +684,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
 			      IN OUT PULONG Length,
 			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
 {
-  PSECURITY_DESCRIPTOR ObjectSd;
+  PISECURITY_DESCRIPTOR ObjectSd;
   PISECURITY_DESCRIPTOR_RELATIVE RelSD;
   PSID Owner = NULL;
   PSID Group = NULL;
@@ -873,11 +879,12 @@ SeSetSecurityDescriptorInfoEx(
  */
 BOOLEAN STDCALL
 SeValidSecurityDescriptor(IN ULONG Length,
-			  IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+			  IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
   ULONG SdLength;
   PISID Sid;
   PACL Acl;
+  PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
 
   if (Length < SECURITY_DESCRIPTOR_MIN_LENGTH)
     {

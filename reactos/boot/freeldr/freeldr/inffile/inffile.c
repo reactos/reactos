@@ -28,12 +28,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <freeldr.h>
-#include <mm.h>
-#include <rtl.h>
-#include <fs.h>
-
-#include <inffile.h>
-
 
 #define CONTROL_Z  '\x1a'
 #define MAX_SECTION_NAME_LEN  255
@@ -210,7 +204,7 @@ InfpCacheFreeSection (PINFCACHESECTION Section)
 
 static PINFCACHESECTION
 InfpCacheFindSection (PINFCACHE Cache,
-		      PCHAR Name)
+		      PCSTR Name)
 {
   PINFCACHESECTION Section = NULL;
 
@@ -223,7 +217,7 @@ InfpCacheFindSection (PINFCACHE Cache,
   Section = Cache->FirstSection;
   while (Section != NULL)
     {
-      if (stricmp (Section->Name, Name) == 0)
+      if (_stricmp (Section->Name, Name) == 0)
 	{
 	  return Section;
 	}
@@ -373,14 +367,14 @@ InfpAddFieldToLine (PINFCACHELINE Line,
 
 static PINFCACHELINE
 InfpCacheFindKeyLine (PINFCACHESECTION Section,
-		      PCHAR Key)
+		      PCSTR Key)
 {
   PINFCACHELINE Line;
 
   Line = Section->FirstLine;
   while (Line != NULL)
     {
-      if (Line->Key != NULL && stricmp (Line->Key, Key) == 0)
+      if (Line->Key != NULL && _stricmp (Line->Key, Key) == 0)
 	{
 	  return Line;
 	}
@@ -393,7 +387,7 @@ InfpCacheFindKeyLine (PINFCACHESECTION Section,
 
 
 /* push the current state on the parser stack */
-inline static void push_state( struct parser *parser, enum parser_state state )
+__inline static void push_state( struct parser *parser, enum parser_state state )
 {
 //  assert( parser->stack_pos < sizeof(parser->stack)/sizeof(parser->stack[0]) );
   parser->stack[parser->stack_pos++] = state;
@@ -401,7 +395,7 @@ inline static void push_state( struct parser *parser, enum parser_state state )
 
 
 /* pop the current state */
-inline static void pop_state( struct parser *parser )
+__inline static void pop_state( struct parser *parser )
 {
 //  assert( parser->stack_pos );
   parser->state = parser->stack[--parser->stack_pos];
@@ -409,7 +403,7 @@ inline static void pop_state( struct parser *parser )
 
 
 /* set the parser state and return the previous one */
-inline static enum parser_state set_state( struct parser *parser, enum parser_state state )
+__inline static enum parser_state set_state( struct parser *parser, enum parser_state state )
 {
   enum parser_state ret = parser->state;
   parser->state = state;
@@ -418,14 +412,14 @@ inline static enum parser_state set_state( struct parser *parser, enum parser_st
 
 
 /* check if the pointer points to an end of file */
-inline static int is_eof( struct parser *parser, const CHAR *ptr )
+__inline static int is_eof( struct parser *parser, const CHAR *ptr )
 {
   return (ptr >= parser->end || *ptr == CONTROL_Z);
 }
 
 
 /* check if the pointer points to an end of line */
-inline static int is_eol( struct parser *parser, const CHAR *ptr )
+__inline static int is_eol( struct parser *parser, const CHAR *ptr )
 {
   return (ptr >= parser->end ||
 	  *ptr == CONTROL_Z ||
@@ -876,7 +870,7 @@ InfpParseBuffer (PINFCACHE file,
 
 BOOLEAN
 InfOpenFile(PHINF InfHandle,
-	    PCHAR FileName,
+	    PCSTR FileName,
 	    PULONG ErrorLine)
 {
   PFILE FileHandle;
@@ -991,8 +985,8 @@ InfCloseFile(HINF InfHandle)
 
 BOOLEAN
 InfFindFirstLine (HINF InfHandle,
-		  PCHAR Section,
-		  PCHAR Key,
+		  PCSTR Section,
+		  PCSTR Key,
 		  PINFCONTEXT Context)
 {
   PINFCACHE Cache;
@@ -1014,7 +1008,7 @@ InfFindFirstLine (HINF InfHandle,
 //      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
 
       /* Are the section names the same? */
-      if (stricmp(CacheSection->Name, Section) == 0)
+      if (_stricmp(CacheSection->Name, Section) == 0)
 	{
 	  if (Key != NULL)
 	    {
@@ -1088,7 +1082,7 @@ InfFindFirstMatchLine (PINFCONTEXT ContextIn,
   CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && stricmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && _stricmp (CacheLine->Key, Key) == 0)
 	{
 
 	  if (ContextIn != ContextOut)
@@ -1124,7 +1118,7 @@ InfFindNextMatchLine (PINFCONTEXT ContextIn,
   CacheLine = (PINFCACHELINE)ContextIn->Line;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && stricmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && _stricmp (CacheLine->Key, Key) == 0)
 	{
 
 	  if (ContextIn != ContextOut)
@@ -1166,7 +1160,7 @@ InfGetLineCount(HINF InfHandle,
 //      DPRINT("Comparing '%S' and '%S'\n", CacheSection->Name, Section);
 
       /* Are the section names the same? */
-      if (stricmp(CacheSection->Name, Section) == 0)
+      if (_stricmp(CacheSection->Name, Section) == 0)
 	{
 	  return CacheSection->LineCount;
 	}
@@ -1457,7 +1451,7 @@ InfGetData (PINFCONTEXT Context,
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
 		 ULONG FieldIndex,
-		 PCHAR *Data)
+		 PCSTR *Data)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;

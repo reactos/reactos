@@ -37,17 +37,11 @@
  * FILE:              lib/rtl/qsort.c
  * PROGRAMMER:        Adapted from CygWin newlib 2000-03-12.       
  */
-
-#ifndef __GNUC__
-#define inline
-#endif
+#include <rtl.h>
 
 /* FIXME: these types should be from the default includes */
 
-typedef int (* 	_pfunccmp_t) (char *, char *);
-typedef int size_t;
-
-#define min(a,b) ((a)<(b)?(a):(b))
+typedef int (* 	_pfunccmp_t) (const void *, const void *);
 
 /*
  * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
@@ -66,7 +60,7 @@ typedef int size_t;
 #define SWAPINIT(a, es) swaptype = ((char *)a - (char *)0) % sizeof(long) || \
 	es % sizeof(long) ? 2 : es == sizeof(long)? 0 : 1;
 
-static inline void
+static __inline void
 swapfunc (
 	char	* a,
 	char	* b,
@@ -90,7 +84,7 @@ swapfunc (
 
 #define vecswap(a, b, n) 	if ((n) > 0) swapfunc(a, b, n, swaptype)
 
-static inline char *
+static __inline char *
 med3 (
 	char		* a,
 	char		* b,

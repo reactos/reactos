@@ -18,16 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include "fat.h"
-#include <disk.h>
-#include <rtl.h>
-#include <ui.h>
-#include <arch.h>
-#include <mm.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <cache.h>
-#include <machine.h>
 
 ULONG			BytesPerSector;			/* Number of bytes per sector */
 ULONG			SectorsPerCluster;		/* Number of sectors per cluster */
@@ -565,8 +558,8 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize,
 		//
 		// See if the file name matches either the short or long name
 		//
-		if (((strlen(FileName) == strlen(LfnNameBuffer)) && (stricmp(FileName, LfnNameBuffer) == 0)) ||
-			((strlen(FileName) == strlen(ShortNameBuffer)) && (stricmp(FileName, ShortNameBuffer) == 0)))		{
+		if (((strlen(FileName) == strlen(LfnNameBuffer)) && (_stricmp(FileName, LfnNameBuffer) == 0)) ||
+			((strlen(FileName) == strlen(ShortNameBuffer)) && (_stricmp(FileName, ShortNameBuffer) == 0)))		{
 			//
 			// We found the entry, now fill in the FAT_FILE_INFO struct
 			//
@@ -640,7 +633,7 @@ static BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Direct
 			continue;
 		}
 		if (FileNameLen == DirEntry->FileNameSize &&
-		    0 == strnicmp(FileName, DirEntry->FileName, FileNameLen))
+		    0 == _strnicmp(FileName, DirEntry->FileName, FileNameLen))
 		{
 			/*
 			 * We found the entry, now fill in the FAT_FILE_INFO struct
@@ -687,7 +680,7 @@ static BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Direct
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-BOOL FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	UINT		i;
 	ULONG		NumberOfPathParts;
@@ -915,7 +908,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* FatOpenFile(PCHAR FileName)
+FILE* FatOpenFile(PCSTR FileName)
 {
 	FAT_FILE_INFO		TempFatFileInfo;
 	PFAT_FILE_INFO		FileHandle;

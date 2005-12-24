@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define WINLOGON_SAS_CLASS L"SAS window class"
+#define WINLOGON_SAS_TITLE L"SAS"
+
 #define HK_CTRL_ALT_DEL 0
 #define HK_CTRL_SHIFT_ESC   1
 
@@ -72,15 +75,50 @@ DestroySAS(PWLSESSION Session, HWND hwndSAS)
   return TRUE;
 }
 
-#define EWX_ACTION_MASK 0x0b
+#define EWX_ACTION_MASK 0xffffffeb
+#define EWX_FLAGS_MASK  0x00000014
+
+typedef struct tagLOGOFF_SHUTDOWN_DATA
+{
+  UINT Flags;
+  PWLSESSION Session;
+} LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
+
+static DWORD WINAPI
+LogoffShutdownThread(LPVOID Parameter)
+{
+  PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA) Parameter;
+
+  if (! ImpersonateLoggedOnUser(LSData->Session->UserToken))
+  {
+    DPRINT1("ImpersonateLoggedOnUser failed with error %d\n", GetLastError());
+    return 0;
+  }
+  if (! ExitWindowsEx(EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK)
+                      | (EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
+                      0))
+  {
+    DPRINT1("Unable to kill user apps, error %d\n", GetLastError());
+    RevertToSelf();
+    return 0;
+  }
+  RevertToSelf();
+
+  HeapFree(GetProcessHeap(), 0, LSData);
+
+  return 1;
+}
+
 static LRESULT
-HandleExitWindows(DWORD RequestingProcessId, UINT Flags)
+HandleExitWindows(PWLSESSION Session, DWORD RequestingProcessId, UINT Flags)
 {
   UINT Action;
   HANDLE Process;
   HANDLE Token;
+  HANDLE Thread;
   BOOL CheckResult;
   PPRIVILEGE_SET PrivSet;
+  PLOGOFF_SHUTDOWN_DATA LSData;
 
   /* Check parameters */
   Action = Flags & EWX_ACTION_MASK;
@@ -139,7 +177,22 @@ HandleExitWindows(DWORD RequestingProcessId, UINT Flags)
     }
   }
 
-  /* FIXME actually start logoff/shutdown now */
+  LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
+  if (NULL == LSData)
+  {
+    DPRINT1("Failed to allocate mem for thread data\n");
+    return STATUS_NO_MEMORY;
+  }
+  LSData->Flags = Flags;
+  LSData->Session = Session;
+  Thread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID) LSData, 0, NULL);
+  if (NULL == Thread)
+  {
+    DPRINT1("Unable to create shutdown thread, error %d\n", GetLastError());
+    HeapFree(GetProcessHeap(), 0, LSData);
+    return STATUS_UNSUCCESSFUL;
+  }
+  CloseHandle(Thread);
 
   return 1;
 }
@@ -178,7 +231,7 @@ SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case PM_WINLOGON_EXITWINDOWS:
     {
-      return HandleExitWindows((DWORD) wParam, (UINT) lParam);
+      return HandleExitWindows(Session, (DWORD) wParam, (UINT) lParam);
     }
     case WM_DESTROY:
     {

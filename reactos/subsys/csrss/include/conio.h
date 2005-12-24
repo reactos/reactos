@@ -100,6 +100,8 @@ void FASTCALL ConioPhysicalToLogical(PCSRSS_SCREEN_BUFFER Buff,
                                      LONG *LogicalY);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
+VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData,
+                                           DWORD Timeout);
 
 /* api/conio.c */
 CSR_API(CsrWriteConsole);

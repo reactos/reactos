@@ -1,4 +1,6 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+//encoded=samcharly_at_hotmail_dot_com
+//Spanish Language Resource
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -19,7 +21,7 @@ END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Video Driver Installation"
+CAPTION "Instalación del Controlador de Video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
@@ -75,7 +77,7 @@ BEGIN
   LTEXT "Por favor seleccione el controlador gráfico que desea usar:",-1,25,25,225,15
   PUSHBUTTON "Controlador VGA de ReactOS", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Controlador VBE de ReactOS (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "Haga click en 'Finalizar para completar la operación o 'Cancelar' para salir de la instalación sin cambios.", -1, 25, 93, 225, 20
+  LTEXT "Haga click en 'Finalizar' para completar la operación o 'Cancelar' para salir de la instalación sin cambios.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -106,25 +108,25 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_SEARCHINGFORCDROM "Searching for VMware(r) Tools CD-ROM..."
-  IDS_COPYINGFILES      "Copying files..."
-  IDS_ENABLINGDRIVER    "Enabling VMware(r) SVGA driver..."
+  IDS_SEARCHINGFORCDROM "Buscando el CD_ROM de VMware(r) Tools..."
+  IDS_COPYINGFILES      "Copiando ficheros..."
+  IDS_ENABLINGDRIVER    "Habilitando el controlador VMware(r) SVGA..."
 END
 
 STRINGTABLE
 BEGIN
-  IDD_INSERT_VMWARE_TOOLSTITLE     	"VMware (r) SVGA driver installation wizard"
-  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Please insert the VMware tool CD-Rom."
-  IDD_INSTALLING_VMWARE_TOOLSTITLE      "VMware (r) SVGA driver installation wizard"
-  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Search and copy the VMware (r) SVGA driver."
-  IDD_CONFIGTITLE     			"VMware (r) SVGA driver installation wizard"
-  IDD_CONFIGSUBTITLE     		"Select your favorite screen resolution."
-  IDD_INSTALLATION_FAILEDTITLE     	"VMware (r) SVGA driver installation wizard"
-  IDD_INSTALLATION_FAILEDSUBTITLE       "The VMware (r) SVGA driver installation failed."
-  IDD_CHOOSEACTIONTITLE    	        "VMware (r) SVGA driver installation wizard"
-  IDD_CHOOSEACTIONSUBTITLE              "Choose what you like to do."
-  IDD_SELECTDRIVERTITLE                 "VMware (r) SVGA driver installation wizard"
-  IDD_SELECTDRIVERSUBTITLE              "Select a driver."
-  IDD_DOUNINSTALLTITLE                  "VMware (r) SVGA driver installation wizard"
-  IDD_DOUNINSTALLSUBTITLE               "Uninstall the driver."
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Por favor inserte el CD-Rom de VMware tool."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Busque y copie el controlador de VMware (r) SVGA."
+  IDD_CONFIGTITLE     			"Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_CONFIGSUBTITLE     		"Seleccione la resolución de su pantalla."
+  IDD_INSTALLATION_FAILEDTITLE     	"Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "El Ayudante de instalación del controlador VMware (r) SVGA a fallado."
+  IDD_CHOOSEACTIONTITLE    	        "Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_CHOOSEACTIONSUBTITLE              "Escoja lo que quiera hacer."
+  IDD_SELECTDRIVERTITLE                 "Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_SELECTDRIVERSUBTITLE              "Seleccione un controlador."
+  IDD_DOUNINSTALLTITLE                  "Ayudante de instalación controlador VMware (r) SVGA"
+  IDD_DOUNINSTALLSUBTITLE               "Desinstale el controlador."
 END

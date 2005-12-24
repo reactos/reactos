@@ -26,6 +26,8 @@
  *      05-01-2004  Created
  */
 #include <windows.h>
+#include <initguid.h>
+#include <devguid.h>
 #include <commctrl.h>
 #include <cpl.h>
 
@@ -79,7 +81,7 @@ CPlApplet(HWND hwndCpl,
       CPLINFO *CPlInfo = (CPLINFO*)lParam2;
       UINT uAppIndex = (UINT)lParam1;
 
-      CPlInfo->lData = 0;
+      CPlInfo->lData = lParam1;
       CPlInfo->idIcon = Applets[uAppIndex].idIcon;
       CPlInfo->idName = Applets[uAppIndex].idName;
       CPlInfo->idInfo = Applets[uAppIndex].idDescription;

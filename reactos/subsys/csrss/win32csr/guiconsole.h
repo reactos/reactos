@@ -8,12 +8,6 @@
 
 #include "api.h"
 
-extern NTSTATUS FASTCALL GuiInitConsole(PCSRSS_CONSOLE Console);
-extern VOID STDCALL GuiConsoleDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT Region);
-extern VOID STDCALL GuiConsoleCopyRegion(HWND hWnd,
-                                         RECT *Source,
-                                         RECT *Dest);
-extern VOID STDCALL GuiConsoleChangeTitle(PCSRSS_CONSOLE Console);
-extern VOID STDCALL GuiConsoleDeleteConsole(PCSRSS_CONSOLE Console);
+NTSTATUS FASTCALL GuiInitConsole(PCSRSS_CONSOLE Console);
 
 /*EOF*/

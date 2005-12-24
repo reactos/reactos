@@ -82,7 +82,7 @@ IntUserFreeSharedSectionPool(IN PSHARED_SECTION_POOL SharedSectionPool)
 
    Array = &SharedSectionPool->SectionsArray;
 
-   ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&SharedSectionPool->Lock);
    while(SharedSectionPool->SharedSectionCount > 0 && Array != NULL)
    {
       for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
@@ -114,7 +114,7 @@ IntUserFreeSharedSectionPool(IN PSHARED_SECTION_POOL SharedSectionPool)
    ASSERT(SharedSectionPool->SectionsArray.Next == NULL);
    ASSERT(SharedSectionPool->SharedSectionCount == 0);
 
-   ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
 }
 
 
@@ -135,11 +135,11 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
 
    Size = ROUND_UP(*SharedSectionSize, PAGE_SIZE);
 
-   ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&SharedSectionPool->Lock);
 
    if(Size > SharedSectionPool->PoolFree)
    {
-      ExReleaseFastMutex(&SharedSectionPool->Lock);
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
       DPRINT1("Shared Section Pool limit (0x%x KB) reached, attempted to allocate a 0x%x KB shared section!\n",
               SharedSectionPool->PoolSize / 1024, (*SharedSectionSize) / 1024);
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -187,7 +187,7 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
                                        TAG_SSECTPOOL);
       if(NewArray == NULL)
       {
-         ExReleaseFastMutex(&SharedSectionPool->Lock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
          DPRINT1("Failed to allocate new array for shared sections!\n");
          return STATUS_INSUFFICIENT_RESOURCES;
       }
@@ -234,7 +234,7 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
       }
    }
 
-   ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
 
    return Status;
 }
@@ -253,7 +253,7 @@ InUserDeleteSharedSection(PSHARED_SECTION_POOL SharedSectionPool,
 
    SectionObject = NULL;
 
-   ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&SharedSectionPool->Lock);
 
    for(Array = &SharedSectionPool->SectionsArray;
          Array != NULL && SectionObject == NULL;
@@ -276,7 +276,7 @@ InUserDeleteSharedSection(PSHARED_SECTION_POOL SharedSectionPool,
       }
    }
 
-   ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
 
    if(SectionObject != NULL)
    {
@@ -312,7 +312,7 @@ IntUserMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
    SectionObject = NULL;
    SharedSection = NULL;
 
-   ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&SharedSectionPool->Lock);
 
    for(Array = &SharedSectionPool->SectionsArray;
          Array != NULL && SectionObject == NULL;
@@ -360,7 +360,7 @@ IntUserMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
       Status = STATUS_UNSUCCESSFUL;
    }
 
-   ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
 
    return Status;
 }
@@ -381,7 +381,7 @@ IntUserUnMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
 
    SectionObject = NULL;
 
-   ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&SharedSectionPool->Lock);
 
    for(Array = &SharedSectionPool->SectionsArray;
          Array != NULL && SectionObject == NULL;
@@ -399,7 +399,7 @@ IntUserUnMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
       }
    }
 
-   ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&SharedSectionPool->Lock);
 
    if(SectionObject != NULL)
    {

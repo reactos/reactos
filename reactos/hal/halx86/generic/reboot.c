@@ -64,7 +64,6 @@ HalReturnToFirmware (
     }
     else if (Action == HalRebootRoutine)
     {
-        HalReleaseDisplayOwnership();
         HalReboot ();
     }
 }

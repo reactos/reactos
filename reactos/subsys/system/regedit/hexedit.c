@@ -867,7 +867,7 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PHEXEDIT_DATA hed;
 
-  hed = (PHEXEDIT_DATA)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
+  hed = (PHEXEDIT_DATA)(LONG_PTR)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
   switch(uMsg)
   {
     case WM_ERASEBKGND:

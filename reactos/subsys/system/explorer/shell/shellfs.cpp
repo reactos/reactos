@@ -135,7 +135,7 @@ bool ShellEntry::get_path(PTSTR path, size_t path_count) const
 /*
 	path[0] = TEXT('\0');
 
-	if (FAILED(path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH)))
+	if (FAILED(path_from_pidl(get_parent_folder(), &*_pidl, path, path_count)))
 		return false;
 */
 	FileSysShellPath fs_path(create_absolute_pidl());
@@ -410,7 +410,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					if (bhfi_valid)
 						memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
 
-					if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
+					if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, COUNTOF(name), SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
 						if (!entry->_data.cFileName[0])
 							_tcscpy(entry->_data.cFileName, name);
 						else if (_tcscmp(entry->_display_name, name))

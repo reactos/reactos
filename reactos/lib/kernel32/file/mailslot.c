@@ -63,7 +63,7 @@ CreateMailslotW(LPCWSTR lpName,
    ULONG Attributes = OBJ_CASE_INSENSITIVE;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 
-   Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
+   Result = RtlDosPathNameToNtPathName_U(lpName,
 					 &MailslotName,
 					 NULL,
 					 NULL);

@@ -118,15 +118,15 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
         }
 
         /* get properties */
-        sig->File = load_dynamic_stringW(row,2);
-        minVersion = load_dynamic_stringW(row,3);
+        sig->File = msi_dup_record_field(row,2);
+        minVersion = msi_dup_record_field(row,3);
         if (minVersion)
         {
             ACTION_VerStrToInteger(minVersion, &sig->MinVersionMS,
              &sig->MinVersionLS);
             msi_free( minVersion);
         }
-        maxVersion = load_dynamic_stringW(row,4);
+        maxVersion = msi_dup_record_field(row,4);
         if (maxVersion)
         {
             ACTION_VerStrToInteger(maxVersion, &sig->MaxVersionMS,
@@ -139,7 +139,7 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
         sig->MaxSize = MSI_RecordGetInteger(row,6);
         if (sig->MaxSize == MSI_NULL_INTEGER)
             sig->MaxSize = 0;
-        sig->Languages = load_dynamic_stringW(row,9);
+        sig->Languages = msi_dup_record_field(row,9);
         time = MSI_RecordGetInteger(row,7);
         if (time != MSI_NULL_INTEGER)
             DosDateTimeToFileTime(HIWORD(time), LOWORD(time), &sig->MinTime);
@@ -276,9 +276,9 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
         }
 
         root = MSI_RecordGetInteger(row,2);
-        keyPath = load_dynamic_stringW(row,3);
+        keyPath = msi_dup_record_field(row,3);
         /* FIXME: keyPath needs to be expanded for properties */
-        valueName = load_dynamic_stringW(row,4);
+        valueName = msi_dup_record_field(row,4);
         /* FIXME: valueName probably does too */
         type = MSI_RecordGetInteger(row,5);
 
@@ -442,7 +442,7 @@ static UINT ACTION_AppSearchIni(MSIPACKAGE *package, BOOL *appFound,
         }
 
         /* get file name */
-        fileName = load_dynamic_stringW(row,2);
+        fileName = msi_dup_record_field(row,2);
         FIXME("AppSearch unimplemented for IniLocator (ini file name %s)\n",
          debugstr_w(fileName));
         msi_free( fileName);
@@ -549,7 +549,7 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
 
             if (buf)
             {
-                static const WCHAR rootW[] = { '\\',0 };
+                static WCHAR rootW[] = { '\\',0 };
                 UINT versionLen;
                 LPVOID subBlock = NULL;
 

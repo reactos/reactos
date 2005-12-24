@@ -34,6 +34,8 @@
  *      PGS_DRAGNDROP
  *    Notifications:
  *      PGN_HOTITEMCHANGE
+ *    Messages:
+ *      WM_PRINT and/or WM_PRINTCLIENT
  *
  * TESTING:
  *    Tested primarily with the controlspy Pager application.

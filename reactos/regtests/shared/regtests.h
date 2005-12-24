@@ -6,6 +6,8 @@
  * UPDATE HISTORY:
  *      06-07-2003  CSH  Created
  */
+#ifndef __REGTESTS_H
+#define __REGTESTS_H
 #include <stdio.h>
 #include <string.h>
 
@@ -30,7 +32,6 @@ void SetupOnce()
 
 /* Test types */
 #define TT_NORMAL         0
-#define TT_PERFORMANCE    1
 
 /* Valid values for return values of TestRoutine */
 #define TS_TIMEDOUT      ((DWORD)-2)
@@ -75,7 +76,7 @@ FunctionName(int Command) \
 #define _Dispatcher(FunctionName, TestName) \
   _DispatcherTimeout(FunctionName, TestName, 5000)
 
-static inline void
+static __inline void
 AppendAssertion(char *message)
 {
   if (strlen(_Buffer) != 0)
@@ -237,20 +238,11 @@ _GetCurrentProcess();
 HANDLE STDCALL
 _GetCurrentThread();
 
-BOOL STDCALL
-_GetThreadContext(HANDLE hThread, LPCONTEXT lpContext);
-
-DWORD STDCALL
-_SuspendThread(HANDLE hThread);
-
-DWORD STDCALL
-_ResumeThread(HANDLE hThread);
-
 VOID STDCALL
 _Sleep(DWORD dwMilliseconds);
 
 
-static inline PCHAR
+static __inline PCHAR
 FrameworkGetExportedFunctionNameInternal(_PAPI_DESCRIPTION ApiDescription)
 {
   if (ApiDescription->ForwardedFunctionName != NULL)
@@ -263,7 +255,7 @@ FrameworkGetExportedFunctionNameInternal(_PAPI_DESCRIPTION ApiDescription)
     }
 }
 
-static inline PVOID
+static __inline PVOID
 FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
 {
   HANDLE hModule;
@@ -289,7 +281,7 @@ FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
   return function;
 }
 
-static inline PVOID
+static __inline PVOID
 FrameworkGetHookInternal(ULONG index)
 {
   PVOID address;
@@ -324,7 +316,7 @@ FrameworkGetHookInternal(ULONG index)
 }
 
 
-static inline VOID
+static __inline VOID
 _SetHook(PCHAR name,
   PVOID address)
 {
@@ -348,7 +340,7 @@ typedef struct __HOOK
   PVOID FunctionAddress;
 } _HOOK, *_PHOOK;
 
-static inline VOID
+static __inline VOID
 _SetHooks(_PHOOK hookTable)
 {
   _PHOOK hook;
@@ -362,7 +354,7 @@ _SetHooks(_PHOOK hookTable)
     }
 }
 
-static inline VOID
+static __inline VOID
 _UnsetHooks(_PHOOK hookTable)
 {
   _PHOOK hook;
@@ -376,7 +368,7 @@ _UnsetHooks(_PHOOK hookTable)
     }
 }
 
-static inline VOID
+static __inline VOID
 _UnsetAllHooks()
 {
   _PAPI_DESCRIPTION api;
@@ -388,3 +380,5 @@ _UnsetAllHooks()
       api->MockFunctionAddress = NULL;
     }
 }
+
+#endif /* __REGTESTS_H */

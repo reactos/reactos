@@ -32,7 +32,7 @@
 
 #include "mkhive.h"
 #include "registry.h"
-#include "infcache.h"
+#include <infhost.h>
 
 
 
@@ -246,13 +246,13 @@ do_reg_operation(HKEY KeyHandle,
     }
 
   if (!(Flags & FLG_ADDREG_BINVALUETYPE) ||
-      (Type == REG_DWORD && InfGetFieldCount (Context) == 5))
+      (Type == REG_DWORD && InfHostGetFieldCount (Context) == 5))
     {
       PCHAR Str = NULL;
 
       if (Type == REG_MULTI_SZ)
 	{
-	  if (!InfGetMultiSzField (Context, 5, NULL, 0, &Size))
+	  if (InfHostGetMultiSzField (Context, 5, NULL, 0, &Size) != 0)
 	    Size = 0;
 
 	  if (Size)
@@ -261,7 +261,7 @@ do_reg_operation(HKEY KeyHandle,
 	      if (Str == NULL)
 		return FALSE;
 
-	      InfGetMultiSzField (Context, 5, Str, Size, NULL);
+	      InfHostGetMultiSzField (Context, 5, Str, Size, NULL);
 	    }
 
 	  if (Flags & FLG_ADDREG_APPEND)
@@ -281,7 +281,7 @@ do_reg_operation(HKEY KeyHandle,
 	}
       else
 	{
-	  if (!InfGetStringField (Context, 5, NULL, 0, &Size))
+	  if (InfHostGetStringField (Context, 5, NULL, 0, &Size) != 0)
 	    Size = 0;
 
 	  if (Size)
@@ -290,7 +290,7 @@ do_reg_operation(HKEY KeyHandle,
 	      if (Str == NULL)
 		return FALSE;
 
-	      InfGetStringField (Context, 5, Str, Size, NULL);
+	      InfHostGetStringField (Context, 5, Str, Size, NULL);
 	    }
 	}
 
@@ -333,7 +333,7 @@ do_reg_operation(HKEY KeyHandle,
     {
       PCHAR Data = NULL;
 
-      if (!InfGetBinaryField (Context, 5, NULL, 0, &Size))
+      if (InfHostGetBinaryField (Context, 5, NULL, 0, &Size) != 0)
 	Size = 0;
 
       if (Size)
@@ -343,7 +343,7 @@ do_reg_operation(HKEY KeyHandle,
 	    return FALSE;
 
 	  DPRINT("setting binary data %s len %lu\n", ValueName, Size);
-	  InfGetBinaryField (Context, 5, Data, Size, NULL);
+	  InfHostGetBinaryField (Context, 5, Data, Size, NULL);
 	}
 
       RegSetValue (KeyHandle,
@@ -372,26 +372,26 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
   ULONG Flags;
   ULONG Length;
 
-  INFCONTEXT Context;
+  PINFCONTEXT Context = NULL;
   HKEY KeyHandle;
   BOOL Ok;
 
 
-  Ok = InfFindFirstLine (hInf, Section, NULL, &Context);
+  Ok = InfHostFindFirstLine (hInf, Section, NULL, &Context) == 0;
   if (!Ok)
     return TRUE; /* Don't fail if the section isn't present */
 
-  for (;Ok; Ok = InfFindNextLine (&Context, &Context))
+  for (;Ok; Ok = (InfHostFindNextLine (Context, Context) == 0))
     {
       /* get root */
-      if (!InfGetStringField (&Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL))
+      if (InfHostGetStringField (Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL) != 0)
 	continue;
       if (!GetRootKey (Buffer))
 	continue;
 
       /* get key */
       Length = strlen (Buffer);
-      if (!InfGetStringField (&Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
+      if (InfHostGetStringField (Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL) != 0)
 	*Buffer = 0;
 
       DPRINT("KeyName: <%s>\n", Buffer);
@@ -403,7 +403,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
       else
         {
           /* get flags */
-          if (!InfGetIntField (&Context, 4, (PLONG)&Flags))
+          if (InfHostGetIntField (Context, 4, (PLONG)&Flags) != 0)
             Flags = 0;
         }
 
@@ -427,7 +427,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 	}
 
       /* get value name */
-      if (InfGetStringField (&Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
+      if (InfHostGetStringField (Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL) == 0)
 	{
 	  ValuePtr = Buffer;
 	}
@@ -437,11 +437,13 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 	}
 
       /* and now do it */
-      if (!do_reg_operation (KeyHandle, ValuePtr, &Context, Flags))
+      if (!do_reg_operation (KeyHandle, ValuePtr, Context, Flags))
 	{
 	  return FALSE;
 	}
     }
+
+  InfHostFreeContext(Context);
 
   return TRUE;
 }
@@ -456,9 +458,9 @@ ImportRegistryFile(PCHAR FileName,
   ULONG ErrorLine;
 
   /* Load inf file from install media. */
-  if (!InfOpenFile(&hInf, FileName, &ErrorLine))
+  if (InfHostOpenFile(&hInf, FileName, &ErrorLine) != 0)
     {
-      DPRINT1 ("InfOpenFile() failed\n");
+      DPRINT1 ("InfHostOpenFile() failed\n");
       return FALSE;
     }
 
@@ -472,7 +474,7 @@ ImportRegistryFile(PCHAR FileName,
       DPRINT1 ("registry_callback() failed\n");
     }
 
-  InfCloseFile (hInf);
+  InfHostCloseFile (hInf);
 
   return TRUE;
 }

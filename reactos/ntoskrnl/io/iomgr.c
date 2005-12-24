@@ -40,6 +40,18 @@ extern POBJECT_TYPE IoAdapterObjectType;
 NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
 NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
 
+VOID INIT_FUNCTION IopInitLookasideLists(VOID);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IoInitCancelHandling)
+#pragma alloc_text(INIT, IoInitShutdownNotification)
+#pragma alloc_text(INIT, IopInitLookasideLists)
+#pragma alloc_text(INIT, IoInit)
+#pragma alloc_text(INIT, IoInit2)
+#pragma alloc_text(INIT, IoInit3)
+#endif
+
+
 /* INIT FUNCTIONS ************************************************************/
 
 VOID
@@ -483,7 +495,14 @@ BOOLEAN STDCALL
 IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
                         IN UCHAR MinorVersion)
 {
-   if (MajorVersion <= 1 && MinorVersion <= 10)
+   /* MinorVersion = 0x20 : WinXP
+                     0x10 : Win2k
+                     0x5  : WinMe
+                     <0x5 : Win98
+
+      We report Win2k now
+      */
+   if (MajorVersion <= 1 && MinorVersion <= 0x10)
       return TRUE;
    return FALSE;
 }

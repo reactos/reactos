@@ -107,24 +107,6 @@ HRESULT WINAPI  OleCreateLinkFromData(LPDATAOBJECT pSrcDataObj, REFIID riid,
   return E_NOTIMPL;
 }
 
-/******************************************************************************
- *              OleIsRunning        [OLE32.@]
- */
-BOOL WINAPI OleIsRunning(LPOLEOBJECT pObject)
-{
-  FIXME("(%p), stub!\n", pObject);
-  return TRUE;
-}
-
-/***********************************************************************
- *           OleRegEnumVerbs    [OLE32.@]
- */
-HRESULT WINAPI OleRegEnumVerbs (REFCLSID clsid, LPENUMOLEVERB* ppenum)
-{
-    FIXME("(%p,%p), stub!\n", clsid, ppenum);
-    return OLEOBJ_E_NOVERBS;
-}
-
 /***********************************************************************
  *           OleRegEnumFormatEtc    [OLE32.@]
  */
@@ -136,31 +118,4 @@ HRESULT     WINAPI OleRegEnumFormatEtc (
     FIXME("(%p, %ld, %p), stub!\n", clsid, dwDirection, ppenumFormatetc);
 
     return E_NOTIMPL;
-}
-
-/***********************************************************************
- *           DllGetClassObject                          [OLE2.4]
- */
-HRESULT WINAPI DllGetClassObject16(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
-{
-  FIXME("(%s, %s, %p): stub\n", debugstr_guid(rclsid), debugstr_guid(iid), ppv);
-  return E_NOTIMPL;
-}
-
-/***********************************************************************
- *           OleSetClipboard                            [OLE2.49]
- */
-HRESULT WINAPI OleSetClipboard16(IDataObject* pDataObj)
-{
-  FIXME("(%p): stub\n", pDataObj);
-  return S_OK;
-}
-
-/***********************************************************************
- *           OleGetClipboard                            [OLE2.50]
- */
-HRESULT WINAPI OleGetClipboard16(IDataObject** ppDataObj)
-{
-  FIXME("(%p): stub\n", ppDataObj);
-  return E_NOTIMPL;
 }

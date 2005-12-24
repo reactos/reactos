@@ -1,9 +1,16 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crt/??????
+ * PURPOSE:     Unknown
+ * PROGRAMER:   Unknown
+ * UPDATE HISTORY:
+ *              25/11/05: Created
+ */
 
-#include "precomp.h"
-#include <io.h>
+#include <precomp.h>
 #include <sys/stat.h>
 #include <tchar.h>
-#include <internal/file.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -20,7 +27,7 @@ int _tchmod(const _TCHAR* filename, mode_t mode)
     DWORD FileAttributes = 0;
     BOOLEAN Set = FALSE;
 
-    DPRINT(#_tchmod"('%"sT"', %x)\n", filename, mode);
+    DPRINT(MK_STR(_tchmod)"('%"sT"', %x)\n", filename, mode);
 
     FileAttributes = GetFileAttributes(filename);
     if ( FileAttributes == (DWORD)-1 ) {

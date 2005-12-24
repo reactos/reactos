@@ -1,10 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <limits.h>
-#include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <internal/file.h>
-
+#include <precomp.h>
 
 /*
  * @implemented

@@ -44,7 +44,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 NtCurrentProcess(),
 				 KeyHandle,
 				 0,
-				 FALSE,
+				 0,
 				 DUPLICATE_SAME_ACCESS);
 #ifndef NDEBUG
       if(!NT_SUCCESS(Status))
@@ -893,7 +893,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("RtlpGetRegistryHandle() failed! Status: 0x%x\n", Status);
+    DPRINT("RtlpGetRegistryHandle() failed! Status: 0x%lx\n", Status);
     return(Status);
   }
 
@@ -908,7 +908,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 			 ValueLength);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT1("ZwSetValueKey() failed! Status: 0x%x\n", Status);
+    DPRINT1("ZwSetValueKey() failed! Status: 0x%lx\n", Status);
   }
 
   ZwClose(KeyHandle);

@@ -15,6 +15,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, KiInitializeBugCheck)
+#endif
+
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};

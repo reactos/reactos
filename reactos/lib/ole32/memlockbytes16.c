@@ -500,12 +500,12 @@ HRESULT HGLOBALLockBytesImpl16_Stat(
  * 
  * Creates an ILockBytes interface for a HGLOBAL handle.
  *
- * Params:
+ * PARAMS
  * 	hGlobal			the global handle (16bit)
  *	fDeleteOnRelease	delete handle on release.
  *	ppLkbyt			pointer to ILockBytes interface.
  *
- * Returns:
+ * RETURNS
  *	Staddard OLE error return codes.
  *
  */

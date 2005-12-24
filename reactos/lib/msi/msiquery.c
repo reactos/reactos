@@ -657,8 +657,7 @@ static UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
     if( TRACE_ON( msi ) )
         enum_stream_names( stg );
 
-    /* r = table_apply_transform( db, stg ); */
-    FIXME("should apply transform %s\n", debugstr_w(szTransformFile) );
+    r = msi_table_apply_transform( db, stg );
 
     IStorage_Release( stg );
 

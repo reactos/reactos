@@ -80,7 +80,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    CHAR c;
 
    StrLength = Name->Length / sizeof(WCHAR);
-   DPRINT("StrLength: %hu\n", StrLength);
+   DPRINT("StrLength: %lu\n", StrLength);
 
    /* Find last dot in Name */
    DotPos = 0;
@@ -96,7 +96,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    {
       DotPos = i;
    }
-   DPRINT("DotPos: %hu\n", DotPos);
+   DPRINT("DotPos: %lu\n", DotPos);
 
    /* Copy name (6 valid characters max) */
    for (i = 0, NameLength = 0; NameLength < 6 && i < DotPos; i++)
@@ -114,7 +114,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    }
 
    DPRINT("NameBuffer: '%.08S'\n", NameBuffer);
-   DPRINT("NameLength: %hu\n", NameLength);
+   DPRINT("NameLength: %lu\n", NameLength);
 
    /* Copy extension (4 valid characters max) */
    if (DotPos < StrLength)
@@ -138,7 +138,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
       ExtLength = 0;
    }
    DPRINT("ExtBuffer: '%.04S'\n", ExtBuffer);
-   DPRINT("ExtLength: %hu\n", ExtLength);
+   DPRINT("ExtLength: %lu\n", ExtLength);
 
    /* Determine next index */
    IndexLength = RtlpGetIndexLength(Context->LastIndexValue);
@@ -153,7 +153,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
       Checksum = 0;
    }
 
-   DPRINT("CopyLength: %hu\n", CopyLength);
+   DPRINT("CopyLength: %lu\n", CopyLength);
 
    if ((Context->NameLength == CopyLength) &&
          (wcsncmp(Context->NameBuffer, NameBuffer, CopyLength) == 0) &&
@@ -181,7 +181,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 
    IndexLength = RtlpGetIndexLength(Context->LastIndexValue);
 
-   DPRINT("CurrentIndex: %hu, IndexLength %hu\n", Context->LastIndexValue, IndexLength);
+   DPRINT("CurrentIndex: %lu, IndexLength %lu\n", Context->LastIndexValue, IndexLength);
 
    if (Context->CheckSumInserted)
    {

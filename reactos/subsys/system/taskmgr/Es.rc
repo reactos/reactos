@@ -1,5 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // Spanish (Spain) resources by Carlos Garcia Gomez
+//Sync to latest version of En.rc Samuel Serapión 
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -52,10 +53,10 @@ CHECKED
 ID_VIEW_SELECTCOLUMNS
         POPUP "Historial de la &CPU"
         BEGIN
-            MENUITEM "&Un Grafico, Todas las CPUs",        
+            MENUITEM "&Una Grafica, Todas las CPUs",        
 ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Un Grafico &Por CPU",          
+            MENUITEM "Una Grafica, &Por CPU",          
 ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
@@ -76,7 +77,7 @@ ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "A&yuda"
     BEGIN
-        MENUITEM "&Temas de Ayuda del Administrados de Tareas",   
+        MENUITEM "&Temas de Ayuda del Administrador de Tareas",   
 ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Acerca del Administrador de Tareas",         
@@ -310,35 +311,25 @@ BEGIN
     PUSHBUTTON      "Cancelar",IDCANCEL,174,133,50,14
     LTEXT           "La Afinidad de Procesador que pone mandos sobre los cuales permitirán a las CPUs el proceso para ejecutar.",
                     IDC_STATIC,5,5,220,16
-    CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | 
-WS_TABSTOP,
+    CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
-    CONTROL         "CPU 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,41,37,10
-    CONTROL         "CPU 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,54,37,10
-    CONTROL         "CPU 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,67,37,10
-    CONTROL         "CPU 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,80,37,10
-    CONTROL         "CPU 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,93,37,10
-    CONTROL         "CPU 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,106,37,10
-    CONTROL         "CPU 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,119,37,10
-    CONTROL         "CPU 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,61,28,37,10
-    CONTROL         "CPU 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | 
-WS_DISABLED |
+    CONTROL         "CPU 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,61,41,37,10
     CONTROL         "CPU 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,54,41,10
@@ -561,47 +552,6 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-#ifndef _MAC
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x40004L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "CompanyName", "Brian Palmer\0"
-            VALUE "FileDescription", "Task Manager by Brian Palmer\0"
-            VALUE "FileVersion", "1.0.0.1\0"
-            VALUE "InternalName", "taskmgr\0"
-            VALUE "LegalCopyright", "Copyright © Brian Palmer 2000\0"
-            VALUE "OriginalFilename", "taskmgr.exe\0"
-            VALUE "ProductName", "Task Manager by Brian Palmer\0"
-            VALUE "ProductVersion", "1.0.0.1\0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
-#endif    // !_MAC
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
@@ -675,7 +625,85 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Establece el proceso en prioridad ABAJO DE LO NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Establece el proceso en prioridad BAJA"
-    IDS_LICENSE             "Este programa es software libre; usted puede redistribuirlo y/o modificarlo bajo los términos de la Licencia de GNU General Public License publicada por la Free Software Fundation;  la versión 2.1 de la Licencia, (o en su opción) cualquier versión posterior.\r\n\r\nEste programa es distribuido con la esperanza de que será útil, pero SIN NINGUNA GARANTÍA; sin ni siquiera la garantía implícita de VALOR COMERCIAL O SALUD PARA UN OBJETIVO PARTICULAR. Ver que la GNU General Public License para más detalles \r\n\r\nUsted debería haber recibido una copia de la GNU General Public License junto con este programa; si no, escriba a la Free Software Fundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, EE. UU."END
+    IDS_LICENSE             "Este programa es software libre; usted puede redistribuirlo y/o modificarlo bajo los términos de la Licencia de GNU General Public License publicada por la Free Software Fundation;  la versión 2.1 de la Licencia, (o en su opción) cualquier versión posterior.\r\n\r\nEste programa es distribuido con la esperanza de que será útil, pero SIN NINGUNA GARANTÍA; sin ni siquiera la garantía implícita de VALOR COMERCIAL O SALUD PARA UN OBJETIVO PARTICULAR. Ver que la GNU General Public License para más detalles \r\n\r\nUsted debería haber recibido una copia de la GNU General Public License junto con este programa; si no, escriba a la Free Software Fundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, EE. UU."
 
-#endif    // Spanish (SPAIN) resources by Carlos Garcia Gomez
+END	// Spanish (SPAIN) resources by Carlos Garcia Gomez
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TAB_APPS                  "Aplicaciones"
+    IDS_TAB_PROCESSES             "Procesos"
+    IDS_TAB_PERFORMANCE           "Rendimiento"
+    IDS_TAB_TASK                  "Tareas"
+    IDS_TAB_STATUS                "Estatus"
+    IDS_TAB_IMAGENAME             "Nombre de Imagen"
+    IDS_TAB_PID                   "PID"
+    IDS_TAB_USERNAME              "Nombre Usuario"
+    IDS_TAB_SESSIONID             "ID de sección"
+    IDS_TAB_CPU                   "CPU"
+    IDS_TAB_CPUTIME               "Tiempo CPU"
+    IDS_TAB_MEMUSAGE              "Uso de Mem"
+    IDS_TAB_PEAKMEMUSAGE          "Pico uso de Mem"
+    IDS_TAB_MEMDELTA              "Delta Mem"
+    IDS_TAB_PAGEFAULT             "Faltas de Pagina"
+    IDS_TAB_PFDELTA               "FP Delta"
+    IDS_TAB_VMSIZE                "Tamaño MV(Maquina Virtual)"
+    IDS_TAB_PAGEDPOOL             "Grupo Paginado"
+    IDS_TAB_NPPOOL                "Grupo NP"
+    IDS_TAB_BASEPRI               "Base Pri"
+    IDS_TAB_HANDLES               "Manijas(Handles)"
+    IDS_TAB_THREADS               "Hilos"
+    IDS_TAB_USERPBJECTS           "Objetos USER"
+    IDS_TAB_GDIOBJECTS            "Objetos GDI"
+    IDS_TAB_IOREADS               "I/O Lectura"
+    IDS_TAB_IOWRITES              "I/O Escrito"
+    IDS_TAB_IOOTHER               "I/O Otro"
+    IDS_TAB_IOREADBYTES           "I/O Bytes Leidos"
+    IDS_TAB_IOWRITESBYTES         "I/O Bytes Escritos"
+    IDS_TAB_IOOTHERBYTES          "I/O Otros Bytes"
+    IDS_MENU_SELECTCOLUMNS        "&Seleccione Columnas..."
+    IDS_MENU_16BITTASK            "&Eseñe tareas 16-bit"
+    IDS_MENU_WINDOWS              "&Ventanas"
+    IDS_MENU_LARGEICONS           "Iconos G&randes"
+    IDS_MENU_SMALLICONS           "Iconos &Pequeños"
+    IDS_MENU_DETAILS              "&Detalles"
+    IDS_MENU_ONEGRAPHALLCPUS      "&Una Grafica, Todos CPUs"
+    IDS_MENU_ONEGRAPHPERCPU       "Una Grafica &Por CPU"
+    IDS_MENU_CPUHISTORY           "Historial &CPU"
+    IDS_MENU_SHOWKERNELTIMES      "Mues&tra tiempos Nucleo"
+    IDS_CREATENEWTASK             "Crear Tarea Nueva"
+    IDS_CREATENEWTASK_DESC        "Escriba el nombre de un programa, carpeta, documento, o recurso de internet, y Task Manager lo habrera por ti."
+    IDS_MSG_ACCESSPROCESSAFF      "Incapaz de accesar o alterar Afinidad del Proceso"
+    IDS_MSG_PROCESSONEPRO         "El proceso debe tener afinidad con por lo menos un procesador."
+    IDS_MSG_INVALIDOPTION         "Opción Invalida"
+    IDS_MSG_UNABLEDEBUGPROCESS    "Incapaz de depurar proceso"
+    IDS_MSG_WARNINGDEBUG          "ADVERTENCIA: La depuración de este proceso puede resultar en perdidad de data.\n¿Esta seguro que quiere usar el depurador?"
+    IDS_MSG_TASKMGRWARNING        "Advertencia de Manejador de Tareas"
+    IDS_MSG_WARNINGTERMINATING    "ADVERTENCIA: Terminando un proceso puede causar resultados indeseados\nresultados que incluyen la posible perdida de data o inestabilidad del systema. El\nproceso no se le dara un chance de grabar su estado o\ndata antes de ser terminado. ¿Está seguro que quiere \nterminar el proceso?"
+    IDS_MSG_UNABLETERMINATEPRO    "Incapaz de cerrar el Proceso"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Incapaz de cambiar la prioridad"
+    IDS_MSG_WARNINGCHANGEPRIORITY "Advertencia: Cambiando la clase de prioridad de este proceso puede\ncausar resultados indeseados incluyendo posible inestabilidad del sistema. ¿Está seguro que\nusted quiera cambiar la Clase de Prioridad?"
+    IDS_MSG_TRAYICONCPUUSAGE      "Promedio CPU: %d%%"
+    IDS_STATUS_MEMUSAGE           "Uso Mem: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "Uso CPU: %3d%%"
+    IDS_STATUS_PROCESSES          "Procesos: %d"
+    IDS_Not_Responding            "No Responde"
+    IDS_Running                   "Funcionando"  
+END
+
+
+#endif    // Spanish (SPAIN) resources by Samuel Serapión
 /////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

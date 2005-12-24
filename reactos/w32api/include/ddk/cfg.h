@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __CFG_H
-#define __CFG_H
+#ifndef _CFG_INCLUDED_
+#define _CFG_INCLUDED_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -80,6 +80,8 @@ extern "C" {
 #define CM_PROB_HELD_FOR_EJECT              0x0000002F
 #define CM_PROB_DRIVER_BLOCKED              0x00000030
 #define CM_PROB_REGISTRY_TOO_LARGE          0x00000031
+#define CM_PROB_SETPROPERTIES_FAILED        0x00000032
+#define NUM_CM_PROB                         0x00000033
 
 #define LCPRI_FORCECONFIG                 0x00000000
 #define LCPRI_BOOTCONFIG                  0x00000001
@@ -142,4 +144,4 @@ typedef enum _PNP_VETO_TYPE {
 }
 #endif
 
-#endif /* __CFG_H */
+#endif /* _CFG_INCLUDED_ */

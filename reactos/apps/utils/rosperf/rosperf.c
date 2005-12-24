@@ -319,7 +319,7 @@ PrintOSVersion(void)
   RosVersion = VersionInfo.szCSDVersion + wcslen(VersionInfo.szCSDVersion) + 1;
   RosVersionLen = sizeof(VersionInfo.szCSDVersion) / sizeof(VersionInfo.szCSDVersion[0]) -
                   (RosVersion - VersionInfo.szCSDVersion);
-  if (7 <= RosVersionLen && 0 == wcsnicmp(RosVersion, L"ReactOS", 7))
+  if (7 <= RosVersionLen && 0 == _wcsnicmp(RosVersion, L"ReactOS", 7))
     {
       wprintf(L"Running on %s\n", RosVersion);
       return;
@@ -744,7 +744,7 @@ ProcessCommandLine(PPERF_INFO PerfInfo, unsigned *TestCount, PTEST *Tests)
     {
       if (L'/' == ArgV[Arg][0] || L'-' == ArgV[Arg][0])
         {
-          if (0 == wcsicmp(ArgV[Arg] + 1, L"repeat"))
+          if (0 == _wcsicmp(ArgV[Arg] + 1, L"repeat"))
             {
               if (ArgC <= Arg + 1)
                 {
@@ -763,7 +763,7 @@ ProcessCommandLine(PPERF_INFO PerfInfo, unsigned *TestCount, PTEST *Tests)
                   return FALSE;
                 }
             }
-          else if (0 == wcsicmp(ArgV[Arg] + 1, L"seconds"))
+          else if (0 == _wcsicmp(ArgV[Arg] + 1, L"seconds"))
             {
               if (ArgC <= Arg + 1)
                 {
@@ -802,7 +802,7 @@ ProcessCommandLine(PPERF_INFO PerfInfo, unsigned *TestCount, PTEST *Tests)
             }
           for (i = 0; i < AllTestCount; i++)
             {
-              if (0 == wcsicmp(ArgV[Arg], AllTests[i].Option))
+              if (0 == _wcsicmp(ArgV[Arg], AllTests[i].Option))
                 {
                   DoTest[i] = TRUE;
                   break;

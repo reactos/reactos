@@ -60,7 +60,8 @@ void
 IfTest::Run ()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/if.xml" );
-	Project project ( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 
 	TestProjectIf ( project );
 	TestModuleIf ( project );

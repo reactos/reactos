@@ -352,7 +352,7 @@ typedef unsigned long PIXEL;
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 
 /* 32-bit Color (___ format) */
-inline PIXEL average32(PIXEL a, PIXEL b)
+__inline PIXEL average32(PIXEL a, PIXEL b)
 {
   return a; // FIXME: Temp hack to remove "PCB-effect" from the image
 }

@@ -68,12 +68,6 @@ PerformTest(PVOID _arg)
   return 1;
 }
 
-BOOL
-IsContextChanged(LPCONTEXT context1, LPCONTEXT context2)
-{
-  return memcmp(context1, context2, sizeof(CONTEXT)) != 0;
-}
-
 VOID
 ControlNormalTest(HANDLE hThread,
             PERFORM_TEST_ARGS *Args,
@@ -98,54 +92,9 @@ ControlNormalTest(HANDLE hThread,
 }
 
 VOID
-ControlPerformanceTest(HANDLE hThread,
-            PERFORM_TEST_ARGS *Args,
-            DWORD TimeOut)
-{
-  DWORD status;
-  CONTEXT lastContext;
-  CONTEXT currentContext;
-
-  ZeroMemory(&lastContext, sizeof(CONTEXT));
-  lastContext.ContextFlags = CONTEXT_FULL;
-  ZeroMemory(&currentContext, sizeof(CONTEXT));
-  currentContext.ContextFlags = CONTEXT_FULL;
-
-  do {
-    _Sleep(1);
-
-    if (_SuspendThread(hThread) == (DWORD)-1)
-      break;
-
-    if (_GetThreadContext(hThread, &currentContext) == 0)
-      break;
-
-   if (IsContextChanged(&currentContext, &lastContext))
-     Args->Time++;
-
-    if (_ResumeThread(hThread) == (DWORD)-1)
-      break;
-
-    if (Args->Time >= TimeOut)
-      {
-        _TerminateThread(hThread, 0);
-        Args->Result = TS_TIMEDOUT;
-        break;
-      }
-
-    status = _WaitForSingleObject(hThread, 0);
-    if (status == WAIT_OBJECT_0 || status == WAIT_FAILED)
-      break;
-
-    lastContext = currentContext;
-  } while (TRUE);
-}
-
-VOID
 DisplayResult(PERFORM_TEST_ARGS* Args,
               LPSTR OutputBuffer)
 {
-  char Buffer[5000];
   char Format[100];
 
   if (Args->Result == TS_OK)
@@ -165,7 +114,7 @@ DisplayResult(PERFORM_TEST_ARGS* Args,
                                   Args->Time));
     }
   else
-      sprintf(OutputBuffer, "[%s] Failed (%s)\n", Args->TestName, Buffer);
+      sprintf(OutputBuffer, "[%s] Failed (%s)\n", Args->TestName, Args->Buffer);
 
   if (Args->OutputRoutine != NULL)
     (*Args->OutputRoutine)(OutputBuffer);
@@ -183,9 +132,6 @@ ControlTest(HANDLE hThread,
   {
     case TT_NORMAL:
       ControlNormalTest(hThread, Args, TimeOut);
-      break;
-    case TT_PERFORMANCE:
-      ControlPerformanceTest(hThread, Args, TimeOut);
       break;
     default:
       printf("Unknown test type %ld\n", TestType);

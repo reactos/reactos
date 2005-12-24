@@ -1,12 +1,12 @@
+#include <precomp.h>
+
 #include <signal.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <internal/file.h>
 
 void _default_handler(int signal);
 
-//typedef void (*_p_sig_fn_t)(int);
+typedef void (*__p_sig_fn_t)(int);
 
 
 typedef struct _sig_element

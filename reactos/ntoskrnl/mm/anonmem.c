@@ -727,15 +727,14 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
       }
    }
 
-   Status = MmCreateMemoryArea(Process,
-                               AddressSpace,
+   Status = MmCreateMemoryArea(AddressSpace,
                                MEMORY_AREA_VIRTUAL_MEMORY,
                                &BaseAddress,
                                RegionSize,
                                Protect,
                                &MemoryArea,
                                PBaseAddress != 0,
-                               (AllocationType & MEM_TOP_DOWN) == MEM_TOP_DOWN,
+                               AllocationType & MEM_TOP_DOWN,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
@@ -748,7 +747,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                       (ULONG_PTR)MemoryArea->StartingAddress;
 
-   MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
+   MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
                       MemoryAreaLength, Type, Protect);
 
    if ((AllocationType & MEM_COMMIT) &&
@@ -991,7 +990,7 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                PULONG ResultLength)
 {
    PMM_REGION Region;
-   PVOID RegionBase;
+   PVOID RegionBase = NULL;
 
    Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -1000,7 +999,7 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                          Address, &RegionBase);
    Info->BaseAddress = RegionBase;
    Info->AllocationBase = MemoryArea->StartingAddress;
-   Info->AllocationProtect = MemoryArea->Attributes;
+   Info->AllocationProtect = MemoryArea->Protect;
    Info->RegionSize = Region->Length;
    Info->State = Region->Type;
    Info->Protect = Region->Protect;

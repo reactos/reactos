@@ -1462,6 +1462,10 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Window->IDMenu = 0;
    Window->Instance = hInstance;
    Window->hSelf = hWnd;
+
+   if (!hMenu)
+       hMenu = Class->hMenu;
+
    if (0 != (dwStyle & WS_CHILD))
    {
       Window->IDMenu = (UINT) hMenu;

@@ -1366,7 +1366,7 @@ JSSymbol js_vm_intern_with_len (JSVirtualMachine *vm, const char *name,
 				unsigned int len);
 
 /* Intern symbol <name> to virtual machine and return its JSSymbol id. */
-static inline JSSymbol
+static __inline JSSymbol
 js_vm_intern (JSVirtualMachine *vm, const char *name)
 {
   return js_vm_intern_with_len (vm, name, strlen (name));
@@ -1424,7 +1424,7 @@ void js_vm_error (JSVirtualMachine *vm);
  * hash value should be re-mapped to the correct range, for example,
  * with the mod operand.
  */
-static inline unsigned int
+static __inline unsigned int
 js_count_hash (const char *data, unsigned int data_len)
 {
   unsigned int val = 0, i;
@@ -1509,7 +1509,7 @@ int js_vm_is_marked_ptr (void *ptr);
 
 /* Function. */
 
-static inline JSFunction *
+static __inline JSFunction *
 js_vm_make_function (JSVirtualMachine *vm, void *implementation)
 {
   JSFunction *f = (JSFunction *) js_vm_alloc (vm, sizeof (*f));
@@ -1532,7 +1532,7 @@ void js_vm_builtin_create (JSVirtualMachine *vm, JSNode *result,
 
 /* Array. */
 
-static inline void
+static __inline void
 js_vm_make_array (JSVirtualMachine *vm, JSNode *n, unsigned int length)
 {
   unsigned int i;
@@ -1547,7 +1547,7 @@ js_vm_make_array (JSVirtualMachine *vm, JSNode *n, unsigned int length)
     n->u.varray->data[i].type = JS_UNDEFINED;
 }
 
-static inline void
+static __inline void
 js_vm_expand_array (JSVirtualMachine *vm, JSNode *n, unsigned int length)
 {
   if (n->u.varray->length < length)
@@ -1648,7 +1648,7 @@ void js_vm_stacktrace (JSVirtualMachine *vm, unsigned int num_frames);
 
 /* Strings. */
 
-static inline void
+static __inline void
 js_vm_make_string (JSVirtualMachine *vm, JSNode *n, const char *data,
 		   unsigned int data_len)
 {
@@ -1664,7 +1664,7 @@ js_vm_make_string (JSVirtualMachine *vm, JSNode *n, const char *data,
 }
 
 
-static inline void
+static __inline void
 js_vm_make_static_string (JSVirtualMachine *vm, JSNode *n, const char *data,
 			  unsigned int data_len)
 {
@@ -1677,7 +1677,7 @@ js_vm_make_static_string (JSVirtualMachine *vm, JSNode *n, const char *data,
 }
 
 
-static inline int
+static __inline int
 js_compare_strings (JSNode *a, JSNode *b)
 {
   unsigned int i;
@@ -1698,7 +1698,7 @@ js_compare_strings (JSNode *a, JSNode *b)
 }
 
 
-static inline char *
+static __inline char *
 js_string_to_c_string (JSVirtualMachine *vm, const JSNode *a)
 {
   char *cp;

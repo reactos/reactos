@@ -1,6 +1,7 @@
 LIBRARY newdev.dll
 
 EXPORTS
+ClientSideInstallW@12
 DevInstallW@16
 ;InstallDevInst
 ;InstallDevInstEx

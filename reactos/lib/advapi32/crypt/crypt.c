@@ -32,6 +32,21 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * Note: this code is harmless on little-endian machines.
+ */
+VOID byteReverse(unsigned char *buf, unsigned longs)
+{
+    unsigned int t;
+
+    do
+    {
+        t = (unsigned int)((unsigned)buf[3] << 8 | buf[2]) << 16 |
+            ((unsigned)buf[1] << 8 | buf[0]);
+        *(unsigned int *)buf = t;
+        buf += 4;
+    } while (--longs);
+}
 
 HWND crypt_hWindow = 0;
 
@@ -1480,7 +1495,7 @@ BOOL WINAPI CryptGetUserKey (HCRYPTPROV hProv, DWORD dwKeySpec, HCRYPTKEY *phUse
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptHashData (HCRYPTHASH hHash, BYTE *pbData, DWORD dwDataLen, DWORD dwFlags)
+BOOL WINAPI CryptHashData (HCRYPTHASH hHash, const BYTE *pbData, DWORD dwDataLen, DWORD dwFlags)
 {
 	PCRYPTHASH hash = (PCRYPTHASH)hHash;
 	PCRYPTPROV prov;
@@ -1965,14 +1980,6 @@ DWORD WINAPI RemoveUsersFromEncryptedFile (
 /*
  * @unimplemented
  */
-BOOL WINAPI EncryptionDisable (
-	LPCWSTR,
-	BOOL
-	);
-
-/*
- * @unimplemented
- */
 BOOL WINAPI FileEncryptionStatusW (
 	LPCWSTR lpcwstr,
 	LPDWORD lpdword
@@ -2031,3 +2038,17 @@ DWORD WINAPI QueryRecoveryAgentsOnEncryptedFile (
 	DPRINT1("%s() not implemented!\n", __FUNCTION__);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptionDisable(
+    LPCWSTR DirPath,
+    BOOL Disable
+    )
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+

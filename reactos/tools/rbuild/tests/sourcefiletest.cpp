@@ -51,7 +51,9 @@ SourceFileTest::IsParentOf ( const SourceFile* parent,
 void
 SourceFileTest::IncludeTest ()
 {
-	const Project project ( RBUILD_BASE "tests" SSEP "data" SSEP "automaticdependency_include.xml" );
+	const string projectFilename = RBUILD_BASE "tests" SSEP "data" SSEP "automaticdependency_include.xml";
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	AutomaticDependency automaticDependency ( project );
 	automaticDependency.ParseFiles ();
 	ARE_EQUAL( 4, automaticDependency.sourcefile_map.size () );
@@ -64,7 +66,9 @@ SourceFileTest::IncludeTest ()
 void
 SourceFileTest::FullParseTest ()
 {
-	const Project project ( RBUILD_BASE "tests" SSEP "data" SSEP "automaticdependency.xml" );
+	const string projectFilename = RBUILD_BASE "tests" SSEP "data" SSEP "automaticdependency.xml";
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	AutomaticDependency automaticDependency ( project );
 	automaticDependency.ParseFiles ();
 	ARE_EQUAL( 5, automaticDependency.sourcefile_map.size () );

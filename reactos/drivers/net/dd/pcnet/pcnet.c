@@ -87,11 +87,11 @@ MiniportHandleInterrupt(
           if (Data & CSR0_CERR)
             Adapter->Statistics.XmtCollisions++;
         }
-      else if(Data & CSR0_IDON)
+      if(Data & CSR0_IDON)
         {
           DPRINT("IDON\n");
         }
-      else if(Data & CSR0_RINT)
+      if(Data & CSR0_RINT)
         {
           DPRINT("receive interrupt\n");
 
@@ -147,7 +147,7 @@ MiniportHandleInterrupt(
               Adapter->Statistics.RcvGoodFrames++;
             }
         }
-      else if(Data & CSR0_TINT)
+      if(Data & CSR0_TINT)
         {
           PTRANSMIT_DESCRIPTOR Descriptor;
 
@@ -201,10 +201,9 @@ MiniportHandleInterrupt(
             }
           NdisMSendResourcesAvailable(Adapter->MiniportAdapterHandle);
         }
-      else
+      if(Data & ~(CSR0_ERR | CSR0_IDON | CSR0_RINT | CSR0_TINT))
         {
-          DPRINT1("UNHANDLED INTERRUPT\n");
-          ASSERT(FALSE);
+          DPRINT("UNHANDLED INTERRUPT CSR0 0x%x\n", Data);
         }
 
       NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
@@ -1081,7 +1080,7 @@ MiniportSend(
       (Adapter->CurrentTransmitEndIndex == NUMBER_OF_BUFFERS - 1 &&
        Adapter->CurrentTransmitStartIndex == 0))
     {
-      DPRINT("No free space in circular buffer\n");
+      DPRINT1("No free space in circular buffer\n");
       NdisDprReleaseSpinLock(&Adapter->Lock);
       return NDIS_STATUS_RESOURCES;
     }

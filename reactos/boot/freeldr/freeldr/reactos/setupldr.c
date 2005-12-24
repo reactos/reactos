@@ -19,20 +19,6 @@
  */
 
 #include <freeldr.h>
-#include <reactos/rossym.h>
-#include <debug.h>
-#include <arch.h>
-#include <disk.h>
-#include <reactos.h>
-#include <rtl.h>
-#include <fs.h>
-#include <multiboot.h>
-#include <mm.h>
-#include <machine.h>
-#include <ui.h>
-#include <inffile.h>
-
-#include "registry.h"
 
 LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel
@@ -60,14 +46,14 @@ FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
 }
 
 static BOOL
-LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
+LoadKernel(PCSTR szSourcePath, PCSTR szFileName)
 {
   CHAR szFullName[256];
 #ifdef USE_UI
   CHAR szBuffer[80];
 #endif
   PFILE FilePointer;
-  PCHAR szShortName;
+  PCSTR szShortName;
 
   if (szSourcePath[0] != '\\')
     {
@@ -125,7 +111,7 @@ LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
 }
 
 static BOOL
-LoadKernelSymbols(PCHAR szSourcePath, PCHAR szFileName)
+LoadKernelSymbols(PCSTR szSourcePath, PCSTR szFileName)
 {
   static ROSSYM_CALLBACKS FreeldrCallbacks =
     {
@@ -180,14 +166,14 @@ LoadKernelSymbols(PCHAR szSourcePath, PCHAR szFileName)
 }
 
 static BOOL
-LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
+LoadDriver(PCSTR szSourcePath, PCSTR szFileName)
 {
   CHAR szFullName[256];
 #ifdef USE_UI
   CHAR szBuffer[80];
 #endif
   PFILE FilePointer;
-  PCHAR szShortName;
+  PCSTR szShortName;
 
   if (szSourcePath[0] != '\\')
     {
@@ -245,14 +231,14 @@ LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
 
 
 static BOOL
-LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
+LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 {
   CHAR szFullName[256];
 #ifdef USE_UI
   CHAR szBuffer[80];
 #endif
   PFILE FilePointer;
-  PCHAR szShortName;
+  PCSTR szShortName;
 
   if (szSourcePath[0] != '\\')
     {
@@ -312,8 +298,8 @@ VOID RunLoader(VOID)
 {
   ULONG_PTR Base;
   ULONG Size;
-  char *SourcePath;
-  char *LoadOptions;
+  const char *SourcePath;
+  const char *LoadOptions;
   UINT i;
 
   HINF InfHandle;
@@ -461,7 +447,7 @@ VOID RunLoader(VOID)
 
   /* Export the hardware hive */
   Base = FrLdrCreateModule ("HARDWARE");
-  RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
+  RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
   FrLdrCloseModule (Base, Size);
 
 #if 0

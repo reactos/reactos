@@ -1390,9 +1390,11 @@ static HRESULT WINAPI DataCache_GetAdvise(
 
   if (ppAdvSink!=NULL)
   {
-    IAdviseSink_QueryInterface(this->sinkInterface,
+    if (this->sinkInterface != NULL)
+        IAdviseSink_QueryInterface(this->sinkInterface,
 			       &IID_IAdviseSink,
 			       (void**)ppAdvSink);
+    else *ppAdvSink = NULL;
   }
 
   return S_OK;

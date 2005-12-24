@@ -22,7 +22,8 @@ using std::string;
 void IncludeTest::Run()
 {
 	string projectFilename ( RBUILD_BASE "tests/data/include.xml" );
-	Project project ( projectFilename );
+	Configuration configuration;
+	Project project ( configuration, projectFilename );
 	ARE_EQUAL(1, project.non_if_data.includes.size());
 	Include& include1 = *project.non_if_data.includes[0];
 	ARE_EQUAL("include1", include1.directory);

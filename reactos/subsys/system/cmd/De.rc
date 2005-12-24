@@ -1,3 +1,4 @@
+#include "windows.h"
 #include "resource.h"
 /*
  *  German language file by Klemens Friedl <frik85> 2005-06-03
@@ -470,9 +471,9 @@ STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version."
 
-STRING_VERSION_HELP5, "\nSenden Sie Bug-Reports an <ros-dev@reactos.com>.\n\
+STRING_VERSION_HELP5, "\nSenden Sie Bug-Reports an <ros-dev@reactos.org>.\n\
 Updates sind auf der offiziellen ReactOS-Seite verfuegbar:\n\
-http://www.reactos.com"
+http://www.reactos.org"
 
 STRING_VERSION_HELP6, "\nFreeDOS Version programmiert von:\n"
 
@@ -515,7 +516,7 @@ CHCP     Zeigt die aktive Codepagenummer an bzw. legt diese fest.\n\
 CHOICE   Wartet auf den Benutzer, welcher aus einer Auswahl eine Option\n\
          waehlen muss.\n\
 CLS      Loescht den Bildschirminhalt.\n\
-CMD      Startet eine neue Instanz des Windows-Befehlsinterpreters.\n\
+CMD      Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\
 COLOR    Legt die Hintergrund- und Vordergrundfarben fuer die Konsole fest.\n\
 COPY     Kopiert eine oder mehrere Dateien an eine andere Stelle.\n\
 DATE     Zeigt das Datum an bzw. legt dieses fest.\n\
@@ -527,7 +528,7 @@ EXIT     Beendet das Programm CMD.EXE (Befehlsinterpreter).\n\
 FOR      Fuehrt einen angegebenen Befehl fuer jede Datei in einem Dateiensatz\n\
          aus.\n\
 FREE     Zeigt den (freien) Speicherplatz an.\n\
-GOTO     Setzt den Windows-Befehlsinterpreter auf eine markierte Zeile in\n\
+GOTO     Setzt den ReactOS-Befehlsinterpreter auf eine markierte Zeile in\n\
          einem Batchprogramm.\n\
 HELP     Zeigt Hilfeinformationen zu ReactOS-Befehlen an.\n\
 HISTORY  Listet alle Befehle auf welche sich im Speicher befinden.\n\
@@ -557,7 +558,7 @@ TIME     Zeigt die Systemzeit an bzw. legt sie fest.\n\
 TIMER    Erlaubt die Benutzung von bis zu 10 Stopuhren\n\
 TITLE    Legt den Fenstertitel fuer das Eingabeaufforderungsfenster fest.\n\
 TYPE     Zeigt den Inhalt einer Textdatei an.\n\
-VER      Zeigt die Windows-Version an.\n\
+VER      Zeigt die ReactOS-Version an.\n\
 VERIFY   Legt fest, ob ueberwacht werden soll, ob Dateien korrekt auf den\n\
          Datentraeger geschrieben werden.\n\
 VOL      Zeigt die Datentraegervolumebezeichnung und die Seriennummer an.\n"

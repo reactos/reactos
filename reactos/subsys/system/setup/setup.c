@@ -28,6 +28,7 @@
 #include <tchar.h>
 #include <syssetup/syssetup.h>
 #include <userenv.h>
+#include <tchar.h>
 
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -56,7 +57,6 @@ LPTSTR lstrchr(LPCTSTR s, TCHAR c)
   return (LPTSTR)NULL;
 }
 
-
 static VOID
 RunNewSetup (HINSTANCE hInstance)
 {
@@ -74,8 +74,8 @@ RunNewSetup (HINSTANCE hInstance)
     }
 
   DPRINT("Loaded 'syssetup'!\n");
-
   InstallReactOS = (PINSTALL_REACTOS)GetProcAddress (hDll, "InstallReactOS");
+
   if (InstallReactOS == NULL)
     {
       DPRINT("Failed to get address for 'InstallReactOS()'!\n");

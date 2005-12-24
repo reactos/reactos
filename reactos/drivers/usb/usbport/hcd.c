@@ -822,6 +822,7 @@ int STDCALL usb_check_bandwidth (struct usb_device *dev, struct urb *urb)
 
 	new_alloc = old_alloc + (int) bustime;
 	if (new_alloc > FRAME_TIME_MAX_USECS_ALLOC) {
+#ifdef DEBUG_MODE
 #ifdef	DEBUG
 		char	*mode = 
 #ifdef CONFIG_USB_BANDWIDTH
@@ -831,6 +832,7 @@ int STDCALL usb_check_bandwidth (struct usb_device *dev, struct urb *urb)
 #endif
 		dev_dbg (&dev->dev, "usb_check_bandwidth %sFAILED: %d + %ld = %d usec\n",
 			mode, old_alloc, bustime, new_alloc);
+#endif
 #endif
 #ifdef CONFIG_USB_BANDWIDTH
 		bustime = -ENOSPC;	/* report error */

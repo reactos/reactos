@@ -5,6 +5,8 @@
  * PURPOSE:         Win32 Advanced API Libary Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
+#ifndef __ADVAPI32_H
+#define __ADVAPI32_H
 
 /* INCLUDES ******************************************************************/
 
@@ -140,4 +142,4 @@ extern NTMARTA NtMartaStatic;
 
 DWORD CheckNtMartaPresent(VOID);
 
-/* EOF */
+#endif /* __ADVAPI32_H */

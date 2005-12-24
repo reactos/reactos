@@ -68,7 +68,7 @@ CdfsWSubString(PWCHAR pTarget, const PWCHAR pSource, size_t pLength)
 
 
 PFCB
-CdfsCreateFCB(PWSTR FileName)
+CdfsCreateFCB(PCWSTR FileName)
 {
   PFCB Fcb;
 

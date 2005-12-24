@@ -121,8 +121,8 @@ FsRecUnload(IN PDRIVER_OBJECT DriverObject)
 
 static NTSTATUS
 FsRecRegisterFs(PDRIVER_OBJECT DriverObject,
-		PWSTR FsName,
-		PWSTR RecognizerName,
+		PCWSTR FsName,
+		PCWSTR RecognizerName,
 		ULONG DeviceType,
 		ULONG FsType)
 {

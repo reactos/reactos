@@ -70,12 +70,15 @@ LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
 String COMException::toString() const
 {
 	TCHAR msg[4*BUFFER_LEN];
+	int l = 4*BUFFER_LEN;
 	LPTSTR p = msg;
 
-	p += _stprintf(p, TEXT("%s\nContext: %s"), super::ErrorMessage(), (LPCTSTR)_context.toString());
+	int n = _stprintf_s2(p, l, TEXT("%s\nContext: %s"), super::ErrorMessage(), (LPCTSTR)_context.toString());
+	p += n;
+	l -= n;
 
 	if (_file)
-		p += _stprintf(p, TEXT("\nLocation: %hs:%d"), _file, _line);
+		p += _stprintf_s2(p, l, TEXT("\nLocation: %hs:%d"), _file, _line);
 
 	return msg;
 }
@@ -320,7 +323,7 @@ String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
 	HRESULT hr = ((IShellFolder*)*const_cast<ShellFolder*>(this))->GetDisplayNameOf(pidl, flags, &strret);
 
 	if (hr == S_OK)
-		strret.GetString(pidl->mkid, buffer, MAX_PATH);
+		strret.GetString(pidl->mkid, buffer, COUNTOF(buffer));
 	else {
 		CHECKERROR(hr);
 		*buffer = TEXT('\0');
@@ -369,7 +372,7 @@ void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolde
 		CHECKERROR(sf->GetUIObjectOf(hWnd, 1, &idl, riid, 0, ppvOut));
 }
 
-#if 1	// ILCombine() was missing in previous versions of MinGW.
+#if 0	// ILCombine() was missing in previous versions of MinGW and is not exported from shell32.dll on Windows 2000.
 
  // convert an item id list from relative to absolute (=relative to the desktop) format
 ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
@@ -415,7 +418,10 @@ ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 	return p;
 }
 
-UINT ILGetSize(LPCITEMIDLIST pidl)
+#endif
+
+ // local implementation of ILGetSize() to replace missing export on Windows 2000
+UINT ILGetSize_local(LPCITEMIDLIST pidl)
 {
 	if (!pidl)
 		return 0;
@@ -429,8 +435,6 @@ UINT ILGetSize(LPCITEMIDLIST pidl)
 
 	return l;
 }
-
-#endif
 
 
 #ifndef	_SHFOLDER_H_

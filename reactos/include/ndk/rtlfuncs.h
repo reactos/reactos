@@ -1,26 +1,205 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/rtlfuncs.h
- * PURPOSE:         Prototypes for Runtime Library Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    rtlfuncs.h
+
+Abstract:
+
+    Function definitions for the Run-Time Library
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _RTLFUNCS_H
 #define _RTLFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
+#include <umtypes.h>
 #include <ntnls.h>
-#include "extypes.h"
-#include "rtltypes.h"
+#include <extypes.h>
+#include <rtltypes.h>
 
-/* MACROS ********************************************************************/
+#ifdef NTOS_MODE_USER
 
-/* FIXME: Eventually move the ones in rtltypes.h here... */
+//
+// List Functions
+//
+FORCEINLINE
+VOID
+InitializeListHead(
+    IN PLIST_ENTRY ListHead
+)
+{
+    ListHead->Flink = ListHead->Blink = ListHead;
+}
 
-/*
- * Splay Tree Macros
- */
+FORCEINLINE
+VOID
+InsertHeadList(
+    IN PLIST_ENTRY ListHead,
+    IN PLIST_ENTRY Entry
+)
+{
+    PLIST_ENTRY OldFlink;
+    OldFlink = ListHead->Flink;
+    Entry->Flink = OldFlink;
+    Entry->Blink = ListHead;
+    OldFlink->Blink = Entry;
+    ListHead->Flink = Entry;
+}
+
+FORCEINLINE
+VOID
+InsertTailList(
+    IN PLIST_ENTRY ListHead,
+    IN PLIST_ENTRY Entry
+)
+{
+    PLIST_ENTRY OldBlink;
+    OldBlink = ListHead->Blink;
+    Entry->Flink = ListHead;
+    Entry->Blink = OldBlink;
+    OldBlink->Flink = Entry;
+    ListHead->Blink = Entry;
+}
+
+BOOLEAN
+FORCEINLINE
+IsListEmpty(
+    IN const LIST_ENTRY * ListHead
+)
+{
+    return (BOOLEAN)(ListHead->Flink == ListHead);
+}
+
+FORCEINLINE
+PSINGLE_LIST_ENTRY
+PopEntryList(
+    PSINGLE_LIST_ENTRY ListHead
+)
+{
+    PSINGLE_LIST_ENTRY FirstEntry;
+    FirstEntry = ListHead->Next;
+    if (FirstEntry != NULL) {
+        ListHead->Next = FirstEntry->Next;
+    }
+
+    return FirstEntry;
+}
+
+FORCEINLINE
+VOID
+PushEntryList(
+    PSINGLE_LIST_ENTRY ListHead,
+    PSINGLE_LIST_ENTRY Entry
+)
+{
+    Entry->Next = ListHead->Next;
+    ListHead->Next = Entry;
+}
+
+FORCEINLINE
+BOOLEAN
+RemoveEntryList(
+    IN PLIST_ENTRY  Entry)
+{
+    PLIST_ENTRY OldFlink;
+    PLIST_ENTRY OldBlink;
+
+    OldFlink = Entry->Flink;
+    OldBlink = Entry->Blink;
+    OldFlink->Blink = OldBlink;
+    OldBlink->Flink = OldFlink;
+    return (BOOLEAN)(OldFlink == OldBlink);
+}
+
+FORCEINLINE
+PLIST_ENTRY
+RemoveHeadList(
+    IN PLIST_ENTRY  ListHead)
+{
+    PLIST_ENTRY Flink;
+    PLIST_ENTRY Entry;
+
+    Entry = ListHead->Flink;
+    Flink = Entry->Flink;
+    ListHead->Flink = Flink;
+    Flink->Blink = ListHead;
+    return Entry;
+}
+
+FORCEINLINE
+PLIST_ENTRY
+RemoveTailList(
+    IN PLIST_ENTRY  ListHead)
+{
+    PLIST_ENTRY Blink;
+    PLIST_ENTRY Entry;
+
+    Entry = ListHead->Blink;
+    Blink = Entry->Blink;
+    ListHead->Blink = Blink;
+    Blink->Flink = ListHead;
+    return Entry;
+}
+
+//
+// LUID Macros
+//
+#define RtlEqualLuid(L1, L2) (((L1)->HighPart == (L2)->HighPart) && \
+                              ((L1)->LowPart  == (L2)->LowPart))
+
+#endif
+
+//
+// RTL Splay Tree Functions
+//
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSplay(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlDelete(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+    PRTL_SPLAY_LINKS Links,
+    PRTL_SPLAY_LINKS *Root
+);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
+
 #define RtlIsLeftChild(Links) \
     (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
 
@@ -68,52 +247,9 @@
         _SplayChild->Parent = _SplayParent;             \
     }
 
-/* PROTOTYPES ****************************************************************/
-
-/*
- * Splay Tree Functions
- */
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSplay(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlDelete(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlDeleteNoSplay(
-    PRTL_SPLAY_LINKS Links,
-    PRTL_SPLAY_LINKS *Root
-);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
-
-/*
- * Error and Exception Functions
- */
+//
+// Error and Exception Functions
+//
 NTSYSAPI
 PVOID
 NTAPI
@@ -185,10 +321,9 @@ RtlUnwind(
     IN PVOID ReturnValue
 );
 
-/*
- * Heap Functions
- */
-
+//
+// Heap Functions
+//
 NTSYSAPI
 PVOID
 NTAPI
@@ -273,10 +408,9 @@ RtlValidateHeap(
 
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
-
-/*
- * Security Functions
- */
+//
+// Security Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -457,16 +591,16 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCreateSecurityDescriptor(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    ULONG Revision
+    OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN ULONG Revision
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCreateSecurityDescriptorRelative(
-    PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
-    ULONG Revision
+    OUT PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
+    IN ULONG Revision
 );
 
 NTSYSAPI
@@ -519,9 +653,9 @@ RtlGetAce(
 NTSTATUS
 NTAPI
 RtlGetControlSecurityDescriptor(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PSECURITY_DESCRIPTOR_CONTROL Control,
-    PULONG Revision
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    OUT PSECURITY_DESCRIPTOR_CONTROL Control,
+    OUT PULONG Revision
 );
 
 NTSYSAPI
@@ -538,10 +672,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetSaclSecurityDescriptor(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PBOOLEAN SaclPresent,
-    PACL* Sacl,
-    PBOOLEAN SaclDefaulted
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    OUT PBOOLEAN SaclPresent,
+    OUT PACL* Sacl,
+    OUT PBOOLEAN SaclDefaulted
 );
 
 NTSYSAPI
@@ -566,8 +700,8 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlGetSecurityDescriptorRMControl(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PUCHAR RMControl
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    OUT PUCHAR RMControl
 );
 
 NTSYSAPI
@@ -598,6 +732,14 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlLengthSid(IN PSID Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMakeSelfRelativeSD(
+    IN PSECURITY_DESCRIPTOR AbsoluteSD,
+    OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
+    IN OUT PULONG BufferLength);
 
 NTSYSAPI
 VOID
@@ -645,6 +787,15 @@ RtlSelfRelativeToAbsoluteSD2(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlSetAttributesSecurityDescriptor(
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN SECURITY_DESCRIPTOR_CONTROL Control,
+    OUT PULONG Revision
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlSetControlSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
@@ -655,10 +806,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSetDaclSecurityDescriptor (
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    BOOLEAN DaclPresent,
-    PACL Dacl,
-    BOOLEAN DaclDefaulted
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN BOOLEAN DaclPresent,
+    IN PACL Dacl,
+    IN BOOLEAN DaclDefaulted
 );
 
 NTSYSAPI
@@ -703,8 +854,8 @@ NTSYSAPI
 VOID
 NTAPI
 RtlSetSecurityDescriptorRMControl(
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PUCHAR RMControl
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PUCHAR RMControl
 );
 
 NTSYSAPI
@@ -787,9 +938,9 @@ RtlSetSecurityObject(
     IN HANDLE Token
 );
 
-/*
- * Single-Character Functions
- */
+//
+// Single-Character Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -853,7 +1004,13 @@ RtlCharToInteger(
     PULONG Value
 );
 
-#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || ((defined(_M_AMD64) || defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
+//
+// Byte Swap Functions
+//
+#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || \
+    ((defined(_M_AMD64) || \
+     defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
+
 unsigned short __cdecl _byteswap_ushort(unsigned short);
 unsigned long  __cdecl _byteswap_ulong (unsigned long);
 unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
@@ -863,6 +1020,7 @@ unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
 #define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
 #define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
+
 #else
 
 USHORT
@@ -879,20 +1037,22 @@ RtlUlonglongByteSwap(IN ULONGLONG Source);
 
 #endif
 
-/*
- * Unicode->Ansi String Functions
- */
+//
+// Unicode->Ansi String Functions
+//
 NTSYSAPI
 ULONG
 NTAPI
 RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString);
 
 #ifdef NTOS_MODE_USER
+
 #define RtlUnicodeStringToAnsiSize(STRING) (                  \
     NLS_MB_CODE_PAGE_TAG ?                                    \
     RtlxUnicodeStringToAnsiSize(STRING) :                     \
     ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
 )
+
 #endif
 
 NTSYSAPI
@@ -904,9 +1064,9 @@ RtlUnicodeStringToAnsiString(
     BOOLEAN AllocateDestinationString
 );
 
-/*
- * Unicode->OEM String Functions
- */
+//
+// Unicode->OEM String Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -951,14 +1111,17 @@ NTAPI
 RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString);
 
 #ifdef NTOS_MODE_USER
-#define RtlUnicodeStringToOemSize(STRING) (                   \
-    NLS_MB_OEM_CODE_PAGE_TAG ?                                \
-    RtlxUnicodeStringToOemSize(STRING) :                      \
-    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
+
+#define RtlUnicodeStringToOemSize(STRING) (                             \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                                          \
+    RtlxUnicodeStringToOemSize(STRING) :                                \
+    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR)           \
 )
-#define RtlUnicodeStringToCountedOemSize(STRING) (                    \
-    (ULONG)(RtlUnicodeStringToOemSize(STRING) - sizeof(ANSI_NULL)) \
+
+#define RtlUnicodeStringToCountedOemSize(STRING) (                      \
+    (ULONG)(RtlUnicodeStringToOemSize(STRING) - sizeof(ANSI_NULL))      \
 )
+
 #endif
 
 NTSYSAPI
@@ -972,9 +1135,9 @@ RtlUnicodeToOemN(
     ULONG UnicodeSize
 );
 
-/*
- * Unicode->MultiByte String Functions
- */
+//
+// Unicode->MultiByte String Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1011,20 +1174,9 @@ ULONG
 NTAPI
 RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString);
 
-/*
- * OEM to Unicode Functions
- */
-#ifdef NTOS_MODE_USER
-#define RtlOemStringToUnicodeSize(STRING) (                  \
-    NLS_MB_OEM_CODE_PAGE_TAG ?                               \
-    RtlxOemStringToUnicodeSize(STRING) :                     \
-    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
-)
-#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
-    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
-)
-#endif
-
+//
+// OEM to Unicode Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1045,9 +1197,23 @@ RtlOemToUnicodeN(
     ULONG BytesInOemString
 );
 
-/*
- * Ansi->Unicode String Functions
- */
+#ifdef NTOS_MODE_USER
+
+#define RtlOemStringToUnicodeSize(STRING) (                             \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                                          \
+    RtlxOemStringToUnicodeSize(STRING) :                                \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)              \
+)
+
+#define RtlOemStringToCountedUnicodeSize(STRING) (                      \
+    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL))   \
+)
+
+#endif
+
+//
+// Ansi->Unicode String Functions
+//
 NTSYSAPI
 ULONG
 NTAPI
@@ -1065,11 +1231,13 @@ RtlAnsiStringToUnicodeString(
 );
 
 #ifdef NTOS_MODE_USER
-#define RtlAnsiStringToUnicodeSize(STRING) (                 \
-    NLS_MB_CODE_PAGE_TAG ?                                   \
-    RtlxAnsiStringToUnicodeSize(STRING) :                    \
-    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
+
+#define RtlAnsiStringToUnicodeSize(STRING) (                        \
+    NLS_MB_CODE_PAGE_TAG ?                                          \
+    RtlxAnsiStringToUnicodeSize(STRING) :                           \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)          \
 )
+
 #endif
 
 NTSYSAPI
@@ -1080,9 +1248,9 @@ RtlCreateUnicodeStringFromAsciiz(
     IN PCSZ Source
 );
 
-/*
- * Unicode String Functions
- */
+//
+// Unicode String Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1125,6 +1293,7 @@ RtlCreateUnicodeString(
 );
 
 #ifdef NTOS_MODE_USER
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1133,6 +1302,7 @@ RtlDowncaseUnicodeString(
     IN PCUNICODE_STRING UniSource,
     IN BOOLEAN AllocateDestinationString
 );
+
 #endif
 
 NTSYSAPI
@@ -1220,9 +1390,9 @@ RtlUnicodeStringToInteger(
     PULONG Value
 );
 
-/*
- * Ansi String Functions
- */
+//
+// Ansi String Functions
+//
 NTSYSAPI
 VOID
 NTAPI
@@ -1236,17 +1406,17 @@ RtlInitAnsiString(
     PCSZ SourceString
 );
 
-/*
- * OEM String Functions
- */
+//
+// OEM String Functions
+//
 NTSYSAPI
 VOID
 NTAPI
 RtlFreeOemString(IN POEM_STRING OemString);
 
-/*
- * MultiByte->Unicode String Functions
- */
+//
+// MultiByte->Unicode String Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1267,9 +1437,9 @@ RtlMultiByteToUnicodeSize(
     ULONG MbSize
 );
 
-/*
- * Atom Functions
- */
+//
+// Atom Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1315,15 +1485,23 @@ RtlQueryAtomInAtomTable(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlPinAtomInAtomTable(
+    IN PRTL_ATOM_TABLE AtomTable,
+    IN RTL_ATOM Atom
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlLookupAtomInAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN PWSTR AtomName,
     OUT PRTL_ATOM Atom
 );
 
-/*
- * Memory Functions
- */
+//
+// Memory Functions
+//
 NTSYSAPI
 VOID
 NTAPI
@@ -1333,9 +1511,9 @@ RtlFillMemoryUlong(
     IN ULONG Fill
 );
 
-/*
- * Process Management Functions
- */
+//
+// Process Management Functions
+//
 NTSYSAPI
 VOID
 NTAPI
@@ -1434,9 +1612,11 @@ RtlSetProcessIsCritical(
     IN BOOLEAN IsWinlogon
 );
 
-/*
- * Environment/Path Functions
- */
+#define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
+
+//
+// Environment/Path Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1476,10 +1656,10 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlDosPathNameToNtPathName_U(
-    PWSTR DosName,
-    PUNICODE_STRING NtName,
-    PWSTR *ShortName,
-    PCURDIR CurrentDirectory
+    IN PCWSTR DosPathName,
+    OUT PUNICODE_STRING NtPathName,
+    OUT PCWSTR *NtFileNamePart,
+    OUT CURDIR *DirectoryInfo
 );
 
 NTSYSAPI
@@ -1542,9 +1722,9 @@ RtlSetEnvironmentVariable(
     PUNICODE_STRING Value
 );
 
-/*
- * Critical Section/Resource Functions
- */
+//
+// Critical Section/Resource Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1653,9 +1833,9 @@ RtlReleaseResource(
     IN PRTL_RESOURCE Resource
 );
 
-/*
- * Compression Functions
- */
+//
+// Compression Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1691,11 +1871,11 @@ RtlGetCompressionWorkSpaceSize(
     OUT PULONG CompressFragmentWorkSpaceSize
 );
 
-/*
- * Debug Info Functions
- */
+//
+// Debug Info Functions
+//
 NTSYSAPI
-PDEBUG_BUFFER
+PRTL_DEBUG_BUFFER
 NTAPI
 RtlCreateQueryDebugBuffer(
     IN ULONG Size,
@@ -1705,7 +1885,7 @@ RtlCreateQueryDebugBuffer(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
+RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_BUFFER DebugBuffer);
 
 NTSYSAPI
 NTSTATUS
@@ -1713,12 +1893,12 @@ NTAPI
 RtlQueryProcessDebugInformation(
     IN ULONG ProcessId,
     IN ULONG DebugInfoClassMask,
-    IN OUT PDEBUG_BUFFER DebugBuffer
+    IN OUT PRTL_DEBUG_BUFFER DebugBuffer
 );
 
-/*
- * Bitmap Functions
- */
+//
+// Bitmap Functions
+//
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -1782,9 +1962,9 @@ RtlSetBits (
     IN ULONG NumberToSet
 );
 
-/*
- * Timer Functions
- */
+//
+// Timer Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1835,9 +2015,9 @@ NTSTATUS
 NTAPI
 RtlDeleteTimerQueue(HANDLE TimerQueue);
 
-/*
- * Debug Functions
- */
+//
+// Debug Functions
+//
 ULONG
 __cdecl
 DbgPrint(
@@ -1849,9 +2029,9 @@ VOID
 NTAPI
 DbgBreakPoint(VOID);
 
-/*
- * Handle Table Functions
- */
+//
+// Handle Table Functions
+//
 NTSYSAPI
 PRTL_HANDLE_TABLE_ENTRY
 NTAPI
@@ -1899,9 +2079,9 @@ RtlIsValidIndexHandle(
     OUT PRTL_HANDLE_TABLE_ENTRY *Handle
 );
 
-/*
- * PE Functions
- */
+//
+// PE Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1929,7 +2109,7 @@ RtlImageDirectoryEntryToData(
 );
 
 NTSYSAPI
-ULONG
+PVOID
 NTAPI
 RtlImageRvaToVa(
     PIMAGE_NT_HEADERS NtHeader,
@@ -1952,9 +2132,9 @@ RtlImageRvaToSection(
     ULONG Rva
 );
 
-/*
- * Registry Functions
- */
+//
+// Registry Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2009,9 +2189,9 @@ RtlWriteRegistryValue(
     ULONG ValueLength
 );
 
-/*
- * NLS Functions
- */
+//
+// NLS Functions
+//
 NTSYSAPI
 VOID
 NTAPI
@@ -2035,14 +2215,17 @@ VOID
 NTAPI
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
 
-/*
- * Misc conversion functions
- */
 #if defined(NTOS_MODE_USER) && !defined(NO_RTL_INLINES)
+
+//
+// Misc conversion functions
+//
 static __inline
 LARGE_INTEGER
 NTAPI_INLINE
-RtlConvertLongToLargeInteger(LONG SignedInteger)
+RtlConvertLongToLargeInteger(
+    LONG SignedInteger
+)
 {
     LARGE_INTEGER Result;
 
@@ -2055,7 +2238,8 @@ LARGE_INTEGER
 NTAPI_INLINE
 RtlEnlargedIntegerMultiply(
     LONG Multiplicand,
-    LONG Multiplier)
+    LONG Multiplier
+)
 {
     LARGE_INTEGER Product;
 
@@ -2069,7 +2253,8 @@ NTAPI_INLINE
 RtlEnlargedUnsignedDivide(
     IN ULARGE_INTEGER Dividend,
     IN ULONG Divisor,
-    IN PULONG Remainder OPTIONAL)
+    IN PULONG Remainder OPTIONAL
+)
 {
     ULONG Quotient;
 
@@ -2086,7 +2271,8 @@ LARGE_INTEGER
 NTAPI_INLINE
 RtlEnlargedUnsignedMultiply(
     ULONG Multiplicand,
-    ULONG Multiplier)
+    ULONG Multiplier
+)
 {
     LARGE_INTEGER Product;
 
@@ -2100,9 +2286,9 @@ ULONG
 NTAPI
 RtlUniform(PULONG Seed);
 
-/*
- * Network Functions
- */
+//
+// Network Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2113,9 +2299,48 @@ RtlIpv4StringToAddressW(
     OUT PULONG IpAddr
 );
 
-/*
- * Time Functions
- */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressA(
+    IN LPSTR Name,
+    OUT PULONG Unknown,
+    OUT PVOID IpAddr
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressW(
+    IN LPWSTR Name,
+    OUT PULONG Unknown,
+    OUT PVOID IpAddr
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressExA(
+    IN LPSTR AddressName,
+    IN PVOID Address,
+    IN PULONG ScopeId,
+    IN PUSHORT Port
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIpv6StringToAddressExW(
+    IN LPWSTR AddressName,
+    IN PVOID Address,
+    IN PULONG ScopeId,
+    IN PUSHORT Port
+);
+
+
+//
+// Time Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2150,9 +2375,9 @@ RtlTimeToTimeFields(
     PTIME_FIELDS TimeFields
 );
 
-/*
- * Version Functions
- */
+//
+// Version Functions
+//
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2172,28 +2397,4 @@ BOOLEAN
 NTAPI
 RtlGetNtProductType(OUT PNT_PRODUCT_TYPE ProductType);
 
-static __inline struct _PEB* NtCurrentPeb (void) 
-{
-    struct _PEB * pPeb;
-
-#if defined(__GNUC__)
-
-    __asm__ __volatile__
-    (
-      "movl %%fs:0x30, %0\n" /* fs:30h == Teb->Peb */
-      : "=r" (pPeb) /* can't have two memory operands */
-      : /* no inputs */
-    );
-
-#elif defined(_MSC_VER)
-
-    __asm mov eax, fs:0x30;
-    __asm mov pPeb, eax
-
-#else
-#error Unknown compiler for inline assembler
-#endif
-
-    return pPeb;
-}
 #endif

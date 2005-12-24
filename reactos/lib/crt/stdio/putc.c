@@ -24,11 +24,7 @@
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include "precomp.h"
-#include <stdio.h>
-#include <wchar.h>
-#include <errno.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 // putc can be a macro
 #undef putc

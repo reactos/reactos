@@ -59,10 +59,12 @@ StubbedComponent::ProcessXMLSubElement ( const XMLElement& e )
 		subs_invalid = false;
 	}
 	if ( subs_invalid && e.subElements.size () > 0 )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			e.location,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
+	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXMLSubElement ( *e.subElements[i] );
 }
@@ -83,7 +85,7 @@ StubbedSymbol::ProcessXML ()
 {
 	if ( node.value.size () == 0 )
 	{
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"<symbol> is empty." );
 	}

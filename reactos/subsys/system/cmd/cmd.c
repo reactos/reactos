@@ -176,10 +176,45 @@ WORD wDefColor;           /* default color */
 #endif
 
 /*
- *  is character a delimeter when used on first word?
+ * convert
+ *
+ * insert commas into a number
+ */
+INT
+ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperator)
+{
+	TCHAR temp[32];
+	INT c = 0;
+	INT n = 0;
+
+	if (num.QuadPart == 0)
+	{
+		des[0] = _T('0');
+		des[1] = _T('\0');
+		n = 1;
+	}
+	else
+	{
+		temp[31] = 0;
+		while (num.QuadPart > 0)
+		{
+			if ((((c + 1) % (nNumberGroups + 1)) == 0) && (bPutSeperator))
+				temp[30 - c++] = cThousandSeparator;
+                        temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
+			num.QuadPart /= 10;
+		}
+
+		for (n = 0; n <= c; n++)
+			des[n] = temp[31 - c + n];
+	}
+
+	return n;
+}
+
+/*
+ * is character a delimeter when used on first word?
  *
  */
-
 static BOOL IsDelimiter (TCHAR c)
 {
 	return (c == _T('/') || c == _T('=') || c == _T('\0') || _istspace (c));
@@ -318,6 +353,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	if (first == NULL)
 	{
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -326,6 +362,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	{
 		free (first);
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -335,6 +372,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		free (first);
 		free (rest);
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -345,6 +383,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		free (rest);
 		free (full);
 		error_out_of_memory();
+                nErrorLevel = 1;
 		return ;
 	}
 
@@ -415,7 +454,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		free (rest);
 		free (full);
 		free (szFullName);
-
+                nErrorLevel = 1;
 		return;
 	}
 
@@ -428,6 +467,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 			free (rest);
 			free (full);
 			free (szFullName);
+                        nErrorLevel = 1;
 			return;
 
 	}
@@ -490,6 +530,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 				GetExitCodeProcess (prci.hProcess, &dwExitCode);
 				nErrorLevel = (INT)dwExitCode;
 			}
+                        else
+                        {
+                            nErrorLevel = 0;
+                        }
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
 		}
@@ -505,7 +549,12 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 				DebugPrintf (_T("[ShellExecute failed!: %s]\n"), full);
 #endif
 				error_bad_command ();
+                                nErrorLevel = 1;
 			}
+                        else
+                        {
+                                nErrorLevel = 0;
+                        }
 		}
 		// restore console mode
 		SetConsoleMode (
@@ -597,9 +646,12 @@ DoCommand (LPTSTR line)
 		}
 		*/
 
-		/* Skip over whitespace to rest of line */
-		while (_istspace (*rest))
+		/* Skip over whitespace to rest of line, exclude 'echo' command */
+		if (_tcsicmp (com, _T("echo"))) 
+		{
+			while (_istspace (*rest))
 			rest++;
+		}
 
 		/* Scan internal command table */
 		for (cmdptr = cmds;; cmdptr++)
@@ -643,8 +695,6 @@ DoCommand (LPTSTR line)
 			}
 		}
 	}
-	/* Just in case a CTRL+C slipped through a command */
-	bCtrlBreak = FALSE;
 	free(com);
 }
 
@@ -1295,7 +1345,7 @@ ProcessInput (BOOL bFlag)
 		if (!(ip = ReadBatchLine (&bEchoThisLine)))
 		{
 			if (bFlag)
-				return 0;
+				return nErrorLevel;
 
 			ReadCommand (readline, CMDLINE_LENGTH);
 			ip = readline;
@@ -1319,11 +1369,11 @@ ProcessInput (BOOL bFlag)
 			{
 				UINT envNameLen;
 				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
-				if ( !envVal )
-					return 1;
-				ip += envNameLen;
-				cp = _stpcpy ( cp, envVal );
-				continue;
+				if ( envVal )
+				{
+					ip += envNameLen;
+					cp = _stpcpy ( cp, envVal );
+				}
 			}
 
 			if (_istcntrl (*ip))
@@ -1411,7 +1461,7 @@ ProcessInput (BOOL bFlag)
 			ConOutPuts (commandline);
 		}
 
-		if (*commandline)
+		if (!CheckCtrlBreak(BREAK_INPUT) && *commandline)
 		{
 			ParseCommandLine (commandline);
 			if (bEcho && !bIgnoreEcho && (!bIsBatch || bEchoThisLine))
@@ -1421,7 +1471,7 @@ ProcessInput (BOOL bFlag)
 	}
 	while (!bCanExit || !bExit);
 
-	return 0;
+	return nErrorLevel;
 }
 
 
@@ -1431,9 +1481,11 @@ ProcessInput (BOOL bFlag)
 BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 {
 
+	DWORD			dwWritten;
+	INPUT_RECORD	rec;
 	static BOOL SelfGenerated = FALSE;
-
-	if ((dwCtrlType != CTRL_C_EVENT) &&
+    
+ 	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
 	{
 		return FALSE;
@@ -1454,6 +1506,22 @@ BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 		return TRUE;
 	}
 
+    
+    rec.EventType = KEY_EVENT;
+    rec.Event.KeyEvent.bKeyDown = TRUE;
+    rec.Event.KeyEvent.wRepeatCount = 1;
+    rec.Event.KeyEvent.wVirtualKeyCode = _T('C');
+    rec.Event.KeyEvent.wVirtualScanCode = _T('C') - 35;
+    rec.Event.KeyEvent.uChar.AsciiChar = _T('C');
+    rec.Event.KeyEvent.uChar.UnicodeChar = _T('C');
+    rec.Event.KeyEvent.dwControlKeyState = RIGHT_CTRL_PRESSED; 
+
+    WriteConsoleInput(
+        hIn,
+        &rec,
+        1,
+		&dwWritten);
+        
 	bCtrlBreak = TRUE;
 	/* FIXME: Handle batch files */
 

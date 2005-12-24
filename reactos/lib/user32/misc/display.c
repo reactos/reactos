@@ -61,7 +61,7 @@ EnumDisplayDevicesA(
       return FALSE;
     }
 
-  DisplayDeviceW.cb = lpDisplayDevice->cb;
+  DisplayDeviceW.cb = sizeof(DISPLAY_DEVICEW);  
   rc = NtUserEnumDisplayDevices (
     &Device,
     iDevNum,

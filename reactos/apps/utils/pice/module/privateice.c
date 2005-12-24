@@ -45,7 +45,7 @@ Copyright notice:
 #include <linux/string.h>
 */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <debug.h>
 #include <rosrtl/string.h>
 

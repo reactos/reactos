@@ -348,7 +348,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
           {
              ULONG AtomNameLen = wcslen(AtomName);
              
-             if (AtomNameLen > MAX_ATOM_LEN)
+             if (AtomNameLen > RTL_MAXIMUM_ATOM_LENGTH)
              {
                 Status = STATUS_INVALID_PARAMETER;
                 goto end;

@@ -7,7 +7,7 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"msgina.dll\0"
 #include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDI_LOGOFFICON ICON "resources/ico_logoff.ico"
 

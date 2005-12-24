@@ -489,12 +489,19 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 
   RtlAcquirePebLock ();
 
+  /* FIXME - not thread-safe */
   if (lpLocalStartupInfo == NULL)
     {
 	/* create new local startup info (ansi) */
 	lpLocalStartupInfo = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                      0,
 	                                      sizeof(STARTUPINFOA));
+        if (lpLocalStartupInfo == NULL)
+        {
+            RtlReleasePebLock ();
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return;
+        }
 
 	lpLocalStartupInfo->cb = sizeof(STARTUPINFOA);
 

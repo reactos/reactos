@@ -10,11 +10,7 @@
  *              28/12/98: Created
  */
 
-#include <stdio.h>
-#include <conio.h>
-#include <internal/console.h>
-
-
+#include <precomp.h>
 
 int char_avail = 0;
 int ungot_char = 0;

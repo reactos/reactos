@@ -27,7 +27,7 @@
  * $Id$
  */
 
-#include "ddk/ntddk.h"
+#include "ntddk.h"
 #include "jsint.h"
 #include "jsconfig.h"
 

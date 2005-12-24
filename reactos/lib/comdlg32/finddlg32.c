@@ -440,9 +440,8 @@ cleanup:
 
 /***********************************************************************
  *	FindTextA 				[COMDLG32.@]
- *	RETURNS
- *		Window handle to created dialog: Success
- *		NULL: Failure
+ *
+ * See FindTextW.
  */
 HWND WINAPI FindTextA(
 	LPFINDREPLACEA pfr	/* [in] Find/replace structure*/
@@ -464,9 +463,8 @@ HWND WINAPI FindTextA(
 
 /***********************************************************************
  *	ReplaceTextA 				[COMDLG32.@]
- *	RETURNS
- *		Window handle to created dialog: Success
- *		NULL: Failure
+ *
+ * See ReplaceTextW.
  */
 HWND WINAPI ReplaceTextA(
 	LPFINDREPLACEA pfr	/* [in] Find/replace structure*/
@@ -489,6 +487,9 @@ HWND WINAPI ReplaceTextA(
 
 /***********************************************************************
  *	FindTextW 				[COMDLG32.@]
+ *
+ * Create a modeless find-text dialog box.
+ *
  *	RETURNS
  *		Window handle to created dialog: Success
  *		NULL: Failure
@@ -520,6 +521,9 @@ HWND WINAPI FindTextW(
 
 /***********************************************************************
  *	ReplaceTextW 				[COMDLG32.@]
+ *
+ * Create a modeless replace-text dialog box.
+ *
  *	RETURNS
  *		Window handle to created dialog: Success
  *		NULL: Failure

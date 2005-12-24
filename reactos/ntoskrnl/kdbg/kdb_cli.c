@@ -379,28 +379,28 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
                 "   ECX  0x%08x   EDX  0x%08x\n"
                 "   ESI  0x%08x   EDI  0x%08x\n"
                 "   EBP  0x%08x\n",
-                Tf->Cs & 0xFFFF, Tf->Eip,
-                Tf->Ss, Tf->Esp,
+                Tf->SegCs & 0xFFFF, Tf->Eip,
+                Tf->HardwareSegSs, Tf->HardwareEsp,
                 Tf->Eax, Tf->Ebx,
                 Tf->Ecx, Tf->Edx,
                 Tf->Esi, Tf->Edi,
                 Tf->Ebp);
-      KdbpPrint("EFLAGS  0x%08x ", Tf->Eflags);
+      KdbpPrint("EFLAGS  0x%08x ", Tf->EFlags);
       for (i = 0; i < 32; i++)
       {
          if (i == 1)
          {
-            if ((Tf->Eflags & (1 << 1)) == 0)
+            if ((Tf->EFlags & (1 << 1)) == 0)
                KdbpPrint(" !BIT1");
          }
          else if (i == 12)
          {
-            KdbpPrint(" IOPL%d", (Tf->Eflags >> 12) & 3);
+            KdbpPrint(" IOPL%d", (Tf->EFlags >> 12) & 3);
          }
          else if (i == 13)
          {
          }
-         else if ((Tf->Eflags & (1 << i)) != 0)
+         else if ((Tf->EFlags & (1 << i)) != 0)
             KdbpPrint(EflagsBits[i]);
       }
       KdbpPrint("\n");
@@ -461,18 +461,18 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
    else if (Argv[0][0] == 's') /* sregs */
    {
       KdbpPrint("CS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                Tf->Cs & 0xffff, (Tf->Cs & 0xffff) >> 3,
-                (Tf->Cs & (1 << 2)) ? 'L' : 'G', Tf->Cs & 3);
+                Tf->SegCs & 0xffff, (Tf->SegCs & 0xffff) >> 3,
+                (Tf->SegCs & (1 << 2)) ? 'L' : 'G', Tf->SegCs & 3);
       KdbpPrint("DS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                Tf->Ds, Tf->Ds >> 3, (Tf->Ds & (1 << 2)) ? 'L' : 'G', Tf->Ds & 3);
+                Tf->SegDs, Tf->SegDs >> 3, (Tf->SegDs & (1 << 2)) ? 'L' : 'G', Tf->SegDs & 3);
       KdbpPrint("ES  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                Tf->Es, Tf->Es >> 3, (Tf->Es & (1 << 2)) ? 'L' : 'G', Tf->Es & 3);
+                Tf->SegEs, Tf->SegEs >> 3, (Tf->SegEs & (1 << 2)) ? 'L' : 'G', Tf->SegEs & 3);
       KdbpPrint("FS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                Tf->Fs, Tf->Fs >> 3, (Tf->Fs & (1 << 2)) ? 'L' : 'G', Tf->Fs & 3);
+                Tf->SegFs, Tf->SegFs >> 3, (Tf->SegFs & (1 << 2)) ? 'L' : 'G', Tf->SegFs & 3);
       KdbpPrint("GS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                Tf->Gs, Tf->Gs >> 3, (Tf->Gs & (1 << 2)) ? 'L' : 'G', Tf->Gs & 3);
+                Tf->SegGs, Tf->SegGs >> 3, (Tf->SegGs & (1 << 2)) ? 'L' : 'G', Tf->SegGs & 3);
       KdbpPrint("SS  0x%04x  Index 0x%04x  %cDT RPL%d\n",
-                Tf->Ss, Tf->Ss >> 3, (Tf->Ss & (1 << 2)) ? 'L' : 'G', Tf->Ss & 3);
+                Tf->HardwareSegSs, Tf->HardwareSegSs >> 3, (Tf->HardwareSegSs & (1 << 2)) ? 'L' : 'G', Tf->HardwareSegSs & 3);
    }
    else /* dregs */
    {
@@ -940,10 +940,10 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
 
          if (Thread->Tcb.TrapFrame != NULL)
          {
-            if (Thread->Tcb.TrapFrame->PreviousMode == KernelMode)
+            if (Thread->Tcb.TrapFrame->PreviousPreviousMode == KernelMode)
                Esp = (PULONG)Thread->Tcb.TrapFrame->TempEsp;
             else
-               Esp = (PULONG)Thread->Tcb.TrapFrame->Esp;
+               Esp = (PULONG)Thread->Tcb.TrapFrame->HardwareEsp;
             Ebp = (PULONG)Thread->Tcb.TrapFrame->Ebp;
             Eip = Thread->Tcb.TrapFrame->Eip;
          }
@@ -1466,35 +1466,15 @@ KdbpCmdTss(ULONG Argc, PCHAR Argv[])
    KTSS *Tss = KeGetCurrentKPCR()->TSS;
 
    KdbpPrint("Current TSS is at 0x%08x.\n", (INT)Tss);
-   KdbpPrint("  PreviousTask:  0x%08x\n"
-             "  Ss0:Esp0:      0x%04x:0x%08x\n"
-             "  Ss1:Esp1:      0x%04x:0x%08x\n"
-             "  Ss2:Esp2:      0x%04x:0x%08x\n"
-             "  Cr3:           0x%08x\n"
-             "  Eip:           0x%08x\n"
-             "  Eflags:        0x%08x\n"
-             "  Eax:           0x%08x\n"
-             "  Ecx:           0x%08x\n"
-             "  Edx:           0x%08x\n"
-             "  Ebx:           0x%08x\n"
-             "  Esp:           0x%08x\n"
-             "  Ebp:           0x%08x\n"
-             "  Esi:           0x%08x\n"
-             "  Edi:           0x%08x\n"
+   KdbpPrint("  Eip:           0x%08x\n"
              "  Es:            0x%04x\n"
              "  Cs:            0x%04x\n"
              "  Ss:            0x%04x\n"
              "  Ds:            0x%04x\n"
              "  Fs:            0x%04x\n"
              "  Gs:            0x%04x\n"
-             "  Ldt:           0x%04x\n"
-             "  Trap:          0x%04x\n"
              "  IoMapBase:     0x%04x\n",
-             Tss->PreviousTask, Tss->Ss0, Tss->Esp0, Tss->Ss1, Tss->Esp1,
-             Tss->Ss2, Tss->Esp2, Tss->Cr3, Tss->Eip, Tss->Eflags, Tss->Eax,
-             Tss->Ecx, Tss->Edx, Tss->Ebx, Tss->Esp, Tss->Ebp, Tss->Esi,
-             Tss->Edi, Tss->Es, Tss->Cs, Tss->Ss, Tss->Ds, Tss->Fs, Tss->Gs,
-             Tss->Ldt, Tss->Trap, Tss->IoMapBase);
+             Tss->Eip, Tss->Es, Tss->Cs, Tss->Ds, Tss->Fs, Tss->Gs, Tss->IoMapBase);
    return TRUE;
 }
 

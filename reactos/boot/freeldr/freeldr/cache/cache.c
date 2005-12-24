@@ -17,14 +17,9 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include <freeldr.h>
-#include "cm.h"
-#include <mm.h>
-#include <disk.h>
-#include <machine.h>
-#include <cache.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +162,7 @@ BOOL CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount
 		RtlCopyMemory(Buffer,
 			(PVOID)((ULONG_PTR)CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)),
 			(CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
-		DbgPrint((DPRINT_CACHE, "1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, (CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector)));
+		DbgPrint((DPRINT_CACHE, "1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, ((ULONG_PTR)CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector)));
 
 		//
 		// Update the buffer address

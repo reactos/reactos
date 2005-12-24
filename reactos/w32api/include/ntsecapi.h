@@ -125,16 +125,6 @@ extern "C" {
 
 #if !defined(_NTDEF_H) && !defined(_SUBAUTH_H)
 typedef LONG NTSTATUS, *PNTSTATUS;
-typedef struct _UNICODE_STRING {
-  USHORT Length;
-  USHORT MaximumLength;
-  PWSTR Buffer;
-} UNICODE_STRING, *PUNICODE_STRING;
-typedef struct _STRING {
-  USHORT Length;
-  USHORT MaximumLength;
-  PCHAR Buffer;
-} STRING, *PSTRING;
 #endif
 
 #if defined (_NTDEF_H)
@@ -383,6 +373,12 @@ typedef struct _LSA_TRANSLATED_NAME {
   LSA_UNICODE_STRING Name;
   LONG DomainIndex;
 } LSA_TRANSLATED_NAME, *PLSA_TRANSLATED_NAME;
+
+#ifndef _NTDEF_
+typedef LSA_UNICODE_STRING UNICODE_STRING, *PUNICODE_STRING;
+typedef LSA_STRING STRING, *PSTRING ;
+#endif
+
 typedef struct _MSV1_0_INTERACTIVE_LOGON {
   MSV1_0_LOGON_SUBMIT_TYPE MessageType;
   UNICODE_STRING LogonDomainName;

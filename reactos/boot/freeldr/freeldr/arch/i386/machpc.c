@@ -17,16 +17,10 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "mm.h"
-#include "arch.h"
-#include "machine.h"
-#include "machpc.h"
-#include "rtl.h"
-#include "i386.h"
+#include <freeldr.h>
 
 VOID
-PcMachInit(char *CmdLine)
+PcMachInit(const char *CmdLine)
 {
   EnableA20();
 

@@ -51,6 +51,7 @@ LIST_ENTRY GroupListHead;
 LIST_ENTRY ServiceListHead;
 
 static RTL_RESOURCE DatabaseLock;
+static DWORD dwResumeCount = 1;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -99,6 +100,35 @@ ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName)
                                            SERVICE,
                                            ServiceListEntry);
         if (_wcsicmp(CurrentService->lpDisplayName, lpDisplayName) == 0)
+        {
+            DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
+            return CurrentService;
+        }
+
+        ServiceEntry = ServiceEntry->Flink;
+    }
+
+    DPRINT("Couldn't find a matching service\n");
+
+    return NULL;
+}
+
+
+PSERVICE
+ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    DPRINT("ScmGetServiceEntryByResumeCount() called\n");
+
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+        if (CurrentService->dwResumeCount > dwResumeCount)
         {
             DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
             return CurrentService;
@@ -232,6 +262,9 @@ ScmCreateNewServiceRecord(LPWSTR lpServiceName,
     wcscpy(lpService->szServiceName, lpServiceName);
     lpService->lpServiceName = lpService->szServiceName;
     lpService->lpDisplayName = lpService->lpServiceName;
+
+    /* Set the resume count */
+    lpService->dwResumeCount = dwResumeCount++;
 
     /* Append service entry */
     InsertTailList(&ServiceListHead,
@@ -404,6 +437,32 @@ ScmReadGroupList(VOID)
 }
 
 
+VOID
+ScmDeleteMarkedServices(VOID)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+        ServiceEntry = ServiceEntry->Flink;
+
+        if (CurrentService->bDeleted == TRUE)
+        {
+            DPRINT1("Delete service: %S\n", CurrentService->lpServiceName);
+
+            /* FIXME: Delete the registry keys */
+
+            /* FIXME: Delete the service record from the list */
+
+        }
+    }
+}
+
+
 DWORD
 ScmCreateServiceDatabase(VOID)
 {
@@ -474,7 +533,8 @@ ScmCreateServiceDatabase(VOID)
 
     RegCloseKey(hServicesKey);
 
-    /* FIXME: Delete services that are marked for delete */
+    /* Delete services that are marked for delete */
+    ScmDeleteMarkedServices();
 
     DPRINT("ScmCreateServiceDatabase() done\n");
 
@@ -836,8 +896,6 @@ static NTSTATUS
 ScmStartService(PSERVICE Service,
                 PSERVICE_GROUP Group)
 {
-    WCHAR szDriverPath[MAX_PATH];
-    UNICODE_STRING DriverPath;
     NTSTATUS Status;
 
     DPRINT("ScmStartService() called\n");
@@ -845,21 +903,12 @@ ScmStartService(PSERVICE Service,
     Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
     DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
 
-    if (Service->Status.dwServiceType == SERVICE_KERNEL_DRIVER ||
-        Service->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER ||
-        Service->Status.dwServiceType == SERVICE_RECOGNIZER_DRIVER)
+    if (Service->Status.dwServiceType & SERVICE_DRIVER)
     {
         /* Load driver */
-        wcscpy(szDriverPath,
-               L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
-        wcscat(szDriverPath,
-               Service->lpServiceName);
-
-        RtlInitUnicodeString(&DriverPath,
-                             szDriverPath);
-
-        DPRINT("  Path: %wZ\n", &DriverPath);
-        Status = NtLoadDriver(&DriverPath);
+        Status = ScmLoadDriver(Service);
+        if (Status == STATUS_SUCCESS)
+            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
     }
     else
     {

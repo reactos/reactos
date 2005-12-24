@@ -200,6 +200,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
   Exports.CsrInsertObjectProc = CsrInsertObject;
   Exports.CsrGetObjectProc = CsrGetObject;
   Exports.CsrReleaseObjectProc = CsrReleaseObject;
+  Exports.CsrEnumProcessesProc = CsrEnumProcesses;
   if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &InitCompleteProc,
                     &Exports, CsrssApiHeap))
     {
@@ -260,8 +261,8 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 				    NULL);
 	Status = NtCreatePort ( Port,
 				& PortAttributes,
-				260, /* TODO: make caller set it*/
-				328, /* TODO: make caller set it*/
+				LPC_MAX_DATA_LENGTH, /* TODO: make caller set it*/
+				LPC_MAX_MESSAGE_LENGTH, /* TODO: make caller set it*/
 				0); /* TODO: make caller set it*/
 	if(!NT_SUCCESS(Status))
 	{

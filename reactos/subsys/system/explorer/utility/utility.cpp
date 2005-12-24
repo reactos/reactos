@@ -158,11 +158,20 @@ String Context::getStackTrace() const
 
 BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 {
+#ifdef __STDC_WANT_SECURE_LIB__
+	SYSTEMTIME stime;
+	struct tm tm_;
+	struct tm* tm = &tm_;
+
+	if (gmtime_s(tm, t) != 0)
+		return FALSE;
+#else
 	struct tm* tm = gmtime(t);
 	SYSTEMTIME stime;
 
 	if (!tm)
 		return FALSE;
+#endif
 
 	stime.wYear = tm->tm_year+1900;
 	stime.wMonth = tm->tm_mon+1;
@@ -504,14 +513,14 @@ bool SplitFileSysURL(LPCTSTR url, String& dir_out, String& fname_out)
 		TCHAR path[_MAX_PATH];
 
 		 // convert slashes to back slashes
-		GetFullPathName(url, _MAX_PATH, path, NULL);
+		GetFullPathName(url, COUNTOF(path), path, NULL);
 
 		if (GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY)
 			fname_out.erase();
 		else {
 			TCHAR drv[_MAX_DRIVE], dir[_MAX_DIR], fname[_MAX_FNAME], ext[_MAX_EXT];
 
-			_tsplitpath(path, drv, dir, fname, ext);
+			_tsplitpath_s(path, drv, COUNTOF(drv), dir, COUNTOF(dir), fname, COUNTOF(fname), ext, COUNTOF(ext));
 			_stprintf(path, TEXT("%s%s"), drv, dir);
 
 			fname_out.printf(TEXT("%s%s"), fname, ext);

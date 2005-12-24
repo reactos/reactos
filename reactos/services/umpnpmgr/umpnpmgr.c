@@ -30,9 +30,9 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <ndk/sysguid.h>
-#include <ddk/wdmguid.h>
-#include <ddk/cfgmgr32.h>
+#include <umpnpmgr/sysguid.h>
+#include <wdmguid.h>
+#include <cfgmgr32.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -57,6 +57,10 @@ static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
 
 static HKEY hEnumKey = NULL;
 static HKEY hClassKey = NULL;
+
+static HANDLE hUserToken = NULL;
+static HANDLE hInstallEvent = NULL;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -118,16 +122,18 @@ NtStatusToCrError(NTSTATUS Status)
 {
     switch (Status)
     {
-    	case STATUS_NO_SUCH_DEVICE:
-    		return CR_NO_SUCH_DEVINST;
-    	default:
-    		/* FIXME: add more mappings */
-    		DPRINT1("Unable to map status 0x%08lx\n", Status);
-    		return CR_FAILURE;
+        case STATUS_NO_SUCH_DEVICE:
+            return CR_NO_SUCH_DEVINST;
+
+        default:
+            /* FIXME: add more mappings */
+            DPRINT1("Unable to map status 0x%08lx\n", Status);
+            return CR_FAILURE;
     }
 }
 
 
+/* Function 2 */
 CONFIGRET
 PNP_GetVersion(handle_t BindingHandle,
                unsigned short *Version)
@@ -137,6 +143,7 @@ PNP_GetVersion(handle_t BindingHandle,
 }
 
 
+/* Function 3 */
 CONFIGRET
 PNP_GetGlobalState(handle_t BindingHandle,
                    unsigned long *State,
@@ -147,6 +154,52 @@ PNP_GetGlobalState(handle_t BindingHandle,
 }
 
 
+/* Function 4 */
+CONFIGRET
+PNP_InitDetection(handle_t BindingHandle)
+{
+    DPRINT("PNP_InitDetection() called\n");
+    return CR_SUCCESS;
+}
+
+
+/* Function 5 */
+CONFIGRET
+PNP_ReportLogOn(handle_t BindingHandle,
+                unsigned long Admin,
+                unsigned long ProcessId)
+{
+    HANDLE hProcess;
+
+    DPRINT1("PNP_ReportLogOn(%lu, %lu) called\n", Admin, ProcessId);
+
+    /* Get the users token */
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS,
+                           TRUE,
+                           ProcessId);
+    if (hProcess != NULL)
+    {
+        if (hUserToken != NULL)
+        {
+            CloseHandle(hUserToken);
+            hUserToken = NULL;
+        }
+
+        OpenProcessToken(hProcess,
+                         TOKEN_ALL_ACCESS,
+                         &hUserToken);
+        CloseHandle(hProcess);
+    }
+
+    /* Trigger the installer thread */
+    if (hInstallEvent != NULL)
+        SetEvent(hInstallEvent);
+
+    return CR_SUCCESS;
+}
+
+
+/* Function 6 */
 CONFIGRET
 PNP_ValidateDeviceInstance(handle_t BindingHandle,
                            wchar_t *DeviceInstance,
@@ -196,6 +249,7 @@ Done:
 }
 
 
+/* Function 7 */
 CONFIGRET
 PNP_GetRootDeviceInstance(handle_t BindingHandle,
                           wchar_t *DeviceInstance,
@@ -221,6 +275,7 @@ Done:
 }
 
 
+/* Function 8 */
 CONFIGRET
 PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
                              unsigned long Relationship,
@@ -264,6 +319,7 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
 }
 
 
+/* Function 9 */
 CONFIGRET
 PNP_EnumerateSubKeys(handle_t BindingHandle,
                      unsigned long Branch,
@@ -317,6 +373,7 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
 }
 
 
+/* Function 11 */
 CONFIGRET
 PNP_GetDeviceListSize(handle_t BindingHandle,
                       wchar_t *Filter,
@@ -332,6 +389,7 @@ PNP_GetDeviceListSize(handle_t BindingHandle,
 }
 
 
+/* Function 12 */
 CONFIGRET
 PNP_GetDepth(handle_t BindingHandle,
              wchar_t *DeviceInstance,
@@ -365,118 +423,7 @@ PNP_GetDepth(handle_t BindingHandle,
 }
 
 
-CONFIGRET
-PNP_SetDeviceRegProp(handle_t BindingHandle,
-                     wchar_t *DeviceId,
-                     unsigned long Property,
-                     unsigned long DataType,
-                     char *Buffer,
-                     unsigned long Length,
-                     unsigned long Flags)
-{
-    CONFIGRET ret = CR_SUCCESS;
-    LPWSTR lpValueName = NULL;
-    HKEY hKey = 0;
-
-    DPRINT("PNP_SetDeviceRegProp() called\n");
-
-    DPRINT("DeviceId: %S\n", DeviceId);
-    DPRINT("Property: %lu\n", Property);
-    DPRINT("DataType: %lu\n", DataType);
-    DPRINT("Length: %lu\n", Length);
-
-    switch (Property)
-    {
-        case CM_DRP_DEVICEDESC:
-            lpValueName = L"DeviceDesc";
-            break;
-
-        case CM_DRP_HARDWAREID:
-            lpValueName = L"HardwareID";
-            break;
-
-        case CM_DRP_COMPATIBLEIDS:
-            lpValueName = L"CompatibleIDs";
-            break;
-
-        case CM_DRP_SERVICE:
-            lpValueName = L"Service";
-            break;
-
-        case CM_DRP_CLASS:
-            lpValueName = L"Class";
-            break;
-
-        case CM_DRP_CLASSGUID:
-            lpValueName = L"ClassGUID";
-            break;
-
-        case CM_DRP_DRIVER:
-            lpValueName = L"Driver";
-            break;
-
-        case CM_DRP_CONFIGFLAGS:
-            lpValueName = L"ConfigFlags";
-            break;
-
-        case CM_DRP_MFG:
-            lpValueName = L"Mfg";
-            break;
-
-        case CM_DRP_FRIENDLYNAME:
-            lpValueName = L"FriendlyName";
-            break;
-
-        case CM_DRP_LOCATION_INFORMATION:
-            lpValueName = L"LocationInformation";
-            break;
-
-        case CM_DRP_UPPERFILTERS:
-            lpValueName = L"UpperFilters";
-            break;
-
-        case CM_DRP_LOWERFILTERS:
-            lpValueName = L"LowerFilters";
-            break;
-
-        default:
-            return CR_INVALID_PROPERTY;
-    }
-
-    DPRINT("Value name: %S\n", lpValueName);
-
-    if (RegOpenKeyExW(hEnumKey,
-                      DeviceId,
-                      0,
-                      KEY_ALL_ACCESS,
-                      &hKey))
-        return CR_INVALID_DEVNODE;
-
-    if (Length == 0)
-    {
-        if (RegDeleteValueW(hKey,
-                            lpValueName))
-            ret = CR_REGISTRY_ERROR;
-    }
-    else
-    {
-        if (RegSetValueExW(hKey,
-                           lpValueName,
-                           0,
-                           DataType,
-                           (const BYTE*)Buffer,
-                           Length))
-            ret = CR_REGISTRY_ERROR;
-    }
-
-    RegCloseKey(hKey);
-
-    DPRINT("PNP_SetDeviceRegProp() done (returns %lx)\n", ret);
-
-    return ret;
-}
-
-
+/* Function 13 */
 CONFIGRET
 PNP_GetDeviceRegProp(handle_t BindingHandle,
                      wchar_t *DeviceInstance,
@@ -664,6 +611,137 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
 }
 
 
+/* Function 14 */
+CONFIGRET
+PNP_SetDeviceRegProp(handle_t BindingHandle,
+                     wchar_t *DeviceId,
+                     unsigned long Property,
+                     unsigned long DataType,
+                     char *Buffer,
+                     unsigned long Length,
+                     unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+    LPWSTR lpValueName = NULL;
+    HKEY hKey = 0;
+
+    DPRINT("PNP_SetDeviceRegProp() called\n");
+
+    DPRINT("DeviceId: %S\n", DeviceId);
+    DPRINT("Property: %lu\n", Property);
+    DPRINT("DataType: %lu\n", DataType);
+    DPRINT("Length: %lu\n", Length);
+
+    switch (Property)
+    {
+        case CM_DRP_DEVICEDESC:
+            lpValueName = L"DeviceDesc";
+            break;
+
+        case CM_DRP_HARDWAREID:
+            lpValueName = L"HardwareID";
+            break;
+
+        case CM_DRP_COMPATIBLEIDS:
+            lpValueName = L"CompatibleIDs";
+            break;
+
+        case CM_DRP_SERVICE:
+            lpValueName = L"Service";
+            break;
+
+        case CM_DRP_CLASS:
+            lpValueName = L"Class";
+            break;
+
+        case CM_DRP_CLASSGUID:
+            lpValueName = L"ClassGUID";
+            break;
+
+        case CM_DRP_DRIVER:
+            lpValueName = L"Driver";
+            break;
+
+        case CM_DRP_CONFIGFLAGS:
+            lpValueName = L"ConfigFlags";
+            break;
+
+        case CM_DRP_MFG:
+            lpValueName = L"Mfg";
+            break;
+
+        case CM_DRP_FRIENDLYNAME:
+            lpValueName = L"FriendlyName";
+            break;
+
+        case CM_DRP_LOCATION_INFORMATION:
+            lpValueName = L"LocationInformation";
+            break;
+
+        case CM_DRP_UPPERFILTERS:
+            lpValueName = L"UpperFilters";
+            break;
+
+        case CM_DRP_LOWERFILTERS:
+            lpValueName = L"LowerFilters";
+            break;
+
+        default:
+            return CR_INVALID_PROPERTY;
+    }
+
+    DPRINT("Value name: %S\n", lpValueName);
+
+    if (RegOpenKeyExW(hEnumKey,
+                      DeviceId,
+                      0,
+                      KEY_ALL_ACCESS,
+                      &hKey))
+        return CR_INVALID_DEVNODE;
+
+    if (Length == 0)
+    {
+        if (RegDeleteValueW(hKey,
+                            lpValueName))
+            ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        if (RegSetValueExW(hKey,
+                           lpValueName,
+                           0,
+                           DataType,
+                           (const BYTE*)Buffer,
+                           Length))
+            ret = CR_REGISTRY_ERROR;
+    }
+
+    RegCloseKey(hKey);
+
+    DPRINT("PNP_SetDeviceRegProp() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 15 */
+CONFIGRET
+PNP_GetClassInstance(handle_t BindingHandle,
+                     wchar_t *DeviceId, /* in */
+                     wchar_t *Buffer, /* out */
+                     unsigned long Length)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_Get_Class_Instance() called\n");
+
+    DPRINT("PNP_Get_Class_Instance() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 16 */
 CONFIGRET
 PNP_CreateKey(handle_t BindingHandle,
               wchar_t *SubKey,
@@ -680,6 +758,64 @@ PNP_CreateKey(handle_t BindingHandle,
 }
 
 
+/* Function 17 */
+CONFIGRET
+PNP_DeleteRegistryKey(handle_t BindingHandle,
+                      wchar_t *DeviceId,
+                      wchar_t *ParentKey,
+                      wchar_t *ChildKey,
+                      unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_DeleteRegistryKey() called\n");
+
+    DPRINT("PNP_DeleteRegistryKey() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 18 */
+#if 0
+CONFIGRET
+PNP_GetClassCount(handle_t BindingHandle,
+                  unsigned long *ClassCount,
+                  unsigned long Flags)
+{
+    HANDLE hKey = NULL;
+    DWORD dwError;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            pszRegPathClass,
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hKey);
+    if (dwError != ERROR_SUCCESS)
+        return CR_INVALID_DATA;
+
+    dwError = RegQueryInfoKeyW(hKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &ClassCount,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+    RegCloseKey(hKey);
+    if (dwError != ERROR_SUCCESS)
+        return CR_INVALID_DATA;
+
+    return CR_SUCCESS;
+}
+#endif
+
+
+/* Function 19 */
 CONFIGRET
 PNP_GetClassName(handle_t BindingHandle,
                  wchar_t *ClassGuid,
@@ -729,6 +865,7 @@ PNP_GetClassName(handle_t BindingHandle,
 }
 
 
+/* Function 20 */
 CONFIGRET
 PNP_DeleteClassKey(handle_t BindingHandle,
                    wchar_t *ClassGuid,
@@ -755,6 +892,62 @@ PNP_DeleteClassKey(handle_t BindingHandle,
 }
 
 
+/* Function 29 */
+CONFIGRET
+PNP_DeviceInstanceAction(handle_t BindingHandle,
+                         unsigned long MajorAction,
+                         unsigned long MinorAction,
+                         wchar_t *DeviceInstance1,
+                         wchar_t *DeviceInstance2)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_DeviceInstanceAction() called\n");
+
+    switch (MajorAction)
+    {
+        case 2:
+            DPRINT("Move device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
+        case 3:
+            DPRINT("Setup device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
+        case 4:
+            DPRINT("Enable device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
+        case 5:
+            DPRINT("Disable device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
+        case 7:
+            DPRINT("Reenumerate device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            DPRINT1("Unknown function %lu\n", MajorAction);
+            ret = CR_CALL_NOT_IMPLEMENTED;
+    }
+
+    DPRINT("PNP_DeviceInstanceAction() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 30 */
 CONFIGRET
 PNP_GetDeviceStatus(handle_t BindingHandle,
                     wchar_t *DeviceInstance,
@@ -791,6 +984,7 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
 }
 
 
+/* Function 31 */
 CONFIGRET
 PNP_SetDeviceProblem(handle_t BindingHandle,
                      wchar_t *DeviceInstance,
@@ -804,6 +998,24 @@ PNP_SetDeviceProblem(handle_t BindingHandle,
     /* FIXME */
 
     DPRINT1("PNP_SetDeviceProblem() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 33 */
+CONFIGRET
+PNP_UninstallDevInst(handle_t BindingHandle,
+                     wchar_t *DeviceInstance,
+                     DWORD Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_UninstallDevInst() called\n");
+
+    /* FIXME */
+
+    DPRINT1("PNP_UninstallDevInst() done (returns %lx)\n", ret);
 
     return ret;
 }
@@ -875,10 +1087,21 @@ PNP_RequestEjectPC(handle_t BindingHandle)
     return ret;
 }
 
+
+/* Function 58 */
+CONFIGRET
+PNP_RunDetection(handle_t BindingHandle,
+                 unsigned long Flags)
+{
+    DPRINT("PNP_RunDetection() called\n");
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
 typedef BOOL (WINAPI *PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
 
 static BOOL
-InstallDevice(PCWSTR DeviceInstance)
+InstallDevice(PCWSTR DeviceInstance, BOOL SetupIsActive)
 {
     PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
     HMODULE hNewDev = NULL;
@@ -903,13 +1126,16 @@ InstallDevice(PCWSTR DeviceInstance)
 
     /* Install device */
     SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+
     hNewDev = LoadLibraryW(L"newdev.dll");
     if (!hNewDev)
         goto cleanup;
+
     DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
     if (!DevInstallW)
         goto cleanup;
-    if (!DevInstallW(NULL, NULL, DeviceInstance, SW_SHOWNOACTIVATE))
+
+    if (!DevInstallW(NULL, NULL, DeviceInstance, SetupIsActive ? SW_HIDE : SW_SHOWNOACTIVATE))
         goto cleanup;
 
     DeviceInstalled = TRUE;
@@ -921,6 +1147,38 @@ cleanup:
     return DeviceInstalled;
 }
 
+
+static BOOL
+SetupIsActive(VOID)
+{
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    DWORD regType, active, size;
+    LONG rc;
+    BOOL ret = FALSE;
+
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_QUERY_VALUE, &hKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+
+    size = sizeof(DWORD);
+    rc = RegQueryValueExW(hKey, L"SystemSetupInProgress", NULL, &regType, (LPBYTE)&active, &size);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    if (regType != REG_DWORD || size != sizeof(DWORD))
+        goto cleanup;
+
+    ret = (active != 0);
+
+cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+
+    DPRINT("System setup in progress? %S\n", ret ? L"YES" : L"NO");
+
+    return ret;
+}
+
+
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
@@ -928,11 +1186,14 @@ PnpEventThread(LPVOID lpParameter)
     ULONG PnpEventSize;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
+    BOOL setupActive;
 
     PnpEventSize = 0x1000;
     PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
     if (PnpEvent == NULL)
         return ERROR_OUTOFMEMORY;
+
+    setupActive = SetupIsActive();
 
     for (;;)
     {
@@ -961,7 +1222,7 @@ PnpEventThread(LPVOID lpParameter)
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            InstallDevice(PnpEvent->TargetDevice.DeviceIds);
+            InstallDevice(PnpEvent->TargetDevice.DeviceIds, setupActive);
         }
         else
         {
@@ -1016,6 +1277,14 @@ main(int argc, char *argv[])
     DWORD dwError;
 
     DPRINT("Umpnpmgr: main() started\n");
+
+    hInstallEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (hInstallEvent == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the Install Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",

@@ -1,6 +1,6 @@
 #include <roscfg.h>
 #include <limits.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <../recmutex/recmutex.h>
 #include <roscfg.h>
 #include <tcpip.h>
@@ -36,4 +36,4 @@
 #include <ports.h>
 #include <ipifcons.h>
 #include <ndk/ntndk.h>
-
+#include <chew/chew.h>

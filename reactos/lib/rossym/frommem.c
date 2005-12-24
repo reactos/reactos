@@ -8,7 +8,7 @@
  */
 
 #define NTOSAPI
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
 

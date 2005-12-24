@@ -1,0 +1,35 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Writing element content</title><meta name="generator" content="DocBook XSL Stylesheets V1.61.2"><link rel="home" href="index.html" title="Libxml Tutorial"><link rel="up" href="index.html" title="Libxml Tutorial"><link rel="previous" href="ar01s05.html" title="Using XPath to Retrieve Element Content"><link rel="next" href="ar01s07.html" title="Writing Attribute"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Writing element content</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ar01s05.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="ar01s07.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="xmltutorialwritingcontent"></a>Writing element content</h2></div></div><div></div></div><p><a class="indexterm" name="id2586968"></a>
+      Writing element content uses many of the same steps we used above
+      &#8212; parsing the document and walking the tree. We parse the document,
+      then traverse the tree to find the place we want to insert our element. For
+      this example, we want to again find the "storyinfo" element and
+      this time insert a keyword. Then we'll write the file to disk. Full code:
+      <a href="ape.html" title="E. Code for Add Keyword Example">Appendix E, <i>Code for Add Keyword Example</i></a></p><p>
+      The main difference in this example is in
+      <tt class="function">parseStory</tt>:
+
+      </p><pre class="programlisting">
+void
+parseStory (xmlDocPtr doc, xmlNodePtr cur, char *keyword) {
+
+	<a name="addkeyword"></a><img src="images/callouts/1.png" alt="1" border="0"> xmlNewTextChild (cur, NULL, "keyword", keyword);
+    return;
+}
+      </pre><p>
+      </p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><a href="#addkeyword"><img src="images/callouts/1.png" alt="1" border="0"></a> </td><td valign="top" align="left"><p>The <tt class="function"><a href="http://xmlsoft.org/html/libxml-tree.html#XMLNEWTEXTCHILD" target="_top">xmlNewTextChild</a></tt>
+				     function adds a new child element at the
+				     current node pointer's location in the
+	    tree, specified by <tt class="varname">cur</tt>.</p></td></tr></table></div><p>
+         </p><p>
+      <a class="indexterm" name="id2587052"></a>
+      Once the node has been added, we would like to write the document to
+      file. Is you want the element to have a namespace, you can add it here as
+      well. In our case, the namespace is NULL.
+      </p><pre class="programlisting">
+	xmlSaveFormatFile (docname, doc, 1);
+      </pre><p>
+      The first parameter is the name of the file to be written. You'll notice
+      it is the same as the file we just read. In this case, we just write over
+      the old file. The second parameter is a pointer to the xmlDoc
+      structure. Setting the third parameter equal to one ensures indenting on output.
+    </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s05.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ar01s07.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Using XPath to Retrieve Element Content </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Writing Attribute</td></tr></table></div></body></html>

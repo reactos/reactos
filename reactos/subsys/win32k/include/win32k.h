@@ -7,7 +7,8 @@
  */
 
 /* INCLUDES ******************************************************************/
-
+#ifndef __WIN32K_H
+#define __WIN32K_H
 /* Internal Win32k Headers */
 #include <include/ntuser.h>
 #include <include/win32.h>
@@ -61,4 +62,4 @@
 #include <eng/objects.h>
 #include <eng/misc.h>
 #include <dib/dib.h>
-/* EOF */
+#endif /* __WIN32K_H */

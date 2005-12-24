@@ -137,22 +137,6 @@ static VOID MD4Transform(unsigned int buf[4], const unsigned int in[16])
 }
 
 /*
- * Note: this code is harmless on little-endian machines.
- */
-static VOID byteReverse(unsigned char *buf, unsigned longs)
-{
-    unsigned int t;
-
-    do
-    {
-        t = (unsigned int)((unsigned)buf[3] << 8 | buf[2]) << 16 |
-            ((unsigned)buf[1] << 8 | buf[0]);
-        *(unsigned int *)buf = t;
-        buf += 4;
-    } while (--longs);
-}
-
-/*
  * Start MD4 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */

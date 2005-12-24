@@ -13,13 +13,12 @@
 #ifndef __CRT_INTERNAL_FILE_H
 #define __CRT_INTERNAL_FILE_H
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdarg.h>
+#ifndef _CRT_PRECOMP_H
+#error DO NOT INCLUDE THIS HEADER DIRECTLY
+#endif
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnt.h>
+#include <stdarg.h>
+#include <time.h>
 
 #ifndef _IORMONCL
 #define _IORMONCL 004000  /* remove on close, for temp files */
@@ -137,12 +136,10 @@ void _fwalk(void (*func)(FILE*)); // not exported
 #define MB_CUR_MAX __mb_cur_max
 
 
-int _isnanl(double x);
-int _isinfl(double x);
+int _isnanl(long double x);
+int _isinfl(long double x);
 int _isnan(double x);
 int _isinf(double x);
-
-
 
 /* Flags for the iobuf structure (for reference) */
 #if 0
@@ -151,23 +148,24 @@ int _isinf(double x);
 #define  _IORW 0x0080 /* opened as "r+w" */
 #endif
 
+#ifndef F_OK
+#define	F_OK	0	/* Check for file existence */
+#endif
+#ifndef W_OK
+#define	W_OK	2	/* Check for write permission */
+#endif
+
 /* internal FILE->_flag flags */
 
 #define _IOMYBUF  0x0008  /* stdio malloc()'d buffer */
 #define _IOEOF    0x0010  /* EOF reached on read */
 #define _IOERR    0x0020  /* I/O error from system */
 #define _IOSTRG   0x0040  /* Strange or no file descriptor */
-
 #define _IOBINARY 0x040000
 #define _IOTEXT   0x000000
-
 #define _IOCOMMIT 0x100000
-
 #define _IODIRTY  0x010000
 #define _IOAHEAD  0x020000
-
-
-
 
 /*
  * The three possible buffering mode (nMode) values for setvbuf.
@@ -177,11 +175,9 @@ int _isinf(double x);
 #define _IOFBF    0x0000     /* full buffered */
 #define _IOLBF    0x0040     /* line buffered */
 #define _IONBF    0x0004     /* not buffered */
-
 #define _IO_LBF   0x80000    /* this value is used insteat of _IOLBF within the
                                 structure FILE as value for _flags,
                                 because _IOLBF has the same value as _IOSTRG */
-
 
 wint_t _filwbuf(FILE *f);
 
@@ -190,5 +186,5 @@ wint_t _filwbuf(FILE *f);
    int __cdecl _flsbuf (int, FILE*);
 #endif
 
-
 #endif /* __dj_include_libc_file_h__ */
+

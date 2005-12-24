@@ -105,17 +105,44 @@
 #            -dm{module}  Check only automatic dependencies for this module.
 #            -mi          Let make handle creation of install directories. Rbuild will not generate the directories.
 #            -ps          Generate proxy makefiles in source tree instead of the output tree.
+#            -ud          Disable compilation units.
+#            -r           Input XML
+#
+#    ROS_AUTOMAKE
+#        Alternate name of makefile.auto
+#
+
+# check for versions of make that don't have features we need...
+# the function "eval" is only available in 3.80+, which happens to be the minimum
+# version that has the features we use...
+# THIS CHECK IS BORROWED FROM THE "GMSL" PROJECT, AND IS COVERED BY THE GPL LICENSE
+# YOU CAN FIND OUT MORE ABOUT GMSL - A VERY COOL PROJECT - AT:
+# http://gmsl.sourceforge.net/
+
+__gmsl_have_eval :=
+__gmsl_ignore := $(eval __gmsl_have_eval := T)
+
+ifndef __gmsl_have_eval
+$(error ReactOS's makefiles use GNU Make 3.80+ features, you have $(MAKE_VERSION), you MUST UPGRADE in order to build ReactOS - Sorry)
+endif
+# END of code borrowed from GMSL ( http://gmsl.sourceforge.net/ )
 
 .PHONY: all
 .PHONY: clean
-all: makefile.auto
+
+ifeq ($(ROS_AUTOMAKE),)
+ROS_AUTOMAKE=makefile.auto
+endif
+
+all: $(ROS_AUTOMAKE)
 
 
 .SUFFIXES:
 
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
-ifeq ($(OSTYPE),msys)
+ifeq ($(findstring msys,$(shell sh --version 2>nul)),msys)
+export OSTYPE = msys
 HOST=mingw32-linux
 else
 HOST=mingw32-windows
@@ -214,7 +241,7 @@ ifeq ($(HOST),mingw32-linux)
 	export EXEPREFIX = ./
 ifeq ($(OSTYPE),msys)
 	export EXEPOSTFIX = .exe
-else	
+else
 	export EXEPOSTFIX =
 endif
 	export SEP = /
@@ -319,7 +346,7 @@ ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
--include makefile.auto
+-include $(ROS_AUTOMAKE)
 
 PREAUTO := \
 	$(BIN2C_TARGET) \
@@ -332,7 +359,7 @@ PREAUTO := \
 	$(NCI_SERVICE_FILES) \
 	$(GENDIB_DIB_FILES)
 
-makefile.auto: $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
+$(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) mingw
 
@@ -347,7 +374,7 @@ $(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)
 
 $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
 	$(ECHO_WMC)
-	$(Q)$(WMC_TARGET) -i -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
+	$(Q)$(WMC_TARGET) -i -U -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
 
 .PHONY: msvc6
 msvc6: $(RBUILD_TARGET)
@@ -371,7 +398,7 @@ msvc8: $(RBUILD_TARGET)
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
-	-@$(rm) makefile.auto $(PREAUTO) 2>$(NUL)
+	-@$(rm) $(ROS_AUTOMAKE) $(PREAUTO) 2>$(NUL)
 
 .PHONY: clean
 clean: makefile_auto_clean

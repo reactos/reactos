@@ -7,8 +7,8 @@
 size_t _strxspn(const char *s1, const char *s2)
 {
  unsigned char char_map[1 << CHAR_BIT * sizeof(char)];
- register unsigned char * us2 = (unsigned char *)s2;
- register unsigned char * str = (unsigned char *)s1;
+ const unsigned char * us2 = (const unsigned char *)s2;
+ const unsigned char * str = (const unsigned char *)s1;
 
  memset(char_map, 0, sizeof(char_map));
 
@@ -18,7 +18,7 @@ size_t _strxspn(const char *s1, const char *s2)
  for(; *str; ++ str)
   if(_x(char_map[*str / CHAR_BIT] & (1 << (*str % CHAR_BIT)))) break;
 
- return str - (unsigned char*)s1;
+ return (size_t)str - (size_t)s1;
 }
 
 /* EOF */

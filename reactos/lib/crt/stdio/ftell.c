@@ -1,12 +1,7 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <io.h>
-#include <errno.h>
-#include <internal/file.h>
-
+#include <precomp.h>
 
 /*
  * @implemented

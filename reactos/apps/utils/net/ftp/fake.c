@@ -113,7 +113,7 @@ int fgetcSocket(int s)
 
 #endif
 
-char *fprintfSocket(int s, char *format, ...)
+const char *fprintfSocket(int s, const char *format, ...)
 {
    va_list argptr;
    char buffer[10009];
@@ -127,7 +127,7 @@ char *fprintfSocket(int s, char *format, ...)
    return NULL;
 }
 
-char *fputsSocket(char *format, int s)
+const char *fputsSocket(const char *format, int s)
 {
    send(s, format, strlen(format), 0);
 

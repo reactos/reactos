@@ -530,7 +530,7 @@ static int stabs_pts_read_range(struct ParseTypedefData* ptd, const char* typena
     return 0;
 }
 
-static inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
+static __inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
 {
     struct symt*        dt;
     char*               tmp;
@@ -570,7 +570,7 @@ static inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
     return 0;
 }
 
-static inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd, 
+static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd, 
                                            struct symt_udt* sdt)
 {
     long        	sz, ofs;
@@ -716,7 +716,7 @@ static inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
     return 0;
 }
 
-static inline int stabs_pts_read_enum(struct ParseTypedefData* ptd, 
+static __inline int stabs_pts_read_enum(struct ParseTypedefData* ptd, 
                                       struct symt_enum* edt)
 {
     long        value;
@@ -735,7 +735,7 @@ static inline int stabs_pts_read_enum(struct ParseTypedefData* ptd,
     return 0;
 }
 
-static inline int stabs_pts_read_array(struct ParseTypedefData* ptd,
+static __inline int stabs_pts_read_array(struct ParseTypedefData* ptd,
                                        struct symt** adt)
 {
     long                lo, hi;

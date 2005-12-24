@@ -205,7 +205,7 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 	    cd->DosPath.Buffer[Length - 2] != L':')
 		Length--;
 
-	DPRINT ("cd->DosPath.Buffer %S Length %d\n",
+	DPRINT ("cd->DosPath.Buffer %S Length %lu\n",
 	        cd->DosPath.Buffer, Length);
 
 	if (MaximumLength / sizeof(WCHAR) > Length)
@@ -289,72 +289,6 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
       ZwClose( handle );
       handle = 0;
    }
-
-
-/* What the heck is this all about??? It looks like its getting the long path,
- * and if does, ITS WRONG! If current directory is set with a short path,
- * GetCurrentDir should return a short path.
- * If anyone agrees with me, remove this stuff.
- * -Gunnar
- */
-#if 0
-   filenameinfo = RtlAllocateHeap(RtlGetProcessHeap(),
-              0,
-              MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
-
-   Status = ZwQueryInformationFile(handle,
-               &iosb,
-               filenameinfo,
-               MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),
-               FileNameInformation);
-   if (!NT_SUCCESS(Status))
-     {
-   RtlFreeHeap(RtlGetProcessHeap(),
-          0,
-          filenameinfo);
-   RtlFreeHeap(RtlGetProcessHeap(),
-          0,
-          buf);
-   RtlFreeHeap(RtlGetProcessHeap(),
-          0,
-          full.Buffer);
-   RtlReleasePebLock();
-   return(Status);
-     }
-
-   /* If it's just "\", we need special handling */
-   if (filenameinfo->FileNameLength > sizeof(WCHAR))
-     {
-   wcs = buf + size / sizeof(WCHAR) - 1;
-   if (*wcs == L'\\')
-     {
-       *(wcs) = 0;
-       wcs--;
-       size -= sizeof(WCHAR);
-     }
-
-   for (Index = 0;
-        Index < filenameinfo->FileNameLength / sizeof(WCHAR);
-        Index++)
-     {
-        if (filenameinfo->FileName[Index] == '\\') backslashcount++;
-     }
-
-   DPRINT("%d \n",backslashcount);
-   for (;backslashcount;wcs--)
-     {
-        if (*wcs=='\\') backslashcount--;
-     }
-   wcs++;
-
-   RtlCopyMemory(wcs, filenameinfo->FileName, filenameinfo->FileNameLength);
-   wcs[filenameinfo->FileNameLength / sizeof(WCHAR)] = 0;
-
-   size = (wcs - buf) * sizeof(WCHAR) + filenameinfo->FileNameLength;
-     }
-#endif
-
-
 
    if (cd->Handle)
       ZwClose(cd->Handle);
@@ -498,7 +432,7 @@ static ULONG get_full_path_helper(
    ULONG size)
 {
     ULONG                       reqsize = 0, mark = 0, dep = 0, deplen;
-    DOS_PATHNAME_TYPE           type;
+    RTL_PATH_TYPE               type;
     LPWSTR                      ins_str = NULL;
     LPCWSTR                     ptr;
     const UNICODE_STRING*       cd;
@@ -547,6 +481,11 @@ static ULONG get_full_path_helper(
             val.Length = 0;
             val.MaximumLength = size;
             val.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
+            if (val.Buffer == NULL)
+            {
+                reqsize = 0;
+                goto done;
+            }
 
             switch (RtlQueryEnvironmentVariable_U(NULL, &var, &val))
             {
@@ -713,6 +652,8 @@ DWORD NTAPI RtlGetFullPathName_U(
     if (reqsize > size)
     {
         LPWSTR tmp = RtlAllocateHeap(RtlGetProcessHeap(), 0, reqsize);
+        if (tmp == NULL)
+            return 0;
         reqsize = get_full_path_helper(name, tmp, reqsize);
         if (reqsize > size)  /* it may have worked the second time */
         {
@@ -734,10 +675,10 @@ DWORD NTAPI RtlGetFullPathName_U(
  * @implemented
  */
 BOOLEAN NTAPI
-RtlDosPathNameToNtPathName_U(PWSTR dosname,
-			     PUNICODE_STRING ntname,
-			     PWSTR *FilePart,
-			     PCURDIR nah)
+RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
+			     OUT PUNICODE_STRING NtPathName,
+			     OUT PCWSTR *NtFileNamePart,
+			     OUT CURDIR *DirectoryInfo)
 {
 	UNICODE_STRING  us;
 	PCURDIR cd;
@@ -752,7 +693,7 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 
 	RtlAcquirePebLock ();
 
-	RtlInitUnicodeString (&us, dosname);
+	RtlInitUnicodeString (&us, DosPathName);
 	if (us.Length > 8)
 	{
 		Buffer = us.Buffer;
@@ -780,10 +721,10 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 		return FALSE;
 	}
 
-	Size = RtlGetFullPathName_U (dosname,
+	Size = RtlGetFullPathName_U (DosPathName,
 	                             sizeof(fullname),
 	                             fullname,
-	                             FilePart);
+	                             (PWSTR*)NtFileNamePart);
 	if (Size == 0 || Size > MAX_PATH * sizeof(WCHAR))
 	{
 		RtlFreeHeap (RtlGetProcessHeap (),
@@ -822,18 +763,18 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	}
 
 	/* set NT filename */
-	ntname->Length        = Length * sizeof(WCHAR);
-	ntname->MaximumLength = sizeof(fullname) + MAX_PFX_SIZE;
-	ntname->Buffer        = Buffer;
+	NtPathName->Length        = Length * sizeof(WCHAR);
+	NtPathName->MaximumLength = sizeof(fullname) + MAX_PFX_SIZE;
+	NtPathName->Buffer        = Buffer;
 
 	/* set pointer to file part if possible */
-	if (FilePart && *FilePart)
-		*FilePart = Buffer + Length - wcslen (*FilePart);
+	if (NtFileNamePart && *NtFileNamePart)
+		*NtFileNamePart = Buffer + Length - wcslen (*NtFileNamePart);
 
 	/* Set name and handle structure if possible */
-	if (nah)
+	if (DirectoryInfo)
 	{
-		memset (nah, 0, sizeof(CURDIR));
+		memset (DirectoryInfo, 0, sizeof(CURDIR));
 		cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectory.DosPath);
 		if (Type == 5 && cd->Handle)
 		{
@@ -841,10 +782,10 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 		    if (RtlEqualUnicodeString(&us, &cd->DosPath, TRUE))
 		    {
 			Length = ((cd->DosPath.Length / sizeof(WCHAR)) - Offset) + ((Type == 1) ? 8 : 4);
-			nah->DosPath.Buffer = Buffer + Length;
-			nah->DosPath.Length = ntname->Length - (Length * sizeof(WCHAR));
-			nah->DosPath.MaximumLength = nah->DosPath.Length;
-			nah->Handle = cd->Handle;
+			DirectoryInfo->DosPath.Buffer = Buffer + Length;
+			DirectoryInfo->DosPath.Length = NtPathName->Length - (Length * sizeof(WCHAR));
+			DirectoryInfo->DosPath.MaximumLength = DirectoryInfo->DosPath.Length;
+			DirectoryInfo->Handle = cd->Handle;
 		    }
 		}
 	}

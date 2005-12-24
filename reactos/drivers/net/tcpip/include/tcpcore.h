@@ -262,7 +262,7 @@ extern void	skb_under_panic(struct sk_buff *skb, int len, void *here);
  *	Returns true if the queue is empty, false otherwise.
  */
 
-static inline int skb_queue_empty(struct sk_buff_head *list)
+static __inline int skb_queue_empty(struct sk_buff_head *list)
 {
 	return (list->next == (struct sk_buff *) list);
 }
@@ -275,7 +275,7 @@ static inline int skb_queue_empty(struct sk_buff_head *list)
  *	to the buffer.
  */
 
-static inline struct sk_buff *skb_get(struct sk_buff *skb)
+static __inline struct sk_buff *skb_get(struct sk_buff *skb)
 {
 	atomic_inc(&skb->users);
 	return skb;
@@ -294,14 +294,14 @@ static inline struct sk_buff *skb_get(struct sk_buff *skb)
  *	hit zero.
  */
 
-static inline void kfree_skb(struct sk_buff *skb)
+static __inline void kfree_skb(struct sk_buff *skb)
 {
 	if (atomic_read(&skb->users) == 1 || atomic_dec_and_test(&skb->users))
 		__kfree_skb(skb);
 }
 
 /* Use this if you didn't touch the skb state [for fast switching] */
-static inline void kfree_skb_fast(struct sk_buff *skb)
+static __inline void kfree_skb_fast(struct sk_buff *skb)
 {
 	if (atomic_read(&skb->users) == 1 || atomic_dec_and_test(&skb->users))
 		kfree_skbmem(skb);
@@ -316,7 +316,7 @@ static inline void kfree_skb_fast(struct sk_buff *skb)
  *	shared data so must not be written to under normal circumstances.
  */
 
-static inline int skb_cloned(struct sk_buff *skb)
+static __inline int skb_cloned(struct sk_buff *skb)
 {
 	return skb->cloned && atomic_read(&skb_shinfo(skb)->dataref) != 1;
 }
@@ -329,7 +329,7 @@ static inline int skb_cloned(struct sk_buff *skb)
  *	buffer.
  */
 
-static inline int skb_shared(struct sk_buff *skb)
+static __inline int skb_shared(struct sk_buff *skb)
 {
 	return (atomic_read(&skb->users) != 1);
 }
@@ -348,7 +348,7 @@ static inline int skb_shared(struct sk_buff *skb)
  *	NULL is returned on a memory allocation failure.
  */
 
-static inline struct sk_buff *skb_share_check(struct sk_buff *skb, int pri)
+static __inline struct sk_buff *skb_share_check(struct sk_buff *skb, int pri)
 {
 	if (skb_shared(skb)) {
 		struct sk_buff *nskb;
@@ -381,7 +381,7 @@ static inline struct sk_buff *skb_share_check(struct sk_buff *skb, int pri)
  *	%NULL is returned on a memory allocation failure.
  */
 
-static inline struct sk_buff *skb_unshare(struct sk_buff *skb, int pri)
+static __inline struct sk_buff *skb_unshare(struct sk_buff *skb, int pri)
 {
 	struct sk_buff *nskb;
 	if(!skb_cloned(skb))
@@ -405,7 +405,7 @@ static inline struct sk_buff *skb_unshare(struct sk_buff *skb, int pri)
  *	volatile. Use with caution.
  */
 
-static inline struct sk_buff *skb_peek(struct sk_buff_head *list_)
+static __inline struct sk_buff *skb_peek(struct sk_buff_head *list_)
 {
 	struct sk_buff *list = ((struct sk_buff *)list_)->next;
 	if (list == (struct sk_buff *)list_)
@@ -427,7 +427,7 @@ static inline struct sk_buff *skb_peek(struct sk_buff_head *list_)
  *	volatile. Use with caution.
  */
 
-static inline struct sk_buff *skb_peek_tail(struct sk_buff_head *list_)
+static __inline struct sk_buff *skb_peek_tail(struct sk_buff_head *list_)
 {
 	struct sk_buff *list = ((struct sk_buff *)list_)->prev;
 	if (list == (struct sk_buff *)list_)
@@ -442,12 +442,12 @@ static inline struct sk_buff *skb_peek_tail(struct sk_buff_head *list_)
  *	Return the length of an &sk_buff queue.
  */
 
-static inline __u32 skb_queue_len(struct sk_buff_head *list_)
+static __inline __u32 skb_queue_len(struct sk_buff_head *list_)
 {
 	return(list_->qlen);
 }
 
-static inline void skb_queue_head_init(struct sk_buff_head *list)
+static __inline void skb_queue_head_init(struct sk_buff_head *list)
 {
 	spin_lock_init(&list->lock);
 	list->prev = (struct sk_buff *)list;
@@ -473,7 +473,7 @@ static inline void skb_queue_head_init(struct sk_buff_head *list)
  *	A buffer cannot be placed on two lists at the same time.
  */
 
-static inline void __skb_queue_head(struct sk_buff_head *list, struct sk_buff *newsk)
+static __inline void __skb_queue_head(struct sk_buff_head *list, struct sk_buff *newsk)
 {
 	struct sk_buff *prev, *next;
 
@@ -500,7 +500,7 @@ static inline void __skb_queue_head(struct sk_buff_head *list, struct sk_buff *n
  *	A buffer cannot be placed on two lists at the same time.
  */
 
-static inline void skb_queue_head(struct sk_buff_head *list, struct sk_buff *newsk)
+static __inline void skb_queue_head(struct sk_buff_head *list, struct sk_buff *newsk)
 {
 	unsigned long flags;
 
@@ -521,7 +521,7 @@ static inline void skb_queue_head(struct sk_buff_head *list, struct sk_buff *new
  */
 
 
-static inline void __skb_queue_tail(struct sk_buff_head *list, struct sk_buff *newsk)
+static __inline void __skb_queue_tail(struct sk_buff_head *list, struct sk_buff *newsk)
 {
 	struct sk_buff *prev, *next;
 
@@ -547,7 +547,7 @@ static inline void __skb_queue_tail(struct sk_buff_head *list, struct sk_buff *n
  *	A buffer cannot be placed on two lists at the same time.
  */
 
-static inline void skb_queue_tail(struct sk_buff_head *list, struct sk_buff *newsk)
+static __inline void skb_queue_tail(struct sk_buff_head *list, struct sk_buff *newsk)
 {
 	unsigned long flags;
 
@@ -565,7 +565,7 @@ static inline void skb_queue_tail(struct sk_buff_head *list, struct sk_buff *new
  *	returned or %NULL if the list is empty.
  */
 
-static inline struct sk_buff *__skb_dequeue(struct sk_buff_head *list)
+static __inline struct sk_buff *__skb_dequeue(struct sk_buff_head *list)
 {
 	struct sk_buff *next, *prev, *result;
 
@@ -594,7 +594,7 @@ static inline struct sk_buff *__skb_dequeue(struct sk_buff_head *list)
  *	returned or %NULL if the list is empty.
  */
 
-static inline struct sk_buff *skb_dequeue(struct sk_buff_head *list)
+static __inline struct sk_buff *skb_dequeue(struct sk_buff_head *list)
 {
 	unsigned long flags;
 	struct sk_buff *result;
@@ -609,7 +609,7 @@ static inline struct sk_buff *skb_dequeue(struct sk_buff_head *list)
  *	Insert a packet on a list.
  */
 
-static inline void __skb_insert(struct sk_buff *newsk,
+static __inline void __skb_insert(struct sk_buff *newsk,
 	struct sk_buff * prev, struct sk_buff *next,
 	struct sk_buff_head * list)
 {
@@ -631,7 +631,7 @@ static inline void __skb_insert(struct sk_buff *newsk,
  *	A buffer cannot be placed on two lists at the same time.
  */
 
-static inline void skb_insert(struct sk_buff *old, struct sk_buff *newsk)
+static __inline void skb_insert(struct sk_buff *old, struct sk_buff *newsk)
 {
 	unsigned long flags;
 
@@ -644,7 +644,7 @@ static inline void skb_insert(struct sk_buff *old, struct sk_buff *newsk)
  *	Place a packet after a given packet in a list.
  */
 
-static inline void __skb_append(struct sk_buff *old, struct sk_buff *newsk)
+static __inline void __skb_append(struct sk_buff *old, struct sk_buff *newsk)
 {
 	__skb_insert(newsk, old, old->next, old->list);
 }
@@ -660,7 +660,7 @@ static inline void __skb_append(struct sk_buff *old, struct sk_buff *newsk)
  */
 
 
-static inline void skb_append(struct sk_buff *old, struct sk_buff *newsk)
+static __inline void skb_append(struct sk_buff *old, struct sk_buff *newsk)
 {
 	unsigned long flags;
 
@@ -674,7 +674,7 @@ static inline void skb_append(struct sk_buff *old, struct sk_buff *newsk)
  * the list known..
  */
 
-static inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
+static __inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
 {
 	struct sk_buff * next, * prev;
 
@@ -701,7 +701,7 @@ static inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
  *	destroyed.
  */
 
-static inline void skb_unlink(struct sk_buff *skb)
+static __inline void skb_unlink(struct sk_buff *skb)
 {
 	struct sk_buff_head *list = skb->list;
 
@@ -726,7 +726,7 @@ static inline void skb_unlink(struct sk_buff *skb)
  *	returned or %NULL if the list is empty.
  */
 
-static inline struct sk_buff *__skb_dequeue_tail(struct sk_buff_head *list)
+static __inline struct sk_buff *__skb_dequeue_tail(struct sk_buff_head *list)
 {
 	struct sk_buff *skb = skb_peek_tail(list);
 	if (skb)
@@ -743,7 +743,7 @@ static inline struct sk_buff *__skb_dequeue_tail(struct sk_buff_head *list)
  *	returned or %NULL if the list is empty.
  */
 
-static inline struct sk_buff *skb_dequeue_tail(struct sk_buff_head *list)
+static __inline struct sk_buff *skb_dequeue_tail(struct sk_buff_head *list)
 {
 	unsigned long flags;
 	struct sk_buff *result;
@@ -754,12 +754,12 @@ static inline struct sk_buff *skb_dequeue_tail(struct sk_buff_head *list)
 	return result;
 }
 
-static inline int skb_is_nonlinear(const struct sk_buff *skb)
+static __inline int skb_is_nonlinear(const struct sk_buff *skb)
 {
 	return skb->data_len;
 }
 
-static inline int skb_headlen(const struct sk_buff *skb)
+static __inline int skb_headlen(const struct sk_buff *skb)
 {
 	return skb->len - skb->data_len;
 }
@@ -772,7 +772,7 @@ static inline int skb_headlen(const struct sk_buff *skb)
  *	Add data to an sk_buff
  */
 
-static inline unsigned char *__skb_put(struct sk_buff *skb, unsigned int len)
+static __inline unsigned char *__skb_put(struct sk_buff *skb, unsigned int len)
 {
 	unsigned char *tmp=skb->tail;
 	SKB_LINEAR_ASSERT(skb);
@@ -791,7 +791,7 @@ static inline unsigned char *__skb_put(struct sk_buff *skb, unsigned int len)
  *	first byte of the extra data is returned.
  */
 
-static inline unsigned char *skb_put(struct sk_buff *skb, unsigned int len)
+static __inline unsigned char *skb_put(struct sk_buff *skb, unsigned int len)
 {
 #if 0
 	unsigned char *tmp=skb->tail;
@@ -807,7 +807,7 @@ return NULL;
 #endif
 }
 
-static inline unsigned char *__skb_push(struct sk_buff *skb, unsigned int len)
+static __inline unsigned char *__skb_push(struct sk_buff *skb, unsigned int len)
 {
 	skb->data-=len;
 	skb->len+=len;
@@ -824,7 +824,7 @@ static inline unsigned char *__skb_push(struct sk_buff *skb, unsigned int len)
  *	panic. A pointer to the first byte of the extra data is returned.
  */
 
-static inline unsigned char *skb_push(struct sk_buff *skb, unsigned int len)
+static __inline unsigned char *skb_push(struct sk_buff *skb, unsigned int len)
 {
 #if 0
 	skb->data-=len;
@@ -838,7 +838,7 @@ static inline unsigned char *skb_push(struct sk_buff *skb, unsigned int len)
 #endif
 }
 
-static inline char *__skb_pull(struct sk_buff *skb, unsigned int len)
+static __inline char *__skb_pull(struct sk_buff *skb, unsigned int len)
 {
 	skb->len-=len;
 	if (skb->len < skb->data_len)
@@ -857,7 +857,7 @@ static inline char *__skb_pull(struct sk_buff *skb, unsigned int len)
  *	the old data.
  */
 
-static inline unsigned char * skb_pull(struct sk_buff *skb, unsigned int len)
+static __inline unsigned char * skb_pull(struct sk_buff *skb, unsigned int len)
 {
 	if (len > skb->len)
 		return NULL;
@@ -866,7 +866,7 @@ static inline unsigned char * skb_pull(struct sk_buff *skb, unsigned int len)
 
 extern unsigned char * __pskb_pull_tail(struct sk_buff *skb, int delta);
 
-static inline char *__pskb_pull(struct sk_buff *skb, unsigned int len)
+static __inline char *__pskb_pull(struct sk_buff *skb, unsigned int len)
 {
 	if (len > skb_headlen(skb) &&
 	    __pskb_pull_tail(skb, len-skb_headlen(skb)) == NULL)
@@ -875,14 +875,14 @@ static inline char *__pskb_pull(struct sk_buff *skb, unsigned int len)
 	return 	skb->data += len;
 }
 
-static inline unsigned char * pskb_pull(struct sk_buff *skb, unsigned int len)
+static __inline unsigned char * pskb_pull(struct sk_buff *skb, unsigned int len)
 {
 	if (len > skb->len)
 		return NULL;
 	return __pskb_pull(skb,len);
 }
 
-static inline int pskb_may_pull(struct sk_buff *skb, unsigned int len)
+static __inline int pskb_may_pull(struct sk_buff *skb, unsigned int len)
 {
 	if (len <= skb_headlen(skb))
 		return 1;
@@ -898,7 +898,7 @@ static inline int pskb_may_pull(struct sk_buff *skb, unsigned int len)
  *	Return the number of bytes of free space at the head of an &sk_buff.
  */
 
-static inline int skb_headroom(const struct sk_buff *skb)
+static __inline int skb_headroom(const struct sk_buff *skb)
 {
 	return skb->data-skb->head;
 }
@@ -910,7 +910,7 @@ static inline int skb_headroom(const struct sk_buff *skb)
  *	Return the number of bytes of free space at the tail of an sk_buff
  */
 
-static inline int skb_tailroom(const struct sk_buff *skb)
+static __inline int skb_tailroom(const struct sk_buff *skb)
 {
 	return skb_is_nonlinear(skb) ? 0 : skb->end-skb->tail;
 }
@@ -924,7 +924,7 @@ static inline int skb_tailroom(const struct sk_buff *skb)
  *	room. This is only allowed for an empty buffer.
  */
 
-static inline void skb_reserve(struct sk_buff *skb, unsigned int len)
+static __inline void skb_reserve(struct sk_buff *skb, unsigned int len)
 {
 	skb->data+=len;
 	skb->tail+=len;
@@ -932,7 +932,7 @@ static inline void skb_reserve(struct sk_buff *skb, unsigned int len)
 
 extern int ___pskb_trim(struct sk_buff *skb, unsigned int len, int realloc);
 
-static inline void __skb_trim(struct sk_buff *skb, unsigned int len)
+static __inline void __skb_trim(struct sk_buff *skb, unsigned int len)
 {
 	if (!skb->data_len) {
 		skb->len = len;
@@ -951,7 +951,7 @@ static inline void __skb_trim(struct sk_buff *skb, unsigned int len)
  *	the buffer is already under the length specified it is not modified.
  */
 
-static inline void skb_trim(struct sk_buff *skb, unsigned int len)
+static __inline void skb_trim(struct sk_buff *skb, unsigned int len)
 {
 	if (skb->len > len) {
 		__skb_trim(skb, len);
@@ -959,7 +959,7 @@ static inline void skb_trim(struct sk_buff *skb, unsigned int len)
 }
 
 
-static inline int __pskb_trim(struct sk_buff *skb, unsigned int len)
+static __inline int __pskb_trim(struct sk_buff *skb, unsigned int len)
 {
 	if (!skb->data_len) {
 		skb->len = len;
@@ -970,7 +970,7 @@ static inline int __pskb_trim(struct sk_buff *skb, unsigned int len)
 	}
 }
 
-static inline int pskb_trim(struct sk_buff *skb, unsigned int len)
+static __inline int pskb_trim(struct sk_buff *skb, unsigned int len)
 {
 	if (len < skb->len)
 		return __pskb_trim(skb, len);
@@ -987,7 +987,7 @@ static inline int pskb_trim(struct sk_buff *skb, unsigned int len)
  */
 
 
-static inline void skb_orphan(struct sk_buff *skb)
+static __inline void skb_orphan(struct sk_buff *skb)
 {
 	if (skb->destructor)
 		skb->destructor(skb);
@@ -1005,7 +1005,7 @@ static inline void skb_orphan(struct sk_buff *skb)
  */
 
 
-static inline void skb_queue_purge(struct sk_buff_head *list)
+static __inline void skb_queue_purge(struct sk_buff_head *list)
 {
 	struct sk_buff *skb;
 	while ((skb=skb_dequeue(list))!=NULL)
@@ -1022,7 +1022,7 @@ static inline void skb_queue_purge(struct sk_buff_head *list)
  */
 
 
-static inline void __skb_queue_purge(struct sk_buff_head *list)
+static __inline void __skb_queue_purge(struct sk_buff_head *list)
 {
 	struct sk_buff *skb;
 	while ((skb=__skb_dequeue(list))!=NULL)
@@ -1042,7 +1042,7 @@ static inline void __skb_queue_purge(struct sk_buff_head *list)
  *	%NULL is returned in there is no free memory.
  */
 
-static inline struct sk_buff *__dev_alloc_skb(unsigned int length,
+static __inline struct sk_buff *__dev_alloc_skb(unsigned int length,
 					      int gfp_mask)
 {
 	struct sk_buff *skb;
@@ -1066,7 +1066,7 @@ static inline struct sk_buff *__dev_alloc_skb(unsigned int length,
  *	allocates memory it can be called from an interrupt.
  */
 
-static inline struct sk_buff *dev_alloc_skb(unsigned int length)
+static __inline struct sk_buff *dev_alloc_skb(unsigned int length)
 {
 #if 0
 	return __dev_alloc_skb(length, GFP_ATOMIC);
@@ -1088,7 +1088,7 @@ static inline struct sk_buff *dev_alloc_skb(unsigned int length)
  *	and at least @headroom of space at head.
  */
 
-static inline int
+static __inline int
 skb_cow(struct sk_buff *skb, unsigned int headroom)
 {
 #if 0
@@ -1114,7 +1114,7 @@ skb_cow(struct sk_buff *skb, unsigned int headroom)
  *	is returned and the old skb data released.  */
 int skb_linearize(struct sk_buff *skb, int gfp);
 
-static inline void *kmap_skb_frag(const skb_frag_t *frag)
+static __inline void *kmap_skb_frag(const skb_frag_t *frag)
 {
 #if 0
 #ifdef CONFIG_HIGHMEM
@@ -1129,7 +1129,7 @@ static inline void *kmap_skb_frag(const skb_frag_t *frag)
 #endif
 }
 
-static inline void kunmap_skb_frag(void *vaddr)
+static __inline void kunmap_skb_frag(void *vaddr)
 {
 #if 0
 	kunmap_atomic(vaddr, KM_SKB_DATA_SOFTIRQ);
@@ -1162,13 +1162,13 @@ extern void skb_init(void);
 extern void skb_add_mtu(int mtu);
 
 #ifdef CONFIG_NETFILTER
-static inline void
+static __inline void
 nf_conntrack_put(struct nf_ct_info *nfct)
 {
 	if (nfct && atomic_dec_and_test(&nfct->master->use))
 		nfct->master->destroy(nfct->master);
 }
-static inline void
+static __inline void
 nf_conntrack_get(struct nf_ct_info *nfct)
 {
 	if (nfct)
@@ -1733,12 +1733,12 @@ struct dst_ops
 
 #ifdef __KERNEL__
 
-static inline void dst_hold(struct dst_entry * dst)
+static __inline void dst_hold(struct dst_entry * dst)
 {
 	atomic_inc(&dst->__refcnt);
 }
 
-static inline
+static __inline
 struct dst_entry * dst_clone(struct dst_entry * dst)
 {
 	if (dst)
@@ -1746,7 +1746,7 @@ struct dst_entry * dst_clone(struct dst_entry * dst)
 	return dst;
 }
 
-static inline
+static __inline
 void dst_release(struct dst_entry * dst)
 {
 	if (dst)
@@ -1757,7 +1757,7 @@ extern void * dst_alloc(struct dst_ops * ops);
 extern void __dst_free(struct dst_entry * dst);
 extern void dst_destroy(struct dst_entry * dst);
 
-static inline
+static __inline
 void dst_free(struct dst_entry * dst)
 {
 	if (dst->obsolete > 1)
@@ -1769,27 +1769,27 @@ void dst_free(struct dst_entry * dst)
 	__dst_free(dst);
 }
 
-static inline void dst_confirm(struct dst_entry *dst)
+static __inline void dst_confirm(struct dst_entry *dst)
 {
 	if (dst)
 		neigh_confirm(dst->neighbour);
 }
 
-static inline void dst_negative_advice(struct dst_entry **dst_p)
+static __inline void dst_negative_advice(struct dst_entry **dst_p)
 {
 	struct dst_entry * dst = *dst_p;
 	if (dst && dst->ops->negative_advice)
 		*dst_p = dst->ops->negative_advice(dst);
 }
 
-static inline void dst_link_failure(struct sk_buff *skb)
+static __inline void dst_link_failure(struct sk_buff *skb)
 {
 	struct dst_entry * dst = skb->dst;
 	if (dst && dst->ops && dst->ops->link_failure)
 		dst->ops->link_failure(skb);
 }
 
-static inline void dst_set_expires(struct dst_entry *dst, int timeout)
+static __inline void dst_set_expires(struct dst_entry *dst, int timeout)
 {
 	unsigned long expires = jiffies + timeout;
 
@@ -1940,7 +1940,7 @@ extern int tcp_port_rover;
 extern struct sock *tcp_v4_lookup_listener(u32 addr, unsigned short hnum, int dif);
 
 /* These are AF independent. */
-static __inline__ int tcp_bhashfn(__u16 lport)
+static __inline int tcp_bhashfn(__u16 lport)
 {
 	return (lport & (tcp_bhash_size - 1));
 }
@@ -1992,7 +1992,7 @@ struct tcp_tw_bucket {
 
 extern kmem_cache_t *tcp_timewait_cachep;
 
-static inline void tcp_tw_put(struct tcp_tw_bucket *tw)
+static __inline void tcp_tw_put(struct tcp_tw_bucket *tw)
 {
 	if (atomic_dec_and_test(&tw->refcnt)) {
 #ifdef INET_REFCNT_DEBUG
@@ -2048,7 +2048,7 @@ extern void tcp_tw_deschedule(struct tcp_tw_bucket *tw);
 	 (!((__sk)->bound_dev_if) || ((__sk)->bound_dev_if == (__dif))))
 
 /* These can have wildcards, don't try too hard. */
-static __inline__ int tcp_lhashfn(unsigned short num)
+static __inline int tcp_lhashfn(unsigned short num)
 {
 #if 0
 	return num & (TCP_LHTABLE_SIZE - 1);
@@ -2057,7 +2057,7 @@ static __inline__ int tcp_lhashfn(unsigned short num)
 #endif
 }
 
-static __inline__ int tcp_sk_listen_hashfn(struct sock *sk)
+static __inline int tcp_sk_listen_hashfn(struct sock *sk)
 {
 #if 0
 	return tcp_lhashfn(sk->num);
@@ -2341,7 +2341,7 @@ extern kmem_cache_t *tcp_openreq_cachep;
 #define tcp_openreq_alloc()		kmem_cache_alloc(tcp_openreq_cachep, SLAB_ATOMIC)
 #define tcp_openreq_fastfree(req)	kmem_cache_free(tcp_openreq_cachep, req)
 
-static inline void tcp_openreq_free(struct open_request *req)
+static __inline void tcp_openreq_free(struct open_request *req)
 {
 	req->class->destructor(req);
 	tcp_openreq_fastfree(req);
@@ -2477,17 +2477,17 @@ enum tcp_ack_state_t
 	TCP_ACK_PUSHED= 4
 };
 
-static inline void tcp_schedule_ack(struct tcp_opt *tp)
+static __inline void tcp_schedule_ack(struct tcp_opt *tp)
 {
 	tp->ack.pending |= TCP_ACK_SCHED;
 }
 
-static inline int tcp_ack_scheduled(struct tcp_opt *tp)
+static __inline int tcp_ack_scheduled(struct tcp_opt *tp)
 {
 	return tp->ack.pending&TCP_ACK_SCHED;
 }
 
-static __inline__ void tcp_dec_quickack_mode(struct tcp_opt *tp)
+static __inline void tcp_dec_quickack_mode(struct tcp_opt *tp)
 {
 	if (tp->ack.quick && --tp->ack.quick == 0) {
 		/* Leaving quickack mode we deflate ATO. */
@@ -2497,12 +2497,12 @@ static __inline__ void tcp_dec_quickack_mode(struct tcp_opt *tp)
 
 extern void tcp_enter_quickack_mode(struct tcp_opt *tp);
 
-static __inline__ void tcp_delack_init(struct tcp_opt *tp)
+static __inline void tcp_delack_init(struct tcp_opt *tp)
 {
 	memset(&tp->ack, 0, sizeof(tp->ack));
 }
 
-static inline void tcp_clear_options(struct tcp_opt *tp)
+static __inline void tcp_clear_options(struct tcp_opt *tp)
 {
  	tp->tstamp_ok = tp->sack_ok = tp->wscale_ok = tp->snd_wscale = 0;
 }
@@ -2641,7 +2641,7 @@ typedef int (*sk_read_actor_t)(read_descriptor_t *, struct sk_buff *,
 extern int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
 			 sk_read_actor_t recv_actor);
 
-static inline void tcp_clear_xmit_timer(struct sock *sk, int what)
+static __inline void tcp_clear_xmit_timer(struct sock *sk, int what)
 {
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
@@ -2677,7 +2677,7 @@ static inline void tcp_clear_xmit_timer(struct sock *sk, int what)
 /*
  *	Reset the retransmission timer
  */
-static inline void tcp_reset_xmit_timer(struct sock *sk, int what, unsigned long when)
+static __inline void tcp_reset_xmit_timer(struct sock *sk, int what, unsigned long when)
 {
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
@@ -2715,7 +2715,7 @@ static inline void tcp_reset_xmit_timer(struct sock *sk, int what, unsigned long
  * and even PMTU discovery events into account.
  */
 
-static __inline__ unsigned int tcp_current_mss(struct sock *sk)
+static __inline unsigned int tcp_current_mss(struct sock *sk)
 {
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
@@ -2742,7 +2742,7 @@ static __inline__ unsigned int tcp_current_mss(struct sock *sk)
  * Underestimations are more easy to detect and fix by tcp_measure_rcv_mss().
  */
 
-static inline void tcp_initialize_rcv_mss(struct sock *sk)
+static __inline void tcp_initialize_rcv_mss(struct sock *sk)
 {
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
@@ -2756,7 +2756,7 @@ static inline void tcp_initialize_rcv_mss(struct sock *sk)
 #endif
 }
 
-static __inline__ void __tcp_fast_path_on(struct tcp_opt *tp, u32 snd_wnd)
+static __inline void __tcp_fast_path_on(struct tcp_opt *tp, u32 snd_wnd)
 {
 #if 0
 	tp->pred_flags = htonl((tp->tcp_header_len << 26) |
@@ -2765,14 +2765,14 @@ static __inline__ void __tcp_fast_path_on(struct tcp_opt *tp, u32 snd_wnd)
 #endif
 }
 
-static __inline__ void tcp_fast_path_on(struct tcp_opt *tp)
+static __inline void tcp_fast_path_on(struct tcp_opt *tp)
 {
 #if 0
 	__tcp_fast_path_on(tp, tp->snd_wnd>>tp->snd_wscale);
 #endif
 }
 
-static inline void tcp_fast_path_check(struct sock *sk, struct tcp_opt *tp)
+static __inline void tcp_fast_path_check(struct sock *sk, struct tcp_opt *tp)
 {
 #if 0
 	if (skb_queue_len(&tp->out_of_order_queue) == 0 &&
@@ -2787,7 +2787,7 @@ static inline void tcp_fast_path_check(struct sock *sk, struct tcp_opt *tp)
  * Rcv_nxt can be after the window if our peer push more data
  * than the offered window.
  */
-static __inline__ u32 tcp_receive_window(struct tcp_opt *tp)
+static __inline u32 tcp_receive_window(struct tcp_opt *tp)
 {
 #if 0
 	s32 win = tp->rcv_wup + tp->rcv_wnd - tp->rcv_nxt;
@@ -2879,7 +2879,7 @@ struct tcp_skb_cb {
 /*
  *	Compute minimal free write space needed to queue new packets.
  */
-static inline int tcp_min_write_space(struct sock *sk)
+static __inline int tcp_min_write_space(struct sock *sk)
 {
 #if 0
 	return sk->wmem_queued/2;
@@ -2888,7 +2888,7 @@ return 0;
 #endif
 }
 
-static inline int tcp_wspace(struct sock *sk)
+static __inline int tcp_wspace(struct sock *sk)
 {
 #if 0
 	return sk->sndbuf - sk->wmem_queued;
@@ -2912,7 +2912,7 @@ return 0;
  *	"Packets left network, but not honestly ACKed yet" PLUS
  *	"Packets fast retransmitted"
  */
-static __inline__ unsigned int tcp_packets_in_flight(struct tcp_opt *tp)
+static __inline unsigned int tcp_packets_in_flight(struct tcp_opt *tp)
 {
 #if 0
 	return tp->packets_out - tp->left_out + tp->retrans_out;
@@ -2926,7 +2926,7 @@ static __inline__ unsigned int tcp_packets_in_flight(struct tcp_opt *tp)
  * 	one half the current congestion window, but no
  *	less than two segments
  */
-static inline __u32 tcp_recalc_ssthresh(struct tcp_opt *tp)
+static __inline __u32 tcp_recalc_ssthresh(struct tcp_opt *tp)
 {
 #if 0
 	return max(tp->snd_cwnd >> 1U, 2U);
@@ -2939,7 +2939,7 @@ static inline __u32 tcp_recalc_ssthresh(struct tcp_opt *tp)
  * The exception is rate halving phase, when cwnd is decreasing towards
  * ssthresh.
  */
-static inline __u32 tcp_current_ssthresh(struct tcp_opt *tp)
+static __inline __u32 tcp_current_ssthresh(struct tcp_opt *tp)
 {
 #if 0
 	if ((1<<tp->ca_state)&(TCPF_CA_CWR|TCPF_CA_Recovery))
@@ -2953,7 +2953,7 @@ static inline __u32 tcp_current_ssthresh(struct tcp_opt *tp)
 #endif
 }
 
-static inline void tcp_sync_left_out(struct tcp_opt *tp)
+static __inline void tcp_sync_left_out(struct tcp_opt *tp)
 {
 #if 0
 	if (tp->sack_ok && tp->sacked_out >= tp->packets_out - tp->lost_out)
@@ -2966,7 +2966,7 @@ extern void tcp_cwnd_application_limited(struct sock *sk);
 
 /* Congestion window validation. (RFC2861) */
 
-static inline void tcp_cwnd_validate(struct sock *sk, struct tcp_opt *tp)
+static __inline void tcp_cwnd_validate(struct sock *sk, struct tcp_opt *tp)
 {
 #if 0
 	if (tp->packets_out >= tp->snd_cwnd) {
@@ -2985,7 +2985,7 @@ static inline void tcp_cwnd_validate(struct sock *sk, struct tcp_opt *tp)
 }
 
 /* Set slow start threshould and cwnd not falling to slow start */
-static inline void __tcp_enter_cwr(struct tcp_opt *tp)
+static __inline void __tcp_enter_cwr(struct tcp_opt *tp)
 {
 #if 0
 	tp->undo_marker = 0;
@@ -2999,7 +2999,7 @@ static inline void __tcp_enter_cwr(struct tcp_opt *tp)
 #endif
 }
 
-static inline void tcp_enter_cwr(struct tcp_opt *tp)
+static __inline void tcp_enter_cwr(struct tcp_opt *tp)
 {
 #if 0
 	tp->prior_ssthresh = 0;
@@ -3015,7 +3015,7 @@ extern __u32 tcp_init_cwnd(struct tcp_opt *tp);
 /* Slow start with delack produces 3 packets of burst, so that
  * it is safe "de facto".
  */
-static __inline__ __u32 tcp_max_burst(struct tcp_opt *tp)
+static __inline __u32 tcp_max_burst(struct tcp_opt *tp)
 {
 	return 3;
 }
@@ -3030,7 +3030,7 @@ static __inline__ int tcp_minshall_check(struct tcp_opt *tp)
 #endif
 }
 
-static __inline__ void tcp_minshall_update(struct tcp_opt *tp, int mss, struct sk_buff *skb)
+static __inline void tcp_minshall_update(struct tcp_opt *tp, int mss, struct sk_buff *skb)
 {
 #if 0
 	if (skb->len < mss)
@@ -3046,7 +3046,7 @@ static __inline__ void tcp_minshall_update(struct tcp_opt *tp, int mss, struct s
       With Minshall's modification: all sent small packets are ACKed.
  */
 
-static __inline__ int
+static __inline int
 tcp_nagle_check(struct tcp_opt *tp, struct sk_buff *skb, unsigned mss_now, int nonagle)
 {
 #if 0
@@ -3064,7 +3064,7 @@ tcp_nagle_check(struct tcp_opt *tp, struct sk_buff *skb, unsigned mss_now, int n
 /* This checks if the data bearing packet SKB (usually tp->send_head)
  * should be put on the wire right now.
  */
-static __inline__ int tcp_snd_test(struct tcp_opt *tp, struct sk_buff *skb,
+static __inline int tcp_snd_test(struct tcp_opt *tp, struct sk_buff *skb,
 				   unsigned cur_mss, int nonagle)
 {
 #if 0
@@ -3102,7 +3102,7 @@ static __inline__ int tcp_snd_test(struct tcp_opt *tp, struct sk_buff *skb,
 #endif
 }
 
-static __inline__ void tcp_check_probe_timer(struct sock *sk, struct tcp_opt *tp)
+static __inline void tcp_check_probe_timer(struct sock *sk, struct tcp_opt *tp)
 {
 #if 0
 	if (!tp->packets_out && !tp->pending)
@@ -3110,7 +3110,7 @@ static __inline__ void tcp_check_probe_timer(struct sock *sk, struct tcp_opt *tp
 #endif
 }
 
-static __inline__ int tcp_skb_is_last(struct sock *sk, struct sk_buff *skb)
+static __inline int tcp_skb_is_last(struct sock *sk, struct sk_buff *skb)
 {
 #if 0
 	return (skb->next == (struct sk_buff*)&sk->write_queue);
@@ -3123,7 +3123,7 @@ static __inline__ int tcp_skb_is_last(struct sock *sk, struct sk_buff *skb)
  * TCP_CORK or attempt at coalescing tiny packets.
  * The socket must be locked by the caller.
  */
-static __inline__ void __tcp_push_pending_frames(struct sock *sk,
+static __inline void __tcp_push_pending_frames(struct sock *sk,
 						 struct tcp_opt *tp,
 						 unsigned cur_mss,
 						 int nonagle)
@@ -3142,7 +3142,7 @@ static __inline__ void __tcp_push_pending_frames(struct sock *sk,
 #endif
 }
 
-static __inline__ void tcp_push_pending_frames(struct sock *sk,
+static __inline void tcp_push_pending_frames(struct sock *sk,
 					       struct tcp_opt *tp)
 {
 #if 0
@@ -3150,7 +3150,7 @@ static __inline__ void tcp_push_pending_frames(struct sock *sk,
 #endif
 }
 
-static __inline__ int tcp_may_send_now(struct sock *sk, struct tcp_opt *tp)
+static __inline int tcp_may_send_now(struct sock *sk, struct tcp_opt *tp)
 {
 #if 0
 	struct sk_buff *skb = tp->send_head;
@@ -3163,14 +3163,14 @@ static __inline__ int tcp_may_send_now(struct sock *sk, struct tcp_opt *tp)
 #endif
 }
 
-static __inline__ void tcp_init_wl(struct tcp_opt *tp, u32 ack, u32 seq)
+static __inline void tcp_init_wl(struct tcp_opt *tp, u32 ack, u32 seq)
 {
 #if 0
 	tp->snd_wl1 = seq;
 #endif
 }
 
-static __inline__ void tcp_update_wl(struct tcp_opt *tp, u32 ack, u32 seq)
+static __inline void tcp_update_wl(struct tcp_opt *tp, u32 ack, u32 seq)
 {
 #if 0
 	tp->snd_wl1 = seq;
@@ -3183,7 +3183,7 @@ extern void			tcp_destroy_sock(struct sock *sk);
 /*
  * Calculate(/check) TCP checksum
  */
-static __inline__ u16 tcp_v4_check(struct tcphdr *th, int len,
+static __inline u16 tcp_v4_check(struct tcphdr *th, int len,
 				   unsigned long saddr, unsigned long daddr,
 				   unsigned long base)
 {
@@ -3194,7 +3194,7 @@ static __inline__ u16 tcp_v4_check(struct tcphdr *th, int len,
 #endif
 }
 
-static __inline__ int __tcp_checksum_complete(struct sk_buff *skb)
+static __inline int __tcp_checksum_complete(struct sk_buff *skb)
 {
 #if 0
 	return (unsigned short)csum_fold(skb_checksum(skb, 0, skb->len, skb->csum));
@@ -3203,7 +3203,7 @@ static __inline__ int __tcp_checksum_complete(struct sk_buff *skb)
 #endif
 }
 
-static __inline__ int tcp_checksum_complete(struct sk_buff *skb)
+static __inline int tcp_checksum_complete(struct sk_buff *skb)
 {
 #if 0
 	return skb->ip_summed != CHECKSUM_UNNECESSARY &&
@@ -3215,7 +3215,7 @@ static __inline__ int tcp_checksum_complete(struct sk_buff *skb)
 
 /* Prequeue for VJ style copy to user, combined with checksumming. */
 
-static __inline__ void tcp_prequeue_init(struct tcp_opt *tp)
+static __inline void tcp_prequeue_init(struct tcp_opt *tp)
 {
 #if 0
 	tp->ucopy.task = NULL;
@@ -3233,7 +3233,7 @@ static __inline__ void tcp_prequeue_init(struct tcp_opt *tp)
  *
  * NOTE: is this not too big to inline?
  */
-static __inline__ int tcp_prequeue(struct sock *sk, struct sk_buff *skb)
+static __inline int tcp_prequeue(struct sock *sk, struct sk_buff *skb)
 {
 #if 0
 	struct tcp_opt *tp = &sk->tp_pinfo.af_tcp;
@@ -3277,7 +3277,7 @@ static char *statename[]={
 };
 #endif
 
-static __inline__ void tcp_set_state(struct sock *sk, int state)
+static __inline void tcp_set_state(struct sock *sk, int state)
 {
 #if 0
 	int oldstate = sk->state;
@@ -3309,7 +3309,7 @@ static __inline__ void tcp_set_state(struct sock *sk, int state)
 #endif
 }
 
-static __inline__ void tcp_done(struct sock *sk)
+static __inline void tcp_done(struct sock *sk)
 {
 #if 0
 	tcp_set_state(sk, TCP_CLOSE);
@@ -3324,7 +3324,7 @@ static __inline__ void tcp_done(struct sock *sk)
 #endif
 }
 
-static __inline__ void tcp_sack_reset(struct tcp_opt *tp)
+static __inline void tcp_sack_reset(struct tcp_opt *tp)
 {
 #if 0
 	tp->dsack = 0;
@@ -3333,7 +3333,7 @@ static __inline__ void tcp_sack_reset(struct tcp_opt *tp)
 #endif
 }
 
-static __inline__ void tcp_build_and_update_options(__u32 *ptr, struct tcp_opt *tp, __u32 tstamp)
+static __inline void tcp_build_and_update_options(__u32 *ptr, struct tcp_opt *tp, __u32 tstamp)
 {
 #if 0
 	if (tp->tstamp_ok) {
@@ -3370,7 +3370,7 @@ static __inline__ void tcp_build_and_update_options(__u32 *ptr, struct tcp_opt *
  * MAX_SYN_SIZE to match the new maximum number of options that you
  * can generate.
  */
-static inline void tcp_syn_build_options(__u32 *ptr, int mss, int ts, int sack,
+static __inline void tcp_syn_build_options(__u32 *ptr, int mss, int ts, int sack,
 					     int offer_wscale, int wscale, __u32 tstamp, __u32 ts_recent)
 {
 #if 0
@@ -3412,7 +3412,7 @@ static inline void tcp_syn_build_options(__u32 *ptr, int mss, int ts, int sack,
  * be a multiple of mss if possible. We assume here that mss >= 1.
  * This MUST be enforced by all callers.
  */
-static inline void tcp_select_initial_window(int __space, __u32 mss,
+static __inline void tcp_select_initial_window(int __space, __u32 mss,
 	__u32 *rcv_wnd,
 	__u32 *window_clamp,
 	int wscale_ok,
@@ -3467,7 +3467,7 @@ static inline void tcp_select_initial_window(int __space, __u32 mss,
 #endif
 }
 
-static inline int tcp_win_from_space(int space)
+static __inline int tcp_win_from_space(int space)
 {
 #if 0
 	return sysctl_tcp_adv_win_scale<=0 ?
@@ -3479,7 +3479,7 @@ static inline int tcp_win_from_space(int space)
 }
 
 /* Note: caller must be prepared to deal with negative returns */
-static inline int tcp_space(struct sock *sk)
+static __inline int tcp_space(struct sock *sk)
 {
 #if 0
 	return tcp_win_from_space(sk->rcvbuf - atomic_read(&sk->rmem_alloc));
@@ -3488,7 +3488,7 @@ static inline int tcp_space(struct sock *sk)
 #endif
 }
 
-static inline int tcp_full_space( struct sock *sk)
+static __inline int tcp_full_space( struct sock *sk)
 {
 #if 0
 	return tcp_win_from_space(sk->rcvbuf);
@@ -3497,21 +3497,21 @@ static inline int tcp_full_space( struct sock *sk)
 #endif
 }
 
-static inline void tcp_acceptq_removed(struct sock *sk)
+static __inline void tcp_acceptq_removed(struct sock *sk)
 {
 #if 0
 	sk->ack_backlog--;
 #endif
 }
 
-static inline void tcp_acceptq_added(struct sock *sk)
+static __inline void tcp_acceptq_added(struct sock *sk)
 {
 #if 0
 	sk->ack_backlog++;
 #endif
 }
 
-static inline int tcp_acceptq_is_full(struct sock *sk)
+static __inline int tcp_acceptq_is_full(struct sock *sk)
 {
 #if 0
 	return sk->ack_backlog > sk->max_ack_backlog;
@@ -3520,7 +3520,7 @@ static inline int tcp_acceptq_is_full(struct sock *sk)
 #endif
 }
 
-static inline void tcp_acceptq_queue(struct sock *sk, struct open_request *req,
+static __inline void tcp_acceptq_queue(struct sock *sk, struct open_request *req,
 					 struct sock *child)
 {
 #if 0
@@ -3548,7 +3548,7 @@ struct tcp_listen_opt
 	struct open_request	*syn_table[TCP_SYNQ_HSIZE];
 };
 
-static inline void
+static __inline void
 tcp_synq_removed(struct sock *sk, struct open_request *req)
 {
 #if 0
@@ -3561,7 +3561,7 @@ tcp_synq_removed(struct sock *sk, struct open_request *req)
 #endif
 }
 
-static inline void tcp_synq_added(struct sock *sk)
+static __inline void tcp_synq_added(struct sock *sk)
 {
 #if 0
 	struct tcp_listen_opt *lopt = sk->tp_pinfo.af_tcp.listen_opt;
@@ -3572,7 +3572,7 @@ static inline void tcp_synq_added(struct sock *sk)
 #endif
 }
 
-static inline int tcp_synq_len(struct sock *sk)
+static __inline int tcp_synq_len(struct sock *sk)
 {
 #if 0
 	return sk->tp_pinfo.af_tcp.listen_opt->qlen;
@@ -3581,7 +3581,7 @@ static inline int tcp_synq_len(struct sock *sk)
 #endif
 }
 
-static inline int tcp_synq_young(struct sock *sk)
+static __inline int tcp_synq_young(struct sock *sk)
 {
 #if 0
 	return sk->tp_pinfo.af_tcp.listen_opt->qlen_young;
@@ -3590,7 +3590,7 @@ static inline int tcp_synq_young(struct sock *sk)
 #endif
 }
 
-static inline int tcp_synq_is_full(struct sock *sk)
+static __inline int tcp_synq_is_full(struct sock *sk)
 {
 #if 0
 	return tcp_synq_len(sk)>>sk->tp_pinfo.af_tcp.listen_opt->max_qlen_log;
@@ -3599,7 +3599,7 @@ static inline int tcp_synq_is_full(struct sock *sk)
 #endif
 }
 
-static inline void tcp_synq_unlink(struct tcp_opt *tp, struct open_request *req,
+static __inline void tcp_synq_unlink(struct tcp_opt *tp, struct open_request *req,
 				       struct open_request **prev)
 {
 #if 0
@@ -3609,7 +3609,7 @@ static inline void tcp_synq_unlink(struct tcp_opt *tp, struct open_request *req,
 #endif
 }
 
-static inline void tcp_synq_drop(struct sock *sk, struct open_request *req,
+static __inline void tcp_synq_drop(struct sock *sk, struct open_request *req,
 				     struct open_request **prev)
 {
 #if 0
@@ -3619,7 +3619,7 @@ static inline void tcp_synq_drop(struct sock *sk, struct open_request *req,
 #endif
 }
 
-static __inline__ void tcp_openreq_init(struct open_request *req,
+static __inline void tcp_openreq_init(struct open_request *req,
 					struct tcp_opt *tp,
 					struct sk_buff *skb)
 {
@@ -3640,7 +3640,7 @@ static __inline__ void tcp_openreq_init(struct open_request *req,
 
 #define TCP_MEM_QUANTUM	((int)PAGE_SIZE)
 
-static inline void tcp_free_skb(struct sock *sk, struct sk_buff *skb)
+static __inline void tcp_free_skb(struct sock *sk, struct sk_buff *skb)
 {
 #if 0
 	sk->tp_pinfo.af_tcp.queue_shrunk = 1;
@@ -3650,7 +3650,7 @@ static inline void tcp_free_skb(struct sock *sk, struct sk_buff *skb)
 #endif
 }
 
-static inline void tcp_charge_skb(struct sock *sk, struct sk_buff *skb)
+static __inline void tcp_charge_skb(struct sock *sk, struct sk_buff *skb)
 {
 #if 0
 	sk->wmem_queued += skb->truesize;
@@ -3661,7 +3661,7 @@ static inline void tcp_charge_skb(struct sock *sk, struct sk_buff *skb)
 extern void __tcp_mem_reclaim(struct sock *sk);
 extern int tcp_mem_schedule(struct sock *sk, int size, int kind);
 
-static inline void tcp_mem_reclaim(struct sock *sk)
+static __inline void tcp_mem_reclaim(struct sock *sk)
 {
 #if 0
 	if (sk->forward_alloc >= TCP_MEM_QUANTUM)
@@ -3669,7 +3669,7 @@ static inline void tcp_mem_reclaim(struct sock *sk)
 #endif
 }
 
-static inline void tcp_enter_memory_pressure(void)
+static __inline void tcp_enter_memory_pressure(void)
 {
 #if 0
 	if (!tcp_memory_pressure) {
@@ -3679,7 +3679,7 @@ static inline void tcp_enter_memory_pressure(void)
 #endif
 }
 
-static inline void tcp_moderate_sndbuf(struct sock *sk)
+static __inline void tcp_moderate_sndbuf(struct sock *sk)
 {
 #if 0
 	if (!(sk->userlocks&SOCK_SNDBUF_LOCK)) {
@@ -3689,7 +3689,7 @@ static inline void tcp_moderate_sndbuf(struct sock *sk)
 #endif
 }
 
-static inline struct sk_buff *tcp_alloc_pskb(struct sock *sk, int size, int mem, int gfp)
+static __inline struct sk_buff *tcp_alloc_pskb(struct sock *sk, int size, int mem, int gfp)
 {
 #if 0
 	struct sk_buff *skb = alloc_skb(size+MAX_TCP_HEADER, gfp);
@@ -3712,7 +3712,7 @@ static inline struct sk_buff *tcp_alloc_pskb(struct sock *sk, int size, int mem,
 #endif
 }
 
-static inline struct sk_buff *tcp_alloc_skb(struct sock *sk, int size, int gfp)
+static __inline struct sk_buff *tcp_alloc_skb(struct sock *sk, int size, int gfp)
 {
 #if 0
 	return tcp_alloc_pskb(sk, size, 0, gfp);
@@ -3721,7 +3721,7 @@ static inline struct sk_buff *tcp_alloc_skb(struct sock *sk, int size, int gfp)
 #endif
 }
 
-static inline struct page * tcp_alloc_page(struct sock *sk)
+static __inline struct page * tcp_alloc_page(struct sock *sk)
 {
 #if 0
 	if (sk->forward_alloc >= (int)PAGE_SIZE ||
@@ -3738,7 +3738,7 @@ static inline struct page * tcp_alloc_page(struct sock *sk)
 #endif
 }
 
-static inline void tcp_writequeue_purge(struct sock *sk)
+static __inline void tcp_writequeue_purge(struct sock *sk)
 {
 #if 0
 	struct sk_buff *skb;
@@ -3751,7 +3751,7 @@ static inline void tcp_writequeue_purge(struct sock *sk)
 
 extern void tcp_rfree(struct sk_buff *skb);
 
-static inline void tcp_set_owner_r(struct sk_buff *skb, struct sock *sk)
+static __inline void tcp_set_owner_r(struct sk_buff *skb, struct sock *sk)
 {
 #if 0
 	skb->sk = sk;
@@ -3768,7 +3768,7 @@ extern void tcp_listen_wlock(void);
  *   use plain read_(un)lock(&tcp_lhash_lock).
  */
 
-static inline void tcp_listen_lock(void)
+static __inline void tcp_listen_lock(void)
 {
 #if 0
 	/* read_lock synchronizes to candidates to writers */
@@ -3778,7 +3778,7 @@ static inline void tcp_listen_lock(void)
 #endif
 }
 
-static inline void tcp_listen_unlock(void)
+static __inline void tcp_listen_unlock(void)
 {
 #if 0
 	if (atomic_dec_and_test(&tcp_lhash_users))
@@ -3786,7 +3786,7 @@ static inline void tcp_listen_unlock(void)
 #endif
 }
 
-static inline int keepalive_intvl_when(struct tcp_opt *tp)
+static __inline int keepalive_intvl_when(struct tcp_opt *tp)
 {
 #if 0
 	return tp->keepalive_intvl ? : sysctl_tcp_keepalive_intvl;
@@ -3795,7 +3795,7 @@ static inline int keepalive_intvl_when(struct tcp_opt *tp)
 #endif
 }
 
-static inline int keepalive_time_when(struct tcp_opt *tp)
+static __inline int keepalive_time_when(struct tcp_opt *tp)
 {
 #if 0
 	return tp->keepalive_time ? : sysctl_tcp_keepalive_time;
@@ -3804,7 +3804,7 @@ static inline int keepalive_time_when(struct tcp_opt *tp)
 #endif
 }
 
-static inline int tcp_fin_time(struct tcp_opt *tp)
+static __inline int tcp_fin_time(struct tcp_opt *tp)
 {
 #if 0
 	int fin_timeout = tp->linger2 ? : sysctl_tcp_fin_timeout;
@@ -3818,7 +3818,7 @@ static inline int tcp_fin_time(struct tcp_opt *tp)
 #endif
 }
 
-static inline int tcp_paws_check(struct tcp_opt *tp, int rst)
+static __inline int tcp_paws_check(struct tcp_opt *tp, int rst)
 {
 #if 0
 	if ((s32)(tp->rcv_tsval - tp->ts_recent) >= 0)

@@ -481,11 +481,13 @@ IShellFolder_fnBindToObject (IShellFolder2 * iface, LPCITEMIDLIST pidl,
                              LPBC pbc, REFIID riid, LPVOID * ppvOut)
 {
     IGenericSFImpl *This = impl_from_IShellFolder2(iface);
+    WCHAR szPath[MAX_PATH];
 
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", This, pidl, pbc,
      shdebugstr_guid (riid), ppvOut);
 
-    return SHELL32_BindToChild (This->pidlRoot, This->sPathTarget, pidl, riid,
+    MultiByteToWideChar(CP_ACP, 0, This->sPathTarget, -1, szPath, MAX_PATH);
+    return SHELL32_BindToChild (This->pidlRoot, szPath, pidl, riid,
      ppvOut);
 }
 

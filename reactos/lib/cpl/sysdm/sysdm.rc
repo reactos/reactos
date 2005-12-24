@@ -1,11 +1,10 @@
-
 #include "resource.h"
 #include "windows.h"
 
 #include <commctrl.h>
 #include "resource.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS System Applet\0"
@@ -16,11 +15,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 IDI_DEVMGR ICON "resources/devmgr.ico"
 
+#include "en.rc"
 #include "cz.rc"
 #include "de.rc"
 #include "dk.rc"
-#include "en.rc"
 #include "fr.rc"
-#include "Ja.rc"
 #include "nl.rc"
 #include "sv.rc"
+#include "es.rc"
+#include "Ja.rc"
+#include "hu.rc"
+

@@ -20,12 +20,9 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include <freeldr.h>
-#include <arch.h>
-#include <video.h>
-#include <portio.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
 
 typedef struct

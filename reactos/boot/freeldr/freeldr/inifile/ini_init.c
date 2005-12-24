@@ -18,12 +18,6 @@
  */
 
 #include <freeldr.h>
-#include "ini.h"
-#include <fs.h>
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-
 
 BOOL IniFileInitialize(VOID)
 {

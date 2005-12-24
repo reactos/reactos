@@ -1,5 +1,4 @@
-#include <io.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 /*
  * @implemented

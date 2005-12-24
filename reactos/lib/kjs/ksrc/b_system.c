@@ -46,7 +46,7 @@
  *   stdout			file
  */
 
-#include "ddk/ntddk.h"
+#include "ntddk.h"
 #include "jsint.h"
 #include "kjs.h"
 

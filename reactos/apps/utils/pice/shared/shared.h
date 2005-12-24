@@ -35,7 +35,7 @@ Copyright notice:
 
 --*/
 
-//#include <ddk/ntddk.h>
+//#include <ntddk.h>
 //#include <winnt.h>
 
 //temporary

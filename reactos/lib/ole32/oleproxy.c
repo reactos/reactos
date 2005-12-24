@@ -302,9 +302,8 @@ static ULONG WINAPI IRpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (!ref) {
-	IRpcChannelBuffer_Release(This->chanbuf);
-	This->chanbuf = NULL;
-	HeapFree(GetProcessHeap(),0,This);
+        IRpcProxyBuffer_Disconnect(iface);
+        HeapFree(GetProcessHeap(),0,This);
     }
     return ref;
 }
@@ -452,11 +451,13 @@ CFProxy_Construct(IUnknown *pUnkOuter, LPVOID *ppv,LPVOID *ppProxy) {
 
     cf->lpvtbl_cf	= &cfproxyvt;
     cf->lpvtbl_proxy	= &pspbvtbl;
-    /* only one reference for the proxy buffer */
+    /* one reference for the proxy buffer */
     cf->ref		= 1;
     cf->outer_unknown = pUnkOuter;
     *ppv		= &(cf->lpvtbl_cf);
     *ppProxy		= &(cf->lpvtbl_proxy);
+    /* and one reference for the object */
+    IUnknown_AddRef((IUnknown *)*ppv);
     return S_OK;
 }
 
@@ -698,9 +699,15 @@ static HRESULT WINAPI RemUnkProxy_QueryInterface(LPREMUNKNOWN iface, REFIID riid
 static ULONG WINAPI RemUnkProxy_AddRef(LPREMUNKNOWN iface)
 {
   RemUnkProxy *This = (RemUnkProxy *)iface;
+  ULONG refs;
 
   TRACE("(%p)->AddRef()\n",This);
-  return InterlockedIncrement(&This->refs);
+
+  if (This->outer_unknown)
+      refs = IUnknown_AddRef(This->outer_unknown);
+  else
+      refs = InterlockedIncrement(&This->refs);
+  return refs;
 }
 
 static ULONG WINAPI RemUnkProxy_Release(LPREMUNKNOWN iface)
@@ -871,8 +878,8 @@ static ULONG WINAPI RURpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
     ULONG ref = InterlockedDecrement(&This->refs);
     TRACE("%p, %ld\n", iface, ref);
     if (!ref) {
-	IRpcChannelBuffer_Release(This->chan);This->chan = NULL;
-	HeapFree(GetProcessHeap(),0,This);
+        IRpcProxyBuffer_Disconnect(iface);
+        HeapFree(GetProcessHeap(),0,This);
     }
     return ref;
 }
@@ -918,6 +925,8 @@ RemUnkProxy_Construct(IUnknown *pUnkOuter, LPVOID *ppv,LPVOID *ppProxy) {
     This->outer_unknown = pUnkOuter;
     *ppv		= &(This->lpvtbl_remunk);
     *ppProxy		= &(This->lpvtbl_proxy);
+    /* and one reference for the object */
+    IUnknown_AddRef((IUnknown *)*ppv);
     return S_OK;
 }
 

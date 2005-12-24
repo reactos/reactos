@@ -98,7 +98,7 @@ int STDCALL LoadStringA
 {
  UNICODE_STRING wstrResStr;
  ANSI_STRING strBuf;
- NTSTATUS nErrCode;
+ INT retSize;
 
  /* parameter validation */
  if
@@ -125,14 +125,13 @@ int STDCALL LoadStringA
  strBuf.MaximumLength = nBufferMax * sizeof(CHAR);
  strBuf.Buffer = lpBuffer;
 
- nErrCode = RtlUnicodeStringToAnsiString(&strBuf, &wstrResStr, FALSE);
+ retSize = WideCharToMultiByte(CP_ACP, 0, wstrResStr.Buffer, wstrResStr.Length / sizeof(WCHAR), strBuf.Buffer, strBuf.MaximumLength, NULL, NULL);
 
- if(!NT_SUCCESS(nErrCode))
- {
+ if(!retSize)
   /* failure */
-  RtlNtStatusToDosError(nErrCode);
   return 0;
- }
+ else 
+  strBuf.Length = retSize;
 
  /* the ANSI string may not be null-terminated */
  if(strBuf.Length >= strBuf.MaximumLength)

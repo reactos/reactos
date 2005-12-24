@@ -12,7 +12,7 @@
 #include <tdikrnl.h>
 #include <tdiinfo.h>
 #else
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <net/tdikrnl.h>
 #include <net/tdiinfo.h>
 #endif

@@ -13,6 +13,11 @@
 #define INITGUID
 #include "kbdclass.h"
 
+static NTSTATUS
+SearchForLegacyDrivers(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PCLASS_DRIVER_EXTENSION DriverExtension);
+
 static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
@@ -206,7 +211,7 @@ ReadRegistryEntries(
 	Parameters[2].EntryContext = &DriverExtension->DeviceBaseName;
 	Parameters[2].DefaultType = REG_SZ;
 	Parameters[2].DefaultData = &DefaultDeviceBaseName;
-	Parameters[2].DefaultLength = sizeof(ULONG);
+	Parameters[2].DefaultLength = 0;
 
 	Status = RtlQueryRegistryValues(
 		RTL_REGISTRY_ABSOLUTE,
@@ -327,7 +332,14 @@ cleanup:
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	/* FIXME: create registry entry in HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP */
+	/* Add entry entry to HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\[DeviceBaseName] */
+	RtlWriteRegistryValue(
+		RTL_REGISTRY_DEVICEMAP,
+		DriverExtension->DeviceBaseName.Buffer,
+		DeviceNameU.Buffer,
+		REG_SZ,
+		DriverExtension->RegistryPath.Buffer,
+		DriverExtension->RegistryPath.MaximumLength);
 
 	/* HACK: 1st stage setup needs a keyboard to open it in user-mode
 	 * Create a link to user space... */
@@ -356,6 +368,8 @@ ClassCallback(
 	ULONG ReadSize;
 
 	ASSERT(ClassDeviceExtension->Common.IsClassDO);
+
+	KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
 
 	DPRINT("ClassCallback()\n");
 	/* A filter driver might have consumed all the data already; I'm
@@ -391,8 +405,6 @@ ClassCallback(
 	/* If we have data from the port driver and a higher service to send the data to */
 	if (InputCount != 0)
 	{
-		KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
-
 		if (ClassDeviceExtension->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
 			ReadSize = ClassDeviceExtension->DriverExtension->DataQueueSize - ClassDeviceExtension->InputCount;
 		else
@@ -416,13 +428,14 @@ ClassCallback(
 		ClassDeviceExtension->PortData += ReadSize;
 		ClassDeviceExtension->InputCount += ReadSize;
 
-		KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
 		(*ConsumedCount) += ReadSize;
 	}
 	else
 	{
 		DPRINT("ClassCallBack() entered, InputCount = %lu - DOING NOTHING\n", InputCount);
 	}
+
+	KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
 
 	if (Irp != NULL)
 	{
@@ -464,7 +477,7 @@ ConnectPortDriver(
 	else
 		IoStatus.Status = Status;
 
-	if (NT_SUCCESS(Status))
+	if (NT_SUCCESS(IoStatus.Status))
 		ObReferenceObject(PortDO);
 
 	return IoStatus.Status;
@@ -482,10 +495,12 @@ ClassAddDevice(
 
 	DPRINT("ClassAddDevice called. Pdo = 0x%p\n", Pdo);
 
-	if (Pdo == NULL)
-		return STATUS_SUCCESS;
-
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
+
+	if (Pdo == NULL)
+		/* We're getting a NULL Pdo at the first call as we're a legacy driver.
+		 * Use it to search for legacy port drivers. */
+		return SearchForLegacyDrivers(DriverObject, DriverExtension);
 
 	/* Create new device object */
 	Status = IoCreateDevice(
@@ -506,7 +521,6 @@ ClassAddDevice(
 	RtlZeroMemory(DeviceExtension, sizeof(CLASS_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsClassDO = FALSE;
 	DeviceExtension->PnpState = dsStopped;
-	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
@@ -514,7 +528,10 @@ ClassAddDevice(
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
-	Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
+		Fdo->Flags |= DO_POWER_PAGABLE;
+	if (DeviceExtension->LowerDevice->Flags & DO_BUFFERED_IO)
+		Fdo->Flags |= DO_BUFFERED_IO;
 
 	if (DriverExtension->ConnectMultiplePorts)
 		Status = ConnectPortDriver(Fdo, DriverExtension->MainClassDeviceObject);
@@ -561,9 +578,14 @@ ClassStartIo(
 
 		KeAcquireSpinLock(&DeviceExtension->SpinLock, &oldIrql);
 
+		DPRINT("Mdl: %p, UserBuffer: %p, InputCount: %lu\n",
+			Irp->MdlAddress,
+			Irp->UserBuffer,
+			DeviceExtension->InputCount);
+
 		/* FIXME: use SEH */
 		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
+			Irp->AssociatedIrp.SystemBuffer,
 			DeviceExtension->PortData - DeviceExtension->InputCount,
 			sizeof(KEYBOARD_INPUT_DATA));
 
@@ -686,7 +708,6 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-				ObDereferenceObject(PortDeviceObject);
 			}
 		}
 		else
@@ -697,7 +718,6 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
-				ObDereferenceObject(PortDeviceObject);
 				continue;
 			}
 			Status = ConnectPortDriver(PortDeviceObject, ClassDO);
@@ -705,7 +725,6 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-				ObDereferenceObject(PortDeviceObject);
 				IoDeleteDevice(ClassDO);
 			}
 		}
@@ -747,6 +766,16 @@ DriverEntry(
 	}
 	RtlZeroMemory(DriverExtension, sizeof(CLASS_DRIVER_EXTENSION));
 
+	Status = RtlDuplicateUnicodeString(
+		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+		RegistryPath,
+		&DriverExtension->RegistryPath);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+
 	Status = ReadRegistryEntries(RegistryPath, DriverExtension);
 	if (!NT_SUCCESS(Status))
 	{
@@ -769,7 +798,7 @@ DriverEntry(
 	DriverObject->DriverExtension->AddDevice = ClassAddDevice;
 	DriverObject->DriverUnload = DriverUnload;
 
-	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = IrpStub;
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE]         = ClassCreate;
@@ -779,7 +808,5 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ClassDeviceControl;
 	DriverObject->DriverStartIo                        = ClassStartIo;
 
-	Status = SearchForLegacyDrivers(DriverObject, DriverExtension);
-
-	return Status;
+	return STATUS_SUCCESS;
 }

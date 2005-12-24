@@ -19,15 +19,9 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <mm.h>
-#include <portio.h>
-
-#include "../../reactos/registry.h"
-#include "hardware.h"
-
 
 static BOOL
 FindApmBios(VOID)
@@ -62,15 +56,15 @@ FindApmBios(VOID)
 VOID
 DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
-  char Buffer[80];
+  WCHAR Buffer[80];
   FRLDRHKEY BiosKey;
   LONG Error;
 
   if (FindApmBios())
     {
       /* Create new bus key */
-      sprintf(Buffer,
-	      "MultifunctionAdapter\\%u", *BusNumber);
+      swprintf(Buffer,
+	      L"MultifunctionAdapter\\%u", *BusNumber);
       Error = RegCreateKey(SystemKey,
 			   Buffer,
 			   &BiosKey);
@@ -93,10 +87,10 @@ DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
       /* Set 'Identifier' value */
       Error = RegSetValue(BiosKey,
-			  "Identifier",
+			  L"Identifier",
 			  REG_SZ,
-			  "APM",
-			  4);
+			  (PCHAR)L"APM",
+			  4 * sizeof(WCHAR));
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));

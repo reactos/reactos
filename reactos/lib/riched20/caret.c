@@ -1097,6 +1097,7 @@ BOOL ME_ArrowKey(ME_TextEditor *editor, int nVKey, int nCtrl)
         editor->bCaretAtEnd = FALSE; /* FIXME or maybe not */
         ME_DeleteSelection(editor);
         ME_UpdateRepaint(editor);
+        ME_SendRequestResize(editor, FALSE);
         return TRUE;
       }
       if (ME_ArrowLeft(editor, p)) {
@@ -1105,6 +1106,7 @@ BOOL ME_ArrowKey(ME_TextEditor *editor, int nVKey, int nCtrl)
         ME_MoveCaret(editor);
         ME_DeleteTextAtCursor(editor, nCursor, 1);
         ME_UpdateRepaint(editor);
+        ME_SendRequestResize(editor, FALSE);
       }
       return TRUE;
     }
@@ -1117,11 +1119,13 @@ BOOL ME_ArrowKey(ME_TextEditor *editor, int nVKey, int nCtrl)
         ME_DeleteSelection(editor);
         ME_ClearTempStyle(editor);
         ME_UpdateRepaint(editor);
+        ME_SendRequestResize(editor, FALSE);
         return TRUE;
       }
       ME_DeleteTextAtCursor(editor, nCursor, 1);
       ME_ClearTempStyle(editor);
       ME_UpdateRepaint(editor);
+      ME_SendRequestResize(editor, FALSE);
       return TRUE;
     }
     case VK_HOME: {

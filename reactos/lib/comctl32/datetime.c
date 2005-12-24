@@ -1284,6 +1284,7 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_GETDLGCODE:
         return DLGC_WANTARROWS | DLGC_WANTCHARS;
 
+    case WM_PRINTCLIENT:
     case WM_PAINT:
         return DATETIME_Paint (infoPtr, (HDC)wParam);
 

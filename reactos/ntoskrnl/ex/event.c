@@ -14,9 +14,13 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeEventImplementation)
+#endif
+
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED ExEventObjectType = NULL;
+POBJECT_TYPE ExEventObjectType = NULL;
 
 static GENERIC_MAPPING ExpEventMapping = {
     STANDARD_RIGHTS_READ | SYNCHRONIZE | EVENT_QUERY_STATE,

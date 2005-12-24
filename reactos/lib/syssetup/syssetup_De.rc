@@ -17,7 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 
 IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
@@ -132,8 +132,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Some text...", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "Some more text...", IDC_STATIC, 53, 29, 253, 20
+    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
+    LTEXT "", IDC_ITEM, 53, 29, 253, 20
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
 END
 
@@ -179,22 +179,44 @@ BEGIN
     IDS_PROCESSSUBTITLE  "Process page subtitle"
 END
 
+
+STRINGTABLE
+BEGIN
+    IDS_CMT_WINEFILE    "Starte Winefile"
+    IDS_CMT_IBROWSER	"Starte iBrowser"
+END
+
+
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Zubehör"
-    IDS_CMT_CALC        "Launch Calculator"
+    IDS_CMT_CALC        "Starte Taschenrechner"
     IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
     IDS_CMT_EXPLORER    "Starte Explorer"
-    IDS_CMT_WINEFILE    "Starte Winefile"
     IDS_CMT_NOTEPAD     "Starte Texteditor"
-    IDS_CMT_REGEDIT     "Starte Registry Editor"
+    IDS_CMT_REGEDIT     "Starte Registrierungseditor"
 END
+
 
 STRINGTABLE
 BEGIN
     IDS_GAMES		"Spiele"
     IDS_CMT_SOLITAIRE	"Solitaire"
     IDS_CMT_WINEMINE	"WineMine"
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_SETUP			"ReactOS Setup"
+    IDS_UNKNOWN_ERROR			"Unbekannter Fehler"
+    IDS_REGISTERING_COMPONENTS	"Registriere Komponenten..."
+    IDS_LOADLIBRARY_FAILED		"LoadLibrary fehlgeschlagen: "
+    IDS_GETPROCADDR_FAILED		"GetProcAddr fehlgeschlagen: "
+    IDS_REGSVR_FAILED			"DllRegisterServer fehlgeschlagen: "
+    IDS_DLLINSTALL_FAILED		"DllInstall fehlgeschlagen: "
+    IDS_TIMEOUT				"Zeitüberschreitung während der Registrierung"
+    IDS_REASON_UNKNOWN			"Grund unbekannt"
 END
 
 /* EOF */

@@ -103,4 +103,4 @@ zlib_host: $(ZLIB_HOST_TARGET)
 .PHONY: zlib_host_clean
 zlib_host_clean:
 	-@$(rm) $(ZLIB_HOST_TARGET) $(ZLIB_HOST_OBJECTS) 2>$(NUL)
-clean: zlib_clean
+clean: zlib_host_clean

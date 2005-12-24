@@ -38,7 +38,7 @@ InternalOpenDirW(LPCWSTR DirName,
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE hFile;
 
-  if (!RtlDosPathNameToNtPathName_U((LPWSTR)DirName,
+  if (!RtlDosPathNameToNtPathName_U(DirName,
 				    &NtPathU,
 				    NULL,
 				    NULL))
@@ -444,7 +444,7 @@ GetVolumeInformationA(
 	)
 {
   UNICODE_STRING FileSystemNameU;
-  UNICODE_STRING VolumeNameU;
+  UNICODE_STRING VolumeNameU = {0};
   ANSI_STRING VolumeName;
   ANSI_STRING FileSystemName;
   PWCHAR RootPathNameW;
@@ -455,11 +455,14 @@ GetVolumeInformationA(
 
   if (lpVolumeNameBuffer)
     {
-      VolumeNameU.Length = 0;
       VolumeNameU.MaximumLength = nVolumeNameSize * sizeof(WCHAR);
       VolumeNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                    0,
 	                                    VolumeNameU.MaximumLength);
+      if (VolumeNameU.Buffer == NULL)
+      {
+          goto FailNoMem;
+      }
     }
 
   if (lpFileSystemNameBuffer)
@@ -469,6 +472,19 @@ GetVolumeInformationA(
       FileSystemNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 	                                        0,
 	                                        FileSystemNameU.MaximumLength);
+      if (FileSystemNameU.Buffer == NULL)
+      {
+          if (VolumeNameU.Buffer != NULL)
+          {
+              RtlFreeHeap(RtlGetProcessHeap(),
+                          0,
+                          VolumeNameU.Buffer);
+          }
+
+FailNoMem:
+          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+          return FALSE;
+      }
     }
 
   Result = GetVolumeInformationW (RootPathNameW,
@@ -724,6 +740,11 @@ SetVolumeLabelW(
 			       0,
 			       sizeof(FILE_FS_LABEL_INFORMATION) +
 			       LabelLength);
+   if (LabelInfo == NULL)
+   {
+       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+       return FALSE;
+   }
    LabelInfo->VolumeLabelLength = LabelLength;
    memcpy(LabelInfo->VolumeLabel,
 	  lpVolumeName,
@@ -759,6 +780,233 @@ SetVolumeLabelW(
 
    CloseHandle(hFile);
    return TRUE;
+}
+
+/**
+ * @name GetVolumeNameForVolumeMountPointW
+ *
+ * Return an unique volume name for a drive root or mount point.
+ *
+ * @param VolumeMountPoint
+ *        Pointer to string that contains either root drive name or
+ *        mount point name.
+ * @param VolumeName
+ *        Pointer to buffer that is filled with resulting unique
+ *        volume name on success.
+ * @param VolumeNameLength
+ *        Size of VolumeName buffer in TCHARs.
+ *
+ * @return
+ *     TRUE when the function succeeds and the VolumeName buffer is filled,
+ *     FALSE otherwise.
+ */
+
+BOOL WINAPI
+GetVolumeNameForVolumeMountPointW(
+   IN LPCWSTR VolumeMountPoint,
+   OUT LPWSTR VolumeName,
+   IN DWORD VolumeNameLength)
+{
+   UNICODE_STRING NtFileName;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE FileHandle;
+   IO_STATUS_BLOCK Iosb;
+   ULONG BufferLength;
+   PMOUNTDEV_NAME MountDevName;
+   PMOUNTMGR_MOUNT_POINT MountPoint;
+   ULONG MountPointSize;
+   PMOUNTMGR_MOUNT_POINTS MountPoints;
+   ULONG Index;
+   PUCHAR SymbolicLinkName;
+   BOOL Result;
+   NTSTATUS Status;
+
+   /*
+    * First step is to convert the passed volume mount point name to
+    * an NT acceptable name.
+    */
+
+   if (!RtlDosPathNameToNtPathName_U(VolumeMountPoint, &NtFileName, NULL, NULL))
+   {
+      SetLastError(ERROR_PATH_NOT_FOUND);
+      return FALSE;
+   }
+
+   if (NtFileName.Length > sizeof(WCHAR) &&
+       NtFileName.Buffer[(NtFileName.Length / sizeof(WCHAR)) - 1] == '\\')
+   {
+      NtFileName.Length -= sizeof(WCHAR);
+   }
+
+   /*
+    * Query mount point device name which we will later use for determining
+    * the volume name.
+    */
+
+   InitializeObjectAttributes(&ObjectAttributes, &NtFileName, 0, NULL, NULL);
+   Status = NtOpenFile(&FileHandle, FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                       &ObjectAttributes, &Iosb,
+                       FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       FILE_SYNCHRONOUS_IO_NONALERT);
+   RtlFreeUnicodeString(&NtFileName);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+   }
+
+   BufferLength = sizeof(MOUNTDEV_NAME) + 50 * sizeof(WCHAR);
+   do
+   {
+      MountDevName = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
+      if (MountDevName == NULL)
+      {
+         NtClose(FileHandle);
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+         return FALSE;
+      }
+
+      Status = NtDeviceIoControlFile(FileHandle, NULL, NULL, NULL, &Iosb,
+                                     IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                     NULL, 0, MountDevName, BufferLength);
+      if (!NT_SUCCESS(Status))
+      {
+         RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
+         if (Status == STATUS_BUFFER_OVERFLOW)
+         {
+            BufferLength = sizeof(MOUNTDEV_NAME) + MountDevName->NameLength;
+            continue;
+         }
+         else 
+         {
+            NtClose(FileHandle);
+            SetLastErrorByStatus(Status);
+            return FALSE;
+         }
+      }
+   }
+   while (!NT_SUCCESS(Status));
+
+   NtClose(FileHandle);
+
+   /*
+    * Get the mount point information from mount manager.
+    */
+
+   MountPointSize = MountDevName->NameLength + sizeof(MOUNTMGR_MOUNT_POINT);
+   MountPoint = RtlAllocateHeap(GetProcessHeap(), 0, MountPointSize);
+   if (MountPoint == NULL)
+   {
+      RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
+   RtlZeroMemory(MountPoint, sizeof(MOUNTMGR_MOUNT_POINT));
+   MountPoint->DeviceNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
+   MountPoint->DeviceNameLength = MountDevName->NameLength;
+   RtlCopyMemory(MountPoint + 1, MountDevName->Name, MountDevName->NameLength);
+   RtlFreeHeap(GetProcessHeap(), 0, MountDevName);
+
+   RtlInitUnicodeString(&NtFileName, L"\\??\\MountPointManager");
+   InitializeObjectAttributes(&ObjectAttributes, &NtFileName, 0, NULL, NULL);
+   Status = NtOpenFile(&FileHandle, FILE_GENERIC_READ, &ObjectAttributes,
+                       &Iosb, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                       FILE_SYNCHRONOUS_IO_NONALERT);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+      return FALSE;
+   }
+
+   BufferLength = sizeof(MOUNTMGR_MOUNT_POINTS);
+   do
+   {
+      MountPoints = RtlAllocateHeap(GetProcessHeap(), 0, BufferLength);
+      if (MountPoints == NULL)
+      {
+         RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+         NtClose(FileHandle);
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+         return FALSE;
+      }
+
+      Status = NtDeviceIoControlFile(FileHandle, NULL, NULL, NULL, &Iosb,
+                                     IOCTL_MOUNTMGR_QUERY_POINTS,
+                                     MountPoint, MountPointSize,
+                                     MountPoints, BufferLength);
+      if (!NT_SUCCESS(Status))
+      {
+         RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
+         if (Status == STATUS_BUFFER_OVERFLOW)
+         {
+            BufferLength = MountPoints->Size;
+            continue;
+         }
+         else if (!NT_SUCCESS(Status))
+         {
+            RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+            NtClose(FileHandle);
+            SetLastErrorByStatus(Status);
+            return FALSE;
+         }
+      }
+   }
+   while (!NT_SUCCESS(Status));
+
+   RtlFreeHeap(GetProcessHeap(), 0, MountPoint);
+   NtClose(FileHandle);
+
+   /*
+    * Now we've gathered info about all mount points mapped to our device, so
+    * select the correct one and copy it into the output buffer.
+    */
+
+   for (Index = 0; Index < MountPoints->NumberOfMountPoints; Index++)
+   {
+      MountPoint = MountPoints->MountPoints + Index;
+      SymbolicLinkName = (PUCHAR)MountPoints + MountPoint->SymbolicLinkNameOffset;
+      
+      /*
+       * Check for "\\?\Volume{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}\"
+       * (with the last slash being optional) style symbolic links.
+       */
+
+      if (MountPoint->SymbolicLinkNameLength == 48 * sizeof(WCHAR) ||
+          (MountPoint->SymbolicLinkNameLength == 49 * sizeof(WCHAR) &&
+           SymbolicLinkName[48] == L'\\'))
+      {
+         if (RtlCompareMemory(SymbolicLinkName, L"\\??\\Volume{",
+                              11 * sizeof(WCHAR)) == 11 * sizeof(WCHAR) &&
+             SymbolicLinkName[19] == L'-' && SymbolicLinkName[24] == L'-' &&
+             SymbolicLinkName[29] == L'-' && SymbolicLinkName[34] == L'-' &&
+             SymbolicLinkName[47] == L'}')
+         {
+            if (VolumeNameLength >= MountPoint->SymbolicLinkNameLength / sizeof(WCHAR))
+            {
+               RtlCopyMemory(VolumeName,
+                             (PUCHAR)MountPoints + MountPoint->SymbolicLinkNameOffset,
+                             MountPoint->SymbolicLinkNameLength);
+               VolumeName[1] = L'\\';
+               Result = TRUE;
+            }
+            else
+            {
+               SetLastError(ERROR_FILENAME_EXCED_RANGE);
+               Result = FALSE;
+            }
+
+            RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
+
+            return Result;
+         }
+      }
+   }
+
+   RtlFreeHeap(GetProcessHeap(), 0, MountPoints);
+   SetLastError(ERROR_INVALID_PARAMETER);
+
+   return FALSE;
 }
 
 /* EOF */

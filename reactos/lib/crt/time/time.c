@@ -7,7 +7,6 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
 /*
  * DOS file system functions
  *
@@ -15,10 +14,7 @@
  * Copyright 1996 Alexandre Julliard
  */
 
-#include "precomp.h"
-#include <time.h>
-#include <internal/file.h>
-
+#include <precomp.h>
 
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
 

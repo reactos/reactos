@@ -34,6 +34,7 @@ HKR, , NoInstallClass, 0, 1
 %USB\ROOT_HUB.DeviceDesc%=RootHub_Inst,USB\ROOT_HUB20
 
 [IntelMfg]
+%PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc%=UHCI_Inst,PCI\VEN_8086&DEV_7020&CC_0C0300
 %PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc%=UHCI_Inst,PCI\VEN_8086&DEV_7112&CC_0C0300
 
 ;------------------------------ UHCI DRIVER -----------------------------
@@ -125,4 +126,5 @@ PCI\CC_0C0320.DeviceDesc = "EHCI USB controller"
 USB\ROOT_HUB.DeviceDesc = "Root hub"
 
 IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB controller"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB controller"

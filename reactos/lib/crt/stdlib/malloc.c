@@ -21,13 +21,10 @@
  *       handler and non atomic heap operations
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <stdlib.h>
 #include <malloc.h>
 
-
-/* fixme: should have this in common header */
-#define ROUND_UP(a,b) ((a + (b-1)) & ~(b-1))
 
 /* round to 16 bytes + alloc at minimum 16 bytes */
 #define ROUND_SIZE(size) (max(16, ROUND_UP(size, 16)))

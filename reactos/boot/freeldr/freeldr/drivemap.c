@@ -18,11 +18,8 @@
  */
 
 #include <freeldr.h>
-#include <drivemap.h>
-#include <rtl.h>
-#include <inifile.h>
-#include <cache.h>
-#include <ui.h>
+
+#define NDEBUG
 #include <debug.h>
 
 BOOL	DriveMapInstalled = FALSE;	// Tells us if we have already installed our drive map int 13h handler code
@@ -30,7 +27,7 @@ ULONG		OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
 ULONG		DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
 ULONG		DriveMapHandlerSegOff = 0;	// Segment:offset style address of our drive map handler
 
-VOID DriveMapMapDrivesInSection(PCHAR SectionName)
+VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 {
 	CHAR			SettingName[80];
 	CHAR			SettingValue[80];
@@ -59,7 +56,7 @@ VOID DriveMapMapDrivesInSection(PCHAR SectionName)
 		// Get the next setting from the .ini file section
 		if (IniReadSettingByNumber(SectionId, Index, SettingName, 80, SettingValue, 80))
 		{
-			if (stricmp(SettingName, "DriveMap") == 0)
+			if (_stricmp(SettingName, "DriveMap") == 0)
 			{
 				// Make sure we haven't exceeded the drive map max count
 				if (DriveMapList.DriveMapCount >= 4)
@@ -117,7 +114,7 @@ VOID DriveMapMapDrivesInSection(PCHAR SectionName)
 	}
 }
 
-BOOL DriveMapIsValidDriveString(PCHAR DriveString)
+BOOL DriveMapIsValidDriveString(PCSTR DriveString)
 {
 	ULONG		Index;
 
@@ -147,7 +144,7 @@ BOOL DriveMapIsValidDriveString(PCHAR DriveString)
 	return TRUE;
 }
 
-ULONG DriveMapGetBiosDriveNumber(PCHAR DeviceName)
+ULONG DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 {
 	ULONG		BiosDriveNumber = 0;
 

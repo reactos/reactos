@@ -1,41 +1,59 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/dbgktypes.h
- * PURPOSE:         Definitions for User-Mode Kernel Debugging not in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 25/06/05
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    dbgktypes.h
+
+Abstract:
+
+    Type definitions for the User Mode Debugging Facility.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
 
 #ifndef _DBGKTYPES_H
 #define _DBGKTYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
+#include <umtypes.h>
+#include <lpctypes.h>
 
-/* EXPORTED DATA *************************************************************/
+//
+// Debug Object Access Masks
+//
+#define DEBUG_OBJECT_WAIT_STATE_CHANGE      0x0001
+#define DEBUG_OBJECT_ADD_REMOVE_PROCESS     0x0002
+#define DEBUG_OBJECT_ALL_ACCESS             (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x0F)
 
-/* CONSTANTS *****************************************************************/
-#define DEBUG_OBJECT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x0F)
-#define DEBUG_OBJECT_WAIT_STATE_CHANGE 0x0001
-#define DEBUG_OBJECT_ADD_REMOVE_PROCESS 0x0002
-
-/* ENUMERATIONS **************************************************************/
-
+//
+// Debug Object Information Classes for NtQueryDebugObject
+//
 typedef enum _DEBUGOBJECTINFOCLASS
 {
     DebugObjectUnusedInformation,
     DebugObjectKillProcessOnExitInformation
 } DEBUGOBJECTINFOCLASS, *PDEBUGOBJECTINFOCLASS;
 
-/* TYPES *********************************************************************/
-
+//
+// Debug Object Information Structures
+//
 typedef struct _DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION
 {
     ULONG KillProcessOnExit;
-} DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION, *
-PDEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION;
+} DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION, *PDEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION;
 
 #ifndef NTOS_MODE_USER
+
+//
+// Debug Object
+//
 typedef struct _DBGK_DEBUG_OBJECT
 {
     KEVENT Event;
@@ -51,8 +69,12 @@ typedef struct _DBGK_DEBUG_OBJECT
         };
     };
 } DBGK_DEBUG_OBJECT, *PDBGK_DEBUG_OBJECT;
+
 #endif
 
+//
+// Debug States
+//
 typedef enum _DBG_STATE
 {
     DbgIdle,
@@ -68,6 +90,9 @@ typedef enum _DBG_STATE
     DbgUnloadDllStateChange
 } DBG_STATE, *PDBG_STATE;
 
+//
+// Debug Message Structures
+//
 typedef struct _DBGKM_EXCEPTION
 {
     EXCEPTION_RECORD ExceptionRecord;
@@ -113,6 +138,9 @@ typedef struct _DBGKM_UNLOAD_DLL
     PVOID BaseAddress;
 } DBGKM_UNLOAD_DLL, *PDBGKM_UNLOAD_DLL;
 
+//
+// User-Mode Debug State Change Structure
+//
 typedef struct _DBGUI_WAIT_STATE_CHANGE
 {
     DBG_STATE NewState;
@@ -138,6 +166,9 @@ typedef struct _DBGUI_WAIT_STATE_CHANGE
     } StateInfo;
 } DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;
 
+//
+// LPC Debug Message
+//
 typedef struct _DBGKM_MSG
 {
     PORT_MESSAGE h;
@@ -145,12 +176,12 @@ typedef struct _DBGKM_MSG
     ULONG Status;
     union
     {
-	    DBGKM_EXCEPTION Exception;
+        DBGKM_EXCEPTION Exception;
         DBGKM_CREATE_THREAD CreateThread;
         DBGKM_CREATE_PROCESS CreateProcess;
-	    DBGKM_EXIT_THREAD ExitThread;
+        DBGKM_EXIT_THREAD ExitThread;
         DBGKM_EXIT_PROCESS ExitProcess;
-	    DBGKM_LOAD_DLL LoadDll;
+        DBGKM_LOAD_DLL LoadDll;
         DBGKM_UNLOAD_DLL UnloadDll;
     };
 } DBGKM_MSG, *PDBGKM_MSG;

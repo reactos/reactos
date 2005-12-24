@@ -1,13 +1,6 @@
+#include <precomp.h>
 
-
-#include <stdio.h>
 #include <tchar.h>
-#include <internal/file.h>
-
-
-
-
-
 
 /*
  * @implemented

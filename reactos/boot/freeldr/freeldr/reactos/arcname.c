@@ -20,18 +20,16 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-
 
 BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition)
 {
 	char *p;
 
-	if (strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
 		return FALSE;
 
 	p = ArcPath + 15;
-	if (strnicmp(p, "fdisk(", 6) == 0)
+	if (_strnicmp(p, "fdisk(", 6) == 0)
 	{
 		/*
 		 * floppy disk path:
@@ -45,7 +43,7 @@ BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* Boot
 		p++;
 		*BootPartition = 0xff;
 	}
-	else if (strnicmp(p, "cdrom(", 6) == 0)
+	else if (_strnicmp(p, "cdrom(", 6) == 0)
 	{
 		/*
 		 * cdrom path:
@@ -59,7 +57,7 @@ BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* Boot
 		p++;
 		*BootPartition = 0xff;
 	}
-	else if (strnicmp(p, "rdisk(", 6) == 0)
+	else if (_strnicmp(p, "rdisk(", 6) == 0)
 	{
 		/*
 		 * hard disk path:
@@ -68,7 +66,7 @@ BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* Boot
 		p = p + 6;
 		*BootDrive = atoi(p) + 0x80;
 		p = strchr(p, ')');
-		if ((p == NULL) || (strnicmp(p, ")partition(", 11) != 0))
+		if ((p == NULL) || (_strnicmp(p, ")partition(", 11) != 0))
 			return FALSE;
 		p = p + 11;
 		*BootPartition = atoi(p);
@@ -128,11 +126,11 @@ ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
 	char *	p;
 	ULONG		DriveNumber = 0;
 
-	if (strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
 		return 0;
 
 	p = ArcPath + 15;
-	if (strnicmp(p, "fdisk(", 6) == 0)
+	if (_strnicmp(p, "fdisk(", 6) == 0)
 	{
 		/*
 		 * floppy disk path:
@@ -141,7 +139,7 @@ ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
 		p = p + 6;
 		DriveNumber = atoi(p);
 	}
-	else if (strnicmp(p, "rdisk(", 6) == 0)
+	else if (_strnicmp(p, "rdisk(", 6) == 0)
 	{
 		/*
 		 * hard disk path:

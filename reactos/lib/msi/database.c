@@ -38,14 +38,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-/*
- * The MSVC headers define the MSIDBOPEN_* macros cast to LPCTSTR,
- *  which is a problem because LPCTSTR isn't defined when compiling wine.
- * To work around this problem, we need to define LPCTSTR as LPCWSTR here,
- *  and make sure to only use it in W functions.
- */
-#define LPCTSTR LPCWSTR
-
 DEFINE_GUID( CLSID_MsiDatabase, 0x000c1084, 0x0000, 0x0000,
              0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID( CLSID_MsiPatch, 0x000c1086, 0x0000, 0x0000,
@@ -67,6 +59,7 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
     DWORD r;
 
     free_cached_tables( db );
+    msi_free_transforms( db );
     msi_destroy_stringtable( db->strings );
     r = IStorage_Release( db->storage );
     if( r )
@@ -156,6 +149,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     db->storage = stg;
     db->mode = szMode;
     list_init( &db->tables );
+    list_init( &db->transforms );
 
     db->strings = load_string_table( stg );
     if( !db->strings )

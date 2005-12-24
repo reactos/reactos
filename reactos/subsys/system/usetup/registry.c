@@ -484,86 +484,90 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
   ULONG Flags;
   ULONG Length;
 
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   HANDLE KeyHandle;
   BOOLEAN Ok;
 
 
   Ok = InfFindFirstLine (hInf, Section, NULL, &Context);
 
-  for (;Ok; Ok = InfFindNextLine (&Context, &Context))
+  if (Ok)
     {
-      /* get root */
-      if (!InfGetStringField (&Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL))
-	continue;
-      if (!GetRootKey (Buffer))
-	continue;
+      for (;Ok; Ok = InfFindNextLine (Context, Context))
+        {
+          /* get root */
+          if (!InfGetStringField (Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL))
+              continue;
+          if (!GetRootKey (Buffer))
+            continue;
 
-      /* get key */
-      Length = wcslen (Buffer);
-      if (!InfGetStringField (&Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
-	*Buffer = 0;
+          /* get key */
+          Length = wcslen (Buffer);
+          if (!InfGetStringField (Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
+            *Buffer = 0;
 
-      DPRINT("KeyName: <%S>\n", Buffer);
+          DPRINT("KeyName: <%S>\n", Buffer);
 
-      /* get flags */
-      if (!InfGetIntField (&Context, 4, (PLONG)&Flags))
-	Flags = 0;
+          /* get flags */
+          if (!InfGetIntField (Context, 4, (PLONG)&Flags))
+            Flags = 0;
 
-      DPRINT("Flags: %lx\n", Flags);
+          DPRINT("Flags: %lx\n", Flags);
 
-      RtlInitUnicodeString (&Name,
-			    Buffer);
+          RtlInitUnicodeString (&Name,
+                                Buffer);
 
-      InitializeObjectAttributes (&ObjectAttributes,
-				  &Name,
-				  OBJ_CASE_INSENSITIVE,
-				  NULL,
-				  NULL);
+          InitializeObjectAttributes (&ObjectAttributes,
+                                      &Name,
+                                      OBJ_CASE_INSENSITIVE,
+                                      NULL,
+                                      NULL);
 
-      if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
-	{
-	  Status = NtOpenKey (&KeyHandle,
-			      KEY_ALL_ACCESS,
-			      &ObjectAttributes);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
-	      continue;  /* ignore if it doesn't exist */
-	    }
-	}
-      else
-	{
-	  Status = CreateNestedKey (&KeyHandle,
-				    KEY_ALL_ACCESS,
-				    &ObjectAttributes);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
-	      continue;
-	    }
-	}
+          if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
+            {
+              Status = NtOpenKey (&KeyHandle,
+                                  KEY_ALL_ACCESS,
+                                  &ObjectAttributes);
+              if (!NT_SUCCESS(Status))
+                {
+                  DPRINT("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                  continue;  /* ignore if it doesn't exist */
+                }
+            }
+          else
+            {
+              Status = CreateNestedKey (&KeyHandle,
+                                        KEY_ALL_ACCESS,
+                                        &ObjectAttributes);
+              if (!NT_SUCCESS(Status))
+                {
+                  DPRINT("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                  continue;
+                }
+            }
 
-      /* get value name */
-      if (InfGetStringField (&Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
-	{
-	  RtlInitUnicodeString (&Value,
-				Buffer);
-	  ValuePtr = &Value;
-	}
-      else
-	{
-	  ValuePtr = NULL;
-	}
+          /* get value name */
+          if (InfGetStringField (Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
+            {
+              RtlInitUnicodeString (&Value,
+                                    Buffer);
+              ValuePtr = &Value;
+            }
+          else
+            {
+              ValuePtr = NULL;
+            }
 
-      /* and now do it */
-      if (!do_reg_operation (KeyHandle, ValuePtr, &Context, Flags))
-	{
-	  NtClose (KeyHandle);
-	  return FALSE;
-	}
+          /* and now do it */
+          if (!do_reg_operation (KeyHandle, ValuePtr, Context, Flags))
+            {
+              NtClose (KeyHandle);
+              return FALSE;
+            }
 
-      NtClose (KeyHandle);
+          NtClose (KeyHandle);
+        }
+      InfFreeContext(Context);
     }
 
   return TRUE;

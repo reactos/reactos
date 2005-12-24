@@ -248,6 +248,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
          
          e = PopEntryList(&Win32Thread->ReferencesList);
       }
+      PsSetThreadWin32Thread(Thread, NULL);
     }
 
   RETURN( STATUS_SUCCESS);

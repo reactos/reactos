@@ -65,7 +65,7 @@ LRESULT CALLBACK NotifyHookProc(int code, WPARAM wparam, LPARAM lparam)
 		COPYDATASTRUCT data;
 
 		cds._hwnd = pmsg->hwnd;
-		cds._len = GetWindowModuleFileNameA(pmsg->hwnd, cds._path, MAX_PATH);
+		cds._len = GetWindowModuleFileNameA(pmsg->hwnd, cds._path, COUNTOF(cds._path));
 
 		data.dwData = WM_GETMODULEPATH;
 		data.cbData = sizeof(cds);

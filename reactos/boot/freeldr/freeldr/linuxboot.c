@@ -19,21 +19,9 @@
 
 
 #include <freeldr.h>
-#include <arch.h>
-#include <disk.h>
-#include <miscboot.h>
-#include <rtl.h>
-#include <fs.h>
-#include <ui.h>
-#include <linux.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <mm.h>
-#include <inifile.h>
-#include <oslist.h> // For RemoveQuotes()
-#include <video.h>
-#include <drivemap.h>
-
-
 
 #define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
 
@@ -54,7 +42,7 @@ PVOID			LinuxInitrdLoadAddress = NULL;
 CHAR			LinuxBootDescription[80];
 CHAR			LinuxBootPath[260] = "";
 
-VOID LoadAndBootLinux(PCHAR OperatingSystemName, PCHAR Description)
+VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 {
 	PFILE	LinuxKernel = NULL;
 	PFILE	LinuxInitrdFile = NULL;
@@ -229,7 +217,7 @@ LinuxBootFailed:
 	LinuxCommandLineSize = 0;
 }
 
-BOOL LinuxParseIniSection(PCHAR OperatingSystemName)
+BOOL LinuxParseIniSection(PCSTR OperatingSystemName)
 {
 	CHAR	SettingName[260];
 	ULONG	SectionId;

@@ -12,6 +12,7 @@
 	<library>rpcrt4</library>
 	<file>config.c</file>
 	<file>database.c</file>
+	<file>driver.c</file>
 	<file>rpcserver.c</file>
 	<file>services.c</file>
 	<file>services.rc</file>

@@ -20,7 +20,7 @@
 #ifndef __OSLIST_H
 #define __OSLIST_H
 
-BOOL	InitOperatingSystemList(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer);
+BOOL	InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer);
 ULONG		CountOperatingSystems(ULONG SectionId);
 BOOL	AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount);
 BOOL	RemoveQuotes(PCHAR QuotedString);

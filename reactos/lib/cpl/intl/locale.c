@@ -96,6 +96,22 @@ void SetNewLocale(LCID lcid)
 	DWORD ret;
 	TCHAR value[9];
 	DWORD valuesize;
+	WCHAR ACPPage[9];
+	WCHAR OEMPage[9];
+
+	ret = GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTCODEPAGE, (WORD*)OEMPage, sizeof(OEMPage));
+	if (ret == 0)
+	{
+		MessageBoxW(NULL, L"Problem reading OEM code page", L"Big Problem", MB_OK);
+		return;
+	}
+
+	GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_IDEFAULTANSICODEPAGE, (WORD*)ACPPage, sizeof(ACPPage));
+	if (ret == 0)
+	{
+		MessageBoxW(NULL, L"Problem reading ANSI code page", L"Big Problem", MB_OK);
+		return;
+	}
 
 	ret = RegOpenKeyW(HKEY_CURRENT_USER, L"Control Panel\\International", &localeKey);
 
@@ -103,6 +119,21 @@ void SetNewLocale(LCID lcid)
 	{
 		// some serious error
 		MessageBoxW(NULL, L"Problem opening HKCU\\Control Panel\\International key", L"Big Problem", MB_OK);
+		return;
+	}
+
+	wsprintf(value, L"%04X", (DWORD)lcid);
+	valuesize = (wcslen(value) + 1) * sizeof(WCHAR);
+
+	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, valuesize);
+	RegCloseKey(localeKey);
+
+	ret = RegOpenKeyW(HKEY_USERS, L".DEFAULT\\Control Panel\\International", &localeKey);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		// some serious error
+		MessageBoxW(NULL, L"Problem opening HKU\\.DEFAULT\\Control Panel\\International key", L"Big Problem", MB_OK);
 		return;
 	}
 
@@ -123,7 +154,24 @@ void SetNewLocale(LCID lcid)
 
 	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, valuesize );
 	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, valuesize );
+
 	RegCloseKey(langKey);
+
+
+	// Set language
+	ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage", &langKey);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		MessageBoxW(NULL, L"Problem opening HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage key", L"Big Problem", MB_OK);
+		return;
+	}
+
+	RegSetValueExW(langKey, L"OEMCP", 0, REG_SZ, (BYTE *)OEMPage, (wcslen(OEMPage) +1 ) * sizeof(WCHAR) );
+	RegSetValueExW(langKey, L"ACP", 0, REG_SZ, (BYTE *)ACPPage, (wcslen(ACPPage) +1 ) * sizeof(WCHAR) );
+
+	RegCloseKey(langKey);
+
 }
 
 /* Property page dialog callback */

@@ -140,7 +140,7 @@ RtlMoveMemory (
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 VOID
 FASTCALL
@@ -149,7 +149,9 @@ RtlPrefetchMemoryNonTemporal(
 	IN SIZE_T Length
 	)
 {
-	UNIMPLEMENTED;
+	/* By nature of prefetch, this is non-portable. */
+	(void)Source;
+	(void)Length;
 }
 
 

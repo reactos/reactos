@@ -818,7 +818,7 @@ RemoveFontResourceA(
  */
 DWORD
 STDCALL
-GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, DWORD *height)
+GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 {
     SIZE sz;
     static const WCHAR alphabet[] = {
@@ -833,4 +833,59 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, DWORD *height)
     if (height) *height = sz.cy;
     return (sz.cx / 26 + 1) / 2;
 }
+
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+EnumFontsW(
+	HDC  hDC,
+	LPCWSTR lpFaceName,
+	FONTENUMPROCW  FontFunc,
+	LPARAM  lParam
+	)
+{
+#if 0
+  return NtGdiEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
+#else
+  return EnumFontFamiliesW( hDC, lpFaceName, FontFunc, lParam );
+#endif
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+EnumFontsA (
+	HDC  hDC,
+	LPCSTR lpFaceName,
+	FONTENUMPROCA  FontFunc,
+	LPARAM  lParam
+	)
+{
+#if 0
+  NTSTATUS Status;
+  LPWSTR lpFaceNameW;
+  int rc = 0;
+
+  Status = HEAP_strdupA2W ( &lpFaceNameW, lpFaceName );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+    {
+      rc = NtGdiEnumFonts ( hDC, lpFaceNameW, FontFunc, lParam );
+
+      HEAP_free ( lpFaceNameW );
+    }
+  return rc;
+#else
+  return EnumFontFamiliesA( hDC, lpFaceName, FontFunc, lParam );
+#endif
+}
+
+
+
 

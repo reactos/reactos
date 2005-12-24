@@ -29,9 +29,20 @@ ULONG KiFastSystemCallDisable = 1;
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 extern ULONG IdleProcessorMask;
 
+static VOID INIT_FUNCTION Ki386GetCpuId(VOID);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, Ki386GetCpuId)
+#pragma alloc_text(INIT, KeCreateApplicationProcessorIdleThread)
+#pragma alloc_text(INIT, KePrepareForApplicationProcessorInit)
+#pragma alloc_text(INIT, KeInit1)
+#pragma alloc_text(INIT, KeInit2)
+#pragma alloc_text(INIT, Ki386SetProcessorFeatures)
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
-VOID INIT_FUNCTION STATIC
+static VOID INIT_FUNCTION
 Ki386GetCpuId(VOID)
 {
    ULONG OrigFlags, Flags, FinalFlags;
@@ -170,10 +181,11 @@ INIT_FUNCTION
 NTAPI
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
-  DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
   PFN_TYPE PrcPfn;
   PKIPCR Pcr;
   PKIPCR BootPcr;
+
+  DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
 
   BootPcr = (PKIPCR)KPCR_BASE;
   Pcr = (PKIPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
@@ -243,7 +255,7 @@ KeApplicationProcessorInit(VOID)
      extern void KiFastCallEntry(void);
 
      /* CS Selector of the target segment. */
-     Ke386Wrmsr(0x174, KERNEL_CS, 0);
+     Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
      /* Target ESP. */
      Ke386Wrmsr(0x175, 0, 0);
      /* Target EIP. */
@@ -298,6 +310,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->TSS = &KiBootTss;
    KPCR->Number = 0;
    KPCR->SetMember = 1 << 0;
+   KeActiveProcessors = 1 << 0;
    KPCR->PrcbData.SetMember = 1 << 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
@@ -398,11 +411,23 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       extern void KiFastCallEntry(void);
 
       /* CS Selector of the target segment. */
-      Ke386Wrmsr(0x174, KERNEL_CS, 0);
+      Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
       /* Target ESP. */
       Ke386Wrmsr(0x175, 0, 0);
       /* Target EIP. */
       Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
+   }
+
+   /* Does the CPU Support 'prefetchnta' (SSE)  */
+   if(KPCR->PrcbData.FeatureBits & X86_FEATURE_SSE)
+   {
+       ULONG Protect;
+
+       Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
+       MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
+       /* Replace the ret by a nop */
+       *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+       MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
    }
 }
 
@@ -463,6 +488,7 @@ KeInit2(VOID)
    DPRINT("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
    if (Ke386L1CacheSize)
    {
+
       DPRINT("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
    }
    if (Pcr->L2CacheSize)
@@ -481,10 +507,15 @@ Ki386SetProcessorFeatures(VOID)
    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"FastSystemCallDisable");
    HANDLE KeyHandle;
    ULONG ResultLength;
-   KEY_VALUE_PARTIAL_INFORMATION ValueData;
+   struct
+   {
+       KEY_VALUE_PARTIAL_INFORMATION Info;
+       UCHAR Buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                                 Data[0]) + sizeof(ULONG)];
+   } ValueData;
    NTSTATUS Status;
    ULONG FastSystemCallDisable = 0;
-
+   
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
@@ -503,7 +534,7 @@ Ki386SetProcessorFeatures(VOID)
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
 
-   /* Does the CPU Support Fast System Call? */
+   /* Does the CPU Support Fast System Call? */   
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
 
         /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
@@ -514,20 +545,29 @@ Ki386SetProcessorFeatures(VOID)
                                    OBJ_CASE_INSENSITIVE,
                                    NULL,
                                    NULL);
-        Status = NtOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+        Status = ZwOpenKey(&KeyHandle,
+                           KEY_QUERY_VALUE,
+                           &ObjectAttributes);
 
         if (NT_SUCCESS(Status)) {
 
             /* Read the Value then Close the Key */
-            Status = NtQueryValueKey(KeyHandle,
+            Status = ZwQueryValueKey(KeyHandle,
                                      &ValueName,
                                      KeyValuePartialInformation,
                                      &ValueData,
                                      sizeof(ValueData),
                                      &ResultLength);
-            RtlMoveMemory(&FastSystemCallDisable, ValueData.Data, sizeof(ULONG));
+            if (NT_SUCCESS(Status))
+            {
+                if (ResultLength == sizeof(ValueData) &&
+                    ValueData.Info.Type == REG_DWORD)
+                {
+                    FastSystemCallDisable = *(PULONG)ValueData.Info.Data != 0;
+                }
 
-            NtClose(KeyHandle);
+                ZwClose(KeyHandle);
+            }
         }
 
     } else {

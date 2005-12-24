@@ -1,19 +1,35 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/kdfuncs.h
- * PURPOSE:         Prototypes for Kernel Debugger Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    kdfuncs.h
+
+Abstract:
+
+    Function definitions for the Kernel Debugger.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _KDFUNCS_H
 #define _KDFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
-#include "kdtypes.h"
+//
+// Dependencies
+//
+#include <umtypes.h>
+#include <kdtypes.h>
 
-/* PROTOTYPES ****************************************************************/
+#ifndef NTOS_MODE_USER
 
+//
+// Port Functions
+//
 UCHAR
 NTAPI
 KdPollBreakIn(VOID);
@@ -81,6 +97,14 @@ VOID
 NTAPI
 KdPortSave (VOID);
 
+VOID
+NTAPI
+KdRestore(VOID);
+
+VOID
+NTAPI
+KdSave (VOID);
+
 BOOLEAN
 NTAPI
 KdPortDisableInterrupts(VOID);
@@ -89,4 +113,70 @@ BOOLEAN
 NTAPI
 KdPortEnableInterrupts(VOID);
 
+BOOLEAN
+NTAPI
+KdDebuggerInitialize0(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+#endif
+
+//
+// Native Calls
+//
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryDebugFilterState(
+     ULONG ComponentId,
+     ULONG Level
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetDebugFilterState(
+    ULONG ComponentId,
+    ULONG Level,
+    BOOLEAN State
+);
+
+NTSTATUS
+NTAPI
+NtSystemDebugControl(
+    DEBUG_CONTROL_CODE ControlCode,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    PULONG ReturnLength
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+ZwQueryDebugFilterState(
+     ULONG ComponentId,
+     ULONG Level
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetDebugFilterState(
+    ULONG ComponentId,
+    ULONG Level,
+    BOOLEAN State
+);
+
+NTSTATUS
+NTAPI
+ZwSystemDebugControl(
+    DEBUG_CONTROL_CODE ControlCode,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    PULONG ReturnLength
+);
 #endif

@@ -126,7 +126,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwLength;
     LPWSTR lpStr;
 
-    DPRINT1("ChangeServiceConfigW() called\n");
+    DPRINT("ChangeServiceConfigW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -204,7 +204,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 /**********************************************************************
  *  ControlService
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 ControlService(SC_HANDLE hService,
@@ -258,27 +258,134 @@ ControlServiceEx(IN SC_HANDLE hService,
 /**********************************************************************
  *  CreateServiceA
  *
- * @unimplemented
+ * @implemented
  */
 SC_HANDLE
 STDCALL
-CreateServiceA(
-    SC_HANDLE   hSCManager,
-    LPCSTR      lpServiceName,
-    LPCSTR      lpDisplayName,
-    DWORD       dwDesiredAccess,
-    DWORD       dwServiceType,
-    DWORD       dwStartType,
-    DWORD       dwErrorControl,
-    LPCSTR      lpBinaryPathName,
-    LPCSTR      lpLoadOrderGroup,
-    LPDWORD     lpdwTagId,
-    LPCSTR      lpDependencies,
-    LPCSTR      lpServiceStartName,
-    LPCSTR      lpPassword)
+CreateServiceA(SC_HANDLE hSCManager,
+               LPCSTR lpServiceName,
+               LPCSTR lpDisplayName,
+               DWORD dwDesiredAccess,
+               DWORD dwServiceType,
+               DWORD dwStartType,
+               DWORD dwErrorControl,
+               LPCSTR lpBinaryPathName,
+               LPCSTR lpLoadOrderGroup,
+               LPDWORD lpdwTagId,
+               LPCSTR lpDependencies,
+               LPCSTR lpServiceStartName,
+               LPCSTR lpPassword)
 {
-    DPRINT1("CreateServiceA is unimplemented, but returning INVALID_HANDLE_VALUE instead of NULL\n");
-    return INVALID_HANDLE_VALUE;
+    SC_HANDLE RetVal = NULL;
+    LPWSTR lpServiceNameW = NULL;
+    LPWSTR lpDisplayNameW = NULL;
+    LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpLoadOrderGroupW = NULL;
+    LPWSTR lpDependenciesW = NULL;
+    LPWSTR lpServiceStartNameW = NULL;
+    LPWSTR lpPasswordW = NULL;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    LPSTR lpStr;
+
+    int len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
+    lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpServiceNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
+    lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpDisplayNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
+    lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpBinaryPathNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpBinaryPathNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
+    lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpLoadOrderGroupW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
+
+    if (lpDependencies != NULL)
+    {
+        lpStr = (LPSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = strlen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+    }
+
+    lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
+    if (!lpDependenciesW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, dwDependenciesLength);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
+    lpServiceStartName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpServiceStartNameW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, NULL, 0);
+    lpPasswordW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!lpPasswordW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
+
+    RetVal = CreateServiceW(hSCManager,
+                            lpServiceNameW,
+                            lpDisplayNameW,
+                            dwDesiredAccess,
+                            dwServiceType,
+                            dwStartType,
+                            dwErrorControl,
+                            lpBinaryPathNameW,
+                            lpLoadOrderGroupW,
+                            lpdwTagId,
+                            lpDependenciesW,
+                            lpServiceStartNameW,
+                            lpPasswordW);
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+    HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+    HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+    HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+    HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+    HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
+    HeapFree(GetProcessHeap(), 0, lpPasswordW);
+
+    return RetVal;
 }
 
 
@@ -349,7 +456,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     {
         DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
-        return INVALID_HANDLE_VALUE;
+        return NULL;
     }
 
     return hService;
@@ -412,13 +519,12 @@ EnumDependentServicesA(
  */
 BOOL
 STDCALL
-EnumDependentServicesW(
-    SC_HANDLE       hService,
-    DWORD           dwServiceState,
-    LPENUM_SERVICE_STATUSW  lpServices,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded,
-    LPDWORD         lpServicesReturned)
+EnumDependentServicesW(SC_HANDLE hService,
+                       DWORD dwServiceState,
+                       LPENUM_SERVICE_STATUSW lpServices,
+                       DWORD cbBufSize,
+                       LPDWORD pcbBytesNeeded,
+                       LPDWORD lpServicesReturned)
 {
     DPRINT1("EnumDependentServicesW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -433,7 +539,7 @@ EnumDependentServicesW(
  */
 BOOL
 STDCALL
-EnumServiceGroupW (
+EnumServiceGroupW(
     DWORD   Unknown0,
     DWORD   Unknown1,
     DWORD   Unknown2,
@@ -457,7 +563,7 @@ EnumServiceGroupW (
  */
 BOOL
 STDCALL
-EnumServicesStatusA (
+EnumServicesStatusA(
     SC_HANDLE               hSCManager,
     DWORD                   dwServiceType,
     DWORD                   dwServiceState,
@@ -468,6 +574,58 @@ EnumServicesStatusA (
     LPDWORD                 lpResumeHandle)
 {
     DPRINT1("EnumServicesStatusA is unimplemented\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/**********************************************************************
+ *  EnumServicesStatusW
+ *
+ * @unimplemented
+ */
+BOOL
+STDCALL
+EnumServicesStatusW(SC_HANDLE hSCManager,
+                    DWORD dwServiceType,
+                    DWORD dwServiceState,
+                    LPENUM_SERVICE_STATUSW lpServices,
+                    DWORD cbBufSize,
+                    LPDWORD pcbBytesNeeded,
+                    LPDWORD lpServicesReturned,
+                    LPDWORD lpResumeHandle)
+{
+#if 0
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT1("EnumServicesStatusW() called\n");
+
+    HandleBind();
+
+    dwError = ScmrEnumServicesStatusW(BindingHandle,
+                                      (unsigned int)hSCManager,
+                                      dwServiceType,
+                                      dwServiceState,
+                                      (unsigned char *)lpServices,
+                                      cbBufSize,
+                                      pcbBytesNeeded,
+                                      lpServicesReturned,
+                                      lpResumeHandle);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrEnumServicesStatusW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+
+
+    DPRINT1("ScmrEnumServicesStatusW() done\n");
+
+    return TRUE;
+#endif
+
+    DPRINT1("EnumServicesStatusW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -516,29 +674,6 @@ EnumServicesStatusExW(SC_HANDLE  hSCManager,
   LPCWSTR  pszGroupName)
 {
     DPRINT1("EnumServicesStatusExW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/**********************************************************************
- *  EnumServicesStatusW
- *
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumServicesStatusW(
-    SC_HANDLE               hSCManager,
-    DWORD                   dwServiceType,
-    DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUSW  lpServices,
-    DWORD                   cbBufSize,
-    LPDWORD                 pcbBytesNeeded,
-    LPDWORD                 lpServicesReturned,
-    LPDWORD                 lpResumeHandle)
-{
-    DPRINT1("EnumServicesStatusW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -898,28 +1033,101 @@ QueryServiceConfigA(
 /**********************************************************************
  *  QueryServiceConfigW
  *
+ * @implemented
+ */
+BOOL STDCALL
+QueryServiceConfigW(SC_HANDLE hService,
+                    LPQUERY_SERVICE_CONFIGW lpServiceConfig,
+                    DWORD cbBufSize,
+                    LPDWORD pcbBytesNeeded)
+{
+    DWORD dwError;
+
+    DPRINT("QueryServiceConfigW(%p, %p, %lu, %p)\n",
+           hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceConfigW(BindingHandle,
+                                      (unsigned int)hService,
+                                      (unsigned char *)lpServiceConfig,
+                                      cbBufSize,
+                                      pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrQueryServiceConfigW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    /* Adjust the pointers */
+    if (lpServiceConfig->lpBinaryPathName)
+        lpServiceConfig->lpBinaryPathName =
+            (LPWSTR)((ULONG_PTR)lpServiceConfig +
+                     (ULONG_PTR)lpServiceConfig->lpBinaryPathName);
+
+    if (lpServiceConfig->lpLoadOrderGroup)
+        lpServiceConfig->lpLoadOrderGroup =
+            (LPWSTR)((ULONG_PTR)lpServiceConfig +
+                     (ULONG_PTR)lpServiceConfig->lpLoadOrderGroup);
+
+    if (lpServiceConfig->lpDependencies)
+        lpServiceConfig->lpDependencies =
+            (LPWSTR)((ULONG_PTR)lpServiceConfig +
+                     (ULONG_PTR)lpServiceConfig->lpDependencies);
+
+    if (lpServiceConfig->lpServiceStartName)
+        lpServiceConfig->lpServiceStartName =
+            (LPWSTR)((ULONG_PTR)lpServiceConfig +
+                     (ULONG_PTR)lpServiceConfig->lpServiceStartName);
+
+    if (lpServiceConfig->lpDisplayName)
+        lpServiceConfig->lpDisplayName =
+           (LPWSTR)((ULONG_PTR)lpServiceConfig +
+                    (ULONG_PTR)lpServiceConfig->lpDisplayName);
+
+    DPRINT("QueryServiceConfigW() done\n");
+
+    return TRUE;
+}
+
+
+/**********************************************************************
+ *  QueryServiceConfig2A
+ *
  * @unimplemented
  */
 BOOL
 STDCALL
-QueryServiceConfigW(
+QueryServiceConfig2A(
     SC_HANDLE       hService,
-    LPQUERY_SERVICE_CONFIGW lpServiceConfig,
-    DWORD                   cbBufSize,
-    LPDWORD                 pcbBytesNeeded)
+    DWORD           dwInfo,
+    LPBYTE          lpBuffer,
+    DWORD           cbBufSize,
+    LPDWORD         pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceConfigW is unimplemented\n");
-    if (lpServiceConfig && cbBufSize >= sizeof(QUERY_SERVICE_CONFIGW))
-    {
-        memset(lpServiceConfig, 0, *pcbBytesNeeded);
-        return TRUE;
-    }
-    else
-    {
-        *pcbBytesNeeded = sizeof(QUERY_SERVICE_CONFIGW);
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
-    }
+    DPRINT1("QueryServiceConfig2A is unimplemented\n");
+    return FALSE;
+}
+
+
+/**********************************************************************
+ *  QueryServiceConfig2W
+ *
+ * @unimplemented
+ */
+BOOL
+STDCALL
+QueryServiceConfig2W(
+    SC_HANDLE       hService,
+    DWORD           dwInfo,
+    LPBYTE          lpBuffer,
+    DWORD           cbBufSize,
+    LPDWORD         pcbBytesNeeded)
+{
+    DPRINT1("QueryServiceConfig2W is unimplemented\n");
+    return FALSE;
 }
 
 
@@ -964,20 +1172,37 @@ QueryServiceLockStatusW(
 /**********************************************************************
  *  QueryServiceObjectSecurity
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceObjectSecurity(
-    SC_HANDLE       hService,
-    SECURITY_INFORMATION    dwSecurityInformation,
-    PSECURITY_DESCRIPTOR    lpSecurityDescriptor,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceObjectSecurity(SC_HANDLE hService,
+                           SECURITY_INFORMATION dwSecurityInformation,
+                           PSECURITY_DESCRIPTOR lpSecurityDescriptor,
+                           DWORD cbBufSize,
+                           LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceObjectSecurity is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceObjectSecurity(%p, %lu, %p)\n",
+           hService, dwSecurityInformation, lpSecurityDescriptor);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceObjectSecurity(BindingHandle,
+                                             (unsigned int)hService,
+                                             dwSecurityInformation,
+                                             (unsigned char *)lpSecurityDescriptor,
+                                             cbBufSize,
+                                             pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -1032,6 +1257,70 @@ QueryServiceStatusEx(SC_HANDLE  hService,
 
 
 /**********************************************************************
+ *  SetServiceObjectSecurity
+ *
+ * @implemented
+ */
+BOOL STDCALL
+SetServiceObjectSecurity(SC_HANDLE hService,
+                         SECURITY_INFORMATION dwSecurityInformation,
+                         PSECURITY_DESCRIPTOR lpSecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR SelfRelativeSD = NULL;
+    ULONG Length;
+    NTSTATUS Status;
+    DWORD dwError;
+
+    Length = 0;
+    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
+                                   SelfRelativeSD,
+                                   &Length);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    SelfRelativeSD = HeapAlloc(GetProcessHeap(), 0, Length);
+    if (SelfRelativeSD == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
+                                   SelfRelativeSD,
+                                   &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrSetServiceObjectSecurity(BindingHandle,
+                                           (unsigned int)hService,
+                                           dwSecurityInformation,
+                                           (unsigned char *)SelfRelativeSD,
+                                           Length);
+
+    HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/**********************************************************************
  *  StartServiceA
  *
  * @unimplemented
@@ -1061,9 +1350,10 @@ StartServiceW(
     DWORD       dwNumServiceArgs,
     LPCWSTR     *lpServiceArgVectors)
 {
-    DPRINT1("StartServiceW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DPRINT1("StartServiceW is unimplemented, but returns success...\n");
+    //SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    //return FALSE;
+    return TRUE;
 }
 
 

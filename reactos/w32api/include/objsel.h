@@ -21,12 +21,9 @@
 extern "C" {
 #endif
 
-#include <unknwn.h>
-#include <oaidl.h>
-#include <objidl.h>
-
-#if defined (_MSC_VER)
-#define INITGUID
+/* the PSDK headers defines it as EXTERN_C const GUID CLSID_DsObjectPicker = {...},
+ * but that's not a good idea when EXTERN_C is extern... */
+#ifndef DEFINE_GUID
 #include <initguid.h>
 #endif
 

@@ -47,7 +47,7 @@ MIDIERR_STILLPLAYING, 		"Nemohu provést tuto operaci dokud jsou data pøehrávána.
 MIDIERR_NOMAP, 			"MIDI map nebyla nalezena. To mù¾e ukazovat na problém s ovladaèem nebo je soubor MIDIMAP.CFG po¹kozen èi chybí."
 MIDIERR_NOTREADY, 		"Port pøená¹í data na zaøízení. Poèkejte na dokonèení pøenosu a zkuste to znovu."
 MIDIERR_NODEVICE, 		"Souèasné nastavení MIDI mapperu se odkazuje na MIDI zaøízení nepøítomné v systému. Upravte nastavení MIDI mapperu."
-MIDIERR_INVALIDSETUP, 		"Souèasné nastavení MIDI je po¹kozené. Pøepi¹te soubor MIDIMAP.CFG ve Windows slo¾ce SYSTEM originálem a zkuste to znovu."
+MIDIERR_INVALIDSETUP, 		"Souèasné nastavení MIDI je po¹kozené. Pøepi¹te soubor MIDIMAP.CFG ve ReactOS slo¾ce SYSTEM originálem a zkuste to znovu."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Neplatný identifikátor MCI zaøízení. Pou¾ijte identifikátor vrácený pøi otevøení MCI zaøízení."
@@ -68,7 +68,7 @@ MCIERR_MISSING_PARAMETER, 	"Tento pøíkaz vy¾aduje parametr. Zadejte ho."
 MCIERR_UNSUPPORTED_FUNCTION, 	"Vámi pou¾ité MCI zaøízení nepodporuje uvedený pøíkaz."
 MCIERR_FILE_NOT_FOUND, 		"Soubor nebyl nalezen. Ujistìte se, ¾e cesta k souboru a jeho jméno jsou platné."
 MCIERR_DEVICE_NOT_READY, 	"Ovladaè zaøízení není pøipraven."
-MCIERR_INTERNAL, 		"Pøi inicialiazaci MCI do¹lo k problémùm. Zkuste zrestartovat Windows."
+MCIERR_INTERNAL, 		"Pøi inicialiazaci MCI do¹lo k problémùm. Zkuste zrestartovat ReactOS."
 MCIERR_DRIVER, 			"Ovladaè má problémy a ukonèil svou èinnost. Ovladaè nevrátil popis chyby."
 MCIERR_CANNOT_USE_ALL, 		"Nemohu pou¾ít 'all' jako jméno zaøízení pøi provádìní tohoto pøíkazu."
 MCIERR_MULTIPLE, 		"Vyskytly se chyby na více zaøízeních. Zadejte pøíkazy zvlá¹» pro ka¾dé jedno zaøízeníify, aby bylo zji¹tìno, které zaøízení chybuje."

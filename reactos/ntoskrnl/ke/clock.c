@@ -20,6 +20,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, KiInitializeSystemClock)
+#endif
+
 /* GLOBALS ****************************************************************/
 
 /*
@@ -52,14 +56,8 @@ extern LIST_ENTRY KiTimerListHead;
  */
 #define CLOCK_INCREMENT (100000)
 
-#ifdef  __GNUC__
-ULONG EXPORTED KeMaximumIncrement = 100000;
-ULONG EXPORTED KeMinimumIncrement = 100000;
-#else
-/* Microsoft-style declarations */
-EXPORTED ULONG KeMaximumIncrement = 100000;
-EXPORTED ULONG KeMinimumIncrement = 100000;
-#endif
+ULONG KeMaximumIncrement = 100000;
+ULONG KeMinimumIncrement = 100000;
 
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
@@ -266,8 +264,8 @@ KeUpdateRunTime(
     * Cs bit 0 is always set for user mode if we are in protected mode.
     * V86 mode is counted as user time.
     */
-   if (TrapFrame->Cs & 0x1 ||
-       TrapFrame->Eflags & X86_EFLAGS_VM)
+   if (TrapFrame->SegCs & MODE_MASK ||
+       TrapFrame->EFlags & X86_EFLAGS_VM)
    {
       InterlockedIncrementUL(&CurrentThread->UserTime);
       InterlockedIncrementUL(&CurrentProcess->UserTime);

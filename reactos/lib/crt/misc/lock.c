@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -30,18 +30,18 @@ typedef struct
 
 static LOCKTABLEENTRY lock_table[ _TOTAL_LOCKS ];
 
-static inline void msvcrt_mlock_set_entry_initialized( int locknum, BOOL initialized )
+static __inline void msvcrt_mlock_set_entry_initialized( int locknum, BOOL initialized )
 {
   lock_table[ locknum ].bInit = initialized;
 }
 
-static inline void msvcrt_initialize_mlock( int locknum )
+static __inline void msvcrt_initialize_mlock( int locknum )
 {
   InitializeCriticalSection( &(lock_table[ locknum ].crit) );
   msvcrt_mlock_set_entry_initialized( locknum, TRUE );
 }
 
-static inline void msvcrt_uninitialize_mlock( int locknum )
+static __inline void msvcrt_uninitialize_mlock( int locknum )
 {
   DeleteCriticalSection( &(lock_table[ locknum ].crit) );
   msvcrt_mlock_set_entry_initialized( locknum, FALSE );

@@ -18,13 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <ui.h>
-#include "gui.h"
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-#include <inifile.h>
-#include <version.h>
 
 VOID GuiDrawBackdrop(VOID)
 {
@@ -46,7 +39,7 @@ VOID GuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 {
 }
 
-VOID GuiDrawStatusText(PUCHAR StatusText)
+VOID GuiDrawStatusText(PCSTR StatusText)
 {
 }
 
@@ -62,11 +55,11 @@ VOID GuiRestoreScreen(PUCHAR Buffer)
 {
 }
 
-VOID GuiMessageBox(PUCHAR MessageText)
+VOID GuiMessageBox(PCSTR MessageText)
 {
 }
 
-VOID GuiMessageBoxCritical(PUCHAR MessageText)
+VOID GuiMessageBoxCritical(PCSTR MessageText)
 {
 }
 
@@ -74,12 +67,12 @@ VOID GuiDrawProgressBar(ULONG Position, ULONG Range)
 {
 }
 
-UCHAR GuiTextToColor(PUCHAR ColorText)
+UCHAR GuiTextToColor(PCSTR ColorText)
 {
 	return 0;
 }
 
-UCHAR GuiTextToFillStyle(PUCHAR FillStyleText)
+UCHAR GuiTextToFillStyle(PCSTR FillStyleText)
 {
 	return 0;
 }

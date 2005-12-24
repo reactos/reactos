@@ -6,8 +6,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <ddraw.h>
-#include <ddk/ddrawi.h>
-#include <ddk/d3dhal.h>
+#include <ddrawi.h>
+#include <d3dhal.h>
 #include <ddrawgdi.h>
 
 /******** Main Object ********/

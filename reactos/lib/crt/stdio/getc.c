@@ -21,11 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "precomp.h"
-#include <stdio.h>
-#include <wchar.h>
-#include <errno.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 //getc can be a macro
 #undef getc

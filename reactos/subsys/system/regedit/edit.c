@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <shellapi.h>
 #include <ctype.h>
+#include <shlwapi.h>
 
 #include "main.h"
 #include "regproc.h"
@@ -49,7 +50,6 @@ static PVOID binValueData;
 static DWORD dwordValueData;
 static DWORD valueDataLen;
 static EDIT_MODE dwordEditMode = EDIT_MODE_HEX;
-
 
 void error(HWND hwnd, INT resId, ...)
 {
@@ -72,6 +72,23 @@ void error(HWND hwnd, INT resId, ...)
     va_end(ap);
 
     MessageBox(hwnd, errstr, title, MB_OK | MB_ICONERROR);
+}
+
+static void error_code_messagebox(HWND hwnd, DWORD error_code)
+{
+    LPTSTR lpMsgBuf;
+    DWORD status;
+    TCHAR title[256];
+    static const TCHAR fallback[] = TEXT("Error displaying error message.\n");
+    if (!LoadString(hInst, IDS_ERROR, title, COUNT_OF(title)))
+        lstrcpy(title, TEXT("Error"));
+    status = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                           NULL, error_code, 0, (LPTSTR)&lpMsgBuf, 0, NULL);
+    if (!status)
+        lpMsgBuf = (LPTSTR)fallback;
+    MessageBox(hwnd, lpMsgBuf, title, MB_OK | MB_ICONERROR);
+    if (lpMsgBuf != fallback)
+        LocalFree(lpMsgBuf);
 }
 
 void warning(HWND hwnd, INT resId, ...)
@@ -231,7 +248,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 {
     WNDPROC oldwndproc;
 
-    oldwndproc = (WNDPROC)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWL_USERDATA);
 
     switch (uMsg)
     {
@@ -284,7 +301,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
         /* subclass the edit control */
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
-        oldproc = (WNDPROC)GetWindowLongPtr(hwndValue, GWL_WNDPROC);
+        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwndValue, GWL_WNDPROC);
         SetWindowLongPtr(hwndValue, GWL_USERDATA, (DWORD_PTR)oldproc);
         SetWindowLongPtr(hwndValue, GWL_WNDPROC, (DWORD_PTR)DwordEditSubclassProc);
 
@@ -695,5 +712,36 @@ done:
         HeapFree(GetProcessHeap(), 0, stringValueData);
     stringValueData = NULL;
 
+    return result;
+}
+
+BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
+{
+    TCHAR msg[128], caption[128];
+    BOOL result = FALSE;
+    LONG lRet;
+    HKEY hKey;
+    
+    lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, KEY_READ|KEY_SET_VALUE, &hKey);
+    if (lRet != ERROR_SUCCESS) {
+	error_code_messagebox(hwnd, lRet);
+	return FALSE;
+    }
+    
+    LoadString(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
+    LoadString(hInst, IDS_QUERY_DELETE_KEY_ONE, msg, sizeof(msg)/sizeof(TCHAR));
+
+    if (MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) != IDYES)
+        goto done;
+	
+    lRet = SHDeleteKey(hKeyRoot, keyPath);
+    if (lRet != ERROR_SUCCESS) {
+	error(hwnd, IDS_BAD_KEY, keyPath);
+	goto done;
+    }
+    result = TRUE;
+    
+done:
+    RegCloseKey(hKey);
     return result;
 }

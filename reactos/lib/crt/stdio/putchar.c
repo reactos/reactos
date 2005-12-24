@@ -8,9 +8,9 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <stdio.h>
+#include <precomp.h>
+
 #include <tchar.h>
-#include <internal/file.h>
 
 #undef putc
 #undef putchar

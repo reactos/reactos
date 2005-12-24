@@ -45,13 +45,13 @@ PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle )
    return NULL;
 }
 
-inline static HANDLE entry_to_handle(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY ptr )
+__inline static HANDLE entry_to_handle(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY ptr )
 {
    int index = ptr - ht->handles;
    return (HANDLE)(((index << 1) + FIRST_USER_HANDLE) + (ptr->generation << 16));
 }
 
-inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
+__inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
 
@@ -104,7 +104,7 @@ VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes)
    ht->allocated_handles = bytes / sizeof(USER_HANDLE_ENTRY);
 }
 
-inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY entry)
+__inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY entry)
 {
    void *ret;
    ret = entry->ptr;

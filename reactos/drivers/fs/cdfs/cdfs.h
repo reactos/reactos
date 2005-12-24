@@ -1,8 +1,8 @@
 #ifndef CDFS_H
 #define CDFS_H
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+#include <ntddk.h>
+#include <ntifs.h>
 #include <ntddcdrm.h>
 #include <ccros.h>
 
@@ -288,7 +288,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 /* fcb.c */
 
 PFCB
-CdfsCreateFCB(PWCHAR FileName);
+CdfsCreateFCB(PCWSTR FileName);
 
 VOID
 CdfsDestroyFCB(PFCB Fcb);

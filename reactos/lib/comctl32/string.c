@@ -22,6 +22,9 @@
  *
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h> /* atoi */
@@ -171,13 +174,52 @@ LPSTR WINAPI StrChrA(LPCSTR lpszStr, WORD ch)
   return NULL;
 }
 
+/**************************************************************************
+ * StrCmpNIA [COMCTL32.353]
+ *
+ * Compare two strings, up to a maximum length, ignoring case.
+ *
+ * PARAMS
+ *  lpszStr  [I] First string to compare
+ *  lpszComp [I] Second string to compare
+ *  iLen     [I] Maximum number of chars to compare.
+ *
+ * RETURNS
+ *  An integer less than, equal to or greater than 0, indicating that
+ *  lpszStr is less than, the same, or greater than lpszComp.
+ */
+INT WINAPI StrCmpNIA(LPCSTR lpszStr, LPCSTR lpszComp, INT iLen)
+{
+  INT iRet;
+
+  TRACE("(%s,%s,%i)\n", debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
+
+  iRet = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen);
+  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
+}
+
+/*************************************************************************
+ * StrCmpNIW	[COMCTL32.361]
+ *
+ * See StrCmpNIA.
+ */
+INT WINAPI StrCmpNIW(LPCWSTR lpszStr, LPCWSTR lpszComp, INT iLen)
+{
+  INT iRet;
+
+  TRACE("(%s,%s,%i)\n", debugstr_w(lpszStr), debugstr_w(lpszComp), iLen);
+
+  iRet = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen);
+  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
+}
+
 /*************************************************************************
  * COMCTL32_StrStrHelperA
  *
  * Internal implementation of StrStrA/StrStrIA
  */
 static LPSTR COMCTL32_StrStrHelperA(LPCSTR lpszStr, LPCSTR lpszSearch,
-                                    int (*pStrCmpFn)(LPCSTR,LPCSTR,size_t))
+                                    INT (WINAPI *pStrCmpFn)(LPCSTR,LPCSTR,INT))
 {
   size_t iLen;
 
@@ -201,7 +243,7 @@ static LPSTR COMCTL32_StrStrHelperA(LPCSTR lpszStr, LPCSTR lpszSearch,
  * Internal implementation of StrStrW/StrStrIW
  */
 static LPWSTR COMCTL32_StrStrHelperW(LPCWSTR lpszStr, LPCWSTR lpszSearch,
-                                     int (*pStrCmpFn)(LPCWSTR,LPCWSTR,int))
+                                     INT (WINAPI *pStrCmpFn)(LPCWSTR,LPCWSTR,INT))
 {
   int iLen;
 
@@ -235,7 +277,7 @@ LPSTR WINAPI StrStrIA(LPCSTR lpszStr, LPCSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_a(lpszStr), debugstr_a(lpszSearch));
 
-  return COMCTL32_StrStrHelperA(lpszStr, lpszSearch, strncasecmp);
+  return COMCTL32_StrStrHelperA(lpszStr, lpszSearch, StrCmpNIA);
 }
 
 /**************************************************************************
@@ -264,7 +306,7 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
 
-  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, (int (*)(LPCWSTR,LPCWSTR,int)) wcsnicmp);
+  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, StrCmpNIW);
 }
 
 /**************************************************************************
@@ -361,45 +403,6 @@ INT WINAPI StrCmpNA(LPCSTR lpszStr, LPCSTR lpszComp, INT iLen)
   TRACE("(%s,%s,%i)\n", debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
 
   iRet = CompareStringA(GetThreadLocale(), 0, lpszStr, iLen, lpszComp, iLen);
-  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
-}
-
-/**************************************************************************
- * StrCmpNIA [COMCTL32.353]
- *
- * Compare two strings, up to a maximum length, ignoring case.
- *
- * PARAMS
- *  lpszStr  [I] First string to compare
- *  lpszComp [I] Second string to compare
- *  iLen     [I] Maximum number of chars to compare.
- *
- * RETURNS
- *  An integer less than, equal to or greater than 0, indicating that
- *  lpszStr is less than, the same, or greater than lpszComp.
- */
-int WINAPI StrCmpNIA(LPCSTR lpszStr, LPCSTR lpszComp, int iLen)
-{
-  INT iRet;
-
-  TRACE("(%s,%s,%i)\n", debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
-
-  iRet = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen);
-  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
-}
-
-/*************************************************************************
- * StrCmpNIW	[COMCTL32.361]
- *
- * See StrCmpNIA.
- */
-INT WINAPI StrCmpNIW(LPCWSTR lpszStr, LPCWSTR lpszComp, int iLen)
-{
-  INT iRet;
-
-  TRACE("(%s,%s,%i)\n", debugstr_w(lpszStr), debugstr_w(lpszComp), iLen);
-
-  iRet = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen);
   return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
 }
 
@@ -501,7 +504,7 @@ LPSTR WINAPI StrStrA(LPCSTR lpszStr, LPCSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_a(lpszStr), debugstr_a(lpszSearch));
 
-  return COMCTL32_StrStrHelperA(lpszStr, lpszSearch, strncmp);
+  return COMCTL32_StrStrHelperA(lpszStr, lpszSearch, StrCmpNA);
 }
 
 /**************************************************************************
@@ -513,7 +516,7 @@ LPWSTR WINAPI StrStrW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
 
-  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, (int (*)(LPCWSTR,LPCWSTR,int)) wcsncmp);
+  return COMCTL32_StrStrHelperW(lpszStr, lpszSearch, StrCmpNW);
 }
 
 /*************************************************************************

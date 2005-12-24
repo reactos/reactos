@@ -47,6 +47,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitMemoryAreas)
+#endif
+
 /* #define VALIDATE_MEMORY_AREAS */
 
 /* FUNCTIONS *****************************************************************/
@@ -105,7 +109,7 @@ static PMEMORY_AREA MmIterateNextNode(PMEMORY_AREA Node)
 }
 
 /**
- * @name MmIterateFirstNode
+ * @name MmIterateLastNode
  *
  * @param Node
  *        Head node of the MEMORY_AREA tree.
@@ -123,7 +127,7 @@ static PMEMORY_AREA MmIterateLastNode(PMEMORY_AREA Node)
 }
 
 /**
- * @name MmIterateNextNode
+ * @name MmIteratePreviousNode
  *
  * @param Node
  *        Current node in the tree.
@@ -200,9 +204,9 @@ MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
         Node != NULL;
         Node = MmIterateNextNode(Node))
    {
-      DbgPrint("Start %p End %p Attributes %x\n",
+      DbgPrint("Start %p End %p Protect %x Flags %x\n",
                Node->StartingAddress, Node->EndingAddress,
-               Node->Attributes);
+               Node->Protect, Node->Flags);
    }
 
    DbgPrint("Finished MmDumpMemoryAreas()\n");
@@ -928,15 +932,14 @@ MmFreeMemoryAreaByPtr(
  */
 
 NTSTATUS STDCALL
-MmCreateMemoryArea(PEPROCESS Process,
-                   PMADDRESS_SPACE AddressSpace,
+MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
                    ULONG Type,
                    PVOID *BaseAddress,
                    ULONG_PTR Length,
-                   ULONG Attributes,
+                   ULONG Protect,
                    PMEMORY_AREA *Result,
                    BOOLEAN FixedAddress,
-                   BOOLEAN TopDown,
+                   ULONG AllocationFlags,
                    PHYSICAL_ADDRESS BoundaryAddressMultiple)
 {
    PVOID EndAddress;
@@ -959,7 +962,7 @@ MmCreateMemoryArea(PEPROCESS Process,
       *BaseAddress = MmFindGap(AddressSpace,
                                tmpLength,
                                Granularity,
-                               TopDown != 0);
+                               (AllocationFlags & MEM_TOP_DOWN) == MEM_TOP_DOWN);
       if ((*BaseAddress) == 0)
       {
          DPRINT("No suitable gap\n");
@@ -1007,7 +1010,8 @@ MmCreateMemoryArea(PEPROCESS Process,
    MemoryArea->Type = Type;
    MemoryArea->StartingAddress = *BaseAddress;
    MemoryArea->EndingAddress = (PVOID)((ULONG_PTR)*BaseAddress + tmpLength);
-   MemoryArea->Attributes = Attributes;
+   MemoryArea->Protect = Protect;
+   MemoryArea->Flags = AllocationFlags;
    MemoryArea->LockCount = 0;
    MemoryArea->PageOpCount = 0;
    MemoryArea->DeleteInProgress = FALSE;

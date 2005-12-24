@@ -51,6 +51,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case KernelModeDriver:
 		case BootSector:
 		case BootLoader:
+		case BootProgram:
 			return true;
 		case BuildTool:
 		case StaticLibrary:
@@ -72,7 +73,7 @@ Bootstrap::Initialize ()
 {
 	if ( !IsSupportedModuleType ( module->type ) )
 	{
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"<bootstrap> is not applicable for this module type." );
 	}

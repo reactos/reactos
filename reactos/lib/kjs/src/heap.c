@@ -54,7 +54,7 @@
  * Prototypes for static functions.
  */
 
-static inline unsigned int
+static __inline unsigned int
 list (unsigned int size)
 {
   unsigned int list = 0;
@@ -72,7 +72,7 @@ list (unsigned int size)
 }
 
 
-static inline void
+static __inline void
 delete_destroyable (JSHeapMemoryBlock *b)
 {
   JSHeapDestroyable *destroyable

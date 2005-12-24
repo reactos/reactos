@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __AFILTER_H
-#define __AFILTER_H
+#ifndef _ARC_FILTER_DEFS_
+#define _ARC_FILTER_DEFS_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -186,4 +186,4 @@ ArcDestroyPacket(
 }
 #endif
 
-#endif /* __AFILTER_H */
+#endif /* _ARC_FILTER_DEFS_ */

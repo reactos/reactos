@@ -752,10 +752,10 @@ NtUserGetKeyboardLayoutList(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetKeyboardLayoutName(
-  DWORD Unknown0);
+  LPWSTR lpszName);
 
 DWORD
 STDCALL
@@ -1170,7 +1170,8 @@ NtUserRegisterClassExWOW(
    PUNICODE_STRING MenuName,
    WNDPROC wpExtra,
    DWORD Flags,
-   DWORD Unknown7);
+   DWORD Unknown7,
+   HMENU hMenu);
 
 BOOL
 STDCALL

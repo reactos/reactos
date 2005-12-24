@@ -1,6 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 FILE _iob[20] =
 {

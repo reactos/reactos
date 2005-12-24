@@ -32,32 +32,6 @@ class MingwModuleHandler;
 extern std::string
 v2s ( const string_list& v, int wrap_at );
 
-typedef std::map<std::string,Directory*> directory_map;
-
-
-class Directory
-{
-public:
-	std::string name;
-	directory_map subdirs;
-	Directory ( const std::string& name );
-	void Add ( const char* subdir );
-	void GenerateTree ( const std::string& parent,
-	                    bool verbose );
-	std::string EscapeSpaces ( std::string path );
-	void CreateRule ( FILE* f,
-	                  const std::string& parent );
-private:
-	bool mkdir_p ( const char* path );
-	std::string ReplaceVariable ( std::string name,
-	                              std::string value,
-	                              std::string path );
-	std::string GetEnvironmentVariable ( const std::string& name );
-	void ResolveVariablesInPath ( char* buf,
-	                              std::string path );
-	bool CreateDirectory ( std::string path );
-};
-
 
 class MingwBackend : public Backend
 {
@@ -74,7 +48,7 @@ public:
 	std::string nasmCommand;
 	std::string binutilsPrefix;
 	std::string binutilsCommand;
-	bool usePipe;
+	bool usePipe, manualBinutilsSetting;
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
 	Directory* installDirectory;
@@ -103,6 +77,8 @@ private:
 	std::string GetBin2ResExecutable ();
 	void UnpackWineResources ();
 	void GenerateTestSupportCode ();
+	void GenerateCompilationUnitSupportCode ();
+	void GenerateSysSetup ();
 	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();
@@ -117,6 +93,7 @@ private:
 	void DetectNetwideAssembler ();
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
+	bool CanEnablePreCompiledHeaderSupportForModule ( const Module& module );
 	void ProcessModules ();
 	void CheckAutomaticDependenciesForModuleOnly ();
 	void ProcessNormal ();

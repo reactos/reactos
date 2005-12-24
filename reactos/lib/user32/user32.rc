@@ -12,7 +12,7 @@
 
 #define IDS_MDI_MOREWINDOWS     13
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -58,11 +58,12 @@ OBM_CLOSE BITMAP "resources/obm_close.bmp"
 OBM_COMBO BITMAP "resources/obm_combo.bmp"
 OBM_MNARROW BITMAP "resources/obm_mnarrow.bmp"
 
-
+#include "En.rc"
 #include "Da.rc"
 #include "De.rc"
-#include "En.rc"
-#include "Ja.rc"
+#include "Fr.rc"
 #include "Nl.rc"
 #include "Pl.rc"
+#include "Ja.rc"
 #include "Sv.rc"
+#include "Hu.rc"

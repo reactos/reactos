@@ -269,7 +269,16 @@ static void BuildCallFrom16Core( FILE *outfile, int reg_func, int thunk )
 #endif
 
         /* Push address of CONTEXT86 structure -- popped by the relay routine */
-        fprintf( outfile, "\tpushl %%esp\n" );
+        fprintf( outfile, "\tmovl %%esp,%%eax\n" );
+        fprintf( outfile, "\tandl $~15,%%esp\n" );
+        fprintf( outfile, "\tsubl $4,%%esp\n" );
+        fprintf( outfile, "\tpushl %%eax\n" );
+    }
+    else
+    {
+        fprintf( outfile, "\tsubl $8,%%esp\n" );
+        fprintf( outfile, "\tandl $~15,%%esp\n" );
+        fprintf( outfile, "\taddl $8,%%esp\n" );
     }
 
     /* Call relay routine (which will call the API entry point) */
@@ -725,7 +734,8 @@ static void BuildCallTo32CBClient( FILE *outfile, BOOL isEx )
  * (ebp+0)   saved ebp
  * (ebp-128) buffer area to allow stack frame manipulation
  * (ebp-332) CONTEXT86 struct
- * (ebp-336) CONTEXT86 *argument
+ * (ebp-336) padding for stack alignment
+ * (ebp-336-n) CONTEXT86 *argument
  *  ....     other arguments copied from (ebp+12)
  *
  * The entry point routine is called with a CONTEXT* extra argument,
@@ -746,7 +756,7 @@ static void BuildCallFrom32Regs( FILE *outfile )
 
     fprintf( outfile, "\tpushl %%ebp\n" );
     fprintf( outfile, "\tmovl %%esp,%%ebp\n ");
-    fprintf( outfile, "\tleal -%d(%%esp), %%esp\n", STACK_SPACE );
+    fprintf( outfile, "\tleal -%d(%%esp), %%esp\n", STACK_SPACE + 4 /* for context arg */);
 
     /* Build the context structure */
 
@@ -787,17 +797,18 @@ static void BuildCallFrom32Regs( FILE *outfile )
     /* Transfer the arguments */
 
     fprintf( outfile, "\tmovl 4(%%ebp),%%ebx\n" );   /* get relay code addr */
-    fprintf( outfile, "\tpushl %%esp\n" );           /* push ptr to context struct */
     fprintf( outfile, "\tmovzbl 4(%%ebx),%%ecx\n" ); /* fetch number of args to copy */
-    fprintf( outfile, "\tjecxz 1f\n" );
     fprintf( outfile, "\tsubl %%ecx,%%esp\n" );
+    fprintf( outfile, "\tandl $~15,%%esp\n" );
     fprintf( outfile, "\tleal 16(%%ebp),%%esi\n" );  /* get %esp at time of call */
     fprintf( outfile, "\tmovl %%esp,%%edi\n" );
     fprintf( outfile, "\tshrl $2,%%ecx\n" );
+    fprintf( outfile, "\tjz 1f\n" );
     fprintf( outfile, "\tcld\n" );
     fprintf( outfile, "\trep\n\tmovsl\n" );  /* copy args */
-
-    fprintf( outfile, "1:\tmovzbl 5(%%ebx),%%eax\n" ); /* fetch number of args to remove */
+    fprintf( outfile, "1:\tleal %d(%%ebp),%%eax\n", -STACK_SPACE );  /* get addr of context struct */
+    fprintf( outfile, "\tmovl %%eax,(%%edi)\n" );    /* and pass it as extra arg */
+    fprintf( outfile, "\tmovzbl 5(%%ebx),%%eax\n" ); /* fetch number of args to remove */
     fprintf( outfile, "\tleal 16(%%ebp,%%eax),%%eax\n" );
     fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Esp) - STACK_SPACE );
 

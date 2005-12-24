@@ -25,6 +25,7 @@
  */
 
 #include <windows.h>
+#include <devguid.h>
 #include <commctrl.h>
 #include <cpl.h>
 
@@ -32,63 +33,38 @@
 #include "resource.h"
 
 
-
 /* Property page dialog callback */
 static INT_PTR CALLBACK
-Page1Proc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+MouseHardwareProc(IN HWND hwndDlg,
+	          IN UINT uMsg,
+	          IN WPARAM wParam,
+	          IN LPARAM lParam)
 {
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
-}
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            GUID Guids[] = {
+                GUID_DEVCLASS_MOUSE
+            };
 
-/* Property page dialog callback */
-static INT_PTR CALLBACK
-Page2Proc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
-}
+            /* create the hardware page */
+            DeviceCreateHardwarePageEx(hwndDlg,
+                                       Guids,
+                                       sizeof(Guids) / sizeof(Guids[0]),
+                                       HWPD_STANDARDLIST);
+            break;
+        }
+    }
 
-/* Property page dialog callback */
-static INT_PTR CALLBACK
-Page3Proc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
+    return FALSE;
 }
 
 
 LONG APIENTRY
 MouseApplet(HWND hwnd, UINT uMsg, LONG lParam1, LONG lParam2)
 {
-  PROPSHEETPAGE psp[3];
+  PROPSHEETPAGE psp[1];
   PROPSHEETHEADER psh;
   TCHAR Caption[256];
 
@@ -105,9 +81,7 @@ MouseApplet(HWND hwnd, UINT uMsg, LONG lParam1, LONG lParam2)
   psh.nStartPage = 0;
   psh.ppsp = psp;
 
-  InitPropSheetPage(&psp[0], IDD_PROPPAGE1, Page1Proc);
-  InitPropSheetPage(&psp[1], IDD_PROPPAGE2, Page2Proc);
-  InitPropSheetPage(&psp[2], IDD_PROPPAGE3, Page3Proc);
+  InitPropSheetPage(&psp[0], IDD_HARDWARE, MouseHardwareProc);
 
   return (LONG)(PropertySheet(&psh) != -1);
 }

@@ -236,7 +236,7 @@ BOOL SHELL_DeleteFileW(LPCWSTR pszFile, BOOL bShowUI)
  * RETURNS
  *  TRUE if successful, FALSE otherwise
  *
- * NOTES:
+ * NOTES
  *  Verified on Win98 / IE 5 (SHELL32 4.72, March 1999 build) to be ANSI.
  *  This is Unicode on NT/2000
  */
@@ -290,7 +290,7 @@ BOOL WINAPI Win32CreateDirectoryAW(LPCVOID path, LPSECURITY_ATTRIBUTES sec)
  * RETURNS
  *  TRUE if successful, FALSE otherwise
  *
- * NOTES:
+ * NOTES
  *  Verified on Win98 / IE 5 (SHELL32 4.72, March 1999 build) to be ANSI.
  *  This is Unicode on NT/2000
  */
@@ -354,7 +354,7 @@ BOOL WINAPI Win32RemoveDirectoryAW(LPCVOID path)
  * RETURNS
  *  TRUE if successful, FALSE otherwise
  *
- * NOTES:
+ * NOTES
  *  Verified on Win98 / IE 5 (SHELL32 4.72, March 1999 build) to be ANSI.
  *  This is Unicode on NT/2000
  */
@@ -560,6 +560,8 @@ int WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES se
 
 /*************************************************************************
  * SHCreateDirectoryExW      [SHELL32.@]
+ *
+ * See SHCreateDirectoryExA.
  */
 int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 {
@@ -792,6 +794,10 @@ DWORD SHNameTranslate(LPWSTR* wString, LPCWSTR* pWToFrom, BOOL more)
  * PARAMS
  *  lpFileOp   [I/O] pointer to a structure containing all the necessary information
  *
+ * RETURNS
+ *  Success: zero
+ *  Failure: nonzero
+ *
  * NOTES
  *  exported by name
  */
@@ -998,7 +1004,7 @@ static DWORD shfileops_get_parent_attr(LPWSTR pFile,LPWSTR pTemp)
 /*************************************************************************
  * SHFileOperationW          [SHELL32.@]
  *
- * See SHFileOperationA
+ * See SHFileOperationA.
  */
 int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 {
@@ -1394,6 +1400,8 @@ shfileop_end:
  * PARAMS
  *  hNameMapping [I] handle to the name mappings used during renaming of files
  *
+ * RETURNS
+ *  Nothing
  */
 void WINAPI SHFreeNameMappings(HANDLE hNameMapping)
 {

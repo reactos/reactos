@@ -16,9 +16,15 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, PsInitJobManagment)
+#endif
+
+
+
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE EXPORTED PsJobType = NULL;
+POBJECT_TYPE PsJobType = NULL;
 
 LIST_ENTRY PsJobListHead;
 static FAST_MUTEX PsJobListLock;

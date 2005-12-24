@@ -41,7 +41,7 @@ CompareSymEntry(const PROSSYM_ENTRY SymEntry1, const PROSSYM_ENTRY SymEntry2)
     }
 
   return 0;
-} 
+}
 
 static int
 GetStabInfo(void *FileData, PIMAGE_FILE_HEADER PEFileHeader,
@@ -169,6 +169,8 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
       switch (StabEntry[i].n_type)
         {
           case N_SO:
+          case N_SOL:
+          case N_BINCL:
             Name = (char *) StabStringsBase + StabEntry[i].n_strx;
             if (StabStringsLength < StabEntry[i].n_strx
                 ||'\0' == *Name || '/' == Name[strlen(Name) - 1]
@@ -610,7 +612,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
             {
               RosSymOffset = CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData;
             }
-          if (Section == InRelocSectionIndex)
+          if (Section == (ULONG)InRelocSectionIndex)
             {
               OutRelocSection = CurrentSectionHeader;
             }

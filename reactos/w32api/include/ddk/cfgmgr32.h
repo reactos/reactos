@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __CFGMGR32_H
-#define __CFGMGR32_H
+#ifndef _CFGMGR32_H_
+#define _CFGMGR32_H_
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -105,6 +105,10 @@ extern "C" {
 #define CR_INVALID_CONFLICT_LIST          0x00000039
 #define CR_INVALID_INDEX                  0x0000003A
 #define CR_INVALID_STRUCTURE_SIZE         0x0000003B
+
+#define RegDisposition_OpenAlways         0x00000000
+#define RegDisposition_OpenExisting       0x00000001
+#define RegDisposition_Bits               0x00000001
 
 
 typedef DWORD RETURN_TYPE;
@@ -223,6 +227,12 @@ typedef RESOURCEID *PRESOURCEID;
 
 #define CM_DRP_MIN                         0x00000001
 #define CM_DRP_MAX                         0x00000017
+
+#define CM_REGISTRY_HARDWARE               0x00000000
+#define CM_REGISTRY_SOFTWARE               0x00000001
+#define CM_REGISTRY_USER                   0x00000100
+#define CM_REGISTRY_CONFIG                 0x00000200
+#define CM_REGISTRY_BITS                   0x00000301
 
 
 typedef struct BusNumber_Des_s {
@@ -741,8 +751,24 @@ CM_Delete_Class_Key_Ex(
 /* FIXME: Obsolete CM_Delete_Range */
 /* FIXME: Obsolete CM_Detected_Resource_Conflict */
 /* FIXME: Obsolete CM_Detected_Resource_Conflict_Ex */
-/* FIXME: Obsolete CM_Disable_DevNode */
-/* FIXME: Obsolete CM_Disable_DevNodeEx */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Disable_DevNode(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Disable_DevNode_Ex(
+    IN DEVINST  dnDevInst,
+    IN ULONG  ulFlags,
+    IN HMACHINE  hMachine);
+
+#define CM_Disable_DevInst CM_Disable_DevNode
+#define CM_Disable_DevInst_Ex CM_Disable_DevNode_Ex
 
 CMAPI
 CONFIGRET
@@ -750,8 +776,23 @@ WINAPI
 CM_Disconnect_Machine(
   IN HMACHINE  hMachine);
 
-/* FIXME: Obsolete CM_Enable_DevNode */
-/* FIXME: Obsolete CM_Enable_DevNodeEx */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Enable_DevNode(
+    IN DEVINST  dnDevInst,
+    IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Enable_DevNode_Ex(
+    IN DEVINST  dnDevInst,
+    IN ULONG  ulFlags,
+    IN HMACHINE  hMachine);
+
+#define CM_Enable_DevInst CM_Enable_DevNode
+#define CM_Enable_DevInst_Ex CM_Enable_DevNode_Ex
 
 CMAPI
 CONFIGRET
@@ -1785,11 +1826,47 @@ WINAPI
 CM_Request_Eject_PC_Ex(
   IN HMACHINE  hMachine);
 
-/* FIXME: Obsolete CM_Run_Detection */
-/* FIXME: Obsolete CM_Run_Detection_Ex */
+/* CM_Run_Detection[_Ex].ulFlags constants */
+#define CM_DETECT_NEW_PROFILE       0x00000001
+#define CM_DETECT_CRASHED           0x00000002
+#define CM_DETECT_HWPROF_FIRST_BOOT 0x00000004
+#define CM_DETECT_RUN               0x80000000
+#define CM_DETECT_BITS              0x80000007
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Run_Detection(
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Run_Detection_Ex(
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Set_Class_Registry_Property */
-/* FIXME: Obsolete CM_Set_DevNode_Problem */
-/* FIXME: Obsolete CM_Set_DevNode_Problem_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_DevNode_Problem(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProblem,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_DevNode_Problem_Ex(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulProblem,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#define CM_Set_DevInst_Problem CM_Set_DevNode_Problem
+#define CM_Set_DevInst_Problem_Ex CM_Set_DevNode_Problem_Ex
 
 CMAPI
 CONFIGRET
@@ -1876,4 +1953,4 @@ CMP_WaitNoPendingInstallEvents(
 }
 #endif
 
-#endif /* __CFGMGR32_H */
+#endif /* _CFGMGR32_H_ */

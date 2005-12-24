@@ -10,16 +10,8 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <sys/types.h>
+#include <precomp.h>
 #include <sys/stat.h>
-#include <stdlib.h>
-#include <io.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

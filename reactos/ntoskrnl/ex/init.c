@@ -32,6 +32,18 @@ BOOLEAN SetupMode = TRUE;
 
 VOID PspPostInitSystemProcess(VOID);
 
+static VOID INIT_FUNCTION InitSystemSharedUserPage (PCSZ ParameterLine);
+VOID INIT_FUNCTION ExpDisplayNotice(VOID);
+INIT_FUNCTION NTSTATUS ExpLoadInitialProcess(PHANDLE ProcessHandle, PHANDLE ThreadHandle);
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, InitSystemSharedUserPage)
+#pragma alloc_text(INIT, ExpDisplayNotice)
+#pragma alloc_text(INIT, ExpLoadInitialProcess)
+#pragma alloc_text(INIT, ExpInitializeExecutive)
+#pragma alloc_text(INIT, ExInit2)
+#endif
+
 /* FUNCTIONS ****************************************************************/
 
 static
@@ -77,7 +89,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
     /* Create local parameter line copy */
     ParamBuffer = ExAllocatePool(PagedPool, 256);
-    strcpy (ParamBuffer, (char *)ParameterLine);
+    strcpy (ParamBuffer, (const char *)ParameterLine);
     DPRINT("%s\n", ParamBuffer);
 
     /* Cut options off */
@@ -220,7 +232,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     }
 }
 
-inline
+__inline
 VOID
 STDCALL
 ExecuteRuntimeAsserts(VOID)
@@ -250,12 +262,11 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
     ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
     ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
-    ASSERT(FIELD_OFFSET(KTSS, Eflags) == KTSS_EFLAGS);
     ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
     ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
 }
 
-inline
+__inline
 VOID
 STDCALL
 ParseAndCacheLoadedModules(VOID)
@@ -303,7 +314,7 @@ ParseAndCacheLoadedModules(VOID)
     }
 }
 
-inline
+__inline
 VOID
 STDCALL
 ParseCommandLine(PULONG MaxMem,
@@ -418,10 +429,9 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
     RTL_USER_PROCESS_INFORMATION Info;
 
     /* Create a handle to the process */
-    Status = ObpCreateHandle(PsGetCurrentProcess(),
-                             PsInitialSystemProcess,
+    Status = ObpCreateHandle(PsInitialSystemProcess,
                              PROCESS_CREATE_PROCESS | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
-                             FALSE,
+                             OBJ_KERNEL_HANDLE,
                              &SystemProcessHandle);
     if(!NT_SUCCESS(Status))
     {

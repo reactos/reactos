@@ -26,18 +26,18 @@ double __log2 (double __x);
 
 double __log2 (double __x)
 {
-  register double __value;
+  register double __val;
 #ifdef __GNUC__
   __asm __volatile__
     ("fld1\n\t"
      "fxch\n\t"
      "fyl2x"
-     : "=t" (__value) : "0" (__x));
+     : "=t" (__val) : "0" (__x));
 #else
   //__value = linkme_log2(__x);
-  __value = 0;
+  __val = 0;
 #endif /*__GNUC__*/
-  return __value;
+  return __val;
 }
 
 /*
@@ -45,7 +45,7 @@ double __log2 (double __x)
  */
 double pow (double __x, double __y)
 {
-  register double __value;
+  register double __val;
 #ifdef __GNUC__
   register double __exponent;
   long __p = (long) __y;
@@ -80,15 +80,15 @@ double pow (double __x, double __y)
      "fxch\n\t"
      "fsub      %%st(1)         # fract(y * log2(x))\n\t"
      "f2xm1                     # 2^(fract(y * log2(x))) - 1\n\t"
-     : "=t" (__value), "=u" (__exponent) :  "0" (__log2 (__x)), "1" (__y));
-  __value += 1.0;
+     : "=t" (__val), "=u" (__exponent) :  "0" (__log2 (__x)), "1" (__y));
+  __val += 1.0;
   __asm __volatile__
     ("fscale"
-     : "=t" (__value) : "0" (__value), "u" (__exponent));
+     : "=t" (__val) : "0" (__val), "u" (__exponent));
 #else
-  __value = linkme_pow(__x, __y);
+  __val = linkme_pow(__x, __y);
 #endif /*__GNUC__*/
-  return __value;
+  return __val;
 }
 
 long double powl (long double __x,long double __y)

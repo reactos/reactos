@@ -216,7 +216,7 @@ VOID HalpCalibrateStallExecution(VOID)
      Ki386RdTSC(EndCount);
 
      Pcr->PrcbData.MHz = (ULONG)(EndCount.QuadPart - StartCount.QuadPart) / 10000;
-     DPRINT("%dMHz\n", Pcr->PrcbData.MHz);
+     DPRINT("%luMHz\n", Pcr->PrcbData.MHz);
      return;
 
   }

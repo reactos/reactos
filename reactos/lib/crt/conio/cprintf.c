@@ -6,9 +6,7 @@
  * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <conio.h>
+#include <precomp.h>
 
 /*
  * @unimplemented

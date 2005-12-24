@@ -18,19 +18,67 @@
  */
 
 #include <freeldr.h>
-#include <ui.h>
-#include "tui.h"
-#include "keycodes.h"
-#include <rtl.h>
-#include <mm.h>
-#include <debug.h>
-#include <inifile.h>
-#include <version.h>
-#include <video.h>
-#include <machine.h>
-
 
 PVOID	TextVideoBuffer = NULL;
+
+/*
+ * printf() - prints formatted text to stdout
+ * originally from GRUB
+ */
+int printf(const char *format, ... )
+{
+	va_list ap;
+	va_start(ap,format);
+	char c, *ptr, str[16];
+
+	while ((c = *(format++)))
+	{
+		if (c != '%')
+		{
+			MachConsPutChar(c);
+		}
+		else
+		{
+			switch (c = *(format++))
+			{
+			case 'd': case 'u': case 'x':
+                if (c == 'x')
+                    *_itoa(va_arg(ap, unsigned long), str, 16) = 0;
+                else
+                    *_itoa(va_arg(ap, unsigned long), str, 10) = 0;
+
+				ptr = str;
+
+				while (*ptr)
+				{
+					MachConsPutChar(*(ptr++));
+				}
+				break;
+
+			case 'c': MachConsPutChar((va_arg(ap,int))&0xff); break;
+
+			case 's':
+				ptr = va_arg(ap,char *);
+
+				while ((c = *(ptr++)))
+				{
+					MachConsPutChar(c);
+				}
+				break;
+			case '%':
+				MachConsPutChar(c);
+				break;
+			default:
+				printf("\nprintf() invalid format specifier - %%%c\n", c);
+				break;
+			}
+		}
+	}
+
+	va_end(ap);
+
+	return 0;
+}
 
 BOOL TuiInitialize(VOID)
 {
@@ -142,19 +190,18 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
 	ULONG		i, j;
 
 	// Clip the area to the screen
-	// FIXME: This code seems to have problems... Uncomment and view ;-)
-	/*if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
+	if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
 	{
 		return;
 	}
-	if ((Left + Right) >= UiScreenWidth)
+	if (Right >= UiScreenWidth)
 	{
-		Right = UiScreenWidth - Left;
+		Right = UiScreenWidth - 1;
 	}
-	if ((Top + Bottom) >= UiScreenHeight)
+	if (Bottom >= UiScreenHeight)
 	{
-		Bottom = UiScreenHeight - Top;
-	}*/
+		Bottom = UiScreenHeight - 1;
+	}
 
 	// Loop through each line and fill it in
 	for (i=Top; i<=Bottom; i++)
@@ -304,7 +351,7 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
  * DrawText()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
+VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	ULONG		i, j;
@@ -317,7 +364,7 @@ VOID TuiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr)
+VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
 	ULONG		TextLength;
 	ULONG		BoxWidth;
@@ -378,7 +425,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR
 	}
 }
 
-VOID TuiDrawStatusText(PCHAR StatusText)
+VOID TuiDrawStatusText(PCSTR StatusText)
 {
 	ULONG		i;
 
@@ -412,7 +459,7 @@ VOID TuiUpdateDateTime(VOID)
 	// Get the month name
 	strcpy(DateString, UiMonthNames[Month - 1]);
 	// Get the day
-	itoa(Day, TempString, 10);
+	_itoa(Day, TempString, 10);
 	// Get the day postfix
 	if (1 == Day || 21 == Day || 31 == Day)
 	{
@@ -436,7 +483,7 @@ VOID TuiUpdateDateTime(VOID)
 	strcat(DateString, " ");
 
 	// Get the year and add it to the date
-	itoa(Year, TempString, 10);
+	_itoa(Year, TempString, 10);
 	strcat(DateString, TempString);
 
 	// Draw the date
@@ -452,18 +499,18 @@ VOID TuiUpdateDateTime(VOID)
 	{
 		Hour = 12;
 	}
-	itoa(Hour, TempString, 10);
+	_itoa(Hour, TempString, 10);
 	strcpy(TimeString, "    ");
 	strcat(TimeString, TempString);
 	strcat(TimeString, ":");
-	itoa(Minute, TempString, 10);
+	_itoa(Minute, TempString, 10);
 	if (Minute < 10)
 	{
 		strcat(TimeString, "0");
 	}
 	strcat(TimeString, TempString);
 	strcat(TimeString, ":");
-	itoa(Second, TempString, 10);
+	_itoa(Second, TempString, 10);
 	if (Second < 10)
 	{
 		strcat(TimeString, "0");
@@ -504,7 +551,7 @@ VOID TuiRestoreScreen(PUCHAR Buffer)
 	}
 }
 
-VOID TuiMessageBox(PCHAR MessageText)
+VOID TuiMessageBox(PCSTR MessageText)
 {
 	PVOID	ScreenBuffer;
 
@@ -520,7 +567,7 @@ VOID TuiMessageBox(PCHAR MessageText)
 	MmFreeMemory(ScreenBuffer);
 }
 
-VOID TuiMessageBoxCritical(PCHAR MessageText)
+VOID TuiMessageBoxCritical(PCSTR MessageText)
 {
 	int		width = 8;
 	unsigned int	height = 1;
@@ -662,55 +709,55 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 	VideoCopyOffScreenBufferToVRAM();
 }
 
-UCHAR TuiTextToColor(PCHAR ColorText)
+UCHAR TuiTextToColor(PCSTR ColorText)
 {
-	if (stricmp(ColorText, "Black") == 0)
+	if (_stricmp(ColorText, "Black") == 0)
 		return COLOR_BLACK;
-	else if (stricmp(ColorText, "Blue") == 0)
+	else if (_stricmp(ColorText, "Blue") == 0)
 		return COLOR_BLUE;
-	else if (stricmp(ColorText, "Green") == 0)
+	else if (_stricmp(ColorText, "Green") == 0)
 		return COLOR_GREEN;
-	else if (stricmp(ColorText, "Cyan") == 0)
+	else if (_stricmp(ColorText, "Cyan") == 0)
 		return COLOR_CYAN;
-	else if (stricmp(ColorText, "Red") == 0)
+	else if (_stricmp(ColorText, "Red") == 0)
 		return COLOR_RED;
-	else if (stricmp(ColorText, "Magenta") == 0)
+	else if (_stricmp(ColorText, "Magenta") == 0)
 		return COLOR_MAGENTA;
-	else if (stricmp(ColorText, "Brown") == 0)
+	else if (_stricmp(ColorText, "Brown") == 0)
 		return COLOR_BROWN;
-	else if (stricmp(ColorText, "Gray") == 0)
+	else if (_stricmp(ColorText, "Gray") == 0)
 		return COLOR_GRAY;
-	else if (stricmp(ColorText, "DarkGray") == 0)
+	else if (_stricmp(ColorText, "DarkGray") == 0)
 		return COLOR_DARKGRAY;
-	else if (stricmp(ColorText, "LightBlue") == 0)
+	else if (_stricmp(ColorText, "LightBlue") == 0)
 		return COLOR_LIGHTBLUE;
-	else if (stricmp(ColorText, "LightGreen") == 0)
+	else if (_stricmp(ColorText, "LightGreen") == 0)
 		return COLOR_LIGHTGREEN;
-	else if (stricmp(ColorText, "LightCyan") == 0)
+	else if (_stricmp(ColorText, "LightCyan") == 0)
 		return COLOR_LIGHTCYAN;
-	else if (stricmp(ColorText, "LightRed") == 0)
+	else if (_stricmp(ColorText, "LightRed") == 0)
 		return COLOR_LIGHTRED;
-	else if (stricmp(ColorText, "LightMagenta") == 0)
+	else if (_stricmp(ColorText, "LightMagenta") == 0)
 		return COLOR_LIGHTMAGENTA;
-	else if (stricmp(ColorText, "Yellow") == 0)
+	else if (_stricmp(ColorText, "Yellow") == 0)
 		return COLOR_YELLOW;
-	else if (stricmp(ColorText, "White") == 0)
+	else if (_stricmp(ColorText, "White") == 0)
 		return COLOR_WHITE;
 
 	return COLOR_BLACK;
 }
 
-UCHAR TuiTextToFillStyle(PCHAR FillStyleText)
+UCHAR TuiTextToFillStyle(PCSTR FillStyleText)
 {
-	if (stricmp(FillStyleText, "Light") == 0)
+	if (_stricmp(FillStyleText, "Light") == 0)
 	{
 		return LIGHT_FILL;
 	}
-	else if (stricmp(FillStyleText, "Medium") == 0)
+	else if (_stricmp(FillStyleText, "Medium") == 0)
 	{
 		return MEDIUM_FILL;
 	}
-	else if (stricmp(FillStyleText, "Dark") == 0)
+	else if (_stricmp(FillStyleText, "Dark") == 0)
 	{
 		return DARK_FILL;
 	}
@@ -772,7 +819,7 @@ VOID TuiFadeOut(VOID)
 
 }
 
-BOOL TuiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length)
+BOOL TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	int		width = 8;
 	unsigned int	height = 1;

@@ -22,10 +22,10 @@
 #include <tdikrnl.h>
 #include <tdiinfo.h>
 #else
-#include <ddk/ntddk.h>
-#include <ddk/ndis.h>
-#include <ddk/tdikrnl.h>
-#include <ddk/tdiinfo.h>
+#include <ntddk.h>
+#include <ndis.h>
+#include <tdikrnl.h>
+#include <tdiinfo.h>
 #endif
 
 #include <debug.h>

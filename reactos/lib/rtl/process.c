@@ -76,11 +76,11 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     ULONG Size;
     PWCHAR Environment = 0;
     
-    DPRINT("RtlpInitEnvironment (hProcess: %lx, Peb: %p Params: %p)\n",
+    DPRINT("RtlpInitEnvironment (hProcess: %p, Peb: %p Params: %p)\n",
             ProcessHandle, Peb, ProcessParameters);
             
     /* Give the caller 1MB if he requested it */
-    if (ProcessParameters->Flags & PPF_RESERVE_1MB)
+    if (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB)
     {
         /* Give 1MB starting at 0x4 */
         BaseAddress = (PVOID)4;
@@ -134,7 +134,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     }
     
     DPRINT("EnvironmentPointer %p\n", BaseAddress);
-    DPRINT("Ppb->MaximumLength %x\n", ProcessParameters->MaximumLength);
+    DPRINT("Ppb->MaximumLength 0x%lx\n", ProcessParameters->MaximumLength);
 
     /* Now allocate space for the Parameter Block */
     BaseAddress = NULL;
@@ -333,7 +333,7 @@ RtlEncodePointer(IN PVOID Pointer)
 
   if(!NT_SUCCESS(Status))
   {
-    DPRINT1("Failed to receive the process cookie! Status: 0x%x\n", Status);
+    DPRINT1("Failed to receive the process cookie! Status: 0x%lx\n", Status);
     return Pointer;
   }
 

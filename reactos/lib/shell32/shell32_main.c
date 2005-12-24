@@ -297,6 +297,32 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
     return 0;
 }
 
+/*************************************************************************
+ * SHELL_IsShortcut		[internal]
+ *
+ * Decide if an item id list points to a shell shortcut
+ */
+BOOL SHELL_IsShortcut(LPCITEMIDLIST pidlLast)
+{
+    char szTemp[MAX_PATH];
+    HKEY keyCls;
+    BOOL ret = FALSE;
+
+    if (_ILGetExtension(pidlLast, szTemp, MAX_PATH) &&
+          HCR_MapTypeToValueA(szTemp, szTemp, MAX_PATH, TRUE))
+    {
+        if (ERROR_SUCCESS == RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, KEY_QUERY_VALUE, &keyCls))
+        {
+          if (ERROR_SUCCESS == RegQueryValueExA(keyCls, "IsShortcut", NULL, NULL, NULL, NULL))
+            ret = TRUE;
+
+          RegCloseKey(keyCls);
+        }
+    }
+
+    return ret;
+}
+
 #define SHGFI_KNOWN_FLAGS \
     (SHGFI_SMALLICON | SHGFI_OPENICON | SHGFI_SHELLICONSIZE | SHGFI_PIDL | \
      SHGFI_USEFILEATTRIBUTES | SHGFI_ADDOVERLAYS | SHGFI_OVERLAYINDEX | \
@@ -320,6 +346,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     LPITEMIDLIST    pidlLast = NULL, pidl = NULL;
     HRESULT hr = S_OK;
     BOOL IconNotYetLoaded=TRUE;
+    UINT uGilFlags = 0;
 
     TRACE("%s fattr=0x%lx sfi=%p(attr=0x%08lx) size=0x%x flags=0x%x\n",
           (flags & SHGFI_PIDL)? "pidl" : debugstr_w(path), dwFileAttributes,
@@ -458,14 +485,20 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     }
 
     /* ### icons ###*/
-    if (flags & SHGFI_ADDOVERLAYS)
-        FIXME("SHGFI_ADDOVERLAYS unhandled\n");
+    if (flags & SHGFI_OPENICON)
+        uGilFlags |= GIL_OPENICON;
+
+    if (flags & SHGFI_LINKOVERLAY)
+        uGilFlags |= GIL_FORSHORTCUT;
+    else if ((flags&SHGFI_ADDOVERLAYS) ||
+             (flags&(SHGFI_ICON|SHGFI_SMALLICON))==SHGFI_ICON)
+    {
+        if (SHELL_IsShortcut(pidlLast))
+            uGilFlags |= GIL_FORSHORTCUT;
+    }
 
     if (flags & SHGFI_OVERLAYINDEX)
         FIXME("SHGFI_OVERLAYINDEX unhandled\n");
-
-    if (flags & SHGFI_LINKOVERLAY)
-        FIXME("set icon to link, stub\n");
 
     if (flags & SHGFI_SELECTED)
         FIXME("set icon to selected, stub\n");
@@ -483,12 +516,11 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                &uDummy, (LPVOID*)&pei);
         if (SUCCEEDED(hr))
         {
-            hr = IExtractIconW_GetIconLocation(pei, 
-                    (flags & SHGFI_OPENICON)? GIL_OPENICON : 0,
+            hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
                     szLocation, MAX_PATH, &iIndex, &uFlags);
             psfi->iIcon = iIndex;
 
-            if (uFlags != GIL_NOTFILENAME)
+            if (!(uFlags & GIL_NOTFILENAME))
                 lstrcpyW (psfi->szDisplayName, szLocation);
             else
                 ret = FALSE;
@@ -550,7 +582,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         else
         {
             if (!(PidlToSicIndex(psfParent, pidlLast, !(flags & SHGFI_SMALLICON),
-                (flags & SHGFI_OPENICON)? GIL_OPENICON : 0, &(psfi->iIcon))))
+                uGilFlags, &(psfi->iIcon))))
             {
                 ret = FALSE;
             }

@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ObInitSymbolicLinkImplementation)
+#endif
+
 
 /* GLOBALS ******************************************************************/
 
@@ -229,7 +233,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
   {
     SymbolicLink->TargetName.Length = 0;
     SymbolicLink->TargetName.MaximumLength =
-      ((wcslen(LinkTarget->Buffer) + 1) * sizeof(WCHAR));
+      CapturedLinkTarget.Length + sizeof(WCHAR);
     SymbolicLink->TargetName.Buffer =
       ExAllocatePoolWithTag(NonPagedPool,
 			    SymbolicLink->TargetName.MaximumLength,

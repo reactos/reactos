@@ -303,7 +303,7 @@ typedef struct tagClipboardWindowInfo
  *  Places a pointer to the specified data object onto the clipboard,
  *  making the data object accessible to the OleGetClipboard function.
  *
- * RETURNS:
+ * RETURNS
  *
  *    S_OK                  IDataObject pointer placed on the clipboard
  *    CLIPBRD_E_CANT_OPEN   OpenClipboard failed
@@ -477,16 +477,6 @@ HRESULT WINAPI OleGetClipboard(IDataObject** ppDataObj)
                                    &IID_IDataObject,  (void**)ppDataObj);
   return hr;
 }
-
-/***********************************************************************
- *           OleFlushClipboard   [OLE2.76]
- */
-
-HRESULT WINAPI OleFlushClipboard16(void)
-{
-  return OleFlushClipboard();
-}
-
 
 /******************************************************************************
  *              OleFlushClipboard        [OLE32.@]

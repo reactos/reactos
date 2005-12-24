@@ -32,87 +32,173 @@ extern "C" {
 #endif
 
 #define MAX_IDE_CHANNEL   2
+#define MAX_IDE_LINE      2
 #define MAX_IDE_DEVICE    2
 
 #include <pshpack1.h>
-typedef struct _IDE_DRIVE_IDENTIFY
-{
-  USHORT GeneralConfiguration;
-  USHORT NumberOfCylinders;
-  USHORT Reserved1;
-  USHORT NumberOfHeads;
-  USHORT UnformattedBytesPerTrack;
-  USHORT UnformattedBytesPerSector;
-  USHORT SectorsPerTrack;
-  USHORT VendorUnique1[3];
-  BYTE   SerialNumber[20];
-  USHORT BufferType;
-  USHORT BufferSectorSize;
-  USHORT NumberOfEccBytes;
-  BYTE   FirmwareRevision[8];
-  BYTE   ModelNumber[40];
-  BYTE   MaximumBlockTransfer;
-  BYTE   VendorUnique2;
-  USHORT DoubleWordIo;
-  USHORT Capabilities;
-  USHORT Reserved2;
-  BYTE   VendorUnique3;
-  BYTE   PioCycleTimingMode;
-  BYTE   VendorUnique4;
-  BYTE   DmaCycleTimingMode;
-  USHORT TranslationFieldsValid:3;
-  USHORT Reserved3:13;
-  USHORT NumberOfCurrentCylinders;
-  USHORT NumberOfCurrentHeads;
-  USHORT CurrentSectorsPerTrack;
-  ULONG  CurrentSectorCapacity;
-  USHORT CurrentMultiSectorSetting;
-  ULONG  UserAddressableSectors;
-  USHORT SingleWordDMASupport : 8;
-  USHORT SingleWordDMAActive : 8;
-  USHORT MultiWordDMASupport : 8;
-  USHORT MultiWordDMAActive : 8;
-  USHORT AdvancedPIOModes : 8;
-  USHORT Reserved4 : 8;
-  USHORT MinimumMWXferCycleTime;
-  USHORT RecommendedMWXferCycleTime;
-  USHORT MinimumPIOCycleTime;
-  USHORT MinimumPIOCycleTimeIORDY;
-  USHORT Reserved5[11];
-  USHORT MajorRevision;
-  USHORT MinorRevision;
-  USHORT Reserved6[6];
-  USHORT UltraDMASupport : 8;
-  USHORT UltraDMAActive : 8;
-  USHORT Reserved7[37];
-  USHORT LastLun:3;
-  USHORT Reserved8:13;
-  USHORT MediaStatusNotification:2;
-  USHORT Reserved9:6;
-  USHORT DeviceWriteProtect:1;
-  USHORT Reserved10:7;
-  USHORT Reserved11[128];
-} IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
+typedef struct _IDENTIFY_DATA {
+  USHORT GeneralConfiguration;       /* 00 */
+  USHORT NumCylinders;               /* 02 */
+  USHORT Reserved1;                  /* 04 */
+  USHORT NumHeads;                   /* 06 */
+  USHORT UnformattedBytesPerTrack;   /* 08 */
+  USHORT UnformattedBytesPerSector;  /* 10 */
+  USHORT NumSectorsPerTrack;         /* 12 */
+  USHORT VendorUnique1[3];           /* 14 */
+  UCHAR  SerialNumber[20];           /* 20 */
+  USHORT BufferType;                 /* 40 */
+  USHORT BufferSectorSize;           /* 42 */
+  USHORT NumberOfEccBytes;           /* 44 */
+  UCHAR  FirmwareRevision[8];        /* 46 */
+  UCHAR  ModelNumber[40];            /* 54 */
+  UCHAR  MaximumBlockTransfer;       /* 94 */
+  UCHAR  VendorUnique2;              /* 95 */
+  USHORT DoubleWordIo;               /* 96 */
+  USHORT Capabilities;               /* 98 */
+  USHORT Reserved2;                  /* 100 */
+  UCHAR  VendorUnique3;              /* 102 */
+  UCHAR  PioCycleTimingMode;         /* 103 */
+  UCHAR  VendorUnique4;              /* 104 */
+  UCHAR  DmaCycleTimingMode;         /* 105 */
+  USHORT TranslationFieldsValid:3;   /* 106 */
+  USHORT Reserved3:13;               /*  -  */
+  USHORT NumberOfCurrentCylinders;   /* 108 */
+  USHORT NumberOfCurrentHeads;       /* 110 */
+  USHORT CurrentSectorsPerTrack;     /* 112 */
+  ULONG  CurrentSectorCapacity;      /* 114 */
+  USHORT CurrentMultiSectorSetting;  /* 118 */
+  ULONG  UserAddressableSectors;     /* 120 */
+  USHORT SingleWordDMASupport:8;     /* 124 */
+  USHORT SingleWordDMAActive:8;      /*  -  */
+  USHORT MultiWordDMASupport:8;      /* 126 */
+  USHORT MultiWordDMAActive:8;       /*  -  */
+  USHORT AdvancedPIOModes:8;         /* 128 */
+  USHORT Reserved4:8;                /*  -  */
+  USHORT MinimumMWXferCycleTime;     /* 130 */
+  USHORT RecommendedMWXferCycleTime; /* 132 */
+  USHORT MinimumPIOCycleTime;        /* 134 */
+  USHORT MinimumPIOCycleTimeIORDY;   /* 136 */
+  USHORT Reserved5[11];              /* 138 */
+  USHORT MajorRevision;              /* 160 */
+  USHORT MinorRevision;              /* 162 */
+  USHORT Reserved6;                  /* 164 */
+  USHORT CommandSetSupport;          /* 166 */
+  USHORT Reserved6a[2];              /* 168 */
+  USHORT CommandSetActive;           /* 172 */
+  USHORT Reserved6b;                 /* 174 */
+  USHORT UltraDMASupport:8;          /* 176 */
+  USHORT UltraDMAActive:8;           /*  -  */
+  USHORT Reserved7[11];              /* 178 */
+  ULONG  Max48BitLBA[2];             /* 200 */
+  USHORT Reserved7a[22];             /* 208 */
+  USHORT LastLun:3;                  /* 252 */
+  USHORT Reserved8:13;               /*  -  */
+  USHORT MediaStatusNotification:2;  /* 254 */
+  USHORT Reserved9:6;                /*  -  */
+  USHORT DeviceWriteProtect:1;       /*  -  */
+  USHORT Reserved10:7;               /*  -  */
+  USHORT Reserved11[128];            /* 256 */
+} IDENTIFY_DATA, *PIDENTIFY_DATA;
+
+typedef struct _EXTENDED_IDENTIFY_DATA {
+  USHORT GeneralConfiguration;       /* 00 */
+  USHORT NumCylinders;               /* 02 */
+  USHORT Reserved1;                  /* 04 */
+  USHORT NumHeads;                   /* 06 */
+  USHORT UnformattedBytesPerTrack;   /* 08 */
+  USHORT UnformattedBytesPerSector;  /* 10 */
+  USHORT NumSectorsPerTrack;         /* 12 */
+  union
+  {
+    USHORT VendorUnique1[3];         /* 14 */
+    struct
+    {
+      UCHAR InterSectorGap;          /* 14 */
+      UCHAR InterSectorGapSize;      /* -  */
+      UCHAR Reserved16;              /* 16 */
+      UCHAR BytesInPLO;              /* -  */
+      USHORT VendorUniqueCnt;        /* 18 */
+    } u;
+  };
+  UCHAR  SerialNumber[20];           /* 20 */
+  USHORT BufferType;                 /* 40 */
+  USHORT BufferSectorSize;           /* 42 */
+  USHORT NumberOfEccBytes;           /* 44 */
+  UCHAR  FirmwareRevision[8];        /* 46 */
+  UCHAR  ModelNumber[40];            /* 54 */
+  UCHAR  MaximumBlockTransfer;       /* 94 */
+  UCHAR  VendorUnique2;              /* 95 */
+  USHORT DoubleWordIo;               /* 96 */
+  USHORT Capabilities;               /* 98 */
+  USHORT Reserved2;                  /* 100 */
+  UCHAR  VendorUnique3;              /* 102 */
+  UCHAR  PioCycleTimingMode;         /* 103 */
+  UCHAR  VendorUnique4;              /* 104 */
+  UCHAR  DmaCycleTimingMode;         /* 105 */
+  USHORT TranslationFieldsValid:3;   /* 106 */
+  USHORT Reserved3:13;               /*  -  */
+  USHORT NumberOfCurrentCylinders;   /* 108 */
+  USHORT NumberOfCurrentHeads;       /* 110 */
+  USHORT CurrentSectorsPerTrack;     /* 112 */
+  ULONG  CurrentSectorCapacity;      /* 114 */
+  USHORT CurrentMultiSectorSetting;  /* 118 */
+  ULONG  UserAddressableSectors;     /* 120 */
+  USHORT SingleWordDMASupport:8;     /* 124 */
+  USHORT SingleWordDMAActive:8;      /*  -  */
+  USHORT MultiWordDMASupport:8;      /* 126 */
+  USHORT MultiWordDMAActive:8;       /*  -  */
+  USHORT AdvancedPIOModes:8;         /* 128 */
+  USHORT Reserved4:8;                /*  -  */
+  USHORT MinimumMWXferCycleTime;     /* 130 */
+  USHORT RecommendedMWXferCycleTime; /* 132 */
+  USHORT MinimumPIOCycleTime;        /* 134 */
+  USHORT MinimumPIOCycleTimeIORDY;   /* 136 */
+  USHORT Reserved5[11];              /* 138 */
+  USHORT MajorRevision;              /* 160 */
+  USHORT MinorRevision;              /* 162 */
+  USHORT Reserved6;                  /* 164 */
+  USHORT CommandSetSupport;          /* 166 */
+  USHORT Reserved6a[2];              /* 168 */
+  USHORT CommandSetActive;           /* 172 */
+  USHORT Reserved6b;                 /* 174 */
+  USHORT UltraDMASupport:8;          /* 176 */
+  USHORT UltraDMAActive:8;           /*  -  */
+  USHORT Reserved7[11];              /* 178 */
+  ULONG  Max48BitLBA[2];             /* 200 */
+  USHORT Reserved7a[22];             /* 208 */
+  USHORT LastLun:3;                  /* 252 */
+  USHORT Reserved8:13;               /*  -  */
+  USHORT MediaStatusNotification:2;  /* 254 */
+  USHORT Reserved9:6;                /*  -  */
+  USHORT DeviceWriteProtect:1;       /*  -  */
+  USHORT Reserved10:7;               /*  -  */
+  USHORT Reserved11[128];            /* 256 */
+} EXTENDED_IDENTIFY_DATA, *PEXTENDED_IDENTIFY_DATA;
 #include <poppack.h>
 
 typedef struct _PCIIDE_TRANSFER_MODE_SELECT
 {
   ULONG Channel;
-  BOOLEAN DevicePresent[MAX_IDE_DEVICE];
-  BOOLEAN FixedDisk[MAX_IDE_DEVICE];
-  BOOLEAN IoReadySupported[MAX_IDE_DEVICE];
-  ULONG DeviceTransferModeSupported[MAX_IDE_DEVICE];
-  ULONG BestPioCycleTime[MAX_IDE_DEVICE];
-  ULONG BestSwDmaCycleTime[MAX_IDE_DEVICE];
-  ULONG BestMwDmaCycleTime[MAX_IDE_DEVICE];
-  ULONG BestUDmaCycleTime[MAX_IDE_DEVICE];
-  ULONG DeviceTransferModeCurrent[MAX_IDE_DEVICE];
-  ULONG DeviceTransferModeSelected[MAX_IDE_DEVICE];
+  BOOLEAN DevicePresent[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  BOOLEAN FixedDisk[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  BOOLEAN IoReadySupported[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG DeviceTransferModeSupported[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG BestPioCycleTime[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG BestSwDmaCycleTime[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG BestMwDmaCycleTime[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG BestUDmaCycleTime[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG DeviceTransferModeCurrent[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG UserChoiceTransferMode[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  ULONG EnableUDMA66;
+  IDENTIFY_DATA IdentifyData[MAX_IDE_DEVICE];
+  ULONG DeviceTransferModeSelected[MAX_IDE_DEVICE * MAX_IDE_LINE];
+  PULONG TransferModeTimingTable;
+  ULONG TransferModeTableLength;
 } PCIIDE_TRANSFER_MODE_SELECT, *PPCIIDE_TRANSFER_MODE_SELECT;
 
 typedef enum
 {
-  ChannelDisabled,
+  ChannelDisabled = 0,
   ChannelEnabled,
   ChannelStateUnknown
 } IDE_CHANNEL_STATE;
@@ -131,7 +217,7 @@ typedef NTSTATUS
   IN PVOID DeviceExtension,
   IN OUT PPCIIDE_TRANSFER_MODE_SELECT XferMode);
 
-typedef BOOLEAN
+typedef ULONG
 (NTAPI *PCIIDE_USEDMA_FUNC)(
   IN PVOID DeviceExtension,
   IN PUCHAR CdbCommand,
@@ -139,7 +225,7 @@ typedef BOOLEAN
 
 typedef NTSTATUS
 (NTAPI *PCIIDE_UDMA_MODES_SUPPORTED)(
-  IN IDE_DRIVE_IDENTIFY IdentifyData,
+  IN IDENTIFY_DATA IdentifyData,
   OUT PULONG BestXferMode,
   OUT PULONG CurrentXferMode);
 
@@ -210,6 +296,7 @@ PciIdeXSetBusData(
 #define UDMA_MODE2  (1 << 13)
 #define UDMA_MODE3  (1 << 14)
 #define UDMA_MODE4  (1 << 15)
+#define UDMA_MODE5  (1 << 16)
 
 #ifdef __cplusplus
 }

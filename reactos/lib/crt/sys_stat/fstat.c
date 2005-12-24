@@ -9,14 +9,8 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
-#include <sys/types.h>
+#include <precomp.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented
@@ -73,7 +67,7 @@ int _fstat(int fd, struct _stat* statbuf)
   else if (dwFileType == FILE_TYPE_PIPE)
   {
     statbuf->st_dev = fd;
-    statbuf->st_mode = S_IFIFO;
+    statbuf->st_mode = -1; //S_IFIFO;
   }
   else
   {

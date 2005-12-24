@@ -1,29 +1,108 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/halfuncs.h
- * PURPOSE:         Prototypes for exported HAL Functions not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    halfuncs.h
+
+Abstract:
+
+    Function definitions for the HAL.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _HALFUNCS_H
 #define _HALFUNCS_H
 
-/* DEPENDENCIES **************************************************************/
-#include "haltypes.h"
+//
+// Dependencies
+//
+#include <umtypes.h>
+#include <haltypes.h>
 
-/* FUNCTION TYPES ************************************************************/
+#ifndef NTOS_MODE_USER
 
-/* PROTOTYPES ****************************************************************/
-
+//
+// Display Functions
+//
+NTHALAPI
 BOOLEAN
 NTAPI
-HalQueryDisplayOwnership(VOID);
+HalQueryDisplayOwnership(
+    VOID
+);
 
+NTHALAPI
+VOID
+NTAPI
+HalDisplayString(
+    IN PCHAR String
+);
+
+NTHALAPI
 BOOLEAN
 NTAPI
-HalAllProcessorsStarted(VOID);
+HalQueryDisplayOwnership(
+    VOID
+);
 
+NTHALAPI
+VOID
+NTAPI
+HalReleaseDisplayOwnership(
+    VOID
+);
+
+//
+// Initialization Functions
+//
+NTHALAPI
+BOOLEAN
+NTAPI
+HalAllProcessorsStarted(
+    VOID
+);
+
+NTHALAPI
+VOID
+NTAPI
+HalInitializeProcessor(
+    ULONG ProcessorNumber,
+    PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalInitSystem(
+    ULONG BootPhase,
+    PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+NTHALAPI
+VOID
+NTAPI
+HalReturnToFirmware(
+    FIRMWARE_REENTRY Action
+);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalStartNextProcessor(
+    ULONG Unknown1,
+    ULONG Unknown2
+);
+
+//
+// Interrupt Functions
+//
+NTHALAPI
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
@@ -32,6 +111,7 @@ HalBeginSystemInterrupt(
     PKIRQL OldIrql
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalDisableSystemInterrupt(
@@ -39,12 +119,7 @@ HalDisableSystemInterrupt(
     KIRQL Irql
 );
 
-VOID
-NTAPI
-HalDisplayString (
-    IN PCHAR String
-);
-
+NTHALAPI
 BOOLEAN
 NTAPI
 HalEnableSystemInterrupt(
@@ -53,6 +128,7 @@ HalEnableSystemInterrupt(
     KINTERRUPT_MODE InterruptMode
 );
 
+NTHALAPI
 VOID
 NTAPI
 HalEndSystemInterrupt(
@@ -60,6 +136,7 @@ HalEndSystemInterrupt(
     ULONG Vector
 );
 
+NTHALAPI
 BOOLEAN
 NTAPI
 HalGetEnvironmentVariable(
@@ -68,64 +145,38 @@ HalGetEnvironmentVariable(
     USHORT ValueLength
 );
 
+NTHALAPI
 VOID
 NTAPI
-HalInitializeProcessor(
-    ULONG ProcessorNumber,
-    PVOID ProcessorStack
+HalReportResourceUsage(
+    VOID
 );
 
-BOOLEAN
-NTAPI
-HalInitSystem(
-    ULONG BootPhase,
-    PLOADER_PARAMETER_BLOCK LoaderBlock
-);
-
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(VOID);
-
-VOID
-NTAPI
-HalReportResourceUsage(VOID);
-
+NTHALAPI
 VOID
 FASTCALL
 HalRequestSoftwareInterrupt(
     KIRQL SoftwareInterruptRequested
 );
 
-VOID
-NTAPI
-HalReleaseDisplayOwnership(VOID);
-
-VOID
-NTAPI
-HalReturnToFirmware(
-    FIRMWARE_REENTRY Action
-);
-
+NTHALAPI
 VOID
 NTAPI
 HalRequestIpi(
     ULONG Unknown
 );
 
-BOOLEAN
+NTHALAPI
+VOID
 NTAPI
-HalSetEnvironmentVariable(
-    IN PCH Name,
-    IN PCH Value
+HalHandleNMI(
+    ULONG Unknown
 );
 
-BOOLEAN
-NTAPI
-HalStartNextProcessor(
-    ULONG Unknown1,
-    ULONG Unknown2
-);
-
+//
+// I/O Functions
+//
+NTHALAPI
 VOID
 NTAPI
 IoAssignDriveLetters(
@@ -135,4 +186,16 @@ IoAssignDriveLetters(
     PSTRING NtSystemPathString
 );
 
+//
+// Environment Functions
+//
+NTHALAPI
+BOOLEAN
+NTAPI
+HalSetEnvironmentVariable(
+    IN PCH Name,
+    IN PCH Value
+);
+
+#endif
 #endif

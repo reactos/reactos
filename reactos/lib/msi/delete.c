@@ -33,7 +33,7 @@
 
 #include "query.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msi);
+WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 
 /*

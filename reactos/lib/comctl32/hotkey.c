@@ -516,6 +516,7 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_NCCREATE:
 	    return HOTKEY_NCCreate (hwnd, (LPCREATESTRUCTW)lParam);
 
+	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    HOTKEY_Paint(infoPtr, (HDC)wParam);
 	    return 0;

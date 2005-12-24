@@ -34,6 +34,7 @@
 #define IDC_DEVMGR      106
 #define IDC_ENVVAR	107
 #define IDC_STAREC	108
+#define IDC_PERFOR	109
 #define IDC_ICON1       201
 
 #define IDC_COMPUTERNAME	202

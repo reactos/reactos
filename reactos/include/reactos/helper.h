@@ -1,22 +1,40 @@
 #ifndef _HELPER_H
 #define _HELPER_H
 
-/* FIXME: clean this mess up and move to NDK */
-#define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
-#define ROUNDDOWN(a,b)	(((a)/(b))*(b))
-#define ROUND_UP ROUNDUP
-#define ROUND_DOWN ROUNDDOWN
-#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~(PAGE_SIZE-1)))
-#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGE_SIZE) ? ((((ULONG)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG)x) )
+#ifndef ROUND_UP
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+#endif
+
+#ifndef ROUND_DOWN
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+#endif
+
+#ifndef ROUNDUP
+#define ROUNDUP ROUND_UP
+#endif
+
+#ifndef ROUNDDOWN
+#define ROUNDDOWN ROUND_DOWN
+#endif
+
+#ifndef PAGE_ROUND_DOWN
+#define PAGE_ROUND_DOWN(x) (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
+#endif
+
+#ifndef PAGE_ROUND_UP
+#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#endif
+
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
-#define RtlRosMin(X,Y) (((X) < (Y))? (X) : (Y))
+
 #define RtlRosMin3(X,Y,Z) (((X) < (Y)) ? RtlRosMin(X,Z) : RtlRosMin(Y,Z))
+
 #ifndef KEBUGCHECK
 #define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
 #define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
 #endif
-#define EXPORTED __declspec(dllexport)
-#define IMPORTED __declspec(dllimport)
 
 /* iterate through the list using a list entry. 
  * elem is set to NULL if the list is run thru without breaking out or if list is empty.
@@ -40,7 +58,9 @@
 			 ((PIMAGE_DOS_HEADER)a)->e_lfanew    +	\
 			 sizeof (IMAGE_NT_SIGNATURE)		     +	\
 			 sizeof (IMAGE_FILE_HEADER)))
+#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 #define NTSTAT_SEVERITY_SHIFT 30
 #define NTSTAT_SEVERITY_MASK  0x00000003

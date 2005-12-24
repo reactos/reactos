@@ -48,21 +48,20 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
-   ULONG Attributes;
+   ULONG Protect = PAGE_READWRITE|PAGE_SYSTEM|PAGE_NOCACHE|PAGE_WRITETHROUGH;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    BoundaryAddressMultiple.QuadPart = 0;
    MmLockAddressSpace(MmGetKernelAddressSpace());
    Result = NULL;
-   Status = MmCreateMemoryArea (NULL,
-                                MmGetKernelAddressSpace(),
+   Status = MmCreateMemoryArea (MmGetKernelAddressSpace(),
                                 MEMORY_AREA_NO_CACHE,
                                 &Result,
                                 NumberOfBytes,
-                                0,
+                                Protect,
                                 &marea,
                                 FALSE,
-                                FALSE,
+                                0,
                                 BoundaryAddressMultiple);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
@@ -70,8 +69,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    {
       return (NULL);
    }
-   Attributes = PAGE_READWRITE | PAGE_SYSTEM | PAGE_NOCACHE |
-                PAGE_WRITETHROUGH;
+
    for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE); i++)
    {
       PFN_TYPE NPage;
@@ -79,7 +77,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &NPage);
       MmCreateVirtualMapping (NULL,
                               (char*)Result + (i * PAGE_SIZE),
-                              Attributes,
+                              Protect,
                               &NPage,
                               1);
    }

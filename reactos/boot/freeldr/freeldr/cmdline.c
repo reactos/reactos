@@ -19,8 +19,6 @@
  */
 
 #include <freeldr.h>
-#include <cmdline.h>
-#include <rtl.h>
 
 static CMDLINEINFO CmdLineInfo;
 
@@ -94,11 +92,11 @@ CmdLineParse(char *CmdLine)
             {
               *s++ = '\0';
             }
-          if (0 == stricmp(Name, "defaultos"))
+          if (0 == _stricmp(Name, "defaultos"))
             {
               CmdLineInfo.DefaultOperatingSystem = Value;
             }
-          else if (0 == stricmp(Name, "timeout"))
+          else if (0 == _stricmp(Name, "timeout"))
             {
               CmdLineInfo.TimeOut = atoi(Value);
             }
@@ -106,7 +104,7 @@ CmdLineParse(char *CmdLine)
     }
 }
 
-char *
+const char *
 CmdLineGetDefaultOS(void)
 {
   return CmdLineInfo.DefaultOperatingSystem;

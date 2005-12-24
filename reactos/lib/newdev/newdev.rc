@@ -7,4 +7,7 @@ IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 
 #include "En.rc"
+#include "Es.rc"
 #include "De.rc"
+#include "Hu.rc"
+#include "Ru.rc"

@@ -8,9 +8,7 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
-#include <io.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <internal/debug.h>

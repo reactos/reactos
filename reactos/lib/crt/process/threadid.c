@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 #include <process.h>
 
 
@@ -13,7 +13,7 @@ unsigned long __threadid (void)
 /*
  * @implemented
  */
-void *__threadhandle(void)
+uintptr_t __threadhandle()
 {
-   return GetCurrentThread();
+   return (uintptr_t)GetCurrentThread();
 }

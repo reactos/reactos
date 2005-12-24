@@ -44,7 +44,7 @@ TCHAR cgetchar (VOID)
 	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
 	INPUT_RECORD irBuffer;
 	DWORD  dwRead;
-
+/*
 	do
 	{
 		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
@@ -60,6 +60,39 @@ TCHAR cgetchar (VOID)
 		}
 	}
 	while (TRUE);
+*/
+	do
+ 	{
+ 		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
+ 		
+		if (irBuffer.EventType == KEY_EVENT)
+ 		{
+			if (irBuffer.Event.KeyEvent.dwControlKeyState &
+				 (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+			{
+				if (irBuffer.Event.KeyEvent.wVirtualKeyCode == 'C')
+				{
+//					if (irBuffer.Event.KeyEvent.bKeyDown == TRUE)
+//					{
+						bCtrlBreak = TRUE;
+						break;
+//					}
+				}
+			}
+			else if ((irBuffer.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+	       (irBuffer.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
+	       (irBuffer.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL))
+			{
+				;
+			}
+ 
+			else
+			{
+				break;
+			}
+ 		}
+ 	}
+ 	while (TRUE);
 
 #ifndef _UNICODE
 	return irBuffer.Event.KeyEvent.uChar.AsciiChar;
@@ -468,7 +501,10 @@ INT PagePrompt (VOID)
 	if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
 	    ((ir.Event.KeyEvent.wVirtualKeyCode == _T('C')) &&
 	     (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+	{
+		bCtrlBreak = TRUE;
 		return PROMPT_BREAK;
+	}
 
 	return PROMPT_YES;
 }

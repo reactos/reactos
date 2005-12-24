@@ -27,10 +27,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntdddisk.h>
-#include <ddk/scsi.h>
-#include <ddk/ntddscsi.h>
+#include <ntddk.h>
+#include <ntdddisk.h>
+#include <scsi.h>
+#include <ntddscsi.h>
 #include <include/class2.h>
 #include <stdio.h>
 

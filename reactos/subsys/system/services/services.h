@@ -16,6 +16,7 @@ typedef struct _SERVICE
     LPWSTR lpDisplayName;
     LPWSTR lpServiceGroup;
     BOOL bDeleted;
+    DWORD dwResumeCount;
 
     SERVICE_STATUS Status;
     DWORD dwStartType;
@@ -23,6 +24,8 @@ typedef struct _SERVICE
     DWORD dwTag;
 
     ULONG Flags;
+
+    PSECURITY_DESCRIPTOR lpSecurityDescriptor;
 
     BOOLEAN ServiceVisited;
 
@@ -71,9 +74,19 @@ VOID ScmAutoStartServices(VOID);
 
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
+PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
 DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
+
+
+/* driver.c */
+
+NTSTATUS ScmLoadDriver(PSERVICE lpService);
+DWORD ScmUnloadDriver(PSERVICE lpService);
+DWORD ScmControlDriver(PSERVICE lpService,
+                       DWORD dwControl,
+                       LPSERVICE_STATUS lpServiceStatus);
 
 
 /* rpcserver.c */

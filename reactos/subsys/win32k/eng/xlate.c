@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static inline ULONG
+static __inline ULONG
 ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 {
    ULONG TranslatedColor;
@@ -54,7 +54,7 @@ ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 }
 
 
-static inline ULONG
+static __inline ULONG
 ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
                   PALETTEENTRY *DestColors, ULONG NumColors)
 {
@@ -94,7 +94,7 @@ ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
    return BestIndex;
 }
 
-static inline VOID
+static __inline VOID
 BitMasksFromPal(USHORT PalType, PPALGDI Palette,
                 PULONG RedMask, PULONG BlueMask, PULONG GreenMask)
 {
@@ -131,7 +131,7 @@ BitMasksFromPal(USHORT PalType, PPALGDI Palette,
  * Calculate the number of bits Mask must be shift to the left to get a
  * 1 in the most significant bit position
  */
-static inline INT
+static __inline INT
 CalculateShift(ULONG Mask)
 {
    ULONG Shift = 0;

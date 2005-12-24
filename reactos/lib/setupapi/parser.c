@@ -213,7 +213,7 @@ static struct line *add_line( struct inf_file *file, int section_index )
     struct section *section;
     struct line *line;
 
-    assert( section_index >= 0 && section_index < file->nb_sections );
+    ASSERT( section_index >= 0 && section_index < file->nb_sections );
 
     section = file->sections[section_index];
     if (section->nb_lines == section->alloc_lines)  /* need to grow the section */
@@ -420,7 +420,7 @@ static WCHAR *push_string( struct inf_file *file, const WCHAR *string )
 /* push the current state on the parser stack */
 inline static void push_state( struct parser *parser, enum parser_state state )
 {
-    assert( parser->stack_pos < sizeof(parser->stack)/sizeof(parser->stack[0]) );
+    ASSERT( parser->stack_pos < sizeof(parser->stack)/sizeof(parser->stack[0]) );
     parser->stack[parser->stack_pos++] = state;
 }
 
@@ -428,7 +428,7 @@ inline static void push_state( struct parser *parser, enum parser_state state )
 /* pop the current state */
 inline static void pop_state( struct parser *parser )
 {
-    assert( parser->stack_pos );
+    ASSERT( parser->stack_pos );
     parser->state = parser->stack[--parser->stack_pos];
 }
 
@@ -509,12 +509,12 @@ static struct field *add_field_from_token( struct parser *parser, int is_key )
     {
         if (parser->cur_section == -1)  /* got a line before the first section */
         {
-            parser->error = ERROR_WRONG_INF_STYLE;
+            parser->error = ERROR_EXPECTED_SECTION_NAME;
             return NULL;
         }
         if (!(parser->line = add_line( parser->file, parser->cur_section ))) goto error;
     }
-    else assert(!is_key);
+    else ASSERT(!is_key);
 
     text = push_string( parser->file, parser->token );
     if ((field = add_field( parser->file, text )))
@@ -899,7 +899,7 @@ static void append_inf_file( struct inf_file *parent, struct inf_file *child )
  *
  * parse an INF file.
  */
-static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *error_line )
+static struct inf_file *parse_file( HANDLE handle, UINT *error_line )
 {
     void *buffer;
     DWORD err = 0;
@@ -911,8 +911,6 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
     buffer = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, size );
     NtClose( mapping );
     if (!buffer) return NULL;
-
-    if (class) FIXME( "class %s not supported yet\n", debugstr_w(class) );
 
     if (!(file = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*file) )))
     {
@@ -964,6 +962,7 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
                 if (!strcmpiW( field->text, Windows95 )) goto done;
             }
         }
+        if (error_line) *error_line = 0;
         err = ERROR_WRONG_INF_STYLE;
     }
 
@@ -1041,6 +1040,72 @@ HINF WINAPI SetupOpenInfFileA( PCSTR name, PCSTR class, DWORD style, UINT *error
 }
 
 
+static BOOL
+GetInfClassW(
+    IN HINF hInf,
+    OUT LPGUID ClassGuid,
+    OUT PWSTR ClassName,
+    IN DWORD ClassNameSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    DWORD requiredSize;
+    WCHAR guidW[MAX_GUID_STRING_LEN + 1];
+    BOOL ret = FALSE;
+
+    /* Read class Guid */
+    if (!SetupGetLineTextW(NULL, hInf, L"Version", L"ClassGUID", guidW, sizeof(guidW), NULL))
+        goto cleanup;
+    guidW[37] = '\0'; /* Replace the } by a NULL character */
+    if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
+        goto cleanup;
+
+    /* Read class name */
+    ret = SetupGetLineTextW(NULL, hInf, L"Version", L"Class", ClassName, ClassNameSize, &requiredSize);
+    if (ret && ClassName == NULL && ClassNameSize == 0)
+    {
+        if (RequiredSize)
+            *RequiredSize = requiredSize;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
+        goto cleanup;
+    }
+    if (!ret)
+    {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            if (RequiredSize)
+                *RequiredSize = requiredSize;
+            goto cleanup;
+        }
+        else if (!SetupDiClassNameFromGuidW(ClassGuid, ClassName, ClassNameSize, &requiredSize))
+        {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                if (RequiredSize)
+                    *RequiredSize = requiredSize;
+                goto cleanup;
+            }
+            /* Return a NULL class name */
+            if (RequiredSize)
+                *RequiredSize = 1;
+            if (ClassNameSize < 1)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                goto cleanup;
+            }
+            memcpy(ClassGuid, &GUID_NULL, sizeof(GUID));
+            *ClassName = UNICODE_NULL;
+        }
+    }
+
+    ret = TRUE;
+
+cleanup:
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+
 /***********************************************************************
  *            SetupOpenInfFileW   (SETUPAPI.@)
  */
@@ -1090,7 +1155,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
 
     if (handle != INVALID_HANDLE_VALUE)
     {
-        file = parse_file( handle, class, error );
+        file = parse_file( handle, error );
         CloseHandle( handle );
     }
     if (!file)
@@ -1101,6 +1166,37 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
     TRACE( "%s -> %p\n", debugstr_w(path), file );
     file->src_root = path;
     if ((p = strrchrW( path, '\\' ))) p[1] = 0;  /* remove file name */
+
+    if (class)
+    {
+        GUID ClassGuid;
+        LPWSTR ClassName = HeapAlloc(GetProcessHeap(), 0, (strlenW(class) + 1) * sizeof(WCHAR));
+        if (!ClassName)
+        {
+            /* Not enough memory */
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            SetupCloseInfFile((HINF)file);
+            return NULL;
+        }
+        else if (!GetInfClassW((HINF)file, &ClassGuid, ClassName, strlenW(class) + 1, NULL))
+        {
+            /* Unable to get class name in .inf file */
+            HeapFree(GetProcessHeap(), 0, ClassName);
+            SetLastError(ERROR_CLASS_MISMATCH);
+            SetupCloseInfFile((HINF)file);
+            return NULL;
+        }
+        else if (strcmpW(class, ClassName) != 0)
+        {
+            /* Provided name name is not the expected one */
+            HeapFree(GetProcessHeap(), 0, ClassName);
+            SetLastError(ERROR_CLASS_MISMATCH);
+            SetupCloseInfFile((HINF)file);
+            return NULL;
+        }
+        HeapFree(GetProcessHeap(), 0, ClassName);
+    }
+
     SetLastError( 0 );
     return (HINF)file;
 }
@@ -1595,7 +1691,7 @@ BOOL WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer,
     unsigned int len;
 
     SetLastError(0);
-    if (!field) return FALSE;
+    if (!field) { SetLastError(ERROR_INVALID_PARAMETER); return FALSE; }
     len = PARSER_string_substA( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
     if (buffer)
@@ -1626,7 +1722,7 @@ BOOL WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer
     unsigned int len;
 
     SetLastError(0);
-    if (!field) return FALSE;
+    if (!field) { SetLastError(ERROR_INVALID_PARAMETER); return FALSE; }
     len = PARSER_string_substW( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
     if (buffer)
@@ -2110,8 +2206,6 @@ SetupDiGetINFClassW(
     OUT PDWORD RequiredSize OPTIONAL)
 {
     HINF hInf = INVALID_HANDLE_VALUE;
-    DWORD requiredSize;
-    WCHAR guidW[MAX_GUID_STRING_LEN + 1];
     BOOL ret = FALSE;
 
     TRACE("%S %p %p %ld %p\n", InfName, ClassGuid,
@@ -2122,53 +2216,7 @@ SetupDiGetINFClassW(
     if (hInf == INVALID_HANDLE_VALUE)
         goto cleanup;
 
-    /* Read class Guid */
-    if (!SetupGetLineTextW(NULL, hInf, L"Version", L"ClassGUID", guidW, sizeof(guidW), NULL))
-        goto cleanup;
-    guidW[37] = '\0'; /* Replace the } by a NULL character */
-    if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
-        goto cleanup;
-
-    /* Read class name */
-    ret = SetupGetLineTextW(NULL, hInf, L"Version", L"Class", ClassName, ClassNameSize, &requiredSize);
-    if (ret && ClassName == NULL && ClassNameSize == 0)
-    {
-        if (RequiredSize)
-            *RequiredSize = requiredSize;
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        ret = FALSE;
-        goto cleanup;
-    }
-    if (!ret)
-    {
-        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-        {
-            if (RequiredSize)
-                *RequiredSize = requiredSize;
-            goto cleanup;
-        }
-        else if (!SetupDiClassNameFromGuidW(ClassGuid, ClassName, ClassNameSize, &requiredSize))
-        {
-            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-            {
-                if (RequiredSize)
-                    *RequiredSize = requiredSize;
-                goto cleanup;
-            }
-            /* Return a NULL class name */
-            if (RequiredSize)
-                *RequiredSize = 1;
-            if (ClassNameSize < 1)
-            {
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                goto cleanup;
-            }
-            memcpy(ClassGuid, &GUID_NULL, sizeof(GUID));
-            *ClassName = UNICODE_NULL;
-        }
-    }
-
-    ret = TRUE;
+    ret = GetInfClassW(hInf, ClassGuid, ClassName, ClassNameSize, RequiredSize);
 
 cleanup:
     if (hInf != INVALID_HANDLE_VALUE)

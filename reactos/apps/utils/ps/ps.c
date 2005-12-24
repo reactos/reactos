@@ -90,14 +90,14 @@ typedef struct _SYSTEM_THREADS
  
 
 //                     x00000000 00000000 000:00:00  000:00:00 ()
-static char* title  = "P     PID     PPID     KTime      UTime   NAME\n";
-static char* title1 = "t              TID     KTime      UTime   State      WaitResson\n";
-static char* title2 = "w     PID     Hwnd  WndStile        TID   WndName\n";
+static char title[]  = "P     PID     PPID     KTime      UTime   NAME\n";
+static char title1[] = "t              TID     KTime      UTime   State      WaitResson\n";
+static char title2[] = "w     PID     Hwnd  WndStile        TID   WndName\n";
 
 
 struct status {
     DWORD state;
-    char  desc[10];
+    const char  desc[10];
 }   thread_stat[8 + 1] = { 
     {0,	"Init      "},
     {1,	"Ready     "},
@@ -269,12 +269,13 @@ int main()
 		          statt->desc , waitt->desc);
         	WriteFile(stdout, buf1, lstrlen(buf1), &r, NULL);
 
-		EnumThreadWindows((DWORD)CurrentProcess->Threads[ti].ClientId.UniqueThread,
+		EnumThreadWindows(PtrToUlong(CurrentProcess->Threads[ti].ClientId.UniqueThread),
 		                  (WNDENUMPROC) EnumThreadProc,
 		                  (LPARAM)(LPTSTR) szWindowName );
 	   }
+
 	   CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess +
-	                     CurrentProcess->NextEntryOffset);
+	                     (ULONG_PTR)CurrentProcess->NextEntryOffset);
 	} 
   	return (0);
 }

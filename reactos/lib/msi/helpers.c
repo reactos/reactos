@@ -107,36 +107,9 @@ LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
     return FilePath;
 }
 
-WCHAR *load_dynamic_stringW(MSIRECORD *row, INT index)
+LPWSTR msi_dup_record_field( MSIRECORD *row, INT index )
 {
-    UINT rc;
-    DWORD sz;
-    LPWSTR ret;
-   
-    sz = 0; 
-    if (MSI_RecordIsNull(row,index))
-        return NULL;
-
-    rc = MSI_RecordGetStringW(row,index,NULL,&sz);
-
-    /* having an empty string is different than NULL */
-    if (sz == 0)
-    {
-        ret = msi_alloc(sizeof(WCHAR));
-        ret[0] = 0;
-        return ret;
-    }
-
-    sz ++;
-    ret = msi_alloc(sz * sizeof (WCHAR));
-    rc = MSI_RecordGetStringW(row,index,ret,&sz);
-    if (rc!=ERROR_SUCCESS)
-    {
-        ERR("Unable to load dynamic string\n");
-        msi_free(ret);
-        ret = NULL;
-    }
-    return ret;
+    return strdupW( MSI_RecordGetString(row,index) );
 }
 
 LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop)
@@ -200,9 +173,6 @@ int track_tempfile( MSIPACKAGE *package, LPCWSTR name, LPCWSTR path )
 {
     MSITEMPFILE *temp;
 
-    if (!package)
-        return -1;
-
     LIST_FOR_EACH_ENTRY( temp, &package->tempfiles, MSITEMPFILE, entry )
     {
         if (lstrcmpW( name, temp->File )==0)
@@ -240,6 +210,24 @@ MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir )
     return NULL;
 }
 
+static LPWSTR get_source_root( MSIPACKAGE *package )
+{
+    LPWSTR path, p;
+
+    path = msi_dup_property( package, cszSourceDir );
+    if (path)
+        return path;
+
+    path = msi_dup_property( package, cszDatabase );
+    if (path)
+    {
+        p = strrchrW(path,'\\');
+        if (p)
+            *(p+1) = 0;
+    }
+    return path;
+}
+
 LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder)
 {
@@ -272,19 +260,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
             msi_free(check_path);
         }
         else
-        {
-            path = msi_dup_property( package, cszSourceDir );
-            if (!path)
-            {
-                path = msi_dup_property( package, cszDatabase );
-                if (path)
-                {
-                    p = strrchrW(path,'\\');
-                    if (p)
-                        *(p+1) = 0;
-                }
-            }
-        }
+            path = get_source_root( package );
         if (folder)
             *folder = get_loaded_folder( package, name );
         return path;
@@ -332,7 +308,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
 
             path = build_directory_name( 3, p, f->TargetDefault, NULL );
             f->ResolvedTarget = strdupW( path );
-            TRACE("   resolved into %s\n",debugstr_w(path));
+            TRACE("target -> %s\n", debugstr_w(path));
             if (set_prop)
                 MSI_SetPropertyW(package,name,path);
         }
@@ -342,8 +318,17 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
                 path = build_directory_name( 3, p, f->SourceDefault, NULL );
             else
                 path = strdupW(p);
-            TRACE("   (source)resolved into %s\n",debugstr_w(path));
-            f->ResolvedSource = strdupW( path );
+            TRACE("source -> %s\n", debugstr_w(path));
+
+            /* if the directory doesn't exist, use the root */
+            if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW( path ))
+            {
+                msi_free( path );
+                path = get_source_root( package );
+                TRACE("defaulting to %s\n", debugstr_w(path));
+            }
+            else
+                f->ResolvedSource = strdupW( path );
         }
         msi_free(p);
     }
@@ -751,7 +736,7 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
 
         /* update the cached actionformat */
         msi_free(package->ActionFormat);
-        package->ActionFormat = load_dynamic_stringW(row,3);
+        package->ActionFormat = msi_dup_record_field(row,3);
 
         msi_free(package->LastAction);
         package->LastAction = strdupW(action);
@@ -773,8 +758,7 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     msiobj_release(&row->hdr);
 }
 
-BOOL ACTION_VerifyComponentForAction(MSIPACKAGE* package, MSICOMPONENT* comp,
-                                            INSTALLSTATE check )
+BOOL ACTION_VerifyComponentForAction( MSICOMPONENT* comp, INSTALLSTATE check )
 {
     if (!comp)
         return FALSE;
@@ -935,7 +919,7 @@ UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
     UINT count;
     LPWSTR *newbuf = NULL;
 
-    if (!package || !package->script)
+    if (!package->script)
         return FALSE;
 
     TRACE("Registering Action %s as having fun\n",debugstr_w(action));
@@ -958,7 +942,7 @@ BOOL check_unique_action(MSIPACKAGE *package, LPCWSTR action)
 {
     INT i;
 
-    if (!package || !package->script)
+    if (!package->script)
         return FALSE;
 
     for (i = 0; i < package->script->UniqueActionsCount; i++)

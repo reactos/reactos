@@ -20,8 +20,6 @@
  */
 
 #include <freeldr.h>
-#include <../arch/i386/hardware.h>
-#include <internal/i386/ke.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -245,7 +243,7 @@ FrLdrGetKernelBase(VOID)
     while ((p = strchr(p, '/')) != NULL) {
 
         /* Find "/3GB" */
-        if (!strnicmp(p + 1, "3GB", 3)) {
+        if (!_strnicmp(p + 1, "3GB", 3)) {
 
             /* Make sure there's nothing following it */
             if (p[4] == ' ' || p[4] == 0) {
@@ -305,7 +303,7 @@ FrLdrGetPaeMode(VOID)
 
           p++;
           /* Find "PAE" */
-          if (!strnicmp(p, "PAE", 3)) {
+          if (!_strnicmp(p, "PAE", 3)) {
 
               /* Make sure there's nothing following it */
               if (p[3] == ' ' || p[3] == 0) {
@@ -706,7 +704,7 @@ FrLdrMapKernel(FILE *KernelImage)
 ULONG_PTR
 STDCALL
 FrLdrLoadModule(FILE *ModuleImage,
-                LPSTR ModuleName,
+                LPCSTR ModuleName,
                 PULONG ModuleSize)
 {
     ULONG LocalModuleSize;
@@ -757,7 +755,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 
 ULONG_PTR
 STDCALL
-FrLdrCreateModule(LPSTR ModuleName)
+FrLdrCreateModule(LPCSTR ModuleName)
 {
     PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;

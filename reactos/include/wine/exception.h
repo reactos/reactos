@@ -24,7 +24,6 @@
 #include <setjmp.h>
 #include <windef.h>
 #include <excpt.h>
-#include <wine/port.h>
 
 /* The following definitions allow using exceptions in Wine and Winelib code
  *
@@ -65,8 +64,8 @@
 
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
-    struct _EXCEPTION_REGISTRATION_RECORD *prev;
-    PEXCEPTION_HANDLER handler;
+    struct _EXCEPTION_REGISTRATION_RECORD *Prev;
+    PEXCEPTION_HANDLER Handler;
 } EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
 /* Define this if you want to use your compiler built-in __try/__except support.
@@ -79,6 +78,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 #define __EXCEPT(func) __except((func)(GetExceptionInformation()))
 #define __FINALLY(func) __finally { (func)(!AbnormalTermination()); }
 #define __ENDTRY /*nothing*/
+#define __EXCEPT_PAGE_FAULT __except(GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
 
 #else  /* USE_COMPILER_EXCEPTIONS */
 
@@ -101,7 +101,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
              __f.frame.Handler = __wine_exception_handler; \
              __f.u.filter = (func); \
              __wine_push_frame( &__f.frame ); \
-             if (sigsetjmp( __f.jmp, 1 )) { \
+             if (setjmp( __f.jmp )) { \
                  const __WINE_FRAME * const __eptr __attribute__((unused)) = &__f; \
                  do {
 
@@ -130,8 +130,11 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 typedef DWORD (CALLBACK *__WINE_FILTER)(PEXCEPTION_POINTERS);
 typedef void (CALLBACK *__WINE_FINALLY)(BOOL);
 
-#define WINE_EXCEPTION_FILTER(func) DWORD WINAPI func( EXCEPTION_POINTERS *__eptr )
-#define WINE_FINALLY_FUNC(func) void WINAPI func( BOOL __normal )
+/* convenience handler for page fault exceptions */
+#define __EXCEPT_PAGE_FAULT __EXCEPT( (__WINE_FILTER)1 )
+
+#define WINE_EXCEPTION_FILTER(func) DWORD CALLBACK func( PEXCEPTION_POINTERS __eptr )
+#define WINE_FINALLY_FUNC(func) void CALLBACK func( BOOL __normal )
 
 #define GetExceptionInformation() (__eptr)
 #define GetExceptionCode()        (__eptr->ExceptionRecord->ExceptionCode)
@@ -149,20 +152,15 @@ typedef struct __tagWINE_FRAME
         /* finally data */
         __WINE_FINALLY finally_func;
     } u;
-    sigjmp_buf jmp;
+    jmp_buf jmp;
     /* hack to make GetExceptionCode() work in handler */
     DWORD ExceptionCode;
     const struct __tagWINE_FRAME *ExceptionRecord;
 } __WINE_FRAME;
 
-extern DWORD __wine_exception_handler( PEXCEPTION_RECORD record, EXCEPTION_REGISTRATION_RECORD *frame,
-                                       CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **pdispatcher );
-extern DWORD __wine_finally_handler( PEXCEPTION_RECORD record, EXCEPTION_REGISTRATION_RECORD *frame,
-                                     CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **pdispatcher );
-
 #endif /* USE_COMPILER_EXCEPTIONS */
 
-static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+static __inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #if defined(__GNUC__) && defined(__i386__)
     EXCEPTION_REGISTRATION_RECORD *prev;
@@ -179,12 +177,12 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGIST
 #endif
 }
 
-static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+static __inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #if defined(__GNUC__) && defined(__i386__)
     __asm__ __volatile__(".byte 0x64\n\tmovl %0,(0)"
-                         : : "r" (frame->prev) : "memory" );
-    return frame->prev;
+                         : : "r" (frame->Prev) : "memory" );
+    return frame->Prev;
 
 #else
     NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
@@ -192,6 +190,65 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
     return frame->Prev;
 #endif
 }
+
+#ifndef USE_COMPILER_EXCEPTIONS
+
+extern VOID NTAPI RtlUnwind(PVOID,PVOID,PEXCEPTION_RECORD,PVOID);
+
+static __inline EXCEPTION_DISPOSITION
+__wine_exception_handler( struct _EXCEPTION_RECORD *record, void *frame,
+                          struct _CONTEXT *context, void *pdispatcher )
+{
+    __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
+
+    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
+        return ExceptionContinueSearch;
+
+    if (wine_frame->u.filter == (void *)1)  /* special hack for page faults */
+    {
+        if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
+            return ExceptionContinueSearch;
+    }
+    else if (wine_frame->u.filter)
+    {
+        EXCEPTION_POINTERS ptrs;
+        ptrs.ExceptionRecord = record;
+        ptrs.ContextRecord = context;
+        switch(wine_frame->u.filter( &ptrs ))
+        {
+        case EXCEPTION_CONTINUE_SEARCH:
+            return ExceptionContinueSearch;
+        case EXCEPTION_CONTINUE_EXECUTION:
+            return ExceptionContinueExecution;
+        case EXCEPTION_EXECUTE_HANDLER:
+            break;
+        default:
+            break;
+        }
+    }
+    /* hack to make GetExceptionCode() work in handler */
+    wine_frame->ExceptionCode   = record->ExceptionCode;
+    wine_frame->ExceptionRecord = wine_frame;
+
+    RtlUnwind( frame, 0, record, 0 );
+    __wine_pop_frame( frame );
+    longjmp( wine_frame->jmp, 1 );
+}
+
+
+static __inline EXCEPTION_DISPOSITION
+__wine_finally_handler( struct _EXCEPTION_RECORD *record, void *frame,
+                        struct _CONTEXT *context, void *pdispatcher )
+{
+    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND))
+    {
+        __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
+        wine_frame->u.finally_func( FALSE );
+    }
+    return ExceptionContinueSearch;
+}
+
+#endif /* USE_COMPILER_EXCEPTIONS */
 
 
 /* Wine-specific exceptions codes */
@@ -205,5 +262,12 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
 #define EXCEPTION_VM86_PICRETURN  0x80000112
 
 extern void __wine_enter_vm86( CONTEXT *context );
+
+static __inline WINE_EXCEPTION_FILTER(__wine_pagefault_filter)
+{
+    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
+        return EXCEPTION_CONTINUE_SEARCH;
+    return EXCEPTION_EXECUTE_HANDLER;
+}
 
 #endif  /* __WINE_WINE_EXCEPTION_H */

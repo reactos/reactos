@@ -18,11 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <video.h>
-#include <portio.h>
-#include <mm.h>
-#include <machine.h>
-
 
 PVOID	VideoOffScreenBuffer = NULL;
 

@@ -18,17 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include <disk.h>
-#include <rtl.h>
-#include <arch.h>
-#include <mm.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <cache.h>
-#include <machine.h>
-
-#include "iso.h"
-
 
 #define SECTORSIZE 2048
 
@@ -107,7 +99,7 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Directo
 			Name[i] = 0;
 			DbgPrint((DPRINT_FILESYSTEM, "Name '%s'\n", Name));
 
-			if (strlen(FileName) == strlen(Name) && stricmp(FileName, Name) == 0)
+			if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
 			{
 				IsoFileInfoPointer->FileStart = Record->ExtentLocationL;
 				IsoFileInfoPointer->FileSize = Record->DataLengthL;
@@ -180,7 +172,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-static BOOL IsoLookupFile(PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOL IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	UINT		i;
 	ULONG			NumberOfPathParts;
@@ -263,7 +255,7 @@ static BOOL IsoLookupFile(PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* IsoOpenFile(PCHAR FileName)
+FILE* IsoOpenFile(PCSTR FileName)
 {
 	ISO_FILE_INFO		TempFileInfo;
 	PISO_FILE_INFO		FileHandle;

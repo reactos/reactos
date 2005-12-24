@@ -239,7 +239,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
 
 VOID
 NTAPI
-MmInitialiseRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
+MmInitializeRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
                    ULONG Protect)
 {
    PMM_REGION Region;

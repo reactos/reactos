@@ -33,7 +33,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
 
-  irql = Ki386ReadFsByte(FIELD_OFFSET(KPCR, Irql));
+  Ki386ReadFsByte(FIELD_OFFSET(KPCR, Irql), irql);
   if (irql > HIGH_LEVEL)
     {
       DPRINT1 ("CurrentIrql %x\n", irql);
@@ -72,6 +72,7 @@ VOID
 HalpLowerIrql(KIRQL NewIrql, BOOL FromHalEndSystemInterrupt)
 {
   ULONG Flags;
+  UCHAR DpcRequested;
   if (NewIrql >= DISPATCH_LEVEL)
     {
       KeSetCurrentIrql (NewIrql);
@@ -83,7 +84,8 @@ HalpLowerIrql(KIRQL NewIrql, BOOL FromHalEndSystemInterrupt)
     {
       KeSetCurrentIrql (DISPATCH_LEVEL);
       APICWrite(APIC_TPR, IRQL2TPR (DISPATCH_LEVEL) & APIC_TPR_PRI);
-      if (FromHalEndSystemInterrupt || Ki386ReadFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST])))
+      Ki386ReadFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), DpcRequested);
+      if (FromHalEndSystemInterrupt || DpcRequested)
         {
           Ki386WriteFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 0);
           Ki386EnableInterrupts();

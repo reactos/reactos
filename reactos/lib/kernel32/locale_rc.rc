@@ -46,9 +46,9 @@
 #include "nls/arq.nls"   /* 0x4001  LANG_ARABIC, SUBLANG_ARABIC_QATAR */
 #endif
 
-#include "nls/bgr.nls"   /* 0x0402  LANG_BULGARIAN, SUBLANG_DEFAULT */
+#include "nls/bgr.nls"   /* 0x0402  LANG_BULGARIAN, SUBLANG_NEUTRAL */
 
-#include "nls/cat.nls"   /* 0x0403  LANG_CATALAN, SUBLANG_DEFAULT */
+#include "nls/cat.nls"   /* 0x0403  LANG_CATALAN, SUBLANG_NEUTRAL */
 
 #include "nls/cht.nls"   /* 0x0404  LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL */
 #include "nls/chs.nls"   /* 0x0804  LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED */
@@ -56,9 +56,9 @@
 #include "nls/zhi.nls"   /* 0x1004  LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE */
 //#include "nls/zhm.nls"   /* 0x1404  LANG_CHINESE, SUBLANG_CHINESE_MACAU */
 
-#include "nls/csy.nls"   /* 0x0405  LANG_CZECH, SUBLANG_DEFAULT */
+#include "nls/csy.nls"   /* 0x0405  LANG_CZECH, SUBLANG_NEUTRAL */
 
-#include "nls/dan.nls"   /* 0x0406  LANG_DANISH, SUBLANG_DEFAULT */
+#include "nls/dan.nls"   /* 0x0406  LANG_DANISH, SUBLANG_NEUTRAL */
 
 #include "nls/deu.nls"   /* 0x0407  LANG_GERMAN, SUBLANG_GERMAN */
 #include "nls/des.nls"   /* 0x0807  LANG_GERMAN, SUBLANG_GERMAN_SWISS */
@@ -66,7 +66,7 @@
 #include "nls/del.nls"   /* 0x1007  LANG_GERMAN, SUBLANG_GERMAN_LUXEMBOURG */
 #include "nls/dec.nls"   /* 0x1407  LANG_GERMAN, SUBLANG_GERMAN_LIECHTENSTEIN */
 
-#include "nls/ell.nls"   /* 0x0408  LANG_GREEK, SUBLANG_DEFAULT */
+#include "nls/ell.nls"   /* 0x0408  LANG_GREEK, SUBLANG_NEUTRAL */
 
 #include "nls/enu.nls"   /* 0x0409  LANG_ENGLISH, SUBLANG_ENGLISH_US */
 #include "nls/eng.nls"   /* 0x0809  LANG_ENGLISH, SUBLANG_ENGLISH_UK */
@@ -103,7 +103,7 @@
 #include "nls/esi.nls"   /* 0x4c0a  LANG_SPANISH, SUBLANG_SPANISH_NICARAGUA */
 #include "nls/esu.nls"   /* 0x500a  LANG_SPANISH, SUBLANG_SPANISH_PUERTO_RICO */
 
-#include "nls/fin.nls"   /* 0x040b  LANG_FINNISH, SUBLANG_DEFAULT */
+#include "nls/fin.nls"   /* 0x040b  LANG_FINNISH, SUBLANG_NEUTRAL */
 
 #include "nls/fra.nls"   /* 0x040c  LANG_FRENCH, SUBLANG_FRENCH */
 #include "nls/frb.nls"   /* 0x080c  LANG_FRENCH, SUBLANG_FRENCH_BELGIAN */
@@ -112,16 +112,16 @@
 #include "nls/frl.nls"   /* 0x140c  LANG_FRENCH, SUBLANG_FRENCH_LUXEMBOURG */
 #include "nls/frm.nls"   /* 0x180c  LANG_FRENCH, SUBLANG_FRENCH_MONACO */
 
-#include "nls/heb.nls"   /* 0x040d  LANG_HEBREW, SUBLANG_DEFAULT */
+#include "nls/heb.nls"   /* 0x040d  LANG_HEBREW, SUBLANG_NEUTRAL */
 
-#include "nls/hun.nls"   /* 0x040e  LANG_HUNGARIAN, SUBLANG_DEFAULT */
+#include "nls/hun.nls"   /* 0x040e  LANG_HUNGARIAN, SUBLANG_NEUTRAL */
 
-#include "nls/isl.nls"   /* 0x040f  LANG_ICELANDIC, SUBLANG_DEFAULT */
+#include "nls/isl.nls"   /* 0x040f  LANG_ICELANDIC, SUBLANG_NEUTRAL */
 
 #include "nls/ita.nls"   /* 0x0410  LANG_ITALIAN, SUBLANG_ITALIAN */
 #include "nls/its.nls"   /* 0x0810  LANG_ITALIAN, SUBLANG_ITALIAN_SWISS */
 
-//#include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_DEFAULT */
+//#include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_NEUTRAL */
 
 //#include "nls/kor.nls"   /* 0x0412  LANG_KOREAN, SUBLANG_KOREAN */
 
@@ -131,104 +131,104 @@
 #include "nls/nor.nls"   /* 0x0414  LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL */
 #include "nls/non.nls"   /* 0x0814  LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NYNORSK */
 
-#include "nls/plk.nls"   /* 0x0415  LANG_POLISH, SUBLANG_DEFAULT */
+#include "nls/plk.nls"   /* 0x0415  LANG_POLISH, SUBLANG_NEUTRAL */
 
 #include "nls/ptb.nls"   /* 0x0416  LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN */
 #include "nls/ptg.nls"   /* 0x0816  LANG_PORTUGUESE, SUBLANG_PORTUGUESE */
 
-#include "nls/rom.nls"   /* 0x0418  LANG_ROMANIAN, SUBLANG_DEFAULT */
+#include "nls/rom.nls"   /* 0x0418  LANG_ROMANIAN, SUBLANG_NEUTRAL */
 
-#include "nls/rus.nls"   /* 0x0419  LANG_RUSSIAN, SUBLANG_DEFAULT */
+#include "nls/rus.nls"   /* 0x0419  LANG_RUSSIAN, SUBLANG_NEUTRAL */
 
-#include "nls/hrv.nls"   /* 0x041a  LANG_SERBIAN, SUBLANG_DEFAULT */
+#include "nls/hrv.nls"   /* 0x041a  LANG_SERBIAN, SUBLANG_NEUTRAL */
 #include "nls/srl.nls"   /* 0x081a  LANG_SERBIAN, SUBLANG_SERBIAN_LATIN */
 #include "nls/srb.nls"   /* 0x0c1a  LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC */
 
-#include "nls/sky.nls"   /* 0x041b  LANG_SLOVAK, SUBLANG_DEFAULT */
+#include "nls/sky.nls"   /* 0x041b  LANG_SLOVAK, SUBLANG_NEUTRAL */
 
-#include "nls/sqi.nls"   /* 0x041c  LANG_ALBANIAN, SUBLANG_DEFAULT */
+#include "nls/sqi.nls"   /* 0x041c  LANG_ALBANIAN, SUBLANG_NEUTRAL */
 
 #include "nls/sve.nls"   /* 0x041d  LANG_SWEDISH, SUBLANG_SWEDISH */
 #include "nls/svf.nls"   /* 0x081d  LANG_SWEDISH, SUBLANG_SWEDISH_FINLAND */
 
-#include "nls/tha.nls"   /* 0x041e  LANG_THAI, SUBLANG_DEFAULT */
+#include "nls/tha.nls"   /* 0x041e  LANG_THAI, SUBLANG_NEUTRAL */
 
-#include "nls/trk.nls"   /* 0x041f  LANG_TURKISH, SUBLANG_DEFAULT */
+#include "nls/trk.nls"   /* 0x041f  LANG_TURKISH, SUBLANG_NEUTRAL */
 
 //#include "nls/urd.nls"   /* 0x0420  LANG_URDU, SUBLANG_URDU_PAKISTAN */
 
-#include "nls/ind.nls"   /* 0x0421  LANG_INDONESIAN, SUBLANG_DEFAULT */
+#include "nls/ind.nls"   /* 0x0421  LANG_INDONESIAN, SUBLANG_NEUTRAL */
 
-#include "nls/ukr.nls"   /* 0x0422  LANG_UKRAINIAN, SUBLANG_DEFAULT */
+#include "nls/ukr.nls"   /* 0x0422  LANG_UKRAINIAN, SUBLANG_NEUTRAL */
 
-#include "nls/bel.nls"   /* 0x0423  LANG_BELARUSIAN, SUBLANG_DEFAULT */
+#include "nls/bel.nls"   /* 0x0423  LANG_BELARUSIAN, SUBLANG_NEUTRAL */
 
-#include "nls/slv.nls"   /* 0x0424  LANG_SLOVENIAN, SUBLANG_DEFAULT */
+#include "nls/slv.nls"   /* 0x0424  LANG_SLOVENIAN, SUBLANG_NEUTRAL */
 
-#include "nls/eti.nls"   /* 0x0425  LANG_ESTONIAN, SUBLANG_DEFAULT */
+#include "nls/eti.nls"   /* 0x0425  LANG_ESTONIAN, SUBLANG_NEUTRAL */
 
-#include "nls/lvi.nls"   /* 0x0426  LANG_LATVIAN, SUBLANG_DEFAULT */
+#include "nls/lvi.nls"   /* 0x0426  LANG_LATVIAN, SUBLANG_NEUTRAL */
 
 //#include "nls/lth.nls"   /* 0x0427  LANG_LITHUANIAN, SUBLANG_LITHUANIAN */
 
-//#include "nls/far.nls"   /* 0x0429  LANG_FARSI, SUBLANG_DEFAULT */
+//#include "nls/far.nls"   /* 0x0429  LANG_FARSI, SUBLANG_NEUTRAL */
 
-//#include "nls/vit.nls"   /* 0x042a  LANG_VIETNAMESE, SUBLANG_DEFAULT */
+//#include "nls/vit.nls"   /* 0x042a  LANG_VIETNAMESE, SUBLANG_NEUTRAL */
 
-//#include "nls/hye.nls"   /* 0x042b  LANG_ARMENIAN, SUBLANG_DEFAULT */
+//#include "nls/hye.nls"   /* 0x042b  LANG_ARMENIAN, SUBLANG_NEUTRAL */
 
 //#include "nls/azl.nls"   /* 0x042c  LANG_AZERI, SUBLANG_AZERI_LATIN */
 //#include "nls/aze.nls"   /* 0x082c  LANG_AZERI, SUBLANG_AZERI_CYRILLIC */
 
-#include "nls/euq.nls"   /* 0x042d  LANG_BASQUE, SUBLANG_DEFAULT */
+#include "nls/euq.nls"   /* 0x042d  LANG_BASQUE, SUBLANG_NEUTRAL */
 
-#include "nls/mki.nls"   /* 0x042f  LANG_MACEDONIAN, SUBLANG_DEFAULT */
+#include "nls/mki.nls"   /* 0x042f  LANG_MACEDONIAN, SUBLANG_NEUTRAL */
 
-#include "nls/afk.nls"   /* 0x0436  LANG_AFRIKAANS, SUBLANG_DEFAULT */
+#include "nls/afk.nls"   /* 0x0436  LANG_AFRIKAANS, SUBLANG_NEUTRAL */
 
-//#include "nls/kat.nls"   /* 0x0437  LANG_GEORGIAN, SUBLANG_DEFAULT */
+//#include "nls/kat.nls"   /* 0x0437  LANG_GEORGIAN, SUBLANG_NEUTRAL */
 
-#include "nls/fos.nls"   /* 0x0438  LANG_FAEROESE, SUBLANG_DEFAULT */
+#include "nls/fos.nls"   /* 0x0438  LANG_FAEROESE, SUBLANG_NEUTRAL */
 
-//#include "nls/hin.nls"   /* 0x0439  LANG_HINDI, SUBLANG_DEFAULT */
+//#include "nls/hin.nls"   /* 0x0439  LANG_HINDI, SUBLANG_NEUTRAL */
 
 #include "nls/msl.nls"   /* 0x043e  LANG_MALAY, SUBLANG_MALAY_MALAYSIA */
 #include "nls/msb.nls"   /* 0x083e  LANG_MALAY, SUBLANG_MALAY_BRUNEI_DARUSSALAM */
 
-//#include "nls/kkz.nls"   /* 0x043f  LANG_KAZAK, SUBLANG_DEFAULT */
+//#include "nls/kkz.nls"   /* 0x043f  LANG_KAZAK, SUBLANG_NEUTRAL */
 
-//#include "nls/kyr.nls"   /* 0x0440  LANG_KYRGYZ, SUBLANG_DEFAULT */
+//#include "nls/kyr.nls"   /* 0x0440  LANG_KYRGYZ, SUBLANG_NEUTRAL */
 
-#include "nls/swk.nls"   /* 0x0441  LANG_SWAHILI, SUBLANG_DEFAULT */
+#include "nls/swk.nls"   /* 0x0441  LANG_SWAHILI, SUBLANG_NEUTRAL */
 
 //#include "nls/uzl.nls"   /* 0x0443  LANG_UZBEK, SUBLANG_UZBEK_LATIN */
 #include "nls/uzb.nls"   /* 0x0843  LANG_UZBEK, SUBLANG_UZBEK_CYRILLIC */
 
-//#include "nls/ttt.nls"   /* 0x0444  LANG_TATAR, SUBLANG_DEFAULT */
+//#include "nls/ttt.nls"   /* 0x0444  LANG_TATAR, SUBLANG_NEUTRAL */
 
-//#include "nls/pan.nls"   /* 0x0446  LANG_PUNJABI, SUBLANG_DEFAULT */
+//#include "nls/pan.nls"   /* 0x0446  LANG_PUNJABI, SUBLANG_NEUTRAL */
 
-//#include "nls/guj.nls"   /* 0x0447  LANG_GUJARATI, SUBLANG_DEFAULT */
+//#include "nls/guj.nls"   /* 0x0447  LANG_GUJARATI, SUBLANG_NEUTRAL */
 
-//#include "nls/tam.nls"   /* 0x0449  LANG_TAMIL, SUBLANG_DEFAULT */
+//#include "nls/tam.nls"   /* 0x0449  LANG_TAMIL, SUBLANG_NEUTRAL */
 
-//#include "nls/tel.nls"   /* 0x044a  LANG_TELUGU, SUBLANG_DEFAULT */
+//#include "nls/tel.nls"   /* 0x044a  LANG_TELUGU, SUBLANG_NEUTRAL */
 
-//#include "nls/kan.nls"   /* 0x044b  LANG_KANNADA, SUBLANG_DEFAULT */
+//#include "nls/kan.nls"   /* 0x044b  LANG_KANNADA, SUBLANG_NEUTRAL */
 
-//#include "nls/mar.nls"   /* 0x044e  LANG_MARATHI, SUBLANG_DEFAULT */
+//#include "nls/mar.nls"   /* 0x044e  LANG_MARATHI, SUBLANG_NEUTRAL */
 
-//#include "nls/san.nls"   /* 0x044f  LANG_SANSKRIT, SUBLANG_DEFAULT */
+//#include "nls/san.nls"   /* 0x044f  LANG_SANSKRIT, SUBLANG_NEUTRAL */
 
-//#include "nls/mon.nls"   /* 0x0450  LANG_MONGOLIAN, SUBLANG_DEFAULT */
+//#include "nls/mon.nls"   /* 0x0450  LANG_MONGOLIAN, SUBLANG_NEUTRAL */
 
-#include "nls/glc.nls"   /* 0x0456  LANG_GALICIAN, SUBLANG_DEFAULT */
+#include "nls/glc.nls"   /* 0x0456  LANG_GALICIAN, SUBLANG_NEUTRAL */
 
-//#include "nls/knk.nls"   /* 0x0457  LANG_KONKANI, SUBLANG_DEFAULT */
+//#include "nls/knk.nls"   /* 0x0457  LANG_KONKANI, SUBLANG_NEUTRAL */
 
-//#include "nls/syr.nls"   /* 0x045a  LANG_SYRIAC, SUBLANG_DEFAULT */
+//#include "nls/syr.nls"   /* 0x045a  LANG_SYRIAC, SUBLANG_NEUTRAL */
 
-//#include "nls/div.nls"   /* 0x0465  LANG_DIVEHI, SUBLANG_DEFAULT */
+//#include "nls/div.nls"   /* 0x0465  LANG_DIVEHI, SUBLANG_NEUTRAL */
 
 
 /* Wine extensions */
@@ -239,12 +239,12 @@
 //#include "nls/gdh.nls"   /* 0x083c  LANG_GAELIC, SUBLANG_GAELIC_SCOTTISH */
 //#include "nls/gdv.nls"   /* 0x0c3c  LANG_GAELIC, SUBLANG_GAELIC_MANX */
 
-//#include "nls/eox.nls"   /* 0x048f  LANG_ESPERANTO, SUBLANG_DEFAULT */
+//#include "nls/eox.nls"   /* 0x048f  LANG_ESPERANTO, SUBLANG_NEUTRAL */
 
-//#include "nls/wal.nls"   /* 0x0490  LANG_WALON, SUBLANG_DEFAULT */
+//#include "nls/wal.nls"   /* 0x0490  LANG_WALON, SUBLANG_NEUTRAL */
 
-//#include "nls/cor.nls"   /* 0x0491  LANG_CORNISH, SUBLANG_DEFAULT */
+//#include "nls/cor.nls"   /* 0x0491  LANG_CORNISH, SUBLANG_NEUTRAL */
 
-//#include "nls/cym.nls"   /* 0x0492  LANG_WELSH, SUBLANG_DEFAULT */
+//#include "nls/cym.nls"   /* 0x0492  LANG_WELSH, SUBLANG_NEUTRAL */
 
-//#include "nls/brf.nls"   /* 0x0493  LANG_BRETON, SUBLANG_DEFAULT */
+//#include "nls/brf.nls"   /* 0x0493  LANG_BRETON, SUBLANG_NEUTRAL */

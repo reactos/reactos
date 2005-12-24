@@ -60,6 +60,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000807","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000807","Layout Text",0x00000000,"SG"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000813","Layout File",0x00000000,"kbdbe.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000813","Layout Text",0x00000000,"BE (point)"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000408","Layout File",0x00000000,"kbdhe.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000408","Layout Text",0x00000000,"Greek"
 
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
@@ -568,10 +570,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard P
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","Service",0x00000000,"i8042prt"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","ClassGUID",0x00000000,"{4D36E96B-E325-11CE-BFC1-08002BE10318}"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0F13\0000","Service",0x00000000,"i8042prt"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0F13\0000","ClassGUID",0x00000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
 ; Keyboard class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000
@@ -579,6 +577,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Group",0x00000000,"Keyboard C
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ImagePath",0x00020000,"system32\drivers\kbdclass.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters","ConnectMultiplePorts",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
 
 ; SB16 driver
@@ -610,8 +609,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Group",0x00000000,"Pointer Cl
 HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","ImagePath",0x00020000,"system32\drivers\mouclass.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","ConnectMultiplePorts",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","MouseDataQueueSize",0x00010001,0x00000064
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"mouclass"
 
 ; Mailslot filesystem driver
@@ -628,10 +625,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
-; NE2000 network card
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP80D6\0000","HardwareID",0x00010000,"*PNP80D6"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP80D6\0000","DeviceDesc",0x00000000,"Network card"
-
 ; PCI driver
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","HardwareID",0x00010000,"*PNP0A03"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","DeviceDesc",0x00000000,"PCI bus"
@@ -640,7 +633,22 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000\LogConf","BasicConfigVect
 01,00,00,00,01,00,01,00,01,00,00,00, \
 00,06,00,00,00,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
+; We need the PCI bus to be installed at 3rd boot to enumerate display cards and to
+; not have the "CsrServerInitialization: failed to initialize video (Status=c0000001)"
+; error when a custom driver (as the VMware one) is installed. At the moment,
+; StartServiceW is not implemented, so PlugPlay service  can't start during
+; second stage setup. => We have to code PCI bus parameters it in registry...
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","Service",0x00000000,"pci"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCI","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCI","ImagePath",0x00020000,"system32\drivers\pci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Type",0x00010001,0x00000001
 
+; ACPI bus
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","HardwareID",0x00010000,"*PNP0C08"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","DeviceDesc",0x00000000,"ACPI bus"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","Service",0x00000000,"acpi"
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
@@ -674,7 +682,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Group",0x00000000,"PlugPlay"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\umpnpmgr.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 
 ; RPC service
@@ -717,11 +725,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00010000,"Tcpip"
 
 ; Simple TCP services
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,"Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simple TCP/IP Services"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ImagePath",0x00020000,"%SystemRoot%\system32\tcpsvcs.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
 
 ; Virtual FAT filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ErrorControl",0x00010001,0x00000000
@@ -729,15 +739,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Group",0x00000000,"Boot File Sy
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32\drivers\vfatfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
-
-; Xbox Nvidia driver
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Group",0x00000000,"Video"
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","ImagePath",0x00020000,"system32\drivers\xboxvmp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10DE&DEV_02A0&SUBSYS_00000000&REV_A1\0000","Service",0x00000000,"XboxVmp"
 
 ; VBE SVGA driver
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
@@ -760,6 +761,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 
+; Windows Installer Service
+
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Adds, modifies, and removes applications provided as a Windows Installer (*.msi) package. If this service is disabled, any services that explicitly depend on it will fail to start."
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ImagePath",0x00020000,"system32\msiexec.exe /V"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Type",0x00010001,0x00000020
+
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001
 HKLM,"SYSTEM\Select","Default",0x00010001,0x00000001
@@ -771,5 +781,5 @@ HKLM,"SYSTEM\Setup","CmdLine",0x00000000,"setup -newsetup"
 HKLM,"SYSTEM\Setup","OsLoaderPath",0x00000000,"\"
 HKLM,"SYSTEM\Setup","SetupType",0x00010001,0x00000001
 HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
-HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000000
+HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 ; EOF

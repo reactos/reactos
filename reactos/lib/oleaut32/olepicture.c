@@ -1056,6 +1056,7 @@ static int _gif_inputfunc(GifFileType *gif, GifByteType *data, int len) {
 static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   HRESULT	hr = E_FAIL;
   BOOL		headerisdata = FALSE;
+  BOOL		statfailed = FALSE;
   ULONG		xread, toread;
   BYTE 		*xbuf;
   DWORD		header[2];
@@ -1065,19 +1066,29 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   
   TRACE("(%p,%p)\n",This,pStm);
 
+  /****************************************************************************************
+   * Part 1: Load the data
+   */
   /* Sometimes we have a header, sometimes we don't. Apply some guesses to find
    * out whether we do.
    *
    * UPDATE: the IStream can be mapped to a plain file instead of a stream in a
-   * compound file. This may explain most, if not all, of the cases of "no header",
-   * and the header validation should take this into account. At least in Visual Basic 6,
-   * resource streams, valid headers are
+   * compound file. This may explain most, if not all, of the cases of "no
+   * header", and the header validation should take this into account.
+   * At least in Visual Basic 6, resource streams, valid headers are
    *    header[0] == "lt\0\0",
    *    header[1] == length_of_stream.
+   *
+   * Also handle streams where we do not have a working "Stat" method by
+   * reading all data until the end of the stream.
    */
   hr=IStream_Stat(pStm,&statstg,STATFLAG_NONAME);
-  if (hr)
-      FIXME("Stat failed with hres %lx\n",hr);
+  if (hr) {
+      TRACE("stat failed with hres %lx, proceeding to read all data.\n",hr);
+      statfailed = TRUE;
+      /* we will read at least 8 byte ... just right below */
+      statstg.cbSize.QuadPart = 8;
+  }
   hr=IStream_Read(pStm,header,8,&xread);
   if (hr || xread!=8) {
       FIXME("Failure while reading picture header (hr is %lx, nread is %ld).\n",hr,xread);
@@ -1089,41 +1100,76 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   if (!memcmp(&(header[0]),"lt\0\0", 4) && (header[1] <= statstg.cbSize.QuadPart-8)) {
       toread = header[1];
   } else {
-      if (!memcmp(&(header[0]), "GIF8",     4)	||   /* GIF header */
-	  !memcmp(&(header[0]), "BM",       2)	||   /* BMP header */
-	  !memcmp(&(header[0]), "\xff\xd8", 2)	||   /* JPEG header */
-	  (header[1] > statstg.cbSize.QuadPart)	||   /* invalid size */
-	  (header[1]==0)
+      if (!memcmp(&(header[0]), "GIF8",     4) ||   /* GIF header */
+          !memcmp(&(header[0]), "BM",       2) ||   /* BMP header */
+          !memcmp(&(header[0]), "\xff\xd8", 2) ||   /* JPEG header */
+          (header[1] > statstg.cbSize.QuadPart)||   /* invalid size */
+          (header[1]==0)
       ) {/* Incorrect header, assume none. */
           headerisdata = TRUE;
           toread = statstg.cbSize.QuadPart-8;
-	  xread = 8;
+          xread = 8;
       } else {
-	  FIXME("Unknown stream header magic: %08lx\n", header[0]);
+          FIXME("Unknown stream header magic: %08lx\n", header[0]);
           toread = header[1];
       }
   }
 
-  This->datalen = toread+(headerisdata?8:0);
-  xbuf = This->data = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, This->datalen);
+  if (statfailed) { /* we don't know the size ... read all we get */
+      int sizeinc = 4096;
+      int origsize = sizeinc;
+      ULONG nread = 42;
 
-  if (headerisdata)
-      memcpy (xbuf, &header, 8);
+      TRACE("Reading all data from stream.\n");
+      xbuf = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, origsize);
+      if (headerisdata)
+          memcpy (xbuf, &header, 8);
+      while (1) {
+          while (xread < origsize) {
+              hr = IStream_Read(pStm,xbuf+xread,origsize-xread,&nread);
+              xread+=nread;
+              if (hr || !nread)
+                  break;
+          }
+          if (!nread || hr) /* done, or error */
+              break;
+          if (xread == origsize) {
+              origsize += sizeinc;
+              sizeinc = 2*sizeinc; /* exponential increase */
+              xbuf = HeapReAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, xbuf, origsize);
+          }
+      }
+      if (hr)
+          TRACE("hr in no-stat loader case is %08lx\n", hr);
+      TRACE("loaded %ld bytes.\n", xread);
+      This->datalen = xread;
+      This->data    = xbuf;
+  } else {
+      This->datalen = toread+(headerisdata?8:0);
+      xbuf = This->data = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, This->datalen);
 
-  while (xread < This->datalen) {
-      ULONG nread;
-      hr = IStream_Read(pStm,xbuf+xread,This->datalen-xread,&nread);
-      xread+=nread;
-      if (hr || !nread)
-	break;
+      if (headerisdata)
+          memcpy (xbuf, &header, 8);
+
+      while (xread < This->datalen) {
+          ULONG nread;
+          hr = IStream_Read(pStm,xbuf+xread,This->datalen-xread,&nread);
+          xread+=nread;
+          if (hr || !nread)
+              break;
+      }
+      if (xread != This->datalen)
+          FIXME("Could only read %ld of %d bytes out of stream?\n",xread,This->datalen);
   }
-  if (xread != This->datalen)
-      FIXME("Could only read %ld of %d bytes out of stream?\n",xread,This->datalen);
-
-  if (This->datalen == 0) {	/* Marks the "NONE" picture */
+  if (This->datalen == 0) { /* Marks the "NONE" picture */
       This->desc.picType = PICTYPE_NONE;
       return S_OK;
   }
+
+
+  /****************************************************************************************
+   * Part 2: Process the loaded data
+   */
 
   magic = xbuf[0] + (xbuf[1]<<8);
   switch (magic) {

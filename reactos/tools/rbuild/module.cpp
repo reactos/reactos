@@ -52,16 +52,24 @@ Replace ( const string& s, const string& find, const string& with )
 }
 
 string
-FixSeparator ( const string& s )
+ChangeSeparator ( const string& s,
+                  const char fromSeparator,
+                  const char toSeparator )
 {
 	string s2(s);
-	char* p = strchr ( &s2[0], cBadSep );
+	char* p = strchr ( &s2[0], fromSeparator );
 	while ( p )
 	{
-		*p++ = cSep;
-		p = strchr ( p, cBadSep );
+		*p++ = toSeparator;
+		p = strchr ( p, fromSeparator );
 	}
 	return s2;
+}
+
+string
+FixSeparator ( const string& s )
+{
+	return ChangeSeparator ( s, cBadSep, cSep );
 }
 
 string
@@ -115,11 +123,11 @@ GetSubPath (
 	const string& att_value )
 {
 	if ( !att_value.size() )
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			location,
 			"<directory> tag has empty 'name' attribute" );
 	if ( strpbrk ( att_value.c_str (), "/\\?*:<>|" ) )
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			location,
 			"<directory> tag has invalid characters in 'name' attribute" );
 	if ( !path.size() )
@@ -179,30 +187,45 @@ GetBooleanValue ( const string& value )
 		return false;
 }
 
+string
+ToLower ( string filename )
+{
+	for ( size_t i = 1; i < filename.length (); i++ )
+		filename[i] = tolower ( filename[i] );
+	return filename;
+}
+
+void IfableData::ExtractModules( std::vector<Module*> &modules )
+{
+	size_t i;
+	for ( i = 0; i < this->modules.size (); i++ )
+		modules.push_back(this->modules[i]);
+}
+
 IfableData::~IfableData()
 {
 	size_t i;
-	for ( i = 0; i < files.size(); i++ )
-		delete files[i];
-	for ( i = 0; i < includes.size(); i++ )
+	for ( i = 0; i < includes.size (); i++ )
 		delete includes[i];
-	for ( i = 0; i < defines.size(); i++ )
+	for ( i = 0; i < defines.size (); i++ )
 		delete defines[i];
-	for ( i = 0; i < libraries.size(); i++ )
+	for ( i = 0; i < libraries.size (); i++ )
 		delete libraries[i];
-	for ( i = 0; i < properties.size(); i++ )
+	for ( i = 0; i < properties.size (); i++ )
 		delete properties[i];
-	for ( i = 0; i < compilerFlags.size(); i++ )
+	for ( i = 0; i < compilerFlags.size (); i++ )
 		delete compilerFlags[i];
-	for ( i = 0; i < ifs.size(); i++ )
+	for ( i = 0; i < modules.size(); i++ )
+		delete modules[i];
+	for ( i = 0; i < ifs.size (); i++ )
 		delete ifs[i];
+	for ( i = 0; i < compilationUnits.size (); i++ )
+		delete compilationUnits[i];
 }
 
 void IfableData::ProcessXML ()
 {
 	size_t i;
-	for ( i = 0; i < files.size (); i++ )
-		files[i]->ProcessXML ();
 	for ( i = 0; i < includes.size (); i++ )
 		includes[i]->ProcessXML ();
 	for ( i = 0; i < defines.size (); i++ )
@@ -215,6 +238,8 @@ void IfableData::ProcessXML ()
 		compilerFlags[i]->ProcessXML ();
 	for ( i = 0; i < ifs.size (); i++ )
 		ifs[i]->ProcessXML ();
+	for ( i = 0; i < compilationUnits.size (); i++ )
+		compilationUnits[i]->ProcessXML ();
 }
 
 Module::Module ( const Project& project,
@@ -224,6 +249,7 @@ Module::Module ( const Project& project,
 	  node (moduleNode),
 	  importLibrary (NULL),
 	  bootstrap (NULL),
+	  autoRegister(NULL),
 	  linkerScript (NULL),
 	  pch (NULL),
 	  cplusplus (false),
@@ -371,6 +397,12 @@ Module::Module ( const Project& project,
 		aliasedModuleName = att->value;
 	else
 		aliasedModuleName = "";
+
+	if ( type == BootProgram )
+	{
+		att = moduleNode.GetAttribute ( "payload", true );
+		payload = att->value;
+	}
 }
 
 Module::~Module ()
@@ -398,22 +430,29 @@ Module::ProcessXML()
 	if ( type == Alias )
 	{
 		if ( aliasedModuleName == name )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				node.location,
 				"module '%s' cannot link against itself",
 				name.c_str() );
-	  	const Module* m = project.LocateModule ( aliasedModuleName );
+		}
+		const Module* m = project.LocateModule ( aliasedModuleName );
 		if ( !m )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				node.location,
 				"module '%s' trying to alias non-existant module '%s'",
 				name.c_str(),
 				aliasedModuleName.c_str() );
+		}
 	}
 
 	size_t i;
 	for ( i = 0; i < node.subElements.size(); i++ )
-		ProcessXMLSubElement ( *node.subElements[i], path );
+	{
+		ParseContext parseContext;
+		ProcessXMLSubElement ( *node.subElements[i], path, parseContext );
+	}
 	for ( i = 0; i < invocations.size(); i++ )
 		invocations[i]->ProcessXML ();
 	for ( i = 0; i < dependencies.size(); i++ )
@@ -429,13 +468,17 @@ Module::ProcessXML()
 		linkerScript->ProcessXML();
 	if ( pch )
 		pch->ProcessXML();
+	if ( autoRegister )
+		autoRegister->ProcessXML();
 }
 
 void
 Module::ProcessXMLSubElement ( const XMLElement& e,
                                const string& path,
-                               If* pIf /*= NULL*/ )
+                               ParseContext& parseContext )
 {
+	If* pOldIf = parseContext.ifData;
+	CompilationUnit* pOldCompilationUnit = parseContext.compilationUnit;
 	bool subs_invalid = false;
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () > 0 )
@@ -447,9 +490,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			if ( !stricmp ( att->value.c_str(), "true" ) )
 				first = true;
 			else if ( stricmp ( att->value.c_str(), "false" ) )
-				throw InvalidBuildFileException (
+			{
+				throw XMLInvalidBuildFileException (
 					e.location,
 					"attribute 'first' of <file> element can only be 'true' or 'false'" );
+			}
 		}
 		string switches = "";
 		att = e.GetAttribute ( "switches", false );
@@ -470,8 +515,18 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		                         first,
 		                         switches,
 		                         false );
-		if ( pIf )
-			pIf->data.files.push_back ( pFile );
+		if ( parseContext.compilationUnit )
+			parseContext.compilationUnit->files.push_back ( pFile );
+		else
+		{
+			CompilationUnit* pCompilationUnit = new CompilationUnit ( pFile );
+			if ( parseContext.ifData )
+				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
+			else
+				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+		}
+		if ( parseContext.ifData )
+			parseContext.ifData->data.files.push_back ( pFile );
 		else
 			non_if_data.files.push_back ( pFile );
 		subs_invalid = true;
@@ -479,8 +534,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "library" && e.value.size () )
 	{
 		Library* pLibrary = new Library ( e, *this, e.value );
-		if ( pIf )
-			pIf->data.libraries.push_back ( pLibrary );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.libraries.push_back ( pLibrary );
 		else
 			non_if_data.libraries.push_back ( pLibrary );
 		subs_invalid = true;
@@ -494,8 +549,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "include" )
 	{
 		Include* include = new Include ( project, this, &e );
-		if ( pIf )
-			pIf->data.includes.push_back ( include );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.includes.push_back ( include );
 		else
 			non_if_data.includes.push_back ( include );
 		subs_invalid = true;
@@ -503,68 +558,74 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "define" )
 	{
 		Define* pDefine = new Define ( project, this, e );
-		if ( pIf )
-			pIf->data.defines.push_back ( pDefine );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.defines.push_back ( pDefine );
 		else
 			non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
 	else if ( e.name == "invoke" )
 	{
-		if ( pIf )
-			throw InvalidBuildFileException (
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"<invoke> is not a valid sub-element of <if>" );
+		}
 		invocations.push_back ( new Invoke ( e, *this ) );
 		subs_invalid = false;
 	}
 	else if ( e.name == "dependency" )
 	{
-		if ( pIf )
-			throw InvalidBuildFileException (
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"<dependency> is not a valid sub-element of <if>" );
+		}
 		dependencies.push_back ( new Dependency ( e, *this ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "importlibrary" )
 	{
-		if ( pIf )
-			throw InvalidBuildFileException (
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"<importlibrary> is not a valid sub-element of <if>" );
+		}
 		if ( importLibrary )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"Only one <importlibrary> is valid per module" );
+		}
 		importLibrary = new ImportLibrary ( e, *this );
 		subs_invalid = true;
 	}
 	else if ( e.name == "if" )
 	{
-		If* pOldIf = pIf;
-		pIf = new If ( e, project, this );
+		parseContext.ifData = new If ( e, project, this );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( parseContext.ifData );
 		else
-			non_if_data.ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( parseContext.ifData );
 		subs_invalid = false;
 	}
 	else if ( e.name == "ifnot" )
 	{
-		If* pOldIf = pIf;
-		pIf = new If ( e, project, this, true );
+		parseContext.ifData = new If ( e, project, this, true );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( parseContext.ifData );
 		else
-			non_if_data.ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( parseContext.ifData );
 		subs_invalid = false;
 	}
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( project, this, e );
-		if ( pIf )
-			pIf->data.compilerFlags.push_back ( pCompilerFlag );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.compilerFlags.push_back ( pCompilerFlag );
 		else
 			non_if_data.compilerFlags.push_back ( pCompilerFlag );
 		subs_invalid = true;
@@ -577,9 +638,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "linkerscript" )
 	{
 		if ( linkerScript )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"Only one <linkerscript> is valid per module" );
+		}
 		linkerScript = new LinkerScript ( project, this, e );
 		subs_invalid = true;
 	}
@@ -590,7 +653,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "property" )
 	{
-		throw InvalidBuildFileException (
+		throw XMLInvalidBuildFileException (
 			e.location,
 			"<property> is not a valid sub-element of <module>" );
 	}
@@ -601,25 +664,58 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "pch" )
 	{
-		if ( pIf )
-			throw InvalidBuildFileException (
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"<pch> is not a valid sub-element of <if>" );
+		}
 		if ( pch )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				e.location,
 				"Only one <pch> is valid per module" );
+		}
 		pch = new PchFile (
 			e, *this, File ( FixSeparator ( path + cSep + e.value ), false, "", true ) );
 		subs_invalid = true;
 	}
+	else if ( e.name == "compilationunit" )
+	{
+		if ( project.configuration.CompilationUnitsEnabled )
+		{
+			CompilationUnit* pCompilationUnit = new CompilationUnit ( &project, this, &e );
+			if ( parseContext.ifData )
+				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
+			else
+				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+			parseContext.compilationUnit = pCompilationUnit;
+		}
+		subs_invalid = false;
+	}
+	else if ( e.name == "autoregister" )
+	{
+		if ( autoRegister != NULL)
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"there can be only one <%s> element for a module",
+				e.name.c_str() );
+		}
+		autoRegister = new AutoRegister ( project, this, e );
+		subs_invalid = true;
+	}
 	if ( subs_invalid && e.subElements.size() > 0 )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			e.location,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
+	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath, pIf );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
+	parseContext.ifData = pOldIf;
+	parseContext.compilationUnit = pOldCompilationUnit;
 }
 
 ModuleType
@@ -651,6 +747,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BootLoader;
 	if ( attribute.value == "bootsector" )
 		return BootSector;
+	if ( attribute.value == "bootprogram" )
+		return BootProgram;
 	if ( attribute.value == "iso" )
 		return Iso;
 	if ( attribute.value == "liveiso" )
@@ -704,6 +802,8 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Alias:
 			return "";
+		case BootProgram:
+			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -747,6 +847,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case BootProgram:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -782,6 +883,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case BootProgram:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -814,6 +916,7 @@ Module::IsDLL () const
 		case ObjectLibrary:
 		case BootLoader:
 		case BootSector:
+		case BootProgram:
 		case Iso:
 		case LiveIso:
 		case RpcServer:
@@ -842,6 +945,7 @@ Module::GenerateInOutputTree () const
 		case BuildTool:
 		case BootLoader:
 		case BootSector:
+		case BootProgram:
 		case Iso:
 		case LiveIso:
 			return true;
@@ -893,6 +997,19 @@ Module::GetPathWithPrefix ( const string& prefix ) const
 }
 
 string
+Module::GetPathToBaseDir () const
+{
+	string temp_path = path;
+	string result = "..\\";
+	while(temp_path.find ('\\') != string::npos)
+	{
+		temp_path.erase (0, temp_path.find('\\')+1);
+		result += "..\\";
+	}
+	return result;
+}
+
+string
 Module::GetInvocationTarget ( const int index ) const
 {
 	return ssprintf ( "%s_invoke_%d",
@@ -906,11 +1023,10 @@ Module::HasFileWithExtension (
 	const std::string& extension ) const
 {
 	size_t i;
-	for ( i = 0; i < data.files.size (); i++ )
+	for ( i = 0; i < data.compilationUnits.size (); i++ )
 	{
-		File& file = *data.files[i];
-		string file_ext = GetExtension ( file.name );
-		if ( !stricmp ( file_ext.c_str (), extension.c_str () ) )
+		CompilationUnit* compilationUnit = data.compilationUnits[i];
+		if ( compilationUnit->HasFileWithExtension ( extension ) )
 			return true;
 	}
 	for ( i = 0; i < data.ifs.size (); i++ )
@@ -952,13 +1068,6 @@ File::ProcessXML()
 {
 }
 
-bool
-File::IsGeneratedFile () const
-{
-	string extension = GetExtension ( name );
-	return ( extension == ".spec" || extension == ".SPEC" );
-}
-
 
 Library::Library ( const XMLElement& _node,
                    const Module& _module,
@@ -969,27 +1078,33 @@ Library::Library ( const XMLElement& _node,
 	  importedModule(_module.project.LocateModule(_name))
 {
 	if ( module.name == name )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"module '%s' cannot link against itself",
 			name.c_str() );
+	}
 	if ( !importedModule )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"module '%s' trying to import non-existant module '%s'",
 			module.name.c_str(),
 			name.c_str() );
+	}
 }
 
 void
 Library::ProcessXML()
 {
 	if ( !module.project.LocateModule ( name ) )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			node.location,
 			"module '%s' is trying to link against non-existant module '%s'",
 			module.name.c_str(),
 			name.c_str() );
+	}
 }
 
 
@@ -1010,11 +1125,13 @@ Invoke::ProcessXML()
 	{
 		invokeModule = module.project.LocateModule ( att->value );
 		if ( invokeModule == NULL )
-			throw InvalidBuildFileException (
+		{
+			throw XMLInvalidBuildFileException (
 				node.location,
 				"module '%s' is trying to invoke non-existant module '%s'",
 				module.name.c_str(),
 				att->value.c_str() );
+		}
 	}
 
 	for ( size_t i = 0; i < node.subElements.size (); i++ )
@@ -1036,9 +1153,12 @@ Invoke::ProcessXMLSubElement ( const XMLElement& e )
 			ProcessXMLSubElementOutput ( *e.subElements[i] );
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
-		throw InvalidBuildFileException ( e.location,
-		                                  "<%s> cannot have sub-elements",
-		                                  e.name.c_str() );
+	{
+		throw XMLInvalidBuildFileException (
+			e.location,
+			"<%s> cannot have sub-elements",
+			e.name.c_str() );
+	}
 }
 
 void
@@ -1047,13 +1167,17 @@ Invoke::ProcessXMLSubElementInput ( const XMLElement& e )
 	bool subs_invalid = false;
 	if ( e.name == "inputfile" && e.value.size () > 0 )
 	{
-		input.push_back ( new InvokeFile ( e, FixSeparator ( module.path + cSep + e.value ) ) );
+		input.push_back ( new InvokeFile (
+			e, FixSeparator ( module.path + cSep + e.value ) ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
-		throw InvalidBuildFileException ( e.location,
-		                                  "<%s> cannot have sub-elements",
-		                                  e.name.c_str() );
+	{
+		throw XMLInvalidBuildFileException (
+			e.location,
+			"<%s> cannot have sub-elements",
+			e.name.c_str() );
+	}
 }
 
 void
@@ -1062,14 +1186,17 @@ Invoke::ProcessXMLSubElementOutput ( const XMLElement& e )
 	bool subs_invalid = false;
 	if ( e.name == "outputfile" && e.value.size () > 0 )
 	{
-		output.push_back ( new InvokeFile ( e, FixSeparator ( module.path + cSep + e.value ) ) );
+		output.push_back ( new InvokeFile (
+			e, FixSeparator ( module.path + cSep + e.value ) ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			e.location,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
+	}
 }
 
 void
@@ -1147,10 +1274,13 @@ Dependency::ProcessXML()
 {
 	dependencyModule = module.project.LocateModule ( node.value );
 	if ( dependencyModule == NULL )
-		throw InvalidBuildFileException ( node.location,
-		                                  "module '%s' depend on non-existant module '%s'",
-		                                  module.name.c_str(),
-		                                  node.value.c_str() );
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"module '%s' depend on non-existant module '%s'",
+			module.name.c_str(),
+			node.value.c_str() );
+	}
 }
 
 
@@ -1195,6 +1325,7 @@ If::~If ()
 void
 If::ProcessXML()
 {
+	
 }
 
 
@@ -1230,5 +1361,88 @@ PchFile::PchFile (
 
 void
 PchFile::ProcessXML()
+{
+}
+
+
+AutoRegister::AutoRegister ( const Project& project_,
+                             const Module* module_,
+                             const XMLElement& node_ )
+	: project(project_),
+	  module(module_),
+	  node(node_)
+{
+	Initialize();
+}
+
+AutoRegister::~AutoRegister ()
+{
+}
+
+bool
+AutoRegister::IsSupportedModuleType ( ModuleType type )
+{
+	switch ( type )
+	{
+		case Win32DLL:
+			return true;
+		case Kernel:
+		case KernelModeDLL:
+		case NativeDLL:
+		case NativeCUI:
+		case Win32CUI:
+		case Win32GUI:
+		case KernelModeDriver:
+		case BootSector:
+		case BootLoader:
+		case BootProgram:
+		case BuildTool:
+		case StaticLibrary:
+		case ObjectLibrary:
+		case Iso:
+		case LiveIso:
+		case Test:
+		case RpcServer:
+		case RpcClient:
+		case Alias:
+			return false;
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+AutoRegisterType
+AutoRegister::GetAutoRegisterType( string type )
+{
+	if ( type == "DllRegisterServer" )
+		return DllRegisterServer;
+	if ( type == "DllInstall" )
+		return DllInstall;
+	if ( type == "Both" )
+		return Both;
+	throw XMLInvalidBuildFileException (
+		node.location,
+		"<autoregister> type attribute must be DllRegisterServer, DllInstall or Both." );
+}
+
+void
+AutoRegister::Initialize ()
+{
+	if ( !IsSupportedModuleType ( module->type ) )
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"<autoregister> is not applicable for this module type." );
+	}
+
+	const XMLAttribute* att = node.GetAttribute ( "infsection", true );
+	infSection = att->value;
+
+	att = node.GetAttribute ( "type", true );
+	type = GetAutoRegisterType ( att->value );
+}
+
+void
+AutoRegister::ProcessXML()
 {
 }

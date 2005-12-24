@@ -19,19 +19,12 @@
 
 #include "mingw.h"
 #include <assert.h>
+#include "modulehandler.h"
+
 #ifdef _MSC_VER
 #define popen _popen
 #define pclose _pclose
-#else
-#include <dirent.h>
 #endif//_MSC_VER
-#include "modulehandler.h"
-
-#ifdef WIN32
-#define MKDIR(s) mkdir(s)
-#else
-#define MKDIR(s) mkdir(s, 0755)
-#endif
 
 using std::string;
 using std::vector;
@@ -62,180 +55,6 @@ v2s ( const string_list& v, int wrap_at )
 }
 
 
-Directory::Directory ( const string& name_ )
-	: name(name_)
-{
-}
-
-void
-Directory::Add ( const char* subdir )
-{
-	size_t i;
-	string s1 = string ( subdir );
-	if ( ( i = s1.find ( '$' ) ) != string::npos )
-	{
-		throw InvalidOperationException ( __FILE__,
-		                                  __LINE__,
-		                                  "No environment variables can be used here. Path was %s",
-		                                  subdir );
-	}
-
-	const char* p = strpbrk ( subdir, "/\\" );
-	if ( !p )
-		p = subdir + strlen(subdir);
-	string s ( subdir, p-subdir );
-	if ( subdirs.find(s) == subdirs.end() )
-		subdirs[s] = new Directory(s);
-	if ( *p && *++p )
-		subdirs[s]->Add ( p );
-}
-
-bool
-Directory::mkdir_p ( const char* path )
-{
-#ifndef _MSC_VER
-	DIR *directory;
-	directory = opendir ( path );
-	if ( directory != NULL )
-	{
-		closedir ( directory );
-		return false;
-	}
-#endif//_MSC_VER
-
-	if ( MKDIR ( path ) != 0 )
-	{
-#ifdef _MSC_VER
-		if ( errno == EEXIST )
-			return false;
-#endif//_MSC_VER
-		throw AccessDeniedException ( string ( path ) );
-	}
-	return true;
-}
-
-bool
-Directory::CreateDirectory ( string path )
-{
-	size_t index = 0;
-	size_t nextIndex;
-	if ( isalpha ( path[0] ) && path[1] == ':' && path[2] == cSep )
-	{
-		nextIndex = path.find ( cSep, 3);
-	}
-	else
-		nextIndex = path.find ( cSep );
-
-	bool directoryWasCreated = false;
-	while ( nextIndex != string::npos )
-	{
-		nextIndex = path.find ( cSep, index + 1 );
-		directoryWasCreated = mkdir_p ( path.substr ( 0, nextIndex ).c_str () );
-		index = nextIndex;
-	}
-	return directoryWasCreated;
-}
-
-string
-Directory::ReplaceVariable ( string name,
-                             string value,
-                             string path )
-{
-	size_t i = path.find ( name );
-	if ( i != string::npos )
-		return path.replace ( i, name.length (), value );
-	else
-		return path;
-}
-
-void
-Directory::ResolveVariablesInPath ( char* buf,
-                                    string path )
-{
-	string s = ReplaceVariable ( "$(INTERMEDIATE)", Environment::GetIntermediatePath (), path );
-	s = ReplaceVariable ( "$(OUTPUT)", Environment::GetOutputPath (), s );
-	s = ReplaceVariable ( "$(INSTALL)", Environment::GetInstallPath (), s );
-	strcpy ( buf, s.c_str () );
-}
-
-void
-Directory::GenerateTree ( const string& parent,
-                          bool verbose )
-{
-	string path;
-
-	if ( parent.size () > 0 )
-	{
-		char buf[256];
-		
-		path = parent + sSep + name;
-		ResolveVariablesInPath ( buf, path );
-		if ( CreateDirectory ( buf ) && verbose )
-			printf ( "Created %s\n", buf );
-	}
-	else
-		path = name;
-
-	for ( directory_map::iterator i = subdirs.begin ();
-		i != subdirs.end ();
-		++i )
-	{
-		i->second->GenerateTree ( path, verbose );
-	}
-}
-
-string
-Directory::EscapeSpaces ( string path )
-{
-	string newpath;
-	char* p = &path[0];
-	while ( *p != 0 )
-	{
-		if ( *p == ' ' )
-			newpath = newpath + "\\ ";
-		else
-			newpath = newpath + *p;
-		*p++;
-	}
-	return newpath;
-}
-
-void
-Directory::CreateRule ( FILE* f,
-                        const string& parent )
-{
-	string path;
-
-	if ( parent.size() > 0 )
-	{
-		string escapedParent = EscapeSpaces ( parent );
-		fprintf ( f,
-			"%s%c%s: | %s\n",
-			escapedParent.c_str (),
-			cSep,
-			EscapeSpaces ( name ).c_str (),
-			escapedParent.c_str () );
-
-		fprintf ( f,
-			"\t$(ECHO_MKDIR)\n" );
-
-		fprintf ( f,
-			"\t${mkdir} $@\n" );
-
-		path = parent + sSep + name;
-	}
-	else
-		path = name;
-
-	for ( directory_map::iterator i = subdirs.begin();
-		i != subdirs.end();
-		++i )
-	{
-		i->second->CreateRule ( f, path );
-	}
-}
-
-
 static class MingwFactory : public Backend::Factory
 {
 public:
@@ -252,6 +71,7 @@ public:
 MingwBackend::MingwBackend ( Project& project,
                              Configuration& configuration )
 	: Backend ( project, configuration ),
+	  manualBinutilsSetting( false ),
 	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
 	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
 	  installDirectory ( new Directory ( "$(INSTALL)" ) )
@@ -275,6 +95,42 @@ MingwBackend::AddDirectoryTarget ( const string& directory,
 	return directoryTree->name;
 }
 
+bool
+MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module )
+{
+	if ( !configuration.CompilationUnitsEnabled )
+		return true;
+
+	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
+	size_t i;
+	for ( i = 0; i < compilationUnits.size (); i++ )
+	{
+ 		CompilationUnit& compilationUnit = *compilationUnits[i];
+		if ( compilationUnit.files.size () != 1 )
+			return false;
+	}
+	// intentionally make a copy so that we can append more work in
+	// the middle of processing without having to go recursive
+	vector<If*> v = module.non_if_data.ifs;
+	for ( i = 0; i < v.size (); i++ )
+	{
+		size_t j;
+		If& rIf = *v[i];
+		// check for sub-ifs to add to list
+		const vector<If*>& ifs = rIf.data.ifs;
+		for ( j = 0; j < ifs.size (); j++ )
+			v.push_back ( ifs[j] );
+		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
+		for ( j = 0; j < compilationUnits.size (); j++ )
+		{
+			CompilationUnit& compilationUnit = *compilationUnits[j];
+			if ( compilationUnit.files.size () != 1 )
+				return false;
+		}
+	}
+	return true;
+}
+
 void
 MingwBackend::ProcessModules ()
 {
@@ -282,6 +138,7 @@ MingwBackend::ProcessModules ()
 
 	vector<MingwModuleHandler*> v;
 	size_t i;
+
 	for ( i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -290,6 +147,8 @@ MingwBackend::ProcessModules ()
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 			module,
 			this );
+		if ( use_pch && CanEnablePreCompiledHeaderSupportForModule ( module ) )
+			h->EnablePreCompiledHeaderSupport ();
 		if ( module.host == HostDefault )
 		{
 			module.host = h->DefaultHost();
@@ -379,6 +238,8 @@ MingwBackend::ProcessNormal ()
 	GenerateDirectories ();
 	UnpackWineResources ();
 	GenerateTestSupportCode ();
+	GenerateCompilationUnitSupportCode ();
+	GenerateSysSetup ();
 	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -392,7 +253,6 @@ MingwBackend::CreateMakefile ()
 		throw AccessDeniedException ( ProjectNode.makefile );
 	MingwModuleHandler::SetBackend ( this );
 	MingwModuleHandler::SetMakefile ( fMakefile );
-	MingwModuleHandler::SetUsePch ( use_pch );
 }
 
 void
@@ -709,6 +569,27 @@ MingwBackend::GenerateTestSupportCode ()
 	printf ( "done\n" );
 }
 
+void
+MingwBackend::GenerateCompilationUnitSupportCode ()
+{
+	if ( configuration.CompilationUnitsEnabled )
+	{
+		printf ( "Generating compilation unit support code..." );
+		CompilationUnitSupportCode compilationUnitSupportCode ( ProjectNode );
+		compilationUnitSupportCode.Generate ( configuration.Verbose );
+		printf ( "done\n" );
+	}
+}
+
+void
+MingwBackend::GenerateSysSetup ()
+{
+	printf ( "Generating syssetup.inf..." );
+	SysSetupGenerator sysSetupGenerator ( ProjectNode );
+	sysSetupGenerator.Generate ();
+	printf ( "done\n" );
+}
+
 string
 MingwBackend::GetProxyMakefileTree () const
 {
@@ -873,6 +754,7 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 bool
 MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 {
+	if ( manualBinutilsSetting ) return true;
 	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
 	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
     	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
@@ -888,11 +770,13 @@ MingwBackend::DetectBinutils ()
 
 	bool detectedBinutils = false;
 	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+
 	if ( ROS_PREFIXValue.length () > 0 )
 	{
 		binutilsPrefix = ROS_PREFIXValue;
 		binutilsCommand = binutilsPrefix + "-ld";
-		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+		manualBinutilsSetting = true;
+		detectedBinutils = true;
 	}
 #if defined(WIN32)
 	if ( !detectedBinutils )
@@ -923,6 +807,7 @@ MingwBackend::DetectBinutils ()
 	}
 	else
 		printf ( "not detected\n" );
+
 }
 
 void

@@ -2,6 +2,8 @@
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl
  *
+ * TODO:
+ *   - Verify the implementation of '%Z'.
  */
 
 /*
@@ -14,6 +16,7 @@
 /*
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
+
 #include <rtl.h>
 
 #define ZEROPAD	1		/* pad with zero */
@@ -84,7 +87,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 	}
 	i = 0;
 	if (num == 0)
-		tmp[i++]='0';
+		tmp[i++] = '0';
 	else while (num != 0)
 		tmp[i++] = digits[do_div(&num,base)];
 	if (i > precision)
@@ -214,19 +217,19 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 		{
 			if (buf <= end)
 				*buf = ' ';
-			++buf;
+			buf++;
 		}
 	for (i = 0; i < len; ++i)
 	{
 		if (buf <= end)
 			*buf = (unsigned char)(*sw++);
-		++buf;
+		buf++;
 	}
 	while (len < field_width--)
 	{
 		if (buf <= end)
 			*buf = ' ';
-		++buf;
+		buf++;
 	}
 	return buf;
 }

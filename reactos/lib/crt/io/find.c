@@ -1,9 +1,5 @@
-#include "precomp.h"
-#include <io.h>
-#include <string.h>
+#include <precomp.h>
 #include <tchar.h>
-#include <internal/file.h>
-
 
 /*
  * @implemented

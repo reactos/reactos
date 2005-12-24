@@ -36,6 +36,7 @@ extern "C" {
 */
 #define DDKAPI __stdcall
 #define DDKFASTAPI __fastcall
+#define FASTCALL __fastcall
 #define DDKCDECLAPI __cdecl
 
 /* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
@@ -97,6 +98,21 @@ extern "C" {
 #endif
 
 /*
+ * Alignment Macros
+ */
+#define ALIGN_DOWN(s, t) \
+    ((ULONG)(s) & ~(sizeof(t) - 1))
+
+#define ALIGN_UP(s, t) \
+    (ALIGN_DOWN(((ULONG)(s) + sizeof(t) - 1), t))
+
+#define ALIGN_DOWN_POINTER(p, t) \
+    ((PVOID)((ULONG_PTR)(p) & ~((ULONG_PTR)sizeof(t) - 1)))
+
+#define ALIGN_UP_POINTER(p, t) \
+    (ALIGN_DOWN_POINTER(((ULONG_PTR)(p) + sizeof(t) - 1), t))
+
+/*
 ** Forward declarations
 */
 
@@ -117,6 +133,10 @@ struct _DEVICE_DESCRIPTION;
 struct _SCATTER_GATHER_LIST;
 struct _DRIVE_LAYOUT_INFORMATION;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
+
+typedef PVOID PSECURITY_DESCRIPTOR;
+typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
+typedef PVOID PSID;
 
 DECLARE_INTERNAL_OBJECT(ADAPTER_OBJECT)
 DECLARE_INTERNAL_OBJECT(DMA_ADAPTER)
@@ -140,38 +160,6 @@ typedef ULONG LOGICAL;
 */
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 
-static __inline struct _KPCR * KeGetCurrentKPCR(
-  VOID)
-{
-  ULONG Value;
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
-	  : "=r" (Value)
-    : /* no inputs */
-  );
-#elif defined(_MSC_VER)
-  __asm mov eax, fs:[1Ch]
-  __asm mov [Value], eax
-#endif
-  return (struct _KPCR *) Value;
-}
-
-static __inline struct _KPRCB * KeGetCurrentPrcb(
-  VOID)
-{
-  ULONG Value;
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
-	  : "=r" (Value)
-    : /* no inputs */
-  );
-#elif defined(_MSC_VER)
-  __asm mov eax, fs:[20h]
-  __asm mov [Value], eax
-#endif
-  return (struct _KPRCB *) Value;
-}
-
 /*
 ** Simple structures
 */
@@ -179,7 +167,6 @@ static __inline struct _KPRCB * KeGetCurrentPrcb(
 typedef LONG KPRIORITY;
 typedef UCHAR KIRQL, *PKIRQL;
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
-typedef ULONG KAFFINITY, *PKAFFINITY;
 typedef UCHAR KPROCESSOR_MODE;
 
 typedef enum _MODE {
@@ -228,6 +215,10 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64
+
+#define EX_RUNDOWN_ACTIVE                 0x1
+#define EX_RUNDOWN_COUNT_SHIFT            0x1
+#define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
 
 #define METHOD_BUFFERED                   0
 #define METHOD_IN_DIRECT                  1
@@ -375,6 +366,11 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
 #define THREAD_ALERT (0x0004)
+
+#define FM_LOCK_BIT             (0x1)
+#define FM_LOCK_BIT_V           (0x0)
+#define FM_LOCK_WAITER_WOKEN    (0x2)
+#define FM_LOCK_WAITER_INC      (0x4)
 
 /* Exported object types */
 extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
@@ -580,6 +576,13 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
+typedef EXCEPTION_DISPOSITION
+(DDKAPI *PEXCEPTION_ROUTINE)(
+  IN struct _EXCEPTION_RECORD *ExceptionRecord,
+  IN PVOID EstablisherFrame,
+  IN OUT struct _CONTEXT *ContextRecord,
+  IN OUT PVOID DispatcherContext);
+
 typedef VOID
 (DDKAPI *PDRIVER_LIST_CONTROL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
@@ -705,6 +708,42 @@ typedef ULONG
   IN ULONG  Offset,
   IN ULONG  Length);
 
+/* PCI_DEVICE_PRESENCE_PARAMETERS.Flags */
+#define PCI_USE_SUBSYSTEM_IDS   0x00000001
+#define PCI_USE_REVISION        0x00000002
+#define PCI_USE_VENDEV_IDS      0x00000004
+#define PCI_USE_CLASS_SUBCLASS  0x00000008
+#define PCI_USE_PROGIF          0x00000010
+#define PCI_USE_LOCAL_BUS       0x00000020
+#define PCI_USE_LOCAL_DEVICE    0x00000040
+
+typedef struct _PCI_DEVICE_PRESENCE_PARAMETERS {
+  ULONG   Size;
+  ULONG   Flags;
+  USHORT  VendorID;
+  USHORT  DeviceID;
+  UCHAR   RevisionID;
+  USHORT  SubVendorID;
+  USHORT  SubSystemID;
+  UCHAR   BaseClass;
+  UCHAR   SubClass;
+  UCHAR   ProgIf;
+} PCI_DEVICE_PRESENCE_PARAMETERS, *PPCI_DEVICE_PRESENCE_PARAMETERS;
+
+typedef BOOLEAN
+(DDKAPI *PPCI_IS_DEVICE_PRESENT)(
+  IN USHORT  VendorID,
+  IN USHORT  DeviceID,
+  IN UCHAR   RevisionID,
+  IN USHORT  SubVendorID,
+  IN USHORT  SubSystemID,
+  IN ULONG   Flags);
+
+typedef BOOLEAN
+(DDKAPI *PPCI_IS_DEVICE_PRESENT_EX)(
+  IN PVOID Context,
+  IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters);
+
 typedef union _POWER_STATE {
   SYSTEM_POWER_STATE  SystemState;
   DEVICE_POWER_STATE  DeviceState;
@@ -726,6 +765,16 @@ typedef struct _BUS_INTERFACE_STANDARD {
   PGET_SET_DEVICE_DATA  SetBusData;
   PGET_SET_DEVICE_DATA  GetBusData;
 } BUS_INTERFACE_STANDARD, *PBUS_INTERFACE_STANDARD;
+
+typedef struct _PCI_DEVICE_PRESENT_INTERFACE {
+  USHORT  Size;
+  USHORT  Version;
+  PVOID  Context;
+  PINTERFACE_REFERENCE  InterfaceReference;
+  PINTERFACE_DEREFERENCE  InterfaceDereference;
+  PPCI_IS_DEVICE_PRESENT  IsDevicePresent;
+  PPCI_IS_DEVICE_PRESENT_EX  IsDevicePresentEx;
+} PCI_DEVICE_PRESENT_INTERFACE, *PPCI_DEVICE_PRESENT_INTERFACE;
 
 typedef struct _DEVICE_CAPABILITIES {
   USHORT  Size;
@@ -1064,13 +1113,23 @@ typedef struct _KSEMAPHORE {
     LONG Limit;
 } KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
-typedef struct _FAST_MUTEX {
-  LONG  Count;
-  struct _KTHREAD  *Owner;
-  ULONG  Contention;
-  KEVENT  Event;
-  ULONG  OldIrql;
+typedef struct _FAST_MUTEX
+{
+    LONG Count;
+    PKTHREAD Owner;
+    ULONG Contention;
+    KEVENT Gate;
+    ULONG OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
+
+typedef struct _EX_RUNDOWN_REF
+{
+    union
+    {
+        ULONG_PTR Count;
+        PVOID Ptr;
+    };
+} EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
 typedef struct _KGATE
 {
@@ -2514,7 +2573,7 @@ typedef struct {
   pHalMirrorVerify  HalMirrorVerify;
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_)
+#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
 extern DECL_IMPORT PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
@@ -2638,16 +2697,6 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
 typedef struct _FILE_DISPOSITION_INFORMATION {
   BOOLEAN  DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
-
-typedef struct _FILE_QUOTA_INFORMATION {
-    ULONG NextEntryOffset;
-    ULONG SidLength;
-    LARGE_INTEGER ChangeTime;
-    LARGE_INTEGER QuotaUsed;
-    LARGE_INTEGER QuotaThreshold;
-    LARGE_INTEGER QuotaLimit;
-    SID Sid;
-} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
 
 typedef struct _FILE_END_OF_FILE_INFORMATION {
   LARGE_INTEGER  EndOfFile;
@@ -4924,13 +4973,29 @@ DDKAPI
 KeGetCurrentIrql(
   VOID);
 
-/*
- * ULONG
- * KeGetCurrentProcessorNumber(
- *   VOID)
- */
-#define KeGetCurrentProcessorNumber() \
-  ((ULONG)KeGetCurrentKPCR()->Number)
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+#if defined(__GNUC__)
+  ULONG ret;
+  __asm__ __volatile__ (
+    "movl %%fs:%c1, %0\n"
+    : "=r" (ret)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return ret;
+#elif defined(_MSC_VER)
+#if _MSC_FULL_VER >= 13012035
+  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+#else
+  __asm { movzx eax, _PCR KPCR.Number }
+#endif
+#else
+#error Unknown compiler
+#endif
+}
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -6091,23 +6156,64 @@ KeTryToAcquireGuardedMutex(
     PKGUARDED_MUTEX GuardedMutex
 );
 
-/** Executive support routines **/
+/* Fast Mutex */
+#define ExInitializeFastMutex(_FastMutex) \
+{ \
+    (_FastMutex)->Count = FM_LOCK_BIT; \
+    (_FastMutex)->Owner = NULL; \
+    (_FastMutex)->Contention = 0; \
+    KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
+}
 
-#if defined(_X86_)
-NTHALAPI
+NTOSAPI
+VOID
+FASTCALL
+ExAcquireFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+VOID
+FASTCALL
+ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex);
+
+#if defined(_NTHAL_) && defined(_X86_)
+NTOSAPI
+VOID
+FASTCALL
+ExiAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+VOID
+FASTCALL
+ExiReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+BOOLEAN
+FASTCALL
+ExiTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+#define ExAcquireFastMutex(FastMutex)       ExiAcquireFastMutex(FastMutex)
+#define ExReleaseFastMutex(FastMutex)       ExiReleaseFastMutex(FastMutex)
+#define ExTryToAcquireFastMutex(FastMutex)  ExiTryToAcquireFastMutex(FastMutex)
+
 #else
-NTOSAPI
-#endif
-VOID
-DDKFASTAPI
-ExAcquireFastMutex(
-  IN PFAST_MUTEX  FastMutex);
 
 NTOSAPI
 VOID
-DDKFASTAPI
-ExAcquireFastMutexUnsafe(
-  IN PFAST_MUTEX  FastMutex);
+FASTCALL
+ExAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+VOID
+FASTCALL
+ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
+
+NTOSAPI
+BOOLEAN
+FASTCALL
+ExTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+#endif
+
+/** Executive support routines **/
 
 NTOSAPI
 BOOLEAN
@@ -6330,19 +6436,6 @@ KeInitializeEvent(
   IN EVENT_TYPE  Type,
   IN BOOLEAN  State);
 
-/*
- * VOID DDKAPI
- * ExInitializeFastMutex(
- *   IN PFAST_MUTEX  FastMutex)
- */
-#define ExInitializeFastMutex(_FastMutex) \
-{ \
-  (_FastMutex)->Count = 1; \
-  (_FastMutex)->Owner = NULL; \
-  (_FastMutex)->Contention = 0; \
-  KeInitializeEvent(&(_FastMutex)->Event, SynchronizationEvent, FALSE); \
-}
-
 NTOSAPI
 VOID
 DDKAPI
@@ -6560,22 +6653,6 @@ DDKAPI
 ExReinitializeResourceLite(
   IN PERESOURCE  Resource);
 
-#if defined(_X86_)
-NTHALAPI
-#else
-NTOSAPI
-#endif
-VOID
-DDKFASTAPI
-ExReleaseFastMutex(
-  IN PFAST_MUTEX  FastMutex);
-
-NTOSAPI
-VOID
-DDKFASTAPI
-ExReleaseFastMutexUnsafe(
-  IN PFAST_MUTEX  FastMutex);
-
 NTOSAPI
 VOID
 DDKAPI
@@ -6609,16 +6686,6 @@ DDKAPI
 ExSystemTimeToLocalTime(
   IN PLARGE_INTEGER  SystemTime,
   OUT PLARGE_INTEGER  LocalTime);
-
-#ifdef _M_IX86
-NTHALAPI
-#else
-NTOSAPI
-#endif
-BOOLEAN
-DDKFASTAPI
-ExTryToAcquireFastMutex(
-  IN PFAST_MUTEX  FastMutex);
 
 NTOSAPI
 BOOLEAN
@@ -6671,7 +6738,7 @@ NTOSAPI
 VOID
 DDKAPI
 ProbeForWrite(
-  IN CONST VOID  *Address,
+  IN PVOID  Address,
   IN ULONG  Length,
   IN ULONG  Alignment);
 
@@ -8365,6 +8432,8 @@ DDKAPI
 KeLeaveCriticalRegion(
   VOID);
 
+#ifdef _X86_
+
 static __inline
 VOID
 KeMemoryBarrier(
@@ -8377,6 +8446,8 @@ KeMemoryBarrier(
   __asm xchg [Barrier], eax
 #endif
 }
+
+#endif
 
 NTOSAPI
 LONG
@@ -10183,7 +10254,7 @@ DbgSetDebugFilterState(
 
 #endif /* !DBG */
 
-#if defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
+#if defined(_NTDDK_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
 
 extern NTOSAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTOSAPI PBOOLEAN KdDebuggerEnabled;

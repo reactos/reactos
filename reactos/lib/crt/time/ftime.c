@@ -8,8 +8,7 @@
  *              07/15/03 -- Created
  */
 
-#include "precomp.h"
-#include <sys/time.h>
+#include <precomp.h>
 #include <sys/timeb.h>
 
 /* ftime (3) -- Obsolete BSD library function included in the SUS for copat.

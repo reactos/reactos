@@ -1,34 +1,10 @@
 /*
- *  ReactOS Win32 Applications
- *  Copyright (C) 2005 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-
-/*
- * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS netstat utility
+ * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        apps/utils/net/netstat/netstat.c
  * PURPOSE:     display IP stack statistics
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 19/09/05 Created
- *              Some ideas/code taken from Rob Dickinson's original app
- *
+ * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  */
-
 /*
  * TODO:
  * sort function return values.
@@ -108,7 +84,7 @@ BOOL ParseCmdline(int argc, char* argv[])
 
     TCHAR Proto[5];
 
-    if ((argc == 1) || (isdigit(*argv[1])))
+    if ((argc == 1) || (_istdigit(*argv[1])))
         bNoOptions = TRUE;
 
     /* Parse command line for options we have been given. */
@@ -123,23 +99,21 @@ BOOL ParseCmdline(int argc, char* argv[])
                 switch (tolower(c))
                 {
                     case 'a' :
-                        //_tprintf(_T("got a\n"));
                         bDoShowAllCons = TRUE;
                         break;
+                    case 'b' :
+                        bDoShowProcName = TRUE;
+                        break;
                     case 'e' :
-                        //_tprintf(_T("got e\n"));
                         bDoShowEthStats = TRUE;
                         break;
                     case 'n' :
-                        //_tprintf(_T("got n\n"));
                         bDoShowNumbers = TRUE;
                         break;
                     case 's' :
-                        //_tprintf(_T("got s\n"));
                         bDoShowProtoStats = TRUE;
                         break;
                     case 'p' :
-                        //_tprintf(_T("got p\n"));
                         bDoShowProtoCons = TRUE;
 
                         strncpy(Proto, (++argv)[i], sizeof(Proto));
@@ -171,10 +145,12 @@ BOOL ParseCmdline(int argc, char* argv[])
                 }
             }
         }
-        else if (isdigit(*argv[i]))
+        else if (_istdigit(*argv[i]))
         {
-            _stscanf(argv[i], "%lu", &Interval);
-            bLoopOutput = TRUE;
+            if (_stscanf(argv[i], "%lu", &Interval) != EOF)
+                bLoopOutput = TRUE;
+            else
+                return EXIT_FAILURE;
         }
 //        else
 //        {
@@ -201,9 +177,9 @@ BOOL DisplayOutput()
 
     if (bDoShowRouteTable)
     {
+        /* mingw doesn't have lib for _tsystem */
         if (system("route print") == -1)
         {
-            //mingw doesn't have lib for _tsystem
             _tprintf(_T("cannot find 'route.exe'\n"));
             return EXIT_FAILURE;
         }
@@ -278,7 +254,7 @@ VOID ShowIpStatistics()
     PMIB_IPSTATS pIpStats;
     DWORD dwRetVal;
 
-    pIpStats = (MIB_IPSTATS*) malloc(sizeof(MIB_IPSTATS));
+    pIpStats = (MIB_IPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPSTATS));
 
     if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
     {
@@ -303,6 +279,8 @@ VOID ShowIpStatistics()
     }
     else
         DoFormatMessage(dwRetVal);
+
+    HeapFree(GetProcessHeap(), 0, pIpStats);
 }
 
 VOID ShowIcmpStatistics()
@@ -310,7 +288,7 @@ VOID ShowIcmpStatistics()
     PMIB_ICMP pIcmpStats;
     DWORD dwRetVal;
 
-    pIcmpStats = (MIB_ICMP*) malloc(sizeof(MIB_ICMP));
+    pIcmpStats = (MIB_ICMP*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_ICMP));
 
     if ((dwRetVal = GetIcmpStatistics(pIcmpStats)) == NO_ERROR)
     {
@@ -346,6 +324,8 @@ VOID ShowIcmpStatistics()
     else
         DoFormatMessage(dwRetVal);
 
+    HeapFree(GetProcessHeap(), 0, pIcmpStats);
+
 }
 
 VOID ShowTcpStatistics()
@@ -353,7 +333,7 @@ VOID ShowTcpStatistics()
     PMIB_TCPSTATS pTcpStats;
     DWORD dwRetVal;
 
-    pTcpStats = (MIB_TCPSTATS*) malloc(sizeof(MIB_TCPSTATS));
+    pTcpStats = (MIB_TCPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_TCPSTATS));
 
     if ((dwRetVal = GetTcpStatistics(pTcpStats)) == NO_ERROR)
     {
@@ -369,6 +349,8 @@ VOID ShowTcpStatistics()
     }
     else
         DoFormatMessage(dwRetVal);
+
+    HeapFree(GetProcessHeap(), 0, pTcpStats);
 }
 
 VOID ShowUdpStatistics()
@@ -376,7 +358,7 @@ VOID ShowUdpStatistics()
     PMIB_UDPSTATS pUdpStats;
     DWORD dwRetVal;
 
-    pUdpStats = (MIB_UDPSTATS*) malloc(sizeof(MIB_UDPSTATS));
+    pUdpStats = (MIB_UDPSTATS*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_UDPSTATS));
 
     if ((dwRetVal = GetUdpStatistics(pUdpStats)) == NO_ERROR)
     {
@@ -388,6 +370,8 @@ VOID ShowUdpStatistics()
     }
     else
         DoFormatMessage(dwRetVal);
+
+    HeapFree(GetProcessHeap(), 0, pUdpStats);
 }
 
 VOID ShowEthernetStatistics()
@@ -396,12 +380,12 @@ VOID ShowEthernetStatistics()
     DWORD dwSize = 0;
     DWORD dwRetVal = 0;
 
-    pIfTable = (MIB_IFTABLE*) malloc(sizeof(MIB_IFTABLE));
+    pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IFTABLE));
 
     if (GetIfTable(pIfTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
     {
-        GlobalFree(pIfTable);
-        pIfTable = (MIB_IFTABLE*) malloc(dwSize);
+        HeapFree(GetProcessHeap(), 0, pIfTable);
+        pIfTable = (MIB_IFTABLE*) HeapAlloc(GetProcessHeap(), 0, dwSize);
 
         if ((dwRetVal = GetIfTable(pIfTable, &dwSize, 0)) == NO_ERROR)
         {
@@ -423,6 +407,7 @@ VOID ShowEthernetStatistics()
         else
             DoFormatMessage(dwRetVal);
     }
+    HeapFree(GetProcessHeap(), 0, pIfTable);
 }
 
 VOID ShowTcpTable()
@@ -444,12 +429,13 @@ VOID ShowTcpTable()
         DoFormatMessage(error);
         exit(EXIT_FAILURE);
     }
-    tcpTable = (PMIB_TCPTABLE)malloc(dwSize);
+    tcpTable = (PMIB_TCPTABLE) HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetTcpTable(tcpTable, &dwSize, TRUE );
     if (error)
     {
         printf("Failed to snapshot TCP endpoints table.\n");
         DoFormatMessage(error);
+        HeapFree(GetProcessHeap(), 0, tcpTable);
         exit(EXIT_FAILURE);
     }
 
@@ -475,6 +461,7 @@ VOID ShowTcpTable()
             Host, Remote, TcpState[tcpTable->table[i].dwState]);
         }
     }
+    HeapFree(GetProcessHeap(), 0, tcpTable);
 }
 
 
@@ -495,12 +482,13 @@ VOID ShowUdpTable()
         DoFormatMessage(error);
         exit(EXIT_FAILURE);
     }
-    udpTable = (PMIB_UDPTABLE)malloc(dwSize);
+    udpTable = (PMIB_UDPTABLE) HeapAlloc(GetProcessHeap(), 0, dwSize);
     error = GetUdpTable(udpTable, &dwSize, TRUE);
     if (error)
     {
         printf("Failed to snapshot UDP endpoints table.\n");
         DoFormatMessage(error);
+        HeapFree(GetProcessHeap(), 0, udpTable);
         exit(EXIT_FAILURE);
     }
 
@@ -516,6 +504,8 @@ VOID ShowUdpTable()
 
         _tprintf(_T("  %-6s %-22s %-22s\n"), _T("UDP"), Host,  _T(":*:"));
     }
+
+    HeapFree(GetProcessHeap(), 0, udpTable);
 }
 
 
@@ -523,7 +513,7 @@ VOID ShowUdpTable()
  * Translate port numbers into their text equivalent if there is one
  */
 PCHAR
-GetPortName(UINT Port, PCHAR Proto, CHAR Name[], INT NameLen)
+GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
 {
     struct servent *pSrvent;
 
@@ -563,7 +553,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
         return Name;
     }
 
-    Name[0] = L'\0';
+    Name[0] = _T('\0');
 
     // Try to translate to a name
     if (!IpAddr) {
@@ -574,13 +564,15 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
                 (nIpAddr >> 8) & 0xFF,
                 (nIpAddr) & 0xFF);
         } else {
-            //gethostname(name, namelen);
+            if (gethostname(Name, NameLen) != 0)
+                DoFormatMessage(WSAGetLastError());
         }
     } else if (IpAddr == 0x0100007f) {
         if (Local) {
-            //gethostname(name, namelen);
+            if (gethostname(Name, NameLen) != 0)
+                DoFormatMessage(WSAGetLastError());
         } else {
-            strcpy(Name, "localhost");
+            _tcsncpy(Name, _T("localhost"), 10);
         }
 //  } else if (phostent = gethostbyaddr((char*)&ipaddr, sizeof(nipaddr), PF_INET)) {
 //      strcpy(name, phostent->h_name);
@@ -616,7 +608,6 @@ VOID Usage()
 
 
 
-
 /*
  *
  * Parse command line parameters and set any options
@@ -625,6 +616,14 @@ VOID Usage()
  */
 int main(int argc, char *argv[])
 {
+    WSADATA wsaData;
+
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        _tprintf(_T("WSAStartup() failed : %d\n"), WSAGetLastError());
+        return -1;
+    }
+
     if (ParseCmdline(argc, argv))
         return -1;
 

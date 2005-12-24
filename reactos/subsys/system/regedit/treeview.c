@@ -107,6 +107,13 @@ LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     return pathBuffer;
 }
 
+BOOL DeleteNode(HWND hwndTV, HTREEITEM hItem)
+{
+    if (!hItem) hItem = TreeView_GetSelection(hwndTV);
+    if (!hItem) return FALSE;
+    return TreeView_DeleteItem(hwndTV, hItem);
+}
+
 /* Add an entry to the tree. Only give hKey for root nodes (HKEY_ constants) */
 static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HKEY hKey, DWORD dwChildren)
 {
@@ -132,7 +139,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
     return TreeView_InsertItem(hwndTV, &tvins);
 }
 
-static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
+BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
 {
     HKEY hRoot, hKey, hSubKey;
     HTREEITEM childItem;
@@ -312,28 +319,46 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name)
     HTREEITEM hNewItem = 0;
     TVITEMEX item;
 
-    if (!hItem) hItem = TreeView_GetSelection(hwndTV);
-    if (!hItem) return FALSE;
-    if (TreeView_GetItemState(hwndTV, hItem, TVIS_EXPANDEDONCE)) {
-	hNewItem = AddEntryToTree(hwndTV, hItem, name, 0, 0);
-	SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
-    } else {
-	item.mask = TVIF_CHILDREN | TVIF_HANDLE;
-	item.hItem = hItem;
-	if (!TreeView_GetItem(hwndTV, &item)) return FALSE;
-	item.cChildren = 1;
-	if (!TreeView_SetItem(hwndTV, &item)) return FALSE;
+    /* Default to the current selection */
+    if (!hItem)
+    {
+        hItem = TreeView_GetSelection(hwndTV);
+        if (!hItem)
+            return FALSE;
     }
+
+    memset(&item, 0, sizeof(item));
+    item.hItem = hItem;
+    item.mask = TVIF_CHILDREN | TVIF_HANDLE | TVIF_STATE;
+    if (!TreeView_GetItem(hwndTV, &item))
+        return FALSE;
+
+    if ((item.state & TVIS_EXPANDEDONCE) && (item.cChildren > 0))
+    {
+        hNewItem = AddEntryToTree(hwndTV, hItem, name, 0, 0);
+        SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
+    }
+	else
+    {
+        item.mask = TVIF_CHILDREN | TVIF_HANDLE;
+        item.hItem = hItem;
+        item.cChildren = 1;
+        if (!TreeView_SetItem(hwndTV, &item))
+            return FALSE;
+    }
+
     TreeView_Expand(hwndTV, hItem, TVE_EXPAND);
-    if (!hNewItem) {
-	for(hNewItem = TreeView_GetChild(hwndTV, hItem); hNewItem; hNewItem = TreeView_GetNextSibling(hwndTV, hNewItem)) {
-	    item.mask = TVIF_HANDLE | TVIF_TEXT;
-	    item.hItem = hNewItem;
-	    item.pszText = buf;
-	    item.cchTextMax = COUNT_OF(buf);
-	    if (!TreeView_GetItem(hwndTV, &item)) continue;
-	    if (lstrcmp(name, item.pszText) == 0) break;
-	}	
+    if (!hNewItem)
+    {
+        for(hNewItem = TreeView_GetChild(hwndTV, hItem); hNewItem; hNewItem = TreeView_GetNextSibling(hwndTV, hNewItem))
+        {
+            item.mask = TVIF_HANDLE | TVIF_TEXT;
+            item.hItem = hNewItem;
+            item.pszText = buf;
+            item.cchTextMax = COUNT_OF(buf);
+            if (!TreeView_GetItem(hwndTV, &item)) continue;
+            if (lstrcmp(name, item.pszText) == 0) break;
+        }	
     }
     if (hNewItem) TreeView_SelectItem(hwndTV, hNewItem);
 
@@ -510,6 +535,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     if (LoadString(hInst, IDS_NEW_KEY, szNewKeyFormat, sizeof(szNewKeyFormat) / sizeof(szNewKeyFormat[0])) <= 0)
         goto done;
 
+    /* Need to create a new key with a unique name */
     do
     {
         _sntprintf(szNewKey, sizeof(szNewKey) / sizeof(szNewKey[0]), szNewKeyFormat, iIndex++);
@@ -522,10 +548,12 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     }
     while(!hNewKey);
 
-    hNewItem = AddEntryToTree(hwndTV, hItem, szNewKey, NULL, 0);
+    /* Insert the new key */
+    hNewItem = InsertNode(hwndTV, hItem, szNewKey);
     if (!hNewItem)
         goto done;
-    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
+
+    /* The new key's name is probably not appropriate yet */
     TreeView_EditLabel(hwndTV, hNewItem);
 
     bSuccess = TRUE;
@@ -544,7 +572,7 @@ done:
  * Returns the handle to the new control if successful, or NULL otherwise.
  * hwndParent - handle to the control's parent window.
  */
-HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id)
+HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, HMENU id)
 {
     RECT rcClient;
     HWND hwndTV;
@@ -554,7 +582,7 @@ HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id)
     hwndTV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_TREEVIEW, NULL,
                             WS_VISIBLE | WS_CHILD | WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_EDITLABELS,
                             0, 0, rcClient.right, rcClient.bottom,
-                            hwndParent, (HMENU)id, hInst, NULL);
+                            hwndParent, id, hInst, NULL);
     /* Initialize the image list, and add items to the control.  */
     if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, pHostName)) {
         DestroyWindow(hwndTV);
@@ -576,6 +604,10 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 	TCHAR szBuffer[128];
 	LPCTSTR s;
 	TVITEM tvi;
+
+    /* Total no-good hack */
+    if (!_tcsncmp(keyPath, _T("My Computer\\"), 12))
+        keyPath += 12;
 
 	hRoot = TreeView_GetRoot(hwndTV);
 	hItem = hRoot;

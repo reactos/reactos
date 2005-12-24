@@ -9,10 +9,7 @@
  *              28/12/98: Appropriated for Reactos
  */
 
-#include "precomp.h"
-#include <io.h>
-#include <errno.h>
-#include <internal/file.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <internal/debug.h>

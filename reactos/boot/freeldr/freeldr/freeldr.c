@@ -18,16 +18,11 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <arch.h>
-#include <machine.h>
-#include <mm.h>
-#include <debug.h>
-#include <bootmgr.h>
-#include <fs.h>
-#include <cmdline.h>
 
-VOID BootMain(char *CmdLine)
+#define NDEBUG
+#include <debug.h>
+
+VOID BootMain(LPSTR CmdLine)
 {
 	CmdLineParse(CmdLine);
 

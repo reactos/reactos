@@ -38,10 +38,10 @@ KeInitializeProfile(PKPROFILE Profile,
 
     /* Copy all the settings we were given */
     Profile->Process = Process;
-    Profile->RegionStart = ImageBase;
+    Profile->RangeBase = ImageBase;
     Profile->BucketShift = BucketSize - 2; /* See ntinternals.net -- Alex */
-    Profile->RegionEnd = (PVOID)((ULONG_PTR)ImageBase + ImageSize);
-    Profile->Active = FALSE;
+    Profile->RangeLimit = (PVOID)((ULONG_PTR)ImageBase + ImageSize);
+    Profile->Started = FALSE;
     Profile->Source = ProfileSource;
     Profile->Affinity = Affinity;
 }
@@ -68,11 +68,11 @@ KeStartProfile(PKPROFILE Profile,
     KeAcquireSpinLockAtDpcLevel(&KiProfileLock);
 
     /* Make sure it's not running */
-    if (!Profile->Active) {
+    if (!Profile->Started) {
 
-        /* Set it as active */
+        /* Set it as Started */
         Profile->Buffer = Buffer;
-        Profile->Active = TRUE;
+        Profile->Started = TRUE;
 
         /* Get the process, if any */
         ProfileProcess = Profile->Process;
@@ -80,11 +80,11 @@ KeStartProfile(PKPROFILE Profile,
         /* Insert it into the Process List or Global List */
         if (ProfileProcess) {
 
-            InsertTailList(&ProfileProcess->ProfileListHead, &Profile->ListEntry);
+            InsertTailList(&ProfileProcess->ProfileListHead, &Profile->ProfileListEntry);
 
         } else {
 
-            InsertTailList(&KiProfileListHead, &Profile->ListEntry);
+            InsertTailList(&KiProfileListHead, &Profile->ProfileListEntry);
         }
 
         /* Check if this type of profile (source) is already running */
@@ -134,11 +134,11 @@ KeStopProfile(PKPROFILE Profile)
     KeAcquireSpinLockAtDpcLevel(&KiProfileLock);
 
     /* Make sure it's running */
-    if (Profile->Active) {
+    if (Profile->Started) {
 
         /* Remove it from the list and disable */
-        RemoveEntryList(&Profile->ListEntry);
-        Profile->Active = FALSE;
+        RemoveEntryList(&Profile->ProfileListEntry);
+        Profile->Started = FALSE;
 
         /* Find the Source Object */
         LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry) 
@@ -227,19 +227,19 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
     PKPROFILE Profile;
 
     /* Loop the List */
-    LIST_FOR_EACH(Profile, ListHead, KPROFILE, ListEntry)
+    LIST_FOR_EACH(Profile, ListHead, KPROFILE, ProfileListEntry)
     {
         /* Check if the source is good, and if it's within the range */
         if ((Profile->Source != Source) ||
-            (TrapFrame->Eip < (ULONG_PTR)Profile->RegionStart) ||
-            (TrapFrame->Eip > (ULONG_PTR)Profile->RegionEnd)) {
+            (TrapFrame->Eip < (ULONG_PTR)Profile->RangeBase) ||
+            (TrapFrame->Eip > (ULONG_PTR)Profile->RangeLimit)) {
 
             continue;
         }
 
         /* Get the Pointer to the Bucket Value representing this EIP */
         BucketValue = (PULONG)((((ULONG_PTR)Profile->Buffer +
-                               (TrapFrame->Eip - (ULONG_PTR)Profile->RegionStart))
+                               (TrapFrame->Eip - (ULONG_PTR)Profile->RangeBase))
                                 >> Profile->BucketShift) &~ 0x3);
 
         /* Increment the value */

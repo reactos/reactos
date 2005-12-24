@@ -51,7 +51,7 @@ typedef struct _INFCONTEXT
 
 BOOLEAN
 InfOpenFile (PHINF InfHandle,
-	     PCHAR FileName,
+	     PCSTR FileName,
 	     PULONG ErrorLine);
 
 VOID
@@ -60,8 +60,8 @@ InfCloseFile (HINF InfHandle);
 
 BOOLEAN
 InfFindFirstLine (HINF InfHandle,
-		  PCHAR Section,
-		  PCHAR Key,
+		  PCSTR Section,
+		  PCSTR Key,
 		  PINFCONTEXT Context);
 
 BOOLEAN
@@ -123,7 +123,7 @@ InfGetData (PINFCONTEXT Context,
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
 		 ULONG FieldIndex,
-		 PCHAR *Data);
+		 PCSTR *Data);
 
 #endif /* __INFCACHE_H__ */
 

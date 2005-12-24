@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
+#include <precomp.h>
+
 #include <wchar.h>
-#include <internal/file.h>
 
 /*
  * @implemented
@@ -20,4 +20,5 @@ fputwc(wchar_t c, FILE *fp)
 {
   return putwc(c,fp);
 }
+
 

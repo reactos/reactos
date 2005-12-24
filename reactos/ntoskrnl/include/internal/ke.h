@@ -244,7 +244,7 @@ KiExpireTimers(
 );
 
 KIRQL
-inline
+__inline
 FASTCALL
 KeAcquireDispatcherDatabaseLock(VOID);
 
@@ -363,7 +363,7 @@ KiInsertTimer(
 );
 
 VOID
-inline
+__inline
 FASTCALL
 KiSatisfyObjectWait(
     PDISPATCHER_HEADER Object,
@@ -371,7 +371,7 @@ KiSatisfyObjectWait(
 );
 
 BOOLEAN
-inline
+__inline
 FASTCALL
 KiIsObjectSignaled(
     PDISPATCHER_HEADER Object,
@@ -379,7 +379,7 @@ KiIsObjectSignaled(
 );
 
 VOID
-inline
+__inline
 FASTCALL
 KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
 

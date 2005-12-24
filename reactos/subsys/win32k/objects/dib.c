@@ -449,7 +449,8 @@ NtGdiGetDIBits(HDC hDC,
          DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
          DestSize.cy = ScanLines;
          DestBitmap = EngCreateBitmap(
-            DestSize, BitmapObj->SurfObj.lDelta,
+            DestSize, DIB_GetDIBWidthBytes(DestSize.cx,
+                                           Info->bmiHeader.biBitCount),
             BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
             0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
             Bits);
@@ -497,7 +498,8 @@ NtGdiGetDIBits(HDC hDC,
             DestPaletteType, SourcePaletteType, hDestPalette, hSourcePalette);
 
          SourcePoint.x = 0;
-         SourcePoint.y = StartScan;
+         SourcePoint.y = BitmapObj->SurfObj.sizlBitmap.cy -
+                         (StartScan + ScanLines);
 
          /* Determine destination rectangle */
          DestRect.top = 0;
@@ -667,6 +669,7 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   int height;
   WORD bpp;
   WORD compr;
+  SIZEL size;
 
   if (DIB_GetBitmapInfo( header, &width, &height, &bpp, &compr ) == -1) return 0;
 
@@ -721,7 +724,12 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   }
   else
   {
-    handle = NtGdiCreateBitmap( width, height, 1, 1, NULL);
+    size.cx = width;
+    size.cy = abs(height);
+
+    handle = IntCreateBitmap(size, DIB_GetDIBWidthBytes(width, 1), BMF_1BPP,
+                             (height < 0 ? BMF_TOPDOWN : 0) | BMF_NOZEROINIT,
+                             NULL);
   }
 
   if (height < 0)
@@ -986,24 +994,7 @@ DIB_CreateDIBSection(
  */
 INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
 {
-  int words;
-
-  switch(depth)
-  {
-    case 1:  words = (width + 31) >> 5; break;
-    case 4:  words = (width + 7) >> 3; break;
-    case 8:  words = (width + 3) >> 2; break;
-    case 15:
-    case 16: words = (width + 1) >> 1; break;
-    case 24: words = (width * 3 + 3) >> 2; break;
-
-    default:
-      DPRINT("(%d): Unsupported depth\n", depth );
-      /* fall through */
-    case 32:
-      words = width;
-  }
-  return words << 2;
+  return ((width * depth + 31) & ~31) >> 3;
 }
 
 /***********************************************************************
@@ -1117,7 +1108,11 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   if (palGDI->Mode != PAL_INDEXED)
     {
       PALETTE_UnlockPalette(palGDI);
-      return NULL;
+      palGDI = PALETTE_LockPalette(dc->PalIndexed);
+      if (palGDI->Mode != PAL_INDEXED)
+        {
+          return NULL;
+        }
     }
 
   nNumColors = 1 << lpbmi->bmiHeader.biBitCount;
@@ -1149,6 +1144,7 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
   ULONG ColorCount;
   PALETTEENTRY *palEntries = NULL;
   HPALETTE hPal;
+  ULONG RedMask, GreenMask, BlueMask;
 
   // Determine Bits Per Pixel
   bits = bmi->bmiHeader.biBitCount;
@@ -1157,14 +1153,21 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
   if (bits <= 8)
     {
       *paletteType = PAL_INDEXED;
+      RedMask = GreenMask = BlueMask = 0;
     }
   else if(bits < 24)
     {
       *paletteType = PAL_BITFIELDS;
+      RedMask = 0xf800;
+      GreenMask = 0x07e0;
+      BlueMask = 0x001f;
     }
   else
     {
       *paletteType = PAL_BGR;
+      RedMask = 0xff0000;
+      GreenMask = 0x00ff00;
+      BlueMask = 0x0000ff;
     }
 
   if (bmi->bmiHeader.biClrUsed == 0)
@@ -1182,7 +1185,9 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
     }
   else
     {
-      hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
+      hPal = PALETTE_AllocPalette(*paletteType, ColorCount,
+                                  (ULONG*) palEntries,
+                                  RedMask, GreenMask, BlueMask );
     }
 
   return hPal;

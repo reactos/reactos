@@ -296,7 +296,7 @@ OpenFile(LPCSTR lpFileName,
 	else
 		RtlUnicodeStringToOemString (&FileName, &FileNameU, FALSE);
 
-	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)PathNameW,
+	if (!RtlDosPathNameToNtPathName_U (PathNameW,
 					   &FileNameString,
 					   NULL,
 					   NULL))
@@ -849,7 +849,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   }
 
   /* Validate and translate the filename */
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+  if (!RtlDosPathNameToNtPathName_U (lpFileName,
 				     &FileName,
 				     NULL,
 				     NULL))
@@ -1061,7 +1061,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
   DPRINT ("SetFileAttributeW(%S, 0x%lx) called\n", lpFileName, dwFileAttributes);
 
   /* Validate and translate the filename */
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+  if (!RtlDosPathNameToNtPathName_U (lpFileName,
 				     &FileName,
 				     NULL,
 				     NULL))

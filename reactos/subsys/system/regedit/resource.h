@@ -37,12 +37,15 @@
 #define IDR_REGEDIT_MENU                130
 #define IDD_EXPORTRANGE                 131
 #define IDI_OPEN_FILE                   132
-#define IDD_DIALOG2                     132
 #define IDI_CLOSED_FILE                 133
 #define IDI_ROOT                        134
 #define IDI_STRING                      135
 #define IDI_BIN                         136
 #define IDR_POPUP_MENUS                 137
+#define IDD_ADDFAVORITES                138
+#define IDD_REMOVEFAVORITES             139
+#define IDD_FIND                        140
+#define IDD_FINDING                     141
 #define IDC_LICENSE_EDIT                1029
 #define ID_REGISTRY_EXIT                32770
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
@@ -60,6 +63,7 @@
 #define ID_EDIT_NEW_STRINGVALUE         32786
 #define ID_EDIT_NEW_BINARYVALUE         32787
 #define ID_EDIT_NEW_DWORDVALUE          32788
+
 #define ID_REGISTRY_IMPORTREGISTRYFILE  32789
 #define ID_REGISTRY_EXPORTREGISTRYFILE  32790
 #define ID_REGISTRY_CONNECTNETWORKREGISTRY 32791
@@ -126,6 +130,11 @@
 #define IDS_ERR_DELETEVALUE		32855
 #define IDS_ERR_RENVAL_CAPTION		32856
 #define IDS_ERR_RENVAL_TOEMPTY		32857
+#define IDS_BAD_KEY                     32858
+
+#define ID_EDIT_NEW_MULTISTRINGVALUE		32860
+#define ID_EDIT_NEW_EXPANDABLESTRINGVALUE	32861
+
 #define ID_SWITCH_PANELS                32871
 #define ID_EDIT_PERMISSIONS		32872
 #define ID_TREE_DELETE                  32873
@@ -135,6 +144,8 @@
 #define IDS_QUERY_DELETE_KEY_CONFIRM    32877
 #define ID_TREE_SUGGESTION_MIN          32878
 #define ID_TREE_SUGGESTION_MAX          32887
+#define ID_TREE_EXPORT                  32888
+#define ID_TREE_PERMISSIONS             32889
 
 #define IDS_FLT_REGFILES		31001
 #define IDS_FLT_REGFILES_FLT		31002
@@ -180,5 +191,21 @@
 #define IDC_EXPORT_ALL          2008
 #define IDC_EXPORT_BRANCH       2009
 #define IDC_EXPORT_BRANCH_TEXT  2010
+
+
+#define IDC_FAVORITENAME                2011  
+#define IDC_FAVORITESLIST               2012
+#define IDC_FINDWHAT                    2013
+#define IDC_LOOKAT_KEYS                 2014
+#define IDC_LOOKAT_VALUES               2015
+#define IDC_LOOKAT_DATA                 2016
+#define IDC_MATCHSTRING                 2017
+#define IDC_MATCHCASE                   2018
+#define IDS_FINISHEDFIND                2019
+
+#define ID_FAVORITES_MIN                2100
+#define ID_FAVORITES_MAX                2999
+
+#define ID_ACCEL                        3000
 
 #define IDC_STATIC                      -1

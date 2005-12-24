@@ -1,8 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <stdarg.h>
-#include <limits.h>
-#include <internal/file.h>
+#include <precomp.h>
+
 #include <tchar.h>
 
 /*

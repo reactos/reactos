@@ -9,8 +9,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+#include <ntddk.h>
+#include <ntifs.h>
 
 //#define NDEBUG
 #include <debug.h>

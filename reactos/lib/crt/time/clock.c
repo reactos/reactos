@@ -8,11 +8,7 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
-#include <time.h>
-#include <internal/file.h>
-
-VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
+#include <precomp.h>
 
 /*
  * @implemented

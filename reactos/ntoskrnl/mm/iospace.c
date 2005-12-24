@@ -54,7 +54,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
-   ULONG Attributes;
+   ULONG Protect;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PFN_TYPE Pfn;
 
@@ -72,16 +72,20 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
    Offset = PhysicalAddress.u.LowPart % PAGE_SIZE;
    NumberOfBytes += Offset;
    PhysicalAddress.QuadPart -= Offset;
+   Protect = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
+   if (CacheEnable != MmCached)
+   {
+      Protect |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
+   }
 
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   Status = MmCreateMemoryArea (NULL,
-                                MmGetKernelAddressSpace(),
+   Status = MmCreateMemoryArea (MmGetKernelAddressSpace(),
                                 MEMORY_AREA_IO_MAPPING,
                                 &Result,
                                 NumberOfBytes,
-                                0,
+                                Protect,
                                 &marea,
-                                FALSE,
+                                0,
                                 FALSE,
                                 BoundaryAddressMultiple);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
@@ -91,16 +95,11 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
       DPRINT("MmMapIoSpace failed (%lx)\n", Status);
       return (NULL);
    }
-   Attributes = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
-   if (CacheEnable != MmCached)
-   {
-      Attributes |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
-   }
    Pfn = PhysicalAddress.QuadPart >> PAGE_SHIFT;
    for (i = 0; i < PAGE_ROUND_UP(NumberOfBytes); i += PAGE_SIZE, Pfn++)
    {
       Status = MmCreateVirtualMappingForKernel((char*)Result + i,
-                                               Attributes,
+                                               Protect,
                                                &Pfn,
 					       1);
       if (!NT_SUCCESS(Status))

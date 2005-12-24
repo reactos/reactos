@@ -8,8 +8,7 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
-#include <conio.h>
+#include <precomp.h>
 
 /*
  * @implemented

@@ -8,10 +8,8 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
-#include <stdlib.h>
+#include <precomp.h>
 #include <tchar.h>
-
 
 /*
  * @implemented

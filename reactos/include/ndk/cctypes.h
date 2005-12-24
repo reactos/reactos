@@ -1,24 +1,37 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/cctypes.h
- * PURPOSE:         Definitions for exported Cache Manager Types not defined in DDK/IFS
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    cctypes.h
+
+Abstract:
+
+    Type definitions for the Cache Controller.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
 
 #ifndef _CCTYPES_H
 #define _CCTYPES_H
 
-/* DEPENDENCIES **************************************************************/
+//
+// Dependencies
+//
+#include <umtypes.h>
 
-/* EXPORTED DATA *************************************************************/
+#ifndef NTOS_MODE_USER
+
+//
+// Kernel Exported CcData
+//
 extern ULONG NTSYSAPI CcFastReadNotPossible;
 extern ULONG NTSYSAPI CcFastReadWait;
 
-/* ENUMERATIONS **************************************************************/
-
-/* TYPES *********************************************************************/
-
 #endif
+#endif // _CCTYPES_H
 

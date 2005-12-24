@@ -23,10 +23,13 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <share.h>
+#include <wchar.h>
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <cfgmgr32.h>
 #include <fdi.h>
+#include <regstr.h>
 #include <setupapi.h>
 #include <shlobj.h>
 #include <wine/debug.h>
@@ -39,6 +42,7 @@
 #include "resource.h"
 
 #define SETUP_DEV_INFO_SET_MAGIC 0xd00ff057
+#define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
 
 struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
 {
@@ -54,7 +58,7 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
      */
     DWORD Flags;
 
-    WCHAR SymbolicLink[0]; /* \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
+    WCHAR SymbolicLink[ANYSIZE_ARRAY]; /* \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
 };
 
 /* We don't want to open the .inf file to read only one information in it, so keep a handle to it once it
@@ -63,6 +67,9 @@ struct InfFileDetails
 {
     HINF hInf;
     LONG References;
+
+    /* May contain no directory if the file is already in %SYSTEMROOT%\Inf */
+    WCHAR FullInfFileName[ANYSIZE_ARRAY];
 };
 
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */
@@ -70,6 +77,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
     LIST_ENTRY ListEntry;
 
     DWORD DriverRank;
+    ULARGE_INTEGER DriverDate;
     SP_DRVINFO_DATA_V2_W Info;
     SP_DRVINFO_DETAIL_DATA_W Details;
     GUID ClassGuid;
@@ -77,9 +85,15 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
     struct InfFileDetails *InfFileDetails;
 };
 
+struct ClassInstallParams
+{
+    PSP_PROPCHANGE_PARAMS PropChange;
+};
+
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
 {
     LIST_ENTRY ListEntry;
+    DEVINST dnDevInst; /* Used in CM_* functions */
 
     /* Reserved Field points to a struct DriverInfoElement */
     SP_DEVINSTALL_PARAMS_W InstallParams;
@@ -100,7 +114,8 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
      *       String which identifies the device. Can be NULL. If not NULL,
      *       points into the Data field at the end of the structure
      * - ClassGuid
-     *       Identifies the class of this device. FIXME: can it be GUID_NULL?
+     *       Identifies the class of this device. It is GUID_NULL if the
+     *       device has not been installed
      * - CreationFlags
      *       Is a combination of:
      *       - DICD_GENERATE_ID
@@ -121,7 +136,10 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
     /* List of interfaces implemented by this device */
     LIST_ENTRY InterfaceListHead; /* List of struct DeviceInterface */
 
-    WCHAR Data[0];
+    /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
+    struct ClassInstallParams ClassInstallParams;
+
+    WCHAR Data[ANYSIZE_ARRAY];
 };
 
 struct DeviceInfoSet /* HDEVINFO */
@@ -129,6 +147,7 @@ struct DeviceInfoSet /* HDEVINFO */
     DWORD magic; /* SETUP_DEV_INFO_SET_MAGIC */
     GUID ClassGuid; /* If != GUID_NULL, only devices of this class can be in the device info set */
     HKEY HKLM; /* Local or distant HKEY_LOCAL_MACHINE registry key */
+    HMACHINE hMachine; /* Used in CM_* functions */
 
     /* Reserved Field points to a struct DriverInfoElement */
     SP_DEVINSTALL_PARAMS_W InstallParams;
@@ -137,6 +156,27 @@ struct DeviceInfoSet /* HDEVINFO */
     LIST_ENTRY DriverListHead; /* List of struct DriverInfoElement */
 
     LIST_ENTRY ListHead; /* List of struct DeviceInfoElement */
+    struct DeviceInfoElement *SelectedDevice;
+
+    /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
+    struct ClassInstallParams ClassInstallParams;
+
+    /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
+     * or NULL if related to local machine. Points into szData field at the
+     * end of the structure */
+    PCWSTR MachineName;
+    WCHAR szData[ANYSIZE_ARRAY];
+};
+
+struct ClassImageList
+{
+    DWORD magic; /* SETUP_CLASS_IMAGE_LIST_MAGIC */
+
+    /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
+     * or NULL if related to local machine. Points into szData field at the
+     * end of the structure */
+    PCWSTR MachineName;
+    WCHAR szData[ANYSIZE_ARRAY];
 };
 
 extern HINSTANCE hInstance;
@@ -175,5 +215,7 @@ extern HINSTANCE hInstance;
 extern OSVERSIONINFOW OsVersionInfo;
 
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
+
+BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value);
 
 #endif /* __SETUPAPI_PRIVATE_H */

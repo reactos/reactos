@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /><link rel="SHORTCUT ICON" href="/favicon.ico" /><style type="text/css">
+TD {font-family: Verdana,Arial,Helvetica}
+BODY {font-family: Verdana,Arial,Helvetica; margin-top: 2em; margin-left: 0em; margin-right: 0em}
+H1 {font-family: Verdana,Arial,Helvetica}
+H2 {font-family: Verdana,Arial,Helvetica}
+H3 {font-family: Verdana,Arial,Helvetica}
+A:link, A:visited, A:active { text-decoration: underline }
+</style><title>Encodings support</title></head><body bgcolor="#8b7765" text="#000000" link="#a06060" vlink="#000000"><table border="0" width="100%" cellpadding="5" cellspacing="0" align="center"><tr><td width="120"><a href="http://swpat.ffii.org/"><img src="epatents.png" alt="Action against software patents" /></a></td><td width="180"><a href="http://www.gnome.org/"><img src="gnome2.png" alt="Gnome2 Logo" /></a><a href="http://www.w3.org/Status"><img src="w3c.png" alt="W3C Logo" /></a><a href="http://www.redhat.com/"><img src="redhat.gif" alt="Red Hat Logo" /></a><div align="left"><a href="http://xmlsoft.org/"><img src="Libxml2-Logo-180x168.gif" alt="Made with Libxml2 Logo" /></a></div></td><td><table border="0" width="90%" cellpadding="2" cellspacing="0" align="center" bgcolor="#000000"><tr><td><table width="100%" border="0" cellspacing="1" cellpadding="3" bgcolor="#fffacd"><tr><td align="center"><h1>The XML C parser and toolkit of Gnome</h1><h2>Encodings support</h2></td></tr></table></td></tr></table></td></tr></table><table border="0" cellpadding="4" cellspacing="0" width="100%" align="center"><tr><td bgcolor="#8b7765"><table border="0" cellspacing="0" cellpadding="2" width="100%"><tr><td valign="top" width="200" bgcolor="#8b7765"><table border="0" cellspacing="0" cellpadding="1" width="100%" bgcolor="#000000"><tr><td><table width="100%" border="0" cellspacing="1" cellpadding="3"><tr><td colspan="1" bgcolor="#eecfa1" align="center"><center><b>Main Menu</b></center></td></tr><tr><td bgcolor="#fffacd"><form action="search.php" enctype="application/x-www-form-urlencoded" method="get"><input name="query" type="text" size="20" value="" /><input name="submit" type="submit" value="Search ..." /></form><ul><li><a href="index.html">Home</a></li><li><a href="http://xmlsoft.org/wiki">Wiki</a></li><li><a href="html/index.html">Reference Manual</a></li><li><a href="intro.html">Introduction</a></li><li><a href="FAQ.html">FAQ</a></li><li><a href="docs.html" style="font-weight:bold">Developer Menu</a></li><li><a href="bugs.html">Reporting bugs and getting help</a></li><li><a href="help.html">How to help</a></li><li><a href="downloads.html">Downloads</a></li><li><a href="news.html">Releases</a></li><li><a href="XMLinfo.html">XML</a></li><li><a href="XSLT.html">XSLT</a></li><li><a href="xmldtd.html">Validation &amp; DTDs</a></li><li><a href="encoding.html">Encodings support</a></li><li><a href="catalog.html">Catalog support</a></li><li><a href="namespaces.html">Namespaces</a></li><li><a href="contribs.html">Contributions</a></li><li><a href="examples/index.html" style="font-weight:bold">Code Examples</a></li><li><a href="html/index.html" style="font-weight:bold">API Menu</a></li><li><a href="guidelines.html">XML Guidelines</a></li><li><a href="ChangeLog.html">Recent Changes</a></li></ul></td></tr></table><table width="100%" border="0" cellspacing="1" cellpadding="3"><tr><td colspan="1" bgcolor="#eecfa1" align="center"><center><b>Related links</b></center></td></tr><tr><td bgcolor="#fffacd"><ul><li><a href="http://mail.gnome.org/archives/xml/">Mail archive</a></li><li><a href="http://xmlsoft.org/XSLT/">XSLT libxslt</a></li><li><a href="http://phd.cs.unibo.it/gdome2/">DOM gdome2</a></li><li><a href="http://www.aleksey.com/xmlsec/">XML-DSig xmlsec</a></li><li><a href="ftp://xmlsoft.org/">FTP</a></li><li><a href="http://www.zlatkovic.com/projects/libxml/">Windows binaries</a></li><li><a href="http://www.blastwave.org/packages.php/libxml2">Solaris binaries</a></li><li><a href="http://www.explain.com.au/oss/libxml2xslt.html">MacOsX binaries</a></li><li><a href="http://libxmlplusplus.sourceforge.net/">C++ bindings</a></li><li><a href="http://www.zend.com/php5/articles/php5-xmlphp.php#Heading4">PHP bindings</a></li><li><a href="http://sourceforge.net/projects/libxml2-pas/">Pascal bindings</a></li><li><a href="http://rubyforge.org/projects/xml-tools/">Ruby bindings</a></li><li><a href="http://tclxml.sourceforge.net/">Tcl bindings</a></li><li><a href="http://bugzilla.gnome.org/buglist.cgi?product=libxml2">Bug Tracker</a></li></ul></td></tr></table></td></tr></table></td><td valign="top" bgcolor="#8b7765"><table border="0" cellspacing="0" cellpadding="1" width="100%"><tr><td><table border="0" cellspacing="0" cellpadding="1" width="100%" bgcolor="#000000"><tr><td><table border="0" cellpadding="3" cellspacing="1" width="100%"><tr><td bgcolor="#fffacd"><p>If you are not really familiar with Internationalization (usual shortcut
+is I18N) , Unicode, characters and glyphs, I suggest you read a <a href="http://www.tbray.org/ongoing/When/200x/2003/04/06/Unicode">presentation</a>
+by Tim Bray on Unicode and why you should care about it.</p><p>If you don't understand why <b>it does not make sense to have a string
+without knowing what encoding it uses</b>, then as Joel Spolsky said
+<a href="http://www.joelonsoftware.com/articles/Unicode.html">please do
+not write another line of code until you finish reading that article.</a>.
+It is a prerequisite to understand this page, and avoid a lot of problems
+with libxml2, XML or text processing in general.</p><p>Table of Content:</p><ol><li><a href="encoding.html#What">What does internationalization support
+    mean ?</a></li>
+  <li><a href="encoding.html#internal">The internal encoding, how and
+  why</a></li>
+  <li><a href="encoding.html#implemente">How is it implemented ?</a></li>
+  <li><a href="encoding.html#Default">Default supported encodings</a></li>
+  <li><a href="encoding.html#extend">How to extend the existing
+  support</a></li>
+</ol><h3><a name="What" id="What">What does internationalization support mean ?</a></h3><p>XML was designed from the start to allow the support of any character set
+by using Unicode. Any conformant XML parser has to support the UTF-8 and
+UTF-16 default encodings which can both express the full unicode ranges. UTF8
+is a variable length encoding whose greatest points are to reuse the same
+encoding for ASCII and to save space for Western encodings, but it is a bit
+more complex to handle in practice. UTF-16 use 2 bytes per character (and
+sometimes combines two pairs), it makes implementation easier, but looks a
+bit overkill for Western languages encoding. Moreover the XML specification
+allows the document to be encoded in other encodings at the condition that
+they are clearly labeled as such. For example the following is a wellformed
+XML document encoded in ISO-8859-1 and using accentuated letters that we
+French like for both markup and content:</p><pre>&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;très&gt;là&lt;/très&gt;</pre><p>Having internationalization support in libxml2 means the following:</p><ul><li>the document is properly parsed</li>
+  <li>informations about it's encoding are saved</li>
+  <li>it can be modified</li>
+  <li>it can be saved in its original encoding</li>
+  <li>it can also be saved in another encoding supported by libxml2 (for
+    example straight UTF8 or even an ASCII form)</li>
+</ul><p>Another very important point is that the whole libxml2 API, with the
+exception of a few routines to read with a specific encoding or save to a
+specific encoding, is completely agnostic about the original encoding of the
+document.</p><p>It should be noted too that the HTML parser embedded in libxml2 now obey
+the same rules too, the following document will be (as of 2.2.2) handled  in
+an internationalized fashion by libxml2 too:</p><pre>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+                      "http://www.w3.org/TR/REC-html40/loose.dtd"&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;W3C crée des standards pour le Web.&lt;/body&gt;
+&lt;/html&gt;</pre><h3><a name="internal" id="internal">The internal encoding, how and why</a></h3><p>One of the core decisions was to force all documents to be converted to a
+default internal encoding, and that encoding to be UTF-8, here are the
+rationales for those choices:</p><ul><li>keeping the native encoding in the internal form would force the libxml
+    users (or the code associated) to be fully aware of the encoding of the
+    original document, for examples when adding a text node to a document,
+    the content would have to be provided in the document encoding, i.e. the
+    client code would have to check it before hand, make sure it's conformant
+    to the encoding, etc ... Very hard in practice, though in some specific
+    cases this may make sense.</li>
+  <li>the second decision was which encoding. From the XML spec only UTF8 and
+    UTF16 really makes sense as being the two only encodings for which there
+    is mandatory support. UCS-4 (32 bits fixed size encoding) could be
+    considered an intelligent choice too since it's a direct Unicode mapping
+    support. I selected UTF-8 on the basis of efficiency and compatibility
+    with surrounding software:
+    <ul><li>UTF-8 while a bit more complex to convert from/to (i.e. slightly
+        more costly to import and export CPU wise) is also far more compact
+        than UTF-16 (and UCS-4) for a majority of the documents I see it used
+        for right now (RPM RDF catalogs, advogato data, various configuration
+        file formats, etc.) and the key point for today's computer
+        architecture is efficient uses of caches. If one nearly double the
+        memory requirement to store the same amount of data, this will trash
+        caches (main memory/external caches/internal caches) and my take is
+        that this harms the system far more than the CPU requirements needed
+        for the conversion to UTF-8</li>
+      <li>Most of libxml2 version 1 users were using it with straight ASCII
+        most of the time, doing the conversion with an internal encoding
+        requiring all their code to be rewritten was a serious show-stopper
+        for using UTF-16 or UCS-4.</li>
+      <li>UTF-8 is being used as the de-facto internal encoding standard for
+        related code like the <a href="http://www.pango.org/">pango</a>
+        upcoming Gnome text widget, and a lot of Unix code (yet another place
+        where Unix programmer base takes a different approach from Microsoft
+        - they are using UTF-16)</li>
+    </ul></li>
+</ul><p>What does this mean in practice for the libxml2 user:</p><ul><li>xmlChar, the libxml2 data type is a byte, those bytes must be assembled
+    as UTF-8 valid strings. The proper way to terminate an xmlChar * string
+    is simply to append 0 byte, as usual.</li>
+  <li>One just need to make sure that when using chars outside the ASCII set,
+    the values has been properly converted to UTF-8</li>
+</ul><h3><a name="implemente" id="implemente">How is it implemented ?</a></h3><p>Let's describe how all this works within libxml, basically the I18N
+(internationalization) support get triggered only during I/O operation, i.e.
+when reading a document or saving one. Let's look first at the reading
+sequence:</p><ol><li>when a document is processed, we usually don't know the encoding, a
+    simple heuristic allows to detect UTF-16 and UCS-4 from encodings where
+    the ASCII range (0-0x7F) maps with ASCII</li>
+  <li>the xml declaration if available is parsed, including the encoding
+    declaration. At that point, if the autodetected encoding is different
+    from the one declared a call to xmlSwitchEncoding() is issued.</li>
+  <li>If there is no encoding declaration, then the input has to be in either
+    UTF-8 or UTF-16, if it is not then at some point when processing the
+    input, the converter/checker of UTF-8 form will raise an encoding error.
+    You may end-up with a garbled document, or no document at all ! Example:
+    <pre>~/XML -&gt; ./xmllint err.xml 
+err.xml:1: error: Input is not proper UTF-8, indicate encoding !
+&lt;très&gt;là&lt;/très&gt;
+   ^
+err.xml:1: error: Bytes: 0xE8 0x73 0x3E 0x6C
+&lt;très&gt;là&lt;/très&gt;
+   ^</pre>
+  </li>
+  <li>xmlSwitchEncoding() does an encoding name lookup, canonicalize it, and
+    then search the default registered encoding converters for that encoding.
+    If it's not within the default set and iconv() support has been compiled
+    it, it will ask iconv for such an encoder. If this fails then the parser
+    will report an error and stops processing:
+    <pre>~/XML -&gt; ./xmllint err2.xml 
+err2.xml:1: error: Unsupported encoding UnsupportedEnc
+&lt;?xml version="1.0" encoding="UnsupportedEnc"?&gt;
+                                             ^</pre>
+  </li>
+  <li>From that point the encoder processes progressively the input (it is
+    plugged as a front-end to the I/O module) for that entity. It captures
+    and converts on-the-fly the document to be parsed to UTF-8. The parser
+    itself just does UTF-8 checking of this input and process it
+    transparently. The only difference is that the encoding information has
+    been added to the parsing context (more precisely to the input
+    corresponding to this entity).</li>
+  <li>The result (when using DOM) is an internal form completely in UTF-8
+    with just an encoding information on the document node.</li>
+</ol><p>Ok then what happens when saving the document (assuming you
+collected/built an xmlDoc DOM like structure) ? It depends on the function
+called, xmlSaveFile() will just try to save in the original encoding, while
+xmlSaveFileTo() and xmlSaveFileEnc() can optionally save to a given
+encoding:</p><ol><li>if no encoding is given, libxml2 will look for an encoding value
+    associated to the document and if it exists will try to save to that
+    encoding,
+    <p>otherwise everything is written in the internal form, i.e. UTF-8</p>
+  </li>
+  <li>so if an encoding was specified, either at the API level or on the
+    document, libxml2 will again canonicalize the encoding name, lookup for a
+    converter in the registered set or through iconv. If not found the
+    function will return an error code</li>
+  <li>the converter is placed before the I/O buffer layer, as another kind of
+    buffer, then libxml2 will simply push the UTF-8 serialization to through
+    that buffer, which will then progressively be converted and pushed onto
+    the I/O layer.</li>
+  <li>It is possible that the converter code fails on some input, for example
+    trying to push an UTF-8 encoded Chinese character through the UTF-8 to
+    ISO-8859-1 converter won't work. Since the encoders are progressive they
+    will just report the error and the number of bytes converted, at that
+    point libxml2 will decode the offending character, remove it from the
+    buffer and replace it with the associated charRef encoding &amp;#123; and
+    resume the conversion. This guarantees that any document will be saved
+    without losses (except for markup names where this is not legal, this is
+    a problem in the current version, in practice avoid using non-ascii
+    characters for tag or attribute names). A special "ascii" encoding name
+    is used to save documents to a pure ascii form can be used when
+    portability is really crucial</li>
+</ol><p>Here are a few examples based on the same test document:</p><pre>~/XML -&gt; ./xmllint isolat1 
+&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+&lt;très&gt;là&lt;/très&gt;
+~/XML -&gt; ./xmllint --encode UTF-8 isolat1 
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;trÃ¨s&gt;lÃ  &lt;/trÃ¨s&gt;
+~/XML -&gt; </pre><p>The same processing is applied (and reuse most of the code) for HTML I18N
+processing. Looking up and modifying the content encoding is a bit more
+difficult since it is located in a &lt;meta&gt; tag under the &lt;head&gt;,
+so a couple of functions htmlGetMetaEncoding() and htmlSetMetaEncoding() have
+been provided. The parser also attempts to switch encoding on the fly when
+detecting such a tag on input. Except for that the processing is the same
+(and again reuses the same code).</p><h3><a name="Default" id="Default">Default supported encodings</a></h3><p>libxml2 has a set of default converters for the following encodings
+(located in encoding.c):</p><ol><li>UTF-8 is supported by default (null handlers)</li>
+  <li>UTF-16, both little and big endian</li>
+  <li>ISO-Latin-1 (ISO-8859-1) covering most western languages</li>
+  <li>ASCII, useful mostly for saving</li>
+  <li>HTML, a specific handler for the conversion of UTF-8 to ASCII with HTML
+    predefined entities like &amp;copy; for the Copyright sign.</li>
+</ol><p>More over when compiled on an Unix platform with iconv support the full
+set of encodings supported by iconv can be instantly be used by libxml. On a
+linux machine with glibc-2.1 the list of supported encodings and aliases fill
+3 full pages, and include UCS-4, the full set of ISO-Latin encodings, and the
+various Japanese ones.</p><h4>Encoding aliases</h4><p>From 2.2.3, libxml2 has support to register encoding names aliases. The
+goal is to be able to parse document whose encoding is supported but where
+the name differs (for example from the default set of names accepted by
+iconv). The following functions allow to register and handle new aliases for
+existing encodings. Once registered libxml2 will automatically lookup the
+aliases when handling a document:</p><ul><li>int xmlAddEncodingAlias(const char *name, const char *alias);</li>
+  <li>int xmlDelEncodingAlias(const char *alias);</li>
+  <li>const char * xmlGetEncodingAlias(const char *alias);</li>
+  <li>void xmlCleanupEncodingAliases(void);</li>
+</ul><h3><a name="extend" id="extend">How to extend the existing support</a></h3><p>Well adding support for new encoding, or overriding one of the encoders
+(assuming it is buggy) should not be hard, just write input and output
+conversion routines to/from UTF-8, and register them using
+xmlNewCharEncodingHandler(name, xxxToUTF8, UTF8Toxxx),  and they will be
+called automatically if the parser(s) encounter such an encoding name
+(register it uppercase, this will help). The description of the encoders,
+their arguments and expected return values are described in the encoding.h
+header.</p><p>A quick note on the topic of subverting the parser to use a different
+internal encoding than UTF-8, in some case people will absolutely want to
+keep the internal encoding different, I think it's still possible (but the
+encoding must be compliant with ASCII on the same subrange) though I didn't
+tried it. The key is to override the default conversion routines (by
+registering null encoders/decoders for your charsets), and bypass the UTF-8
+checking of the parser by setting the parser context charset
+(ctxt-&gt;charset) to something different than XML_CHAR_ENCODING_UTF8, but
+there is no guarantee that this will work. You may also have some troubles
+saving back.</p><p>Basically proper I18N support is important, this requires at least
+libxml-2.0.0, but a lot of features and corrections are really available only
+starting 2.2.</p><p><a href="bugs.html">Daniel Veillard</a></p></td></tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></body></html>

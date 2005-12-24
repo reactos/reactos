@@ -17,15 +17,14 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "mm.h"
-#include "machine.h"
-#include "machxbox.h"
-#include "i386.h"
+#include <freeldr.h>
 
 VOID
-XboxMachInit(char *CmdLine)
+XboxMachInit(const char *CmdLine)
 {
+  /* Set LEDs to red before anything is initialized */
+  XboxSetLED("rrrr");
+
   /* Initialize our stuff */
   XboxMemInit();
   XboxVideoInit();
@@ -59,4 +58,7 @@ XboxMachInit(char *CmdLine)
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = XboxRTCGetCurrentDateTime;
   MachVtbl.HwDetect = XboxHwDetect;
+
+  /* Set LEDs to orange after init */
+  XboxSetLED("oooo");
 }

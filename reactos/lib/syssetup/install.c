@@ -236,44 +236,6 @@ AppendRidToSid (PSID *Dst,
 			       Dst);
 }
 
-INT_PTR CALLBACK
-RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-   switch(msg)
-   {
-      case WM_INITDIALOG:
-         SendDlgItemMessage(hWnd, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
-            MAKELPARAM(0, 300));
-         SetTimer(hWnd, 1, 50, NULL);
-         return TRUE;
-
-      case WM_TIMER:
-         {
-            INT Position;
-            HWND hWndProgress;
-
-            hWndProgress = GetDlgItem(hWnd, IDC_RESTART_PROGRESS);
-            Position = SendMessage(hWndProgress, PBM_GETPOS, 0, 0);
-            if (Position == 300)
-               EndDialog(hWnd, 0);
-            else
-               SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
-         }
-         return TRUE;
-
-      case WM_COMMAND:
-         switch (wParam)
-         {
-            case IDOK:
-            case IDCANCEL:
-               EndDialog(hWnd, 0);
-               return TRUE;
-         }
-         break;
-   }
-
-   return FALSE;
-}
 
 static VOID
 CreateTempDir(LPCWSTR VarName)
@@ -369,6 +331,43 @@ ProcessSysSetupInf(VOID)
 }
 
 
+static BOOL
+EnableUserModePnpManager(VOID)
+{
+  SC_HANDLE hSCManager = NULL;
+  SC_HANDLE hService = NULL;
+  BOOL ret = FALSE;
+
+  hSCManager = OpenSCManager(NULL, NULL, 0);
+  if (hSCManager == NULL)
+    goto cleanup;
+
+  hService = OpenService(hSCManager, _T("PlugPlay"), SERVICE_CHANGE_CONFIG | SERVICE_START);
+  if (hService == NULL)
+    goto cleanup;
+
+  ret = ChangeServiceConfig(
+    hService,
+    SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  if (!ret)
+    goto cleanup;
+
+  ret = StartService(hService, 0, NULL);
+  if (!ret)
+    goto cleanup;
+
+  ret = TRUE;
+
+cleanup:
+  if (hSCManager != NULL)
+    CloseServiceHandle(hSCManager);
+  if (hService != NULL)
+    CloseServiceHandle(hService);
+  return ret;
+}
+
+
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
@@ -415,6 +414,8 @@ InstallReactOS (HINSTANCE hInstance)
 
   /* create program startmenu shortcuts */  
   CreateShortcut(CSIDL_PROGRAMS, NULL, _T("winefile.lnk"), _T("winefile.exe"), IDS_CMT_WINEFILE);
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("ibrowser.lnk"), _T("ibrowser.exe"), IDS_CMT_IBROWSER);
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Get Firefox.lnk"), _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
@@ -528,6 +529,12 @@ InstallReactOS (HINSTANCE hInstance)
   if (!ProcessSysSetupInf())
   {
     DebugPrint("ProcessSysSetupInf() failed!\n");
+    return 0;
+  }
+
+  if (!EnableUserModePnpManager())
+  {
+    DebugPrint("EnableUserModePnpManager() failed!\n");
     return 0;
   }
 

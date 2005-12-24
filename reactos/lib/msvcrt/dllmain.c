@@ -21,9 +21,6 @@
  */
 
 #include <precomp.h>
-#include <stdio.h>
-#include <internal/tls.h>
-#include <stdlib.h>
 #include <internal/wine/msvcrt.h>
 
 #define NDEBUG
@@ -90,7 +87,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         if (BlockEnvToEnvironW() < 0)
         {
-            FreeEnvironment((char**)_wenviron);
+            FreeEnvironment(_environ);
             return FALSE;
         }
 

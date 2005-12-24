@@ -16,7 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STATIC
+static VOID 
 MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)
@@ -71,30 +71,29 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
    NTSTATUS Status;
    PVOID BaseAddress = NULL;
    PFN_TYPE PBase;
-   ULONG Attributes;
+   ULONG Protect;
    ULONG i;
 
-   Attributes = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
+   Protect = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
    if (CacheType == MmNonCached || CacheType == MmWriteCombined)
    {
-      Attributes |= PAGE_NOCACHE;
+      Protect |= PAGE_NOCACHE;
    }
    if (CacheType == MmWriteCombined)
    {
-      Attributes |= PAGE_WRITECOMBINE;
+      Protect |= PAGE_WRITECOMBINE;
    }
 
    MmLockAddressSpace(MmGetKernelAddressSpace());
-   Status = MmCreateMemoryArea(NULL,
-                               MmGetKernelAddressSpace(),
+   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                MEMORY_AREA_CONTINUOUS_MEMORY,
                                &BaseAddress,
                                NumberOfBytes,
-                               0,
+                               PAGE_READWRITE,
                                &MArea,
                                FALSE,
-                               FALSE,
-                               (PHYSICAL_ADDRESS)0LL);
+                               0,
+                               RtlConvertLongToLargeInteger(0));
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
    if (!NT_SUCCESS(Status))
@@ -120,7 +119,7 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
    {
       MmCreateVirtualMapping(NULL,
                              (char*)BaseAddress + (i * PAGE_SIZE),
-                             Attributes,
+                             Protect,
                              &PBase,
 			     1);
    }
@@ -159,9 +158,9 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
                             IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
    return MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
-                                                 (PHYSICAL_ADDRESS)0LL,
+                                                 RtlConvertLongToLargeInteger(0),
                                                  HighestAcceptableAddress,
-                                                 (PHYSICAL_ADDRESS)0LL,
+                                                 RtlConvertLongToLargeInteger(0),
                                                  MmCached);
 }
 

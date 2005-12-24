@@ -13,7 +13,6 @@
  */
 /*
  * TODO:
- * display multiple adapters
  * fix renew / release
  * implement flushdns, registerdns, displaydns, showclassid, setclassid
  * allow globbing on adapter names
@@ -33,7 +32,8 @@
 #define _UNICODE
 
 
-PTCHAR GetNodeTypeName(UINT NodeType)
+
+LPCTSTR GetNodeTypeName(UINT NodeType)
 {
     switch (NodeType) {
         case 1: return _T("Broadcast");
@@ -44,7 +44,7 @@ PTCHAR GetNodeTypeName(UINT NodeType)
     }
 }
 
-PTCHAR GetInterfaceTypeName(UINT InterfaceType)
+LPCTSTR GetInterfaceTypeName(UINT InterfaceType)
 {
     switch (InterfaceType) {
         case MIB_IF_TYPE_OTHER:     return _T("Other Type Of Adapter");
@@ -97,13 +97,15 @@ DWORD DoFormatMessage(DWORD ErrorCode)
 
 INT ShowInfo(BOOL bAll)
 {
-    PIP_ADAPTER_INFO pAdapterInfo;
+    PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL;
     ULONG    adaptOutBufLen;
 
     PFIXED_INFO pFixedInfo;
     ULONG    netOutBufLen;
-    PIP_ADDR_STRING pIPAddr;
+    PIP_ADDR_STRING pIPAddr = NULL;
+
+	DWORD ErrRet = 0;
 
     /* assign memory for call to GetNetworkParams */
     pFixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
@@ -114,46 +116,69 @@ INT ShowInfo(BOOL bAll)
     adaptOutBufLen = sizeof(IP_ADAPTER_INFO);
 
     /* set required buffer size */
-    if(GetNetworkParams(pFixedInfo, &netOutBufLen) == ERROR_BUFFER_OVERFLOW)
-    {
+    if(GetNetworkParams(pFixedInfo, &netOutBufLen) == ERROR_BUFFER_OVERFLOW) 
+	{
         GlobalFree(pFixedInfo);
         pFixedInfo = (FIXED_INFO *) GlobalAlloc(GPTR, netOutBufLen);
     }
 
     /* set required buffer size */
-    if (GetAdaptersInfo( pAdapterInfo, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW)
-    {
+    if (GetAdaptersInfo( pAdapterInfo, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW) 
+	{
        free(pAdapterInfo);
        pAdapterInfo = (IP_ADAPTER_INFO *) malloc (adaptOutBufLen);
     }
 
-    if (GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR)
-    {
-      if (GetNetworkParams(pFixedInfo, &netOutBufLen) == NO_ERROR)
-      {
-        pAdapter = pAdapterInfo;
+    if ((ErrRet = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen)) != NO_ERROR)
+	{
+		_tprintf(_T("GetAdaptersInfo failed : "));
+		DoFormatMessage(ErrRet);
+		return EXIT_FAILURE;
+	}
+
+    if ((ErrRet = GetNetworkParams(pFixedInfo, &netOutBufLen)) != NO_ERROR)
+	{
+		_tprintf(_T("GetNetworkParams failed : "));
+		DoFormatMessage(ErrRet);
+		return EXIT_FAILURE;
+	}
+    
+    pAdapter = pAdapterInfo;
         //HKEY hKey;
         //LPCTSTR lpSubKey = _T("SYSTEM\\ControlSet\\Control\\Network");
 
-        _tprintf(_T("\nReactOS IP Configuration\n\n"));
+    _tprintf(_T("\nReactOS IP Configuration\n\n"));
 
-        if (bAll)
+
+    if (bAll)
+    {
+        _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
+        _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : \n"));
+        _tprintf(_T("\tNode Type . . . . . . . . . . . . : %s\n"), GetNodeTypeName(pFixedInfo->NodeType));
+        if (pFixedInfo->EnableRouting)
+            _tprintf(_T("\tIP Routing Enabled. . . . . . . . : Yes\n"));
+        else
+            _tprintf(_T("\tIP Routing Enabled. . . . . . . . : No\n"));
+        if (pAdapter->HaveWins)
+            _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : Yes\n"));
+        else
+            _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : No\n"));
+        _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
+    }
+
+	while (pAdapter)
+	{
+
+        _tprintf(_T("\n%s ...... : \n\n"), GetInterfaceTypeName(pAdapter->Type));
+        
+        /* check if the adapter is connected to the media */
+        if (_tcscmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0") == 0)
         {
-            _tprintf(_T("\tHost Name . . . . . . . . . . . . : %s\n"), pFixedInfo->HostName);
-            _tprintf(_T("\tPrimary DNS Suffix. . . . . . . . : \n"));
-            _tprintf(_T("\tNode Type . . . . . . . . . . . . : %s\n"), GetNodeTypeName(pFixedInfo->NodeType));
-            if (pFixedInfo->EnableRouting)
-                _tprintf(_T("\tIP Routing Enabled. . . . . . . . : Yes\n"));
-            else
-                _tprintf(_T("\tIP Routing Enabled. . . . . . . . : No\n"));
-            if (pAdapter->HaveWins)
-                _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : Yes\n"));
-            else
-                _tprintf(_T("\tWINS Proxy enabled. . . . . . . . : No\n"));
-            _tprintf(_T("\tDNS Suffix Search List. . . . . . : %s\n"), pFixedInfo->DomainName);
+            _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
+            pAdapter = pAdapter->Next;
+            continue;
         }
-
-        _tprintf(_T("\n%s Local Area Connection: \n\n"), GetInterfaceTypeName(pAdapter->Type));
+        
         _tprintf(_T("\tConnection-specific DNS Suffix. . : %s\n"), pFixedInfo->DomainName);
 
         if (bAll)
@@ -196,14 +221,11 @@ INT ShowInfo(BOOL bAll)
             }
         }
         _tprintf(_T("\n"));
-    }
-    else
-        _tprintf(_T("Call to GetNetworkParams failed.\n"));
         
-       }
-    else
-        _tprintf(_T("Call to GetAdaptersInfo failed.\n"));
+		pAdapter = pAdapter->Next;
 
+    }
+ 
     return 0;
 }
 
@@ -216,8 +238,9 @@ INT Release(TCHAR Index)
     if (Index == (TCHAR)NULL)
     {
         PIP_INTERFACE_INFO pInfo;
+        ULONG ulOutBufLen;
         pInfo = (IP_INTERFACE_INFO *) malloc(sizeof(IP_INTERFACE_INFO));
-        ULONG ulOutBufLen = 0;
+        ulOutBufLen = 0;
 
         /* Make an initial call to GetInterfaceInfo to get
          * the necessary size into the ulOutBufLen variable */
@@ -270,8 +293,9 @@ INT Renew(TCHAR Index)
     if (Index == (TCHAR)NULL)
     {
         PIP_INTERFACE_INFO pInfo;
+        ULONG ulOutBufLen;
         pInfo = (IP_INTERFACE_INFO *) malloc(sizeof(IP_INTERFACE_INFO));
-        ULONG ulOutBufLen = 0;
+        ulOutBufLen = 0;
 
         /* Make an initial call to GetInterfaceInfo to get
          * the necessary size into the ulOutBufLen variable */
@@ -315,9 +339,12 @@ VOID Info()
 {
      // Declare and initialize variables
     PIP_INTERFACE_INFO pInfo;
+    ULONG ulOutBufLen;
+    DWORD dwRetVal;
+
     pInfo = (IP_INTERFACE_INFO *) malloc( sizeof(IP_INTERFACE_INFO) );
-    ULONG ulOutBufLen = sizeof(IP_INTERFACE_INFO);
-    DWORD dwRetVal = 0;
+    ulOutBufLen = sizeof(IP_INTERFACE_INFO);
+    dwRetVal = 0;
 
 
     // Make an initial call to GetInterfaceInfo to get

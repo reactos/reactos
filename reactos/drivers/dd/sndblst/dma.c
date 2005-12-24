@@ -2,7 +2,7 @@
     Routines to simplify the use of DMA for Sound Blaster driver
 */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "sndblst.h"
 
 #if 0

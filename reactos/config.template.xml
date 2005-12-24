@@ -15,6 +15,12 @@
 -->
 <property name="ARCH" value="i386" />
 
+<!--
+  Sub-architecture to build for. Specify one of:
+    xbox
+-->
+<property name="SARCH" value="" />
+
 
 <!--
   Which CPU ReactOS should be optimized for. Specify one of:

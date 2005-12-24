@@ -63,6 +63,7 @@ typedef struct {
 #define PD32_OUT_OF_MEMORY                    1113
 #define PD32_GENERIC_ERROR                    1114
 #define PD32_DRIVER_UNKNOWN                   1115
+#define PD32_NO_DEVICES                       1121
 
 #define PD32_PRINTER_STATUS_READY             1536
 #define PD32_PRINTER_STATUS_PAUSED            1537

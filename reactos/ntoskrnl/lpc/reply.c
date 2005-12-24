@@ -45,7 +45,7 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
      }
 
    Size = sizeof(QUEUEDMESSAGE);
-   if (LpcReply && LpcReply->u1.s1.TotalLength > sizeof(PORT_MESSAGE))
+   if (LpcReply && LpcReply->u1.s1.TotalLength > (CSHORT)sizeof(PORT_MESSAGE))
      {
        Size += LpcReply->u1.s1.TotalLength - sizeof(PORT_MESSAGE);
      }
@@ -163,7 +163,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
    PreviousMode = ExGetPreviousMode();
 
    DPRINT("NtReplyWaitReceivePortEx(PortHandle %x, LpcReply %x, "
-	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
+	  "LpcMessage %x)\n", PortHandle, ReplyMessage, ReceiveMessage);
 
    if (PreviousMode != KernelMode)
      {

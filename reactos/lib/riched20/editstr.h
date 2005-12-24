@@ -270,6 +270,7 @@ typedef struct tagME_TextEditor
   int nSequence;
   int nOldSelFrom, nOldSelTo;
   COLORREF rgbBackColor;
+  HBRUSH hbrBackground;
   BOOL bCaretAtEnd;
   int nEventMask;
   int nModifyStep;

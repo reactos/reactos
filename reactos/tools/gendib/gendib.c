@@ -119,8 +119,8 @@
 typedef struct _ROPINFO
   {
     unsigned RopCode;
-    char *Name;
-    char *Operation;
+    const char *Name;
+    const char *Operation;
     int UsesDest;
     int UsesSource;
     int UsesPattern;
@@ -170,7 +170,7 @@ FindRopInfo(unsigned RopCode)
 }
 
 static void
-Output(FILE *Out, char *Fmt, ...)
+Output(FILE *Out, const char *Fmt, ...)
 {
   static unsigned Indent = 0;
   static int AtBOL = 1;
@@ -253,9 +253,9 @@ static void
 CreateOperation(FILE *Out, unsigned Bpp, PROPINFO RopInfo, unsigned SourceBpp,
                 unsigned Bits)
 {
-  char *Cast;
-  char *Dest;
-  char *Template;
+  const char *Cast;
+  const char *Dest;
+  const char *Template;
 
   MARK(Out);
   if (32 == Bits)
@@ -307,7 +307,7 @@ CreateOperation(FILE *Out, unsigned Bpp, PROPINFO RopInfo, unsigned SourceBpp,
 static void
 CreateBase(FILE *Out, int Source, int Flags, unsigned Bpp)
 {
-  char *What = (Source ? "Source" : "Dest");
+  const char *What = (Source ? "Source" : "Dest");
 
   MARK(Out);
   Output(Out, "%sBase = (char *) BltInfo->%sSurface->pvScan0 +\n", What, What);
@@ -370,8 +370,8 @@ static void
 CreateGetSource(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
                 unsigned SourceBpp, unsigned Shift)
 {
-  char *AssignOp;
-  char *Before;
+  const char *AssignOp;
+  const char *Before;
   char After[8];
 
   MARK(Out);

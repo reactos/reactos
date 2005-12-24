@@ -47,6 +47,36 @@ extern "C" {
 #define UNALIGNED
 #endif
 
+#ifndef DECLSPEC_ADDRSAFE
+#if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
+#define DECLSPEC_ADDRSAFE __declspec(address_safe)
+#else
+#define DECLSPEC_ADDRSAFE
+#endif
+#endif
+
+#ifndef FORCEINLINE
+#if (_MSC_VER >= 1200)
+#define FORCEINLINE __forceinline
+#elif (_MSC_VER)
+#define FORCEINLINE __inline
+#else
+#define FORCEINLINE static __inline
+#endif
+#endif
+
+#if !defined(_NTSYSTEM_)
+#define NTSYSAPI     DECLSPEC_IMPORT
+#define NTSYSCALLAPI DECLSPEC_IMPORT
+#else
+#define NTSYSAPI
+#if defined(_NTDLLBUILD_)
+#define NTSYSCALLAPI
+#else
+#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
+#endif
+#endif
+
 #ifndef VOID
 #define VOID void
 #endif
@@ -210,9 +240,54 @@ typedef DWORD FLONG;
 #define SPECIFIC_RIGHTS_ALL	0xFFFF
 #define ACCESS_SYSTEM_SECURITY	0x1000000
 
-#ifndef WIN32_NO_STATUS 
-#define DBG_CONTINUE            ((DWORD)0x00010002L)
-#endif
+#ifndef WIN32_NO_STATUS
+
+#define STATUS_WAIT_0                    ((DWORD)0x00000000)
+#define STATUS_ABANDONED_WAIT_0          ((DWORD)0x00000080)
+#define STATUS_USER_APC                  ((DWORD)0x000000C0)
+#define STATUS_TIMEOUT                   ((DWORD)0x00000102)
+#define STATUS_PENDING                   ((DWORD)0x00000103)
+#define STATUS_SEGMENT_NOTIFICATION      ((DWORD)0x40000005)
+#define STATUS_GUARD_PAGE_VIOLATION      ((DWORD)0x80000001)
+#define STATUS_DATATYPE_MISALIGNMENT     ((DWORD)0x80000002)
+#define STATUS_BREAKPOINT                ((DWORD)0x80000003)
+#define STATUS_SINGLE_STEP               ((DWORD)0x80000004)
+#define STATUS_ACCESS_VIOLATION          ((DWORD)0xC0000005)
+#define STATUS_IN_PAGE_ERROR             ((DWORD)0xC0000006)
+#define STATUS_INVALID_HANDLE            ((DWORD)0xC0000008)
+#define STATUS_NO_MEMORY                 ((DWORD)0xC0000017)
+#define STATUS_ILLEGAL_INSTRUCTION       ((DWORD)0xC000001D)
+#define STATUS_NONCONTINUABLE_EXCEPTION  ((DWORD)0xC0000025)
+#define STATUS_INVALID_DISPOSITION       ((DWORD)0xC0000026)
+#define STATUS_ARRAY_BOUNDS_EXCEEDED     ((DWORD)0xC000008C)
+#define STATUS_FLOAT_DENORMAL_OPERAND    ((DWORD)0xC000008D)
+#define STATUS_FLOAT_DIVIDE_BY_ZERO      ((DWORD)0xC000008E)
+#define STATUS_FLOAT_INEXACT_RESULT      ((DWORD)0xC000008F)
+#define STATUS_FLOAT_INVALID_OPERATION   ((DWORD)0xC0000090)
+#define STATUS_FLOAT_OVERFLOW            ((DWORD)0xC0000091)
+#define STATUS_FLOAT_STACK_CHECK         ((DWORD)0xC0000092)
+#define STATUS_FLOAT_UNDERFLOW           ((DWORD)0xC0000093)
+#define STATUS_INTEGER_DIVIDE_BY_ZERO    ((DWORD)0xC0000094)
+#define STATUS_INTEGER_OVERFLOW          ((DWORD)0xC0000095)
+#define STATUS_PRIVILEGED_INSTRUCTION    ((DWORD)0xC0000096)
+#define STATUS_STACK_OVERFLOW            ((DWORD)0xC00000FD)
+#define STATUS_CONTROL_C_EXIT            ((DWORD)0xC000013A)
+#define STATUS_FLOAT_MULTIPLE_FAULTS     ((DWORD)0xC00002B4)
+#define STATUS_FLOAT_MULTIPLE_TRAPS      ((DWORD)0xC00002B5)
+#define STATUS_REG_NAT_CONSUMPTION       ((DWORD)0xC00002C9)
+#define STATUS_SXS_EARLY_DEACTIVATION    ((DWORD)0xC015000F)
+#define STATUS_SXS_INVALID_DEACTIVATION  ((DWORD)0xC0150010)
+
+#define DBG_EXCEPTION_HANDLED       ((DWORD)0x00010001)
+#define DBG_CONTINUE                ((DWORD)0x00010002)
+#define DBG_TERMINATE_THREAD        ((DWORD)0x40010003)
+#define DBG_TERMINATE_PROCESS       ((DWORD)0x40010004)
+#define DBG_CONTROL_C               ((DWORD)0x40010005)
+#define DBG_CONTROL_BREAK           ((DWORD)0x40010008)
+#define DBG_COMMAND_EXCEPTION       ((DWORD)0x40010009)
+#define DBG_EXCEPTION_NOT_HANDLED   ((DWORD)0x80010001)
+
+#endif /* WIN32_NO_STATUS */
 
 #define MAXIMUM_ALLOWED	0x2000000
 #define GENERIC_READ	0x80000000
@@ -774,7 +849,8 @@ typedef enum
 #define PROCESSOR_ARCHITECTURE_ARM 5
 #define PROCESSOR_ARCHITECTURE_IA64 6
 #define PROCESSOR_ARCHITECTURE_ALPHA64 7
-#define PROCESSOR_ARCHITECTURE_MSIL8
+#define PROCESSOR_ARCHITECTURE_MSIL 8
+#define PROCESSOR_ARCHITECTURE_AMD64 9
 #define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
 #define PF_FLOATING_POINT_PRECISION_ERRATA 0
 #define PF_FLOATING_POINT_EMULATED 1
@@ -1416,6 +1492,7 @@ typedef enum
 #define IsReparseTagValid(x) (!((x)&~IO_REPARSE_TAG_VALID_VALUES)&&((x)>IO_REPARSE_TAG_RESERVED_RANGE))
 #define IO_REPARSE_TAG_SYMBOLIC_LINK IO_REPARSE_TAG_RESERVED_ZERO
 #define IO_REPARSE_TAG_MOUNT_POINT 0xA0000003
+#define IO_REPARSE_TAG_SYMLINK 0xA000000CL
 #ifndef RC_INVOKED
 typedef DWORD ACCESS_MASK, *PACCESS_MASK;
 
@@ -1467,11 +1544,14 @@ typedef struct _GENERIC_MAPPING {
 	ACCESS_MASK GenericExecute;
 	ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
+/* Sigh..when will they learn... */
+#ifndef __NTDDK_H
 typedef struct _ACE_HEADER {
 	BYTE AceType;
 	BYTE AceFlags;
 	WORD AceSize;
 } ACE_HEADER, *PACE_HEADER;
+
 typedef struct _ACCESS_ALLOWED_ACE {
 	ACE_HEADER Header;
 	ACCESS_MASK Mask;
@@ -1525,6 +1605,7 @@ typedef struct _SYSTEM_ALARM_OBJECT_ACE {
 	GUID InheritedObjectType;
 	DWORD SidStart;
 } SYSTEM_ALARM_OBJECT_ACE,*PSYSTEM_ALARM_OBJECT_ACE;
+#endif
 typedef struct _ACL {
 	BYTE AclRevision;
 	BYTE Sbz1;
@@ -1598,7 +1679,7 @@ typedef struct _CONTEXT {
 #define CONTEXT_INTEGER	4L
 #define CONTEXT_DEBUG_REGISTERS	8L
 #define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_FLOATING_POINT|CONTEXT_INTEGER)
-typedef struct {
+typedef struct _CONTEXT {
 	double Fpr0;
 	double Fpr1;
 	double Fpr2;
@@ -2154,6 +2235,8 @@ typedef struct _SE_IMPERSONATION_STATE {
 	BOOLEAN EffectiveOnly;
 	SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE,*PSE_IMPERSONATION_STATE;
+/* Steven you are my hero when you fix the w32api ddk! */
+#if !defined(__NTDDK_H)
 typedef struct _SID_IDENTIFIER_AUTHORITY {
 	BYTE Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
@@ -2258,6 +2341,7 @@ typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
 	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
 } TOKEN_INFORMATION_CLASS;
+#endif
 typedef enum _SID_NAME_USE {
 	SidTypeUser=1,SidTypeGroup,SidTypeDomain,SidTypeAlias,
 	SidTypeWellKnownGroup,SidTypeDeletedAccount,SidTypeInvalid,
@@ -2410,6 +2494,11 @@ typedef struct _RTL_CRITICAL_SECTION {
 	ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION;
 #endif
+
+typedef LONG
+(NTAPI *PVECTORED_EXCEPTION_HANDLER)(
+    struct _EXCEPTION_POINTERS *ExceptionInfo
+);
 
 typedef struct _EVENTLOGRECORD {
 	DWORD Length;
@@ -3026,6 +3115,7 @@ typedef struct _REPARSE_DATA_BUFFER {
 			WORD   SubstituteNameLength;
 			WORD   PrintNameOffset;
 			WORD   PrintNameLength;
+			ULONG  Flags;
 			WCHAR PathBuffer[1];
 		} SymbolicLinkReparseBuffer;
 		struct {
@@ -3157,6 +3247,8 @@ typedef struct _JOBOBJECT_BASIC_PROCESS_ID_LIST {
 typedef struct _JOBOBJECT_BASIC_UI_RESTRICTIONS {
 	DWORD UIRestrictionsClass;
 } JOBOBJECT_BASIC_UI_RESTRICTIONS,*PJOBOBJECT_BASIC_UI_RESTRICTIONS;
+/* Steven you are my hero when you fix the w32api ddk! */
+#ifndef __NTDDK_H
 typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	DWORD SecurityLimitFlags;
 	HANDLE JobToken;
@@ -3164,6 +3256,7 @@ typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	PTOKEN_PRIVILEGES PrivilegesToDelete;
 	PTOKEN_GROUPS RestrictedSids;
 } JOBOBJECT_SECURITY_LIMIT_INFORMATION,*PJOBOBJECT_SECURITY_LIMIT_INFORMATION;
+#endif
 typedef struct _JOBOBJECT_END_OF_JOB_TIME_INFORMATION {
 	DWORD EndOfJobTimeAction;
 } JOBOBJECT_END_OF_JOB_TIME_INFORMATION,*PJOBOBJECT_END_OF_JOB_TIME_INFORMATION;
@@ -3564,6 +3657,16 @@ extern struct _TEB * NtCurrentTeb(void);
 
 #elif defined(_MSC_VER)
 
+#if (_MSC_FULL_VER >= 13012035)
+
+DWORD __readfsdword(DWORD);
+#pragma intrinsic(__readfsdword)
+
+__inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
+__inline struct _TEB * NtCurrentTeb(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x18); }
+
+#else
+
 static __inline PVOID GetCurrentFiber(void)
 {
     PVOID p;
@@ -3579,6 +3682,8 @@ static __inline struct _TEB * NtCurrentTeb(void)
 	__asm mov [p], eax
     return p;
 }
+
+#endif /* _MSC_FULL_VER */
 
 #endif /* __GNUC__/__WATCOMC__/_MSC_VER */
 

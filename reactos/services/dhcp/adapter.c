@@ -125,6 +125,7 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             ( EnumKey, EnumKeysTop[i], "DriverDesc" );
 
         if( DriverDesc &&
+            RootDevice &&
             !strcmp( DriverDesc, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
                 malloc( strlen( TargetKeyNameStart ) +

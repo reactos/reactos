@@ -442,7 +442,7 @@ AntiMonikerImpl_GetDisplayName(IMoniker* iface, IBindCtx* pbc,
         return E_POINTER;
 
     if (pmkToLeft!=NULL){
-        FIXME("() pmkToLeft!=NULL not implemented \n");
+        FIXME("() pmkToLeft!=NULL not implemented\n");
         return E_NOTIMPL;
     }
 

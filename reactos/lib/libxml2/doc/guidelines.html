@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <style type="text/css"></style>
+<!--
+TD {font-family: Verdana,Arial,Helvetica}
+BODY {font-family: Verdana,Arial,Helvetica; margin-top: 2em; margin-left: 0em; margin-right: 0em}
+H1 {font-family: Verdana,Arial,Helvetica}
+H2 {font-family: Verdana,Arial,Helvetica}
+H3 {font-family: Verdana,Arial,Helvetica}
+A:link, A:visited, A:active { text-decoration: underline }
+  </style>
+-->
+  <title>XML resources publication guidelines</title>
+</head>
+
+<body bgcolor="#fffacd" text="#000000">
+<h1 align="center">XML resources publication guidelines</h1>
+
+<p></p>
+
+<p>The goal of this document is to provide a set of guidelines and tips
+helping the publication and deployment of <a
+href="http://www.w3.org/XML/">XML</a> resources for the <a
+href="http://www.gnome.org/">GNOME project</a>. However it is not tied to
+GNOME and might be helpful more generally. I welcome <a
+href="mailto:veillard@redhat.com">feedback</a> on this document.</p>
+
+<p>The intended audience is the software developers who started using XML
+for some of the resources of their project, as a storage format, for data
+exchange, checking or transformations. There have been an increasing number
+of new XML formats defined, but not all steps have been taken, possibly because of
+lack of documentation, to truly gain all the benefits of the use of XML.
+These guidelines hope to improve the matter and provide a better overview of
+the overall XML processing and associated steps needed to deploy it
+successfully:</p>
+
+<p>Table of contents:</p>
+<ol>
+  <li><a href="#Design">Design guidelines</a></li>
+  <li><a href="#Canonical">Canonical URL</a></li>
+  <li><a href="#Catalog">Catalog setup</a></li>
+  <li><a href="#Package">Package integration</a></li>
+</ol>
+
+<h2><a name="Design">Design guidelines</a></h2>
+
+<p>This part intends to focus on the format itself of XML. It may  arrive
+a bit too late since the structure of the document may already be cast in
+existing and deployed code. Still, here are a few rules which might be helpful
+when designing a new XML vocabulary or making the revision of an existing
+format:</p>
+
+<h3>Reuse existing formats:</h3>
+
+<p>This may sounds a bit simplistic, but before designing your own format,
+try to lookup existing XML vocabularies on similar data. Ideally this allows
+you to reuse them, in which case a lot of the existing tools like DTD, schemas
+and stylesheets may already be available. If you are looking at a
+documentation format, <a href="http://www.docbook.org/">DocBook</a> should
+handle your needs. If reuse is not possible because some semantic or use case
+aspects are too different this will be helpful avoiding design errors like
+targeting the vocabulary to the wrong abstraction level. In this format
+design phase try to be synthetic and be sure to express the real content of
+your data and use the XML structure to express the semantic and context of
+those data.</p>
+
+<h3>DTD rules:</h3>
+
+<p>Building a DTD (Document Type Definition) or a Schema describing the
+structure allowed by instances is the core of the design process of the
+vocabulary. Here are a few tips:</p>
+<ul>
+  <li>use significant words for the element and attributes names.</li>
+  <li>do not use attributes for general textual content, attributes
+    will be modified by the parser before reaching the application,
+    spaces and line informations will be modified.</li>
+  <li>use single elements for every string that might be subject to
+    localization. The canonical way to localize XML content is to use
+    siblings element carrying different xml:lang attributes like in the
+    following:
+    <pre>&lt;welcome&gt;
+  &lt;msg xml:lang="en"&gt;hello&lt;/msg&gt;
+  &lt;msg xml:lang="fr"&gt;bonjour&lt;/msg&gt;
+&lt;/welcome&gt;</pre>
+  </li>
+  <li>use attributes to refine the content of an element but avoid them for
+    more complex tasks, attribute parsing is not cheaper than an element and
+    it is far easier to make an element content more complex while attribute
+    will have to remain very simple.</li>
+</ul>
+
+<h3>Versioning:</h3>
+
+<p>As part of the design, make sure the structure you define will be usable
+for future extension that you may not consider for the current version. There
+are two parts to this:</p>
+<ul>
+  <li>Make sure the instance contains a version number which will allow to
+    make backward compatibility easy. Something as simple as having a
+    <code>version="1.0"</code> on the root document of the instance is
+    sufficient.</li>
+  <li>While designing the code doing the analysis of the data provided by the
+    XML parser, make sure you can work with unknown versions, generate a UI
+    warning and process only the tags recognized by your version but keep in
+    mind that you should not break on unknown elements if the version
+    attribute was not in the recognized set.</li>
+</ul>
+
+<h3>Other design parts:</h3>
+
+<p>While defining you vocabulary, try to think in term of other usage of your
+data, for example how using XSLT stylesheets could be used to make an HTML
+view of your data, or to convert it into a different format. Checking XML
+Schemas and looking at defining an XML Schema with a more complete
+validation and datatyping of your data structures is important, this helps
+avoiding some mistakes in the design phase.</p>
+
+<h3>Namespace:</h3>
+
+<p>If you expect your XML vocabulary to be used or recognized outside of your
+application (for example binding a specific processing from a graphic shell
+like Nautilus to an instance of your data) then you should really define an <a
+href="http://www.w3.org/TR/REC-xml-names/">XML namespace</a> for your
+vocabulary. A namespace name is an URL (absolute URI more precisely). It is
+generally recommended to anchor it as an HTTP resource to a server associated
+with the software project. See the next section about this. In practice this
+will mean that XML parsers will not handle your element names as-is but as a
+couple based on the namespace name and the element name. This allows it to
+recognize and disambiguate processing. Unicity of the namespace name can be
+for the most part guaranteed by the use of the DNS registry. Namespace can
+also be used to carry versioning information like:</p>
+
+<p><code>"http://www.gnome.org/project/projectname/1.0/"</code></p>
+
+<p>An easy way to use them is to make them the default namespace on the
+root element of the XML instance like:</p>
+<pre>&lt;structure xmlns="http://www.gnome.org/project/projectname/1.0/"&gt;
+  &lt;data&gt;
+  ...
+  &lt;/data&gt;
+&lt;/structure&gt;</pre>
+
+<p>In that document, structure and all descendant elements like data are in
+the given namespace.</p>
+
+<h2><a name="Canonical">Canonical URL</a></h2>
+
+<p>As seen in the previous namespace section, while XML processing is not
+tied to the Web there is a natural synergy between both. XML was designed to
+be available on the Web, and keeping the infrastructure that way helps
+deploying the XML resources. The core of this issue is the notion of
+"Canonical URL" of an XML resource. The resource can be an XML document, a
+DTD, a stylesheet, a schema, or even non-XML data associated with an XML
+resource, the canonical URL is the URL where the "master" copy of that
+resource is expected to be present on the Web. Usually when processing XML a
+copy of the resource will be present on the local disk, maybe in
+/usr/share/xml or /usr/share/sgml maybe in /opt or even on C:\projectname\
+(horror !). The key point is that the way to name that resource should be
+independent of the actual place where it resides on disk if it is available,
+and the fact that the processing will still work if there is no local copy
+(and that the machine where the processing is connected to the Internet).</p>
+
+<p>What this really means is that one should never use the local name of a
+resource to reference it but always use the canonical URL. For example in a
+DocBook instance the following should not be used:</p>
+<pre>&lt;!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"<br>
+
+
+                         "/usr/share/xml/docbook/4.2/docbookx.dtd"&gt;</pre>
+
+<p>But always reference the canonical URL for the DTD:</p>
+<pre>&lt;!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"<br>
+
+
+                         "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd"&gt;   </pre>
+
+<p>Similarly, the document instance may reference the <a
+href="http://www.w3.org/TR/xslt">XSLT</a> stylesheets needed to process it to
+generate HTML, and the canonical URL should be used:</p>
+<pre>&lt;?xml-stylesheet
+  href="http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl"
+  type="text/xsl"?&gt;</pre>
+
+<p>Defining the canonical URL for the resources needed should obey a few
+simple rules similar to those used to design namespace names:</p>
+<ul>
+  <li>use a DNS name you know is associated to the project and will be
+    available on the long term</li>
+  <li>within that server space, reserve the right to the subtree where you
+    intend to keep those data</li>
+  <li>version the URL so that multiple concurrent versions of the resources
+    can be hosted simultaneously</li>
+</ul>
+
+<h2><a name="Catalog">Catalog setup</a></h2>
+
+<h3>How catalogs work:</h3>
+
+<p>The catalogs are the technical mechanism which allow the XML processing
+tools to use a local copy of the resources if it is available even if the
+instance document references the canonical URL. <a
+href="http://www.oasis-open.org/committees/entity/">XML Catalogs</a> are
+anchored in the root catalog (usually <code>/etc/xml/catalog</code> or
+defined by the user). They are a tree of XML documents defining the mappings
+between the canonical naming space and the local installed ones, this can be
+seen as a static cache structure.</p>
+
+<p>When the XML processor is asked to process a resource it will
+automatically test for a locally available version in the catalog, starting
+from the root catalog, and possibly fetching sub-catalog resources until it
+finds that the catalog has that resource or not. If not the default
+processing of fetching the resource from the Web is done, allowing in most
+case to recover from a catalog miss. The key point is that the document
+instances are totally independent of the availability of a catalog or from
+the actual place where the local resource they reference may be installed.
+This greatly improves the management of the documents in the long run, making
+them independent of the platform or toolchain used to process them. The
+figure below tries to express that  mechanism:<img src="catalog.gif"
+alt="Picture describing the catalog "></p>
+
+<h3>Usual catalog setup:</h3>
+
+<p>Usually catalogs for a project are setup as a 2 level hierarchical cache,
+the root catalog containing only "delegates" indicating a separate subcatalog
+dedicated to the project. The goal is to keep the root catalog clean and
+simplify the maintenance of the catalog by using separate catalogs per
+project. For example when creating a catalog for the <a
+href="http://www.w3.org/TR/xhtml1">XHTML1</a> DTDs, only 3 items are added to
+the root catalog:</p>
+<pre>  &lt;delegatePublic publicIdStartString="-//W3C//DTD XHTML 1.0"
+                  catalog="file:///usr/share/sgml/xhtml1/xmlcatalog"/&gt;
+  &lt;delegateSystem systemIdStartString="http://www.w3.org/TR/xhtml1/DTD"
+                  catalog="file:///usr/share/sgml/xhtml1/xmlcatalog"/&gt;
+  &lt;delegateURI uriStartString="http://www.w3.org/TR/xhtml1/DTD"
+                  catalog="file:///usr/share/sgml/xhtml1/xmlcatalog"/&gt;</pre>
+
+<p>They are all "delegates" meaning that if the catalog system is asked to
+resolve a reference corresponding to them, it has to lookup a sub catalog.
+Here the subcatalog was installed as
+<code>/usr/share/sgml/xhtml1/xmlcatalog</code> in the local tree. That
+decision is left to the sysadmin or the packager for that system and may
+obey different rules, but the actual place on the filesystem (or on a
+resource cache on the local network) will not influence the processing as
+long as it is available. The first rule indicate that if the reference uses a
+PUBLIC identifier beginning with the</p>
+
+<p><code>"-//W3C//DTD XHTML 1.0"</code></p>
+
+<p>substring, then the catalog lookup should be limited to the specific given
+lookup catalog. Similarly the second and third entries indicate those
+delegation rules for SYSTEM, DOCTYPE or normal URI references when the URL
+starts with the <code>"http://www.w3.org/TR/xhtml1/DTD"</code> substring
+which indicates the location on the W3C server where the XHTML1 resources are
+stored. Those are the beginning of all Canonical URLs for XHTML1 resources.
+Those three rules are sufficient in practice to capture all references to XHTML1
+resources and direct the processing tools to the right subcatalog.</p>
+
+<h3>A subcatalog example:</h3>
+
+<p>Here is the complete subcatalog used for XHTML1:</p>
+<pre>&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE catalog PUBLIC "-//OASIS//DTD Entity Resolution XML Catalog V1.0//EN"
+          "http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd"&gt;
+&lt;catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog"&gt;
+  &lt;public publicId="-//W3C//DTD XHTML 1.0 Strict//EN"
+          uri="xhtml1-20020801/DTD/xhtml1-strict.dtd"/&gt;
+  &lt;public publicId="-//W3C//DTD XHTML 1.0 Transitional//EN"
+          uri="xhtml1-20020801/DTD/xhtml1-transitional.dtd"/&gt;
+  &lt;public publicId="-//W3C//DTD XHTML 1.0 Frameset//EN"
+          uri="xhtml1-20020801/DTD/xhtml1-frameset.dtd"/&gt;
+  &lt;rewriteSystem systemIdStartString="http://www.w3.org/TR/xhtml1/DTD"
+          rewritePrefix="xhtml1-20020801/DTD"/&gt;
+  &lt;rewriteURI uriStartString="http://www.w3.org/TR/xhtml1/DTD"
+          rewritePrefix="xhtml1-20020801/DTD"/&gt;
+&lt;/catalog&gt;</pre>
+
+<p>There are a few things to notice:</p>
+<ul>
+  <li>this is an XML resource, it points to the DTD using Canonical URLs, the
+    root element defines a namespace (but based on an URN not an HTTP
+  URL).</li>
+  <li>it contains 5 rules, the 3 first ones are direct mapping for the 3
+    PUBLIC identifiers defined by the XHTML1 specification and associating
+    them with the local resource containing the DTD, the 2 last ones are
+    rewrite rules allowing to build the local filename for any URL based on
+    "http://www.w3.org/TR/xhtml1/DTD", the local cache simplifies the rules by
+    keeping the same structure as the on-line server at the Canonical URL</li>
+  <li>the local resources are designated using URI references (the uri or
+    rewritePrefix attributes), the base being the containing sub-catalog URL,
+    which means that in practice the copy of the XHTML1 strict DTD is stored
+    locally in
+    <code>/usr/share/sgml/xhtml1/xmlcatalog/xhtml1-20020801/DTD/xhtml1-strict.dtd</code></li>
+</ul>
+
+<p>Those 5 rules are sufficient to cover all references to the resources held
+at the Canonical URL for the XHTML1 DTDs.</p>
+
+<h2><a name="Package">Package integration</a></h2>
+
+<p>Creating and removing catalogs should be handled as part of the process of
+(un)installing the local copy of the resources. The catalog files being XML
+resources should be processed with XML based tools to avoid problems with the
+generated files, the xmlcatalog command coming with libxml2 allows you to create
+catalogs, and add or remove rules at that time. Here is a complete example
+coming from the RPM for the XHTML1 DTDs post install script. While this example
+is platform and packaging specific, this can be useful as a an example in
+other contexts:</p>
+<pre>%post
+CATALOG=/usr/share/sgml/xhtml1/xmlcatalog
+#
+# Register it in the super catalog with the appropriate delegates
+#
+ROOTCATALOG=/etc/xml/catalog
+
+if [ ! -r $ROOTCATALOG ]
+then
+    /usr/bin/xmlcatalog --noout --create $ROOTCATALOG
+fi
+
+if [ -w $ROOTCATALOG ]
+then
+        /usr/bin/xmlcatalog --noout --add "delegatePublic" \
+                "-//W3C//DTD XHTML 1.0" \
+                "file://$CATALOG" $ROOTCATALOG
+        /usr/bin/xmlcatalog --noout --add "delegateSystem" \
+                "http://www.w3.org/TR/xhtml1/DTD" \
+                "file://$CATALOG" $ROOTCATALOG
+        /usr/bin/xmlcatalog --noout --add "delegateURI" \
+                "http://www.w3.org/TR/xhtml1/DTD" \
+                "file://$CATALOG" $ROOTCATALOG
+fi</pre>
+
+<p>The XHTML1 subcatalog is not created on-the-fly in that case, it is
+installed as part of the files of the packages. So the only work needed is to
+make sure the root catalog exists and register the delegate rules.</p>
+
+<p>Similarly, the script for the post-uninstall just remove the rules from the
+catalog:</p>
+<pre>%postun
+#
+# On removal, unregister the xmlcatalog from the supercatalog
+#
+if [ "$1" = 0 ]; then
+    CATALOG=/usr/share/sgml/xhtml1/xmlcatalog
+    ROOTCATALOG=/etc/xml/catalog
+
+    if [ -w $ROOTCATALOG ]
+    then
+            /usr/bin/xmlcatalog --noout --del \
+                    "-//W3C//DTD XHTML 1.0" $ROOTCATALOG
+            /usr/bin/xmlcatalog --noout --del \
+                    "http://www.w3.org/TR/xhtml1/DTD" $ROOTCATALOG
+            /usr/bin/xmlcatalog --noout --del \
+                    "http://www.w3.org/TR/xhtml1/DTD" $ROOTCATALOG
+    fi
+fi</pre>
+
+<p>Note the test against $1, this is needed to not remove the delegate rules
+in case of upgrade of the package.</p>
+
+<p>Following the set of guidelines and tips provided in this document should
+help deploy the XML resources in the GNOME framework without much pain and
+ensure a smooth evolution of the resource and instances.</p>
+
+<p><a href="mailto:veillard@redhat.com">Daniel Veillard</a></p>
+
+<p>$Id: guidelines.html,v 1.6 2004/12/26 21:01:48 veillard Exp $</p>
+
+<p></p>
+</body>
+</html>

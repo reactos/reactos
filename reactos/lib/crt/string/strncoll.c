@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 #include <string.h>
 
 /* Compare S1 and S2, returning less than, equal to or

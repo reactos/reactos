@@ -11,6 +11,7 @@
 #include <advapi32.h>
 
 #define NDEBUG
+#include <wine/debug.h>
 #include <debug.h>
 
 /*
@@ -574,5 +575,24 @@ AllocAndReadRestrictedSids:
 
   return Ret;
 }
+
+BOOL STDCALL 
+CreateRestrictedToken(
+            HANDLE TokenHandle,
+            DWORD Flags,
+            DWORD DisableSidCount,
+            PSID_AND_ATTRIBUTES pSidAndAttributes,
+            DWORD DeletePrivilegeCount,
+            PLUID_AND_ATTRIBUTES pLUIDAndAttributes,
+            DWORD RestrictedSidCount,
+            PSID_AND_ATTRIBUTES pSIDAndAttributes,
+            PHANDLE NewTokenHandle
+)
+{
+    FIXME("unimplemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
 
 /* EOF */

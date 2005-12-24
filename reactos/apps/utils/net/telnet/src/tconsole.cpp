@@ -60,17 +60,17 @@ TConsole::TConsole(HANDLE h) {
 	GetConsoleScreenBufferInfo(hConsole, &ConsoleInfo);
 
 	// Start with correct colors
-	int fg = ini.get_normal_fg();
-	int bg = ini.get_normal_bg();
-	if(fg == -1)
-		fg = defaultfg = origfg = ConsoleInfo.wAttributes & 0xF;
+	int color_fg = ini.get_normal_fg();
+	int color_bg = ini.get_normal_bg();
+	if(color_fg == -1)
+		color_fg = defaultfg = origfg = ConsoleInfo.wAttributes & 0xF;
 	else
-		defaultfg = origfg = fg;
-	if(bg == -1)
-		bg = defaultbg = origbg = (ConsoleInfo.wAttributes >> 4) & 0xF;
+		defaultfg = origfg = color_fg;
+	if(color_bg == -1)
+		color_bg = defaultbg = origbg = (ConsoleInfo.wAttributes >> 4) & 0xF;
 	else
-		defaultbg = origbg = bg;
-	wAttributes = fg | (bg << 4);
+		defaultbg = origbg = color_bg;
+	wAttributes = color_fg | (color_bg << 4);
 	reverse = blink = underline = false;
 	SetConsoleTextAttribute(hConsole, wAttributes);
 

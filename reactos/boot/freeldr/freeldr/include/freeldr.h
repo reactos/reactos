@@ -20,7 +20,11 @@
 #ifndef __FREELDR_H
 #define __FREELDR_H
 
-#include <ddk/ntddk.h>
+#define UINT64_C(val) val##ULL
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <ntddk.h>
 #include <ndk/ntndk.h>
 #include <arch.h>
 #include <rtl.h>
@@ -29,11 +33,46 @@
 #include <ui.h>
 #include <multiboot.h>
 #include <mm.h>
+#include <cache.h>
 #include <machine.h>
 #include <inifile.h>
+#include <inffile.h>
 #include <video.h>
 #include <portio.h>
 #include <reactos.h>
+#include <registry.h>
+#include <fsrec.h>
+/* file system headers */
+#include <fs/ext2.h>
+#include <fs/fat.h>
+#include <fs/ntfs.h>
+#include <fs/iso.h>
+/* ui support */
+#include <ui/tui.h>
+#include <ui/gui.h>
+/* arch files */
+#include <arch/i386/hardware.h>
+#include <arch/i386/i386.h>
+#include <arch/i386/machpc.h>
+#include <arch/i386/machxbox.h>
+#include <internal/i386/ke.h>
+/* misc files */
+#include <keycodes.h>
+#include <version.h>
+#include <cmdline.h>
+/* Needed by boot manager */
+#include <bootmgr.h>
+#include <oslist.h>
+#include <drivemap.h>
+#include <miscboot.h>
+#include <options.h>
+#include <linux.h>
+/* Externals */
+#include <reactos/rossym.h>
+#include <reactos/buildno.h>
+#include <reactos/helper.h>
+/* Needed if debuging is enabled */
+#include <comm.h>
 
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
 

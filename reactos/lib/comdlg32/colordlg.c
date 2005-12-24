@@ -1249,6 +1249,16 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 
 /***********************************************************************
  *            ChooseColorW  (COMDLG32.@)
+ *
+ * Create a color dialog box.
+ *
+ * PARAMS
+ *  lpChCol [I/O] in:  information to initialize the dialog box.
+ *                out: User's color selection
+ *
+ * RETURNS
+ *  TRUE:  Ok button clicked.
+ *  FALSE: Cancel button clicked, or error.
  */
 BOOL WINAPI ChooseColorW( LPCHOOSECOLORW lpChCol )
 {
@@ -1309,6 +1319,8 @@ BOOL WINAPI ChooseColorW( LPCHOOSECOLORW lpChCol )
 
 /***********************************************************************
  *            ChooseColorA  (COMDLG32.@)
+ *
+ * See ChooseColorW.
  */
 BOOL WINAPI ChooseColorA( LPCHOOSECOLORA lpChCol )
 

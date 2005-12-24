@@ -48,7 +48,7 @@ CleanupClassImpl(VOID)
 }
 
 
-inline VOID FASTCALL 
+__inline VOID FASTCALL 
 ClassDerefObject(PWNDCLASS_OBJECT Class)
 {
    ASSERT(Class->refs >= 1);
@@ -56,7 +56,7 @@ ClassDerefObject(PWNDCLASS_OBJECT Class)
 }
 
 
-inline VOID FASTCALL 
+__inline VOID FASTCALL 
 ClassRefObject(PWNDCLASS_OBJECT Class)
 {
    ASSERT(Class->refs >= 0);
@@ -66,9 +66,21 @@ ClassRefObject(PWNDCLASS_OBJECT Class)
 
 VOID FASTCALL DestroyClass(PWNDCLASS_OBJECT Class)
 {
+#if defined(DBG) || defined(KDBG)
+   if ( Class->refs != 0 )
+   {
+      WCHAR AtomName[256];
+      ULONG AtomNameLen = sizeof(AtomName);
+      RtlQueryAtomInAtomTable ( gAtomTable, Class->Atom,
+         NULL, NULL, AtomName, &AtomNameLen );
+      DPRINT1("DestroyClass(): can't delete class = '%ws', b/c refs = %lu\n", AtomName, Class->refs );
+   }
+#endif
    ASSERT(Class->refs == 0);
    
    RemoveEntryList(&Class->ListEntry);
+   if (Class->hMenu)
+      UserDestroyMenu(Class->hMenu);
    RtlDeleteAtomFromAtomTable(gAtomTable, Class->Atom);
    ExFreePool(Class);
 }
@@ -122,7 +134,7 @@ ClassGetClassByName(LPCWSTR ClassName, HINSTANCE hInstance)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed to lookup class atom!\n");
+      DPRINT1("Failed to lookup class atom (ClassName '%S')!\n", ClassName);
       return FALSE;
    }
 
@@ -149,7 +161,8 @@ IntRegisterClass(
    DWORD Flags,
    WNDPROC wpExtra,
    PUNICODE_STRING MenuName,
-   RTL_ATOM Atom)
+   RTL_ATOM Atom,
+   HMENU hMenu)
 {
    PWNDCLASS_OBJECT Class;
    ULONG  objectSize;
@@ -188,6 +201,7 @@ IntRegisterClass(
    Class->hInstance = lpwcx->hInstance;
    Class->hIcon = lpwcx->hIcon;
    Class->hCursor = lpwcx->hCursor;
+   Class->hMenu = hMenu;
    Class->hbrBackground = lpwcx->hbrBackground;
    Class->Unicode = !(Flags & REGISTERCLASS_ANSI);
    Class->Global = Global;
@@ -414,7 +428,8 @@ NtUserRegisterClassExWOW(
    PUNICODE_STRING MenuName,
    WNDPROC wpExtra,
    DWORD Flags,
-   DWORD Unknown7)
+   DWORD Unknown7,
+   HMENU hMenu)
 
 /*
  * FUNCTION:
@@ -495,7 +510,7 @@ NtUserRegisterClassExWOW(
       RETURN(0);
    }
 
-   if (!IntRegisterClass(&SafeClass, Flags, wpExtra, MenuName, Atom))
+   if (!IntRegisterClass(&SafeClass, Flags, wpExtra, MenuName, Atom, hMenu))
    {
       if (ClassName->Length)
       {

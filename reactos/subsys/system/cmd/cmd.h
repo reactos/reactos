@@ -93,6 +93,7 @@ INT cmd_cls (LPTSTR, LPTSTR);
 
 
 /* Prototypes for CMD.C */
+INT ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperator);
 VOID ParseCommandLine (LPTSTR);
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
@@ -143,7 +144,7 @@ VOID ConInString (LPTSTR, DWORD);
 VOID ConOutChar (TCHAR);
 VOID ConOutPuts (LPTSTR);
 VOID ConOutPrintf (LPTSTR, ...);
-VOID ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
+INT ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
 VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);

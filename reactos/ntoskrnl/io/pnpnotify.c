@@ -15,6 +15,11 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IopInitPnpNotificationImplementation)
+#endif
+
+
 /* TYPES *******************************************************************/
 
 typedef struct _PNP_NOTIFY_ENTRY

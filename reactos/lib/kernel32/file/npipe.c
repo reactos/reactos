@@ -90,7 +90,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     if (nMaxInstances == PIPE_UNLIMITED_INSTANCES) nMaxInstances = -1;
 
     /* Convert the name */
-    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
+    Result = RtlDosPathNameToNtPathName_U(lpName,
                                            &NamedPipeName,
                                            NULL,
                                            NULL);
@@ -353,6 +353,16 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         return FALSE;
     }
 
+    /* Now calculate the total length of the structure and allocate it */
+    WaitPipeInfoSize = FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name[0]) +
+                       NewName.Length;
+    WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
+    if (WaitPipeInfo == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
     /* Initialize the object attributes */
     DPRINT("Opening: %wZ\n", &DevicePath);
     InitializeObjectAttributes(&ObjectAttributes,
@@ -374,13 +384,9 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         DPRINT1("Status: %lx\n", Status);
         SetLastErrorByStatus(Status);
         RtlFreeUnicodeString(&NamedPipeName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
         return(FALSE);
     }
-
-    /* Now calculate the total length of the structure and allocate it */
-    WaitPipeInfoSize = FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name[0]) +
-                       NewName.Length;
-    WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
 
     /* Check what timeout we got */
     if (nTimeOut == NMPWAIT_USE_DEFAULT_WAIT)
@@ -458,7 +464,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
    HANDLE FileHandle;
    IO_STATUS_BLOCK Iosb;
 
-   r = RtlDosPathNameToNtPathName_U((LPWSTR)lpNamedPipeName,
+   r = RtlDosPathNameToNtPathName_U(lpNamedPipeName,
 				    &NamedPipeName,
 				    NULL,
 				    NULL);
@@ -905,15 +911,19 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 			 LPSTR lpUserName,
 			 DWORD nMaxUserNameSize)
 {
-  UNICODE_STRING UserNameW;
+  UNICODE_STRING UserNameW = {0};
   ANSI_STRING UserNameA;
   BOOL Ret;
 
   if(lpUserName != NULL)
   {
-    UserNameW.Length = 0;
     UserNameW.MaximumLength = nMaxUserNameSize * sizeof(WCHAR);
-    UserNameW.Buffer = HeapAlloc(GetCurrentProcess(), 0, UserNameW.MaximumLength);
+    UserNameW.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, UserNameW.MaximumLength);
+    if (UserNameW.Buffer == NULL)
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
 
     UserNameA.Buffer = lpUserName;
     UserNameA.Length = 0;
@@ -930,7 +940,10 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 
   if(Ret && lpUserName != NULL)
   {
-    NTSTATUS Status = RtlUnicodeStringToAnsiString(&UserNameA, &UserNameW, FALSE);
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&UserNameW, UserNameW.Buffer);
+    Status = RtlUnicodeStringToAnsiString(&UserNameA, &UserNameW, FALSE);
     if(!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
@@ -940,7 +953,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 
   if(UserNameW.Buffer != NULL)
   {
-    HeapFree(GetCurrentProcess(), 0, UserNameW.Buffer);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, UserNameW.Buffer);
   }
 
   return Ret;
@@ -1015,6 +1028,11 @@ PeekNamedPipe(HANDLE hNamedPipe,
     /* Calculate the buffer space that we'll need and allocate it */
     BufferSize = nBufferSize + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+    if (Buffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     /* Tell the driver to seek */
     Status = NtFsControlFile(hNamedPipe,

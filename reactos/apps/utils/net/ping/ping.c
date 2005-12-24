@@ -16,7 +16,9 @@
 #include <stdio.h>
 #ifndef _MSC_VER
 
-//#define DBG
+#ifdef DBG
+#undef DBG
+#endif
 
 /* FIXME: Where should this be? */
 #ifdef CopyMemory

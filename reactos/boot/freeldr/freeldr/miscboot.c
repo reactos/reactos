@@ -17,19 +17,9 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include <freeldr.h>
-#include <arch.h>
-#include <miscboot.h>
-#include <rtl.h>
-#include <fs.h>
-#include <ui.h>
-#include <inifile.h>
-#include <disk.h>
-#include <drivemap.h>
-#include <machine.h>
 
-VOID LoadAndBootBootSector(PCHAR OperatingSystemName)
+VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 {
 	PFILE	FilePointer;
 	CHAR	SettingName[80];
@@ -100,7 +90,7 @@ VOID LoadAndBootBootSector(PCHAR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootPartition(PCHAR OperatingSystemName)
+VOID LoadAndBootPartition(PCSTR OperatingSystemName)
 {
 	CHAR			SettingName[80];
 	CHAR			SettingValue[80];
@@ -171,7 +161,7 @@ VOID LoadAndBootPartition(PCHAR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootDrive(PCHAR OperatingSystemName)
+VOID LoadAndBootDrive(PCSTR OperatingSystemName)
 {
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];

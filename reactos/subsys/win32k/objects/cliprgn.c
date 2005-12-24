@@ -99,20 +99,13 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   return retval;
 }
 
-int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
-                          HRGN  hrgn,
-                          int  fnMode)
+
+int STDCALL IntGdiExtSelectClipRgn(PDC dc, 
+                                HRGN hrgn, 
+                                int fnMode)
 {
   int retval;
-  DC *dc;
-
-  if (!(dc = DC_LockDc(hDC)))
-  {
-  	SetLastWin32Error(ERROR_INVALID_HANDLE);
-  	return ERROR;
-  }
-
-//  dc->w.flags &= ~DC_DIRTY;
+  //  dc->w.flags &= ~DC_DIRTY;
 
   if (!hrgn)
   {
@@ -127,7 +120,6 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
     }
     else
     {
-      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return ERROR;
     }
@@ -158,8 +150,26 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
   }
 
   retval = CLIPPING_UpdateGCRegion(dc);
-  DC_UnlockDc(dc);
+  return retval;
+}
 
+
+int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
+                          HRGN  hrgn,
+                          int  fnMode)
+{
+  int retval;
+  DC *dc;
+
+  if (!(dc = DC_LockDc(hDC)))
+  {
+  	SetLastWin32Error(ERROR_INVALID_HANDLE);
+  	return ERROR;
+  }
+
+  retval = IntGdiExtSelectClipRgn ( dc, hrgn, fnMode );
+
+  DC_UnlockDc(dc);
   return retval;
 }
 
@@ -425,13 +435,6 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
    DC_UnlockDc(dc);
 
    return Result;
-}
-
-BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
-                         int  Mode)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 INT STDCALL

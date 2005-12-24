@@ -1,0 +1,64 @@
+/* $Id: En.rc 12852 2005-01-06 13:58:04Z mf $ */
+/*
+* Copyright 2005 Robert Horvath - Hungarian trasnlation - talley at cubeclub.hu
+*/
+LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPTITLE            "ReactOS - Üdvözlünk"
+    IDS_DEFAULTTOPICTITLE   "ReactOS"
+    IDS_DEFAULTTOPICDESC    "Üdvözlünk a React Operációs Rendszerben.\n\n"
+//    IDS_CHECKTEXT           "Show this dialog again"
+//    IDS_CLOSETEXT           "Kilépés"
+END
+
+/* Topic buttons */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICBUTTON0        "ReactOS telepítése"
+    IDS_TOPICBUTTON1        "A CD böngészése"
+    IDS_TOPICBUTTON2        "Kilépés"
+//    IDS_TOPICBUTTON3        "Empty Topic 3"
+//    IDS_TOPICBUTTON4        "Empty Topic 4"
+//    IDS_TOPICBUTTON5        "Empty Topic 5"
+//    IDS_TOPICBUTTON6        "Empty Topic 6"
+//    IDS_TOPICBUTTON7        "Empty Topic 7"
+//    IDS_TOPICBUTTON8        "Empty Topic 8"
+//    IDS_TOPICBUTTON9        "Empty Topic 9"
+END
+
+/* Topic titles */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICTITLE0         "ReactOS telepítése"
+    IDS_TOPICTITLE1         "A CD böngészése"
+    IDS_TOPICTITLE2         "Kilépés"
+//    IDS_TOPICTITLE3         "Empty Topic Title 3"
+//    IDS_TOPICTITLE4         "Empty Topic Title 4"
+//    IDS_TOPICTITLE5         "Empty Topic Title 5"
+//    IDS_TOPICTITLE6         "Empty Topic Title 6"
+//    IDS_TOPICTITLE7         "Empty Topic Title 7"
+//    IDS_TOPICTITLE8         "Empty Topic Title 8"
+//    IDS_TOPICTITLE9         "Empty Topic Title 9"
+END
+
+/* Topic descriptions */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICDESC0          "A ReactOS telepítése vagy frissítése."
+    IDS_TOPICDESC1          "A CD böngészése"
+    IDS_TOPICDESC2          "Kilépés"
+//    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
+//    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
+//    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
+//    IDS_TOPICDESC6          "Topic description 6.\n\nDescribe topic 6 here."
+//    IDS_TOPICDESC7          "Topic description 7.\n\nDescribe topic 7 here."
+//    IDS_TOPICDESC8          "Topic description 8.\n\nDescribe topic 8 here."
+//    IDS_TOPICDESC9          "Topic description 9.\n\nDescribe topic 9 here."
+END
+
+/* EOF */

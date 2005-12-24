@@ -2007,6 +2007,7 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   case WM_LBUTTONUP:
     return MONTHCAL_LButtonUp(infoPtr, lParam);
 
+  case WM_PRINTCLIENT:
   case WM_PAINT:
     return MONTHCAL_Paint(infoPtr, wParam);
 

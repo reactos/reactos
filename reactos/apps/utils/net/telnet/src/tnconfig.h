@@ -198,7 +198,7 @@ private:
 
 	// Host configration
 	char host[128];
-	char *port;
+	const char *port;
 
 	// Aliases
 	char **aliases;

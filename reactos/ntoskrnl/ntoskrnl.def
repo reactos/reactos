@@ -63,6 +63,7 @@ DbgPrintEx
 DbgPrintReturnControlC
 DbgQueryDebugFilterState@8
 DbgSetDebugFilterState@12
+@ExiAcquireFastMutex@4=@ExAcquireFastMutex@4
 @ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8
@@ -86,6 +87,7 @@ ExDeleteResourceLite@4
 ExDesktopObjectType DATA
 ExDisableResourceBoostLite@4
 ExEnumHandleTable@16
+@ExEnterCriticalRegionAndAcquireFastMutexUnsafe@4
 ExEventObjectType DATA
 ExExtendZone@12
 ExFreePool@4
@@ -133,7 +135,9 @@ ExRaiseStatus@4=RtlRaiseStatus@4
 ExRegisterCallback@12
 ExReinitializeResourceLite@4
 @ExReInitializeRundownProtection@4
+@ExiReleaseFastMutex@4=@ExReleaseFastMutex@4
 @ExReleaseFastMutexUnsafe@4
+@ExReleaseFastMutexUnsafeAndLeaveCriticalRegion@4
 ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
@@ -1113,10 +1117,10 @@ RtlIpv6AddressToStringA@8
 RtlIpv6AddressToStringExA@16
 RtlIpv6AddressToStringExW@16
 RtlIpv6AddressToStringW@8
-RtlIpv6StringToAddressA@16
+RtlIpv6StringToAddressA@12
 RtlIpv6StringToAddressExA@16
 RtlIpv6StringToAddressExW@16
-RtlIpv6StringToAddressW@16
+RtlIpv6StringToAddressW@12
 RtlIsGenericTableEmpty@4
 RtlIsGenericTableEmptyAvl@4
 RtlIsNameLegalDOS8Dot3@12
@@ -1436,6 +1440,7 @@ _strrev
 _strset
 _strupr
 _vsnprintf
+_vsnwprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp

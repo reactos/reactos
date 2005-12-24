@@ -54,7 +54,7 @@ bool NotifyHook::ModulePathCopyData(LPARAM lparam, HWND* phwnd, String& path)
 {
 	char buffer[MAX_PATH];
 
-	int l = GetWindowModulePathCopyData(lparam, phwnd, buffer, MAX_PATH);
+	int l = GetWindowModulePathCopyData(lparam, phwnd, buffer, COUNTOF(buffer));
 
 	if (l) {
 		path.assign(buffer, l);
@@ -190,7 +190,7 @@ bool NotifyInfo::modify(NOTIFYICONDATA* pnid)
 
 	 // avoid to send WM_GETTEXT messages to the own process
 	if (pid != GetCurrentProcessId())
-		if (GetWindowText(_hWnd, title, MAX_PATH)) {
+		if (GetWindowText(_hWnd, title, COUNTOF(title))) {
 			if (_windowTitle != title) {
 				_windowTitle = title;
 				changes = true;
@@ -1282,7 +1282,7 @@ HWND ClockWindow::Create(HWND hwndParent)
 	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 
 	RECT rect = {0, 0, 0, 0};
-	TCHAR buffer[16];
+	TCHAR buffer[8];
 
 	if (!GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, NULL, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
 		_tcscpy(buffer, TEXT("00:00"));

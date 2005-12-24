@@ -1,7 +1,7 @@
 #ifndef _OSKITFREEBSD_H
 #define _OSKITFREEBSD_H
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #ifdef linux
 #include <netinet/in.h>
@@ -16,7 +16,7 @@ void *memset( void *dest, int c, size_t count );
 #define bzero(x,y) memset(x,0,y)
 #define bcopy(src,dst,n) memcpy(dst,src,n)
 #ifdef _MSC_VER
-static inline void panic ( const char* fmt, ... )
+static __inline void panic ( const char* fmt, ... )
 {
 	va_list arg;
 	va_start(arg, fmt);

@@ -699,6 +699,76 @@ extern HRESULT OLEAUTPS_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *
 extern void _get_STDFONT_CF(LPVOID);
 extern void _get_STDPIC_CF(LPVOID);
 
+static HRESULT WINAPI PSDispatchFacBuf_QueryInterface(IPSFactoryBuffer *iface, REFIID riid, void **ppv)
+{
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IPSFactoryBuffer))
+    {
+        IUnknown_AddRef(iface);
+        *ppv = (void *)iface;
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI PSDispatchFacBuf_AddRef(IPSFactoryBuffer *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI PSDispatchFacBuf_Release(IPSFactoryBuffer *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI PSDispatchFacBuf_CreateProxy(IPSFactoryBuffer *iface, IUnknown *pUnkOuter, REFIID riid, IRpcProxyBuffer **ppProxy, void **ppv)
+{
+    IPSFactoryBuffer *pPSFB;
+    HRESULT hr;
+
+    if (IsEqualIID(riid, &IID_IDispatch))
+        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, &IID_IPSFactoryBuffer, (void **)&pPSFB);
+    else
+        hr = TMARSHAL_DllGetClassObject(&CLSID_PSOAInterface, &IID_IPSFactoryBuffer, (void **)&pPSFB);
+
+    if (FAILED(hr)) return hr;
+
+    hr = IPSFactoryBuffer_CreateProxy(pPSFB, pUnkOuter, riid, ppProxy, ppv);
+
+    IPSFactoryBuffer_Release(pPSFB);
+    return hr;
+}
+
+static HRESULT WINAPI PSDispatchFacBuf_CreateStub(IPSFactoryBuffer *iface, REFIID riid, IUnknown *pUnkOuter, IRpcStubBuffer **ppStub)
+{
+    IPSFactoryBuffer *pPSFB;
+    HRESULT hr;
+
+    if (IsEqualIID(riid, &IID_IDispatch))
+        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, &IID_IPSFactoryBuffer, (void **)&pPSFB);
+    else
+        hr = TMARSHAL_DllGetClassObject(&CLSID_PSOAInterface, &IID_IPSFactoryBuffer, (void **)&pPSFB);
+
+    if (FAILED(hr)) return hr;
+
+    hr = IPSFactoryBuffer_CreateStub(pPSFB, riid, pUnkOuter, ppStub);
+
+    IPSFactoryBuffer_Release(pPSFB);
+    return hr;
+}
+
+static const IPSFactoryBufferVtbl PSDispatchFacBuf_Vtbl =
+{
+    PSDispatchFacBuf_QueryInterface,
+    PSDispatchFacBuf_AddRef,
+    PSDispatchFacBuf_Release,
+    PSDispatchFacBuf_CreateProxy,
+    PSDispatchFacBuf_CreateStub
+};
+
+/* This is the whole PSFactoryBuffer object, just the vtableptr */
+static const IPSFactoryBufferVtbl *pPSDispatchFacBuf = &PSDispatchFacBuf_Vtbl;
+
 /***********************************************************************
  *		DllGetClassObject (OLEAUT32.@)
  */
@@ -719,11 +789,15 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	    return S_OK;
 	}
     }
-    if (IsEqualCLSID(rclsid, &CLSID_PSDispatch) ||
-        IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
+    if (IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
         IsEqualCLSID(rclsid, &CLSID_PSTypeLib) ||
         IsEqualCLSID(rclsid, &CLSID_PSEnumVariant)) {
         return OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, iid, ppv);
+    }
+    if (IsEqualCLSID(rclsid, &CLSID_PSDispatch) && IsEqualIID(iid, &IID_IPSFactoryBuffer)) {
+        *ppv = &pPSDispatchFacBuf;
+        IPSFactoryBuffer_AddRef((IPSFactoryBuffer *)*ppv);
+        return S_OK;
     }
     if (IsEqualGUID(rclsid,&CLSID_PSOAInterface)) {
 	if (S_OK==TMARSHAL_DllGetClassObject(rclsid,iid,ppv))

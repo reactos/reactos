@@ -1190,6 +1190,7 @@ void output_stubs( FILE *outfile, DLLSPEC *spec )
         fprintf( outfile, "\t.align %d\n", get_alignment(4) );
         fprintf( outfile, "\t%s\n", func_declaration(name) );
         fprintf( outfile, "%s:\n", asm_name(name) );
+        fprintf( outfile, "\tsubl $4,%%esp\n" );
 
         if (UsePIC)
         {

@@ -13,20 +13,32 @@
 #define NDEBUG
 #include <debug.h>
 
+/* swtich this off to get rid of all dx debug msg */
+#define DX_DEBUG
+
+
 /************************************************************************/
 /* DIRECT DRAW OBJECT                                                   */
 /************************************************************************/
 
 BOOL INTERNAL_CALL
 DD_Cleanup(PVOID ObjectBody)
-{
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(ObjectBody, GDI_OBJECT_TYPE_DIRECTDRAW);
+{       
+	PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
+#ifdef DX_DEBUG
+	DPRINT1("DD_Cleanup\n");
+#endif
+	
 	if (!pDirectDraw)
 		return FALSE;
-
+    
+    if (pDirectDraw->Global.dhpdev == NULL)
+        return FALSE;
+        
+    if (pDirectDraw->DrvDisableDirectDraw == NULL)
+        return FALSE;
+        
 	pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
-
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	return TRUE;
 }
 
@@ -37,6 +49,9 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	DD_CALLBACKS callbacks;
 	DD_SURFACECALLBACKS surface_callbacks;
 	DD_PALETTECALLBACKS palette_callbacks;
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdCreateDirectDrawObject\n");
+#endif
 
 	RtlZeroMemory(&callbacks, sizeof(DD_CALLBACKS));
 	callbacks.dwSize = sizeof(DD_CALLBACKS);
@@ -45,7 +60,13 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	RtlZeroMemory(&palette_callbacks, sizeof(DD_PALETTECALLBACKS));
 	palette_callbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
-	
+	/* FIXME hdc can be zero for d3d9 */
+    /* we need create it, if in that case */
+	if (hdc == NULL)
+	{
+	    return NULL;
+    }
+    
 	DC *pDC = DC_LockDc(hdc);
 	if (!pDC)
 		return NULL;
@@ -62,6 +83,9 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 
 	if (!success)
 	{
+#ifdef DX_DEBUG
+        DPRINT1("DirectDraw creation failed\n"); 
+#endif
 		// DirectDraw creation failed
 		DC_UnlockDc(pDC);
 		return NULL;
@@ -71,6 +95,9 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!hDirectDraw)
 	{
 		/* No more memmory */
+#ifdef DX_DEBUG
+		DPRINT1("No more memmory\n"); 
+#endif
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
@@ -79,6 +106,9 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!pDirectDraw)
 	{
 		/* invalid handle */
+#ifdef DX_DEBUG
+		DPRINT1("invalid handle\n"); 
+#endif
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
@@ -109,15 +139,18 @@ BOOL STDCALL NtGdiDdDeleteDirectDrawObject(
     HANDLE hDirectDrawLocal
 )
 {
+#ifdef DX_DEBUG
+    DPRINT1("NtGdiDdDeleteDirectDrawObject\n");
+#endif
 	return GDIOBJ_FreeObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 }
 
 BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     HANDLE hDirectDrawLocal,
-    DD_HALINFO *pHalInfo,
+    DD_HALINFO  *pHalInfo,
     DWORD *pCallBackFlags,
-    PD3DNTHAL_CALLBACKS puD3dCallbacks,
-    PD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
+    LPD3DNTHAL_CALLBACKS puD3dCallbacks,
+    LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
     PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
     LPDDSURFACEDESC puD3dTextureFormats,
     DWORD *puNumHeaps,
@@ -126,9 +159,53 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     DWORD *puFourCC
 )
 {
+#ifdef DX_DEBUG
+    DPRINT1("NtGdiDdQueryDirectDrawObject\n");
+#endif
+
+    /* Check for NULL pointer to prevent any one doing a mistake */
+
+    if (hDirectDrawLocal == NULL)
+    {
+#ifdef DX_DEBUG
+       DPRINT1("warning hDirectDraw handler is NULL, the handler is  DDRAWI_DIRECTDRAW_GBL.hDD\n");
+       DPRINT1("and it is NtGdiDdCreateDirectDrawObject return value\n");
+#endif
+       return FALSE;
+    }
+
+
+    if (pHalInfo == NULL)
+    {
+#ifdef DX_DEBUG
+       DPRINT1("warning pHalInfo buffer is NULL \n");
+#endif
+       return FALSE;
+    }
+
+    if ( pCallBackFlags == NULL)
+    {
+#ifdef DX_DEBUG
+       DPRINT1("warning pCallBackFlags s NULL, the size must be 3*DWORD in follow order \n");
+       DPRINT1("pCallBackFlags[0] = flags in DD_CALLBACKS\n");
+       DPRINT1("pCallBackFlags[1] = flags in DD_SURFACECALLBACKS\n");
+       DPRINT1("pCallBackFlags[2] = flags in DD_PALETTECALLBACKS\n");
+#endif
+       return FALSE;
+    }
+   
+    
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	
+	
 	if (!pDirectDraw)
+	{
+        /* Fail to Lock DirectDraw handle */
+#ifdef DX_DEBUG
+        DPRINT1(" Fail to Lock DirectDraw handle \n");        
+#endif
 		return FALSE;
+    }
 
 	BOOL success = pDirectDraw->DrvGetDirectDrawInfo(
 		pDirectDraw->Global.dhpdev,
@@ -140,29 +217,133 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 
 	if (!success)
 	{
+#ifdef DX_DEBUG
+        DPRINT1(" Fail to get DirectDraw driver info \n");
+#endif
 		GDIOBJ_UnlockObjByPtr(pDirectDraw);
 		return FALSE;
 	}
 
+      
+    /* rest the flag so we do not need do it later */
+    pCallBackFlags[0]=0;
+    pCallBackFlags[1]=0;
+    pCallBackFlags[2]=0;
+
 	if (pHalInfo)
-	{
-       RtlMoveMemory(&pDirectDraw->Hal, pHalInfo, sizeof(DD_HALINFO));
+	{       
+      
+          {
+             DDHALINFO* pHalInfo2 = ((DDHALINFO*) pHalInfo);
+#ifdef DX_DEBUG
+             DPRINT1("Found DirectDraw CallBack for 2D and 3D Hal\n");
+#endif
+             RtlMoveMemory(&pDirectDraw->Hal, pHalInfo2, sizeof(DDHALINFO));
 
-	   if (pHalInfo->lpD3DHALCallbacks)
-	   {
-		 RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof(D3DNTHAL_CALLBACKS));		
+             if (pHalInfo2->lpDDExeBufCallbacks)
+	         {
+#ifdef DX_DEBUG
+                 DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");                                
+#endif
+                 /* msdn DDHAL_D3DBUFCALLBACKS = DD_D3DBUFCALLBACKS */
+                 RtlMoveMemory(puD3dBufferCallbacks, pHalInfo2->lpDDExeBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+             }
+              
+#ifdef DX_DEBUG               
+             DPRINT1("Do not support CallBack for 3D Hal\n");
+#endif
+             /* FIXME we need D3DHAL be include 
+
+             if (pHalInfo2->lpD3DHALCallbacks )
+	         {    
+#ifdef DX_DEBUG
+                    DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
+#endif
+		            RtlMoveMemory(puD3dCallbacks, (ULONG *)pHalInfo2->lpD3DHALCallbacks, sizeof( D3DHAL_CALLBACKS ));		
+	         } 
+             */              
+
+
+             /* msdn say D3DHAL_GLOBALDRIVERDATA and D3DNTHAL_GLOBALDRIVERDATA are not same 
+                but if u compare these in msdn it is exacly same */
+
+	         if (pHalInfo->lpD3DGlobalDriverData)
+	         {
+#ifdef DX_DEBUG
+                   DPRINT1("Found DirectDraw CallBack for 3D Hal Private  \n");
+#endif
+		           RtlMoveMemory(puD3dDriverData, (ULONG *)pHalInfo2->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+	         }
+              
+             /* build the flag */
+               
+             if (pHalInfo2->lpDDCallbacks!=NULL)
+             {
+#ifdef DX_DEBUG
+                    DPRINT1("Dectect DirectDraw lpDDCallbacks for 2D Hal flag = %d\n",pHalInfo2->lpDDCallbacks->dwFlags);
+#endif
+                    pCallBackFlags[0] = pHalInfo2->lpDDCallbacks->dwFlags;
+             }
+     
+             if (pHalInfo2->lpDDCallbacks!=NULL)
+             {
+#ifdef DX_DEBUG
+                   DPRINT1("Dectect DirectDraw lpDDSurfaceCallbacks for 2D Hal flag = %d\n",pHalInfo2->lpDDSurfaceCallbacks->dwFlags);
+#endif
+                   pCallBackFlags[1] = pHalInfo2->lpDDSurfaceCallbacks->dwFlags;
+             }
+       
+             if (pHalInfo2->lpDDCallbacks!=NULL)
+             {
+#ifdef DX_DEBUG
+                   DPRINT1("Dectect DirectDraw lpDDCallbacks for 2D Hal flag = %d\n",pHalInfo2->lpDDPaletteCallbacks->dwFlags);
+#endif
+                   pCallBackFlags[2] = pHalInfo2->lpDDPaletteCallbacks->dwFlags;
+             }
+
+          }
+             
+#ifdef DX_DEBUG
+          DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
+#endif
+          RtlMoveMemory(&pDirectDraw->Hal, pHalInfo, sizeof(DD_HALINFO));
+
+          if (pHalInfo->lpD3DBufCallbacks)
+	      {
+#ifdef DX_DEBUG
+                   DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");
+#endif
+		           RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+	      }
+
+          if (pHalInfo->lpD3DHALCallbacks)
+	      {
+#ifdef DX_DEBUG
+                   DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
+#endif
+		           RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof(D3DNTHAL_CALLBACKS));		
+	      }
+
+	      if (pHalInfo->lpD3DGlobalDriverData)
+	      {
+#ifdef DX_DEBUG
+                   DPRINT1("Found DirectDraw CallBack for 3D Hal Private  \n");
+#endif
+		           RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+	      }
+          
+#ifdef DX_DEBUG
+          DPRINT1("Unkown DirectX driver interface\n");
+#endif
+                            	   	          	   	                           	   	
 	   }
 
-	   if (pHalInfo->lpD3DGlobalDriverData)
-	   {
-		 RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-	   }
-	   if (pHalInfo->lpD3DBufCallbacks)
-	   {
-		 RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
-	   }
-       	   	
-	 }
+#ifdef DX_DEBUG
+     else
+	 {
+	   DPRINT1("No DirectDraw Hal info have been found, it did not fail, it did gather some other info \n");
+    }
+#endif
         
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
@@ -175,14 +356,38 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
     PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = 0;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdGetDriverInfo\n");
+#endif
+	
 	if (pDirectDraw == NULL) 
+	{
+#ifdef DX_DEBUG
+        DPRINT1("Can not lock DirectDraw handle \n");
+#endif
 		return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	if   (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
+    
+    /* it exsist two version of NtGdiDdGetDriverInfo we need check for both flags */
+    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
+         ddRVal++;
+         
+    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFO2))
+         ddRVal++;
+                    
+    
+    /* Now we are doing the call to drv DrvGetDriverInfo */
+	if   (ddRVal == 2)
+	{
+#ifdef DX_DEBUG
+         DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");         
+#endif
 	     ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    }
 	else
 	     ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
    
@@ -209,11 +414,19 @@ DWORD STDCALL NtGdiDdCreateSurface(
 {
 	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdCreateSurface\n");
+#endif
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
+	{
+#ifdef DX_DEBUG
+       	DPRINT1("Can not lock the DirectDraw handle\n");
+#endif
 		return DDHAL_DRIVER_NOTHANDLED;
-
+    }
+	
 	/* backup the orignal PDev and info */
 	lgpl = puCreateSurfaceData->lpDD;
 
@@ -222,7 +435,12 @@ DWORD STDCALL NtGdiDdCreateSurface(
 	
 	/* make the call */
 	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
+	{
+#ifdef DX_DEBUG
+        DPRINT1("DirectDraw HAL does not support Create Surface"); 
+#endif
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+    }
 	else
 	{	  
 	   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	 
@@ -242,6 +460,10 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 {
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdWaitForVerticalBlank\n");
+#endif
+
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
@@ -272,9 +494,12 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 )
 {
 	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+	PDD_DIRECTDRAW_GLOBAL lgpl;	
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdCanCreateSurface\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -306,6 +531,9 @@ DWORD STDCALL NtGdiDdGetScanLine(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdGetScanLine\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -344,6 +572,9 @@ DWORD STDCALL NtGdiDdDestroySurface(
 	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdDestroySurface\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -382,6 +613,10 @@ DWORD STDCALL NtGdiDdFlip(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceTarget, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdFlip\n");
+#endif
+	
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -414,6 +649,9 @@ DWORD STDCALL NtGdiDdLock(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdLock\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -445,6 +683,9 @@ DWORD STDCALL NtGdiDdUnlock(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdUnlock\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -477,6 +718,9 @@ DWORD STDCALL NtGdiDdBlt(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
     PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+    DPRINT1("NtGdiDdBlt\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -508,6 +752,9 @@ DWORD STDCALL NtGdiDdSetColorKey(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdSetColorKey\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -541,6 +788,9 @@ DWORD STDCALL NtGdiDdAddAttachedSurface(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceAttached, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdAddAttachedSurface\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -572,6 +822,9 @@ DWORD STDCALL NtGdiDdGetBltStatus(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdGetBltStatus\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -603,6 +856,9 @@ DWORD STDCALL NtGdiDdGetFlipStatus(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdGetFlipStatus\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -635,6 +891,9 @@ DWORD STDCALL NtGdiDdUpdateOverlay(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
     PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+    DPRINT1("NtGdiDdUpdateOverlay\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -667,6 +926,9 @@ DWORD STDCALL NtGdiDdSetOverlayPosition(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
     PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+    DPRINT1("NtGdiDdSetOverlayPosition\n");
+#endif
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -700,6 +962,9 @@ DDSURF_Cleanup(PVOID pDDSurf)
 	/* FIXME: implement 
 	 * PDD_SURFACE pDDSurf = PVOID pDDSurf
 	 */
+#ifdef DX_DEBUG
+    DPRINT1("DDSURF_Cleanup\n");
+#endif
 	return TRUE;
 }
 
@@ -713,6 +978,9 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 )
 {
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdCreateSurfaceObject\n");
+#endif
 	if (!pDirectDraw)
 		return NULL;
 
@@ -743,7 +1011,14 @@ BOOL STDCALL NtGdiDdDeleteSurfaceObject(
     HANDLE hSurface
 )
 {
+#ifdef DX_DEBUG
+    DPRINT1("NtGdiDdDeleteSurfaceObject\n");
+#endif
+    /* FIXME add right GDI_OBJECT_TYPE_ for everthing for now 
+       we are using same type */
+	/* return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE); */
 	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
+	
 }
 
 
@@ -789,6 +1064,9 @@ DWORD STDCALL NtGdiDdGetAvailDriverMemory(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdGetAvailDriverMemory\n");
+#endif
 
 	/* backup the orignal PDev and info */
 	lgpl = puGetAvailDriverMemoryData->lpDD;
@@ -820,6 +1098,10 @@ DWORD STDCALL NtGdiDdSetExclusiveMode(
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+
+#ifdef DX_DEBUG
+	DPRINT1("NtGdiDdSetExclusiveMode\n");
+#endif
 
 	/* backup the orignal PDev and info */
 	lgpl = puSetExclusiveModeData->lpDD;

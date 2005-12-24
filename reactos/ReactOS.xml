@@ -10,6 +10,9 @@
 	<xi:include href="baseaddress.xml" />
 
 	<define name="_M_IX86" />
+	<define name="_X86_" />
+	<define name="__i386__" />
+	<define name="_REACTOS_" />
 	<if property="MP" value="1">
 		<define name="CONFIG_SMP" value="1" />
 	</if>
@@ -22,7 +25,7 @@
 		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-ftracer</compilerflag>
 		<compilerflag>-momit-leaf-frame-pointer</compilerflag>
-		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
+		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>            
 	</if>
 	<if property="KDBG" value="1">
 		<define name="KDBG" value="1" />
@@ -30,12 +33,15 @@
 	</if>
 	<compilerflag>-Wpointer-arith</compilerflag>
 
+	<include>.</include>
 	<include>include</include>
 	<include>include/reactos</include>
 	<include>include/libs</include>
 	<include>include/drivers</include>
 	<include>include/subsys</include>
+	<include>include/ndk</include>
 	<include>w32api/include</include>
+	<include>w32api/include/crt</include>
 	<include>w32api/include/ddk</include>
 
 	<directory name="apps">

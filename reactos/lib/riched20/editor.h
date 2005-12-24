@@ -173,6 +173,7 @@ ME_DisplayItem *ME_MakeRow(int height, int baseline, int width);
 void ME_InsertRowStart(ME_WrapContext *wc, ME_DisplayItem *pEnd);
 void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp);
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
+void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
 
 /* para.c */
 ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 

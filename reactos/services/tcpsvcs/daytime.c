@@ -32,16 +32,16 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
     
     SendTime(Sock, pszTime);
 
-    _tprintf(_T("Shutting connection down...\n"));
+    LogEvent(_T("DayTime: Shutting connection down...\n"), 0, FALSE);
     if (ShutdownConnection(Sock, FALSE))
-        _tprintf(_T("Connection is down.\n"));
+        LogEvent(_T("DayTime: Connection is down.\n"), 0, FALSE);
     else
     {
-        _tprintf(_T("Connection shutdown failed\n"));
+        LogEvent(_T("DayTime: Connection shutdown failed\n"), 0, FALSE);
         RetVal = -1;
     }
     
-    _tprintf(_T("Terminating daytime thread\n"));
+    LogEvent(_T("DayTime: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
 }
 
@@ -54,6 +54,6 @@ BOOL SendTime(SOCKET Sock, TCHAR *time)
     if (RetVal == SOCKET_ERROR)
         return FALSE;
 
-    _tprintf(("Connection closed by peer.\n"));
+    LogEvent(_T("DayTime: Connection closed by peer.\n"), 0, FALSE);
     return TRUE;
 }

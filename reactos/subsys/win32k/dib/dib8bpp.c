@@ -276,7 +276,7 @@ DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 typedef unsigned char PIXEL;
 
 /* 16-bit HiColor (565 format) */
-inline PIXEL average8(PIXEL a, PIXEL b)
+__inline PIXEL average8(PIXEL a, PIXEL b)
 {
   return a; // FIXME: Depend on SetStretchMode
 }

@@ -7,7 +7,6 @@
  *              KJK::Hyperion <noog@libero.it>
  */
 
-#include <ndk/i386/segment.h>
 #include <ndk/asm.h>
 
 #define CONTEXT_FULL                    0x10007
@@ -18,7 +17,7 @@
 
 _SwitchToFiber@4:
     /* Get the TEB */
-    mov edx, fs:[TEB_SELECTOR]
+    mov edx, fs:[KGDT_R3_TEB]
     
     /* Get the Fiber */
     mov eax, [edx+TEB_FIBER_DATA]

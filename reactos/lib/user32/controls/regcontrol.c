@@ -51,6 +51,7 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
       &MenuName,
       Descr->procA,
       REGISTERCLASS_SYSTEM,
+      0,
       0);
 }
 

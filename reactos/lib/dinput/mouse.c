@@ -711,7 +711,7 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceState(
     if(This->acquired == 0) return DIERR_NOTACQUIRED;
 
     EnterCriticalSection(&(This->crit));
-    TRACE("(this=%p,0x%08lx,%p): \n",This,len,ptr);
+    TRACE("(this=%p,0x%08lx,%p):\n", This, len, ptr);
     TRACE("(X: %ld - Y: %ld - Z: %ld  L: %02x M: %02x R: %02x)\n",
 	  This->m_state.lX, This->m_state.lY, This->m_state.lZ,
 	  This->m_state.rgbButtons[0], This->m_state.rgbButtons[2], This->m_state.rgbButtons[1]);

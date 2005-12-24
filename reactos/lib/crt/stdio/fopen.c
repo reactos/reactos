@@ -25,19 +25,11 @@
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include "precomp.h"
+#include <precomp.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <io.h>
-#include <fcntl.h>
 #include <tchar.h>
-#include <internal/file.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
-
-
 
 FILE* _tfopen(const _TCHAR *file, const _TCHAR *mode)
 {

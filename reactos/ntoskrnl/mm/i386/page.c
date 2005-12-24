@@ -14,6 +14,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
+#pragma alloc_text(INIT, MiInitPageDirectoryMap)
+#endif
+
+
 /* GLOBALS *****************************************************************/
 
 #define PA_BIT_PRESENT   (0)
@@ -2419,30 +2425,28 @@ MiInitPageDirectoryMap(VOID)
 
    BoundaryAddressMultiple.QuadPart = 0;
    BaseAddress = (PVOID)PAGETABLE_MAP;
-   Status = MmCreateMemoryArea(NULL,
-                               MmGetKernelAddressSpace(),
+   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                MEMORY_AREA_SYSTEM,
                                &BaseAddress,
 		               Ke386Pae ? 0x800000 : 0x400000,
-                               0,
+                               PAGE_READWRITE,
                                &kernel_map_desc,
                                TRUE,
-                               FALSE,
+                               0,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
       KEBUGCHECK(0);
    }
    BaseAddress = (PVOID)HYPERSPACE;
-   Status = MmCreateMemoryArea(NULL,
-                               MmGetKernelAddressSpace(),
+   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                MEMORY_AREA_SYSTEM,
                                &BaseAddress,
 		               0x400000,
-                               0,
+                               PAGE_READWRITE,
                                &hyperspace_desc,
                                TRUE,
-                               FALSE,
+                               0,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {

@@ -54,7 +54,7 @@ _memmove:
 	je	.L3
 	rep	movsb
 .L3:
-	mov	16(%ebp),%eax
+	mov	8(%ebp),%eax
 	pop	%edi
 	pop	%esi
 	leave

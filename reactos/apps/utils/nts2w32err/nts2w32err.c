@@ -13,7 +13,7 @@
  *
  */
 #include <windows.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #include <stdio.h>
 

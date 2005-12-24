@@ -43,4 +43,13 @@ DEFINE_GUID(IID_IPersistFolder3, 0xcef04fdf, 0xfe72, 0x11d2, 0x87,0xa5, 0x00,0xc
 /*** IShellExecuteHookW methods ***/
 #define IShellExecuteHookW_Execute(p,a) (p)->lpVtbl->Execute(p,a)
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IShellExtInit_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellExtInit_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IShellExtInit_Release(p) (p)->lpVtbl->Release(p)
+/*** IShellExtInit methods ***/
+#define IShellExtInit_Initialize(p,a,b,c) (p)->lpVtbl->Initialize(p,a,b,c)
+#endif
+
 #endif /* __WINE_SHOBJIDL_H */

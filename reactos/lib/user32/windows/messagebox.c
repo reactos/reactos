@@ -51,16 +51,6 @@
 #define IDI_WINLOGOA       MAKEINTRESOURCEA(32517)
 #define IDI_WINLOGOW       MAKEINTRESOURCEW(32517)
 
-#ifndef MB_TYPEMASK
-#define MB_TYPEMASK             0x0000000F
-#endif
-#ifndef MB_ICONMASK
-#define MB_ICONMASK             0x000000F0
-#endif
-#ifndef MB_DEFMASK
-#define MB_DEFMASK              0x00000F00
-#endif
-
 #define BTN_CX (75)
 #define BTN_CY (23)
 
@@ -196,7 +186,6 @@ MessageBoxTimeoutIndirectW(
     DLGITEMTEMPLATE *iico, *itxt;
     NONCLIENTMETRICSW nclm;
     WCHAR capbuf[32];
-    HMODULE hUser32;
     LPVOID buf;
     BYTE *dest;
     LPCWSTR caption, text;
@@ -213,11 +202,9 @@ MessageBoxTimeoutIndirectW(
     BOOL defbtn = FALSE;
     DWORD units = GetDialogBaseUnits();
 
-    hUser32 = GetModuleHandleW(L"USER32");
-
     if(!lpMsgBoxParams->lpszCaption || !HIWORD((LPWSTR)lpMsgBoxParams->lpszCaption))
     {
-      LoadStringW(hUser32, IDS_ERROR, &capbuf[0], 32);
+      LoadStringW(User32Instance, IDS_ERROR, &capbuf[0], 32);
       caption = &capbuf[0];
     }
     else
@@ -335,34 +322,34 @@ MessageBoxTimeoutIndirectW(
       switch(Buttons[i])
       {
         case IDOK:
-          LoadStringW(hUser32, IDS_OK, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_OK, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDCANCEL:
-          LoadStringW(hUser32, IDS_CANCEL, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_CANCEL, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDYES:
-          LoadStringW(hUser32, IDS_YES, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_YES, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDNO:
-          LoadStringW(hUser32, IDS_NO, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_NO, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDTRYAGAIN:
-          LoadStringW(hUser32, IDS_TRYAGAIN, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_TRYAGAIN, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDCONTINUE:
-          LoadStringW(hUser32, IDS_CONTINUE, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_CONTINUE, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDABORT:
-          LoadStringW(hUser32, IDS_ABORT, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_ABORT, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDRETRY:
-          LoadStringW(hUser32, IDS_RETRY, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_RETRY, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDIGNORE:
-          LoadStringW(hUser32, IDS_IGNORE, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_IGNORE, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDHELP:
-          LoadStringW(hUser32, IDS_HELP, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
+          LoadStringW(User32Instance, IDS_HELP, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         default:
           ButtonText[i][0] = (WCHAR)0;

@@ -279,7 +279,7 @@ InternalFindFirstFile (
 	   SearchPath[Length] = 0;
 	}
 
-	bResult = RtlDosPathNameToNtPathName_U ((LPWSTR)SearchPath,
+	bResult = RtlDosPathNameToNtPathName_U (SearchPath,
 	                                        &NtPathU,
 	                                        NULL,
 	                                        NULL);

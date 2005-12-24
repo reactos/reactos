@@ -12,6 +12,14 @@
  *
  */
 
+#define WIN32_LEAN_AND_MEAN
+#include <stdio.h>
+#include <winsock2.h>
+#include <tchar.h>
+ 
+#define UNICODE
+#define _UNICODE
+
 /* default port numbers */
 #define ECHO_PORT 7
 #define DISCARD_PORT 9
@@ -40,7 +48,6 @@ typedef struct _Services {
     TCHAR *Name;
     LPTHREAD_START_ROUTINE Service;
 } SERVICES, *PSERVICES;
-
 
 /* tcpsvcs functions */
 //static VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);

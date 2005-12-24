@@ -8,10 +8,7 @@
  *              28/12/98: Created
  */
 
-#include "precomp.h"
-#include <conio.h>
-#include <internal/console.h>
-
+#include <precomp.h>
 
 /*
  * FIXME PeekConsoleInput returns more than keyboard hits

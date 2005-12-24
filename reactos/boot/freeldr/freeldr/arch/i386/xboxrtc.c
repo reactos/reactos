@@ -17,10 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "machine.h"
-#include "machxbox.h"
-#include "portio.h"
+#include <freeldr.h>
 
 #define RTC_REGISTER_A   0x0A
 #define   RTC_REG_A_UIP  0x80  /* Update In Progress bit */

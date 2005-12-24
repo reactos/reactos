@@ -410,7 +410,7 @@ static BOOL CreateCPanelEnumList(
     WIN32_FIND_DATAA wfd;
     HANDLE hFile;
 
-    TRACE("(%p)->(flags=0x%08lx) \n",iface,dwFlags);
+    TRACE("(%p)->(flags=0x%08lx)\n", iface, dwFlags);
 
     /* enumerate control panel folders folders */
     if (dwFlags & SHCONTF_FOLDERS)

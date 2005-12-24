@@ -146,13 +146,13 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 					if (cursor < current)
 						if (InputRecord.Event.KeyEvent.dwControlKeyState &
 							(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
-							unsigned int i,j;
+							unsigned int j, k;
 							for (j = cursor; j <= current; j++)
 								if (buf[j+1] == ' ' || (j+1)==current)
 									break;
-								for (i = ++j; i <= current; i++)
-									if (buf[i] != ' ' || i == current) {
-										cursor = i == current ? --i : i;
+								for (k = ++j; k <= current; k++)
+									if (buf[k] != ' ' || k == current) {
+										cursor = k == current ? --k : k;
 										break;
 									}
 						} else
@@ -163,13 +163,13 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 					if (cursor > 0)
 						if(InputRecord.Event.KeyEvent.dwControlKeyState &
 							(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
-							int i,j;
+							int j, k;
 							for (j = cursor; j >= 0; j--)
 								if (buf[j-1] != ' ')
 									break;
-								for (i = --j; i >= 0; i--)
-									if (buf[i] == ' ' || i == 0) {
-										cursor = !i ? i : ++i;
+								for (k = --j; k >= 0; k--)
+									if (buf[k] == ' ' || k == 0) {
+										cursor = !k ? k : ++k;
 										break;
 									}
 						} else
@@ -414,13 +414,13 @@ enum {
 
 
 struct command {
-	char* cmd;				// command
+	const char* cmd;				// command
 	int   minLen,			// minimal length for match
 		  minParms,			// minimal count of parms
 		  maxParms;			// maximal -/- (negative disables)
 	int   isSubCmd,			// is a subcommand - number of wich command
 		  haveSubCmd;		// have subcommands? 0 or 1
-	char* usage;			// text of usage
+	const char* usage;			// text of usage
 };
 
 command cmdList[__COMMAND_LIST_SIZE] = {

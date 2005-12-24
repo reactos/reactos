@@ -948,6 +948,7 @@ NtUserOpenDesktop(
    ACCESS_MASK dwDesiredAccess)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
+   HWINSTA WinSta;
    PWINSTATION_OBJECT WinStaObject;
    UNICODE_STRING DesktopName;
    NTSTATUS Status;
@@ -962,16 +963,16 @@ NtUserOpenDesktop(
     * qualified desktop name
     */
 
+   WinSta = UserGetProcessWindowStation();
    Status = IntValidateWindowStationHandle(
-               PsGetCurrentProcess()->Win32WindowStation,
+               WinSta,
                KernelMode,
                0,
                &WinStaObject);
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed validation of window station handle (0x%X)\n",
-              PsGetCurrentProcess()->Win32WindowStation);
+      DPRINT1("Failed validation of window station handle (0x%X)\n", WinSta);
       SetLastNtError(Status);
       RETURN( 0);
    }
@@ -986,7 +987,7 @@ NtUserOpenDesktop(
 
    ObDereferenceObject(WinStaObject);
 
-   DPRINT1("Trying to open desktop (%wZ)\n", &DesktopName);
+   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
 
    /* Initialize ObjectAttributes for the desktop object */
    InitializeObjectAttributes(
@@ -1000,7 +1001,7 @@ NtUserOpenDesktop(
                &ObjectAttributes,
                ExDesktopObjectType,
                NULL,
-               UserMode,
+               KernelMode,
                dwDesiredAccess,
                NULL,
                (HANDLE*)&Desktop);
@@ -1205,8 +1206,12 @@ NtUserPaintDesktop(HDC hDC)
    IntGdiGetClipBox(hDC, &Rect);
 
    hWndDesktop = IntGetDesktopWindow();
-   if (!(WndDesktop = UserGetWindowObject(hWndDesktop)))
+   
+   WndDesktop = UserGetWindowObject(hWndDesktop);
+   if (!WndDesktop)
+   {
       RETURN(FALSE);
+   }
 
    DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE); //fixme: verify retval
 
@@ -1215,11 +1220,13 @@ NtUserPaintDesktop(HDC hDC)
     * Paint desktop background
     */
 
-   if(WinSta->hbmWallpaper != NULL)
+   if (WinSta->hbmWallpaper != NULL)
    {
       PWINDOW_OBJECT DeskWin;
 
-      if((DeskWin = UserGetWindowObject(hWndDesktop)))
+      DeskWin = UserGetWindowObject(hWndDesktop);
+      
+      if (DeskWin)
       {
          SIZE sz;
          int x, y;
@@ -1227,35 +1234,93 @@ NtUserPaintDesktop(HDC hDC)
 
          sz.cx = DeskWin->WindowRect.right - DeskWin->WindowRect.left;
          sz.cy = DeskWin->WindowRect.bottom - DeskWin->WindowRect.top;
-
-
-         x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
-         y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
-
+ 
+         if (WinSta->WallpaperMode == wmStretch ||
+             WinSta->WallpaperMode == wmTile)
+         {
+            x = 0;
+            y = 0;
+         }
+         else
+         {
+            /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
+            x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
+            y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
+         }
+ 
          hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
          if(hWallpaperDC != NULL)
          {
             HBITMAP hOldBitmap;
-
-            if(x > 0 || y > 0)
+ 
+            /* fill in the area that the bitmap is not going to cover */
+            if (x > 0 || y > 0)
             {
-               /* FIXME - clip out the bitmap */
-               PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
-               NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-               NtGdiSelectObject(hDC, PreviousBrush);
+               /* FIXME - clip out the bitmap 
+                                            can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                                            once we support DSTINVERT */
+              PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
+              NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+              NtGdiSelectObject(hDC, PreviousBrush);
+            }
+ 
+            /*Do not fill the background after it is painted no matter the size of the picture */
+            doPatBlt = FALSE;
+ 
+            hOldBitmap = NtGdiSelectObject(hWallpaperDC, WinSta->hbmWallpaper);
+ 
+            if (WinSta->WallpaperMode == wmStretch)
+            {
+                NtGdiStretchBlt(hDC, 
+                                x, 
+                                y, 
+                                Rect.right, 
+                                Rect.bottom, 
+                                hWallpaperDC, 
+                                0, 
+                                0, 
+                                WinSta->cxWallpaper, 
+                                WinSta->cyWallpaper, 
+                                SRCCOPY);
+            }
+            else if (WinSta->WallpaperMode == wmTile)
+            {
+                /* paint the bitmap across the screen then down */
+                for(y = 0; y < Rect.bottom; y += WinSta->cyWallpaper)
+                {
+                    for(x = 0; x < Rect.right; x += WinSta->cxWallpaper)
+                    {
+                        NtGdiBitBlt(hDC, 
+                                    x, 
+                                    y, 
+                                    WinSta->cxWallpaper, 
+                                    WinSta->cyWallpaper, 
+                                    hWallpaperDC, 
+                                    0, 
+                                    0, 
+                                    SRCCOPY);
+                    }
+                }
             }
             else
-               doPatBlt = FALSE;
-
-            hOldBitmap = NtGdiSelectObject(hWallpaperDC, WinSta->hbmWallpaper);
-            NtGdiBitBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, hWallpaperDC, 0, 0, SRCCOPY);
-            NtGdiSelectObject(hWallpaperDC, hOldBitmap);
-
+            {
+                NtGdiBitBlt(hDC, 
+                            x, 
+                            y, 
+                            WinSta->cxWallpaper, 
+                            WinSta->cyWallpaper, 
+                            hWallpaperDC, 
+                            0, 
+                            0, 
+                            SRCCOPY);
+            } 
+            NtGdiSelectObject(hWallpaperDC, hOldBitmap); 
             NtGdiDeleteDC(hWallpaperDC);
          }
       }
    }
 
+   /* Back ground is set to none, clear the screen */
    if (doPatBlt)
    {
       PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
@@ -1273,9 +1338,13 @@ NtUserPaintDesktop(HDC hDC)
       RECT rect;
 
       if (*s_wszVersion)
+      {
          len = wcslen(s_wszVersion);
+      }
       else
+      {
          len = GetSystemVersionString(s_wszVersion);
+      }
 
       if (len)
       {

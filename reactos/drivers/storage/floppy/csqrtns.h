@@ -27,7 +27,7 @@
 #ifdef _MSC_VER
 #include <csq.h>
 #else
-#include <ddk/csq.h>
+#include <csq.h>
 #endif
 
 /*

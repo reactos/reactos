@@ -18,20 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <fs.h>
-#include "fsrec.h"
-#include "fat.h"
-#include "iso.h"
-#include "ext2.h"
-#include "ntfs.h"
-#include <disk.h>
-#include <rtl.h>
-#include <arch.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <machine.h>
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -133,7 +122,7 @@ BOOL FsRecIsNtfs(ULONG DriveNumber, ULONG VolumeStartSector)
 		return FALSE;
 	}
 
-	if (!RtlCompareMemory(BootSector->SystemId, "NTFS", 4))
+	if (RtlEqualMemory(BootSector->SystemId, "NTFS", 4))
 	{
 		return TRUE;
 	}

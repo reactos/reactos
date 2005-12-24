@@ -194,7 +194,13 @@ GetSystemPowerStatus (
     )
 {
     STUB;
-    return 0;
+    PowerStatus->ACLineStatus = 1;
+    PowerStatus->BatteryFlag = 128;
+    PowerStatus->BatteryLifePercent = 255;
+    PowerStatus->Reserved1 = 0;
+    PowerStatus->BatteryLifeTime = -1;
+    PowerStatus->BatteryFullLifeTime = -1;
+    return TRUE;
 }
 
 
@@ -336,39 +342,6 @@ VDMOperationStarted (
     return 0;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-VerLanguageNameA (
-    DWORD   wLang,
-    LPSTR   szLang,
-    DWORD   nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-VerLanguageNameW (
-    DWORD   wLang,
-    LPWSTR  szLang,
-    DWORD   nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -453,20 +426,6 @@ CancelDeviceWakeupRequest(
     return 0;
 }
 
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-CreateActCtxA(
-    PCACTCTXA pActCtx
-    )
-{
-    STUB;
-    return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -477,7 +436,7 @@ CreateActCtxW(
     )
 {
     STUB;
-    return 0;
+    return INVALID_HANDLE_VALUE;
 }
 
 /*
@@ -1050,7 +1009,7 @@ FindActCtxSectionStringW(
     )
 {
     STUB;
-    return 0;
+    return FALSE;
 }
 
 /*
@@ -1139,21 +1098,6 @@ GetModuleHandleExW(
     DWORD        dwFlags,
     LPCWSTR     lpModuleName,
     HMODULE*    phModule
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetVolumeNameForVolumeMountPointW(
-    LPCWSTR lpszVolumeMountPoint,
-    LPWSTR lpszVolumeName,
-    DWORD cchBufferLength
     )
 {
     STUB;
@@ -1261,23 +1205,6 @@ DnsHostnameToComputerNameA (
     LPCSTR Hostname,
     LPSTR ComputerName,
     LPDWORD nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FindActCtxSectionStringA(
-    DWORD dwFlags,
-    const GUID *lpExtensionGuid,
-    ULONG ulSectionId,
-    LPCSTR lpStringToFind,
-    PACTCTX_SECTION_KEYED_DATA ReturnedData
     )
 {
     STUB;
@@ -1602,4 +1529,20 @@ NlsGetCacheUpdateCount(VOID)
 {
     STUB;
     return 0;
+}
+
+BOOL
+STDCALL
+Wow64DisableWow64FsRedirection (VOID ** pv)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+STDCALL
+Wow64RevertWow64FsRedirection (VOID * pv)
+{
+    STUB;
+    return FALSE;
 }

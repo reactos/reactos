@@ -11,6 +11,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, RtlpInitNls)
+#pragma alloc_text(INIT, RtlpImportAnsiCodePage)
+#pragma alloc_text(INIT, RtlpImportOemCodePage)
+#pragma alloc_text(INIT, RtlpImportUnicodeCasemap)
+#pragma alloc_text(INIT, RtlpCreateInitialNlsTables)
+#pragma alloc_text(INIT, RtlpCreateNlsSection)
+#endif
+
 
 /* GLOBALS *******************************************************************/
 

@@ -13,11 +13,11 @@
 
 /* VARIABLES ***************************************************************/
 
-BOOLEAN EXPORTED KdDebuggerEnabled = FALSE;
-BOOLEAN EXPORTED KdEnteredDebugger = FALSE;
-BOOLEAN EXPORTED KdDebuggerNotPresent = TRUE;
-BOOLEAN EXPORTED KiEnableTimerWatchdog = FALSE;
-ULONG EXPORTED KiBugCheckData;
+BOOLEAN KdDebuggerEnabled = FALSE;
+BOOLEAN KdEnteredDebugger = FALSE;
+BOOLEAN KdDebuggerNotPresent = TRUE;
+BOOLEAN KiEnableTimerWatchdog = FALSE;
+ULONG KiBugCheckData;
 BOOLEAN KdpBreakPending;
 VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
 
@@ -217,7 +217,7 @@ STDCALL
 NtQueryDebugFilterState(IN ULONG ComponentId,
                         IN ULONG Level)
 {
-	int i;
+	unsigned int i;
 
 	/* convert Level to mask if it isn't already one */
 	if ( Level < 32 )
@@ -241,7 +241,7 @@ NtSetDebugFilterState(IN ULONG ComponentId,
                       IN ULONG Level,
                       IN BOOLEAN State)
 {
-	int i;
+	unsigned int i;
 	for ( i = 0; i < KdComponentTableEntries; i++ )
 	{
 		if ( ComponentId == KdComponentTable[i].ComponentId )

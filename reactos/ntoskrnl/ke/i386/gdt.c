@@ -92,7 +92,7 @@ KiInitializeGdt(PKPCR Pcr)
    * Set the base address of the PCR
    */
   Base = (ULONG)Pcr;
-  Entry = PCR_SELECTOR / 2;
+  Entry = KGDT_R0_PCR / 2;
   Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
 
   Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
@@ -117,24 +117,24 @@ KiInitializeGdt(PKPCR Pcr)
 	   "movl %1, %%fs\n\t"
 	   "movl %0, %%gs\n\t"
 	   : /* no output */
-	   : "a" (KERNEL_DS), "d" (PCR_SELECTOR));
+	   : "a" (KGDT_R0_DATA), "d" (KGDT_R0_PCR));
   __asm__ ("pushl %0\n\t"
 	   "pushl $.l4\n\t"
 	   "lret\n\t"
 	   ".l4:\n\t"
 	   : /* no output */
-	   : "a" (KERNEL_CS));
+	   : "a" (KGDT_R0_CODE));
 #elif defined(_MSC_VER)
   __asm
   {
     lgdt Descriptor;
-    mov ax, KERNEL_DS;
-    mov dx, PCR_SELECTOR;
+    mov ax, KGDT_R0_DATA;
+    mov dx, KGDT_R0_PCR;
     mov ds, ax;
     mov es, ax;
     mov fs, dx;
     mov gs, ax;
-    push KERNEL_CS;
+    push KGDT_R0_CODE;
     push offset l4 ;
     retf
 l4:

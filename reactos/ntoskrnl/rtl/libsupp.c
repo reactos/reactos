@@ -225,23 +225,15 @@ RtlpCreateAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
    return (AtomTable->ExHandleTable != NULL);
 }
 
-static VOID STDCALL
-AtomDeleteHandleCallback(PHANDLE_TABLE HandleTable,
-                         PVOID Object,
-                         ULONG GrantedAccess,
-                         PVOID Context)
-{
-   return;
-}
-
 VOID
 RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->ExHandleTable)
    {
-      ExDestroyHandleTable(AtomTable->ExHandleTable,
-                           AtomDeleteHandleCallback,
-                           AtomTable);
+      ExSweepHandleTable(AtomTable->ExHandleTable,
+                         NULL,
+                         NULL);
+      ExDestroyHandleTable(AtomTable->ExHandleTable);
       AtomTable->ExHandleTable = NULL;
    }
 }
@@ -370,5 +362,56 @@ RtlpCreateUnicodeString(
 
    return TRUE;
 }
+
+/*
+ * Ldr Resource support code
+ */
+
+IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
+                                              LPCWSTR name, void *root,
+                                              int want_dir );
+IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( IMAGE_RESOURCE_DIRECTORY *dir,
+                                            WORD id, void *root, int want_dir );
+IMAGE_RESOURCE_DIRECTORY *find_first_entry( IMAGE_RESOURCE_DIRECTORY *dir,
+                                            void *root, int want_dir );
+
+/**********************************************************************
+ *  find_entry
+ *
+ * Find a resource entry
+ */
+NTSTATUS find_entry( PVOID BaseAddress, LDR_RESOURCE_INFO *info,
+                     ULONG level, void **ret, int want_dir )
+{
+    ULONG size;
+    void *root;
+    IMAGE_RESOURCE_DIRECTORY *resdirptr;
+
+    root = RtlImageDirectoryEntryToData( BaseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &size );
+    if (!root) return STATUS_RESOURCE_DATA_NOT_FOUND;
+    resdirptr = root;
+
+    if (!level--) goto done;
+    if (!(*ret = find_entry_by_name( resdirptr, (LPCWSTR)info->Type, root, want_dir || level )))
+        return STATUS_RESOURCE_TYPE_NOT_FOUND;
+    if (!level--) return STATUS_SUCCESS;
+
+    resdirptr = *ret;
+    if (!(*ret = find_entry_by_name( resdirptr, (LPCWSTR)info->Name, root, want_dir || level )))
+        return STATUS_RESOURCE_NAME_NOT_FOUND;
+    if (!level--) return STATUS_SUCCESS;
+    if (level) return STATUS_INVALID_PARAMETER;  /* level > 3 */
+
+    resdirptr = *ret;
+
+    if ((*ret = find_first_entry( resdirptr, root, want_dir ))) return STATUS_SUCCESS;
+
+    return STATUS_RESOURCE_DATA_NOT_FOUND;
+
+done:
+    *ret = resdirptr;
+    return STATUS_SUCCESS;
+}
+
 
 /* EOF */

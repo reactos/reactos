@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-#include <ddk/wdmguid.h>
+#include <wdmguid.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -62,12 +62,11 @@ void
 Include::ProcessXML()
 {
 	const XMLAttribute* att;
-	att = node->GetAttribute ( "base",
-	                           false );
+	att = node->GetAttribute ( "base", false );
 	if ( att )
 	{
 		if ( !module )
-			throw InvalidBuildFileException (
+			throw XMLInvalidBuildFileException (
 				node->location,
 				"'base' attribute illegal from global <include>" );
 		bool referenceResolved = false;
@@ -87,7 +86,7 @@ Include::ProcessXML()
 			}
 		}
 		if ( !referenceResolved )
-			throw InvalidBuildFileException (
+			throw XMLInvalidBuildFileException (
 				node->location,
 				"<include> attribute 'base' references non-existant project or module '%s'",
 				att->value.c_str() );

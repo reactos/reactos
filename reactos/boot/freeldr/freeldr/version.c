@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <version.h>
-#include <rtl.h>
 
 CHAR	FreeLoaderVersionString[80];
 

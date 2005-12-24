@@ -14,7 +14,16 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, Ki386BootInitializeTSS)
+#endif
+
 /* GLOBALS *******************************************************************/
+
+typedef struct _KTSSNOIOPM
+{
+    UCHAR TssData[KTSS_IO_MAPS];
+} KTSSNOIOPM;
 
 static KTSS* Ki386TssArray[MAXIMUM_PROCESSORS];
 PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
@@ -38,7 +47,7 @@ Ke386IoSetAccessProcess(PEPROCESS Process, BOOL EnableDisable)
   USHORT Offset;
 
   if(EnableDisable > 1) return FALSE;
-  Offset = (EnableDisable) ? (USHORT) FIELD_OFFSET(KTSS, IoBitmap) : 0xffff;
+  Offset = (EnableDisable) ? (USHORT) FIELD_OFFSET(KTSS, IoMaps) : 0xffff;
 
   oldIrql = KeRaiseIrqlToSynchLevel();
   Process->Pcb.IopmOffset = Offset;
@@ -62,7 +71,7 @@ Ke386SetIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
 
   oldIrql = KeRaiseIrqlToSynchLevel();
 
-  memcpy(&KeGetCurrentKPCR()->TSS->IoBitmap[0],
+  memcpy(&KeGetCurrentKPCR()->TSS->IoMaps[0],
          IOMapStart,
          0x2000);
 
@@ -85,7 +94,7 @@ Ke386QueryIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
   oldIrql = KeRaiseIrqlToSynchLevel();
 
   memcpy(IOMapStart,
-         &KeGetCurrentKPCR()->TSS->IoBitmap[0],
+         &KeGetCurrentKPCR()->TSS->IoMaps[0],
          0x2000);
 
   KeLowerIrql(oldIrql);
@@ -96,8 +105,8 @@ VOID
 Ki386ApplicationProcessorInitializeTSS(VOID)
 {
   ULONG cr3_;
-  KTSS* Tss;
-  KTSSNOIOPM* TrapTss;
+  PKTSS Tss;
+  PKTSS TrapTss;
   PVOID TrapStack;
   ULONG Id;
   PUSHORT Gdt;
@@ -113,16 +122,15 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   TrapStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
 
   Ki386TssArray[Id] = Tss;
-  Ki386TrapTssArray[Id] = TrapTss;
+  Ki386TrapTssArray[Id] = (KTSSNOIOPM*)TrapTss;
   Ki386TrapStackArray[Id] = TrapStack;
   KeGetCurrentKPCR()->TSS = Tss;
 
   /* Initialize the boot TSS. */
   Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + MM_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  Tss->Ss0 = KERNEL_DS;
+  Tss->Ss0 = KGDT_R0_DATA;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  Tss->IoBitmap[8192] = 0xFF;
-  Tss->Ldt = 0;
+  Tss->LDT = 0;
 
   /*
    * Initialize a descriptor for the TSS
@@ -130,27 +138,23 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   base = (ULONG)Tss;
   length = sizeof(KTSS) - 1;
 
-  Gdt[(TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
-  Gdt[(TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
-  Gdt[(TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
-  Gdt[(TSS_SELECTOR / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
+  Gdt[(KGDT_TSS / 2) + 0] = (USHORT)(length & 0xFFFF);
+  Gdt[(KGDT_TSS / 2) + 1] = (USHORT)(base & 0xFFFF);
+  Gdt[(KGDT_TSS / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
+  Gdt[(KGDT_TSS / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16));
 
   /* Initialize the TSS used for handling double faults. */
-  TrapTss->Eflags = 0;
+  TrapTss->Flags = 0;
   TrapTss->Esp0 = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  TrapTss->Ss0 = KERNEL_DS;
-  TrapTss->Esp = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  TrapTss->Cs = KERNEL_CS;
+  TrapTss->Ss0 = KGDT_R0_DATA;
+  TrapTss->Cs = KGDT_R0_CODE;
   TrapTss->Eip = (ULONG)KiTrap8;
-  TrapTss->Ss = KERNEL_DS;
-  TrapTss->Ds = KERNEL_DS;
-  TrapTss->Es = KERNEL_DS;
-  TrapTss->Fs = PCR_SELECTOR;
+  TrapTss->Ds = KGDT_R0_DATA;
+  TrapTss->Es = KGDT_R0_DATA;
+  TrapTss->Fs = KGDT_R0_PCR;
   TrapTss->IoMapBase = 0xFFFF; /* No i/o bitmap */
-  TrapTss->IoBitmap[0] = 0xFF;
-  TrapTss->Ldt = 0;
-  TrapTss->Cr3 = cr3_;
+  TrapTss->LDT = 0;
 
   /*
    * Initialize a descriptor for the trap TSS.
@@ -158,10 +162,10 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   base = (ULONG)TrapTss;
   length = sizeof(KTSSNOIOPM) - 1;
 
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
+  Gdt[(KGDT_DF_TSS / 2) + 0] = (USHORT)(length & 0xFFFF);
+  Gdt[(KGDT_DF_TSS / 2) + 1] = (USHORT)(base & 0xFFFF);
+  Gdt[(KGDT_DF_TSS / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
+  Gdt[(KGDT_DF_TSS / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16));
 
   /*
@@ -170,9 +174,9 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 #if defined(__GNUC__)
   __asm__("ltr %%ax"
 	  : /* no output */
-	  : "a" (TSS_SELECTOR));
+	  : "a" (KGDT_TSS));
 #elif defined(_MSC_VER)
-  __asm mov ax, TSS_SELECTOR
+  __asm mov ax, KGDT_TSS
   __asm ltr ax
 #else
 #error Unknown compiler for inline assembler
@@ -185,6 +189,7 @@ Ki386BootInitializeTSS(VOID)
   ULONG cr3_;
   extern unsigned int trap_stack, trap_stack_top;
   unsigned int base, length;
+  PKTSS Tss;
 
   Ke386GetPageTableDirectory(cr3_);
 
@@ -195,11 +200,9 @@ Ki386BootInitializeTSS(VOID)
 
   /* Initialize the boot TSS. */
   KiBootTss.Esp0 = (ULONG)init_stack_top - sizeof(FX_SAVE_AREA);
-  KiBootTss.Ss0 = KERNEL_DS;
-  //   KiBootTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
+  KiBootTss.Ss0 = KGDT_R0_DATA;
   KiBootTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTss.IoBitmap[8192] = 0xFF;
-  KiBootTss.Ldt = LDT_SELECTOR;
+  KiBootTss.LDT = KGDT_LDT;
 
   /*
    * Initialize a descriptor for the TSS
@@ -207,27 +210,24 @@ Ki386BootInitializeTSS(VOID)
   base = (unsigned int)&KiBootTss;
   length = sizeof(KiBootTss) - 1;
 
-  KiBootGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  KiBootGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  KiBootGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-  KiBootGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+  KiBootGdt[(KGDT_TSS / 2) + 0] = (length & 0xFFFF);
+  KiBootGdt[(KGDT_TSS / 2) + 1] = (base & 0xFFFF);
+  KiBootGdt[(KGDT_TSS / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+  KiBootGdt[(KGDT_TSS / 2) + 3] = ((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16);
 
   /* Initialize the TSS used for handling double faults. */
-  KiBootTrapTss.Eflags = 0;
-  KiBootTrapTss.Esp0 = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  KiBootTrapTss.Ss0 = KERNEL_DS;
-  KiBootTrapTss.Esp = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
-  KiBootTrapTss.Cs = KERNEL_CS;
-  KiBootTrapTss.Eip = (ULONG)KiTrap8;
-  KiBootTrapTss.Ss = KERNEL_DS;
-  KiBootTrapTss.Ds = KERNEL_DS;
-  KiBootTrapTss.Es = KERNEL_DS;
-  KiBootTrapTss.Fs = PCR_SELECTOR;
-  KiBootTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-  KiBootTrapTss.IoBitmap[0] = 0xFF;
-  KiBootTrapTss.Ldt = 0x0;
-  KiBootTrapTss.Cr3 = cr3_;
+  Tss = (PKTSS)&KiBootTrapTss;
+  Tss->Flags = 0;
+  Tss->Esp0 = (ULONG)trap_stack_top; /* FIXME: - sizeof(FX_SAVE_AREA)? */
+  Tss->Ss0 = KGDT_R0_DATA;
+  Tss->Cs = KGDT_R0_CODE;
+  Tss->Eip = (ULONG)KiTrap8;
+  Tss->Ds = KGDT_R0_DATA;
+  Tss->Es = KGDT_R0_DATA;
+  Tss->Fs = KGDT_R0_PCR;
+  Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
+  Tss->LDT = 0x0;
 
   /*
    * Initialize a descriptor for the trap TSS.
@@ -235,10 +235,10 @@ Ki386BootInitializeTSS(VOID)
   base = (unsigned int)&KiBootTrapTss;
   length = sizeof(KiBootTrapTss) - 1;
 
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-  KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+  KiBootGdt[(KGDT_DF_TSS / 2) + 0] = (length & 0xFFFF);
+  KiBootGdt[(KGDT_DF_TSS / 2) + 1] = (base & 0xFFFF);
+  KiBootGdt[(KGDT_DF_TSS / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+  KiBootGdt[(KGDT_DF_TSS / 2) + 3] = ((length & 0xF0000) >> 16) |
     ((base & 0xFF000000) >> 16);
 
   /*
@@ -247,9 +247,9 @@ Ki386BootInitializeTSS(VOID)
 #if defined(__GNUC__)
   __asm__("ltr %%ax"
 	  : /* no output */
-	  : "a" (TSS_SELECTOR));
+	  : "a" (KGDT_TSS));
 #elif defined(_MSC_VER)
-  __asm mov ax, TSS_SELECTOR
+  __asm mov ax, KGDT_TSS
   __asm ltr ax
 #else
 #error Unknown compiler for inline assembler

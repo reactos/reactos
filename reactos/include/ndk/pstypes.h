@@ -1,53 +1,85 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/pstypes.h
- * PURPOSE:         Defintions for Process Manager Types not documented in DDK/IFS.
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    pstypes.h
+
+Abstract:
+
+    Type definitions for the Process Manager
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _PSTYPES_H
 #define _PSTYPES_H
 
-/* DEPENDENCIES **************************************************************/
-#include "ldrtypes.h"
-#include "mmtypes.h"
-#include "obtypes.h"
+//
+// Dependencies
+//
+#include <umtypes.h>
+#include <ldrtypes.h>
+#include <mmtypes.h>
+#include <obtypes.h>
 #ifndef NTOS_MODE_USER
-#include "extypes.h"
-#include "setypes.h"
+#include <extypes.h>
+#include <setypes.h>
 #endif
 
-/* EXPORTED DATA *************************************************************/
+//
+// KUSER_SHARED_DATA location in User Mode
+//
+#define USER_SHARED_DATA                        (0x7FFE0000)
 
+//
+// Kernel Exports
+//
 #ifndef NTOS_MODE_USER
+
 extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
 extern NTSYSAPI POBJECT_TYPE PsProcessType;
+
 #endif
 
-/* CONSTANTS *****************************************************************/
+//
+// Global Flags
+//
+#define FLG_STOP_ON_EXCEPTION                   0x00000001
+#define FLG_SHOW_LDR_SNAPS                      0x00000002
+#define FLG_DEBUG_INITIAL_COMMAND               0x00000004
+#define FLG_STOP_ON_HUNG_GUI                    0x00000008
+#define FLG_HEAP_ENABLE_TAIL_CHECK              0x00000010
+#define FLG_HEAP_ENABLE_FREE_CHECK              0x00000020
+#define FLG_HEAP_VALIDATE_PARAMETERS            0x00000040
+#define FLG_HEAP_VALIDATE_ALL                   0x00000080
+#define FLG_POOL_ENABLE_TAIL_CHECK              0x00000100
+#define FLG_POOL_ENABLE_FREE_CHECK              0x00000200
+#define FLG_POOL_ENABLE_TAGGING                 0x00000400
+#define FLG_HEAP_ENABLE_TAGGING                 0x00000800
+#define FLG_USER_STACK_TRACE_DB                 0x00001000
+#define FLG_KERNEL_STACK_TRACE_DB               0x00002000
+#define FLG_MAINTAIN_OBJECT_TYPELIST            0x00004000
+#define FLG_HEAP_ENABLE_TAG_BY_DLL              0x00008000
+#define FLG_IGNORE_DEBUG_PRIV                   0x00010000
+#define FLG_ENABLE_CSRDEBUG                     0x00020000
+#define FLG_ENABLE_KDEBUG_SYMBOL_LOAD           0x00040000
+#define FLG_DISABLE_PAGE_KERNEL_STACKS          0x00080000
+#define FLG_HEAP_ENABLE_CALL_TRACING            0x00100000
+#define FLG_HEAP_DISABLE_COALESCING             0x00200000
+#define FLG_ENABLE_CLOSE_EXCEPTIONS             0x00400000
+#define FLG_ENABLE_EXCEPTION_LOGGING            0x00800000
+#define FLG_ENABLE_HANDLE_TYPE_TAGGING          0x01000000
+#define FLG_HEAP_PAGE_ALLOCS                    0x02000000
+#define FLG_DEBUG_INITIAL_COMMAND_EX            0x04000000
 
-/* These are not exposed to drivers normally */
-#ifndef NTOS_MODE_USER
-    #define JOB_OBJECT_ASSIGN_PROCESS           1
-    #define JOB_OBJECT_SET_ATTRIBUTES           2
-    #define JOB_OBJECT_QUERY                    4
-    #define JOB_OBJECT_TERMINATE                8
-    #define JOB_OBJECT_SET_SECURITY_ATTRIBUTES  16
-    #define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
-#endif
-
-#define USER_SHARED_DATA (0x7FFE0000)
-
-#ifdef NTOS_MODE_USER
-/* Macros for current Process/Thread built-in 'special' ID */
-#define NtCurrentProcess()                      ((HANDLE)(LONG_PTR)-1)
-#define ZwCurrentProcess()                      NtCurrentProcess()
-#define NtCurrentThread()                       ((HANDLE)(LONG_PTR)-2)
-#define ZwCurrentThread()                       NtCurrentThread()
-#endif
-
-/* Process priority classes */
+//
+// Process priority classes
+//
 #define PROCESS_PRIORITY_CLASS_INVALID          0
 #define PROCESS_PRIORITY_CLASS_IDLE             1
 #define PROCESS_PRIORITY_CLASS_NORMAL           2
@@ -56,43 +88,49 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_PRIORITY_CLASS_BELOW_NORMAL     5
 #define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL     6
 
-/* Process base priorities */
+//
+// NtCreateProcessEx flags
+//
+#define PS_REQUEST_BREAKAWAY                    1
+#define PS_NO_DEBUG_INHERIT                     2
+#define PS_INHERIT_HANDLES                      4
+#define PS_UNKNOWN_VALUE                        8
+#define PS_ALL_FLAGS                            (PS_REQUEST_BREAKAWAY | \
+                                                 PS_NO_DEBUG_INHERIT |  \
+                                                 PS_INHERIT_HANDLES |   \
+                                                 PS_UNKNOWN_VALUE)      
+
+//
+// Process base priorities
+//
 #define PROCESS_PRIORITY_IDLE                   3
 #define PROCESS_PRIORITY_NORMAL                 8
 #define PROCESS_PRIORITY_NORMAL_FOREGROUND      9
 
-/* Global Flags */
-#define FLG_STOP_ON_EXCEPTION          0x00000001
-#define FLG_SHOW_LDR_SNAPS             0x00000002
-#define FLG_DEBUG_INITIAL_COMMAND      0x00000004
-#define FLG_STOP_ON_HUNG_GUI           0x00000008
-#define FLG_HEAP_ENABLE_TAIL_CHECK     0x00000010
-#define FLG_HEAP_ENABLE_FREE_CHECK     0x00000020
-#define FLG_HEAP_VALIDATE_PARAMETERS   0x00000040
-#define FLG_HEAP_VALIDATE_ALL          0x00000080
-#define FLG_POOL_ENABLE_TAIL_CHECK     0x00000100
-#define FLG_POOL_ENABLE_FREE_CHECK     0x00000200
-#define FLG_POOL_ENABLE_TAGGING        0x00000400
-#define FLG_HEAP_ENABLE_TAGGING        0x00000800
-#define FLG_USER_STACK_TRACE_DB        0x00001000
-#define FLG_KERNEL_STACK_TRACE_DB      0x00002000
-#define FLG_MAINTAIN_OBJECT_TYPELIST   0x00004000
-#define FLG_HEAP_ENABLE_TAG_BY_DLL     0x00008000
-#define FLG_IGNORE_DEBUG_PRIV          0x00010000
-#define FLG_ENABLE_CSRDEBUG            0x00020000
-#define FLG_ENABLE_KDEBUG_SYMBOL_LOAD  0x00040000
-#define FLG_DISABLE_PAGE_KERNEL_STACKS 0x00080000
-#define FLG_HEAP_ENABLE_CALL_TRACING   0x00100000
-#define FLG_HEAP_DISABLE_COALESCING    0x00200000
-#define FLG_ENABLE_CLOSE_EXCEPTIONS    0x00400000
-#define FLG_ENABLE_EXCEPTION_LOGGING   0x00800000
-#define FLG_ENABLE_HANDLE_TYPE_TAGGING 0x01000000
-#define FLG_HEAP_PAGE_ALLOCS           0x02000000
-#define FLG_DEBUG_INITIAL_COMMAND_EX   0x04000000
-
-/* ENUMERATIONS **************************************************************/
+#if 0
+//
+// Job Access Types
+//
+#define JOB_OBJECT_ASSIGN_PROCESS               0x1
+#define JOB_OBJECT_SET_ATTRIBUTES               0x2
+#define JOB_OBJECT_QUERY                        0x4
+#define JOB_OBJECT_TERMINATE                    0x8
+#define JOB_OBJECT_SET_SECURITY_ATTRIBUTES      0x10
+#define JOB_OBJECT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 31)
+#endif
 
 #ifdef NTOS_MODE_USER
+//
+// Current Process/Thread built-in 'special' handles
+//
+#define NtCurrentProcess()                      ((HANDLE)(LONG_PTR)-1)
+#define ZwCurrentProcess()                      NtCurrentProcess()
+#define NtCurrentThread()                       ((HANDLE)(LONG_PTR)-2)
+#define ZwCurrentThread()                       NtCurrentThread()
+
+//
+// Process/Thread/Job Information Classes for NtQueryInformationProcess/Thread/Job
+//
 typedef enum _PROCESSINFOCLASS
 {
     ProcessBasicInformation,
@@ -169,9 +207,9 @@ typedef enum _THREADINFOCLASS
     ThreadActualBasePriority,
     MaxThreadInfoClass
 } THREADINFOCLASS;
-#endif
 
-#ifndef NTOS_MODE_USER
+#else
+
 typedef enum _JOBOBJECTINFOCLASS
 {
     JobObjectBasicAccountingInformation = 1,
@@ -186,12 +224,18 @@ typedef enum _JOBOBJECTINFOCLASS
     JobObjectJobSetInformation,
     MaxJobObjectInfoClass
 } JOBOBJECTINFOCLASS;
-#endif
 
-/* FUNCTION TYPES ************************************************************/
-typedef VOID (NTAPI *PPEBLOCKROUTINE)(PVOID);
+//
+// Declare empty structure definitions so that they may be referenced by
+// routines before they are defined
+//
+struct _W32THREAD;
+struct _W32PROCESS;
+struct _ETHREAD;
 
-#ifndef NTOS_MODE_USER
+//
+// Win32K Process and Thread Callbacks
+//
 typedef NTSTATUS
 (NTAPI *PW32_PROCESS_CALLBACK)(
     struct _EPROCESS *Process,
@@ -203,35 +247,52 @@ typedef NTSTATUS
     struct _ETHREAD *Thread,
     BOOLEAN Create
 );
+
 #endif
 
-/* TYPES *********************************************************************/
-
-struct _W32THREAD;
-struct _W32PROCESS;
-
-struct _ETHREAD;
-
 #ifdef NTOS_MODE_USER
+
+//
+// ClientID Structure
+//
 typedef struct _CLIENT_ID
 {
     HANDLE UniqueProcess;
     HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
+
 #endif
 
+//
+// Descriptor Table Entry Definition
+//
+#define _DESCRIPTOR_TABLE_ENTRY_DEFINED
 typedef struct _DESCRIPTOR_TABLE_ENTRY
 {
     ULONG Selector;
     LDT_ENTRY Descriptor;
 } DESCRIPTOR_TABLE_ENTRY, *PDESCRIPTOR_TABLE_ENTRY;
 
+//
+// PEB Lock Routine
+//
+typedef VOID
+(NTAPI *PPEBLOCKROUTINE)(
+    PVOID PebLock
+);
+
+//
+// PEB Free Block Descriptor
+//
 typedef struct _PEB_FREE_BLOCK
 {
     struct _PEB_FREE_BLOCK* Next;
     ULONG Size;
 } PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
 
+//
+// Process Environment Block (PEB)
+//
 typedef struct _PEB
 {
     UCHAR InheritedAddressSpace;                     /* 00h */
@@ -293,6 +354,9 @@ typedef struct _PEB
     UNICODE_STRING CSDVersion;                       /* 1DCh */
 } PEB, *PPEB;
 
+//
+// GDI Batch Descriptor
+//
 typedef struct _GDI_TEB_BATCH
 {
     ULONG Offset;
@@ -300,6 +364,9 @@ typedef struct _GDI_TEB_BATCH
     ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
+//
+// Initial TEB
+//
 typedef struct _INITIAL_TEB
 {
     PVOID PreviousStackBase;
@@ -309,6 +376,9 @@ typedef struct _INITIAL_TEB
     PVOID AllocatedStackBase;
 } INITIAL_TEB, *PINITIAL_TEB;
 
+//
+// TEB Active Frame Structures
+//
 typedef struct _TEB_ACTIVE_FRAME_CONTEXT 
 {
     ULONG Flags;
@@ -322,6 +392,9 @@ typedef struct _TEB_ACTIVE_FRAME
     PTEB_ACTIVE_FRAME_CONTEXT Context;
 } TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
 
+//
+// Thread Environment Block (TEB)
+//
 typedef struct _TEB
 {
     NT_TIB Tib;                             /* 00h */
@@ -398,6 +471,10 @@ typedef struct _TEB
 } TEB, *PTEB;
 
 #ifdef NTOS_MODE_USER
+
+//
+// Process Information Structures for NtQueryProcessInformation
+//
 typedef struct _PROCESS_BASIC_INFORMATION
 {
     NTSTATUS ExitStatus;
@@ -442,6 +519,7 @@ typedef struct _PROCESS_SESSION_INFORMATION
 {
     ULONG SessionId;
 } PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
+
 #endif
 
 typedef struct _PROCESS_PRIORITY_CLASS
@@ -450,6 +528,9 @@ typedef struct _PROCESS_PRIORITY_CLASS
     UCHAR   PriorityClass;
 } PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
 
+//
+// Thread Information Structures for NtQueryProcessInformation
+//
 typedef struct _THREAD_BASIC_INFORMATION
 {
     NTSTATUS ExitStatus;
@@ -461,11 +542,10 @@ typedef struct _THREAD_BASIC_INFORMATION
 } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
 
 #ifndef NTOS_MODE_USER
-/* FIXME: see note in mmtypes.h */
-#ifdef _NTOSKRNL_
-#include <internal/mm.h>
-#endif
 
+//
+// EPROCESS Quota Structures
+//
 typedef struct _EPROCESS_QUOTA_ENTRY
 {
     SIZE_T Usage;
@@ -482,6 +562,9 @@ typedef struct _EPROCESS_QUOTA_BLOCK
     ULONG ProcessCount;
 } EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
+//
+// FIXME: This really belongs in mmtypes.h
+//
 typedef struct _PAGEFAULT_HISTORY
 {
     ULONG CurrentIndex;
@@ -491,28 +574,37 @@ typedef struct _PAGEFAULT_HISTORY
     PROCESS_WS_WATCH_INFORMATION WatchInfo[1];
 } PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
 
+//
+// Process Impersonation Information
+//
 typedef struct _PS_IMPERSONATION_INFORMATION
 {
-    PACCESS_TOKEN                   Token;
-    BOOLEAN                         CopyOnOpen;
-    BOOLEAN                         EffectiveOnly;
-    SECURITY_IMPERSONATION_LEVEL    ImpersonationLevel;
+    PACCESS_TOKEN Token;
+    BOOLEAN CopyOnOpen;
+    BOOLEAN EffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
 } PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
 
+//
+// Process Termination Port
+//
 typedef struct _TERMINATION_PORT
 {
     struct _TERMINATION_PORT *Next;
     PVOID Port;
 } TERMINATION_PORT, *PTERMINATION_PORT;
 
+//
+// Executive Thread (ETHREAD)
+//
 #include <pshpack4.h>
 typedef struct _ETHREAD
 {
-    KTHREAD                        Tcb;                         /* 1C0 */
-    LARGE_INTEGER                  CreateTime;                  /* 1C0 */
-    LARGE_INTEGER                  ExitTime;                    /* 1C0 */
+    KTHREAD                        Tcb;                         /* 1B8 */
+    LARGE_INTEGER                  CreateTime;                  /* 1B8 */
     union
     {
+        LARGE_INTEGER              ExitTime;                    /* 1C0 */
         LIST_ENTRY                 LpcReplyChain;               /* 1C0 */
         LIST_ENTRY                 KeyedWaitChain;              /* 1C0 */
     };
@@ -529,12 +621,12 @@ typedef struct _ETHREAD
         PVOID                      KeyedWaitValue;              /* 1D4 */
     };
     KSPIN_LOCK                     ActiveTimerListLock;         /* 1D8 */
-    LIST_ENTRY                     ActiveTimerListHead;         /* 1D8 */
-    CLIENT_ID                      Cid;                         /* 1E0 */
+    LIST_ENTRY                     ActiveTimerListHead;         /* 1DC */
+    CLIENT_ID                      Cid;                         /* 1E4 */
     union
     {
-        KSEMAPHORE                 LpcReplySemaphore;           /* 1E4 */
-        KSEMAPHORE                 KeyedReplySemaphore;         /* 1E4 */
+        KSEMAPHORE                 LpcReplySemaphore;           /* 1EC */
+        KSEMAPHORE                 KeyedReplySemaphore;         /* 1EC */
     };
     union
     {
@@ -607,6 +699,13 @@ typedef struct _ETHREAD
     UCHAR                          ActiveFaultCount;            /* 24E */
 } ETHREAD;
 
+#if defined(_NTOSKRNL_)
+    #include <internal/mm.h>
+#endif
+
+//
+// Executive Process (EPROCESS)
+//
 typedef struct _EPROCESS
 {
     KPROCESS              Pcb;                          /* 000 */
@@ -660,7 +759,7 @@ typedef struct _EPROCESS
     LIST_ENTRY            ThreadListHead;               /* 184 */
     PVOID                 SecurityPort;                 /* 188 */
     PVOID                 PaeTop;                       /* 18C */
-    ULONG                 ActiveThreds;                 /* 190 */
+    ULONG                 ActiveThreads;                /* 190 */
     ACCESS_MASK           GrantedAccess;                /* 194 */
     ULONG                 DefaultHardErrorProcessing;   /* 198 */
     NTSTATUS              LastThreadExitStatus;         /* 19C */
@@ -732,19 +831,21 @@ typedef struct _EPROCESS
     MM_AVL_TABLE          VadRoot;                      /* 250 */
     ULONG                 Cookie;                       /* 270 */
 
-/***************************************************************
- *                REACTOS SPECIFIC START
- ***************************************************************/
-    /* FIXME WILL BE DEPRECATED WITH PUSHLOCK SUPPORT IN 0.3.0 */
+#ifdef _REACTOS_
+    /* FIXME: WILL BE DEPRECATED WITH PUSHLOCK SUPPORT IN 0.3.0*/
     KEVENT                LockEvent;                    /* 274 */
     ULONG                 LockCount;                    /* 284 */
     struct _KTHREAD       *LockOwner;                   /* 288 */
 
-    /* FIXME MOVE TO AVL TREES                                 */
+    /* FIXME: MOVE TO AVL TREES                                */
     MADDRESS_SPACE        AddressSpace;                 /* 28C */
+#endif
 } EPROCESS;
 #include <poppack.h>
 
+//
+// Job Token Filter Data
+//
 #include <pshpack1.h>
 typedef struct _PS_JOB_TOKEN_FILTER
 {
@@ -759,6 +860,9 @@ typedef struct _PS_JOB_TOKEN_FILTER
     ULONG CapturedPrivilegesLength;
 } PS_JOB_TOKEN_FILTER, *PPS_JOB_TOKEN_FILTER;
 
+//
+// Executive Job (EJOB)
+//
 typedef struct _EJOB
 {
     KEVENT Event;
@@ -808,6 +912,9 @@ typedef struct _EJOB
 } EJOB, *PEJOB;
 #include <poppack.h>
 
+//
+// Win32K Callback Registration Data
+//
 typedef struct _W32_CALLOUT_DATA
 {
     PW32_PROCESS_CALLBACK W32ProcessCallout;
@@ -824,13 +931,14 @@ typedef struct _W32_CALLOUT_DATA
     OB_DELETE_METHOD WinStaDelete;
     OB_PARSE_METHOD WinStaParse;
     OB_OPEN_METHOD WinStaOpen;
-    
-    /* FIXME: These are ROS-ONLY and are fixed in a future local patch */
+#ifdef _REACTOS_
+    /* FIXME: REACTOS ONLY */
     OB_FIND_METHOD WinStaFind;
     OB_OPEN_METHOD WinStaCreate;
     OB_CREATE_METHOD DesktopCreate;
+#endif
 } W32_CALLOUT_DATA, *PW32_CALLOUT_DATA;
 
-#endif
+#endif // !NTOS_MODE_USER
 
-#endif
+#endif // _PSTYPES_H

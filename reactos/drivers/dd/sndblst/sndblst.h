@@ -12,7 +12,7 @@
 #ifndef __INCLUDES_SNDBLST_H__
 #define __INCLUDES_SNDBLST_H__
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeWorkerThreads)
+#endif
+
 /* DEFINES *******************************************************************/
 
 #define NUMBER_OF_WORKER_THREADS   (5)

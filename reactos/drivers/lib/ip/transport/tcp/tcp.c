@@ -647,4 +647,34 @@ NTSTATUS TCPGetPeerAddress
     return STATUS_SUCCESS;
 }
 
+VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
+    PLIST_ENTRY Entry;
+    PLIST_ENTRY ListHead[4];
+    KIRQL OldIrql;
+    PTDI_BUCKET Bucket;
+    UINT i = 0;
+
+    ListHead[0] = &Endpoint->ReceiveRequest;
+    ListHead[1] = &Endpoint->ConnectRequest;
+    ListHead[2] = &Endpoint->ListenRequest;
+    ListHead[3] = 0;
+
+    TcpipAcquireSpinLock( &Endpoint->Lock, &OldIrql );
+
+    for( i = 0; ListHead[i]; i++ ) {
+	for( Entry = ListHead[i]->Flink;
+	     Entry != ListHead[i];
+	     Entry = Entry->Flink ) {
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    
+	    if( Bucket->Request.RequestContext == Irp ) {
+		RemoveEntryList( &Bucket->Entry );
+		break;
+	    }
+	}
+    }
+
+    TcpipReleaseSpinLock( &Endpoint->Lock, OldIrql );
+}
+
 /* EOF */

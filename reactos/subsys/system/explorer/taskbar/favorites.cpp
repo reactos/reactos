@@ -72,9 +72,9 @@ bool Bookmark::read_url(LPCTSTR path)
 			while(isspace(*cont))
 				++cont;
 
-			if (!strnicmp(keyword, "URL", 3))
+			if (!_strnicmp(keyword, "URL", 3))
 				_url = DecodeURLString(cont);
-			else if (!strnicmp(keyword, "IconFile", 8))
+			else if (!_strnicmp(keyword, "IconFile", 8))
 				_icon_path = DecodeURLString(cont);
 		}
 	}
@@ -407,7 +407,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 			bookmark._name = DecodeXMLString(name);
 
 			entry->get_path(path, COUNTOF(path));
-			_tsplitpath(path, NULL, NULL, NULL, ext);
+			_tsplitpath_s(path, NULL, 0, NULL, 0, NULL, 0, ext, COUNTOF(ext));
 
 			if (!_tcsicmp(ext, TEXT(".url"))) {
 				bookmark.read_url(path);

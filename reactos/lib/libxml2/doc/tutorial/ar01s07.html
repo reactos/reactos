@@ -1,0 +1,30 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Writing Attribute</title><meta name="generator" content="DocBook XSL Stylesheets V1.61.2"><link rel="home" href="index.html" title="Libxml Tutorial"><link rel="up" href="index.html" title="Libxml Tutorial"><link rel="previous" href="ar01s06.html" title="Writing element content"><link rel="next" href="ar01s08.html" title="Retrieving Attributes"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Writing Attribute</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ar01s06.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="ar01s08.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="xmltutorialwritingattribute"></a>Writing Attribute</h2></div></div><div></div></div><p><a class="indexterm" name="id2587093"></a>
+Writing an attribute is similar to writing text to a new element. In
+      this case, we'll add a reference <span class="acronym">URI</span> to our
+      document. Full code:<a href="apf.html" title="F. Code for Add Attribute Example">Appendix F, <i>Code for Add Attribute Example</i></a>.</p><p>
+      A <tt class="sgmltag-element">reference</tt> is a child of the <tt class="sgmltag-element">story</tt>
+      element, so finding the place to put our new element and attribute is
+      simple. As soon as we do the error-checking test in our
+      <tt class="function">parseDoc</tt>, we are in the right spot to add our
+      element. But before we do that, we need to make a declaration using a
+      data type we have not seen yet:
+      </p><pre class="programlisting">
+	xmlAttrPtr newattr;
+      </pre><p>
+      We also need an extra xmlNodePtr:
+      </p><pre class="programlisting">
+	xmlNodePtr newnode;
+      </pre><p>
+    </p><p>
+      The rest of <tt class="function">parseDoc</tt> is the same as before until we
+      check to see if our root element is <tt class="sgmltag-element">story</tt>. If it is,
+      then we know we are at the right spot to add our element:
+
+      </p><pre class="programlisting">
+	<a name="addreferencenode"></a><img src="images/callouts/1.png" alt="1" border="0"> newnode = xmlNewTextChild (cur, NULL, "reference", NULL);
+	<a name="addattributenode"></a><img src="images/callouts/2.png" alt="2" border="0"> newattr = xmlNewProp (newnode, "uri", uri);	
+      </pre><p>
+      </p><div class="calloutlist"><table border="0" summary="Callout list"><tr><td width="5%" valign="top" align="left"><a href="#addreferencenode"><img src="images/callouts/1.png" alt="1" border="0"></a> </td><td valign="top" align="left"><p>First we add a new node at the location of the current node
+	    pointer, <tt class="varname">cur.</tt> using the <a href="http://xmlsoft.org/html/libxml-tree.html#XMLNEWTEXTCHILD" target="_top">xmlNewTextChild</a> function.</p></td></tr></table></div><p>
+   </p><p>Once the node is added, the file is written to disk just as in the
+    previous example in which we added an element with text content.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ar01s06.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ar01s08.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Writing element content </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Retrieving Attributes</td></tr></table></div></body></html>

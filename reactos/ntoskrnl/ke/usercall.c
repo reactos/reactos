@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, PsInitialiseW32Call)
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 #if ALEX_CB_REWRITE
@@ -108,15 +112,14 @@ PsAllocateCallbackStack(ULONG StackSize)
   BoundaryAddressMultiple.QuadPart = 0;
   StackSize = PAGE_ROUND_UP(StackSize);
   MmLockAddressSpace(MmGetKernelAddressSpace());
-  Status = MmCreateMemoryArea(NULL,
-			      MmGetKernelAddressSpace(),
+  Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
 			      MEMORY_AREA_KERNEL_STACK,
 			      &KernelStack,
 			      StackSize,
-			      0,
+			      PAGE_READWRITE,
 			      &StackArea,
 			      FALSE,
-			      FALSE,
+			      0,
 			      BoundaryAddressMultiple);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
@@ -208,9 +211,9 @@ KeUserModeCallback(IN ULONG RoutineIndex,
                 Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(ULONG)));
   NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
   /* We need the stack pointer to remain 4-byte aligned */
-  NewFrame->Esp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
+  NewFrame->HardwareEsp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
   NewFrame->Eip = (ULONG)KeUserCallbackDispatcher;
-  UserEsp = (PULONG)NewFrame->Esp;
+  UserEsp = (PULONG)NewFrame->HardwareEsp;
   UserEsp[0] = 0;     /* Return address. */
   UserEsp[1] = RoutineIndex;
   UserEsp[2] = (ULONG)&UserEsp[4];

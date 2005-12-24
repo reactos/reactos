@@ -14,6 +14,13 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitializeBalancer)
+#pragma alloc_text(INIT, MmInitializeMemoryConsumer)
+#pragma alloc_text(INIT, MiInitBalancerThread)
+#endif
+
+
 /* TYPES ********************************************************************/
 typedef struct _MM_ALLOCATION_REQUEST
 {

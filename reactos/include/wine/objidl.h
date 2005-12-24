@@ -94,10 +94,6 @@ typedef struct tagRemSTGMEDIUM {
 	unsigned long cbData;
 	BYTE data[1];
 } RemSTGMEDIUM;
-typedef struct tagHLITEM {
-	ULONG uHLID;
-	LPWSTR pwzFriendlyName;
-} HLITEM;
 typedef struct tagSTATDATA {
 	FORMATETC formatetc;
 	DWORD grfAdvf;
@@ -430,7 +426,6 @@ EXTERN_C const FMTID FMTID_DocSummaryInformation;
 EXTERN_C const FMTID FMTID_UserDefinedProperties;
 
 DECLARE_ENUMERATOR(FORMATETC);
-DECLARE_ENUMERATOR(HLITEM);
 DECLARE_ENUMERATOR(STATDATA);
 DECLARE_ENUMERATOR(STATPROPSETSTG);
 DECLARE_ENUMERATOR(STATPROPSTG);
@@ -642,6 +637,36 @@ DECLARE_INTERFACE_(IMoniker,IPersistStream)
 	STDMETHOD(IsSystemMoniker)(THIS_ PDWORD) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IMoniker_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IMoniker_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IMoniker_Release(p) (p)->lpVtbl->Release(p)
+/*** IPersist methods ***/
+#define IMoniker_GetClassID(p,a) (p)->lpVtbl->GetClassID(p,a)
+/*** IPersistStream methods ***/
+#define IMoniker_IsDirty(p) (p)->lpVtbl->IsDirty(p)
+#define IMoniker_Load(p,a) (p)->lpVtbl->Load(p,a)
+#define IMoniker_Save(p,a,b) (p)->lpVtbl->Save(p,a,b)
+#define IMoniker_GetSizeMax(p,a) (p)->lpVtbl->GetSizeMax(p,a)
+/*** IMoniker methods ***/
+#define IMoniker_BindToObject(p,a,b,c,d) (p)->lpVtbl->BindToObject(p,a,b,c,d)
+#define IMoniker_BindToStorage(p,a,b,c,d) (p)->lpVtbl->BindToStorage(p,a,b,c,d)
+#define IMoniker_Reduce(p,a,b,c,d) (p)->lpVtbl->Reduce(p,a,b,c,d)
+#define IMoniker_ComposeWith(p,a,b,c) (p)->lpVtbl->ComposeWith(p,a,b,c)
+#define IMoniker_Enum(p,a,b) (p)->lpVtbl->Enum(p,a,b)
+#define IMoniker_IsEqual(p,a) (p)->lpVtbl->IsEqual(p,a)
+#define IMoniker_Hash(p,a) (p)->lpVtbl->Hash(p,a)
+#define IMoniker_IsRunning(p,a,b,c) (p)->lpVtbl->IsRunning(p,a,b,c)
+#define IMoniker_GetTimeOfLastChange(p,a,b,c) (p)->lpVtbl->GetTimeOfLastChange(p,a,b,c)
+#define IMoniker_Inverse(p,a) (p)->lpVtbl->Inverse(p,a)
+#define IMoniker_CommonPrefixWith(p,a,b) (p)->lpVtbl->CommonPrefixWith(p,a,b)
+#define IMoniker_RelativePathTo(p,a,b) (p)->lpVtbl->RelativePathTo(p,a,b)
+#define IMoniker_GetDisplayName(p,a,b,c) (p)->lpVtbl->GetDisplayName(p,a,b,c)
+#define IMoniker_ParseDisplayName(p,a,b,c,d,e) (p)->lpVtbl->ParseDisplayName(p,a,b,c,d,e)
+#define IMoniker_IsSystemMoniker(p,a) (p)->lpVtbl->IsSystemMoniker(p,a)
+#endif
 
 EXTERN_C const IID IID_IPersistStorage;
 #define INTERFACE IPersistStorage
@@ -2090,5 +2115,37 @@ void __RPC_STUB IMultiQI_QueryMultipleInterfaces_Stub(
 
 #endif  /* __IMultiQI_INTERFACE_DEFINED__ */
 
+typedef struct _GDI_OBJECT {
+    DWORD ObjectType;
+    union {
+        wireHBITMAP hBitmap;
+        wireHPALETTE hPalette;
+        wireHGLOBAL hGeneric;
+    } u;
+} GDI_OBJECT;
+typedef struct _userSTGMEDIUM {
+    struct {
+        DWORD tymed;
+        union {
+            wireHMETAFILEPICT hMetaFilePict;
+            wireHENHMETAFILE hHEnhMetaFile;
+            GDI_OBJECT *hGdiHandle;
+            wireHGLOBAL hGlobal;
+            LPOLESTR lpszFileName;
+            BYTE_BLOB *pstm;
+            BYTE_BLOB *pstg;
+        } u;
+    } DUMMYSTRUCTNAME;
+    IUnknown *pUnkForRelease;
+} userSTGMEDIUM;
+typedef userSTGMEDIUM *wireSTGMEDIUM;
+typedef userSTGMEDIUM *wireASYNC_STGMEDIUM;
+typedef STGMEDIUM ASYNC_STGMEDIUM;
+typedef STGMEDIUM *LPSTGMEDIUM;
+typedef struct _FLAG_STGMEDIUM {
+    long ContextFlags;
+    long fPassOwnership;
+    STGMEDIUM Stgmed;
+} FLAG_STGMEDIUM;
 
 #endif  /* __WINE_OBJIDL_H */

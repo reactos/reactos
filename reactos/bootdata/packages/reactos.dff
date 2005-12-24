@@ -61,6 +61,7 @@ drivers\usb\usbport\usbport.sys         2
 lib\advapi32\advapi32.dll               1
 lib\advpack\advpack.dll                 1
 lib\aclui\aclui.dll                     1
+lib\avifil32\avifil32.dll               1
 lib\cabinet\cabinet.dll                 1
 lib\cards\cards.dll                     1
 lib\cpl\access\access.cpl               1
@@ -69,6 +70,7 @@ lib\cpl\control\control.exe             1
 lib\cpl\desk\desk.cpl                   1
 lib\cpl\intl\intl.cpl                   1
 lib\cpl\main\main.cpl                   1
+lib\cpl\mmsys\mmsys.cpl                 1
 lib\cpl\ncpa\ncpa.cpl                   1
 lib\cpl\sysdm\sysdm.cpl                 1
 lib\cpl\timedate\timedate.cpl           1
@@ -76,12 +78,18 @@ lib\cfgmgr32\cfgmgr32.dll               1
 lib\comctl32\comctl32.dll               1
 lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
+lib\crypt32\crypt32.dll                 1
+lib\d3d8thk\d3d8thk.dll                 1
 lib\dbghelp\dbghelp.dll                 1
 lib\ddraw\ddraw.dll                     1
 lib\devenum\devenum.dll                 1
+lib\devmgr\devmgr.dll                   1
+lib\dhcpcsvc\dhcpcsvc.dll               1
 lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
 lib\dnsapi\dnsapi.dll                   1
+lib\dplay\dplay.dll                     1
+lib\dplayx\dplayx.dll                   1
 lib\dsound\dsound.dll                   1
 lib\dxdiagn\dxdiagn.dll                 1
 lib\fmifs\fmifs.dll                     1
@@ -99,6 +107,8 @@ lib\keyboard\kbddv\kbddv.dll            1
 lib\keyboard\kbdes\kbdes.dll            1
 lib\keyboard\kbdfr\kbdfr.dll            1
 lib\keyboard\kbdgr\kbdgr.dll            1
+lib\keyboard\kbdhe\kbdhe.dll            1
+lib\keyboard\kbdhu\kbdhu.dll            1
 lib\keyboard\kbdru\kbdru.dll            1
 lib\keyboard\kbdse\kbdse.dll            1
 lib\keyboard\kbdsg\kbdsg.dll            1
@@ -127,6 +137,7 @@ lib\ntdll\ntdll.dll                     1
 lib\ntmarta\ntmarta.dll                 1
 lib\objsel\objsel.dll                   1
 lib\ole32\ole32.dll                     1
+lib\oleacc\oleacc.dll                   1
 lib\oleaut32\oleaut32.dll               1
 lib\oledlg\oledlg.dll                   1
 lib\olepro32\olepro32.dll               1
@@ -171,11 +182,13 @@ subsys\win32k\win32k.sys                1
 subsys\system\autochk\autochk.exe       1
 subsys\system\calc\calc.exe             1
 subsys\system\cmd\cmd.exe               1
+subsys\system\devmgr\devmgrapp.exe      1
 subsys\system\explorer\explorer.exe     4
 subsys\system\explorer\explorer-cfg-template.xml 4
 subsys\system\explorer\notifyhook\notifyhook.dll 1
 subsys\system\format\format.exe         1
 subsys\system\ibrowser\ibrowser.exe     1
+subsys\system\msconfig\msconfig.exe     1
 subsys\system\msiexec\msiexec.exe       1
 subsys\system\notepad\notepad.exe       1
 subsys\system\gettype\gettype.exe       1
@@ -184,6 +197,7 @@ subsys\system\regedit\clb\clb.dll       1
 subsys\system\regsvr32\regsvr32.exe     1
 subsys\system\reporterror\reporterror.exe 1
 subsys\system\rundll32\rundll32.exe     1
+subsys\system\sc\sc.exe     		1
 subsys\system\services\services.exe     1
 subsys\system\setup\setup.exe           1
 subsys\system\taskmgr\taskmgr.exe       1
@@ -213,6 +227,8 @@ apps\utils\net\tracert\tracert.exe      1
 apps\utils\net\whois\whois.exe          1
 apps\utils\ps\ps.exe                    1
 apps\utils\rosperf\rosperf.exe          1
+apps\utils\shutdown\shutdown.exe        1
+apps\utils\getfirefox\getfirefox.exe    1
 media\fonts\c0419bt_.ttf                3
 media\fonts\c0582bt_.ttf                3
 media\fonts\c0583bt_.ttf                3
@@ -298,16 +314,18 @@ media\inf\display.inf                   6
 media\inf\hdc.inf                       6
 media\inf\layout.inf                    6
 media\inf\machine.inf                   6
-media\inf\mouse.inf                     6
-media\inf\keyboard.inf                     6
+media\inf\msmouse.inf                   6
+media\inf\keyboard.inf                  6
 media\inf\NET_NIC.inf                   6
 media\inf\netamd.inf                    6
 media\inf\netisa.inf                    6
+media\inf\netrtpnt.inf                  6
 media\inf\ports.inf                     6
 media\inf\scsi.inf                      6
 media\inf\syssetup.inf                  6
 media\inf\usbport.inf                   6
 media\inf\usbstor.inf                   6
+media\inf\xboxdisp.inf                  6
 modules\os2\server\os2srv.dll           1        optional
 modules\os2\lib\doscalls\doscalls.dll   1        optional
 modules\posix\server\psxsrv.dll         1        optional
@@ -332,12 +350,11 @@ modules\rosapps\net\niclist\niclist.exe 1        optional
 modules\rosapps\notevil\notevil.exe     1        optional
 modules\rosapps\packmgr\cmd-line\rosget.exe    1 optional
 modules\rosapps\packmgr\gui\packmgr.exe 1        optional
-modules\rosapps\packmgr\lib\packlib.dll 1        optional
+modules\rosapps\packmgr\lib\package.dll 1        optional
 modules\rosapps\sysutils\ctm\ctm.exe    1        optional
 modules\rosapps\sysutils\lsdd\lsdd.exe  1        optional
 modules\rosapps\sysutils\man\man.exe    1        optional
 modules\rosapps\sysutils\pedump\pedump.exe     1 optional
 modules\rosapps\sysutils\regexpl\regexpl.exe   1 optional
-modules\rosapps\sysutils\shutdown\shutdown.exe 1 optional
 modules\rosapps\sysutils\tcat\cat.exe          1 optional
 modules\rosapps\sysutils\tlist\tlist.exe       1 optional

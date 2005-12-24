@@ -50,9 +50,11 @@ void
 Define::Initialize()
 {
 	const XMLAttribute* att = node.GetAttribute ( "name", true );
+	const XMLAttribute* empty = node.GetAttribute ( "empty", false );
 	assert(att);
 	name = att->value;
 	value = node.value;
+	if( empty ) value = " ";
 }
 
 void

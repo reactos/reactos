@@ -20,14 +20,5 @@ This is mostly done thanks to Greatlord(cmd.c is the hardest spot that is left).
 && runs the 2nd command only if the first was a success
 Not sure where to put this code even
 
-*mkdir needs recurvisly create folders
-When doing "mkdir c:\windows\foo\bar\foofoo" where foo, bar, and foofoo are not folders, it will create all the folders to that a vaild path
-
-*Correct Error checking
-A lot of commands on failure just spit out GetLastError instead of looking for the real cause.  It should give a better output to give at least some kinda clue what is wrong.  
-
 *Reg Testing
 We need more batch files like the one Royce made for "set /a".  What out for if bugs when doing this... could lead to in the wrong direction when looking for a regression.
-
-*Add Breaker
-THere is partly code in place for this already.  However it is broken and not finished.  PocketCMD which is open source and based off ros cmd does do this correctly though.  So there is something to look at and see how it can be done.  though it is hard to find where they are doing it even though they are based on eachother they look pretty different now a days.

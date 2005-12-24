@@ -1,7 +1,5 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
-#define NTOS_MODE_USER
-#define _NTSYSTEM_
 #include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
 
@@ -41,7 +39,7 @@ size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 	if (mbstr == NULL)
 	{
 		RtlUnicodeToMultiByteSize (&Size,
-		                           (wchar_t *)wcstr,
+		                           (wchar_t*)((size_t)wcstr),
 		                           Length * sizeof(WCHAR));
 
 		return (size_t)Size;
@@ -50,7 +48,7 @@ size_t wcstombs (char *mbstr, const wchar_t *wcstr, size_t count)
 	Status = RtlUnicodeToMultiByteN (mbstr,
 	                                 count,
 	                                 &Size,
-	                                 (wchar_t *)wcstr,
+	                                 (wchar_t*)((size_t)wcstr),
 	                                 Length * sizeof(WCHAR));
 	if (!NT_SUCCESS(Status))
 		return -1;

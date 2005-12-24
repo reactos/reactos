@@ -71,7 +71,7 @@ MCIERR_MISSING_PARAMETER, 	"Il manque un paramêtre dans la commande spécifiée : 
 MCIERR_UNSUPPORTED_FUNCTION, 	"Le périphérique MCI que vous utilisez ne prend pas en charge la commande spécifiée."
 MCIERR_FILE_NOT_FOUND, 		"Le fichier spécifié est introuvable. Vérifiez que le chemin d'accès et le nom de fichier sont corrects."
 MCIERR_DEVICE_NOT_READY, 	"Le pilote de périphérique n'est pas prêt. Attendez une minute avant d'essayer à nouveau."
-MCIERR_INTERNAL, 		"Un problème est survenu lors de l'initialisation de MCI. Essayez de redémarrer Windows."
+MCIERR_INTERNAL, 		"Un problème est survenu lors de l'initialisation de MCI. Essayez de redémarrer ReactOS."
 MCIERR_DRIVER, 			"Une erreur spécifique au pilote a provoqué sa fermeture. Essayez de relancer la commande."
 MCIERR_CANNOT_USE_ALL, 		"Utilisez un nom de périphérique spécifique pour cette commande."
 MCIERR_MULTIPLE, 		"Des erreurs se sont produites dans plusieurs périphériques. Spécifiez chaque commande et chaque périphérique séparément afin de déterminer les périphériques qui ont provoqué les erreurs."

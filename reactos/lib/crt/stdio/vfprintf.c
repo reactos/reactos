@@ -1,9 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdarg.h>
-#include <stdio.h>
-#include <malloc.h>
-#include <internal/file.h>
-#include <ntdef.h>
+#include <precomp.h>
 
 extern int __mb_cur_max;
 int __vfprintf(FILE*, const char*, va_list);
@@ -58,7 +54,6 @@ int vfprintf(FILE* f, const char* fmt, va_list ap)
 
 #include <ctype.h>
 #include <string.h>
-#include <stdio.h>
 #include <math.h>
 #include <internal/ieee.h>
 
@@ -448,6 +443,7 @@ static int string(FILE *f, const char* s, int len, int field_width, int precisio
 static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
+	char * mb;
 	if (sw == NULL)
 	{
 		sw = L"<NULL>";
@@ -474,10 +470,11 @@ static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int pre
 				return -1;
 			done++;
 		}
+	mb = malloc(MB_CUR_MAX * sizeof(char));
+	if(!mb)
+		return -1;
 	for (i = 0; i < len; ++i)
 	{
-//#define MB_CUR_MAX 1
-		char mb[MB_CUR_MAX];
 		int mbcount, j;
 		mbcount = wctomb(mb, *sw++);
 		if (mbcount <= 0)
@@ -487,16 +484,23 @@ static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int pre
 		for (j = 0; j < mbcount; j++)
 		{
 			if (putc(mb[j], f) == EOF)
+			{
+				free(mb);
 				return -1;
+			}
 			done++;
 		}
 	}
 	while (len < field_width--)
 	{
 		if (putc(' ', f) == EOF)
+		{
+			free(mb);
 			return -1;
+		}
 		done++;
 	}
+	free(mb);
 	return done;
 }
 

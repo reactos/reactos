@@ -202,7 +202,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   PAGED_CODE();
 
-  PreviousMode = KeGetPreviousMode();
+  PreviousMode = ExGetPreviousMode();
 
   if (PreviousMode != KernelMode)
   {
@@ -246,8 +246,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                                       &ObjectName);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-      goto Cleanup;
+      DPRINT1("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+      return Status;
     }
 
   PostCreateKeyInfo.CompleteName = &ObjectName;
@@ -255,7 +255,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreCreateKey, &PreCreateKeyInfo);
   if (!NT_SUCCESS(Status))
     {
-      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
       goto Cleanup;
     }
     
@@ -264,14 +263,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                         (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (!NT_SUCCESS(Status))
     {
       PostCreateKeyInfo.Object = NULL;
       PostCreateKeyInfo.Status = Status;
       CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
 
-      DPRINT("CmpFindObject failed, Status: 0x%x\n", Status);
+      DPRINT1("CmpFindObject failed, Status: 0x%x\n", Status);
       goto Cleanup;
     }
 
@@ -286,18 +284,18 @@ NtCreateKey(OUT PHANDLE KeyHandle,
           PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
           CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
 
-	  DPRINT("Object marked for delete!\n");
+	  DPRINT1("Object marked for delete!\n");
 	  Status = STATUS_UNSUCCESSFUL;
 	  goto Cleanup;
 	}
 
-      Status = ObpCreateHandle(PsGetCurrentProcess(),
-			      Object,
-			      DesiredAccess,
-			      TRUE,
-			      &hKey);
+      Status = ObpCreateHandle(Object,
+			       DesiredAccess,
+			       ObjectCreateInfo.Attributes,
+			       &hKey);
 
-      DPRINT("ObpCreateHandle failed Status 0x%x\n", Status);
+      if (!NT_SUCCESS(Status))
+        DPRINT1("ObpCreateHandle failed Status 0x%x\n", Status);
 
       PostCreateKeyInfo.Object = NULL;
       PostCreateKeyInfo.Status = Status;
@@ -317,7 +315,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       if (L'\\' == RemainingPath.Buffer[i])
         {
-          DPRINT1("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
+          DPRINT("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
 
           PostCreateKeyInfo.Object = NULL;
           PostCreateKeyInfo.Status = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -395,7 +393,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			CreateOptions);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("CmiAddSubKey() failed (Status %lx)\n", Status);
+      DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
       /* Release hive lock */
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
@@ -465,6 +463,7 @@ SuccessReturn:
   _SEH_END;
 
 Cleanup:
+  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (Class != NULL)
   {
     ReleaseCapturedUnicodeString(&CapturedClass,
@@ -982,7 +981,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
 		CmiKeyType,
-		UserMode,
+		ExGetPreviousMode(),
 		(PVOID *) &KeyObject,
 		NULL);
 
@@ -1135,18 +1134,16 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                   ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
               ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
 
-	      if (Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) <
-	          NameSize)
+              if (Length < ValueFullInformation->DataOffset)
 	        {
 	          NameSize = Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]);
 	          DataSize = 0;
 	          Status = STATUS_BUFFER_OVERFLOW;
 	          CHECKPOINT;
 	        }
-              else if (ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
-                       Name[0]) - NameSize, sizeof(PVOID)) < DataSize)
+              else if (Length - ValueFullInformation->DataOffset < DataSize) 
 	        {
-	          DataSize = ROUND_UP(Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]) - NameSize, sizeof(PVOID));
+	          DataSize = Length - ValueFullInformation->DataOffset;
 	          Status = STATUS_BUFFER_OVERFLOW;
 	          CHECKPOINT;
 	        }
@@ -1259,7 +1256,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   UNICODE_STRING RemainingPath;
   KPROCESSOR_MODE PreviousMode;
   PVOID Object = NULL;
-  HANDLE hKey;
+  HANDLE hKey = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
@@ -1333,12 +1330,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	                (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
-      Status = STATUS_INVALID_HANDLE; /* Because CmpFindObject returns STATUS_UNSUCCESSFUL */
-      hKey = *KeyHandle; /* Preserve hkResult value */
+      Status = STATUS_INVALID_HANDLE; /* Because ObFindObject returns STATUS_UNSUCCESSFUL */
       goto openkey_cleanup;
     }
 
@@ -1350,7 +1345,6 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     {
       RtlFreeUnicodeString(&RemainingPath);
       Status = STATUS_OBJECT_NAME_NOT_FOUND;
-      hKey = NULL;
       goto openkey_cleanup;
     }
 
@@ -1360,21 +1354,17 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
     {
       Status = STATUS_UNSUCCESSFUL;
-      hKey = NULL;
       goto openkey_cleanup;
     }
 
-  Status = ObpCreateHandle(PsGetCurrentProcess(),
-			  Object,
-			  DesiredAccess,
-			  TRUE,
-			  &hKey);
-
-  if (!NT_SUCCESS(Status))
-     hKey = NULL;
+  Status = ObpCreateHandle(Object,
+			   DesiredAccess,
+			   ObjectCreateInfo.Attributes,
+			   &hKey);
 
 openkey_cleanup:
 
+  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
   PostOpenKeyInfo.Status = Status;
   CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
@@ -1385,15 +1375,18 @@ openkey_cleanup:
       ObDereferenceObject(Object);
     }
 
-  _SEH_TRY
+  if (NT_SUCCESS(Status))
   {
-    *KeyHandle = hKey;
+    _SEH_TRY
+    {
+      *KeyHandle = hKey;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
   }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
 
   return Status;
 }
@@ -1431,7 +1424,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		(KeyInformationClass != KeyNameInformation ? KEY_QUERY_VALUE : 0),
 		CmiKeyType,
-		UserMode,
+		ExGetPreviousMode(),
 		(PVOID *) &KeyObject,
 		NULL);
   if (!NT_SUCCESS(Status))
@@ -1657,7 +1650,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
 		CmiKeyType,
-		UserMode,
+		ExGetPreviousMode(),
 		(PVOID *)&KeyObject,
 		NULL);
 
@@ -1904,10 +1897,10 @@ NtSetValueKey(IN HANDLE KeyHandle,
   BLOCK_OFFSET ValueCellOffset;
   PDATA_CELL DataCell;
   PDATA_CELL NewDataCell;
-  PHBIN pBin;
   ULONG DesiredAccess;
   REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
   REG_POST_OPERATION_INFORMATION PostOperationInfo;
+  ULONG DataCellSize;
 
   PAGED_CODE();
 
@@ -1981,74 +1974,74 @@ NtSetValueKey(IN HANDLE KeyHandle,
   DPRINT("ValueCell %p\n", ValueCell);
   DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
 
+  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
+      (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
+    {
+      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
+      DataCellSize = (DataCell->CellSize < 0 ? -DataCell->CellSize : DataCell->CellSize) - sizeof(CELL_HEADER);
+    }
+  else
+    {
+      DataCell = NULL;
+      DataCellSize = 0;
+    }
+
+
   if (DataSize <= sizeof(BLOCK_OFFSET))
     {
       /* If data size <= sizeof(BLOCK_OFFSET) then store data in the data offset */
       DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-      if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-	  (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
+      if (DataCell)
 	{
-	  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
 	  CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
 	}
 
       RtlCopyMemory(&ValueCell->DataOffset, Data, DataSize);
       ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
       ValueCell->DataType = Type;
-      RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
       CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
-  else if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-	   (DataSize <= (ValueCell->DataSize & REG_DATA_SIZE_MASK)))
+  else 
     {
-      /* If new data size is <= current then overwrite current data */
-      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset,&pBin);
-      RtlZeroMemory(DataCell->Data, ValueCell->DataSize);
+      if (DataSize > DataCellSize)
+        {
+         /*
+          * New data size is larger than the current, destroy current
+          * data block and allocate a new one.
+          */
+          BLOCK_OFFSET NewOffset;
+
+          DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+
+          Status = CmiAllocateCell (RegistryHive,
+				    sizeof(CELL_HEADER) + DataSize,
+				    (PVOID *)&NewDataCell,
+				    &NewOffset);
+          if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
+
+	      ExReleaseResourceLite(&CmiRegistryLock);
+	      KeLeaveCriticalRegion();
+              PostOperationInfo.Status = Status;
+              CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
+	      ObDereferenceObject(KeyObject);
+
+	      return Status;
+	    }
+
+          if (DataCell)
+	    {
+	      CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
+	    }
+
+          ValueCell->DataOffset = NewOffset;
+          DataCell = NewDataCell;
+        }
+
       RtlCopyMemory(DataCell->Data, Data, DataSize);
-      ValueCell->DataSize = DataSize;
-      ValueCell->DataType = Type;
-    }
-  else
-    {
-      /*
-       * New data size is larger than the current, destroy current
-       * data block and allocate a new one.
-       */
-      BLOCK_OFFSET NewOffset;
-
-      DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-
-      if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-	  (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
-	{
-	  DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
-	  CmiDestroyCell(RegistryHive, DataCell, ValueCell->DataOffset);
-	  ValueCell->DataSize = 0;
-	  ValueCell->DataType = 0;
-	  ValueCell->DataOffset = (BLOCK_OFFSET)-1;
-	}
-
-      Status = CmiAllocateCell (RegistryHive,
-				sizeof(CELL_HEADER) + DataSize,
-				(PVOID *)&NewDataCell,
-				&NewOffset);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
-
-	  ExReleaseResourceLite(&CmiRegistryLock);
-	  KeLeaveCriticalRegion();
-          PostOperationInfo.Status = Status;
-          CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-	  ObDereferenceObject(KeyObject);
-
-	  return Status;
-	}
-
-      RtlCopyMemory(&NewDataCell->Data[0], Data, DataSize);
       ValueCell->DataSize = DataSize & REG_DATA_SIZE_MASK;
       ValueCell->DataType = Type;
-      ValueCell->DataOffset = NewOffset;
       CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
       CmiMarkBlockDirty(RegistryHive, ValueCellOffset);
     }
@@ -2090,7 +2083,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 
   PAGED_CODE();
   
-  PreviousMode = KeGetPreviousMode();
+  PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
@@ -2197,7 +2190,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   DPRINT ("NtLoadKey2() called\n");
 
 #if 0
-  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, KeGetPreviousMode ()))
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 
@@ -2368,7 +2361,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_QUERY_VALUE,
 				     CmiKeyType,
-				     UserMode,
+				     ExGetPreviousMode(),
 				     (PVOID *) &KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -2515,14 +2508,14 @@ NtSaveKey (IN HANDLE KeyHandle,
   DPRINT ("NtSaveKey() called\n");
 
 #if 0
-  if (!SeSinglePrivilegeCheck (SeBackupPrivilege, KeGetPreviousMode ()))
+  if (!SeSinglePrivilegeCheck (SeBackupPrivilege, ExGetPreviousMode ()))
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 
   Status = ObReferenceObjectByHandle (KeyHandle,
 				      0,
 				      CmiKeyType,
-				      KeGetPreviousMode(),
+				      ExGetPreviousMode(),
 				      (PVOID *)&KeyObject,
 				      NULL);
   if (!NT_SUCCESS(Status))
@@ -2622,7 +2615,7 @@ NtSetInformationKey (IN HANDLE KeyHandle,
   Status = ObReferenceObjectByHandle (KeyHandle,
 				      KEY_SET_VALUE,
 				      CmiKeyType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID *)&KeyObject,
 				      NULL);
   if (!NT_SUCCESS (Status))
@@ -2704,7 +2697,7 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
   DPRINT ("NtUnloadKey() called\n");
 
 #if 0
-  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, KeGetPreviousMode ()))
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 

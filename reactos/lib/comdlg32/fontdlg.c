@@ -160,6 +160,16 @@ void _dump_cf_flags(DWORD cflags)
 
 /***********************************************************************
  *           ChooseFontW   (COMDLG32.@)
+ *
+ * Create a font dialog box.
+ *
+ * PARAMS
+ *  lpChFont [I/O] in:  information to initialize the dialog box.
+ *                 out: User's color selection
+ *
+ * RETURNS
+ *  TRUE:  Ok button clicked.
+ *  FALSE: Cancel button clicked, or error.
  */
 BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
 {
@@ -212,6 +222,8 @@ BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
 
 /***********************************************************************
  *           ChooseFontA   (COMDLG32.@)
+ *
+ * See ChosseFontW.
  */
 BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
 {

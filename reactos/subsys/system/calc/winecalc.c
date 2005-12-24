@@ -2941,23 +2941,71 @@ void calc_buffer_display(CALC *calc) {
     TCHAR s[CALC_BUF_SIZE];
     int point=0;
     calcfloat real;
+    static int old_base = NBASE_DECIMAL;
 
+   
     switch (calc->numBase) {
-    case NBASE_HEX:
-        real = calc_atof(calc->buffer, calc->numBase);
-        _stprintf(calc->display, TEXT("%lx"), (long)real);
+    case NBASE_HEX:      
+        real = calc_atof(calc->buffer, old_base);
+        _stprintf(calc->display, _T("%lx"), (long)real);   
+        _stprintf(calc->buffer, _T("%lx"), (long)real);         
+        old_base = NBASE_HEX;        
         break;
 
-    case NBASE_OCTAL:
-        _stprintf(calc->display, TEXT("%lo"), (long)calc->buffer);
+    case NBASE_OCTAL:  
+         real = calc_atof(calc->buffer, old_base);
+        _stprintf(calc->display, TEXT("%lo"), (long)real);
+        _stprintf(calc->buffer, TEXT("%lo"), (long)real);
+        old_base = NBASE_OCTAL;
         break;
 
     case NBASE_BINARY:
-        _stprintf(calc->display, TEXT("%lx"), (long)calc->buffer);
+        {
+          int buf=0;          
+          int t;
+
+          if (calc->buffer[0]==_T('\0'))
+          {
+            real=0;
+          }
+          else
+          {
+            real = calc_atof(calc->buffer, old_base);
+          }
+          
+          calc->display[buf]=_T('0');
+          calc->buffer[buf]=_T('0');
+          for (t=31;t>=0;t--)
+          {                  
+            if (((((long)real)>>t) & ~0xFFFFFFFE)==0)
+            {
+                calc->display[buf]=_T('0');
+                calc->buffer[buf]=_T('0');
+                buf++;
+            }
+            else
+            {
+                calc->display[buf]=_T('1');
+                calc->buffer[buf]=_T('1');
+                buf++;
+            }
+            
+          }
+        
+          if (buf==0) 
+          {
+              buf++;
+          }
+         
+          calc->buffer[buf]=_T('\0');
+          calc->display[buf]=_T('\0');          
+          old_base = NBASE_BINARY;
+        }
         break;
 
     case NBASE_DECIMAL:
-        calc_buffer_format(calc);
+
+       calc_buffer_format(calc);
 
         if (calc->displayMode) {
             if (!_tcscmp(calc->buffer, TEXT("0")) || !calc->buffer[0]) {
@@ -2968,7 +3016,9 @@ void calc_buffer_display(CALC *calc) {
                 int lz = 0;
                 int exp = 0;
 
-                real = calc_atof(calc->buffer, calc->numBase);
+                       
+
+                real = calc_atof(calc->buffer,old_base);
                 _stprintf(s, FMT_DESC_EXP, real);
                 // remove leading zeros in exponent
                 p = s;
@@ -3008,6 +3058,20 @@ void calc_buffer_display(CALC *calc) {
             // add point if missing
             // display
 
+            if (old_base != calc->numBase)
+            {
+                if (calc->buffer[0]==_T('\0'))
+                {
+                    real = 0;
+                }
+                else
+                {
+                    real = calc_atof(calc->buffer, old_base);
+                }           
+                _stprintf(calc->display, _T("%.f"), real);   
+                _stprintf(calc->buffer, _T("%.f"), real);               
+            }                              
+
             _tcscpy(s,calc->buffer);
             p = s;
 
@@ -3031,7 +3095,9 @@ void calc_buffer_display(CALC *calc) {
                 calc->display[0] = 0;
             _tcscat(calc->display, s);
         }
+        old_base = NBASE_DECIMAL;
     }
+   
     InvalidateRect(calc->hWnd, NULL, FALSE);
     UpdateWindow(calc->hWnd);
 }

@@ -26,7 +26,7 @@
 // ReactOS Loading Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID LoadAndBootReactOS(PCHAR OperatingSystemName);
+VOID LoadAndBootReactOS(PCSTR OperatingSystemName);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -61,8 +61,8 @@ VOID FASTCALL FrLdrSetupPae(ULONG Magic);
 VOID FASTCALL FrLdrSetupPageDirectory(VOID);
 VOID FASTCALL FrLdrGetPaeMode(VOID);
 BOOL STDCALL FrLdrMapKernel(FILE *KernelImage);
-ULONG_PTR STDCALL FrLdrCreateModule(LPSTR ModuleName);
-ULONG_PTR STDCALL FrLdrLoadModule(FILE *ModuleImage, LPSTR ModuleName, PULONG ModuleSize);
+ULONG_PTR STDCALL FrLdrCreateModule(LPCSTR ModuleName);
+ULONG_PTR STDCALL FrLdrLoadModule(FILE *ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
 BOOL STDCALL FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
 VOID STDCALL FrLdrStartup(ULONG Magic);
 typedef VOID (FASTCALL *ASMCODE)(ULONG Magic, PLOADER_PARAMETER_BLOCK LoaderBlock);

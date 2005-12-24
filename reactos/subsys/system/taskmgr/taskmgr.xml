@@ -9,24 +9,26 @@
 	<library>gdi32</library>
 	<library>comctl32</library>
 	<pch>precomp.h</pch>
-	<file>about.c</file>
-	<file>affinity.c</file>
-	<file>applpage.c</file>
-	<file>column.c</file>
-	<file>dbgchnl.c</file>
-	<file>debug.c</file>
-	<file>endproc.c</file>
-	<file>font.c</file>
-	<file>graph.c</file>
-	<file>optnmenu.c</file>
-	<file>perfdata.c</file>
-	<file>perfpage.c</file>
-	<file>priority.c</file>
-	<file>procpage.c</file>
-	<file>proclist.c</file>
-	<file>run.c</file>
-	<file>trayicon.c</file>
-	<file>taskmgr.c</file>
-	<file>graphctl.c</file>
+	<compilationunit name="unit.c">
+		<file>about.c</file>
+		<file>affinity.c</file>
+		<file>applpage.c</file>
+		<file>column.c</file>
+		<file>dbgchnl.c</file>
+		<file>debug.c</file>
+		<file>endproc.c</file>
+		<file>font.c</file>
+		<file>graph.c</file>
+		<file>optnmenu.c</file>
+		<file>perfdata.c</file>
+		<file>perfpage.c</file>
+		<file>priority.c</file>
+		<file>procpage.c</file>
+		<file>proclist.c</file>
+		<file>run.c</file>
+		<file>trayicon.c</file>
+		<file>taskmgr.c</file>
+		<file>graphctl.c</file>
+	</compilationunit>
 	<file>taskmgr.rc</file>
 </module>

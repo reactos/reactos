@@ -1,5 +1,5 @@
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
+#include <ntddk.h>
+#include <winddi.h>
 
 #include "regtests.h"
 

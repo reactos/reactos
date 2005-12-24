@@ -17,6 +17,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MiInitializeNonPagedPool)
+#endif
+
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
 #else
@@ -1472,7 +1476,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    DPRINT("freeing block %x\n",blk);
 
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->hdr.Size,
-              block->Caller);
+              blk->Caller);
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
    VALIDATE_POOL;

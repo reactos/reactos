@@ -18,12 +18,9 @@
  */
 
 #include <freeldr.h>
-#include <disk.h>
-#include <arch.h>
-#include <rtl.h>
-#include <ui.h>
-#include <debug.h>
 
+#define NDEBUG
+#include <debug.h>
 
 #undef  UNIMPLEMENTED
 #define UNIMPLEMENTED   BugCheck((DPRINT_WARNING, "Unimplemented\n"));
@@ -39,7 +36,7 @@ VOID DiskReportError (BOOL bError)
 	bReportError = bError;
 }
 
-VOID DiskError(PCHAR ErrorString, ULONG ErrorCode)
+VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 {
 	CHAR	ErrorCodeString[200];
 
@@ -53,7 +50,7 @@ VOID DiskError(PCHAR ErrorString, ULONG ErrorCode)
 	UiMessageBox(ErrorCodeString);
 }
 
-PCHAR DiskGetErrorCodeString(ULONG ErrorCode)
+PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
 {
 	switch (ErrorCode)
 	{

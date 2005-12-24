@@ -14,6 +14,7 @@
 #include "Es.rc"
 #include "Ru.rc"
 #include "Ja.rc"
+#include "Hu.rc"
 
 
 STRINGTABLE DISCARDABLE

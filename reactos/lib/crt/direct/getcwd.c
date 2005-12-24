@@ -1,8 +1,6 @@
-#include "precomp.h"
+#include <precomp.h>
 #include <direct.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <internal/file.h>
 #include <tchar.h>
 
 /*

@@ -24,10 +24,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-
-#include <stdio.h>
-#include <internal/file.h>
-
+#include <precomp.h>
 
 char* fgets(char* s, int n, FILE* f)
 {

@@ -522,7 +522,7 @@ SystemConfigurationDataQueryRoutine(PWSTR ValueName,
 }
 #define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
 
-STATIC VOID
+static VOID
 EnumerateBiosDiskEntries(PPARTLIST PartList)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[3];

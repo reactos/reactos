@@ -48,7 +48,7 @@ RtlpSysVolCreateSecurityDescriptor(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
                                TAG('S', 'e', 'S', 'd'));
     if (AbsSD == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -66,7 +66,7 @@ RtlpSysVolCreateSecurityDescriptor(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
                               TAG('S', 'e', 'A', 'c'));
     if (Dacl == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -126,7 +126,7 @@ Cleanup:
 
 static NTSTATUS
 RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
-                                IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+                                IN PISECURITY_DESCRIPTOR SecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR RelSD = NULL;
     PSECURITY_DESCRIPTOR NewRelSD = NULL;
@@ -165,7 +165,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                TAG('S', 'e', 'S', 'd'));
     if (RelSD == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -230,6 +230,10 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                          0,
                                          0,
                                          &LocalSystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
 
     /* check if the Administrators are the owner and at least a not-NULL DACL
        is present */
@@ -296,7 +300,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                    TAG('S', 'e', 'S', 'd'));
         if (AbsSD == NULL)
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_NO_MEMORY;
             goto Cleanup;
         }
 
@@ -356,6 +360,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
                                   TAG('S', 'e', 'S', 'd'));
     if (NewRelSD == NULL)
     {
+        Status = STATUS_NO_MEMORY;
         goto Cleanup;
     }
 
@@ -363,7 +368,7 @@ RtlpSysVolCheckOwnerAndSecurity(IN HANDLE DirectoryHandle,
     Status = RtlAbsoluteToSelfRelativeSD(AbsSD,
                                          NewRelSD,
                                          &RelSDSize);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
         goto Cleanup;
     }
@@ -545,7 +550,7 @@ RtlCreateSystemVolumeInformationFolder(
     HANDLE hDirectory;
     UNICODE_STRING DirectoryName, NewPath;
     ULONG PathLen;
-    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    PISECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     PSID SystemSid = NULL;
     BOOLEAN AddSep = FALSE;
     NTSTATUS Status;

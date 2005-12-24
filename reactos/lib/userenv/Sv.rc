@@ -16,7 +16,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
@@ -43,5 +43,5 @@ BEGIN
     IDS_CACHE          "Lokala inställningar\\Temporary Internet Files"
     IDS_HISTORY        "Lokala inställningar\\Tidigare"
     IDS_COOKIES        "Cookies"
-    IDS_PROGRAMFILES   "%SystemDrive%\\Program files"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Program"
 END

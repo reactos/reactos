@@ -420,7 +420,7 @@ const char *get_stub_name( const ORDDEF *odp, const DLLSPEC *spec )
  *
  * The reason gas is written this way is that it's trying to mimick
  * native assemblers for the various architectures it runs on.  gas
- * provides other directives that work consistantly across
+ * provides other directives that work consistently across
  * architectures, but of course we want to work on all arches with or
  * without gas.  Hence this function.
  *

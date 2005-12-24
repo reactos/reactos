@@ -33,6 +33,7 @@
 #include <stddef.h>
 
 /* PSDK/NDK */
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <fmifs/fmifs.h>
 #define NTOS_MODE_USER
@@ -42,7 +43,7 @@
 #include <fslib/vfatlib.h>
 
 /* DDK Disk Headers */
-#include <ddk/ntddscsi.h>
+#include <ntddscsi.h>
 
 /* Blue Driver Header */
 #include <blue/ntddblue.h>
@@ -53,11 +54,12 @@
 /* ReactOS Version */
 #include <reactos/buildno.h>
 
+#include <infros.h>
+
 /* Internal Headers */
 #include "console.h"
 #include "partlist.h"
 #include "inicache.h"
-#include "infcache.h"
 #include "filequeue.h"
 #include "progress.h"
 #include "bootsup.h"

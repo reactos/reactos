@@ -13,6 +13,11 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitializeKernelAddressSpace)
+#endif
+
+
 /* GLOBALS ******************************************************************/
 
 STATIC MADDRESS_SPACE KernelAddressSpace;
@@ -30,7 +35,7 @@ MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
-   ExAcquireFastMutex(&AddressSpace->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Lock);
 }
 
 VOID
@@ -44,7 +49,7 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
-   ExReleaseFastMutex(&AddressSpace->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Lock);
 }
 
 VOID

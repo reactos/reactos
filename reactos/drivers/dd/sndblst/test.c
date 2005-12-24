@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "mpu401.h"
 
 int main()

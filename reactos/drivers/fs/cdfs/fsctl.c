@@ -35,7 +35,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static inline
+static __inline
 int msf_to_lba (BYTE m, BYTE s, BYTE f)
 {
    return (((m * 60) + s) * 75 + f) - 150;

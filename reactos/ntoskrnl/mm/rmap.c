@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitializeRmapList)
+#endif
+
 /* TYPES ********************************************************************/
 
 typedef struct _MM_RMAP_ENTRY
@@ -459,6 +463,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
       KEBUGCHECK(0);
    }
    MmSetRmapListHeadPage(Page, NULL);
+   ExReleaseFastMutex(&RmapListLock);
    while (current_entry != NULL)
    {
       previous_entry = current_entry;
@@ -479,7 +484,6 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
          InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
       }
    }
-   ExReleaseFastMutex(&RmapListLock);
 }
 
 VOID

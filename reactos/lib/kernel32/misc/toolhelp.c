@@ -92,10 +92,10 @@ typedef struct _TH32SNAPSHOT
 /* INTERNAL FUNCTIONS *********************************************************/
 
 static VOID
-TH32FreeAllocatedResources(PDEBUG_BUFFER HeapDebug,
-                           PDEBUG_BUFFER ModuleDebug,
+TH32FreeAllocatedResources(PRTL_DEBUG_BUFFER HeapDebug,
+                           PRTL_DEBUG_BUFFER ModuleDebug,
                            PVOID ProcThrdInfo,
-                           ULONG ProcThrdInfoSize)
+                           SIZE_T ProcThrdInfoSize)
 {
   if(HeapDebug != NULL)
   {
@@ -118,10 +118,10 @@ TH32FreeAllocatedResources(PDEBUG_BUFFER HeapDebug,
 static NTSTATUS
 TH32CreateSnapshot(DWORD dwFlags,
                    DWORD th32ProcessID,
-                   PDEBUG_BUFFER *HeapDebug,
-                   PDEBUG_BUFFER *ModuleDebug,
+                   PRTL_DEBUG_BUFFER *HeapDebug,
+                   PRTL_DEBUG_BUFFER *ModuleDebug,
                    PVOID *ProcThrdInfo,
-                   ULONG *ProcThrdInfoSize)
+                   SIZE_T *ProcThrdInfoSize)
 {
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -139,7 +139,7 @@ TH32CreateSnapshot(DWORD dwFlags,
     if(*HeapDebug != NULL)
     {
       Status = RtlQueryProcessDebugInformation(th32ProcessID,
-                                               PDI_HEAPS,
+                                               RTL_DEBUG_QUERY_HEAPS,
                                                *HeapDebug);
     }
     else
@@ -156,7 +156,7 @@ TH32CreateSnapshot(DWORD dwFlags,
     if(*ModuleDebug != NULL)
     {
       Status = RtlQueryProcessDebugInformation(th32ProcessID,
-                                               PDI_MODULES,
+                                               RTL_DEBUG_QUERY_MODULES,
                                                *ModuleDebug);
     }
     else
@@ -221,8 +221,8 @@ TH32CreateSnapshot(DWORD dwFlags,
 static NTSTATUS
 TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
                                     DWORD th32ProcessID,
-                                    PDEBUG_BUFFER HeapDebug,
-                                    PDEBUG_BUFFER ModuleDebug,
+                                    PRTL_DEBUG_BUFFER HeapDebug,
+                                    PRTL_DEBUG_BUFFER ModuleDebug,
                                     PVOID ProcThrdInfo,
                                     HANDLE *SectionHandle)
 {
@@ -239,8 +239,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
   ULONG ViewSize, i;
   ULONG nProcesses = 0, nThreads = 0, nHeaps = 0, nModules = 0;
   ULONG RequiredSnapshotSize = sizeof(TH32SNAPSHOT);
-  PHEAP_INFORMATION hi = NULL;
-  PMODULE_INFORMATION mi = NULL;
+  PRTL_PROCESS_HEAPS hi = NULL;
+  PRTL_PROCESS_MODULES mi = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
 
   /*
@@ -248,7 +248,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
    */
   if(dwFlags & TH32CS_SNAPHEAPLIST)
   {
-    hi = (PHEAP_INFORMATION)HeapDebug->HeapInformation;
+    hi = (PRTL_PROCESS_HEAPS)HeapDebug->HeapInformation;
     nHeaps = hi->HeapCount;
     RequiredSnapshotSize += nHeaps * sizeof(HEAPLIST32);
   }
@@ -258,7 +258,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
    */
   if(dwFlags & TH32CS_SNAPMODULE)
   {
-    mi = (PMODULE_INFORMATION)ModuleDebug->ModuleInformation;
+    mi = (PRTL_PROCESS_MODULES)ModuleDebug->ModuleInformation;
     nModules = mi->ModuleCount;
     RequiredSnapshotSize += nModules * sizeof(MODULEENTRY32W);
   }
@@ -1113,9 +1113,9 @@ HANDLE
 STDCALL
 CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {
-  PDEBUG_BUFFER HeapDebug, ModuleDebug;
+  PRTL_DEBUG_BUFFER HeapDebug, ModuleDebug;
   PVOID ProcThrdInfo;
-  ULONG ProcThrdInfoSize;
+  SIZE_T ProcThrdInfoSize;
   NTSTATUS Status;
   HANDLE hSnapShotSection = NULL;
 

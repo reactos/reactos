@@ -17,6 +17,8 @@
 #include <tdikrnl.h>
 #include <tdiinfo.h>
 #include <string.h>
+#define _WINBASE_
+#define _WINDOWS_H
 #include <winsock2.h>
 #include <afd/shared.h>
 

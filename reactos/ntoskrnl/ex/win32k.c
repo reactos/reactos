@@ -13,10 +13,14 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpWin32kInit)
+#endif
+
 /* DATA **********************************************************************/
 
-POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
-POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
+POBJECT_TYPE ExWindowStationObjectType = NULL;
+POBJECT_TYPE ExDesktopObjectType = NULL;
 
 static GENERIC_MAPPING ExpWindowStationMapping = 
 {

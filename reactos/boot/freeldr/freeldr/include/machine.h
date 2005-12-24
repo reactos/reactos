@@ -72,7 +72,7 @@ typedef struct tagMACHVTBL
   VOID (*HwDetect)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
-VOID MachInit(char *CmdLine);
+VOID MachInit(const char *CmdLine);
 
 extern MACHVTBL MachVtbl;
 

@@ -537,6 +537,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
   VARIANTARG* rgVarRef = NULL;
   UINT u, cVarRef;
   UINT uArgErr;
+  EXCEPINFO ExcepInfo;
 
   TRACE("(%p)->(%ld,%s,%lx,%x,%p,%p,%p,%p)\n", This,
         dispIdMember, debugstr_guid(riid),
@@ -546,6 +547,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
   /* [out] args can't be null, use dummy vars if needed */
   if (!pVarResult) pVarResult = &VarResult;
   if (!puArgErr) puArgErr = &uArgErr;
+  if (!pExcepInfo) pExcepInfo = &ExcepInfo;
 
   /* count by-ref args */
   for (cVarRef=0,u=0; u<pDispParams->cArgs; u++) {
@@ -595,6 +597,13 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
     }
     CoTaskMemFree(rgVarRef);
     CoTaskMemFree(rgVarRefIdx);
+  }
+
+  if(pExcepInfo == &ExcepInfo)
+  {
+    SysFreeString(pExcepInfo->bstrSource);
+    SysFreeString(pExcepInfo->bstrDescription);
+    SysFreeString(pExcepInfo->bstrHelpFile);
   }
   return hr;
 }

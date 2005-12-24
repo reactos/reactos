@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Plug & Play
+ * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/classinst.c
  * PURPOSE:         Display class installer
  *
@@ -24,6 +24,8 @@ DisplayClassInstaller(
 	TCHAR SectionName[MAX_PATH];
 	TCHAR ServiceName[MAX_SERVICE_NAME_LEN];
 	SP_DRVINFO_DETAIL_DATA DriverInfoDetailData;
+	HKEY hDriverKey = INVALID_HANDLE_VALUE;
+	HKEY hSettingsKey = INVALID_HANDLE_VALUE;
 	HKEY hServicesKey = INVALID_HANDLE_VALUE;
 	HKEY hServiceKey = INVALID_HANDLE_VALUE;
 	HKEY hDeviceSubKey = INVALID_HANDLE_VALUE;
@@ -34,6 +36,7 @@ DisplayClassInstaller(
 	if (InstallFunction != DIF_INSTALLDEVICE)
 		return ERROR_DI_DO_DEFAULT;
 
+	/* Set DI_NEEDRESTART flag */
 	InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
 	result = SetupDiGetDeviceInstallParams(DeviceInfoSet, DeviceInfoData, &InstallParams);
 	if (!result)
@@ -53,6 +56,7 @@ DisplayClassInstaller(
 		goto cleanup;
 	}
 
+	/* Get .inf file name and section name */
 	DriverInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
 	result = SetupDiGetSelectedDriver(DeviceInfoSet, DeviceInfoData, &DriverInfoData);
 	if (!result)
@@ -93,6 +97,7 @@ DisplayClassInstaller(
 	}
 	_tcscat(SectionName, _T(".SoftwareSettings"));
 
+	/* Do normal install */
 	result = SetupDiInstallDevice(DeviceInfoSet, DeviceInfoData);
 	if (!result)
 	{
@@ -101,6 +106,46 @@ DisplayClassInstaller(
 		goto cleanup;
 	}
 
+	/* Open driver registry key and create Settings subkey */
+	hDriverKey = SetupDiOpenDevRegKey(
+		DeviceInfoSet, DeviceInfoData,
+		DICS_FLAG_GLOBAL, 0, DIREG_DRV,
+		KEY_CREATE_SUB_KEY);
+	if (hDriverKey == INVALID_HANDLE_VALUE)
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiOpenDevRegKey() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	rc = RegCreateKeyEx(
+		hDriverKey, L"Settings",
+		0, NULL, REG_OPTION_NON_VOLATILE, 
+#if _WIN32_WINNT >= 0x502
+		KEY_READ | KEY_WRITE,
+#else
+		KEY_ALL_ACCESS,
+#endif
+		NULL, &hSettingsKey, &disposition);
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegCreateKeyEx() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+
+	/* Install .SoftwareSettings to Settings subkey */
+	result = SetupInstallFromInfSection(
+		InstallParams.hwndParent, hInf, SectionName,
+		SPINST_REGISTRY, hSettingsKey,
+		NULL, 0, NULL, NULL,
+		NULL, NULL);
+	if (!result)
+	{
+		rc = GetLastError();
+		DPRINT("SetupInstallFromInfSection() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+
+	/* Get service name and open service registry key */
 	result = SetupDiGetDeviceRegistryProperty(
 		DeviceInfoSet, DeviceInfoData,
 		SPDRP_SERVICE, NULL,
@@ -147,6 +192,8 @@ DisplayClassInstaller(
 	}
 
 	/* Install SoftwareSettings section */
+	/* Yes, we're installing this section for the second time.
+	 * We don't want to create a link to Settings subkey */
 	result = SetupInstallFromInfSection(
 		InstallParams.hwndParent, hInf, SectionName,
 		SPINST_REGISTRY, hDeviceSubKey,
@@ -166,6 +213,10 @@ DisplayClassInstaller(
 cleanup:
 	if (hInf != INVALID_HANDLE_VALUE)
 		SetupCloseInfFile(hInf);
+	if (hDriverKey != INVALID_HANDLE_VALUE)
+		RegCloseKey(hDriverKey);
+	if (hSettingsKey != INVALID_HANDLE_VALUE)
+		RegCloseKey(hSettingsKey);
 	if (hServicesKey != INVALID_HANDLE_VALUE)
 		RegCloseKey(hServicesKey);
 	if (hServiceKey != INVALID_HANDLE_VALUE)

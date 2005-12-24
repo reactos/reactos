@@ -1,11 +1,7 @@
 /* $Id$
  *
  */
-
-#include <errno.h>
-#include <internal/tls.h>
-#include <internal/file.h>
-
+#include <precomp.h>
 #include "doserrmap.h"
 
 /*

@@ -18,6 +18,8 @@
 
 #define Unimplemented DbgPrint("WL: %S() at %S:%i unimplemented!\n", __FUNCTION__, __FILE__, __LINE__)
 
+#define WINLOGON_DESKTOP   L"Winlogon"
+
 /*
  * @implemented
  */

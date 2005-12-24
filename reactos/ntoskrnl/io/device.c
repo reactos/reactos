@@ -121,6 +121,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       }
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
+      IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
    }
 
    return STATUS_SUCCESS;
@@ -153,17 +154,19 @@ IopStartDevice(
    }
    else
    {
-      if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
-          Fdo->DeviceType == FILE_DEVICE_ACPI)
+	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
       {
-         DPRINT("Bus extender found\n");
-
+         DPRINT("Device needs enumeration, invalidating bus relations\n");
          Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
+		 IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
       }
    }
 
    ObDereferenceObject(Fdo);
-   
+
+   if (NT_SUCCESS(Status))
+       DeviceNode->Flags |= DN_STARTED;
+
    return Status;
 }
 
@@ -569,7 +572,8 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Cannot insert Device Object into Handle Table (status 0x%08lx)\n", Status);
+        DPRINT1("Cannot insert Device Object '%wZ' into Handle Table (status 0x%08lx)\n",
+            DeviceName, Status);
         *DeviceObject = NULL;
         return Status;
     }

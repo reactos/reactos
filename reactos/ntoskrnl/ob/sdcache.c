@@ -52,7 +52,7 @@ ObpInitSdCache(VOID)
 }
 
 
-static inline VOID
+static __inline VOID
 ObpSdCacheLock(VOID)
 {
   /* can't acquire a fast mutex in the early boot process... */
@@ -63,7 +63,7 @@ ObpSdCacheLock(VOID)
 }
 
 
-static inline VOID
+static __inline VOID
 ObpSdCacheUnlock(VOID)
 {
   /* can't acquire a fast mutex in the early boot process... */

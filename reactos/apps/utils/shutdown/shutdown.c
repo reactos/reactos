@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS shutdown/logoff utility
  * FILE:            apps/utils/shutdown/shutdown.c

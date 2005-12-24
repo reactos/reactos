@@ -1,15 +1,7 @@
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <lsass/lsass.h>
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#include <ntsecapi.h>
-#include <security.h>
-#include <sspi.h>
-
 
 
 SECURITY_STATUS

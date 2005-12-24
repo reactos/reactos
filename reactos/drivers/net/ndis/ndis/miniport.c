@@ -377,7 +377,9 @@ VOID NTAPI
 MiniSendResourcesAvailable(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
+/*
     UNIMPLEMENTED
+*/
 }
 
 
@@ -876,6 +878,27 @@ VOID NTAPI MiniportDpc(
 }
 
 
+VOID
+NTAPI
+MiniStatus(
+    IN NDIS_HANDLE  MiniportHandle,
+    IN NDIS_STATUS  GeneralStatus,
+    IN PVOID  StatusBuffer,
+    IN UINT  StatusBufferSize)
+{
+    UNIMPLEMENTED
+}
+
+
+VOID
+NTAPI
+MiniStatusComplete(
+    IN NDIS_HANDLE  MiniportAdapterHandle)
+{
+    UNIMPLEMENTED
+}
+
+
 /*
  * @unimplemented
  */
@@ -1335,7 +1358,7 @@ NdisIPnPStartDevice(
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
                                DevicePropertyLegacyBusType, Size,
                                &Adapter->NdisMiniportBlock.BusType, &Size);
-  if (!NT_SUCCESS(Status) || Adapter->NdisMiniportBlock.BusType == InterfaceTypeUndefined)
+  if (!NT_SUCCESS(Status) || (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType == InterfaceTypeUndefined)
     {
       NdisInitUnicodeString(&ParamName, L"BusType");
       NdisReadConfiguration(&NdisStatus, &ConfigParam, ConfigHandle,
@@ -1404,6 +1427,8 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.ResetCompleteHandler = MiniResetComplete;
   Adapter->NdisMiniportBlock.TDCompleteHandler    = MiniTransferDataComplete;
   Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
+  Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
+  Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
 
   Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
 
@@ -1533,14 +1558,17 @@ NdisIDispatchPnp(
         break;
 
       case IRP_MN_STOP_DEVICE:
-        /* FIXME */
-        Status = STATUS_UNSUCCESSFUL;
-        break;
         Status = NdisIForwardIrpAndWait(Adapter, Irp);
         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
           {
             Status = NdisIPnPStopDevice(DeviceObject, Irp);
           }
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        break;
+
+      case IRP_MN_QUERY_DEVICE_RELATIONS:
+        Status = STATUS_NOT_SUPPORTED;
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;

@@ -35,7 +35,6 @@ typedef enum _PAGE_NUMBER
   START_PAGE,
   INTRO_PAGE,
   LICENSE_PAGE,
-  WARNING_PAGE,
   INSTALL_INTRO_PAGE,
 
 //  SCSI_CONTROLLER_PAGE,
@@ -395,7 +394,7 @@ CheckUnattendedSetup(VOID)
 {
   WCHAR UnattendInfPath[MAX_PATH];
   UNICODE_STRING FileName;
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   HINF UnattendInf;
   ULONG ErrorLine;
   NTSTATUS Status;
@@ -429,14 +428,16 @@ CheckUnattendedSetup(VOID)
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"Signature", &Context))
     {
       DPRINT("InfFindFirstLine() failed for section 'Unattend'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
 
   /* Get pointer 'Signature' key */
-  if (!InfGetData(&Context, NULL, &Value))
+  if (!InfGetData(Context, NULL, &Value))
     {
       DPRINT("InfGetData() failed for key 'Signature'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
@@ -445,6 +446,7 @@ CheckUnattendedSetup(VOID)
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
       DPRINT("Signature not $ReactOS$\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
@@ -453,31 +455,37 @@ CheckUnattendedSetup(VOID)
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
       DPRINT("InfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
-  if (!InfGetIntField(&Context, 0, &IntValue))
+  if (!InfGetIntField(Context, 0, &IntValue))
     {
       DPRINT("InfGetIntField() failed for key 'DestinationDiskNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
   UnattendDestinationDiskNumber = IntValue;
+  InfFreeContext(Context);
 
   /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
     {
       DPRINT("InfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
-  if (!InfGetIntField(&Context, 0, &IntValue))
+  if (!InfGetIntField(Context, 0, &IntValue))
     {
       DPRINT("InfGetIntField() failed for key 'DestinationPartitionNumber'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
   UnattendDestinationPartitionNumber = IntValue;
+  InfFreeContext(Context);
 
   /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
   if (!InfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
@@ -488,14 +496,16 @@ CheckUnattendedSetup(VOID)
     }
 
   /* Get pointer 'InstallationDirectory' key */
-  if (!InfGetData(&Context, NULL, &Value))
+  if (!InfGetData(Context, NULL, &Value))
     {
       DPRINT("InfGetData() failed for key 'InstallationDirectory'\n");
+      InfFreeContext(Context);
       InfCloseFile(UnattendInf);
       return;
     }
   wcscpy(UnattendInstallationDirectory, Value);
 
+  InfFreeContext(Context);
   InfCloseFile(UnattendInf);
 
   IsUnattendedSetup = TRUE;
@@ -516,7 +526,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   NTSTATUS Status;
   WCHAR FileNameBuffer[MAX_PATH];
   UNICODE_STRING FileName;
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   PWCHAR Value;
   ULONG ErrorLine;
   ULONG ReturnSize;
@@ -630,8 +640,9 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 
   /* Get pointer 'Signature' key */
-  if (!InfGetData (&Context, NULL, &Value))
+  if (!InfGetData (Context, NULL, &Value))
     {
+      InfFreeContext(Context);
       PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
 
@@ -649,6 +660,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   /* Check 'Signature' string */
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
+      InfFreeContext(Context);
       PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
 		 "ENTER = Reboot computer");
 
@@ -662,6 +674,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
+  InfFreeContext(Context);
 
   CheckUnattendedSetup();
 
@@ -687,6 +700,9 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(8, 19, "\x07  Press L to view the ReactOS Licensing Terms and Conditions");
   SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
 
+  SetTextXY(6, 23, "For more information on ReactOS, please visit:");
+  SetHighlightedTextXY(6, 24, "http://www.reactos.org");
+
   SetStatusText("   ENTER = Continue  R = Repair F3 = Quit");
 
   if (IsUnattendedSetup)
@@ -707,7 +723,7 @@ IntroPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return WARNING_PAGE;
+	  return INSTALL_INTRO_PAGE;
       break;
 	}
       else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
@@ -733,22 +749,28 @@ IntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LicensePage(PINPUT_RECORD Ir)
 {
-  SetHighlightedTextXY(6, 8, "Licensing:");
+  SetHighlightedTextXY(6, 6, "Licensing:");
 
-  SetTextXY(8, 11, "The ReactOS System is licensed under the terms of the");
-  SetTextXY(8, 12, "GNU GPL with parts containing code from other compatible");
-  SetTextXY(8, 13, "licenses such as the X11 or BSD and GNU LGPL licenses.");
-  SetTextXY(8, 14, "All software that is part of the ReactOS system is");
-  SetTextXY(8, 15, "therefore released under the GNU GPL as well as maintaining");
-  SetTextXY(8, 16, "the original license.");
+  SetTextXY(8, 8, "The ReactOS System is licensed under the terms of the");
+  SetTextXY(8, 9, "GNU GPL with parts containing code from other compatible");
+  SetTextXY(8, 10, "licenses such as the X11 or BSD and GNU LGPL licenses.");
+  SetTextXY(8, 11, "All software that is part of the ReactOS system is");
+  SetTextXY(8, 12, "therefore released under the GNU GPL as well as maintaining");
+  SetTextXY(8, 13, "the original license.");
 
-  SetTextXY(8, 18, "This software comes with NO WARRANTY or restrictions on usage");
-  SetTextXY(8, 19, "save applicable local and international law. The licensing of");
-  SetTextXY(8, 20, "ReactOS only covers distribution to third parties.");
+  SetTextXY(8, 15, "This software comes with NO WARRANTY or restrictions on usage");
+  SetTextXY(8, 16, "save applicable local and international law. The licensing of");
+  SetTextXY(8, 17, "ReactOS only covers distribution to third parties.");
 
-  SetTextXY(8, 22, "If for some reason you did not receive a copy of the");
-  SetTextXY(8, 23, "GNU General Public License with ReactOS please visit");
-  SetHighlightedTextXY(8, 25, "http://www.gnu.org/licenses/licenses.html");
+  SetTextXY(8, 18, "If for some reason you did not receive a copy of the");
+  SetTextXY(8, 19, "GNU General Public License with ReactOS please visit");
+  SetHighlightedTextXY(8, 20, "http://www.gnu.org/licenses/licenses.html");
+
+  SetHighlightedTextXY(6, 22, "Warranty:");
+
+  SetTextXY(8, 24, "This is free software; see the source for copying conditions.");
+  SetTextXY(8, 25, "There is NO warranty; not even for MERCHANTABILITY or");
+  SetTextXY(8, 26, "FITNESS FOR A PARTICULAR PURPOSE");
 
   SetStatusText("   ENTER = Return");
 
@@ -761,46 +783,6 @@ LicensePage(PINPUT_RECORD Ir)
           return INTRO_PAGE;
           break;
       }
-    }
-
-  return LICENSE_PAGE;
-}
-
-/*
- * Warning Page
- * RETURNS
- *	Continues to setup
- */
-static PAGE_NUMBER
-WarningPage(PINPUT_RECORD Ir)
-{
-  SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Warranty Statement");
-  SetHighlightedTextXY(6, 8, "Warranty:");
-
-  SetTextXY(8, 11, "This is free software; see the source for copying conditions.");
-  SetTextXY(8, 12, "There is NO warranty; not even for MERCHANTABILITY or");
-  SetTextXY(8, 13, "FITNESS FOR A PARTICULAR PURPOSE");
-
-  SetTextXY(8, 15, "For more information on ReactOS, please visit:");
-  SetHighlightedTextXY(8, 16, "http://www.reactos.org");
-
-  SetStatusText("   F8 = Continue   ESC = Exit");
-
-  while (TRUE)
-    {
-      ConInKey(Ir);
-
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F8)) /* F8 */
-	{
-	    return INSTALL_INTRO_PAGE;
-	  break;
-	}
-      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
-	{
-	  return QUIT_PAGE;
-	}
     }
 
   return LICENSE_PAGE;
@@ -2565,7 +2547,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
   PPARTENTRY PartEntry;
   WCHAR InstallDir[51];
   PWCHAR DefaultPath;
-  INFCONTEXT Context;
+  PINFCONTEXT Context;
   ULONG Length;
 
   if (PartitionList == NULL ||
@@ -2598,7 +2580,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     }
 
   /* Read the 'DefaultPath' data */
-  if (InfGetData (&Context, NULL, &DefaultPath))
+  if (InfGetData (Context, NULL, &DefaultPath))
     {
       wcscpy(InstallDir, DefaultPath);
     }
@@ -2606,6 +2588,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     {
       wcscpy(InstallDir, L"\\ReactOS");
     }
+  InfFreeContext(Context);
   Length = wcslen(InstallDir);
 
   SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
@@ -2670,8 +2653,8 @@ AddSectionToCopyQueue(HINF InfFile,
 		       PWCHAR SourceCabinet,
 		       PINPUT_RECORD Ir)
 {
-  INFCONTEXT FilesContext;
-  INFCONTEXT DirContext;
+  PINFCONTEXT FilesContext;
+  PINFCONTEXT DirContext;
   PWCHAR FileKeyName;
   PWCHAR FileKeyValue;
   PWCHAR DirKeyValue;
@@ -2702,7 +2685,7 @@ AddSectionToCopyQueue(HINF InfFile,
   do
     {
       /* Get source file name and target directory id */
-      if (!InfGetData (&FilesContext, &FileKeyName, &FileKeyValue))
+      if (!InfGetData (FilesContext, &FileKeyName, &FileKeyValue))
 	{
 	  /* FIXME: Handle error! */
 	  DPRINT1("InfGetData() failed\n");
@@ -2710,7 +2693,7 @@ AddSectionToCopyQueue(HINF InfFile,
 	}
 
       /* Get optional target file name */
-      if (!InfGetDataField (&FilesContext, 2, &TargetFileName))
+      if (!InfGetDataField (FilesContext, 2, &TargetFileName))
 	TargetFileName = NULL;
 
       DPRINT ("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
@@ -2723,9 +2706,10 @@ AddSectionToCopyQueue(HINF InfFile,
 	  break;
 	}
 
-      if (!InfGetData (&DirContext, NULL, &DirKeyValue))
+      if (!InfGetData (DirContext, NULL, &DirKeyValue))
 	{
 	  /* FIXME: Handle error! */
+          InfFreeContext(DirContext);
 	  DPRINT1("InfGetData() failed\n");
 	  break;
 	}
@@ -2741,8 +2725,11 @@ AddSectionToCopyQueue(HINF InfFile,
 	  /* FIXME: Handle error! */
 	  DPRINT1("SetupQueueCopy() failed\n");
 	}
+      InfFreeContext(DirContext);
     }
-  while (InfFindNextLine(&FilesContext, &FilesContext));
+  while (InfFindNextLine(FilesContext, FilesContext));
+
+  InfFreeContext(FilesContext);
 
   return TRUE;
 }
@@ -2753,8 +2740,8 @@ PrepareCopyPageInfFile(HINF InfFile,
 		       PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
-  INFCONTEXT DirContext;
-  PWCHAR AdditionalSectionName;
+  PINFCONTEXT DirContext;
+  PWCHAR AdditionalSectionName = NULL;
   PWCHAR KeyValue;
   ULONG Length;
   NTSTATUS Status;
@@ -2840,7 +2827,7 @@ PrepareCopyPageInfFile(HINF InfFile,
   /* Enumerate the directory values and create the subdirectories */
   do
     {
-      if (!InfGetData (&DirContext, NULL, &KeyValue))
+      if (!InfGetData (DirContext, NULL, &KeyValue))
 	{
 	  DPRINT1("break\n");
 	  break;
@@ -2883,7 +2870,9 @@ PrepareCopyPageInfFile(HINF InfFile,
 	    }
 	}
     }
-  while (InfFindNextLine (&DirContext, &DirContext));
+  while (InfFindNextLine (DirContext, DirContext));
+
+  InfFreeContext(DirContext);
 
   return(TRUE);
 }
@@ -2894,7 +2883,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 {
   HINF InfHandle;
   WCHAR PathBuffer[MAX_PATH];
-  INFCONTEXT CabinetsContext;
+  PINFCONTEXT CabinetsContext;
   ULONG InfFileSize;
   PWCHAR KeyValue;
   NTSTATUS Status;
@@ -2940,7 +2929,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
    */
   do
     {
-      if (!InfGetData (&CabinetsContext, NULL, &KeyValue))
+      if (!InfGetData (CabinetsContext, NULL, &KeyValue))
 	break;
 
       wcscpy(PathBuffer, SourcePath.Buffer);
@@ -3017,7 +3006,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
           return QUIT_PAGE;
         }
     }
-  while (InfFindNextLine (&CabinetsContext, &CabinetsContext));
+  while (InfFindNextLine (CabinetsContext, CabinetsContext));
+
+  InfFreeContext(CabinetsContext);
 
   return FILE_COPY_PAGE;
 }
@@ -3095,7 +3086,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
-  INFCONTEXT InfContext;
+  PINFCONTEXT InfContext;
   PWSTR Action;
   PWSTR File;
   PWSTR Section;
@@ -3164,9 +3155,9 @@ RegistryPage(PINPUT_RECORD Ir)
 
   do
     {
-      InfGetDataField (&InfContext, 0, &Action);
-      InfGetDataField (&InfContext, 1, &File);
-      InfGetDataField (&InfContext, 2, &Section);
+      InfGetDataField (InfContext, 0, &Action);
+      InfGetDataField (InfContext, 1, &File);
+      InfGetDataField (InfContext, 2, &Section);
 
       DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
@@ -3203,7 +3194,9 @@ RegistryPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  while (InfFindNextLine (&InfContext, &InfContext));
+  while (InfFindNextLine (InfContext, InfContext));
+
+  InfFreeContext(InfContext);
 
   /* Update display registry settings */
   SetStatusText("   Updating display registry settings...");
@@ -3310,6 +3303,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
   SetTextXY(8, 12, "Install bootloader on the harddisk (MBR).");
   SetTextXY(8, 13, "Install bootloader on a floppy disk.");
+  SetTextXY(8, 14, "Skip install bootloader.");
   InvertTextXY (8, Line, 48, 1);
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -3322,28 +3316,25 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
 	  NormalTextXY (8, Line, 48, 1);
-	  if (Line == 12)
-	    Line = 13;
-	  else if (Line == 13)
-	    Line = 12;
-#if 0
-	  else
-	    Line++;
-#endif
+	  
+	  Line++;
+      if (Line<12) Line=14;
+      if (Line>14) Line=12;
+      	 
+       
+
 	  InvertTextXY (8, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
 	  NormalTextXY (8, Line, 48, 1);
-	  if (Line == 12)
-	    Line = 13;
-	  else if (Line == 13)
-	    Line = 12;
-#if 0
-	  else
-	    Line--;
-#endif
+	  
+	  Line--;
+      if (Line<12) Line=14;
+      if (Line>14) Line=12;
+
+
 	  InvertTextXY (8, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -3362,6 +3353,10 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	  else if (Line == 13)
 	    {
 	      return BOOT_LOADER_FLOPPY_PAGE;
+	    }
+      else if (Line == 14)
+	    {
+	       return SUCCESS_PAGE;;
 	    }
 
 	  return BOOT_LOADER_PAGE;
@@ -3645,13 +3640,16 @@ NtProcessStartup(PPEB Peb)
   RtlNormalizeProcessParams(Peb->ProcessParameters);
 
   ProcessHeap = Peb->ProcessHeap;
+  InfSetHeap(ProcessHeap);
 
   SignalInitEvent();
 
   Status = AllocConsole();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("AllocConsole() failed (Status = 0x%08lx)\n", Status);
+      PrintString("Unable to open the console (Status = 0x%08lx)\n\n", Status);
+      PrintString("The most common cause of this is using an USB keyboard\n");
+      PrintString("USB keyboards are not fully supported yet\n");
 
       /* Raise a hard error (crash the system/BSOD) */
       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
@@ -3688,11 +3686,6 @@ NtProcessStartup(PPEB Peb)
 	  /* License page */
 	  case LICENSE_PAGE:
 	    Page = LicensePage(&Ir);
-	    break;
-        
-	  /* Warning page */
-	  case WARNING_PAGE:
-	    Page = WarningPage(&Ir);
 	    break;
 
 	  /* Intro page */

@@ -55,7 +55,7 @@ static const WCHAR szPercentZeroStar_d[] = { '%','0','*','d','\0' };
 
 #if 0
 #define dump_tokens(rgb) do { \
-  int i_; TRACE("Tokens->{ \n"); \
+  int i_; TRACE("Tokens->{\n"); \
   for (i_ = 0; i_ < rgb[0]; i_++) \
     TRACE("%s0x%02x", i_?",":"",rgb[i_]); \
   TRACE(" }\n"); \
@@ -1598,10 +1598,11 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
     case FMT_DATE_GENERAL:
       {
         BSTR date = NULL;
-        WCHAR *pDate = date;
-        hRes = VarBstrFromDate(V_DATE(&vDate), lcid, 0, pbstrOut);
+        WCHAR *pDate;
+        hRes = VarBstrFromDate(V_DATE(&vDate), lcid, 0, &date);
         if (FAILED(hRes))
           goto VARIANT_FormatDate_Exit;
+	pDate = date;
         while (*pDate)
           *pBuff++ = *pDate++;
         SysFreeString(date);
@@ -1623,10 +1624,11 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       {
         /* FIXME: VARIANT_CALENDAR HIJRI should cause Hijri output */
         BSTR date = NULL;
-        WCHAR *pDate = date;
-        hRes = VarBstrFromDate(V_DATE(&vDate), lcid, VAR_TIMEVALUEONLY, pbstrOut);
+        WCHAR *pDate;
+        hRes = VarBstrFromDate(V_DATE(&vDate), lcid, VAR_TIMEVALUEONLY, &date);
         if (FAILED(hRes))
           goto VARIANT_FormatDate_Exit;
+	pDate = date;
         while (*pDate)
           *pBuff++ = *pDate++;
         SysFreeString(date);

@@ -104,7 +104,7 @@ RtlpCreateUserStack(HANDLE hProcess,
         UseGuard = TRUE;
     }
     
-    DPRINT("AllocatedBase: %p, StackBase: %p, Stack: %p, StackCommit: %lx\n",
+    DPRINT("AllocatedBase: %p, StackBase: %p, Stack: %lx, StackCommit: %lx\n",
             InitialTeb->AllocatedStackBase, InitialTeb->StackBase, Stack,
             StackCommit);
     
@@ -123,7 +123,7 @@ RtlpCreateUserStack(HANDLE hProcess,
     
     /* Now set the current Stack Limit */
     InitialTeb->StackLimit = (PVOID)Stack;
-    DPRINT("StackLimit: %p\n", Stack);
+    DPRINT("StackLimit: %lx\n", Stack);
     
     /* Create a guard page */
     if (UseGuard)
@@ -146,7 +146,7 @@ RtlpCreateUserStack(HANDLE hProcess,
         /* Update the Stack Limit keeping in mind the Guard Page */
         InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit -
                                          GuardPageSize);
-        DPRINT1("StackLimit: %p\n", Stack);   
+        DPRINT1("StackLimit: %lx\n", Stack);   
     }
     
     /* We are done! */
@@ -192,9 +192,9 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     OBJECT_ATTRIBUTES ObjectAttributes;
     CONTEXT Context;
     
-    DPRINT("RtlCreateUserThread: (hProcess: %lx, Suspended: %lx,"
+    DPRINT("RtlCreateUserThread: (hProcess: %p, Suspended: %d,"
             "ZeroBits: %lx, StackReserve: %lx, StackCommit: %lx,"
-            "StartAddress: %p, Parameter: %lx)\n", ProcessHandle,
+            "StartAddress: %p, Parameter: %p)\n", ProcessHandle,
             CreateSuspended, StackZeroBits, StackReserve, StackCommit,
             StartAddress, Parameter);
     
@@ -240,7 +240,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     }
     else
     {
-        DPRINT("Thread created: %lx\n", Handle);
+        DPRINT("Thread created: %p\n", Handle);
         if (ThreadHandle) *ThreadHandle = Handle;
         if (ClientId) *ClientId = ThreadCid;
     }
@@ -261,7 +261,7 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
                      IN PTHREAD_START_ROUTINE ThreadStartAddress,
                      IN PINITIAL_TEB InitialTeb)
 {
-    DPRINT("RtlInitializeContext: (hProcess: %lx, ThreadContext: %p, Teb: %p\n",
+    DPRINT("RtlInitializeContext: (hProcess: %p, ThreadContext: %p, Teb: %p\n",
             ProcessHandle, ThreadContext, InitialTeb);
 
     /* 
@@ -278,11 +278,11 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
     
     /* Set the Selectors */
     ThreadContext->SegGs = 0;
-    ThreadContext->SegFs = TEB_SELECTOR;
-    ThreadContext->SegEs = USER_DS;
-    ThreadContext->SegDs = USER_DS;
-    ThreadContext->SegCs = USER_CS;
-    ThreadContext->SegSs = USER_DS;
+    ThreadContext->SegFs = KGDT_R3_TEB | RPL_MASK;
+    ThreadContext->SegEs = KGDT_R3_DATA | RPL_MASK;
+    ThreadContext->SegDs = KGDT_R3_DATA | RPL_MASK;
+    ThreadContext->SegCs = KGDT_R3_CODE | RPL_MASK;
+    ThreadContext->SegSs = KGDT_R3_DATA | RPL_MASK;
     
     /* Enable Interrupts */
     ThreadContext->EFlags = 0x200; /*X86_EFLAGS_IF */

@@ -9,7 +9,7 @@
 	<xi:include href="cmd/cmd.xml" />
 </directory>
 <directory name="devmgr">
-        <xi:include href="devmgr/devmgr.xml" />
+        <xi:include href="devmgr/devmgrapp.xml" />
 </directory>
 <directory name="expand">
 	<xi:include href="expand/expand.xml" />
@@ -55,6 +55,9 @@
 </directory>
 <directory name="rundll32">
 	<xi:include href="rundll32/rundll32.xml" />
+</directory>
+<directory name="sc">
+	<xi:include href="sc/sc.xml" />
 </directory>
 <directory name="services">
 	<xi:include href="services/services.xml" />

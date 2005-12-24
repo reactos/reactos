@@ -95,11 +95,11 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         }
 
         /* Enable Interrupts and disable some unsupported flags right now */
-        TrapFrame->Eflags = Context->EFlags | X86_EFLAGS_IF;
-        TrapFrame->Eflags &= ~(X86_EFLAGS_VM | X86_EFLAGS_NT | X86_EFLAGS_IOPL);
+        TrapFrame->EFlags = Context->EFlags | X86_EFLAGS_IF;
+        TrapFrame->EFlags &= ~(X86_EFLAGS_VM | X86_EFLAGS_NT | X86_EFLAGS_IOPL);
 
         /* Set the previous mode as user */
-        TrapFrame->PreviousMode = UserMode;
+        TrapFrame->PreviousPreviousMode = UserMode;
 
         /* Terminate the Exception Handler List */
         TrapFrame->ExceptionList = (PVOID)0xFFFFFFFF;

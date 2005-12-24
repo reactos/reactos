@@ -180,7 +180,7 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
                 }
             }
         }
-        /* If an image couldnt be selected, choose the first one */
+        /* If an image couldn't be selected, choose the first one */
         return MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, TMT_IMAGEFILE1);
     }
     else if(imageselecttype == IST_SIZE) {
@@ -224,7 +224,7 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
                 return fileProp;
             }
         }
-        /* If an image couldnt be selected, choose the smallest one */
+        /* If an image couldn't be selected, choose the smallest one */
         return MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, TMT_IMAGEFILE1);
     }
     return NULL;

@@ -16,6 +16,17 @@
 
 /* FUNCTIONS ****************************************************************/
 
+
+VOID
+NTAPI
+HalAllocateCrashDumpRegisters(
+  ULONG Unknown1,
+  ULONG Unknown2)
+{
+  UNIMPLEMENTED;
+}
+
+
 VOID STDCALL
 HalHandleNMI(ULONG Unused)
 {

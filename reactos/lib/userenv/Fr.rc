@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2005 Hervé Poussineau
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA        "Application Data"
+    IDS_DESKTOP        "Bureau"
+    IDS_FAVORITES      "Favoris"
+    IDS_STARTMENU      "Menu Démarrer"
+    IDS_PROGRAMS       "Menu Démarrer\\Programmes"
+    IDS_ADMINTOOLS     "Menu Démarrer\\Programmes\\Outils d'administration"
+    IDS_STARTUP        "Menu Démarrer\\Programmes\\Démarrage"
+    IDS_MYDOCUMENTS    "Mes documents"
+    IDS_MYPICTURES     "Mes documents\\Mes photos"
+    IDS_MYMUSIC        "Mes documents\\Ma musique"
+    IDS_MYVIDEOS       "Mes documents\\Mes vidéos"
+    IDS_TEMPLATES      "Modèles"
+    IDS_RECENT         "Recent"
+    IDS_SENDTO         "SendTo"
+    IDS_PRINTHOOD      "Voisinage d'impression"
+    IDS_NETHOOD        "Voisinage réseau"
+    IDS_LOCALSETTINGS  "Local Settings"
+    IDS_LOCALAPPDATA   "Local Settings\\Application Data"
+    IDS_TEMP           "Local Settings\\Temp"
+    IDS_CACHE          "Local Settings\\Temporary Internet Files"
+    IDS_HISTORY        "Local Settings\\Historique"
+    IDS_COOKIES        "Cookies"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
+END

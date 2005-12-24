@@ -35,8 +35,11 @@ LONG_PTR RPCRT4_NdrClientCall2(PMIDL_STUB_DESC pStubDesc,
 
 HRESULT RPCRT4_GetPSFactory(REFIID riid, struct IPSFactoryBuffer **ppPS);
 
-PFORMAT_STRING ComputeConformance(MIDL_STUB_MESSAGE *pStubMsg, unsigned char *pMemory,
-                                  PFORMAT_STRING pFormat, ULONG_PTR def);
+#define ComputeConformance(pStubMsg, pMemory, pFormat, def) ComputeConformanceOrVariance(pStubMsg, pMemory, pFormat, def, &pStubMsg->MaxCount)
+#define ComputeVariance(pStubMsg, pMemory, pFormat, def) ComputeConformanceOrVariance(pStubMsg, pMemory, pFormat, def, &pStubMsg->ActualCount)
+PFORMAT_STRING ComputeConformanceOrVariance(
+    MIDL_STUB_MESSAGE *pStubMsg, unsigned char *pMemory,
+    PFORMAT_STRING pFormat, ULONG_PTR def, ULONG *pCount);
 
 typedef unsigned char* (WINAPI *NDR_MARSHALL)  (PMIDL_STUB_MESSAGE, unsigned char*, PFORMAT_STRING);
 typedef unsigned char* (WINAPI *NDR_UNMARSHALL)(PMIDL_STUB_MESSAGE, unsigned char**,PFORMAT_STRING, unsigned char);

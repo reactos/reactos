@@ -19,6 +19,7 @@
 #include <assert.h>
 
 #include "rbuild.h"
+#include "backend/backend.h"
 
 using std::string;
 using std::vector;
@@ -66,11 +67,27 @@ Environment::GetInstallPath ()
 	                                             "reactos" );
 }
 
+ParseContext::ParseContext ()
+	: ifData (NULL),
+	  compilationUnit (NULL)
+{
+}
 
-Project::Project ( const string& filename )
+
+FileLocation::FileLocation ( Directory* directory,
+                             std::string filename )
+                             : directory (directory),
+                               filename (filename)
+{
+}
+
+
+Project::Project ( const Configuration& configuration,
+                   const string& filename )
 	: xmlfile (filename),
 	  node (NULL),
-	  head (NULL)
+	  head (NULL),
+	  configuration (configuration)
 {
 	ReadXml();
 }
@@ -78,8 +95,12 @@ Project::Project ( const string& filename )
 Project::~Project ()
 {
 	size_t i;
+	if ( _backend )
+		delete _backend;
+#ifdef NOT_NEEDED_SINCE_THESE_ARE_CLEANED_BY_IFABLE_DATA
 	for ( i = 0; i < modules.size (); i++ )
 		delete modules[i];
+#endif
 	for ( i = 0; i < linkerFlags.size (); i++ )
 		delete linkerFlags[i];
 	for ( i = 0; i < cdfiles.size (); i++ )
@@ -206,6 +227,7 @@ Project::WriteConfigurationFile ()
 void
 Project::ExecuteInvocations ()
 {
+	fprintf( stderr, "ExecuteInvocations\n" );
 	for ( size_t i = 0; i < modules.size (); i++ )
 		modules[i]->InvokeModule ();
 }
@@ -227,7 +249,10 @@ Project::ReadXml ()
 		}
 	}
 
-	throw InvalidBuildFileException (
+	if (node == NULL)
+		node = head->subElements[0];
+
+	throw XMLInvalidBuildFileException (
 		node->location,
 		"Document contains no 'project' tag." );
 }
@@ -251,12 +276,33 @@ Project::ProcessXML ( const string& path )
 
 	size_t i;
 	for ( i = 0; i < node->subElements.size (); i++ )
-		ProcessXMLSubElement ( *node->subElements[i], path );
-	for ( i = 0; i < modules.size (); i++ )
-		modules[i]->ProcessXML ();
+	{
+		ParseContext parseContext;
+		ProcessXMLSubElement ( *node->subElements[i], path, parseContext );
+	}
+	
+	non_if_data.ProcessXML ();
+
+	non_if_data.ExtractModules( modules );
+
+	for ( i = 0; i < non_if_data.ifs.size (); i++ )
+	{
+		const Property *property = 
+		    LookupProperty( non_if_data.ifs[i]->property );
+
+		if( !property ) continue;
+
+		bool conditionTrue = 
+			(non_if_data.ifs[i]->negated && 
+			 (property->value != non_if_data.ifs[i]->value)) ||
+			(property->value == non_if_data.ifs[i]->value);
+		if ( conditionTrue )
+			non_if_data.ifs[i]->data.ExtractModules( modules );
+	}
 	for ( i = 0; i < linkerFlags.size (); i++ )
 		linkerFlags[i]->ProcessXML ();
-	non_if_data.ProcessXML ();
+	for ( i = 0; i < modules.size (); i++ )
+		modules[i]->ProcessXML ();
 	for ( i = 0; i < cdfiles.size (); i++ )
 		cdfiles[i]->ProcessXML ();
 	for ( i = 0; i < installfiles.size (); i++ )
@@ -266,24 +312,25 @@ Project::ProcessXML ( const string& path )
 void
 Project::ProcessXMLSubElement ( const XMLElement& e,
                                 const string& path,
-                                If* pIf )
+                                ParseContext& parseContext )
 {
 	bool subs_invalid = false;
+	If* pOldIf = parseContext.ifData;
+	
 	string subpath(path);
 	if ( e.name == "module" )
 	{
-		if ( pIf )
-			throw InvalidBuildFileException (
-				e.location,
-				"<module> is not a valid sub-element of <if>" );
 		Module* module = new Module ( *this, e, path );
 		if ( LocateModule ( module->name ) )
-			throw InvalidBuildFileException (
+			throw XMLInvalidBuildFileException (
 				node->location,
 				"module name conflict: '%s' (originally defined at %s)",
 				module->name.c_str(),
 				module->node.location.c_str() );
-		modules.push_back ( module );
+		if ( parseContext.ifData )
+		    parseContext.ifData->data.modules.push_back( module );
+		else
+		    non_if_data.modules.push_back ( module );
 		return; // defer processing until later
 	}
 	else if ( e.name == "cdfile" )
@@ -307,8 +354,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "include" )
 	{
 		Include* include = new Include ( *this, &e );
-		if ( pIf )
-			pIf->data.includes.push_back ( include );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.includes.push_back ( include );
 		else
 			non_if_data.includes.push_back ( include );
 		subs_invalid = true;
@@ -316,8 +363,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "define" )
 	{
 		Define* define = new Define ( *this, e );
-		if ( pIf )
-			pIf->data.defines.push_back ( define );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.defines.push_back ( define );
 		else
 			non_if_data.defines.push_back ( define );
 		subs_invalid = true;
@@ -325,8 +372,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( *this, e );
-		if ( pIf )
-			pIf->data.compilerFlags.push_back ( pCompilerFlag );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.compilerFlags.push_back ( pCompilerFlag );
 		else
 			non_if_data.compilerFlags.push_back ( pCompilerFlag );
 		subs_invalid = true;
@@ -338,39 +385,41 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "if" )
 	{
-		If* pOldIf = pIf;
-		pIf = new If ( e, *this, NULL );
+		parseContext.ifData = new If ( e, *this, NULL );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( parseContext.ifData );
 		else
-			non_if_data.ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( parseContext.ifData );
 		subs_invalid = false;
 	}
 	else if ( e.name == "ifnot" )
 	{
-		If* pOldIf = pIf;
-		pIf = new If ( e, *this, NULL, true );
+		parseContext.ifData = new If ( e, *this, NULL, true );
 		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( pIf );
+			pOldIf->data.ifs.push_back ( parseContext.ifData );
 		else
-			non_if_data.ifs.push_back ( pIf );
+			non_if_data.ifs.push_back ( parseContext.ifData );
 		subs_invalid = false;
 	}
 	else if ( e.name == "property" )
 	{
 		Property* property = new Property ( e, *this, NULL );
-		if ( pIf )
-			pIf->data.properties.push_back ( property );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.properties.push_back ( property );
 		else
 			non_if_data.properties.push_back ( property );
 	}
 	if ( subs_invalid && e.subElements.size() )
-		throw InvalidBuildFileException (
+	{
+		throw XMLInvalidBuildFileException (
 			e.location,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
+	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath, pIf );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
+
+	parseContext.ifData = pOldIf;
 }
 
 Module*
@@ -402,5 +451,3 @@ Project::GetProjectFilename () const
 {
 	return xmlfile;
 }
-
-	

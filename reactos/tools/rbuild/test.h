@@ -21,6 +21,8 @@
 #include "rbuild.h"
 #include "backend/mingw/mingw.h"
 
+#define SSEP DEF_SSEP
+
 #define RBUILD_BASE "tools" SSEP "rbuild" SSEP
 	
 class BaseTest
@@ -148,6 +150,12 @@ public:
 
 
 class SymbolTest : public BaseTest
+{
+public:
+	void Run ();
+};
+
+class CompilationUnitTest : public BaseTest
 {
 public:
 	void Run ();

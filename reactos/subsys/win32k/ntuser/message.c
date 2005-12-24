@@ -113,24 +113,25 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
    CREATESTRUCTW *Cs;
    PUNICODE_STRING WindowName;
    PUNICODE_STRING ClassName;
-   UINT Size;
+   UINT Size = 0;
 
-   _SEH_TRY {
-      if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
+   _SEH_TRY 
    {
-      return (UINT) wParam;
+      if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
+      {
+         Size = (UINT)wParam;
       }
       else if (MMS_SIZE_WPARAMWCHAR == MsgMemoryEntry->Size)
-   {
-      return (UINT) (wParam * sizeof(WCHAR));
+      {
+         Size = (UINT) (wParam * sizeof(WCHAR));
       }
       else if (MMS_SIZE_LPARAMSZ == MsgMemoryEntry->Size)
-   {
-      return (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
+      {
+         Size = (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
       }
       else if (MMS_SIZE_SPECIAL == MsgMemoryEntry->Size)
-   {
-      switch(MsgMemoryEntry->Message)
+      {
+         switch(MsgMemoryEntry->Message)
          {
             case WM_CREATE:
             case WM_NCCREATE:
@@ -146,31 +147,34 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                {
                   Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
                }
-               return Size;
                break;
 
             case WM_NCCALCSIZE:
-               return wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
+               Size = wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
                break;
 
             case WM_COPYDATA:
-               return sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
+               Size = sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
+               break;
 
             default:
                assert(FALSE);
-               return 0;
+               Size = 0;
                break;
          }
       }
       else
       {
-         return MsgMemoryEntry->Size;
+         Size = MsgMemoryEntry->Size;
       }
-   } _SEH_HANDLE {
-
+   } 
+   _SEH_HANDLE 
+   {
       DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH_GetExceptionCode());
-   } _SEH_END;
-   return 0;
+      Size = 0;
+   } 
+   _SEH_END;
+   return Size;
 }
 
 static FASTCALL NTSTATUS

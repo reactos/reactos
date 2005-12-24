@@ -35,7 +35,7 @@ CopyLoop (
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
    UCHAR *lpBuffer = NULL;
-   ULONG RegionSize = 0x10000;
+   SIZE_T RegionSize = 0x10000;
    LARGE_INTEGER BytesCopied;
    DWORD CallbackReason;
    DWORD ProgressResult;

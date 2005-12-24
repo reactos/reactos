@@ -234,7 +234,7 @@ BOOL WINAPI IsUserAdmin(VOID)
 
     for (i = 0; i < lpGroups->GroupCount; i++)
     {
-        if (EqualSid(lpSid, &lpGroups->Groups[i].Sid))
+        if (EqualSid(lpSid, lpGroups->Groups[i].Sid))
         {
             bResult = TRUE;
             break;
@@ -278,7 +278,10 @@ LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage)
 
     lpUnicodeStr = MyMalloc(nLength * sizeof(WCHAR));
     if (lpUnicodeStr == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
+    }
 
     if (!MultiByteToWideChar(uCodePage, 0, lpMultiByteStr,
                              nLength, lpUnicodeStr, nLength))
@@ -464,12 +467,6 @@ BOOL WINAPI EnablePrivilege(LPCWSTR lpPrivilegeName, BOOL bEnable)
  */
 BOOL WINAPI DelayedMove(LPCWSTR lpExistingFileName, LPCWSTR lpNewFileName)
 {
-    if (OsVersionInfo.dwPlatformId != VER_PLATFORM_WIN32_NT)
-    {
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
-    }
-
     return MoveFileExW(lpExistingFileName, lpNewFileName,
                        MOVEFILE_REPLACE_EXISTING | MOVEFILE_DELAY_UNTIL_REBOOT);
 }

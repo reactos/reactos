@@ -166,7 +166,7 @@ EngUnlockDriverObj ( IN HDRVOBJ hdo )
 {
   PDRIVERGDI DrvObjInt = ObjToGDI((PDRIVEROBJ)hdo, DRIVER);
 
-  ExReleaseFastMutex(&DrvObjInt->Lock);
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DrvObjInt->Lock);
   return TRUE;
 }
 

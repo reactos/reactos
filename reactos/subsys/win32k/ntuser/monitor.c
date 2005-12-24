@@ -236,9 +236,9 @@ IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
    {
       PMONITOR_OBJECT NewPrimaryMonitor = (Monitor->Prev != NULL) ? (Monitor->Prev) : (Monitor->Next);
 
-      ExAcquireFastMutex(&NewPrimaryMonitor->Lock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&NewPrimaryMonitor->Lock);
       NewPrimaryMonitor->IsPrimary = TRUE;
-      ExReleaseFastMutex(&NewPrimaryMonitor->Lock);
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&NewPrimaryMonitor->Lock);
    }
 
    if (gMonitorList == Monitor)
@@ -330,12 +330,12 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
    {
       RECT MonitorRect, IntersectionRect;
 
-      ExAcquireFastMutex(&Monitor->Lock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Monitor->Lock);
       MonitorRect.left = 0; /* FIXME: get origin */
       MonitorRect.top = 0; /* FIXME: get origin */
       MonitorRect.right = MonitorRect.left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
       MonitorRect.bottom = MonitorRect.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
-      ExReleaseFastMutex(&Monitor->Lock);
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
 
       DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
              MonitorRect.left, MonitorRect.top, MonitorRect.right, MonitorRect.bottom);

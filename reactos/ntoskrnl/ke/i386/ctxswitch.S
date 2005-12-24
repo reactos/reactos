@@ -13,7 +13,6 @@
 #include <roscfg.h>
 #include <internal/i386/ke.h>
 #include <ndk/asm.h>
-#include <ndk/i386/segment.h>
 .intel_syntax noprefix
 
 #define Running 2 
@@ -61,7 +60,7 @@ _KiThreadStartup@156:
      * expect any static data (like some badly coded usermode/win9x apps do)
      */
     xor ebx, ebx
-    xor esi, edi
+    xor esi, esi
     xor edi, edi
     xor ebp, ebp
     
@@ -197,12 +196,12 @@ NoAddressSpaceSwitch:
     /* Write the LDT Selector */
     mov ebp, [ebx+KPCR_GDT]
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
-    mov [ebp+LDT_SELECTOR], eax
+    mov [ebp+KGDT_LDT], eax
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
-    mov [ebp+LDT_SELECTOR+4], eax
+    mov [ebp+KGDT_LDT+4], eax
     
     /* Save LDT Selector */
-    mov eax, LDT_SELECTOR
+    mov eax, KGDT_LDT
         
 NoLdt:
     

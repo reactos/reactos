@@ -15,9 +15,11 @@
 	<library>shell32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
+	<library>shlwapi</library>
 	<file>about.c</file>
 	<file>childwnd.c</file>
 	<file>edit.c</file>
+	<file>find.c</file>
 	<file>framewnd.c</file>
 	<file>hexedit.c</file>
 	<file>listview.c</file>

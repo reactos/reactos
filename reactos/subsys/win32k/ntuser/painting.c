@@ -320,6 +320,19 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    BOOL HasPaintMessage, HasNCPaintMessage;
 
    /*
+    * If the nonclient is not to be redrawn, clip the region to the client
+    * rect
+    */
+   if (0 != (Flags & RDW_INVALIDATE) && 0 == (Flags & RDW_FRAME))
+   {
+      HRGN hRgnClient;
+
+      hRgnClient = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+      RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnClient, RGN_AND);
+      NtGdiDeleteObject(hRgnClient);
+   }
+
+   /*
     * Clip the given region with window rectangle (or region)
     */
 
@@ -769,9 +782,12 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
          RGNDATA_UnlockRgn(Rgn);
          IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->ClientRect);
-         IntGdiOffsetRect(&Ps.rcPaint,
-                          -Window->ClientRect.left,
-                          -Window->ClientRect.top);
+         if (! IntGdiIsEmptyRect(&Ps.rcPaint))
+         {
+            IntGdiOffsetRect(&Ps.rcPaint,
+                             -Window->ClientRect.left,
+                             -Window->ClientRect.top);
+         }
       }
       else
       {
@@ -995,7 +1011,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       }
    }
 
-   RETURN(Window->UpdateRegion != NULL);
+   RETURN(!IntGdiIsEmptyRect(&Rect));
 
 CLEANUP:
    DPRINT("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);

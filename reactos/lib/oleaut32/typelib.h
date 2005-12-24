@@ -152,6 +152,7 @@ typedef struct tagMSFT_TypeInfoBase {
                                 /* or in base intefaces */
                                 /* if coclass: offset in reftable */
                                 /* if interface: reference to inherited if */
+                                /* if module: offset to dllname in name table */
         INT     datatype2;      /* if 0x8000, entry above is valid */
                                 /* actually dunno */
                                 /* else it is zero? */
@@ -599,8 +600,10 @@ WORD typeofarray
 
 #include "poppack.h"
 
+HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc );
+
 extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args);
-extern void dump_Variant(VARIANT * pvar);
+extern void dump_Variant(const VARIANT * pvar);
 
 HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv);
 

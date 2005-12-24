@@ -219,7 +219,7 @@ void RTFInit(RTF_Info *info)
 		info->rtfTextBuf = RTFAlloc (rtfBufSiz);
 		info->pushedTextBuf = RTFAlloc (rtfBufSiz);
 		if (info->rtfTextBuf == NULL || info->pushedTextBuf == NULL)
-			RTFPanic (info,"Cannot allocate text buffers.");
+			ERR ("Cannot allocate text buffers.");
 		info->rtfTextBuf[0] = info->pushedTextBuf[0] = '\0';
 	}
 
@@ -283,7 +283,7 @@ void RTFSetInputName(RTF_Info *info, char *name)
 
 	info->inputName = RTFStrSave (name);
 	if (info->inputName == NULL)
-		RTFPanic (info,"RTFSetInputName: out of memory");
+		ERR ("RTFSetInputName: out of memory");
 }
 
 
@@ -299,7 +299,7 @@ void RTFSetOutputName(RTF_Info *info, char *name)
 
 	info->outputName = RTFStrSave (name);
 	if (info->outputName == NULL)
-		RTFPanic (info, "RTFSetOutputName: out of memory");
+		ERR ("RTFSetOutputName: out of memory");
 }
 
 
@@ -388,7 +388,7 @@ void RTFRouteToken(RTF_Info *info)
 
 	if (info->rtfClass < 0 || info->rtfClass >= rtfMaxClass)	/* watchdog */
 	{
-		RTFPanic (info,"Unknown class %d: %s (reader malfunction)",
+		ERR( "Unknown class %d: %s (reader malfunction)",
 							info->rtfClass, info->rtfTextBuf);
 	}
 	if (RTFCheckCM (info, rtfControl, rtfDestination))
@@ -490,9 +490,9 @@ void RTFUngetToken(RTF_Info *info)
 	TRACE("\n");
 
 	if (info->pushedClass >= 0)	/* there's already an ungotten token */
-		RTFPanic (info,"cannot unget two tokens");
+		ERR ("cannot unget two tokens");
 	if (info->rtfClass < 0)
-		RTFPanic (info,"no token to unget");
+		ERR ("no token to unget");
 	info->pushedClass = info->rtfClass;
 	info->pushedMajor = info->rtfMajor;
 	info->pushedMinor = info->rtfMinor;
@@ -600,7 +600,7 @@ RTFCharSetToCodePage(RTF_Info *info, int charset)
                         /* FIXME: TranslateCharsetInfo does not work as good as it
                          * should, so let's use it only when all else fails */
                         if (!TranslateCharsetInfo(&n, &csi, TCI_SRCCHARSET))
-				RTFMsg(info, "%s: unknown charset %u\n", __FUNCTION__, charset);
+				ERR("%s: unknown charset %u\n", __FUNCTION__, charset);
 			else
                                 return csi.ciACP;
 		}
@@ -893,19 +893,19 @@ static void ReadFontTbl(RTF_Info *info)
 			else if (RTFCheckCM (info, rtfGroup, rtfBeginGroup))
 				old = 0;	/* brace */
 			else			/* can't tell! */
-				RTFPanic (info, "%s: Cannot determine format", fn);
+				ERR ( "%s: Cannot determine format", fn);
 		}
 		if (old == 0)		/* need to find "{" here */
 		{
 			if (!RTFCheckCM (info, rtfGroup, rtfBeginGroup))
-				RTFPanic (info, "%s: missing \"{\"", fn);
+				ERR ( "%s: missing \"{\"", fn);
 			RTFGetToken (info);	/* yes, skip to next token */
 			if (info->rtfClass == rtfEOF)
 				break;
 		}
 		fp = New (RTFFont);
 		if (fp == NULL)
-			RTFPanic (info, "%s: cannot allocate font entry", fn);
+			ERR ( "%s: cannot allocate font entry", fn);
 
 		fp->rtfNextFont = info->fontList;
 		info->fontList = fp;
@@ -929,8 +929,8 @@ static void ReadFontTbl(RTF_Info *info)
 				{
 				default:
 					/* ignore token but announce it */
-					RTFMsg (info,"%s: unknown token \"%s\"\n",
-							fn, info->rtfTextBuf);
+					ERR ("%s: unknown token \"%s\"\n",
+						fn, info->rtfTextBuf);
                                         break;
 				case rtfFontFamily:
 					fp->rtfFFamily = info->rtfMinor;
@@ -991,7 +991,7 @@ static void ReadFontTbl(RTF_Info *info)
 				*bp = '\0';
 				fp->rtfFName = RTFStrSave (buf);
 				if (fp->rtfFName == NULL)
-					RTFPanic (info, "%s: cannot allocate font name", fn);
+					ERR ( "%s: cannot allocate font name", fn);
 				/* already have next token; don't read one */
 				/* at bottom of loop */
 				continue;
@@ -999,7 +999,7 @@ static void ReadFontTbl(RTF_Info *info)
 			else
 			{
 				/* ignore token but announce it */
-				RTFMsg (info, "%s: unknown token \"%s\"\n",
+				ERR ( "%s: unknown token \"%s\"\n",
 							fn,info->rtfTextBuf);
 			}
 			RTFGetToken (info);
@@ -1012,7 +1012,7 @@ static void ReadFontTbl(RTF_Info *info)
 		{
 			RTFGetToken (info);
 			if (!RTFCheckCM (info, rtfGroup, rtfEndGroup))
-				RTFPanic (info, "%s: missing \"}\"", fn);
+				ERR ( "%s: missing \"}\"", fn);
 			if (info->rtfClass == rtfEOF)
 				break;
 		}
@@ -1026,7 +1026,7 @@ static void ReadFontTbl(RTF_Info *info)
                 }
 	}
 	if (fp->rtfFNum == -1)
-		RTFPanic (info,"%s: missing font number", fn);
+		ERR( "%s: missing font number", fn);
 /*
  * Could check other pieces of structure here, too, I suppose.
  */
@@ -1068,7 +1068,7 @@ static void ReadColorTbl(RTF_Info *info)
 			break;
 		cp = New (RTFColor);
 		if (cp == NULL)
-			RTFPanic (info,"%s: cannot allocate color entry", fn);
+			ERR ( "%s: cannot allocate color entry", fn);
 		cp->rtfCNum = cnum++;
 		cp->rtfCRed = cp->rtfCGreen = cp->rtfCBlue = -1;
 		cp->rtfNextColor = info->colorList;
@@ -1086,7 +1086,7 @@ static void ReadColorTbl(RTF_Info *info)
 		if (info->rtfClass == rtfEOF)
 			break;
 		if (!RTFCheckCM (info, rtfText, ';'))
-			RTFPanic (info,"%s: malformed entry", fn);
+			ERR ("%s: malformed entry", fn);
 	}
 	RTFRouteToken (info);	/* feed "}" back to router */
 }
@@ -1116,7 +1116,7 @@ static void ReadStyleSheet(RTF_Info *info)
 			break;
 		sp = New (RTFStyle);
 		if (sp == NULL)
-			RTFPanic (info,"%s: cannot allocate stylesheet entry", fn);
+			ERR ( "%s: cannot allocate stylesheet entry", fn);
 		sp->rtfSName = NULL;
 		sp->rtfSNum = -1;
 		sp->rtfSType = rtfParStyle;
@@ -1128,7 +1128,7 @@ static void ReadStyleSheet(RTF_Info *info)
 		sp->rtfExpanding = 0;
 		info->styleList = sp;
 		if (!RTFCheckCM (info, rtfGroup, rtfBeginGroup))
-			RTFPanic (info,"%s: missing \"{\"", fn);
+			ERR ( "%s: missing \"{\"", fn);
 		real_style = TRUE;
 		for (;;)
 		{
@@ -1140,7 +1140,7 @@ static void ReadStyleSheet(RTF_Info *info)
 			{
 				if (RTFCheckMM (info, rtfSpecialChar, rtfOptDest)) {
 					RTFGetToken(info);
-					RTFPanic(info, "%s: skipping optional destination", fn);
+					ERR( "%s: skipping optional destination", fn);
 					RTFSkipGroup(info);
 					info->rtfClass = rtfGroup;
 					info->rtfMajor = rtfEndGroup;
@@ -1182,14 +1182,14 @@ static void ReadStyleSheet(RTF_Info *info)
 				}
 				sep = New (RTFStyleElt);
 				if (sep == NULL)
-					RTFPanic (info,"%s: cannot allocate style element", fn);
+					ERR ( "%s: cannot allocate style element", fn);
 				sep->rtfSEClass = info->rtfClass;
 				sep->rtfSEMajor = info->rtfMajor;
 				sep->rtfSEMinor = info->rtfMinor;
 				sep->rtfSEParam = info->rtfParam;
 				sep->rtfSEText = RTFStrSave (info->rtfTextBuf);
 				if (sep->rtfSEText == NULL)
-					RTFPanic (info,"%s: cannot allocate style element text", fn);
+					ERR ( "%s: cannot allocate style element text", fn);
 				if (sepLast == NULL)
 					sp->rtfSSEList = sep;	/* first element */
 				else				/* add to end */
@@ -1203,7 +1203,7 @@ static void ReadStyleSheet(RTF_Info *info)
 				 * This passes over "{\*\keycode ... }, among
 				 * other things. A temporary (perhaps) hack.
 				 */
-                                RTFPanic(info, "%s: skipping begin", fn);
+                                ERR( "%s: skipping begin", fn);
 				RTFSkipGroup (info);
 				continue;
 			}
@@ -1224,19 +1224,19 @@ static void ReadStyleSheet(RTF_Info *info)
 				*bp = '\0';
 				sp->rtfSName = RTFStrSave (buf);
 				if (sp->rtfSName == NULL)
-					RTFPanic (info, "%s: cannot allocate style name", fn);
+					ERR ( "%s: cannot allocate style name", fn);
 			}
 			else		/* unrecognized */
 			{
 				/* ignore token but announce it */
-				RTFMsg (info, "%s: unknown token \"%s\"\n",
+				ERR ( "%s: unknown token \"%s\"\n",
 							fn, info->rtfTextBuf);
 			}
 		}
 		if (real_style) {
 			RTFGetToken (info);
 			if (!RTFCheckCM (info, rtfGroup, rtfEndGroup))
-				RTFPanic (info, "%s: missing \"}\"", fn);
+				ERR ( "%s: missing \"}\"", fn);
 			/*
 			 * Check over the style structure.  A name is a must.
 			 * If no style number was specified, check whether it's the
@@ -1248,12 +1248,12 @@ static void ReadStyleSheet(RTF_Info *info)
 			 * Some German RTF writers use "Standard" instead of "Normal".
 			 */
 			if (sp->rtfSName == NULL)
-				RTFPanic (info,"%s: missing style name", fn);
+				ERR ( "%s: missing style name", fn);
 			if (sp->rtfSNum < 0)
 			{
 				if (strncmp (buf, "Normal", 6) != 0
 					&& strncmp (buf, "Standard", 8) != 0)
-					RTFPanic (info,"%s: missing style number", fn);
+					ERR ( "%s: missing style number", fn);
 				sp->rtfSNum = rtfNormalStyleNum;
 			}
 			if (sp->rtfSNextPar == -1)	/* if \snext not given, */
@@ -1359,7 +1359,7 @@ void RTFExpandStyle(RTF_Info *info, int n)
 	if (s == NULL)
 		return;
 	if (s->rtfExpanding != 0)
-		RTFPanic (info,"Style expansion loop, style %d", n);
+		ERR ("Style expansion loop, style %d", n);
 	s->rtfExpanding = 1;	/* set expansion flag for loop detection */
 	/*
 	 * Expand "based-on" style (unless it's the same as the current
@@ -2446,63 +2446,6 @@ int RTFHexToChar(int i)
 /* ---------------------------------------------------------------------- */
 
 /*
- * Print message.
- *
- * Message should include linefeeds as necessary.
- */
-
-
-void RTFMsg (RTF_Info *info, const char *fmt, ...)
-{
-	char	buf[rtfBufSiz];
-
-	va_list args;
-	va_start (args,fmt);
-	vsprintf (buf, fmt, args);
-	va_end (args);
-	MESSAGE( "%s", buf);
-}
-
-
-/* ---------------------------------------------------------------------- */
-
-
-/*
- * Process termination.  Print error message and exit.  Also prints
- * current token, and current input line number and position within
- * line if any input has been read from the current file.  (No input
- * has been read if prevChar is EOF).
- */
-
-static void DefaultPanicProc(RTF_Info *info, char *s)
-{
-	MESSAGE( "%s", s);
-	/*exit (1);*/
-}
-
-
-
-void RTFPanic(RTF_Info *info, const char *fmt, ...)
-{
-	char	buf[rtfBufSiz];
-
-	va_list args;
-	va_start (args,fmt);
-	vsprintf (buf, fmt, args);
-	va_end (args);
-	lstrcatA (buf, "\n");
-	if (info->prevChar != EOF && info->rtfTextBuf != NULL)
-	{
-		sprintf (buf + lstrlenA (buf),
-			"Last token read was \"%s\" near line %ld, position %d.\n",
-			info->rtfTextBuf, info->rtfLineNum, info->rtfLinePos);
-	}
-	DefaultPanicProc(info, buf);
-}
-
-/* ---------------------------------------------------------------------- */
-
-/*
  * originally from RTF tools' text-writer.c
  *
  * text-writer -- RTF-to-text translation writer code.
@@ -2594,7 +2537,7 @@ CharAttr(RTF_Info *info)
                         TRACE("font %d codepage %d\n", info->rtfParam, info->codePage);
                 }
                 else
-                        RTFMsg(info, "unknown font %d\n", info->rtfParam);
+                        ERR( "unknown font %d\n", info->rtfParam);
                 break;
         case rtfUnicodeLength:
                 info->unicodeLength = info->rtfParam;

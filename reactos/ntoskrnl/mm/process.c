@@ -18,6 +18,9 @@ extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
 extern ULONG NtGlobalFlag;
 
+#define MM_HIGHEST_VAD_ADDRESS \
+    (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
+
 /* FUNCTIONS *****************************************************************/
 
 PVOID
@@ -45,21 +48,20 @@ MiCreatePebOrTeb(PEPROCESS Process,
      */
     do {
         DPRINT("Trying to allocate: %x\n", AllocatedBase);
-        Status = MmCreateMemoryArea(Process,
-                                    ProcessAddressSpace,
+        Status = MmCreateMemoryArea(ProcessAddressSpace,
                                     MEMORY_AREA_PEB_OR_TEB,
                                     &AllocatedBase,
                                     PAGE_SIZE,
                                     PAGE_READWRITE,
                                     &MemoryArea,
                                     TRUE,
-                                    FALSE,
+                                    0,
                                     BoundaryAddressMultiple);
         AllocatedBase = RVA(AllocatedBase, -PAGE_SIZE);
     } while (Status != STATUS_SUCCESS);
 
     /* Initialize the Region */
-    MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
+    MmInitializeRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
                        PAGE_SIZE,
                        MEM_COMMIT,
                        PAGE_READWRITE);
@@ -143,15 +145,14 @@ MmCreateKernelStack(BOOLEAN GuiStack)
     MmLockAddressSpace(MmGetKernelAddressSpace());
 
     /* Create a MAREA for the Kernel Stack */
-    Status = MmCreateMemoryArea(NULL,
-                                MmGetKernelAddressSpace(),
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_KERNEL_STACK,
                                 &KernelStack,
                                 MM_STACK_SIZE,
-                                0,
+                                PAGE_READWRITE,
                                 &StackArea,
                                 FALSE,
-                                FALSE,
+                                0,
                                 BoundaryAddressMultiple);
 
     /* Unlock the Address Space */
@@ -193,23 +194,19 @@ MmCreatePeb(PEPROCESS Process)
 {
     PPEB Peb = NULL;
     LARGE_INTEGER SectionOffset;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PVOID TableBase = NULL;
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_LOAD_CONFIG_DIRECTORY ImageConfigData;
     NTSTATUS Status;
     KAFFINITY ProcessAffinityMask = 0;
     SectionOffset.QuadPart = (ULONGLONG)0;
-
     DPRINT("MmCreatePeb\n");
 
     /* Allocate the PEB */
-    Peb = MiCreatePebOrTeb(Process, (PVOID)PEB_BASE);
-    if (Peb != (PVOID)PEB_BASE)
-    {
-        DPRINT1("MiCreatePebOrTeb() returned %x\n", Peb);
-        return STATUS_UNSUCCESSFUL;
-    }
+    Peb = MiCreatePebOrTeb(Process,
+                           (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
+    ASSERT(Peb == (PVOID)0x7FFDF000);
 
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");
@@ -347,7 +344,8 @@ MmCreateTeb(PEPROCESS Process,
     }
 
     /* Allocate the TEB */
-    Teb = MiCreatePebOrTeb(Process, (PVOID)TEB_BASE);
+    Teb = MiCreatePebOrTeb(Process,
+                           (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
 
     /* Initialize the PEB */
     RtlZeroMemory(Teb, sizeof(TEB));
@@ -387,7 +385,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     PVOID BaseAddress;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
     BoundaryAddressMultiple.QuadPart = 0;
 
@@ -399,15 +397,14 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
 
     /* Protect the highest 64KB of the process address space */
     BaseAddress = (PVOID)MmUserProbeAddress;
-    Status = MmCreateMemoryArea(Process,
-                                ProcessAddressSpace,
+    Status = MmCreateMemoryArea(ProcessAddressSpace,
                                 MEMORY_AREA_NO_ACCESS,
                                 &BaseAddress,
                                 0x10000,
                                 PAGE_NOACCESS,
                                 &MemoryArea,
                                 FALSE,
-                                FALSE,
+                                0,
                                 BoundaryAddressMultiple);
     if (!NT_SUCCESS(Status))
     {
@@ -417,15 +414,14 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
 
     /* Protect the 60KB above the shared user page */
     BaseAddress = (char*)USER_SHARED_DATA + PAGE_SIZE;
-    Status = MmCreateMemoryArea(Process,
-                                ProcessAddressSpace,
+    Status = MmCreateMemoryArea(ProcessAddressSpace,
                                 MEMORY_AREA_NO_ACCESS,
                                 &BaseAddress,
                                 0x10000 - PAGE_SIZE,
                                 PAGE_NOACCESS,
                                 &MemoryArea,
                                 FALSE,
-                                FALSE,
+                                0,
                                 BoundaryAddressMultiple);
     if (!NT_SUCCESS(Status))
     {
@@ -435,15 +431,14 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
 
     /* Create the shared data page */
     BaseAddress = (PVOID)USER_SHARED_DATA;
-    Status = MmCreateMemoryArea(Process,
-                                ProcessAddressSpace,
+    Status = MmCreateMemoryArea(ProcessAddressSpace,
                                 MEMORY_AREA_SHARED_DATA,
                                 &BaseAddress,
                                 PAGE_SIZE,
-                                PAGE_READONLY,
+                                PAGE_EXECUTE_READ,
                                 &MemoryArea,
                                 FALSE,
-                                FALSE,
+                                0,
                                 BoundaryAddressMultiple);
     if (!NT_SUCCESS(Status))
     {
@@ -478,7 +473,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to map process Image\n");
-            goto exit;
+            return Status;
         }
 
         /* Save the pointer */

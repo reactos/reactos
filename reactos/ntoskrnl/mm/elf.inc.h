@@ -139,7 +139,7 @@ static __inline BOOLEAN Intsafe_CanOffsetPointer
 
 #ifndef RTL_CONTAINS_FIELD
 #define RTL_CONTAINS_FIELD(P_, SIZE_, FIELD_) \
- ((((char *)(P_)) + (SIZE_)) > (((char *)(&((P_)->FIELD_))) + sizeof((P_)->FIELD_)))
+ ((ULONG_PTR)(P_) + (ULONG_PTR)(SIZE_) > (ULONG_PTR)&((P_)->FIELD_) + sizeof((P_)->FIELD_))
 #endif
 
 #define ELFFMT_FIELDS_EQUAL(TYPE1_, TYPE2_, FIELD_) \
@@ -266,8 +266,13 @@ static __inline ULONG ElfFmtpSafeReadULong
 {
  PBYTE p;
  ULONG nSafeInput;
+ union
+ {
+     CONST ULONG32 *ConstInput;
+     ULONG32 *Input;
+ }pInput = {Input};
 
- RtlRetrieveUlong(&nSafeInput, Input);
+ RtlRetrieveUlong(&nSafeInput, pInput.Input);
 
  if(DataType == ELF_TARG_DATA)
   return nSafeInput;

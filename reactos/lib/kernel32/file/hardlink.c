@@ -51,7 +51,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
     return FALSE;
   }
 
-  if(RtlDosPathNameToNtPathName_U((LPWSTR)lpExistingFileName, &LinkTarget, NULL, NULL))
+  if(RtlDosPathNameToNtPathName_U(lpExistingFileName, &LinkTarget, NULL, NULL))
   {
     ULONG NeededSize = RtlGetFullPathName_U((LPWSTR)lpExistingFileName, 0, NULL, NULL);
     if(NeededSize > 0)
@@ -108,7 +108,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
                                     FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);
                 if(NT_SUCCESS(Status))
                 {
-                  if(RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName, &LinkName, NULL, NULL))
+                  if(RtlDosPathNameToNtPathName_U(lpFileName, &LinkName, NULL, NULL))
                   {
                     NeededSize = sizeof(FILE_LINK_INFORMATION) + LinkName.Length + sizeof(WCHAR);
                     LinkInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize);

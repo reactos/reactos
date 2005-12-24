@@ -48,12 +48,12 @@
 
 //  -------------------------------------------------------------------------
 
-#include <ddk/ntddk.h>
-#include <ddk/srb.h>
-#include <ddk/scsi.h>
-#include <ddk/ntddscsi.h>
-#include <ddk/ntdddisk.h>
-#include <ddk/ntddstor.h>
+#include <ntddk.h>
+#include <srb.h>
+#include <scsi.h>
+#include <ntddscsi.h>
+#include <ntdddisk.h>
+#include <ntddstor.h>
 
 #include "atapi.h"
 

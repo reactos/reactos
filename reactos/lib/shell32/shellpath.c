@@ -1562,8 +1562,14 @@ end:
 /*************************************************************************
  * SHGetFolderPathW			[SHELL32.@]
  *
+ * Convert nFolder to path.  
+ *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: standard HRESULT error codes.
+ *
  * NOTES
- * Converts nFolder to path.  Most values can be overridden in either
+ * Most values can be overridden in either
  * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders
  * or in the same location in HKLM.
  * The registry usage is explained by the following tech note:
@@ -1577,13 +1583,13 @@ end:
  * http://www.microsoft.com/windows2000/techinfo/reskit/en-us/default.asp?url=/windows2000/techinfo/reskit/en-us/regentry/36276.asp
  * the HKCU paths take precedence over the HKLM paths.
  *
- **********************************************************************/
+ */
 HRESULT WINAPI SHGetFolderPathW(
-	HWND hwndOwner,
-	int nFolder,
-	HANDLE hToken,
-	DWORD dwFlags,
-	LPWSTR pszPath)
+	HWND hwndOwner,    /* [I] owner window */
+	int nFolder,       /* [I] CSIDL identifying the folder */
+	HANDLE hToken,     /* [I] access token */
+	DWORD dwFlags,     /* [I] which path to return */
+	LPWSTR pszPath)    /* [O] converted path */
 {
     HRESULT    hr;
     WCHAR      szBuildPath[MAX_PATH], szTemp[MAX_PATH];
@@ -1689,6 +1695,8 @@ end:
 
 /*************************************************************************
  * SHGetFolderPathA			[SHELL32.@]
+ *
+ * See SHGetFolderPathW.
  */
 HRESULT WINAPI SHGetFolderPathA(
 	HWND hwndOwner,
@@ -1800,12 +1808,15 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_RECENT,
      CSIDL_SENDTO,
      CSIDL_STARTMENU,
+     CSIDL_MYMUSIC,
+     CSIDL_MYVIDEO,
      CSIDL_DESKTOPDIRECTORY,
      CSIDL_NETHOOD,
      CSIDL_TEMPLATES,
      CSIDL_PRINTHOOD,
      CSIDL_COOKIES,
      CSIDL_HISTORY,
+     CSIDL_MYPICTURES
     };
     WCHAR userShellFolderPath[MAX_PATH], shellFolderPath[MAX_PATH];
     LPCWSTR pUserShellFolderPath, pShellFolderPath;
@@ -1928,11 +1939,7 @@ BOOL WINAPI SHGetSpecialFolderPathAW (
 /*************************************************************************
  * SHGetFolderLocation [SHELL32.@]
  *
- * NOTES
  * Gets the folder locations from the registry and creates a pidl.
- * Creates missing reg keys and directories.
- * Mostly forwards to SHGetFolderPathW, but a few values of nFolder return
- * virtual folders that are handled here.
  *
  * PARAMS
  *   hwndOwner  [I]
@@ -1942,7 +1949,14 @@ BOOL WINAPI SHGetSpecialFolderPathAW (
  *   dwReserved [I] must be zero
  *   ppidl      [O] PIDL of a special folder
  *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: Standard OLE-defined error result, S_FALSE or E_INVALIDARG
+ *
  * NOTES
+ *  Creates missing reg keys and directories.
+ *  Mostly forwards to SHGetFolderPathW, but a few values of nFolder return
+ *  virtual folders that are handled here.
  */
 HRESULT WINAPI SHGetFolderLocation(
 	HWND hwndOwner,

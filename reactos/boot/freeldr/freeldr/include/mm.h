@@ -35,6 +35,50 @@ typedef struct
 	ULONG		Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
+#if  defined(__i386__) || defined(_PPC_)
+
+#define MM_PAGE_SIZE	4096
+
+#endif // defined __i386__ or _PPC_
+
+typedef struct
+{
+	ULONG		PageAllocated;					// Zero = free, non-zero = allocated
+	ULONG		PageAllocationLength;			// Number of pages allocated (or zero if this isn't the first page in the chain)
+} PACKED PAGE_LOOKUP_TABLE_ITEM, *PPAGE_LOOKUP_TABLE_ITEM;
+
+//
+// Define this to 1 if you want the entire contents
+// of the memory allocation bitmap displayed
+// when a chunk is allocated or freed
+//
+#define DUMP_MEM_MAP_ON_VERIFY	0
+
+
+
+extern	PVOID	PageLookupTableAddress;
+extern	ULONG		TotalPagesInLookupTable;
+extern	ULONG		FreePagesInLookupTable;
+extern	ULONG		LastFreePageHint;
+
+#ifdef DEBUG
+PUCHAR	MmGetSystemMemoryMapTypeString(ULONG Type);
+#endif
+
+ULONG		MmGetPageNumberFromAddress(PVOID Address);	// Returns the page number that contains a linear address
+PVOID	MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the last address of memory from the memory map
+ULONG		MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the count of addressable pages from address zero including any memory holes and reserved memory regions
+PVOID	MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the address for a memory chunk big enough to hold the page lookup table (starts search from end of memory)
+VOID	MmSortBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Sorts the BIOS_MEMORY_MAP array so the first element corresponds to the first address in memory
+VOID	MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Inits the page lookup table according to the memory types in the memory map
+VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, ULONG PageAllocated);	// Marks the specified pages as allocated or free in the lookup table
+VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount);	// Allocates the specified pages in the lookup table
+ULONG		MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount);	// Returns the number of free pages in the lookup table
+ULONG		MmFindAvailablePagesFromEnd(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded);	// Returns the page number of the first available page range from the end of memory
+ULONG		MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, ULONG LastPage);	// Returns the page number of the first available page range before the specified page
+VOID	MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount);	// Removes entries in the memory map that describe memory above 4G
+VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount);	// Sets the LastFreePageHint to the last usable page of memory
+BOOL	MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE
 
 ULONG		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 

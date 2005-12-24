@@ -150,7 +150,7 @@ KeInitInterrupts (VOID)
     */
    for (i=0;i<NR_IRQS;i++)
      {
-        KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
+        KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KGDT_R0_CODE<<16);
         KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
                             I486_INTERRUPT_GATE;
 #ifdef CONFIG_SMP
@@ -170,42 +170,42 @@ STATIC VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
                           PKTRAP_FRAME TrapFrame)
 {
-   TrapFrame->Gs     = (USHORT)IrqTrapFrame->Gs;
-   TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
-   TrapFrame->Es     = (USHORT)IrqTrapFrame->Es;
-   TrapFrame->Ds     = (USHORT)IrqTrapFrame->Ds;
+   TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
+   TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
+   TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
+   TrapFrame->SegDs     = (USHORT)IrqTrapFrame->Ds;
    TrapFrame->Eax    = IrqTrapFrame->Eax;
    TrapFrame->Ecx    = IrqTrapFrame->Ecx;
    TrapFrame->Edx    = IrqTrapFrame->Edx;
    TrapFrame->Ebx    = IrqTrapFrame->Ebx;
-   TrapFrame->Esp    = IrqTrapFrame->Esp;
+   TrapFrame->HardwareEsp    = IrqTrapFrame->Esp;
    TrapFrame->Ebp    = IrqTrapFrame->Ebp;
    TrapFrame->Esi    = IrqTrapFrame->Esi;
    TrapFrame->Edi    = IrqTrapFrame->Edi;
    TrapFrame->Eip    = IrqTrapFrame->Eip;
-   TrapFrame->Cs     = IrqTrapFrame->Cs;
-   TrapFrame->Eflags = IrqTrapFrame->Eflags;
+   TrapFrame->SegCs     = IrqTrapFrame->Cs;
+   TrapFrame->EFlags = IrqTrapFrame->Eflags;
 }
 
 STATIC VOID
 KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
                           PKIRQ_TRAPFRAME IrqTrapFrame)
 {
-   IrqTrapFrame->Gs     = TrapFrame->Gs;
-   IrqTrapFrame->Fs     = TrapFrame->Fs;
-   IrqTrapFrame->Es     = TrapFrame->Es;
-   IrqTrapFrame->Ds     = TrapFrame->Ds;
+   IrqTrapFrame->Gs     = TrapFrame->SegGs;
+   IrqTrapFrame->Fs     = TrapFrame->SegFs;
+   IrqTrapFrame->Es     = TrapFrame->SegEs;
+   IrqTrapFrame->Ds     = TrapFrame->SegDs;
    IrqTrapFrame->Eax    = TrapFrame->Eax;
    IrqTrapFrame->Ecx    = TrapFrame->Ecx;
    IrqTrapFrame->Edx    = TrapFrame->Edx;
    IrqTrapFrame->Ebx    = TrapFrame->Ebx;
-   IrqTrapFrame->Esp    = TrapFrame->Esp;
+   IrqTrapFrame->Esp    = TrapFrame->HardwareEsp;
    IrqTrapFrame->Ebp    = TrapFrame->Ebp;
    IrqTrapFrame->Esi    = TrapFrame->Esi;
    IrqTrapFrame->Edi    = TrapFrame->Edi;
    IrqTrapFrame->Eip    = TrapFrame->Eip;
-   IrqTrapFrame->Cs     = TrapFrame->Cs;
-   IrqTrapFrame->Eflags = TrapFrame->Eflags;
+   IrqTrapFrame->Cs     = TrapFrame->SegCs;
+   IrqTrapFrame->Eflags = TrapFrame->EFlags;
 }
 
 VOID STDCALL
@@ -308,7 +308,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386DisableInterrupts();
 
-   if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KERNEL_CS)
+   if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KGDT_R0_CODE)
      {
        HalEndSystemInterrupt (APC_LEVEL, 0);
 

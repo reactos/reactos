@@ -85,6 +85,6 @@ strtol(const char *nptr, char **endptr, int base)
   else if (neg)
     acc = -acc;
   if (endptr != 0)
-    *endptr = any ? (char *)s - 1 : (char *)nptr;
+    *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
   return acc;
 }

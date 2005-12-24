@@ -13,7 +13,7 @@
 
 #define NDEBUG
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "halxbox.h"
 
 #include <internal/debug.h>

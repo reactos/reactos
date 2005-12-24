@@ -19,7 +19,7 @@
 #include "De.rc"
 #include "Nl.rc"
 #include "Pl.rc"
-#include "Ru.rc"
 #include "Sv.rc"
-
+#include "Es.rc"
+#include "Hu.rc"
 

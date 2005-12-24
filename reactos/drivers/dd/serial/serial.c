@@ -29,7 +29,7 @@ DriverEntry(
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerialAddDevice;
 
-	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = ForwardIrpAndForget;
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialCreate;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SerialClose;

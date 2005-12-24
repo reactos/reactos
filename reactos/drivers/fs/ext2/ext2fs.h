@@ -1,5 +1,5 @@
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
+#include <ntddk.h>
+#include <ntifs.h>
 
 BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,

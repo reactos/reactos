@@ -13,7 +13,7 @@ typedef struct
 
 extern HINSTANCE hApplet;
 
-
+extern DWORD DbgPrint(PCHAR Fmt, ...);
 
 #endif // __NCPA_H
 

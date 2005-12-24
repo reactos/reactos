@@ -265,42 +265,43 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
     BOOL ret = TRUE;
     WCHAR szPath[MAX_PATH];
 
-    TRACE("(%p)->(flags=0x%08lx) \n",list,dwFlags);
+    TRACE("(%p)->(flags=0x%08lx)\n", list, dwFlags);
 
     /* enumerate the root folders */
     if (dwFlags & SHCONTF_FOLDERS)
     {
         HKEY hkey;
-        LONG r;
+        UINT i;
 
         /* create the pidl for This item */
         ret = AddToEnumList(list, _ILCreateMyComputer());
 
-        r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Desktop_NameSpaceW,
-                          0, KEY_READ, &hkey);
-        if (ret && ERROR_SUCCESS == r)
-        {
-            WCHAR iid[50];
-            int i=0;
-            BOOL moreKeys = TRUE;
-
-            while (ret && moreKeys)
+        for (i=0; i<2; i++) {
+            if (ret && !RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
+                                      Desktop_NameSpaceW, 0, KEY_READ, &hkey))
             {
-                DWORD size;
+                WCHAR iid[50];
+                int i=0;
 
-                size = sizeof (iid);
-                r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
-                if (ERROR_SUCCESS == r)
+                while (ret)
                 {
-                    ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
-                    i++;
+                    DWORD size;
+                    LONG r;
+
+                    size = sizeof (iid);
+                    r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
+                    if (ERROR_SUCCESS == r)
+                    {
+                        ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
+                        i++;
+                    }
+                    else if (ERROR_NO_MORE_ITEMS == r)
+                        break;
+                    else
+                        ret = FALSE;
                 }
-                else if (ERROR_NO_MORE_ITEMS == r)
-                    moreKeys = FALSE;
-                else
-                    ret = FALSE;
+                RegCloseKey(hkey);
             }
-            RegCloseKey(hkey);
         }
     }
 
@@ -338,14 +339,11 @@ static HRESULT WINAPI ISF_Desktop_fnBindToObject (IShellFolder2 * iface,
                 LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
-    char szPath[MAX_PATH];
 
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n",
            This, pidl, pbcReserved, shdebugstr_guid (riid), ppvOut);
 
-    WideCharToMultiByte( CP_ACP, 0, This->sPathTarget, -1,
-                         szPath, MAX_PATH, NULL, NULL );
-    return SHELL32_BindToChild( This->pidlRoot, szPath, pidl, riid, ppvOut );
+    return SHELL32_BindToChild( This->pidlRoot, This->sPathTarget, pidl, riid, ppvOut );
 }
 
 /**************************************************************************
@@ -430,6 +428,9 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
     static const DWORD dwDesktopAttributes = 
         SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
+    static const DWORD dwMyComputerAttributes = 
+        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET |
+        SFGAO_DROPTARGET | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08lx))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -449,6 +450,8 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
             pdump (*apidl);
             if (_ILIsDesktop(*apidl)) { 
                 *rgfInOut &= dwDesktopAttributes;
+            } else if (_ILIsMyComputer(*apidl)) {
+                *rgfInOut &= dwMyComputerAttributes;
             } else {
                 SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
             }

@@ -67,7 +67,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     //ApiMessage->Opcode = ApiNumber; <- Activate with new CSR
     ApiMessage->CsrCaptureData = NULL;
 
-    DPRINT("API: %x, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
+    DPRINT("API: %lx, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
            ApiNumber,
            ApiMessage->Header.u1.s1.DataLength,
            ApiMessage->Header.u1.s1.TotalLength);
@@ -94,15 +94,15 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
             while (PointerCount--)
             {
                 /* Get this pointer and check if it's valid */
-                DPRINT("Array Address: %p. This pointer: %p. Data: %p\n",
+                DPRINT("Array Address: %p. This pointer: %p. Data: %lx\n",
                         &Pointers, Pointers, *Pointers);
                 if ((CurrentPointer = *Pointers++))
                 {
                     /* Update it */
-                    DPRINT("CurrentPointer: %p.\n", *(PULONG_PTR)CurrentPointer);
+                    DPRINT("CurrentPointer: %lx.\n", *(PULONG_PTR)CurrentPointer);
                     *(PULONG_PTR)CurrentPointer += CsrPortMemoryDelta;
                     Pointers[-1] = CurrentPointer - (ULONG_PTR)ApiMessage;
-                    DPRINT("CurrentPointer: %p.\n", *(PULONG_PTR)CurrentPointer);
+                    DPRINT("CurrentPointer: %lx.\n", *(PULONG_PTR)CurrentPointer);
                 }
             }
         }
@@ -164,7 +164,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     }
 
     /* Return the CSR Result */
-    DPRINT("Got back: %x\n", ApiMessage->Status);
+    DPRINT("Got back: 0x%lx\n", ApiMessage->Status);
     return ApiMessage->Status;
 }
 
@@ -203,6 +203,10 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
 
     /* Allocate a buffer for it */
     PortName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, PortNameLength);
+    if (PortName.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Create the name */
     RtlAppendUnicodeToString(&PortName, ObjectDirectory );
@@ -255,6 +259,13 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
                                           0,
                                           0,
                                           &SystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure */
+        DPRINT1("Couldn't allocate SID\n");
+        NtClose(CsrSectionHandle);
+        return Status;
+    }
 
     /* Connect to the port */
     Status = NtSecureConnectPort(&CsrApiPort,
@@ -293,6 +304,12 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
                                 PAGE_SIZE,
                                 0,
                                 0);
+    if (CsrPortHeap == NULL)
+    {
+        NtClose(CsrApiPort);
+        CsrApiPort = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -399,6 +416,10 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
         /* Setup a buffer for the connection info */
         CaptureBuffer = CsrAllocateCaptureBuffer(1,
                                                  ClientConnect->ConnectionInfoSize);
+        if (CaptureBuffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
         /* Allocate a pointer for the connection info*/
         CsrAllocateMessagePointer(CaptureBuffer,
@@ -433,7 +454,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
     }
 
     /* Let the caller know if this was server to server */
-    DPRINT("Status was: %lx. Are we in server: %lx\n", Status, InsideCsrProcess);
+    DPRINT("Status was: 0x%lx. Are we in server: 0x%x\n", Status, InsideCsrProcess);
     if (ServerToServerCall) *ServerToServerCall = InsideCsrProcess;
     return Status;
 }

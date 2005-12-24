@@ -17,12 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "freeldr.h"
-#include "machine.h"
-#include "arch.h"
-#include "debug.h"
-#include "machpc.h"
-#include "rtl.h"
+#include <freeldr.h>
 
 #define TEXTMODE_BUFFER      0xb8000
 #define TEXTMODE_BUFFER_SIZE 0x8000

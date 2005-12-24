@@ -40,29 +40,6 @@ DeviceCapabilitiesExW(
 #endif
 }
 
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-EnumFontsW(
-	HDC  hDC,
-	LPCWSTR lpFaceName,
-	FONTENUMPROCW  FontFunc,
-	LPARAM  lParam
-	)
-{
-#if 0
-  return NtGdiEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
-#else
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#endif
-}
-
-
 /*
  * @unimplemented
  */

@@ -139,7 +139,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 
    Param->MaximumLength = RegionSize;
    Param->Length = Length;
-   Param->Flags = PPF_NORMALIZED;
+   Param->Flags = RTL_USER_PROCESS_PARAMETERS_NORMALIZED;
    Param->Environment = Environment;
    Param->CurrentDirectory.Handle = CurrentDirectoryHandle;
    Param->ConsoleHandle = ConsoleHandle;
@@ -238,7 +238,7 @@ RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 PRTL_USER_PROCESS_PARAMETERS NTAPI
 RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
-   if (Params && (Params->Flags & PPF_NORMALIZED))
+   if (Params && (Params->Flags & RTL_USER_PROCESS_PARAMETERS_NORMALIZED))
      {
 	DENORMALIZE(Params->CurrentDirectory.DosPath.Buffer, Params);
 	DENORMALIZE(Params->DllPath.Buffer, Params);
@@ -249,7 +249,7 @@ RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 	DENORMALIZE(Params->ShellInfo.Buffer, Params);
 	DENORMALIZE(Params->RuntimeData.Buffer, Params);
 
-	Params->Flags &= ~PPF_NORMALIZED;
+	Params->Flags &= ~RTL_USER_PROCESS_PARAMETERS_NORMALIZED;
      }
 
    return Params;
@@ -263,7 +263,7 @@ RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 PRTL_USER_PROCESS_PARAMETERS NTAPI
 RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
-   if (Params && !(Params->Flags & PPF_NORMALIZED))
+   if (Params && !(Params->Flags & RTL_USER_PROCESS_PARAMETERS_NORMALIZED))
      {
 	NORMALIZE(Params->CurrentDirectory.DosPath.Buffer, Params);
 	NORMALIZE(Params->DllPath.Buffer, Params);
@@ -274,7 +274,7 @@ RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 	NORMALIZE(Params->ShellInfo.Buffer, Params);
 	NORMALIZE(Params->RuntimeData.Buffer, Params);
 
-	Params->Flags |= PPF_NORMALIZED;
+	Params->Flags |= RTL_USER_PROCESS_PARAMETERS_NORMALIZED;
      }
 
    return Params;

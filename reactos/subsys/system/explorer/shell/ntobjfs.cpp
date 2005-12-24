@@ -237,9 +237,9 @@ void NtObjDirectory::read_directory(int scan_flags)
 			} else {
 				info->type.string_ptr = TEXT("");
 			}
-			lstrcpynW(p, info->name.string_ptr, _MAX_PATH);
+			lstrcpynW(p, info->name.string_ptr, COUNTOF(buffer));
 #else
-			WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, MAX_PATH, 0, 0);
+			WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, COUNTOF(buffer), 0, 0);
 #endif
 
 			lstrcpyn(w32fd.cFileName, p, sizeof(w32fd.cFileName) / sizeof(0[w32fd.cFileName]));
@@ -310,7 +310,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 						int len = link.string_len/sizeof(WCHAR);
 						entry->_content = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
 #ifdef UNICODE
-						wcsncpy(entry->_content, link, len);
+						wcsncpy_s(entry->_content, len+1, link, len);
 #else
 						U2nA(link, entry->_content, len);
 #endif
@@ -328,7 +328,7 @@ void NtObjDirectory::read_directory(int scan_flags)
 #else
 			char type_name[32];
 			WideCharToMultiByte(CP_ACP, 0, info->type.string_ptr, info->type.string_len, type_name, 32, 0, 0);
-			entry->_type_name = strdup(type_name);
+			entry->_type_name = _strdup(type_name);
 #endif
 
 			if (!first_entry)

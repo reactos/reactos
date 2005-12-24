@@ -125,8 +125,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
      ' ','W','H','E','R','E',' ','`','A','c','t','i' ,'o','n','`',' ',
      '=',' ','\'','%','s','\'',0};
     UINT type;
-    LPWSTR source;
-    LPWSTR target;
+    LPCWSTR source, target;
     WCHAR *deformated=NULL;
 
     row = MSI_QueryGetRecord( package->db, ExecSeqQuery, action );
@@ -135,8 +134,8 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 
     type = MSI_RecordGetInteger(row,2);
 
-    source = load_dynamic_stringW(row,3);
-    target = load_dynamic_stringW(row,4);
+    source = MSI_RecordGetString(row,3);
+    target = MSI_RecordGetString(row,4);
 
     TRACE("Handling custom action %s (%x %s %s)\n",debugstr_w(action),type,
           debugstr_w(source), debugstr_w(target));
@@ -231,8 +230,6 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
     }
 
 end:
-    msi_free(source);
-    msi_free(target);
     msiobj_release(&row->hdr);
     return rc;
 }
@@ -330,16 +327,16 @@ static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
 
     switch (rc)
     {
-        case ERROR_FUNCTION_NOT_CALLED:
-        case ERROR_SUCCESS:
-        case ERROR_INSTALL_USEREXIT:
-        case ERROR_INSTALL_FAILURE:
-            return rc;
-        case ERROR_NO_MORE_ITEMS:
-            return ERROR_SUCCESS;
-        default:
-            ERR("Invalid Return Code %lx\n",rc);
-            return ERROR_INSTALL_FAILURE;
+    case ERROR_FUNCTION_NOT_CALLED:
+    case ERROR_SUCCESS:
+    case ERROR_INSTALL_USEREXIT:
+    case ERROR_INSTALL_FAILURE:
+        return rc;
+    case ERROR_NO_MORE_ITEMS:
+        return ERROR_SUCCESS;
+    default:
+        ERR("Invalid Return Code %ld\n",rc);
+        return ERROR_INSTALL_FAILURE;
     }
 }
 
@@ -416,7 +413,7 @@ static DWORD WINAPI ACTION_CallDllFunction(thread_struct *stuff)
     CustomEntry *fn;
     DWORD rc = ERROR_SUCCESS;
 
-    TRACE("calling function (%s, %s) \n", debugstr_w(stuff->source),
+    TRACE("calling function (%s, %s)\n", debugstr_w(stuff->source),
           debugstr_w(stuff->target));
 
     hModule = LoadLibraryW(stuff->source);
@@ -546,7 +543,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
         msi_free(deformated);
     }
 
-    TRACE("executing exe %s \n",debugstr_w(cmd));
+    TRACE("executing exe %s\n", debugstr_w(cmd));
 
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
@@ -607,7 +604,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
         msi_free(deformated);
     }
 
-    TRACE("executing exe %s \n",debugstr_w(cmd));
+    TRACE("executing exe %s\n", debugstr_w(cmd));
 
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
@@ -692,7 +689,7 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
     }
     msi_free(prop);
 
-    TRACE("executing exe %s \n",debugstr_w(cmd));
+    TRACE("executing exe %s\n", debugstr_w(cmd));
 
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
@@ -732,7 +729,7 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
     if (!deformated)
         return ERROR_FUNCTION_FAILED;
 
-    TRACE("executing exe %s \n",debugstr_w(deformated));
+    TRACE("executing exe %s\n", debugstr_w(deformated));
 
     rc = CreateProcessW(NULL, deformated, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);

@@ -1369,6 +1369,10 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
         if (urlComponents.nPort == INTERNET_INVALID_PORT_NUMBER)
             urlComponents.nPort = INTERNET_DEFAULT_HTTP_PORT;
 
+        if (sizeof(path) / sizeof(path[0]) <= strlenW(path) + strlenW(extra))
+            return FALSE;
+        strcatW(path, extra);
+
 #if 0
         /*
          * This upsets redirects to binary files on sourceforge.net 
@@ -2024,7 +2028,11 @@ BOOL HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr)
     /*
      * HACK peek at the buffer
      */
+#if 0
+    /* This is Wine code, we don't support MSG_PEEK yet so we have to do it
+       a bit different */
     NETCON_recv(&lpwhr->netConnection, buffer, buflen, MSG_PEEK, &rc);
+#endif
 
     /*
      * We should first receive 'HTTP/1.x nnn OK' where nnn is the status code.
@@ -2033,6 +2041,9 @@ BOOL HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr)
     memset(buffer, 0, MAX_REPLY_LEN);
     if (!NETCON_getNextLine(&lpwhr->netConnection, bufferA, &buflen))
         goto lend;
+#if 1
+    rc = buflen;
+#endif
     MultiByteToWideChar( CP_ACP, 0, bufferA, buflen, buffer, MAX_REPLY_LEN );
 
     /* regenerate raw headers */
@@ -2073,6 +2084,9 @@ BOOL HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr)
         {
             LPWSTR * pFieldAndValue;
 
+#if 1
+            rc += buflen;
+#endif
             TRACE("got line %s, now interpreting\n", debugstr_a(bufferA));
             MultiByteToWideChar( CP_ACP, 0, bufferA, buflen, buffer, MAX_REPLY_LEN );
 

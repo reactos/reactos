@@ -140,7 +140,8 @@ int OskitTCPRecv( void *connection,
 
     *OutLen = 0;
 
-    printf("so->so_state %x\n", ((struct socket *)connection)->so_state);
+    OS_DbgPrint(OSK_MID_TRACE,
+                ("so->so_state %x\n", ((struct socket *)connection)->so_state));
 
     if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
     if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;

@@ -294,7 +294,7 @@ void TScroller::ScrollBack(){
 			for (r = 0; r < CON_HEIGHT; r++) {
 				memset(szStatusLine, ' ', CON_COLS);
 				for(c = 0; c <= CON_WIDTH; c++) {
-					int done = FALSE;
+					done = FALSE;
 					if (ch >= iScrollSize) p = ' ';
 					else p = stripped[ch];
 					switch(p) {

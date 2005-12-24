@@ -20,14 +20,7 @@
  * by the Xbox Linux group: http://www.xbox-linux.org
  */
 
-#include "freeldr.h"
-#include "debug.h"
-#include "mm.h"
-#include "rtl.h"
-#include "hardware.h"
-#include "machine.h"
-#include "machxbox.h"
-#include "portio.h"
+#include <freeldr.h>
 
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;

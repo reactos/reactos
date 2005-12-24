@@ -10,6 +10,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>devmgr</library>
 	<file>keyboard.c</file>
 	<file>main.c</file>
 	<file>mouse.c</file>

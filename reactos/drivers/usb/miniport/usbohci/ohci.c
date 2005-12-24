@@ -21,16 +21,16 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	/* Initialize generic linux structure */
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
-	dev->dev.dev_ext = (PVOID)DeviceObject;
+	dev->dev.dev_ext = DeviceObject;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_OHCI_TAG); // 128 max len for slot name
 
-	// Init wrapper
+	/* Init wrapper */
 	init_wrapper(dev);
 
 	strcpy(dev->dev.name, "OpenHCI PCI-USB Controller");
 	strcpy(dev->slot_name, "OHCD PCI Slot");
 
-	// Init the OHCI HCD. Probe will be called automatically, but will fail because id=NULL
+	/* Init the OHCI HCD. Probe will be called automatically, but will fail because id=NULL */
 	Status = ohci_hcd_pci_init();
 	if (!NT_SUCCESS(Status))
 	{
@@ -40,10 +40,10 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 		return Status;
 	}
 
-	// Init core usb
+	/* Init core usb */
 	usb_init();
 
-	// Probe device with real id now
+	/* Probe device with real id now */
 	ohci_pci_driver.probe(dev, ohci_pci_ids);
 
 	return STATUS_SUCCESS;

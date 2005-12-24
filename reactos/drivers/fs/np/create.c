@@ -618,13 +618,13 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
       KeSetEvent(&OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
       if (Server)
       {
+         ExReleaseFastMutex(&OtherSide->DataListLock);
          ExReleaseFastMutex(&Fcb->DataListLock);
-	 ExReleaseFastMutex(&OtherSide->DataListLock);
       }
       else
       {
-	 ExReleaseFastMutex(&OtherSide->DataListLock);
-	 ExReleaseFastMutex(&Fcb->DataListLock);
+          ExReleaseFastMutex(&Fcb->DataListLock);
+          ExReleaseFastMutex(&OtherSide->DataListLock);
       }
    }
    else if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)

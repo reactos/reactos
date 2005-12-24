@@ -35,12 +35,14 @@
  */
 #include <sys/types.h>
 #include <winsock2.h>
-#include "unistd.h"
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 
 #include "various.h"
+
+int close(int);
 
 void
 netfinger(char *name)

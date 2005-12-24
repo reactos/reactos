@@ -17,6 +17,9 @@
 <directory name="authz">
 	<xi:include href="authz/authz.xml" />
 </directory>
+<directory name="avifil32">
+	<xi:include href="avifil32/avifil32.xml" />
+</directory>
 <directory name="cabinet">
 	<xi:include href="cabinet/cabinet.xml" />
 </directory>
@@ -41,6 +44,9 @@
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.xml" />
 </directory>
+<directory name="crypt32">
+	<xi:include href="crypt32/crypt32.xml" />
+</directory>
 <directory name="d3d8thk">
 	<xi:include href="d3d8thk/d3d8thk.xml" />
 </directory>
@@ -52,6 +58,12 @@
 </directory>
 <directory name="devenum">
 	<xi:include href="devenum/devenum.xml" />
+</directory>
+<directory name="devmgr">
+	<xi:include href="devmgr/devmgr.xml" />
+</directory>
+<directory name="dhcpcsvc">
+	<xi:include href="dhcpcsvc/dhcpcsvc.xml" />
 </directory>
 <directory name="dinput">
 	<xi:include href="dinput/dinput.xml" />
@@ -109,6 +121,9 @@
 </directory>
 <directory name="imm32">
 	<xi:include href="imm32/imm32.xml" />
+</directory>
+<directory name="inflib">
+	<xi:include href="inflib/inflib.xml" />
 </directory>
 <directory name="intrlck">
 	<xi:include href="intrlck/intrlck.xml" />
@@ -193,6 +208,9 @@
 </directory>
 <directory name="ole32">
 	<xi:include href="ole32/ole32.xml" />
+</directory>
+<directory name="oleacc">
+	<xi:include href="oleacc/oleacc.xml" />
 </directory>
 <directory name="oleaut32">
 	<xi:include href="oleaut32/oleaut32.xml" />

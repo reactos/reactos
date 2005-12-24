@@ -399,6 +399,9 @@ supported by your printer.\nPlease enter a value between 1 and %d."
     PD32_OUT_OF_MEMORY                    "ความจํา์หมด"
     PD32_GENERIC_ERROR                    "เกิดความปิดพลาด"
     PD32_DRIVER_UNKNOWN                   "ไม่รู้จักดไร์เวอร์์เครื่องพิมพ์"
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
+such as page setup or printing a document, you need to install a printer. \
+Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "เครื่องพิมพ์ปกติ; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "มี %d แฟ้มรออยู่"

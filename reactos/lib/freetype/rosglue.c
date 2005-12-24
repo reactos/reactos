@@ -8,7 +8,7 @@
  * NOTES:
  */
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <ctype.h>
 #include <errno.h>
 #include <setjmp.h>

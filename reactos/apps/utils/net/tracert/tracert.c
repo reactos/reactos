@@ -28,7 +28,6 @@
  */
 
 
-#include <windows.h>
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
@@ -726,7 +725,7 @@ static VOID Usage(VOID)
  */
 int main(int argc, char* argv[])
 {
-    if (!ParseCmdline(argc, _argv)) return -1;
+    if (!ParseCmdline(argc, argv)) return -1;
 
     Driver();
 

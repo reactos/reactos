@@ -882,6 +882,7 @@ IoSetDeviceInterfaceState(
    PWCHAR StartPosition;
    PWCHAR EndPosition;
    NTSTATUS Status;
+   GUID EventGuid;
 
    if (SymbolicLinkName == NULL)
       return STATUS_INVALID_PARAMETER_1;
@@ -917,10 +918,11 @@ IoSetDeviceInterfaceState(
       return Status;
    }
 
+   EventGuid = Enable ? GUID_DEVICE_INTERFACE_ARRIVAL : GUID_DEVICE_INTERFACE_REMOVAL;
    IopNotifyPlugPlayNotification(
       PhysicalDeviceObject,
       EventCategoryDeviceInterfaceChange,
-      Enable ? (LPGUID)&GUID_DEVICE_INTERFACE_ARRIVAL : (LPGUID)&GUID_DEVICE_INTERFACE_REMOVAL,
+      &EventGuid,
       &GuidString,
       (PVOID)SymbolicLinkName);
 

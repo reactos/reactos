@@ -64,47 +64,16 @@ static HRESULT parse_schema(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size,
 static IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
 {
     IInternetProtocolInfo *ret = NULL;
-    WCHAR schema[64], str_clsid[64];
-    HKEY hkey = NULL;
-    DWORD res, type, size, schema_len;
-    CLSID clsid;
-    LPWSTR wszKey;
+    IUnknown *unk;
     HRESULT hres;
 
-    static const WCHAR wszProtocolsKey[] =
-        {'P','R','O','T','O','C','O','L','S','\\','H','a','n','d','l','e','r','\\'};
-    static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
-
-    hres = parse_schema(url, 0, schema, sizeof(schema)/sizeof(schema[0]), &schema_len);
-    if(FAILED(hres) || !schema_len)
+    hres = get_protocol_iface(url, &unk);
+    if(FAILED(hres))
         return NULL;
 
-    wszKey = HeapAlloc(GetProcessHeap(), 0, sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
-    memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
-    memcpy(wszKey + sizeof(wszProtocolsKey)/sizeof(WCHAR), schema, (schema_len+1)*sizeof(WCHAR));
+    IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&ret);
+    IUnknown_Release(unk);
 
-    res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
-    HeapFree(GetProcessHeap(), 0, wszKey);
-    if(res != ERROR_SUCCESS) {
-        TRACE("Could not open key %s\n", debugstr_w(wszKey));
-        return NULL;
-    }
-    
-    size = sizeof(str_clsid);
-    res = RegQueryValueExW(hkey, wszCLSID, NULL, &type, (LPBYTE)str_clsid, &size);
-    RegCloseKey(hkey);
-    if(res != ERROR_SUCCESS || type != REG_SZ) {
-        WARN("Could not get protocol CLSID res=%ld\n", res);
-        return NULL;
-    }
-
-    hres = CLSIDFromString(str_clsid, &clsid);
-    if(FAILED(hres)) {
-        WARN("CLSIDFromString failed: %08lx\n", hres);
-        return NULL;
-    }
-
-    CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IInternetProtocolInfo, (void**)&ret);
     return ret;
 }
 

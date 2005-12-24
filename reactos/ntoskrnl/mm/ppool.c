@@ -19,6 +19,10 @@
 #include <internal/debug.h>
 #endif//PPOOL_UMODE_TEST
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitializePagedPool)
+#endif
+
 #undef ASSERT
 #define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 

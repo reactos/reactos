@@ -28,7 +28,7 @@ RtlFindMessage(PVOID BaseAddress,
    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
    PRTL_MESSAGE_RESOURCE_DATA MessageTable;
    NTSTATUS Status;
-   ULONG EntryOffset, IdOffset = 0;
+   ULONG EntryOffset = 0, IdOffset = 0;
    PRTL_MESSAGE_RESOURCE_ENTRY MessageEntry;
    ULONG i;
 
@@ -83,6 +83,11 @@ RtlFindMessage(PVOID BaseAddress,
 	  {
 	     return STATUS_MESSAGE_NOT_FOUND;
 	  }
+     }
+
+   if (MessageTable->NumberOfBlocks <= i)
+     {
+	return STATUS_MESSAGE_NOT_FOUND;
      }
 
    MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((PUCHAR)MessageTable + MessageTable->Blocks[i].OffsetToEntries);
@@ -146,7 +151,7 @@ RtlFormatMessage(PWSTR Message,
 {
   DPRINT1("RtlFormatMessage(%S, %u, %s, %s, %s, %s, %p, %lu)\n",
 	  Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", Ansi ? "TRUE" : "FALSE",
-	  ArgumentIsArray ? "TRUE" : "FALSE", Arguments, Buffer, BufferSize);
+	  ArgumentIsArray ? "TRUE" : "FALSE", (PSTR)Arguments, Buffer, BufferSize);
 
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;

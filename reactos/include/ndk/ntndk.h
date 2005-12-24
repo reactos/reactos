@@ -1,59 +1,63 @@
-/*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/ndk/ntndk.h
- * PURPOSE:         Main Native Development Kit Header file to include all others.
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 06/10/04
- */
+/*++ NDK Version: 0095
+
+Copyright (c) Alex Ionescu.  All rights reserved.
+
+Header Name:
+
+    ntndk.h
+
+Abstract:
+
+    Master include file for the Native Development Kit.
+
+Author:
+
+    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+
+--*/
+
 #ifndef _NTNDK_
 #define _NTNDK_
 
-/* C Standard Headers */
-#include <stdarg.h>
+#include <stdarg.h>         // C Standard Header
+#include <umtypes.h>        // General Definitions
 
-/* Helper Header */
-#include <reactos/helper.h>
+#include <cctypes.h>        // Cache Manager Types
+#include <cmtypes.h>        // Configuration Manager Types
+#include <dbgktypes.h>      // User-Mode Kernel Debugging Types
+#include <extypes.h>        // Executive Types
+#include <kdtypes.h>        // Kernel Debugger Types
+#include <ketypes.h>        // Kernel Types
+#include <haltypes.h>       // Hardware Abstraction Layer Types
+#include <ifssupp.h>        // IFS Support Header
+#include <iotypes.h>        // Input/Output Manager Types
+#include <ldrtypes.h>       // Loader Types
+#include <lpctypes.h>       // Local Procedure Call Types
+#include <mmtypes.h>        // Memory Manager Types
+#include <obtypes.h>        // Object Manager Types
+#include <potypes.h>        // Power Manager Types
+#include <pstypes.h>        // Process Manager Types
+#include <rtltypes.h>       // Runtime Library Types
+#include <setypes.h>        // Security Subsystem Types
 
-/* A version of ntdef.h to be used with PSDK headers. */
-#include "umtypes.h"
+#include <cmfuncs.h>        // Configuration Manager Functions
+#include <dbgkfuncs.h>      // User-Mode Kernel Debugging Functions
+#include <kdfuncs.h>        // Kernel Debugger Functions
+#include <kefuncs.h>        // Kernel Functions
+#include <exfuncs.h>        // Executive Functions
+#include <halfuncs.h>       // Hardware Abstraction Layer Functions
+#include <iofuncs.h>        // Input/Output Manager Functions
+#include <inbvfuncs.h>      // Initialization Boot Video Functions
+#include <ldrfuncs.h>       // Loader Functions
+#include <lpcfuncs.h>       // Local Procedure Call Functions
+#include <mmfuncs.h>        // Memory Manager Functions
+#include <obfuncs.h>        // Object Manager Functions
+#include <pofuncs.h>        // Power Manager Functions
+#include <psfuncs.h>        // Process Manager Functions
+#include <rtlfuncs.h>       // Runtime Library Functions
+#include <sefuncs.h>        // Security Subsystem Functions
+#include <umfuncs.h>        // User-Mode NT Library Functions
 
-/* Kernel-Mode NDK */
-#ifndef NTOS_MODE_USER
-#include "ifssupp.h"        /* IFS Support Header */
-#include "kdfuncs.h"        /* Kernel Debugger Functions */
-#include "cctypes.h"        /* Cache Manager Types */
-#include "potypes.h"        /* Power Manager Types */
-#include "haltypes.h"       /* Hardware Abstraction Layer Types */
-#include "halfuncs.h"       /* Hardware Abstraction Layer Functions */
-#include "inbvfuncs.h"      /* Initialization Boot Video Functions */
-#include "iofuncs.h"        /* Input/Output Manager Functions */
-#include "kefuncs.h"        /* Kernel Functions */
-#include "mmfuncs.h"        /* Memory Manager Functions */
-#include "obfuncs.h"        /* Object Manager Functions */
-#include "psfuncs.h"        /* Process Manager Functions */
-#include "sefuncs.h"        /* Security Subsystem Functions */
-#endif /* !NTOS_MODE_USER */
+#include <asm.h>            // Assembly Offsets
 
-/* Shared NDK */
-#include "extypes.h"        /* Executive Types */
-#include "cmtypes.h"        /* Configuration Manager Types */
-#include "kdtypes.h"        /* Kernel Debugger Types */
-#include "ketypes.h"        /* Kernel Types */
-#include "iotypes.h"        /* Input/Output Manager Types */
-#include "ldrtypes.h"       /* Loader Types */
-#include "ldrfuncs.h"       /* Loader Functions */
-#include "mmtypes.h"        /* Memory Manager Types */
-#include "obtypes.h"        /* Object Manager Types */
-#include "pstypes.h"        /* Process Manager Types */
-#include "lpctypes.h"       /* Local Procedure Call Types */
-#include "dbgktypes.h"      /* User-Mode Kernel Debugging Types */
-#include "zwfuncs.h"        /* Native Functions (System Calls) */
-#include "rtltypes.h"       /* Runtime Library Types */
-#include "rtlfuncs.h"       /* Runtime Library Functions */
-#include "setypes.h"        /* Security Subsystem Types */
-#include "umfuncs.h"        /* User-Mode NT Library Functions */
-#include "i386/floatsave.h" /* Floating Point Save Area Definitions for i386 */
-#include "i386/segment.h"   /* Kernel CPU Segment Definitions for i386 */
-
-#endif 
+#endif // _NTNDK_

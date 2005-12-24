@@ -7,6 +7,7 @@
 /* command line options */
 BOOL bNoOptions        = FALSE; // print default
 BOOL bDoShowAllCons    = FALSE; // -a
+BOOL bDoShowProcName   = FALSE; // -b
 BOOL bDoShowEthStats   = FALSE; // -e
 BOOL bDoShowNumbers    = FALSE; // -n
 BOOL bDoShowProtoCons  = FALSE; // -p
@@ -54,7 +55,7 @@ VOID ShowUdpStatistics(VOID);
 VOID ShowEthernetStatistics(VOID);
 VOID ShowTcpTable(VOID);
 VOID ShowUdpTable(VOID);
-PCHAR GetPortName(UINT Port, PCHAR Proto, CHAR Name[PORTNAMELEN], INT NameLen);
+PCHAR GetPortName(UINT Port, PCSTR Proto, CHAR Name[PORTNAMELEN], INT NameLen);
 PCHAR GetIpHostName(BOOL local, UINT ipaddr, CHAR name[HOSTNAMELEN], int namelen);
 VOID Usage(VOID);
 

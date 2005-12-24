@@ -51,15 +51,6 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(HDEVINFO devinfo, PSP_DEVINFO_LIST_D
 }
 
 /***********************************************************************
- *		SetupDiGetDeviceInfoListDetailW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetDeviceInfoListDetailW(HDEVINFO devinfo, PSP_DEVINFO_LIST_DETAIL_DATA_W devinfo_data )
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
  *		SetupCopyOEMInfA  (SETUPAPI.@)
  */
 BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,
@@ -82,7 +73,8 @@ BOOL WINAPI SetupCopyOEMInfW(PCWSTR sourceinffile, PCWSTR sourcemedialoc,
 {
   FIXME("stub: source %s location %s ...\n", debugstr_w(sourceinffile),
         debugstr_w(sourcemedialoc));
-  return FALSE;
+  //return FALSE;
+  return TRUE;
 }
 
 /***********************************************************************
@@ -174,3 +166,15 @@ BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
     FIXME ("Stub %p\n",FileLogHandle);
     return TRUE;
 }
+
+
+/***********************************************************************
+ *		SetupDiDestroyClassImageList(SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
+{
+    FIXME ("Stub %p\n", ClassImageListData);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return TRUE;
+}
+

@@ -36,29 +36,6 @@ InstallSelectedDriverW(
 	return FALSE;
 }
 
-BOOL WINAPI
-UpdateDriverForPlugAndPlayDevicesA(
-	IN HWND hwndParent,
-	IN LPCSTR HardwareId,
-	IN LPCSTR FullInfPath,
-	IN DWORD InstallFlags,
-	OUT PBOOL bRebootRequired OPTIONAL)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_GEN_FAILURE);
-	return FALSE;
-}
 
-BOOL WINAPI
-UpdateDriverForPlugAndPlayDevicesW(
-	IN HWND hwndParent,
-	IN LPCWSTR HardwareId,
-	IN LPCWSTR FullInfPath,
-	IN DWORD InstallFlags,
-	OUT PBOOL bRebootRequired OPTIONAL)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_GEN_FAILURE);
-	return FALSE;
-}
+
 

@@ -24,9 +24,6 @@
 #define REG_MAX_NAME_SIZE     256
 #define REG_MAX_DATA_SIZE     2048
 
-/* FIXME: should go into msvcrt.h header? */
-#define offsetof(s,m)       (size_t)&(((s*)NULL)->m)
-
 /* GLOBALS ******************************************************************/
 
 static RTL_CRITICAL_SECTION HandleTableCS;
@@ -55,7 +52,7 @@ static NTSTATUS OpenCurrentConfigKey(PHANDLE KeyHandle);
 
 /* FUNCTIONS ****************************************************************/
 /* check if value type needs string conversion (Ansi<->Unicode) */
-inline static int is_string( DWORD type )
+__inline static int is_string( DWORD type )
 {
     return (type == REG_SZ) || (type == REG_EXPAND_SZ) || (type == REG_MULTI_SZ);
 }
@@ -2240,7 +2237,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
     DWORD total_size;
     char buffer[256], *buf_ptr = buffer;
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
-    static const int info_size = offsetof( KEY_VALUE_FULL_INFORMATION, Name );
+    static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
 
     //TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
       //    hkey, index, value, val_count, reserved, type, data, count );
@@ -2367,7 +2364,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
     DWORD total_size;
     char buffer[256], *buf_ptr = buffer;
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
-    static const int info_size = offsetof( KEY_VALUE_FULL_INFORMATION, Name );
+    static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
 
     //TRACE("(%p,%ld,%p,%p,%p,%p,%p,%p)\n",
     //      hkey, index, value, val_count, reserved, type, data, count );
@@ -2589,7 +2586,7 @@ RegLoadKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U (lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))
@@ -3861,7 +3858,7 @@ RegReplaceKeyW (HKEY hKey,
     }
 
   /* Convert new file name */
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFile,
+  if (!RtlDosPathNameToNtPathName_U (lpNewFile,
 				     &NewFileName,
 				     NULL,
 				     NULL))
@@ -3881,7 +3878,7 @@ RegReplaceKeyW (HKEY hKey,
 			      NULL);
 
   /* Convert old file name */
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpOldFile,
+  if (!RtlDosPathNameToNtPathName_U (lpOldFile,
 				     &OldFileName,
 				     NULL,
 				     NULL))
@@ -3980,7 +3977,7 @@ RegRestoreKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U (lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))
@@ -4073,7 +4070,7 @@ RegSaveKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((PWSTR)lpFile,
+  if (!RtlDosPathNameToNtPathName_U (lpFile,
 				     &FileName,
 				     NULL,
 				     NULL))

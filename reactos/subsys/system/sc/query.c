@@ -8,27 +8,32 @@
  *           Ged Murphy 20/10/05 Created
  *
  */
+/*
+ * TODO:
+ * Allow calling of 2 options e.g.:
+ *    type= driver state= inactive
+ */
 
 #include "sc.h"
 
 /* local function decs */
 VOID PrintService(BOOL bExtended);
-BOOL EnumServices(DWORD ServiceType, DWORD ServiceState);
+BOOL EnumServices(LPCTSTR ServiceName, DWORD ServiceType, DWORD ServiceState);
+BOOL QueryService(LPCTSTR ServiceName, BOOL bExtended);
 
 /* global variables */
 static ENUM_SERVICE_STATUS_PROCESS *pServiceStatus = NULL;
+DWORD NumServices = 0;
 
 
-BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
+BOOL
+Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
 {
             
-    if (! ServiceName)
+    if (! ServiceName) /* display all running services and drivers */
     {
-        /* display all running services and drivers */
-        _tprintf(_T("No service name, displaying all services\n")); // test
-
         /* get default values */
-        EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
+        EnumServices(NULL, SERVICE_WIN32, SERVICE_ACTIVE);
         
         /* print default values */
         PrintService(bExtended);
@@ -37,13 +42,12 @@ BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
     {
         LPCTSTR Type = *ServiceArgs;
         
-        _tprintf(_T("got type\narg = %s\n"), Type); // test
         if (_tcsicmp(Type, _T("driver")) == 0)
-            EnumServices(SERVICE_DRIVER, SERVICE_STATE_ALL);
+            EnumServices(NULL, SERVICE_DRIVER, SERVICE_ACTIVE);
         else if (_tcsicmp(Type, _T("service")) == 0)
-            EnumServices(SERVICE_WIN32, SERVICE_STATE_ALL);
+            EnumServices(NULL, SERVICE_WIN32, SERVICE_ACTIVE);
         else if (_tcsicmp(Type, _T("all")) == 0)
-            EnumServices(SERVICE_DRIVER|SERVICE_WIN32, SERVICE_STATE_ALL);
+            EnumServices(NULL, SERVICE_DRIVER|SERVICE_WIN32, SERVICE_ACTIVE);
         else
         {
             _tprintf(_T("\nERROR following \"type=\"!\n"));
@@ -56,12 +60,10 @@ BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
     {
         LPCTSTR State = *ServiceArgs;
 
-        if (_tcsicmp(State, _T("active")) == 0)
-            EnumServices(SERVICE_DRIVER|SERVICE_WIN32, SERVICE_ACTIVE);
-        else if (_tcsicmp(State, _T("inactive")) == 0)
-            EnumServices(SERVICE_DRIVER|SERVICE_WIN32, SERVICE_INACTIVE);
+        if (_tcsicmp(State, _T("inactive")) == 0)
+            EnumServices(NULL, SERVICE_WIN32, SERVICE_INACTIVE);
         else if (_tcsicmp(State, _T("all")) == 0)
-            EnumServices(SERVICE_DRIVER|SERVICE_WIN32, SERVICE_STATE_ALL);
+            EnumServices(NULL, SERVICE_WIN32, SERVICE_STATE_ALL);
         else
         {
             _tprintf(_T("\nERROR following \"state=\"!\n"));
@@ -77,35 +79,138 @@ BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
 
     else if(_tcsicmp(ServiceName, _T("group=")))
 */
-    else
+    else /* print only the service requested */
     {
-        /* print only the service requested */
-        printf("Service name %s\n", ServiceName); // test
-
-        /* get default values */
-        EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
-
-        /* print default values */
-        PrintService(bExtended);
+        QueryService(ServiceName, bExtended);
     }
     
     return TRUE;
-
 }
 
 
-BOOL EnumServices(DWORD ServiceType, DWORD ServiceState)
+BOOL
+QueryService(LPCTSTR ServiceName, BOOL bExtended)
 {
-    //SC_HANDLE hSc;
+    SERVICE_STATUS_PROCESS *pServiceInfo = NULL;
+    SC_HANDLE hSc;
+    DWORD BufSiz = 0;
+    DWORD BytesNeeded = 0;
+    DWORD Ret;
+
+    hSc = OpenService(hSCManager, ServiceName, SERVICE_QUERY_STATUS);
+
+    if (hSc == NULL)
+    {
+        _tprintf(_T("QueryService: openService failed\n"));
+        ReportLastError();
+        return FALSE;
+    }
+
+    Ret = QueryServiceStatusEx(hSc,
+                SC_STATUS_PROCESS_INFO,
+                NULL,
+                BufSiz,
+                &BytesNeeded);
+
+    if ((Ret != 0) || (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+    {
+        _tprintf(_T("QueryService: First call to QueryServiceStatusEx failed : "));
+        ReportLastError();
+        return FALSE;
+    }
+    else /* Call function again if required size was returned */
+    {
+        /* reserve memory for service info array */
+        pServiceInfo = (SERVICE_STATUS_PROCESS *)
+            HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+        if (pServiceInfo == NULL)
+        {
+            _tprintf(_T("QueryService: Failed to allocate memory : "));
+            ReportLastError();
+            return FALSE;
+        }
+
+        /* fill array with service info */
+        if (! QueryServiceStatusEx(hSc,
+                    SC_STATUS_PROCESS_INFO,
+                    (LPBYTE)pServiceInfo,
+                    BytesNeeded,
+                    &BytesNeeded))
+        {
+            _tprintf(_T("QueryService: Second call to QueryServiceStatusEx failed : "));
+            ReportLastError();
+            HeapFree(GetProcessHeap(), 0, pServiceInfo);
+            return FALSE;
+        }
+    }
+
+    
+    _tprintf(_T("SERVICE_NAME: %s\n"), ServiceName);
+
+    _tprintf(_T("\tTYPE               : %x  "),
+         (unsigned int)pServiceInfo->dwServiceType);
+    switch (pServiceInfo->dwServiceType)
+    {
+        case 1 : _tprintf(_T("KERNEL_DRIVER\n")); break;
+        case 2 : _tprintf(_T("FILE_SYSTEM_DRIVER\n")); break;
+        case 16 : _tprintf(_T("WIN32_OWN_PROCESS\n")); break;
+        case 32 : _tprintf(_T("WIN32_SHARE_PROCESS\n")); break;
+        default : _tprintf(_T("\n")); break;
+    }
+
+    _tprintf(_T("\tSTATE              : %x  "),
+        (unsigned int)pServiceInfo->dwCurrentState);
+
+    switch (pServiceInfo->dwCurrentState)
+    {
+        case 1 : _tprintf(_T("STOPPED\n")); break;
+        case 2 : _tprintf(_T("START_PENDING\n")); break;
+        case 3 : _tprintf(_T("STOP_PENDING\n")); break;
+        case 4 : _tprintf(_T("RUNNING\n")); break;
+        case 5 : _tprintf(_T("CONTINUE_PENDING\n")); break;
+        case 6 : _tprintf(_T("PAUSE_PENDING\n")); break;
+        case 7 : _tprintf(_T("PAUSED\n")); break;
+        default : _tprintf(_T("\n")); break;
+    }
+
+//        _tprintf(_T("\n\taccepted         : 0x%x\n\n"),
+//            pServiceStatus[i].ServiceStatusProcess.dwControlsAccepted);
+//            (STOPPABLE,NOT_PAUSABLE,ACCEPTS_SHUTDOWN)
+
+    _tprintf(_T("\tWIN32_EXIT_CODE    : %d  (0x%x)\n"),
+        (unsigned int)pServiceInfo->dwWin32ExitCode,
+        (unsigned int)pServiceInfo->dwWin32ExitCode);
+    _tprintf(_T("\tSERVICE_EXIT_CODE  : %d  (0x%x)\n"),
+        (unsigned int)pServiceInfo->dwServiceSpecificExitCode,
+        (unsigned int)pServiceInfo->dwServiceSpecificExitCode);
+    _tprintf(_T("\tCHECKPOINT         : 0x%x\n"),
+        (unsigned int)pServiceInfo->dwCheckPoint);
+    _tprintf(_T("\tWAIT_HINT          : 0x%x\n"),
+        (unsigned int)pServiceInfo->dwWaitHint);
+    if (bExtended)
+    {
+        _tprintf(_T("\tPID                : %lu\n"),
+            pServiceInfo->dwProcessId);
+        _tprintf(_T("\tFLAGS              : %lu\n"),
+            pServiceInfo->dwServiceFlags);
+    }
+    
+    HeapFree(GetProcessHeap(), 0, pServiceInfo);
+
+    return TRUE;
+}
+
+
+BOOL
+EnumServices(LPCTSTR ServiceName, DWORD ServiceType, DWORD ServiceState)
+{
     DWORD BufSize = 0;
     DWORD BytesNeeded = 0;
-    DWORD NumServices = 0;
     DWORD ResumeHandle = 0;
-    
-//    hSc = OpenService(hSCManager, ServiceName, SERVICE_QUERY_STATUS);
+    DWORD Ret;
 
     /* determine required buffer size */
-    if (! EnumServicesStatusEx(hSCManager,
+    Ret = EnumServicesStatusEx(hSCManager,
                 SC_ENUM_PROCESS_INFO,
                 ServiceType,
                 ServiceState,
@@ -114,39 +219,45 @@ BOOL EnumServices(DWORD ServiceType, DWORD ServiceState)
                 &BytesNeeded,
                 &NumServices,
                 &ResumeHandle,
-                0))
-    {
-        /* Call function again if required size was returned */
-        if (GetLastError() == ERROR_MORE_DATA)
-        {
-            /* reserve memory for service info array */
-            pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) malloc(BytesNeeded);
+                0);
 
-            /* fill array with service info */
-            if (! EnumServicesStatusEx(hSCManager,
-                        SC_ENUM_PROCESS_INFO,
-                        SERVICE_DRIVER | SERVICE_WIN32,
-                        SERVICE_STATE_ALL,
-                        (LPBYTE)pServiceStatus,
-                        BufSize,
-                        &BytesNeeded,
-                        &NumServices,
-                        &ResumeHandle,
-                        0))
-            {
-                _tprintf(_T("Second call to EnumServicesStatusEx failed : "));
-                ReportLastError();
-                return FALSE;
-            }
-        }
-        else /* exit on failure */
+    if ((Ret != 0) && (GetLastError() != ERROR_MORE_DATA))
+    {
+        _tprintf(_T("EnumServices: First call to EnumServicesStatusEx failed : "));
+        ReportLastError();
+        return FALSE;
+    }
+    else /* Call function again if required size was returned */
+    {
+        /* reserve memory for service info array */
+        pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *)
+                HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+        if (pServiceStatus == NULL)
         {
-            _tprintf(_T("First call to EnumServicesStatusEx failed : "));
+            _tprintf(_T("EnumServices: Failed to allocate memory : "));
             ReportLastError();
             return FALSE;
         }
+
+        /* fill array with service info */
+        if (! EnumServicesStatusEx(hSCManager,
+                    SC_ENUM_PROCESS_INFO,
+                    ServiceType,
+                    ServiceState,
+                    (LPBYTE)pServiceStatus,
+                    BytesNeeded,
+                    &BytesNeeded,
+                    &NumServices,
+                    &ResumeHandle,
+                    0))
+        {
+            _tprintf(_T("EnumServices: Second call to EnumServicesStatusEx failed : "));
+            ReportLastError();
+            HeapFree(GetProcessHeap(), 0, pServiceStatus);
+            return FALSE;
+        }
     }
-    
+
     return TRUE;
 }
 
@@ -154,26 +265,64 @@ BOOL EnumServices(DWORD ServiceType, DWORD ServiceState)
 VOID
 PrintService(BOOL bExtended)
 {
-    _tprintf(_T("SERVICE_NAME: %s\n"), pServiceStatus->lpServiceName);
-    _tprintf(_T("DISPLAY_NAME: %s\n"), pServiceStatus->lpDisplayName);
-    _tprintf(_T("TYPE               : %lu\n"),
-        pServiceStatus->ServiceStatusProcess.dwServiceType);
-    _tprintf(_T("STATE              : %lu\n"),
-        pServiceStatus->ServiceStatusProcess.dwCurrentState);
-                        //    (STOPPABLE,NOT_PAUSABLE,ACCEPTS_SHUTDOWN)
-    _tprintf(_T("WIN32_EXIT_CODE    : %lu \n"),
-        pServiceStatus->ServiceStatusProcess.dwWin32ExitCode);
-    _tprintf(_T("SERVICE_EXIT_CODE  : %lu \n"),
-        pServiceStatus->ServiceStatusProcess.dwServiceSpecificExitCode);
-    _tprintf(_T("CHECKPOINT         : %lu\n"),
-        pServiceStatus->ServiceStatusProcess.dwCheckPoint);
-    _tprintf(_T("WAIT_HINT          : %lu\n"),
-        pServiceStatus->ServiceStatusProcess.dwWaitHint);
-    if (bExtended)
+    int i;
+    
+    for (i=0; i < NumServices; i++)
     {
-        _tprintf(_T("PID                : %lu\n"),
-            pServiceStatus->ServiceStatusProcess.dwProcessId);
-        _tprintf(_T("FLAGS              : %lu\n"),
-            pServiceStatus->ServiceStatusProcess.dwServiceFlags);
+
+        _tprintf(_T("SERVICE_NAME: %s\n"), pServiceStatus[i].lpServiceName);
+        _tprintf(_T("DISPLAY_NAME: %s\n"), pServiceStatus[i].lpDisplayName);
+
+        _tprintf(_T("\tTYPE               : %x  "),
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwServiceType);
+        switch (pServiceStatus[i].ServiceStatusProcess.dwServiceType)
+        {
+            case 1 : _tprintf(_T("KERNEL_DRIVER\n")); break;
+            case 2 : _tprintf(_T("FILE_SYSTEM_DRIVER\n")); break;
+            case 16 : _tprintf(_T("WIN32_OWN_PROCESS\n")); break;
+            case 32 : _tprintf(_T("WIN32_SHARE_PROCESS\n")); break;
+            default : _tprintf(_T("\n")); break;
+        }
+
+        _tprintf(_T("\tSTATE              : %x  "),
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwCurrentState);
+
+        switch (pServiceStatus[i].ServiceStatusProcess.dwCurrentState)
+        {
+            case 1 : _tprintf(_T("STOPPED\n")); break;
+            case 2 : _tprintf(_T("START_PENDING\n")); break;
+            case 3 : _tprintf(_T("STOP_PENDING\n")); break;
+            case 4 : _tprintf(_T("RUNNING\n")); break;
+            case 5 : _tprintf(_T("CONTINUE_PENDING\n")); break;
+            case 6 : _tprintf(_T("PAUSE_PENDING\n")); break;
+            case 7 : _tprintf(_T("PAUSED\n")); break;
+            default : _tprintf(_T("\n")); break;
+        }
+
+    //        _tprintf(_T("\n\taccepted         : 0x%x\n\n"),
+    //            pServiceStatus[i].ServiceStatusProcess.dwControlsAccepted);
+    //            (STOPPABLE,NOT_PAUSABLE,ACCEPTS_SHUTDOWN)
+
+        _tprintf(_T("\tWIN32_EXIT_CODE    : %d  (0x%x)\n"),
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwWin32ExitCode,
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwWin32ExitCode);
+        _tprintf(_T("\tSERVICE_EXIT_CODE  : %d  (0x%x)\n"),
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwServiceSpecificExitCode,
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwServiceSpecificExitCode);
+        _tprintf(_T("\tCHECKPOINT         : 0x%x\n"),
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwCheckPoint);
+        _tprintf(_T("\tWAIT_HINT          : 0x%x\n"),
+            (unsigned int)pServiceStatus[i].ServiceStatusProcess.dwWaitHint);
+        if (bExtended)
+        {
+            _tprintf(_T("\tPID                : %lu\n"),
+                pServiceStatus[i].ServiceStatusProcess.dwProcessId);
+            _tprintf(_T("\tFLAGS              : %lu\n"),
+                pServiceStatus[i].ServiceStatusProcess.dwServiceFlags);
+        }
+
+            _tprintf(_T("\n"));
     }
+    
+    _tprintf(_T("number : %lu\n"), NumServices);
 }

@@ -23,11 +23,12 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/miniport.h>
-#include <ddk/video.h>
-#include <ddk/ntddvdeo.h>
-#include <debug.h>
+#include <ntddk.h>
+#include <miniport.h>
+#include <video.h>
+
+#define UNIMPLEMENTED \
+   VideoPortDebugPrint(Error, "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
 void
 InitVGAMode();

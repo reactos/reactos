@@ -934,6 +934,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 		return UPDOWN_KeyPressed(infoPtr, (int)wParam);
 	    break;
 
+	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    return UPDOWN_Paint (infoPtr, (HDC)wParam);
 

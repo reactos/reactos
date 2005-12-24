@@ -44,10 +44,7 @@ PciIdeChannelEnabled(
 		return ChannelDisabled;
 	}
 
-	/* FIXME: I don't know where to find the enabled/disabled
-	 * bits for channels, so assume they are always enabled
-	 */
-	return ChannelEnabled;
+	return ChannelStateUnknown;
 }
 
 BOOLEAN NTAPI
@@ -74,15 +71,16 @@ PciIdeTransferModeSelect(
 	return STATUS_SUCCESS;
 }
 
-BOOLEAN NTAPI
+ULONG NTAPI
 PciIdeUseDma(
 	IN PVOID DeviceExtension,
 	IN PUCHAR CdbCommand,
 	IN PUCHAR Slave)
 {
-	DPRINT1("PciIdeUseDma(%p %p %p)\n", DeviceExtension, CdbCommand, Slave);
+	DPRINT("PciIdeUseDma(%p %p %p)\n", DeviceExtension, CdbCommand, Slave);
 
-	return FALSE;
+	/* Nothing should prevent us to use DMA */
+	return 1;
 }
 
 NTSTATUS NTAPI
@@ -99,7 +97,7 @@ PciIdeGetControllerProperties(
 	ControllerProperties->IgnoreActiveBitForAtaDevice = FALSE;
 	ControllerProperties->AlwaysClearBusMasterInterrupt = TRUE;
 	ControllerProperties->PciIdeUseDma = PciIdeUseDma;
-	ControllerProperties->AlignmentRequirement = 1; /* FIXME */
+	ControllerProperties->AlignmentRequirement = 1;
 	ControllerProperties->DefaultPIO = 0; /* FIXME */
 	ControllerProperties->PciIdeUdmaModesSupported = NULL; /* optional */
 	

@@ -558,7 +558,7 @@ LRESULT MDIShellBrowserChild::Init(LPCREATESTRUCT pcs)
 
 	update_shell_browser();
 
-	if (&*_shellBrowser)
+	if (_shellBrowser.get())
 		if (_left_hwnd)
 			_shellBrowser->Init(_himlSmall);
 		else

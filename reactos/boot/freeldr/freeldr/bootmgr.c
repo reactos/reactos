@@ -18,24 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <rtl.h>
-#include <fs.h>
-#include <reactos.h>
-#include <ui.h>
-#include <arch.h>
-#include <miscboot.h>
-#include <linux.h>
-#include <mm.h>
-#include <inifile.h>
-#include <debug.h>
-#include <options.h>
-#include <oslist.h>
-#include <video.h>
-#include <bootmgr.h>
-#include <drivemap.h>
-#include <keycodes.h>
-#include <cmdline.h>
-#include <machine.h>
 
 VOID RunLoader(VOID)
 {
@@ -43,8 +25,8 @@ VOID RunLoader(VOID)
 	CHAR	SettingValue[80];
 	ULONG		SectionId;
 	ULONG		OperatingSystemCount;
-	PCHAR	*OperatingSystemSectionNames;
-	PCHAR	*OperatingSystemDisplayNames;
+	PCSTR	*OperatingSystemSectionNames;
+	PCSTR	*OperatingSystemDisplayNames;
 	ULONG		DefaultOperatingSystem;
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
@@ -138,23 +120,23 @@ NoGui:
 
 		// Install the drive mapper according to this sections drive mappings
 		DriveMapMapDrivesInSection(OperatingSystemSectionNames[SelectedOperatingSystem]);
-		if (stricmp(SettingValue, "ReactOS") == 0)
+		if (_stricmp(SettingValue, "ReactOS") == 0)
 		{
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "Linux") == 0)
+		else if (_stricmp(SettingValue, "Linux") == 0)
 		{
 			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem], OperatingSystemDisplayNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "BootSector") == 0)
+		else if (_stricmp(SettingValue, "BootSector") == 0)
 		{
 			LoadAndBootBootSector(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "Partition") == 0)
+		else if (_stricmp(SettingValue, "Partition") == 0)
 		{
 			LoadAndBootPartition(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
-		else if (stricmp(SettingValue, "Drive") == 0)
+		else if (_stricmp(SettingValue, "Drive") == 0)
 		{
 			LoadAndBootDrive(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
@@ -166,10 +148,10 @@ reboot:
 	return;
 }
 
-ULONG	 GetDefaultOperatingSystem(PCHAR OperatingSystemList[], ULONG	 OperatingSystemCount)
+ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSystemCount)
 {
 	CHAR	DefaultOSText[80];
-	PCHAR	DefaultOSName;
+	PCSTR	DefaultOSName;
 	ULONG	SectionId;
 	ULONG	DefaultOS = 0;
 	ULONG	Idx;
@@ -192,7 +174,7 @@ ULONG	 GetDefaultOperatingSystem(PCHAR OperatingSystemList[], ULONG	 OperatingSy
 	{
 		for (Idx=0; Idx<OperatingSystemCount; Idx++)
 		{
-			if (stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
+			if (_stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
 			{
 				DefaultOS = Idx;
 				break;
