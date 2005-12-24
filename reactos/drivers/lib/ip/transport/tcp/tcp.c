@@ -419,9 +419,8 @@ NTSTATUS TCPShutdown(VOID)
 	return STATUS_SUCCESS;
 
     WaitForThread.QuadPart = -2500000; /* 250 ms */
-    KeSetEvent(&TimerLoopEvent, IO_NO_INCREMENT, TRUE);
-    KeWaitForSingleObject(&TimerThreadHandle, Executive, KernelMode,
-                          FALSE, &WaitForThread);
+    KeSetEvent(&TimerLoopEvent, IO_NO_INCREMENT, FALSE);
+    ZwWaitForSingleObject(TimerThreadHandle, FALSE, &WaitForThread);
 
     /* Deregister this protocol with IP layer */
     IPRegisterProtocol(IPPROTO_TCP, NULL);
