@@ -17,6 +17,9 @@
 	<directory name="kbdhe">
 		<xi:include href="kbdhe/kbdhe.xml" />
 	</directory>
+	<directory name="kbdheb">
+		<xi:include href="kbdheb/kbdheb.xml" />
+	</directory>
 	<directory name="kbdhu">
 		<xi:include href="kbdhu/kbdhu.xml" />
 	</directory>
