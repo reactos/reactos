@@ -433,10 +433,10 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
         /* and now do it */
         if (!do_reg_operation( hkey, buffer, &context, flags ))
         {
-            RegCloseKey( hkey );
+            if (hkey != root_key) RegCloseKey( hkey );
             return FALSE;
         }
-        RegCloseKey( hkey );
+        if (hkey != root_key) RegCloseKey( hkey );
     }
     return TRUE;
 }
