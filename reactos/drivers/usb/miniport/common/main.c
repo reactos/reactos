@@ -197,7 +197,8 @@ AddDevice(
 	UNICODE_STRING LinkDeviceName;
 	PUSBMP_DRIVER_EXTENSION DriverExtension;
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
-	ULONG DeviceNumber;
+	static ULONG DeviceNumber = 0;
+	BOOL AlreadyRestarted = FALSE;
 
 	// Allocate driver extension now
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
@@ -216,18 +217,33 @@ AddDevice(
 		}
 	}
 
-	// Create a unicode device name
-	DeviceNumber = 0; //TODO: Allocate new device number every time
-	swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
-	RtlInitUnicodeString(&DeviceName, DeviceBuffer);
+	/* Create a unicode device name. Allocate a new device number every time */
+	do
+	{
+		DeviceNumber++;
+		if (DeviceNumber == 9999)
+		{
+			/* Hmm. We don't have a free number. */ 
+			if (AlreadyRestarted)
+			{
+				Status = STATUS_UNSUCCESSFUL;
+				break;
+			}
+			/* Start again at DeviceNumber = 0 to find a free number */
+			DeviceNumber = 0;
+			AlreadyRestarted = TRUE;
+		}
+		swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
+		RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
-	Status = IoCreateDevice(DriverObject,
-				sizeof(USBMP_DEVICE_EXTENSION),
-				&DeviceName,
-				FILE_DEVICE_BUS_EXTENDER,
-				0,
-				FALSE,
-				&fdo);
+		Status = IoCreateDevice(DriverObject,
+					sizeof(USBMP_DEVICE_EXTENSION),
+					&DeviceName,
+					FILE_DEVICE_BUS_EXTENDER,
+					0,
+					FALSE,
+					&fdo);
+	} while (Status == STATUS_OBJECT_NAME_COLLISION);
 
 	if (!NT_SUCCESS(Status))
 	{
