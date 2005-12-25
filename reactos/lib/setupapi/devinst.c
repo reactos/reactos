@@ -29,6 +29,7 @@ static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
+static const WCHAR DotCoInstallers[]  = {'.','C','o','I','n','s','t','a','l','l','e','r','s',0};
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR SymbolicLink[]  = {'S','y','m','b','o','l','i','c','L','i','n','k',0};
@@ -7021,6 +7022,9 @@ SetupDiInstallDriverFiles(
         struct DriverInfoElement *SelectedDriver;
         WCHAR SectionName[MAX_PATH];
         DWORD SectionNameLength = 0;
+        PVOID InstallMsgHandler;
+        PVOID InstallMsgHandlerContext;
+        PVOID Context = NULL;
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
         ret = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
@@ -7037,21 +7041,49 @@ SetupDiInstallDriverFiles(
         ret = SetupDiGetActualSectionToInstallW(
             SelectedDriver->InfFileDetails->hInf,
             SelectedDriver->Details.SectionName,
-            SectionName, MAX_PATH, &SectionNameLength, NULL);
+            SectionName, MAX_PATH - strlenW(DotCoInstallers), &SectionNameLength, NULL);
         if (!ret)
             goto done;
 
-        if (!InstallParams.InstallMsgHandler)
+        if (InstallParams.InstallMsgHandler)
         {
-            InstallParams.InstallMsgHandler = SetupDefaultQueueCallbackW;
-            InstallParams.InstallMsgHandlerContext = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
-            SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+            InstallMsgHandler = InstallParams.InstallMsgHandler;
+            InstallMsgHandlerContext = InstallParams.InstallMsgHandlerContext;
+        }
+        else
+        {
+            Context = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
+            if (!Context)
+                goto cleanup;
+            InstallMsgHandler = SetupDefaultQueueCallback;
+            InstallMsgHandlerContext = Context;
         }
         ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
             SelectedDriver->InfFileDetails->hInf, SectionName,
             SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
-            InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
+            InstallMsgHandler, InstallMsgHandlerContext,
             DeviceInfoSet, DeviceInfoData);
+        if (!ret)
+            goto done;
+
+        /* Install files from .CoInstallers section */
+        lstrcatW(SectionName, DotCoInstallers);
+        ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+            SelectedDriver->InfFileDetails->hInf, SectionName,
+            SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
+            InstallMsgHandler, InstallMsgHandlerContext,
+            DeviceInfoSet, DeviceInfoData);
+        if (!ret)
+            goto done;
+
+        /* Set the DI_NOFILECOPY flag to prevent another
+         * installation during SetupDiInstallDevice */
+        InstallParams.Flags |= DI_NOFILECOPY;
+        ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+
+cleanup:
+       if (Context)
+           SetupTermDefaultQueueCallback(Context);
     }
 
 done:
@@ -7090,6 +7122,7 @@ SetupDiRegisterCoDeviceInstallers(
         WCHAR SectionName[MAX_PATH];
         DWORD SectionNameLength = 0;
         HKEY hKey = INVALID_HANDLE_VALUE;
+        PVOID Context = NULL;
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
         Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
@@ -7108,9 +7141,9 @@ SetupDiRegisterCoDeviceInstallers(
             SelectedDriver->InfFileDetails->hInf,
             SelectedDriver->Details.SectionName,
             SectionName, MAX_PATH, &SectionNameLength, NULL);
-        if (!Result || SectionNameLength > MAX_PATH - wcslen(L".CoInstallers") - 1)
+        if (!Result || SectionNameLength > MAX_PATH - strlenW(DotCoInstallers) - 1)
             goto cleanup;
-        wcscat(SectionName, L".CoInstallers");
+        lstrcatW(SectionName, DotCoInstallers);
 
         /* Open/Create driver key information */
 #if _WIN32_WINNT >= 0x502
@@ -7128,17 +7161,14 @@ SetupDiRegisterCoDeviceInstallers(
         if (!(InstallParams.Flags & DI_NOFILECOPY))
         {
             DoAction |= SPINST_FILES;
-            if (!InstallParams.InstallMsgHandler)
-            {
-                InstallParams.InstallMsgHandler = SetupDefaultQueueCallbackW;
-                InstallParams.InstallMsgHandlerContext = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
-                SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
-            }
+            Context = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
+            if (!Context)
+                goto cleanup;
         }
         Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
             SelectedDriver->InfFileDetails->hInf, SectionName,
             DoAction, hKey, NULL, SP_COPY_NEWER,
-            InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
+            SetupDefaultQueueCallback, Context,
             DeviceInfoSet, DeviceInfoData);
         if (!Result)
             goto cleanup;
@@ -7146,6 +7176,8 @@ SetupDiRegisterCoDeviceInstallers(
         ret = TRUE;
 
 cleanup:
+        if (Context)
+            SetupTermDefaultQueueCallback(Context);
         if (hKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hKey);
     }
@@ -7337,6 +7369,34 @@ InfIsFromOEMLocation(
     return TRUE;
 }
 
+
+static UINT WINAPI
+NullInstallMsgHandler(
+    IN PVOID Context,
+    UINT Notification,
+    UINT_PTR Param1,
+    UINT_PTR Param2)
+{
+    switch (Notification)
+    {
+        case SPFILENOTIFY_STARTQUEUE: return TRUE;
+        case SPFILENOTIFY_ENDQUEUE: return 0;
+        case SPFILENOTIFY_STARTSUBQUEUE: return TRUE;
+        case SPFILENOTIFY_ENDSUBQUEUE: return 0;
+        case SPFILENOTIFY_STARTDELETE: return FILEOP_SKIP;
+        case SPFILENOTIFY_ENDDELETE: return 0;
+        case SPFILENOTIFY_STARTRENAME: return FILEOP_SKIP;
+        case SPFILENOTIFY_ENDRENAME: return 0;
+        case SPFILENOTIFY_STARTCOPY: return FILEOP_SKIP;
+        case SPFILENOTIFY_ENDCOPY: return 0;
+        case SPFILENOTIFY_NEEDMEDIA: return FILEOP_SKIP;
+        default:
+            FIXME("Notification %u params %p, %p\n", Notification, Param1, Param2 );
+            break;
+    }
+    return 0;
+}
+
 /***********************************************************************
  *		SetupDiInstallDevice (SETUPAPI.@)
  */
@@ -7364,6 +7424,7 @@ SetupDiInstallDevice(
     BOOL NeedtoCopyFile;
     LARGE_INTEGER fullVersion;
     LONG rc;
+    PVOID Context = NULL;
     BOOL ret = FALSE; /* Return value */
 
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
@@ -7447,29 +7508,18 @@ SetupDiInstallDevice(
     if (!(InstallParams.Flags & DI_NOFILECOPY))
     {
         DoAction |= SPINST_FILES;
-        if (!InstallParams.InstallMsgHandler)
-        {
-            InstallParams.InstallMsgHandler = SetupDefaultQueueCallbackW;
-            InstallParams.InstallMsgHandlerContext = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
-            SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
-        }
+        Context = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
+        if (!Context)
+            goto cleanup;
     }
     *pSectionName = '\0';
     Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
         SelectedDriver->InfFileDetails->hInf, SectionName,
         DoAction, hKey, NULL, SP_COPY_NEWER,
-        InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
+        InstallParams.Flags & (DI_NOFILECOPY | DI_NOVCP) ? NullInstallMsgHandler : SetupDefaultQueueCallback, Context,
         DeviceInfoSet, DeviceInfoData);
     if (!Result)
         goto cleanup;
-    if (!(InstallParams.Flags & DI_NOFILECOPY) && !(InstallParams.Flags & DI_NOVCP))
-    {
-        if (Result && InstallParams.InstallMsgHandler == SetupDefaultQueueCallbackW)
-        {
-            /* Delete resources allocated by SetupInitDefaultQueueCallback */
-            SetupTermDefaultQueueCallback(InstallParams.InstallMsgHandlerContext);
-        }
-    }
     InstallParams.Flags |= DI_NOFILECOPY;
     SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
 
@@ -7561,7 +7611,7 @@ SetupDiInstallDevice(
     Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
         SelectedDriver->InfFileDetails->hInf, SectionName,
         SPINST_REGISTRY, hKey, NULL, 0,
-        InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
+        NULL, NULL,
         DeviceInfoSet, DeviceInfoData);
     if (!Result)
         goto cleanup;
@@ -7600,7 +7650,8 @@ cleanup:
     if (lpGuidString)
         RpcStringFreeW(&lpGuidString);
     HeapFree(GetProcessHeap(), 0, lpFullGuidString);
-
+    if (Context)
+        SetupTermDefaultQueueCallback(Context);
     TRACE("Returning %d\n", ret);
     return ret;
 }
