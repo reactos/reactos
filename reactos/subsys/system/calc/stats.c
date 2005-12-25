@@ -72,23 +72,23 @@ BOOL CALLBACK StatsDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 
 		case ID_STATS_LOAD:
 			{
-			   int i;
+			   INT i;
 
-			   i = SendMessage(hWndListBox, LB_GETCURSEL, 0, 0);
-                           SendMessage(hWndListBox, LB_GETTEXT,   i, (LPARAM)calc.buffer);
+			   i = (INT) SendMessage(hWndListBox, LB_GETCURSEL, 0, 0);
+               SendMessage(hWndListBox, LB_GETTEXT,   i, (LPARAM)calc.buffer);
 			   calc_buffer_display(&calc);
-                        }
+             }
             return 0;
 
 		case ID_STATS_CD:
 			{
-			   int i;
+			   INT i;
 
-			   i = SendMessage(hWndListBox, LB_GETCURSEL, 0, 0);
-                           SendMessage(hWndListBox, LB_DELETESTRING, i, 0);
-                           InvalidateRect(hDlg,NULL,TRUE);
+			   i = (INT) SendMessage(hWndListBox, LB_GETCURSEL, 0, 0);
+               SendMessage(hWndListBox, LB_DELETESTRING, i, 0);
+               InvalidateRect(hDlg,NULL,TRUE);
 			   UpdateWindow(hDlg);
-                        }
+             }
 			return 0;
 
 		case ID_STATS_CAD:

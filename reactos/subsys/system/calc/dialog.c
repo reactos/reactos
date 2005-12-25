@@ -72,11 +72,11 @@ BOOL CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
 
         SetBkMode(hdc, TRANSPARENT);
 
-        TextOut(hdc, 10, 10, c1, _tcslen(c1));
-        TextOut(hdc, 10, 35, c2, _tcslen(c2));
-        TextOut(hdc, 10, 50, c3, _tcslen(c3));
-        TextOut(hdc, 10, 75, c4, _tcslen(c4));
-        TextOut(hdc, 10, 90, c5, _tcslen(c5));
+        TextOut(hdc, 10, 10, c1, (INT) _tcslen(c1));
+        TextOut(hdc, 10, 35, c2, (INT) _tcslen(c2));
+        TextOut(hdc, 10, 50, c3, (INT) _tcslen(c3));
+        TextOut(hdc, 10, 75, c4, (INT) _tcslen(c4));
+        TextOut(hdc, 10, 90, c5, (INT) _tcslen(c5));
 
         SelectObject(hdc, hFontOrg);
 
