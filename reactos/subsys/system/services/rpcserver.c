@@ -2081,8 +2081,55 @@ ScmrQueryServiceStatusEx(handle_t BindingHandle,
                          unsigned long cbBufSize,
                          unsigned long *pcbBytesNeeded) /* out */
 {
-    DPRINT1("ScmrQueryServiceStatusEx() is unimplemented\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    LPSERVICE_STATUS_PROCESS lpStatus;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService;
+
+    DPRINT("ScmrQueryServiceStatusEx() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    if (InfoLevel != SC_STATUS_PROCESS_INFO)
+        return ERROR_INVALID_LEVEL;
+
+    *pcbBytesNeeded = sizeof(SERVICE_STATUS_PROCESS);
+
+    if (cbBufSize < sizeof(SERVICE_STATUS_PROCESS))
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SERVICE_QUERY_STATUS))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    lpStatus = (LPSERVICE_STATUS_PROCESS)lpBuffer;
+
+    /* Return service status information */
+    RtlCopyMemory(lpStatus,
+                  &lpService->Status,
+                  sizeof(SERVICE_STATUS));
+
+    lpStatus->dwProcessId = lpService->ProcessId;	/* FIXME */
+    lpStatus->dwServiceFlags = 0;			/* FIXME */
+
+    return ERROR_SUCCESS;
 }
 
 
