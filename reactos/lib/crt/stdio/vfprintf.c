@@ -367,13 +367,20 @@ static int numberf(FILE * f, double __n, char exp_sign,  int size, int precision
 			}
 
 		tmp = buf;
+		
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
 			j = 0;
-			while ( j < i && ( *tmp == '0' || *tmp == '.' )) {
+			while ( j < i && *tmp == L'0' ) {
+					tmp++;
+					i--;
+			}
+			if ( j < i && *tmp == L'.' ) {
 					tmp++;
 					i--;
 			}
 		}
+		
+		
 //		else
 //			while (i < precision--)
 //				putc('0', f);
