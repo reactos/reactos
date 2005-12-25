@@ -20,6 +20,7 @@
 	<file>checklist.c</file>
 	<file>guid.c</file>
 	<file>misc.c</file>
+	<file>sidcache.c</file>
 	<file>aclui.rc</file>
 	<pch>precomp.h</pch>
 </module>

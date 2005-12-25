@@ -28,7 +28,18 @@
  */
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 HINSTANCE hDllInstance;
+
+#define SIDN_LOOKUPSUCCEEDED    (0x101)
+typedef struct _SIDLOOKUPNOTIFYINFO
+{
+    NMHDR nmh;
+    PSID Sid;
+    PSIDREQRESULT SidRequestResult;
+} SIDLOOKUPNOTIFYINFO, *PSIDLOOKUPNOTIFYINFO;
 
 static PSID
 AceHeaderToSID(IN PACE_HEADER AceHeader)
@@ -77,6 +88,8 @@ DestroySecurityPage(IN PSECURITY_PAGE sp)
         ImageList_Destroy(sp->hiPrincipals);
     }
 
+    DestroySidCacheMgr(sp->SidCacheMgr);
+
     HeapFree(GetProcessHeap(),
              0,
              sp);
@@ -85,7 +98,8 @@ DestroySecurityPage(IN PSECURITY_PAGE sp)
 }
 
 static VOID
-FreePrincipalsList(IN PPRINCIPAL_LISTITEM *PrincipalsListHead)
+FreePrincipalsList(IN PSECURITY_PAGE sp,
+                   IN PPRINCIPAL_LISTITEM *PrincipalsListHead)
 {
     PPRINCIPAL_LISTITEM CurItem, NextItem;
     PACE_ENTRY AceEntry, NextAceEntry;
@@ -105,6 +119,12 @@ FreePrincipalsList(IN PPRINCIPAL_LISTITEM *PrincipalsListHead)
         }
 
         /* free the SID string if present */
+        if (CurItem->SidReqResult != NULL)
+        {
+            DereferenceSidReqResult(sp->SidCacheMgr,
+                                    CurItem->SidReqResult);
+        }
+
         if (CurItem->DisplayString != NULL)
         {
             LocalFree((HLOCAL)CurItem->DisplayString);
@@ -179,43 +199,50 @@ FindSidInPrincipalsListAddAce(IN PPRINCIPAL_LISTITEM PrincipalsListHead,
     return NULL;
 }
 
-static BOOL
+static VOID
+SidLookupCompletion(IN HANDLE SidCacheMgr,
+                    IN PSID Sid,
+                    IN PSIDREQRESULT SidRequestResult,
+                    IN PVOID Context)
+{
+    PSECURITY_PAGE sp = (PSECURITY_PAGE)Context;
+
+    /* NOTE: this routine may be executed in a different thread
+             than the GUI! */
+
+    if (SidRequestResult != NULL)
+    {
+        SIDLOOKUPNOTIFYINFO LookupInfo;
+
+        LookupInfo.nmh.hwndFrom = sp->hWnd;
+        LookupInfo.nmh.idFrom = 0;
+        LookupInfo.nmh.code = SIDN_LOOKUPSUCCEEDED;
+        LookupInfo.Sid = Sid;
+        LookupInfo.SidRequestResult = SidRequestResult;
+
+        /* notify the page that the sid lookup succeeded */
+        SendMessage(sp->hWnd,
+                    WM_NOTIFY,
+                    (WPARAM)LookupInfo.nmh.idFrom,
+                    (LPARAM)&LookupInfo.nmh);
+    }
+}
+
+static PPRINCIPAL_LISTITEM
 AddPrincipalToList(IN PSECURITY_PAGE sp,
                    IN PSID Sid,
-                   IN PACE_HEADER AceHeader)
+                   IN PACE_HEADER AceHeader,
+                   OUT BOOL *LookupDeferred  OPTIONAL)
 {
-    PPRINCIPAL_LISTITEM PrincipalListItem = NULL;
-    PACE_ENTRY AceEntry = NULL;
-    BOOL Ret = FALSE;
+    PPRINCIPAL_LISTITEM PrincipalListItem = NULL, *PrincipalLink;
+    PACE_ENTRY AceEntry;
+    BOOL Deferred = FALSE;
 
     if (!FindSidInPrincipalsListAddAce(sp->PrincipalsListHead,
                                        Sid,
                                        AceHeader))
     {
-        DWORD SidLength, AccountNameSize, DomainNameSize;
-        SID_NAME_USE SidNameUse;
-        DWORD LookupResult;
-        PPRINCIPAL_LISTITEM PrincipalListItem, *PrincipalLink;
-
-        AccountNameSize = 0;
-        DomainNameSize = 0;
-
-        /* calculate the size of the buffer we need to calculate */
-        if (!LookupAccountSid(sp->ServerName,
-                              Sid,
-                              NULL,
-                              &AccountNameSize,
-                              NULL,
-                              &DomainNameSize,
-                              &SidNameUse))
-        {
-            LookupResult = GetLastError();
-            if (LookupResult != ERROR_NONE_MAPPED &&
-                LookupResult != ERROR_INSUFFICIENT_BUFFER)
-            {
-                goto Cleanup;
-            }
-        }
+        DWORD SidLength;
         
         PrincipalLink = &sp->PrincipalsListHead;
         while (*PrincipalLink != NULL)
@@ -228,232 +255,215 @@ AddPrincipalToList(IN PSECURITY_PAGE sp,
         /* allocate the principal */
         PrincipalListItem = HeapAlloc(GetProcessHeap(),
                                       0,
-                                      sizeof(PRINCIPAL_LISTITEM) + SidLength +
-                                          ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
+                                      sizeof(PRINCIPAL_LISTITEM) + SidLength);
         if (PrincipalListItem != NULL)
         {
-            PrincipalListItem->AccountName = (LPWSTR)((ULONG_PTR)(PrincipalListItem + 1) + SidLength);
-            PrincipalListItem->DomainName = PrincipalListItem->AccountName + AccountNameSize;
+            PrincipalListItem->DisplayString = NULL;
+            PrincipalListItem->SidReqResult = NULL;
 
             CopySid(SidLength,
                     (PSID)(PrincipalListItem + 1),
                     Sid);
 
-            LookupResult = ERROR_SUCCESS;
-            if (!LookupAccountSid(sp->ServerName,
-                                  Sid,
-                                  PrincipalListItem->AccountName,
-                                  &AccountNameSize,
-                                  PrincipalListItem->DomainName,
-                                  &DomainNameSize,
-                                  &SidNameUse))
-            {
-                LookupResult = GetLastError();
-                if (LookupResult != ERROR_NONE_MAPPED)
-                {
-                    goto Cleanup;
-                }
-            }
-
-            if (AccountNameSize == 0)
-            {
-                PrincipalListItem->AccountName = NULL;
-            }
-            if (DomainNameSize == 0)
-            {
-                PrincipalListItem->DomainName = NULL;
-            }
-
             /* allocate some memory for the ACE and copy it */
             AceEntry = HeapAlloc(GetProcessHeap(),
                                  0,
                                  sizeof(ACE_ENTRY) + AceHeader->AceSize);
-            if (AceEntry == NULL)
+            if (AceEntry != NULL)
             {
-                goto Cleanup;
-            }
-            AceEntry->Next = NULL;
-            CopyMemory(AceEntry + 1,
-                       AceHeader,
-                       AceHeader->AceSize);
+                AceEntry->Next = NULL;
+                CopyMemory(AceEntry + 1,
+                           AceHeader,
+                           AceHeader->AceSize);
 
-            /* add the ACE to the list */
-            PrincipalListItem->ACEs = AceEntry;
+                /* add the ACE to the list */
+                PrincipalListItem->ACEs = AceEntry;
 
-            PrincipalListItem->Next = NULL;
-            Ret = TRUE;
+                PrincipalListItem->Next = NULL;
 
-            if (LookupResult == ERROR_NONE_MAPPED)
-            {
-                if (!ConvertSidToStringSid(Sid,
-                                           &PrincipalListItem->DisplayString))
-                {
-                    PrincipalListItem->DisplayString = NULL;
-                }
+                /* append item to the principals list */
+                *PrincipalLink = PrincipalListItem;
+
+                /* lookup the SID now */
+                Deferred = !LookupSidCache(sp->SidCacheMgr,
+                                           Sid,
+                                           SidLookupCompletion,
+                                           sp);
             }
             else
             {
-                LSA_HANDLE LsaHandle;
-                NTSTATUS Status;
-
-                PrincipalListItem->DisplayString = NULL;
-
-                /* read the domain of the SID */
-                if (OpenLSAPolicyHandle(sp->ServerName,
-                                        POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
-                                        &LsaHandle))
-                {
-                    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain;
-                    PLSA_TRANSLATED_NAME Names;
-                    PLSA_TRUST_INFORMATION Domain;
-                    PLSA_UNICODE_STRING DomainName;
-                    PPOLICY_ACCOUNT_DOMAIN_INFO PolicyAccountDomainInfo = NULL;
-
-                    Status = LsaLookupSids(LsaHandle,
-                                           1,
-                                           &Sid,
-                                           &ReferencedDomain,
-                                           &Names);
-                    if (NT_SUCCESS(Status))
-                    {
-                        if (ReferencedDomain != NULL &&
-                            Names->DomainIndex >= 0)
-                        {
-                            Domain = &ReferencedDomain->Domains[Names->DomainIndex];
-                            DomainName = &Domain->Name;
-                        }
-                        else
-                        {
-                            Domain = NULL;
-                            DomainName = NULL;
-                        }
-
-                        PrincipalListItem->SidNameUse = Names->Use;
-
-                        switch (Names->Use)
-                        {
-                            case SidTypeAlias:
-                                if (Domain != NULL)
-                                {
-                                    /* query the domain name for BUILTIN accounts */
-                                    Status = LsaQueryInformationPolicy(LsaHandle,
-                                                                       PolicyAccountDomainInformation,
-                                                                       (PVOID*)&PolicyAccountDomainInfo);
-                                    if (NT_SUCCESS(Status))
-                                    {
-                                        DomainName = &PolicyAccountDomainInfo->DomainName;
-
-                                        /* make the user believe this is a group */
-                                        PrincipalListItem->SidNameUse = SidTypeGroup;
-                                    }
-                                }
-                                /* fall through */
-
-                            case SidTypeUser:
-                            {
-                                if (Domain != NULL)
-                                {
-                                    SIZE_T Size = (AccountNameSize + DomainName->Length +
-                                                   Names->Name.Length + 6) * sizeof(WCHAR);
-                                    PrincipalListItem->DisplayString = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                                                                    Size);
-                                    if (PrincipalListItem->DisplayString != NULL)
-                                    {
-                                        WCHAR *s;
-
-                                        /* NOTE: LSA_UNICODE_STRINGs are not always NULL-terminated! */
-
-                                        wcscpy(PrincipalListItem->DisplayString,
-                                               PrincipalListItem->AccountName);
-                                        wcscat(PrincipalListItem->DisplayString,
-                                               L" (");
-                                        s = PrincipalListItem->DisplayString + wcslen(PrincipalListItem->DisplayString);
-                                        CopyMemory(s,
-                                                   DomainName->Buffer,
-                                                   DomainName->Length);
-                                        s += DomainName->Length / sizeof(WCHAR);
-                                        *(s++) = L'\\';
-                                        CopyMemory(s,
-                                                   Names->Name.Buffer,
-                                                   Names->Name.Length);
-                                        s += Names->Name.Length / sizeof(WCHAR);
-                                        *(s++) = L')';
-                                        *s = L'\0';
-                                    }
-                                    else
-                                    {
-                                        Ret = FALSE;
-                                        break;
-                                    }
-
-                                    /* mark the ace as a user unless it's a
-                                       BUILTIN account */
-                                    if (PolicyAccountDomainInfo == NULL)
-                                    {
-                                        PrincipalListItem->SidNameUse = SidTypeUser;
-                                    }
-                                }
-                                break;
-                            }
-
-                            case SidTypeWellKnownGroup:
-                            {
-                                /* make the user believe this is a group */
-                                PrincipalListItem->SidNameUse = SidTypeGroup;
-                                break;
-                            }
-
-                            default:
-                            {
-                                DPRINT("Unhandled SID type: 0x%x\n", Names->Use);
-                                break;
-                            }
-                        }
-
-                        if (PolicyAccountDomainInfo != NULL)
-                        {
-                            LsaFreeMemory(PolicyAccountDomainInfo);
-                        }
-
-                        LsaFreeMemory(ReferencedDomain);
-                        LsaFreeMemory(Names);
-                    }
-                    LsaClose(LsaHandle);
-                }
-            }
-
-            if (Ret)
-            {
-                /* append item to the principals list */
-                *PrincipalLink = PrincipalListItem;
+                HeapFree(GetProcessHeap(),
+                         0,
+                         PrincipalListItem);
+                PrincipalListItem = NULL;
             }
         }
     }
 
-    if (!Ret)
+    if (PrincipalListItem != NULL && LookupDeferred != NULL)
     {
-Cleanup:
-        if (PrincipalListItem != NULL)
-        {
-            if (PrincipalListItem->DisplayString != NULL)
-            {
-                LocalFree((HLOCAL)PrincipalListItem->DisplayString);
-            }
+        *LookupDeferred = Deferred;
+    }
 
-            HeapFree(GetProcessHeap(),
-                     0,
-                     PrincipalListItem);
+    return PrincipalListItem;
+}
+
+static LPWSTR
+GetPrincipalDisplayString(IN PPRINCIPAL_LISTITEM PrincipalListItem)
+{
+    LPWSTR lpDisplayString = NULL;
+
+    if (PrincipalListItem->SidReqResult != NULL)
+    {
+        if (PrincipalListItem->SidReqResult->SidNameUse == SidTypeUser ||
+            PrincipalListItem->SidReqResult->SidNameUse == SidTypeGroup)
+        {
+            LoadAndFormatString(hDllInstance,
+                                IDS_USERDOMAINFORMAT,
+                                &lpDisplayString,
+                                PrincipalListItem->SidReqResult->AccountName,
+                                PrincipalListItem->SidReqResult->DomainName,
+                                PrincipalListItem->SidReqResult->AccountName);
         }
-
-        if (AceEntry != NULL)
+        else
         {
-            HeapFree(GetProcessHeap(),
-                     0,
-                     AceEntry);
+            LoadAndFormatString(hDllInstance,
+                                IDS_USERFORMAT,
+                                &lpDisplayString,
+                                PrincipalListItem->SidReqResult->AccountName);
         }
     }
+    else
+    {
+        ConvertSidToStringSid((PSID)(PrincipalListItem + 1),
+                              &lpDisplayString);
+    }
+
+    return lpDisplayString;
+}
+
+static VOID
+CreatePrincipalListItem(OUT LVITEM *li,
+                        IN PSECURITY_PAGE sp,
+                        IN PPRINCIPAL_LISTITEM PrincipalListItem,
+                        IN INT Index,
+                        IN BOOL Selected)
+{
+    INT ImageIndex = 2;
+
+    if (PrincipalListItem->SidReqResult != NULL)
+    {
+        switch (PrincipalListItem->SidReqResult->SidNameUse)
+        {
+            case SidTypeUser:
+                ImageIndex = 0;
+                break;
+            case SidTypeWellKnownGroup:
+            case SidTypeGroup:
+                ImageIndex = 1;
+                break;
+            default:
+                break;
+        }
+    }
+
+    li->mask = LVIF_IMAGE | LVIF_PARAM | LVIF_STATE | LVIF_TEXT;
+    li->iItem = Index;
+    li->iSubItem = 0;
+    li->state = (Selected ? LVIS_SELECTED : 0);
+    li->stateMask = LVIS_SELECTED;
+    li->pszText = PrincipalListItem->DisplayString;
+    li->iImage = ImageIndex;
+    li->lParam = (LPARAM)PrincipalListItem;
+}
+
+static INT
+AddPrincipalListEntry(IN PSECURITY_PAGE sp,
+                      IN PPRINCIPAL_LISTITEM PrincipalListItem,
+                      IN INT Index,
+                      IN BOOL Selected)
+{
+    LVITEM li;
+    INT Ret;
+
+    if (PrincipalListItem->DisplayString != NULL)
+    {
+        LocalFree((HLOCAL)PrincipalListItem->DisplayString);
+    }
+    PrincipalListItem->DisplayString = GetPrincipalDisplayString(PrincipalListItem);
+
+    CreatePrincipalListItem(&li,
+                            sp,
+                            PrincipalListItem,
+                            Index,
+                            Selected);
+
+    Ret = ListView_InsertItem(sp->hWndPrincipalsList,
+                              &li);
 
     return Ret;
+}
+
+static int CALLBACK
+PrincipalCompare(IN LPARAM lParam1,
+                 IN LPARAM lParam2,
+                 IN LPARAM lParamSort)
+{
+    PPRINCIPAL_LISTITEM Item1 = (PPRINCIPAL_LISTITEM)lParam1;
+    PPRINCIPAL_LISTITEM Item2 = (PPRINCIPAL_LISTITEM)lParam2;
+
+    if (Item1->DisplayString != NULL && Item2->DisplayString != NULL)
+    {
+        return wcscmp(Item1->DisplayString,
+                      Item2->DisplayString);
+    }
+
+    return 0;
+}
+
+static VOID
+UpdatePrincipalListItem(IN PSECURITY_PAGE sp,
+                        IN INT PrincipalIndex,
+                        IN PPRINCIPAL_LISTITEM PrincipalListItem,
+                        IN PSIDREQRESULT SidReqResult)
+{
+    LVITEM li;
+
+    /* replace the request result structure */
+    if (PrincipalListItem->SidReqResult != NULL)
+    {
+        DereferenceSidReqResult(sp->SidCacheMgr,
+                                PrincipalListItem->SidReqResult);
+    }
+
+    ReferenceSidReqResult(sp->SidCacheMgr,
+                          SidReqResult);
+    PrincipalListItem->SidReqResult = SidReqResult;
+
+    /* update the display string */
+    if (PrincipalListItem->DisplayString != NULL)
+    {
+        LocalFree((HLOCAL)PrincipalListItem->DisplayString);
+    }
+    PrincipalListItem->DisplayString = GetPrincipalDisplayString(PrincipalListItem);
+
+    /* update the list item */
+    CreatePrincipalListItem(&li,
+                            sp,
+                            PrincipalListItem,
+                            PrincipalIndex,
+                            FALSE);
+
+    /* don't change the list item state */
+    li.mask &= ~(LVIF_STATE | LVIF_PARAM);
+
+    ListView_SetItem(sp->hWndPrincipalsList,
+                     &li);
+
+    /* sort the principals list view again */
+    ListView_SortItems(sp->hWndPrincipalsList,
+                       PrincipalCompare,
+                       (LPARAM)sp);
 }
 
 static VOID
@@ -465,7 +475,8 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
     HRESULT hRet;
 
     /* delete the cached ACL */
-    FreePrincipalsList(&sp->PrincipalsListHead);
+    FreePrincipalsList(sp,
+                       &sp->PrincipalsListHead);
 
     /* query the ACL */
     hRet = sp->psi->lpVtbl->GetSecurity(sp->psi,
@@ -493,84 +504,28 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
                            (LPVOID*)&AceHeader) &&
                     AceHeader != NULL)
                 {
+                    BOOL LookupDeferred;
+                    PPRINCIPAL_LISTITEM PrincipalListItem;
+
                     Sid = AceHeaderToSID(AceHeader);
 
-                    AddPrincipalToList(sp,
-                                       Sid,
-                                       AceHeader);
+                    PrincipalListItem = AddPrincipalToList(sp,
+                                                           Sid,
+                                                           AceHeader,
+                                                           &LookupDeferred);
+
+                    if (PrincipalListItem != NULL && LookupDeferred)
+                    {
+                        AddPrincipalListEntry(sp,
+                                              PrincipalListItem,
+                                              -1,
+                                              FALSE);
+                    }
                 }
             }
         }
         LocalFree((HLOCAL)SecurityDescriptor);
     }
-}
-
-static INT
-AddPrincipalListEntry(IN PSECURITY_PAGE sp,
-                      IN PPRINCIPAL_LISTITEM PrincipalListItem,
-                      IN INT Index,
-                      IN BOOL Selected)
-{
-    LVITEM li;
-
-    li.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_STATE | LVIF_TEXT;
-    li.iItem = Index;
-    li.iSubItem = 0;
-    li.state = (Selected ? LVIS_SELECTED : 0);
-    li.stateMask = LVIS_SELECTED;
-    li.pszText = (PrincipalListItem->DisplayString != NULL ?
-                  PrincipalListItem->DisplayString :
-                  PrincipalListItem->AccountName);
-
-    switch (PrincipalListItem->SidNameUse)
-    {
-        case SidTypeUser:
-            li.iImage = 0;
-            break;
-        case SidTypeGroup:
-            li.iImage = 1;
-            break;
-        default:
-            li.iImage = -1;
-            break;
-    }
-    li.lParam = (LPARAM)PrincipalListItem;
-
-    return ListView_InsertItem(sp->hWndPrincipalsList,
-                               &li);
-}
-
-static VOID
-FillPrincipalsList(IN PSECURITY_PAGE sp)
-{
-    LPARAM SelLParam;
-    PPRINCIPAL_LISTITEM CurItem;
-    RECT rcLvClient;
-
-    SelLParam = ListViewGetSelectedItemData(sp->hWndPrincipalsList);
-
-    DisableRedrawWindow(sp->hWndPrincipalsList);
-
-    ListView_DeleteAllItems(sp->hWndPrincipalsList);
-
-    for (CurItem = sp->PrincipalsListHead;
-         CurItem != NULL;
-         CurItem = CurItem->Next)
-    {
-        AddPrincipalListEntry(sp,
-                              CurItem,
-                              -1,
-                              (SelLParam == (LPARAM)CurItem));
-    }
-    
-    EnableRedrawWindow(sp->hWndPrincipalsList);
-    
-    GetClientRect(sp->hWndPrincipalsList,
-                  &rcLvClient);
-    
-    ListView_SetColumnWidth(sp->hWndPrincipalsList,
-                            0,
-                            rcLvClient.right);
 }
 
 static VOID
@@ -586,18 +541,22 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
     if (Selected != NULL)
     {
         LPWSTR szLabel;
+        LPWSTR szDisplayString;
 
+        szDisplayString = GetPrincipalDisplayString(Selected);
         if (LoadAndFormatString(hDllInstance,
                                 IDS_PERMISSIONS_FOR,
                                 &szLabel,
-                                Selected->AccountName))
+                                szDisplayString))
         {
             SetWindowText(sp->hPermissionsForLabel,
                           szLabel);
 
             LocalFree((HLOCAL)szLabel);
         }
-        
+
+        LocalFree((HLOCAL)szDisplayString);
+
         /* FIXME - update the checkboxes */
     }
     else
@@ -617,6 +576,54 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
                     CLM_CLEARCHECKBOXES,
                     0,
                     0);
+    }
+}
+
+static void
+UpdatePrincipalInfo(IN PSECURITY_PAGE sp,
+                    IN PSIDLOOKUPNOTIFYINFO LookupInfo)
+{
+    PPRINCIPAL_LISTITEM CurItem;
+
+    for (CurItem = sp->PrincipalsListHead;
+         CurItem != NULL;
+         CurItem = CurItem->Next)
+    {
+        if (EqualSid((PSID)(CurItem + 1),
+                     LookupInfo->Sid))
+        {
+            INT PrincipalIndex;
+            LVFINDINFO lvfi;
+
+            /* find the principal in the list */
+            lvfi.flags = LVFI_PARAM;
+            lvfi.lParam = (LPARAM)CurItem;
+            PrincipalIndex = ListView_FindItem(sp->hWndPrincipalsList,
+                                               -1,
+                                               &lvfi);
+
+            if (PrincipalIndex != -1)
+            {
+                /* update the principal in the list view control */
+                UpdatePrincipalListItem(sp,
+                                        PrincipalIndex,
+                                        CurItem,
+                                        LookupInfo->SidRequestResult);
+
+                if (ListViewGetSelectedItemData(sp->hWndPrincipalsList) == (LPARAM)CurItem)
+                {
+                    UpdateControlStates(sp);
+                }
+            }
+            else
+            {
+                AddPrincipalListEntry(sp,
+                                      CurItem,
+                                      -1,
+                                      FALSE);
+            }
+            break;
+        }
     }
 }
 
@@ -1058,9 +1065,21 @@ AddSelectedPrincipal(IN IDsObjectPicker *pDsObjectPicker,
                                          pSid);
     if (AceHeader != NULL)
     {
-        AddPrincipalToList(sp,
-                           pSid,
-                           AceHeader);
+        PPRINCIPAL_LISTITEM PrincipalListItem;
+        BOOL LookupDeferred;
+
+        PrincipalListItem = AddPrincipalToList(sp,
+                                               pSid,
+                                               AceHeader,
+                                               &LookupDeferred);
+
+        if (PrincipalListItem != NULL && LookupDeferred)
+        {
+            AddPrincipalListEntry(sp,
+                                  PrincipalListItem,
+                                  -1,
+                                  FALSE);
+        }
 
         HeapFree(GetProcessHeap(),
                  0,
@@ -1125,6 +1144,23 @@ SecurityPageProc(IN HWND hwndDlg,
                         }
                     }
                 }
+                else if (pnmh->hwndFrom == sp->hWnd)
+                {
+                    switch(pnmh->code)
+                    {
+                        case SIDN_LOOKUPSUCCEEDED:
+                        {
+                            PSIDLOOKUPNOTIFYINFO LookupInfo = CONTAINING_RECORD(lParam,
+                                                                                SIDLOOKUPNOTIFYINFO,
+                                                                                nmh);
+
+                            /* a SID lookup succeeded, update the information */
+                            UpdatePrincipalInfo(sp,
+                                                LookupInfo);
+                            break;
+                        }
+                    }
+                }
                 break;
             }
             
@@ -1152,9 +1188,6 @@ SecurityPageProc(IN HWND hwndDlg,
                             
                             /* delete the instance */
                             FreeObjectPicker(sp->pDsObjectPicker);
-                            
-                            /* reload the principal list */
-                            FillPrincipalsList(sp);
                         }
                         else
                         {
@@ -1203,13 +1236,6 @@ SecurityPageProc(IN HWND hwndDlg,
                     sp->hPermissionsForLabel = GetDlgItem(hwndDlg, IDC_LABEL_PERMISSIONS_FOR);
                     
                     sp->SpecialPermCheckIndex = -1;
-                    
-                    if ((sp->ObjectInfo.dwFlags & SI_SERVER_IS_DC) &&
-                        sp->ObjectInfo.pszServerName != NULL &&
-                        sp->ObjectInfo.pszServerName[0] != L'\0')
-                    {
-                        sp->ServerName = sp->ObjectInfo.pszServerName;
-                    }
 
                     /* save the pointer to the structure */
                     SetWindowLongPtr(hwndDlg,
@@ -1248,8 +1274,6 @@ SecurityPageProc(IN HWND hwndDlg,
                                           &lvc);
                     
                     ReloadPrincipalsList(sp);
-
-                    FillPrincipalsList(sp);
                     
                     ListViewSelectItem(sp->hWndPrincipalsList,
                                        0);
@@ -1313,6 +1337,8 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     PROPSHEETPAGE psp = {0};
     PSECURITY_PAGE sPage;
     SI_OBJECT_INFO ObjectInfo = {0};
+    HANDLE SidCacheMgr;
+    LPCWSTR SystemName = NULL;
     HRESULT hRet;
 
     if (psi == NULL)
@@ -1336,10 +1362,26 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
         DPRINT("CreateSecurityPage() failed! Failed to query the object information!\n");
         return NULL;
     }
-    
+
+    if ((ObjectInfo.dwFlags & SI_SERVER_IS_DC) &&
+         ObjectInfo.pszServerName != NULL &&
+         ObjectInfo.pszServerName[0] != L'\0')
+    {
+        SystemName = ObjectInfo.pszServerName;
+    }
+
+    SidCacheMgr = CreateSidCacheMgr(GetProcessHeap(),
+                                    SystemName);
+    if (SidCacheMgr == NULL)
+    {
+        DPRINT("Creating the SID cache failed!\n");
+        return NULL;
+    }
+
     hRet = CoInitialize(NULL);
     if (FAILED(hRet))
     {
+        DestroySidCacheMgr(SidCacheMgr);
         DPRINT("CoInitialize failed!\n");
         return NULL;
     }
@@ -1349,13 +1391,19 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
                       sizeof(SECURITY_PAGE));
     if (sPage == NULL)
     {
+        DestroySidCacheMgr(SidCacheMgr);
+        CoUninitialize();
+
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         
         DPRINT("Not enough memory to allocate a SECURITY_PAGE!\n");
         return NULL;
     }
+
     sPage->psi = psi;
     sPage->ObjectInfo = ObjectInfo;
+    sPage->ServerName = SystemName;
+    sPage->SidCacheMgr = SidCacheMgr;
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_USECALLBACK;

@@ -28,6 +28,9 @@
  */
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 #define CI_TEXT_MARGIN_WIDTH    (8)
 #define CI_TEXT_MARGIN_HEIGHT   (3)
 #define CI_TEXT_SELECTIONMARGIN (1)
@@ -1476,10 +1479,7 @@ CheckListWndProc(IN HWND hwnd,
     
     if (infoPtr == NULL && uMsg != WM_CREATE)
     {
-        return DefWindowProc(hwnd,
-                             uMsg,
-                             wParam,
-                             lParam);
+        goto HandleDefaultMessage;
     }
     
     Ret = 0;
@@ -2224,11 +2224,7 @@ CheckListWndProc(IN HWND hwnd,
                 
                 default:
                 {
-                    Ret = DefWindowProc(hwnd,
-                                        uMsg,
-                                        wParam,
-                                        lParam);
-                    break;
+                    goto HandleDefaultMessage;
                 }
             }
             break;
@@ -2568,6 +2564,7 @@ CheckListWndProc(IN HWND hwnd,
         
         default:
         {
+HandleDefaultMessage:
             Ret = DefWindowProc(hwnd,
                                 uMsg,
                                 wParam,

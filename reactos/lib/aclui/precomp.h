@@ -1,4 +1,7 @@
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
 #include <windows.h>
+#include <ndk/ntndk.h>
 #include <commctrl.h>
 #include <oleauto.h>
 #include <objsel.h>
@@ -11,13 +14,6 @@
 #include <tmschema.h>
 #endif
 #include "resource.h"
-
-ULONG DbgPrint(PCH Format,...);
-#define DPRINT DbgPrint
-
-#ifndef NT_SUCCESS
-#define NT_SUCCESS(status) ((LONG)(status) >= 0)
-#endif
 
 #define EnableRedrawWindow(hwnd) \
     SendMessage((hwnd), WM_SETREDRAW, TRUE, 0)
@@ -35,11 +31,9 @@ typedef struct _ACE_ENTRY
 typedef struct _PRINCIPAL_LISTITEM
 {
     struct _PRINCIPAL_LISTITEM *Next;
+    struct _SIDREQRESULT *SidReqResult;
     PACE_ENTRY ACEs;
-    SID_NAME_USE SidNameUse;
-    WCHAR *DisplayString;
-    WCHAR *AccountName;
-    WCHAR *DomainName;
+    LPWSTR DisplayString;
 } PRINCIPAL_LISTITEM, *PPRINCIPAL_LISTITEM;
 
 typedef struct _SECURITY_PAGE
@@ -54,9 +48,9 @@ typedef struct _SECURITY_PAGE
     /* Main Principals List */
     HWND hWndPrincipalsList;
     PPRINCIPAL_LISTITEM PrincipalsListHead;
-    
+
     INT ControlsMargin;
-    
+
     INT SpecialPermCheckIndex;
 
     HIMAGELIST hiPrincipals;
@@ -64,18 +58,14 @@ typedef struct _SECURITY_PAGE
     LPSECURITYINFO psi;
     SI_OBJECT_INFO ObjectInfo;
     IDsObjectPicker *pDsObjectPicker;
-    
+
     SI_ACCESS DefaultAccess;
-    
-    LPWSTR ServerName;
+
+    HANDLE SidCacheMgr;
+    LPCWSTR ServerName;
 } SECURITY_PAGE, *PSECURITY_PAGE;
 
 /* MISC ***********************************************************************/
-
-BOOL
-OpenLSAPolicyHandle(IN LPWSTR SystemName,
-                    IN ACCESS_MASK DesiredAccess,
-                    OUT PLSA_HANDLE PolicyHandle);
 
 DWORD
 LoadAndFormatString(IN HINSTANCE hInstance,
@@ -162,5 +152,45 @@ WINAPI
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
         IN LPVOID lpvReserved);
+
+/* SIDCACHE *******************************************************************/
+
+typedef struct _SIDREQRESULT
+{
+    LONG RefCount;
+    SID_NAME_USE SidNameUse;
+    LPWSTR AccountName;
+    LPWSTR DomainName;
+} SIDREQRESULT, *PSIDREQRESULT;
+
+typedef VOID (*PSIDREQCOMPLETIONPROC)(IN HANDLE SidCacheMgr,
+                                      IN PSID Sid,
+                                      IN PSIDREQRESULT SidRequestResult,
+                                      IN PVOID Context);
+
+HANDLE
+CreateSidCacheMgr(IN HANDLE Heap,
+                  IN LPCWSTR SystemName);
+
+VOID
+DestroySidCacheMgr(IN HANDLE SidCacheMgr);
+
+VOID
+DequeueSidLookup(IN HANDLE SidCacheMgr,
+                 IN PSID pSid);
+
+BOOL
+LookupSidCache(IN HANDLE SidCacheMgr,
+               IN PSID pSid,
+               IN PSIDREQCOMPLETIONPROC CompletionProc,
+               IN PVOID Context);
+
+VOID
+ReferenceSidReqResult(IN HANDLE SidCacheMgr,
+                      IN PSIDREQRESULT ReqResult);
+
+VOID
+DereferenceSidReqResult(IN HANDLE SidCacheMgr,
+                        IN PSIDREQRESULT ReqResult);
 
 /* EOF */

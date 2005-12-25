@@ -28,6 +28,9 @@
  */
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static PCWSTR ObjectPickerAttributes[] =
 {
     L"ObjectSid",
@@ -125,40 +128,6 @@ LoadAndFormatString(IN HINSTANCE hInstance,
     }
 
     return Ret;
-}
-
-BOOL
-OpenLSAPolicyHandle(IN LPWSTR SystemName,
-                    IN ACCESS_MASK DesiredAccess,
-                    OUT PLSA_HANDLE PolicyHandle)
-{
-    LSA_OBJECT_ATTRIBUTES LsaObjectAttributes = {0};
-    LSA_UNICODE_STRING LsaSystemName, *psn;
-    NTSTATUS Status;
-
-    if (SystemName != NULL)
-    {
-        LsaSystemName.Buffer = SystemName;
-        LsaSystemName.Length = wcslen(SystemName) * sizeof(WCHAR);
-        LsaSystemName.MaximumLength = LsaSystemName.Length + sizeof(WCHAR);
-        psn = &LsaSystemName;
-    }
-    else
-    {
-        psn = NULL;
-    }
-
-    Status = LsaOpenPolicy(psn,
-                           &LsaObjectAttributes,
-                           DesiredAccess,
-                           PolicyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(LsaNtStatusToWinError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 LPARAM
