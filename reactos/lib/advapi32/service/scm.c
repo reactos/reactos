@@ -80,26 +80,68 @@ HandleUnbind(VOID)
 /**********************************************************************
  *  ChangeServiceConfigA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-ChangeServiceConfigA(
-    SC_HANDLE   hService,
-    DWORD       dwServiceType,
-    DWORD       dwStartType,
-    DWORD       dwErrorControl,
-    LPCSTR      lpBinaryPathName,
-    LPCSTR      lpLoadOrderGroup,
-    LPDWORD     lpdwTagId,
-    LPCSTR      lpDependencies,
-    LPCSTR      lpServiceStartName,
-    LPCSTR      lpPassword,
-    LPCSTR      lpDisplayName)
+BOOL STDCALL
+ChangeServiceConfigA(SC_HANDLE hService,
+                     DWORD dwServiceType,
+                     DWORD dwStartType,
+                     DWORD dwErrorControl,
+                     LPCSTR lpBinaryPathName,
+                     LPCSTR lpLoadOrderGroup,
+                     LPDWORD lpdwTagId,
+                     LPCSTR lpDependencies,
+                     LPCSTR lpServiceStartName,
+                     LPCSTR lpPassword,
+                     LPCSTR lpDisplayName)
 {
-    DPRINT1("ChangeServiceConfigA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    LPSTR lpStr;
+
+    DPRINT("ChangeServiceConfigA() called\n");
+
+    /* Calculate the Dependencies length*/
+    if (lpDependencies != NULL)
+    {
+        lpStr = (LPSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = strlen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+    }
+
+    /* FIXME: Encrypt the password */
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrChangeServiceConfigA(BindingHandle,
+                                       (unsigned int)hService,
+                                       dwServiceType,
+                                       dwStartType,
+                                       dwErrorControl,
+                                       (LPSTR)lpBinaryPathName,
+                                       (LPSTR)lpLoadOrderGroup,
+                                       lpdwTagId,
+                                       (LPSTR)lpDependencies,
+                                       dwDependenciesLength,
+                                       (LPSTR)lpServiceStartName,
+                                       NULL,              /* FIXME: lpPassword */
+                                       0,                 /* FIXME: dwPasswordLength */
+                                       (LPSTR)lpDisplayName);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrChangeServiceConfigA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -540,15 +582,15 @@ EnumDependentServicesW(SC_HANDLE hService,
 BOOL
 STDCALL
 EnumServiceGroupW(
-    DWORD   Unknown0,
-    DWORD   Unknown1,
-    DWORD   Unknown2,
-    DWORD   Unknown3,
-    DWORD   Unknown4,
-    DWORD   Unknown5,
-    DWORD   Unknown6,
-    DWORD   Unknown7,
-    DWORD   Unknown8)
+    SC_HANDLE               hSCManager,
+    DWORD                   dwServiceType,
+    DWORD                   dwServiceState,
+    LPENUM_SERVICE_STATUSA  lpServices,
+    DWORD                   cbBufSize,
+    LPDWORD                 pcbBytesNeeded,
+    LPDWORD                 lpServicesReturned,
+    LPDWORD                 lpResumeHandle,
+    LPCWSTR                 lpGroup)
 {
     DPRINT1("EnumServiceGroupW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -582,10 +624,9 @@ EnumServicesStatusA(
 /**********************************************************************
  *  EnumServicesStatusW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 EnumServicesStatusW(SC_HANDLE hSCManager,
                     DWORD dwServiceType,
                     DWORD dwServiceState,
@@ -595,10 +636,11 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
                     LPDWORD lpServicesReturned,
                     LPDWORD lpResumeHandle)
 {
-#if 0
+    LPENUM_SERVICE_STATUSW lpStatusPtr;
     DWORD dwError = ERROR_SUCCESS;
+    DWORD dwCount;
 
-    DPRINT1("EnumServicesStatusW() called\n");
+    DPRINT("EnumServicesStatusW() called\n");
 
     HandleBind();
 
@@ -611,23 +653,31 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
                                       pcbBytesNeeded,
                                       lpServicesReturned,
                                       lpResumeHandle);
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
+    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    {
+        if (lpStatusPtr->lpServiceName)
+            lpStatusPtr->lpServiceName =
+                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+        if (lpStatusPtr->lpDisplayName)
+            lpStatusPtr->lpDisplayName =
+                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+        lpStatusPtr++;
+    }
+
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrEnumServicesStatusW() failed (Error %lu)\n", dwError);
+        DPRINT("ScmrEnumServicesStatusW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
 
-
-
-    DPRINT1("ScmrEnumServicesStatusW() done\n");
+    DPRINT("ScmrEnumServicesStatusW() done\n");
 
     return TRUE;
-#endif
-
-    DPRINT1("EnumServicesStatusW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 }
 
 
@@ -682,19 +732,35 @@ EnumServicesStatusExW(SC_HANDLE  hSCManager,
 /**********************************************************************
  *  GetServiceDisplayNameA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-GetServiceDisplayNameA(
-    SC_HANDLE   hSCManager,
-    LPCSTR      lpServiceName,
-    LPSTR       lpDisplayName,
-    LPDWORD     lpcchBuffer)
+BOOL STDCALL
+GetServiceDisplayNameA(SC_HANDLE hSCManager,
+                       LPCSTR lpServiceName,
+                       LPSTR lpDisplayName,
+                       LPDWORD lpcchBuffer)
 {
-    DPRINT1("GetServiceDisplayNameA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("GetServiceDisplayNameA() called\n");
+
+    HandleBind();
+
+    dwError = ScmrGetServiceDisplayNameA(BindingHandle,
+                                         (unsigned int)hSCManager,
+                                         (LPSTR)lpServiceName,
+                                         lpDisplayName,
+                                         lpcchBuffer);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    (*lpcchBuffer)--;
+
+    return TRUE;
 }
 
 
@@ -736,19 +802,35 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
 /**********************************************************************
  *  GetServiceKeyNameA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-GetServiceKeyNameA(
-    SC_HANDLE   hSCManager,
-    LPCSTR      lpDisplayName,
-    LPSTR       lpServiceName,
-    LPDWORD     lpcchBuffer)
+BOOL STDCALL
+GetServiceKeyNameA(SC_HANDLE hSCManager,
+                   LPCSTR lpDisplayName,
+                   LPSTR lpServiceName,
+                   LPDWORD lpcchBuffer)
 {
-    DPRINT1("GetServiceKeyNameA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("GetServiceKeyNameA() called\n");
+
+    HandleBind();
+
+    dwError = ScmrGetServiceKeyNameA(BindingHandle,
+                                     (unsigned int)hSCManager,
+                                     (LPSTR)lpDisplayName,
+                                     lpServiceName,
+                                     lpcchBuffer);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrGetServiceKeyNameA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    (*lpcchBuffer)--;
+
+    return TRUE;
 }
 
 
@@ -1014,19 +1096,63 @@ OpenServiceW(SC_HANDLE hSCManager,
 /**********************************************************************
  *  QueryServiceConfigA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceConfigA(
-    SC_HANDLE       hService,
-    LPQUERY_SERVICE_CONFIGA lpServiceConfig,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceConfigA(SC_HANDLE hService,
+                    LPQUERY_SERVICE_CONFIGA lpServiceConfig,
+                    DWORD cbBufSize,
+                    LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceConfigA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceConfigA(%p, %p, %lu, %p)\n",
+           hService, lpServiceConfig, cbBufSize, pcbBytesNeeded);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceConfigA(BindingHandle,
+                                      (unsigned int)hService,
+                                      (unsigned char *)lpServiceConfig,
+                                      cbBufSize,
+                                      pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrQueryServiceConfigA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    /* Adjust the pointers */
+    if (lpServiceConfig->lpBinaryPathName)
+        lpServiceConfig->lpBinaryPathName =
+            (LPSTR)((ULONG_PTR)lpServiceConfig +
+                    (ULONG_PTR)lpServiceConfig->lpBinaryPathName);
+
+    if (lpServiceConfig->lpLoadOrderGroup)
+        lpServiceConfig->lpLoadOrderGroup =
+            (LPSTR)((ULONG_PTR)lpServiceConfig +
+                    (ULONG_PTR)lpServiceConfig->lpLoadOrderGroup);
+
+    if (lpServiceConfig->lpDependencies)
+        lpServiceConfig->lpDependencies =
+            (LPSTR)((ULONG_PTR)lpServiceConfig +
+                    (ULONG_PTR)lpServiceConfig->lpDependencies);
+
+    if (lpServiceConfig->lpServiceStartName)
+        lpServiceConfig->lpServiceStartName =
+            (LPSTR)((ULONG_PTR)lpServiceConfig +
+                    (ULONG_PTR)lpServiceConfig->lpServiceStartName);
+
+    if (lpServiceConfig->lpDisplayName)
+        lpServiceConfig->lpDisplayName =
+           (LPSTR)((ULONG_PTR)lpServiceConfig +
+                   (ULONG_PTR)lpServiceConfig->lpDisplayName);
+
+    DPRINT("QueryServiceConfigA() done\n");
+
+    return TRUE;
 }
 
 
@@ -1240,19 +1366,36 @@ QueryServiceStatus(SC_HANDLE hService,
 /**********************************************************************
  *  QueryServiceStatusEx
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceStatusEx(SC_HANDLE  hService,
-  SC_STATUS_TYPE  InfoLevel,
-  LPBYTE  lpBuffer,
-  DWORD  cbBufSize,
-  LPDWORD  pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceStatusEx(SC_HANDLE hService,
+                     SC_STATUS_TYPE InfoLevel,
+                     LPBYTE lpBuffer,
+                     DWORD cbBufSize,
+                     LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceStatusEx is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceStatusEx() called\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceStatusEx(BindingHandle,
+                                       (unsigned int)hService,
+                                       InfoLevel,
+                                       lpBuffer,
+                                       cbBufSize,
+                                       pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrQueryServiceStatusEx() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -1350,6 +1493,26 @@ StartServiceW(
     DWORD       dwNumServiceArgs,
     LPCWSTR     *lpServiceArgVectors)
 {
+#if 0
+    DWORD dwError;
+
+    DPRINT("StartServiceW()\n", ScLock);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrStartServiceW(BindingHandle,
+                                dwNumServiceArgs,
+                                lpServiceArgVectors);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrStartServiceW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+#endif
     DPRINT1("StartServiceW is unimplemented, but returns success...\n");
     //SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     //return FALSE;

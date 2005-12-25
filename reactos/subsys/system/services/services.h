@@ -39,6 +39,7 @@ typedef struct _SERVICE
 
 /* VARIABLES ***************************************************************/
 
+extern LIST_ENTRY ServiceListHead;
 extern BOOL ScmShutdown;
 
 
