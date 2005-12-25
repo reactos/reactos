@@ -584,7 +584,7 @@ LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 {
   PROPSHEETHEADER psh;
-  PROPSHEETPAGE psp[3];
+  PROPSHEETPAGE psp[2];
   TCHAR Caption[256];
 
   LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
