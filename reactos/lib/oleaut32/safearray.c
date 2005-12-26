@@ -355,7 +355,9 @@ static HRESULT SAFEARRAY_DestroyData(SAFEARRAY *psa, ULONG ulStartCell)
 /* Copy data items from one array to another */
 static HRESULT SAFEARRAY_CopyData(SAFEARRAY *psa, SAFEARRAY *dest)
 {
-  if (!psa->pvData || !dest->pvData || psa->fFeatures & FADF_DATADELETED)
+  if (!psa->pvData)
+    return S_OK;
+  else if (!dest->pvData || psa->fFeatures & FADF_DATADELETED)
     return E_INVALIDARG;
   else
   {
@@ -1377,6 +1379,12 @@ HRESULT WINAPI SafeArrayCopy(SAFEARRAY *psa, SAFEARRAY **ppsaOut)
 
   if (!psa)
     return S_OK; /* Handles copying of NULL arrays */
+
+  if (!psa->cbElements)
+  {
+    ERR("not copying an array of 0 elements\n");
+    return E_INVALIDARG;
+  }
 
   if (psa->fFeatures & (FADF_RECORD|FADF_HAVEIID|FADF_HAVEVARTYPE))
   {

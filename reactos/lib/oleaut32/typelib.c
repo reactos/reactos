@@ -85,7 +85,7 @@ WINE_DECLARE_DEBUG_CHANNEL(typelib);
 /* The OLE Automation ProxyStub Interface Class (aka Typelib Marshaler) */
 const GUID CLSID_PSOAInterface = { 0x00020424, 0, 0, { 0xC0, 0, 0, 0, 0, 0, 0, 0x46 } };
 
-static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTYPE *vt);
+static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, VARTYPE *vt);
 static HRESULT TLB_AllocAndInitVarDesc(const VARDESC *src, VARDESC **dest_ptr);
 
 /****************************************************************************
@@ -5054,7 +5054,7 @@ _copy_arg(	ITypeInfo2 *tinfo, TYPEDESC *tdesc,
     return E_FAIL;
 }
 
-static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTYPE *vt)
+static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, VARTYPE *vt)
 {
     HRESULT hr = S_OK;
     ITypeInfo *tinfo2 = NULL;
@@ -5088,11 +5088,11 @@ static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTY
         break;
 
     case TKIND_INTERFACE:
-      	if (IsEqualIID(&IID_IDispatch, &tattr->guid))
-      	   *vt |= VT_DISPATCH;
-       	else
-       	   *vt |= VT_UNKNOWN;
-       	break;
+        if (IsEqualIID(&IID_IDispatch, &tattr->guid))
+           *vt |= VT_DISPATCH;
+        else
+           *vt |= VT_UNKNOWN;
+        break;
 
     case TKIND_DISPATCH:
         *vt |= VT_DISPATCH;
@@ -5118,7 +5118,7 @@ static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTY
     return hr;
 }
 
-static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTYPE *vt)
+static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, VARTYPE *vt)
 {
     HRESULT hr = S_OK;
 
@@ -5134,7 +5134,7 @@ static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, TYPEDESC *tdesc, VARTYP
             ((tdesc->vt == VT_PTR) && (tdesc->u.lptdesc->vt == VT_USERDEFINED)))
         {
             VARTYPE vt_userdefined = 0;
-            TYPEDESC *tdesc_userdefined = tdesc;
+            const TYPEDESC *tdesc_userdefined = tdesc;
             if (tdesc->vt == VT_PTR)
             {
                 vt_userdefined = VT_BYREF;

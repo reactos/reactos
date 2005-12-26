@@ -629,7 +629,7 @@ HRESULT WINAPI OleTranslateColor(
   COLORREF colorref;
   BYTE b = HIBYTE(HIWORD(clr));
 
-  TRACE("(%08lx, %p, %p):stub\n", clr, hpal, pColorRef);
+  TRACE("(%08lx, %p, %p)\n", clr, hpal, pColorRef);
 
   /*
    * In case pColorRef is NULL, provide our own to simplify the code.
