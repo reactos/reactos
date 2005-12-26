@@ -262,6 +262,11 @@ IsDeviceHidden(IN DEVINST DevInst,
                OUT BOOL *IsHidden);
 
 BOOL
+IsDriverInstalled(IN DEVINST DevInst,
+                  IN HMACHINE hMachine,
+                  OUT BOOL *Installed);
+
+BOOL
 CanDisableDevice(IN DEVINST DevInst,
                  IN HMACHINE hMachine,
                  OUT BOOL *CanDisable);

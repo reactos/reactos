@@ -532,6 +532,31 @@ IsDeviceStarted(IN DEVINST DevInst,
 
 
 BOOL
+IsDriverInstalled(IN DEVINST DevInst,
+                  IN HMACHINE hMachine,
+                  OUT BOOL *Installed)
+{
+    CONFIGRET cr;
+    ULONG Status, ProblemNumber;
+    BOOL Ret = FALSE;
+
+    cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
+    if (cr == CR_SUCCESS)
+    {
+        *Installed = ((Status & DN_HAS_PROBLEM) != 0 ||
+                      (Status & (DN_DRIVER_LOADED | DN_STARTED)) != 0);
+        Ret = TRUE;
+    }
+
+    return Ret;
+}
+
+
+BOOL
 EnableDevice(IN HDEVINFO DeviceInfoSet,
              IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
              IN BOOL bEnable,
