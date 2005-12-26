@@ -1471,6 +1471,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       TRACE("WM_SETTEXT - NULL\n");
     ME_CommitUndo(editor);
     ME_EmptyUndoStack(editor);
+    ME_SetSelection(editor, 0, 0);
     ME_UpdateRepaint(editor);
     return 0;
   }
