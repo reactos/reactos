@@ -401,7 +401,7 @@ static HRESULT get_callback(IBindCtx *pbc, IBindStatusCallback **callback)
 
     hres = IBindCtx_GetObjectParam(pbc, wszBSCBHolder, (IUnknown**)callback);
     if(FAILED(hres))
-        return INET_E_DATA_NOT_AVAILABLE;
+        return MK_E_SYNTAX;
 
     return S_OK;
 }

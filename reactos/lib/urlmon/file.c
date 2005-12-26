@@ -110,7 +110,9 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     LARGE_INTEGER size;
     DWORD len;
     LPWSTR url, mime = NULL;
+    LPCWSTR file_name;
     WCHAR null_char = 0;
+    BOOL first_call = FALSE;
     HRESULT hres;
 
     static const WCHAR wszFile[]  = {'f','i','l','e',':'};
@@ -134,39 +136,51 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         return hres;
     }
 
-    hres = FindMimeFromData(NULL, url, NULL, 0, NULL, 0, &mime, 0);
-    if(SUCCEEDED(hres))
-        IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_DIRECTBIND, mime);
+    if(!(grfBINDF & BINDF_FROMURLMON))
+        IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_DIRECTBIND, NULL);
 
     if(!This->file) {
+        first_call = TRUE;
+
         IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, &null_char);
 
-        This->file = CreateFileW(url+sizeof(wszFile)/sizeof(WCHAR), GENERIC_READ, FILE_SHARE_READ,
-                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        file_name = url+sizeof(wszFile)/sizeof(WCHAR);
+        if(file_name[0] == '/' && file_name[1] == '/' && file_name[2] == '/')
+            file_name += 3;
+
+        This->file = CreateFileW(file_name, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
         if(This->file == INVALID_HANDLE_VALUE) {
             This->file = NULL;
             IInternetProtocolSink_ReportResult(pOIProtSink, INET_E_RESOURCE_NOT_FOUND,
                     GetLastError(), NULL);
             HeapFree(GetProcessHeap(), 0, url);
-            CoTaskMemFree(mime);
             return INET_E_RESOURCE_NOT_FOUND;
         }
 
-        IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_CACHEFILENAMEAVAILABLE,
-                url+sizeof(wszFile)/sizeof(WCHAR));
-        if(mime)
-            IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_MIMETYPEAVAILABLE, mime);
-        IInternetProtocolSink_ReportResult(pOIProtSink, S_OK, 0, NULL);
+        IInternetProtocolSink_ReportProgress(pOIProtSink,
+                BINDSTATUS_CACHEFILENAMEAVAILABLE, file_name);
+
+        hres = FindMimeFromData(NULL, url, NULL, 0, NULL, 0, &mime, 0);
+        if(SUCCEEDED(hres)) {
+            IInternetProtocolSink_ReportProgress(pOIProtSink,
+                    (grfBINDF & BINDF_FROMURLMON) ?
+                    BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE : BINDSTATUS_MIMETYPEAVAILABLE,
+                    mime);
+            CoTaskMemFree(mime);
+        }
     }
 
-    CoTaskMemFree(mime);
     HeapFree(GetProcessHeap(), 0, url);
 
     if(GetFileSizeEx(This->file, &size))
         IInternetProtocolSink_ReportData(pOIProtSink,
                 BSCF_FIRSTDATANOTIFICATION|BSCF_LASTDATANOTIFICATION,
                 size.u.LowPart, size.u.LowPart);
+
+    if(first_call)
+        IInternetProtocolSink_ReportResult(pOIProtSink, S_OK, 0, NULL);
 
     return S_OK;
 }
