@@ -260,7 +260,7 @@ The function returns a 64-bit value (Win32 only).
 The entry point is only available on i386 platforms.
 .TP
 .B -register
-The function uses CPU register to pass arguments (Win16 only).
+The function uses CPU register to pass arguments.
 .TP
 .B -private
 The function cannot be imported from other dlls, it can only be

@@ -37,7 +37,32 @@
 #include "build.h"
 
 
+/* check if entry point needs a relay thunk */
+static inline int needs_relay( const ORDDEF *odp )
+{
+    /* skip nonexistent entry points */
+    if (!odp) return 0;
+    /* skip non-functions */
+    if ((odp->type != TYPE_STDCALL) && (odp->type != TYPE_CDECL)) return 0;
+    /* skip norelay and forward entry points */
+    if (odp->flags & (FLAG_NORELAY|FLAG_FORWARD)) return 0;
+    return 1;
+}
 
+/* check if dll will output relay thunks */
+int has_relays( DLLSPEC *spec )
+{
+    unsigned int i;
+
+    if (target_cpu != CPU_x86) return 0;
+
+    for (i = spec->base; i <= spec->limit; i++)
+    {
+        ORDDEF *odp = spec->ordinals[i];
+        if (needs_relay( odp )) return 1;
+    }
+    return 0;
+}
 
 /*******************************************************************
  *         make_internal_name
@@ -60,6 +85,101 @@ static const char *make_internal_name( const ORDDEF *odp, DLLSPEC *spec, const c
     return buffer;
 }
 
+
+/*******************************************************************
+ *         output_relay_debug
+ *
+ * Output entry points for relay debugging
+ */
+static void output_relay_debug( FILE *outfile, DLLSPEC *spec )
+{
+    unsigned int i, j, args, flags;
+
+    /* first the table of entry point offsets */
+
+    fprintf( outfile, "\t%s\n", get_asm_rodata_section() );
+    fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+    fprintf( outfile, ".L__wine_spec_relay_entry_point_offsets:\n" );
+
+    for (i = spec->base; i <= spec->limit; i++)
+    {
+        ORDDEF *odp = spec->ordinals[i];
+
+        if (needs_relay( odp ))
+            fprintf( outfile, "\t.long .L__wine_spec_relay_entry_point_%d-__wine_spec_relay_entry_points\n", i );
+        else
+            fprintf( outfile, "\t.long 0\n" );
+    }
+
+    /* then the table of argument types */
+
+    fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+    fprintf( outfile, ".L__wine_spec_relay_arg_types:\n" );
+
+    for (i = spec->base; i <= spec->limit; i++)
+    {
+        ORDDEF *odp = spec->ordinals[i];
+        unsigned int mask = 0;
+
+        if (needs_relay( odp ))
+        {
+            for (j = 0; j < 16 && odp->u.func.arg_types[j]; j++)
+            {
+                if (odp->u.func.arg_types[j] == 't') mask |= 1<< (j*2);
+                if (odp->u.func.arg_types[j] == 'W') mask |= 2<< (j*2);
+            }
+        }
+        fprintf( outfile, "\t.long 0x%08x\n", mask );
+    }
+
+    /* then the relay thunks */
+
+    fprintf( outfile, "\t.text\n" );
+    fprintf( outfile, "__wine_spec_relay_entry_points:\n" );
+    fprintf( outfile, "\tnop\n" );  /* to avoid 0 offset */
+
+    for (i = spec->base; i <= spec->limit; i++)
+    {
+        ORDDEF *odp = spec->ordinals[i];
+
+        if (!needs_relay( odp )) continue;
+
+        fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+        fprintf( outfile, ".L__wine_spec_relay_entry_point_%d:\n", i );
+
+        if (odp->flags & FLAG_REGISTER)
+            fprintf( outfile, "\tpushl %%eax\n" );
+        else
+            fprintf( outfile, "\tpushl %%esp\n" );
+
+        args = strlen(odp->u.func.arg_types);
+        flags = 0;
+        if (odp->flags & FLAG_RET64) flags |= 1;
+        if (odp->type == TYPE_STDCALL) flags |= 2;
+        fprintf( outfile, "\tpushl $%u\n", (flags << 24) | (args << 16) | (i - spec->base) );
+
+        if (UsePIC)
+        {
+            fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+            fprintf( outfile, "1:\tleal .L__wine_spec_relay_descr-1b(%%eax),%%eax\n" );
+        }
+        else fprintf( outfile, "\tmovl $.L__wine_spec_relay_descr,%%eax\n" );
+        fprintf( outfile, "\tpushl %%eax\n" );
+
+        if (odp->flags & FLAG_REGISTER)
+        {
+            fprintf( outfile, "\tcall *8(%%eax)\n" );
+        }
+        else
+        {
+            fprintf( outfile, "\tcall *4(%%eax)\n" );
+            if (odp->type == TYPE_STDCALL)
+                fprintf( outfile, "\tret $%u\n", args * get_ptr_size() );
+            else
+                fprintf( outfile, "\tret\n" );
+        }
+    }
+}
 
 /*******************************************************************
  *         output_exports
@@ -183,58 +303,27 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
                 fprintf( outfile, "\t%s \"%s\"\n", get_asm_string_keyword(), odp->link_name );
         }
     }
-    fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+    fprintf( outfile, "\t.align %d\n", get_alignment(get_ptr_size()) );
     fprintf( outfile, ".L__wine_spec_exports_end:\n" );
 
     /* output relays */
 
     /* we only support relay debugging on i386 */
-    if (target_cpu == CPU_x86)
+    if (target_cpu != CPU_x86)
     {
-        for (i = spec->base; i <= spec->limit; i++)
-        {
-            ORDDEF *odp = spec->ordinals[i];
-            unsigned int j, args, mask = 0;
-
-            /* skip nonexistent entry points */
-            if (!odp) goto ignore;
-            /* skip non-functions */
-            if ((odp->type != TYPE_STDCALL) && (odp->type != TYPE_CDECL)) goto ignore;
-            /* skip norelay and forward entry points */
-            if (odp->flags & (FLAG_NORELAY|FLAG_FORWARD)) goto ignore;
-
-            for (j = 0; odp->u.func.arg_types[j]; j++)
-            {
-                if (odp->u.func.arg_types[j] == 't') mask |= 1<< (j*2);
-                if (odp->u.func.arg_types[j] == 'W') mask |= 2<< (j*2);
-            }
-            if ((odp->flags & FLAG_RET64) && (j < 16)) mask |= 0x80000000;
-
-            args = strlen(odp->u.func.arg_types) * get_ptr_size();
-
-            switch(odp->type)
-            {
-            case TYPE_STDCALL:
-                fprintf( outfile, "\tjmp %s\n", asm_name(odp->link_name) );
-                fprintf( outfile, "\tret $%d\n", args );
-                fprintf( outfile, "\t.long %s,0x%08x\n", asm_name(odp->link_name), mask );
-                break;
-            case TYPE_CDECL:
-                fprintf( outfile, "\tjmp %s\n", asm_name(odp->link_name) );
-                fprintf( outfile, "\tret\n" );
-                fprintf( outfile, "\t%s %d\n", get_asm_short_keyword(), args );
-                fprintf( outfile, "\t.long %s,0x%08x\n", asm_name(odp->link_name), mask );
-                break;
-            default:
-                assert(0);
-            }
-            continue;
-
-        ignore:
-            fprintf( outfile, "\t.long 0,0,0,0\n" );
-        }
+        fprintf( outfile, "\t%s 0\n", get_asm_ptr_keyword() );
+        return;
     }
-    else fprintf( outfile, "\t.long 0\n" );
+
+    fprintf( outfile, ".L__wine_spec_relay_descr:\n" );
+    fprintf( outfile, "\t%s 0xdeb90001\n", get_asm_ptr_keyword() );  /* magic */
+    fprintf( outfile, "\t%s 0,0\n", get_asm_ptr_keyword() );         /* relay funcs */
+    fprintf( outfile, "\t%s 0\n", get_asm_ptr_keyword() );           /* private data */
+    fprintf( outfile, "\t%s __wine_spec_relay_entry_points\n", get_asm_ptr_keyword() );
+    fprintf( outfile, "\t%s .L__wine_spec_relay_entry_point_offsets\n", get_asm_ptr_keyword() );
+    fprintf( outfile, "\t%s .L__wine_spec_relay_arg_types\n", get_asm_ptr_keyword() );
+
+    output_relay_debug( outfile, spec );
 }
 
 

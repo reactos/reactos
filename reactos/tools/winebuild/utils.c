@@ -585,6 +585,15 @@ const char *get_asm_short_keyword(void)
     }
 }
 
+const char *get_asm_rodata_section(void)
+{
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE: return ".const";
+    default:             return ".section .rodata";
+    }
+}
+
 const char *get_asm_string_section(void)
 {
     switch (target_platform)

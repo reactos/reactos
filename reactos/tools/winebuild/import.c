@@ -1245,5 +1245,6 @@ void output_imports( FILE *outfile, DLLSPEC *spec )
     output_immediate_import_thunks( outfile );
     output_delayed_import_thunks( outfile, spec );
     output_external_link_imports( outfile, spec );
-    if (nb_imports || ext_link_imports.count || has_stubs(spec)) output_get_pc_thunk( outfile );
+    if (nb_imports || ext_link_imports.count || has_stubs(spec) || has_relays(spec))
+        output_get_pc_thunk( outfile );
 }

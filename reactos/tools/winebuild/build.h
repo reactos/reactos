@@ -189,6 +189,7 @@ extern const char *asm_globl( const char *func );
 extern const char *get_asm_ptr_keyword(void);
 extern const char *get_asm_string_keyword(void);
 extern const char *get_asm_short_keyword(void);
+extern const char *get_asm_rodata_section(void);
 extern const char *get_asm_string_section(void);
 extern void output_function_size( FILE *outfile, const char *name );
 
@@ -199,6 +200,7 @@ extern void add_extra_ld_symbol( const char *name );
 extern void read_undef_symbols( DLLSPEC *spec, char **argv );
 extern int resolve_imports( DLLSPEC *spec );
 extern int has_imports(void);
+extern int has_relays( DLLSPEC *spec );
 extern void output_get_pc_thunk( FILE *outfile );
 extern void output_stubs( FILE *outfile, DLLSPEC *spec );
 extern void output_imports( FILE *outfile, DLLSPEC *spec );

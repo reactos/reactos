@@ -849,7 +849,7 @@ static void BuildCallFrom32Regs( FILE *outfile )
     output_function_size( outfile, "__wine_call_from_32_regs" );
 
     function_header( outfile, "__wine_call_from_32_restore_regs" );
-    fprintf( outfile, "\tleal 4(%%esp),%%ecx\n" );
+    fprintf( outfile, "\tmovl 4(%%esp),%%ecx\n" );
     fprintf( outfile, "\tjmp 2b\n" );
     output_function_size( outfile, "__wine_call_from_32_restore_regs" );
 }
