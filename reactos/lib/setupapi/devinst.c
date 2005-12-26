@@ -7369,34 +7369,6 @@ InfIsFromOEMLocation(
     return TRUE;
 }
 
-
-static UINT WINAPI
-NullInstallMsgHandler(
-    IN PVOID Context,
-    UINT Notification,
-    UINT_PTR Param1,
-    UINT_PTR Param2)
-{
-    switch (Notification)
-    {
-        case SPFILENOTIFY_STARTQUEUE: return TRUE;
-        case SPFILENOTIFY_ENDQUEUE: return 0;
-        case SPFILENOTIFY_STARTSUBQUEUE: return TRUE;
-        case SPFILENOTIFY_ENDSUBQUEUE: return 0;
-        case SPFILENOTIFY_STARTDELETE: return FILEOP_SKIP;
-        case SPFILENOTIFY_ENDDELETE: return 0;
-        case SPFILENOTIFY_STARTRENAME: return FILEOP_SKIP;
-        case SPFILENOTIFY_ENDRENAME: return 0;
-        case SPFILENOTIFY_STARTCOPY: return FILEOP_SKIP;
-        case SPFILENOTIFY_ENDCOPY: return 0;
-        case SPFILENOTIFY_NEEDMEDIA: return FILEOP_SKIP;
-        default:
-            FIXME("Notification %u params %p, %p\n", Notification, Param1, Param2 );
-            break;
-    }
-    return 0;
-}
-
 /***********************************************************************
  *		SetupDiInstallDevice (SETUPAPI.@)
  */
@@ -7516,7 +7488,7 @@ SetupDiInstallDevice(
     Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
         SelectedDriver->InfFileDetails->hInf, SectionName,
         DoAction, hKey, NULL, SP_COPY_NEWER,
-        InstallParams.Flags & (DI_NOFILECOPY | DI_NOVCP) ? NullInstallMsgHandler : SetupDefaultQueueCallback, Context,
+        SetupDefaultQueueCallback, Context,
         DeviceInfoSet, DeviceInfoData);
     if (!Result)
         goto cleanup;

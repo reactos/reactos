@@ -864,20 +864,29 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
 
     if (flags & SPINST_FILES)
     {
+        SP_DEVINSTALL_PARAMS_W install_params;
         struct files_callback_info info;
         HSPFILEQ queue;
+        BOOL use_custom_queue;
         BOOL ret;
 
-        if (!(queue = SetupOpenFileQueue())) return FALSE;
-        info.queue      = queue;
+        install_params.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+        use_custom_queue = SetupDiGetDeviceInstallParamsW(devinfo, devinfo_data, &install_params) && (install_params.Flags & DI_NOVCP);
+        if (!use_custom_queue && ((queue = SetupOpenFileQueue()) == (HSPFILEQ)INVALID_HANDLE_VALUE ))
+            return FALSE;
+        info.queue      = use_custom_queue ? install_params.FileQueue : queue;
         info.src_root   = src_root;
         info.copy_flags = copy_flags;
         info.layout     = hinf;
         ret = (iterate_section_fields( hinf, section, CopyFiles, copy_files_callback, &info ) &&
                iterate_section_fields( hinf, section, DelFiles, delete_files_callback, &info ) &&
-               iterate_section_fields( hinf, section, RenFiles, rename_files_callback, &info ) &&
-               SetupCommitFileQueueW( owner, queue, callback, context ));
-        SetupCloseFileQueue( queue );
+               iterate_section_fields( hinf, section, RenFiles, rename_files_callback, &info ));
+        if (!use_custom_queue)
+        {
+            if (ret)
+                ret = SetupCommitFileQueueW( owner, queue, callback, context );
+            SetupCloseFileQueue( queue );
+        }
         if (!ret) return FALSE;
     }
     if (flags & SPINST_INIFILES)
