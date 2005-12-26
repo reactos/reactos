@@ -700,7 +700,7 @@ BOOL WINAPI PathResolveAW(
 /*************************************************************************
 *	PathProcessCommandA	[SHELL32.653]
 */
-HRESULT WINAPI PathProcessCommandA (
+LONG WINAPI PathProcessCommandA (
 	LPCSTR lpszPath,
 	LPSTR lpszBuff,
 	DWORD dwBuffSize,
@@ -708,14 +708,15 @@ HRESULT WINAPI PathProcessCommandA (
 {
 	FIXME("%s %p 0x%04lx 0x%04lx stub\n",
 	lpszPath, lpszBuff, dwBuffSize, dwFlags);
-	strcpy(lpszBuff, lpszPath);
-	return 0;
+	if(!lpszPath) return -1;
+	if(lpszBuff) strcpy(lpszBuff, lpszPath);
+	return strlen(lpszPath);
 }
 
 /*************************************************************************
 *	PathProcessCommandW
 */
-HRESULT WINAPI PathProcessCommandW (
+LONG WINAPI PathProcessCommandW (
 	LPCWSTR lpszPath,
 	LPWSTR lpszBuff,
 	DWORD dwBuffSize,
@@ -723,14 +724,15 @@ HRESULT WINAPI PathProcessCommandW (
 {
 	FIXME("(%s, %p, 0x%04lx, 0x%04lx) stub\n",
 	debugstr_w(lpszPath), lpszBuff, dwBuffSize, dwFlags);
-	strcpyW(lpszBuff, lpszPath);
-	return 0;
+	if(!lpszPath) return -1;
+	if(lpszBuff) strcpyW(lpszBuff, lpszPath);
+	return strlenW(lpszPath);
 }
 
 /*************************************************************************
 *	PathProcessCommand (SHELL32.653)
 */
-HRESULT WINAPI PathProcessCommandAW (
+LONG WINAPI PathProcessCommandAW (
 	LPCVOID lpszPath,
 	LPVOID lpszBuff,
 	DWORD dwBuffSize,

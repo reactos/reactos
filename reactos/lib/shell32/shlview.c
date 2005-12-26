@@ -103,7 +103,8 @@ typedef struct
         IDropTarget*    pCurDropTarget; /* The sub-item, which is currently dragged over */
         IDataObject*    pCurDataObject; /* The dragged data-object */
         LONG            iDragOverItem;  /* Dragged over item's index, iff pCurDropTarget != NULL */
-        UINT            iActiveTimersMask; /* Bookkeeping of activated timers for drag scrolling */
+        UINT            cScrollDelay;   /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
+        POINT           ptLastMousePos; /* Mouse position at last DragOver call */
 } IShellViewImpl;
 
 static const IShellViewVtbl svvt;
@@ -197,7 +198,9 @@ IShellView * IShellView_Constructor( IShellFolder * pFolder)
         sv->pCurDropTarget = NULL;
         sv->pCurDataObject = NULL;
         sv->iDragOverItem = 0;
-        sv->iActiveTimersMask = 0;
+        sv->cScrollDelay = 0;
+        sv->ptLastMousePos.x = 0;
+        sv->ptLastMousePos.y = 0;
 
 	TRACE("(%p)->(%p)\n",sv, pFolder);
 	return (IShellView *) sv;
@@ -2179,48 +2182,6 @@ static ULONG WINAPI ISVDropTarget_Release( IDropTarget *iface)
 }
 
 /******************************************************************************
- * scroll_timer_proc [Internal]
- *
- * Timer callback function for drag&drop scrolling
- */
-
-#define IDT_UP    0x1u
-#define IDT_DOWN  0x2u
-#define IDT_LEFT  0x4u
-#define IDT_RIGHT 0x8u
-
-VOID CALLBACK scroll_timer_proc(HWND hwnd, UINT uMsg, UINT_PTR idTimer, DWORD dwTimer) {
-    switch (idTimer) {
-        case IDT_UP:
-            SendMessageW(hwnd, WM_VSCROLL, SB_LINEUP, 0);
-            break;
-        case IDT_DOWN:
-            SendMessageW(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
-            break;
-        case IDT_LEFT:
-            SendMessageW(hwnd, WM_HSCROLL, SB_LINEUP, 0);
-            break;
-        case IDT_RIGHT:
-            SendMessageW(hwnd, WM_HSCROLL, SB_LINEDOWN, 0);
-            break;
-    }
-}
-
-/******************************************************************************
- * start_stop_timer [Internal]
- */
-static inline void start_stop_timer(IShellViewImpl *This, UINT_PTR idTimer, BOOL fStart) {
-    if (fStart && !(This->iActiveTimersMask & idTimer)) {
-        SetTimer(This->hWndList, idTimer, 200, scroll_timer_proc);
-        This->iActiveTimersMask |= idTimer;
-    }
-    if (!fStart && This->iActiveTimersMask & idTimer) {
-        KillTimer(This->hWndList, idTimer);
-        This->iActiveTimersMask &= ~idTimer;
-    }
-}
-
-/******************************************************************************
  * drag_notify_subitem [Internal]
  *
  * Figure out the shellfolder object, which is currently under the mouse cursor
@@ -2246,13 +2207,28 @@ static HRESULT drag_notify_subitem(IShellViewImpl *This, DWORD grfKeyState, POIN
     ScreenToClient(This->hWndList, &htinfo.pt);
     lResult = SendMessageW(This->hWndList, LVM_HITTEST, 0, (LPARAM)&htinfo);
 
-    /* Start or stop the drag scrolling timers */
+    /* Send WM_*SCROLL messages every 250 ms during drag-scrolling */
     GetClientRect(This->hWndList, &clientRect);
-    start_stop_timer(This, IDT_LEFT,  htinfo.pt.x < SCROLLAREAWIDTH);
-    start_stop_timer(This, IDT_RIGHT, htinfo.pt.x > clientRect.right - SCROLLAREAWIDTH);
-    start_stop_timer(This, IDT_UP,    htinfo.pt.y < SCROLLAREAWIDTH);
-    start_stop_timer(This, IDT_DOWN,  htinfo.pt.y > clientRect.bottom - SCROLLAREAWIDTH);
-
+    if (htinfo.pt.x == This->ptLastMousePos.x && htinfo.pt.y == This->ptLastMousePos.y &&
+        (htinfo.pt.x < SCROLLAREAWIDTH || htinfo.pt.x > clientRect.right - SCROLLAREAWIDTH ||
+         htinfo.pt.y < SCROLLAREAWIDTH || htinfo.pt.y > clientRect.bottom - SCROLLAREAWIDTH ))
+    {
+        This->cScrollDelay = (This->cScrollDelay + 1) % 5; /* DragOver is called every 50 ms */
+        if (This->cScrollDelay == 0) { /* Mouse did hover another 250 ms over the scroll-area */
+            if (htinfo.pt.x < SCROLLAREAWIDTH) 
+                SendMessageW(This->hWndList, WM_HSCROLL, SB_LINEUP, 0);
+            if (htinfo.pt.x > clientRect.right - SCROLLAREAWIDTH)
+                SendMessageW(This->hWndList, WM_HSCROLL, SB_LINEDOWN, 0);
+            if (htinfo.pt.y < SCROLLAREAWIDTH)
+                SendMessageW(This->hWndList, WM_VSCROLL, SB_LINEUP, 0);
+            if (htinfo.pt.y > clientRect.bottom - SCROLLAREAWIDTH)
+                SendMessageW(This->hWndList, WM_VSCROLL, SB_LINEDOWN, 0);
+        }
+    } else {
+        This->cScrollDelay = 0; /* Reset, if the cursor is not over the listview's scroll-area */
+    }
+    This->ptLastMousePos = htinfo.pt;
+ 
     /* If we are still over the previous sub-item, notify it via DragOver and return. */
     if (This->pCurDropTarget && lResult == This->iDragOverItem)
     return IDropTarget_DragOver(This->pCurDropTarget, grfKeyState, pt, pdwEffect);
@@ -2321,11 +2297,6 @@ static HRESULT WINAPI ISVDropTarget_DragLeave(IDropTarget *iface) {
     This->pCurDropTarget = NULL;
     This->iDragOverItem = 0;
      
-    start_stop_timer(This, IDT_LEFT,  FALSE);
-    start_stop_timer(This, IDT_RIGHT, FALSE);
-    start_stop_timer(This, IDT_UP,    FALSE);
-    start_stop_timer(This, IDT_DOWN,  FALSE);
-   
     return S_OK;
 }
 
@@ -2342,11 +2313,6 @@ static HRESULT WINAPI ISVDropTarget_Drop(IDropTarget *iface, IDataObject* pDataO
     This->pCurDropTarget = NULL;
     This->iDragOverItem = 0;
 
-    start_stop_timer(This, IDT_LEFT,  FALSE);
-    start_stop_timer(This, IDT_RIGHT, FALSE);
-    start_stop_timer(This, IDT_UP,    FALSE);
-    start_stop_timer(This, IDT_DOWN,  FALSE);
-   
     return S_OK;
 }
 
