@@ -26,56 +26,56 @@ This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
 The following build tools are shared with Wine.
-reactos/tools/unicode		# Synced to Wine-0_9_3
-reactos/tools/wpp		# Synced to Wine-0_9_3
+reactos/tools/unicode		# Synced to Wine-0_9_4
+reactos/tools/wpp		# Synced to Wine-0_9_4
 reactos/tools/bin2res		# Resource to binary converter
-reactos/tools/winebuild		# Synced to Wine-0_9_3
-reactos/tools/wmc		# Synced to Wine-0_9_3
-reactos/tools/wrc		# Synced to Wine-0_9_3
+reactos/tools/winebuild		# Synced to Wine-0_9_4
+reactos/tools/wmc		# Synced to Wine-0_9_4
+reactos/tools/wrc		# Synced to Wine-0_9_4
 reactos/tools/widl		# Forked at Wine-20050930
 
 The following libraries are shared with Wine.
 
-reactos/lib/avifil32            # Synced to Wine-0_9_3
-reactos/lib/cabinet             # Synced to Wine-0_9_3
-reactos/lib/comctl32            # Synced to Wine-0_9_3
-reactos/lib/comdlg32		# Synced to Wine-0_9_3
-reactos/lib/crypt32		# Synced to Wine-0_9_3
+reactos/lib/avifil32            # Synced to Wine-0_9_4
+reactos/lib/cabinet             # Synced to Wine-0_9_4
+reactos/lib/comctl32            # Synced to Wine-0_9_4
+reactos/lib/comdlg32		# Synced to Wine-0_9_4
+reactos/lib/crypt32		# Synced to Wine-0_9_4
 reactos/lib/dbghelp		# 
-reactos/lib/dinput		# Synced to Wine-0_9_3
-reactos/lib/dinput8		# Synced to Wine-0_9_3
-reactos/lib/dplay		# Synced to Wine-0_9_3
-reactos/lib/dplayx		# Synced to Wine-0_9_3
-reactos/lib/dxdiagn		# Synced to Wine-0_9_3
-reactos/lib/icmp		# Synced to Wine-0_9_3
-reactos/lib/imm32		# Synced to Wine-0_9_3
+reactos/lib/dinput		# Synced to Wine-0_9_4
+reactos/lib/dinput8		# Synced to Wine-0_9_4
+reactos/lib/dplay		# Synced to Wine-0_9_4
+reactos/lib/dplayx		# Synced to Wine-0_9_4
+reactos/lib/dxdiagn		# Synced to Wine-0_9_4
+reactos/lib/icmp		# Synced to Wine-0_9_4
+reactos/lib/imm32		# Synced to Wine-0_9_4
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
 reactos/lib/msvcrt20		# Out of sync
-reactos/lib/mpr                 # Synced to Wine-0_9_3
+reactos/lib/mpr                 # Synced to Wine-0_9_4
 reactos/lib/msacm		# Out of sync
-reactos/lib/msimg32		# Synced to Wine-0_9_3
-reactos/lib/msi			# Synced to Wine-0_9_3
+reactos/lib/msimg32		# Synced to Wine-0_9_4
+reactos/lib/msi			# Synced to Wine-0_9_4
 reactos/lib/msvideo		# Out of sync
-reactos/lib/netapi32		# Synced to Wine-0_9_3
-reactos/lib/objsel		# Synced to Wine-0_9_3
+reactos/lib/netapi32		# Synced to Wine-0_9_4
+reactos/lib/objsel		# Synced to Wine-0_9_4
 reactos/lib/odbc32		# Out of sync. Depends on port of Linux ODBC.
-reactos/lib/ole32               # Synced to Wine-0_9_3
-reactos/lib/oleacc              # Synced to Wine-0_9_3
-reactos/lib/oleaut32		# Synced to Wine-0_9_3
-reactos/lib/oledlg              # Synced to Wine-0_9_3
-reactos/lib/olepro32		# Synced to Wine-0_9_3
-reactos/lib/riched20		# Synced to Wine-0_9_3
-reactos/lib/richedit		# Synced to Wine-0_9_3
-reactos/lib/rpcrt4		# Synced to Wine-0_9_3
+reactos/lib/ole32               # Synced to Wine-0_9_4
+reactos/lib/oleacc              # Synced to Wine-0_9_4
+reactos/lib/oleaut32		# Synced to Wine-0_9_4
+reactos/lib/oledlg              # Synced to Wine-0_9_4
+reactos/lib/olepro32		# Synced to Wine-0_9_4
+reactos/lib/riched20		# Synced to Wine-0_9_4
+reactos/lib/richedit		# Synced to Wine-0_9_4
+reactos/lib/rpcrt4		# Synced to Wine-0_9_4
 reactos/lib/setupapi		# Forked at Wine-20050524
-reactos/lib/shell32             # Synced to Wine-0_9_3
-reactos/lib/shdocvw             # Synced to Wine-0_9_3
-reactos/lib/shfolder            # Synced to Wine-0_9_3
-reactos/lib/shlwapi             # Synced to Wine-0_9_3
+reactos/lib/shell32             # Synced to Wine-0_9_4
+reactos/lib/shdocvw             # Synced to Wine-0_9_4
+reactos/lib/shfolder            # Synced to Wine-0_9_4
+reactos/lib/shlwapi             # Synced to Wine-0_9_4
 reactos/lib/twain		# Out of sync
-reactos/lib/urlmon		# Synced to Wine-0_9_3
-reactos/lib/uxtheme		# Synced to Wine-0_9_3
+reactos/lib/urlmon		# Synced to Wine-0_9_4
+reactos/lib/uxtheme		# Synced to Wine-0_9_4
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
 reactos/lib/winmm		# Forked at Wine-20050628
