@@ -1076,7 +1076,6 @@ LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcf)
         HDC hdc;
         HPEN hOrigPen;
         HFONT hOrigFont;
-        COLORREF rgbPrev;
         LOGFONTW lf = *(lpcf->lpLogFont);
 
         MapWindowPoints( 0, hDlg, (LPPOINT) &info.rcWindow, 2);
@@ -1104,7 +1103,7 @@ LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcf)
         info.rcWindow.top++;
         info.rcWindow.left++;
         hOrigFont = SelectObject( hdc, CreateFontIndirectW( &lf ) );
-        rgbPrev=SetTextColor( hdc, lpcf->rgbColors );
+        SetTextColor( hdc, lpcf->rgbColors );
 
         DrawTextW( hdc,
                 sample_lang_text[CHARSET_ORDER[lpcf->lpLogFont->lfCharSet]],
