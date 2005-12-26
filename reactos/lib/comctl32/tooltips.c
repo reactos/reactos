@@ -2400,7 +2400,7 @@ TOOLTIPS_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
     DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
     DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
 
-    dwStyle &= 0x0000FFFF;
+    dwStyle &= ~(WS_CHILD | /*WS_MAXIMIZE |*/ WS_BORDER | WS_DLGFRAME);
     dwStyle |= (WS_POPUP | WS_BORDER | WS_CLIPSIBLINGS);
 
     /* WS_BORDER only draws a border round the window rect, not the

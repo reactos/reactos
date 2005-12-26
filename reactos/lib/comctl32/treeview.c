@@ -565,7 +565,7 @@ TREEVIEW_SendTreeviewNotify(TREEVIEW_INFO *infoPtr, UINT code, UINT action,
     TRACE("code:%d action:%x olditem:%p newitem:%p\n",
 	  code, action, oldItem, newItem);
 
-    ZeroMemory(&nmhdr, sizeof(NMTREEVIEWA));
+    ZeroMemory(&nmhdr, sizeof(NMTREEVIEWW));
 
     nmhdr.hdr.hwndFrom = hwnd;
     nmhdr.hdr.idFrom = GetWindowLongPtrW(hwnd, GWLP_ID);
