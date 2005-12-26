@@ -29,6 +29,7 @@
 #include "winbase.h"
 #include "objbase.h"
 #include "winreg.h"
+#include "shlwapi.h"
 
 #include "wine/debug.h"
 
