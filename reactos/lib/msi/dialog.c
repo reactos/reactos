@@ -1618,6 +1618,8 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
 {
     static const WCHAR df[] = {
         'D','e','f','a','u','l','t','U','I','F','o','n','t',0 };
+    static const WCHAR dfv[] = {
+        'M','S',' ','S','h','e','l','l',' ','D','l','g',0 };
     msi_dialog *dialog = (msi_dialog*) cs->lpCreateParams;
     MSIRECORD *rec = NULL;
     LPWSTR title = NULL;
@@ -1644,6 +1646,11 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
     dialog->attributes = MSI_RecordGetInteger( rec, 6 );
 
     dialog->default_font = msi_dup_property( dialog->package, df );
+    if (!dialog->default_font)
+    {
+        dialog->default_font = strdupW(dfv);
+        if (!dialog->default_font) return -1;
+    }
 
     title = msi_get_deformatted_field( dialog->package, rec, 7 );
     SetWindowTextW( hwnd, title );

@@ -639,10 +639,15 @@ UINT MSI_FormatRecordA( MSIPACKAGE* package, MSIRECORD* record, LPSTR buffer,
 
     len = deformat_string_internal(package,rec,&deformated,strlenW(rec),
                                    record, NULL);
+    /* If len is zero then WideCharToMultiByte will return 0 indicating 
+     * failure, but that will do just as well since we are ignoring
+     * possible errors.
+     */
     lenA = WideCharToMultiByte(CP_ACP,0,deformated,len,NULL,0,NULL,NULL);
 
     if (buffer)
     {
+        /* Ditto above */
         WideCharToMultiByte(CP_ACP,0,deformated,len,buffer,*size,NULL, NULL);
         if (*size>lenA)
         {
@@ -652,7 +657,8 @@ UINT MSI_FormatRecordA( MSIPACKAGE* package, MSIRECORD* record, LPSTR buffer,
         else
         {
             rc = ERROR_MORE_DATA;
-            buffer[(*size)-1] = 0;    
+            if (*size)
+                buffer[(*size)-1] = 0;
         }
     }
     else
