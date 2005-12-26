@@ -457,7 +457,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     DWORD dwLength;
     LPWSTR lpStr;
 
-    DPRINT1("CreateServiceW() called\n");
+    DPRINT("CreateServiceW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -496,7 +496,7 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (unsigned int *)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
+        DPRINT1("ScmrCreateServiceW(%S) failed (Error %lu)\n", lpServiceName, dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1085,7 +1085,7 @@ OpenServiceA(SC_HANDLE hSCManager,
                                (unsigned int*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
+        DPRINT("ScmrOpenServiceA(%s) failed (Error %lu)\n", lpServiceName, dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1122,7 +1122,7 @@ OpenServiceW(SC_HANDLE hSCManager,
                                (unsigned int*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
+        DPRINT("ScmrOpenServiceW(%S) failed (Error %lu)\n", lpServiceName, dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1207,6 +1207,7 @@ QueryServiceConfigW(SC_HANDLE hService,
                     DWORD cbBufSize,
                     LPDWORD pcbBytesNeeded)
 {
+#if 0
     DWORD dwError;
 
     DPRINT("QueryServiceConfigW(%p, %p, %lu, %p)\n",
@@ -1215,11 +1216,13 @@ QueryServiceConfigW(SC_HANDLE hService,
     HandleBind();
 
     /* Call to services.exe using RPC */
+    CHECKPOINT1;
     dwError = ScmrQueryServiceConfigW(BindingHandle,
                                       (unsigned int)hService,
                                       (unsigned char *)lpServiceConfig,
                                       cbBufSize,
                                       pcbBytesNeeded);
+    CHECKPOINT1;
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT("ScmrQueryServiceConfigW() failed (Error %lu)\n", dwError);
@@ -1256,6 +1259,20 @@ QueryServiceConfigW(SC_HANDLE hService,
     DPRINT("QueryServiceConfigW() done\n");
 
     return TRUE;
+#else
+    DPRINT1("QueryServiceConfigW is unimplemented\n");
+    if (lpServiceConfig && cbBufSize >= sizeof(QUERY_SERVICE_CONFIGW))
+    {
+        memset(lpServiceConfig, 0, *pcbBytesNeeded);
+        return TRUE;
+    }
+    else
+    {
+        *pcbBytesNeeded = sizeof(QUERY_SERVICE_CONFIGW);
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+#endif
 }
 
 
