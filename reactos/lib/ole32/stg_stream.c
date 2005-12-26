@@ -273,7 +273,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
    */
   if (This->smallBlockChain!=0)
   {
-    SmallBlockChainStream_ReadAt(This->smallBlockChain,
+    res = SmallBlockChainStream_ReadAt(This->smallBlockChain,
 				 This->currentPosition,
 				 bytesToReadFromBuffer,
 				 pv,
@@ -282,7 +282,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
   }
   else if (This->bigBlockChain!=0)
   {
-    BlockChainStream_ReadAt(This->bigBlockChain,
+    res = BlockChainStream_ReadAt(This->bigBlockChain,
 			    This->currentPosition,
 			    bytesToReadFromBuffer,
 			    pv,
@@ -300,30 +300,19 @@ static HRESULT WINAPI StgStreamImpl_Read(
     goto end;
   }
 
-  /*
-   * We should always be able to read the proper amount of data from the
-   * chain.
-   */
-  assert(bytesToReadFromBuffer == *pcbRead);
-
-  /*
-   * Advance the pointer for the number of positions read.
-   */
-  This->currentPosition.u.LowPart += *pcbRead;
-
-  if(*pcbRead != cb)
+  if (SUCCEEDED(res))
   {
-    WARN("read %ld instead of the required %ld bytes !\n", *pcbRead, cb);
-    /*
-     * this used to return S_FALSE, however MSDN docu says that an app should
-     * be prepared to handle error in case of stream end reached, as *some*
-     * implementations *might* return an error (IOW: most do *not*).
-     * As some program fails on returning S_FALSE, I better use S_OK here.
-     */
-    res = S_OK;
+      /*
+       * We should always be able to read the proper amount of data from the
+       * chain.
+       */
+      assert(bytesToReadFromBuffer == *pcbRead);
+
+      /*
+       * Advance the pointer for the number of positions read.
+       */
+      This->currentPosition.u.LowPart += *pcbRead;
   }
-  else
-    res = S_OK;
 
 end:
   TRACE("<-- %08lx\n", res);

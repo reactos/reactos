@@ -79,6 +79,8 @@ typedef struct tagTrackerWindowInfo
   HWND       curTargetHWND;	/* window the mouse is hovering over */
   HWND       curDragTargetHWND; /* might be a ancestor of curTargetHWND */
   IDropTarget* curDragTarget;
+  POINTL     curMousePos;       /* current position of the mouse in screen coordinates */
+  DWORD      dwKeyState;        /* current state of the shift and ctrl keys and the mouse buttons */
 } TrackerWindowInfo;
 
 typedef struct tagOleMenuDescriptor  /* OleMenuDescriptor */
@@ -158,13 +160,9 @@ static LRESULT WINAPI  OLEDD_DragTrackerWindowProc(
 			 WPARAM wParam,
 			 LPARAM   lParam);
 static void OLEDD_TrackMouseMove(
-                         TrackerWindowInfo* trackerInfo,
-			 POINT            mousePos,
-			 DWORD              keyState);
+                         TrackerWindowInfo* trackerInfo);
 static void OLEDD_TrackStateChange(
-                         TrackerWindowInfo* trackerInfo,
-			 POINT            mousePos,
-			 DWORD              keyState);
+                         TrackerWindowInfo* trackerInfo);
 static DWORD OLEDD_GetButtonState(void);
 
 
@@ -533,6 +531,10 @@ HRESULT WINAPI DoDragDrop (
      */
     while (!trackerInfo.trackingDone && GetMessageA(&msg, 0, 0, 0) )
     {
+      trackerInfo.curMousePos.x = msg.pt.x;
+      trackerInfo.curMousePos.y = msg.pt.y;
+      trackerInfo.dwKeyState = OLEDD_GetButtonState();
+	    
       if ( (msg.message >= WM_KEYFIRST) &&
 	   (msg.message <= WM_KEYLAST) )
       {
@@ -551,9 +553,7 @@ HRESULT WINAPI DoDragDrop (
 	/*
 	 * Notify the drop source.
 	 */
-	OLEDD_TrackStateChange(&trackerInfo,
-			       msg.pt,
-			       OLEDD_GetButtonState());
+        OLEDD_TrackStateChange(&trackerInfo);
       }
       else
       {
@@ -2033,6 +2033,9 @@ static DropTargetNode* OLEDD_FindDropTarget(HWND hwndOfTarget)
  * to receive the user input and act upon it. This procedure is in charge
  * of this behavior.
  */
+
+#define DRAG_TIMER_ID 1
+
 static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
 			 HWND   hwnd,
 			 UINT   uMsg,
@@ -2046,27 +2049,14 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
       LPCREATESTRUCTA createStruct = (LPCREATESTRUCTA)lParam;
 
       SetWindowLongA(hwnd, 0, (LONG)createStruct->lpCreateParams);
-
+      SetTimer(hwnd, DRAG_TIMER_ID, 50, NULL);
 
       break;
     }
+    case WM_TIMER:
     case WM_MOUSEMOVE:
     {
-      TrackerWindowInfo* trackerInfo = (TrackerWindowInfo*)GetWindowLongA(hwnd, 0);
-      POINT            mousePos;
-
-      /*
-       * Get the current mouse position in screen coordinates.
-       */
-      mousePos.x = LOWORD(lParam);
-      mousePos.y = HIWORD(lParam);
-      ClientToScreen(hwnd, &mousePos);
-
-      /*
-       * Track the movement of the mouse.
-       */
-      OLEDD_TrackMouseMove(trackerInfo, mousePos, wParam);
-
+      OLEDD_TrackMouseMove((TrackerWindowInfo*)GetWindowLongA(hwnd, 0));
       break;
     }
     case WM_LBUTTONUP:
@@ -2076,22 +2066,12 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN:
     {
-      TrackerWindowInfo* trackerInfo = (TrackerWindowInfo*)GetWindowLongA(hwnd, 0);
-      POINT            mousePos;
-
-      /*
-       * Get the current mouse position in screen coordinates.
-       */
-      mousePos.x = LOWORD(lParam);
-      mousePos.y = HIWORD(lParam);
-      ClientToScreen(hwnd, &mousePos);
-
-      /*
-       * Notify everyone that the button state changed
-       * TODO: Check if the "escape" key was pressed.
-       */
-      OLEDD_TrackStateChange(trackerInfo, mousePos, wParam);
-
+      OLEDD_TrackStateChange((TrackerWindowInfo*)GetWindowLongA(hwnd, 0));
+      break;
+    }
+    case WM_DESTROY:
+    {
+      KillTimer(hwnd, DRAG_TIMER_ID);
       break;
     }
   }
@@ -2114,23 +2094,19 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
  *    trackerInfo - Pointer to the structure identifying the
  *                  drag & drop operation that is currently
  *                  active.
- *    mousePos    - Current position of the mouse in screen
- *                  coordinates.
- *    keyState    - Contains the state of the shift keys and the
- *                  mouse buttons (MK_LBUTTON and the like)
  */
-static void OLEDD_TrackMouseMove(
-  TrackerWindowInfo* trackerInfo,
-  POINT            mousePos,
-  DWORD              keyState)
+static void OLEDD_TrackMouseMove(TrackerWindowInfo* trackerInfo)
 {
   HWND   hwndNewTarget = 0;
   HRESULT  hr = S_OK;
+  POINT pt;
 
   /*
    * Get the handle of the window under the mouse
    */
-  hwndNewTarget = WindowFromPoint(mousePos);
+  pt.x = trackerInfo->curMousePos.x;
+  pt.y = trackerInfo->curMousePos.y;
+  hwndNewTarget = WindowFromPoint(pt);
 
   /*
    * Every time, we re-initialize the effects passed to the
@@ -2145,19 +2121,9 @@ static void OLEDD_TrackMouseMove(
   if ( (trackerInfo->curDragTarget != 0) &&
        (trackerInfo->curTargetHWND == hwndNewTarget) )
   {
-    POINTL  mousePosParam;
-
-    /*
-     * The documentation tells me that the coordinate should be in the target
-     * window's coordinate space. However, the tests I made tell me the
-     * coordinates should be in screen coordinates.
-     */
-    mousePosParam.x = mousePos.x;
-    mousePosParam.y = mousePos.y;
-
     IDropTarget_DragOver(trackerInfo->curDragTarget,
-			 keyState,
-			 mousePosParam,
+                         trackerInfo->dwKeyState,
+                         trackerInfo->curMousePos,
 			 trackerInfo->pdwEffect);
   }
   else
@@ -2197,20 +2163,10 @@ static void OLEDD_TrackMouseMove(
        */
       if (trackerInfo->curDragTarget!=0)
       {
-	POINTL  mousePosParam;
-
-	/*
-	 * The documentation tells me that the coordinate should be in the target
-	 * window's coordinate space. However, the tests I made tell me the
-	 * coordinates should be in screen coordinates.
-	 */
-	mousePosParam.x = mousePos.x;
-	mousePosParam.y = mousePos.y;
-
 	IDropTarget_DragEnter(trackerInfo->curDragTarget,
 			      trackerInfo->dataObject,
-			      keyState,
-			      mousePosParam,
+                              trackerInfo->dwKeyState,
+                              trackerInfo->curMousePos,
 			      trackerInfo->pdwEffect);
       }
     }
@@ -2276,15 +2232,8 @@ static void OLEDD_TrackMouseMove(
  *    trackerInfo - Pointer to the structure identifying the
  *                  drag & drop operation that is currently
  *                  active.
- *    mousePos    - Current position of the mouse in screen
- *                  coordinates.
- *    keyState    - Contains the state of the shift keys and the
- *                  mouse buttons (MK_LBUTTON and the like)
  */
-static void OLEDD_TrackStateChange(
-  TrackerWindowInfo* trackerInfo,
-  POINT            mousePos,
-  DWORD              keyState)
+static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
 {
   /*
    * Ask the drop source what to do with the operation.
@@ -2292,7 +2241,7 @@ static void OLEDD_TrackStateChange(
   trackerInfo->returnValue = IDropSource_QueryContinueDrag(
 			       trackerInfo->dropSource,
 			       trackerInfo->escPressed,
-			       keyState);
+                               trackerInfo->dwKeyState);
 
   /*
    * All the return valued will stop the operation except the S_OK
@@ -2325,20 +2274,10 @@ static void OLEDD_TrackStateChange(
 	 */
         case DRAGDROP_S_DROP:
 	{
-	  POINTL  mousePosParam;
-
-	  /*
-	   * The documentation tells me that the coordinate should be
-	   * in the target window's coordinate space. However, the tests
-	   * I made tell me the coordinates should be in screen coordinates.
-	   */
-	  mousePosParam.x = mousePos.x;
-	  mousePosParam.y = mousePos.y;
-
 	  IDropTarget_Drop(trackerInfo->curDragTarget,
 			   trackerInfo->dataObject,
-			   keyState,
-			   mousePosParam,
+                           trackerInfo->dwKeyState,
+                           trackerInfo->curMousePos,
 			   trackerInfo->pdwEffect);
 	  break;
 	}

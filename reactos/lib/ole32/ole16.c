@@ -144,7 +144,7 @@ SEGPTR IMalloc16_fnRealloc(IMalloc16* iface,SEGPTR pv,DWORD cb)
 /******************************************************************************
  * IMalloc16_GetSize [COMPOBJ.506]
  */
-DWORD IMalloc16_fnGetSize(const IMalloc16* iface,SEGPTR pv)
+DWORD IMalloc16_fnGetSize(IMalloc16* iface,SEGPTR pv)
 {
 	IMalloc16Impl *This = (IMalloc16Impl *)iface;
         TRACE("(%p)->GetSize(%08lx)\n",This,pv);
@@ -154,7 +154,7 @@ DWORD IMalloc16_fnGetSize(const IMalloc16* iface,SEGPTR pv)
 /******************************************************************************
  * IMalloc16_DidAlloc [COMPOBJ.507]
  */
-INT16 IMalloc16_fnDidAlloc(const IMalloc16* iface,LPVOID pv) {
+INT16 IMalloc16_fnDidAlloc(IMalloc16* iface,LPVOID pv) {
         IMalloc16 *This = (IMalloc16 *)iface;
 	TRACE("(%p)->DidAlloc(%p)\n",This,pv);
 	return (INT16)-1;
@@ -173,7 +173,7 @@ LPVOID IMalloc16_fnHeapMinimize(IMalloc16* iface) {
  * IMalloc16_Constructor [VTABLE]
  */
 LPMALLOC16
-IMalloc16_Constructor()
+IMalloc16_Constructor(void)
 {
     static IMalloc16Vtbl vt16;
     static SEGPTR msegvt16;

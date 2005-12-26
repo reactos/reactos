@@ -667,7 +667,7 @@ void SmallBlockChainStream_FreeBlock(
 ULONG SmallBlockChainStream_GetNextFreeBlock(
          SmallBlockChainStream* This);
 
-BOOL SmallBlockChainStream_ReadAt(
+HRESULT SmallBlockChainStream_ReadAt(
 	       SmallBlockChainStream* This,
 	       ULARGE_INTEGER offset,
 	       ULONG          size,

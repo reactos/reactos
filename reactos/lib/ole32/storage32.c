@@ -3414,7 +3414,8 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
   ULARGE_INTEGER size, offset;
   ULONG cbRead, cbWritten, cbTotalRead, cbTotalWritten;
   ULONG propertyIndex;
-  BOOL successRead, successWrite;
+  BOOL successWrite;
+  HRESULT successRead;
   StgProperty chainProperty;
   BYTE *buffer;
   BlockChainStream *bbTempChain = NULL;
@@ -3463,7 +3464,7 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
 
     offset.u.LowPart += This->smallBlockSize;
 
-  } while (successRead && successWrite);
+  } while (SUCCEEDED(successRead) && successWrite);
   HeapFree(GetProcessHeap(),0,buffer);
 
   assert(cbTotalRead == cbTotalWritten);
@@ -4397,6 +4398,9 @@ BOOL BlockChainStream_ReadAt(BlockChainStream* This,
     blockNoInSequence--;
   }
 
+  if ((blockNoInSequence > 0) && (blockIndex == BLOCK_END_OF_CHAIN))
+      return FALSE; /* We failed to find the starting block */
+
   This->lastBlockNoInSequenceIndex = blockIndex;
 
   /*
@@ -5098,13 +5102,14 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
  * bytesRead may be NULL.
  * Failure will be returned if the specified number of bytes has not been read.
  */
-BOOL SmallBlockChainStream_ReadAt(
+HRESULT SmallBlockChainStream_ReadAt(
   SmallBlockChainStream* This,
   ULARGE_INTEGER         offset,
   ULONG                  size,
   void*                  buffer,
   ULONG*                 bytesRead)
 {
+  HRESULT rc = S_OK;
   ULARGE_INTEGER offsetInBigBlockFile;
   ULONG blockNoInSequence =
     offset.u.LowPart / This->parentStorage->smallBlockSize;
@@ -5127,9 +5132,9 @@ BOOL SmallBlockChainStream_ReadAt(
 
   while ( (blockNoInSequence > 0) &&  (blockIndex != BLOCK_END_OF_CHAIN))
   {
-    if(FAILED(SmallBlockChainStream_GetNextBlockInChain(This, blockIndex,
-							&blockIndex)))
-      return FALSE;
+    rc = SmallBlockChainStream_GetNextBlockInChain(This, blockIndex, &blockIndex);
+    if(FAILED(rc))
+      return rc;
     blockNoInSequence--;
   }
 
@@ -5158,27 +5163,32 @@ BOOL SmallBlockChainStream_ReadAt(
 
     /*
      * Read those bytes in the buffer from the small block file.
+     * The small block has already been identified so it shouldn't fail
+     * unless the file is corrupt.
      */
-    BlockChainStream_ReadAt(This->parentStorage->smallBlockRootChain,
+    if (!BlockChainStream_ReadAt(This->parentStorage->smallBlockRootChain,
       offsetInBigBlockFile,
       bytesToReadInBuffer,
       bufferWalker,
-      &bytesReadFromBigBlockFile);
+      &bytesReadFromBigBlockFile))
+      return STG_E_DOCFILECORRUPT;
 
     assert(bytesReadFromBigBlockFile == bytesToReadInBuffer);
 
     /*
      * Step to the next big block.
      */
-    if(FAILED(SmallBlockChainStream_GetNextBlockInChain(This, blockIndex, &blockIndex)))
-      return FALSE;
+    rc = SmallBlockChainStream_GetNextBlockInChain(This, blockIndex, &blockIndex);
+    if(FAILED(rc))
+      return rc;
+
     bufferWalker += bytesToReadInBuffer;
     size         -= bytesToReadInBuffer;
     *bytesRead   += bytesToReadInBuffer;
     offsetInBlock = 0;  /* There is no offset on the next block */
   }
 
-  return (size == 0);
+  return rc;
 }
 
 /******************************************************************************

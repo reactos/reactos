@@ -476,7 +476,7 @@ HRESULT WINAPI CreateErrorInfo(ICreateErrorInfo **pperrinfo)
 {
 	IErrorInfo * pei;
 	HRESULT res;
-	TRACE("(%p): stub:\n", pperrinfo);
+	TRACE("(%p)\n", pperrinfo);
 	if(! pperrinfo ) return E_INVALIDARG;
 	if(!(pei=IErrorInfoImpl_Constructor()))return E_OUTOFMEMORY;
 

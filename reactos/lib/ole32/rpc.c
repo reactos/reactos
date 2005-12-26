@@ -112,8 +112,7 @@ struct dispatch_params
 
 static WINE_EXCEPTION_FILTER(ole_filter)
 {
-    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ||
-        GetExceptionCode() == EXCEPTION_PRIV_INSTRUCTION)
+    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_CONTINUE_SEARCH;
     return EXCEPTION_EXECUTE_HANDLER;
 }
