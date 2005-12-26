@@ -16,9 +16,6 @@
 
 #include "sc.h"
 
-#define DEBUG
-#include <debug.h>
-
 /* local function decs */
 VOID PrintService(BOOL bExtended);
 BOOL EnumServices(DWORD ServiceType, DWORD ServiceState);
