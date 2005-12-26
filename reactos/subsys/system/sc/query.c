@@ -16,9 +16,12 @@
 
 #include "sc.h"
 
+#define DEBUG
+#include <debug.h>
+
 /* local function decs */
 VOID PrintService(BOOL bExtended);
-BOOL EnumServices(LPCTSTR ServiceName, DWORD ServiceType, DWORD ServiceState);
+BOOL EnumServices(DWORD ServiceType, DWORD ServiceState);
 BOOL QueryService(LPCTSTR ServiceName, BOOL bExtended);
 
 /* global variables */
@@ -29,11 +32,10 @@ DWORD NumServices = 0;
 BOOL
 Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
 {
-            
     if (! ServiceName) /* display all running services and drivers */
     {
         /* get default values */
-        EnumServices(NULL, SERVICE_WIN32, SERVICE_ACTIVE);
+        EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
         
         /* print default values */
         PrintService(bExtended);
@@ -43,11 +45,11 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
         LPCTSTR Type = *ServiceArgs;
         
         if (_tcsicmp(Type, _T("driver")) == 0)
-            EnumServices(NULL, SERVICE_DRIVER, SERVICE_ACTIVE);
+            EnumServices(SERVICE_DRIVER, SERVICE_ACTIVE);
         else if (_tcsicmp(Type, _T("service")) == 0)
-            EnumServices(NULL, SERVICE_WIN32, SERVICE_ACTIVE);
+            EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
         else if (_tcsicmp(Type, _T("all")) == 0)
-            EnumServices(NULL, SERVICE_DRIVER|SERVICE_WIN32, SERVICE_ACTIVE);
+            EnumServices(SERVICE_DRIVER|SERVICE_WIN32, SERVICE_ACTIVE);
         else
         {
             _tprintf(_T("\nERROR following \"type=\"!\n"));
@@ -61,9 +63,9 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
         LPCTSTR State = *ServiceArgs;
 
         if (_tcsicmp(State, _T("inactive")) == 0)
-            EnumServices(NULL, SERVICE_WIN32, SERVICE_INACTIVE);
+            EnumServices(SERVICE_WIN32, SERVICE_INACTIVE);
         else if (_tcsicmp(State, _T("all")) == 0)
-            EnumServices(NULL, SERVICE_WIN32, SERVICE_STATE_ALL);
+            EnumServices(SERVICE_WIN32, SERVICE_STATE_ALL);
         else
         {
             _tprintf(_T("\nERROR following \"state=\"!\n"));
@@ -202,7 +204,7 @@ QueryService(LPCTSTR ServiceName, BOOL bExtended)
 
 
 BOOL
-EnumServices(LPCTSTR ServiceName, DWORD ServiceType, DWORD ServiceState)
+EnumServices(DWORD ServiceType, DWORD ServiceState)
 {
     DWORD BufSize = 0;
     DWORD BytesNeeded = 0;
@@ -265,7 +267,7 @@ EnumServices(LPCTSTR ServiceName, DWORD ServiceType, DWORD ServiceState)
 VOID
 PrintService(BOOL bExtended)
 {
-    int i;
+    DWORD i;
     
     for (i=0; i < NumServices; i++)
     {

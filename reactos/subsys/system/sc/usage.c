@@ -13,7 +13,7 @@
 
 INT MainUsage(VOID)
 {
-    TCHAR c;
+    INT c;
 
     _tprintf(_T("DESCRIPTION:\n")
     _T("\tSC is a command line program used for communicating with\n")

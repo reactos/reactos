@@ -21,16 +21,17 @@ DWORD ReportLastError(VOID)
     DWORD ErrorCode = GetLastError();
     if (ErrorCode != ERROR_SUCCESS) 
     {
-        if ((RetVal = FormatMessage(
-                FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                FORMAT_MESSAGE_FROM_SYSTEM |
-                FORMAT_MESSAGE_IGNORE_INSERTS,
-                NULL,
-                ErrorCode,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-                (LPTSTR) &lpMsgBuf,
-                0,
-                NULL )))
+        RetVal = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                               FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
+                               NULL,
+                               ErrorCode,
+                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+                               (LPTSTR) &lpMsgBuf,
+                               0,
+                               NULL );
+
+        if (RetVal != 0)
         {
             _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
 
@@ -169,8 +170,6 @@ int _tmain(int argc, LPCTSTR argv[])
             ServiceName = argv[2];
         return ScControl(MachineName, Command, ServiceName, &argv[3], argc);
     }
-
-    return MainUsage();
 }
 
 
