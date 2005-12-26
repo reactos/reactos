@@ -22,6 +22,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "objbase.h"
 #include "winnetwk.h"
 #include "wine/debug.h"
 #include "wnetpriv.h"
