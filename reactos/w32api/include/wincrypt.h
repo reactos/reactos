@@ -1711,7 +1711,46 @@ typedef BOOL (WINAPI *PFN_CRYPT_ENUM_OID_FUNC)(DWORD dwEncodingType,
  LPCWSTR const rgpwszValueName[], const BYTE * const rgpbValueData[],
  const DWORD rgcbValueData[], void *pvArg);
 
-/* subject types for CryptVerifyCertificateSignatureEx */
+typedef struct _CRL_DIST_POINT_NAME {
+    DWORD dwDistPointNameChoice;
+    union {
+        CERT_ALT_NAME_INFO FullName;
+    } DUMMYUNIONNAME;
+} CRL_DIST_POINT_NAME, *PCRL_DIST_POINT_NAME;
+
+#define CRL_DIST_POINT_NO_NAME         0
+#define CRL_DIST_POINT_FULL_NAME       1
+#define CRL_DIST_POINT_ISSUER_RDN_NAME 2
+
+typedef struct _CRL_DIST_POINT {
+    CRL_DIST_POINT_NAME DistPointName;
+    CRYPT_BIT_BLOB      ReasonFlags;
+    CERT_ALT_NAME_INFO  CRLIssuer;
+} CRL_DIST_POINT, *PCRL_DIST_POINT;
+
+#define CRL_REASON_UNUSED_FLAG                 0x80
+#define CRL_REASON_KEY_COMPROMISE_FLAG         0x40
+#define CRL_REASON_CA_COMPROMISE_FLAG          0x20
+#define CRL_REASON_AFFILIATION_CHANGED_FLAG    0x10
+#define CRL_REASON_SUPERSEDED_FLAG             0x08
+#define CRL_REASON_CESSATION_OF_OPERATION_FLAG 0x04
+#define CRL_REASON_CERTIFICATE_HOLD_FLAG       0x02
+
+typedef struct _CRL_DIST_POINTS_INFO {
+    DWORD           cDistPoint;
+    PCRL_DIST_POINT rgDistPoint;
+} CRL_DIST_POINTS_INFO, *PCRL_DIST_POINTS_INFO;
+
+#define CRL_DIST_POINT_ERR_INDEX_MASK  0x7f
+#define CRL_DIST_POINT_ERR_INDEX_SHIFT 24
+#define GET_CRL_DIST_POINT_ERR_INDEX(x) \
+ (((x) >> CRL_DIST_POINT_ERR_INDEX_SHIFT) & CRL_DIST_POINT_ERR_INDEX_MASK)
+
+#define CRL_DIST_POINT_ERR_CRL_ISSUER_BIT 0x80000000L
+#define IS_CRL_DIST_POINT_ERR_CRL_ISSUER(x) \
+ ((x) & CRL_DIST_POINT_ERR_CRL_ISSUER_BIT)
+
+/*  types for CryptVerifyCertificateSignatureEx */
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB 1
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_CERT 2
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_CRL  3

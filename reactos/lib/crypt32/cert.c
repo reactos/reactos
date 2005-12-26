@@ -313,14 +313,6 @@ static BOOL WINAPI CRYPT_SetCertificateContextProperty(
 static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
  DWORD cbElement, DWORD dwContextTypeFlags, DWORD *pdwContentType);
 
-/* filter for page-fault exceptions */
-static WINE_EXCEPTION_FILTER(page_fault)
-{
-    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
-        return EXCEPTION_EXECUTE_HANDLER;
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
 static void CRYPT_InitStore(WINECRYPT_CERTSTORE *store, HCRYPTPROV hCryptProv,
  DWORD dwFlags, CertStoreType type)
 {
@@ -1885,6 +1877,22 @@ DWORD WINAPI CertEnumCertificateContextProperties(PCCERT_CONTEXT pCertContext,
     return ret;
 }
 
+static BOOL CRYPT_GetCertHashProp(PWINE_CERT_CONTEXT context, DWORD dwPropId,
+ ALG_ID algID, const BYTE *toHash, DWORD toHashLen, void *pvData,
+ DWORD *pcbData)
+{
+    BOOL ret = CryptHashCertificate(0, algID, 0, toHash, toHashLen, pvData,
+     pcbData);
+    if (ret)
+    {
+        CRYPT_DATA_BLOB blob = { *pcbData, pvData };
+
+        ret = CRYPT_SetCertificateContextProperty(context, dwPropId,
+         0, &blob);
+    }
+    return ret;
+}
+
 static BOOL WINAPI CRYPT_GetCertificateContextProperty(
  PWINE_CERT_CONTEXT context, DWORD dwPropId, void *pvData, DWORD *pcbData)
 {
@@ -1927,26 +1935,34 @@ static BOOL WINAPI CRYPT_GetCertificateContextProperty(
         switch (dwPropId)
         {
         case CERT_SHA1_HASH_PROP_ID:
-            ret = CryptHashCertificate(0, CALG_SHA1, 0,
+            ret = CRYPT_GetCertHashProp(context, dwPropId, CALG_SHA1,
              context->cert.pbCertEncoded, context->cert.cbCertEncoded, pvData,
              pcbData);
-            if (ret)
-            {
-                CRYPT_DATA_BLOB blob = { *pcbData, pvData };
-
-                ret = CRYPT_SetCertificateContextProperty(context, dwPropId,
-                 0, &blob);
-            }
             break;
-        case CERT_KEY_PROV_INFO_PROP_ID:
         case CERT_MD5_HASH_PROP_ID:
-        case CERT_SIGNATURE_HASH_PROP_ID:
-        case CERT_KEY_IDENTIFIER_PROP_ID:
-        case CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID:
-        case CERT_ISSUER_SERIAL_NUMBER_MD5_HASH_PROP_ID:
-        case CERT_SUBJECT_NAME_MD5_HASH_PROP_ID:
-            FIXME("implicit property %ld\n", dwPropId);
+            ret = CRYPT_GetCertHashProp(context, dwPropId, CALG_MD5,
+             context->cert.pbCertEncoded, context->cert.cbCertEncoded, pvData,
+             pcbData);
             break;
+        case CERT_SUBJECT_NAME_MD5_HASH_PROP_ID:
+            ret = CRYPT_GetCertHashProp(context, dwPropId, CALG_MD5,
+             context->cert.pCertInfo->Subject.pbData,
+             context->cert.pCertInfo->Subject.cbData,
+             pvData, pcbData);
+            break;
+        case CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID:
+            ret = CRYPT_GetCertHashProp(context, dwPropId, CALG_MD5,
+             context->cert.pCertInfo->SubjectPublicKeyInfo.PublicKey.pbData,
+             context->cert.pCertInfo->SubjectPublicKeyInfo.PublicKey.cbData,
+             pvData, pcbData);
+            break;
+        case CERT_SIGNATURE_HASH_PROP_ID:
+        case CERT_ISSUER_SERIAL_NUMBER_MD5_HASH_PROP_ID:
+            FIXME("implicit property %ld\n", dwPropId);
+            SetLastError(CRYPT_E_NOT_FOUND);
+            break;
+        default:
+            SetLastError(CRYPT_E_NOT_FOUND);
         }
     }
     LeaveCriticalSection(&context->cs);
@@ -2108,6 +2124,7 @@ static BOOL WINAPI CRYPT_SetCertificateContextProperty(
         case CERT_PVK_FILE_PROP_ID:
         case CERT_SIGNATURE_HASH_PROP_ID:
         case CERT_ISSUER_PUBLIC_KEY_MD5_HASH_PROP_ID:
+        case CERT_SUBJECT_NAME_MD5_HASH_PROP_ID:
         case CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID:
         case CERT_ENROLLMENT_PROP_ID:
         case CERT_CROSS_CERT_DIST_POINTS_PROP_ID:
@@ -2787,7 +2804,7 @@ static const void * WINAPI CRYPT_ReadSerializedElement(const BYTE *pbElement,
             }
         }
     }
-    __EXCEPT(page_fault)
+    __EXCEPT_PAGE_FAULT
     {
         SetLastError(STATUS_ACCESS_VIOLATION);
         context = NULL;
