@@ -7476,7 +7476,9 @@ SetupDiInstallDevice(
         goto cleanup;
 
     /* Install main section */
-    DoAction = SPINST_REGISTRY;
+    DoAction = 0;
+    if (!(InstallParams.FlagsEx & DI_FLAGSEX_NO_DRVREG_MODIFY))
+        DoAction |= SPINST_REGISTRY;
     if (!(InstallParams.Flags & DI_NOFILECOPY))
     {
         DoAction |= SPINST_FILES;
@@ -7579,10 +7581,13 @@ SetupDiInstallDevice(
         goto cleanup;
 
     /* Install .HW section */
+    DoAction = 0;
+    if (!(InstallParams.FlagsEx & DI_FLAGSEX_NO_DRVREG_MODIFY))
+        DoAction |= SPINST_REGISTRY;
     wcscpy(pSectionName, L".HW");
     Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
         SelectedDriver->InfFileDetails->hInf, SectionName,
-        SPINST_REGISTRY, hKey, NULL, 0,
+        DoAction, hKey, NULL, 0,
         NULL, NULL,
         DeviceInfoSet, DeviceInfoData);
     if (!Result)
