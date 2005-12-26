@@ -596,10 +596,24 @@ typedef PCONFLICT_DETAILS_A PCONFLICT_DETAILS;
 #endif
 
 
+#define CMP_MAGIC  0x01234567
 
-/* FIXME: Missing CMP_Init_Detection */
+
+CMAPI
+CONFIGRET
+WINAPI
+CMP_Init_Detection(
+  IN DWORD  dwMagic);
+
 /* FIXME: Missing CMP_RegisterNotification */
-/* FIXME: Missing CMP_Report_LogOn */
+
+CMAPI
+CONFIGRET
+WINAPI
+CMP_Report_LogOn(
+  IN DWORD dwMagic,
+  IN DWORD dwProcessId);
+
 /* FIXME: Missing CMP_UnregisterNotification */
 /* FIXME: Missing CMP_WaitNoPendingInstallEvents */
 /* FIXME: Missing CMP_WaitServicesAvailable */
@@ -763,9 +777,9 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Disable_DevNode_Ex(
-    IN DEVINST  dnDevInst,
-    IN ULONG  ulFlags,
-    IN HMACHINE  hMachine);
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
 
 #define CM_Disable_DevInst CM_Disable_DevNode
 #define CM_Disable_DevInst_Ex CM_Disable_DevNode_Ex
@@ -780,16 +794,16 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Enable_DevNode(
-    IN DEVINST  dnDevInst,
-    IN ULONG  ulFlags);
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enable_DevNode_Ex(
-    IN DEVINST  dnDevInst,
-    IN ULONG  ulFlags,
-    IN HMACHINE  hMachine);
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
 
 #define CM_Enable_DevInst CM_Enable_DevNode
 #define CM_Enable_DevInst_Ex CM_Enable_DevNode_Ex
