@@ -708,24 +708,64 @@ EnumServicesStatusExA(SC_HANDLE  hSCManager,
 /**********************************************************************
  *  EnumServicesStatusExW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-EnumServicesStatusExW(SC_HANDLE  hSCManager,
-  SC_ENUM_TYPE  InfoLevel,
-  DWORD  dwServiceType,
-  DWORD  dwServiceState,
-  LPBYTE  lpServices,
-  DWORD  cbBufSize,
-  LPDWORD  pcbBytesNeeded,
-  LPDWORD  lpServicesReturned,
-  LPDWORD  lpResumeHandle,
-  LPCWSTR  pszGroupName)
+BOOL STDCALL
+EnumServicesStatusExW(SC_HANDLE hSCManager,
+                      SC_ENUM_TYPE InfoLevel,
+                      DWORD dwServiceType,
+                      DWORD dwServiceState,
+                      LPBYTE lpServices,
+                      DWORD cbBufSize,
+                      LPDWORD pcbBytesNeeded,
+                      LPDWORD lpServicesReturned,
+                      LPDWORD lpResumeHandle,
+                      LPCWSTR pszGroupName)
 {
-    DPRINT1("EnumServicesStatusExW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtr;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwCount;
+
+    DPRINT1("EnumServicesStatusExW() called\n");
+
+    HandleBind();
+
+    dwError = ScmrEnumServicesStatusExW(BindingHandle,
+                                        (unsigned int)hSCManager,
+                                        (unsigned long)InfoLevel,
+                                        dwServiceType,
+                                        dwServiceState,
+                                        (unsigned char *)lpServices,
+                                        cbBufSize,
+                                        pcbBytesNeeded,
+                                        lpServicesReturned,
+                                        lpResumeHandle,
+                                        (wchar_t *)pszGroupName);
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSW)lpServices;
+    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    {
+        if (lpStatusPtr->lpServiceName)
+            lpStatusPtr->lpServiceName =
+                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+        if (lpStatusPtr->lpDisplayName)
+            lpStatusPtr->lpDisplayName =
+                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+        lpStatusPtr++;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrEnumServicesStatusExW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    DPRINT1("ScmrEnumServicesStatusExW() done\n");
+
+    return TRUE;
 }
 
 
@@ -1390,7 +1430,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
                                        pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrQueryServiceStatusEx() failed (Error %lu)\n", dwError);
+        DPRINT("ScmrQueryServiceStatusEx() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

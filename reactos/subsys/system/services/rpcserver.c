@@ -1393,9 +1393,9 @@ ScmrEnumServicesStatusW(handle_t BindingHandle,
     *lpServicesReturned = dwServiceCount;
     *pcbBytesNeeded = dwRequiredSize;
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUS)lpServices;
+    lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
     lpStringPtr = (LPWSTR)((ULONG_PTR)lpServices +
-                           dwServiceCount * sizeof(ENUM_SERVICE_STATUS));
+                           dwServiceCount * sizeof(ENUM_SERVICE_STATUSW));
 
     dwRequiredSize = 0;
     for (ServiceEntry = &lpService->ServiceListEntry;
@@ -2138,7 +2138,227 @@ ScmrQueryServiceStatusEx(handle_t BindingHandle,
 
 
 /* Function 42 */
-/* ScmrEnumServicesStatusExW */
+unsigned long
+ScmrEnumServicesStatusExW(handle_t BindingHandle,
+                          unsigned int hSCManager,
+                          unsigned long InfoLevel,
+                          unsigned long dwServiceType,
+                          unsigned long dwServiceState,
+                          unsigned char *lpServices,
+                          unsigned long dwBufSize,
+                          unsigned long *pcbBytesNeeded,
+                          unsigned long *lpServicesReturned,
+                          unsigned long *lpResumeHandle,
+                          wchar_t *pszGroupName)
+{
+    PMANAGER_HANDLE hManager;
+    PSERVICE lpService;
+    DWORD dwError = ERROR_SUCCESS;
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+    DWORD dwState;
+    DWORD dwRequiredSize;
+    DWORD dwServiceCount;
+    DWORD dwSize;
+    DWORD dwLastResumeCount;
+    LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtr;
+    LPWSTR lpStringPtr;
+
+    DPRINT("ScmrEnumServicesStatusExW() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    if (InfoLevel != SC_ENUM_PROCESS_INFO)
+        return ERROR_INVALID_LEVEL;
+
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT1("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n",
+                hManager->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
+
+    dwLastResumeCount = *lpResumeHandle;
+
+    /* Lock the service list shared */
+
+    lpService = ScmGetServiceEntryByResumeCount(dwLastResumeCount);
+    if (lpService == NULL)
+    {
+        dwError = ERROR_SUCCESS;
+        goto Done;
+    }
+
+    dwRequiredSize = 0;
+    dwServiceCount = 0;
+
+    for (ServiceEntry = &lpService->ServiceListEntry;
+         ServiceEntry != &ServiceListHead;
+         ServiceEntry = ServiceEntry->Flink)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+
+        if ((CurrentService->Status.dwServiceType & dwServiceType) == 0)
+            continue;
+
+        dwState = SERVICE_ACTIVE;
+        if (CurrentService->Status.dwCurrentState == SERVICE_STOPPED)
+            dwState = SERVICE_INACTIVE;
+
+        if ((dwState & dwServiceState) == 0)
+            continue;
+
+        if (pszGroupName)
+        {
+            if (_wcsicmp(pszGroupName, CurrentService->lpServiceGroup))
+                continue;
+        }
+
+        dwSize = sizeof(ENUM_SERVICE_STATUS_PROCESSW) +
+                 ((wcslen(CurrentService->lpServiceName) + 1) * sizeof(WCHAR)) +
+                 ((wcslen(CurrentService->lpDisplayName) + 1) * sizeof(WCHAR));
+
+        if (dwRequiredSize + dwSize <= dwBufSize)
+        {
+            DPRINT("Service name: %S  fit\n", CurrentService->lpServiceName);
+            dwRequiredSize += dwSize;
+            dwServiceCount++;
+            dwLastResumeCount = CurrentService->dwResumeCount;
+        }
+        else
+        {
+            DPRINT("Service name: %S  no fit\n", CurrentService->lpServiceName);
+            break;
+        }
+
+    }
+
+    DPRINT("dwRequiredSize: %lu\n", dwRequiredSize);
+    DPRINT("dwServiceCount: %lu\n", dwServiceCount);
+
+    for (;
+         ServiceEntry != &ServiceListHead;
+         ServiceEntry = ServiceEntry->Flink)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+
+        if ((CurrentService->Status.dwServiceType & dwServiceType) == 0)
+            continue;
+
+        dwState = SERVICE_ACTIVE;
+        if (CurrentService->Status.dwCurrentState == SERVICE_STOPPED)
+            dwState = SERVICE_INACTIVE;
+
+        if ((dwState & dwServiceState) == 0)
+            continue;
+
+        if (pszGroupName)
+        {
+            if (_wcsicmp(pszGroupName, CurrentService->lpServiceGroup))
+                continue;
+        }
+
+        dwRequiredSize += (sizeof(ENUM_SERVICE_STATUS_PROCESSW) +
+                           ((wcslen(CurrentService->lpServiceName) + 1) * sizeof(WCHAR)) +
+                           ((wcslen(CurrentService->lpDisplayName) + 1) * sizeof(WCHAR)));
+
+        dwError = ERROR_MORE_DATA;
+    }
+
+    DPRINT("*pcbBytesNeeded: %lu\n", dwRequiredSize);
+
+    *lpResumeHandle = dwLastResumeCount;
+    *lpServicesReturned = dwServiceCount;
+    *pcbBytesNeeded = dwRequiredSize;
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSW)lpServices;
+    lpStringPtr = (LPWSTR)((ULONG_PTR)lpServices +
+                           dwServiceCount * sizeof(ENUM_SERVICE_STATUS_PROCESSW));
+
+    dwRequiredSize = 0;
+    for (ServiceEntry = &lpService->ServiceListEntry;
+         ServiceEntry != &ServiceListHead;
+         ServiceEntry = ServiceEntry->Flink)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+
+        if ((CurrentService->Status.dwServiceType & dwServiceType) == 0)
+            continue;
+
+        dwState = SERVICE_ACTIVE;
+        if (CurrentService->Status.dwCurrentState == SERVICE_STOPPED)
+            dwState = SERVICE_INACTIVE;
+
+        if ((dwState & dwServiceState) == 0)
+            continue;
+
+        if (pszGroupName)
+        {
+            if (_wcsicmp(pszGroupName, CurrentService->lpServiceGroup))
+                continue;
+        }
+
+        dwSize = sizeof(ENUM_SERVICE_STATUS_PROCESSW) +
+                 ((wcslen(CurrentService->lpServiceName) + 1) * sizeof(WCHAR)) +
+                 ((wcslen(CurrentService->lpDisplayName) + 1) * sizeof(WCHAR));
+
+        if (dwRequiredSize + dwSize <= dwBufSize)
+        {
+            /* Copy the service name */
+            wcscpy(lpStringPtr,
+                   CurrentService->lpServiceName);
+            lpStatusPtr->lpServiceName = (LPWSTR)((ULONG_PTR)lpStringPtr - (ULONG_PTR)lpServices);
+            lpStringPtr += (wcslen(CurrentService->lpServiceName) + 1);
+
+            /* Copy the display name */
+            wcscpy(lpStringPtr,
+                   CurrentService->lpDisplayName);
+            lpStatusPtr->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStringPtr - (ULONG_PTR)lpServices);
+            lpStringPtr += (wcslen(CurrentService->lpDisplayName) + 1);
+
+            /* Copy the status information */
+            memcpy(&lpStatusPtr->ServiceStatusProcess,
+                   &CurrentService->Status,
+                   sizeof(SERVICE_STATUS));
+            lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->ProcessId; /* FIXME */
+            lpStatusPtr->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
+
+            lpStatusPtr++;
+            dwRequiredSize += dwSize;
+        }
+        else
+        {
+            break;
+        }
+
+    }
+
+Done:;
+    /* Unlock the service list */
+
+    DPRINT("ScmrEnumServicesStatusExW() done (Error %lu)\n", dwError);
+
+    return dwError;
+}
 
 
 /* Function 43 */
