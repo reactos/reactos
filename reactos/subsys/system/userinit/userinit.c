@@ -16,14 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Userinit Logon Application
  * FILE:        subsys/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 #include <windows.h>
+#include <cfgmgr32.h>
 #include "resource.h"
 
 
@@ -142,16 +142,38 @@ void SetUserSettings(void)
   }
 }
 
+
+typedef DWORD (WINAPI *PCMP_REPORT_LOGON)(DWORD, DWORD);
+
+static VOID
+NotifyLogon(VOID)
+{
+    HINSTANCE hModule;
+    PCMP_REPORT_LOGON CMP_Report_LogOn;
+
+    hModule = LoadLibrary(L"setupapi.dll");
+    if (hModule)
+    {
+        CMP_Report_LogOn = (PCMP_REPORT_LOGON)GetProcAddress(hModule, "CMP_Report_LogOn");
+        if (CMP_Report_LogOn)
+            CMP_Report_LogOn(CMP_MAGIC, GetCurrentProcessId());
+
+        FreeLibrary(hModule);
+    }
+}
+
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif /* _MSC_VER */
 
 int WINAPI
 WinMain(HINSTANCE hInst,
-	HINSTANCE hPrevInstance,
-	LPSTR lpszCmdLine,
-	int nCmdShow)
+        HINSTANCE hPrevInstance,
+        LPSTR lpszCmdLine,
+        int nCmdShow)
 {
+  NotifyLogon();
   SetUserSettings();
   StartShell();
   return 0;
