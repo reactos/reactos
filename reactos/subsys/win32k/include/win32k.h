@@ -1,4 +1,4 @@
-t/*
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Graphics Subsystem
  * FILE:            subsys/win32k/include/win32k.h
