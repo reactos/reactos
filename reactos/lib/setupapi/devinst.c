@@ -3757,6 +3757,9 @@ BOOL WINAPI SetupDiCallClassInstaller(
 
         switch (InstallFunction)
         {
+            case DIF_ADDPROPERTYPAGE_ADVANCED:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                break;
             case DIF_ALLOW_INSTALL:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
                 break;
