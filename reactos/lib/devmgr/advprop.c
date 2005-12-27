@@ -65,6 +65,7 @@ typedef struct _DEVADVPROP_INFO
     BOOL IsAdmin : 1;
     BOOL DoDefaultDevAction : 1;
     BOOL PageInitialized : 1;
+    BOOL ShowRemotePages : 1;
     BOOL HasDriverPage : 1;
     BOOL HasResourcePage : 1;
     BOOL HasPowerPage : 1;
@@ -423,7 +424,9 @@ UpdateDevInfo(IN HWND hwndDlg,
                           &bDrvInstalled) &&
         bDrvInstalled)
     {
-        if (SetupDiCallClassInstaller(DIF_ADDPROPERTYPAGE_ADVANCED,
+        if (SetupDiCallClassInstaller((dap->ShowRemotePages ?
+                                           DIF_ADDREMOTEPROPERTYPAGE_ADVANCED :
+                                           DIF_ADDPROPERTYPAGE_ADVANCED),
                                       DeviceInfoSet,
                                       DeviceInfoData))
         {
@@ -1093,6 +1096,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     DevAdvPropInfo->CurrentDeviceInfoSet = INVALID_HANDLE_VALUE;
     DevAdvPropInfo->CurrentDeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
 
+    DevAdvPropInfo->ShowRemotePages = (lpMachineName != NULL && lpMachineName[0] != L'\0');
     DevAdvPropInfo->hMachine = hMachine;
     DevAdvPropInfo->lpMachineName = lpMachineName;
     DevAdvPropInfo->szDevName[0] = L'\0';
@@ -1108,7 +1112,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
     psh.hwndParent = hWndParent;
     psh.pszCaption = DevAdvPropInfo->szDevName;
 
-    DevAdvPropInfo->PropertySheetType = lpMachineName != NULL ?
+    DevAdvPropInfo->PropertySheetType = DevAdvPropInfo->ShowRemotePages ?
                                             DIGCDP_FLAG_REMOTE_ADVANCED :
                                             DIGCDP_FLAG_ADVANCED;
 
