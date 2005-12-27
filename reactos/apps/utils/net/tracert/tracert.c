@@ -69,20 +69,6 @@ INT iMaxHops = 30;              // -h  Max number of hops before trace ends
 INT iHostList;                  // -j  @UNIMPLEMENTED@
 INT iTimeOut = 2000;            // -w  time before packet times out
 
-/* function definitions */
-static BOOL ParseCmdline(int argc, char* argv[]);
-static INT Driver(void);
-static INT Setup(INT ttl);
-static VOID SetupTimingMethod(void);
-static VOID ResolveHostname(void);
-static VOID PreparePacket(INT packetSize, INT seqNum);
-static INT SendPacket(INT datasize);
-static INT ReceivePacket(INT datasize);
-static INT DecodeResponse(INT packetSize, INT seqNum);
-static LONG GetTime(void);
-static WORD CheckSum(PUSHORT data, UINT size);
-static VOID Usage(void);
-
 
 /*
  *
@@ -137,7 +123,7 @@ static INT Driver(VOID)
 {
 
     INT iHopCount = 1;              // hop counter. default max is 30
-    INT iSeqNum = 0;                // initialise packet sequence number
+    USHORT iSeqNum = 0;                // initialise packet sequence number
     INT iTTL = 1;                   // set initial packet TTL to 1
     BOOL bFoundTarget = FALSE;      // Have we reached our destination yet
     BOOL bAwaitPacket;              // indicates whether we have recieved a good packet
@@ -433,7 +419,7 @@ static INT Setup(INT iTTL)
  * Calculate the packet checksum
  *
  */
-static VOID PreparePacket(INT iPacketSize, INT iSeqNum)
+static VOID PreparePacket(INT iPacketSize, USHORT iSeqNum)
 {
     /* assemble ICMP echo request packet */
     sendpacket.icmpheader.type      = ECHO_REQUEST;
@@ -480,8 +466,8 @@ static INT SendPacket(INT datasize)
         if (WSAGetLastError() == WSAEACCES)
         {
             _tprintf(_T("\n\nYou must be an administrator to run this program!\n\n"));
-            exit(1);
             WSACleanup();
+            exit(1);
         }
         else
         {
@@ -584,7 +570,7 @@ static INT ReceivePacket(INT datasize)
  * It all is well, print the time taken for the round trip.
  *
  */
-static INT DecodeResponse(INT iPacketSize, INT iSeqNum)
+static INT DecodeResponse(INT iPacketSize, USHORT iSeqNum)
 {
     unsigned short header_len = recvpacket.h_len * 4;
     /* cast the recieved packet into an ECHO reply and a TTL Exceed so we can check the ID*/
@@ -645,7 +631,7 @@ static INT DecodeResponse(INT iPacketSize, INT iSeqNum)
  *
  */
 
-static LONG GetTime(VOID)
+static LONGLONG GetTime(VOID)
 {
     LARGE_INTEGER Time;
 

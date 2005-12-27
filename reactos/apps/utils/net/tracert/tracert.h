@@ -68,3 +68,16 @@ typedef struct TTLExceedHeader
 /* return to normal */
 #include <poppack.h>
 
+/* function definitions */
+static BOOL ParseCmdline(int argc, char* argv[]);
+static INT Driver(void);
+static INT Setup(INT ttl);
+static VOID SetupTimingMethod(void);
+static VOID ResolveHostname(void);
+static VOID PreparePacket(INT packetSize, USHORT seqNum);
+static INT SendPacket(INT datasize);
+static INT ReceivePacket(INT datasize);
+static INT DecodeResponse(INT packetSize, USHORT seqNum);
+static LONGLONG GetTime(void);
+static WORD CheckSum(PUSHORT data, UINT size);
+static VOID Usage(void);
