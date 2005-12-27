@@ -98,6 +98,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000041D = "Swedish (Sweden)"
 00000807 = "German (Swiss)"
 00000408 = "Greek"
+00000422 = "Ukrainian"
 00010408 = "Greek 220"
 
 [Files.KeyboardLayout]
@@ -110,6 +111,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040E = kbdhu.dll
 00000419 = kbdru.dll
 0000041D = kbdse.dll
+00000422 = kbdur.dll
 00000809 = kbduk.dll
 00000807 = kbdsg.dll
 00000813 = kbdbe.dll

@@ -41,4 +41,7 @@
 	<directory name="kbdbe">
 		<xi:include href="kbdbe/kbdbe.xml" />
 	</directory>
+	<directory name="kbdur">
+		<xi:include href="kbdur/kbdur.xml" />
+	</directory>
 </group>
