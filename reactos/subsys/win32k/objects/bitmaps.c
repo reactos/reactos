@@ -1524,7 +1524,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	res = IntCreateBitmapIndirect(&bm);
 	if(res)
 	{
-		char *buf;
+		PBYTE buf;
 
 		buf = ExAllocatePoolWithTag (PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
 		NtGdiGetBitmapBits (hBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);

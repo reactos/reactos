@@ -7210,7 +7210,7 @@ SetupDiInstallDeviceInterfaces(
         LPWSTR InterfaceGuidString = NULL;
         LPWSTR ReferenceString = NULL;
         LPWSTR InterfaceSection = NULL;
-        UINT InterfaceFlags;
+        INT InterfaceFlags;
         GUID InterfaceGuid;
         BOOL Result;
 
