@@ -26,7 +26,7 @@ typedef struct _USBMP_DEVICE_EXTENSTION
    ULONG BaseAddrLength;
    ULONG Flags;
    //ULONG AdapterInterfaceType;
-   //ULONG SystemIoBusNumber;
+   ULONG SystemIoBusNumber;
    ULONG SystemIoSlotNumber;
    //LIST_ENTRY AddressMappingListHead;
 
