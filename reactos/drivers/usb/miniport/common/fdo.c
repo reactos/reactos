@@ -58,6 +58,8 @@ UsbMpFdoStartDevice(
 	PUSBMP_DRIVER_EXTENSION DriverExtension;
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PCM_RESOURCE_LIST AllocatedResources;
+	ULONG Size;
+	NTSTATUS Status;
 
 	if (DeviceObject == KeyboardFdo || DeviceObject == MouseFdo)
 		return STATUS_SUCCESS;
@@ -141,6 +143,23 @@ UsbMpFdoStartDevice(
 		((struct hc_driver *)pci_ids->driver_data)->flags & HCD_MEMORY ? L"Memory" : L"I/O",
 		DeviceExtension->BaseAddress,
 		DeviceExtension->BaseAddrLength);
+
+	/* Get bus number from the upper level bus driver. */
+	Size = sizeof(ULONG);
+	Status = IoGetDeviceProperty(
+		DeviceExtension->PhysicalDeviceObject,
+		DevicePropertyBusNumber,
+		Size,
+		&DeviceExtension->SystemIoBusNumber,
+		&Size);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("USBMP: IoGetDeviceProperty DevicePropertyBusNumber failed\n");
+		DeviceExtension->SystemIoBusNumber = 0;
+	}
+
+	DPRINT("USBMP: Busnumber %d\n", DeviceExtension->SystemIoBusNumber);
 
 	/* Init wrapper with this object */
 	return InitLinuxWrapper(DeviceObject);
