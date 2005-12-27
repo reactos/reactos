@@ -346,7 +346,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_MINIMIZE_ALL        "minimize all windows"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Volume"
     IDS_ITEMS_CUR           "current items"
