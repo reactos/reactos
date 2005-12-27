@@ -246,11 +246,11 @@ CreateIconFromResourceEx(
 
   if (! fIcon)
     {
-      wXHotspot = (WORD)*pbIconBits;
-      pbIconBits+=2;
-      wYHotspot = (WORD)*pbIconBits;
-      pbIconBits+=2;
-      cbIconBits-=4;
+      wXHotspot = *(WORD*)pbIconBits;
+      pbIconBits+=sizeof(WORD);
+      wYHotspot = *(WORD*)pbIconBits;
+      pbIconBits+=sizeof(WORD);
+      cbIconBits-=2*sizeof(WORD);
     }
   else
     {
