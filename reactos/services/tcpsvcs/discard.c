@@ -24,7 +24,7 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
     if (!RecieveIncomingPackets(Sock))
     {
         LogEvent(_T("Discard: RecieveIncomingPackets failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
 
     LogEvent(_T("Discard: Shutting connection down...\n"), 0, FALSE);
@@ -33,7 +33,7 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
     else
     {
         LogEvent(_T("Discard: Connection shutdown failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
     
     LogEvent(_T("Discard: Terminating thread\n"), 0, FALSE);

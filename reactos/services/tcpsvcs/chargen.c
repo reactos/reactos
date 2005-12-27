@@ -21,13 +21,13 @@ extern BOOL bShutDown;
 
 DWORD WINAPI ChargenHandler(VOID* Sock_)
 {
-    DWORD RetVal = 0;
+    INT RetVal = 0;
     SOCKET Sock = (SOCKET)Sock_;
 
     if (!GenerateChars(Sock))
     {
         LogEvent(_T("Chargen: Char generation failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
 
     LogEvent(_T("Chargen: Shutting connection down...\n"), 0, FALSE);
@@ -36,7 +36,7 @@ DWORD WINAPI ChargenHandler(VOID* Sock_)
     else
     {
         LogEvent(_T("Chargen: Connection shutdown failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
     
     LogEvent(_T("Chargen: Terminating thread\n"), 0, FALSE);
@@ -56,7 +56,7 @@ BOOL GenerateChars(SOCKET Sock)
 
     /* fill ring with printable characters */
     for (charIndex=0, i=START; i<=END; charIndex++, i++)
-        ring[charIndex] = i;
+        ring[charIndex] = (char)i;
     /* save the address of the end character in the ring */
     endring = &ring[charIndex];
 

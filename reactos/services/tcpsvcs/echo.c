@@ -23,7 +23,7 @@ DWORD WINAPI EchoHandler(VOID* Sock_)
 
     if (!EchoIncomingPackets(Sock)) {
         LogEvent(_T("Echo: EchoIncomingPackets failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
 
     LogEvent(_T("Echo: Shutting connection down...\n"), 0, FALSE);
@@ -33,7 +33,7 @@ DWORD WINAPI EchoHandler(VOID* Sock_)
     else
     {
         LogEvent(_T("Echo: Connection shutdown failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
     
     LogEvent(_T("Echo: Terminating thread\n"), 0, FALSE);

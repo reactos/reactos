@@ -44,7 +44,7 @@
 
 /* data structure to pass to threads */
 typedef struct _Services {
-    INT Port;
+    USHORT Port;
     TCHAR *Name;
     LPTHREAD_START_ROUTINE Service;
 } SERVICES, *PSERVICES;
@@ -53,13 +53,13 @@ typedef struct _Services {
 //static VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
 VOID WINAPI ServerCtrlHandler(DWORD control);
 INT CreateServers(VOID);
-VOID LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg);
+VOID LogEvent (LPCTSTR UserMessage, INT ExitCode, BOOL PrintErrorMsg);
 void UpdateStatus (int NewStatus, int Check);
 
 
 /* skelserver functions */
 DWORD WINAPI StartServer(LPVOID lpParam);
-SOCKET SetUpListener(const char* ServAddr, int Port);
+SOCKET SetUpListener(USHORT Port);
 VOID AcceptConnections(SOCKET ListeningSocket,
     LPTHREAD_START_ROUTINE Service, TCHAR *Name);
 BOOL EchoIncomingPackets(SOCKET sd);

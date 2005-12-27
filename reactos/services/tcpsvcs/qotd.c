@@ -36,7 +36,7 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     if(! GetSystemDirectory(Sys, MAX_PATH))
     {
     	LogEvent(_T("QOTD: Getting system path failed.\n"), 0, TRUE);
-    	ExitThread(-1);
+    	ExitThread(1);
     }
     
     _tcscat(Sys, FilePath);
@@ -49,7 +49,7 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
 		_stprintf(buf, _T("QOTD: Error opening quote file : %s\n"), Sys);
         LogEvent(buf, 0, TRUE);
         LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
-        ExitThread(-1);
+        ExitThread(1);
     }
 
     /* read all quotes in the file into an array */
@@ -75,7 +75,7 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     {
         LogEvent(_T("QOTD: Connection shutdown failed\n"), 0, FALSE);
         LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
-        ExitThread(-1);
+        ExitThread(1);
     }
     
     LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
@@ -90,7 +90,7 @@ BOOL SendQuote(SOCKET Sock, TCHAR* Quote)
     INT StringSize;
     INT RetVal;
 
-    StringSize = strlen(Quote);
+    StringSize = (INT)_tcsclen(Quote);
     RetVal = send(Sock, Quote, sizeof(TCHAR) * StringSize, 0);
 
     if (RetVal == SOCKET_ERROR)

@@ -38,7 +38,7 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
     else
     {
         LogEvent(_T("DayTime: Connection shutdown failed\n"), 0, FALSE);
-        RetVal = -1;
+        RetVal = 1;
     }
     
     LogEvent(_T("DayTime: Terminating thread\n"), 0, FALSE);
@@ -48,7 +48,7 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
 
 BOOL SendTime(SOCKET Sock, TCHAR *time)
 {
-    INT StringSize = strlen(time);
+    INT StringSize = (INT)_tcsclen(time);
     INT RetVal = send(Sock, time, sizeof(TCHAR) * StringSize, 0);
     
     if (RetVal == SOCKET_ERROR)

@@ -21,13 +21,12 @@ DWORD WINAPI StartServer(LPVOID lpParam)
 {
 	SOCKET ListeningSocket;
 	PSERVICES pServices;
-    const TCHAR* HostIP = "127.0.0.1";
     TCHAR buf[256];
 
     pServices = (PSERVICES)lpParam;
 
 //DebugBreak();
-    ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
+    ListeningSocket = SetUpListener(htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
     {
 		LogEvent("Socket error when setting up listener\n", 0, TRUE);
@@ -45,7 +44,7 @@ DWORD WINAPI StartServer(LPVOID lpParam)
 }
 
 
-SOCKET SetUpListener(const char* ServAddr, int Port)
+SOCKET SetUpListener(USHORT Port)
 {
     SOCKET Sock;
     SOCKADDR_IN Server;

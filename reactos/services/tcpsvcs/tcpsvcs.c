@@ -52,7 +52,7 @@ Services[NUM_SERVICES] =
 
 
 int
-main(int argc, char *argv[])
+main(void)
 {
     SERVICE_TABLE_ENTRY ServiceTable[] =
     {
@@ -245,12 +245,10 @@ CreateServers()
 }
 
 
-/*	LogEvent is similar to the ReportError function used elsewhere
-	For a service, however, we ReportEvent rather than write to standard
-	error. Eventually, this function should go into the utility
-	library.  */
+/*	This is a temperary log system until our eventlog is in place  */
+
 VOID
-LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg)
+LogEvent (LPCTSTR UserMessage, INT ExitCode, BOOL PrintErrorMsg)
 {
 	DWORD eMsgLen, ErrNum = GetLastError ();
 	LPTSTR lpvSysMsg;
@@ -265,7 +263,7 @@ LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg)
 			ErrNum, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPTSTR)&lpvSysMsg, 0, NULL);
 
-		_stprintf(MessageBuffer, _T("%s %s ErrNum = %lu. ExitCode = %lu."),
+		_stprintf(MessageBuffer, _T("%s %s ErrNum = %lu. ExitCode = %d."),
 			UserMessage, lpvSysMsg, ErrNum, ExitCode);
 		HeapFree(GetProcessHeap (), 0, lpvSysMsg);
 	}
