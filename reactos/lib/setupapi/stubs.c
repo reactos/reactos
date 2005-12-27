@@ -178,3 +178,49 @@ BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListD
     return TRUE;
 }
 
+
+/***********************************************************************
+ *		SetupDiRegisterDeviceInfo(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiRegisterDeviceInfo(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData,
+    IN DWORD Flags,
+    IN PSP_DETSIG_CMPPROC CompareProc OPTIONAL,
+    IN PVOID CompareContext OPTIONAL,
+    OUT PSP_DEVINFO_DATA DupDeviceInfoData OPTIONAL)
+{
+    FIXME ("Stub %p %p 0x%lx %p %p %p\n", DeviceInfoSet, DeviceInfoData,
+        Flags, CompareProc, CompareContext, DupDeviceInfoData);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *		SetupDiRemoveDevice(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiRemoveDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME ("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *		SetupDiUnremoveDevice(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiUnremoveDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME ("Stub %p %p\n", DeviceInfoSet, DeviceInfoData);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}

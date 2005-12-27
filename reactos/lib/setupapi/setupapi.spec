@@ -368,8 +368,8 @@
 @ stub SetupDiOpenDeviceInterfaceRegKey
 @ stdcall SetupDiOpenDeviceInterfaceW(ptr wstr long ptr)
 @ stdcall SetupDiRegisterCoDeviceInstallers(ptr ptr)
-@ stub SetupDiRegisterDeviceInfo
-@ stub SetupDiRemoveDevice
+@ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
+@ stdcall SetupDiRemoveDevice(ptr ptr)
 @ stub SetupDiRemoveDeviceInterface
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stub SetupDiSelectDevice
@@ -385,7 +385,7 @@
 @ stdcall SetupDiSetSelectedDevice(ptr ptr)
 @ stdcall SetupDiSetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)
-@ stub SetupDiUnremoveDevice
+@ stdcall SetupDiUnremoveDevice(ptr ptr)
 @ stub SetupDuplicateDiskSpaceListA
 @ stub SetupDuplicateDiskSpaceListW
 @ stdcall SetupFindFirstLineA(long str str ptr)

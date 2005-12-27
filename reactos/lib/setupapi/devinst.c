@@ -3631,6 +3631,14 @@ FreeFunctionPointer(
        return GetLastError();
 }
 
+static BOOL WINAPI
+IntSetupDiRegisterDeviceInfo(
+    IN HDEVINFO DeviceInfoSet,
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData)
+{
+    return SetupDiRegisterDeviceInfo(DeviceInfoSet, DeviceInfoData, 0, NULL, NULL, NULL);
+}
+
 /***********************************************************************
  *		SetupDiCallClassInstaller (SETUPAPI.@)
  */
@@ -3667,7 +3675,13 @@ BOOL WINAPI SetupDiCallClassInstaller(
             case DIF_ADDPROPERTYPAGE_ADVANCED:
                 CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
                 break;
+            case DIF_ADDREMOTEPROPERTYPAGE_ADVANCED:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                break;
             case DIF_ALLOW_INSTALL:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_DETECT:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
                 break;
             case DIF_DESTROYPRIVATEDATA:
@@ -3694,6 +3708,15 @@ BOOL WINAPI SetupDiCallClassInstaller(
             case DIF_NEWDEVICEWIZARD_PREANALYZE:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
                 break;
+            case DIF_NEWDEVICEWIZARD_PRESELECT:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_NEWDEVICEWIZARD_SELECT:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_POWERMESSAGEWAKE:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                break;
             case DIF_PROPERTYCHANGE:
                 CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
                 DefaultHandler = SetupDiChangeState;
@@ -3702,9 +3725,28 @@ BOOL WINAPI SetupDiCallClassInstaller(
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
                 DefaultHandler = SetupDiRegisterCoDeviceInstallers;
                 break;
+            case DIF_REGISTERDEVICE:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = IntSetupDiRegisterDeviceInfo;
+                break;
+            case DIF_REMOVE:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiRemoveDevice;
+                break;
             case DIF_SELECTBESTCOMPATDRV:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
                 DefaultHandler = SetupDiSelectBestCompatDrv;
+                break;
+            case DIF_SELECTDEVICE:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiSelectBestCompatDrv;
+                break;
+            case DIF_TROUBLESHOOTER:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_UNREMOVE:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiUnremoveDevice;
                 break;
             default:
                 ERR("Install function %u not supported\n", InstallFunction);
