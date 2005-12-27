@@ -79,6 +79,71 @@ typedef struct _DEVADVPROP_INFO
 #define PM_INITIALIZE (WM_APP + 0x101)
 
 
+static VOID
+UpdateDriverDlg(IN HWND hwndDlg,
+                IN PDEVADVPROP_INFO dap)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    /* set the device image */
+    SendDlgItemMessage(hwndDlg,
+                       IDC_DEVICON,
+                       STM_SETICON,
+                       (WPARAM)dap->hDevIcon,
+                       0);
+
+    /* set the device name edit control text */
+    SetDlgItemText(hwndDlg,
+                   IDC_DEVNAME,
+                   dap->szDevName);
+
+    /* query the driver provider */
+    if (GetDriverProviderString(DeviceInfoSet,
+                                DeviceInfoData,
+                                dap->szTemp,
+                                sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+    {
+        SetDlgItemText(hwndDlg,
+                       IDC_DRVPROVIDER,
+                       dap->szTemp);
+    }
+
+    /* query the driver date */
+    if (GetDriverDateString(DeviceInfoSet,
+                            DeviceInfoData,
+                            dap->szTemp,
+                            sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+    {
+        SetDlgItemText(hwndDlg,
+                       IDC_DRVDATE,
+                       dap->szTemp);
+    }
+
+    /* query the driver version */
+    if (GetDriverVersionString(DeviceInfoSet,
+                               DeviceInfoData,
+                               dap->szTemp,
+                               sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+    {
+        SetDlgItemText(hwndDlg,
+                       IDC_DRVVERSION,
+                       dap->szTemp);
+    }
+}
+
+
 static INT_PTR
 CALLBACK
 AdvProcDriverDlgProc(IN HWND hwndDlg,
@@ -116,17 +181,8 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                                      DWL_USER,
                                      (DWORD_PTR)dap);
 
-                    /* set the device image */
-                    SendDlgItemMessage(hwndDlg,
-                                       IDC_DEVICON,
-                                       STM_SETICON,
-                                       (WPARAM)dap->hDevIcon,
-                                       0);
-
-                    /* set the device name edit control text */
-                    SetDlgItemText(hwndDlg,
-                                   IDC_DEVNAME,
-                                   dap->szDevName);
+                    UpdateDriverDlg(hwndDlg,
+                                    dap);
                 }
                 Ret = TRUE;
                 break;
@@ -391,7 +447,7 @@ UpdateDevInfo(IN HWND hwndDlg,
         }
         else
         {
-    GetParentNode:
+GetParentNode:
             /* get the parent node from the initial devinst */
             CM_Get_Parent_Ex(&dap->ParentDevInst,
                              dap->DeviceInfoData.DevInst,

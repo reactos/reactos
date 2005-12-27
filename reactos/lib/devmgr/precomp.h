@@ -2,6 +2,7 @@
 #define __DEVMGR_H
 
 #include <windows.h>
+#include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
 #include <commctrl.h>
@@ -255,6 +256,24 @@ GetDeviceStatusString(IN DEVINST DevInst,
                       IN HMACHINE hMachine,
                       OUT LPWSTR szBuffer,
                       IN DWORD BufferSize);
+
+BOOL
+GetDriverProviderString(IN HDEVINFO DeviceInfoSet,
+                        IN PSP_DEVINFO_DATA DeviceInfoData,
+                        OUT LPWSTR szBuffer,
+                        IN DWORD BufferSize);
+
+BOOL
+GetDriverVersionString(IN HDEVINFO DeviceInfoSet,
+                       IN PSP_DEVINFO_DATA DeviceInfoData,
+                       OUT LPWSTR szBuffer,
+                       IN DWORD BufferSize);
+
+BOOL
+GetDriverDateString(IN HDEVINFO DeviceInfoSet,
+                    IN PSP_DEVINFO_DATA DeviceInfoData,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD BufferSize);
 
 BOOL
 IsDeviceHidden(IN DEVINST DevInst,

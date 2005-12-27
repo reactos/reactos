@@ -449,14 +449,200 @@ GetDeviceStatusString(IN DEVINST DevInst,
     else
     {
 GeneralMessage:
-        Ret = LoadString(hDllInstance,
-                         MessageId,
-                         szBuffer,
-                         (int)BufferSize);
+        if (LoadString(hDllInstance,
+                        MessageId,
+                        szBuffer,
+                        (int)BufferSize))
+        {
+            Ret = TRUE;
+        }
     }
 
     return Ret;
 }
+
+
+BOOL
+GetDriverProviderString(IN HDEVINFO DeviceInfoSet,
+                        IN PSP_DEVINFO_DATA DeviceInfoData,
+                        OUT LPWSTR szBuffer,
+                        IN DWORD BufferSize)
+{
+    HKEY hKey;
+    DWORD dwSize, dwType;
+    BOOL Ret = FALSE;
+
+    szBuffer[0] = L'\0';
+
+    /* get driver provider, date and version */
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        /* query the driver provider */
+        dwSize = BufferSize;
+        if (RegQueryValueEx(hKey,
+                            REGSTR_VAL_PROVIDER_NAME,
+                            NULL,
+                            &dwType,
+                            (LPBYTE)szBuffer,
+                            &dwSize) == ERROR_SUCCESS &&
+            dwType == REG_SZ &&
+            szBuffer[0] != L'\0')
+        {
+            Ret = TRUE;
+        }
+        else
+        {
+            szBuffer[0] = L'\0';
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    if (szBuffer[0] == L'\0')
+    {
+        /* unable to query the information */
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
+    }
+
+    return Ret;
+}
+
+
+BOOL
+GetDriverVersionString(IN HDEVINFO DeviceInfoSet,
+                       IN PSP_DEVINFO_DATA DeviceInfoData,
+                       OUT LPWSTR szBuffer,
+                       IN DWORD BufferSize)
+{
+    HKEY hKey;
+    DWORD dwSize, dwType;
+    BOOL Ret = FALSE;
+
+    szBuffer[0] = L'\0';
+
+    /* get driver provider, date and version */
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        /* query the driver provider */
+        dwSize = BufferSize;
+        if (RegQueryValueEx(hKey,
+                            L"DriverVersion",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)szBuffer,
+                            &dwSize) == ERROR_SUCCESS &&
+            dwType == REG_SZ &&
+            szBuffer[0] != L'\0')
+        {
+            Ret = TRUE;
+        }
+        else
+        {
+            szBuffer[0] = L'\0';
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    if (szBuffer[0] == L'\0')
+    {
+        /* unable to query the information */
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
+    }
+
+    return Ret;
+}
+
+BOOL
+GetDriverDateString(IN HDEVINFO DeviceInfoSet,
+                    IN PSP_DEVINFO_DATA DeviceInfoData,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD BufferSize)
+{
+    HKEY hKey;
+    FILETIME DriverDate;
+    SYSTEMTIME SystemTime, LocalTime;
+    DWORD dwSize, dwType;
+    BOOL Ret = FALSE;
+
+    szBuffer[0] = L'\0';
+
+    /* get driver provider, date and version */
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        /* query the driver provider */
+        dwSize = sizeof(FILETIME);
+        if (RegQueryValueEx(hKey,
+                            L"DriverDateData",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&DriverDate,
+                            &dwSize) == ERROR_SUCCESS &&
+            dwType == REG_BINARY &&
+            dwSize == sizeof(FILETIME) &&
+            FileTimeToSystemTime(&DriverDate,
+                                 &SystemTime) &&
+            SystemTimeToTzSpecificLocalTime(NULL,
+                                            &SystemTime,
+                                            &LocalTime) &&
+            GetDateFormat(LOCALE_USER_DEFAULT,
+                          DATE_SHORTDATE,
+                          &LocalTime,
+                          NULL,
+                          szBuffer,
+                          BufferSize) != 0)
+        {
+            Ret = TRUE;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    if (!Ret)
+    {
+        /* unable to query the information */
+        if (LoadString(hDllInstance,
+                       IDS_UNKNOWN,
+                       szBuffer,
+                       BufferSize))
+        {
+            Ret = TRUE;
+        }
+    }
+
+    return Ret;
+}
+
 
 
 BOOL
