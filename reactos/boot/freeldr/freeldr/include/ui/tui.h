@@ -73,12 +73,12 @@ typedef struct
 
 } TUI_MENU_INFO, *PTUI_MENU_INFO;
 
-VOID	TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
-VOID	TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
-VOID	TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
-VOID	TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG		TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOL	TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+VOID	WINAPI TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
+VOID	WINAPI TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
+VOID	WINAPI TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
+VOID	WINAPI TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
+ULONG	WINAPI TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOL	WINAPI TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 /*

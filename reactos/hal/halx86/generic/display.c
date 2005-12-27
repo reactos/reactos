@@ -171,7 +171,7 @@
 
 
 #define CHAR_ATTRIBUTE_BLACK  0x00  /* black on black */
-#define CHAR_ATTRIBUTE        0x17  /* grey on blue */
+#define CHAR_ATTRIBUTE        0x07  /* grey on black */
 
 #define FONT_AMOUNT        (8*8192)
 

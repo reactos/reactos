@@ -587,6 +587,10 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		return;
 	}
 
+	UiDrawBackdrop();
+	UiDrawStatusText("Detecting Hardware...");
+    UiDrawProgressBarCenter(1, 100, szLoadingMsg);
+
 	/*
 	 * Setup multiboot information structure
 	 */
@@ -677,19 +681,15 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(reactos_kernel_cmdline, value);
 	}
 
-
-	UiDrawBackdrop();
-	UiDrawStatusText("Detecting Hardware...");
-
 	/*
 	 * Detect hardware
 	 */
 	MachHwDetect();
+    UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
 	if (AcpiPresent) LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
 	UiDrawStatusText("Loading...");
-	UiDrawProgressBarCenter(0, 100, szLoadingMsg);
 
 	/*
 	 * Try to open system drive

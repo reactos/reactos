@@ -20,6 +20,8 @@
 #include <freeldr.h>
 
 PVOID	TextVideoBuffer = NULL;
+extern BOOL UiDrawTime;
+extern BOOL UiMinimal;
 
 /*
  * printf() - prints formatted text to stdout
@@ -111,6 +113,25 @@ VOID TuiUnInitialize(VOID)
 
 VOID TuiDrawBackdrop(VOID)
 {
+    if (UiMinimal)
+    {
+        //
+        // Fill in a black background
+        //
+        TuiFillArea(0,
+                    0,
+                    UiScreenWidth - 1,
+                    UiScreenHeight - 1,
+                    0,
+                    0);
+
+        //
+        // Update the screen buffer
+        //
+        VideoCopyOffScreenBufferToVRAM();
+        return;
+    }
+
 	//
 	// Fill in the background (excluding title box & status bar)
 	//
@@ -429,6 +450,11 @@ VOID TuiDrawStatusText(PCSTR StatusText)
 {
 	ULONG		i;
 
+    //
+    // Minimal UI doesn't have a status bar
+    //
+    if (UiMinimal) return;
+
 	TuiDrawText(0, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	TuiDrawText(1, UiScreenHeight-1, StatusText, ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 
@@ -448,6 +474,9 @@ VOID TuiUpdateDateTime(VOID)
 	CHAR	TimeString[40];
 	CHAR	TempString[20];
 	BOOL	PMHour = FALSE;
+
+    /* Don't draw the time if this has been disabled */
+    if (!UiDrawTime) return;
 
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
 	if (Year < 1 || 9999 < Year || Month < 1 || 12 < Month || Day < 1 ||
@@ -663,10 +692,28 @@ VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 	ULONG		Width = 50; // Allow for 50 "bars"
 	ULONG		Height = 2;
 
-	Left = (UiScreenWidth - Width - 4) / 2;
-	Right = Left + Width + 3;
-	Top = (UiScreenHeight - Height - 2) / 2;
-	Top += 2;
+	//
+	// Is this the minimal UI?
+	//
+	if (UiMinimal)
+	{
+		//
+		// Use alternate settings
+		//
+		Width = 80;
+		Left = 0;
+		Right = Left + Width;
+		Top = UiScreenHeight - Height - 4;
+		Bottom = Top + Height + 1;
+	}
+	else
+	{
+		Left = (UiScreenWidth - Width - 4) / 2;
+		Right = Left + Width + 3;
+		Top = (UiScreenHeight - Height - 2) / 2;
+		Top += 2;
+	}
+
 	Bottom = Top + Height + 1;
 
 	TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
@@ -685,12 +732,26 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 		Position = Range;
 	}
 
-	// Draw the box
-	TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
+    //
+    // Minimal UI has no box, and only generic loading text
+    //
+    if (!UiMinimal)
+    {
+	    // Draw the box
+	    TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
 
-	// Draw the "Loading..." text
-	//TuiDrawText(70/2, Top+1, "Loading...", ATTR(UiTextColor, UiMenuBgColor));
-	TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+    	//
+        //  Draw the "Loading..." text
+        //
+	    TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+    }
+    else
+    {
+    	//
+        //  Draw the "Loading..." text
+        //
+        TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, "ReactOS is loading files...", ATTR(7, 0));
+    }
 
 	// Draw the percent complete
 	for (i=0; i<(Position*ProgressBarWidth)/Range; i++)
@@ -698,14 +759,16 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 		TuiDrawText(Left+2+i, Top+2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
 	}
 
-	// Draw the rest
-	for (; i<ProgressBarWidth; i++)
-	{
-		TuiDrawText(Left+2+i, Top+2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
-	}
+	// Draw the shadow for non-minimal UI
+    if (!UiMinimal)
+    {
+	    for (; i<ProgressBarWidth; i++)
+	    {
+		    TuiDrawText(Left+2+i, Top+2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
+	    }
+    }
 
 	TuiUpdateDateTime();
-
 	VideoCopyOffScreenBufferToVRAM();
 }
 

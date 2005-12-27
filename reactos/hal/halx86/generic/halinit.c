@@ -53,8 +53,7 @@ HalInitSystem (ULONG BootPhase,
   else if (BootPhase == 2)
     {
       /* Go to blue screen */
-      HalClearDisplay (0x17); /* grey on blue */
-      
+    
       HalpZeroPageMapping = MmMapIoSpace((LARGE_INTEGER)0LL, PAGE_SIZE, MmNonCached);
     }
 

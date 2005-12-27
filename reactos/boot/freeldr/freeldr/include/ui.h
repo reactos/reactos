@@ -46,6 +46,10 @@ extern	CHAR	UiTitleBoxTitleText[260];						// Title box's title text
 extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is displayed
 
 extern	BOOL	UiUseSpecialEffects;							// Tells us if we should use fade effects
+extern BOOL UiCenterMenu;
+extern BOOL UiMenuBox;
+extern BOOL UiMinimal;
+extern CHAR UiTimeText[];
 
 extern	const CHAR	UiMonthNames[12][15];
 

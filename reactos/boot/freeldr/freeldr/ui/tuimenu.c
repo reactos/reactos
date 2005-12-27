@@ -1,427 +1,549 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         FreeLoader
+ * FILE:            freeldr/ui/tuimenu.c
+ * PURPOSE:         UI Menu Functions
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Brian Palmer (brianp@sginet.com)
  */
+
+/* INCLUDES ******************************************************************/
 
 #include <freeldr.h>
 
-BOOL TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+/* FUNCTIONS *****************************************************************/
+
+BOOL
+WINAPI
+TuiDisplayMenu(PCSTR MenuItemList[],
+               ULONG MenuItemCount,
+               ULONG DefaultMenuItem,
+               LONG MenuTimeOut,
+               ULONG* SelectedMenuItem,
+               BOOL CanEscape,
+               UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	TUI_MENU_INFO	MenuInformation;
-	ULONG		LastClockSecond;
-	ULONG		CurrentClockSecond;
-	ULONG		KeyPress;
+    TUI_MENU_INFO MenuInformation;
+    ULONG LastClockSecond;
+    ULONG CurrentClockSecond;
+    ULONG KeyPress;
 
-	//
-	// The first thing we need to check is the timeout
-	// If it's zero then don't bother with anything,
-	// just return the default item
-	//
-	if (MenuTimeOut == 0)
-	{
-		if (SelectedMenuItem != NULL)
-		{
-			*SelectedMenuItem = DefaultMenuItem;
-		}
+    //
+    // Check if there's no timeout
+    if (!MenuTimeOut)
+    {
+        //
+        // Return the default selected item
+        //
+        if (SelectedMenuItem) *SelectedMenuItem = DefaultMenuItem;
+        return TRUE;
+    }
 
-		return TRUE;
-	}
+    //
+    // Setup the MENU_INFO structure
+    //
+    MenuInformation.MenuItemList = MenuItemList;
+    MenuInformation.MenuItemCount = MenuItemCount;
+    MenuInformation.MenuTimeRemaining = MenuTimeOut;
+    MenuInformation.SelectedMenuItem = DefaultMenuItem;
 
-	//
-	// Setup the MENU_INFO structure
-	//
-	MenuInformation.MenuItemList = MenuItemList;
-	MenuInformation.MenuItemCount = MenuItemCount;
-	MenuInformation.MenuTimeRemaining = MenuTimeOut;
-	MenuInformation.SelectedMenuItem = DefaultMenuItem;
+    //
+    // Calculate the size of the menu box
+    //
+    TuiCalcMenuBoxSize(&MenuInformation);
 
-	//
-	// Calculate the size of the menu box
-	//
-	TuiCalcMenuBoxSize(&MenuInformation);
+    //
+    // Draw the menu
+    //
+    TuiDrawMenu(&MenuInformation);
 
-	//
-	// Draw the menu
-	//
-	TuiDrawMenu(&MenuInformation);
+    //
+    // Get the current second of time
+    //
+    MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &LastClockSecond);
 
-	//
-	// Get the current second of time
-	//
-	MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &LastClockSecond);
+    //
+    // Process keys
+    //
+    while (TRUE)
+    {
+        //
+        // Process key presses
+        //
+        KeyPress = TuiProcessMenuKeyboardEvent(&MenuInformation,
+                                               KeyPressFilter);
 
-	//
-	// Process keys
-	//
-	while (1)
-	{
-		//
-		// Process key presses
-		//
-		KeyPress = TuiProcessMenuKeyboardEvent(&MenuInformation, KeyPressFilter);
-		if (KeyPress == KEY_ENTER)
-		{
-			//
-			// If they pressed enter then exit this loop
-			//
-			break;
-		}
-		else if (CanEscape && KeyPress == KEY_ESC)
-		{
-			//
-			// They pressed escape, so just return FALSE
-			//
-			return FALSE;
-		}
+        //
+        // Check for ENTER or ESC
+        //
+        if (KeyPress == KEY_ENTER) break;
+        if (CanEscape && KeyPress == KEY_ESC) return FALSE;
 
-		//
-		// Update the date & time
-		//
-		TuiUpdateDateTime();
+        //
+        // Update the date & time
+        //
+        TuiUpdateDateTime();
+        VideoCopyOffScreenBufferToVRAM();
 
-		VideoCopyOffScreenBufferToVRAM();
+        //
+        // Check if there is a countdown
+        //
+        if (MenuInformation.MenuTimeRemaining)
+        {
+            //
+            // Get the updated time, seconds only
+            //
+            MachRTCGetCurrentDateTime(NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      &CurrentClockSecond);
 
-		if (MenuInformation.MenuTimeRemaining > 0)
-		{
-			MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &CurrentClockSecond);
-			if (CurrentClockSecond != LastClockSecond)
-			{
-				//
-				// Update the time information
-				//
-				LastClockSecond = CurrentClockSecond;
-				MenuInformation.MenuTimeRemaining--;
+            //
+            // Check if more then a second has now elapsed
+            //
+            if (CurrentClockSecond != LastClockSecond)
+            {
+                //
+                // Update the time information
+                //
+                LastClockSecond = CurrentClockSecond;
+                MenuInformation.MenuTimeRemaining--;
 
-				//
-				// Update the menu
-				//
-				TuiDrawMenuBox(&MenuInformation);
+                //
+                // Update the menu
+                //
+                TuiDrawMenuBox(&MenuInformation);
+                VideoCopyOffScreenBufferToVRAM();
+            }
+        }
+        else
+        {
+            //
+            // A time out occurred, exit this loop and return default OS
+            //
+            break;
+        }
+    }
 
-				VideoCopyOffScreenBufferToVRAM();
-			}
-		}
-		else if (MenuInformation.MenuTimeRemaining == 0)
-		{
-			//
-			// A time out occurred, exit this loop and return default OS
-			//
-			break;
-		}
-	}
-
-	//
-	// Update the selected menu item information
-	//
-	if (SelectedMenuItem != NULL)
-	{
-		*SelectedMenuItem = MenuInformation.SelectedMenuItem;
-	}
-
-	return TRUE;
+    //
+    // Return the selected item
+    //
+    if (SelectedMenuItem) *SelectedMenuItem = MenuInformation.SelectedMenuItem;
+    return TRUE;
 }
 
-VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
+VOID
+WINAPI
+TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 {
-	ULONG		Idx;
-	ULONG		Width;
-	ULONG		Height;
-	ULONG		Length;
+    ULONG i;
+    ULONG Width = 0;
+    ULONG Height;
+    ULONG Length;
 
-	//
-	// Height is the menu item count plus 2 (top border & bottom border)
-	//
-	Height = MenuInfo->MenuItemCount + 2;
-	Height -= 1; // Height is zero-based
+    //
+    // Height is the menu item count plus 2 (top border & bottom border)
+    //
+    Height = MenuInfo->MenuItemCount + 2;
+    Height -= 1; // Height is zero-based
 
-	//
-	// Find the length of the longest string in the menu
-	//
-	Width = 0;
-	for(Idx=0; Idx<MenuInfo->MenuItemCount; Idx++)
-	{
-		Length = strlen(MenuInfo->MenuItemList[Idx]);
+    //
+    // Loop every item
+    //
+    for(i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        //
+        // Get the string length and make it become the new width if necessary
+        //
+        Length = strlen(MenuInfo->MenuItemList[i]);
+        if (Length > Width) Width = Length;
+    }
 
-		if (Length > Width)
-		{
-			Width = Length;
-		}
-	}
+    //
+    // Allow room for left & right borders, plus 8 spaces on each side
+    //
+    Width += 18;
 
-	//
-	// Allow room for left & right borders, plus 8 spaces on each side
-	//
-	Width += 18;
+    //
+    // Check if we're drawing a centered menu
+    //
+    if (UiCenterMenu)
+    {
+        //
+        // Calculate the menu box area for a centered menu
+        //
+        MenuInfo->Left = (UiScreenWidth - Width) / 2;
+        MenuInfo->Top = (((UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT) -
+                          Height) / 2) + TUI_TITLE_BOX_CHAR_HEIGHT;
+    }
+    else
+    {
+        //
+        // Put the menu in the default left-corner position
+        //
+        MenuInfo->Left = -1;
+        MenuInfo->Top = 4;
+    }
 
-	//
-	// Calculate the menu box area
-	//
-	MenuInfo->Left = (UiScreenWidth - Width) / 2;
-	MenuInfo->Right = (MenuInfo->Left) + Width;
-	MenuInfo->Top = (((UiScreenHeight - TUI_TITLE_BOX_CHAR_HEIGHT) - Height) / 2) + TUI_TITLE_BOX_CHAR_HEIGHT;
-	MenuInfo->Bottom = (MenuInfo->Top) + Height;
+    //
+    // The other margins are the same
+    //
+    MenuInfo->Right = (MenuInfo->Left) + Width;
+    MenuInfo->Bottom = (MenuInfo->Top) + Height;
 }
 
-VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
+VOID
+WINAPI
+TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 {
-	ULONG		Idx;
+    ULONG i;
 
-	//
-	// Draw the backdrop
-	//
-	UiDrawBackdrop();
+    //
+    // Draw the backdrop
+    //
+    UiDrawBackdrop();
 
-	//
-	// Update the status bar
-	//
-	UiDrawStatusText("Use \x18\x19 to select, then press ENTER.");
+    //
+    // Check if this is the minimal (console) UI
+    //
+    if (UiMinimal)
+    {
+        //
+        // No GUI status bar text, just minimal text. first to tell the user to
+        // choose.
+        //
+        TuiDrawText(0,
+                    MenuInfo->Top - 2,
+                    "Please select the operating system to start:",
+                    ATTR(UiMenuFgColor, UiMenuBgColor));
 
-	//
-	// Draw the menu box
-	//
-	TuiDrawMenuBox(MenuInfo);
+        //
+        // Now tell him how to choose
+        //
+        TuiDrawText(0,
+                    MenuInfo->Bottom + 1,
+                    "Use the up and down arrow keys to move the highlight to "
+                    "your choice.",
+                    ATTR(UiMenuFgColor, UiMenuBgColor));
+        TuiDrawText(0,
+                    MenuInfo->Bottom + 2,
+                    "Press ENTER to choose.",
+                    ATTR(UiMenuFgColor, UiMenuBgColor));
 
-	//
-	// Draw each line of the menu
-	//
-	for (Idx=0; Idx<MenuInfo->MenuItemCount; Idx++)
-	{
-		TuiDrawMenuItem(MenuInfo, Idx);
-	}
+        //
+        // And offer F8 options
+        //
+        TuiDrawText(0,
+                    UiScreenHeight - 4,
+                    "For troubleshooting and advanced startup options for "
+                    "ReactOS, press F8.",
+                    ATTR(UiMenuFgColor, UiMenuBgColor));
+    }
+    else
+    {
+        //
+        // Update the status bar
+        //
+        UiDrawStatusText("Use \x18\x19 to select, then press ENTER.");
+    }
 
-	VideoCopyOffScreenBufferToVRAM();
+    //
+    // Draw the menu box
+    //
+    TuiDrawMenuBox(MenuInfo);
+
+    //
+    // Draw each line of the menu
+    //
+    for (i = 0; i < MenuInfo->MenuItemCount; i++) TuiDrawMenuItem(MenuInfo, i);
+    VideoCopyOffScreenBufferToVRAM();
 }
 
-VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
+VOID
+WINAPI
+TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 {
-	CHAR	MenuLineText[80];
-	CHAR	TempString[80];
-	ULONG		Idx;
+    CHAR MenuLineText[80];
+    CHAR TempString[80];
+    ULONG i;
 
-	//
-	// Draw the menu box
-	//
-	UiDrawBox(MenuInfo->Left,
-		MenuInfo->Top,
-		MenuInfo->Right,
-		MenuInfo->Bottom,
-		D_VERT,
-		D_HORZ,
-		FALSE,		// Filled
-		TRUE,		// Shadow
-		ATTR(UiMenuFgColor, UiMenuBgColor));
+    //
+    // Draw the menu box if requested
+    //
+    if (UiMenuBox)
+    {
+        UiDrawBox(MenuInfo->Left,
+                  MenuInfo->Top,
+                  MenuInfo->Right,
+                  MenuInfo->Bottom,
+                  D_VERT,
+                  D_HORZ,
+                  FALSE,        // Filled
+                  TRUE,        // Shadow
+                  ATTR(UiMenuFgColor, UiMenuBgColor));
+    }
 
-	//
-	// If there is a timeout draw the time remaining
-	//
-	if (MenuInfo->MenuTimeRemaining >= 0)
-	{
-		strcpy(MenuLineText, "[ Time Remaining: ");
-		_itoa(MenuInfo->MenuTimeRemaining, TempString, 10);
-		strcat(MenuLineText, TempString);
-		strcat(MenuLineText, " ]");
+    //
+    // If there is a timeout draw the time remaining
+    //
+    if (MenuInfo->MenuTimeRemaining >= 0)
+    {
+        //
+        // Copy the integral time text string, and remove the last 2 chars
+        //
+        strcpy(TempString, UiTimeText);
+        i = strlen(TempString);
+        TempString[i - 2] = 0;
 
-		UiDrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
-			MenuInfo->Bottom,
-			MenuLineText,
-			ATTR(UiMenuFgColor, UiMenuBgColor));
-	}
+        //
+        // Display the first part of the string and the remaining time
+        //
+        strcpy(MenuLineText, TempString);
+        _itoa(MenuInfo->MenuTimeRemaining, TempString, 10);
+        strcat(MenuLineText, TempString);
 
-	//
-	// Now draw the separators
-	//
-	for (Idx=0; Idx<MenuInfo->MenuItemCount; Idx++)
-	{
-		if (_stricmp(MenuInfo->MenuItemList[Idx], "SEPARATOR") == 0)
-		{
-			UiDrawText(MenuInfo->Left, MenuInfo->Top + Idx + 1, "\xC7", ATTR(UiMenuFgColor, UiMenuBgColor));
-			UiDrawText(MenuInfo->Right, MenuInfo->Top + Idx + 1, "\xB6", ATTR(UiMenuFgColor, UiMenuBgColor));
-		}
-	}
+        //
+        // Add the last 2 chars
+        //
+        strcat(MenuLineText, &UiTimeText[i - 2]);
+
+        //
+        // Check if this is a centered menu
+        //
+        if (UiCenterMenu)
+        {
+            //
+            // Display it in the center of the menu
+            //
+            UiDrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
+                       MenuInfo->Bottom,
+                       MenuLineText,
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+        else
+        {
+            //
+            // Display under the menu directly
+            //
+            UiDrawText(0,
+                       MenuInfo->Bottom + 3,
+                       MenuLineText,
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+    }
+
+    //
+    // Loop each item
+    //
+    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        //
+        // Check if it's a separator
+        //
+        if (!(_stricmp(MenuInfo->MenuItemList[i], "SEPARATOR")))
+        {
+            //
+            // Draw the separator line
+            //
+            UiDrawText(MenuInfo->Left,
+                       MenuInfo->Top + i + 1,
+                       "\xC7",
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+            UiDrawText(MenuInfo->Right,
+                       MenuInfo->Top + i + 1,
+                       "\xB6",
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+    }
 }
 
-VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
+VOID
+WINAPI
+TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo,
+                ULONG MenuItemNumber)
 {
-	ULONG		Idx;
-	CHAR	MenuLineText[80];
-	ULONG		SpaceTotal;
-	ULONG		SpaceLeft;
-	ULONG		SpaceRight;
-	UCHAR	Attribute;
+    ULONG i;
+    CHAR MenuLineText[80];
+    ULONG SpaceTotal;
+    ULONG SpaceLeft;
+    ULONG SpaceRight = 0;
+    UCHAR Attribute = ATTR(UiTextColor, UiMenuBgColor);
 
-	//
-	// We will want the string centered so calculate
-	// how many spaces will be to the left and right
-	//
-	SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) - strlen(MenuInfo->MenuItemList[MenuItemNumber]);
-	SpaceLeft = (SpaceTotal / 2) + 1;
-	SpaceRight = (SpaceTotal - SpaceLeft) + 1;
+    //
+    // Check if using centered menu
+    //
+    if (UiCenterMenu)
+    {
+        //
+        // We will want the string centered so calculate
+        // how many spaces will be to the left and right
+        //
+        SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) -
+                     strlen(MenuInfo->MenuItemList[MenuItemNumber]);
+        SpaceLeft = (SpaceTotal / 2) + 1;
+        SpaceRight = (SpaceTotal - SpaceLeft) + 1;
 
-	//
-	// Insert the spaces on the left
-	//
-	for (Idx=0; Idx<SpaceLeft; Idx++)
-	{
-		MenuLineText[Idx] = ' ';
-	}
-	MenuLineText[Idx] = '\0';
+        //
+        // Insert the spaces on the left
+        //
+        for (i = 0; i < SpaceLeft; i++) MenuLineText[i] = ' ';
+        MenuLineText[i] = '\0';
+    }
+    else
+    {
+        //
+        // Simply left-align it
+        //
+        MenuLineText[0] = '\0';
+        strcat(MenuLineText, "    ");
+    }
 
-	//
-	// Now append the text string
-	//
-	strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    //
+    // Now append the text string
+    //
+    strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
-	//
-	// Now append the spaces on the right
-	//
-	for (Idx=0; Idx<SpaceRight; Idx++)
-	{
-		strcat(MenuLineText, " ");
-	}
+    //
+    // Check if using centered menu, and add spaces on the right if so
+    //
+    if (UiCenterMenu) for (i=0; i < SpaceRight; i++) strcat(MenuLineText, " ");
 
-	//
-	// If it is a separator then adjust the text accordingly
-	//
-	if (_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR") == 0)
-	{
-		memset(MenuLineText, 0, 80);
-		memset(MenuLineText, 0xC4, (MenuInfo->Right - MenuInfo->Left - 1));
-		Attribute = ATTR(UiMenuFgColor, UiMenuBgColor);
-	}
-	else
-	{
-		Attribute = ATTR(UiTextColor, UiMenuBgColor);
-	}
+    //
+    // If it is a separator
+    //
+    if (!(_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR")))
+    {
+        //
+        // Make it a separator line and use menu colors
+        //
+        memset(MenuLineText, 0, 80);
+        memset(MenuLineText, 0xC4, (MenuInfo->Right - MenuInfo->Left - 1));
+        Attribute = ATTR(UiMenuFgColor, UiMenuBgColor);
+    }
+    else if (MenuItemNumber == MenuInfo->SelectedMenuItem)
+    {
+        //
+        // If this is the selected item, use the selected colors
+        //
+        Attribute = ATTR(UiSelectedTextColor, UiSelectedTextBgColor);
+    }
 
-	//
-	// If this is the selected menu item then draw it as selected
-	// otherwise just draw it using the normal colors
-	//
-	if (MenuItemNumber == MenuInfo->SelectedMenuItem)
-	{
-		UiDrawText(MenuInfo->Left + 1,
-			MenuInfo->Top + 1 + MenuItemNumber,
-			MenuLineText,
-			ATTR(UiSelectedTextColor, UiSelectedTextBgColor));
-	}
-	else
-	{
-		UiDrawText(MenuInfo->Left + 1,
-			MenuInfo->Top + 1 + MenuItemNumber,
-			MenuLineText,
-			Attribute);
-	}
+    //
+    // Draw the item
+    //
+    UiDrawText(MenuInfo->Left + 1,
+               MenuInfo->Top + 1 + MenuItemNumber,
+               MenuLineText,
+               Attribute);
 }
 
-ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter)
+ULONG
+WINAPI
+TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo,
+                            UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	ULONG		KeyEvent = 0;
+    ULONG KeyEvent = 0;
+    ULONG Selected, Count;
 
-	//
-	// Check for a keypress
-	//
-	if (MachConsKbHit())
-	{
-		//
-		// Cancel the timeout
-		//
-		if (MenuInfo->MenuTimeRemaining != -1)
-		{
-			MenuInfo->MenuTimeRemaining = -1;
-			TuiDrawMenuBox(MenuInfo);
-		}
+    //
+    // Check for a keypress
+    //
+    if (MachConsKbHit())
+    {
+        //
+        // Check if the timeout is not already complete
+        //
+        if (MenuInfo->MenuTimeRemaining != -1)
+        {
+            //
+            // Cancel it and remove it
+            //
+            MenuInfo->MenuTimeRemaining = -1;
+            TuiDrawMenuBox(MenuInfo); // FIXME: Remove for minimal UI too
+        }
 
-		//
-		// Get the key
-		//
-		KeyEvent = MachConsGetCh();
+        //
+        // Get the key
+        //
+        KeyEvent = MachConsGetCh();
 
-		//
-		// Is it extended?
-		//
-		if (KeyEvent == 0)
-			KeyEvent = MachConsGetCh(); // Yes - so get the extended key
+        //
+        // Is it extended? Then get the extended key
+        //
+        if (!KeyEvent) KeyEvent = MachConsGetCh();
 
-		//
-		// Call the supplied key filter callback function to see
-		// if it is going to handle this keypress.
-		//
-		if (KeyPressFilter != NULL)
-		{
-			if (KeyPressFilter(KeyEvent))
-			{
-				// It processed the key character
-				TuiDrawMenu(MenuInfo);
+        //
+        // Call the supplied key filter callback function to see
+        // if it is going to handle this keypress.
+        //
+        if ((KeyPressFilter) && (KeyPressFilter(KeyEvent)))
+        {
+            //
+            // It processed the key character, so redraw and exit
+            //
+            TuiDrawMenu(MenuInfo);
+            return 0;
+        }
 
-				return 0;
-			}
-		}
+        //
+        // Process the key
+        //
+        if ((KeyEvent == KEY_UP) || (KeyEvent == KEY_DOWN))
+        {
+            //
+            // Get the current selected item and count
+            //
+            Selected = MenuInfo->SelectedMenuItem;
+            Count = MenuInfo->MenuItemCount - 1;
 
-		//
-		// Process the key
-		//
-		switch (KeyEvent)
-		{
-		case KEY_UP:
+            //
+            // Check if this was a key up and there's a selected menu item
+            //
+            if ((KeyEvent == KEY_UP) && (Selected))
+            {
+                //
+                // Update the menu (Deselect previous item)
+                //
+                MenuInfo->SelectedMenuItem--;
+                TuiDrawMenuItem(MenuInfo, Selected);
+                Selected--;
 
-			if (MenuInfo->SelectedMenuItem > 0)
-			{
-				MenuInfo->SelectedMenuItem--;
+                // Skip past any separators
+                if ((Selected) &&
+                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                {
+                    MenuInfo->SelectedMenuItem--;
+                }
+            }
+            else if ((KeyEvent == KEY_DOWN) && (Selected < Count))
+            {
+                //
+                // Update the menu (deselect previous item)
+                //
+                MenuInfo->SelectedMenuItem++;
+                TuiDrawMenuItem(MenuInfo, Selected);
+                Selected++;
 
-				//
-				// Update the menu
-				//
-				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem + 1);	// Deselect previous item
+                // Skip past any separators
+                if ((Selected < Count) &&
+                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                {
+                    MenuInfo->SelectedMenuItem++;
+                }
+            }
 
-				// Skip past any separators
-				if (MenuInfo->SelectedMenuItem > 0 && _stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
-				{
-					MenuInfo->SelectedMenuItem--;
-				}
+            //
+            // Select new item and update video buffer
+            //
+            TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);
+            VideoCopyOffScreenBufferToVRAM();
+        }
+    }
 
-				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
-			}
-
-			break;
-
-		case KEY_DOWN:
-
-			if (MenuInfo->SelectedMenuItem < (MenuInfo->MenuItemCount - 1))
-			{
-				MenuInfo->SelectedMenuItem++;
-
-				//
-				// Update the menu
-				//
-				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem - 1);	// Deselect previous item
-
-				// Skip past any separators
-				if (MenuInfo->SelectedMenuItem < (MenuInfo->MenuItemCount - 1) && _stricmp(MenuInfo->MenuItemList[MenuInfo->SelectedMenuItem], "SEPARATOR") == 0)
-				{
-					MenuInfo->SelectedMenuItem++;
-				}
-
-				TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);		// Select new item
-			}
-
-			break;
-		}
-
-		VideoCopyOffScreenBufferToVRAM();
-	}
-
-	return KeyEvent;
+    //
+    // Return the pressed key
+    //
+    return KeyEvent;
 }

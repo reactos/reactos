@@ -29,6 +29,7 @@ extern LIST_ENTRY KiProfileListHead;
 extern LIST_ENTRY KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
 BOOLEAN SetupMode = TRUE;
+BOOLEAN NoGuiBoot = FALSE;
 
 VOID PspPostInitSystemProcess(VOID);
 
@@ -497,7 +498,6 @@ ExpInitializeExecutive(VOID)
     UNICODE_STRING EventName;
     HANDLE InitDoneEventHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    BOOLEAN NoGuiBoot = FALSE;
     BOOLEAN BootLog = FALSE;
     ULONG MaxMem = 0;
     BOOLEAN ForceAcpiDisable = FALSE;
@@ -531,7 +531,6 @@ ExpInitializeExecutive(VOID)
 
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
     ParseAndCacheLoadedModules();
-
 
     /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
     KeInit2();
@@ -631,7 +630,7 @@ ExpInitializeExecutive(VOID)
     HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Display version number and copyright/warranty message */
-    ExpDisplayNotice();
+    if (NoGuiBoot) ExpDisplayNotice();
 
     /* Call KD Providers at Phase 2 */
     KdInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
@@ -727,7 +726,10 @@ ExpInitializeExecutive(VOID)
             KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
         }
 
-        /* Disable the Boot Logo */
+        /*
+         * FIXME: FILIP!
+         * Disable the Boot Logo
+         */
         if (!NoGuiBoot) InbvEnableBootDriver(FALSE);
 
         /* Signal the Event and close the handle */

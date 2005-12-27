@@ -50,6 +50,11 @@ BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is display
 VIDEODISPLAYMODE	UiDisplayMode		= VideoTextMode;		// Tells us if we are in text or graphics mode
 
 BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
+BOOL	UiDrawTime					= TRUE;					// Tells us if we should draw the time
+BOOL	UiMinimal					= FALSE;				// Tells us if we should use a minimal console-like UI
+BOOL	UiCenterMenu				= TRUE;					// Tells us if we should use a centered or left-aligned menu
+BOOL	UiMenuBox					= TRUE;					// Tells us if we shuld draw a box around the menu
+CHAR	UiTimeText[260] = "[Time Remaining: ] ";
 
 const CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
@@ -86,6 +91,10 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 		if (IniReadSettingByName(SectionId, "TitleText", SettingText, 260))
 		{
 			strcpy(UiTitleBoxTitleText, SettingText);
+		}
+		if (IniReadSettingByName(SectionId, "TimeText", SettingText, 260))
+		{
+			strcpy(UiTimeText, SettingText);
 		}
 		if (IniReadSettingByName(SectionId, "StatusBarColor", SettingText, 260))
 		{
@@ -160,6 +169,50 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 			else
 			{
 				UiUseSpecialEffects = FALSE;
+			}
+		}
+		if (IniReadSettingByName(SectionId, "ShowTime", SettingText, 260))
+		{
+			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			{
+				UiDrawTime = TRUE;
+			}
+			else
+			{
+				UiDrawTime = FALSE;
+			}
+		}
+		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, 260))
+		{
+			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			{
+				UiMinimal = TRUE;
+			}
+			else
+			{
+				UiMinimal = FALSE;
+			}
+		}
+		if (IniReadSettingByName(SectionId, "MenuBox", SettingText, 260))
+		{
+			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			{
+				UiMenuBox = TRUE;
+			}
+			else
+			{
+				UiMenuBox = FALSE;
+			}
+		}
+		if (IniReadSettingByName(SectionId, "CenterMenu", SettingText, 260))
+		{
+			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			{
+				UiCenterMenu = TRUE;
+			}
+			else
+			{
+				UiCenterMenu = FALSE;
 			}
 		}
 	}

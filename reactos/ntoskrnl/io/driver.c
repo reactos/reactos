@@ -18,6 +18,7 @@
 extern LOADER_PARAMETER_BLOCK KeLoaderBlock;
 extern ULONG KeTickCount;
 extern BOOLEAN SetupMode;
+extern BOOLEAN NoGuiBoot;
 
 typedef struct _SERVICE_GROUP
 {
@@ -372,7 +373,7 @@ IopDisplayLoadingMessage(PVOID ServiceName,
                          BOOLEAN Unicode)
 {
     CHAR TextBuffer[256];
-    if (SetupMode) return;
+    if (SetupMode || !NoGuiBoot) return;
     if (Unicode) 
     {
         sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);
