@@ -318,7 +318,7 @@ IntGdiCreateHatchBrush(
       return 0;
    }
 
-   hPattern = NtGdiCreateBitmap(8, 8, 1, 1, HatchBrushes[Style]);
+   hPattern = NtGdiCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
    if (hPattern == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -557,10 +557,12 @@ IntGdiPolyPatBlt(
 
 HBRUSH STDCALL
 NtGdiCreateDIBBrush(
-   CONST BITMAPINFO *BitmapInfoAndData,
-   UINT ColorSpec,
-   UINT BitmapInfoSize,
-   CONST VOID *PackedDIB)
+   IN PVOID BitmapInfoAndData,
+   IN FLONG ColorSpec,
+   IN UINT BitmapInfoSize,
+   IN BOOL  b8X8,
+   IN BOOL bPen,
+   IN PVOID PackedDIB)
 {
    BITMAPINFO *SafeBitmapInfoAndData;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -619,7 +621,8 @@ NtGdiCreatePatternBrush(
 }
 
 HBRUSH STDCALL
-NtGdiCreateSolidBrush(COLORREF Color)
+NtGdiCreateSolidBrush(COLORREF Color,
+                      IN OPTIONAL HBRUSH hbr)
 {
    return IntGdiCreateSolidBrush(Color);
 }
@@ -682,9 +685,9 @@ BOOL STDCALL
 NtGdiPolyPatBlt(
    HDC hDC,
    DWORD dwRop,
-   PPATRECT pRects,
-   INT cRects,
-   ULONG Reserved)
+   IN PPOLYPATBLT pRects,
+   IN DWORD cRects,
+   IN DWORD Mode)
 {
    PPATRECT rb = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -721,7 +724,7 @@ NtGdiPolyPatBlt(
       }
    }
 
-   Ret = IntGdiPolyPatBlt(hDC, dwRop, pRects, cRects, Reserved);
+   Ret = IntGdiPolyPatBlt(hDC, dwRop, (PPATRECT)pRects, cRects, Mode);
 
    if (cRects > 0)
       ExFreePool(rb);

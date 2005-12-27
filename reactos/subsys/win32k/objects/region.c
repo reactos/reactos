@@ -115,7 +115,6 @@ SOFTWARE.
 
 /* $Id$ */
 #include <w32k.h>
-#include <win32k/float.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -2250,9 +2249,9 @@ exit:
 
 HRGN
 STDCALL
-NtGdiExtCreateRegion(CONST XFORM *Xform,
+NtGdiExtCreateRegion(OPTIONAL LPXFORM Xform,
                           DWORD Count,
-                          CONST RGNDATA *RgnData)
+                          LPRGNDATA RgnData)
 {
    HRGN hRgn;
    PROSRGNDATA Region;

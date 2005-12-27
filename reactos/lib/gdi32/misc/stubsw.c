@@ -129,7 +129,7 @@ BOOL
 STDCALL
 GetICMProfileW(
 	HDC		a0,
-	DWORD		a1,	/* MS says LPDWORD! */
+	LPDWORD		a1,
 	LPWSTR		a2
 	)
 {
@@ -228,7 +228,7 @@ BOOL
 STDCALL
 UpdateICMRegKeyW(
 	DWORD	a0,
-	DWORD	a1,
+	LPWSTR	a1,
 	LPWSTR	a2,
 	UINT	a3
 	)

@@ -26,7 +26,7 @@ BRUSHOBJ_hGetColorTransform@4
 BRUSHOBJ_pvAllocRbrush@8
 BRUSHOBJ_pvGetRbrush@4
 BRUSHOBJ_ulGetBrushColor@4
-BitBlt@36=NtGdiBitBlt@36
+BitBlt@36
 CancelDC@4
 CheckColorsInGamut@16
 ChoosePixelFormat@8
@@ -88,7 +88,7 @@ CreateRectRgnIndirect@4=NtGdiCreateRectRgnIndirect@4
 CreateRoundRectRgn@24=NtGdiCreateRoundRectRgn@24
 CreateScalableFontResourceA@16
 CreateScalableFontResourceW@16
-CreateSolidBrush@4=NtGdiCreateSolidBrush@4
+CreateSolidBrush@4
 DPtoLP@12=NtGdiDPtoLP@12
 DeleteColorSpace@4
 DeleteDC@4=NtGdiDeleteDC@4
@@ -393,7 +393,7 @@ GetGlyphIndicesA@20
 GetGlyphIndicesW@20
 GetGlyphOutline=GetGlyphOutlineA@28
 GetGlyphOutlineA@28
-GetGlyphOutlineW@28=NtGdiGetGlyphOutline@28
+GetGlyphOutlineW@28
 GetGlyphOutlineWow@28
 GetGraphicsMode@4=NtGdiGetGraphicsMode@4
 GetHFONT@4

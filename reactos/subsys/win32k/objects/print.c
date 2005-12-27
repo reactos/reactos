@@ -148,11 +148,13 @@ INT
 STDCALL
 NtGdiExtEscape(
    HDC    hDC,
+   IN OPTIONAL PWCHAR pDriver,
+   IN INT nDriver,
    INT    Escape,
    INT    InSize,
-   LPCSTR UnsafeInData,
+   OPTIONAL LPSTR UnsafeInData,
    INT    OutSize,
-   LPSTR  UnsafeOutData)
+   OPTIONAL LPSTR  UnsafeOutData)
 {
    PDC      pDC = DC_LockDc(hDC);
    LPVOID   SafeInData = NULL;
@@ -297,9 +299,12 @@ NtGdiSetAbortProc(HDC  hDC,
 }
 
 INT
-STDCALL
-NtGdiStartDoc(HDC  hDC,
-                  CONST LPDOCINFOW  di)
+APIENTRY
+NtGdiStartDoc(
+    IN HDC hdc,
+    IN DOCINFOW *pdi,
+    OUT BOOL *pbBanding,
+    IN INT iJob)
 {
   UNIMPLEMENTED;
   return 0;

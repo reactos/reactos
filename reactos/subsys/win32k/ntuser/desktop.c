@@ -1281,7 +1281,8 @@ NtUserPaintDesktop(HDC hDC)
                                 0, 
                                 WinSta->cxWallpaper, 
                                 WinSta->cyWallpaper, 
-                                SRCCOPY);
+                                SRCCOPY,
+                                0);
             }
             else if (WinSta->WallpaperMode == wmTile)
             {
@@ -1298,7 +1299,9 @@ NtUserPaintDesktop(HDC hDC)
                                     hWallpaperDC, 
                                     0, 
                                     0, 
-                                    SRCCOPY);
+                                    SRCCOPY,
+                                    0,
+                                    0);
                     }
                 }
             }
@@ -1312,7 +1315,9 @@ NtUserPaintDesktop(HDC hDC)
                             hWallpaperDC, 
                             0, 
                             0, 
-                            SRCCOPY);
+                            SRCCOPY,
+                            0,
+                            0);
             } 
             NtGdiSelectObject(hWallpaperDC, hOldBitmap); 
             NtGdiDeleteDC(hWallpaperDC);
