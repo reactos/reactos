@@ -808,17 +808,13 @@ GetParentNode:
                 else
                 {
                     /* cleanup, we were unable to get the device property sheets */
+                    iPage = nDriverPages;
                     dap->nDevPropSheets -= nDriverPages;
                     nDriverPages = 0;
-                    if (dap->nDevPropSheets == 0)
-                    {
-                        HeapFree(GetProcessHeap(),
-                                 0,
-                                 dap->DevPropSheets);
-                        dap->DevPropSheets = NULL;
-                    }
                 }
             }
+            else
+                iPage = 0;
 
             /* add the driver page if necessary */
             if (dap->HasDriverPage)
@@ -841,6 +837,7 @@ GetParentNode:
                     else
                     {
                         dap->pDestroyPropertySheetPage(dap->DevPropSheets[iPage]);
+                        dap->DevPropSheets[iPage] = NULL;
                     }
                 }
             }
@@ -1105,7 +1102,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
         DevIdSize = (DWORD)wcslen(lpDeviceID) + 1;
     }
 
-    if (lpMachineName != NULL)
+    if (lpMachineName != NULL && lpMachineName[0] != L'\0')
     {
         CONFIGRET cr = CM_Connect_Machine(lpMachineName,
                                           &hMachine);
