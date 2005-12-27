@@ -142,6 +142,10 @@ void SetUserSettings(void)
   }
 }
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4100)
+#endif /* _MSC_VER */
+
 int WINAPI
 WinMain(HINSTANCE hInst,
 	HINSTANCE hPrevInstance,
