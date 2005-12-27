@@ -1586,85 +1586,6 @@ static LONG SETUP_CreateDevList(
     }
 }
 
-#ifndef __REACTOS__
-static LONG SETUP_CreateSerialDeviceList(
-       struct DeviceInfoSet *list,
-       PCWSTR MachineName,
-       LPGUID InterfaceGuid,
-       PCWSTR DeviceInstanceW)
-{
-    static const size_t initialSize = 100;
-    size_t size;
-    WCHAR buf[initialSize];
-    LPWSTR devices;
-    static const WCHAR devicePrefixW[] = { 'C','O','M',0 };
-    LPWSTR ptr;
-    struct DeviceInfoElement *deviceInfo;
-
-    if (MachineName)
-        WARN("'MachineName' is ignored on Wine!\n");
-    if (DeviceInstanceW)
-        WARN("'DeviceInstanceW' can't be set on Wine!\n");
-
-    devices = buf;
-    size = initialSize;
-    while (TRUE)
-    {
-        if (QueryDosDeviceW(NULL, devices, size) != 0)
-            break;
-        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-        {
-            size *= 2;
-            if (devices != buf)
-                HeapFree(GetProcessHeap(), 0, devices);
-            devices = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
-            if (!devices)
-                return ERROR_NOT_ENOUGH_MEMORY;
-            *devices = '\0';
-        }
-        else
-        {
-            if (devices != buf)
-                HeapFree(GetProcessHeap(), 0, devices);
-            return GetLastError();
-        }
-    }
-
-    /* 'devices' is a MULTI_SZ string */
-    for (ptr = devices; *ptr; ptr += strlenW(ptr) + 1)
-    {
-        if (strncmpW(devicePrefixW, ptr, sizeof(devicePrefixW) / sizeof(devicePrefixW[0]) - 1) == 0)
-        {
-            /* We have found a device */
-            struct DeviceInterface *interfaceInfo;
-            TRACE("Adding %s to list\n", debugstr_w(ptr));
-            /* Step 1. Create a device info element */
-            if (!CreateDeviceInfoElement(list, ptr, &GUID_SERENUM_BUS_ENUMERATOR, &deviceInfo))
-            {
-                if (devices != buf)
-                    HeapFree(GetProcessHeap(), 0, devices);
-                return GetLastError();
-            }
-            InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
-
-            /* Step 2. Create an interface list for this element */
-            if (!CreateDeviceInterface(deviceInfo, ptr, InterfaceGuid, &interfaceInfo))
-            {
-                if (devices != buf)
-                    HeapFree(GetProcessHeap(), 0, devices);
-                return GetLastError();
-            }
-            interfaceInfo->Flags |= SPINT_ACTIVE | SPINT_DEFAULT;
-            InsertTailList(&deviceInfo->InterfaceListHead, &interfaceInfo->ListEntry);
-        }
-    }
-    if (devices != buf)
-        HeapFree(GetProcessHeap(), 0, devices);
-    return ERROR_SUCCESS;
-}
-
-#else /* __REACTOS__ */
-
 static LONG SETUP_CreateInterfaceList(
        struct DeviceInfoSet *list,
        PCWSTR MachineName,
@@ -1927,7 +1848,6 @@ static LONG SETUP_CreateInterfaceList(
     RegCloseKey(hInterfaceKey);
     return ERROR_SUCCESS;
 }
-#endif /* __REACTOS__ */
 
 /***********************************************************************
  *		SetupDiGetClassDevsExW (SETUPAPI.@)
@@ -2002,20 +1922,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
             return INVALID_HANDLE_VALUE;
         }
 
-#ifndef __REACTOS__
-        /* Special case: find serial ports by calling QueryDosDevice */
-        if (IsEqualIID(class, &GUID_DEVINTERFACE_COMPORT))
-            rc = SETUP_CreateSerialDeviceList(list, machine, (LPGUID)class, enumstr);
-        if (IsEqualIID(class, &GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR))
-            rc = SETUP_CreateSerialDeviceList(list, machine, (LPGUID)class, enumstr);
-        else
-        {
-            ERR("Wine can only enumerate serial devices at the moment!\n");
-            rc = ERROR_INVALID_PARAMETER;
-        }
-#else /* __REACTOS__ */
         rc = SETUP_CreateInterfaceList(list, machine, (LPGUID)class, enumstr);
-#endif /* __REACTOS__ */
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
