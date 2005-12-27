@@ -17,11 +17,17 @@ typedef struct _USBMP_DEVICE_EXTENSTION
    PDEVICE_OBJECT NextDeviceObject;
    //UNICODE_STRING RegistryPath;
    UNICODE_STRING HcdInterfaceName;
-   //PKINTERRUPT InterruptObject;
    //KSPIN_LOCK InterruptSpinLock;
    PCM_RESOURCE_LIST AllocatedResources;
+
+   /* Interrupt-related info */
+   PKINTERRUPT InterruptObject;
    ULONG InterruptVector;
    ULONG InterruptLevel;
+   KINTERRUPT_MODE InterruptMode;
+   BOOLEAN InterruptShare;
+   KAFFINITY InterruptAffinity;
+
    PHYSICAL_ADDRESS BaseAddress;
    ULONG BaseAddrLength;
    ULONG Flags;
