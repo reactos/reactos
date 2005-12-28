@@ -1079,5 +1079,6 @@ protected:
 	CtxMenuInterfaces _cm_ifs;
 };
 
+
 extern HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl,
 										LPCITEMIDLIST* ppidl, int x, int y, CtxMenuInterfaces& cm_ifs);

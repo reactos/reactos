@@ -197,6 +197,66 @@ void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 	}
 }
 
+ // local replacement implementation for SHBindToParent()
+ // (derived from http://www.geocities.com/SiliconValley/2060/articles/shell-helpers.html)
+static HRESULT my_SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, VOID** ppv, LPCITEMIDLIST* ppidlLast)
+{
+	HRESULT hr;
+
+	if (!ppv)
+		return E_POINTER;
+
+	// There must be at least one item ID.
+	if (!pidl || !pidl->mkid.cb)
+		return E_INVALIDARG;
+
+	 // Get the desktop folder as root.
+	ShellFolder desktop;
+/*	IShellFolderPtr desktop;
+	hr = SHGetDesktopFolder(&desktop);
+	if (FAILED(hr))
+		return hr; */
+
+	// Walk to the penultimate item ID.
+	LPCITEMIDLIST marker = pidl;
+	for (;;)
+	{
+		LPCITEMIDLIST next = reinterpret_cast<LPCITEMIDLIST>(
+			marker->mkid.abID - sizeof(marker->mkid.cb) + marker->mkid.cb);
+		if (!next->mkid.cb)
+			break;
+		marker = next;
+	}
+
+	if (marker == pidl)
+	{
+		// There was only a single item ID, so bind to the root folder.
+		hr = desktop->QueryInterface(riid, ppv);
+	}
+	else
+	{
+		// Copy the ID list, truncating the last item.
+		int length = marker->mkid.abID - pidl->mkid.abID;
+		if (LPITEMIDLIST parent_id = reinterpret_cast<LPITEMIDLIST>(
+			malloc(length + sizeof(pidl->mkid.cb))))
+		{
+			LPBYTE raw_data = reinterpret_cast<LPBYTE>(parent_id);
+			memcpy(raw_data, pidl, length);
+			memset(raw_data + length, 0, sizeof(pidl->mkid.cb));
+			hr = desktop->BindToObject(parent_id, 0, riid, ppv);
+			free(parent_id);
+		}
+		else
+			return E_OUTOFMEMORY;
+	}
+
+	// Return a pointer to the last item ID.
+	if (ppidlLast)
+		*ppidlLast = marker;
+
+	return hr;
+}
+
 void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen)
 {
 	CONTEXT("ShellBrowserChild::Tree_DoItemMenu()");
@@ -214,10 +274,21 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
 		} else {
 			ShellPath shell_path = entry->create_absolute_pidl();
-			LPCITEMIDLIST pidl = shell_path;
+			LPCITEMIDLIST pidl_abs = shell_path;
 
-			///@todo use parent folder instead of desktop
-			CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
+			IShellFolder* parentFolder;
+			LPCITEMIDLIST pidlLast;
+
+			 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
+			HRESULT hr = my_SHBindToParent(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast);
+
+			if (SUCCEEDED(hr)) {
+				hr = ShellFolderContextMenu(parentFolder, _hwnd, 1, &pidlLast, pptScreen->x, pptScreen->y, _cm_ifs);
+
+				parentFolder->Release();
+			}
+
+			CHECKERROR(hr);
 		}
 	}
 }
@@ -289,7 +360,7 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 		ShellDirectory* entry = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, pnmtv->itemNew.hItem);
 
 		if (entry)
-			if (!InsertSubitems(pnmtv->itemNew.hItem, entry, entry->_folder)) {
+			if (!InsertSubitems(pnmtv->itemNew.hItem, entry)) {
 				entry->_shell_attribs &= ~SFGAO_HASSUBFOLDER;
 
 				 // remove subitem "+"
@@ -304,7 +375,7 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 	}
 }
 
-int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
+int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry)
 {
 	CONTEXT("ShellBrowserChild::InsertSubitems()");
 
@@ -347,9 +418,9 @@ int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShel
 			tvInsert.hParent = hParentItem;
 
 			TreeView_InsertItem(_left_hwnd, &tvInsert);
-		}
 
-		++cnt;
+			++cnt;
+		}
 	}
 
 	SendMessage(_left_hwnd, WM_SETREDRAW, TRUE, 0);
