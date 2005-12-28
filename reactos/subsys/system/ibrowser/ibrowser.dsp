@@ -205,6 +205,11 @@ SOURCE=.\utility\xmlstorage.h
 # PROP Default_Filter "bmp,ico"
 # Begin Source File
 
+SOURCE=.\De.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\dot.ico
 # End Source File
 # Begin Source File
@@ -217,11 +222,36 @@ SOURCE=.\res\dot_trans.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\En.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Es.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\favorites.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\Fr.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Hu.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\ibrowser.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\ibrowser.rc
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
@@ -237,11 +267,26 @@ SOURCE=.\res\iexplore.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\Ja.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\network.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\reactos.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Ro.rc
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Sv.rc
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 

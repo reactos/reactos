@@ -11,8 +11,3 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 #define IDS_VERSION_STR             5000
 #define IDS_IBROWSER_VERSION_STR    5001
-
-#include "En.rc"
-#include "Es.rc"
-#include "Ja.rc"
-
