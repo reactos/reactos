@@ -630,6 +630,12 @@ NtUserGetMonitorInfo(
       RETURN(FALSE);
    }
 
+   if(pMonitorInfo == NULL)
+   {
+      SetLastNtError(STATUS_INVALID_PARAMETER);
+      RETURN(FALSE);
+   }
+
    /* get size of pMonitorInfo */
    Status = MmCopyFromCaller(&MonitorInfo.cbSize, &pMonitorInfo->cbSize, sizeof (MonitorInfo.cbSize));
    if (!NT_SUCCESS(Status))
