@@ -359,11 +359,11 @@ NtUserGetListBoxInfo(
 DWORD
 STDCALL
 NtUserGetMouseMovePointsEx(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4)
+   UINT cbSize,
+   LPMOUSEMOVEPOINT lppt,
+   LPMOUSEMOVEPOINT lpptBuf,
+   int nBufPoints,
+   DWORD resolution)
 {
    UNIMPLEMENTED
 
