@@ -5389,12 +5389,20 @@ SetupDiBuildDriverInfoList(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
+        PLIST_ENTRY pDriverListHead = &list->DriverListHead;
         BOOL Result;
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
         Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
         if (!Result)
             goto done;
+
+        if (DeviceInfoData)
+        {
+            struct DeviceInfoElement *devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            if (!(devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS))
+                pDriverListHead = &devInfo->DriverListHead;
+        }
 
         if (DriverType == SPDIT_COMPATDRIVER)
         {
@@ -5633,7 +5641,7 @@ SetupDiBuildDriverInfoList(
                         {
                             /* FIXME: read [ControlFlags] / ExcludeFromSelect */
                             if (!AddDriverToList(
-                                &list->DriverListHead,
+                                pDriverListHead,
                                 DriverType,
                                 &ClassGuid,
                                 ContextDevice,
@@ -5689,7 +5697,7 @@ SetupDiBuildDriverInfoList(
                                     if (wcsicmp(DeviceId, currentId) == 0)
                                     {
                                         AddDriverToList(
-                                            &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead,
+                                            pDriverListHead,
                                             DriverType,
                                             &ClassGuid,
                                             ContextDevice,
@@ -5710,7 +5718,7 @@ SetupDiBuildDriverInfoList(
                                         if (wcsicmp(DeviceId, currentId) == 0)
                                         {
                                             AddDriverToList(
-                                                &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead,
+                                                pDriverListHead,
                                                 DriverType,
                                                 &ClassGuid,
                                                 ContextDevice,
@@ -6106,8 +6114,6 @@ SetupDiEnumDriverInfoW(
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DriverType != SPDIT_CLASSDRIVER && DriverType != SPDIT_COMPATDRIVER)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DriverType == SPDIT_CLASSDRIVER && DeviceInfoData)
-        SetLastError(ERROR_INVALID_PARAMETER);
     else if (DriverType == SPDIT_COMPATDRIVER && !DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_W) && DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_W))
@@ -6118,8 +6124,7 @@ SetupDiEnumDriverInfoW(
         PLIST_ENTRY ItemList;
         if (DeviceInfoData)
             devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
-        if (DriverType == SPDIT_CLASSDRIVER ||
-            (devInfo && devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS))
+        if (!devInfo || (devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS))
         {
             ListHead = &((struct DeviceInfoSet *)DeviceInfoSet)->DriverListHead;
         }

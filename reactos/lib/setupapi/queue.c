@@ -1200,11 +1200,43 @@ BOOL WINAPI SetupScanFileQueueA( HSPFILEQ queue, DWORD flags, HWND window,
 /***********************************************************************
  *            SetupScanFileQueueW   (SETUPAPI.@)
  */
-BOOL WINAPI SetupScanFileQueueW( HSPFILEQ queue, DWORD flags, HWND window,
+BOOL WINAPI SetupScanFileQueueW( HSPFILEQ handle, DWORD flags, HWND window,
                                  PSP_FILE_CALLBACK_W callback, PVOID context, PDWORD result )
 {
-    FIXME("stub\n");
-    return FALSE;
+    struct file_queue *queue = handle;
+    struct file_op *op;
+    BOOL allnodesprocessed = FALSE;
+    FILEPATHS_W paths;
+
+    paths.Source = paths.Target = NULL;
+    *result = FALSE;
+
+    if ( flags & (SPQ_SCAN_FILE_PRESENCE | SPQ_SCAN_FILE_VALIDITY | SPQ_SCAN_USE_CALLBACKEX | SPQ_SCAN_INFORM_USER | SPQ_SCAN_PRUNE_COPY_QUEUE /*| SPQ_SCAN_USE_CALLBACK_SIGNERINFO | SPQ_SCAN_PRUNE_DELREN*/) )
+    {
+        FIXME( "flags ignored 0x%lx\n", flags & (SPQ_SCAN_FILE_PRESENCE | SPQ_SCAN_FILE_VALIDITY | SPQ_SCAN_USE_CALLBACKEX | SPQ_SCAN_INFORM_USER | SPQ_SCAN_PRUNE_COPY_QUEUE /*| SPQ_SCAN_USE_CALLBACK_SIGNERINFO | SPQ_SCAN_PRUNE_DELREN*/) );
+    }
+
+    if (queue->copy_queue.count)
+    {
+        for (op = queue->copy_queue.head; op; op = op->next)
+        {
+            build_filepathsW( op, &paths );
+            if (flags & SPQ_SCAN_USE_CALLBACK)
+            {
+                /* FIXME: sometimes set param 2 to SPQ_DELAYED_COPY */
+                if (NO_ERROR != callback( context, SPFILENOTIFY_QUEUESCAN, (UINT)paths.Target, 0 ))
+                    goto done;
+            }
+        }
+    }
+
+    *result = TRUE;
+    allnodesprocessed = TRUE;
+
+ done:
+    HeapFree( GetProcessHeap(), 0, (void *)paths.Source );
+    HeapFree( GetProcessHeap(), 0, (void *)paths.Target );
+    return allnodesprocessed;
 }
 
 
