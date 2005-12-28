@@ -105,7 +105,7 @@ struct ShellDirectory : public ShellEntry, public Directory
 
 	virtual bool get_path(PTSTR path, size_t path_count) const;
 
-	int	extract_icons(bool big_icons);
+	int	extract_icons(ICONCACHE_FLAGS flags);
 
 	ShellFolder _folder;
 	HWND	_hwnd;

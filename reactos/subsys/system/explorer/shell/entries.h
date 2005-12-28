@@ -64,6 +64,19 @@ enum SCAN_FLAGS {
 #define	ATTRIBUTE_EXECUTABLE		0x80000000
 #endif
 
+enum ICONCACHE_FLAGS {
+	ICF_NORMAL	 =  0,
+	ICF_LARGE	 =  1,
+	ICF_OPEN	 =  2,
+	ICF_OVERLAYS =  4,
+	ICF_HICON	 =  8,
+	ICF_SYSCACHE = 16
+};
+
+#ifndef SHGFI_ADDOVERLAYS // missing in MinGW (as of 28.12.2005)
+#define SHGFI_ADDOVERLAYS 0x000000020
+#endif
+
 
  /// base of all file and directory entries
 struct Entry
@@ -103,7 +116,8 @@ public:
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
 	void	sort_directory(SORT_ORDER sortOrder);
 	void	smart_scan(SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
-	void	extract_icon(bool big_icons);
+	int		extract_icon(ICONCACHE_FLAGS flags=ICF_NORMAL);
+	int		safe_extract_icon(ICONCACHE_FLAGS flags=ICF_NORMAL);
 
 	virtual void		read_directory(int scan_flags=SCAN_ALL) {}
 	virtual const void*	get_next_path_component(const void*) const {return NULL;}

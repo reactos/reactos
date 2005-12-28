@@ -319,52 +319,55 @@ void Entry::smart_scan(SORT_ORDER sortOrder, int scan_flags)
 }
 
 
-void Entry::extract_icon(bool big_icons)
+
+int Entry::extract_icon(ICONCACHE_FLAGS flags)
 {
 	TCHAR path[MAX_PATH];
 
 	ICON_ID icon_id = ICID_NONE;
 
 	if (get_path(path, COUNTOF(path)) && _tcsncmp(path,TEXT("::{"),3))
-		icon_id = g_Globals._icon_cache.extract(path, big_icons);
+		icon_id = g_Globals._icon_cache.extract(path, flags);
 
 	if (icon_id == ICID_NONE) {
-		IExtractIcon* pExtract;
-		if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
-			unsigned flags;
-			int idx;
+		if (!(flags & (ICF_OPEN|ICF_OVERLAYS))) {
+			IExtractIcon* pExtract;
+			if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
+				unsigned gil_flags;
+				int idx;
 
-			if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, COUNTOF(path), &idx, &flags))) {
-				if (flags & GIL_NOTFILENAME)
-					icon_id = g_Globals._icon_cache.extract(pExtract, path, idx, big_icons);
-				else {
-					if (idx == -1)
-						idx = 0;	// special case for some control panel applications ("System")
+				if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, COUNTOF(path), &idx, &gil_flags))) {
+					if (gil_flags & GIL_NOTFILENAME)
+						icon_id = g_Globals._icon_cache.extract(pExtract, path, idx, flags);
+					else {
+						if (idx == -1)
+							idx = 0;	// special case for some control panel applications ("System")
 
-					icon_id = g_Globals._icon_cache.extract(path, idx);
-				}
-
-			/* using create_absolute_pidl() [see below] results in more correct icons for some control panel applets ("NVidia").
-				if (icon_id == ICID_NONE) {
-					SHFILEINFO sfi;
-
-					if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
-						icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
-				} */
-			/*
-				if (icon_id == ICID_NONE) {
-					LPBYTE b = (LPBYTE) alloca(0x10000);
-					SHFILEINFO sfi;
-
-					FILE* file = fopen(path, "rb");
-					if (file) {
-						int l = fread(b, 1, 0x10000, file);
-						fclose(file);
-
-						if (l)
-							icon_id = g_Globals._icon_cache.add(CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR));
+						icon_id = g_Globals._icon_cache.extract(path, idx, flags);
 					}
-				} */
+
+				/* using create_absolute_pidl() [see below] results in more correct icons for some control panel applets (NVidia display driver).
+					if (icon_id == ICID_NONE) {
+						SHFILEINFO sfi;
+
+						if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
+							icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
+					} */
+				/*
+					if (icon_id == ICID_NONE) {
+						LPBYTE b = (LPBYTE) alloca(0x10000);
+						SHFILEINFO sfi;
+
+						FILE* file = fopen(path, "rb");
+						if (file) {
+							int l = fread(b, 1, 0x10000, file);
+							fclose(file);
+
+							if (l)
+								icon_id = g_Globals._icon_cache.add(CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR));
+						}
+					} */
+				}
 			}
 		}
 
@@ -374,17 +377,38 @@ void Entry::extract_icon(bool big_icons)
 			const ShellPath& pidl_abs = create_absolute_pidl();
 			LPCITEMIDLIST pidl = pidl_abs;
 
-			HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_PIDL|(big_icons? SHGFI_SMALLICON: 0));
+			int shgfi_flags = SHGFI_SYSICONINDEX|SHGFI_PIDL;
+
+			if (!(flags & ICF_LARGE))
+				shgfi_flags |= SHGFI_SMALLICON;
+
+			if (flags & ICF_OPEN)
+				shgfi_flags |= SHGFI_OPENICON;
+
+			// ICF_OVERLAYS is not supported in this case.
+
+			HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), shgfi_flags);
 			if (himlSys)
 				icon_id = g_Globals._icon_cache.add(sfi.iIcon);
 			/*
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|(g_Globals._big_icons? SHGFI_SMALLICON: 0)))
+			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|(g_Globals._large_icons? SHGFI_SMALLICON: 0)))
 				icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
 			*/
 		}
 	}
 
-	_icon_id = icon_id;
+	return icon_id;
+}
+
+int Entry::safe_extract_icon(ICONCACHE_FLAGS flags)
+{
+	try {
+		return extract_icon(flags);
+	} catch(COMException&) {
+		// ignore unexpected exceptions while extracting icons
+	}
+
+	return ICID_NONE;
 }
 
 

@@ -344,7 +344,7 @@ int FindProgramDlg::Notify(int id, NMHDR* pnmh)
 				Entry* entry = cache_entry._entry;
 
 				if (entry->_icon_id == ICID_UNKNOWN)
-					entry->extract_icon(false);
+					entry->_icon_id = entry->extract_icon(ICF_SYSCACHE);
 
 				pDispInfo->item.iImage = g_Globals._icon_cache.get_icon(entry->_icon_id).get_sysiml_idx();
 				pDispInfo->item.mask |= LVIF_DI_SETITEM;

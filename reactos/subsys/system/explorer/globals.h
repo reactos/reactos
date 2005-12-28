@@ -98,6 +98,7 @@ struct Icon {
 	int		add_to_imagelist(HIMAGELIST himl, HDC hdc_wnd, COLORREF bk_color=GetSysColor(COLOR_WINDOW), HBRUSH bk_brush=GetSysColorBrush(COLOR_WINDOW)) const;
 
 	int		get_sysiml_idx() const {return _itype==IT_SYSCACHE? _sys_idx: -1;}
+	HICON	get_hicon() const {return _itype!=IT_SYSCACHE? _hicon: 0;}
 
 	bool	destroy() {if (_itype == IT_DYNAMIC) {DestroyIcon(_hicon); return true;} else return false;}
 
@@ -118,9 +119,9 @@ struct IconCache {
 
 	void	init();
 
-	const Icon&	extract(LPCTSTR path, bool big_icons);
-	const Icon&	extract(LPCTSTR path, int idx);
-	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx, bool big_icons);
+	const Icon&	extract(LPCTSTR path, ICONCACHE_FLAGS flags=ICF_NORMAL);
+	const Icon&	extract(LPCTSTR path, int idx, ICONCACHE_FLAGS flags=ICF_HICON);
+	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx, ICONCACHE_FLAGS flags=ICF_HICON);
 
 	const Icon&	add(HICON hIcon, ICON_TYPE type=IT_DYNAMIC);
 	const Icon&	add(int sys_idx/*, ICON_TYPE type=IT_SYSCACHE*/);
@@ -137,23 +138,24 @@ protected:
 	typedef map<int, Icon> IconMap;
 	IconMap	_icons;
 
-	typedef map<String, ICON_ID> PathMap;
-	PathMap	_pathMap;
+	typedef pair<String,int/*ICONCACHE_FLAGS*/> CacheKey;
+	typedef map<CacheKey, ICON_ID> PathCacheMap;
+	PathCacheMap _pathCache;
 
-	typedef pair<String, int> CachePair;
-	typedef map<CachePair, ICON_ID> PathIdxMap;
-	PathIdxMap _pathIdxMap;
+	typedef pair<String,pair<int,int/*ICONCACHE_FLAGS*/> > IdxCacheKey;
+	typedef map<IdxCacheKey, ICON_ID> IdxCacheMap;
+	IdxCacheMap _idxCache;
 
 	HIMAGELIST _himlSys_small;
 };
 
 
-#define	ICON_SIZE_X		GetSystemMetrics(big_icons? SM_CXICON: SM_CXSMICON)
-#define	ICON_SIZE_Y		GetSystemMetrics(big_icons? SM_CYICON: SM_CYSMICON)
+#define	ICON_SIZE_X		GetSystemMetrics(large_icons? SM_CXICON: SM_CXSMICON)
+#define	ICON_SIZE_Y		GetSystemMetrics(large_icons? SM_CYICON: SM_CYSMICON)
 
 
  /// create a bitmap from an icon
-extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool big_icons*/);
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool large_icons*/);
 
  /// add icon with alpha channel to imagelist using the specified background color
 extern int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);

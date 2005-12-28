@@ -322,7 +322,7 @@ int Icon::add_to_imagelist(HIMAGELIST himl, HDC hdc_wnd, COLORREF bk_color, HBRU
 	return ret;
 }
 
-HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool big_icons*/)
+HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool large_icons*/)
 {
 	int cx = GetSystemMetrics(SM_CXSMICON);	//ICON_SIZE_X;
 	int cy = GetSystemMetrics(SM_CYSMICON);	//ICON_SIZE_Y;
@@ -396,27 +396,65 @@ void IconCache::init()
 }
 
 
-const Icon& IconCache::extract(LPCTSTR path, bool big_icons)
+const Icon& IconCache::extract(LPCTSTR path, ICONCACHE_FLAGS flags)
 {
-	PathMap::iterator found = _pathMap.find(path);
+	 // search for matching icon with unchanged flags in the cache
+	CacheKey mapkey(path, flags);
+	PathCacheMap::iterator found = _pathCache.find(mapkey);
 
-	if (found != _pathMap.end())
+	if (found != _pathCache.end())
 		return _icons[found->second];
+
+	 // search for matching icon with handle
+	CacheKey mapkey_hicon(path, flags|ICF_HICON);
+	if (flags != mapkey_hicon.second) {
+		found = _pathCache.find(mapkey_hicon);
+
+		if (found != _pathCache.end())
+			return _icons[found->second];
+	}
+
+	 // search for matching icon in the system image list cache
+	CacheKey mapkey_syscache(path, flags|ICF_SYSCACHE);
+	if (flags != mapkey_syscache.second) {
+		found = _pathCache.find(mapkey_syscache);
+
+		if (found != _pathCache.end())
+			return _icons[found->second];
+	}
 
 	SHFILEINFO sfi;
 
-	if (big_icons) {
-		if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON)) {
+	int shgfi_flags = 0;
+
+	if (flags & ICF_OPEN)
+		shgfi_flags |= SHGFI_OPENICON;
+
+	if ((flags&(ICF_LARGE|ICF_OVERLAYS|ICF_HICON)) && !(flags&ICF_SYSCACHE)) {
+		shgfi_flags |= SHGFI_ICON;
+
+		if (!(flags & ICF_LARGE))
+			shgfi_flags |= SHGFI_SMALLICON;
+
+		if (flags & ICF_OVERLAYS)
+			shgfi_flags |= SHGFI_ADDOVERLAYS;
+
+		 // get small/big icons with/without overlays
+		if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), shgfi_flags)) {
 			const Icon& icon = add(sfi.hIcon, IT_CACHED);
 
 			///@todo limit cache size
-			_pathMap[path] = icon;
+			_pathCache[mapkey_hicon] = icon;
 
 			return icon;
 		}
 	} else {
+		assert(!(flags&ICF_OVERLAYS));
+
+		shgfi_flags |= SHGFI_SYSICONINDEX|SHGFI_SMALLICON;
+
 		 // use system image list - the "search program dialog" needs it
-		HIMAGELIST himlSys_small = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
+		HIMAGELIST himlSys_small = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), shgfi_flags);
 
 		if (himlSys_small) {
 			_himlSys_small = himlSys_small;
@@ -424,7 +462,7 @@ const Icon& IconCache::extract(LPCTSTR path, bool big_icons)
 			const Icon& icon = add(sfi.iIcon/*, IT_SYSCACHE*/);
 
 			///@todo limit cache size
-			_pathMap[path] = icon;
+			_pathCache[mapkey_syscache] = icon;
 
 			return icon;
 		}
@@ -433,15 +471,15 @@ const Icon& IconCache::extract(LPCTSTR path, bool big_icons)
 	return _icons[ICID_NONE];
 }
 
-const Icon& IconCache::extract(LPCTSTR path, int idx)
+const Icon& IconCache::extract(LPCTSTR path, int idx, ICONCACHE_FLAGS flags)
 {
-	CachePair key(path, idx);
+	IdxCacheKey key(path, make_pair(idx, (flags|ICF_HICON)&~ICF_SYSCACHE));
 
 	key.first.toLower();
 
-	PathIdxMap::iterator found = _pathIdxMap.find(key);
+	IdxCacheMap::iterator found = _idxCache.find(key);
 
-	if (found != _pathIdxMap.end())
+	if (found != _idxCache.end())
 		return _icons[found->second];
 
 	HICON hIcon;
@@ -449,7 +487,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 	if ((int)ExtractIconEx(path, idx, NULL, &hIcon, 1) > 0) {
 		const Icon& icon = add(hIcon, IT_CACHED);
 
-		_pathIdxMap[key] = icon;
+		_idxCache[key] = icon;
 
 		return icon;
 	} else {
@@ -460,15 +498,16 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 	}
 }
 
-const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx, bool big_icons)
+const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx, ICONCACHE_FLAGS flags)
 {
 	HICON hIconLarge = 0;
 	HICON hIcon;
 
+	bool large_icons = flags & ICF_LARGE;
 	HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(GetSystemMetrics(SM_CXICON), ICON_SIZE_X));
 
 	if (hr == NOERROR) {	//@@ oder SUCCEEDED(hr) ?
-		if (big_icons) {	//@@ OK?
+		if (large_icons) {	//@@ OK?
 			if (hIcon)
 				DestroyIcon(hIcon);
 
@@ -479,7 +518,7 @@ const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx, bo
 		}
 
 		if (hIcon)
-			return add(hIcon);
+			return add(hIcon);	//@@ When do we want not to free this icons?
 	}
 
 	return _icons[ICID_NONE];

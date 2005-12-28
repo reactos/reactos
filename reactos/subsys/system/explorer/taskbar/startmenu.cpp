@@ -46,9 +46,9 @@
 #define	SHELLPATH_NET_CONNECTIONS	TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}")
 
 
-StartMenu::StartMenu(HWND hwnd, bool big_icons)
+StartMenu::StartMenu(HWND hwnd, bool large_icons)
  :	super(hwnd),
-	_big_icons(big_icons)
+	_large_icons(large_icons)
 {
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
@@ -70,10 +70,10 @@ StartMenu::StartMenu(HWND hwnd, bool big_icons)
 #endif
 }
 
-StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info, bool big_icons)
+StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info, bool large_icons)
  :	super(hwnd),
 	_create_info(create_info),
-	_big_icons(big_icons)
+	_large_icons(large_icons)
 {
 	for(StartMenuFolders::const_iterator it=create_info._folders.begin(); it!=create_info._folders.end(); ++it)
 		if (*it)
@@ -117,7 +117,7 @@ BtnWindowClass& StartMenu::GetWndClasss()
 
 Window::CREATORFUNC_INFO StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
-HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, bool parent_big_icons,
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title,
 						CREATORFUNC_INFO creator, void* info, const String& filter)
 {
 	UINT style, ex_style;
@@ -133,7 +133,7 @@ HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndP
 		top_height = 0;
 	}
 
-	bool big_icons = false;
+	bool large_icons = false;
 	RECT rect = {x, y-STARTMENU_LINE_HEIGHT-top_height, x+STARTMENU_WIDTH_MIN, y};
 
 #ifndef _LIGHT_STARTMENU
@@ -348,7 +348,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
  			WindowRect pos(_hwnd);
 
 			///@todo do something similar to StartMenuRoot::TrackStartmenu() in order to automatically close submenus when clicking on the desktop background
-			StartMenu::Create(pos.left+3, pos.bottom-3, _create_info._folders, 0, _create_info._title, _big_icons, _create_info._creator, _create_info._info);
+			StartMenu::Create(pos.left+3, pos.bottom-3, _create_info._folders, 0, _create_info._title, _create_info._creator, _create_info._info);
 			CloseStartMenu();
 		}
 
@@ -391,7 +391,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (_arrow_btns) {
 				RECT rect_up, rect_down;
 
-				GetArrowButtonRects(&rect_up, &rect_down, _big_icons);
+				GetArrowButtonRects(&rect_up, &rect_down, _large_icons);
 
 				SCROLL_MODE scroll_mode = SCROLL_NOT;
 
@@ -515,7 +515,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 int StartMenu::ButtonHitTest(POINT pt)
 {
 	ClientRect clnt(_hwnd);
-	const bool big_icons = _big_icons;
+	const bool large_icons = _large_icons;
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
 	if (pt.x<rect.left || pt.x>rect.right)
@@ -547,7 +547,7 @@ void StartMenu::InvalidateSelection()
 		return;
 
 	ClientRect clnt(_hwnd);
-	const bool big_icons = _big_icons;
+	const bool large_icons = _large_icons;
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
 	for(SMBtnVector::const_iterator it=_buttons.begin()+_scroll_pos; it!=_buttons.end(); ++it) {
@@ -773,7 +773,7 @@ bool StartMenu::GetButtonRect(int id, PRECT prect) const
 {
 #ifdef _LIGHT_STARTMENU
 	ClientRect clnt(_hwnd);
-	const bool big_icons = _big_icons;
+	const bool large_icons = _large_icons;
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
 	for(SMBtnVector::const_iterator it=_buttons.begin()+_scroll_pos; it!=_buttons.end(); ++it) {
@@ -823,10 +823,10 @@ void StartMenu::GetFloatingButtonRect(LPRECT prect)
 }
 
 
-void StartMenu::DrawArrows(HDC hdc, bool big_icons)
+void StartMenu::DrawArrows(HDC hdc, bool large_icons)
 {
-	int cx = big_icons? 16: 8;
-	int cy = big_icons? 8: 4;
+	int cx = large_icons? 16: 8;
+	int cy = large_icons? 8: 4;
 
 	ResIconEx arrowUpIcon(IDI_ARROW_UP, cx, cy);
 	ResIconEx arrowDownIcon(IDI_ARROW_DOWN, cx, cy);
@@ -837,10 +837,10 @@ void StartMenu::DrawArrows(HDC hdc, bool big_icons)
 	DrawIconEx(hdc, clnt.right/2-cx/2, clnt.bottom-cy-1, arrowDownIcon, cx, cy, 0, 0, DI_NORMAL);
 }
 
-void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, bool big_icons)
+void StartMenu::GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, bool large_icons)
 {
-	int cx = big_icons? 16: 8;
-	int cy = big_icons? 8: 4;
+	int cx = large_icons? 16: 8;
+	int cy = large_icons? 8: 4;
 
 	GetClientRect(_hwnd, prect_up);
 	*prect_down = *prect_up;
@@ -865,10 +865,10 @@ void StartMenu::Paint(PaintCanvas& canvas)
 
 #ifdef _LIGHT_STARTMENU
 	if (_arrow_btns)
-		DrawArrows(canvas, _big_icons);
+		DrawArrows(canvas, _large_icons);
 
 	ClientRect clnt(_hwnd);
-	const bool big_icons = _big_icons;
+	const bool large_icons = _large_icons;
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
 	int sep_width = rect.right-rect.left - 4;
@@ -900,7 +900,7 @@ void StartMenu::Paint(PaintCanvas& canvas)
 				break;
 
 			if (rect.top >= canvas.rcPaint.top)
-				DrawStartMenuButton(canvas, rect, btn._title, btn, btn._id==_selected_id, false, _big_icons);
+				DrawStartMenuButton(canvas, rect, btn._title, btn, btn._id==_selected_id, false, _large_icons);
 		}
 
 		rect.top = rect.bottom;
@@ -930,11 +930,7 @@ void StartMenu::UpdateIcons(/*int idx*/)
 				Entry* entry = *it;
 
 				if (entry->_icon_id == ICID_UNKNOWN)
-					try {
-						entry->extract_icon(_big_icons);
-					} catch(COMException&) {
-						// ignore unexpected exceptions while extracting icons
-					}
+					entry->_icon_id = entry->safe_extract_icon(_large_icons? ICF_LARGE: ICF_NORMAL);
 
 				if (entry->_icon_id > ICID_NONE) {
 					btn._icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
@@ -947,7 +943,7 @@ void StartMenu::UpdateIcons(/*int idx*/)
 						break;
 
 					WindowCanvas canvas(_hwnd);
-					DrawStartMenuButton(canvas, rect, NULL, btn, btn._id==_selected_id, false, _big_icons);
+					DrawStartMenuButton(canvas, rect, NULL, btn, btn._id==_selected_id, false, _large_icons);
 
 					//InvalidateRect(_hwnd, &rect, FALSE);
 					//UpdateWindow(_hwnd);
@@ -1266,7 +1262,7 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTS
 		ClientToScreen(_hwnd, &rect);
 
 		x = rect.right;	// Submenus should overlap their parent a bit.
-		const bool big_icons = _big_icons;
+		const bool large_icons = _large_icons;
 		y = rect.top+STARTMENU_LINE_HEIGHT +_border_top/*own border*/ -STARTMENU_TOP_BTN_SPACE/*border of new submenu*/;
 	} else {
 		WindowRect pos(_hwnd);
@@ -1276,7 +1272,7 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTS
 	}
 
 	_submenu_id = id;
-	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, _big_icons, creator, info, _create_info._filter);
+	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, title, creator, info, _create_info._filter);
 }
 
 
@@ -1368,10 +1364,10 @@ int GetStartMenuBtnTextWidth(HDC hdc, LPCTSTR title, HWND hwnd)
 }
 
 #ifdef _LIGHT_STARTMENU
-void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed, bool big_icons)
+void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed, bool large_icons)
 #else
 void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
-								bool hasSubmenu, bool enabled, bool has_focus, bool pushed, bool big_icons);
+								bool hasSubmenu, bool enabled, bool has_focus, bool pushed, bool large_icons);
 #endif
 {
 	UINT style = DFCS_BUTTONPUSH;
@@ -1404,7 +1400,7 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 		FillRect(hdc, &rect, bk_brush);
 
 	if (btn._icon_id > ICID_NONE)
-		g_Globals._icon_cache.get_icon(btn._icon_id).draw(hdc, iconPos.x, iconPos.y, ICON_SIZE_X, ICON_SIZE_Y, bk_color, bk_brush/*, big_icons*/);
+		g_Globals._icon_cache.get_icon(btn._icon_id).draw(hdc, iconPos.x, iconPos.y, ICON_SIZE_X, ICON_SIZE_Y, bk_color, bk_brush/*, large_icons*/);
 
 	 // draw submenu arrow at the right
 	if (btn._hasSubmenu) {
@@ -1438,7 +1434,7 @@ void StartMenu::ResizeToButtons()
 	WindowCanvas canvas(_hwnd);
 	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 
-	const bool big_icons = _big_icons;
+	const bool large_icons = _large_icons;
 
 	int max_width = STARTMENU_WIDTH_MIN;
 	int height = 0;
@@ -1583,7 +1579,7 @@ void StartMenuRoot::ReadLogoSize()
 }
 
 
-static void CalculateStartPos(HWND hwndOwner, RECT& rect, bool big_icons)
+static void CalculateStartPos(HWND hwndOwner, RECT& rect, bool large_icons)
 {
 	WindowRect pos(hwndOwner);
 
@@ -1599,11 +1595,11 @@ static void CalculateStartPos(HWND hwndOwner, RECT& rect, bool big_icons)
 	AdjustWindowRectEx(&rect, WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, FALSE, 0);
 }
 
-HWND StartMenuRoot::Create(HWND hwndOwner, bool big_icons)
+HWND StartMenuRoot::Create(HWND hwndOwner, bool large_icons)
 {
 	RECT rect;
 
-	CalculateStartPos(hwndOwner, rect, big_icons);
+	CalculateStartPos(hwndOwner, rect, large_icons);
 
 	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, GetWndClasss(), TITLE_STARTMENU,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN,
@@ -1624,7 +1620,7 @@ void StartMenuRoot::TrackStartmenu()
 	 // recalculate start menu root position
 	RECT rect;
 
-	CalculateStartPos(GetParent(hwnd), rect, _big_icons);
+	CalculateStartPos(GetParent(hwnd), rect, _large_icons);
 
 	SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 

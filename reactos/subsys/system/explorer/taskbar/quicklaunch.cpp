@@ -109,11 +109,7 @@ void QuickLaunchBar::AddShortcuts()
 
 		 // immediatelly extract the shortcut icons
 		for(Entry*entry=_dir->_down; entry; entry=entry->_next)
-			try {
-				entry->extract_icon(false);
-			} catch(COMException&) {
-				// ignore unexpected exceptions while extracting icons
-			}
+			entry->_icon_id = entry->safe_extract_icon(ICF_NORMAL);
 	} catch(COMException&) {
 		return;
 	}

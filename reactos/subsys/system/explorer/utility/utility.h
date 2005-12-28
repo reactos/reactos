@@ -207,7 +207,7 @@ using namespace std;
 #include <vector>
 
 
-/* not necessary with correct include file order for comdef.h (path "...\Program Files\Microsoft SDK\include" first)
+/* not necessary with correct include file order for comdef.h ("<MS PSDK>\include" path first)
 #if _MSC_VER>=1300	// VS.Net
 #define _NO_COMUTIL
 #endif

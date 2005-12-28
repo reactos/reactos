@@ -62,7 +62,7 @@ struct ShellBrowser : public IShellBrowserImpl
 #endif
 {
 	ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
-					HIMAGELIST himl, BrowserCallback* cb, CtxMenuInterfaces& cm_ifs);
+					BrowserCallback* cb, CtxMenuInterfaces& cm_ifs);
 	virtual ~ShellBrowser();
 
 	//IOleWindow
@@ -124,9 +124,9 @@ struct ShellBrowser : public IShellBrowserImpl
 
 	LRESULT	Init(HWND hWndFrame);
 
-	void	Init(HIMAGELIST himl)
+	void	Init()
 	{
-		InitializeTree(himl);
+		InitializeTree();
 		InitDragDrop();
 	}
 
@@ -141,6 +141,8 @@ struct ShellBrowser : public IShellBrowserImpl
 
 	 // for SDIMainFrame
 	void	jump_to(LPCITEMIDLIST pidl);
+
+	void	invalidate_cache();
 
 protected:
 	HWND	_hwnd;
@@ -164,7 +166,7 @@ protected:
 
 	CtxMenuInterfaces& _cm_ifs;
 
-	void	InitializeTree(HIMAGELIST himl);
+	void	InitializeTree();
 	bool	InitDragDrop();
 
 #ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
@@ -173,6 +175,10 @@ protected:
 	 // IShellFolderViewCB
 	virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
+
+	map<int, int> _image_map;
+
+	int		get_image_idx(int icon_id);
 };
 
 
@@ -194,27 +200,13 @@ template<typename BASE> struct ShellBrowserChildT
 	ShellBrowserChildT(HWND hwnd)
 	 :	super(hwnd)
 	{
-		_himlSmall = 0;
 	}
 
 	 // constructor for MDIShellBrowserChild
 	ShellBrowserChildT(HWND hwnd, const ShellChildWndInfo& info)
 	 :	super(hwnd, info)
 	{
-		_himlSmall = 0;
 	}
-
-	void init_himl()
-	{
-		SHFILEINFO sfi;
-
-		_himlSmall = (HIMAGELIST)SHGetFileInfo(C_DRIVE, 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
-//		_himlLarge = (HIMAGELIST)SHGetFileInfo(C_DRIVE, 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
-	}
-
-protected:
-	HIMAGELIST	_himlSmall;		// list
-//	HIMAGELIST	_himlLarge;		// shell image
 
 protected:
 	auto_ptr<ShellBrowser> _shellBrowser;

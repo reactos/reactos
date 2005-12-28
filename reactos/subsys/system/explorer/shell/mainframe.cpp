@@ -1335,9 +1335,6 @@ SDIMainFrame::SDIMainFrame(HWND hwnd)
 	_split_pos = DEFAULT_SPLIT_POS;
 	_last_split = DEFAULT_SPLIT_POS;
 
-	 // create image list for explorer tree view
-	init_himl();
-
 	/* wait for PM_OPEN_WINDOW message before creating a shell view
 	update_shell_browser();*/
 }
@@ -1647,12 +1644,12 @@ void SDIMainFrame::update_shell_browser()
 	}
 
 	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _left_hwnd, _right_hwnd,
-												_shellpath_info, _himlSmall, this, _cm_ifs));
+												_shellpath_info, this, _cm_ifs));
 
 	_shellBrowser->Init(_hwnd);
 
 	if (_left_hwnd)
-		_shellBrowser->Init(_himlSmall);
+		_shellBrowser->Init();
 
 	 // update _clnt_rect and set size of new created shell view windows
 	update_clnt_rect();
