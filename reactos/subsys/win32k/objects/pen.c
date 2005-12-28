@@ -63,7 +63,7 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
 
       case PS_ALTERNATE:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-         PenObject->hbmPattern = NtGdiCreateBitmap(8, 1, 1, 1, (LPBYTE)wPatternAlternate);
+         PenObject->hbmPattern = NtGdiCreateBitmap(8, 1, 1, 1, wPatternAlternate);
          break;
 
       default:
@@ -81,8 +81,7 @@ HPEN STDCALL
 NtGdiCreatePen(
    INT PenStyle,
    INT Width,
-   COLORREF Color,
-   IN HBRUSH hbr)
+   COLORREF Color)
 {
   LOGPEN LogPen;
 
@@ -126,19 +125,11 @@ HPEN STDCALL
 NtGdiExtCreatePen(
    DWORD PenStyle,
    DWORD Width,
-   IN ULONG iBrushStyle,
-   IN ULONG ulColor,
-   IN ULONG_PTR lClientHatch,
-   IN ULONG_PTR lHatch,
+   CONST LOGBRUSH *LogBrush,
    DWORD StyleCount,
-   PULONG Style,
-   IN ULONG cjDIB,
-   IN BOOL bOldStylePen,
-   IN OPTIONAL HBRUSH hbrush)
+   CONST DWORD *Style)
 {
    /* NOTE: This is HACK! */
-    DPRINT1("FIXME: FIX CALLERS FIRST!\n");
-    KEBUGCHECK(0);
    LOGPEN LogPen;
 
    if (PenStyle & PS_USERSTYLE)
@@ -146,7 +137,7 @@ NtGdiExtCreatePen(
 
    LogPen.lopnStyle = PenStyle & PS_STYLE_MASK;
    LogPen.lopnWidth.x = Width;
-   LogPen.lopnColor = ulColor;
+   LogPen.lopnColor = (LogBrush != NULL) ? LogBrush->lbColor : 0;
 
    return IntGdiCreatePenIndirect(&LogPen);
 }

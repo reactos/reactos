@@ -20,40 +20,13 @@ CreateDIBSection(
                                       &ConvertedInfoSize, FALSE);
    if (pConvertedInfo)
    {
-      hBitmap = NtGdiCreateDIBSection(hDC, hSection, dwOffset, pConvertedInfo, Usage, 0, 0, 0, Bits);
+      hBitmap = NtGdiCreateDIBSection(hDC, pConvertedInfo, Usage, Bits,
+                                      hSection, dwOffset);
       if (BitmapInfo != pConvertedInfo)
          RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
    }
 
    return hBitmap;
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-BitBlt(HDC hdcDest,      /* handle to destination DC */
-       int nXOriginDest, /* x-coord of destination upper-left corner */
-       int nYOriginDest, /* y-coord of destination upper-left corner */
-       int nWidthDest,   /* width of destination rectangle */
-       int nHeightDest,  /* height of destination rectangle */
-       HDC hdcSrc,       /* handle to source DC */
-       int nXSrc,        /* x-coordinate of source upper-left corner */
-       int nYSrc,        /* y-coordinate of source upper-left corner */
-       DWORD dwRop)      /* raster operation code */
-{
-    return NtGdiBitBlt(hdcDest,
-                       nXOriginDest,
-                       nYOriginDest,
-                       nWidthDest,
-                       nHeightDest,
-                       hdcSrc,
-                       nXSrc,
-                       nYSrc,
-                       dwRop,
-                       0,
-                       0);
 }
 
 /*
@@ -78,9 +51,9 @@ StretchBlt(
    {
       return NtGdiStretchBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest,
                              nHeightDest, hdcSrc, nXOriginSrc, nYOriginSrc,
-                             nWidthSrc, nHeightSrc, dwRop, 0);
+                             nWidthSrc, nHeightSrc, dwRop);
    }
   
    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest,
-                      nHeightDest, hdcSrc, nXOriginSrc, nYOriginSrc, dwRop, 0, 0);
+                      nHeightDest, hdcSrc, nXOriginSrc, nYOriginSrc, dwRop);
 }

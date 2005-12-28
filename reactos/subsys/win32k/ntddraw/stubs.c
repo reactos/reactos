@@ -16,11 +16,11 @@
 
 
 
-DWORD STDCALL NtGdiD3dContextCreate(
+BOOL STDCALL NtGdiD3dContextCreate(
     HANDLE hDirectDrawLocal,
     HANDLE hSurfColor,
     HANDLE hSurfZ,
-    LPD3DNTHAL_CONTEXTCREATEDATA pdcci
+    D3DNTHAL_CONTEXTCREATEDATA *pdcci
 )
 {
 	UNIMPLEMENTED
@@ -37,7 +37,7 @@ DWORD STDCALL NtGdiD3dContextDestroy(
 	return 0;
 }
 
-DWORD STDCALL NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
+DWORD STDCALL NtGdiD3dContextDestroyAll(VOID)
 {
 	/* This entry point is not supported on NT5 and ROS */
 	UNIMPLEMENTED
@@ -226,7 +226,7 @@ DWORD STDCALL NtGdiDdGetDriverState(
 	return 0;
 }
 
-HANDLE STDCALL NtGdiDdGetDxHandle(
+DWORD STDCALL NtGdiDdGetDxHandle(
     HANDLE hDirectDraw,
     HANDLE hSurface,
     BOOL bRelease
@@ -383,9 +383,7 @@ DWORD STDCALL NtGdiDdUnlockD3D(
 
 
 
-DWORD STDCALL NtGdiDdAlphaBlt(IN HANDLE hSurfaceDest,
-                              IN OPTIONAL HANDLE hSurfaceSrc,
-                              IN OUT PDD_BLTDATA puBltData)
+DWORD STDCALL NtGdiDdAlphaBlt(VOID)
 {
 	UNIMPLEMENTED
 

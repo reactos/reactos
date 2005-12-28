@@ -1132,7 +1132,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
 
       if (!NtGdiBitBlt(hDC, rDst_lp.left, rDst_lp.top, rDst_lp.right - rDst_lp.left,
                        rDst_lp.bottom - rDst_lp.top, hDC, rSrc_lp.left, rSrc_lp.top,
-                       SRCCOPY, 0, 0))
+                       SRCCOPY))
          return FALSE;
    }
    else

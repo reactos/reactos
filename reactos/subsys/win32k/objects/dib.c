@@ -557,11 +557,11 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
       /* copy existing bitmap from destination dc */
       if (SrcWidth == DestWidth && SrcHeight == DestHeight)
          NtGdiBitBlt(hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
-                     SrcWidth, SrcHeight, hDC, XDest, YDest, ROP, 0, 0);
+                     SrcWidth, SrcHeight, hDC, XDest, YDest, ROP);
       else
          NtGdiStretchBlt(hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
                          SrcWidth, SrcHeight, hDC, XDest, YDest, DestWidth, DestHeight,
-                         ROP, 0);
+                         ROP);
    }
 
    NtGdiSetDIBits(hdcMem, hBitmap, 0, BitsInfo->bmiHeader.biHeight, Bits,
@@ -572,11 +572,11 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
    if (SrcWidth == DestWidth && SrcHeight == DestHeight)
       NtGdiBitBlt(hDC, XDest, YDest, DestWidth, DestHeight,
                   hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
-                  ROP, 0, 0);
+                  ROP);
    else
       NtGdiStretchBlt(hDC, XDest, YDest, DestWidth, DestHeight,
                       hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
-                      SrcWidth, SrcHeight, ROP, 0);
+                      SrcWidth, SrcHeight, ROP);
 
    NtGdiSelectObject(hdcMem, hOldBitmap);
    NtGdiDeleteDC(hdcMem);
@@ -586,8 +586,8 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
 }
 
 LONG STDCALL NtGdiGetBitmapBits(HBITMAP  hBitmap,
-                        ULONG  Count,
-                        OUT OPTIONAL PBYTE Bits)
+                        LONG  Count,
+                        LPVOID  Bits)
 {
   PBITMAPOBJ  bmp;
   LONG  height, ret;
@@ -767,14 +767,11 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
 }
 
 HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
-                              IN OPTIONAL HANDLE hSection,
-                              IN DWORD dwOffset,
-                              IN LPBITMAPINFO bmi,
-                              DWORD  Usage,
-                              IN UINT cjHeader,
-                              IN FLONG fl,
-                              IN ULONG_PTR dwColorSpace,
-                              PVOID *Bits)
+                              CONST BITMAPINFO  *bmi,
+                              UINT  Usage,
+                              VOID  *Bits,
+                              HANDLE  hSection,
+                              DWORD  dwOffset)
 {
   HBITMAP hbitmap = 0;
   DC *dc;

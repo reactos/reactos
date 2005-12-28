@@ -63,10 +63,10 @@ NtGdiGetPixelFormat(HDC  hDC)
 }
 
 BOOL
-APIENTRY
-NtGdiSetPixelFormat(
-    IN HDC hdc,
-    IN INT ipfd)
+STDCALL
+NtGdiSetPixelFormat(HDC  hDC,
+                         INT  PixelFormat,
+                         CONST PPIXELFORMATDESCRIPTOR  pfd)
 {
   UNIMPLEMENTED;
   return FALSE;

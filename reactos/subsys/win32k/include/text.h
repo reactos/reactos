@@ -1,24 +1,6 @@
 #ifndef _WIN32K_TEXT_H
 #define _WIN32K_TEXT_H
 
-/* GDI logical font object */
-typedef struct
-{
-   LOGFONTW   logfont;
-   FONTOBJ    *Font;
-   BOOLEAN Initialized; /* Don't reinitialize for each DC */
-} TEXTOBJ, *PTEXTOBJ;
-
-/*  Internal interface  */
-
-#define  TEXTOBJ_AllocText() \
-  ((HFONT) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_FONT))
-#define  TEXTOBJ_FreeText(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
-#define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
-#define  TEXTOBJ_UnlockText(pBMObj) GDIOBJ_UnlockObjByPtr (pBMObj)
-
-NTSTATUS FASTCALL TextIntRealizeFont(HFONT FontHandle);
-NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);

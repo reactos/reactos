@@ -47,23 +47,21 @@ NtGdiGdiSetBatchLimit(DWORD  Limit)
   return 0;
 }
 
-DWORD
-APIENTRY
-NtGdiGetBoundsRect(
-    IN HDC hdc,
-    OUT LPRECT prc,
-    IN DWORD f)
+UINT
+STDCALL
+NtGdiGetBoundsRect(HDC  hDC,
+                        LPRECT  Bounds,
+                        UINT  Flags)
 {
   DPRINT("stub");
   return  DCB_RESET;   /* bounding rectangle always empty */
 }
 
-DWORD
-APIENTRY
-NtGdiSetBoundsRect(
-    IN HDC hdc,
-    IN LPRECT prc,
-    IN DWORD f)
+UINT
+STDCALL
+NtGdiSetBoundsRect(HDC  hDC,
+                        CONST PRECT  Bounds,
+                        UINT  Flags)
 {
   DPRINT("stub");
   return  DCB_DISABLE;   /* bounding rectangle always empty */

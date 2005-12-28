@@ -19,7 +19,7 @@
 /* $Id$ */
 
 #include <w32k.h>
-#include "math.h"
+#include <win32k/float.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -174,10 +174,9 @@ NtGdiFlattenPath(HDC  hDC)
 
 
 BOOL
-APIENTRY
-NtGdiGetMiterLimit(
-    IN HDC hdc,
-    OUT PDWORD pdwOut)
+STDCALL
+NtGdiGetMiterLimit(HDC  hDC,
+                        PFLOAT  Limit)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -203,11 +202,10 @@ NtGdiPathToRegion(HDC  hDC)
 }
 
 BOOL
-APIENTRY
-NtGdiSetMiterLimit(
-    IN HDC hdc,
-    IN DWORD dwNew,
-    IN OUT OPTIONAL PDWORD pdwOut)
+STDCALL
+NtGdiSetMiterLimit(HDC  hDC,
+                        FLOAT  NewLimit,
+                        PFLOAT  OldLimit)
 {
   UNIMPLEMENTED;
   return FALSE;

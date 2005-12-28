@@ -1,8 +1,6 @@
 #ifndef _WIN32K_INTGDI_H
 #define _WIN32K_INTGDI_H
 
-#include "region.h"
-
 /* Brush functions */
 
 XLATEOBJ* FASTCALL

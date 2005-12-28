@@ -1,9 +1,9 @@
 #ifndef _WIN32K_OBJECT_H
 #define _WIN32K_OBJECT_H
 
-#include "gdiobj.h"
-#include "bitmaps.h"
-#include "pen.h"
+#include <win32k/gdiobj.h>
+#include <win32k/bitmaps.h>
+#include <win32k/pen.h>
 
 #define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */

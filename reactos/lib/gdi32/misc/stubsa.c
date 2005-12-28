@@ -157,9 +157,9 @@ CreateColorSpaceA(
 BOOL
 STDCALL
 GetICMProfileA(
-	HDC		hdc,
-	LPDWORD pBufSize,
-	LPSTR		pszFilename
+	HDC		a0,
+	DWORD		a1,	/* MS says LPDWORD! */
+	LPSTR		a2
 	)
 {
 	UNIMPLEMENTED;
@@ -258,7 +258,7 @@ BOOL
 STDCALL
 UpdateICMRegKeyA(
 	DWORD	a0,
-	LPSTR	a1,
+	DWORD	a1,
 	LPSTR	a2,
 	UINT	a3
 	)

@@ -99,11 +99,13 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&This->ddsd; 
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = This->pLocal;	
-	CreateData.ddRVal = DD_FALSE;
-		
+	asm("int3");
+	CreateData.ddRVal = 1;
+
 	/* this is the call we were waiting for */
 	if(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
+	asm("int3");
 
 	/* FIXME remove the if and debug string*/
 	if(CreateData.ddRVal != DD_OK)

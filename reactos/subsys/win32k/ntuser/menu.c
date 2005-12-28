@@ -322,7 +322,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuInfo.dwStyle = 0; /* FIXME */
    Menu->MenuInfo.cyMax = 0; /* default */
    Menu->MenuInfo.hbrBack =
-      NtGdiCreateSolidBrush(RGB(192, 192, 192), 0); /* FIXME: default background color */
+      NtGdiCreateSolidBrush(RGB(192, 192, 192)); /* FIXME: default background color */
    Menu->MenuInfo.dwContextHelpID = 0; /* default */
    Menu->MenuInfo.dwMenuData = 0; /* default */
    Menu->MenuInfo.Self = *Handle;

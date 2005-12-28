@@ -187,8 +187,8 @@ UINT
 STDCALL
 GetEnhMetaFilePixelFormat(
 	HENHMETAFILE			hemf,
-	UINT				cbBuffer,
-	PIXELFORMATDESCRIPTOR	*ppfd
+	DWORD				cbBuffer,
+	CONST PIXELFORMATDESCRIPTOR	*ppfd
 	)
 {
 	ENHMETAHEADER pemh;
@@ -199,7 +199,7 @@ GetEnhMetaFilePixelFormat(
 	{
 		if(pemh.cbPixelFormat)
 		{
-		memcpy((void*)ppfd, UlongToPtr(pemh.offPixelFormat), cbBuffer );
+		memcpy((void*)ppfd, (const void *)pemh.offPixelFormat, cbBuffer );
 		return(pemh.cbPixelFormat);
 		}
 	}

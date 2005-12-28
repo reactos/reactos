@@ -22,6 +22,7 @@
  */
 
 #include <w32k.h>
+#include <win32k/ntddraw.h>
 #include <include/napi.h>
 
 #define NDEBUG

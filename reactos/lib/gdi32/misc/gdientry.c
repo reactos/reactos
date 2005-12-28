@@ -27,16 +27,9 @@
 
 
 #include "precomp.h"
-#include <ddraw.h>
-#include <ddrawi.h>
-#include <ddrawint.h>
-#include <ddrawgdi.h>
 static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
 static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
 
-BOOL
-intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
-				     BOOL bComplete);
 
 /*
  * @implemented
@@ -98,42 +91,8 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
   return TRUE;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-                        LPDDHALINFO pHalInfo,
-                        LPDDHAL_DDCALLBACKS pDDCallbacks,
-                        LPDDHAL_DDSURFACECALLBACKS pDDSurfaceCallbacks,
-                        LPDDHAL_DDPALETTECALLBACKS pDDPaletteCallbacks,
-                        LPD3DHAL_CALLBACKS pD3dCallbacks,
-                        LPD3DHAL_GLOBALDRIVERDATA pD3dDriverData,
-                        LPDDHAL_DDEXEBUFCALLBACKS pD3dBufferCallbacks,
-                        LPDDSURFACEDESC pD3dTextureFormats,
-                        LPDWORD pdwFourCC,
-                        LPVIDMEM pvmList)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-HBITMAP
-STDCALL
-DdCreateDIBSection(HDC hdc,
-                   CONST BITMAPINFO *pbmi,
-                   UINT iUsage,
-                   VOID **ppvBits,
-                   HANDLE hSectionApp,
-                   DWORD dwOffset)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @implemented

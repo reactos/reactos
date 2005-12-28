@@ -1137,25 +1137,21 @@ NtGdiDeleteDC(HDC  DCHandle)
   return TRUE;
 }
 
-INT
-APIENTRY
-NtGdiDrawEscape(
-    IN HDC hdc,
-    IN INT iEsc,
-    IN INT cjIn,
-    IN OPTIONAL LPSTR pjIn)
+INT STDCALL
+NtGdiDrawEscape(HDC  hDC,
+               INT  nEscape,
+               INT  cbInput,
+               LPCSTR  lpszInData)
 {
   UNIMPLEMENTED;
   return 0;
 }
 
-ULONG
-APIENTRY
-NtGdiEnumObjects(
-    IN HDC hdc,
-    IN INT iObjectType,
-    IN ULONG cjBuf,
-    OUT OPTIONAL PVOID pvBuf)
+INT STDCALL
+NtGdiEnumObjects(HDC  hDC,
+                INT  ObjectType,
+                GOBJENUMPROC  ObjectFunc,
+                LPARAM  lParam)
 {
   UNIMPLEMENTED;
   return 0;
@@ -1919,14 +1915,8 @@ DC_GET_VAL_EX( GetViewportOrgEx, vportOrgX, vportOrgY, POINT, x, y )
 DC_GET_VAL_EX( GetWindowExtEx, wndExtX, wndExtY, SIZE, cx, cy )
 DC_GET_VAL_EX( GetWindowOrgEx, wndOrgX, wndOrgY, POINT, x, y )
 
-BOOL
-APIENTRY
-NtGdiResetDC(
-    IN HDC hdc,
-    IN LPDEVMODEW pdm,
-    OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2,
-    OUT VOID *ppUMdhpdev)
+HDC STDCALL
+NtGdiResetDC(HDC  hDC, CONST DEVMODEW *InitData)
 {
   UNIMPLEMENTED;
   return 0;

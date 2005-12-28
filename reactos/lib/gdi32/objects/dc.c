@@ -348,8 +348,7 @@ ResetDCW(
 	CONST DEVMODEW	*lpInitData
 	)
 {
-  NtGdiResetDC ( hdc, (PDEVMODEW)lpInitData, NULL, NULL, NULL);
-  return hdc;
+  return NtGdiResetDC ( hdc, lpInitData );
 }
 
 
@@ -364,12 +363,13 @@ ResetDCA(
 	)
 {
   LPDEVMODEW InitDataW;
+  HDC hDc;
 
   InitDataW = GdiConvertToDevmodeW((LPDEVMODEA)lpInitData);
 
-  NtGdiResetDC ( hdc, InitDataW, NULL, NULL, NULL);
+  hDc = NtGdiResetDC ( hdc, InitDataW );
   HEAP_free(InitDataW);
-  return hdc;
+  return hDc;
 }
 
 
@@ -383,7 +383,7 @@ StartDocW(
 	CONST DOCINFOW	*a1
 	)
 {
-	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1, NULL, 0);
+	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1 );
 }
 
 

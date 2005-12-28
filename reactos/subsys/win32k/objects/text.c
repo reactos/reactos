@@ -1554,7 +1554,7 @@ NtGdiExtTextOut(
    {
       goto fail;
    }
-   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor), 0);
+   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
    if ( !hBrushFg )
    {
       goto fail;
@@ -1567,7 +1567,7 @@ NtGdiExtTextOut(
    IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
    if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
    {
-      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor), 0);
+      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor));
       if ( !hBrushBg )
       {
          goto fail;
@@ -2115,17 +2115,15 @@ NtGdiGetFontLanguageInfo(HDC  hDC)
   return 0;
 }
 
-ULONG
-APIENTRY
-NtGdiGetGlyphOutline(
-    IN HDC hdc,
-    IN WCHAR wch,
-    IN UINT iFormat,
-    OUT LPGLYPHMETRICS pgm,
-    IN ULONG cjBuf,
-    OUT OPTIONAL PVOID pvBuf,
-    IN LPMAT2 pmat2,
-    IN BOOL bIgnoreRotation)
+DWORD
+STDCALL
+NtGdiGetGlyphOutline(HDC  hDC,
+                           UINT  Char,
+                           UINT  Format,
+                           LPGLYPHMETRICS  gm,
+                           DWORD  Bufsize,
+                           LPVOID  Buffer,
+                           CONST LPMAT2 mat2)
 {
   UNIMPLEMENTED;
   return 0;
@@ -2152,10 +2150,9 @@ NtGdiGetOutlineTextMetrics(HDC  hDC,
 }
 
 BOOL
-APIENTRY
-NtGdiGetRasterizerCaps(
-    OUT LPRASTERIZER_STATUS praststat,
-    IN ULONG cjBytes)
+STDCALL
+NtGdiGetRasterizerCaps(LPRASTERIZER_STATUS  rs,
+                            UINT  Size)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -2169,12 +2166,11 @@ NtGdiGetTextCharset(HDC  hDC)
   return 0;
 }
 
-INT
-APIENTRY
-NtGdiGetTextCharsetInfo(
-    IN HDC hdc,
-    OUT OPTIONAL LPFONTSIGNATURE lpSig,
-    IN DWORD dwFlags)
+UINT
+STDCALL
+NtGdiGetTextCharsetInfo(HDC  hDC,
+                             LPFONTSIGNATURE  Sig,
+                             DWORD  Flags)
 {
   UNIMPLEMENTED;
   return 0;

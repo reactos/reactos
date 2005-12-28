@@ -39,7 +39,7 @@ CreateDIBPatternBrush(
    if (pConvertedInfo)
    {
       hBrush = NtGdiCreateDIBBrush(pConvertedInfo, fuColorSpec,
-                                   ConvertedInfoSize, FALSE, FALSE, lpPackedDIB);
+                                   ConvertedInfoSize, lpPackedDIB);
       if ((PBITMAPINFO)lpPackedDIB != pConvertedInfo)
          RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
    }
@@ -69,23 +69,12 @@ CreateDIBPatternBrushPt(
    if (pConvertedInfo)
    {
       hBrush = NtGdiCreateDIBBrush(pConvertedInfo, fuColorSpec,
-                                   ConvertedInfoSize, FALSE, FALSE, (PVOID)lpPackedDIB);
+                                   ConvertedInfoSize, lpPackedDIB);
       if ((PBITMAPINFO)lpPackedDIB != pConvertedInfo)
          RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
    }
 
    return hBrush;
-}
-
-/*
- * @implemented
- */
-HBRUSH
-STDCALL
-CreateSolidBrush(IN COLORREF crColor)
-{
-    /* Call Server-Side API */
-    return NtGdiCreateSolidBrush(crColor, NULL);
 }
 
 /*
@@ -116,7 +105,7 @@ CreateBrushIndirect(
          break;
 
       case BS_SOLID:
-         hBrush = NtGdiCreateSolidBrush(LogBrush->lbColor, 0);
+         hBrush = NtGdiCreateSolidBrush(LogBrush->lbColor);
          break;
 
       case BS_HATCHED:
