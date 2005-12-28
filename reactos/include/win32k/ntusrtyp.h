@@ -22,6 +22,7 @@ typedef struct _PATRECT
 } PATRECT, * PPATRECT;
 
 /* Structures for reading icon/cursor files and resources */
+#pragma pack(push,1)
 typedef struct _ICONIMAGE
 {
     BITMAPINFOHEADER icHeader;      // DIB header
@@ -107,6 +108,7 @@ typedef struct
     WORD idCount;                       // How many images?
     GRPCURSORICONDIRENTRY idEntries[1]; // The entries for each image
 } GRPCURSORICONDIR;
+#pragma pack(pop)
 
 typedef struct _THRDCARETINFO
 {
