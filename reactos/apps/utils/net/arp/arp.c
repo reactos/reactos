@@ -51,7 +51,7 @@ int _CRT_glob = 0; // stop * from listing dir files in arp -d *
 /*
  * function declerations
  */
-DWORD DoFormatMessage(DWORD ErrorCode);
+DWORD DoFormatMessage(VOID);
 INT PrintEntries(PMIB_IPNETROW pIpAddRow);
 INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
 INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr);
@@ -62,10 +62,12 @@ VOID Usage(VOID);
 /*
  * convert error code into meaningful message
  */
-DWORD DoFormatMessage(DWORD ErrorCode)
+DWORD DoFormatMessage(VOID)
 {
     LPVOID lpMsgBuf;
     DWORD RetVal;
+
+    DWORD ErrorCode = GetLastError();
 
     if (ErrorCode != ERROR_SUCCESS) 
     {
@@ -149,55 +151,63 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
     INT iRet;
     UINT i, k;
-    PMIB_IPNETTABLE pIpNetTable;
-    PMIB_IPADDRTABLE pIpAddrTable;
-    ULONG ulSize = 0;
+    PMIB_IPNETTABLE pIpNetTable = NULL;
+    PMIB_IPADDRTABLE pIpAddrTable = NULL;
+    DWORD Size = 0;
     struct in_addr inaddr, inaddr2;
-    DWORD dwSize = 0;
     PTCHAR pszIpAddr;
     TCHAR szIntIpAddr[20];
 
-    /* Return required buffer size */
-    GetIpNetTable(NULL, &ulSize, 0);
+    /* retrieve the IP-to-physical address mapping table */
+
+    /* get table size */
+    GetIpNetTable(pIpNetTable, &Size, 0);
 
     /* allocate memory for ARP address table */
-    pIpNetTable = (PMIB_IPNETTABLE) malloc(ulSize * sizeof(BYTE));
+    pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
+    if (pIpNetTable == NULL)
+        goto cleanup;
+
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    /* get Arp address table */
-    if (pIpNetTable != NULL)
-        GetIpNetTable(pIpNetTable, &ulSize, TRUE);
-    else
+    iRet = GetIpNetTable(pIpNetTable, &Size, TRUE);
+
+    if (iRet != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
-        free(pIpNetTable);
-        exit(EXIT_FAILURE);
+        DoFormatMessage();
+        goto cleanup;
     }
 
     /* check there are entries in the table */
     if (pIpNetTable->dwNumEntries == 0)
     {
         _tprintf(_T("No ARP entires found\n"));
-        free(pIpNetTable);
-        exit(EXIT_FAILURE);
+        goto cleanup;
     }
 
 
 
-    /* try doing this in the way it's done above, it's clearer */
     /* Retrieve the interface-to-ip address mapping
      * table to get the IP address for adapter */
-    pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
-    GetIpAddrTable(pIpAddrTable, &dwSize, 0);   // NULL ?
 
+    /* get table size */
+    Size = 0;
+    GetIpAddrTable(pIpAddrTable, &Size, 0);
 
-    pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
-    //ZeroMemory(pIpAddrTable, sizeof(*pIpAddrTable));
+    pIpAddrTable = (MIB_IPADDRTABLE *) HeapAlloc(GetProcessHeap(), 0, Size);
+    if (pIpAddrTable == NULL)
+        goto cleanup;
 
-    if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR)
+    ZeroMemory(pIpAddrTable, sizeof(*pIpAddrTable));
+
+    iRet = GetIpAddrTable(pIpAddrTable, &Size, TRUE);
+
+    if (iRet != NO_ERROR)
     {
         _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
-        _tprintf(_T("error: %d\n"), WSAGetLastError());
+        DoFormatMessage();
+        goto cleanup;
     }
 
 
@@ -237,10 +247,14 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
             PrintEntries(&pIpNetTable->table[i]);
     }
 
-    free(pIpNetTable);
-    free(pIpAddrTable);
-
     return EXIT_SUCCESS;
+    
+cleanup:
+    if (pIpNetTable != NULL)
+        HeapFree(GetProcessHeap(), 0, pIpNetTable);
+    if (pIpAddrTable != NULL)
+        HeapFree(GetProcessHeap(), 0, pIpAddrTable);
+    return EXIT_FAILURE;
 }
 
 
@@ -254,12 +268,10 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
  */
 INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 {
-    PMIB_IPNETROW pAddHost;
-    PMIB_IPADDRTABLE pIpAddrTable;
-    PMIB_IPNETTABLE pIpNetTable;
+    PMIB_IPNETROW pAddHost = NULL;
+    PMIB_IPNETTABLE pIpNetTable = NULL;
     DWORD dwIpAddr = 0;
-    DWORD dwSize = 0;
-    ULONG ulSize = 0;
+    ULONG Size = 0;
     INT iRet, i, val, c;
 
     /* error checking */
@@ -270,20 +282,20 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
         {
             _tprintf(_T("ARP: bad IP address: %s\n"), pszInetAddr);
-            exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
     }
     else
     {
         Usage();
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     /* check MAC address */
     if (strlen(pszEthAddr) != 17)
     {
         _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     for (i=0; i<17; i++)
     {
@@ -293,29 +305,36 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         if (!isxdigit(pszEthAddr[i]))
         {
             _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
-            exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
     }
 
     /* We need the IpNetTable to get the adapter index */
     /* Return required buffer size */
-    GetIpNetTable(NULL, &ulSize, 0);
+    GetIpNetTable(pIpNetTable, &Size, 0);
+
     /* allocate memory for ARP address table */
-    pIpNetTable = (PMIB_IPNETTABLE) malloc(ulSize * sizeof(BYTE));
+    pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
+    if (pIpNetTable == NULL)
+        goto cleanup;
+
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
-    /* get Arp address table */
-    if (pIpNetTable != NULL)
-        GetIpNetTable(pIpNetTable, &ulSize, TRUE);
-    else
+
+    iRet = GetIpNetTable(pIpNetTable, &Size, TRUE);
+
+    if (iRet != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
-        free(pIpNetTable);
-        return -1;
+        DoFormatMessage();
+        goto cleanup;
     }
 
 
     /* reserve memory on heap and zero */
-    pAddHost = (MIB_IPNETROW *) malloc(sizeof(MIB_IPNETROW));
+    pAddHost = (MIB_IPNETROW *) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
+    if (pAddHost == NULL)
+        goto cleanup;
+
     ZeroMemory(pAddHost, sizeof(MIB_IPNETROW));
 
     /* set dwIndex field to the index of a local IP address to
@@ -324,30 +343,15 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     {
         if (sscanf(pszIfAddr, "%lx", &pAddHost->dwIndex) == EOF)
         {
-            free(pIpNetTable);
-            free(pAddHost);
-            return EXIT_FAILURE;
+            goto cleanup;
         }
     }
     else
     {
-        /* map the IP to the index */
-        pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
-        GetIpAddrTable(pIpAddrTable, &dwSize, 0);
-
-        pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
-
-        if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR)
-        {
-            _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
-            _tprintf(_T("error: %d\n"), WSAGetLastError());
-        }
         //printf("debug print: pIpNetTable->table[0].dwIndex = %lx\n", pIpNetTable->table[0].dwIndex);
         /* needs testing. I get the correct index on my machine, but need others
          * to test their card index.  Any problems and we can use GetAdaptersInfo instead */
         pAddHost->dwIndex = pIpNetTable->table[0].dwIndex;
-
-        free(pIpAddrTable);
     }
 
     /* Set MAC address to 6 bytes (typical) */
@@ -380,14 +384,20 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     /* Add the ARP entry */
     if ((iRet = SetIpNetEntry(pAddHost)) != NO_ERROR)
     {
-        DoFormatMessage(iRet);
-        free(pAddHost);
-        exit(EXIT_FAILURE);
+        DoFormatMessage();
+        goto cleanup;
     }
 
-    free(pAddHost);
+    HeapFree(GetProcessHeap(), 0, pAddHost);
 
     return EXIT_SUCCESS;
+
+cleanup:
+    if (pIpNetTable != NULL)
+        HeapFree(GetProcessHeap(), 0, pIpNetTable);
+    if (pAddHost != NULL)
+        HeapFree(GetProcessHeap(), 0, pAddHost);
+    return EXIT_FAILURE;
 }
 
 
@@ -401,12 +411,10 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
  */
 INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
-    PMIB_IPNETROW pDelHost;
-    PMIB_IPADDRTABLE pIpAddrTable;
-    PMIB_IPNETTABLE pIpNetTable;
-    ULONG ulSize = 0;
+    PMIB_IPNETROW pDelHost = NULL;
+    PMIB_IPNETTABLE pIpNetTable = NULL;
+    DWORD Size = 0;
     DWORD dwIpAddr = 0;
-    DWORD dwSize = 0;
     INT iRet;
     BOOL bFlushTable = FALSE;
 
@@ -432,48 +440,43 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 
     /* We need the IpNetTable to get the adapter index */
     /* Return required buffer size */
-    GetIpNetTable(NULL, &ulSize, 0);
+    GetIpNetTable(NULL, &Size, 0);
+
     /* allocate memory for ARP address table */
-    pIpNetTable = (PMIB_IPNETTABLE) malloc(ulSize * sizeof(BYTE));
+    pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
+    if (pIpNetTable == NULL)
+        goto cleanup;
+
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
-    /* get Arp address table */
-    if (pIpNetTable != NULL)
-        GetIpNetTable(pIpNetTable, &ulSize, TRUE);
-    else
+
+    iRet = GetIpNetTable(pIpNetTable, &Size, TRUE);
+
+    if (iRet != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
-        free(pIpNetTable);
-        return -1;
+        DoFormatMessage();
+        goto cleanup;
     }
 
+    /* reserve memory on heap and zero */
+    pDelHost = (MIB_IPNETROW *) HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
+    if (pDelHost == NULL)
+        goto cleanup;
 
-     pIpAddrTable = (MIB_IPADDRTABLE*) malloc(sizeof(MIB_IPADDRTABLE));
-     pDelHost = (MIB_IPNETROW *) malloc(sizeof(MIB_IPNETROW));
-     ZeroMemory(pIpAddrTable, sizeof(MIB_IPADDRTABLE));
-     ZeroMemory(pDelHost, sizeof(MIB_IPNETROW));
+    ZeroMemory(pDelHost, sizeof(MIB_IPNETROW));
+
+
     /* set dwIndex field to the index of a local IP address to
      * indicate the network on which the ARP entry applies */
     if (pszIfAddr)
     {
         if (sscanf(pszIfAddr, "%lx", &pDelHost->dwIndex) == EOF)
         {
-            free(pIpNetTable);
-            free(pIpAddrTable);
-            free(pDelHost);
-            return EXIT_FAILURE;
+            goto cleanup;
         }
     }
     else
     {
-        /* map the IP to the index */
-        if (GetIpAddrTable(pIpAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
-            pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
-
-        if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR)
-        {
-            _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
-            _tprintf(_T("error: %d\n"), WSAGetLastError());
-        }
         /* needs testing. I get the correct index on my machine, but need others
          * to test their card index. Any problems and we can use GetAdaptersInfo instead */
         pDelHost->dwIndex = pIpNetTable->table[0].dwIndex;
@@ -484,15 +487,12 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         /* delete arp cache */
         if ((iRet = FlushIpNetTable(pDelHost->dwIndex)) != NO_ERROR)
         {
-            DoFormatMessage(iRet);
-            free(pIpAddrTable);
-            free(pDelHost);
-            return EXIT_FAILURE;
+            DoFormatMessage();
+            goto cleanup;
         }
         else
         {
-            free(pIpAddrTable);
-            free(pDelHost);
+            HeapFree(GetProcessHeap(), 0, pDelHost);
             return EXIT_SUCCESS;
         }
     }
@@ -503,17 +503,20 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* Add the ARP entry */
     if ((iRet = DeleteIpNetEntry(pDelHost)) != NO_ERROR)
     {
-
-        DoFormatMessage(iRet);
-        free(pIpAddrTable);
-        free(pDelHost);
-        exit(EXIT_FAILURE);
+        DoFormatMessage();
+        goto cleanup;
     }
 
-    free(pIpAddrTable);
-    free(pDelHost);
+    HeapFree(GetProcessHeap(), 0, pDelHost);
 
     return EXIT_SUCCESS;
+
+cleanup:
+    if (pIpNetTable != NULL)
+        HeapFree(GetProcessHeap(), 0, pIpNetTable);
+    if (pDelHost != NULL)
+        HeapFree(GetProcessHeap(), 0, pDelHost);
+    return EXIT_FAILURE;
 }
 
 
@@ -615,6 +618,4 @@ INT main(int argc, char* argv[])
         Usage();
 
     return EXIT_SUCCESS;
-} /*
-warning: suggest parentheses around assignment used as truth value
-warning: char format, void arg (arg 2)*/
+} 
