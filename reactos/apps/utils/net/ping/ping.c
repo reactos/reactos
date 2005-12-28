@@ -182,7 +182,7 @@ static ULONG GetULONG(LPSTR String)
     ULONG Value;
 
     i = 0;
-    Length = strlen(String);
+    Length = (UINT)_tcslen(String);
     while ((i < Length) && ((String[i] < '0') || (String[i] > '9'))) i++;
     if ((i >= Length) || ((String[i] < '0') || (String[i] > '9'))) {
         InvalidOption = TRUE;
