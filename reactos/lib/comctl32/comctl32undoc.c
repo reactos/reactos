@@ -96,7 +96,7 @@ LPVOID WINAPI Alloc (DWORD dwSize)
 LPVOID WINAPI ReAlloc (LPVOID lpSrc, DWORD dwSize)
 {
     if (lpSrc)
-        return LocalReAlloc( lpSrc, dwSize, LMEM_ZEROINIT );
+        return LocalReAlloc( lpSrc, dwSize, LMEM_ZEROINIT | LMEM_MOVEABLE );
     else
         return LocalAlloc( LMEM_ZEROINIT, dwSize);
 }
