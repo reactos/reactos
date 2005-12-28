@@ -26,13 +26,10 @@
 /* CSRSS Headers */
 #include <csrss/csrss.h>
 
-/* External Win32K Headers */
+/* Public Win32K Headers */
+#include <win32k/ntusrtyp.h>
 #include <win32k/ntuser.h>
-#include <win32k/caret.h>
 #include <win32k/callback.h>
-#include <win32k/cursoricon.h>
-#include <win32k/menu.h>
-#include <win32k/paint.h>
 
 /* WINE Headers */
 #include <wine/debug.h>
@@ -41,6 +38,7 @@
 /* Internal User32 Headers */
 #include "user32p.h"
 
-/* FIXME: FILIP */
+/* FIXME: Use ntgdi.h then cleanup... */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-DWORD STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
+BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
+DWORD STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, DWORD *);

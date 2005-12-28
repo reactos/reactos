@@ -338,13 +338,14 @@ IntGdiPolyPolyline(DC      *dc,
 /******************************************************************************/
 
 BOOL
-STDCALL
-NtGdiAngleArc(HDC  hDC,
-             int  X,
-             int  Y,
-             DWORD  Radius,
-             FLOAT  StartAngle,
-             FLOAT  SweepAngle)
+APIENTRY
+NtGdiAngleArc(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    IN DWORD dwRadius,
+    IN DWORD dwStartAngle,
+    IN DWORD dwSweepAngle)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -725,11 +726,12 @@ NtGdiPolyBezierTo(HDC  hDC,
 }
 
 BOOL
-STDCALL
-NtGdiPolyDraw(HDC            hDC,
-             CONST LPPOINT  pt,
-             CONST LPBYTE   Types,
-             int            Count)
+APIENTRY
+NtGdiPolyDraw(
+    IN HDC hdc,
+    IN LPPOINT ppt,
+    IN LPBYTE pjAttr,
+    IN ULONG cpt)
 {
   UNIMPLEMENTED;
   return FALSE;

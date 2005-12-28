@@ -41,7 +41,9 @@ NtGdiBitBlt(
 	HDC  hDCSrc,
 	INT  XSrc,
 	INT  YSrc,
-	DWORD  ROP)
+	DWORD  ROP,
+	IN DWORD crBackColor,
+	IN FLONG fl)
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
@@ -457,7 +459,7 @@ NtGdiCreateBitmap(
 	INT  Height,
 	UINT  Planes,
 	UINT  BitsPixel,
-	CONST VOID *Bits)
+	IN OPTIONAL LPBYTE Bits)
 {
    BITMAP BM;
 
@@ -467,7 +469,7 @@ NtGdiCreateBitmap(
    BM.bmWidthBytes = BITMAPOBJ_GetWidthBytes(Width, Planes * BitsPixel);
    BM.bmPlanes = Planes;
    BM.bmBitsPixel = BitsPixel;
-   BM.bmBits = (LPVOID) Bits;
+   BM.bmBits = Bits;
 
    return IntCreateBitmapIndirect(&BM);
 }
@@ -712,7 +714,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				{
 					PBITMAPOBJ bmpobj;
 
-					NtGdiBitBlt ( hDCTmp, 0, 0, 1, 1, hDC, XPos, YPos, SRCCOPY );
+					NtGdiBitBlt ( hDCTmp, 0, 0, 1, 1, hDC, XPos, YPos, SRCCOPY, 0, 0 );
 					NtGdiSelectObject ( hDCTmp, hBmpOld );
 
 					// our bitmap is no longer selected, so we can access it's stuff...
@@ -756,7 +758,8 @@ NtGdiMaskBlt (
 	HDC hdcDest, INT nXDest, INT nYDest,
 	INT nWidth, INT nHeight, HDC hdcSrc,
 	INT nXSrc, INT nYSrc, HBITMAP hbmMask,
-	INT xMask, INT yMask, DWORD dwRop)
+	INT xMask, INT yMask, DWORD dwRop,
+	IN DWORD crBackColor)
 {
 	HBITMAP hOldMaskBitmap, hBitmap2, hOldBitmap2, hBitmap3, hOldBitmap3;
 	HDC hDCMask, hDC1, hDC2;
@@ -893,7 +896,7 @@ NtGdiMaskBlt (
 	};
 
 	if (!hbmMask)
-		return NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop));
+		return NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop), 0, 0);
 
 	/* 1. make mask bitmap's dc */
 	hDCMask = NtGdiCreateCompatibleDC(hdcDest);
@@ -907,9 +910,9 @@ NtGdiMaskBlt (
 	hOldBitmap2 = (HBITMAP)NtGdiSelectObject(hDC1, hBitmap2);
 
 	/* 2.2 draw dest bitmap and mask */
-	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY);
-	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, BKGND_ROP3(dwRop));
-	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hDCMask, xMask, yMask, DSTERASE);
+	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY, 0, 0);
+	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, BKGND_ROP3(dwRop), 0, 0);
+	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hDCMask, xMask, yMask, DSTERASE, 0, 0);
 
 	/* 3. make masked Foreground bitmap */
 
@@ -919,13 +922,13 @@ NtGdiMaskBlt (
 	hOldBitmap3 = (HBITMAP)NtGdiSelectObject(hDC2, hBitmap3);
 
 	/* 3.2 draw src bitmap and mask */
-	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY);
-	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop));
-	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hDCMask, xMask, yMask, SRCAND);
+	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY, 0, 0);
+	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop), 0,0);
+	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hDCMask, xMask, yMask, SRCAND, 0, 0);
 
 	/* 4. combine two bitmap and copy it to hdcDest */
-	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hDC2, 0, 0, SRCPAINT);
-	NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hDC1, 0, 0, SRCCOPY);
+	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hDC2, 0, 0, SRCPAINT, 0, 0);
+	NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hDC1, 0, 0, SRCCOPY, 0, 0);
 
 	/* 5. restore all object */
 	NtGdiSelectObject(hDCMask, hOldMaskBitmap);
@@ -943,18 +946,20 @@ NtGdiMaskBlt (
 	return TRUE;
 }
 
-BOOL STDCALL
+BOOL
+APIENTRY
 NtGdiPlgBlt(
-	HDC  hDCDest,
-	CONST POINT  *Point,
-	HDC  hDCSrc,
-	INT  XSrc,
-	INT  YSrc,
-	INT  Width,
-	INT  Height,
-	HBITMAP  hMaskBitmap,
-	INT  xMask,
-	INT  yMask)
+    IN HDC hdcTrg,
+    IN LPPOINT pptlTrg,
+    IN HDC hdcSrc,
+    IN INT xSrc,
+    IN INT ySrc,
+    IN INT cxSrc,
+    IN INT cySrc,
+    IN HBITMAP hbmMask,
+    IN INT xMask,
+    IN INT yMask,
+    IN DWORD crBackColor)
 {
 	UNIMPLEMENTED;
 	return FALSE;
@@ -964,7 +969,7 @@ LONG STDCALL
 NtGdiSetBitmapBits(
 	HBITMAP  hBitmap,
 	DWORD  Bytes,
-	CONST VOID *Bits)
+	IN PBYTE Bits)
 {
 	LONG height, ret;
 	PBITMAPOBJ bmp;
@@ -1072,7 +1077,7 @@ NtGdiSetPixelV(
 	INT  Y,
 	COLORREF  Color)
 {
-	HBRUSH NewBrush = NtGdiCreateSolidBrush(Color);
+	HBRUSH NewBrush = NtGdiCreateSolidBrush(Color, NULL);
 	HGDIOBJ OldBrush;
 
 	if (NewBrush == NULL)
@@ -1101,7 +1106,8 @@ NtGdiStretchBlt(
 	INT  YOriginSrc,
 	INT  WidthSrc,
 	INT  HeightSrc,
-	DWORD  ROP)
+	DWORD  ROP,
+	IN DWORD dwBackColor)
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
@@ -1323,16 +1329,17 @@ failed:
 BOOL STDCALL
 NtGdiAlphaBlend(
 	HDC  hDCDest,
-	INT  XOriginDest,
-	INT  YOriginDest,
-	INT  WidthDest,
-	INT  HeightDest,
+	LONG  XOriginDest,
+	LONG  YOriginDest,
+	LONG  WidthDest,
+	LONG  HeightDest,
 	HDC  hDCSrc,
-	INT  XOriginSrc,
-	INT  YOriginSrc,
-	INT  WidthSrc,
-	INT  HeightSrc,
-	BLENDFUNCTION  BlendFunc)
+	LONG  XOriginSrc,
+	LONG  YOriginSrc,
+	LONG  WidthSrc,
+	LONG  HeightSrc,
+	BLENDFUNCTION  BlendFunc,
+	IN HANDLE hcmXform)
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;

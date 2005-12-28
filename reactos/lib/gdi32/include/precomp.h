@@ -8,89 +8,26 @@
 
 /* INCLUDES ******************************************************************/
 
-/* SDK/DDK/NDK Headers. */
+/* Definitions */
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
-#define __GDI32__
+
+/* SDK/DDK/NDK Headers. */
 #include <windows.h>
-#include <ddraw.h>
-#include <ddrawi.h>
-#include <winddi.h>
-#include <prntfont.h>
-#include <ddrawgdi.h>
 #include <ndk/ntndk.h>
-#include <tchar.h>
+#include <winddi.h>
+#include <d3dnthal.h>
+#include <prntfont.h>
 
-/* Win32K External Headers */
-#include <win32k/kapi.h>
+/* Public Win32K Headers */
+#include <win32k/ntgdityp.h>
+#include <ntgdi.h>
+#include <win32k/ntgdihdl.h>
 
-/* directdraw syscall */
-#include <win32k/ntddraw.h>
+/* Private GDI32 Header */
+#include "gdi32p.h"
 
+/* Deprecated NTGDI calls which shouldn't exist */
+#include <win32k/ntgdibad.h>
 
-#define NtUserGetDCBrushColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-#define NtUserGetDCPenColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_PEN, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-#define NtUserSetDCBrushColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCBRUSHCOLOR)
-
-#define NtUserSetDCPenColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
-
-typedef int (CALLBACK* EMFPLAYPROC)( HDC, INT, HANDLE );
-typedef DWORD FULLSCREENCONTROL;
-typedef DWORD UNIVERSAL_FONT_ID;
-typedef UNIVERSAL_FONT_ID *PUNIVERSAL_FONT_ID;
-typedef DWORD REALIZATION_INFO;
-typedef REALIZATION_INFO *PREALIZATION_INFO;
-typedef DWORD CHWIDTHINFO;
-typedef CHWIDTHINFO *PCHWIDTHINFO;
-
-/* == GLOBAL VARIABLES ====================================================== */
-
-extern PGDI_TABLE_ENTRY GdiHandleTable;
-extern HANDLE hProcessHeap;
-extern HANDLE CurrentProcessId;
-
-/* == HEAP ================================================================== */
-
-PVOID    HEAP_alloc ( DWORD len );
-NTSTATUS HEAP_strdupA2W ( LPWSTR* ppszW, LPCSTR lpszA );
-VOID     HEAP_free ( LPVOID memory );
-
-/* == FONT ================================================================== */
-
-BOOL FASTCALL TextMetricW2A(TEXTMETRICA *tma, TEXTMETRICW *tmw);
-BOOL FASTCALL NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw);
-BOOL FASTCALL NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw);
-
-/* == GDI HANDLES =========================================================== */
-
-BOOL GdiIsHandleValid(HGDIOBJ hGdiObj);
-BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
-
-/* == BITMAP UTILITY FUNCTIONS ============================================== */
-
-BOOL STDCALL CalculateColorTableSize(CONST BITMAPINFOHEADER *BitmapInfoHeader, UINT *ColorSpec, UINT *ColorTableSize);
-LPBITMAPINFO STDCALL ConvertBitmapInfo(CONST BITMAPINFO *BitmapInfo, UINT ColorSpec, UINT *BitmapInfoSize, BOOL FollowedByData);
-
-/* == CONVERSION FUNCTIONS ================================================== */
-DEVMODEW *
-STDCALL
-GdiConvertToDevmodeW(DEVMODEA *dm);
-
-VOID
-STDCALL
-LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA);
-
-VOID
-STDCALL
-LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW);
-
-/* == Directx FUNCTIONS ================================================== */
-BOOL
-intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, BOOL bComplete);
 /* EOF */

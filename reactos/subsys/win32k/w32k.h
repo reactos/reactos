@@ -8,11 +8,13 @@
 
 /* INCLUDES ******************************************************************/
 
+#define _NO_COM
+
 /* DDK/NDK/SDK Headers */
+#include <ntifs.h>
 #include <ntddk.h>
 #include <ntddmou.h>
-#include <ntifs.h>
-#include <ndk/ntndk.h>
+#include <ntndk.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -25,6 +27,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <wingdi.h>
 #include <winddi.h>
 #include <winuser.h>
+#include <prntfont.h>
 #include <dde.h>
 #include <wincon.h>
 
@@ -40,8 +43,13 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* Probe and capture */
 #include <reactos/probe.h>
 
-/* External Win32K Header */
-#include <win32k/win32k.h>
+/* Public Win32K Headers */
+#include <win32k/callback.h>
+#include <win32k/ntusrtyp.h>
+#include <win32k/ntuser.h>
+#include <win32k/ntgdityp.h>
+#include <win32k/ntgdibad.h>
+#include <ntgdi.h>
 
 /* Internal Win32K Header */
 #include "include/win32k.h"

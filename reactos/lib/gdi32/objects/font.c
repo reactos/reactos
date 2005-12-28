@@ -517,8 +517,27 @@ GetGlyphOutlineA(
 	CONST MAT2	*lpmat2
 	)
 {
-  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
+  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetGlyphOutlineW(
+	HDC		hdc,
+	UINT		uChar,
+	UINT		uFormat,
+	LPGLYPHMETRICS	lpgm,
+	DWORD		cbBuffer,
+	LPVOID		lpvBuffer,
+	CONST MAT2	*lpmat2
+	)
+{
+  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
+}
+
 
 
 /*

@@ -44,17 +44,19 @@ NtGdiColorMatchToTarget(HDC  hDC,
   return FALSE;
 }
 
-HCOLORSPACE
-STDCALL
-NtGdiCreateColorSpace(LPLOGCOLORSPACEW  LogColorSpace)
+HANDLE
+APIENTRY
+NtGdiCreateColorSpace(
+    IN PLOGCOLORSPACEEXW pLogColorSpace)
 {
   UNIMPLEMENTED;
   return 0;
 }
 
 BOOL
-STDCALL
-NtGdiDeleteColorSpace(HCOLORSPACE  hColorSpace)
+APIENTRY
+NtGdiDeleteColorSpace(
+    IN HANDLE hColorSpace)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -112,10 +114,10 @@ NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
   return FALSE;
 }
 
-HCOLORSPACE
+BOOL
 STDCALL
-NtGdiSetColorSpace(HDC  hDC,
-                               HCOLORSPACE  hColorSpace)
+NtGdiSetColorSpace(IN HDC hdc,
+                   IN HCOLORSPACE hColorSpace)
 {
   UNIMPLEMENTED;
   return 0;

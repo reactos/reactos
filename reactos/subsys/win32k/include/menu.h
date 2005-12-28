@@ -1,8 +1,6 @@
 #ifndef _WIN32K_MENU_H
 #define _WIN32K_MENU_H
 
-#include <win32k/menu.h>
-
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
@@ -37,6 +35,13 @@ typedef struct _MENU_OBJECT
   ROSMENUINFO MenuInfo;
   BOOL RtoL;
 } MENU_OBJECT, *PMENU_OBJECT;
+
+typedef struct _SETMENUITEMRECT
+{
+  UINT uItem;
+  BOOL fByPosition;
+  RECT rcRect;
+} SETMENUITEMRECT, *PSETMENUITEMRECT;
 
 PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu);

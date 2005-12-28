@@ -8,7 +8,7 @@ NtGdiAnimatePalette			4
 NtGdiArc				9
 NtGdiArcTo				9
 NtGdiBeginPath				1
-NtGdiBitBlt				9
+NtGdiBitBlt				11
 NtGdiCancelDC				1
 NtGdiCheckColorsInGamut			4
 NtGdiChord				9
@@ -27,8 +27,8 @@ NtGdiCreateCompatibleBitmap		3
 NtGdiCreateCompatibleDC			1
 NtGdiCreateDC				4
 NtGdiCreateDIBitmap			6
-NtGdiCreateDIBBrush			4
-NtGdiCreateDIBSection			6
+NtGdiCreateDIBBrush			6
+NtGdiCreateDIBSection			9
 NtGdiCreateDiscardableBitmap		3
 NtGdiCreateEllipticRgn			4
 NtGdiCreateEllipticRgnIndirect		1
@@ -49,7 +49,7 @@ NtGdiCreateRectRgn			4
 NtGdiCreateRectRgnIndirect		1
 NtGdiCreateRoundRectRgn			6
 NtGdiCreateScalableFontResource		4
-NtGdiCreateSolidBrush			1
+NtGdiCreateSolidBrush			2
 NtGdiDPtoLP				3
 NtGdiDeleteColorSpace			1
 NtGdiDeleteDC				1
@@ -124,7 +124,7 @@ NtGdiGetFontData			5
 NtGdiGetFontFamilyInfo			4
 NtGdiGetFontLanguageInfo		1
 #NtGdiGetFontResourceInfo		?
-NtGdiGetGlyphOutline			7
+NtGdiGetGlyphOutline			8
 #NtGdiGetGlyphOutlineWow		?
 NtGdiGetGraphicsMode			1
 NtGdiGetICMProfile			3
@@ -208,7 +208,7 @@ NtGdiRectInRegion			2
 NtGdiRectVisible			2
 NtGdiRectangle				5
 NtGdiRemoveFontResource			1
-NtGdiResetDC				2
+NtGdiResetDC				5
 NtGdiResizePalette			2
 NtGdiRestoreDC				2
 NtGdiRoundRect				7
@@ -264,9 +264,9 @@ NtGdiSetViewportOrgEx			4
 NtGdiSetWindowExtEx			4
 NtGdiSetWindowOrgEx			4
 NtGdiSetWorldTransform			2
-NtGdiStartDoc				2
+NtGdiStartDoc				4
 NtGdiStartPage				1
-NtGdiStretchBlt				11
+NtGdiStretchBlt				12
 NtGdiStretchDIBits			13
 NtGdiStrokeAndFillPath			1
 NtGdiStrokePath				1

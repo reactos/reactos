@@ -1285,13 +1285,13 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
    if (WidthDest == WidthSrc && HeightDest == HeightSrc)
    {
       NtGdiBitBlt(DcDest, XDest, YDest, WidthDest, HeightDest,
-                  DcSrc, XSrc, YSrc, Rop3);
+                  DcSrc, XSrc, YSrc, Rop3, 0, 0);
    }
    else if (SRCCOPY == Rop3)
    {
       NtGdiStretchBlt(DcDest, XDest, YDest, WidthDest, HeightDest,
                       DcSrc, XSrc, YSrc, WidthSrc, HeightSrc,
-                      Rop3);
+                      Rop3, 0);
    }
    else
    {
@@ -1326,9 +1326,9 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       }
       if (! NtGdiStretchBlt(DcStretched, 0, 0, WidthDest, HeightDest,
                             DcSrc, XSrc, YSrc, WidthSrc, HeightSrc,
-                            SRCCOPY) ||
+                            SRCCOPY, 0) ||
           ! NtGdiBitBlt(DcDest, XDest, YDest, WidthDest, HeightDest,
-                        DcStretched, 0, 0, Rop3))
+                        DcStretched, 0, 0, Rop3, 0, 0))
       {
          DPRINT1("Failed to blt\n");
       }
@@ -1342,7 +1342,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
                      DcSrc, XSrc, YSrc, WidthSrc, HeightSrc, Rop3, Color) \
         NtGdiStretchBlt((DcDest), (XDest), (YDest), (WidthDest), (HeightDest), \
                         (DcSrc), (XSrc), (YSrc), (WidthSrc), (HeightSrc), \
-                        (Rop3))
+                        (Rop3), 0)
 #endif /* STRETCH_CAN_SRCCOPY_ONLY */
 
 /*
@@ -1495,7 +1495,7 @@ NtUserDrawIconEx(
    }
 
    if(DoFlickerFree)
-      NtGdiBitBlt(hdc, xLeft, yTop, cxWidth, cyHeight, hdcOff, 0, 0, SRCCOPY);
+      NtGdiBitBlt(hdc, xLeft, yTop, cxWidth, cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
 
    NtGdiSetTextColor(hdcOff, oldFg);
    NtGdiSetBkColor(hdcOff, oldBg);

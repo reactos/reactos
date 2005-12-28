@@ -127,7 +127,7 @@ SetMiterLimit(
 	PFLOAT	a2
 	)
 {
-	return NtGdiSetMiterLimit ( hdc, a1, a2 );
+	return NtGdiSetMiterLimit ( hdc, a1, (PDWORD)a2 );
 }
 
 
@@ -180,7 +180,7 @@ GetMiterLimit(
 	PFLOAT	a1
 	)
 {
-	return NtGdiGetMiterLimit ( hdc, a1 );
+	return NtGdiGetMiterLimit ( hdc, (PDWORD)a1 );
 }
 
 /*
