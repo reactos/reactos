@@ -66,26 +66,30 @@ DWORD DoFormatMessage(DWORD ErrorCode)
 {
     LPVOID lpMsgBuf;
     DWORD RetVal;
-    /* double brackets to silence the assignment warning message */
-    if ((RetVal = FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            ErrorCode,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-            (LPTSTR) &lpMsgBuf,
-            0,
-            NULL ))) {
-        _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
 
-        LocalFree(lpMsgBuf);
-        /* return number of TCHAR's stored in output buffer
-         * excluding '\0' - as FormatMessage does*/
-        return RetVal;
+    if (ErrorCode != ERROR_SUCCESS) 
+    {
+        RetVal = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                               FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
+                               NULL,
+                               ErrorCode,
+                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+                               (LPTSTR) &lpMsgBuf,
+                               0,
+                               NULL );
+
+        if (RetVal != 0)
+        {
+            _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
+
+            LocalFree(lpMsgBuf);
+            /* return number of TCHAR's stored in output buffer
+             * excluding '\0' - as FormatMessage does*/
+            return RetVal;
+        }
     }
-    else
-        return 0;
+    return 0;
 }
 
 
@@ -256,8 +260,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     DWORD dwIpAddr = 0;
     DWORD dwSize = 0;
     ULONG ulSize = 0;
-    INT iRet, i, val;
-    TCHAR c;
+    INT iRet, i, val, c;
 
     /* error checking */
 
@@ -318,7 +321,14 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     /* set dwIndex field to the index of a local IP address to
      * indicate the network on which the ARP entry applies */
     if (pszIfAddr)
-        sscanf(pszIfAddr, "%lx", &pAddHost->dwIndex);
+    {
+        if (sscanf(pszIfAddr, "%lx", &pAddHost->dwIndex) == EOF)
+        {
+            free(pIpNetTable);
+            free(pAddHost);
+            return EXIT_FAILURE;
+        }
+    }
     else
     {
         /* map the IP to the index */
@@ -355,7 +365,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         c = toupper(pszEthAddr[i*3 + 1]);
         c = c - (isdigit(c) ? '0' : ('A' - 10));
         val += c;
-        pAddHost->bPhysAddr[i] = val;
+        pAddHost->bPhysAddr[i] = (BYTE)val;
     }
 
 
@@ -444,7 +454,15 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* set dwIndex field to the index of a local IP address to
      * indicate the network on which the ARP entry applies */
     if (pszIfAddr)
-        sscanf(pszIfAddr, "%lx", &pDelHost->dwIndex);
+    {
+        if (sscanf(pszIfAddr, "%lx", &pDelHost->dwIndex) == EOF)
+        {
+            free(pIpNetTable);
+            free(pIpAddrTable);
+            free(pDelHost);
+            return EXIT_FAILURE;
+        }
+    }
     else
     {
         /* map the IP to the index */
