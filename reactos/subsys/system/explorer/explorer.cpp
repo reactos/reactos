@@ -452,10 +452,14 @@ void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 			cmd.ParseCmdLine(lpCmdLine);
 
 		 // Open the first child window after initializing the application
-		if (cmd.IsValidPath())
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, cmd._flags, (LPARAM)lpCmdLine);
-		else
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0/*OWM_EXPLORE|OWM_DETAILS*/, 0);
+		if (cmd.IsValidPath()) {
+			 // We use the static s_path variable to store the path string in order 
+			 // to avoid accessing prematurely freed memory in the PostMessage handlers.
+			static String s_path = cmd._path;
+
+			PostMessage(hMainFrame, PM_OPEN_WINDOW, cmd._flags, (LPARAM)(LPCTSTR)s_path);
+		} else
+			PostMessage(hMainFrame, PM_OPEN_WINDOW, cmd._flags, 0);
 	}
 }
 
