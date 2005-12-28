@@ -134,6 +134,8 @@ LoadCursorIconImage(
       h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id),
                                  Icon ? MAKEINTRESOURCEW(RT_ICON) :
                                  MAKEINTRESOURCEW(RT_CURSOR));
+      if (h2Resource == NULL)
+         return NULL;
 
       hResource = LoadResource(hinst, h2Resource);
       if (hResource == NULL)
