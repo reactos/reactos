@@ -96,7 +96,8 @@ public:
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder);
 	void	sort_directory(SORT_ORDER sortOrder);
 	void	smart_scan(int scan_flags=SCAN_ALL);
-	void	extract_icon();
+	int		extract_icon();
+	int		safe_extract_icon();
 
 	virtual void read_directory(int scan_flags=SCAN_ALL) {}
 	virtual const void* get_next_path_component(const void*) const {return NULL;}

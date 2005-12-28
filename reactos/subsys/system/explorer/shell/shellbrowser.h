@@ -41,6 +41,10 @@ struct ShellPathInfo
 };
 
 
+#ifndef SHGFI_ADDOVERLAYS // missing in MinGW (as of 28.12.2005)
+#define SHGFI_ADDOVERLAYS 0x000000020
+#endif
+
  /// Implementation of IShellBrowserImpl interface in explorer child windows
 struct ShellBrowserChild : public IShellBrowserImpl
 {
@@ -112,11 +116,10 @@ protected:
 	ShellFolder	_folder;
 
 	IShellView*	_pShellView;	// current hosted shellview
-	HIMAGELIST	_himlSmall;		// list
-//	HIMAGELIST	_himlLarge;		// shell image
 	TreeDropTarget* _pDropTarget;
 
-	HTREEITEM _last_sel;
+	HIMAGELIST	_himl;
+	HTREEITEM	_last_sel;
 
 public:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -154,4 +157,11 @@ public:
 protected:
 	ShellDirectory*	_cur_dir;
 	CtxMenuInterfaces& _cm_ifs;
+
+	typedef map<Entry*, int> ImageMap;
+	ImageMap _image_map;
+	ImageMap _image_map_open;
+
+	int		get_entry_image(Entry* entry, LPCITEMIDLIST pidl, int shgfi_flags, ImageMap& cache);
+	void	invalidate_cache();
 };

@@ -51,11 +51,10 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& ri
 	_left_hwnd(left_hwnd),
 	_right_hwnd(right_hwnd),
 	_create_info(create_info),
-	_cm_ifs(_cm_ifs)
+	_cm_ifs(cm_ifs)
 {
 	_pShellView = NULL;
 	_pDropTarget = NULL;
-	_himlSmall = 0;
 	_last_sel = 0;
 
 	 // SDI integration
@@ -64,12 +63,16 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& ri
 
 	_cur_dir = NULL;
 
+	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+	ImageList_SetBkColor(_himl, GetSysColor(COLOR_WINDOW));
+
 	Init(hwnd);
 }
 
 ShellBrowserChild::~ShellBrowserChild()
 {
 	TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
+	ImageList_Destroy(_himl);
 
 	if (_pShellView)
 		_pShellView->Release();
@@ -94,16 +97,6 @@ LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 
 	ClientRect rect(_hwnd);
 
-	SHFILEINFO sfi;
-
-	_himlSmall = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
-//	_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
-
-	if (_left_hwnd) {
-		InitializeTree();
-		InitDragDrop();
-	}
-
 	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORADDRESSBAR);
 
 	_root._drive_type = DRIVE_UNKNOWN;
@@ -118,6 +111,11 @@ LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 	 // -> set_curdir()
 	_root._entry->read_directory();
 
+	if (_left_hwnd) {
+		InitializeTree();
+		InitDragDrop();
+	}
+
 	/* already filled by ShellDirectory constructor
 	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
 
@@ -129,22 +127,20 @@ void ShellBrowserChild::InitializeTree()
 {
 	CONTEXT("ShellBrowserChild::InitializeTree()");
 
-	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
+	TreeView_SetImageList(_left_hwnd, _himl, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
-	TV_ITEM tvItem;
-
-	tvItem.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
-	tvItem.lParam = (LPARAM)_root._entry;
-	tvItem.pszText = LPSTR_TEXTCALLBACK;
-	tvItem.iImage = tvItem.iSelectedImage = I_IMAGECALLBACK;
-	tvItem.cChildren = 1;
-
 	TV_INSERTSTRUCT tvInsert;
+	TV_ITEM& tvItem = tvInsert.item;
 
 	tvInsert.hParent = 0;
 	tvInsert.hInsertAfter = TVI_LAST;
-	tvInsert.item = tvItem;
+
+	tvItem.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
+	tvItem.lParam = (LPARAM)_root._entry;
+	tvItem.pszText = _root._volname; //LPSTR_TEXTCALLBACK;
+	tvItem.iImage = tvItem.iSelectedImage = I_IMAGECALLBACK;
+	tvItem.cChildren = 1;
 
 	HTREEITEM hItem = TreeView_InsertItem(_left_hwnd, &tvInsert);
 	TreeView_SelectItem(_left_hwnd, hItem);
@@ -167,8 +163,7 @@ bool ShellBrowserChild::InitDragDrop()
 		_pDropTarget->Release(); // free TreeDropTarget
 		_pDropTarget = NULL;
 		return false;
-	}
-	else
+	} else
 		_pDropTarget->Release();
 
 	FORMATETC ftetc;
@@ -233,36 +228,55 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 
 	LPNMTVDISPINFO lpdi = (LPNMTVDISPINFO)pnmh;
 	ShellEntry* entry = (ShellEntry*)lpdi->item.lParam;
-	if (!entry)
-		return;
 
-	if (lpdi->item.mask & TVIF_TEXT)
-		lpdi->item.pszText = entry->_display_name;
-
-	if (lpdi->item.mask & (/*TVIF_TEXT|*/TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
-		ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
-		LPCITEMIDLIST pidl = pidl_abs;
-
-		SHFILEINFO sfi;
-/*
+	if (entry) {
 		if (lpdi->item.mask & TVIF_TEXT)
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_DISPLAYNAME))
-				lstrcpy(lpdi->item.pszText, sfi.szDisplayName);	///@todo look at cchTextMax if there is enough space available
-			else
-				lpdi->item.pszText = entry->_data.cFileName;
-*/
-		if (lpdi->item.mask & TVIF_IMAGE)
-			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY) == _himlSmall)
-				lpdi->item.iImage = sfi.iIcon;
-			else
-				lpdi->item.iImage = -1;
+			lpdi->item.pszText = entry->_display_name;
 
-		if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
-			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_OPENICON) == _himlSmall)
-				lpdi->item.iSelectedImage = sfi.iIcon;
-			else
-				lpdi->item.iSelectedImage = -1;
+		if (lpdi->item.mask & (TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
+			ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
+			LPCITEMIDLIST pidl = pidl_abs;
+
+			if (lpdi->item.mask & TVIF_IMAGE)
+				lpdi->item.iImage = get_entry_image(entry, pidl, SHGFI_SMALLICON, _image_map);
+
+			if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
+				lpdi->item.iSelectedImage = get_entry_image(entry, pidl, SHGFI_SMALLICON|SHGFI_OPENICON, _image_map_open);
+		}
 	}
+}
+
+int ShellBrowserChild::get_entry_image(Entry* entry, LPCITEMIDLIST pidl, int shgfi_flags, ImageMap& cache)
+{
+	SHFILEINFO sfi;
+	int idx = -1;
+
+	ImageMap::const_iterator found = cache.find(entry);
+
+	if (found != cache.end())
+		return found->second;
+
+	if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), shgfi_flags|SHGFI_PIDL|SHGFI_ICON|SHGFI_ADDOVERLAYS)) {
+		idx = ImageList_AddIcon(_himl, sfi.hIcon);
+
+		DestroyIcon(sfi.hIcon);
+	}
+
+	cache[entry] = idx;
+
+	return idx;
+}
+
+void ShellBrowserChild::invalidate_cache()
+{
+	TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
+	ImageList_Destroy(_himl);
+
+	TreeView_SetImageList(_left_hwnd, _himl, TVSIL_NORMAL);
+	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+
+	_image_map.clear();
+	_image_map_open.clear();
 }
 
 void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)

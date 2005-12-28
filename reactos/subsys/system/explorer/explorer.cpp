@@ -443,8 +443,6 @@ void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 		ShowWindow(hMainFrame, cmdShow);
 		UpdateWindow(hMainFrame);
 
-		bool valid_dir = false;
-
 		cmd._cmdShow = cmdShow;
 
 		 // parse command line options

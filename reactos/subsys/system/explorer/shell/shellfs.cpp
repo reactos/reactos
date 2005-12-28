@@ -298,11 +298,7 @@ void ShellDirectory::read_directory(int scan_flags)
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					entry->_icon_id = ICID_FOLDER;
 				else if (scan_flags & SCAN_EXTRACT_ICONS)
-					try {
-						entry->extract_icon();
-					} catch(COMException&) {
-						// ignore unexpected exceptions while extracting icons
-					}
+					entry->_icon_id = entry->safe_extract_icon();
 
 				last = entry;
 			} while(FindNextFile(hFind, &w32fd));
@@ -404,11 +400,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 						!(attribs & SFGAO_FILESYSTEM)) {
 						if (scan_flags & SCAN_EXTRACT_ICONS)
-							try {
-								entry->extract_icon();
-							} catch(COMException&) {
-								// ignore unexpected exceptions while extracting icons
-							}
+							entry->_icon_id = entry->safe_extract_icon();
 					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 						entry->_icon_id = ICID_FOLDER;
 					else
@@ -463,7 +455,7 @@ int ShellDirectory::extract_icons()
 
 	for(Entry*entry=_down; entry; entry=entry->_next)
 		if (entry->_icon_id == ICID_UNKNOWN) {
-			entry->extract_icon();
+			entry->_icon_id = entry->extract_icon();
 
 			if (entry->_icon_id != ICID_NONE)
 				++cnt;

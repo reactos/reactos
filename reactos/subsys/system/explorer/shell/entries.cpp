@@ -319,7 +319,7 @@ void Entry::smart_scan(int scan_flags)
 }
 
 
-void Entry::extract_icon()
+int Entry::extract_icon()
 {
 	TCHAR path[MAX_PATH];
 
@@ -384,7 +384,18 @@ void Entry::extract_icon()
 		}
 	}
 
-	_icon_id = icon_id;
+	return icon_id;
+}
+
+int Entry::safe_extract_icon()
+{
+	try {
+		return extract_icon();
+	} catch(COMException&) {
+		// ignore unexpected exceptions while extracting icons
+	}
+
+	return ICID_NONE;
 }
 
 
