@@ -190,8 +190,7 @@ bool ShellBrowser::InitDragDrop()
 		_pDropTarget->Release(); // free TreeDropTarget
 		_pDropTarget = NULL;
 		return false;
-	}
-	else
+	} else
 		_pDropTarget->Release();
 
 	FORMATETC ftetc;
@@ -273,6 +272,12 @@ int ShellBrowser::get_image_idx(int icon_id)
 
 void ShellBrowser::invalidate_cache()
 {
+	(void)TreeView_SetImageList(_left_hwnd, _himl_old, TVSIL_NORMAL);
+	ImageList_Destroy(_himl);
+
+	_himl_old = TreeView_SetImageList(_left_hwnd, _himl, TVSIL_NORMAL);
+	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+
 	for(map<int,int>::const_iterator it=_image_map.begin(); it!=_image_map.end(); ++it)
 		g_Globals._icon_cache.free_icon(it->first);
 
