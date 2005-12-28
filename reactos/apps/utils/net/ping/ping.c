@@ -408,7 +408,7 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
     CHAR              Time[100];
     LARGE_INTEGER     RelativeTime;
     LARGE_INTEGER     LargeTime;
-    CHAR              Sign[1];
+    CHAR              Sign[2];
 
     IpHeader = (PIPv4_HEADER)buffer;
 
