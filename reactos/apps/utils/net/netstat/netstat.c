@@ -502,7 +502,7 @@ VOID ShowUdpTable()
 
         sprintf(Host, "%s:%s", HostIp, HostPort);
 
-        _tprintf(_T("  %-6s %-22s %-22s\n"), _T("UDP"), Host,  _T(":*:"));
+        _tprintf(_T("  %-6s %-22s %-22s\n"), _T("UDP"), Host,  _T("*:*"));
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
@@ -531,18 +531,16 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
 }
 
 
-//
-// GetIpHostName
-//
-// Translate IP addresses into their name-resolved form if possible.
-//
+/*
+ * convert addresses into dotted decimal or hostname
+ */
 PCHAR
 GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
 {
 //  struct hostent *phostent;
     UINT nIpAddr;
 
-    // Does the user want raw numbers?
+    /* display dotted decimal */
     nIpAddr = htonl(IpAddr);
     if (bDoShowNumbers) {
         sprintf(Name, "%d.%d.%d.%d",
@@ -555,7 +553,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
 
     Name[0] = _T('\0');
 
-    // Try to translate to a name
+    /* try to resolve the name */
     if (!IpAddr) {
         if (!Local) {
             sprintf(Name, "%d.%d.%d.%d",
@@ -588,7 +586,7 @@ GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
 
 VOID Usage()
 {
-    _tprintf(_T("Displays current TCP/IP protocol statistics and network connections.\n\n"
+    _tprintf(_T("\nDisplays current TCP/IP protocol statistics and network connections.\n\n"
     "NETSTAT [-a] [-e] [-n] [-s] [-p proto] [-r] [interval]\n\n"
     "  -a            Displays all connections and listening ports.\n"
     "  -e            Displays Ethernet statistics. May be combined with -s\n"
