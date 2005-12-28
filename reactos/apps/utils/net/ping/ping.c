@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
  * FILE:        apps/net/ping/ping.c
@@ -8,17 +7,14 @@
  * REVISIONS:
  *   CSH  01/09/2000 Created
  */
-//#include <windows.h>
+
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#ifndef _MSC_VER
 
-#ifdef DBG
-#undef DBG
-#endif
+#ifndef _MSC_VER
 
 /* FIXME: Where should this be? */
 #ifdef CopyMemory
@@ -35,8 +31,11 @@ typedef long long __int64;
 
 char * _i64toa(__int64 value, char *string, int radix);
 
-#endif
+#endif /* _MSC_VER */
 
+#ifdef DBG
+#undef DBG
+#endif
 
 /* General ICMP constants */
 #define ICMP_MINSIZE		8		/* Minimum ICMP packet size */
@@ -453,12 +452,13 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr),
       size - IphLength - sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
-    if (RelativeTime.QuadPart < MinRTT.QuadPart) {
-		  MinRTT.QuadPart = RelativeTime.QuadPart;
-      MinRTTSet = TRUE;
+    if (RelativeTime.QuadPart < MinRTT.QuadPart || !MinRTTSet) {
+	    MinRTT.QuadPart = RelativeTime.QuadPart;
+        MinRTTSet = TRUE;
     }
-	  if (RelativeTime.QuadPart > MaxRTT.QuadPart)
-	      MaxRTT.QuadPart = RelativeTime.QuadPart;
+	if (RelativeTime.QuadPart > MaxRTT.QuadPart)
+	    MaxRTT.QuadPart = RelativeTime.QuadPart;
+
     SumRTT.QuadPart += RelativeTime.QuadPart;
 
 	return TRUE;
