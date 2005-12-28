@@ -843,7 +843,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 };
 
 
-#ifdef __WINE__	// Wine doesn't know of unnamed union members and uses some macros instead.
+#if defined(__WINE__) && defined(NONAMELESSUNION)	// Wine doesn't know of unnamed union members and uses some macros instead.
 #define	UNION_MEMBER(x) DUMMYUNIONNAME.##x
 #else
 #define	UNION_MEMBER(x) x
@@ -1159,6 +1159,7 @@ template<typename BASE> struct ExtContextMenuHandlerT
 protected:
 	CtxMenuInterfaces _cm_ifs;
 };
+
 
 extern HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl,
 										LPCITEMIDLIST* ppidl, int x, int y, CtxMenuInterfaces& cm_ifs);
