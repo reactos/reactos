@@ -866,7 +866,7 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
     {
         SP_DEVINSTALL_PARAMS_W install_params;
         struct files_callback_info info;
-        HSPFILEQ queue;
+        HSPFILEQ queue = NULL;
         BOOL use_custom_queue;
         BOOL ret;
 
