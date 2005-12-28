@@ -4139,6 +4139,59 @@ BOOL WINAPI SetupDiGetDeviceInstallParamsW(
     return ret;
 }
 
+static BOOL
+CheckDeviceInstallParameters(
+       IN PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
+{
+    DWORD SupportedFlags =
+        DI_NOVCP |                            /* 0x00000008 */
+        DI_DIDCOMPAT |                        /* 0x00000010 */
+        DI_DIDCLASS |                         /* 0x00000020 */
+        DI_NEEDRESTART |                      /* 0x00000080 */
+        DI_NEEDREBOOT |                       /* 0x00000100 */
+        DI_RESOURCEPAGE_ADDED |               /* 0x00002000 */
+        DI_PROPERTIES_CHANGE |                /* 0x00004000 */
+        DI_ENUMSINGLEINF |                    /* 0x00010000 */
+        DI_CLASSINSTALLPARAMS |               /* 0x00100000 */
+        DI_NODI_DEFAULTACTION |               /* 0x00200000 */
+        DI_NOFILECOPY |                       /* 0x01000000 */
+        DI_DRIVERPAGE_ADDED;                  /* 0x04000000 */
+    DWORD SupportedFlagsEx =
+        DI_FLAGSEX_CI_FAILED |                /* 0x00000004 */
+        DI_FLAGSEX_DIDINFOLIST |              /* 0x00000010 */
+        DI_FLAGSEX_DIDCOMPATINFO |            /* 0x00000020 */
+        DI_FLAGSEX_ALLOWEXCLUDEDDRVS |        /* 0x00000800 */
+        DI_FLAGSEX_NO_DRVREG_MODIFY;          /* 0x00008000 */
+    BOOL ret = FALSE;
+
+    /* FIXME: add support for more flags */
+
+    /* FIXME: DI_CLASSINSTALLPARAMS flag is not correctly used.
+     * It should be checked before accessing to other values
+     * of the SP_DEVINSTALL_PARAMS structure */
+
+    if (DeviceInstallParams->Flags & ~SupportedFlags)
+    {
+        FIXME("Unknown Flags: 0x%08lx\n", DeviceInstallParams->Flags & ~SupportedFlags);
+        SetLastError(ERROR_INVALID_FLAGS);
+    }
+    else if (DeviceInstallParams->FlagsEx & ~SupportedFlagsEx)
+    {
+        FIXME("Unknown FlagsEx: 0x%08lx\n", DeviceInstallParams->FlagsEx & ~SupportedFlagsEx);
+        SetLastError(ERROR_INVALID_FLAGS);
+    }
+    else if ((DeviceInstallParams->Flags & DI_NOVCP)
+        && (DeviceInstallParams->FileQueue == NULL || DeviceInstallParams->FileQueue == (HSPFILEQ)INVALID_HANDLE_VALUE))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        /* FIXME: check Reserved field */
+        ret = TRUE;
+    }
+
+    return ret;
+}
+
 /***********************************************************************
  *		SetupDiSetDeviceInstallParamsW (SETUPAPI.@)
  */
@@ -4162,11 +4215,9 @@ BOOL WINAPI SetupDiSetDeviceInstallParamsW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInstallParams->cbSize != sizeof(SP_DEVINSTALL_PARAMS_W))
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else
+    else if (CheckDeviceInstallParameters(DeviceInstallParams))
     {
         PSP_DEVINSTALL_PARAMS_W Destination;
-
-        /* FIXME: Validate parameters */
 
         if (DeviceInfoData)
             Destination = &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->InstallParams;
@@ -5368,6 +5419,7 @@ SetupDiBuildDriverInfoList(
     LPWSTR HardwareIDs = NULL;
     LPWSTR CompatibleIDs = NULL;
     LPWSTR FullInfFileName = NULL;
+    LPWSTR ExcludeFromSelect = NULL;
     FILETIME DriverDate;
     DWORDLONG DriverVersion = 0;
     DWORD RequiredSize;
@@ -5593,6 +5645,14 @@ SetupDiBuildDriverInfoList(
                     }
                 }
 
+                if (InstallParams.FlagsEx & DI_FLAGSEX_ALLOWEXCLUDEDDRVS)
+                {
+                    /* Read ExcludeFromSelect control flags */
+                    /* FIXME */
+                }
+                else
+                    FIXME("ExcludeFromSelect list ignored\n");
+
                 /* Get the manufacturers list */
                 Result = SetupFindFirstLineW(currentInfFileDetails->hInf, L"Manufacturer", NULL, &ContextManufacturer);
                 while (Result)
@@ -5639,7 +5699,7 @@ SetupDiBuildDriverInfoList(
                     {
                         if (DriverType == SPDIT_CLASSDRIVER)
                         {
-                            /* FIXME: read [ControlFlags] / ExcludeFromSelect */
+                            /* FIXME: Check ExcludeFromSelect list */
                             if (!AddDriverToList(
                                 pDriverListHead,
                                 DriverType,
@@ -5691,6 +5751,7 @@ SetupDiBuildDriverInfoList(
                                     HeapFree(GetProcessHeap(), 0, DeviceId);
                                     goto done;
                                 }
+                                /* FIXME: Check ExcludeFromSelect list */
                                 DriverAlreadyAdded = FALSE;
                                 for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += wcslen(currentId) + 1, DriverRank++)
                                 {
@@ -5747,7 +5808,8 @@ SetupDiBuildDriverInfoList(
                 ret = TRUE;
 next:
                 HeapFree(GetProcessHeap(), 0, ProviderName);
-                ProviderName = NULL;
+                HeapFree(GetProcessHeap(), 0, ExcludeFromSelect);
+                ProviderName = ExcludeFromSelect = NULL;
 
                 DereferenceInfFile(currentInfFileDetails);
                 currentInfFileDetails = NULL;
@@ -5777,6 +5839,7 @@ done:
     HeapFree(GetProcessHeap(), 0, HardwareIDs);
     HeapFree(GetProcessHeap(), 0, CompatibleIDs);
     HeapFree(GetProcessHeap(), 0, FullInfFileName);
+    HeapFree(GetProcessHeap(), 0, ExcludeFromSelect);
     if (currentInfFileDetails)
         DereferenceInfFile(currentInfFileDetails);
     HeapFree(GetProcessHeap(), 0, Buffer);
@@ -6458,7 +6521,7 @@ SetupDiSetSelectedDriverW(
                 else
                 {
                     /* The caller wants to compare only DriverType, Description and ProviderName fields */
-                    struct DriverInfoElement *driverInfo = (struct DriverInfoElement *)ItemList;
+                    struct DriverInfoElement *driverInfo = CONTAINING_RECORD(ItemList, struct DriverInfoElement, ListEntry);
                     if (driverInfo->Info.DriverType == DriverInfoData->DriverType
                         && wcscmp(driverInfo->Info.Description, DriverInfoData->Description) == 0
                         && wcscmp(driverInfo->Info.ProviderName, DriverInfoData->ProviderName) == 0)
@@ -6466,6 +6529,7 @@ SetupDiSetSelectedDriverW(
                         break;
                     }
                 }
+                ItemList= ItemList->Flink;
             }
             if (ItemList == ListHead)
                 SetLastError(ERROR_INVALID_PARAMETER);
