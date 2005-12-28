@@ -1,4 +1,5 @@
 // German language resource file (David Hinz (fRy2oo5), 2005-12-04)
+// This is incomplete, IDS_DEV_UNKNOWN_RESOURCE still needs to be translated
 
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
@@ -77,7 +78,7 @@ BEGIN
                                    "Bitte benutzen sie das System-Setup Programm dieses Computers, um den Interrupt für dieses Gerät neu zu konfigurieren."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS kann den Gerätetreiber für dieses Gerät nicht initialisieren."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS kann den Gerätetreiber für dieses Gerät nicht laden, weil eine noch frühere Instanz des Gerätetreibers im Speicher ist."
-    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS cannot load the device driver for this hardware. The driver may be corrupted or missing."
+    IDS_DEV_DRIVER_FAILED_LOAD "Der Gerätetreiber für diese Hardware kann nicht geladen werden. Der Treiber ist möglicherweise beschädigt oder nicht vorhanden."
     IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS kann dieses Gerät nicht ansprechen, weil seine Serviceschlüssel Information nicht in der Registry ist oder weil sie falsch ist."
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS hat den Gerätetreiber für dieses Gerät erfolgreich geladen, kann aber das Gerät nicht finden."
     IDS_DEV_DUPLICATE_DEVICE "ReactOS kann den Gerätetreiber für dieses Gerät nicht laden, weil bereits ein identisches Gerät installiert ist."
@@ -87,7 +88,7 @@ BEGIN
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS kann auf dieses Gerät nicht zugreifen, weil das Betriebssystem heruntergefahren wird."
     IDS_DEV_HELD_FOR_EJECT "ReactOS kann dieses Gerät nicht benutzen, weil es für \"Sicheres Entfernen\" vorbereitet wurde, aber es wurde bisher nicht vom Computer entfernt."
     IDS_DEV_DRIVER_BLOCKED "Die Ausführung der Software für dieses Gerät wurde blockiert, weil bekannt ist, dass sie Probleme mit ReactOS hat. Kontaktieren sie den Hersteller für einen neuen Treiber."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS cannot start new hardware devices because the system hive is too large (exceeds the Registry Size Limit)."
+    IDS_DEV_REGISTRY_TOO_LARGE "Die neuen Hardwaregeräte können nicht gestartet werden, da die Systemstruktur zu groß ist (die Struktur überschreitet die Registrierungsgrößenbeschränkung)."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS konnte die Einstellungen für dieses Gerät nicht verändern."
 END
 
@@ -130,15 +131,15 @@ END
 
 IDD_DEVICEDRIVER DIALOG DISCARDABLE  0, 0, 252, 218
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Driver"
+CAPTION "Treiber"
 FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Driver provider:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "Treiberanbieter:", -1, 37, 39, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Driver date:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     LTEXT "Treiberdatum:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Driver version:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "Treiberversion:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
 END
