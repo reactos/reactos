@@ -1,12 +1,9 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/win32k.c
- * PURPOSE:         Executive Win32 subsystem support
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Moved callbacks to win32k and cleanup.
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PURPOSE:         Executive Win32 Object Support (Desktop/WinStation)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 #include <ntoskrnl.h>
@@ -104,7 +101,7 @@ STDCALL
 ExpDesktopCreate(PVOID ObjectBody,
                  PVOID Parent,
                  PWSTR RemainingPath,
-                 struct _OBJECT_ATTRIBUTES* ObjectAttributes) 
+                 POBJECT_ATTRIBUTES ObjectAttributes)
 {
     /* Call the Registered Callback */
     return ExpDesktopObjectCreate(ObjectBody,
@@ -128,9 +125,8 @@ ExpWin32kInit(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    DPRINT("Creating Win32 Object Types\n");
 
-    DPRINT("Creating window station  Object Type\n");
-  
     /* Create the window station Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"WindowStation");
@@ -140,7 +136,9 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.OpenProcedure = ExpWinStaObjectOpen;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExWindowStationObjectType);
+    ObpCreateTypeObject(&ObjectTypeInitializer,
+                        &Name,
+                        &ExWindowStationObjectType);
 
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
@@ -148,7 +146,6 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;
     ObjectTypeInitializer.ParseProcedure = NULL;
-   
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExDesktopObjectType);
 }
 

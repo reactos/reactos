@@ -3,7 +3,6 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/lookas.c
  * PURPOSE:         Lookaside lists
- *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  David Welch (welch@mcmail.com)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -28,7 +27,7 @@ KSPIN_LOCK ExpPagedLookasideListLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 INIT_FUNCTION
 STDCALL
 ExpInitLookasideLists()
@@ -184,7 +183,6 @@ ExInitializeNPagedLookasideList(PNPAGED_LOOKASIDE_LIST Lookaside,
                                 &Lookaside->L.ListEntry,
                                 &ExpNonPagedLookasideListLock);
 }
-
 
 /*
  * @implemented

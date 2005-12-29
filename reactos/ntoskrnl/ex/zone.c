@@ -3,7 +3,6 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/zone.c
  * PURPOSE:         Implements zone buffers
- *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  David Welch (welch@mcmail.com)
  */
@@ -32,8 +31,8 @@ ExExtendZone(PZONE_HEADER Zone,
      * BlockSize and Segment must be 8-byte aligned.
      * Blocksize cannot exceed Segment Size.
      */
-    if (((ULONG_PTR)Segment & 7) || 
-        (SegmentSize & 7) || 
+    if (((ULONG_PTR)Segment & 7) ||
+        (SegmentSize & 7) ||
         (Zone->BlockSize > SegmentSize))
     {
         DPRINT1("Invalid ExExtendZone Alignment and/or Size\n");
@@ -41,7 +40,8 @@ ExExtendZone(PZONE_HEADER Zone,
     }
 
     /* Link the Zone and Segment */
-    PushEntryList(&Zone->SegmentList,&((PZONE_SEGMENT_HEADER)Segment)->SegmentList);
+    PushEntryList(&Zone->SegmentList,
+                  &((PZONE_SEGMENT_HEADER)Segment)->SegmentList);
 
     /* Get to the first entry */
     Entry = (ULONG_PTR)Segment + sizeof(ZONE_SEGMENT_HEADER);
@@ -65,7 +65,6 @@ ExExtendZone(PZONE_HEADER Zone,
     return STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
@@ -74,7 +73,7 @@ STDCALL
 ExInterlockedExtendZone(PZONE_HEADER Zone,
                         PVOID Segment,
                         ULONG SegmentSize,
-                        PKSPIN_LOCK	Lock)
+                        PKSPIN_LOCK Lock)
 {
     NTSTATUS Status;
     KIRQL OldIrql;
@@ -89,7 +88,6 @@ ExInterlockedExtendZone(PZONE_HEADER Zone,
     KeReleaseSpinLock(Lock, OldIrql);
     return Status;
 }
-
 
 /*
  * FUNCTION: Initalizes a zone header
@@ -130,7 +128,8 @@ ExInitializeZone(PZONE_HEADER Zone,
     /* Link empty list */
     Zone->FreeList.Next = NULL;
     Zone->SegmentList.Next = NULL;
-    PushEntryList(&Zone->SegmentList, &((PZONE_SEGMENT_HEADER)InitialSegment)->SegmentList);
+    PushEntryList(&Zone->SegmentList,
+                  &((PZONE_SEGMENT_HEADER)InitialSegment)->SegmentList);
     ((PZONE_SEGMENT_HEADER)InitialSegment)->Reserved = NULL;
 
     /* Get first entry */
