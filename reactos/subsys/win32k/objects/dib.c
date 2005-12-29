@@ -866,7 +866,7 @@ DIB_CreateDIBSection(
   if (bm.bmBits)
   {
     dib = ExAllocatePoolWithTag(PagedPool, sizeof(DIBSECTION), TAG_DIB);
-    RtlZeroMemory(dib, sizeof(DIBSECTION));
+    if (dib != NULL) RtlZeroMemory(dib, sizeof(DIBSECTION));
   }
 
   if (dib)
@@ -1125,6 +1125,12 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
     }
 
   lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
+  if (lpRGB == NULL)
+  {
+     PALETTE_UnlockPalette(palGDI);
+     return NULL;   
+  }
+  
   lpIndex = (USHORT *)&lpbmi->bmiColors[0];
 
   for (i = 0; i < nNumColors; i++)
