@@ -188,7 +188,7 @@ KeStartProfile(
     PVOID Buffer
 );
 
-VOID
+BOOLEAN
 STDCALL
 KeStopProfile(struct _KPROFILE* Profile);
 

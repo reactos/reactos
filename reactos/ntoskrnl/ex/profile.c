@@ -1,65 +1,55 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/profile.c
  * PURPOSE:         Support for Executive Profile Objects
- *
- * PROGRAMMERS:     Alex Ionescu
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, ExpInitializeProfileImplementation)
 #endif
 
-/* FIXME: NDK This structure is a *GUESS* -- Alex */
-typedef struct _EPROFILE {
-    PEPROCESS Process;
-    PVOID ImageBase;
-    ULONG ImageSize;
-    ULONG BucketSize;
-    PVOID Buffer;
-    ULONG BufferSize;
-    PKPROFILE KeProfile;
-    KPROFILE_SOURCE ProfileSource;
-    KAFFINITY Affinity;
-    PMDL Mdl;
-    PVOID LockedBuffer;
-} EPROFILE, *PEPROFILE;
+#define TAG_PROFILE TAG('P', 'r', 'o', 'f')
 
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE ExProfileObjectType = NULL;
+KMUTEX ExpProfileMutex;
 
-static KMUTEX ExpProfileMutex;
-
-#define PROFILE_CONTROL 1
-
-static GENERIC_MAPPING ExpProfileMapping = {
+GENERIC_MAPPING ExpProfileMapping =
+{
     STANDARD_RIGHTS_READ    | PROFILE_CONTROL,
     STANDARD_RIGHTS_WRITE   | PROFILE_CONTROL,
     STANDARD_RIGHTS_EXECUTE | PROFILE_CONTROL,
-    STANDARD_RIGHTS_ALL};
+    PROFILE_ALL_ACCESS
+};
+
+/* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 ExpDeleteProfile(PVOID ObjectBody)
 {
     PEPROFILE Profile;
+    ULONG State;
 
     /* Typecast the Object */
     Profile = (PEPROFILE)ObjectBody;
 
     /* Check if there if the Profile was started */
-    if (Profile->LockedBuffer) {
-
+    if (Profile->LockedBuffer)
+    {
         /* Stop the Profile */
-        KeStopProfile(Profile->KeProfile);
+        State = KeStopProfile(Profile->KeProfile);
+        ASSERT(State != FALSE);
 
         /* Unmap the Locked Buffer */
         MmUnmapLockedPages(Profile->LockedBuffer, Profile->Mdl);
@@ -67,28 +57,22 @@ ExpDeleteProfile(PVOID ObjectBody)
         ExFreePool(Profile->Mdl);
     }
 
-    /* Check if a Process is associated */
-    if (Profile->Process != NULL) {
-
-        /* Dereference it */
-        ObDereferenceObject(Profile->Process);
-        Profile->Process = NULL;
-    }
+    /* Check if a Process is associated and reference it */
+    if (Profile->Process) ObDereferenceObject(Profile->Process);
 }
 
 VOID
 INIT_FUNCTION
-STDCALL
+NTAPI
 ExpInitializeProfileImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
-  
-    /* Initialize the Mutex to lock the States */
-    KeInitializeMutex(&ExpProfileMutex, 0x40);
-
     DPRINT("Creating Profile Object Type\n");
-  
+
+    /* Initialize the Mutex to lock the States */
+    KeInitializeMutex(&ExpProfileMutex, 64);
+
     /* Create the Event Pair Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Profile");
@@ -97,12 +81,12 @@ ExpInitializeProfileImplementation(VOID)
     ObjectTypeInitializer.GenericMapping = ExpProfileMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteProfile;
-    ObjectTypeInitializer.ValidAccessMask = STANDARD_RIGHTS_ALL;
+    ObjectTypeInitializer.ValidAccessMask = PROFILE_ALL_ACCESS;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExProfileObjectType);
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtCreateProfile(OUT PHANDLE ProfileHandle,
                 IN HANDLE Process OPTIONAL,
                 IN PVOID ImageBase,
@@ -119,33 +103,79 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status = STATUS_SUCCESS;
-
+    ULONG Segment = 0, Log2 = 0;
     PAGED_CODE();
 
     /* Easy way out */
-    if(BufferSize == 0) return STATUS_INVALID_PARAMETER_7;
+    if(!BufferSize) return STATUS_INVALID_PARAMETER_7;
 
-    /* Check the Parameters for validity */
-    if(PreviousMode != KernelMode) {
+    /* Check if this is a low-memory profile */
+    if ((!BucketSize) && (ImageBase < (PVOID)(0x10000)))
+    {
+        /* Validate size */
+        if (BufferSize < sizeof(ULONG)) return STATUS_INVALID_PARAMETER_7;
 
-        _SEH_TRY {
+        /* This will become a segmented profile object */
+        Segment = (ULONG)ImageBase;
+        ImageBase = 0;
 
+        /* Recalculate the bucket size */
+        BucketSize = ImageSize / (BufferSize / sizeof(ULONG));
+
+        /* Convert it to log2 */
+        BucketSize--;
+        while (BucketSize >>= 1) Log2++;
+        BucketSize += Log2 + 1;
+    }
+
+    /* Validate bucket size */
+    if ((BucketSize > 31) || (BucketSize < 2))
+    {
+        DPRINT1("Bucket size invalid\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Make sure that the buckets can map the range */
+    if ((ImageSize >> (BucketSize - 2)) > BufferSize)
+    {
+        DPRINT1("Bucket size too small\n");
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* Make sure that the range isn't too gigantic */
+    if (((ULONG_PTR)ImageBase + ImageSize) < ImageSize)
+    {
+        DPRINT1("Range too big\n");
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
+    {
+        /* Entry SEH */
+        _SEH_TRY
+        {
+            /* Make sure that the handle pointer is valid */
             ProbeForWriteHandle(ProfileHandle);
 
+            /* Check if the buffer is valid */
             ProbeForWrite(Buffer,
                           BufferSize,
                           sizeof(ULONG));
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
-        } _SEH_END;
+        }
+        _SEH_END;
 
+        /* Bail out if we failed */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Check if a process was specified */
-    if (Process) {
-
+    if (Process)
+    {
         /* Reference it */
         Status = ObReferenceObjectByHandle(Process,
                                            PROCESS_QUERY_INFORMATION,
@@ -154,15 +184,18 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
                                            (PVOID*)&pProcess,
                                            NULL);
         if (!NT_SUCCESS(Status)) return(Status);
-
-    } else {
+    }
+    else
+    {
+        /* Segmented profile objects cannot be used system-wide */
+        if (Segment) return STATUS_INVALID_PARAMETER;
 
         /* No process was specified, which means a System-Wide Profile */
         pProcess = NULL;
 
         /* For this, we need to check the Privilege */
-        if(!SeSinglePrivilegeCheck(SeSystemProfilePrivilege, PreviousMode)) {
-
+        if(!SeSinglePrivilegeCheck(SeSystemProfilePrivilege, PreviousMode))
+        {
             DPRINT1("NtCreateProfile: Caller requires the SeSystemProfilePrivilege privilege!\n");
             return STATUS_PRIVILEGE_NOT_HELD;
         }
@@ -181,7 +214,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
                             NULL,
                             sizeof(EPROFILE),
                             0,
-                            0,
+                            sizeof(EPROFILE) + sizeof(KPROFILE),
                             (PVOID*)&Profile);
     if (!NT_SUCCESS(Status)) return(Status);
 
@@ -192,6 +225,8 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     Profile->BufferSize = BufferSize;
     Profile->BucketSize = BucketSize;
     Profile->LockedBuffer = NULL;
+    Profile->Segment = Segment;
+    Profile->ProfileSource = ProfileSource;
     Profile->Affinity = Affinity;
     Profile->Process = pProcess;
 
@@ -205,29 +240,31 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     ObDereferenceObject(Profile);
 
     /* Check for Success */
-    if (!NT_SUCCESS(Status)) {
-
+    if (!NT_SUCCESS(Status))
+    {
         /* Dereference Process on failure */
         if (pProcess) ObDereferenceObject(pProcess);
         return Status;
     }
 
-    /* Copy the created handle back to the caller*/
-    _SEH_TRY {
-
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Copy the created handle back to the caller*/
         *ProfileHandle = hProfile;
-
-    } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
         Status = _SEH_GetExceptionCode();
-    } _SEH_END;
+    }
+    _SEH_END;
 
     /* Return Status */
     return Status;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
                           OUT PLARGE_INTEGER PerformanceFrequency OPTIONAL)
 {
@@ -235,43 +272,50 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
     LARGE_INTEGER PerfFrequency;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Check the Parameters for validity */
-    if(PreviousMode != KernelMode) {
-
-        _SEH_TRY {
-
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
+    {
+        /* Entry SEH Block */
+        _SEH_TRY
+        {
+            /* Make sure the counter and frequency are valid */
             ProbeForWriteLargeInteger(PerformanceCounter);
-
-            ProbeForWriteLargeInteger(PerformanceFrequency);
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+            if (PerformanceFrequency)
+            {
+                ProbeForWriteLargeInteger(PerformanceFrequency);
+            }
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
-        } _SEH_END;
+        }
+        _SEH_END;
 
+        /* If the pointers are invalid, bail out */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
-    _SEH_TRY {
-
+    /* Enter a new SEH Block */
+    _SEH_TRY
+    {
         /* Query the Kernel */
         *PerformanceCounter = KeQueryPerformanceCounter(&PerfFrequency);
 
         /* Return Frequency if requested */
-        if(PerformanceFrequency) {
-
-            *PerformanceFrequency = PerfFrequency;
-        }
-    } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        if(PerformanceFrequency) *PerformanceFrequency = PerfFrequency;
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
         Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
-    } _SEH_END;
-
+    /* Return status to caller */
     return Status;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtStartProfile(IN HANDLE ProfileHandle)
 {
     PEPROFILE Profile;
@@ -279,7 +323,6 @@ NtStartProfile(IN HANDLE ProfileHandle)
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PVOID TempLockedBuffer;
     NTSTATUS Status;
-
     PAGED_CODE();
 
     /* Get the Object */
@@ -299,8 +342,8 @@ NtStartProfile(IN HANDLE ProfileHandle)
                           NULL);
 
     /* The Profile can still be enabled though, so handle that */
-    if (Profile->LockedBuffer) {
-
+    if (Profile->LockedBuffer)
+    {
         /* Release our lock, dereference and return */
         KeReleaseMutex(&ExpProfileMutex, FALSE);
         ObDereferenceObject(Profile);
@@ -310,7 +353,7 @@ NtStartProfile(IN HANDLE ProfileHandle)
     /* Allocate a Kernel Profile Object. */
     KeProfile = ExAllocatePoolWithTag(NonPagedPool,
                                       sizeof(EPROFILE),
-                                      TAG('P', 'r', 'o', 'f'));
+                                      TAG_PROFILE);
 
     /* Allocate the Mdl Structure */
     Profile->Mdl = MmCreateMdl(NULL, Profile->Buffer, Profile->BufferSize);
@@ -344,13 +387,12 @@ NtStartProfile(IN HANDLE ProfileHandle)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtStopProfile(IN HANDLE ProfileHandle)
 {
     PEPROFILE Profile;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-
     PAGED_CODE();
 
     /* Get the Object */
@@ -370,8 +412,8 @@ NtStopProfile(IN HANDLE ProfileHandle)
                           NULL);
 
     /* Make sure the Profile Object is really Started */
-    if (!Profile->LockedBuffer) {
-
+    if (!Profile->LockedBuffer)
+    {
         Status = STATUS_PROFILING_NOT_STARTED;
         goto Exit;
     }
@@ -395,51 +437,55 @@ Exit:
 }
 
 NTSTATUS
-STDCALL
-NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
+NTAPI
+NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
                        OUT PULONG Interval)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG ReturnInterval;
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
 
-    /* Check the Parameters for validity */
-    if(PreviousMode != KernelMode) {
-
-        _SEH_TRY {
-
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
+    {
+        /* Enter SEH Block */
+        _SEH_TRY
+        {
+            /* Validate interval */
             ProbeForWriteUlong(Interval);
-
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
-        } _SEH_END;
+        }
+        _SEH_END;
 
+        /* If pointer was invalid, bail out */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Query the Interval */
     ReturnInterval = KeQueryIntervalProfile(ProfileSource);
 
-    /* Return the data */
-    _SEH_TRY  {
-
+    /* Enter SEH block for return */
+    _SEH_TRY
+    {
+        /* Return the data */
         *Interval = ReturnInterval;
-
-    } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
         Status = _SEH_GetExceptionCode();
-
-    } _SEH_END;
+    }
+    _SEH_END;
 
     /* Return Success */
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtSetIntervalProfile(IN ULONG Interval,
                      IN KPROFILE_SOURCE Source)
 {

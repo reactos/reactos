@@ -55,44 +55,56 @@ extern ULONG NTSYSAPI NtBuildNumber;
 //
 // Invalid Handle Value Constant
 //
-#define INVALID_HANDLE_VALUE            (HANDLE)-1
+#define INVALID_HANDLE_VALUE                (HANDLE)-1
 
 #endif
 
 //
 // Increments
 //
-#define MUTANT_INCREMENT                1
+#define MUTANT_INCREMENT                    1
 
 //
 // Callback Object Access Mask
 //
-#define CALLBACK_ALL_ACCESS             (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
-#define CALLBACK_EXECUTE                (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
-#define CALLBACK_WRITE                  (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
-#define CALLBACK_READ                   (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
+#define CALLBACK_ALL_ACCESS                 (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
+#define CALLBACK_EXECUTE                    (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
+#define CALLBACK_WRITE                      (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
+#define CALLBACK_READ                       (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
 
 //
 // Event Object Access Masks
 //
 #ifdef NTOS_MODE_USER
-#define EVENT_QUERY_STATE               0x0001
+#define EVENT_QUERY_STATE                   0x0001
 
 //
 // Semaphore Object Acess Masks
 //
-#define SEMAPHORE_QUERY_STATE           0x0001
+#define SEMAPHORE_QUERY_STATE               0x0001
 #endif
 
 //
 // Event Pair Access Masks
 //
-#define EVENT_PAIR_ALL_ACCESS           0x1F0000L
+#define EVENT_PAIR_ALL_ACCESS               0x1F0000L
+
+//
+// Profile Object Access Masks
+//
+#define PROFILE_CONTROL                     0x0001
+#define PROFILE_ALL_ACCESS                  (STANDARD_RIGHTS_REQUIRED | PROFILE_CONTROL)
 
 //
 // Maximum Parameters for NtRaiseHardError
 //
-#define MAXIMUM_HARDERROR_PARAMETERS    4
+#define MAXIMUM_HARDERROR_PARAMETERS        4
+
+//
+// Pushlock Wait Block Flags
+//
+#define EX_PUSH_LOCK_FLAGS_EXCLUSIVE        1
+#define EX_PUSH_LOCK_FLAGS_WAIT             2
 
 //
 // Shutdown types for NtShutdownSystem
@@ -271,13 +283,52 @@ typedef struct _EX_FAST_REF
 } EX_FAST_REF, *PEX_FAST_REF;
 
 //
-// Executive Fast Reference Wait Block
+// Executive Cache-Aware Rundown Reference Descriptor
+//
+typedef struct _EX_RUNDOWN_REF_CACHE_AWARE
+{
+    union
+    {
+        ULONG_PTR Count;
+        PVOID Ptr;
+    };
+    PVOID PoolToFree;
+} EX_RUNDOWN_REF_CACHE_AWARE, *PEX_RUNDOWN_REF_CACHE_AWARE;
+
+//
+// Executive Rundown Wait Block
 //
 typedef struct _EX_RUNDOWN_WAIT_BLOCK
 {
     ULONG_PTR Count;
     KEVENT RundownEvent;
 } EX_RUNDOWN_WAIT_BLOCK, *PEX_RUNDOWN_WAIT_BLOCK;
+
+//
+// Executive Pushlock Wait Block
+//
+#ifndef __GNUC__ // WARNING! PUSHLOCKS WILL NOT WORK IN GCC FOR NOW!!!
+__declspec(align(16))
+#endif
+typedef struct _EX_PUSH_LOCK_WAIT_BLOCK
+{
+    union
+    {
+        KGATE WakeGate;
+        KEVENT WakeEvent;
+    };
+    struct _EX_PUSH_LOCK_WAIT_BLOCK *Next;
+    struct _EX_PUSH_LOCK_WAIT_BLOCK *Last;
+    struct _EX_PUSH_LOCK_WAIT_BLOCK *Previous;
+    LONG ShareCount;
+    LONG Flags;
+#if DBG
+    BOOL Signaled;
+    EX_PUSH_LOCK NewValue;
+    EX_PUSH_LOCK OldValue;
+    PEX_PUSH_LOCK PushLock;
+#endif
+} EX_PUSH_LOCK_WAIT_BLOCK, *PEX_PUSH_LOCK_WAIT_BLOCK;
 
 //
 // Callback Object
@@ -289,6 +340,25 @@ typedef struct _CALLBACK_OBJECT
     LIST_ENTRY RegisteredCallbacks;
     ULONG AllowMultipleCallbacks;
 } CALLBACK_OBJECT , *PCALLBACK_OBJECT;
+
+//
+// Profile OBject
+//
+typedef struct _EPROFILE
+{
+    PEPROCESS Process;
+    PVOID ImageBase;
+    SIZE_T ImageSize;
+    PVOID Buffer;
+    ULONG BufferSize;
+    ULONG BucketSize;
+    PKPROFILE KeProfile;
+    PVOID LockedBuffer;
+    PMDL Mdl;
+    ULONG Segment;
+    KPROFILE_SOURCE ProfileSource;
+    KAFFINITY Affinity;
+} EPROFILE, *PEPROFILE;
 
 //
 // Handle Table Structures
