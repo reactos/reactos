@@ -292,21 +292,6 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
   return list;
 
 fail:
-  if (list != NULL)
-  {
-      EngFreeMem(list); 
-  }
-  
-  if (list->Edges != NULL)
-  {
-      int t;
-      for (t=0; Count;t++)
-      {
-          if (list->Edges[t] != NULL)
-              EngFreeMem(list->Edges[t]);           
-      }      
-      EngFreeMem(list->Edges); 
-  }
   
   DPRINT1("Out Of MEMORY!!\n");
   POLYGONFILL_DestroyEdgeList ( list );
