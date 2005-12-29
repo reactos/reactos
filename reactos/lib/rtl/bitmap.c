@@ -125,9 +125,15 @@ RtlAreBitsSet(PRTL_BITMAP BitMapHeader,
 VOID NTAPI
 RtlClearAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
-    memset(BitMapHeader->Buffer,
-	   0x00,
-	   ROUND_UP(BitMapHeader->SizeOfBitMap, 8) / 8);
+   if (BitMapHeader != NULL)
+   { 
+     if (BitMapHeader->Buffer != NULL)
+     {
+        memset(BitMapHeader->Buffer,
+	           0x00,
+	           ROUND_UP(BitMapHeader->SizeOfBitMap, 8) / 8);
+     }
+   }
 }
 
 
