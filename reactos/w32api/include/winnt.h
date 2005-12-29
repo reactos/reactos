@@ -3692,6 +3692,53 @@ static __inline PVOID GetFiberData(void)
 	return *((PVOID *)GetCurrentFiber());
 }
 
+#if defined(__GNUC__)
+
+static __inline__ BOOLEAN
+InterlockedBitTestAndSet(IN LONG *Base,
+                         IN LONG Bit)
+{
+	LONG OldBit;
+
+	__asm__ __volatile__("lock"
+	                     "btsl %2,%1\n\t"
+	                     "sbbl %0,%0\n\t"
+		             :"=r" (OldBit),"=m" (*Base)
+		             :"Ir" (Bit)
+			     : "memory");
+	return OldBit;
+}
+
+static __inline__ BOOLEAN
+InterlockedBitTestAndReset(IN LONG *Base,
+                          IN LONG Bit)
+{
+	LONG OldBit;
+
+	__asm__ __volatile__("lock"
+	                     "btrl %2,%1\n\t"
+	                     "sbbl %0,%0\n\t"
+		             :"=r" (OldBit),"=m" (*Base)
+		             :"Ir" (Bit)
+			     : "memory");
+	return OldBit;
+}
+
+#endif
+
+#if defined(_AMD64_)
+#if defined(_M_AMD64)
+
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONG64 *)a, b)
+
+#endif
+
+#else
+
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
+
+#endif
+
 #endif /* RC_INVOKED */
 
 #ifdef __cplusplus

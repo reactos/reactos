@@ -147,7 +147,7 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
 
     CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
     if(!CurrentCallback->PendingDelete &&
-       ExAcquireRundownProtectionEx(&CurrentCallback->RundownRef, 1))
+       ExAcquireRundownProtection(&CurrentCallback->RundownRef))
     {
       /* don't hold locks during the callbacks! */
       ExReleaseFastMutex(&CmiCallbackLock);
@@ -160,7 +160,7 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
       /* don't release the rundown protection before holding the callback lock
          so the pointer to the next callback isn't cleared in case this callback
          get's deleted */
-      ExReleaseRundownProtectionEx(&CurrentCallback->RundownRef, 1);
+      ExReleaseRundownProtection(&CurrentCallback->RundownRef);
       if(!NT_SUCCESS(Status))
       {
         /* one callback returned failure, don't call any more callbacks */

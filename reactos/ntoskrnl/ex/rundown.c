@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/rundown.c
- * PURPOSE:         Rundown Protection Functions
- *
- * PROGRAMMERS:     Alex Ionescu & Thomas Weidenmueller - Implementation
+ * PURPOSE:         Rundown and Cache-Aware Rundown Protection
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
@@ -15,261 +15,489 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
+/*++
+ * @name ExfAcquireRundownProtection
+ * @implemented NT5.1
+ *
+ *     The ExfAcquireRundownProtection routine acquires rundown protection for
+ *     the specified descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return TRUE if access to the protected structure was granted, FALSE otherwise.
+ *
+ * @remarks Callers of ExfAcquireRundownProtection can be running at any IRQL.
+ *
+ *--*/
 BOOLEAN
 FASTCALL
-ExAcquireRundownProtection (
-    IN PEX_RUNDOWN_REF RunRef
-    )
+ExfAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
-    /* Call the general function with only one Reference add */
-    return ExAcquireRundownProtectionEx(RunRef, 1);
+    ULONG_PTR Value = RunRef->Count, NewValue;
+
+    /* Make sure a rundown is not active */
+    if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
+
+    /* Loop until successfully incremented the counter */
+    for (;;)
+    {
+        /* Add a reference */
+        NewValue = Value + EX_RUNDOWN_COUNT_INC;
+
+        /* Change the value */
+        Value = ExpChangeRundown(RunRef, NewValue, Value);
+        if (Value == NewValue) return TRUE;
+
+        /* Make sure a rundown is not active */
+        if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
+    }
 }
 
-/*
- * @implemented
- */
+/*++
+ * @name ExfAcquireRundownProtectionEx
+ * @implemented NT5.2
+ *
+ *     The ExfAcquireRundownProtectionEx routine acquires multiple rundown
+ *     protection references for the specified descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @param Count
+ *         Number of times to reference the descriptor.
+ *
+ * @return TRUE if access to the protected structure was granted, FALSE otherwise.
+ *
+ * @remarks Callers of ExfAcquireRundownProtectionEx can be running at any IRQL.
+ *
+ *--*/
 BOOLEAN
 FASTCALL
-ExAcquireRundownProtectionEx (
-    IN PEX_RUNDOWN_REF RunRef,
-    IN ULONG Count
-    )
+ExfAcquireRundownProtectionEx(IN PEX_RUNDOWN_REF RunRef,
+                              IN ULONG Count)
 {
-    ULONG_PTR PrevCount, Current;
+    ULONG_PTR Value = RunRef->Count, NewValue;
 
-    PAGED_CODE();
+    /* Make sure a rundown is not active */
+    if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
 
+    /* Convert the count to our internal representation */
     Count <<= EX_RUNDOWN_COUNT_SHIFT;
 
     /* Loop until successfully incremented the counter */
-    do
+    for (;;)
     {
-        Current = RunRef->Count;
+        /* Add references */
+        NewValue = Value + Count;
+
+        /* Change the value */
+        Value = ExpChangeRundown(RunRef, NewValue, Value);
+        if (Value == NewValue) return TRUE;
 
         /* Make sure a rundown is not active */
-        if (Current & EX_RUNDOWN_ACTIVE)
-        {
-            return FALSE;
-        }
-
-#ifdef _WIN64
-        PrevCount = (ULONG_PTR)InterlockedExchangeAdd64((LONGLONG*)&RunRef->Count, (LONGLONG)Count);
-#else
-        PrevCount = (ULONG_PTR)InterlockedExchangeAdd((LONG*)&RunRef->Count, (LONG)Count);
-#endif
-    } while (PrevCount != Current);
-
-    /* Return Success */
-    return TRUE;
+        if (Value & EX_RUNDOWN_ACTIVE) return FALSE;
+    }
 }
 
-/*
- * @implemented
- */
+/*++
+ * @name ExfInitializeRundownProtection
+ * @implemented NT5.1
+ *
+ *     The ExfInitializeRundownProtection routine initializes a rundown
+ *     protection descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks Callers of ExfInitializeRundownProtection can be running at any IRQL.
+ *
+ *--*/
 VOID
 FASTCALL
-ExInitializeRundownProtection (
-    IN PEX_RUNDOWN_REF RunRef
-    )
+ExfInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
-    PAGED_CODE();
-
     /* Set the count to zero */
     RunRef->Count = 0;
 }
 
-/*
- * @implemented
- */
+/*++
+ * @name ExfReInitializeRundownProtection
+ * @implemented NT5.1
+ *
+ *     The ExfReInitializeRundownProtection routine re-initializes a rundown
+ *     protection descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks Callers of ExfReInitializeRundownProtection can be running at any IRQL.
+ *
+ *--*/
 VOID
 FASTCALL
-ExReInitializeRundownProtection (
-    IN PEX_RUNDOWN_REF RunRef
-    )
+ExfReInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
     /* Reset the count */
-#ifdef _WIN64
-    InterlockedExchange64((LONGLONG*)&RunRef->Count, 0LL);
-#else
-    InterlockedExchange((LONG*)&RunRef->Count, 0);
-#endif
+    InterlockedExchange((PLONG)&RunRef->Count, 0);
 }
 
-
-/*
- * @implemented
- */
+/*++
+ * @name ExfRundownCompleted
+ * @implemented NT5.1
+ *
+ *     The ExfRundownCompleted routine completes the rundown of the specified
+ *     descriptor by setting the active bit.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks Callers of ExfRundownCompleted must be running at IRQL <= APC_LEVEL.
+ *
+ *--*/
 VOID
 FASTCALL
-ExReleaseRundownProtectionEx (
-    IN PEX_RUNDOWN_REF RunRef,
-    IN ULONG Count
-    )
+ExfRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 {
     PAGED_CODE();
 
-    Count <<= EX_RUNDOWN_COUNT_SHIFT;
+    /* Sanity check */
+    ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
-    for (;;)
+    /* Mark the counter as active */
+    InterlockedExchange((PLONG)&RunRef->Count, EX_RUNDOWN_ACTIVE);
+}
+
+/*++
+ * @name ExfReleaseRundownProtection
+ * @implemented NT5.1
+ *
+ *     The ExfReleaseRundownProtection routine releases the rundown protection
+ *     reference for the specified descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks Callers of ExfReleaseRundownProtection can be running at any IRQL.
+ *
+ *--*/
+VOID
+FASTCALL
+ExfReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+{
+    ULONG_PTR Value = RunRef->Count, NewValue;
+    PEX_RUNDOWN_WAIT_BLOCK WaitBlock;
+
+    /* Check if rundown is not active */
+    if (!(Value & EX_RUNDOWN_ACTIVE))
     {
-        ULONG_PTR Current = RunRef->Count;
-
-        /* Check if Rundown is active */
-        if (Current & EX_RUNDOWN_ACTIVE)
-        {
-            /* Get Pointer */
-            PEX_RUNDOWN_WAIT_BLOCK RundownDescriptor = (PEX_RUNDOWN_WAIT_BLOCK)(Current & ~EX_RUNDOWN_ACTIVE);
-
-            if (RundownDescriptor == NULL)
-            {
-                /* the rundown was completed and there's no one to notify */
-                break;
-            }
-
-            Current = RundownDescriptor->Count;
-
-            /* Decrease RundownDescriptor->Count by Count Count */
-            for (;;)
-            {
-                ULONG_PTR PrevCount, NewCount;
-
-                if ((Count >> EX_RUNDOWN_COUNT_SHIFT) == Current)
-                {
-                    NewCount = 0;
-                }
-                else
-                {
-                    NewCount = ((RundownDescriptor->Count - (Count >> EX_RUNDOWN_COUNT_SHIFT)) << EX_RUNDOWN_COUNT_SHIFT) | EX_RUNDOWN_ACTIVE;
-                }
-#ifdef _WIN64
-                PrevCount = (ULONG_PTR)InterlockedCompareExchange64((LONGLONG*)&RundownDescriptor->Count, (LONGLONG)NewCount, (LONGLONG)Current);
-#else
-                PrevCount = (ULONG_PTR)InterlockedCompareExchange((LONG*)&RundownDescriptor->Count, (LONG)NewCount, (LONG)Current);
-#endif
-                if (PrevCount == Current)
-                {
-                    if (NewCount == 0)
-                    {
-                        /* Signal the event so anyone waiting on it can now kill it */
-                        KeSetEvent(&RundownDescriptor->RundownEvent, 0, FALSE);
-                    }
-
-                    /* Successfully decremented the counter, so bail! */
-                    break;
-                }
-
-                Current = PrevCount;
-            }
-
-            break;
-        }
-        else
-        {
-            ULONG_PTR PrevCount, NewCount = Current - (ULONG_PTR)Count;
-#ifdef _WIN64
-            PrevCount = (ULONG_PTR)InterlockedCompareExchange64((LONGLONG*)&RunRef->Count, (LONGLONG)NewCount, (LONGLONG)Current);
-#else
-            PrevCount = (ULONG_PTR)InterlockedCompareExchange((LONG*)&RunRef->Count, (LONG)NewCount, (LONG)Current);
-#endif
-            if (PrevCount == Current)
-            {
-                /* Successfully decremented the counter, so bail! */
-                break;
-            }
-        }
-    }
-}
-
-/*
-* @implemented
-*/
-VOID
-FASTCALL
-ExReleaseRundownProtection (
-    IN PEX_RUNDOWN_REF RunRef
-    )
-{
-    /* Call the general function with only 1 reference removal */
-    ExReleaseRundownProtectionEx(RunRef, 1);
-}
-
-/*
- * @implemented
- */
-VOID
-FASTCALL
-ExRundownCompleted (
-    IN PEX_RUNDOWN_REF RunRef
-    )
-{
-    PAGED_CODE();
-
-    /* mark the counter as active */
-#ifdef _WIN64
-    InterlockedExchange64((LONGLONG*)&RunRef->Count, (LONGLONG)EX_RUNDOWN_ACTIVE);
-#else
-    InterlockedExchange((LONG*)&RunRef->Count, EX_RUNDOWN_ACTIVE);
-#endif
-}
-
-/*
- * @implemented
- */
-VOID
-FASTCALL
-ExWaitForRundownProtectionRelease (
-    IN PEX_RUNDOWN_REF RunRef
-    )
-{
-    ULONG_PTR PrevCount, NewPtr, PrevPtr;
-    EX_RUNDOWN_WAIT_BLOCK RundownDescriptor;
-
-    PAGED_CODE();
-
-    PrevCount = RunRef->Count;
-
-    if (PrevCount != 0 && !(PrevCount & EX_RUNDOWN_ACTIVE))
-    {
-        /* save the reference counter */
-        RundownDescriptor.Count = PrevCount >> EX_RUNDOWN_COUNT_SHIFT;
-
-        /* Pending Count... wait on them to be closed with an event */
-        KeInitializeEvent(&RundownDescriptor.RundownEvent, NotificationEvent, FALSE);
-
-        ASSERT(!((ULONG_PTR)&RundownDescriptor & EX_RUNDOWN_ACTIVE));
-
-        NewPtr = (ULONG_PTR)&RundownDescriptor | EX_RUNDOWN_ACTIVE;
-
+        /* Loop until successfully incremented the counter */
         for (;;)
         {
-#ifdef _WIN64
-            PrevPtr = (ULONG_PTR)InterlockedCompareExchange64((LONGLONG*)&RunRef->Ptr, (LONGLONG)NewPtr, (LONGLONG)PrevCount);
-#else
-            PrevPtr = (ULONG_PTR)InterlockedCompareExchange((LONG*)&RunRef->Ptr, (LONG)NewPtr, (LONG)PrevCount);
-#endif
-            if (PrevPtr == PrevCount)
-            {
-                /* Wait for whoever needs to release to notify us */
-                KeWaitForSingleObject(&RundownDescriptor.RundownEvent, Executive, KernelMode, FALSE, NULL);
-                break;
-            }
-            else if (PrevPtr == 0 || (PrevPtr & EX_RUNDOWN_ACTIVE))
-            {
-                /* some one else was faster, let's just bail */
-                break;
-            }
+            /* Sanity check */
+            ASSERT((Value >= EX_RUNDOWN_COUNT_INC) || (KeNumberProcessors > 1));
 
-            PrevCount = PrevPtr;
+            /* Get the new value */
+            NewValue = Value - EX_RUNDOWN_COUNT_INC;
 
-            /* save the changed reference counter and try again */
-            RundownDescriptor.Count = PrevCount >> EX_RUNDOWN_COUNT_SHIFT;
+            /* Change the value */
+            Value = ExpChangeRundown(RunRef, NewValue, Value);
+            if (Value == NewValue) return;
+
+            /* Loop again if we're still not active */
+            if (Value & EX_RUNDOWN_ACTIVE) break;
         }
+    }
+
+    /* Get the wait block */
+    WaitBlock = (PEX_RUNDOWN_WAIT_BLOCK)(Value & ~EX_RUNDOWN_ACTIVE);
+    ASSERT((WaitBlock->Count > 0) || (KeNumberProcessors > 1));
+
+    /* Remove the one count */
+    if (InterlockedExchangeAddSizeT(&WaitBlock->Count, -1))
+    {
+        /* We're down to 0 now, so signal the event */
+        KeSetEvent(&WaitBlock->RundownEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 
-/* EOF */
+/*++
+ * @name ExfReleaseRundownProtectionEx
+ * @implemented NT5.2
+ *
+ *     The ExfReleaseRundownProtectionEx routine releases multiple rundown
+ *     protection references for the specified descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @param Count
+ *         Number of times to dereference the descriptor.
+ *
+ * @return None.
+ *
+ * @remarks Callers of ExfAcquireRundownProtectionEx can be running at any IRQL.
+ *
+ *--*/
+VOID
+FASTCALL
+ExfReleaseRundownProtectionEx(IN PEX_RUNDOWN_REF RunRef,
+                              IN ULONG Count)
+{
+    ULONG_PTR Value = RunRef->Count, NewValue;
+    PEX_RUNDOWN_WAIT_BLOCK WaitBlock;
+
+    /* Check if rundown is not active */
+    if (!(Value & EX_RUNDOWN_ACTIVE))
+    {
+        /* Loop until successfully incremented the counter */
+        for (;;)
+        {
+            /* Sanity check */
+            ASSERT((Value >= EX_RUNDOWN_COUNT_INC * Count) || (KeNumberProcessors > 1));
+
+            /* Get the new value */
+            NewValue = Value - (Count * EX_RUNDOWN_COUNT_INC);
+
+            /* Change the value */
+            Value = ExpChangeRundown(RunRef, NewValue, Value);
+            if (Value == NewValue) return;
+
+            /* Loop again if we're still not active */
+            if (Value & EX_RUNDOWN_ACTIVE) break;
+        }
+    }
+
+    /* Get the wait block */
+    WaitBlock = (PEX_RUNDOWN_WAIT_BLOCK)(Value & ~EX_RUNDOWN_ACTIVE);
+    ASSERT((WaitBlock->Count >= Count) || (KeNumberProcessors > 1));
+
+    /* Remove the count */
+    if (InterlockedExchangeAddSizeT(WaitBlock->Count, -(LONG)Count) ==
+        (LONG)Count)
+    {
+        /* We're down to 0 now, so signal the event */
+        KeSetEvent(&WaitBlock->RundownEvent, IO_NO_INCREMENT, FALSE);
+    }
+}
+
+/*++
+ * @name ExfWaitForRundownProtectionRelease
+ * @implemented NT5.1
+ *
+ *     The ExfWaitForRundownProtectionRelease routine waits until the specified
+ *     rundown descriptor has been released.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks Callers of ExfWaitForRundownProtectionRelease must be running
+ *          at IRQL <= APC_LEVEL.
+ *
+ *--*/
+VOID
+FASTCALL
+ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
+{
+    ULONG_PTR Value, Count, NewValue;
+    EX_RUNDOWN_WAIT_BLOCK WaitBlock;
+    PEX_RUNDOWN_WAIT_BLOCK WaitBlockPointer;
+    PKEVENT Event;
+    PAGED_CODE();
+
+    /* Set the active bit */
+    Value = ExpChangeRundown(RunRef, EX_RUNDOWN_ACTIVE, 0);
+    if ((Value == 0) || (Value == EX_RUNDOWN_ACTIVE)) return;
+
+    /* No event for now */
+    Event = NULL;
+    WaitBlockPointer = (PEX_RUNDOWN_WAIT_BLOCK)((ULONG_PTR)&WaitBlock |
+                                                EX_RUNDOWN_ACTIVE);
+
+    /* Start waitblock set loop */
+    for(;;)
+    {
+        /* Save the count */
+        Count = Value >> EX_RUNDOWN_COUNT_SHIFT;
+
+        /* If the count is over one or we don't have en event yet, create it */
+        if (Count || !Event)
+        {
+            /* Initialize the event */
+            KeInitializeEvent(&WaitBlock.RundownEvent,
+                              NotificationEvent,
+                              FALSE);
+
+            /* Set the pointer */
+            Event = &WaitBlock.RundownEvent;
+        }
+
+        /* Set the count */
+        WaitBlock.Count = Count;
+
+        /* Now set the pointer */
+        NewValue = ExpChangeRundown(RunRef, PtrToUlong(WaitBlockPointer), Value);
+        if (NewValue == Value) break;
+
+        /* Loop again */
+        Value = NewValue;
+        ASSERT((Value & EX_RUNDOWN_ACTIVE) == 0);
+    }
+
+    /* If the count was 0, we're done */
+    if (!Count) return;
+
+    /* Wait for whoever needs to release to notify us */
+    KeWaitForSingleObject(Event, Executive, KernelMode, FALSE, NULL);
+    ASSERT(WaitBlock.Count == 0);
+}
+
+/* FIXME: STUBS **************************************************************/
+
+/*
+ * @unimplemented NT5.2
+ */
+BOOLEAN
+FASTCALL
+ExfAcquireRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+BOOLEAN
+FASTCALL
+ExfAcquireRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+                                        IN ULONG Count)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    DBG_UNREFERENCED_PARAMETER(Count);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+FASTCALL
+ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+FASTCALL
+ExfReleaseRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+                                        IN ULONG Count)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    DBG_UNREFERENCED_PARAMETER(Count);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+FASTCALL
+ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+FASTCALL
+ExfRundownCompletedCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+FASTCALL
+ExfReInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+PEX_RUNDOWN_REF_CACHE_AWARE
+NTAPI
+ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
+                                      IN ULONG Tag)
+{
+    DBG_UNREFERENCED_PARAMETER(PoolType);
+    DBG_UNREFERENCED_PARAMETER(Tag);
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+NTAPI
+ExFreeCacheAwareRundownProtection(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+VOID
+NTAPI
+ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+                                        IN ULONG Count)
+{
+    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
+    DBG_UNREFERENCED_PARAMETER(Count);
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented NT5.2
+ */
+SIZE_T
+NTAPI
+ExSizeOfRundownProtectionCacheAware(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+

@@ -146,7 +146,6 @@
 			<file>resource.c</file>
 			<file>rundown.c</file>
 			<file>sem.c</file>
-			<file>synch.c</file>
 			<file>sysinfo.c</file>
 			<file>time.c</file>
 			<file>timer.c</file>

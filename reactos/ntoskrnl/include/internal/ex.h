@@ -77,6 +77,58 @@ VOID
 STDCALL
 ExpInitializeProfileImplementation(VOID);
 
+/* Rundown Functions ********************************************************/
+
+VOID
+FASTCALL
+ExfInitializeRundownProtection(
+     OUT PEX_RUNDOWN_REF RunRef
+);
+
+VOID
+FASTCALL
+ExfReInitializeRundownProtection(
+     OUT PEX_RUNDOWN_REF RunRef
+);
+
+BOOLEAN
+FASTCALL
+ExfAcquireRundownProtection(
+     IN OUT PEX_RUNDOWN_REF RunRef
+);
+
+BOOLEAN
+FASTCALL
+ExfAcquireRundownProtectionEx(
+     IN OUT PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
+VOID
+FASTCALL
+ExfReleaseRundownProtection(
+     IN OUT PEX_RUNDOWN_REF RunRef
+);
+
+VOID
+FASTCALL
+ExfReleaseRundownProtectionEx(
+     IN OUT PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
+VOID
+FASTCALL
+ExfRundownCompleted(
+     OUT PEX_RUNDOWN_REF RunRef
+);
+
+VOID
+FASTCALL
+ExfWaitForRundownProtectionRelease(
+     IN OUT PEX_RUNDOWN_REF RunRef
+);
+
 /* HANDLE TABLE FUNCTIONS ***************************************************/
 
 #define EX_HANDLE_ENTRY_LOCKED (1 << ((sizeof(PVOID) * 8) - 1))
@@ -191,6 +243,184 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
 {
     return ExSystemExceptionFilter();
 }
+
+/* RUNDOWN *******************************************************************/
+
+#ifdef _WIN64
+#define ExpChangeRundown(x, y, z) InterlockedCompareExchange64((PLONGLONG)x, y, z)
+#define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
+#else
+#define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, y, z)
+#define ExpSetRundown(x, y) InterlockedExchange((PLONG)x, y)
+#endif
+
+/*++
+ * @name ExfAcquireRundownProtection
+ * INTERNAL MACRO
+ *
+ *     The ExfAcquireRundownProtection routine acquires rundown protection for
+ *     the specified descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return TRUE if access to the protected structure was granted, FALSE otherwise.
+ *
+ * @remarks This is the internal macro for system use only.In case the rundown
+ *          was active, then the slow-path will be called through the exported
+ *          function.
+ *
+ *--*/
+BOOLEAN
+FORCEINLINE
+ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+{
+    ULONG_PTR Value, NewValue, OldValue;
+
+    /* Get the current value and mask the active bit */
+    Value = RunRef->Count &~ EX_RUNDOWN_ACTIVE;
+
+    /* Add a reference */
+    NewValue = Value + EX_RUNDOWN_COUNT_INC;
+
+    /* Change the value */
+    OldValue = ExpChangeRundown(RunRef, NewValue, Value);
+    if (OldValue != Value)
+    {
+        /* Rundown was active, use long path */
+        return ExfAcquireRundownProtection(RunRef);
+    }
+
+    /* Success */
+    return TRUE;
+}
+
+/*++
+ * @name ExReleaseRundownProtection
+ * INTERNAL MACRO
+ *
+ *     The ExReleaseRundownProtection routine releases rundown protection for
+ *     the specified descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return TRUE if access to the protected structure was granted, FALSE otherwise.
+ *
+ * @remarks This is the internal macro for system use only.In case the rundown
+ *          was active, then the slow-path will be called through the exported
+ *          function.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+{
+    ULONG_PTR Value, NewValue, OldValue;
+
+    /* Get the current value and mask the active bit */
+    Value = RunRef->Count &~ EX_RUNDOWN_ACTIVE;
+
+    /* Remove a reference */
+    NewValue = Value - EX_RUNDOWN_COUNT_INC;
+
+    /* Change the value */
+    OldValue = ExpChangeRundown(RunRef, NewValue, Value);
+
+    /* Check if the rundown was active */
+    if (OldValue != Value)
+    {
+        /* Rundown was active, use long path */
+        ExfReleaseRundownProtection(RunRef);
+    }
+    else
+    {
+        /* Sanity check */
+        ASSERT((Value >= EX_RUNDOWN_COUNT_INC) || (KeNumberProcessors > 1));
+    }
+}
+
+/*++
+ * @name ExInitializeRundownProtection
+ * INTERNAL MACRO
+ *
+ *     The ExInitializeRundownProtection routine initializes a rundown
+ *     protection descriptor.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks This is the internal macro for system use only.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+{
+    /* Set the count to zero */
+    RunRef->Count = 0;
+}
+
+/*++
+ * @name ExWaitForRundownProtectionRelease
+ * INTERNAL MACRO
+ *
+ *     The ExWaitForRundownProtectionRelease routine waits until the specified
+ *     rundown descriptor has been released.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks This is the internal macro for system use only. If a wait is actually
+ *          necessary, then the slow path is taken through the exported function.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
+{
+    ULONG_PTR Value;
+
+    /* Set the active bit */
+    Value = ExpChangeRundown(RunRef, EX_RUNDOWN_ACTIVE, 0);
+    if ((Value) || (Value != EX_RUNDOWN_ACTIVE))
+    {
+        /* If the the rundown wasn't already active, then take the long path */
+        ExfWaitForRundownProtectionRelease(RunRef);
+    }
+}
+
+/*++
+ * @name ExRundownCompleted
+ * INTERNAL MACRO
+ *
+ *     The ExRundownCompleted routine completes the rundown of the specified
+ *     descriptor by setting the active bit.
+ *
+ * @param RunRef
+ *        Pointer to a rundown reference descriptor.
+ *
+ * @return None.
+ *
+ * @remarks This is the internal macro for system use only.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
+{
+    /* Sanity check */
+    ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
+
+    /* Mark the counter as active */
+    ExpSetRundown(&RunRef->Count, EX_RUNDOWN_ACTIVE);
+}
+
+
 
 /* OTHER FUNCTIONS **********************************************************/
 

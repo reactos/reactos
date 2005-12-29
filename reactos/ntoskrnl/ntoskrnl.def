@@ -65,11 +65,28 @@ DbgQueryDebugFilterState@8
 DbgSetDebugFilterState@12
 @ExiAcquireFastMutex@4=@ExAcquireFastMutex@4
 @ExAcquireFastMutexUnsafe@4
+ExAcquireRundownProtection=@ExfAcquireRundownProtection@4
+ExAcquireRundownProtectionCacheAware=@ExfAcquireRundownProtectionCacheAware@4
+ExAcquireRundownProtectionCacheAwareEx=@ExfAcquireRundownProtectionCacheAwareEx@8
+ExAcquireRundownProtectionEx=@ExfAcquireRundownProtectionEx@8
+ExInitializeRundownProtection=@ExfInitializeRundownProtection@4
+ExReInitializeRundownProtection=@ExfReInitializeRundownProtection@4
+ExReInitializeRundownProtectionCacheAware=@ExfReInitializeRundownProtectionCacheAware@4
+ExReleaseRundownProtection=@ExfReleaseRundownProtection@4
+ExReleaseRundownProtectionCacheAware=@ExfReleaseRundownProtectionCacheAware@4
+ExReleaseRundownProtectionCacheAwareEx=@ExfReleaseRundownProtectionCacheAwareEx@8
+ExReleaseRundownProtectionEx=@ExfReleaseRundownProtectionEx@8
+ExRundownCompleted=@ExfRundownCompleted@4
+ExRundownCompletedCacheAware=@ExfRundownCompletedCacheAware@4
+ExWaitForRundownProtectionRelease=@ExfWaitForRundownProtectionRelease@4
+ExWaitForRundownProtectionReleaseCacheAware=@ExfWaitForRundownProtectionReleaseCacheAware@4
+ExAllocateCacheAwareRundownProtection@8
+ExFreeCacheAwareRundownProtection@4
+ExInitializeRundownProtectionCacheAware@8
+ExSizeOfRundownProtectionCacheAware@0
 ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite@8
-@ExAcquireRundownProtection@4
-@ExAcquireRundownProtectionEx@8
 ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
 ExAllocateFromPagedLookasideList@4=ExiAllocateFromPagedLookasideList@4
@@ -98,7 +115,6 @@ ExGetCurrentProcessorCpuUsage@4
 ExGetExclusiveWaiterCount@4
 ExGetPreviousMode@0
 ExGetSharedWaiterCount@4
-@ExInitializeRundownProtection@4
 ExInitializeNPagedLookasideList@28
 ExInitializePagedLookasideList@28
 ExInitializeResource@4
@@ -134,16 +150,12 @@ ExRaiseHardError@24
 ExRaiseStatus@4=RtlRaiseStatus@4
 ExRegisterCallback@12
 ExReinitializeResourceLite@4
-@ExReInitializeRundownProtection@4
 @ExiReleaseFastMutex@4=@ExReleaseFastMutex@4
 @ExReleaseFastMutexUnsafe@4
 @ExReleaseFastMutexUnsafeAndLeaveCriticalRegion@4
 ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
-@ExReleaseRundownProtection@4
-@ExReleaseRundownProtectionEx@8
-@ExRundownCompleted@4
 ExSemaphoreObjectType DATA
 ExSetResourceOwnerPointer@8
 ExSetTimerResolution@8
@@ -153,11 +165,7 @@ ExTryToAcquireResourceExclusiveLite@4
 ExUnregisterCallback@4
 ExUuidCreate@4
 ExVerifySuite@4
-@ExWaitForRundownProtectionRelease@4
 ExWindowStationObjectType DATA
-@ExfAcquirePushLockExclusive@4
-@ExfAcquirePushLockShared@4
-@ExfReleasePushLock@4
 @ExfInterlockedAddUlong@12
 @ExfInterlockedInsertHeadList@12
 @ExfInterlockedInsertTailList@12

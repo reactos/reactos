@@ -37,11 +37,62 @@ typedef struct _EVENT_TRACE_HEADER *PEVENT_TRACE_HEADER;
 //
 VOID
 FASTCALL
-ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex);
+ExEnterCriticalRegionAndAcquireFastMutexUnsafe(
+    PFAST_MUTEX FastMutex
+);
 
 VOID
 FASTCALL
-ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex);
+ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(
+    PFAST_MUTEX FastMutex
+);
+
+//
+// Pushlock functions
+//
+VOID
+FASTCALL
+ExfAcquirePushLockExclusive(
+    PEX_PUSH_LOCK PushLock
+);
+
+VOID
+FASTCALL
+ExfAcquirePushLockShared(
+    PEX_PUSH_LOCK PushLock
+);
+
+VOID
+FASTCALL
+ExfReleasePushLock(
+    PEX_PUSH_LOCK PushLock
+);
+
+VOID
+FASTCALL
+ExfReleasePushLockExclusive(
+    PEX_PUSH_LOCK PushLock
+);
+
+VOID
+FASTCALL
+ExfReleasePushLockShared(
+    PEX_PUSH_LOCK PushLock
+);
+
+VOID
+FASTCALL
+ExfTryToWakePushLock(
+    PEX_PUSH_LOCK PushLock
+);
+
+VOID
+FASTCALL
+ExfUnblockPushLock(
+    PEX_PUSH_LOCK PushLock,
+    PVOID CurrentWaitBlock
+);
+
 #endif
 
 //
