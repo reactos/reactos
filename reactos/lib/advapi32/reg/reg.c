@@ -3184,7 +3184,7 @@ RegQueryInfoKeyW (HKEY hKey,
     {
       *lpcbMaxValueLen = FullInfo->MaxValueDataLen;
     }
-
+#ifndef __REACTOS__ 
   if (lpcbSecurityDescriptor != NULL)
     {
       Status = NtQuerySecurityObject(KeyHandle,
@@ -3207,6 +3207,7 @@ RegQueryInfoKeyW (HKEY hKey,
 	  goto Cleanup;
 	}
     }
+#endif
 
   if (lpftLastWriteTime != NULL)
     {
