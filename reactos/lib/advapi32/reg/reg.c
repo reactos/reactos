@@ -15,7 +15,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <advapi32.h>
-#define NDEBUG
+//#define NDEBUG
+#define YDEBUG
 #include <wine/debug.h>
 
 /* DEFINES ******************************************************************/
