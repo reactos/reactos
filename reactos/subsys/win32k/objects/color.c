@@ -173,6 +173,9 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
 	  palette->palNumEntries,
 	  (PULONG)palette->palPalEntry,
 	  0, 0, 0);
+	  
+  if (NewPalette == NULL)
+      return NULL;
 
   PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
   /* FIXME - Handle PalGDI == NULL!!!! */
