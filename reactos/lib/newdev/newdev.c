@@ -1,17 +1,28 @@
 /*
-* COPYRIGHT:       See COPYING in the top level directory
-* PROJECT:         ReactOS New devices installation
-* FILE:            lib/newdev/newdev.c
-* PURPOSE:         New devices installation
-*
-* PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
-* PROGRAMMERS:     Christoph von Wittich (Christoph@ActiveVB.de)
-*/
+ * New device installer (newdev.dll)
+ *
+ * Copyright 2005 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005 Christoph von Wittich (Christoph@ActiveVB.de)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
-//#define NDEBUG
-#include <debug.h>
-
+#define YDEBUG
 #include "newdev.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(newdev);
 
 static BOOL SearchDriver ( PDEVINSTDATA DevInstData, LPCTSTR Path );
 static BOOL InstallDriver ( PDEVINSTDATA DevInstData );
@@ -22,7 +33,7 @@ static DEVINSTDATA DevInstData;
 HINSTANCE hDllInstance;
 HANDLE hThread;
 
-BOOL
+static BOOL
 CanDisableDevice(IN DEVINST DevInst,
                  IN HMACHINE hMachine,
                  OUT BOOL *CanDisable)
@@ -54,7 +65,7 @@ CanDisableDevice(IN DEVINST DevInst,
 }
 
 
-BOOL
+static BOOL
 IsDeviceStarted(IN DEVINST DevInst,
                 IN HMACHINE hMachine,
                 OUT BOOL *IsEnabled)
@@ -78,7 +89,7 @@ IsDeviceStarted(IN DEVINST DevInst,
 }
 
 
-BOOL
+static BOOL
 StartDevice(IN HDEVINFO DeviceInfoSet,
             IN PSP_DEVINFO_DATA DevInfoData  OPTIONAL,
             IN BOOL bEnable,
@@ -745,20 +756,20 @@ FindDriver(
     DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
     if (!SetupDiGetDeviceInstallParams(DevInstData->hDevInfo, &DevInstData->devInfoData, &DevInstallParams))
     {
-        DPRINT("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
     DevInstallParams.FlagsEx |= DI_FLAGSEX_ALLOWEXCLUDEDDRVS;
     if (!SetupDiSetDeviceInstallParams(DevInstData->hDevInfo, &DevInstData->devInfoData, &DevInstallParams))
     {
-        DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
     ret = SetupDiBuildDriverInfoList(DevInstData->hDevInfo, &DevInstData->devInfoData, SPDIT_COMPATDRIVER);
     if (!ret)
     {
-        DPRINT("SetupDiBuildDriverInfoList() failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiBuildDriverInfoList() failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -773,10 +784,10 @@ FindDriver(
     {
         if (GetLastError() == ERROR_NO_MORE_ITEMS)
             return FALSE;
-        DPRINT("SetupDiEnumDriverInfo() failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiEnumDriverInfo() failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
-    DPRINT("Installing driver %S: %S\n", DevInstData->drvInfoData.MfgName, DevInstData->drvInfoData.Description);
+    TRACE("Installing driver %S: %S\n", DevInstData->drvInfoData.MfgName, DevInstData->drvInfoData.Description);
 
     return TRUE;
 }
@@ -899,7 +910,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_SELECTBESTCOMPATDRV) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_SELECTBESTCOMPATDRV) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -909,7 +920,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_ALLOW_INSTALL) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_ALLOW_INSTALL) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -919,7 +930,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_PREANALYZE) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_PREANALYZE) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -929,7 +940,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_POSTANALYZE) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_POSTANALYZE) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -939,7 +950,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_INSTALLDEVICEFILES) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_INSTALLDEVICEFILES) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -949,7 +960,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_REGISTER_COINSTALLERS) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_REGISTER_COINSTALLERS) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -959,7 +970,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_INSTALLINTERFACES) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_INSTALLINTERFACES) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -969,7 +980,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_INSTALLDEVICE) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_INSTALLDEVICE) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -979,7 +990,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_FINISHINSTALL) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_FINISHINSTALL) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -989,7 +1000,7 @@ InstallDriver(
         &DevInstData->devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiCallClassInstaller(DIF_DESTROYPRIVATEDATA) failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCallClassInstaller(DIF_DESTROYPRIVATEDATA) failed with error 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -1004,13 +1015,13 @@ CleanUp(VOID)
     if (DevInstData.devInfoData.cbSize != 0)
     {
         if (!SetupDiDestroyDriverInfoList(DevInstData.hDevInfo, &DevInstData.devInfoData, SPDIT_COMPATDRIVER))
-            DPRINT("SetupDiDestroyDriverInfoList() failed with error 0x%lx\n", GetLastError());
+            TRACE("SetupDiDestroyDriverInfoList() failed with error 0x%lx\n", GetLastError());
     }
 
     if (DevInstData.hDevInfo != INVALID_HANDLE_VALUE)
     {
         if (!SetupDiDestroyDeviceInfoList(DevInstData.hDevInfo))
-            DPRINT("SetupDiDestroyDeviceInfoList() failed with error 0x%lx\n", GetLastError());
+            TRACE("SetupDiDestroyDeviceInfoList() failed with error 0x%lx\n", GetLastError());
     }
 
     if (DevInstData.buffer)
@@ -1018,6 +1029,9 @@ CleanUp(VOID)
 
 }
 
+/*
+* @implemented
+*/
 BOOL WINAPI
 DevInstallW(
             IN HWND hWndParent,
@@ -1046,7 +1060,7 @@ DevInstallW(
     DevInstData.hDevInfo = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
     if (DevInstData.hDevInfo == INVALID_HANDLE_VALUE)
     {
-        DPRINT("SetupDiCreateDeviceInfoListExW() failed with error 0x%lx\n", GetLastError());
+        TRACE("SetupDiCreateDeviceInfoListExW() failed with error 0x%lx\n", GetLastError());
         CleanUp();
         return FALSE;
     }
@@ -1060,7 +1074,7 @@ DevInstallW(
         &DevInstData.devInfoData);
     if (!ret)
     {
-        DPRINT("SetupDiOpenDeviceInfoW() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
+        TRACE("SetupDiOpenDeviceInfoW() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
         DevInstData.devInfoData.cbSize = 0;
         CleanUp();
         return FALSE;
@@ -1080,7 +1094,7 @@ DevInstallW(
         DevInstData.buffer = HeapAlloc(GetProcessHeap(), 0, DevInstData.requiredSize);
         if (!DevInstData.buffer)
         {
-            DPRINT("HeapAlloc() failed\n");
+            TRACE("HeapAlloc() failed\n");
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         }
         else
@@ -1096,7 +1110,7 @@ DevInstallW(
     }
     if (!ret)
     {
-        DPRINT("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
+        TRACE("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
         CleanUp();
         return FALSE;
     }
@@ -1123,7 +1137,7 @@ DevInstallW(
     }
     */
 
-    DPRINT("Installing %S (%S)\n", DevInstData.buffer, InstanceId);
+    TRACE("Installing %S (%S)\n", DevInstData.buffer, InstanceId);
 
     if ((!FindDriver(&DevInstData)) && (Show != SW_HIDE))
     {
@@ -1191,6 +1205,9 @@ DevInstallW(
     return TRUE;
 }
 
+/*
+* @unimplemented
+*/
 BOOL WINAPI
 ClientSideInstallW(IN HWND hWndOwner,
                    IN DWORD dwUnknownFlags,

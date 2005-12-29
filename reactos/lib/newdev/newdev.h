@@ -4,12 +4,11 @@
 #include <setupapi.h>
 #include <cfgmgr32.h>
 #include <tchar.h>
+#include <wine/debug.h>
 
 #include <stdio.h>
 
 #include "resource.h"
-
-ULONG DbgPrint(PCH Format,...);
 
 typedef struct _DEVINSTDATA
 {
