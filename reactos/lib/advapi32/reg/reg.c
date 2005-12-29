@@ -2507,12 +2507,13 @@ RegGetKeySecurity(HKEY hKey,
       TRACE("MapDefaultKey() failed (Status %lx)\n", Status);
       return RtlNtStatusToDosError (Status);
     }
-
+#ifndef __REACTOS__
   Status = NtQuerySecurityObject(KeyHandle,
 				 SecurityInformation,
 				 pSecurityDescriptor,
 				 *lpcbSecurityDescriptor,
 				 lpcbSecurityDescriptor);
+#endif
 
   ClosePredefKey(KeyHandle);
 
