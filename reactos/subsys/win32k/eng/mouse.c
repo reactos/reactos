@@ -389,6 +389,11 @@ EngSetPointerShape(
       PBYTE Bits;
 
       Bits = EngAllocMem(0, psoColor->cjBits, TAG_MOUSE);
+      if (Bits == NULL)
+      {
+          return SPS_ERROR;
+      }
+      
       memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
 
       pgp->ColorSurface = (HSURF)EngCreateBitmap(pgp->Size,
@@ -407,6 +412,11 @@ EngSetPointerShape(
       Size.cx = pgp->Size.cx;
       Size.cy = pgp->Size.cy << 1;
       Bits = EngAllocMem(0, psoMask->cjBits, TAG_MOUSE);
+      if (Bits == NULL)
+      {
+          return SPS_ERROR;
+      }
+      
       memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
 
       pgp->MaskSurface = (HSURF)EngCreateBitmap(Size,
