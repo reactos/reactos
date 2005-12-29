@@ -1385,9 +1385,10 @@ ProcessInput (BOOL bFlag)
 			tmp = commandline;
 			tmp += _tcsspn(tmp,_T(" \t"));
 			/* first we find and skip and pre-redirections... */
-			while ( _tcschr(_T("<>"),*tmp)
+			while (( tmp ) &&
+				( _tcschr(_T("<>"),*tmp)
 				|| !_tcsncmp(tmp,_T("1>"),2)
-				|| !_tcsncmp(tmp,_T("2>"),2) )
+				|| !_tcsncmp(tmp,_T("2>"),2) ))
 			{
 				if ( _istdigit(*tmp) )
 					tmp += 2;
@@ -1402,7 +1403,8 @@ ProcessInput (BOOL bFlag)
 				}
 				else
 					tmp = _tcspbrk(tmp,_T(" \t"));
-				tmp += _tcsspn(tmp,_T(" \t"));
+				if ( tmp )
+					tmp += _tcsspn(tmp,_T(" \t"));
 			}
 			/* we should now be pointing to the actual command
 			 * (if there is one yet)*/
