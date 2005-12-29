@@ -1,16 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ke/spinlock.c
  * PURPOSE:         Implements spinlocks
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
- */
-
-/*
- * NOTE: On a uniprocessor machine spinlocks are implemented by raising
- * the irq level
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ****************************************************************/
@@ -19,16 +13,16 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#undef KefAcquireSpinLockAtDpcLevel
+#undef KeAcquireSpinLockAtDpcLevel
+#undef KefReleaseSpinLockFromDpcLevel
+#undef KeReleaseSpinLockFromDpcLevel
+
 /* FUNCTIONS ***************************************************************/
 
 /*
  * @implemented
- */
-BOOLEAN STDCALL
-KeSynchronizeExecution (PKINTERRUPT		Interrupt,
-			PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
-			PVOID			SynchronizeContext)
-/*
+ *
  * FUNCTION: Synchronizes the execution of a given routine with the ISR
  * of a given interrupt object
  * ARGUMENTS:
@@ -38,17 +32,26 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
  *       SynchronizeContext = Parameter to pass to the synchronized routine
  * RETURNS: TRUE if the operation succeeded
  */
+BOOLEAN
+STDCALL
+KeSynchronizeExecution(PKINTERRUPT Interrupt,
+                       PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
+                       PVOID SynchronizeContext)
 {
-   KIRQL oldlvl;
-   BOOLEAN ret;
+    KIRQL OldIrql;
+    BOOLEAN Status;
 
-   oldlvl = KeAcquireInterruptSpinLock(Interrupt);
+    /* Raise IRQL and acquire lock on MP */
+    OldIrql = KeAcquireInterruptSpinLock(Interrupt);
 
-   ret = SynchronizeRoutine(SynchronizeContext);
+    /* Call the routine */
+    Status = SynchronizeRoutine(SynchronizeContext);
 
-   KeReleaseInterruptSpinLock(Interrupt, oldlvl);
+    /* Release lock and lower IRQL */
+    KeReleaseInterruptSpinLock(Interrupt, OldIrql);
 
-   return(ret);
+    /* Return routine status */
+    return Status;
 }
 
 /*
@@ -56,148 +59,107 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
  */
 KIRQL
 STDCALL
-KeAcquireInterruptSpinLock(
-    IN PKINTERRUPT Interrupt
-    )
+KeAcquireInterruptSpinLock(IN PKINTERRUPT Interrupt)
 {
-   KIRQL oldIrql;
+    KIRQL OldIrql;
 
-   KeRaiseIrql(Interrupt->SynchronizeIrql, &oldIrql);
-   KiAcquireSpinLock(Interrupt->ActualLock);
-   return oldIrql;
+    /* Raise IRQL */
+    KeRaiseIrql(Interrupt->SynchronizeIrql, &OldIrql);
+
+    /* Acquire spinlock on MP */
+    KiAcquireSpinLock(Interrupt->ActualLock);
+    return OldIrql;
 }
 
 /*
  * @implemented
- */
-VOID STDCALL
-KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
-/*
+ *
  * FUNCTION: Initalizes a spinlock
  * ARGUMENTS:
  *           SpinLock = Caller supplied storage for the spinlock
  */
+VOID
+STDCALL
+KeInitializeSpinLock(PKSPIN_LOCK SpinLock)
 {
-   *SpinLock = 0;
+    *SpinLock = 0;
 }
-
-#undef KefAcquireSpinLockAtDpcLevel
 
 /*
  * @implemented
  */
-VOID FASTCALL
+VOID
+FASTCALL
 KefAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
 {
-  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-  KiAcquireSpinLock(SpinLock);
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    KiAcquireSpinLock(SpinLock);
 }
-
-#undef KeAcquireSpinLockAtDpcLevel
 
 /*
  * @implemented
- */
-VOID STDCALL
-KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
-/*
+ *
  * FUNCTION: Acquires a spinlock when the caller is already running at
  * dispatch level
  * ARGUMENTS:
  *        SpinLock = Spinlock to acquire
  */
+VOID
+STDCALL
+KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK SpinLock)
 {
-  KefAcquireSpinLockAtDpcLevel(SpinLock);
+    KefAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 FASTCALL
-KeAcquireInStackQueuedSpinLockAtDpcLevel(
-    IN PKSPIN_LOCK SpinLock,
-    IN PKLOCK_QUEUE_HANDLE LockHandle
-    )
-{
-	UNIMPLEMENTED;
-}
-
-
-#undef KefReleaseSpinLockFromDpcLevel
-
-/*
- * @implemented
- */
-VOID FASTCALL
 KefReleaseSpinLockFromDpcLevel(PKSPIN_LOCK SpinLock)
 {
-  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-  KiReleaseSpinLock(SpinLock);
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    KiReleaseSpinLock(SpinLock);
 }
-
-#undef KeReleaseSpinLockFromDpcLevel
 
 /*
  * @implemented
- */
-VOID STDCALL
-KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
-/*
+ *
  * FUNCTION: Releases a spinlock when the caller was running at dispatch
  * level before acquiring it
  * ARGUMENTS:
  *         SpinLock = Spinlock to release
  */
-{
-  KefReleaseSpinLockFromDpcLevel(SpinLock);
-}
-
-/*
- * @unimplemented
- */
 VOID
-FASTCALL
-KeReleaseInStackQueuedSpinLockFromDpcLevel(
-    IN PKLOCK_QUEUE_HANDLE LockHandle
-    )
+STDCALL
+KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK SpinLock)
 {
-	UNIMPLEMENTED;
+    KefReleaseSpinLockFromDpcLevel(SpinLock);
 }
 
 /*
  * @implemented
  */
-VOID FASTCALL
+VOID
+FASTCALL
 KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
 {
-  ULONG i;
-
-  /*
-   * FIXME: This depends on gcc assembling this test to a single load from
-   * the spinlock's value.
-   */
-  ASSERT(*SpinLock < 2);
-
-  while ((i = InterlockedExchangeUL(SpinLock, 1)) == 1)
-  {
 #ifdef CONFIG_SMP
-    /* Avoid reading the value again too fast */
-#if 1
-    __asm__ __volatile__ ("1:\n\t"
-	                  "cmpl	$0,(%0)\n\t"
-			  "jne	1b\n\t"
-			  :
-                          : "r" (SpinLock));
-#else
-    while (0 != *(volatile KSPIN_LOCK*)SpinLock);
-#endif
-#else
-    DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
-    KEBUGCHECKEX(SPIN_LOCK_ALREADY_OWNED, (ULONG)SpinLock, 0, 0, 0);
+    for (;;)
+    {
+        /* Try to acquire it */
+        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
+        {
+            /* Value changed... wait until it's locked */
+            while (*SpinLock == 1) YieldProcessor();
+        }
+        else
+        {
+            /* All is well, break out */
+            break;
+        }
+    }
 #endif /* CONFIG_SMP */
-  }
 }
 
 /*
@@ -205,27 +167,48 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
  */
 VOID
 STDCALL
-KeReleaseInterruptSpinLock(
-	IN PKINTERRUPT Interrupt,
-	IN KIRQL OldIrql
-	)
+KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
+                           IN KIRQL OldIrql)
 {
-   KiReleaseSpinLock(Interrupt->ActualLock);
-   KeLowerIrql(OldIrql);
+    /* Release lock on MP */
+    KiReleaseSpinLock(Interrupt->ActualLock);
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
 }
 
 /*
  * @implemented
  */
-VOID FASTCALL
+VOID
+FASTCALL
 KiReleaseSpinLock(PKSPIN_LOCK SpinLock)
 {
-  if (*SpinLock != 1)
-  {
-    DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
-    KEBUGCHECKEX(SPIN_LOCK_NOT_OWNED, (ULONG)SpinLock, 0, 0, 0);
-  }
-  (void)InterlockedExchangeUL(SpinLock, 0);
+#ifdef CONFIG_SMP
+    /* Simply clear it */
+    *SpinLock = 0;
+#endif
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
+                                         IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNIMPLEMENTED;
 }
 
 /* EOF */

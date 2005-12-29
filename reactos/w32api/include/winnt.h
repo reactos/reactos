@@ -3700,7 +3700,7 @@ InterlockedBitTestAndSet(IN LONG *Base,
 {
 	LONG OldBit;
 
-	__asm__ __volatile__("lock"
+	__asm__ __volatile__("lock "
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Base)
@@ -3715,7 +3715,7 @@ InterlockedBitTestAndReset(IN LONG *Base,
 {
 	LONG OldBit;
 
-	__asm__ __volatile__("lock"
+	__asm__ __volatile__("lock "
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Base)
@@ -3725,6 +3725,8 @@ InterlockedBitTestAndReset(IN LONG *Base,
 }
 
 #endif
+
+#define YieldProcessor() __asm__ __volatile__("pause");
 
 #if defined(_AMD64_)
 #if defined(_M_AMD64)
