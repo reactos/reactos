@@ -21,7 +21,7 @@
 
 ULONG NtMajorVersion = 5;
 ULONG NtMinorVersion = 0;
-ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(6, 0);
+ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
 ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG NtGlobalFlag = 0;
 CHAR  KeNumberProcessors;
