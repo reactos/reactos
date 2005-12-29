@@ -150,6 +150,9 @@ RtlCreateAtomTable(IN ULONG TableSize,
         return STATUS_SUCCESS;
      }
 
+   /* Use default if size was incorrect */
+   if (TableSize <= 1) TableSize = 37;
+
    /* allocate atom table */
    Table = RtlpAllocAtomTable(((TableSize - 1) * sizeof(PRTL_ATOM_TABLE_ENTRY)) +
                               sizeof(RTL_ATOM_TABLE));
@@ -507,27 +510,22 @@ RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
      }
 
    RtlpLockAtomTable(AtomTable);
-
    Status = STATUS_OBJECT_NAME_NOT_FOUND;
 
    /* string atom */
    Entry = RtlpHashAtomName(AtomTable,
                             AtomName,
                             &HashLink);
-
    if (Entry != NULL)
      {
         Status = STATUS_SUCCESS;
         FoundAtom = (RTL_ATOM)Entry->Atom;
      }
-
    RtlpUnlockAtomTable(AtomTable);
-
    if (NT_SUCCESS(Status) && Atom != NULL)
      {
         *Atom = FoundAtom;
      }
-
    return Status;
 }
 

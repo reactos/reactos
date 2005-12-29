@@ -1,635 +1,584 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/atom.c
  * PURPOSE:         Atom functions
- * PROGRAMMER:      Eric Kohl ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
- *                  Full rewrite 27/05/2001
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
+/* INCLUDES ******************************************************************/
 #include <k32.h>
 
 #define NDEBUG
 #include "../include/debug.h"
 
-
 /* GLOBALS *******************************************************************/
 
-static PRTL_ATOM_TABLE LocalAtomTable = NULL;
+PRTL_ATOM_TABLE BaseLocalAtomTable = NULL;
 
-static PRTL_ATOM_TABLE GetLocalAtomTable(VOID);
+/* FUNCTIONS *****************************************************************/
 
+PVOID
+WINAPI
+InternalInitAtomTable(VOID)
+{
+    /* Create or return the local table */
+    if (!BaseLocalAtomTable) RtlCreateAtomTable(0, &BaseLocalAtomTable);
+    return BaseLocalAtomTable;
+}
+
+ATOM
+WINAPI
+InternalAddAtom(BOOLEAN Local,
+                BOOLEAN Unicode,
+                LPCSTR AtomName)
+{
+    NTSTATUS Status;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING UnicodeString;
+    PUNICODE_STRING AtomNameString;
+    ATOM Atom = INVALID_ATOM;
+
+    /* Check if it's an integer atom */
+    if ((ULONG_PTR)AtomName <= 0xFFFF)
+    {
+        /* Convert the name to an atom */
+        Atom = (ATOM)PtrToShort((PVOID)AtomName);
+        if (Atom >= MAXINTATOM)
+        {
+            /* Fail, atom number too large */
+            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            return INVALID_ATOM;
+        }
+
+        /* Return it */
+        return Atom;
+    }
+    else
+    {
+        /* Check if this is a unicode atom */
+        if (Unicode)
+        {
+            /* Use a unicode string */
+            AtomNameString = &UnicodeString;
+            RtlInitUnicodeString(AtomNameString, (LPWSTR)AtomName);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Use an ansi string */
+            RtlInitAnsiString(&AnsiString, AtomName );
+
+            /* Check if we can abuse the TEB */
+            if (AnsiString.MaximumLength > 260)
+            {
+                /* We can't, allocate a new string */
+                AtomNameString = &UnicodeString;
+                Status = RtlAnsiStringToUnicodeString(AtomNameString,
+                                                      &AnsiString,
+                                                      TRUE);
+            }
+            else
+            {
+                /* We can! Use the TEB */
+                AtomNameString = &NtCurrentTeb()->StaticUnicodeString;
+                Status = RtlAnsiStringToUnicodeString(AtomNameString,
+                                                      &AnsiString,
+                                                      FALSE);
+            }
+        }
+
+        /* Check for failure */
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastErrorByStatus(Status);
+            return Atom;
+        }
+    }
+
+    /* Check if we're doing local add */
+    if (Local)
+    {
+        /* Do a local add */
+        Status = RtlAddAtomToAtomTable(InternalInitAtomTable(),
+                                       AtomNameString->Buffer,
+                                       &Atom);
+    }
+    else
+    {
+        /* Do a global add */
+        Status = NtAddAtom(AtomNameString->Buffer,
+                           AtomNameString->Length,
+                           &Atom);
+    }
+
+    /* Check for failure */
+    if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+
+    /* Check if we were non-static ANSI */
+    if (!(Unicode) && (AtomNameString == &UnicodeString))
+    {
+        /* Free the allocated buffer */
+        RtlFreeUnicodeString(AtomNameString);
+    }
+
+    /* Return the atom */
+    return Atom;
+}
+
+ATOM
+WINAPI
+InternalFindAtom(BOOLEAN Local,
+                 BOOLEAN Unicode,
+                 LPCSTR AtomName)
+{
+    NTSTATUS Status;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING UnicodeString;
+    PUNICODE_STRING AtomNameString;
+    ATOM Atom = INVALID_ATOM;
+
+    /* Check if it's an integer atom */
+    if ((ULONG_PTR)AtomName <= 0xFFFF)
+    {
+        /* Convert the name to an atom */
+        Atom = (ATOM)PtrToShort((PVOID)AtomName);
+        if (Atom >= MAXINTATOM)
+        {
+            /* Fail, atom number too large */
+            SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+            DPRINT1("Invalid atom\n");
+        }
+
+        /* Return it */
+        return Atom;
+    }
+    else
+    {
+        /* Check if this is a unicode atom */
+        if (Unicode)
+        {
+            /* Use a unicode string */
+            AtomNameString = &UnicodeString;
+            RtlInitUnicodeString(AtomNameString, (LPWSTR)AtomName);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Use an ansi string */
+            RtlInitAnsiString(&AnsiString, AtomName);
+
+            /* Check if we can abuse the TEB */
+            if (AnsiString.MaximumLength > 260)
+            {
+                /* We can't, allocate a new string */
+                AtomNameString = &UnicodeString;
+                Status = RtlAnsiStringToUnicodeString(AtomNameString,
+                                                      &AnsiString,
+                                                      TRUE);
+            }
+            else
+            {
+                /* We can! Use the TEB */
+                AtomNameString = &NtCurrentTeb()->StaticUnicodeString;
+                Status = RtlAnsiStringToUnicodeString(AtomNameString,
+                                                      &AnsiString,
+                                                      FALSE);
+            }
+        }
+
+        /* Check for failure */
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed\n");
+            SetLastErrorByStatus(Status);
+            return Atom;
+        }
+    }
+
+    /* Check if we're doing local lookup */
+    if (Local)
+    {
+        /* Do a local lookup */
+        Status = RtlLookupAtomInAtomTable(InternalInitAtomTable(),
+                                          AtomNameString->Buffer,
+                                          &Atom);
+    }
+    else
+    {
+        /* Do a global search */
+        if (!AtomNameString->Length)
+        {
+            /* This is illegal in win32 */
+            DPRINT1("No name given\n");
+            Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        else
+        {
+            /* Call the global function */
+            Status = NtFindAtom(AtomNameString->Buffer,
+                                AtomNameString->Length,
+                                &Atom);
+        }
+    }
+
+    /* Check for failure */
+    if (!NT_SUCCESS(Status)) SetLastErrorByStatus(Status);
+
+    /* Check if we were non-static ANSI */
+    if (!(Unicode) && (AtomNameString == &UnicodeString))
+    {
+        /* Free the allocated buffer */
+        RtlFreeUnicodeString(AtomNameString);
+    }
+
+    /* Return the atom */
+    return Atom;
+}
+
+ATOM
+WINAPI
+InternalDeleteAtom(BOOLEAN Local,
+                   ATOM Atom)
+{
+    NTSTATUS Status;
+
+    /* Validate it */
+    if (Atom >= MAXINTATOM)
+    {
+        /* Check if it's a local delete */
+        if (Local)
+        {
+            /* Delete it locally */
+            Status = RtlDeleteAtomFromAtomTable(InternalInitAtomTable(), Atom);
+        }
+        else
+        {
+            /* Delete it globall */
+            Status = NtDeleteAtom(Atom);
+        }
+
+        /* Check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            SetLastErrorByStatus(Status);
+            return INVALID_ATOM;
+        }
+    }
+
+    /* Return failure */
+    return 0;
+}
+
+UINT
+WINAPI
+InternalGetAtomName(BOOLEAN Local,
+                    BOOLEAN Unicode,
+                    ATOM Atom,
+                    LPSTR AtomName,
+                    DWORD Size)
+{
+    NTSTATUS Status;
+    DWORD RetVal = 0;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING UnicodeString;
+    PVOID TempBuffer = NULL;
+    PWSTR AtomNameString;
+    ULONG AtomInfoLength;
+    ULONG AtomNameLength;
+    PATOM_BASIC_INFORMATION AtomInfo;
+
+    /* Normalize the size as not to overflow */
+    if (!Unicode && Size > 0x7000) Size = 0x7000;
+
+    /* Make sure it's valid too */
+    if (!Size)
+    {
+        SetLastErrorByStatus(STATUS_BUFFER_OVERFLOW);
+        return 0;
+    }
+
+    /* Check if this is a global query */
+    if (Local)
+    {
+        /* Set the query length */
+        AtomNameLength = Size * sizeof(WCHAR);
+
+        /* If it's unicode, just keep the name */
+        if (Unicode)
+        {
+            AtomNameString = (PWSTR)AtomName;
+        }
+        else
+        {
+            /* Allocate memory for the ansi buffer */
+            TempBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                         0,
+                                         AtomNameLength);
+            AtomNameString = TempBuffer;
+        }
+
+        /* Query the name */
+        Status = RtlQueryAtomInAtomTable(InternalInitAtomTable(),
+                                         Atom,
+                                         NULL,
+                                         NULL,
+                                         AtomNameString,
+                                         &AtomNameLength);
+    }
+    else
+    {
+        /* We're going to do a global query, so allocate a buffer */
+        AtomInfoLength = sizeof(ATOM_BASIC_INFORMATION) +
+                         (Size * sizeof(WCHAR));
+        AtomInfo = TempBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                0,
+                                                AtomInfoLength);
+
+        /* Query the name */
+        Status = NtQueryInformationAtom(Atom,
+                                        AtomBasicInformation,
+                                        AtomInfo,
+                                        AtomInfoLength,
+                                        &AtomInfoLength);
+        if (NT_SUCCESS(Status))
+        {
+            /* Success. Update the length and get the name */
+            AtomNameLength = (ULONG)AtomInfo->NameLength;
+            AtomNameString = AtomInfo->Name;
+        }
+    }
+
+    /* Check for global success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if it was unicode */
+        if (Unicode)
+        {
+            /* We return the length in chars */
+            RetVal = AtomNameLength / sizeof(WCHAR);
+
+            /* Copy the memory if this was a global query */
+            if (AtomNameString != (PWSTR)AtomName)
+            {
+                RtlMoveMemory(AtomName, AtomNameString, AtomNameLength);
+            }
+
+            /* And null-terminate it if the buffer was too large */
+            if (RetVal < Size)
+            {
+                ((PWCHAR)AtomName)[RetVal] = UNICODE_NULL;
+            }
+        }
+        else
+        {
+            /* First create a unicode string with our data */
+            UnicodeString.Buffer = AtomNameString;
+            UnicodeString.Length = (USHORT)AtomNameLength;
+            UnicodeString.MaximumLength = (USHORT)(UnicodeString.Length +
+                                                   sizeof(WCHAR));
+
+            /* Now prepare an ansi string for conversion */
+            AnsiString.Buffer = AtomName;
+            AnsiString.Length = 0;
+            AnsiString.MaximumLength = (USHORT)Size;
+
+            /* Convert it */
+            Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                                  &UnicodeString,
+                                                  FALSE);
+
+            /* Return the length */
+            if (NT_SUCCESS(Status)) RetVal = AnsiString.Length;
+        }
+    }
+
+    /* Free the temporary buffer if we have one */
+    if (TempBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, TempBuffer);
+
+    /* Check for failure */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DPRINT1("Failed: %lx\n", Status);
+        SetLastErrorByStatus(Status);
+    }
+
+    /* Return length */
+    return RetVal;
+}
 
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 GlobalAddAtomA(LPCSTR lpString)
 {
-   UNICODE_STRING AtomName;
-   NTSTATUS Status;
-   ATOM Atom;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   if (lstrlenA(lpString) > 255)
-   {
-      /* This limit does not exist with NtAddAtom so the limit is probably
-       * added for compability. -Gunnar
-       */
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return (ATOM)0;
-   }
-
-   RtlCreateUnicodeStringFromAsciiz(&AtomName,
-				    (LPSTR)lpString);
-
-   Status = NtAddAtom(AtomName.Buffer,
-                      AtomName.Length,
-		      &Atom);
-   RtlFreeUnicodeString(&AtomName);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalAddAtom(FALSE, FALSE, lpString);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 GlobalAddAtomW(LPCWSTR lpString)
 {
-   ATOM Atom;
-   NTSTATUS Status;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   if (lstrlenW(lpString) > 255)
-   {
-      /* This limit does not exist with NtAddAtom so the limit is probably
-       * added for compability. -Gunnar
-       */
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return (ATOM)0;
-   }
-
-   Status = NtAddAtom((LPWSTR)lpString,
-                      wcslen(lpString),
-		      &Atom);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalAddAtom(FALSE, TRUE, (LPSTR)lpString);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 GlobalDeleteAtom(ATOM nAtom)
 {
-   NTSTATUS Status;
-
-   if (nAtom < 0xC000)
-     {
-	return 0;
-     }
-
-   Status = NtDeleteAtom(nAtom);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return nAtom;
-     }
-
-   return 0;
+    return InternalDeleteAtom(FALSE, nAtom);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 GlobalFindAtomA(LPCSTR lpString)
 {
-   UNICODE_STRING AtomName;
-   NTSTATUS Status;
-   ATOM Atom;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   if (lstrlenA(lpString) > 255)
-   {
-      /* This limit does not exist with NtAddAtom so the limit is probably
-       * added for compability. -Gunnar
-       */
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return (ATOM)0;
-   }
-
-   RtlCreateUnicodeStringFromAsciiz(&AtomName,
-				    (LPSTR)lpString);
-   Status = NtFindAtom(AtomName.Buffer,
-                       AtomName.Length,
-		       &Atom);
-   RtlFreeUnicodeString(&AtomName);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalFindAtom(FALSE, FALSE, lpString);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 GlobalFindAtomW(LPCWSTR lpString)
 {
-   ATOM Atom;
-   NTSTATUS Status;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   if (lstrlenW(lpString) > 255)
-   {
-      /* This limit does not exist with NtAddAtom so the limit is probably
-       * added for compability. -Gunnar
-       */
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return (ATOM)0;
-   }
-
-   Status = NtFindAtom((LPWSTR)lpString,
-                       wcslen(lpString),
-		       &Atom);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalFindAtom(FALSE, TRUE, (LPSTR)lpString);
 }
 
-
-UINT STDCALL
+/*
+ * @implemented
+ */
+UINT
+WINAPI
 GlobalGetAtomNameA(ATOM nAtom,
-		   LPSTR lpBuffer,
-		   int nSize)
+                   LPSTR lpBuffer,
+                   int nSize)
 {
-   PATOM_BASIC_INFORMATION Buffer;
-   UNICODE_STRING AtomNameU;
-   ANSI_STRING AtomName;
-   ULONG BufferSize;
-   ULONG ReturnLength;
-   NTSTATUS Status;
-
-   BufferSize = sizeof(ATOM_BASIC_INFORMATION) + nSize * sizeof(WCHAR);
-   Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-			    HEAP_ZERO_MEMORY,
-			    BufferSize);
-   if (Buffer == NULL)
-   {
-       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       return 0;
-   }
-
-   Status = NtQueryInformationAtom(nAtom,
-				   AtomBasicInformation,
-				   Buffer,
-				   BufferSize,
-				   &ReturnLength);
-   if (!NT_SUCCESS(Status))
-     {
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    Buffer);
-        SetLastErrorByStatus(Status);
-	return 0;
-     }
-
-   RtlInitUnicodeString(&AtomNameU,
-			Buffer->Name);
-   AtomName.Buffer = lpBuffer;
-   AtomName.Length = 0;
-   AtomName.MaximumLength = nSize;
-   RtlUnicodeStringToAnsiString(&AtomName,
-				&AtomNameU,
-				FALSE);
-
-   ReturnLength = AtomName.Length;
-   RtlFreeHeap(RtlGetProcessHeap(),
-	       0,
-	       Buffer);
-
-   return ReturnLength;
+    return InternalGetAtomName(FALSE, FALSE, nAtom, lpBuffer, (DWORD)nSize);
 }
-
 
 /*
  * @implemented
  */
-UINT STDCALL
+UINT
+WINAPI
 GlobalGetAtomNameW(ATOM nAtom,
-		   LPWSTR lpBuffer,
-		   int nSize)
+                   LPWSTR lpBuffer,
+                   int nSize)
 {
-   PATOM_BASIC_INFORMATION Buffer;
-   ULONG BufferSize;
-   ULONG ReturnLength;
-   NTSTATUS Status;
-
-   BufferSize = sizeof(ATOM_BASIC_INFORMATION) + nSize * sizeof(WCHAR);
-   Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-			    HEAP_ZERO_MEMORY,
-			    BufferSize);
-   if (Buffer == NULL)
-   {
-       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       return 0;
-   }
-
-   Status = NtQueryInformationAtom(nAtom,
-				   AtomBasicInformation,
-				   Buffer,
-				   BufferSize,
-				   &ReturnLength);
-   if (!NT_SUCCESS(Status))
-     {
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    Buffer);
-        SetLastErrorByStatus(Status);
-	return 0;
-     }
-
-   memcpy(lpBuffer, Buffer->Name, Buffer->NameLength);
-   ReturnLength = Buffer->NameLength / sizeof(WCHAR);
-   *(lpBuffer + ReturnLength) = 0;
-   RtlFreeHeap(RtlGetProcessHeap(),
-	       0,
-	       Buffer);
-
-   return ReturnLength;
+    return InternalGetAtomName(FALSE,
+                               TRUE,
+                               nAtom,
+                               (LPSTR)lpBuffer,
+                               (DWORD)nSize);
 }
-
-
-static PRTL_ATOM_TABLE
-GetLocalAtomTable(VOID)
-{
-   if (LocalAtomTable != NULL)
-     {
-	return LocalAtomTable;
-     }
-   RtlCreateAtomTable(37,
-		      &LocalAtomTable);
-   return LocalAtomTable;
-}
-
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 InitAtomTable(DWORD nSize)
 {
-   NTSTATUS Status;
+    /* Normalize size */
+    if (nSize < 4 || nSize > 511) nSize = 37;
 
-   /* nSize should be a prime number */
-
-   if ( nSize < 4 || nSize >= 512 )
-     {
-	nSize = 37;
-     }
-
-   if (LocalAtomTable == NULL)
-    {
-	Status = RtlCreateAtomTable(nSize,
-				    &LocalAtomTable);
-	if (!NT_SUCCESS(Status))
-	  {
-	     SetLastErrorByStatus(Status);
-	     return FALSE;
-	  }
-    }
-
-  return TRUE;
+    DPRINT("Here\n");
+    return NT_SUCCESS(RtlCreateAtomTable(nSize, &BaseLocalAtomTable));
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 AddAtomA(LPCSTR lpString)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   UNICODE_STRING AtomName;
-   NTSTATUS Status;
-   ATOM Atom;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   AtomTable = GetLocalAtomTable();
-
-   RtlCreateUnicodeStringFromAsciiz(&AtomName,
-				    (LPSTR)lpString);
-
-   Status = RtlAddAtomToAtomTable(AtomTable,
-				  AtomName.Buffer,
-				  &Atom);
-   RtlFreeUnicodeString(&AtomName);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalAddAtom(TRUE, FALSE, lpString);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 AddAtomW(LPCWSTR lpString)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   ATOM Atom;
-   NTSTATUS Status;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   AtomTable = GetLocalAtomTable();
-
-   Status = RtlAddAtomToAtomTable(AtomTable,
-				  (LPWSTR)lpString,
-				  &Atom);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalAddAtom(TRUE, TRUE, (LPSTR)lpString);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 DeleteAtom(ATOM nAtom)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   NTSTATUS Status;
-
-   if (nAtom < 0xC000)
-     {
-	return 0;
-     }
-
-   AtomTable = GetLocalAtomTable();
-
-   Status = RtlDeleteAtomFromAtomTable(AtomTable,
-				       nAtom);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return nAtom;
-     }
-
-   return 0;
+    return InternalDeleteAtom(TRUE, nAtom);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 FindAtomA(LPCSTR lpString)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   UNICODE_STRING AtomName;
-   NTSTATUS Status;
-   ATOM Atom;
-
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   AtomTable = GetLocalAtomTable();
-   RtlCreateUnicodeStringFromAsciiz(&AtomName,
-				    (LPSTR)lpString);
-   Status = RtlLookupAtomInAtomTable(AtomTable,
-				     AtomName.Buffer,
-				     &Atom);
-   RtlFreeUnicodeString(&AtomName);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
+    return InternalFindAtom(TRUE, FALSE, lpString);
 }
-
 
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM
+WINAPI
 FindAtomW(LPCWSTR lpString)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   ATOM Atom;
-   NTSTATUS Status;
+    return InternalFindAtom(TRUE, TRUE, (LPSTR)lpString);
 
-   if (HIWORD((ULONG)lpString) == 0)
-     {
-	if ((ULONG)lpString >= 0xC000)
-	  {
-	     SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	     return (ATOM)0;
-	  }
-	return (ATOM)LOWORD((ULONG)lpString);
-     }
-
-   AtomTable = GetLocalAtomTable();
-
-   Status = RtlLookupAtomInAtomTable(AtomTable,
-				     (LPWSTR)lpString,
-				     &Atom);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return (ATOM)0;
-     }
-
-   return Atom;
 }
-
 
 /*
  * @implemented
  */
-UINT STDCALL
+UINT
+WINAPI
 GetAtomNameA(ATOM nAtom,
-	     LPSTR lpBuffer,
-	     int nSize)
+             LPSTR lpBuffer,
+             int nSize)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   PWCHAR Buffer;
-   UNICODE_STRING AtomNameU;
-   ANSI_STRING AtomName;
-   ULONG NameLength;
-   NTSTATUS Status;
-
-   AtomTable = GetLocalAtomTable();
-
-   NameLength = nSize * sizeof(WCHAR);
-   Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-			    HEAP_ZERO_MEMORY,
-			    NameLength);
-   if (Buffer == NULL)
-   {
-       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-       return 0;
-   }
-
-   Status = RtlQueryAtomInAtomTable(AtomTable,
-				    nAtom,
-				    NULL,
-				    NULL,
-				    Buffer,
-				    &NameLength);
-   if (!NT_SUCCESS(Status))
-     {
-	RtlFreeHeap(RtlGetProcessHeap(),
-		    0,
-		    Buffer);
-        SetLastErrorByStatus(Status);
-	return 0;
-     }
-
-   RtlInitUnicodeString(&AtomNameU,
-			Buffer);
-   AtomName.Buffer = lpBuffer;
-   AtomName.Length = 0;
-   AtomName.MaximumLength = nSize;
-   RtlUnicodeStringToAnsiString(&AtomName,
-				&AtomNameU,
-				FALSE);
-
-   NameLength = AtomName.Length;
-   RtlFreeHeap(RtlGetProcessHeap(),
-	       0,
-	       Buffer);
-
-   return NameLength;
+    return InternalGetAtomName(TRUE, FALSE, nAtom, lpBuffer, (DWORD)nSize);
 }
-
 
 /*
  * @implemented
  */
-UINT STDCALL
+UINT
+WINAPI
 GetAtomNameW(ATOM nAtom,
-	     LPWSTR lpBuffer,
-	     int nSize)
+             LPWSTR lpBuffer,
+             int nSize)
 {
-   PRTL_ATOM_TABLE AtomTable;
-   ULONG NameLength;
-   NTSTATUS Status;
-
-   AtomTable = GetLocalAtomTable();
-
-   NameLength = nSize * sizeof(WCHAR);
-   Status = RtlQueryAtomInAtomTable(AtomTable,
-				    nAtom,
-				    NULL,
-				    NULL,
-				    lpBuffer,
-				    &NameLength);
-   if (!NT_SUCCESS(Status))
-     {
-	return 0;
-     }
-
-   return(NameLength / sizeof(WCHAR));
+    return InternalGetAtomName(TRUE,
+                               TRUE,
+                               nAtom,
+                               (LPSTR)lpBuffer,
+                               (DWORD)nSize);
 }
-
 /* EOF */

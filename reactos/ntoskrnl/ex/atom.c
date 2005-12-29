@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define TAG_ATOM TAG('A', 't', 'o', 'm')
+
 /* GLOBALS ****************************************************************/
 
 /* 
@@ -45,79 +47,6 @@ ExpGetGlobalAtomTable(VOID)
     return GlobalAtomTable;
 }
 
-NTSTATUS
-NTAPI
-RtlpQueryAtomInformation(PRTL_ATOM_TABLE AtomTable,
-                         RTL_ATOM Atom,
-                         PATOM_BASIC_INFORMATION AtomInformation,
-                         ULONG AtomInformationLength,
-                         PULONG ReturnLength)
-{
-    NTSTATUS Status;
-    ULONG UsageCount;
-    ULONG Flags;
-    ULONG NameLength;
-
-    NameLength = AtomInformationLength - sizeof(ATOM_BASIC_INFORMATION) + sizeof(WCHAR);
-    Status = RtlQueryAtomInAtomTable(AtomTable,
-                                     Atom,
-                                     &UsageCount,
-                                     &Flags,
-                                     AtomInformation->Name,
-                                     &NameLength);
-
-    if (!NT_SUCCESS(Status)) return Status;
-    DPRINT("NameLength: %lu\n", NameLength);
-
-    if (ReturnLength != NULL)
-    {
-        *ReturnLength = NameLength + sizeof(ATOM_BASIC_INFORMATION);
-    }
-
-    if (NameLength + sizeof(ATOM_BASIC_INFORMATION) > AtomInformationLength)
-    {
-        return STATUS_INFO_LENGTH_MISMATCH;
-    }
-
-    AtomInformation->UsageCount = (USHORT)UsageCount;
-    AtomInformation->Flags = (USHORT)Flags;
-    AtomInformation->NameLength = (USHORT)NameLength;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-RtlpQueryAtomTableInformation(PRTL_ATOM_TABLE AtomTable,
-                              RTL_ATOM Atom,
-                              PATOM_TABLE_INFORMATION AtomInformation,
-                              ULONG AtomInformationLength,
-                              PULONG ReturnLength)
-{
-    ULONG Length;
-    NTSTATUS Status;
-
-    Length = sizeof(ATOM_TABLE_INFORMATION);
-    DPRINT("RequiredLength: %lu\n", Length);
-
-    if (ReturnLength) *ReturnLength = Length;
-
-    if (Length > AtomInformationLength) return STATUS_INFO_LENGTH_MISMATCH;
-
-    Status = RtlQueryAtomListInAtomTable(AtomTable,
-                                         (AtomInformationLength - Length) /
-                                         sizeof(RTL_ATOM),
-                                         &AtomInformation->NumberOfAtoms,
-                                         AtomInformation->Atoms);
-    if (NT_SUCCESS(Status))
-    {
-        ReturnLength += AtomInformation->NumberOfAtoms * sizeof(RTL_ATOM);
-        if (ReturnLength != NULL) *ReturnLength = Length;
-    }
-
-    return Status;
-}
-
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -130,14 +59,96 @@ NtAddAtom(IN PWSTR AtomName,
           OUT PRTL_ATOM Atom)
 {
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    LPWSTR CapturedName = NULL;
+    ULONG CapturedSize;
+    RTL_ATOM SafeAtom;
+    PAGED_CODE();
 
     /* Check for the table */
     if (AtomTable == NULL) return STATUS_ACCESS_DENIED;
 
-    /* FIXME: SEH! */
+    /* Check for valid name */
+    if (AtomNameLength > (RTL_MAXIMUM_ATOM_LENGTH * sizeof(WCHAR)))
+    {
+        /* Fail */
+        DPRINT1("Atom name too long\n");
+        return STATUS_INVALID_PARAMETER;
+    }
 
-    /* Call the worker function */
-    return RtlAddAtomToAtomTable(AtomTable, AtomName, Atom);
+    /* Check if we're called from user-mode*/
+    if (PreviousMode != KernelMode)
+    {
+        /* Enter SEH */
+        _SEH_TRY
+        {
+            /* Check if we have a name */
+            if (AtomName)
+            {
+                /* Probe the atom */
+                ProbeForRead(AtomName, AtomNameLength, sizeof(WCHAR));
+
+                /* Allocate an aligned buffer + the null char */
+                CapturedSize = ((AtomNameLength + sizeof(WCHAR)) &~
+                                (sizeof(WCHAR) -1));
+                CapturedName = ExAllocatePoolWithTag(PagedPool,
+                                                     CapturedSize,
+                                                     TAG_ATOM);
+                if (!CapturedName)
+                {
+                    /* Fail the call */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+                else
+                {
+                    /* Copy the name and null-terminate it */
+                    RtlMoveMemory(CapturedName, AtomName, AtomNameLength);
+                    CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+                }
+
+                /* Probe the atom too */
+                if (Atom) ProbeForWriteUshort(Atom);
+            }
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+    else
+    {
+        /* Simplify code and re-use one variable */
+        if (AtomName) CapturedName = AtomName;
+    }
+
+    /* Make sure probe worked */
+    if (NT_SUCCESS(Status))
+    {
+        /* Call the runtime function */
+        Status = RtlAddAtomToAtomTable(AtomTable, CapturedName, &SafeAtom);
+        if (NT_SUCCESS(Status) && (Atom))
+        {
+            /* Success and caller wants the atom back.. .enter SEH */
+            _SEH_TRY
+            {
+                /* Return the atom */
+                *Atom = SafeAtom;
+            }
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+    }
+
+    /* If we captured anything, free it */
+    if ((CapturedName) && (CapturedName != AtomName)) ExFreePool(CapturedName);
+
+    /* Return to caller */
+    return Status;
 }
 
 /*
@@ -148,6 +159,7 @@ NTAPI
 NtDeleteAtom(IN RTL_ATOM Atom)
 {
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
+    PAGED_CODE();
 
     /* Check for valid table */
     if (AtomTable == NULL) return STATUS_ACCESS_DENIED;
@@ -166,14 +178,96 @@ NtFindAtom(IN PWSTR AtomName,
            OUT PRTL_ATOM Atom)
 {
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    LPWSTR CapturedName = NULL;
+    ULONG CapturedSize;
+    RTL_ATOM SafeAtom;
+    PAGED_CODE();
 
-    /* Check for valid table */
+    /* Check for the table */
     if (AtomTable == NULL) return STATUS_ACCESS_DENIED;
 
-    /* FIXME: SEH!!! */
+    /* Check for valid name */
+    if (AtomNameLength > (RTL_MAXIMUM_ATOM_LENGTH * sizeof(WCHAR)))
+    {
+        /* Fail */
+        DPRINT1("Atom name too long\n");
+        return STATUS_INVALID_PARAMETER;
+    }
 
-    /* Call worker function */
-    return RtlLookupAtomInAtomTable(AtomTable, AtomName, Atom);
+    /* Check if we're called from user-mode*/
+    if (PreviousMode != KernelMode)
+    {
+        /* Enter SEH */
+        _SEH_TRY
+        {
+            /* Check if we have a name */
+            if (AtomName)
+            {
+                /* Probe the atom */
+                ProbeForRead(AtomName, AtomNameLength, sizeof(WCHAR));
+
+                /* Allocate an aligned buffer + the null char */
+                CapturedSize = ((AtomNameLength + sizeof(WCHAR)) &~
+                                (sizeof(WCHAR) -1));
+                CapturedName = ExAllocatePoolWithTag(PagedPool,
+                                                     CapturedSize,
+                                                     TAG_ATOM);
+                if (!CapturedName)
+                {
+                    /* Fail the call */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+                else
+                {
+                    /* Copy the name and null-terminate it */
+                    RtlMoveMemory(CapturedName, AtomName, AtomNameLength);
+                    CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+                }
+
+                /* Probe the atom too */
+                if (Atom) ProbeForWriteUshort(Atom);
+            }
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+    else
+    {
+        /* Simplify code and re-use one variable */
+        if (AtomName) CapturedName = AtomName;
+    }
+
+    /* Make sure probe worked */
+    if (NT_SUCCESS(Status))
+    {
+        /* Call the runtime function */
+        Status = RtlLookupAtomInAtomTable(AtomTable, CapturedName, &SafeAtom);
+        if (NT_SUCCESS(Status) && (Atom))
+        {
+            /* Success and caller wants the atom back.. .enter SEH */
+            _SEH_TRY
+            {
+                /* Return the atom */
+                *Atom = SafeAtom;
+            }
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+    }
+
+    /* If we captured anything, free it */
+    if ((CapturedName) && (CapturedName != AtomName)) ExFreePool(CapturedName);
+
+    /* Return to caller */
+    return Status;
 }
 
 /*
@@ -188,7 +282,10 @@ NtQueryInformationAtom(RTL_ATOM Atom,
                        PULONG ReturnLength)
 {
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
+    PATOM_BASIC_INFORMATION BasicInformation = AtomInformation;
+    PATOM_TABLE_INFORMATION TableInformation = AtomInformation;
     NTSTATUS Status;
+    ULONG Flags, UsageCount, NameLength;
 
     /* Check for valid table */
     if (AtomTable == NULL) return STATUS_ACCESS_DENIED;
@@ -198,23 +295,70 @@ NtQueryInformationAtom(RTL_ATOM Atom,
     /* Choose class */
     switch (AtomInformationClass)
     {
+        /* Caller requested info about an atom */
         case AtomBasicInformation:
-            Status = RtlpQueryAtomInformation(AtomTable,
-                                              Atom,
-                                              AtomInformation,
-                                              AtomInformationLength,
-                                              ReturnLength);
+
+            /* Size check */
+            *ReturnLength = FIELD_OFFSET(ATOM_BASIC_INFORMATION, Name);
+            if (*ReturnLength > AtomInformationLength)
+            {
+                /* Fail */
+                DPRINT1("Buffer too small\n");
+                return STATUS_INFO_LENGTH_MISMATCH;
+            }
+
+            /* Prepare query */
+            UsageCount = 0;
+            NameLength = AtomInformationLength - *ReturnLength;
+            BasicInformation->Name[0] = UNICODE_NULL;
+
+            /* Query the data */
+            Status = RtlQueryAtomInAtomTable(AtomTable,
+                                             Atom,
+                                             &UsageCount,
+                                             &Flags,
+                                             BasicInformation->Name,
+                                             &NameLength);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return data */
+                BasicInformation->UsageCount = (USHORT)UsageCount;
+                BasicInformation->Flags = (USHORT)Flags;
+                BasicInformation->NameLength = (USHORT)NameLength;
+                *ReturnLength += NameLength + sizeof(WCHAR);
+            }
             break;
 
+        /* Caller requested info about an Atom Table */
         case AtomTableInformation:
-            Status = RtlpQueryAtomTableInformation(AtomTable,
-                                                   Atom,
-                                                   AtomInformation,
-                                                   AtomInformationLength,
-                                                   ReturnLength);
+
+            /* Size check */
+            *ReturnLength = FIELD_OFFSET(ATOM_TABLE_INFORMATION, Atoms);
+            if (*ReturnLength > AtomInformationLength)
+            {
+                /* Fail */
+                DPRINT1("Buffer too small\n");
+                return STATUS_INFO_LENGTH_MISMATCH;
+            }
+
+            /* Query the data */
+            Status = RtlQueryAtomListInAtomTable(AtomTable,
+                                                 (AtomInformationLength - *ReturnLength) /
+                                                 sizeof(RTL_ATOM),
+                                                 &TableInformation->NumberOfAtoms,
+                                                 TableInformation->Atoms);
+            if (NT_SUCCESS(Status))
+            {
+                /* Update the return length */
+                *ReturnLength += TableInformation->NumberOfAtoms *
+                                 sizeof(RTL_ATOM);
+            }
             break;
 
+        /* Caller was on crack */
         default:
+
+            /* Unrecognized class */
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
