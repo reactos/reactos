@@ -99,7 +99,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG ValidResponseOptions,
                  OUT PULONG Response)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PULONG_PTR SafeParams = NULL;
     ULONG SafeResponse;
     UNICODE_STRING SafeString;
