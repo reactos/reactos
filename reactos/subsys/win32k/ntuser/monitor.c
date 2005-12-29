@@ -778,7 +778,7 @@ NtUserMonitorFromRect(
    HMONITOR hMonitor = NULL;
    RECT rect;
    NTSTATUS status;
-
+   
    /* get rect */
    status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
    if (!NT_SUCCESS(status))
@@ -838,6 +838,8 @@ NtUserMonitorFromRect(
                                         numMonitors, 0);
    if (numMonitors <= 0)
    {
+      ExFreePool(hMonitorList);
+      ExFreePool(rectList);
       return (HMONITOR)NULL;
    }
 
