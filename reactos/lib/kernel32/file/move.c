@@ -72,14 +72,12 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     static const WCHAR ValueName[] = {'P','e','n','d','i','n','g',
                                       'F','i','l','e','R','e','n','a','m','e',
                                       'O','p','e','r','a','t','i','o','n','s',0};
-    static const WCHAR SessionW[] = {'M','a','c','h','i','n','e','\\',
-                                     'S','y','s','t','e','m','\\',
-                                     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-                                     'C','o','n','t','r','o','l','\\',
-                                     'S','e','s','s','i','o','n',' ','M','a','n','a','g','e','r',0};
+
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager");
+
     static const int info_size = FIELD_OFFSET( KEY_VALUE_PARTIAL_INFORMATION, Data );
 
-    OBJECT_ATTRIBUTES attr;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING nameW, source_name, dest_name;
     KEY_VALUE_PARTIAL_INFORMATION *info;
     BOOL rc = FALSE;
@@ -88,6 +86,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     DWORD DataSize = 0;
     BYTE *Buffer = NULL;
     WCHAR *p;
+    NTSTATUS Status;
 
     DPRINT("Add support to smss for keys created by MOVEFILE_DELAY_UNTIL_REBOOT\n");
 
@@ -104,18 +103,30 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
         return FALSE;
     }
 
-    attr.Length = sizeof(attr);
-    attr.RootDirectory = 0;
-    attr.ObjectName = &nameW;
-    attr.Attributes = 0;
-    attr.SecurityDescriptor = NULL;
-    attr.SecurityQualityOfService = NULL;
-    RtlInitUnicodeString( &nameW, SessionW );
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-    if (NtCreateKey( &Reboot, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS)
+    Status =  NtOpenKey(&Reboot,
+		                    KEY_ALL_ACCESS,
+		                    &ObjectAttributes);
+
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error creating key for reboot managment [%s]\n",
-             "SYSTEM\\CurrentControlSet\\Control\\Session Manager");
+        Status = NtCreateKey(&Reboot, 
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
         RtlFreeUnicodeString( &source_name );
         RtlFreeUnicodeString( &dest_name );
         return FALSE;
