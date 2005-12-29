@@ -266,13 +266,15 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
   list->Edges = (FILL_EDGE**)EngAllocMem(FL_ZERO_MEMORY, Count*sizeof(FILL_EDGE*), FILL_EDGE_ALLOC_TAG);
   if ( !list->Edges )
     goto fail;
+
   memset ( list->Edges, 0, Count * sizeof(FILL_EDGE*) );
 
   for ( CurPt = 1; CurPt < Count; ++CurPt )
   {
     e = POLYGONFILL_MakeEdge ( Points[CurPt-1], Points[CurPt] );
-    if ( !e )
+    if ( !e )   
       goto fail;
+
     // if a straight horizontal line - who cares?
     if ( !e->absdy )
       EngFreeMem ( e );
@@ -282,6 +284,7 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
   e = POLYGONFILL_MakeEdge ( Points[CurPt-1], Points[0] );
   if ( !e )
     goto fail;
+      
   if ( !e->absdy )
     EngFreeMem ( e );
   else
@@ -289,6 +292,22 @@ POLYGONFILL_MakeEdgeList(PPOINT Points, int Count)
   return list;
 
 fail:
+  if (list != NULL)
+  {
+      EngFreeMem(list); 
+  }
+  
+  if (list->Edges != NULL)
+  {
+      int t;
+      for (t=0; Count;t++)
+      {
+          if (list->Edges[t] != NULL)
+              EngFreeMem(list->Edges[t]);           
+      }      
+      EngFreeMem(list->Edges); 
+  }
+  
   DPRINT1("Out Of MEMORY!!\n");
   POLYGONFILL_DestroyEdgeList ( list );
   return 0;
