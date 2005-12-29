@@ -27,6 +27,9 @@
  */
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 HINSTANCE hDllInstance = NULL;
 
 
@@ -566,7 +569,7 @@ GetDriverVersionString(IN HDEVINFO DeviceInfoSet,
     {
         /* unable to query the information */
         if (LoadString(hDllInstance,
-                       IDS_UNKNOWN,
+                       IDS_NOTAVAILABLE,
                        szBuffer,
                        BufferSize))
         {
@@ -632,7 +635,7 @@ GetDriverDateString(IN HDEVINFO DeviceInfoSet,
     {
         /* unable to query the information */
         if (LoadString(hDllInstance,
-                       IDS_UNKNOWN,
+                       IDS_NOTAVAILABLE,
                        szBuffer,
                        BufferSize))
         {
@@ -878,6 +881,189 @@ GetDeviceDescriptionString(IN HDEVINFO DeviceInfoSet,
         }
     }
 
+    return Ret;
+}
+
+
+BOOL
+FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
+                  IN PSP_DEVINFO_DATA DeviceInfoData,
+                  OUT PSP_DRVINFO_DATA DriverInfoData)
+{
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    SP_DEVINSTALL_PARAMS InstallParams = {0};
+    SP_DRVINFO_DETAIL_DATA DriverInfoDetailData = {0};
+    WCHAR InfPath[MAX_PATH];
+    WCHAR InfSection[LINE_LEN];
+    DWORD dwType, dwLength;
+    DWORD i = 0;
+    LONG rc;
+    BOOL Ret = FALSE;
+
+    /* Steps to find the right driver:
+     * 1) Get the device install parameters
+     * 2) Open the driver registry key
+     * 3) Read the .inf file name
+     * 4) Update install params, by setting DI_ENUMSINGLEINF and .inf file name
+     * 5) Build class driver list
+     * 6) Read inf section and inf section extension from registry
+     * 7) Enumerate drivers
+     * 8) Find the one who is in the same section as current driver?
+     */
+
+    /* 1) Get the install params */
+    InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+    if (!SetupDiGetDeviceInstallParams(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       &InstallParams))
+    {
+        DPRINT1("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+
+#ifdef DI_FLAGSEX_INSTALLEDDRIVER
+    InstallParams.FlagsEx |= (DI_FLAGSEX_INSTALLEDDRIVER | DI_FLAGSEX_ALLOWEXCLUDEDDRVS);
+    if (SetupDiSetDeviceInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      &InstallParams))
+    {
+        if (SetupDiBuildDriverInfoList(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       SPDIT_CLASSDRIVER) &&
+            SetupDiEnumDriverInfo(DeviceInfoSet,
+                                  DeviceInfoData,
+                                  SPDIT_CLASSDRIVER,
+                                  0,
+                                  DriverInfoData))
+        {
+            Ret = TRUE;
+        }
+
+        goto Cleanup;
+    }
+    InstallParams.FlagsEx &= ~(DI_FLAGSEX_INSTALLEDDRIVER | DI_FLAGSEX_ALLOWEXCLUDEDDRVS);
+#endif
+
+    /* 2) Open the driver registry key */
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("SetupDiOpenDevRegKey() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+
+    /* 3) Read the .inf file name */
+    dwLength = (sizeof(InfPath) / sizeof(InfPath[0])) - 1;
+    rc = RegQueryValueEx(hKey,
+                         REGSTR_VAL_INFPATH,
+                         0,
+                         &dwType,
+                         (LPBYTE)InfPath,
+                         &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        DPRINT1("RegQueryValueEx() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+    else if (dwType != REG_SZ)
+    {
+        SetLastError(ERROR_GEN_FAILURE);
+        DPRINT1("Expected registry type REG_SZ (%lu), got %lu\n", REG_SZ, dwType);
+        goto Cleanup;
+    }
+    InfPath[(dwLength / sizeof(WCHAR)) - 1] = L'\0';
+
+    /* 4) Update install params, by setting DI_ENUMSINGLEINF and .inf file name */
+    InstallParams.Flags |= DI_ENUMSINGLEINF;
+    InstallParams.FlagsEx |= DI_FLAGSEX_ALLOWEXCLUDEDDRVS;
+    wcscpy(InstallParams.DriverPath, InfPath);
+    if (!SetupDiSetDeviceInstallParams(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       &InstallParams))
+    {
+        DPRINT1("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+
+    /* 5) Build class driver list */
+    if (!SetupDiBuildDriverInfoList(DeviceInfoSet,
+                                    DeviceInfoData,
+                                    SPDIT_CLASSDRIVER))
+    {
+        DPRINT1("SetupDiBuildDriverInfoList() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+
+    /* 6) Read inf section and from registry */
+    dwLength = (sizeof(InfSection) / sizeof(InfSection[0])) - 1;
+    rc = RegQueryValueEx(hKey,
+                         REGSTR_VAL_INFSECTION,
+                         0,
+                         &dwType,
+                         (LPBYTE)InfSection,
+                         &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        DPRINT1("RegQueryValueEx() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+    else if (dwType != REG_SZ)
+    {
+        SetLastError(ERROR_GEN_FAILURE);
+        DPRINT1("Expected registry type REG_SZ (%lu), got %lu\n", REG_SZ, dwType);
+        goto Cleanup;
+    }
+    InfPath[(dwLength / sizeof(WCHAR)) - 1] = L'\0';
+
+    /* 7) Enumerate drivers */
+    DriverInfoData->cbSize = sizeof(SP_DRVINFO_DATA);
+    DriverInfoDetailData.cbSize = sizeof(SP_DRVINFO_DETAIL_DATA);
+    while (SetupDiEnumDriverInfo(DeviceInfoSet,
+                                 DeviceInfoData,
+                                 SPDIT_CLASSDRIVER,
+                                 i,
+                                 DriverInfoData))
+    {
+        /* 8) Find the one who is in the same section as current driver */
+        if (!SetupDiGetDriverInfoDetail(DeviceInfoSet,
+                                        DeviceInfoData,
+                                        DriverInfoData,
+                                        &DriverInfoDetailData,
+                                        DriverInfoDetailData.cbSize,
+                                        NULL) &&
+            GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            DPRINT1("SetupDiGetDriverInfoDetail() failed with error 0x%lx\n", GetLastError());
+            goto Cleanup;
+        }
+        if (!wcsicmp(DriverInfoDetailData.SectionName,
+                     InfSection) != 0)
+        {
+            /* We have found the right driver */
+            Ret = TRUE;
+            goto Cleanup;
+        }
+
+        i++;
+    }
+    if (GetLastError() != ERROR_NO_MORE_ITEMS)
+    {
+        DPRINT1("SetupDiEnumDriverInfo() failed with error 0x%lx\n", GetLastError());
+        goto Cleanup;
+    }
+
+    SetLastError(ERROR_NO_DRIVER_SELECTED);
+
+Cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
     return Ret;
 }
 

@@ -313,6 +313,11 @@ GetDeviceDescriptionString(IN HDEVINFO DeviceInfoSet,
                            OUT LPWSTR szBuffer,
                            IN DWORD BufferSize);
 
+BOOL
+FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
+                  IN PSP_DEVINFO_DATA DeviceInfoData,
+                  OUT PSP_DRVINFO_DATA DriverInfoData);
+
 #endif /* __DEVMGR_H */
 
 /* EOF */

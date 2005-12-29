@@ -24,6 +24,9 @@ BEGIN
     IDS_PROPERTIES "P&roperties"
     IDS_UPDATEDRV "U&pdate Driver..."
     IDS_REBOOT "Restart &Computer..."
+    IDS_NOTAVAILABLE "Not available"
+    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
+    IDS_NODRIVERS "No driver files are required or have been loaded for this device."
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -141,4 +144,31 @@ BEGIN
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Driver version:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+     PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 70, 15
+     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
 END
+
+IDD_DRIVERDETAILS DIALOG DISCARDABLE  0, 0, 224, 250
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Driver File Details"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_DEVICON, 7, 7, 20, 20
+    LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
+    LTEXT "&Driver files:", -1, 7, 36, 204, 8
+    CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
+            LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+    LTEXT "Provider:", -1, 14, 134, 50, 8
+    LTEXT "", IDC_FILEPROVIDER, 66, 134, 155, 8
+    LTEXT "File version:", -1, 14, 150, 50, 8
+    LTEXT "", IDC_FILEVERSION, 66, 150, 155, 8
+    LTEXT "Copyright:", -1, 14, 166, 50, 8
+    LTEXT "", IDC_FILECOPYRIGHT, 66, 166, 155, 8
+    LTEXT "Digital Signer:", -1, 14, 182, 50, 8
+    LTEXT "", IDC_DIGITALSIGNER, 66, 182, 155, 8
+    PUSHBUTTON "OK", IDOK, 167, 228, 50, 14
+END
+

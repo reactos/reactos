@@ -76,7 +76,207 @@ typedef struct _DEVADVPROP_INFO
     /* struct may be dynamically expanded here! */
 } DEVADVPROP_INFO, *PDEVADVPROP_INFO;
 
+
+typedef struct _ENUMDRIVERFILES_CONTEXT
+{
+    HWND hDriversListView;
+    UINT nCount;
+} ENUMDRIVERFILES_CONTEXT, *PENUMDRIVERFILES_CONTEXT;
+
 #define PM_INITIALIZE (WM_APP + 0x101)
+
+
+static UINT WINAPI
+EnumDeviceDriverFilesCallback(IN PVOID Context,
+                              IN UINT Notification,
+                              IN UINT_PTR Param1,
+                              IN UINT_PTR Param2)
+{
+    LVITEM li;
+    PENUMDRIVERFILES_CONTEXT EnumDriverFilesContext = (PENUMDRIVERFILES_CONTEXT)Context;
+
+    li.mask = LVIF_TEXT | LVIF_STATE;
+    li.iItem = EnumDriverFilesContext->nCount++;
+    li.iSubItem = 0;
+    li.state = (li.iItem == 0 ? LVIS_SELECTED : 0);
+    li.stateMask = LVIS_SELECTED;
+    li.pszText = (LPWSTR)Param1;
+    ListView_InsertItem(EnumDriverFilesContext->hDriversListView,
+                        &li);
+    return NO_ERROR;
+}
+
+
+static VOID
+UpdateDriverDetailsDlg(IN HWND hwndDlg,
+                       IN HWND hDriversListView,
+                       IN PDEVADVPROP_INFO dap)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    SP_DRVINFO_DATA DriverInfoData;
+    ENUMDRIVERFILES_CONTEXT EnumDriverFilesContext;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    /* set the device image */
+    SendDlgItemMessage(hwndDlg,
+                       IDC_DEVICON,
+                       STM_SETICON,
+                       (WPARAM)dap->hDevIcon,
+                       0);
+
+    /* set the device name edit control text */
+    SetDlgItemText(hwndDlg,
+                   IDC_DEVNAME,
+                   dap->szDevName);
+
+    /* fill the driver files list view */
+    EnumDriverFilesContext.hDriversListView = hDriversListView;
+    EnumDriverFilesContext.nCount = 0;
+
+    ListView_DeleteAllItems(EnumDriverFilesContext.hDriversListView);
+    DriverInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
+    if (FindCurrentDriver(DeviceInfoSet,
+                          DeviceInfoData,
+                          &DriverInfoData) &&
+        SetupDiSetSelectedDriver(DeviceInfoSet,
+                                 DeviceInfoData,
+                                 &DriverInfoData))
+    {
+        HSPFILEQ queueHandle;
+
+        queueHandle = SetupOpenFileQueue();
+        if (queueHandle != (HSPFILEQ)INVALID_HANDLE_VALUE)
+        {
+            SP_DEVINSTALL_PARAMS DeviceInstallParams = {0};
+            DeviceInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+            if (SetupDiGetDeviceInstallParams(DeviceInfoSet,
+                                              DeviceInfoData,
+                                              &DeviceInstallParams))
+            {
+                DeviceInstallParams.FileQueue = queueHandle;
+                DeviceInstallParams.Flags |= DI_NOVCP;
+
+                if (SetupDiSetDeviceInstallParams(DeviceInfoSet,
+                                                  DeviceInfoData,
+                                                  &DeviceInstallParams) &&
+                    SetupDiCallClassInstaller(DIF_INSTALLDEVICEFILES,
+                                              DeviceInfoSet,
+                                              DeviceInfoData))
+                {
+                    DWORD scanResult;
+                    RECT rcClient;
+                    LVCOLUMN lvc;
+
+                    /* enumerate the driver files */
+                    SetupScanFileQueue(queueHandle,
+                                       SPQ_SCAN_USE_CALLBACK,
+                                       NULL,
+                                       EnumDeviceDriverFilesCallback,
+                                       &EnumDriverFilesContext,
+                                       &scanResult);
+
+                    /* update the list view column width */
+                    GetClientRect(hDriversListView,
+                                  &rcClient);
+                    lvc.mask = LVCF_WIDTH;
+                    lvc.cx = rcClient.right;
+                    ListView_SetColumn(hDriversListView,
+                                       0,
+                                       &lvc);
+                }
+            }
+
+            SetupCloseFileQueue(queueHandle);
+        }
+    }
+}
+
+
+static INT_PTR
+CALLBACK
+DriverDetailsDlgProc(IN HWND hwndDlg,
+                     IN UINT uMsg,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam)
+{
+    PDEVADVPROP_INFO dap;
+    INT_PTR Ret = FALSE;
+
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
+                                             DWL_USER);
+
+    if (dap != NULL || uMsg == WM_INITDIALOG)
+    {
+        switch (uMsg)
+        {
+            case WM_COMMAND:
+            {
+                switch (LOWORD(wParam))
+                {
+                    case IDOK:
+                    {
+                        EndDialog(hwndDlg,
+                                  IDOK);
+                        break;
+                    }
+                }
+                break;
+            }
+
+            case WM_CLOSE:
+            {
+                EndDialog(hwndDlg,
+                          IDCANCEL);
+                break;
+            }
+
+            case WM_INITDIALOG:
+            {
+                LV_COLUMN lvc;
+                HWND hDriversListView;
+
+                dap = (PDEVADVPROP_INFO)lParam;
+                if (dap != NULL)
+                {
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_USER,
+                                     (DWORD_PTR)dap);
+
+                    hDriversListView = GetDlgItem(hwndDlg,
+                                                  IDC_DRIVERFILES);
+
+                    /* add a column to the list view control */
+                    lvc.mask = LVCF_FMT | LVCF_WIDTH;
+                    lvc.fmt = LVCFMT_LEFT;
+                    lvc.cx = 0;
+                    ListView_InsertColumn(hDriversListView,
+                                          0,
+                                          &lvc);
+
+                    UpdateDriverDetailsDlg(hwndDlg,
+                                           hDriversListView,
+                                           dap);
+                }
+
+                Ret = TRUE;
+                break;
+            }
+        }
+    }
+
+    return Ret;
+}
 
 
 static VOID
@@ -161,6 +361,23 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
     {
         switch (uMsg)
         {
+            case WM_COMMAND:
+            {
+                switch (LOWORD(wParam))
+                {
+                    case IDC_DRIVERDETAILS:
+                    {
+                        DialogBoxParam(hDllInstance,
+                                       MAKEINTRESOURCE(IDD_DRIVERDETAILS),
+                                       hwndDlg,
+                                       DriverDetailsDlgProc,
+                                       (ULONG_PTR)dap);
+                        break;
+                    }
+                }
+                break;
+            }
+
             case WM_NOTIFY:
             {
                 NMHDR *hdr = (NMHDR*)lParam;
