@@ -1,12 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/mutant.c
  * PURPOSE:         Executive Management of Mutants
- *
- * PROGRAMMERS:     Alex Ionescu - Fix tab/space mismatching, tiny fixes to query function and
- *                                 add more debug output.
- *                  David Welch (welch@cwcom.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,31 +17,30 @@
 #pragma alloc_text(INIT, ExpInitializeMutantImplementation)
 #endif
 
-#ifndef MUTANT_INCREMENT
-#define MUTANT_INCREMENT                1
-#endif
+/* DATA **********************************************************************/
 
 POBJECT_TYPE ExMutantObjectType = NULL;
 
-static GENERIC_MAPPING ExpMutantMapping = {
+GENERIC_MAPPING ExpMutantMapping =
+{
     STANDARD_RIGHTS_READ    | SYNCHRONIZE | MUTANT_QUERY_STATE,
     STANDARD_RIGHTS_WRITE   | SYNCHRONIZE,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | MUTANT_QUERY_STATE,
-    MUTANT_ALL_ACCESS};
+    MUTANT_ALL_ACCESS
+};
 
-static const INFORMATION_CLASS_INFO ExMutantInfoClass[] = {
-
+static const INFORMATION_CLASS_INFO ExMutantInfoClass[] =
+{
      /* MutantBasicInformation */
-    ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ),
+    ICI_SQ_SAME( sizeof(MUTANT_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY),
 };
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 ExpDeleteMutant(PVOID ObjectBody)
 {
-
     DPRINT("ExpDeleteMutant(ObjectBody 0x%p)\n", ObjectBody);
 
     /* Make sure to release the Mutant */
@@ -55,14 +52,13 @@ ExpDeleteMutant(PVOID ObjectBody)
 
 VOID
 INIT_FUNCTION
-STDCALL
+NTAPI
 ExpInitializeMutantImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
-
     DPRINT("Creating Mutant Object Type\n");
-  
+
     /* Create the Event Pair Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Mutant");
@@ -79,7 +75,7 @@ ExpInitializeMutantImplementation(VOID)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtCreateMutant(OUT PHANDLE MutantHandle,
                IN ACCESS_MASK DesiredAccess,
                IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
@@ -89,22 +85,26 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     HANDLE hMutant;
     PKMUTANT Mutant;
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
-    DPRINT("NtCreateMutant(0x%p, 0x%x, 0x%p)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtCreateMutant(0x%p, 0x%x, 0x%p)\n",
+            MutantHandle, DesiredAccess, ObjectAttributes);
 
-    /* Check Output Safety */
-    if(PreviousMode != KernelMode) {
-
-        _SEH_TRY {
-
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
+    {
+        /* Enter SEH Block */
+        _SEH_TRY
+        {
+            /* Check handle pointer */
             ProbeForWriteHandle(MutantHandle);
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-        } _SEH_END;
-
+        /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -120,8 +120,8 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
                             (PVOID*)&Mutant);
 
     /* Check for success */
-    if(NT_SUCCESS(Status)) {
-
+    if(NT_SUCCESS(Status))
+    {
         /* Initalize the Kernel Mutant */
         DPRINT("Initializing the Mutant\n");
         KeInitializeMutant(Mutant, InitialOwner);
@@ -135,18 +135,20 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
                                 &hMutant);
         ObDereferenceObject(Mutant);
 
-        /* Check for success and return handle */
-        if(NT_SUCCESS(Status)) {
-
-            _SEH_TRY {
-
+        /* Check for success */
+        if(NT_SUCCESS(Status))
+        {
+            /* Enter SEH for return */
+            _SEH_TRY
+            {
+                /* Return the handle to the caller */
                 *MutantHandle = hMutant;
-
-            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+            }
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            {
                 Status = _SEH_GetExceptionCode();
-
-            } _SEH_END;
+            }
+            _SEH_END;
         }
     }
 
@@ -158,7 +160,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtOpenMutant(OUT PHANDLE MutantHandle,
              IN ACCESS_MASK DesiredAccess,
              IN POBJECT_ATTRIBUTES ObjectAttributes)
@@ -166,22 +168,26 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     HANDLE hMutant;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
-    DPRINT("NtOpenMutant(0x%p, 0x%x, 0x%p)\n", MutantHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtOpenMutant(0x%p, 0x%x, 0x%p)\n",
+            MutantHandle, DesiredAccess, ObjectAttributes);
 
-    /* Check Output Safety */
-    if(PreviousMode != KernelMode) {
-
-        _SEH_TRY {
-
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
+    {
+        /* Enter SEH Block */
+        _SEH_TRY
+        {
+            /* Check handle pointer */
             ProbeForWriteHandle(MutantHandle);
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-        } _SEH_END;
-
+        /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -194,18 +200,20 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
                                 NULL,
                                 &hMutant);
 
-    /* Check for success and return handle */
-    if(NT_SUCCESS(Status)) {
-
-        _SEH_TRY {
-
+    /* Check for success */
+    if(NT_SUCCESS(Status))
+    {
+        /* Enter SEH for return */
+        _SEH_TRY
+        {
+            /* Return the handle to the caller */
             *MutantHandle = hMutant;
-
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
-
-        } _SEH_END;
+        }
+        _SEH_END;
     }
 
     /* Return Status */
@@ -216,7 +224,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtQueryMutant(IN HANDLE MutantHandle,
               IN MUTANT_INFORMATION_CLASS MutantInformationClass,
               OUT PVOID MutantInformation,
@@ -226,20 +234,21 @@ NtQueryMutant(IN HANDLE MutantHandle,
     PKMUTANT Mutant;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    PMUTANT_BASIC_INFORMATION BasicInfo = (PMUTANT_BASIC_INFORMATION)MutantInformation;
-
+    PMUTANT_BASIC_INFORMATION BasicInfo =
+        (PMUTANT_BASIC_INFORMATION)MutantInformation;
     PAGED_CODE();
 
     /* Check buffers and parameters */
     Status = DefaultQueryInfoBufferCheck(MutantInformationClass,
                                          ExMutantInfoClass,
-                                         sizeof(ExMutantInfoClass) / sizeof(ExMutantInfoClass[0]),
+                                         sizeof(ExMutantInfoClass) /
+                                         sizeof(ExMutantInfoClass[0]),
                                          MutantInformation,
                                          MutantInformationLength,
                                          ResultLength,
                                          PreviousMode);
-    if(!NT_SUCCESS(Status)) {
-
+    if(!NT_SUCCESS(Status))
+    {
         DPRINT("NtQueryMutant() failed, Status: 0x%x\n", Status);
         return Status;
     }
@@ -252,24 +261,26 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                        (PVOID*)&Mutant,
                                        NULL);
     /* Check for Status */
-    if(NT_SUCCESS(Status)) {
-
-         _SEH_TRY {
-
+    if(NT_SUCCESS(Status))
+    {
+        /* Enter SEH Block for return */
+         _SEH_TRY
+         {
             /* Fill out the Basic Information Requested */
             DPRINT("Returning Mutant Information\n");
             BasicInfo->CurrentCount = KeReadStateMutant(Mutant);
-            BasicInfo->OwnedByCaller = (Mutant->OwnerThread == KeGetCurrentThread());
+            BasicInfo->OwnedByCaller = (Mutant->OwnerThread ==
+                                        KeGetCurrentThread());
             BasicInfo->AbandonedState = Mutant->Abandoned;
 
             /* Return the Result Length if requested */
            if(ResultLength) *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
-
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
-
-        } _SEH_END;
+        }
+        _SEH_END;
 
         /* Release the Object */
         ObDereferenceObject(Mutant);
@@ -279,39 +290,38 @@ NtQueryMutant(IN HANDLE MutantHandle,
     return Status;
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtReleaseMutant(IN HANDLE MutantHandle,
-                IN PLONG PreviousCount  OPTIONAL)
+                IN PLONG PreviousCount OPTIONAL)
 {
     PKMUTANT Mutant;
-    KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
-
-    PreviousMode = ExGetPreviousMode();
-
     DPRINT("NtReleaseMutant(MutantHandle 0x%p PreviousCount 0x%p)\n",
             MutantHandle,
             PreviousCount);
 
-    /* Check Output Safety */
-    if(PreviousMode != KernelMode && PreviousCount) {
-
-        _SEH_TRY {
-
+     /* Check if we were called from user-mode */
+    if((PreviousCount) && (PreviousMode != KernelMode))
+    {
+        /* Entry SEH Block */
+        _SEH_TRY
+        {
+            /* Make sure the state pointer is valid */
             ProbeForWriteLong(PreviousCount);
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-        } _SEH_END;
-
+        /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -324,25 +334,30 @@ NtReleaseMutant(IN HANDLE MutantHandle,
                                        NULL);
 
     /* Check for Success and release if such */
-    if(NT_SUCCESS(Status)) {
+    if(NT_SUCCESS(Status))
+    {
+        /*
+         * Release the mutant. doing so might raise an exception which we're
+         * required to catch!
+         */
+        _SEH_TRY
+        {
+            /* Release the mutant */
+            LONG Prev = KeReleaseMutant(Mutant,
+                                        MUTANT_INCREMENT,
+                                        FALSE,
+                                        FALSE);
 
-        /* release the mutant. doing so might raise an exception which we're
-           required to catch! */
-        _SEH_TRY {
-
-            LONG Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
-
-            if(PreviousCount) {
-
-                *PreviousCount = Prev;
-            }
-
-        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
-
+            /* Return the previous count if requested */
+            if(PreviousCount) *PreviousCount = Prev;
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
             Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-        } _SEH_END;
-
+        /* Dereference it */
         ObDereferenceObject(Mutant);
     }
 

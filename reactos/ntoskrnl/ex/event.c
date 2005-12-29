@@ -153,11 +153,13 @@ NtCreateEvent(OUT PHANDLE EventHandle,
                                  &hEvent);
         ObDereferenceObject(Event);
 
-        /* Check for success and return handle */
+        /* Check for success */
         if(NT_SUCCESS(Status))
         {
+            /* Enter SEH for return */
             _SEH_TRY
             {
+                /* Return the handle to the caller */
                 *EventHandle = hEvent;
             }
             _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
@@ -320,14 +322,16 @@ NtQueryEvent(IN HANDLE EventHandle,
     PKEVENT Event;
     KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    PEVENT_BASIC_INFORMATION BasicInfo = (PEVENT_BASIC_INFORMATION)EventInformation;
+    PEVENT_BASIC_INFORMATION BasicInfo =
+        (PEVENT_BASIC_INFORMATION)EventInformation;
     PAGED_CODE();
     DPRINT("NtQueryEvent(0x%p, 0x%x)\n", EventHandle, EventInformationClass);
 
     /* Check buffers and class validity */
     Status = DefaultQueryInfoBufferCheck(EventInformationClass,
                                          ExEventInfoClass,
-                                         sizeof(ExEventInfoClass) / sizeof(ExEventInfoClass[0]),
+                                         sizeof(ExEventInfoClass) /
+                                         sizeof(ExEventInfoClass[0]),
                                          EventInformation,
                                          EventInformationLength,
                                          ReturnLength,
