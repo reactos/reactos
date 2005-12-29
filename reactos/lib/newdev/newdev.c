@@ -739,8 +739,21 @@ static BOOL
 FindDriver(
            IN PDEVINSTDATA DevInstData)
 {
-
+    SP_DEVINSTALL_PARAMS DevInstallParams = {0,};
     BOOL ret;
+
+    DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+    if (!SetupDiGetDeviceInstallParams(DevInstData->hDevInfo, &DevInstData->devInfoData, &DevInstallParams))
+    {
+        DPRINT("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        return FALSE;
+    }
+    DevInstallParams.FlagsEx |= DI_FLAGSEX_ALLOWEXCLUDEDDRVS;
+    if (!SetupDiSetDeviceInstallParams(DevInstData->hDevInfo, &DevInstData->devInfoData, &DevInstallParams))
+    {
+        DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+        return FALSE;
+    }
 
     ret = SetupDiBuildDriverInfoList(DevInstData->hDevInfo, &DevInstData->devInfoData, SPDIT_COMPATDRIVER);
     if (!ret)
