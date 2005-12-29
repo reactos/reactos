@@ -109,24 +109,17 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
                                NULL,
                                NULL);
 
-    Status =  NtOpenKey(&Reboot,
-		                    KEY_ALL_ACCESS,
-		                    &ObjectAttributes);
+     Status = NtCreateKey(&Reboot, 
+                          KEY_QUERY_VALUE | KEY_SET_VALUE,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          REG_OPTION_NON_VOLATILE,
+                          NULL);
 
     if (!NT_SUCCESS(Status))
     {
-        Status = NtCreateKey(&Reboot, 
-                             KEY_ALL_ACCESS,
-                             &ObjectAttributes,
-                             0,
-                             NULL,
-                             REG_OPTION_NON_VOLATILE,
-                             NULL);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtCreateKey() failed (Status 0x%lx)\n", Status);
         RtlFreeUnicodeString( &source_name );
         RtlFreeUnicodeString( &dest_name );
         return FALSE;
