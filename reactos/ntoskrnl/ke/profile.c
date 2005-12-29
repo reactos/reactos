@@ -122,7 +122,7 @@ KeStartProfile(PKPROFILE Profile,
     if (!FreeBuffer) ExFreePool(SourceBuffer);
 }
 
-VOID
+BOOLEAN
 STDCALL
 KeStopProfile(PKPROFILE Profile)
 {
@@ -161,6 +161,9 @@ KeStopProfile(PKPROFILE Profile)
 
     /* Free the Source Object */
     if (CurrentSource) ExFreePool(CurrentSource);
+
+    /* FIXME */
+    return FALSE;
 }
 
 ULONG
