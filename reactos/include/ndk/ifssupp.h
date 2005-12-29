@@ -117,8 +117,6 @@ typedef struct _KQUEUE
     LIST_ENTRY ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
-typedef PVOID EX_PUSH_LOCK;
-
 typedef enum _RTL_GENERIC_COMPARE_RESULTS
 {
     GenericLessThan,
