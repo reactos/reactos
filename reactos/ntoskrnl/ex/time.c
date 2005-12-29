@@ -1,11 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/time.c
- * PURPOSE:         Time
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         Time and Timezone Management
+ * PROGRAMMERS:     Eric Kohl
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,7 +12,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
 
 #define TICKSPERMINUTE  600000000
 
@@ -28,114 +26,109 @@ TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpTimeZoneId;
 
-
 /* FUNCTIONS ****************************************************************/
 
 VOID
 INIT_FUNCTION
-STDCALL
+NTAPI
 ExpInitTimeZoneInfo(VOID)
 {
-  LARGE_INTEGER CurrentTime;
-  NTSTATUS Status;
+    LARGE_INTEGER CurrentTime;
+    NTSTATUS Status;
 
-  /* Read time zone information from the registry */
-  Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
-  if (!NT_SUCCESS(Status))
+     /* Read time zone information from the registry */
+    Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
+    if (!NT_SUCCESS(Status))
     {
-      memset(&ExpTimeZoneInfo, 0, sizeof(TIME_ZONE_INFORMATION));
-
-      ExpTimeZoneBias.QuadPart = (LONGLONG)0;
-      ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
+        /* Failed, clear all data */
+        RtlZeroMemory(&ExpTimeZoneInfo, sizeof(TIME_ZONE_INFORMATION));
+        ExpTimeZoneBias.QuadPart = (LONGLONG)0;
+        ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
-  else
+    else
     {
-      /* FIXME: Calculate transition dates */
+        /* FIXME: Calculate transition dates */
 
-      ExpTimeZoneBias.QuadPart =
-	((LONGLONG)(ExpTimeZoneInfo.Bias + ExpTimeZoneInfo.StandardBias)) * TICKSPERMINUTE;
-      ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+        /* Set bias and ID */
+        ExpTimeZoneBias.QuadPart = ((LONGLONG)(ExpTimeZoneInfo.Bias +
+                                               ExpTimeZoneInfo.StandardBias)) *
+                                               TICKSPERMINUTE;
+        ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
     }
 
-  SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
-  SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
-  SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
-  SharedUserData->TimeZoneId = ExpTimeZoneId;
+    /* Change it for user-mode applications */
+    SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
+    SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
+    SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+    SharedUserData->TimeZoneId = ExpTimeZoneId;
 
-  /* Convert boot time from local time to UTC */
-  SystemBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
+    /* Convert boot time from local time to UTC */
+    SystemBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
 
-  /* Convert sytem time from local time to UTC */
-  do
+    /* Convert system time from local time to UTC */
+    do
     {
-      CurrentTime.u.HighPart = SharedUserData->SystemTime.High1Time;
-      CurrentTime.u.LowPart = SharedUserData->SystemTime.LowPart;
-    }
-  while (CurrentTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+        CurrentTime.u.HighPart = SharedUserData->SystemTime.High1Time;
+        CurrentTime.u.LowPart = SharedUserData->SystemTime.LowPart;
+    } while (CurrentTime.u.HighPart != SharedUserData->SystemTime.High2Time);
 
-  CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
-
-  SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
-  SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
-  SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
+    /* Change it for user-mode applications */
+    CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
+    SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
+    SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
+    SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
 }
-
 
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {
-  LARGE_INTEGER LocalTime;
-  LARGE_INTEGER SystemTime;
-  TIME_FIELDS TimeFields;
+    LARGE_INTEGER LocalTime, SystemTime;
+    TIME_FIELDS TimeFields;
+    DPRINT("ExpSetTimeZoneInformation() called\n");
 
-  DPRINT("ExpSetTimeZoneInformation() called\n");
+    DPRINT("Old time zone bias: %d minutes\n", ExpTimeZoneInfo.Bias);
+    DPRINT("Old time zone standard bias: %d minutes\n",
+            ExpTimeZoneInfo.StandardBias);
+    DPRINT("New time zone bias: %d minutes\n", TimeZoneInformation->Bias);
+    DPRINT("New time zone standard bias: %d minutes\n",
+            TimeZoneInformation->StandardBias);
 
-  DPRINT("Old time zone bias: %d minutes\n",
-	 ExpTimeZoneInfo.Bias);
-  DPRINT("Old time zone standard bias: %d minutes\n",
-	 ExpTimeZoneInfo.StandardBias);
+    /* Get the local time */
+    HalQueryRealTimeClock(&TimeFields);
+    RtlTimeFieldsToTime(&TimeFields, &LocalTime);
 
-  DPRINT("New time zone bias: %d minutes\n",
-	 TimeZoneInformation->Bias);
-  DPRINT("New time zone standard bias: %d minutes\n",
-	 TimeZoneInformation->StandardBias);
+    /* FIXME: Calculate transition dates */
 
-  /* Get the local time */
-  HalQueryRealTimeClock(&TimeFields);
-  RtlTimeFieldsToTime(&TimeFields,
-		      &LocalTime);
+    /* Calculate the bias and set the ID */
+    ExpTimeZoneBias.QuadPart = ((LONGLONG)(TimeZoneInformation->Bias +
+                                           TimeZoneInformation->StandardBias)) *
+                                           TICKSPERMINUTE;
+    ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
 
-  /* FIXME: Calculate transition dates */
+    /* Copy the timezone information */
+    RtlMoveMemory(&ExpTimeZoneInfo,
+                  TimeZoneInformation,
+                  sizeof(TIME_ZONE_INFORMATION));
 
-  ExpTimeZoneBias.QuadPart =
-    ((LONGLONG)(TimeZoneInformation->Bias + TimeZoneInformation->StandardBias)) * TICKSPERMINUTE;
-  ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+    /* Set the new time zone information */
+    SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
+    SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
+    SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+    SharedUserData->TimeZoneId = ExpTimeZoneId;
 
-  memcpy(&ExpTimeZoneInfo,
-	 TimeZoneInformation,
-	 sizeof(TIME_ZONE_INFORMATION));
+    DPRINT("New time zone bias: %I64d minutes\n",
+            ExpTimeZoneBias.QuadPart / TICKSPERMINUTE);
 
-  /* Set the new time zone information */
-  SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
-  SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
-  SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
-  SharedUserData->TimeZoneId = ExpTimeZoneId;
+    /* Calculate the new system time */
+    ExLocalTimeToSystemTime(&LocalTime, &SystemTime);
 
-  DPRINT("New time zone bias: %I64d minutes\n",
-	 ExpTimeZoneBias.QuadPart / TICKSPERMINUTE);
+    /* Set the new system time */
+    KiSetSystemTime(&SystemTime);
 
-  /* Calculate the new system time */
-  ExLocalTimeToSystemTime(&LocalTime,
-			  &SystemTime);
-
-  /* Set the new system time */
-  KiSetSystemTime(&SystemTime);
-
-  DPRINT("ExpSetTimeZoneInformation() done\n");
-
-  return STATUS_SUCCESS;
+    /* Return success */
+    DPRINT("ExpSetTimeZoneInformation() done\n");
+    return STATUS_SUCCESS;
 }
-
 
 /*
  * FUNCTION: Sets the system time.
@@ -146,84 +139,81 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
  *        old time of day in the standard time format.
  * RETURNS: Status
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
-		OUT PLARGE_INTEGER PreviousTime OPTIONAL)
+                OUT PLARGE_INTEGER PreviousTime OPTIONAL)
 {
-  LARGE_INTEGER OldSystemTime;
-  LARGE_INTEGER NewSystemTime;
-  LARGE_INTEGER LocalTime;
-  TIME_FIELDS TimeFields;
-  KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status = STATUS_SUCCESS;
+    LARGE_INTEGER OldSystemTime;
+    LARGE_INTEGER NewSystemTime;
+    LARGE_INTEGER LocalTime;
+    TIME_FIELDS TimeFields;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
 
-  PAGED_CODE();
-
-  PreviousMode = ExGetPreviousMode();
-
-  if(PreviousMode != KernelMode)
-  {
-    _SEH_TRY
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
     {
-      NewSystemTime = ProbeForReadLargeInteger(SystemTime);
-      if(PreviousTime != NULL)
-      {
-        ProbeForWriteLargeInteger(PreviousTime);
-      }
+        _SEH_TRY
+        {
+            /* Verify the time pointers */
+            NewSystemTime = ProbeForReadLargeInteger(SystemTime);
+            if(PreviousTime) ProbeForWriteLargeInteger(PreviousTime);
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        /* If the pointers were invalid, bail out */
+        if(!NT_SUCCESS(Status)) return Status;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    else
     {
-      Status = _SEH_GetExceptionCode();
+        /* Reuse the pointer */
+        NewSystemTime = *SystemTime;
     }
-    _SEH_END;
 
-    if(!NT_SUCCESS(Status))
+    /* Make sure we have permission to change the time */
+    if(!SeSinglePrivilegeCheck(SeSystemtimePrivilege, PreviousMode))
     {
-      return Status;
+        DPRINT1("NtSetSystemTime: Caller requires the "
+                "SeSystemtimePrivilege privilege!\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
     }
-  }
-  else
-  {
-    NewSystemTime = *SystemTime;
-  }
 
-  if(!SeSinglePrivilegeCheck(SeSystemtimePrivilege,
-                             PreviousMode))
-  {
-    DPRINT1("NtSetSystemTime: Caller requires the SeSystemtimePrivilege privilege!\n");
-    return STATUS_PRIVILEGE_NOT_HELD;
-  }
+    /* Check if caller wants the old time */
+    if(PreviousTime) KeQuerySystemTime(&OldSystemTime);
 
-  if(PreviousTime != NULL)
-  {
-    KeQuerySystemTime(&OldSystemTime);
-  }
+    /* Convert the time and set it in HAL */
+    ExSystemTimeToLocalTime(&NewSystemTime, &LocalTime);
+    RtlTimeToTimeFields(&LocalTime, &TimeFields);
+    HalSetRealTimeClock(&TimeFields);
 
-  ExSystemTimeToLocalTime(&NewSystemTime,
-			  &LocalTime);
-  RtlTimeToTimeFields(&LocalTime,
-		      &TimeFields);
-  HalSetRealTimeClock(&TimeFields);
+    /* Now set system time */
+    KiSetSystemTime(&NewSystemTime);
 
-  /* Set system time */
-  KiSetSystemTime(&NewSystemTime);
-
-  if(PreviousTime != NULL)
-  {
-    _SEH_TRY
+    /* Check if caller wanted previous time */
+    if(PreviousTime)
     {
-      *PreviousTime = OldSystemTime;
+        /* Enter SEH Block for return */
+        _SEH_TRY
+        {
+            /* Return the previous time */
+            *PreviousTime = OldSystemTime;
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-  }
 
-  return STATUS_SUCCESS;
+    /* Return status */
+    return Status;
 }
-
 
 /*
  * FUNCTION: Retrieves the system time.
@@ -231,85 +221,77 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
  *          CurrentTime - Points to a variable that receives the current
  *          time of day in the standard time format.
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
 {
-  KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
 
-  PAGED_CODE();
-
-  PreviousMode = ExGetPreviousMode();
-
-  if(PreviousMode != KernelMode)
-  {
-    _SEH_TRY
+    /* Check if we were called from user-mode */
+    if(PreviousMode != KernelMode)
     {
-      ProbeForWriteLargeInteger(SystemTime);
+        _SEH_TRY
+        {
+            /* Verify the time pointer */
+            ProbeForWriteLargeInteger(SystemTime);
 
-      /* it's safe to pass the pointer directly to KeQuerySystemTime as it's just
-         a basic copy to these pointer, if it raises an exception nothing dangerous
-         can happen! */
-      KeQuerySystemTime(SystemTime);
+            /*
+             * It's safe to pass the pointer directly to KeQuerySystemTime as
+             * it's just a basic copy to this pointer. If it raises an
+             * exception nothing dangerous can happen!
+             */
+            KeQuerySystemTime(SystemTime);
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+        Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    else
     {
-      Status = _SEH_GetExceptionCode();
+        /* Query the time directly */
+        KeQuerySystemTime(SystemTime);
     }
-    _SEH_END;
-  }
-  else
-  {
-    KeQuerySystemTime(SystemTime);
-  }
 
-  return Status;
+    /* Return status to caller */
+    return Status;
 }
-
 
 /*
  * @implemented
  */
 VOID
-STDCALL
-ExLocalTimeToSystemTime (
-	PLARGE_INTEGER	LocalTime,
-	PLARGE_INTEGER	SystemTime
-	)
+NTAPI
+ExLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
+                        PLARGE_INTEGER SystemTime)
 {
-  SystemTime->QuadPart =
-    LocalTime->QuadPart + ExpTimeZoneBias.QuadPart;
+    SystemTime->QuadPart = LocalTime->QuadPart + ExpTimeZoneBias.QuadPart;
 }
-
 
 /*
  * @unimplemented
  */
 ULONG
-STDCALL
-ExSetTimerResolution (
-    IN ULONG DesiredTime,
-    IN BOOLEAN SetResolution
-    )
+NTAPI
+ExSetTimerResolution(IN ULONG DesiredTime,
+                     IN BOOLEAN SetResolution)
 {
-	UNIMPLEMENTED;
-
+    UNIMPLEMENTED;
     return 0;
 }
-
 
 /*
  * @implemented
  */
 VOID
-STDCALL
-ExSystemTimeToLocalTime (
-	PLARGE_INTEGER	SystemTime,
-	PLARGE_INTEGER	LocalTime
-	)
+NTAPI
+ExSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
+                        PLARGE_INTEGER LocalTime)
 {
-  LocalTime->QuadPart =
-    SystemTime->QuadPart - ExpTimeZoneBias.QuadPart;
+    LocalTime->QuadPart = SystemTime->QuadPart - ExpTimeZoneBias.QuadPart;
 }
 
 /* EOF */
