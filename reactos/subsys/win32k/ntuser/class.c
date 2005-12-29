@@ -208,6 +208,27 @@ IntRegisterClass(
    Class->hIconSm = lpwcx->hIconSm;
    Class->Atom = Atom;
    
+   if (MenuName->Length == 0)
+   {
+      Class->lpszMenuName.Length =
+         Class->lpszMenuName.MaximumLength = 0;
+      Class->lpszMenuName.Buffer = MenuName->Buffer;
+   }
+   else
+   {
+      Class->lpszMenuName.Length =
+         Class->lpszMenuName.MaximumLength = MenuName->MaximumLength;
+      Class->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, Class->lpszMenuName.MaximumLength, TAG_STRING);
+      
+      if (Class->lpszMenuName.Buffer == NULL) 
+      {
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         return(FALSE);
+      }
+      
+      RtlCopyUnicodeString(&Class->lpszMenuName, MenuName);
+   }
+   
    if (wpExtra == NULL)
    {
       if (Flags & REGISTERCLASS_ANSI)
@@ -235,19 +256,7 @@ IntRegisterClass(
       }
    }
    
-   if (MenuName->Length == 0)
-   {
-      Class->lpszMenuName.Length =
-         Class->lpszMenuName.MaximumLength = 0;
-      Class->lpszMenuName.Buffer = MenuName->Buffer;
-   }
-   else
-   {
-      Class->lpszMenuName.Length =
-         Class->lpszMenuName.MaximumLength = MenuName->MaximumLength;
-      Class->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, Class->lpszMenuName.MaximumLength, TAG_STRING);
-      RtlCopyUnicodeString(&Class->lpszMenuName, MenuName);
-   }
+  
    
    /* Extra class data */
    if (Class->cbClsExtra)
