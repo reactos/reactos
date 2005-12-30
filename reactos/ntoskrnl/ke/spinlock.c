@@ -151,7 +151,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
         if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
         {
             /* Value changed... wait until it's locked */
-            while (*SpinLock == 1) YieldProcessor();
+            while (*(volatile KSPIN_LOCK *)SpinLock == 1) YieldProcessor();
         }
         else
         {
