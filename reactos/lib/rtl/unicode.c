@@ -75,15 +75,15 @@ RtlAnsiStringToUnicodeString(
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
     UniDest->Length = (USHORT)Length - sizeof(WCHAR);
 
-    if (AllocateDestinationString == TRUE)
+    if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
         UniDest->MaximumLength = Length;
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (Length >= UniDest->MaximumLength)
+    else if (UniDest->Length >= UniDest->MaximumLength)
     {
-        return STATUS_BUFFER_TOO_SMALL;
+        return STATUS_BUFFER_OVERFLOW;
     }
 
     Status = RtlMultiByteToUnicodeN(UniDest->Buffer,
@@ -92,9 +92,13 @@ RtlAnsiStringToUnicodeString(
                                     AnsiSource->Buffer,
                                     AnsiSource->Length);
 
-    if (!NT_SUCCESS(Status) && AllocateDestinationString)
+    if (!NT_SUCCESS(Status))
     {
-        RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
+        if (AllocateDestinationString)
+        {
+            RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
+            UniDest->Buffer = NULL;
+        }
         return Status;
     }
 
