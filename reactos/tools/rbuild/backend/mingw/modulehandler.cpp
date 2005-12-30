@@ -1321,7 +1321,7 @@ MingwModuleHandler::GenerateCommands (
 }
 
 void
-MingwModuleHandler::GenerateBuildMapCode ()
+MingwModuleHandler::GenerateBuildMapCode ( const char *mapTarget )
 {
 	fprintf ( fMakefile,
 	          "ifeq ($(ROS_BUILDMAP),full)\n" );
@@ -1334,7 +1334,8 @@ MingwModuleHandler::GenerateBuildMapCode ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_OBJDUMP)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)${objdump} -d -S $@ > %s\n",
+	          "\t$(Q)${objdump} -d -S %s > %s\n",
+			  mapTarget ? mapTarget :  "$@",
 	          mapFilename.c_str () );
 
 	fprintf ( fMakefile,
@@ -1345,7 +1346,8 @@ MingwModuleHandler::GenerateBuildMapCode ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_NM)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)${nm} --numeric-sort $@ > %s\n",
+	          "\t$(Q)${nm} --numeric-sort %s > %s\n",
+			  mapTarget ? mapTarget :  "$@",
 	          mapFilename.c_str () );
 
 	fprintf ( fMakefile,
@@ -2672,6 +2674,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	fprintf ( fMakefile,
 	          "\t${objcopy} -O binary %s $@\n",
 	          junk_tmp.c_str () );
+	GenerateBuildMapCode ( junk_tmp.c_str() );
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s 2>$(NUL)\n",
 	          junk_tmp.c_str () );

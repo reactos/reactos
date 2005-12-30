@@ -119,6 +119,7 @@ protected:
 	                             const std::string& libsMacro,
 	                             const std::string& pefixupParameters );
 	void GeneratePhonyTarget() const;
+	void GenerateBuildMapCode ( const char *mapTarget = NULL );
 	void GenerateRules ();
 	void GenerateImportLibraryTargetIfNeeded ();
 	void GetDefinitionDependencies ( string_list& dependencies ) const;
@@ -199,7 +200,6 @@ private:
 	bool IsWineModule () const;
 	std::string GetDefinitionFilename () const;
 	static std::string RemoveVariables ( std::string path);
-	void GenerateBuildMapCode ();
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );
 	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
