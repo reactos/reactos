@@ -176,6 +176,8 @@ DateTimePageProc(HWND hwndDlg,
 }
 
 
+
+
 static PTIMEZONE_ENTRY
 GetLargerTimeZoneEntry(DWORD Index)
 {
@@ -568,6 +570,41 @@ TimeZonePageProc(HWND hwndDlg,
 }
 
 
+/* Property page dialog callback */
+INT_PTR CALLBACK
+InetTimePageProc(HWND hwndDlg,
+		 UINT uMsg,
+		 WPARAM wParam,
+		 LPARAM lParam)
+{
+  switch (uMsg)
+  {
+    case WM_INITDIALOG:
+      break;
+
+    case WM_COMMAND:
+      break;
+
+    case WM_DESTROY:
+      break;
+
+    case WM_NOTIFY:
+      {
+         switch (lParam)
+            {
+
+              default:
+                break;
+            }
+
+      }
+      break;
+  }
+
+  return FALSE;
+}
+
+
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 {
@@ -584,7 +621,7 @@ LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 {
   PROPSHEETHEADER psh;
-  PROPSHEETPAGE psp[2];
+  PROPSHEETPAGE psp[3];
   TCHAR Caption[256];
 
   LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
@@ -602,6 +639,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 
   InitPropSheetPage(&psp[0], IDD_DATETIMEPAGE, DateTimePageProc);
   InitPropSheetPage(&psp[1], IDD_TIMEZONEPAGE, TimeZonePageProc);
+  InitPropSheetPage(&psp[2], IDD_INETTIMEPAGE, InetTimePageProc);
 
   return (LONG)(PropertySheet(&psh) != -1);
 }
