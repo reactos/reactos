@@ -1598,6 +1598,7 @@ NtGdiExtTextOut(
       DestRect.top    = SpecifiedDestRect.top    + dc->w.DCOrgY;
       DestRect.right  = SpecifiedDestRect.right  + dc->w.DCOrgX;
       DestRect.bottom = SpecifiedDestRect.bottom + dc->w.DCOrgY;
+      IntLPtoDP(dc, (LPRECT)&DestRect, 2);
       IntEngBitBlt(
          &BitmapObj->SurfObj,
          NULL,
