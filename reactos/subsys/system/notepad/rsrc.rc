@@ -41,10 +41,10 @@ ID_ACCEL ACCELERATORS
     VK_F5, CMD_TIME_DATE, VIRTKEY
 }
 
+#include "En.rc"
 #include "Cs.rc"
 #include "Da.rc"
 #include "De.rc"
-#include "En.rc"
 #include "Es.rc"
 #include "Fi.rc"
 #include "Fr.rc"
@@ -60,5 +60,6 @@ ID_ACCEL ACCELERATORS
 #include "Sk.rc"
 #include "Sv.rc"
 #include "Th.rc"
+#include "Uk.rc"
 #include "Wa.rc"
 #include "Zh.rc"
