@@ -112,6 +112,11 @@
 #define NtUserEnableProcessWindowGhosting(bEnable) \
   NtUserCallOneParam((DWORD)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING)
 
+#define NtUserShowCursor(bShow) \
+  NtUserCallOneParam((DWORD)bShow, ONEPARAM_ROUTINE_SHOWCURSOR)
+  
+  
+
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
 

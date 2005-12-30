@@ -320,13 +320,12 @@ SetSystemCursor(HCURSOR hcur,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 ShowCursor(BOOL bShow)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserShowCursor(bShow);
 }
 
 HCURSOR

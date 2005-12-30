@@ -11,7 +11,8 @@
 
 #include <w32k.h>
 
-#define NDEBUG
+//#define NDEBUG
+#undef NDEBUG
 #include <debug.h>
 
 /* registered Logon process */
@@ -164,6 +165,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
+
 /*
  * @implemented
  */
@@ -176,10 +178,90 @@ NtUserCallOneParam(
    DECLARE_RETURN(DWORD);
 
    DPRINT("Enter NtUserCallOneParam\n");
+
+
+   if (Routine == ONEPARAM_ROUTINE_SHOWCURSOR)
+   {
+      PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+      PSYSTEM_CURSORINFO CurInfo;
+                 
+      HDC Screen;
+      HBITMAP dcbmp;
+      SURFOBJ *SurfObj;         
+      BITMAPOBJ *BitmapObj;
+      GDIDEVICE *ppdev;
+      GDIPOINTER *pgp;
+                                                                                
+      if(!(Screen = IntGetScreenDC()))
+      {
+        return 1; /* No mouse */
+      }
+                       
+      PDC dc = DC_LockDc(Screen);
+
+      if (!dc)
+      {
+        return 1; /* No mouse */
+      }
+           
+      dcbmp = dc->w.hBitmap;
+      DC_UnlockDc(dc);
+
+      BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
+      if ( !BitmapObj )
+      {
+         BITMAPOBJ_UnlockBitmap(BitmapObj); 
+         return 1; /* No Mouse */
+      }
+              
+      SurfObj = &BitmapObj->SurfObj;
+      if (SurfObj == NULL)
+      {
+        BITMAPOBJ_UnlockBitmap(BitmapObj); 
+        return 1; /* No mouse */
+      }
+           
+      ppdev = GDIDEV(SurfObj);
+                                                                      
+      if(ppdev == NULL)
+      {
+        BITMAPOBJ_UnlockBitmap(BitmapObj); 
+        return 1; /* No mouse */
+      }
+                  
+      pgp = &ppdev->Pointer;
+      
+      CurInfo = IntGetSysCursorInfo(WinSta);
+           
+      if (Param == FALSE)
+      {
+          if (CurInfo->ShowingCursor != 0)
+          {
+             ppdev->SafetyRemoveCount = 1;
+             ppdev->SafetyRemoveLevel = 1;
+             EngMovePointer(SurfObj,-1,-1,NULL);               
+             CurInfo->ShowingCursor = 0;                
+           }
+           
+       }
+       else
+       {
+          /* Show Cursor */              
+          ppdev->SafetyRemoveCount = 0;
+          ppdev->SafetyRemoveLevel = 0;
+          EngMovePointer(SurfObj,-1,-1,NULL);
+          CurInfo->ShowingCursor = CURSOR_SHOWING;
+       }
+                                                    
+       BITMAPOBJ_UnlockBitmap(BitmapObj); 
+       return 0;                       
+       }
+         
+   
    UserEnterExclusive();
 
    switch(Routine)
-   {
+   {   	     
       case ONEPARAM_ROUTINE_GETMENU:
          {
             PWINDOW_OBJECT Window;
