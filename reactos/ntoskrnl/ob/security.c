@@ -159,47 +159,74 @@ NtQuerySecurityObject(IN HANDLE Handle,
 		      IN ULONG Length,
 		      OUT PULONG ResultLength)
 {
-  POBJECT_HEADER Header;
-  PVOID Object;
-  NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
+    PVOID Object;
+    POBJECT_HEADER Header;
+    ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  DPRINT("NtQuerySecurityObject() called\n");
+    PreviousMode = ExGetPreviousMode();
 
-  Status = ObReferenceObjectByHandle(Handle,
-				     (SecurityInformation & SACL_SECURITY_INFORMATION) ? ACCESS_SYSTEM_SECURITY : 0,
-				     NULL,
-				     KeGetPreviousMode(),
-				     &Object,
-				     NULL);
-  if (!NT_SUCCESS(Status))
+    if (PreviousMode != KernelMode)
     {
-      DPRINT1("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
-      return Status;
+        _SEH_TRY
+        {
+            ProbeForWrite(SecurityDescriptor,
+                          Length,
+                          sizeof(ULONG));
+            ProbeForWriteUlong(ResultLength);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
-  Header = BODY_TO_HEADER(Object);
-  if (Header->Type == NULL)
+    /* get the required access rights for the operation */
+    SeQuerySecurityAccessMask(SecurityInformation,
+                              &DesiredAccess);
+
+    Status = ObReferenceObjectByHandle(Handle,
+                                       DesiredAccess,
+                                       NULL,
+                                       PreviousMode,
+                                       &Object,
+                                       NULL);
+
+    if (NT_SUCCESS(Status))
     {
-      DPRINT1("Invalid object type\n");
-      ObDereferenceObject(Object);
-      return STATUS_UNSUCCESSFUL;
+        Header = BODY_TO_HEADER(Object);
+        ASSERT(Header->Type != NULL);
+
+        Status = Header->Type->TypeInfo.SecurityProcedure(Object,
+                                                          QuerySecurityDescriptor,
+                                                          SecurityInformation,
+                                                          SecurityDescriptor,
+                                                          &Length,
+                                                          &Header->SecurityDescriptor,
+                                                          Header->Type->TypeInfo.PoolType,
+                                                          &Header->Type->TypeInfo.GenericMapping);
+
+        ObDereferenceObject(Object);
+
+        /* return the required length */
+        _SEH_TRY
+        {
+            *ResultLength = Length;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
 
-      *ResultLength = Length;
-      Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-					    QuerySecurityDescriptor,
-					    SecurityInformation,
-					    SecurityDescriptor,
-					    ResultLength,
-                        NULL,
-                        NonPagedPool,
-                        NULL);
-
-  ObDereferenceObject(Object);
-
-  return Status;
+    return Status;
 }
 
 
@@ -211,46 +238,81 @@ NtSetSecurityObject(IN HANDLE Handle,
 		    IN SECURITY_INFORMATION SecurityInformation,
 		    IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-  POBJECT_HEADER Header;
-  PVOID Object;
-  NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
+    PVOID Object;
+    POBJECT_HEADER Header;
+    SECURITY_DESCRIPTOR_RELATIVE *CapturedSecurityDescriptor;
+    ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
+    NTSTATUS Status;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  DPRINT("NtSetSecurityObject() called\n");
-
-  Status = ObReferenceObjectByHandle(Handle,
-				     (SecurityInformation & SACL_SECURITY_INFORMATION) ? ACCESS_SYSTEM_SECURITY : 0,
-				     NULL,
-				     KeGetPreviousMode(),
-				     &Object,
-				     NULL);
-  if (!NT_SUCCESS(Status))
+    /* make sure the caller doesn't pass a NULL security descriptor! */
+    if (SecurityDescriptor == NULL)
     {
-      DPRINT1("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
-      return Status;
+        return STATUS_ACCESS_DENIED;
     }
 
-  Header = BODY_TO_HEADER(Object);
-  if (Header->Type == NULL)
+    PreviousMode = ExGetPreviousMode();
+
+    /* capture and make a copy of the security descriptor */
+    Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
+                                         PreviousMode,
+                                         PagedPool,
+                                         TRUE,
+                                         (PSECURITY_DESCRIPTOR*)&CapturedSecurityDescriptor);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Invalid object type\n");
-      ObDereferenceObject(Object);
-      return STATUS_UNSUCCESSFUL;
+        DPRINT1("Capturing the security descriptor failed! Status: 0x%lx\n", Status);
+        return Status;
     }
 
-      Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-					    SetSecurityDescriptor,
-					    SecurityInformation,
-					    SecurityDescriptor,
-					    NULL,
-                        NULL,
-                        NonPagedPool,
-                        NULL);
+    /* make sure the security descriptor passed by the caller
+       is valid for the operation we're about to perform */
+    if (((SecurityInformation & OWNER_SECURITY_INFORMATION) &&
+         (CapturedSecurityDescriptor->Owner == 0)) ||
+        ((SecurityInformation & GROUP_SECURITY_INFORMATION) &&
+         (CapturedSecurityDescriptor->Group == 0)))
+    {
+        Status = STATUS_INVALID_SECURITY_DESCR;
+    }
+    else
+    {
+        /* get the required access rights for the operation */
+        SeSetSecurityAccessMask(SecurityInformation,
+                                &DesiredAccess);
 
-  ObDereferenceObject(Object);
+        Status = ObReferenceObjectByHandle(Handle,
+                                           DesiredAccess,
+                                           NULL,
+                                           PreviousMode,
+                                           &Object,
+                                           NULL);
 
-  return Status;
+        if (NT_SUCCESS(Status))
+        {
+            Header = BODY_TO_HEADER(Object);
+            ASSERT(Header->Type != NULL);
+
+            Status = Header->Type->TypeInfo.SecurityProcedure(Object,
+                                                              SetSecurityDescriptor,
+                                                              SecurityInformation,
+                                                              (PSECURITY_DESCRIPTOR)SecurityDescriptor,
+                                                              NULL,
+                                                              &Header->SecurityDescriptor,
+                                                              Header->Type->TypeInfo.PoolType,
+                                                              &Header->Type->TypeInfo.GenericMapping);
+
+            ObDereferenceObject(Object);
+        }
+    }
+
+    /* release the descriptor */
+    SeReleaseSecurityDescriptor((PSECURITY_DESCRIPTOR)CapturedSecurityDescriptor,
+                                PreviousMode,
+                                TRUE);
+
+    return Status;
 }
 
 

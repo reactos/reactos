@@ -1037,7 +1037,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 	      OUT PACCESS_MASK GrantedAccess,
 	      OUT PNTSTATUS AccessStatus)
 {
-  SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
+  SECURITY_SUBJECT_CONTEXT SubjectSecurityContext = {0};
   KPROCESSOR_MODE PreviousMode;
   PTOKEN Token;
   NTSTATUS Status;
@@ -1082,8 +1082,6 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
       return STATUS_ACCESS_VIOLATION;
     }
 
-  RtlZeroMemory(&SubjectSecurityContext,
-		sizeof(SECURITY_SUBJECT_CONTEXT));
   SubjectSecurityContext.ClientToken = Token;
   SubjectSecurityContext.ImpersonationLevel = Token->ImpersonationLevel;
 
@@ -1116,6 +1114,39 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   DPRINT("NtAccessCheck() done\n");
 
   return Status;
+}
+
+VOID STDCALL
+SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                          OUT PACCESS_MASK DesiredAccess)
+{
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION |
+                               GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
+    {
+        *DesiredAccess |= READ_CONTROL;
+    }
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+    }
+}
+
+VOID STDCALL
+SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                        OUT PACCESS_MASK DesiredAccess)
+{
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+    {
+        *DesiredAccess |= WRITE_OWNER;
+    }
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        *DesiredAccess |= WRITE_DAC;
+    }
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+    }
 }
 
 /* EOF */

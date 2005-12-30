@@ -274,6 +274,14 @@ SeDefaultObjectMethod(
     KeLeaveCriticalRegion();                                                   \
   while(0)
 
+VOID STDCALL
+SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                          OUT PACCESS_MASK DesiredAccess);
+
+VOID STDCALL
+SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                        OUT PACCESS_MASK DesiredAccess);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_SE_H */
 
 /* EOF */
