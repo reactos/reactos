@@ -30,14 +30,14 @@ VOID
 WINAPI
 DeviceProperties_RunDLLA(HWND hWndParent,
                          HINSTANCE hInst,
-                         LPCWSTR lpDeviceCmd,
+                         LPCSTR lpDeviceCmd,
                          int nCmdShow);
 
 VOID
 WINAPI
 DeviceProperties_RunDLLW(HWND hWndParent,
                          HINSTANCE hInst,
-                         LPCSTR lpDeviceCmd,
+                         LPCWSTR lpDeviceCmd,
                          int nCmdShow);
 
 int

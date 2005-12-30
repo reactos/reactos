@@ -123,7 +123,7 @@ VOID
 WINAPI
 DeviceProperties_RunDLLA(HWND hWndParent,
                          HINSTANCE hInst,
-                         LPCWSTR lpDeviceCmd,
+                         LPCSTR lpDeviceCmd,
                          int nCmdShow)
 {
   UNIMPLEMENTED;
@@ -159,7 +159,7 @@ VOID
 WINAPI
 DeviceProperties_RunDLLW(HWND hWndParent,
                          HINSTANCE hInst,
-                         LPCSTR lpDeviceCmd,
+                         LPCWSTR lpDeviceCmd,
                          int nCmdShow)
 {
   UNIMPLEMENTED;
