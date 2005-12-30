@@ -1488,17 +1488,6 @@ NtGdiExtTextOut(
 
    // TODO: Write test-cases to exactly match real Windows in different
    // bad parameters (e.g. does Windows check the DC or the RECT first?).
-   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
-   {
-      // At least one of the two flags were specified. Copy lprc. Once.
-      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-   }
-
    dc = DC_LockDc(hDC);
    if (!dc)
    {
@@ -1510,6 +1499,18 @@ NtGdiExtTextOut(
       DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
+   }
+
+   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
+   {
+      // At least one of the two flags were specified. Copy lprc. Once.
+      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         return FALSE;
+      }
+      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
    }
 
    if (NULL != UnsafeDx && Count > 0)
