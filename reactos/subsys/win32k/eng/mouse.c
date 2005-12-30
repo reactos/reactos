@@ -72,13 +72,13 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  ppdev->SafetyRemoveCount++;
-
-  if (ppdev->SafetyRemoveLevel)
+  if (ppdev->SafetyRemoveLevel != 0)
     {
-      /* already hidden */
+      ppdev->SafetyRemoveCount++;
       return FALSE;
     }
+
+ ppdev->SafetyRemoveCount++;
 
   if (pgp->Exclude.right >= HazardX1
       && pgp->Exclude.left <= HazardX2
