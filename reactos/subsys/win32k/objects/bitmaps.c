@@ -116,6 +116,8 @@ NtGdiBitBlt(
 	DestRect.right  = XDest+Width;
 	DestRect.bottom = YDest+Height;
 
+        IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
+
 	SourcePoint.x = XSrc;
 	SourcePoint.y = YSrc;
 

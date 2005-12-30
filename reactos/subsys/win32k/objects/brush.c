@@ -480,6 +480,8 @@ IntPatBlt(
          DestRect.bottom = YLeft + dc->w.DCOrgY + 1;
       }
 
+      IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
       BrushOrigin.x = BrushObj->ptOrigin.x + dc->w.DCOrgX;
       BrushOrigin.y = BrushObj->ptOrigin.y + dc->w.DCOrgY;
 
