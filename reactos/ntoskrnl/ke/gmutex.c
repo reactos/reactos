@@ -135,7 +135,7 @@ FASTCALL
 KeAcquireGuardedMutexUnsafe(PKGUARDED_MUTEX GuardedMutex)
 {
     /* Remove the lock */
-    if (!InterlockedClearBit(&GuardedMutex->Count, 0))
+    if (!InterlockedBitTestAndReset(&GuardedMutex->Count, 0))
     {
         /* The Guarded Mutex was already locked, enter contented case */
         KiAcquireGuardedMutexContented(GuardedMutex);
@@ -204,7 +204,7 @@ KeTryToAcquireGuardedMutex(PKGUARDED_MUTEX GuardedMutex)
     KeEnterGuardedRegion();
 
     /* Remove the lock */
-    if (InterlockedClearBit(&GuardedMutex->Count, 0))
+    if (InterlockedBitTestAndReset(&GuardedMutex->Count, 0))
     {
         /* Re-enable APCs */
         KeLeaveGuardedRegion();

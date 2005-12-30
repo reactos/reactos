@@ -125,6 +125,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>interlck_asm.S</file>
+				<file>fastinterlck_asm.S</file>
 			</directory>
 		</if>
 		<compilationunit name="ex.c">
@@ -137,8 +138,6 @@
 			<file>fmutex.c</file>
 			<file>handle.c</file>
 			<file>init.c</file>
-			<file>interlck.c</file>
-			<file>list.c</file>
 			<file>lookas.c</file>
 			<file>mutant.c</file>
 			<file>power.c</file>

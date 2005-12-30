@@ -177,7 +177,7 @@ ExWindowStationObjectType DATA
 @Exfi386InterlockedExchangeUlong@8
 @Exfi386InterlockedIncrementLong@4
 Exi386InterlockedDecrementLong@4
-Exi386InterlockedExchangeUlong@8
+Exi386InterlockedExchangeUlong@12
 Exi386InterlockedIncrementLong@4
 FsRtlAcquireFileExclusive@4
 FsRtlAddLargeMcbEntry@28

@@ -289,6 +289,9 @@ Author:
 #define EFLAGS_ALIGN_CHECK                      0x40000
 #define EFLAGS_VIF                              0x80000
 #define EFLAGS_VIP                              0x100000
+#define EFLAG_SIGN                              0x8000
+#define EFLAG_ZERO                              0x4000
+#define EFLAG_SELECT                            (EFLAG_SIGN | EFLAG_ZERO)
 
 //
 // CR0
