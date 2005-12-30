@@ -269,7 +269,7 @@ ScmReadString(HKEY hServiceKey,
             dwError = GetLastError();
             goto done;
         }
-        expanded = HeapAlloc(GetProcessHeap(), 0, dwSizeNeeded);
+        expanded = HeapAlloc(GetProcessHeap(), 0, dwSizeNeeded * sizeof(WCHAR));
         if (dwSizeNeeded < ExpandEnvironmentStringsW((LPCWSTR)ptr, expanded, dwSizeNeeded))
         {
             dwError = GetLastError();
