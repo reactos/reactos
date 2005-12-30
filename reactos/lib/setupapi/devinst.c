@@ -5608,7 +5608,7 @@ SetupDiBuildDriverInfoList(
                 currentInfFileDetails = HeapAlloc(
                     GetProcessHeap(),
                     0,
-                    FIELD_OFFSET(struct InfFileDetails, FullInfFileName) + wcslen(FullInfFileName) * sizeof(WCHAR) + UNICODE_NULL);
+                    FIELD_OFFSET(struct InfFileDetails, FullInfFileName) + wcslen(FullInfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
                 if (!currentInfFileDetails)
                     continue;
                 memset(currentInfFileDetails, 0, sizeof(struct InfFileDetails));
