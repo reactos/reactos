@@ -99,8 +99,10 @@ __local_unwind2:
 
     // If we have reached the end of the chain or we're asked to stop here
     // by the caller then exit
-    movl     ER_TRYLEVEL(%ebx), %eax
+    test     %ebx, %ebx
+    je       .lu2_done
 
+    movl     ER_TRYLEVEL(%ebx), %eax
     cmpl     $-1, %eax
     je       .lu2_done
 
@@ -288,7 +290,6 @@ __except_handler3:
     // Perform local unwinding
 .eh3_unwind:
 
-    movl     $ExceptionContinueSearch, %eax
     testl    $EXCEPTION_TARGET_UNWIND, EREC_FLAGS(%eax)
     jnz      .eh3_return
 
