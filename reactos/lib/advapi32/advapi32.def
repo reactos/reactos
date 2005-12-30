@@ -59,7 +59,7 @@ BuildTrusteeWithSidA@8
 BuildTrusteeWithSidW@8
 ;CancelOverlappedAccess@4
 ;ChangeServiceConfig2A@12
-;ChangeServiceConfig2W@12
+ChangeServiceConfig2W@12
 ChangeServiceConfigA@44
 ChangeServiceConfigW@44
 CheckTokenMembership@12

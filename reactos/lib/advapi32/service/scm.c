@@ -78,6 +78,53 @@ HandleUnbind(VOID)
 
 
 /**********************************************************************
+ *  ChangeServiceConfig2W
+ *
+ * @implemented
+ */
+BOOL WINAPI
+ChangeServiceConfig2W(SC_HANDLE hService,
+                      DWORD dwInfoLevel,
+                      LPVOID lpInfo)
+{
+    DWORD lpInfoSize;
+    DWORD dwError;
+
+    DPRINT("ChangeServiceConfig2W() called\n");
+
+    /* Determine the length of the lpInfo parameter */
+    switch (dwInfoLevel)
+    {
+        case SERVICE_CONFIG_DESCRIPTION:
+            lpInfoSize = sizeof(SERVICE_DESCRIPTION);
+        case SERVICE_CONFIG_FAILURE_ACTIONS:
+            lpInfoSize = sizeof(SERVICE_FAILURE_ACTIONS);
+        default:
+            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+
+    if (lpInfo == NULL)
+        return TRUE;
+
+    HandleBind();
+
+    dwError = ScmrChangeServiceConfig2W(BindingHandle,
+                                        (unsigned int)hService,
+                                        dwInfoLevel,
+                                        lpInfo,
+                                        lpInfoSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrChangeServiceConfig2W() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+}
+
+
+/**********************************************************************
  *  ChangeServiceConfigA
  *
  * @implemented
@@ -1553,7 +1600,7 @@ StartServiceW(
 #if 0
     DWORD dwError;
 
-    DPRINT("StartServiceW()\n", ScLock);
+    DPRINT("StartServiceW()\n");
 
     HandleBind();
 

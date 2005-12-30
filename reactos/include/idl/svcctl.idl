@@ -324,7 +324,11 @@ cpp_quote("#endif")
   /* ScmrChangeServiceConfig2A */
 
   /* Function 37 */
-  /* ScmrChangeServiceConfig2W */
+  DWORD ScmrChangeServiceConfig2W([in] handle_t BindingHandle,
+                                  [in] SC_HANDLE hService,
+                                  [in] DWORD dwInfoLevel,
+                                  [in, size_is(dwInfoSize)] unsigned char *lpInfo,
+                                  [in] DWORD dwInfoSize);
 
   /* Function 38 */
   /* ScmrQueryServiceConfig2A */

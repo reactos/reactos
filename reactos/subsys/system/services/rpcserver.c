@@ -2061,7 +2061,16 @@ ScmrGetServiceKeyNameA(handle_t BindingHandle,
 
 
 /* Function 37 */
-/* ScmrChangeServiceConfig2W */
+unsigned long
+ScmrChangeServiceConfig2W(handle_t BindingHandle,
+                          unsigned int hService,
+                          unsigned long dwInfoLevel,
+                          unsigned char *lpInfo,
+                          unsigned long dwInfoSize)
+{
+    DPRINT1("ScmrChangeServiceConfig2W() is unimplemented\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 38 */
