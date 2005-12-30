@@ -134,6 +134,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
   HSURF ColorSurface;
   HSURF MaskSurface;
   HSURF SaveSurface;
+  BOOL  ShowPointer;
   
   /* public pointer information */
   RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */

@@ -153,10 +153,13 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       return;
    }
 
+      
+
    pgp->Enabled = FALSE;
 
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
+   
 
    if (pgp->SaveSurface != NULL)
    {
@@ -207,6 +210,12 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    {
       return;
    }
+   
+   if (pgp->ShowPointer == 1)
+   {
+      return ;
+   }
+
 
    pgp->Enabled = TRUE;
 

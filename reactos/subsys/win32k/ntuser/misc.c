@@ -237,8 +237,9 @@ NtUserCallOneParam(
       {
           if (CurInfo->ShowingCursor != 0)
           {
-             ppdev->SafetyRemoveCount = 1;
-             ppdev->SafetyRemoveLevel = 1;
+             pgp->ShowPointer = 1;
+             //ppdev->SafetyRemoveCount = 1;
+             //ppdev->SafetyRemoveLevel = 1;
              EngMovePointer(SurfObj,-1,-1,NULL);               
              CurInfo->ShowingCursor = 0;                
            }
@@ -247,8 +248,9 @@ NtUserCallOneParam(
        else
        {
           /* Show Cursor */              
-          ppdev->SafetyRemoveCount = 0;
-          ppdev->SafetyRemoveLevel = 0;
+          pgp->ShowPointer = 0;
+          //ppdev->SafetyRemoveCount = 0;
+          //ppdev->SafetyRemoveLevel = 0;
           EngMovePointer(SurfObj,-1,-1,NULL);
           CurInfo->ShowingCursor = CURSOR_SHOWING;
        }
