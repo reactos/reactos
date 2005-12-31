@@ -809,13 +809,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
    PreviousMode = ExGetPreviousMode();
 
-   Status = ProbeAndCaptureUnicodeString(&CapturedFileName,
-                                         PreviousMode,
-                                         FileName);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
    if (PreviousMode != KernelMode)
    {
       _SEH_TRY
@@ -831,8 +824,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
       if (!NT_SUCCESS(Status))
       {
-         ReleaseCapturedUnicodeString(&CapturedFileName,
-                                      PreviousMode);
          return Status;
       }
    }
@@ -840,6 +831,29 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    {
       SafeInitialSize = *InitialSize;
       SafeMaximumSize = *MaximumSize;
+   }
+
+   /* Pagefiles can't be larger than 4GB and ofcourse the minimum should be
+      smaller than the maximum */
+   if (0 != SafeInitialSize.u.HighPart)
+   {
+      return STATUS_INVALID_PARAMETER_2;
+   }
+   if (0 != SafeMaximumSize.u.HighPart)
+   {
+      return STATUS_INVALID_PARAMETER_3;
+   }
+   if (SafeMaximumSize.u.LowPart < SafeInitialSize.u.LowPart)
+   {
+      return STATUS_INVALID_PARAMETER_MIX;
+   }
+
+   Status = ProbeAndCaptureUnicodeString(&CapturedFileName,
+                                         PreviousMode,
+                                         FileName);
+   if (!NT_SUCCESS(Status))
+   {
+      return(Status);
    }
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -881,12 +895,24 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       return Status;
    }
 
-   BytesPerAllocationUnit = FsSizeInformation.SectorsPerAllocationUnit * FsSizeInformation.BytesPerSector;
-   if (BytesPerAllocationUnit % PAGE_SIZE)
+   BytesPerAllocationUnit = FsSizeInformation.SectorsPerAllocationUnit *
+                            FsSizeInformation.BytesPerSector;
+
+   /* We have to find a value which is a multiple of both PAGE_SIZE and
+      BytesPerAllocationUnit */
+   SafeInitialSize.u.LowPart = ((SafeInitialSize.u.LowPart + PAGE_SIZE - 1) /
+                                PAGE_SIZE) * PAGE_SIZE;
+   while (0 != (SafeInitialSize.u.LowPart % BytesPerAllocationUnit) &&
+          SafeInitialSize.u.LowPart <= SafeMaximumSize.u.LowPart - PAGE_SIZE)
+   {
+      SafeInitialSize.u.LowPart += PAGE_SIZE;
+   }
+   if (0 != (SafeInitialSize.u.LowPart % BytesPerAllocationUnit))
    {
       ZwClose(FileHandle);
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_ALLOTTED_SPACE_EXCEEDED;
    }
+   ASSERT(0 == (SafeInitialSize.u.LowPart % PAGE_SIZE));
 
    Status = ZwSetInformationFile(FileHandle,
                                  &IoStatus,

@@ -41,9 +41,6 @@ NTSTATUS __cdecl _main(int argc,
   NTSTATUS Status = STATUS_SUCCESS;
   PROCESS_BASIC_INFORMATION PBI = {0};
 
-  PrintString("ReactOS Session Manager (Build %s)\n",
-	     KERNEL_VERSION_BUILD_STR);
-
   /* Lookup yourself */
   Status = NtQueryInformationProcess (NtCurrentProcess(),
 		    		      ProcessBasicInformation,

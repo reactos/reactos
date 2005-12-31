@@ -31,7 +31,7 @@ VOID STDCALL DisplayString(LPCWSTR lpwString)
    UNICODE_STRING us;
    
    RtlInitUnicodeString (&us, lpwString);
-   ZwDisplayString (&us);
+   NtDisplayString (&us);
 }
 
 VOID STDCALL PrintString (char* fmt, ...)
@@ -44,6 +44,7 @@ VOID STDCALL PrintString (char* fmt, ...)
    va_start(ap, fmt);
    vsprintf(buffer, fmt, ap);
    va_end(ap);
+   DPRINT1("%s", buffer);
    
    RtlInitAnsiString (&AnsiString, buffer);
    RtlAnsiStringToUnicodeString (&UnicodeString,

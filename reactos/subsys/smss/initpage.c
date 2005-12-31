@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * initpage.c - 
  * 
  * ReactOS Operating System
@@ -217,18 +216,23 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
       MaximumSize.QuadPart = InitialSize.QuadPart;
     }
 
-  DPRINT1("SMSS: Created paging file %wZ with size %I64d KB\n",
+  DPRINT("Creating paging file %wZ with size %I64d KB\n",
          &FileName, InitialSize.QuadPart / 1024);
 
   Status = NtCreatePagingFile(&FileName,
                               &InitialSize,
                               &MaximumSize,
                               0);
+  if (! NT_SUCCESS(Status))
+    {
+      PrintString("Creation of paging file %wZ with size %I64d KB failed (status 0x%x\n",
+                  &FileName, InitialSize.QuadPart / 1024);
+    }
 
 Cleanup:
   RtlFreeUnicodeString(&FileName);
 
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -238,7 +242,7 @@ SmCreatePagingFiles(VOID)
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   NTSTATUS Status;
 
-  DbgPrint("SM: creating system paging files\n");
+  DPRINT("creating system paging files\n");
   /*
    * Disable paging file on MiniNT/Live CD.
    */

@@ -41,10 +41,8 @@ SmpObjectDirectoryQueryRoutine(PWSTR ValueName,
   HANDLE WindowsDirectory;
   NTSTATUS Status = STATUS_SUCCESS;
 
-#ifndef NDEBUG
-  DbgPrint("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  DbgPrint("ValueData '%S'\n", (PWSTR)ValueData);
-#endif
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
   if (ValueType != REG_SZ)
     {
       return(STATUS_SUCCESS);
