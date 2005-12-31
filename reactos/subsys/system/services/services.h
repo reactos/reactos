@@ -29,7 +29,7 @@ typedef struct _SERVICE
     LIST_ENTRY ServiceListEntry;
     LPWSTR lpServiceName;
     LPWSTR lpDisplayName;
-    LPWSTR lpServiceGroup;
+    PSERVICE_GROUP lpGroup;
     BOOL bDeleted;
     DWORD dwResumeCount;
 
@@ -109,6 +109,8 @@ DWORD ScmControlDriver(PSERVICE lpService,
 /* groupdb.c */
 
 DWORD ScmCreateGroupList(VOID);
+DWORD ScmSetServiceGroup(PSERVICE lpService,
+                         LPWSTR lpGroupName);
 
 
 /* rpcserver.c */

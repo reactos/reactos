@@ -927,7 +927,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
 
     if (lpdwTagId != NULL)
     {
-        dwError = ScmAssignNewTag(lpService->lpServiceGroup,
+        dwError = ScmAssignNewTag(lpService->lpGroup->lpGroupName,
                                   &lpService->dwTag);
         if (dwError != ERROR_SUCCESS)
             goto done;
@@ -1161,7 +1161,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     if (lpdwTagId != NULL)
     {
-        dwError = ScmAssignNewTag(lpService->lpServiceGroup,
+        dwError = ScmAssignNewTag(lpService->lpGroup->lpGroupName,
                                   &lpService->dwTag);
         if (dwError != ERROR_SUCCESS)
             goto done;
@@ -1635,8 +1635,8 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
     if (lpImagePath != NULL)
         dwRequiredSize += ((wcslen(lpImagePath) + 1) * sizeof(WCHAR));
 
-    if (lpService->lpServiceGroup  != NULL)
-        dwRequiredSize += ((wcslen(lpService->lpServiceGroup) + 1) * sizeof(WCHAR));
+    if (lpService->lpGroup != NULL)
+        dwRequiredSize += ((wcslen(lpService->lpGroup->lpGroupName) + 1) * sizeof(WCHAR));
 
     /* FIXME: Add Dependencies length*/
 
@@ -1670,11 +1670,11 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
             lpConfig->lpBinaryPathName = NULL;
         }
 
-        if (lpService->lpServiceGroup != NULL)
+        if (lpService->lpGroup != NULL)
         {
-            wcscpy(lpStr, lpService->lpServiceGroup);
+            wcscpy(lpStr, lpService->lpGroup->lpGroupName);
             lpConfig->lpLoadOrderGroup = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
-            lpStr += (wcslen(lpService->lpServiceGroup) + 1);
+            lpStr += (wcslen(lpService->lpGroup->lpGroupName) + 1);
         }
         else
         {
@@ -2290,7 +2290,8 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
 
         if (pszGroupName)
         {
-            if (_wcsicmp(pszGroupName, CurrentService->lpServiceGroup))
+            if ((CurrentService->lpGroup == NULL) ||
+                _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
                 continue;
         }
 
@@ -2336,7 +2337,8 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
 
         if (pszGroupName)
         {
-            if (_wcsicmp(pszGroupName, CurrentService->lpServiceGroup))
+            if ((CurrentService->lpGroup == NULL) ||
+                _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
                 continue;
         }
 
@@ -2378,7 +2380,8 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
 
         if (pszGroupName)
         {
-            if (_wcsicmp(pszGroupName, CurrentService->lpServiceGroup))
+            if ((CurrentService->lpGroup == NULL) ||
+                _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
                 continue;
         }
 

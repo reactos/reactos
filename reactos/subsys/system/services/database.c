@@ -267,8 +267,9 @@ CreateServiceListEntry(LPWSTR lpServiceName,
 
     if (lpGroup != NULL)
     {
-        lpService->lpServiceGroup = lpGroup;
-        lpGroup = NULL;
+        dwError = ScmSetServiceGroup(lpService, lpGroup);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     if (lpDisplayName != NULL)
@@ -278,7 +279,7 @@ CreateServiceListEntry(LPWSTR lpServiceName,
     }
 
     DPRINT("ServiceName: '%S'\n", lpService->lpServiceName);
-    DPRINT("Group: '%S'\n", lpService->lpServiceGroup);
+    DPRINT("Group: '%S'\n", lpService->lpGroup->lpGroupName);
     DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
            lpService->dwStartType,
            lpService->Status.dwServiceType,
@@ -415,8 +416,6 @@ ScmCheckDriver(PSERVICE Service)
     ULONG BufferLength;
     ULONG DataLength;
     ULONG Index;
-    PLIST_ENTRY GroupEntry;
-    PSERVICE_GROUP CurrentGroup;
 
     DPRINT("ScmCheckDriver(%S) called\n", Service->lpServiceName);
 
@@ -481,24 +480,12 @@ ScmCheckDriver(PSERVICE Service)
             /* Mark service as 'running' */
             Service->Status.dwCurrentState = SERVICE_RUNNING;
 
-            /* Find the driver's group and mark it as 'running' */
-            if (Service->lpServiceGroup != NULL)
+            /* Mark the service group as 'running' */
+            if (Service->lpGroup != NULL)
             {
-                GroupEntry = GroupListHead.Flink;
-                while (GroupEntry != &GroupListHead)
-                {
-                    CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
-
-                    DPRINT("Checking group '%S'\n", &CurrentGroup->lpGroupName);
-                    if (Service->lpServiceGroup != NULL &&
-                        _wcsicmp(Service->lpServiceGroup, CurrentGroup->lpGroupName) == 0)
-                    {
-                        CurrentGroup->ServicesRunning = TRUE;
-                    }
-
-                    GroupEntry = GroupEntry->Flink;
-                }
+                Service->lpGroup->ServicesRunning = TRUE;
             }
+
             break;
         }
     }
@@ -856,8 +843,7 @@ ScmAutoStartServices(VOID)
             {
                 CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-                if ((CurrentService->lpServiceGroup != NULL) &&
-                    (_wcsicmp(CurrentGroup->lpGroupName, CurrentService->lpServiceGroup) == 0) &&
+                if ((CurrentService->lpGroup == CurrentGroup) &&
                     (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                     (CurrentService->ServiceVisited == FALSE) &&
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
@@ -877,8 +863,7 @@ ScmAutoStartServices(VOID)
         {
             CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-            if ((CurrentService->lpServiceGroup != NULL) &&
-                (_wcsicmp(CurrentGroup->lpGroupName, CurrentService->lpServiceGroup) == 0) &&
+            if ((CurrentService->lpGroup == CurrentGroup) &&
                 (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                 (CurrentService->ServiceVisited == FALSE))
             {
@@ -899,7 +884,7 @@ ScmAutoStartServices(VOID)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-        if ((CurrentService->lpServiceGroup != NULL) &&
+        if ((CurrentService->lpGroup != NULL) &&
             (CurrentService->dwStartType == SERVICE_AUTO_START) &&
             (CurrentService->ServiceVisited == FALSE))
         {
@@ -917,7 +902,7 @@ ScmAutoStartServices(VOID)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-        if ((CurrentService->lpServiceGroup == NULL) &&
+        if ((CurrentService->lpGroup == NULL) &&
             (CurrentService->dwStartType == SERVICE_AUTO_START) &&
             (CurrentService->ServiceVisited == FALSE))
         {

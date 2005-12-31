@@ -13,9 +13,63 @@
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY GroupListHead;
+LIST_ENTRY UnknownGroupListHead;
 
 
 /* FUNCTIONS *****************************************************************/
+
+DWORD
+ScmSetServiceGroup(PSERVICE lpService,
+                   LPWSTR lpGroupName)
+{
+    PLIST_ENTRY GroupEntry;
+    PSERVICE_GROUP lpGroup;
+
+    GroupEntry = GroupListHead.Flink;
+    while (GroupEntry != &GroupListHead)
+    {
+        lpGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+        if (!_wcsicmp(lpGroup->lpGroupName, lpGroupName))
+        {
+            lpService->lpGroup = lpGroup;
+            return ERROR_SUCCESS;
+        }
+
+        GroupEntry = GroupEntry->Flink;
+    }
+
+    GroupEntry = UnknownGroupListHead.Flink;
+    while (GroupEntry != &UnknownGroupListHead)
+    {
+        lpGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+        if (!_wcsicmp(lpGroup->lpGroupName, lpGroupName))
+        {
+            lpGroup->dwRefCount++;
+            lpService->lpGroup = lpGroup;
+            return ERROR_SUCCESS;
+        }
+
+        GroupEntry = GroupEntry->Flink;
+    }
+
+    lpGroup = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
+                                        HEAP_ZERO_MEMORY,
+                                        sizeof(SERVICE_GROUP) + (wcslen(lpGroupName) * sizeof(WCHAR)));
+    if (lpGroup == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(lpGroup->szGroupName, lpGroupName);
+    lpGroup->lpGroupName = lpGroup->szGroupName;
+    lpGroup->dwRefCount = 1;
+
+    InsertTailList(&UnknownGroupListHead,
+                   &lpGroup->GroupListEntry);
+
+    return ERROR_SUCCESS;
+}
+
 
 static NTSTATUS STDCALL
 CreateGroupOrderListRoutine(PWSTR ValueName,
@@ -120,6 +174,7 @@ ScmCreateGroupList(VOID)
     NTSTATUS Status;
 
     InitializeListHead(&GroupListHead);
+    InitializeListHead(&UnknownGroupListHead);
 
     /* Build group order list */
     RtlZeroMemory(&QueryTable,
