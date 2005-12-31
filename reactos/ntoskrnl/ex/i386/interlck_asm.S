@@ -8,27 +8,8 @@
  
 /* INCLUDES ******************************************************************/
 #include <ndk/asm.h>
+#include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
-
-//#define CONFIG_SMP
-
-#ifdef CONFIG_SMP
-#define LOCK lock
-#define ACQUIRE_SPINLOCK(x, y) \
-    lock bts dword ptr [x], 0; \
-    jb y
-#define RELEASE_SPINLOCK(x) mov byte ptr [x], 0
-#define SPIN_ON_LOCK(x, y) \
-1: \
-    test dword ptr [x], 1; \
-    jz y; \
-    pause; \
-    jmp 1b
-#else
-#define LOCK
-#define ACQUIRE_SPINLOCK(x, y)
-#define RELEASE_SPINLOCK(x) 
-#endif
 
 /* FUNCTIONS ****************************************************************/
 
