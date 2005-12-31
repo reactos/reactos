@@ -1,0 +1,4 @@
+<tree>
+	<node name="Mozilla Control" file="mozcontrol.xml"/>
+	<node name="AbiWord" file="abiword.xml"/>
+</tree>
