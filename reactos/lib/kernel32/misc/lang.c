@@ -979,7 +979,7 @@ CompareStringW (
 
     if (dwCmpFlags & ~NORM_IGNORECASE)
     {
-        DPRINT1("CompareString: STUB flags - 0x%x\n", dwCmpFlags);
+        DPRINT("CompareString: STUB flags - 0x%x\n", dwCmpFlags);
 	Result = compare_unicode_string(&String1, &String2, dwCmpFlags);
     }
     else
