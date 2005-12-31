@@ -268,14 +268,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		if (++cnt == max)
 			break;
 
-#ifndef _NO_WIN_FS
-		if (entry->_etype == ET_SHELL)
-			AddEntry(dir._folder, static_cast<ShellEntry*>(entry));
-		else
-			AddEntry(dir._folder, entry);
-#else
-			AddEntry(dir._folder, static_cast<ShellEntry*>(entry));
-#endif
+		AddEntry(dir._folder, static_cast<ShellEntry*>(entry));
 	}
 }
 
@@ -1238,18 +1231,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 
 			///@todo If the user explicitly clicked on a submenu, display this folder as floating start menu.
 
-#ifndef _NO_WIN_FS
-			if (entry->_etype == ET_SHELL)
-				new_folders.push_back(entry->create_absolute_pidl());
-			else {
-				TCHAR path[MAX_PATH];
-
-				if (entry->get_path(path))
-					new_folders.push_back(path);
-			}
-#else
 			new_folders.push_back(entry->create_absolute_pidl());
-#endif
 
 			if (title.empty())
 				title = entry->_display_name;

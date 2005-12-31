@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -109,20 +109,12 @@ ShellPath ShellEntry::create_absolute_pidl() const
 {
 	CONTEXT("ShellEntry::create_absolute_pidl()");
 
-	if (_up)
-#ifndef _NO_WIN_FS
-		if (_up->_etype == ET_SHELL)
-#endif
-		{
-			ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
+	if (_up) {
+		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
-			if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
-				return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
-		}
-#ifndef _NO_WIN_FS
-		else
-			return _pidl.create_absolute_pidl(_up->create_absolute_pidl());
-#endif
+		if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
+			return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
+	}
 
 	return _pidl;
 }
@@ -223,38 +215,65 @@ void ShellDirectory::read_directory(int scan_flags)
 	/*if (_folder.empty())
 		return;*/
 
-#ifndef _NO_WIN_FS
-	TCHAR buffer[MAX_PATH];
+	ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
 
-	if (get_path(buffer)) {
-		Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
+	TCHAR name[MAX_PATH];
+	HRESULT hr_next = S_OK;
 
-		LPTSTR p = buffer + _tcslen(buffer);
+	do {
+#define FETCH_ITEM_COUNT	32
+		LPITEMIDLIST pidls[FETCH_ITEM_COUNT];
+		ULONG cnt = 0;
 
-		lstrcpy(p, TEXT("\\*"));
+		memset(pidls, 0, sizeof(pidls));
 
-		WIN32_FIND_DATA w32fd;
-		HANDLE hFind = FindFirstFile(buffer, &w32fd);
+		hr_next = enumerator->Next(FETCH_ITEM_COUNT, pidls, &cnt);
 
-		if (hFind != INVALID_HANDLE_VALUE) {
-			do {
-				 // ignore hidden files (usefull in the start menu)
-				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-					continue;
+		/* don't break yet now: Registry Explorer Plugin returns E_FAIL!
+		if (!SUCCEEDED(hr_next))
+			break; */
 
-				 // ignore directory entries "." and ".."
-				if ((w32fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) &&
-					w32fd.cFileName[0]==TEXT('.') &&
-					(w32fd.cFileName[1]==TEXT('\0') ||
-					(w32fd.cFileName[1]==TEXT('.') && w32fd.cFileName[2]==TEXT('\0'))))
-					continue;
+		if (hr_next == S_FALSE)
+			break;
 
-				lstrcpy(p+1, w32fd.cFileName);
+		for(ULONG n=0; n<cnt; ++n) {
+			WIN32_FIND_DATA w32fd;
+			BY_HANDLE_FILE_INFORMATION bhfi;
+			bool bhfi_valid = false;
+
+			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
+
+			SFGAOF attribs_before = ~SFGAO_READONLY & ~SFGAO_VALIDATE;
+			SFGAOF attribs = attribs_before;
+			HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
+			bool removeable = false;
+
+			if (SUCCEEDED(hr) && attribs!=attribs_before) {
+				 // avoid accessing floppy drives when browsing "My Computer"
+				if (attribs & SFGAO_REMOVABLE) {
+					attribs |= SFGAO_HASSUBFOLDER;
+					removeable = true;
+				} else if (!(scan_flags & SCAN_DONT_ACCESS)) {
+					DWORD attribs2 = SFGAO_READONLY;
+
+					HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
+
+					if (SUCCEEDED(hr))
+						attribs |= attribs2;
+				}
+			} else
+				attribs = 0;
+
+			bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
+											 !(scan_flags&SCAN_DONT_ACCESS) && !removeable);
+
+			try {
+				Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					entry = new WinDirectory(this, buffer);
+					entry = new ShellDirectory(this, pidls[n], _hwnd);
 				else
-					entry = new WinEntry(this);
+					entry = new ShellEntry(this, pidls[n]);
 
 				if (!first_entry)
 					first_entry = entry;
@@ -264,165 +283,42 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-				entry->_level = level;
+				if (bhfi_valid)
+					memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
 
-				if (!(scan_flags & SCAN_DONT_ACCESS)) {
-					HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-												0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-
-					if (hFile != INVALID_HANDLE_VALUE) {
-						if (GetFileInformationByHandle(hFile, &entry->_bhfi))
-							entry->_bhfi_valid = true;
-
-						CloseHandle(hFile);
-					}
+				if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
+					if (!entry->_data.cFileName[0])
+						_tcscpy(entry->_data.cFileName, name);
+					else if (_tcscmp(entry->_display_name, name))
+						entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
 				}
+
+				if (attribs & SFGAO_LINK)
+					w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
+
+				entry->_level = level;
+				entry->_shell_attribs = attribs;
+				entry->_bhfi_valid = bhfi_valid;
 
 				 // set file type name
-				LPCTSTR ext = g_Globals._ftype_mgr.set_type(entry);
+				g_Globals._ftype_mgr.set_type(entry);
 
-				DWORD attribs = SFGAO_FILESYSTEM;
-
-				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					attribs |= SFGAO_FOLDER|SFGAO_HASSUBFOLDER;
-
-				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-					attribs |= SFGAO_READONLY;
-
-				//if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-				//	attribs |= SFGAO_HIDDEN;
-
-				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED)
-					attribs |= SFGAO_COMPRESSED;
-
-				if (ext && !_tcsicmp(ext, _T(".lnk"))) {
-					attribs |= SFGAO_LINK;
-					w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
-				}
-
-				entry->_shell_attribs = attribs;
-
-				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				 // get icons for files and virtual objects
+				if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+					!(attribs & SFGAO_FILESYSTEM)) {
+					if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
+						entry->_icon_id = entry->safe_extract_icon();
+				} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					entry->_icon_id = ICID_FOLDER;
-				else if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
-					entry->_icon_id = entry->safe_extract_icon();
+				else
+					entry->_icon_id = ICID_NONE;	// don't try again later
 
 				last = entry;
-			} while(FindNextFile(hFind, &w32fd));
-
-			FindClose(hFind);
-		}
-
-	}
-	else // no file system path
-#endif
-	{
-
-		ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
-
-		TCHAR name[MAX_PATH];
-		HRESULT hr_next = S_OK;
-
-		do {
-#define FETCH_ITEM_COUNT	32
-			LPITEMIDLIST pidls[FETCH_ITEM_COUNT];
-			ULONG cnt = 0;
-
-			memset(pidls, 0, sizeof(pidls));
-
-			hr_next = enumerator->Next(FETCH_ITEM_COUNT, pidls, &cnt);
-
-			/* don't break yet now: Registry Explorer Plugin returns E_FAIL!
-			if (!SUCCEEDED(hr_next))
-				break; */
-
-			if (hr_next == S_FALSE)
-				break;
-
-			for(ULONG n=0; n<cnt; ++n) {
-				WIN32_FIND_DATA w32fd;
-				BY_HANDLE_FILE_INFORMATION bhfi;
-				bool bhfi_valid = false;
-
-				memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
-
-				SFGAOF attribs_before = ~SFGAO_READONLY & ~SFGAO_VALIDATE;
-				SFGAOF attribs = attribs_before;
-				HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
-				bool removeable = false;
-
-				if (SUCCEEDED(hr) && attribs!=attribs_before) {
-					 // avoid accessing floppy drives when browsing "My Computer"
-					if (attribs & SFGAO_REMOVABLE) {
-						attribs |= SFGAO_HASSUBFOLDER;
-						removeable = true;
-					} else if (!(scan_flags & SCAN_DONT_ACCESS)) {
-						DWORD attribs2 = SFGAO_READONLY;
-
-						HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
-
-						if (SUCCEEDED(hr))
-							attribs |= attribs2;
-					}
-				} else
-					attribs = 0;
-
-				bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
-												 !(scan_flags&SCAN_DONT_ACCESS) && !removeable);
-
-				try {
-					Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
-
-					if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-						entry = new ShellDirectory(this, pidls[n], _hwnd);
-					else
-						entry = new ShellEntry(this, pidls[n]);
-
-					if (!first_entry)
-						first_entry = entry;
-
-					if (last)
-						last->_next = entry;
-
-					memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
-
-					if (bhfi_valid)
-						memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
-
-					if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
-						if (!entry->_data.cFileName[0])
-							_tcscpy(entry->_data.cFileName, name);
-						else if (_tcscmp(entry->_display_name, name))
-							entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
-					}
-
-					if (attribs & SFGAO_LINK)
-						w32fd.dwFileAttributes |= ATTRIBUTE_SYMBOLIC_LINK;
-
-					entry->_level = level;
-					entry->_shell_attribs = attribs;
-					entry->_bhfi_valid = bhfi_valid;
-
-					 // set file type name
-					g_Globals._ftype_mgr.set_type(entry);
-
-					 // get icons for files and virtual objects
-					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-						!(attribs & SFGAO_FILESYSTEM)) {
-						if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
-							entry->_icon_id = entry->safe_extract_icon();
-					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-						entry->_icon_id = ICID_FOLDER;
-					else
-						entry->_icon_id = ICID_NONE;	// don't try again later
-
-					last = entry;
-				} catch(COMException& e) {
-					HandleException(e, _hwnd);
-				}
+			} catch(COMException& e) {
+				HandleException(e, _hwnd);
 			}
-		} while(SUCCEEDED(hr_next));
-	}
+		}
+	} while(SUCCEEDED(hr_next));
 
 	if (last)
 		last->_next = NULL;
@@ -448,16 +344,12 @@ Entry* ShellDirectory::find_entry(const void* p)
 {
 	LPITEMIDLIST pidl = (LPITEMIDLIST) p;
 
-	for(Entry*entry=_down; entry; entry=entry->_next)
-#ifndef _NO_WIN_FS
-		if (entry->_etype == ET_SHELL)
-#endif
-		{
-			ShellEntry* se = static_cast<ShellEntry*>(entry);
+	for(Entry*entry=_down; entry; entry=entry->_next) {
+		ShellEntry* se = static_cast<ShellEntry*>(entry);
 
-			if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
-				return entry;
-		}
+		if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
+			return entry;
+	}
 
 	return NULL;
 }

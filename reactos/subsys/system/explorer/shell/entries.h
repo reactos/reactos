@@ -26,13 +26,6 @@
  //
 
 
-#ifndef _NO_WIN_FS
-enum ENTRY_TYPE {
-	ET_WINDOWS,
-	ET_SHELL
-};
-#endif
-
 enum SORT_ORDER {
 	SORT_NONE,
 	SORT_NAME,
@@ -59,13 +52,8 @@ enum SCAN_FLAGS {
 struct Entry
 {
 protected:
-#ifndef _NO_WIN_FS
-	Entry(ENTRY_TYPE etype);
-	Entry(Entry* parent, ENTRY_TYPE etype);
-#else
 	Entry();
 	Entry(Entry* parent);
-#endif
 	Entry(const Entry&);
 
 public:
@@ -86,9 +74,6 @@ public:
 	LPTSTR		_type_name;
 	LPTSTR		_content;
 
-#ifndef _NO_WIN_FS
-	ENTRY_TYPE	_etype;
-#endif
 	int /*ICON_ID*/ _icon_id;
 
 	BY_HANDLE_FILE_INFORMATION _bhfi;

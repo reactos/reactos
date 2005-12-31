@@ -413,15 +413,6 @@ SOURCE=.\shell\shellfs.h
 SOURCE=.\shell\startup.c
 # SUBTRACT CPP /YX /Yc /Yu
 # End Source File
-# Begin Source File
-
-SOURCE=.\shell\winfs.cpp
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\winfs.h
-# End Source File
 # End Group
 # Begin Group "dialogs"
 

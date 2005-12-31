@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -194,66 +194,6 @@ void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 	}
 }
 
- // local replacement implementation for SHBindToParent()
- // (derived from http://www.geocities.com/SiliconValley/2060/articles/shell-helpers.html)
-static HRESULT my_SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, VOID** ppv, LPCITEMIDLIST* ppidlLast)
-{
-	HRESULT hr;
-
-	if (!ppv)
-		return E_POINTER;
-
-	// There must be at least one item ID.
-	if (!pidl || !pidl->mkid.cb)
-		return E_INVALIDARG;
-
-	 // Get the desktop folder as root.
-	ShellFolder desktop;
-/*	IShellFolderPtr desktop;
-	hr = SHGetDesktopFolder(&desktop);
-	if (FAILED(hr))
-		return hr; */
-
-	// Walk to the penultimate item ID.
-	LPCITEMIDLIST marker = pidl;
-	for (;;)
-	{
-		LPCITEMIDLIST next = reinterpret_cast<LPCITEMIDLIST>(
-			marker->mkid.abID - sizeof(marker->mkid.cb) + marker->mkid.cb);
-		if (!next->mkid.cb)
-			break;
-		marker = next;
-	}
-
-	if (marker == pidl)
-	{
-		// There was only a single item ID, so bind to the root folder.
-		hr = desktop->QueryInterface(riid, ppv);
-	}
-	else
-	{
-		// Copy the ID list, truncating the last item.
-		int length = marker->mkid.abID - pidl->mkid.abID;
-		if (LPITEMIDLIST parent_id = reinterpret_cast<LPITEMIDLIST>(
-			malloc(length + sizeof(pidl->mkid.cb))))
-		{
-			LPBYTE raw_data = reinterpret_cast<LPBYTE>(parent_id);
-			memcpy(raw_data, pidl, length);
-			memset(raw_data + length, 0, sizeof(pidl->mkid.cb));
-			hr = desktop->BindToObject(parent_id, 0, riid, ppv);
-			free(parent_id);
-		}
-		else
-			return E_OUTOFMEMORY;
-	}
-
-	// Return a pointer to the last item ID.
-	if (ppidlLast)
-		*ppidlLast = marker;
-
-	return hr;
-}
-
 void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen)
 {
 	CONTEXT("ShellBrowserChild::Tree_DoItemMenu()");
@@ -263,36 +203,11 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	if (itemData) {
 		Entry* entry = (Entry*)itemData;
 
-#ifndef _NO_WIN_FS
-		if (entry->_etype == ET_SHELL)
-#endif
-		{
-			ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
-			ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
-			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
+		ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
+		ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
+		LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
-			CHECKERROR(ShellFolderContextMenu(folder, _hwnd, 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
-		}
-#ifndef _NO_WIN_FS
-		else {
-			ShellPath shell_path = entry->create_absolute_pidl();
-			LPCITEMIDLIST pidl_abs = shell_path;
-
-			IShellFolder* parentFolder;
-			LPCITEMIDLIST pidlLast;
-
-			 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
-			HRESULT hr = my_SHBindToParent(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast);
-
-			if (SUCCEEDED(hr)) {
-				hr = ShellFolderContextMenu(parentFolder, _hwnd, 1, &pidlLast, pptScreen->x, pptScreen->y, _cm_ifs);
-
-				parentFolder->Release();
-			}
-
-			CHECKERROR(hr);
-		}
-#endif
+		CHECKERROR(ShellFolderContextMenu(folder, _hwnd, 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
 	}
 }
 
@@ -671,11 +586,8 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 					Entry* entry = parent->find_entry(pidl);
 
 					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-#ifndef _NO_WIN_FS
-						if (entry->_etype == ET_SHELL)
-#endif
-							if (expand_folder(static_cast<ShellDirectory*>(entry)))
-								return S_OK;
+						if (expand_folder(static_cast<ShellDirectory*>(entry)))
+							return S_OK;
 				}
 			//@@}
 		} else { // no tree control
@@ -766,30 +678,25 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 
 void ShellBrowserChild::jump_to(Entry* entry)
 {
-#ifndef _NO_WIN_FS
-	if (entry->_etype == ET_SHELL)
-#endif
-	{
-		IShellFolder* folder;
-		ShellDirectory* se = static_cast<ShellDirectory*>(entry);
+	IShellFolder* folder;
+	ShellDirectory* se = static_cast<ShellDirectory*>(entry);
 
-		if (se->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			folder = static_cast<ShellDirectory*>(se)->_folder;
-		else
-			folder = se->get_parent_folder();
+	if (se->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		folder = static_cast<ShellDirectory*>(se)->_folder;
+	else
+		folder = se->get_parent_folder();
 
-		if (!folder) {
-			assert(folder);
-			return;
-		}
-
-		if (_create_info._open_mode & OWM_EXPLORE) {
-
-			//@@ todo
-
-		} else;
-			UpdateFolderView(folder);
-
-		_cur_dir = se;
+	if (!folder) {
+		assert(folder);
+		return;
 	}
+
+	if (_create_info._open_mode & OWM_EXPLORE) {
+
+		//@@ todo
+
+	} else;
+		UpdateFolderView(folder);
+
+	_cur_dir = se;
 }

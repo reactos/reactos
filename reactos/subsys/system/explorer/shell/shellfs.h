@@ -29,13 +29,8 @@
  /// shell file/directory entry
 struct ShellEntry : public Entry
 {
-#ifndef _NO_WIN_FS
-	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
-	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
-#else
 	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent), _pidl(shell_path) {}
 	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent), _pidl(shell_path) {}
-#endif
 
 	virtual bool get_path(PTSTR path) const;
 	virtual ShellPath create_absolute_pidl() const;
@@ -47,13 +42,8 @@ struct ShellEntry : public Entry
 	ShellPath	_pidl;	// parent relative PIDL
 
 protected:
-#ifndef _NO_WIN_FS
-	ShellEntry(LPITEMIDLIST shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}
-	ShellEntry(const ShellPath& shell_path) : Entry(ET_SHELL), _pidl(shell_path) {}
-#else
 	ShellEntry(LPITEMIDLIST shell_path) : _pidl(shell_path) {}
 	ShellEntry(const ShellPath& shell_path) : _pidl(shell_path) {}
-#endif
 };
 
 

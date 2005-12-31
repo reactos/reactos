@@ -78,7 +78,6 @@ OBJECTS = \
 	shellbrowserimpl.o \
 	explorer.o \
 	entries.o \
-	winfs.o \
 	shellfs.o \
 	desktop.o \
 	desktopbar.o \
