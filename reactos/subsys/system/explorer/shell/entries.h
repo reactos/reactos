@@ -155,17 +155,15 @@ struct ShellDirectory : public ShellEntry, public Directory
 		pFolder->Release();
 	}
 
-	ShellEntry*	read_tree(const void* path, SORT_ORDER sortOrder);
 	void	read_directory(SORT_ORDER sortOrder, int scan_flags=0);
 	void	read_directory(int scan_flags=0);
 	void	sort_directory(SORT_ORDER sortOrder);
 	void	smart_scan(int scan_flags=0);
-	virtual const void* get_next_path_component(const void*) const;
-	virtual ShellEntry* find_entry(const void* p);
 
+	virtual ShellEntry* find_entry(const void* p);
 	virtual bool get_path(PTSTR path) const;
 
-	int	extract_icons();
+	int		extract_icons();
 
 	ShellFolder _folder;
 	HWND	_hwnd;
@@ -178,7 +176,7 @@ protected:
 inline IShellFolder* ShellEntry::get_parent_folder() const
 {
 	if (_up)
-		return static_cast<ShellDirectory*>(_up)->_folder;
+		return _up->_folder;
 	else
 		return GetDesktopFolder();
 }

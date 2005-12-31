@@ -103,8 +103,6 @@ LRESULT ShellBrowserChild::Init()
 
 	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
 
-	jump_to(_create_info._shell_path);
-
 	 // -> set_curdir()
 	_root._entry->read_directory();
 
@@ -113,8 +111,7 @@ LRESULT ShellBrowserChild::Init()
 		InitDragDrop();
 	}
 
-	/* already filled by ShellDirectory constructor
-	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
+	jump_to(_create_info._shell_path);
 
 	return 0;
 }
@@ -278,11 +275,11 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 	if (pnmtv->action == TVE_COLLAPSE)
         TreeView_Expand(_left_hwnd, pnmtv->itemNew.hItem, TVE_COLLAPSE|TVE_COLLAPSERESET);
     else if (pnmtv->action == TVE_EXPAND) {
-		ShellDirectory* entry = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, pnmtv->itemNew.hItem);
+		ShellDirectory* dir = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, pnmtv->itemNew.hItem);
 
-		if (entry)
-			if (!InsertSubitems(pnmtv->itemNew.hItem, entry)) {
-				entry->_shell_attribs &= ~SFGAO_HASSUBFOLDER;
+		if (dir)
+			if (!InsertSubitems(pnmtv->itemNew.hItem, dir)) {
+				dir->_shell_attribs &= ~SFGAO_HASSUBFOLDER;
 
 				 // remove subitem "+"
 				TV_ITEM tvItem;
@@ -359,10 +356,11 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 {
 	CONTEXT("ShellBrowserChild::OnTreeItemSelected()");
 
-	_last_sel = pnmtv->itemNew.hItem;
-	ShellDirectory* entry = (ShellDirectory*)pnmtv->itemNew.lParam;
+	ShellDirectory* dir = (ShellDirectory*)pnmtv->itemNew.lParam;
 
-	jump_to(entry);
+	jump_to(dir);
+
+	_last_sel = pnmtv->itemNew.hItem;
 }
 
 void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
@@ -576,26 +574,24 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 
 	if (pida->cidl >= 1) {
 		if (_left_hwnd) {	// explorer mode
-			//@@if (_last_sel) {
-				ShellDirectory* parent = _cur_dir;//@@(ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
+			ShellDirectory* parent = _cur_dir;
 
-				if (parent) {
-					try {
-						parent->smart_scan();
-					} catch(COMException& e) {
-						return e.Error();
-					}
-
-					UINT firstOffset = pida->aoffset[1];
-					LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pida+firstOffset);
-
-					ShellEntry* entry = parent->find_entry(pidl);
-
-					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-						if (expand_folder(static_cast<ShellDirectory*>(entry)))
-							return S_OK;
+			if (parent) {
+				try {
+					parent->smart_scan();
+				} catch(COMException& e) {
+					return e.Error();
 				}
-			//@@}
+
+				UINT firstOffset = pida->aoffset[1];
+				LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pida+firstOffset);
+
+				ShellEntry* entry = parent->find_entry(pidl);
+
+				if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+					if (select_folder(static_cast<ShellDirectory*>(entry), true))
+						return S_OK;
+			}
 		} else { // no tree control
 			if (MainFrame::OpenShellFolders(pida, _hWndFrame))
 				return S_OK;
@@ -611,7 +607,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 }
 
 
-bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
+bool ShellBrowserChild::select_folder(ShellDirectory* dir, bool expand)
 {
 	CONTEXT("ShellBrowserChild::expand_folder()");
 
@@ -619,14 +615,19 @@ bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 	if (!_last_sel)
 		return false;
 
-	if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
-		return false;
+	if (expand)
+		if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
+			return false;
 
 	for(HTREEITEM hitem=TreeView_GetChild(_left_hwnd,_last_sel); hitem; hitem=TreeView_GetNextSibling(_left_hwnd,hitem)) {
-		if ((ShellDirectory*)TreeView_GetItemData(_left_hwnd,hitem) == entry) {
-			if (TreeView_SelectItem(_left_hwnd, hitem) &&
-				TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
+		if ((ShellDirectory*)TreeView_GetItemData(_left_hwnd,hitem) == dir) {
+			if (TreeView_SelectItem(_left_hwnd, hitem)) {
+				if (expand)
+					if (!TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
+						return false;
+
 				return true;
+			}
 
 			break;
 		}
@@ -645,7 +646,7 @@ void ShellBrowserChild::jump_to(LPCTSTR path)
 
 void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 {
-	ShellDirectory* entry = NULL;
+	ShellDirectory* dir = NULL;
 
 	if (!_cur_dir)
 		_cur_dir = _root._entry;
@@ -661,48 +662,36 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 
 				_cur_dir->smart_scan();
 
-				entry = static_cast<ShellDirectory*>(_cur_dir->find_entry(child_pidl));
-				if (!entry)
+				dir = static_cast<ShellDirectory*>(_cur_dir->find_entry(child_pidl));
+				if (!dir)
 					break;
 
-				jump_to(entry);
+				jump_to(dir);
 			}
 		} else {
 			_cur_dir->smart_scan();
 
-			entry = static_cast<ShellDirectory*>(_cur_dir->find_entry(pidl));	// This is not correct in the common case, but works on the desktop level.
+			dir = static_cast<ShellDirectory*>(_cur_dir->find_entry(pidl));	// This is not correct in the common case, but works on the desktop level.
 
-			if (entry)
-				jump_to(entry);
+			if (dir)
+				jump_to(dir);
 		}
 	}
 
 	 // If not already called, now directly call UpdateFolderView() using pidl.
-	if (!entry)
+	if (!dir)
 		UpdateFolderView(ShellFolder(pidl));
 }
 
-void ShellBrowserChild::jump_to(ShellDirectory* entry)
+void ShellBrowserChild::jump_to(ShellDirectory* dir)
 {
-	IShellFolder* folder;
-	ShellDirectory* se = entry;
-
-	if (se->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		folder = static_cast<ShellDirectory*>(se)->_folder;
-	else
-		folder = se->get_parent_folder();
-
-	if (!folder) {
-		assert(folder);
+	if (dir == _cur_dir)
 		return;
-	}
 
-	if (_create_info._open_mode & OWM_EXPLORE) {
+	if (_left_hwnd)
+		select_folder(dir, false);
 
-		//@@ todo
+	UpdateFolderView(dir->_folder);
 
-	} else;
-		UpdateFolderView(folder);
-
-	_cur_dir = se;
+	_cur_dir = dir;
 }

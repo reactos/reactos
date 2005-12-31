@@ -138,7 +138,7 @@ public:
 
 	void	UpdateFolderView(IShellFolder* folder);
 	void	Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen);
-	bool	expand_folder(ShellDirectory* entry);
+	bool	select_folder(ShellDirectory* dir, bool expand);
 
 	// SDI integration
 public:
@@ -150,7 +150,7 @@ public:
 	void	jump_to(LPCTSTR path);
 	void	jump_to(LPCITEMIDLIST pidl);
 
-	void	jump_to(ShellDirectory* entry);
+	void	jump_to(ShellDirectory* dir);
 
 protected:
 	ShellDirectory*	_cur_dir;

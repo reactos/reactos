@@ -129,36 +129,6 @@ ShellEntry::~ShellEntry()
 }
 
 
- // read directory tree and expand to the given location
-ShellEntry* ShellDirectory::read_tree(const void* path, SORT_ORDER sortOrder)
-{
-	CONTEXT("ShellEntry::read_tree()");
-
-	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
-
-	ShellDirectory* entry = this;
-
-	for(const void*p=path; p && entry; ) {
-		if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-			break;
-
-		entry->read_directory(sortOrder);
-
-		if (entry->_down)
-			entry->_expanded = true;
-
-		ShellEntry* next_entry = entry->find_entry(p);
-		p = entry->get_next_path_component(p);
-
-		entry = static_cast<ShellDirectory*>(next_entry);
-	}
-
-	SetCursor(old_cursor);
-
-	return entry;
-}
-
-
 void ShellDirectory::read_directory(SORT_ORDER sortOrder, int scan_flags)
 {
 	CONTEXT("ShellEntry::read_directory(SORT_ORDER)");

@@ -96,7 +96,7 @@ ShellPath ShellEntry::create_absolute_pidl() const
 	CONTEXT("ShellEntry::create_absolute_pidl()");
 
 	if (_up) {
-		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
+		ShellDirectory* dir = _up;
 
 		if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
 			return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
@@ -304,19 +304,6 @@ void ShellDirectory::read_directory(int scan_flags)
 
 	_down = first_entry;
 	_scanned = true;
-}
-
-const void* ShellDirectory::get_next_path_component(const void* p) const
-{
-	LPITEMIDLIST pidl = (LPITEMIDLIST)p;
-
-	if (!pidl || !pidl->mkid.cb)
-		return NULL;
-
-	 // go to next element
-	pidl = (LPITEMIDLIST)((LPBYTE)pidl+pidl->mkid.cb);
-
-	return pidl;
 }
 
 ShellEntry* ShellDirectory::find_entry(const void* p)
