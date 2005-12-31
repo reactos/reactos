@@ -1730,7 +1730,53 @@ ScmrQueryServiceLockStatusW(handle_t BindingHandle,
 
 
 /* Function 19 */
-/* ScmrStartServiceW */
+unsigned long
+ScmrStartServiceW(handle_t BindingHandle,
+                  unsigned int hService,
+                  unsigned long dwNumServiceArgs,
+                  unsigned char *lpServiceArgBuffer,
+                  unsigned long cbBufSize)
+{
+    DWORD dwError = ERROR_SUCCESS;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+
+    DPRINT1("ScmrStartServiceW() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SERVICE_START))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (lpService->dwStartType == SERVICE_DISABLED)
+        return ERROR_SERVICE_DISABLED;
+
+    if (lpService->bDeleted)
+        return ERROR_SERVICE_MARKED_FOR_DELETE;
+
+    /* FIXME: Start the service */
+
+    return dwError;
+}
 
 
 /* Function 20 */
@@ -2019,7 +2065,17 @@ ScmrQueryServiceLockStatusA(handle_t BindingHandle,
 
 
 /* Function 31 */
-/* ScmrStartServiceA */
+unsigned long
+ScmrStartServiceA(handle_t BindingHandle,
+                  unsigned int hService,
+                  unsigned long dwNumServiceArgs,
+                  unsigned char *lpServiceArgBuffer,
+                  unsigned long cbBufSize)
+{
+    DPRINT1("ScmrStartServiceA() called\n");
+    return ERROR_SUCCESS;
+//    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 32 */

@@ -184,6 +184,13 @@ cpp_quote("#endif")
                                     [out] LPDWORD pcbBytesNeeded);
 
   /* Function 19 */
+  DWORD ScmrStartServiceW([in] handle_t BindingHandle,
+                          [in] SC_HANDLE hService,
+                          [in] DWORD dwNumServiceArgs,
+                          [in, size_is(cbBufSize)] LPBYTE lpServiceArgBuffer,
+                          [in] DWORD cbBufSize);
+
+  /* FIXME: This is the correct interface but WIDL doesn't support it yet! */
 //  DWORD ScmrStartServiceW([in] handle_t BindingHandle,
 //                          [in] SC_HANDLE hService,
 //                          [in] DWORD dwNumServiceArgs,
@@ -288,13 +295,20 @@ cpp_quote("#endif")
                                 [out] LPDWORD pcbBytesNeeded);
 
   /* Function 30 */
-//  DWORD ScmrQueryServiceLockStatusA([in] handle_t BindingHandle,
-//                                    [in] SC_HANDLE hSCManager,
-//                                    [out, unique, size_is(cbBufSize)] LPBYTE lpLockStatus,
-//                                    [in] DWORD cbBufSize,
-//                                    [out] LPDWORD pcbBytesNeeded);
+  DWORD ScmrQueryServiceLockStatusA([in] handle_t BindingHandle,
+                                    [in] SC_HANDLE hSCManager,
+                                    [out, unique, size_is(cbBufSize)] LPBYTE lpLockStatus,
+                                    [in] DWORD cbBufSize,
+                                    [out] LPDWORD pcbBytesNeeded);
 
   /* Function 31 */
+  DWORD ScmrStartServiceA([in] handle_t BindingHandle,
+                          [in] SC_HANDLE hService,
+                          [in] DWORD dwNumServiceArgs,
+                          [in, size_is(cbBufSize)] LPBYTE lpServiceArgBuffer,
+                          [in] DWORD cbBufSize);
+
+  /* FIXME: This is the correct interface but WIDL doesn't support it yet! */
 //  DWORD ScmrStartServiceA([in] handle_t BindingHandle,
 //                          [in] SC_HANDLE hService,
 //                          [in] DWORD dwNumServiceArgs,
@@ -314,20 +328,24 @@ cpp_quote("#endif")
                                [out, unique, size_is(*lpcchBuffer)] LPSTR lpServiceName,
                                [in, out, ref] LPDWORD lpcchBuffer);
 
-  /* Function 35 */
+  /* Function 34 */
   /* ScmrGetCurrentGroupStateW */
 
   /* Function 35 */
   /* ScmrEnumServiceGroupW */
 
   /* Function 36 */
-  /* ScmrChangeServiceConfig2A */
+//  DWORD ScmrChangeServiceConfig2A([in] handle_t BindingHandle,
+//                                  [in] SC_HANDLE hService,
+//                                  [in] DWORD dwInfoLevel,
+//                                  [in, size_is(dwInfoSize)] LPBYTE lpInfo,
+//                                  [in] DWORD dwInfoSize);
 
   /* Function 37 */
   DWORD ScmrChangeServiceConfig2W([in] handle_t BindingHandle,
                                   [in] SC_HANDLE hService,
                                   [in] DWORD dwInfoLevel,
-                                  [in, size_is(dwInfoSize)] unsigned char *lpInfo,
+                                  [in, size_is(dwInfoSize)] LPBYTE lpInfo,
                                   [in] DWORD dwInfoSize);
 
   /* Function 38 */

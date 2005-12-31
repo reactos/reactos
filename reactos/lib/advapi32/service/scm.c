@@ -1557,32 +1557,89 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 /**********************************************************************
  *  StartServiceA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-StartServiceA(
-    SC_HANDLE   hService,
-    DWORD       dwNumServiceArgs,
-    LPCSTR      *lpServiceArgVectors)
+BOOL STDCALL
+StartServiceA(SC_HANDLE hService,
+              DWORD dwNumServiceArgs,
+              LPCSTR *lpServiceArgVectors)
 {
-    DPRINT1("StartServiceA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+#if 0
+    DWORD dwError;
+
+    DPRINT("StartServiceA()\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrStartServiceA(BindingHandle,
+                                hService,
+                                dwNumServiceArgs,
+                                lpServiceArgVectors);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrStartServiceA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+#endif
+    LPSTR lpBuffer;
+    LPSTR lpStr;
+    DWORD dwError;
+    DWORD dwBufSize;
+    DWORD i;
+
+    dwBufSize = 0;
+    for (i = 0; i < dwNumServiceArgs; i++)
+    {
+        dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
+    }
+    DPRINT1("dwBufSize: %lu\n", dwBufSize);
+
+    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
+    if (lpBuffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    lpStr = lpBuffer;
+    for (i = 0; i < dwNumServiceArgs; i++)
+    {
+        strcpy(lpStr, lpServiceArgVectors[i]);
+        lpStr += (strlen(lpServiceArgVectors[i]) + 1);
+    }
+
+    dwError = ScmrStartServiceA(BindingHandle,
+                                (unsigned int)hService,
+                                dwNumServiceArgs,
+                                (unsigned char *)lpBuffer,
+                                dwBufSize);
+
+    HeapFree(GetProcessHeap(), 0, lpBuffer);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrStartServiceA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
 /**********************************************************************
  *  StartServiceW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-StartServiceW(
-    SC_HANDLE   hService,
-    DWORD       dwNumServiceArgs,
-    LPCWSTR     *lpServiceArgVectors)
+BOOL STDCALL
+StartServiceW(SC_HANDLE hService,
+              DWORD dwNumServiceArgs,
+              LPCWSTR *lpServiceArgVectors)
 {
 #if 0
     DWORD dwError;
@@ -1593,6 +1650,7 @@ StartServiceW(
 
     /* Call to services.exe using RPC */
     dwError = ScmrStartServiceW(BindingHandle,
+                                hService,
                                 dwNumServiceArgs,
                                 lpServiceArgVectors);
     if (dwError != ERROR_SUCCESS)
@@ -1604,9 +1662,48 @@ StartServiceW(
 
     return TRUE;
 #endif
-    DPRINT1("StartServiceW is unimplemented, but returns success...\n");
-    //SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    //return FALSE;
+    LPWSTR lpBuffer;
+    LPWSTR lpStr;
+    DWORD dwError;
+    DWORD dwBufSize;
+    DWORD i;
+
+    dwBufSize = 0;
+    for (i = 0; i < dwNumServiceArgs; i++)
+    {
+        dwBufSize += ((wcslen(lpServiceArgVectors[i]) + 1) * sizeof(WCHAR));
+    }
+    DPRINT1("dwBufSize: %lu\n", dwBufSize);
+
+    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufSize);
+    if (lpBuffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    lpStr = lpBuffer;
+    for (i = 0; i < dwNumServiceArgs; i++)
+    {
+        wcscpy(lpStr, lpServiceArgVectors[i]);
+        lpStr += (wcslen(lpServiceArgVectors[i]) + 1);
+    }
+
+    dwError = ScmrStartServiceW(BindingHandle,
+                                (unsigned int)hService,
+                                dwNumServiceArgs,
+                                (unsigned char *)lpBuffer,
+                                dwBufSize);
+
+    HeapFree(GetProcessHeap(), 0, lpBuffer);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrStartServiceW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
     return TRUE;
 }
 
