@@ -27,7 +27,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-STATIC NTSTATUS
+NTSTATUS
 IopInitiatePnpIrp(
   PDEVICE_OBJECT DeviceObject,
   PIO_STATUS_BLOCK IoStatusBlock,

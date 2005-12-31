@@ -108,6 +108,13 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 
 /* agp.c */
 
+NTSTATUS
+IopInitiatePnpIrp(
+  PDEVICE_OBJECT DeviceObject,
+  PIO_STATUS_BLOCK IoStatusBlock,
+  ULONG MinorFunction,
+  PIO_STACK_LOCATION Stack OPTIONAL);
+
 NTSTATUS NTAPI
 IntAgpGetInterface(
    IN PVOID HwDeviceExtension,

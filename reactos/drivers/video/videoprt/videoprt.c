@@ -22,6 +22,7 @@
  */
 
 #include "videoprt.h"
+#include <wdmguid.h>
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -738,11 +739,6 @@ VideoPortGetRegistryParameters(
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   if (IsParameterFileName)
-   {
-      UNIMPLEMENTED;
-   }
-
    Context.HwDeviceExtension = HwDeviceExtension;
    Context.HwContext = HwContext;
    Context.HwGetRegistryRoutine = GetRegistryRoutine;
@@ -758,12 +754,21 @@ VideoPortGetRegistryParameters(
    QueryTable[1].QueryRoutine = NULL;
    QueryTable[1].Name = NULL;
 
-   return NT_SUCCESS(RtlQueryRegistryValues(
+   if (!NT_SUCCESS(RtlQueryRegistryValues(
       RTL_REGISTRY_ABSOLUTE,
       DeviceExtension->RegistryPath.Buffer,
       QueryTable,
       &Context,
-      NULL)) ? ERROR_SUCCESS : ERROR_INVALID_PARAMETER;
+      NULL)))
+      return ERROR_INVALID_PARAMETER;
+
+   if (IsParameterFileName)
+   {
+      /* FIXME: need to read the contents of the file */
+      UNIMPLEMENTED;
+   }
+
+   return ERROR_SUCCESS;
 }
 
 /*
@@ -1077,14 +1082,19 @@ VideoPortQueueDpc(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 
 PVOID NTAPI
 VideoPortGetAssociatedDeviceExtension(IN PVOID DeviceObject)
 {
-   DPRINT1("VideoPortGetAssociatedDeviceExtension: Unimplemented.\n");
-   return NULL;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+   DPRINT("VideoPortGetAssociatedDeviceExtension\n");
+   DeviceExtension = ((PDEVICE_OBJECT)DeviceObject)->DeviceExtension;
+   if (!DeviceExtension)
+      return NULL;
+   return DeviceExtension->MiniPortDeviceExtension;
 }
 
 /*
@@ -1126,7 +1136,7 @@ VideoPortGetVersion(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 
 BOOLEAN NTAPI
@@ -1139,8 +1149,51 @@ VideoPortCheckForDeviceExistence(
    IN USHORT SubSystemId,
    IN ULONG Flags)
 {
-   DPRINT1("VideoPortCheckForDeviceExistence: Unimplemented.\n");
-   return TRUE;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+   PCI_DEVICE_PRESENT_INTERFACE PciDevicePresentInterface;
+   IO_STATUS_BLOCK IoStatusBlock;
+   IO_STACK_LOCATION IoStack;
+   ULONG PciFlags = 0;
+   NTSTATUS Status;
+   BOOL DevicePresent;
+
+   DPRINT("VideoPortCheckForDeviceExistence\n");
+
+   if (Flags & ~(CDE_USE_REVISION | CDE_USE_SUBSYSTEM_IDS))
+   {
+       DPRINT1("VideoPortCheckForDeviceExistence: Unknown flags 0x%lx\n", Flags & ~(CDE_USE_REVISION | CDE_USE_SUBSYSTEM_IDS));
+       return FALSE;
+   }
+
+   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+
+   PciDevicePresentInterface.Size = sizeof(PCI_DEVICE_PRESENT_INTERFACE);
+   PciDevicePresentInterface.Version = 1;
+   IoStack.Parameters.QueryInterface.Size = PciDevicePresentInterface.Size;
+      IoStack.Parameters.QueryInterface.Version = PciDevicePresentInterface.Version;
+      IoStack.Parameters.QueryInterface.Interface = (PINTERFACE)&PciDevicePresentInterface;
+      IoStack.Parameters.QueryInterface.InterfaceType =
+      &GUID_PCI_DEVICE_PRESENT_INTERFACE;
+   Status = IopInitiatePnpIrp(DeviceExtension->NextDeviceObject,
+      &IoStatusBlock, IRP_MN_QUERY_INTERFACE, &IoStack);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopInitiatePnpIrp() failed! (Status 0x%lx)\n", Status);
+      return FALSE;
+   }
+
+   if (Flags & CDE_USE_REVISION)
+      PciFlags |= PCI_USE_REVISION;
+   if (Flags & CDE_USE_SUBSYSTEM_IDS)
+      PciFlags |= PCI_USE_SUBSYSTEM_IDS;
+
+   DevicePresent = PciDevicePresentInterface.IsDevicePresent(
+      VendorId, DeviceId, RevisionId,
+      SubVendorId, SubSystemId, PciFlags);
+
+   PciDevicePresentInterface.InterfaceDereference(PciDevicePresentInterface.Context);
+
+   return DevicePresent;
 }
 
 /*
