@@ -107,6 +107,8 @@ void MainFrame::update_explorer_view()
 
 	_shellBrowser = auto_ptr<ShellBrowserChild>(new ShellBrowserChild(_hwnd, _left_hwnd, _right_hwnd, _create_info, _cm_ifs));
 
+	_shellBrowser->Init();
+
 	 // update _shellBrowser->_clnt_rect
 	ClientRect rect(_hwnd);
 	resize_frame(rect.right, rect.bottom);
@@ -312,11 +314,15 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 
-	  default:
+	  default: {
+		LRESULT res;
+
 		if (_shellBrowser.get())
-			return _shellBrowser->WndProc(nmsg, wparam, lparam);
-		else
-			return super::WndProc(nmsg, wparam, lparam);
+			if (_shellBrowser->WndProc(nmsg, wparam, lparam, res))
+				return res;
+
+		return super::WndProc(nmsg, wparam, lparam);
+	  }
 	}
 
 	return 0;

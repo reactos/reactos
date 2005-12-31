@@ -48,6 +48,7 @@ static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
 ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd,
 					ShellPathInfo& create_info, CtxMenuInterfaces& cm_ifs)
  :	_hwnd(hwnd),
+	_hWndFrame(hwnd),
 	_left_hwnd(left_hwnd),
 	_right_hwnd(right_hwnd),
 	_create_info(create_info),
@@ -65,8 +66,6 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& ri
 
 	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
 	ImageList_SetBkColor(_himl, GetSysColor(COLOR_WINDOW));
-
-	Init(hwnd);
 }
 
 ShellBrowserChild::~ShellBrowserChild()
@@ -89,11 +88,9 @@ ShellBrowserChild::~ShellBrowserChild()
 }
 
 
-LRESULT ShellBrowserChild::Init(HWND hWndFrame)
+LRESULT ShellBrowserChild::Init()
 {
 	CONTEXT("ShellBrowserChild::Init()");
-
-	_hWndFrame = hWndFrame;
 
 	ClientRect rect(_hwnd);
 
@@ -271,7 +268,7 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 			ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
-			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
+			CHECKERROR(ShellFolderContextMenu(folder, _hwnd, 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
 		} else {
 			ShellPath shell_path = entry->create_absolute_pidl();
 			LPCITEMIDLIST pidl_abs = shell_path;
@@ -501,11 +498,12 @@ void ShellBrowserChild::resize_children()
 }
 
 
-LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+bool ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam, LRESULT& res)
 {
 	switch(nmsg) {
 	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
-		return (LRESULT)static_cast<IShellBrowser*>(this);
+		res = (LRESULT)static_cast<IShellBrowser*>(this);
+		return true;
 
 
 		// SDI integration:
@@ -536,7 +534,8 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			if (pt.x>=_split_pos-SPLIT_WIDTH/2 && pt.x<_split_pos+SPLIT_WIDTH/2+1) {
 				SetCursor(LoadCursor(0, IDC_SIZEWE));
-				return TRUE;
+				res = TRUE;
+				return true;
 			}
 		}
 		goto def;
@@ -590,10 +589,11 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 
 	  default: def:
-		return DefWindowProc(_hwnd, nmsg, wparam, lparam);
+		return false;
 	}
 
-	return 0;
+	res = 0;
+	return true;
 }
 
 int ShellBrowserChild::Command(int id, int code)
@@ -718,38 +718,37 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 {
 	Entry* entry = NULL;
 
-	///@todo use OWM_EXPLORE flag in _create_info._open_mode
-
 	if (!_cur_dir)
 		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
-
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
-	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME);
-	-> see FileChildWindow::FileChildWindow()
-*/
 
 	if (_cur_dir) {
 		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
 
-		LPCITEMIDLIST child_pidl;
+		if (ILFindChild) {
+			for(;;) {
+				LPCITEMIDLIST child_pidl = (*ILFindChild)(_cur_dir->create_absolute_pidl(), pidl);
+				if (!child_pidl || !child_pidl->mkid.cb)
+					break;
 
-		if (ILFindChild)
-			child_pidl = (*ILFindChild)(_cur_dir->create_absolute_pidl(), pidl);
-		else
-			child_pidl = pidl;	// This is not correct in the common case, but works on the desktop level.
+				_cur_dir->smart_scan();
 
-		if (child_pidl) {
+				entry = _cur_dir->find_entry(child_pidl);
+				if (!entry)
+					break;
+
+				jump_to(entry);
+			}
+		} else {
 			_cur_dir->smart_scan();
 
-			entry = _cur_dir->find_entry(child_pidl);
+			entry = _cur_dir->find_entry(pidl);	// This is not correct in the common case, but works on the desktop level.
 
 			if (entry)
 				jump_to(entry);
 		}
 	}
 
-		//@@ work around as long as we don't iterate correctly through the ShellEntry tree
+	 // in case of any problem directly call UpdateFolderView()
 	if (!entry)
 		UpdateFolderView(ShellFolder(pidl));
 }

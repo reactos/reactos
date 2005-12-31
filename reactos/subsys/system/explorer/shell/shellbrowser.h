@@ -122,11 +122,11 @@ protected:
 	HTREEITEM	_last_sel;
 
 public:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	bool	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam, LRESULT& res);
 	int		Command(int id, int code);
 	int 	Notify(int id, NMHDR* pnmh);
 
-	LRESULT	Init(HWND hWndFrame);
+	LRESULT	Init();
 	void	InitializeTree();
 	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry);
 	bool	InitDragDrop();
