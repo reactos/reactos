@@ -195,8 +195,8 @@ void ShellDirectory::read_directory(int scan_flags)
 
 	int level = _level + 1;
 
-	Entry* first_entry = NULL;
-	Entry* last = NULL;
+	ShellEntry* first_entry = NULL;
+	ShellEntry* last = NULL;
 
 	/*if (_folder.empty())
 		return;*/
@@ -251,7 +251,7 @@ void ShellDirectory::read_directory(int scan_flags)
 			fill_w32fdata_shell(pidls[n], attribs, &w32fd, !(scan_flags&SCAN_DONT_ACCESS)&&!removeable);
 
 			try {
-				Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
+				ShellEntry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					entry = new ShellDirectory(this, pidls[n], _hwnd);
@@ -319,11 +319,11 @@ const void* ShellDirectory::get_next_path_component(const void* p) const
 	return pidl;
 }
 
-Entry* ShellDirectory::find_entry(const void* p)
+ShellEntry* ShellDirectory::find_entry(const void* p)
 {
 	LPITEMIDLIST pidl = (LPITEMIDLIST) p;
 
-	for(Entry*entry=_down; entry; entry=entry->_next) {
+	for(ShellEntry*entry=_down; entry; entry=entry->_next) {
 		ShellEntry* se = static_cast<ShellEntry*>(entry);
 
 		if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
@@ -337,7 +337,7 @@ int ShellDirectory::extract_icons()
 {
 	int cnt = 0;
 
-	for(Entry*entry=_down; entry; entry=entry->_next)
+	for(ShellEntry*entry=_down; entry; entry=entry->_next)
 		if (entry->_icon_id == ICID_UNKNOWN) {
 			entry->_icon_id = entry->extract_icon();
 

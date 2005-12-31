@@ -149,7 +149,7 @@ void QuickLaunchBar::AddShortcuts()
 
 	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&sep);
 
-	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
+	for(ShellEntry*entry=_dir->_down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 			continue;
@@ -168,7 +168,7 @@ void QuickLaunchBar::AddShortcuts()
 	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
 }
 
-void QuickLaunchBar::AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry, int flags)
+void QuickLaunchBar::AddButton(int id, HBITMAP hbmp, LPCTSTR name, ShellEntry* entry, int flags)
 {
 	TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 	int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);

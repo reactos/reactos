@@ -47,7 +47,7 @@ struct QuickLaunchEntry
 
 	HBITMAP	_hbmp;
 	String	_title;
-	Entry*	_entry;
+	ShellEntry*	_entry;
 };
 
  /// map for managing the task bar buttons
@@ -80,6 +80,6 @@ protected:
 	int				_size;
 
 	void	AddShortcuts();
-	void	AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry, int flags=TBSTATE_ENABLED);
+	void	AddButton(int id, HBITMAP hbmp, LPCTSTR name, ShellEntry* entry, int flags=TBSTATE_ENABLED);
 	void	UpdateDesktopButtons(int desktop_idx);
 };

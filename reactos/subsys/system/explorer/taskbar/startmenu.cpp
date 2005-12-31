@@ -254,7 +254,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		*ignore_name = '\0';
 
 	int cnt = 0;
-	for(Entry*entry=dir._down; entry; entry=entry->_next) {
+	for(ShellEntry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_shell_attribs & SFGAO_HIDDEN)
 		//not appropriate for drive roots: if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -870,7 +870,7 @@ void StartMenu::UpdateIcons(/*int idx*/)
 			btn._icon_id = ICID_NONE;
 
 			for(ShellEntrySet::iterator it=sme._entries.begin(); it!=sme._entries.end(); ++it) {
-				Entry* entry = *it;
+				ShellEntry* entry = *it;
 
 				if (entry->_icon_id == ICID_UNKNOWN)
 					try {
@@ -924,7 +924,7 @@ void StartMenu::UpdateIcons(/*int idx*/)
 				sme._hIcon = (HICON)-1;
 
 				for(ShellEntrySet::const_iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
-					const Entry* sm_entry = *it2;
+					const ShellEntry* sm_entry = *it2;
 
 					if (sm_entry->_hIcon) {
 						sme._hIcon = sm_entry->_hIcon;
@@ -1003,7 +1003,7 @@ int StartMenu::Command(int id, int code)
 }
 
 
-StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, Entry* entry)
+StartMenuEntry& StartMenu::AddEntry(const String& title, ICON_ID icon_id, ShellEntry* entry)
 {
 	 // search for an already existing subdirectory entry with the same name
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -1050,18 +1050,7 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, ShellEntry* entry)
 		icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
 
 	return AddEntry(folder.get_name(entry->_pidl), icon_id, entry);
-}
-
-StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, Entry* entry)
-{
-	ICON_ID icon_id;
-
-	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		icon_id = ICID_FOLDER;
-	else
-		icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
-
-	return AddEntry(entry->_display_name, icon_id, entry);
+//	return AddEntry(entry->_display_name, icon_id, entry);
 }
 
 
@@ -1225,7 +1214,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 	String title;
 
 	for(ShellEntrySet::const_iterator it=entries.begin(); it!=entries.end(); ++it) {
-		Entry* entry = const_cast<Entry*>(*it);
+		ShellEntry* entry = const_cast<ShellEntry*>(*it);
 
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 

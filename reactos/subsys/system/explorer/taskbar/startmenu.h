@@ -66,7 +66,7 @@ struct StartMenuDirectory
 };
 
 typedef list<StartMenuDirectory> StartMenuShellDirs;
-typedef set<Entry*> ShellEntrySet;
+typedef set<ShellEntry*> ShellEntrySet;
 
  /// structure holding information about one start menu entry
 struct StartMenuEntry
@@ -268,10 +268,9 @@ protected:
 
 	virtual void AddEntries();
 
-	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id, Entry* entry);
+	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id, ShellEntry* entry);
 	StartMenuEntry& AddEntry(const String& title, ICON_ID icon_id=ICID_NONE, int id=-1);
 	StartMenuEntry& AddEntry(const ShellFolder folder, ShellEntry* entry);
-	StartMenuEntry& AddEntry(const ShellFolder folder, Entry* entry);
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, const String& ignore="");
 

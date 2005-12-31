@@ -34,7 +34,6 @@
 #include "utility/shellclasses.h"
 
 #include "shell/entries.h"
-#include "shell/shellfs.h"
 
 #include "utility/window.h"
 

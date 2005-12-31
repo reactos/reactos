@@ -86,35 +86,6 @@ void _log_(LPCTSTR txt)
 }
 
 
-bool FileTypeManager::is_exe_file(LPCTSTR ext)
-{
-	static const LPCTSTR s_executable_extensions[] = {
-		TEXT("COM"),
-		TEXT("EXE"),
-		TEXT("BAT"),
-		TEXT("CMD"),
-		TEXT("CMM"),
-		TEXT("BTM"),
-		TEXT("AWK"),
-		0
-	};
-
-	TCHAR ext_buffer[_MAX_EXT];
-	const LPCTSTR* p;
-	LPCTSTR s;
-	LPTSTR d;
-
-	for(s=ext+1,d=ext_buffer; (*d=toupper(*s)); s++)
-		++d;
-
-	for(p=s_executable_extensions; *p; p++)
-		if (!lstrcmp(ext_buffer, *p))
-			return true;
-
-	return false;
-}
-
-
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
 	_tcslwr((LPTSTR)ext.c_str());
@@ -149,7 +120,7 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 	return ftype;
 }
 
-LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
+LPCTSTR FileTypeManager::set_type(ShellEntry* entry, bool dont_hide_ext)
 {
 	LPCTSTR ext = _tcsrchr(entry->_data.cFileName, TEXT('.'));
 
@@ -163,9 +134,6 @@ LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
 			_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
 			entry->_display_name[len] = TEXT('\0');
 		}
-
-		if (is_exe_file(ext))
-			entry->_data.dwFileAttributes |= ATTRIBUTE_EXECUTABLE;
 	}
 
 	return ext;

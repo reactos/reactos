@@ -30,7 +30,7 @@
 
 
  // allocate and initialise a directory entry
-Entry::Entry()
+ShellEntry::ShellEntry()
 {
 	_up = NULL;
 	_next = NULL;
@@ -42,8 +42,36 @@ Entry::Entry()
 	_display_name = _data.cFileName;
 }
 
-Entry::Entry(Entry* parent)
- :	_up(parent)
+ShellEntry::ShellEntry(LPITEMIDLIST shell_path)
+ : _pidl(shell_path)
+{
+	_up = NULL;
+	_next = NULL;
+	_down = NULL;
+	_expanded = false;
+	_scanned = false;
+	_level = 0;
+	_icon_id = ICID_UNKNOWN;
+	_display_name = _data.cFileName;
+}
+
+ShellEntry::ShellEntry(const ShellPath& shell_path)
+ : _pidl(shell_path)
+{
+	_up = NULL;
+	_next = NULL;
+	_down = NULL;
+	_expanded = false;
+	_scanned = false;
+	_level = 0;
+	_icon_id = ICID_UNKNOWN;
+	_display_name = _data.cFileName;
+}
+
+
+ShellEntry::ShellEntry(ShellDirectory* parent, const ShellPath& shell_path)
+ :	_up(parent),
+	_pidl(shell_path)
 {
 	_next = NULL;
 	_down = NULL;
@@ -54,7 +82,21 @@ Entry::Entry(Entry* parent)
 	_display_name = _data.cFileName;
 }
 
-Entry::Entry(const Entry& other)
+ShellEntry::ShellEntry(ShellDirectory* parent, LPITEMIDLIST shell_path)
+ :	_up(parent),
+	_pidl(shell_path)
+{
+	_next = NULL;
+	_down = NULL;
+	_expanded = false;
+	_scanned = false;
+	_level = 0;
+	_icon_id = ICID_UNKNOWN;
+	_display_name = _data.cFileName;
+}
+
+ShellEntry::ShellEntry(const ShellEntry& other)
+ :	_pidl(other._pidl)
 {
 	_next = NULL;
 	_down = NULL;
@@ -77,7 +119,7 @@ Entry::Entry(const Entry& other)
 }
 
  // free a directory entry
-Entry::~Entry()
+ShellEntry::~ShellEntry()
 {
 	if (_icon_id > ICID_NONE)
 		g_Globals._icon_cache.free_icon(_icon_id);
@@ -88,24 +130,27 @@ Entry::~Entry()
 
 
  // read directory tree and expand to the given location
-Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
+ShellEntry* ShellDirectory::read_tree(const void* path, SORT_ORDER sortOrder)
 {
-	CONTEXT("Entry::read_tree()");
+	CONTEXT("ShellEntry::read_tree()");
 
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
-	Entry* entry = this;
+	ShellDirectory* entry = this;
 
 	for(const void*p=path; p && entry; ) {
+		if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			break;
+
 		entry->read_directory(sortOrder);
 
 		if (entry->_down)
 			entry->_expanded = true;
 
-		Entry* next_entry = entry->find_entry(p);
+		ShellEntry* next_entry = entry->find_entry(p);
 		p = entry->get_next_path_component(p);
 
-		entry = next_entry;
+		entry = static_cast<ShellDirectory*>(next_entry);
 	}
 
 	SetCursor(old_cursor);
@@ -114,19 +159,21 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 }
 
 
-void Entry::read_directory(SORT_ORDER sortOrder, int scan_flags)
+void ShellDirectory::read_directory(SORT_ORDER sortOrder, int scan_flags)
 {
-	CONTEXT("Entry::read_directory(SORT_ORDER)");
+	CONTEXT("ShellEntry::read_directory(SORT_ORDER)");
 
 	 // call into subclass
 	read_directory(scan_flags);
 
 #ifndef ROSSHELL
 	if (g_Globals._prescan_nodes) {	//@todo _prescan_nodes should not be used for reading the start menu.
-		for(Entry*entry=_down; entry; entry=entry->_next)
+		for(ShellEntry*entry=_down; entry; entry=entry->_next)
 			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				entry->read_directory(scan_flags);
-				entry->sort_directory(sortOrder);
+				ShellDirectory* dir = static_cast<ShellDirectory*>(entry);
+
+				dir->read_directory(scan_flags);
+				dir->sort_directory(sortOrder);
 			}
 	}
 #endif
@@ -170,8 +217,8 @@ static int compareNothing(const void* arg1, const void* arg2)
 
 static int compareName(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	const WIN32_FIND_DATA* fd1 = &(*(ShellEntry**)arg1)->_data;
+	const WIN32_FIND_DATA* fd2 = &(*(ShellEntry**)arg2)->_data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -182,8 +229,8 @@ static int compareName(const void* arg1, const void* arg2)
 
 static int compareExt(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	const WIN32_FIND_DATA* fd1 = &(*(ShellEntry**)arg1)->_data;
+	const WIN32_FIND_DATA* fd2 = &(*(ShellEntry**)arg2)->_data;
 	const TCHAR *name1, *name2, *ext1, *ext2;
 
 	int cmp = compareType(fd1, fd2);
@@ -215,8 +262,8 @@ static int compareExt(const void* arg1, const void* arg2)
 
 static int compareSize(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	WIN32_FIND_DATA* fd1 = &(*(ShellEntry**)arg1)->_data;
+	WIN32_FIND_DATA* fd2 = &(*(ShellEntry**)arg2)->_data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -236,8 +283,8 @@ static int compareSize(const void* arg1, const void* arg2)
 
 static int compareDate(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	WIN32_FIND_DATA* fd1 = &(*(ShellEntry**)arg1)->_data;
+	WIN32_FIND_DATA* fd2 = &(*(ShellEntry**)arg2)->_data;
 
 	int cmp = compareType(fd1, fd2);
 	if (cmp)
@@ -256,11 +303,11 @@ static int (*sortFunctions[])(const void* arg1, const void* arg2) = {
 };
 
 
-void Entry::sort_directory(SORT_ORDER sortOrder)
+void ShellDirectory::sort_directory(SORT_ORDER sortOrder)
 {
 	if (sortOrder != SORT_NONE) {
-		Entry* entry = _down;
-		Entry** array, **p;
+		ShellEntry* entry = _down;
+		ShellEntry** array, **p;
 		int len;
 
 		len = 0;
@@ -268,7 +315,7 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 			++len;
 
 		if (len) {
-			array = (Entry**) alloca(len*sizeof(Entry*));
+			array = (ShellEntry**) alloca(len*sizeof(ShellEntry*));
 
 			p = array;
 			for(entry=_down; entry; entry=entry->_next)
@@ -288,9 +335,9 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 }
 
 
-void Entry::smart_scan(int scan_flags)
+void ShellDirectory::smart_scan(int scan_flags)
 {
-	CONTEXT("Entry::smart_scan()");
+	CONTEXT("ShellEntry::smart_scan()");
 
 	if (!_scanned) {
 		free_subentries();
@@ -299,7 +346,7 @@ void Entry::smart_scan(int scan_flags)
 }
 
 
-int Entry::extract_icon()
+int ShellEntry::extract_icon()
 {
 	TCHAR path[MAX_PATH];
 
@@ -367,7 +414,7 @@ int Entry::extract_icon()
 	return icon_id;
 }
 
-int Entry::safe_extract_icon()
+int ShellEntry::safe_extract_icon()
 {
 	try {
 		return extract_icon();
@@ -379,82 +426,10 @@ int Entry::safe_extract_icon()
 }
 
 
-BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
-{
-	TCHAR cmd[MAX_PATH];
-
-	if (!get_path(cmd))
-		return FALSE;
-
-	 // add path to the recent file list
-	SHAddToRecentDocs(SHARD_PATH, cmd);
-
-	 // start program, open document...
-	return launch_file(hwnd, cmd, nCmdShow);
-}
-
-
-HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
-{
-	TCHAR path[MAX_PATH];
-/*
-	if (!get_path(path))
-		return E_FAIL;
-
-	ShellPath shell_path(path);
-
-	IShellFolder* pFolder;
-	LPCITEMIDLIST pidl_last = NULL;
-
-	static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
-
-	if (!SHBindToParent)
-		return E_NOTIMPL;
-
-	HRESULT hr = (*SHBindToParent)(shell_path, IID_IShellFolder, (LPVOID*)&pFolder, &pidl_last);
-	if (FAILED(hr))
-		return hr;
-
-	ShellFolder shell_folder(pFolder);
-
-	shell_folder->Release();
-
-	return shell_folder->GetUIObjectOf(hWnd, 1, &pidl_last, riid, NULL, ppvOut);
-*/
-	if (!_up)
-		return E_INVALIDARG;
-
-	if (!_up->get_path(path))
-		return E_FAIL;
-
-	ShellPath shell_path(path);
-	ShellFolder shell_folder(shell_path);
-
-#ifdef UNICODE
-	LPWSTR wname = _data.cFileName;
-#else
-	WCHAR wname[MAX_PATH];
-	MultiByteToWideChar(CP_ACP, 0, _data.cFileName, -1, wname, MAX_PATH);
-#endif
-
-	LPITEMIDLIST pidl_last = NULL;
-	HRESULT hr = shell_folder->ParseDisplayName(hWnd, NULL, wname, NULL, &pidl_last, NULL);
-
-	if (FAILED(hr))
-		return hr;
-
-	hr = shell_folder->GetUIObjectOf(hWnd, 1, (LPCITEMIDLIST*)&pidl_last, riid, NULL, ppvOut);
-
-	ShellMalloc()->Free((void*)pidl_last);
-
-	return hr;
-}
-
-
  // recursively free all child entries
-void Entry::free_subentries()
+void ShellEntry::free_subentries()
 {
-	Entry *entry, *next=_down;
+	ShellEntry *entry, *next=_down;
 
 	if (next) {
 		_down = 0;

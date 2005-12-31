@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,28 +40,32 @@ enum SCAN_FLAGS {
 };
 
 #ifndef ATTRIBUTE_SYMBOLIC_LINK
-#define	ATTRIBUTE_LONGNAME			0x08000000
-#define	ATTRIBUTE_VOLNAME			0x10000000
-#define	ATTRIBUTE_ERASED			0x20000000
 #define ATTRIBUTE_SYMBOLIC_LINK		0x40000000
 #define	ATTRIBUTE_EXECUTABLE		0x80000000
 #endif
 
 
- /// base of all file and directory entries
-struct Entry
+struct ShellDirectory;
+
+
+ /// base of all file entries
+struct ShellEntry
 {
+	ShellEntry();
+	ShellEntry(const ShellEntry& other);
+	ShellEntry(ShellDirectory* parent, LPITEMIDLIST shell_path);
+	ShellEntry(ShellDirectory* parent, const ShellPath& shell_path);
+
 protected:
-	Entry();
-	Entry(Entry* parent);
-	Entry(const Entry&);
+	ShellEntry(LPITEMIDLIST shell_path);
+	ShellEntry(const ShellPath& shell_path);
 
 public:
-	virtual ~Entry();
+	virtual ~ShellEntry();
 
-	Entry*		_next;
-	Entry*		_down;
-	Entry*		_up;
+	ShellEntry*	_next;
+	ShellEntry*	_down;
+	ShellDirectory*	_up;
 
 	bool		_expanded;
 	bool		_scanned;
@@ -74,22 +78,19 @@ public:
 
 	int /*ICON_ID*/ _icon_id;
 
+	ShellPath	_pidl;	// parent relative PIDL
+
 	void	free_subentries();
 
-	void	read_directory(SORT_ORDER sortOrder, int scan_flags=0);
-	Entry*	read_tree(const void* path, SORT_ORDER sortOrder);
-	void	sort_directory(SORT_ORDER sortOrder);
-	void	smart_scan(int scan_flags=0);
 	int		extract_icon();
 	int		safe_extract_icon();
 
-	virtual void read_directory(int scan_flags=0) {}
-	virtual const void* get_next_path_component(const void*) const {return NULL;}
-	virtual Entry* find_entry(const void*) {return NULL;}
-	virtual bool get_path(PTSTR path) const = 0;
-	virtual ShellPath create_absolute_pidl() const {return (LPCITEMIDLIST)NULL;}
-	virtual HRESULT GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
-	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
+	virtual bool get_path(PTSTR path) const;
+	ShellPath create_absolute_pidl() const;
+	BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
+	HRESULT GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
+
+	IShellFolder* get_parent_folder() const;
 };
 
 
@@ -103,12 +104,92 @@ protected:
 };
 
 
+ /// shell folder entry
+struct ShellDirectory : public ShellEntry, public Directory
+{
+	ShellDirectory(ShellFolder& root_folder, const ShellPath& shell_path, HWND hwnd)
+	 :	ShellEntry(shell_path),
+		_folder(root_folder, shell_path),
+		_hwnd(hwnd)
+	{
+		CONTEXT("ShellDirectory::ShellDirectory()");
+
+		lstrcpy(_data.cFileName, root_folder.get_name(shell_path, SHGDN_FORPARSING));
+		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+		_shell_attribs = SFGAO_FOLDER;
+
+		ShellFolder subfolder(root_folder, shell_path);
+		IShellFolder* pFolder = subfolder;
+		pFolder->AddRef();
+		_path = pFolder;
+	}
+
+	explicit ShellDirectory(ShellDirectory* parent, LPITEMIDLIST shell_path, HWND hwnd)
+	 :	ShellEntry(parent, shell_path),
+		_folder(parent->_folder, shell_path),
+		_hwnd(hwnd)
+	{
+		/* not neccessary - the caller will fill the info
+		lstrcpy(_data.cFileName, _folder.get_name(shell_path));
+		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+		_shell_attribs = SFGAO_FOLDER; */
+
+		_folder->AddRef();
+		_path = _folder;
+	}
+
+	ShellDirectory(const ShellDirectory& other)
+	 :	ShellEntry(other),
+		Directory(other),
+		_folder(other._folder),
+		_hwnd(other._hwnd)
+	{
+		IShellFolder* pFolder = (IShellFolder*)_path;
+		pFolder->AddRef();
+	}
+
+	~ShellDirectory()
+	{
+		IShellFolder* pFolder = (IShellFolder*)_path;
+		_path = NULL;
+		pFolder->Release();
+	}
+
+	ShellEntry*	read_tree(const void* path, SORT_ORDER sortOrder);
+	void	read_directory(SORT_ORDER sortOrder, int scan_flags=0);
+	void	read_directory(int scan_flags=0);
+	void	sort_directory(SORT_ORDER sortOrder);
+	void	smart_scan(int scan_flags=0);
+	virtual const void* get_next_path_component(const void*) const;
+	virtual ShellEntry* find_entry(const void* p);
+
+	virtual bool get_path(PTSTR path) const;
+
+	int	extract_icons();
+
+	ShellFolder _folder;
+	HWND	_hwnd;
+
+protected:
+	void	fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA*, bool do_access=true);
+};
+
+
+inline IShellFolder* ShellEntry::get_parent_folder() const
+{
+	if (_up)
+		return static_cast<ShellDirectory*>(_up)->_folder;
+	else
+		return GetDesktopFolder();
+}
+
+
  /// root entry for file system trees
 struct Root {
 	Root();
 	~Root();
 
-	Entry*	_entry;
+	ShellDirectory*	_entry;
 	TCHAR	_path[MAX_PATH];
 	TCHAR	_volname[_MAX_FNAME];
 	TCHAR	_fs[_MAX_DIR];

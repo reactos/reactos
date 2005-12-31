@@ -201,9 +201,9 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	LPARAM itemData = TreeView_GetItemData(hwndTreeView, hItem);
 
 	if (itemData) {
-		Entry* entry = (Entry*)itemData;
+		ShellEntry* entry = (ShellEntry*)itemData;
 
-		ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
+		ShellDirectory* dir = entry->_up;
 		ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
 		LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
@@ -238,7 +238,7 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 	}
 }
 
-int ShellBrowserChild::get_entry_image(Entry* entry, LPCITEMIDLIST pidl, int shgfi_flags, ImageMap& cache)
+int ShellBrowserChild::get_entry_image(ShellEntry* entry, LPCITEMIDLIST pidl, int shgfi_flags, ImageMap& cache)
 {
 	SHFILEINFO sfi;
 	int idx = -1;
@@ -296,7 +296,7 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 	}
 }
 
-int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry)
+int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, ShellDirectory* dir)
 {
 	CONTEXT("ShellBrowserChild::InsertSubitems()");
 
@@ -307,15 +307,21 @@ int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry)
 	SendMessage(_left_hwnd, WM_SETREDRAW, FALSE, 0);
 
 	try {
-		entry->smart_scan();
+		dir->smart_scan();
 	} catch(COMException& e) {
 		HandleException(e, g_Globals._hMainWnd);
+	}
+
+	 // remove old children items
+	for(HTREEITEM hchild,hnext=TreeView_GetChild(_left_hwnd, hParentItem); hchild=hnext; ) {
+		hnext = TreeView_GetNextSibling(_left_hwnd, hchild);
+		TreeView_DeleteItem(_left_hwnd, hchild);
 	}
 
 	TV_ITEM tvItem;
 	TV_INSERTSTRUCT tvInsert;
 
-	for(entry=entry->_down; entry; entry=entry->_next) {
+	for(ShellEntry*entry=dir->_down; entry; entry=entry->_next) {
 #ifndef _LEFT_FILES
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 #endif
@@ -354,7 +360,7 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 	CONTEXT("ShellBrowserChild::OnTreeItemSelected()");
 
 	_last_sel = pnmtv->itemNew.hItem;
-	Entry* entry = (Entry*)pnmtv->itemNew.lParam;
+	ShellDirectory* entry = (ShellDirectory*)pnmtv->itemNew.lParam;
 
 	jump_to(entry);
 }
@@ -583,7 +589,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 					UINT firstOffset = pida->aoffset[1];
 					LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pida+firstOffset);
 
-					Entry* entry = parent->find_entry(pidl);
+					ShellEntry* entry = parent->find_entry(pidl);
 
 					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
 						if (expand_folder(static_cast<ShellDirectory*>(entry)))
@@ -639,10 +645,10 @@ void ShellBrowserChild::jump_to(LPCTSTR path)
 
 void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 {
-	Entry* entry = NULL;
+	ShellDirectory* entry = NULL;
 
 	if (!_cur_dir)
-		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
+		_cur_dir = _root._entry;
 
 	if (_cur_dir) {
 		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
@@ -655,7 +661,7 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 
 				_cur_dir->smart_scan();
 
-				entry = _cur_dir->find_entry(child_pidl);
+				entry = static_cast<ShellDirectory*>(_cur_dir->find_entry(child_pidl));
 				if (!entry)
 					break;
 
@@ -664,7 +670,7 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 		} else {
 			_cur_dir->smart_scan();
 
-			entry = _cur_dir->find_entry(pidl);	// This is not correct in the common case, but works on the desktop level.
+			entry = static_cast<ShellDirectory*>(_cur_dir->find_entry(pidl));	// This is not correct in the common case, but works on the desktop level.
 
 			if (entry)
 				jump_to(entry);
@@ -676,10 +682,10 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 		UpdateFolderView(ShellFolder(pidl));
 }
 
-void ShellBrowserChild::jump_to(Entry* entry)
+void ShellBrowserChild::jump_to(ShellDirectory* entry)
 {
 	IShellFolder* folder;
-	ShellDirectory* se = static_cast<ShellDirectory*>(entry);
+	ShellDirectory* se = entry;
 
 	if (se->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		folder = static_cast<ShellDirectory*>(se)->_folder;

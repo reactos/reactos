@@ -406,10 +406,6 @@ SOURCE=.\shell\shellfs.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\shell\shellfs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\startup.c
 # SUBTRACT CPP /YX /Yc /Yu
 # End Source File

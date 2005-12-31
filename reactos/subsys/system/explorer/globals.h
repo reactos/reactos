@@ -39,9 +39,7 @@ struct FileTypeManager : public map<String, FileTypeInfo>
 
 	const FileTypeInfo& operator[](String ext);
 
-	static bool is_exe_file(LPCTSTR ext);
-
-	LPCTSTR set_type(struct Entry* entry, bool dont_hide_ext=false);
+	LPCTSTR set_type(struct ShellEntry* entry, bool dont_hide_ext=false);
 };
 
 

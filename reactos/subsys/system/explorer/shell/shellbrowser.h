@@ -102,8 +102,6 @@ struct ShellBrowserChild : public IShellBrowserImpl
 		return E_NOTIMPL;
 	}
 
-	const Root& get_root() const {return _root;}
-
 protected:
 	HWND	_hwnd;
 	HWND	_left_hwnd;
@@ -128,7 +126,7 @@ public:
 
 	LRESULT	Init();
 	void	InitializeTree();
-	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry);
+	int		InsertSubitems(HTREEITEM hParentItem, ShellDirectory* dir);
 	bool	InitDragDrop();
 
 	HRESULT OnDefaultCommand(LPIDA pida);
@@ -152,16 +150,16 @@ public:
 	void	jump_to(LPCTSTR path);
 	void	jump_to(LPCITEMIDLIST pidl);
 
-	void	jump_to(Entry* entry);
+	void	jump_to(ShellDirectory* entry);
 
 protected:
 	ShellDirectory*	_cur_dir;
 	CtxMenuInterfaces& _cm_ifs;
 
-	typedef map<Entry*, int> ImageMap;
+	typedef map<ShellEntry*, int> ImageMap;
 	ImageMap _image_map;
 	ImageMap _image_map_open;
 
-	int		get_entry_image(Entry* entry, LPCITEMIDLIST pidl, int shgfi_flags, ImageMap& cache);
+	int		get_entry_image(ShellEntry* entry, LPCITEMIDLIST pidl, int shgfi_flags, ImageMap& cache);
 	void	invalidate_cache();
 };
