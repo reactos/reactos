@@ -97,8 +97,10 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     {
         case SERVICE_CONFIG_DESCRIPTION:
             lpInfoSize = sizeof(SERVICE_DESCRIPTION);
+            break;
         case SERVICE_CONFIG_FAILURE_ACTIONS:
             lpInfoSize = sizeof(SERVICE_FAILURE_ACTIONS);
+            break;
         default:
             DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
             SetLastError(ERROR_INVALID_PARAMETER);
@@ -121,6 +123,8 @@ ChangeServiceConfig2W(SC_HANDLE hService,
         SetLastError(dwError);
         return FALSE;
     }
+
+    return TRUE;
 }
 
 
