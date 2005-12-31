@@ -263,13 +263,18 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	if (itemData) {
 		Entry* entry = (Entry*)itemData;
 
-		if (entry->_etype == ET_SHELL) {
+#ifndef _NO_WIN_FS
+		if (entry->_etype == ET_SHELL)
+#endif
+		{
 			ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
 			ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
 			CHECKERROR(ShellFolderContextMenu(folder, _hwnd, 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
-		} else {
+		}
+#ifndef _NO_WIN_FS
+		else {
 			ShellPath shell_path = entry->create_absolute_pidl();
 			LPCITEMIDLIST pidl_abs = shell_path;
 
@@ -287,6 +292,7 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 
 			CHECKERROR(hr);
 		}
+#endif
 	}
 }
 
@@ -301,16 +307,19 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 		if (lpdi->item.mask & TVIF_TEXT)
 			lpdi->item.pszText = entry->_display_name;
 
-		if (lpdi->item.mask & (TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
-			ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
-			LPCITEMIDLIST pidl = pidl_abs;
+		if (lpdi->item.mask & (TVIF_IMAGE|TVIF_SELECTEDIMAGE))
+			try {
+				ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
+				LPCITEMIDLIST pidl = pidl_abs;
 
-			if (lpdi->item.mask & TVIF_IMAGE)
-				lpdi->item.iImage = get_entry_image(entry, pidl, SHGFI_SMALLICON, _image_map);
+				if (lpdi->item.mask & TVIF_IMAGE)
+					lpdi->item.iImage = get_entry_image(entry, pidl, SHGFI_SMALLICON, _image_map);
 
-			if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
-				lpdi->item.iSelectedImage = get_entry_image(entry, pidl, SHGFI_SMALLICON|SHGFI_OPENICON, _image_map_open);
-		}
+				if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
+					lpdi->item.iSelectedImage = get_entry_image(entry, pidl, SHGFI_SMALLICON|SHGFI_OPENICON, _image_map_open);
+			} catch(COMException&) {
+				// ignore exception
+			}
 	}
 }
 
@@ -662,7 +671,9 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 					Entry* entry = parent->find_entry(pidl);
 
 					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+#ifndef _NO_WIN_FS
 						if (entry->_etype == ET_SHELL)
+#endif
 							if (expand_folder(static_cast<ShellDirectory*>(entry)))
 								return S_OK;
 				}
@@ -748,14 +759,17 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 		}
 	}
 
-	 // in case of any problem directly call UpdateFolderView()
+	 // If not already called, now directly call UpdateFolderView() using pidl.
 	if (!entry)
 		UpdateFolderView(ShellFolder(pidl));
 }
 
 void ShellBrowserChild::jump_to(Entry* entry)
 {
-	if (entry->_etype == ET_SHELL) {
+#ifndef _NO_WIN_FS
+	if (entry->_etype == ET_SHELL)
+#endif
+	{
 		IShellFolder* folder;
 		ShellDirectory* se = static_cast<ShellDirectory*>(entry);
 
@@ -769,7 +783,12 @@ void ShellBrowserChild::jump_to(Entry* entry)
 			return;
 		}
 
-		UpdateFolderView(folder);
+		if (_create_info._open_mode & OWM_EXPLORE) {
+
+			//@@ todo
+
+		} else;
+			UpdateFolderView(folder);
 
 		_cur_dir = se;
 	}

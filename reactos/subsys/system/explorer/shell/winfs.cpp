@@ -51,6 +51,17 @@ void WinDirectory::read_directory(int scan_flags)
 
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
+			 // ignore hidden files (usefull in the start menu)
+			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+				continue;
+
+			 // ignore directory entries "." and ".."
+			if ((w32fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) &&
+				w32fd.cFileName[0]==TEXT('.') &&
+				(w32fd.cFileName[1]==TEXT('\0') ||
+				(w32fd.cFileName[1]==TEXT('.') && w32fd.cFileName[2]==TEXT('\0'))))
+				continue;
+
 			lstrcpy(pname+1, w32fd.cFileName);
 
 			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -70,7 +81,7 @@ void WinDirectory::read_directory(int scan_flags)
 			 // display file type names, but don't hide file extensions
 			g_Globals._ftype_mgr.set_type(entry, true);
 
-			if (scan_flags & SCAN_DO_ACCESS) {
+			if (!(scan_flags & SCAN_DONT_ACCESS)) {
 				HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
 											0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
@@ -85,7 +96,8 @@ void WinDirectory::read_directory(int scan_flags)
 			last = entry;	// There is always at least one entry, because FindFirstFile() succeeded and we don't filter the file entries.
 		} while(FindNextFile(hFind, &w32fd));
 
-		last->_next = NULL;
+		if (last)
+			last->_next = NULL;
 
 		FindClose(hFind);
 	}

@@ -175,7 +175,6 @@ void MainFrame::jump_to(LPCTSTR path, int mode)
 	} else {
 		_create_info._open_mode = mode;
 		_create_info._shell_path = path;
-		_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
 
 		update_explorer_view();
 	}
@@ -192,7 +191,6 @@ void MainFrame::jump_to(LPCITEMIDLIST path, int mode)
 	} else {
 		_create_info._open_mode = mode;
 		_create_info._shell_path = path;
-		_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
 
 		update_explorer_view();
 	}
@@ -304,6 +302,11 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			path = buffer;
 		}
+
+		if (wparam & OWM_ROOTED)
+			_create_info._root_shell_path = shell_path;
+		else
+			_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
 		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);
 		return TRUE;}	// success

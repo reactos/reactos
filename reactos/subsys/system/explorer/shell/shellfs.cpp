@@ -110,13 +110,19 @@ ShellPath ShellEntry::create_absolute_pidl() const
 	CONTEXT("ShellEntry::create_absolute_pidl()");
 
 	if (_up)
-		if (_up->_etype == ET_SHELL) {
+#ifndef _NO_WIN_FS
+		if (_up->_etype == ET_SHELL)
+#endif
+		{
 			ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
 			if (dir->_pidl->mkid.cb)	// Caching of absolute PIDLs could enhance performance.
 				return _pidl.create_absolute_pidl(dir->create_absolute_pidl());
-		} else
+		}
+#ifndef _NO_WIN_FS
+		else
 			return _pidl.create_absolute_pidl(_up->create_absolute_pidl());
+#endif
 
 	return _pidl;
 }
@@ -217,9 +223,10 @@ void ShellDirectory::read_directory(int scan_flags)
 	/*if (_folder.empty())
 		return;*/
 
+#ifndef _NO_WIN_FS
 	TCHAR buffer[MAX_PATH];
 
-	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer)) {
+	if (get_path(buffer)) {
 		Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 		LPTSTR p = buffer + _tcslen(buffer);
@@ -259,7 +266,7 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				entry->_level = level;
 
-				if (scan_flags & SCAN_DO_ACCESS) {
+				if (!(scan_flags & SCAN_DONT_ACCESS)) {
 					HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
 												0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
@@ -277,7 +284,7 @@ void ShellDirectory::read_directory(int scan_flags)
 				DWORD attribs = SFGAO_FILESYSTEM;
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					attribs |= SFGAO_FOLDER;
+					attribs |= SFGAO_FOLDER|SFGAO_HASSUBFOLDER;
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 					attribs |= SFGAO_READONLY;
@@ -297,7 +304,7 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					entry->_icon_id = ICID_FOLDER;
-				else if (scan_flags & SCAN_EXTRACT_ICONS)
+				else if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
 					entry->_icon_id = entry->safe_extract_icon();
 
 				last = entry;
@@ -306,7 +313,10 @@ void ShellDirectory::read_directory(int scan_flags)
 			FindClose(hFind);
 		}
 
-	} else { // !SCAN_FILESYSTEM
+	}
+	else // no file system path
+#endif
+	{
 
 		ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
 
@@ -346,7 +356,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					if (attribs & SFGAO_REMOVABLE) {
 						attribs |= SFGAO_HASSUBFOLDER;
 						removeable = true;
-					} else if (scan_flags & SCAN_DO_ACCESS) {
+					} else if (!(scan_flags & SCAN_DONT_ACCESS)) {
 						DWORD attribs2 = SFGAO_READONLY;
 
 						HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
@@ -358,7 +368,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					attribs = 0;
 
 				bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
-												 (scan_flags&SCAN_DO_ACCESS) && !removeable);
+												 !(scan_flags&SCAN_DONT_ACCESS) && !removeable);
 
 				try {
 					Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
@@ -399,7 +409,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					 // get icons for files and virtual objects
 					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 						!(attribs & SFGAO_FILESYSTEM)) {
-						if (scan_flags & SCAN_EXTRACT_ICONS)
+						if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
 							entry->_icon_id = entry->safe_extract_icon();
 					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 						entry->_icon_id = ICID_FOLDER;
@@ -439,7 +449,10 @@ Entry* ShellDirectory::find_entry(const void* p)
 	LPITEMIDLIST pidl = (LPITEMIDLIST) p;
 
 	for(Entry*entry=_down; entry; entry=entry->_next)
-		if (entry->_etype == ET_SHELL) {
+#ifndef _NO_WIN_FS
+		if (entry->_etype == ET_SHELL)
+#endif
+		{
 			ShellEntry* se = static_cast<ShellEntry*>(entry);
 
 			if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))

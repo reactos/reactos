@@ -26,11 +26,6 @@
  //
 
 
-#define _LIGHT_STARTMENU
-//#define _LAZY_ICONEXTRACT
-//#define _SINGLE_ICONEXTRACT
-
-
 #define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
 #define	TITLE_STARTMENU			TEXT("Start Menu")
 
@@ -138,7 +133,7 @@ struct StartMenuSeparator : public Static
 
 typedef list<ShellPath> StartMenuFolders;
 
- /// structor containing information for creating start menus
+ /// struct containing information for creating start menus
 struct StartMenuCreateInfo
 {
 	StartMenuCreateInfo() : _border_top(0) {}

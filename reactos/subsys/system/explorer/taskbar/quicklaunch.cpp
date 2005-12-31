@@ -104,7 +104,7 @@ void QuickLaunchBar::AddShortcuts()
 		RecursiveCreateDirectory(path);
 		_dir = new ShellDirectory(GetDesktopFolder(), path, _hwnd);
 
-		_dir->smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
+		_dir->smart_scan(SCAN_DONT_ACCESS);
 	} catch(COMException&) {
 		return;
 	}

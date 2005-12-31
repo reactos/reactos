@@ -233,6 +233,11 @@ SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-jp.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\explorer.ico
 # End Source File
 # Begin Source File
@@ -294,11 +299,6 @@ SOURCE=.\res\reactos.ico
 # Begin Source File
 
 SOURCE=".\res\ros-big.ico"
-# End Source File
-# Begin Source File
-
-SOURCE=".\explorer-jp.rc"
-# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
@@ -408,6 +408,7 @@ SOURCE=.\shell\startup.c
 # Begin Source File
 
 SOURCE=.\shell\winfs.cpp
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 

@@ -26,11 +26,12 @@
  //
 
 
+#ifndef _NO_WIN_FS
 enum ENTRY_TYPE {
-	ET_UNKNOWN,
 	ET_WINDOWS,
 	ET_SHELL
 };
+#endif
 
 enum SORT_ORDER {
 	SORT_NONE,
@@ -41,12 +42,8 @@ enum SORT_ORDER {
 };
 
 enum SCAN_FLAGS {
-	SCAN_EXTRACT_ICONS	= 1,
-	SCAN_DO_ACCESS		= 2,
-
-	SCAN_ALL			= 3,
-
-	SCAN_FILESYSTEM		= 4
+	SCAN_DONT_EXTRACT_ICONS	= 1,
+	SCAN_DONT_ACCESS		= 2
 };
 
 #ifndef ATTRIBUTE_SYMBOLIC_LINK
@@ -62,8 +59,13 @@ enum SCAN_FLAGS {
 struct Entry
 {
 protected:
+#ifndef _NO_WIN_FS
 	Entry(ENTRY_TYPE etype);
 	Entry(Entry* parent, ENTRY_TYPE etype);
+#else
+	Entry();
+	Entry(Entry* parent);
+#endif
 	Entry(const Entry&);
 
 public:
@@ -84,7 +86,9 @@ public:
 	LPTSTR		_type_name;
 	LPTSTR		_content;
 
+#ifndef _NO_WIN_FS
 	ENTRY_TYPE	_etype;
+#endif
 	int /*ICON_ID*/ _icon_id;
 
 	BY_HANDLE_FILE_INFORMATION _bhfi;
@@ -92,14 +96,14 @@ public:
 
 	void	free_subentries();
 
-	void	read_directory(SORT_ORDER sortOrder, int scan_flags=SCAN_ALL);
+	void	read_directory(SORT_ORDER sortOrder, int scan_flags=0);
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder);
 	void	sort_directory(SORT_ORDER sortOrder);
-	void	smart_scan(int scan_flags=SCAN_ALL);
+	void	smart_scan(int scan_flags=0);
 	int		extract_icon();
 	int		safe_extract_icon();
 
-	virtual void read_directory(int scan_flags=SCAN_ALL) {}
+	virtual void read_directory(int scan_flags=0) {}
 	virtual const void* get_next_path_component(const void*) const {return NULL;}
 	virtual Entry* find_entry(const void*) {return NULL;}
 	virtual bool get_path(PTSTR path) const = 0;

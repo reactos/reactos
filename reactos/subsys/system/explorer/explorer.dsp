@@ -416,6 +416,7 @@ SOURCE=.\shell\startup.c
 # Begin Source File
 
 SOURCE=.\shell\winfs.cpp
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 

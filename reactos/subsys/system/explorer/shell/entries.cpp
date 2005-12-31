@@ -30,8 +30,12 @@
 
 
  // allocate and initialise a directory entry
+#ifndef _NO_WIN_FS
 Entry::Entry(ENTRY_TYPE etype)
  :	_etype(etype)
+#else
+Entry::Entry()
+#endif
 {
 	_up = NULL;
 	_next = NULL;
@@ -46,9 +50,14 @@ Entry::Entry(ENTRY_TYPE etype)
 	_content = NULL;
 }
 
+#ifndef _NO_WIN_FS
 Entry::Entry(Entry* parent, ENTRY_TYPE etype)
  :	_up(parent),
 	_etype(etype)
+#else
+Entry::Entry(Entry* parent)
+ :	_up(parent)
+#endif
 {
 	_next = NULL;
 	_down = NULL;
@@ -83,7 +92,9 @@ Entry::Entry(const Entry& other)
 	_type_name = other._type_name? _tcsdup(other._type_name): NULL;
 	_content = other._content? _tcsdup(other._content): NULL;
 
+#ifndef _NO_WIN_FS
 	_etype = other._etype;
+#endif
 	_icon_id = other._icon_id;
 
 	_bhfi = other._bhfi;
