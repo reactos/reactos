@@ -71,13 +71,8 @@ public:
 
 	SFGAOF		_shell_attribs;
 	LPTSTR		_display_name;
-	LPTSTR		_type_name;
-	LPTSTR		_content;
 
 	int /*ICON_ID*/ _icon_id;
-
-	BY_HANDLE_FILE_INFORMATION _bhfi;
-	bool		_bhfi_valid;
 
 	void	free_subentries();
 

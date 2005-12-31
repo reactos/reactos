@@ -31,11 +31,9 @@
 #include <shlwapi.h>
 
 
-bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, BY_HANDLE_FILE_INFORMATION* pbhfi, bool do_access)
+void ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, bool do_access)
 {
 	CONTEXT("ShellDirectory::fill_w32fdata_shell()");
-
-	bool bhfi_valid = false;
 
 	if (do_access && !( (attribs&SFGAO_FILESYSTEM) && SUCCEEDED(
 				SHGetDataFromIDList(_folder, pidl, SHGDFIL_FINDDATA, pw32fdata, sizeof(WIN32_FIND_DATA))) )) {
@@ -73,16 +71,6 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 					}
 				}
 
-				HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-											0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-
-				if (hFile != INVALID_HANDLE_VALUE) {
-					if (GetFileInformationByHandle(hFile, pbhfi))
-						bhfi_valid = true;
-
-					CloseHandle(hFile);
-				}
-
 				SetErrorMode(sem_org);
 
 				GlobalUnlock(medium.hGlobal);
@@ -100,8 +88,6 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 
 	if (attribs & SFGAO_COMPRESSED)
 		pw32fdata->dwFileAttributes |= FILE_ATTRIBUTE_COMPRESSED;
-
-	return bhfi_valid;
 }
 
 
@@ -238,8 +224,6 @@ void ShellDirectory::read_directory(int scan_flags)
 
 		for(ULONG n=0; n<cnt; ++n) {
 			WIN32_FIND_DATA w32fd;
-			BY_HANDLE_FILE_INFORMATION bhfi;
-			bool bhfi_valid = false;
 
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
@@ -264,8 +248,7 @@ void ShellDirectory::read_directory(int scan_flags)
 			} else
 				attribs = 0;
 
-			bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
-											 !(scan_flags&SCAN_DONT_ACCESS) && !removeable);
+			fill_w32fdata_shell(pidls[n], attribs, &w32fd, !(scan_flags&SCAN_DONT_ACCESS)&&!removeable);
 
 			try {
 				Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
@@ -283,9 +266,6 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-				if (bhfi_valid)
-					memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
-
 				if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
 					if (!entry->_data.cFileName[0])
 						_tcscpy(entry->_data.cFileName, name);
@@ -298,7 +278,6 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				entry->_level = level;
 				entry->_shell_attribs = attribs;
-				entry->_bhfi_valid = bhfi_valid;
 
 				 // set file type name
 				g_Globals._ftype_mgr.set_type(entry);

@@ -156,9 +156,6 @@ LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
 	if (ext) {
 		const FileTypeInfo& type = (*this)[ext];
 
-		if (!type._displayname.empty())
-			entry->_type_name = _tcsdup(type._displayname);
-
 		 // hide some file extensions
 		if (type._neverShowExt && !dont_hide_ext) {
 			int len = ext - entry->_data.cFileName;

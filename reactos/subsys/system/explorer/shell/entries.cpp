@@ -37,12 +37,9 @@ Entry::Entry()
 	_down = NULL;
 	_expanded = false;
 	_scanned = false;
-	_bhfi_valid = false;
 	_level = 0;
 	_icon_id = ICID_UNKNOWN;
 	_display_name = _data.cFileName;
-	_type_name = NULL;
-	_content = NULL;
 }
 
 Entry::Entry(Entry* parent)
@@ -52,12 +49,9 @@ Entry::Entry(Entry* parent)
 	_down = NULL;
 	_expanded = false;
 	_scanned = false;
-	_bhfi_valid = false;
 	_level = 0;
 	_icon_id = ICID_UNKNOWN;
 	_display_name = _data.cFileName;
-	_type_name = NULL;
-	_content = NULL;
 }
 
 Entry::Entry(const Entry& other)
@@ -78,13 +72,8 @@ Entry::Entry(const Entry& other)
 
 	_shell_attribs = other._shell_attribs;
 	_display_name = other._display_name==other._data.cFileName? _data.cFileName: _tcsdup(other._display_name);
-	_type_name = other._type_name? _tcsdup(other._type_name): NULL;
-	_content = other._content? _tcsdup(other._content): NULL;
 
 	_icon_id = other._icon_id;
-
-	_bhfi = other._bhfi;
-	_bhfi_valid = other._bhfi_valid;
 }
 
  // free a directory entry
@@ -95,12 +84,6 @@ Entry::~Entry()
 
 	if (_display_name != _data.cFileName)
 		free(_display_name);
-
-	if (_type_name)
-		free(_type_name);
-
-	if (_content)
-		free(_content);
 }
 
 
