@@ -9,6 +9,21 @@
 #include <ndk/ntndk.h>
 #include <services/services.h>
 
+
+typedef struct _SERVICE_GROUP
+{
+    LIST_ENTRY GroupListEntry;
+    LPWSTR lpGroupName;
+
+    DWORD dwRefCount;
+    BOOLEAN ServicesRunning;
+    ULONG TagCount;
+    PULONG TagArray;
+
+    WCHAR szGroupName[1];
+} SERVICE_GROUP, *PSERVICE_GROUP;
+
+
 typedef struct _SERVICE
 {
     LIST_ENTRY ServiceListEntry;
@@ -40,6 +55,7 @@ typedef struct _SERVICE
 /* VARIABLES ***************************************************************/
 
 extern LIST_ENTRY ServiceListHead;
+extern LIST_ENTRY GroupListHead;
 extern BOOL ScmShutdown;
 
 
@@ -88,6 +104,11 @@ DWORD ScmUnloadDriver(PSERVICE lpService);
 DWORD ScmControlDriver(PSERVICE lpService,
                        DWORD dwControl,
                        LPSERVICE_STATUS lpServiceStatus);
+
+
+/* groupdb.c */
+
+DWORD ScmCreateGroupList(VOID);
 
 
 /* rpcserver.c */

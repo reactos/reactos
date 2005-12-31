@@ -31,23 +31,8 @@
 #include <debug.h>
 
 
-/* TYPES *********************************************************************/
-
-typedef struct _SERVICE_GROUP
-{
-  LIST_ENTRY GroupListEntry;
-  UNICODE_STRING GroupName;
-
-  BOOLEAN ServicesRunning;
-  ULONG TagCount;
-  PULONG TagArray;
-
-} SERVICE_GROUP, *PSERVICE_GROUP;
-
-
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY GroupListHead;
 LIST_ENTRY ServiceListHead;
 
 static RTL_RESOURCE DatabaseLock;
@@ -140,104 +125,6 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
     DPRINT("Couldn't find a matching service\n");
 
     return NULL;
-}
-
-
-static NTSTATUS STDCALL
-CreateGroupOrderListRoutine(PWSTR ValueName,
-                            ULONG ValueType,
-                            PVOID ValueData,
-                            ULONG ValueLength,
-                            PVOID Context,
-                            PVOID EntryContext)
-{
-    PSERVICE_GROUP Group;
-
-    DPRINT("CreateGroupOrderListRoutine(%S, %x, %x, %x, %x, %x)\n",
-           ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
-
-    if (ValueType == REG_BINARY &&
-        ValueData != NULL &&
-        ValueLength >= sizeof(DWORD) &&
-        ValueLength >= (*(PULONG)ValueData + 1) * sizeof(DWORD))
-    {
-        Group = (PSERVICE_GROUP)Context;
-        Group->TagCount = ((PULONG)ValueData)[0];
-        if (Group->TagCount > 0)
-        {
-            if (ValueLength >= (Group->TagCount + 1) * sizeof(DWORD))
-            {
-                Group->TagArray = (PULONG)HeapAlloc(GetProcessHeap(),
-                                                    HEAP_ZERO_MEMORY,
-                                                    Group->TagCount * sizeof(DWORD));
-                if (Group->TagArray == NULL)
-                {
-                    Group->TagCount = 0;
-                    return STATUS_INSUFFICIENT_RESOURCES;
-                }
-
-                RtlCopyMemory(Group->TagArray,
-                              (PULONG)ValueData + 1,
-                              Group->TagCount * sizeof(DWORD));
-            }
-            else
-            {
-                Group->TagCount = 0;
-                return STATUS_UNSUCCESSFUL;
-            }
-        }
-    }
-
-    return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS STDCALL
-CreateGroupListRoutine(PWSTR ValueName,
-                       ULONG ValueType,
-                       PVOID ValueData,
-                       ULONG ValueLength,
-                       PVOID Context,
-                       PVOID EntryContext)
-{
-    PSERVICE_GROUP Group;
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-    NTSTATUS Status;
-
-    if (ValueType == REG_SZ)
-    {
-        DPRINT("Data: '%S'\n", (PWCHAR)ValueData);
-
-        Group = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
-                                          HEAP_ZERO_MEMORY,
-                                          sizeof(SERVICE_GROUP));
-        if (Group == NULL)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        if (!RtlCreateUnicodeString(&Group->GroupName,
-                                    (PWSTR)ValueData))
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlZeroMemory(&QueryTable, sizeof(QueryTable));
-        QueryTable[0].Name = (PWSTR)ValueData;
-        QueryTable[0].QueryRoutine = CreateGroupOrderListRoutine;
-
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-                                        L"GroupOrderList",
-                                        QueryTable,
-                                        (PVOID)Group,
-                                        NULL);
-        DPRINT("%x %d %S\n", Status, Group->TagCount, (PWSTR)ValueData);
-
-        InsertTailList(&GroupListHead,
-                       &Group->GroupListEntry);
-    }
-
-    return STATUS_SUCCESS;
 }
 
 
@@ -412,31 +299,6 @@ done:;
 }
 
 
-DWORD
-ScmReadGroupList(VOID)
-{
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-    NTSTATUS Status;
-
-    InitializeListHead(&GroupListHead);
-
-    /* Build group order list */
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
-
-    QueryTable[0].Name = L"List";
-    QueryTable[0].QueryRoutine = CreateGroupListRoutine;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-                                    L"ServiceGroupOrder",
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-
-    return RtlNtStatusToDosError(Status);
-}
-
-
 VOID
 ScmDeleteMarkedServices(VOID)
 {
@@ -476,7 +338,7 @@ ScmCreateServiceDatabase(VOID)
 
     DPRINT("ScmCreateServiceDatabase() called\n");
 
-    dwError = ScmReadGroupList();
+    dwError = ScmCreateGroupList();
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
@@ -627,9 +489,9 @@ ScmCheckDriver(PSERVICE Service)
                 {
                     CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
-                    DPRINT("Checking group '%wZ'\n", &CurrentGroup->GroupName);
+                    DPRINT("Checking group '%S'\n", &CurrentGroup->lpGroupName);
                     if (Service->lpServiceGroup != NULL &&
-                        _wcsicmp(Service->lpServiceGroup, CurrentGroup->GroupName.Buffer) == 0)
+                        _wcsicmp(Service->lpServiceGroup, CurrentGroup->lpGroupName) == 0)
                     {
                         CurrentGroup->ServicesRunning = TRUE;
                     }
@@ -984,7 +846,7 @@ ScmAutoStartServices(VOID)
     {
         CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
-        DPRINT("Group '%wZ'\n", &CurrentGroup->GroupName);
+        DPRINT("Group '%S'\n", CurrentGroup->lpGroupName);
 
         /* Start all services witch have a valid tag */
         for (i = 0; i < CurrentGroup->TagCount; i++)
@@ -995,7 +857,7 @@ ScmAutoStartServices(VOID)
                 CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
                 if ((CurrentService->lpServiceGroup != NULL) &&
-                    (_wcsicmp(CurrentGroup->GroupName.Buffer, CurrentService->lpServiceGroup) == 0) &&
+                    (_wcsicmp(CurrentGroup->lpGroupName, CurrentService->lpServiceGroup) == 0) &&
                     (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                     (CurrentService->ServiceVisited == FALSE) &&
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
@@ -1016,7 +878,7 @@ ScmAutoStartServices(VOID)
             CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
             if ((CurrentService->lpServiceGroup != NULL) &&
-                (_wcsicmp(CurrentGroup->GroupName.Buffer, CurrentService->lpServiceGroup) == 0) &&
+                (_wcsicmp(CurrentGroup->lpGroupName, CurrentService->lpServiceGroup) == 0) &&
                 (CurrentService->dwStartType == SERVICE_AUTO_START) &&
                 (CurrentService->ServiceVisited == FALSE))
             {

@@ -233,7 +233,7 @@ ScmReadString(HKEY hServiceKey,
     DWORD dwType;
     DWORD dwSizeNeeded;
     LPWSTR expanded = NULL;
-    LPBYTE ptr = NULL;
+    LPWSTR ptr = NULL;
 
     *lpValue = NULL;
 
@@ -255,7 +255,7 @@ ScmReadString(HKEY hServiceKey,
                                lpValueName,
                                0,
                                &dwType,
-                               ptr,
+                               (LPBYTE)ptr,
                                &dwSize);
     if (dwError != ERROR_SUCCESS)
         goto done;
@@ -281,7 +281,7 @@ ScmReadString(HKEY hServiceKey,
     }
     else
     {
-        *lpValue = (LPWSTR)ptr;
+        *lpValue = ptr;
     }
 
 done:;
