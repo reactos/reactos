@@ -116,6 +116,7 @@
 #define IDI_NOTIFY_R                    169
 #define IDB_MDI                         170
 #define IDB_SDI                         171
+#define IDI_MINIMIZE                    172
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
