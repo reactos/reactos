@@ -2,7 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -979,7 +979,10 @@ static const WCHAR ExtensionPlatformNT[]  = {'.','N','T',0};
 static const WCHAR ExtensionPlatformWindows[]  = {'.','W','i','n',0};
 
 static const WCHAR ExtensionArchitectureNone[]  = {0};
+static const WCHAR ExtensionArchitecturealpha[]  = {'a','l','p','h','a',0};
 static const WCHAR ExtensionArchitectureamd64[]  = {'a','m','d','6','4',0};
+static const WCHAR ExtensionArchitectureia64[]  = {'i','a','6','4',0};
+static const WCHAR ExtensionArchitecturemips[]  = {'m','i','p','s',0};
 static const WCHAR ExtensionArchitectureppc[]  = {'p','p','c',0};
 static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
 
@@ -993,16 +996,26 @@ static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
                 pExtensionPlatform = ExtensionPlatformNT;
                 break;
             default:
+                ERR("Unkown platform 0x%lx\n", pPlatformInfo->Platform);
                 pExtensionPlatform = ExtensionPlatformNone;
                 break;
         }
         switch (pPlatformInfo->ProcessorArchitecture)
         {
+            case PROCESSOR_ARCHITECTURE_ALPHA:
+                pExtensionArchitecture = ExtensionArchitecturealpha;
+                break;
             case PROCESSOR_ARCHITECTURE_AMD64:
                 pExtensionArchitecture = ExtensionArchitectureamd64;
                 break;
+            case PROCESSOR_ARCHITECTURE_IA64:
+                pExtensionArchitecture = ExtensionArchitectureia64;
+                break;
             case PROCESSOR_ARCHITECTURE_INTEL:
                 pExtensionArchitecture = ExtensionArchitecturex86;
+                break;
+            case PROCESSOR_ARCHITECTURE_MIPS:
+                pExtensionArchitecture = ExtensionArchitecturemips;
                 break;
             case PROCESSOR_ARCHITECTURE_PPC:
                 pExtensionArchitecture = ExtensionArchitectureppc;
@@ -6529,7 +6542,7 @@ SetupDiSetSelectedDriverW(
                         break;
                     }
                 }
-                ItemList= ItemList->Flink;
+                ItemList = ItemList->Flink;
             }
             if (ItemList == ListHead)
                 SetLastError(ERROR_INVALID_PARAMETER);
