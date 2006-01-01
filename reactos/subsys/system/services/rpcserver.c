@@ -220,12 +220,11 @@ ScmCheckAccess(SC_HANDLE Handle,
 
 
 DWORD
-ScmAssignNewTag(LPWSTR lpServiceGroup,
-                LPDWORD lpdwTagId)
+ScmAssignNewTag(PSERVICE lpService)
 {
     /* FIXME */
-    DPRINT("Assigning new tag in group %S\n", lpServiceGroup);
-    *lpdwTagId = 0;
+    DPRINT("Assigning new tag to service %S\n", lpService->lpServiceName);
+    lpService->dwTag = 0;
     return ERROR_SUCCESS;
 }
 
@@ -927,10 +926,10 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
 
     if (lpdwTagId != NULL)
     {
-        dwError = ScmAssignNewTag(lpService->lpGroup->lpGroupName,
-                                  &lpService->dwTag);
+        dwError = ScmAssignNewTag(lpService);
         if (dwError != ERROR_SUCCESS)
             goto done;
+
         dwError = RegSetValueExW(hServiceKey,
                                  L"Tag",
                                  0,
@@ -939,6 +938,7 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
                                  sizeof(DWORD));
         if (dwError != ERROR_SUCCESS)
             goto done;
+
         *lpdwTagId = lpService->dwTag;
     }
 
@@ -1073,6 +1073,23 @@ ScmrCreateServiceW(handle_t BindingHandle,
         wcscpy(lpService->lpDisplayName, lpDisplayName);
     }
 
+    /* Assign the service to a group */
+    if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
+    {
+        dwError = ScmSetServiceGroup(lpService,
+                                     lpLoadOrderGroup);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    /* Assign a new tag */
+    if (lpdwTagId != NULL)
+    {
+        dwError = ScmAssignNewTag(lpService);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
     /* Write service data to the registry */
     /* Create the service key */
     dwError = ScmCreateServiceKey(lpServiceName,
@@ -1161,10 +1178,6 @@ ScmrCreateServiceW(handle_t BindingHandle,
 
     if (lpdwTagId != NULL)
     {
-        dwError = ScmAssignNewTag(lpService->lpGroup->lpGroupName,
-                                  &lpService->dwTag);
-        if (dwError != ERROR_SUCCESS)
-            goto done;
         dwError = RegSetValueExW(hServiceKey,
                                  L"Tag",
                                  0,
