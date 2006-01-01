@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
  * PURPOSE:         Paging file functions
@@ -897,22 +896,18 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
    BytesPerAllocationUnit = FsSizeInformation.SectorsPerAllocationUnit *
                             FsSizeInformation.BytesPerSector;
-
-   /* We have to find a value which is a multiple of both PAGE_SIZE and
-      BytesPerAllocationUnit */
-   SafeInitialSize.u.LowPart = ((SafeInitialSize.u.LowPart + PAGE_SIZE - 1) /
-                                PAGE_SIZE) * PAGE_SIZE;
-   while (0 != (SafeInitialSize.u.LowPart % BytesPerAllocationUnit) &&
-          SafeInitialSize.u.LowPart <= SafeMaximumSize.u.LowPart - PAGE_SIZE)
+   /* FIXME: If we have 2048 BytesPerAllocationUnit (FAT16 < 128MB) there is
+    * a problem if the paging file is fragmented. Suppose the first cluster
+    * of the paging file is cluster 3042 but cluster 3043 is NOT part of the
+    * paging file but of another file. We can't write a complete page (4096
+    * bytes) to the physical location of cluster 3042 then. */
+   if (BytesPerAllocationUnit % PAGE_SIZE)
    {
-      SafeInitialSize.u.LowPart += PAGE_SIZE;
-   }
-   if (0 != (SafeInitialSize.u.LowPart % BytesPerAllocationUnit))
-   {
+      DPRINT1("BytesPerAllocationUnit %d is not a multiple of PAGE_SIZE %d\n",
+              BytesPerAllocationUnit, PAGE_SIZE);
       ZwClose(FileHandle);
-      return STATUS_ALLOTTED_SPACE_EXCEEDED;
+      return STATUS_UNSUCCESSFUL;
    }
-   ASSERT(0 == (SafeInitialSize.u.LowPart % PAGE_SIZE));
 
    Status = ZwSetInformationFile(FileHandle,
                                  &IoStatus,

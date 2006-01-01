@@ -225,8 +225,8 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
                               0);
   if (! NT_SUCCESS(Status))
     {
-      PrintString("Creation of paging file %wZ with size %I64d KB failed (status 0x%x\n",
-                  &FileName, InitialSize.QuadPart / 1024);
+      PrintString("Creation of paging file %wZ with size %I64d KB failed (status 0x%x)\n",
+                  &FileName, InitialSize.QuadPart / 1024, Status);
     }
 
 Cleanup:
