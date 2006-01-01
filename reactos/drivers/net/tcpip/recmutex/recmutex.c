@@ -38,7 +38,6 @@ UINT RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOL ToWrite ) {
 					    FALSE,
 					    NULL );
 	    ExAcquireFastMutex( &RecMutex->Mutex );
-	    if( Status == STATUS_SUCCESS ) break;
 	}
 	RecMutex->Locked = TRUE;
 	RecMutex->Writer = ToWrite;
