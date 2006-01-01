@@ -397,8 +397,8 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    int saveY;
    BOOLEAN DesIsBiggerY=FALSE;
   
-    SrcSizeY = SourceRect->bottom;
-    SrcSizeX = SourceRect->right;
+    SrcSizeY = SourceRect->bottom - SourceRect->top;
+    SrcSizeX = SourceRect->right - SourceRect->left;
   
     DesSizeY = DestRect->bottom;
     DesSizeX = DestRect->right;   
@@ -422,7 +422,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		     /* Draw one Hline on X - Led to the Des Zoom In*/
 		     if (DesSizeX>SrcSizeX)
 			 {
-		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -433,7 +433,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -455,7 +455,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			 {
 			   /* Draw one Hline on X - Led to the Des Zoom Out*/
 
-               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+               for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -466,7 +466,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -491,7 +491,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		    if (DesSizeX>SrcSizeX)
 			{
 				/* Draw one pixel on X - Led to the Des Zoom In*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -502,7 +502,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -522,7 +522,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			else
 			{
 				/* Draw one pixel on X - Led to the Des Zoom Out*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -533,7 +533,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -560,7 +560,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		     /* Draw one Hline on X - Led to the Des Zoom In*/
 		     if (DesSizeX>SrcSizeX)
 			 {
-		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -571,7 +571,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -589,7 +589,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			 {
 			   /* Draw one Hline on X - Led to the Des Zoom Out*/
 
-               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+               for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -600,7 +600,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -622,7 +622,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		    if (DesSizeX>SrcSizeX)
 			{
 				/* Draw one pixel on X - Led to the Des Zoom In*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -633,7 +633,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -649,7 +649,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			else
 			{
 				/* Draw one pixel on X - Led to the Des Zoom Out*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -660,7 +660,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -684,7 +684,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		     /* Draw one Hline on X - Led to the Des Zoom In*/
 		     if (DesSizeX>SrcSizeX)
 			 {
-		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -695,7 +695,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -713,7 +713,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			 {
 			   /* Draw one Hline on X - Led to the Des Zoom Out*/
 
-               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+               for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -724,7 +724,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -746,7 +746,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		    if (DesSizeX>SrcSizeX)
 			{
 				/* Draw one pixel on X - Led to the Des Zoom In*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -757,7 +757,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -773,7 +773,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			else
 			{
 				/* Draw one pixel on X - Led to the Des Zoom Out*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -784,7 +784,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -808,7 +808,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		     /* Draw one Hline on X - Led to the Des Zoom In*/
 		     if (DesSizeX>SrcSizeX)
 			 {
-		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -819,7 +819,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -837,7 +837,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			 {
 			   /* Draw one Hline on X - Led to the Des Zoom Out*/
 
-               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+               for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -848,7 +848,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -870,7 +870,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		    if (DesSizeX>SrcSizeX)
 			{
 				/* Draw one pixel on X - Led to the Des Zoom In*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -881,7 +881,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -897,7 +897,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			else
 			{
 				/* Draw one pixel on X - Led to the Des Zoom Out*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -908,7 +908,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -932,7 +932,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		     /* Draw one Hline on X - Led to the Des Zoom In*/
 		     if (DesSizeX>SrcSizeX)
 			 {
-		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -943,7 +943,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -961,7 +961,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			 {
 			   /* Draw one Hline on X - Led to the Des Zoom Out*/
 
-               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+               for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -972,7 +972,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -994,7 +994,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		    if (DesSizeX>SrcSizeX)
 			{
 				/* Draw one pixel on X - Led to the Des Zoom In*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -1005,7 +1005,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -1021,7 +1021,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			else
 			{
 				/* Draw one pixel on X - Led to the Des Zoom Out*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -1032,7 +1032,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -1056,7 +1056,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		     /* Draw one Hline on X - Led to the Des Zoom In*/
 		     if (DesSizeX>SrcSizeX)
 			 {
-		  		for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+		  		for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -1067,7 +1067,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -1085,7 +1085,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			 {
 			   /* Draw one Hline on X - Led to the Des Zoom Out*/
 
-               for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+               for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -1096,7 +1096,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
@@ -1118,7 +1118,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		    if (DesSizeX>SrcSizeX)
 			{
 				/* Draw one pixel on X - Led to the Des Zoom In*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -1129,7 +1129,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{						
 						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);
 						
@@ -1145,7 +1145,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 			else
 			{
 				/* Draw one pixel on X - Led to the Des Zoom Out*/
-				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
+				for (DesY=DestRect->bottom-zoomY; DesY>=DestRect->top; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
 						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
@@ -1156,7 +1156,7 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					saveY = DesY+zoomY;
 
-					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
+					for (DesX=DestRect->right-zoomX; DesX>=DestRect->left; DesX-=zoomX)				
 					{
 						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
 					
