@@ -69,7 +69,6 @@ extern struct mbuf *m_copypack();
 #define IS_LOOPBACK_ADDR(addr) \
   ((ntohl(addr) & IN_CLASSA_NET) == (IN_LOOPBACKNET << IN_CLASSA_NSHIFT))
 
-
 /*
  * Tcp output routine: figure out what should be sent and send it.
  */
@@ -87,6 +86,9 @@ tcp_output(tp)
 	int idle, sendalot;
 	struct rmxp_tao *taop;
 	struct rmxp_tao tao_noncached;
+#ifdef __REACTOS__
+	struct mbuf *n;
+#endif
 
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
@@ -732,6 +734,18 @@ send:
 #endif
 	error = ip_output(m, tp->t_inpcb->inp_options, &tp->t_inpcb->inp_route,
 			  so->so_options & SO_DONTROUTE, 0);
+#ifdef __REACTOS__
+	/* We allocated m, so we are responsible for freeing it. If the mbuf
+           contains a pointer to an external datablock, we (or rather, m_copy)
+           didn't allocate it but pointed it to the data to send. So we have
+           to cheat a little bit and keep M_FREE from freeing the external
+           data block */
+	while (NULL != m) {
+	    m->m_flags &= ~M_EXT;
+	    MFREE(m, n);
+	    m = n;
+	}
+#endif
     }
 	if (error) {
 out:
