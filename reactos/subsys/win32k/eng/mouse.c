@@ -210,15 +210,9 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    {
       return;
    }
-   
-   if (pgp->ShowPointer < 0)
-   {
-      return ;
-   }
-
-
+     
    pgp->Enabled = TRUE;
-
+   
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
 
@@ -281,14 +275,19 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
         {
            if((ColorSurf = EngLockSurface(pgp->ColorSurface)))
            {
-             IntEngBitBltEx(DestSurface, ColorSurf, MaskSurf, NULL,
+             if (pgp->ShowPointer >= 0)
+             {
+                IntEngBitBltEx(DestSurface, ColorSurf, MaskSurf, NULL,
                             pgp->XlateObject, &DestRect, &SrcPoint, &SrcPoint,
                             NULL, NULL, R4_MASK, FALSE);
-             EngUnlockSurface(ColorSurf);
+                EngUnlockSurface(ColorSurf);
+             }
            }
         }
         else
         {
+            if (pgp->ShowPointer >= 0)
+            {
            IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
                           ROP3_TO_ROP4(SRCAND), FALSE);
@@ -296,6 +295,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
            IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
                           ROP3_TO_ROP4(SRCINVERT), FALSE);
+           }
         }
         EngUnlockSurface(MaskSurf);
       }
