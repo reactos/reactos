@@ -122,7 +122,7 @@ void QuickLaunchBar::AddShortcuts()
 	HBRUSH bk_brush = GetSysColorBrush(COLOR_BTNFACE);
 
 	AddButton(ID_MINIMIZE_ALL, g_Globals._icon_cache.get_icon(ICID_MINIMIZE).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_MINIMIZE_ALL), NULL);
-	AddButton(ID_EXPLORE, g_Globals._icon_cache.get_icon(ICID_COMPUTER).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_TITLE), NULL);
+	AddButton(ID_EXPLORE, g_Globals._icon_cache.get_icon(ICID_EXPLORER).create_bitmap(bk_color, bk_brush, canvas), ResString(IDS_TITLE), NULL);
 
 	TBBUTTON sep = {0, -1, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
 	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&sep);
