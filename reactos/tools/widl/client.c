@@ -304,7 +304,7 @@ static void write_procformatstring(type_t *iface)
     unsigned int type_offset = 2;
     int in_attr, out_attr;
 
-    print_client("const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =\n");
+    print_client("static const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =\n");
     print_client("{\n");
     indent++;
     print_client("0,\n");
@@ -429,7 +429,7 @@ static void write_typeformatstring(type_t *iface)
     int ptr_attr, ref_attr, unique_attr;
     void *sizeis_attr;
 
-    print_client("const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =\n");
+    print_client("static const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =\n");
     print_client("{\n");
     indent++;
     print_client("0,\n");
@@ -1782,7 +1782,7 @@ static void write_bindinghandledecl(type_t *iface)
 
 static void write_stubdescdecl(type_t *iface)
 {
-    print_client("extern const MIDL_STUB_DESC %s_StubDesc;\n", iface->name);
+    print_client("static const MIDL_STUB_DESC %s_StubDesc;\n", iface->name);
     fprintf(client, "\n");
 }
 
@@ -1791,7 +1791,7 @@ static void write_stubdescriptor(type_t *iface)
 {
     char *implicit_handle = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
 
-    print_client("const MIDL_STUB_DESC %s_StubDesc =\n", iface->name);
+    print_client("static const MIDL_STUB_DESC %s_StubDesc =\n", iface->name);
     print_client("{\n");
     indent++;
     print_client("(void __RPC_FAR *)& %s___RpcClientInterface,\n", iface->name);
@@ -1956,8 +1956,8 @@ static void write_formatstringsdecl(type_t *iface)
     write_formatdesc("TYPE");
     write_formatdesc("PROC");
     fprintf(client, "\n");
-    print_client("extern const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString;\n");
-    print_client("extern const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString;\n");
+    print_client("static const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString;\n");
+    print_client("static const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString;\n");
     print_client("\n");
 }
 

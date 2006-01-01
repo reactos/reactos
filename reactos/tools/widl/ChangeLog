@@ -1,5 +1,13 @@
 ChangeLog
 
+2006-01-01 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Generate static MIDL_PROC_FORMAT_STRING, MIDL_TYPE_FORMAT_STRING and
+  MIDL_STUB_DESC variables.
+
 2005-12-05 ekohl
 
    tools/widl/widl.c
