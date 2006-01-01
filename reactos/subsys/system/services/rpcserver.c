@@ -1252,6 +1252,8 @@ ScmrEnumDependentServicesW(handle_t BindingHandle,
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT1("ScmrEnumDependentServicesW() called\n");
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
 
     DPRINT1("ScmrEnumDependentServicesW() done (Error %lu)\n", dwError);
 
@@ -1951,6 +1953,8 @@ ScmrEnumDependentServicesA(handle_t BindingHandle,
                            unsigned long *lpServicesReturned)
 {
     DPRINT1("ScmrEnumDependentServicesA() is unimplemented\n");
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 

@@ -408,8 +408,7 @@ ControlServiceEx(IN SC_HANDLE hService,
  *
  * @implemented
  */
-SC_HANDLE
-STDCALL
+SC_HANDLE STDCALL
 CreateServiceA(SC_HANDLE hSCManager,
                LPCSTR lpServiceName,
                LPCSTR lpDisplayName,
@@ -558,12 +557,12 @@ CreateServiceW(SC_HANDLE hSCManager,
                LPCWSTR lpPassword)
 {
     SC_HANDLE hService = NULL;
-    DWORD dwError;
     DWORD dwDependenciesLength = 0;
+    DWORD dwError;
     DWORD dwLength;
     LPWSTR lpStr;
 
-    DPRINT1("CreateServiceW() called\n");
+    DPRINT("CreateServiceW() called\n");
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -602,7 +601,7 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (unsigned int *)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
+        DPRINT("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -642,31 +641,65 @@ DeleteService(SC_HANDLE hService)
 /**********************************************************************
  *  EnumDependentServicesA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-EnumDependentServicesA(
-    SC_HANDLE       hService,
-    DWORD           dwServiceState,
-    LPENUM_SERVICE_STATUSA  lpServices,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded,
-    LPDWORD         lpServicesReturned)
+BOOL STDCALL
+EnumDependentServicesA(SC_HANDLE hService,
+                       DWORD dwServiceState,
+                       LPENUM_SERVICE_STATUSA lpServices,
+                       DWORD cbBufSize,
+                       LPDWORD pcbBytesNeeded,
+                       LPDWORD lpServicesReturned)
 {
-    DPRINT1("EnumDependentServicesA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LPENUM_SERVICE_STATUSA lpStatusPtr;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwCount;
+
+    DPRINT("EnumServicesStatusA() called\n");
+
+    HandleBind();
+
+    dwError = ScmrEnumDependentServicesA(BindingHandle,
+                                         (unsigned int)hService,
+                                         dwServiceState,
+                                         (unsigned char *)lpServices,
+                                         cbBufSize,
+                                         pcbBytesNeeded,
+                                         lpServicesReturned);
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
+    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    {
+        if (lpStatusPtr->lpServiceName)
+            lpStatusPtr->lpServiceName =
+                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+        if (lpStatusPtr->lpDisplayName)
+            lpStatusPtr->lpDisplayName =
+                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+        lpStatusPtr++;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrEnumDependentServicesA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    DPRINT("EnumDependentServicesA() done\n");
+
+    return TRUE;
 }
 
 
 /**********************************************************************
  *  EnumDependentServicesW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 EnumDependentServicesW(SC_HANDLE hService,
                        DWORD dwServiceState,
                        LPENUM_SERVICE_STATUSW lpServices,
@@ -674,9 +707,46 @@ EnumDependentServicesW(SC_HANDLE hService,
                        LPDWORD pcbBytesNeeded,
                        LPDWORD lpServicesReturned)
 {
-    DPRINT1("EnumDependentServicesW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LPENUM_SERVICE_STATUSW lpStatusPtr;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwCount;
+
+    DPRINT("EnumServicesStatusW() called\n");
+
+    HandleBind();
+
+    dwError = ScmrEnumDependentServicesW(BindingHandle,
+                                         (unsigned int)hService,
+                                         dwServiceState,
+                                         (unsigned char *)lpServices,
+                                         cbBufSize,
+                                         pcbBytesNeeded,
+                                         lpServicesReturned);
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
+    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    {
+        if (lpStatusPtr->lpServiceName)
+            lpStatusPtr->lpServiceName =
+                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+        if (lpStatusPtr->lpDisplayName)
+            lpStatusPtr->lpDisplayName =
+                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+        lpStatusPtr++;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrEnumDependentServicesW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    DPRINT("EnumDependentServicesW() done\n");
+
+    return TRUE;
 }
 
 
@@ -691,7 +761,7 @@ EnumServiceGroupW(
     SC_HANDLE               hSCManager,
     DWORD                   dwServiceType,
     DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUSA  lpServices,
+    LPENUM_SERVICE_STATUSW  lpServices,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded,
     LPDWORD                 lpServicesReturned,
@@ -758,7 +828,7 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    DPRINT("ScmrEnumServicesStatusA() done\n");
+    DPRINT("EnumServicesStatusA() done\n");
 
     return TRUE;
 }
@@ -818,7 +888,7 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    DPRINT("ScmrEnumServicesStatusW() done\n");
+    DPRINT("EnumServicesStatusW() done\n");
 
     return TRUE;
 }
@@ -882,7 +952,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    DPRINT("ScmrEnumServicesStatusExA() done\n");
+    DPRINT("EnumServicesStatusExA() done\n");
 
     return TRUE;
 }
@@ -946,7 +1016,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    DPRINT("ScmrEnumServicesStatusExW() done\n");
+    DPRINT("EnumServicesStatusExW() done\n");
 
     return TRUE;
 }
