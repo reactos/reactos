@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -240,6 +240,7 @@ void ShellDirectory::read_directory(int scan_flags)
 	/*if (_folder.empty())
 		return;*/
 
+#ifndef _NO_WIN_FS
 	TCHAR buffer[MAX_PATH];
 
 	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer, COUNTOF(buffer)) && _tcsncmp(buffer,TEXT("::{"),3)) {
@@ -304,7 +305,7 @@ void ShellDirectory::read_directory(int scan_flags)
 				DWORD attribs = SFGAO_FILESYSTEM;
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					attribs |= SFGAO_FOLDER;
+					attribs |= SFGAO_FOLDER|SFGAO_HASSUBFOLDER;
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 					attribs |= SFGAO_READONLY;
@@ -332,8 +333,10 @@ void ShellDirectory::read_directory(int scan_flags)
 
 			FindClose(hFind);
 		}
-
-	} else { // !SCAN_FILESYSTEM
+	}
+	else // !SCAN_FILESYSTEM
+#endif
+	{
 
 		ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
 

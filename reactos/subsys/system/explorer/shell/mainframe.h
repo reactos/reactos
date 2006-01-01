@@ -112,7 +112,9 @@ protected:
 	HWND	_hmdiclient;
 
 	WindowHandle _hextrabar;
+#ifndef _NO_WIN_FS
 	WindowHandle _hdrivebar;
+#endif
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -128,7 +130,9 @@ protected:
 
 	virtual bool go_to(LPCTSTR url, bool new_window);
 
+#ifndef _NO_WIN_FS
 	TCHAR	_drives[BUFFER_LEN];
+#endif
 };
 
 #endif

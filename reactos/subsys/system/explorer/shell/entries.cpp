@@ -326,15 +326,19 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 
 	ICON_ID icon_id = ICID_NONE;
 
-	if (get_path(path, COUNTOF(path)) && _tcsncmp(path,TEXT("::{"),3))
+	 // not for ET_SHELL to display the correct desktop icon
+	if (_etype!=ET_SHELL && get_path(path, COUNTOF(path)))
 		icon_id = g_Globals._icon_cache.extract(path, flags);
 
 	if (icon_id == ICID_NONE) {
-		if (!(flags & (ICF_OPEN|ICF_OVERLAYS))) {
+		if (!(flags & ICF_OVERLAYS)) {
 			IExtractIcon* pExtract;
 			if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
 				unsigned gil_flags;
 				int idx;
+
+				if (flags & ICF_OPEN)
+					gil_flags |= GIL_OPENICON;
 
 				if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, COUNTOF(path), &idx, &gil_flags))) {
 					if (gil_flags & GIL_NOTFILENAME)
@@ -377,7 +381,7 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 			const ShellPath& pidl_abs = create_absolute_pidl();
 			LPCITEMIDLIST pidl = pidl_abs;
 
-			int shgfi_flags = SHGFI_SYSICONINDEX|SHGFI_PIDL;
+			int shgfi_flags = SHGFI_PIDL;
 
 			if (!(flags & ICF_LARGE))
 				shgfi_flags |= SHGFI_SMALLICON;
@@ -385,15 +389,19 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 			if (flags & ICF_OPEN)
 				shgfi_flags |= SHGFI_OPENICON;
 
-			// ICF_OVERLAYS is not supported in this case.
+			if (flags & ICF_SYSCACHE) {
+				assert(!(flags&ICF_OVERLAYS));
 
-			HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), shgfi_flags);
-			if (himlSys)
-				icon_id = g_Globals._icon_cache.add(sfi.iIcon);
-			/*
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|(g_Globals._large_icons? SHGFI_SMALLICON: 0)))
-				icon_id = g_Globals._icon_cache.add(sfi.hIcon)._id;
-			*/
+				HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|shgfi_flags);
+				if (himlSys)
+					icon_id = g_Globals._icon_cache.add(sfi.iIcon);
+			} else {
+				if (flags & ICF_OVERLAYS)
+					shgfi_flags |= SHGFI_ADDOVERLAYS;
+
+				if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_ICON|shgfi_flags))
+					icon_id = g_Globals._icon_cache.add(sfi.hIcon);
+			}
 		}
 	}
 
@@ -675,9 +683,11 @@ bool Entry::get_path_base ( PTSTR path, size_t path_count, ENTRY_TYPE etype ) co
 				memcpy(path+1, name, l*sizeof(TCHAR));
 				len += l+1;
 
-				if ( etype == ET_WINDOWS && entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
+#ifndef _NO_WIN_FS
+				if (etype == ET_WINDOWS && entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
 					path[0] = TEXT(':');
 				else
+#endif
 					path[0] = TEXT('\\');
 			}
 

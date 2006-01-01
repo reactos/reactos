@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,8 @@
 
 
 #include <precomp.h>
+
+#ifndef _NO_WIN_FS
 
 //#include "winfs.h"
 
@@ -138,6 +140,19 @@ void WinDirectory::read_directory(int scan_flags)
 
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
+#ifdef _NO_WIN_FS	//@todo not really correct: We shouldn't hide . and .. 
+			 // ignore hidden files (usefull in the start menu)
+			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+				continue;
+
+			 // ignore directory entries "." and ".."
+			if ((w32fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) &&
+				w32fd.cFileName[0]==TEXT('.') &&
+				(w32fd.cFileName[1]==TEXT('\0') ||
+				(w32fd.cFileName[1]==TEXT('.') && w32fd.cFileName[2]==TEXT('\0'))))
+				continue;
+#endif
+
 			lstrcpy(pname+1, w32fd.cFileName);
 
 			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -175,7 +190,8 @@ void WinDirectory::read_directory(int scan_flags)
 			last = entry;	// There is always at least one entry, because FindFirstFile() succeeded and we don't filter the file entries.
 		} while(FindNextFile(hFind, &w32fd));
 
-		last->_next = NULL;
+		if (last)
+			last->_next = NULL;
 
 		FindClose(hFind);
 	}
@@ -245,3 +261,5 @@ ShellPath WinEntry::create_absolute_pidl() const
 
 	return ShellPath();
 }
+
+#endif // _NO_WIN_FS

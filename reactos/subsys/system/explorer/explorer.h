@@ -26,11 +26,20 @@
  //
 
 
+#define _LIGHT_STARTMENU
+#define _LAZY_ICONEXTRACT
+#define _SINGLE_ICONEXTRACT
+//#define _NO_WIN_FS
+
+
 #include "utility/shellclasses.h"
 
 #include "shell/entries.h"
 
+#ifndef _NO_WIN_FS
 #include "shell/winfs.h"
+#endif
+
 #include "shell/shellfs.h"
 
 #ifndef ROSSHELL

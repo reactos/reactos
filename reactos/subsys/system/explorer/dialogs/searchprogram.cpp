@@ -246,6 +246,7 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	item.iItem = ListView_InsertItem(_list_ctrl, &item);	// We could use the information in _sort to enable manual sorting while populating the list.
 
 	item.mask = LVIF_TEXT;
+
 	item.iSubItem = 1;
 	item.pszText = (LPTSTR)(LPCTSTR)cache_entry._path;
 	ListView_SetItem(_list_ctrl, &item);

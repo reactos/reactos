@@ -28,7 +28,9 @@
 
 enum ENTRY_TYPE {
 	ET_UNKNOWN,
+#ifndef _NO_WIN_FS
 	ET_WINDOWS,
+#endif
 #ifdef __WINE__
 	ET_UNIX,
 #endif

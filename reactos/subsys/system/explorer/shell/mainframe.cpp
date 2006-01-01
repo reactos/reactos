@@ -794,6 +794,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 
 
 	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
+#ifndef _NO_WIN_FS
 	PTSTR p;
 
 #ifndef _NO_REBAR
@@ -808,10 +809,12 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn, 1,
 				16, 13, 16, 13, sizeof(TBBUTTON));
 #endif
+#endif
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
+#ifndef _NO_WIN_FS
 	GetLogicalDriveStrings(BUFFER_LEN, _drives);
 
 	 // register windows drive root strings
@@ -835,6 +838,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 
 		while(*p++);
 	}
+#endif
 
 
 #ifndef _NO_REBAR
@@ -856,6 +860,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	rbBand.cx = 284;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
+#ifndef _NO_WIN_FS
 	rbBand.fStyle |= RBBS_BREAK;
 	rbBand.lpText = TEXT("Drives");
 	rbBand.hwndChild = _hdrivebar;
@@ -863,6 +868,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	rbBand.cyMinChild = btn_hgt + 4;
 	rbBand.cx = 400;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+#endif
 #endif
 }
 
@@ -937,13 +943,13 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath root_path = DesktopFolderPath();
+		ShellPath shell_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
-				root_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				FileSysShellPath fsp(root_path);
+				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				FileSysShellPath fsp(shell_path);
 				path = fsp;
 
 				if (path) {
@@ -954,7 +960,7 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
-				root_path = path;	// create as "rooted" window
+				shell_path = path;	// create as "rooted" window
 			}
 		} else {
 			///@todo read paths and window placements from registry
@@ -972,7 +978,7 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			OBJ_CONTEXT("create ShellChildWndInfo", path);
 
 			 // Shell Namespace as default view
-			ShellChildWndInfo create_info(_hmdiclient, path, root_path);
+			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
 
 			create_info._pos.showCmd = wparam&OWM_SEPARATE? SW_SHOWNORMAL: SW_SHOWMAXIMIZED;
 			create_info._pos.rcNormalPosition.left = CW_USEDEFAULT;
@@ -1010,6 +1016,7 @@ int MDIMainFrame::Command(int id, int code)
 		if (SendMessage(hwndClient, PM_DISPATCH_COMMAND, MAKELONG(id,code), 0))
 			return 0;
 
+#ifndef _NO_WIN_FS
 	if (id>=ID_DRIVE_FIRST && id<=ID_DRIVE_FIRST+0xFF) {
 		TCHAR drv[_MAX_DRIVE], path[MAX_PATH];
 		LPCTSTR root = _drives;
@@ -1034,6 +1041,7 @@ int MDIMainFrame::Command(int id, int code)
 
 		return 1;
 	}
+#endif
 
 	switch(id) {
 	  case ID_WINDOW_NEW: {
@@ -1064,9 +1072,11 @@ int MDIMainFrame::Command(int id, int code)
 		toggle_child(_hwnd, id, _hextrabar, 1);
 		break;
 
+#ifndef _NO_WIN_FS
 	  case ID_VIEW_DRIVE_BAR:
 		toggle_child(_hwnd, id, _hdrivebar, 2);
 		break;
+#endif
 
 #ifdef __WINE__
 	  case ID_DRIVE_UNIX_FS: {
@@ -1174,10 +1184,12 @@ void MDIMainFrame::frame_get_clientspace(PRECT prect)
 {
 	super::frame_get_clientspace(prect);
 
+#ifndef _NO_WIN_FS
 	if (IsWindowVisible(_hdrivebar)) {
 		ClientRect rt(_hdrivebar);
 		prect->top += rt.bottom+2;
 	}
+#endif
 }
 
 void MDIMainFrame::resize_frame(int cx, int cy)
@@ -1208,6 +1220,7 @@ void MDIMainFrame::resize_frame(int cx, int cy)
 		//	rect.bottom -= rt.bottom;
 		}
 
+#ifndef _NO_WIN_FS
 		if (IsWindowVisible(_hdrivebar)) {
 			SendMessage(_hdrivebar, WM_SIZE, 0, 0);
 			WindowRect rt(_hdrivebar);
@@ -1216,6 +1229,7 @@ void MDIMainFrame::resize_frame(int cx, int cy)
 			rect.top = new_top;
 		//	rect.bottom -= rt.bottom;
 		}
+#endif
 	}
 
 	if (IsWindowVisible(_hstatusbar)) {
@@ -1476,13 +1490,13 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath root_path = DesktopFolderPath();
+		ShellPath shell_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
-				root_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				FileSysShellPath fsp(root_path);
+				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				FileSysShellPath fsp(shell_path);
 				path = fsp;
 
 				if (path) {
@@ -1493,7 +1507,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
-				root_path = path;	// create as "rooted" window
+				shell_path = path;	// create as "rooted" window
 			}
 		} else {
 			///@todo read paths and window placements from registry
@@ -1501,10 +1515,15 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				*buffer = '\0';
 
 			path = buffer;
-			root_path = path;
+			shell_path = path;
 		}
 
-		jump_to(root_path, wparam);	//@todo content of 'path' not used any more
+		if (wparam & OWM_ROOTED)
+			_shellpath_info._root_shell_path = shell_path;
+		else
+			_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DESKTOP, _hwnd);	// CSIDL_DRIVES
+
+		jump_to(shell_path, wparam);	//@todo content of 'path' not used any more
 		return TRUE;}	// success
 
 	  default: def:
@@ -1620,8 +1639,6 @@ void SDIMainFrame::update_shell_browser()
 		delete _shellBrowser.release();
 	}
 
-	///@todo use OWM_ROOTED flag
-
 	 // create explorer treeview
 	if (_shellpath_info._open_mode & OWM_EXPLORE) {
 		if (!_left_hwnd) {
@@ -1709,7 +1726,6 @@ void SDIMainFrame::jump_to(LPCTSTR path, int mode)
 	} else */{
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@ path
 
 		update_shell_browser();
 	}
@@ -1726,7 +1742,6 @@ void SDIMainFrame::jump_to(LPCITEMIDLIST path, int mode)
 	} else {
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = path;	//@@ MF 02.10.2005 was: SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
 		update_shell_browser();
 	}

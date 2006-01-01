@@ -117,26 +117,31 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 
 	//LOG(FmtString(TEXT("ShellBrowser::jump_to(): pidl=%s"), (LPCTSTR)FileSysShellPath(pidl)));
 
+	 // We could call read_tree() here to iterate through the hierarchy and open all folders
+	 // from _create_info._root_shell_path (_cur_dir) to _create_info._shell_path (pidl).
+	 // To make it easier we just use ILFindChild() instead.
 	if (_cur_dir) {
 		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
 
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from _create_info._root_shell_path (_cur_dir) to _create_info._shell_path (pidl)
-	_root._entry->read_tree(_create_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME);
-	-> see FileChildWindow::FileChildWindow()_create_info._shell_path
-*/
+		if (ILFindChild) {
+			for(;;) {
+				LPCITEMIDLIST child_pidl = (*ILFindChild)(_cur_dir->create_absolute_pidl(), pidl);
+				if (!child_pidl || !child_pidl->mkid.cb)
+					break;
 
-		LPCITEMIDLIST child_pidl;
+				_cur_dir->smart_scan();
 
-		if (ILFindChild)
-			child_pidl = (*ILFindChild)(_cur_dir->create_absolute_pidl(), pidl);
-		else
-			child_pidl = pidl;	// This is not correct in the common case, but works on the desktop level.
+				entry = _cur_dir->find_entry(child_pidl);
+				if (!entry)
+					break;
 
-		if (child_pidl) {
+				_cur_dir = static_cast<ShellDirectory*>(entry);
+				_callback->entry_selected(entry);
+			}
+		} else {
 			_cur_dir->smart_scan();
 
-			entry = _cur_dir->find_entry(child_pidl);
+			entry = _cur_dir->find_entry(pidl);	// This is not correct in the common case, but works on the desktop level.
 
 			if (entry) {
 				_cur_dir = static_cast<ShellDirectory*>(entry);
@@ -145,7 +150,7 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 		}
 	}
 
-		//@@ work around as long as we don't iterate correctly through the ShellEntry tree
+	 // If not already called, now directly call UpdateFolderView() using pidl
 	if (!entry)
 		UpdateFolderView(ShellFolder(pidl));
 }
@@ -323,6 +328,12 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 		entry->smart_scan();
 	} catch(COMException& e) {
 		HandleException(e, g_Globals._hMainWnd);
+	}
+
+	 // remove old children items
+	for(HTREEITEM hchild,hnext=TreeView_GetChild(_left_hwnd, hParentItem); hchild=hnext; ) {
+		hnext = TreeView_GetNextSibling(_left_hwnd, hchild);
+		TreeView_DeleteItem(_left_hwnd, hchild);
 	}
 
 	TV_ITEM tvItem;
@@ -622,8 +633,6 @@ void MDIShellBrowserChild::update_shell_browser()
 		split_pos = _split_pos;
 		delete _shellBrowser.release();
 	}
-
-	///@todo use OWM_ROOTED flag
 
 	 // create explorer treeview
 	if (_create_info._open_mode & OWM_EXPLORE) {

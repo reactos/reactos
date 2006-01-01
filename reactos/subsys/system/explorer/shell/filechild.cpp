@@ -39,6 +39,7 @@ FileChildWndInfo::FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE ety
  :	super(hmdiclient),
 	_etype(etype)
 {
+#ifndef _NO_WIN_FS
 	if (etype == ET_UNKNOWN)
 #ifdef __WINE__
 		if (*path == '/')
@@ -46,6 +47,7 @@ FileChildWndInfo::FileChildWndInfo(HWND hmdiclient, LPCTSTR path, ENTRY_TYPE ety
 		else
 #endif
 			_etype = ET_WINDOWS;
+#endif
 
 	_path = path;
 
@@ -134,20 +136,6 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_right = NULL;
 
 	switch(info._etype) {
-	  case ET_SHELL: {	//@@ separate FileChildWindow into ShellChildWindow, WinChildWindow, UnixChildWindow ?
-		_root._drive_type = DRIVE_UNKNOWN;
-		_root._sort_order = SORT_NAME;
-
-		lstrcpy(drv, TEXT("\\"));
-		lstrcpy(_root._volname, TEXT("Desktop"));
-		_root._fs_flags = 0;
-		lstrcpy(_root._fs, TEXT("Shell"));
-
-		_root._entry = new ShellDirectory(GetDesktopFolder(), DesktopFolderPath(), hwnd);
-		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
-		entry = _root.read_tree(&*shell_info._shell_path);
-		break;}
-
 #ifdef __WINE__
 	  case ET_UNIX:
 		_root._drive_type = GetDriveType(info._path);
@@ -207,6 +195,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		}
 		break;}
 
+#ifndef _NO_WIN_FS
 	  default:	// ET_WINDOWS
 		_root._drive_type = GetDriveType(info._path);
 		_root._sort_order = SORT_NAME;
@@ -217,6 +206,24 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._path, drv);
 		_root._entry = new WinDirectory(_root._path);
 		entry = _root.read_tree(info._path+_tcslen(_root._path));
+		break;
+#else
+	default:
+#endif
+
+	  case ET_SHELL: {	//@@ separate FileChildWindow into ShellChildWindow, WinChildWindow, UnixChildWindow ?
+		_root._drive_type = DRIVE_UNKNOWN;
+		_root._sort_order = SORT_NAME;
+
+		lstrcpy(drv, TEXT("\\"));
+		lstrcpy(_root._volname, TEXT("Desktop"));
+		_root._fs_flags = 0;
+		lstrcpy(_root._fs, TEXT("Shell"));
+
+		_root._entry = new ShellDirectory(GetDesktopFolder(), DesktopFolderPath(), hwnd);
+		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
+		entry = _root.read_tree(&*shell_info._shell_path);
+		break;}
 	}
 
 	if (_root._entry) {

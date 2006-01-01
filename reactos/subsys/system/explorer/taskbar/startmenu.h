@@ -26,11 +26,6 @@
  //
 
 
-#define _LIGHT_STARTMENU
-#define _LAZY_ICONEXTRACT
-#define _SINGLE_ICONEXTRACT
-
-
 #define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
 #define	TITLE_STARTMENU			TEXT("Start Menu")
 
