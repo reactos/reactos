@@ -423,6 +423,7 @@ static LRESULT CALLBACK dinput_mouse_hook( int code, WPARAM wparam, LPARAM lpara
     DWORD dwCoop;
     static long last_event = 0;
     int wdata;
+    long lasttime = 0; 
 
     if (code != HC_ACTION) return CallNextHookEx( This->hook, code, wparam, lparam );
 
@@ -434,10 +435,19 @@ static LRESULT CALLBACK dinput_mouse_hook( int code, WPARAM wparam, LPARAM lpara
      * the warps happen. But if it involves a mouse button event we
      * allow it since we don't want to lose the clicks.
      */
+#ifndef __REACTOS__     
     if (((GetCurrentTime() - last_event) < 10)
         && wparam == WM_MOUSEMOVE)
 	goto end;
     else last_event = GetCurrentTime();
+#else
+    lasttime = GetCurrentTime() - last_event;
+    
+    if ((lasttime) < 1)        
+	    goto end;
+    else if ((lasttime) >= 10)        
+	    last_event = GetCurrentTime();    
+#endif    
     
     /* Mouse moved -> send event if asked */
     if (This->hEvent)
