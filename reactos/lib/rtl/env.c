@@ -567,7 +567,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    if (SysEnvUsed == TRUE)
       RtlReleasePebLock();
 
-   DPRINT1("Return STATUS_VARIABLE_NOT_FOUND: %wZ\n", Name);
+   DPRINT("Return STATUS_VARIABLE_NOT_FOUND: %wZ\n", Name);
    return(STATUS_VARIABLE_NOT_FOUND);
 }
 
