@@ -776,7 +776,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                    IN PLARGE_INTEGER MaximumSize,
                    IN ULONG Reserved)
 {
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    IO_STATUS_BLOCK IoStatus;
