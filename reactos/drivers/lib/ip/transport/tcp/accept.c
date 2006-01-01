@@ -115,9 +115,6 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 	ListEntry = ListEntry->Flink;
 
 	if( Bucket->AssociatedEndpoint == Connection ) {
-#ifdef MEMTRACK
-	    UntrackFL( __FILE__, __LINE__, Bucket->Request.RequestContext );
-#endif
 	    RemoveEntryList( ListEntry->Blink );
 	    ExFreePool( Bucket );
 	}
