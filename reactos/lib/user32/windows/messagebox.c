@@ -493,7 +493,15 @@ MessageBoxTimeoutIndirectW(
       txtrect.right -= GetSystemMetrics(SM_CXICON) + MSGBOXEX_SPACING;
     txtrect.top = txtrect.left = txtrect.bottom = 0;
     SelectObject(hDC, hFont);
-    DrawTextW(hDC, text, textlen, &txtrect, DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_CALCRECT);
+    if (textlen != 0)
+    {
+      DrawTextW(hDC, text, textlen, &txtrect, DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_CALCRECT);
+    }
+    else
+    {
+      txtrect.right = txtrect.left + 1;
+      txtrect.bottom = txtrect.top + 1;
+    }
     txtrect.right++;
 
     /* calculate position and size of the icon */
