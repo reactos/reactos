@@ -155,8 +155,8 @@ void OskitTCPGetAddress( void *socket,
 
 #undef errno
 
-void *fbsd_malloc( unsigned int bytes, ... );
-void fbsd_free( void *data, ... );
+void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... );
+void fbsd_free( void *data, char *file, unsigned line, ... );
 #if 0
 #define malloc(x) fbsd_malloc(x,__FILE__,__LINE__)
 #define free(x) fbsd_free(x,__FILE__,__LINE__)

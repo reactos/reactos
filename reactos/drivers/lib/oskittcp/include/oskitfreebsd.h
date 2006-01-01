@@ -30,6 +30,6 @@ static __inline void panic ( const char* fmt, ... )
 #define panic(...) do { printf(__VA_ARGS__); \
         oskittcp_die(__FILE__,__LINE__); } while(0)
 #endif//_MSC_VER
-#define kmem_malloc(x,y,z) malloc(y)
+#define kmem_malloc(x,y,z) malloc(y,0,0)
 
 #endif//_OSKITFREEBSD_H

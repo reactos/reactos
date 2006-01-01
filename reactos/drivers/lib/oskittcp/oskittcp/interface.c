@@ -33,15 +33,15 @@ void clock_init();
 int isprint(int c);
 int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
 
-void *fbsd_malloc( unsigned int bytes, ... ) {
+void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... ) {
     if( !OtcpEvent.TCPMalloc ) panic("no malloc");
     return OtcpEvent.TCPMalloc
-	( OtcpEvent.ClientData, (OSK_UINT)bytes, "*", 0 );
+	( OtcpEvent.ClientData, (OSK_UINT)bytes, file, line );
 }
 
-void fbsd_free( void *data, ... ) {
+void fbsd_free( void *data, char *file, unsigned line, ... ) {
     if( !OtcpEvent.TCPFree ) panic("no free");
-    OtcpEvent.TCPFree( OtcpEvent.ClientData, data, "*", 0 );
+    OtcpEvent.TCPFree( OtcpEvent.ClientData, data, file, line );
 }
 
 void InitOskitTCP() {

@@ -329,8 +329,8 @@ extern struct kmembuckets bucket[];
 extern void *malloc __P((unsigned long size, ...));
 extern void free __P((void *addr, ...));
 #else
-#define malloc fbsd_malloc
-#define free   fbsd_free
+#define malloc(size, flags, id) fbsd_malloc(size, __FILE__, __LINE__)
+#define free(area, flags)   fbsd_free(area, __FILE__, __LINE__)
 #endif
 #endif /* KERNEL */
 #endif /* !_SYS_MALLOC_H_ */

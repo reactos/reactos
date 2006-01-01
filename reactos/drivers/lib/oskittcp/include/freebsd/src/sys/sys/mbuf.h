@@ -304,7 +304,7 @@ union mcluster {
 #ifdef __REACTOS__
 #define MCLGET(m, how) { \
           OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
-          (m)->m_ext.ext_buf = malloc(MCLBYTES); \
+          (m)->m_ext.ext_buf = malloc(MCLBYTES,__FILE__,__LINE__); \
 	  if ((m)->m_ext.ext_buf != NULL) { \
               (m)->m_data = (m)->m_ext.ext_buf; \
               (m)->m_flags |= M_EXT; \
@@ -313,7 +313,7 @@ union mcluster {
         }
 
 #define MCLFREE(p) { \
-          free( (p) ); \
+          free( (p), 0 ); \
         }
 #else
 #define	MCLGET(m, how) \
