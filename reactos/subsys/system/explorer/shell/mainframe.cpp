@@ -304,7 +304,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (wparam & OWM_ROOTED)
 			_create_info._root_shell_path = shell_path;
 		else
-			_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);
+			_create_info._root_shell_path = DesktopFolderPath();	//SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
 		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);
 		return TRUE;}	// success

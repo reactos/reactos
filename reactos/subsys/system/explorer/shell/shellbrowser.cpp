@@ -611,13 +611,11 @@ bool ShellBrowserChild::select_folder(ShellDirectory* dir, bool expand)
 {
 	CONTEXT("ShellBrowserChild::expand_folder()");
 
-	//HTREEITEM hitem_sel = TreeView_GetSelection(_left_hwnd);
 	if (!_last_sel)
 		return false;
 
-	if (expand)
-		if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
-			return false;
+	if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
+		return false;
 
 	for(HTREEITEM hitem=TreeView_GetChild(_left_hwnd,_last_sel); hitem; hitem=TreeView_GetNextSibling(_left_hwnd,hitem)) {
 		if ((ShellDirectory*)TreeView_GetItemData(_left_hwnd,hitem) == dir) {
