@@ -1665,38 +1665,84 @@ QueryServiceConfig2W(SC_HANDLE hService,
 /**********************************************************************
  *  QueryServiceLockStatusA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceLockStatusA(
-    SC_HANDLE           hSCManager,
-    LPQUERY_SERVICE_LOCK_STATUSA    lpLockStatus,
-    DWORD               cbBufSize,
-    LPDWORD             pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceLockStatusA(SC_HANDLE hSCManager,
+                        LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
+                        DWORD cbBufSize,
+                        LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceLockStatusA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceLockStatusA() called\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceLockStatusA(BindingHandle,
+                                          (unsigned int)hSCManager,
+                                          (unsigned char *)lpLockStatus,
+                                          cbBufSize,
+                                          pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    if (lpLockStatus->lpLockOwner != NULL)
+    {
+        lpLockStatus->lpLockOwner =
+            (LPSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
+    }
+
+    DPRINT("QueryServiceLockStatusA() done\n");
+
+    return TRUE;
 }
 
 
 /**********************************************************************
  *  QueryServiceLockStatusW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceLockStatusW(
-    SC_HANDLE           hSCManager,
-    LPQUERY_SERVICE_LOCK_STATUSW    lpLockStatus,
-    DWORD               cbBufSize,
-    LPDWORD             pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceLockStatusW(SC_HANDLE hSCManager,
+                        LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
+                        DWORD cbBufSize,
+                        LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceLockStatusW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceLockStatusW() called\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceLockStatusW(BindingHandle,
+                                          (unsigned int)hSCManager,
+                                          (unsigned char *)lpLockStatus,
+                                          cbBufSize,
+                                          pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    if (lpLockStatus->lpLockOwner != NULL)
+    {
+        lpLockStatus->lpLockOwner =
+            (LPWSTR)((UINT_PTR)lpLockStatus + (UINT_PTR)lpLockStatus->lpLockOwner);
+    }
+
+    DPRINT("QueryServiceLockStatusW() done\n");
+
+    return TRUE;
 }
 
 
