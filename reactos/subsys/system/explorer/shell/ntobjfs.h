@@ -117,6 +117,6 @@ struct NtObjDirectory : public NtObjEntry, public Directory
 		_path = NULL;
 	}
 
-	virtual void read_directory(int scan_flags=SCAN_ALL);
+	virtual void read_directory(int scan_flags=0);
 	virtual Entry* find_entry(const void*);
 };

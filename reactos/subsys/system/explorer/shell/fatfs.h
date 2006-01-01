@@ -50,7 +50,7 @@ struct FATDirectory : public FATEntry, public Directory
 	FATDirectory(FATDrive& drive, Entry* parent, LPCTSTR path, unsigned cluster);
 	~FATDirectory();
 
-	virtual void read_directory(int scan_flags=SCAN_ALL);
+	virtual void read_directory(int scan_flags=0);
 	virtual const void* get_next_path_component(const void*) const;
 	virtual Entry* find_entry(const void*);
 

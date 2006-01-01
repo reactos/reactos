@@ -50,12 +50,9 @@ enum SORT_ORDER {
 };
 
 enum SCAN_FLAGS {
-//	SCAN_EXTRACT_ICONS	= 1,
-	SCAN_DO_ACCESS		= 2,
-
-	SCAN_ALL			= 3,
-
-	SCAN_FILESYSTEM		= 4
+	SCAN_DONT_EXTRACT_ICONS	= 1,
+	SCAN_DONT_ACCESS		= 2,
+	SCAN_NO_FILESYSTEM		= 4
 };
 
 #ifndef ATTRIBUTE_SYMBOLIC_LINK
@@ -114,19 +111,20 @@ public:
 
 	void	free_subentries();
 
-	void	read_directory_base(SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
-	Entry*	read_tree(const void* path, SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
+	void	read_directory_base(SORT_ORDER sortOrder=SORT_NAME, int scan_flags=0);
+	Entry*	read_tree(const void* path, SORT_ORDER sortOrder=SORT_NAME, int scan_flags=0);
 	void	sort_directory(SORT_ORDER sortOrder);
-	void	smart_scan(SORT_ORDER sortOrder=SORT_NAME, int scan_flags=SCAN_ALL);
+	void	smart_scan(SORT_ORDER sortOrder=SORT_NAME, int scan_flags=0);
 	int		extract_icon(ICONCACHE_FLAGS flags=ICF_NORMAL);
 	int		safe_extract_icon(ICONCACHE_FLAGS flags=ICF_NORMAL);
 
-	virtual void		read_directory(int scan_flags=SCAN_ALL) {}
+	virtual void		read_directory(int scan_flags=0) {}
 	virtual const void*	get_next_path_component(const void*) const {return NULL;}
 	virtual Entry*		find_entry(const void*) {return NULL;}
 	virtual bool		get_path(PTSTR path, size_t path_count) const = 0;
 	virtual ShellPath	create_absolute_pidl() const {return (LPCITEMIDLIST)NULL;}
 	virtual HRESULT		GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
+	virtual ShellFolder get_shell_folder() const;
 	virtual BOOL		launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 	virtual HRESULT		do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& cm_ifs);
 
@@ -158,6 +156,6 @@ struct Root {
 	DWORD	_fs_flags;
 	SORT_ORDER _sort_order;
 
-	Entry*	read_tree(LPCTSTR path, int scan_flags=SCAN_ALL);
-	Entry*	read_tree(LPCITEMIDLIST pidl, int scan_flags=SCAN_ALL);
+	Entry*	read_tree(LPCTSTR path, int scan_flags=0);
+	Entry*	read_tree(LPCITEMIDLIST pidl, int scan_flags=0);
 };

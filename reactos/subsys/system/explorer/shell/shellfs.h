@@ -37,6 +37,7 @@ struct ShellEntry : public Entry
 	virtual HRESULT		GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
 	virtual BOOL		launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 	virtual HRESULT		do_context_menu(HWND hwnd, LPPOINT pptScreen, CtxMenuInterfaces& cm_ifs);
+	virtual ShellFolder	get_shell_folder() const;
 
 	IShellFolder*		get_parent_folder() const;
 
@@ -99,11 +100,12 @@ struct ShellDirectory : public ShellEntry, public Directory
 		pFolder->Release();
 	}
 
-	virtual void read_directory(int scan_flags=SCAN_ALL);
+	virtual void read_directory(int scan_flags=0);
 	virtual const void* get_next_path_component(const void*) const;
 	virtual Entry* find_entry(const void*);
 
 	virtual bool get_path(PTSTR path, size_t path_count) const;
+	virtual ShellFolder	get_shell_folder() const;
 
 	int	extract_icons(ICONCACHE_FLAGS flags);
 

@@ -980,6 +980,11 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			 // Shell Namespace as default view
 			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
 
+			if (wparam & OWM_ROOTED)
+				create_info._root_shell_path = shell_path;
+			else
+				create_info._root_shell_path = DesktopFolderPath();	//SpecialFolderPath(CSIDL_DRIVES, _hwnd);
+
 			create_info._pos.showCmd = wparam&OWM_SEPARATE? SW_SHOWNORMAL: SW_SHOWMAXIMIZED;
 			create_info._pos.rcNormalPosition.left = CW_USEDEFAULT;
 			create_info._pos.rcNormalPosition.top = CW_USEDEFAULT;
@@ -1521,7 +1526,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (wparam & OWM_ROOTED)
 			_shellpath_info._root_shell_path = shell_path;
 		else
-			_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DESKTOP, _hwnd);	// CSIDL_DRIVES
+			_shellpath_info._root_shell_path = DesktopFolderPath();	//SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
 		jump_to(shell_path, wparam);	//@todo content of 'path' not used any more
 		return TRUE;}	// success
@@ -1660,10 +1665,8 @@ void SDIMainFrame::update_shell_browser()
 		}
 	}
 
-	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _left_hwnd, _right_hwnd,
+	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _hwnd, _left_hwnd, _right_hwnd,
 												_shellpath_info, this, _cm_ifs));
-
-	_shellBrowser->Init(_hwnd);
 
 	if (_left_hwnd)
 		_shellBrowser->Init();
@@ -1674,37 +1677,25 @@ void SDIMainFrame::update_shell_browser()
 
 void SDIMainFrame::entry_selected(Entry* entry)
 {
-	if (entry->_etype == ET_SHELL) {
-		ShellEntry* shell_entry = static_cast<ShellEntry*>(entry);
-		IShellFolder* folder;
+	if (_left_hwnd)
+		_shellBrowser->select_folder(entry, false);
 
-		if (shell_entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			folder = static_cast<ShellDirectory*>(shell_entry)->_folder;
+	_shellBrowser->UpdateFolderView(entry->get_shell_folder());
+
+	 // set size of new created shell view windows
+	resize_children();
+
+	TCHAR path[MAX_PATH];
+
+	if (entry->get_path(path, COUNTOF(path))) {
+		String url;
+
+		if (path[0] == ':')
+			url.printf(TEXT("shell://%s"), path);
 		else
-			folder = shell_entry->get_parent_folder();
+			url.printf(TEXT("file://%s"), path);
 
-		if (!folder) {
-			assert(folder);
-			return;
-		}
-
-		TCHAR path[MAX_PATH];
-
-		if (shell_entry->get_path(path, COUNTOF(path))) {
-			String url;
-
-			if (path[0] == ':')
-				url.printf(TEXT("shell://%s"), path);
-			else
-				url.printf(TEXT("file://%s"), path);
-
-			set_url(url);
-		}
-
-		_shellBrowser->UpdateFolderView(folder);
-
-		 // update _clnt_rect and set size of new created shell view windows
-		update_clnt_rect();
+		set_url(url);
 	}
 }
 

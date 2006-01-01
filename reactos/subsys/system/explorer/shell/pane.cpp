@@ -648,7 +648,6 @@ void Pane::calc_tabbed_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str)
 	DrawTextEx(dis->hDC, (LPTSTR)str, -1, &rt, DT_CALCRECT|DT_SINGLELINE|DT_NOPREFIX|DT_EXPANDTABS|DT_TABSTOP, &dtp);*/
 
 	DrawText(dis->hDC, (LPTSTR)str, -1, &rt, DT_CALCRECT|DT_SINGLELINE|DT_EXPANDTABS|DT_TABSTOP|(2<<8));
-	//FIXME rt (0,0) ???
 
 	if (rt.right > _widths[col])
 		_widths[col] = rt.right;

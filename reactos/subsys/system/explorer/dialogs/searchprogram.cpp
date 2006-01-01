@@ -59,7 +59,7 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 	ShellDirectory* dir = new ShellDirectory(GetDesktopFolder(), path, 0);
 	_dirs.push(dir);
 
-	dir->smart_scan(SORT_NONE, /*SCAN_EXTRACT_ICONS|*/SCAN_FILESYSTEM);
+	dir->smart_scan(SORT_NONE);
 
 	for(Entry*entry=dir->_down; _alive && entry; entry=entry->_next) {
 		if (entry->_shell_attribs & SFGAO_HIDDEN)

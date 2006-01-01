@@ -167,3 +167,4 @@ If you search for more information, look into the Subversion repository.
 01.11.2005	m. fuchs	String::str(), String::toLower() to allow conventient and WINE compatible string conversions
 29.11.2005	m. fuchs	Adjustments for Visual Studio 2005: use new secure CT functions, COUNTOF for buffer sizes
 28.12.2005	m. fuchs	display icon overlays in Explorer tree view
+31.12.2005	m. fuchs	handle "/root" command line parameter

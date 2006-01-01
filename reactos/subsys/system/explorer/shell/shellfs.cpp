@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004, 2005 Martin Fuchs
+ * Copyright 2003, 2004, 2005, 2006 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -228,6 +228,22 @@ HRESULT ShellEntry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 }
 
 
+ShellFolder Entry::get_shell_folder() const
+{
+	return ShellFolder(create_absolute_pidl());
+}
+
+ShellFolder ShellEntry::get_shell_folder() const
+{
+	return get_parent_folder();
+}
+
+ShellFolder ShellDirectory::get_shell_folder() const
+{
+	return _folder;
+}
+
+
 void ShellDirectory::read_directory(int scan_flags)
 {
 	CONTEXT("ShellDirectory::read_directory()");
@@ -241,14 +257,13 @@ void ShellDirectory::read_directory(int scan_flags)
 		return;*/
 
 #ifndef _NO_WIN_FS
-	TCHAR buffer[MAX_PATH];
+	TCHAR buffer[_MAX_PATH+_MAX_FNAME];
 
-	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer, COUNTOF(buffer)) && _tcsncmp(buffer,TEXT("::{"),3)) {
+	if (!(scan_flags&SCAN_NO_FILESYSTEM) && get_path(buffer, COUNTOF(buffer)) && _tcsncmp(buffer,TEXT("::{"),3)) {
 		Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 		LPTSTR p = buffer + _tcslen(buffer);
 
-		// TODO FIXME - this can overflow
 		lstrcpy(p, TEXT("\\*"));
 
 		WIN32_FIND_DATA w32fd;
@@ -284,7 +299,7 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				entry->_level = level;
 
-				if (scan_flags & SCAN_DO_ACCESS) {
+				if (!(scan_flags & SCAN_DONT_ACCESS)) {
 					HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
 												0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
@@ -325,19 +340,18 @@ void ShellDirectory::read_directory(int scan_flags)
 
 				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 					entry->_icon_id = ICID_FOLDER;
-/*				else if (scan_flags & SCAN_EXTRACT_ICONS)
-					entry->safe_extract_icon(large_icons);
-*/
+				else if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
+					entry->_icon_id = entry->safe_extract_icon();	// Assume small icon, we can extract the large icon later on demand.
+
 				last = entry;
 			} while(FindNextFile(hFind, &w32fd));
 
 			FindClose(hFind);
 		}
 	}
-	else // !SCAN_FILESYSTEM
+	else // SCAN_NO_FILESYSTEM
 #endif
 	{
-
 		ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
 
 		TCHAR name[MAX_PATH];
@@ -376,7 +390,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					if (attribs & SFGAO_REMOVABLE) {
 						attribs |= SFGAO_HASSUBFOLDER;
 						removeable = true;
-					} else if (scan_flags & SCAN_DO_ACCESS) {
+					} else if (!(scan_flags & SCAN_DONT_ACCESS)) {
 						DWORD attribs2 = SFGAO_READONLY;
 
 						HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
@@ -388,7 +402,7 @@ void ShellDirectory::read_directory(int scan_flags)
 					attribs = 0;
 
 				bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi,
-												 (scan_flags&SCAN_DO_ACCESS) && !removeable);
+												 !(scan_flags&SCAN_DONT_ACCESS) && !removeable);
 
 				try {
 					Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
@@ -429,9 +443,9 @@ void ShellDirectory::read_directory(int scan_flags)
 					 // get icons for files and virtual objects
 					if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 						!(attribs & SFGAO_FILESYSTEM)) {
-/*						if (scan_flags & SCAN_EXTRACT_ICONS)
-							entry->extract_icon(large_icons);
-*/					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+						if (!(scan_flags & SCAN_DONT_EXTRACT_ICONS))
+							entry->_icon_id = entry->safe_extract_icon();	// Assume small icon, we can extract the large icon later on demand.
+					} else if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 						entry->_icon_id = ICID_FOLDER;
 					else
 						entry->_icon_id = ICID_NONE;	// don't try again later
@@ -478,6 +492,16 @@ Entry* ShellDirectory::find_entry(const void* p)
 
 			if (se->_pidl && se->_pidl->mkid.cb==pidl->mkid.cb && !memcmp(se->_pidl, pidl, se->_pidl->mkid.cb))
 				return entry;
+		} else {
+			const ShellPath& sp = entry->create_absolute_pidl();
+			static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST)> ILFindLastID(TEXT("SHELL32"), "ILFindLastID");
+
+			if (ILFindLastID) {
+				LPCITEMIDLIST entry_pidl = (*ILFindLastID)(sp);
+
+				if (entry_pidl && entry_pidl->mkid.cb==pidl->mkid.cb && !memcmp(entry_pidl, pidl, entry_pidl->mkid.cb))
+					return entry;
+			}
 		}
 
 	return NULL;

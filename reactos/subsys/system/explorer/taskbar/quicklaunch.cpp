@@ -105,7 +105,7 @@ void QuickLaunchBar::AddShortcuts()
 		RecursiveCreateDirectory(path);
 		_dir = new ShellDirectory(GetDesktopFolder(), path, _hwnd);
 
-		_dir->smart_scan(SORT_NAME, /*SCAN_EXTRACT_ICONS|*/SCAN_FILESYSTEM);
+		_dir->smart_scan(SORT_NAME);
 
 		 // immediatelly extract the shortcut icons
 		for(Entry*entry=_dir->_down; entry; entry=entry->_next)
@@ -160,12 +160,12 @@ void QuickLaunchBar::AddShortcuts()
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 			continue;
 
-			 // hide subfolders
-			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-				HBITMAP hbmp = g_Globals._icon_cache.get_icon(entry->_icon_id).create_bitmap(bk_color, bk_brush, canvas);
+		 // hide subfolders
+		if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			HBITMAP hbmp = g_Globals._icon_cache.get_icon(entry->_icon_id).create_bitmap(bk_color, bk_brush, canvas);
 
-				AddButton(_next_id++, hbmp, entry->_display_name, entry);	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name);
-			}
+			AddButton(_next_id++, hbmp, entry->_display_name, entry);	//entry->_etype==ET_SHELL? desktop_folder.get_name(static_cast<ShellEntry*>(entry)->_pidl): entry->_display_name);
+		}
 	}
 
 	_btn_dist = LOWORD(SendMessage(_hwnd, TB_GETBUTTONSIZE, 0, 0));

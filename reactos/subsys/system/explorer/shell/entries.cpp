@@ -614,6 +614,7 @@ HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 	return hr;
 }
 
+
  // get full path of specified directory entry
 bool Entry::get_path_base ( PTSTR path, size_t path_count, ENTRY_TYPE etype ) const
 {

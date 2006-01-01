@@ -61,7 +61,7 @@ struct ShellBrowser : public IShellBrowserImpl
 	,	public IComSrvBase<IShellFolderViewCB, ShellBrowser>, public SimpleComObject
 #endif
 {
-	ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
+	ShellBrowser(HWND hwnd, HWND hwndFrame, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
 					BrowserCallback* cb, CtxMenuInterfaces& cm_ifs);
 	virtual ~ShellBrowser();
 
@@ -90,7 +90,7 @@ struct ShellBrowser : public IShellBrowserImpl
 			return S_OK;
 		}
 
-		HWND hwnd = (HWND)SendMessage(_hWndFrame, PM_GET_CONTROLWINDOW, id, 0);
+		HWND hwnd = (HWND)SendMessage(_hwndFrame, PM_GET_CONTROLWINDOW, id, 0);
 
 		if (hwnd) {
 			*lphwnd = hwnd;
@@ -105,7 +105,7 @@ struct ShellBrowser : public IShellBrowserImpl
 		if (!pret)
 			return E_POINTER;
 
-		HWND hstatusbar = (HWND)SendMessage(_hWndFrame, PM_GET_CONTROLWINDOW, id, 0);
+		HWND hstatusbar = (HWND)SendMessage(_hwndFrame, PM_GET_CONTROLWINDOW, id, 0);
 
 		if (hstatusbar) {
 			*pret = ::SendMessage(hstatusbar, uMsg, wParam, lParam);
@@ -122,13 +122,7 @@ struct ShellBrowser : public IShellBrowserImpl
 	void	OnTreeItemRClick(int idCtrl, LPNMHDR pnmh);
 	void	OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv);
 
-	LRESULT	Init(HWND hWndFrame);
-
-	void	Init()
-	{
-		InitializeTree();
-		InitDragDrop();
-	}
+	void	Init();
 
 	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 
@@ -138,6 +132,8 @@ struct ShellBrowser : public IShellBrowserImpl
 
 	void	UpdateFolderView(IShellFolder* folder);
 	HTREEITEM select_entry(HTREEITEM hitem, Entry* entry, bool expand=true);
+
+	bool	select_folder(Entry* entry, bool expand);
 
 	 // for SDIMainFrame
 	void	jump_to(LPCITEMIDLIST pidl);
@@ -153,7 +149,7 @@ protected:
 	HIMAGELIST	_himl_old;
 	BrowserCallback* _callback;
 
-	WindowHandle _hWndFrame;
+	HWND	 _hwndFrame;
 	ShellFolder	_folder;
 
 	IShellView*	_pShellView;	// current hosted shellview
@@ -272,7 +268,7 @@ protected:
 	void	update_shell_browser();
 
 	 // interface BrowserCallback
-	virtual void	entry_selected(Entry* entry);
+	virtual void entry_selected(Entry* entry);
 };
 
 #endif

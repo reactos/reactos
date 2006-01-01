@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004, 2005 Martin Fuchs
+ * Copyright 2003, 2004, 2005, 2006 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@ const LPCTSTR C_DRIVE = C_DRIVE_STR;
 #endif
 
 
-ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
+ShellBrowser::ShellBrowser(HWND hwnd, HWND hwndFrame, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
 							BrowserCallback* cb, CtxMenuInterfaces& cm_ifs)
 #ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
  :	super(IID_IShellFolderViewCB),
@@ -45,6 +45,7 @@ ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, 
  :	
 #endif
 	_hwnd(hwnd),
+	_hwndFrame(hwndFrame),
 	_left_hwnd(left_hwnd),
 	_right_hwnd(right_hwnd),
 	_create_info(create_info),
@@ -81,11 +82,9 @@ ShellBrowser::~ShellBrowser()
 }
 
 
-LRESULT ShellBrowser::Init(HWND hWndFrame)
+void ShellBrowser::Init()
 {
 	CONTEXT("ShellBrowser::Init()");
-
-	_hWndFrame = hWndFrame;
 
 	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORADDRESSBAR);
 
@@ -96,22 +95,23 @@ LRESULT ShellBrowser::Init(HWND hWndFrame)
 
 	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
 
-	jump_to(_create_info._shell_path);
+	_root._entry->read_directory(SCAN_DONT_ACCESS|SCAN_NO_FILESYSTEM);	// avoid to handle desktop root folder as file system directory
 
-	 // -> set_curdir()
-	_root._entry->read_directory();
+	if (_left_hwnd) {
+		InitializeTree();
+		InitDragDrop();
+	}
+
+	jump_to(_create_info._shell_path);
 
 	/* already filled by ShellDirectory constructor
 	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
-
-	return 0;
 }
 
 void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 {
 	Entry* entry = NULL;
 
-	 //@@
 	if (!_cur_dir)
 		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
 
@@ -129,7 +129,7 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 				if (!child_pidl || !child_pidl->mkid.cb)
 					break;
 
-				_cur_dir->smart_scan();
+				_cur_dir->smart_scan(SORT_NAME, SCAN_DONT_ACCESS);
 
 				entry = _cur_dir->find_entry(child_pidl);
 				if (!entry)
@@ -139,7 +139,7 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 				_callback->entry_selected(entry);
 			}
 		} else {
-			_cur_dir->smart_scan();
+			_cur_dir->smart_scan(SORT_NAME, SCAN_DONT_ACCESS);
 
 			entry = _cur_dir->find_entry(pidl);	// This is not correct in the common case, but works on the desktop level.
 
@@ -211,30 +211,6 @@ bool ShellBrowser::InitDragDrop()
 }
 
 
-void ShellBrowser::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
-{
-	CONTEXT("ShellBrowser::OnTreeItemRClick()");
-
-	TVHITTESTINFO tvhti;
-
-	GetCursorPos(&tvhti.pt);
-	ScreenToClient(_left_hwnd, &tvhti.pt);
-
-	tvhti.flags = LVHT_NOWHERE;
-	(void)TreeView_HitTest(_left_hwnd, &tvhti);
-
-	if (TVHT_ONITEM & tvhti.flags) {
-		LPARAM itemData = TreeView_GetItemData(_left_hwnd, tvhti.hItem);
-
-		if (itemData) {
-			Entry* entry = (Entry*)itemData;
-			ClientToScreen(_left_hwnd, &tvhti.pt);
-
-			CHECKERROR(entry->do_context_menu(_hwnd, tvhti.pt, _cm_ifs));
-		}
-	}
-}
-
 void ShellBrowser::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 {
 	CONTEXT("ShellBrowser::OnTreeGetDispInfo()");
@@ -289,6 +265,7 @@ void ShellBrowser::invalidate_cache()
 	_image_map.clear();
 }
 
+
 void ShellBrowser::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 {
 	CONTEXT("ShellBrowser::OnTreeItemExpanding()");
@@ -325,7 +302,7 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 	SendMessage(_left_hwnd, WM_SETREDRAW, FALSE, 0);
 
 	try {
-		entry->smart_scan();
+		entry->smart_scan(SORT_NAME, SCAN_DONT_ACCESS);
 	} catch(COMException& e) {
 		HandleException(e, g_Globals._hMainWnd);
 	}
@@ -344,6 +321,16 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 #endif
 		{
+			 // ignore hidden directories
+			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+				continue;
+
+			 // ignore directory entries "." and ".."
+			if (entry->_data.cFileName[0]==TEXT('.') &&
+				(entry->_data.cFileName[1]==TEXT('\0') ||
+				(entry->_data.cFileName[1]==TEXT('.') && entry->_data.cFileName[2]==TEXT('\0'))))
+				continue;
+
 			ZeroMemory(&tvItem, sizeof(tvItem));
 
 			tvItem.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
@@ -363,9 +350,9 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 			tvInsert.hParent = hParentItem;
 
 			(void)TreeView_InsertItem(_left_hwnd, &tvInsert);
-		}
 
-		++cnt;
+			++cnt;
+		}
 	}
 
 	SendMessage(_left_hwnd, WM_SETREDRAW, TRUE, 0);
@@ -373,17 +360,44 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 	return cnt;
 }
 
+
 void ShellBrowser::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 {
 	CONTEXT("ShellBrowser::OnTreeItemSelected()");
 
-	ShellEntry* entry = (ShellEntry*)pnmtv->itemNew.lParam;
+	Entry* entry = (Entry*)pnmtv->itemNew.lParam;
 
 	_last_sel = pnmtv->itemNew.hItem;
 
 	if (entry)
 		_callback->entry_selected(entry);
 }
+
+
+void ShellBrowser::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
+{
+	CONTEXT("ShellBrowser::OnTreeItemRClick()");
+
+	TVHITTESTINFO tvhti;
+
+	GetCursorPos(&tvhti.pt);
+	ScreenToClient(_left_hwnd, &tvhti.pt);
+
+	tvhti.flags = LVHT_NOWHERE;
+	(void)TreeView_HitTest(_left_hwnd, &tvhti);
+
+	if (TVHT_ONITEM & tvhti.flags) {
+		LPARAM itemData = TreeView_GetItemData(_left_hwnd, tvhti.hItem);
+
+		if (itemData) {
+			Entry* entry = (Entry*)itemData;
+			ClientToScreen(_left_hwnd, &tvhti.pt);
+
+			CHECKERROR(entry->do_context_menu(_hwnd, tvhti.pt, _cm_ifs));
+		}
+	}
+}
+
 
 void ShellBrowser::UpdateFolderView(IShellFolder* folder)
 {
@@ -461,7 +475,7 @@ HRESULT ShellBrowser::OnDefaultCommand(LPIDA pida)
 
 				if (parent) {
 					try {
-						parent->smart_scan();
+						parent->smart_scan(SORT_NAME, SCAN_DONT_ACCESS);
 					} catch(COMException& e) {
 						return e.Error();
 					}
@@ -475,10 +489,13 @@ HRESULT ShellBrowser::OnDefaultCommand(LPIDA pida)
 						if (entry->_etype == ET_SHELL)
 							if (_last_sel && select_entry(_last_sel, entry))
 								return S_OK;
+
+					//@todo look for hidden or new subfolders and refresh/add new entry instead of opening a new window
+					return E_NOTIMPL;
 				}
 			}
 		} else { // no tree control
-			if (MainFrameBase::OpenShellFolders(pida, _hWndFrame))
+			if (MainFrameBase::OpenShellFolders(pida, _hwndFrame))
 				return S_OK;
 
 /* create new Frame Window
@@ -534,7 +551,7 @@ bool ShellBrowser::jump_to_pidl(LPCITEMIDLIST pidl)
 		if (!entry || !hitem)
 			break;
 
-		entry->smart_scan(SORT_NAME);
+		entry->smart_scan(SORT_NAME, SCAN_DONT_ACCESS);
 
 		Entry* found = entry->find_entry(p);
 		p = entry->get_next_path_component(p);
@@ -549,12 +566,40 @@ bool ShellBrowser::jump_to_pidl(LPCITEMIDLIST pidl)
 }
 
 
+bool ShellBrowser::select_folder(Entry* entry, bool expand)
+{
+	CONTEXT("ShellBrowser::expand_folder()");
+
+	if (!_last_sel)
+		return false;
+
+	if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
+		return false;
+
+	for(HTREEITEM hitem=TreeView_GetChild(_left_hwnd,_last_sel); hitem; hitem=TreeView_GetNextSibling(_left_hwnd,hitem)) {
+		if ((ShellDirectory*)TreeView_GetItemData(_left_hwnd,hitem) == entry) {
+			if (TreeView_SelectItem(_left_hwnd, hitem)) {
+				if (expand)
+					if (!TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
+						return false;
+
+				return true;
+			}
+
+			break;
+		}
+	}
+
+	return false;
+}
+
+
 #ifndef _NO_MDI
 
 MDIShellBrowserChild::MDIShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
  :	super(hwnd, info),
 	_create_info(info),
-	_shellpath_info(info)	//@@ copies info -> no referenz to _create_info !
+	_shellpath_info(info)	//@@ copies info -> no reference to _create_info !
 {
 /**todo Conversion of shell path into path string -> store into URL history
 	const String& path = GetDesktopFolder().get_name(info._shell_path, SHGDN_FORADDRESSBAR);
@@ -584,12 +629,6 @@ LRESULT MDIShellBrowserChild::Init(LPCREATESTRUCT pcs)
 		return 1;
 
 	update_shell_browser();
-
-	if (_shellBrowser.get())
-		if (_left_hwnd)
-			_shellBrowser->Init();
-		else
-			_shellBrowser->UpdateFolderView(_create_info._shell_path.get_folder());
 
 	return 0;
 }
@@ -651,10 +690,10 @@ void MDIShellBrowserChild::update_shell_browser()
 		}
 	}
 
-	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _left_hwnd, _right_hwnd,
+	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _hwndFrame, _left_hwnd, _right_hwnd,
 												_shellpath_info, this, _cm_ifs));
 
-	_shellBrowser->Init(_hwndFrame);
+	_shellBrowser->Init();
 }
 
 
@@ -681,38 +720,27 @@ String MDIShellBrowserChild::jump_to_int(LPCTSTR url)
 
 void MDIShellBrowserChild::entry_selected(Entry* entry)
 {
-	if (entry->_etype == ET_SHELL) {
-		ShellEntry* shell_entry = static_cast<ShellEntry*>(entry);
-		IShellFolder* folder;
+	if (_left_hwnd)
+		_shellBrowser->select_folder(entry, false);
 
-		if (shell_entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			folder = static_cast<ShellDirectory*>(shell_entry)->_folder;
+	_shellBrowser->UpdateFolderView(entry->get_shell_folder());
+
+	 // set size of new created shell view windows
+	ClientRect rt(_hwnd);
+	resize_children(rt.right, rt.bottom);
+
+	 // set new URL
+	TCHAR path[MAX_PATH];
+
+	if (entry->get_path(path, COUNTOF(path))) {
+		String url;
+
+		if (path[0] == ':')
+			url.printf(TEXT("shell://%s"), path);
 		else
-			folder = shell_entry->get_parent_folder();
+			url.printf(TEXT("file://%s"), path);
 
-		if (!folder) {
-			assert(folder);
-			return;
-		}
-
-		TCHAR path[MAX_PATH];
-
-		if (shell_entry->get_path(path, COUNTOF(path))) {
-			String url;
-
-			if (path[0] == ':')
-				url.printf(TEXT("shell://%s"), path);
-			else
-				url.printf(TEXT("file://%s"), path);
-
-			set_url(url);
-		}
-
-		_shellBrowser->UpdateFolderView(folder);
-
-		 // set size of new created shell view windows
-		ClientRect rt(_hwnd);
-		resize_children(rt.right, rt.bottom);
+		set_url(url);
 	}
 }
 

@@ -140,19 +140,6 @@ void WinDirectory::read_directory(int scan_flags)
 
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
-#ifdef _NO_WIN_FS	//@todo not really correct: We shouldn't hide . and .. 
-			 // ignore hidden files (usefull in the start menu)
-			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-				continue;
-
-			 // ignore directory entries "." and ".."
-			if ((w32fd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) &&
-				w32fd.cFileName[0]==TEXT('.') &&
-				(w32fd.cFileName[1]==TEXT('\0') ||
-				(w32fd.cFileName[1]==TEXT('.') && w32fd.cFileName[2]==TEXT('\0'))))
-				continue;
-#endif
-
 			lstrcpy(pname+1, w32fd.cFileName);
 
 			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -172,7 +159,7 @@ void WinDirectory::read_directory(int scan_flags)
 			 // display file type names, but don't hide file extensions
 			g_Globals._ftype_mgr.set_type(entry, true);
 
-			if (scan_flags & SCAN_DO_ACCESS) {
+			if (!(scan_flags & SCAN_DONT_ACCESS)) {
 				HANDLE hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
 											0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
@@ -247,7 +234,7 @@ Entry* WinDirectory::find_entry(const void* p)
  // get full path of specified directory entry
 bool WinEntry::get_path(PTSTR path, size_t path_count) const
 {
-	return get_path_base ( path, path_count, ET_WINDOWS );
+	return get_path_base(path, path_count, ET_WINDOWS);
 }
 
 ShellPath WinEntry::create_absolute_pidl() const
