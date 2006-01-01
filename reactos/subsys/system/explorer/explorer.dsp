@@ -407,6 +407,11 @@ SOURCE=".\explorer-jp.rc"
 # End Source File
 # Begin Source File
 
+SOURCE=".\explorer-pl.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=".\explorer-pt.rc"
 # PROP Exclude_From_Build 1
 # End Source File
@@ -520,6 +525,10 @@ SOURCE=.\res\logov256.bmp
 # Begin Source File
 
 SOURCE=.\res\mdi.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\minimize.ico
 # End Source File
 # Begin Source File
 

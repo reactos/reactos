@@ -141,23 +141,23 @@ struct ShellBrowser : public IShellBrowserImpl
 	void	invalidate_cache();
 
 protected:
-	HWND	_hwnd;
-	HWND	_left_hwnd;
-	WindowHandle& _right_hwnd;
-	ShellPathInfo& _create_info;
-	HIMAGELIST	_himl;
-	HIMAGELIST	_himl_old;
+	HWND			_hwnd;
+	HWND			_hwndFrame;
+	HWND			_left_hwnd;
+	WindowHandle&	_right_hwnd;
+	ShellPathInfo&	_create_info;
+	HIMAGELIST		_himl;
+	HIMAGELIST		_himl_old;
 	BrowserCallback* _callback;
 
-	HWND	 _hwndFrame;
-	ShellFolder	_folder;
+	ShellFolder		_folder;
 
-	IShellView*	_pShellView;	// current hosted shellview
-	TreeDropTarget* _pDropTarget;
+	IShellView*		_pShellView;	// current hosted shellview
+	TreeDropTarget*	_pDropTarget;
 
-	HTREEITEM _last_sel;
+	HTREEITEM		_last_sel;
 
-	Root	_root;
+	Root			_root;
 	ShellDirectory*	_cur_dir;
 
 	CtxMenuInterfaces& _cm_ifs;
