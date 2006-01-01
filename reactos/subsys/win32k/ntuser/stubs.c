@@ -365,6 +365,35 @@ NtUserGetMouseMovePointsEx(
    int nBufPoints,
    DWORD resolution)
 {
+/*
+   if (cbSize != sizeof (MOUSEMOVEPOINT)
+   {
+       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
+       return GMMP_ERR_POINT_NOT_FOUND;
+   }
+       
+   if (!lppt)
+   {
+       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
+       return GMMP_ERR_POINT_NOT_FOUND;
+   }
+   
+   if (!lpptBuf)
+   {
+       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
+       return GMMP_ERR_POINT_NOT_FOUND;
+   }
+       
+   switch(resolution)
+   {
+     case GMMP_USE_DISPLAY_POINTS:
+     case GMMP_USE_HIGH_RESOLUTION_POINTS:
+          break;
+     default:
+        SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
+        return GMMP_ERR_POINT_NOT_FOUND;
+   }
+  */     
    UNIMPLEMENTED
 
    return 0;

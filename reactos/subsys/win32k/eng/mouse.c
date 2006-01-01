@@ -211,7 +211,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       return;
    }
    
-   if (pgp->ShowPointer == 1)
+   if (pgp->ShowPointer < 0)
    {
       return ;
    }

@@ -134,7 +134,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
   HSURF ColorSurface;
   HSURF MaskSurface;
   HSURF SaveSurface;
-  BOOL  ShowPointer;
+  int  ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
   
   /* public pointer information */
   RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */

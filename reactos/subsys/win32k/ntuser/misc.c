@@ -191,17 +191,18 @@ NtUserCallOneParam(
       BITMAPOBJ *BitmapObj;
       GDIDEVICE *ppdev;
       GDIPOINTER *pgp;
+      int showpointer=0;
                                                                                 
       if(!(Screen = IntGetScreenDC()))
       {
-        return 1; /* No mouse */
+        return showpointer; /* No mouse */
       }
                        
       PDC dc = DC_LockDc(Screen);
 
       if (!dc)
       {
-        return 1; /* No mouse */
+        return showpointer; /* No mouse */
       }
            
       dcbmp = dc->w.hBitmap;
@@ -211,14 +212,14 @@ NtUserCallOneParam(
       if ( !BitmapObj )
       {
          BITMAPOBJ_UnlockBitmap(BitmapObj); 
-         return 1; /* No Mouse */
+         return showpointer; /* No Mouse */
       }
               
       SurfObj = &BitmapObj->SurfObj;
       if (SurfObj == NULL)
       {
         BITMAPOBJ_UnlockBitmap(BitmapObj); 
-        return 1; /* No mouse */
+        return showpointer; /* No mouse */
       }
            
       ppdev = GDIDEV(SurfObj);
@@ -226,7 +227,7 @@ NtUserCallOneParam(
       if(ppdev == NULL)
       {
         BITMAPOBJ_UnlockBitmap(BitmapObj); 
-        return 1; /* No mouse */
+        return showpointer; /* No mouse */
       }
                   
       pgp = &ppdev->Pointer;
@@ -235,9 +236,11 @@ NtUserCallOneParam(
            
       if (Param == FALSE)
       {
-          if (CurInfo->ShowingCursor != 0)
-          {
-             pgp->ShowPointer = 1;
+          pgp->ShowPointer--;         
+          showpointer = pgp->ShowPointer;
+          
+          if (showpointer >= 0)
+          {          
              //ppdev->SafetyRemoveCount = 1;
              //ppdev->SafetyRemoveLevel = 1;
              EngMovePointer(SurfObj,-1,-1,NULL);               
@@ -247,16 +250,21 @@ NtUserCallOneParam(
        }
        else
        {
+          pgp->ShowPointer++;
+          showpointer = pgp->ShowPointer;
+          
           /* Show Cursor */              
-          pgp->ShowPointer = 0;
-          //ppdev->SafetyRemoveCount = 0;
-          //ppdev->SafetyRemoveLevel = 0;
-          EngMovePointer(SurfObj,-1,-1,NULL);
-          CurInfo->ShowingCursor = CURSOR_SHOWING;
+          if (showpointer < 0) 
+          {
+             //ppdev->SafetyRemoveCount = 0;
+             //ppdev->SafetyRemoveLevel = 0;
+             EngMovePointer(SurfObj,-1,-1,NULL);
+             CurInfo->ShowingCursor = CURSOR_SHOWING;
+          }
        }
                                                     
        BITMAPOBJ_UnlockBitmap(BitmapObj); 
-       return 0;                       
+       return showpointer;                       
        }
          
    
