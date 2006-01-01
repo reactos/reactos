@@ -1753,7 +1753,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoClose")))
 #endif
-		AddButton(ResString(IDS_SHUTDOWN),	ICID_LOGOFF, false, IDC_SHUTDOWN);
+		AddButton(ResString(IDS_SHUTDOWN),	ICID_SHUTDOWN, false, IDC_SHUTDOWN);
 
 
 #ifndef _ROS_

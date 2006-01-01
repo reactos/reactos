@@ -67,6 +67,7 @@
 #define IDI_FOLDERARROW                 125
 #define IDI_ARROW                       125
 #define IDI_ARROW_SELECTED              126
+#define IDI_SHUTDOWN                    127
 #define IDB_LOGOV                       129
 #define IDB_LOGOV256                    130
 #define IDA_SEARCH_PROGRAM              133
