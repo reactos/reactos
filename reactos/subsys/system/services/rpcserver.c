@@ -2105,15 +2105,34 @@ ScmrGetServiceKeyNameA(handle_t BindingHandle,
 
 
 /* Function 34 */
-/* ScmrGetCurrentGroupStateW */
+unsigned long
+ScmrGetCurrentGroupStateW(handle_t BindingHandle)
+{
+    DPRINT1("ScmrGetCurrentGroupStateW() is unimplemented\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 35 */
-/* ScmrEnumServiceGroupW */
+unsigned long
+ScmrEnumServiceGroupW(handle_t BindingHandle)
+{
+    DPRINT1("ScmrEnumServiceGroupW() is unimplemented\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 36 */
-/* ScmrChangeServiceConfig2A */
+unsigned long
+ScmrChangeServiceConfig2A(handle_t BindingHandle,
+                          unsigned int hService,
+                          unsigned long dwInfoLevel,
+                          unsigned char *lpInfo,
+                          unsigned long dwInfoSize)
+{
+    DPRINT1("ScmrChangeServiceConfig2A() is unimplemented\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 37 */
@@ -2130,11 +2149,31 @@ ScmrChangeServiceConfig2W(handle_t BindingHandle,
 
 
 /* Function 38 */
-/* ScmrQueryServiceConfig2A */
+unsigned long
+ScmrQueryServiceConfig2A(handle_t BindingHandle,
+                         unsigned int hService,
+                         unsigned long dwInfoLevel,
+                         unsigned char *lpBuffer,
+                         unsigned long cbBufSize,
+                         unsigned long *pcbBytesNeeded)
+{
+    DPRINT1("ScmrQueryServiceConfig2A() is unimplemented\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 39 */
-/* ScmrQueryServiceConfig2W */
+unsigned long
+ScmrQueryServiceConfig2W(handle_t BindingHandle,
+                         unsigned int hService,
+                         unsigned long dwInfoLevel,
+                         unsigned char *lpBuffer,
+                         unsigned long cbBufSize,
+                         unsigned long *pcbBytesNeeded)
+{
+    DPRINT1("ScmrQueryServiceConfig2W() is unimplemented\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 40 */
@@ -2199,7 +2238,24 @@ ScmrQueryServiceStatusEx(handle_t BindingHandle,
 
 
 /* Function 41 */
-/* ScmrEnumServicesStatusExA */
+unsigned long
+ScmrEnumServicesStatusExA(handle_t BindingHandle,
+                          unsigned int hSCManager,
+                          unsigned long InfoLevel,
+                          unsigned long dwServiceType,
+                          unsigned long dwServiceState,
+                          unsigned char *lpServices,
+                          unsigned long dwBufSize,
+                          unsigned long *pcbBytesNeeded,
+                          unsigned long *lpServicesReturned,
+                          unsigned long *lpResumeHandle,
+                          char *pszGroupName)
+{
+    DPRINT1("ScmrEnumServicesStatusExA() is unimplemented\n");
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /* Function 42 */
@@ -2290,9 +2346,17 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
 
         if (pszGroupName)
         {
-            if ((CurrentService->lpGroup == NULL) ||
-                _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
-                continue;
+            if (*pszGroupName == 0)
+            {
+                if (CurrentService->lpGroup != NULL)
+                    continue;
+            }
+            else
+            {
+                if ((CurrentService->lpGroup == NULL) ||
+                    _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
+                    continue;
+            }
         }
 
         dwSize = sizeof(ENUM_SERVICE_STATUS_PROCESSW) +
@@ -2337,9 +2401,17 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
 
         if (pszGroupName)
         {
-            if ((CurrentService->lpGroup == NULL) ||
-                _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
-                continue;
+            if (*pszGroupName == 0)
+            {
+                if (CurrentService->lpGroup != NULL)
+                    continue;
+            }
+            else
+            {
+                if ((CurrentService->lpGroup == NULL) ||
+                    _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
+                    continue;
+            }
         }
 
         dwRequiredSize += (sizeof(ENUM_SERVICE_STATUS_PROCESSW) +
@@ -2380,9 +2452,17 @@ ScmrEnumServicesStatusExW(handle_t BindingHandle,
 
         if (pszGroupName)
         {
-            if ((CurrentService->lpGroup == NULL) ||
-                _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
-                continue;
+            if (*pszGroupName == 0)
+            {
+                if (CurrentService->lpGroup != NULL)
+                    continue;
+            }
+            else
+            {
+                if ((CurrentService->lpGroup == NULL) ||
+                    _wcsicmp(pszGroupName, CurrentService->lpGroup->lpGroupName))
+                    continue;
+            }
         }
 
         dwSize = sizeof(ENUM_SERVICE_STATUS_PROCESSW) +

@@ -78,6 +78,59 @@ HandleUnbind(VOID)
 
 
 /**********************************************************************
+ *  ChangeServiceConfig2A
+ *
+ * @implemented
+ */
+BOOL WINAPI
+ChangeServiceConfig2A(SC_HANDLE hService,
+                      DWORD dwInfoLevel,
+                      LPVOID lpInfo)
+{
+    DWORD lpInfoSize;
+    DWORD dwError;
+
+    DPRINT("ChangeServiceConfig2A() called\n");
+
+    /* Determine the length of the lpInfo parameter */
+    switch (dwInfoLevel)
+    {
+        case SERVICE_CONFIG_DESCRIPTION:
+            lpInfoSize = sizeof(SERVICE_DESCRIPTIONA);
+            break;
+
+        case SERVICE_CONFIG_FAILURE_ACTIONS:
+            lpInfoSize = sizeof(SERVICE_FAILURE_ACTIONSA);
+            break;
+
+        default:
+            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+
+    if (lpInfo == NULL)
+        return TRUE;
+
+    HandleBind();
+
+    dwError = ScmrChangeServiceConfig2A(BindingHandle,
+                                        (unsigned int)hService,
+                                        dwInfoLevel,
+                                        lpInfo,
+                                        lpInfoSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrChangeServiceConfig2A() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/**********************************************************************
  *  ChangeServiceConfig2W
  *
  * @implemented
@@ -96,11 +149,13 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-            lpInfoSize = sizeof(SERVICE_DESCRIPTION);
+            lpInfoSize = sizeof(SERVICE_DESCRIPTIONW);
             break;
+
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            lpInfoSize = sizeof(SERVICE_FAILURE_ACTIONS);
+            lpInfoSize = sizeof(SERVICE_FAILURE_ACTIONSW);
             break;
+
         default:
             DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
             SetLastError(ERROR_INVALID_PARAMETER);
@@ -652,23 +707,60 @@ EnumServiceGroupW(
 /**********************************************************************
  *  EnumServicesStatusA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-EnumServicesStatusA(
-    SC_HANDLE               hSCManager,
-    DWORD                   dwServiceType,
-    DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUSA  lpServices,
-    DWORD                   cbBufSize,
-    LPDWORD                 pcbBytesNeeded,
-    LPDWORD                 lpServicesReturned,
-    LPDWORD                 lpResumeHandle)
+BOOL STDCALL
+EnumServicesStatusA(SC_HANDLE hSCManager,
+                    DWORD dwServiceType,
+                    DWORD dwServiceState,
+                    LPENUM_SERVICE_STATUSA lpServices,
+                    DWORD cbBufSize,
+                    LPDWORD pcbBytesNeeded,
+                    LPDWORD lpServicesReturned,
+                    LPDWORD lpResumeHandle)
 {
-    DPRINT1("EnumServicesStatusA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LPENUM_SERVICE_STATUSA lpStatusPtr;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwCount;
+
+    DPRINT("EnumServicesStatusA() called\n");
+
+    HandleBind();
+
+    dwError = ScmrEnumServicesStatusA(BindingHandle,
+                                      (unsigned int)hSCManager,
+                                      dwServiceType,
+                                      dwServiceState,
+                                      (unsigned char *)lpServices,
+                                      cbBufSize,
+                                      pcbBytesNeeded,
+                                      lpServicesReturned,
+                                      lpResumeHandle);
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
+    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    {
+        if (lpStatusPtr->lpServiceName)
+            lpStatusPtr->lpServiceName =
+                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+        if (lpStatusPtr->lpDisplayName)
+            lpStatusPtr->lpDisplayName =
+                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+        lpStatusPtr++;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrEnumServicesStatusA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    DPRINT("ScmrEnumServicesStatusA() done\n");
+
+    return TRUE;
 }
 
 
@@ -735,24 +827,64 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
 /**********************************************************************
  *  EnumServicesStatusExA
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-EnumServicesStatusExA(SC_HANDLE  hSCManager,
-  SC_ENUM_TYPE  InfoLevel,
-  DWORD  dwServiceType,
-  DWORD  dwServiceState,
-  LPBYTE  lpServices,
-  DWORD  cbBufSize,
-  LPDWORD  pcbBytesNeeded,
-  LPDWORD  lpServicesReturned,
-  LPDWORD  lpResumeHandle,
-  LPCSTR  pszGroupName)
+BOOL STDCALL
+EnumServicesStatusExA(SC_HANDLE hSCManager,
+                      SC_ENUM_TYPE InfoLevel,
+                      DWORD dwServiceType,
+                      DWORD dwServiceState,
+                      LPBYTE lpServices,
+                      DWORD cbBufSize,
+                      LPDWORD pcbBytesNeeded,
+                      LPDWORD lpServicesReturned,
+                      LPDWORD lpResumeHandle,
+                      LPCSTR pszGroupName)
 {
-    DPRINT1("EnumServicesStatusExA is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    LPENUM_SERVICE_STATUS_PROCESSA lpStatusPtr;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwCount;
+
+    DPRINT("EnumServicesStatusExA() called\n");
+
+    HandleBind();
+
+    dwError = ScmrEnumServicesStatusExA(BindingHandle,
+                                        (unsigned int)hSCManager,
+                                        (unsigned long)InfoLevel,
+                                        dwServiceType,
+                                        dwServiceState,
+                                        (unsigned char *)lpServices,
+                                        cbBufSize,
+                                        pcbBytesNeeded,
+                                        lpServicesReturned,
+                                        lpResumeHandle,
+                                        (char *)pszGroupName);
+
+    lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSA)lpServices;
+    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    {
+        if (lpStatusPtr->lpServiceName)
+            lpStatusPtr->lpServiceName =
+                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+        if (lpStatusPtr->lpDisplayName)
+            lpStatusPtr->lpDisplayName =
+                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+        lpStatusPtr++;
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrEnumServicesStatusExA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    DPRINT("ScmrEnumServicesStatusExA() done\n");
+
+    return TRUE;
 }
 
 
@@ -777,7 +909,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     DWORD dwError = ERROR_SUCCESS;
     DWORD dwCount;
 
-    DPRINT1("EnumServicesStatusExW() called\n");
+    DPRINT("EnumServicesStatusExW() called\n");
 
     HandleBind();
 
@@ -814,7 +946,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    DPRINT1("ScmrEnumServicesStatusExW() done\n");
+    DPRINT("ScmrEnumServicesStatusExW() done\n");
 
     return TRUE;
 }
@@ -1313,38 +1445,150 @@ QueryServiceConfigW(SC_HANDLE hService,
 /**********************************************************************
  *  QueryServiceConfig2A
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceConfig2A(
-    SC_HANDLE       hService,
-    DWORD           dwInfo,
-    LPBYTE          lpBuffer,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceConfig2A(SC_HANDLE hService,
+                     DWORD dwInfoLevel,
+                     LPBYTE lpBuffer,
+                     DWORD cbBufSize,
+                     LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceConfig2A is unimplemented\n");
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceConfig2A(%p, %lu, %p, %lu, %p)\n",
+           hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceConfig2A(BindingHandle,
+                                       (unsigned int)hService,
+                                       dwInfoLevel,
+                                       (unsigned char *)lpBuffer,
+                                       cbBufSize,
+                                       pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrQueryServiceConfig2A() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    switch (dwInfoLevel)
+    {
+        case SERVICE_CONFIG_DESCRIPTION:
+            {
+                LPSERVICE_DESCRIPTIONA lpPtr = (LPSERVICE_DESCRIPTIONA)lpBuffer;
+
+                if (lpPtr->lpDescription != NULL)
+                    lpPtr->lpDescription =
+                        (LPSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpDescription);
+            }
+            break;
+
+        case SERVICE_CONFIG_FAILURE_ACTIONS:
+            {
+                LPSERVICE_FAILURE_ACTIONSA lpPtr = (LPSERVICE_FAILURE_ACTIONSA)lpBuffer;
+
+                if (lpPtr->lpRebootMsg != NULL)
+                    lpPtr->lpRebootMsg =
+                        (LPSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpRebootMsg);
+
+                if (lpPtr->lpCommand != NULL)
+                    lpPtr->lpCommand =
+                        (LPSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpCommand);
+
+                if (lpPtr->lpsaActions != NULL)
+                    lpPtr->lpsaActions =
+                        (SC_ACTION*)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpsaActions);
+            }
+            break;
+
+        default:
+            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+
+    DPRINT("QueryServiceConfig2A() done\n");
+
+    return TRUE;
 }
 
 
 /**********************************************************************
  *  QueryServiceConfig2W
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceConfig2W(
-    SC_HANDLE       hService,
-    DWORD           dwInfo,
-    LPBYTE          lpBuffer,
-    DWORD           cbBufSize,
-    LPDWORD         pcbBytesNeeded)
+BOOL STDCALL
+QueryServiceConfig2W(SC_HANDLE hService,
+                     DWORD dwInfoLevel,
+                     LPBYTE lpBuffer,
+                     DWORD cbBufSize,
+                     LPDWORD pcbBytesNeeded)
 {
-    DPRINT1("QueryServiceConfig2W is unimplemented\n");
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("QueryServiceConfig2W(%p, %lu, %p, %lu, %p)\n",
+           hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceConfig2W(BindingHandle,
+                                       (unsigned int)hService,
+                                       dwInfoLevel,
+                                       (unsigned char *)lpBuffer,
+                                       cbBufSize,
+                                       pcbBytesNeeded);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmrQueryServiceConfig2W() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    switch (dwInfoLevel)
+    {
+        case SERVICE_CONFIG_DESCRIPTION:
+            {
+                LPSERVICE_DESCRIPTIONW lpPtr = (LPSERVICE_DESCRIPTIONW)lpBuffer;
+
+                if (lpPtr->lpDescription != NULL)
+                    lpPtr->lpDescription =
+                        (LPWSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpDescription);
+            }
+            break;
+
+        case SERVICE_CONFIG_FAILURE_ACTIONS:
+            {
+                LPSERVICE_FAILURE_ACTIONSW lpPtr = (LPSERVICE_FAILURE_ACTIONSW)lpBuffer;
+
+                if (lpPtr->lpRebootMsg != NULL)
+                    lpPtr->lpRebootMsg =
+                        (LPWSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpRebootMsg);
+
+                if (lpPtr->lpCommand != NULL)
+                    lpPtr->lpCommand =
+                        (LPWSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpCommand);
+
+                if (lpPtr->lpsaActions != NULL)
+                    lpPtr->lpsaActions =
+                        (SC_ACTION*)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpsaActions);
+            }
+            break;
+
+        default:
+            DPRINT1("Unknown info level 0x%lx\n", dwInfoLevel);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+
+    DPRINT("QueryServiceConfig2W() done\n");
+
+    return TRUE;
 }
 
 
