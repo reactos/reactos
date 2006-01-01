@@ -104,13 +104,13 @@ struct ShellBrowserChild : public IShellBrowserImpl
 
 protected:
 	HWND	_hwnd;
+	HWND	_hWndFrame;
 	HWND	_left_hwnd;
 	WindowHandle& _right_hwnd;
 	ShellPathInfo& _create_info;
 
 	Root	_root;
 
-	WindowHandle _hWndFrame;
 	ShellFolder	_folder;
 
 	IShellView*	_pShellView;	// current hosted shellview
