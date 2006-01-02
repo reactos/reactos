@@ -754,7 +754,7 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
 
     /* Allocate the Port and make sure it suceeded */
     if((TerminationPort = ExAllocatePoolWithTag(NonPagedPool,
-                                                sizeof(PTERMINATION_PORT),
+                                                sizeof(TERMINATION_PORT),
                                                 TAG('P', 's', 'T', '=')))) {
 
         /* Associate the Port */
