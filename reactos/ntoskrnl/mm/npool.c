@@ -37,6 +37,15 @@
 #endif /* __GNUC__ */
 #endif
 
+VOID MmPrintMemoryStatistic(VOID);
+
+#define NPOOL_REDZONE_CHECK             /* check the block at deallocation */
+// #define NPOOL_REDZONE_CHECK_FULL     /* check all blocks at each allocation/deallocation */
+#define NPOOL_REDZONE_SIZE  8           /* number of red zone bytes */
+#define NPOOL_REDZONE_LOVALUE 0x87
+#define NPOOL_REDZONE_HIVALUE 0xA5
+
+
 /* avl types ****************************************************************/
 
 /* FIXME:
@@ -73,6 +82,9 @@ typedef struct _HDR_USED
     ULONG Tag;
     PVOID Caller;
     LIST_ENTRY TagListEntry;
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+    ULONG UserSize;
+#endif 
     BOOLEAN Dumped;
 } HDR_USED, *PHDR_USED;
 
@@ -83,8 +95,12 @@ typedef struct _HDR_FREE
 } HDR_FREE, *PHDR_FREE;
 
 #define HDR_FREE_SIZE ROUND_UP(sizeof(HDR_FREE), MM_POOL_ALIGNMENT)
-#define HDR_USED_SIZE ROUND_UP(sizeof(HDR_USED), MM_POOL_ALIGNMENT)
 
+#if defined(NPOOL_REDZONE_CHECK) || #defined(NPOOL_REDZONE_CHECK_FULL)
+#define HDR_USED_SIZE ROUND_UP(sizeof(HDR_USED) + NPOOL_REDZONE_SIZE, MM_POOL_ALIGNMENT)
+#else
+#define HDR_USED_SIZE ROUND_UP(sizeof(HDR_USED), MM_POOL_ALIGNMENT)
+#endif
 
 /* GLOBALS *****************************************************************/
 
@@ -130,15 +146,6 @@ ULONG EiUsedNonPagedPool = 0;
 
 /* Total quota for Non Paged Pool */
 ULONG MmTotalNonPagedPoolQuota = 0;
-
-/*
- * Allocate a range of memory in the nonpaged pool
- */
-PVOID
-MiAllocNonPagedPoolRegion(unsigned int nr_pages);
-
-VOID
-MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free);
 
 #ifdef TAG_STATISTICS_TRACKING
 #define TAG_HASH_TABLE_SIZE       (1024)
@@ -772,9 +779,11 @@ MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
    }
    else
    {
-      DbgPrint("Tag %x Blocks %d Total Size %d Average Size %d\n",
+      DbgPrint("Tag %x Blocks %d Total Size %d Average Size %d ",
                CurrentTag, CurrentNrBlocks, CurrentSize,
                CurrentSize / CurrentNrBlocks);
+      KeRosPrintAddress((PVOID)CurrentTag);
+      DbgPrint("\n");
    }
 }
 #endif /* defined(TAG_STATISTICS_TRACKING) */
@@ -1458,6 +1467,71 @@ ExRosQueryNonPagedPoolTag ( PVOID Addr )
    return blk->Tag;
 }
 
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+void check_redzone_header(HDR_USED* hdr)
+{
+   PBYTE LoZone = (PBYTE)((ULONG_PTR)hdr + HDR_USED_SIZE - NPOOL_REDZONE_SIZE);
+   PBYTE HiZone = (PBYTE)((ULONG_PTR)hdr + HDR_USED_SIZE + hdr->UserSize);
+   BOOL LoOK = TRUE;
+   BOOL HiOK = TRUE;
+   ULONG i;
+   CHAR c[5];
+
+   for (i = 0; i < NPOOL_REDZONE_SIZE; i++)
+   {
+      if (LoZone[i] != NPOOL_REDZONE_LOVALUE)
+      {
+         LoOK = FALSE;
+      }
+      if (HiZone[i] != NPOOL_REDZONE_HIVALUE)
+      {
+         HiOK = FALSE;
+      }
+   }
+   
+   if (!HiOK || !LoOK)
+   {
+      c[0] = (CHAR)((hdr->Tag >> 24) & 0xFF);
+      c[1] = (CHAR)((hdr->Tag >> 16) & 0xFF);
+      c[2] = (CHAR)((hdr->Tag >> 8) & 0xFF);
+      c[3] = (CHAR)(hdr->Tag & 0xFF);
+      c[4] = 0;
+
+      if (!isprint(c[0]) || !isprint(c[1]) || !isprint(c[2]) || !isprint(c[3]))
+      {
+         c[0] = 0;
+      }
+
+      if (!LoOK)
+      {
+         DbgPrint("NPOOL: Low-side redzone overwritten, Block %x, Size %d, Tag %x(%s), Caller %x\n",
+                  (ULONG_PTR)hdr + HDR_USED_SIZE, hdr->UserSize, hdr->Tag, c, hdr->Caller);
+      }
+      if (!HiOK)
+      {
+         DbgPrint("NPPOL: High-side redzone overwritten, Block %x, Size %d, Tag %x(%s), Caller %x\n",
+                  (ULONG_PTR)hdr + HDR_USED_SIZE, hdr->UserSize, hdr->Tag, c, hdr->Caller);
+      }
+      KEBUGCHECK(0);
+   }
+}
+#endif 
+
+#ifdef NPOOL_REDZONE_CHECK_FULL
+void check_redzone_list(void)
+{
+   PLIST_ENTRY current_entry;
+
+   current_entry = UsedBlockListHead.Flink;
+   while (current_entry != &UsedBlockListHead)
+   {
+      check_redzone_header(CONTAINING_RECORD(current_entry, HDR_USED, ListEntry));
+      current_entry = current_entry->Flink;
+   }
+}
+#endif
+
+
 VOID STDCALL ExFreeNonPagedPool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
@@ -1494,9 +1568,18 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
       KEBUGCHECK(0);
       return;
    }
-   memset(block, 0xcc, blk->hdr.Size - HDR_USED_SIZE);
-#ifdef TAG_STATISTICS_TRACKING
 
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+   check_redzone_header(blk);
+#endif
+
+#ifdef NPOOL_REDZONE_CHECK_FULL
+   check_redzone_list();
+#endif
+
+   memset(block, 0xcc, blk->hdr.Size - HDR_USED_SIZE);
+
+#ifdef TAG_STATISTICS_TRACKING
    MiRemoveFromTagHashTable(blk);
 #endif
 
@@ -1510,6 +1593,9 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 PVOID STDCALL
 ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+   ULONG UserSize;
+#endif
    PVOID block;
    HDR_USED* best = NULL;
    KIRQL oldIrql;
@@ -1520,9 +1606,13 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
 
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
+#ifdef NPOOL_REDZONE_CHECK_FULL
+   check_redzone_list();
+#endif
+
    VALIDATE_POOL;
 
-#if 0
+#if 1
    /* after some allocations print the npaged pool stats */
 #ifdef TAG_STATISTICS_TRACKING
 
@@ -1531,6 +1621,7 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
       if (counter++ % 100000 == 0)
       {
          MiDebugDumpNonPagedPoolStats(FALSE);
+         MmPrintMemoryStatistic();
       }
    }
 #endif
@@ -1545,7 +1636,12 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
       return(NULL);
    }
    /* Make the size dword alligned, this makes the block dword alligned */
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+   UserSize = Size;
+   Size = ROUND_UP(Size + NPOOL_REDZONE_SIZE, MM_POOL_ALIGNMENT);
+#else
    Size = ROUND_UP(Size, MM_POOL_ALIGNMENT);
+#endif
 
    if (Size >= PAGE_SIZE)
    {
@@ -1566,12 +1662,19 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
       KeReleaseSpinLock(&MmNpoolLock, oldIrql);
       DPRINT1("Trying to allocate %lu bytes from nonpaged pool - nothing suitable found, returning NULL\n",
               Size );
+      KeRosDumpStackFrames(NULL, 10);
       return NULL;
    }
    best->Tag = Tag;
    best->Caller = Caller;
    best->Dumped = FALSE;
    best->TagListEntry.Flink = best->TagListEntry.Blink = NULL;
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+   best->UserSize = UserSize;
+   memset((PVOID)((ULONG_PTR)best + HDR_USED_SIZE - NPOOL_REDZONE_SIZE), NPOOL_REDZONE_LOVALUE, NPOOL_REDZONE_SIZE);
+   memset((PVOID)((ULONG_PTR)best + HDR_USED_SIZE + UserSize), NPOOL_REDZONE_HIVALUE, NPOOL_REDZONE_SIZE);
+#endif
+
 #ifdef TAG_STATISTICS_TRACKING
 
    MiAddToTagHashTable(best);
@@ -1607,7 +1710,13 @@ MiInitializeNonPagedPool(VOID)
    FreeBlockListRoot = NULL;
 
    MiNonPagedPoolAllocMap = (PVOID)((ULONG_PTR)MiNonPagedPoolStart + PAGE_SIZE);
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+   MiNonPagedPoolNrOfPages = ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8;
+   MiNonPagedPoolNrOfPages = ROUND_UP(MiNonPagedPoolNrOfPages + NPOOL_REDZONE_SIZE, MM_POOL_ALIGNMENT);
+   MiNonPagedPoolNrOfPages = PAGE_ROUND_UP(MiNonPagedPoolNrOfPages + HDR_FREE_SIZE) + PAGE_SIZE;
+#else
    MiNonPagedPoolNrOfPages = PAGE_ROUND_UP(ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8 + HDR_FREE_SIZE) + PAGE_SIZE;
+#endif
    MiNonPagedPoolNrOfPages /= PAGE_SIZE;
    Address = MiNonPagedPoolStart;
 
@@ -1649,10 +1758,17 @@ MiInitializeNonPagedPool(VOID)
    /* the second block contains the non paged pool bitmap */
    used = (HDR_USED*)((ULONG_PTR)free + free->hdr.Size);
    used->hdr.Magic = BLOCK_HDR_USED_MAGIC;
+#if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
+   used->UserSize = ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8;
+   used->hdr.Size = ROUND_UP(used->UserSize + NPOOL_REDZONE_SIZE, MM_POOL_ALIGNMENT) + HDR_USED_SIZE;
+   memset((PVOID)((ULONG_PTR)used + HDR_USED_SIZE - NPOOL_REDZONE_SIZE), NPOOL_REDZONE_LOVALUE, NPOOL_REDZONE_SIZE);
+   memset((PVOID)((ULONG_PTR)used + HDR_USED_SIZE + used->UserSize), NPOOL_REDZONE_HIVALUE, NPOOL_REDZONE_SIZE);
+#else
    used->hdr.Size = ROUND_UP(MiNonPagedPoolLength / PAGE_SIZE, 32) / 8 + HDR_USED_SIZE;
+#endif
    used->hdr.previous = &free->hdr;
    used->Tag = 0xffffffff;
-   used->Caller = 0;
+   used->Caller = (PVOID)MiInitializeNonPagedPool;
    used->Dumped = FALSE;
    add_to_used_list(used);
 #ifdef TAG_STATISTICS_TRACKING
@@ -1664,7 +1780,7 @@ MiInitializeNonPagedPool(VOID)
    free->hdr.Magic = BLOCK_HDR_FREE_MAGIC;
    free->hdr.Size = MiNonPagedPoolLength - ((ULONG_PTR)free - (ULONG_PTR)MiNonPagedPoolStart);
    free->hdr.previous = &used->hdr;
-   memset((PVOID)((ULONG_PTR)free + HDR_FREE_SIZE), 0x0cc, (ULONG_PTR)Address - (ULONG_PTR)free - HDR_FREE_SIZE);
+   memset((PVOID)((ULONG_PTR)free + HDR_FREE_SIZE), 0xcc, (ULONG_PTR)Address - (ULONG_PTR)free - HDR_FREE_SIZE);
    add_to_free_list(free);
 }
 
