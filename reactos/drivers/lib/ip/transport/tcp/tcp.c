@@ -286,10 +286,12 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
 			      OSK_UINT FindType,
 			      OSK_SOCKADDR *ReqAddr );
 
+NTSTATUS TCPMemStartup( void );
 void *TCPMalloc( void *ClientData,
 		 OSK_UINT bytes, OSK_PCHAR file, OSK_UINT line );
 void TCPFree( void *ClientData,
 	      void *data, OSK_PCHAR file, OSK_UINT line );
+void TCPMemShutdown( void );
 
 int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	      int tmio );
@@ -376,10 +378,16 @@ NTSTATUS TCPStartup(VOID)
  *     Status of operation
  */
 {
+    NTSTATUS Status;
+
     TcpipRecursiveMutexInit( &TCPLock );
     ExInitializeFastMutex( &SleepingThreadsLock );
     InitializeListHead( &SleepingThreadsList );
     InitializeListHead( &SignalledConnections );
+    Status = TCPMemStartup();
+    if ( ! NT_SUCCESS(Status) ) {
+	return Status;
+    }
 
     PortsStartup( &TCPPorts, 1, 0xfffe );
 
@@ -432,6 +440,8 @@ NTSTATUS TCPShutdown(VOID)
     DeinitOskitTCP();
 
     PortsShutdown( &TCPPorts );
+
+    TCPMemShutdown();
 
     return STATUS_SUCCESS;
 }

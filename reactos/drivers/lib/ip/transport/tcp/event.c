@@ -108,19 +108,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     else return 0;
 }
 
-void *TCPMalloc( void *ClientData,
-		 OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
-    void *v = PoolAllocateBuffer( Bytes );
-    if( v ) TrackWithTag( FOURCC('f','b','s','d'), v, (PCHAR)File, Line );
-    return v;
-}
-
-void TCPFree( void *ClientData,
-	      void *data, OSK_PCHAR File, OSK_UINT Line ) {
-    UntrackFL( (PCHAR)File, Line, data );
-    PoolFreeBuffer( data );
-}
-
 int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	      int tmio ) {
     PSLEEPING_THREAD SleepingThread;
@@ -171,4 +158,150 @@ void TCPWakeup( void *ClientData, void *token ) {
 	Entry = Entry->Flink;
     }
     TcpipReleaseFastMutex( &SleepingThreadsLock );
+}
+
+/* Memory management routines
+ *
+ * By far the most requests for memory are either for 128 or 2048 byte blocks,
+ * so we want to satisfy those from lookaside lists. Unfortunately, the
+ * TCPFree() function doesn't pass the size of the block to be freed, so we
+ * need to keep track of it ourselves. We do it by prepending each block with
+ * 4 bytes, indicating if this is a 'L'arge (2048), 'S'mall (128) or 'O'ther
+ * block.
+ */
+
+/* Set to some non-zero value to get a profile of memory allocation sizes */
+#define MEM_PROFILE 0
+
+#define SMALL_SIZE 128
+#define LARGE_SIZE 2048
+
+#define SIGNATURE_LARGE TAG('L','L','L','L')
+#define SIGNATURE_SMALL TAG('S','S','S','S')
+#define SIGNATURE_OTHER TAG('O','O','O','O')
+#define TCP_TAG TAG('T','C','P',' ')
+
+static NPAGED_LOOKASIDE_LIST LargeLookasideList;
+static NPAGED_LOOKASIDE_LIST SmallLookasideList;
+
+NTSTATUS
+TCPMemStartup( void )
+{
+    ExInitializeNPagedLookasideList( &LargeLookasideList,
+                                     NULL,
+                                     NULL,
+                                     0,
+                                     LARGE_SIZE + sizeof( ULONG ),
+                                     TCP_TAG,
+                                     0 );
+    ExInitializeNPagedLookasideList( &SmallLookasideList,
+                                     NULL,
+                                     NULL,
+                                     0,
+                                     SMALL_SIZE + sizeof( ULONG ),
+                                     TCP_TAG,
+                                     0 );
+
+    return STATUS_SUCCESS;
+}
+
+void *TCPMalloc( void *ClientData,
+		 OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
+    void *v;
+    ULONG Signature;
+
+#if 0 != MEM_PROFILE
+    static OSK_UINT *Sizes = NULL, *Counts = NULL, ArrayAllocated = 0;
+    static OSK_UINT ArrayUsed = 0, AllocationCount = 0;
+    OSK_UINT i, NewSize, *NewArray;
+    int Found;
+
+    Found = 0;
+    for ( i = 0; i < ArrayUsed && ! Found; i++ ) {
+	Found = ( Sizes[i] == Bytes );
+	if ( Found ) {
+	    Counts[i]++;
+	}
+    }
+    if ( ! Found ) {
+	if ( ArrayAllocated <= ArrayUsed ) {
+	    NewSize = ( 0 == ArrayAllocated ? 16 : 2 * ArrayAllocated );
+	    NewArray = PoolAllocateBuffer( 2 * NewSize * sizeof( OSK_UINT ) );
+	    if ( NULL != NewArray ) {
+		if ( 0 != ArrayAllocated ) {
+		    memcpy( NewArray, Sizes,
+		            ArrayAllocated * sizeof( OSK_UINT ) );
+		    PoolFreeBuffer( Sizes );
+		    memcpy( NewArray + NewSize, Counts,
+		            ArrayAllocated * sizeof( OSK_UINT ) );
+		    PoolFreeBuffer( Counts );
+		}
+		Sizes = NewArray;
+		Counts = NewArray + NewSize;
+		ArrayAllocated = NewSize;
+	    } else if ( 0 != ArrayAllocated ) {
+		PoolFreeBuffer( Sizes );
+		PoolFreeBuffer( Counts );
+		ArrayAllocated = 0;
+	    }
+	}
+	if ( ArrayUsed < ArrayAllocated ) {
+	    Sizes[ArrayUsed] = Bytes;
+	    Counts[ArrayUsed] = 1;
+	    ArrayUsed++;
+	}
+    }
+
+    if ( 0 == (++AllocationCount % MEM_PROFILE) ) {
+	TI_DbgPrint(DEBUG_TCP, ("Memory allocation size profile:\n"));
+	for ( i = 0; i < ArrayUsed; i++ ) {
+	    TI_DbgPrint(DEBUG_TCP,
+	                ("Size %4u Count %5u\n", Sizes[i], Counts[i]));
+	}
+	TI_DbgPrint(DEBUG_TCP, ("End of memory allocation size profile\n"));
+    }
+#endif /* MEM_PROFILE */
+
+    if ( SMALL_SIZE == Bytes ) {
+	v = ExAllocateFromNPagedLookasideList( &SmallLookasideList );
+	Signature = SIGNATURE_SMALL;
+    } else if ( LARGE_SIZE == Bytes ) {
+	v = ExAllocateFromNPagedLookasideList( &LargeLookasideList );
+	Signature = SIGNATURE_LARGE;
+    } else {
+	v = PoolAllocateBuffer( Bytes + sizeof(ULONG) );
+	Signature = SIGNATURE_OTHER;
+    }
+    if( v ) {
+	*((ULONG *) v) = Signature;
+	v = (void *)((char *) v + sizeof(ULONG));
+	TrackWithTag( FOURCC('f','b','s','d'), v, (PCHAR)File, Line );
+    }
+
+    return v;
+}
+
+void TCPFree( void *ClientData,
+	      void *data, OSK_PCHAR File, OSK_UINT Line ) {
+    ULONG Signature;
+
+    UntrackFL( (PCHAR)File, Line, data );
+    data = (void *)((char *) data - sizeof(ULONG));
+    Signature = *((ULONG *) data);
+    if ( SIGNATURE_SMALL == Signature ) {
+	ExFreeToNPagedLookasideList( &SmallLookasideList, data );
+    } else if ( SIGNATURE_LARGE == Signature ) {
+	ExFreeToNPagedLookasideList( &LargeLookasideList, data );
+    } else if ( SIGNATURE_OTHER == Signature ) {
+	PoolFreeBuffer( data );
+    } else {
+	ASSERT( FALSE );
+    }
+}
+
+void
+TCPMemShutdown( void )
+{
+    ExDeleteNPagedLookasideList( &SmallLookasideList );
+    ExDeleteNPagedLookasideList( &LargeLookasideList );
 }
