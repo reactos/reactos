@@ -3,8 +3,11 @@
 
 #ifdef MEMTRACK
 
-LIST_ENTRY AllocatedObjectsList;
-KSPIN_LOCK AllocatedObjectsLock;
+#define TRACK_TAG TAG('T','r','C','K')
+
+static LIST_ENTRY AllocatedObjectsList;
+static KSPIN_LOCK AllocatedObjectsLock;
+static NPAGED_LOOKASIDE_LIST AllocatedObjectsLookasideList;
 DWORD TagsToShow[MEMTRACK_MAX_TAGS_TO_TRACK] = { 0 };
 
 VOID TrackTag( DWORD Tag ) {
@@ -17,6 +20,13 @@ VOID TrackTag( DWORD Tag ) {
 VOID TrackingInit() {
     TcpipInitializeSpinLock( &AllocatedObjectsLock );
     InitializeListHead( &AllocatedObjectsList );
+    ExInitializeNPagedLookasideList(&AllocatedObjectsLookasideList,
+                                   NULL,
+                                   NULL,
+                                   0,
+                                   sizeof(ALLOCATION_TRACKER),
+                                   TRACK_TAG,
+                                   0 );
 }
 
 VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
@@ -50,7 +60,7 @@ VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
 
 VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
     PALLOCATION_TRACKER TrackedThing =
-	PoolAllocateBuffer( sizeof(*TrackedThing) );
+        ExAllocateFromNPagedLookasideList( &AllocatedObjectsLookasideList );
 
     KIRQL OldIrql;
     PLIST_ENTRY Entry;
@@ -80,7 +90,7 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	TrackedThing->LineNo   = LineNo;
 
 
-	InsertTailList( &AllocatedObjectsList, &TrackedThing->Entry );
+	InsertHeadList( &AllocatedObjectsList, &TrackedThing->Entry );
 	ShowTrackedThing( "Alloc", TrackedThing, FileName, LineNo );
     }
 
@@ -111,7 +121,9 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 
 	    ShowTrackedThing( "Free ", ThingInList, File, Line );
 
-	    PoolFreeBuffer( ThingInList );
+	    ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
+	                                ThingInList );
+ 
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    /* TrackDumpFL( File, Line ); */
 	    return;
