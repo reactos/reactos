@@ -116,10 +116,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			// TODO FIXME - do we want the full path of the file here?
 			string file = string(".") + &files[i]->name[vcproj_path.size()];
 
-			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )
-				source_files.push_back ( file );
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
+            else
+				source_files.push_back ( file );
 		}
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )
