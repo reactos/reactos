@@ -476,7 +476,7 @@ NTSTATUS TCPConnect
     USHORT RemotePort;
     PTDI_BUCKET Bucket;
 
-    DbgPrint("TCPConnect: Called\n");
+    TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
 
     Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
     if( !Bucket ) return STATUS_NO_MEMORY;
@@ -494,9 +494,10 @@ NTSTATUS TCPConnect
 	 &RemoteAddress,
 	 &RemotePort);
 
-    DbgPrint("Connecting to address %x:%x\n",
-	     RemoteAddress.Address.IPv4Address,
-	     RemotePort);
+    TI_DbgPrint(DEBUG_TCP,
+                ("Connecting to address %x:%x\n",
+                 RemoteAddress.Address.IPv4Address,
+                 RemotePort));
 
     if (!NT_SUCCESS(Status)) {
 	TI_DbgPrint(DEBUG_TCP, ("Could not AddrBuildAddress in TCPConnect\n"));

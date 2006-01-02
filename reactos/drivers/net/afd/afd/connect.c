@@ -151,9 +151,11 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				       0, NULL, TRUE );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
+#if 0
     OskitDumpBuffer
 	( (PCHAR)ConnectReq,
 	  IrpSp->Parameters.DeviceIoControl.InputBufferLength );
+#endif
 
     switch( FCB->State ) {
     case SOCKET_STATE_CONNECTED:
