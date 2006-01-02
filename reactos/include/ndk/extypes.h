@@ -354,7 +354,7 @@ typedef struct _EX_PUSH_LOCK_WAIT_BLOCK
     LONG ShareCount;
     LONG Flags;
 #if DBG
-    BOOL Signaled;
+    BOOLEAN Signaled;
     EX_PUSH_LOCK NewValue;
     EX_PUSH_LOCK OldValue;
     PEX_PUSH_LOCK PushLock;

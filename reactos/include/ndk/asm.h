@@ -291,7 +291,9 @@ Author:
 #define EFLAGS_VIP                              0x100000
 #define EFLAG_SIGN                              0x8000
 #define EFLAG_ZERO                              0x4000
-#define EFLAG_SELECT                            (EFLAG_SIGN | EFLAG_ZERO)
+#ifndef EFLAG_SELECT
+#define EFLAG_SELECT                            (EFLAG_SIGN + EFLAG_ZERO)
+#endif
 
 //
 // CR0
