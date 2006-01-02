@@ -619,13 +619,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    int DesX;
    int DesY;
    int color;
-   int zoomX;
-   int zoomY;
-  // int count;
-  // int saveX;
-  // int saveY;
-   BOOLEAN DesIsBiggerY=FALSE;
-
+  
   DPRINT("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
@@ -635,24 +629,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   
     DesSizeY = DestRect->bottom - DestRect->top;
     DesSizeX = DestRect->right - DestRect->left;
- /*
-    SrcSizeY = SourceRect->bottom;
-    SrcSizeX = SourceRect->right;
-  
-    DesSizeY = DestRect->bottom;
-    DesSizeX = DestRect->right;
-  */ 
-	zoomX = DesSizeX / SrcSizeX;
-    if (zoomX==0) zoomX=1;
-
-	zoomY = DesSizeY / SrcSizeY;
-    if (zoomY==0) zoomY=1;
-
-	if (DesSizeY>SrcSizeY)
-      DesIsBiggerY = TRUE;
-
       
-
     switch(SourceSurf->iBitmapFormat)
     {
       
@@ -662,23 +639,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {			 
-           if (DesSizeY>SrcSizeY)
-                sy = SourceRect->top + ((DesY - DestRect->top) / zoomY);
-            else
-                sy = SourceRect->top + ((DesY - DestRect->top) * zoomY);
-                    
-            if (sy > SourceRect->bottom)
-                sy = SourceRect->bottom;
+           sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
                      
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {			
-                 if (DesSizeX>SrcSizeX)
-                     sx = SourceRect->left + ((DesX - DestRect->left) / zoomX);
-                 else
-                     sx = SourceRect->left + ((DesX - DestRect->left) * zoomX);
-                  			 
-                 if (sx > SourceRect->right)
-                     sx = SourceRect->right;
+                  sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                    		
                   if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
 				  {
@@ -698,24 +663,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {			 
-           if (DesSizeY>SrcSizeY)
-                sy = SourceRect->top + ((DesY - DestRect->top) / zoomY);
-            else
-                sy = SourceRect->top + ((DesY - DestRect->top) * zoomY);
-                    
-            if (sy > SourceRect->bottom)
-                sy = SourceRect->bottom;
+           sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
                      
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {			
-                 if (DesSizeX>SrcSizeX)
-                     sx = SourceRect->left + ((DesX - DestRect->left) / zoomX);
-                 else
-                     sx = SourceRect->left + ((DesX - DestRect->left) * zoomX);
-                  			 
-                 if (sx > SourceRect->right)
-                     sx = SourceRect->right;
-                   		
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                  color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
@@ -728,24 +680,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {			 
-           if (DesSizeY>SrcSizeY)
-                sy = SourceRect->top + ((DesY - DestRect->top) / zoomY);
-            else
-                sy = SourceRect->top + ((DesY - DestRect->top) * zoomY);
-                    
-            if (sy > SourceRect->bottom)
-                sy = SourceRect->bottom;
+            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
                      
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {			
-                 if (DesSizeX>SrcSizeX)
-                     sx = SourceRect->left + ((DesX - DestRect->left) / zoomX);
-                 else
-                     sx = SourceRect->left + ((DesX - DestRect->left) * zoomX);
-                  			 
-                 if (sx > SourceRect->right)
-                     sx = SourceRect->right;
-                   		
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                  color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
@@ -758,24 +697,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {			 
-           if (DesSizeY>SrcSizeY)
-                sy = SourceRect->top + ((DesY - DestRect->top) / zoomY);
-            else
-                sy = SourceRect->top + ((DesY - DestRect->top) * zoomY);
-                    
-            if (sy > SourceRect->bottom)
-                sy = SourceRect->bottom;
-                     
+           sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
+                                
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {			
-                 if (DesSizeX>SrcSizeX)
-                     sx = SourceRect->left + ((DesX - DestRect->left) / zoomX);
-                 else
-                     sx = SourceRect->left + ((DesX - DestRect->left) * zoomX);
-                  			 
-                 if (sx > SourceRect->right)
-                     sx = SourceRect->right;
-                   		
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;                   		
                  color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
@@ -788,24 +714,11 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {			 
-           if (DesSizeY>SrcSizeY)
-                sy = SourceRect->top + ((DesY - DestRect->top) / zoomY);
-            else
-                sy = SourceRect->top + ((DesY - DestRect->top) * zoomY);
-                    
-            if (sy > SourceRect->bottom)
-                sy = SourceRect->bottom;
+           sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
                      
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {			
-                 if (DesSizeX>SrcSizeX)
-                     sx = SourceRect->left + ((DesX - DestRect->left) / zoomX);
-                 else
-                     sx = SourceRect->left + ((DesX - DestRect->left) * zoomX);
-                  			 
-                 if (sx > SourceRect->right)
-                     sx = SourceRect->right;
-                   		
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;                   		
                  color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
