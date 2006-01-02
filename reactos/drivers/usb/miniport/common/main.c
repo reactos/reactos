@@ -17,7 +17,7 @@
 #define INITGUID
 #include "usbcommon.h"
 
-// data for embedded drivers
+/* Data for embedded drivers */
 CONNECT_DATA KbdClassInformation;
 CONNECT_DATA MouseClassInformation;
 PDEVICE_OBJECT KeyboardFdo = NULL;
@@ -32,9 +32,9 @@ CreateRootHubPdo(
 	PDEVICE_OBJECT Pdo;
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
-	
+
 	DPRINT("USBMP: CreateRootHubPdo()\n");
-	
+
 	Status = IoCreateDevice(
 		DriverObject,
 		sizeof(USBMP_DEVICE_EXTENSION),
@@ -48,19 +48,19 @@ CreateRootHubPdo(
 		DPRINT("USBMP: IoCreateDevice() call failed with status 0x%08x\n", Status);
 		return Status;
 	}
-	
+
 	Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
 	Pdo->Flags |= DO_POWER_PAGABLE;
-	
-	// zerofill device extension
+
+	/* Zerofill device extension */
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)Pdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(USBMP_DEVICE_EXTENSION));
-	
+
 	DeviceExtension->IsFDO = FALSE;
 	DeviceExtension->FunctionalDeviceObject = Fdo;
-	
+
 	Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
+
 	*pPdo = Pdo;
 	return STATUS_SUCCESS;
 }
@@ -189,18 +189,18 @@ AddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT pdo)
 {
-	PDEVICE_OBJECT fdo;
+	PDEVICE_OBJECT fdo = NULL;
 	NTSTATUS Status;
 	WCHAR DeviceBuffer[20];
 	WCHAR LinkDeviceBuffer[20];
 	UNICODE_STRING DeviceName;
 	UNICODE_STRING LinkDeviceName;
 	PUSBMP_DRIVER_EXTENSION DriverExtension;
-	PUSBMP_DEVICE_EXTENSION DeviceExtension;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension = NULL;
 	static ULONG DeviceNumber = 0;
-	BOOL AlreadyRestarted = FALSE;
+	BOOLEAN AlreadyRestarted = FALSE;
 
-	// Allocate driver extension now
+	/* Allocate driver extension now */
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	if (DriverExtension == NULL)
 	{
@@ -212,27 +212,14 @@ AddDevice(
 
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("USBMP: Allocating DriverObjectExtension failed.\n");
-			return Status;
+			DPRINT1("USBMP: Allocating DriverObjectExtension failed.\n");
+			goto cleanup;
 		}
 	}
 
 	/* Create a unicode device name. Allocate a new device number every time */
-	do
+	while (TRUE)
 	{
-		DeviceNumber++;
-		if (DeviceNumber == 9999)
-		{
-			/* Hmm. We don't have a free number. */ 
-			if (AlreadyRestarted)
-			{
-				Status = STATUS_UNSUCCESSFUL;
-				break;
-			}
-			/* Start again at DeviceNumber = 0 to find a free number */
-			DeviceNumber = 0;
-			AlreadyRestarted = TRUE;
-		}
 		swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
 		RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
@@ -243,25 +230,41 @@ AddDevice(
 					0,
 					FALSE,
 					&fdo);
-	} while (Status == STATUS_OBJECT_NAME_COLLISION);
+		if (Status != STATUS_OBJECT_NAME_COLLISION)
+			break;
+
+		if (DeviceNumber == 9999)
+		{
+			/* Hmm. We don't have a free number. */ 
+			if (AlreadyRestarted)
+			{
+				Status = STATUS_TOO_MANY_NAMES;
+				break;
+			}
+			/* Start again at DeviceNumber = 0 to find a free number */
+			DeviceNumber = 0;
+			AlreadyRestarted = TRUE;
+		}
+		else
+			DeviceNumber++;
+	}
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("USBMP: IoCreateDevice call failed with status 0x%08lx\n", Status);
-		return Status;
+		DPRINT1("USBMP: IoCreateDevice call failed with status 0x%08lx\n", Status);
+		goto cleanup;
 	}
 
-	// zerofill device extension
+	/* Zerofill device extension */
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(USBMP_DEVICE_EXTENSION));
-	
+
 	/* Create root hub Pdo */
 	Status = CreateRootHubPdo(DriverObject, fdo, &DeviceExtension->RootHubPdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("USBMP: CreateRootHubPdo() failed with status 0x%08lx\n", Status);
-		IoDeleteDevice(fdo);
-		return Status;
+		DPRINT1("USBMP: CreateRootHubPdo() failed with status 0x%08lx\n", Status);
+		goto cleanup;
 	}
 
 	/* Register device interface for controller */
@@ -272,15 +275,13 @@ AddDevice(
 		&DeviceExtension->HcdInterfaceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("USBMP: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
-		IoDeleteDevice(DeviceExtension->RootHubPdo);
-		IoDeleteDevice(fdo);
-		return Status;
+		DPRINT1("USBMP: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
+		goto cleanup;
 	}
 
 	DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(fdo, pdo);
 
-	// Initialize device extension
+	/* Initialize device extension */
 	DeviceExtension->IsFDO = TRUE;
 	DeviceExtension->DeviceNumber = DeviceNumber;
 	DeviceExtension->PhysicalDeviceObject = pdo;
@@ -288,24 +289,26 @@ AddDevice(
 	DeviceExtension->DriverExtension = DriverExtension;
 
 	fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
-	/* FIXME: do a loop to find an available number */
-	swprintf(LinkDeviceBuffer, L"\\??\\HCD%lu", 0);
+
+	/* Use the same number as the FDO */
+	swprintf(LinkDeviceBuffer, L"\\??\\HCD%lu", DeviceNumber);
 
 	RtlInitUnicodeString(&LinkDeviceName, LinkDeviceBuffer);
-
 	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
-
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("USBMP: IoCreateSymbolicLink() call failed with status 0x%08x\n", Status);
-		IoDeleteDevice(DeviceExtension->RootHubPdo);
-		IoDeleteDevice(fdo);
-		return Status;
+		DPRINT1("USBMP: IoCreateSymbolicLink() call failed with status 0x%08x\n", Status);
+		goto cleanup;
 	}
-	
 
 	return STATUS_SUCCESS;
+
+cleanup:
+	if (DeviceExtension && DeviceExtension->RootHubPdo)
+		IoDeleteDevice(DeviceExtension->RootHubPdo);
+	if (fdo)
+		IoDeleteDevice(fdo);
+	return Status;
 }
 
 NTSTATUS STDCALL
@@ -428,15 +431,15 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
 
-	// Register in usbcore.sys
+	/* Register in usbcore.sys */
 	UsbPortInterface.KbdConnectData = &KbdClassInformation;
 	UsbPortInterface.MouseConnectData = &MouseClassInformation;
-	
+
 	KbdClassInformation.ClassService = NULL;
 	KbdClassInformation.ClassDeviceObject = NULL;
 	MouseClassInformation.ClassService = NULL;
 	MouseClassInformation.ClassDeviceObject = NULL;
-	
+
 	RegisterPortDriver(DriverObject, &UsbPortInterface);
 
 	AddDevice_Keyboard(DriverObject, NULL);
