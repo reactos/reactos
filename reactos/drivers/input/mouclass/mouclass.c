@@ -307,8 +307,8 @@ CreateClassDeviceObject(
 		}
 		DeviceId++;
 	}
-	DPRINT("Too much devices starting with '\\Device\\%wZ'\n", &DriverExtension->DeviceBaseName);
-	Status = STATUS_UNSUCCESSFUL;
+	DPRINT("Too many devices starting with '\\Device\\%wZ'\n", &DriverExtension->DeviceBaseName);
+	Status = STATUS_TOO_MANY_NAMES;
 cleanup:
 	if (!NT_SUCCESS(Status))
 	{
