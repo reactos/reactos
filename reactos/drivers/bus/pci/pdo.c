@@ -373,6 +373,7 @@ PdoQueryResourceRequirements(
   }
   else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
   {
+    /* FIXME: Count Cardbus bridge resources */
   }
   else
   {
@@ -386,11 +387,8 @@ PdoQueryResourceRequirements(
   }
 
   /* Calculate the resource list size */
-  ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
-  if (ResCount > 1)
-  {
-    ListSize += ((ResCount - 1) * sizeof(IO_RESOURCE_DESCRIPTOR));
-  }
+  ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List->Descriptors)
+    + ResCount * sizeof(IO_RESOURCE_DESCRIPTOR);
 
   DPRINT("ListSize %lu (0x%lx)\n", ListSize, ListSize);
 
@@ -403,6 +401,7 @@ PdoQueryResourceRequirements(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
+  RtlZeroMemory(ResourceList, ListSize);
   ResourceList->ListSize = ListSize;
   ResourceList->InterfaceType = PCIBus;
   ResourceList->BusNumber = DeviceExtension->PciDevice->BusNumber;
@@ -584,11 +583,10 @@ PdoQueryResourceRequirements(
     {
       Descriptor->Option = 0; /* Required */
       Descriptor->Type = CmResourceTypeBusNumber;
-      Descriptor->ShareDisposition = CmResourceShareShared;
-      Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+      Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
 
       Descriptor->u.BusNumber.MinBusNumber =
-      Descriptor->u.BusNumber.MaxBusNumber = DeviceExtension->PciDevice->PciConfig.u.type1.SubordinateBus;
+      Descriptor->u.BusNumber.MaxBusNumber = DeviceExtension->PciDevice->PciConfig.u.type1.SecondaryBus;
       Descriptor->u.BusNumber.Length = 1;
       Descriptor->u.BusNumber.Reserved = 0;
     }
@@ -677,10 +675,12 @@ PdoQueryResources(
       if (Length != 0)
         ResCount++;
     }
+    if (DeviceExtension->PciDevice->PciConfig.BaseClass == PCI_CLASS_BRIDGE_DEV)
+      ResCount++;
   }
   else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
   {
-
+    /* FIXME: Count Cardbus bridge resources */
   }
   else
   {
@@ -694,11 +694,8 @@ PdoQueryResources(
   }
 
   /* Calculate the resource list size */
-  ListSize = sizeof(CM_RESOURCE_LIST);
-  if (ResCount > 1)
-  {
-    ListSize += ((ResCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-  }
+  ListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List->PartialResourceList.PartialDescriptors)
+    + ResCount * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
   /* Allocate the resource list */
   ResourceList = ExAllocatePool(PagedPool,
@@ -706,13 +703,14 @@ PdoQueryResources(
   if (ResourceList == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
 
+  RtlZeroMemory(ResourceList, ListSize);
   ResourceList->Count = 1;
   ResourceList->List[0].InterfaceType = PCIConfiguration;
   ResourceList->List[0].BusNumber = DeviceExtension->PciDevice->BusNumber;
 
   PartialList = &ResourceList->List[0].PartialResourceList;
-  PartialList->Version = 0;
-  PartialList->Revision = 0;
+  PartialList->Version = 1;
+  PartialList->Revision = 1;
   PartialList->Count = ResCount;
 
   Descriptor = &PartialList->PartialDescriptors[0];
@@ -811,10 +809,19 @@ PdoQueryResources(
 
       Descriptor++;
     }
+    if (DeviceExtension->PciDevice->PciConfig.BaseClass == PCI_CLASS_BRIDGE_DEV)
+    {
+      Descriptor->Type = CmResourceTypeBusNumber;
+      Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+
+      Descriptor->u.BusNumber.Start = DeviceExtension->PciDevice->PciConfig.u.type1.SecondaryBus;
+      Descriptor->u.BusNumber.Length = 1;
+      Descriptor->u.BusNumber.Reserved = 0;
+    }
   }
   else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
   {
-    /* FIXME: Cardbus */
+    /* FIXME: Add Cardbus bridge resources */
   }
 
   Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
