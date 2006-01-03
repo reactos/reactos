@@ -155,7 +155,7 @@ DetectCPU(FRLDRHKEY CpuKey,
       *Ptr = edx;
       Ptr++;
       *Ptr = ecx;
-      swprintf(VendorIdentifier, L"%s", tmpVendorIdentifier);
+      swprintf(VendorIdentifier, L"%S", tmpVendorIdentifier);
 
       /* Get Identifier */
       GetCpuid(1, &eax, &ebx, &ecx, &edx);
@@ -308,7 +308,7 @@ SetMpsProcessor(FRLDRHKEY CpuKey,
   *Ptr = edx;
   Ptr++;
   *Ptr = ecx;
-  swprintf(VendorIdentifier, L"%s", tmpVendorIdentifier);
+  swprintf(VendorIdentifier, L"%S", tmpVendorIdentifier);
 
   /* Get 'Identifier' */
   swprintf(Identifier,
