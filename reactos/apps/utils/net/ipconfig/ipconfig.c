@@ -144,11 +144,13 @@ INT ShowInfo(BOOL bAll)
 	}
     
     pAdapter = pAdapterInfo;
-        //HKEY hKey;
-        //LPCTSTR lpSubKey = _T("SYSTEM\\ControlSet\\Control\\Network");
+
+    /* temp note until GetAdatersInfo is fixed */
+    _tprintf(_T("Note - ipconfig is currently returning incorrect information\n"));
+    _tprintf(_T("If your adapter is configured correctly, it will usually \n"));
+    _tprintf(_T("display the loopback, otherwise an error will be displayed\n\n"));
 
     _tprintf(_T("\nReactOS IP Configuration\n\n"));
-
 
     if (bAll)
     {
