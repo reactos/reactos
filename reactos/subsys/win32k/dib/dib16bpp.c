@@ -603,44 +603,6 @@ BOOLEAN ScaleRectAvg16(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
-/* check clib region */
-BOOLEAN CheckClipRegion(CLIPOBJ *ClipRegion, RECTL* DestRect, int DesX, int DesY)
-{
-  BOOLEAN  status = FALSE;
-  PSPAN ClipSpans;
-  UINT ClipSpansCount;
-  UINT SpanIndex = 0;
-
-  if (! ClipobjToSpans(&ClipSpans, &ClipSpansCount, ClipRegion, DestRect))
-  {
-      return FALSE;
-  }
-    
-  if (0 == ClipSpansCount)
-  {
-      /* No clip spans == empty clipping region, everything clipped away */
-      ASSERT(NULL == ClipSpans);
-      return FALSE;
-  }
-
-  for  (SpanIndex=0; SpanIndex<ClipSpansCount;SpanIndex++)
-  {
-   	   if (ClipSpans[SpanIndex].Y < DesY)
-       	   status = FALSE;
-      
-  	   if (ClipSpans[SpanIndex].Y+ClipSpans[SpanIndex].Height > DesY)
-      	   status = FALSE;
-  
-       if (ClipSpans[SpanIndex].X > DesX)
-           status = FALSE;
-      
-      if (ClipSpans[SpanIndex].X+ClipSpans[SpanIndex].Width > DesX)
-          status = FALSE;
-   }
-   
-  return status;
-}
-
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
