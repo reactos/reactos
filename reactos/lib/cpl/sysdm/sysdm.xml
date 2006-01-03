@@ -17,5 +17,6 @@
 	<file>hardware.c</file>
 	<file>sysdm.c</file>
 	<file>userprofile.c</file>
+	<file>virtmem.c</file>
 	<file>sysdm.rc</file>
 </module>

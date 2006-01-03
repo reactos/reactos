@@ -22,7 +22,10 @@ INT_PTR CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 INT_PTR CALLBACK UserProfilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* environment.c */
-INT_PTR CALLBACK EnvironmentDlgProc (HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK EnvironmentDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+/* virtmem.c */
+INT_PTR CALLBACK VirtMemDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 #endif /* __CPL_SYSDM_H */

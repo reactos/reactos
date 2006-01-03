@@ -48,6 +48,13 @@ AdvancedPageProc(
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
+        case IDC_PERFOR:
+          DialogBox(hApplet,
+                    MAKEINTRESOURCE(IDD_VIRTMEM),
+                    hwndDlg,
+                    VirtMemDlgProc);
+          break;
+
         case IDC_ENVVAR:
           DialogBox(hApplet,
                     MAKEINTRESOURCE(IDD_ENVIRONMENT_VARIABLES),
@@ -60,4 +67,3 @@ AdvancedPageProc(
   }
   return FALSE;
 }
-
