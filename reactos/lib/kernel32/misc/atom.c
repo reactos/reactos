@@ -72,6 +72,7 @@ InternalAddAtom(BOOLEAN Local,
             /* Check if we can abuse the TEB */
             if (AnsiString.MaximumLength > 260)
             {
+RosHack:
                 /* We can't, allocate a new string */
                 AtomNameString = &UnicodeString;
                 Status = RtlAnsiStringToUnicodeString(AtomNameString,
@@ -80,8 +81,18 @@ InternalAddAtom(BOOLEAN Local,
             }
             else
             {
-                /* We can! Use the TEB */
+                /* We can! Get the TEB String */
                 AtomNameString = &NtCurrentTeb()->StaticUnicodeString;
+
+                /* FIXME: HACK! */
+                if (!AtomNameString->MaximumLength)
+                {
+                    DPRINT1("Hit the ROS TEB Static Unicode String Bug\n",
+                            "Please try to fix the underlying problem!!!\n");
+                    goto RosHack;
+                }
+
+                /* Convert it into the TEB */
                 Status = RtlAnsiStringToUnicodeString(AtomNameString,
                                                       &AnsiString,
                                                       FALSE);
@@ -171,6 +182,7 @@ InternalFindAtom(BOOLEAN Local,
             /* Check if we can abuse the TEB */
             if (AnsiString.MaximumLength > 260)
             {
+RosHack:
                 /* We can't, allocate a new string */
                 AtomNameString = &UnicodeString;
                 Status = RtlAnsiStringToUnicodeString(AtomNameString,
@@ -179,8 +191,18 @@ InternalFindAtom(BOOLEAN Local,
             }
             else
             {
-                /* We can! Use the TEB */
+                /* We can! Get the TEB String */
                 AtomNameString = &NtCurrentTeb()->StaticUnicodeString;
+
+                /* FIXME: HACK! */
+                if (!AtomNameString->MaximumLength)
+                {
+                    DPRINT1("Hit the ROS TEB Static Unicode String Bug\n",
+                            "Please try to fix the underlying problem!!!\n");
+                    goto RosHack;
+                }
+
+                /* Convert it into the TEB */
                 Status = RtlAnsiStringToUnicodeString(AtomNameString,
                                                       &AnsiString,
                                                       FALSE);
