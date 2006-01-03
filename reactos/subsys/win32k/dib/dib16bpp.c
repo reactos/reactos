@@ -649,16 +649,17 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                              CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
                              ULONG Mode)
 {
-   int SrcSizeY;
-   int SrcSizeX;
-   int DesSizeY;
-   int DesSizeX;      
-   int sx;
-   int sy;
-   int DesX;
-   int DesY;
-   int color;
+   LONG SrcSizeY;
+   LONG SrcSizeX;
+   LONG DesSizeY;
+   LONG DesSizeX;      
+   LONG sx;
+   LONG sy;
+   LONG DesX;
+   LONG DesY;
+   LONG color;
    PULONG DestBits;
+   LONG DifflDelta;
 
   
   DPRINT("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
@@ -680,7 +681,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-                      
+      
+	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	                  
        for (DesY=0; DesY<DesSizeY; DesY++)
        {	 
             sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
@@ -701,7 +704,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				     DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
                   }
             }
-            DestBits = (PULONG)((ULONG_PTR)DestBits - (DesSizeX << 1) + DestSurf->lDelta);
+            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
        }
        break;
 
@@ -711,7 +714,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-                      
+      
+	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	                  
        for (DesY=0; DesY<DesSizeY; DesY++)
        {	 
             sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
@@ -725,7 +730,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
-            DestBits = (PULONG)((ULONG_PTR)DestBits - (DesSizeX << 1) + DestSurf->lDelta);
+            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
        }
        break;
        
@@ -735,6 +740,8 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
+                   
+      DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
                       
        for (DesY=0; DesY<DesSizeY; DesY++)
        {	 
@@ -749,7 +756,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
-            DestBits = (PULONG)((ULONG_PTR)DestBits - (DesSizeX << 1) + DestSurf->lDelta);
+            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
        }
        break;
        
@@ -760,7 +767,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-                      
+      
+	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	                  
        for (DesY=0; DesY<DesSizeY; DesY++)
        {	 
             sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
@@ -774,8 +783,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
-            DestBits = (PULONG)((ULONG_PTR)DestBits - (DesSizeX << 1) + DestSurf->lDelta);
-       }       break;
+            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
+       }       
+	   break;
 
       case BMF_32BPP:		
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
@@ -783,7 +793,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                       
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 1) +
                    DestRect->top * DestSurf->lDelta);
-                      
+      
+	  DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	                  
        for (DesY=0; DesY<DesSizeY; DesY++)
        {	 
             sy = ((DesY  * SrcSizeY) / DesSizeY) + SourceRect->top;
@@ -797,7 +809,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
-            DestBits = (PULONG)((ULONG_PTR)DestBits - (DesSizeX << 1) + DestSurf->lDelta);
+            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
        }
        break;
 
