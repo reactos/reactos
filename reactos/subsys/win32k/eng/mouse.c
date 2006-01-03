@@ -156,7 +156,19 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       
 
    pgp->Enabled = FALSE;
+   
+   /*
+    * The mouse is hide from ShowCours and it is frist ?? 
+    */
+   if (pgp->ShowPointer < 0)
+   {
+     return ;
+   }
+   
 
+  /*
+   *  Hide the cours
+   */
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
    
@@ -213,6 +225,14 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
      
    pgp->Enabled = TRUE;
    
+   /*
+    * Do not blt the mouse if it in hide 
+    */
+   if (pgp->ShowPointer < 0)
+   {
+     return ;
+   }
+   
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
 
@@ -244,7 +264,8 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       EngUnlockSurface(SaveSurface);
    }
 
-   /*
+
+   /*   
     * Blit the cursor on the screen.
     */
 
@@ -266,6 +287,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       SrcPoint.x = max(-pt.x, 0);
       SrcPoint.y = max(-pt.y, 0);
 
+
       if (pgp->MaskSurface)
         MaskSurf = EngLockSurface(pgp->MaskSurface);
 
@@ -275,27 +297,21 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
         {
            if((ColorSurf = EngLockSurface(pgp->ColorSurface)))
            {
-             if (pgp->ShowPointer >= 0)
-             {
                 IntEngBitBltEx(DestSurface, ColorSurf, MaskSurf, NULL,
                             pgp->XlateObject, &DestRect, &SrcPoint, &SrcPoint,
                             NULL, NULL, R4_MASK, FALSE);
                 EngUnlockSurface(ColorSurf);
-             }
            }
         }
         else
-        {
-            if (pgp->ShowPointer >= 0)
-            {
+        {         
            IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
                           ROP3_TO_ROP4(SRCAND), FALSE);
            SrcPoint.y += pgp->Size.cy;
            IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
-                          ROP3_TO_ROP4(SRCINVERT), FALSE);
-           }
+                          ROP3_TO_ROP4(SRCINVERT), FALSE);         
         }
         EngUnlockSurface(MaskSurf);
       }
