@@ -1079,7 +1079,7 @@ CmiExportValue (PREGISTRY_HIVE Hive,
       ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
       ValueCell->DataType = DataType;
       memcpy (&ValueCell->DataOffset,
-	      Data,
+	      &Data,
 	      DataSize);
     }
   else
