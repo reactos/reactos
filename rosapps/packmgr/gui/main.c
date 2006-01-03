@@ -406,7 +406,7 @@ int SetStatus (int status1, int status2, WCHAR* text)
 	if(status2!=-1)
 		SendMessage(GetDlgItem(hStatus, IDC_STATUS2), PBM_SETPOS, status2, 0);
 
-	// If the Status is 1000 very thing is done
+	// If the Status is 1000 everything is done
 	if(status1==1000)
 	{
 		EndDialog(hStatus, TRUE);

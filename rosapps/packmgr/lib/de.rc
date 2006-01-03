@@ -8,7 +8,7 @@ BEGIN
   ERR_OK	   "Fertig."
   ERR_PACK	   "Es konnten nicht alle Packages installiert werden.\n\nFür mehr Details schauen Sie bitte in ""logfile.html""."
   ERR_GENERIC      "Ein Fehler ist aufgetreten. \nnFür mehr Details schauen Sie bitte in ""logfile.html""."
-  ERR_DOWNL	   "Eine benötigte Datei konnte nicht runtergeladen werden!\nnFür mehr Details schauen Sie bitte in ""logfile.html""."
+  ERR_DOWNL	   "Eine benötigte Datei konnte nicht runtergeladen werden!\nFür mehr Details schauen Sie bitte in ""logfile.html""."
   ERR_FILE	   "Bei der Scriptausfürhung trat ein Fehler auf.\nDatei konnte nicht geöffnet werden."
  
   ERR_SYNATX       "Bei der Scriptausfürhung trat ein Fehler auf.\nSynatx-Fehler."

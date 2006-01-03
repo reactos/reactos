@@ -1,6 +1,6 @@
 Sub Main
   ' ToDo: Choose from different mirrors
-  download "http://prdownloads.sourceforge.net/sevenzip/7z432.exe?use_mirror=ovh", "7z432.exe"
+  download "http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z432.exe", "7z432.exe"
 End Sub
 
 Sub After

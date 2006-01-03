@@ -1,8 +1,0 @@
-' Not in use anymore because reactos can download it without Package Manager
-Sub Main
-  download ("http://www.iol.ie/~locka/mozilla/MozillaControl16.exe", "mozillacontrol16.exe")
-End Sub
-
-Sub After
-  shell mozillacontrol16.exe
-End Sub

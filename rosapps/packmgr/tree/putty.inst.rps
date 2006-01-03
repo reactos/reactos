@@ -1,4 +1,4 @@
 Sub Main
-  ' ToDo: Download putty.exe to programm files
-  download ("http://the.earth.li/~sgtatham/putty/latest/x86/putty.exe", "putty.exe")
+  ' ToDo: Download putty.exe in own dir
+  download ("http://the.earth.li/~sgtatham/putty/latest/x86/putty.exe", "C:\Program Files\putty.exe")
 End Sub
