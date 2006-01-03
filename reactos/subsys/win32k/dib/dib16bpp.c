@@ -603,6 +603,44 @@ BOOLEAN ScaleRectAvg16(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
+/* check clib region */
+BOOLEAN CheckClipRegion(CLIPOBJ *ClipRegion, RECTL* DestRect, int DesX, int DesY)
+{
+  BOOLEAN  status = FALSE;
+  PSPAN ClipSpans;
+  UINT ClipSpansCount;
+  UINT SpanIndex = 0;
+
+  if (! ClipobjToSpans(&ClipSpans, &ClipSpansCount, ClipRegion, DestRect))
+  {
+      return FALSE;
+  }
+    
+  if (0 == ClipSpansCount)
+  {
+      /* No clip spans == empty clipping region, everything clipped away */
+      ASSERT(NULL == ClipSpans);
+      return FALSE;
+  }
+
+  for  (SpanIndex=0; SpanIndex<ClipSpansCount;SpanIndex++)
+  {
+   	   if (ClipSpans[SpanIndex].Y < DesY)
+       	   status = FALSE;
+      
+  	   if (ClipSpans[SpanIndex].Y+ClipSpans[SpanIndex].Height > DesY)
+      	   status = FALSE;
+  
+       if (ClipSpans[SpanIndex].X > DesX)
+           status = FALSE;
+      
+      if (ClipSpans[SpanIndex].X+ClipSpans[SpanIndex].Width > DesX)
+          status = FALSE;
+   }
+   
+  return status;
+}
+
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
 BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                              RECTL* DestRect, RECTL *SourceRect,
@@ -677,19 +715,32 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_8BPP:		
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
+      
+      
                       
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
+	   	    BOOL UsesSource = ROP4_USES_SOURCE(mode);
+            BOOL UsesPattern = ROP4_USES_PATTERN(mode);
+            ULONG Dest;
+	   			 
             sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
                      
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
-                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
-                 color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
-                 DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+            {	
+			
+						
+                  sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+                  color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
+                  Dest = DIB_16BPP_GetPixel(SourceSurf, DesX, DesY);
+                  color = DIB_DoRop(Mode, Dest, color, 0);
+                  
+                  //DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
+				 DIB_16BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
        }
        break;
+       
 
       case BMF_24BPP:		
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
