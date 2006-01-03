@@ -296,6 +296,7 @@ ZwDeleteObjectAuditAlarm(
     IN BOOLEAN GenerateOnClose
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDuplicateObject(
@@ -321,6 +322,7 @@ ZwMakeTemporaryObject(
     IN HANDLE Handle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenDirectoryObject(
@@ -425,6 +427,7 @@ ZwWaitForMultipleObjects(
     IN PLARGE_INTEGER Time
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForSingleObject(

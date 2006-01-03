@@ -157,8 +157,6 @@ RemoveTailList(
 #define RtlEqualLuid(L1, L2) (((L1)->HighPart == (L2)->HighPart) && \
                               ((L1)->LowPart  == (L2)->LowPart))
 
-#endif
-
 //
 // RTL Splay Tree Functions
 //
@@ -246,6 +244,7 @@ RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
+#endif
 
 //
 // Error and Exception Functions
@@ -1694,9 +1693,9 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsNameLegalDOS8Dot3(
-    IN PUNICODE_STRING UnicodeName,
-    IN PANSI_STRING AnsiName,
-    PBOOLEAN Unknown
+    IN PCUNICODE_STRING Name,
+    IN OUT POEM_STRING OemName OPTIONAL,
+    IN OUT PBOOLEAN NameContainsSpaces OPTIONAL
 );
 
 NTSYSAPI

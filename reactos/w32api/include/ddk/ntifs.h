@@ -1551,6 +1551,13 @@ typedef struct _SECURITY_CLIENT_CONTEXT {
     TOKEN_CONTROL               ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
+typedef struct _ACE_HEADER
+{
+    UCHAR AceType;
+    UCHAR AceFlags;
+    USHORT AceSize;
+} ACE_HEADER, *PACE_HEADER;
+
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
     PRTL_SPLAY_LINKS    Cache;
@@ -3370,6 +3377,13 @@ KeUnstackDetachProcess (
 NTKERNELAPI
 BOOLEAN
 NTAPI
+KeSetKernelStackSwapEnable(
+    IN BOOLEAN Enable
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
 MmCanFileBeTruncated (
     IN PSECTION_OBJECT_POINTERS     SectionObjectPointer,
     IN PLARGE_INTEGER               NewFileSize
@@ -3885,10 +3899,10 @@ RtlInitializeSid (
 NTSYSAPI
 BOOLEAN
 NTAPI
-RtlIsNameLegalDOS8Dot3 (
-    IN PUNICODE_STRING UnicodeName,
-    IN PANSI_STRING    AnsiName,
-    PBOOLEAN           Unknown
+RtlIsNameLegalDOS8Dot3(
+    IN PCUNICODE_STRING Name,
+    IN OUT POEM_STRING OemName OPTIONAL,
+    IN OUT PBOOLEAN NameContainsSpaces OPTIONAL
 );
 
 NTSYSAPI
@@ -3973,6 +3987,92 @@ RtlSubAuthoritySid (
     IN PSID    Sid,
     IN ULONG   SubAuthority
 );
+
+/* RTL Splay Tree Functions */
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSplay(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlDelete(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+    PRTL_SPLAY_LINKS Links,
+    PRTL_SPLAY_LINKS *Root
+);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
+
+#define RtlIsLeftChild(Links) \
+    (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlIsRightChild(Links) \
+    (RtlRightChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlRightChild(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->RightChild
+
+#define RtlIsRoot(Links) \
+    (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlLeftChild(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->LeftChild
+
+#define RtlParent(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->Parent
+
+#define RtlInitializeSplayLinks(Links)                  \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayLinks;                   \
+        _SplayLinks = (PRTL_SPLAY_LINKS)(Links);        \
+        _SplayLinks->Parent = _SplayLinks;              \
+        _SplayLinks->LeftChild = NULL;                  \
+        _SplayLinks->RightChild = NULL;                 \
+    }
+
+#define RtlInsertAsLeftChild(ParentLinks,ChildLinks)    \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->LeftChild = _SplayChild;          \
+        _SplayChild->Parent = _SplayParent;             \
+    }
+
+#define RtlInsertAsRightChild(ParentLinks,ChildLinks)   \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->RightChild = _SplayChild;         \
+        _SplayChild->Parent = _SplayParent;             \
+    }
 
 NTSYSAPI
 BOOLEAN

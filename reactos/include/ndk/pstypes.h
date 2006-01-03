@@ -600,7 +600,8 @@ typedef struct _TERMINATION_PORT
 #include <pshpack4.h>
 typedef struct _ETHREAD
 {
-    KTHREAD                        Tcb;                         /* 1B8 */
+    KTHREAD                        Tcb;                         /* 000 */
+    PVOID                          Padding;                     /* 1B4 */
     LARGE_INTEGER                  CreateTime;                  /* 1B8 */
     union
     {

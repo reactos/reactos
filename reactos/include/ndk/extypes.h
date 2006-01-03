@@ -273,7 +273,7 @@ typedef struct _EX_QUEUE_WORKER_INFO
 typedef struct _EX_WORK_QUEUE
 {
     KQUEUE WorkerQueue;
-    ULONG DynamicThreadCount;
+    LONG DynamicThreadCount;
     ULONG WorkItemsProcessed;
     ULONG WorkItemsProcessedLastPass;
     ULONG QueueDepthLastPass;
@@ -318,6 +318,8 @@ typedef struct _EX_RUNDOWN_WAIT_BLOCK
 //
 // Executive Pushlock
 //
+#undef EX_PUSH_LOCK
+#undef PEX_PUSH_LOCK
 typedef struct _EX_PUSH_LOCK
 {
     union

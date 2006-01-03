@@ -562,6 +562,7 @@ ZwDeleteBootEntry(
     IN PUNICODE_STRING EntryValue
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteFile(
@@ -591,6 +592,7 @@ ZwEnumerateBootEntries(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushBuffersFile(

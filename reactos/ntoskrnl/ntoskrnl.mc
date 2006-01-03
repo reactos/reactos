@@ -1003,6 +1003,14 @@ Language=English
 WORKER_THREAD_RETURNED_AT_BAD_IRQL
 .
 
+MessageId=0xE4
+Severity=Success
+Facility=System
+SymbolicName=WORKER_INVALID
+Language=English
+WORKER_INVALID
+.
+
 MessageId=0xE2
 Severity=Success
 Facility=System

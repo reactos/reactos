@@ -485,6 +485,7 @@ ZwClearEvent(
     IN HANDLE EventHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateEvent(
@@ -741,6 +742,7 @@ ZwSetDefaultHardErrorPort(
     IN HANDLE PortHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEvent(

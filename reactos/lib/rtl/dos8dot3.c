@@ -232,10 +232,11 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 /*
  * @implemented
  */
-BOOLEAN NTAPI
-RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
-                       IN PANSI_STRING AnsiName,
-                       OUT PBOOLEAN SpacesFound)
+BOOLEAN
+NTAPI
+RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
+                       IN OUT POEM_STRING AnsiName OPTIONAL,
+                       IN OUT PBOOLEAN SpacesFound OPTIONAL)
 {
    PANSI_STRING name = AnsiName;
    ANSI_STRING DummyString;

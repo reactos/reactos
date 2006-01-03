@@ -117,6 +117,13 @@ typedef struct _KQUEUE
     LIST_ENTRY ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
+typedef struct _ACE_HEADER
+{
+    UCHAR AceType;
+    UCHAR AceFlags;
+    USHORT AceSize;
+} ACE_HEADER, *PACE_HEADER;
+
 typedef enum _RTL_GENERIC_COMPARE_RESULTS
 {
     GenericLessThan,
