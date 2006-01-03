@@ -1,6 +1,6 @@
 <tree>
   <node name="Internet and Network" icon="5">
-	<node name="Firefox" file="firebox.xml"/>
+	<node name="Firefox" file="firefox.xml"/>
     <!--<node name="Mozilla Control" file="mozcontrol.xml"/>-->
 	<node name="Putty" file="putty.xml"/>
 	<node name="Tiny Webserver" file="tiny.xml"/>
