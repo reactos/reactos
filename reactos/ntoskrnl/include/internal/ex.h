@@ -420,7 +420,244 @@ ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
     ExpSetRundown(&RunRef->Count, EX_RUNDOWN_ACTIVE);
 }
 
+/* PUSHLOCKS *****************************************************************/
 
+/*++
+ * @name ExAcquirePushLockExclusive
+ * INTERNAL MACRO
+ *
+ *     The ExAcquirePushLockExclusive macro exclusively acquires a PushLock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be acquired.
+ *
+ * @return None.
+ *
+ * @remarks The function attempts the quickest route to acquire the lock, which is
+ *          to simply set the lock bit.
+ *          However, if the pushlock is already shared, the slower path is taken.
+ *
+ *          Callers of ExAcquirePushLockShared must be running at IRQL <= APC_LEVEL.
+ *          This macro should usually be paired up with KeAcquireCriticalRegion.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
+{
+    /* Try acquiring the lock */
+    if (InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V))
+    {
+        /* Someone changed it, use the slow path */
+        ExfAcquirePushLockExclusive(PushLock);
+    }
+
+    /* Sanity check */
+    ASSERT(PushLock->Locked);
+}
+
+/*++
+ * @name ExAcquirePushLockShared
+ * INTERNAL MACRO
+ *
+ *     The ExAcquirePushLockShared macro acquires a shared PushLock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be acquired.
+ *
+ * @return None.
+ *
+ * @remarks The function attempts the quickest route to acquire the lock, which is
+ *          to simply set the lock bit and set the share count to one.
+ *          However, if the pushlock is already shared, the slower path is taken.
+ *
+ *          Callers of ExAcquirePushLockShared must be running at IRQL <= APC_LEVEL.
+ *          This macro should usually be paired up with KeAcquireCriticalRegion.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK NewValue;
+
+    /* Try acquiring the lock */
+    NewValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
+    if (!InterlockedCompareExchangePointer(PushLock, NewValue.Ptr, 0))
+    {
+        /* Someone changed it, use the slow path */
+        ExfAcquirePushLockShared(PushLock);
+    }
+
+    /* Sanity checks */
+    ASSERT(PushLock->Locked);
+    ASSERT(PushLock->Waiting || PushLock->Shared > 0);
+}
+
+/*++
+ * @name ExWaitOnPushLock
+ * INTERNAL MACRO
+ *
+ *     The ExWaitOnPushLock macro acquires and instantly releases a pushlock.
+ *
+ * @params PushLock
+ *         Pointer to a pushlock.
+ *
+ * @return None.
+ *
+ * @remarks The function attempts to get any exclusive waiters out of their slow
+ *          path by forcing an instant acquire/release operation.
+ *
+ *          Callers of ExWaitOnPushLock must be running at IRQL <= APC_LEVEL.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExWaitOnPushLock(PEX_PUSH_LOCK PushLock)
+{
+    /* Acquire the lock */
+    ExfAcquirePushLockExclusive(PushLock);
+    ASSERT(PushLock->Locked);
+
+    /* Release it */
+    ExfReleasePushLockExclusive(PushLock);
+}
+
+/*++
+ * @name ExReleasePushLockShared
+ * INTERNAL MACRO
+ *
+ *     The ExReleasePushLockShared macro releases a previously acquired PushLock.
+ *
+ * @params PushLock
+ *         Pointer to a previously acquired pushlock.
+ *
+ * @return None.
+ *
+ * @remarks The function attempts the quickest route to release the lock, which is 
+ *          to simply decrease the share count and remove the lock bit.
+ *          However, if the pushlock is being waited on then the long path is taken.
+ *
+ *          Callers of ExReleasePushLockShared must be running at IRQL <= APC_LEVEL.
+ *          This macro should usually be paired up with KeLeaveCriticalRegion.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue;
+
+    /* Sanity checks */
+    ASSERT(PushLock->Locked);
+    ASSERT(PushLock->Waiting || PushLock->Shared > 0);
+
+    /* Try to clear the pushlock */
+    OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
+    if (InterlockedCompareExchangePointer(PushLock, 0, OldValue.Ptr) !=
+        OldValue.Ptr)
+    {
+        /* There are still other people waiting on it */
+        ExfReleasePushLockShared(PushLock);
+    }
+}
+
+/*++
+ * @name ExReleasePushLockExclusive
+ * INTERNAL MACRO
+ *
+ *     The ExReleasePushLockExclusive macro releases a previously
+ *     exclusively acquired PushLock.
+ *
+ * @params PushLock
+ *         Pointer to a previously acquired pushlock.
+ *
+ * @return None.
+ *
+ * @remarks The function attempts the quickest route to release the lock, which is
+ *          to simply clear the locked bit.
+ *          However, if the pushlock is being waited on, the slow path is taken
+ *          in an attempt to wake up the lock.
+ *
+ *          Callers of ExReleasePushLockExclusive must be running at IRQL <= APC_LEVEL.
+ *          This macro should usually be paired up with KeLeaveCriticalRegion.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue;
+
+    /* Sanity checks */
+    ASSERT(PushLock->Locked);
+    ASSERT(PushLock->Waiting || PushLock->Shared == 0);
+
+    /* Unlock the pushlock */
+    OldValue.Value = InterlockedExchangeAddSizeT((PLONG)PushLock, -1);
+
+    /* Sanity checks */
+    ASSERT(OldValue.Locked);
+    ASSERT(OldValue.Waiting || OldValue.Shared == 0);
+
+    /* Check if anyone is waiting on it and it's not already waking*/
+    if ((OldValue.Waiting) && !(OldValue.Waking))
+    {
+        /* Wake it up */
+        ExfTryToWakePushLock(PushLock);
+    }
+}
+
+/*++
+ * @name ExReleasePushLock
+ * INTERNAL MACRO
+ *
+ *     The ExReleasePushLock macro releases a previously acquired PushLock.
+ *
+ * @params PushLock
+ *         Pointer to a previously acquired pushlock.
+ *
+ * @return None.
+ *
+ * @remarks The function attempts the quickest route to release the lock, which is 
+ *          to simply clear all the fields and decrease the share count if required.
+ *          However, if the pushlock is being waited on then the long path is taken.
+ *
+ *          Callers of ExReleasePushLock must be running at IRQL <= APC_LEVEL.
+ *          This macro should usually be paired up with KeLeaveCriticalRegion.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExReleasePushLock(PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue = *PushLock;
+    EX_PUSH_LOCK NewValue;
+
+    /* Sanity checks */
+    ASSERT(OldValue.Locked);
+
+    /* Check if the pushlock is shared */
+    if (OldValue.Shared > 1)
+    {
+        /* Decrease the share count */
+        NewValue.Value = OldValue.Value &~ EX_PUSH_LOCK_SHARE_INC;
+    }
+    else
+    {
+        /* Clear the pushlock entirely */
+        NewValue.Value = 0;
+    }
+
+    /* Check if nobody is waiting on us and try clearing the lock here */
+    if ((OldValue.Waiting) ||
+        (InterlockedCompareExchangePointer(PushLock, NewValue.Ptr, OldValue.Ptr) ==
+         OldValue.Ptr))
+    {
+        /* We have waiters, use the long path */
+        ExfReleasePushLock(PushLock);
+    }
+}
 
 /* OTHER FUNCTIONS **********************************************************/
 

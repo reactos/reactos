@@ -141,6 +141,7 @@
 			<file>lookas.c</file>
 			<file>mutant.c</file>
 			<file>power.c</file>
+			<file>pushlock.c</file>
 			<file>profile.c</file>
 			<file>resource.c</file>
 			<file>rundown.c</file>

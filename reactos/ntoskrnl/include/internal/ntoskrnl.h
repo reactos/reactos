@@ -81,6 +81,27 @@ RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                  IN PVOID ContextData,
                  IN ULONG Size);
 
+/* FIXME: Interlocked functions that need to be made into a public header */
+FORCEINLINE
+LONG
+InterlockedAnd(IN OUT LONG volatile *Target,
+               IN LONG Set)
+{
+    LONG i;
+    LONG j;
+
+    j = *Target;
+    do {
+        i = j;
+        j = InterlockedCompareExchange((PLONG)Target,
+                                       i & Set,
+                                       i);
+
+    } while (i != j);
+
+    return j;
+}
+
 /*
  * generic information class probing code
  */
