@@ -75,7 +75,7 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 	UpdateWindow(hwnd);
 
 	// Load the tree
-	int error = PML_LoadTree(&tree, "tree.xml", AddItem);
+	int error = PML_LoadTree(&tree, "tree_bare.xml", AddItem);
 	
 	if(error)
 	{

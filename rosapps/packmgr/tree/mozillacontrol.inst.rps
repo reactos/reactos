@@ -1,5 +1,4 @@
-'Install rutine for Mozilla Control 1.6
-
+' Not in use anymore because reactos can download it without Package Manager
 Sub Main
   download ("http://www.iol.ie/~locka/mozilla/MozillaControl16.exe", "mozillacontrol16.exe")
 End Sub

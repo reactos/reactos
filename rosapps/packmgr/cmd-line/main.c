@@ -185,7 +185,7 @@ int Show (void)
 	WCHAR errbuf[2000];
 
 	// load the tree
-	error = PML_LoadTree (&tree, "tree.xml", NULL);
+	error = PML_LoadTree (&tree, "tree_bare.xml", NULL);
 	if(error)
 	{
 		wprintf(PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)));

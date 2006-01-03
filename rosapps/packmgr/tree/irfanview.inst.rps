@@ -1,0 +1,8 @@
+Sub Main
+  ' ToDo: Choose from different mirrors
+  download ("http://www.aeicomputertech.com/_downloads/iview398.exe", "iview398.exe")
+End Sub
+
+Sub After
+  shell iview398.exe
+End Sub

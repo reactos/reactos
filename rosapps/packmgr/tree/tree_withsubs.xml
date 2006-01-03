@@ -1,4 +1,5 @@
 <tree>
+  <node name="Warning: Not up to date"/>
   <node name="Internet and Network" icon="5">
     <node name="Browser" icon="5">
       <node name="MozillaControl" file="mozcontrol.xml"/>

@@ -1,0 +1,7 @@
+<package>
+  <name>Ritlab Tiny Webserver</name>
+  <version>1.93</version>
+  <description>This is a simple webserver running under ReactOs.</description>
+  <scripts inst="tiny.inst.rps"/>
+</package>
+

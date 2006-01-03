@@ -1,6 +1,11 @@
+<!--
+Not in use since reactos can download it itself now.
+-->
+
 <package>
-  <name>MozillaControl</name>
-  <description>Provide the Gekko Engine for ReactOS.</description>
-  <scripts inst="mozillacontrol.inst.rps" srcinst="mozillacontrol.inst.rps"/>
+  <name>Mozilla Control</name>
+  <version>1.6</version>
+  <description>Provides the Gekko Engine for ReactOS.</description>
+  <scripts inst="mozillacontrol.inst.rps"/>
 </package>
 
