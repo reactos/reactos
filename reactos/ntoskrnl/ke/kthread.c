@@ -1177,15 +1177,12 @@ KiSetPriorityThread(PKTHREAD Thread,
 }
 
 /*
- * Sets thread's base priority relative to the process' base priority
- * Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
- *
  * @implemented
  */
 LONG
 STDCALL
-KeSetBasePriorityThread (PKTHREAD Thread,
-                         LONG Increment)
+KeSetBasePriorityThread(PKTHREAD Thread,
+                        LONG Increment)
 {
     KIRQL OldIrql;
     PKPROCESS Process;

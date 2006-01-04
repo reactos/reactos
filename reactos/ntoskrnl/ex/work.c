@@ -19,17 +19,17 @@
 /* DATA **********************************************************************/
 
 /* Number of worker threads for each Queue */
-#define EX_HYPERCRITICAL_WORK_THREADS   1
-#define EX_DELAYED_WORK_THREADS         3
-#define EX_CRITICAL_WORK_THREADS        5
+#define EX_HYPERCRITICAL_WORK_THREADS               1
+#define EX_DELAYED_WORK_THREADS                     3
+#define EX_CRITICAL_WORK_THREADS                    5
 
 /* Magic flag for dynamic worker threads */
-#define EX_DYNAMIC_WORK_THREAD          0x80000000
+#define EX_DYNAMIC_WORK_THREAD                      0x80000000
 
-/* Worker thread priorities */
-#define EX_HYPERCRITICAL_QUEUE_PRIORITY 7
-#define EX_CRITICAL_QUEUE_PRIORITY      5
-#define EX_DELAYED_QUEUE_PRIORITY       4
+/* Worker thread priority increments (added to base priority) */
+#define EX_HYPERCRITICAL_QUEUE_PRIORITY_INCREMENT   7
+#define EX_CRITICAL_QUEUE_PRIORITY_INCREMENT        5
+#define EX_DELAYED_QUEUE_PRIORITY_INCREMENT         4
 
 /* The actual worker queue array */
 EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
@@ -284,17 +284,17 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
     if (WorkQueueType == DelayedWorkQueue)
     {
         /* Priority == 4 */
-        Priority = EX_DELAYED_QUEUE_PRIORITY;
+        Priority = EX_DELAYED_QUEUE_PRIORITY_INCREMENT;
     }
     else if (WorkQueueType == CriticalWorkQueue)
     {
         /* Priority == 5 */
-        Priority = EX_CRITICAL_QUEUE_PRIORITY;
+        Priority = EX_CRITICAL_QUEUE_PRIORITY_INCREMENT;
     }
     else
     {
         /* Priority == 7 */
-        Priority = EX_HYPERCRITICAL_QUEUE_PRIORITY;
+        Priority = EX_HYPERCRITICAL_QUEUE_PRIORITY_INCREMENT;
     }
 
     /* Get the Thread */
@@ -306,7 +306,7 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
                               NULL);
 
     /* Set the Priority */
-    KeSetPriorityThread(&Thread->Tcb, Priority);
+    KeSetBasePriorityThread(&Thread->Tcb, Priority);
 
     /* Dereference and close handle */
     ObDereferenceObject(Thread);
@@ -431,7 +431,7 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
 
     /* Raise our priority above all other worker threads */
     KeSetBasePriorityThread(KeGetCurrentThread(),
-                            EX_CRITICAL_QUEUE_PRIORITY + 1);
+                            EX_CRITICAL_QUEUE_PRIORITY_INCREMENT + 1);
 
     /* Setup the timer */
     KeInitializeTimer(&Timer);
