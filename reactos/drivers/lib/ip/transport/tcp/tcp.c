@@ -153,6 +153,63 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 	    }
 	}
     }
+    if( NewState & SEL_WRITE ) {
+	TI_DbgPrint(DEBUG_TCP,("Writeable: irp list %s\n",
+			       IsListEmpty(&Connection->ReceiveRequest) ?
+			       "empty" : "nonempty"));
+
+	while( !IsListEmpty( &Connection->SendRequest ) ) {
+	    OSK_UINT SendLen = 0, Sent = 0;
+	    OSK_PCHAR SendBuffer = 0;
+
+	    Entry = RemoveHeadList( &Connection->SendRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+
+	    Irp = Bucket->Request.RequestContext;
+	    Mdl = Irp->MdlAddress;
+
+	    TI_DbgPrint(DEBUG_TCP,
+			("Getting the user buffer from %x\n", Mdl));
+
+	    NdisQueryBuffer( Mdl, &SendBuffer, &SendLen );
+
+	    TI_DbgPrint(DEBUG_TCP,
+			("Writing %d bytes to %x\n", SendLen, SendBuffer));
+
+	    TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
+	    TI_DbgPrint
+		(DEBUG_TCP,
+		 ("Connection->SocketContext: %x\n",
+		  Connection->SocketContext));
+
+	    Status = TCPTranslateError
+		( OskitTCPSend( Connection->SocketContext,
+				SendBuffer,
+				SendLen,
+				&Sent,
+				0 ) );
+
+	    TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Sent));
+
+	    if( Status == STATUS_SUCCESS ) {
+		TI_DbgPrint(DEBUG_TCP,("Sent %d bytes with status %x\n",
+				       Sent, Status));
+
+		Complete( Bucket->Request.RequestContext,
+			  STATUS_SUCCESS, Sent );
+	    } else if( Status == STATUS_PENDING ) {
+		InsertHeadList
+		    ( &Connection->SendRequest, &Bucket->Entry );
+		break;
+	    } else {
+		TI_DbgPrint(DEBUG_TCP,
+			    ("Completing Send request: %x %x\n",
+			     Bucket->Request, Status));
+		Complete( Bucket->Request.RequestContext, Status, 0 );
+	    }
+	}
+    }
 
     if( NewState & SEL_FIN ) {
         PLIST_ENTRY ListsToErase[4];
@@ -209,6 +266,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     InitializeListHead(&Connection->ConnectRequest);
     InitializeListHead(&Connection->ListenRequest);
     InitializeListHead(&Connection->ReceiveRequest);
+    InitializeListHead(&Connection->SendRequest);
 
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
@@ -656,10 +714,17 @@ NTSTATUS TCPReceiveData
 NTSTATUS TCPSendData
 ( PCONNECTION_ENDPOINT Connection,
   PCHAR BufferData,
-  ULONG PacketSize,
-  PULONG DataUsed,
-  ULONG Flags) {
+  ULONG SendLength,
+  PULONG BytesSent,
+  ULONG Flags,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context ) {
+    UINT Sent = 0;
     NTSTATUS Status;
+    PTDI_BUCKET Bucket;
+
+    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n",
+                           SendLength, Connection->SocketContext));
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
@@ -669,11 +734,37 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
 			   Connection->SocketContext));
 
-    Status = OskitTCPSend( Connection->SocketContext,
-			   (OSK_PCHAR)BufferData, PacketSize,
-			   (PUINT)DataUsed, 0 );
+    Status = TCPTranslateError
+	( OskitTCPSend( Connection->SocketContext,
+			(OSK_PCHAR)BufferData, SendLength,
+			&Sent, 0 ) );
+
+    TI_DbgPrint(DEBUG_TCP,("OskitTCPSend: %x, %d\n", Status, Sent));
+
+    /* Keep this request around ... there was no data yet */
+    if( Status == STATUS_PENDING ) {
+	/* Freed in TCPSocketState */
+	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+	if( !Bucket ) {
+	    TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
+	    TcpipRecursiveMutexLeave( &TCPLock );
+	    return STATUS_NO_MEMORY;
+	}
+
+	Bucket->Request.RequestNotifyObject = Complete;
+	Bucket->Request.RequestContext = Context;
+	*BytesSent = 0;
+
+	InsertHeadList( &Connection->SendRequest, &Bucket->Entry );
+	TI_DbgPrint(DEBUG_TCP,("Queued write irp\n"));
+    } else {
+	TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Sent));
+	*BytesSent = Sent;
+    }
 
     TcpipRecursiveMutexLeave( &TCPLock );
+
+    TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     return Status;
 }
@@ -729,14 +820,14 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
     PTDI_BUCKET Bucket;
     UINT i = 0;
 
-    ListHead[0] = &Endpoint->ReceiveRequest;
-    ListHead[1] = &Endpoint->ConnectRequest;
-    ListHead[2] = &Endpoint->ListenRequest;
-    ListHead[3] = 0;
+    ListHead[0] = &Endpoint->SendRequest;
+    ListHead[1] = &Endpoint->ReceiveRequest;
+    ListHead[2] = &Endpoint->ConnectRequest;
+    ListHead[3] = &Endpoint->ListenRequest;
 
     TcpipAcquireSpinLock( &Endpoint->Lock, &OldIrql );
 
-    for( i = 0; ListHead[i]; i++ ) {
+    for( i = 0; i < sizeof( ListHead ) / sizeof( ListHead[0] ); i++ ) {
 	for( Entry = ListHead[i]->Flink;
 	     Entry != ListHead[i];
 	     Entry = Entry->Flink ) {

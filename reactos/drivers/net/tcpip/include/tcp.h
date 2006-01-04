@@ -150,7 +150,9 @@ NTSTATUS TCPSendData(
   PCHAR Buffer,
   ULONG DataSize,
   PULONG DataUsed,
-  ULONG Flags);
+  ULONG Flags,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context);
 
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 

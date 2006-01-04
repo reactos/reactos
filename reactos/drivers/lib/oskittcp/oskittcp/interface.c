@@ -256,12 +256,26 @@ int OskitTCPClose( void *socket ) {
 
 int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
-    struct mbuf* m = m_devget( Data, Len, 0, NULL, NULL );
-    int error = 0;
-	if ( !m )
-		return ENOBUFS;
-    error = sosend( socket, NULL, NULL, m, NULL, 0 );
-    *OutLen = Len;
+    int error;
+    struct uio uio;
+    struct iovec iov;
+
+    iov.iov_len = Len;
+    iov.iov_base = Data;
+    uio.uio_iov = &iov;
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = 0;
+    uio.uio_resid = Len;
+    uio.uio_segflg = UIO_SYSSPACE;
+    uio.uio_rw = UIO_WRITE;
+    uio.uio_procp = NULL;
+
+    error = sosend( socket, NULL, &uio, NULL, NULL, 0 );
+    if (OSK_EWOULDBLOCK == error) {
+	((struct socket *) socket)->so_snd.sb_flags |= SB_WAIT;
+    }
+    *OutLen = uio.uio_offset;
+
     return error;
 }
 

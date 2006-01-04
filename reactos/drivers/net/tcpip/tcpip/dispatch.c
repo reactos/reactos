@@ -898,15 +898,15 @@ NTSTATUS DispTdiSend(
  */
 {
   PIO_STACK_LOCATION IrpSp;
-  PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
+  PTDI_REQUEST_KERNEL_SEND SendInfo;
   PTRANSPORT_CONTEXT TranContext;
   NTSTATUS Status;
-  ULONG BytesReceived;
+  ULONG BytesSent;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
-  ReceiveInfo = (PTDI_REQUEST_KERNEL_RECEIVE)&(IrpSp->Parameters);
+  SendInfo = (PTDI_REQUEST_KERNEL_SEND)&(IrpSp->Parameters);
 
   TranContext = IrpSp->FileObject->FsContext;
   if (TranContext == NULL)
@@ -938,12 +938,14 @@ NTSTATUS DispTdiSend(
 	Status = TCPSendData(
 	    TranContext->Handle.ConnectionContext,
 	    Data,
-	    ReceiveInfo->ReceiveLength,
-	    &BytesReceived,
-	    ReceiveInfo->ReceiveFlags);
+	    SendInfo->SendLength,
+	    &BytesSent,
+	    SendInfo->SendFlags,
+	    DispDataRequestComplete,
+	    Irp);
 	if (Status != STATUS_PENDING)
 	{
-	    DispDataRequestComplete(Irp, Status, BytesReceived);
+	    DispDataRequestComplete(Irp, Status, BytesSent);
 	} else
 	    IoMarkIrpPending( Irp );
     }

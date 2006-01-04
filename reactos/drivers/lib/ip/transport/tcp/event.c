@@ -121,6 +121,11 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	KeInitializeEvent( &SleepingThread->Event, NotificationEvent, FALSE );
 	SleepingThread->SleepToken = token;
 
+	/* We're going to sleep and need to release the lock, otherwise
+           it's impossible to re-enter oskittcp to deliver the event that's
+           going to wake us */
+	TcpipRecursiveMutexLeave( &TCPLock );
+
 	TcpipAcquireFastMutex( &SleepingThreadsLock );
 	InsertTailList( &SleepingThreadsList, &SleepingThread->Entry );
 	TcpipReleaseFastMutex( &SleepingThreadsLock );
@@ -135,6 +140,8 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	TcpipAcquireFastMutex( &SleepingThreadsLock );
 	RemoveEntryList( &SleepingThread->Entry );
 	TcpipReleaseFastMutex( &SleepingThreadsLock );
+
+	TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
 	PoolFreeBuffer( SleepingThread );
     }

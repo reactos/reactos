@@ -302,6 +302,7 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
+    LIST_ENTRY SendRequest;    /* Queued send requests */
 
     /* Signals */
     LIST_ENTRY SignalList;     /* Entry in the list of sockets waiting for

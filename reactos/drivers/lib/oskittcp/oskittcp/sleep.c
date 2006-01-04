@@ -35,6 +35,10 @@ void wakeup( struct socket *so, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));
 	flags |= SEL_READ;
     }
+    if( 0 < sbspace(&so->so_snd) ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Socket writeable\n"));
+	flags |= SEL_WRITE;
+    }
     if( so->so_state & SS_CANTRCVMORE ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket can't be read any longer\n"));
 	flags |= SEL_FIN;

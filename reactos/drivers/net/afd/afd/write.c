@@ -1,4 +1,4 @@
-/* $Id$
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -17,7 +17,6 @@ static NTSTATUS DDKAPI SendComplete
   PIRP Irp,
   PVOID Context ) {
     NTSTATUS Status = Irp->IoStatus.Status;
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp = NULL;
@@ -25,6 +24,15 @@ static NTSTATUS DDKAPI SendComplete
     PAFD_SEND_INFO SendReq = NULL;
     PAFD_MAPBUF Map;
     UINT TotalBytesCopied = 0, SpaceAvail, i, CopySize = 0;
+
+    /*
+     * The Irp parameter passed in is the IRP of the stream between AFD and
+     * TDI driver. It's not very usefull to us. We need the IRPs of the stream
+     * between usermode and AFD. Those are chained from
+     * FCB->PendingIrpList[FUNCTION_SEND] and you'll see them in the code
+     * below as "NextIrp" ('cause they are the next usermode IRP to be
+     * processed).
+     */
 
     AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
 			    Irp->IoStatus.Status,
@@ -78,7 +86,7 @@ static NTSTATUS DDKAPI SendComplete
 	!IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) &&
 	NT_SUCCESS(Status) ) {
 	NextIrpEntry =
-	    RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+	    RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	NextIrp =
 	    CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
 	NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
@@ -89,8 +97,7 @@ static NTSTATUS DDKAPI SendComplete
 
 	SpaceAvail = FCB->Send.Size - FCB->Send.BytesUsed;
 
-	for( i = 0; FCB->Send.BytesUsed < FCB->Send.Content &&
-		 i < SendReq->BufferCount; i++ ) {
+	for( i = 0; i < SendReq->BufferCount; i++ ) {
 	    Map[i].BufferAddress =
 		MmMapLockedPages( Map[i].Mdl, KernelMode );
 
@@ -101,7 +108,7 @@ static NTSTATUS DDKAPI SendComplete
 			   Map[i].BufferAddress,
 			   CopySize );
 
-	    MmUnmapLockedPages( Map[i].Mdl, KernelMode );
+	    MmUnmapLockedPages( Map[i].BufferAddress, Map[i].Mdl );
 
 	    FCB->Send.BytesUsed += CopySize;
 	    TotalBytesCopied += CopySize;
@@ -116,7 +123,7 @@ static NTSTATUS DDKAPI SendComplete
 	SocketCalloutEnter( FCB );
 
 	Status = TdiSend( &FCB->SendIrp.InFlightRequest,
-			  IrpSp->FileObject,
+			  FCB->Connection.Object,
 			  0,
 			  FCB->Send.Window,
 			  FCB->Send.BytesUsed,
@@ -138,13 +145,13 @@ static NTSTATUS DDKAPI SendComplete
 
 	AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 
-	return UnlockAndMaybeComplete( FCB, Status, Irp, TotalBytesCopied,
+	return UnlockAndMaybeComplete( FCB, Status, NextIrp, TotalBytesCopied,
 				       NULL, TRUE );
     } else if( NextIrp ) {
 	AFD_DbgPrint(MID_TRACE,("Could not do any more with Irp %x\n",
 				NextIrp));
 	InsertHeadList( &FCB->PendingIrpList[FUNCTION_SEND],
-			&Irp->Tail.Overlay.ListEntry );
+			&NextIrp->Tail.Overlay.ListEntry );
     }
 
     SocketStateUnlock( FCB );
