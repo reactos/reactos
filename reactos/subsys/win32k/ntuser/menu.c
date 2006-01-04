@@ -1696,16 +1696,11 @@ NtUserGetMenuItemRect(
    LPRECT lprcItem)
 {
    ROSMENUINFO mi;
-   ROSMENUITEMINFO mii;
    HWND referenceHwnd;
-   LPPOINT lpPoints;
-   LPRECT lpRect = NULL;
-   POINT FromOffset;
-   LONG XMove, YMove;
-   ULONG i;
+   RECT Rect;
    NTSTATUS Status;
    PMENU_OBJECT Menu;
-   PWINDOW_OBJECT ReferenceWnd;
+   PMENU_ITEM MenuItem;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserGetMenuItemRect\n");
@@ -1716,41 +1711,26 @@ NtUserGetMenuItemRect(
       RETURN(FALSE);
    }
 
-   if(!UserMenuItemInfo(Menu, uItem, MF_BYPOSITION, &mii, FALSE))
-      RETURN( FALSE);
-
+   if (IntGetMenuItemByFlag(Menu, uItem, MF_BYPOSITION, &MenuItem, NULL) > -1)
+        Rect = MenuItem->Rect;
+   else
+      RETURN(FALSE);
+   
    referenceHwnd = hWnd;
-
+   
    if(!hWnd)
    {
       if(!UserMenuInfo(Menu, &mi, FALSE))
          RETURN( FALSE);
       if(mi.Wnd == 0)
          RETURN( FALSE);
-      referenceHwnd = mi.Wnd;
+      referenceHwnd = mi.Wnd; /* Okay we found it, so now what do we do? */
    }
 
    if (lprcItem == NULL)
       RETURN( FALSE);
-   *lpRect = mii.Rect;
-   lpPoints = (LPPOINT)lpRect;
 
-   ReferenceWnd = UserGetWindowObject(referenceHwnd);
-   if (!ReferenceWnd || !UserGetClientOrigin(ReferenceWnd, &FromOffset))
-   {
-      RETURN( FALSE);
-   }
-
-   XMove = FromOffset.x;
-   YMove = FromOffset.y;
-
-   for (i = 0; i < 2; i++)
-   {
-      lpPoints[i].x += XMove;
-      lpPoints[i].y += YMove;
-   }
-
-   Status = MmCopyToCaller(lprcItem, lpPoints, sizeof(RECT));
+   Status = MmCopyToCaller(lprcItem, &Rect, sizeof(RECT));
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
