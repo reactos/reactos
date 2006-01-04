@@ -523,7 +523,7 @@ ExpInitializeWorkerThreads(VOID)
 
     /* Protect against greedy registry modifications */
     ExpAdditionalDelayedWorkerThreads =
-        min(ExpAdditionalCriticalWorkerThreads, 16);
+        min(ExpAdditionalDelayedWorkerThreads, 16);
     ExpAdditionalCriticalWorkerThreads =
         min(ExpAdditionalCriticalWorkerThreads, 16);
 
