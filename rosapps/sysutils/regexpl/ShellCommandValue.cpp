@@ -243,7 +243,7 @@ CheckValueArgument:
       default:
         {
           TCHAR Buffer[256];
-          DWORD i;
+          DWORD i, j;
           for (i = 0 ; i < dwValueSize ; i++)
           {
             if (i%16 == 0)
@@ -266,7 +266,7 @@ CheckValueArgument:
             if (i && (i%16 == 15))
             {	// if this is the last byte in line
               // Dump text representation
-              for (DWORD j = i-15; j <= i; j += blnUnicodeDump?2:1)\
+              for (j = i-15; j <= i; j += blnUnicodeDump?2:1)\
                   {
                     if ((j%8 == 0)&&(j%16 != 0))
                     {	// this is the additional space between 7th and 8th byte in current line
@@ -321,7 +321,7 @@ CheckValueArgument:
             if (k && (k%16 == 15))
             {	// if this is the last byte in line
               ASSERT((k-15)%16 == 0);	// k-15 must point at begin of last line
-              for (DWORD j = k-15; j < i; j += j += blnUnicodeDump?2:1)
+              for (j = k-15; j < i; j += blnUnicodeDump?2:1)
               {
                 if (blnUnicodeDump&&(j+1 >= i))
                 {	// ok, buffer size is odd number, so we don't display last byte.

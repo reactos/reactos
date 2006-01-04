@@ -804,7 +804,7 @@ void test8(void)
  LONG dwError;
  TOKEN_PRIVILEGES NewPrivileges;
  HANDLE Token,hKey;
- LUID Luid;
+ LUID Luid = {0};
  BOOLEAN bRes;
   Status=NtOpenProcessToken(GetCurrentProcess()
 	,TOKEN_ADJUST_PRIVILEGES,&Token);

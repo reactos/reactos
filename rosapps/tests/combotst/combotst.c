@@ -545,7 +545,7 @@ WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
                     PrintTextXY("CBN_EDITCHANGE notification",NOTIFYX,NOTIFYY,27,srect);
                     break;
 
-                case CBN_ERRSPACE:
+                case (WORD)CBN_ERRSPACE:
                     ScrollWindow (hwnd, 0, SCROLLAMOUNT, &srect, &srect);
                     PrintTextXY("CBN_ERRSPACE notification",NOTIFYX,NOTIFYY,25,srect);
                     break;
