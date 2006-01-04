@@ -1200,7 +1200,9 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     UINT_PTR retval = 31;
     WCHAR wcmd[1024];
     WCHAR buffer[MAX_PATH];
+    WCHAR target[MAX_PATH];
     BOOL done;
+    DWORD attribs;
 
     /* make a local copy of the LPSHELLEXECUTEINFO structure and work with this from now on */
     memcpy(&sei_tmp, sei, sizeof(sei_tmp));
@@ -1315,9 +1317,20 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
 		strcpyW(wszApplicationName, wExplorer);
 
 		sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
-	    } else if (HCR_GetExecuteCommandW(0, wszFolder, sei_tmp.lpVerb?sei_tmp.lpVerb:wszOpen, buffer, sizeof(buffer))) {
-		SHELL_ArgifyW(wszApplicationName, sizeof(wszApplicationName)/sizeof(WCHAR), buffer, NULL, sei_tmp.lpIDList, NULL);
-
+	    } else {
+		/* Check if we're executing a directory and if so use the
+		   handler for the Folder class */
+		strcpyW(target, buffer);
+		attribs = GetFileAttributesW(buffer);
+		if (attribs != INVALID_FILE_ATTRIBUTES &&
+		    0 != (attribs & FILE_ATTRIBUTE_DIRECTORY) &&
+		    HCR_GetExecuteCommandW(0, wszFolder,
+		                           sei_tmp.lpVerb?sei_tmp.lpVerb:wszOpen,
+		                           buffer, sizeof(buffer))) {
+		    SHELL_ArgifyW(wszApplicationName,
+		                  sizeof(wszApplicationName)/sizeof(WCHAR),
+		                  buffer, target, sei_tmp.lpIDList, NULL);
+		}
 		sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
 	    }
 	}
