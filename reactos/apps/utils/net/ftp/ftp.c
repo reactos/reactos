@@ -211,13 +211,16 @@ int login(const char *host)
 	int n, aflag = 0;
 
 	user = pass = acct = 0;
-	if (ruserpass(host, &puser, &ppass, &pacct) < 0) {
+	n = ruserpass(host, &puser, &ppass, &pacct);
+	if (n < 0) {
 		code = -1;
 		return(0);
 	}
-	user = puser;
-	pass = ppass;
-	acct = pacct;
+	if (0 != n) {
+		user = puser;
+		pass = ppass;
+		acct = pacct;
+	}
 	while (user == NULL) {
            const char *myname = "none"; // This needs to become the usename env
 
