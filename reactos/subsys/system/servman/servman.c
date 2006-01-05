@@ -571,7 +571,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 	wc.hInstance	 = hInstance;
 	wc.hIcon		 = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SM_ICON));
 	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	wc.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
 	wc.lpszClassName = ClassName;
 	wc.hIconSm		 = (HICON)LoadImage(GetModuleHandle(NULL),
