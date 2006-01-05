@@ -121,6 +121,7 @@ NtFsControlFile@40
 NtGetContextThread@8
 NtGetPlugPlayEvent@16
 NtGetTickCount@0
+NtImpersonateAnonymousToken@4
 NtImpersonateClientOfPort@8
 NtImpersonateThread@12
 NtInitializeRegistry@4
@@ -209,6 +210,7 @@ NtReplaceKey@12
 NtReplyPort@8
 NtReplyWaitReplyPort@8
 NtReplyWaitReceivePort@16
+NtReplyWaitReceivePortEx@20
 NtRequestPort@8
 NtRequestWaitReplyPort@12
 NtResetEvent@8
@@ -318,7 +320,7 @@ RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
 RtlAssert@16
-;RtlCaptureStackBackTrace
+RtlCaptureStackBackTrace@16
 RtlCharToInteger@12
 RtlCheckRegistryKey@8
 RtlClearAllBits@4
@@ -474,6 +476,7 @@ RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
 RtlGetSecurityDescriptorRMControl@8
+RtlGetSetBootStatusData@24
 ;RtlGetUserInfoHeap
 RtlGetVersion@4
 RtlHashUnicodeString@16
@@ -546,6 +549,7 @@ RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor@4
 RtlLengthSid@4
 RtlLocalTimeToSystemTime@8
+RtlLockBootStatusData@4
 RtlLockHeap@4
 RtlLookupAtomInAtomTable@12
 RtlLookupElementGenericTable@8
@@ -647,6 +651,7 @@ RtlTimeToTimeFields@8
 RtlTryEnterCriticalSection@4
 @RtlUlongByteSwap@4
 @RtlUlonglongByteSwap@8
+RtlUnhandledExceptionFilter@4
 RtlUnicodeStringToAnsiSize@4=RtlxUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString@12
@@ -658,6 +663,7 @@ RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN@20
 RtlUniform@4
+RtlUnlockBootStatusData@4
 RtlUnlockHeap@4
 RtlUnwind@16
 RtlUpcaseUnicodeChar@4
@@ -674,6 +680,7 @@ RtlUpperString@8
 ;RtlUsageHeap
 @RtlUshortByteSwap@4
 RtlValidAcl@4
+RtlValidRelativeSecurityDescriptor@12
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
 RtlValidateHeap@12
@@ -764,6 +771,7 @@ ZwFsControlFile@40
 ZwGetContextThread@8
 ZwGetPlugPlayEvent@16
 ZwGetTickCount@0
+ZwImpersonateAnonymousToken@4
 ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
 ZwInitializeRegistry@4
@@ -847,6 +855,7 @@ ZwRemoveIoCompletion@20
 ZwReplaceKey@12
 ZwReplyPort@8
 ZwReplyWaitReceivePort@16
+ZwReplyWaitReceivePortEx@20
 ZwReplyWaitReplyPort@8
 ZwRequestPort@8
 ZwRequestWaitReplyPort@12

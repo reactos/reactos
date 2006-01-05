@@ -136,4 +136,15 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
+LONG
+NTAPI
+RtlUnhandledExceptionFilter(IN struct _EXCEPTION_POINTERS* ExceptionInfo)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
 /* EOF */

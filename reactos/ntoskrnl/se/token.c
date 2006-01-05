@@ -2363,6 +2363,20 @@ SeTokenIsWriteRestricted(
 
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtImpersonateAnonymousToken(
+	IN HANDLE Thread
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 NTSTATUS

@@ -69,6 +69,7 @@ NtFsControlFile 10
 NtGetContextThread 2
 NtGetPlugPlayEvent 4
 NtGetTickCount 0
+NtImpersonateAnonymousToken 1
 NtImpersonateClientOfPort 2
 NtImpersonateThread 3
 NtInitializeRegistry 1
@@ -164,6 +165,7 @@ NtRemoveIoCompletion 5
 NtReplaceKey 3
 NtReplyPort 2
 NtReplyWaitReceivePort 4
+NtReplyWaitReceivePortEx 5
 NtReplyWaitReplyPort 2
 NtRequestPort 2
 NtRequestWaitReplyPort 3
