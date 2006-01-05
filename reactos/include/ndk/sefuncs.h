@@ -181,6 +181,13 @@ NtDuplicateToken(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtImpersonateAnonymousToken(
+    IN HANDLE Thread
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtOpenObjectAuditAlarm(
     IN PUNICODE_STRING SubsystemName,
     IN PVOID HandleId,
@@ -348,6 +355,13 @@ ZwDuplicateToken(
     IN BOOLEAN EffectiveOnly,
     IN TOKEN_TYPE TokenType,
     OUT PHANDLE NewTokenHandle
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+ZwImpersonateAnonymousToken(
+    IN HANDLE Thread
 );
 
 NTSYSCALLAPI

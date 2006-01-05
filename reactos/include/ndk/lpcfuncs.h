@@ -124,9 +124,19 @@ NTSTATUS
 NTAPI
 NtReplyWaitReceivePort(
     IN HANDLE PortHandle,
-    IN PVOID *PortContext OPTIONAL,
+    OUT PVOID *PortContext OPTIONAL,
     IN PPORT_MESSAGE ReplyMessage OPTIONAL,
     OUT PPORT_MESSAGE ReceiveMessage
+);
+
+NTSTATUS
+NTAPI
+NtReplyWaitReceivePortEx(
+    IN HANDLE PortHandle,
+    OUT PVOID *PortContext OPTIONAL,
+    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+    OUT PPORT_MESSAGE ReceiveMessage,
+    IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
 NTSTATUS
@@ -275,9 +285,19 @@ NTSTATUS
 NTAPI
 ZwReplyWaitReceivePort(
     IN HANDLE PortHandle,
-    IN PVOID *PortContext OPTIONAL,
+    OUT PVOID *PortContext OPTIONAL,
     IN PPORT_MESSAGE ReplyMessage OPTIONAL,
     OUT PPORT_MESSAGE ReceiveMessage
+);
+
+NTSTATUS
+NTAPI
+ZwReplyWaitReceivePortEx(
+    IN HANDLE PortHandle,
+    OUT PVOID *PortContext OPTIONAL,
+    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+    OUT PPORT_MESSAGE ReceiveMessage,
+    IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
 NTSTATUS
