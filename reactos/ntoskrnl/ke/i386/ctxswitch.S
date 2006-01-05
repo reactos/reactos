@@ -246,10 +246,10 @@ SameProcess:
     pop [ebx+KPCR_EXCEPTION_LIST]
 
     /* Return */
-//#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP
     mov ecx, offset _DispatcherDatabaseLock
     call @KefReleaseSpinLockFromDpcLevel@4
-//#endif
+#endif
     ret 
 
 /*++
