@@ -247,7 +247,7 @@ SameProcess:
 
     /* Return */
 //#ifdef CONFIG_SMP
-    mov ecx, _DispatcherDatabaseLock
+    mov ecx, offset _DispatcherDatabaseLock
     call @KefReleaseSpinLockFromDpcLevel@4
 //#endif
     ret 
