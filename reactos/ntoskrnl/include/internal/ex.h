@@ -17,9 +17,10 @@ extern POBJECT_TYPE ExEventPairObjectType;
 
 /* Note: we only use a spinlock on SMP. On UP, we cli/sti intead */
 #ifndef CONFIG_SMP
-#define ExAcquireResourceLock(l, i) \
-    UNREFERENCED_PARAMETER(*i); \
-    Ke386DisableInterrupts();
+#define ExAcquireResourceLock(l, i) { \
+    (void)i; \
+    Ke386DisableInterrupts(); \
+}
 #define ExReleaseResourceLock(l, i) Ke386EnableInterrupts();
 #else
 #define ExAcquireResourceLock(l, i) KeAcquireSpinLock(l, i);
