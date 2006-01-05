@@ -15,6 +15,17 @@ extern POBJECT_TYPE ExEventPairObjectType;
   ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
   EX_HANDLE_ENTRY_AUDITONCLOSE)))
 
+/* Note: we only use a spinlock on SMP. On UP, we cli/sti intead */
+#ifndef CONFIG_SMP
+#define ExAcquireResourceLock(l, i) \
+    UNREFERENCED_PARAMETER(*i); \
+    Ke386DisableInterrupts();
+#define ExReleaseResourceLock(l, i) Ke386EnableInterrupts();
+#else
+#define ExAcquireResourceLock(l, i) KeAcquireSpinLock(l, i);
+#define ExReleaseResourceLock(l, i) KeReleaseSpinLock(l, i);
+#endif
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
@@ -76,6 +87,10 @@ ExpInitializeTimerImplementation(VOID);
 VOID
 STDCALL
 ExpInitializeProfileImplementation(VOID);
+
+VOID
+NTAPI
+ExpResourceInitialization(VOID);
 
 /* Rundown Functions ********************************************************/
 

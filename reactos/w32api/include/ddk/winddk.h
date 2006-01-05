@@ -6601,7 +6601,7 @@ ExIsResourceAcquiredLite(
   IN PERESOURCE  Resource);
 
 NTOSAPI
-USHORT
+ULONG
 DDKAPI
 ExIsResourceAcquiredSharedLite(
   IN PERESOURCE  Resource);
@@ -6648,7 +6648,7 @@ ExRegisterCallback(
   IN PVOID  CallbackContext);
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 ExReinitializeResourceLite(
   IN PERESOURCE  Resource);

@@ -1003,20 +1003,28 @@ Language=English
 WORKER_THREAD_RETURNED_AT_BAD_IRQL
 .
 
-MessageId=0xE4
-Severity=Success
-Facility=System
-SymbolicName=WORKER_INVALID
-Language=English
-WORKER_INVALID
-.
-
 MessageId=0xE2
 Severity=Success
 Facility=System
 SymbolicName=MANUALLY_INITIATED_CRASH
 Language=English
 MANUALLY_INITIATED_CRASH
+.
+
+MessageId=0xE3
+Severity=Success
+Facility=System
+SymbolicName=RESOURCE_NOT_OWNED
+Language=English
+RESOURCE_NOT_OWNED
+.
+
+MessageId=0xE4
+Severity=Success
+Facility=System
+SymbolicName=WORKER_INVALID
+Language=English
+WORKER_INVALID
 .
 
 MessageId=0xFA

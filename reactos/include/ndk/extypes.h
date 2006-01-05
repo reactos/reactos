@@ -118,6 +118,11 @@ extern ULONG NTSYSAPI NtBuildNumber;
 #define EX_PUSH_LOCK_FLAGS_WAIT             2
 
 //
+// Resource (ERESOURCE) Flags
+//
+#define ResourceHasDisabledPriorityBoost    0x08
+
+//
 // Shutdown types for NtShutdownSystem
 //
 typedef enum _SHUTDOWN_ACTION

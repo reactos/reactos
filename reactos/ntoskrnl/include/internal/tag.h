@@ -10,9 +10,9 @@
 #define CALLBACK_TAG        TAG('C','L','B','K')
 
 /* formerly located in ex/resource.c */
-#define TAG_OWNER_TABLE     TAG('R', 'O', 'W', 'N')
-#define TAG_EXCLUSIVE_LOCK  TAG('E', 'R', 'E', 'L')
-#define TAG_SHARED_SEM      TAG('E', 'R', 'S', 'S')
+#define TAG_RESOURCE_TABLE      TAG('R', 'e', 'T', 'a')
+#define TAG_RESOURCE_EVENT      TAG('R', 'e', 'T', 'a')
+#define TAG_RESOURCE_SEMAPHORE  TAG('R', 'e', 'T', 'a')
 
 /* formerly located in fs/notify.c */
 #define FSRTL_NOTIFY_TAG TAG('N','O','T','I')

@@ -489,7 +489,7 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
     DPRINT("Process created successfully\n");
     return STATUS_SUCCESS;
 }
-   
+
 VOID
 INIT_FUNCTION
 STDCALL
@@ -542,6 +542,9 @@ ExpInitializeExecutive(VOID)
     InitializeListHead(&KiProfileListHead);
     InitializeListHead(&KiProfileSourceListHead);
     KeInitializeSpinLock(&KiProfileLock);
+
+    /* Initialize resources */
+    ExpResourceInitialization();
 
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
