@@ -11,6 +11,7 @@ namespace TechBot.Library
 		private int port;
 		private string channelnames;
 		private string botname;
+		private string password;
 		private string chmPath;
 		private string mainChm;
 		private string ntstatusXml;
@@ -28,6 +29,7 @@ namespace TechBot.Library
 		                  int port,
 		                  string channelnames,
 		                  string botname,
+		                  string password,
 		                  string chmPath,
 		                  string mainChm,
 		                  string ntstatusXml,
@@ -41,6 +43,10 @@ namespace TechBot.Library
 			this.port = port;
 			this.channelnames = channelnames;
 			this.botname = botname;
+			if (password == null || password.Trim() == "")
+				this.password = null;
+			else
+				this.password = password;
 			this.chmPath = chmPath;
 			this.mainChm = mainChm;
 			this.ntstatusXml = ntstatusXml;
@@ -72,7 +78,7 @@ namespace TechBot.Library
 			                                       hostname, port));
 			client.Connect(hostname, port);
 			System.Console.WriteLine("Connected...");
-			client.Register(botname, null);
+			client.Register(botname, password, null);
 			System.Console.WriteLine(String.Format("Registered as {0}...", botname));
 			JoinChannels();
 			

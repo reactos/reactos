@@ -11,6 +11,7 @@ namespace TechBot
 		private int IRCServerHostPort;
 		private string IRCChannelNames;
 		private string IRCBotName;
+		private string IRCBotPassword;
 		private string ChmPath;
 		private string MainChm;
 		private string NtstatusXml;
@@ -32,6 +33,7 @@ namespace TechBot
 			IRCServerHostPort = Int32.Parse(ConfigurationSettings.AppSettings["IRCServerHostPort"]);
 			IRCChannelNames = ConfigurationSettings.AppSettings["IRCChannelNames"];
 			IRCBotName = ConfigurationSettings.AppSettings["IRCBotName"];
+			IRCBotPassword = ConfigurationSettings.AppSettings["IRCBotPassword"];
 			ChmPath = ConfigurationSettings.AppSettings["ChmPath"];
 			MainChm = ConfigurationSettings.AppSettings["MainChm"];
 			NtstatusXml = ConfigurationSettings.AppSettings["NtstatusXml"];
@@ -51,6 +53,7 @@ namespace TechBot
 			                                       IRCServerHostPort,
 			                                       IRCChannelNames,
 			                                       IRCBotName,
+			                                       IRCBotPassword,
 			                                       ChmPath,
 			                                       MainChm,
 			                                       NtstatusXml,

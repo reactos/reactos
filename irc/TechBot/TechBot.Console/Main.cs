@@ -74,6 +74,18 @@ namespace TechBot.Console
 			}
 		}
 
+		private static string IRCBotPassword
+		{
+			get
+			{
+				string optionName = "IRCBotPassword";
+				string s = ConfigurationSettings.AppSettings[optionName];
+				VerifyRequiredOption(optionName,
+				                     s);
+				return s;
+			}
+		}
+
 		private static string ChmPath
 		{
 			get
@@ -176,6 +188,7 @@ namespace TechBot.Console
 			                                       IRCServerHostPort,
 			                                       IRCChannelNames,
 			                                       IRCBotName,
+			                                       IRCBotPassword,
 			                                       ChmPath,
 			                                       MainChm,
 			                                       NtstatusXml,

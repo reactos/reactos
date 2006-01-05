@@ -556,26 +556,40 @@ namespace TechBot.IRCLibrary
 		public void ChangeNick(string nickname)
 		{
 			if (nickname == null)
-			{
 				throw new ArgumentNullException("nickname", "Nickname cannot be null.");
-			}
 
 			/* NICK <nickname> [ <hopcount> ] */
 			SendMessage(new IrcMessage(IRC.NICK, nickname));
 		}
 
 		/// <summary>
+		/// Submit password to identify user.
+		/// </summary>
+		/// <param name="password">Password of registered nick.</param>
+		private void SubmitPassword(string password)
+		{
+			if (password == null)
+				throw new ArgumentNullException("password", "Password cannot be null.");
+
+			/* PASS <password> */
+			SendMessage(new IrcMessage(IRC.PASS, password));
+		}
+
+		/// <summary>
 		/// Register.
 		/// </summary>
 		/// <param name="nickname">New nickname.</param>
+		/// <param name="password">Password. Can be null.</param>
 		/// <param name="realname">Real name. Can be null.</param>
-		public void Register(string nickname, string realname)
+		public void Register(string nickname,
+		                     string password,
+		                     string realname)
 		{
 			if (nickname == null)
-			{
 				throw new ArgumentNullException("nickname", "Nickname cannot be null.");
-			}
 			firstPingReceived = false;
+			if (password != null)
+				SubmitPassword(password);
 			ChangeNick(nickname);
 			/* OLD: USER <username> <hostname> <servername> <realname> */
 			/* NEW: USER <user> <mode> <unused> <realname> */
