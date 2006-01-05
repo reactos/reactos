@@ -19,7 +19,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     IF_LIST_ITER(CurrentIF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
     KIRQL OldIrql;
-    UINT Count = 1; /* Start adapter indices at 1 */
+    UINT Count = 0;
     UINT IfCount = CountInterfaces();
     PIPADDR_ENTRY IpAddress =
 	ExAllocatePool( NonPagedPool, sizeof( IPADDR_ENTRY ) * IfCount );
@@ -38,20 +38,21 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 	/* Locate the diffrent addresses and put them the right place */
 	GetInterfaceIPv4Address( CurrentIF,
 				 ADE_UNICAST,
-				 &IpAddress->Addr );
+				 &IpCurrent->Addr );
 	GetInterfaceIPv4Address( CurrentIF,
 				 ADE_BROADCAST,
-				 &IpAddress->BcastAddr );
+				 &IpCurrent->BcastAddr );
 	GetInterfaceIPv4Address( CurrentIF,
 				 ADE_ADDRMASK,
-				 &IpAddress->Mask );
+				 &IpCurrent->Mask );
 	IpCurrent++;
 	Count++;
     } EndFor(CurrentIF);
+    ASSERT( Count == IfCount );
 
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
-    Status = InfoCopyOut( (PCHAR)IpAddress, sizeof(*IpAddress) * Count,
+    Status = InfoCopyOut( (PCHAR)IpAddress, sizeof(*IpAddress) * IfCount,
 			  Buffer, BufferSize );
 
     ExFreePool( IpAddress );
