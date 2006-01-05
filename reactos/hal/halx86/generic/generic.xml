@@ -18,7 +18,6 @@
 	<file>pci.c</file>
 	<file>portio.c</file>
 	<file>reboot.c</file>
-	<file>spinlock.c</file>
 	<file>sysbus.c</file>
 	<file>sysinfo.c</file>
 	<file>time.c</file>
