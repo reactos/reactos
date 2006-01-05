@@ -798,7 +798,7 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
 
 VOID
 FASTCALL
-KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
+KiExitDispatcher(KIRQL OldIrql)
 {
     /* If it's the idle thread, dispatch */
     if (!(KeIsExecutingDpc()) &&
@@ -807,17 +807,10 @@ KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
         (KeGetCurrentThread() == KeGetCurrentPrcb()->IdleThread))
     {
         KiDispatchThreadNoLock(Ready);
-        KeLowerIrql(OldIrql);
     }
-    else
-    {
-        /* Just release the spin lock */
-#ifdef CONFIG_SMP
-        KeReleaseSpinLock(&DispatcherDatabaseLock, OldIrql);
-#else
-        KeLowerIrql(OldIrql);
-#endif
-    }
+
+    /* Lower irql back */
+    KeLowerIrql(OldIrql);
 }
 
 /* EOF */

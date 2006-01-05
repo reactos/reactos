@@ -51,6 +51,7 @@ extern ULONG_PTR KERNEL_BASE;
 #ifndef CONFIG_SMP
 #define KeInitializeDispatcher()
 #define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
+#define KeReleaseDispatcherDatabaseLock(OldIrql) KiExitDispatcher(OldIrql);
 #define KeAcquireDispatcherDatabaseLockAtDpcLevel()
 #define KeReleaseDispatcherDatabaseLockFromDpcLevel()
 #else
@@ -60,6 +61,9 @@ extern ULONG_PTR KERNEL_BASE;
     KeAcquireSpinLockAtDpcLevel (&DispatcherDatabaseLock);
 #define KeReleaseDispatcherDatabaseLockFromDpcLevel() \
     KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
+#define KeReleaseDispatcherDatabaseLock(OldIrql) \
+    KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock); \
+    KiExitDispatcher(OldIrql);
 #endif
 
 /* The following macro initializes a dispatcher object's header */
@@ -259,6 +263,10 @@ VOID
 STDCALL
 KiAdjustQuantumThread(IN PKTHREAD Thread);
 
+VOID
+FASTCALL
+KiExitDispatcher(KIRQL OldIrql);
+
 /* gmutex.c ********************************************************************/
 
 VOID
@@ -385,10 +393,6 @@ KiExpireTimers(
     PVOID SystemArgument1,
     PVOID SystemArgument2
 );
-
-VOID
-FASTCALL
-KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 
 VOID
 STDCALL
