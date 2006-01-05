@@ -62,6 +62,9 @@
 <directory name="services">
 	<xi:include href="services/services.xml" />
 </directory>
+<directory name="servman">
+	<xi:include href="servman/servman.xml" />
+</directory>
 <directory name="setup">
 	<xi:include href="setup/setup.xml" />
 </directory>

@@ -1,5 +1,5 @@
 <module name="servman" type="win32gui" installbase="system32" installname="servman.exe">
-	<include base="msconfig">.</include>
+	<include base="servman">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
