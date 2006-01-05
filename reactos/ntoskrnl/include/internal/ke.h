@@ -44,30 +44,173 @@ extern ULONG_PTR KERNEL_BASE;
 
 /* MACROS *************************************************************************/
 
-#define KeEnterCriticalRegion() \
-{ \
-    PKTHREAD _Thread = KeGetCurrentThread(); \
-    if (_Thread) _Thread->KernelApcDisable--; \
+/*
+ * On UP machines, we don't actually have a spinlock, we merely raise
+ * IRQL to DPC level.
+ */
+#ifndef CONFIG_SMP
+#define KeInitializeDispatcher()
+#define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
+#define KeAcquireDispatcherDatabaseLockAtDpcLevel()
+#define KeReleaseDispatcherDatabaseLockFromDpcLevel()
+#else
+#define KeInitializeDispatcher() KeInitializeSpinLock(&DispatcherDatabaseLock);
+#define KeAcquireDispatcherDatabaseLock() KfAcquireSpinLock(&DispatcherDatabaseLock);
+#define KeAcquireDispatcherDatabaseLockAtDpcLevel() \
+    KeAcquireSpinLockAtDpcLevel (&DispatcherDatabaseLock);
+#define KeReleaseDispatcherDatabaseLockFromDpcLevel() \
+    KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
+#endif
+
+/* The following macro initializes a dispatcher object's header */
+#define KeInitializeDispatcherHeader(Header, t, s, State)                   \
+{                                                                           \
+    (Header)->Type = t;                                                     \
+    (Header)->Absolute = 0;                                                 \
+    (Header)->Inserted = 0;                                                 \
+    (Header)->Size = s;                                                     \
+    (Header)->SignalState = State;                                          \
+    InitializeListHead(&((Header)->WaitListHead));                          \
 }
 
-#define KeLeaveCriticalRegion() \
-{ \
-    PKTHREAD _Thread = KeGetCurrentThread(); \
-    if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
-    { \
-        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode]) && \
-            (_Thread->SpecialApcDisable == 0)) \
-        { \
-            KiCheckForKernelApcDelivery(); \
-        } \
-    } \
+/* The following macro satisfies the wait of any dispatcher object */
+#define KiSatisfyObjectWait(Object, Thread)                                 \
+{                                                                           \
+    /* Special case for Mutants */                                          \
+    if ((Object)->Header.Type == MutantObject)                              \
+    {                                                                       \
+        /* Decrease the Signal State */                                     \
+        (Object)->Header.SignalState--;                                     \
+                                                                            \
+        /* Check if it's now non-signaled */                                \
+        if (!(Object)->Header.SignalState)                                  \
+        {                                                                   \
+            /* Set the Owner Thread */                                      \
+            (Object)->OwnerThread = Thread;                                 \
+                                                                            \
+            /* Disable APCs if needed */                                    \
+            Thread->KernelApcDisable -= (Object)->ApcDisable;               \
+                                                                            \
+            /* Check if it's abandoned */                                   \
+            if ((Object)->Abandoned)                                        \
+            {                                                               \
+                /* Unabandon it */                                          \
+                (Object)->Abandoned = FALSE;                                \
+                                                                            \
+                /* Return Status */                                         \
+                Thread->WaitStatus = STATUS_ABANDONED;                      \
+            }                                                               \
+                                                                            \
+            /* Insert it into the Mutant List */                            \
+            InsertHeadList(&Thread->MutantListHead,                         \
+                           &(Object)->MutantListEntry);                     \
+        }                                                                   \
+    }                                                                       \
+    else if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==               \
+             EventSynchronizationObject)                                    \
+    {                                                                       \
+        /* Synchronization Timers and Events just get un-signaled */        \
+        (Object)->Header.SignalState = 0;                                   \
+    }                                                                       \
+    else if ((Object)->Header.Type == SemaphoreObject)                      \
+    {                                                                       \
+        /* These ones can have multiple states, so we only decrease it */   \
+        (Object)->Header.SignalState--;                                     \
+    }                                                                       \
+}
+
+/* The following macro satisfies the wait of a mutant dispatcher object */
+#define KiSatisfyMutantWait(Object, Thread)                                 \
+{                                                                           \
+    /* Decrease the Signal State */                                         \
+    (Object)->Header.SignalState--;                                         \
+                                                                            \
+    /* Check if it's now non-signaled */                                    \
+    if (!(Object)->Header.SignalState)                                      \
+    {                                                                       \
+        /* Set the Owner Thread */                                          \
+        (Object)->OwnerThread = Thread;                                     \
+                                                                            \
+        /* Disable APCs if needed */                                        \
+        Thread->KernelApcDisable -= (Object)->ApcDisable;                   \
+                                                                            \
+        /* Check if it's abandoned */                                       \
+        if ((Object)->Abandoned)                                            \
+        {                                                                   \
+            /* Unabandon it */                                              \
+            (Object)->Abandoned = FALSE;                                    \
+                                                                            \
+            /* Return Status */                                             \
+            Thread->WaitStatus = STATUS_ABANDONED;                          \
+        }                                                                   \
+                                                                            \
+        /* Insert it into the Mutant List */                                \
+        InsertHeadList(&Thread->MutantListHead,                             \
+                       &(Object)->MutantListEntry);                         \
+    }                                                                       \
+}
+
+/* The following macro satisfies the wait of any nonmutant dispatcher object */
+#define KiSatisfyNonMutantWait(Object, Thread)                              \
+{                                                                           \
+    if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==                    \
+             EventSynchronizationObject)                                    \
+    {                                                                       \
+        /* Synchronization Timers and Events just get un-signaled */        \
+        (Object)->Header.SignalState = 0;                                   \
+    }                                                                       \
+    else if ((Object)->Header.Type == SemaphoreObject)                      \
+    {                                                                       \
+        /* These ones can have multiple states, so we only decrease it */   \
+        (Object)->Header.SignalState--;                                     \
+    }                                                                       \
+}
+
+/* The following macro satisfies multiple objects in a wait state */
+#define KiSatisifyMultipleObjectWaits(FirstBlock)                           \
+{                                                                           \
+    PKWAIT_BLOCK WaitBlock = FirstBlock;                                    \
+    PKTHREAD WaitThread = WaitBlock->Thread;                                \
+                                                                            \
+    /* Loop through all the Wait Blocks, and wake each Object */            \
+    do                                                                      \
+    {                                                                       \
+        /* Make sure it hasn't timed out */                                 \
+        if (WaitBlock->WaitKey != STATUS_TIMEOUT)                           \
+        {                                                                   \
+            /* Wake the Object */                                           \
+            KiSatisfyObjectWait((PKMUTANT)WaitBlock->Object, WaitThread);   \
+        }                                                                   \
+                                                                            \
+        /* Move to the next block */                                        \
+        WaitBlock = WaitBlock->NextWaitBlock;                               \
+    } while (WaitBlock != FirstBlock);                                      \
+}
+
+extern KSPIN_LOCK DispatcherDatabaseLock;
+
+#define KeEnterCriticalRegion()                                             \
+{                                                                           \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
+    if (_Thread) _Thread->KernelApcDisable--;                               \
+}
+
+#define KeLeaveCriticalRegion()                                             \
+{                                                                           \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
+    if((_Thread) && (++_Thread->KernelApcDisable == 0))                     \
+    {                                                                       \
+        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode]) &&     \
+            (_Thread->SpecialApcDisable == 0))                              \
+        {                                                                   \
+            KiCheckForKernelApcDelivery();                                  \
+        }                                                                   \
+    }                                                                       \
 }
 
 #define KEBUGCHECKWITHTF(a,b,c,d,e,f) \
-    DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), KeBugCheckWithTf(a,b,c,d,e,f)
-
-#define MAXIMUM_PROCESSORS      32
-
+    DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), \
+             KeBugCheckWithTf(a,b,c,d,e,f)
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
@@ -243,25 +386,9 @@ KiExpireTimers(
     PVOID SystemArgument2
 );
 
-KIRQL
-__inline
-FASTCALL
-KeAcquireDispatcherDatabaseLock(VOID);
-
 VOID
-__inline
-FASTCALL
-KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
-
-VOID
-__inline
 FASTCALL
 KeReleaseDispatcherDatabaseLock(KIRQL Irql);
-
-VOID
-__inline
-FASTCALL
-KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
 VOID
 STDCALL
@@ -313,16 +440,6 @@ KeExpireTimers(
 );
 
 VOID
-__inline
-FASTCALL
-KeInitializeDispatcherHeader(
-    DISPATCHER_HEADER* Header,
-    ULONG Type,
-    ULONG Size,
-    ULONG SignalState
-);
-
-VOID
 NTAPI
 KeDumpStackFrames(PULONG Frame);
 
@@ -362,14 +479,6 @@ KiInsertTimer(
     LARGE_INTEGER DueTime
 );
 
-VOID
-__inline
-FASTCALL
-KiSatisfyObjectWait(
-    PDISPATCHER_HEADER Object,
-    PKTHREAD Thread
-);
-
 BOOLEAN
 __inline
 FASTCALL
@@ -379,14 +488,9 @@ KiIsObjectSignaled(
 );
 
 VOID
-__inline
-FASTCALL
-KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
-
-VOID
 FASTCALL
 KiWaitTest(
-    PDISPATCHER_HEADER Object,
+    PVOID Object,
     KPRIORITY Increment
 );
 
@@ -505,11 +609,6 @@ KeInitDpc(struct _KPRCB* Prcb);
 VOID
 NTAPI
 KeInitDispatcher(VOID);
-
-VOID
-__inline
-FASTCALL
-KeInitializeDispatcher(VOID);
 
 VOID
 NTAPI

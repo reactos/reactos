@@ -819,7 +819,7 @@ KeInitializeThread(PKPROCESS Process,
     DPRINT("Initializing Dispatcher Header for New Thread: %x in Process: %x\n", Thread, Process);
     KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
                                  ThreadObject,
-                                 sizeof(KTHREAD),
+                                 sizeof(KTHREAD) / sizeof(LONG),
                                  FALSE);
 
     DPRINT("Thread Header Created. SystemRoutine: %x, StartRoutine: %x with Context: %x\n",

@@ -21,6 +21,8 @@
 
 /* GLOBALS ****************************************************************/  
 
+.extern _DispatcherDatabaseLock
+
 /* FUNCTIONS ****************************************************************/
 
 /*++
@@ -244,7 +246,10 @@ SameProcess:
     pop [ebx+KPCR_EXCEPTION_LIST]
 
     /* Return */
-    call @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
+//#ifdef CONFIG_SMP
+    mov ecx, _DispatcherDatabaseLock
+    call @KefReleaseSpinLockFromDpcLevel@4
+//#endif
     ret 
 
 /*++

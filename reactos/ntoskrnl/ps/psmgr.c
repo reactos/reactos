@@ -204,7 +204,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsIdleProcess->ActiveProcessLinks);
    KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
 				ProcessObject,
-				sizeof(EPROCESS),
+				sizeof(EPROCESS) / sizeof(LONG),
 				FALSE);
    PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
    strcpy(PsIdleProcess->ImageFileName, "Idle");
@@ -246,7 +246,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.Header,
 				ProcessObject,
-				sizeof(EPROCESS),
+				sizeof(EPROCESS) / sizeof(LONG),
 				FALSE);
    KProcess = &PsInitialSystemProcess->Pcb;
    PspInheritQuota(PsInitialSystemProcess, NULL);

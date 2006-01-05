@@ -84,7 +84,6 @@ ExAllocateCacheAwareRundownProtection@8
 ExFreeCacheAwareRundownProtection@4
 ExInitializeRundownProtectionCacheAware@8
 ExSizeOfRundownProtectionCacheAware@0
-ExAcquireResourceExclusive@8
 ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive@8
@@ -99,7 +98,6 @@ ExConvertExclusiveToSharedLite@4
 ExCreateCallback@16
 ExDeleteNPagedLookasideList@4
 ExDeletePagedLookasideList@4
-ExDeleteResource@4
 ExDeleteResourceLite@4
 ExDesktopObjectType DATA
 ExDisableResourceBoostLite@4
@@ -117,7 +115,6 @@ ExGetPreviousMode@0
 ExGetSharedWaiterCount@4
 ExInitializeNPagedLookasideList@28
 ExInitializePagedLookasideList@28
-ExInitializeResource@4
 ExInitializeResourceLite@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
@@ -153,7 +150,6 @@ ExReinitializeResourceLite@4
 @ExiReleaseFastMutex@4=@ExReleaseFastMutex@4
 @ExReleaseFastMutexUnsafe@4
 @ExReleaseFastMutexUnsafeAndLeaveCriticalRegion@4
-ExReleaseResourceForThread@8
 ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
 ExSemaphoreObjectType DATA
@@ -522,7 +518,6 @@ Ke386SetIoAccessMap@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
 KeAcquireSpinLockAtDpcLevel@4
-@KeAcquireDispatcherDatabaseLockAtDpcLevel@0
 @KeAcquireInStackQueuedSpinLockAtDpcLevel@8
 KeAcquireInterruptSpinLock@4
 KeAddSystemServiceTable@20
@@ -606,7 +601,6 @@ KeReadStateSemaphore@4
 KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
 KeRegisterBugCheckReasonCallback@16
-@KeReleaseDispatcherDatabaseLockFromDpcLevel@0
 @KeReleaseGuardedMutexUnsafe@4
 @KeReleaseGuardedMutex@4
 @KeReleaseInStackQueuedSpinLockFromDpcLevel@4
