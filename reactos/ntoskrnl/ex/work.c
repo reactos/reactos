@@ -425,7 +425,7 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
     KTIMER Timer;
     LARGE_INTEGER Timeout;
     NTSTATUS Status;
-    PVOID WaitEvents[2];
+    PVOID WaitEvents[3];
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Context);
 
