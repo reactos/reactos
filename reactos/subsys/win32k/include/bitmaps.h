@@ -34,8 +34,8 @@ typedef struct _BITMAPOBJ
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
 
 BOOL INTERNAL_CALL BITMAPOBJ_InitBitsLock(BITMAPOBJ *pBMObj);
-#define BITMAPOBJ_LockBitmapBits(pBMObj) ExAcquireFastMutex((pBMObj)->BitsLock)
-#define BITMAPOBJ_UnlockBitmapBits(pBMObj) ExReleaseFastMutex((pBMObj)->BitsLock)
+#define BITMAPOBJ_LockBitmapBits(pBMObj) ExEnterCriticalRegionAndAcquireFastMutexUnsafe((pBMObj)->BitsLock)
+#define BITMAPOBJ_UnlockBitmapBits(pBMObj) ExReleaseFastMutexUnsafeAndLeaveCriticalRegion((pBMObj)->BitsLock)
 void INTERNAL_CALL BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *pBMObj);
 
 INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
