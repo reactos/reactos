@@ -209,11 +209,21 @@ static int numberf(FILE * f, double __n, wchar_t exp_sign,  int size, int precis
 	} n;
 
 	n.__n = &__n;
+ 
+    if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' ) 
+    {
+        if ( 0 == n.n->mantissal && 0 == n.n->mantissah && 0 == n.n->exponent )
+        {
+            ie = 0;
+        }
+        else
+        {
+            ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
+        }
 
-	if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' ) {
-		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
-		exponent = ie/3.321928;
-	}
+        exponent = ie/3.321928;
+    }
+
 
 	if ( exp_sign == L'g' || exp_sign == L'G' ) {
 		type |= ZEROTRUNC;
