@@ -67,7 +67,7 @@ namespace TechBot.Library
 			return "!ntstatus <value>";
 		}
 		
-		private string GetNtstatusDescription(long ntstatus)
+		public string GetNtstatusDescription(long ntstatus)
 		{
 			XmlElement root = ntstatusXmlDocument.DocumentElement;
 			XmlNode node = root.SelectSingleNode(String.Format("Ntstatus[@value='{0}']",

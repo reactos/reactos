@@ -67,7 +67,7 @@ namespace TechBot.Library
 			return "!winerror <value>";
 		}
 		
-		private string GetWinerrorDescription(long winerror)
+		public string GetWinerrorDescription(long winerror)
 		{
 			XmlElement root = winerrorXmlDocument.DocumentElement;
 			XmlNode node = root.SelectSingleNode(String.Format("Winerror[@value='{0}']",

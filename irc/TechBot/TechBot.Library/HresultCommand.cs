@@ -67,7 +67,7 @@ namespace TechBot.Library
 			return "!hresult <value>";
 		}
 		
-		private string GetHresultDescription(long hresult)
+		public string GetHresultDescription(long hresult)
 		{
 			XmlElement root = hresultXmlDocument.DocumentElement;
 			XmlNode node = root.SelectSingleNode(String.Format("Hresult[@value='{0}']",

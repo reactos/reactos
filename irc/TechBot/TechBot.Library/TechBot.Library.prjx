@@ -12,6 +12,7 @@
     <File name=".\NumberParser.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
     <File name=".\HresultCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
     <File name=".\WinerrorCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ErrorCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
     <File name=".\SvnCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
     <File name=".\BugCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
     <File name=".\WmCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />

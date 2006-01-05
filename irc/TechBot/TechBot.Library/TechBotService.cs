@@ -54,6 +54,10 @@ namespace TechBot.Library
 			                                 winerrorXml));
 			commands.Add(new HresultCommand(serviceOutput,
 			                                hresultXml));
+			commands.Add(new ErrorCommand(serviceOutput,
+											ntstatusXml,
+											winerrorXml,
+											hresultXml));
 			commands.Add(new WmCommand(serviceOutput,
 			                           wmXml));
 			commands.Add(new SvnCommand(serviceOutput,
