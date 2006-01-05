@@ -5,13 +5,19 @@ namespace TechBot.Library
 	public class BugCommand : BaseCommand, ICommand
 	{
 		private IServiceOutput serviceOutput;
-		private string bugUrl;
+		private string RosBugUrl;
+		private string WineBugUrl;
+		private string SambaBugUrl;
 
 		public BugCommand(IServiceOutput serviceOutput,
-		                  string bugUrl)
+		                  string RosBugUrl,
+		                  string WineBugUrl,
+		                  string SambaBugUrl)
 		{
 			this.serviceOutput = serviceOutput;
-			this.bugUrl = bugUrl;
+			this.RosBugUrl = RosBugUrl;
+			this.WineBugUrl = WineBugUrl;
+			this.SambaBugUrl = SambaBugUrl;
 		}
 		
 		public bool CanHandle(string commandName)
@@ -41,7 +47,18 @@ namespace TechBot.Library
 				                                      bugText));
 				return;
 			}
+			
+			string bugUrl = this.RosBugUrl;
 
+			if (context is ChannelMessageContext)
+			{
+				ChannelMessageContext channelContext = context as ChannelMessageContext;
+				if (channelContext.Channel.Name == "winehackers")
+					bugUrl = this.WineBugUrl;
+				else if (channelContext.Channel.Name == "samba-technical")
+					bugUrl = this.SambaBugUrl;
+			}
+			
 			serviceOutput.WriteLine(context,
 			                        String.Format(bugUrl, bug));
 		}

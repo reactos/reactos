@@ -19,7 +19,7 @@ namespace TechBot.Library
 		private string hresultXml;
 		private string wmXml;
 		private string svnCommand;
-		private string bugUrl;
+		private string bugUrl, WineBugUrl, SambaBugUrl;
 		private IrcClient client;
 		private ArrayList channels = new ArrayList(); /* IrcChannel */
 		private TechBotService service;
@@ -37,7 +37,9 @@ namespace TechBot.Library
 		                  string hresultXml,
 		                  string wmXml,
 		                  string svnCommand,
-		                  string bugUrl)
+		                  string BugUrl,
+		                  string WineBugUrl,
+		                  string SambaBugUrl)
 		{
 			this.hostname = hostname;
 			this.port = port;
@@ -54,7 +56,9 @@ namespace TechBot.Library
 			this.hresultXml = hresultXml;
 			this.wmXml = wmXml;
 			this.svnCommand = svnCommand;
-			this.bugUrl = bugUrl;
+			this.bugUrl = BugUrl;
+			this.WineBugUrl = WineBugUrl;
+			this.SambaBugUrl = SambaBugUrl;
 		}
 
 		public void Run()
@@ -67,7 +71,9 @@ namespace TechBot.Library
 			                             hresultXml,
 			                             wmXml,
 			                             svnCommand,
-			                             bugUrl);
+			                             bugUrl,
+			                             WineBugUrl,
+			                             SambaBugUrl);
 			service.Run();
 
 			client = new IrcClient();

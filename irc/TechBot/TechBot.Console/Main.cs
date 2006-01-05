@@ -182,6 +182,32 @@ namespace TechBot.Console
 			}
 		}
 
+		private static string WineBugUrl
+		{
+			get
+			{
+				string optionName = "WineBugUrl";
+				string s = ConfigurationSettings.AppSettings[optionName];
+				VerifyRequiredOption(optionName,
+				                     s);
+				return s;
+			}
+		}
+
+
+		private static string SambaBugUrl
+		{
+			get
+			{
+				string optionName = "SambaBugUrl";
+				string s = ConfigurationSettings.AppSettings[optionName];
+				VerifyRequiredOption(optionName,
+				                     s);
+				return s;
+			}
+		}
+
+
 		private static void RunIrcService()
 		{
 			IrcService ircService = new IrcService(IRCServerHostName,
@@ -196,7 +222,9 @@ namespace TechBot.Console
 			                                       HresultXml,
 			                                       WmXml,
 			                                       SvnCommand,
-			                                       BugUrl);
+			                                       BugUrl,
+			                                       WineBugUrl,
+			                                       SambaBugUrl);
 			ircService.Run();
 		}
 		
@@ -217,7 +245,9 @@ namespace TechBot.Console
 			                                            HresultXml,
 			                                            WmXml,
 			                                            SvnCommand,
-			                                            BugUrl);
+			                                            BugUrl,
+			                                            WineBugUrl,
+			                                            SambaBugUrl);
 			service.Run();
 			while (true)
 			{
