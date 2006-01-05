@@ -88,7 +88,7 @@ protected:
 	std::string GetBasename ( const std::string& filename ) const;
 	FileLocation* GetActualSourceFilename ( const FileLocation* fileLocation ) const;
 	std::string GetExtraDependencies ( const std::string& filename ) const;
-	std::string MingwModuleHandler::GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
+	std::string GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
 	std::string GetModuleArchiveFilename () const;
 	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
@@ -147,7 +147,7 @@ private:
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;
-	std::string MingwModuleHandler::GetPrecompiledHeaderFilename () const;
+	std::string GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const FileLocation* sourceFileLocation,
 	                          const std::string& extraDependencies,
 	                          const std::string& cc,
