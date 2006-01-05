@@ -62,6 +62,13 @@ HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\System32\msiex
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\System32\msiexec /f %1"
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\System32\msiexec /x %1"
 
+; set MIME type for .html and .htm because Tiny webserver needs it
+HKCR,".htm","",0x00000000,"html"
+HKCR,".htm","Content Type",0x00000000,"text/html"
+
+HKCR,".html","",0x00000000,"html"
+HKCR,".html","Content Type",0x00000000,"text/html"
+
 HKCR,"CLSID",,0x00000012
 
 ; For Shell32.dll

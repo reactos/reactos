@@ -2507,7 +2507,7 @@ RegGetKeySecurity(HKEY hKey,
       TRACE("MapDefaultKey() failed (Status %lx)\n", Status);
       return RtlNtStatusToDosError (Status);
     }
-#ifndef __REACTOS__
+#if 0
   Status = NtQuerySecurityObject(KeyHandle,
 				 SecurityInformation,
 				 pSecurityDescriptor,
@@ -3185,7 +3185,7 @@ RegQueryInfoKeyW (HKEY hKey,
     {
       *lpcbMaxValueLen = FullInfo->MaxValueDataLen;
     }
-#ifndef __REACTOS__ 
+#if 0
   if (lpcbSecurityDescriptor != NULL)
     {
       Status = NtQuerySecurityObject(KeyHandle,
