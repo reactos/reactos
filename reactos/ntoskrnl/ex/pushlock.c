@@ -164,8 +164,10 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
         /* Sanity check */
         ASSERT(!WaitBlock->Signaled);
 
+#ifdef DBG
         /* We are about to get signaled */
         WaitBlock->Signaled = TRUE;
+#endif
 
         /* Set the Wait Bit in the Wait Block */
         if (!InterlockedBitTestAndReset(&WaitBlock->Flags, 1))
