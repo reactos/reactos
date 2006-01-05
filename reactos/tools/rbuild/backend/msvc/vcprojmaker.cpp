@@ -243,8 +243,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	{
 		std::string& cfg = cfgs[icfg];
 
-		bool debug = strstr ( cfg.c_str(), "Debug" );
-		bool speed = strstr ( cfg.c_str(), "Speed" );
+		bool debug = strstr ( cfg.c_str(), "Debug" ) != NULL;
+		bool speed = strstr ( cfg.c_str(), "Speed" ) != NULL;
 		bool release = (!debug && !speed );
 
 		//bool msvc_headers = ( 0 != strstr ( cfg.c_str(), "MSVC Headers" ) );
