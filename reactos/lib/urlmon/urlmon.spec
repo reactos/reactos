@@ -7,7 +7,7 @@
 
 @ stub AsyncGetClassBits
 @ stub AsyncInstallDistributionUnit
-@ stub BindAsyncMoniker
+@ stdcall BindAsyncMoniker(ptr long ptr ptr ptr)
 @ stdcall CoGetClassObjectFromURL(ptr wstr long long wstr ptr long ptr ptr ptr)
 @ stub CoInstall
 @ stdcall CoInternetCombineUrl(wstr wstr long wstr long ptr long)

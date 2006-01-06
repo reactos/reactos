@@ -225,6 +225,16 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
         memcpy(This->mime, szStatusText, len*sizeof(WCHAR));
         break;
     }
+    case BINDSTATUS_SENDINGREQUEST:
+        IBindStatusCallback_OnProgress(This->callback, 0, 0, BINDSTATUS_SENDINGREQUEST,
+                                       szStatusText);
+        break;
+    case BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE:
+        IBindStatusCallback_OnProgress(This->callback, 0, 0,
+                                       BINDSTATUS_MIMETYPEAVAILABLE, szStatusText);
+        break;
+    case BINDSTATUS_CACHEFILENAMEAVAILABLE:
+        break;
     default:
         FIXME("Unhandled status code %ld\n", ulStatusCode);
         return E_NOTIMPL;
@@ -438,6 +448,8 @@ static HRESULT Binding_Create(LPCWSTR url, IBindCtx *pbc, REFIID riid, Binding *
     int len;
     HRESULT hres;
 
+    static const WCHAR wszFile[] = {'f','i','l','e',':'};
+
     if(!IsEqualGUID(&IID_IStream, riid)) {
         FIXME("Unsupported riid %s\n", debugstr_guid(riid));
         return E_NOTIMPL;
@@ -483,9 +495,13 @@ static HRESULT Binding_Create(LPCWSTR url, IBindCtx *pbc, REFIID riid, Binding *
         return hres;
     }
 
-    ret->bindf |= (BINDF_FROMURLMON|BINDF_NEEDFILE);
+    ret->bindf |= BINDF_FROMURLMON;
 
     len = strlenW(url)+1;
+
+    if(len < sizeof(wszFile)/sizeof(WCHAR) || memcmp(wszFile, url, sizeof(wszFile)))
+        ret->bindf |= BINDF_NEEDFILE;
+
     ret->url = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
     memcpy(ret->url, url, len*sizeof(WCHAR));
 

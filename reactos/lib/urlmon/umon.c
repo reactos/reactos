@@ -3,6 +3,7 @@
  *
  * Copyright 1999 Ulrich Czekalla for Corel Corporation
  * Copyright 2002 Huw D M Davies for CodeWeavers
+ * Copyright 2005 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -496,55 +497,6 @@ static HRESULT WINAPI URLMonikerImpl_BindToObject(IMoniker* iface,
     return E_NOTIMPL;
 }
 
-typedef struct {
-    enum {OnProgress, OnDataAvailable} callback;
-} URLMON_CallbackData;
-
-
-#if 0
-static LRESULT CALLBACK URLMON_WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-    return DefWindowProcA(hwnd, msg, wparam, lparam);
-}
-
-static void PostOnProgress(URLMonikerImpl *This, UINT progress, UINT maxprogress, DWORD status, LPCWSTR *str)
-{
-}
-
-static void CALLBACK URLMON_InternetCallback(HINTERNET hinet, /*DWORD_PTR*/ DWORD context, DWORD status,
-					     void *status_info, DWORD status_info_len)
-{
-    URLMonikerImpl *This = (URLMonikerImpl *)context;
-    TRACE("handle %p this %p status %08lx\n", hinet, This, status);
-
-    if(This->filesize == -1) {
-	switch(status) {
-	case INTERNET_STATUS_RESOLVING_NAME:
-	    PostOnProgess(This, 0, 0, BINDSTATUS_FINDINGRESOURCE, status_info);
-	    break;
-	case INTERNET_STATUS_CONNECTING_TO_SERVER:
-	    PostOnProgress(This, 0, 0, BINDSTATUS_CONNECTING, NULL);
-	    break;
-	case INTERNET_STATUS_SENDING_REQUEST:
-	    PostOnProgress(This, 0, 0, BINDSTATUS_SENDINGREQUEST, NULL);
-	    break;
-	case INTERNET_REQUEST_COMPLETE:
-	  {
-	      DWORD len, lensz = sizeof(len);
-
-	    HttpQueryInfoW(hrequest, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &len, &lensz, NULL);
-	    TRACE("res = %ld gle = %08lx url len = %ld\n", hres, GetLastError(), len);
-	    This->filesize = len;
-	    break;
-	  }
-	}
-    }
-
-    return;
-}
-#endif
-
-
 /******************************************************************************
  *        URLMoniker_BindToStorage
  ******************************************************************************/
@@ -601,7 +553,7 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
             if(SUCCEEDED(hres)) {
                 WCHAR *urlcopy, *tmpwc;
                 URL_COMPONENTSW url;
-                WCHAR *host, *path, *partial_path, *user, *pass;
+                WCHAR *host, *path, *user, *pass;
                 DWORD lensz = sizeof(bind->expected_size);
                 DWORD dwService = 0;
                 BOOL bSuccess;
@@ -622,17 +574,6 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
                     if (*tmpwc == '\\')
                             *tmpwc = '/';
 
-#if 0
-                if(!registered_wndclass) {
-                    WNDCLASSA urlmon_wndclass = {0, URLMON_WndProc,0, 0, URLMON_hInstance, 0, 0, 0, NULL, "URLMON_Callback_Window_Class"};
-                    RegisterClassA(&urlmon_wndclass);
-                    registered_wndclass = TRUE;
-                }
-
-                This->hwndCallback = CreateWindowA("URLMON_Callback_Window_Class", NULL, 0, 0, 0, 0, 0, 0, 0,
-                                                   URLMON_hInstance, NULL);
-
-#endif
                 bind->expected_size = 0;
                 bind->total_read = 0;
 
@@ -667,15 +608,9 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
                     pass = 0;
                 }
 
-                switch ((DWORD) url.nScheme)
-                {
-                case INTERNET_SCHEME_FTP:
-                case INTERNET_SCHEME_GOPHER:
-                case INTERNET_SCHEME_HTTP:
-                case INTERNET_SCHEME_HTTPS:
 
-                    bind->hinternet = InternetOpenA("User Agent", 0, NULL, NULL, 0 /*INTERNET_FLAG_ASYNC*/);
-/*                  InternetSetStatusCallback(bind->hinternet, URLMON_InternetCallback);*/
+                do {
+                    bind->hinternet = InternetOpenA("User Agent", 0, NULL, NULL, 0);
                     if (!bind->hinternet)
                     {
                             hres = HRESULT_FROM_WIN32(GetLastError());
@@ -797,48 +732,8 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
             
                     InternetCloseHandle(bind->hconnect);
                     InternetCloseHandle(bind->hinternet);
-                    break;
+                } while(0);
 
-                case INTERNET_SCHEME_FILE:
-                    partial_path = bind->URLName + 5; /* Skip the "file:" part */
-                    if ((partial_path[0] != '/' && partial_path[0] != '\\') ||
-                        (partial_path[1] != '/' && partial_path[1] != '\\'))
-                    {
-                        hres = E_FAIL;
-                    }
-                    else
-                    {
-                        HANDLE h;
-
-                        partial_path += 2;
-                        if (partial_path[0] == '/' || partial_path[0] == '\\')
-                            ++partial_path;
-                        h = CreateFileW(partial_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
-                        if (h == (HANDLE) HFILE_ERROR)
-                        {
-                            hres = HRESULT_FROM_WIN32(GetLastError());
-                        }
-                        else
-                        {
-                            char buf[4096];
-                            DWORD bufread;
-
-                            IBindStatusCallback_OnProgress(bind->pbscb, 0, 0, BINDSTATUS_CACHEFILENAMEAVAILABLE, szFileName);
-
-                            while (ReadFile(h, buf, sizeof(buf), &bufread, NULL) && bufread > 0)
-                                hres = Binding_MoreCacheData(bind, buf, bufread);
-
-                            CloseHandle(h);
-                            hres = S_OK;
-                        }
-                    }
-                        
-                    break;
-
-                default:
-                    FIXME("Unsupported URI scheme");
-                    break;
-                }
                 Binding_CloseCacheDownload(bind);
                 Binding_FinishedDownload(bind, hres);
 
@@ -880,8 +775,7 @@ static HRESULT WINAPI URLMonikerImpl_BindToStorage(IMoniker* iface,
     if(url.nScheme == INTERNET_SCHEME_HTTP
        || url.nScheme== INTERNET_SCHEME_HTTPS
        || url.nScheme== INTERNET_SCHEME_FTP
-       || url.nScheme == INTERNET_SCHEME_GOPHER
-       || url.nScheme == INTERNET_SCHEME_FILE)
+       || url.nScheme == INTERNET_SCHEME_GOPHER)
         return URLMonikerImpl_BindToStorage_hack(This->URLName, pbc, pmkToLeft, riid, ppvObject);
 
     TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObject);
@@ -1198,9 +1092,20 @@ static HRESULT URLMonikerImpl_Construct(URLMonikerImpl* This, LPCOLESTR lpszLeft
             HeapFree(GetProcessHeap(), 0, This->URLName);
             return hres;
         }
+    }else {
+        /* FIXME:
+         * We probably should use CoInternetParseUrl or something similar here.
+         */
+
+        static const WCHAR wszFile[] = {'f','i','l','e',':','/','/',};
+
+        /* file protocol is a special case */
+        if(sizeStr > sizeof(wszFile)/sizeof(WCHAR)
+                && !memcmp(lpszURLName, wszFile, sizeof(wszFile)))
+            UrlCanonicalizeW(lpszURLName, This->URLName, &sizeStr, URL_FILE_USE_PATHURL);
+        else
+            strcpyW(This->URLName,lpszURLName);
     }
-    else
-        strcpyW(This->URLName,lpszURLName);
 
     URLMON_LockModule();
 
@@ -1347,6 +1252,42 @@ HRESULT WINAPI IsAsyncMoniker(IMoniker *pmk)
         return S_OK;
     }
     return S_FALSE;
+}
+
+/***********************************************************************
+ *           BindAsyncMoniker (URLMON.@)
+ *
+ * Bind a bind status callback to an asynchronous URL Moniker.
+ *
+ * PARAMS
+ *  pmk           [I] Moniker object to bind status callback to
+ *  grfOpt        [I] Options, seems not used
+ *  pbsc          [I] Status callback to bind
+ *  iidResult     [I] Interface to return
+ *  ppvResult     [O] Resulting asynchronous moniker object
+ *
+ * RETURNS
+ *    Success: S_OK.
+ *    Failure: E_INVALIDARG, if any argument is invalid, or
+ *             E_OUTOFMEMORY if memory allocation fails.
+ */
+HRESULT WINAPI BindAsyncMoniker(IMoniker *pmk, DWORD grfOpt, IBindStatusCallback *pbsc, REFIID iidResult, LPVOID *ppvResult)
+{
+    LPBC pbc = NULL;
+    HRESULT hr = E_INVALIDARG;
+
+    if (pmk && ppvResult)
+    {
+        *ppvResult = NULL;
+
+        hr = CreateAsyncBindCtx(0, pbsc, NULL, &pbc);
+        if (hr == NOERROR)
+        {
+            hr = IMoniker_BindToObject(pmk, pbc, NULL, iidResult, ppvResult);
+            IBindCtx_Release(pbc);
+        }
+    }
+    return hr;
 }
 
 /***********************************************************************

@@ -109,7 +109,7 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
     size = sizeof(DWORD);
     res = RegQueryValueExW(hkey, schema, NULL, NULL, (PBYTE)zone, &size);
     if(res == ERROR_SUCCESS)
-                            return S_OK;
+        return S_OK;
 
     *zone = 3;
     return S_OK;
@@ -268,15 +268,17 @@ static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *ifac
 }
 
 static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *iface, 
-                                                   LPCWSTR pwszUrl,
-                                                   BYTE *pbSecurityId, DWORD *pcbSecurityId,
-                                                   DWORD_PTR dwReserved)
+        LPCWSTR pwszUrl, BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
     SecManagerImpl *This = SECMGR_THIS(iface);
+    LPWSTR buf, ptr, ptr2;
+    DWORD size, zone, len;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %p %08lx)\n", iface, debugstr_w(pwszUrl), pbSecurityId, pcbSecurityId,
-          dwReserved);
+    static const WCHAR wszFile[] = {'f','i','l','e',':'};
+
+    TRACE("(%p)->(%s %p %p %08lx)\n", iface, debugstr_w(pwszUrl), pbSecurityId,
+          pcbSecurityId, dwReserved);
 
     if(This->custom_manager) {
         hres = IInternetSecurityManager_GetSecurityId(This->custom_manager,
@@ -285,8 +287,65 @@ static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *ifa
             return hres;
     }
 
-    FIXME("Default action is not implemented\n");
-    return E_NOTIMPL;
+    if(!pwszUrl || !pbSecurityId || !pcbSecurityId)
+        return E_INVALIDARG;
+
+    if(dwReserved)
+        FIXME("dwReserved is not supported\n");
+
+    len = strlenW(pwszUrl)+1;
+    buf = HeapAlloc(GetProcessHeap(), 0, (len+16)*sizeof(WCHAR));
+
+    hres = CoInternetParseUrl(pwszUrl, PARSE_SECURITY_URL, 0, buf, len, &size, 0);
+    if(FAILED(hres))
+        memcpy(buf, pwszUrl, len*sizeof(WCHAR));
+
+    hres = map_url_to_zone(buf, &zone);
+    if(FAILED(hres)) {
+        HeapFree(GetProcessHeap(), 0, buf);
+        return hres == 0x80041001 ? E_INVALIDARG : hres;
+    }
+
+    /* file protocol is a special case */
+    if(strlenW(pwszUrl) >= sizeof(wszFile)/sizeof(WCHAR)
+            && !memcmp(buf, wszFile, sizeof(wszFile))) {
+
+        static const BYTE secidFile[] = {'f','i','l','e',':'};
+
+        if(*pcbSecurityId < sizeof(secidFile)+sizeof(zone))
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+
+        memcpy(pbSecurityId, secidFile, sizeof(secidFile));
+        *(DWORD*)(pbSecurityId+sizeof(secidFile)) = zone;
+
+        *pcbSecurityId = sizeof(secidFile)+sizeof(zone);
+        return S_OK;
+    }
+
+    ptr = strchrW(buf, ':');
+    ptr2 = ++ptr;
+    while(*ptr2 == '/')
+        ptr2++;
+    if(ptr2 != ptr)
+        memmove(ptr, ptr2, (strlenW(ptr2)+1)*sizeof(WCHAR));
+
+    ptr = strchrW(ptr, '/');
+    if(ptr)
+        *ptr = 0;
+
+    len = WideCharToMultiByte(CP_ACP, 0, buf, -1, NULL, 0, NULL, NULL)-1;
+
+    if(len+sizeof(DWORD) > *pcbSecurityId)
+        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+
+    WideCharToMultiByte(CP_ACP, 0, buf, -1, (LPSTR)pbSecurityId, -1, NULL, NULL);
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    *(DWORD*)(pbSecurityId+len) = zone;
+
+    *pcbSecurityId = len+sizeof(DWORD);
+
+    return S_OK;
 }
 
 
