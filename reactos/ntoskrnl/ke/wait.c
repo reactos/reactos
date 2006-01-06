@@ -105,7 +105,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    NTSTATUS WaitStatus;
+    NTSTATUS WaitStatus = STATUS_SUCCESS;
     DPRINT("Entering KeDelayExecutionThread\n");
 
     /* Check if the lock is already held */
@@ -238,7 +238,7 @@ KeWaitForSingleObject(PVOID Object,
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    NTSTATUS WaitStatus;
+    NTSTATUS WaitStatus = STATUS_SUCCESS;
     DPRINT("Entering KeWaitForSingleObject\n");
 
     /* Check if the lock is already held */
@@ -436,7 +436,7 @@ KeWaitForMultipleObjects(ULONG Count,
     PKTHREAD CurrentThread = KeGetCurrentThread();
     ULONG AllObjectsSignaled;
     ULONG WaitIndex;
-    NTSTATUS WaitStatus;
+    NTSTATUS WaitStatus = STATUS_SUCCESS;
     DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
            "PsGetCurrentThread() %x, Timeout %x\n",
            Count, Object, PsGetCurrentThread(), Timeout);
