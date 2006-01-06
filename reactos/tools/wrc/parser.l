@@ -87,7 +87,8 @@
 %x pp_code_page
 
 %option stack
-%option never-interactive
+%option nounput noyy_top_state
+%option 8bit never-interactive
 
 /* Some shortcut definitions */
 ws	[ \f\t\r]
@@ -110,10 +111,6 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 #include "newstruc.h"
 
 #include "parser.tab.h"
-
-#define YY_USE_PROTOS
-#define YY_NO_UNPUT
-#define YY_NO_TOP_STATE
 
 /* Always update the current character position within a line */
 #define YY_USER_ACTION	char_number+=yyleng; wanted_id = want_id; want_id = 0;

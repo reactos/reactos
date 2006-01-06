@@ -165,6 +165,8 @@ int char_number = 1;		/* The current char pos within the line */
 char *cmdline;			/* The entire commandline */
 time_t now;			/* The time of start of wrc */
 
+int yy_flex_debug;
+
 resource_t *resource_top;	/* The top of the parsed resources */
 
 int getopt (int argc, char *const *argv, const char *optstring);
