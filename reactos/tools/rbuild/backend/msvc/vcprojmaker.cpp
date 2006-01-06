@@ -335,7 +335,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		}
 
 		fprintf ( OUT, "\t\t\t\tEnablePREfast=\"%s\"\r\n", debug ? "TRUE" : "FALSE");
-		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127;4214\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", release ? "0" : "4" );
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", release ? "FALSE" : "TRUE");
 		if ( !module.cplusplus )
