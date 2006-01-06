@@ -143,6 +143,20 @@ typedef struct tagFileStruct
     The second the dos name when needed or just 0x00 */
 } FileStruct;
 
+/* At least on WinXP, this struct is appended with 2-byte-alignment to FileStruct. There follows 
+ * a WORD member after the wszName string, which gives the offset from the beginning of the PIDL 
+ * to the FileStructW member. */
+typedef struct tagFileStructW {
+    WORD cbLen;
+    BYTE dummy1[6];
+    WORD uCreationDate;
+    WORD uCreationTime;
+    WORD uLastAccessDate;
+    WORD uLastAccessTime;
+    BYTE dummy2[4];
+    WCHAR wszName[1];
+} FileStructW;
+
 typedef struct tagValueW
 {
     WCHAR name[1];
@@ -240,6 +254,7 @@ LPPIDLDATA	_ILGetDataPointer	(LPCITEMIDLIST);
 LPSTR		_ILGetTextPointer	(LPCITEMIDLIST);
 LPSTR		_ILGetSTextPointer	(LPCITEMIDLIST);
 IID		*_ILGetGUIDPointer	(LPCITEMIDLIST pidl);
+FileStructW     *_ILGetFileStructW      (LPCITEMIDLIST pidl);
 
 /*
  * debug helper

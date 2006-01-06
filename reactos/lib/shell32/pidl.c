@@ -1811,15 +1811,21 @@ DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
  */
 DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
 {
-    DWORD    dwReturn;
+    DWORD   dwReturn;
     char    szTemp[MAX_PATH];
+    FileStructW *pFileStructW = _ILGetFileStructW(pidl);
 
     TRACE("(%p %p %x)\n",pidl,szOut,uOutSize);
 
-    dwReturn = _ILSimpleGetText(pidl, szTemp, uOutSize);
+    if (pFileStructW) {
+        lstrcpynW(szOut, pFileStructW->wszName, uOutSize);
+        dwReturn = lstrlenW(pFileStructW->wszName);
+    } else {
+        dwReturn = _ILSimpleGetText(pidl, szTemp, MAX_PATH);
 
-    if (!MultiByteToWideChar(CP_ACP, 0, szTemp, -1, szOut, MAX_PATH))
-        *szOut = 0;
+        if (!MultiByteToWideChar(CP_ACP, 0, szTemp, -1, szOut, uOutSize))
+            *szOut = 0;
+    }
 
     TRACE("-- (%p=%s 0x%08lx)\n",szOut,debugstr_w(szOut),dwReturn);
     return dwReturn;
@@ -1936,6 +1942,45 @@ IID* _ILGetGUIDPointer(LPCITEMIDLIST pidl)
         break;
     }
     return NULL;
+}
+
+/******************************************************************************
+ * _ILGetFileStructW [Internal]
+ *
+ * Get pointer the a SHITEMID's FileStructW field if present
+ *
+ * PARAMS
+ *  pidl [I] The SHITEMID
+ *
+ * RETURNS
+ *  Success: Pointer to pidl's FileStructW field.
+ *  Failure: NULL
+ */
+FileStructW* _ILGetFileStructW(LPCITEMIDLIST pidl) {
+    FileStructW *pFileStructW;
+    WORD cbOffset;
+    
+    if (!(_ILIsValue(pidl) || _ILIsFolder(pidl)))
+        return NULL;
+
+    cbOffset = *(WORD*)((LPBYTE)pidl + pidl->mkid.cb - sizeof(WORD));
+    pFileStructW = (FileStructW*)((LPBYTE)pidl + cbOffset);
+
+    /* Currently I don't see a fool prove way to figure out if a pidl is for sure of WinXP
+     * style with a FileStructW member. If we switch all our shellfolder-implementations to
+     * the new format, this won't be a problem. For now, we do as many sanity checks as possible. */
+    if (cbOffset & 0x1 || /* FileStructW member is word aligned in the pidl */
+        /* FileStructW is positioned after FileStruct */
+        cbOffset < sizeof(pidl->mkid.cb) + sizeof(PIDLTYPE) + sizeof(FileStruct) ||
+        /* There has to be enough space at cbOffset in the pidl to hold FileStructW and cbOffset */
+        cbOffset > pidl->mkid.cb - sizeof(cbOffset) - sizeof(FileStructW) ||
+        pidl->mkid.cb != cbOffset + pFileStructW->cbLen)
+    {
+        WARN("Invalid pidl format (cbOffset = %d)!\n", cbOffset);
+        return NULL;
+    }
+
+    return pFileStructW;
 }
 
 /*************************************************************************
