@@ -313,7 +313,12 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
   if (newSize.u.LowPart > This->streamSize.u.LowPart)
   {
     /* grow stream */
-   IStream_SetSize(iface, newSize);
+    HRESULT hr = IStream_SetSize(iface, newSize);
+    if (FAILED(hr))
+    {
+      ERR("IStream_SetSize failed with error 0x%08lx\n", hr);
+      return hr;
+    }
   }
 
   /*

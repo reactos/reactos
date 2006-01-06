@@ -249,7 +249,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
 
   ULONG bytesReadBuffer;
   ULONG bytesToReadFromBuffer;
-  HRESULT res = S_FALSE;
+  HRESULT res;
 
   TRACE("(%p, %p, %ld, %p)\n",
 	iface, pv, cb, pcbRead);
@@ -282,11 +282,15 @@ static HRESULT WINAPI StgStreamImpl_Read(
   }
   else if (This->bigBlockChain!=0)
   {
-    res = BlockChainStream_ReadAt(This->bigBlockChain,
-			    This->currentPosition,
-			    bytesToReadFromBuffer,
-			    pv,
-			    pcbRead);
+    BOOL success = BlockChainStream_ReadAt(This->bigBlockChain,
+                                           This->currentPosition,
+                                           bytesToReadFromBuffer,
+                                           pv,
+                                           pcbRead);
+    if (success)
+      res = S_OK;
+    else
+      res = STG_E_READFAULT;
   }
   else
   {
