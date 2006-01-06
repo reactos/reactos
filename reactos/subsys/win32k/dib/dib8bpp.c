@@ -460,15 +460,15 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
                             ULONG Mode)
 {
-   int SrcSizeY;
-   int SrcSizeX;
-   int DesSizeY;
-   int DesSizeX;      
-   int sx;
-   int sy;
-   int DesX;
-   int DesY;
-   int color;
+   LONG SrcSizeY;
+   LONG SrcSizeX;
+   LONG DesSizeY;
+   LONG DesSizeX;      
+   LONG sx;
+   LONG sy;
+   LONG DesX;
+   LONG DesY;
+   LONG color;
 
   DPRINT("DIB_8BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
