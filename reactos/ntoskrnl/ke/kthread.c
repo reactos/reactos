@@ -172,48 +172,22 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
     KEBUGCHECK(0);
 }
 
-VOID
-STDCALL
-KiBlockThread(PNTSTATUS Status,
-              UCHAR Alertable,
-              ULONG WaitMode,
-              UCHAR WaitReason)
+NTSTATUS
+NTAPI
+KiSwapThread(VOID)
 {
-    PKTHREAD Thread = KeGetCurrentThread();
-    PKWAIT_BLOCK WaitBlock;
+    PKTHREAD CurrentThread = KeGetCurrentThread();
 
-    if (Thread->ApcState.KernelApcPending) {
+    /* Find a new thread to run */
+    DPRINT("Dispatching Thread as blocked\n");
+    KiDispatchThreadNoLock(Waiting);
 
-        DPRINT("Dispatching Thread as ready (APC!)\n");
+    /* Lower IRQL back */
+    DPRINT("Lowering IRQL \n");
+    KfLowerIrql(CurrentThread->WaitIrql);
 
-        /* Remove Waits */
-        WaitBlock = Thread->WaitBlockList;
-        do {
-            RemoveEntryList (&WaitBlock->WaitListEntry);
-            WaitBlock = WaitBlock->NextWaitBlock;
-        } while (WaitBlock != Thread->WaitBlockList);
-        Thread->WaitBlockList = NULL;
-
-        /* Dispatch it and return status */
-        KiDispatchThreadNoLock (Ready);
-        if (Status != NULL) *Status = STATUS_KERNEL_APC;
-
-    } else {
-
-        /* Set the Thread Data as Requested */
-        DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
-        Thread->Alertable = Alertable;
-        Thread->WaitMode = (UCHAR)WaitMode;
-        Thread->WaitReason = WaitReason;
-
-        /* Dispatch it and return status */
-        KiDispatchThreadNoLock(Waiting);
-        DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
-        if (Status != NULL) *Status = Thread->WaitStatus;
-    }
-
-    DPRINT("Releasing Dispatcher Lock\n");
-    KfLowerIrql(Thread->WaitIrql);
+    /* Return the wait status */
+    return CurrentThread->WaitStatus;
 }
 
 VOID

@@ -78,12 +78,15 @@ KeWaitForGate(PKGATE Gate,
             KiWakeQueue(CurrentThread->Queue);
         }
 
-        /* Block the Thread */
-        DPRINT("Blocking the Thread: %x\n", CurrentThread);
-        KiBlockThread(&Status,
-                      CurrentThread->Alertable,
-                      WaitMode,
-                      WaitReason);
+        /* Setup the wait information */
+        CurrentThread->WaitMode = WaitMode;
+        CurrentThread->WaitReason = WaitReason;
+        CurrentThread->WaitTime = 0;
+        CurrentThread->State = Waiting;
+
+        /* Find a new thread to run */
+        DPRINT("Swapping threads\n");
+        Status = KiSwapThread();
 
         /* Check if we were executing an APC */
         if (Status != STATUS_KERNEL_APC) return;

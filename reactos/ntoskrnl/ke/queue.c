@@ -286,12 +286,16 @@ KeRemoveQueue(IN PKQUEUE Queue,
             InsertTailList(&Queue->Header.WaitListHead,
                            &WaitBlock->WaitListEntry);
 
-            /* Block the Thread */
-            DPRINT("Blocking the Thread: %x %x!\n", KeGetCurrentThread(), Thread);
-            KiBlockThread(&Status,
-                          FALSE,
-                          WaitMode,
-                          WrQueue);
+            /* Setup the wait information */
+            Thread->WaitMode = WaitMode;
+            Thread->WaitReason = WrQueue;
+            Thread->Alertable = FALSE;
+            Thread->WaitTime = 0;
+            Thread->State = Waiting;
+
+            /* Find a new thread to run */
+            DPRINT("Swapping threads\n");
+            Status = KiSwapThread();
 
             /* Reset the wait reason */
             Thread->WaitReason = 0;

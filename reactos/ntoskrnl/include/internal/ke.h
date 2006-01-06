@@ -48,13 +48,7 @@ extern ULONG_PTR KERNEL_BASE;
  * On UP machines, we don't actually have a spinlock, we merely raise
  * IRQL to DPC level.
  */
-#ifndef CONFIG_SMP
-#define KeInitializeDispatcher()
-#define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
-#define KeReleaseDispatcherDatabaseLock(OldIrql) KiExitDispatcher(OldIrql);
-#define KeAcquireDispatcherDatabaseLockAtDpcLevel()
-#define KeReleaseDispatcherDatabaseLockFromDpcLevel()
-#else
+#ifdef CONFIG_SMP
 #define KeInitializeDispatcher() KeInitializeSpinLock(&DispatcherDatabaseLock);
 #define KeAcquireDispatcherDatabaseLock() KfAcquireSpinLock(&DispatcherDatabaseLock);
 #define KeAcquireDispatcherDatabaseLockAtDpcLevel() \
@@ -64,6 +58,12 @@ extern ULONG_PTR KERNEL_BASE;
 #define KeReleaseDispatcherDatabaseLock(OldIrql) \
     KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock); \
     KiExitDispatcher(OldIrql);
+#else
+#define KeInitializeDispatcher()
+#define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
+#define KeReleaseDispatcherDatabaseLock(OldIrql) KiExitDispatcher(OldIrql);
+#define KeAcquireDispatcherDatabaseLockAtDpcLevel()
+#define KeReleaseDispatcherDatabaseLockFromDpcLevel()
 #endif
 
 /* The following macro initializes a dispatcher object's header */
@@ -232,14 +232,11 @@ VOID
 STDCALL
 KiDispatchThread(ULONG NewThreadStatus);
 
-/* Puts a Thread into a block state. */
-VOID
-STDCALL
-KiBlockThread(
-    PNTSTATUS Status,
-    UCHAR Alertable,
-    ULONG WaitMode,
-    UCHAR WaitReason
+/* Finds a new thread to run */
+NTSTATUS
+NTAPI
+KiSwapThread(
+    VOID
 );
 
 /* Removes a thread out of a block state. */

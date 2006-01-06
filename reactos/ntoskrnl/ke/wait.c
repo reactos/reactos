@@ -106,7 +106,6 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
     NTSTATUS Status;
-
     DPRINT("Entering KeDelayExecutionThread\n");
 
     /* Check if the lock is already held */
@@ -129,6 +128,15 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
     /* Start Wait Loop */
     do
     {
+        /* Check if a kernel APC is pending and we were below APC_LEVEL */
+        if ((CurrentThread->ApcState.KernelApcPending) &&
+            (CurrentThread->WaitIrql < APC_LEVEL))
+        {
+            /* Unlock the dispatcher */
+            KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+            goto SkipWait;
+        }
+
         /* Chceck if we can do an alertable wait, if requested */
         if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status)) break;
 
@@ -162,13 +170,16 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
             KiWakeQueue(CurrentThread->Queue);
         }
 
-        /* Block the Thread */
-        DPRINT("Blocking the Thread: %d, %d, %x\n",
-                Alertable, WaitMode, KeGetCurrentThread());
-        KiBlockThread(&Status,
-                      Alertable,
-                      WaitMode,
-                      DelayExecution);
+        /* Setup the wait information */
+        CurrentThread->Alertable = Alertable;
+        CurrentThread->WaitMode = WaitMode;
+        CurrentThread->WaitReason = DelayExecution;
+        CurrentThread->WaitTime = 0;
+        CurrentThread->State = Waiting;
+
+        /* Find a new thread to run */
+        DPRINT("Swapping threads\n");
+        Status = KiSwapThread();
 
         /* Check if we were executing an APC or if we timed out */
         if (Status != STATUS_KERNEL_APC)
@@ -180,7 +191,11 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
             return Status;
         }
 
-        DPRINT("Looping Again\n"); // FIXME: Need to modify interval
+        /* FIXME: Fixup interval */
+
+        /* Acquire again the lock */
+SkipWait:
+        DPRINT("Looping again\n");
         CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
     }
     while (TRUE);
@@ -241,6 +256,15 @@ KeWaitForSingleObject(PVOID Object,
     /* Start the actual Loop */
     do
     {
+        /* Check if a kernel APC is pending and we were below APC_LEVEL */
+        if ((CurrentThread->ApcState.KernelApcPending) &&
+            (CurrentThread->WaitIrql < APC_LEVEL))
+        {
+            /* Unlock the dispatcher */
+            KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+            goto SkipWait;
+        }
+
         /* Get the current Wait Status */
         WaitStatus = CurrentThread->WaitStatus;
 
@@ -344,13 +368,16 @@ KeWaitForSingleObject(PVOID Object,
             KiWakeQueue(CurrentThread->Queue);
         }
 
-        /* Block the Thread */
-        DPRINT("Blocking the Thread: %d, %d, %d, %x\n",
-                Alertable, WaitMode, WaitReason, KeGetCurrentThread());
-        KiBlockThread(&Status,
-                      Alertable,
-                      WaitMode,
-                      (UCHAR)WaitReason);
+        /* Setup the wait information */
+        CurrentThread->Alertable = Alertable;
+        CurrentThread->WaitMode = WaitMode;
+        CurrentThread->WaitReason = WaitReason;
+        CurrentThread->WaitTime = 0;
+        CurrentThread->State = Waiting;
+
+        /* Find a new thread to run */
+        DPRINT("Swapping threads\n");
+        Status = KiSwapThread();
 
         /* Check if we were executing an APC */
         if (Status != STATUS_KERNEL_APC)
@@ -359,8 +386,15 @@ KeWaitForSingleObject(PVOID Object,
             return Status;
         }
 
-        /* Loop again and acquire the dispatcher lock */
-        DPRINT("Looping Again\n"); // FIXME: Change interval
+        /* Check if we had a timeout */
+        if (Timeout)
+        {
+             /* FIXME: Fixup interval */
+        }
+
+        /* Acquire again the lock */
+SkipWait:
+        DPRINT("Looping again\n");
         CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
     }
     while (TRUE);
@@ -443,6 +477,15 @@ KeWaitForMultipleObjects(ULONG Count,
     /* Start the actual Loop */
     do
     {
+        /* Check if a kernel APC is pending and we were below APC_LEVEL */
+        if ((CurrentThread->ApcState.KernelApcPending) &&
+            (CurrentThread->WaitIrql < APC_LEVEL))
+        {
+            /* Unlock the dispatcher */
+            KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+            goto SkipWait;
+        }
+
         /* Get the current Wait Status */
         WaitStatus = CurrentThread->WaitStatus;
 
@@ -612,13 +655,16 @@ KeWaitForMultipleObjects(ULONG Count,
             KiWakeQueue(CurrentThread->Queue);
         }
 
-        /* Block the Thread */
-        DPRINT("Blocking the Thread: %d, %d, %d, %x\n",
-                Alertable, WaitMode, WaitReason, KeGetCurrentThread());
-        KiBlockThread(&Status,
-                      Alertable,
-                      WaitMode,
-                      (UCHAR)WaitReason);
+        /* Setup the wait information */
+        CurrentThread->Alertable = Alertable;
+        CurrentThread->WaitMode = WaitMode;
+        CurrentThread->WaitReason = WaitReason;
+        CurrentThread->WaitTime = 0;
+        CurrentThread->State = Waiting;
+
+        /* Find a new thread to run */
+        DPRINT("Swapping threads\n");
+        Status = KiSwapThread();
 
         /* Check if we were executing an APC */
         DPRINT("Thread is back\n");
@@ -628,8 +674,15 @@ KeWaitForMultipleObjects(ULONG Count,
             return Status;
         }
 
-        /* Loop again and re-acquire the dispatcher lock */
-        DPRINT("Looping Again\n"); // FIXME: Fix-up the interval */
+        /* Check if we had a timeout */
+        if (Timeout)
+        {
+             /* FIXME: Fixup interval */
+        }
+
+        /* Acquire again the lock */
+SkipWait:
+        DPRINT("Looping again\n");
         CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
     }
     while (TRUE);
