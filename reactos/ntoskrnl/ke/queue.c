@@ -270,8 +270,8 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 WaitBlock->WaitType = WaitAny;
 
                 /* Link the timer to this Wait Block */
-                InitializeListHead(&Timer->Header.WaitListHead);
-                InsertTailList(&Timer->Header.WaitListHead, &WaitBlock->WaitListEntry);
+                Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
+                Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
 
                 /* Create Timer */
                 DPRINT("Creating Timer with timeout %I64d\n", *Timeout);
@@ -290,7 +290,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             Thread->WaitMode = WaitMode;
             Thread->WaitReason = WrQueue;
             Thread->Alertable = FALSE;
-            Thread->WaitTime = 0;
+            Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
             Thread->State = Waiting;
 
             /* Find a new thread to run */

@@ -63,13 +63,12 @@ KeWaitForGate(PKGATE Gate,
         GateWaitBlock->Thread = CurrentThread;
 
         /* Set the Thread Wait Data */
-        CurrentThread->WaitReason = WaitReason;
-        CurrentThread->WaitMode = WaitMode;
         CurrentThread->WaitIrql = OldIrql;
         CurrentThread->GateObject = Gate;
 
         /* Insert into the Wait List */
-        InsertTailList(&Gate->Header.WaitListHead, &GateWaitBlock->WaitListEntry);
+        InsertTailList(&Gate->Header.WaitListHead,
+                       &GateWaitBlock->WaitListEntry);
 
         /* Handle Kernel Queues */
         if (CurrentThread->Queue)
@@ -81,7 +80,7 @@ KeWaitForGate(PKGATE Gate,
         /* Setup the wait information */
         CurrentThread->WaitMode = WaitMode;
         CurrentThread->WaitReason = WaitReason;
-        CurrentThread->WaitTime = 0;
+        CurrentThread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
         CurrentThread->State = Waiting;
 
         /* Find a new thread to run */

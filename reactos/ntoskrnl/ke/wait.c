@@ -148,15 +148,11 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
 
         /* Setup the Wait Block */
         CurrentThread->WaitBlockList = TimerWaitBlock;
-        TimerWaitBlock->Object = (PVOID)ThreadTimer;
-        TimerWaitBlock->Thread = CurrentThread;
-        TimerWaitBlock->WaitKey = (USHORT)STATUS_TIMEOUT;
-        TimerWaitBlock->WaitType = WaitAny;
         TimerWaitBlock->NextWaitBlock = TimerWaitBlock;
 
         /* Link the timer to this Wait Block */
-        InitializeListHead(&ThreadTimer->Header.WaitListHead);
-        InsertTailList(&ThreadTimer->Header.WaitListHead, &TimerWaitBlock->WaitListEntry);
+        ThreadTimer->Header.WaitListHead.Flink = &TimerWaitBlock->WaitListEntry;
+        ThreadTimer->Header.WaitListHead.Blink = &TimerWaitBlock->WaitListEntry;
 
         /* Insert the Timer into the Timer Lists and enable it */
         if (!KiInsertTimer(ThreadTimer, *Interval))
@@ -177,7 +173,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
         CurrentThread->Alertable = Alertable;
         CurrentThread->WaitMode = WaitMode;
         CurrentThread->WaitReason = DelayExecution;
-        CurrentThread->WaitTime = 0;
+        CurrentThread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
         CurrentThread->State = Waiting;
 
         /* Find a new thread to run */
@@ -336,16 +332,11 @@ KeWaitForSingleObject(PVOID Object,
             WaitBlock->NextWaitBlock = TimerWaitBlock;
 
             /* Set up the Timer Wait Block */
-            TimerWaitBlock->Object = (PVOID)ThreadTimer;
-            TimerWaitBlock->Thread = CurrentThread;
-            TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
-            TimerWaitBlock->WaitType = WaitAny;
             TimerWaitBlock->NextWaitBlock = WaitBlock;
 
             /* Link the timer to this Wait Block */
-            InitializeListHead(&ThreadTimer->Header.WaitListHead);
-            InsertTailList(&ThreadTimer->Header.WaitListHead,
-                           &TimerWaitBlock->WaitListEntry);
+            ThreadTimer->Header.WaitListHead.Flink = &TimerWaitBlock->WaitListEntry;
+            ThreadTimer->Header.WaitListHead.Blink = &TimerWaitBlock->WaitListEntry;
 
             /* Insert the Timer into the Timer Lists and enable it */
             if (!KiInsertTimer(ThreadTimer, *Timeout))
@@ -371,7 +362,7 @@ KeWaitForSingleObject(PVOID Object,
         CurrentThread->Alertable = Alertable;
         CurrentThread->WaitMode = WaitMode;
         CurrentThread->WaitReason = WaitReason;
-        CurrentThread->WaitTime = 0;
+        CurrentThread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
         CurrentThread->State = Waiting;
 
         /* Find a new thread to run */
@@ -610,13 +601,9 @@ KeWaitForMultipleObjects(ULONG Count,
             WaitBlock->NextWaitBlock = TimerWaitBlock;
 
             /* Set up the Timer Wait Block */
-            TimerWaitBlock->Object = (PVOID)ThreadTimer;
-            TimerWaitBlock->Thread = CurrentThread;
-            TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
-            TimerWaitBlock->WaitType = WaitAny;
             TimerWaitBlock->NextWaitBlock = WaitBlockArray;
 
-            /* Link the timer to this Wait Block */
+            /* Initialize the list head */
             InitializeListHead(&ThreadTimer->Header.WaitListHead);
 
             /* Insert the Timer into the Timer Lists and enable it */
@@ -655,7 +642,7 @@ KeWaitForMultipleObjects(ULONG Count,
         CurrentThread->Alertable = Alertable;
         CurrentThread->WaitMode = WaitMode;
         CurrentThread->WaitReason = WaitReason;
-        CurrentThread->WaitTime = 0;
+        CurrentThread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
         CurrentThread->State = Waiting;
 
         /* Find a new thread to run */

@@ -19,6 +19,8 @@
 #define THREAD_ALERT_INCREMENT 2
 
 extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
+#define TIMER_WAIT_BLOCK 0x3L
+
 
 /*
  * PURPOSE: List of threads associated with each priority level
@@ -789,6 +791,10 @@ KeInitializeThread(PKPROCESS Process,
                    PVOID Teb,
                    PVOID KernelStack)
 {
+    ULONG i;
+    PKWAIT_BLOCK TimerWaitBlock;
+    PKTIMER Timer;
+
     /* Initalize the Dispatcher Header */
     DPRINT("Initializing Dispatcher Header for New Thread: %x in Process: %x\n", Thread, Process);
     KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
@@ -803,6 +809,13 @@ KeInitializeThread(PKPROCESS Process,
     /* Initialize the Mutant List */
     InitializeListHead(&Thread->MutantListHead);
 
+    /* Initialize the wait blocks */
+    for (i = 0; i< (THREAD_WAIT_OBJECTS + 1); i++)
+    {
+        /* Put our pointer */
+        Thread->WaitBlock[i].Thread = Thread;
+    }
+
     /* Setup the Service Descriptor Table for Native Calls */
     Thread->ServiceTable = KeServiceDescriptorTable;
 
@@ -813,6 +826,7 @@ KeInitializeThread(PKPROCESS Process,
     Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
     Thread->ApcStateIndex = OriginalApcEnvironment;
+    Thread->ApcQueueable = TRUE;
     KeInitializeSpinLock(&Thread->ApcQueueLock);
 
     /* Initialize the Suspend APC */
@@ -829,16 +843,17 @@ KeInitializeThread(PKPROCESS Process,
     KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
 
     /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
-#if 0
-    Thread->WaitBlock[3].Object = (PVOID)&Thread->Timer;
-    Thread->WaitBlock[3].Thread = Thread;
-    Thread->WaitBlock[3].WaitKey = STATUS_TIMEOUT;
-    Thread->WaitBlock[3].WaitType = WaitAny;
-    Thread->WaitBlock[3].NextWaitBlock = NULL;
-    InsertTailList(&Thread->Timer.Header.WaitListHead,
-                   &Thread->WaitBlock[3].WaitListEntry);
-#endif
-    KeInitializeTimer(&Thread->Timer);
+    Timer = &Thread->Timer;
+    KeInitializeTimer(Timer);
+    TimerWaitBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
+    TimerWaitBlock->Object = Timer;
+    TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
+    TimerWaitBlock->WaitType = WaitAny;
+    TimerWaitBlock->NextWaitBlock = NULL;
+
+    /* Link the two wait lists together */
+    TimerWaitBlock->WaitListEntry.Flink = &Timer->Header.WaitListHead;
+    TimerWaitBlock->WaitListEntry.Blink = &Timer->Header.WaitListHead;
 
     /* Set the TEB */
     Thread->Teb = Teb;
