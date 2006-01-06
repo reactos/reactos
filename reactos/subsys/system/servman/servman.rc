@@ -10,7 +10,7 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-IDI_SM_ICON ICON "res/applet.ico"
+IDI_SM_ICON ICON "res/system.ico"
 
 #include "En.rc"
 #include "De.rc"

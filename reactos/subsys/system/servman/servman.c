@@ -91,9 +91,8 @@ GetServices ( void )
                 GetSystemMetrics(SM_CYSMICON), ILC_MASK, 1, 1);
 
             /* Add an icon to each image list */
-            hiconItem = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
+            hiconItem = LoadImage(hInstance, MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
             ImageList_AddIcon(hSmall, hiconItem);
-            DestroyIcon(hiconItem);
 
             ListView_SetImageList(hListView, hSmall, LVSIL_SMALL);
 
@@ -574,7 +573,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	wc.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
 	wc.lpszClassName = ClassName;
-	wc.hIconSm		 = (HICON)LoadImage(GetModuleHandle(NULL),
+	wc.hIconSm		 = (HICON)LoadImage(hInstance,
                         MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
 
 	if(!RegisterClassEx(&wc))
