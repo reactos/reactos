@@ -781,8 +781,8 @@ NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
 
 static NTSTATUS CheckForDeviceDesc( PUNICODE_STRING EnumKeyName,
                                     PUNICODE_STRING TargetKeyName,
-                                    PUNICODE_STRING ShortName,
-                                    PUNICODE_STRING OutName ) {
+                                    PUNICODE_STRING Name,
+                                    PUNICODE_STRING DeviceDesc ) {
     UNICODE_STRING RootDevice = { 0 }, LinkageKeyName = { 0 };
     UNICODE_STRING DescKeyName = { 0 }, Linkage = { 0 };
     UNICODE_STRING BackSlash = { 0 };
@@ -809,14 +809,14 @@ static NTSTATUS CheckForDeviceDesc( PUNICODE_STRING EnumKeyName,
     Status = ReadStringFromRegistry( LinkageKey, L"RootDevice", &RootDevice );
     if( !NT_SUCCESS(Status) ) goto cleanup;
 
-    if( RtlCompareUnicodeString( &RootDevice, ShortName, TRUE ) == 0 ) {
+    if( RtlCompareUnicodeString( &RootDevice, Name, TRUE ) == 0 ) {
         Status = OpenRegistryKey( &DescKeyName, &DescKey );
         if( !NT_SUCCESS(Status) ) goto cleanup;
 
-        Status = ReadStringFromRegistry( DescKey, L"DriverDesc", OutName );
+        Status = ReadStringFromRegistry( DescKey, L"DriverDesc", DeviceDesc );
         if( !NT_SUCCESS(Status) ) goto cleanup;
 
-        TI_DbgPrint(DEBUG_DATALINK,("ADAPTER NAME: %wZ\n", OutName));
+        TI_DbgPrint(DEBUG_DATALINK,("ADAPTER DESC: %wZ\n", DeviceDesc));
     } else Status = STATUS_UNSUCCESSFUL;
 
 cleanup:
@@ -831,8 +831,8 @@ cleanup:
     return Status;
 }
 
-static NTSTATUS FindDeviceNameForAdapter( PUNICODE_STRING ShortName,
-                                          PUNICODE_STRING OutName ) {
+static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
+                                          PUNICODE_STRING DeviceDesc ) {
     UNICODE_STRING EnumKeyName, TargetKeyName;
     HANDLE EnumKey;
     NTSTATUS Status;
@@ -872,7 +872,7 @@ static NTSTATUS FindDeviceNameForAdapter( PUNICODE_STRING ShortName,
             TargetKeyName.Buffer = Kbio->Name;
 
             Status = CheckForDeviceDesc
-                ( &EnumKeyName, &TargetKeyName, ShortName, OutName );
+                ( &EnumKeyName, &TargetKeyName, Name, DeviceDesc );
             if( NT_SUCCESS(Status) ) {
                 NtClose( EnumKey );
                 return Status;
@@ -880,25 +880,30 @@ static NTSTATUS FindDeviceNameForAdapter( PUNICODE_STRING ShortName,
         }
     }
 
-    RtlInitUnicodeString( OutName, L"" );
-    AppendUnicodeString( OutName, &TargetKeyName, FALSE );
+    RtlInitUnicodeString( DeviceDesc, L"" );
+    AppendUnicodeString( DeviceDesc, &TargetKeyName, FALSE );
     NtClose( EnumKey );
     return STATUS_UNSUCCESSFUL;
 }
 
-VOID GetShortName( PUNICODE_STRING RegistryKey,
-                   PUNICODE_STRING ShortNameOut ) {
+VOID GetName( PUNICODE_STRING RegistryKey,
+              PUNICODE_STRING OutName ) {
     PWCHAR Ptr;
-    ShortNameOut->Buffer =
+    UNICODE_STRING PartialRegistryKey;
+
+    PartialRegistryKey.Buffer =
         RegistryKey->Buffer + wcslen(CCS_ROOT L"\\Services\\");
-    Ptr = ShortNameOut->Buffer;
+    Ptr = PartialRegistryKey.Buffer;
 
     while( *Ptr != L'\\' &&
            ((PCHAR)Ptr) < ((PCHAR)RegistryKey->Buffer) + RegistryKey->Length )
         Ptr++;
 
-    ShortNameOut->Length = ShortNameOut->MaximumLength =
-        (Ptr - ShortNameOut->Buffer) * sizeof(WCHAR);
+    PartialRegistryKey.Length = PartialRegistryKey.MaximumLength =
+        (Ptr - PartialRegistryKey.Buffer) * sizeof(WCHAR);
+
+    RtlInitUnicodeString( OutName, L"" );
+    AppendUnicodeString( OutName, &PartialRegistryKey, FALSE );
 }
 
 VOID BindAdapter(
@@ -920,13 +925,10 @@ VOID BindAdapter(
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
     HANDLE RegHandle = 0;
-    UNICODE_STRING ShortName;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
     Adapter->State = LAN_STATE_OPENING;
-
-    GetShortName( RegistryPath, &ShortName );
 
     NdisStatus = NDISCall(Adapter,
                           NdisRequestSetInformation,
@@ -963,11 +965,14 @@ VOID BindAdapter(
      * services (ZwOpenKey, etc).
      */
 
+    GetName( RegistryPath, &IF->Name );
+
     Status = OpenRegistryKey( RegistryPath, &RegHandle );
 
     if(NT_SUCCESS(Status)) {
-	Status = FindDeviceNameForAdapter( &ShortName, &IF->Name );
-        TI_DbgPrint(DEBUG_DATALINK,("Adapter Name: %wZ\n", &IF->Name));
+	Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
+        TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
+                    &IF->Description));
     }
 
     DefaultMask.Type = IP_ADDRESS_V4;

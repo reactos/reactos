@@ -150,7 +150,8 @@ typedef struct _IP_INTERFACE {
     IP_ADDRESS PointToPoint;      /* Point to point address */
     IP_ADDRESS Netmask;           /* Netmask */
     IP_ADDRESS Broadcast;         /* Broadcast */
-    UNICODE_STRING Name;          /* Adapter name */
+    UNICODE_STRING Name;          /* Adapter name (GUID) */
+    UNICODE_STRING Description;   /* Adapter description (Human readable) */
     PUCHAR Address;               /* Pointer to interface address */
     UINT  AddressLength;          /* Length of address in bytes */
     UINT  Index;                  /* Index of adapter (used to add ip addr) */
