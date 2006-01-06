@@ -452,7 +452,6 @@ int main(int argc, char **argv)
 	DWORD RepairMode = 0;
 
 	DWORD AdvertiseMode = 0;
-	LPWSTR Transforms = NULL;
 	struct string_list *transform_list = NULL;
 	LANGID Language = 0;
 
@@ -658,10 +657,6 @@ int main(int argc, char **argv)
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 			StringListAppend(&transform_list, argvW[i]);
 		}
-		else if(!msi_strprefix(argvW[i], "TRANSFORMS="))
-		{
-			StringListAppend(&transform_list, argvW[i]+11);
-		}
 		else if(!msi_strequal(argvW[i], "/g"))
 		{
 			i++;
@@ -858,7 +853,6 @@ int main(int argc, char **argv)
 	MsiSetInternalUI(InstallUILevel, NULL);
 
 	Properties = build_properties( property_list );
-	Transforms = build_transforms( transform_list );
 
 	if(FunctionInstallAdmin && FunctionPatch)
 		FunctionInstall = FALSE;
@@ -880,6 +874,7 @@ int main(int argc, char **argv)
 	}
 	else if(FunctionAdvertise)
 	{
+		LPWSTR Transforms = build_transforms( property_list );
 		ReturnCode = MsiAdvertiseProductW(PackageName, (LPWSTR) AdvertiseMode, Transforms, Language);
 	}
 	else if(FunctionPatch)
