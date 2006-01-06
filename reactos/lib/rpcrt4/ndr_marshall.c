@@ -375,9 +375,17 @@ PFORMAT_STRING ComputeConformanceOrVariance(
     ptr = *(LPVOID*)ptr;
     break;
   case RPC_FC_CALLBACK:
+  {
+    unsigned char *old_stack_top = pStubMsg->StackTop;
+    pStubMsg->StackTop = ptr;
+
     /* ofs is index into StubDesc->apfnExprEval */
-    FIXME("handle callback\n");
+    TRACE("callback conformance into apfnExprEval[%d]\n", ofs);
+    pStubMsg->StubDesc->apfnExprEval[ofs](pStubMsg);
+
+    pStubMsg->StackTop = old_stack_top;
     goto finish_conf;
+  }
   default:
     break;
   }

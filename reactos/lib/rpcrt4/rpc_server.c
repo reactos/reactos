@@ -989,6 +989,9 @@ RPC_STATUS WINAPI RpcServerListen( UINT MinimumCallThreads, UINT MaxCalls, UINT 
 
   status = RPCRT4_start_listen(FALSE);
 
+  if (status == RPC_S_OK)
+    RPCRT4_sync_with_server_thread();
+
   if (DontWait || (status != RPC_S_OK)) return status;
 
   return RpcMgmtWaitServerListen();
@@ -1009,8 +1012,6 @@ RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
   }
   
   LeaveCriticalSection(&listen_cs);
-
-  RPCRT4_sync_with_server_thread();
 
   return RPC_S_OK;
 }
