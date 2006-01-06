@@ -174,8 +174,6 @@ ul	[uUlL]|[uUlL][lL]|[lL][uU]|[lL][lL][uU]|[uU][lL][lL]|[lL][uU][lL]
 #error Must use flex version 2.5.1 or higher (yy_scan_* routines are required).
 #endif
 
-#define YY_USE_PROTOS
-#define YY_NO_UNPUT
 #define YY_READ_BUF_SIZE	65536		/* So we read most of a file at once */
 
 #define yy_current_state()	YY_START
