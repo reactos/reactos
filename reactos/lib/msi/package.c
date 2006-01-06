@@ -228,6 +228,8 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szScreenY[] = {'S','c','r','e','e','n','Y',0};
     static const WCHAR szColorBits[] = {'C','o','l','o','r','B','i','t','s',0};
     static const WCHAR szScreenFormat[] = {'%','d',0};
+    static const WCHAR szIntel[] = { 'I','n','t','e','l',0 };
+    SYSTEM_INFO sys_info;
 
     /*
      * Other things that probably should be set:
@@ -352,6 +354,13 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 
     sprintfW( bufstr, szFormat2, MSI_MAJORVERSION, MSI_MINORVERSION);
     MSI_SetPropertyW( package, szVersionMsi, bufstr );
+
+    GetSystemInfo( &sys_info );
+    if (sys_info.u.s.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
+    {
+        sprintfW( bufstr, szScreenFormat, sys_info.wProcessorLevel );
+        MSI_SetPropertyW( package, szIntel, bufstr );
+    }
 
     /* Screen properties. */
     dc = GetDC(0);

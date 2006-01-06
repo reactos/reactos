@@ -57,7 +57,7 @@ static LONG dll_count;
 
 static const WCHAR installerW[] = {'\\','I','n','s','t','a','l','l','e','r',0};
 
-/**********************************************************************
+/*
  * Dll lifetime tracking declaration
  */
 static void LockModule(void)

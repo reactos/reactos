@@ -243,6 +243,13 @@ static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument,
     return r;
 }
 
+static UINT ControlEvent_Reset(MSIPACKAGE* package, LPCWSTR argument, 
+                                   msi_dialog* dialog)
+{
+    msi_dialog_reset(dialog);
+    return ERROR_SUCCESS;
+}
+
 /*
  * Subscribed events
  */
@@ -371,6 +378,7 @@ struct _events Events[] = {
     { "Remove",ControlEvent_Remove },
     { "AddSource",ControlEvent_AddSource },
     { "SetTargetPath",ControlEvent_SetTargetPath },
+    { "Reset",ControlEvent_Reset },
     { NULL,NULL },
 };
 

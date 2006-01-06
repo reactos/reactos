@@ -59,7 +59,6 @@ struct msi_control_tag
     HBITMAP hBitmap;
     HICON hIcon;
     LPWSTR tabnext;
-    HMODULE hDll;
     WCHAR name[1];
 };
 
@@ -329,7 +328,6 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
     control->value = NULL;
     control->hBitmap = NULL;
     control->hIcon = NULL;
-    control->hDll = NULL;
     control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
 
     x = MSI_RecordGetInteger( rec, 4 );
@@ -695,6 +693,42 @@ static UINT msi_dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+/******************** Scroll Text ********************************************/
+
+struct msi_scrolltext_info
+{
+    msi_dialog *dialog;
+    msi_control *control;
+    WNDPROC oldproc;
+    HMODULE hRichedit;
+};
+
+static LRESULT WINAPI
+MSIScrollText_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    struct msi_scrolltext_info *info;
+    HRESULT r;
+
+    TRACE("%p %04x %08x %08lx\n", hWnd, msg, wParam, lParam);
+
+    info = GetPropW( hWnd, szButtonData );
+
+    r = CallWindowProcW( info->oldproc, hWnd, msg, wParam, lParam );
+
+    switch( msg )
+    {
+    case WM_NCDESTROY:
+        FreeLibrary( info->hRichedit );
+        msi_free( info );
+        RemovePropW( hWnd, szButtonData );
+        break;
+    case WM_VSCROLL:
+        msi_dialog_button_handler( info->dialog, info->control, BN_CLICKED );
+        break;
+    }
+    return r;
+}
+
 struct msi_streamin_info
 {
     LPSTR string;
@@ -718,29 +752,11 @@ msi_richedit_stream_in( DWORD_PTR arg, LPBYTE buffer, LONG count, LONG *pcb )
     return 0;
 }
 
-static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
+static void msi_scrolltext_add_text( msi_control *control, LPCWSTR text )
 {
-    static const WCHAR szRichEdit20W[] = {
-    	'R','i','c','h','E','d','i','t','2','0','W',0
-    };
     struct msi_streamin_info info;
-    msi_control *control;
-    LPCWSTR text;
     EDITSTREAM es;
-    DWORD style;
-    HMODULE hRichedit;
 
-    hRichedit = LoadLibraryA("riched20");
-
-    style = WS_BORDER | ES_MULTILINE | WS_VSCROLL |
-            ES_READONLY | ES_AUTOVSCROLL | WS_TABSTOP;
-    control = msi_dialog_add_control( dialog, rec, szRichEdit20W, style );
-    if (!control)
-        return ERROR_FUNCTION_FAILED;
-
-    control->hDll = hRichedit;
-
-    text = MSI_RecordGetString( rec, 10 );
     info.string = strdupWtoA( text );
     info.offset = 0;
     info.length = lstrlenA( info.string ) + 1;
@@ -752,6 +768,43 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     SendMessageW( control->hwnd, EM_STREAMIN, SF_RTF, (LPARAM) &es );
 
     msi_free( info.string );
+}
+
+static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
+{
+    static const WCHAR szRichEdit20W[] = {
+    	'R','i','c','h','E','d','i','t','2','0','W',0
+    };
+    struct msi_scrolltext_info *info;
+    msi_control *control;
+    DWORD style;
+
+    info = msi_alloc( sizeof *info );
+    if (!info)
+        return ERROR_FUNCTION_FAILED;
+
+    info->hRichedit = LoadLibraryA("riched20");
+
+    style = WS_BORDER | ES_MULTILINE | WS_VSCROLL |
+            ES_READONLY | ES_AUTOVSCROLL | WS_TABSTOP;
+    control = msi_dialog_add_control( dialog, rec, szRichEdit20W, style );
+    if (!control)
+    {
+        FreeLibrary( info->hRichedit );
+        msi_free( info );
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    info->dialog = dialog;
+    info->control = control;
+
+    /* subclass the static control */
+    info->oldproc = (WNDPROC) SetWindowLongPtrW( control->hwnd, GWLP_WNDPROC,
+                                          (LONG_PTR)MSIScrollText_WndProc );
+    SetPropW( control->hwnd, szButtonData, info );
+
+    /* add the text into the richedit */
+    msi_scrolltext_add_text( control, MSI_RecordGetString( rec, 10 ) );
 
     return ERROR_SUCCESS;
 }
@@ -1076,15 +1129,16 @@ static struct msi_maskedit_info * msi_dialog_parse_groups( LPCWSTR mask )
     if( !mask )
         return info;
 
-    p = strchrW(mask, '<');
-    if( !p )
-        return info;
-
     info = msi_alloc_zero( sizeof *info );
     if( !info )
         return info;
 
-    p++;
+    p = strchrW(mask, '<');
+    if( p )
+        p++;
+    else
+        p = mask;
+
     for( i=0; i<MASK_MAX_GROUPS; i++ )
     {
         /* stop at the end of the string */
@@ -1124,7 +1178,7 @@ msi_maskedit_create_children( struct msi_maskedit_info *info, LPCWSTR font )
     HWND hwnd;
     UINT i;
 
-    style = WS_CHILD | WS_BORDER | WS_VISIBLE | WS_TABSTOP;
+    style = WS_CHILD | WS_BORDER | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL;
 
     GetClientRect( info->hwnd, &rect );
 
@@ -1510,6 +1564,12 @@ static UINT msi_dialog_evaluate_control_conditions( msi_dialog *dialog )
     msiobj_release( &view->hdr );
 
     return r;
+}
+
+UINT msi_dialog_reset( msi_dialog *dialog )
+{
+    /* FIXME: should restore the original values of any properties we changed */
+    return msi_dialog_evaluate_control_conditions( dialog );
 }
 
 /* figure out the height of 10 point MS Sans Serif */
@@ -2138,8 +2198,6 @@ void msi_dialog_destroy( msi_dialog *dialog )
             DestroyIcon( t->hIcon );
         msi_free( t->tabnext );
         msi_free( t );
-        if (t->hDll)
-            FreeLibrary( t->hDll );
     }
 
     /* destroy the list of fonts */

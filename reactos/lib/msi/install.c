@@ -449,8 +449,31 @@ UINT WINAPI MsiSetTargetPathW(MSIHANDLE hInstall, LPCWSTR szFolder,
 
 BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
 {
-    FIXME("STUB (iRunMode=%i)\n",iRunMode);
-    return TRUE;
+    BOOL r = FALSE;
+
+    switch (iRunMode)
+    {
+    case MSIRUNMODE_WINDOWS9X:
+        if (GetVersion() & 0x80000000)
+            r = TRUE;
+        break;
+
+    case MSIRUNMODE_RESERVED11:
+    case MSIRUNMODE_RESERVED14:
+    case MSIRUNMODE_RESERVED15:
+        break;
+
+    case MSIRUNMODE_SCHEDULED:
+    case MSIRUNMODE_ROLLBACK:
+    case MSIRUNMODE_COMMIT:
+        break;
+
+    default:
+        FIXME("%ld %d\n", hInstall, iRunMode);
+        r = TRUE;
+    }
+
+    return r;
 }
 
 /***********************************************************************

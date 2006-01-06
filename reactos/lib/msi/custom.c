@@ -548,13 +548,14 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    msi_free(cmd);
 
     if ( !rc )
     {
-        ERR("Unable to execute command\n");
+        ERR("Unable to execute command %s\n", debugstr_w(cmd));
+        msi_free(cmd);
         return ERROR_SUCCESS;
     }
+    msi_free(cmd);
 
     prc = process_handle(package, type, info.hThread, info.hProcess, action, 
                           &finished);
@@ -609,13 +610,14 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    msi_free(cmd);
     
     if ( !rc )
     {
-        ERR("Unable to execute command\n");
+        ERR("Unable to execute command %s\n", debugstr_w(cmd));
+        msi_free(cmd);
         return ERROR_SUCCESS;
     }
+    msi_free(cmd);
 
     prc = process_handle(package, type, info.hThread, info.hProcess, action, 
                          NULL);
@@ -694,13 +696,14 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    msi_free(cmd);
     
     if ( !rc )
     {
-        ERR("Unable to execute command\n");
+        ERR("Unable to execute command %s\n", debugstr_w(cmd));
+        msi_free(cmd);
         return ERROR_SUCCESS;
     }
+    msi_free(cmd);
 
     return process_handle(package, type, info.hThread, info.hProcess, action, NULL);
 }
@@ -733,13 +736,14 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
 
     rc = CreateProcessW(NULL, deformated, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
-    msi_free(deformated);
 
     if ( !rc )
     {
-        ERR("Unable to execute command\n");
+        ERR("Unable to execute command %s\n", debugstr_w(deformated));
+        msi_free(deformated);
         return ERROR_SUCCESS;
     }
+    msi_free(deformated);
 
     prc = process_handle(package, type, info.hThread, info.hProcess, action,
                          NULL);

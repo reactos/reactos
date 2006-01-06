@@ -317,6 +317,8 @@ extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
 
 /* transform functions */
 extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg );
+extern UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db, 
+                 LPCWSTR szTransformFile, int iErrorCond );
 
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
@@ -414,6 +416,7 @@ extern void msi_dialog_destroy( msi_dialog* );
 extern BOOL msi_dialog_register_class( void );
 extern void msi_dialog_unregister_class( void );
 extern void msi_dialog_handle_event( msi_dialog*, LPCWSTR, LPCWSTR, MSIRECORD * );
+extern UINT msi_dialog_reset( msi_dialog *dialog );
 
 /* preview */
 extern MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE * );

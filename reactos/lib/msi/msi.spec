@@ -41,7 +41,7 @@
 45 stdcall MsiEnumProductsW(long ptr)
 46 stdcall MsiEvaluateConditionA(long str)
 47 stdcall MsiEvaluateConditionW(long wstr)
-48 stub MsiGetLastErrorRecord
+48 stdcall MsiGetLastErrorRecord()
 49 stdcall MsiGetActiveDatabase(long)
 50 stdcall MsiGetComponentStateA(long str ptr ptr)
 51 stdcall MsiGetComponentStateW(long wstr ptr ptr)

@@ -569,6 +569,30 @@ static UINT msi_apply_patches( MSIPACKAGE *package )
     return r;
 }
 
+static UINT msi_apply_transforms( MSIPACKAGE *package )
+{
+    static const WCHAR szTransforms[] = {
+        'T','R','A','N','S','F','O','R','M','S',0 };
+    LPWSTR xform_list, *xforms;
+    UINT i, r = ERROR_SUCCESS;
+
+    xform_list = msi_dup_property( package, szTransforms );
+    xforms = msi_split_string( xform_list, ';' );
+
+    for( i=0; xforms && xforms[i] && r == ERROR_SUCCESS; i++ )
+    {
+        if (xforms[i][0] == ':')
+            r = msi_apply_substorage_transform( package, package->db, &xforms[i][1] );
+        else
+            r = MSI_DatabaseApplyTransformW( package->db, xforms[i], 0 );
+    }
+
+    msi_free( xforms );
+    msi_free( xform_list );
+
+    return r;
+}
+
 /****************************************************
  * TOP level entry points 
  *****************************************************/
@@ -618,6 +642,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
 
     msi_parse_command_line( package, szCommandLine );
 
+    msi_apply_transforms( package );
     msi_apply_patches( package );
 
     if ( msi_get_property_int(package, szUILevel, 0) >= INSTALLUILEVEL_REDUCED )
@@ -3096,7 +3121,7 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
     }
     msi_free(buffer);
     
-    FIXME("Need to write more keys to the user registry\n");
+    /* FIXME: Need to write more keys to the user registry */
   
     hDb= alloc_msihandle( &package->db->hdr );
     rc = MsiGetSummaryInformationW(hDb, NULL, 0, &hSumInfo); 
@@ -3540,7 +3565,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
         return rc;
 
     /* dump all the info i can grab */
-    FIXME("Flesh out more information\n");
+    /* FIXME: Flesh out more information */
 
     msi_write_uninstall_property_vals( package, hkey );
 
@@ -3554,7 +3579,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     RegSetValueExW(hkey,szUninstallString,0,REG_EXPAND_SZ,(LPBYTE)buffer,size);
     msi_free(buffer);
 
-    FIXME("Write real Estimated Size when we have it\n");
+    /* FIXME: Write real Estimated Size when we have it */
     msi_reg_set_val_dword( hkey, szEstimatedSize, 0 );
    
     GetLocalTime(&systime);
@@ -4210,11 +4235,23 @@ static UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
     return msi_unimplemented_action_stub( package, "UnregisterFonts", table );
 }
 
+static UINT ACTION_CCPSearch( MSIPACKAGE *package )
+{
+    static const WCHAR table[] = { 'C','C','P','S','e','a','r','c','h',0 };
+    return msi_unimplemented_action_stub( package, "CCPSearch", table );
+}
+
+static UINT ACTION_RMCCPSearch( MSIPACKAGE *package )
+{
+    static const WCHAR table[] = { 'C','C','P','S','e','a','r','c','h',0 };
+    return msi_unimplemented_action_stub( package, "RMCCPSearch", table );
+}
+
 static struct _actions StandardActions[] = {
     { szAllocateRegistrySpace, ACTION_AllocateRegistrySpace },
     { szAppSearch, ACTION_AppSearch },
     { szBindImage, ACTION_BindImage },
-    { szCCPSearch, NULL},
+    { szCCPSearch, ACTION_CCPSearch},
     { szCostFinalize, ACTION_CostFinalize },
     { szCostInitialize, ACTION_CostInitialize },
     { szCreateFolders, ACTION_CreateFolders },
@@ -4266,7 +4303,7 @@ static struct _actions StandardActions[] = {
     { szRemoveRegistryValues, NULL},
     { szRemoveShortcuts, NULL},
     { szResolveSource, ACTION_ResolveSource},
-    { szRMCCPSearch, NULL},
+    { szRMCCPSearch, ACTION_RMCCPSearch},
     { szScheduleReboot, NULL},
     { szSelfRegModules, ACTION_SelfRegModules },
     { szSelfUnregModules, ACTION_SelfUnregModules },
