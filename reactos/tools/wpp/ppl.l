@@ -1,4 +1,4 @@
-/*
+/* -*-C-*-
  * Wrc preprocessor lexical analysis
  *
  * Copyright 1999-2000	Bertho A. Stultiens (BS)
@@ -127,7 +127,9 @@
  * Special flex options and exclusive scanner start-conditions
  */
 %option stack
-%option never-interactive
+%option 8bit never-interactive
+%option nounput
+%option prefix="pp"
 
 %x pp_pp
 %x pp_eol

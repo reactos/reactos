@@ -28,7 +28,7 @@
 #include "wpp_private.h"
 #include "wine/wpp.h"
 
-int ppdebug;
+int ppdebug, pp_flex_debug;
 
 struct define
 {
