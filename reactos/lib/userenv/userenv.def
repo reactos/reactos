@@ -19,6 +19,8 @@ DeleteDesktopItemA@8 @115 NONAME
 DeleteDesktopItemW@8 @116 NONAME
 CreateEnvironmentBlock@12
 DestroyEnvironmentBlock@4
+ExpandEnvironmentStringsForUserA@16
+ExpandEnvironmentStringsForUserW@16
 GetAllUsersProfileDirectoryA@8
 GetAllUsersProfileDirectoryW@8
 GetDefaultUserProfileDirectoryA@8
