@@ -33,6 +33,10 @@
 #define NDEBUG
 #include <debug.h>
 
+PMENU_OBJECT FASTCALL
+IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu);
+
+
 
 /* STATIC FUNCTION ***********************************************************/
 
