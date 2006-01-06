@@ -33,7 +33,7 @@
 #define NDEBUG
 #include <debug.h>
 
-extern PMENU_OBJECT FASTCALL
+PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu);
 
 
@@ -1659,7 +1659,7 @@ NtUserGetMenuBarInfo(
    MENUBARINFO kmbi;
    DECLARE_RETURN(BOOL);
   
-   DPRINT("Enter NtUserGetMenuBarInfo\n");
+   DPRINT1("Enter NtUserGetMenuBarInfo\n");
    UserEnterShared();
   
    if (!(WindowObject = UserGetWindowObject(hwnd)))
@@ -1849,7 +1849,7 @@ NtUserGetMenuBarInfo(
    RETURN(Res);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetMenuBarInfo, ret=%i\n",_ret_);
+   DPRINT1("Leave NtUserGetMenuBarInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;  
 }
@@ -1887,7 +1887,7 @@ NtUserGetMenuItemRect(
    PMENU_ITEM MenuItem;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetMenuItemRect\n");
+   DPRINT1("Enter NtUserGetMenuItemRect\n");
    UserEnterShared();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
@@ -1923,7 +1923,7 @@ NtUserGetMenuItemRect(
    RETURN( TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetMenuItemRect, ret=%i\n",_ret_);
+   DPRINT1("Leave NtUserGetMenuItemRect, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
