@@ -847,51 +847,54 @@ VOID DIALOG_FilePageSetup(void)
 static INT_PTR WINAPI DIALOG_PAGESETUP_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 
-   switch (msg)
+    switch (msg)
     {
     case WM_COMMAND:
-      switch (wParam)
+        if (HIWORD(wParam) == BN_CLICKED)
         {
-        case IDOK:
-          /* save user input and close dialog */
-          GetDlgItemText(hDlg, 0x141, Globals.szHeader, SIZEOF(Globals.szHeader));
-          GetDlgItemText(hDlg, 0x143, Globals.szFooter, SIZEOF(Globals.szFooter));
-          GetDlgItemText(hDlg, 0x14A, Globals.szMarginTop, SIZEOF(Globals.szMarginTop));
-          GetDlgItemText(hDlg, 0x150, Globals.szMarginBottom, SIZEOF(Globals.szMarginBottom));
-          GetDlgItemText(hDlg, 0x147, Globals.szMarginLeft, SIZEOF(Globals.szMarginLeft));
-          GetDlgItemText(hDlg, 0x14D, Globals.szMarginRight, SIZEOF(Globals.szMarginRight));
-          EndDialog(hDlg, IDOK);
-          return TRUE;
+            switch (LOWORD(wParam))
+            {
+            case IDOK:
+                /* save user input and close dialog */
+                GetDlgItemText(hDlg, 0x141, Globals.szHeader, SIZEOF(Globals.szHeader));
+                GetDlgItemText(hDlg, 0x143, Globals.szFooter, SIZEOF(Globals.szFooter));
+                GetDlgItemText(hDlg, 0x14A, Globals.szMarginTop, SIZEOF(Globals.szMarginTop));
+                GetDlgItemText(hDlg, 0x150, Globals.szMarginBottom, SIZEOF(Globals.szMarginBottom));
+                GetDlgItemText(hDlg, 0x147, Globals.szMarginLeft, SIZEOF(Globals.szMarginLeft));
+                GetDlgItemText(hDlg, 0x14D, Globals.szMarginRight, SIZEOF(Globals.szMarginRight));
+                EndDialog(hDlg, IDOK);
+                return TRUE;
 
-        case IDCANCEL:
-          /* discard user input and close dialog */
-          EndDialog(hDlg, IDCANCEL);
-          return TRUE;
+            case IDCANCEL:
+                /* discard user input and close dialog */
+                EndDialog(hDlg, IDCANCEL);
+                return TRUE;
 
-        case IDHELP:
-        {
-          /* FIXME: Bring this to work */
-          static const WCHAR sorryW[] = { 'S','o','r','r','y',',',' ','n','o',' ','h','e','l','p',' ','a','v','a','i','l','a','b','l','e',0 };
-          static const WCHAR helpW[] = { 'H','e','l','p',0 };
-          MessageBox(Globals.hMainWnd, sorryW, helpW, MB_ICONEXCLAMATION);
-          return TRUE;
+            case IDHELP:
+                {
+                    /* FIXME: Bring this to work */
+                    static const WCHAR sorryW[] = { 'S','o','r','r','y',',',' ','n','o',' ','h','e','l','p',' ','a','v','a','i','l','a','b','l','e',0 };
+                    static const WCHAR helpW[] = { 'H','e','l','p',0 };
+                    MessageBox(Globals.hMainWnd, sorryW, helpW, MB_ICONEXCLAMATION);
+                    return TRUE;
+                }
+
+            default:
+                break;
+            }
         }
-
-        default:
-          break;
-        }
-      break;
+        break;
 
     case WM_INITDIALOG:
-       /* fetch last user input prior to display dialog */
-       SetDlgItemText(hDlg, 0x141, Globals.szHeader);
-       SetDlgItemText(hDlg, 0x143, Globals.szFooter);
-       SetDlgItemText(hDlg, 0x14A, Globals.szMarginTop);
-       SetDlgItemText(hDlg, 0x150, Globals.szMarginBottom);
-       SetDlgItemText(hDlg, 0x147, Globals.szMarginLeft);
-       SetDlgItemText(hDlg, 0x14D, Globals.szMarginRight);
-       break;
+        /* fetch last user input prior to display dialog */
+        SetDlgItemText(hDlg, 0x141, Globals.szHeader);
+        SetDlgItemText(hDlg, 0x143, Globals.szFooter);
+        SetDlgItemText(hDlg, 0x14A, Globals.szMarginTop);
+        SetDlgItemText(hDlg, 0x150, Globals.szMarginBottom);
+        SetDlgItemText(hDlg, 0x147, Globals.szMarginLeft);
+        SetDlgItemText(hDlg, 0x14D, Globals.szMarginRight);
+        break;
     }
 
-  return FALSE;
+    return FALSE;
 }
