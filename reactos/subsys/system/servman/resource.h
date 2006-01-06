@@ -1,5 +1,10 @@
 #define IDC_STATIC -1
 
+/* about box info */
+#define IDD_ABOUTBOX        200
+#define IDC_LICENSE_EDIT    201
+#define IDS_LICENSE         202
+
 #define IDC_SERVLIST        1000
 #define IDC_TOOLBAR         1001
 #define IDC_STATUSBAR	    1002
@@ -42,3 +47,19 @@
 
 #define IDB_START 50
 #define IDI_SM_ICON 51
+
+
+
+
+#define IDS_PROP_SHEET 10000
+#define IDD_DLG_GENERAL 10001
+#define IDC_SERV_NAME 10041
+#define IDC_DISP_NAME 10051
+#define IDC_DESCRIPTION 10061
+#define IDC_START_TYPE 10101
+#define IDC_SERV_STATUS 10121
+#define IDC_START 10131
+#define IDC_STOP 10141
+#define IDC_PAUSE 10151
+#define IDC_RESUME 10161
+#define IDC_START_PARAM 10191
