@@ -105,7 +105,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    NTSTATUS Status;
+    NTSTATUS WaitStatus;
     DPRINT("Entering KeDelayExecutionThread\n");
 
     /* Check if the lock is already held */
@@ -138,7 +138,10 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
         }
 
         /* Chceck if we can do an alertable wait, if requested */
-        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status)) break;
+        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &WaitStatus)) break;
+
+        /* Set status */
+        CurrentThread->WaitStatus = STATUS_WAIT_0;
 
         /* Set Timer */
         ThreadTimer = &CurrentThread->Timer;
@@ -159,7 +162,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
         if (!KiInsertTimer(ThreadTimer, *Interval))
         {
             /* FIXME: The timer already expired, we should find a new ready thread */
-            Status = STATUS_SUCCESS;
+            WaitStatus = STATUS_SUCCESS;
             break;
         }
 
@@ -179,16 +182,16 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
 
         /* Find a new thread to run */
         DPRINT("Swapping threads\n");
-        Status = KiSwapThread();
+        WaitStatus = KiSwapThread();
 
         /* Check if we were executing an APC or if we timed out */
-        if (Status != STATUS_KERNEL_APC)
+        if (WaitStatus != STATUS_KERNEL_APC)
         {
             /* This is a good thing */
-            if (Status == STATUS_TIMEOUT) Status = STATUS_SUCCESS;
+            if (WaitStatus == STATUS_TIMEOUT) WaitStatus = STATUS_SUCCESS;
 
             /* Return Status */
-            return Status;
+            return WaitStatus;
         }
 
         /* FIXME: Fixup interval */
@@ -204,7 +207,7 @@ SkipWait:
     DPRINT("Returning from KeDelayExecutionThread(), %x. Status: %d\n",
             KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
-    return Status;
+    return WaitStatus;
 }
 
 /*
@@ -235,7 +238,6 @@ KeWaitForSingleObject(PVOID Object,
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    NTSTATUS Status;
     NTSTATUS WaitStatus;
     DPRINT("Entering KeWaitForSingleObject\n");
 
@@ -265,8 +267,8 @@ KeWaitForSingleObject(PVOID Object,
             goto SkipWait;
         }
 
-        /* Get the current Wait Status */
-        WaitStatus = CurrentThread->WaitStatus;
+        /* Set default status */
+        CurrentThread->WaitStatus = STATUS_WAIT_0;
 
         /* Append wait block to the KTHREAD wait block list */
         CurrentThread->WaitBlockList = WaitBlock = &CurrentThread->WaitBlock[0];
@@ -286,7 +288,7 @@ KeWaitForSingleObject(PVOID Object,
                 {
                     /* It has a normal signal state, so unwait it and return */
                     KiSatisfyMutantWait(CurrentObject, CurrentThread);
-                    Status = STATUS_WAIT_0;
+                    WaitStatus = CurrentThread->WaitStatus;
                     goto DontWait;
                 }
                 else
@@ -301,22 +303,19 @@ KeWaitForSingleObject(PVOID Object,
         {
             /* Another satisfied object */
             KiSatisfyNonMutantWait(CurrentObject, CurrentThread);
-            Status = STATUS_WAIT_0;
+            WaitStatus = STATUS_WAIT_0;
             goto DontWait;
         }
 
         /* Set up the Wait Block */
         WaitBlock->Object = CurrentObject;
         WaitBlock->Thread = CurrentThread;
-        WaitBlock->WaitKey = (USHORT)(STATUS_WAIT_0);
+        WaitBlock->WaitKey = (USHORT)(STATUS_SUCCESS);
         WaitBlock->WaitType = WaitAny;
         WaitBlock->NextWaitBlock = WaitBlock;
 
         /* Make sure we can satisfy the Alertable request */
-        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status)) break;
-
-        /* Set the Wait Status */
-        CurrentThread->WaitStatus = Status;
+        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &WaitStatus)) break;
 
         /* Enable the Timeout Timer if there was any specified */
         if (Timeout)
@@ -325,7 +324,7 @@ KeWaitForSingleObject(PVOID Object,
             if (!Timeout->QuadPart)
             {
                 /* Return a timeout */
-                Status = STATUS_TIMEOUT;
+                WaitStatus = STATUS_TIMEOUT;
                 goto DontWait;
             }
 
@@ -352,7 +351,7 @@ KeWaitForSingleObject(PVOID Object,
             if (!KiInsertTimer(ThreadTimer, *Timeout))
             {
                 /* Return a timeout if we couldn't insert the timer */
-                Status = STATUS_TIMEOUT;
+                WaitStatus = STATUS_TIMEOUT;
                 goto DontWait;
             }
         }
@@ -377,13 +376,13 @@ KeWaitForSingleObject(PVOID Object,
 
         /* Find a new thread to run */
         DPRINT("Swapping threads\n");
-        Status = KiSwapThread();
+        WaitStatus = KiSwapThread();
 
         /* Check if we were executing an APC */
-        if (Status != STATUS_KERNEL_APC)
+        if (WaitStatus != STATUS_KERNEL_APC)
         {
             /* Return Status */
-            return Status;
+            return WaitStatus;
         }
 
         /* Check if we had a timeout */
@@ -401,9 +400,9 @@ SkipWait:
 
     /* Release the Lock, we are done */
     DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n",
-            KeGetCurrentThread(), Status);
+            KeGetCurrentThread(), WaitStatus);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
-    return Status;
+    return WaitStatus;
 
 DontWait:
     /* Adjust the Quantum */
@@ -411,15 +410,16 @@ DontWait:
 
     /* Release & Return */
     DPRINT("Quick-return from KeWaitForMultipleObjects(), %x. Status: %d\n.",
-            KeGetCurrentThread(), Status);
+            KeGetCurrentThread(), WaitStatus);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
-    return Status;
+    return WaitStatus;
 }
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 KeWaitForMultipleObjects(ULONG Count,
                          PVOID Object[],
                          WAIT_TYPE WaitType,
@@ -436,7 +436,6 @@ KeWaitForMultipleObjects(ULONG Count,
     PKTHREAD CurrentThread = KeGetCurrentThread();
     ULONG AllObjectsSignaled;
     ULONG WaitIndex;
-    NTSTATUS Status;
     NTSTATUS WaitStatus;
     DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
            "PsGetCurrentThread() %x, Timeout %x\n",
@@ -486,11 +485,11 @@ KeWaitForMultipleObjects(ULONG Count,
             goto SkipWait;
         }
 
-        /* Get the current Wait Status */
-        WaitStatus = CurrentThread->WaitStatus;
-
         /* Append wait block to the KTHREAD wait block list */
         CurrentThread->WaitBlockList = WaitBlock = WaitBlockArray;
+
+        /* Set default wait status */
+        CurrentThread->WaitStatus = STATUS_WAIT_0;
 
         /* Check if the wait is (already) satisfied */
         AllObjectsSignaled = TRUE;
@@ -516,7 +515,7 @@ KeWaitForMultipleObjects(ULONG Count,
                         {
                             /* Normal signal state, so unwait it and return */
                             KiSatisfyMutantWait(CurrentObject, CurrentThread);
-                            Status = STATUS_WAIT_0 | WaitIndex;
+                            WaitStatus = CurrentThread->WaitStatus | WaitIndex;
                             goto DontWait;
                         }
                         else
@@ -531,7 +530,7 @@ KeWaitForMultipleObjects(ULONG Count,
                 {
                     /* Another signaled object, unwait and return */
                     KiSatisfyNonMutantWait(CurrentObject, CurrentThread);
-                    Status = WaitIndex;
+                    WaitStatus = WaitIndex;
                     goto DontWait;
                 }
             }
@@ -585,15 +584,12 @@ KeWaitForMultipleObjects(ULONG Count,
 
             /* Satisfy their Waits and return to the caller */
             KiSatisifyMultipleObjectWaits(WaitBlock);
-            Status = STATUS_WAIT_0;
+            WaitStatus = CurrentThread->WaitStatus;
             goto DontWait;
         }
 
         /* Make sure we can satisfy the Alertable request */
-        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status)) break;
-
-        /* Set the Wait Status */
-        CurrentThread->WaitStatus = Status;
+        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &WaitStatus)) break;
 
         /* Enable the Timeout Timer if there was any specified */
         if (Timeout)
@@ -602,7 +598,7 @@ KeWaitForMultipleObjects(ULONG Count,
             if (!Timeout->QuadPart)
             {
                 /* Return a timeout */
-                Status = STATUS_TIMEOUT;
+                WaitStatus = STATUS_TIMEOUT;
                 goto DontWait;
             }
 
@@ -627,7 +623,7 @@ KeWaitForMultipleObjects(ULONG Count,
             if (!KiInsertTimer(ThreadTimer, *Timeout))
             {
                 /* Return a timeout if we couldn't insert the timer */
-                Status = STATUS_TIMEOUT;
+                WaitStatus = STATUS_TIMEOUT;
                 goto DontWait;
             }
         }
@@ -664,14 +660,14 @@ KeWaitForMultipleObjects(ULONG Count,
 
         /* Find a new thread to run */
         DPRINT("Swapping threads\n");
-        Status = KiSwapThread();
+        WaitStatus = KiSwapThread();
 
         /* Check if we were executing an APC */
         DPRINT("Thread is back\n");
-        if (Status != STATUS_KERNEL_APC)
+        if (WaitStatus != STATUS_KERNEL_APC)
         {
             /* Return Status */
-            return Status;
+            return WaitStatus;
         }
 
         /* Check if we had a timeout */
@@ -688,9 +684,9 @@ SkipWait:
     while (TRUE);
 
     /* Release the Lock, we are done */
-    DPRINT("Returning, %x. Status: %d\n",  KeGetCurrentThread(), Status);
+    DPRINT("Returning, %x. Status: %d\n",  KeGetCurrentThread(), WaitStatus);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
-    return Status;
+    return WaitStatus;
 
 DontWait:
     /* Adjust the Quantum */
@@ -698,9 +694,9 @@ DontWait:
 
     /* Release & Return */
     DPRINT("Returning, %x. Status: %d\n. We did not wait.",
-            KeGetCurrentThread(), Status);
+            KeGetCurrentThread(), WaitStatus);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
-    return Status;
+    return WaitStatus;
 }
 
 VOID
