@@ -496,6 +496,7 @@ return TRUE;
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
+
 BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL BrushOrigin,
@@ -533,7 +534,7 @@ BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                   sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                    		
                   color = DIB_1BPP_GetPixel(SourceSurf, sx, sy);
-				  DIB_1BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));                  
+				  DIB_1BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));                  
             }
        }		
 
