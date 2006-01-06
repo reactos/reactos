@@ -2288,6 +2288,7 @@ static LRESULT PROPSHEET_QuerySiblings(HWND hwndDlg,
 static BOOL PROPSHEET_AddPage(HWND hwndDlg,
                               HPROPSHEETPAGE hpage)
 {
+  PropPageInfo * ppi;
   PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
                                                      PropSheetInfoStr);
   HWND hwndTabControl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
@@ -2298,9 +2299,13 @@ static BOOL PROPSHEET_AddPage(HWND hwndDlg,
   /*
    * Allocate and fill in a new PropPageInfo entry.
    */
-  psInfo->proppage = (PropPageInfo*) ReAlloc(psInfo->proppage,
-                                                      sizeof(PropPageInfo) *
-                                                      (psInfo->nPages + 1));
+  ppi = (PropPageInfo*) ReAlloc(psInfo->proppage,
+                                sizeof(PropPageInfo) *
+                                (psInfo->nPages + 1));
+  if (!ppi)
+      return FALSE;
+
+  psInfo->proppage = ppi;
   if (!PROPSHEET_CollectPageInfo(ppsp, psInfo, psInfo->nPages))
       return FALSE;
 

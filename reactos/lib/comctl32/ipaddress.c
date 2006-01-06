@@ -189,7 +189,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
     edit.bottom = rcClient.bottom - 2;
 
     infoPtr->Self = hwnd;
-    infoPtr->Enabled = FALSE;
+    infoPtr->Enabled = TRUE;
     infoPtr->Notify = lpCreate->hwndParent;
 
     for (i = 0; i < 4; i++) {
@@ -208,6 +208,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
         part->OrigProc = (WNDPROC)
 		SetWindowLongPtrW (part->EditHwnd, GWLP_WNDPROC,
 				(DWORD_PTR)IPADDRESS_SubclassProc);
+        EnableWindow(part->EditHwnd, infoPtr->Enabled);
     }
 
     return 0;
