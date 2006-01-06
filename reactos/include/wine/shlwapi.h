@@ -12,6 +12,8 @@
 #ifndef __WINE_SHLWAPI_H
 #define __WINE_SHLWAPI_H
 
+#define URL_FILE_USE_PATHURL 0x00010000
+
 #define INTERFACE IQueryAssociations
 DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
 {

@@ -328,9 +328,10 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 {
     HRESULT hr = S_OK;
     DWORD EscapeFlags;
-    LPWSTR lpszUrlCpy, wk1, wk2, mp, root;
+    LPWSTR lpszUrlCpy, wk1, wk2, mp, mp2, root;
     INT nByteLen, state;
     DWORD nLen, nWkLen;
+    WCHAR slash = dwFlags & URL_FILE_USE_PATHURL ? '\\' : '/';
 
     TRACE("(%s %p %p 0x%08lx)\n", debugstr_w(pszUrl), pszCanonicalized,
 	  pcchCanonicalized, dwFlags);
@@ -377,23 +378,37 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 		*wk2++ = *wk1++;
 		if (*wk1 != L'/') {state = 6; break;}
 		*wk2++ = *wk1++;
+                if((dwFlags & URL_FILE_USE_PATHURL) && *wk1 == '/')
+                    wk1++;
 		state = 4;
 		break;
 	    case 3:
 		nWkLen = strlenW(wk1);
 		memcpy(wk2, wk1, (nWkLen + 1) * sizeof(WCHAR));
+                mp = wk2;
 		wk1 += nWkLen;
 		wk2 += nWkLen;
+
+                while(mp < wk2) {
+                    if(*mp == '/' || *mp == '\\')
+                        *mp = slash;
+                    mp++;
+                }
 		break;
 	    case 4:
-		if (!isalnumW(*wk1) && (*wk1 != L'-') && (*wk1 != L'.')) {state = 3; break;}
-		while(isalnumW(*wk1) || (*wk1 == L'-') || (*wk1 == L'.')) *wk2++ = *wk1++;
-		state = 5;
-		break;
-	    case 5:
-		if (*wk1 != L'/') {state = 3; break;}
-		*wk2++ = *wk1++;
-		state = 6;
+                if (!isalnumW(*wk1) && (*wk1 != L'-') && (*wk1 != L'.') && (*wk1 != ':'))
+                    {state = 3; break;}
+                while(isalnumW(*wk1) || (*wk1 == L'-') || (*wk1 == L'.') || (*wk1 == ':'))
+                    *wk2++ = *wk1++;
+                state = 5;
+                break;
+            case 5:
+                if (*wk1 != '/' && *wk1 != '\\') {state = 3; break;}
+                while(*wk1 == '/') {
+                    *wk2++ = slash;
+                    wk1++;
+                }
+                state = 6;
 		break;
 	    case 6:
 		/* Now at root location, cannot back up any more. */
@@ -401,7 +416,11 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 		root = wk2-1;
 		while (*wk1) {
 		    TRACE("wk1=%c\n", (CHAR)*wk1);
-		    mp = strchrW(wk1, L'/');
+
+                    mp = strchrW(wk1, '/');
+                    mp2 = strchrW(wk1, '\\');
+                    if(mp2 && mp2 < mp)
+                        mp = mp2;
 		    if (!mp) {
 			nWkLen = strlenW(wk1);
 			memcpy(wk2, wk1, (nWkLen + 1) * sizeof(WCHAR));
@@ -409,35 +428,41 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 			wk2 += nWkLen;
 			continue;
 		    }
-		    nLen = mp - wk1 + 1;
-		    memcpy(wk2, wk1, nLen * sizeof(WCHAR));
-		    wk2 += nLen;
-		    wk1 += nLen;
+                    nLen = mp - wk1;
+                    if(nLen) {
+                        memcpy(wk2, wk1, nLen * sizeof(WCHAR));
+                        wk2 += nLen;
+                        wk1 += nLen;
+                    }
+                    *wk2++ = slash;
+                    wk1++;
+
 		    if (*wk1 == L'.') {
 			TRACE("found '/.'\n");
-			if (*(wk1+1) == L'/') {
+                        if (wk1[1] == '/' || wk1[1] == '\\') {
 			    /* case of /./ -> skip the ./ */
 			    wk1 += 2;
 			}
-			else if (*(wk1+1) == L'.') {
+                        else if (wk1[1] == '.') {
 			    /* found /..  look for next / */
 			    TRACE("found '/..'\n");
-			    if (*(wk1+2) == L'/' || *(wk1+2) == L'?' || *(wk1+2) == L'#' || *(wk1+2) == 0) {
+                            if (wk1[2] == '/' || wk1[2] == '\\' ||wk1[2] == '?'
+                                    || wk1[2] == '#' || !wk1[2]) {
 				/* case /../ -> need to backup wk2 */
 				TRACE("found '/../'\n");
 				*(wk2-1) = L'\0';  /* set end of string */
-				mp = strrchrW(root, L'/');
+                                mp = strrchrW(root, slash);
 				if (mp && (mp >= root)) {
 				    /* found valid backup point */
 				    wk2 = mp + 1;
-				    if(*(wk1+2) != L'/')
+                                    if(wk1[2] != '/' && wk1[2] != '\\')
 				        wk1 += 2;
 				    else
 				        wk1 += 3;
 				}
 				else {
-				    /* did not find point, restore '/' */
-				    *(wk2-1) = L'/';
+                                    /* did not find point, restore '/' */
+                                    *(wk2-1) = slash;
 				}
 			    }
 			}
@@ -459,7 +484,7 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     while ((nLen > 0) && ((lpszUrlCpy[nLen-1] == '\r')||(lpszUrlCpy[nLen-1] == '\n')))
         lpszUrlCpy[--nLen]=0;
 
-    if(dwFlags & URL_UNESCAPE)
+    if(dwFlags & (URL_UNESCAPE | URL_FILE_USE_PATHURL))
         UrlUnescapeW(lpszUrlCpy, NULL, &nLen, URL_UNESCAPE_INPLACE);
 
     if((EscapeFlags = dwFlags & (URL_ESCAPE_UNSAFE |
