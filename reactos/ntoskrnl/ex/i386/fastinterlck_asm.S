@@ -611,7 +611,7 @@
 @ExfInterlockedCompareExchange64@12:
 
     /* Save registers */
-    push ebp
+    push ebx
     push ebp
 
     /* Get desination pointer, exchange value and comperand value/address */
