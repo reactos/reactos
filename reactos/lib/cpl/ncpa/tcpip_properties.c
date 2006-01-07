@@ -179,15 +179,18 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             while(pString->Next)
                 pString = pString->Next;
             dwIPAddr = inet_addr(pString->IpAddress.String);
-            SendDlgItemMessage(hwndDlg,IDC_IPADDR,IPM_SETADDRESS,0,dwIPAddr);
+            SendDlgItemMessage(hwndDlg,IDC_IPADDR,IPM_SETADDRESS,0,
+                               ntohl(dwIPAddr));
             dwIPAddr = inet_addr(pString->IpMask.String);
-            SendDlgItemMessage(hwndDlg,IDC_SUBNETMASK,IPM_SETADDRESS,0,dwIPAddr);
+            SendDlgItemMessage(hwndDlg,IDC_SUBNETMASK,IPM_SETADDRESS,0,
+                               ntohl(dwIPAddr));
 
             pString = &pInfo->GatewayList;
             while(pString->Next)
                 pString = pString->Next;
             dwIPAddr = inet_addr(pString->IpAddress.String);
-            SendDlgItemMessage(hwndDlg,IDC_DEFGATEWAY,IPM_SETADDRESS,0,dwIPAddr);
+            SendDlgItemMessage(hwndDlg,IDC_DEFGATEWAY,IPM_SETADDRESS,0,
+                               ntohl(dwIPAddr));
 
         }
         {
@@ -208,7 +211,8 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 while( NextDNSServer && StaticDNS < 2 ) {
                     dwIPAddr = inet_addr(NextDNSServer);
                     if( dwIPAddr != INADDR_NONE ) {
-                        SendDlgItemMessage(hwndDlg,IDC_DNS1 + StaticDNS,IPM_SETADDRESS,0,dwIPAddr);
+                        SendDlgItemMessage(hwndDlg,IDC_DNS1 + StaticDNS,
+                                           IPM_SETADDRESS,0,ntohl(dwIPAddr));
                         StaticDNS++;
                     }
                     NextDNSServer = strchr( pszDNS, ',' );
