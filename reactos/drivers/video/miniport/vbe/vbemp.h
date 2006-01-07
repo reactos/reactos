@@ -23,9 +23,16 @@
 
 /* INCLUDES *******************************************************************/
 
+#ifdef _MSC_VER
+#include "dderror.h"
+#include "devioctl.h"
+#else
 #include <ntddk.h>
-#include <miniport.h>
-#include <video.h>
+#endif
+
+#include "miniport.h"
+#include "ntddvdeo.h"
+#include "video.h"
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_VBE TAG('V', 'B', 'E', ' ')
@@ -91,15 +98,15 @@
 typedef struct
 {
    CHAR Signature[4];
-   WORD Version;
-   DWORD OemStringPtr;
+   USHORT Version;
+   ULONG OemStringPtr;
    LONG Capabilities;
-   DWORD VideoModePtr;
-   WORD TotalMemory;
-   WORD OemSoftwareRevision;
-   DWORD OemVendorNamePtr;
-   DWORD OemProductNamePtr;
-   DWORD OemProductRevPtr;
+   ULONG VideoModePtr;
+   USHORT TotalMemory;
+   USHORT OemSoftwareRevision;
+   ULONG OemVendorNamePtr;
+   ULONG OemProductNamePtr;
+   ULONG OemProductRevPtr;
    CHAR Reserved[222];
    CHAR OemData[256];
 } VBE_INFO, *PVBE_INFO;
@@ -112,58 +119,58 @@ typedef struct
 typedef struct
 {
    /* Mandatory information for all VBE revisions */
-   WORD ModeAttributes;
-   BYTE WinAAttributes;
-   BYTE WinBAttributes;
-   WORD WinGranularity;
-   WORD WinSize;
-   WORD WinASegment;
-   WORD WinBSegment;
-   DWORD WinFuncPtr;
-   WORD BytesPerScanLine;
+   USHORT ModeAttributes;
+   UCHAR WinAAttributes;
+   UCHAR WinBAttributes;
+   USHORT WinGranularity;
+   USHORT WinSize;
+   USHORT WinASegment;
+   USHORT WinBSegment;
+   ULONG WinFuncPtr;
+   USHORT BytesPerScanLine;
 
    /* Mandatory information for VBE 1.2 and above */
-   WORD XResolution;
-   WORD YResolution;
-   BYTE XCharSize;
-   BYTE YCharSize;
-   BYTE NumberOfPlanes;
-   BYTE BitsPerPixel;
-   BYTE NumberOfBanks;
-   BYTE MemoryModel;
-   BYTE BankSize;
-   BYTE NumberOfImagePages;
-   BYTE Reserved1;
+   USHORT XResolution;
+   USHORT YResolution;
+   UCHAR XCharSize;
+   UCHAR YCharSize;
+   UCHAR NumberOfPlanes;
+   UCHAR BitsPerPixel;
+   UCHAR NumberOfBanks;
+   UCHAR MemoryModel;
+   UCHAR BankSize;
+   UCHAR NumberOfImagePages;
+   UCHAR Reserved1;
 
    /* Direct Color fields (required for Direct/6 and YUV/7 memory models) */
-   BYTE RedMaskSize;
-   BYTE RedFieldPosition;
-   BYTE GreenMaskSize;
-   BYTE GreenFieldPosition;
-   BYTE BlueMaskSize;
-   BYTE BlueFieldPosition;
-   BYTE ReservedMaskSize;
-   BYTE ReservedFieldPosition;
-   BYTE DirectColorModeInfo;
+   UCHAR RedMaskSize;
+   UCHAR RedFieldPosition;
+   UCHAR GreenMaskSize;
+   UCHAR GreenFieldPosition;
+   UCHAR BlueMaskSize;
+   UCHAR BlueFieldPosition;
+   UCHAR ReservedMaskSize;
+   UCHAR ReservedFieldPosition;
+   UCHAR DirectColorModeInfo;
 
    /* Mandatory information for VBE 2.0 and above */
-   DWORD PhysBasePtr;
-   DWORD Reserved2;
-   WORD Reserved3;
+   ULONG PhysBasePtr;
+   ULONG Reserved2;
+   USHORT Reserved3;
 
    /* Mandatory information for VBE 3.0 and above */
-   WORD LinBytesPerScanLine;
-   BYTE BnkNumberOfImagePages;
-   BYTE LinNumberOfImagePages;
-   BYTE LinRedMaskSize;
-   BYTE LinRedFieldPosition;
-   BYTE LinGreenMaskSize;
-   BYTE LinGreenFieldPosition;
-   BYTE LinBlueMaskSize;
-   BYTE LinBlueFieldPosition;
-   BYTE LinReservedMaskSize;
-   BYTE LinReservedFieldPosition;
-   DWORD MaxPixelClock;
+   USHORT LinBytesPerScanLine;
+   UCHAR BnkNumberOfImagePages;
+   UCHAR LinNumberOfImagePages;
+   UCHAR LinRedMaskSize;
+   UCHAR LinRedFieldPosition;
+   UCHAR LinGreenMaskSize;
+   UCHAR LinGreenFieldPosition;
+   UCHAR LinBlueMaskSize;
+   UCHAR LinBlueFieldPosition;
+   UCHAR LinReservedMaskSize;
+   UCHAR LinReservedFieldPosition;
+   ULONG MaxPixelClock;
 
    CHAR Reserved4[189];
 } VBE_MODEINFO, *PVBE_MODEINFO;
@@ -184,9 +191,9 @@ typedef struct
 
    /* Saved information about video modes */
    ULONG ModeCount;
-   WORD *ModeNumbers;
+   USHORT *ModeNumbers;
    PVBE_MODEINFO ModeInfo;
-   WORD CurrentMode;
+   USHORT CurrentMode;
 } VBE_DEVICE_EXTENSION, *PVBE_DEVICE_EXTENSION;
 
 VP_STATUS STDCALL
@@ -223,49 +230,49 @@ VBESetPowerState(
    ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBESetCurrentMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE RequestedMode,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEResetDevice(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEMapVideoMemory(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY RequestedAddress,
    PVIDEO_MEMORY_INFORMATION MapInformation,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEUnmapVideoMemory(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY VideoMemory,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEQueryNumAvailModes(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_NUM_MODES Modes,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEQueryAvailModes(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION ReturnedModes,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEQueryCurrentMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoModeInfo,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBESetColorRegisters(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,

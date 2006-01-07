@@ -110,7 +110,7 @@ VBESortModes(PVBE_DEVICE_EXTENSION DeviceExtension)
    ULONG Pos;
    int Result;
    VBE_MODEINFO TempModeInfo;
-   WORD TempModeNumber;
+   USHORT TempModeNumber;
 
    while (!Finished)
    {
@@ -301,7 +301,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    VBEDeviceExtension->ModeInfo =
       VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(VBE_MODEINFO), TAG_VBE);
    VBEDeviceExtension->ModeNumbers =
-      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(WORD), TAG_VBE);
+      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(USHORT), TAG_VBE);
 
    /*
     * Get the actual mode infos.
@@ -404,9 +404,9 @@ VBEStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket)
 {
-   BOOL Result;
+   BOOLEAN Result;
 
-   RequestPacket->StatusBlock->Status = STATUS_UNSUCCESSFUL;
+   RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
 
    switch (RequestPacket->IoControlCode)
    {
@@ -507,12 +507,12 @@ VBEStartIO(
          break;
 
       default:
-         RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+         RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
          return FALSE;
    }
 
    if (Result)
-      RequestPacket->StatusBlock->Status = STATUS_SUCCESS;
+      RequestPacket->StatusBlock->Status = NO_ERROR;
 
    return TRUE;
 }
@@ -615,7 +615,7 @@ VBEGetPowerState(
       &BiosRegisters);
 
    if (BiosRegisters.Eax == VBE_NOT_SUPPORTED)
-      return ERROR_NOT_SUPPORTED;
+      return ERROR_DEV_NOT_EXIST;
    if (BiosRegisters.Eax != VBE_SUCCESS)
       return ERROR_INVALID_FUNCTION;
 
@@ -648,7 +648,7 @@ VBEGetPowerState(
       return NO_ERROR;
    }
 
-   return ERROR_NOT_SUPPORTED;
+   return ERROR_DEV_NOT_EXIST;
 }
 
 /*
@@ -697,7 +697,7 @@ VBESetPowerState(
       &BiosRegisters);
 
    if (BiosRegisters.Eax == VBE_NOT_SUPPORTED)
-      return ERROR_NOT_SUPPORTED;
+      return ERROR_DEV_NOT_EXIST;
    if (BiosRegisters.Eax != VBE_SUCCESS)
       return ERROR_INVALID_FUNCTION;
 
@@ -710,7 +710,7 @@ VBESetPowerState(
  * Sets the adapter to the specified operating mode.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBESetCurrentMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE RequestedMode,
@@ -750,7 +750,7 @@ VBESetCurrentMode(
  * at system boot.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEResetDevice(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock)
@@ -774,7 +774,7 @@ VBEResetDevice(
  * space of the requestor.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEMapVideoMemory(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY RequestedAddress,
@@ -831,7 +831,7 @@ VBEMapVideoMemory(
  * frame buffer and video RAM.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEUnmapVideoMemory(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY VideoMemory,
@@ -850,7 +850,7 @@ VBEUnmapVideoMemory(
  * buffer for an IOCTL_VIDEO_QUERY_AVAIL_MODES request.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEQueryNumAvailModes(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_NUM_MODES Modes,
@@ -942,7 +942,7 @@ VBEQueryMode(
  * Returns information about each video mode supported by the adapter.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEQueryAvailModes(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION ReturnedModes,
@@ -972,7 +972,7 @@ VBEQueryAvailModes(
  * Returns information about current video mode.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBEQueryCurrentMode(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoModeInfo,
@@ -997,7 +997,7 @@ VBEQueryCurrentMode(
  * yet implemented.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 VBESetColorRegisters(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,
