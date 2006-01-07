@@ -199,7 +199,7 @@ BeepDeviceControl(PDEVICE_OBJECT DeviceObject,
 			    FALSE,
 			    NULL);
     }
-  else if (BeepParam->Duration == (DWORD)-1)
+  else if (BeepParam->Duration == (ULONG)-1)
     {
       if (DeviceExtension->BeepOn == TRUE)
 	{

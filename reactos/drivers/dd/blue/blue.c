@@ -12,13 +12,32 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntddk.h>
+
+/* FIXME: W32API NEEDS TO BE FIXED */
+#ifdef _MSC_VER
+/*
+ * Wincon.h can't be included due to missing user-mode types,
+ * so we'll define them here 
+ */
+typedef ULONG DWORD, *LPDWORD;
+typedef USHORT UINT, *LPWORD;
+typedef USHORT WORD;
+typedef UCHAR BYTE;
+typedef INT BOOL;
+typedef PVOID HWND;
+typedef PVOID LPVOID;
+#define WINAPI NTAPI
+#define APIENTRY WINAPI
+#define WINBASEAPI
+typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
+#endif
+
 #include <wincon.h>
 #include <blue/ntddblue.h>
 #include <ndk/halfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* DEFINITIONS ***************************************************************/
 
@@ -53,14 +72,14 @@
 
 typedef struct _DEVICE_EXTENSION
 {
-    PBYTE VideoMemory;    /* Pointer to video memory */
-    DWORD CursorSize;
-    BOOL  CursorVisible;
-    WORD  CharAttribute;
-    DWORD Mode;
-    BYTE  ScanLines;      /* Height of a text line */
-    WORD  Rows;           /* Number of rows        */
-    WORD  Columns;        /* Number of columns     */
+    PUCHAR VideoMemory;    /* Pointer to video memory */
+    ULONG CursorSize;
+    INT  CursorVisible;
+    USHORT  CharAttribute;
+    ULONG Mode;
+    UCHAR  ScanLines;      /* Height of a text line */
+    USHORT  Rows;           /* Number of rows        */
+    USHORT  Columns;        /* Number of columns     */
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
@@ -77,12 +96,12 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     PHYSICAL_ADDRESS BaseAddress;
     NTSTATUS Status;
     unsigned int offset;
-    BYTE data, value;
+    UCHAR data, value;
 
     DeviceExtension = DeviceObject->DeviceExtension;
 
     /* disable interrupts */
-    __asm__("cli\n\t");
+    _disable();
 
     /* get current output position */
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
@@ -113,7 +132,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     DeviceExtension->ScanLines = (READ_PORT_UCHAR (CRTC_DATA) & 0x1F) + 1;
 
     /* enable interrupts */
-    __asm__("sti\n\t");
+    _enable();
 
     /* calculate number of text rows */
     DeviceExtension->Rows =
@@ -130,7 +149,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     /* get pointer to video memory */
     BaseAddress.QuadPart = VIDMEM_BASE;
     DeviceExtension->VideoMemory =
-        (PBYTE)MmMapIoSpace (BaseAddress, DeviceExtension->Rows * DeviceExtension->Columns * 2, MmNonCached);
+        (PUCHAR)MmMapIoSpace (BaseAddress, DeviceExtension->Rows * DeviceExtension->Columns * 2, MmNonCached);
 
     DeviceExtension->CursorSize    = 5; /* FIXME: value correct?? */
     DeviceExtension->CursorVisible = TRUE;
@@ -141,14 +160,14 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
                             ENABLE_WRAP_AT_EOL_OUTPUT;
 
     /* show blinking cursor */
-    __asm__("cli\n\t");
+    _disable();
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
     WRITE_PORT_UCHAR (CRTC_DATA, (DeviceExtension->ScanLines - 1) & 0x1F);
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
     data = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
     WRITE_PORT_UCHAR (CRTC_DATA,
                       data | ((DeviceExtension->ScanLines - 1) & 0x1F));
-    __asm__("sti\n\t");
+    _enable();
 
     Status = STATUS_SUCCESS;
 
@@ -167,7 +186,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
     char *pch = Irp->UserBuffer;
-    PBYTE vidmem;
+    PUCHAR vidmem;
     unsigned int i;
     int j, offset;
     int cursorx, cursory;
@@ -189,12 +208,12 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     rows = DeviceExtension->Rows;
     columns = DeviceExtension->Columns;
 
-    __asm__ ("cli\n\t");
+    _disable();
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
     offset = READ_PORT_UCHAR (CRTC_DATA)<<8;
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
     offset += READ_PORT_UCHAR (CRTC_DATA);
-    __asm__ ("sti\n\t");
+    _enable();
 
     cursory = offset / columns;
     cursorx = offset % columns;
@@ -284,13 +303,13 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
        /* Set the cursor position */
        offset = (cursory * columns) + cursorx;
     }
-    __asm__ ("cli\n\t");
+    _disable();
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
     WRITE_PORT_UCHAR (CRTC_DATA, offset);
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
     offset >>= 8;
     WRITE_PORT_UCHAR (CRTC_DATA, offset);
-    __asm__ ("sti\n\t");
+    _enable();
 
     Status = STATUS_SUCCESS;
 
@@ -320,12 +339,12 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           unsigned int offset;
 
           /* read cursor position from crtc */
-          __asm__("cli\n\t");
+          _disable();
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
           offset = READ_PORT_UCHAR (CRTC_DATA);
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
           offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
-          __asm__("sti\n\t");
+          _enable();
 
           pcsbi->dwSize.X = columns;
           pcsbi->dwSize.Y = rows;
@@ -357,12 +376,12 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           offset = (pcsbi->dwCursorPosition.Y * DeviceExtension->Columns) +
                     pcsbi->dwCursorPosition.X;
 
-          __asm__("cli\n\t");
+          _disable();
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
           WRITE_PORT_UCHAR (CRTC_DATA, offset);
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
           WRITE_PORT_UCHAR (CRTC_DATA, offset>>8);
-          __asm__("sti\n\t");
+          _enable();
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -384,8 +403,8 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
       case IOCTL_CONSOLE_SET_CURSOR_INFO:
         {
           PCONSOLE_CURSOR_INFO pcci = (PCONSOLE_CURSOR_INFO)Irp->AssociatedIrp.SystemBuffer;
-          BYTE data, value;
-          DWORD size, height;
+          UCHAR data, value;
+          ULONG size, height;
 
           DeviceExtension->CursorSize = pcci->dwSize;
           DeviceExtension->CursorVisible = pcci->bVisible;
@@ -398,16 +417,16 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
               size = 1;
             }
 
-          data |= (BYTE)(height - size);
+          data |= (UCHAR)(height - size);
 
-          __asm__("cli\n\t");
+          _disable();
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
           WRITE_PORT_UCHAR (CRTC_DATA, data);
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
           value = READ_PORT_UCHAR (CRTC_DATA) & 0xE0;
           WRITE_PORT_UCHAR (CRTC_DATA, value | (height - 1));
 
-          __asm__("sti\n\t");
+          _enable();
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -439,9 +458,9 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
       case IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE:
         {
           POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
-          PBYTE vidmem;
+          PUCHAR vidmem;
           int offset;
-          DWORD dwCount;
+          ULONG dwCount;
 
           vidmem = DeviceExtension->VideoMemory;
           offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
@@ -462,10 +481,10 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
       case IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE:
         {
           POUTPUT_ATTRIBUTE Buf = (POUTPUT_ATTRIBUTE)Irp->AssociatedIrp.SystemBuffer;
-          PWORD pAttr = (PWORD)MmGetSystemAddressForMdl(Irp->MdlAddress);
-          PBYTE vidmem;
+          PUSHORT pAttr = (PUSHORT)MmGetSystemAddressForMdl(Irp->MdlAddress);
+          PUCHAR vidmem;
           int offset;
-          DWORD dwCount;
+          ULONG dwCount;
 
           vidmem = DeviceExtension->VideoMemory;
           offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
@@ -487,9 +506,9 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         {
           COORD *pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
           CHAR *pAttr = (CHAR *)(pCoord + 1);
-          PBYTE vidmem;
+          PUCHAR vidmem;
           int offset;
-          DWORD dwCount;
+          ULONG dwCount;
 
           vidmem = DeviceExtension->VideoMemory;
           offset = (pCoord->Y * DeviceExtension->Columns * 2) +
@@ -505,7 +524,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         break;
 
       case IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE:
-        DeviceExtension->CharAttribute = (WORD)*(PWORD)Irp->AssociatedIrp.SystemBuffer;
+        DeviceExtension->CharAttribute = (USHORT)*(PUSHORT)Irp->AssociatedIrp.SystemBuffer;
         Irp->IoStatus.Information = 0;
         Status = STATUS_SUCCESS;
         break;
@@ -513,9 +532,9 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
       case IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER:
         {
           POUTPUT_CHARACTER Buf = (POUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
-          PBYTE vidmem;
+          PUCHAR vidmem;
           int offset;
-          DWORD dwCount;
+          ULONG dwCount;
 
           vidmem = DeviceExtension->VideoMemory;
           offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
@@ -539,9 +558,9 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         {
           POUTPUT_CHARACTER Buf = (POUTPUT_CHARACTER)Irp->AssociatedIrp.SystemBuffer;
           LPSTR pChar = (LPSTR)MmGetSystemAddressForMdl(Irp->MdlAddress);
-          PBYTE vidmem;
+          PUCHAR vidmem;
           int offset;
-          DWORD dwCount;
+          ULONG dwCount;
 
           vidmem = DeviceExtension->VideoMemory;
           offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
@@ -563,9 +582,9 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         {
           COORD *pCoord;
           LPSTR pChar;
-          PBYTE vidmem;
+          PUCHAR vidmem;
           int offset;
-          DWORD dwCount;
+          ULONG dwCount;
 
           pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
           pChar = (CHAR *)(pCoord + 1);
@@ -586,11 +605,11 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
       case IOCTL_CONSOLE_DRAW:
         {
           PCONSOLE_DRAW ConsoleDraw;
-          PBYTE Src, Dest;
+          PUCHAR Src, Dest;
           UINT SrcDelta, DestDelta, i, Offset;
 
           ConsoleDraw = (PCONSOLE_DRAW) MmGetSystemAddressForMdl(Irp->MdlAddress);
-          Src = (PBYTE) (ConsoleDraw + 1);
+          Src = (PUCHAR) (ConsoleDraw + 1);
           SrcDelta = ConsoleDraw->SizeX * 2;
           Dest = DeviceExtension->VideoMemory +
                  (ConsoleDraw->Y * DeviceExtension->Columns + ConsoleDraw->X) * 2;
@@ -606,12 +625,12 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           Offset = (ConsoleDraw->CursorY * DeviceExtension->Columns) +
                    ConsoleDraw->CursorX;
 
-          __asm__("cli\n\t");
+          _disable();
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
           WRITE_PORT_UCHAR (CRTC_DATA, Offset);
           WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
           WRITE_PORT_UCHAR (CRTC_DATA, Offset >> 8);
-          __asm__("sti\n\t");
+          _enable();
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
