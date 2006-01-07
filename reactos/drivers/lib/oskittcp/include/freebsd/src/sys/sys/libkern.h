@@ -62,9 +62,4 @@ u_long	 random __P((void));
 char	*rindex __P((const char *, int));
 int	 scanc __P((u_int, u_char *, u_char *, int));
 int	 skpc __P((int, int, char *));
-char	*strcat __P((char *, const char *));
-int	 strcmp __P((const char *, const char *));
-char	*strcpy __P((char *, const char *));
-size_t	 strlen __P((const char *));
-int	 strncmp __P((const char *, const char *, size_t));
-char	*strncpy __P((char *, const char *, size_t));
+

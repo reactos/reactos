@@ -177,7 +177,7 @@ extern	unsigned tty_imask;	/* group of interrupts masked with spltty() */
 static int splhigh() { return 0; }
 static int splimp() { return 0; }
 static int splnet() { return 0; }
-static int splx() { return 0; }
+static int splx(x) { return 0; }
 static int splclock() { return 0; }
 
 #elif defined(__GNUC__)

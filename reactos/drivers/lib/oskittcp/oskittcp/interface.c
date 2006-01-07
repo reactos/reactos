@@ -30,7 +30,6 @@ unsigned volatile ipending;
 struct timeval boottime;
 
 void clock_init();
-int isprint(int c);
 int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
 
 void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... ) {

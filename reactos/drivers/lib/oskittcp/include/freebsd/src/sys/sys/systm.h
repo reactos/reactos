@@ -114,7 +114,7 @@ int	ureadc __P((int, struct uio *));
 void	*hashinit __P((int count, int type, u_long *hashmask));
 void	*phashinit __P((int count, int type, u_long *nentries));
 
-__dead void	panic __P((const char *, ...)) __dead2;
+//__dead void	panic __P((const char *, ...)) __dead2;
 __dead void	boot __P((int)) __dead2;
 void	tablefull __P((const char *));
 void	addlog __P((const char *, ...));
@@ -126,7 +126,7 @@ void	printf __P((const char *, ...));
 #include <oskitdebug.h>
 
 
-int __cdecl vprintf(const char *, va_list);
+//int __cdecl vprintf(const char *, va_list);
 
 #define log bsd_log
 static __inline int bsd_log ( int blah, const char* fmt, ... )
