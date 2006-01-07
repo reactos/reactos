@@ -35,36 +35,6 @@ static unsigned char rightMask;
 #define READ_REGISTER_UCHAR(p) (*((volatile UCHAR *)(p)))
 #define WRITE_REGISTER_UCHAR(p,c) (*((volatile CHAR *)(p))) = (c)
 
-INT abs(INT nm)
-{
-  if(nm<0)
-  {
-    return nm * -1;
-  } else
-  {
-    return nm;
-  }
-}
-
-div_t div(int num, int denom)
-{
-  div_t r;
-  if (num > 0 && denom < 0) {
-    num = -num;
-    denom = -denom;
-  }
-  r.quot = num / denom;
-  r.rem = num % denom;
-  if (num < 0 && denom > 0)
-  {
-    if (r.rem > 0)
-    {
-      r.quot++;
-      r.rem -= denom;
-    }
-  }
-  return r;
-}
 
 /*int mod(int num, int denom)
 {

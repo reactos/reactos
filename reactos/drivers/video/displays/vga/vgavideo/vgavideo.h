@@ -50,7 +50,7 @@ VOID vgaGetByte(ULONG offset,
 INT vgaGetPixel(INT x, INT y);
 BOOL vgaHLine(INT x, INT y, INT len, UCHAR c);
 BOOL vgaVLine(INT x, INT y, INT len, UCHAR c);
-INT abs(INT nm);
+INT __cdecl abs(INT nm);
 BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2);
 
 #define SEQ_I   0x3C4           /* Sequencer Index */

@@ -7,7 +7,7 @@
 #include <debug.h>
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
-typedef BOOL STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
+typedef BOOL  (STDCALL *PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                      SURFOBJ* InputObj,
                                      SURFOBJ* Mask,
                                      XLATEOBJ* ColorTranslation,
