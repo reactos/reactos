@@ -8,7 +8,7 @@
  *   CSH 01/08-2000 Created
  */
 
-#include <buffer.h>
+#include <ndissys.h>
 
 
 __inline ULONG SkipToOffset(

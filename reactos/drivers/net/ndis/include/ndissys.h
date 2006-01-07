@@ -11,9 +11,19 @@
 #define __NDISSYS_H
 
 typedef unsigned long NDIS_STATS;
+
+/* This magical flag combo seems to work. Filip should verify this */
+#undef NDIS_WRAPPER
+#define NDIS_LEGACY_DRIVER 1
+#define NDIS_LEGACY_MINIPORT 1
+#define NDIS_LEGACY_PROTOCOL 1
+#define NDIS51_MINIPORT 1
+#define NDIS_MINIPORT_DRIVER 1
 #include <ndis.h>
+#undef EXPORT
 #include <xfilter.h>
 #include <afilter.h>
+#include <atm.h>
 
 #if _MSC_VER
 /* FIXME: These were removed and are no longer used! */
@@ -22,13 +32,6 @@ typedef unsigned long NDIS_STATS;
 /* FIXME: We miss the ATM headers. */
 typedef struct _ATM_ADDRESS *PATM_ADDRESS;
 #endif /* _MSC_VER */
-
-/* FIXME: This should go away once NDK will be compatible with MS DDK headers. */
-#if _MSC_VER
-NTSTATUS NTAPI ZwDuplicateObject(IN HANDLE, IN HANDLE, IN HANDLE, OUT PHANDLE, IN ACCESS_MASK, IN ULONG, IN ULONG);
-#else
-#include <ndk/ntndk.h>
-#endif
 
 struct _ADAPTER_BINDING;
 
