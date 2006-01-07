@@ -412,15 +412,15 @@ typedef struct _NDIS_PACKET {
     struct {
       UCHAR  MiniportReserved[2 * sizeof(PVOID)];
       UCHAR  WrapperReserved[2 * sizeof(PVOID)];
-    } s1;
+    };
     struct {
       UCHAR  MiniportReservedEx[3 * sizeof(PVOID)];
       UCHAR  WrapperReservedEx[sizeof(PVOID)];
-    } s2;
+    };
     struct {
       UCHAR  MacReserved[4 * sizeof(PVOID)];
-    } s3;
-  } u;
+    };
+  };
   ULONG_PTR  Reserved[2];
   UCHAR  ProtocolReserved[1];
 } NDIS_PACKET, *PNDIS_PACKET, **PPNDIS_PACKET;

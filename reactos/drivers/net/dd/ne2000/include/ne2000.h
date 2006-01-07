@@ -7,6 +7,9 @@
 #ifndef __NE2000_H
 #define __NE2000_H
 
+#define NDIS_MINIPORT_DRIVER 1
+#define NDIS_LEGACY_MINIPORT 1
+#define NDIS51_MINIPORT 1
 #include <ndis.h>
 #include <8390.h>
 #include <debug.h>
@@ -59,7 +62,7 @@ typedef struct _MINIPORT_RESERVED
     PNDIS_PACKET Next;
 } MINIPORT_RESERVED, *PMINIPORT_RESERVED;
 
-#define RESERVED(Packet) ((PMINIPORT_RESERVED)((Packet)->u.s1.MiniportReserved))
+#define RESERVED(Packet) ((PMINIPORT_RESERVED)((Packet)->MiniportReserved))
 
 typedef UCHAR DRIVER_HARDWARE_ADDRESS[DRIVER_LENGTH_OF_ADDRESS];
 
