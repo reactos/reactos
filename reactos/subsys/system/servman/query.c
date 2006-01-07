@@ -39,7 +39,7 @@ RefreshServiceList(VOID)
     {
         HICON hiconItem;     /* icon for list-view items */
         HIMAGELIST hSmall;   /* image list for other views */
-        TCHAR buf[256];
+        TCHAR buf[300];
 
         /* Create the icon image lists */
         hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
@@ -53,7 +53,7 @@ RefreshServiceList(VOID)
 
         /* set the number of services in the status bar */
         LoadString(hInstance, IDS_SERVICES_NUM_SERVICES, szNumServices, 32);
-        _stprintf(buf, szNumServices, NumServices);
+        _sntprintf(buf, 300, szNumServices, NumServices);
         SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)buf);
 
 
@@ -67,7 +67,7 @@ RefreshServiceList(VOID)
             DWORD dwValueSize;
 
              /* open the registry key for the service */
-            _stprintf(buf, _T("System\\CurrentControlSet\\Services\\%s"),
+            _sntprintf(buf, 300, _T("System\\CurrentControlSet\\Services\\%s"),
                       pServiceStatus[Index].lpServiceName);
 
             if( RegOpenKeyEx(HKEY_LOCAL_MACHINE,
