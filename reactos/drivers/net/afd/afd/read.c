@@ -47,9 +47,10 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     UINT i, BytesToCopy = 0,
 	BytesAvailable =
 	FCB->Recv.Content - FCB->Recv.BytesUsed;
-    *TotalBytesCopied = 0;
     PAFD_MAPBUF Map;
     NTSTATUS Status;
+    *TotalBytesCopied = 0;
+
 
     AFD_DbgPrint(MID_TRACE,("Called, BytesAvailable = %d\n",
 			    BytesAvailable));
@@ -210,7 +211,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     return RetStatus;
 }
 
-NTSTATUS DDKAPI ReceiveComplete
+NTSTATUS NTAPI ReceiveComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
@@ -418,7 +419,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
     return Status;
 }
 
-NTSTATUS DDKAPI
+NTSTATUS NTAPI
 PacketSocketRecvComplete(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp,

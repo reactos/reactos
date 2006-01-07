@@ -232,7 +232,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
     ExReleaseFastMutex( &FCB->Mutex );
 }
 
-NTSTATUS DDKAPI UnlockAndMaybeComplete
+NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information,
   PIO_COMPLETION_ROUTINE Completion,

@@ -8,9 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 #include <afd.h>
-#ifndef _MSC_VER
 #include <pseh/pseh.h>
-#endif
 #include "debug.h"
 #include "tdiconn.h"
 #include "tdi_proto.h"

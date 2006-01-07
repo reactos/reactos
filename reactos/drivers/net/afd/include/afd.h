@@ -19,6 +19,8 @@
 #include <string.h>
 #define _WINBASE_
 #define _WINDOWS_H
+#define _INC_WINDOWS
+#include <windef.h>
 #include <winsock2.h>
 #include <afd/shared.h>
 
@@ -201,7 +203,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 			 BOOLEAN Write, BOOLEAN LockAddress );
 VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address );
 UINT SocketAcquireStateLock( PAFD_FCB FCB );
-NTSTATUS DDKAPI UnlockAndMaybeComplete
+NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information,
   PIO_COMPLETION_ROUTINE Completion,
@@ -223,12 +225,12 @@ VOID DestroySocket( PAFD_FCB FCB );
 
 /* read.c */
 
-NTSTATUS DDKAPI ReceiveComplete
+NTSTATUS NTAPI ReceiveComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context );
 
-NTSTATUS DDKAPI PacketSocketRecvComplete
+NTSTATUS NTAPI PacketSocketRecvComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context );

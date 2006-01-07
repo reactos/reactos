@@ -72,7 +72,7 @@ static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 }
 
-static NTSTATUS DDKAPI ListenComplete
+static NTSTATUS NTAPI ListenComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {

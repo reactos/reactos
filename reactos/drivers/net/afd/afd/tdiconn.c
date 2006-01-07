@@ -183,6 +183,7 @@ TdiBuildConnectionInfoPair
     PCHAR LayoutFrame;
     UINT SizeOfEntry;
     ULONG TdiAddressSize;
+    PTDI_CONNECTION_INFORMATION FromTdiConn, ToTdiConn;
 
     /* FIXME: Get from socket information */
     TdiAddressSize = TdiAddressSizeFromType(From->Address[0].AddressType);
@@ -197,8 +198,7 @@ TdiBuildConnectionInfoPair
 
     RtlZeroMemory( LayoutFrame, 2 * SizeOfEntry );
 
-    PTDI_CONNECTION_INFORMATION
-	FromTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame,
+	FromTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame;
 	ToTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame + SizeOfEntry;
 
     if (From != NULL) {
