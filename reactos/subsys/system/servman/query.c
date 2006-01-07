@@ -47,25 +47,17 @@ RefreshServiceList(VOID)
         _stprintf(buf, szNumServices, NumServices);
         SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)buf);
 
+
         for (Index = 0; Index < NumServices; Index++)
         {
             HKEY hKey = NULL;
-            TCHAR Description[5000];
-            DWORD Size = 5000;
+            LPTSTR Description = NULL;
+            LONG ret;
+            LPTSTR LogOnAs = NULL;
+            DWORD StartUp = 0;
+            DWORD dwValueSize;
 
-            /* set the display name */
-
-            ZeroMemory(&item, sizeof(LV_ITEM));
-            item.mask = LVIF_TEXT;
-            //item.iImage = 0;
-            item.pszText = pServiceStatus[Index].lpDisplayName;
-            item.iItem = ListView_GetItemCount(hListView);
-            item.lParam = 0;
-            item.iItem = ListView_InsertItem(hListView, &item);
-
-
-            /* set the description */
-
+             /* open the registry key for the service */
             _stprintf(buf, _T("System\\CurrentControlSet\\Services\\%s"),
                       pServiceStatus[Index].lpServiceName);
 
@@ -79,16 +71,59 @@ RefreshServiceList(VOID)
                 return FALSE;
             }
 
-            RegQueryValueEx(hKey,
-                            _T("Description"),
-                            NULL,
-                            NULL,
-                            (LPBYTE)Description,
-                            &Size);
 
-            item.pszText = Description;
-            item.iSubItem = 1;
-            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+            /* set the display name */
+
+            ZeroMemory(&item, sizeof(LV_ITEM));
+            item.mask = LVIF_TEXT;
+            //item.iImage = 0;
+            item.pszText = pServiceStatus[Index].lpDisplayName;
+            item.iItem = ListView_GetItemCount(hListView);
+            //item.lParam = 0;
+            item.iItem = ListView_InsertItem(hListView, &item);
+
+
+            /* set the description */
+            dwValueSize = 0;
+            ret = RegQueryValueEx(hKey,
+                                _T("Description"),
+                                NULL,
+                                NULL,
+                                NULL,
+                                &dwValueSize);
+            if (ret != ERROR_SUCCESS && ret != ERROR_FILE_NOT_FOUND)
+            {
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+            
+            if (ret != ERROR_FILE_NOT_FOUND)
+            {
+                Description = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
+                if (Description == NULL)
+                {
+                    RegCloseKey(hKey);
+                    return FALSE;
+                }
+                if(RegQueryValueEx(hKey,
+                                   _T("Description"),
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)Description,
+                                   &dwValueSize))
+                {
+                    HeapFree(GetProcessHeap(), 0, Description);
+                    RegCloseKey(hKey);
+                    return FALSE;
+                }
+
+                item.pszText = Description;
+                item.iSubItem = 1;
+                SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+
+                HeapFree(GetProcessHeap(), 0, Description);
+            }
+            
 
 
             /* set the status */
@@ -106,8 +141,87 @@ RefreshServiceList(VOID)
                 item.iSubItem = 2;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
             }
-         }
-    }
+
+            /* set the startup type */
+
+            dwValueSize = sizeof(DWORD);
+            if (RegQueryValueEx(hKey,
+                                _T("Start"),
+                                NULL,
+                                NULL,
+                                (LPBYTE)StartUp,
+                                &dwValueSize))
+            {
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+
+            if (StartUp == 0x02)
+            {
+                LoadString(hInstance, IDS_SERVICES_AUTO, szStatus, 128);
+                item.pszText = szStatus;
+                item.iSubItem = 2;
+                SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+            }
+            else if (StartUp == 0x03)
+            {
+                LoadString(hInstance, IDS_SERVICES_MAN, szStatus, 128);
+                item.pszText = szStatus;
+                item.iSubItem = 2;
+                SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+            }
+            else if (StartUp == 0x04)
+            {
+                LoadString(hInstance, IDS_SERVICES_DIS, szStatus, 128);
+                item.pszText = szStatus;
+                item.iSubItem = 2;
+                SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+            }
+
+
+
+            /* set Log On As */
+
+            dwValueSize = 0;
+            if (RegQueryValueEx(hKey,
+                                _T("ObjectName"),
+                                NULL,
+                                NULL,
+                                NULL,
+                                &dwValueSize))
+            {
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+            
+            LogOnAs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
+            if (LogOnAs == NULL)
+            {
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+            if(RegQueryValueEx(hKey,
+                               _T("ObjectName"),
+                               NULL,
+                               NULL,
+                               (LPBYTE)LogOnAs,
+                               &dwValueSize))
+            {
+                HeapFree(GetProcessHeap(), 0, LogOnAs);
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+
+            item.pszText = LogOnAs;
+            item.iSubItem = 4;
+            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+
+            HeapFree(GetProcessHeap(), 0, LogOnAs);
+
+            RegCloseKey(hKey);
+
+        }
+    } 
 
     return TRUE;
 }
