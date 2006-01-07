@@ -11,4 +11,5 @@
 	<file>pnp.c</file>
 	<file>screen.c</file>
 	<file>green.rc</file>
+	<pch>green.h</pch>
 </module>

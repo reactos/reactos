@@ -154,8 +154,8 @@ KeyboardDpcSendData(
 
 	Queue = DeviceExtension->ActiveQueue % 2;
 	InterlockedIncrement((PLONG)&DeviceExtension->ActiveQueue);
-	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
-			DeviceExtension->ClassInformation.DeviceObject,
+	(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.ClassService)(
+			DeviceExtension->ClassInformation.ClassDeviceObject,
 			DeviceExtension->KeyboardInputData[Queue],
 			&DeviceExtension->KeyboardInputData[Queue][DeviceExtension->InputDataCount[Queue]],
 			&InputDataConsumed);
@@ -300,7 +300,7 @@ KeyboardInternalDeviceControl(
 			}
 
 			DeviceExtension->ClassInformation =
-				*((PCLASS_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
+				*((PCONNECT_DATA)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
 
 			/* Initialize serial port */
 			Fcr = 0;

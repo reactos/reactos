@@ -1,37 +1,16 @@
+#include <stdarg.h>
 #include <ntddk.h>
+#include <ndk/iotypes.h>
+#include <windef.h>
+#define WINBASEAPI
+typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 #include <ntddser.h>
 #include <kbdmou.h>
 #include <wincon.h>
-#include <stdarg.h>
+#include <drivers/blue/ntddblue.h>
 
-#if defined(__GNUC__)
-  #include <drivers/blue/ntddblue.h>
-
-  #define INFINITE 0xFFFFFFFF
-
-  NTSTATUS NTAPI
-  ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
-    ULONG Attributes,
-    PACCESS_STATE PassedAccessState,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_TYPE ObjectType,
-    KPROCESSOR_MODE AccessMode,
-    PVOID ParseContext,
-    PVOID* ObjectPtr);
-
-  typedef struct _CLASS_INFORMATION
-  {
-    PDEVICE_OBJECT DeviceObject;
-    PVOID CallBack;
-  } CLASS_INFORMATION, *PCLASS_INFORMATION;
-
-  #define KEYBOARD_BUFFER_SIZE 100
-
-#elif defined(_MSC_VER)
-  /* Nothing more to do */
-#else
-  #error Unknown compiler!
-#endif
+#define INFINITE -1
+#define KEYBOARD_BUFFER_SIZE 100
 
 typedef enum
 {
@@ -50,7 +29,7 @@ typedef struct _KEYBOARD_DEVICE_EXTENSION
 	COMMON_DEVICE_EXTENSION Common;
 	PDEVICE_OBJECT Green;
 
-	CLASS_INFORMATION ClassInformation;
+	CONNECT_DATA ClassInformation;
 	HANDLE WorkerThreadHandle;
 	KDPC KeyboardDpc;
 
