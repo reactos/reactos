@@ -7,9 +7,6 @@
 <directory name="ndis">
 	<xi:include href="ndis/ndis.xml" />
 </directory>
-<directory name="npf">
-	<xi:include href="npf/npf.xml" />
-</directory>
 <directory name="tcpip">
 	<xi:include href="tcpip/tcpip.xml" />
 </directory>
