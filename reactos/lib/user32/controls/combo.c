@@ -29,7 +29,6 @@
  * TODO:
  *   - ComboBox_[GS]etMinVisible()
  *   - CB_GETMINVISIBLE, CB_SETMINVISIBLE
- *   - CB_LIMITTEXT
  *   - CB_SETTOPINDEX
  */
 
@@ -2315,7 +2314,9 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		return  (lphc->wState & CBF_EUI) ? TRUE : FALSE;
 	case CB_GETCOMBOBOXINFO:
 		return COMBO_GetComboBoxInfo(lphc, (COMBOBOXINFO *)lParam);
-
+    case CB_LIMITTEXT:
+        if( lphc->wState & CBF_EDIT )
+            return SendMessageW(lphc->hWndEdit, EM_LIMITTEXT, wParam, lParam);
 	default:
 		if (message >= WM_USER)
 		    WARN("unknown msg WM_USER+%04x wp=%04x lp=%08lx\n",
