@@ -293,6 +293,7 @@ void ShellBrowser::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 
 int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
 {
+	HTREEITEM hchild, hnext;
 	CONTEXT("ShellBrowser::InsertSubitems()");
 
 	WaitCursor wait;
@@ -308,7 +309,8 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 	}
 
 	 // remove old children items
-	for(HTREEITEM hchild,hnext=TreeView_GetChild(_left_hwnd, hParentItem); hchild=hnext; ) {
+	hnext = hchild = TreeView_GetChild(_left_hwnd, hParentItem);
+	while((hchild=hnext) != NULL) {
 		hnext = TreeView_GetNextSibling(_left_hwnd, hchild);
 		TreeView_DeleteItem(_left_hwnd, hchild);
 	}
