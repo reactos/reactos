@@ -1,5 +1,13 @@
-#include "servman.h"
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        subsys/system/servman/servman.c
+ * PURPOSE:     Main window message handler
+ * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ *               
+ */
 
+#include "servman.h"
 
 const TCHAR ClassName[] = _T("ServiceManager");
 

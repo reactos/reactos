@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        subsys/system/servman/about.c
+ * PURPOSE:     About dialog box message handler
+ * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ *               
+ */
+
 #include "servman.h"
 
 extern HINSTANCE hInstance;

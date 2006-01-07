@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        subsys/system/servman/query.c
+ * PURPOSE:     Query service information
+ * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ *               
+ */
+
 #include "servman.h"
 
 extern HINSTANCE hInstance;
@@ -18,7 +27,7 @@ VOID FreeMemory(VOID)
 BOOL
 RefreshServiceList(VOID)
 {
-    LV_ITEM item;
+    LVITEM item;
     TCHAR szNumServices[32];
     TCHAR szStatus[128];
     DWORD NumServices = 0;
@@ -76,12 +85,17 @@ RefreshServiceList(VOID)
 
             ZeroMemory(&item, sizeof(LV_ITEM));
             item.mask = LVIF_TEXT;
-            //item.iImage = 0;
+            item.iImage = 0;
             item.pszText = pServiceStatus[Index].lpDisplayName;
+            /*_tcsncpy(item.pszText,
+                    pServiceStatus[Index].lpDisplayName,                    
+                    sizeof(pServiceStatus[Index].lpDisplayName));*/
+
             item.iItem = ListView_GetItemCount(hListView);
-            //item.lParam = 0;
+            item.lParam = 0;
             item.iItem = ListView_InsertItem(hListView, &item);
 
+            
 
             /* set the description */
             dwValueSize = 0;
@@ -149,7 +163,7 @@ RefreshServiceList(VOID)
                                 _T("Start"),
                                 NULL,
                                 NULL,
-                                (LPBYTE)StartUp,
+                                (LPBYTE)&StartUp,
                                 &dwValueSize))
             {
                 RegCloseKey(hKey);
@@ -160,21 +174,21 @@ RefreshServiceList(VOID)
             {
                 LoadString(hInstance, IDS_SERVICES_AUTO, szStatus, 128);
                 item.pszText = szStatus;
-                item.iSubItem = 2;
+                item.iSubItem = 3;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
             }
             else if (StartUp == 0x03)
             {
                 LoadString(hInstance, IDS_SERVICES_MAN, szStatus, 128);
                 item.pszText = szStatus;
-                item.iSubItem = 2;
+                item.iSubItem = 3;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
             }
             else if (StartUp == 0x04)
             {
                 LoadString(hInstance, IDS_SERVICES_DIS, szStatus, 128);
                 item.pszText = szStatus;
-                item.iSubItem = 2;
+                item.iSubItem = 3;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
             }
 
