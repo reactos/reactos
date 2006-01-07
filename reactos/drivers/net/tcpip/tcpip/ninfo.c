@@ -16,7 +16,6 @@
 TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 				     PUINT BufferSize ) {
 
-    IF_LIST_ITER(CurrentIF);
     TDI_STATUS Status = TDI_INVALID_REQUEST;
     KIRQL OldIrql;
     UINT Count = 0;
@@ -24,6 +23,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     PIPADDR_ENTRY IpAddress =
 	ExAllocatePool( NonPagedPool, sizeof( IPADDR_ENTRY ) * IfCount );
     PIPADDR_ENTRY IpCurrent = IpAddress;
+    IF_LIST_ITER(CurrentIF);
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
@@ -66,8 +66,8 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     TDI_STATUS Status;
     KIRQL OldIrql;
-    UINT RtCount = CountFIBs(),
-	Size = sizeof( IPROUTE_ENTRY ) * RtCount;
+    UINT RtCount = CountFIBs();
+    UINT Size = sizeof( IPROUTE_ENTRY ) * RtCount;
     PFIB_ENTRY RCache =
 	ExAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount ),
 	RCacheCur = RCache;
@@ -142,7 +142,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
 				      PUINT BufferSize ) {
     IPSNMP_INFO SnmpInfo;
     UINT IfCount = CountInterfaces();
-    UINT RouteCount = CountFIBs( NULL );
+    UINT RouteCount = CountFIBs();
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));

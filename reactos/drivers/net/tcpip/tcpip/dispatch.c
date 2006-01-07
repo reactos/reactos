@@ -160,7 +160,7 @@ VOID DispDoDisconnect( PVOID Data ) {
     DispCancelComplete(DisType->FileObject);
 }
 
-VOID DDKAPI DispCancelRequest(
+VOID NTAPI DispCancelRequest(
     PDEVICE_OBJECT Device,
     PIRP Irp)
 /*
@@ -245,7 +245,7 @@ VOID DDKAPI DispCancelRequest(
 }
 
 
-VOID DDKAPI DispCancelListenRequest(
+VOID NTAPI DispCancelListenRequest(
     PDEVICE_OBJECT Device,
     PIRP Irp)
 /*

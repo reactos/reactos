@@ -11,7 +11,7 @@ VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
 
 /* NOTE: When we leave, the FAST_MUTEX must have been released.  The result
  * is that we always exit in the same irql as entering */
-UINT RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOL ToWrite ) {
+SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
 

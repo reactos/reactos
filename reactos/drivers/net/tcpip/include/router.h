@@ -43,7 +43,7 @@ NTSTATUS RouterStartup(
 NTSTATUS RouterShutdown(
     VOID);
 
-UINT CountFIBs();
+UINT CountFIBs(VOID);
 
 UINT CopyFIBs( PFIB_ENTRY Target );
 
