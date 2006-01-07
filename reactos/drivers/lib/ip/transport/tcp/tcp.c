@@ -376,7 +376,7 @@ static HANDLE TimerThreadHandle;
  * 800, 1000 and process the "fast" events at 200, 400, 600, 800, 1000 and the
  * "slow" events at 500 and 1000.
  */
-static VOID DDKAPI
+static VOID NTAPI
 TimerThread(PVOID Context)
 {
     LARGE_INTEGER Timeout;

@@ -57,7 +57,7 @@ _csum_partial:
 	testl $1, %esi		# Check alignment.
 	jz 10f			# Jump if alignment is boundary of 2bytes.
 
-	# buf is odd
+	// buf is odd
 	dec %ecx
 	jl 8f
 	movzbl (%esi), %ebx
