@@ -60,7 +60,7 @@ VOID STDCALL ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
 }
     
 BOOLEAN ChewCreate
-( PVOID *ItemPtr, UINT Bytes, VOID (*Worker)( PVOID ), PVOID UserSpace ) {
+( PVOID *ItemPtr, SIZE_T Bytes, VOID (*Worker)( PVOID ), PVOID UserSpace ) {
     PWORK_ITEM Item;
     
     if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
