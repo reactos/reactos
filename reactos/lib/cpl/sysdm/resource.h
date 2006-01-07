@@ -24,6 +24,11 @@
 
 #define IDS_CPLSYSTEMNAME              1001
 #define IDS_CPLSYSTEMDESCRIPTION       2001
+#define IDS_DRIVE                      3000
+#define IDS_SPACE                      3001
+#define IDS_MIN                        3002
+#define IDS_REC                        3003
+#define IDS_CUR                        3004
 
 /* controls */
 #define IDC_LICENSEMEMO                 101
@@ -82,15 +87,6 @@
 #define IDC_MINIMUM                     251
 #define IDC_RECOMMENDED                 252
 #define IDC_CURRENT                     253
-
-#define IDS_DRIVE   1000
-#define IDS_SPACE   1001
-#define IDS_MIN     1002
-#define IDS_REC     1003
-#define IDS_CUR     1004
-
-
-
 
 #endif /* __CPL_RESOURCE_H */
 
