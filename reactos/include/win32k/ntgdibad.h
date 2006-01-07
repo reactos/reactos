@@ -188,14 +188,6 @@ NtGdiArcTo(HDC  hDC,
                 int  XRadial2,
                 int  YRadial2);
 
-/* Does not exist */
-BOOL
-STDCALL
-NtGdiCheckColorsInGamut(HDC  hDC,
-                             LPVOID  RGBTriples,
-                             LPVOID  Buffer,
-                             UINT  Count);
-
 /* Use NtGdiArcInternal with GdiTypeChord */
 BOOL
 STDCALL

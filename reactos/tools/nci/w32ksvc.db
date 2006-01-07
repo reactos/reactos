@@ -10,7 +10,6 @@ NtGdiArcTo				9
 NtGdiBeginPath				1
 NtGdiBitBlt				11
 NtGdiCancelDC				1
-NtGdiCheckColorsInGamut			4
 NtGdiChord				9
 NtGdiCloseEnhMetaFile			1
 NtGdiCloseFigure			1

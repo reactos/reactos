@@ -25,17 +25,6 @@
 
 BOOL
 STDCALL
-NtGdiCheckColorsInGamut(HDC  hDC,
-                             LPVOID  RGBTriples,
-                             LPVOID  Buffer,
-                             UINT  Count)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
 NtGdiColorMatchToTarget(HDC  hDC,
                              HDC  hDCTarget,
                              DWORD  Action)
