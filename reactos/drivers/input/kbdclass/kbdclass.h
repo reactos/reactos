@@ -3,15 +3,7 @@
 #include <ntddkbd.h>
 #include <stdio.h>
 
-#if defined(__GNUC__)
-  NTSTATUS NTAPI
-  IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT SourceDevice,
-    IN PDEVICE_OBJECT TargetDevice,
-    OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-#else
-  #error Unknown compiler!
-#endif
+#define MAX_PATH 260
 
 typedef enum
 {
