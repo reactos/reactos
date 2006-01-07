@@ -91,7 +91,7 @@ CreateScalableFontResourceW@16
 CreateSolidBrush@4
 DPtoLP@12=NtGdiDPtoLP@12
 DeleteColorSpace@4
-DeleteDC@4=NtGdiDeleteDC@4
+DeleteDC@4=NtGdiDeleteObjectApp@4
 DeleteEnhMetaFile@4
 DeleteMetaFile@4
 DeleteObject@4

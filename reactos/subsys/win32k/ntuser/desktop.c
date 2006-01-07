@@ -1320,7 +1320,7 @@ NtUserPaintDesktop(HDC hDC)
                             0);
             } 
             NtGdiSelectObject(hWallpaperDC, hOldBitmap); 
-            NtGdiDeleteDC(hWallpaperDC);
+            NtGdiDeleteObjectApp(hWallpaperDC);
          }
       }
    }

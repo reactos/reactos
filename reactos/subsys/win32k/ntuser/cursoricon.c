@@ -1312,7 +1312,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       }
       if (NULL == BitmapStretched)
       {
-         NtGdiDeleteDC(DcStretched);
+         NtGdiDeleteObjectApp(DcStretched);
          DPRINT1("Failed to create temporary bitmap\n");
          return;
       }
@@ -1320,7 +1320,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       if (NULL == OldBitmap)
       {
          NtGdiDeleteObject(BitmapStretched);
-         NtGdiDeleteDC(DcStretched);
+         NtGdiDeleteObjectApp(DcStretched);
          DPRINT1("Failed to create temporary bitmap\n");
          return;
       }
@@ -1334,7 +1334,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       }
       NtGdiSelectObject(DcStretched, OldBitmap);
       NtGdiDeleteObject(BitmapStretched);
-      NtGdiDeleteDC(DcStretched);
+      NtGdiDeleteObjectApp(DcStretched);
    }
 }
 #else
@@ -1439,7 +1439,7 @@ NtUserDrawIconEx(
       hbmOff = NtGdiCreateCompatibleBitmap(hdc, cxWidth, cyHeight);
       if(!hbmOff)
       {
-         NtGdiDeleteDC(hdcOff);
+         NtGdiDeleteObjectApp(hdcOff);
          goto done;
       }
       hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
@@ -1511,10 +1511,10 @@ cleanup:
       NtGdiSelectObject(hdcOff, hOldOffBmp);
       NtGdiSelectObject(hdcOff, hOldOffBrush);
       NtGdiDeleteObject(hbmOff);
-      NtGdiDeleteDC(hdcOff);
+      NtGdiDeleteObjectApp(hdcOff);
    }
    if(hdcMem)
-      NtGdiDeleteDC(hdcMem);
+      NtGdiDeleteObjectApp(hdcMem);
 
 done:
    ObDereferenceObject(WinSta);

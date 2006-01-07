@@ -579,7 +579,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
                       SrcWidth, SrcHeight, ROP, 0);
 
    NtGdiSelectObject(hdcMem, hOldBitmap);
-   NtGdiDeleteDC(hdcMem);
+   NtGdiDeleteObjectApp(hdcMem);
    NtGdiDeleteObject(hBitmap);
 
    return SrcHeight;
@@ -799,7 +799,7 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   }
 
   if (bDesktopDC)
-    NtGdiDeleteDC(hDC);
+    NtGdiDeleteObjectApp(hDC);
 
   return hbitmap;
 }

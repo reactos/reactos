@@ -729,7 +729,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				}
 				NtGdiDeleteObject ( hBmpTmp );
 			}
-			NtGdiDeleteDC ( hDCTmp );
+			NtGdiDeleteObjectApp ( hDCTmp );
 		}
 	}
 
@@ -941,9 +941,9 @@ NtGdiMaskBlt (
 	NtGdiDeleteObject(hBitmap2);
 	NtGdiDeleteObject(hBitmap3);
 
-	NtGdiDeleteDC(hDC1);
-	NtGdiDeleteDC(hDC2);
-	NtGdiDeleteDC(hDCMask);
+	NtGdiDeleteObjectApp(hDC1);
+	NtGdiDeleteObjectApp(hDC2);
+	NtGdiDeleteObjectApp(hDCMask);
 
 	return TRUE;
 }

@@ -647,7 +647,7 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
       DC_SetOwnership(dce->hDC, PsGetCurrentProcess());
    }
 
-   NtGdiDeleteDC(dce->hDC);
+   NtGdiDeleteObjectApp(dce->hDC);
    if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
    {
       NtGdiDeleteObject(dce->hClipRgn);

@@ -52,7 +52,7 @@ NtGdiCreateScalableFontResource		4
 NtGdiCreateSolidBrush			2
 NtGdiDPtoLP				3
 NtGdiDeleteColorSpace			1
-NtGdiDeleteDC				1
+NtGdiDeleteObjectApp			1
 NtGdiDeleteEnhMetaFile			1
 NtGdiDeleteMetaFile			1
 NtGdiDeleteObject			1

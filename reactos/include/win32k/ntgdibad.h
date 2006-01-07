@@ -348,9 +348,6 @@ NtGdiDPtoLP (
 	int	Count
 	);
 
-/* Use NtGdiDeleteObjectApp. */
-BOOL STDCALL  NtGdiDeleteDC(HDC  hDC);
-
 /* Meta are user-mode. */
 BOOL
 STDCALL

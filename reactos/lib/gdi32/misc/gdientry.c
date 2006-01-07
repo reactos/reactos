@@ -83,7 +83,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
   if ((ULONG_PTR)newHdc != pDirectDrawGlobalInternal->hDD)
   {
     pDirectDrawGlobalInternal->hDD = (ULONG_PTR) NtGdiDdCreateDirectDrawObject(newHdc);
-    NtGdiDeleteDC(newHdc);
+    NtGdiDeleteObjectApp(newHdc);
   }
 
    /* pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD; ? */

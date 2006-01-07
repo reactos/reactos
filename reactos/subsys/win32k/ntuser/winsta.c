@@ -371,7 +371,7 @@ IntEndDesktopGraphics(VOID)
    if (NULL != ScreenDeviceContext)
    {
       DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
-      NtGdiDeleteDC(ScreenDeviceContext);
+      NtGdiDeleteObjectApp(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
    }
    IntHideDesktop(IntGetActiveDesktop());

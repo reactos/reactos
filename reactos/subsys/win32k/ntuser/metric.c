@@ -171,7 +171,7 @@ UserGetSystemMetrics(ULONG Index)
                   Height = ScreenDC->GDIInfo->ulVertRes;
                   DC_UnlockDc(ScreenDC);
                }
-               NtGdiDeleteDC(ScreenDCHandle);
+               NtGdiDeleteObjectApp(ScreenDCHandle);
             }
             return SM_CXSCREEN == Index ? Width : Height;
          }

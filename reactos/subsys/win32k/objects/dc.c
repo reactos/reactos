@@ -165,7 +165,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
     {
       if (NULL != DisplayDC)
         {
-          NtGdiDeleteDC(DisplayDC);
+          NtGdiDeleteObjectApp(DisplayDC);
         }
       return NULL;
     }
@@ -176,7 +176,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
       DC_UnlockDc(OrigDC);
       if (NULL != DisplayDC)
         {
-          NtGdiDeleteDC(DisplayDC);
+          NtGdiDeleteObjectApp(DisplayDC);
         }
       return  NULL;
     }
@@ -213,7 +213,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
       DC_FreeDC( hNewDC );
       if (NULL != DisplayDC)
         {
-          NtGdiDeleteDC(DisplayDC);
+          NtGdiDeleteObjectApp(DisplayDC);
         }
       return NULL;
     }
@@ -233,7 +233,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   DC_UnlockDc(OrigDC);
   if (NULL != DisplayDC)
     {
-      NtGdiDeleteDC(DisplayDC);
+      NtGdiDeleteObjectApp(DisplayDC);
     }
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
@@ -1060,7 +1060,7 @@ NtGdiCreateIC(PUNICODE_STRING Driver,
 }
 
 BOOL STDCALL
-NtGdiDeleteDC(HDC  DCHandle)
+NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {
   PDC  DCToDelete;
 
@@ -1092,7 +1092,7 @@ NtGdiDeleteDC(HDC  DCHandle)
     DC_SetNextDC (DCToDelete, DC_GetNextDC (savedDC));
     DCToDelete->saveLevel--;
     DC_UnlockDc( savedDC );
-    NtGdiDeleteDC (savedHDC);
+    NtGdiDeleteObjectApp (savedHDC);
   }
 
   /*  Free GDI resources allocated to this DC  */
@@ -1991,7 +1991,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
       {
       DC_UnlockDc( dcs );
       }
-    NtGdiDeleteDC (hdcs);
+    NtGdiDeleteObjectApp (hdcs);
   }
   DC_UnlockDc( dc );
   return  success;
@@ -2034,7 +2034,7 @@ NtGdiSaveDC(HDC  hDC)
      */
   if (!PATH_AssignGdiPath (&dcs->w.path, &dc->w.path))
   {
-    NtGdiDeleteDC (hdcs);
+    NtGdiDeleteObjectApp (hdcs);
     return 0;
   }
 #endif
