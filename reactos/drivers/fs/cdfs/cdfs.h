@@ -1,8 +1,8 @@
 #ifndef CDFS_H
 #define CDFS_H
 
-#include <ntddk.h>
 #include <ntifs.h>
+#include <ntddk.h>
 #include <ntddcdrm.h>
 #include <ccros.h>
 
@@ -21,6 +21,7 @@
 #define VOLUME_PARTITION_DESCRIPTOR_TYPE	3
 #define VOLUME_DESCRIPTOR_SET_TERMINATOR	255
 
+#include <pshpack1.h>
 struct _DIR_RECORD
 {
   UCHAR  RecordLength;			// 1
@@ -42,7 +43,8 @@ struct _DIR_RECORD
   ULONG  VolumeSequenceNumber;		// 29-32
   UCHAR  FileIdLength;			// 33
   UCHAR  FileId[1];			// 34
-} __attribute__((packed));
+};
+#include <poppack.h>
 
 typedef struct _DIR_RECORD DIR_RECORD, *PDIR_RECORD;
 
@@ -54,12 +56,13 @@ typedef struct _DIR_RECORD DIR_RECORD, *PDIR_RECORD;
 
 
 /* Volume Descriptor header*/
+#include <pshpack1.h>
 struct _VD_HEADER
 {
   UCHAR  VdType;			// 1
   UCHAR  StandardId[5];			// 2-6
   UCHAR  VdVersion;			// 7
-} __attribute__((packed));
+};
 
 typedef struct _VD_HEADER VD_HEADER, *PVD_HEADER;
 
@@ -93,8 +96,7 @@ struct _PVD
 
   /* more data ... */
 
-} __attribute__((packed));
-
+};
 typedef struct _PVD PVD, *PPVD;
 
 
@@ -125,7 +127,8 @@ struct _SVD
   UCHAR  PublisherIdentifier[128];	// 319-446
 
  // more data ...
-} __attribute__((packed));
+};
+#include <poppack.h>
 
 typedef struct _SVD SVD, *PSVD;
 
@@ -170,6 +173,8 @@ typedef struct
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
+
+#define MAX_PATH                260
 
 typedef struct _FCB
 {

@@ -36,7 +36,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static __inline
-int msf_to_lba (BYTE m, BYTE s, BYTE f)
+int msf_to_lba (UCHAR m, UCHAR s, UCHAR f)
 {
    return (((m * 60) + s) * 75 + f) - 150;
 }

@@ -381,12 +381,12 @@ CdfsGetNameInformation(PFCB Fcb,
   DPRINT("CdfsGetNameInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
     return(STATUS_BUFFER_OVERFLOW);
 
   Info->FileNameLength = Length;
   Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+    ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   return(STATUS_SUCCESS);
@@ -404,12 +404,12 @@ CdfsGetDirectoryInformation(PFCB Fcb,
   DPRINT("CdfsGetDirectoryInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
     return(STATUS_BUFFER_OVERFLOW);
 
   Info->FileNameLength = Length;
   Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+    ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
@@ -447,7 +447,7 @@ CdfsGetDirectoryInformation(PFCB Fcb,
 static NTSTATUS
 CdfsGetFullDirectoryInformation(PFCB Fcb,
 				PDEVICE_EXTENSION DeviceExt,
-				PFILE_FULL_DIRECTORY_INFORMATION Info,
+				PFILE_FULL_DIR_INFORMATION Info,
 				ULONG BufferLength)
 {
   ULONG Length;
@@ -455,12 +455,12 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
   DPRINT("CdfsGetFullDirectoryInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
     return(STATUS_BUFFER_OVERFLOW);
 
   Info->FileNameLength = Length;
   Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+    ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
@@ -500,7 +500,7 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
 static NTSTATUS
 CdfsGetBothDirectoryInformation(PFCB Fcb,
 				PDEVICE_EXTENSION DeviceExt,
-				PFILE_BOTH_DIRECTORY_INFORMATION Info,
+				PFILE_BOTH_DIR_INFORMATION Info,
 				ULONG BufferLength)
 {
   ULONG Length;
@@ -508,12 +508,12 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
   DPRINT("CdfsGetBothDirectoryInformation() called\n");
 
   Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
     return(STATUS_BUFFER_OVERFLOW);
 
   Info->FileNameLength = Length;
   Info->NextEntryOffset =
-    ROUND_UP(sizeof(FILE_BOTH_DIRECTORY_INFORMATION) + Length, 4);
+    ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
   memcpy(Info->FileName, Fcb->ObjectName, Length);
 
   /* Convert file times */
@@ -682,14 +682,14 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 	      case FileFullDirectoryInformation:
 		Status = CdfsGetFullDirectoryInformation(&TempFcb,
 							 DeviceExtension,
-							 (PFILE_FULL_DIRECTORY_INFORMATION)Buffer,
+							 (PFILE_FULL_DIR_INFORMATION)Buffer,
 							 BufferLength);
 		break;
 
 	      case FileBothDirectoryInformation:
 		Status = CdfsGetBothDirectoryInformation(&TempFcb,
 							 DeviceExtension,
-							 (PFILE_BOTH_DIRECTORY_INFORMATION)Buffer,
+							 (PFILE_BOTH_DIR_INFORMATION)Buffer,
 							 BufferLength);
 		break;
 
