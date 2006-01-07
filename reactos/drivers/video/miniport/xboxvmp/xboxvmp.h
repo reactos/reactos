@@ -25,10 +25,34 @@
 
 /* INCLUDES *******************************************************************/
 
+#ifdef _MSC_VER
+#include "dderror.h"
+#include "devioctl.h"
+#define PAGE_SIZE 4096
+#else
 #include <ntddk.h>
-#include <miniport.h>
-#include <video.h>
-#include <ndk/exfuncs.h>
+#endif
+
+#include "miniport.h"
+#include "ntddvdeo.h"
+#include "video.h"
+
+/* FIXME: NDK not compatible with miniport drivers */
+#define SystemBasicInformation 0
+typedef struct _SYSTEM_BASIC_INFORMATION
+{
+    ULONG Reserved;
+    ULONG TimerResolution;
+    ULONG PageSize;
+    ULONG NumberOfPhysicalPages;
+    ULONG LowestPhysicalPageNumber;
+    ULONG HighestPhysicalPageNumber;
+    ULONG AllocationGranularity;
+    ULONG MinimumUserModeAddress;
+    ULONG MaximumUserModeAddress;
+    KAFFINITY ActiveProcessorsAffinityMask;
+    CCHAR NumberOfProcessors;
+} SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
 
 typedef struct
 {
@@ -72,49 +96,49 @@ XboxVmpSetPowerState(
    ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpSetCurrentMode(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE RequestedMode,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpResetDevice(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpMapVideoMemory(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY RequestedAddress,
    PVIDEO_MEMORY_INFORMATION MapInformation,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpUnmapVideoMemory(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY VideoMemory,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpQueryNumAvailModes(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_NUM_MODES Modes,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpQueryAvailModes(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION ReturnedModes,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpQueryCurrentMode(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoModeInfo,
    PSTATUS_BLOCK StatusBlock);
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpSetColorRegisters(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,

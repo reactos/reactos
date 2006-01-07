@@ -135,9 +135,9 @@ XboxVmpStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket)
 {
-  BOOL Result;
+  BOOLEAN Result;
 
-  RequestPacket->StatusBlock->Status = STATUS_UNSUCCESSFUL;
+  RequestPacket->StatusBlock->Status = ERROR_INVALID_PARAMETER;
 
   switch (RequestPacket->IoControlCode)
     {
@@ -230,13 +230,13 @@ XboxVmpStartIO(
 
       default:
         VideoPortDebugPrint(Warn, "XboxVmpStartIO 0x%x not implemented\n");
-        RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+        RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
         return FALSE;
     }
 
   if (Result)
     {
-      RequestPacket->StatusBlock->Status = STATUS_SUCCESS;
+      RequestPacket->StatusBlock->Status = NO_ERROR;
     }
 
   return TRUE;
@@ -278,7 +278,7 @@ XboxVmpGetPowerState(
 {
   VideoPortDebugPrint(Error, "XboxVmpGetPowerState is not supported\n");
 
-  return ERROR_NOT_SUPPORTED;
+  return ERROR_INVALID_FUNCTION;
 }
 
 /*
@@ -295,7 +295,7 @@ XboxVmpSetPowerState(
 {
   VideoPortDebugPrint(Error, "XboxVmpSetPowerState not supported\n");
 
-  return ERROR_NOT_SUPPORTED;
+  return ERROR_INVALID_FUNCTION;
 }
 
 /*
@@ -304,7 +304,7 @@ XboxVmpSetPowerState(
  * Sets the adapter to the specified operating mode.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpSetCurrentMode(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE RequestedMode,
@@ -327,7 +327,7 @@ XboxVmpSetCurrentMode(
  * at system boot.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpResetDevice(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PSTATUS_BLOCK StatusBlock)
@@ -344,7 +344,7 @@ XboxVmpResetDevice(
  * space of the requestor.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpMapVideoMemory(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY RequestedAddress,
@@ -356,13 +356,14 @@ XboxVmpMapVideoMemory(
   SYSTEM_BASIC_INFORMATION BasicInfo;
   ULONG Length;
 
+  /* FIXME: this should probably be done differently, without native API */
   StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 
   FrameBuffer.u.HighPart = 0;
-  if (NT_SUCCESS(ZwQuerySystemInformation(SystemBasicInformation,
+  if (ZwQuerySystemInformation(SystemBasicInformation,
                                           (PVOID) &BasicInfo,
                                           sizeof(SYSTEM_BASIC_INFORMATION),
-                                          &Length)))
+                                          &Length) == NO_ERROR)
     {
       FrameBuffer.u.LowPart = BasicInfo.HighestPhysicalPageNumber * PAGE_SIZE;
     }
@@ -398,7 +399,7 @@ XboxVmpMapVideoMemory(
  * frame buffer and video RAM.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpUnmapVideoMemory(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MEMORY VideoMemory,
@@ -418,7 +419,7 @@ XboxVmpUnmapVideoMemory(
  * buffer for an IOCTL_VIDEO_QUERY_AVAIL_MODES request.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpQueryNumAvailModes(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_NUM_MODES Modes,
@@ -430,7 +431,7 @@ XboxVmpQueryNumAvailModes(
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 {
   int nRetriesToLive=50;
@@ -508,7 +509,7 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 }
 
 
-static BOOL
+static BOOLEAN
 I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return)
 {
   return ReadfromSMBus(bPicAddressI2cFormat, bDataToWrite, 1, Return);
@@ -520,7 +521,7 @@ I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *
  * Returns information about each video mode supported by the adapter.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpQueryAvailModes(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoMode,
@@ -535,7 +536,7 @@ XboxVmpQueryAvailModes(
  * Returns information about current video mode.
  */
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 XboxVmpQueryCurrentMode(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_MODE_INFORMATION VideoMode,
