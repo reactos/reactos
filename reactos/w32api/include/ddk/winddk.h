@@ -10270,6 +10270,10 @@ extern BOOLEAN KdDebuggerEnabled;
 
 #endif
 
+/* Available as intrinsics on MSVC */
+static __inline void _disable(void) {__asm__("cli\n\t");}
+static __inline void _enable(void)  {__asm__("sti\n\t");}
+
 #ifdef __cplusplus
 }
 #endif

@@ -28,6 +28,22 @@ Author:
 #ifndef NTOS_MODE_USER
 
 //
+// The DDK steals these away from you.
+//
+VOID
+_enable(
+    VOID
+);
+VOID
+_disable(
+    VOID
+);
+#ifdef _MSC_VER
+#pragma intrinsic(_enable)
+#pragma intrinsic(_disable)
+#endif
+
+//
 // Display Functions
 //
 NTHALAPI
