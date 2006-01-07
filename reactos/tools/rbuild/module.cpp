@@ -817,7 +817,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case Kernel:
 			return "_NtProcessStartup";
 		case KernelModeDLL:
-			return "DriverEntry";
+			return "_DriverEntry@8";
 		case NativeDLL:
 			return "_DllMainCRTStartup@12";
 		case NativeCUI:
@@ -836,7 +836,7 @@ Module::GetDefaultModuleEntrypoint () const
 			else
 				return "_WinMainCRTStartup";
 		case KernelModeDriver:
-			return "DriverEntry";
+			return "_DriverEntry@8";
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
