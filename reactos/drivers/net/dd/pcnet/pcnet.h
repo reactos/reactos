@@ -140,7 +140,7 @@ MiGetMediaState(PADAPTER Adapter);
 #define RESET_IN_PROGRESS 0x1
 
 #if DBG
-#define BREAKPOINT __asm__ ("int $3\n");
+#define BREAKPOINT DbgBreakPoint();
 #else
 #define BREAKPOINT
 #endif

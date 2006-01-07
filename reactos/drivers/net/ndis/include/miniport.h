@@ -71,36 +71,6 @@ typedef struct _NDIS_WRAPPER_CONTEXT {
 
 #define GET_MINIPORT_DRIVER(Handle)((PNDIS_M_DRIVER_BLOCK)Handle)
 
-#ifndef NUMBER_OF_WORK_ITEM_TYPES
-
-typedef enum _NDIS_WORK_ITEM_TYPE {
-  NdisWorkItemRequest,
-  NdisWorkItemSend,
-  NdisWorkItemReturnPackets,
-  NdisWorkItemResetRequested,
-  NdisWorkItemResetInProgress,
-  NdisWorkItemHalt,
-  NdisWorkItemSendLoopback,
-  NdisWorkItemMiniportCallback,
-  NdisMaxWorkItems
-} NDIS_WORK_ITEM_TYPE, *PNDIS_WORK_ITEM_TYPE;
-
-#define NUMBER_OF_WORK_ITEM_TYPES         NdisMaxWorkItems
-#define NUMBER_OF_SINGLE_WORK_ITEMS       6
-
-typedef struct _NDIS_MINIPORT_WORK_ITEM {
-    SINGLE_LIST_ENTRY  Link;
-    NDIS_WORK_ITEM_TYPE  WorkItemType;
-    PVOID  WorkItemContext;
-} NDIS_MINIPORT_WORK_ITEM, *PNDIS_MINIPORT_WORK_ITEM;
-
-typedef struct _X_FILTER FDDI_FILTER, *PFDDI_FILTER;
-
-typedef VOID (NTAPI *W_MINIPORT_CALLBACK)(
-  IN NDIS_HANDLE  MiniportAdapterContext,
-  IN PVOID  CallbackContext);
-#endif
-
 /* Information about a logical adapter */
 typedef struct _LOGICAL_ADAPTER
 {
