@@ -35,6 +35,7 @@
 #include <ntddstor.h>
 #include <ntdddisk.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #define NDEBUG
 #include <debug.h>

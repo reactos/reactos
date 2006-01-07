@@ -41,6 +41,7 @@
 
 #define SCSI_DISK_TIMEOUT	10	/* Default timeout: 10 seconds */
 #define MODE_DATA_SIZE		192
+#define MAX_PATH            260
 
 
 typedef struct _DISK_DATA

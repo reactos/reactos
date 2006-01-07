@@ -98,7 +98,7 @@ PciIdeXSetBusData(
 	IN ULONG BufferLength)
 {
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-	PBYTE CurrentBuffer = NULL;
+	PUCHAR CurrentBuffer = NULL;
 	ULONG i, BytesWritten;
 	NTSTATUS Status;
 
@@ -117,7 +117,7 @@ PciIdeXSetBusData(
 		goto cleanup;
 
 	for (i = 0; i < BufferLength; i++)
-		CurrentBuffer[i] = (CurrentBuffer[i] & ~((PBYTE)DataMask)[i]) | (((PBYTE)DataMask)[i] & ((PBYTE)Buffer)[i]);
+		CurrentBuffer[i] = (CurrentBuffer[i] & ~((PUCHAR)DataMask)[i]) | (((PUCHAR)DataMask)[i] & ((PUCHAR)Buffer)[i]);
 
 	FdoDeviceExtension = CONTAINING_RECORD(DeviceExtension, FDO_DEVICE_EXTENSION, MiniControllerExtension);
 	if (!FdoDeviceExtension->BusInterface)

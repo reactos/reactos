@@ -1,5 +1,5 @@
-#include <ntddk.h>
 #include <ntifs.h>
+#include <ntddk.h>
 #include <ide.h>
 #include <wdmguid.h>
 #include <stdio.h>
@@ -34,7 +34,7 @@ typedef struct _FDO_DEVICE_EXTENSION
 	PDEVICE_OBJECT Pdo[MAX_IDE_CHANNEL];
 	USHORT VendorId;
 	USHORT DeviceId;
-	PBYTE MiniControllerExtension[0];
+	PUCHAR MiniControllerExtension[0];
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct _PDO_DEVICE_EXTENSION
