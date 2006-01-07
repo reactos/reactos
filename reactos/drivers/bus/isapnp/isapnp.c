@@ -22,12 +22,6 @@
 
 #pragma  alloc_text(init, DriverEntry)
 
-// Make the PASSIVE_LEVEL routines pageable, so that they don't
-// waste nonpaged memory
-
-#pragma  alloc_text(page, ACPIDispatchOpenClose)
-#pragma  alloc_text(page, ACPIDispatchRead)
-#pragma  alloc_text(page, ACPIDispatchWrite)
 
 #endif  /*  ALLOC_PRAGMA  */
 
@@ -92,18 +86,18 @@ PCSZ TagName(ULONG Tag, BOOLEAN Small)
 
 #endif
 
-static inline VOID WriteData(UCHAR Value)
+static __inline VOID WriteData(UCHAR Value)
 {
   WRITE_PORT_UCHAR((PUCHAR)ISAPNP_WRITE_PORT, Value);
 }
 
-static inline VOID WriteAddress(UCHAR Value)
+static __inline VOID WriteAddress(UCHAR Value)
 {
 	WRITE_PORT_UCHAR((PUCHAR)ISAPNP_ADDRESS_PORT, Value);
 	KeStallExecutionProcessor(20);
 }
 
-static inline UCHAR ReadData(VOID)
+static __inline UCHAR ReadData(VOID)
 {
 	return READ_PORT_UCHAR(IsaPnPReadPort);
 }
@@ -158,7 +152,7 @@ static VOID WriteUlong(UCHAR Index, ULONG Value)
 }
 #endif
 
-static inline VOID SetReadDataPort(ULONG Port)
+static __inline VOID SetReadDataPort(ULONG Port)
 {
   IsaPnPReadPort = (PUCHAR)Port;
 	WriteUchar(0x00, Port >> 2);

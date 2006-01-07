@@ -14,6 +14,13 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+STDCALL
+DriverEntry(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PUNICODE_STRING RegistryPath
+);
+
 #ifdef  ALLOC_PRAGMA
 
 // Make the initialization routines discardable, so that they

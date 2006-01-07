@@ -7,8 +7,8 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
-#include <ntddk.h>
 #include <ntifs.h>
+#include <ntddk.h>
 #include <ntddser.h>
 #include <stdio.h>
 

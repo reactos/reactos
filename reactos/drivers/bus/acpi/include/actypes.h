@@ -191,6 +191,16 @@ typedef UINT64                          u64;
 /*
  * Local datatypes
  */
+#ifdef _MSC_VER
+typedef ULONGLONG u64;
+typedef ULONG u32;
+typedef USHORT u16;
+typedef UCHAR u8;
+typedef LONGLONG s64;
+typedef LONG s32;
+typedef SHORT s16;
+typedef CHAR s8;
+#endif
 
 typedef u32                             ACPI_STATUS;    /* All ACPI Exceptions */
 typedef u32                             ACPI_NAME;      /* 4-s8 ACPI name */
