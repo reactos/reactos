@@ -341,6 +341,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", speed ? "FALSE" : "TRUE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
+        fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", (sys || (exe && module.type == Kernel)) ? 2: 1);
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : "4");
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
@@ -389,7 +390,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
-				fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DriverEntry" : module.entrypoint.c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());	
 			}
@@ -401,7 +401,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 					fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
-					fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
 				}
@@ -409,7 +408,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				{
 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 1 );
-					fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );
 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
