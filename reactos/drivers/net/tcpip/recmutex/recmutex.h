@@ -5,7 +5,7 @@ typedef struct _RECURSIVE_MUTEX {
     /* Lock. */
     FAST_MUTEX Mutex;
     /* Number of times this object was locked */
-    UINT LockCount;
+    SIZE_T LockCount;
     /* CurrentThread */
     PVOID CurrentThread;  
     /* Notification event which signals that another thread can take over */
@@ -21,7 +21,7 @@ typedef struct _RECURSIVE_MUTEX {
 } RECURSIVE_MUTEX, *PRECURSIVE_MUTEX;
 
 extern VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex );
-extern UINT RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOL ToRead );
+extern SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToRead );
 extern VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex );
 
 #endif/*_ROSRTL_RECMUTEX_H*/

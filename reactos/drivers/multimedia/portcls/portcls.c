@@ -42,8 +42,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 /*
  * @implemented
  */
-DWORD STDCALL
-DllInitialize(DWORD Unknown)
+ULONG STDCALL
+DllInitialize(ULONG Unknown)
 {
     return 0;
 }
@@ -51,7 +51,7 @@ DllInitialize(DWORD Unknown)
 /*
  * @implemented
  */
-DWORD STDCALL
+ULONG STDCALL
 DllUnload(VOID)
 {
     return 0;
@@ -63,11 +63,11 @@ DllUnload(VOID)
  */
 NTSTATUS STDCALL
 PcAddAdapterDevice(
- DWORD DriverObject,
- DWORD PhysicalDeviceObject,
- DWORD StartDevice,
- DWORD MaxObjects,
- DWORD DeviceExtensionSize
+ ULONG DriverObject,
+ ULONG PhysicalDeviceObject,
+ ULONG StartDevice,
+ ULONG MaxObjects,
+ ULONG DeviceExtensionSize
 )
 {
  UNIMPLEMENTED;
@@ -79,9 +79,9 @@ PcAddAdapterDevice(
  */
 NTSTATUS STDCALL
 PcAddContentHandlers(
- DWORD  ContentId,
- DWORD  paHandlers,
- DWORD  NumHandlers
+ ULONG  ContentId,
+ ULONG  paHandlers,
+ ULONG  NumHandlers
 )
 {
  UNIMPLEMENTED;
@@ -93,9 +93,9 @@ PcAddContentHandlers(
  */
 NTSTATUS STDCALL
 PcCompleteIrp(
- DWORD  DeviceObject,
- DWORD  Irp,
- DWORD  Status
+ ULONG  DeviceObject,
+ ULONG  Irp,
+ ULONG  Status
 )
 {
  UNIMPLEMENTED;
@@ -107,8 +107,8 @@ PcCompleteIrp(
  */
 NTSTATUS STDCALL
 PcCompletePendingPropertyRequest(
- DWORD PropertyRequest,
- DWORD NtStatus
+ ULONG PropertyRequest,
+ ULONG NtStatus
 )
 {
  UNIMPLEMENTED;
@@ -120,9 +120,9 @@ PcCompletePendingPropertyRequest(
  */
 NTSTATUS STDCALL 
 PcCreateContentMixed(
- DWORD paContentId,
- DWORD cContentId,
- DWORD pMixedContentId
+ ULONG paContentId,
+ ULONG cContentId,
+ ULONG pMixedContentId
 )
 {
  UNIMPLEMENTED;
@@ -134,7 +134,7 @@ PcCreateContentMixed(
  */
 NTSTATUS STDCALL
 PcDestroyContent(
- DWORD ContentId
+ ULONG ContentId
 )
 {
  UNIMPLEMENTED;
@@ -146,8 +146,8 @@ PcDestroyContent(
  */
 NTSTATUS STDCALL
 PcDispatchIrp(
- DWORD DeviceObject,
- DWORD Irp
+ ULONG DeviceObject,
+ ULONG Irp
 )
 {
  UNIMPLEMENTED;
@@ -159,9 +159,9 @@ PcDispatchIrp(
  */
 NTSTATUS STDCALL
 PcForwardContentToDeviceObject(
- DWORD ContentId,
- DWORD Reserved,
- DWORD DrmForward
+ ULONG ContentId,
+ ULONG Reserved,
+ ULONG DrmForward
 )
 {
  UNIMPLEMENTED;
@@ -173,8 +173,8 @@ PcForwardContentToDeviceObject(
  */
 NTSTATUS STDCALL 
 PcForwardContentToFileObject(
- DWORD ContentId,
- DWORD FileObject
+ ULONG ContentId,
+ ULONG FileObject
 )
 {
  UNIMPLEMENTED;
@@ -186,9 +186,9 @@ PcForwardContentToFileObject(
  */
 NTSTATUS STDCALL 
 PcForwardContentToInterface(
- DWORD ContentId,
- DWORD Unknown,
- DWORD NumMethods
+ ULONG ContentId,
+ ULONG Unknown,
+ ULONG NumMethods
 )
 {
  UNIMPLEMENTED;
@@ -200,8 +200,8 @@ PcForwardContentToInterface(
  */
 NTSTATUS STDCALL
 PcForwardIrpSynchronous(
- DWORD DeviceObject,
- DWORD Irp 
+ ULONG DeviceObject,
+ ULONG Irp 
 )
 {
  UNIMPLEMENTED;
@@ -213,8 +213,8 @@ PcForwardIrpSynchronous(
  */
 NTSTATUS STDCALL 
 PcGetContentRights(
- DWORD ContentId,
- DWORD DrmRights
+ ULONG ContentId,
+ ULONG DrmRights
 )
 {
  UNIMPLEMENTED;
@@ -226,11 +226,11 @@ PcGetContentRights(
  */
 NTSTATUS STDCALL
 PcGetDeviceProperty(
- DWORD DeviceObject,
- DWORD DeviceProperty,
- DWORD BufferLength,
- DWORD PropertyBuffer,
- DWORD ResultLength
+ ULONG DeviceObject,
+ ULONG DeviceProperty,
+ ULONG BufferLength,
+ ULONG PropertyBuffer,
+ ULONG ResultLength
 )
 {
  UNIMPLEMENTED;
@@ -257,9 +257,9 @@ PcGetTimeInterval(
  */
 NTSTATUS STDCALL
 PcInitializeAdapterDriver(
- DWORD DriverObject,
- DWORD RegistryPathName,
- DWORD AddDevice
+ ULONG DriverObject,
+ ULONG RegistryPathName,
+ ULONG AddDevice
 )
 {
  UNIMPLEMENTED;
@@ -271,11 +271,11 @@ PcInitializeAdapterDriver(
  */
 NTSTATUS STDCALL
 PcNewDmaChannel(
- DWORD OutDmaChannel,
- DWORD Unknown,
- DWORD PoolType,
- DWORD DeviceDescription,
- DWORD DeviceObject
+ ULONG OutDmaChannel,
+ ULONG Unknown,
+ ULONG PoolType,
+ ULONG DeviceDescription,
+ ULONG DeviceObject
 )
 {
  UNIMPLEMENTED;
@@ -287,11 +287,11 @@ PcNewDmaChannel(
  */
 NTSTATUS STDCALL
 PcNewInterruptSync(
- DWORD OutInterruptSync,
- DWORD Unknown,
- DWORD ResourceList,
- DWORD ResourceIndex,
- DWORD Mode
+ ULONG OutInterruptSync,
+ ULONG Unknown,
+ ULONG ResourceList,
+ ULONG ResourceIndex,
+ ULONG Mode
 )
 {
  UNIMPLEMENTED;
@@ -303,8 +303,8 @@ PcNewInterruptSync(
  */
 NTSTATUS STDCALL
 PcNewMiniport(
- DWORD OutMiniport,
- DWORD ClassId
+ ULONG OutMiniport,
+ ULONG ClassId
 )
 {
  UNIMPLEMENTED;
@@ -316,8 +316,8 @@ PcNewMiniport(
  */
 NTSTATUS STDCALL
 PcNewPort(
- DWORD OutPort,
- DWORD ClassId
+ ULONG OutPort,
+ ULONG ClassId
 )
 {
  UNIMPLEMENTED;
@@ -329,15 +329,15 @@ PcNewPort(
  */
 NTSTATUS STDCALL
 PcNewRegistryKey(
- DWORD OutRegistryKey,
- DWORD Unknown,
- DWORD RegistryKeyType,
- DWORD DesiredAccess,
- DWORD DeviceObject,
- DWORD SubDevice,
- DWORD ObjectAttributes,
- DWORD CreateOptions,
- DWORD Disposition
+ ULONG OutRegistryKey,
+ ULONG Unknown,
+ ULONG RegistryKeyType,
+ ULONG DesiredAccess,
+ ULONG DeviceObject,
+ ULONG SubDevice,
+ ULONG ObjectAttributes,
+ ULONG CreateOptions,
+ ULONG Disposition
 )
 {
  UNIMPLEMENTED;
@@ -349,11 +349,11 @@ PcNewRegistryKey(
  */
 NTSTATUS STDCALL
 PcNewResourceList(
- DWORD OutResourceList,
- DWORD Unknown,
- DWORD PoolType,
- DWORD TranslatedResources,
- DWORD UntranslatedResources
+ ULONG OutResourceList,
+ ULONG Unknown,
+ ULONG PoolType,
+ ULONG TranslatedResources,
+ ULONG UntranslatedResources
 )
 {
  UNIMPLEMENTED;
@@ -365,11 +365,11 @@ PcNewResourceList(
  */
 NTSTATUS STDCALL
 PcNewResourceSublist(
- DWORD OutResourceList,
- DWORD Unknown,
- DWORD PoolType,
- DWORD ParentList,
- DWORD MaximumEntries
+ ULONG OutResourceList,
+ ULONG Unknown,
+ ULONG PoolType,
+ ULONG ParentList,
+ ULONG MaximumEntries
 )
 {
  UNIMPLEMENTED;
@@ -381,8 +381,8 @@ PcNewResourceSublist(
  */
 NTSTATUS STDCALL
 PcNewServiceGroup(
- DWORD OutServiceGroup,
- DWORD Unknown
+ ULONG OutServiceGroup,
+ ULONG Unknown
 )
 {
  UNIMPLEMENTED;
@@ -394,8 +394,8 @@ PcNewServiceGroup(
  */
 NTSTATUS STDCALL
 PcRegisterAdapterPowerManagement(
- DWORD Unknown,
- DWORD pvContext
+ ULONG Unknown,
+ ULONG pvContext
 )
 {
  UNIMPLEMENTED;
@@ -407,9 +407,9 @@ PcRegisterAdapterPowerManagement(
  */
 NTSTATUS STDCALL
 PcRegisterIoTimeout(
- DWORD pDeviceObject,
- DWORD pTimerRoutine,
- DWORD pContext
+ ULONG pDeviceObject,
+ ULONG pTimerRoutine,
+ ULONG pContext
 )
 {
  UNIMPLEMENTED;
@@ -421,11 +421,11 @@ PcRegisterIoTimeout(
  */
 NTSTATUS STDCALL
 PcRegisterPhysicalConnection(
- DWORD DeviceObject,
- DWORD FromUnknown,
- DWORD FromPin,
- DWORD ToUnknown,
- DWORD ToPin
+ ULONG DeviceObject,
+ ULONG FromUnknown,
+ ULONG FromPin,
+ ULONG ToUnknown,
+ ULONG ToPin
 )
 {
  UNIMPLEMENTED;
@@ -437,11 +437,11 @@ PcRegisterPhysicalConnection(
  */
 NTSTATUS STDCALL
 PcRegisterPhysicalConnectionFromExternal(
- DWORD DeviceObject,
- DWORD FromString,
- DWORD FromPin,
- DWORD ToUnknown,
- DWORD ToPin
+ ULONG DeviceObject,
+ ULONG FromString,
+ ULONG FromPin,
+ ULONG ToUnknown,
+ ULONG ToPin
 )
 {
  UNIMPLEMENTED;
@@ -453,11 +453,11 @@ PcRegisterPhysicalConnectionFromExternal(
  */
 NTSTATUS STDCALL
 PcRegisterPhysicalConnectionToExternal(
- DWORD DeviceObject,
- DWORD FromUnknown,
- DWORD FromPin,
- DWORD ToString,
- DWORD ToPin
+ ULONG DeviceObject,
+ ULONG FromUnknown,
+ ULONG FromPin,
+ ULONG ToString,
+ ULONG ToPin
 )
 {
  UNIMPLEMENTED;
@@ -469,9 +469,9 @@ PcRegisterPhysicalConnectionToExternal(
  */
 NTSTATUS STDCALL
 PcRegisterSubdevice(
- DWORD DeviceObject,
- DWORD SubdevName,
- DWORD Unknown
+ ULONG DeviceObject,
+ ULONG SubdevName,
+ ULONG Unknown
 )
 {
  UNIMPLEMENTED;
@@ -483,8 +483,8 @@ PcRegisterSubdevice(
  */
 NTSTATUS STDCALL
 PcRequestNewPowerState(
- DWORD pDeviceObject,
- DWORD RequestedNewState
+ ULONG pDeviceObject,
+ ULONG RequestedNewState
 )
 {
  UNIMPLEMENTED;
@@ -496,9 +496,9 @@ PcRequestNewPowerState(
  */
 NTSTATUS STDCALL
 PcUnregisterIoTimeout(
- DWORD pDeviceObject,
- DWORD pTimerRoutine,
- DWORD pContext
+ ULONG pDeviceObject,
+ ULONG pTimerRoutine,
+ ULONG pContext
 )
 {
  UNIMPLEMENTED;

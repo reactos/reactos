@@ -11,6 +11,7 @@ typedef VOID
 (*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
 
 /* TCPv4 header structure */
+#include <pshpack1.h>
 typedef struct TCPv4_HEADER {
   USHORT SourcePort;        /* Source port */
   USHORT DestinationPort;   /* Destination port */
@@ -21,7 +22,7 @@ typedef struct TCPv4_HEADER {
   USHORT Window;            /* Maximum acceptable receive window */
   USHORT Checksum;          /* Checksum of segment */
   USHORT Urgent;            /* Pointer to urgent data */
-} __attribute__((packed)) TCPv4_HEADER, *PTCPv4_HEADER;
+} TCPv4_HEADER, *PTCPv4_HEADER;
 
 /* TCPv4 header flags */
 #define TCP_URG   0x20
@@ -49,7 +50,8 @@ typedef struct TCPv4_PSEUDO_HEADER {
   UCHAR Zero;               /* Reserved */
   UCHAR Protocol;           /* Protocol */
   USHORT TCPLength;         /* Size of TCP segment */
-} __attribute__((packed)) TCPv4_PSEUDO_HEADER, *PTCPv4_PSEUDO_HEADER;
+} TCPv4_PSEUDO_HEADER, *PTCPv4_PSEUDO_HEADER;
+#include <poppack.h>
 
 typedef struct _SLEEPING_THREAD {
     LIST_ENTRY Entry;

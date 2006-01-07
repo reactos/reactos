@@ -13,96 +13,98 @@
 extern "C" {
 #endif
 
+/* This header is total bull**** */
+
 #include <ntddk.h>
 
 #define PORTCLASSAPI extern
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcAddAdapterDevice(
- DWORD DriverObject,
- DWORD PhysicalDeviceObject,
- DWORD StartDevice,
- DWORD MaxObjects,
- DWORD DeviceExtensionSize
+ ULONG DriverObject,
+ ULONG PhysicalDeviceObject,
+ ULONG StartDevice,
+ ULONG MaxObjects,
+ ULONG DeviceExtensionSize
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcAddContentHandlers(
- DWORD  ContentId,
- DWORD  paHandlers,
- DWORD  NumHandlers
+ ULONG  ContentId,
+ ULONG  paHandlers,
+ ULONG  NumHandlers
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcCompleteIrp(
- DWORD  DeviceObject,
- DWORD  Irp,
- DWORD  Status
+ ULONG  DeviceObject,
+ ULONG  Irp,
+ ULONG  Status
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcCompletePendingPropertyRequest(
- DWORD PropertyRequest,
- DWORD NtStatus
+ ULONG PropertyRequest,
+ ULONG NtStatus
 );
 
 PORTCLASSAPI NTSTATUS STDCALL 
 PcCreateContentMixed(
- DWORD paContentId,
- DWORD cContentId,
- DWORD pMixedContentId
+ ULONG paContentId,
+ ULONG cContentId,
+ ULONG pMixedContentId
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcDestroyContent(
- DWORD ContentId
+ ULONG ContentId
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcDispatchIrp(
- DWORD DeviceObject,
- DWORD Irp
+ ULONG DeviceObject,
+ ULONG Irp
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcForwardContentToDeviceObject(
- DWORD ContentId,
- DWORD Reserved,
- DWORD DrmForward
+ ULONG ContentId,
+ ULONG Reserved,
+ ULONG DrmForward
 );
 
 PORTCLASSAPI NTSTATUS STDCALL 
 PcForwardContentToFileObject(
- DWORD ContentId,
- DWORD FileObject
+ ULONG ContentId,
+ ULONG FileObject
 );
 
 PORTCLASSAPI NTSTATUS STDCALL 
 PcForwardContentToInterface(
- DWORD ContentId,
- DWORD Unknown,
- DWORD NumMethods
+ ULONG ContentId,
+ ULONG Unknown,
+ ULONG NumMethods
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcForwardIrpSynchronous(
- DWORD DeviceObject,
- DWORD Irp 
+ ULONG DeviceObject,
+ ULONG Irp 
 );
 
 PORTCLASSAPI NTSTATUS STDCALL 
 PcGetContentRights(
- DWORD ContentId,
- DWORD DrmRights
+ ULONG ContentId,
+ ULONG DrmRights
 ); 
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcGetDeviceProperty(
- DWORD DeviceObject,
- DWORD DeviceProperty,
- DWORD BufferLength,
- DWORD PropertyBuffer,
- DWORD ResultLength
+ ULONG DeviceObject,
+ ULONG DeviceProperty,
+ ULONG BufferLength,
+ ULONG PropertyBuffer,
+ ULONG ResultLength
 );
 
 PORTCLASSAPI ULONGLONG STDCALL
@@ -112,136 +114,136 @@ PcGetTimeInterval(
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcInitializeAdapterDriver(
- DWORD DriverObject,
- DWORD RegistryPathName,
- DWORD AddDevice
+ ULONG DriverObject,
+ ULONG RegistryPathName,
+ ULONG AddDevice
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewDmaChannel(
- DWORD OutDmaChannel,
- DWORD Unknown,
- DWORD PoolType,
- DWORD DeviceDescription,
- DWORD DeviceObject
+ ULONG OutDmaChannel,
+ ULONG Unknown,
+ ULONG PoolType,
+ ULONG DeviceDescription,
+ ULONG DeviceObject
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewInterruptSync(
- DWORD OutInterruptSync,
- DWORD Unknown,
- DWORD ResourceList,
- DWORD ResourceIndex,
- DWORD Mode
+ ULONG OutInterruptSync,
+ ULONG Unknown,
+ ULONG ResourceList,
+ ULONG ResourceIndex,
+ ULONG Mode
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewMiniport(
- DWORD OutMiniport,
- DWORD ClassId
+ ULONG OutMiniport,
+ ULONG ClassId
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewPort(
- DWORD OutPort,
- DWORD ClassId
+ ULONG OutPort,
+ ULONG ClassId
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewRegistryKey(
- DWORD OutRegistryKey,
- DWORD Unknown,
- DWORD RegistryKeyType,
- DWORD DesiredAccess,
- DWORD DeviceObject,
- DWORD SubDevice,
- DWORD ObjectAttributes,
- DWORD CreateOptions,
- DWORD Disposition
+ ULONG OutRegistryKey,
+ ULONG Unknown,
+ ULONG RegistryKeyType,
+ ULONG DesiredAccess,
+ ULONG DeviceObject,
+ ULONG SubDevice,
+ ULONG ObjectAttributes,
+ ULONG CreateOptions,
+ ULONG Disposition
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewResourceList(
- DWORD OutResourceList,
- DWORD Unknown,
- DWORD PoolType,
- DWORD TranslatedResources,
- DWORD UntranslatedResources
+ ULONG OutResourceList,
+ ULONG Unknown,
+ ULONG PoolType,
+ ULONG TranslatedResources,
+ ULONG UntranslatedResources
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewResourceSublist(
- DWORD OutResourceList,
- DWORD Unknown,
- DWORD PoolType,
- DWORD ParentList,
- DWORD MaximumEntries
+ ULONG OutResourceList,
+ ULONG Unknown,
+ ULONG PoolType,
+ ULONG ParentList,
+ ULONG MaximumEntries
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcNewServiceGroup(
- DWORD OutServiceGroup,
- DWORD Unknown
+ ULONG OutServiceGroup,
+ ULONG Unknown
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRegisterAdapterPowerManagement(
- DWORD Unknown,
- DWORD pvContext
+ ULONG Unknown,
+ ULONG pvContext
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRegisterIoTimeout(
- DWORD pDeviceObject,
- DWORD pTimerRoutine,
- DWORD pContext
+ ULONG pDeviceObject,
+ ULONG pTimerRoutine,
+ ULONG pContext
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRegisterPhysicalConnection(
- DWORD DeviceObject,
- DWORD FromUnknown,
- DWORD FromPin,
- DWORD ToUnknown,
- DWORD ToPin
+ ULONG DeviceObject,
+ ULONG FromUnknown,
+ ULONG FromPin,
+ ULONG ToUnknown,
+ ULONG ToPin
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRegisterPhysicalConnectionFromExternal(
- DWORD DeviceObject,
- DWORD FromString,
- DWORD FromPin,
- DWORD ToUnknown,
- DWORD ToPin
+ ULONG DeviceObject,
+ ULONG FromString,
+ ULONG FromPin,
+ ULONG ToUnknown,
+ ULONG ToPin
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRegisterPhysicalConnectionToExternal(
- DWORD DeviceObject,
- DWORD FromUnknown,
- DWORD FromPin,
- DWORD ToString,
- DWORD ToPin
+ ULONG DeviceObject,
+ ULONG FromUnknown,
+ ULONG FromPin,
+ ULONG ToString,
+ ULONG ToPin
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRegisterSubdevice(
- DWORD DeviceObject,
- DWORD SubdevName,
- DWORD Unknown
+ ULONG DeviceObject,
+ ULONG SubdevName,
+ ULONG Unknown
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcRequestNewPowerState(
- DWORD pDeviceObject,
- DWORD RequestedNewState
+ ULONG pDeviceObject,
+ ULONG RequestedNewState
 );
 
 PORTCLASSAPI NTSTATUS STDCALL
 PcUnregisterIoTimeout(
- DWORD pDeviceObject,
- DWORD pTimerRoutine,
- DWORD pContext
+ ULONG pDeviceObject,
+ ULONG pTimerRoutine,
+ ULONG pContext
 );
 
 #ifdef __cplusplus

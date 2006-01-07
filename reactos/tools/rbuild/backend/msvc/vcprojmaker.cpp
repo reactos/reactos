@@ -388,6 +388,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			{
 				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DriverEntry" : module.entrypoint.c_str ());
@@ -399,6 +400,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				{
 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 					fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
@@ -408,6 +410,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				{
 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 1 );
+					fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
