@@ -12,15 +12,8 @@
 
 typedef unsigned long NDIS_STATS;
 
-/* This magical flag combo seems to work. Filip should verify this */
-#undef NDIS_WRAPPER
-#define NDIS_LEGACY_DRIVER 1
-#define NDIS_LEGACY_MINIPORT 1
-#define NDIS_LEGACY_PROTOCOL 1
-#define NDIS51_MINIPORT 1
-#define NDIS_MINIPORT_DRIVER 1
+#include <ntifs.h>
 #include <ndis.h>
-#undef EXPORT
 #include <xfilter.h>
 #include <afilter.h>
 #include <atm.h>

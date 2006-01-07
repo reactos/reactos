@@ -6,6 +6,10 @@
 	<define name="NDIS51" />
 	<define name="NDIS50_MINIPORT" />
 	<define name="NDIS51_MINIPORT" />
+	<define name="NDIS_LEGACY_DRIVER" />
+	<define name="NDIS_LEGACY_MINIPORT" />
+	<define name="NDIS_LEGACY_PROTOCOL" />
+	<define name="NDIS_MINIPORT_DRIVER" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="include">
