@@ -39,7 +39,7 @@ RefreshServiceList(VOID)
     {
         HICON hiconItem;     /* icon for list-view items */
         HIMAGELIST hSmall;   /* image list for other views */
-        TCHAR buf[40];
+        TCHAR buf[256];
 
         /* Create the icon image lists */
         hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
@@ -85,14 +85,8 @@ RefreshServiceList(VOID)
 
             ZeroMemory(&item, sizeof(LV_ITEM));
             item.mask = LVIF_TEXT;
-            item.iImage = 0;
             item.pszText = pServiceStatus[Index].lpDisplayName;
-            /*_tcsncpy(item.pszText,
-                    pServiceStatus[Index].lpDisplayName,                    
-                    sizeof(pServiceStatus[Index].lpDisplayName));*/
-
             item.iItem = ListView_GetItemCount(hListView);
-            item.lParam = 0;
             item.iItem = ListView_InsertItem(hListView, &item);
 
             
@@ -137,7 +131,12 @@ RefreshServiceList(VOID)
 
                 HeapFree(GetProcessHeap(), 0, Description);
             }
-            
+            else
+            {
+                item.pszText = '\0';
+                item.iSubItem = 1;
+                SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+            }            
 
 
             /* set the status */
