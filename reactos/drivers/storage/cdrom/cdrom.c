@@ -946,9 +946,9 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
  */
 static NTSTATUS
 CdromClassReadTocEntry (PDEVICE_OBJECT DeviceObject,
-			UINT TrackNo,
+			SIZE_T TrackNo,
 			PVOID Buffer,
-			UINT Length)
+			SIZE_T Length)
 {
   PDEVICE_EXTENSION DeviceExtension;
   SCSI_REQUEST_BLOCK Srb;
@@ -978,9 +978,9 @@ CdromClassReadTocEntry (PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 CdromClassReadLastSession (PDEVICE_OBJECT DeviceObject,
-			   UINT TrackNo,
+			   SIZE_T TrackNo,
 			   PVOID Buffer,
-			   UINT Length)
+			   SIZE_T Length)
 {
   PDEVICE_EXTENSION DeviceExtension;
   SCSI_REQUEST_BLOCK Srb;

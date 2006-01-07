@@ -63,6 +63,10 @@
 #define VERSION  "0.0.1"
 
 
+NTSTATUS NTAPI
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath);
+
 //  -------------------------------------------------------  File Static Data
 
 #ifdef ENABLE_DMA
@@ -98,9 +102,9 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
   PUCHAR DataBuffer;
   ULONG DataTransferLength;
 
-  BOOLEAN FASTCALL (*Handler)(IN struct _ATAPI_MINIPORT_EXTENSION* DevExt);
+  BOOLEAN (FASTCALL *Handler)(IN struct _ATAPI_MINIPORT_EXTENSION* DevExt);
 #ifdef ENABLE_DMA
-  BOOL UseDma;
+  BOOLEAN UseDma;
   ULONG PRDCount;
   ULONG PRDMaxCount;
   PPRD PRDTable;
@@ -168,7 +172,7 @@ PCI_NATIVE_CONTROLLER const PciNativeController[] =
 static BOOLEAN
 AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	     PSCSI_REQUEST_BLOCK Srb,
-	     BYTE cmd);
+	     UCHAR cmd);
 #endif
 
 static ULONG STDCALL
@@ -208,8 +212,8 @@ AtapiStartIo(IN PVOID DeviceExtension,
 
 static VOID
 AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
-		    BYTE command,
-		    BOOLEAN FASTCALL (*Handler)(PATAPI_MINIPORT_EXTENSION));
+		    UCHAR command,
+		    BOOLEAN (FASTCALL *Handler)(PATAPI_MINIPORT_EXTENSION));
 
 static BOOLEAN STDCALL
 AtapiInterrupt(IN PVOID DeviceExtension);
@@ -338,7 +342,7 @@ IDESwapBytePairs(UCHAR *Buf,
 //  RETURNS:
 //    NTSTATUS
 
-STDCALL NTSTATUS
+NTSTATUS NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
@@ -1106,7 +1110,7 @@ static BOOLEAN STDCALL
 AtapiInterrupt(IN PVOID DeviceExtension)
 {
   PATAPI_MINIPORT_EXTENSION DevExt;
-  BYTE Status;
+  UCHAR Status;
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
 
   if (DevExt->Handler == NULL)
@@ -1149,7 +1153,7 @@ static BOOLEAN
 AtapiConfigDma(PATAPI_MINIPORT_EXTENSION DeviceExtension, ULONG UnitNumber)
 {
   BOOLEAN Result = FALSE;
-  BYTE Status;
+  UCHAR Status;
 
   if (UnitNumber < 2)
     {
@@ -2156,7 +2160,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #ifdef ENABLE_DMA
   if (DeviceExtension->UseDma)
     {
-      BYTE DmaCommand;
+      UCHAR DmaCommand;
       /* start DMA */
       DmaCommand = IDEReadDMACommand(DeviceExtension->BusMasterRegisterBase);
       IDEWriteDMACommand(DeviceExtension->BusMasterRegisterBase, DmaCommand|0x01);
@@ -2382,7 +2386,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR Command;
   ULONG Retries;
   UCHAR Status;
-  BOOLEAN FASTCALL (*Handler)(PATAPI_MINIPORT_EXTENSION DevExt);
+  BOOLEAN (FASTCALL *Handler)(PATAPI_MINIPORT_EXTENSION DevExt);
 
   DPRINT("AtapiReadWrite() called!\n");
   DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
@@ -2585,7 +2589,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #ifdef ENABLE_DMA
   if (DeviceExtension->UseDma)
     {
-      BYTE DmaCommand;
+      UCHAR DmaCommand;
       /* start DMA */
       DmaCommand = IDEReadDMACommand(DeviceExtension->BusMasterRegisterBase);
       IDEWriteDMACommand(DeviceExtension->BusMasterRegisterBase, DmaCommand|0x01);
@@ -2602,7 +2606,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
           /* Wait for controller ready */
           for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
 	    {
-	      BYTE  Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+	      UCHAR  Status = IDEReadStatus(DeviceExtension->CommandPortBase);
 	      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
 	        {
 	          break;
@@ -2989,12 +2993,12 @@ AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt,
 static BOOLEAN FASTCALL
 AtapiDmaPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
-  BYTE SrbStatus;
-  BYTE DmaCommand;
-  BYTE DmaStatus;
-  BYTE Status;
-  BYTE Error;
-  BYTE SensKey;
+  UCHAR SrbStatus;
+  UCHAR DmaCommand;
+  UCHAR DmaStatus;
+  UCHAR Status;
+  UCHAR Error;
+  UCHAR SensKey;
 
   DPRINT("AtapiPacketDmaInterrupt\n");
 
@@ -3043,16 +3047,16 @@ static BOOLEAN FASTCALL
 AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
   PSCSI_REQUEST_BLOCK Srb;
-  BYTE Status;
-  BYTE IntReason;
+  UCHAR Status;
+  UCHAR IntReason;
   ULONG TransferSize;
   ULONG JunkSize = 0;
-  BOOL IsLastBlock;
-  PBYTE TargetAddress;
+  BOOLEAN IsLastBlock;
+  PUCHAR TargetAddress;
   ULONG Retries;
-  BYTE SrbStatus;
-  BYTE Error;
-  BYTE SensKey;
+  UCHAR SrbStatus;
+  UCHAR Error;
+  UCHAR SensKey;
 
   DPRINT("AtapiPacketInterrupt()\n");
 
@@ -3183,7 +3187,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 static BOOLEAN FASTCALL
 AtapiNoDataInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
-  BYTE Status;
+  UCHAR Status;
 
   DPRINT("AtapiNoDataInterrupt()\n");
 
@@ -3199,9 +3203,9 @@ AtapiNoDataInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 static BOOLEAN FASTCALL
 AtapiDmaInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
-  BYTE DmaCommand;
-  BYTE DmaStatus;
-  BYTE Status;
+  UCHAR DmaCommand;
+  UCHAR DmaStatus;
+  UCHAR Status;
 
   DPRINT("AtapiDmaInterrupt()\n");
 
@@ -3448,8 +3452,8 @@ AtapiWriteInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt)
 
 static VOID
 AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
-		    BYTE command,
-		    BOOLEAN FASTCALL (*Handler)(PATAPI_MINIPORT_EXTENSION))
+		    UCHAR command,
+		    BOOLEAN (FASTCALL *Handler)(PATAPI_MINIPORT_EXTENSION))
 {
   if (DevExt->Handler != NULL)
     {
@@ -3464,7 +3468,7 @@ AtapiExecuteCommand(PATAPI_MINIPORT_EXTENSION DevExt,
 static BOOLEAN
 AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	     PSCSI_REQUEST_BLOCK Srb,
-	     BYTE cmd)
+	     UCHAR cmd)
 {
   PVOID StartAddress;
   PVOID EndAddress;
@@ -3472,7 +3476,7 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
   SCSI_PHYSICAL_ADDRESS PhysicalAddress;
   ULONG Length;
   ULONG tmpLength;
-  BYTE Status;
+  UCHAR Status;
 
   DPRINT("AtapiInitDma()\n");
 
