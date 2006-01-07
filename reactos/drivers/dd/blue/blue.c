@@ -12,25 +12,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntddk.h>
-
-/* FIXME: W32API NEEDS TO BE FIXED */
-#ifdef _MSC_VER
-/*
- * Wincon.h can't be included due to missing user-mode types,
- * so we'll define them here 
- */
-typedef ULONG DWORD, *LPDWORD;
-typedef USHORT UINT, *LPWORD;
-typedef USHORT WORD;
-typedef UCHAR BYTE;
-typedef INT BOOL;
-typedef PVOID HWND;
-typedef PVOID LPVOID;
-#define WINAPI NTAPI
-#define APIENTRY WINAPI
+#include <windef.h>
 #define WINBASEAPI
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
-#endif
 
 #include <wincon.h>
 #include <blue/ntddblue.h>

@@ -24,6 +24,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntddk.h>
+#include <windef.h>
 #include <ndk/ldrfuncs.h>
 #include "bootvid.h"
 #include "ntbootvid.h"
@@ -78,7 +79,7 @@ static PDRIVER_OBJECT BootVidDriverObject = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-STATIC BOOLEAN FASTCALL
+static BOOLEAN FASTCALL
 InbvFindBootimage()
 {
    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
@@ -119,7 +120,7 @@ InbvFindBootimage()
 }
 
 
-STATIC BOOLEAN FASTCALL
+static BOOLEAN FASTCALL
 InbvMapVideoMemory(VOID)
 {
    PHYSICAL_ADDRESS PhysicalAddress;
@@ -131,7 +132,7 @@ InbvMapVideoMemory(VOID)
 }
 
 
-STATIC BOOLEAN FASTCALL
+static BOOLEAN FASTCALL
 InbvUnmapVideoMemory(VOID)
 {
    MmUnmapIoSpace(VideoMemory, 0x10000);
@@ -139,7 +140,7 @@ InbvUnmapVideoMemory(VOID)
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 vgaPreCalc()
 {
    ULONG j;
@@ -158,7 +159,7 @@ vgaPreCalc()
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 vgaSetRegisters(const VGA_REGISTERS *Registers)
 {
    UINT i;
@@ -246,7 +247,7 @@ VidCleanUp(VOID)
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 InbvSetColor(INT Index, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
    WRITE_PORT_UCHAR(PELINDEX, Index);
@@ -256,7 +257,7 @@ InbvSetColor(INT Index, UCHAR Red, UCHAR Green, UCHAR Blue)
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 InbvSetBlackPalette()
 {
    register ULONG r = 0;
@@ -276,7 +277,7 @@ InbvSetBlackPalette()
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 InbvDisplayBitmap(ULONG Width, ULONG Height, PCHAR ImageData)
 {
    ULONG j, k, y;
@@ -322,7 +323,7 @@ InbvDisplayBitmap(ULONG Width, ULONG Height, PCHAR ImageData)
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 InbvDisplayCompressedBitmap()
 {
    PBITMAPV5HEADER bminfo;
@@ -470,7 +471,7 @@ InbvDisplayCompressedBitmap()
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 InbvFadeUpPalette()
 {
    PBITMAPV5HEADER bminfo;
@@ -542,7 +543,7 @@ InbvFadeUpPalette()
 }
 
 
-STATIC VOID STDCALL
+static VOID STDCALL
 InbvBitmapThreadMain(PVOID Ignored)
 {
    if (InbvFindBootimage())
@@ -558,7 +559,7 @@ InbvBitmapThreadMain(PVOID Ignored)
 }
 
 
-STATIC BOOLEAN STDCALL
+static BOOLEAN STDCALL
 VidInitialize(VOID)
 {
    NTSTATUS Status;
