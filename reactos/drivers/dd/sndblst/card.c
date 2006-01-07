@@ -7,7 +7,7 @@
 #include <ntddk.h>
 #include "sndblst.h"
 
-VOID SetOutputSampleRate(UINT BasePort, UINT SampleRate)
+VOID SetOutputSampleRate(ULONG BasePort, ULONG SampleRate)
 {
     // This only works for DSP v4.xx ONLY - need a workaround!
     DPRINT("Setting output sample rate\n");
@@ -22,7 +22,7 @@ VOID SetOutputSampleRate(UINT BasePort, UINT SampleRate)
 }
 
 
-VOID EnableSpeaker(UINT BasePort, BOOLEAN SpeakerOn)
+VOID EnableSpeaker(ULONG BasePort, BOOLEAN SpeakerOn)
 {
     DPRINT("Setting speaker status %d\n", SpeakerOn);
 
@@ -33,7 +33,7 @@ VOID EnableSpeaker(UINT BasePort, BOOLEAN SpeakerOn)
 }
 
 
-BOOLEAN IsSpeakerEnabled(UINT BasePort)
+BOOLEAN IsSpeakerEnabled(ULONG BasePort)
 {
     DPRINT("Obtaining speaker status\n");
 
@@ -48,7 +48,7 @@ BOOLEAN IsSpeakerEnabled(UINT BasePort)
 }
 
 
-VOID BeginPlayback(UINT BasePort, UINT BitDepth, UINT Channels, UINT BlockSize)
+VOID BeginPlayback(ULONG BasePort, ULONG BitDepth, ULONG Channels, ULONG BlockSize)
 {
     DPRINT("BeginPlayback(%d, %d, %d, %d)\n", BasePort, BitDepth, Channels, BlockSize);
 

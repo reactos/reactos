@@ -41,7 +41,7 @@ static IO_ALLOCATION_ACTION STDCALL SoundProgramDMA(
     IN PVOID Context)
 {
     PDEVICE_EXTENSION Device = DeviceObject->DeviceExtension;
-    UINT zzz;
+    ULONG zzz;
     PUCHAR VirtualAddress = (PUCHAR) MmGetMdlVirtualAddress(Device->Mdl);
 
     DPRINT("IoMapTransfer\n");

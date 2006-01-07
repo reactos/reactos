@@ -96,9 +96,9 @@ typedef struct _DEVICE_EXTENSION
 {
     PWSTR RegistryPath;
     PDRIVER_OBJECT DriverObject;
-    UINT Port;
-    UINT IRQ;
-    UINT DMA;
+    ULONG Port;
+    ULONG IRQ;
+    ULONG DMA;
     ULONG BufferSize;
     PADAPTER_OBJECT Adapter;
     PMDL Mdl;
@@ -123,8 +123,8 @@ typedef struct _DEVICE_INSTANCE
 
 //typedef struct _CONFIG
 //{
-//    UINT Port;
-//    UINT IRQ;
+//    ULONG Port;
+//    ULONG IRQ;
 //} CONFIG, *PCONFIG;
 
 /*
@@ -139,9 +139,9 @@ typedef REGISTRY_CALLBACK_ROUTINE *PREGISTRY_CALLBACK_ROUTINE;
     Prototypes for functions in portio.c :
 */
 
-BOOLEAN WaitToSend(UINT BasePort);
-BOOLEAN WaitToReceive(UINT BasePort);
-WORD InitSoundCard(UINT BasePort);
+BOOLEAN WaitToSend(ULONG BasePort);
+BOOLEAN WaitToReceive(ULONG BasePort);
+USHORT InitSoundCard(ULONG BasePort);
 
 /*
     Prototypes for functions in settings.c :
@@ -168,9 +168,9 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject);
 
 
 
-VOID SetOutputSampleRate(UINT BasePort, UINT SampleRate);
-VOID EnableSpeaker(UINT BasePort, BOOLEAN SpeakerOn);
-BOOLEAN IsSpeakerEnabled(UINT BasePort);
-VOID BeginPlayback(UINT BasePort, UINT BitDepth, UINT Channels, UINT BlockSize);
+VOID SetOutputSampleRate(ULONG BasePort, ULONG SampleRate);
+VOID EnableSpeaker(ULONG BasePort, BOOLEAN SpeakerOn);
+BOOLEAN IsSpeakerEnabled(ULONG BasePort);
+VOID BeginPlayback(ULONG BasePort, ULONG BitDepth, ULONG Channels, ULONG BlockSize);
 
 #endif

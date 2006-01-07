@@ -13,6 +13,7 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ntddk.h>
+#include <halfuncs.h>
 #include <string.h>
 #include <devices.h>
 
@@ -38,7 +39,6 @@ static BOOLEAN STDCALL DMAOutputISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
 
 void sb16_play(WAVE_HDR* wave)
 {
-	unsigned int eflags;
 	ULONG MappedIrq;
 	KIRQL Dirql;
 	KAFFINITY Affinity;
@@ -64,9 +64,7 @@ void sb16_play(WAVE_HDR* wave)
     * saving the previous state of the interrupt flag
     */
 
-   	__asm__("pushf\n\tpop %0\n\tcli\n\t"
-	   : "=m" (eflags)
-	   : );
+   	_disable();
 
        memcpy(sb16.buffer,(&wave->data),wave->dLen);
 
@@ -82,9 +80,7 @@ void sb16_play(WAVE_HDR* wave)
 	// outb(0x21,(mask&~newmask));
 
        // Restore the interrupt flag
-	__asm__("push %0\n\tpopf\n\t"
-		   :
-		   : "m" (eflags));
+	_enable();
 
 
 

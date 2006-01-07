@@ -20,7 +20,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 /* INTERNAL VARIABLES ******************************************************/
 
-UINT DeviceCount = 0;
+ULONG DeviceCount = 0;
 
 
 /* FUNCTIONS ***************************************************************/
@@ -38,7 +38,7 @@ static NTSTATUS InitDevice(
 //    CONFIG Config;
     RTL_QUERY_REGISTRY_TABLE Table[2];
     NTSTATUS s;
-    WORD DSP_Version = 0;
+    USHORT DSP_Version = 0;
     UCHAR DSP_Major = 0, DSP_Minor = 0;
 
     // This is TEMPORARY, to ensure that we don't process more than 1 device.
@@ -228,7 +228,7 @@ BlasterCleanup(PDEVICE_OBJECT DeviceObject,
  * RETURNS: Success or failure
  */
 {
-  UINT Channel;
+  ULONG Channel;
   DPRINT("BlasterCleanup() called!\n");
 
     // Reset the device (should we do this?)
@@ -255,8 +255,8 @@ BlasterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION Stack;
     PDEVICE_EXTENSION DeviceExtension;
-    UINT ByteCount;
-    PBYTE Data;
+    ULONG ByteCount;
+    PUCHAR Data;
 
     DPRINT("BlasterWrite() called!\n");
 
@@ -265,7 +265,7 @@ BlasterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     DPRINT("%d bytes\n", Stack->Parameters.Write.Length);
 
-            Data = (PBYTE) Irp->AssociatedIrp.SystemBuffer;
+            Data = (PUCHAR) Irp->AssociatedIrp.SystemBuffer;
 
             for (ByteCount = 0; ByteCount < Stack->Parameters.Write.Length; ByteCount ++)
             {
@@ -307,7 +307,7 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 /*        case IOCTL_MIDI_PLAY :
         {
             DPRINT("Received IOCTL_MIDI_PLAY\n");
-            Data = (PBYTE) Irp->AssociatedIrp.SystemBuffer;
+            Data = (PUCHAR) Irp->AssociatedIrp.SystemBuffer;
 
             DPRINT("Sending %d bytes of MIDI data to 0x%d:\n", Stack->Parameters.DeviceIoControl.InputBufferLength, DeviceExtension->Port);
 

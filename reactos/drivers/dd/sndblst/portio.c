@@ -12,7 +12,7 @@
 #include <ntddk.h>
 #include "sndblst.h"
 
-BOOLEAN WaitToSend(UINT BasePort)
+BOOLEAN WaitToSend(ULONG BasePort)
 {
     int TimeOut;
 
@@ -35,7 +35,7 @@ BOOLEAN WaitToSend(UINT BasePort)
     return TRUE;
 }
 
-BOOLEAN WaitToReceive(UINT BasePort)
+BOOLEAN WaitToReceive(ULONG BasePort)
 {
     int TimeOut;
 
@@ -59,9 +59,9 @@ BOOLEAN WaitToReceive(UINT BasePort)
 }
 
 
-WORD InitSoundCard(UINT BasePort)
+USHORT InitSoundCard(ULONG BasePort)
 {
-    UINT TimeOut;
+    ULONG TimeOut;
     BOOLEAN Status;
     UCHAR DSP_Major, DSP_Minor;
 
