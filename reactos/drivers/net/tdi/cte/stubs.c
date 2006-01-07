@@ -10,7 +10,7 @@
 NTSTATUS
 STDCALL
 CTEBlock (
-	DWORD	Unknown0
+	ULONG	Unknown0
 	)
 {
 	return STATUS_NOT_IMPLEMENTED;
@@ -23,8 +23,8 @@ CTEBlock (
 VOID
 STDCALL
 CTEInitEvent (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 }
@@ -36,7 +36,7 @@ CTEInitEvent (
 VOID
 STDCALL
 CTEInitTimer (
-	DWORD	Unknown0
+	ULONG	Unknown0
 	)
 {
 }
@@ -62,13 +62,13 @@ CTEInitialize (
 NTSTATUS
 STDCALL
 CTELogEvent (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3,
+	ULONG	Unknown4,
+	ULONG	Unknown5,
+	ULONG	Unknown6
 	)
 {
 	/* Probably call
@@ -85,8 +85,8 @@ CTELogEvent (
 BOOLEAN
 STDCALL
 CTEScheduleEvent (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 	return FALSE;
@@ -99,8 +99,8 @@ CTEScheduleEvent (
 LONG
 STDCALL
 CTESignal (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 #if 0
@@ -122,10 +122,10 @@ CTESignal (
 BOOLEAN
 STDCALL
 CTEStartTimer (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+	ULONG	Unknown3
 	)
 {
 	return FALSE;

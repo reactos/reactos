@@ -10,7 +10,7 @@
 VOID
 STDCALL
 TdiMapBuffer (
-	DWORD	Unknown0
+	ULONG	Unknown0
 	)
 {
 	/* This function is absolete */
@@ -23,7 +23,7 @@ TdiMapBuffer (
 VOID
 STDCALL
 TdiUnmapBuffer (
-	DWORD	Unknown0
+	ULONG	Unknown0
 	)
 {
 	/* This function is obsolete */

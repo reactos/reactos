@@ -99,7 +99,7 @@ typedef LONG NTSTATUS, *PNTSTATUS;
 //
 // Basic NT Types
 //
-#if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H)
+#if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H) && !defined(_NTSECAPI_)
 
 typedef struct _UNICODE_STRING
 {
@@ -107,7 +107,6 @@ typedef struct _UNICODE_STRING
     USHORT MaximumLength;
     PWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
-typedef const UNICODE_STRING* PCUNICODE_STRING;
 
 typedef struct _STRING
 {
@@ -115,6 +114,8 @@ typedef struct _STRING
     USHORT MaximumLength;
     PCHAR Buffer;
 } STRING, *PSTRING;
+
+#endif
 
 typedef struct _OBJECT_ATTRIBUTES
 {
@@ -125,8 +126,8 @@ typedef struct _OBJECT_ATTRIBUTES
     PVOID SecurityDescriptor;
     PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
-#endif
 
+typedef const UNICODE_STRING* PCUNICODE_STRING;
 typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;
 typedef STRING OEM_STRING;

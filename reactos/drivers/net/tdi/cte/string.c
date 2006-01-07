@@ -9,8 +9,8 @@
 BOOLEAN
 STDCALL
 CTEAllocateString (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 	return FALSE;
@@ -23,8 +23,8 @@ CTEAllocateString (
 BOOLEAN
 STDCALL
 CTEInitString (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 	return FALSE;

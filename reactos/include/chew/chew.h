@@ -31,7 +31,7 @@ VOID ChewShutdown();
  * Else, the function returns false and Item is undefined.
  */
 BOOLEAN ChewCreate
-( PVOID *Item, UINT Bytes, VOID (*Worker)(PVOID), PVOID UserSpace );
+( PVOID *Item, SIZE_T Bytes, VOID (*Worker)(PVOID), PVOID UserSpace );
 /**
  * Remove a work item, given the pointer returned to Item in ChewCreate.
  */

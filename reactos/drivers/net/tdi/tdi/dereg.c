@@ -41,9 +41,9 @@ TdiDeRegister (
 NTSTATUS
 STDCALL
 TdiRegisterAddressChangeHandler (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	)
 {
 #if 0
@@ -81,8 +81,8 @@ TdiDeregisterAddressChangeHandler (
 NTSTATUS
 STDCALL
 TdiRegisterDeviceObject (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 #if 0
@@ -120,8 +120,8 @@ TdiDeregisterDeviceObject (
 NTSTATUS
 STDCALL
 TdiRegisterNetAddress (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	ULONG	Unknown0,
+	ULONG	Unknown1
 	)
 {
 #if 0
@@ -159,9 +159,9 @@ TdiDeregisterNetAddress (
 NTSTATUS
 STDCALL
 TdiRegisterNotificationHandler (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	)
 {
 #if 0
