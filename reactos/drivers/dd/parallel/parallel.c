@@ -83,7 +83,7 @@ Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS status;
-   UINT i;
+   ULONG i;
 
    switch (Stack->MajorFunction)
      {

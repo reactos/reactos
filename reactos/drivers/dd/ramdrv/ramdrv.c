@@ -98,7 +98,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   void *tbuff;
   unsigned int dstlen = 1024 * 1440;
   FILE_STANDARD_INFORMATION finfo;
-  DWORD err;
+  ULONG err;
 
   DPRINT("Ramdisk driver\n");
 

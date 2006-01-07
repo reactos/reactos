@@ -308,9 +308,9 @@ BZ_EXTERN const char * BZ_API(BZ2_bzerror) (
    );
 #endif
 
-extern _stdcall void *(*BZ2_malloc)( unsigned long size );
-extern _stdcall void (*BZ2_free)( void *ptr );
-_stdcall void BZ2_set_malloc_free( _stdcall void *(*malloc)(unsigned long size), _stdcall void (*free)(void *ptr) );
+extern void *(_stdcall *BZ2_malloc)( unsigned long size );
+extern void (*_stdcall BZ2_free)( void *ptr );
+void _stdcall BZ2_set_malloc_free(  void *(_stdcall *malloc)(unsigned long size), void (_stdcall *free)(void *ptr) );
 
 #ifdef __cplusplus
 }

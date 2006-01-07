@@ -13,7 +13,7 @@
 #include "mpu401.h"
 
 
-BOOLEAN WaitToSend(UINT BasePort)
+BOOLEAN WaitToSend(ULONG BasePort)
 {
     int TimeOut;
 
@@ -37,7 +37,7 @@ BOOLEAN WaitToSend(UINT BasePort)
 }
 
 
-BOOLEAN WaitToReceive(UINT BasePort)
+BOOLEAN WaitToReceive(ULONG BasePort)
 {
     int TimeOut;
 
@@ -61,9 +61,9 @@ BOOLEAN WaitToReceive(UINT BasePort)
 }
 
 
-BOOLEAN InitUARTMode(UINT BasePort)
+BOOLEAN InitUARTMode(ULONG BasePort)
 {
-    UINT TimeOut;
+    ULONG TimeOut;
     UCHAR Status = 0;
 
     DbgPrint("InitUARTMode() called\n");

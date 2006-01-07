@@ -23,7 +23,7 @@
 
 /* INTERNAL VARIABLES ******************************************************/
 
-UINT DeviceCount = 0;
+ULONG DeviceCount = 0;
 
 
 /* FUNCTIONS ***************************************************************/
@@ -205,7 +205,7 @@ MPU401Cleanup(PDEVICE_OBJECT DeviceObject,
  * RETURNS: Success or failure
  */
 {
-  UINT Channel;
+  ULONG Channel;
   DPRINT("MPU401Cleanup() called!\n");
 
     // Reset the device (should we do this?)
@@ -240,8 +240,8 @@ MPU401DeviceControl(PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION Stack;
     PDEVICE_EXTENSION DeviceExtension;
-    UINT ByteCount;
-    PBYTE Data;
+    ULONG ByteCount;
+    PUCHAR Data;
 
     DPRINT("MPU401DeviceControl() called!\n");
 
@@ -256,7 +256,7 @@ MPU401DeviceControl(PDEVICE_OBJECT DeviceObject,
         case IOCTL_MIDI_PLAY :
         {
             DPRINT("Received IOCTL_MIDI_PLAY\n");
-            Data = (PBYTE) Irp->AssociatedIrp.SystemBuffer;
+            Data = (PUCHAR) Irp->AssociatedIrp.SystemBuffer;
 
             DPRINT("Sending %d bytes of MIDI data to 0x%d:\n", Stack->Parameters.DeviceIoControl.InputBufferLength, DeviceExtension->Port);
 

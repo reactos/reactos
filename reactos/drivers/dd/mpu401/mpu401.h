@@ -85,8 +85,8 @@ typedef struct _DEVICE_EXTENSION
 {
     PUNICODE_STRING RegistryPath;
     PDRIVER_OBJECT DriverObject;
-    UINT Port;
-    UINT IRQ;
+    ULONG Port;
+    ULONG IRQ;
 //  KDPC Dpc;
 //  KTIMER Timer;
 //  KEVENT Event;
@@ -110,8 +110,8 @@ typedef struct _DEVICE_INSTANCE
 
 //typedef struct _CONFIG
 //{
-//    UINT Port;
-//    UINT IRQ;
+//    ULONG Port;
+//    ULONG IRQ;
 //} CONFIG, *PCONFIG;
 
 /*
@@ -126,9 +126,9 @@ typedef REGISTRY_CALLBACK_ROUTINE *PREGISTRY_CALLBACK_ROUTINE;
     Prototypes for functions in portio.c :
 */
 
-BOOLEAN WaitToSend(UINT BasePort);
-BOOLEAN WaitToReceive(UINT BasePort);
-BOOLEAN InitUARTMode(UINT BasePort);
+BOOLEAN WaitToSend(ULONG BasePort);
+BOOLEAN WaitToReceive(ULONG BasePort);
+BOOLEAN InitUARTMode(ULONG BasePort);
 
 /*
     Prototypes for functions in settings.c :
