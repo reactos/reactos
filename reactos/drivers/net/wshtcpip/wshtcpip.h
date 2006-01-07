@@ -8,9 +8,8 @@
 #define __WSHTCPIP_H
 
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include <rtlfuncs.h>
 #include <wsahelp.h>
+#include <rtlfuncs.h>
 
 #define EXPORT STDCALL
 
