@@ -96,9 +96,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
 
-	// this is a define in MinGW w32api, but not Microsoft's headers
+	// MinGW doesn't have a safe-string library yet
 	defines.push_back ( "_CRT_SECURE_NO_DEPRECATE" );
 	defines.push_back ( "_CRT_NON_CONFORMING_SWPRINTFS" );
+	// this is a define in MinGW w32api, but not Microsoft's headers
 	defines.push_back ( "STDCALL=__stdcall" );
 
 	string baseaddr;
@@ -309,9 +310,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\"\r\n" );
 
 		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
-		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", debug ? "3" : "0" );
+        fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", sys ? 0 : (debug ? "3" : "0") );
 		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"5\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
+        fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", sys ? "FALSE" : (debug ? "TRUE" : "FALSE" ));
 		fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
 		
 		if ( module.pch != NULL )
@@ -336,8 +337,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t\tEnablePREfast=\"%s\"\r\n", debug ? "TRUE" : "FALSE");
 		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127;4214\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", release ? "0" : "4" );
-		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", release ? "FALSE" : "TRUE");
+		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", speed ? "0" : "4" );
+		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", speed ? "FALSE" : "TRUE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : "4");
@@ -384,31 +385,39 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			if ( sys )
 			{
-				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /DRIVER /ALIGN:0x20 /SUBSYSTEM:NATIVE /SECTION:INIT,D /NODEFAULTLIB /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
+				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
+				fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DriverEntry" : module.entrypoint.c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());	
 			}
 			else if ( exe )
 			{
 				if ( module.type == Kernel )
- 				{
- 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /NODEFAULTLIB /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
- 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+				{
+					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
+					fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
+					fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
- 				}
+				}
 				else if ( module.type == NativeCUI )
 				{
- 					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SUBSYSTEM:NATIVE /NODEFAULTLIB /ALIGN:0x20\"\r\n" );
- 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20\"\r\n" );
+					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 1 );
+					fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );
+					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
 				}
 				else if ( module.type == Win32CUI || module.type == Win32GUI )
- 				{
- 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
- 				}
+				{
+					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
+				}
 			}
 			else if ( dll )
 			{
