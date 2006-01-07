@@ -23,9 +23,17 @@
 
 /* INCLUDES *******************************************************************/
 
+#ifdef _MSC_VER
+#include "dderror.h"
+#include "devioctl.h"
+#else
 #include <ntddk.h>
-#include <miniport.h>
-#include <video.h>
+#endif
+
+#include "miniport.h"
+#include "ntddvdeo.h"
+#include "video.h"
+#include "vgavideo.h"
 
 #define UNIMPLEMENTED \
    VideoPortDebugPrint(Error, "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
@@ -33,7 +41,7 @@
 void
 InitVGAMode();
 
-static VP_STATUS STDCALL
+VP_STATUS STDCALL
 VGAFindAdapter(
    PVOID DeviceExtension,
    PVOID Context,
@@ -41,11 +49,11 @@ VGAFindAdapter(
    PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    PUCHAR Again);
 
-static BOOLEAN STDCALL
+BOOLEAN STDCALL
 VGAInitialize(
    PVOID DeviceExtension);
 
-static BOOLEAN STDCALL
+BOOLEAN STDCALL
 VGAStartIO(
    PVOID DeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket);
@@ -53,7 +61,7 @@ VGAStartIO(
 /*static BOOLEAN STDCALL
 VGAInterrupt(PVOID DeviceExtension);*/
 
-static BOOLEAN STDCALL
+BOOLEAN STDCALL
 VGAResetHw(
    PVOID DeviceExtension,
    ULONG Columns,
@@ -63,59 +71,59 @@ VGAResetHw(
 VGATimer(PVOID DeviceExtension);*/
 
 /* Mandatory IoControl routines */
-BOOL
+BOOLEAN
 VGAMapVideoMemory(
    IN PVOID DeviceExtension,
    IN PVIDEO_MEMORY RequestedAddress,
    OUT PVIDEO_MEMORY_INFORMATION MapInformation,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGAQueryAvailModes(
    OUT PVIDEO_MODE_INFORMATION ReturnedModes,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGAQueryCurrentMode(
    OUT PVIDEO_MODE_INFORMATION CurrentMode,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGAQueryNumAvailModes(
    OUT PVIDEO_NUM_MODES NumberOfModes,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+VOID
 VGAResetDevice(OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGASetColorRegisters(
    IN PVIDEO_CLUT ColorLookUpTable,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGASetPaletteRegisters(
-   IN PWORD PaletteRegisters,
+   IN PUSHORT PaletteRegisters,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGASetCurrentMode(
    IN PVIDEO_MODE RequestedMode,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGAShareVideoMemory(
    IN PVIDEO_SHARE_MEMORY RequestedMemory,
    OUT PVIDEO_MEMORY_INFORMATION ReturnedMemory,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGAUnmapVideoMemory(
    IN PVOID DeviceExtension,
    IN PVIDEO_MEMORY MemoryToUnmap,
    OUT PSTATUS_BLOCK StatusBlock);
 
-BOOL
+BOOLEAN
 VGAUnshareVideoMemory(
    IN PVIDEO_MEMORY MemoryToUnshare,
    OUT PSTATUS_BLOCK StatusBlock);

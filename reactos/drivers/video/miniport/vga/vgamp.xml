@@ -5,4 +5,5 @@
 	<file>initvga.c</file>
 	<file>vgamp.c</file>
 	<file>vgamp.rc</file>
+	<pch>vgamp.h</pch>
 </module>

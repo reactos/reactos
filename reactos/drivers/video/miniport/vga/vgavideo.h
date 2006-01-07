@@ -1,5 +1,3 @@
-#include <ntddk.h>
-#include <ntddvdeo.h>
 
 #define VGA_NORMAL 0
 #define VGA_AND    8

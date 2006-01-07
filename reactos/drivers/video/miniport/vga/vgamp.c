@@ -72,7 +72,7 @@ DriverEntry(IN PVOID Context1,
 //  RETURNS:
 //    VP_STATUS
 
-static VP_STATUS STDCALL
+VP_STATUS STDCALL
 VGAFindAdapter(PVOID DeviceExtension,
                PVOID Context,
                PWSTR ArgumentString,
@@ -82,7 +82,7 @@ VGAFindAdapter(PVOID DeviceExtension,
   /* FIXME: Determine if the adapter is present  */
   *Again = FALSE;
 
-  return  STATUS_SUCCESS;
+  return  NO_ERROR;
 
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */
   /* FIXME: Map resources into system memory for the adapter  */
@@ -104,7 +104,7 @@ VGAFindAdapter(PVOID DeviceExtension,
 //    PVOID  DeviceExtension
 //  RETURNS:
 //    BOOLEAN  Success or failure
-static BOOLEAN STDCALL
+BOOLEAN STDCALL
 VGAInitialize(PVOID DeviceExtension)
 {
   return  TRUE;
@@ -161,13 +161,13 @@ VGAInitialize(PVOID DeviceExtension)
 //    BOOLEAN  This function must return TRUE, and complete the work or
 //             set an error status in the VRP.
 
-static BOOLEAN STDCALL
+BOOLEAN STDCALL
 VGAStartIO(PVOID DeviceExtension,
            PVIDEO_REQUEST_PACKET RequestPacket)
 {
-  BOOL Result;
+  BOOLEAN Result;
 
-  RequestPacket->StatusBlock->Status = STATUS_UNSUCCESSFUL;
+  RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
 
   switch (RequestPacket->IoControlCode)
     {
@@ -216,7 +216,8 @@ VGAStartIO(PVOID DeviceExtension,
       break;
 
     case  IOCTL_VIDEO_RESET_DEVICE:
-      Result = VGAResetDevice(RequestPacket->StatusBlock);
+      VGAResetDevice(RequestPacket->StatusBlock);
+      Result = TRUE;
       break;
 
     case  IOCTL_VIDEO_SET_COLOR_REGISTERS:
@@ -275,7 +276,7 @@ VGAStartIO(PVOID DeviceExtension,
                             RequestPacket->StatusBlock);
       break;
     case  IOCTL_VIDEO_SET_PALETTE_REGISTERS:
-      Result = VGASetPaletteRegisters((PWORD) RequestPacket->InputBuffer,
+      Result = VGASetPaletteRegisters((PUSHORT) RequestPacket->InputBuffer,
                              RequestPacket->StatusBlock);
       break;
 
@@ -318,12 +319,12 @@ VGAStartIO(PVOID DeviceExtension,
 #endif
 
     default:
-      RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+      RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
       return FALSE;
     }
 
   if (Result)
-    RequestPacket->StatusBlock->Status = STATUS_SUCCESS;
+    RequestPacket->StatusBlock->Status = NO_ERROR;
 
   return TRUE;
 }
@@ -367,7 +368,7 @@ VGAInterrupt(PVOID DeviceExtension)
 //    BOOLEAN  TRUE if no further action is necessary, FALSE if the system
 //             needs to still do a BIOS int 10 reset.
 
-static BOOLEAN STDCALL
+BOOLEAN STDCALL
 VGAResetHw(PVOID DeviceExtension,
 	   ULONG Columns,
 	   ULONG Rows)
@@ -397,7 +398,7 @@ VGATimer(PVOID DeviceExtension)
 
 #endif
 
-BOOL  VGAMapVideoMemory(IN PVOID DeviceExtension,
+BOOLEAN  VGAMapVideoMemory(IN PVOID DeviceExtension,
 			IN PVIDEO_MEMORY  RequestedAddress,
                         OUT PVIDEO_MEMORY_INFORMATION  MapInformation,
                         OUT PSTATUS_BLOCK  StatusBlock)
@@ -428,14 +429,14 @@ BOOL  VGAMapVideoMemory(IN PVOID DeviceExtension,
   return TRUE;
 }
 
-BOOL  VGAQueryAvailModes(OUT PVIDEO_MODE_INFORMATION  ReturnedModes,
+BOOLEAN  VGAQueryAvailModes(OUT PVIDEO_MODE_INFORMATION  ReturnedModes,
                          OUT PSTATUS_BLOCK  StatusBlock)
 {
   /* Only one mode exists in VGA (640x480), so use VGAQueryCurrentMode */
   return VGAQueryCurrentMode(ReturnedModes, StatusBlock);
 }
 
-BOOL  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
+BOOLEAN  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
                           OUT PSTATUS_BLOCK  StatusBlock)
 {
   CurrentMode->Length = sizeof(VIDEO_MODE_INFORMATION);
@@ -464,7 +465,7 @@ BOOL  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
   return TRUE;
 }
 
-BOOL  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
+BOOLEAN  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
                             OUT PSTATUS_BLOCK  StatusBlock)
 {
   NumberOfModes->NumModes = 1;
@@ -473,7 +474,7 @@ BOOL  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
   return TRUE;
 }
 
-BOOL  VGASetPaletteRegisters(IN PWORD  PaletteRegisters,
+BOOLEAN  VGASetPaletteRegisters(IN PUSHORT  PaletteRegisters,
                              OUT PSTATUS_BLOCK  StatusBlock)
 {
   ;
@@ -502,7 +503,7 @@ BOOL  VGASetPaletteRegisters(IN PWORD  PaletteRegisters,
   return TRUE;
 }
 
-BOOL  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
+BOOLEAN  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
                            OUT PSTATUS_BLOCK  StatusBlock)
 {
   int i;
@@ -518,7 +519,7 @@ BOOL  VGASetColorRegisters(IN PVIDEO_CLUT  ColorLookUpTable,
   return TRUE;
 }
 
-BOOL  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
+BOOLEAN  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
                         OUT PSTATUS_BLOCK  StatusBlock)
 {
   if(RequestedMode->RequestedMode == 12)
@@ -531,17 +532,17 @@ BOOL  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
   }
 }
 
-BOOL  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
+BOOLEAN  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
                           OUT PVIDEO_MEMORY_INFORMATION  ReturnedMemory,
                           OUT PSTATUS_BLOCK  StatusBlock)
 {
   UNIMPLEMENTED;
 
-  StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+  StatusBlock->Status = ERROR_INVALID_FUNCTION;
   return FALSE;
 }
 
-BOOL  VGAUnmapVideoMemory(IN PVOID DeviceExtension,
+BOOLEAN  VGAUnmapVideoMemory(IN PVOID DeviceExtension,
 			  IN PVIDEO_MEMORY  MemoryToUnmap,
                           OUT PSTATUS_BLOCK  StatusBlock)
 {
@@ -553,11 +554,11 @@ BOOL  VGAUnmapVideoMemory(IN PVOID DeviceExtension,
     return FALSE;
 }
 
-BOOL  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
+BOOLEAN  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
                             OUT PSTATUS_BLOCK  StatusBlock)
 {
   UNIMPLEMENTED;
 
-  StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+  StatusBlock->Status = ERROR_INVALID_FUNCTION;
   return FALSE;
 }

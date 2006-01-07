@@ -1,10 +1,4 @@
-#include <ntddk.h>
-#include <miniport.h>
-#include <video.h>
-#include "vgavideo.h"
-
-#define NDEBUG
-#include <debug.h>
+#include "vgamp.h"
 
 static VGA_REGISTERS Mode12Regs =
 {
@@ -24,10 +18,10 @@ static VGA_REGISTERS Mode12Regs =
 
 VGA_REGISTERS TextModeRegs;
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 vgaSaveRegisters(PVGA_REGISTERS Registers)
 {
-   UINT i;
+   SIZE_T i;
 
    for (i = 0; i < sizeof(Registers->CRT); i++)
    {
@@ -57,10 +51,10 @@ vgaSaveRegisters(PVGA_REGISTERS Registers)
    Registers->Misc = VideoPortReadPortUchar(MISC);
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 vgaSetRegisters(PVGA_REGISTERS Registers)
 {
-   UINT i;
+   SIZE_T i;
 
    /* Update misc output register */
    VideoPortWritePortUchar(MISC, Registers->Misc);
