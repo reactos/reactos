@@ -245,7 +245,7 @@ CreateFreeLoaderIniForDos(PWCHAR IniPath,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=COM1 /NOGUIBOOT");
+		    L"/DEBUGPORT=SCREEN /NOGUIBOOT");
 
   /* Create "DOS" section */
   IniSection = IniCacheAppendSection(IniCache,
@@ -356,7 +356,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=COM1 /NOGUIBOOT");
+		    L"/DEBUGPORT=SCREEN /NOGUIBOOT");
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);
