@@ -169,6 +169,7 @@ ReadAttribute (PATTRIBUTE attr,
 	       PDEVICE_EXTENSION Vcb,
 	       PDEVICE_OBJECT DeviceObject)
 {
+  PNONRESIDENT_ATTRIBUTE NresAttr = (PNONRESIDENT_ATTRIBUTE)attr;
   if (attr->Nonresident == FALSE)
     {
 	memcpy (buffer,
@@ -176,7 +177,6 @@ ReadAttribute (PATTRIBUTE attr,
 		((PRESIDENT_ATTRIBUTE)attr)->ValueLength);
     }
 
-  PNONRESIDENT_ATTRIBUTE NresAttr = (PNONRESIDENT_ATTRIBUTE)attr;
   ReadExternalAttribute(Vcb, NresAttr, 0, (ULONG)(NresAttr->LastVcn) + 1,
 		buffer);
 }
@@ -194,16 +194,13 @@ ReadFileRecord (PDEVICE_EXTENSION Vcb,
   PVOID p;
   ULONG BytesPerFileRecord = Vcb->NtfsInfo.BytesPerFileRecord;
   ULONG clusters = max(BytesPerFileRecord / Vcb->NtfsInfo.BytesPerCluster, 1);
-
+  ULONGLONG vcn = index * BytesPerFileRecord / Vcb->NtfsInfo.BytesPerCluster;
+  LONG m = (Vcb->NtfsInfo.BytesPerCluster / BytesPerFileRecord) - 1;
+  ULONG n = m > 0 ? (index & m) : 0;
+  
   p = ExAllocatePool(NonPagedPool, clusters * Vcb->NtfsInfo.BytesPerCluster);
 
-  ULONGLONG vcn = index * BytesPerFileRecord / Vcb->NtfsInfo.BytesPerCluster;
-
   ReadVCN (Vcb, Mft, AttributeData, vcn, clusters, p);
-
-  LONG m = (Vcb->NtfsInfo.BytesPerCluster / BytesPerFileRecord) - 1;
-
-  ULONG n = m > 0 ? (index & m) : 0;
 
   memcpy(file, (PVOID)((ULONG_PTR)p + n * BytesPerFileRecord), BytesPerFileRecord);
 
@@ -227,6 +224,7 @@ ReadExternalAttribute (PDEVICE_EXTENSION Vcb,
   ULONGLONG runcount;
   ULONG readcount;
   ULONG left;
+  ULONG n;
 
     PUCHAR bytes = (PUCHAR)buffer;
 
@@ -238,7 +236,7 @@ ReadExternalAttribute (PDEVICE_EXTENSION Vcb,
 		readcount = (ULONG)min (runcount, left);
 
 
-		ULONG n = readcount * Vcb->NtfsInfo.BytesPerCluster;
+		n = readcount * Vcb->NtfsInfo.BytesPerCluster;
 
 		if (lcn == 0)
 			memset(bytes, 0, n);

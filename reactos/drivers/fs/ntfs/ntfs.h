@@ -1,8 +1,8 @@
 #ifndef NTFS_H
 #define NTFS_H
 
-#include <ntddk.h>
 #include <ntifs.h>
+#include <ntddk.h>
 #include <ntdddisk.h>
 #include <ccros.h>
 
@@ -10,8 +10,8 @@
 
 
 #define CACHEPAGESIZE(pDeviceExt) \
-	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGE_SIZE ? \
-	 (pDeviceExt)->NtfsInfo.BytesPerCluster : PAGE_SIZE)
+	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
+	 (pDeviceExt)->NtfsInfo.UCHARsPerCluster : PAGE_SIZE)
 
 #ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
@@ -19,7 +19,7 @@
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
-
+#include <pshpack1.h>
 typedef struct _BOOT_SECTOR
 {
   UCHAR     Magic[3];				// 0x00
@@ -37,12 +37,13 @@ typedef struct _BOOT_SECTOR
   ULONGLONG MftLocation;
   ULONGLONG MftMirrLocation;
   CHAR      ClustersPerMftRecord;
-  BYTE      Unused3[3];
+  UCHAR      Unused3[3];
   CHAR      ClustersPerIndexRecord;
-  BYTE      Unused4[3];
+  UCHAR      Unused4[3];
   ULONGLONG SerialNumber;			// 0x48
   UCHAR     BootCode[432];			// 0x50
-} __attribute__((packed)) BOOT_SECTOR, *PBOOT_SECTOR;
+} BOOT_SECTOR, *PBOOT_SECTOR;
+#include <poppack.h>
 
 //typedef struct _BootSector BootSector;
 
@@ -91,6 +92,7 @@ typedef struct
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
+#define MAX_PATH                260
 
 typedef struct _FCB
 {
@@ -187,7 +189,7 @@ typedef struct
   ULONG BytesAllocated;         /* Allocated size of the FILE record */
   ULONGLONG BaseFileRecord;     /* File reference to the base FILE record */
   USHORT NextAttributeNumber;   /* Next Attribute Id */
-  USHORT Pading;                /* Align to 4 byte boundary (XP) */
+  USHORT Pading;                /* Align to 4 UCHAR boundary (XP) */
   ULONG MFTRecordNumber;        /* Number of this MFT Record (XP) */
 } FILE_RECORD_HEADER, *PFILE_RECORD_HEADER;
 
