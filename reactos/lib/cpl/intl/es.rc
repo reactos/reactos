@@ -50,10 +50,10 @@ BEGIN
   LTEXT "Símbolo &PM:", -1, 13, 106, 54, 10, WS_VISIBLE | WS_GROUP
   COMBOBOX IDC_TIMEPMSYMBOL, 68, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
   GROUPBOX "", -1, 7, 124, 228, 60, WS_VISIBLE
-  LTEXT "Formato de Notación del Tiempo\n\n"
-	"h = hora    m = minuto    s = segundo    t = am ó pm\n\n"
-        "h = 12 houras   H = 24 houras\n"
-        "hh, mm, ss = cero inicial  h, m, s = sin cero inicial",
+  LTEXT "Formato de Notación del Tiempo\n\n\
+		h = hora    m = minuto    s = segundo    t = am ó pm\n\n\
+		h = 12 houras   H = 24 houras\n\
+		hh, mm, ss = cero inicial  h, m, s = sin cero inicial", 
         -1, 13, 133, 214, 47, WS_CHILD |WS_VISIBLE | WS_GROUP
 END
 
