@@ -55,7 +55,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hToolsListCtrl = GetDlgItem(hDlg, IDC_TOOLS_LIST);
         hToolsDialog = hDlg;
 
-        dwStyle = SendMessage(hToolsListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+        dwStyle = (DWORD) SendMessage(hToolsListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
         SendMessage(hToolsListCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 

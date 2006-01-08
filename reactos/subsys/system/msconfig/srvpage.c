@@ -19,7 +19,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hServicesListCtrl = GetDlgItem(hDlg, IDC_SERVICES_LIST);
         hServicesDialog = hDlg;
 
-        dwStyle = SendMessage(hServicesListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+        dwStyle = (DWORD) SendMessage(hServicesListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
         SendMessage(hServicesListCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 
@@ -93,7 +93,7 @@ GetServices ( void )
             {
                 /* reserve memory for service info array */
                 pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
-                if (pServiceStatus == NULL) 
+                if (!pServiceStatus) 
 			        return;
 
                 /* fill array with service info */
@@ -111,6 +111,8 @@ GetServices ( void )
 
         if (NumServices)
         {
+            if (!pServiceStatus)
+                return;
             for (Index = 0; Index < NumServices; Index++)
             {
                 memset(&item, 0, sizeof(LV_ITEM));

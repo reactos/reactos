@@ -22,4 +22,5 @@
 		<file>msconfig.c</file>
 	</compilationunit>
 	<file>msconfig.rc</file>
+	<pch>precomp.h</pch>
 </module>

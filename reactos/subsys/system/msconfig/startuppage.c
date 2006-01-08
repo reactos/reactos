@@ -19,7 +19,7 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hStartupListCtrl = GetDlgItem(hDlg, IDC_STARTUP_LIST);
         hStartupDialog = hDlg;
 
-        dwStyle = SendMessage(hStartupListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+        dwStyle = (DWORD) SendMessage(hStartupListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
         SendMessage(hStartupListCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 
@@ -62,7 +62,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
     HKEY hKey;
     DWORD Index, dwValues, retVal, dwType;
     DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME; 
-    TCHAR Data[MAX_VALUE_NAME];
+    TCHAR* Data;
     TCHAR lpValueName[MAX_KEY_LENGTH];
     TCHAR Path[MAX_KEY_LENGTH + 5];
     LV_ITEM item;
@@ -73,8 +73,11 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
         {
             for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++) 
             {
-                dwValueLength = MAX_VALUE_NAME;
+                dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
+                Data = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME);
+                if (Data == NULL)
+                    break;
                 retVal = RegEnumValue(hKey, Index, lpValueName, &dwValueLength, NULL, &dwType, (LPBYTE)Data, &dwDataLength);
                 if (retVal == ERROR_SUCCESS) 
                 {
@@ -88,21 +91,29 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
 
                     if (dwType == REG_SZ)
                     {
-                        GetLongPathName(Data, Data, sizeof(Data));
+                        GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
                         item.pszText = Data;
                         item.iSubItem = 1;
                         SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                     }
                     
-                    if (hRootKey == HKEY_LOCAL_MACHINE)
-                        _tcscpy(Path, _T("HKLM\\"));
-                    if (hRootKey == HKEY_CURRENT_USER)
-                        _tcscpy(Path, _T("HKCU\\"));
+                    switch (PtrToLong(hRootKey))
+                    {
+                    case HKEY_LOCAL_MACHINE:
+                        _tcscpy(Path, _T("HKLM\\\0"));
+                        break;
+                    case HKEY_CURRENT_USER:
+                        _tcscpy(Path, _T("HKCU\\\0"));
+                        break;
+                    default:
+                        _tcscpy(Path, _T("\0"));
+                    }
 
                     _tcscat(Path, KeyName);
                     item.pszText = Path;
                     item.iSubItem = 2;
                     SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                    HeapFree(GetProcessHeap(), 0, Data);
                 }
             }
         }
