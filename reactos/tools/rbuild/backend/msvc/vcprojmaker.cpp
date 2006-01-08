@@ -321,6 +321,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			string pch_path = Path::RelativeFromDirectory (
 				module.pch->file.name,
 				module.GetBasePath() );
+			string::size_type pos = pch_path.find_last_of ("/");
+			if ( pos != string::npos )
+				pch_path.erase(0, pos+1);         
 			fprintf ( OUT, "\t\t\t\tPrecompiledHeaderThrough=\"%s\"\r\n", pch_path.c_str() );
 		}
 		else
