@@ -54,6 +54,15 @@ typedef struct _SYSTEM_BASIC_INFORMATION
     CCHAR NumberOfProcessors;
 } SYSTEM_BASIC_INFORMATION, *PSYSTEM_BASIC_INFORMATION;
 
+LONG
+__stdcall
+ZwQuerySystemInformation(
+    IN ULONG SystemInformationClass,
+    OUT PVOID SystemInformation,
+    IN ULONG Length,
+    OUT PULONG ResultLength
+);
+
 typedef struct
 {
   PHYSICAL_ADDRESS PhysControlStart;
