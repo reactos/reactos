@@ -126,7 +126,7 @@ HalAllocateCommonBuffer(
 }
 
 
-VOID
+PVOID
 NTAPI
 HalAllocateCrashDumpRegisters(
   ULONG Unknown1,

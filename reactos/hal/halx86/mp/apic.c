@@ -55,7 +55,8 @@ ULONG lastregw[MAX_CPU];
 ULONG lastvalw[MAX_CPU];
 
 #ifdef CONFIG_SMP
-typedef struct __attribute__((packed)) _COMMON_AREA_INFO
+#include <pshpack1.h>
+typedef struct _COMMON_AREA_INFO
 {
    ULONG Stack;		    /* Location of AP stack */
    ULONG PageDirectory;	    /* Page directory for an AP */
@@ -63,6 +64,7 @@ typedef struct __attribute__((packed)) _COMMON_AREA_INFO
    ULONG PaeModeEnabled;    /* PAE mode is enabled */
    ULONG Debug[16];	    /* For debugging */
 } COMMON_AREA_INFO, *PCOMMON_AREA_INFO;
+#include <poppack.h>
 #endif
 
 CHAR *APstart, *APend;
@@ -73,15 +75,15 @@ CHAR *APstart, *APend;
 #define HZ		(100)
 #define APIC_DIVISOR	(16)
 
-#define CMOS_READ(address) ({ \
+#define CMOS_READ(address) { \
    WRITE_PORT_UCHAR((PUCHAR)0x70, address)); \
    READ_PORT_UCHAR((PUCHAR)0x71)); \
-})
+}
 
-#define CMOS_WRITE(address, value) ({ \
+#define CMOS_WRITE(address, value) { \
    WRITE_PORT_UCHAR((PUCHAR)0x70, address); \
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
-})
+}
 
 extern ULONG_PTR KernelBase;
 
@@ -414,7 +416,8 @@ VOID APICDump(VOID)
 
 BOOLEAN VerifyLocalAPIC(VOID)
 {
-   UINT reg0, reg1;
+   SIZE_T reg0, reg1;
+   ULONG l, h;
    /* The version register is read-only in a real APIC */
    reg0 = APICRead(APIC_VER);
    DPRINT1("Getting VERSION: %x\n", reg0);
@@ -461,7 +464,6 @@ BOOLEAN VerifyLocalAPIC(VOID)
       return FALSE;
    }
 
-   ULONG l, h;
    Ki386Rdmsr(0x1b /*MSR_IA32_APICBASE*/, l, h);
 
    if (!(l & /*MSR_IA32_APICBASE_ENABLE*/(1<<11))) 

@@ -49,7 +49,7 @@ KeAcquireSpinLockRaiseToSynch (
 {
   KIRQL OldIrql;
 
-  OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+  OldIrql = KfRaiseIrql(CLOCK2_LEVEL);
   KiAcquireSpinLock(SpinLock);
 
   return OldIrql;

@@ -69,7 +69,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
 }
 
 VOID 
-HalpLowerIrql(KIRQL NewIrql, BOOL FromHalEndSystemInterrupt)
+HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
 {
   ULONG Flags;
   UCHAR DpcRequested;
