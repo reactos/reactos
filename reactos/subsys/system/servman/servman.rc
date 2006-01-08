@@ -13,5 +13,5 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDI_SM_ICON ICON "res/system.ico"
 
 #include "En.rc"
-#include "De.rc"
+//#include "De.rc" /* I don't want to have to keep altering 2 files whilst developing */
 

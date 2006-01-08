@@ -7,6 +7,8 @@
  *               
  */
 
+//ShellAbout(hwnd, _T("test"), _T("test2"), MAKEINTRESOURCE(IDI_SM_ICON));
+
 #include "servman.h"
 
 extern HINSTANCE hInstance;

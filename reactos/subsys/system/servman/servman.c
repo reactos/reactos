@@ -20,28 +20,28 @@ HWND hTool;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch(msg)
-	{
-		case WM_CREATE:
-		{
-			//HFONT hfDefault;
+    switch(msg)
+    {
+        case WM_CREATE:
+        {
+             //HFONT hfDefault;
 
-			HWND hTool;
-			TBADDBITMAP tbab;
+            HWND hTool;
+            TBADDBITMAP tbab;
             INT iImageOffset;
-			INT statwidths[] = {110, -1};
-			TCHAR szTemp[256];
+            INT statwidths[] = {110, -1};
+            TCHAR szTemp[256];
             RECT rcClient;
             LVCOLUMN lvc = { 0 };
 
             /* Toolbar buttons */
-	        TBBUTTON tbb [NUM_BUTTONS] = 
+            TBBUTTON tbb [NUM_BUTTONS] = 
             { // iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString
                 {STD_PROPERTIES, ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
                 {STD_FILENEW,    ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /*  */
                 {STD_FILENEW,    ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /*  */
 
-		        /* Note: First item for a seperator is its width in pixels */
+                /* Note: First item for a seperator is its width in pixels */
                 {5, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
 
                 {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */ 
@@ -53,7 +53,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /* ======================== Create Toolbar ============================== */
 
             /* Create Toolbar */
-			hTool = CreateWindowEx(0,
+            hTool = CreateWindowEx(0,
                                    TOOLBARCLASSNAME,
                                    NULL,
                                    WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
@@ -62,35 +62,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                    (HMENU)IDC_TOOLBAR,
                                    hInstance,
                                    NULL);
-			if(hTool == NULL)
-				MessageBox(hwnd, _T("Could not create tool bar."), _T("Error"), MB_OK | MB_ICONERROR);
+            if(hTool == NULL)
+                MessageBox(hwnd, _T("Could not create tool bar."), _T("Error"), MB_OK | MB_ICONERROR);
 
             /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
-	        SendMessage(hTool, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+            SendMessage(hTool, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-	        /* Add standard image list */
-	        tbab.hInst = HINST_COMMCTRL;
-	        tbab.nID = IDB_STD_SMALL_COLOR;
-	        SendMessage(hTool, TB_ADDBITMAP, 0, (LPARAM) &tbab);
+            /* Add standard image list */
+            tbab.hInst = HINST_COMMCTRL;
+            tbab.nID = IDB_STD_SMALL_COLOR;
+            SendMessage(hTool, TB_ADDBITMAP, 0, (LPARAM) &tbab);
 
-	        /* Add custom images */
-	        tbab.hInst = hInstance;
-	        tbab.nID = IDB_BUTTONS;
-	        iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, 4, (LPARAM)&tbab);
-	        tbb[4].iBitmap += iImageOffset; /* start */
-	        tbb[5].iBitmap += iImageOffset; /* stop */
-	        tbb[6].iBitmap += iImageOffset; /* pause */  
-	        tbb[7].iBitmap += iImageOffset; /* restart */
+            /* Add custom images */
+            tbab.hInst = hInstance;
+            tbab.nID = IDB_BUTTONS;
+            iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, 4, (LPARAM)&tbab);
+            tbb[4].iBitmap += iImageOffset; /* start */
+            tbb[5].iBitmap += iImageOffset; /* stop */
+            tbb[6].iBitmap += iImageOffset; /* pause */  
+            tbb[7].iBitmap += iImageOffset; /* restart */
 
-	        /* Add buttons to toolbar */
-	        SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
+            /* Add buttons to toolbar */
+            SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
 
-	        /* Send a WM_SIZE message to layout controls */
-	        GetClientRect(hwnd, &rcClient);
-	        SendMessage(hwnd, WM_SIZE, SIZE_RESTORED, MAKELONG(rcClient.right, rcClient.bottom));
+            /* Send a WM_SIZE message to layout controls */
+            GetClientRect(hwnd, &rcClient);
+            SendMessage(hwnd, WM_SIZE, SIZE_RESTORED, MAKELONG(rcClient.right, rcClient.bottom));
 
-	        /* Show toolbar */
-	        ShowWindow(hTool, SW_SHOWNORMAL);
+            /* Show toolbar */
+            ShowWindow(hTool, SW_SHOWNORMAL);
 
 
 
@@ -151,7 +151,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 /* ======================== Create Status Bar ============================== */
 
-			hStatus = CreateWindowEx(0,
+		    hStatus = CreateWindowEx(0,
                                      STATUSCLASSNAME,
                                      NULL,
                                      WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
@@ -161,63 +161,64 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                      hInstance,
                                      NULL);
             if(hStatus == NULL)
-				MessageBox(hwnd, _T("Could not create status bar."),
+			    MessageBox(hwnd, _T("Could not create status bar."),
                            _T("Error!"), MB_OK | MB_ICONERROR);
 
-			SendMessage(hStatus, SB_SETPARTS, sizeof(statwidths)/sizeof(int), (LPARAM)statwidths);
+		    SendMessage(hStatus, SB_SETPARTS, sizeof(statwidths)/sizeof(int), (LPARAM)statwidths);
 
-			/* populate the list view with all services */
-			if (! RefreshServiceList() )
+		    /* populate the list view with all services */
+		    if (! RefreshServiceList() )
                 GetError();
 
-		}
-		break;
-		case WM_SIZE:
-		{
-			RECT rcTool;
-			int iToolHeight;
+	    }
+	    break;
+	    case WM_SIZE:
+	    {
+		    RECT rcTool;
+		    int iToolHeight;
 
-			RECT rcStatus;
-			int iStatusHeight;
+		    RECT rcStatus;
+		    int iStatusHeight;
 
-			int lvHeight;
-			RECT rcClient;
+		    int lvHeight;
+		    RECT rcClient;
 
-			/* Size toolbar and get height */
-			SendMessage(hTool, TB_AUTOSIZE, 0, 0);
+		    /* Size toolbar and get height */
+            hTool = GetDlgItem(hwnd, IDC_TOOLBAR);
+		    SendMessage(hTool, TB_AUTOSIZE, 0, 0);
 
-			GetWindowRect(hTool, &rcTool);
-			iToolHeight = rcTool.bottom - rcTool.top;
+		    GetWindowRect(hTool, &rcTool);
+		    iToolHeight = rcTool.bottom - rcTool.top;
 
-			/* Size status bar and get height */
-			hStatus = GetDlgItem(hwnd, IDC_STATUSBAR);
-			SendMessage(hStatus, WM_SIZE, 0, 0);
+		    /* Size status bar and get height */
+		    hStatus = GetDlgItem(hwnd, IDC_STATUSBAR);
+		    SendMessage(hStatus, WM_SIZE, 0, 0);
 
-			GetWindowRect(hStatus, &rcStatus);
-			iStatusHeight = rcStatus.bottom - rcStatus.top;
+		    GetWindowRect(hStatus, &rcStatus);
+		    iStatusHeight = rcStatus.bottom - rcStatus.top;
 
-			/* Calculate remaining height and size list view */
-			GetClientRect(hwnd, &rcClient);
+		    /* Calculate remaining height and size list view */
+		    GetClientRect(hwnd, &rcClient);
 
-			lvHeight = rcClient.bottom - iToolHeight - iStatusHeight;
+		    lvHeight = rcClient.bottom - iToolHeight - iStatusHeight;
 
-			hListView = GetDlgItem(hwnd, IDC_SERVLIST);
-			SetWindowPos(hListView, NULL, 0, iToolHeight, rcClient.right, lvHeight, SWP_NOZORDER);
-		}
-		break;
+		    hListView = GetDlgItem(hwnd, IDC_SERVLIST);
+		    SetWindowPos(hListView, NULL, 0, iToolHeight, rcClient.right, lvHeight, SWP_NOZORDER);
+	    }
+	    break;
 
-		case WM_NOTIFY:
+	    case WM_NOTIFY:
         {
             LPNMITEMACTIVATE item;
 
             switch (((LPNMHDR) lParam)->code)
             {
 
-		        case NM_DBLCLK:
-				item = (LPNMITEMACTIVATE) lParam;
-				PropSheets(hwnd);
+	            case NM_DBLCLK:
+			    item = (LPNMITEMACTIVATE) lParam;
+			    PropSheets(hwnd);
 
-				break;
+			    break;
             
                 case TTN_GETDISPINFO:
                 {
@@ -270,25 +271,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
 
-		case WM_CLOSE:
+	    case WM_CLOSE:
             /* free the service array */
             FreeMemory();
-			DestroyWindow(hwnd);
-		break;
+		    DestroyWindow(hwnd);
+	    break;
 
-		case WM_DESTROY:
-			PostQuitMessage(0);
-		break;
+	    case WM_DESTROY:
+		    PostQuitMessage(0);
+	    break;
 
-		case WM_COMMAND:
-			switch(LOWORD(wParam))
-			{
-				case ID_FILE_EXIT:
-					PostMessage(hwnd, WM_CLOSE, 0, 0);
-				break;
+	    case WM_COMMAND:
+		    switch(LOWORD(wParam))
+		    {
+			    case ID_FILE_EXIT:
+				    PostMessage(hwnd, WM_CLOSE, 0, 0);
+			    break;
 
-				case ID_START:
-				break;
+			    case ID_START:
+			    break;
 
                 case ID_STOP:
                 break;
@@ -322,66 +323,66 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case ID_EXPORT:
                 break;
 
-			}
-		break;
+		    }
+	    break;
 
-		default:
-			return DefWindowProc(hwnd, msg, wParam, lParam);
-	}
-	return 0;
+	    default:
+		    return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    return 0;
 }
 
 
 //#pragma warning(disable : 4100)
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine, int nCmdShow)
+    LPSTR lpCmdLine, int nCmdShow)
 {
-	WNDCLASSEX wc;
-	MSG Msg;
-	BOOL bRet;
+    WNDCLASSEX wc;
+    MSG Msg;
+    BOOL bRet;
 
-	hInstance = hThisInstance;
+    hInstance = hThisInstance;
 
-	InitCommonControls();
+    InitCommonControls();
 
-	wc.cbSize		 = sizeof(WNDCLASSEX);
-	wc.style		 = 0;
-	wc.lpfnWndProc	 = WndProc;
-	wc.cbClsExtra	 = 0;
-	wc.cbWndExtra	 = 0;
-	wc.hInstance	 = hInstance;
-	wc.hIcon		 = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
-	wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-	wc.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
-	wc.lpszClassName = ClassName;
-	wc.hIconSm		 = (HICON)LoadImage(hInstance,
+    wc.cbSize		 = sizeof(WNDCLASSEX);
+    wc.style		 = 0;
+    wc.lpfnWndProc	 = WndProc;
+    wc.cbClsExtra	 = 0;
+    wc.cbWndExtra	 = 0;
+    wc.hInstance	 = hInstance;
+    wc.hIcon		 = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
+    wc.hCursor		 = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
+    wc.lpszClassName = ClassName;
+    wc.hIconSm		 = (HICON)LoadImage(hInstance,
                         MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
 
-	if(!RegisterClassEx(&wc))
-	{
-		MessageBox(NULL, _T("Window Registration Failed!"), _T("Error!"),
-			MB_ICONEXCLAMATION | MB_OK);
-		return 0;
-	}
+    if(!RegisterClassEx(&wc))
+    {
+	    MessageBox(NULL, _T("Window Registration Failed!"), _T("Error!"),
+		    MB_ICONEXCLAMATION | MB_OK);
+	    return 0;
+    }
 
-	hMainWnd = CreateWindowEx(
-		0,
-		ClassName,
-		_T("ReactOS Service Manager"),
-		WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-		CW_USEDEFAULT, CW_USEDEFAULT, 700, 500,
-		NULL, NULL, hInstance, NULL);
+    hMainWnd = CreateWindowEx(
+	    0,
+	    ClassName,
+	    _T("ReactOS Service Manager"),
+	    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+	    CW_USEDEFAULT, CW_USEDEFAULT, 700, 500,
+	    NULL, NULL, hInstance, NULL);
 
-	if(hMainWnd == NULL)
-	{
-		MessageBox(NULL, _T("Window Creation Failed!"), _T("Error!"),
-			MB_ICONEXCLAMATION | MB_OK);
-		return 0;
-	}
+    if(hMainWnd == NULL)
+    {
+	    MessageBox(NULL, _T("Window Creation Failed!"), _T("Error!"),
+		    MB_ICONEXCLAMATION | MB_OK);
+	    return 0;
+    }
 
-	ShowWindow(hMainWnd, nCmdShow);
-	UpdateWindow(hMainWnd);
+    ShowWindow(hMainWnd, nCmdShow);
+    UpdateWindow(hMainWnd);
 
     while( (bRet = GetMessage( &Msg, NULL, 0, 0 )) != 0)
     {
@@ -395,7 +396,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
             DispatchMessage(&Msg);
         }
     }
-	return Msg.wParam;
+    return Msg.wParam;
 }
 
 
