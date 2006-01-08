@@ -51,5 +51,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <win32k/ntgdibad.h>
 #include <ntgdi.h>
 
+/* For access to SECTION_OBJECT. FIXME: Once compatible with NT, use NDK! */
+#include <internal/mm.h>
+
 /* Internal Win32K Header */
 #include "include/win32k.h"
+

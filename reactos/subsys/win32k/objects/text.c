@@ -281,7 +281,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       return 0;
    }
 
-   Status = MmCreateSection(&SectionObject, SECTION_ALL_ACCESS,
+   Status = MmCreateSection((PVOID)&SectionObject, SECTION_ALL_ACCESS,
                             NULL, NULL, PAGE_READONLY,
                             0, FileHandle, NULL);
    if (!NT_SUCCESS(Status))

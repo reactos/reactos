@@ -205,7 +205,7 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
    /* now allocate a real section */
 
    SectionSize.QuadPart = Size;
-   Status = MmCreateSection(&FreeSharedSection->SectionObject,
+   Status = MmCreateSection((PVOID)&FreeSharedSection->SectionObject,
                             SECTION_ALL_ACCESS,
                             NULL,
                             &SectionSize,
