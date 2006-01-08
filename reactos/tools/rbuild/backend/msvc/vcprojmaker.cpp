@@ -226,14 +226,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "\t\t\tName=\"Win32\"/>\r\n" );
 	fprintf ( OUT, "\t</Platforms>\r\n" );
 
-	fprintf ( OUT, "\t<ToolFiles>\r\n" );
-	fprintf ( OUT, "\t\t<ToolFile\r\n" );
+	//fprintf ( OUT, "\t<ToolFiles>\r\n" );
+	//fprintf ( OUT, "\t\t<ToolFile\r\n" );
 
-	string path = Path::RelativeFromDirectory ( ProjectNode.name, module.GetBasePath() );
-	path.erase(path.find(ProjectNode.name, 0), ProjectNode.name.size() + 1);
+	//string path = Path::RelativeFromDirectory ( ProjectNode.name, module.GetBasePath() );
+	//path.erase(path.find(ProjectNode.name, 0), ProjectNode.name.size() + 1);
 
-	fprintf ( OUT, "\t\t\tRelativePath=\"%sgccasm.rules\"/>\r\n", path.c_str() );
-	fprintf ( OUT, "\t</ToolFiles>\r\n" );
+	//fprintf ( OUT, "\t\t\tRelativePath=\"%sgccasm.rules\"/>\r\n", path.c_str() );
+	//fprintf ( OUT, "\t</ToolFiles>\r\n" );
 
 	int n = 0;
 
