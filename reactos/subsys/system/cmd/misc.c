@@ -370,6 +370,12 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 		/* adjust string pointer if quoted (") */
 		if (bQuoted)
 		{
+      /* Check to make sure if there is no ending "
+       * we dont run over the null char */
+      if(*s != _T('/'))
+      {
+        break;
+      }
 			++s;
 			bQuoted = FALSE;
 		}
