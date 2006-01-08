@@ -384,7 +384,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 			nQuotes++;
 
 	/* Find the prefix and suffix */
-	if(nQuotes % 2 && nQuotes > 1)
+	if(nQuotes % 2 && nQuotes >= 1)
 	{
 		/* Odd number of quotes.  Just start from the last " */
 		/* THis is the way MS does it, and is an easy way out */
@@ -401,7 +401,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 			szSearch = szSearch1;
 		/* Move one char past */
 		szSearch++;		
-      szSearch[0] = _T('\0');
+    szSearch[0] = _T('\0');
 		_tcscpy(szPrefix,str);
 		return;
 	
@@ -582,7 +582,9 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		/* Start the search for all the files */
 		GetFullPathName(szBaseWord, MAX_PATH, szSearchPath, NULL);
 		if(StartLength > 0)
+    {
 			_tcscat(szSearchPath,_T("*"));
+    }
 		_tcscpy(LastSearch,szSearchPath);
 		_tcscpy(LastPrefix,szPrefix);
 	}
@@ -613,10 +615,10 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 			continue;
 		
 		/* Don't show files when they are doing 'cd' or 'rd' */
-		if(!ShowAll)
+		if(!ShowAll &&
+       file.dwFileAttributes != 0xFFFFFFFF &&
+       !(file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			DWORD attr = GetFileAttributes (file.cFileName);
-			if(attr != 0xFFFFFFFF && (!(attr & FILE_ATTRIBUTE_DIRECTORY)))
 				continue;
 		}
 
