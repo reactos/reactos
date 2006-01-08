@@ -158,6 +158,10 @@ struct client_lease {
 	time_t			 expiry, renewal, rebind;
 	struct iaddr		 address;
 	char			*server_name;
+#ifdef _REACTOS_
+	time_t			 obtained;
+	struct iaddr		 serveraddress;
+#endif
 	char			*filename;
 	struct string_list	*medium;
 	unsigned int		 is_static : 1;

@@ -7,6 +7,7 @@ enum {
     DhcpReqReleaseIpAddress,
     DhcpReqRenewIpAddress,
     DhcpReqStaticRefreshParams,
+    DhcpReqGetAdapterInfo,
 };
 
 typedef struct _COMM_DHCP_REQ {
@@ -39,6 +40,12 @@ typedef union _COMM_DHCP_REPLY {
         DWORD Mtu;
         DWORD Speed;
     } QueryHWInfo;
+    struct {
+        BOOL DhcpEnabled;
+        DWORD DhcpServer;
+        time_t LeaseObtained;
+        time_t LeaseExpires;
+    } GetAdapterInfo;
 } COMM_DHCP_REPLY;
 
 #define DHCP_PIPE_NAME "\\\\.\\pipe\\dhcpclient"

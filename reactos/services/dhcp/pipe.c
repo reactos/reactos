@@ -9,6 +9,9 @@
 
 #include <rosdhcp.h>
 
+#define NDEBUG
+#include <reactos/debug.h>
+
 static HANDLE CommPipe = INVALID_HANDLE_VALUE, CommThread;
 DWORD CommThrId;
 
@@ -30,8 +33,8 @@ DWORD PipeSend( COMM_DHCP_REPLY *Reply ) {
 DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
     DWORD BytesRead, BytesWritten;
     COMM_DHCP_REQ Req;
-    BOOL Result;
-    BOOLEAN Connection;
+    COMM_DHCP_REPLY Reply;
+    BOOL Result, Connection;
 
     while( (Connection = ConnectNamedPipe( CommPipe, NULL )) ) {
         Result = ReadFile( CommPipe, &Req, sizeof(Req), &BytesRead, NULL );
@@ -51,6 +54,21 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
 
             case DhcpReqRenewIpAddress:
                 BytesWritten = DSRenewIpAddressLease( PipeSend, &Req );
+                break;
+
+            case DhcpReqStaticRefreshParams:
+                BytesWritten = DSStaticRefreshParams( PipeSend, &Req );
+                break;
+
+            case DhcpReqGetAdapterInfo:
+                BytesWritten = DSGetAdapterInfo( PipeSend, &Req );
+                break;
+
+            default:
+                DPRINT1("Unrecognized request type %d\n", Req.Type);
+                ZeroMemory( &Reply, sizeof( COMM_DHCP_REPLY ) );
+                Reply.Reply = 0;
+                BytesWritten = PipeSend( &Reply );
                 break;
             }
         }

@@ -11,6 +11,8 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>ws2_32</library>
+	<library>dhcpcsvc</library>
+	<file>dhcp_reactos.c</file>
 	<file>ifenum_reactos.c</file>
 	<file>ipstats_reactos.c</file>
 	<file>iphlpapi_main.c</file>

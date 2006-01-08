@@ -11,6 +11,9 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 
+#define NDEBUG
+#include <reactos/debug.h>
+
 static CRITICAL_SECTION ApiCriticalSection;
 
 VOID ApiInit() {
@@ -134,6 +137,43 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
                                &Adapter->NteContext,
                                &Adapter->NteInstance );
         Reply.Reply = NT_SUCCESS(Status);
+    }
+
+    ApiUnlock();
+
+    return Send( &Reply );
+}
+
+DWORD DSGetAdapterInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
+    COMM_DHCP_REPLY Reply;
+    PDHCP_ADAPTER Adapter;
+
+    ApiLock();
+
+    Adapter = AdapterFindIndex( Req->AdapterIndex );
+
+    Reply.Reply = Adapter ? 1 : 0;
+
+    if( Adapter ) {
+        Reply.GetAdapterInfo.DhcpEnabled = (S_STATIC != Adapter->DhclientState.state);
+        if (S_BOUND == Adapter->DhclientState.state) {
+            if (sizeof(Reply.GetAdapterInfo.DhcpServer) ==
+                Adapter->DhclientState.active->serveraddress.len) {
+                memcpy(&Reply.GetAdapterInfo.DhcpServer,
+                       Adapter->DhclientState.active->serveraddress.iabuf,
+                       Adapter->DhclientState.active->serveraddress.len);
+            } else {
+                DPRINT1("Unexpected server address len %d\n",
+                        Adapter->DhclientState.active->serveraddress.len);
+                Reply.GetAdapterInfo.DhcpServer = htonl(INADDR_NONE);
+            }
+            Reply.GetAdapterInfo.LeaseObtained = Adapter->DhclientState.active->obtained;
+            Reply.GetAdapterInfo.LeaseExpires = Adapter->DhclientState.active->expiry;
+        } else {
+            Reply.GetAdapterInfo.DhcpServer = htonl(INADDR_NONE);
+            Reply.GetAdapterInfo.LeaseObtained = 0;
+            Reply.GetAdapterInfo.LeaseExpires = 0;
+        }
     }
 
     ApiUnlock();

@@ -42,6 +42,7 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "iphlpapi.h"
+#include "dhcp.h"
 #include "ifenum.h"
 #include "ipstats.h"
 #include "resinfo.h"
@@ -559,6 +560,8 @@ DWORD WINAPI GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
 DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
   DWORD ret;
+  BOOL dhcpEnabled;
+  DWORD dhcpServer;
 
   TRACE("pAdapterInfo %p, pOutBufLen %p\n", pAdapterInfo, pOutBufLen);
   if (!pOutBufLen)
@@ -637,6 +640,12 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
                ptr->IpAddressList.IpAddress.String);
               toIPAddressString(getInterfaceMaskByIndex(table->indexes[ndx]),
                ptr->IpAddressList.IpMask.String);
+              getDhcpInfoForAdapter(table->indexes[ndx], &dhcpEnabled,
+                                    &dhcpServer, &ptr->LeaseObtained,
+                                    &ptr->LeaseExpires);
+              ptr->DhcpEnabled = (DWORD) dhcpEnabled;
+              toIPAddressString(dhcpServer,
+                                ptr->DhcpServer.IpAddress.String);
               if (winsEnabled) {
                 ptr->HaveWins = TRUE;
                 memcpy(ptr->PrimaryWinsServer.IpAddress.String,

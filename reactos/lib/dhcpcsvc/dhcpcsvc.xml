@@ -1,5 +1,5 @@
 <module name="dhcpcsvc" type="win32dll" installbase="system32" installname="dhcpcsvc.dll">
-	<importlibrary definition="dhcpcsvc.def" />
+	<importlibrary definition="dhcpcsvc.spec.def" />
 	<include base="dhcpcsvc">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />
@@ -11,4 +11,5 @@
 	<library>iphlpapi</library>
 	<file>dhcpcsvc.c</file>
 	<file>dhcpcsvc.rc</file>
+	<file>dhcpcsvc.spec</file>
 </module>

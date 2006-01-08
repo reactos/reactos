@@ -12,6 +12,7 @@
 #include <roscfg.h>
 #include <winsock2.h>
 #include <dhcpcsdk.h>
+#include <time.h>
 #include <dhcp/rosdhcp_public.h>
 
 #define DHCP_TIMEOUT 1000
@@ -113,6 +114,70 @@ DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
     Result = CallNamedPipe
         ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
           &BytesRead, DHCP_TIMEOUT );
+
+    return Reply.Reply;
+}
+
+/*++
+ * @name DhcpRosGetAdapterInfo
+ * @implemented ReactOS only
+ *
+ * Get DHCP info for an adapter
+ *
+ * @param AdapterIndex
+ *        Index of the adapter (iphlpapi-style) for which info is
+ *        requested
+ *
+ * @param DhcpEnabled
+ *        Returns whether DHCP is enabled for the adapter
+ *
+ * @param DhcpServer
+ *        Returns DHCP server IP address (255.255.255.255 if no
+ *        server reached yet), in network byte order
+ *
+ * @param LeaseObtained
+ *        Returns time at which the lease was obtained
+ *
+ * @param LeaseExpires
+ *        Returns time at which the lease will expire
+ *
+ * @return non-zero on success
+ *
+ * @remarks This is a ReactOS-only routine
+ *
+ *--*/
+DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
+                                      PBOOL DhcpEnabled,
+                                      PDWORD DhcpServer,
+                                      time_t *LeaseObtained,
+                                      time_t *LeaseExpires )
+{
+    COMM_DHCP_REQ Req;
+    COMM_DHCP_REPLY Reply;
+    DWORD BytesRead;
+    BOOL Result;
+
+    Req.Type = DhcpReqGetAdapterInfo;
+    Req.AdapterIndex = AdapterIndex;
+
+    Result = CallNamedPipe
+        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
+          &BytesRead, DHCP_TIMEOUT );
+
+    if ( 0 != Result && 0 != Reply.Reply ) {
+        *DhcpEnabled = Reply.GetAdapterInfo.DhcpEnabled;
+    } else {
+        *DhcpEnabled = FALSE;
+    }
+    if ( *DhcpEnabled ) {
+        *DhcpServer = Reply.GetAdapterInfo.DhcpServer;
+        *LeaseObtained = Reply.GetAdapterInfo.LeaseObtained;
+        *LeaseExpires = Reply.GetAdapterInfo.LeaseExpires;
+    } else {
+        *DhcpServer = INADDR_NONE;
+        *LeaseObtained = 0;
+        *LeaseExpires = 0;
+    }
 
     return Reply.Reply;
 }
