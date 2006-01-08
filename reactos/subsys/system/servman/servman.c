@@ -39,7 +39,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             hListView = CreateWindow(WC_LISTVIEW,
                                      NULL,
-                                     WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER | LVS_EDITLABELS,
+                                     WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER | 
+                                     LVS_EDITLABELS | LVS_SORTASCENDING,
                                      0, 0, 0, 0, /* sized via WM_SIZE */
                                      hwnd,
                                      (HMENU) IDC_SERVLIST,
@@ -196,8 +197,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 
 		case WM_NOTIFY:
+        {
+            LPNMITEMACTIVATE item;
+
             switch (((LPNMHDR) lParam)->code)
             {
+
+		        case NM_DBLCLK:
+				item = (LPNMITEMACTIVATE) lParam;
+				PropSheets(hwnd);
+
+				break;
+            
                 case TTN_GETDISPINFO:
                 {
                     LPTOOLTIPTEXT lpttt;
@@ -246,6 +257,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 default:
                 break;
             }
+        }
         break;
 
 		case WM_CLOSE:

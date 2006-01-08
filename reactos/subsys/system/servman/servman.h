@@ -8,6 +8,8 @@
 #include <commctrl.h>
 #include "resource.h"
 
+#define MAX_KEY_LENGTH 256
+
 BOOL RefreshServiceList(VOID);
 
 BOOL CALLBACK

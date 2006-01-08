@@ -32,6 +32,7 @@ RefreshServiceList(VOID)
     TCHAR szStatus[128];
     DWORD NumServices = 0;
     DWORD Index;
+    LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
 
     NumServices = GetServiceList();
 
@@ -67,7 +68,7 @@ RefreshServiceList(VOID)
             DWORD dwValueSize;
 
              /* open the registry key for the service */
-            _sntprintf(buf, 300, _T("System\\CurrentControlSet\\Services\\%s"),
+            _sntprintf(buf, 300, Path,
                       pServiceStatus[Index].lpServiceName);
 
             if( RegOpenKeyEx(HKEY_LOCAL_MACHINE,
