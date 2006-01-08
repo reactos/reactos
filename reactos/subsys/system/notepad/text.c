@@ -20,14 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define UNICODE
-
-#include <assert.h>
-#include <stdio.h>
-#include <windows.h>
-#include <commdlg.h>
-
-#include "main.h"
+#include <notepad.h>
 
 static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, DWORD dwAppendLen)
 {

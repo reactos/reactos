@@ -20,16 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define UNICODE
-#define _UNICODE
-
-#include <assert.h>
-#include <stdio.h>
-#include <windows.h>
-#include <commdlg.h>
-#include <tchar.h>
-
-#include "main.h"
+#include <notepad.h>
 
 static const TCHAR s_szRegistryKey[] = { 'S','o','f','t','w','a','r','e',
 	'\\','M','i','c','r','o','s','o','f','t',

@@ -20,20 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define UNICODE
-#define _UNICODE
-
-#define _CRT_SECURE_NO_DEPRECATE
-
-#include <assert.h>
-#include <stdio.h>
-#include <windows.h>
-#include <commdlg.h>
-#include <tchar.h>
-
-#include "main.h"
-#include "license.h"
-#include "dialog.h"
+#include <notepad.h>
 
 static const WCHAR helpfileW[] = { 'n','o','t','e','p','a','d','.','h','l','p',0 };
 

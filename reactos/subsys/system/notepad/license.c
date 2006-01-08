@@ -18,14 +18,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include "license.h"
+#include <notepad.h>
 
 VOID WineLicense(HWND Wnd)
 {
   /* FIXME: should load strings from resources */
   LICENSE *License = &WineLicense_En;
-  MessageBox(Wnd, License->License, License->LicenseCaption,
+  MessageBoxA(Wnd, License->License, License->LicenseCaption,
              MB_ICONINFORMATION | MB_OK);
 }
 
@@ -34,7 +33,7 @@ VOID WineWarranty(HWND Wnd)
 {
   /* FIXME: should load strings from resources */
   LICENSE *License = &WineLicense_En;
-  MessageBox(Wnd, License->Warranty, License->WarrantyCaption,
+  MessageBoxA(Wnd, License->Warranty, License->WarrantyCaption,
              MB_ICONEXCLAMATION | MB_OK);
 }
 

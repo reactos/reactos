@@ -15,4 +15,5 @@
 	<file>text.c</file>
 	<file>settings.c</file>
 	<file>rsrc.rc</file>
+	<pch>notepad.h</pch>
 </module>

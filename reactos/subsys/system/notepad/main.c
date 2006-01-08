@@ -22,18 +22,7 @@
  *
  */
 
-#define UNICODE
-#define _UNICODE
-
-#define _CRT_SECURE_NO_DEPRECATE
-
-#include <windows.h>
-#include <stdio.h>
-#include <tchar.h>
-
-#include "main.h"
-#include "dialog.h"
-#include "notepad_res.h"
+#include <notepad.h>
 
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
