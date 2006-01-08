@@ -1,5 +1,6 @@
 #ifdef _MSC_VER
 #pragma warning ( disable : 4103 ) /* use #pragma pack to change alignment */
+#undef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE
 #endif//_MSC_VER
 
