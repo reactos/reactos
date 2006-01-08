@@ -29,6 +29,8 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <cmtypes.h>
+#include <cmfuncs.h>
+#include <rtlfuncs.h>
 #include <umpnpmgr/sysguid.h>
 #include <wdmguid.h>
 #include <cfgmgr32.h>
