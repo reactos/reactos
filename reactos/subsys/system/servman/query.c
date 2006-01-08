@@ -46,7 +46,7 @@ RefreshServiceList(VOID)
 
         /* Create the icon image lists */
         hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
-            GetSystemMetrics(SM_CYSMICON), ILC_MASK, 1, 1);
+            GetSystemMetrics(SM_CYSMICON), ILC_MASK | ILC_COLOR16, 1, 1);
 
         /* Add an icon to each image list */
         hiconItem = LoadImage(hInstance, MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
