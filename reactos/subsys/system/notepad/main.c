@@ -37,7 +37,7 @@ VOID SetFileName(LPCWSTR szFileName)
 {
     lstrcpy(Globals.szFileName, szFileName);
     Globals.szFileTitle[0] = 0;
-    GetFileTitle(szFileName, Globals.szFileTitle, wcslen(Globals.szFileTitle));
+    GetFileTitle(szFileName, Globals.szFileTitle, sizeof(Globals.szFileTitle) / sizeof(Globals.szFileTitle[0]));
 }
 
 /***********************************************************************

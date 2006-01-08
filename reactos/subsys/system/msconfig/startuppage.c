@@ -75,7 +75,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
             {
                 dwValueLength = MAX_KEY_LENGTH;
                 dwDataLength = MAX_VALUE_NAME;
-                Data = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME);
+                Data = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME * sizeof(TCHAR));
                 if (Data == NULL)
                     break;
                 retVal = RegEnumValue(hKey, Index, lpValueName, &dwValueLength, NULL, &dwType, (LPBYTE)Data, &dwDataLength);
