@@ -92,7 +92,7 @@ class MSVCBackend : public Backend
 		void _generate_sln_header ( FILE* OUT );
 		void _generate_sln_footer ( FILE* OUT );
 		void _generate_sln ( FILE* OUT );
-		void _generate_rules_file ( FILE* OUT );
+		//void _generate_rules_file ( FILE* OUT );
 		void _generate_sln_project (
 			FILE* OUT,
 			const Module& module,

@@ -493,7 +493,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
 			}
 
-			if (configuration.VSProjectVersion < "8.00") {
+			//if (configuration.VSProjectVersion < "8.00") {
 				if ((source_file.find(".idl") != string::npos) || ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's')))
 				{
 					fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
@@ -514,7 +514,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					}
 					fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
 				}
-			}
+			//}
 		}
 		fprintf ( OUT, "\t\t\t</File>\r\n" );
 	}
@@ -588,29 +588,29 @@ MSVCBackend::_get_solution_verion ( void ) {
 }
 
 
-void
-MSVCBackend::_generate_rules_file ( FILE* OUT )
-{
-	fprintf ( OUT, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" );
-	fprintf ( OUT, "<VisualStudioToolFile\r\n" );
-	fprintf ( OUT, "\tName=\"GCC Assembler\"\r\n" );
-	fprintf ( OUT, "\tVersion=\"%s\"\r\n", _get_solution_verion().c_str() );
-	fprintf ( OUT, "\t>\r\n" );
-	fprintf ( OUT, "\t<Rules>\r\n" );
-	fprintf ( OUT, "\t\t<CustomBuildRule\r\n" );
-	fprintf ( OUT, "\t\t\tName=\"Assembler\"\r\n" );
-	fprintf ( OUT, "\t\t\tDisplayName=\"Assembler Files\"\r\n" );
-	fprintf ( OUT, "\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n" );
-	fprintf ( OUT, "\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"\r\n" );	
-	fprintf ( OUT, "\t\t\tFileExtensions=\"*.S\"\r\n" );
-	fprintf ( OUT, "\t\t\tExecutionDescription=\"asm\"\r\n" );
-	fprintf ( OUT, "\t\t\t>\r\n" );
-	fprintf ( OUT, "\t\t\t<Properties>\r\n" );
-	fprintf ( OUT, "\t\t\t</Properties>\r\n" );
-	fprintf ( OUT, "\t\t</CustomBuildRule>\r\n" );
-	fprintf ( OUT, "\t</Rules>\r\n" );
-	fprintf ( OUT, "</VisualStudioToolFile>\r\n" );
-}
+//void
+//MSVCBackend::_generate_rules_file ( FILE* OUT )
+//{
+//	fprintf ( OUT, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" );
+//	fprintf ( OUT, "<VisualStudioToolFile\r\n" );
+//	fprintf ( OUT, "\tName=\"GCC Assembler\"\r\n" );
+//	fprintf ( OUT, "\tVersion=\"%s\"\r\n", _get_solution_verion().c_str() );
+//	fprintf ( OUT, "\t>\r\n" );
+//	fprintf ( OUT, "\t<Rules>\r\n" );
+//	fprintf ( OUT, "\t\t<CustomBuildRule\r\n" );
+//	fprintf ( OUT, "\t\t\tName=\"Assembler\"\r\n" );
+//	fprintf ( OUT, "\t\t\tDisplayName=\"Assembler Files\"\r\n" );
+//	fprintf ( OUT, "\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n" );
+//	fprintf ( OUT, "\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"\r\n" );	
+//	fprintf ( OUT, "\t\t\tFileExtensions=\"*.S\"\r\n" );
+//	fprintf ( OUT, "\t\t\tExecutionDescription=\"asm\"\r\n" );
+//	fprintf ( OUT, "\t\t\t>\r\n" );
+//	fprintf ( OUT, "\t\t\t<Properties>\r\n" );
+//	fprintf ( OUT, "\t\t\t</Properties>\r\n" );
+//	fprintf ( OUT, "\t\t</CustomBuildRule>\r\n" );
+//	fprintf ( OUT, "\t</Rules>\r\n" );
+//	fprintf ( OUT, "</VisualStudioToolFile>\r\n" );
+//}
 
 void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
