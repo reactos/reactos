@@ -34,6 +34,8 @@ RefreshServiceList(VOID)
     DWORD Index;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
 
+    ListView_DeleteAllItems(hListView);
+
     NumServices = GetServiceList();
 
     if (NumServices)

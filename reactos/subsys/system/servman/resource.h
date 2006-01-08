@@ -22,7 +22,6 @@
 #define ID_EXIT             2010
 
 #define IDR_MAINMENU        102
-#define ID_FILE_EXIT        4001
 #define ID_VIEW_CUSTOMIZE   4021
 #define ID_HELP_ABOUT       4031
 

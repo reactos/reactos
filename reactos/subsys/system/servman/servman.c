@@ -26,30 +26,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
              //HFONT hfDefault;
 
-            HWND hTool;
             TBADDBITMAP tbab;
             INT iImageOffset;
-            INT statwidths[] = {110, -1};
+            INT statwidths[] = {110, -1}; /* widths of status bar */
             TCHAR szTemp[256];
-            RECT rcClient;
             LVCOLUMN lvc = { 0 };
 
             /* Toolbar buttons */
             TBBUTTON tbb [NUM_BUTTONS] = 
-            { // iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString
+            {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
                 {TBICON_PROP,    ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
                 {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* refresh */
                 {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* export */
 
                 /* Note: First item for a seperator is its width in pixels */
-                {5, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
+                {25, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
 
                 {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */ 
                 {TBICON_STOP,    ID_STOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
                 {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */   
                 {TBICON_RESTART, ID_RESTART, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
 
-                {5, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
+                {25, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
 
                 {TBICON_NEW,     ID_NEW,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */
                 {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
@@ -98,10 +96,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Add buttons to toolbar */
             SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
 
-            /* Send a WM_SIZE message to layout controls */
-            GetClientRect(hwnd, &rcClient);
-            SendMessage(hwnd, WM_SIZE, SIZE_RESTORED, MAKELONG(rcClient.right, rcClient.bottom));
-
             /* Show toolbar */
             ShowWindow(hTool, SW_SHOWNORMAL);
 
@@ -121,39 +115,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (hListView == NULL)
                 MessageBox(hwnd, _T("Could not create List View."), _T("Error"), MB_OK | MB_ICONERROR);
 
-
-
             ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT |
-                    /*LVS_EX_GRIDLINES |*/ LVS_EX_HEADERDRAGDROP);
+                    LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP);
 
             lvc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
             lvc.fmt  = LVCFMT_LEFT;
 
-            /* Add columns to the list-view (first column contains check box). */
+            /* Add columns to the list-view */
+
+            /* name */
             lvc.iSubItem = 0;
             lvc.cx       = 160;
             LoadString(hInstance, IDS_FIRSTCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 0, &lvc);
 
+            /* description */
             lvc.iSubItem = 1;
             lvc.cx       = 260;
             LoadString(hInstance, IDS_SECONDCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 1, &lvc);
 
+            /* status */
             lvc.iSubItem = 2;
             lvc.cx       = 75;
             LoadString(hInstance, IDS_THIRDCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 2, &lvc);
 
+            /* startup type */
             lvc.iSubItem = 3;
             lvc.cx       = 80;
             LoadString(hInstance, IDS_FOURTHCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 3, &lvc);
 
+            /* logon as */
             lvc.iSubItem = 4;
             lvc.cx       = 100;
             LoadString(hInstance, IDS_FITHCOLUMN, szTemp, 256);
@@ -309,11 +307,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    case WM_COMMAND:
 		    switch(LOWORD(wParam))
 		    {
-			    case ID_FILE_EXIT:
-				    PostMessage(hwnd, WM_CLOSE, 0, 0);
-			    break;
+                case ID_PROP:
+                    PropSheets(hwnd);
+                break;
+                
+                case ID_REFRESH:
+                    if (! RefreshServiceList() )
+                        GetError();
 
-			    case ID_START:
+                case ID_EXPORT:
+                break;
+
+                case ID_START:
 			    break;
 
                 case ID_STOP:
@@ -328,12 +333,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case ID_RESTART:
                 break;
 
-                case ID_REFRESH:
+                case ID_NEW:
                 break;
 
-                case ID_PROP:
-                    PropSheets(hwnd);
+                case ID_HELP:
                 break;
+
+                case ID_EXIT:
+				    PostMessage(hwnd, WM_CLOSE, 0, 0);
+			    break;
 
                 case ID_VIEW_CUSTOMIZE:
                 break;
@@ -344,9 +352,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                               hwnd,
                               AboutDialogProc);
                  break;
-
-                case ID_EXPORT:
-                break;
 
 		    }
 	    break;
