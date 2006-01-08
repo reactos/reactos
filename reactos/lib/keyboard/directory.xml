@@ -32,6 +32,9 @@
 	<directory name="kbdsg">
 		<xi:include href="kbdsg/kbdsg.xml" />
 	</directory>
+	<directory name="kbdsk">
+		<xi:include href="kbdsg/kbdsk.xml" />
+	</directory>
 	<directory name="kbduk">
 		<xi:include href="kbduk/kbduk.xml" />
 	</directory>
