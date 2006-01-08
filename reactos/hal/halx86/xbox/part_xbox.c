@@ -11,13 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <halxbox.h>
+
 #define NDEBUG
-
-#include <hal.h>
-#include <ntdddisk.h>
-#include "halxbox.h"
-
-#include <internal/debug.h>
 #include <debug.h>
 
 #define XBOX_SIGNATURE_SECTOR 3
@@ -35,7 +31,7 @@ static struct
 {
   ULONG SectorStart;
   ULONG SectorCount;
-  BYTE PartitionType;
+  CHAR PartitionType;
 } XboxPartitions[] =
 {
   /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */

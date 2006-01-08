@@ -12,7 +12,10 @@
 #ifndef HALXBOX_H_INCLUDED
 #define HALXBOX_H_INCLUDED
 
-extern BYTE XboxFont8x16[256 * 16];
+#include <hal.h>
+#include <ntdddisk.h>
+
+extern CHAR XboxFont8x16[256 * 16];
 
 void HalpXboxInitPciBus(ULONG BusNumber, PBUS_HANDLER BusHandler);
 void HalpXboxInitPartIo(void);

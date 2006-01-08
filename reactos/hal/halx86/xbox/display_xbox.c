@@ -12,9 +12,10 @@
 
 /* For an explanation about display ownership see generic/display.c */
 
-#include <ntddk.h>
-#include <hal.h>
-#include "halxbox.h"
+#include <halxbox.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #define I2C_IO_BASE 0xc000
 
@@ -152,7 +153,7 @@ HalClearDisplay(UCHAR CharAttribute)
   CursorY = 0;
 }
 
-VOID STATIC
+VOID static
 HalScrollDisplay (VOID)
 {
   ULONG Line, Col;
@@ -198,7 +199,7 @@ HalPutCharacter(UCHAR Character)
   HalpXboxOutputChar(Character, CursorX, CursorY, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
 }
 
-static BOOL
+static BOOLEAN
 ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 {
   int nRetriesToLive=50;
@@ -276,7 +277,7 @@ ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
 }
 
 
-static BOOL
+static BOOLEAN
 I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return)
 {
   return ReadfromSMBus(bPicAddressI2cFormat, bDataToWrite, 1, Return);
