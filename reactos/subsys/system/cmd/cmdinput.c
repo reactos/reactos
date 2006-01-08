@@ -415,6 +415,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
             case _T('M'):
             case _T('C'):
                 /* ^M does the same as return */
+                bCharInput = TRUE;
                 if(!(ir.Event.KeyEvent.dwControlKeyState &
                    (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
                 {
