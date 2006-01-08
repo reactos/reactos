@@ -1263,7 +1263,7 @@ wstringa(std::wstring& f, const char* sa, int len, int field_width, int precisio
 	{
 		wchar_t w;
 		int mbcount;
-		mbcount = mbtowc(&w, sa, len-i);
+		mbcount = mbtowc(&w, sa+i, len-i);
 		if (mbcount <= 0)
 			break;
 		f += w;
