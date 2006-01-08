@@ -1125,7 +1125,7 @@ static int TypeOrderFromDirname(LPCTSTR name)
 }
 
 /* directories first... */
-static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
+static int __cdecl compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 {
 	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
 	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
@@ -1140,7 +1140,7 @@ static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 }
 
 
-static int compareName(const void* arg1, const void* arg2)
+static int __cdecl compareName(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1152,7 +1152,7 @@ static int compareName(const void* arg1, const void* arg2)
 	return lstrcmpi(fd1->cFileName, fd2->cFileName);
 }
 
-static int compareExt(const void* arg1, const void* arg2)
+static int __cdecl compareExt(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1185,7 +1185,7 @@ static int compareExt(const void* arg1, const void* arg2)
 	return lstrcmpi(name1, name2);
 }
 
-static int compareSize(const void* arg1, const void* arg2)
+static int __cdecl compareSize(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1206,7 +1206,7 @@ static int compareSize(const void* arg1, const void* arg2)
 	return cmp<0? -1: cmp>0? 1: 0;
 }
 
-static int compareDate(const void* arg1, const void* arg2)
+static int __cdecl compareDate(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1219,7 +1219,7 @@ static int compareDate(const void* arg1, const void* arg2)
 }
 
 
-static int (*sortFunctions[])(const void* arg1, const void* arg2) = {
+static int (__cdecl *sortFunctions[])(const void* arg1, const void* arg2) = {
 	compareName,	/* SORT_NAME */
 	compareExt,		/* SORT_EXT */
 	compareSize,	/* SORT_SIZE */

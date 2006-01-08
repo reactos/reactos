@@ -67,12 +67,12 @@ static PVOID CabinetReservedArea = NULL;
 
 /* Needed by zlib, but we don't want the dependency on msvcrt.dll */
 
-void free(void* _ptr)
+void __cdecl free(void* _ptr)
 {
   RtlFreeHeap(ProcessHeap, 0, _ptr);
 }
 
-void* calloc(size_t _nmemb, size_t _size)
+void* __cdecl calloc(size_t _nmemb, size_t _size)
 {
   return (void*)RtlAllocateHeap (ProcessHeap, HEAP_ZERO_MEMORY, _size);
 }

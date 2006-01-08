@@ -26,6 +26,7 @@
 #include <cfgmgr32.h>
 #include "resource.h"
 
+#define CMP_MAGIC  0x01234567
 
 /* GLOBALS ******************************************************************/
 

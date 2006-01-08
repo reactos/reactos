@@ -505,6 +505,9 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
   PWCHAR ServiceName;
   ULONG StartValue;
   NTSTATUS Status;
+  WCHAR RegPath [255];
+  PWCHAR Buffer;
+  ULONG Width, Hight, Bpp;
 
   DPRINT("ProcessDisplayRegistry() called\n");
 
@@ -546,16 +549,14 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
     }
 
   /* Set the resolution */
-  WCHAR RegPath [255];
   swprintf(RegPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\%s\\Device0", ServiceName);
 
-  PWCHAR Buffer;
   if (!InfGetDataField(Context, 4, &Buffer))
     {
       DPRINT("InfGetDataField() failed\n");
       return FALSE;
     }
-  ULONG Width = wcstoul(Buffer, NULL, 10);
+  Width = wcstoul(Buffer, NULL, 10);
   Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
 				 RegPath, 
 				 L"DefaultSettings.XResolution",
@@ -574,7 +575,7 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       DPRINT("InfGetDataField() failed\n");
       return FALSE;
     }
-  ULONG Hight = wcstoul(Buffer, 0, 0);
+  Hight = wcstoul(Buffer, 0, 0);
   Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
 				 RegPath,
 				 L"DefaultSettings.YResolution",
@@ -592,7 +593,7 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
       DPRINT("InfGetDataField() failed\n");
       return FALSE;
     }
-  ULONG Bpp = wcstoul(Buffer, 0, 0);
+  Bpp = wcstoul(Buffer, 0, 0);
   Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
 				 RegPath,
 				 L"DefaultSettings.BitsPerPel",

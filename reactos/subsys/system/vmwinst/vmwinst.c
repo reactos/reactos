@@ -77,9 +77,14 @@ DetectVMware(int *Version)
 
   /* Try using a VMware I/O port. If not running in VMware this'll throw an
      exception! */
+#ifndef _MSC_VER
   __asm__ __volatile__("inl  %%dx, %%eax"
     : "=a" (ver), "=b" (magic)
     : "0" (0x564d5868), "d" (0x5658), "c" (0xa));
+#else
+#error PLEASE WRITE THIS IN ASSEMBLY
+#endif
+
 
   if(magic == 0x564d5868)
   {
@@ -485,6 +490,7 @@ PageWelcomeProc(
   LPARAM lParam
 )
 {
+  LPNMHDR pnmh = (LPNMHDR)lParam;
   switch(uMsg)
   {
     case WM_NOTIFY:
@@ -495,7 +501,6 @@ PageWelcomeProc(
       hwndControl = GetParent(hwndDlg);
       CenterWindow (hwndControl);
 
-      LPNMHDR pnmh = (LPNMHDR)lParam;
       switch(pnmh->code)
       {
         case PSN_SETACTIVE:
@@ -822,6 +827,7 @@ PageConfigProc(
   LPARAM lParam
 )
 {
+  LPNMHDR pnmh = (LPNMHDR)lParam;
   switch(uMsg)
   {
     case WM_INITDIALOG:
@@ -860,7 +866,6 @@ PageConfigProc(
       hwndControl = GetParent(hwndDlg);
       CenterWindow (hwndControl);
 
-      LPNMHDR pnmh = (LPNMHDR)lParam;
       switch(pnmh->code)
       {
         case PSN_SETACTIVE:
