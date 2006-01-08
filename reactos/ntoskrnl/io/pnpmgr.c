@@ -533,18 +533,20 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    InitializeObjectAttributes(&ObjectAttributes, &KeyName,
                               OBJ_CASE_INSENSITIVE, NULL, NULL);
    Status = ZwOpenKey(DevInstRegKey, DesiredAccess, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("IoOpenDeviceRegistryKey(%wZ): Base key doesn't exist, exiting... (Status 0x%08lx)\n", &KeyName, Status);
+      ExFreePool(KeyNameBuffer);
+      return Status;
+   }
    ExFreePool(KeyNameBuffer);
 
    /*
-    * For driver key we're done now. Also if the base key doesn't
-    * exist we can bail out with error...
+    * For driver key we're done now.
     */
 
-   if ((DevInstKeyType & PLUGPLAY_REGKEY_DRIVER) || !NT_SUCCESS(Status))
-   {
-      DPRINT1("IoOpenDeviceRegistryKey(): Base key doesn't exist, exiting...\n");
+   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
       return Status;
-   }
 
    /*
     * Let's go further. For device key we must open "Device Parameters"
