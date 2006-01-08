@@ -36,7 +36,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	
 	strcpy(dev->dev.name, "UnivHCI PCI-USB Controller");
 	strcpy(dev->slot_name, "UHCD PCI Slot");
-DbgBreakPoint();
+
 	/* Init the HCD. Probe will be called automatically, but will fail because id=NULL */
 	Status = uhci_hcd_init();
 	if (!NT_SUCCESS(Status))

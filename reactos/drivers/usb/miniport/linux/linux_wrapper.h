@@ -399,7 +399,7 @@ struct usbdevfs_hub_portinfo
 #define IS_ERR_VALUE(x) unlikely((x) > (unsigned long)-1000L)
 static __inline long IS_ERR(const void *ptr)
 {
-	return IS_ERR_VALUE((unsigned long)ptr);
+	return (long)IS_ERR_VALUE((unsigned long)ptr);
 }
 
 

@@ -421,7 +421,6 @@ static int uhci_irq(struct usb_hcd *hcd, struct pt_regs *regs)
 
 	if (status & USBSTS_RD)
 	{
-		DbgBreakPoint();
 		usb_hcd_poll_rh_status(hcd);
 	}
 	else {
@@ -938,7 +937,7 @@ const struct pci_device_id __devinitdata uhci_pci_ids[] = { {
 MODULE_DEVICE_TABLE(pci, uhci_pci_ids);
 
 struct pci_driver uhci_pci_driver = {
-	0,
+	/* list_head*/	0, 0,
 	/*.name =*/		(char *)hcd_name,
 	/*.id_table =*/	uhci_pci_ids,
 
