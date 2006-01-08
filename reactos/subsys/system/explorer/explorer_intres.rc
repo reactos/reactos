@@ -117,6 +117,7 @@ BEGIN
     "#include ""explorer-ru.rc""\r\n"
     "#include ""explorer-jp.rc""\r\n"
     "#include ""explorer-hu.rc""\r\n"
+    "#include ""explorer-uk.rc""\r\n"
     "\r\n"
     "#ifndef __WINDRES__\r\n"
     "#include ""explorer-cn.rc""\r\n"

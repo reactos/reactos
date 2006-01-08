@@ -53,3 +53,4 @@
 #include "wininet_Ru.rc"
 #include "wininet_Si.rc"
 #include "wininet_Hu.rc"
+#include "wininet_Uk.rc"

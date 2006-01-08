@@ -18,4 +18,5 @@ IDI_DEVMGR ICON "resources/devmgr.ico"
 #include "Pl.rc"
 #include "De.rc"
 #include "Es.rc"
+#include "Uk.rc"
 

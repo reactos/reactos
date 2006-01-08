@@ -47,4 +47,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Sv.rc"
 #include "Ru.rc"
 #include "Es.rc"
+#include "Uk.rc"
 

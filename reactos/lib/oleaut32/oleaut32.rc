@@ -42,6 +42,7 @@
 #include "oleaut32_Ru.rc"
 #include "oleaut32_Sv.rc"
 #include "oleaut32_Th.rc"
+#include "oleaut32_Uk.rc"
 
 /*
  * FIXME:

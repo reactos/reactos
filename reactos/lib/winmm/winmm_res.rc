@@ -42,6 +42,7 @@
 #include "winmm_Si.rc"
 #include "winmm_Sk.rc"
 //#include "winmm_Hu.rc"
+#include "winmm_Uk.rc"
 
 /* do not add NLS specific stuff below that line */
 
