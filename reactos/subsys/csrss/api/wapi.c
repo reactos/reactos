@@ -282,6 +282,7 @@ ServerSbApiPortThread (PVOID PortHandle)
 	PORT_MESSAGE    Request;
 	PVOID           Context = NULL;
 	NTSTATUS        Status = STATUS_SUCCESS;
+    PPORT_MESSAGE Reply = NULL;
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -312,7 +313,7 @@ DPRINT("-- 2\n");
 					__FUNCTION__, Status);
 			} else {
 DPRINT("-- 3\n");
-				PPORT_MESSAGE Reply = NULL;
+				
 				/*
 				 * Tell the init thread the SM gave the
 				 * green light for boostrapping.
