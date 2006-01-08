@@ -17,20 +17,7 @@
  */
 
 
-#include <windows.h>
-#include <tchar.h>
-#include <commctrl.h>
-#include <commdlg.h>
-#include <cderr.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <shellapi.h>
-#include <objsel.h>
-#include <objbase.h>
-#include <ole2.h>
-
-#include "main.h"
-#include "regproc.h"
+#include <regedit.h>
 
 static TCHAR s_szFindWhat[256];
 static const TCHAR s_szFindFlags[] = _T("FindFlags");

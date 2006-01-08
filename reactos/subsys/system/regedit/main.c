@@ -18,23 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
-#include <windows.h>
-#include <commctrl.h>
-#include <accctrl.h>
-#include <unknwn.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <process.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <aclui.h>
-#include <cguid.h>
-
-#include "main.h"
-#include "hexedit.h"
-#include "security.h"
-#include "regproc.h"
+#include <regedit.h>
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine);
 

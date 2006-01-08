@@ -475,7 +475,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	}
 
 }
- int compare(const void *arg1,const void *arg2)
+ int __cdecl compare(const void *arg1,const void *arg2)
  {
 	FileName * File1;
 	FileName * File2;

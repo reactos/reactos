@@ -20,4 +20,5 @@
 		<file>servman.c</file>
 	</compilationunit>
 	<file>servman.rc</file>
+	<pch>servman.h</pch>
 </module>

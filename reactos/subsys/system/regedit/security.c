@@ -18,21 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
+#include <regedit.h>
+
 #define INITGUID
-#include <windows.h>
-#include <tchar.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <accctrl.h>
-#include <objbase.h>
-#include <basetyps.h>
-#include <unknwn.h>
-#include <aclui.h>
-#include <cguid.h>
-#include "security.h"
-#include "regproc.h"
-#include "resource.h"
+#include <guiddef.h>
+
+DEFINE_GUID(IID_CRegKeySecurity, 0x965fc360, 0x16ff, 0x11d0, 0x0091, 0xcb,0x00,0xaa,0x00,0xbb,0xb7,0x23);
 
 /******************************************************************************
    Implementation of the CRegKeySecurity interface

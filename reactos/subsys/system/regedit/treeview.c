@@ -18,20 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <windows.h>
-#include <commctrl.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <process.h>
-#include <stdio.h>
-#include <string.h>
-#include <tchar.h>
-
-#include "main.h"
+#include <regedit.h>
 
 /* Global variables and constants  */
 /* Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images.  */
@@ -133,7 +120,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
     tvi.iSelectedImage = Image_Open;
     tvi.cChildren = dwChildren;
     tvi.lParam = (LPARAM)hKey;
-    tvins.DUMMYUNIONNAME.item = tvi;
+    tvins.item = tvi;
     tvins.hInsertAfter = (HTREEITEM)(hKey ? TVI_LAST : TVI_FIRST);
     tvins.hParent = hParent;
     return TreeView_InsertItem(hwndTV, &tvins);
@@ -389,7 +376,7 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
     tvi.cChildren = 5;
     /* Save the heading level in the item's application-defined data area.  */
     tvi.lParam = (LPARAM)NULL;
-    tvins.DUMMYUNIONNAME.item = tvi;
+    tvins.item = tvi;
     tvins.hInsertAfter = (HTREEITEM)TVI_FIRST;
     tvins.hParent = TVI_ROOT;
     /* Add the item to the tree view control.  */

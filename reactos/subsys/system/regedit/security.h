@@ -7,8 +7,6 @@ InitializeAclUiDll(VOID);
 VOID
 UnloadAclUiDll(VOID);
 
-DEFINE_GUID(IID_CRegKeySecurity, 0x965fc360, 0x16ff, 0x11d0, 0x0091, 0xcb,0x00,0xaa,0x00,0xbb,0xb7,0x23);
-
 /******************************************************************************
    CRegKeySecurity
  ******************************************************************************/

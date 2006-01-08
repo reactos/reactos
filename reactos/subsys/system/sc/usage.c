@@ -8,7 +8,6 @@
  *           Ged Murphy 20/10/05 Created
  *
  */
-#include <conio.h>
 #include "sc.h"
 
 INT MainUsage(VOID)

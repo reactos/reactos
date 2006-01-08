@@ -18,16 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <process.h>
-#include <stdio.h>
+#include <regedit.h>
 
-#include "main.h"
-#include "regproc.h"
 
 #define CX_ICON    16
 #define CY_ICON    16

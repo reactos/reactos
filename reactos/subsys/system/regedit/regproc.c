@@ -20,18 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <limits.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <winnt.h>
-#include <winreg.h>
-#include <assert.h>
-#include <tchar.h>
-#include <malloc.h>
-#include <shlwapi.h>
-#include "regproc.h"
+#include <regedit.h>
 
 #define REG_VAL_BUF_SIZE        4096
 
