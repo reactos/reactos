@@ -9,15 +9,17 @@
 #define IDC_TOOLBAR         1001
 #define IDC_STATUSBAR	    1002
 
-#define ID_PROP             4010
-#define ID_REFRESH          4011
-#define ID_EXPORT           4012
-
-#define ID_START            2000
-#define ID_STOP             2001
-#define ID_PAUSE            2002
-#define ID_RESUME           2003
-#define ID_RESTART          2004
+#define ID_PROP             2000
+#define ID_REFRESH          2001
+#define ID_EXPORT           2002
+#define ID_START            2003
+#define ID_STOP             2004
+#define ID_PAUSE            2005
+#define ID_RESUME           2006
+#define ID_RESTART          2007
+#define ID_NEW              2008
+#define ID_HELP             2009
+#define ID_EXIT             2010
 
 #define IDR_MAINMENU        102
 #define ID_FILE_EXIT        4001
@@ -37,34 +39,42 @@
 #define IDS_TOOLTIP_STOP    6004
 #define IDS_TOOLTIP_PAUSE   6005
 #define IDS_TOOLTIP_RESTART 6006
-
+#define IDS_TOOLTIP_NEW     6007
+#define IDS_TOOLTIP_HELP    6008
+#define IDS_TOOLTIP_EXIT    6009
 
 #define IDS_SERVICES_STATUS_RUNNING 5000
 #define IDS_SERVICES_STATUS_STOPPED 5001
-#define IDS_SERVICES_YES 5002
+#define IDS_SERVICES_YES    5002
 #define IDS_SERVICES_UNKNOWN 5003
-#define IDS_SERVICES_AUTO 5004
-#define IDS_SERVICES_MAN 5005
-#define IDS_SERVICES_DIS 5006
+#define IDS_SERVICES_AUTO   5004
+#define IDS_SERVICES_MAN    5005
+#define IDS_SERVICES_DIS    5006
 #define IDS_SERVICES_NUM_SERVICES 5010
 
 #define IDI_SM_ICON         50
 #define IDB_BUTTONS         51
-#define TBICON_START        2
-#define TBICON_STOP         3
-#define TBICON_PAUSE        0
-#define TBICON_RESTART      1
 
+#define TBICON_PROP         0
+#define TBICON_REFRESH      1
+#define TBICON_EXPORT       2
+#define TBICON_START        3
+#define TBICON_STOP         4
+#define TBICON_PAUSE        5
+#define TBICON_RESTART      6
+#define TBICON_NEW          7
+#define TBICON_HELP         8
+#define TBICON_EXIT         9
 
-#define IDS_PROP_SHEET 10000
-#define IDD_DLG_GENERAL 10001
-#define IDC_SERV_NAME 10041
-#define IDC_DISP_NAME 10051
-#define IDC_DESCRIPTION 10061
-#define IDC_START_TYPE 10101
-#define IDC_SERV_STATUS 10121
-#define IDC_START 10131
-#define IDC_STOP 10141
-#define IDC_PAUSE 10151
-#define IDC_RESUME 10161
-#define IDC_START_PARAM 10191
+#define IDS_PROP_SHEET      10000
+#define IDD_DLG_GENERAL     10001
+#define IDC_SERV_NAME       10041
+#define IDC_DISP_NAME       10051
+#define IDC_DESCRIPTION     10061
+#define IDC_START_TYPE      10101
+#define IDC_SERV_STATUS     10121
+#define IDC_START           10131
+#define IDC_STOP            10141
+#define IDC_PAUSE           10151
+#define IDC_RESUME          10161
+#define IDC_START_PARAM     10191

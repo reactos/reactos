@@ -9,7 +9,7 @@
 #include "resource.h"
 
 #define MAX_KEY_LENGTH 256
-#define NUM_BUTTONS 8
+#define NUM_BUTTONS 12
 
 BOOL RefreshServiceList(VOID);
 

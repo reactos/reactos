@@ -67,7 +67,7 @@ BEGIN
   CONTROL "",IDC_START_PARAM,"Static",0x50001000,70,199,176,11
 END
 
-IDB_BUTTONS BITMAP "res/buttons.bmp"
+IDB_BUTTONS BITMAP "res/toolbar.bmp"
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -118,4 +118,7 @@ BEGIN
     IDS_TOOLTIP_STOP    "Stop service"
     IDS_TOOLTIP_PAUSE   "Pause service"
     IDS_TOOLTIP_RESTART "Restart service"
+    IDS_TOOLTIP_NEW     "Create a service"
+    IDS_TOOLTIP_HELP    "Help"
+    IDS_TOOLTIP_EXIT    "Exit"
 END

@@ -37,9 +37,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Toolbar buttons */
             TBBUTTON tbb [NUM_BUTTONS] = 
             { // iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString
-                {STD_PROPERTIES, ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
-                {STD_FILENEW,    ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /*  */
-                {STD_FILENEW,    ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /*  */
+                {TBICON_PROP,    ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
+                {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* refresh */
+                {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* export */
 
                 /* Note: First item for a seperator is its width in pixels */
                 {5, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
@@ -48,6 +48,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {TBICON_STOP,    ID_STOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
                 {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */   
                 {TBICON_RESTART, ID_RESTART, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
+
+                {5, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
+
+                {TBICON_NEW,     ID_NEW,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */
+                {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
+                {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
+
             };
 
 /* ======================== Create Toolbar ============================== */
@@ -76,11 +83,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Add custom images */
             tbab.hInst = hInstance;
             tbab.nID = IDB_BUTTONS;
-            iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, 4, (LPARAM)&tbab);
+            iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, 11, (LPARAM)&tbab);
+            tbb[0].iBitmap += iImageOffset; /* properties */
+            tbb[1].iBitmap += iImageOffset; /* refresh */
+            tbb[2].iBitmap += iImageOffset; /* export */
             tbb[4].iBitmap += iImageOffset; /* start */
             tbb[5].iBitmap += iImageOffset; /* stop */
-            tbb[6].iBitmap += iImageOffset; /* pause */  
+            tbb[6].iBitmap += iImageOffset; /* pause */
             tbb[7].iBitmap += iImageOffset; /* restart */
+            tbb[9].iBitmap += iImageOffset; /* new */
+            tbb[10].iBitmap += iImageOffset; /* help */
+            tbb[11].iBitmap += iImageOffset; /* exit */
 
             /* Add buttons to toolbar */
             SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
@@ -259,6 +272,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                         case ID_RESTART:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_RESTART);
+                        break;
+                        
+                        case ID_NEW:
+                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_NEW);
+                        break;
+
+                        case ID_HELP:
+                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_HELP);
+                        break;
+
+                        case ID_EXIT:
+                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXIT);
                         break;
 
                     }
