@@ -372,7 +372,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 		{
       /* Check to make sure if there is no ending "
        * we dont run over the null char */
-      if(*s != _T('/'))
+      if(*s == _T('\0'))
       {
         break;
       }
