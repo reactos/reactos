@@ -140,6 +140,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
     BOOL bReturn = FALSE;
 	TCHAR szPath[MAX_PATH];
+    BOOL bCharInput;
 
 	/* get screen size */
 	GetScreenSize (&maxx, &maxy);
@@ -215,6 +216,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 		//	continue;
 
 
+        bCharInput = FALSE;
 
 		switch (ir.Event.KeyEvent.wVirtualKeyCode)
 		{
@@ -511,15 +513,17 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 				break;
 
+            default:
+                /* This input is just a normal char */
+                bCharInput = TRUE;
+
 			}
 #ifdef _UNICODE
             ch = ir.Event.KeyEvent.uChar.UnicodeChar;
-            if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)) &&
-                !(ir.Event.KeyEvent.dwControlKeyState & (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
+            if ((ch >= 32 && (charcount != (maxlen - 2)) && bCharInput)
 #else
             ch = ir.Event.KeyEvent.uChar.AsciiChar;
-            if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)) && 
-                !(ir.Event.KeyEvent.dwControlKeyState & (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
+            if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)) && bCharInput)
 #endif /* _UNICODE */
             {
                 /* insert character into string... */
