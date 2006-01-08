@@ -48,7 +48,7 @@ static char copyright[] =
 
 #include "rosdhcp.h"
 
-static INLINE int do_hash PROTO ((unsigned char *, int, int));
+static __inline int do_hash PROTO ((unsigned char *, int, int));
 
 struct hash_table *new_hash ()
 {
@@ -60,7 +60,7 @@ struct hash_table *new_hash ()
 	return rv;
 }
 
-static INLINE int do_hash (name, len, size)
+static __inline int do_hash (name, len, size)
 	unsigned char *name;
 	int len;
 	int size;

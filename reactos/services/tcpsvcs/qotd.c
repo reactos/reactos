@@ -12,10 +12,6 @@
  *
  */
 
-#include <stdio.h>
-#include <winsock2.h>
-#include <tchar.h>
-#include <time.h>
 #include "tcpsvcs.h"
 
 #define QBUFSIZ 160

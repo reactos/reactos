@@ -12,9 +12,6 @@
  *
  */
 
-#include <stdio.h>
-#include <winsock2.h>
-#include <tchar.h>
 #include "tcpsvcs.h"
 
 extern BOOL bShutDown;

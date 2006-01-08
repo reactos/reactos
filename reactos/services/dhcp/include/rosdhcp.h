@@ -2,12 +2,11 @@
 #define ROSDHCP_H
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <winsock2.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <iprtrmib.h>
 #include <iphlpapi.h>
-#include <winsock2.h>
 #include <dhcpcsdk.h>
 #include <stdio.h>
 #include <setjmp.h>

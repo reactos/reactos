@@ -12,11 +12,11 @@
  *
  */
 
-#define WIN32_LEAN_AND_MEAN
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
- 
+#include <time.h>
+
 #define UNICODE
 #define _UNICODE
 

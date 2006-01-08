@@ -11,8 +11,11 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <lpctypes.h>
+#include <lpcfuncs.h>
+#include <rtlfuncs.h>
+#include <obfuncs.h>
+#include <iotypes.h>
 #include <debug.h>
 #include "eventlogrpc_s.h"
 

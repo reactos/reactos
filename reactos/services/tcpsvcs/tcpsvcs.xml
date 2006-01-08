@@ -13,4 +13,5 @@
     <file>qotd.c</file>
     <file>chargen.c</file>
     <file>tcpsvcs.rc</file>
+    <pch>tcpsvcs.h</pch>
 </module>

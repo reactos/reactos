@@ -50,12 +50,14 @@
 
 #define ETH_ALEN 6
 #define ETHER_ADDR_LEN  ETH_ALEN
+#include <pshpack1.h>
 struct ether_header
 {
   u_int8_t  ether_dhost[ETH_ALEN];      /* destination eth addr */
   u_int8_t  ether_shost[ETH_ALEN];      /* source ether addr    */
   u_int16_t ether_type;                 /* packet type ID field */
-} __attribute__ ((__packed__));
+};
+#include <poppack.h>
 
 struct ip
   {
@@ -94,18 +96,18 @@ struct udphdr {
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #include "dhcp.h"
 #include "tree.h"
@@ -274,6 +276,9 @@ struct hash_table {
 
 #define	MAX_TIME 0x7fffffff
 #define	MIN_TIME 0
+#ifdef _MSC_VER
+typedef SIZE_T ssize_t;
+#endif
 
 /* External definitions... */
 
@@ -287,11 +292,19 @@ void do_packet(struct interface_info *, struct dhcp_packet *,
 
 /* errwarn.c */
 extern int warnings_occurred;
+#ifdef _MSC_VER
+void error(char *, ...);
+int warning(char *, ...);
+int note(char *, ...);
+int debug(char *, ...);
+int parse_warn(char *, ...);
+#else
 void error(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int warning(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int note(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int debug(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int parse_warn(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+#endif
 
 /* conflex.c */
 extern int lexline, lexchar;

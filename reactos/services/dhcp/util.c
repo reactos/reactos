@@ -11,10 +11,10 @@ char *piaddr( struct iaddr addr ) {
 }
 
 int note( char *format, ... ) {
-    va_list arg_begin;
-    va_start( arg_begin, format );
     char buf[0x100];
     int ret;
+    va_list arg_begin;
+    va_start( arg_begin, format );
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
@@ -24,10 +24,10 @@ int note( char *format, ... ) {
 }
 
 int debug( char *format, ... ) {
-    va_list arg_begin;
-    va_start( arg_begin, format );
     char buf[0x100];
     int ret;
+    va_list arg_begin;
+    va_start( arg_begin, format );
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
@@ -37,10 +37,10 @@ int debug( char *format, ... ) {
 }
 
 int warn( char *format, ... ) {
-    va_list arg_begin;
-    va_start( arg_begin, format );
     char buf[0x100];
     int ret;
+    va_list arg_begin;
+    va_start( arg_begin, format );
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
@@ -50,10 +50,10 @@ int warn( char *format, ... ) {
 }
 
 int warning( char *format, ... ) {
-    va_list arg_begin;
-    va_start( arg_begin, format );
     char buf[0x100];
     int ret;
+    va_list arg_begin;
+    va_start( arg_begin, format );
 
     ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
 
@@ -63,9 +63,9 @@ int warning( char *format, ... ) {
 }
 
 void error( char *format, ... ) {
+    char buf[0x100];
     va_list arg_begin;
     va_start( arg_begin, format );
-    char buf[0x100];
 
     vsnprintf( buf, sizeof(buf), format, arg_begin );
 
