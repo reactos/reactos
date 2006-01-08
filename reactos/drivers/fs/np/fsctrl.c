@@ -394,7 +394,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   switch (IoStack->Parameters.FileSystemControl.FsControlCode)
     {
       case FSCTL_PIPE_ASSIGN_EVENT:
-	DPRINT("Assign event\n");
+	DPRINT1("Assign event not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
@@ -414,12 +414,14 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       case FSCTL_PIPE_QUERY_EVENT:
-	DPRINT("Query event\n");
+	DPRINT1("Query event not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_TRANSCEIVE:
-	DPRINT("Transceive\n");
+	/* If you implement this, please remove the workaround in
+	   lib/kernel32/file/npipe.c function TransactNamedPipe() */
+	DPRINT1("Transceive not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
@@ -429,42 +431,43 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       case FSCTL_PIPE_IMPERSONATE:
-	DPRINT("Impersonate\n");
+	DPRINT1("Impersonate not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_SET_CLIENT_PROCESS:
-	DPRINT("Set client process\n");
+	DPRINT1("Set client process not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
-	DPRINT("Query client process\n");
+	DPRINT1("Query client process not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_INTERNAL_READ:
-	DPRINT("Internal read\n");
+	DPRINT1("Internal read not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_INTERNAL_WRITE:
-	DPRINT("Internal write\n");
+	DPRINT1("Internal write not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_INTERNAL_TRANSCEIVE:
-	DPRINT("Internal transceive\n");
+	DPRINT1("Internal transceive not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       case FSCTL_PIPE_INTERNAL_READ_OVFLOW:
-	DPRINT("Internal read overflow\n");
+	DPRINT1("Internal read overflow not implemented\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
       default:
-	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.FsControlCode);
+	DPRINT1("Unrecognized IoControlCode: %x\n",
+ 	       IoStack->Parameters.FileSystemControl.FsControlCode);
 	Status = STATUS_UNSUCCESSFUL;
     }
 

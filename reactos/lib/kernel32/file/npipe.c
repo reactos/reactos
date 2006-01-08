@@ -1150,6 +1150,7 @@ TransactNamedPipe(IN HANDLE hNamedPipe,
      }
    else
      {
+#if 0 /* We don't implement FSCTL_PIPE_TRANSCEIVE yet */
         IO_STATUS_BLOCK Iosb;
 
         Status = NtFsControlFile(hNamedPipe,
@@ -1187,6 +1188,31 @@ TransactNamedPipe(IN HANDLE hNamedPipe,
              SetLastErrorByStatus(Status);
              return FALSE;
           }
+#else /* Workaround while FSCTL_PIPE_TRANSCEIVE not available */
+        DWORD nActualBytes;
+
+        while (0 != nInBufferSize &&
+               WriteFile(hNamedPipe, lpInBuffer, nInBufferSize, &nActualBytes,
+                         NULL))
+          {
+             lpInBuffer = (LPVOID)((char *) lpInBuffer + nActualBytes);
+             nInBufferSize -= nActualBytes;
+          }
+        if (0 != nInBufferSize)
+          {
+             /* Must have dropped out of the while 'cause WriteFile failed */
+             return FALSE;
+          }
+        if (! ReadFile(hNamedPipe, lpOutBuffer, nOutBufferSize, &nActualBytes,
+                       NULL))
+          {
+             return FALSE;
+          }
+        if (NULL != lpBytesRead)
+          {
+            *lpBytesRead = nActualBytes;
+          }
+#endif
      }
 
    return TRUE;
