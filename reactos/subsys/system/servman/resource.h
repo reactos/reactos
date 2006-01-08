@@ -48,10 +48,12 @@
 #define IDS_SERVICES_DIS 5006
 #define IDS_SERVICES_NUM_SERVICES 5010
 
-#define IDB_START 50
-#define IDI_SM_ICON 51
-
-
+#define IDI_SM_ICON         50
+#define IDB_BUTTONS         51
+#define TBICON_START        2
+#define TBICON_STOP         3
+#define TBICON_PAUSE        0
+#define TBICON_RESTART      1
 
 
 #define IDS_PROP_SHEET 10000

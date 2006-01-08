@@ -15,6 +15,7 @@ HINSTANCE hInstance;
 HWND hMainWnd;
 HWND hListView;
 HWND hStatus;
+HWND hTool;
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -26,16 +27,74 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//HFONT hfDefault;
 
 			HWND hTool;
-			TBBUTTON tbb[7];
 			TBADDBITMAP tbab;
-
-			int statwidths[] = {110, -1};
-
+            INT iImageOffset;
+			INT statwidths[] = {110, -1};
 			TCHAR szTemp[256];
-
-			/* Create List View */
+            RECT rcClient;
             LVCOLUMN lvc = { 0 };
-            //LVITEM   lv  = { 0 };
+
+            /* Toolbar buttons */
+	        TBBUTTON tbb [NUM_BUTTONS] = 
+            { // iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString
+                {STD_PROPERTIES, ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
+                {STD_FILENEW,    ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /*  */
+                {STD_FILENEW,    ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /*  */
+
+		        /* Note: First item for a seperator is its width in pixels */
+                {5, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
+
+                {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */ 
+                {TBICON_STOP,    ID_STOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
+                {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */   
+                {TBICON_RESTART, ID_RESTART, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
+            };
+
+/* ======================== Create Toolbar ============================== */
+
+            /* Create Toolbar */
+			hTool = CreateWindowEx(0,
+                                   TOOLBARCLASSNAME,
+                                   NULL,
+                                   WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
+                                   0, 0, 0, 0,
+                                   hwnd,
+                                   (HMENU)IDC_TOOLBAR,
+                                   hInstance,
+                                   NULL);
+			if(hTool == NULL)
+				MessageBox(hwnd, _T("Could not create tool bar."), _T("Error"), MB_OK | MB_ICONERROR);
+
+            /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
+	        SendMessage(hTool, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+	        /* Add standard image list */
+	        tbab.hInst = HINST_COMMCTRL;
+	        tbab.nID = IDB_STD_SMALL_COLOR;
+	        SendMessage(hTool, TB_ADDBITMAP, 0, (LPARAM) &tbab);
+
+	        /* Add custom images */
+	        tbab.hInst = hInstance;
+	        tbab.nID = IDB_BUTTONS;
+	        iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, 4, (LPARAM)&tbab);
+	        tbb[4].iBitmap += iImageOffset; /* start */
+	        tbb[5].iBitmap += iImageOffset; /* stop */
+	        tbb[6].iBitmap += iImageOffset; /* pause */  
+	        tbb[7].iBitmap += iImageOffset; /* restart */
+
+	        /* Add buttons to toolbar */
+	        SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
+
+	        /* Send a WM_SIZE message to layout controls */
+	        GetClientRect(hwnd, &rcClient);
+	        SendMessage(hwnd, WM_SIZE, SIZE_RESTORED, MAKELONG(rcClient.right, rcClient.bottom));
+
+	        /* Show toolbar */
+	        ShowWindow(hTool, SW_SHOWNORMAL);
+
+
+
+/* ======================== Create List View ============================== */
 
             hListView = CreateWindow(WC_LISTVIEW,
                                      NULL,
@@ -46,6 +105,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                      (HMENU) IDC_SERVLIST,
                                      hInstance,
                                      NULL);
+            if (hListView == NULL)
+                MessageBox(hwnd, _T("Could not create List View."), _T("Error"), MB_OK | MB_ICONERROR);
+
+
 
             ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT |
                     /*LVS_EX_GRIDLINES |*/ LVS_EX_HEADERDRAGDROP);
@@ -84,60 +147,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 4, &lvc);
 
-			/* Create Toolbar */
-			hTool = CreateWindowEx(0,
-                                   TOOLBARCLASSNAME,
-                                   NULL,
-                                   WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
-                                   0, 0, 0, 0,
-                                   hwnd,
-                                   (HMENU)IDC_TOOLBAR,
-                                   hInstance,
-                                   NULL);
-			if(hTool == NULL)
-				MessageBox(hwnd, _T("Could not create tool bar."), _T("Error"), MB_OK | MB_ICONERROR);
 
-			// Send the TB_BUTTONSTRUCTSIZE message, which is required for
-			// backward compatibility.
-			SendMessage(hTool, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-			tbab.hInst = HINST_COMMCTRL;
-			tbab.nID = IDB_STD_SMALL_COLOR;
-			SendMessage(hTool, TB_ADDBITMAP, 0, (LPARAM)&tbab);
+/* ======================== Create Status Bar ============================== */
 
-            ZeroMemory(tbb, sizeof(tbb));
-            tbb[0].iBitmap = STD_PROPERTIES;
-            tbb[0].fsState = TBSTATE_ENABLED;
-            tbb[0].fsStyle = TBSTYLE_BUTTON;
-            tbb[0].idCommand = ID_PROP;
-            tbb[1].iBitmap = STD_FILENEW;
-            tbb[1].fsState = TBSTATE_ENABLED;
-            tbb[1].fsStyle = TBSTYLE_BUTTON;
-            tbb[1].idCommand = ID_REFRESH;
-            tbb[2].iBitmap = STD_FILENEW;
-            tbb[2].fsState = TBSTATE_ENABLED;
-            tbb[2].fsStyle = TBSTYLE_BUTTON;
-            tbb[2].idCommand = ID_EXPORT;
-            /* seperator */
-            tbb[3].iBitmap = STD_FILENEW;
-            tbb[3].fsState = TBSTATE_ENABLED;
-            tbb[3].fsStyle = TBSTYLE_BUTTON;
-            tbb[3].idCommand = ID_START;
-            tbb[4].iBitmap = STD_FILENEW;
-            tbb[4].fsState = TBSTATE_ENABLED;
-            tbb[4].fsStyle = TBSTYLE_BUTTON;
-            tbb[4].idCommand = ID_STOP;
-            tbb[5].iBitmap = STD_FILENEW;
-            tbb[5].fsState = TBSTATE_ENABLED;
-            tbb[5].fsStyle = TBSTYLE_BUTTON;
-            tbb[5].idCommand = ID_PAUSE;
-            tbb[6].iBitmap = STD_FILENEW;
-            tbb[6].fsState = TBSTATE_ENABLED;
-            tbb[6].fsStyle = TBSTYLE_BUTTON;
-            tbb[6].idCommand = ID_RESTART;
-            SendMessage(hTool, TB_ADDBUTTONS, sizeof(tbb)/sizeof(TBBUTTON), (LPARAM)&tbb);
-
-			/* Create Status bar */
 			hStatus = CreateWindowEx(0,
                                      STATUSCLASSNAME,
                                      NULL,
@@ -156,24 +169,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			/* populate the list view with all services */
 			if (! RefreshServiceList() )
                 GetError();
+
 		}
 		break;
 		case WM_SIZE:
 		{
-			HWND hTool;
 			RECT rcTool;
 			int iToolHeight;
 
-			//HWND hStatus;
 			RECT rcStatus;
 			int iStatusHeight;
 
-			//HWND hListView;
 			int lvHeight;
 			RECT rcClient;
 
 			/* Size toolbar and get height */
-			hTool = GetDlgItem(hwnd, IDC_TOOLBAR);
 			SendMessage(hTool, TB_AUTOSIZE, 0, 0);
 
 			GetWindowRect(hTool, &rcTool);
@@ -265,9 +275,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             FreeMemory();
 			DestroyWindow(hwnd);
 		break;
+
 		case WM_DESTROY:
 			PostQuitMessage(0);
 		break;
+
 		case WM_COMMAND:
 			switch(LOWORD(wParam))
 			{
@@ -301,7 +313,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_HELP_ABOUT:
-                    DialogBox(GetModuleHandle(NULL),
+                    DialogBox(hInstance,
                               MAKEINTRESOURCE(IDD_ABOUTBOX),
                               hwnd,
                               AboutDialogProc);
@@ -312,6 +324,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			}
 		break;
+
 		default:
 			return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
@@ -319,7 +332,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-
+//#pragma warning(disable : 4100)
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 	LPSTR lpCmdLine, int nCmdShow)
 {
