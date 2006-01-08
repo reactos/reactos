@@ -82,6 +82,27 @@ CreateDIBPatternBrushPt(
  */
 HBRUSH
 STDCALL
+CreateHatchBrush(INT fnStyle,
+                 COLORREF clrref)
+{
+    return NtGdiCreateHatchBrushInternal(fnStyle, clrref, FALSE);
+}
+
+/*
+ * @implemented
+ */
+HBRUSH
+STDCALL
+CreatePatternBrush(HBITMAP hbmp)
+{
+    return NtGdiCreatePatternBrushInternal(hbmp, FALSE, FALSE);
+}
+
+/*
+ * @implemented
+ */
+HBRUSH
+STDCALL
 CreateSolidBrush(IN COLORREF crColor)
 {
     /* Call Server-Side API */
@@ -111,8 +132,15 @@ CreateBrushIndirect(
          break;
 
       case BS_PATTERN:
+         hBrush = NtGdiCreatePatternBrushInternal((HBITMAP)LogBrush->lbHatch, 
+                                                  FALSE, 
+                                                  FALSE);
+         break;
+
       case BS_PATTERN8X8:
-         hBrush = NtGdiCreatePatternBrush((HBITMAP)LogBrush->lbHatch);
+         hBrush = NtGdiCreatePatternBrushInternal((HBITMAP)LogBrush->lbHatch, 
+                                                  FALSE, 
+                                                  TRUE);
          break;
 
       case BS_SOLID:
@@ -120,7 +148,9 @@ CreateBrushIndirect(
          break;
 
       case BS_HATCHED:
-         hBrush = NtGdiCreateHatchBrush(LogBrush->lbHatch, LogBrush->lbColor);
+         hBrush = NtGdiCreateHatchBrushInternal(LogBrush->lbHatch, 
+                                                LogBrush->lbColor, 
+                                                FALSE);
          break;
          
       case BS_NULL:

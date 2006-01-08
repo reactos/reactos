@@ -72,13 +72,13 @@ CreateFontIndirectExW@4
 CreateFontIndirectW@4
 CreateFontW@56
 CreateHalftonePalette@4=NtGdiCreateHalftonePalette@4
-CreateHatchBrush@8=NtGdiCreateHatchBrush@8
+CreateHatchBrush@8
 CreateICA@16
 CreateICW@16
 CreateMetaFileA@4
 CreateMetaFileW@4
 CreatePalette@4=NtGdiCreatePalette@4
-CreatePatternBrush@4=NtGdiCreatePatternBrush@4
+CreatePatternBrush@4
 CreatePen@12=NtGdiCreatePen@12
 CreatePenIndirect@4=NtGdiCreatePenIndirect@4
 CreatePolyPolygonRgn@16=NtGdiCreatePolyPolygonRgn@16

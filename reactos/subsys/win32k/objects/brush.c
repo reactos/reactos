@@ -608,16 +608,19 @@ NtGdiCreateDIBBrush(
 }
 
 HBRUSH STDCALL
-NtGdiCreateHatchBrush(
-   INT Style,
-   COLORREF Color)
+NtGdiCreateHatchBrushInternal(
+   ULONG Style,
+   COLORREF Color,
+   BOOL bPen)
 {
    return IntGdiCreateHatchBrush(Style, Color);
 }
 
 HBRUSH STDCALL
-NtGdiCreatePatternBrush(
-   HBITMAP hBitmap)
+NtGdiCreatePatternBrushInternal(
+   HBITMAP hBitmap,
+   BOOL bPen,
+   BOOL b8x8)
 {
    return IntGdiCreatePatternBrush(hBitmap);
 }

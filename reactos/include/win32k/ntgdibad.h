@@ -281,12 +281,6 @@ NtGdiCreateEnhMetaFile (
 	LPCWSTR		Description
 	);
 
-/* Use NtGdiCreateHatchBrushInternal with FALSE at the end. */
-HBRUSH STDCALL
-NtGdiCreateHatchBrush(
-   INT Style,
-   COLORREF Color);
-
 /* Metafiles are user mode */
 HDC
 STDCALL
@@ -300,11 +294,6 @@ STDCALL
 NtGdiCreatePalette (
 	CONST PLOGPALETTE	lgpl
 	);
-
-/* Use NtGdiCreatePatternBrushInternal with false, false at the end. */
-HBRUSH STDCALL
-NtGdiCreatePatternBrush(
-   HBITMAP hBitmap);
 
 /* Use NtGdiCreatePen with -> as parameters. */
 HPEN STDCALL

@@ -35,11 +35,11 @@ NtGdiCreateEnhMetaFile			4
 NtGdiCreateFont				14
 NtGdiCreateFontIndirect			1
 NtGdiCreateHalftonePalette		1
-NtGdiCreateHatchBrush			2
+NtGdiCreateHatchBrushInternal		3
 NtGdiCreateIC				4
 NtGdiCreateMetaFile			1
 NtGdiCreatePalette			1
-NtGdiCreatePatternBrush			1
+NtGdiCreatePatternBrushInternal	3
 NtGdiCreatePen				3
 NtGdiCreatePenIndirect			1
 NtGdiCreatePolygonRgn			3
