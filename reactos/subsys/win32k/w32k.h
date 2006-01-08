@@ -24,12 +24,15 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
 #include <windef.h>
+#include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>
 #include <winuser.h>
 #include <prntfont.h>
 #include <dde.h>
 #include <wincon.h>
+#define _NOCSECT_TYPE
+#include <ddrawi.h>
 
 /* SEH Support with PSEH */
 #include <pseh/pseh.h>
@@ -56,4 +59,12 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Internal Win32K Header */
 #include "include/win32k.h"
+
+/* Undocumented stuff */
+typedef DRIVEROBJ *PDRIVEROBJ;
+#define WM_SYSTIMER 280
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#define M_PI_2 1.57079632679489661923
+#endif
 

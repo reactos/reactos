@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
+typedef BOOLEAN (STDCALL *PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFOBJ* InputObj,
                                         SURFOBJ* Mask,
                                         XLATEOBJ* ColorTranslation,
@@ -42,7 +42,7 @@ typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         BRUSHOBJ* Brush,
                                         POINTL* BrushOrigin,
                                         ROP4 Rop4);
-typedef BOOLEAN STDCALL (*PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
+typedef BOOLEAN (STDCALL *PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
                                             SURFOBJ* InputObj,
                                             SURFOBJ* Mask,
                                             CLIPOBJ* ClipRegion,
@@ -246,7 +246,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
    return Result;
 }
 
-INT abs(INT nm);
+INT __cdecl abs(INT nm);
 
 /*
  * @implemented

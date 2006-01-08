@@ -1176,6 +1176,7 @@ IntRoundRect(
   PGDIBRUSHOBJ   PenBrushObj, FillBrushObj;
   GDIBRUSHINST FillBrushInst, PenBrushInst;
   RECTL      RectBounds;
+  int potential_steps;
   int i, col, row, width, height, x1, x1start, x2, x2start, y1, y2;
   int xradius, yradius;
   //float aspect_square;
@@ -1338,7 +1339,7 @@ IntRoundRect(
       d -= ddec;
     }
 
-    int potential_steps = ( a_square * row ) / b_square - col + 1;
+    potential_steps = ( a_square * row ) / b_square - col + 1;
     while ( d < 0 && potential_steps-- )
     {
       d += dinc; /* two_b_square * (3 + (col << 1)); */

@@ -177,7 +177,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
    return Size;
 }
 
-static FASTCALL NTSTATUS
+static NTSTATUS
 PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    NCCALCSIZE_PARAMS *UnpackedNcCalcsize;
@@ -260,7 +260,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
    return STATUS_SUCCESS;
 }
 
-static FASTCALL NTSTATUS
+static NTSTATUS
 UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    NCCALCSIZE_PARAMS *UnpackedParams;
@@ -670,6 +670,7 @@ co_IntPeekMessage(PUSER_MESSAGE Msg,
    PUSER_MESSAGE Message;
    BOOL Present, RemoveMessages;
    USER_REFERENCE_ENTRY Ref;
+   USHORT HitTest;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -817,7 +818,6 @@ MessageFound:
          return TRUE;
       }
 
-      USHORT HitTest;
       if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
             co_IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, FALSE))
          /* FIXME - check message filter again, if the message doesn't match anymore,

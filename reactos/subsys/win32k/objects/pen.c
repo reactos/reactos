@@ -136,10 +136,10 @@ NtGdiExtCreatePen(
    IN BOOL bOldStylePen,
    IN OPTIONAL HBRUSH hbrush)
 {
+    LOGPEN LogPen;
    /* NOTE: This is HACK! */
     DPRINT1("FIXME: FIX CALLERS FIRST!\n");
     KEBUGCHECK(0);
-   LOGPEN LogPen;
 
    if (PenStyle & PS_USERSTYLE)
       PenStyle = (PenStyle & ~PS_STYLE_MASK) | PS_SOLID;

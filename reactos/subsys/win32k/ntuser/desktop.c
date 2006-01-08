@@ -1196,12 +1196,15 @@ NtUserPaintDesktop(HDC hDC)
    BOOL doPatBlt = TRUE;
    PWINDOW_OBJECT WndDesktop;
    int len;
+   COLORREF color_old;
+   UINT align_old;
+   int mode_old;
+   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
    DECLARE_RETURN(BOOL);
-   
+
    UserEnterExclusive();
    DPRINT("Enter NtUserPaintDesktop\n");
 
-   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
 
    IntGdiGetClipBox(hDC, &Rect);
 
@@ -1359,9 +1362,9 @@ NtUserPaintDesktop(HDC hDC)
             rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
          }
 
-         COLORREF color_old = NtGdiSetTextColor(hDC, RGB(255,255,255));
-         UINT align_old = NtGdiSetTextAlign(hDC, TA_RIGHT);
-         int mode_old = NtGdiSetBkMode(hDC, TRANSPARENT);
+         color_old = NtGdiSetTextColor(hDC, RGB(255,255,255));
+         align_old = NtGdiSetTextAlign(hDC, TA_RIGHT);
+         mode_old = NtGdiSetBkMode(hDC, TRANSPARENT);
 
          NtGdiTextOut(hDC, rect.right-16, rect.bottom-48, s_wszVersion, len);
 

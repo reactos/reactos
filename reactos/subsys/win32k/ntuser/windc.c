@@ -155,7 +155,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
    return(Dce);
 }
 
-VOID STATIC STDCALL
+VOID static STDCALL
 DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
                BOOL SetClipOrigin)
 {
@@ -185,7 +185,7 @@ DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
 }
 
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 DceDeleteClipRgn(DCE* Dce)
 {
    Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN);
@@ -205,7 +205,7 @@ DceDeleteClipRgn(DCE* Dce)
    Dce->DCXFlags |= DCX_DCEDIRTY;
 }
 
-STATIC INT FASTCALL
+static INT FASTCALL
 DceReleaseDC(DCE* dce, BOOL EndPaint)
 {
    if (DCX_DCEBUSY != (dce->DCXFlags & (DCX_DCEEMPTY | DCX_DCEBUSY)))
@@ -241,7 +241,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    return 1;
 }
 
-STATIC VOID FASTCALL
+static VOID FASTCALL
 DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 {
    HANDLE hRgnVisible = NULL;

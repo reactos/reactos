@@ -233,7 +233,7 @@ MouseThreadMain(PVOID StartContext)
 /* Returns a value that indicates if the key is a modifier key, and
  * which one.
  */
-STATIC UINT STDCALL
+static UINT STDCALL
 IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
 {
    if (InputData->Flags & KEY_E1)
@@ -280,7 +280,7 @@ IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
 /* Asks the keyboard driver to send a small table that shows which
  * lights should connect with which scancodes
  */
-STATIC NTSTATUS STDCALL
+static NTSTATUS STDCALL
 IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
                              PKEYBOARD_INDICATOR_TRANSLATION *IndicatorTrans)
 {
@@ -333,7 +333,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
 /* Sends the keyboard commands to turn on/off the lights.
  */
-STATIC NTSTATUS STDCALL
+static NTSTATUS STDCALL
 IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
                       PKEYBOARD_INPUT_DATA KeyInput,
                       PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans)
@@ -374,7 +374,7 @@ IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
    return STATUS_SUCCESS;
 }
 
-STATIC VOID STDCALL
+static VOID STDCALL
 IntKeyboardSendWinKeyMsg()
 {
    PWINDOW_OBJECT Window;
@@ -395,13 +395,13 @@ IntKeyboardSendWinKeyMsg()
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
-STATIC VOID STDCALL
+static VOID STDCALL
 co_IntKeyboardSendAltKeyMsg()
 {
    co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
 }
 
-STATIC VOID STDCALL
+static VOID STDCALL
 KeyboardThreadMain(PVOID StartContext)
 {
    UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");

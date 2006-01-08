@@ -36,10 +36,10 @@
 
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 
-STATIC PHOOKTABLE GlobalHooks;
+static PHOOKTABLE GlobalHooks;
 
 /* create a new hook table */
-STATIC FASTCALL PHOOKTABLE
+static PHOOKTABLE
 IntAllocHookTable(void)
 {
    PHOOKTABLE Table;
@@ -86,7 +86,7 @@ PHOOK FASTCALL IntGetHookObject(HHOOK hHook)
 
 
 /* create a new hook and add it to the specified table */
-STATIC FASTCALL PHOOK
+static PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
 {
    PHOOK Hook;
@@ -127,7 +127,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
 }
 
 /* get the hook table that a given hook belongs to */
-STATIC PHOOKTABLE FASTCALL
+static PHOOKTABLE FASTCALL
 IntGetTable(PHOOK Hook)
 {
    if (NULL == Hook->Thread || WH_KEYBOARD_LL == Hook->HookId ||
@@ -140,7 +140,7 @@ IntGetTable(PHOOK Hook)
 }
 
 /* get the first hook in the chain */
-STATIC PHOOK FASTCALL
+static PHOOK FASTCALL
 IntGetFirstHook(PHOOKTABLE Table, int HookId)
 {
    PLIST_ENTRY Elem = Table->Hooks[HOOKID_TO_INDEX(HookId)].Flink;
@@ -149,7 +149,7 @@ IntGetFirstHook(PHOOKTABLE Table, int HookId)
 }
 
 /* find the first non-deleted hook in the chain */
-STATIC PHOOK FASTCALL
+static PHOOK FASTCALL
 IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
 {
    PHOOK Hook;
@@ -167,7 +167,7 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
 }
 
 /* find the next hook in the chain, skipping the deleted ones */
-STATIC PHOOK FASTCALL
+static PHOOK FASTCALL
 IntGetNextHook(PHOOK Hook)
 {
    PHOOKTABLE Table = IntGetTable(Hook);
@@ -193,7 +193,7 @@ IntGetNextHook(PHOOK Hook)
 }
 
 /* free a hook, removing it from its chain */
-STATIC VOID FASTCALL
+static VOID FASTCALL
 IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 {
    RemoveEntryList(&Hook->Chain);
@@ -210,7 +210,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 }
 
 /* remove a hook, freeing it if the chain is not in use */
-STATIC FASTCALL VOID
+static VOID
 IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
 {
    PHOOKTABLE Table = IntGetTable(Hook);
@@ -232,7 +232,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
 }
 
 /* release a hook chain, removing deleted hooks if the use count drops to 0 */
-STATIC VOID FASTCALL
+static VOID FASTCALL
 IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
 {
    PLIST_ENTRY Elem;

@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-INT abs(INT nm);
+INT __cdecl abs(INT nm);
 
 #define FILL_EDGE_ALLOC_TAG 0x45465044
 
@@ -562,8 +562,7 @@ FillPolygon(
   int ScanLine;
 
   void
-  STDCALL
-  (*FillScanLine)(
+  (STDCALL *FillScanLine)(
     PDC dc,
     int ScanLine,
     FILL_EDGE* ActiveHead,

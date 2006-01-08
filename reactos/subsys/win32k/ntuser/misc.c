@@ -176,6 +176,7 @@ NtUserCallOneParam(
    DWORD Routine)
 {
    DECLARE_RETURN(DWORD);
+   PDC dc;
 
    DPRINT("Enter NtUserCallOneParam\n");
 
@@ -198,7 +199,7 @@ NtUserCallOneParam(
         return showpointer; /* No mouse */
       }
                        
-      PDC dc = DC_LockDc(Screen);
+      dc = DC_LockDc(Screen);
 
       if (!dc)
       {
@@ -1019,7 +1020,6 @@ IntSystemParametersInfo(
                         the bitmap. We'll change it's ownership to system and replace it with
                         the current wallpaper bitmap */
                      HBITMAP hOldBitmap, hNewBitmap;
-                     ASSERT(pvParam);
                      UNICODE_STRING Key = RTL_CONSTANT_STRING(L"Control Panel\\Desktop"); 
                      UNICODE_STRING Tile = RTL_CONSTANT_STRING(L"TileWallpaper"); 
                      UNICODE_STRING Style = RTL_CONSTANT_STRING(L"WallpaperStyle");
@@ -1034,7 +1034,8 @@ IntSystemParametersInfo(
                      ULONG ResLength = 0;
                      ULONG TileNum = 0;
                      ULONG StyleNum = 0;
-                     
+                     ASSERT(pvParam);
+
                      hNewBitmap = *(HBITMAP*)pvParam;
                      if(hNewBitmap != NULL)
                      {

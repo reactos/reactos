@@ -113,6 +113,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    SURFOBJ *soMask = NULL, *soColor = NULL;
    XLATEOBJ *XlateObj = NULL;
    HDC Screen;
+   PDC dc;
 
    CurInfo = IntGetSysCursorInfo(WinSta);
    OldCursor = CurInfo->CurrentCursorObject;
@@ -132,7 +133,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
          return (HCURSOR)0;
       }
       /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-      PDC dc = DC_LockDc(Screen);
+      dc = DC_LockDc(Screen);
 
       if (!dc)
       {
@@ -772,6 +773,7 @@ NtUserGetCursorInfo(
    PWINSTATION_OBJECT WinSta;
    NTSTATUS Status;
    PCURICON_OBJECT CurIcon;
+   HDC hDC;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserGetCursorInfo\n");
@@ -779,7 +781,6 @@ NtUserGetCursorInfo(
 
 #if 1
 
-   HDC hDC;
 
    /* FIXME - get the screen dc from the window station or desktop */
    if (!(hDC = IntGetScreenDC()))

@@ -159,7 +159,7 @@ NtGdiBitBlt(
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
-		BrushOrigin = BrushObj->ptOrigin;
+		BrushOrigin = *((PPOINTL)&BrushObj->ptOrigin);
 		IntGdiInitBrushInstance(&BrushInst, BrushObj, DCDest->XlateBrush);
 	}
 	else
@@ -400,7 +400,7 @@ done:
   return Ret;
 }
 
-static FASTCALL HBITMAP
+static HBITMAP
 IntCreateBitmapIndirect(CONST BITMAP *BM)
 {
    PBITMAPOBJ bmp;
@@ -655,6 +655,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	SURFOBJ *SurfaceObject;
 	HPALETTE Pal = 0;
 	XLATEOBJ *XlateObj;
+    HBITMAP hBmpTmp;
 
 	dc = DC_LockDc (hDC);
 
@@ -707,7 +708,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 			static const BITMAPINFOHEADER bih = { sizeof(BITMAPINFOHEADER), 1, 1, 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
 			BITMAPINFO bi;
 			RtlMoveMemory ( &(bi.bmiHeader), &bih, sizeof(bih) );
-			HBITMAP hBmpTmp = NtGdiCreateDIBitmap ( hDC, &bi.bmiHeader, 0, NULL, &bi, DIB_RGB_COLORS );
+			hBmpTmp = NtGdiCreateDIBitmap ( hDC, &bi.bmiHeader, 0, NULL, &bi, DIB_RGB_COLORS );
 			//HBITMAP hBmpTmp = NtGdiCreateBitmap ( 1, 1, 1, 32, NULL);
 			if ( hBmpTmp )
 			{
@@ -1349,8 +1350,9 @@ NtGdiAlphaBlend(
 	RECTL DestRect, SourceRect;
 	BOOL Status;
 	XLATEOBJ *XlateObj;
-	BLENDOBJ BlendObj = {BlendFunc};
+	BLENDOBJ BlendObj;
 	HPALETTE SourcePalette = 0, DestPalette = 0;
+    BlendObj.BlendFunction = BlendFunc;
 
 	DCDest = DC_LockDc(hDCDest);
 	if (NULL == DCDest)

@@ -1043,6 +1043,7 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    UINT ScanCode = (lParam >> 16) & 0xff;
    BOOL ExtKey = lParam & (1<<24) ? TRUE : FALSE;
    PKBDTABLES keyLayout;
+   VSC_LPWSTR *KeyNames;
    DECLARE_RETURN(DWORD);
    
    DPRINT("Enter NtUserGetKeyNameText\n");
@@ -1069,7 +1070,7 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
       VkCode = ScanToVk( ScanCode, ExtKey, keyLayout );
    }
 
-   VSC_LPWSTR *KeyNames = 0;
+   KeyNames = 0;
 
    if( CareVk != VkCode )
       ScanCode = VkToScan( VkCode, ExtKey, keyLayout );

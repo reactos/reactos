@@ -45,8 +45,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PDWORD addr = (PDWORD)((PWORD)((PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta) + x1);
 
- 
-#ifdef _M_IX86
+#if defined(_M_IX86) && !defined(_MSC_VER)
   /* This is about 10% faster than the generic C code below */
   LONG Count = x2 - x1;
 
@@ -97,7 +96,7 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 VOID
 DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
-#ifdef _M_IX86
+#if defined(_M_IX86) && !defined(_MSC_VER)
   asm volatile(
     "   testl %2, %2"       "\n\t"
     "   jle   2f"           "\n\t"
@@ -129,7 +128,7 @@ DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
       "r"(SurfObj->lDelta), "r"(y2 - y1), "a"(c)
     : "cc", "memory", "%ecx");
 #else
-  PBYTE byteaddr = SurfObj->pvScan0 + y1 * SurfObj->lDelta;
+  PBYTE byteaddr = (ULONG_PTR)SurfObj->pvScan0 + y1 * SurfObj->lDelta;
   PWORD addr = (PWORD)byteaddr + x;
   LONG lDelta = SurfObj->lDelta;
 
@@ -342,7 +341,7 @@ DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
   ULONG DestY;	
 
-#ifdef _M_IX86
+#if defined(_M_IX86) && !defined(_MSC_VER)
   /* This is about 10% faster than the generic C code below */ 
   ULONG delta = DestSurface->lDelta;
   ULONG width = (DestRect->right - DestRect->left) ;
@@ -865,13 +864,13 @@ typedef union {
    } col;
 } NICEPIXEL16;
 
-STATIC inline UCHAR
+static __inline UCHAR
 Clamp5(ULONG val)
 {
    return (val > 31) ? 31 : val;
 }
 
-STATIC inline UCHAR
+static __inline UCHAR
 Clamp6(ULONG val)
 {
    return (val > 63) ? 63 : val;

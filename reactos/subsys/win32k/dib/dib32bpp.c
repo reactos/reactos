@@ -41,8 +41,7 @@ DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return (ULONG)(*addr);
 }
 
-
-#ifdef _M_IX86
+#if defined(_M_IX86) && !defined(_MSC_VER)
 VOID
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {      
@@ -78,7 +77,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 VOID
 DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;  
+  PBYTE byteaddr = (ULONG_PTR)SurfObj->pvScan0 + y * SurfObj->lDelta;  
   PDWORD addr = (PDWORD)byteaddr + x1;		
   LONG cx = x1;
   while(cx < x2) 
@@ -744,7 +743,7 @@ typedef union {
    } col;
 } NICEPIXEL32;
 
-STATIC inline UCHAR
+static __inline UCHAR
 Clamp8(ULONG val)
 {
    return (val > 255) ? 255 : val;

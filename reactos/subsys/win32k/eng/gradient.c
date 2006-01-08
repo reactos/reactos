@@ -452,7 +452,7 @@ IntEngGradientFillTriangle(
 }
 
 
-BOOL FASTCALL STATIC
+BOOL static
 IntEngIsNULLTriangle(TRIVERTEX  *pVertex, GRADIENT_TRIANGLE *gt)
 {
   if(COMPAREVERTEX(VERTEX(Vertex1), VERTEX(Vertex2)))

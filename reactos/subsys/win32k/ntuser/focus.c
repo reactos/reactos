@@ -138,7 +138,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
    return NULL;
 }
 
-STATIC BOOL FASTCALL
+static BOOL FASTCALL
 co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
 {
    HWND hWnd = Window->hSelf;
@@ -438,12 +438,12 @@ CLEANUP:
 HWND STDCALL
 NtUserGetCapture(VOID)
 {
+   PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(HWND);
 
    DPRINT("Enter NtUserGetCapture\n");
    UserEnterShared();
 
-   PUSER_MESSAGE_QUEUE ThreadQueue;
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
    RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
 

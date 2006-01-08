@@ -43,7 +43,7 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
   ULONG Count = x2 - x1;
-#ifndef _M_IX86
+#if !defined(_M_IX86) || defined(_MSC_VER)
   ULONG MultiCount;
   ULONG Fill[3];
 #endif
@@ -78,7 +78,7 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
        *
        * So, taking endianness into account again, we need to fill with these
        * ULONGs: CABC BCAB ABCA */
-#ifdef _M_IX86
+#if defined(_M_IX86) && !defined(_MSC_VER)
        /* This is about 30% faster than the generic C code below */
        __asm__ __volatile__ (
 "      movl %1, %%ecx\n"
@@ -396,7 +396,7 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
   ULONG DestY;	
 
-#ifdef _M_IX86
+#if defined(_M_IX86) && !defined(_MSC_VER)
   PBYTE xaddr = (PBYTE)DestSurface->pvScan0 + DestRect->top * DestSurface->lDelta + (DestRect->left << 1) + DestRect->left;
   PBYTE addr;
   ULONG Count;
@@ -678,7 +678,7 @@ typedef union {
    } col;
 } NICEPIXEL32;
 
-STATIC inline UCHAR
+static __inline UCHAR
 Clamp8(ULONG val)
 {
    return (val > 255) ? 255 : val;

@@ -681,7 +681,7 @@ typedef union {
    } col;
 } NICEPIXEL16;
 
-STATIC inline UCHAR
+static __inline UCHAR
 Clamp8(ULONG val)
 {
    return (val > 255) ? 255 : val;

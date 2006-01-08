@@ -43,6 +43,8 @@ typedef USHORT RTL_ATOM, *PRTL_ATOM;
 //
 // Kernel Exported Object Types
 //
+extern POBJECT_TYPE NTSYSAPI ExDesktopObjectType;
+extern POBJECT_TYPE NTSYSAPI ExWindowStationObjectType;
 extern POBJECT_TYPE NTSYSAPI ExIoCompletionType;
 extern POBJECT_TYPE NTSYSAPI ExMutantObjectType;
 extern POBJECT_TYPE NTSYSAPI ExTimerType;
