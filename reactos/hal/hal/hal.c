@@ -133,6 +133,7 @@ HalAllocateCrashDumpRegisters(
   ULONG Unknown2)
 {
   UNIMPLEMENTED;
+  return NULL;
 }
 
 
