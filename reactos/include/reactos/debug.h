@@ -21,10 +21,11 @@
 #define CHECKED
 #endif
 
-#if 0
 /* Define DbgPrint/RtlAssert unless the NDK is used */
 #if !defined(_NTNDK_) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
 
+/* Make sure we have basic types (some people include us *before* SDK... */
+#if defined(_NTDEF_) || (defined _WINDEF_) || (defined _WINDEF_H)
 ULONG
 __cdecl
 DbgPrint(
@@ -40,8 +41,8 @@ RtlAssert(
     ULONG LineNumber,
     PCHAR Message
 );
-
 #endif
+
 #endif
 
 #ifndef assert
@@ -85,7 +86,7 @@ RtlAssert(
         #ifdef _MSC_VER
             static __inline void DPRINT ( const char* fmt, ... )
             {
-                UNREFERENCED_PARAMETER(fmt);
+                //UNREFERENCED_PARAMETER(fmt);
             }
         #else
             #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
