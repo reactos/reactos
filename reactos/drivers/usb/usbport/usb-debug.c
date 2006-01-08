@@ -20,6 +20,11 @@
 #include "../miniport/usb_wrapper.h"
 #endif
 
+void usb_show_device_descriptor(struct usb_device_descriptor *desc);
+void usb_show_config_descriptor(struct usb_config_descriptor *desc);
+void usb_show_interface_descriptor(struct usb_interface_descriptor *desc);
+void usb_show_endpoint_descriptor(struct usb_endpoint_descriptor *desc);
+
 static void usb_show_endpoint(struct usb_host_endpoint *endpoint)
 {
 	usb_show_endpoint_descriptor(&endpoint->desc);

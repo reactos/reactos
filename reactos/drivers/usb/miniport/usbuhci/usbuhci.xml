@@ -1,4 +1,5 @@
-<module name="usbuhci" type="kernelmodedriver" installbase="system32/drivers" installname="usbuhci.sys">
+<module name="usbuhci" type="kernelmodedriver" installbase="system32/drivers" installname="usbuhci.sys" allowwarnings="true">
+	<define name="DEBUG_MODE" />
 	<define name="__USE_W32API" />
 	<include>../linux</include>
 	<include base="usbminiportcommon"></include>

@@ -6,7 +6,7 @@ typedef struct _USBMP_DRIVER_EXTENSION
    //OHCI_HW_INITIALIZATION_DATA InitializationData;
    //PVOID HwContext;
    //UNICODE_STRING RegistryPath;
-
+   void *dummy;
 } USBMP_DRIVER_EXTENSION, *PUSBMP_DRIVER_EXTENSION;
 
 typedef struct _USBMP_DEVICE_EXTENSTION

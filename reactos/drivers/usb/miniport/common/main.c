@@ -12,8 +12,6 @@
  */
 
 #define NDEBUG
-#include <debug.h>
-
 #define INITGUID
 #include "usbcommon.h"
 
@@ -197,8 +195,7 @@ AddDevice(
 	UNICODE_STRING LinkDeviceName;
 	PUSBMP_DRIVER_EXTENSION DriverExtension;
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
-	static ULONG DeviceNumber = 0;
-	BOOL AlreadyRestarted = FALSE;
+	ULONG DeviceNumber;
 
 	// Allocate driver extension now
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
@@ -217,33 +214,18 @@ AddDevice(
 		}
 	}
 
-	/* Create a unicode device name. Allocate a new device number every time */
-	do
-	{
-		DeviceNumber++;
-		if (DeviceNumber == 9999)
-		{
-			/* Hmm. We don't have a free number. */ 
-			if (AlreadyRestarted)
-			{
-				Status = STATUS_UNSUCCESSFUL;
-				break;
-			}
-			/* Start again at DeviceNumber = 0 to find a free number */
-			DeviceNumber = 0;
-			AlreadyRestarted = TRUE;
-		}
-		swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
-		RtlInitUnicodeString(&DeviceName, DeviceBuffer);
+	// Create a unicode device name
+	DeviceNumber = 0; //TODO: Allocate new device number every time
+	swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
+	RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
-		Status = IoCreateDevice(DriverObject,
-					sizeof(USBMP_DEVICE_EXTENSION),
-					&DeviceName,
-					FILE_DEVICE_BUS_EXTENDER,
-					0,
-					FALSE,
-					&fdo);
-	} while (Status == STATUS_OBJECT_NAME_COLLISION);
+	Status = IoCreateDevice(DriverObject,
+				sizeof(USBMP_DEVICE_EXTENSION),
+				&DeviceName,
+				FILE_DEVICE_BUS_EXTENDER,
+				0,
+				FALSE,
+				&fdo);
 
 	if (!NT_SUCCESS(Status))
 	{
@@ -414,19 +396,19 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 	USBPORT_INTERFACE UsbPortInterface;
 	ULONG i;
 
-	DriverObject->DriverUnload = DriverUnload;
-	DriverObject->DriverExtension->AddDevice = AddDevice;
+	DriverObject->DriverUnload = (PDRIVER_UNLOAD)DriverUnload;
+	DriverObject->DriverExtension->AddDevice = (PDRIVER_ADD_DEVICE)AddDevice;
 
-	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-		DriverObject->MajorFunction[i] = IrpStub;
+	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+		DriverObject->MajorFunction[i] = (PDRIVER_DISPATCH)IrpStub;
 
-	DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchCreate;
-	DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchClose;
-	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DispatchCleanup;
-	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
-	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalDeviceControl;
-	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
-	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
+	DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)DispatchCreate;
+	DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)DispatchClose;
+	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)DispatchCleanup;
+	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)DispatchDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)DispatchInternalDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH)DispatchPnp;
+	DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH)DispatchPower;
 
 	// Register in usbcore.sys
 	UsbPortInterface.KbdConnectData = &KbdClassInformation;

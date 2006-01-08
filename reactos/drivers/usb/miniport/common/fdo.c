@@ -8,9 +8,7 @@
  *                  James Tabor (jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net)
  */
 
-#define NDEBUG
-#include <debug.h>
-
+//#define NDEBUG
 #include "usbcommon.h"
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
@@ -48,6 +46,35 @@ UsbMpGetUserBuffers(
 	}
 }
 
+BOOLEAN STDCALL
+HciInterruptService(IN PKINTERRUPT Interrupt,
+					IN OUT PVOID ServiceContext)
+{
+	DPRINT1("USBMP Interrupt\n");
+	return FALSE;
+}
+
+static VOID
+UsbMpRegisterIsr(PDEVICE_OBJECT DeviceObject)
+{
+	NTSTATUS Status;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	/* Connect interrupt and enable them */
+	DPRINT("IoConnectInterrupt: vec=0x%x,lev=0x%x,mode=0x%x,aff=0x%x\n", DeviceExtension->InterruptVector, DeviceExtension->InterruptLevel, DeviceExtension->InterruptMode, DeviceExtension->InterruptAffinity);
+	Status = IoConnectInterrupt(
+		&DeviceExtension->InterruptObject, (PKSERVICE_ROUTINE)HciInterruptService,
+		DeviceObject, NULL,
+		DeviceExtension->InterruptVector, DeviceExtension->InterruptLevel, DeviceExtension->InterruptLevel,
+		DeviceExtension->InterruptMode, DeviceExtension->InterruptShare,
+		DeviceExtension->InterruptAffinity, FALSE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("usbmp: IoConnectInterrupt() failed with status 0x%08x\n", Status);
+		return;
+	}
+}
+
 NTSTATUS STDCALL
 UsbMpFdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -74,7 +101,7 @@ UsbMpFdoStartDevice(
 	/*
 	* Store	some resources in the DeviceExtension.
 	*/
-	AllocatedResources = Stack->Parameters.StartDevice.AllocatedResources;
+	AllocatedResources = Stack->Parameters.StartDevice.AllocatedResourcesTranslated;
 	if (AllocatedResources != NULL)
 	{
 		CM_FULL_RESOURCE_DESCRIPTOR    *FullList;
@@ -116,6 +143,14 @@ UsbMpFdoStartDevice(
 				{
 					DeviceExtension->InterruptLevel  = Descriptor->u.Interrupt.Level;
 					DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+					DeviceExtension->InterruptAffinity = Descriptor->u.Interrupt.Affinity;
+					if (Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+						DeviceExtension->InterruptMode = Latched;
+					else
+						DeviceExtension->InterruptMode = LevelSensitive;
+
+					DeviceExtension->InterruptShare = (Descriptor->ShareDisposition == CmResourceShareShared);
+
 				}
 				else if (Descriptor->Type == CmResourceTypePort)
 				{
@@ -144,6 +179,11 @@ UsbMpFdoStartDevice(
 		DeviceExtension->BaseAddress,
 		DeviceExtension->BaseAddrLength);
 
+	/* Register Interrupt Service Routine */
+	UsbMpRegisterIsr(DeviceObject);
+
+	/* Acquire some information about the placement of the controller in the bus */
+
 	/* Get bus number from the upper level bus driver. */
 	Size = sizeof(ULONG);
 	Status = IoGetDeviceProperty(
@@ -160,6 +200,23 @@ UsbMpFdoStartDevice(
 	}
 
 	DPRINT("USBMP: Busnumber %d\n", DeviceExtension->SystemIoBusNumber);
+
+	/* Get bus device address from the upper level bus driver. */
+	Size = sizeof(ULONG);
+	IoGetDeviceProperty(
+		DeviceExtension->PhysicalDeviceObject,
+		DevicePropertyAddress,
+		Size,
+		&DeviceExtension->SystemIoSlotNumber,
+		&Size);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("USBMP: IoGetDeviceProperty DevicePropertyAddress failed\n");
+		DeviceExtension->SystemIoSlotNumber = 0;
+	}
+
+	DPRINT("USBMP: Slotnumber 0x%x\n", DeviceExtension->SystemIoSlotNumber);
 
 	/* Init wrapper with this object */
 	return InitLinuxWrapper(DeviceObject);

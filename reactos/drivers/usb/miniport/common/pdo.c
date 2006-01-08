@@ -9,8 +9,6 @@
  */
 
 #define NDEBUG
-#include <debug.h>
-
 #include "usbcommon.h"
 
 extern struct usb_driver hub_driver;
@@ -87,7 +85,8 @@ UsbMpPdoQueryId(
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	RtlInitUnicodeString(&String, NULL);
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceExtension->FunctionalDeviceObject->DeviceExtension;
-	roothub = ((struct usb_hcd*)DeviceExtension->pdev->data)->self.root_hub;
+	//roothub = ((struct usb_hcd*)DeviceExtension->pdev->data)->self.root_hub;
+	roothub = hcd_to_bus(DeviceExtension->pdev->data)->root_hub;
 
 	switch (IdType)
 	{
@@ -297,7 +296,7 @@ UsbMpPnpPdo(
 					
 					DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 					
-					Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &SourceString, &Description);
+					Status = _RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &SourceString, &Description);
 					if (NT_SUCCESS(Status))
 						Information = (ULONG_PTR)Description.Buffer;
 					break;

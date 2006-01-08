@@ -8,14 +8,21 @@
   Initialize device before it's used by a driver. Ask low-level code to enable I/O and memory.
   Wake up the device if it was suspended. Beware, this function can fail. 
  */
-static int __inline__ pci_enable_device(struct pci_dev *dev)
+static int __inline pci_enable_device(struct pci_dev *dev)
 {
 	DPRINT1("pci_enable_device() called...\n");
 	return 0;
 }
 
+static void __inline pci_disable_device(struct pci_dev *dev)
+{
+	DPRINT1("pci_disable_device() called...\n");
+	return;
+}
+
+
 // Get physical address where resource x resides
-static PHYSICAL_ADDRESS __inline__ pci_resource_start (struct pci_dev *dev, int x)
+static PHYSICAL_ADDRESS __inline pci_resource_start (struct pci_dev *dev, int x)
 {
 	PUSBMP_DEVICE_EXTENSION dev_ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 	DPRINT1("pci_resource_start() called, x=0x%x\n", x);
@@ -26,7 +33,7 @@ static PHYSICAL_ADDRESS __inline__ pci_resource_start (struct pci_dev *dev, int 
 }
 
 // ???
-static unsigned long __inline__ pci_resource_len (struct pci_dev *dev, int x)
+static unsigned long __inline pci_resource_len (struct pci_dev *dev, int x)
 {
 	PUSBMP_DEVICE_EXTENSION ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 
@@ -37,7 +44,7 @@ static unsigned long __inline__ pci_resource_len (struct pci_dev *dev, int x)
 }
 
 // ???
-static int __inline__ pci_resource_flags(struct pci_dev *dev, int x)
+static int __inline pci_resource_flags(struct pci_dev *dev, int x)
 {
 	PUSBMP_DEVICE_EXTENSION ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 	
@@ -50,10 +57,10 @@ static int __inline__ pci_resource_flags(struct pci_dev *dev, int x)
 /*
    Enables bus-mastering for device dev
 */
-static int __inline__ pci_set_master(struct pci_dev *dev) {return 0;}
+static int __inline pci_set_master(struct pci_dev *dev) {return 0;}
 
 // Store pointer to data for this device
-static int __inline__ pci_set_drvdata(struct pci_dev *dev, void* d)
+static int __inline pci_set_drvdata(struct pci_dev *dev, void* d)
 {
 	DPRINT1("pci_set_drvdata() called...\n");
 	dev->data=(void*)d;
@@ -61,9 +68,9 @@ static int __inline__ pci_set_drvdata(struct pci_dev *dev, void* d)
 }
 
 // Get pointer to previously saved data
-static void __inline__ *pci_get_drvdata(struct pci_dev *dev)
+static void __inline *pci_get_drvdata(struct pci_dev *dev)
 {
-	DPRINT1("pci_get_drvdata() called...\n");
+	DPRINT1("pci_get_drvdata() called, dev %p...\n", dev);
 	return dev->data;
 }
 
@@ -81,7 +88,7 @@ start  begin of region
 n      length of region  
 name   name of requester 
 */
-static int __inline__ request_region(PHYSICAL_ADDRESS addr, unsigned long len, const char * d)
+static int __inline request_region(PHYSICAL_ADDRESS addr, unsigned long len, const char * d)
 {
 	DPRINT1("request_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return ~0;
@@ -94,7 +101,7 @@ Parameters:
 addr  virtual start address 
 
 */
-static int __inline__ iounmap(void* p)
+static int __inline iounmap(void* p)
 {
 	DPRINT1("iounmap(): p=0x%x. FIXME - how to obtain len of mapped region?\n", p);
 	
@@ -110,7 +117,7 @@ Parameters:
 start  begin of region  
 n  length of region  
 */
-static int __inline__ release_region(PHYSICAL_ADDRESS addr, unsigned long len)
+static int __inline release_region(PHYSICAL_ADDRESS addr, unsigned long len)
 {
 	DPRINT1("release_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return 0;
@@ -124,7 +131,7 @@ start  begin of region
 n      length of region  
 name   name of requester 
 */
-static int __inline__ request_mem_region(PHYSICAL_ADDRESS addr, unsigned long len, const char * d)
+static int __inline request_mem_region(PHYSICAL_ADDRESS addr, unsigned long len, const char * d)
 {
 	DPRINT1("request_mem_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return 1;
@@ -140,7 +147,7 @@ size       size of physical address range
 Returns:
 virtual start address of mapped range
 */
-static void __inline__ *ioremap_nocache(PHYSICAL_ADDRESS addr, unsigned long len)
+static void __inline *ioremap_nocache(PHYSICAL_ADDRESS addr, unsigned long len)
 {
 	// MmMapIoSpace with NoCache param
 	DPRINT1("ioremap_nocache(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
@@ -155,7 +162,7 @@ Parameters:
 start  begin of region  
 n      length of region  
 */
-static int __inline__ release_mem_region(PHYSICAL_ADDRESS addr, unsigned long len)
+static int __inline release_mem_region(PHYSICAL_ADDRESS addr, unsigned long len)
 {
 	DPRINT1("release_mem_region(): addr=0x%lx, len=0x%lx\n", addr.u.LowPart, len);
 	return 0;

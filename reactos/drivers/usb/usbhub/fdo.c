@@ -153,7 +153,8 @@ UsbhubFdoQueryBusRelations(
 			else
 			{
 				/* Use values specified in the interface descriptor */
-				struct usb_host_interface *itf = PdoExtension->dev->actconfig->interface->altsetting;
+#if 0
+				struct usb_host_interface *itf = PdoExtension->dev->actconfig->interface;
 				sprintf(Buffer[0], "USB\\Class_%02x&SubClass_%02x&Prot_%02x",
 					itf->desc.bInterfaceClass,
 					itf->desc.bInterfaceSubClass,
@@ -163,6 +164,7 @@ UsbhubFdoQueryBusRelations(
 					itf->desc.bInterfaceSubClass);
 				sprintf(Buffer[2], "USB\\Class_%02x",
 					itf->desc.bInterfaceClass);
+#endif
 			}
 			Status = UsbhubInitMultiSzString(
 				&PdoExtension->CompatibleIds,
@@ -319,10 +321,10 @@ UsbhubDeviceControlFdo(
 				NodeInformation = (PUSB_NODE_INFORMATION)BufferOut;
 				dev = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->dev;
 				NodeInformation->NodeType = UsbHub;
-				RtlCopyMemory(
+				/*RtlCopyMemory(
 					&NodeInformation->u.HubInformation.HubDescriptor,
 					((struct usb_hub *)usb_get_intfdata(to_usb_interface(&dev->actconfig->interface[0].dev)))->descriptor,
-					sizeof(USB_HUB_DESCRIPTOR));
+					sizeof(USB_HUB_DESCRIPTOR));*/
 				NodeInformation->u.HubInformation.HubIsBusPowered = dev->actconfig->desc.bmAttributes & 0x80;
 				Information = sizeof(USB_NODE_INFORMATION);
 				Status = STATUS_SUCCESS;
@@ -378,7 +380,7 @@ UsbhubDeviceControlFdo(
 		case IOCTL_USB_GET_NODE_CONNECTION_INFORMATION:
 		{
 			PUSB_NODE_CONNECTION_INFORMATION ConnectionInformation;
-			ULONG i, j, k;
+			//ULONG i, j, k;
 			struct usb_device* dev;
 			ULONG NumberOfOpenPipes = 0;
 			ULONG SizeOfOpenPipesArray;
@@ -417,7 +419,7 @@ UsbhubDeviceControlFdo(
 				ConnectionInformation->DeviceIsHub = dev->descriptor.bDeviceClass == USB_CLASS_HUB;
 				ConnectionInformation->DeviceAddress = dev->devnum;
 				ConnectionInformation->ConnectionStatus = DeviceConnected;
-				
+#if 0
 				for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++)
 					for (j = 0; j < dev->actconfig->interface[i].num_altsetting; j++)
 						for (k = 0; k < dev->actconfig->interface[i].altsetting[j].desc.bNumEndpoints; k++)
@@ -434,6 +436,7 @@ UsbhubDeviceControlFdo(
 							}
 							NumberOfOpenPipes++;
 						}
+#endif
 				ConnectionInformation->NumberOfOpenPipes = NumberOfOpenPipes;
 				
 				Information = sizeof(USB_NODE_CONNECTION_INFORMATION);

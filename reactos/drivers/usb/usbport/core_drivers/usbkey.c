@@ -207,16 +207,26 @@ static void usb_kbd_disconnect(struct usb_interface *intf)
 
 static struct usb_device_id usb_kbd_id_table [] = {
 	{ USB_INTERFACE_INFO(3, 1, 1) },
-	{ }						/* Terminating entry */
+	{ 0 }						/* Terminating entry */
 };
 
 
 static struct usb_driver usb_kbd_driver = {
+	THIS_MODULE,
+	"keyboard",
+	usb_kbd_probe,
+	usb_kbd_disconnect,
+	NULL,
+	NULL,
+	NULL,
+	usb_kbd_id_table,
+/*
 	.owner =		THIS_MODULE,
 	.name =			"keyboard",
 	.probe =		usb_kbd_probe,
 	.disconnect =		usb_kbd_disconnect,
 	.id_table =		usb_kbd_id_table,
+*/
 };
 
 void UsbKeyBoardInit(void)

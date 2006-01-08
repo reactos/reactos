@@ -43,6 +43,7 @@
 #define USBFRNUM	6
 #define USBFLBASEADD	8
 #define USBSOF		12
+#define   USBSOF_DEFAULT	64	/* Frame length is exactly 1 ms */
 
 /* USB port status and control registers */
 #define USBPORTSC1	16
@@ -51,16 +52,25 @@
 #define   USBPORTSC_CSC		0x0002	/* Connect Status Change */
 #define   USBPORTSC_PE		0x0004	/* Port Enable */
 #define   USBPORTSC_PEC		0x0008	/* Port Enable Change */
-#define   USBPORTSC_LS		0x0030	/* Line Status */
+#define   USBPORTSC_DPLUS	0x0010	/* D+ high (line status) */
+#define   USBPORTSC_DMINUS	0x0020	/* D- high (line status) */
 #define   USBPORTSC_RD		0x0040	/* Resume Detect */
+#define   USBPORTSC_RES1	0x0080	/* reserved, always 1 */
 #define   USBPORTSC_LSDA	0x0100	/* Low Speed Device Attached */
 #define   USBPORTSC_PR		0x0200	/* Port Reset */
+/* OC and OCC from Intel 430TX and later (not UHCI 1.1d spec) */
 #define   USBPORTSC_OC		0x0400	/* Over Current condition */
+#define   USBPORTSC_OCC		0x0800	/* Over Current Change R/WC */
 #define   USBPORTSC_SUSP	0x1000	/* Suspend */
+#define   USBPORTSC_RES2	0x2000	/* reserved, write zeroes */
+#define   USBPORTSC_RES3	0x4000	/* reserved, write zeroes */
+#define   USBPORTSC_RES4	0x8000	/* reserved, write zeroes */
 
 /* Legacy support register */
 #define USBLEGSUP		0xc0
 #define   USBLEGSUP_DEFAULT	0x2000	/* only PIRQ enable set */
+#define   USBLEGSUP_RWC		0x8f00	/* the R/WC bits */
+#define   USBLEGSUP_RO		0x5040	/* R/O and reserved bits */
 
 #define UHCI_NULL_DATA_SIZE	0x7FF	/* for UHCI controller TD */
 
@@ -75,7 +85,7 @@
 #define CAN_SCHEDULE_FRAMES	1000	/* how far future frames can be scheduled */
 
 struct uhci_frame_list {
-	__u32 frame[UHCI_NUMFRAMES];
+	__le32 frame[UHCI_NUMFRAMES];
 
 	void *frame_cpu[UHCI_NUMFRAMES];
 
@@ -98,25 +108,36 @@ struct urb_priv;
  * In the frame list, qh->link maintains a list of QHs seen by the HC:
  *     skel1 --> ep1-qh --> ep2-qh --> ... --> skel2 --> ...
  */
+#include <pshpck16.h>
 struct uhci_qh {
 	/* Hardware fields */
-	__u32 link;			/* Next queue */
-	__u32 element;			/* Queue element pointer */
+	__le32 link;			/* Next queue */
+	__le32 element;			/* Queue element pointer */
 
 	/* Software fields */
 	dma_addr_t dma_handle;
 
-	struct usb_device *dev;
 	struct urb_priv *urbp;
 
 	struct list_head list;		/* P: uhci->frame_list_lock */
 	struct list_head remove_list;	/* P: uhci->remove_list_lock */
-} __attribute__((aligned(16)));
+};
+#include <poppack.h>
+
+/*
+ * We need a special accessor for the element pointer because it is
+ * subject to asynchronous updates by the controller
+ */
+static __le32 inline qh_element(struct uhci_qh *qh) {
+	__le32 element = qh->element;
+
+	barrier();
+	return element;
+}
 
 /*
  * for TD <status>:
  */
-#define td_status(td)		le32_to_cpu((td)->status)
 #define TD_CTRL_SPD		(1 << 29)	/* Short Packet Detect */
 #define TD_CTRL_C_ERR_MASK	(3 << 27)	/* Error Counter bits */
 #define TD_CTRL_C_ERR_SHIFT	27
@@ -136,7 +157,7 @@ struct uhci_qh {
 				 TD_CTRL_BABBLE | TD_CTRL_CRCTIME | TD_CTRL_BITSTUFF)
 
 #define uhci_maxerr(err)		((err) << TD_CTRL_C_ERR_SHIFT)
-#define uhci_status_bits(ctrl_sts)	((ctrl_sts) & 0xFE0000)
+#define uhci_status_bits(ctrl_sts)	((ctrl_sts) & 0xF60000)
 #define uhci_actual_length(ctrl_sts)	(((ctrl_sts) + 1) & TD_CTRL_ACTLEN_MASK) /* 1-based */
 
 /*
@@ -178,31 +199,45 @@ struct uhci_qh {
  * td->link points to either another TD (not necessarily for the same urb or
  * even the same endpoint), or nothing (PTR_TERM), or a QH (for queued urbs)
  */
+#include <pshpck16.h>
 struct uhci_td {
 	/* Hardware fields */
-	__u32 link;
-	__u32 status;
-	__u32 token;
-	__u32 buffer;
+	__le32 link;
+	__le32 status;
+	__le32 token;
+	__le32 buffer;
 
 	/* Software fields */
 	dma_addr_t dma_handle;
 
-	struct usb_device *dev;
 	struct urb *urb;
 
 	struct list_head list;		/* P: urb->lock */
+	struct list_head remove_list;	/* P: uhci->td_remove_list_lock */
 
 	int frame;			/* for iso: what frame? */
 	struct list_head fl_list;	/* P: uhci->frame_list_lock */
-} __attribute__((aligned(16)));
+};
+#include <poppack.h>
+
+/*
+ * We need a special accessor for the control/status word because it is
+ * subject to asynchronous updates by the controller
+ */
+static u32 inline td_status(struct uhci_td *td) {
+	__le32 status = td->status;
+
+	barrier();
+	return le32_to_cpu(status);
+}
+
 
 /*
  * The UHCI driver places Interrupt, Control and Bulk into QH's both
  * to group together TD's for one transfer, and also to faciliate queuing
  * of URB's. To make it easy to insert entries into the schedule, we have
- * a skeleton of QH's for each predefined Interrupt latency, low speed
- * control, high speed control and terminating QH (see explanation for
+ * a skeleton of QH's for each predefined Interrupt latency, low-speed
+ * control, full-speed control and terminating QH (see explanation for
  * the terminating QH below).
  *
  * When we want to add a new QH, we add it to the end of the list for the
@@ -217,9 +252,9 @@ struct uhci_td {
  * skel int32 QH
  * ...
  * skel int1 QH
- * skel low speed control QH
+ * skel low-speed control QH
  * dev 5 control QH
- * skel high speed control QH
+ * skel full-speed control QH
  * skel bulk QH
  * dev 1 bulk QH
  * dev 2 bulk QH
@@ -228,7 +263,7 @@ struct uhci_td {
  * The terminating QH is used for 2 reasons:
  * - To place a terminating TD which is used to workaround a PIIX bug
  *   (see Intel errata for explanation)
- * - To loop back to the high speed control queue for full speed bandwidth
+ * - To loop back to the full-speed control queue for full-speed bandwidth
  *   reclamation
  *
  * Isochronous transfers are stored before the start of the skeleton
@@ -248,7 +283,7 @@ struct uhci_td {
 #define skel_int2_qh		skelqh[6]
 #define skel_int1_qh		skelqh[7]
 #define skel_ls_control_qh	skelqh[8]
-#define skel_hs_control_qh	skelqh[9]
+#define skel_fs_control_qh	skelqh[9]
 #define skel_bulk_qh		skelqh[10]
 #define skel_term_qh		skelqh[11]
 
@@ -286,134 +321,148 @@ static inline int __interval_to_skel(int interval)
 }
 
 /*
- * Device states for the host controller.
+ * States for the root hub.
  *
  * To prevent "bouncing" in the presence of electrical noise,
- * we insist on a 1-second "grace" period, before switching to
- * the RUNNING or SUSPENDED states, during which the state is
- * not allowed to change.
- *
- * The resume process is divided into substates in order to avoid
- * potentially length delays during the timer handler.
- *
- * States in which the host controller is halted must have values <= 0.
+ * when there are no devices attached we delay for 1 second in the
+ * RUNNING_NODEVS state before switching to the AUTO_STOPPED state.
+ * 
+ * (Note that the AUTO_STOPPED state won't be necessary once the hub
+ * driver learns to autosuspend.)
  */
-enum uhci_state {
-	UHCI_RESET,
-	UHCI_RUNNING_GRACE,		/* Before RUNNING */
-	UHCI_RUNNING,			/* The normal state */
-	UHCI_SUSPENDING_GRACE,		/* Before SUSPENDED */
-	UHCI_SUSPENDED = -10,		/* When no devices are attached */
-	UHCI_RESUMING_1,
-	UHCI_RESUMING_2
-};
+enum uhci_rh_state {
+	/* In the following states the HC must be halted.
+	 * These two must come first */
+	UHCI_RH_RESET,
+	UHCI_RH_SUSPENDED,
 
-#define hcd_to_uhci(hcd_ptr) container_of(hcd_ptr, struct uhci_hcd, hcd)
+	UHCI_RH_AUTO_STOPPED,
+	UHCI_RH_RESUMING,
+
+	/* In this state the HC changes from running to halted,
+	 * so it can legally appear either way. */
+	UHCI_RH_SUSPENDING,
+
+	/* In the following states it's an error if the HC is halted.
+	 * These two must come last */
+	UHCI_RH_RUNNING,		/* The normal state */
+	UHCI_RH_RUNNING_NODEVS,		/* Running with no devices attached */
+};
 
 /*
  * This describes the full uhci information.
- *
- * Note how the "proper" USB information is just
- * a subset of what the full implementation needs.
  */
 struct uhci_hcd {
-	struct usb_hcd hcd;
-
-#ifdef CONFIG_PROC_FS
-	/* procfs */
-	struct proc_dir_entry *proc_entry;
-#endif
+	void *dentry;
 
 	/* Grabbed from PCI */
 	unsigned long io_addr;
 
-	struct pci_pool *qh_pool;
-	struct pci_pool *td_pool;
-
-	struct usb_bus *bus;
+	struct dma_pool *qh_pool;
+	struct dma_pool *td_pool;
 
 	struct uhci_td *term_td;	/* Terminating TD, see UHCI bug */
 	struct uhci_qh *skelqh[UHCI_NUM_SKELQH];	/* Skeleton QH's */
 
-	spinlock_t frame_list_lock;
-	struct uhci_frame_list *fl;		/* P: uhci->frame_list_lock */
-	int fsbr;				/* Full speed bandwidth reclamation */
+	spinlock_t lock;
+	struct uhci_frame_list *fl;		/* P: uhci->lock */
+	int fsbr;				/* Full-speed bandwidth reclamation */
 	unsigned long fsbrtimeout;		/* FSBR delay */
 
-	enum uhci_state state;			/* FIXME: needs a spinlock */
-	unsigned long state_end;		/* Time of next transition */
-	int resume_detect;			/* Need a Global Resume */
+	enum uhci_rh_state rh_state;
+	unsigned long auto_stop_time;		/* When to AUTO_STOP */
+
+	unsigned int frame_number;		/* As of last check */
+	unsigned int is_stopped;
+#define UHCI_IS_STOPPED		9999		/* Larger than a frame # */
+
+	unsigned int scan_in_progress:1;	/* Schedule scan is running */
+	unsigned int need_rescan:1;		/* Redo the schedule scan */
+	unsigned int hc_inaccessible:1;		/* HC is suspended or dead */
+	unsigned int working_RD:1;		/* Suspended root hub doesn't
+						   need to be polled */
+
+	/* Support for port suspend/resume/reset */
+	unsigned long port_c_suspend;		/* Bit-arrays of ports */
+	unsigned long suspended_ports;
+	unsigned long resuming_ports;
+	unsigned long ports_timeout;		/* Time to stop signalling */
 
 	/* Main list of URB's currently controlled by this HC */
-	spinlock_t urb_list_lock;
-	struct list_head urb_list;		/* P: uhci->urb_list_lock */
+	struct list_head urb_list;		/* P: uhci->lock */
 
 	/* List of QH's that are done, but waiting to be unlinked (race) */
-	spinlock_t qh_remove_list_lock;
-	struct list_head qh_remove_list;	/* P: uhci->qh_remove_list_lock */
+	struct list_head qh_remove_list;	/* P: uhci->lock */
+	unsigned int qh_remove_age;		/* Age in frames */
+
+	/* List of TD's that are done, but waiting to be freed (race) */
+	struct list_head td_remove_list;	/* P: uhci->lock */
+	unsigned int td_remove_age;		/* Age in frames */
 
 	/* List of asynchronously unlinked URB's */
-	spinlock_t urb_remove_list_lock;
-	struct list_head urb_remove_list;	/* P: uhci->urb_remove_list_lock */
+	struct list_head urb_remove_list;	/* P: uhci->lock */
+	unsigned int urb_remove_age;		/* Age in frames */
 
 	/* List of URB's awaiting completion callback */
-	spinlock_t complete_list_lock;
-	struct list_head complete_list;		/* P: uhci->complete_list_lock */
+	struct list_head complete_list;		/* P: uhci->lock */
 
-	int rh_numports;
+	int rh_numports;			/* Number of root-hub ports */
 
-	struct timer_list stall_timer;
+	wait_queue_head_t waitqh;		/* endpoint_disable waiters */
 };
+
+/* Convert between a usb_hcd pointer and the corresponding uhci_hcd */
+static inline struct uhci_hcd *hcd_to_uhci(struct usb_hcd *hcd)
+{
+	return (struct uhci_hcd *) (hcd->hcd_priv);
+}
+static inline struct usb_hcd *uhci_to_hcd(struct uhci_hcd *uhci)
+{
+	return container_of((void *) uhci, struct usb_hcd, hcd_priv);
+}
+
+#define uhci_dev(u)	(uhci_to_hcd(u)->self.controller)
 
 struct urb_priv {
 	struct list_head urb_list;
 
 	struct urb *urb;
-	struct usb_device *dev;
 
 	struct uhci_qh *qh;		/* QH for this URB */
 	struct list_head td_list;	/* P: urb->lock */
 
-	int fsbr : 1;			/* URB turned on FSBR */
-	int fsbr_timeout : 1;		/* URB timed out on FSBR */
-	int queued : 1;			/* QH was queued (not linked in) */
-	int short_control_packet : 1;	/* If we get a short packet during */
-					/*  a control transfer, retrigger */
-					/*  the status phase */
-
-	int status;			/* Final status */
+	unsigned fsbr : 1;		/* URB turned on FSBR */
+	unsigned fsbr_timeout : 1;	/* URB timed out on FSBR */
+	unsigned queued : 1;		/* QH was queued (not linked in) */
+	unsigned short_control_packet : 1;	/* If we get a short packet during */
+						/*  a control transfer, retrigger */
+						/*  the status phase */
 
 	unsigned long inserttime;	/* In jiffies */
 	unsigned long fsbrtime;		/* In jiffies */
 
 	struct list_head queue_list;	/* P: uhci->frame_list_lock */
-	struct list_head complete_list;	/* P: uhci->complete_list_lock */
 };
 
 /*
  * Locking in uhci.c
  *
- * spinlocks are used extensively to protect the many lists and data
- * structures we have. It's not that pretty, but it's necessary. We
- * need to be done with all of the locks (except complete_list_lock) when
- * we call urb->complete. I've tried to make it simple enough so I don't
- * have to spend hours racking my brain trying to figure out if the
- * locking is safe.
+ * Almost everything relating to the hardware schedule and processing
+ * of URBs is protected by uhci->lock.  urb->status is protected by
+ * urb->lock; that's the one exception.
  *
- * Here's the safe locking order to prevent deadlocks:
+ * To prevent deadlocks, never lock uhci->lock while holding urb->lock.
+ * The safe order of locking is:
  *
- * #1 uhci->urb_list_lock
+ * #1 uhci->lock
  * #2 urb->lock
- * #3 uhci->urb_remove_list_lock, uhci->frame_list_lock,
- *   uhci->qh_remove_list_lock
- * #4 uhci->complete_list_lock
- *
- * If you're going to grab 2 or more locks at once, ALWAYS grab the lock
- * at the lowest level FIRST and NEVER grab locks at the same level at the
- * same time.
- *
- * So, if you need uhci->urb_list_lock, grab it before you grab urb->lock
  */
 
-#endif
 
+/* Some special IDs */
+
+#define PCI_VENDOR_ID_GENESYS		0x17a0
+#define PCI_DEVICE_ID_GL880S_UHCI	0x8083
+#define PCI_DEVICE_ID_GL880S_EHCI	0x8084
+
+#endif

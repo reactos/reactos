@@ -1,4 +1,6 @@
+//#include <stdio.h>
 //#include <stdlib.h>
+//#include <string.h>
 //#include <ntos/types.h>
 //#include <extypes.h>
 
@@ -7,11 +9,38 @@
         Lots of definitions should go to corresponding files
 */
 
-#include <ntifs.h>
+//#include <ntifs.h>
+#include "ntddk.h"
 #include <kbdmou.h>
 #include <debug.h>
 
+// a couple of defines
+#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+
+// Define bit scan intrinsics, so we can use them without the need to include wnet ddk
+#if defined(_MSC_VER)
+#define BitScanForward _BitScanForward
+#define BitScanReverse _BitScanReverse
+BOOLEAN _BitScanForward (OUT ULONG *Index, IN ULONG Mask);
+BOOLEAN _BitScanReverse (OUT ULONG *Index, IN ULONG Mask);
+#pragma intrinsic(_BitScanForward)
+#pragma intrinsic(_BitScanReverse)
+
+#define inline __inline
+#endif
+
+
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+/*
+ * FUNCTION: Assert a maximum value for the current irql
+ * ARGUMENTS:
+ *        x = Maximum irql
+ */
+#define ASSERT_IRQL_LESS_OR_EQUAL(x) ASSERT(KeGetCurrentIrql()<=(x))
+#define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))
+#define ASSERT_IRQL_LESS(x) ASSERT(KeGetCurrentIrql()<(x))
+
 
 void wait_ms(int mils);
 void my_udelay(int us);

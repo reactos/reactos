@@ -69,10 +69,10 @@ DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 {
-	DriverObject->DriverUnload = DriverUnload;
-	DriverObject->DriverExtension->AddDevice = AddDevice;
-	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
-	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
+	DriverObject->DriverUnload = (PDRIVER_UNLOAD)DriverUnload;
+	DriverObject->DriverExtension->AddDevice = (PDRIVER_ADD_DEVICE)AddDevice;
+	DriverObject->MajorFunction[IRP_MJ_PNP] = (PDRIVER_DISPATCH)DispatchPnp;
+	DriverObject->MajorFunction[IRP_MJ_POWER] = (PDRIVER_DISPATCH)DispatchPower;
 
 	return STATUS_SUCCESS;
 }

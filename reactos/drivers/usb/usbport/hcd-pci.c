@@ -38,8 +38,7 @@
 #include "hcd.h"
 #endif
 
-
-/* PCI-based HCs are normal, but custom bus glue should be ok */
+/* PCI-based HCs are common, but plenty of non-PCI HCs are used too */
 
 
 /*-------------------------------------------------------------------------*/
@@ -63,13 +62,8 @@ int STDCALL
 usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
 {
 	struct hc_driver	*driver;
-	PHYSICAL_ADDRESS	resource;
-	unsigned long		len;
-	void			*base;
 	struct usb_hcd		*hcd;
-	int			retval, region;
-	char			buf [8];
-	//char			*bufp = buf;
+	int			retval;
 
 	printk("usbcore: usb_hcd_pci_probe() called\n");
 
@@ -81,122 +75,85 @@ usb_hcd_pci_probe (struct pci_dev *dev, const struct pci_device_id *id)
 
 	if (pci_enable_device (dev) < 0)
 		return -ENODEV;
-
+	dev->current_state = PCI_D0;
+	//dev->dev.power.power_state = PMSG_ON;
+	
         if (!dev->irq) {
         	err ("Found HC with no IRQ.  Check BIOS/PCI %s setup!",
 			dev->slot_name);
-   	        return -ENODEV;
+   	        retval = -ENODEV;
+			goto err1;
         }
 
+	hcd = usb_create_hcd (driver, &dev->dev, pci_name(dev));
+	if (!hcd) {
+		retval = -ENOMEM;
+		goto err1;
+	}
+
 	if (driver->flags & HCD_MEMORY) {	// EHCI, OHCI
-		region = 0;
-		resource = pci_resource_start (dev, 0);
-		len = pci_resource_len (dev, 0);
-		if (!request_mem_region (resource, len, driver->description)) {
-			dbg ("controller already in use");
-			return -EBUSY;
+		hcd->rsrc_start = pci_resource_start (dev, 0);
+		hcd->rsrc_len = pci_resource_len (dev, 0);
+		if (!request_mem_region (hcd->rsrc_start, hcd->rsrc_len,
+				driver->description)) {
+			dev_dbg (&dev->dev, "controller already in use\n");
+			retval = -EBUSY;
+			goto err2;
 		}
-		base = ioremap_nocache (resource, len);
-		if (base == NULL) {
-			dbg ("error mapping memory");
+		hcd->regs = ioremap_nocache (hcd->rsrc_start, hcd->rsrc_len);
+		if (hcd->regs == NULL) {
+			dev_dbg (&dev->dev, "error mapping memory\n");
 			retval = -EFAULT;
-clean_1:
-			release_mem_region (resource, len);
-			err ("init %s fail, %d", dev->slot_name, retval);
-			return retval;
+			goto err3;
 		}
 
 	} else { 				// UHCI
-		//resource = 0;
-		len = 0;
-		for (region = 0; region < PCI_ROM_RESOURCE; region++) {
-			if (!(pci_resource_flags (dev, region) & IORESOURCE_IO))
-				continue;
+		int	region;
 
-			resource = pci_resource_start (dev, region);
-			len = pci_resource_len (dev, region);
-			if (request_region (resource, len,
+		for (region = 0; region < PCI_ROM_RESOURCE; region++) {
+			//if (!(pci_resource_flags (dev, region) & IORESOURCE_IO))
+			//	continue;
+
+			hcd->rsrc_start = pci_resource_start (dev, region);
+			hcd->rsrc_len = pci_resource_len (dev, region);
+			if (request_region (hcd->rsrc_start, hcd->rsrc_len,
 					driver->description))
 				break;
 		}
 		if (region == PCI_ROM_RESOURCE) {
 			dbg ("no i/o regions available");
-			return -EBUSY;
+			retval = -EBUSY;
+			goto err1;
 		}
-		base = (void *) (ULONG_PTR)resource.u.LowPart;
 	}
 
 	// driver->start(), later on, will transfer device from
 	// control by SMM/BIOS to control by Linux (if needed)
-
+	pci_set_drvdata (dev, hcd); // ReactOS-specific, needed in order to get pointer to usb_hcd in any place.
 	pci_set_master (dev);
 
-	hcd = driver->hcd_alloc ();
-	if (hcd == NULL){
-		dbg ("hcd alloc fail");
-		retval = -ENOMEM;
-clean_2:
-		if (driver->flags & HCD_MEMORY) {
-			iounmap (base);
-			goto clean_1;
-		} else {
-			release_region (resource, len);
-			err ("init %s fail, %d", dev->slot_name, retval);
-			return retval;
-		}
-	}
-	pci_set_drvdata (dev, hcd);
-	hcd->driver = driver;
-	hcd->description = driver->description;
-	hcd->pdev = dev;
-	hcd->self.bus_name = dev->slot_name;
-	hcd->product_desc = dev->dev.name;
-	hcd->self.controller = &dev->dev;
-	hcd->controller = hcd->self.controller;
-
-	if ((retval = hcd_buffer_create (hcd)) != 0) {
-clean_3:
-		driver->hcd_free (hcd);
-		goto clean_2;
-	}
-
-	dev_info (hcd->controller, "%s\n", hcd->product_desc);
-
-#ifndef __sparc__
-	sprintf (buf, "%d", dev->irq);
-#else
-	bufp = __irq_itoa(dev->irq);
-#endif
-	if (request_irq (dev->irq, usb_hcd_irq, SA_SHIRQ, hcd->description, hcd)
-			!= 0) {
-		dev_err (hcd->controller,
-				"request interrupt %s failed\n", buf);
-		retval = -EBUSY;
-		goto clean_3;
-	}
-	hcd->irq = dev->irq;
-
-	hcd->regs = base;
-	hcd->region = region;
-	dev_info (hcd->controller, "irq %s, %s %p\n", buf,
-		(driver->flags & HCD_MEMORY) ? "pci mem" : "io base",
-		base);
-
-	usb_bus_init (&hcd->self);
-	hcd->self.op = &usb_hcd_operations;
-	hcd->self.hcpriv = (void *) hcd;
-
-	INIT_LIST_HEAD (&hcd->dev_list);
-
-	usb_register_bus (&hcd->self);
-
-	if ((retval = driver->start (hcd)) < 0)
-		usb_hcd_pci_remove (dev);
+	retval = usb_add_hcd (hcd, dev->irq, SA_SHIRQ);
+	if (retval != 0)
+		goto err4;
 
 	//ReactOS-specific: Init core drivers here
 	UsbKeyBoardInit();
 	UsbMouseInit();
 
+	return retval;
+
+ err4:
+	if (driver->flags & HCD_MEMORY) {
+		iounmap (hcd->regs);
+ err3:
+		release_mem_region (hcd->rsrc_start, hcd->rsrc_len);
+	} else
+		release_region (hcd->rsrc_start, hcd->rsrc_len);
+ err2:
+	usb_put_hcd (hcd);
+ err1:
+	pci_disable_device (dev);
+	dev_err (&dev->dev, "init %s fail, %d\n", pci_name(dev), retval);
 	return retval;
 } 
 EXPORT_SYMBOL (usb_hcd_pci_probe);
@@ -224,98 +181,121 @@ void STDCALL usb_hcd_pci_remove (struct pci_dev *dev)
 	hcd = pci_get_drvdata(dev);
 	if (!hcd)
 		return;
-	dev_info (hcd->controller, "remove, state %x\n", hcd->state);
 
-	if (in_interrupt ())
-		BUG ();
-
-	hub = hcd->self.root_hub;
-	hcd->state = USB_STATE_QUIESCING;
-
-	dev_dbg (hcd->controller, "roothub graceful disconnect\n");
-	usb_disconnect (&hub);
-
-	hcd->driver->stop (hcd);
-	hcd_buffer_destroy (hcd);
-	hcd->state = USB_STATE_HALT;
-	pci_set_drvdata (dev, 0);
-
-	free_irq (hcd->irq, hcd);
+	usb_remove_hcd (hcd);
 	if (hcd->driver->flags & HCD_MEMORY) {
 		iounmap (hcd->regs);
-		release_mem_region (pci_resource_start (dev, 0),
-			pci_resource_len (dev, 0));
+		release_mem_region (hcd->rsrc_start, hcd->rsrc_len);
 	} else {
-		release_region (pci_resource_start (dev, hcd->region),
-			pci_resource_len (dev, hcd->region));
+		release_region (hcd->rsrc_start, hcd->rsrc_len);
 	}
-
-	usb_deregister_bus (&hcd->self);
-	if (atomic_read (&hcd->self.refcnt) != 1) {
-		dev_warn (hcd->controller,
-			"dangling refs (%d) to bus %d!\n",
-			atomic_read (&hcd->self.refcnt) - 1,
-			hcd->self.busnum);
-	}
-	hcd->driver->hcd_free (hcd);
+	usb_put_hcd (hcd);
+	pci_disable_device(dev);
 }
 EXPORT_SYMBOL (usb_hcd_pci_remove);
 
 
 #ifdef	CONFIG_PM
 
-/*
- * Some "sleep" power levels imply updating struct usb_driver
- * to include a callback asking hcds to do their bit by checking
- * if all the drivers can suspend.  Gets involved with remote wakeup.
- *
- * If there are pending urbs, then HCs will need to access memory,
- * causing extra power drain.  New sleep()/wakeup() PM calls might
- * be needed, beyond PCI suspend()/resume().  The root hub timer
- * still be accessing memory though ...
- *
- * FIXME:  USB should have some power budgeting support working with
- * all kinds of hubs.
- *
- * FIXME:  This assumes only D0->D3 suspend and D3->D0 resume.
- * D1 and D2 states should do something, yes?
- *
- * FIXME:  Should provide generic enable_wake(), calling pci_enable_wake()
- * for all supported states, so that USB remote wakeup can work for any
- * devices that support it (and are connected via powered hubs).
- *
- * FIXME:  resume doesn't seem to work right any more...
- */
-
-
-// 2.4 kernels have issued concurrent resumes (w/APM)
-// we defend against that error; PCI doesn't yet.
-
 /**
  * usb_hcd_pci_suspend - power management suspend of a PCI-based HCD
  * @dev: USB Host Controller being suspended
+ * @message: semantics in flux
  *
  * Store this function in the HCD's struct pci_driver as suspend().
  */
-int usb_hcd_pci_suspend (struct pci_dev *dev, u32 state)
+int usb_hcd_pci_suspend (struct pci_dev *dev, pm_message_t message)
 {
 	struct usb_hcd		*hcd;
-	int			retval;
+	int			retval = 0;
+	int			has_pci_pm;
 
 	hcd = pci_get_drvdata(dev);
-	dev_info (hcd->controller, "suspend to state %d\n", state);
 
-	pci_save_state (dev, hcd->pci_state);
+	/* FIXME until the generic PM interfaces change a lot more, this
+	 * can't use PCI D1 and D2 states.  For example, the confusion
+	 * between messages and states will need to vanish, and messages
+	 * will need to provide a target system state again.
+	 *
+	 * It'll be important to learn characteristics of the target state,
+	 * especially on embedded hardware where the HCD will often be in
+	 * charge of an external VBUS power supply and one or more clocks.
+	 * Some target system states will leave them active; others won't.
+	 * (With PCI, that's often handled by platform BIOS code.)
+	 */
 
-	// FIXME for all connected devices, leaf-to-root:
-	// driver->suspend()
-	// proposed "new 2.5 driver model" will automate that
+	/* even when the PCI layer rejects some of the PCI calls
+	 * below, HCs can try global suspend and reduce DMA traffic.
+	 * PM-sensitive HCDs may already have done this.
+	 */
+	has_pci_pm = pci_find_capability(dev, PCI_CAP_ID_PM);
 
-	/* driver may want to disable DMA etc */
-	retval = hcd->driver->suspend (hcd, state);
-	hcd->state = USB_STATE_SUSPENDED;
+	switch (hcd->state) {
 
- 	pci_set_power_state (dev, state);
+	/* entry if root hub wasn't yet suspended ... from sysfs,
+	 * without autosuspend, or if USB_SUSPEND isn't configured.
+	 */
+	case HC_STATE_RUNNING:
+		hcd->state = HC_STATE_QUIESCING;
+		retval = hcd->driver->suspend (hcd, message);
+		if (retval) {
+			dev_dbg (hcd->self.controller, 
+					"suspend fail, retval %d\n",
+					retval);
+			break;
+		}
+		hcd->state = HC_STATE_SUSPENDED;
+		/* FALLTHROUGH */
+
+	/* entry with CONFIG_USB_SUSPEND, or hcds that autosuspend: the
+	 * controller and/or root hub will already have been suspended,
+	 * but it won't be ready for a PCI resume call.
+	 *
+	 * FIXME only CONFIG_USB_SUSPEND guarantees hub_suspend() will
+	 * have been called, otherwise root hub timers still run ...
+	 */
+	case HC_STATE_SUSPENDED:
+		/* no DMA or IRQs except when HC is active */
+		if (dev->current_state == PCI_D0) {
+			pci_save_state (dev);
+			pci_disable_device (dev);
+		}
+
+		if (!has_pci_pm) {
+			dev_dbg (hcd->self.controller, "--> PCI D0/legacy\n");
+			break;
+		}
+
+		/* NOTE:  dev->current_state becomes nonzero only here, and
+		 * only for devices that support PCI PM.  Also, exiting
+		 * PCI_D3 (but not PCI_D1 or PCI_D2) is allowed to reset
+		 * some device state (e.g. as part of clock reinit).
+		 */
+		retval = pci_set_power_state (dev, PCI_D3hot);
+		if (retval == 0) {
+			dev_dbg (hcd->self.controller, "--> PCI D3\n");
+			retval = pci_enable_wake (dev, PCI_D3hot, hcd->remote_wakeup);
+			if (retval)
+				break;
+			retval = pci_enable_wake (dev, PCI_D3cold, hcd->remote_wakeup);
+		} else if (retval < 0) {
+			dev_dbg (&dev->dev, "PCI D3 suspend fail, %d\n",
+					retval);
+			(void) usb_hcd_pci_resume (dev);
+			break;
+		}
+		break;
+	default:
+		dev_dbg (hcd->self.controller, "hcd state %d; not suspended\n",
+			hcd->state);
+		WARN_ON(1);
+		retval = -EINVAL;
+		break;
+	}
+
+	/* update power_state **ONLY** to make sysfs happier */
+	if (retval == 0)
+		dev->dev.power.power_state = message;
 	return retval;
 }
 EXPORT_SYMBOL (usb_hcd_pci_suspend);
@@ -332,39 +312,91 @@ int usb_hcd_pci_resume (struct pci_dev *dev)
 	int			retval;
 
 	hcd = pci_get_drvdata(dev);
-	dev_info (hcd->controller, "resume\n");
-
-	/* guard against multiple resumes (APM bug?) */
-	atomic_inc (&hcd->resume_count);
-	if (atomic_read (&hcd->resume_count) != 1) {
-		dev_err (hcd->controller, "concurrent PCI resumes\n");
-		retval = 0;
-		goto done;
+	if (hcd->state != HC_STATE_SUSPENDED) {
+		dev_dbg (hcd->self.controller, 
+				"can't resume, not suspended!\n");
+		return 0;
 	}
 
-	retval = -EBUSY;
-	if (hcd->state != USB_STATE_SUSPENDED) {
-		dev_dbg (hcd->controller, "can't resume, not suspended!\n");
-		goto done;
-	}
-	hcd->state = USB_STATE_RESUMING;
+	/* NOTE:  chip docs cover clean "real suspend" cases (what Linux
+	 * calls "standby", "suspend to RAM", and so on).  There are also
+	 * dirty cases when swsusp fakes a suspend in "shutdown" mode.
+	 */
+	if (dev->current_state != PCI_D0) {
+#ifdef	DEBUG
+		int	pci_pm;
+		u16	pmcr;
 
-	pci_set_power_state (dev, 0);
-	pci_restore_state (dev, hcd->pci_state);
+		pci_pm = pci_find_capability(dev, PCI_CAP_ID_PM);
+		pci_read_config_word(dev, pci_pm + PCI_PM_CTRL, &pmcr);
+		pmcr &= PCI_PM_CTRL_STATE_MASK;
+		if (pmcr) {
+			/* Clean case:  power to USB and to HC registers was
+			 * maintained; remote wakeup is easy.
+			 */
+			dev_dbg(hcd->self.controller, "resume from PCI D%d\n",
+					pmcr);
+		} else {
+			/* Clean:  HC lost Vcc power, D0 uninitialized
+			 *   + Vaux may have preserved port and transceiver
+			 *     state ... for remote wakeup from D3cold
+			 *   + or not; HCD must reinit + re-enumerate
+			 *
+			 * Dirty: D0 semi-initialized cases with swsusp
+			 *   + after BIOS init
+			 *   + after Linux init (HCD statically linked)
+			 */
+			dev_dbg(hcd->self.controller,
+				"PCI D0, from previous PCI D%d\n",
+				dev->current_state);
+		}
+#endif
+		retval = pci_enable_wake (dev, dev->current_state, 0);
+		if (retval) {
+			dev_err(hcd->self.controller,
+				"can't enable_wake to %d, %d!\n",
+				dev->current_state, retval);
+			return retval;
+		}
+		retval = pci_enable_wake (dev, PCI_D3cold, 0);
+		if (retval) {
+			dev_err(hcd->self.controller,
+				"can't enable_wake to %d, %d!\n",
+				PCI_D3cold, retval);
+			return retval;
+		}
+	} else {
+		/* Same basic cases: clean (powered/not), dirty */
+		dev_dbg(hcd->self.controller, "PCI legacy resume\n");
+	}
+
+	/* NOTE:  the PCI API itself is asymmetric here.  We don't need to
+	 * pci_set_power_state(PCI_D0) since that's part of re-enabling;
+	 * but that won't re-enable bus mastering.  Yet pci_disable_device()
+	 * explicitly disables bus mastering...
+	 */
+	retval = pci_enable_device (dev);
+	if (retval < 0) {
+		dev_err (hcd->self.controller,
+			"can't re-enable after resume, %d!\n", retval);
+		return retval;
+	}
+	pci_set_master (dev);
+	pci_restore_state (dev);
+
+	dev->dev.power.power_state = PMSG_ON;
+
+	hcd->state = HC_STATE_RESUMING;
+	hcd->saw_irq = 0;
 
 	retval = hcd->driver->resume (hcd);
-	if (!HCD_IS_RUNNING (hcd->state)) {
-		dev_dbg (hcd->controller, "resume fail, retval %d\n", retval);
+	if (!HC_IS_RUNNING (hcd->state)) {
+		dev_dbg (hcd->self.controller, 
+				"resume fail, retval %d\n", retval);
 		usb_hc_died (hcd);
-// FIXME:  recover, reset etc.
-	} else {
-		// FIXME for all connected devices, root-to-leaf:
-		// driver->resume ();
-		// proposed "new 2.5 driver model" will automate that
 	}
 
-done:
-	atomic_dec (&hcd->resume_count);
+	retval = pci_enable_device(dev);
 	return retval;
 }
 EXPORT_SYMBOL (usb_hcd_pci_resume);

@@ -12,6 +12,10 @@
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define USB_MINIPORT_TAG TAG('u','s','b','m')
 
+#ifndef RTL_CONSTANT_STRING
+#define RTL_CONSTANT_STRING(s) { sizeof(s) - sizeof((s)[0]), sizeof(s), s }
+#endif
+
 #include "../../usbport/hcd.h"
 #include "usbcommon_types.h"
 

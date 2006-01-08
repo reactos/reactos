@@ -8,8 +8,6 @@
  */
 
 #define NDEBUG
-#include <debug.h>
-
 #include "usbcommon.h"
 #include <stdarg.h>
 
@@ -39,7 +37,7 @@ ForwardIrpAndWait(
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
 	DPRINT("USBMP: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
-	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
+	IoSetCompletionRoutine(Irp, (PIO_COMPLETION_ROUTINE)ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);
 	if (Status == STATUS_PENDING)

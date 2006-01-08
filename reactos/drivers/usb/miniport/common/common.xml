@@ -1,4 +1,4 @@
-<module name="usbminiportcommon" type="objectlibrary">
+<module name="usbminiportcommon" type="objectlibrary" allowwarnings="true">
 	<define name="__USE_W32API" />
 	<include>../linux</include>
 	<include base="usbport">.</include>

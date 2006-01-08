@@ -59,10 +59,11 @@
  * Hub Status and Hub Change results
  * See USB 2.0 spec Table 11-19 and Table 11-20
  */
+#include <pshpack1.h>
 struct usb_port_status {
-	__u16 wPortStatus;
-	__u16 wPortChange;	
-} __attribute__ ((packed));
+	__le16 wPortStatus;
+	__le16 wPortChange;	
+};
 
 /* 
  * wPortStatus bit field
@@ -103,9 +104,9 @@ struct usb_port_status {
 #define HUB_CHAR_PORTIND        0x0080 /* D7       */
 
 struct usb_hub_status {
-	__u16 wHubStatus;
-	__u16 wHubChange;
-} __attribute__ ((packed));
+	__le16 wHubStatus;
+	__le16 wHubChange;
+};
 
 /*
  * Hub Status & Hub Change bit masks
@@ -137,9 +138,32 @@ struct usb_hub_descriptor {
 	    	/* add 1 bit for hub status change; round to bytes */
 	__u8  DeviceRemovable[(USB_MAXCHILDREN + 1 + 7) / 8];
 	__u8  PortPwrCtrlMask[(USB_MAXCHILDREN + 1 + 7) / 8];
-} __attribute__ ((packed));
+};
+
+
+/* port indicator status selectors, tables 11-7 and 11-25 */
+#define HUB_LED_AUTO	0
+#define HUB_LED_AMBER	1
+#define HUB_LED_GREEN	2
+#define HUB_LED_OFF	3
+
+enum hub_led_mode {
+	INDICATOR_AUTO = 0,
+	INDICATOR_CYCLE,
+	/* software blinks for attention:  software, hardware, reserved */
+	INDICATOR_GREEN_BLINK, INDICATOR_GREEN_BLINK_OFF,
+	INDICATOR_AMBER_BLINK, INDICATOR_AMBER_BLINK_OFF,
+	INDICATOR_ALT_BLINK, INDICATOR_ALT_BLINK_OFF
+};
+#include <poppack.h>
 
 struct usb_device;
+
+/* Transaction Translator Think Times, in bits */
+#define HUB_TTTT_8_BITS		0x00
+#define HUB_TTTT_16_BITS	0x20
+#define HUB_TTTT_24_BITS	0x40
+#define HUB_TTTT_32_BITS	0x60
 
 /*
  * As of USB 2.0, full/low speed devices are segregated into trees.
@@ -154,6 +178,7 @@ struct usb_device;
 struct usb_tt {
 	struct usb_device	*hub;	/* upstream highspeed hub */
 	int			multi;	/* true means one TT per port */
+	unsigned		think_time;	/* think time in ns */
 
 	/* for control/bulk error recovery (CLEAR_TT_BUFFER) */
 	spinlock_t		lock;
@@ -170,11 +195,12 @@ struct usb_tt_clear {
 extern void usb_hub_tt_clear_buffer (struct usb_device *dev, int pipe);
 
 struct usb_hub {
-	struct usb_interface	*intf;		/* the "real" device */
+	struct device		*intfdev;	/* the "interface" device */
+	struct usb_device	*hdev;
 	struct urb		*urb;		/* for interrupt polling pipe */
 
-	/* buffer for urb ... 1 bit each for hub and children, rounded up */
-	char			(*buffer)[(USB_MAXCHILDREN + 1 + 7) / 8];
+	/* buffer for urb ... with extra space in case of babble */
+	char			(*buffer)[8];
 	dma_addr_t		buffer_dma;	/* DMA address for buffer */
 	union {
 		struct usb_hub_status	hub;
@@ -183,13 +209,28 @@ struct usb_hub {
 
 	int			error;		/* last reported error */
 	int			nerrors;	/* track consecutive errors */
-	int			RestCounter;
-	struct list_head	hub_list;	/* all hubs */
+
 	struct list_head	event_list;	/* hubs w/data or errs ready */
+	unsigned long		event_bits[1];	/* status change bitmask */
+	unsigned long		change_bits[1];	/* ports with logical connect
+							status change */
+	unsigned long		busy_bits[1];	/* ports being reset */
+#if USB_MAXCHILDREN > 31 /* 8*sizeof(unsigned long) - 1 */
+#error event_bits[] is too short!
+#endif
 
 	struct usb_hub_descriptor *descriptor;	/* class descriptor */
-	struct semaphore	khubd_sem;
 	struct usb_tt		tt;		/* Transaction Translator */
+
+	u8			power_budget;	/* in 2mA units; or zero */
+
+	unsigned		quiescing:1;
+	unsigned		activating:1;
+	unsigned		resume_root_hub:1;
+
+	unsigned		has_indicators:1;
+	enum hub_led_mode	indicator[USB_MAXCHILDREN];
+	struct work_struct	leds;
 };
 
 #endif /* __LINUX_HUB_H */

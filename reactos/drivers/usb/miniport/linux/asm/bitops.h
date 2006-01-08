@@ -33,12 +33,24 @@
  * Note that @nr may be almost arbitrarily large; this function is not
  * restricted to acting on a single-word quantity.
  */
-static __inline__ void set_bit(int nr, volatile void * addr)
+static __inline void set_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	__asm__ __volatile__( LOCK_PREFIX
 		"btsl %1,%0"
 		:"=m" (ADDR)
 		:"Ir" (nr));
+#elif defined(_MSC_VER)
+	__asm {
+           mov eax, nr
+           mov ecx, addr
+           lock bts [ecx], eax
+           setc al
+    };
+#else
+	InterlockedBitTestAndSet(addr, nr);
+#endif
+
 }
 
 /**
@@ -50,12 +62,18 @@ static __inline__ void set_bit(int nr, volatile void * addr)
  * If it's called on the same region of memory simultaneously, the effect
  * may be that only one operation succeeds.
  */
-static __inline__ void __set_bit(int nr, volatile void * addr)
+static __inline void __set_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	__asm__(
 		"btsl %1,%0"
 		:"=m" (ADDR)
 		:"Ir" (nr));
+#elif defined(_MSC_VER)
+	set_bit(nr, addr);
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -68,12 +86,22 @@ static __inline__ void __set_bit(int nr, volatile void * addr)
  * you should call smp_mb__before_clear_bit() and/or smp_mb__after_clear_bit()
  * in order to ensure changes are visible on other processors.
  */
-static __inline__ void clear_bit(int nr, volatile void * addr)
+static __inline void clear_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	__asm__ __volatile__( LOCK_PREFIX
 		"btrl %1,%0"
 		:"=m" (ADDR)
 		:"Ir" (nr));
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           lock btr [ecx], eax
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 #define smp_mb__before_clear_bit()	barrier()
 #define smp_mb__after_clear_bit()	barrier()
@@ -87,12 +115,22 @@ static __inline__ void clear_bit(int nr, volatile void * addr)
  * If it's called on the same region of memory simultaneously, the effect
  * may be that only one operation succeeds.
  */
-static __inline__ void __change_bit(int nr, volatile void * addr)
+static __inline void __change_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	__asm__ __volatile__(
 		"btcl %1,%0"
 		:"=m" (ADDR)
 		:"Ir" (nr));
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           btc [ecx], eax
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -104,12 +142,22 @@ static __inline__ void __change_bit(int nr, volatile void * addr)
  * Note that @nr may be almost arbitrarily large; this function is not
  * restricted to acting on a single-word quantity.
  */
-static __inline__ void change_bit(int nr, volatile void * addr)
+static __inline void change_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	__asm__ __volatile__( LOCK_PREFIX
 		"btcl %1,%0"
 		:"=m" (ADDR)
 		:"Ir" (nr));
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           lock btc [ecx], eax
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -120,15 +168,27 @@ static __inline__ void change_bit(int nr, volatile void * addr)
  * This operation is atomic and cannot be reordered.  
  * It also implies a memory barrier.
  */
-static __inline__ int test_and_set_bit(int nr, volatile void * addr)
+static __inline int test_and_set_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	int oldbit;
 
 	__asm__ __volatile__( LOCK_PREFIX
 		"btsl %2,%1\n\tsbbl %0,%0"
 		:"=r" (oldbit),"=m" (ADDR)
 		:"Ir" (nr) : "memory");
+
 	return oldbit;
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           lock bts [ecx], eax
+           setc al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -140,8 +200,9 @@ static __inline__ int test_and_set_bit(int nr, volatile void * addr)
  * If two examples of this operation race, one can appear to succeed
  * but actually fail.  You must protect multiple accesses with a lock.
  */
-static __inline__ int __test_and_set_bit(int nr, volatile void * addr)
+static __inline int __test_and_set_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	int oldbit;
 
 	__asm__(
@@ -149,6 +210,16 @@ static __inline__ int __test_and_set_bit(int nr, volatile void * addr)
 		:"=r" (oldbit),"=m" (ADDR)
 		:"Ir" (nr));
 	return oldbit;
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           lock bts [ecx], eax
+           setc al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -159,8 +230,9 @@ static __inline__ int __test_and_set_bit(int nr, volatile void * addr)
  * This operation is atomic and cannot be reordered.  
  * It also implies a memory barrier.
  */
-static __inline__ int test_and_clear_bit(int nr, volatile void * addr)
+static __inline int test_and_clear_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	int oldbit;
 
 	__asm__ __volatile__( LOCK_PREFIX
@@ -168,6 +240,16 @@ static __inline__ int test_and_clear_bit(int nr, volatile void * addr)
 		:"=r" (oldbit),"=m" (ADDR)
 		:"Ir" (nr) : "memory");
 	return oldbit;
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           lock btr [ecx], eax
+           setc al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -179,8 +261,9 @@ static __inline__ int test_and_clear_bit(int nr, volatile void * addr)
  * If two examples of this operation race, one can appear to succeed
  * but actually fail.  You must protect multiple accesses with a lock.
  */
-static __inline__ int __test_and_clear_bit(int nr, volatile void * addr)
+static __inline int __test_and_clear_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	int oldbit;
 
 	__asm__(
@@ -188,11 +271,22 @@ static __inline__ int __test_and_clear_bit(int nr, volatile void * addr)
 		:"=r" (oldbit),"=m" (ADDR)
 		:"Ir" (nr));
 	return oldbit;
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           lock btr [ecx], eax
+           setc al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /* WARNING: non atomic and it can be reordered! */
-static __inline__ int __test_and_change_bit(int nr, volatile void * addr)
+static __inline int __test_and_change_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	int oldbit;
 
 	__asm__ __volatile__(
@@ -200,6 +294,16 @@ static __inline__ int __test_and_change_bit(int nr, volatile void * addr)
 		:"=r" (oldbit),"=m" (ADDR)
 		:"Ir" (nr) : "memory");
 	return oldbit;
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           btc [ecx], eax
+           setc al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /**
@@ -210,8 +314,9 @@ static __inline__ int __test_and_change_bit(int nr, volatile void * addr)
  * This operation is atomic and cannot be reordered.  
  * It also implies a memory barrier.
  */
-static __inline__ int test_and_change_bit(int nr, volatile void * addr)
+static __inline int test_and_change_bit(int nr, volatile void * addr)
 {
+#if defined(__GNUC__)
 	int oldbit;
 
 	__asm__ __volatile__( LOCK_PREFIX
@@ -219,6 +324,16 @@ static __inline__ int test_and_change_bit(int nr, volatile void * addr)
 		:"=r" (oldbit),"=m" (ADDR)
 		:"Ir" (nr) : "memory");
 	return oldbit;
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           btc [ecx], eax
+           setc al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 #if 0 /* Fool kernel-doc since it doesn't do macros yet */
@@ -230,26 +345,42 @@ static __inline__ int test_and_change_bit(int nr, volatile void * addr)
 static int test_bit(int nr, const volatile void * addr);
 #endif
 
-static __inline__ int constant_test_bit(int nr, const volatile void * addr)
+static __inline int constant_test_bit(int nr, const volatile void * addr)
 {
 	return ((1UL << (nr & 31)) & (((const volatile unsigned int *) addr)[nr >> 5])) != 0;
 }
 
-static __inline__ int variable_test_bit(int nr, volatile void * addr)
+static __inline int variable_test_bit(int nr, volatile void * addr)
 {
 	int oldbit;
-
+#if defined(__GNUC__)
 	__asm__ __volatile__(
 		"btl %2,%1\n\tsbbl %0,%0"
 		:"=r" (oldbit)
 		:"m" (ADDR),"Ir" (nr));
+#elif defined(_MSC_VER)
+    __asm {
+           mov eax, nr
+           mov ecx, addr
+           bt [ecx], eax
+		   setc al
+           //mov oldbit, al
+    };
+#else
+#error Unknown compiler for inline assembler
+#endif
+
 	return oldbit;
 }
 
+/*
 #define test_bit(nr,addr) \
 (__builtin_constant_p(nr) ? \
  constant_test_bit((nr),(addr)) : \
  variable_test_bit((nr),(addr)))
+ */
+#define test_bit(nr,addr) \
+( variable_test_bit( (nr),(addr) ) )
 
 /**
  * find_first_zero_bit - find the first zero bit in a memory region
@@ -259,7 +390,8 @@ static __inline__ int variable_test_bit(int nr, volatile void * addr)
  * Returns the bit-number of the first zero bit, not the number of the byte
  * containing a bit.
  */
-static __inline__ int find_first_zero_bit(void * addr, unsigned size)
+#if defined(__GNUC__)
+static __inline int find_first_zero_bit(void * addr, unsigned size)
 {
 	int d0, d1, d2;
 	int res;
@@ -282,6 +414,34 @@ static __inline__ int find_first_zero_bit(void * addr, unsigned size)
 		:"1" ((size + 31) >> 5), "2" (addr), "b" (addr));
 	return res;
 }
+#elif defined(_MSC_VER)
+#define find_first_zero_bit(addr, size) \
+	find_next_zero_bit((addr), (size), 0)
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+/**
+ * ffz - find first zero in word.
+ * @word: The word to search
+ *
+ * Undefined if no zero exists, so code should check against ~0UL first.
+ */
+static __inline unsigned long ffz(unsigned long word)
+{
+#if defined(__GNUC__)
+	__asm__("bsfl %1,%0"
+		:"=r" (word)
+		:"r" (~word));
+	return word;
+#elif defined(_MSC_VER)
+	ULONG index;
+	BitScanForward(&index, ~word);
+	return index;
+#else
+#error Unknown compiler for inline assembler
+#endif
+}
 
 /**
  * find_next_zero_bit - find the first zero bit in a memory region
@@ -289,7 +449,8 @@ static __inline__ int find_first_zero_bit(void * addr, unsigned size)
  * @offset: The bitnumber to start searching at
  * @size: The maximum size to search
  */
-static __inline__ int find_next_zero_bit (void * addr, int size, int offset)
+#if defined(__GNUC__)
+static __inline int find_next_zero_bit (void * addr, int size, int offset)
 {
 	unsigned long * p = ((unsigned long *) addr) + (offset >> 5);
 	int set = 0, bit = offset & 31, res;
@@ -315,20 +476,47 @@ static __inline__ int find_next_zero_bit (void * addr, int size, int offset)
 	res = find_first_zero_bit (p, size - 32 * (p - (unsigned long *) addr));
 	return (offset + set + res);
 }
-
-/**
- * ffz - find first zero in word.
- * @word: The word to search
- *
- * Undefined if no zero exists, so code should check against ~0UL first.
- */
-static __inline__ unsigned long ffz(unsigned long word)
+#elif defined(_MSC_VER)
+static __inline unsigned long find_next_zero_bit(const void *addr, unsigned long size, unsigned long offset)
 {
-	__asm__("bsfl %1,%0"
-		:"=r" (word)
-		:"r" (~word));
-	return word;
+	const unsigned long *p = addr;
+	unsigned long result = offset & ~63UL;
+	unsigned long tmp;
+
+	p += offset >> 6;
+	if (offset >= size)
+		return size;
+	size -= result;
+	offset &= 63UL;
+	if (offset) {
+		tmp = *(p++);
+		tmp |= ~0UL >> (64-offset);
+		if (size < 64)
+			goto found_first;
+		if (~tmp)
+			goto found_middle;
+		size -= 64;
+		result += 64;
+	}
+	while (size & ~63UL) {
+		if (~(tmp = *(p++)))
+			goto found_middle;
+		result += 64;
+		size -= 64;
+	}
+	if (!size)
+		return result;
+	tmp = *p;
+ found_first:
+	tmp |= ~0UL << size;
+	if (tmp == ~0UL)        /* Are any bits zero? */
+		return result + size; /* Nope. */
+ found_middle:
+	return result + ffz(tmp);
 }
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 #ifdef __KERNEL__
 

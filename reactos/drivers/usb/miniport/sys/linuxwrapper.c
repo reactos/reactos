@@ -32,6 +32,7 @@ int need_wakeup;
 int my_jiffies;
 
 struct timer_list *main_timer_list[MAX_TIMERS];
+PKDEFERRED_ROUTINE timer_dpcs[MAX_TIMERS];
 struct dummy_process act_cur={0};
 struct dummy_process *my_current;
 
@@ -57,6 +58,13 @@ void init_wrapper(struct pci_dev *probe_dev)
 	{
 		main_timer_list[n]=NULL;
 	}
+
+	// FIXME: Change if more than 5 timers
+	timer_dpcs[0] = (PKDEFERRED_ROUTINE)_TimerDpc0;
+	timer_dpcs[1] = (PKDEFERRED_ROUTINE)_TimerDpc1;
+	timer_dpcs[2] = (PKDEFERRED_ROUTINE)_TimerDpc2;
+	timer_dpcs[3] = (PKDEFERRED_ROUTINE)_TimerDpc3;
+	timer_dpcs[4] = (PKDEFERRED_ROUTINE)_TimerDpc4;
 
 	my_jiffies=0;
 	num_irqs=0;
@@ -117,7 +125,7 @@ void do_all_timers(void)
 /*------------------------------------------------------------------------*/ 
 // Purpose: Remember thread procedure and data in global var
 // ReactOS Purpose: Create real kernel thread
-int my_kernel_thread(int STDCALL (*handler)(void*), void* parm, int flags)
+int my_kernel_thread(int (STDCALL *handler)(void*), void* parm, int flags)
 {
 	HANDLE hThread = NULL;
 	//thread_handler=handler;
@@ -160,11 +168,12 @@ int my_kill_proc(int pid, int signal, int unk)
 
 
 /* calls probe function for hotplug (which does device matching), this is the
-only link between usbcore and the registered device drivers! */
+   only link between usbcore and the registered device drivers! */
 int my_device_add(struct device *dev)
 {
 	int n,found=0;
-	printk("drv_num %i %p %p\n",drvs_num,m_drivers[0]->probe,m_drivers[1]->probe);
+	//printk("drv_num %i %p %p\n",drvs_num,m_drivers[0]->probe,m_drivers[1]->probe);
+	printk("drv_num %i %p\n",drvs_num,m_drivers[0]->probe);
 
 	if (dev->driver)
 	{
@@ -179,7 +188,6 @@ int my_device_add(struct device *dev)
 			{
 				dev->driver=m_drivers[n];
 				printk("probe%i %p\n",n,m_drivers[n]->probe);
-
 				if (m_drivers[n]->probe(dev) == 0)
 				{
 //					return 0;
@@ -225,6 +233,7 @@ void my_device_initialize(struct device *dev)
 /*------------------------------------------------------------------------*/ 
 void my_wake_up(PKEVENT evnt)
 {
+	//DPRINT1("wake_up(), evnt=%p\n", evnt);
 	need_wakeup=1;
 
 	KeSetEvent(evnt, 0, FALSE); // Signal event
@@ -234,6 +243,7 @@ void my_init_waitqueue_head(PKEVENT evnt)
 {
 	// this is used only in core/message.c, and it isn't needed there
 	//KeInitializeEvent(evnt, NotificationEvent, TRUE); // signalled state
+	DPRINT1("init_waitqueue_head(), evnt=%p\n", evnt);
 }
 /*------------------------------------------------------------------------*/ 
 /* wait until woken up (only one wait allowed!) */
@@ -242,12 +252,7 @@ extern unsigned int LAST_USB_IRQ;
 int my_schedule_timeout(int x)
 {
 	LONGLONG HH;
-	//LONGLONG temp;
 	LARGE_INTEGER delay;
-	//PULONG tmp_debug=NULL;
-	//extern unsigned int LAST_USB_EVENT_TICK;
-
-	//*tmp_debug = 0xFFAAFFAA;
 
 	printk("schedule_timeout: %d ms\n", x);
 
@@ -263,14 +268,8 @@ int my_schedule_timeout(int x)
 	while(x>0)
 	{
 		KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
-    	//temp = HH - LAST_USB_EVENT_TICK;
-    	
-		//if (temp>(3579)) { //3579 = 1ms!
-		//if (temp>1000) {
-			do_all_timers();
-		//	LAST_USB_EVENT_TICK = HH;
-		//}
 
+		do_all_timers();
 		handle_irqs(-1);
 		
 		if (need_wakeup)
@@ -290,49 +289,35 @@ int my_schedule_timeout(int x)
 /*------------------------------------------------------------------------*/ 
 void my_wait_for_completion(struct completion *x)
 {
-//	LONGLONG HH;
-//	LONGLONG temp;
-	LARGE_INTEGER delay;
-
-	//extern unsigned int LAST_USB_EVENT_TICK;
-
-	printk("wait for completion, x=0x%08x\n", (DWORD)x);
-
-	int n=10;
-	n = n*1000;	// to us format
-
-	while(!x->done && (n>0))
-	{
-		//KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
-		//temp = HH - LAST_USB_EVENT_TICK;
-
-		//if (temp>(3579)) {
-		//if (temp>(1000)) {
-			do_all_timers();
-		//	LAST_USB_EVENT_TICK = HH;
-		//}
-
-			handle_irqs(-1);
-
-		delay.QuadPart = -10;
-		KeDelayExecutionThread(KernelMode, FALSE, &delay); //wait_us(1);
-		n--;
-	}
-	printk("wait for completion done %i\n",x->done);
-
+	//printk("wait for completion, x=0x%08x, x->done=%d\n", (DWORD)x, x->done);
+	KeWaitForSingleObject(&x->wait, Executive, KernelMode, FALSE, NULL);
+	KeClearEvent(&x->wait);
+	x->done--;
+	//printk("wait for completion done %i\n",x->done);
 }
 /*------------------------------------------------------------------------*/ 
 void my_init_completion(struct completion *x)
 {
+	//DPRINT1("init_completion(), x=%p\n", x);
 	x->done=0;
 	KeInitializeEvent(&x->wait, NotificationEvent, FALSE);
 }
 /*------------------------------------------------------------------------*/ 
 void my_interruptible_sleep_on(PKEVENT evnt)
 {
+	DPRINT1("interruptible_sleep_on(), evnt=%p\n", evnt);
 	KeWaitForSingleObject(evnt, Executive, KernelMode, FALSE, NULL);
 	KeClearEvent(evnt); // reset to not-signalled
 }
+
+// Some kind of a hack currently
+void my_try_to_freeze()
+{
+	LARGE_INTEGER delay;
+	delay.QuadPart = -100000; // 0.1 seconds
+	KeDelayExecutionThread(KernelMode, FALSE, &delay);
+}
+
 /*------------------------------------------------------------------------*/ 
 // Helper for pci_module_init
 /*------------------------------------------------------------------------*/ 
@@ -352,16 +337,6 @@ int my_pci_module_init(struct pci_driver *x)
 struct pci_dev *my_pci_find_slot(int a,int b)
 {
 	return NULL;
-}
-/*------------------------------------------------------------------------*/ 
-int my_pci_write_config_word(struct pci_dev *dev, int where, u16 val)
-{
-	//dev->bus, dev->devfn, where, val
-	PUSBMP_DEVICE_EXTENSION dev_ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
-
-	//FIXME: Is returning this value correct?
-	//FIXME: Mixing pci_dev and win structs isn't a good thing at all
-	return HalSetBusDataByOffset(PCIConfiguration, dev->bus->number, dev_ext->SystemIoSlotNumber, &val, where, sizeof(val));
 }
 /*------------------------------------------------------------------------*/ 
 int my_request_irq(unsigned int irq,
@@ -444,11 +419,6 @@ init_dma(PUSBMP_DEVICE_EXTENSION pDevExt)
 {
 	// Prepare device descriptor structure
 	DEVICE_DESCRIPTION dd;
-#ifdef USB_DMA_SINGLE_SUPPORT
-	KEVENT DMAEvent;
-	KIRQL OldIrql;
-	NTSTATUS Status;
-#endif
 
 	RtlZeroMemory( &dd, sizeof(dd) );
 	dd.Version = DEVICE_DESCRIPTION_VERSION;
@@ -482,89 +452,57 @@ init_dma(PUSBMP_DEVICE_EXTENSION pDevExt)
 	if (pDevExt->pDmaAdapter == NULL)
 		return STATUS_INSUFFICIENT_RESOURCES;
 
-#ifdef USB_DMA_SINGLE_SUPPORT
-	/* Allocate buffer now */
-    pDevExt->BufferSize = pDevExt->mapRegisterCount * PAGE_SIZE;
-    DPRINT1("Bufsize = %u\n", pDevExt->BufferSize);
-    pDevExt->VirtualBuffer = pDevExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(
-									pDevExt->pDmaAdapter, pDevExt->BufferSize, &pDevExt->Buffer, FALSE);
-    DPRINT1("Bufsize = %u, Buffer = 0x%x", pDevExt->BufferSize, pDevExt->Buffer.LowPart);
-
-	if (!pDevExt->VirtualBuffer)
-    {
-        DPRINT1("Could not allocate buffer\n");
-        // should try again with smaller buffer...
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    DPRINT1("Calling IoAllocateMdl()\n");
-    pDevExt->Mdl = IoAllocateMdl(pDevExt->VirtualBuffer, pDevExt->BufferSize, FALSE, FALSE, NULL);
-    DPRINT1("Bufsize == %u\n", pDevExt->BufferSize);
-
-    if (!pDevExt->Mdl)
-    {
-        DPRINT1("IoAllocateMdl() FAILED\n");
-        //TODO: Free the HAL buffer
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    DPRINT1("VBuffer == 0x%x Mdl == %u Bufsize == %u\n", pDevExt->VirtualBuffer, pDevExt->Mdl, pDevExt->BufferSize);
-
-    DPRINT1("Calling MmBuildMdlForNonPagedPool\n");
-    MmBuildMdlForNonPagedPool(pDevExt->Mdl);
-
-
-	/* Get map registers for DMA */
-	KeInitializeEvent(&DMAEvent, SynchronizationEvent, FALSE);
-
-	KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-	// TODO: Free adapter channel somewhere
-	Status = pDevExt->pDmaAdapter->DmaOperations->AllocateAdapterChannel(pDevExt->pDmaAdapter,
-				pDevExt->PhysicalDeviceObject, pDevExt->mapRegisterCount, MapRegisterCallback, &DMAEvent);
-	KeLowerIrql(OldIrql);
-
-    DPRINT1("VBuffer == 0x%x Bufsize == %u\n", pDevExt->VirtualBuffer, pDevExt->BufferSize);
-    KeWaitForSingleObject(&DMAEvent, Executive, KernelMode, FALSE, NULL);
-
-	if(Status != STATUS_SUCCESS)
-	{
-		DPRINT("init_dma(): unable to allocate adapter channels\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-#endif
 	return STATUS_SUCCESS;
 }
 
 /*
- * FUNCTION: Acquire map registers in prep for DMA
- * ARGUMENTS:
- *     DeviceObject: unused
- *     Irp: unused
- *     MapRegisterBase: returned to blocked thread via a member var
- *     Context: contains a pointer to the right ControllerInfo
- *     struct
- * RETURNS:
- *     KeepObject, because that's what the DDK says to do
- */
-#ifdef USB_DMA_SINGLE_SUPPORT
-static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObject,
-                                                      PIRP Irp,
-                                                      PVOID MapRegisterBase,
-                                                      PVOID Context)
+ Timer DPCs
+*/
+void STDCALL _TimerDpc0(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
 {
-	PUSBMP_DEVICE_EXTENSION pDevExt = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	UNREFERENCED_PARAMETER(Irp);
-
-	DPRINT("usb_linuxwrapper: MapRegisterCallback Called, base=0x%08x\n", MapRegisterBase);
-
-	pDevExt->MapRegisterBase = MapRegisterBase;
-
-	// signal that we are finished
-    KeSetEvent(Context, 0, FALSE);
-
-	return KeepObject;//DeallocateObjectKeepRegisters;
+	int n = 0;
+	void (*function)(unsigned long)=main_timer_list[n]->function;
+	unsigned long data=main_timer_list[n]->data;
+	//printk("TimerDpc0\n");
+	function(data);
+	//handle_irqs(-1);
 }
-#endif
+
+void STDCALL _TimerDpc1(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
+{
+	int n = 1;
+	void (*function)(unsigned long)=main_timer_list[n]->function;
+	unsigned long data=main_timer_list[n]->data;
+	printk("TimerDpc1\n");
+	function(data);
+}
+
+void STDCALL _TimerDpc2(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
+{
+	int n = 2;
+	void (*function)(unsigned long)=main_timer_list[n]->function;
+	unsigned long data=main_timer_list[n]->data;
+	printk("TimerDpc2\n");
+	//function(data);
+}
+
+void STDCALL _TimerDpc3(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
+{
+	int n = 3;
+	void (*function)(unsigned long)=main_timer_list[n]->function;
+	unsigned long data=main_timer_list[n]->data;
+	printk("TimerDpc3\n");
+	//function(data);
+}
+
+void STDCALL _TimerDpc4(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
+{
+	int n = 4;
+	void (*function)(unsigned long)=main_timer_list[n]->function;
+	unsigned long data=main_timer_list[n]->data;
+	printk("TimerDpc4\n");
+	//function(data);
+}
 
 void *my_dma_pool_alloc(struct dma_pool *pool, int gfp_flags, dma_addr_t *dma_handle)
 {
@@ -597,7 +535,7 @@ If allocation is nonzero, objects returned from pci_pool_alloc won't cross that 
 This is useful for devices which have addressing restrictions on individual DMA transfers, such
 as not crossing boundaries of 4KBytes. 
 */
-struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, size_t size, size_t align, size_t allocation)
+struct pci_pool *my_pci_pool_create(const char * name, struct device * pdev, size_t size, size_t align, size_t allocation)
 {
 	struct pci_pool		*retval;
 
@@ -637,7 +575,7 @@ struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, si
 	retval->blocks_allocated = 0;
 	
 	DPRINT("pci_pool_create(): %s/%s size %d, %d/page (%d alloc)\n",
-		pdev ? pdev->slot_name : NULL, retval->name, size,
+		pdev ? pdev->name : NULL, retval->name, size,
 		retval->blocks_per_page, allocation);
 
 	return retval;
@@ -664,7 +602,7 @@ address through the handle. If such a memory block can't be allocated, null is r
 void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_handle)
 {
 	PVOID result;
-	PUSBMP_DEVICE_EXTENSION devExt = (PUSBMP_DEVICE_EXTENSION)pool->pdev->dev_ext;
+	PUSBMP_DEVICE_EXTENSION devExt = (PUSBMP_DEVICE_EXTENSION)to_pci_dev(pool->pdev)->dev_ext;
 	int page=0, offset;
 	int map, i, block;
 
@@ -780,7 +718,7 @@ Description
 Caller guarantees that no more memory from the pool is in use, and that nothing will try to
 use the pool after this call. 
 */
-void __inline__ my_pci_pool_destroy (struct pci_pool * pool)
+void my_pci_pool_destroy (struct pci_pool * pool)
 {
 	DPRINT1("pci_pool_destroy(): alloc'd: %d, UNIMPLEMENTED\n", pool->blocks_allocated);
 
@@ -887,20 +825,175 @@ void my_pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t size
 /*------------------------------------------------------------------------*/ 
 void my_spin_lock_init(spinlock_t *sl)
 {
+	//DPRINT("spin_lock_init: %p\n", sl);
 	KeInitializeSpinLock(&sl->SpinLock);
 }
 
 void my_spin_lock(spinlock_t *sl)
 {
-	//KeAcquireSpinLock(&sl->SpinLock, &sl->OldIrql);
+	//DPRINT("spin_lock_: %p\n", sl);
+	KeAcquireSpinLock(&sl->SpinLock, &sl->OldIrql);
 }
 
 void my_spin_unlock(spinlock_t *sl)
 {
-	//KeReleaseSpinLock(&sl->SpinLock, sl->OldIrql);
+	//DPRINT("spin_unlock: %p\n", sl);
+	KeReleaseSpinLock(&sl->SpinLock, sl->OldIrql);
 }
 
 void my_spin_lock_irqsave(spinlock_t *sl, int flags)
 {
-	my_spin_lock(sl);
+	//DPRINT("spin_lock_irqsave: %p\n", sl);
+	//my_spin_lock(sl);
+	KeAcquireSpinLock(&sl->SpinLock, &sl->OldIrql);
+}
+
+void my_spin_unlock_irqrestore(spinlock_t *sl, int flags)
+{
+	//DPRINT("spin_unlock_irqrestore: %p\n", sl);
+	//my_spin_unlock(sl);
+	KeReleaseSpinLock(&sl->SpinLock, sl->OldIrql);
+}
+
+void my_spin_lock_irq(spinlock_t *sl)
+{
+	//DPRINT("spin_lock_irq: %p\n", sl);
+	//my_spin_lock(sl);
+	KeAcquireSpinLock(&sl->SpinLock, &sl->OldIrql);
+}
+
+void my_spin_unlock_irq(spinlock_t *sl)
+{
+	//DPRINT("spin_unlock_irq: %p\n", sl);
+	//my_spin_unlock(sl);
+	KeReleaseSpinLock(&sl->SpinLock, sl->OldIrql);
+}
+
+
+
+/*------------------------------------------------------------------------*/ 
+/* Misc routines                                                          */
+/*------------------------------------------------------------------------*/ 
+/**
+ * strlcpy - Copy a %NUL terminated string into a sized buffer
+ * @dest: Where to copy the string to
+ * @src: Where to copy the string from
+ * @size: size of destination buffer
+ *
+ * Compatible with *BSD: the result is always a valid
+ * NUL-terminated string that fits in the buffer (unless,
+ * of course, the buffer size is zero). It does not pad
+ * out the result like strncpy() does.
+ */
+size_t strlcpy(char *dest, const char *src, size_t size)
+{
+	size_t ret = strlen(src);
+
+	if (size) {
+		size_t len = (ret >= size) ? size-1 : ret;
+		memcpy(dest, src, len);
+		dest[len] = '\0';
+	}
+	return ret;
+}
+
+/**
+ * kzalloc - allocate memory. The memory is set to zero.
+ * @size: how many bytes of memory are required.
+ * @flags: the type of memory to allocate.
+ */
+void *my_kzalloc(size_t size/*, gfp_t flags*/)
+{
+	void *ret = kmalloc(size, flags);
+	if (ret)
+		memset(ret, 0, size);
+	return ret;
+}
+
+/**
+ * memcmp - Compare two areas of memory
+ * @cs: One area of memory
+ * @ct: Another area of memory
+ * @count: The size of the area.
+ */
+int __cdecl memcmp(const void * cs,const void * ct,size_t count)
+{
+	const unsigned char *su1, *su2;
+	int res = 0;
+
+	for( su1 = cs, su2 = ct; 0 < count; ++su1, ++su2, count--)
+		if ((res = *su1 - *su2) != 0)
+			break;
+	return res;
+}
+
+/*------------------------------------------------------------------------*/ 
+int my_pci_write_config_word(struct pci_dev *dev, int where, u16 val)
+{
+	//dev->bus, dev->devfn, where, val
+	PUSBMP_DEVICE_EXTENSION dev_ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
+
+	//FIXME: Is returning this value correct?
+	//FIXME: Mixing pci_dev and win structs isn't a good thing at all (though I doubt it wants to access device in another slot/bus)
+	DPRINT1("pci_write_config_word: BusNum: %d, SlotNum: 0x%x, value: 0x%x, where: 0x%x\n",
+		dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, val, where);
+	return HalSetBusDataByOffset(PCIConfiguration, dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, &val, where, sizeof(val));
+}
+
+/*------------------------------------------------------------------------*/ 
+int my_pci_read_config_word(struct pci_dev *dev, int where, u16 *val)
+{
+	ULONG result;
+
+	//dev->bus, dev->devfn, where, val
+	PUSBMP_DEVICE_EXTENSION dev_ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
+
+	//FIXME: Is returning this value correct?
+	//FIXME: Mixing pci_dev and win structs isn't a good thing at all
+	result = HalGetBusDataByOffset(PCIConfiguration, dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, val, where, sizeof(*val));
+	DPRINT1("pci_read_config_word: BusNum: %d, SlotNum: 0x%x, value: 0x%x, where: 0x%x\n",
+		dev_ext->SystemIoBusNumber, dev_ext->SystemIoSlotNumber, *val, where);
+
+	return result;
+}
+
+/* For compatibility with Windows XP */
+NTSTATUS
+_RtlDuplicateUnicodeString(
+   IN ULONG Flags,
+   IN PCUNICODE_STRING SourceString,
+   OUT PUNICODE_STRING DestinationString)
+{
+   if (SourceString == NULL || DestinationString == NULL)
+      return STATUS_INVALID_PARAMETER;
+
+
+   if ((SourceString->Length == 0) && 
+       (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | 
+                  RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
+   {
+      DestinationString->Length = 0;
+      DestinationString->MaximumLength = 0;
+      DestinationString->Buffer = NULL;
+   }
+   else
+   {
+      ULONG DestMaxLength = SourceString->Length;
+
+      if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
+         DestMaxLength += sizeof(UNICODE_NULL);
+
+      DestinationString->Buffer = ExAllocatePool(PagedPool, DestMaxLength);
+      if (DestinationString->Buffer == NULL)
+         return STATUS_NO_MEMORY;
+
+      RtlCopyMemory(DestinationString->Buffer, SourceString->Buffer, SourceString->Length);
+      DestinationString->Length = SourceString->Length;
+      DestinationString->MaximumLength = DestMaxLength;
+
+      if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
+         DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+   }
+
+   return STATUS_SUCCESS;
 }

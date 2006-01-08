@@ -5,9 +5,25 @@
 // some typedefs to make for easy sizing
 
 //typedef unsigned long ULONG;
+typedef long long u64;
 typedef unsigned int u32;
 typedef unsigned short u16;
 typedef unsigned char u8;
+
+typedef unsigned int __u32;
+typedef unsigned short __u16;
+typedef unsigned char __u8;
+
+// we don't care much about big-endian
+typedef unsigned int __le32;
+typedef unsigned short __le16;
+typedef unsigned char __le8;
+
+
+typedef short s16;
+
+typedef u32 dma_addr_t;
+
 #ifndef bool_already_defined_
 	typedef int bool;
 #endif
@@ -23,5 +39,10 @@ typedef unsigned long RGBA; // LSB=R -> MSB = A
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
+
+#define __iomem
+#define __user
+
+typedef u32 uid_t;
 
 #endif /* #ifndef cromwell_types_h */

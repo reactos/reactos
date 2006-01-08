@@ -8,8 +8,6 @@
  */
 
 #define NDEBUG
-#include <debug.h>
-
 #include "usbcommon.h"
 
 NTSTATUS STDCALL

@@ -159,7 +159,7 @@ static int usb_mouse_probe(struct usb_interface * intf, const struct usb_device_
 	char path[64];
 	char *buf;
 
-	interface = &intf->altsetting[intf->act_altsetting];
+	interface = intf->cur_altsetting;//&intf->altsetting[intf->act_altsetting];
 
 	if (interface->desc.bNumEndpoints != 1) 
 		return -ENODEV;
@@ -251,18 +251,26 @@ static void usb_mouse_disconnect(struct usb_interface *intf)
 
 static struct usb_device_id usb_mouse_id_table [] = {
 	{ USB_INTERFACE_INFO(3, 1, 2) },
-    { }						/* Terminating entry */
+    { 0 }						/* Terminating entry */
 };
 
 MODULE_DEVICE_TABLE (usb, usb_mouse_id_table);
 
 static struct usb_driver usb_mouse_driver = {
+	THIS_MODULE,
+	"usbmouse",
+	usb_mouse_probe,
+	usb_mouse_disconnect,
+	usb_mouse_id_table
+/*
 	.owner		= THIS_MODULE,
 	.name		= "usbmouse",
 	.probe		= usb_mouse_probe,
 	.disconnect	= usb_mouse_disconnect,
 	.id_table	= usb_mouse_id_table,
+*/
 };
+
 
 void UsbMouseInit(void)
 {
