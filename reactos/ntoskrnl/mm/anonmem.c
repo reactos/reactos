@@ -137,7 +137,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
                        PMM_PAGEOP PageOp)
 {
    PFN_TYPE Page;
-   BOOL WasDirty;
+   BOOLEAN WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
 

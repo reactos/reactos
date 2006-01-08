@@ -252,7 +252,7 @@ HalpGrowMapBuffers(
    
    if (MapRegisterCount > 0)
    {
-      PMAP_REGISTER_ENTRY CurrentEntry, PreviousEntry;
+      PROS_MAP_REGISTER_ENTRY CurrentEntry, PreviousEntry;
 
       CurrentEntry = AdapterObject->MapRegisterBase +
                      AdapterObject->NumberOfMapRegisters;
@@ -351,7 +351,7 @@ HalpDmaAllocateMasterAdapter(VOID)
 
    MasterAdapter->MapRegisterBase = ExAllocatePoolWithTag(
       NonPagedPool,
-      SizeOfBitmap * sizeof(MAP_REGISTER_ENTRY),
+      SizeOfBitmap * sizeof(ROS_MAP_REGISTER_ENTRY),
       TAG_DMA);
    if (MasterAdapter->MapRegisterBase == NULL)
    {
@@ -360,7 +360,7 @@ HalpDmaAllocateMasterAdapter(VOID)
    }
 
    RtlZeroMemory(MasterAdapter->MapRegisterBase,
-                 SizeOfBitmap * sizeof(MAP_REGISTER_ENTRY));
+                 SizeOfBitmap * sizeof(ROS_MAP_REGISTER_ENTRY));
    if (!HalpGrowMapBuffers(MasterAdapter, 0x10000))
    {
       ExFreePool(MasterAdapter);
@@ -455,8 +455,8 @@ HalpDmaInitializeEisaAdapter(
    PDEVICE_DESCRIPTION DeviceDescription)
 {
    UCHAR Controller;
-   DMA_MODE DmaMode = { Byte: 0 };
-   DMA_EXTENDED_MODE ExtendedMode = { Byte: 0 };
+   DMA_MODE DmaMode = {{0 }};
+   DMA_EXTENDED_MODE ExtendedMode = {{ 0 }};
    PVOID AdapterBaseVa;
 
    Controller = (DeviceDescription->DmaChannel & 4) ? 2 : 1;
@@ -1127,7 +1127,7 @@ HalAllocateAdapterChannel(
             if (!AdapterObject->ScatterGather)
             {
                AdapterObject->MapRegisterBase =
-                  (PMAP_REGISTER_ENTRY)(
+                  (PROS_MAP_REGISTER_ENTRY)(
                      (ULONG_PTR)AdapterObject->MapRegisterBase |
                      MAP_BASE_SW_SG);
             }
@@ -1285,7 +1285,7 @@ IoFreeAdapterChannel(
                if (!AdapterObject->ScatterGather)
                {
                   AdapterObject->MapRegisterBase =
-                     (PMAP_REGISTER_ENTRY)(
+                     (PROS_MAP_REGISTER_ENTRY)(
                         (ULONG_PTR)AdapterObject->MapRegisterBase |
                         MAP_BASE_SW_SG);
                }
@@ -1371,10 +1371,10 @@ IoFreeMapRegisters(
 
    if (NumberOfMapRegisters != 0)
    {
-      PMAP_REGISTER_ENTRY RealMapRegisterBase;
+      PROS_MAP_REGISTER_ENTRY RealMapRegisterBase;
 
       RealMapRegisterBase =
-         (PMAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
+         (PROS_MAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
       RtlClearBits(MasterAdapter->MapRegisters,
                    RealMapRegisterBase - MasterAdapter->MapRegisterBase,
                    NumberOfMapRegisters);
@@ -1408,7 +1408,7 @@ IoFreeMapRegisters(
       if (!AdapterObject->ScatterGather)
       {
          AdapterObject->MapRegisterBase =
-            (PMAP_REGISTER_ENTRY)(
+            (PROS_MAP_REGISTER_ENTRY)(
                (ULONG_PTR)AdapterObject->MapRegisterBase |
                MAP_BASE_SW_SG);
       }
@@ -1459,7 +1459,7 @@ IoFreeMapRegisters(
 VOID STDCALL
 HalpCopyBufferMap(
    PMDL Mdl,
-   PMAP_REGISTER_ENTRY MapRegisterBase,
+   PROS_MAP_REGISTER_ENTRY MapRegisterBase,
    PVOID CurrentVa,
    ULONG Length,
    BOOLEAN WriteToDevice)
@@ -1555,7 +1555,7 @@ IoFlushAdapterBuffers(
    BOOLEAN WriteToDevice)
 {
    BOOLEAN SlaveDma = FALSE;
-   PMAP_REGISTER_ENTRY RealMapRegisterBase;
+   PROS_MAP_REGISTER_ENTRY RealMapRegisterBase;
 
    ASSERT_IRQL(DISPATCH_LEVEL);  
 
@@ -1582,7 +1582,7 @@ IoFlushAdapterBuffers(
       return TRUE;
 
    RealMapRegisterBase =
-      (PMAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
+      (PROS_MAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
 
    if (!WriteToDevice)
    {
@@ -1655,7 +1655,7 @@ IoMapTransfer(
    ULONG TransferOffset;
    ULONG TransferLength;
    BOOLEAN UseMapRegisters;
-   PMAP_REGISTER_ENTRY RealMapRegisterBase;
+   PROS_MAP_REGISTER_ENTRY RealMapRegisterBase;
    PHYSICAL_ADDRESS PhysicalAddress;
    PHYSICAL_ADDRESS HighestAcceptableAddress;
    ULONG Counter;
@@ -1722,7 +1722,7 @@ IoMapTransfer(
     */
 
    RealMapRegisterBase =
-      (PMAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
+      (PROS_MAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
 
    /*
     * Try to calculate the size of the transfer. We can only transfer

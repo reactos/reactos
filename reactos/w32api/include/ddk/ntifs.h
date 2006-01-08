@@ -530,7 +530,6 @@ typedef struct _KPROCESS                        *PKPROCESS;
 typedef struct _KQUEUE                          *PKQUEUE;
 typedef struct _KTRAP_FRAME                     *PKTRAP_FRAME;
 typedef struct _OBJECT_DIRECTORY                *POBJECT_DIRECTORY;
-typedef struct _SECTION_OBJECT                  *PSECTION_OBJECT;
 typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
 typedef struct _VACB                            *PVACB;
 typedef struct _VAD_HEADER                      *PVAD_HEADER;
@@ -3423,21 +3422,6 @@ MmIsRecursiveIoFault (
 
 #endif
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapViewOfSection (
-    IN PVOID                SectionObject,
-    IN PEPROCESS            Process,
-    IN OUT PVOID            *BaseAddress,
-    IN ULONG                ZeroBits,
-    IN ULONG                CommitSize,
-    IN OUT PLARGE_INTEGER   SectionOffset OPTIONAL,
-    IN OUT PULONG           ViewSize,
-    IN SECTION_INHERIT      InheritDisposition,
-    IN ULONG                AllocationType,
-    IN ULONG                Protect
-);
 
 NTKERNELAPI
 BOOLEAN

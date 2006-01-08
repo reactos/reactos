@@ -29,7 +29,7 @@
 NTSTATUS STDCALL
 EiConnectPort(IN PEPORT* ConnectedPort,
 	      IN PEPORT NamedPort,
-	      IN PSECTION_OBJECT Section,
+	      IN PVOID Section,
 	      IN LARGE_INTEGER SectionOffset,
 	      IN ULONG ViewSize,
 	      OUT PVOID* ClientSendViewBase,
@@ -252,7 +252,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   ULONG MaximumMessageSize;
   PVOID ConnectData = NULL;
   ULONG ConnectDataLength = 0;
-  PSECTION_OBJECT SectionObject;
+  PVOID SectionObject;
   LARGE_INTEGER SectionOffset;
   PEPORT ConnectedPort;
   KPROCESSOR_MODE PreviousMode;
@@ -775,7 +775,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (WriteMap != NULL)
     {
-      PSECTION_OBJECT SectionObject;
+      PVOID SectionObject;
       LARGE_INTEGER SectionOffset;
 
       Status = ObReferenceObjectByHandle(WriteMap->SectionHandle,

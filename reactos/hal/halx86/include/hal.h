@@ -12,8 +12,8 @@
 #include <stdio.h>
 
 /* IFS/DDK/NDK Headers */
-#include <ntddk.h>
 #include <ntifs.h>
+#include <ntddk.h>
 #include <ndk/ntndk.h>
 
 /* Internal Kernel Headers */

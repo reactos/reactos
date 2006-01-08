@@ -848,7 +848,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   ULONG CreateDisposition;
   IO_STATUS_BLOCK IoSB;
   HANDLE FileHandle;
-  PSECTION_OBJECT SectionObject;
+  PVOID SectionObject;
   PUCHAR ViewBase;
   ULONG ViewSize;
   NTSTATUS Status;

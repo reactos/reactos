@@ -592,6 +592,7 @@ ZwEnumerateBootEntries(
     IN ULONG Unknown2
 );
 
+#ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -599,6 +600,7 @@ ZwFlushBuffersFile(
     IN HANDLE FileHandle,
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -716,6 +718,7 @@ ZwQueryDirectoryFile(
     IN BOOLEAN RestartScan
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwQueryEaFile(
@@ -729,6 +732,7 @@ ZwQueryEaFile(
     IN PULONG EaIndex OPTIONAL,
     IN BOOLEAN RestartScan
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -837,6 +841,7 @@ ZwSetBootOptions(
     ULONG Unknown2
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwSetEaFile(
@@ -845,6 +850,7 @@ ZwSetEaFile(
     PVOID EaBuffer,
     ULONG EaBufferSize
 );
+#endif
 
 NTSYSCALLAPI
 NTSTATUS

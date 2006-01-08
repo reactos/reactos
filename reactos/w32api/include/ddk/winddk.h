@@ -127,7 +127,6 @@ struct _FILE_OBJECT;
 struct _DMA_ADAPTER;
 struct _DEVICE_OBJECT;
 struct _DRIVER_OBJECT;
-struct _SECTION_OBJECT;
 struct _IO_STATUS_BLOCK;
 struct _DEVICE_DESCRIPTION;
 struct _SCATTER_GATHER_LIST;
@@ -141,7 +140,6 @@ typedef PVOID PSID;
 DECLARE_INTERNAL_OBJECT(ADAPTER_OBJECT)
 DECLARE_INTERNAL_OBJECT(DMA_ADAPTER)
 DECLARE_INTERNAL_OBJECT(IO_STATUS_BLOCK)
-DECLARE_INTERNAL_OBJECT(SECTION_OBJECT)
 
 #if 1
 /* FIXME: Unknown definitions */
@@ -6789,6 +6787,22 @@ HalExamineMBR(
   IN ULONG  MBRTypeIdentifier,
   OUT PVOID  *Buffer);
 
+VOID
+NTAPI
+HalPutDmaAdapter(
+    PADAPTER_OBJECT AdapterObject
+);
+
+NTSTATUS
+NTAPI
+IoAllocateAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
+    IN PVOID Context
+);
+
 NTHALAPI
 VOID
 DDKAPI
@@ -8833,7 +8847,7 @@ NTOSAPI
 NTSTATUS
 DDKAPI
 MmCreateSection(
-  OUT PSECTION_OBJECT  *SectionObject,
+  OUT PVOID *SectionObject,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
   IN PLARGE_INTEGER  MaximumSize,

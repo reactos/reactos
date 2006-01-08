@@ -113,7 +113,7 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
 NTSTATUS FASTCALL
 MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                       IN PVOID Address,
-                      IN CINT VirtualMemoryInformationClass,
+                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
                       OUT PVOID VirtualMemoryInformation,
                       IN ULONG Length,
                       OUT PULONG ResultLength)

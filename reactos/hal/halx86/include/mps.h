@@ -22,7 +22,8 @@
 /* MP Floating Pointer Structure */
 #define MPF_SIGNATURE (('_' << 24) | ('P' << 16) | ('M' << 8) | '_')
 
-typedef struct __attribute__((packed)) _MP_FLOATING_POINTER
+#include <pshpack1.h>
+typedef struct _MP_FLOATING_POINTER
 {
 	ULONG Signature;     /* _MP_ */
 	ULONG Address;          /* Physical Address Pointer (0 means no configuration table exist) */
@@ -34,14 +35,15 @@ typedef struct __attribute__((packed)) _MP_FLOATING_POINTER
 	UCHAR Feature3;         /* Unused (0) */
 	UCHAR Feature4;         /* Unused (0) */
 	UCHAR Feature5;         /* Unused (0) */
-} __attribute__((packed)) MP_FLOATING_POINTER, *PMP_FLOATING_POINTER;
+} MP_FLOATING_POINTER, *PMP_FLOATING_POINTER;
+
 
 #define FEATURE2_IMCRP  0x80
 
 /* MP Configuration Table Header */
 #define MPC_SIGNATURE (('P' << 24) | ('M' << 16) | ('C' << 8) | 'P')
 
-typedef struct __attribute__((packed)) _MP_CONFIGURATION_TABLE
+typedef struct _MP_CONFIGURATION_TABLE
 {
   ULONG Signature;     /* PCMP */
   USHORT Length;	        /* Size of configuration table */
@@ -56,7 +58,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_TABLE
   USHORT ExtTableLength;  /* Extended Table Length */
   UCHAR ExtTableChecksum; /* Extended Table Checksum */
   UCHAR Reserved;         /* Reserved */
-} __attribute__((packed)) MP_CONFIGURATION_TABLE, *PMP_CONFIGURATION_TABLE;
+} MP_CONFIGURATION_TABLE, *PMP_CONFIGURATION_TABLE;
 
 /* MP Configuration Table Entries */
 #define MPCTE_PROCESSOR 0   /* One entry per processor */
@@ -66,7 +68,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_TABLE
 #define MPCTE_LINTSRC   4   /* One entry per system interrupt source */
 
 
-typedef struct __attribute__((packed)) _MP_CONFIGURATION_PROCESSOR
+typedef struct _MP_CONFIGURATION_PROCESSOR
 {
   UCHAR Type;         /* 0 */
   UCHAR ApicId;       /* Local APIC ID for the processor */
@@ -75,17 +77,16 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_PROCESSOR
   ULONG CpuSignature; /* CPU signature */
   ULONG FeatureFlags; /* CPUID feature value */
   ULONG Reserved[2];  /* Reserved (0) */
-} __attribute__((packed)) MP_CONFIGURATION_PROCESSOR, 
-  *PMP_CONFIGURATION_PROCESSOR;
+}  MP_CONFIGURATION_PROCESSOR, *PMP_CONFIGURATION_PROCESSOR;
 
 
 
-typedef struct __attribute__((packed)) _MP_CONFIGURATION_BUS
+typedef struct  _MP_CONFIGURATION_BUS
 {
 	UCHAR Type;         /* 1 */
 	UCHAR BusId;        /* Bus ID */
 	CHAR BusType[6];   /* Bus type */
-} __attribute__((packed)) MP_CONFIGURATION_BUS, *PMP_CONFIGURATION_BUS;
+}  MP_CONFIGURATION_BUS, *PMP_CONFIGURATION_BUS;
 
 #define MAX_BUS 32
 
@@ -114,21 +115,21 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_BUS
 #define BUSTYPE_XPRESS	"XPRESS"
 
 
-typedef struct __attribute__((packed)) _MP_CONFIGURATION_IOAPIC
+typedef struct _MP_CONFIGURATION_IOAPIC
 {
 	UCHAR Type;         /* 2 */
 	UCHAR ApicId;       /* I/O APIC ID */
 	UCHAR ApicVersion;  /* I/O APIC version */
 	UCHAR ApicFlags;    /* I/O APIC flags */
 	ULONG ApicAddress;  /* I/O APIC base address */
-} __attribute__((packed)) MP_CONFIGURATION_IOAPIC, *PMP_CONFIGURATION_IOAPIC;
+} MP_CONFIGURATION_IOAPIC, *PMP_CONFIGURATION_IOAPIC;
 
 #define MAX_IOAPIC  2
 
 #define MP_IOAPIC_USABLE  0x01
 
 
-typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTSRC
+typedef struct _MP_CONFIGURATION_INTSRC
 {
 	UCHAR Type;         /* 3 */
 	UCHAR IrqType;      /* Interrupt type */
@@ -137,7 +138,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTSRC
 	UCHAR SrcBusIrq;    /* Source bus interrupt */
 	UCHAR DstApicId;    /* Destination APIC ID */
 	UCHAR DstApicInt;   /* Destination interrupt */
-} __attribute__((packed)) MP_CONFIGURATION_INTSRC, *PMP_CONFIGURATION_INTSRC;
+}  MP_CONFIGURATION_INTSRC, *PMP_CONFIGURATION_INTSRC;
 
 #define MAX_IRQ_SOURCE  128
 
@@ -151,7 +152,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTSRC
 #define IRQDIR_LOW      3
 
 
-typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTLOCAL
+typedef struct _MP_CONFIGURATION_INTLOCAL
 {
 	UCHAR Type;         /* 4 */
 	UCHAR IrqType;      /* Interrupt type */
@@ -161,6 +162,7 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTLOCAL
 	UCHAR DstApicId;    /* Destination local APIC ID */
 	UCHAR DstApicLInt;  /* Destination local APIC interrupt */
 } MP_CONFIGURATION_INTLOCAL, *PMP_CONFIGURATION_INTLOCAL;
+#include <poppack.h>
 
 #define MP_APIC_ALL	0xFF
   

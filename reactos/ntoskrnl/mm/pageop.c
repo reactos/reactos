@@ -136,7 +136,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 PMM_PAGEOP
 NTAPI
 MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
-            PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First)
+            PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOLEAN First)
 /*
  * FUNCTION: Get a page operation descriptor corresponding to
  * the memory area and either the segment, offset pair or the

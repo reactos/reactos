@@ -16,14 +16,12 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
-VOID
-NTAPI
-HalAllocateCrashDumpRegisters(
-  ULONG Unknown1,
-  ULONG Unknown2)
+PVOID STDCALL
+HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
+                              IN OUT PULONG NumberOfMapRegisters)
 {
   UNIMPLEMENTED;
+  return NULL;
 }
 
 

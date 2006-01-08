@@ -353,7 +353,7 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
    ExReleaseFastMutex(&RmapListLock);
 }
 
-BOOL
+BOOLEAN
 NTAPI
 MmIsDirtyPageRmap(PFN_TYPE Page)
 {

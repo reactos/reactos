@@ -1333,7 +1333,7 @@ VOID
 MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 {
    MM_SECTION_PAGEOUT_CONTEXT* PageOutContext;
-   BOOL WasDirty;
+   BOOLEAN WasDirty;
    PFN_TYPE Page;
 
    PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
@@ -2151,7 +2151,7 @@ MmCreatePhysicalMemorySection(VOID)
                               OBJ_PERMANENT,
                               NULL,
                               NULL);
-   Status = MmCreateSection(&PhysSection,
+   Status = MmCreateSection((PVOID)&PhysSection,
                             SECTION_ALL_ACCESS,
                             &Obj,
                             &SectionSize,
@@ -3363,7 +3363,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                  IN HANDLE FileHandle OPTIONAL)
 {
    LARGE_INTEGER SafeMaximumSize;
-   PSECTION_OBJECT SectionObject;
+   PVOID SectionObject;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -4814,7 +4814,7 @@ MmSetBankedSection (DWORD Unknown0,
  * @implemented
  */
 NTSTATUS STDCALL
-MmCreateSection (OUT PSECTION_OBJECT  * SectionObject,
+MmCreateSection (OUT PVOID  * Section,
                  IN ACCESS_MASK  DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes     OPTIONAL,
                  IN PLARGE_INTEGER  MaximumSize,
@@ -4824,6 +4824,7 @@ MmCreateSection (OUT PSECTION_OBJECT  * SectionObject,
                  IN PFILE_OBJECT  File      OPTIONAL)
 {
    ULONG Protection;
+   PSECTION_OBJECT *SectionObject = (PSECTION_OBJECT *)Section;
 
    /*
     * Check the protection

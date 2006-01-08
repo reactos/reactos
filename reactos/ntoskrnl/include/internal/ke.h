@@ -304,13 +304,6 @@ KiIpiSendRequest(
     ULONG IpiRequest
 );
 
-VOID
-NTAPI
-KeIpiGenericCall(
-    VOID (STDCALL *WorkerRoutine)(PVOID),
-    PVOID Argument
-);
-
 /* next file ***************************************************************/
 
 VOID 
@@ -480,14 +473,6 @@ KiInsertTimer(
     LARGE_INTEGER DueTime
 );
 
-BOOLEAN
-__inline
-FASTCALL
-KiIsObjectSignaled(
-    PDISPATCHER_HEADER Object,
-    PKTHREAD Thread
-);
-
 VOID
 FASTCALL
 KiWaitTest(
@@ -584,10 +569,6 @@ KeRemoveQueueApc(PKAPC Apc);
 VOID
 FASTCALL
 KiWakeQueue(IN PKQUEUE Queue);
-
-PLIST_ENTRY
-STDCALL
-KeRundownQueue(IN PKQUEUE Queue);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

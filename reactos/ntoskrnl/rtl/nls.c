@@ -33,7 +33,7 @@ static ULONG NlsOemCodePageTableSize = 0;
 static PUSHORT NlsUnicodeCasemapTable = NULL;
 static ULONG NlsUnicodeCasemapTableSize = 0;
 
-PSECTION_OBJECT NlsSectionObject = NULL;
+PVOID NlsSectionObject = NULL;
 static PVOID NlsSectionBase = NULL;
 static ULONG NlsSectionViewSize = 0;
 

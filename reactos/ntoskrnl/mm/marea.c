@@ -767,7 +767,7 @@ MmFreeMemoryArea(
       }
       else
       {
-         BOOL Dirty = FALSE;
+         BOOLEAN Dirty = FALSE;
          SWAPENTRY SwapEntry = 0;
          PFN_TYPE Page = 0;
 

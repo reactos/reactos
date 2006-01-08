@@ -601,8 +601,8 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
 {
   ULONG DataSize;
   PCI_COMMON_CONFIG PciConfig;
-  UINT Address;
-  UINT ResourceCount;
+  SIZE_T Address;
+  SIZE_T ResourceCount;
   ULONG Size[PCI_TYPE0_ADDRESSES];
   NTSTATUS Status = STATUS_SUCCESS;
   UCHAR Offset;

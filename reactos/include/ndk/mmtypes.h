@@ -343,6 +343,20 @@ typedef struct _MMSUPPORT
     ULONG GrowthSinceLastEstimate;
 } MMSUPPORT, *PMMSUPPORT;
 
+//
+// Memory Information Types
+//
+typedef struct _MEMORY_BASIC_INFORMATION
+{
+    PVOID BaseAddress;
+    PVOID AllocationBase;
+    ULONG AllocationProtect;
+    ULONG RegionSize;
+    ULONG State;
+    ULONG Protect;
+    ULONG Type;
+} MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
+
 #endif // !NTOS_MODE_USER
 
 #endif // _MMTYPES_H

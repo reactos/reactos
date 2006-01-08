@@ -50,7 +50,7 @@ HalMakeBeep (
 
     if (Frequency)
     {
-        DWORD Divider = CLOCKFREQ / Frequency;
+        ULONG Divider = CLOCKFREQ / Frequency;
 
         if (Divider > 0x10000)
         {

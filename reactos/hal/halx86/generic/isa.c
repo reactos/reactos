@@ -17,7 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL HalIsaProbe(VOID)
+BOOLEAN HalIsaProbe(VOID)
 /*
  * FUNCTION: Probes for an ISA bus
  * RETURNS: True if detected

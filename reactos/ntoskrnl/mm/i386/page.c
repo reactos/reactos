@@ -796,7 +796,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -916,8 +916,8 @@ MmRawDeleteVirtualMapping(PVOID Address)
 
 VOID
 NTAPI
-MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
-                       BOOL* WasDirty, PPFN_TYPE Page)
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
+                       BOOLEAN* WasDirty, PPFN_TYPE Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */

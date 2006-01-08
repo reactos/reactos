@@ -205,7 +205,7 @@ typedef struct _SECTION_OBJECT
         PMM_IMAGE_SECTION_OBJECT ImageSection;
         PMM_SECTION_SEGMENT Segment;
     };
-} SECTION_OBJECT;
+} SECTION_OBJECT, *PSECTION_OBJECT;
 
 typedef struct _MEMORY_AREA
 {
@@ -776,7 +776,7 @@ MmGetPageOp(
     PMM_SECTION_SEGMENT Segment,
     ULONG Offset,
     ULONG OpType,
-    BOOL First
+    BOOLEAN First
 );
 
 PMM_PAGEOP
@@ -892,7 +892,7 @@ VOID
 NTAPI
 MmSetDirtyAllRmaps(PFN_TYPE Page);
 
-BOOL
+BOOLEAN
 NTAPI
 MmIsDirtyPageRmap(PFN_TYPE Page);
 
@@ -1041,7 +1041,7 @@ NTAPI
 MmDisableVirtualMapping(
     PEPROCESS Process,
     PVOID Address,
-    BOOL* WasDirty,
+    BOOLEAN* WasDirty,
     PPFN_TYPE Page
 );
 
@@ -1203,8 +1203,8 @@ NTAPI
 MmDeleteVirtualMapping(
     PEPROCESS Process,
     PVOID Address,
-    BOOL FreePage,
-    BOOL* WasDirty,
+    BOOLEAN FreePage,
+    BOOLEAN* WasDirty,
     PPFN_TYPE Page
 );
 
@@ -1246,18 +1246,6 @@ MmTrimUserMemory(
     ULONG Target,
     ULONG Priority,
     PULONG NrFreedPages
-);
-
-/* cont.c ********************************************************************/
-
-PVOID
-STDCALL
-MmAllocateContiguousMemorySpecifyCache(
-    IN SIZE_T NumberOfBytes,
-    IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-    IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-    IN MEMORY_CACHING_TYPE CacheType OPTIONAL
 );
 
 /* region.c ************************************************************/
@@ -1313,6 +1301,21 @@ MmQuerySectionView(
 
 NTSTATUS
 NTAPI
+MmMapViewOfSection(
+    IN PVOID SectionObject,
+    IN PEPROCESS Process,
+    IN OUT PVOID *BaseAddress,
+    IN ULONG ZeroBits,
+    IN ULONG CommitSize,
+    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+    IN OUT PULONG ViewSize,
+    IN SECTION_INHERIT InheritDisposition,
+    IN ULONG AllocationType,
+    IN ULONG Protect
+);
+
+NTSTATUS
+NTAPI
 MmProtectSectionView(
     PMADDRESS_SPACE AddressSpace,
     PMEMORY_AREA MemoryArea,
@@ -1334,19 +1337,6 @@ MmWritePageSectionView(
 NTSTATUS
 NTAPI
 MmInitSectionImplementation(VOID);
-
-NTSTATUS 
-STDCALL
-MmCreateSection(
-    OUT PSECTION_OBJECT *SectionObject,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN PLARGE_INTEGER MaximumSize,
-    IN ULONG SectionPageProtection,
-    IN ULONG AllocationAttributes,
-    IN HANDLE FileHandle OPTIONAL,
-    IN PFILE_OBJECT File OPTIONAL
-);
 
 NTSTATUS
 NTAPI
@@ -1408,7 +1398,7 @@ FASTCALL
 MiQueryVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID Address,
-    IN CINT VirtualMemoryInformationClass,
+    IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     OUT PVOID VirtualMemoryInformation,
     IN ULONG Length,
     OUT PULONG ResultLength

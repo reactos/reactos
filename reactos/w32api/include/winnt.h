@@ -2428,6 +2428,8 @@ typedef struct _TAPE_CREATE_PARTITION {
 	DWORD Count;
 	DWORD Size;
 } TAPE_CREATE_PARTITION,*PTAPE_CREATE_PARTITION;
+/* Sigh..when will they learn... */
+#ifndef __NTDDK_H
 typedef struct _MEMORY_BASIC_INFORMATION {
 	PVOID BaseAddress;
 	PVOID AllocationBase;
@@ -2437,6 +2439,7 @@ typedef struct _MEMORY_BASIC_INFORMATION {
 	DWORD Protect;
 	DWORD Type;
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
+#endif
 typedef struct _MESSAGE_RESOURCE_ENTRY {
 	WORD Length;
 	WORD Flags;

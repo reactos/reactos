@@ -87,8 +87,8 @@ static BOOLEAN
 KdpDoesComPortExist (PUCHAR BaseAddress)
 {
         BOOLEAN found;
-        BYTE mcr;
-        BYTE msr;
+        UCHAR mcr;
+        UCHAR msr;
 
         found = FALSE;
 
@@ -149,14 +149,14 @@ BOOLEAN
 STDCALL
 KdPortInitialize (
 	PKD_PORT_INFORMATION	PortInformation,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	)
 {
         ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
         char buffer[80];
         ULONG divisor;
-        BYTE lcr;
+        UCHAR lcr;
 
         if (PortInitialized == FALSE)
         {
@@ -282,15 +282,15 @@ BOOLEAN
 STDCALL
 KdPortInitializeEx (
 	PKD_PORT_INFORMATION	PortInformation,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	)
 {
         ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
 		PUCHAR ComPortBase;
         char buffer[80];
         ULONG divisor;
-        BYTE lcr;
+        UCHAR lcr;
 
 		if (PortInformation->BaudRate == 0)
 		{

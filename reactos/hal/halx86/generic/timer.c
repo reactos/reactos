@@ -96,7 +96,7 @@ static BOOLEAN UdelayCalibrated = FALSE;
  * For supported compilers we use inline assembler. For the others,
  * portable plain C.
  */
-VOID STDCALL __attribute__((noinline))
+DECLSPEC_NOINLINE VOID STDCALL
 __KeStallExecutionProcessor(ULONG Loops)
 {
   if (!Loops)
@@ -121,7 +121,9 @@ ROSL1:
 #endif
 }
 
-VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
+VOID
+STDCALL
+KeStallExecutionProcessor(ULONG Microseconds)
 {
    PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
@@ -305,7 +307,8 @@ HalCalibratePerformanceCounter(ULONG Count)
 }
 
 
-LARGE_INTEGER STDCALL
+LARGE_INTEGER
+STDCALL
 KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 /*
  * FUNCTION: Queries the finest grained running count available in the system

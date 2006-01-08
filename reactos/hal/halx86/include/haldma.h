@@ -310,12 +310,12 @@ typedef struct _EISA_CONTROL
    DMA_CHANNEL_STOP DmaChannelStop[8];  /* 4E0h-4FFh */
 } EISA_CONTROL, *PEISA_CONTROL;
 
-typedef struct _MAP_REGISTER_ENTRY
+typedef struct _ROS_MAP_REGISTER_ENTRY
 {
    PVOID VirtualAddress;
    PHYSICAL_ADDRESS PhysicalAddress;
    ULONG Counter;
-} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
+} ROS_MAP_REGISTER_ENTRY, *PROS_MAP_REGISTER_ENTRY;
 
 struct _ADAPTER_OBJECT {
    /*
@@ -333,7 +333,7 @@ struct _ADAPTER_OBJECT {
 
    ULONG MapRegistersPerChannel;
    PVOID AdapterBaseVa;
-   PMAP_REGISTER_ENTRY MapRegisterBase;
+   PROS_MAP_REGISTER_ENTRY MapRegisterBase;
 
    ULONG NumberOfMapRegisters;
    ULONG CommittedMapRegisters;
@@ -376,20 +376,21 @@ HalpGetDmaAdapter(
    IN PDEVICE_DESCRIPTION DeviceDescription,
    OUT PULONG NumberOfMapRegisters);
 
-VOID STDCALL
-HalPutDmaAdapter(
-   PADAPTER_OBJECT AdapterObject);
+/* FIXME: I added the definition to winddk.h but gcc wants it -HERE-. WHY?? */
+#ifndef _MSC_VER
+NTSTATUS
+NTAPI
+IoAllocateAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
+    IN PVOID Context
+);
+#endif
 
 ULONG STDCALL
 HalpDmaGetDmaAlignment(
    PADAPTER_OBJECT AdapterObject);
-
-NTSTATUS STDCALL
-IoAllocateAdapterChannel(
-   IN PADAPTER_OBJECT AdapterObject,
-   IN PDEVICE_OBJECT DeviceObject,
-   IN ULONG NumberOfMapRegisters,
-   IN PDRIVER_CONTROL ExecutionRoutine,
-   IN PVOID Context);
 
 #endif /* HALDMA_H */
