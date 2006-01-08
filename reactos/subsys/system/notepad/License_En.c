@@ -1,5 +1,4 @@
-#include <windows.h>
-#include "license.h"
+#include <notepad.h>
 
 static const CHAR LicenseCaption_En[] = "LICENSE";
 static const CHAR License_En[] =
