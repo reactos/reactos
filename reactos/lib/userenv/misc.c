@@ -51,12 +51,12 @@ BOOL
 GetUserSidFromToken (HANDLE hToken,
 		     PUNICODE_STRING SidString)
 {
-  PSID_AND_ATTRIBUTES SidBuffer;
+  PSID_AND_ATTRIBUTES SidBuffer, nsb;
   ULONG Length;
   NTSTATUS Status;
 
   Length = 256;
-  SidBuffer = LocalAlloc (0,
+  SidBuffer = LocalAlloc (LMEM_FIXED,
 			  Length);
   if (SidBuffer == NULL)
     return FALSE;
@@ -68,12 +68,16 @@ GetUserSidFromToken (HANDLE hToken,
 				    &Length);
   if (Status == STATUS_BUFFER_TOO_SMALL)
     {
-      SidBuffer = LocalReAlloc (SidBuffer,
-				Length,
-				0);
-      if (SidBuffer == NULL)
-	return FALSE;
+      nsb = LocalReAlloc (SidBuffer,
+                          Length,
+                          LMEM_MOVEABLE);
+      if (nsb == NULL)
+        {
+          LocalFree((HLOCAL)SidBuffer);
+          return FALSE;
+        }
 
+      SidBuffer = nsb;
       Status = NtQueryInformationToken (hToken,
 					TokenUser,
 					(PVOID)SidBuffer,
@@ -83,7 +87,7 @@ GetUserSidFromToken (HANDLE hToken,
 
   if (!NT_SUCCESS (Status))
     {
-      LocalFree (SidBuffer);
+      LocalFree ((HLOCAL)SidBuffer);
       return FALSE;
     }
 
@@ -93,7 +97,7 @@ GetUserSidFromToken (HANDLE hToken,
 					 SidBuffer[0].Sid,
 					 TRUE);
 
-  LocalFree (SidBuffer);
+  LocalFree ((HLOCAL)SidBuffer);
 
   if (!NT_SUCCESS (Status))
     return FALSE;
