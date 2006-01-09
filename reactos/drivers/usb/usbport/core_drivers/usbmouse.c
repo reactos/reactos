@@ -257,18 +257,14 @@ static struct usb_device_id usb_mouse_id_table [] = {
 MODULE_DEVICE_TABLE (usb, usb_mouse_id_table);
 
 static struct usb_driver usb_mouse_driver = {
-	THIS_MODULE,
-	"usbmouse",
-	usb_mouse_probe,
-	usb_mouse_disconnect,
-	usb_mouse_id_table
-/*
-	.owner		= THIS_MODULE,
-	.name		= "usbmouse",
-	.probe		= usb_mouse_probe,
-	.disconnect	= usb_mouse_disconnect,
-	.id_table	= usb_mouse_id_table,
-*/
+	/*.owner		=*/	THIS_MODULE,
+	/*.name			=*/	"usbmouse",
+	/*.probe		=*/	usb_mouse_probe,
+	/*.disconnect	=*/	usb_mouse_disconnect,
+	/*.ioctl		=*/	NULL,
+	/*.suspend		=*/	NULL,
+	/*.resume		=*/	NULL,
+	/*.id_table		=*/	usb_mouse_id_table
 };
 
 
