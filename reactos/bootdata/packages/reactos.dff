@@ -98,6 +98,7 @@ lib\gdi32\gdi32.dll                     1
 lib\gdiplus\gdiplus.dll                 1
 lib\glu32\glu32.dll                     1
 lib\hid\hid.dll                         1
+lib\icmp\icmp.dll                       1
 lib\imagehlp\imagehlp.dll               1
 lib\imm32\imm32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
