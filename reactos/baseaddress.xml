@@ -56,6 +56,7 @@
 <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
 <property name="BASEADDRESS_LZ32" value="0x73d80000" />
 <property name="BASEADDRESS_COREDLL" value="0x73d80000" />
+<property name="BASEADDRESS_ICMP" value="0x741F0000" />
 <property name="BASEADDRESS_USERENV" value="0x74850000" />
 <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />
 <property name="BASEADDRESS_OLEDLG" value="0x74d00000" />

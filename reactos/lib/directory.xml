@@ -116,6 +116,9 @@
 <directory name="hid">
 	<xi:include href="hid/hid.xml" />
 </directory>
+<directory name="icmp">
+	<xi:include href="icmp/icmp.xml" />
+</directory>
 <directory name="imagehlp">
 	<xi:include href="imagehlp/imagehlp.xml" />
 </directory>
