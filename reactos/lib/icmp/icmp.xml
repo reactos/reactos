@@ -1,5 +1,4 @@
 <module name="icmp" type="win32dll" baseaddress="${BASEADDRESS_ICMP}" installbase="system32" installname="icmp.dll">
-	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="icmp.spec.def" />
 	<include base="icmp">.</include>
 	<include base="ReactOS">include/wine</include>
