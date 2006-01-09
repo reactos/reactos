@@ -25,7 +25,7 @@
 	<directory name="eng">
 		<compilationunit name="eng.c">
 			<file>bitblt.c</file>
-			<file>brush.c</file>
+			<file>engbrush.c</file>
 			<file>clip.c</file>
 			<file>copybits.c</file>
 			<file>debug.c</file>
@@ -37,7 +37,7 @@
 			<file>gradient.c</file>
 			<file>lineto.c</file>
 			<file>mem.c</file>
-			<file>misc.c</file>
+			<file>engmisc.c</file>
 			<file>mouse.c</file>
 			<file>paint.c</file>
 			<file>palette.c</file>
@@ -46,7 +46,7 @@
 			<file>sort.c</file>
 			<file>surface.c</file>
 			<file>transblt.c</file>
-			<file>window.c</file>
+			<file>engwindow.c</file>
 			<file>xlate.c</file>
 		</compilationunit>
 	</directory>
@@ -59,7 +59,7 @@
 	<directory name="misc">
 		<compilationunit name="misc.c">
 			<file>driver.c</file>
-			<file>error.c</file>
+			<file>err.c</file>
 			<file>math.c</file>
 			<file>copy.c</file>
 		</compilationunit>
@@ -104,7 +104,7 @@
 			<file>prop.c</file>
 			<file>scrollbar.c</file>
 			<file>session.c</file>
-			<file>stubs.c</file>
+			<file>ntstubs.c</file>
 			<file>timer.c</file>
 			<file>useratom.c</file>
 			<file>vis.c</file>
@@ -125,14 +125,14 @@
 			<file>color.c</file>
 			<file>coord.c</file>
 			<file>dc.c</file>
-			<file>dib.c</file>
+			<file>dibobj.c</file>
 			<file>fillshap.c</file>
 			<file>gdiobj.c</file>
 			<file>icm.c</file>
 			<file>line.c</file>
 			<file>metafile.c</file>
-			<file>paint.c</file>
-			<file>palette.c</file>
+			<file>paintobj.c</file>
+			<file>palobj.c</file>
 			<file>path.c</file>
 			<file>pen.c</file>
 			<file>polyfill.c</file>
