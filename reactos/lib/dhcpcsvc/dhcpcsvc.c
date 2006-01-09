@@ -1,12 +1,9 @@
-/* $Id: dllmain.c 12852 2005-01-06 13:58:04Z mf $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/dhcpcapi/dhcpcapi.c
  * PURPOSE:         Client API for DHCP
- * PROGRAMMER:      arty (ayerkes@speakeasy.net)
- * UPDATE HISTORY:
- *                  Created 12/04/2005
+ * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
  */
 
 #include <roscfg.h>
@@ -14,6 +11,9 @@
 #include <dhcpcsdk.h>
 #include <time.h>
 #include <dhcp/rosdhcp_public.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #define DHCP_TIMEOUT 1000
 
@@ -118,34 +118,70 @@ DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
     return Reply.Reply;
 }
 
-/*++
- * @name DhcpRosGetAdapterInfo
- * @implemented ReactOS only
+/*!
+ * Set new TCP/IP parameters and notify DHCP client service of this
  *
+ * \param[in] ServerName
+ *        NULL for local machine
+ *
+ * \param[in] AdapterName
+ *        IPHLPAPI name of adapter to change
+ *
+ * \param[in] NewIpAddress
+ *        TRUE if IP address changes
+ *
+ * \param[in] IpAddress
+ *        New IP address (network byte order)
+ *
+ * \param[in] SubnetMask
+ *        New subnet mask (network byte order)
+ *
+ * \param[in] DhcpAction
+ *        0 - don't modify
+ *        1 - enable DHCP
+ *        2 - disable DHCP
+ *
+ * \return non-zero on success
+ *
+ * \remarks Undocumented by Microsoft
+ */
+DWORD APIENTRY
+DhcpNotifyConfigChange(LPWSTR ServerName,
+                       LPWSTR AdapterName,
+                       BOOL NewIpAddress,
+                       DWORD IpIndex,
+                       DWORD IpAddress,
+                       DWORD SubnetMask,
+                       int DhcpAction)
+{
+    DPRINT1("DhcpNotifyConfigChange not implemented yet\n");
+    return 0;
+}
+
+/*!
  * Get DHCP info for an adapter
  *
- * @param AdapterIndex
+ * \param[in] AdapterIndex
  *        Index of the adapter (iphlpapi-style) for which info is
  *        requested
  *
- * @param DhcpEnabled
+ * \param[out] DhcpEnabled
  *        Returns whether DHCP is enabled for the adapter
  *
- * @param DhcpServer
+ * \param[out] DhcpServer
  *        Returns DHCP server IP address (255.255.255.255 if no
  *        server reached yet), in network byte order
  *
- * @param LeaseObtained
+ * \param[out] LeaseObtained
  *        Returns time at which the lease was obtained
  *
- * @param LeaseExpires
+ * \param[out] LeaseExpires
  *        Returns time at which the lease will expire
  *
- * @return non-zero on success
+ * \return non-zero on success
  *
- * @remarks This is a ReactOS-only routine
- *
- *--*/
+ * \remarks This is a ReactOS-only routine
+ */
 DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
                                       PBOOL DhcpEnabled,
                                       PDWORD DhcpServer,
