@@ -66,6 +66,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "ipexport.h"
+#include <ws2tcpip.h>
 #include "icmpapi.h"
 #include "wine/debug.h"
 
