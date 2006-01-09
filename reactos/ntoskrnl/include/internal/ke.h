@@ -56,7 +56,6 @@ extern ULONG_PTR KERNEL_BASE;
 #define KeReleaseDispatcherDatabaseLockFromDpcLevel() \
     KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
 #define KeReleaseDispatcherDatabaseLock(OldIrql) \
-    KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock); \
     KiExitDispatcher(OldIrql);
 #else
 #define KeInitializeDispatcher()
@@ -303,6 +302,13 @@ KiIpiSendRequest(
     KAFFINITY TargetSet,
     ULONG IpiRequest
 );
+
+VOID   
+NTAPI   
+KeIpiGenericCall(   
+    VOID (STDCALL *WorkerRoutine)(PVOID),   
+    PVOID Argument   
+);   
 
 /* next file ***************************************************************/
 

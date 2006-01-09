@@ -844,6 +844,10 @@ KiExitDispatcher(KIRQL OldIrql)
     {
         KiDispatchThreadNoLock(Ready);
     }
+    else
+    {
+        KeReleaseDispatcherDatabaseLockFromDpcLevel();    
+    }
 
     /* Lower irql back */
     KeLowerIrql(OldIrql);
