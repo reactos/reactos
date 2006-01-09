@@ -213,7 +213,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
   if (RequestedInformation &
       (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
     {
-      AccessMask |= STANDARD_RIGHTS_READ;
+      AccessMask |= READ_CONTROL;
     }
 
   if (RequestedInformation & SACL_SECURITY_INFORMATION)
