@@ -8,7 +8,7 @@ LsaLookupAuthenticationPackage@12
 LsaFreeReturnBuffer@4
 LsaCallAuthenticationPackage@28
 ;AcceptSecurityContext@36
-;AcquireCredentialsHandleA@36
+AcquireCredentialsHandleA@36
 ;AcquireCredentialsHandleW@36
 ;@AddCredentialsA
 ;@AddCredentialsW
@@ -39,7 +39,7 @@ GetUserNameExW@12
 ;@ImportSecurityContextW
 ;@InitSecurityInterfaceA
 ;@InitSecurityInterfaceW
-;InitializeSecurityContextA@48
+InitializeSecurityContextA@48
 ;InitializeSecurityContextW@48
 LsaEnumerateLogonSessions@8
 LsaGetLogonSessionData@8
