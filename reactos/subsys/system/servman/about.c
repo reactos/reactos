@@ -13,6 +13,9 @@
 
 extern HINSTANCE hInstance;
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4100)
+#endif
 BOOL CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {

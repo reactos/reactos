@@ -11,7 +11,9 @@
 
 extern HINSTANCE hInstance;
 
-
+#ifdef _MSC_VER
+#pragma warning(disable : 4100)
+#endif
 /* Property page dialog callback */
 INT_PTR CALLBACK
 GeneralPageProc(HWND hwndDlg,

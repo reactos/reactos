@@ -13,15 +13,13 @@
 
 BOOL RefreshServiceList(VOID);
 
-BOOL CALLBACK
-AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 VOID GetError(VOID);
 VOID FreeMemory(VOID);
 VOID DisplayString(PTCHAR);
 
-LONG APIENTRY
-PropSheets(HWND hwnd);
+LONG APIENTRY PropSheets(HWND hwnd);
 
 DWORD GetServiceList(VOID);
 

@@ -177,12 +177,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		    SendMessage(hStatus, SB_SETPARTS, sizeof(statwidths)/sizeof(int), (LPARAM)statwidths);
 
-		    /* populate the list view with all services */
+
+/* ================= populate the list view with all services =================== */
+
 		    if (! RefreshServiceList() )
                 GetError();
 
 	    }
 	    break;
+
 	    case WM_SIZE:
 	    {
 		    RECT rcTool;
@@ -241,7 +244,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                     // Specify the resource identifier of the descriptive
                     // text for the given button.
-                    idButton = lpttt->hdr.idFrom;
+                    idButton = (UINT)lpttt->hdr.idFrom;
                     switch (idButton)
                     {
                         case ID_PROP:
@@ -337,11 +340,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_HELP:
+                    MessageBox(NULL, _T("Help is not yet implemented\n"), 
+                        _T("Note!"), MB_OK | MB_ICONINFORMATION);
                 break;
 
                 case ID_EXIT:
-				    PostMessage(hwnd, WM_CLOSE, 0, 0);
-			    break;
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                break;
 
                 case ID_VIEW_CUSTOMIZE:
                 break;
@@ -362,8 +367,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-
-//#pragma warning(disable : 4100)
+#ifdef _MSC_VER
+#pragma warning(disable : 4100)
+#endif
 int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
     LPSTR lpCmdLine, int nCmdShow)
 {
@@ -426,7 +432,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
             DispatchMessage(&Msg);
         }
     }
-    return Msg.wParam;
+    return (int)Msg.wParam;
 }
 
 
