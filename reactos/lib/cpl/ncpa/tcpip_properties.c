@@ -1,29 +1,9 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS Network Control Panel
- * FILE:            lib/cpl/system/tcpip_properties.c
- * PURPOSE:         ReactOS Network Control Panel
- * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
- * UPDATE HISTORY:
- *      08-15-2004  Created
+ * PROJECT:     ReactOS Network Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/cpl/system/tcpip_properties.c
+ * PURPOSE:     ReactOS Network Control Panel
+ * COPYRIGHT:   Copyright 2004 Gero Kuehn (reactos.filter@gkware.com)
  */
 
 #include <stdlib.h>
@@ -56,17 +36,32 @@
 void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 
 static void
-EnableDHCP( HWND hwndDlg, BOOL Enabled ) {
-    CheckDlgButton(hwndDlg,IDC_USEDHCP,Enabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwndDlg,IDC_NODHCP,Enabled ? BST_UNCHECKED : BST_CHECKED);
+ManualDNS( HWND hwndDlg, BOOL Enabled ) {
+    CheckDlgButton(hwndDlg, IDC_FIXEDDNS, Enabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwndDlg, IDC_AUTODNS, Enabled ? BST_UNCHECKED : BST_CHECKED);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), Enabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), Enabled);
+    if ( ! Enabled ) {
+        SendDlgItemMessage(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessage(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+    }
 }
 
 static void
-ManualDNS( HWND hwndDlg, BOOL Enabled ) {
-    CheckDlgButton(hwndDlg,IDC_FIXEDDNS,Enabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwndDlg,IDC_AUTODNS,Enabled ? BST_UNCHECKED : BST_CHECKED);
-    EnableWindow(GetDlgItem(hwndDlg,IDC_DNS1),Enabled);
-    EnableWindow(GetDlgItem(hwndDlg,IDC_DNS2),Enabled);
+EnableDHCP( HWND hwndDlg, BOOL Enabled ) {
+    CheckDlgButton(hwndDlg, IDC_USEDHCP, Enabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwndDlg, IDC_NODHCP, Enabled ? BST_UNCHECKED : BST_CHECKED);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), ! Enabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), ! Enabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), ! Enabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODNS), Enabled);
+    if ( Enabled ) {
+        SendDlgItemMessage(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessage(hwndDlg, IDC_SUBNETMASK, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessage(hwndDlg, IDC_DEFGATEWAY, IPM_CLEARADDRESS, 0, 0);
+    } else {
+        ManualDNS(hwndDlg, TRUE);
+    }
 }
 
 static BOOL
@@ -172,6 +167,7 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         EnableDHCP( hwndDlg, pInfo->DhcpEnabled );
 
+        if ( ! pInfo->DhcpEnabled )
         {
             DWORD dwIPAddr;
             IP_ADDR_STRING *pString;
@@ -208,7 +204,7 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 NextDNSServer = pszDNS;
 
-                while( NextDNSServer && StaticDNS < 2 ) {
+                while( NextDNSServer && *NextDNSServer && StaticDNS < 2 ) {
                     dwIPAddr = inet_addr(NextDNSServer);
                     if( dwIPAddr != INADDR_NONE ) {
                         SendDlgItemMessage(hwndDlg,IDC_DNS1 + StaticDNS,
@@ -219,9 +215,8 @@ TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if( NextDNSServer )
                         NextDNSServer++;
                 }
-
-                ManualDNS( hwndDlg, StaticDNS );
             }
+            ManualDNS( hwndDlg, StaticDNS );
         }
     }
     break;
