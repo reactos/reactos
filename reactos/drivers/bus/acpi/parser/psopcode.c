@@ -24,9 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acparser.h"
-#include "amlcode.h"
+#include <acpi.h>
 
 
 #define _COMPONENT          ACPI_PARSER

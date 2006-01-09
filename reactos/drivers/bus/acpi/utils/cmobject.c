@@ -24,11 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-#include "actables.h"
-#include "amlcode.h"
+#include <acpi.h>
 
 
 #define _COMPONENT          ACPI_UTILITIES

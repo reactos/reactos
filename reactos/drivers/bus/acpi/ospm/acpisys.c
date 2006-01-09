@@ -7,9 +7,7 @@
  * UPDATE HISTORY:
  *      01-05-2001  CSH  Created
  */
-#include <acpisys.h>
-#include <bm.h>
-#include <bn.h>
+#include <acpi.h>
 
 #define NDEBUG
 #include <debug.h>

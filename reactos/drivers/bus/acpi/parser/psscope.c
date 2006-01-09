@@ -24,8 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acparser.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_PARSER
 	 MODULE_NAME         ("psscope")

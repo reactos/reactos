@@ -24,11 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "amlcode.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_NAMESPACE
 	 MODULE_NAME         ("nssearch")

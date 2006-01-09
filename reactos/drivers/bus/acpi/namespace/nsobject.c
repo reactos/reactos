@@ -25,12 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "amlcode.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "actables.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_NAMESPACE
 	 MODULE_NAME         ("nsobject")

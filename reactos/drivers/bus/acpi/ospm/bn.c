@@ -24,8 +24,6 @@
  */
 
 #include <acpi.h>
-#include "bn.h"
-
 
 #define _COMPONENT		ACPI_BUTTON
 	MODULE_NAME		("bn")

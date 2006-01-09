@@ -24,11 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acevents.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "amlcode.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_EVENTS
 	 MODULE_NAME         ("evregion")

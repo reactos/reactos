@@ -25,10 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "acresrc.h"
-#include "amlcode.h"
-#include "acnamesp.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_RESOURCES
 	 MODULE_NAME         ("rscalc")

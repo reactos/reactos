@@ -24,11 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acparser.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-#include "acglobal.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_UTILITIES
 	 MODULE_NAME         ("cmalloc")

@@ -24,12 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "achware.h"
-#include "acnamesp.h"
-#include "acevents.h"
-#include "amlcode.h"
-#include "acinterp.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_EVENTS
 	 MODULE_NAME         ("evxface")

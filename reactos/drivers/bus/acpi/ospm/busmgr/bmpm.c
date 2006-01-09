@@ -25,8 +25,6 @@
 
 
 #include <acpi.h>
-#include "bm.h"
-#include "bmpower.h"
 
 
 #define _COMPONENT		ACPI_POWER_CONTROL

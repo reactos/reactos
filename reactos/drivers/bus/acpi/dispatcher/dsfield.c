@@ -24,12 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "amlcode.h"
-#include "acdispat.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_DISPATCHER
 	 MODULE_NAME         ("dsfield")

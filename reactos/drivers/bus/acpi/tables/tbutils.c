@@ -24,10 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "actables.h"
-#include "acinterp.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_TABLES
 	 MODULE_NAME         ("tbutils")

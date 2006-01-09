@@ -24,12 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acevents.h"
-#include "achware.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "amlcode.h"
+#include <acpi.h>
 
 /*
  * These implementations of standard C Library routines can optionally be

@@ -24,10 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "acdispat.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_DISPATCHER
 	 MODULE_NAME         ("dswscope")

@@ -25,12 +25,8 @@
  */
 
 
-#include "acpi.h"
-#include "acparser.h"
-#include "acinterp.h"
-#include "amlcode.h"
-#include "acnamesp.h"
-#include "acevents.h"
+#include <acpi.h>
+
 
 #define _COMPONENT          ACPI_EXECUTER
 	 MODULE_NAME         ("amutils")

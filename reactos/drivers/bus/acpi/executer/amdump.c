@@ -24,11 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "amlcode.h"
-#include "acnamesp.h"
-#include "actables.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_EXECUTER
 	 MODULE_NAME         ("amdump")

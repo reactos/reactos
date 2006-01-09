@@ -29,6 +29,7 @@
 #include "platform/types.h"
 #undef ROUND_DOWN
 #undef ROUND_UP
+#define DEFINE_ACPI_GLOBALS
 
 /*
  * Common includes for all ACPI driver files
@@ -51,6 +52,18 @@
 #include "achware.h"            /* Hardware defines and interfaces */
 #include "accommon.h"           /* Common interfaces */
 #include "acresrc.h"            /* Resource Manager function prototypes */
-
+#include "acparser.h"
+#include "acinterp.h"
+#include "amlcode.h"
+#include "acnamesp.h"
+#include "acevents.h"
+#include "actables.h"
+#include "acdispat.h"
+#include <ntddk.h>
+#include <bm.h>
+#include <bn.h>
+#include <bmpower.h>
+#include <acpisys.h>
+#include <acglobal.h>
 
 #endif /* __ACPI_H__ */

@@ -24,12 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "amlcode.h"
-#include "acparser.h"
-#include "acdispat.h"
-#include "acnamesp.h"
-#include "acinterp.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_DISPATCHER
 	 MODULE_NAME         ("dswstate")

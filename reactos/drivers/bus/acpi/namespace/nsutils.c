@@ -25,11 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "amlcode.h"
-#include "actables.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_NAMESPACE
 	 MODULE_NAME         ("nsutils")

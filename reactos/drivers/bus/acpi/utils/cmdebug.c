@@ -24,7 +24,7 @@
  */
 
 
-#include "acpi.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_UTILITIES
 	 MODULE_NAME         ("cmdebug")

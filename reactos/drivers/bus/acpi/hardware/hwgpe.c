@@ -24,10 +24,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "acpi.h"
-#include "achware.h"
-#include "acnamesp.h"
-#include "acevents.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_HARDWARE
 	 MODULE_NAME         ("hwgpe")

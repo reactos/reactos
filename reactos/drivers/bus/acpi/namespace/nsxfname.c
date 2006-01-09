@@ -25,13 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-#include "amlcode.h"
-#include "acparser.h"
-#include "acdispat.h"
-#include "acevents.h"
+#include <acpi.h>
 
 
 #define _COMPONENT          ACPI_NAMESPACE

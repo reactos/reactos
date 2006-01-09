@@ -24,12 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "achware.h"
-#include "acnamesp.h"
-#include "acevents.h"
-#include "acparser.h"
-#include "acdispat.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_UTILITIES
 	 MODULE_NAME         ("cminit")

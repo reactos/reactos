@@ -24,10 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-#include "acresrc.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_RESOURCES
 	 MODULE_NAME         ("rsxface")

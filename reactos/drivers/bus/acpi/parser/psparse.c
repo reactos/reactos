@@ -33,13 +33,7 @@
  * templates in Aml_op_info[]
  */
 
-#include "acpi.h"
-#include "acparser.h"
-#include "acdispat.h"
-#include "amlcode.h"
-#include "acnamesp.h"
-#include "acdebug.h"
-#include "acinterp.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_PARSER
 	 MODULE_NAME         ("psparse")

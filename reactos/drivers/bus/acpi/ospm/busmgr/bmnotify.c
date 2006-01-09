@@ -25,7 +25,7 @@
 
 
 #include <acpi.h>
-#include "bm.h"
+
 
 
 #define _COMPONENT		ACPI_BUS_MANAGER

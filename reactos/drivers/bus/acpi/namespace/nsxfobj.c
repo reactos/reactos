@@ -25,11 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-#include "acdispat.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_NAMESPACE
 	 MODULE_NAME         ("nsxfobj")

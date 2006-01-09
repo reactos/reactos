@@ -24,13 +24,8 @@
  */
 
 
-#include "acpi.h"
-#include "acparser.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "acevents.h"
-#include "amlcode.h"
-#include "acdispat.h"
+#include <acpi.h>
+
 
 
 #define _COMPONENT          ACPI_EXECUTER

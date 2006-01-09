@@ -23,13 +23,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define DEFINE_ACPI_GLOBALS
-
-#include "acpi.h"
-#include "acevents.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "amlcode.h"
+#include <acpi.h>
 
 
 #define _COMPONENT          ACPI_UTILITIES
@@ -186,6 +180,97 @@ ACPI_TABLE_SUPPORT          acpi_gbl_acpi_table_data[NUM_ACPI_TABLES] =
 	/* XSDT 6 */ {XSDT_SIG,  XSDT_SIG, sizeof (RSDT_SIG)-1, ACPI_TABLE_SINGLE,   AE_OK,      NULL},
 };
 
+/*
+ * String versions of the exception codes above
+ * These strings must match the corresponding defines exactly
+ */
+NATIVE_CHAR          *acpi_gbl_exception_names_env[] =
+{
+	"AE_OK",
+	"AE_ERROR",
+	"AE_NO_ACPI_TABLES",
+	"AE_NO_NAMESPACE",
+	"AE_NO_MEMORY",
+	"AE_NOT_FOUND",
+	"AE_NOT_EXIST",
+	"AE_EXIST",
+	"AE_TYPE",
+	"AE_NULL_OBJECT",
+	"AE_NULL_ENTRY",
+	"AE_BUFFER_OVERFLOW",
+	"AE_STACK_OVERFLOW",
+	"AE_STACK_UNDERFLOW",
+	"AE_NOT_IMPLEMENTED",
+	"AE_VERSION_MISMATCH",
+	"AE_SUPPORT",
+	"AE_SHARE",
+	"AE_LIMIT",
+	"AE_TIME",
+	"AE_UNKNOWN_STATUS",
+	"AE_ACQUIRE_DEADLOCK",
+	"AE_RELEASE_DEADLOCK",
+	"AE_NOT_ACQUIRED",
+	"AE_ALREADY_ACQUIRED",
+	"AE_NO_HARDWARE_RESPONSE",
+	"AE_NO_GLOBAL_LOCK",
+};
+
+static NATIVE_CHAR          *acpi_gbl_exception_names_pgm[] =
+{
+	"AE_BAD_PARAMETER",
+	"AE_BAD_CHARACTER",
+	"AE_BAD_PATHNAME",
+	"AE_BAD_DATA",
+	"AE_BAD_ADDRESS",
+};
+
+static NATIVE_CHAR          *acpi_gbl_exception_names_tbl[] =
+{
+	"AE_BAD_SIGNATURE",
+	"AE_BAD_HEADER",
+	"AE_BAD_CHECKSUM",
+	"AE_BAD_VALUE",
+};
+
+static NATIVE_CHAR          *acpi_gbl_exception_names_aml[] =
+{
+	"AE_AML_ERROR",
+	"AE_AML_PARSE",
+	"AE_AML_BAD_OPCODE",
+	"AE_AML_NO_OPERAND",
+	"AE_AML_OPERAND_TYPE",
+	"AE_AML_OPERAND_VALUE",
+	"AE_AML_UNINITIALIZED_LOCAL",
+	"AE_AML_UNINITIALIZED_ARG",
+	"AE_AML_UNINITIALIZED_ELEMENT",
+	"AE_AML_NUMERIC_OVERFLOW",
+	"AE_AML_REGION_LIMIT",
+	"AE_AML_BUFFER_LIMIT",
+	"AE_AML_PACKAGE_LIMIT",
+	"AE_AML_DIVIDE_BY_ZERO",
+	"AE_AML_BAD_NAME",
+	"AE_AML_NAME_NOT_FOUND",
+	"AE_AML_INTERNAL",
+	"AE_AML_INVALID_SPACE_ID",
+	"AE_AML_STRING_LIMIT",
+	"AE_AML_NO_RETURN_VALUE",
+	"AE_AML_METHOD_LIMIT",
+	"AE_AML_NOT_OWNER",
+	"AE_AML_MUTEX_ORDER",
+	"AE_AML_MUTEX_NOT_ACQUIRED",
+};
+
+static NATIVE_CHAR          *acpi_gbl_exception_names_ctrl[] =
+{
+	"AE_CTRL_RETURN_VALUE",
+	"AE_CTRL_PENDING",
+	"AE_CTRL_TERMINATE",
+	"AE_CTRL_TRUE",
+	"AE_CTRL_FALSE",
+	"AE_CTRL_DEPTH",
+	"AE_CTRL_END",
+	"AE_CTRL_TRANSFER",
+};
 
 /*****************************************************************************
  *

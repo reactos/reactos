@@ -25,11 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "actables.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_TABLES
 	 MODULE_NAME         ("tbxface")

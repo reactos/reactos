@@ -24,10 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "achware.h"
-#include "actables.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_TABLES
 	 MODULE_NAME         ("tbget")

@@ -31,8 +31,7 @@
  */
 
 
-#include "acpi.h"
-#include "acresrc.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_RESOURCES
 	 MODULE_NAME         ("rsmisc")

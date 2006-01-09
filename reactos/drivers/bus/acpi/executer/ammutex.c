@@ -25,11 +25,8 @@
  */
 
 
-#include "acpi.h"
-#include "acinterp.h"
-#include "acnamesp.h"
-#include "achware.h"
-#include "acevents.h"
+#include <acpi.h>
+
 
 #define _COMPONENT          ACPI_EXECUTER
 	 MODULE_NAME         ("ammutex")

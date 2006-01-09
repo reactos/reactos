@@ -25,9 +25,7 @@
  */
 
 
-#include "acpi.h"
-#include "achware.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_HARDWARE
 	 MODULE_NAME         ("hwacpi")

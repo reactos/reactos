@@ -24,10 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acparser.h"
-#include "amlcode.h"
-#include "acnamesp.h"
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_PARSER
 	 MODULE_NAME         ("psargs")

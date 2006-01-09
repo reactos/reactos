@@ -24,14 +24,7 @@
  */
 
 
-#include "acpi.h"
-#include "acevents.h"
-#include "achware.h"
-#include "acnamesp.h"
-#include "acinterp.h"
-#include "amlcode.h"
-#include "acdebug.h"
-
+#include <acpi.h>
 
 #define _COMPONENT          ACPI_UTILITIES
 	 MODULE_NAME         ("cmutils")
