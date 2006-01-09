@@ -267,6 +267,7 @@ KiExpireTimers(PKDPC Dpc,
 
         /* Get the Timer */
         Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
+        Timer->Header.Inserted = FALSE;
         DPRINT("Expiring Timer: %x\n", Timer);
 
         /* Expire it */
