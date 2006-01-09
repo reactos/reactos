@@ -295,17 +295,13 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 	double e;
 	long ie;
 
-	//int x;
-	char *buf, *tmp;
 	int i = 0;
 	int j = 0;
-	//int k = 0;
+	int ro = 0;
 
 	double frac, intr;
 	double p;
-	char sign;
-	char c;
-	char ro = 0;
+	char *buf, *tmp, sign, c;
 	int result;
 
 	union
@@ -316,12 +312,14 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 
 	n.__n = &__n;
 
-	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' )
+	{
 		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
 		exponent = ie/3.321928;
 	}
 
-	if ( exp_sign == 'g' || exp_sign == 'G' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' )
+	{
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
 			exp_sign -= 2; // g -> e and G -> E
@@ -329,7 +327,8 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 			exp_sign = 'f';
 	}
 
-	if ( exp_sign == 'e' ||  exp_sign == 'E' ) {
+	if ( exp_sign == 'e' ||  exp_sign == 'E' )
+	{
 		frac = modf(exponent,&e);
 		if ( frac > 0.5 )
 			e++;
@@ -352,23 +351,29 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 		return true;
 	}
 
-	if ( exp_sign == 'f' ) {
+	if ( exp_sign == 'f' )
+	{
 		buf = (char*)alloca(4096);
-		if (type & LEFT) {
+		if (type & LEFT)
 			type &= ~ZEROPAD;
-		}
 
 		c = (type & ZEROPAD) ? '0' : ' ';
 		sign = 0;
-		if (type & SIGN) {
-			if (__n < 0) {
+		if (type & SIGN)
+		{
+			if (__n < 0)
+			{
 				sign = '-';
 				__n = fabs(__n);
 				size--;
-			} else if (type & PLUS) {
+			}
+			else if (type & PLUS)
+			{
 				sign = '+';
 				size--;
-			} else if (type & SPACE) {
+			}
+			else if (type & SPACE)
+			{
 				sign = ' ';
 				size--;
 			}
@@ -377,11 +382,11 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 		frac = modf(__n,&intr);
 
 		// # flags forces a . and prevents trucation of trailing zero's
-
-		if ( precision > 0 ) {
-			//frac = modfl(__n,&intr);
+		if ( precision > 0 )
+		{
 			i = precision-1;
-			while (  i >= 0  ) {
+			while ( i >= 0  )
+			{
 				frac*=10.0L;
 				frac = modf(frac, &p);
 				buf[i] = (int)p + '0';
@@ -391,23 +396,26 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 			size -= precision;
 
 			ro = 0;
-			if ( frac > 0.5 ) {
+			if ( frac > 0.5 )
 				ro = 1;
-			}
 
-			if ( precision >= 1 || type & SPECIAL) {
+			if ( precision >= 1 || type & SPECIAL)
+			{
 				buf[i++] = '.';
 				size--;
 			}
 		}
 
-		if ( intr == 0.0 ) {
+		if ( intr == 0.0 )
+		{
 			buf[i++] = '0';
 			size--;
 		}
-		else {
-			while ( intr > 0.0 ) {
-			        p = intr;
+		else
+		{
+			while ( intr > 0.0 )
+			{
+				p = intr;
 				intr/=10.0L;
 				modf(intr, &intr);
 
@@ -419,12 +427,15 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 		}
 
 		j = 0;
-		while ( j < i && ro == 1) {
-			if ( buf[j] >= '0' && buf[j] <= '8' ) {
+		while ( j < i && ro == 1)
+		{
+			if ( buf[j] >= '0' && buf[j] <= '8' )
+			{
 				buf[j]++;
 				ro = 0;
 			}
-			else if ( buf[j] == '9' ) {
+			else if ( buf[j] == '9' )
+			{
 				buf[j] = '0';
 			}
 			j++;
@@ -434,7 +445,6 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 
 		buf[i] = 0;
 
-		size -= precision;
 		if (!(type&(ZEROPAD+LEFT)))
 		{
 			while(size-->0)
@@ -446,18 +456,16 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 		}
 
 		if (!(type&(ZEROPAD+LEFT)))
+		{
 			while(size-->0)
-			{
 				f += ' ';
-			}
-		if (type & SPECIAL) {
 		}
 
 		if (!(type & LEFT))
+		{
 			while (size-- > 0)
-			{
 				f += c;
-			}
+		}
 
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) )
@@ -469,9 +477,6 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 				i--;
 			}
 		}
-//		else
-//			while (i < precision--)
-//				putc('0', f);
 		while (i-- > 0)
 		{
 			f += tmp[i];
@@ -493,10 +498,11 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 
 	int i = 0;
 	int j = 0;
+	int ro = 0;
 
 	double frac, intr;
 	double p;
-	wchar_t *buf, *tmp, sign, c, ro = 0;
+	wchar_t *buf, *tmp, sign, c;
 	int result;
 
 	union
@@ -507,7 +513,8 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 
 	n.__n = &__n;
 
-	if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' ) {
+	if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' )
+	{
 		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
 		exponent = ie/3.321928;
 	}
@@ -576,11 +583,11 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 		frac = modf(__n,&intr);
 
 		// # flags forces a . and prevents trucation of trailing zero's
-
-		if ( precision > 0 ) {
-			//frac = modfl(__n,&intr);
+		if ( precision > 0 )
+		{
 			i = precision-1;
-			while (  i >= 0  ) {
+			while (  i >= 0  )
+			{
 				frac*=10.0L;
 				frac = modf(frac, &p);
 				buf[i] = (int)p + L'0';
@@ -590,22 +597,25 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 			size -= precision;
 
 			ro = 0;
-			if ( frac > 0.5 ) {
+			if ( frac > 0.5 )
 				ro = 1;
-			}
 
-			if ( precision >= 1 || type & SPECIAL) {
+			if ( precision >= 1 || type & SPECIAL)
+			{
 				buf[i++] = L'.';
 				size--;
 			}
 		}
 
-		if ( intr == 0.0 ) {
+		if ( intr == 0.0 )
+		{
 			buf[i++] = L'0';
 			size--;
 		}
-		else {
-			while ( intr > 0.0 ) {
+		else
+		{
+			while ( intr > 0.0 )
+			{
 				p = intr;
 				intr/=10.0L;
 				modf(intr, &intr);
@@ -618,12 +628,15 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 		}
 
 		j = 0;
-		while ( j < i && ro == 1) {
-			if ( buf[j] >= L'0' && buf[j] <= L'8' ) {
+		while ( j < i && ro == 1)
+		{
+			if ( buf[j] >= L'0' && buf[j] <= L'8' )
+			{
 				buf[j]++;
 				ro = 0;
 			}
-			else if ( buf[j] == L'9' ) {
+			else if ( buf[j] == L'9' )
+			{
 				buf[j] = L'0';
 			}
 			j++;
@@ -633,7 +646,6 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 
 		buf[i] = 0;
 
-		size -= precision;
 		if (!(type&(ZEROPAD+LEFT)))
 		{
 			while(size-->0)
@@ -645,18 +657,16 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 		}
 
 		if (!(type&(ZEROPAD+LEFT)))
+		{
 			while(size-->0)
-			{
 				f += L' ';
-			}
-		if (type & SPECIAL) {
 		}
 
 		if (!(type & LEFT))
+		{
 			while (size-- > 0)
-			{
 				f += c;
-			}
+		}
 
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) )
@@ -687,34 +697,31 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 	long double e;
 	long ie;
 
-	//int x;
-	char *buf, *tmp;
 	int i = 0;
 	int j = 0;
-	//int k = 0;
+	int ro = 0;
 
 	long double frac, intr;
 	long double p;
-	char sign;
-	char c;
-	char ro = 0;
-
+	char *buf, *tmp, sign, c;
 	int result;
 
 	union
 	{
-	    long double*   __n;
-	    ieee_long_double_t*   n;
+		long double*   __n;
+		ieee_long_double_t*   n;
 	} n;
 
 	n.__n = &__n;
 
-	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' )
+	{
 		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3fff);
 		exponent = ie/3.321928;
 	}
 
-	if ( exp_sign == 'g' || exp_sign == 'G' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' )
+	{
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
 			exp_sign -= 2; // g -> e and G -> E
@@ -722,11 +729,12 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 			exp_sign = 'f';
 	}
 
-	if ( exp_sign == 'e' || exp_sign == 'E' ) {
+	if ( exp_sign == 'e' ||  exp_sign == 'E' )
+	{
 		frac = modfl(exponent,&e);
 		if ( frac > 0.5 )
 			e++;
-		else if ( frac < -0.5 )
+		else if (  frac < -0.5  )
 			e--;
 
 		result = numberf(f,__n/powl(10.0L,e),'f',size-4, precision, type);
@@ -747,12 +755,9 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 
 	if ( exp_sign == 'f' )
 	{
-
 		buf = (char*)alloca(4096);
 		if (type & LEFT)
-		{
 			type &= ~ZEROPAD;
-		}
 
 		c = (type & ZEROPAD) ? '0' : ' ';
 		sign = 0;
@@ -763,11 +768,13 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 				sign = '-';
 				__n = fabs(__n);
 				size--;
-			} else if (type & PLUS)
+			}
+			else if (type & PLUS)
 			{
 				sign = '+';
 				size--;
-			} else if (type & SPACE)
+			}
+			else if (type & SPACE)
 			{
 				sign = ' ';
 				size--;
@@ -779,8 +786,6 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 		// # flags forces a . and prevents trucation of trailing zero's
 		if ( precision > 0 )
 		{
-			//frac = modfl(__n,&intr);
-
 			i = precision-1;
 			while ( i >= 0  )
 			{
@@ -794,9 +799,7 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 
 			ro = 0;
 			if ( frac > 0.5 )
-			{
 				ro = 1;
-			}
 
 			if ( precision >= 1 || type & SPECIAL)
 			{
@@ -814,7 +817,7 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 		{
 			while ( intr > 0.0 )
 			{
-				p=intr;
+				p = intr;
 				intr/=10.0L;
 				modfl(intr, &intr);
 
@@ -826,7 +829,8 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 		}
 
 		j = 0;
-		while ( j < i && ro == 1) {
+		while ( j < i && ro == 1)
+		{
 			if ( buf[j] >= '0' && buf[j] <= '8' )
 			{
 				buf[j]++;
@@ -843,7 +847,6 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 
 		buf[i] = 0;
 
-		size -= precision;
 		if (!(type&(ZEROPAD+LEFT)))
 		{
 			while(size-->0)
@@ -859,14 +862,13 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 			while(size-->0)
 				f += ' ';
 		}
-		if (type & SPECIAL) {
-		}
 
 		if (!(type & LEFT))
+		{
 			while (size-- > 0)
-			{
 				f += c;
-			}
+		}
+
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) )
 		{
@@ -896,29 +898,31 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 	long double e;
 	long ie;
 
-	wchar_t *buf, *tmp, sign, c, ro = 0;
 	int i = 0;
 	int j = 0;
+	int ro = 0;
 
 	long double frac, intr;
 	long double p;
-
+	wchar_t *buf, *tmp, sign, c;
 	int result;
 
 	union
 	{
-	    long double*   __n;
-	    ieee_long_double_t*   n;
+		long double*   __n;
+		ieee_long_double_t*   n;
 	} n;
 
 	n.__n = &__n;
 
-	if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' ) {
+	if ( exp_sign == L'g' || exp_sign == L'G' || exp_sign == L'e' || exp_sign == L'E' )
+	{
 		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3fff);
 		exponent = ie/3.321928;
 	}
 
-	if ( exp_sign == L'g' || exp_sign == L'G' ) {
+	if ( exp_sign == L'g' || exp_sign == L'G' )
+	{
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
 			exp_sign -= 2; // g -> e and G -> E
@@ -926,11 +930,12 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 			exp_sign = 'f';
 	}
 
-	if ( exp_sign == L'e' || exp_sign == L'E' ) {
+	if ( exp_sign == L'e' || exp_sign == L'E' )
+	{
 		frac = modfl(exponent,&e);
 		if ( frac > 0.5 )
 			e++;
-		else if ( frac < -0.5 )
+		else if (  frac < -0.5  )
 			e--;
 
 		result = wnumberf(f,__n/powl(10.0L,e),L'f',size-4, precision, type);
@@ -951,12 +956,9 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 
 	if ( exp_sign == L'f' )
 	{
-
 		buf = (wchar_t*)alloca(4096*sizeof(wchar_t));
 		if (type & LEFT)
-		{
 			type &= ~ZEROPAD;
-		}
 
 		c = (type & ZEROPAD) ? L'0' : L' ';
 		sign = 0;
@@ -967,11 +969,13 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 				sign = L'-';
 				__n = fabs(__n);
 				size--;
-			} else if (type & PLUS)
+			}
+			else if (type & PLUS)
 			{
 				sign = L'+';
 				size--;
-			} else if (type & SPACE)
+			}
+			else if (type & SPACE)
 			{
 				sign = L' ';
 				size--;
@@ -983,8 +987,6 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 		// # flags forces a . and prevents trucation of trailing zero's
 		if ( precision > 0 )
 		{
-			//frac = modfl(__n,&intr);
-
 			i = precision-1;
 			while ( i >= 0  )
 			{
@@ -998,9 +1000,7 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 
 			ro = 0;
 			if ( frac > 0.5 )
-			{
 				ro = 1;
-			}
 
 			if ( precision >= 1 || type & SPECIAL)
 			{
@@ -1018,7 +1018,7 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 		{
 			while ( intr > 0.0 )
 			{
-				p=intr;
+				p = intr;
 				intr/=10.0L;
 				modfl(intr, &intr);
 
@@ -1030,7 +1030,8 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 		}
 
 		j = 0;
-		while ( j < i && ro == 1) {
+		while ( j < i && ro == 1)
+		{
 			if ( buf[j] >= L'0' && buf[j] <= L'8' )
 			{
 				buf[j]++;
@@ -1047,7 +1048,6 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 
 		buf[i] = 0;
 
-		size -= precision;
 		if (!(type&(ZEROPAD+LEFT)))
 		{
 			while(size-->0)
@@ -1063,14 +1063,13 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 			while(size-->0)
 				f += L' ';
 		}
-		if (type & SPECIAL) {
-		}
 
 		if (!(type & LEFT))
+		{
 			while (size-- > 0)
-			{
 				f += c;
-			}
+		}
+
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) )
 		{
