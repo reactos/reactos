@@ -568,7 +568,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 2) +
                   DestRect->top * DestSurf->lDelta);
        
-	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 2); 
 	                
        for (DesY=0; DesY<DesSizeY; DesY++)
        {			 
@@ -599,7 +599,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 2) +
                   DestRect->top * DestSurf->lDelta);
        
-	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 2); 
 	                
        for (DesY=0; DesY<DesSizeY; DesY++)
        {			 
@@ -623,7 +623,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 2) +
                   DestRect->top * DestSurf->lDelta);
        
-	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 2); 
 	                
        for (DesY=0; DesY<DesSizeY; DesY++)
        {			 
@@ -646,7 +646,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 2) +
                   DestRect->top * DestSurf->lDelta);
        
-	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 2); 
 	                
        for (DesY=0; DesY<DesSizeY; DesY++)
        {			 
@@ -669,7 +669,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left << 2) +
                   DestRect->top * DestSurf->lDelta);
        
-	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 1); 
+	   DifflDelta = DestSurf->lDelta -  (DesSizeX << 2); 
 	                
        for (DesY=0; DesY<DesSizeY; DesY++)
        {			 
