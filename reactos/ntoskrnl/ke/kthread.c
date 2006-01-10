@@ -14,13 +14,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FIXME: NDK */
-#define MAXIMUM_SUSPEND_COUNT 0x7F
-#define THREAD_ALERT_INCREMENT 2
-
 extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
-#define TIMER_WAIT_BLOCK 0x3L
-
 
 /*
  * PURPOSE: List of threads associated with each priority level

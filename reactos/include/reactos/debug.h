@@ -22,7 +22,7 @@
 #endif
 
 /* Define DbgPrint/RtlAssert unless the NDK is used */
-#if !defined(_NTNDK_) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
+#if !defined(_RTLFUNCS_H) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
 
 /* Make sure we have basic types (some people include us *before* SDK... */
 #if defined(_NTDEF_) || (defined _WINDEF_) || (defined _WINDEF_H)
@@ -100,17 +100,8 @@ RtlAssert(
 #else
 
     /* On non-debug builds, we never show these */
-    #ifdef _MSC_VER
-        static __inline void DPRINT1 ( const char* fmt, ... )
-        {
-        }
-        static __inline void DPRINT ( const char* fmt, ... )
-        {
-        }
-    #else
-        #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-        #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-    #endif
+    #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 
     #define CHECKPOINT1
     #define CHECKPOINT

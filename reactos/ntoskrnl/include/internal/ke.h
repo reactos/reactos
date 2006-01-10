@@ -169,27 +169,6 @@ extern ULONG_PTR KERNEL_BASE;
     }                                                                       \
 }
 
-/* The following macro satisfies multiple objects in a wait state */
-#define KiSatisifyMultipleObjectWaits(FirstBlock)                           \
-{                                                                           \
-    PKWAIT_BLOCK WaitBlock = FirstBlock;                                    \
-    PKTHREAD WaitThread = WaitBlock->Thread;                                \
-                                                                            \
-    /* Loop through all the Wait Blocks, and wake each Object */            \
-    do                                                                      \
-    {                                                                       \
-        /* Make sure it hasn't timed out */                                 \
-        if (WaitBlock->WaitKey != STATUS_TIMEOUT)                           \
-        {                                                                   \
-            /* Wake the Object */                                           \
-            KiSatisfyObjectWait((PKMUTANT)WaitBlock->Object, WaitThread);   \
-        }                                                                   \
-                                                                            \
-        /* Move to the next block */                                        \
-        WaitBlock = WaitBlock->NextWaitBlock;                               \
-    } while (WaitBlock != FirstBlock);                                      \
-}
-
 extern KSPIN_LOCK DispatcherDatabaseLock;
 
 #define KeEnterCriticalRegion()                                             \
@@ -214,6 +193,12 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 #define KEBUGCHECKWITHTF(a,b,c,d,e,f) \
     DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), \
              KeBugCheckWithTf(a,b,c,d,e,f)
+
+/* Tells us if the Timer or Event is a Syncronization or Notification Object */
+#define TIMER_OR_EVENT_TYPE 0x7L
+
+/* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
+#define TIMER_WAIT_BLOCK 0x3L
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 

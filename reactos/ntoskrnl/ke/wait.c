@@ -18,71 +18,70 @@
 
 KSPIN_LOCK DispatcherDatabaseLock;
 
-/* Tells us if the Timer or Event is a Syncronization or Notification Object */
-#define TIMER_OR_EVENT_TYPE 0x7L
+/* PRIVATE FUNCTIONS *********************************************************/
 
-/* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
-#define TIMER_WAIT_BLOCK 0x3L
+/*
+ * Rules for checking alertability:
+ *  - For Alertable waits ONLY:
+ *      * We don't wait and return STATUS_ALERTED if the thread is alerted
+ *        in EITHER the specified wait mode OR in Kernel Mode.
+ *  - For BOTH Alertable AND Non-Alertable waits:
+ *      * We don't want and return STATUS_USER_APC if the User Mode APC list
+ *        is not empty AND the wait mode is User Mode.
+ */
+#define KiCheckAlertability()                                               \
+    if (Alertable)                                                          \
+    {                                                                       \
+        if (CurrentThread->Alerted[(int)WaitMode])                          \
+        {                                                                   \
+            CurrentThread->Alerted[(int)WaitMode] = FALSE;                  \
+            WaitStatus = STATUS_ALERTED;                                    \
+            break;                                                          \
+        }                                                                   \
+        else if ((WaitMode != KernelMode) &&                                \
+                (!IsListEmpty(&CurrentThread->ApcState.ApcListHead[UserMode])))\
+        {                                                                   \
+            CurrentThread->ApcState.UserApcPending = TRUE;                  \
+            WaitStatus = STATUS_USER_APC;                                   \
+            break;                                                          \
+        }                                                                   \
+        else if (CurrentThread->Alerted[KernelMode])                        \
+        {                                                                   \
+            CurrentThread->Alerted[KernelMode] = FALSE;                     \
+            WaitStatus = STATUS_ALERTED;                                    \
+            break;                                                          \
+        }                                                                   \
+    }                                                                       \
+    else if ((WaitMode != KernelMode) &&                                    \
+             (CurrentThread->ApcState.UserApcPending))                      \
+    {                                                                       \
+        WaitStatus = STATUS_USER_APC;                                       \
+        break;                                                              \
+    }                                                                       \
 
-/* FUNCTIONS *****************************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
-BOOLEAN
-__inline
+VOID
 FASTCALL
-KiCheckAlertability(BOOLEAN Alertable,
-                    PKTHREAD Thread,
-                    KPROCESSOR_MODE WaitMode,
-                    PNTSTATUS Status)
+KiWaitSatisfyAll(PKWAIT_BLOCK FirstBlock)
 {
-    /*
-     * At this point, we have to do a wait, so make sure we can make
-     * the thread Alertable if requested.
-     */
-    if (Alertable)
-    {
-        /* If the Thread is Alerted, set the Wait Status accordingly */
-        if (Thread->Alerted[(int)WaitMode])
-        {
-            Thread->Alerted[(int)WaitMode] = FALSE;
-            DPRINT("Thread was Alerted in the specified Mode\n");
-            *Status = STATUS_ALERTED;
-            return TRUE;
-        }
-        else if ((WaitMode != KernelMode) &&
-                (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
-        {
-            /* If there are User APCs Pending, then we can't really be alertable */
-            DPRINT("APCs are Pending\n");
-            Thread->ApcState.UserApcPending = TRUE;
-            *Status = STATUS_USER_APC;
-            return TRUE;
-        }
-        else if (Thread->Alerted[KernelMode])
-        {
-            /* 
-             * The thread is not alerted in the mode given, but it is alerted
-             * in kernel-mode.
-             */
-            Thread->Alerted[KernelMode] = FALSE;
-            DPRINT("Thread was Alerted in Kernel-Mode\n");
-            *Status = STATUS_ALERTED;
-            return TRUE;
-        }
-    }
-    else if ((WaitMode != KernelMode) &&
-             (Thread->ApcState.UserApcPending))
-    {
-        /*
-         * If there are User APCs Pending and we are waiting in usermode,
-         * then we must notify the caller
-         */
-        DPRINT("APCs are Pending\n");
-        *Status = STATUS_USER_APC;
-        return TRUE;
-    }
+    PKWAIT_BLOCK WaitBlock = FirstBlock;
+    PKTHREAD WaitThread = WaitBlock->Thread;
 
-    /* Stay in the loop */
-    return FALSE;
+    /* Loop through all the Wait Blocks, and wake each Object */
+    do
+    {
+        /* Make sure it hasn't timed out */
+        if (WaitBlock->WaitKey != STATUS_TIMEOUT)
+        {
+            /* Wake the Object */
+            KiSatisfyObjectWait((PKMUTANT)WaitBlock->Object, WaitThread);
+        }
+
+        /* Move to the next block */
+        WaitBlock = WaitBlock->NextWaitBlock;
+    }
+    while (WaitBlock != FirstBlock);
 }
 
 /*
@@ -137,8 +136,8 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
             goto SkipWait;
         }
 
-        /* Chceck if we can do an alertable wait, if requested */
-        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &WaitStatus)) break;
+        /* Check if we can do an alertable wait, if requested */
+        KiCheckAlertability();
 
         /* Set status */
         CurrentThread->WaitStatus = STATUS_WAIT_0;
@@ -311,7 +310,7 @@ KeWaitForSingleObject(PVOID Object,
         WaitBlock->NextWaitBlock = WaitBlock;
 
         /* Make sure we can satisfy the Alertable request */
-        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &WaitStatus)) break;
+        KiCheckAlertability();
 
         /* Enable the Timeout Timer if there was any specified */
         if (Timeout)
@@ -574,13 +573,13 @@ KeWaitForMultipleObjects(ULONG Count,
             WaitBlock = CurrentThread->WaitBlockList;
 
             /* Satisfy their Waits and return to the caller */
-            KiSatisifyMultipleObjectWaits(WaitBlock);
+            KiWaitSatisfyAll(WaitBlock);
             WaitStatus = CurrentThread->WaitStatus;
             goto DontWait;
         }
 
         /* Make sure we can satisfy the Alertable request */
-        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &WaitStatus)) break;
+        KiCheckAlertability();
 
         /* Enable the Timeout Timer if there was any specified */
         if (Timeout)
@@ -754,7 +753,7 @@ KiWaitTest(PVOID ObjectPointer,
             /* All the objects are signaled, we can satisfy */
             DPRINT("Satisfiying a Wait All\n");
             WaitEntry = WaitEntry->Blink;
-            KiSatisifyMultipleObjectWaits(CurrentWaitBlock);
+            KiWaitSatisfyAll(CurrentWaitBlock);
         }
 
         /* All waits satisfied, unwait the thread */

@@ -34,16 +34,16 @@ Author:
 //
 #ifndef _MANAGED
 #if defined(_M_IX86)
-#define FASTCALL                _fastcall
+#define FASTCALL                        _fastcall
 #else
 #define FASTCALL
 #endif
 #else
-#define FASTCALL                NTAPI
+#define FASTCALL                        NTAPI
 #endif
 
 #if !defined(_M_CEE_PURE)
-#define NTAPI_INLINE            NTAPI
+#define NTAPI_INLINE                    NTAPI
 #else
 #define NTAPI_INLINE
 #endif
@@ -66,23 +66,30 @@ Author:
 //
 // Native API Return Value Macros
 //
-#define NT_SUCCESS(Status)      (((NTSTATUS)(Status)) >= 0)
-#define NT_INFORMATION(Status)  ((((ULONG)(Status)) >> 30) == 1)
-#define NT_WARNING(Status)      ((((ULONG)(Status)) >> 30) == 2)
-#define NT_ERROR(Status)        ((((ULONG)(Status)) >> 30) == 3)
+#define NT_SUCCESS(Status)              (((NTSTATUS)(Status)) >= 0)
+#define NT_INFORMATION(Status)          ((((ULONG)(Status)) >> 30) == 1)
+#define NT_WARNING(Status)              ((((ULONG)(Status)) >> 30) == 2)
+#define NT_ERROR(Status)                ((((ULONG)(Status)) >> 30) == 3)
 
 //
 // Limits
 //
-#define MINCHAR                 0x80
-#define MAXCHAR                 0x7f
-#define MINSHORT                0x8000
-#define MAXSHORT                0x7fff
-#define MINLONG                 0x80000000
-#define MAXLONG                 0x7fffffff
-#define MAXUCHAR                0xff
-#define MAXUSHORT               0xffff
-#define MAXULONG                0xffffffff
+#define MINCHAR                         0x80
+#define MAXCHAR                         0x7f
+#define MINSHORT                        0x8000
+#define MAXSHORT                        0x7fff
+#define MINLONG                         0x80000000
+#define MAXLONG                         0x7fffffff
+#define MAXUCHAR                        0xff
+#define MAXUSHORT                       0xffff
+#define MAXULONG                        0xffffffff
+
+//
+// CSR Macros
+//
+#define CSR_MAKE_OPCODE(s,m)            ((s) << 16) | (m)
+#define CSR_API_ID_FROM_OPCODE(n)       ((ULONG)((USHORT)(n)))
+#define CSR_SERVER_ID_FROM_OPCODE(n)    (ULONG)((n) >> 16)
 
 //
 // Basic Types that aren't defined in User-Mode Headers

@@ -40,6 +40,16 @@ Author:
 //
 #define SSDT_MAX_ENTRIES                4
 
+//
+// Maximum number of times a thread can be suspended
+//
+#define MAXIMUM_SUSPEND_COUNT           0x7F
+
+//
+// Dispatcher Priority increments
+//
+#define THREAD_ALERT_INCREMENT          2
+
 #ifdef NTOS_MODE_USER
 
 //
