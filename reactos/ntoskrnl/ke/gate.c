@@ -138,7 +138,6 @@ KeSignalGateBoostPriority(PKGATE Gate)
     /* Reschedule the Thread */
     DPRINT("Unblocking the Thread\n");
     KiUnblockThread(WaitThread, &WaitStatus, EVENT_INCREMENT);
-    return;
 
 quit:
     /* Release the Dispatcher Database Lock */
