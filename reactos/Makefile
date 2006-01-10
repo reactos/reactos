@@ -396,6 +396,39 @@ msvc8: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 msvc
 
+.PHONY: msvc6
+msvc6_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs6.00 msvc
+
+.PHONY: msvc7
+msvc7_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.00 msvc
+
+.PHONY: msvc71
+msvc71_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.10 msvc
+
+.PHONY: msvc8
+msvc8_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs8.00 msvc
+
+.PHONY: msvc_clean
+msvc_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c msvc
+
+.PHONY: msvc_clean_all
+msvc_clean_all: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs6.00 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.00 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.10 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs8.10 msvc
+
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
 	-@$(rm) $(ROS_AUTOMAKE) $(PREAUTO) 2>$(NUL)

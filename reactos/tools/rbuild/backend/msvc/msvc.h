@@ -55,7 +55,14 @@ class MSVCBackend : public Backend
 
 		std::string DspFileName ( const Module& module ) const;
 		std::string VcprojFileName ( const Module& module ) const;
-		
+		std::string DswFileName ( const Module& module ) const;
+		std::string SlnFileName ( const Module& module ) const;
+		std::string OptFileName ( const Module& module ) const;
+		std::string SuoFileName ( const Module& module ) const;
+		std::string NcbFileName ( const Module& module ) const;
+
+
+
 		std::vector<FileUnit> m_fileUnits;
 		std::vector<std::string> m_folders;
 
@@ -87,6 +94,8 @@ class MSVCBackend : public Backend
 			const std::string &find_str,
 			const std::string &replace_str);
 
+		std::string _get_vc_dir ( void ) const;
+
 		void _generate_vcproj ( const Module& module );
 
 		void _generate_sln_header ( FILE* OUT );
@@ -103,7 +112,8 @@ class MSVCBackend : public Backend
 		void _generate_sln_configurations (
 			FILE* OUT,
 			std::string vcproj_guid );
-
+		void _clean_project_files ( void );
+		void _get_object_files ( const Module& module, std::vector<std::string>& out ) const;
 };
 
 #endif // __MSVC_H__

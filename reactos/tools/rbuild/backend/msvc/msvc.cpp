@@ -25,11 +25,14 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "msvc.h"
 #include "../mingw/mingw.h"
 
-using namespace std;
+using std::string;
+using std::vector;
+using std::ifstream;
 
 static class MSVCFactory : public Backend::Factory
 {
@@ -53,6 +56,11 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
+	if ( configuration.CleanAsYouGo ) {
+		_clean_project_files();
+		return;
+	}
+
 	string filename_sln ( ProjectNode.name );
 	//string filename_rules = "gccasm.rules";
 	
@@ -206,6 +214,46 @@ void MSVCBackend::OutputFolders()
 }
 
 std::string
+MSVCBackend::OptFileName ( const Module& module ) const
+{
+	return DosSeparator(
+		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.opt" )
+		);
+}
+
+std::string
+MSVCBackend::SuoFileName ( const Module& module ) const
+{
+	return DosSeparator(
+		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.suo" )
+		);
+}
+
+std::string
+MSVCBackend::DswFileName ( const Module& module ) const
+{
+	return DosSeparator(
+		ReplaceExtension ( module.GetPath(), "_auto.dsw" )
+		);
+}
+
+std::string
+MSVCBackend::SlnFileName ( const Module& module ) const
+{
+	return DosSeparator(
+		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.sln" )
+		);
+}
+
+std::string
+MSVCBackend::NcbFileName ( const Module& module ) const
+{
+	return DosSeparator(
+		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.ncb" )
+		);
+}
+
+std::string
 MSVCBackend::DspFileName ( const Module& module ) const
 {
 	return DosSeparator(
@@ -217,6 +265,112 @@ std::string
 MSVCBackend::VcprojFileName ( const Module& module ) const
 {
 	return DosSeparator(
-		ReplaceExtension ( module.GetPath(), "_auto.vcproj" )
-		);
+			ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.vcproj" )
+			);
 }
+
+std::string MSVCBackend::_get_vc_dir ( void ) const
+{
+	if ( configuration.VSProjectVersion == "6.00" )
+		return "vc6";
+	else if ( configuration.VSProjectVersion == "7.00" )
+		return "vc70";
+	else if ( configuration.VSProjectVersion == "7.10" )
+		return "vc71";
+	else /* must be VS2005 */
+		return "vc8";
+
+
+}
+
+void 
+MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) const
+{
+	string basepath = module.GetBasePath ();
+	string vcdir = _get_vc_dir ();
+	size_t i;
+	string intenv = Environment::GetIntermediatePath () + "\\" + basepath + "\\" + vcdir + "\\";
+	string outenv = Environment::GetOutputPath () + "\\" + basepath + "\\" + vcdir + "\\";
+	string dbg = vcdir.substr ( 0, 3 );
+
+	vector<string> cfgs;
+	cfgs.push_back ( intenv + "Debug" );
+	cfgs.push_back ( intenv + "Release" );
+	cfgs.push_back ( intenv + "Speed" );
+	cfgs.push_back ( outenv + "Debug" );
+	cfgs.push_back ( outenv + "Release" );
+	cfgs.push_back ( outenv + "Speed" );
+
+
+	vector<const IfableData*> ifs_list;
+	ifs_list.push_back ( &module.project.non_if_data );
+	ifs_list.push_back ( &module.non_if_data );
+	while ( ifs_list.size () )
+	{
+		const IfableData& data = *ifs_list.back();
+		ifs_list.pop_back();
+		const vector<File*>& files = data.files;
+		for ( i = 0; i < files.size (); i++ )
+		{
+			string file = files[i]->name;
+			string::size_type pos = file.find_last_of ("\\");
+			if ( pos != string::npos )
+				file.erase ( 0, pos+1 );
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
+				file = ReplaceExtension ( file, ".res" );
+			else
+				file = ReplaceExtension ( file, ".obj" );
+			for ( size_t j = 0; j < cfgs.size () / 2; j++ )
+				out.push_back ( cfgs[j] + "\\" + file );
+		}
+
+	}
+	//common files in intermediate dir
+	for ( i = 0; i < cfgs.size () / 2; i++)
+	{
+		out.push_back ( cfgs[i] + "\\" + "BuildLog.htm" );
+		out.push_back ( cfgs[i] + "\\" + dbg + "0.pdb" );
+		out.push_back ( cfgs[i] + "\\" + dbg + "0.idb" );
+		out.push_back ( cfgs[i] + "\\" + module.name + ".pch" );
+	}
+	//files in the output dir
+	for ( i = cfgs.size () / 2; i < cfgs.size (); i++ )
+	{
+		out.push_back ( cfgs[i] + "\\" + module.GetTargetName () );
+		out.push_back ( cfgs[i] + "\\" + module.name + ".pdb" );
+		out.push_back ( cfgs[i] + "\\" + module.name + ".lib" );
+		out.push_back ( cfgs[i] + "\\" + module.name + ".exp" );
+		out.push_back ( cfgs[i] + "\\" + module.name + ".ilk" );
+		out.push_back ( cfgs[i] + "\\" + "(InputName).obj" ); //MSVC2003 build bug 
+	}
+}
+
+void
+MSVCBackend::_clean_project_files ( void )
+{
+	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	{
+		Module& module = *ProjectNode.modules[i];
+		vector<string> out;
+		printf("Cleaning project %s %s %s\n", module.name.c_str (), module.GetBasePath ().c_str (), NcbFileName ( module ).c_str () );
+		
+		string basepath = module.GetBasePath ();
+		remove ( NcbFileName ( module ).c_str () );
+		remove ( DspFileName ( module ).c_str () );
+		remove ( DswFileName ( module ).c_str () );
+		remove ( OptFileName ( module ).c_str () );
+		remove ( SlnFileName ( module ).c_str () );
+		remove ( SuoFileName ( module ).c_str () );
+		remove ( VcprojFileName ( module ).c_str () );	
+
+		_get_object_files ( module, out );
+		for ( size_t j = 0; j < out.size (); j++)
+			remove ( out[j].c_str () );
+	}
+	string filename_sln = ProjectNode.name + ".sln";
+	string filename_dsw = ProjectNode.name + ".dsw";
+
+	remove ( filename_sln.c_str () );
+	remove ( filename_dsw.c_str () );
+}
+

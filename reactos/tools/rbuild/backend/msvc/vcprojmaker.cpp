@@ -252,8 +252,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t<Configuration\r\n" );
 		fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.c_str() );
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), cfg.c_str() );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), cfg.c_str() );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.c_str() );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.c_str() );
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
 		fprintf ( OUT, "\t\t\tCharacterSet=\"2\">\r\n" );
 
