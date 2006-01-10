@@ -470,9 +470,6 @@ KiInsertQueue(IN PKQUEUE Queue,
         Queue->CurrentCount++;
         Thread->WaitStatus = (NTSTATUS)Entry;
 
-        /* Remove the thread from its wait list */
-        RemoveEntryList(&Thread->WaitListEntry);
-
         /* Check if there's a Thread Timer */
         if (Thread->Timer.Header.Inserted)
         {
