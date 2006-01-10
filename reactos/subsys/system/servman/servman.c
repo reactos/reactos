@@ -236,17 +236,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             switch (((LPNMHDR) lParam)->code)
             {
-                case NM_RCLICK:
-                {
-                    //item = (LPNMITEMACTIVATE) lParam;
-                    //lpnmh = (LPNMHDR) lParam;
-                    POINT pt;
-
-                    GetCursorPos(&pt);
-                    TrackPopupMenuEx(hShortcutMenu, TPM_RIGHTBUTTON, pt.x, pt.y, hwnd, NULL);
-                }
-                break;
-
 	            case NM_DBLCLK:
                     item = (LPNMITEMACTIVATE) lParam;
                     PropSheets(hwnd);
@@ -316,8 +305,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
 	    case WM_CLOSE:
-            /* free the service array */
-            FreeMemory();
+            FreeMemory(); /* free the service array */
             DestroyMenu(hShortcutMenu);
 		    DestroyWindow(hwnd);
 	    break;
@@ -325,6 +313,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    case WM_DESTROY:
 		    PostQuitMessage(0);
 	    break;
+
+        case WM_CONTEXTMENU:
+            {
+                int xPos, yPos;
+
+                xPos = LOWORD(lParam); 
+                yPos = HIWORD(lParam);
+
+                TrackPopupMenuEx(hShortcutMenu, TPM_RIGHTBUTTON, xPos, yPos, hwnd, NULL);
+            }
+        break;
 
 	    case WM_COMMAND:
 		    switch(LOWORD(wParam))
