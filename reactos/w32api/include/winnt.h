@@ -435,19 +435,22 @@ typedef DWORD FLONG;
 
 #define MAILSLOT_NO_MESSAGE	((DWORD)-1)
 #define MAILSLOT_WAIT_FOREVER	((DWORD)-1)
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define PROCESS_TERMINATE	1
 #define PROCESS_CREATE_THREAD	2
 #define PROCESS_SET_SESSIONID	4
 #define PROCESS_VM_OPERATION	8
 #define PROCESS_VM_READ	16
 #define PROCESS_VM_WRITE	32
-#define PROCESS_DUP_HANDLE	64
 #define PROCESS_CREATE_PROCESS	128
 #define PROCESS_SET_QUOTA	256
 #define PROCESS_SET_INFORMATION	512
 #define PROCESS_QUERY_INFORMATION	1024
 #define PROCESS_SUSPEND_RESUME	2048
 #define PROCESS_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0xFFF)
+#endif
+#define PROCESS_DUP_HANDLE	64
 #define THREAD_TERMINATE	1
 #define THREAD_SUSPEND_RESUME	2
 #define THREAD_GET_CONTEXT	8
@@ -3197,6 +3200,8 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT   9
 #define JOB_OBJECT_MSG_JOB_MEMORY_LIMIT       10
 
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define JOB_OBJECT_ASSIGN_PROCESS           1
 #define JOB_OBJECT_SET_ATTRIBUTES           2
 #define JOB_OBJECT_QUERY                    4
@@ -3204,8 +3209,6 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_SET_SECURITY_ATTRIBUTES  16
 #define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 
-/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
-#ifndef __NTDDK_H
 typedef enum _JOBOBJECTINFOCLASS {
 	JobObjectBasicAccountingInformation = 1,
 	JobObjectBasicLimitInformation,

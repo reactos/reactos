@@ -2940,6 +2940,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    PWINDOW_OBJECT WndShell;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
+   NTSTATUS Status;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();
@@ -2949,7 +2950,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       RETURN(FALSE);
    }
 
-   NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                      KernelMode,
                      0,
                      &WinStaObject);
@@ -4407,11 +4408,11 @@ DWORD STDCALL
 NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
 {
    DECLARE_RETURN(DWORD);
+   WndProcHandle Entry;
 
    DPRINT("Enter NtUserDereferenceWndProcHandle\n");
    UserEnterShared();
 
-   WndProcHandle Entry;
    if (((DWORD)wpHandle & 0xFFFF0000) == 0xFFFF0000)
    {
       Entry = WndProcHandlesArray[(DWORD)wpHandle & 0x0000FFFF];
