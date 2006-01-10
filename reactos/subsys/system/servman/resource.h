@@ -22,8 +22,9 @@
 #define ID_EXIT             2010
 
 #define IDR_MAINMENU        102
+#define IDR_POPUP           103
 #define ID_VIEW_CUSTOMIZE   4021
-#define ID_HELP_ABOUT       4031
+#define ID_ABOUT            4031
 
 #define IDS_FIRSTCOLUMN     1
 #define IDS_SECONDCOLUMN    2
@@ -42,14 +43,11 @@
 #define IDS_TOOLTIP_HELP    6008
 #define IDS_TOOLTIP_EXIT    6009
 
-#define IDS_SERVICES_STATUS_RUNNING 5000
-#define IDS_SERVICES_STATUS_STOPPED 5001
-#define IDS_SERVICES_YES    5002
-#define IDS_SERVICES_UNKNOWN 5003
-#define IDS_SERVICES_AUTO   5004
-#define IDS_SERVICES_MAN    5005
-#define IDS_SERVICES_DIS    5006
-#define IDS_SERVICES_NUM_SERVICES 5010
+#define IDS_SERVICES_STARTED 5000
+#define IDS_SERVICES_AUTO    5004
+#define IDS_SERVICES_MAN     5005
+#define IDS_SERVICES_DIS     5006
+#define IDS_NUM_SERVICES     5010
 
 #define IDI_SM_ICON         50
 #define IDB_BUTTONS         51

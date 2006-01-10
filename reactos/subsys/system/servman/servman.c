@@ -4,7 +4,7 @@
  * FILE:        subsys/system/servman/servman.c
  * PURPOSE:     Main window message handler
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
- *               
+ *
  */
 
 #include "servman.h"
@@ -16,6 +16,7 @@ HWND hMainWnd;
 HWND hListView;
 HWND hStatus;
 HWND hTool;
+HMENU hShortcutMenu;
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -33,7 +34,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LVCOLUMN lvc = { 0 };
 
             /* Toolbar buttons */
-            TBBUTTON tbb [NUM_BUTTONS] = 
+            TBBUTTON tbb [NUM_BUTTONS] =
             {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
                 {TBICON_PROP,    ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
                 {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* refresh */
@@ -42,9 +43,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 /* Note: First item for a seperator is its width in pixels */
                 {25, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
 
-                {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */ 
+                {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */
                 {TBICON_STOP,    ID_STOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
-                {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */   
+                {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
                 {TBICON_RESTART, ID_RESTART, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
 
                 {25, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
@@ -105,7 +106,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             hListView = CreateWindow(WC_LISTVIEW,
                                      NULL,
-                                     WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER | 
+                                     WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER |
                                      LVS_EDITLABELS | LVS_SORTASCENDING,
                                      0, 0, 0, 0, /* sized via WM_SIZE */
                                      hwnd,
@@ -178,10 +179,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		    SendMessage(hStatus, SB_SETPARTS, sizeof(statwidths)/sizeof(int), (LPARAM)statwidths);
 
 
+/* ======================== Create Popup Menu ============================== */
+
+            hShortcutMenu = LoadMenu(hInstance, MAKEINTRESOURCE (IDR_POPUP));
+            hShortcutMenu = GetSubMenu(hShortcutMenu, 0);
+
+
+
+
 /* ================= populate the list view with all services =================== */
 
-		    if (! RefreshServiceList() )
-                GetError();
+		    RefreshServiceList();
 
 	    }
 	    break;
@@ -224,16 +232,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    case WM_NOTIFY:
         {
             LPNMITEMACTIVATE item;
+            
 
             switch (((LPNMHDR) lParam)->code)
             {
+                case NM_RCLICK:
+                {
+                    //item = (LPNMITEMACTIVATE) lParam;
+                    //lpnmh = (LPNMHDR) lParam;
+                    POINT pt;
+
+                    GetCursorPos(&pt);
+                    TrackPopupMenuEx(hShortcutMenu, TPM_RIGHTBUTTON, pt.x, pt.y, hwnd, NULL);
+                }
+                break;
 
 	            case NM_DBLCLK:
-			    item = (LPNMITEMACTIVATE) lParam;
-			    PropSheets(hwnd);
-
+                    item = (LPNMITEMACTIVATE) lParam;
+                    PropSheets(hwnd);
 			    break;
-            
+
                 case TTN_GETDISPINFO:
                 {
                     LPTOOLTIPTEXT lpttt;
@@ -274,7 +292,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                         case ID_RESTART:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_RESTART);
                         break;
-                        
+
                         case ID_NEW:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_NEW);
                         break;
@@ -300,6 +318,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    case WM_CLOSE:
             /* free the service array */
             FreeMemory();
+            DestroyMenu(hShortcutMenu);
 		    DestroyWindow(hwnd);
 	    break;
 
@@ -313,10 +332,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case ID_PROP:
                     PropSheets(hwnd);
                 break;
-                
+
                 case ID_REFRESH:
                     if (! RefreshServiceList() )
-                        GetError();
+                        GetError(0);
 
                 case ID_EXPORT:
                 break;
@@ -340,7 +359,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_HELP:
-                    MessageBox(NULL, _T("Help is not yet implemented\n"), 
+                    MessageBox(NULL, _T("Help is not yet implemented\n"),
                         _T("Note!"), MB_OK | MB_ICONINFORMATION);
                 break;
 
@@ -351,7 +370,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case ID_VIEW_CUSTOMIZE:
                 break;
 
-                case ID_HELP_ABOUT:
+                case ID_ABOUT:
                     DialogBox(hInstance,
                               MAKEINTRESOURCE(IDD_ABOUTBOX),
                               hwnd,

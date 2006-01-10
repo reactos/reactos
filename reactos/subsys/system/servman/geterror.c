@@ -2,15 +2,18 @@
 #include "servman.h"
 /* temp file for debugging */
 
-VOID GetError(VOID)
+VOID GetError(DWORD err)
 {
     LPVOID lpMsgBuf;
+
+    if (err == 0)
+        err = GetLastError();
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                   FORMAT_MESSAGE_FROM_SYSTEM |
                   FORMAT_MESSAGE_IGNORE_INSERTS,
                   NULL,
-                  GetLastError(),
+                  err,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
                   (LPTSTR) &lpMsgBuf,
                    0,

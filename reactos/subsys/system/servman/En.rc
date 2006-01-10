@@ -23,9 +23,39 @@ BEGIN
   END
   POPUP "Help"
   BEGIN
-    MENUITEM "About",ID_HELP_ABOUT
+    MENUITEM "About",ID_ABOUT
   END
 END
+
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN  
+    MENUITEM "Start",ID_START
+    MENUITEM "Stop",ID_STOP
+    MENUITEM "Pause",ID_PAUSE
+    MENUITEM "Resume",ID_RESUME
+    MENUITEM "Restart",ID_RESTART
+    MENUITEM SEPARATOR
+    POPUP "All tasks"
+    BEGIN
+      MENUITEM "Start",ID_START
+      MENUITEM "Stop",ID_STOP
+      MENUITEM "Pause",ID_PAUSE
+      MENUITEM "Resume",ID_RESUME
+      MENUITEM "Restart",ID_RESTART
+      MENUITEM "Refresh",ID_REFRESH
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "Refresh",ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Properties",ID_PROP, "Default"
+    MENUITEM SEPARATOR
+    MENUITEM "About",ID_HELP
+  END
+END
+
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,190,182
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
@@ -34,7 +64,7 @@ FONT 8, "Tahoma"
 BEGIN
     CONTROL         "Service Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,48,7,130,26
-    DEFPUSHBUTTON   "Close",IDOK,140,162,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Close",IDOK,75,162,44,15,WS_GROUP
     ICON            IDI_SM_ICON,IDC_STATIC,12,7,30,20
     EDITTEXT        IDC_LICENSE_EDIT,8,44,174,107,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -80,19 +110,16 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_SERVICES_STATUS_RUNNING "Started"
-  IDS_SERVICES_STATUS_STOPPED "Stopped"
-  IDS_SERVICES_YES            "Yes"
-  IDS_SERVICES_UNKNOWN        "Unknown"
-  IDS_SERVICES_AUTO           "Automatic"
-  IDS_SERVICES_MAN            "Manual"
-  IDS_SERVICES_DIS            "Disabled"
+  IDS_SERVICES_STARTED      "Started"
+  IDS_SERVICES_AUTO         "Automatic"
+  IDS_SERVICES_MAN          "Manual"
+  IDS_SERVICES_DIS          "Disabled"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_SERVICES_NUM_SERVICES "Num Services: %d"
-  
+  IDS_NUM_SERVICES "Num Services: %d"
+
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
   /*"This program is free software; you can redistribute it "
               "and/or modify it under the terms of the GNU Lesser General "
@@ -106,7 +133,7 @@ BEGIN
               "General Public License along with this program; if not, write "
               "to the Free Software Foundation, Inc., 59 Temple Place - Suite "
               "330, Boston, MA  02111-1307, USA." */
-  
+
 END
 
 STRINGTABLE DISCARDABLE
