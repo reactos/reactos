@@ -233,7 +233,7 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 		break;
 
 	  case PM_SETSTATUSTEXT:
-		SendMessage(_hstatusbar, SB_SETTEXT, 0, lparam);
+		SendMessage(_hstatusbar, SB_SETTEXT, wparam, lparam);
 		break;
 
 	  case PM_URL_CHANGED:

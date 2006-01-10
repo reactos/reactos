@@ -951,6 +951,12 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 
     void ProgressChange(long Progress, long ProgressMax)
 	{
+		String txt;
+
+		if (Progress>=0 && Progress<ProgressMax)
+			txt.printf(TEXT("%3d %%"), (int)(100.*Progress/ProgressMax+.5));
+
+		SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 1, (LPARAM)txt.c_str());
 	}
 
     void WindowMove()
