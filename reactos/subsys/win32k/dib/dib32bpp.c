@@ -632,7 +632,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             for (DesX=0; DesX<DesSizeX; DesX++, DestBits++)
             {			
                  sx = ((DesX  * SrcSizeX) / DesSizeX) + SourceRect->left;  		
-                 color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
+                 color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
                  *DestBits =  XLATEOBJ_iXlate(ColorTranslation, color);
             }
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
