@@ -405,7 +405,7 @@
 
     /* Get next pointer and do the exchange */
     mov ebx, [eax]
-    LOCK cmpxchg8b qword ptr [ebp]
+    LOCK cmpxchg8b [ebp]
     jnz 1b
 
     /* Restore registers and return */
@@ -449,7 +449,7 @@
     lea ecx, [edx+0x10001]
 
     /* Do the exchange */
-    LOCK cmpxchg8b qword ptr [ebp]
+    LOCK cmpxchg8b [ebp]
     jnz 1b
 
     /* Restore registers and return */
@@ -489,7 +489,7 @@
     mov cx, bx
 
     /* Do the exchange */
-    LOCK cmpxchg8b qword ptr [ebp]
+    LOCK cmpxchg8b [ebp]
     jnz 1b
 
     /* Restore registers and return */
@@ -623,7 +623,7 @@
     mov edx, [edx+4]
 
     /* Do the op */
-    LOCK cmpxchg8b qword ptr [ebp]
+    LOCK cmpxchg8b [ebp]
 
     /* Restore volatiles */
     pop ebp
@@ -655,7 +655,7 @@
     mov edx, [edx+4]
 
     /* Do the op */
-    LOCK cmpxchg8b qword ptr [ebp]
+    LOCK cmpxchg8b [ebp]
 
     /* Restore volatiles */
     pop ebp
