@@ -114,6 +114,8 @@ class MSVCBackend : public Backend
 			std::string vcproj_guid );
 		void _clean_project_files ( void );
 		void _get_object_files ( const Module& module, std::vector<std::string>& out ) const;
+		void _install_files ( const std::string& vcdir, const std::string& config );
+		bool _copy_file ( const std::string& inputname, const std::string& targetname ) const;
 };
 
 #endif // __MSVC_H__

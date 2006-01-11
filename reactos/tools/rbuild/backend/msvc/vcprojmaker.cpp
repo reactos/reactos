@@ -145,11 +145,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			// this code is deactivated untill the tree builds fine with msvc
 			// --- is appended to each library path which is later
 			// replaced by the configuration
-			// i.e. ../output-i386/lib/rtl/---/rtl.lib becomes
-			//      ../output-i386/lib/rtl/Debug/rtl.lib 
+			// i.e. ../output-i386/lib/rtl/vcXX/---/rtl.lib becomes
+			//      ../output-i386/lib/rtl/vcXX/Debug/rtl.lib 
 			// etc
-			libs[i]->importedModule->
-			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath() + "\\---\\" + libs[i]->name + ".lib";
+			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath() + "\\" + _get_vc_dir() + "\\---\\" + libs[i]->name + ".lib";
 			libraries.push_back ( libpath );
 #else
 		libraries.push_back ( libs[i]->name + ".lib" );

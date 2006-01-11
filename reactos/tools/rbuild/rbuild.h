@@ -141,8 +141,10 @@ public:
 	bool CompilationUnitsEnabled;
 	std::string CheckDependenciesForModuleOnlyModule;
 	std::string VSProjectVersion;
+	std::string VSConfigurationType;
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
+	bool InstallFiles;
 };
 
 class Environment

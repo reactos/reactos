@@ -396,22 +396,22 @@ msvc8: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 msvc
 
-.PHONY: msvc6
+.PHONY: msvc6_clean
 msvc6_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs6.00 msvc
 
-.PHONY: msvc7
+.PHONY: msvc7_clean
 msvc7_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.00 msvc
 
-.PHONY: msvc71
+.PHONY: msvc71_clean
 msvc71_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.10 msvc
 
-.PHONY: msvc8
+.PHONY: msvc8_clean
 msvc8_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs8.00 msvc
@@ -428,6 +428,52 @@ msvc_clean_all: $(RBUILD_TARGET)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.00 msvc
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.10 msvc
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs8.10 msvc
+
+.PHONY: msvc7_install_debug
+msvc7_install_debug: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -vcdebug msvc
+
+.PHONY: msvc7_install_release
+msvc7_install_release: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -vcrelease msvc
+
+.PHONY: msvc7_install_speed
+msvc7_install_speed: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -vcspeed msvc
+
+.PHONY: msvc71_install_debug
+msvc71_install_debug: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -vcdebug msvc
+
+.PHONY: msvc71_install_release
+msvc71_install_release: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -vcrelease msvc
+
+
+.PHONY: msvc71_install_speed
+msvc71_install_speed: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -vcspeed msvc
+
+.PHONY: msvc8_install_debug
+msvc8_install_debug: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -vcdebug msvc
+
+.PHONY: msvc8_install_release
+msvc8_install_release: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -vcrelease msvc
+
+.PHONY: msvc8_install_speed
+msvc8_install_speed: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -vcspeed msvc
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:

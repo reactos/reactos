@@ -60,7 +60,10 @@ void MSVCBackend::Process()
 		_clean_project_files();
 		return;
 	}
-
+	if ( configuration.InstallFiles ) {
+		_install_files( _get_vc_dir(),  configuration.VSConfigurationType );
+		return;
+	}
 	string filename_sln ( ProjectNode.name );
 	//string filename_rules = "gccasm.rules";
 	
@@ -374,3 +377,42 @@ MSVCBackend::_clean_project_files ( void )
 	remove ( filename_dsw.c_str () );
 }
 
+bool
+MSVCBackend::_copy_file ( const std::string& inputname, const std::string& targetname ) const
+{
+  FILE * input = fopen ( inputname.c_str (), "rb" );
+	if ( !input )
+		return false;
+
+  FILE * output = fopen ( targetname.c_str (), "wb+" );
+  if ( !output )
+  {
+	fclose ( input );
+	return false;
+  }
+
+  char buffer[256];
+  int num_read;
+  while ( (num_read = fread( buffer, sizeof(char), 256, input) ) || !feof( input ) )
+		fwrite( buffer, sizeof(char), num_read, output );
+
+  fclose ( input );
+  fclose ( output );
+  return true;
+}
+
+void
+MSVCBackend::_install_files (const std::string& vcdir, const::string& config)
+{
+	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	{
+		Module& module = *ProjectNode.modules[i];
+		if ( module.installBase == "" || module.installName == "" )
+			continue;
+
+		string inputname = Environment::GetOutputPath () + "\\" + module.GetBasePath () + "\\" + vcdir + "\\" + config + "\\" + module.GetTargetName ();
+		string installdir = Environment::GetInstallPath () + "\\" + module.installBase + "\\" + module.installName;
+		if ( _copy_file( inputname, installdir ) )
+			printf ("Installed File :'%s'\n",installdir.c_str () );
+	}
+}

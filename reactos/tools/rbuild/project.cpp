@@ -298,6 +298,12 @@ Project::ProcessXML ( const string& path )
 			(property->value == non_if_data.ifs[i]->value);
 		if ( conditionTrue )
 			non_if_data.ifs[i]->data.ExtractModules( modules );
+		else
+		{
+			If * if_data = non_if_data.ifs[i];
+			non_if_data.ifs.erase ( non_if_data.ifs.begin () + i );
+			delete if_data;
+		}
 	}
 	for ( i = 0; i < linkerFlags.size (); i++ )
 		linkerFlags[i]->ProcessXML ();

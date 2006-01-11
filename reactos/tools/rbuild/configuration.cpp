@@ -29,6 +29,7 @@ Configuration::Configuration ()
 	CompilationUnitsEnabled = true;
 	MakeHandlesInstallDirectories = false;
 	GenerateProxyMakefilesInSourceTree = false;
+	InstallFiles = false;
 }
 
 Configuration::~Configuration ()

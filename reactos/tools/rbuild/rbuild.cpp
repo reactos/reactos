@@ -107,6 +107,10 @@ ParseVCProjectSwitch (
 				configuration.VSProjectVersion.append("0");
 
 			break;
+		case 'c':
+			configuration.VSConfigurationType = string (&switchStart[3]);
+			configuration.InstallFiles = true;
+			break;
 		default:
 			printf ( "Unknown switch -d%c\n",
 			         switchChar2 );
@@ -155,7 +159,7 @@ ParseSwitch ( int argc, char** argv, int index )
 	switch ( switchChar )
 	{
 		case 'v':
-			if (switchChar2 == 's')
+			if (switchChar2 == 's' || switchChar2 == 'c' )
 			{
 				return ParseVCProjectSwitch (
 					switchChar2,
