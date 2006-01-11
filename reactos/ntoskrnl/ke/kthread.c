@@ -1466,21 +1466,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     return OldState;
 }
 
-VOID
-NTAPI
-KiServiceCheck(VOID)
-{
-    PKTHREAD Thread = KeGetCurrentThread();
-
-    /* Check if we need to inialize Win32 for this Thread */
-    if (Thread->ServiceTable != KeServiceDescriptorTableShadow) {
-
-        /* We do. Initialize it and save the new table */
-        Thread->ServiceTable = KeServiceDescriptorTableShadow;
-        PsInitWin32Thread((PETHREAD)Thread);
-    }
-}
-
 /*
  *
  * NOT EXPORTED

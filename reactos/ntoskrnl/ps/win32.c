@@ -41,6 +41,13 @@ typedef struct _NTW32CALL_SAVED_STATE
 } NTW32CALL_SAVED_STATE, *PNTW32CALL_SAVED_STATE;
 #endif
 
+PVOID
+STDCALL
+KeSwitchKernelStack(
+    IN PVOID StackBase,
+    IN PVOID StackLimit
+);
+
 /* FUNCTIONS ***************************************************************/
 
 /*
@@ -62,32 +69,104 @@ PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData)
 
 NTSTATUS
 NTAPI
-PsInitWin32Thread (PETHREAD Thread)
+PsConvertToGuiThread(VOID)
 {
-    PEPROCESS Process;
-    NTSTATUS Status = STATUS_SUCCESS;
+    //PVOID NewStack, OldStack;
+    PETHREAD Thread = PsGetCurrentThread();
+    PEPROCESS Process = PsGetCurrentProcess();
+    NTSTATUS Status;
+    PAGED_CODE();
 
-    Process = Thread->ThreadsProcess;
-
-    if (Process->Win32Process == NULL)
+    /* Validate the previous mode */
+    if (KeGetPreviousMode() == KernelMode)
     {
-        if (PspWin32ProcessCallback != NULL)
+        DPRINT1("Danger: win32k call being made in kernel-mode?!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Make sure win32k is here */
+    if (!PspWin32ProcessCallback)
+    {
+        DPRINT1("Danger: Win32K call attempted but Win32k not ready!\n");
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Make sure it's not already win32 */
+    if (Thread->Tcb.ServiceTable != KeServiceDescriptorTable)
+    {
+        DPRINT1("Danger: Thread is already a win32 thread. Limit bypassed?\n");
+        return STATUS_ALREADY_WIN32;
+    }
+
+    /* Check if we don't already have a kernel-mode stack */
+#if 0
+    if (!Thread->Tcb.LargeStack)
+    {
+        /* We don't create one */
+        DPRINT1("Creating large stack\n");
+        NewStack = MmCreateKernelStack(TRUE);
+        if (!NewStack)
         {
-            Status = PspWin32ProcessCallback(Process, TRUE);
+            /* Panic in user-mode */
+            NtCurrentTeb()->LastErrorValue = ERROR_NOT_ENOUGH_MEMORY;
+            return STATUS_NO_MEMORY;
+        }
+
+        /* We're about to switch stacks. Enter a critical region */
+        KeEnterCriticalRegion();
+
+        /* Switch stacks */
+        DPRINT1("Switching stacks. NS IT, SL, SB, KS %p %p %p %p %p\n",
+                NewStack,
+                Thread->Tcb.InitialStack,
+                Thread->Tcb.StackLimit,
+                Thread->Tcb.StackBase,
+                Thread->Tcb.KernelStack);
+        OldStack = KeSwitchKernelStack((PVOID)((ULONG_PTR)NewStack + 0x3000),
+                                       NewStack);
+
+        /* Leave the critical region */
+        KeLeaveCriticalRegion();
+        DPRINT1("We made it!\n");
+
+        /* Delete the old stack */
+        //MmDeleteKernelStack(OldStack, FALSE);
+        DPRINT1("Old stack deleted. IT, SL, SB, KS %p %p %p %p\n",
+                Thread->Tcb.InitialStack,
+                Thread->Tcb.StackLimit,
+                Thread->Tcb.StackBase,
+                Thread->Tcb.KernelStack);
+    }
+#endif
+
+    /* This check is bizare. Check out win32k later */
+    if (!Process->Win32Process)
+    {
+        /* Now tell win32k about us */
+        Status = PspWin32ProcessCallback(Process, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Danger: Win32k wasn't happy about us!\n");
+            return Status;
         }
     }
 
-    if (Thread->Tcb.Win32Thread == NULL)
+    /* Set the new service table */
+    Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;
+    ASSERT(Thread->Tcb.Win32Thread == 0);
+
+    /* Tell Win32k about our thread */
+    Status = PspWin32ThreadCallback(Thread, TRUE);
+    if (!NT_SUCCESS(Status))
     {
-        if (PspWin32ThreadCallback != NULL)
-        {
-            Status = PspWin32ThreadCallback(Thread, TRUE);
-        }
+        /* Revert our table */
+        DPRINT1("Danger: Win32k wasn't happy about us!\n");
+        Thread->Tcb.ServiceTable = KeServiceDescriptorTable;
     }
 
+    /* Return status */
     return Status;
 }
-
 
 VOID
 NTAPI
@@ -120,72 +199,6 @@ PsTerminateWin32Thread (PETHREAD Thread)
     /* don't delete the W32THREAD structure at this point, wait until the
        ETHREAD structure is being freed */
   }
-}
-
-VOID
-STDCALL
-DumpEspData(ULONG Esp, ULONG ThLimit, ULONG ThStack, ULONG PcrLimit, ULONG PcrStack, ULONG Esp0)
-{
-    DPRINT1("Current Esp: %p\n Thread Stack Limit: %p\n Thread Stack: %p\n Pcr Limit: %p, Pcr Stack: %p\n Esp0 :%p\n",Esp, ThLimit, ThStack, PcrLimit, PcrStack, Esp0)   ;
-}
-
- PVOID
-STDCALL
- PsAllocateCallbackStack(ULONG StackSize)
- {
-   PVOID KernelStack = NULL;
-   NTSTATUS Status;
-   PMEMORY_AREA StackArea;
-   ULONG i, j;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-   PPFN_TYPE Pages = alloca(sizeof(PFN_TYPE) * (StackSize /PAGE_SIZE));
-
-    DPRINT1("PsAllocateCallbackStack\n");
-   BoundaryAddressMultiple.QuadPart = 0;
-   StackSize = PAGE_ROUND_UP(StackSize);
-   MmLockAddressSpace(MmGetKernelAddressSpace());
-   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                               MEMORY_AREA_KERNEL_STACK,
-                               &KernelStack,
-                               StackSize,
-                               PAGE_READWRITE,
-                               &StackArea,
-                               FALSE,
-                               0,
-                               BoundaryAddressMultiple);
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
-   if (!NT_SUCCESS(Status))
-     {
-       DPRINT1("Failed to create thread stack\n");
-       return(NULL);
-     }
-   for (i = 0; i < (StackSize / PAGE_SIZE); i++)
-     {
-       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Pages[i]);
-       if (!NT_SUCCESS(Status))
-         {
-           for (j = 0; j < i; j++)
-           {
-             MmReleasePageMemoryConsumer(MC_NPPOOL, Pages[j]);
-           }
-           return(NULL);
-         }
-     }
-   Status = MmCreateVirtualMapping(NULL,
-                                  KernelStack,
-                                  PAGE_READWRITE,
-                                   Pages,
-                                   StackSize / PAGE_SIZE);
-   if (!NT_SUCCESS(Status))
-     {
-      for (i = 0; i < (StackSize / PAGE_SIZE); i++)
-         {
-           MmReleasePageMemoryConsumer(MC_NPPOOL, Pages[i]);
-         }
-       return(NULL);
-     }
-     DPRINT1("PsAllocateCallbackStack %x\n", KernelStack);
-   return(KernelStack);
 }
 
 NTSTATUS

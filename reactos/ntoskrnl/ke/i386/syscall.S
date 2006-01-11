@@ -614,7 +614,7 @@ KiBBTUnexpectedRange:
     /* Set up Win32K Table */
     push edx
     push ebx
-    call _KiServiceCheck@0
+    call _PsConvertToGuiThread@0
 
     /* FIXME: Handle failure */
     pop eax
