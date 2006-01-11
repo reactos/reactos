@@ -28,20 +28,6 @@
 #ifndef _INTERNAL_H
 #define _INTERNAL_H
 
-/* debug.h */
-void
-DebugPrint (char* fmt,...);
-
-#define DPRINT1 DebugPrint("(%s:%d) ",__FILE__,__LINE__), DebugPrint
-#define CHECKPOINT1 do { DebugPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
-
-#ifdef __GNUC__
-#define DPRINT(args...)
-#else
-#define DPRINT
-#endif	/* __GNUC__ */
-#define CHECKPOINT
-
 /* directory.c */
 BOOL
 CopyDirectory (LPCWSTR lpDestinationPath,
@@ -91,6 +77,9 @@ BOOL
 GetUserSidFromToken (HANDLE hToken,
 		     PUNICODE_STRING SidString);
 
+PVOID
+CreateDefaultSD(VOID);
+
 /* profile.c */
 BOOL
 AppendSystemPostfix (LPWSTR lpName,
@@ -108,6 +97,14 @@ UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
 
 /* userenv.c */
 extern HINSTANCE hInstance;
+
+/* gpolicy.c */
+
+VOID
+InitializeGPNotifications(VOID);
+
+VOID
+UninitializeGPNotifications(VOID);
 
 #endif /* _INTERNAL_H */
 

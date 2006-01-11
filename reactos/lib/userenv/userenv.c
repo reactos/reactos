@@ -27,6 +27,9 @@
 
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 HINSTANCE hInstance = NULL;
 
 BOOL WINAPI
@@ -37,9 +40,11 @@ DllMain (HINSTANCE hinstDLL,
   if (fdwReason == DLL_PROCESS_ATTACH)
     {
        hInstance = hinstDLL;
+       InitializeGPNotifications();
     }
   else if (fdwReason == DLL_PROCESS_DETACH)
     {
+        UninitializeGPNotifications();
     }
 
   return TRUE;

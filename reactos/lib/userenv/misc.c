@@ -27,6 +27,9 @@
 
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -107,6 +110,13 @@ GetUserSidFromToken (HANDLE hToken,
   DPRINT ("SidString: '%wZ'\n", SidString);
 
   return TRUE;
+}
+
+PVOID
+CreateDefaultSD(VOID)
+{
+    /* FIXME - create a default security descriptor */
+    return NULL;
 }
 
 /* Dynamic DLL loading interface **********************************************/

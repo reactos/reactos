@@ -31,5 +31,7 @@ GetUserProfileDirectoryA@12
 GetUserProfileDirectoryW@12
 LoadUserProfileA@8
 LoadUserProfileW@8
+RegisterGPNotification@8
 UnloadUserProfile@8
+UnregisterGPNotification@4
 ;EOF

@@ -27,6 +27,10 @@
 
 #include <precomp.h>
 
+#define NDEBUG
+#include <debug.h>
+
+
 typedef struct _FOLDERDATA
 {
   LPWSTR lpValueName;
