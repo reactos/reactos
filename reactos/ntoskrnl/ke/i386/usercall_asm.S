@@ -30,6 +30,7 @@ _KiGetUserModeStackAddress@0:
     mov eax, fs:[KPCR_CURRENT_THREAD]
     mov eax, [eax+KTHREAD_TRAP_FRAME]
     lea eax, [eax+KTRAP_FRAME_ESP]
+    ret
 
 .endfunc
 
@@ -135,7 +136,7 @@ StackOk:
     mov [ebx+KTHREAD_CALLBACK_STACK], esp
 
     /* Align stack on 16-byte boundary */
-    and esp, ~16
+    and esp, ~15
     mov edi, esp
 
     /* Set destination and origin NPX Areas */
@@ -191,7 +192,7 @@ DontBias:
     mov [esp+KTRAP_FRAME_EIP], eax
 
     /* Set the exception list */
-    mov eax, [KPCR_EXCEPTION_LIST]
+    mov eax, fs:[KPCR_EXCEPTION_LIST]
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], eax
 
     /* Set the previous mode */
@@ -252,7 +253,6 @@ GrowFailed:
 _NtCallbackReturn2@12:
 
     /* Get the current thread and make sure we have a callback stack */
-    call _KeBugCheckEx@20
     mov eax, fs:[KPCR_CURRENT_THREAD]
     mov ecx, [eax+KTHREAD_CALLBACK_STACK]
     test ecx, ecx
@@ -283,7 +283,7 @@ _NtCallbackReturn2@12:
     cli
 
     /* Get the initial stack and restore it */
-    mov esi, fs:[KPCR_INITIAL_STACK]
+    mov esi, [eax+KTHREAD_INITIAL_STACK]
     mov [eax+KTHREAD_INITIAL_STACK], ebx
 
     /* Set desination and origin NPX Frames */

@@ -215,9 +215,6 @@ MmGrowKernelStack(PVOID StackPointer)
     Thread->Tcb.StackLimit -= KERNEL_STACK_SIZE;
 
     /* Return success */
-    DPRINT1("Thread, Thread Limit, Stack %p %p %p\n", KeGetCurrentThread(),
-                                                      KeGetCurrentThread()->StackLimit,
-                                                      StackPointer);
     return STATUS_SUCCESS;
 }
 
