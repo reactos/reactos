@@ -17,6 +17,9 @@
 #include <ntddk.h>
 #include <wdmguid.h>
 #include <ndk/ntndk.h>
+#undef TEXT
+#define TEXT(s) L##s
+#include <regstr.h>
 
 /* FIXME: Temporary until CC Ros is gone */
 #include <ccros.h>

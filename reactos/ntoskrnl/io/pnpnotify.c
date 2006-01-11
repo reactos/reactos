@@ -1,12 +1,11 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnpnotify.c
  * PURPOSE:         Plug & Play notification functions
  *
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
- *                  Hervé Poussineau (hpoussin@reactos.com)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -92,9 +91,13 @@ IoRegisterPlugPlayNotification(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
-	if (EventCategory == EventCategoryTargetDeviceChange
+	if (EventCategory == EventCategoryDeviceInterfaceChange
 		&& EventCategoryFlags & PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES)
 	{
+		DEVICE_INTERFACE_CHANGE_NOTIFICATION NotificationInfos;
+		UNICODE_STRING SymbolicLinkU;
+		PWSTR SymbolicLink;
+
 		Status = IoGetDeviceInterfaces(
 			(LPGUID)EventCategoryData,
 			NULL, /* PhysicalDeviceObject OPTIONAL */
@@ -107,8 +110,18 @@ IoRegisterPlugPlayNotification(
 			ObDereferenceObject(DriverObject);
 			return Status;
 		}
-		/* FIXME: enumerate SymbolicLinkList */
-		DPRINT1("IoRegisterPlugPlayNotification(): need to send notifications for existing interfaces!\n");
+		/* Enumerate SymbolicLinkList */
+		NotificationInfos.Version = 1;
+		NotificationInfos.Size = sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION);
+		RtlCopyMemory(&NotificationInfos.Event, &GUID_DEVICE_INTERFACE_ARRIVAL, sizeof(GUID));
+		RtlCopyMemory(&NotificationInfos.InterfaceClassGuid, EventCategoryData, sizeof(GUID));
+		NotificationInfos.SymbolicLinkName = &SymbolicLinkU;
+		for (SymbolicLink = SymbolicLinkList; *SymbolicLink; SymbolicLink += wcslen(SymbolicLink) + 1)
+		{
+			RtlInitUnicodeString(&SymbolicLinkU, SymbolicLink);
+			DPRINT("Calling callback routine for %S\n", SymbolicLink);
+			(*CallbackRoutine)(&NotificationInfos, Context);
+		}
 		ExFreePool(SymbolicLinkList);
 	}
 
@@ -184,7 +197,7 @@ VOID
 IopNotifyPlugPlayNotification(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-	IN GUID* Event,
+	IN LPCGUID Event,
 	IN PVOID EventCategoryData1,
 	IN PVOID EventCategoryData2)
 {
@@ -253,7 +266,7 @@ IopNotifyPlugPlayNotification(
 	 * list to find those that meet some criteria.
 	 */
 
-   LIST_FOR_EACH(ChangeEntry,&PnpNotifyListHead, PNP_NOTIFY_ENTRY, PnpNotifyList)
+	LIST_FOR_EACH(ChangeEntry,&PnpNotifyListHead, PNP_NOTIFY_ENTRY, PnpNotifyList)
 	{
 		CallCurrentEntry = FALSE;
 

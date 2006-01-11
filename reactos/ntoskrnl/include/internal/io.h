@@ -218,7 +218,7 @@ VOID
 IopNotifyPlugPlayNotification(
     IN PDEVICE_OBJECT DeviceObject,
     IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-    IN GUID* Event,
+    IN LPCGUID Event,
     IN PVOID EventCategoryData1,
     IN PVOID EventCategoryData2
 );
