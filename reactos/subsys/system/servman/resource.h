@@ -55,11 +55,11 @@
 #define TBICON_PROP         0
 #define TBICON_REFRESH      1
 #define TBICON_EXPORT       2
-#define TBICON_START        3
-#define TBICON_STOP         4
-#define TBICON_PAUSE        5
-#define TBICON_RESTART      6
-#define TBICON_NEW          7
+#define TBICON_NEW          3
+#define TBICON_START        4
+#define TBICON_STOP         5
+#define TBICON_PAUSE        6
+#define TBICON_RESTART      7
 #define TBICON_HELP         8
 #define TBICON_EXIT         9
 

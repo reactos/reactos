@@ -25,8 +25,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
-             //HFONT hfDefault;
-
             TBADDBITMAP tbab;
             INT iImageOffset;
             INT statwidths[] = {110, -1}; /* widths of status bar */
@@ -41,18 +39,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* export */
 
                 /* Note: First item for a seperator is its width in pixels */
-                {25, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
+                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                            /* separator */
+
+                {TBICON_NEW,     ID_NEW,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },     /* create */
+
+                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                            /* separator */
 
                 {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */
                 {TBICON_STOP,    ID_STOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
                 {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
                 {TBICON_RESTART, ID_RESTART, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
 
-                {25, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                             /* separator */
+                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                            /* separator */
 
-                {TBICON_NEW,     ID_NEW,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */
-                {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
-                {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
+                {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* help */
+                {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },    /* exit */
 
             };
 
@@ -74,25 +75,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
             SendMessage(hTool, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-            /* Add standard image list */
-            tbab.hInst = HINST_COMMCTRL;
-            tbab.nID = IDB_STD_SMALL_COLOR;
-            SendMessage(hTool, TB_ADDBITMAP, 0, (LPARAM) &tbab);
-
             /* Add custom images */
             tbab.hInst = hInstance;
             tbab.nID = IDB_BUTTONS;
-            iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, 11, (LPARAM)&tbab);
+            iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, NUM_BUTTONS, (LPARAM)&tbab);
             tbb[0].iBitmap += iImageOffset; /* properties */
             tbb[1].iBitmap += iImageOffset; /* refresh */
             tbb[2].iBitmap += iImageOffset; /* export */
-            tbb[4].iBitmap += iImageOffset; /* start */
-            tbb[5].iBitmap += iImageOffset; /* stop */
-            tbb[6].iBitmap += iImageOffset; /* pause */
-            tbb[7].iBitmap += iImageOffset; /* restart */
-            tbb[9].iBitmap += iImageOffset; /* new */
-            tbb[10].iBitmap += iImageOffset; /* help */
-            tbb[11].iBitmap += iImageOffset; /* exit */
+            tbb[4].iBitmap += iImageOffset; /* new */
+            tbb[6].iBitmap += iImageOffset; /* start */
+            tbb[7].iBitmap += iImageOffset; /* stop */
+            tbb[8].iBitmap += iImageOffset; /* pause */
+            tbb[9].iBitmap += iImageOffset; /* restart */
+            tbb[11].iBitmap += iImageOffset; /* help */
+            tbb[12].iBitmap += iImageOffset; /* exit */
 
             /* Add buttons to toolbar */
             SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
@@ -126,21 +122,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             /* name */
             lvc.iSubItem = 0;
-            lvc.cx       = 160;
+            lvc.cx       = 150;
             LoadString(hInstance, IDS_FIRSTCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 0, &lvc);
 
             /* description */
             lvc.iSubItem = 1;
-            lvc.cx       = 260;
+            lvc.cx       = 240;
             LoadString(hInstance, IDS_SECONDCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 1, &lvc);
 
             /* status */
             lvc.iSubItem = 2;
-            lvc.cx       = 75;
+            lvc.cx       = 55;
             LoadString(hInstance, IDS_THIRDCOLUMN, szTemp, 256);
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 2, &lvc);
@@ -232,7 +228,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    case WM_NOTIFY:
         {
             LPNMITEMACTIVATE item;
-            
+
 
             switch (((LPNMHDR) lParam)->code)
             {
@@ -247,10 +243,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     UINT idButton;
 
                     lpttt = (LPTOOLTIPTEXT) lParam;
-                    lpttt->hinst = hInstance;
+                    //lpttt->hinst = hInstance;
 
-                    // Specify the resource identifier of the descriptive
-                    // text for the given button.
+                    /* Specify the resource identifier of the descriptive
+                     * text for the given button. */
                     idButton = (UINT)lpttt->hdr.idFrom;
                     switch (idButton)
                     {
@@ -318,10 +314,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 int xPos, yPos;
 
-                xPos = GET_X_LPARAM(lParam); 
+                xPos = GET_X_LPARAM(lParam);
                 yPos = GET_Y_LPARAM(lParam);
 
-                TrackPopupMenuEx(hShortcutMenu, TPM_RIGHTBUTTON, xPos, yPos, hwnd, NULL);
+                TrackPopupMenuEx(hShortcutMenu, TPM_RIGHTBUTTON,
+                                 xPos, yPos, hwnd, NULL);
             }
         break;
 
@@ -333,8 +330,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_REFRESH:
-                    if (! RefreshServiceList() )
-                        GetError(0);
+                    RefreshServiceList();
+                break;
 
                 case ID_EXPORT:
                 break;
@@ -425,7 +422,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 	    ClassName,
 	    _T("ReactOS Service Manager"),
 	    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-	    CW_USEDEFAULT, CW_USEDEFAULT, 700, 500,
+	    CW_USEDEFAULT, CW_USEDEFAULT, 650, 450,
 	    NULL, NULL, hInstance, NULL);
 
     if(hMainWnd == NULL)

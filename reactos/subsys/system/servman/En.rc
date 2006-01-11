@@ -3,27 +3,27 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&File"
   BEGIN
-    MENUITEM "E&xit",ID_EXIT
+    MENUITEM "E&xit",       ID_EXIT
   END
   POPUP "Action"
   BEGIN
-    MENUITEM "Start",ID_START
-    MENUITEM "Stop",ID_STOP
-    MENUITEM "Pause",ID_PAUSE
-    MENUITEM "Resume",ID_RESUME
-    MENUITEM "Restart",ID_RESTART
+    MENUITEM "Start",       ID_START
+    MENUITEM "Stop",        ID_STOP
+    MENUITEM "Pause",       ID_PAUSE
+    MENUITEM "Resume",      ID_RESUME
+    MENUITEM "Restart",     ID_RESTART
     MENUITEM SEPARATOR
-    MENUITEM "Refresh",ID_REFRESH
+    MENUITEM "Refresh",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Properties",ID_PROP
+    MENUITEM "Properties",  ID_PROP
   END
   POPUP "View"
   BEGIN
-    MENUITEM "Customize",ID_VIEW_CUSTOMIZE
+    MENUITEM "Customize",   ID_VIEW_CUSTOMIZE
   END
   POPUP "Help"
   BEGIN
-    MENUITEM "About",ID_ABOUT
+    MENUITEM "About",       ID_ABOUT
   END
 END
 
@@ -31,28 +31,28 @@ END
 IDR_POPUP MENU
 BEGIN
   POPUP "popup"
-  BEGIN  
-    MENUITEM "Start",ID_START
-    MENUITEM "Stop",ID_STOP
-    MENUITEM "Pause",ID_PAUSE
-    MENUITEM "Resume",ID_RESUME
-    MENUITEM "Restart",ID_RESTART
+  BEGIN
+    MENUITEM "Start",       ID_START
+    MENUITEM "Stop",        ID_STOP
+    MENUITEM "Pause",       ID_PAUSE
+    MENUITEM "Resume",      ID_RESUME
+    MENUITEM "Restart",     ID_RESTART
     MENUITEM SEPARATOR
     POPUP "All tasks"
     BEGIN
-      MENUITEM "Start",ID_START
-      MENUITEM "Stop",ID_STOP
-      MENUITEM "Pause",ID_PAUSE
-      MENUITEM "Resume",ID_RESUME
-      MENUITEM "Restart",ID_RESTART
-      MENUITEM "Refresh",ID_REFRESH
+      MENUITEM "Start",     ID_START
+      MENUITEM "Stop",      ID_STOP
+      MENUITEM "Pause",     ID_PAUSE
+      MENUITEM "Resume",    ID_RESUME
+      MENUITEM "Restart",   ID_RESTART
+      MENUITEM "Refresh",   ID_REFRESH
     END
     MENUITEM SEPARATOR
-    MENUITEM "Refresh",ID_REFRESH
+    MENUITEM "Refresh",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Properties",ID_PROP
+    MENUITEM "Properties",  ID_PROP
     MENUITEM SEPARATOR
-    MENUITEM "About",ID_HELP
+    MENUITEM "Help",        ID_HELP
   END
 END
 
@@ -119,21 +119,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Num Services: %d"
-
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
-  /*"This program is free software; you can redistribute it "
-              "and/or modify it under the terms of the GNU Lesser General "
-              "Public License as published by the Free Software Foundation; "
-              "either version 2.1 of the License, or (at your option) any "
-              "later version.\r\n\r\nThis program is distributed in the hope "
-              "that it will be useful, but WITHOUT ANY WARRANTY; without even "
-              "the implied warranty of MERCHANTABILITY or FITNESS FOR A "
-              "PARTICULAR PURPOSE.  See the GNU General Public License for more "
-              "details.\r\n\r\nYou should have received a copy of the GNU "
-              "General Public License along with this program; if not, write "
-              "to the Free Software Foundation, Inc., 59 Temple Place - Suite "
-              "330, Boston, MA  02111-1307, USA." */
-
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
