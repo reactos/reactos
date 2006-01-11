@@ -580,7 +580,7 @@ ExpInitializeExecutive(VOID)
         KeCreateApplicationProcessorIdleThread(KeNumberProcessors);
 
         /* Allocate a stack for use when booting the processor */
-        ProcessorStack = RVA(Ki386InitialStackArray[((int)KeNumberProcessors)], MM_STACK_SIZE);
+        ProcessorStack = RVA(Ki386InitialStackArray[((int)KeNumberProcessors)], KERNEL_STACK_SIZE);
 
         /* Tell HAL a new CPU is being started */
         HalStartNextProcessor(0, (ULONG)ProcessorStack - 2*sizeof(FX_SAVE_AREA));

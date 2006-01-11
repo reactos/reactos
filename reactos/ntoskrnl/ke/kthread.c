@@ -853,8 +853,8 @@ KeInitializeThread(PKPROCESS Process,
     Thread->Teb = Teb;
 
     /* Set the Thread Stacks */
-    Thread->InitialStack = (PCHAR)KernelStack + MM_STACK_SIZE;
-    Thread->StackBase = (PCHAR)KernelStack + MM_STACK_SIZE;
+    Thread->InitialStack = (PCHAR)KernelStack + KERNEL_STACK_SIZE;
+    Thread->StackBase = (PCHAR)KernelStack + KERNEL_STACK_SIZE;
     Thread->StackLimit = (ULONG_PTR)KernelStack;
     Thread->KernelStackResident = TRUE;
 
@@ -864,7 +864,7 @@ KeInitializeThread(PKPROCESS Process,
      * while handling page faults. At this point it isn't possible to call the
      * page fault handler for the missing pde's.
      */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
+    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
     /* Initalize the Thread Context */

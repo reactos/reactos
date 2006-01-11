@@ -119,7 +119,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 
   Tss = ExAllocatePool(NonPagedPool, sizeof(KTSS));
   TrapTss = ExAllocatePool(NonPagedPool, sizeof(KTSSNOIOPM));
-  TrapStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
+  TrapStack = ExAllocatePool(NonPagedPool, KERNEL_STACK_SIZE);
 
   Ki386TssArray[Id] = Tss;
   Ki386TrapTssArray[Id] = (KTSSNOIOPM*)TrapTss;
@@ -127,7 +127,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   KeGetCurrentKPCR()->TSS = Tss;
 
   /* Initialize the boot TSS. */
-  Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + MM_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
+  Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id] + KERNEL_STACK_SIZE; /* FIXME: - sizeof(FX_SAVE_AREA)? */
   Tss->Ss0 = KGDT_R0_DATA;
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   Tss->LDT = 0;
@@ -146,7 +146,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 
   /* Initialize the TSS used for handling double faults. */
   TrapTss->Flags = 0;
-  TrapTss->Esp0 = ((ULONG)TrapStack + MM_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
+  TrapTss->Esp0 = ((ULONG)TrapStack + KERNEL_STACK_SIZE); /* FIXME: - sizeof(FX_SAVE_AREA)? */
   TrapTss->Ss0 = KGDT_R0_DATA;
   TrapTss->Cs = KGDT_R0_CODE;
   TrapTss->Eip = (ULONG)KiTrap8;
