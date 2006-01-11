@@ -71,6 +71,7 @@ _KiCallUserMode@8:
     mov ebx, fs:[KPCR_CURRENT_THREAD]
 
     /* Make sure we're at passive */
+#if DBG
     call _KeGetCurrentIrql@0
     or al, al
     jz AtPassive
@@ -89,7 +90,7 @@ AtPassive:
     movzx eax, byte ptr [ebx+KTHREAD_APC_STATE_INDEX]
     mov edx, [ebx+KTHREAD_COMBINED_APC_DISABLE]
     or eax, eax
-    jz InvalidIndex
+    jnz InvalidIndex
     or edx, edx
     jz ApcsEnabled
 
@@ -103,6 +104,7 @@ InvalidIndex:
     call _KeBugCheckEx@20
 
 ApcsEnabled:
+#endif
 
     /* Get the lowest stack limit and check if we can handle it */
     lea eax, [esp-0x3000]
@@ -145,15 +147,15 @@ StackOk:
 
     /* Now copy the NPX State */
     mov ecx, [esi+FN_CONTROL_WORD]
-    mov [esi+FN_CONTROL_WORD], ecx
+    mov [esp+FN_CONTROL_WORD], ecx
     mov ecx, [esi+FN_STATUS_WORD]
-    mov [esi+FN_STATUS_WORD], ecx
+    mov [esp+FN_STATUS_WORD], ecx
     mov ecx, [esi+FN_TAG_WORD]
-    mov [esi+FN_TAG_WORD], ecx
+    mov [esp+FN_TAG_WORD], ecx
     mov ecx, [esi+FN_DATA_SELECTOR]
-    mov [esi+FN_DATA_SELECTOR], ecx
+    mov [esp+FN_DATA_SELECTOR], ecx
     mov ecx, [esi+FN_CR0_NPX_STATE]
-    mov [esi+FN_CR0_NPX_STATE], ecx
+    mov [esp+FN_CR0_NPX_STATE], ecx
 
     /* Get TSS */
     mov esi, fs:[KPCR_TSS]
@@ -179,7 +181,7 @@ DontBias:
     /* Set copy iterator and dest/origin parameters and do the copy */
     mov ecx, (KTRAP_FRAME_V86_ES - KTRAP_FRAME_FS) / 4
     lea edi, [esp+KTRAP_FRAME_FS]
-    lea esi, [esp+KTRAP_FRAME_FS]
+    lea esi, [edx+KTRAP_FRAME_FS]
     rep movsd
 
     /* FIXME: Copy debug registers if needed */
@@ -193,7 +195,7 @@ DontBias:
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], eax
 
     /* Set the previous mode */
-    mov eax, [EDX+KTRAP_FRAME_PREVIOUS_MODE]
+    mov eax, [edx+KTRAP_FRAME_PREVIOUS_MODE]
     mov [esp+KTRAP_FRAME_PREVIOUS_MODE], eax
 
     /* Bring interrupts back */
@@ -250,6 +252,7 @@ GrowFailed:
 _NtCallbackReturn2@12:
 
     /* Get the current thread and make sure we have a callback stack */
+    call _KeBugCheckEx@20
     mov eax, fs:[KPCR_CURRENT_THREAD]
     mov ecx, [eax+KTHREAD_CALLBACK_STACK]
     test ecx, ecx
