@@ -614,11 +614,15 @@ KiBBTUnexpectedRange:
     /* Set up Win32K Table */
     push edx
     push ebx
-    call _KiServiceCheck
+    call _KiServiceCheck@0
 
     /* FIXME: Handle failure */
     pop eax
     pop edx
+
+    /* Reset trap frame address */
+    mov ebp, esp
+    mov [esi+KTHREAD_TRAP_FRAME], ebp
 
     /* Try the Call again */
     jmp CheckValidCall

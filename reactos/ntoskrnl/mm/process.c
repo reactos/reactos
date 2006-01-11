@@ -185,7 +185,20 @@ MmCreateKernelStack(BOOLEAN GuiStack)
         KEBUGCHECK(0);
     }
 
+    /* Return the stack */
     return KernelStack;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+MmGrowKernelStack(PVOID StackPointer)
+{
+    DPRINT1("We don't support expansion yet :(\n");
+    KEBUGCHECK(0);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

@@ -405,21 +405,6 @@ MmDbgTranslatePhysicalAddress (
    return (0);
 }
 
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-MmGrowKernelStack (
-   DWORD Unknown0
-)
-{
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
-}
-
-
 /*
  * @unimplemented
  */

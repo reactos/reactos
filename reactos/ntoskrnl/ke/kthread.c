@@ -1467,7 +1467,8 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 }
 
 VOID
-KiServiceCheck (VOID)
+NTAPI
+KiServiceCheck(VOID)
 {
     PKTHREAD Thread = KeGetCurrentThread();
 
