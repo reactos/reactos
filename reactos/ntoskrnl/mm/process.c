@@ -166,7 +166,11 @@ MmCreateKernelStack(BOOLEAN GuiStack)
         KEBUGCHECK(0);
     }
 
-    /* Mark the Stack in use */
+    /*
+     * Mark the Stack in use.
+     * Note: Currently we mark all 60KB in use for a GUI Thread.
+     * We should only do this inside MmGrowKernelStack. TODO!
+     */
     for (i = 0; i < (StackSize / PAGE_SIZE); i++)
     {
         Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page[i]);
@@ -197,9 +201,24 @@ NTSTATUS
 STDCALL
 MmGrowKernelStack(PVOID StackPointer)
 {
-    DPRINT1("We don't support expansion yet :(\n");
-    KEBUGCHECK(0);
-    return STATUS_NOT_IMPLEMENTED;
+    PETHREAD Thread = PsGetCurrentThread();
+
+    /* Make sure we have reserved space for our grow */
+    ASSERT(((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) <=
+           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
+
+    /* 
+     * We'll give you three more pages.
+     * NOTE: See note in MmCreateKernelStack. These pages are already being reserved.
+     * It would be more efficient to only grow them (commit them) here.
+     */
+    Thread->Tcb.StackLimit -= KERNEL_STACK_SIZE;
+
+    /* Return success */
+    DPRINT1("Thread, Thread Limit, Stack %p %p %p\n", KeGetCurrentThread(),
+                                                      KeGetCurrentThread()->StackLimit,
+                                                      StackPointer);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
