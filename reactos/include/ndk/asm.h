@@ -85,8 +85,12 @@ Author:
 #define KTHREAD_WAIT_IRQL                       0x4E
 #define KTHREAD_SERVICE_TABLE                   0x118
 #define KTHREAD_PREVIOUS_MODE                   0xD7
+#define KTHREAD_COMBINED_APC_DISABLE            0x70
+#define KTHREAD_LARGE_STACK                     0x107
 #define KTHREAD_TRAP_FRAME                      0x110
 #define KTHREAD_CALLBACK_STACK                  0x114
+#define KTHREAD_APC_STATE_INDEX                 0x11C
+#define KTHREAD_STACK_BASE                      0x158
 
 //
 // KPROCESS Offsets
@@ -309,6 +313,15 @@ Author:
 #define CR0_NW                                  0x20000000
 #define CR0_CD                                  0x40000000
 #define CR0_PG                                  0x80000000
+
+//
+// Usermode callout frame definitions
+//
+#define CBSTACK_STACK                           0x0
+#define CBSTACK_TRAP_FRAME                      0x4
+#define CBSTACK_CALLBACK_STACK                  0x8
+#define CBSTACK_RESULT                          0x20
+#define CBSTACK_RESULT_LENGTH                   0x24
 
 //
 // Generic Definitions
