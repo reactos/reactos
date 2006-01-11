@@ -134,7 +134,8 @@ MmCreateKernelStack(BOOLEAN GuiStack)
     PMEMORY_AREA StackArea;
     ULONG i;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PFN_TYPE Page[MM_STACK_SIZE / PAGE_SIZE];
+    ULONG StackSize = GuiStack ? KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE;
+    PFN_TYPE Page[KERNEL_LARGE_STACK_SIZE / PAGE_SIZE];
     PVOID KernelStack = NULL;
     NTSTATUS Status;
 
@@ -148,7 +149,7 @@ MmCreateKernelStack(BOOLEAN GuiStack)
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_KERNEL_STACK,
                                 &KernelStack,
-                                MM_STACK_SIZE,
+                                StackSize,
                                 PAGE_READWRITE,
                                 &StackArea,
                                 FALSE,
@@ -166,7 +167,7 @@ MmCreateKernelStack(BOOLEAN GuiStack)
     }
 
     /* Mark the Stack in use */
-    for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++)
+    for (i = 0; i < (StackSize / PAGE_SIZE); i++)
     {
         Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page[i]);
     }
@@ -176,7 +177,7 @@ MmCreateKernelStack(BOOLEAN GuiStack)
                                     KernelStack,
                                     PAGE_READWRITE,
                                     Page,
-                                    MM_STACK_SIZE / PAGE_SIZE);
+                                    StackSize / PAGE_SIZE);
 
     /* Check for success */
     if (!NT_SUCCESS(Status))

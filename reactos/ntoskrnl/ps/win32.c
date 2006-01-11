@@ -71,7 +71,7 @@ NTSTATUS
 NTAPI
 PsConvertToGuiThread(VOID)
 {
-    //PVOID NewStack, OldStack;
+    PVOID NewStack, OldStack;
     PETHREAD Thread = PsGetCurrentThread();
     PEPROCESS Process = PsGetCurrentProcess();
     NTSTATUS Status;
@@ -99,11 +99,9 @@ PsConvertToGuiThread(VOID)
     }
 
     /* Check if we don't already have a kernel-mode stack */
-#if 0
     if (!Thread->Tcb.LargeStack)
     {
         /* We don't create one */
-        DPRINT1("Creating large stack\n");
         NewStack = MmCreateKernelStack(TRUE);
         if (!NewStack)
         {
@@ -116,28 +114,15 @@ PsConvertToGuiThread(VOID)
         KeEnterCriticalRegion();
 
         /* Switch stacks */
-        DPRINT1("Switching stacks. NS IT, SL, SB, KS %p %p %p %p %p\n",
-                NewStack,
-                Thread->Tcb.InitialStack,
-                Thread->Tcb.StackLimit,
-                Thread->Tcb.StackBase,
-                Thread->Tcb.KernelStack);
         OldStack = KeSwitchKernelStack((PVOID)((ULONG_PTR)NewStack + 0x3000),
                                        NewStack);
 
         /* Leave the critical region */
         KeLeaveCriticalRegion();
-        DPRINT1("We made it!\n");
 
         /* Delete the old stack */
         //MmDeleteKernelStack(OldStack, FALSE);
-        DPRINT1("Old stack deleted. IT, SL, SB, KS %p %p %p %p\n",
-                Thread->Tcb.InitialStack,
-                Thread->Tcb.StackLimit,
-                Thread->Tcb.StackBase,
-                Thread->Tcb.KernelStack);
     }
-#endif
 
     /* This check is bizare. Check out win32k later */
     if (!Process->Win32Process)

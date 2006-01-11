@@ -204,6 +204,10 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 #define ZwCurrentThread() NtCurrentThread()      
 
+#define KERNEL_STACK_SIZE                   12288
+#define KERNEL_LARGE_STACK_SIZE             61440
+
+
 #define DPFLTR_ERROR_LEVEL                  0
 #define DPFLTR_WARNING_LEVEL                1
 #define DPFLTR_TRACE_LEVEL                  2

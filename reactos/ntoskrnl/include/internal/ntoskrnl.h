@@ -254,9 +254,5 @@ DefaultQueryInfoBufferCheck(UINT Class,
 #endif
 
 #endif
-/*
- *
- */
-#define MM_STACK_SIZE             (3*4096)
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */
