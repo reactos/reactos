@@ -318,8 +318,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 int xPos, yPos;
 
-                xPos = LOWORD(lParam); 
-                yPos = HIWORD(lParam);
+                xPos = GET_X_LPARAM(lParam); 
+                yPos = GET_Y_LPARAM(lParam);
 
                 TrackPopupMenuEx(hShortcutMenu, TPM_RIGHTBUTTON, xPos, yPos, hwnd, NULL);
             }

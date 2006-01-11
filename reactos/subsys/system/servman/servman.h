@@ -1,8 +1,9 @@
 #ifndef __SERVMAN_H
 #define __SERVMAN_H
 
-
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <windowsx.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <commctrl.h>
