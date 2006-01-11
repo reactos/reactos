@@ -7468,6 +7468,8 @@ IoGetDeviceInterfaceAlias(
   IN CONST GUID  *AliasInterfaceClassGuid,
   OUT PUNICODE_STRING  AliasSymbolicLinkName);
 
+#define DEVICE_INTERFACE_INCLUDE_NONACTIVE 0x00000001
+
 NTOSAPI
 NTSTATUS
 DDKAPI
