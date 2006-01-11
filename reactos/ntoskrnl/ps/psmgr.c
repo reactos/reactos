@@ -78,7 +78,6 @@ PiInitProcessManager(VOID)
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();
-   PsInitialiseW32Call();
 }
 
 VOID

@@ -680,7 +680,7 @@ DontWait:
 
     /* Release & Return */
     DPRINT("Returning, %x. Status: %d\n. We did not wait.",
-            KeGetCurrentThread(), WaitStatus);
+             KeGetCurrentThread(), WaitStatus);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return WaitStatus;
 }

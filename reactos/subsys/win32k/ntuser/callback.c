@@ -182,7 +182,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    Arguments->wParam = wParam;
    Arguments->lParam = lParam;
    Arguments->lParamBufferSize = lParamBufferSize;
-   ResultPointer = Arguments;
+   ResultPointer = NULL;
    ResultLength = ArgumentLength;
 
    UserLeaveCo();
@@ -192,6 +192,9 @@ co_IntCallWindowProc(WNDPROC Proc,
                       ArgumentLength,
                       &ResultPointer,
                       &ResultLength);
+
+   /* Simulate old behaviour: copy into our local buffer */
+   RtlMoveMemory(Arguments, ResultPointer, ArgumentLength);
 
    UserEnterCo();
 
@@ -224,7 +227,7 @@ co_IntLoadSysMenuTemplate()
    PVOID ResultPointer;
    ULONG ResultLength;
 
-   ResultPointer = &Result;
+   ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
 
    UserLeaveCo();
@@ -234,6 +237,9 @@ co_IntLoadSysMenuTemplate()
                       0,
                       &ResultPointer,
                       &ResultLength);
+
+   /* Simulate old behaviour: copy into our local buffer */
+   Result = *(LRESULT*)ResultPointer;
 
    UserEnterCo();
 
@@ -253,7 +259,7 @@ co_IntLoadDefaultCursors(VOID)
    ULONG ResultLength;
    BOOL DefaultCursor = TRUE;
 
-   ResultPointer = &Result;
+   ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
 
    UserLeaveCo();
@@ -263,6 +269,9 @@ co_IntLoadDefaultCursors(VOID)
                       sizeof(BOOL),
                       &ResultPointer,
                       &ResultLength);
+
+   /* Simulate old behaviour: copy into our local buffer */
+   Result = *(LRESULT*)ResultPointer;
 
    UserEnterCo();
 
@@ -384,7 +393,7 @@ co_IntCallHookProc(INT HookId,
          break;
    }
 
-   ResultPointer = &Result;
+   ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
 
    UserLeaveCo();
@@ -394,6 +403,9 @@ co_IntCallHookProc(INT HookId,
                       ArgumentLength,
                       &ResultPointer,
                       &ResultLength);
+
+   /* Simulate old behaviour: copy into our local buffer */
+   Result = *(LRESULT*)ResultPointer;
 
    UserEnterCo();
 

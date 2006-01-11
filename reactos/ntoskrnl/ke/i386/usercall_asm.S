@@ -248,9 +248,9 @@ GrowFailed:
  * @remark This call MUST be paired with KeUserModeCallback.
  *
  *--*/
-.globl _NtCallbackReturn2@12
-.func NtCallbackReturn2@12
-_NtCallbackReturn2@12:
+.globl _NtCallbackReturn@12
+.func NtCallbackReturn@12
+_NtCallbackReturn@12:
 
     /* Get the current thread and make sure we have a callback stack */
     mov eax, fs:[KPCR_CURRENT_THREAD]
