@@ -223,7 +223,7 @@ Escape@20
 EudcLoadLinkW@16
 EudcUnloadLinkW@8
 ExcludeClipRect@20=NtGdiExcludeClipRect@20
-ExtCreatePen@20=NtGdiExtCreatePen@20
+ExtCreatePen@20
 ExtCreateRegion@12=NtGdiExtCreateRegion@12
 ExtEscape@24=NtGdiExtEscape@24
 ExtFloodFill@20=NtGdiExtFloodFill@20

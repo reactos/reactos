@@ -70,7 +70,7 @@ NtGdiEnumObjects			4
 NtGdiEqualRgn				2
 NtGdiEscape				5
 NtGdiExcludeClipRect			5
-NtGdiExtCreatePen			5
+NtGdiExtCreatePen			11
 NtGdiExtCreateRegion			3
 NtGdiExtEscape				6
 NtGdiExtFloodFill			5

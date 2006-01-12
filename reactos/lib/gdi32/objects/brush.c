@@ -20,6 +20,31 @@ FixBrushOrgEx(
 /*
  * @implemented
  */
+HPEN
+APIENTRY
+ExtCreatePen(DWORD dwPenStyle,
+             DWORD dwWidth,
+             CONST LOGBRUSH *lplb,
+             DWORD dwStyleCount,
+             CONST DWORD *lpStyle)
+{
+    /* Call NTGDI (hack... like most of gdi32..sigh) */
+    return NtGdiExtCreatePen(dwPenStyle,
+                             dwWidth,
+                             lplb->lbStyle,
+                             lplb->lbColor,
+                             lplb->lbHatch,
+                             0,
+                             dwStyleCount,
+                             (PULONG)lpStyle,
+                             0,
+                             FALSE,
+                             NULL);
+}
+
+/*
+ * @implemented
+ */
 HBRUSH STDCALL
 CreateDIBPatternBrush(
    HGLOBAL hglbDIBPacked,
