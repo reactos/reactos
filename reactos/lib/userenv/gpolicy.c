@@ -493,9 +493,9 @@ EnterCriticalPolicySection(IN BOOL bMachine)
 
         if (hSection != NULL)
         {
-            /* wait up to 10 seconds */
+            /* wait up to 10 minutes */
             if (WaitForSingleObject(hSection,
-                                    60000) != WAIT_FAILED)
+                                    600000) != WAIT_FAILED)
             {
                 return hSection;
             }
