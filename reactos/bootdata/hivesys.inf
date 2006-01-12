@@ -64,6 +64,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000813","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000813","Layout Text",0x00000000,"BE (point)"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000408","Layout File",0x00000000,"kbdhe.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000408","Layout Text",0x00000000,"Greek"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041b","Layout File",0x00000000,"kbdsk.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041b","Layout Text",0x00000000,"Slovak"
 
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
