@@ -47,10 +47,12 @@ static const WCHAR szLocalGPApplied[] = L"userenv: User Group Policy has been ap
 static const WCHAR szLocalGPMutex[] = L"userenv: user policy mutex";
 static const WCHAR szLocalGPRefreshEvent[] = L"userenv: user policy refresh event";
 static const WCHAR szLocalGPForceRefreshEvent[] = L"userenv: user policy force refresh event";
+static const WCHAR szLocalGPDoneEvent[] = L"userenv: User Policy Foreground Done Event";
 static const WCHAR szMachineGPApplied[] = L"Global\\userenv: Machine Group Policy has been applied";
 static const WCHAR szMachineGPMutex[] = L"Global\\userenv: machine policy mutex";
 static const WCHAR szMachineGPRefreshEvent[] = L"Global\\userenv: machine policy refresh event";
 static const WCHAR szMachineGPForceRefreshEvent[] = L"Global\\userenv: machine policy force refresh event";
+static const WCHAR szMachineGPDoneEvent[] = L"Global\\userenv: Machine Policy Foreground Done Event";
 
 static CRITICAL_SECTION GPNotifyLock;
 static PGP_NOTIFY NotificationList = NULL;
@@ -519,5 +521,45 @@ LeaveCriticalPolicySection(IN HANDLE hSection)
     Ret = ReleaseMutex(hSection);
     CloseHandle(hSection);
 
+    return Ret;
+}
+
+BOOL WINAPI
+WaitForUserPolicyForegroundProcessing(VOID)
+{
+    HANDLE hEvent;
+    BOOL Ret = FALSE;
+
+    hEvent = OpenEventW(SYNCHRONIZE,
+                        FALSE,
+                        szLocalGPDoneEvent);
+    if (hEvent != NULL)
+    {
+        Ret = WaitForSingleObject(hEvent,
+                                  INFINITE) != WAIT_FAILED;
+        CloseHandle(hEvent);
+    }
+
+    /* return TRUE even if the mutex doesn't exist! */
+    return Ret;
+}
+
+BOOL WINAPI
+WaitForMachinePolicyForegroundProcessing(VOID)
+{
+    HANDLE hEvent;
+    BOOL Ret = FALSE;
+
+    hEvent = OpenEventW(SYNCHRONIZE,
+                        FALSE,
+                        szMachineGPDoneEvent);
+    if (hEvent != NULL)
+    {
+        Ret = WaitForSingleObject(hEvent,
+                                  INFINITE) != WAIT_FAILED;
+        CloseHandle(hEvent);
+    }
+
+    /* return TRUE even if the mutex doesn't exist! */
     return Ret;
 }

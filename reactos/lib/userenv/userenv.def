@@ -38,4 +38,6 @@ RefreshPolicyEx@8
 RegisterGPNotification@8
 UnloadUserProfile@8
 UnregisterGPNotification@4
+WaitForUserPolicyForegroundProcessing@0
+WaitForMachinePolicyForegroundProcessing@0
 ;EOF
