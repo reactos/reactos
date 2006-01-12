@@ -174,8 +174,10 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 /*         PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ; */
         GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
         GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(152, 205, 152)) ;
-        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(255, 0, 0)) ;
-        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(0, 255, 0)) ;
+        
+        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(0, 255, 0)) ;
+        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(255, 0, 0)) ;
+        
 
         GetClientRect(hPerformancePageMemUsageHistoryGraph, &rc);
         GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
@@ -418,12 +420,19 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
         	 *  Get the CPU usage
         	 */
 	        CpuUsage = PerfDataGetProcessorUsage();
-        	CpuKernelUsage = PerfDataGetProcessorSystemUsage();
         	if (CpuUsage < 0 )        CpuUsage = 0;
         	if (CpuUsage > 100)       CpuUsage = 100;
-        	if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
-        	if (CpuKernelUsage > 100) CpuKernelUsage = 100;
-
+        	
+        	if (TaskManagerSettings.ShowKernelTimes)
+        	{
+        		CpuKernelUsage = PerfDataGetProcessorSystemUsage();
+        		if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
+        		if (CpuKernelUsage > 100) CpuKernelUsage = 100;
+			} 
+			else
+			{
+				CpuKernelUsage = 0;
+			}
             /*
              *  Get the memory usage
              */
@@ -435,6 +444,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
             nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
 
+			 
 
             GraphCtrl_AppendPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage, 0.0, 0.0);
             GraphCtrl_AppendPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2, 0.0, 0.0);

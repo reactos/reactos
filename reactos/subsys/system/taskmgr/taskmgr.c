@@ -873,7 +873,7 @@ void TaskManager_OnViewUpdateSpeedHigh(void)
     CheckMenuRadioItem(hUpdateSpeedMenu, ID_VIEW_UPDATESPEED_HIGH, ID_VIEW_UPDATESPEED_PAUSED, ID_VIEW_UPDATESPEED_HIGH, MF_BYCOMMAND);
 
     KillTimer(hMainWnd, 1);
-    SetTimer(hMainWnd, 1, 1000, NULL);
+    SetTimer(hMainWnd, 1, 500, NULL);
 }
 
 void TaskManager_OnViewUpdateSpeedNormal(void)

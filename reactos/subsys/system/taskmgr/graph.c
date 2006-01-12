@@ -22,6 +22,8 @@
 
 #include <precomp.h>
 
+int                nlastBarsUsed = 0;
+
 LONG                OldGraphWndProc;
 
 void                Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd);
@@ -158,11 +160,8 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
      * Get the CPU usage
      */
     CpuUsage = PerfDataGetProcessorUsage();
-    CpuKernelUsage = PerfDataGetProcessorSystemUsage();
     if (CpuUsage < 0)         CpuUsage = 0;
     if (CpuUsage > 100)       CpuUsage = 100;
-    if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
-    if (CpuKernelUsage > 100) CpuKernelUsage = 100;
 
     /*
      * Check and see how many digits it will take
@@ -197,11 +196,14 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     {
         nBarsUsed = 1;
     }
-    nBarsFree = nBars - nBarsUsed;
+    nBarsFree = nBars - (nlastBarsUsed>nBarsUsed ? nlastBarsUsed : nBarsUsed);
+    
     if (TaskManagerSettings.ShowKernelTimes)
     {
-        nBarsUsedKernel = ((nBars * 2) * CpuKernelUsage) / 100;
-        nBarsUsed -= (nBarsUsedKernel / 2);
+	    CpuKernelUsage = PerfDataGetProcessorSystemUsage();
+	    if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
+	    if (CpuKernelUsage > 100) CpuKernelUsage = 100;
+        nBarsUsedKernel = (nBars * CpuKernelUsage) / 100;
     }
     else
     {
@@ -226,7 +228,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 
     if (nBarsUsedKernel < 0)     nBarsUsedKernel = 0;
     if (nBarsUsedKernel > nBars) nBarsUsedKernel = nBars;
-
+    
     /*
      * Draw the "free" bars
      */
@@ -242,6 +244,25 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
         rcBarRight.bottom += 3;
     }
 
+    /*
+     * Draw the last "used" bars
+     */
+	if ((nlastBarsUsed - nBarsUsed) > 0) {
+	    for (i=0; i< (nlastBarsUsed - nBarsUsed); i++)
+	    {
+	        if (nlastBarsUsed > 5000) nlastBarsUsed = 5000;
+	
+	        FillSolidRect(hDC, &rcBarLeft, MEDIUM_GREEN);
+	        FillSolidRect(hDC, &rcBarRight, MEDIUM_GREEN);
+	
+	        rcBarLeft.top += 3;
+	        rcBarLeft.bottom += 3;
+	
+	        rcBarRight.top += 3;
+	        rcBarRight.bottom += 3;
+	    }
+	}
+	nlastBarsUsed = nBarsUsed;
     /*
      * Draw the "used" bars
      */
@@ -262,48 +283,25 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     /*
      * Draw the "used" kernel bars
      */
-    rcBarLeft.bottom--;
-    rcBarRight.bottom--;
-    if (nBarsUsedKernel && nBarsUsedKernel % 2)
-    {
-        rcBarLeft.top -= 2;
-        rcBarLeft.bottom -= 2;
+    
+    rcBarLeft.top -=3;
+    rcBarLeft.bottom -=3;
 
-        rcBarRight.top -= 2;
-        rcBarRight.bottom -= 2;
-
-        FillSolidRect(hDC, &rcBarLeft, RED);
-        FillSolidRect(hDC, &rcBarRight, RED);
-
-        rcBarLeft.top += 2;
-        rcBarLeft.bottom += 2;
-
-        rcBarRight.top += 2;
-        rcBarRight.bottom += 2;
-
-        nBarsUsedKernel--;
-    }
+    rcBarRight.top -=3;
+    rcBarRight.bottom -=3;
+    
     for (i=0; i<nBarsUsedKernel; i++)
     {
-        if (nBarsUsedKernel > 5000) nBarsUsedKernel = 5000;
 
         FillSolidRect(hDC, &rcBarLeft, RED);
         FillSolidRect(hDC, &rcBarRight, RED);
 
-        rcBarLeft.top++;
-        rcBarLeft.bottom++;
+        rcBarLeft.top -=3;
+        rcBarLeft.bottom -=3;
 
-        rcBarRight.top++;
-        rcBarRight.bottom++;
+        rcBarRight.top -=3;
+        rcBarRight.bottom -=3;
 
-        if (i % 2)
-        {
-            rcBarLeft.top++;
-            rcBarLeft.bottom++;
-
-            rcBarRight.top++;
-            rcBarRight.bottom++;
-        }
     }
 }
 
@@ -338,8 +336,10 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
     CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
-    _stprintf(Text, _T("%dK"), (int)CommitChargeTotal);
-
+    if (CommitChargeTotal > 1024)
+    	_stprintf(Text, _T("%d MB"), (int)(CommitChargeTotal / 1024));
+	else
+		_stprintf(Text, _T("%d K"), (int)CommitChargeTotal);
     /*
      * Draw the font text onto the graph
      * The bottom 20 pixels are reserved for the text
