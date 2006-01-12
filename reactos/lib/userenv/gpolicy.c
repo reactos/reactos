@@ -540,7 +540,6 @@ WaitForUserPolicyForegroundProcessing(VOID)
         CloseHandle(hEvent);
     }
 
-    /* return TRUE even if the mutex doesn't exist! */
     return Ret;
 }
 
@@ -560,6 +559,5 @@ WaitForMachinePolicyForegroundProcessing(VOID)
         CloseHandle(hEvent);
     }
 
-    /* return TRUE even if the mutex doesn't exist! */
     return Ret;
 }
