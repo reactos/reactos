@@ -106,4 +106,9 @@ typedef struct _LDR_RESOURCE_INFO
     ULONG Language;
 } LDR_RESOURCE_INFO, *PLDR_RESOURCE_INFO;
 
+//
+// LdrAddRef Flags
+//
+#define LDR_PIN_MODULE                  0x00000001
+
 #endif

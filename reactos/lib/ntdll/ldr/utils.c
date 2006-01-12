@@ -2135,7 +2135,7 @@ LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module,
      {
        /* ?????????????????? */
      }
-   else if (LoadCount == 1)
+   else if (!(Module->Flags & LDRP_STATIC_LINK) && LoadCount == 1)
      {
        BoundImportDescriptor = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)
                                  RtlImageDirectoryEntryToData(Module->DllBase,
@@ -2207,7 +2207,11 @@ LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module,
 
    if (Unload)
      {
-       LdrpDetachProcess(FALSE);
+       if (!(Module->Flags & LDRP_STATIC_LINK))
+         {
+           LdrpDetachProcess(FALSE);
+         }
+
        RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    return STATUS_SUCCESS;
@@ -2316,6 +2320,83 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
     return STATUS_DLL_NOT_FOUND;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS NTAPI
+LdrAddRefDll(IN ULONG Flags,
+             IN PVOID BaseAddress)
+{
+    PLIST_ENTRY ModuleListHead;
+    PLIST_ENTRY Entry;
+    PLDR_DATA_TABLE_ENTRY Module;
+    NTSTATUS Status;
+
+    if (Flags & ~(LDR_PIN_MODULE))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = STATUS_DLL_NOT_FOUND;
+    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    Entry = ModuleListHead->Flink;
+    while (Entry != ModuleListHead)
+    {
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+
+        if (Module->DllBase == BaseAddress)
+        {
+            if (Flags & LDR_PIN_MODULE)
+            {
+                Module->Flags |= LDRP_STATIC_LINK;
+            }
+            else
+            {
+                LdrpIncrementLoadCount(Module,
+                                       FALSE);
+            }
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        Entry = Entry->Flink;
+    }
+    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+PVOID NTAPI
+RtlPcToFileHeader(IN PVOID PcValue,
+                  PVOID* BaseOfImage)
+{
+    PLIST_ENTRY ModuleListHead;
+    PLIST_ENTRY Entry;
+    PLDR_DATA_TABLE_ENTRY Module;
+    PVOID ImageBase = NULL;
+
+    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    Entry = ModuleListHead->Flink;
+    while (Entry != ModuleListHead)
+      {
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+
+        if ((ULONG_PTR)PcValue >= (ULONG_PTR)Module->DllBase &&
+            (ULONG_PTR)PcValue < (ULONG_PTR)Module->DllBase + Module->SizeOfImage)
+          {
+            ImageBase = Module->DllBase;
+            break;
+          }
+        Entry = Entry->Flink;
+      }
+    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+
+    *BaseOfImage = ImageBase;
+    return ImageBase;
+}
 
 /*
  * @implemented

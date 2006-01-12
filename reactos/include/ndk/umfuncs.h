@@ -161,6 +161,14 @@ DbgUiIssueRemoteBreakin(
 //
 // Loader Functions
 //
+
+NTSTATUS
+NTAPI
+LdrAddRefDll(
+    IN ULONG Flags,
+    IN PVOID BaseAddress
+);
+
 NTSTATUS
 NTAPI
 LdrDisableThreadCalloutsForDll(
@@ -208,6 +216,13 @@ LdrLoadDll(
     IN ULONG LoadFlags,
     IN PUNICODE_STRING Name,
     OUT PVOID *BaseAddress OPTIONAL
+);
+
+PVOID
+NTAPI
+RtlPcToFileHeader(
+    IN PVOID PcValue,
+    PVOID* BaseOfImage
 );
 
 PIMAGE_BASE_RELOCATION

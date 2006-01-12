@@ -35,6 +35,7 @@ KiUserApcDispatcher@16
 KiUserCallbackDispatcher@12
 KiUserExceptionDispatcher@8
 LdrAccessResource@16
+LdrAddRefDll@8
 LdrDisableThreadCalloutsForDll@4
 LdrEnumResources@20
 LdrFindEntryForAddress@8
@@ -576,7 +577,7 @@ RtlOemStringToUnicodeSize@4=RtlxOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
 RtlOpenCurrentUser@8
-;RtlPcToFileHeader
+RtlPcToFileHeader@8
 RtlPinAtomInAtomTable@8
 RtlPrefixString@12
 RtlPrefixUnicodeString@12

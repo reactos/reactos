@@ -1087,23 +1087,6 @@ GetFirmwareEnvironmentVariableW(
     return 0;
 }
 
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetModuleHandleExW(
-    DWORD        dwFlags,
-    LPCWSTR     lpModuleName,
-    HMODULE*    phModule
-    )
-{
-    STUB;
-    return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -1280,23 +1263,6 @@ GetFirmwareEnvironmentVariableA(
     LPCSTR lpGuid,
     PVOID   pBuffer,
     DWORD    nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetModuleHandleExA(
-    DWORD        dwFlags,
-    LPCSTR     lpModuleName,
-    HMODULE*    phModule
     )
 {
     STUB;

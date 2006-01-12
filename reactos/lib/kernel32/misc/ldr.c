@@ -483,6 +483,129 @@ GetModuleHandleW (LPCWSTR lpModuleName)
 /*
  * @implemented
  */
+BOOL
+STDCALL
+GetModuleHandleExW(IN DWORD dwFlags,
+                   IN LPCWSTR lpModuleName  OPTIONAL,
+                   OUT HMODULE* phModule)
+{
+    HMODULE hModule;
+    NTSTATUS Status;
+    BOOL Ret = FALSE;
+
+    if (phModule == NULL ||
+        ((dwFlags & (GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT)) ==
+         (GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (lpModuleName == NULL)
+    {
+        hModule = NtCurrentPeb()->ImageBaseAddress;
+    }
+    else
+    {
+        if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS)
+        {
+            hModule = (HMODULE)RtlPcToFileHeader((PVOID)lpModuleName,
+                                                 (PVOID*)&hModule);
+            if (hModule == NULL)
+            {
+                SetLastErrorByStatus(STATUS_DLL_NOT_FOUND);
+            }
+        }
+        else
+        {
+            hModule = GetModuleHandleW(lpModuleName);
+        }
+    }
+
+    if (hModule != NULL)
+    {
+        if (!(dwFlags & GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT))
+        {
+            Status = LdrAddRefDll((dwFlags & GET_MODULE_HANDLE_EX_FLAG_PIN) ? LDR_PIN_MODULE : 0,
+                                  hModule);
+
+            if (NT_SUCCESS(Status))
+            {
+                Ret = TRUE;
+            }
+            else
+            {
+                SetLastErrorByStatus(Status);
+                hModule = NULL;
+            }
+        }
+        else
+            Ret = TRUE;
+    }
+
+    *phModule = hModule;
+    return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetModuleHandleExA(IN DWORD dwFlags,
+                   IN LPCSTR lpModuleName  OPTIONAL,
+                   OUT HMODULE* phModule)
+{
+    UNICODE_STRING UnicodeName;
+    ANSI_STRING ModuleName;
+    LPCWSTR lpModuleNameW;
+    NTSTATUS Status;
+    BOOL Ret;
+
+    if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS)
+    {
+        lpModuleNameW = (LPCWSTR)lpModuleName;
+    }
+    else
+    {
+        RtlInitAnsiString(&ModuleName,
+                          (LPSTR)lpModuleName);
+
+        /* convert ansi (or oem) string to unicode */
+        if (bIsFileApiAnsi)
+            Status = RtlAnsiStringToUnicodeString(&UnicodeName,
+                                                  &ModuleName,
+                                                  TRUE);
+        else
+            Status = RtlOemStringToUnicodeString(&UnicodeName,
+                                                 &ModuleName,
+                                                 TRUE);
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastErrorByStatus(Status);
+            return FALSE;
+        }
+
+        lpModuleNameW = UnicodeName.Buffer;
+    }
+
+    Ret = GetModuleHandleExW(dwFlags,
+                             lpModuleNameW,
+                             phModule);
+
+    if (!(dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS))
+    {
+        RtlFreeUnicodeString(&UnicodeName);
+    }
+
+    return Ret;
+}
+
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 LoadModule (
