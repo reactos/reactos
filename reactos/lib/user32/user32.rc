@@ -58,6 +58,11 @@ OBM_CLOSE BITMAP "resources/obm_close.bmp"
 OBM_COMBO BITMAP "resources/obm_combo.bmp"
 OBM_MNARROW BITMAP "resources/obm_mnarrow.bmp"
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Languages
+//
+
 #include "En.rc"
 #include "Da.rc"
 #include "De.rc"
@@ -67,3 +72,4 @@ OBM_MNARROW BITMAP "resources/obm_mnarrow.bmp"
 #include "Ja.rc"
 #include "Sv.rc"
 #include "Hu.rc"
+#include "Es.rc"

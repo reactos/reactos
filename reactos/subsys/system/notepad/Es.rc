@@ -125,5 +125,13 @@ STRING_NOTFOUND,                "No se encontró '%s'."
 STRING_OUT_OF_MEMORY,           "No hay suficiente memoria para terminar esta \
                                  tarea. \nCierre una o más aplicaciones para \
                                  aumentar la cantidad \nde memoria libre."
+STRING_CANNOTFIND               "No pudo encontrar '%s'"
+STRING_ANSI,                    "ANSI"
+STRING_UNICODE,                 "Unicode"
+STRING_UNICODE_BE,              "Unicode (big endian)"
+STRING_UTF8,                    "UTF-8"
+STRING_CRLF,                    "Windows"
+STRING_LF,                      "Unix"
+STRING_CR,                      "Mac"
 
 }
