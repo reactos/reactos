@@ -87,6 +87,7 @@ _KiCallUserMode@8:
 
 AtPassive:
 
+#if 0
     /* Make sure that we are not attached and that APCs are not disabled */
     movzx eax, byte ptr [ebx+KTHREAD_APC_STATE_INDEX]
     mov edx, [ebx+KTHREAD_COMBINED_APC_DISABLE]
@@ -103,7 +104,7 @@ InvalidIndex:
     push 0
     push APC_INDEX_MISMATCH
     call _KeBugCheckEx@20
-
+#endif
 ApcsEnabled:
 #endif
 
