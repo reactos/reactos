@@ -567,8 +567,8 @@ ExpBoostOwnerThread(IN PKTHREAD Thread,
             /* Update the kernel state */
             KiSetPriorityThread(OwnerThread, 14, &Released);
 
-            /* Release Lock if needed */
-            if (!Released) KeReleaseDispatcherDatabaseLockFromDpcLevel();
+            /* Reacquire lock if it got releases */
+            if (Released) KeAcquireDispatcherDatabaseLockFromDpcLevel();
 
             /* Make sure we're still at dispatch */
             ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
