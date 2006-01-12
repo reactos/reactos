@@ -11,6 +11,7 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<file>authz.c</file>
+	<file>clictx.c</file>
 	<file>resman.c</file>
 	<file>authz.rc</file>
 	<pch>precomp.h</pch>

@@ -1,6 +1,6 @@
 /*
  * ReactOS Authorization Framework
- * Copyright (C) 2005 ReactOS Team
+ * Copyright (C) 2005 - 2006 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,22 +28,6 @@
  */
 #include <precomp.h>
 
-typedef struct _AUTHZ_RESMAN
-{
-#if DBG
-    DWORD Tag;
-#endif
-
-    PFN_AUTHZ_DYNAMIC_ACCESS_CHECK pfnAccessCheck;
-    PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS pfnComputeDynamicGroups;
-    PFN_AUTHZ_FREE_DYNAMIC_GROUPS pfnFreeDynamicGroups;
-    
-    DWORD flags;
-    PSID UserSid;
-    LUID AuthenticationId;
-
-    WCHAR ResourceManagerName[1];
-} AUTHZ_RESMAN, *PAUTHZ_RESMAN;
 
 static BOOL
 AuthzpQueryToken(IN OUT PAUTHZ_RESMAN ResMan,
@@ -248,7 +232,7 @@ AuthzFreeResourceManager(IN AUTHZ_RESOURCE_MANAGER_HANDLE AuthzResourceManager)
     {
         PAUTHZ_RESMAN ResMan = (PAUTHZ_RESMAN)AuthzResourceManager;
         
-        VALID_RESMAN_HANDLE(AuthzResourceManager);
+        VALIDATE_RESMAN_HANDLE(AuthzResourceManager);
         
         if (!(ResMan->flags & AUTHZ_RM_FLAG_NO_AUDIT))
         {

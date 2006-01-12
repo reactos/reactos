@@ -122,37 +122,7 @@ AuthzFreeAuditEvent(IN AUTHZ_AUDIT_EVENT_HANDLE pAuditEventInfo)
 AUTHZAPI
 BOOL
 WINAPI
-AuthzFreeContext(IN AUTHZ_CLIENT_CONTEXT_HANDLE AuthzClientContext)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-AUTHZAPI
-BOOL
-WINAPI
 AuthzFreeHandle(IN AUTHZ_ACCESS_CHECK_RESULTS_HANDLE AuthzHandle)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-AUTHZAPI
-BOOL
-WINAPI
-AuthzGetInformationFromContext(IN AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContext,
-                               IN AUTHZ_CONTEXT_INFORMATION_CLASS InfoClass,
-                               IN DWORD BufferSize,
-                               OUT PDWORD pSizeRequired,
-                               OUT PVOID Buffer)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -171,25 +141,6 @@ AuthzInitializeContextFromAuthzContext(IN DWORD flags,
                                        IN LUID Identifier,
                                        IN PVOID DynamicGroupArgs,
                                        OUT PAUTHZ_CLIENT_CONTEXT_HANDLE phNewAuthzHandle)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-AUTHZAPI
-BOOL
-WINAPI
-AuthzInitializeContextFromSid(IN DWORD Flags,
-                              IN PSID UserSid,
-                              IN AUTHZ_RESOURCE_MANAGER_HANDLE AuthzResourceManager,
-                              IN PLARGE_INTEGER pExpirationTime,
-                              IN LUID Identifier,
-                              IN PVOID DynamicGroupArgs,
-                              OUT PAUTHZ_CLIENT_CONTEXT_HANDLE pAuthzClientContext)
 {
     UNIMPLEMENTED;
     return FALSE;
