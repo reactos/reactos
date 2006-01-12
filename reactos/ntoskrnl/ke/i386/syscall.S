@@ -470,14 +470,22 @@ V86_Exit_Return:
     ja RestoreAll
 // ==================== END IF FULL RESTORE NEEDED ====================//
 
+//badbadbad 	 
+     add esp, 0x30 	 
+     pop gs 	 
+     pop es 	 
+     pop ds 	 
+     add esp, 0x14 	 
+//badbadbad
+
     /* Restore FS */
 RestoreFs:
-    lea esp, [ebp+KTRAP_FRAME_FS]
+    //lea esp, [ebp+KTRAP_FRAME_FS]
     pop fs
 
 CommonStackClean:
     /* Skip debug information and unsaved registers */
-    lea esp, [ebp+KTRAP_FRAME_EDI]
+    //lea esp, [ebp+KTRAP_FRAME_EDI]
     pop edi
     pop esi
     pop ebx

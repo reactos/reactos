@@ -185,6 +185,11 @@ DontBias:
     lea esi, [edx+KTRAP_FRAME_FS]
     rep movsd
 
+    /* TODO: Ugly hack because of some missing logic in syscall.s */
+    mov dword ptr [esp+KTRAP_FRAME_GS], 0
+    mov dword ptr [esp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    mov dword ptr [esp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+
     /* FIXME: Copy debug registers if needed */
 
     /* Get user-mode dispatcher address and set it as EIP */
