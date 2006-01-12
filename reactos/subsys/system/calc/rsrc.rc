@@ -33,5 +33,6 @@
 #include "Ru.rc"
 #include "Sv.rc"
 #include "Hu.rc"
+#include "Uk.rc"
 
 LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL

@@ -21,3 +21,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #include "Sv.rc"
 #include "Hu.rc"
 #include "Fr.rc"
+#include "Uk.rc"
