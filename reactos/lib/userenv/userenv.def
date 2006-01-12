@@ -19,6 +19,7 @@ DeleteDesktopItemA@8 @115 NONAME
 DeleteDesktopItemW@8 @116 NONAME
 CreateEnvironmentBlock@12
 DestroyEnvironmentBlock@4
+EnterCriticalPolicySection@4
 ExpandEnvironmentStringsForUserA@16
 ExpandEnvironmentStringsForUserW@16
 GetAllUsersProfileDirectoryA@8
@@ -29,6 +30,7 @@ GetProfilesDirectoryA@8
 GetProfilesDirectoryW@8
 GetUserProfileDirectoryA@12
 GetUserProfileDirectoryW@12
+LeaveCriticalPolicySection@4
 LoadUserProfileA@8
 LoadUserProfileW@8
 RegisterGPNotification@8

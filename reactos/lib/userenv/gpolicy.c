@@ -44,7 +44,9 @@ typedef enum
 } GP_ACTION;
 
 static const WCHAR szLocalGPApplied[] = L"userenv: User Group Policy has been applied";
+static const WCHAR szLocalGPMutex[] = L"userenv: user policy mutex";
 static const WCHAR szMachineGPApplied[] = L"Global\\userenv: Machine Group Policy has been applied";
+static const WCHAR szMachineGPMutex[] = L"Global\\userenv: machine policy mutex";
 
 static CRITICAL_SECTION GPNotifyLock;
 static PGP_NOTIFY NotificationList = NULL;
@@ -406,6 +408,60 @@ UnregisterGPNotification(IN HANDLE hEvent)
     }
 
     LeaveCriticalSection(&GPNotifyLock);
+
+    return Ret;
+}
+
+HANDLE WINAPI
+EnterCriticalPolicySection(IN BOOL bMachine)
+{
+    SECURITY_ATTRIBUTES SecurityAttributes;
+    PSECURITY_DESCRIPTOR lpSecurityDescriptor;
+    HANDLE hSection;
+
+    /* create or open the mutex */
+    lpSecurityDescriptor = CreateDefaultSecurityDescriptor();
+    if (lpSecurityDescriptor == NULL)
+    {
+        return NULL;
+    }
+
+    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+    SecurityAttributes.lpSecurityDescriptor = lpSecurityDescriptor;
+    SecurityAttributes.bInheritHandle = FALSE;
+
+    hSection = CreateMutexW(&SecurityAttributes,
+                            FALSE,
+                            (bMachine ? szMachineGPMutex : szLocalGPMutex));
+
+    if (hSection != NULL)
+    {
+        /* wait up to 10 seconds */
+        if (WaitForSingleObject(hSection,
+                                60000) != WAIT_FAILED)
+        {
+            return hSection;
+        }
+
+        CloseHandle(hSection);
+    }
+
+    return NULL;
+}
+
+BOOL WINAPI
+LeaveCriticalPolicySection(IN HANDLE hSection)
+{
+    BOOL Ret;
+
+    if (hSection == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Ret = ReleaseMutex(hSection);
+    CloseHandle(hSection);
 
     return Ret;
 }
