@@ -25,7 +25,6 @@
 #include "dbgchnl.h"
 #include "debug.h"
 #include "endproc.h"
-#include "font.h"
 #include "graph.h"
 #include "graphctl.h"
 #include "optnmenu.h"

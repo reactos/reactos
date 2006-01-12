@@ -28,7 +28,6 @@
 #define IDR_PROCESS_PAGE_CONTEXT        144
 #define IDB_TRAYMASK                    150
 #define IDB_TRAYICON                    153
-#define IDB_FONT                        154
 #define IDD_DEBUG_CHANNELS_DIALOG       155
 #define IDC_DEBUG_CHANNELS_LIST         156
 

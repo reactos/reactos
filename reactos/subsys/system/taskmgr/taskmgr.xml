@@ -17,7 +17,6 @@
 		<file>dbgchnl.c</file>
 		<file>debug.c</file>
 		<file>endproc.c</file>
-		<file>font.c</file>
 		<file>graph.c</file>
 		<file>optnmenu.c</file>
 		<file>perfdata.c</file>

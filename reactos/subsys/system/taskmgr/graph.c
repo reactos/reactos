@@ -134,6 +134,8 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     RECT            rcClient;
     RECT            rcBarLeft;
     RECT            rcBarRight;
+    RECT            rcText;
+    COLORREF        crPrevForeground;
     TCHAR            Text[260];
     ULONG            CpuUsage;
     ULONG            CpuKernelUsage;
@@ -163,28 +165,16 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     if (CpuUsage < 0)         CpuUsage = 0;
     if (CpuUsage > 100)       CpuUsage = 100;
 
-    /*
-     * Check and see how many digits it will take
-     * so we get the indentation right every time.
-     */
-    if (CpuUsage == 100)
-    {
-        _stprintf(Text, _T("%d%%"), (int)CpuUsage);
-    }
-    else if (CpuUsage < 10)
-    {
-        _stprintf(Text, _T("  %d%%"), (int)CpuUsage);
-    }
-    else
-    {
-        _stprintf(Text, _T(" %d%%"), (int)CpuUsage);
-    }
+    _stprintf(Text, _T("%d%%"), (int)CpuUsage);
 
     /*
      * Draw the font text onto the graph
-     * The bottom 20 pixels are reserved for the text
      */
-    Font_DrawText(hDC, Text, ((rcClient.right - rcClient.left) - 32) / 2, rcClient.bottom - 11 - 5);
+    rcText = rcClient;
+    InflateRect(&rcText, -2, -2);
+    crPrevForeground = SetTextColor(hDC, RGB(0, 255, 0));
+    DrawText(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
+    SetTextColor(hDC, crPrevForeground);
 
     /*
      * Now we have to draw the graph
@@ -310,6 +300,8 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     RECT            rcClient;
     RECT            rcBarLeft;
     RECT            rcBarRight;
+    RECT            rcText;
+    COLORREF        crPrevForeground;
     TCHAR            Text[260];
     ULONGLONG        CommitChargeTotal;
     ULONGLONG        CommitChargeLimit;
@@ -342,9 +334,12 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 		_stprintf(Text, _T("%d K"), (int)CommitChargeTotal);
     /*
      * Draw the font text onto the graph
-     * The bottom 20 pixels are reserved for the text
      */
-    Font_DrawText(hDC, Text, ((rcClient.right - rcClient.left) - (_tcslen(Text) * 8)) / 2, rcClient.bottom - 11 - 5);
+    rcText = rcClient;
+    InflateRect(&rcText, -2, -2);
+    crPrevForeground = SetTextColor(hDC, RGB(0, 255, 0));
+    DrawText(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
+    SetTextColor(hDC, crPrevForeground);
 
     /*
      * Now we have to draw the graph
