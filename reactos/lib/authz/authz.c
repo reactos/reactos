@@ -1,6 +1,6 @@
 /*
  * ReactOS Authorization Framework
- * Copyright (C) 2005 ReactOS Team
+ * Copyright (C) 2005 - 2006 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: aclui.c 18173 2005-09-30 18:54:48Z weiden $
- *
+/*
  * PROJECT:         ReactOS Authorization Framework
  * FILE:            lib/authz/authz.c
  * PURPOSE:         Authorization Framework
