@@ -57,6 +57,7 @@ KiCheckForKernelApcDelivery(VOID)
          * be delivered now, but after the IRQL is lowered to passive
          * level again.
          */
+        KeGetCurrentThread()->ApcState.KernelApcPending = TRUE;
         HalRequestSoftwareInterrupt(APC_LEVEL);
     }
 }
