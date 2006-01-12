@@ -41,29 +41,34 @@ GetDesktopPath (BOOL bCommonPath,
   DWORD dwLength;
   DWORD dwType;
   HKEY hKey;
+  LONG Error;
 
   DPRINT ("GetDesktopPath() called\n");
 
-  if (RegOpenKeyExW (HKEY_CURRENT_USER,
-		     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_CURRENT_USER,
+		         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
       DPRINT1 ("RegOpenKeyExW() failed\n");
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   dwLength = MAX_PATH * sizeof(WCHAR);
-  if (RegQueryValueExW (hKey,
-			bCommonPath ? L"Common Desktop" : L"Desktop",
-			0,
-			&dwType,
-			(LPBYTE)szPath,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    bCommonPath ? L"Common Desktop" : L"Desktop",
+			    0,
+			    &dwType,
+			    (LPBYTE)szPath,
+			   &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
       DPRINT1 ("RegQueryValueExW() failed\n");
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -94,29 +99,34 @@ GetProgramsPath (BOOL bCommonPath,
   DWORD dwLength;
   DWORD dwType;
   HKEY hKey;
+  LONG Error;
 
   DPRINT ("GetProgramsPath() called\n");
 
-  if (RegOpenKeyExW (HKEY_CURRENT_USER,
-		     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_CURRENT_USER,
+		         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
       DPRINT1 ("RegOpenKeyExW() failed\n");
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   dwLength = MAX_PATH * sizeof(WCHAR);
-  if (RegQueryValueExW (hKey,
-			bCommonPath ? L"Common Programs" : L"Programs",
-			0,
-			&dwType,
-			(LPBYTE)szPath,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    bCommonPath ? L"Common Programs" : L"Programs",
+			    0,
+			    &dwType,
+			    (LPBYTE)szPath,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
       DPRINT1 ("RegQueryValueExW() failed\n");
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 

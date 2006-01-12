@@ -169,6 +169,7 @@ GetCurrentUserKey (HANDLE hToken)
 {
   UNICODE_STRING SidString;
   HKEY hKey;
+  LONG Error;
 
   if (!GetUserSidFromToken (hToken,
 			    &SidString))
@@ -177,14 +178,16 @@ GetCurrentUserKey (HANDLE hToken)
       return NULL;
     }
 
-  if (RegOpenKeyExW (HKEY_USERS,
-		     SidString.Buffer,
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_USERS,
+		         SidString.Buffer,
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", GetLastError());
+      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", Error);
       RtlFreeUnicodeString (&SidString);
+      SetLastError((DWORD)Error);
       return NULL;
     }
 
@@ -209,32 +212,37 @@ SetUserEnvironment (LPVOID *lpEnvironment,
   DWORD i;
   LPWSTR lpValueName;
   LPWSTR lpValueData;
+  LONG Error;
 
-  if (RegOpenKeyExW (hKey,
-		     lpSubKeyName,
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hEnvKey))
+  Error = RegOpenKeyExW (hKey,
+		         lpSubKeyName,
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hEnvKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", GetLastError());
+      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
-  if (RegQueryInfoKey (hEnvKey,
-		       NULL,
-		       NULL,
-		       NULL,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &dwValues,
-		       &dwMaxValueNameLength,
-		       &dwMaxValueDataLength,
-		       NULL,
-		       NULL))
+  Error = RegQueryInfoKey (hEnvKey,
+		           NULL,
+		           NULL,
+		           NULL,
+		           NULL,
+		           NULL,
+		           NULL,
+		           &dwValues,
+		           &dwMaxValueNameLength,
+		           &dwMaxValueDataLength,
+		           NULL,
+		           NULL);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegQueryInforKey() failed (Error %ld)\n", GetLastError());
+      DPRINT1 ("RegQueryInforKey() failed (Error %ld)\n", Error);
       RegCloseKey (hEnvKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -314,13 +322,17 @@ CreateEnvironmentBlock (LPVOID *lpEnvironment,
   DPRINT("CreateEnvironmentBlock() called\n");
 
   if (lpEnvironment == NULL)
-    return FALSE;
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
 
   Status = RtlCreateEnvironment ((BOOLEAN)bInherit,
 				 (PWSTR*)lpEnvironment);
   if (!NT_SUCCESS (Status))
     {
       DPRINT1 ("RtlCreateEnvironment() failed (Status %lx)\n", Status);
+      SetLastError (RtlNtStatusToDosError (Status));
       return FALSE;
     }
 
@@ -390,7 +402,10 @@ DestroyEnvironmentBlock (LPVOID lpEnvironment)
   DPRINT ("DestroyEnvironmentBlock() called\n");
 
   if (lpEnvironment == NULL)
-    return FALSE;
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
 
   RtlDestroyEnvironment (lpEnvironment);
 

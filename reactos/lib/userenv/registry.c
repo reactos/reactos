@@ -37,6 +37,21 @@ static BOOL
 CopyKey (HKEY hDstKey,
 	 HKEY hSrcKey)
 {
+  LONG Error;
+
+#if (_WIN32_WINNT >= 0x0600)
+  Error = RegCopyTreeW(hSrcKey,
+                       NULL,
+                       hDstKey);
+  if (Error != ERROR_SUCCESS)
+  {
+      SetLastError((DWORD)Error);
+      return FALSE;
+  }
+
+  return TRUE;
+
+#else
   FILETIME LastWrite;
   DWORD dwSubKeys;
   DWORD dwValues;
@@ -56,20 +71,22 @@ CopyKey (HKEY hDstKey,
 
   DPRINT ("CopyKey() called \n");
 
-  if (RegQueryInfoKey (hSrcKey,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &dwSubKeys,
-		       &dwMaxSubKeyNameLength,
-		       NULL,
-		       &dwValues,
-		       &dwMaxValueNameLength,
-		       &dwMaxValueLength,
-		       NULL,
-		       NULL))
+  Error = RegQueryInfoKey (hSrcKey,
+		           NULL,
+		           NULL,
+		           NULL,
+		           &dwSubKeys,
+		           &dwMaxSubKeyNameLength,
+		           NULL,
+		           &dwValues,
+		           &dwMaxValueNameLength,
+		           &dwMaxValueLength,
+		           NULL,
+		           NULL);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegQueryInfoKey() failed (Error %lu)\n", GetLastError ());
+      DPRINT1 ("RegQueryInfoKey() failed (Error %lu)\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -88,56 +105,63 @@ CopyKey (HKEY hDstKey,
       if (lpNameBuffer == NULL)
 	{
 	  DPRINT1("Buffer allocation failed\n");
+          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
 
       for (i = 0; i < dwSubKeys; i++)
 	{
 	  dwSubKeyNameLength = dwMaxSubKeyNameLength;
-	  if (RegEnumKeyExW (hSrcKey,
-			     i,
-			     lpNameBuffer,
-			     &dwSubKeyNameLength,
-			     NULL,
-			     NULL,
-			     NULL,
-			     &LastWrite))
+	  Error = RegEnumKeyExW (hSrcKey,
+			         i,
+			         lpNameBuffer,
+			         &dwSubKeyNameLength,
+			         NULL,
+			         NULL,
+			         NULL,
+			         &LastWrite);
+          if (Error != ERROR_SUCCESS)
 	    {
-	      DPRINT1 ("Subkey enumeration failed (Error %lu)\n", GetLastError());
+	      DPRINT1 ("Subkey enumeration failed (Error %lu)\n", Error);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
+              SetLastError((DWORD)Error);
 	      return FALSE;
 	    }
 
-	  if (RegCreateKeyExW (hDstKey,
-			       lpNameBuffer,
-			       0,
-			       NULL,
-			       REG_OPTION_NON_VOLATILE,
-			       KEY_WRITE,
-			       NULL,
-			       &hDstSubKey,
-			       &dwDisposition))
+	  Error = RegCreateKeyExW (hDstKey,
+			           lpNameBuffer,
+			           0,
+			           NULL,
+			           REG_OPTION_NON_VOLATILE,
+			           KEY_WRITE,
+			           NULL,
+			           &hDstSubKey,
+			           &dwDisposition);
+          if (Error != ERROR_SUCCESS)
 	    {
-	      DPRINT1 ("Subkey creation failed (Error %lu)\n", GetLastError());
+	      DPRINT1 ("Subkey creation failed (Error %lu)\n", Error);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
+              SetLastError((DWORD)Error);
 	      return FALSE;
 	    }
 
-	  if (RegOpenKeyExW (hSrcKey,
-			     lpNameBuffer,
-			     0,
-			     KEY_READ,
-			     &hSrcSubKey))
+	  Error = RegOpenKeyExW (hSrcKey,
+			         lpNameBuffer,
+			         0,
+			         KEY_READ,
+			         &hSrcSubKey);
+          if (Error != ERROR_SUCCESS)
 	    {
-	      DPRINT1 ("Error: %lu\n", GetLastError());
+	      DPRINT1 ("Error: %lu\n", Error);
 	      RegCloseKey (hDstSubKey);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
+              SetLastError((DWORD)Error);
 	      return FALSE;
 	    }
 
@@ -171,6 +195,7 @@ CopyKey (HKEY hDstKey,
       if (lpNameBuffer == NULL)
 	{
 	  DPRINT1 ("Buffer allocation failed\n");
+          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
 
@@ -183,6 +208,7 @@ CopyKey (HKEY hDstKey,
 	  HeapFree (GetProcessHeap (),
 		    0,
 		    lpNameBuffer);
+          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
 
@@ -190,39 +216,43 @@ CopyKey (HKEY hDstKey,
 	{
 	  dwValueNameLength = dwMaxValueNameLength;
 	  dwValueLength = dwMaxValueLength;
-	  if (RegEnumValueW (hSrcKey,
-			     i,
-			     lpNameBuffer,
-			     &dwValueNameLength,
-			     NULL,
-			     &dwType,
-			     lpDataBuffer,
-			     &dwValueLength))
+	  Error = RegEnumValueW (hSrcKey,
+			         i,
+			         lpNameBuffer,
+			         &dwValueNameLength,
+			         NULL,
+			         &dwType,
+			         lpDataBuffer,
+                                 &dwValueLength);
+          if (Error != ERROR_SUCCESS)
 	    {
-	      DPRINT1("Error: %lu\n", GetLastError());
+	      DPRINT1("Error: %lu\n", Error);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpDataBuffer);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
+              SetLastError((DWORD)Error);
 	      return FALSE;
 	    }
 
-	  if (RegSetValueExW (hDstKey,
-			     lpNameBuffer,
-			     0,
-			     dwType,
-			     lpDataBuffer,
-			     dwValueLength))
+	  Error = RegSetValueExW (hDstKey,
+			          lpNameBuffer,
+			          0,
+			          dwType,
+			          lpDataBuffer,
+			          dwValueLength);
+          if (Error != ERROR_SUCCESS)
 	    {
-	      DPRINT1("Error: %lu\n", GetLastError());
+	      DPRINT1("Error: %lu\n", Error);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpDataBuffer);
 	      HeapFree (GetProcessHeap (),
 			0,
 			lpNameBuffer);
+              SetLastError((DWORD)Error);
 	      return FALSE;
 	    }
 	}
@@ -239,6 +269,7 @@ CopyKey (HKEY hDstKey,
   DPRINT ("CopyKey() done \n");
 
   return TRUE;
+#endif
 }
 
 
@@ -246,57 +277,57 @@ BOOL
 CreateUserHive (LPCWSTR lpKeyName,
 		LPCWSTR lpProfilePath)
 {
-  HKEY hDefaultKey;
-  HKEY hUserKey;
+  HKEY hDefaultKey = NULL;
+  HKEY hUserKey = NULL;
+  LONG Error;
+  BOOL Ret = FALSE;
 
   DPRINT ("CreateUserHive(%S) called\n", lpKeyName);
 
-  if (RegOpenKeyExW (HKEY_USERS,
-		     L".Default",
-		     0,
-		     KEY_READ,
-		     &hDefaultKey))
+  Error = RegOpenKeyExW (HKEY_USERS,
+		         L".Default",
+		         0,
+		         KEY_READ,
+		         &hDefaultKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("Error: %lu\n", GetLastError());
-      return FALSE;
+      SetLastError((DWORD)Error);
+      goto Cleanup;
     }
 
-  if (RegOpenKeyExW (HKEY_USERS,
-		     lpKeyName,
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hUserKey))
+  Error = RegOpenKeyExW (HKEY_USERS,
+		         lpKeyName,
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hUserKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("Error: %lu\n", GetLastError());
-      RegCloseKey (hDefaultKey);
-      return FALSE;
+      SetLastError((DWORD)Error);
+      goto Cleanup;
     }
 
   if (!CopyKey(hUserKey, hDefaultKey))
     {
-      DPRINT1 ("Error: %lu\n", GetLastError());
-      RegCloseKey (hUserKey);
-      RegCloseKey (hDefaultKey);
-      return FALSE;
+      goto Cleanup;
     }
 
   if (!UpdateUsersShellFolderSettings(lpProfilePath,
 				      hUserKey))
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RegCloseKey (hUserKey);
-      RegCloseKey (hDefaultKey);
-      return FALSE;
+      goto Cleanup;
     }
 
   RegFlushKey (hUserKey);
+  Ret = TRUE;
 
-  RegCloseKey (hUserKey);
-  RegCloseKey (hDefaultKey);
+Cleanup:
+  if (hUserKey != NULL)
+    RegCloseKey (hUserKey);
 
-  DPRINT ("CreateUserHive() done\n");
+  if (hDefaultKey != NULL)
+    RegCloseKey (hDefaultKey);
 
-  return TRUE;
+  return Ret;
 }
 
 /* EOF */

@@ -66,6 +66,7 @@ AppendSystemPostfix (LPWSTR lpName,
   if (wcslen(lpName) + wcslen(lpszPostfix) >= dwMaxLength)
     {
       DPRINT1("Error: buffer overflow\n");
+      SetLastError(ERROR_BUFFER_OVERFLOW);
       return FALSE;
     }
 
@@ -109,35 +110,39 @@ CreateUserProfileW (PSID Sid,
   WCHAR szUserProfilePath[MAX_PATH];
   WCHAR szDefaultUserPath[MAX_PATH];
   WCHAR szBuffer[MAX_PATH];
-  UNICODE_STRING SidString;
+  LPWSTR SidString;
   DWORD dwLength;
   DWORD dwDisposition;
   HKEY hKey;
-  NTSTATUS Status;
+  LONG Error;
 
   DPRINT("CreateUserProfileW() called\n");
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   /* Get profiles path */
   dwLength = MAX_PATH * sizeof(WCHAR);
-  if (RegQueryValueExW (hKey,
-			L"ProfilesDirectory",
-			NULL,
-			NULL,
-			(LPBYTE)szRawProfilesPath,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"ProfilesDirectory",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szRawProfilesPath,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -153,15 +158,17 @@ CreateUserProfileW (PSID Sid,
 
   /* Get default user path */
   dwLength = MAX_PATH * sizeof(WCHAR);
-  if (RegQueryValueExW (hKey,
-			L"DefaultUserProfile",
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"DefaultUserProfile",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szBuffer,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -173,7 +180,7 @@ CreateUserProfileW (PSID Sid,
   if (!AppendSystemPostfix (szUserProfilePath, MAX_PATH))
     {
       DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      LocalFree ((HLOCAL)SidString);
       RegCloseKey (hKey);
       return FALSE;
     }
@@ -200,30 +207,32 @@ CreateUserProfileW (PSID Sid,
     }
 
   /* Add profile to profile list */
-  Status = RtlConvertSidToUnicodeString (&SidString, Sid, TRUE);
-  if (!NT_SUCCESS(Status))
+  if (!ConvertSidToStringSidW (Sid,
+                               &SidString))
     {
-      DPRINT1("Status: %lx\n", Status);
+      DPRINT1("Error: %lu\n", GetLastError());
       return FALSE;
     }
 
   wcscpy (szBuffer,
 	  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
-  wcscat (szBuffer, SidString.Buffer);
+  wcscat (szBuffer, SidString);
 
   /* Create user profile key */
-  if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
-		       szBuffer,
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hKey,
-		       &dwDisposition))
+  Error = RegCreateKeyExW (HKEY_LOCAL_MACHINE,
+		           szBuffer,
+		           0,
+		           NULL,
+		           REG_OPTION_NON_VOLATILE,
+		           KEY_ALL_ACCESS,
+		           NULL,
+		           &hKey,
+		           &dwDisposition);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      DPRINT1("Error: %lu\n", Error);
+      LocalFree ((HLOCAL)SidString);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -234,36 +243,40 @@ CreateUserProfileW (PSID Sid,
   if (!AppendSystemPostfix (szBuffer, MAX_PATH))
     {
       DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      LocalFree ((HLOCAL)SidString);
       RegCloseKey (hKey);
       return FALSE;
     }
 
   /* Set 'ProfileImagePath' value (non-expanded) */
-  if (RegSetValueExW (hKey,
-		      L"ProfileImagePath",
-		      0,
-		      REG_EXPAND_SZ,
-		      (LPBYTE)szBuffer,
-		      (wcslen (szBuffer) + 1) * sizeof(WCHAR)))
+  Error = RegSetValueExW (hKey,
+		          L"ProfileImagePath",
+		          0,
+		          REG_EXPAND_SZ,
+		          (LPBYTE)szBuffer,
+		          (wcslen (szBuffer) + 1) * sizeof(WCHAR));
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      DPRINT1("Error: %lu\n", Error);
+      LocalFree ((HLOCAL)SidString);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   /* Set 'Sid' value */
-  if (RegSetValueExW (hKey,
-		      L"Sid",
-		      0,
-		      REG_BINARY,
-		      Sid,
-		      RtlLengthSid (Sid)))
+  Error = RegSetValueExW (hKey,
+		          L"Sid",
+		          0,
+		          REG_BINARY,
+		          Sid,
+		          GetLengthSid (Sid));
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      DPRINT1("Error: %lu\n", Error);
+      LocalFree ((HLOCAL)SidString);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -274,27 +287,29 @@ CreateUserProfileW (PSID Sid,
   wcscat (szBuffer, L"\\ntuser.dat");
 
   /* Create new user hive */
-  if (RegLoadKeyW (HKEY_USERS,
-		   SidString.Buffer,
-		   szBuffer))
+  Error = RegLoadKeyW (HKEY_USERS,
+		       SidString,
+		       szBuffer);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      DPRINT1("Error: %lu\n", Error);
+      LocalFree ((HLOCAL)SidString);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   /* Initialize user hive */
-  if (!CreateUserHive (SidString.Buffer, szUserProfilePath))
+  if (!CreateUserHive (SidString, szUserProfilePath))
     {
       DPRINT1("Error: %lu\n", GetLastError());
-      RtlFreeUnicodeString (&SidString);
+      LocalFree ((HLOCAL)SidString);
       return FALSE;
     }
 
   RegUnLoadKeyW (HKEY_USERS,
-		 SidString.Buffer);
+		 SidString);
 
-  RtlFreeUnicodeString (&SidString);
+  LocalFree ((HLOCAL)SidString);
 
   DPRINT("CreateUserProfileW() done\n");
 
@@ -342,28 +357,33 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
   WCHAR szBuffer[MAX_PATH];
   DWORD dwLength;
   HKEY hKey;
+  LONG Error;
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		     0,
-		     KEY_READ,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		         0,
+		         KEY_READ,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   /* Get profiles path */
   dwLength = sizeof(szBuffer);
-  if (RegQueryValueExW (hKey,
-			L"ProfilesDirectory",
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"ProfilesDirectory",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szBuffer,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -379,15 +399,17 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
 
   /* Get 'AllUsersProfile' name */
   dwLength = sizeof(szBuffer);
-  if (RegQueryValueExW (hKey,
-			L"AllUsersProfile",
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"AllUsersProfile",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szBuffer,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -455,28 +477,33 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
   WCHAR szBuffer[MAX_PATH];
   DWORD dwLength;
   HKEY hKey;
+  LONG Error;
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		     0,
-		     KEY_READ,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		         0,
+		         KEY_READ,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   /* Get profiles path */
   dwLength = sizeof(szBuffer);
-  if (RegQueryValueExW (hKey,
-			L"ProfilesDirectory",
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"ProfilesDirectory",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szBuffer,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -492,15 +519,17 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
 
   /* Get 'DefaultUserProfile' name */
   dwLength = sizeof(szBuffer);
-  if (RegQueryValueExW (hKey,
-			L"DefaultUserProfile",
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"DefaultUserProfile",
+			    NULL,
+			    NULL,
+			   (LPBYTE)szBuffer,
+			   &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -568,28 +597,33 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
   WCHAR szBuffer[MAX_PATH];
   DWORD dwLength;
   HKEY hKey;
+  LONG Error;
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
-		     0,
-		     KEY_READ,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		         0,
+		         KEY_READ,
+		        &hKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   /* Get profiles path */
   dwLength = sizeof(szBuffer);
-  if (RegQueryValueExW (hKey,
-			L"ProfilesDirectory",
-			NULL,
-			NULL,
-			(LPBYTE)szBuffer,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"ProfilesDirectory",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szBuffer,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1("Error: %lu\n", GetLastError());
+      DPRINT1("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -668,6 +702,7 @@ GetUserProfileDirectoryW (HANDLE hToken,
   WCHAR szImagePath[MAX_PATH];
   DWORD dwLength;
   HKEY hKey;
+  LONG Error;
 
   if (!GetUserSidFromToken (hToken,
 			    &SidString))
@@ -687,26 +722,30 @@ GetUserProfileDirectoryW (HANDLE hToken,
 
   DPRINT ("KeyName: '%S'\n", szKeyName);
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     szKeyName,
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hKey))
+  Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		         szKeyName,
+		         0,
+		         KEY_ALL_ACCESS,
+		         &hKey);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("Error: %lu\n", GetLastError());
+      DPRINT1 ("Error: %lu\n", Error);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
   dwLength = sizeof(szRawImagePath);
-  if (RegQueryValueExW (hKey,
-			L"ProfileImagePath",
-			NULL,
-			NULL,
-			(LPBYTE)szRawImagePath,
-			&dwLength))
+  Error = RegQueryValueExW (hKey,
+			    L"ProfileImagePath",
+			    NULL,
+			    NULL,
+			    (LPBYTE)szRawImagePath,
+			    &dwLength);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("Error: %lu\n", GetLastError());
+      DPRINT1 ("Error: %lu\n", Error);
       RegCloseKey (hKey);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -792,6 +831,7 @@ LoadUserProfileW (HANDLE hToken,
 {
   WCHAR szUserHivePath[MAX_PATH];
   UNICODE_STRING SidString;
+  LONG Error;
   DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
 
   DPRINT ("LoadUserProfileW() called\n");
@@ -842,23 +882,27 @@ LoadUserProfileW (HANDLE hToken,
 
   DPRINT ("SidString: '%wZ'\n", &SidString);
 
-  if (RegLoadKeyW (HKEY_USERS,
-		   SidString.Buffer,
-		   szUserHivePath))
+  Error = RegLoadKeyW (HKEY_USERS,
+		       SidString.Buffer,
+		       szUserHivePath);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegLoadKeyW() failed (Error %ld)\n", GetLastError());
+      DPRINT1 ("RegLoadKeyW() failed (Error %ld)\n", Error);
       RtlFreeUnicodeString (&SidString);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
-  if (RegOpenKeyExW (HKEY_USERS,
-		     SidString.Buffer,
-		     0,
-		     KEY_ALL_ACCESS,
-		     (PHKEY)&lpProfileInfo->hProfile))
+  Error = RegOpenKeyExW (HKEY_USERS,
+		         SidString.Buffer,
+		         0,
+		         KEY_ALL_ACCESS,
+		         (PHKEY)&lpProfileInfo->hProfile);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", GetLastError());
+      DPRINT1 ("RegOpenKeyExW() failed (Error %ld)\n", Error);
       RtlFreeUnicodeString (&SidString);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 
@@ -875,6 +919,7 @@ UnloadUserProfile (HANDLE hToken,
 		   HANDLE hProfile)
 {
   UNICODE_STRING SidString;
+  LONG Error;
 
   DPRINT ("UnloadUserProfile() called\n");
 
@@ -896,11 +941,13 @@ UnloadUserProfile (HANDLE hToken,
 
   DPRINT ("SidString: '%wZ'\n", &SidString);
 
-  if (RegUnLoadKeyW (HKEY_USERS,
-		     SidString.Buffer))
+  Error = RegUnLoadKeyW (HKEY_USERS,
+		         SidString.Buffer);
+  if (Error != ERROR_SUCCESS)
     {
-      DPRINT1 ("RegUnLoadKeyW() failed (Error %ld)\n", GetLastError());
+      DPRINT1 ("RegUnLoadKeyW() failed (Error %ld)\n", Error);
       RtlFreeUnicodeString (&SidString);
+      SetLastError((DWORD)Error);
       return FALSE;
     }
 

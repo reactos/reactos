@@ -91,6 +91,7 @@ GetUserSidFromToken (HANDLE hToken,
   if (!NT_SUCCESS (Status))
     {
       LocalFree ((HLOCAL)SidBuffer);
+      SetLastError (RtlNtStatusToDosError (Status));
       return FALSE;
     }
 
@@ -103,7 +104,10 @@ GetUserSidFromToken (HANDLE hToken,
   LocalFree ((HLOCAL)SidBuffer);
 
   if (!NT_SUCCESS (Status))
-    return FALSE;
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
 
   DPRINT ("SidString.Length: %lu\n", SidString->Length);
   DPRINT ("SidString.MaximumLength: %lu\n", SidString->MaximumLength);
