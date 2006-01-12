@@ -77,8 +77,8 @@ BOOL
 GetUserSidFromToken (HANDLE hToken,
 		     PUNICODE_STRING SidString);
 
-PVOID
-CreateDefaultSD(VOID);
+PSECURITY_DESCRIPTOR
+CreateDefaultSecurityDescriptor(VOID);
 
 /* profile.c */
 BOOL

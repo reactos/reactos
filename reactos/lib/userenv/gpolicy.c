@@ -249,7 +249,7 @@ GPNotificationThreadProc(IN LPVOID lpParameter)
 
 static HANDLE
 CreateGPEvent(IN BOOL bMachine,
-              IN PVOID lpSecurityDescriptor)
+              IN PSECURITY_DESCRIPTOR lpSecurityDescriptor)
 {
     HANDLE hEvent;
     SECURITY_ATTRIBUTES SecurityAttributes;
@@ -258,7 +258,7 @@ CreateGPEvent(IN BOOL bMachine,
     SecurityAttributes.lpSecurityDescriptor = lpSecurityDescriptor;
     SecurityAttributes.bInheritHandle = FALSE;
 
-    hEvent = CreateEventW((lpSecurityDescriptor != NULL ? &SecurityAttributes : NULL),
+    hEvent = CreateEventW(&SecurityAttributes,
                           TRUE,
                           FALSE,
                           (bMachine ? szMachineGPApplied : szLocalGPApplied));
@@ -271,7 +271,7 @@ RegisterGPNotification(IN HANDLE hEvent,
                        IN BOOL bMachine)
 {
     PGP_NOTIFY Notify;
-    PVOID lpSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR lpSecurityDescriptor = NULL;
     BOOL Ret = FALSE;
 
     EnterCriticalSection(&GPNotifyLock);
@@ -292,7 +292,11 @@ RegisterGPNotification(IN HANDLE hEvent,
     /* create or open the machine group policy event */
     if (hMachineGPAppliedEvent == NULL)
     {
-        lpSecurityDescriptor = CreateDefaultSD();
+        lpSecurityDescriptor = CreateDefaultSecurityDescriptor();
+        if (lpSecurityDescriptor == NULL)
+        {
+            goto Cleanup;
+        }
 
         hMachineGPAppliedEvent = CreateGPEvent(TRUE,
                                                lpSecurityDescriptor);
@@ -307,7 +311,11 @@ RegisterGPNotification(IN HANDLE hEvent,
     {
         if (lpSecurityDescriptor == NULL)
         {
-            lpSecurityDescriptor = CreateDefaultSD();
+            lpSecurityDescriptor = CreateDefaultSecurityDescriptor();
+            if (lpSecurityDescriptor == NULL)
+            {
+                goto Cleanup;
+            }
         }
 
         hLocalGPAppliedEvent = CreateGPEvent(FALSE,

@@ -30,6 +30,8 @@
 #define NDEBUG
 #include <debug.h>
 
+static SID_IDENTIFIER_AUTHORITY LocalSystemAuthority = {SECURITY_NT_AUTHORITY};
+static SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
 
 /* FUNCTIONS ***************************************************************/
 
@@ -116,11 +118,149 @@ GetUserSidFromToken (HANDLE hToken,
   return TRUE;
 }
 
-PVOID
-CreateDefaultSD(VOID)
+PSECURITY_DESCRIPTOR
+CreateDefaultSecurityDescriptor(VOID)
 {
-    /* FIXME - create a default security descriptor */
-    return NULL;
+    PSID LocalSystemSid = NULL;
+    PSID AdministratorsSid = NULL;
+    PSID EveryoneSid = NULL;
+    PACL Dacl;
+    DWORD DaclSize;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+
+    /* create the SYSTEM, Administrators and Everyone SIDs */
+    if (!AllocateAndInitializeSid(&LocalSystemAuthority,
+                                  1,
+                                  SECURITY_LOCAL_SYSTEM_RID,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  &LocalSystemSid) ||
+        !AllocateAndInitializeSid(&LocalSystemAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  &AdministratorsSid) ||
+        !AllocateAndInitializeSid(&WorldAuthority,
+                                  1,
+                                  SECURITY_WORLD_RID,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  &EveryoneSid))
+    {
+        DPRINT1("Failed initializing the SIDs for the default security descriptor (0x%p, 0x%p, 0x%p)\n",
+                LocalSystemSid, AdministratorsSid, EveryoneSid);
+        goto Cleanup;
+    }
+
+    /* allocate the security descriptor and DACL */
+    DaclSize = sizeof(ACL) +
+               ((GetLengthSid(LocalSystemSid) +
+                 GetLengthSid(AdministratorsSid) +
+                 GetLengthSid(EveryoneSid)) +
+                (3 * FIELD_OFFSET(ACCESS_ALLOWED_ACE,
+                                  SidStart)));
+
+    pSD = (PSECURITY_DESCRIPTOR)LocalAlloc(LMEM_FIXED,
+                                           (SIZE_T)DaclSize + sizeof(SECURITY_DESCRIPTOR));
+    if (pSD == NULL)
+    {
+        DPRINT1("Failed to allocate the default security descriptor and ACL\n");
+        goto Cleanup;
+    }
+
+    if (!InitializeSecurityDescriptor(pSD,
+                                      SECURITY_DESCRIPTOR_REVISION))
+    {
+        DPRINT1("Failed to initialize the default security descriptor\n");
+        goto Cleanup;
+    }
+
+    /* initialize and build the DACL */
+    Dacl = (PACL)((ULONG_PTR)pSD + sizeof(SECURITY_DESCRIPTOR));
+    if (!InitializeAcl(Dacl,
+                       (DWORD)DaclSize,
+                       ACL_REVISION))
+    {
+        DPRINT1("Failed to initialize the DACL of the default security descriptor\n");
+        goto Cleanup;
+    }
+
+    /* add the SYSTEM Ace */
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             LocalSystemSid))
+    {
+        DPRINT1("Failed to add the SYSTEM ACE\n");
+        goto Cleanup;
+    }
+
+    /* add the Administrators Ace */
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             AdministratorsSid))
+    {
+        DPRINT1("Failed to add the Administrators ACE\n");
+        goto Cleanup;
+    }
+
+    /* add the Everyone Ace */
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_EXECUTE,
+                             EveryoneSid))
+    {
+        DPRINT1("Failed to add the Everyone ACE\n");
+        goto Cleanup;
+    }
+
+    /* set the DACL */
+    if (!SetSecurityDescriptorDacl(pSD,
+                                   TRUE,
+                                   Dacl,
+                                   FALSE))
+    {
+        DPRINT1("Failed to set the DACL of the default security descriptor\n");
+
+Cleanup:
+        if (pSD != NULL)
+        {
+            LocalFree((HLOCAL)pSD);
+            pSD = NULL;
+        }
+    }
+
+    if (LocalSystemSid != NULL)
+    {
+        FreeSid(LocalSystemSid);
+    }
+    if (AdministratorsSid != NULL)
+    {
+        FreeSid(AdministratorsSid);
+    }
+    if (EveryoneSid != NULL)
+    {
+        FreeSid(EveryoneSid);
+    }
+
+    return pSD;
 }
 
 /* Dynamic DLL loading interface **********************************************/
