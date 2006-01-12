@@ -35,7 +35,6 @@
 				<file>irqhand.s</file>
 				<file>kernel.c</file>
 				<file>ldt.c</file>
-				<file>stkswitch.S</file>
 				<file>syscall.S</file>
 				<file>thread.c</file>
 				<file>tlbflush.S</file>
