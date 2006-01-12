@@ -93,7 +93,7 @@ LoadCursorIconImage(
    ULONG ColorBits;
    PVOID Data;
    CURSORICONDIRENTRY* dirEntry;
-   ICONIMAGE* SafeIconImage;
+   ICONIMAGE* SafeIconImage = NULL;
    GRPCURSORICONDIR* IconResDir;
    INT id;
    ICONIMAGE *ResIcon;
