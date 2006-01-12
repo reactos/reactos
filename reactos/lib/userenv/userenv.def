@@ -33,6 +33,8 @@ GetUserProfileDirectoryW@12
 LeaveCriticalPolicySection@4
 LoadUserProfileA@8
 LoadUserProfileW@8
+RefreshPolicy@4
+RefreshPolicyEx@8
 RegisterGPNotification@8
 UnloadUserProfile@8
 UnregisterGPNotification@4

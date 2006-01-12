@@ -12,6 +12,10 @@ extern "C" {
 #define PI_NOUI (1)
 #define PI_APPLYPOLICY (2)
 
+#if (WINVER >= 0x0500)
+#define RP_FORCE (1)
+#endif
+
 typedef struct _PROFILEINFOA
 {
   DWORD dwSize;
@@ -70,6 +74,19 @@ BOOL WINAPI GetUserProfileDirectoryW(HANDLE, LPWSTR, LPDWORD);
 
 BOOL WINAPI CreateEnvironmentBlock(LPVOID*, HANDLE, BOOL);
 BOOL WINAPI DestroyEnvironmentBlock(LPVOID);
+#if (WINVER >= 0x0500)
+BOOL WINAPI ExpandEnvironmentStringsForUserA (HANDLE, LPCSTR, LPSTR, DWORD);
+BOOL WINAPI ExpandEnvironmentStringsForUserW (HANDLE, LPCWSTR, LPWSTR, DWORD);
+#endif
+
+HANDLE WINAPI EnterCriticalPolicySection (BOOL);
+BOOL WINAPI LeaveCriticalPolicySection (HANDLE);
+BOOL WINAPI RefreshPolicy (BOOL);
+#if (WINVER >= 0x0500)
+BOOL WINAPI RefreshPolicyEx (BOOL, DWORD);
+#endif
+BOOL WINAPI RegisterGPNotification (HANDLE, BOOL);
+BOOL WINAPI UnregisterGPNotification (HANDLE);
 
 #ifdef UNICODE
 typedef PROFILEINFOW PROFILEINFO;
@@ -89,6 +106,9 @@ typedef LPPROFILEINFOW LPPROFILEINFO;
 #define GetDefaultUserProfileDirectory  GetDefaultUserProfileDirectoryW
 #define GetProfilesDirectory  GetProfilesDirectoryW
 #define GetUserProfileDirectory  GetUserProfileDirectoryW
+#if (WINVER >= 0x0500)
+#define ExpandEnvironmentStringsForUser ExpandEnvironmentStringsForUserW
+#endif
 #else
 typedef PROFILEINFOA PROFILEINFO;
 typedef LPPROFILEINFOA LPPROFILEINFO;
@@ -107,6 +127,9 @@ typedef LPPROFILEINFOA LPPROFILEINFO;
 #define GetDefaultUserProfileDirectory  GetDefaultUserProfileDirectoryA
 #define GetProfilesDirectory  GetProfilesDirectoryA
 #define GetUserProfileDirectory  GetUserProfileDirectoryA
+#if (WINVER >= 0x0500)
+#define ExpandEnvironmentStringsForUser ExpandEnvironmentStringsForUserA
+#endif
 #endif
 
 #ifdef __cplusplus

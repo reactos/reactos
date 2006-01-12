@@ -45,8 +45,12 @@ typedef enum
 
 static const WCHAR szLocalGPApplied[] = L"userenv: User Group Policy has been applied";
 static const WCHAR szLocalGPMutex[] = L"userenv: user policy mutex";
+static const WCHAR szLocalGPRefreshEvent[] = L"userenv: user policy refresh event";
+static const WCHAR szLocalGPForceRefreshEvent[] = L"userenv: user policy force refresh event";
 static const WCHAR szMachineGPApplied[] = L"Global\\userenv: Machine Group Policy has been applied";
 static const WCHAR szMachineGPMutex[] = L"Global\\userenv: machine policy mutex";
+static const WCHAR szMachineGPRefreshEvent[] = L"Global\\userenv: machine policy refresh event";
+static const WCHAR szMachineGPForceRefreshEvent[] = L"Global\\userenv: machine policy force refresh event";
 
 static CRITICAL_SECTION GPNotifyLock;
 static PGP_NOTIFY NotificationList = NULL;
@@ -410,6 +414,58 @@ UnregisterGPNotification(IN HANDLE hEvent)
     LeaveCriticalSection(&GPNotifyLock);
 
     return Ret;
+}
+
+BOOL WINAPI
+RefreshPolicy(IN BOOL bMachine)
+{
+    HANDLE hEvent;
+    BOOL Ret = TRUE;
+
+    hEvent = OpenEventW(EVENT_MODIFY_STATE,
+                        FALSE,
+                        (bMachine ? szMachineGPRefreshEvent : szLocalGPRefreshEvent));
+    if (hEvent != NULL)
+    {
+        Ret = SetEvent(hEvent);
+        CloseHandle(hEvent);
+    }
+
+    /* return TRUE even if the mutex doesn't exist! */
+    return Ret;
+}
+
+BOOL WINAPI
+RefreshPolicyEx(IN BOOL bMachine,
+                IN DWORD dwOptions)
+{
+    if (dwOptions & ~RP_FORCE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (dwOptions & RP_FORCE)
+    {
+        HANDLE hEvent;
+        BOOL Ret = TRUE;
+
+        hEvent = OpenEventW(EVENT_MODIFY_STATE,
+                            FALSE,
+                            (bMachine ? szMachineGPForceRefreshEvent : szLocalGPForceRefreshEvent));
+        if (hEvent != NULL)
+        {
+            Ret = SetEvent(hEvent);
+            CloseHandle(hEvent);
+        }
+
+        /* return TRUE even if the mutex doesn't exist! */
+        return Ret;
+    }
+    else
+    {
+        return RefreshPolicy(bMachine);
+    }
 }
 
 HANDLE WINAPI
