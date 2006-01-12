@@ -583,8 +583,7 @@ CreateSidCacheMgr(IN HANDLE Heap,
     scm = HeapAlloc(Heap,
                     0,
                     FIELD_OFFSET(SIDCACHEMGR,
-                                 SystemName[0]) +
-                        ((wcslen(SystemName) + 1) * sizeof(WCHAR)));
+                                 SystemName[wcslen(SystemName) + 1]));
     if (scm != NULL)
     {
         /* zero the static part of the structure */

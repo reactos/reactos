@@ -1,5 +1,5 @@
 <module name="aclui" type="win32dll" baseaddress="${BASEADDRESS_ACLUI}" installbase="system32" installname="aclui.dll">
-	<importlibrary definition="aclui.def" />
+	<importlibrary definition="aclui.spec.def" />
 	<include base="aclui">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
@@ -22,5 +22,6 @@
 	<file>misc.c</file>
 	<file>sidcache.c</file>
 	<file>aclui.rc</file>
+	<file>aclui.spec</file>
 	<pch>precomp.h</pch>
 </module>

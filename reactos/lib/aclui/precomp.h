@@ -62,6 +62,9 @@ typedef struct _SECURITY_PAGE
     SI_ACCESS DefaultAccess;
 
     HANDLE SidCacheMgr;
+    LONG SidLookupsPending;
+    BOOL Initializing : 1;
+
     LPCWSTR ServerName;
 } SECURITY_PAGE, *PSECURITY_PAGE;
 

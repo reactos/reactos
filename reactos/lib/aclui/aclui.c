@@ -342,6 +342,27 @@ GetPrincipalDisplayString(IN PPRINCIPAL_LISTITEM PrincipalListItem)
     return lpDisplayString;
 }
 
+static LPWSTR
+GetPrincipalAccountNameString(IN PPRINCIPAL_LISTITEM PrincipalListItem)
+{
+    LPWSTR lpDisplayString = NULL;
+
+    if (PrincipalListItem->SidReqResult != NULL)
+    {
+        LoadAndFormatString(hDllInstance,
+                            IDS_USERFORMAT,
+                            &lpDisplayString,
+                            PrincipalListItem->SidReqResult->AccountName);
+    }
+    else
+    {
+        ConvertSidToStringSid((PSID)(PrincipalListItem + 1),
+                              &lpDisplayString);
+    }
+
+    return lpDisplayString;
+}
+
 static VOID
 CreatePrincipalListItem(OUT LVITEM *li,
                         IN PSECURITY_PAGE sp,
@@ -543,7 +564,7 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
         LPWSTR szLabel;
         LPWSTR szDisplayString;
 
-        szDisplayString = GetPrincipalDisplayString(Selected);
+        szDisplayString = GetPrincipalAccountNameString(Selected);
         if (LoadAndFormatString(hDllInstance,
                                 IDS_PERMISSIONS_FOR,
                                 &szLabel,
