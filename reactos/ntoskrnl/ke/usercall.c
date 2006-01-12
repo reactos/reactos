@@ -40,7 +40,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
 {
     ULONG_PTR NewStack, OldStack;
     PULONG UserEsp;
-    NTSTATUS CallbackStatus;
+    NTSTATUS CallbackStatus = STATUS_SUCCESS;
     PEXCEPTION_REGISTRATION_RECORD ExceptionList;
     DPRINT("KeUserModeCallback(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
             RoutineIndex, Argument, ArgumentLength);
