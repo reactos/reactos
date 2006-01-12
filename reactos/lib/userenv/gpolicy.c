@@ -477,29 +477,29 @@ EnterCriticalPolicySection(IN BOOL bMachine)
 
     /* create or open the mutex */
     lpSecurityDescriptor = CreateDefaultSecurityDescriptor();
-    if (lpSecurityDescriptor == NULL)
+    if (lpSecurityDescriptor != NULL)
     {
-        return NULL;
-    }
+        SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+        SecurityAttributes.lpSecurityDescriptor = lpSecurityDescriptor;
+        SecurityAttributes.bInheritHandle = FALSE;
 
-    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-    SecurityAttributes.lpSecurityDescriptor = lpSecurityDescriptor;
-    SecurityAttributes.bInheritHandle = FALSE;
+        hSection = CreateMutexW(&SecurityAttributes,
+                                FALSE,
+                                (bMachine ? szMachineGPMutex : szLocalGPMutex));
 
-    hSection = CreateMutexW(&SecurityAttributes,
-                            FALSE,
-                            (bMachine ? szMachineGPMutex : szLocalGPMutex));
+        LocalFree((HLOCAL)lpSecurityDescriptor);
 
-    if (hSection != NULL)
-    {
-        /* wait up to 10 seconds */
-        if (WaitForSingleObject(hSection,
-                                60000) != WAIT_FAILED)
+        if (hSection != NULL)
         {
-            return hSection;
-        }
+            /* wait up to 10 seconds */
+            if (WaitForSingleObject(hSection,
+                                    60000) != WAIT_FAILED)
+            {
+                return hSection;
+            }
 
-        CloseHandle(hSection);
+            CloseHandle(hSection);
+        }
     }
 
     return NULL;
