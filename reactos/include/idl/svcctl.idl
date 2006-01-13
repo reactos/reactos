@@ -383,7 +383,7 @@ cpp_quote("#endif")
                                   [out] LPDWORD pcbBytesNeeded,
                                   [out] LPDWORD lpServicesReturned,
                                   [in, out, unique] LPDWORD lpResumeHandle,
-                                  [in, string] LPCSTR pszGroupName);
+                                  [in, string, unique] LPCSTR pszGroupName);
 
   /* Function 42 */
   DWORD ScmrEnumServicesStatusExW([in] handle_t BindingHandle,
@@ -396,7 +396,7 @@ cpp_quote("#endif")
                                   [out] LPDWORD pcbBytesNeeded,
                                   [out] LPDWORD lpServicesReturned,
                                   [in, out, unique] LPDWORD lpResumeHandle,
-                                  [in, string] LPCWSTR pszGroupName);
+                                  [in, string, unique] LPCWSTR pszGroupName);
 
   /* Function 43 */
   /* ScmrSendTSMessage */
