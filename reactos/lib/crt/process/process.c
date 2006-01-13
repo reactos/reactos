@@ -126,7 +126,7 @@ argvtosT(const _TCHAR* const* argv, _TCHAR delim)
    for(i = 0; argv[i]; i++)
    {
       len = _tcslen(argv[i]);
-      memcpy(ptr, argv[i], len);
+      memcpy(ptr, argv[i], len * sizeof(_TCHAR));
       ptr += len;
       *ptr++ = delim;
    }
@@ -162,7 +162,7 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
    do
    {
       len = _tcslen(arg0);
-      memcpy(ptr, arg0, len);
+      memcpy(ptr, arg0, len * sizeof(_TCHAR));
       ptr += len;
       *ptr++ = delim;
       arg0 = va_arg(alist2, _TCHAR*);
