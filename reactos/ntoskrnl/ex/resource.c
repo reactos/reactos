@@ -304,7 +304,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
                       OldSize * sizeof(OWNER_ENTRY));
 
         /* Acquire dispatcher lock to prevent thread boosting */
-        //KeAcquireDispatcherDatabaseLockAtDpcLevel();
+        KeAcquireDispatcherDatabaseLockAtDpcLevel();
 
         /* Set the new table data */
         Table->TableSize = NewSize;
@@ -314,7 +314,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
         ExpVerifyResource(Resource);
 
         /* Release locks */
-        //KeReleaseDispatcherDatabaseLockFromDpcLevel();
+        KeReleaseDispatcherDatabaseLockFromDpcLevel();
         ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
 
         /* Free the old table */
