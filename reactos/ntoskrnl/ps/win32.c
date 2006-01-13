@@ -71,7 +71,8 @@ NTSTATUS
 NTAPI
 PsConvertToGuiThread(VOID)
 {
-    PVOID NewStack, OldStack;
+    ULONG_PTR NewStack;
+    PVOID OldStack;
     PETHREAD Thread = PsGetCurrentThread();
     PEPROCESS Process = PsGetCurrentProcess();
     NTSTATUS Status;
@@ -102,7 +103,7 @@ PsConvertToGuiThread(VOID)
     if (!Thread->Tcb.LargeStack)
     {
         /* We don't create one */
-        NewStack = MmCreateKernelStack(TRUE);
+        NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE) + KERNEL_LARGE_STACK_SIZE;
         if (!NewStack)
         {
             /* Panic in user-mode */
@@ -114,8 +115,8 @@ PsConvertToGuiThread(VOID)
         KeEnterCriticalRegion();
 
         /* Switch stacks */
-        OldStack = KeSwitchKernelStack((PVOID)((ULONG_PTR)NewStack + 0x3000),
-                                       NewStack);
+        OldStack = KeSwitchKernelStack((PVOID)NewStack,
+                                       (PVOID)(NewStack - KERNEL_STACK_SIZE));
 
         /* Leave the critical region */
         KeLeaveCriticalRegion();

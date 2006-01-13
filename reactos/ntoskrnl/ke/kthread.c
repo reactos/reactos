@@ -853,9 +853,9 @@ KeInitializeThread(PKPROCESS Process,
     Thread->Teb = Teb;
 
     /* Set the Thread Stacks */
-    Thread->InitialStack = (PCHAR)KernelStack + KERNEL_STACK_SIZE;
-    Thread->StackBase = (PCHAR)KernelStack + KERNEL_STACK_SIZE;
-    Thread->StackLimit = (ULONG_PTR)KernelStack;
+    Thread->InitialStack = (PCHAR)KernelStack;
+    Thread->StackBase = (PCHAR)KernelStack;
+    Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
 
     /*

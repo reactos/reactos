@@ -116,7 +116,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     HANDLE_TABLE_ENTRY CidEntry;
-    PVOID KernelStack;
+    ULONG_PTR KernelStack;
 
     /* Reference the Process by handle or pointer, depending on what we got */
     DPRINT("PspCreateThread: %x, %x, %x\n", ProcessHandle, TargetProcess, ThreadContext);
@@ -206,7 +206,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Allocate Stack for non-GUI Thread */
     DPRINT("Initialliazing Thread Stack\n");
-    KernelStack = MmCreateKernelStack(FALSE);
+    KernelStack = (ULONG_PTR)MmCreateKernelStack(FALSE) + KERNEL_STACK_SIZE;
 
     /* Set the Process CID */
     DPRINT("Initialliazing Thread PID and Parent Process\n");
@@ -236,7 +236,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                            NULL,
                            ThreadContext,
                            TebBase,
-                           KernelStack);
+                           (PVOID)KernelStack);
 
     } else {
 
@@ -254,7 +254,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                            StartContext,
                            NULL,
                            NULL,
-                           KernelStack);
+                           (PVOID)KernelStack);
     }
 
     /*
@@ -268,10 +268,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Notify Thread Creation */
     DPRINT("Running Thread Notify \n");
     PspRunCreateThreadNotifyRoutines(Thread, TRUE);
-
-    /* FIXME: Use Lock */
-    DPRINT("Apcs Queueable: %d \n", Thread->Tcb.ApcQueueable);
-    Thread->Tcb.ApcQueueable = TRUE;
 
     /* Suspend the Thread if we have to */
     if (CreateSuspended) {
