@@ -707,9 +707,13 @@ ExpWaitForResource(IN PERESOURCE Resource,
                     Size = Owner->TableSize;
                     for (i = 1; i < Size; i++)
                     {
-                        /* Boot every thread in the table */
-                        OwnerThread = (PKTHREAD)
-                                       Resource->OwnerThreads[1].OwnerThread;
+                        /* Move to next entry */
+                        Owner++
+
+                        /* Get the thread */
+                        OwnerThread = (PKTHREAD)OwnerEntry->OwnerThread;
+
+                        /* Boost it */
                         if (OwnerThread) ExpBoostOwnerThread(Thread, OwnerThread);
                     }
                 }
