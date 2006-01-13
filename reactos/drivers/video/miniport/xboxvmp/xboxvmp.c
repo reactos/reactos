@@ -542,7 +542,7 @@ XboxVmpQueryCurrentMode(
    PVIDEO_MODE_INFORMATION VideoMode,
    PSTATUS_BLOCK StatusBlock)
 {
-  ULONG AvMode;
+  ULONG AvMode = 0;
 
   VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
   VideoMode->ModeIndex = 0;
