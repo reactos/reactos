@@ -4,7 +4,7 @@
 #include <internal/rterror.h>
 
 
-static DWORD TlsIndex = TLS_OUT_OF_INDEXES;
+static unsigned long TlsIndex = (unsigned long)-1;
 
 
 static void InitThreadData(PTHREADDATA ThreadData)
@@ -19,10 +19,19 @@ static void InitThreadData(PTHREADDATA ThreadData)
 }
 
 
-int SetThreadData(PTHREADDATA ThreadData)
+int CreateThreadData(void)
 {
-   if(TlsIndex == TLS_OUT_OF_INDEXES ||
-      !TlsSetValue(TlsIndex, ThreadData))
+   PTHREADDATA ThreadData;
+
+   TlsIndex = TlsAlloc();
+   if (TlsIndex == (unsigned long)-1)
+     return FALSE;
+
+   ThreadData = (PTHREADDATA)calloc(1, sizeof(THREADDATA));
+   if (ThreadData == NULL)
+     return FALSE;
+
+   if(!TlsSetValue(TlsIndex, (LPVOID)ThreadData))
      return FALSE;
 
    InitThreadData(ThreadData);
@@ -31,26 +40,19 @@ int SetThreadData(PTHREADDATA ThreadData)
 }
 
 
-int CreateThreadData(void)
-{
-   TlsIndex = TlsAlloc();
-   return (TlsIndex != TLS_OUT_OF_INDEXES);
-}
-
-
 void DestroyThreadData(void)
 {
-   if (TlsIndex != TLS_OUT_OF_INDEXES)
+   if (TlsIndex != (unsigned long)-1)
      {
 	TlsFree(TlsIndex);
-	TlsIndex = TLS_OUT_OF_INDEXES;
+	TlsIndex = (unsigned long)-1;
      }
 }
 
 
 void FreeThreadData(PTHREADDATA ThreadData)
 {
-   if (TlsIndex != TLS_OUT_OF_INDEXES)
+   if (TlsIndex != (unsigned long)-1)
      {
 	if (ThreadData == NULL)
 	   ThreadData = TlsGetValue(TlsIndex);
@@ -82,8 +84,6 @@ PTHREADDATA GetThreadData(void)
 	     TlsSetValue(TlsIndex, (LPVOID)ThreadData);
 
 	     InitThreadData(ThreadData);
-
-             ThreadData->hThread = GetCurrentThread();
 	  }
 	else
 	  {
