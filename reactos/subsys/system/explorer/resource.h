@@ -118,6 +118,10 @@
 #define IDB_MDI                         170
 #define IDB_SDI                         171
 #define IDI_MINIMIZE                    172
+#define IDI_CONTROLPAN                  173
+#define IDI_DESKSETTING                 174
+#define IDI_NETCONNS                    175
+#define IDI_ADMINISTRATION              176
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403

@@ -166,6 +166,12 @@ IDI_ARROW_DOWN          ICON    DISCARDABLE     "res/arrow_dwn.ico"
 IDI_NOTIFY_L            ICON    DISCARDABLE     "res/notify_l.ico"
 IDI_NOTIFY_R            ICON    DISCARDABLE     "res/notify_r.ico"
 IDI_MINIMIZE            ICON    DISCARDABLE     "res/minimize.ico" 
+IDI_CONTROLPAN          ICON    DISCARDABLE     "res/control-panel.ico"
+IDI_DESKSETTING         ICON    DISCARDABLE     "res/desktop-settings.ico"
+IDI_NETCONNS            ICON    DISCARDABLE     "res/network-conns.ico"
+IDI_ADMINISTRATION      ICON    DISCARDABLE     "res/administration.ico"
+
+
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
