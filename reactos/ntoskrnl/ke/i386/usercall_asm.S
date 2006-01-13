@@ -358,6 +358,26 @@ NoStack:
 
 .endfunc
 
+/*++
+ * @name KeSwitchKernelStack 
+ *
+ *     The KeSwitchKernelStack routine switches from the current thread's stack
+ *     to the new specified base and limit.
+ *
+ * @param StackBase
+ *        Pointer to the new Stack Base of the thread.
+ *
+ * @param StackLimit
+ *        Pointer to the new Stack Limit of the thread.
+ *
+ * @return The previous Stack Limit of the thread.
+ *
+ * @remark This routine should typically only be used when converting from a 
+ *         non-GUI to a GUI Thread. The caller is responsible for freeing the
+ *         previous stack. The new stack values MUST be valid before calling
+ *         this routine.
+ *
+ *--*/
 .globl _KeSwitchKernelStack@8
 .func KeSwitchKernelStack@8
 _KeSwitchKernelStack@8:
@@ -400,7 +420,7 @@ _KeSwitchKernelStack@8:
     pop edi
 
     /* Save old stack base and get new limit/base */
-    mov eax, [edx+KTHREAD_STACK_BASE]
+    mov eax, [edx+KTHREAD_STACK_LIMIT]
     mov ecx, [esp+12]
     mov esi, [esp+16]
 

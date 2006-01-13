@@ -122,7 +122,7 @@ PsConvertToGuiThread(VOID)
         KeLeaveCriticalRegion();
 
         /* Delete the old stack */
-        //MmDeleteKernelStack(OldStack, FALSE);
+        MmDeleteKernelStack(OldStack, FALSE);
     }
 
     /* This check is bizare. Check out win32k later */

@@ -194,7 +194,7 @@ PspDeleteThread(PVOID ObjectBody)
     if(Thread->Tcb.Win32Thread != NULL) ExFreePool (Thread->Tcb.Win32Thread);
 
     /* Release the Kernel Stack */
-    MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit, Thread->Tcb.StackLimit);
+    MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit, Thread->Tcb.LargeStack);
 
     /* Dereference the Process */
     ObDereferenceObject(Process);
