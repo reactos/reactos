@@ -708,10 +708,10 @@ ExpWaitForResource(IN PERESOURCE Resource,
                     for (i = 1; i < Size; i++)
                     {
                         /* Move to next entry */
-                        Owner++
+                        Owner++;
 
                         /* Get the thread */
-                        OwnerThread = (PKTHREAD)OwnerEntry->OwnerThread;
+                        OwnerThread = (PKTHREAD)Owner->OwnerThread;
 
                         /* Boost it */
                         if (OwnerThread) ExpBoostOwnerThread(Thread, OwnerThread);
