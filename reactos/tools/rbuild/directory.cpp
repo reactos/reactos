@@ -19,7 +19,9 @@
 #include <assert.h>
 
 #include "rbuild.h"
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#include <errno.h>
+#else
 #include <dirent.h>
 #endif//_MSC_VER
 
