@@ -385,7 +385,6 @@
 		<file>cppexcept.c</file>
 		<file>heap.c</file>
 		<file>scanf.c</file>
-		<file>thread.c</file>
 		<file>undname.c</file>
 	</directory>
 </module>

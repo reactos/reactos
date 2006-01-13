@@ -17,6 +17,10 @@
 
 typedef struct _ThreadData
 {
+  HANDLE hThread;               /* handle to the current thread */
+  void (__cdecl *start_address)(void*); /* the start address supplied by _beginthread() */
+  void* arglist;                /* the argument list supplied by _beginthread() */
+
   int terrno;                   /* *nix error code */
   unsigned long tdoserrno;      /* Win32 error code (for I/O only) */
   unsigned __int64 tnext;       /* used by rand/srand */
@@ -41,7 +45,8 @@ typedef struct _ThreadData
 int CreateThreadData(void);
 void DestroyThreadData(void);
 
-void FreeThreadData(PTHREADDATA ptd);
+int SetThreadData(PTHREADDATA ThreadData);
+void FreeThreadData(PTHREADDATA ThreadData);
 PTHREADDATA GetThreadData(void);
 
 #endif /* __MSVCRT_INTERNAL_TLS_H */
