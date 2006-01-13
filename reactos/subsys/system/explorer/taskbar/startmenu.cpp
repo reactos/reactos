@@ -1712,7 +1712,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoRecentDocsMenu")))
 #endif
-		AddButton(ResString(IDS_RECENT),	ICID_DOCUMENTS, true, IDC_RECENT);
+		AddButton(ResString(IDS_RECENT),	ICID_RECENT, true, IDC_RECENT);
 
 	AddButton(ResString(IDS_FAVORITES),		ICID_FAVORITES, true, IDC_FAVORITES);
 
@@ -2148,14 +2148,14 @@ void SettingsMenu::AddEntries()
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
 //TODO	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
-	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETCONNS, true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETCONNS, false, IDC_CONNECTIONS);
 #endif
 	AddButton(ResString(IDS_ADMIN),				ICID_ADMINISTRATION, true, IDC_ADMIN);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
 #endif
-		AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
+	AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
 
 	AddButton(ResString(IDS_DESKTOPBAR_SETTINGS), ICID_DESKSETTING, false, ID_DESKTOPBAR_SETTINGS);
 

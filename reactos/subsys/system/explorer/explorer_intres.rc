@@ -170,7 +170,7 @@ IDI_CONTROLPAN          ICON    DISCARDABLE     "res/control-panel.ico"
 IDI_DESKSETTING         ICON    DISCARDABLE     "res/desktop-settings.ico"
 IDI_NETCONNS            ICON    DISCARDABLE     "res/network-conns.ico"
 IDI_ADMINISTRATION      ICON    DISCARDABLE     "res/administration.ico"
-
+IDI_RECENT              ICON    DISCARDABLE     "res/recent-documents.ico"
 
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
