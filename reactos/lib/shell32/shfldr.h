@@ -21,6 +21,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __SHFLDR_H
+#define __SHFLDR_H
+
 #define CHARS_IN_GUID 39
 
 typedef struct {
@@ -71,3 +74,5 @@ static inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 
 void SHELL_FS_ProcessDisplayFilename(LPSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
+
+#endif /* __SHFLDR_H */
