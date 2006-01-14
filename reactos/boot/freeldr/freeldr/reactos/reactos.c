@@ -499,53 +499,55 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 
             /* open driver Key */
             rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
+            if (rc == ERROR_SUCCESS)
+            {
+                /* Read the Start Value */
+                ValueSize = sizeof(ULONG);
+                rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+                if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
+                DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
-            /* Read the Start Value */
-            ValueSize = sizeof(ULONG);
-            rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
-            if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-            DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
+                /* Read the Tag */
+                ValueSize = sizeof(ULONG);
+                rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
+                if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
+                DbgPrint((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
 
-            /* Read the Tag */
-            ValueSize = sizeof(ULONG);
-            rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
-            if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-            DbgPrint((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
+                /* Read the driver's group */
+                DriverGroupSize = sizeof(DriverGroup);
+                rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
+                DbgPrint((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
 
-            /* Read the driver's group */
-            DriverGroupSize = sizeof(DriverGroup);
-            rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-            DbgPrint((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
+                for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
+                    if (TagValue == OrderList[TagIndex]) break;
+                }
 
-            for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
-                if (TagValue == OrderList[TagIndex]) break;
-            }
+                if ((StartValue == 0) &&
+                    (TagIndex > OrderList[0]) &&
+                    (_wcsicmp(DriverGroup, GroupName) == 0)) {
 
-            if ((StartValue == 0) &&
-                (TagIndex > OrderList[0]) &&
-                (_wcsicmp(DriverGroup, GroupName) == 0)) {
+                        ValueSize = sizeof(TempImagePath);
+                        rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
+                        if (rc != ERROR_SUCCESS) {
+                            DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
+                            sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", szSystemRoot, ServiceName);
+                        } else if (TempImagePath[0] != L'\\') {
+                            sprintf(ImagePath, "%s%S", szSystemRoot, TempImagePath);
+                        } else {
+                            sprintf(ImagePath, "%S", TempImagePath);
+                            DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
+                        }
+                    DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
 
-                    ValueSize = sizeof(TempImagePath);
-                    rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
-                    if (rc != ERROR_SUCCESS) {
-                        DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
-                        sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", szSystemRoot, ServiceName);
-                    } else if (TempImagePath[0] != L'\\') {
-                        sprintf(ImagePath, "%s%S", szSystemRoot, TempImagePath);
-                    } else {
-                        sprintf(ImagePath, "%S", TempImagePath);
-                        DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
-                    }
-                DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
+                    if (nPos < 100) nPos += 5;
 
-                if (nPos < 100) nPos += 5;
+                    FrLdrLoadDriver(ImagePath, nPos);
 
-                FrLdrLoadDriver(ImagePath, nPos);
+                } else {
 
-            } else {
-
-                DbgPrint((DPRINT_REACTOS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
-                ServiceName, StartValue, TagValue, DriverGroup, GroupName));
+                    DbgPrint((DPRINT_REACTOS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
+                    ServiceName, StartValue, TagValue, DriverGroup, GroupName));
+                }
             }
 
             Index++;
