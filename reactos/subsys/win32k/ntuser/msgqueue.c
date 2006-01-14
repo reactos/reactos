@@ -46,7 +46,7 @@ static KSPIN_LOCK SystemMessageQueueLock;
 
 static ULONG volatile HardwareMessageQueueStamp = 0;
 static LIST_ENTRY HardwareMessageQueueHead;
-static KMUTEX HardwareMessageQueueLock;
+static KMUTANT HardwareMessageQueueLock;
 
 static KEVENT HardwareMessageEvent;
 
@@ -60,7 +60,7 @@ static PAGED_LOOKASIDE_LIST TimerLookasideList;
   KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql)
 
 #define IntUnLockSystemHardwareMessageQueueLock(Wait) \
-  KeReleaseMutex(&HardwareMessageQueueLock, Wait)
+  KeReleaseMutant(&HardwareMessageQueueLock, IO_NO_INCREMENT, FALSE, Wait)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -122,7 +122,7 @@ MsqInitializeImpl(VOID)
    InitializeListHead(&HardwareMessageQueueHead);
    KeInitializeEvent(&HardwareMessageEvent, NotificationEvent, 0);
    KeInitializeSpinLock(&SystemMessageQueueLock);
-   KeInitializeMutex(&HardwareMessageQueueLock, 0);
+   KeInitializeMutant(&HardwareMessageQueueLock, 0);
 
    ExInitializePagedLookasideList(&MessageLookasideList,
                                   NULL,
