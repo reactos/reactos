@@ -78,8 +78,11 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_HELP_CONTENTS:    DIALOG_HelpContents(); break;
     case CMD_HELP_SEARCH:      DIALOG_HelpSearch(); break;
     case CMD_HELP_ON_HELP:     DIALOG_HelpHelp(); break;
-    case CMD_LICENSE:          DIALOG_HelpLicense(); break;
-    case CMD_NO_WARRANTY:      DIALOG_HelpNoWarranty(); break;
+    case CMD_ABOUT:            DialogBox(GetModuleHandle(NULL),
+                                         MAKEINTRESOURCE(IDD_ABOUTBOX),
+                                         Globals.hMainWnd,
+                                         AboutDialogProc);
+                               break; 
     case CMD_ABOUT_WINE:       DIALOG_HelpAboutWine(); break;
 
     default:
@@ -505,11 +508,13 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     class.cbSize        = sizeof(class);
     class.lpfnWndProc   = NOTEPAD_WndProc;
     class.hInstance     = Globals.hInstance;
-    class.hIcon         = LoadIcon(0, IDI_APPLICATION);
+    class.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_NPICON));
     class.hCursor       = LoadCursor(0, IDC_ARROW);
     class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     class.lpszMenuName  = MAKEINTRESOURCE(MAIN_MENU);
     class.lpszClassName = className;
+    class.hIconSm       = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_NPICON), 
+                            IMAGE_ICON, 16, 16, 0);
 
     if (!RegisterClassEx(&class)) return FALSE;
 

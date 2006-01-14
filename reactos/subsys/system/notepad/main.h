@@ -76,5 +76,3 @@ BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, in
 /* from settings.c */
 void LoadSettings(void);
 void SaveSettings(void);
-
-

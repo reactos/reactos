@@ -52,6 +52,8 @@ VOID DIALOG_HelpAboutWine(VOID);
 
 VOID DIALOG_TimeDate(VOID);
 
+BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+
 /* utility functions */
 VOID ShowLastError(void);
 BOOL FileExists(LPCWSTR szFilename);

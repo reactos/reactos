@@ -67,8 +67,7 @@ BEGIN
 		MENUITEM "&Αναζήτηση...",        CMD_HELP_SEARCH
 		MENUITEM "&Βοήθεια στη βοήθεια",     CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "Ά&δεια",         CMD_LICENSE
-		MENUITEM "&NO WARRANTY",     CMD_NO_WARRANTY
+		MENUITEM "&About"             CMD_ABOUT
 		MENUITEM "Πληρο&φορίες",      CMD_ABOUT_WINE
 	END
 END
@@ -124,6 +123,27 @@ LTEXT           "Αριθμός γραμμής:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_N
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Ακύρωση", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 }
+
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Notepad"
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nIcon borrowed from Notepad2 - http://www.flos-freeware.ch/notepad2.html",
+                    -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
+    CONTROL         "Icon borrowed from Notepad2 - http://www.flos-freeware.ch/notepad2.html",
+                    -1,"Static",0x50000000,8,48,272,11
+    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    ICON            IDI_NPICON,-1,12,9,20,30
+    EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
+                    ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
 
 STRINGTABLE DISCARDABLE
 {

@@ -27,6 +27,9 @@
 #define ID_EOLN                 0x206
 #define DIALOG_GOTO             0x207
 #define ID_LINENUMBER           0x208
+#define IDI_NPICON              0x209
+#define IDD_ABOUTBOX            0x20A
+#define IDC_LICENSE             0x20B
 
 /* Commands */
 #define CMD_NEW                 0x100
@@ -59,9 +62,9 @@
 #define CMD_HELP_CONTENTS       0x130
 #define CMD_HELP_SEARCH         0x131
 #define CMD_HELP_ON_HELP        0x132
-#define CMD_LICENSE             0x135
-#define CMD_NO_WARRANTY         0x136
+#define CMD_ABOUT               0x135
 #define CMD_ABOUT_WINE          0x137
+
 
 /* Strings */
 #define STRING_PAGESETUP_HEADERVALUE 0x160
@@ -95,3 +98,5 @@
 #define STRING_CRLF 0x182
 #define STRING_LF 0x183
 #define STRING_CR 0x184
+
+#define STRING_LICENSE 0x185

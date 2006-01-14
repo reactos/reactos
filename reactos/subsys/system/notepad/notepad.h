@@ -8,6 +8,5 @@
 #include <tchar.h>
 
 #include "main.h"
-#include "license.h"
 #include "dialog.h"
 
