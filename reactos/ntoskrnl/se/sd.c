@@ -125,6 +125,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
   ULONG SidSize;
   ULONG SdSize;
   NTSTATUS Status;
+  PISECURITY_DESCRIPTOR_RELATIVE SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
 
   DPRINT("SeSetWorldSecurityDescriptor() called\n");
 
@@ -133,8 +134,17 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
       return STATUS_ACCESS_DENIED;
     }
 
+  /* calculate the minimum size of the buffer */
   SidSize = RtlLengthSid(SeWorldSid);
-  SdSize = sizeof(SECURITY_DESCRIPTOR) + (2 * SidSize);
+  SdSize = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
+  if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+      SdSize += SidSize;
+  if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+      SdSize += SidSize;
+  if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+      SdSize += sizeof(ACL) + sizeof(ACE) + SidSize;
+    }
 
   if (*BufferLength < SdSize)
     {
@@ -144,42 +154,57 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
   *BufferLength = SdSize;
 
-  Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
-           SECURITY_DESCRIPTOR_REVISION);
+  Status = RtlCreateSecurityDescriptorRelative(SdRel,
+                                               SECURITY_DESCRIPTOR_REVISION);
   if (!NT_SUCCESS(Status))
     {
       return Status;
     }
 
-  SecurityDescriptor->Control |= SE_SELF_RELATIVE;
-  Current = (ULONG_PTR)SecurityDescriptor + sizeof(SECURITY_DESCRIPTOR);
+  Current = (ULONG_PTR)(SdRel + 1);
 
   if (SecurityInformation & OWNER_SECURITY_INFORMATION)
     {
       RtlCopyMemory((PVOID)Current,
-      SeWorldSid,
-      SidSize);
-      SecurityDescriptor->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)SecurityDescriptor);
+                    SeWorldSid,
+                    SidSize);
+      SdRel->Owner = (DWORD)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
       Current += SidSize;
     }
 
   if (SecurityInformation & GROUP_SECURITY_INFORMATION)
     {
       RtlCopyMemory((PVOID)Current,
-      SeWorldSid,
-      SidSize);
-      SecurityDescriptor->Group = (PSID)((ULONG_PTR)Current - (ULONG_PTR)SecurityDescriptor);
+                    SeWorldSid,
+                    SidSize);
+      SdRel->Group = (DWORD)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
       Current += SidSize;
     }
 
   if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
-      SecurityDescriptor->Control |= SE_DACL_PRESENT;
+      PACL Dacl = (PACL)Current;
+      SdRel->Control |= SE_DACL_PRESENT;
+
+      Status = RtlCreateAcl(Dacl,
+                            sizeof(ACL) + sizeof(ACE) + SidSize,
+                            ACL_REVISION);
+      if (!NT_SUCCESS(Status))
+          return Status;
+
+      Status = RtlAddAccessAllowedAce(Dacl,
+                                      ACL_REVISION,
+                                      GENERIC_ALL,
+                                      SeWorldSid);
+      if (!NT_SUCCESS(Status))
+          return Status;
+
+      SdRel->Dacl = (DWORD)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
     }
 
   if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
-      SecurityDescriptor->Control |= SE_SACL_PRESENT;
+      /* FIXME - SdRel->Control |= SE_SACL_PRESENT; */
     }
 
   return STATUS_SUCCESS;
