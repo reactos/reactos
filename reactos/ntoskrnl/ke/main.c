@@ -48,9 +48,9 @@ PVOID KeRaiseUserExceptionDispatcher = NULL;
 
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 
-/* We allocate 4 pages, but we only use 3. The 4th is to guarantee page alignment */
-ULONG kernel_stack[4096];
-ULONG double_trap_stack[4096];
+/* We allocate 5 pages, but we only use 4. The 5th is to guarantee page alignment */
+ULONG kernel_stack[5120];
+ULONG double_trap_stack[5120];
 
 /* These point to the aligned 3 pages */
 ULONG init_stack;
@@ -155,10 +155,11 @@ _main(ULONG MultiBootMagic,
     PIMAGE_OPTIONAL_HEADER OptHead;
     CHAR* s;
 
-    /* Set up the Stacks (Initial Kernel Stack and Double Trap Stack)*/
-    trap_stack = PAGE_ROUND_UP(&double_trap_stack);
+    /* Set up the Stacks (Initial Kernel Stack and Double Trap Stack)
+       and save a page for the fx savings area */
+    trap_stack = PAGE_ROUND_UP(&double_trap_stack) + PAGE_SIZE;
     trap_stack_top = trap_stack + 3 * PAGE_SIZE;
-    init_stack = PAGE_ROUND_UP(&kernel_stack);
+    init_stack = PAGE_ROUND_UP(&kernel_stack) + PAGE_SIZE;
     init_stack_top = init_stack + 3 * PAGE_SIZE;
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */

@@ -35,7 +35,7 @@ _NtProcessStartup:
 .m1:     
     /* Load the initial kernel stack */
     lea _kernel_stack, %eax
-    add $0x1000, %eax
+    add $0x2000, %eax
     and $0xFFFFE000, %eax
     add $(0x3000 - SIZEOF_FX_SAVE_AREA), %eax
     movl %eax, %esp
