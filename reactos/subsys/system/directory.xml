@@ -2,6 +2,9 @@
 <directory name="autochk">
 	<xi:include href="autochk/autochk.xml" />
 </directory>
+<directory name="cacls">
+	<xi:include href="cacls/cacls.xml" />
+</directory>
 <directory name="calc">
 	<xi:include href="calc/calc.xml" />
 </directory>
