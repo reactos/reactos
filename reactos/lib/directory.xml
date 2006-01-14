@@ -152,6 +152,9 @@
 <directory name="lzexpand">
 	<xi:include href="lzexpand/lz32.xml" />
 </directory>
+<directory name="mapi32">
+	<xi:include href="mapi32/mapi32.xml" />
+</directory>
 <directory name="mesa32">
 	<xi:include href="mesa32/mesa32.xml" />
 </directory>

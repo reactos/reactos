@@ -60,6 +60,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 /* other GUIDs */
 
 #include "vfw.h"
+#include "mapiguid.h"
 
 #if 0 /* FIXME */
 #include "uuids.h"

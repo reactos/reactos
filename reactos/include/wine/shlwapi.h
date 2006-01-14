@@ -14,6 +14,8 @@
 
 #define URL_FILE_USE_PATHURL 0x00010000
 
+HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR,DWORD,DWORD,BOOL,struct IStream*,struct IStream**);
+
 #define INTERFACE IQueryAssociations
 DECLARE_INTERFACE_(IQueryAssociations,IUnknown)
 {

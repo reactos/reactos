@@ -89,6 +89,8 @@ typedef FLAGGED_WORD_BLOB *wireBSTR;
 typedef BSTR *LPBSTR;
 typedef LONG SCODE;
 typedef void *HCONTEXT;
+#ifndef _tagCY_DEFINED
+#define _tagCY_DEFINED
 typedef union tagCY {
 	_ANONYMOUS_STRUCT struct {
 		unsigned long Lo;
@@ -96,6 +98,7 @@ typedef union tagCY {
 	}_STRUCT_NAME(s);
 	LONGLONG int64;
 } CY;
+#endif /* _tagCY_DEFINED */
 typedef double DATE;
 typedef struct  tagBSTRBLOB {
 	ULONG cbSize;

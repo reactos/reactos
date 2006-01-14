@@ -120,6 +120,7 @@ lib\keyboard\kbdus\kbdus.dll            1
 lib\kernel32\kernel32.dll               1
 lib\lsasrv\lsasrv.dll                   1
 lib\lzexpand\lz32.dll                   1
+lib\mapi32\mapi32.dll                   1
 lib\mesa32\mesa32.dll                   1
 lib\winmm\midimap\midimap.dll           1
 lib\mmdrv\mmdrv.dll                     1

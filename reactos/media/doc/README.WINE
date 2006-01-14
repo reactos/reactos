@@ -51,6 +51,7 @@ reactos/lib/icmp		# Synced to Wine-0_9_5
 reactos/lib/imm32		# Synced to Wine-0_9_5
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
+reactos/lib/mapi32		# Synced to Wine-0_9_5
 reactos/lib/msvcrt20		# Out of sync
 reactos/lib/mpr                 # Synced to Wine-0_9_5
 reactos/lib/msacm		# Out of sync
