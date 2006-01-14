@@ -30,6 +30,29 @@
 
 #include <user32.h>
 
+#include "pshpack1.h"
+
+typedef struct {
+    BYTE bWidth;
+    BYTE bHeight;
+    BYTE bColorCount;
+    BYTE bReserved;
+    WORD xHotspot;
+    WORD yHotspot;
+    DWORD dwDIBSize;
+    DWORD dwDIBOffset;
+} CURSORICONFILEDIRENTRY;
+
+typedef struct
+{
+    WORD                idReserved;
+    WORD                idType;
+    WORD                idCount;
+    CURSORICONFILEDIRENTRY  idEntries[1];
+} CURSORICONFILEDIR;
+
+#include "poppack.h"
+
 /*forward declerations... actualy in user32\windows\icon.c but usful here****/
 HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
@@ -71,6 +94,87 @@ LoadImageA(HINSTANCE hinst,
 }
 
 
+/*
+ *  The following macro functions account for the irregularities of
+ *   accessing cursor and icon resources in files and resource entries.
+ */
+typedef BOOL (*fnGetCIEntry)( LPVOID dir, int n,
+                              int *width, int *height, int *bits );
+
+/**********************************************************************
+ *	    CURSORICON_FindBestCursor2
+ *
+ * Find the cursor closest to the requested size.
+ * FIXME: parameter 'color' ignored and entries with more than 1 bpp
+ *        ignored too
+ */
+static int CURSORICON_FindBestCursor2( LPVOID dir, fnGetCIEntry get_entry,
+                                      int width, int height, int color )
+{
+    int i, maxwidth, maxheight, cx, cy, bits, bestEntry = -1;
+
+    /* Double height to account for AND and XOR masks */
+
+    height *= 2;
+
+    /* First find the largest one smaller than or equal to the requested size*/
+
+    maxwidth = maxheight = 0;
+    for ( i = 0; get_entry( dir, i, &cx, &cy, &bits ); i++ )
+    {
+        if ((cx <= width) && (cy <= height) &&
+            (cx > maxwidth) && (cy > maxheight) &&
+            (bits == 1))
+        {
+            bestEntry = i;
+            maxwidth  = cx;
+            maxheight = cy;
+        }
+    }
+    if (bestEntry != -1) return bestEntry;
+
+    /* Now find the smallest one larger than the requested size */
+
+    maxwidth = maxheight = 255;
+    for ( i = 0; get_entry( dir, i, &cx, &cy, &bits ); i++ )
+    {
+        if (((cx < maxwidth) && (cy < maxheight) && (bits == 1)) ||
+            (bestEntry==-1))
+        {
+            bestEntry = i;
+            maxwidth  = cx;
+            maxheight = cy;
+        }
+    }
+
+    return bestEntry;
+}
+
+static BOOL CURSORICON_GetFileEntry( LPVOID dir, int n,
+                                     int *width, int *height, int *bits )
+{
+    CURSORICONFILEDIR *filedir = dir;
+    CURSORICONFILEDIRENTRY *entry;
+
+    if ( filedir->idCount <= n )
+        return FALSE;
+    entry = &filedir->idEntries[n];
+    *width = entry->bWidth;
+    *height = entry->bHeight;
+    *bits = entry->bColorCount;
+    return TRUE;
+}
+
+static CURSORICONFILEDIRENTRY *CURSORICON_FindBestCursorFile( CURSORICONFILEDIR *dir,
+                                      int width, int height, int color )
+{
+    int n = CURSORICON_FindBestCursor2( dir, CURSORICON_GetFileEntry,
+                                       width, height, color );
+    if ( n < 0 )
+        return NULL;
+    return &dir->idEntries[n];
+}
+
 static HANDLE
 LoadCursorIconImage(
    HINSTANCE hinst,
@@ -85,19 +189,20 @@ LoadCursorIconImage(
    HANDLE hfRes;
    HANDLE hFile;
    HANDLE hSection;
-   CURSORICONDIR *IconDIR;
+   CURSORICONFILEDIR *IconDIR;
    HDC hScreenDc;
    HICON hIcon;
    ULONG HeaderSize;
    ULONG ColorCount;
    ULONG ColorBits;
    PVOID Data;
-   CURSORICONDIRENTRY* dirEntry;
+   CURSORICONFILEDIRENTRY* dirEntry;
    ICONIMAGE* SafeIconImage = NULL;
    GRPCURSORICONDIR* IconResDir;
    INT id;
    ICONIMAGE *ResIcon;
    BOOL Icon = (uType == IMAGE_ICON);
+   DWORD filesize = 0;
 
    if (!(fuLoad & LR_LOADFROMFILE))
    {
@@ -158,14 +263,6 @@ LoadCursorIconImage(
       return hIcon;
    }
 
-   /*
-    * FIXME: This code is incorrect and is likely to crash in many cases.
-    * In the file the cursor/icon directory records are stored like
-    * CURSORICONFILEDIR, but we treat them like CURSORICONDIR. In Wine
-    * this is solved by creating a fake cursor/icon directory in memory
-    * and passing that to CURSORICON_FindBestIcon.
-    */
-
    if (fuLoad & LR_SHARED)
    {
       DbgPrint("FIXME: need LR_SHARED support for loading icon images from files\n");
@@ -177,6 +274,7 @@ LoadCursorIconImage(
       return NULL;
 
    hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+   filesize = GetFileSize( hFile, NULL );
    CloseHandle(hFile);
    if (hSection == NULL)
       return NULL;
@@ -219,7 +317,7 @@ LoadCursorIconImage(
    }
 
    /* Pick the best size. */
-   dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, width, height, ColorBits);
+   dirEntry = CURSORICON_FindBestCursorFile( IconDIR, width, height, ColorBits );
    if (!dirEntry)
    {
       DeleteDC(hScreenDc);
@@ -227,7 +325,20 @@ LoadCursorIconImage(
       return NULL;
    }
 
-   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes);
+   if ( dirEntry->dwDIBOffset > filesize )
+   {
+      DeleteDC(hScreenDc);
+      UnmapViewOfFile(IconDIR);
+      return NULL;
+   }
+
+   if ( dirEntry->dwDIBOffset + dirEntry->dwDIBSize > filesize ){
+      DeleteDC(hScreenDc);
+      UnmapViewOfFile(IconDIR);
+      return NULL;
+   }
+
+   SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwDIBSize);
    if (SafeIconImage == NULL)
    {
       DeleteDC(hScreenDc);
@@ -235,7 +346,7 @@ LoadCursorIconImage(
       return NULL;
    }
 
-   memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
+   memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwDIBOffset, dirEntry->dwDIBSize);
    UnmapViewOfFile(IconDIR);
 
    /* At this point we have a copy of the icon image to play with. */
