@@ -478,9 +478,9 @@ const Icon& IconCache::extract(LPCTSTR path, ICONCACHE_FLAGS flags)
 	return _icons[ICID_NONE];
 }
 
-const Icon& IconCache::extract(LPCTSTR path, int idx, ICONCACHE_FLAGS flags)
+const Icon& IconCache::extract(LPCTSTR path, int icon_idx, ICONCACHE_FLAGS flags)
 {
-	IdxCacheKey key(path, make_pair(idx, (flags|ICF_HICON)&~ICF_SYSCACHE));
+	IdxCacheKey key(path, make_pair(icon_idx, (flags|ICF_HICON)&~ICF_SYSCACHE));
 
 	key.first.toLower();
 
@@ -491,7 +491,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx, ICONCACHE_FLAGS flags)
 
 	HICON hIcon;
 
-	if ((int)ExtractIconEx(path, idx, NULL, &hIcon, 1) > 0) {
+	if ((int)ExtractIconEx(path, icon_idx, NULL, &hIcon, 1) > 0) {
 		const Icon& icon = add(hIcon, IT_CACHED);
 
 		_idxCache[key] = icon;
@@ -505,13 +505,13 @@ const Icon& IconCache::extract(LPCTSTR path, int idx, ICONCACHE_FLAGS flags)
 	}
 }
 
-const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx, ICONCACHE_FLAGS flags)
+const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int icon_idx, ICONCACHE_FLAGS flags)
 {
 	HICON hIconLarge = 0;
 	HICON hIcon;
 
 	bool large_icons = flags & ICF_LARGE;
-	HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(GetSystemMetrics(SM_CXICON), ICON_SIZE_X));
+	HRESULT hr = pExtract->Extract(path, icon_idx, &hIconLarge, &hIcon, MAKELONG(GetSystemMetrics(SM_CXICON), ICON_SIZE_X));
 
 	if (hr == NOERROR) {	//@@ oder SUCCEEDED(hr) ?
 		if (large_icons) {	//@@ OK?

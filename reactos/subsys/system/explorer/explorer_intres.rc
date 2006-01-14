@@ -102,7 +102,7 @@ BEGIN
     "#endif\r\n"
     "END\r\n"
     "#endif\r\n"
-	"#ifndef _DEBUG\r\n"
+    "#ifndef _DEBUG\r\n"
     "CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE ""explorer.exe.manifest""\r\n"
     "#endif\r\n"
     "\r\n"
@@ -165,13 +165,12 @@ IDI_ARROW_UP            ICON    DISCARDABLE     "res/arrow_up.ico"
 IDI_ARROW_DOWN          ICON    DISCARDABLE     "res/arrow_dwn.ico"
 IDI_NOTIFY_L            ICON    DISCARDABLE     "res/notify_l.ico"
 IDI_NOTIFY_R            ICON    DISCARDABLE     "res/notify_r.ico"
-IDI_MINIMIZE            ICON    DISCARDABLE     "res/minimize.ico" 
+IDI_MINIMIZE            ICON    DISCARDABLE     "res/minimize.ico"
 IDI_CONTROLPAN          ICON    DISCARDABLE     "res/control-panel.ico"
 IDI_DESKSETTING         ICON    DISCARDABLE     "res/desktop-settings.ico"
 IDI_NETCONNS            ICON    DISCARDABLE     "res/network-conns.ico"
 IDI_ADMINISTRATION      ICON    DISCARDABLE     "res/administration.ico"
 IDI_RECENT              ICON    DISCARDABLE     "res/recent-documents.ico"
-
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 

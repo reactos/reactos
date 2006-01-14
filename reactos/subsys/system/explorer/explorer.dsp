@@ -320,6 +320,10 @@ SOURCE=.\res\action.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\administration.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\appicon.ico
 # End Source File
 # Begin Source File
@@ -349,6 +353,14 @@ SOURCE=.\res\computer.ico
 # Begin Source File
 
 SOURCE=.\res\config.ico
+# End Source File
+# Begin Source File
+
+SOURCE=".\res\control-panel.ico"
+# End Source File
+# Begin Source File
+
+SOURCE=".\res\desktop-settings.ico"
 # End Source File
 # Begin Source File
 
@@ -428,6 +440,11 @@ SOURCE=".\explorer-ru.rc"
 # Begin Source File
 
 SOURCE=".\explorer-sv.rc"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=".\explorer-uk.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
@@ -532,6 +549,10 @@ SOURCE=.\res\minimize.ico
 # End Source File
 # Begin Source File
 
+SOURCE=".\res\network-conns.ico"
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\network.ico
 # End Source File
 # Begin Source File
@@ -552,6 +573,10 @@ SOURCE=.\res\reactos.ico
 # End Source File
 # Begin Source File
 
+SOURCE=".\res\recent-documents.ico"
+# End Source File
+# Begin Source File
+
 SOURCE=.\resource.h
 # End Source File
 # Begin Source File
@@ -569,6 +594,10 @@ SOURCE=".\res\search-doc.ico"
 # Begin Source File
 
 SOURCE=.\res\search.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\shutdown.ico
 # End Source File
 # Begin Source File
 

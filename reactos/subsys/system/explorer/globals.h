@@ -127,8 +127,8 @@ struct IconCache {
 	void	init();
 
 	const Icon&	extract(LPCTSTR path, ICONCACHE_FLAGS flags=ICF_NORMAL);
-	const Icon&	extract(LPCTSTR path, int idx, ICONCACHE_FLAGS flags=ICF_HICON);
-	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int idx, ICONCACHE_FLAGS flags=ICF_HICON);
+	const Icon&	extract(LPCTSTR path, int icon_idx, ICONCACHE_FLAGS flags=ICF_HICON);
+	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int icon_idx, ICONCACHE_FLAGS flags=ICF_HICON);
 
 	const Icon&	add(HICON hIcon, ICON_TYPE type=IT_DYNAMIC);
 	const Icon&	add(int sys_idx/*, ICON_TYPE type=IT_SYSCACHE*/);

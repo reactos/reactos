@@ -1088,6 +1088,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\administration.ico"
+				>
+			</File>
+			<File
 				RelativePath="res\appicon.ico"
 				>
 			</File>
@@ -1117,6 +1121,14 @@
 			</File>
 			<File
 				RelativePath="res\config.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\control-panel.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\desktop-settings.ico"
 				>
 			</File>
 			<File
@@ -1958,6 +1970,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\minimize.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\network-conns.ico"
+				>
+			</File>
+			<File
 				RelativePath="res\network.ico"
 				>
 			</File>
@@ -1975,6 +1995,10 @@
 			</File>
 			<File
 				RelativePath="res\reactos.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\recent-documents.ico"
 				>
 			</File>
 			<File
@@ -1998,6 +2022,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\shutdown.ico"
+				>
+			</File>
+			<File
 				RelativePath="res\speaker.ico"
 				>
 			</File>
@@ -2007,6 +2035,10 @@
 			</File>
 			<File
 				RelativePath="res\toolbar.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\winefile.ico"
 				>
 			</File>
 		</Filter>
