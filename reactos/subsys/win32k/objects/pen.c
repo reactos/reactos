@@ -33,6 +33,8 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
    HPEN hPen;
    PGDIBRUSHOBJ PenObject;
    static const WORD wPatternAlternate[] = {0x5555};
+   static const WORD wPatternDash[] = {0x0F0F};
+   static const WORD wPatternDot[] = {0x3333};
 
    if (LogPen->lopnStyle > PS_INSIDEFRAME)
       return 0;
@@ -64,6 +66,21 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
       case PS_ALTERNATE:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
          PenObject->hbmPattern = NtGdiCreateBitmap(8, 1, 1, 1, (LPBYTE)wPatternAlternate);
+         break;
+
+      case PS_DOT:
+         PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
+         PenObject->hbmPattern = NtGdiCreateBitmap(8, 1, 1, 1, (LPBYTE)wPatternDot);
+         break;
+
+      case PS_DASH:
+         PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
+         PenObject->hbmPattern = NtGdiCreateBitmap(8, 1, 1, 1, (LPBYTE)wPatternDash);
+         break;
+
+      case PS_INSIDEFRAME:
+         /* FIXME: does it need some additional work? */
+         PenObject->flAttrs |= GDIBRUSH_IS_SOLID;
          break;
 
       default:
