@@ -325,6 +325,7 @@ RegDisablePredefinedCacheEx(VOID)
 {
     RtlEnterCriticalSection (&HandleTableCS);
     DefaultHandlesDisabled = TRUE;
+    DefaultHandleHKUDisabled = TRUE;
     RtlLeaveCriticalSection (&HandleTableCS);
     return ERROR_SUCCESS;
 }
