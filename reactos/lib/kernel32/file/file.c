@@ -1600,4 +1600,87 @@ CheckNameLegalDOS8Dot3A(
     return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetFinalPathNameByHandleA(IN HANDLE hFile,
+                          OUT LPSTR lpszFilePath,
+                          IN DWORD cchFilePath,
+                          IN DWORD dwFlags)
+{
+    WCHAR FilePathW[MAX_PATH];
+    UNICODE_STRING FilePathU;
+    DWORD PrevLastError;
+    DWORD Ret = 0;
+
+    if (cchFilePath != 0 &&
+        cchFilePath > sizeof(FilePathW) / sizeof(FilePathW[0]))
+    {
+        FilePathU.Length = 0;
+        FilePathU.MaximumLength = cchFilePath * sizeof(WCHAR);
+        FilePathU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           FilePathU.MaximumLength);
+        if (FilePathU.Buffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+    }
+    else
+    {
+        FilePathU.Length = 0;
+        FilePathU.MaximumLength = sizeof(FilePathW);
+        FilePathU.Buffer = FilePathW;
+    }
+
+    /* save the last error code */
+    PrevLastError = GetLastError();
+    SetLastError(ERROR_SUCCESS);
+
+    /* call the unicode version that does all the work */
+    Ret = GetFinalPathNameByHandleW(hFile,
+                                    FilePathU.Buffer,
+                                    cchFilePath,
+                                    dwFlags);
+
+    if (GetLastError() == ERROR_SUCCESS)
+    {
+        /* no error, restore the last error code and convert the string */
+        SetLastError(PrevLastError);
+
+        Ret = FilenameU2A_FitOrFail(lpszFilePath,
+                                    cchFilePath,
+                                    &FilePathU);
+    }
+
+    /* free allocated memory if necessary */
+    if (FilePathU.Buffer != FilePathW)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    FilePathU.Buffer);
+    }
+
+    return Ret;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetFinalPathNameByHandleW(IN HANDLE hFile,
+                          OUT LPWSTR lpszFilePath,
+                          IN DWORD cchFilePath,
+                          IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /* EOF */

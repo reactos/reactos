@@ -387,6 +387,8 @@ GetFileSize@8
 GetFileSizeEx@8
 GetFileTime@16
 GetFileType@4
+GetFinalPathNameByHandleA@16
+GetFinalPathNameByHandleW@16
 GetFirmwareEnvironmentVariableA@16
 GetFirmwareEnvironmentVariableW@16
 GetFullPathNameA@16

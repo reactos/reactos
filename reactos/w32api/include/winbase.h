@@ -1368,6 +1368,8 @@ BOOL WINAPI GetExitCodeThread(HANDLE,PDWORD);
 DWORD WINAPI GetFileAttributesA(LPCSTR);
 #if (_WIN32_WINNT >= 0x0600)
 BOOL WINAPI GetFileAttributesByHandle(HANDLE,LPDWORD,DWORD);
+DWORD WINAPI GetFinalPathNameByHandleA(HANDLE,LPSTR,DWORD,DWORD);
+DWORD WINAPI GetFinalPathNameByHandleW(HANDLE,LPWSTR,DWORD,DWORD);
 #endif
 DWORD WINAPI GetFileAttributesW(LPCWSTR);
 BOOL WINAPI GetFileAttributesExA(LPCSTR,GET_FILEEX_INFO_LEVELS,PVOID);
@@ -2042,8 +2044,11 @@ typedef PCACTCTXW PCACTCTX;
 #define GetEnvironmentStrings GetEnvironmentStringsW
 #define GetEnvironmentVariable GetEnvironmentVariableW
 #define GetFileAttributes GetFileAttributesW
-#define GetFileSecurity GetFileSecurityW
 #define GetFileAttributesEx GetFileAttributesExW
+#define GetFileSecurity GetFileSecurityW
+#if (_WIN32_WINNT >= 0x0600)
+#define GetFinalPathNameByHandle GetFinalPathNameByHandleW
+#endif
 #define GetFullPathName GetFullPathNameW
 #define GetLogicalDriveStrings GetLogicalDriveStringsW
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
@@ -2241,8 +2246,11 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define GetDriveType GetDriveTypeA
 #define GetEnvironmentVariable GetEnvironmentVariableA
 #define GetFileAttributes GetFileAttributesA
-#define GetFileSecurity GetFileSecurityA
 #define GetFileAttributesEx GetFileAttributesExA
+#define GetFileSecurity GetFileSecurityA
+#if (_WIN32_WINNT >= 0x0600)
+#define GetFinalPathNameByHandle GetFinalPathNameByHandleA
+#endif
 #define GetFullPathName GetFullPathNameA
 #define GetLogicalDriveStrings GetLogicalDriveStringsA
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
