@@ -1679,8 +1679,85 @@ GetFinalPathNameByHandleW(IN HANDLE hFile,
                           IN DWORD cchFilePath,
                           IN DWORD dwFlags)
 {
+    if (dwFlags & ~(VOLUME_NAME_DOS | VOLUME_NAME_GUID | VOLUME_NAME_NT |
+                    VOLUME_NAME_NONE | FILE_NAME_NORMALIZED | FILE_NAME_OPENED))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
     UNIMPLEMENTED;
     return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFileBandwidthReservation(IN HANDLE hFile,
+                            IN DWORD nPeriodMilliseconds,
+                            IN DWORD nBytesPerPeriod,
+                            IN BOOL bDiscardable,
+                            OUT LPDWORD lpTransferSize,
+                            OUT LPDWORD lpNumOutstandingRequests)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetFileBandwidthReservation(IN HANDLE hFile,
+                            OUT LPDWORD lpPeriodMilliseconds,
+                            OUT LPDWORD lpBytesPerPeriod,
+                            OUT LPBOOL pDiscardable,
+                            OUT LPDWORD lpTransferSize,
+                            OUT LPDWORD lpNumOutstandingRequests)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetFileCompletionNotificationModes(IN HANDLE FileHandle,
+                                   IN UCHAR Flags)
+{
+    if (Flags & ~(FILE_SKIP_COMPLETION_PORT_ON_SUCCESS | FILE_SKIP_SET_EVENT_ON_HANDLE))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+OpenFileById(IN HANDLE hFile,
+             IN LPFILE_ID_DESCRIPTOR lpFileID,
+             IN DWORD dwDesiredAccess,
+             IN DWORD dwShareMode,
+             IN LPSECURITY_ATTRIBUTES lpSecurityAttributes  OPTIONAL,
+             IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return INVALID_HANDLE_VALUE;
 }
 
 /* EOF */

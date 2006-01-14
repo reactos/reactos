@@ -2171,29 +2171,29 @@ typedef struct _EXCEPTION_POINTERS {
 	PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS,*PEXCEPTION_POINTERS,*LPEXCEPTION_POINTERS;
 typedef union _LARGE_INTEGER {
-  struct {
-    DWORD LowPart;
-    LONG  HighPart;
-  } u;
 #if ! defined(NONAMELESSUNION) || defined(__cplusplus)
   _ANONYMOUS_STRUCT struct {
     DWORD LowPart;
     LONG  HighPart;
   };
 #endif /* NONAMELESSUNION */
+  struct {
+    DWORD LowPart;
+    LONG  HighPart;
+  } u;
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 typedef union _ULARGE_INTEGER {
-  struct {
-    DWORD LowPart;
-    DWORD HighPart;
-  } u;
 #if ! defined(NONAMELESSUNION) || defined(__cplusplus)
   _ANONYMOUS_STRUCT struct {
     DWORD LowPart;
     DWORD HighPart;
   };
 #endif /* NONAMELESSUNION */
+  struct {
+    DWORD LowPart;
+    DWORD HighPart;
+  } u;
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 typedef struct _LUID {

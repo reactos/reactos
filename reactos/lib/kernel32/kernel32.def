@@ -382,6 +382,7 @@ GetFileAttributesW@4
 GetFileAttributesByHandle@12
 GetFileAttributesExA@12
 GetFileAttributesExW@12
+GetFileBandwidthReservation@24
 GetFileInformationByHandle@8
 GetFileSize@8
 GetFileSizeEx@8
@@ -663,6 +664,7 @@ OpenConsoleW@16
 OpenEventA@12
 OpenEventW@12
 OpenFile@12
+OpenFileById@24
 OpenFileMappingA@12
 OpenFileMappingW@12
 OpenJobObjectA@12
@@ -822,6 +824,8 @@ SetFileApisToOEM@0
 SetFileAttributesA@8
 SetFileAttributesW@8
 SetFileAttributesByHandle@12
+SetFileBandwidthReservation@24
+SetFileCompletionNotificationModes@8
 SetFilePointer@16
 SetFilePointerEx@20
 SetFileShortNameA@8
