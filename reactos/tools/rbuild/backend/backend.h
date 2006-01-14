@@ -32,10 +32,12 @@ public:
 	{
 		static std::map<std::string,Factory*>* factories;
 		static int ref;
+		std::string m_name;
+		std::string m_description;
 
 	protected:
 
-		Factory ( const std::string& name_ );
+		Factory ( const std::string& name_, const std::string& description_ );
 		virtual ~Factory();
 
 		virtual Backend* operator() ( Project&,
@@ -45,6 +47,19 @@ public:
 		static Backend* Create ( const std::string& name,
 		                         Project& project,
 		                         Configuration& configuration );
+
+		static std::map<std::string,Factory*>::iterator map_begin(void)
+		{
+			return factories->begin();
+		}
+
+		static std::map<std::string,Factory*>::iterator map_end(void)
+		{
+			return factories->end();
+		}
+
+		const char *Name(void) { return m_name.c_str(); }
+		const char *Description(void) { return m_description.c_str(); }
 	};
 
 protected:

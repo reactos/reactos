@@ -38,7 +38,7 @@ static class MSVCFactory : public Backend::Factory
 {
 	public:
 
-		MSVCFactory() : Factory("MSVC") {}
+		MSVCFactory() : Factory("MSVC", "Microsoft Visual C") {}
 		Backend *operator() (Project &project,
 		                     Configuration& configuration)
 		{

@@ -17,6 +17,7 @@
  */
 #include "pch.h"
 #include <typeinfo>
+#include <algorithm>
 
 #include <stdio.h>
 #ifdef WIN32
@@ -239,9 +240,13 @@ main ( int argc, char** argv )
 		printf ( "  -vs{version}  Version of MS VS project files. Default is %s.\n", MS_VS_DEF_VERSION );
 		printf ( "\n" );
 		printf ( "  buildsystem   Target build system. Can be one of:\n" );
-		printf ( "                 mingw   MinGW\n" );
-		printf ( "                 devcpp  DevC++\n" );
-		printf ( "                 msvc    MS Visual Studio\n" );
+ 
+ 		std::map<std::string,Backend::Factory*>::iterator iter;
+ 		for (iter = Backend::Factory::map_begin(); iter != Backend::Factory::map_end(); iter++)
+ 		{
+ 			Backend::Factory *factory = iter->second;
+ 			printf ( "                %-10s %s\n", factory->Name(), factory->Description());
+ 		}
 		return 1;
 	}
 	try

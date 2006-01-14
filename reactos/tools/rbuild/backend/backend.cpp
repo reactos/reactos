@@ -29,13 +29,15 @@ Backend::Factory::factories = NULL;
 int
 Backend::Factory::ref = 0;
 
-Backend::Factory::Factory ( const std::string& name_ )
+Backend::Factory::Factory ( const std::string& name_, const std::string& description_ )
 {
 	string name(name_);
 	strlwr ( &name[0] );
 	if ( !ref++ )
 		factories = new map<string,Factory*>;
 	(*factories)[name] = this;
+	m_name = name;
+	m_description = description_;
 }
 
 Backend::Factory::~Factory ()

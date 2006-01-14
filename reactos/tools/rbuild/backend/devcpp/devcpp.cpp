@@ -32,7 +32,7 @@ static class DevCppFactory : public Backend::Factory
 {
 	public:
 
-		DevCppFactory() : Factory("devcpp") {}
+		DevCppFactory() : Factory("devcpp", "Dev C++") {}
 		Backend *operator() (Project &project,
 		                     Configuration& configuration)
 		{

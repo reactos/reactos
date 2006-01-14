@@ -58,7 +58,7 @@ v2s ( const string_list& v, int wrap_at )
 static class MingwFactory : public Backend::Factory
 {
 public:
-	MingwFactory() : Factory ( "mingw" ) {}
+	MingwFactory() : Factory ( "mingw", "Minimalist GNU Win32" ) {}
 	Backend* operator() ( Project& project,
 	                      Configuration& configuration )
 	{
