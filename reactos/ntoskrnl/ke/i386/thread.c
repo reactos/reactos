@@ -122,12 +122,12 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         PKKINIT_FRAME InitFrame;
         InitFrame = (PKKINIT_FRAME)((ULONG_PTR)Thread->InitialStack - sizeof(KKINIT_FRAME));
         DPRINT("Setting up a kernel thread with the Frame at: %x\n", InitFrame);
-extern ULONG kernel_stack[];
+
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
-        DbgPrint("->a Ldr: %d kernel_stack:0%p r0x%p InitialStack: %p Initframe: %p-%p FxSav: %p-%p\n", KeLoaderBlock.ModsCount, &kernel_stack, PAGE_ROUND_UP(&kernel_stack), Thread->InitialStack, InitFrame, (ULONG_PTR)InitFrame + sizeof(KKINIT_FRAME), FxSaveArea, (ULONG_PTR)FxSaveArea + sizeof(FX_SAVE_AREA));
+
         RtlZeroMemory(FxSaveArea, sizeof(FX_SAVE_AREA));
-        DbgPrint("->b Ldr: %d kernel_stack:0%p r0x%p InitialStack: %p Initframe: %p-%p FxSav: %p-%p\n", KeLoaderBlock.ModsCount, &kernel_stack, PAGE_ROUND_UP(&kernel_stack), Thread->InitialStack, InitFrame, (ULONG_PTR)InitFrame + sizeof(KKINIT_FRAME), FxSaveArea, (ULONG_PTR)FxSaveArea + sizeof(FX_SAVE_AREA));
+
         Thread->NpxState = NPX_STATE_INVALID;
 
         /* Setup the Stack for KiThreadStartup and Context Switching */
