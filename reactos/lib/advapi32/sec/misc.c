@@ -872,15 +872,14 @@ LookupAccountSidW (
 	PSID_NAME_USE peUse )
 {
 	LSA_UNICODE_STRING SystemName;
-	LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-	LSA_HANDLE PolicyHandle = INVALID_HANDLE_VALUE;
+        LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
+	LSA_HANDLE PolicyHandle = NULL;
 	NTSTATUS Status;
 	PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
 	PLSA_TRANSLATED_NAME TranslatedName = NULL;
 	BOOL ret;
 
 	RtlInitUnicodeString ( &SystemName, pSystemName );
-	ZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
 	Status = LsaOpenPolicy ( &SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle );
 	if ( !NT_SUCCESS(Status) )
 	{
@@ -910,7 +909,8 @@ LookupAccountSidW (
 			else
 			{
 				*pdwAccountName = dwSrcLen;
-				wcscpy ( pAccountName, TranslatedName->Name.Buffer );
+				RtlCopyMemory ( pAccountName, TranslatedName->Name.Buffer, TranslatedName->Name.Length );
+                                pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
 			}
 			if ( peUse )
 				*peUse = TranslatedName->Use;
@@ -929,7 +929,8 @@ LookupAccountSidW (
 				else
 				{
 					*pdwDomainName = dwSrcLen;
-					wcscpy ( pDomainName, ReferencedDomain->Domains[0].Name.Buffer );
+					RtlCopyMemory ( pDomainName, ReferencedDomain->Domains[0].Name.Buffer, ReferencedDomain->Domains[0].Name.Length );
+                                        pDomainName[ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR)] = L'\0';
 				}
 			}
 		}
