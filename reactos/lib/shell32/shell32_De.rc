@@ -115,7 +115,7 @@ FONT 10, "MS Shell Dlg"
  ICON "", 1088, 10, 10, 14, 16
  LTEXT "", 100, 30, 10, 137, 10
  LTEXT "", 101, 30, 22, 137, 10
- LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", 98, 8, 55, 137, 10
+ LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", 98, 8, 55, 170, 10
 }
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95

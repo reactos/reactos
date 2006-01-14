@@ -165,7 +165,7 @@ BEGIN
   IDS_CPLSYSTEMNAME "System"
   IDS_CPLSYSTEMDESCRIPTION "See information about your computer and change various system and hardware settings."
   IDS_DRIVE "Drive:			%s"
-  IDS_SPACE "Space available		%s"
+  IDS_SPACE "Space available:		%s"
   IDS_MIN "Minimum allowed:	%s"
   IDS_REC "Recommended:		%s"
   IDS_CUR "Currently allocated: %s"

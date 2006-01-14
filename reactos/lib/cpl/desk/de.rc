@@ -24,8 +24,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Bildschrimschoner"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "This space is intentionally left blank",IDC_STATIC,66,
-                    90,112,8
+    GROUPBOX        "&Bildschrimschoner",IDC_SCREENS_DUMMY, 5, 7, 238, 136
+    
+    LTEXT           "Liste der Bildschrimschoner:",IDC_STATIC,13, 24, 100, 9
+    CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,13, 34, 171, 69
+    PUSHBUTTON      "&Löschen",IDC_SCREENS_DELETE, 190,47,45,10
+    PUSHBUTTON      "&Hinzufügen",IDC_SCREENS_ADD_BUTTON,    190,34,45,10
+
+    PUSHBUTTON      "&Einstellungen...",IDC_SCREENS_SETTINGS,140, 124, 55, 12,WS_GROUP
+    PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC,200, 124, 37, 12
+
+    CONTROL         "&Passwortschutz bei Reaktivierung.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 122, 18
+
+    LTEXT           "&Warte:",IDC_STATIC,13, 110, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,38, 109, 31, 12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,52, 109, 12, 12
+    LTEXT           "Minuten, bis der Bildschirmschoner angezeigt wird.",IDC_STATIC,75, 111, 165, 9
+
+    GROUPBOX        "&Energiesparfunktion des Bildschirms",IDC_SCREENS_DUMMY2,5, 146, 238, 35
+    LTEXT           "Um die Energiesparfunktion des Bildschrims einzustellen, klicken Sie auf Energiesparfunktion.",
+                    IDC_STATIC,16, 159, 155, 19
+    PUSHBUTTON      "Energ&iesparfunk.",IDC_SCREENS_POWER_BUTTON,175, 162, 60, 12
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188

@@ -1,9 +1,26 @@
+// German (De) resources by DJ_Smith (dj_smith_reactos at online.de)
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Geschwindigkeit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Tastaturgeschwindikeit",-1,73,74,130,8
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
 
 STRINGTABLE
 BEGIN
   IDS_CPLNAME_1 "Maus"
-  IDS_CPLDESCRIPTION_1 "Eigenschaften von Maus."
+  IDS_CPLDESCRIPTION_1 "Mauseinstellungen ändern."
   IDS_CPLNAME_2 "Tastatur"
-  IDS_CPLDESCRIPTION_2 "Eigenschaften von Tastatur."
+  IDS_CPLDESCRIPTION_2 "Tastatureinstellungen ändern."
 END
