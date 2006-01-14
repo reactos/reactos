@@ -19,7 +19,6 @@
 
 #include <precomp.h>
 
-
 static GENERIC_MAPPING FileGenericMapping =
 {
     FILE_GENERIC_READ,
@@ -27,6 +26,7 @@ static GENERIC_MAPPING FileGenericMapping =
     FILE_GENERIC_EXECUTE,
     FILE_ALL_ACCESS
 };
+
 
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,
@@ -173,7 +173,7 @@ PrintFileDacl(IN LPTSTR FilePath,
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     DWORD SDSize = 0;
     TCHAR FullFileName[MAX_PATH + 1];
-    BOOL Ret = FALSE;
+    BOOL Error = FALSE, Ret = FALSE;
 
     Indent = _tcslen(FilePath) + _tcslen(FileName);
     if (Indent++ > MAX_PATH - 1)
@@ -250,16 +250,13 @@ PrintFileDacl(IN LPTSTR FilePath,
                         {
                             if (GetLastError() == ERROR_NONE_MAPPED)
                             {
-                                if (!ConvertSidToStringSid(Sid,
-                                                           &SidString))
-                                {
-                                    break;
-                                }
+                                goto BuildSidString;
                             }
                             else
                             {
                                 if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
                                 {
+                                    Error = TRUE;
                                     break;
                                 }
 
@@ -269,6 +266,7 @@ PrintFileDacl(IN LPTSTR FilePath,
                                 if (Name == NULL)
                                 {
                                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                    Error = TRUE;
                                     break;
                                 }
 
@@ -285,8 +283,19 @@ PrintFileDacl(IN LPTSTR FilePath,
                                     HeapFree(GetProcessHeap(),
                                              0,
                                              Name);
-                                    break;
+                                    Name = NULL;
+                                    goto BuildSidString;
                                 }
+                            }
+                        }
+                        else
+                        {
+BuildSidString:
+                            if (!ConvertSidToStringSid(Sid,
+                                                       &SidString))
+                            {
+                                Error = TRUE;
+                                break;
                             }
                         }
 
@@ -389,7 +398,8 @@ PrintFileDacl(IN LPTSTR FilePath,
                                     DWORD Access;
                                     UINT uID;
                                 }
-                                AccessRights[] = {
+                                AccessRights[] =
+                                {
                                     {FILE_WRITE_ATTRIBUTES, IDS_FILE_WRITE_ATTRIBUTES},
                                     {FILE_READ_ATTRIBUTES, IDS_FILE_READ_ATTRIBUTES},
                                     {FILE_DELETE_CHILD, IDS_FILE_DELETE_CHILD},
@@ -467,7 +477,8 @@ PrintSpecialAccess:
                         AceIndex++;
                     }
 
-                    Ret = TRUE;
+                    if (!Error)
+                        Ret = TRUE;
                 }
                 else
                 {
@@ -512,6 +523,7 @@ int _main (int argc, char *argv[])
         TCHAR *FilePart = NULL;
         WIN32_FIND_DATA FindData;
         HANDLE hFind;
+        DWORD LastError;
         BOOL ContinueAccessDenied = FALSE;
 
         if (argc > 2)
@@ -553,11 +565,15 @@ int _main (int argc, char *argv[])
                         if (!PrintFileDacl(FullPath,
                                            FindData.cFileName))
                         {
-                            if (GetLastError() == ERROR_ACCESS_DENIED &&
-                                !ContinueAccessDenied)
+                            LastError = GetLastError();
+
+                            if (LastError == ERROR_ACCESS_DENIED &&
+                                ContinueAccessDenied)
                             {
-                                break;
+                                PrintErrorMessage(LastError);
                             }
+                            else
+                                break;
                         }
                         else
                             _tprintf(_T("\n"));
