@@ -183,6 +183,7 @@ subsys\ntvdm\ntvdm.exe                  1
 subsys\smss\smss.exe                    1
 subsys\win32k\win32k.sys                1
 subsys\system\autochk\autochk.exe       1
+subsys\system\cacls\cacls.exe           1
 subsys\system\calc\calc.exe             1
 subsys\system\cmd\cmd.exe               1
 subsys\system\devmgr\devmgrapp.exe      1
