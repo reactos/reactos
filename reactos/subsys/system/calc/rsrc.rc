@@ -21,6 +21,8 @@
 #include <windows.h>
 #include "resource.h"
 
+IDI_CALCICON ICON "calculator.ico"
+
 #include "En.rc"
 #include "Cz.rc"
 #include "De.rc"

@@ -172,7 +172,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = hInst;
-    wc.hIcon         = LoadIcon( hInst, appname );
+    wc.hIcon         = LoadIcon(hInst, MAKEINTRESOURCE(IDI_CALCICON));
     wc.hCursor       = LoadCursor( NULL, IDI_APPLICATION );
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
     wc.lpszMenuName  = NULL;
