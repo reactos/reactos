@@ -30,6 +30,7 @@ static RTL_CRITICAL_SECTION HandleTableCS;
 static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static HANDLE ProcessHeap;
 static BOOLEAN DefaultHandlesDisabled = FALSE;
+static BOOLEAN DefaultHandleHKUDisabled = FALSE;
 
 /* PROTOTYPES ***************************************************************/
 
@@ -143,7 +144,7 @@ MapDefaultKey (OUT PHANDLE RealKey,
 {
   PHANDLE Handle;
   ULONG Index;
-  BOOLEAN DoOpen;
+  BOOLEAN DoOpen, DefDisabled;
   NTSTATUS Status = STATUS_SUCCESS;
 
   TRACE("MapDefaultKey (Key %x)\n", Key);
@@ -162,8 +163,13 @@ MapDefaultKey (OUT PHANDLE RealKey,
     }
 
   RtlEnterCriticalSection (&HandleTableCS);
-  
-  if (!DefaultHandlesDisabled)
+
+  if (Key == HKEY_CURRENT_USER)
+      DefDisabled = DefaultHandleHKUDisabled;
+  else
+      DefDisabled = DefaultHandlesDisabled;
+
+  if (!DefDisabled)
     {
       Handle = &DefaultHandleTable[Index];
       DoOpen = (*Handle == NULL);
@@ -183,7 +189,7 @@ MapDefaultKey (OUT PHANDLE RealKey,
 
    if (NT_SUCCESS(Status))
      {
-       if (!DefaultHandlesDisabled)
+       if (!DefDisabled)
           *RealKey = *Handle;
        else
           *(PULONG_PTR)Handle |= 0x1;
@@ -291,6 +297,21 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
   return NtOpenKey (KeyHandle,
 		    MAXIMUM_ALLOWED,
 		    &Attributes);
+}
+
+
+/************************************************************************
+ *  RegDisablePredefinedCache
+ *
+ * @implemented
+ */
+LONG WINAPI
+RegDisablePredefinedCache(VOID)
+{
+    RtlEnterCriticalSection (&HandleTableCS);
+    DefaultHandleHKUDisabled = TRUE;
+    RtlLeaveCriticalSection (&HandleTableCS);
+    return ERROR_SUCCESS;
 }
 
 
@@ -1630,6 +1651,32 @@ RegDeleteTreeA(IN HKEY hKey,
     RtlFreeUnicodeString(&SubKeyName);
 
     return Ret;
+}
+
+
+/************************************************************************
+ *  RegDisableReflectionKey
+ *
+ * @unimplemented
+ */
+LONG WINAPI
+RegDisableReflectionKey(IN HKEY hBase)
+{
+    DPRINT1("RegDisableReflectionKey(0x%p) UNIMPLEMENTED!\n", hBase);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *  RegEnableReflectionKey
+ *
+ * @unimplemented
+ */
+LONG WINAPI
+RegEnableReflectionKey(IN HKEY hBase)
+{
+    DPRINT1("RegEnableReflectionKey(0x%p) UNIMPLEMENTED!\n", hBase);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -3368,6 +3415,21 @@ RegQueryMultipleValuesW (HKEY hKey,
     }
 
   return (lpValueBuf != NULL && *ldwTotsize <= maxBytes) ? ERROR_SUCCESS : ERROR_MORE_DATA;
+}
+
+
+/************************************************************************
+ *  RegQueryReflectionKey
+ *
+ * @unimplemented
+ */
+LONG WINAPI
+RegQueryReflectionKey(IN HKEY hBase,
+                      OUT BOOL* bIsReflectionDisabled)
+{
+    DPRINT1("RegQueryReflectionKey(0x%p, 0x%p) UNIMPLEMENTED!\n",
+            hBase, bIsReflectionDisabled);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 

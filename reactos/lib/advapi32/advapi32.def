@@ -482,8 +482,10 @@ RegDeleteTreeA@8
 RegDeleteTreeW@8
 RegDeleteValueA@8
 RegDeleteValueW@8
-;RegDisablePredefinedCache
+RegDisablePredefinedCache@0
 RegDisablePredefinedCacheEx@0
+RegDisableReflectionKey@4
+RegEnableReflectionKey@4
 RegEnumKeyA@16
 RegEnumKeyExA@32
 RegEnumKeyExW@32
@@ -508,6 +510,7 @@ RegQueryInfoKeyA@48
 RegQueryInfoKeyW@48
 RegQueryMultipleValuesA@20
 RegQueryMultipleValuesW@20
+RegQueryReflectionKey@8
 RegQueryValueA@16
 RegQueryValueExA@24
 RegQueryValueExW@24
