@@ -187,4 +187,29 @@ CancelIo(HANDLE hFile)
   return(TRUE);
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+CancelIoEx(IN HANDLE hFile,
+           IN LPOVERLAPPED lpOverlapped)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+CancelSynchronousIo(IN HANDLE hThread)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */

@@ -70,6 +70,8 @@ CallNamedPipeA@28
 CallNamedPipeW@28
 CancelDeviceWakeupRequest@4
 CancelIo@4
+CancelIoEx@8
+CancelSynchronousIo@4
 CancelTimerQueueTimer@8
 CancelWaitableTimer@4
 ChangeTimerQueueTimer@16
