@@ -248,7 +248,7 @@ PrintFileDacl(IN LPTSTR FilePath,
                                               &DomainSize,
                                               &Use))
                         {
-                            if (GetLastError() == ERROR_NONE_MAPPED)
+                            if (GetLastError() == ERROR_NONE_MAPPED || NameSize == 0)
                             {
                                 goto BuildSidString;
                             }
@@ -271,7 +271,9 @@ PrintFileDacl(IN LPTSTR FilePath,
                                 }
 
                                 Domain = Name + NameSize;
-                                Name[0] = Domain[0] = _T('\0');
+                                Name[0] = _T('\0');
+                                if (DomainSize != 0)
+                                    Domain[0] = _T('\0');
                                 if (!LookupAccountSid(NULL,
                                                       Sid,
                                                       Name,
