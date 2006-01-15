@@ -48,15 +48,17 @@ PVOID KeRaiseUserExceptionDispatcher = NULL;
 
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 
-/* We allocate 5 pages, but we only use 4. The 5th is to guarantee page alignment */
-ULONG kernel_stack[5120];
-ULONG double_trap_stack[5120];
+/* the initial stacks are declared in main_asm.S */
+extern ULONG kernel_stack;
+extern ULONG kernel_stack_top;
+extern ULONG kernel_trap_stack;
+extern ULONG kernel_trap_stack_top;
 
 /* These point to the aligned 3 pages */
-ULONG init_stack;
-ULONG init_stack_top;
-ULONG trap_stack;
-ULONG trap_stack_top;
+ULONG init_stack = (ULONG)&kernel_stack;
+ULONG init_stack_top = (ULONG)&kernel_stack_top;
+ULONG trap_stack = (ULONG)&kernel_trap_stack;
+ULONG trap_stack_top = (ULONG)&kernel_trap_stack_top;
 
 /* Cached modules from the loader block */
 PLOADER_MODULE CachedModules[MaximumCachedModuleType];
@@ -154,13 +156,6 @@ _main(ULONG MultiBootMagic,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_OPTIONAL_HEADER OptHead;
     CHAR* s;
-
-    /* Set up the Stacks (Initial Kernel Stack and Double Trap Stack)
-       and save a page for the fx savings area */
-    trap_stack = PAGE_ROUND_UP(&double_trap_stack) + PAGE_SIZE;
-    trap_stack_top = trap_stack + 3 * PAGE_SIZE;
-    init_stack = PAGE_ROUND_UP(&kernel_stack) + PAGE_SIZE;
-    init_stack_top = init_stack + 3 * PAGE_SIZE;
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
     memcpy(&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
