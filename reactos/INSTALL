@@ -71,8 +71,10 @@ contents. Then burn the CD image, boot from it, and follow instructions.
 5. Help
 
 If you run into problems or have suggestions for making ReactOS better, please
-visit the address below and subscribe to one or more of the mailing lists.
+visit the address below. Mailing lists are available for a variety of topics, 
+bugs should be submitted to bugzilla and general chat takes place in the forums, 
+or #reactos on freenode
 
-http://www.reactos.com/en/content/view/full/66
+http://www.reactos.org
 
 ReactOS Development Team
