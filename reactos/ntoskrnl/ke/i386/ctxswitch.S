@@ -139,7 +139,7 @@ SaveTrapFrameForKDB_Return:
     mov dword ptr [ebx+KPCR_NPX_THREAD], 0
     test byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_DIRTY
     jz 3f
-    cmp dword ptr _FxsrSupport, 0
+    cmp dword ptr _KeI386FxsrPresent, 0
     je 1f
     fxsave [eax-SIZEOF_FX_SAVE_AREA]
     jmp 2f
