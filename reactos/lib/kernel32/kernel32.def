@@ -243,9 +243,11 @@ FindFirstFileA@8
 FindFirstFileExA@24
 FindFirstFileExW@24
 FindFirstFileW@8
+FindFirstStreamW@16
 FindNextChangeNotification@4
 FindNextFileA@8
 FindNextFileW@8
+FindNextStreamW@8
 FindFirstVolumeA@8
 FindFirstVolumeMountPointA@12
 FindFirstVolumeMountPointW@12

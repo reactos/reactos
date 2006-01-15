@@ -19,10 +19,6 @@
 
 /* TYPES ********************************************************************/
 
-#ifndef offsetof
-#define	offsetof(TYPE, MEMBER)	((size_t) &( ((TYPE *) 0)->MEMBER ))
-#endif
-
 #define FIND_DATA_SIZE	(16*1024)
 
 typedef struct _KERNEL32_FIND_FILE_DATA
@@ -32,8 +28,40 @@ typedef struct _KERNEL32_FIND_FILE_DATA
    PFILE_BOTH_DIR_INFORMATION pFileInfo;
 } KERNEL32_FIND_FILE_DATA, *PKERNEL32_FIND_FILE_DATA;
 
+typedef struct _KERNEL32_FIND_STREAM_DATA
+{
+    STREAM_INFO_LEVELS InfoLevel;
+    PFILE_STREAM_INFORMATION pFileStreamInfo;
+    PFILE_STREAM_INFORMATION pCurrent;
+} KERNEL32_FIND_STREAM_DATA, *PKERNEL32_FIND_STREAM_DATA;
+
+typedef enum _KERNEL32_FIND_DATA_TYPE
+{
+    FileFind,
+    StreamFind
+} KERNEL32_FIND_DATA_TYPE;
+
+typedef struct _KERNEL32_FIND_DATA_HEADER
+{
+    KERNEL32_FIND_DATA_TYPE Type;
+} KERNEL32_FIND_DATA_HEADER, *PKERNEL32_FIND_DATA_HEADER;
+
 
 /* FUNCTIONS ****************************************************************/
+
+static __inline PKERNEL32_FIND_FILE_DATA
+HandleToFindData(IN HANDLE Handle)
+{
+    PKERNEL32_FIND_DATA_HEADER FindData = (PKERNEL32_FIND_DATA_HEADER)Handle;
+
+    if (Handle != NULL && Handle != INVALID_HANDLE_VALUE &&
+        FindData->Type == FileFind)
+    {
+        return (PKERNEL32_FIND_FILE_DATA)(FindData + 1);
+    }
+
+    return NULL;
+}
 
 VOID
 InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
@@ -122,13 +150,22 @@ InternalFindNextFile (
         PUNICODE_STRING SearchPattern
 	)
 {
+	PKERNEL32_FIND_DATA_HEADER IHeader;
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
 	NTSTATUS Status;
 
 	DPRINT("InternalFindNextFile(%lx)\n", hFindFile);
 
-	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
+        IHeader = (PKERNEL32_FIND_DATA_HEADER)hFindFile;
+        if (hFindFile == NULL || hFindFile == INVALID_HANDLE_VALUE ||
+            IHeader->Type != FileFind)
+        {
+            SetLastError (ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+
+        IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 
         while (1)
         {
@@ -178,6 +215,7 @@ InternalFindFirstFile (
 	)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
+	PKERNEL32_FIND_DATA_HEADER IHeader;
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
 	UNICODE_STRING NtPathU;
@@ -302,10 +340,11 @@ InternalFindFirstFile (
 
 	DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
 
-	IData = RtlAllocateHeap (hProcessHeap,
-	                         HEAP_ZERO_MEMORY,
-	                         sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
-	if (NULL == IData)
+	IHeader = RtlAllocateHeap (hProcessHeap,
+	                           HEAP_ZERO_MEMORY,
+                                   sizeof(KERNEL32_FIND_DATA_HEADER) +
+	                               sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
+	if (NULL == IHeader)
 	{
 	   RtlFreeHeap (hProcessHeap,
 	                0,
@@ -319,6 +358,9 @@ InternalFindFirstFile (
 	   SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	   return NULL;
 	}
+
+ 	IHeader->Type = FileFind;
+ 	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 
 	/* change pattern: "*.*" --> "*" */
 	if (wcscmp (SearchPattern, L"*.*"))
@@ -348,7 +390,7 @@ InternalFindFirstFile (
 
 	if (!NT_SUCCESS(Status))
 	{
-	   RtlFreeHeap (hProcessHeap, 0, IData);
+	   RtlFreeHeap (hProcessHeap, 0, IHeader);
 	   if (NULL != SlashlessFileName)
 	   {
 	      RtlFreeHeap(hProcessHeap,
@@ -362,7 +404,7 @@ InternalFindFirstFile (
 	IData->pFileInfo->FileIndex = 0;
         IData->DirectoryOnly = DirectoryOnly;
 
-        bResult = InternalFindNextFile((HANDLE)IData, &PatternStr);
+        bResult = InternalFindNextFile((HANDLE)IHeader, &PatternStr);
 	if (NULL != SlashlessFileName)
 	{
 	   RtlFreeHeap(hProcessHeap,
@@ -372,11 +414,11 @@ InternalFindFirstFile (
 
         if (!bResult)
         {
-            FindClose((HANDLE)IData);
+            FindClose((HANDLE)IHeader);
             return NULL;
         }
 
-	return IData;
+	return (HANDLE)IHeader;
 }
 
 
@@ -390,6 +432,7 @@ FindFirstFileA (
 	LPWIN32_FIND_DATAA	lpFindFileData
 	)
 {
+	PKERNEL32_FIND_DATA_HEADER IHeader;
 	PKERNEL32_FIND_FILE_DATA IData;
 	UNICODE_STRING FileNameU;
 	ANSI_STRING FileName;
@@ -407,15 +450,17 @@ FindFirstFileA (
 		                             &FileName,
 		                             TRUE);
 
-	IData = InternalFindFirstFile (FileNameU.Buffer, FALSE);
+	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE);
 
 	RtlFreeUnicodeString (&FileNameU);
 
-	if (IData == NULL)
+	if (IHeader == NULL)
 	{
 		DPRINT("Failing request\n");
 		return INVALID_HANDLE_VALUE;
 	}
+
+	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 
 	DPRINT("IData->pFileInfo->FileNameLength %d\n",
 	       IData->pFileInfo->FileNameLength);
@@ -424,7 +469,7 @@ FindFirstFileA (
         InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
 
 
-	return (HANDLE)IData;
+	return (HANDLE)IHeader;
 }
 
 
@@ -439,19 +484,13 @@ FindNextFileA (
 {
 	PKERNEL32_FIND_FILE_DATA IData;
 
-	if (hFindFile == INVALID_HANDLE_VALUE)
-	{
-		SetLastError (ERROR_INVALID_HANDLE);
-		DPRINT("Failing request\n");
-		return FALSE;
-	}
-
-	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 	if (!InternalFindNextFile (hFindFile, NULL))
 	{
 		DPRINT("InternalFindNextFile() failed\n");
 		return FALSE;
 	}
+
+	IData = (PKERNEL32_FIND_FILE_DATA)((PKERNEL32_FIND_DATA_HEADER)hFindFile + 1);
 
 	DPRINT("IData->pFileInfo->FileNameLength %d\n",
 	       IData->pFileInfo->FileNameLength);
@@ -472,7 +511,7 @@ FindClose (
 	HANDLE	hFindFile
 	)
 {
-	PKERNEL32_FIND_FILE_DATA IData;
+	PKERNEL32_FIND_DATA_HEADER IHeader;
 
 	DPRINT("FindClose(hFindFile %x)\n",hFindFile);
 
@@ -482,10 +521,33 @@ FindClose (
 		return FALSE;
 	}
 
-	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
+	IHeader = (PKERNEL32_FIND_DATA_HEADER)hFindFile;
 
-	CloseHandle (IData->DirectoryHandle);
-	RtlFreeHeap (hProcessHeap, 0, IData);
+	switch (IHeader->Type)
+	{
+		case FileFind:
+		{
+			PKERNEL32_FIND_FILE_DATA IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
+			CloseHandle (IData->DirectoryHandle);
+			break;
+		}
+
+		case StreamFind:
+		{
+			PKERNEL32_FIND_STREAM_DATA IData = (PKERNEL32_FIND_STREAM_DATA)(IHeader + 1);
+			if (IData->pFileStreamInfo != NULL)
+			{
+				RtlFreeHeap (hProcessHeap, 0, IData->pFileStreamInfo);
+			}
+			break;
+		}
+
+		default:
+			SetLastError (ERROR_INVALID_HANDLE);
+			return FALSE;
+	}
+
+	RtlFreeHeap (hProcessHeap, 0, IHeader);
 
 	return TRUE;
 }
@@ -522,19 +584,13 @@ FindNextFileW (
 {
 	PKERNEL32_FIND_FILE_DATA IData;
 
-	if (hFindFile == INVALID_HANDLE_VALUE)
-	{
-		SetLastError (ERROR_INVALID_HANDLE);
-		DPRINT("Failing request\n");
-		return FALSE;
-	}
-
-	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 	if (!InternalFindNextFile(hFindFile, NULL))
 	{
 		DPRINT("Failing request\n");
 		return FALSE;
 	}
+
+	IData = (PKERNEL32_FIND_FILE_DATA)((PKERNEL32_FIND_DATA_HEADER)hFindFile + 1);
 
 	/* copy data into WIN32_FIND_DATA structure */
         InternalCopyFindDataW(lpFindFileData, IData->pFileInfo);
@@ -555,6 +611,7 @@ FindFirstFileExW (LPCWSTR               lpFileName,
                   LPVOID                lpSearchFilter,
                   DWORD                 dwAdditionalFlags)
 {
+    PKERNEL32_FIND_DATA_HEADER IHeader;
     PKERNEL32_FIND_FILE_DATA IData;
 
     if (fInfoLevelId != FindExInfoStandard)
@@ -570,17 +627,19 @@ FindFirstFileExW (LPCWSTR               lpFileName,
             return INVALID_HANDLE_VALUE;
         }
 
-        IData = InternalFindFirstFile (lpFileName, fSearchOp == FindExSearchLimitToDirectories ? TRUE : FALSE);
-	if (IData == NULL)
+        IHeader = InternalFindFirstFile (lpFileName, fSearchOp == FindExSearchLimitToDirectories ? TRUE : FALSE);
+	if (IHeader == NULL)
 	{
 		DPRINT("Failing request\n");
 		return INVALID_HANDLE_VALUE;
 	}
 
-	/* copy data into WIN32_FIND_DATA structure */
+        IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
+
+        /* copy data into WIN32_FIND_DATA structure */
         InternalCopyFindDataW((LPWIN32_FIND_DATAW)lpFindFileData, IData->pFileInfo);
 
-	return (HANDLE)IData;
+	return (HANDLE)IHeader;
     }
     SetLastError(ERROR_INVALID_PARAMETER);
     return INVALID_HANDLE_VALUE;
@@ -600,6 +659,7 @@ FindFirstFileExA (
 	DWORD			dwAdditionalFlags
 	)
 {
+    PKERNEL32_FIND_DATA_HEADER IHeader;
     PKERNEL32_FIND_FILE_DATA IData;
     UNICODE_STRING FileNameU;
     ANSI_STRING FileNameA;
@@ -625,21 +685,262 @@ FindFirstFileExA (
 	else
             RtlOemStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
 
-	IData = InternalFindFirstFile (FileNameU.Buffer, FALSE);
+	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE);
 
 	RtlFreeUnicodeString (&FileNameU);
 
-	if (IData == NULL)
+	if (IHeader == NULL)
 	{
 		DPRINT("Failing request\n");
 		return INVALID_HANDLE_VALUE;
 	}
 
+        IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
+
 	/* copy data into WIN32_FIND_DATA structure */
         InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
+
+        return (HANDLE)IHeader;
     }
     SetLastError(ERROR_INVALID_PARAMETER);
     return INVALID_HANDLE_VALUE;
+}
+
+
+static VOID
+InternalCopyStreamInfo(IN OUT PKERNEL32_FIND_STREAM_DATA IData,
+                       OUT LPVOID lpFindStreamData)
+{
+    ASSERT(IData->pCurrent != NULL);
+
+    switch (IData->InfoLevel)
+    {
+        case FindStreamInfoStandard:
+        {
+            ULONG StreamNameLen;
+            WIN32_FIND_STREAM_DATAW *StreamData = (WIN32_FIND_STREAM_DATAW*)lpFindStreamData;
+
+            StreamNameLen = IData->pCurrent->StreamNameLength;
+            if (StreamNameLen > sizeof(StreamData->cStreamName) - sizeof(WCHAR))
+                StreamNameLen = sizeof(StreamData->cStreamName) - sizeof(WCHAR);
+
+            StreamData->StreamSize.QuadPart = IData->pCurrent->StreamSize.QuadPart;
+            RtlCopyMemory(StreamData->cStreamName,
+                          IData->pCurrent->StreamName,
+                          StreamNameLen);
+            StreamData->cStreamName[StreamNameLen / sizeof(WCHAR)] = L'\0';
+            break;
+        }
+
+        default:
+            ASSERT(FALSE);
+            break;
+    }
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+FindFirstStreamW(IN LPCWSTR lpFileName,
+                 IN STREAM_INFO_LEVELS InfoLevel,
+                 OUT LPVOID lpFindStreamData,
+                 IN DWORD dwFlags)
+{
+    PKERNEL32_FIND_DATA_HEADER IHeader = NULL;
+    PKERNEL32_FIND_STREAM_DATA IData = NULL;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING NtPathU;
+    HANDLE FileHandle = NULL;
+    NTSTATUS Status;
+    ULONG BufferSize = 0;
+
+    if (dwFlags != 0 || InfoLevel != FindStreamInfoStandard ||
+        lpFindStreamData == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* validate & translate the filename */
+    if (!RtlDosPathNameToNtPathName_U(lpFileName,
+                                      &NtPathU,
+                                      NULL,
+                                      NULL))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* open the file */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          0,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN,
+                          0,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* create the search context */
+    IHeader = RtlAllocateHeap(hProcessHeap,
+                              0,
+                              sizeof(KERNEL32_FIND_DATA_HEADER) +
+                                  sizeof(KERNEL32_FIND_STREAM_DATA));
+    if (IHeader == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Cleanup;
+    }
+
+    IHeader->Type = StreamFind;
+    IData = (PKERNEL32_FIND_STREAM_DATA)(IHeader + 1);
+
+    /* capture all information about the streams */
+    IData->InfoLevel = InfoLevel;
+    IData->pCurrent = NULL;
+    IData->pFileStreamInfo = NULL;
+
+    do
+    {
+        BufferSize += 0x1000;
+
+        if (IData->pFileStreamInfo == NULL)
+        {
+            IData->pFileStreamInfo = RtlAllocateHeap(hProcessHeap,
+                                                     0,
+                                                     BufferSize);
+            if (IData->pFileStreamInfo == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+        }
+        else
+        {
+            PFILE_STREAM_INFORMATION pfsi;
+
+            pfsi = RtlReAllocateHeap(hProcessHeap,
+                                     0,
+                                     IData->pFileStreamInfo,
+                                     BufferSize);
+            if (pfsi == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+
+            IData->pFileStreamInfo = pfsi;
+        }
+
+        Status = NtQueryInformationFile(FileHandle,
+                                        &IoStatusBlock,
+                                        IData->pFileStreamInfo,
+                                        BufferSize,
+                                        FileStreamInformation);
+
+    } while (Status == STATUS_BUFFER_TOO_SMALL);
+
+    if (NT_SUCCESS(Status))
+    {
+        NtClose(FileHandle);
+        FileHandle = NULL;
+
+        /* select the first stream and return the information */
+        IData->pCurrent = IData->pFileStreamInfo;
+        InternalCopyStreamInfo(IData,
+                               lpFindStreamData);
+
+        /* all done */
+        Status = STATUS_SUCCESS;
+    }
+
+Cleanup:
+    if (FileHandle != NULL)
+    {
+        NtClose(FileHandle);
+    }
+
+    RtlFreeUnicodeString(&NtPathU);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (IHeader != NULL)
+        {
+            if (IData->pFileStreamInfo != NULL)
+            {
+                RtlFreeHeap(hProcessHeap,
+                            0,
+                            IData->pFileStreamInfo);
+            }
+
+            RtlFreeHeap(hProcessHeap,
+                        0,
+                        IHeader);
+        }
+
+        SetLastErrorByStatus(Status);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return (HANDLE)IHeader;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+FindNextStreamW(IN HANDLE hFindStream,
+                OUT LPVOID lpFindStreamData)
+{
+    PKERNEL32_FIND_DATA_HEADER IHeader;
+    PKERNEL32_FIND_STREAM_DATA IData;
+
+    IHeader = (PKERNEL32_FIND_DATA_HEADER)hFindStream;
+    if (hFindStream == NULL || hFindStream == INVALID_HANDLE_VALUE ||
+        IHeader->Type != StreamFind)
+    {
+        SetLastError (ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    IData = (PKERNEL32_FIND_STREAM_DATA)(IHeader + 1);
+
+    /* select next stream if possible */
+    if (IData->pCurrent->NextEntryOffset != 0)
+    {
+        IData->pCurrent = (PFILE_STREAM_INFORMATION)((ULONG_PTR)IData->pFileStreamInfo +
+                                                     IData->pCurrent->NextEntryOffset);
+    }
+    else
+    {
+        SetLastError(ERROR_HANDLE_EOF);
+        return FALSE;
+    }
+
+    /* return the information */
+    InternalCopyStreamInfo(IData,
+                           lpFindStreamData);
+
+    return TRUE;
 }
 
 
