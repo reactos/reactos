@@ -519,20 +519,20 @@ Ki386SetProcessorFeatures(VOID)
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
    SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
-      (Pcr->PrcbData.FeatureBits & X86_FEATURE_CX8);
+       (Pcr->PrcbData.FeatureBits & X86_FEATURE_CX8) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-      (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX);
+       (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
    SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
    SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
-      (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE);
+       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
-      (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW);
+       (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-      (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC);
+       (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
-      (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2);
+       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? TRUE : FALSE;
 
    /* Does the CPU Support Fast System Call? */   
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
