@@ -1,0 +1,42 @@
+/*
+ * Local Security Authority interface definition
+ */
+
+#define BYTE unsigned char
+#define DWORD unsigned int
+#define BOOL unsigned long
+#define LPBYTE unsigned char*
+#define LPDWORD unsigned long*
+#define LSA_HANDLE unsigned long
+#define NTSTATUS unsigned int
+
+[
+  uuid(12345778-1234-abcd-ef00-0123456789ab),
+  version(0.0),
+  pointer_default(unique),
+  explicit_handle
+]
+interface lsarpc
+{
+/*
+    cpp_quote("#if 0")
+    typedef [handle, unique] wchar_t *LPWSTR;
+    typedef [handle, unique] char *LPSTR;
+    cpp_quote("#endif")
+    typedef [context_handle] void *LSA_HANDLE;
+    typedef LSA_HANDLE *PLSA_HANDLE;
+    typedef unsigned int NTSTATUS;
+*/
+
+    cpp_quote("#if 0")
+    typedef struct _LSA_UNICODE_STRING {
+	    unsigned short Length;
+	    unsigned short MaximumLength;
+	    [size_is(MaximumLength)] wchar_t *Buffer;
+    } LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
+    cpp_quote("#endif")
+
+    /* Function 0 */
+    NTSTATUS LsarClose(handle_t BindingHandle,
+                       [in] LSA_HANDLE ObjectHandle);
+}

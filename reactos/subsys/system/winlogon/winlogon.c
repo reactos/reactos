@@ -16,7 +16,7 @@
 #include <debug.h>
 
 #define SUPPORT_CONSOLESTART 1
-#define START_LSASS          0
+#define START_LSASS          1
 
 /* GLOBALS ******************************************************************/
 
@@ -161,11 +161,12 @@ StartLsass (VOID)
    BOOLEAN Result;
    STARTUPINFO StartupInfo;
    PROCESS_INFORMATION ProcessInformation;
+   WCHAR ServiceString[] = L"lsass.exe";
 
    LsassInitEvent = CreateEvent(NULL,
                                 TRUE,
                                 FALSE,
-                                L"\\LsassInitDone");
+                                L"\\SECURITY_SERVICES_STARTED");
 
    if (LsassInitEvent == NULL)
      {
@@ -183,8 +184,8 @@ StartLsass (VOID)
    StartupInfo.cbReserved2 = 0;
    StartupInfo.lpReserved2 = 0;
 
-   Result = CreateProcess(L"lsass.exe",
-                          NULL,
+   Result = CreateProcess(NULL,
+                          ServiceString,
                           NULL,
                           NULL,
                           FALSE,
@@ -199,7 +200,6 @@ StartLsass (VOID)
         return(FALSE);
      }
 
-   DPRINT("WL: Waiting for lsass\n");
    WaitForSingleObject(LsassInitEvent, INFINITE);
    CloseHandle(LsassInitEvent);
 

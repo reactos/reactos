@@ -193,6 +193,7 @@ subsys\system\explorer\explorer-cfg-template.xml 4
 subsys\system\explorer\notifyhook\notifyhook.dll 1
 subsys\system\format\format.exe         1
 subsys\system\ibrowser\ibrowser.exe     1
+subsys\system\lsass\lsass.exe           1
 subsys\system\msconfig\msconfig.exe     1
 subsys\system\msiexec\msiexec.exe       1
 subsys\system\notepad\notepad.exe       1

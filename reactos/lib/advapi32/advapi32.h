@@ -24,6 +24,10 @@
 /* this has to go after the NDK when being used with the NDK */
 #include <ntsecapi.h>
 
+#include <services/services.h>
+#include "svcctl_c.h"
+#include "lsa_c.h"
+
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS
 #endif

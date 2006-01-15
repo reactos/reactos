@@ -16,24 +16,80 @@
 #define NDEBUG
 #include <debug.h>
 
+static handle_t LSABindingHandle = NULL;
 
-#ifndef SID_REVISION /* FIXME - Winnt.h */
-#define	SID_REVISION (1)	/* Current revision */
-#endif
+static VOID
+LSAHandleUnbind(handle_t *Handle)
+{
+    RPC_STATUS status;
+
+    if (*Handle == NULL)
+        return;
+
+    status = RpcBindingFree(Handle);
+    if (status)
+    {
+        DPRINT1("RpcBindingFree returned 0x%x\n", status);
+    }
+}
+
+static VOID
+LSAHandleBind(VOID)
+{
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+    handle_t Handle;
+
+    if (LSABindingHandle != NULL)
+        return;
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      NULL,
+                                      L"\\pipe\\lsarpc",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
+        return;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &Handle);
+    if (status)
+    {
+        DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+        DPRINT1("RpcStringFree returned 0x%x\n", status);
+    }
+
+    if (InterlockedCompareExchangePointer(&LSABindingHandle,
+                                          (PVOID)Handle,
+                                          NULL) != NULL)
+    {
+        LSAHandleUnbind(&Handle);
+    }
+}
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 LsaClose(LSA_HANDLE ObjectHandle)
 {
-  static int count = 0;
-  if (count++ < 20)
-  {
-     DPRINT1("(%p):LsaClose stub\n",ObjectHandle);
-  }
-  return 0xc0000000;
+    DPRINT("LsaClose(0x%p) called\n", ObjectHandle);
+
+    LSAHandleBind();
+
+    return LsarClose(LSABindingHandle,
+                     (unsigned long)ObjectHandle);
 }
 
 /*
@@ -187,7 +243,7 @@ LsaLookupSids(
     PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
     PLSA_TRANSLATED_NAME *Names)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  return STATUS_NONE_MAPPED;
 }
 
 /******************************************************************************

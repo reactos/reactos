@@ -13,7 +13,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
-#include "svcctl_c.h"
 
 #define NDEBUG
 #include <debug.h>
