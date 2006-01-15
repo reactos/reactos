@@ -287,6 +287,8 @@ KiInsertQueueApc(PKAPC Apc,
     PKAPC QueuedApc;
     NTSTATUS Status;
 
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
     /* Acquire the lock (only needed on MP) */
     KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
@@ -790,7 +792,7 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
         ApcListEntry = Thread->ApcState.ApcListHead[UserMode].Flink;
 
         /* Is it empty now? */
-        if (!ApcListEntry)
+        if (ApcListEntry == &Thread->ApcState.ApcListHead[UserMode])
         {
             /* Release the lock and return */
             KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
