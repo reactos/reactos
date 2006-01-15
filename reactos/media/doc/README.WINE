@@ -78,7 +78,7 @@ reactos/lib/twain		# Out of sync
 reactos/lib/urlmon		# Synced to Wine-0_9_5
 reactos/lib/uxtheme		# Synced to Wine-0_9_5
 reactos/lib/version		# Out of sync
-reactos/lib/wininet		# Out of sync
+reactos/lib/wininet		# Synced to Wine-0_9_5
 reactos/lib/wintrust		# Synced to Wine-0_9_5
 reactos/lib/winmm		# Forked at Wine-20050628
 reactos/lib/winmm/midimap       # Forked at Wine-20050628
