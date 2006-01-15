@@ -443,8 +443,8 @@ std::string XMLReaderBase::get_error_string() const
 	  case XML_ERROR_ABORTED:							return "XML_ERROR_ABORTED";
 	  case XML_ERROR_FINISHED:							return "XML_ERROR_FINISHED";
 	  case XML_ERROR_SUSPEND_PE:						return "XML_ERROR_SUSPEND_PE";
-//#endif
-//#if XML_MAJOR_VERSION>=2
+#endif
+#if XML_MAJOR_VERSION>=2
 		/* Added in 2.0. */
 	  case XML_ERROR_RESERVED_PREFIX_XML:				return "XML_ERROR_RESERVED_PREFIX_XML";
 	  case XML_ERROR_RESERVED_PREFIX_XMLNS:				return "XML_ERROR_RESERVED_PREFIX_XMLNS";
