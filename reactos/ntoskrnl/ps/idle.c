@@ -64,14 +64,14 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
 {
     PETHREAD Thread;
     ULONG_PTR KernelStack;
-    extern unsigned int init_stack;
+    extern unsigned int init_stack_top;
 
     Thread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
     RtlZeroMemory(Thread, sizeof(ETHREAD));
     Thread->ThreadsProcess = Process;
     if (First)
     {
-        KernelStack = init_stack;
+        KernelStack = init_stack_top;
     }
     else
     {
