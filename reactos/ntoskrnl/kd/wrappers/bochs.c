@@ -21,6 +21,8 @@ STDCALL
 KdpBochsDebugPrint(IN PCH Message,
                    IN ULONG Length)
 {
+    if (!KdpDebugMode.Bochs) return;
+
     while (*Message != 0)
     {
         if (*Message == '\n')
@@ -44,16 +46,31 @@ KdpBochsDebugPrint(IN PCH Message,
 
 VOID
 STDCALL
-KdpBochsInit(PKD_DISPATCH_TABLE WrapperTable,
+KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
              ULONG BootPhase)
 {
+    BYTE Value;
     if (!KdpDebugMode.Bochs) return;
 
     if (BootPhase == 0)
     {
+#if defined(_M_IX86) && defined(__GNUC__) 
+        __asm__("inb %w1, %b0\n\t" : "=a" (Value) : "d" (BOCHS_LOGGER_PORT));
+#else
+        Value = READ_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT);
+#endif
+        if (Value != BOCHS_LOGGER_PORT)
+        {
+           KdpDebugMode.Bochs = FALSE;
+           return;
+        }
+
         /* Write out the functions that we support for now */
-        WrapperTable->KdpInitRoutine = KdpBochsInit;
-        WrapperTable->KdpPrintRoutine = KdpBochsDebugPrint;
+        DispatchTable->KdpInitRoutine = KdpBochsInit;
+        DispatchTable->KdpPrintRoutine = KdpBochsDebugPrint;
+
+        /* Register as a Provider */
+        InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
     else if (BootPhase == 2)
     {

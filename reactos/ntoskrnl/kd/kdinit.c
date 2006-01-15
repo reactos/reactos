@@ -25,20 +25,19 @@ KD_PORT_INFORMATION PortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
 ULONG KdpPortIrq;
 #ifdef AUTO_ENABLE_BOCHS
 KDP_DEBUG_MODE KdpDebugMode = {{{.Bochs=TRUE}}};;
-PKDP_INIT_ROUTINE WrapperInitRoutine = KdpBochsInit;
-KD_DISPATCH_TABLE WrapperTable = {.KdpInitRoutine = KdpBochsInit, .KdpPrintRoutine = KdpBochsDebugPrint};
 #else
 KDP_DEBUG_MODE KdpDebugMode;
+#endif
 PKDP_INIT_ROUTINE WrapperInitRoutine;
 KD_DISPATCH_TABLE WrapperTable;
-#endif
 BOOLEAN KdpEarlyBreak = FALSE;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 
 PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
                                          KdpSerialInit,
-                                         KdpInitDebugLog};
+                                         KdpInitDebugLog,
+                                         KdpBochsInit};
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -48,15 +47,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
                        PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCHAR p2 = Currentp2;
-
-    /* Check for BOCHS Debugging */
-    if (!_strnicmp(p2, "BOCHS", 5))
-    {
-        /* Enable It */
-        p2 += 5;
-        KdpDebugMode.Bochs = TRUE;
-        WrapperInitRoutine = KdpBochsInit;
-    }
 
     /* Check for GDB Debugging */
     if (!_strnicmp(p2, "GDB", 3))
@@ -126,6 +116,14 @@ KdpGetDebugMode(PCHAR Currentp2)
         /* Enable It */
         p2 += 4;
         KdpDebugMode.File = TRUE;
+    }
+
+    /* Check for BOCHS Debugging */
+    else if (!_strnicmp(p2, "BOCHS", 5))
+    {
+        /* Enable It */
+        p2 += 5;
+        KdpDebugMode.Bochs = TRUE;
     }
 
     return p2;

@@ -202,7 +202,8 @@ KdpBochsDebugPrint(
 #define KdScreen 0
 #define KdSerial 1
 #define KdFile 2
-#define KdMax 3
+#define KdBochs 3
+#define KdMax 4
 
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE
@@ -215,11 +216,11 @@ typedef struct _KDP_DEBUG_MODE
             UCHAR Screen :1;
             UCHAR Serial :1;
             UCHAR File   :1;
+            UCHAR Bochs  :1;
 
             /* Currently Supported Wrappers */
             UCHAR Pice   :1;
             UCHAR Gdb    :1;
-            UCHAR Bochs  :1;
         };
 
         /* Generic Value */
