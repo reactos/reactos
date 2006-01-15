@@ -149,12 +149,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
         /* Disable any debug regiseters */
         Context->ContextFlags &= ~CONTEXT_DEBUG_REGISTERS;
-        Context->Dr0 = 0;
-        Context->Dr1 = 0;
-        Context->Dr2 = 0;
-        Context->Dr3 = 0;
-        Context->Dr6 = 0;
-        Context->Dr7 = 0;
 
         /* Setup the Trap Frame */
         TrapFrame = &InitFrame->TrapFrame;
@@ -170,6 +164,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         TrapFrame->HardwareSegSs |= RPL_MASK;
         TrapFrame->SegDs |= RPL_MASK;
         TrapFrame->SegEs |= RPL_MASK;
+        TrapFrame->Dr7 = 0;
 
         /* Set the debug mark */
         TrapFrame->DbgArgMark = 0xBADB0D00;
