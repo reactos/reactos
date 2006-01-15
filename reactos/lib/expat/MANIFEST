@@ -1,3 +1,14 @@
+amiga/stdlib.c
+amiga/launch.c
+amiga/expat_vectors.c
+amiga/expat_lib.c
+amiga/expat.xml
+amiga/README.txt
+amiga/Makefile
+amiga/include/proto/expat.h
+amiga/include/libraries/expat.h
+amiga/include/interfaces/expat.h
+amiga/include/inline4/expat.h
 bcb5/README.txt
 bcb5/all_projects.bpg
 bcb5/elements.bpf
@@ -55,6 +66,7 @@ examples/elements.dsp
 examples/outline.c
 examples/outline.dsp
 lib/Makefile.MPW
+lib/amigaconfig.h
 lib/ascii.h
 lib/asciitab.h
 lib/expat.dsp

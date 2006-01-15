@@ -19,7 +19,7 @@
       <td class="banner"><h1>The Expat XML Parser</h1></td>
     </tr>
     <tr>
-      <td class="releaseno">Release 1.95.8</td>
+      <td class="releaseno">Release 2.0.0</td>
       <td></td>
     </tr>
   </table>
@@ -343,6 +343,16 @@ encoded in UTF-16 using wide characters of the type
 defined using the <code>wchar_t</code> type; otherwise, <code>unsigned
 short</code> is used.  Defining this implies
 <code>XML_UNICODE</code>.</dd>
+
+<dt>XML_LARGE_SIZE</dt>
+<dd>If defined, causes the <code>XML_Size</code> and <code>XML_Index</code>
+integer types to be at least 64 bits in size. This is intended to support
+processing of very large input streams, where the return values of
+<code><a href="#XML_GetCurrentByteIndex" >XML_GetCurrentByteIndex</a></code>,
+<code><a href="#XML_GetCurrentLineNumber" >XML_GetCurrentLineNumber</a></code> and
+<code><a href="#XML_GetCurrentColumnNumber" >XML_GetCurrentColumnNumber</a></code>
+could overflow. It may not be supported by all compilers, and is turned
+off by default.</dd>
 
 <dt>XML_CONTEXT_BYTES</dt>
 <dd>The number of input bytes of markup context which the parser will
@@ -984,13 +994,21 @@ dealing with any memory associated with <a href="#userdata">user data</a>.
 <p>To state the obvious: the three parsing functions <code><a href=
 "#XML_Parse" >XML_Parse</a></code>, <code><a href= "#XML_ParseBuffer">
 XML_ParseBuffer</a></code> and <code><a href= "#XML_GetBuffer">
-XML_GetBuffer</a></code> must not be
-called from within a handler unless they operate on a separate parser
-instance, that is, one that did not call the handler. For example, it
-is OK to call the parsing functions from within an
-<code>XML_ExternalEntityRefHandler</code>, if they apply to the parser
-created by <code><a href= "#XML_ExternalEntityParserCreate"
+XML_GetBuffer</a></code> must not be called from within a handler
+unless they operate on a separate parser instance, that is, one that
+did not call the handler. For example, it is OK to call the parsing
+functions from within an <code>XML_ExternalEntityRefHandler</code>,
+if they apply to the parser created by
+<code><a href= "#XML_ExternalEntityParserCreate"
 >XML_ExternalEntityParserCreate</a></code>.</p>
+
+<p>Note: the <code>len</code> argument passed to these functions
+should be considerably less than the maximum value for an integer,
+as it could create an integer overflow situation if the added
+lengths of a buffer and the unprocessed portion of the previous buffer
+exceed the maximum integer value. Input data at the end of a buffer
+will remain unprocessed if it is part of an XML token for which the
+end is not part of that buffer.</p>
 
 <pre class="fcndec" id="XML_Parse">
 enum XML_Status XMLCALL
@@ -1201,10 +1219,11 @@ appropriate handler setter. None of the handler setting functions have
 a return value.</p>
 
 <p>Your handlers will be receiving strings in arrays of type
-<code>XML_Char</code>. This type is defined in expat.h as <code>char
-*</code> and contains bytes encoding UTF-8.  Note that you'll receive
-them in this form independent of the original encoding of the
-document.</p>
+<code>XML_Char</code>. This type is conditionally defined in expat.h as
+either <code>char</code>, <code>wchar_t</code> or <code>unsigned short</code>.
+The former implies UTF-8 encoding, the latter two imply UTF-16 encoding.
+Note that you'll receive them in this form independent of the original
+encoding of the document.</p>
 
 <div class="handler">
 <pre class="setter" id="XML_SetStartElementHandler">
@@ -1896,7 +1915,7 @@ The code should be one of the enums that can be returned from
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentByteIndex">
-long XMLCALL
+XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser p);
 </pre>
 <div class="fcndef">
@@ -1907,7 +1926,7 @@ the values returned by <code><a href= "#XML_GetCurrentLineNumber"
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentLineNumber">
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser p);
 </pre>
 <div class="fcndef">
@@ -1916,7 +1935,7 @@ Return the line number of the position.  The first line is reported as
 </div>
 
 <pre class="fcndec" id="XML_GetCurrentColumnNumber">
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser p);
 </pre>
 <div class="fcndef">

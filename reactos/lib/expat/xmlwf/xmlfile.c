@@ -7,13 +7,17 @@
 #include <stddef.h>
 #include <string.h>
 #include <fcntl.h>
+
 #ifdef COMPILED_FROM_DSP
 #include "winconfig.h"
-#else
-#ifdef HAVE_EXPAT_CONFIG_H
-#include "expat_config.h"
-#endif
-#endif
+#elif defined(MACOS_CLASSIC)
+#include "macconfig.h"
+#elif defined(__amigaos4__)
+#include "amigaconfig.h"
+#elif defined(HAVE_EXPAT_CONFIG_H)
+#include <expat_config.h>
+#endif /* ndef COMPILED_FROM_DSP */
+
 #include "expat.h"
 #include "xmlfile.h"
 #include "xmltchar.h"
@@ -21,6 +25,10 @@
 
 #ifdef _MSC_VER
 #include <io.h>
+#endif
+
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -53,7 +61,7 @@ reportError(XML_Parser parser, const XML_Char *filename)
   enum XML_Error code = XML_GetErrorCode(parser);
   const XML_Char *message = XML_ErrorString(code);
   if (message)
-    ftprintf(stdout, T("%s:%d:%d: %s\n"),
+    ftprintf(stdout, T("%s:%" XML_FMT_INT_MOD "u:%" XML_FMT_INT_MOD "u: %s\n"),
              filename,
              XML_GetErrorLineNumber(parser),
              XML_GetErrorColumnNumber(parser),

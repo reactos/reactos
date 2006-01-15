@@ -16,6 +16,10 @@
 #include <crtdbg.h>
 #endif
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+#endif
+
 /* This ensures proper sorting. */
 
 #define NSSEP T('\001')
@@ -305,7 +309,8 @@ metaLocation(XML_Parser parser)
   if (uri)
     ftprintf((FILE *)XML_GetUserData(parser), T(" uri=\"%s\""), uri);
   ftprintf((FILE *)XML_GetUserData(parser),
-           T(" byte=\"%ld\" nbytes=\"%d\" line=\"%d\" col=\"%d\""),
+           T(" byte=\"%" XML_FMT_INT_MOD "d\" nbytes=\"%d\" \
+			 line=\"%" XML_FMT_INT_MOD "u\" col=\"%" XML_FMT_INT_MOD "u\""),
            XML_GetCurrentByteIndex(parser),
            XML_GetCurrentByteCount(parser),
            XML_GetCurrentLineNumber(parser),
@@ -634,8 +639,13 @@ usage(const XML_Char *prog, int rc)
   exit(rc);
 }
 
+#ifdef AMIGA_SHARED_LIB
+int
+amiga_main(int argc, char *argv[])
+#else
 int
 tmain(int argc, XML_Char **argv)
+#endif
 {
   int i, j;
   const XML_Char *outputDir = NULL;

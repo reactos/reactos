@@ -1,9 +1,16 @@
-Release 1.95.9 TBD
+Release 2.0.0 Wed Jan 11 2006
         - We no longer use the "check" library for C unit testing; we
           always use the (partial) internal implementation of the API.
         - Report XML_NS setting via XML_GetFeatureList().
         - Fixed headers for use from C++.
-        - Updated to use libtool 1.5.10 (the most recent).
+        - XML_GetCurrentLineNumber() and  XML_GetCurrentColumnNumber()
+          now return unsigned integers.
+        - Added XML_LARGE_SIZE switch to enable 64-bit integers for
+          byte indexes and line/column numbers.
+        - Updated to use libtool 1.5.22 (the most recent).
+        - Added support for AmigaOS.
+        - Some mostly minor bug fixes. SF issues include: 1006708,
+          1021776, 1023646, 1114960, 1156398, 1221160, 1271642.
 
 Release 1.95.8 Fri Jul 23 2004
         - Major new feature: suspend/resume.  Handlers can now request

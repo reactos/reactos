@@ -12,11 +12,13 @@
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
+#elif defined(__amigaos4__)
+#include "amigaconfig.h"
 #elif defined(HAVE_EXPAT_CONFIG_H)
 #include <expat_config.h>
 #endif /* ndef COMPILED_FROM_DSP */
 
-#include <expat/expat.h>
+#include "expat.h"
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
@@ -456,7 +458,7 @@ struct XML_ParserStruct {
   char *m_bufferEnd;
   /* allocated end of buffer */
   const char *m_bufferLim;
-  long m_parseEndByteIndex;
+  XML_Index m_parseEndByteIndex;
   const char *m_parseEndPtr;
   XML_Char *m_dataBuf;
   XML_Char *m_dataBufEnd;
@@ -1604,9 +1606,9 @@ XML_GetBuffer(XML_Parser parser, int len)
 
   if (len > bufferLim - bufferEnd) {
     /* FIXME avoid integer overflow */
-    int neededSize = len + (bufferEnd - bufferPtr);
+    int neededSize = len + (int)(bufferEnd - bufferPtr);
 #ifdef XML_CONTEXT_BYTES
-    int keep = bufferPtr - buffer;
+    int keep = (int)(bufferPtr - buffer);
 
     if (keep > XML_CONTEXT_BYTES)
       keep = XML_CONTEXT_BYTES;
@@ -1615,7 +1617,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     if (neededSize  <= bufferLim - buffer) {
 #ifdef XML_CONTEXT_BYTES
       if (keep < bufferPtr - buffer) {
-        int offset = (bufferPtr - buffer) - keep;
+        int offset = (int)(bufferPtr - buffer) - keep;
         memmove(buffer, &buffer[offset], bufferEnd - bufferPtr + keep);
         bufferEnd -= offset;
         bufferPtr -= offset;
@@ -1628,7 +1630,7 @@ XML_GetBuffer(XML_Parser parser, int len)
     }
     else {
       char *newBuf;
-      int bufferSize = bufferLim - bufferPtr;
+      int bufferSize = (int)(bufferLim - bufferPtr);
       if (bufferSize == 0)
         bufferSize = INIT_BUFFER_SIZE;
       do {
@@ -1642,7 +1644,7 @@ XML_GetBuffer(XML_Parser parser, int len)
       bufferLim = newBuf + bufferSize;
 #ifdef XML_CONTEXT_BYTES
       if (bufferPtr) {
-        int keep = bufferPtr - buffer;
+        int keep = (int)(bufferPtr - buffer);
         if (keep > XML_CONTEXT_BYTES)
           keep = XML_CONTEXT_BYTES;
         memcpy(newBuf, &bufferPtr[-keep], bufferEnd - bufferPtr + keep);
@@ -1749,7 +1751,7 @@ XML_GetErrorCode(XML_Parser parser)
   return errorCode;
 }
 
-long XMLCALL
+XML_Index XMLCALL
 XML_GetCurrentByteIndex(XML_Parser parser)
 {
   if (eventPtr)
@@ -1761,7 +1763,7 @@ int XMLCALL
 XML_GetCurrentByteCount(XML_Parser parser)
 {
   if (eventEndPtr && eventPtr)
-    return eventEndPtr - eventPtr;
+    return (int)(eventEndPtr - eventPtr);
   return 0;
 }
 
@@ -1770,15 +1772,15 @@ XML_GetInputContext(XML_Parser parser, int *offset, int *size)
 {
 #ifdef XML_CONTEXT_BYTES
   if (eventPtr && buffer) {
-    *offset = eventPtr - buffer;
-    *size   = bufferEnd - buffer;
+    *offset = (int)(eventPtr - buffer);
+    *size   = (int)(bufferEnd - buffer);
     return buffer;
   }
 #endif /* defined XML_CONTEXT_BYTES */
   return (char *) 0;
 }
 
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentLineNumber(XML_Parser parser)
 {
   if (eventPtr && eventPtr >= positionPtr) {
@@ -1788,7 +1790,7 @@ XML_GetCurrentLineNumber(XML_Parser parser)
   return position.lineNumber + 1;
 }
 
-int XMLCALL
+XML_Size XMLCALL
 XML_GetCurrentColumnNumber(XML_Parser parser)
 {
   if (eventPtr && eventPtr >= positionPtr) {
@@ -2324,12 +2326,12 @@ doContent(XML_Parser parser,
             XmlConvert(enc,
                        &fromPtr, rawNameEnd,
                        (ICHAR **)&toPtr, (ICHAR *)tag->bufEnd - 1);
-            convLen = toPtr - (XML_Char *)tag->buf;
+            convLen = (int)(toPtr - (XML_Char *)tag->buf);
             if (fromPtr == rawNameEnd) {
               tag->name.strLen = convLen;
               break;
             }
-            bufSize = (tag->bufEnd - tag->buf) << 1;
+            bufSize = (int)(tag->bufEnd - tag->buf) << 1;
             {
               char *temp = (char *)REALLOC(tag->buf, bufSize);
               if (temp == NULL)
@@ -2517,12 +2519,12 @@ doContent(XML_Parser parser,
           ICHAR *dataPtr = (ICHAR *)dataBuf;
           XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
           characterDataHandler(handlerArg, dataBuf,
-                               dataPtr - (ICHAR *)dataBuf);
+                               (int)(dataPtr - (ICHAR *)dataBuf));
         }
         else
           characterDataHandler(handlerArg,
                                (XML_Char *)s,
-                               (XML_Char *)end - (XML_Char *)s);
+                               (int)((XML_Char *)end - (XML_Char *)s));
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, end);
@@ -2547,7 +2549,7 @@ doContent(XML_Parser parser,
             XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
             *eventEndPP = s;
             characterDataHandler(handlerArg, dataBuf,
-                                 dataPtr - (ICHAR *)dataBuf);
+                                 (int)(dataPtr - (ICHAR *)dataBuf));
             if (s == next)
               break;
             *eventPP = s;
@@ -2556,7 +2558,7 @@ doContent(XML_Parser parser,
         else
           characterDataHandler(handlerArg,
                                (XML_Char *)s,
-                               (XML_Char *)next - (XML_Char *)s);
+                               (int)((XML_Char *)next - (XML_Char *)s));
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -2854,8 +2856,10 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
         nsAtts[j].hash = uriHash;
         nsAtts[j].uriName = s;
 
-        if (!--nPrefixes)
+        if (!--nPrefixes) {
+          i += 2;
           break;
+        }
       }
       else  /* not prefixed */
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
@@ -3125,7 +3129,7 @@ doCdataSection(XML_Parser parser,
             XmlConvert(enc, &s, next, &dataPtr, (ICHAR *)dataBufEnd);
             *eventEndPP = next;
             characterDataHandler(handlerArg, dataBuf,
-                                 dataPtr - (ICHAR *)dataBuf);
+                                 (int)(dataPtr - (ICHAR *)dataBuf));
             if (s == next)
               break;
             *eventPP = s;
@@ -3134,7 +3138,7 @@ doCdataSection(XML_Parser parser,
         else
           characterDataHandler(handlerArg,
                                (XML_Char *)s,
-                               (XML_Char *)next - (XML_Char *)s);
+                               (int)((XML_Char *)next - (XML_Char *)s));
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, next);
@@ -3799,7 +3803,8 @@ doProlog(XML_Parser parser,
       */
 #ifdef XML_DTD
       if (doctypeSysid || useForeignDTD) {
-        dtd->hasParamEntityRefs = XML_TRUE; /* when docTypeSysid == NULL */
+        XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
+        dtd->hasParamEntityRefs = XML_TRUE;
         if (paramEntityParsing && externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(&dtd->paramEntities,
                                             externalSubsetName,
@@ -3815,11 +3820,17 @@ doProlog(XML_Parser parser,
                                         entity->systemId,
                                         entity->publicId))
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
-          if (dtd->paramEntityRead &&
-              !dtd->standalone &&
-              notStandaloneHandler &&
-              !notStandaloneHandler(handlerArg))
-            return XML_ERROR_NOT_STANDALONE;
+          if (dtd->paramEntityRead) {
+            if (!dtd->standalone && 
+                notStandaloneHandler && 
+                !notStandaloneHandler(handlerArg))
+              return XML_ERROR_NOT_STANDALONE;
+          }
+          /* if we didn't read the foreign DTD then this means that there
+             is no external subset and we must reset dtd->hasParamEntityRefs
+          */
+          else if (!doctypeSysid)
+            dtd->hasParamEntityRefs = hadParamEntityRefs;
           /* end of DTD - no need to update dtd->keepProcessing */
         }
         useForeignDTD = XML_FALSE;
@@ -3836,6 +3847,7 @@ doProlog(XML_Parser parser,
          last chance to read the foreign DTD
       */
       if (useForeignDTD) {
+        XML_Bool hadParamEntityRefs = dtd->hasParamEntityRefs;
         dtd->hasParamEntityRefs = XML_TRUE;
         if (paramEntityParsing && externalEntityRefHandler) {
           ENTITY *entity = (ENTITY *)lookup(&dtd->paramEntities,
@@ -3851,11 +3863,17 @@ doProlog(XML_Parser parser,
                                         entity->systemId,
                                         entity->publicId))
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
-          if (dtd->paramEntityRead &&
-              !dtd->standalone &&
-              notStandaloneHandler &&
-              !notStandaloneHandler(handlerArg))
-            return XML_ERROR_NOT_STANDALONE;
+          if (dtd->paramEntityRead) {
+            if (!dtd->standalone &&
+                notStandaloneHandler &&
+                !notStandaloneHandler(handlerArg))
+              return XML_ERROR_NOT_STANDALONE;
+          }
+          /* if we didn't read the foreign DTD then this means that there
+             is no external subset and we must reset dtd->hasParamEntityRefs
+          */
+          else
+            dtd->hasParamEntityRefs = hadParamEntityRefs;
           /* end of DTD - no need to update dtd->keepProcessing */
         }
       }
@@ -3996,7 +4014,7 @@ doProlog(XML_Parser parser,
                                             next - enc->minBytesPerChar);
         if (declEntity) {
           declEntity->textPtr = poolStart(&dtd->entityValuePool);
-          declEntity->textLen = poolLength(&dtd->entityValuePool);
+          declEntity->textLen = (int)(poolLength(&dtd->entityValuePool));
           poolFinish(&dtd->entityValuePool);
           if (entityDeclHandler) {
             *eventEndPP = s;
@@ -4681,7 +4699,7 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
 
   if (result == XML_ERROR_NONE) {
     if (textEnd != next && ps_parsing == XML_SUSPENDED) {
-      entity->processed = next - textStart;
+      entity->processed = (int)(next - textStart);
       processor = internalEntityProcessor;
     }
     else {
@@ -4727,7 +4745,7 @@ internalEntityProcessor(XML_Parser parser,
   if (result != XML_ERROR_NONE)
     return result;
   else if (textEnd != next && ps_parsing == XML_SUSPENDED) {
-    entity->processed = next - (char *)entity->textPtr;
+    entity->processed = (int)(next - (char *)entity->textPtr);
     return result;
   }
   else {
@@ -4861,9 +4879,8 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
           return XML_ERROR_NO_MEMORY;
         entity = (ENTITY *)lookup(&dtd->generalEntities, name, 0);
         poolDiscard(&temp2Pool);
-        /* first, determine if a check for an existing declaration is needed;
-           if yes, check that the entity exists, and that it is internal,
-           otherwise call the default handler (if called from content)
+        /* First, determine if a check for an existing declaration is needed;
+           if yes, check that the entity exists, and that it is internal.
         */
         if (pool == &dtd->pool)  /* are we called from prolog? */
           checkEntityDecl =
@@ -4882,13 +4899,16 @@ appendAttributeValue(XML_Parser parser, const ENCODING *enc, XML_Bool isCdata,
             return XML_ERROR_ENTITY_DECLARED_IN_PE;
         }
         else if (!entity) {
-          /* cannot report skipped entity here - see comments on
-             skippedEntityHandler
+          /* Cannot report skipped entity here - see comments on
+             skippedEntityHandler.
           if (skippedEntityHandler)
             skippedEntityHandler(handlerArg, name, 0);
           */
+          /* Cannot call the default handler because this would be
+             out of sync with the call to the startElementHandler.
           if ((pool == &tempPool) && defaultHandler)
             reportDefault(parser, enc, ptr, next);
+          */
           break;
         }
         if (entity->open) {
@@ -5188,12 +5208,12 @@ reportDefault(XML_Parser parser, const ENCODING *enc,
       ICHAR *dataPtr = (ICHAR *)dataBuf;
       XmlConvert(enc, &s, end, &dataPtr, (ICHAR *)dataBufEnd);
       *eventEndPP = s;
-      defaultHandler(handlerArg, dataBuf, dataPtr - (ICHAR *)dataBuf);
+      defaultHandler(handlerArg, dataBuf, (int)(dataPtr - (ICHAR *)dataBuf));
       *eventPP = s;
     } while (s != end);
   }
   else
-    defaultHandler(handlerArg, (XML_Char *)s, (XML_Char *)end - (XML_Char *)s);
+    defaultHandler(handlerArg, (XML_Char *)s, (int)((XML_Char *)end - (XML_Char *)s));
 }
 
 
@@ -6075,7 +6095,7 @@ poolGrow(STRING_POOL *pool)
     }
   }
   if (pool->blocks && pool->start == pool->blocks->s) {
-    int blockSize = (pool->end - pool->start)*2;
+    int blockSize = (int)(pool->end - pool->start)*2;
     pool->blocks = (BLOCK *)
       pool->mem->realloc_fcn(pool->blocks,
                              (offsetof(BLOCK, s)
@@ -6089,7 +6109,7 @@ poolGrow(STRING_POOL *pool)
   }
   else {
     BLOCK *tem;
-    int blockSize = pool->end - pool->start;
+    int blockSize = (int)(pool->end - pool->start);
     if (blockSize < INIT_BLOCK_SIZE)
       blockSize = INIT_BLOCK_SIZE;
     else

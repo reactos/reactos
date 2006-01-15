@@ -18,11 +18,22 @@
  *
  * Read an XML document from standard input and print an element
  * outline on standard output.
+ * Must be used with Expat compiled for UTF-8 output.
  */
 
 
 #include <stdio.h>
 #include <expat.h>
+
+#ifdef XML_LARGE_SIZE
+#if defined(XML_USE_MSC_EXTENSIONS) && _MSC_VER < 1400
+#define XML_FMT_INT_MOD "I64"
+#else
+#define XML_FMT_INT_MOD "ll"
+#endif
+#else
+#define XML_FMT_INT_MOD "l"
+#endif
 
 #define BUFFSIZE        8192
 
@@ -54,8 +65,14 @@ end(void *data, const char *el)
   Depth--;
 }
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+int
+amiga_main(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
   XML_Parser p = XML_ParserCreate(NULL);
   if (! p) {
@@ -77,7 +94,7 @@ main(int argc, char *argv[])
     done = feof(stdin);
 
     if (XML_Parse(p, Buff, len, done) == XML_STATUS_ERROR) {
-      fprintf(stderr, "Parse error at line %d:\n%s\n",
+      fprintf(stderr, "Parse error at line %" XML_FMT_INT_MOD "u:\n%s\n",
               XML_GetCurrentLineNumber(p),
               XML_ErrorString(XML_GetErrorCode(p)));
       exit(-1);

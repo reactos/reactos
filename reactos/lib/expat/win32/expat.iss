@@ -1,4 +1,4 @@
-; Basic setup script for the Inno Setep installer builder.  For more
+; Basic setup script for the Inno Setup installer builder.  For more
 ; information on the free installer builder, see www.jrsoftware.org.
 ;
 ; This script was contributed by Tim Peters.
@@ -7,15 +7,15 @@
 [Setup]
 AppName=expat
 AppId=expat
-AppVersion=1.95.8
-AppVerName=expat 1.95.8
-AppCopyright=Copyright © 1998-2003 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
-DefaultDirName={sd}\Expat-1.95.8
+AppVersion=2.0.0
+AppVerName=expat 2.0.0
+AppCopyright=Copyright © 1998-2006 Thai Open Source Software Center, Clark Cooper, and the Expat maintainers
+DefaultDirName={sd}\Expat-2.0.0
 AppPublisher=The Expat Developers
 AppPublisherURL=http://www.libexpat.org/
 AppSupportURL=http://www.libexpat.org/
 AppUpdatesURL=http://www.libexpat.org/
-UninstallDisplayName=Expat XML Parser (version 1.95.8)
+UninstallDisplayName=Expat XML Parser (version 2.0.0)
 UninstallFilesDir={app}\Uninstall
 
 Compression=bzip/9
@@ -27,36 +27,43 @@ DisableProgramGroupPage=yes
 DisableReadyPage=yes
 
 [Files]
-CopyMode: alwaysoverwrite; Source: xmlwf\Release\*.exe;        DestDir: "{app}"
-CopyMode: alwaysoverwrite; Source: win32\MANIFEST.txt;         DestDir: "{app}"
-CopyMode: alwaysoverwrite; Source: Changes;                    DestDir: "{app}"; DestName: Changes.txt
-CopyMode: alwaysoverwrite; Source: COPYING;                    DestDir: "{app}"; DestName: COPYING.txt
-CopyMode: alwaysoverwrite; Source: README;                     DestDir: "{app}"; DestName: README.txt
-CopyMode: alwaysoverwrite; Source: doc\*.html;                 DestDir: "{app}\Doc"
-CopyMode: alwaysoverwrite; Source: doc\*.css;                  DestDir: "{app}\Doc"
-CopyMode: alwaysoverwrite; Source: doc\*.png;                  DestDir: "{app}\Doc"
-CopyMode: alwaysoverwrite; Source: lib\Release\*.dll;          DestDir: "{app}\Libs"
-CopyMode: alwaysoverwrite; Source: lib\Release\*.lib;          DestDir: "{app}\Libs"
-CopyMode: alwaysoverwrite; Source: lib\Release-w\*.dll;        DestDir: "{app}\Libs"
-CopyMode: alwaysoverwrite; Source: lib\Release-w\*.lib;        DestDir: "{app}\Libs"
-CopyMode: alwaysoverwrite; Source: lib\Release_static\*.lib;   DestDir: "{app}\StaticLibs"
-CopyMode: alwaysoverwrite; Source: lib\Release-w_static\*.lib; DestDir: "{app}\StaticLibs"
-CopyMode: alwaysoverwrite; Source: expat.dsw;                  DestDir: "{app}\Source"
-CopyMode: alwaysoverwrite; Source: win32\README.txt;           DestDir: "{app}\Source"
-CopyMode: alwaysoverwrite; Source: bcb5\*.*;                   DestDir: "{app}\Source\bcb5"
-CopyMode: alwaysoverwrite; Source: lib\*.c;                    DestDir: "{app}\Source\lib"
-CopyMode: alwaysoverwrite; Source: lib\*.h;                    DestDir: "{app}\Source\lib"
-CopyMode: alwaysoverwrite; Source: lib\*.def;                  DestDir: "{app}\Source\lib"
-CopyMode: alwaysoverwrite; Source: lib\*.dsp;                  DestDir: "{app}\Source\lib"
-CopyMode: alwaysoverwrite; Source: examples\*.c;               DestDir: "{app}\Source\examples"
-CopyMode: alwaysoverwrite; Source: examples\*.dsp;             DestDir: "{app}\Source\examples"
-CopyMode: alwaysoverwrite; Source: tests\*.c;                  DestDir: "{app}\Source\tests"
-CopyMode: alwaysoverwrite; Source: tests\*.cpp;                DestDir: "{app}\Source\tests"
-CopyMode: alwaysoverwrite; Source: tests\*.h;                  DestDir: "{app}\Source\tests"
-CopyMode: alwaysoverwrite; Source: tests\README.txt;           DestDir: "{app}\Source\tests"
-CopyMode: alwaysoverwrite; Source: xmlwf\*.c*;                 DestDir: "{app}\Source\xmlwf"
-CopyMode: alwaysoverwrite; Source: xmlwf\*.h;                  DestDir: "{app}\Source\xmlwf"
-CopyMode: alwaysoverwrite; Source: xmlwf\*.dsp;                DestDir: "{app}\Source\xmlwf"
+Flags: ignoreversion; Source: xmlwf\Release\*.exe;        DestDir: "{app}"
+Flags: ignoreversion; Source: win32\MANIFEST.txt;         DestDir: "{app}"
+Flags: ignoreversion; Source: Changes;                    DestDir: "{app}"; DestName: Changes.txt
+Flags: ignoreversion; Source: COPYING;                    DestDir: "{app}"; DestName: COPYING.txt
+Flags: ignoreversion; Source: README;                     DestDir: "{app}"; DestName: README.txt
+Flags: ignoreversion; Source: doc\*.html;                 DestDir: "{app}\Doc"
+Flags: ignoreversion; Source: doc\*.css;                  DestDir: "{app}\Doc"
+Flags: ignoreversion; Source: doc\*.png;                  DestDir: "{app}\Doc"
+Flags: ignoreversion; Source: lib\Release\*.dll;          DestDir: "{app}\Libs"
+Flags: ignoreversion; Source: lib\Release\*.lib;          DestDir: "{app}\Libs"
+Flags: ignoreversion; Source: lib\Release-w\*.dll;        DestDir: "{app}\Libs"
+Flags: ignoreversion; Source: lib\Release-w\*.lib;        DestDir: "{app}\Libs"
+Flags: ignoreversion; Source: lib\Release_static\*.lib;   DestDir: "{app}\StaticLibs"
+Flags: ignoreversion; Source: lib\Release-w_static\*.lib; DestDir: "{app}\StaticLibs"
+Flags: ignoreversion; Source: expat.dsw;                  DestDir: "{app}\Source"
+Flags: ignoreversion; Source: win32\README.txt;           DestDir: "{app}\Source"
+Flags: ignoreversion; Source: bcb5\*.bp*;                 DestDir: "{app}\Source\bcb5"
+Flags: ignoreversion; Source: bcb5\*.mak;                 DestDir: "{app}\Source\bcb5"
+Flags: ignoreversion; Source: bcb5\*.def;                 DestDir: "{app}\Source\bcb5"
+Flags: ignoreversion; Source: bcb5\*.txt;                 DestDir: "{app}\Source\bcb5"
+Flags: ignoreversion; Source: bcb5\*.bat;                 DestDir: "{app}\Source\bcb5"
+Flags: ignoreversion; Source: lib\*.c;                    DestDir: "{app}\Source\lib"
+Flags: ignoreversion; Source: lib\*.h;                    DestDir: "{app}\Source\lib"
+Flags: ignoreversion; Source: lib\*.def;                  DestDir: "{app}\Source\lib"
+Flags: ignoreversion; Source: lib\*.dsp;                  DestDir: "{app}\Source\lib"
+Flags: ignoreversion; Source: examples\*.c;               DestDir: "{app}\Source\examples"
+Flags: ignoreversion; Source: examples\*.dsp;             DestDir: "{app}\Source\examples"
+Flags: ignoreversion; Source: tests\*.c;                  DestDir: "{app}\Source\tests"
+Flags: ignoreversion; Source: tests\*.cpp;                DestDir: "{app}\Source\tests"
+Flags: ignoreversion; Source: tests\*.h;                  DestDir: "{app}\Source\tests"
+Flags: ignoreversion; Source: tests\README.txt;           DestDir: "{app}\Source\tests"
+Flags: ignoreversion; Source: tests\benchmark\*.c;        DestDir: "{app}\Source\tests\benchmark"
+Flags: ignoreversion; Source: tests\benchmark\*.ds*;      DestDir: "{app}\Source\tests\benchmark"
+Flags: ignoreversion; Source: tests\benchmark\README.txt; DestDir: "{app}\Source\tests\benchmark"
+Flags: ignoreversion; Source: xmlwf\*.c*;                 DestDir: "{app}\Source\xmlwf"
+Flags: ignoreversion; Source: xmlwf\*.h;                  DestDir: "{app}\Source\xmlwf"
+Flags: ignoreversion; Source: xmlwf\*.dsp;                DestDir: "{app}\Source\xmlwf"
 
 [Messages]
 WelcomeLabel1=Welcome to the Expat XML Parser Setup Wizard

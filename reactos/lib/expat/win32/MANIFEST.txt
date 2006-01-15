@@ -26,4 +26,4 @@ directory you specified to the installer.
     <top>\Source\bcb5\  Project files for Borland C++ Builder 5 and BCC
                         5.5.
 
-    <top>\Unistall\     The uninstaller and its data files.
+

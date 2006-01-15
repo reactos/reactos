@@ -25,8 +25,8 @@ dnl test. I believe this test will work, but I don't have a place with non-
 dnl GNU M4 to test it right now.
 define([expat_version], ifdef([__gnu__],
                               [esyscmd(conftools/get-version.sh lib/expat.h)],
-                              [1.95.x]))
-AC_INIT(expat, expat_version, expat-bugs@mail.libexpat.org)
+                              [2.0.x]))
+AC_INIT(expat, expat_version, expat-bugs@libexpat.org)
 undefine([expat_version])
 
 AC_CONFIG_SRCDIR(Makefile.in)
@@ -44,7 +44,7 @@ dnl
 dnl If the API changes incompatibly set LIBAGE back to 0
 dnl
 
-LIBCURRENT=5
+LIBCURRENT=6
 LIBREVISION=0
 LIBAGE=5
 

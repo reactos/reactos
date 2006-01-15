@@ -7,8 +7,8 @@
 # Note: tagname may be HEAD to just grab the head revision (e.g. for testing)
 #
 
-CVSROOT=':ext:cvs.libexpat.org:/cvsroot/expat'
-#CVSROOT=':pserver:anonymous@cvs.libexpat.org:/cvsroot/expat'
+#CVSROOT=':ext:cvs.libexpat.org:/cvsroot/expat'
+CVSROOT=':pserver:anonymous@cvs.libexpat.org:/cvsroot/expat'
 
 if test $# != 1; then
   echo "USAGE: $0 tagname"

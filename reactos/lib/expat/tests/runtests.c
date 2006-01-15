@@ -17,6 +17,15 @@
 #include "chardata.h"
 #include "minicheck.h"
 
+#ifdef AMIGA_SHARED_LIB
+#include <proto/expat.h>
+#endif
+
+#ifdef XML_LARGE_SIZE
+#define XML_FMT_INT_MOD "ll"
+#else
+#define XML_FMT_INT_MOD "l"
+#endif
 
 static XML_Parser parser;
 
@@ -45,7 +54,8 @@ _xml_failure(XML_Parser parser, const char *file, int line)
 {
     char buffer[1024];
     sprintf(buffer,
-            "\n    %s (line %d, offset %d)\n    reported from %s, line %d",
+            "\n    %s (line %" XML_FMT_INT_MOD "u, offset %"\
+                XML_FMT_INT_MOD "u)\n    reported from %s, line %d",
             XML_ErrorString(XML_GetErrorCode(parser)),
             XML_GetCurrentLineNumber(parser),
             XML_GetCurrentColumnNumber(parser),
@@ -397,14 +407,15 @@ START_TEST(test_line_number_after_parse)
         "<tag>\n"
         "\n"
         "\n</tag>";
-    int lineno;
+    XML_Size lineno;
 
     if (XML_Parse(parser, text, strlen(text), XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
     lineno = XML_GetCurrentLineNumber(parser);
     if (lineno != 4) {
         char buffer[100];
-        sprintf(buffer, "expected 4 lines, saw %d", lineno);
+        sprintf(buffer, 
+            "expected 4 lines, saw %" XML_FMT_INT_MOD "u", lineno);
         fail(buffer);
     }
 }
@@ -414,14 +425,15 @@ END_TEST
 START_TEST(test_column_number_after_parse)
 {
     char *text = "<tag></tag>";
-    int colno;
+    XML_Size colno;
 
     if (XML_Parse(parser, text, strlen(text), XML_FALSE) == XML_STATUS_ERROR)
         xml_failure(parser);
     colno = XML_GetCurrentColumnNumber(parser);
     if (colno != 11) {
         char buffer[100];
-        sprintf(buffer, "expected 11 columns, saw %d", colno);
+        sprintf(buffer, 
+            "expected 11 columns, saw %" XML_FMT_INT_MOD "u", colno);
         fail(buffer);
     }
 }
@@ -434,7 +446,9 @@ start_element_event_handler2(void *userData, const XML_Char *name,
     CharData *storage = (CharData *) userData;
     char buffer[100];
 
-    sprintf(buffer, "<%s> at col:%d line:%d\n", name,
+    sprintf(buffer,
+        "<%s> at col:%" XML_FMT_INT_MOD "u line:%"\
+            XML_FMT_INT_MOD "u\n", name,
 	    XML_GetCurrentColumnNumber(parser),
 	    XML_GetCurrentLineNumber(parser));
     CharData_AppendString(storage, buffer);
@@ -446,7 +460,9 @@ end_element_event_handler2(void *userData, const XML_Char *name)
     CharData *storage = (CharData *) userData;
     char buffer[100];
 
-    sprintf(buffer, "</%s> at col:%d line:%d\n", name,
+    sprintf(buffer,
+        "</%s> at col:%" XML_FMT_INT_MOD "u line:%"\
+            XML_FMT_INT_MOD "u\n", name,
 	    XML_GetCurrentColumnNumber(parser),
 	    XML_GetCurrentLineNumber(parser));
     CharData_AppendString(storage, buffer);
@@ -495,14 +511,14 @@ START_TEST(test_line_number_after_error)
         "<a>\n"
         "  <b>\n"
         "  </a>";  /* missing </b> */
-    int lineno;
+    XML_Size lineno;
     if (XML_Parse(parser, text, strlen(text), XML_FALSE) != XML_STATUS_ERROR)
         fail("Expected a parse error");
 
     lineno = XML_GetCurrentLineNumber(parser);
     if (lineno != 3) {
         char buffer[100];
-        sprintf(buffer, "expected 3 lines, saw %d", lineno);
+        sprintf(buffer, "expected 3 lines, saw %" XML_FMT_INT_MOD "u", lineno);
         fail(buffer);
     }
 }
@@ -515,14 +531,15 @@ START_TEST(test_column_number_after_error)
         "<a>\n"
         "  <b>\n"
         "  </a>";  /* missing </b> */
-    int colno;
+    XML_Size colno;
     if (XML_Parse(parser, text, strlen(text), XML_FALSE) != XML_STATUS_ERROR)
         fail("Expected a parse error");
 
     colno = XML_GetCurrentColumnNumber(parser);
     if (colno != 4) { 
         char buffer[100];
-        sprintf(buffer, "expected 4 columns, saw %d", colno);
+        sprintf(buffer, 
+            "expected 4 columns, saw %" XML_FMT_INT_MOD "u", colno);
         fail(buffer);
     }
 }
@@ -1385,8 +1402,13 @@ make_suite(void)
 }
 
 
+#ifdef AMIGA_SHARED_LIB
+int
+amiga_main(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
     int i, nf;
     int forking = 0, forking_set = 0;
