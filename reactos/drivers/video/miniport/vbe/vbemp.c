@@ -875,7 +875,8 @@ VBEQueryMode(
    ULONG VideoModeId)
 {
    PVBE_MODEINFO VBEMode = &DeviceExtension->ModeInfo[VideoModeId];
-
+   INT dwCalc; 
+   
    VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
    VideoMode->ModeIndex = VideoModeId;
    VideoMode->VisScreenWidth = VBEMode->XResolution;
@@ -887,8 +888,61 @@ VBEQueryMode(
    VideoMode->NumberOfPlanes = VBEMode->NumberOfPlanes;
    VideoMode->BitsPerPlane = VBEMode->BitsPerPixel / VBEMode->NumberOfPlanes;
    VideoMode->Frequency = 1;
-   VideoMode->XMillimeter = 0; /* FIXME */
-   VideoMode->YMillimeter = 0; /* FIXME */
+
+   /*  FIXME 
+    *  how do I get the dpi from the monitor ??, for now 
+    * I (GreatLord) will assume 72dpi for the monitor, few monitor can have more or less 72dpi
+    * you need pay alot of money to get one, that have more that 72dpi. 
+    *
+    * math inch  = pixel / 72dpi 
+    * math Millimeter  = pixel / (72dpi / 2.571428571) * 10
+    * 
+    */
+
+   VideoMode->XMillimeter = VBEMode->XResolution / 28;      
+   dwCalc = VBEMode->XResolution % 28;
+   if ((dwCalc>=3) && (dwCalc<=5))
+       VideoMode->XMillimeter +=1;
+   else if ((dwCalc>=6) && (dwCalc<=8))
+       VideoMode->XMillimeter +=2;
+   else if ((dwCalc>=9) && (dwCalc<=11))
+       VideoMode->XMillimeter +=3;
+   else if ((dwCalc>=12) && (dwCalc<=13))
+       VideoMode->XMillimeter +=4;
+   else if ((dwCalc>=15) && (dwCalc<=16))
+       VideoMode->XMillimeter +=5;
+   else if ((dwCalc>=17) && (dwCalc<=19))
+       VideoMode->XMillimeter +=6;
+   else if ((dwCalc>=20) && (dwCalc<=22))
+       VideoMode->XMillimeter +=7;
+   else if ((dwCalc>=23) && (dwCalc<=25))
+       VideoMode->XMillimeter +=8;
+   else if ((dwCalc>=26) && (dwCalc<=27))
+       VideoMode->XMillimeter +=9;
+
+   VideoMode->YMillimeter = VBEMode->YResolution / 28;
+   dwCalc = VBEMode->YResolution % 28;
+   if ((dwCalc>=3) && (dwCalc<=5))
+       VideoMode->YMillimeter +=1;
+   else if ((dwCalc>=6) && (dwCalc<=8))
+       VideoMode->YMillimeter +=2;
+   else if ((dwCalc>=9) && (dwCalc<=11))
+       VideoMode->YMillimeter +=3;
+   else if ((dwCalc>=12) && (dwCalc<=13))
+       VideoMode->YMillimeter +=4;
+   else if ((dwCalc>=15) && (dwCalc<=16))
+       VideoMode->YMillimeter +=5;
+   else if ((dwCalc>=17) && (dwCalc<=19))
+       VideoMode->YMillimeter +=6;
+   else if ((dwCalc>=20) && (dwCalc<=22))
+       VideoMode->YMillimeter +=7;
+   else if ((dwCalc>=23) && (dwCalc<=25))
+       VideoMode->YMillimeter +=8;
+   else if ((dwCalc>=26) && (dwCalc<=27))
+       VideoMode->YMillimeter +=9;
+   
+   
+
    if (VBEMode->BitsPerPixel > 8)
    {
       /*
