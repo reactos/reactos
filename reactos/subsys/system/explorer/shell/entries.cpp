@@ -59,6 +59,7 @@ Entry::Entry(Entry* parent, ENTRY_TYPE etype)
 	_bhfi_valid = false;
 	_level = 0;
 	_icon_id = ICID_UNKNOWN;
+	_shell_attribs = 0;
 	_display_name = _data.cFileName;
 	_type_name = NULL;
 	_content = NULL;
@@ -167,19 +168,53 @@ Root::~Root()
 }
 
 
- // directories first...
-static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
-{
-	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+ // sort order for different directory/file types
+enum TYPE_ORDER {
+	TO_DIR		= 0,
+	TO_DOT		= 1,
+	TO_DOTDOT	= 2,
+	TO_OTHER_DIR= 3,
+	TO_FILE		= 4,
+	TO_VIRTUAL	= 8
+};
 
-	/* Handle "." and ".." as special case and move them at the very first beginning. */
-	if (order1 && order2) {
-		order1 = fd1->cFileName[0]!='.'? 1: fd1->cFileName[1]=='.'? 2: fd1->cFileName[1]=='\0'? 3: 1;
-		order2 = fd2->cFileName[0]!='.'? 1: fd2->cFileName[1]=='.'? 2: fd2->cFileName[1]=='\0'? 3: 1;
+ // distinguish between ".", ".." and any other directory names
+static TYPE_ORDER TypeOrderFromDirname(LPCTSTR name)
+{
+	if (name[0] == '.') {
+		if (name[1] == '\0')
+			return TO_DOT;		// "."
+
+		if (name[1]=='.' && name[2]=='\0')
+			return TO_DOTDOT;	// ".."
 	}
 
-	return order2==order1? 0: order2<order1? -1: 1;
+	return TO_OTHER_DIR;		// any other directory
+}
+
+ // directories first...
+static int compareType(const Entry* entry1, const Entry* entry2)
+{
+	const WIN32_FIND_DATA* fd1 = &entry1->_data;
+	const WIN32_FIND_DATA* fd2 = &entry2->_data;
+
+	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
+	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
+
+	 // Handle "." and ".." as special case and move them at the very first beginning.
+	if (order1==TO_DIR && order2==TO_DIR) {
+		order1 = TypeOrderFromDirname(fd1->cFileName);
+		order2 = TypeOrderFromDirname(fd2->cFileName);
+	}
+
+	 // Move virtual folders after physical folders
+	if (!(entry1->_shell_attribs & SFGAO_FILESYSTEM))
+		order1 |= TO_VIRTUAL;
+
+	if (!(entry2->_shell_attribs & SFGAO_FILESYSTEM))
+		order2 |= TO_VIRTUAL;
+
+	return order2==order1? 0: order1<order2? -1: 1;
 }
 
 
@@ -190,28 +225,28 @@ static int compareNothing(const void* arg1, const void* arg2)
 
 static int compareName(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	const Entry* entry1 = *(const Entry**)arg1;
+	const Entry* entry2 = *(const Entry**)arg2;
 
-	int cmp = compareType(fd1, fd2);
+	int cmp = compareType(entry1, entry2);
 	if (cmp)
 		return cmp;
 
-	return lstrcmpi(fd1->cFileName, fd2->cFileName);
+	return lstrcmpi(entry1->_data.cFileName, entry2->_data.cFileName);
 }
 
 static int compareExt(const void* arg1, const void* arg2)
 {
-	const WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	const WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	const Entry* entry1 = *(const Entry**)arg1;
+	const Entry* entry2 = *(const Entry**)arg2;
 	const TCHAR *name1, *name2, *ext1, *ext2;
 
-	int cmp = compareType(fd1, fd2);
+	int cmp = compareType(entry1, entry2);
 	if (cmp)
 		return cmp;
 
-	name1 = fd1->cFileName;
-	name2 = fd2->cFileName;
+	name1 = entry1->_data.cFileName;
+	name2 = entry2->_data.cFileName;
 
 	ext1 = _tcsrchr(name1, TEXT('.'));
 	ext2 = _tcsrchr(name2, TEXT('.'));
@@ -235,35 +270,35 @@ static int compareExt(const void* arg1, const void* arg2)
 
 static int compareSize(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	const Entry* entry1 = *(const Entry**)arg1;
+	const Entry* entry2 = *(const Entry**)arg2;
 
-	int cmp = compareType(fd1, fd2);
+	int cmp = compareType(entry1, entry2);
 	if (cmp)
 		return cmp;
 
-	cmp = fd2->nFileSizeHigh - fd1->nFileSizeHigh;
+	cmp = entry2->_data.nFileSizeHigh - entry1->_data.nFileSizeHigh;
 
 	if (cmp < 0)
 		return -1;
 	else if (cmp > 0)
 		return 1;
 
-	cmp = fd2->nFileSizeLow - fd1->nFileSizeLow;
+	cmp = entry2->_data.nFileSizeLow - entry1->_data.nFileSizeLow;
 
 	return cmp<0? -1: cmp>0? 1: 0;
 }
 
 static int compareDate(const void* arg1, const void* arg2)
 {
-	WIN32_FIND_DATA* fd1 = &(*(Entry**)arg1)->_data;
-	WIN32_FIND_DATA* fd2 = &(*(Entry**)arg2)->_data;
+	const Entry* entry1 = *(const Entry**)arg1;
+	const Entry* entry2 = *(const Entry**)arg2;
 
-	int cmp = compareType(fd1, fd2);
+	int cmp = compareType(entry1, entry2);
 	if (cmp)
 		return cmp;
 
-	return CompareFileTime(&fd2->ftLastWriteTime, &fd1->ftLastWriteTime);
+	return CompareFileTime(&entry2->_data.ftLastWriteTime, &entry1->_data.ftLastWriteTime);
 }
 
 
