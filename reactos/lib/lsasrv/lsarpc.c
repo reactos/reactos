@@ -11,18 +11,84 @@
 #define NDEBUG
 #include <debug.h>
 
+#define POLICY_DELETE (RTL_HANDLE_VALID << 1)
+typedef struct _LSAR_POLICY_HANDLE
+{
+    ULONG Flags;
+    LONG RefCount;
+    ACCESS_MASK AccessGranted;
+} LSAR_POLICY_HANDLE, *PLSAR_POLICY_HANDLE;
 
-/* GLOBALS *****************************************************************/
-
-/* VARIABLES ***************************************************************/
-
+static RTL_CRITICAL_SECTION PolicyHandleTableLock;
+static RTL_HANDLE_TABLE PolicyHandleTable;
 
 /* FUNCTIONS ***************************************************************/
+
+static NTSTATUS
+ReferencePolicyHandle(IN LSA_HANDLE ObjectHandle,
+                      IN ACCESS_MASK DesiredAccess,
+                      OUT PLSAR_POLICY_HANDLE *Policy)
+{
+    PLSAR_POLICY_HANDLE ReferencedPolicy;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    RtlEnterCriticalSection(&PolicyHandleTableLock);
+
+    if (RtlIsValidIndexHandle(&PolicyHandleTable,
+                              (ULONG)ObjectHandle,
+                              (PRTL_HANDLE_TABLE_ENTRY*)&ReferencedPolicy) &&
+        !(ReferencedPolicy->Flags & POLICY_DELETE))
+    {
+        if (RtlAreAllAccessesGranted(ReferencedPolicy->AccessGranted,
+                                     DesiredAccess))
+        {
+            ReferencedPolicy->RefCount++;
+            *Policy = ReferencedPolicy;
+        }
+        else
+            Status = STATUS_ACCESS_DENIED;
+    }
+    else
+        Status = STATUS_INVALID_HANDLE;
+
+    RtlLeaveCriticalSection(&PolicyHandleTableLock);
+
+    return Status;
+}
+
+static VOID
+DereferencePolicyHandle(IN OUT PLSAR_POLICY_HANDLE Policy,
+                        IN BOOLEAN Delete)
+{
+    RtlEnterCriticalSection(&PolicyHandleTableLock);
+
+    if (Delete)
+    {
+        Policy->Flags |= POLICY_DELETE;
+        Policy->RefCount--;
+
+        ASSERT(Policy->RefCount != 0);
+    }
+
+    if (--Policy->RefCount == 0)
+    {
+        ASSERT(Policy->Flags & POLICY_DELETE);
+        RtlFreeHandle(&PolicyHandleTable,
+                      (PRTL_HANDLE_TABLE_ENTRY)Policy);
+    }
+
+    RtlLeaveCriticalSection(&PolicyHandleTableLock);
+}
 
 VOID
 LsarStartRpcServer(VOID)
 {
     RPC_STATUS Status;
+
+    RtlInitializeCriticalSection(&PolicyHandleTableLock);
+    RtlInitializeHandleTable(0x1000,
+                             sizeof(LSAR_POLICY_HANDLE),
+                             &PolicyHandleTable);
 
     DPRINT("LsarStartRpcServer() called");
 
@@ -60,8 +126,22 @@ unsigned int
 LsarClose(IN handle_t BindingHandle,
           IN unsigned long ObjectHandle)
 {
+    PLSAR_POLICY_HANDLE Policy = NULL;
+    NTSTATUS Status;
+
     DPRINT1("LsarClose(0x%p) called!\n", ObjectHandle);
-    return STATUS_INVALID_HANDLE;
+
+    Status = ReferencePolicyHandle((LSA_HANDLE)ObjectHandle,
+                                   0,
+                                   &Policy);
+    if (NT_SUCCESS(Status))
+    {
+        /* delete the handle */
+        DereferencePolicyHandle(Policy,
+                                TRUE);
+    }
+
+    return Status;
 }
 
 /* EOF */
