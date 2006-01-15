@@ -905,9 +905,9 @@ XML_GetErrorCode(XML_Parser parser);
    was detected; otherwise the location is the location of the last
    parse event, as described above.
 */
-XMLPARSEAPI(int) XML_GetCurrentLineNumber(XML_Parser parser);
-XMLPARSEAPI(int) XML_GetCurrentColumnNumber(XML_Parser parser);
-XMLPARSEAPI(long) XML_GetCurrentByteIndex(XML_Parser parser);
+XMLPARSEAPI(XML_Size) XML_GetCurrentLineNumber(XML_Parser parser);
+XMLPARSEAPI(XML_Size) XML_GetCurrentColumnNumber(XML_Parser parser);
+XMLPARSEAPI(XML_Index) XML_GetCurrentByteIndex(XML_Parser parser);
 
 /* Return the number of bytes in the current event.
    Returns 0 if the event is in an internal entity.
@@ -1002,9 +1002,9 @@ XML_GetFeatureList(void);
    releases. Micro is bumped with each release, and set to 0 with each
    change to major or minor version.
 */
-#define XML_MAJOR_VERSION 1
-#define XML_MINOR_VERSION 95
-#define XML_MICRO_VERSION 8
+#define XML_MAJOR_VERSION 2
+#define XML_MINOR_VERSION 0
+#define XML_MICRO_VERSION 0
 
 #ifdef __cplusplus
 }
