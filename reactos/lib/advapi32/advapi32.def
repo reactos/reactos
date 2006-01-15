@@ -351,7 +351,7 @@ LsaClose@4
 ;LsaCreateSecret@16
 ;LsaCreateTrustedDomain@16
 ;LsaCreateTrustedDomainEx
-;LsaDelete@4
+LsaDelete@4
 ;LsaDeleteTrustedDomain@8
 LsaEnumerateAccountRights@16
 ;LsaEnumerateAccounts@20

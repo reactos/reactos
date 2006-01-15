@@ -92,6 +92,22 @@ LsaClose(LSA_HANDLE ObjectHandle)
                      (unsigned long)ObjectHandle);
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+LsaDelete(LSA_HANDLE ObjectHandle)
+{
+    DPRINT("LsaDelete(0x%p) called\n", ObjectHandle);
+
+    LSAHandleBind();
+
+    return LsarDelete(LSABindingHandle,
+                      (unsigned long)ObjectHandle);
+}
+
+
 /*
  * @unimplemented
  */

@@ -39,4 +39,8 @@ interface lsarpc
     /* Function 0 */
     NTSTATUS LsarClose(handle_t BindingHandle,
                        [in] LSA_HANDLE ObjectHandle);
+
+    /* Function 1 */
+    NTSTATUS LsarDelete(handle_t BindingHandle,
+                        [in] LSA_HANDLE ObjectHandle);
 }

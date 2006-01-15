@@ -144,4 +144,13 @@ LsarClose(IN handle_t BindingHandle,
     return Status;
 }
 
+/* Function 1 */
+unsigned int
+LsarDelete(IN handle_t BindingHandle,
+           IN unsigned long ObjectHandle)
+{
+    DPRINT1("LsarDelete(0x%p) UNIMPLEMENTED!\n", ObjectHandle);
+    return STATUS_ACCESS_DENIED;
+}
+
 /* EOF */
