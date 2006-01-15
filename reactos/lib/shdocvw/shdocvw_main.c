@@ -406,6 +406,7 @@ static BOOL SHDOCVW_TryDownloadMozillaControl(void)
     WCHAR buf[0x100];
     static const WCHAR szTitle[] = { 'R','e','a','c','t','O','S',0 };
     HANDLE hsem;
+	BOOL ret = TRUE;
 
     SetLastError( ERROR_SUCCESS );
     hsem = CreateSemaphoreA( NULL, 0, 1, "mozctl_install_semaphore");
@@ -413,17 +414,18 @@ static BOOL SHDOCVW_TryDownloadMozillaControl(void)
     {
         LoadStringW( shdocvw_hinstance, 1001, buf, sizeof buf/sizeof(WCHAR) );
         r = MessageBoxW(NULL, buf, szTitle, MB_YESNO | MB_ICONQUESTION);
-        if( r != IDYES )
-            return FALSE;
-
-        DialogBoxW(shdocvw_hinstance, MAKEINTRESOURCEW(100), 0, dlProc);
+        if( r == IDYES )
+			DialogBoxW(shdocvw_hinstance, MAKEINTRESOURCEW(100), 0, dlProc);
+		else
+			ret = FALSE;
     }
     else
         WaitForSingleObject( hsem, INFINITE );
+
     ReleaseSemaphore( hsem, 1, NULL );
     CloseHandle( hsem );
-    
-    return TRUE;
+
+    return ret;
 }
  
 static BOOL SHDOCVW_TryLoadMozillaControl(void)
