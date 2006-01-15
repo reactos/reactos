@@ -141,9 +141,10 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
   PSTAB_ENTRY StabEntry;
   ULONG Count, i;
   ULONG_PTR Address, LastFunctionAddress;
-  int First;
+  int First = 1;
   char *Name;
   char FuncName[256];
+  PROSSYM_ENTRY Current;
 
   StabEntry = StabSymbolsBase;
   Count = StabSymbolsLength / sizeof(STAB_ENTRY);
@@ -161,11 +162,20 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
       fprintf(stderr, "Failed to allocate memory for converted .stab symbols\n");
       return 1;
     }
+  Current = *SymbolsBase;
+  memset ( Current, 0, sizeof(*Current) );
 
   LastFunctionAddress = 0;
-  First = 1;
   for (i = 0; i < Count; i++)
     {
+      if ( 0 == LastFunctionAddress )
+        {
+          Address = StabEntry[i].n_value - ImageBase;
+        }
+      else
+        {
+          Address = LastFunctionAddress + StabEntry[i].n_value;
+        }
       switch (StabEntry[i].n_type)
         {
           case N_SO:
@@ -179,32 +189,37 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
               {
                 continue;
               }
-            Address = StabEntry[i].n_value - ImageBase;
-            if (Address != (*SymbolsBase)[*SymbolsCount].Address && ! First)
+            if ( First || Address != Current->Address )
               {
-                (*SymbolsCount)++;
+                if ( !First )
+                  {
+                    memset ( ++Current, 0, sizeof(*Current) );
+                    Current->FunctionOffset = Current[-1].FunctionOffset;
+                  }
+                else
+                  First = 0;
+                Current->Address = Address;
               }
-            (*SymbolsBase)[*SymbolsCount].Address = Address;
-            (*SymbolsBase)[*SymbolsCount].FileOffset = FindOrAddString((char *) StabStringsBase
-                                                                       + StabEntry[i].n_strx,
-                                                                       StringsLength,
-                                                                       StringsBase);
-            (*SymbolsBase)[*SymbolsCount].FunctionOffset = 0;
-            (*SymbolsBase)[*SymbolsCount].SourceLine = 0;
-            LastFunctionAddress = 0;
+            Current->FileOffset = FindOrAddString((char *)StabStringsBase
+                                                  + StabEntry[i].n_strx,
+                                                  StringsLength,
+                                                  StringsBase);
             break;
           case N_FUN:
-            if (0 == StabEntry[i].n_desc || StabEntry[i].n_value < ImageBase) /* line # 0 isn't valid */
+            if (0 == StabEntry[i].n_desc || StabEntry[i].n_value < ImageBase)
               {
+                LastFunctionAddress = 0; /* line # 0 = end of function */
                 continue;
               }
-            Address = StabEntry[i].n_value - ImageBase;
-            if (Address != (*SymbolsBase)[*SymbolsCount].Address && ! First)
+            if ( First || Address != Current->Address )
               {
-                (*SymbolsCount)++;
-                (*SymbolsBase)[*SymbolsCount].FileOffset = (*SymbolsBase)[*SymbolsCount - 1].FileOffset;
+                if ( !First )
+                  memset ( ++Current, 0, sizeof(*Current) );
+                else
+                  First = 0;
+                Current->Address = Address;
+                Current->FileOffset = Current[-1].FileOffset;
               }
-            (*SymbolsBase)[*SymbolsCount].Address = Address;
             if (sizeof(FuncName) <= strlen((char *) StabStringsBase + StabEntry[i].n_strx))
               {
                 free(*SymbolsBase);
@@ -217,36 +232,32 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
               {
                 *Name = '\0';
               }
-            (*SymbolsBase)[*SymbolsCount].FunctionOffset = FindOrAddString(FuncName,
-                                                                           StringsLength,
-                                                                           StringsBase);
-            (*SymbolsBase)[*SymbolsCount].SourceLine = 0;
+            Current->FunctionOffset = FindOrAddString(FuncName,
+                                                      StringsLength,
+                                                      StringsBase);
+            Current->SourceLine = 0;
             LastFunctionAddress = Address;
             break;
           case N_SLINE:
-            if (0 == LastFunctionAddress)
+            if ( First || Address != Current->Address )
               {
-                Address = StabEntry[i].n_value - ImageBase;
+                if ( !First )
+                  {
+                    memset ( ++Current, 0, sizeof(*Current) );
+                    Current->FileOffset = Current[-1].FileOffset;
+                    Current->FunctionOffset = Current[-1].FunctionOffset;
+                  }
+                else
+                  First = 0;
+                Current->Address = Address;
               }
-            else
-              {
-                Address = LastFunctionAddress + StabEntry[i].n_value;
-              }
-            if (Address != (*SymbolsBase)[*SymbolsCount].Address && ! First)
-              {
-                (*SymbolsCount)++;
-                (*SymbolsBase)[*SymbolsCount].FileOffset = (*SymbolsBase)[*SymbolsCount - 1].FileOffset;
-                (*SymbolsBase)[*SymbolsCount].FunctionOffset = (*SymbolsBase)[*SymbolsCount - 1].FunctionOffset;
-              }
-            (*SymbolsBase)[*SymbolsCount].Address = Address;
-            (*SymbolsBase)[*SymbolsCount].SourceLine = StabEntry[i].n_desc;
+            Current->SourceLine = StabEntry[i].n_desc;
             break;
           default:
             continue;
         }
-      First = 0;
     }
-  (*SymbolsCount)++;
+  *SymbolsCount = (Current - *SymbolsBase + 1);
 
   qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
@@ -265,6 +276,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
   PCOFF_SYMENT CoffEntry;
   char FuncName[256];
   char *p;
+  PROSSYM_ENTRY Current;
 
   CoffEntry = (PCOFF_SYMENT) CoffSymbolsBase;
   Count = CoffSymbolsLength / sizeof(COFF_SYMENT);
@@ -275,12 +287,13 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
       return 1;
     }
   *SymbolsCount = 0;
+  Current = *SymbolsBase;
 
   for (i = 0; i < Count; i++)
     {
       if (ISFCN(CoffEntry[i].e_type) || C_EXT == CoffEntry[i].e_sclass)
         {
-          (*SymbolsBase)[*SymbolsCount].Address = CoffEntry[i].e_value;
+          Current->Address = CoffEntry[i].e_value;
           if (0 < CoffEntry[i].e_scnum)
             {
               if (PEFileHeader->NumberOfSections < CoffEntry[i].e_scnum)
@@ -290,9 +303,9 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                           CoffEntry[i].e_scnum, PEFileHeader->NumberOfSections);
                   return 1;
                 }
-              (*SymbolsBase)[*SymbolsCount].Address += PESectionHeaders[CoffEntry[i].e_scnum - 1].VirtualAddress;
+              Current->Address += PESectionHeaders[CoffEntry[i].e_scnum - 1].VirtualAddress;
             }
-          (*SymbolsBase)[*SymbolsCount].FileOffset = 0;
+          Current->FileOffset = 0;
           if (0 == CoffEntry[i].e.e.e_zeroes)
             {
               if (sizeof(FuncName) <= strlen((char *) CoffStringsBase + CoffEntry[i].e.e.e_offset))
@@ -316,15 +329,16 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
               *p = '\0';
             }
           p = ('_' == FuncName[0] || '@' == FuncName[0] ? FuncName + 1 : FuncName);
-          (*SymbolsBase)[*SymbolsCount].FunctionOffset = FindOrAddString(p,
+          Current->FunctionOffset = FindOrAddString(p,
                                                                          StringsLength,
                                                                          StringsBase);
-          (*SymbolsBase)[*SymbolsCount].SourceLine = 0;
-          (*SymbolsCount)++;
+          Current->SourceLine = 0;
+          memset ( ++Current, 0, sizeof(*Current) );
         }
       i += CoffEntry[i].e_numaux;
     }
 
+  *SymbolsCount = (Current - *SymbolsBase + 1);
   qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
   return 0;
