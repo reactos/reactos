@@ -94,6 +94,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
+        Thread->NpxState = NPX_STATE_INVALID;
 
         /* Check if we support FXsr */
         if (KeI386FxsrPresent)
@@ -136,7 +137,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
                                                   CONTEXT_FLOATING_POINT;
 
             /* Set the Thread's NPX State */
-            Thread->NpxState = NPX_STATE_NOT_LOADED;
+            Thread->NpxState = NPX_STATE_INVALID;
             Thread->DispatcherHeader.NpxIrql = PASSIVE_LEVEL;
         }
         else
@@ -147,13 +148,13 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         }
 
         /* Disable any debug regiseters */
+        Context->ContextFlags &= ~CONTEXT_DEBUG_REGISTERS;
         Context->Dr0 = 0;
         Context->Dr1 = 0;
         Context->Dr2 = 0;
         Context->Dr3 = 0;
         Context->Dr6 = 0;
         Context->Dr7 = 0;
-        Context->ContextFlags &= ~CONTEXT_DEBUG_REGISTERS;
 
         /* Setup the Trap Frame */
         TrapFrame = &InitFrame->TrapFrame;
