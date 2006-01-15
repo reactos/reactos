@@ -3,8 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/thread.c
  * PURPOSE:         i386 Thread Context Creation
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ****************************************************************/
@@ -13,13 +12,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-typedef struct _KSHARED_CTXSWITCH_FRAME {
+typedef struct _KSHARED_CTXSWITCH_FRAME
+{
     ULONG Esp0;
     PVOID ExceptionList;
     PVOID RetEip;
 } KSHARED_CTXSWITCH_FRAME, *PKSHARED_CTXSWITCH_FRAME;
 
-typedef struct _KSTART_FRAME {
+typedef struct _KSTART_FRAME
+{
     PKSYSTEM_ROUTINE SystemRoutine;
     PKSTART_ROUTINE StartRoutine;
     PVOID StartContext;
@@ -65,38 +66,112 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
                            PVOID StartContext,
-                           PCONTEXT Context)
+                           PCONTEXT ContextPointer)
 {
     PFX_SAVE_AREA FxSaveArea;
+    PFXSAVE_FORMAT FxSaveFormat;
     PKSTART_FRAME StartFrame;
     PKSHARED_CTXSWITCH_FRAME CtxSwitchFrame;
-    PKTRAP_FRAME TrapFrame = NULL;
+    PKTRAP_FRAME TrapFrame;
+    CONTEXT LocalContext;
+    PCONTEXT Context = NULL;
+    ULONG ContextFlags;
 
     /* Check if this is a With-Context Thread */
     DPRINT("Ke386InitThreadContext\n");
-    if (Context)
+    if (ContextPointer)
     {
         /* Set up the Initial Frame */
         PKUINIT_FRAME InitFrame;
-        InitFrame = (PKUINIT_FRAME)((ULONG_PTR)Thread->InitialStack - sizeof(KUINIT_FRAME));
-        DPRINT("Setting up a user-mode thread with the Frame at: %x\n", InitFrame);
+        InitFrame = (PKUINIT_FRAME)((ULONG_PTR)Thread->InitialStack -
+                                    sizeof(KUINIT_FRAME));
+        DPRINT("Setting up a user-mode thread. InitFrame at: %p\n", InitFrame);
+
+        /* Copy over the context we got */
+        RtlMoveMemory(&LocalContext, ContextPointer, sizeof(CONTEXT));
+        Context = &LocalContext;
+        ContextFlags = CONTEXT_CONTROL;
+
+        /* Setup the Fx Area */
+        FxSaveArea = &InitFrame->FxSaveArea;
+
+        /* Check if we support FXsr */
+        if (KeI386FxsrPresent)
+        {
+            /* Get the FX Save Format Area */
+            FxSaveFormat = (PFXSAVE_FORMAT)Context->ExtendedRegisters;
+
+            /* Set an initial state */
+            FxSaveFormat->ControlWord = 0x27F;
+            FxSaveFormat->StatusWord = 0;
+            FxSaveFormat->TagWord = 0;
+            FxSaveFormat->ErrorOffset = 0;
+            FxSaveFormat->ErrorSelector = 0;
+            FxSaveFormat->DataOffset =0;
+            FxSaveFormat->DataSelector = 0;
+            FxSaveFormat->MXCsr = 0x1F80;
+        }
+        else
+        {
+            /* Setup the regular save area */
+            Context->FloatSave.ControlWord = 0x27F;
+            Context->FloatSave.StatusWord = 0;
+            Context->FloatSave.TagWord = -1;
+            Context->FloatSave.ErrorOffset = 0;
+            Context->FloatSave.ErrorSelector = 0;
+            Context->FloatSave.DataOffset =0;
+            Context->FloatSave.DataSelector = 0;
+        }
+
+        /* Check if the CPU has NPX */
+        if (KeI386NpxPresent)
+        {
+            /* Set an intial NPX State */
+            Context->FloatSave.Cr0NpxState = 0;
+            FxSaveArea->Cr0NpxState = 0;
+            FxSaveArea->NpxSavedCpu = 0;
+
+            /* Now set the context flags depending on XMM support */
+            ContextFlags |= (KeI386XMMIPresent) ? CONTEXT_EXTENDED_REGISTERS :
+                                                  CONTEXT_FLOATING_POINT;
+
+            /* Set the Thread's NPX State */
+            Thread->NpxState = NPX_STATE_NOT_LOADED;
+            Thread->DispatcherHeader.NpxIrql = PASSIVE_LEVEL;
+        }
+        else
+        {
+            /* We'll use emulation */
+            FxSaveArea->Cr0NpxState = CR0_EM;
+            Thread->NpxState = NPX_STATE_NOT_LOADED &~ CR0_MP;
+        }
+
+        /* Disable any debug regiseters */
+        Context->Dr0 = 0;
+        Context->Dr1 = 0;
+        Context->Dr2 = 0;
+        Context->Dr3 = 0;
+        Context->Dr6 = 0;
+        Context->Dr7 = 0;
+        Context->ContextFlags &= ~CONTEXT_DEBUG_REGISTERS;
 
         /* Setup the Trap Frame */
         TrapFrame = &InitFrame->TrapFrame;
 
         /* Set up a trap frame from the context. */
-        if (KeContextToTrapFrame(Context, NULL, TrapFrame, UserMode))
-        {
-            Thread->NpxState = NPX_STATE_VALID;
-        }
-        else
-        {
-            Thread->NpxState = NPX_STATE_INVALID;
-        }
+        KeContextToTrapFrame(Context,
+                             NULL,
+                             TrapFrame,
+                             Context->ContextFlags | ContextFlags,
+                             UserMode);
 
-        /* Enable Interrupts and disable some unsupported flags right now */
-        TrapFrame->EFlags = Context->EFlags | X86_EFLAGS_IF;
-        TrapFrame->EFlags &= ~(X86_EFLAGS_VM | X86_EFLAGS_NT | X86_EFLAGS_IOPL);
+        /* Set SS, DS, ES's RPL Mask properly */
+        TrapFrame->HardwareSegSs |= RPL_MASK;
+        TrapFrame->SegDs |= RPL_MASK;
+        TrapFrame->SegEs |= RPL_MASK;
+
+        /* Set the debug mark */
+        TrapFrame->DbgArgMark = 0xBADB0D00;
 
         /* Set the previous mode as user */
         TrapFrame->PreviousPreviousMode = UserMode;
@@ -116,19 +191,32 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
     }
     else
     {
-        /* No context Thread, meaning System Thread */
-
-        /* Set up the Initial Frame */
+        /* Set up the Initial Frame for the system thread */
         PKKINIT_FRAME InitFrame;
-        InitFrame = (PKKINIT_FRAME)((ULONG_PTR)Thread->InitialStack - sizeof(KKINIT_FRAME));
-        DPRINT("Setting up a kernel thread with the Frame at: %x\n", InitFrame);
+        InitFrame = (PKKINIT_FRAME)((ULONG_PTR)Thread->InitialStack -
+                                    sizeof(KKINIT_FRAME));
+        DPRINT("Setting up a kernel thread. InitFrame at: %p\n", InitFrame);
 
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
-
         RtlZeroMemory(FxSaveArea, sizeof(FX_SAVE_AREA));
 
-        Thread->NpxState = NPX_STATE_INVALID;
+        /* Check if we have Fxsr support */
+        if (KeI386FxsrPresent)
+        {
+            /* Set the stub FX area */
+            FxSaveArea->U.FxArea.ControlWord = 0x27F;
+            FxSaveArea->U.FxArea.MXCsr = 0x1F80;
+        }
+        else
+        {
+            /* Set the stub FN area */
+            FxSaveArea->U.FnArea.ControlWord = 0x27F;
+            FxSaveArea->U.FnArea.TagWord = -1;
+        }
+
+        /* No NPX State */
+        Thread->NpxState = NPX_STATE_NOT_LOADED;
 
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;

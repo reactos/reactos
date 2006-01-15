@@ -110,6 +110,7 @@ Author:
 #define KPCR_TEB                                0x18
 #define KPCR_SELF                               0x1C
 #define KPCR_PRCB                               0x20
+#define KPCR_IRQL                               0x24
 #define KPCR_KD_VERSION_BLOCK                   0x34
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
@@ -121,6 +122,7 @@ Author:
 #define KPCR_NPX_THREAD                         0x2F4
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
+#define KPCR_SYSTEM_CALLS                       0x6B8
 
 //
 // KGDTENTRY Offsets
@@ -141,6 +143,12 @@ Author:
 #define FN_CR0_NPX_STATE                        0x20C
 #define SIZEOF_FX_SAVE_AREA                     528
 #define NPX_FRAME_LENGTH                        0x210
+
+//
+// NPX States
+//
+#define NPX_STATE_NOT_LOADED                    0xA
+#define NPX_STATE_LOADED                        0x0
 
 //
 // Trap Frame Offsets

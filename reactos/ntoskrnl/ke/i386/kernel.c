@@ -26,6 +26,9 @@ BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
 ULONG KiFastSystemCallDisable = 1;
+ULONG KeI386NpxPresent = 0;
+ULONG KeI386XMMIPresent = 0;
+ULONG KeI386FxsrPresent = 0;
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 extern ULONG IdleProcessorMask;
 

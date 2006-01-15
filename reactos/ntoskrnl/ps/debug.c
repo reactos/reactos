@@ -68,7 +68,7 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
             KeTrapFrameToContext(TrapFrame, NULL, Context);
         } else {
             /* Set the Context */
-            KeContextToTrapFrame(Context, NULL, TrapFrame, Mode);
+            KeContextToTrapFrame(Context, NULL, TrapFrame, Context->ContextFlags, Mode);
         }
         GetSetContext->Status = STATUS_SUCCESS;
     }
@@ -249,7 +249,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
              * I don't know if trying to set your own context makes much
              * sense but we can handle it more efficently.
              */
-            KeContextToTrapFrame(ThreadContext, NULL, Thread->Tcb.TrapFrame, PreviousMode);
+            KeContextToTrapFrame(ThreadContext, NULL, Thread->Tcb.TrapFrame, ThreadContext->ContextFlags, PreviousMode);
 
         } else {
 

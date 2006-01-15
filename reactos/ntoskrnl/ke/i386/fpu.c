@@ -1,11 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/fpu.c
  * PURPOSE:         Handles the FPU
- *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Gregor Anich
  */
 
 /* INCLUDES *****************************************************************/
@@ -39,9 +38,11 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG HardwareMathSupport = 0;
-static ULONG MxcsrFeatureMask = 0, XmmSupport = 0;
-ULONG FxsrSupport = 0; /* used by Ki386ContextSwitch for SMP */
+extern ULONG KeI386NpxPresent;
+extern ULONG KeI386XMMIPresent;
+extern ULONG KeI386FxsrPresent;
+
+static ULONG MxcsrFeatureMask = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -122,7 +123,7 @@ KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, PFNSAVE_FORMAT FnSave)
     FxSave->ErrorSelector = FnSave->ErrorSelector & 0x0000ffff;
     FxSave->DataOffset = FnSave->DataOffset;
     FxSave->DataSelector = FnSave->DataSelector & 0x0000ffff;
-    if (XmmSupport)
+    if (KeI386XMMIPresent)
         FxSave->MXCsr = 0x00001f80 & MxcsrFeatureMask;
     else
         FxSave->MXCsr = 0;
@@ -160,7 +161,7 @@ KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, PFXSAVE_FORMAT FxSave)
 STATIC VOID
 KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, FLOATING_SAVE_AREA *FloatingSaveArea)
 {
-    if (FxsrSupport)
+    if (KeI386FxsrPresent)
     {
         KiFnsaveToFxsaveFormat(&FxSaveArea->U.FxArea, (PFNSAVE_FORMAT)FloatingSaveArea);
     }
@@ -176,7 +177,7 @@ KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, FLOATING_SAVE_AREA *Flo
 VOID
 KiFxSaveAreaToFloatingSaveArea(FLOATING_SAVE_AREA *FloatingSaveArea, CONST PFX_SAVE_AREA FxSaveArea)
 {
-    if (FxsrSupport)
+    if (KeI386FxsrPresent)
     {
         KiFxsaveToFnsaveFormat((PFNSAVE_FORMAT)FloatingSaveArea, &FxSaveArea->U.FxArea);
     }
@@ -203,7 +204,7 @@ KiContextToFxSaveArea(PFX_SAVE_AREA FxSaveArea, PCONTEXT Context)
     /* Now merge the FX_SAVE_AREA from the context with the destination area */
     if ((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) == CONTEXT_EXTENDED_REGISTERS)
     {
-        if (FxsrSupport)
+        if (KeI386FxsrPresent)
         {
             PFXSAVE_FORMAT src = (PFXSAVE_FORMAT)Context->ExtendedRegisters;
             PFXSAVE_FORMAT dst = &FxSaveArea->U.FxArea;
@@ -245,9 +246,9 @@ KiCheckFPU(VOID)
     Ke386SaveFlags(Flags);
     Ke386DisableInterrupts();
 
-    HardwareMathSupport = 0;
-    FxsrSupport = 0;
-    XmmSupport = 0;
+    KeI386NpxPresent = 0;
+    KeI386FxsrPresent = 0;
+    KeI386XMMIPresent = 0;
 
     cr0 = Ke386GetCr0();
     cr0 |= X86_CR0_NE | X86_CR0_MP;
@@ -284,7 +285,7 @@ KiCheckFPU(VOID)
 #error Unknown compiler for inline assembler
 #endif
 
-    HardwareMathSupport = 1;
+    KeI386NpxPresent = 1;
 
     /* check for and enable MMX/SSE support if possible */
     if ((Prcb->FeatureBits & X86_FEATURE_FXSR) != 0)
@@ -293,7 +294,7 @@ KiCheckFPU(VOID)
         PFX_SAVE_AREA FxSaveArea;
 
         /* enable FXSR */
-        FxsrSupport = 1;
+        KeI386FxsrPresent = 1;
 
         /* we need a 16 byte aligned FX_SAVE_AREA */
         FxSaveArea = (PFX_SAVE_AREA)(((ULONG_PTR)DummyArea + 0xf) & (~0x0f));
@@ -313,7 +314,7 @@ KiCheckFPU(VOID)
         Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSXMMEXCPT);
 
         /* enable SSE */
-        XmmSupport = 1;
+        KeI386XMMIPresent = 1;
     }
 
     Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS);
@@ -338,7 +339,7 @@ KiGetFpuState(PKTHREAD Thread)
 
             Cr0 = Ke386GetCr0();
             asm volatile("clts");
-            if (FxsrSupport)
+            if (KeI386FxsrPresent)
                 asm volatile("fxsave %0" : : "m"(FxSaveArea->U.FxArea));
             else
             {
@@ -399,7 +400,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                 KeGetCurrentPrcb()->NpxThread = NULL;
                 FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)NpxThread->InitialStack - sizeof (FX_SAVE_AREA));
                 /* the fnsave might raise a delayed #MF exception */
-                if (FxsrSupport)
+                if (KeI386FxsrPresent)
                 {
                     asm volatile("fxsave %0" : : "m"(FxSaveArea->U.FxArea));
                 }
@@ -417,7 +418,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
             FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)CurrentThread->InitialStack - sizeof (FX_SAVE_AREA));
             if (CurrentThread->NpxState & NPX_STATE_VALID)
             {
-                if (FxsrSupport)
+                if (KeI386FxsrPresent)
                 {
                     FxSaveArea->U.FxArea.MXCsr &= MxcsrFeatureMask;
                     asm volatile("fxrstor %0" : : "m"(FxSaveArea->U.FxArea));
@@ -430,11 +431,11 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
             else /* NpxState & NPX_STATE_INVALID */
             {
                 DPRINT("Setting up clean FPU state\n");
-                if (FxsrSupport)
+                if (KeI386FxsrPresent)
                 {
                     memset(&FxSaveArea->U.FxArea, 0, sizeof(FxSaveArea->U.FxArea));
                     FxSaveArea->U.FxArea.ControlWord = 0x037f;
-                    if (XmmSupport)
+                    if (KeI386XMMIPresent)
                     {
                         FxSaveArea->U.FxArea.MXCsr = 0x00001f80 & MxcsrFeatureMask;
                     }
@@ -550,7 +551,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     ASSERT_IRQL(DISPATCH_LEVEL);
 
     /* check if we are doing software emulation */
-    if (!HardwareMathSupport)
+    if (!KeI386NpxPresent)
     {
         return STATUS_ILLEGAL_FLOAT_CONTEXT;
     }

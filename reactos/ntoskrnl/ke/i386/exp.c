@@ -1,10 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ke/i386/exp.c
- * PURPOSE:         Handling exceptions
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PURPOSE:         Exception Support Code
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gregor Anich
+ *                  David Welch (welch@cwcom.net)
  *                  Skywing (skywing@valhallalegends.com)
  */
 
@@ -22,7 +23,6 @@
 
 /*
  * FIXMES:
- *  - Put back VEH.
  *  - Clean up file.
  *  - Sanitize some context fields.
  *  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
@@ -689,17 +689,20 @@ KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     }
 }
 
-BOOLEAN
+VOID
 NTAPI
 KeContextToTrapFrame(IN PCONTEXT Context,
                      IN OUT PKEXCEPTION_FRAME ExceptionFrame,
                      IN OUT PKTRAP_FRAME TrapFrame,
+                     IN ULONG ContextFlags,
                      IN KPROCESSOR_MODE PreviousMode)
 {
+    PFX_SAVE_AREA FxSaveArea;
+    //ULONG i; Future Use
     BOOLEAN V86Switch = FALSE;
 
     /* Start with the basic Registers */
-    if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+    if ((ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
     {
         /* Check if we went through a V86 switch */
         if ((Context->EFlags & X86_EFLAGS_VM) !=
@@ -746,7 +749,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Process the Integer Registers */
-    if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+    if ((ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
     {
         TrapFrame->Eax = Context->Eax;
         TrapFrame->Ebx = Context->Ebx;
@@ -757,7 +760,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Process the Context Segments */
-    if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+    if ((ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Check if we were in V86 Mode */
         if (TrapFrame->EFlags & X86_EFLAGS_VM)
@@ -770,7 +773,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         }
         else if (!(TrapFrame->SegCs & MODE_MASK))
         {
-            /* For user mode, write the values directly */
+            /* For kernel mode, write the standard values */
             TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
             TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
             TrapFrame->SegFs = Context->SegFs;
@@ -778,7 +781,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         }
         else
         {
-            /* For kernel-mode, return the values */
+            /* For user mode, return the values directlry */
             TrapFrame->SegDs = Context->SegDs;
             TrapFrame->SegEs = Context->SegEs;
             TrapFrame->SegFs = Context->SegFs;
@@ -797,8 +800,42 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         }
     }
 
+    /* Handle the extended registers */
+    if (((ContextFlags & CONTEXT_EXTENDED_REGISTERS) ==
+        CONTEXT_EXTENDED_REGISTERS) &&
+        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
+    {
+        /* Get the FX Area */
+        FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
+
+        /* Check if NPX is present */
+        if (KeI386NpxPresent)
+        {
+            /* Future use */
+        }
+    }
+
+    /* Handle the floating point state */
+    if (((ContextFlags & CONTEXT_FLOATING_POINT) ==
+        CONTEXT_FLOATING_POINT) &&
+        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
+    {
+        /* Get the FX Area */
+        FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
+
+        /* Check if NPX is present */
+        if (KeI386NpxPresent)
+        {
+            /* Future use */
+        }
+        else
+        {
+            /* Future use */
+        }
+    }
+
     /* Handle the Debug Registers */
-    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    if ((ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
     {
         /* FIXME: All these should be sanitized */
         TrapFrame->Dr0 = Context->Dr0;
@@ -812,12 +849,13 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         if (PreviousMode != KernelMode)
         {
             /* Set the Debug Flag */
-            KeGetCurrentThread()->DispatcherHeader.DebugActive = (Context->Dr7 & DR7_ACTIVE);
+            KeGetCurrentThread()->DispatcherHeader.DebugActive =
+                (Context->Dr7 & DR7_ACTIVE);
         }
     }
 
     /* Handle FPU and Extended Registers */
-    return KiContextToFxSaveArea((PFX_SAVE_AREA)(TrapFrame + 1), Context);
+    KiContextToFxSaveArea((PFX_SAVE_AREA)(TrapFrame + 1), Context);
 }
 
 VOID
@@ -898,15 +936,52 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->Edi = TrapFrame->Edi;
     }
 
-    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    /* Handle extended registers */
+    if (((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) ==
+        CONTEXT_EXTENDED_REGISTERS) &&
+        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
     {
-        /*
-         * FIXME: Implement this case
-         */
-        Context->ContextFlags &= (~CONTEXT_DEBUG_REGISTERS) | CONTEXT_i386;
+        /* Get the FX Save Area */
+        FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
+
+        /* Make sure NPX is present */
+        if (KeI386NpxPresent)
+        {
+            /* Future use */
+        }
+
+        /* Old code */
+        FxSaveArea = KiGetFpuState(KeGetCurrentThread());
+        if (FxSaveArea != NULL)
+        {
+            memcpy(Context->ExtendedRegisters, &FxSaveArea->U.FxArea,
+                   min(sizeof (Context->ExtendedRegisters), sizeof (FxSaveArea->U.FxArea)) );
+        }
+        else
+        {
+            Context->ContextFlags &= (~CONTEXT_EXTENDED_REGISTERS) | CONTEXT_i386;
+        }
     }
-    if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
+
+    /* Handle Floating Point */
+    if (((Context->ContextFlags & CONTEXT_FLOATING_POINT) ==
+        CONTEXT_FLOATING_POINT) &&
+        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
     {
+        /* Get the FX Save Area */
+        FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
+
+        /* Make sure we have an NPX */
+        if (KeI386NpxPresent)
+        {
+            /* Future use */
+        }
+        else
+        {
+            /* Future Use */
+        }
+
+        /* Old code */
         FxSaveArea = KiGetFpuState(KeGetCurrentThread());
         if (FxSaveArea != NULL)
         {
@@ -917,18 +992,30 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
         }
     }
-    if ((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) == CONTEXT_EXTENDED_REGISTERS)
+
+    /* Handle debug registers */
+    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) ==
+        CONTEXT_DEBUG_REGISTERS)
     {
-        if (FxSaveArea == NULL)
-            FxSaveArea = KiGetFpuState(KeGetCurrentThread());
-        if (FxSaveArea != NULL)
+        /* Copy the debug registers */
+        Context->Dr0 = TrapFrame->Dr0;
+        Context->Dr1 = TrapFrame->Dr1;
+        Context->Dr2 = TrapFrame->Dr2;
+        Context->Dr3 = TrapFrame->Dr3;
+        Context->Dr6 = TrapFrame->Dr6;
+
+        /* For user-mode, only set DR7 if a debugger is active */
+        if (((TrapFrame->SegCs & MODE_MASK) ||
+            (TrapFrame->EFlags & EFLAGS_V86_MASK)) &&
+            (KeGetCurrentThread()->DispatcherHeader.DebugActive))
         {
-            memcpy(Context->ExtendedRegisters, &FxSaveArea->U.FxArea,
-                   min(sizeof (Context->ExtendedRegisters), sizeof (FxSaveArea->U.FxArea)) );
+            /* Copy it over */
+            Context->Dr7 = TrapFrame->Dr7;
         }
         else
         {
-            Context->ContextFlags &= (~CONTEXT_EXTENDED_REGISTERS) | CONTEXT_i386;
+            /* Clear it */
+            Context->Dr7 = 0;
         }
     }
 }
@@ -1187,11 +1274,9 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     /* Check if User Mode */
     if (PreviousMode == UserMode)
     {
-        extern ULONG FxsrSupport;
         /* Add the FPU Flag */
         Context.ContextFlags |= CONTEXT_FLOATING_POINT;
-        if (FxsrSupport)
-            Context.ContextFlags |= CONTEXT_EXTENDED_REGISTERS;
+        if (KeI386FxsrPresent) Context.ContextFlags |= CONTEXT_EXTENDED_REGISTERS;
     }
 
     /* Get a Context */
@@ -1321,27 +1406,42 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
 Handled:
     /* Convert the context back into Trap/Exception Frames */
-    KeContextToTrapFrame(&Context, NULL, TrapFrame, PreviousMode);
+    KeContextToTrapFrame(&Context,
+                         NULL,
+                         TrapFrame,
+                         Context.ContextFlags,
+                         PreviousMode);
     return;
 }
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
    ULONG OldEip;
    PKTHREAD Thread = KeGetCurrentThread();
 
-    _SEH_TRY {
+   /* Make sure we can access the TEB */
+    _SEH_TRY
+    {
         Thread->Teb->ExceptionCode = ExceptionCode;
-    } _SEH_HANDLE {
+    }
+    _SEH_HANDLE
+    {
         return(ExceptionCode);
-    } _SEH_END;
+    }
+    _SEH_END;
 
-   OldEip = Thread->TrapFrame->Eip;
-   Thread->TrapFrame->Eip = (ULONG_PTR)KeRaiseUserExceptionDispatcher;
-   return((NTSTATUS)OldEip);
+    /* Get the old EIP */
+    OldEip = Thread->TrapFrame->Eip;
+
+    /* Change it to the user-mode dispatcher */
+    Thread->TrapFrame->Eip = (ULONG_PTR)KeRaiseUserExceptionDispatcher;
+
+    /* Return the old EIP */
+    return((NTSTATUS)OldEip);
 }
 

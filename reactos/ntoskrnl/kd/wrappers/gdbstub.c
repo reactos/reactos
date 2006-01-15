@@ -1720,7 +1720,7 @@ GspBreakIn(PKINTERRUPT Interrupt,
 
   KdpGdbEnterDebuggerException(NULL, &Context, TrapFrame);
 
-  KeContextToTrapFrame(&Context, NULL, TrapFrame, KernelMode);
+  KeContextToTrapFrame(&Context, NULL, TrapFrame, Context.ContextFlags, KernelMode);
 
   KeLowerIrql(OldIrql);
 

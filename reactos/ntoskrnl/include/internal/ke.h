@@ -41,6 +41,9 @@ extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER SystemBootTime;
 extern ULONG_PTR KERNEL_BASE;
+extern ULONG KeI386NpxPresent;
+extern ULONG KeI386XMMIPresent;
+extern ULONG KeI386FxsrPresent;
 
 /* MACROS *************************************************************************/
 
@@ -475,12 +478,13 @@ PULONG
 NTAPI
 KeGetStackTopThread(struct _ETHREAD* Thread);
 
-BOOLEAN
+VOID
 STDCALL
 KeContextToTrapFrame(
     PCONTEXT Context,
     PKEXCEPTION_FRAME ExeptionFrame,
     PKTRAP_FRAME TrapFrame,
+    ULONG ContextFlags,
     KPROCESSOR_MODE PreviousMode
 );
 

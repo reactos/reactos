@@ -28,7 +28,11 @@ KiContinuePreviousModeUser(IN PCONTEXT Context,
     Context = &LocalContext;
 
     /* Convert the context into Exception/Trap Frames */
-    KeContextToTrapFrame(&LocalContext, ExceptionFrame, TrapFrame, UserMode);
+    KeContextToTrapFrame(&LocalContext,
+                         ExceptionFrame,
+                         TrapFrame,
+                         LocalContext.ContextFlags,
+                         UserMode);
 }
 
 NTSTATUS
@@ -62,7 +66,11 @@ KiContinue(IN PCONTEXT Context,
         else
         {
             /* Convert the context into Exception/Trap Frames */
-            KeContextToTrapFrame(Context, ExceptionFrame, TrapFrame, KernelMode);
+            KeContextToTrapFrame(Context,
+                                 ExceptionFrame,
+                                 TrapFrame,
+                                 Context->ContextFlags,
+                                 KernelMode);
         }
     }
     _SEH_HANDLE
@@ -142,7 +150,11 @@ KiRaiseException(PEXCEPTION_RECORD ExceptionRecord,
     if (NT_SUCCESS(Status))
     {
         /* Convert the context record */
-        KeContextToTrapFrame(Context, ExceptionFrame, TrapFrame, PreviousMode);
+        KeContextToTrapFrame(Context,
+                             ExceptionFrame,
+                             TrapFrame,
+                             Context->ContextFlags,
+                             PreviousMode);
 
         /* Dispatch the exception */
         KiDispatchException(ExceptionRecord,
