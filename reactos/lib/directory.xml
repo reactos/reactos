@@ -338,6 +338,9 @@
 <directory name="winspool">
 	<xi:include href="winspool/winspool.xml" />
 </directory>
+<directory name="wintrust">
+	<xi:include href="wintrust/wintrust.xml" />
+</directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.xml" />
 </directory>

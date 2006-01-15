@@ -167,9 +167,10 @@ lib\user32\user32.dll                   1
 lib\userenv\userenv.dll                 1
 lib\uxtheme\uxtheme.dll                 1
 lib\version\version.dll                 1
-lib\winspool\winspool.drv               1
 lib\wininet\wininet.dll                 1
 lib\winmm\winmm.dll                     1
+lib\winspool\winspool.drv               1
+lib\wintrust\wintrust.dll               1
 lib\ws2_32\ws2_32.dll                   1
 lib\ws2help\ws2help.dll                 1
 lib\wshirda\wshirda.dll                 1
