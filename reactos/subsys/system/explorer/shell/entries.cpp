@@ -170,12 +170,12 @@ Root::~Root()
 
  // sort order for different directory/file types
 enum TYPE_ORDER {
-	TO_DIR		= 0,
-	TO_DOT		= 1,
-	TO_DOTDOT	= 2,
-	TO_OTHER_DIR= 3,
-	TO_FILE		= 4,
-	TO_VIRTUAL	= 8
+	TO_DIR,
+	TO_DOT,
+	TO_DOTDOT,
+	TO_OTHER_DIR,
+	TO_VIRTUAL_FOLDER,
+	TO_FILE
 };
 
  // distinguish between ".", ".." and any other directory names
@@ -198,21 +198,21 @@ static int compareType(const Entry* entry1, const Entry* entry2)
 	const WIN32_FIND_DATA* fd1 = &entry1->_data;
 	const WIN32_FIND_DATA* fd2 = &entry2->_data;
 
-	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
-	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
+	TYPE_ORDER order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
+	TYPE_ORDER order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
 
 	 // Handle "." and ".." as special case and move them at the very first beginning.
 	if (order1==TO_DIR && order2==TO_DIR) {
 		order1 = TypeOrderFromDirname(fd1->cFileName);
 		order2 = TypeOrderFromDirname(fd2->cFileName);
+
+		 // Move virtual folders after physical folders
+		if (!(entry1->_shell_attribs & SFGAO_FILESYSTEM))
+			order1 = TO_VIRTUAL_FOLDER;
+
+		if (!(entry2->_shell_attribs & SFGAO_FILESYSTEM))
+			order2 = TO_VIRTUAL_FOLDER;
 	}
-
-	 // Move virtual folders after physical folders
-	if (!(entry1->_shell_attribs & SFGAO_FILESYSTEM))
-		order1 |= TO_VIRTUAL;
-
-	if (!(entry2->_shell_attribs & SFGAO_FILESYSTEM))
-		order2 |= TO_VIRTUAL;
 
 	return order2==order1? 0: order1<order2? -1: 1;
 }

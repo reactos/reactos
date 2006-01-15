@@ -72,8 +72,15 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 						pw32fdata->ftLastWriteTime = fad.ftLastWriteTime;
 
 						if (!(fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+							 // copy file size
 							pw32fdata->nFileSizeLow = fad.nFileSizeLow;
 							pw32fdata->nFileSizeHigh = fad.nFileSizeHigh;
+						} else {
+							 // ignore FILE_ATTRIBUTE_HIDDEN attribute of NTFS drives - this would hide those drives in ShellBrowser
+							if (pw32fdata->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) {
+								if (path[1]==':' && path[2]=='\\' && !path[3])	// Is it a drive path?
+									pw32fdata->dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
+							}
 						}
 					}
 
@@ -355,6 +362,7 @@ void ShellDirectory::read_directory(int scan_flags)
 		ShellItemEnumerator enumerator(_folder, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE);
 
 		TCHAR name[MAX_PATH];
+		TCHAR path[MAX_PATH];
 		HRESULT hr_next = S_OK;
 
 		do {
@@ -422,6 +430,11 @@ void ShellDirectory::read_directory(int scan_flags)
 
 					if (bhfi_valid)
 						memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
+
+					 // store path in entry->_data.cFileName in case fill_w32fdata_shell() didn't already fill it
+					if (!entry->_data.cFileName[0])
+						if (SUCCEEDED(path_from_pidl(_folder, pidls[n], path, COUNTOF(path))))
+							_tcscpy(entry->_data.cFileName, path);
 
 					if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, COUNTOF(name), SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
 						if (!entry->_data.cFileName[0])
