@@ -45,24 +45,28 @@ LengthOfStrResource(IN HINSTANCE hInst,
     lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
 
     /* Find the string table block */
-    if ((hrSrc = FindResourceW(hInst,
-                               lpName,
-                               (LPWSTR)RT_STRING)) &&
-        (hRes = LoadResource(hInst,
-                             hrSrc)) &&
-        (lpStr = LockResource(hRes)))
+    hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING);
+    if (hrSrc)
     {
-        UINT x;
-
-        /* Find the string we're looking for */
-        uID &= 0xF; /* position in the block, same as % 16 */
-        for (x = 0; x < uID; x++)
+        hRes = LoadResource(hInst, hrSrc);
+        if (hRes)
         {
-            lpStr += (*lpStr) + 1;
-        }
+            lpStr = LockResource(hRes);
+            if (lpStr)
+            {
+                UINT x;
 
-        /* Found the string */
-        return (int)(*lpStr);
+                /* Find the string we're looking for */
+                uID &= 0xF; /* position in the block, same as % 16 */
+                for (x = 0; x < uID; x++)
+                {
+                    lpStr += (*lpStr) + 1;
+                }
+
+                /* Found the string */
+                return (int)(*lpStr);
+            }
+        }
     }
     return -1;
 }
@@ -85,10 +89,11 @@ AllocAndLoadString(OUT LPTSTR *lpTarget,
         if ((*lpTarget) != NULL)
         {
             INT Ret;
-            if (!(Ret = LoadString(hInst,
-                                   uID,
-                                   *lpTarget,
-                                   ln)))
+            Ret = LoadString(hInst,
+                             uID,
+                             *lpTarget,
+                             ln);
+            if (!Ret)
             {
                 HeapFree(GetProcessHeap(),
                          0,
@@ -322,7 +327,7 @@ BuildSidString:
                             _tprintf(_T("%s\\%s:"),
                                      Domain,
                                      Name);
-                            IndentAccess = _tcslen(Domain) + _tcslen(Name);
+                            IndentAccess = (DWORD)_tcslen(Domain) + _tcslen(Name);
                         }
                         else
                         {
@@ -330,7 +335,7 @@ BuildSidString:
 
                             _tprintf(_T("%s:"),
                                      DisplayString);
-                            IndentAccess = _tcslen(DisplayString);
+                            IndentAccess = (DWORD)_tcslen(DisplayString);
                         }
 
                         /* print the ACE Flags */
@@ -503,9 +508,9 @@ PrintSpecialAccess:
 
 
 #ifdef _UNICODE
-int main(void)
+int __cdecl main(void)
 #else
-int _main (int argc, char *argv[])
+int __cdecl _main (int argc, char *argv[])
 #endif
 {
 #ifdef _UNICODE
