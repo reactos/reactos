@@ -179,8 +179,8 @@ KeInsertQueueDpc(PKDPC Dpc,
 
     /* Check if this is a Thread DPC, which we don't support (yet) */
     if (Dpc->Type == ThreadedDpcObject) {
-        return FALSE;
         KeLowerIrql(OldIrql);
+        return FALSE;
     }
 
 #ifdef CONFIG_SMP
