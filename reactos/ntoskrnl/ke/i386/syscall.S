@@ -5,12 +5,8 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-#include <roscfg.h>
-#include <internal/i386/ke.h>
-#include <ndk/asm.h>
-
-#define UserMode  (1)
-#define STATUS_INVALID_SYSTEM_SERVICE 0xC000001C
+#include <asm.h>
+#include <internal/i386/asmmacro.S>
 
 .globl _KiServiceExit
 .globl _KiServiceExit2
@@ -20,14 +16,18 @@
 .intel_syntax noprefix
 
 /*
- * NOTE: I will create some macros for trap entry and exit,
- * DR* register restoration, modified frame exit, etc, if GAS
- * allows it/I find a way how. This would remove a lot of
- * duplicated code in this file plus the other irq/trap asm files.
- * I think this is similar to what NT does, if you look at teh
- * Dr_kit*_a functions which look auto-generated.
+ * There are 3 main types of Trap Entries:
+ *
+ * - System Calls
+ *     - TODO
+ *
+ * - Exceptions
+ *     - TODO
+ *
+ * - Interrupts
+ *     - TODO
  */
-
+ 
 /*
  * There are 3 main types of Trap Exits:
  *
@@ -78,10 +78,6 @@
   *         - Use macros and merge with trap.s nicely
   */
 
-/*
- * Entries will be discussed later.
- */
- 
  /*** This file is a mess; it is being worked on. Please contact Alex:
   *** alex@relsoft.net if you want to make any changes to it before this
   *** message goes away
@@ -132,7 +128,7 @@ _KiFastCallEntry:
     push 2                              /* Ring 0 EFLAGS */
     add edx, 8                          /* Skip user parameter list */
     popf                                /* Set our EFLAGS */
-    or dword ptr [esp], X86_EFLAGS_IF   /* Re-enable IRQs in EFLAGS, to fake INT */
+    or dword ptr [esp], EFLAGS_INTERRUPT_MASK   /* Re-enable IRQs in EFLAGS, to fake INT */
     push KGDT_R3_CODE + RPL_MASK
     push KUSER_SHARED_SYSCALL_RET
 
@@ -386,7 +382,7 @@ _KiServiceExit:
 
 // ================= COMMON USER-MODE APC DELIVERY CHECK ============//
     /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz ApcLoop
 
     /* Deliver APCs only if we were called from user mode */
@@ -454,7 +450,7 @@ KiRosTrapReturn:
 // ==================== END IF PREVIOUS MODE NEEDED ===================//
 
     /* Check for V86 */
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86_Exit
 
     /* Check if the frame was edited */
@@ -467,6 +463,8 @@ KiRosTrapReturn:
     bt word ptr [esp+KTRAP_FRAME_CS], 0
     cmc
     ja RestoreAll
+    cmp dword ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    jz CommonStackClean
 // ==================== END IF FULL RESTORE NEEDED ====================//
 
 //badbadbad 	 
@@ -518,7 +516,7 @@ FastRet:
     /* Is SYSEXIT Supported/Wanted? */
     cmp dword ptr ss:[_KiFastSystemCallDisable], 0
     jnz IntRet
-    test dword ptr [esp+8], X86_EFLAGS_TF
+    test dword ptr [esp+8], EFLAGS_TF
     jnz IntRet
 
     /* Restore FS to TIB */
@@ -528,7 +526,7 @@ FastRet:
     /* We will be cleaning up the stack ourselves */
     pop edx                                 /* New Ring 3 EIP */
     add esp, 4                              /* Skip Ring 3 DS */
-/*  and dword ptr [esp], ~X86_EFLAGS_IF        Line below is equivalent to this,
+/*  and dword ptr [esp], ~EFLAGS_INTERRUPT_MASK        Line below is equivalent to this,
                                                but older binutils versions don't understand ~ */
     and dword ptr [esp], 0xfffffdff         /* Remove IRQ hack from EFLAGS */
     popf                                    /* Restore old EFLAGS */
@@ -647,7 +645,7 @@ _KiServiceExit2:
     cli
 
     /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz ApcLoop2
 
     /* Deliver APCs only if we were called from user mode */
@@ -700,7 +698,7 @@ KiRosTrapReturn2:
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
 
     /* Check for V86 */
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86_Exit
 
     /* Check if the frame was edited */
@@ -779,65 +777,11 @@ EditedFrame2:
 
 _KiDebugService:
 
-    /* Create the Trap Frame */
+    /* Push error code */
     push 0
-    push ebp
-    push ebx
-    push esi
-    push edi
-    push fs
 
-    /* Switch to correct FS */
-    mov bx, KGDT_R0_PCR
-    mov fs, bx
-
-    /* Save Exception List */
-    push fs:[KPCR_EXCEPTION_LIST]
-
-    /* Traps don't need the previous mode */
-    sub esp, 4
-
-    /* Continue building the Trap Frame */
-    push eax
-    push ecx
-    push edx
-    push ds
-    push es
-    push gs
-    sub esp, 0x30
-
-    /* Switch Segments to Kernel */
-    mov ax, KGDT_R0_DATA
-    mov ds, ax
-    mov es, ax
-
-    /* Set up frame */
-    mov ebp, esp
-
-    /* Check if this was from V86 Mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
-    //jnz V86_kids
-
-    /* Get current thread */
-    mov ecx, [fs:KPCR_CURRENT_THREAD]
-    cld
-
-    /* Flush DR7 */
-    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
-
-    /* Check if the thread was being debugged */
-    test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
-    //jnz Dr_kids
-
-    /* Get the Debug Trap Frame EBP/EIP */
-    mov ebx, [ebp+KTRAP_FRAME_EBP]
-    mov edi, [ebp+KTRAP_FRAME_EIP]
-
-    /* Write the debug data */
-    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
-    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
+    /* Enter trap */
+    TRAP_PROLOG(kids)
 
     /* Increase EIP so we skip the INT3 */
     //inc dword ptr [ebp+KTRAP_FRAME_EIP]
@@ -848,7 +792,7 @@ _KiDebugService:
     mov edx, [ebp+KTRAP_FRAME_EAX]
 
     /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz NotUserMode
 
     /* Check if this is kernel or user-mode */
@@ -892,7 +836,7 @@ Kei386EoiHelper@0:
     cli
 
     /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz ApcLoop3
 
     /* Deliver APCs only if we were called from user mode */
@@ -940,7 +884,7 @@ KiRosTrapReturn3:
     mov [fs:KPCR_EXCEPTION_LIST], edx
 
     /* Check for V86 */
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86_Exit
 
     /* Check if the frame was edited */

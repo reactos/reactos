@@ -3,288 +3,432 @@
  * FILE:            ntoskrnl/ke/i386/trap.s
  * PURPOSE:         Exception handlers
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
+#include <asm.h>
+#include <internal/i386/asmmacro.S>
 
 /* NOTES:
- * The prologue is currently a duplication of the trap enter code in KiDebugService.
- * It will be made a macro and shared later.
+ * Why not share the epilogue?
+ * 1) An extra jmp is expensive (jmps are very costly)
+ * 2) Eventually V86 exit should be handled through ABIOS, and we
+ *    handle ABIOS exit in the shared trap exit code already.
+ * Why not share the KiTrapHandler call?
+ * 1) Would make using the trap-prolog macro much harder.
+ * 2) Eventually some of these traps might be re-implemented in assembly
+ *    to improve speed and depend less on the compiler and/or use features
+ *    not present as C keywords. When that happens, less traps will use the
+ *    shared C handler, so the shared-code would need to be un-shared.
  */
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * Epilog for exception handlers
- */
-_KiTrapEpilog:
-	cmpl	$1, %eax       /* Check for v86 recovery */
-	jne     Kei386EoiHelper@0
-	jmp	_KiV86Complete
-
-.globl _KiTrapProlog
-_KiTrapProlog:	
-	movl	$_KiTrapHandler, %ebx
-	
-.global _KiTrapProlog2
-_KiTrapProlog2:
-	pushl	%edi
-	pushl	%fs
-
-.intel_syntax noprefix
-    /* Load the PCR selector into fs */
-    mov edi, KGDT_R0_PCR
-    mov fs, di
-
-    /* Push exception list and previous mode (invalid) */
-    push fs:[KPCR_EXCEPTION_LIST]
-    push -1
-
-    /* Push volatiles and segments */
-    push eax
-    push ecx
-    push edx
-    push ds
-    push es
-    push gs
-
-    /* Set the R3 data segment */
-    mov ax, KGDT_R3_DATA + RPL_MASK
-
-    /* Skip debug registers and debug stuff */
-    sub esp, 0x30
-
-    /* Load the segment registers */
-    mov ds, ax
-    mov es, ax
-
-    /* Set up frame */
-    mov ebp, esp
-
-    /* Check if this was from V86 Mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    //jnz V86_kids
-
-    /* Get current thread */
-    mov ecx, [fs:KPCR_CURRENT_THREAD]
-    cld
-
-    /* Flush DR7 */
-    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
-
-    /* Check if the thread was being debugged */
-    //test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
-    //jnz Dr_kids
-
-    /* Get the Debug Trap Frame EBP/EIP */
-    mov ecx, [ebp+KTRAP_FRAME_EBP]
-    mov edi, [ebp+KTRAP_FRAME_EIP]
-
-    /* Write the debug data */
-    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
-    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    mov [ebp+KTRAP_FRAME_DEBUGEBP], ecx
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
-.att_syntax
-
-.L6:	
-	
-	/* Call the C exception handler */
-	pushl	%esi
-	pushl	%ebp
-	call	*%ebx
-	addl	$8, %esp
-
-	/* Return to the caller */
-	jmp	_KiTrapEpilog
-
 .globl _KiTrap0
 _KiTrap0:
-	/* No error code */
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$0, %esi
-	jmp	_KiTrapProlog
-				
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(0)
+
+    /* Call the C exception handler */
+    push 0
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
+
 .globl _KiTrap1
 _KiTrap1:
-	/* No error code */
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$1, %esi
-	jmp	_KiTrapProlog
-	
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(1)
+
+    /* Call the C exception handler */
+    push 1
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
+
 .globl _KiTrap2
 _KiTrap2:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$2, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(2)
+
+    /* Call the C exception handler */
+    push 2
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap3
 _KiTrap3:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$3, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(3)
+
+    /* Call the C exception handler */
+    push 3
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap4
 _KiTrap4:
-        pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$4, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(4)
+
+    /* Call the C exception handler */
+    push 4
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap5
 _KiTrap5:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$5, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(5)
+
+    /* Call the C exception handler */
+    push 5
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap6
 _KiTrap6:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$6, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(6)
+
+    /* Call the C exception handler */
+    push 6
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap7
 _KiTrap7:
-        pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$7, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(7)
+
+    /* Call the C exception handler */
+    push 7
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap8
 _KiTrap8:
-	call	_KiDoubleFaultHandler
-	iret
+    call _KiDoubleFaultHandler
+    iret
 
 .globl _KiTrap9
 _KiTrap9:
-        pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$9, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(9)
+
+    /* Call the C exception handler */
+    push 9
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap10
 _KiTrap10:
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$10, %esi
-	jmp	_KiTrapProlog
+    /* Enter trap */
+    TRAP_PROLOG(10)
+
+    /* Call the C exception handler */
+    push 10
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap11
 _KiTrap11:
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$11, %esi
-	jmp	_KiTrapProlog
+    /* Enter trap */
+    TRAP_PROLOG(11)
+
+    /* Call the C exception handler */
+    push 11
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap12
 _KiTrap12:
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$12, %esi
-	jmp	_KiTrapProlog
+    /* Enter trap */
+    TRAP_PROLOG(12)
+
+    /* Call the C exception handler */
+    push 12
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap13
 _KiTrap13:
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$13, %esi
-	jmp	_KiTrapProlog
+    /* Enter trap */
+    TRAP_PROLOG(13)
+
+    /* Call the C exception handler */
+    push 13
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+    
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap14
 _KiTrap14:
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$14, %esi
-	movl	$_KiPageFaultHandler, %ebx
-	jmp	_KiTrapProlog2
+    /* Enter trap */
+    TRAP_PROLOG(14)
+
+    /* Call the C exception handler */
+    push 14
+    push ebp
+    call _KiPageFaultHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap15
 _KiTrap15:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$15, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(15)
+
+    /* Call the C exception handler */
+    push 15
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap16
 _KiTrap16:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$16, %esi
-	jmp	_KiTrapProlog
-	 
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(16)
+
+    /* Call the C exception handler */
+    push 16
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
+
 .globl _KiTrap17
 _KiTrap17:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$17, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(17)
+
+    /* Call the C exception handler */
+    push 17
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap18
 _KiTrap18:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$18, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(18)
+
+    /* Call the C exception handler */
+    push 18
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrap19
 _KiTrap19:
-	pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$19, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(19)
+
+    /* Call the C exception handler */
+    push 19
+    push ebp
+    call _KiTrapHandler
+    add esp, 8
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
 
 .globl _KiTrapUnknown
 _KiTrapUnknown:
-        pushl	$0
-	pushl	%ebp
-	pushl	%ebx
-	pushl	%esi
-	movl	$255, %esi
-	jmp	_KiTrapProlog
+    /* Push error code */
+    push 0
 
-.intel_syntax noprefix
+    /* Enter trap */
+    TRAP_PROLOG(255)
+
+    /* Check for v86 recovery */
+    cmp eax, 1
+
+    /* Return to caller */
+    jne Kei386EoiHelper@0
+    jmp _KiV86Complete
+
 .globl _KiCoprocessorError@0
 _KiCoprocessorError@0:
 

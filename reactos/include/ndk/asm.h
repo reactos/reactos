@@ -9,6 +9,7 @@ Header Name:
 Abstract:
 
     ASM Offsets for dealing with de-referencing structures in registers.
+    C-compatible version of the file ks386.inc present in the newest WDK.
 
 Author:
 
@@ -18,6 +19,12 @@ Author:
 
 #ifndef _ASM_H
 #define _ASM_H
+
+//
+// CPU Modes
+//
+#define KernelMode                              0x0
+#define UserMode                                0x1
 
 //
 // Selector Names
@@ -200,6 +207,7 @@ Author:
 #define KTRAP_FRAME_SIZE                        0x8C
 #define KTRAP_FRAME_LENGTH                      0x8C
 #define KTRAP_FRAME_ALIGN                       0x04
+#define FRAME_EDITED                            0xFFF8
 
 //
 // KUSER_SHARED_DATA Offsets
@@ -344,6 +352,11 @@ Author:
 #define CBSTACK_CALLBACK_STACK                  0x8
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x24
+
+//
+// NTSTATUS Codes
+//
+#define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 
 //
 // Generic Definitions
