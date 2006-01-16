@@ -458,7 +458,6 @@ KiRosTrapReturn:
     jnz V86_Exit
 
     /* Check if the frame was edited */
-V86_Exit_Return:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz EditedFrame
 
@@ -480,12 +479,12 @@ V86_Exit_Return:
 
     /* Restore FS */
 RestoreFs:
-    //lea esp, [ebp+KTRAP_FRAME_FS]
+    lea esp, [ebp+KTRAP_FRAME_FS]
     pop fs
 
 CommonStackClean:
     /* Skip debug information and unsaved registers */
-    //lea esp, [ebp+KTRAP_FRAME_EDI]
+    lea esp, [ebp+KTRAP_FRAME_EDI]
     pop edi
     pop esi
     pop ebx
@@ -551,7 +550,17 @@ V86_Exit:
     pop edx
     pop ecx
     pop eax
-    jmp V86_Exit_Return
+
+    /* Move to non-volatiles */
+    lea esp, [ebp+KTRAP_FRAME_EDI]
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    /* Skip error code and return */
+    add esp, 4
+    iret
 
 AbiosExit:
     /* Not yet supported */
@@ -692,10 +701,9 @@ KiRosTrapReturn2:
 
     /* Check for V86 */
     test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
-    jnz V86_Exit2
+    jnz V86_Exit
 
     /* Check if the frame was edited */
-V86_Exit_Return2:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz EditedFrame2
 
@@ -733,16 +741,6 @@ CommonStackClean2:
     /* Pop error code and return */
     add esp, 4
     iret
-
-V86_Exit2:
-    /* Move to EDX position */
-    add esp, KTRAP_FRAME_EDX
-
-    /* Restore volatiles */
-    pop edx
-    pop ecx
-    pop eax
-    jmp V86_Exit_Return2
 
 EditedFrame2:
     /* Restore real CS value */
@@ -943,10 +941,9 @@ KiRosTrapReturn3:
 
     /* Check for V86 */
     test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
-    jnz V86_Exit3
+    jnz V86_Exit
 
     /* Check if the frame was edited */
-V86_Exit_Return3:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz EditedFrame3
 
@@ -984,16 +981,6 @@ CommonStackClean3:
     /* Pop error code and return */
     add esp, 4
     iret
-
-V86_Exit3:
-    /* Move to EDX position */
-    add esp, KTRAP_FRAME_EDX
-
-    /* Restore volatiles */
-    pop edx
-    pop ecx
-    pop eax
-    jmp V86_Exit_Return3
 
 EditedFrame3:
     /* Restore real CS value */

@@ -1,22 +1,16 @@
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
  * PURPOSE:         Exception handlers
- * PROGRAMMER:      David Welch <welch@cwcom.net>
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES ******************************************************************/
 
-#include <roscfg.h>
 #include <ndk/asm.h>
-#include <internal/i386/ke.h>
-
-#define KernelMode 0
-#define UserMode 1
 
 /* NOTES:
- * The epilog will be replaced by a call to Ki386EoiHelper when bugs are fixed.
  * The prologue is currently a duplication of the trap enter code in KiDebugService.
  * It will be made a macro and shared later.
  */
@@ -28,43 +22,8 @@
  */
 _KiTrapEpilog:
 	cmpl	$1, %eax       /* Check for v86 recovery */
-	jne     _KiTrapRet
+	jne     Kei386EoiHelper@0
 	jmp	_KiV86Complete
-_KiTrapRet:				
-	/* Skip debug information and unsaved registers */
-	addl	$0x18, %esp
-	popl	%eax		/* Dr0 */
-	movl	%eax, %dr0
-	popl	%eax		/* Dr1 */
-	movl	%eax, %dr1
-	popl	%eax		/* Dr2 */
-	movl	%eax, %dr2
-	popl	%eax		/* Dr3 */
-	movl	%eax, %dr3
-	popl	%eax		/* Dr6 */
-	movl	%eax, %dr6
-	popl	%eax		/* Dr7 */
-	movl	%eax, %dr7
-	popl	%gs
-	popl	%es
-	popl	%ds
-	popl	%edx
-	popl	%ecx
-	popl	%eax
-	popl	%ebx
-
-	/* Restore the old exception handler list */
-	popl	%ebx
-	movl	%ebx, %fs:KPCR_EXCEPTION_LIST
-
-	popl	%fs
-	popl	%edi
-	popl	%esi
-	popl	%ebx
-	popl	%ebp
-	addl	$0x4, %esp  /* Ignore error code */
-		
-	iret
 
 .globl _KiTrapProlog
 _KiTrapProlog:	
@@ -106,7 +65,7 @@ _KiTrapProlog2:
     mov ebp, esp
 
     /* Check if this was from V86 Mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     //jnz V86_kids
 
     /* Get current thread */
@@ -358,7 +317,7 @@ _Ki386AdjustEsp0@4:
     mov eax, [eax+KTHREAD_INITIAL_STACK]
 
     /* Check if V86 */
-    test dword ptr [edx+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    test dword ptr [edx+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz NoAdjust
 
     /* Bias the stack */
