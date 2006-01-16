@@ -750,7 +750,8 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       return FALSE;
    }
 
-   MenuItem->fType = lpmii->fType;
+   MenuItem->fType &= ~MENU_ITEM_TYPE(MenuItem->fType);
+   MenuItem->fType |= MENU_ITEM_TYPE(lpmii->fType);
 
    if(lpmii->fMask & MIIM_BITMAP)
    {
@@ -777,7 +778,8 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
          FreeMenuText(MenuItem);
          RtlInitUnicodeString(&MenuItem->Text, NULL);
       }
-      MenuItem->fType = lpmii->fType;
+      MenuItem->fType &= ~MENU_ITEM_TYPE(MenuItem->fType);
+      MenuItem->fType |= MENU_ITEM_TYPE(lpmii->fType);
    }
    if(lpmii->fMask & MIIM_ID)
    {
