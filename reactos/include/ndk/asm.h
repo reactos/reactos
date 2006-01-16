@@ -323,6 +323,20 @@ Author:
 #define CR0_PG                                  0x80000000
 
 //
+// CR4
+//
+#define CR4_VME                                 0x1
+#define CR4_PVI                                 0x2
+#define CR4_TSD                                 0x4
+#define CR4_DE                                  0x8
+#define CR4_PSE                                 0x10
+#define CR4_PAE                                 0x20
+#define CR4_MCE                                 0x40
+#define CR4_PGE                                 0x80
+#define CR4_FXSR                                0x200
+#define CR4_XMMEXCPT                            0x400
+
+//
 // Usermode callout frame definitions
 //
 #define CBSTACK_STACK                           0x0
