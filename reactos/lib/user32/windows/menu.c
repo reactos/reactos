@@ -645,7 +645,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
 #endif
 
   if (! MenuBar)
-    {
+  {
       INT y = Rect.top + Rect.bottom;
       UINT CheckBitmapWidth = GetSystemMetrics(SM_CXMENUCHECK);
       UINT CheckBitmapHeight = GetSystemMetrics(SM_CYMENUCHECK);
@@ -682,6 +682,37 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
               DeleteDC(DcMem);
               DeleteObject(bm);
             }
+            if (Item->hbmpItem)
+            {
+              if (Item->hbmpItem == HBMMENU_CALLBACK)
+              {
+                DRAWITEMSTRUCT drawItem;
+                POINT origorg;
+                drawItem.CtlType = ODT_MENU;
+                drawItem.CtlID = 0;
+                drawItem.itemID = Item->wID;
+                drawItem.itemAction = Action;
+                drawItem.itemState = (Item->fState & MF_CHECKED)?ODS_CHECKED:0;
+                drawItem.itemState |= (Item->fState & MF_DEFAULT)?ODS_DEFAULT:0;
+                drawItem.itemState |= (Item->fState & MF_DISABLED)?ODS_DISABLED:0;
+                drawItem.itemState |= (Item->fState & MF_GRAYED)?ODS_GRAYED|ODS_DISABLED:0;
+                drawItem.itemState |= (Item->fState & MF_HILITE)?ODS_SELECTED:0;
+                drawItem.hwndItem = (HWND) MenuInfo->Self;
+                drawItem.hDC = Dc;
+                drawItem.rcItem = Item->Rect;
+                drawItem.itemData = Item->dwItemData;
+                /* some applications make this assumption on the DC's origin */
+                SetViewportOrgEx( Dc, Item->Rect.left, Item->Rect.top, &origorg);
+                OffsetRect( &drawItem.rcItem, - Item->Rect.left, - Item->Rect.top);
+                SendMessageW( WndOwner, WM_DRAWITEM, 0, (LPARAM)&drawItem);
+                SetViewportOrgEx( Dc, origorg.x, origorg.y, NULL);
+              }
+              else
+              {
+                MenuDrawBitmapItem(Dc, Item, &Rect, MenuBar);
+                return;
+              }
+            }
         }
 
       /* Draw the popup-menu arrow */
@@ -699,9 +730,13 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
           DeleteDC(DcMem);
         }
 
-      Rect.left += CheckBitmapWidth;
-      Rect.right -= ArrowBitmapWidth;
-    }
+        Rect.left += CheckBitmapWidth;
+        Rect.right -= ArrowBitmapWidth;
+  }
+  else if( Item->hbmpItem && !(Item->fType & MF_OWNERDRAW))
+  {   /* Draw the bitmap */
+      MenuDrawBitmapItem(Dc, Item, &Rect, MenuBar);
+  }
 
   /* Done for owner-drawn */
   if (0 != (Item->fType & MF_OWNERDRAW))
@@ -709,14 +744,8 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       return;
     }
 
-  /* Draw the item text or bitmap */
-  if (IS_BITMAP_ITEM(Item->fType))
-    {
-      MenuDrawBitmapItem(Dc, Item, &Rect, MenuBar);
-      return;
-    }
-  /* No bitmap - process text if present */
-  else if (IS_STRING_ITEM(Item->fType))
+  /* process text if present */
+  if (!(Item->fType & MF_SYSMENU) && Item->dwTypeData)
     {
       register int i;
       HFONT FontOld = NULL;
@@ -1154,37 +1183,55 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, HWND WndOwner,
       return;
     }
 
-  if (! MenuBar)
-    {
-      ItemInfo->Rect.right += 2 * CheckBitmapWidth;
-      if (0 != (ItemInfo->fType & MF_POPUP))
-        {
-          ItemInfo->Rect.right += ArrowBitmapWidth;
-        }
-    }
-
   if (0 != (ItemInfo->fType & MF_OWNERDRAW))
     {
       return;
     }
 
-  if (IS_BITMAP_ITEM(ItemInfo->fType))
-    {
-      SIZE Size;
+  if (! MenuBar)
+  {
+      if (ItemInfo->hbmpItem)
+      {
+          if (ItemInfo->hbmpItem == HBMMENU_CALLBACK)
+          {
+              MEASUREITEMSTRUCT measItem;
+              measItem.CtlType = ODT_MENU;
+              measItem.CtlID = 0;
+              measItem.itemID = ItemInfo->wID;
+              measItem.itemWidth = ItemInfo->Rect.right - ItemInfo->Rect.left;
+              measItem.itemHeight = ItemInfo->Rect.bottom - ItemInfo->Rect.top;
+              measItem.itemData = ItemInfo->dwItemData;
+              SendMessageW( WndOwner, WM_MEASUREITEM, ItemInfo->wID, (LPARAM)&measItem);
+              ItemInfo->Rect.right = ItemInfo->Rect.left + measItem.itemWidth;
+          }
+          else
+          {
+              SIZE Size;
 
-      MenuGetBitmapItemSize((int) ItemInfo->hbmpItem, (DWORD) ItemInfo->hbmpItem, &Size);
-      ItemInfo->Rect.right  += Size.cx;
-      ItemInfo->Rect.bottom += Size.cy;
+              MenuGetBitmapItemSize((int) ItemInfo->hbmpItem, (DWORD) ItemInfo->hbmpItem, &Size);
+              ItemInfo->Rect.right  += Size.cx;
+              ItemInfo->Rect.bottom += Size.cy;
 
-      /* Leave space for the sunken border */
-      ItemInfo->Rect.right  += 2;
-      ItemInfo->Rect.bottom += 2;
+              /* Leave space for the sunken border */
+              ItemInfo->Rect.right  += 2;
+              ItemInfo->Rect.bottom += 2;
 
-      /* Special case: Minimize button doesn't have a space behind it. */
-      if (ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE ||
-          ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE_D)
-        ItemInfo->Rect.right -= 1;
-    }
+              /* Special case: Minimize button doesn't have a space behind it. */
+              if (ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE ||
+                  ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE_D)
+                ItemInfo->Rect.right -= 1;
+          }
+          ItemInfo->Rect.right += 2 * CheckBitmapWidth;
+      }
+      else
+      {
+          ItemInfo->Rect.right += 2 * CheckBitmapWidth;
+          if (0 != (ItemInfo->fType & MF_POPUP))
+          {
+              ItemInfo->Rect.right += ArrowBitmapWidth;
+          }
+      }
+  }
 
   /* it must be a text item - unless it's the system menu */
   if (0 == (ItemInfo->fType & MF_SYSMENU) && IS_STRING_ITEM(ItemInfo->fType))
