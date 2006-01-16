@@ -25,7 +25,7 @@
 			<directory name="i386">
 				<file first="true">main_asm.S</file>
 				<file>bios.c</file>
-				<file>brkpoint.S</file>
+				<file>cpu.S</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
 				<file>fpu.c</file>
@@ -37,7 +37,6 @@
 				<file>ldt.c</file>
 				<file>syscall.S</file>
 				<file>thread.c</file>
-				<file>tlbflush.S</file>
 				<file>trap.s</file>
 				<file>tss.c</file>
 				<file>usercall_asm.S</file>
