@@ -7,6 +7,8 @@
 
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
+#define APC_INDEX_MISMATCH 1
+#define IRQL_GT_ZERO_AT_SYSTEM_SERVICE 0x4A
 
 .globl _KiServiceExit
 .globl _KiServiceExit2
@@ -322,7 +324,18 @@ CheckValidCall:
 #endif
 
 NotWin32K:
+    /* Increase total syscall count */
+    inc dword ptr fs:[KPCR_SYSTEM_CALLS]
+
+#ifdef DBG
+    /* Increase per-syscall count */
+    mov ecx, [edi+4]
+    jecxz NoCountTable
+    inc dword ptr [ecx+eax*4]
+#endif
+
     /* Users's current stack frame pointer is source */
+NoCountTable:
     mov esi, edx
 
     /* Allocate room for argument list from kernel stack */
@@ -346,6 +359,14 @@ NotWin32K:
     rep movsd
 
 #ifdef DBG
+
+    /* Make sure this isn't a user-mode call at elevated IRQL */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz SkipCheck
+    call _KeGetCurrentIrql@0
+    or al, al
+    jnz InvalidIrql
+
     /*
      * The following lines are for the benefit of GDB. It will see the return
      * address of the "call ebx" below, find the last label before it and
@@ -355,6 +376,7 @@ NotWin32K:
      * stack backtrace. Since we do want to backtrace into usermode, let's
      * make GDB happy and create a standard prolog.
      */
+SkipCheck:
 KiSystemService:
     push ebp
     mov ebp,esp
@@ -363,6 +385,30 @@ KiSystemService:
 
     /* Do the System Call */
     call ebx
+
+#ifdef DBG
+    /* Make sure the user-mode call didn't return at elevated IRQL */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz SkipCheck2
+    mov esi, eax                /* We need to save the syscall's return val */
+    call _KeGetCurrentIrql@0
+    or al, al
+    jnz InvalidIrql
+    mov eax, esi                /* Restore it */
+
+    /* Get our temporary current thread pointer for sanity check */
+    mov ecx, fs:[KPCR_CURRENT_THREAD]
+
+    /* Make sure that we are not attached and that APCs are not disabled */
+    mov dl, [ecx+KTHREAD_APC_STATE_INDEX]
+    or dl, dl
+    jnz InvalidIndex
+    mov edx, [ecx+KTHREAD_COMBINED_APC_DISABLE]
+    or edx, edx
+    jnz InvalidIndex
+#endif
+
+SkipCheck2:
 
     /* Deallocate the kernel stack frame  */
     mov esp, ebp
@@ -539,6 +585,39 @@ FastRet:
      */
     sti
     sysexit
+
+#ifdef DBG
+InvalidIrql:
+    /* Save current IRQL */
+    push fs:[KPCR_IRQL]
+
+    /* Set us at passive */
+    mov dword ptr fs:[KPCR_IRQL], 0
+    cli
+
+    /* Bugcheck */
+    push 0
+    push 0
+    push eax
+    push ebx
+    push IRQL_GT_ZERO_AT_SYSTEM_SERVICE
+    call _KeBugCheckEx@20
+
+InvalidIndex:
+
+    /* Get the index and APC state */
+    movzx eax, byte ptr [ecx+KTHREAD_APC_STATE_INDEX]
+    mov edx, [ecx+KTHREAD_COMBINED_APC_DISABLE]
+
+    /* Bugcheck */
+    push 0
+    push edx
+    push eax
+    push ebx
+    push APC_INDEX_MISMATCH
+    call _KeBugCheckEx@20
+    ret
+#endif
 
 V86_Exit:
     /* Move to EDX position */
