@@ -495,9 +495,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
    ASSERT(ExceptionNr != 14);
 
-   /* Store the exception number in an unused field in the trap frame. */
-   Tf->DbgArgMark = ExceptionNr;
-
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
 

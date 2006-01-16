@@ -484,13 +484,74 @@ ApcLoop:
 
 KiRosTrapReturn:
 // ========================= COMMON TRAP EXIT CODE ===================//
-    /* Restore exception list */
+#ifdef DBG
+    /* Assert the flags */
+    pushfd
+    pop edx
+    test edx, EFLAGS_INTERRUPT_MASK
+    jnz InvalidExitState
+
+    /* Assert the stack */
+    cmp esp, ebp
+    jnz InvalidExitState
+
+    /* Assert the trap frame */
+StateCheckDone:
+    sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    jnz InvalidTrapFrame
+
+    /* Assert FS */
+    mov bx, fs
+    cmp bx, KGDT_R0_PCR
+    jnz InvalidFs
+
+    /* Assert exception list */
+    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
+    jnz ExceptionListOK
+
+InvalidFs:
+    push -1
+    call _KeBugCheck@4
+
+InvalidTrapFrame:
+    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+
+InvalidExitState:
+    int 3
+    jmp StateCheckDone
+
+ExceptionListOK:
+#endif
+
+    /* Get exception list */
     mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+
+#ifdef DBG
+    /* Assert the saved exception list */
+    or edx, edx
+    jnz ListOk
+    int 3
+
+ListOk:
+#endif
+
+    /* Restore it */
     mov [fs:KPCR_EXCEPTION_LIST], edx
 
 // ==================== ONLY IF PREVIOUS MODE NEEDED ==================//
-    /* Restore previous mode */
+    /* Get previous mode */
     mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
+
+#ifdef DBG
+    /* Assert the saved previous mode */
+    cmp ecx, -1
+    jnz ModeOk
+    int 3
+
+ModeOk:
+#endif
+
+    /* Restore the previous mode */
     mov esi, [fs:KPCR_CURRENT_THREAD]
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
 // ==================== END IF PREVIOUS MODE NEEDED ===================//
@@ -766,13 +827,74 @@ ApcLoop2:
     jmp ApcLoop2
 
 KiRosTrapReturn2:
+#ifdef DBG
+    /* Assert the flags */
+    pushfd
+    pop edx
+    test edx, EFLAGS_INTERRUPT_MASK
+    jnz InvalidExitState2
 
-    /* Restore exception list */
+    /* Assert the stack */
+    cmp esp, ebp
+    jnz InvalidExitState2
+
+    /* Assert the trap frame */
+StateCheckDone2:
+    sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    jnz InvalidTrapFrame2
+
+    /* Assert FS */
+    mov bx, fs
+    cmp bx, KGDT_R0_PCR
+    jnz InvalidFs2
+
+    /* Assert exception list */
+    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
+    jnz ExceptionListOK2
+
+InvalidFs2:
+    push -1
+    call _KeBugCheck@4
+
+InvalidTrapFrame2:
+    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+
+InvalidExitState2:
+    int 3
+    jmp StateCheckDone2
+
+ExceptionListOK2:
+#endif
+
+    /* Get exception list */
     mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+
+#ifdef DBG
+    /* Assert the saved exception list */
+    or edx, edx
+    jnz ListOk2
+    int 3
+
+ListOk2:
+#endif
+
+    /* Restore it */
     mov [fs:KPCR_EXCEPTION_LIST], edx
 
-    /* Restore previous mode */
+// ==================== ONLY IF PREVIOUS MODE NEEDED ==================//
+    /* Get previous mode */
     mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
+
+#ifdef DBG
+    /* Assert the saved previous mode */
+    cmp ecx, -1
+    jnz ModeOk2
+    int 3
+
+ModeOk2:
+#endif
+
+    /* Restore previous mode */
     mov esi, [fs:KPCR_CURRENT_THREAD]
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
 
@@ -957,9 +1079,58 @@ ApcLoop3:
     jmp ApcLoop3
 
 KiRosTrapReturn3:
+#ifdef DBG
+    /* Assert the flags */
+    pushfd
+    pop edx
+    test edx, EFLAGS_INTERRUPT_MASK
+    jnz InvalidExitState3
+
+    /* Assert the stack */
+    cmp esp, ebp
+    jnz InvalidExitState3
+
+    /* Assert the trap frame */
+StateCheckDone3:
+    //sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    //jnz InvalidTrapFrame3
+
+    /* Assert FS */
+    mov bx, fs
+    cmp bx, KGDT_R0_PCR
+    jnz InvalidFs3
+
+    /* Assert exception list */
+    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
+    jnz ExceptionListOK3
+
+InvalidFs3:
+    push -1
+    call _KeBugCheck@4
+
+InvalidTrapFrame3:
+    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+
+InvalidExitState3:
+    int 3
+    jmp StateCheckDone3
+
+ExceptionListOK3:
+#endif
+
+    /* Get exception list */
+    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+
+#ifdef DBG
+    /* Assert the saved exception list */
+    or edx, edx
+    jnz ListOk3
+    int 3
+
+ListOk3:
+#endif
 
     /* Restore exception list */
-    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
     mov [fs:KPCR_EXCEPTION_LIST], edx
 
     /* Check for V86 */

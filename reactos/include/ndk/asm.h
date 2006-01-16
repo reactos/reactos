@@ -356,7 +356,9 @@ Author:
 //
 // NTSTATUS Codes
 //
+#ifdef __ASM__
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
+#endif
 
 //
 // Generic Definitions
