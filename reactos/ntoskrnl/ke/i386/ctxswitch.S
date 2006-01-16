@@ -170,11 +170,11 @@ BadThread:
 
 NoAdjust:
 
-    /* Set new ESP0 */
-    //mov [ebp+KTSS_ESP0], eax
-
     /* Save it */
     push [ebp+KTSS_ESP0]
+
+    /* Set new ESP0 */
+    mov [ebp+KTSS_ESP0], eax
 
     /* Set TEB pointer */
     mov eax, [esi+KTHREAD_TEB]
