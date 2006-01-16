@@ -57,7 +57,7 @@
 .globl _KiThreadStartup@156
 _KiThreadStartup@156:
 
-    /* 
+    /*
      * Clear all the non-volatile registers, so the thread won't be tempted to
      * expect any static data (like some badly coded usermode/win9x apps do)
      */
@@ -65,11 +65,11 @@ _KiThreadStartup@156:
     xor esi, esi
     xor edi, edi
     xor ebp, ebp
-    
+
     /* It's now safe to go to APC */
     mov ecx, APC_LEVEL
     call @KfLowerIrql@4
-    
+
     /* 
      * Call the System Routine which is right on our stack now.
      * After we pop the pointer, the Start Routine/Context will be on the 
@@ -77,18 +77,18 @@ _KiThreadStartup@156:
      */
     pop eax
     call eax
-    
+
     /* The thread returned... was it a user-thread? */
     pop ecx
     or ecx, ecx
     jz BadThread
-    
+
     /* Yes it was, set our trapframe for the System Call Exit Dispatcher */
     mov ebp, esp
-    
+
     /* Exit back to user-mode */
     jmp _KiServiceExit2
-    
+
 BadThread:
 
     /* A system thread returned...this is very bad! */
@@ -114,10 +114,6 @@ BadThread:
  *--*/
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
-#ifdef KDBG
-    //jmp SaveTrapFrameForKDB
-SaveTrapFrameForKDB_Return:
-#endif
 
     /* Get the PCR. It's faster to use ebx+offset then fs:offset */
     mov ebx, [fs:KPCR_SELF]
@@ -132,24 +128,36 @@ SaveTrapFrameForKDB_Return:
     cli
 
     /* Save the initial stack in EAX */
-    mov eax, [edi+KTHREAD_INITIAL_STACK]
+    mov eax, [esi+KTHREAD_INITIAL_STACK]
+
+    /* Save the stack limit in ecx */
+    mov ecx, [esi+KTHREAD_STACK_LIMIT]
+
+    /* Make space for the NPX Frame */
+    sub eax, NPX_FRAME_LENGTH
+
+    /* Set the KPCR stack values */
+    mov [ebx+KPCR_INITIAL_STACK], eax
+    mov [ebx+KPCR_STACK_LIMIT], ecx
 
 #ifdef CONFIG_SMP
     /* Save FPU state if the thread has used it. */
+    mov ecx, [edi+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
     mov dword ptr [ebx+KPCR_NPX_THREAD], 0
     test byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_DIRTY
     jz 3f
     cmp dword ptr _KeI386FxsrPresent, 0
     je 1f
-    fxsave [eax-SIZEOF_FX_SAVE_AREA]
+    fxsave [ecx]
     jmp 2f
 1:
-    fnsave [eax-SIZEOF_FX_SAVE_AREA]
+    fnsave [ecx]
 2:
     mov byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_VALID
 3:
 #endif /* CONFIG_SMP */
-    
+
     /* Save the stack pointer in this processors TSS */
     mov ebp, [ebx+KPCR_TSS]
 
@@ -158,11 +166,16 @@ SaveTrapFrameForKDB_Return:
     jnz NoAdjust
 
     /* Bias esp */
-    //sub dword ptr ss:[ebp+KTSS_ESP0], KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
+    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
 
 NoAdjust:
-    /* Push ESP0 Value */
-    push ss:[ebp+KTSS_ESP0]
+
+    /* Set new ESP0 */
+    mov [ebp+KTSS_ESP0], eax
+
+    /* Set TEB pointer */
+    mov eax, [esi+KTHREAD_TEB]
+    mov [ebx+KPCR_TEB], eax
 
     /* Check if address space switch is needed */
     mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
@@ -172,52 +185,57 @@ NoAdjust:
     /* Switch stacks */
     mov [edi+KTHREAD_KERNEL_STACK], esp
     mov esp, [esi+KTHREAD_KERNEL_STACK]
-    
+
     jz	NoAddressSpaceSwitch
-    
+
+    /* Clear gs */
+    xor ecx, ecx
+    mov gs, cx
+
     /* Switch address space */
     mov cr3, eax
-   
-NoAddressSpaceSwitch:   
-   
+    mov [ebp+KTSS_CR3], eax
+
+NoAddressSpaceSwitch:
+
     /* Stack is OK, safe to enable interrupts now */
-    sti 
+    sti
 
     /* Check if address space switch is needed (the result from above is valid) */
     /* If they match, then use the fast-path and skip all this */
     jz SameProcess
-    
+
     /* Get the new Process. */
     mov edi, [esi+KTHREAD_APCSTATE_PROCESS]
-    
+
     /* Check if we need an LDT */
     xor eax, eax
     cmp [edi+KPROCESS_LDT_DESCRIPTOR0], eax
     jz NoLdt
-    
+
     /* Write the LDT Selector */
-    mov ebp, [ebx+KPCR_GDT]
+    mov ecx, [ebx+KPCR_GDT]
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
-    mov [ebp+KGDT_LDT], eax
+    mov [ecx+KGDT_LDT], eax
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
-    mov [ebp+KGDT_LDT+4], eax
-    
+    mov [ecx+KGDT_LDT+4], eax
+
     /* Save LDT Selector */
     mov eax, KGDT_LDT
-        
+
 NoLdt:
-    
+
     /* Load LDT */
     lldt ax
-  
+
     /* Get the IOPM */
     mov ecx, [edi+KPROCESS_IOPM_OFFSET]
 
     /* Set current IOPM offset in the TSS */
     mov [ebp+KTSS_IOMAPBASE], cx
-    
+
 SameProcess:
-    
+
     /* Set the TEB */
     mov eax, [esi+KTHREAD_TEB]
     mov ecx, [ebx+KPCR_GDT]
@@ -225,10 +243,10 @@ SameProcess:
     shr eax, 16
     mov [ecx+0x3C], al
     mov [ecx+0x3F], ah
-    
+
     /* Increase context switches */
     inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
-    
+
     /* Set TS in cr0 to catch FPU code and load the FPU state when needed */
 #ifndef CONFIG_SMP
     cmp [ebx+KPCR_NPX_THREAD], esi
@@ -238,10 +256,7 @@ SameProcess:
     or eax, X86_CR0_TS
     mov cr0, eax
 4:
-    
-    /* Restore the stack pointer in this processors TSS */
-    pop ss:[ebp+KTSS_ESP0]
-    
+
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
 
@@ -307,106 +322,4 @@ SameProcess:
     /* Clean stack */
     add esp, 4 * 4
     ret
-    
-#ifdef KDBG
-
-SaveTrapFrameForKDB:
-    /* Set up a trap frame */
-    pushf                                        // 0x70
-    push cs                                      // 0x6C
-    push 0             /* Error Code */          // 0x64
-    push ebp                                     // 0x60
-    push ebx
-    
-    /* Fake Interrupt Stack */
-    mov ebp, [esp+20]  /* Eip */
-    mov ebx, [esp+16]  /* Eflags */
-    mov [esp+20], ebx
-    mov ebx, [esp+12]  /* Cs */
-    mov [esp+16], ebx
-    mov [esp+12], ebp
-    
-    push esi
-    push edi
-    push fs
-    push -1            /* Exception List */      // 0x4C
-    push 0             /* Previous Mode */       // 0x48
-    push eax
-    push ecx
-    push edx
-    push ds
-    push es
-    push gs                                      // 0x30
-
-    mov eax, dr7
-    push eax           /* Dr7 */
-    /* Clear breakpoint enables in dr7. */
-    and eax, 0xffff0000
-    mov dr7, eax
-    mov eax, dr6
-    push eax           /* Dr6 */
-    mov eax, dr3
-    push eax           /* Dr3 */
-    mov eax, dr2
-    push eax           /* Dr2 */
-    mov eax, dr1
-    push eax           /* Dr1 */
-    mov eax, dr0
-    push eax           /* Dr0 */
-        
-    lea eax, [esp+0x58]
-    push eax           /* TempEsp */
-    push ss            /* TempSegSs */
-    push 0             /* DebugPointer */
-    push -1            /* DebugArgMark */
-    push [esp+60]      /* Debug EIP */           // 0x4
-    push ebp           /* Debug EBP */           // 0x0
-    
-    /* Set Stack */
-    mov ebp, esp
-    
-    /* Push old Trap Frame */
-    push [edi+KTHREAD_TRAP_FRAME]
-    
-    /* Save new one */
-    mov [edi+KTHREAD_TRAP_FRAME], ebp
-    
-    /* Restore EBP, EBX and EAX */
-    mov ebp, [ebp+KTRAP_FRAME_EBP]
-    mov ebx, [ebp+KTRAP_FRAME_EBX]
-    mov eax, [ebp+KTRAP_FRAME_EAX]
-    
-    /* Return EIP */
-    push offset RestoreTrapFrameForKDB
-        
-    /* Jump to normal code */
-    jmp SaveTrapFrameForKDB_Return
-
-RestoreTrapFrameForKDB:
-  
-    /* Restore the old trapframe */
-    pop [esi+KTHREAD_TRAP_FRAME]
-        
-    /* Pop unused portions of the trap frame */
-    add esp, 0x30
-
-    /* Restore registers from Trap frame */
-    pop gs
-    pop es
-    pop ds
-    pop edx
-    pop ecx
-    pop eax
-    add esp, 8           /* ExceptionList and PreviousMode */
-    pop fs
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-    add esp, 4           /* ErrorCode */
-
-    /* Return to the caller. */
-    iret
-#endif /* KDBG */
-
 
