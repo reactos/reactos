@@ -486,7 +486,11 @@ IntGetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
                     (char *) &Menu->MenuInfo + sizeof(MENUINFO),
                     lpmi->cbSize - sizeof(MENUINFO));
    }
-
+   if (sizeof(ROSMENUINFO) == lpmi->cbSize)
+   {
+     lpmi->maxBmpSize.cx = Menu->MenuInfo.maxBmpSize.cx;
+     lpmi->maxBmpSize.cy = Menu->MenuInfo.maxBmpSize.cy;
+   }
    return TRUE;
 }
 
@@ -530,7 +534,11 @@ IntSetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
       Menu->MenuInfo.WndOwner = lpmi->WndOwner;
       Menu->MenuInfo.TimeToHide = lpmi->TimeToHide;
    }
-
+   if (sizeof(ROSMENUINFO) == lpmi->cbSize)
+   {
+     Menu->MenuInfo.maxBmpSize.cx = lpmi->maxBmpSize.cx;
+     Menu->MenuInfo.maxBmpSize.cy = lpmi->maxBmpSize.cy;
+   }
    return TRUE;
 }
 

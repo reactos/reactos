@@ -63,6 +63,7 @@
 
 #define IS_MAGIC_ITEM(Bmp)   ((int) Bmp <12)
 
+#define MENU_ITEM_HBMP_SPACE (5)
 #define MENU_BAR_ITEMS_SPACE (12)
 #define SEPARATOR_HEIGHT (5)
 #define MENU_TAB_SPACE (8)
@@ -763,6 +764,11 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
           Rect.left += MENU_BAR_ITEMS_SPACE / 2;
           Rect.right -= MENU_BAR_ITEMS_SPACE / 2;
         }
+      if (Item->hbmpItem == HBMMENU_CALLBACK || MenuInfo->maxBmpSize.cx != 0 )
+        {
+          Rect.left += MenuInfo->maxBmpSize.cx;
+          Rect.right -= MenuInfo->maxBmpSize.cx;
+        }
 
       Text = (PWCHAR) Item->dwTypeData;
       for (i = 0; L'\0' != Text[i]; i++)
@@ -784,7 +790,6 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
 	    }
           SetTextColor(Dc, RGB(0x80, 0x80, 0x80));
         }
-
       DrawTextW(Dc, Text, i, &Rect, uFormat);
 
       /* paint the shortcut text */
@@ -1130,7 +1135,7 @@ MenuCleanup(VOID)
  * Calculate the size of the menu item and store it in ItemInfo->rect.
  */
 static void FASTCALL
-MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, HWND WndOwner,
+MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND WndOwner,
                  INT OrgX, INT OrgY, BOOL MenuBar)
 {
   PWCHAR p;
@@ -1203,7 +1208,14 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, HWND WndOwner,
               measItem.itemData = ItemInfo->dwItemData;
               SendMessageW( WndOwner, WM_MEASUREITEM, ItemInfo->wID, (LPARAM)&measItem);
               ItemInfo->Rect.right = ItemInfo->Rect.left + measItem.itemWidth;
-          }
+              if (MenuInfo->maxBmpSize.cx < abs(measItem.itemWidth) +  MENU_ITEM_HBMP_SPACE || 
+                  MenuInfo->maxBmpSize.cy < abs(measItem.itemHeight))
+              {
+                  MenuInfo->maxBmpSize.cx = abs(measItem.itemWidth) + MENU_ITEM_HBMP_SPACE;
+                  MenuInfo->maxBmpSize.cy = abs(measItem.itemHeight);
+                  MenuSetRosMenuInfo(MenuInfo);
+              }
+           }
           else
           {
               SIZE Size;
@@ -1320,7 +1332,7 @@ MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
               break;
             }
 
-          MenuCalcItemSize(Dc, &ItemInfo, WndOwner, OrgX, OrgY, FALSE);
+          MenuCalcItemSize(Dc, &ItemInfo, MenuInfo, WndOwner, OrgX, OrgY, FALSE);
           if (! MenuSetRosMenuItemInfo(MenuInfo->Self, i, &ItemInfo))
             {
               MenuCleanupRosMenuItemInfo(&ItemInfo);
@@ -1426,7 +1438,7 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
             }
 
           DPRINT("calling MENU_CalcItemSize org=(%d, %d)\n", OrgX, OrgY);
-          MenuCalcItemSize(Dc, &ItemInfo, WndOwner, OrgX, OrgY, TRUE);
+          MenuCalcItemSize(Dc, &ItemInfo, MenuInfo, WndOwner, OrgX, OrgY, TRUE);
           if (! MenuSetRosMenuItemInfo(MenuInfo->Self, i, &ItemInfo))
             {
               MenuCleanupRosMenuItemInfo(&ItemInfo);
