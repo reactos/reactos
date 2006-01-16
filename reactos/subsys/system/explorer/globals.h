@@ -86,7 +86,7 @@ enum ICON_ID {
     ICID_CONTROLPAN,
     ICID_DESKSETTING,
     ICID_NETCONNS,
-    ICID_ADMINISTRATION,
+    ICID_ADMIN,
     ICID_RECENT,
 
 	ICID_DYNAMIC
@@ -95,6 +95,7 @@ enum ICON_ID {
 struct Icon {
 	Icon();
 	Icon(ICON_ID id, UINT nid);
+	Icon(ICON_ID id, UINT nid, int icon_size);
 	Icon(ICON_TYPE itype, int id, HICON hIcon);
 	Icon(ICON_TYPE itype, int id, int sys_idx);
 
@@ -157,12 +158,18 @@ protected:
 };
 
 
-#define	ICON_SIZE_X		GetSystemMetrics(large_icons? SM_CXICON: SM_CXSMICON)
-#define	ICON_SIZE_Y		GetSystemMetrics(large_icons? SM_CYICON: SM_CYSMICON)
+#define ICON_SIZE_SMALL		16	// GetSystemMetrics(SM_CXSMICON)
+#define ICON_SIZE_MIDDLE	24	// special size for start menu root icons
+#define ICON_SIZE_LARGE		32	// GetSystemMetrics(SM_CXICON)
+
+#define STARTMENUROOT_ICON_SIZE		ICON_SIZE_MIDDLE	// ICON_SIZE_LARGE
+
+#define ICON_SIZE_FROM_ICF(flags)	(flags&ICF_LARGE? ICON_SIZE_LARGE: flags&ICF_MIDDLE? ICON_SIZE_MIDDLE: ICON_SIZE_SMALL)
+#define ICF_FROM_ICON_SIZE(size)	(size>=ICON_SIZE_LARGE? ICF_LARGE: size>=ICON_SIZE_MIDDLE? ICF_MIDDLE: ICF_NORMAL)
 
 
  /// create a bitmap from an icon
-extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool large_icons*/);
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, int icon_size*/);
 
  /// add icon with alpha channel to imagelist using the specified background color
 extern int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);

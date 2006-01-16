@@ -121,7 +121,7 @@
 #define IDI_CONTROLPAN                  173
 #define IDI_DESKSETTING                 174
 #define IDI_NETCONNS                    175
-#define IDI_ADMINISTRATION              176
+#define IDI_ADMIN                       176
 #define IDI_RECENT                      178
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402

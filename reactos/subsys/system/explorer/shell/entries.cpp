@@ -361,9 +361,9 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 
 	ICON_ID icon_id = ICID_NONE;
 
-	 // not for ET_SHELL to display the correct desktop icon
-	if (_etype!=ET_SHELL && get_path(path, COUNTOF(path)))
-		icon_id = g_Globals._icon_cache.extract(path, flags);
+	if (_etype!=ET_SHELL && get_path(path, COUNTOF(path)))	// not for ET_SHELL to display the correct desktop icon
+		if (!(flags & ICF_MIDDLE))	// not for ICF_MIDDLE to extract 24x24 icons because SHGetFileInfo() doesn't support this icon size
+			icon_id = g_Globals._icon_cache.extract(path, flags);
 
 	if (icon_id == ICID_NONE) {
 		if (!(flags & ICF_OVERLAYS)) {
@@ -418,7 +418,7 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 
 			int shgfi_flags = SHGFI_PIDL;
 
-			if (!(flags & ICF_LARGE))
+			if (!(flags & (ICF_LARGE|ICF_MIDDLE)))
 				shgfi_flags |= SHGFI_SMALLICON;
 
 			if (flags & ICF_OPEN)

@@ -65,11 +65,12 @@ enum SCAN_FLAGS {
 
 enum ICONCACHE_FLAGS {
 	ICF_NORMAL	 =  0,
-	ICF_LARGE	 =  1,
-	ICF_OPEN	 =  2,
-	ICF_OVERLAYS =  4,
-	ICF_HICON	 =  8,
-	ICF_SYSCACHE = 16
+	ICF_MIDDLE	 =  1,
+	ICF_LARGE	 =  2,
+	ICF_OPEN	 =  4,
+	ICF_OVERLAYS =  8,
+	ICF_HICON	 = 16,
+	ICF_SYSCACHE = 32
 };
 
 #ifndef SHGFI_ADDOVERLAYS // missing in MinGW (as of 28.12.2005)

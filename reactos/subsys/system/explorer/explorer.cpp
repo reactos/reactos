@@ -253,6 +253,13 @@ Icon::Icon(ICON_ID id, UINT nid)	//, int cx, int cy
 {
 }
 
+Icon::Icon(ICON_ID id, UINT nid, int icon_size)
+ :	_id(id),
+	_itype(IT_STATIC),
+	_hicon(ResIconEx(nid, icon_size, icon_size))
+{
+}
+
 Icon::Icon(ICON_TYPE itype, int id, HICON hIcon)
  :	_id((ICON_ID)id),
 	_itype(itype),
@@ -322,10 +329,10 @@ int Icon::add_to_imagelist(HIMAGELIST himl, HDC hdc_wnd, COLORREF bk_color, HBRU
 	return ret;
 }
 
-HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, bool large_icons*/)
+HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd/*, int icon_size*/)
 {
-	int cx = GetSystemMetrics(SM_CXSMICON);	//ICON_SIZE_X;
-	int cy = GetSystemMetrics(SM_CYSMICON);	//ICON_SIZE_Y;
+	int cx = ICON_SIZE_SMALL;
+	int cy = ICON_SIZE_SMALL;
 	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, cx, cy);
 
 	MemCanvas canvas;
@@ -373,33 +380,35 @@ int IconCache::s_next_id = ICID_DYNAMIC;
 
 void IconCache::init()
 {
+	int icon_size = STARTMENUROOT_ICON_SIZE;
+
 	_icons[ICID_NONE]		= Icon(IT_STATIC, ICID_NONE, (HICON)0);
 
 	_icons[ICID_FOLDER]		= Icon(ICID_FOLDER,		IDI_FOLDER);
 	//_icons[ICID_DOCUMENT]	= Icon(ICID_DOCUMENT,	IDI_DOCUMENT);
 	_icons[ICID_EXPLORER]	= Icon(ICID_EXPLORER,	IDI_EXPLORER);
-	_icons[ICID_APP]		= Icon(ICID_APP,		IDI_APPICON);
+//	_icons[ICID_APP]		= Icon(ICID_APP,		IDI_APPICON);
 
-	_icons[ICID_CONFIG]		= Icon(ICID_CONFIG,		IDI_CONFIG);
-	_icons[ICID_DOCUMENTS]	= Icon(ICID_DOCUMENTS,	IDI_DOCUMENTS);
-	_icons[ICID_FAVORITES]	= Icon(ICID_FAVORITES,	IDI_FAVORITES);
-	_icons[ICID_INFO]		= Icon(ICID_INFO,		IDI_INFO);
-	_icons[ICID_APPS]		= Icon(ICID_APPS,		IDI_APPS);
-	_icons[ICID_SEARCH]		= Icon(ICID_SEARCH,		IDI_SEARCH);
-	_icons[ICID_ACTION]		= Icon(ICID_ACTION,		IDI_ACTION);
-	_icons[ICID_SEARCH_DOC] = Icon(ICID_SEARCH_DOC,	IDI_SEARCH_DOC);
-	_icons[ICID_PRINTER]	= Icon(ICID_PRINTER,	IDI_PRINTER);
-	_icons[ICID_NETWORK]	= Icon(ICID_NETWORK,	IDI_NETWORK);
-	_icons[ICID_COMPUTER]	= Icon(ICID_COMPUTER,	IDI_COMPUTER);
-	_icons[ICID_LOGOFF]		= Icon(ICID_LOGOFF,		IDI_LOGOFF);
-    _icons[ICID_SHUTDOWN]	= Icon(ICID_SHUTDOWN,	IDI_SHUTDOWN);
-	_icons[ICID_BOOKMARK]	= Icon(ICID_BOOKMARK,	IDI_DOT_TRANS);
-    _icons[ICID_MINIMIZE]	= Icon(ICID_MINIMIZE,	IDI_MINIMIZE);
-	_icons[ICID_CONTROLPAN]	    = Icon(ICID_CONTROLPAN,		IDI_CONTROLPAN);
-    _icons[ICID_DESKSETTING]    = Icon(ICID_DESKSETTING,    IDI_DESKSETTING);
-	_icons[ICID_NETCONNS]	    = Icon(ICID_NETCONNS,	    IDI_NETCONNS);
-    _icons[ICID_ADMINISTRATION]	= Icon(ICID_ADMINISTRATION,	IDI_ADMINISTRATION);
-	_icons[ICID_RECENT]     = Icon(ICID_RECENT,	    IDI_RECENT);
+	_icons[ICID_CONFIG]		= Icon(ICID_CONFIG,		IDI_CONFIG,		icon_size);
+	_icons[ICID_DOCUMENTS]	= Icon(ICID_DOCUMENTS,	IDI_DOCUMENTS,	icon_size);
+	_icons[ICID_FAVORITES]	= Icon(ICID_FAVORITES,	IDI_FAVORITES,	icon_size);
+	_icons[ICID_INFO]		= Icon(ICID_INFO,		IDI_INFO,		icon_size);
+	_icons[ICID_APPS]		= Icon(ICID_APPS,		IDI_APPS,		icon_size);
+	_icons[ICID_SEARCH] 	= Icon(ICID_SEARCH, 	IDI_SEARCH,		icon_size);
+	_icons[ICID_ACTION] 	= Icon(ICID_ACTION, 	IDI_ACTION,		icon_size);
+	_icons[ICID_SEARCH_DOC] = Icon(ICID_SEARCH_DOC, IDI_SEARCH_DOC,	icon_size);
+	_icons[ICID_PRINTER]	= Icon(ICID_PRINTER,	IDI_PRINTER,	icon_size);
+	_icons[ICID_NETWORK]	= Icon(ICID_NETWORK,	IDI_NETWORK,	icon_size);
+	_icons[ICID_COMPUTER]	= Icon(ICID_COMPUTER,	IDI_COMPUTER,	icon_size);
+	_icons[ICID_LOGOFF] 	= Icon(ICID_LOGOFF, 	IDI_LOGOFF,		icon_size);
+	_icons[ICID_SHUTDOWN]	= Icon(ICID_SHUTDOWN,	IDI_SHUTDOWN,	icon_size);
+	_icons[ICID_BOOKMARK]	= Icon(ICID_BOOKMARK,	IDI_DOT_TRANS,	icon_size);
+	_icons[ICID_MINIMIZE]	= Icon(ICID_MINIMIZE,	IDI_MINIMIZE,	icon_size);
+	_icons[ICID_CONTROLPAN] = Icon(ICID_CONTROLPAN, IDI_CONTROLPAN,	icon_size);
+	_icons[ICID_DESKSETTING]= Icon(ICID_DESKSETTING,IDI_DESKSETTING,icon_size);
+	_icons[ICID_NETCONNS]	= Icon(ICID_NETCONNS,	IDI_NETCONNS,	icon_size);
+	_icons[ICID_ADMIN]		= Icon(ICID_ADMIN,		IDI_ADMIN,		icon_size);
+	_icons[ICID_RECENT] 	= Icon(ICID_RECENT, 	IDI_RECENT,		icon_size);
 }
 
 
@@ -437,10 +446,10 @@ const Icon& IconCache::extract(LPCTSTR path, ICONCACHE_FLAGS flags)
 	if (flags & ICF_OPEN)
 		shgfi_flags |= SHGFI_OPENICON;
 
-	if ((flags&(ICF_LARGE|ICF_OVERLAYS|ICF_HICON)) && !(flags&ICF_SYSCACHE)) {
+	if ((flags&(ICF_LARGE|ICF_MIDDLE|ICF_OVERLAYS|ICF_HICON)) && !(flags&ICF_SYSCACHE)) {
 		shgfi_flags |= SHGFI_ICON;
 
-		if (!(flags & ICF_LARGE))
+		if (!(flags & (ICF_LARGE|ICF_MIDDLE)))
 			shgfi_flags |= SHGFI_SMALLICON;
 
 		if (flags & ICF_OVERLAYS)
@@ -510,11 +519,11 @@ const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int icon_id
 	HICON hIconLarge = 0;
 	HICON hIcon;
 
-	bool large_icons = flags & ICF_LARGE;
-	HRESULT hr = pExtract->Extract(path, icon_idx, &hIconLarge, &hIcon, MAKELONG(GetSystemMetrics(SM_CXICON), ICON_SIZE_X));
+	int icon_size = ICON_SIZE_FROM_ICF(flags);
+	HRESULT hr = pExtract->Extract(path, icon_idx, &hIconLarge, &hIcon, MAKELONG(GetSystemMetrics(SM_CXICON), icon_size));
 
 	if (hr == NOERROR) {	//@@ oder SUCCEEDED(hr) ?
-		if (large_icons) {	//@@ OK?
+		if (icon_size > ICON_SIZE_SMALL) {	//@@ OK?
 			if (hIcon)
 				DestroyIcon(hIcon);
 

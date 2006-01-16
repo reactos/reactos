@@ -30,10 +30,10 @@
 #define	TITLE_STARTMENU			TEXT("Start Menu")
 
 
-#define	STARTMENU_WIDTH_MIN		120
-#define	STARTMENU_LINE_HEIGHT	(ICON_SIZE_X+4)
-#define	STARTMENU_SEP_HEIGHT	(STARTMENU_LINE_HEIGHT/2)
-#define	STARTMENU_TOP_BTN_SPACE	8
+#define	STARTMENU_WIDTH_MIN					120
+#define	STARTMENU_LINE_HEIGHT(icon_size)	(icon_size+4)
+#define	STARTMENU_SEP_HEIGHT(icon_size)		(STARTMENU_LINE_HEIGHT(icon_size)/2)
+#define	STARTMENU_TOP_BTN_SPACE				8
 
 
  // private message constants
@@ -110,7 +110,7 @@ struct StartMenuCtrl : public Button
 {
 	StartMenuCtrl(HWND parent, int x, int y, int w, LPCTSTR title,
 					UINT id, HICON hIcon=0, bool hasSubmenu=false, DWORD style=WS_VISIBLE|WS_CHILD|BS_OWNERDRAW, DWORD exStyle=0)
-	 :	Button(parent, title, x, y, w, STARTMENU_LINE_HEIGHT, id, style, exStyle)
+	 :	Button(parent, title, x, y, w, STARTMENU_LINE_HEIGHT(icon_size), id, style, exStyle)
 	{
 		*new StartMenuButton(_hwnd, hIcon, hasSubmenu);
 
@@ -123,7 +123,7 @@ struct StartMenuCtrl : public Button
 struct StartMenuSeparator : public Static
 {
 	StartMenuSeparator(HWND parent, int x, int y, int w, DWORD style=WS_VISIBLE|WS_CHILD|WS_DISABLED|SS_ETCHEDHORZ, DWORD exStyle=0)
-	 :	Static(parent, NULL, x, y+STARTMENU_SEP_HEIGHT/2-1, w, 2, -1, style, exStyle)
+	 :	Static(parent, NULL, x, y+STARTMENU_SEP_HEIGHT(icon_size)/2-1, w, 2, -1, style, exStyle)
 	{
 	}
 };
@@ -182,12 +182,12 @@ struct SMBtnInfo
 
 typedef vector<SMBtnInfo> SMBtnVector;
 
-extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed, bool large_icons);
+extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, const SMBtnInfo& btn, bool has_focus, bool pushed, int icon_size);
 
 #else
 
 extern void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
-								bool hasSubmenu, bool enabled, bool has_focus, bool pushed, bool large_icons);
+								bool hasSubmenu, bool enabled, bool has_focus, bool pushed, int icon_size);
 
 #endif
 
@@ -209,8 +209,8 @@ struct StartMenu :
 	typedef ExtContextMenuHandlerT<OwnerDrawParent<DialogWindow> > super;
 #endif
 
-	StartMenu(HWND hwnd, bool large_icons=false);
-	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info, bool large_icons=false);
+	StartMenu(HWND hwnd, int icon_size=ICON_SIZE_SMALL);
+	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info, int icon_size=ICON_SIZE_SMALL);
 	~StartMenu();
 
 	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title,
@@ -248,7 +248,7 @@ protected:
 
 	StartMenuCreateInfo _create_info;	// copy of the original create info
 
-	bool	_large_icons;
+	int		_icon_size;
 
 #ifdef _LIGHT_STARTMENU
 	SMBtnVector _buttons;
@@ -296,9 +296,9 @@ protected:
 
 	void	DrawFloatingButton(HDC hdc);
 	void	GetFloatingButtonRect(LPRECT prect);
-	void	GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, bool large_icons);
+	void	GetArrowButtonRects(LPRECT prect_up, LPRECT prect_down, int icon_size);
 
-	void	DrawArrows(HDC hdc, bool large_icons);
+	void	DrawArrows(HDC hdc, int icon_size);
 
 	void	Paint(PaintCanvas& canvas);
 	void	UpdateIcons(/*int idx*/);
@@ -333,13 +333,13 @@ struct StartMenuHandler : public StartMenu
 {
 	typedef StartMenu super;
 
-	StartMenuHandler(HWND hwnd, bool large_icons=false)
-	 :	super(hwnd, large_icons)
+	StartMenuHandler(HWND hwnd, int icon_size=ICON_SIZE_SMALL)
+	 :	super(hwnd, icon_size)
 	{
 	}
 
-	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info, bool large_icons=false)
-	 :	super(hwnd, create_info, large_icons)
+	StartMenuHandler(HWND hwnd, const StartMenuCreateInfo& create_info, int icon_size=ICON_SIZE_SMALL)
+	 :	super(hwnd, create_info, icon_size)
 	{
 	}
 
@@ -353,14 +353,20 @@ protected:
 };
 
 
+struct StartMenuRootCreateInfo
+{
+	int	_icon_size;
+};
+
+
  /// Startmenu root window
 struct StartMenuRoot : public StartMenuHandler
 {
 	typedef StartMenuHandler super;
 
-	StartMenuRoot(HWND hwnd);
+	StartMenuRoot(HWND hwnd, const StartMenuRootCreateInfo& info);
 
-	static HWND Create(HWND hwndDesktopBar, bool large_icons);
+	static HWND Create(HWND hwndDesktopBar, int icon_size);
 	void	TrackStartmenu();
 
 protected:

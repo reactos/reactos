@@ -66,8 +66,8 @@ struct Window : public WindowHandle
 	typedef Window* (*CREATORFUNC)(HWND);
 	typedef Window* (*CREATORFUNC_INFO)(HWND, const void*);
 
-	static HWND Create(CREATORFUNC creator, DWORD dwExStyle,
-				LPCTSTR lpClassName, LPCTSTR lpWindowName,
+	static HWND Create(CREATORFUNC creator,
+				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
 
