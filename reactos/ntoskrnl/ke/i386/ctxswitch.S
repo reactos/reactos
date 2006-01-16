@@ -171,7 +171,10 @@ BadThread:
 NoAdjust:
 
     /* Set new ESP0 */
-    mov [ebp+KTSS_ESP0], eax
+    //mov [ebp+KTSS_ESP0], eax
+
+    /* Save it */
+    push [ebp+KTSS_ESP0]
 
     /* Set TEB pointer */
     mov eax, [esi+KTHREAD_TEB]
@@ -256,6 +259,9 @@ SameProcess:
     or eax, X86_CR0_TS
     mov cr0, eax
 4:
+
+    /* Restore ESP0 */
+    pop [ebp+KTSS_ESP0]
 
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
