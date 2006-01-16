@@ -32,7 +32,9 @@ _KeFlushCurrentTb@0:
 
     /* Modifying the PSE, PGE or PAE Flag in CR4 causes the TLB to be flushed */
     mov eax, cr4
-    and eax, ~CR4_PGE
+.att_syntax /* Older binutils versions don't support ~ for .intel_syntax */
+    and $~CR4_PGE, %eax
+.intel_syntax noprefix
     mov cr4, eax
     or eax, CR4_PGE
     mov cr4, eax

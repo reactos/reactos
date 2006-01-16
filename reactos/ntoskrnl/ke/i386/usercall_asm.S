@@ -135,7 +135,9 @@ StackOk:
     mov [ebx+KTHREAD_CALLBACK_STACK], esp
 
     /* Align stack on 16-byte boundary */
-    and esp, ~15
+.att_syntax /* Older binutils versions don't support ~ for intel_syntax */
+    and $~15,%esp
+.intel_syntax noprefix
     mov edi, esp
 
     /* Set destination and origin NPX Areas */
