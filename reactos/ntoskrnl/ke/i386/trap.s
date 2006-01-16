@@ -15,6 +15,12 @@
 #define KernelMode 0
 #define UserMode 1
 
+/* NOTES:
+ * The epilog will be replaced by a call to Ki386EoiHelper when bugs are fixed.
+ * The prologue is currently a duplication of the trap enter code in KiDebugService.
+ * It will be made a macro and shared later.
+ */
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -69,79 +75,62 @@ _KiTrapProlog2:
 	pushl	%edi
 	pushl	%fs
 
-	/* Make room for the previous mode and the exception list */
-	subl	$8, %esp
+.intel_syntax noprefix
+    /* Load the PCR selector into fs */
+    mov edi, KGDT_R0_PCR
+    mov fs, di
 
-	/* Save other registers */	
-	pushl	%eax
-	pushl	%ecx
-	pushl	%edx
-	pushl	%ds
-	pushl	%es
-	pushl	%gs
-	movl	%dr7, %eax
-	pushl	%eax		/* Dr7 */
-	/* Clear all breakpoint enables in dr7. */
-	andl	$0xFFFF0000, %eax
-	movl	%eax, %dr7
-	movl	%dr6, %eax
-	pushl	%eax		/* Dr6 */
-	movl	%dr3, %eax
-	pushl	%eax		/* Dr3 */
-	movl	%dr2, %eax
-	pushl	%eax		/* Dr2 */
-	movl	%dr1, %eax
-	pushl	%eax		/* Dr1 */
-	movl	%dr0, %eax
-	pushl	%eax		/* Dr0 */
-	leal    0x64(%esp), %eax
-	pushl	%eax		/* XXX: TempESP */
-	pushl	%ss		/* XXX: TempSS */
-	pushl	$0		/* XXX: DebugPointer */
-	pushl	$0		/* XXX: DebugArgMark */
-	movl    0x60(%esp), %eax
-	pushl	%eax		/* XXX: DebugEIP */
-	pushl	%ebp		/* XXX: DebugEBP */	
-	
-	/* Load the segment registers */
-	movl	$KGDT_R0_DATA, %eax
-	movl	%eax, %ds
-	movl	%eax, %es
-	movl	%eax, %gs
-	
-	/* save the trap frame */
-	movl	%esp, %ebp		
-	
-	/* Load the PCR selector into fs */
-	movl	$KGDT_R0_PCR, %eax
-	movl	%eax, %fs
+    /* Push exception list and previous mode (invalid) */
+    push fs:[KPCR_EXCEPTION_LIST]
+    push -1
 
-	/* Save the old exception list */
-	movl    %fs:KPCR_EXCEPTION_LIST, %eax
-	movl	%eax, KTRAP_FRAME_EXCEPTION_LIST(%ebp)
-	
-	/* Get a pointer to the current thread */
-	movl    %fs:KPCR_CURRENT_THREAD, %edi
+    /* Push volatiles and segments */
+    push eax
+    push ecx
+    push edx
+    push ds
+    push es
+    push gs
 
-	/* The current thread may be NULL early in the boot process */
-	cmpl	$0, %edi
-	je	.L4
-		
-	/* Save the old previous mode */
-	movl    $0, %eax
-	movb    KTHREAD_PREVIOUS_MODE(%edi), %al
-	movl	%eax, KTRAP_FRAME_PREVIOUS_MODE(%ebp)
-	
-        /* Set the new previous mode based on the saved CS selector */
-	movl	 KTRAP_FRAME_CS(%ebp), %eax
-	andl     $0x0000FFFF, %eax
+    /* Set the R3 data segment */
+    mov ax, KGDT_R3_DATA + RPL_MASK
 
-	/* Save the old trap frame. */
-	movl	KTHREAD_TRAP_FRAME(%edi), %edx
-	pushl	%edx
-	
-	/* Save a pointer to the trap frame in the current KTHREAD */
-	movl	%ebp, KTHREAD_TRAP_FRAME(%edi)
+    /* Skip debug registers and debug stuff */
+    sub esp, 0x30
+
+    /* Load the segment registers */
+    mov ds, ax
+    mov es, ax
+
+    /* Set up frame */
+    mov ebp, esp
+
+    /* Check if this was from V86 Mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    //jnz V86_kids
+
+    /* Get current thread */
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    cld
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    //test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
+    //jnz Dr_kids
+
+    /* Get the Debug Trap Frame EBP/EIP */
+    mov ecx, [ebp+KTRAP_FRAME_EBP]
+    mov edi, [ebp+KTRAP_FRAME_EIP]
+
+    /* Write the debug data */
+    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
+    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    mov [ebp+KTRAP_FRAME_DEBUGEBP], ecx
+    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
+.att_syntax
+
 .L6:	
 	
 	/* Call the C exception handler */
@@ -150,25 +139,9 @@ _KiTrapProlog2:
 	call	*%ebx
 	addl	$8, %esp
 
-	/* Get a pointer to the current thread */
-        movl	%fs:KPCR_CURRENT_THREAD, %esi
-        
-        /* Restore the old trap frame pointer */
-	popl	%ebx
-	cmpl	$0, %esi
-	je	_KiTrapEpilog
-	movl	%ebx, KTHREAD_TRAP_FRAME(%esi)
-
 	/* Return to the caller */
 	jmp	_KiTrapEpilog
 
-	/* Handle the no-thread case out of line */
-.L4:
-	movl	$0, %eax	/* previous mode */
-	movl	%eax, KTRAP_FRAME_PREVIOUS_MODE(%ebp)
-	pushl	%eax		/* old trap frame */
-	jmp	.L6	
-	
 .globl _KiTrap0
 _KiTrap0:
 	/* No error code */

@@ -742,7 +742,7 @@ V86_Exit2:
     pop edx
     pop ecx
     pop eax
-    jmp V86_Exit_Return
+    jmp V86_Exit_Return2
 
 EditedFrame2:
     /* Restore real CS value */
@@ -887,6 +887,7 @@ NotUserMode:
     /* Exit through common routine */
     jmp Kei386EoiHelper@0
 
+.globl Kei386EoiHelper@0
 Kei386EoiHelper@0:
 
     /* Disable interrupts */
@@ -992,7 +993,7 @@ V86_Exit3:
     pop edx
     pop ecx
     pop eax
-    jmp V86_Exit_Return
+    jmp V86_Exit_Return3
 
 EditedFrame3:
     /* Restore real CS value */
