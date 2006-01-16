@@ -15,7 +15,7 @@
 #include <hal.h>
 #include <ntdddisk.h>
 
-extern CHAR XboxFont8x16[256 * 16];
+extern UCHAR XboxFont8x16[256 * 16];
 
 void HalpXboxInitPciBus(ULONG BusNumber, PBUS_HANDLER BusHandler);
 void HalpXboxInitPartIo(void);

@@ -295,7 +295,7 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
   ULONG ScreenHeightPixels;
   PHYSICAL_ADDRESS PhysControl;
   PHYSICAL_ADDRESS PhysBuffer;
-  ULONG AvMode;
+  ULONG AvMode = 0;
   PVOID ControlBuffer;
 
   if (! DisplayInitialized)
