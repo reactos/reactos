@@ -182,7 +182,6 @@ NpfsWaiterThread(PVOID InitContext)
 		      ThreadContext->Count++;
                       ThreadContext->DeviceExt->EmptyWaiterCount--;
 		   }
-		   KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
 		   break;
 		default:
 		   KEBUGCHECK(0);
