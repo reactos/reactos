@@ -5,7 +5,7 @@
  * PROJECT:         ReactOS diskspeed.exe
  * FILE:            apps/tests/diskspeed/diskspeed.c
  * PURPOSE:         Determines disk transfer rates
- * PROGRAMMER:      Hartmut Birr
+ * PROGRAMMER:      
  */
 
 #include <stdio.h>
