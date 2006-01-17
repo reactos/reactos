@@ -13,37 +13,67 @@ extern HINSTANCE hInstance;
 extern HWND hListView;
 extern HWND hStatus;
 
-/* Stores the service array */
+/* Stores the complete services array */
 ENUM_SERVICE_STATUS_PROCESS *pServiceStatus = NULL;
 
 
-/* free service array */
+/* Free service array */
 VOID FreeMemory(VOID)
 {
     HeapFree(GetProcessHeap(), 0, pServiceStatus);
 }
 
-VOID GetData(VOID)
+/* Retrives the service description from the registry */
+BOOL GetDescription(HKEY hKey, LPTSTR *retDescription)
 {
-    LVITEM item;
-    UINT sel;
-    TCHAR buf[200];
 
-    sel = ListView_GetHotItem(hListView);
+    LPTSTR Description = NULL;
+    DWORD dwValueSize = 0;
+    LONG ret = RegQueryValueEx(hKey,
+                               _T("Description"),
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwValueSize);
+    if (ret != ERROR_SUCCESS && ret != ERROR_FILE_NOT_FOUND && ret != ERROR_INVALID_HANDLE)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
 
-    ZeroMemory(&item, sizeof(LV_ITEM));
+    if (ret != ERROR_FILE_NOT_FOUND)
+    {
+        Description = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
+        if (Description == NULL)
+        {
+            RegCloseKey(hKey);
+            return FALSE;
+        }
 
-    item.mask = LVIF_TEXT;
-    item.iItem = sel;
-    item.iSubItem = 0;
-    item.pszText = buf;
-    item.cchTextMax = 200;
+        if(RegQueryValueEx(hKey,
+                           _T("Description"),
+                           NULL,
+                           NULL,
+                           (LPBYTE)Description,
+                           &dwValueSize))
+        {
+            HeapFree(GetProcessHeap(), 0, Description);
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+    }
 
-    ListView_GetItem(hListView, &item);
+    /* copy pointer over */
+    *retDescription = Description;
+
+    return TRUE;
+}
 
 
-    //DisplayString(sel);
-    DisplayString(item.pszText);
+BOOL GetExecutablePath(LPTSTR *ExePath)
+{
+
+    return FALSE;
 }
 
 
@@ -79,12 +109,10 @@ RefreshServiceList(VOID)
         /* assign the image to the list view */
         ListView_SetImageList(hListView, hSmall, LVSIL_SMALL);
 
-
         for (Index = 0; Index < NumServices; Index++)
         {
             HKEY hKey = NULL;
             LPTSTR Description = NULL;
-            LONG ret;
             LPTSTR LogOnAs = NULL;
             DWORD StartUp = 0;
             DWORD dwValueSize;
@@ -102,55 +130,31 @@ RefreshServiceList(VOID)
 
             /* set the display name */
 
-            ZeroMemory(&item, sizeof(LV_ITEM));
-            item.mask = LVIF_TEXT;
+            ZeroMemory(&item, sizeof(LVITEM));
+            item.mask = LVIF_TEXT | LVIF_PARAM;
             item.pszText = pServiceStatus[Index].lpDisplayName;
+
+            /* Set a pointer for each service so we can query it later.
+             * Not all services are added to the list, so we can't query
+             * the item number as they become out of sync with the array */
+            item.lParam = (LPARAM)&pServiceStatus[Index];
+
             item.iItem = ListView_GetItemCount(hListView);
             item.iItem = ListView_InsertItem(hListView, &item);
 
 
 
+
             /* set the description */
-            dwValueSize = 0;
-            ret = RegQueryValueEx(hKey,
-                                _T("Description"),
-                                NULL,
-                                NULL,
-                                NULL,
-                                &dwValueSize);
-            if (ret != ERROR_SUCCESS && ret != ERROR_FILE_NOT_FOUND && ret != ERROR_INVALID_HANDLE)
-            {
-                RegCloseKey(hKey);
-                continue;
-            }
 
-            if (ret != ERROR_FILE_NOT_FOUND)
+            if (GetDescription(hKey, &Description))
             {
-                Description = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
-                if (Description == NULL)
-                {
-                    RegCloseKey(hKey);
-                    return FALSE;
-                }
-                if(RegQueryValueEx(hKey,
-                                   _T("Description"),
-                                   NULL,
-                                   NULL,
-                                   (LPBYTE)Description,
-                                   &dwValueSize))
-                {
-                    HeapFree(GetProcessHeap(), 0, Description);
-                    RegCloseKey(hKey);
-                    continue;
-                }
-
                 item.pszText = Description;
                 item.iSubItem = 1;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
 
                 HeapFree(GetProcessHeap(), 0, Description);
             }
-
 
 
             /* set the status */
@@ -252,6 +256,9 @@ RefreshServiceList(VOID)
         _sntprintf(buf, 300, szNumServices, NumListedServ);
         SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)buf);
     }
+
+    /* turn redraw flag on. It's turned off initially via the LBS_NOREDRAW flag */
+    SendMessage (hListView, WM_SETREDRAW, TRUE, 0) ;
 
     return TRUE;
 }

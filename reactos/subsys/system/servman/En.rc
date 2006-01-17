@@ -83,7 +83,7 @@ BEGIN
   CONTROL "",IDC_DISP_NAME,"Static",0x50001000,70,29,176,12
   CONTROL "",IDC_DESCRIPTION,"Static",0x50201000,70,46,176,22
   CONTROL "Path to executable:",IDC_STATIC,"Static",0x50000000,6,73,82,9
-  CONTROL "",IDC_STATIC,"Static",0x50001000,6,86,238,12
+  CONTROL "",IDC_EXEPATH,"Static",0x50001000,6,86,238,12
   CONTROL "Startup type:",IDC_STATIC,"Static",0x50000000,6,108,53,11
   CONTROL "",IDC_START_TYPE,"ComboBox",0x50010003,70,107,176,11
   CONTROL "Service status:",IDC_STATIC,"Static",0x50000000,4,138,53,11
@@ -96,6 +96,20 @@ BEGIN
   CONTROL "Start parameters",IDC_STATIC,"Static",0x50000000,6,199,53,11
   CONTROL "",IDC_START_PARAM,"Static",0x50001000,70,199,176,11
 END
+
+IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+CAPTION "Dependencies"
+FONT 8,"MS Sans Serif",0,0
+STYLE 0x10CF0000
+BEGIN
+  CONTROL "",IDC_DEPEND_TREE1,"SysTreeView32",0x50010007,8,70,236,68,0x00000200
+  CONTROL "",IDC_DEPEND_TREE2,"SysTreeView32",0x50010007,8,151,234,67,0x00000200
+  CONTROL "Some services depend on other services, system drivers and load order groups. If a system component is stopped or it is not running properly, dependant services can be affected.",IDC_STATIC,"Static",0x50000000,8,7,238,26
+  CONTROL "This service depends on the following components",IDC_STATIC,"Static",0x50000000,8,57,236,9
+  CONTROL "",IDC_DEPEND_SERVICE,"Static",0x50000000,8,38,236,13
+END
+
+
 
 IDB_BUTTONS BITMAP "res/toolbar.bmp"
 

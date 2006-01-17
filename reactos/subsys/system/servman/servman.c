@@ -17,6 +17,7 @@ HWND hListView;
 HWND hStatus;
 HWND hTool;
 HMENU hShortcutMenu;
+INT SelectedItem;
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -100,15 +101,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 /* ======================== Create List View ============================== */
 
-            hListView = CreateWindow(WC_LISTVIEW,
-                                     NULL,
-                                     WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER |
-                                     LVS_EDITLABELS | LVS_SORTASCENDING,
-                                     0, 0, 0, 0, /* sized via WM_SIZE */
-                                     hwnd,
-                                     (HMENU) IDC_SERVLIST,
-                                     hInstance,
-                                     NULL);
+            hListView = CreateWindowEx(0,
+                                       WC_LISTVIEW,
+                                       NULL,
+                                       WS_CHILD | WS_VISIBLE | LVS_REPORT | WS_BORDER |
+                                       LBS_NOTIFY | LVS_SORTASCENDING | LBS_NOREDRAW,
+                                       0, 0, 0, 0, /* sized via WM_SIZE */
+                                       hwnd,
+                                       (HMENU) IDC_SERVLIST,
+                                       hInstance,
+                                       NULL);
             if (hListView == NULL)
                 MessageBox(hwnd, _T("Could not create List View."), _T("Error"), MB_OK | MB_ICONERROR);
 
@@ -227,14 +229,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	    case WM_NOTIFY:
         {
-            LPNMITEMACTIVATE item;
+            NMHDR* nm = (NMHDR*) lParam;
 
-
-            switch (((LPNMHDR) lParam)->code)
+            switch (nm->code)
             {
 	            case NM_DBLCLK:
-                    item = (LPNMITEMACTIVATE) lParam;
-                    PropSheets(hwnd);
+                    OpenPropSheet(hwnd);
+			    break;
+
+			    case LVN_ITEMCHANGED:
+			    {
+			        LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
+
+			        SelectedItem = pnmv->iItem;
+
+			    }
 			    break;
 
                 case TTN_GETDISPINFO:
@@ -243,7 +252,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     UINT idButton;
 
                     lpttt = (LPTOOLTIPTEXT) lParam;
-                    //lpttt->hinst = hInstance;
 
                     /* Specify the resource identifier of the descriptive
                      * text for the given button. */
@@ -300,16 +308,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
 
-	    case WM_CLOSE:
-            FreeMemory(); /* free the service array */
-            DestroyMenu(hShortcutMenu);
-		    DestroyWindow(hwnd);
-	    break;
-
-	    case WM_DESTROY:
-		    PostQuitMessage(0);
-	    break;
-
         case WM_CONTEXTMENU:
             {
                 int xPos, yPos;
@@ -323,10 +321,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
 	    case WM_COMMAND:
+
 		    switch(LOWORD(wParam))
 		    {
                 case ID_PROP:
-                    PropSheets(hwnd);
+                    OpenPropSheet(hwnd);
                 break;
 
                 case ID_REFRESH:
@@ -374,6 +373,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                  break;
 
 		    }
+	    break;
+
+	    case WM_CLOSE:
+            FreeMemory(); /* free the service array */
+            DestroyMenu(hShortcutMenu);
+		    DestroyWindow(hwnd);
+	    break;
+
+	    case WM_DESTROY:
+		    PostQuitMessage(0);
 	    break;
 
 	    default:

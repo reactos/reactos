@@ -16,15 +16,16 @@ BOOL RefreshServiceList(VOID);
 
 BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount);
+BOOL Start(LPCTSTR, LPCTSTR, INT);
 
 VOID GetError(DWORD);
 VOID FreeMemory(VOID);
 VOID DisplayString(PTCHAR);
 
-VOID GetData(VOID);
+BOOL GetDescription(HKEY, LPTSTR *);
+BOOL GetExecutablePath(LPTSTR *);
 
-LONG APIENTRY PropSheets(HWND hwnd);
+LONG APIENTRY OpenPropSheet(HWND);
 
 DWORD GetServiceList(VOID);
 

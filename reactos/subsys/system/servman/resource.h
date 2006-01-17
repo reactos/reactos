@@ -26,12 +26,14 @@
 #define ID_VIEW_CUSTOMIZE   4021
 #define ID_ABOUT            4031
 
+/* List view columns */
 #define IDS_FIRSTCOLUMN     1
 #define IDS_SECONDCOLUMN    2
 #define IDS_THIRDCOLUMN     3
 #define IDS_FOURTHCOLUMN    4
 #define IDS_FITHCOLUMN      5
 
+/* tooltips */
 #define IDS_TOOLTIP_PROP    6000
 #define IDS_TOOLTIP_REFRESH 6001
 #define IDS_TOOLTIP_EXPORT  6002
@@ -52,6 +54,7 @@
 #define IDI_SM_ICON         50
 #define IDB_BUTTONS         51
 
+/* toolbar buttons */
 #define TBICON_PROP         0
 #define TBICON_REFRESH      1
 #define TBICON_EXPORT       2
@@ -63,11 +66,13 @@
 #define TBICON_HELP         8
 #define TBICON_EXIT         9
 
+/* properties dialog */
 #define IDS_PROP_SHEET      10000
 #define IDD_DLG_GENERAL     10001
 #define IDC_SERV_NAME       10041
 #define IDC_DISP_NAME       10051
 #define IDC_DESCRIPTION     10061
+#define IDC_EXEPATH         10062
 #define IDC_START_TYPE      10101
 #define IDC_SERV_STATUS     10121
 #define IDC_START           10131
@@ -75,3 +80,9 @@
 #define IDC_PAUSE           10151
 #define IDC_RESUME          10161
 #define IDC_START_PARAM     10191
+
+#define IDD_DLG_DEPEND      20001
+#define IDC_DEPEND_TREE1    20002
+#define IDC_DEPEND_TREE2    20003
+#define IDC_DEPEND_SERVICE  20004
+
