@@ -13,21 +13,32 @@
 .globl _KiFastCallEntry
 .globl _KiSystemService
 .globl _KiDebugService
+.globl _Kei386EoiHelper@0
+.globl _NtRaiseException@12
+.globl _NtContinue@8
 .intel_syntax noprefix
 
 /*
   * FIXMEs:
   *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
   *           and only when called from user-mode, and returning to user-mode.
-  *         - Implement SYSCALL_PROLOG macro.
-  */
-
- /*** This file is a mess; it is being worked on. Please contact Alex:
-  *** alex@relsoft.net if you want to make any changes to it before this
-  *** message goes away
+  *         - Merge with trap.S and document all traps.
+  *         - Use MmProbe when copying arguments to syscall.
+  *         - Add DR macro/save and VM macro/save.
+  *         - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion
   */
 
 /* FUNCTIONS ***************************************************************/
+
+.func KiSystemService
+_KiSystemService:
+
+    /* Enter the shared system call prolog */
+    SYSCALL_PROLOG
+
+    /* Jump to the actual handler */
+    jmp SharedCode
+.endfunc
 
 BadStack:
 
@@ -123,67 +134,11 @@ _KiFastCallEntry:
     /* Check if the thread was being debugged */
     test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
 
-    /* Jump to shared code or DR Save */
-    //jnz Dr_FastCallDrSave
-    jmp SharedCode
-.endfunc
-
-.func KiSystemService
-_KiSystemService:
-
-// ==================== COMMON SYSTEM CALL CODE ============//
-    /* Create a trap frame */
-    push 0
-    push ebp
-    push ebx
-    push esi
-    push edi
-    push fs
-
-    /* Load PCR Selector into fs */
-    mov ebx, KGDT_R0_PCR
-    mov fs, bx
-
-    /* Get a pointer to the current thread */
-    mov esi, [fs:KPCR_CURRENT_THREAD]
-
-    /* Save the previous exception list */
-    push [fs:KPCR_EXCEPTION_LIST]
-
-    /* Set the exception handler chain terminator */
-    mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
-
-    /* Save the old previous mode */
-    push ss:[esi+KTHREAD_PREVIOUS_MODE]
-    
-    /* Skip the other registers */
-    sub esp, 0x48
-
-    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
-    mov [esp+KTRAP_FRAME_DS], ds
-    mov [esp+KTRAP_FRAME_ES], es
-
-    /* Set the new previous mode based on the saved CS selector */
-    mov ebx, [esp+0x6C]
-    and ebx, 1
-    mov byte ptr ss:[esi+KTHREAD_PREVIOUS_MODE], bl
-
-    /* Go on the Kernel stack frame */
-    mov ebp, esp
-
-    /* Save the old trap frame pointer where EDX would be saved */
-    mov ebx, [esi+KTHREAD_TRAP_FRAME]
-    mov [ebp+KTRAP_FRAME_EDX], ebx
-
-    /* Flush DR7 */
-    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
-
-    /* Check if the thread was being debugged */
-    test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
-    //jnz Dr_kss_a
-
-SharedCode:
+    /* Set the thread's trap frame */
     mov [esi+KTHREAD_TRAP_FRAME], ebp
+
+    /* Save DR registers if needed */
+    //jnz Dr_FastCallDrSave
 
     /* Set the trap frame debug header */
     SET_TF_DEBUG_HEADER
@@ -208,7 +163,7 @@ PrevWasKernelMode:
     /* Enable interrupts */
     sti
 
-CheckValidCall:
+SharedCode:
 
     /*
      * Find out which table offset to use. Converts 0x1124 into 0x10.
@@ -389,14 +344,14 @@ KiBBTUnexpectedRange:
     mov [esi+KTHREAD_TRAP_FRAME], ebp
 
     /* Try the Call again */
-    jmp CheckValidCall
+    jmp SharedCode
 
 InvalidCall:
 
     /* Invalid System Call */
     mov eax, STATUS_INVALID_SYSTEM_SERVICE
     jmp KeReturnFromSystemCall
-    
+
 #ifdef DBG
 InvalidIrql:
     /* Save current IRQL */
@@ -443,7 +398,6 @@ _KiServiceExit2:
     TRAP_EPILOG NotFromSystemCall, DoRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
 .endfunc
 
-.globl _Kei386EoiHelper@0
 .func Kei386EoiHelper@0
 _Kei386EoiHelper@0:
 
@@ -535,7 +489,6 @@ NotUserMode:
     /* Exit through common routine */
     jmp _Kei386EoiHelper@0
 
-.globl _NtRaiseException@12
 _NtRaiseException@12:
 
     /* NOTE: We -must- be called by Zw* to have the right frame! */
@@ -581,7 +534,6 @@ _NtRaiseException@12:
     /* Restore debug registers too */
     jmp _KiServiceExit
 
-.globl _NtContinue@8
 _NtContinue@8:
 
     /* NOTE: We -must- be called by Zw* to have the right frame! */

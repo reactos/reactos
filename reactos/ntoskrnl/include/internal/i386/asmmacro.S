@@ -234,15 +234,123 @@
     SET_TF_DEBUG_HEADER
 
 //
-// @name TRAP_EPILOG
+// @name SYSCALL_PROLOG
 // 
-// This macro creates a standard trap entry prologue.
-// It should be used for entry into any kernel trap (KiTrapXx), but not for
-// system calls, which require special handling.
+// This macro creates a system call entry prologue.
+// It should be used for entry into any fast-system call (KiGetTickCount,
+// KiCallbackReturn, KiRaiseAssertion) and the generic system call handler
+// (KiSystemService)
 //
 // @param Label
-//        Identifying name of the caller function; will be used to append
-//        to the name V86 and DR helper functions, which must already exist.
+//        Unique label identifying the name of the caller function; will be
+//        used to append to the name of the DR helper function, which must
+//        already exist.
+//
+// @remark None.
+//
+.macro SYSCALL_PROLOG
+    /* Create a trap frame */
+    push 0
+    push ebp
+    push ebx
+    push esi
+    push edi
+    push fs
+
+    /* Load PCR Selector into fs */
+    mov ebx, KGDT_R0_PCR
+    mov fs, bx
+
+    /* Get a pointer to the current thread */
+    mov esi, [fs:KPCR_CURRENT_THREAD]
+
+    /* Save the previous exception list */
+    push [fs:KPCR_EXCEPTION_LIST]
+
+    /* Set the exception handler chain terminator */
+    mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
+
+    /* Save the old previous mode */
+    push ss:[esi+KTHREAD_PREVIOUS_MODE]
+
+    /* Skip the other registers */
+    sub esp, 0x48
+
+    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
+    mov [esp+KTRAP_FRAME_DS], ds
+    mov [esp+KTRAP_FRAME_ES], es
+
+    /* Set the new previous mode based on the saved CS selector */
+    mov ebx, [esp+0x6C]
+    and ebx, 1
+    mov byte ptr ss:[esi+KTHREAD_PREVIOUS_MODE], bl
+
+    /* Go on the Kernel stack frame */
+    mov ebp, esp
+
+    /* Save the old trap frame pointer where EDX would be saved */
+    mov ebx, [esi+KTHREAD_TRAP_FRAME]
+    mov [ebp+KTRAP_FRAME_EDX], ebx
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
+
+    /* Set the thread's trap frame and clear direction flag */
+    mov [esi+KTHREAD_TRAP_FRAME], ebp
+    cld
+
+    /* Save DR registers if needed */
+    //jnz Dr_kss_&Label
+
+    /* Set the trap frame debug header */
+    SET_TF_DEBUG_HEADER
+
+#ifdef DBG // FIXME: Is this for GDB? Can it be moved in the stub?
+    /*
+     * We want to know the address from where the syscall stub was called.
+     * If PrevMode is KernelMode, that address is stored in our own (kernel)
+     * stack, at location KTRAP_FRAME_ESP.
+     * If we're coming from UserMode, we load the usermode stack pointer
+     * and go back two frames (first frame is the syscall stub, second call
+     * is the caller of the stub).
+     */
+    mov edi, [ebp+KTRAP_FRAME_ESP]
+    test byte ptr [esi+KTHREAD_PREVIOUS_MODE], 0x01
+    jz 0f
+    mov edi, [edi+4]
+0:
+    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
+#endif
+
+    /* Enable interrupts */
+    sti
+.endm
+
+//
+// @name TRAP_EPILOG
+// 
+// This macro creates an epilogue for leaving any system trap.
+// It is used for exiting system calls, exceptions, interrupts and generic
+// traps.
+//
+// @param SystemCall
+//        Specifies whether this trap will exit a system call. If so, special
+//        code will be assembled to potentially use SYSEXIT instead of IRETD.
+//
+// @param RestorePreviousMode
+//        Specifies if the previous mode should be restored.
+//
+// @param RestoreSegments
+//        Specifies if the segment registers should be restored.
+//
+// @param RestoreVolatiles
+//        Specifies if the volatile registers should be restored.
+//
+// @param RestoreAllRegs
+//        Specifies if volatiles and segments should both be restored.
 //
 // @remark
 //
