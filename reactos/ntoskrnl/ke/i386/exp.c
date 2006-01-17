@@ -9,6 +9,14 @@
  *                  Skywing (skywing@valhallalegends.com)
  */
 
+/*
+ * FIXMES:
+ *  - Clean up file (remove all stack functions and use RtlWalkFrameChain/RtlCaptureStackBacktrace)
+ *  - Sanitize some context fields.
+ *  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
+ *  - Forward exceptions to user-mode debugger.
+ */
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -20,19 +28,13 @@
 #pragma alloc_text(INIT, KeInitExceptions)
 #endif
 
-
-/*
- * FIXMES:
- *  - Clean up file.
- *  - Sanitize some context fields.
- *  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
- *  - Implement official stack trace functions (exported) and remove stuff here.
- *  - Forward exceptions to user-mode debugger.
- */
-
 VOID
 NTAPI
-Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame);
+Ki386AdjustEsp0(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+extern KIDTENTRY KiIdt[];
 
 /* GLOBALS *****************************************************************/
 
@@ -44,31 +46,6 @@ Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame);
 #ifndef ARRAY_SIZE
 # define ARRAY_SIZE(x) (sizeof (x) / sizeof (x[0]))
 #endif
-
-extern void KiSystemService(void);
-extern void KiDebugService(void);
-
-extern VOID KiTrap0(VOID);
-extern VOID KiTrap1(VOID);
-extern VOID KiTrap2(VOID);
-extern VOID KiTrap3(VOID);
-extern VOID KiTrap4(VOID);
-extern VOID KiTrap5(VOID);
-extern VOID KiTrap6(VOID);
-extern VOID KiTrap7(VOID);
-extern VOID KiTrap8(VOID);
-extern VOID KiTrap9(VOID);
-extern VOID KiTrap10(VOID);
-extern VOID KiTrap11(VOID);
-extern VOID KiTrap12(VOID);
-extern VOID KiTrap13(VOID);
-extern VOID KiTrap14(VOID);
-extern VOID KiTrap15(VOID);
-extern VOID KiTrap16(VOID);
-extern VOID KiTrap17(VOID);
-extern VOID KiTrap18(VOID);
-extern VOID KiTrap19(VOID);
-extern VOID KiTrapUnknown(VOID);
 
 extern ULONG init_stack;
 extern ULONG init_stack_top;
@@ -388,8 +365,8 @@ KiDoubleFaultHandler(VOID)
 	      DbgPrint("{");
 	      if (StackRepeatLength[i] == 0)
 		{
-		  for(;;);
-		}
+   for(;;);
+}
 	      for (j = 0; j < StackRepeatLength[i]; j++)
 		{
 		  KeRosPrintAddress(StackTrace[i + j]);
@@ -1168,83 +1145,24 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 	return Count;
 }
 
-static void
-set_system_call_gate(unsigned int sel, unsigned int func)
-{
-   DPRINT("sel %x %d\n",sel,sel);
-   KiIdt[sel].a = (((int)func)&0xffff) +
-     (KGDT_R0_CODE << 16);
-   KiIdt[sel].b = 0xef00 + (((int)func)&0xffff0000);
-   DPRINT("idt[sel].b %x\n",KiIdt[sel].b);
-}
-
-static void set_interrupt_gate(unsigned int sel, unsigned int func)
-{
-   DPRINT("set_interrupt_gate(sel %d, func %x)\n",sel,func);
-   KiIdt[sel].a = (((int)func)&0xffff) +
-     (KGDT_R0_CODE << 16);
-   KiIdt[sel].b = 0x8e00 + (((int)func)&0xffff0000);
-}
-
-static void set_trap_gate(unsigned int sel, unsigned int func, unsigned int dpl)
-{
-   DPRINT("set_trap_gate(sel %d, func %x, dpl %d)\n",sel, func, dpl);
-   ASSERT(dpl <= 3);
-   KiIdt[sel].a = (((int)func)&0xffff) +
-     (KGDT_R0_CODE << 16);
-   KiIdt[sel].b = 0x8f00 + (dpl << 13) + (((int)func)&0xffff0000);
-}
-
-static void
-set_task_gate(unsigned int sel, unsigned task_sel)
-{
-  KiIdt[sel].a = task_sel << 16;
-  KiIdt[sel].b = 0x8500;
-}
-
 VOID
 INIT_FUNCTION
 NTAPI
 KeInitExceptions(VOID)
-/*
- * FUNCTION: Initalize CPU exception handling
- */
 {
-   int i;
+    ULONG i;
+    USHORT FlippedSelector;
 
-   DPRINT("KeInitExceptions()\n");
+    /* Loop the IDT */
+    for (i = 0; i <= MAXIMUM_IDTVECTOR; i ++)
+    {
+        /* Save the current Selector */
+        FlippedSelector = KiIdt[i].Selector;
 
-   /*
-    * Set up the other gates
-    */
-   set_trap_gate(0, (ULONG)KiTrap0, 0);
-   set_trap_gate(1, (ULONG)KiTrap1, 0);
-   set_trap_gate(2, (ULONG)KiTrap2, 0);
-   set_trap_gate(3, (ULONG)KiTrap3, 3);
-   set_trap_gate(4, (ULONG)KiTrap4, 0);
-   set_trap_gate(5, (ULONG)KiTrap5, 0);
-   set_trap_gate(6, (ULONG)KiTrap6, 0);
-   set_trap_gate(7, (ULONG)KiTrap7, 0);
-   set_task_gate(8, KGDT_DF_TSS);
-   set_trap_gate(9, (ULONG)KiTrap9, 0);
-   set_trap_gate(10, (ULONG)KiTrap10, 0);
-   set_trap_gate(11, (ULONG)KiTrap11, 0);
-   set_trap_gate(12, (ULONG)KiTrap12, 0);
-   set_trap_gate(13, (ULONG)KiTrap13, 0);
-   set_interrupt_gate(14, (ULONG)KiTrap14);
-   set_trap_gate(15, (ULONG)KiTrap15, 0);
-   set_trap_gate(16, (ULONG)KiTrap16, 0);
-   set_trap_gate(17, (ULONG)KiTrap17, 0);
-   set_trap_gate(18, (ULONG)KiTrap18, 0);
-   set_trap_gate(19, (ULONG)KiTrap19, 0);
-
-   for (i = 20; i < 256; i++)
-     {
-        set_trap_gate(i,(int)KiTrapUnknown, 0);
-     }
-
-   set_system_call_gate(0x2d,(int)KiDebugService);
-   set_system_call_gate(0x2e,(int)KiSystemService);
+        /* Flip Selector and Extended Offset */
+        KiIdt[i].Selector = KiIdt[i].ExtendedOffset;
+        KiIdt[i].ExtendedOffset = FlippedSelector;
+    }
 }
 
 VOID

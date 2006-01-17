@@ -22,6 +22,10 @@
 #define DoNotRestoreSegments        0
 #define DoNotRestoreVolatiles       0
 
+// Arguments for idt
+#define INT_32_DPL0                 0x8E00
+#define INT_32_DPL3                 0xEE00
+
 .intel_syntax noprefix
 
 //
@@ -58,6 +62,22 @@
 #define ACQUIRE_SPINLOCK(x, y)
 #define RELEASE_SPINLOCK(x) 
 #endif
+
+//
+// @name SET_TF_DEBUG_HEADER
+//
+// This macro sets up the debug header in the trap frame.
+//
+// @param None.
+//
+// @remark ebp = PKTRAP_FRAME.
+//         edi/ebx = Have been saved and can be used.
+//
+.macro idt Handler, Bits
+    .long \Handler
+    .short \Bits
+    .short KGDT_R0_CODE
+.endm
 
 //
 // @name SET_TF_DEBUG_HEADER

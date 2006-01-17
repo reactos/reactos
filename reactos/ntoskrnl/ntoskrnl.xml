@@ -30,7 +30,6 @@
 				<file>exp.c</file>
 				<file>fpu.c</file>
 				<file>gdt.c</file>
-				<file>idt.c</file>
 				<file>irq.c</file>
 				<file>irqhand.s</file>
 				<file>kernel.c</file>

@@ -46,8 +46,6 @@ typedef struct __DESCRIPTOR
 } IDT_DESCRIPTOR, GDT_DESCRIPTOR;
 
 #include <poppack.h>
-
-extern IDT_DESCRIPTOR KiIdt[256];
 //extern GDT_DESCRIPTOR KiGdt[256];
 
 /*

@@ -440,11 +440,10 @@ typedef struct _KIPCR
     ULONG IrrActive;             /* 2C */
     ULONG IDR;                   /* 30 */
     PVOID KdVersionBlock;        /* 34 */
+    PKIDTENTRY IDT;              /* 38 */
 #ifdef _REACTOS_
-    PUSHORT IDT;                 /* 38 */
     PUSHORT GDT;                 /* 3C */
 #else
-    PKIDTENTRY IDT;              /* 38 */
     PKGDTENTRY GDT;              /* 3C */
 #endif
     struct _KTSS *TSS;           /* 40 */

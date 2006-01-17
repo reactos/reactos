@@ -20,44 +20,52 @@
   *         - Handle failure after PsConvertToGuiThread.
   *         - Figure out what the DEBUGEIP hack is for and how it can be moved away.
   *         - Add DR macro/save and VM macro/save.
-  *         - Add .func .endfunc to everything that doesn't have it yet.
   *         - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
   */
 
 /* GLOBALS ******************************************************************/
 
+.globl _KiIdt
+_KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
-.globl _KiTrap0                     /* INT 0: Divide Error (#DE)            */
-.globl _KiTrap1                     /* INT 1: Debug Exception (#DB)         */
-.globl _KiTrap2                     /* INT 2: NMI Interrupt                 */
-.globl _KiTrap3                     /* INT 3: Breakpoint Exception (#BP)    */
-.globl _KiTrap4                     /* INT 4: Overflow Exception (#OF)      */
-.globl _KiTrap5                     /* INT 5: BOUND Range Exceeded (#BR)    */
-.globl _KiTrap6                     /* INT 6: Invalid Opcode Code (#UD)     */
-.globl _KiTrap7                     /* INT 7: Device Not Available (#NM)    */
-.globl _KiTrap8                     /* INT 8: Double Fault Exception (#DF)  */
-.globl _KiTrap9                     /* INT 9: RESERVED                      */
-.globl _KiTrap10                    /* INT 10: Invalid TSS Exception (#TS)  */
-.globl _KiTrap11                    /* INT 11: Segment Not Present (#NP)    */
-.globl _KiTrap12                    /* INT 12: Stack Fault Exception (#SS)  */
-.globl _KiTrap13                    /* INT 13: General Protection (#GP)     */
-.globl _KiTrap14                    /* INT 14: Page-Fault Exception (#PF)   */
-.globl _KiTrap15                    /* INT 15: RESERVED                     */
-.globl _KiTrap16                    /* INT 16: x87 FPU Error (#MF)          */
-.globl _KiTrap17                    /* INT 17: Align Check Exception (#AC)  */
-.globl _KiTrap18                    /* INT 18: Machine Check Exception (#MC)*/
-.globl _KiTrap19                    /* INT 19: SIMD FPU Exception (#XF)     */
-.globl _KiTrapUnknown               /* INT 20-30: UNDEFINED INTERRUPTS      */
-.globl _KiDebugService              /* INT 31: Get Tick Count Handler       */
-.globl _KiCallbackReturn            /* INT 32: User-Mode Callback Return    */
-.globl _KiRaiseAssertion            /* INT 33: Debug Assertion Handler      */
-.globl _KiDebugService              /* INT 34: Debug Service Handler        */
-.globl _KiSystemService             /* INT 35: System Call Service Handler  */
+idt _KiTrap0,          INT_32_DPL0  /* INT 00: Divide Error (#DE)           */
+idt _KiTrap1,          INT_32_DPL0  /* INT 01: Debug Exception (#DB)        */
+idt _KiTrap2,          INT_32_DPL0  /* INT 02: NMI Interrupt                */
+idt _KiTrap3,          INT_32_DPL3  /* INT 03: Breakpoint Exception (#BP)   */
+idt _KiTrap4,          INT_32_DPL3  /* INT 04: Overflow Exception (#OF)     */
+idt _KiTrap5,          INT_32_DPL0  /* INT 05: BOUND Range Exceeded (#BR)   */
+idt _KiTrap6,          INT_32_DPL0  /* INT 06: Invalid Opcode Code (#UD)    */
+idt _KiTrap7,          INT_32_DPL0  /* INT 07: Device Not Available (#NM)   */
+idt _KiTrap8,          INT_32_DPL0  /* INT 08: Double Fault Exception (#DF) */
+idt _KiTrap9,          INT_32_DPL0  /* INT 09: RESERVED                     */
+idt _KiTrap10,         INT_32_DPL0  /* INT 0A: Invalid TSS Exception (#TS)  */
+idt _KiTrap11,         INT_32_DPL0  /* INT 0B: Segment Not Present (#NP)    */
+idt _KiTrap12,         INT_32_DPL0  /* INT 0C: Stack Fault Exception (#SS)  */
+idt _KiTrap13,         INT_32_DPL0  /* INT 0D: General Protection (#GP)     */
+idt _KiTrap14,         INT_32_DPL0  /* INT 0E: Page-Fault Exception (#PF)   */
+idt _KiTrap15,         INT_32_DPL0  /* INT 0F: RESERVED                     */
+idt _KiTrap16,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
+idt _KiTrap17,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
+idt _KiTrap18,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
+idt _KiTrap19,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
+.rept 22
+idt _KiTrapUnknown,    INT_32_DPL0  /* INT 14-29: UNDEFINED INTERRUPTS      */
+.endr
+idt _KiGetTickCount,   INT_32_DPL3  /* INT 2A: Get Tick Count Handler       */
+idt _KiCallbackReturn, INT_32_DPL3  /* INT 2B: User-Mode Callback Return    */
+idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
+idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
+idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
+idt _KiTrapUnknown,    INT_32_DPL0  /* INT 2F: RESERVED                     */
+.rept 220
+idt _KiTrapUnknown,    INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
+.endr
 
-/* We also handle LSTAR Entry                                               */
+/* System call entrypoints:                                                 */
 .globl _KiFastCallEntry
+.globl _KiSystemService
 
-/* And special system-defined software traps                                */
+/* And special system-defined software traps:                               */
 .globl _NtRaiseException@12
 .globl _NtContinue@8
 
@@ -66,7 +74,17 @@
 .globl _KiServiceExit2              /* Exit from syscall with complete frame*/
 .globl _Kei386EoiHelper@0           /* Exit from interrupt or H/W trap      */
 
+.globl _KiIdtDescriptor
+_KiIdtDescriptor:
+    .short 0x800
+    .long _KiIdt
+
 /* FUNCTIONS ****************************************************************/
+
+_KiGetTickCount:
+_KiCallbackReturn:
+_KiRaiseAssertion:
+    int 3
 
 .func KiSystemService
 _KiSystemService:
@@ -473,6 +491,7 @@ AbiosExit:
     /* Not yet supported */
     int 3
 
+.func KiDebugService
 _KiDebugService:
 
     /* Push error code */
@@ -526,7 +545,9 @@ NotUserMode:
 
     /* Exit through common routine */
     jmp _Kei386EoiHelper@0
+.endfunc
 
+.func NtRaiseException@12
 _NtRaiseException@12:
 
     /* NOTE: We -must- be called by Zw* to have the right frame! */
@@ -571,7 +592,9 @@ _NtRaiseException@12:
 
     /* Restore debug registers too */
     jmp _KiServiceExit
+.endfunc
 
+.func NtContinue@8
 _NtContinue@8:
 
     /* NOTE: We -must- be called by Zw* to have the right frame! */
@@ -619,6 +642,7 @@ Error:
     pop ebp
     mov esp, ebp
     jmp _KiServiceExit
+.endfunc
 
 _KiTrap0:
     /* Push error code */
@@ -780,6 +804,7 @@ _KiTrap7:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
+.globl _KiTrap8
 _KiTrap8:
     call _KiDoubleFaultHandler
     iret

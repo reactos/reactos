@@ -131,6 +131,7 @@ static ISR_TABLE IsrTable[NR_IRQS][1];
 #endif
 
 #define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
+extern IDT_DESCRIPTOR KiIdt[256];
 
 /* FUNCTIONS ****************************************************************/
 

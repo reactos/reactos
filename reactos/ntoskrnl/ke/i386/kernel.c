@@ -31,7 +31,7 @@ ULONG KeI386XMMIPresent = 0;
 ULONG KeI386FxsrPresent = 0;
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 extern ULONG IdleProcessorMask;
-
+extern KIDTENTRY KiIdt[256];
 static VOID INIT_FUNCTION Ki386GetCpuId(VOID);
 
 #if defined (ALLOC_PRAGMA)
@@ -309,7 +309,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->Irql = SYNCH_LEVEL;
    KPCR->NtTib.Self = &KPCR->NtTib;
    KPCR->GDT = KiBootGdt;
-   KPCR->IDT = (PUSHORT)KiIdt;
+   KPCR->IDT = KiIdt;
    KPCR->TSS = &KiBootTss;
    KPCR->Number = 0;
    KPCR->SetMember = 1 << 0;
