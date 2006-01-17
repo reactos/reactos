@@ -1,13 +1,27 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnlinclude/i386/asmmacro.S
- * PURPOSE:         Assembly Macros for Spinlocks and common Trap Code (TODO)
+ * PROJECT:         ReactOS Kernel
+ * FILE:            ntoskrnl/include/i386/asmmacro.S
+ * PURPOSE:         Assembly Macros for Spinlocks and common Trap Code
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
  
 /* INCLUDES ******************************************************************/
+
 #include <ndk/asm.h>
+
+// Arguments for TRAP_EPILOG
+#define FromSystemCall              1
+#define DoRestorePreviousMode       1
+#define DoRestoreEverything         1
+#define DoRestoreSegments           1
+#define DoRestoreVolatiles          1
+#define NotFromSystemCall           0
+#define DoNotRestorePreviousMode    0
+#define DoNotRestoreEverything      0
+#define DoNotRestoreSegments        0
+#define DoNotRestoreVolatiles       0
+
 .intel_syntax noprefix
 
 //
@@ -219,5 +233,228 @@
     /* Set the Trap Frame Debug Header */ \
     SET_TF_DEBUG_HEADER
 
+//
+// @name TRAP_EPILOG
+// 
+// This macro creates a standard trap entry prologue.
+// It should be used for entry into any kernel trap (KiTrapXx), but not for
+// system calls, which require special handling.
+//
+// @param Label
+//        Identifying name of the caller function; will be used to append
+//        to the name V86 and DR helper functions, which must already exist.
+//
+// @remark
+//
+.macro TRAP_EPILOG SystemCall, RestorePreviousMode, RestoreSegments, RestoreVolatiles, RestoreAllRegs
+#ifdef DBG
+    /* Assert the flags */
+    pushfd
+    pop edx
+    test edx, EFLAGS_INTERRUPT_MASK
+    jnz 1f
 
+    /* Assert the stack */
+    cmp esp, ebp
+    jnz 1f
+
+    /* Assert the trap frame */
+0:
+    //sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    //jnz 2f
+
+    /* Assert FS */
+    mov bx, fs
+    cmp bx, KGDT_R0_PCR
+    jnz 1f
+
+    /* Assert exception list */
+    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
+    jnz 4f
+2:
+    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+1:
+    int 3
+    jmp 0b
+4:
+#endif
+
+    /* Get exception list */
+    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+
+#ifdef DBG
+    /* Assert the saved exception list */
+    or edx, edx
+    jnz 5f
+    int 3
+5:
+#endif
+
+    /* Restore it */
+    mov [fs:KPCR_EXCEPTION_LIST], edx
+
+.if \RestorePreviousMode
+    /* Get previous mode */
+    mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
+
+#ifdef DBG
+    /* Assert the saved previous mode */
+    cmp ecx, -1
+    jnz 6f
+    int 3
+6:
+#endif
+
+    /* Restore the previous mode */
+    mov esi, [fs:KPCR_CURRENT_THREAD]
+    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
+.endif
+
+    /* Check for V86 */
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86_Exit
+
+    /* Check if the frame was edited */
+    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
+    jz 7f
+
+.ifeq \RestoreAllRegs
+    /* Check the old mode */
+    cmp word ptr [esp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    bt word ptr [esp+KTRAP_FRAME_CS], 0
+    cmc
+    ja 8f
+.endif
+
+.if \RestoreVolatiles
+    /* Restore volatiles */
+    mov edx, [esp+KTRAP_FRAME_EDX]
+    mov ecx, [esp+KTRAP_FRAME_ECX]
+    mov eax, [esp+KTRAP_FRAME_EAX]
+.endif
+
+    /* Check if we were called from kernel mode */
+    cmp dword ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    jz 9f
+
+.if \RestoreSegments
+    /* Restore segment registers */
+    lea esp, [ebp+KTRAP_FRAME_GS]
+    pop gs
+    pop es
+    pop ds
+.endif
+
+    /* Restore FS */
+3:
+    lea esp, [ebp+KTRAP_FRAME_FS]
+    pop fs
+
+9:
+    /* Skip debug information and unsaved registers */
+    lea esp, [ebp+KTRAP_FRAME_EDI]
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    /* Check for ABIOS */
+    cmp word ptr [esp+8], 0x80
+    ja AbiosExit
+
+    /* Pop error code */
+    add esp, 4
+
+.if \SystemCall
+    /* Check if previous CS is from user-mode */
+    test dword ptr [esp+4], 1
+
+    /* It is, so use Fast Exit */
+    jnz FastExit
+
+    /* Jump back to stub */
+    pop edx
+    pop ecx
+    popf
+    jmp edx
+
+.ret:
+.endif
+    iret
+
+.if \SystemCall
+FastExit:
+    /* Is SYSEXIT Supported/Wanted? */
+    cmp dword ptr ss:[_KiFastSystemCallDisable], 0
+    jnz .ret
+    test dword ptr [esp+8], EFLAGS_TF
+    jnz .ret
+
+    /* Restore FS to TIB */
+    mov ecx, KGDT_R3_TEB + RPL_MASK
+    mov fs, ecx
+
+    /* We will be cleaning up the stack ourselves */
+    pop edx                                 /* New Ring 3 EIP */
+    add esp, 4                              /* Skip Ring 3 DS */
+    and dword ptr [esp], 0xfffffdff         /* Remove EFLAGS_INTERRUPT_MASK from EFLAGS */
+    popf                                    /* Restore old EFLAGS */
+    pop ecx                                 /* Old Ring 3 SS:ESP */
+
+    /*
+     * At this point:
+     *     ECX points to the old User Stack.
+     *     EDX points to the instruction to execute in usermode after the sysenter
+     */
+    sti
+    sysexit
+.endif
+
+8:
+    /* Restore EAX */
+    mov eax, [esp+KTRAP_FRAME_EAX]
+
+    /* Skip registers */
+    add esp, 0x30
+
+    /* Restore segments and volatiles */
+    pop gs
+    pop es
+    pop ds
+    pop edx
+    pop ecx
+
+    /* Jump back to mainline code */
+    jmp 3b
+
+7:
+    /* Restore real CS value */
+    mov ebx, [esp+KTRAP_FRAME_TEMPCS]
+    mov [esp+KTRAP_FRAME_CS], ebx
+
+    /*
+     * If ESP was modified, then a special interrupt exit stack
+     * must be created to "update" ESP's value in a legal manner
+     */
+    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
+    sub ebx, 0xC
+    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
+
+    /* Copy Interrupt Stack */
+    mov esi, [esp+KTRAP_FRAME_EFLAGS]
+    mov [ebx+8], esi
+    mov esi, [esp+KTRAP_FRAME_CS]
+    mov [ebx+4], esi
+    mov esi, [esp+KTRAP_FRAME_EIP]
+    mov [ebx], esi
+
+    /* Return */
+    add esp, KTRAP_FRAME_EDI
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+    mov esp, [esp]
+    iret
+.endm
 

@@ -16,59 +16,10 @@
 .intel_syntax noprefix
 
 /*
- * There are 3 main types of Trap Entries: <= Move this to asmmacro.S
- *
- * - System Calls
- *     - TODO
- *
- * - Exceptions
- *     - TODO
- *
- * - Interrupts
- *     - TODO
- */
- 
-/*
- * There are 3 main types of Trap Exits: <= Correct some things and move to asmmacro.S
- *
- * - KiServiceExit
- *     - Clear interrupt flag
- *     - Common User APC Dispatching
- *     - Common exit code; segments and volatiles are not restored
- * You use this for System Call return, when volatiles are irrelevant.
- * (NtContinue, NtRaiseException, KiCallUserMode and all System Call returns)
- *
- * - KiServiceExit2
- *     - Clear interrupt flag
- *     - Common User APC Dispatching
- *     - Common exit code; the entire frame is restored.
- * You use this when volatiles and other registers need to be restored.
- * For example, if debugging is active (NtContinue, NtRaiseException).
- *
- * - Kei386EoiHelper
- *     - Clear interrupt flag
- *     - Common User APC Dispatching
- *     - Common exit code; the entire frame is restored but *NOT* the Previous Mode
- * You use this in the same context as KiServiceExit2, but when the Previous Mode
- * should be tampered with. Clearly, as its name suggests, this routine is mostly
- * useful for End Of Interrupts.
- * Note that this routine is EXPORTED.
- * Note that this routine must called by a JMP, not a CALL.
- */
-
-/*
- * The common exit code has 3 modes of operation:
- *    - Whether or not to restore segments
- *    - Whether or not to restore volatiles
- *    - Whether or not to restore the previous mode
- * All these are exemplified by the 3 trap exits shown above
- */
-
- /*
   * FIXMEs:
   *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
   *           and only when called from user-mode, and returning to user-mode.
-  *         - Use macros and merge with trap.s nicely
+  *         - Implement SYSCALL_PROLOG macro.
   */
 
  /*** This file is a mess; it is being worked on. Please contact Alex:
@@ -101,7 +52,6 @@ BadStack:
 .func KiFastCallEntry
 _KiFastCallEntry:
 
-// ==================== UNIQUE SYSENTER STUB. DO NOT DUPLICATE ============//
     /* Set FS to PCR */
     mov ecx, KGDT_R0_PCR
     mov fs, cx
@@ -181,7 +131,7 @@ _KiFastCallEntry:
 .func KiSystemService
 _KiSystemService:
 
-// ==================== UNIQUE SYSCALL TRAP ENTRY DO NOT DUPLICATE ============//
+// ==================== COMMON SYSTEM CALL CODE ============//
     /* Create a trap frame */
     push 0
     push ebp
@@ -205,7 +155,7 @@ _KiSystemService:
 
     /* Save the old previous mode */
     push ss:[esi+KTHREAD_PREVIOUS_MODE]
-
+    
     /* Skip the other registers */
     sub esp, 0x48
 
@@ -415,162 +365,38 @@ _KiServiceExit:
     mov es, [ebp+KTRAP_FRAME_ES]
     mov ds, [ebp+KTRAP_FRAME_DS]
 
-// ========================= COMMON TRAP EXIT CODE ===================//
-#ifdef DBG
-    /* Assert the flags */
-    pushfd
+    /* Exit and cleanup */
+    TRAP_EPILOG FromSystemCall, DoRestorePreviousMode, DoNotRestoreSegments, DoNotRestoreVolatiles, DoRestoreEverything
+.endfunc
+
+KiBBTUnexpectedRange:
+
+    /* If this isn't a Win32K call, fail */
+    cmp ecx, 0x10
+    jne InvalidCall
+
+    /* Set up Win32K Table */
+    push edx
+    push ebx
+    call _PsConvertToGuiThread@0
+
+    /* FIXME: Handle failure */
+    pop eax
     pop edx
-    test edx, EFLAGS_INTERRUPT_MASK
-    jnz InvalidExitState
 
-    /* Assert the stack */
-    cmp esp, ebp
-    jnz InvalidExitState
+    /* Reset trap frame address */
+    mov ebp, esp
+    mov [esi+KTHREAD_TRAP_FRAME], ebp
 
-    /* Assert the trap frame */
-StateCheckDone:
-    sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    jnz InvalidTrapFrame
+    /* Try the Call again */
+    jmp CheckValidCall
 
-    /* Assert FS */
-    mov bx, fs
-    cmp bx, KGDT_R0_PCR
-    jnz InvalidFs
+InvalidCall:
 
-    /* Assert exception list */
-    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
-    jnz ExceptionListOK
-
-InvalidFs:
-    push -1
-    call _KeBugCheck@4
-
-InvalidTrapFrame:
-    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-
-InvalidExitState:
-    int 3
-    jmp StateCheckDone
-
-ExceptionListOK:
-#endif
-
-    /* Get exception list */
-    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
-
-#ifdef DBG
-    /* Assert the saved exception list */
-    or edx, edx
-    jnz ListOk
-    int 3
-
-ListOk:
-#endif
-
-    /* Restore it */
-    mov [fs:KPCR_EXCEPTION_LIST], edx
-
-// ==================== ONLY IF PREVIOUS MODE NEEDED ==================//
-    /* Get previous mode */
-    mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
-
-#ifdef DBG
-    /* Assert the saved previous mode */
-    cmp ecx, -1
-    jnz ModeOk
-    int 3
-
-ModeOk:
-#endif
-
-    /* Restore the previous mode */
-    mov esi, [fs:KPCR_CURRENT_THREAD]
-    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
-// ==================== END IF PREVIOUS MODE NEEDED ===================//
-
-    /* Check for V86 */
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86_Exit
-
-    /* Check if the frame was edited */
-    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
-    jz EditedFrame
-
-// ==================== ONLY IF FULL RESTORE NEEDED ===================//
-    /* Check the old mode */
-    cmp word ptr [esp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
-    bt word ptr [esp+KTRAP_FRAME_CS], 0
-    cmc
-    ja RestoreAll
-    cmp dword ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
-    jz CommonStackClean
-// ==================== END IF FULL RESTORE NEEDED ====================//
-
-    /* Restore FS */
-RestoreFs:
-    lea esp, [ebp+KTRAP_FRAME_FS]
-    pop fs
-
-CommonStackClean:
-    /* Skip debug information and unsaved registers */
-    lea esp, [ebp+KTRAP_FRAME_EDI]
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-
-    /* Check for ABIOS */
-    cmp word ptr [esp+8], 0x80
-    ja AbiosExit
-
-AbiosReturn:
-    /* Pop error code */
-    add esp, 4
-
-    /* Check if previous CS is from user-mode */
-    test dword ptr [esp+4], 1
-
-    /* It is, so use Fast Exit */
-    jnz FastRet
-
-    /* Jump back to stub */
-    pop edx
-    pop ecx
-    popf
-    jmp edx
-
-IntRet:
-
-    iret
-
-FastRet:
-    /* Is SYSEXIT Supported/Wanted? */
-    cmp dword ptr ss:[_KiFastSystemCallDisable], 0
-    jnz IntRet
-    test dword ptr [esp+8], EFLAGS_TF
-    jnz IntRet
-
-    /* Restore FS to TIB */
-    mov ecx, KGDT_R3_TEB + RPL_MASK
-    mov fs, ecx
+    /* Invalid System Call */
+    mov eax, STATUS_INVALID_SYSTEM_SERVICE
+    jmp KeReturnFromSystemCall
     
-    /* We will be cleaning up the stack ourselves */
-    pop edx                                 /* New Ring 3 EIP */
-    add esp, 4                              /* Skip Ring 3 DS */
-/*  and dword ptr [esp], ~EFLAGS_INTERRUPT_MASK        Line below is equivalent to this,
-                                               but older binutils versions don't understand ~ */
-    and dword ptr [esp], 0xfffffdff         /* Remove IRQ hack from EFLAGS */
-    popf                                    /* Restore old EFLAGS */
-    pop ecx                                 /* Old Ring 3 SS:ESP */
-
-    /*
-     * At this point:
-     *     ECX points to the old User Stack.
-     *     EDX points to the instruction to execute in usermode after the sysenter
-     */
-    sti
-    sysexit
-
 #ifdef DBG
 InvalidIrql:
     /* Save current IRQL */
@@ -604,6 +430,33 @@ InvalidIndex:
     ret
 #endif
 
+.func KiServiceExit2
+_KiServiceExit2:
+
+    /* Disable interrupts */
+    cli
+
+    /* Check for, and deliver, User-Mode APCs if needed */
+    CHECK_FOR_APC_DELIVER 0
+
+    /* Exit and cleanup */
+    TRAP_EPILOG NotFromSystemCall, DoRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
+.endfunc
+
+.globl _Kei386EoiHelper@0
+.func Kei386EoiHelper@0
+_Kei386EoiHelper@0:
+
+    /* Disable interrupts */
+    cli
+
+    /* Check for, and deliver, User-Mode APCs if needed */
+    CHECK_FOR_APC_DELIVER 0
+
+    /* Exit and cleanup */
+    TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
+.endfunc
+
 V86_Exit:
     /* Move to EDX position */
     add esp, KTRAP_FRAME_EDX
@@ -627,240 +480,6 @@ V86_Exit:
 AbiosExit:
     /* Not yet supported */
     int 3
-
-RestoreAll:
-    /* Restore EAX */
-    mov eax, [esp+KTRAP_FRAME_EAX]
-
-    /* Skip registers */
-    add esp, 0x30
-
-    /* Restore segments and volatiles */
-    pop gs
-    pop es
-    pop ds
-    pop edx
-    pop ecx
-
-    /* Jump back to mainline code */
-    jmp RestoreFs
-
-EditedFrame:
-     /* Restore real CS value */
-     mov ebx, [esp+KTRAP_FRAME_TEMPCS]
-     mov [esp+KTRAP_FRAME_CS], ebx
-
-    /*
-     * If ESP was modified, then a special interrupt exit stack
-     * must be created to "update" ESP's value in a legal manner
-     */
-    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
-    sub ebx, 0xC
-    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
-
-    /* Copy Interrupt Stack */
-    mov esi, [esp+KTRAP_FRAME_EFLAGS]
-    mov [ebx+8], esi
-    mov esi, [esp+KTRAP_FRAME_CS]
-    mov [ebx+4], esi
-    mov esi, [esp+KTRAP_FRAME_EIP]
-    mov [ebx], esi
-
-    /* Return */
-    add esp, KTRAP_FRAME_EDI
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-    mov esp, [esp]
-    iret
-
-KiBBTUnexpectedRange:
-
-    /* If this isn't a Win32K call, fail */
-    cmp ecx, 0x10
-    jne InvalidCall
-
-    /* Set up Win32K Table */
-    push edx
-    push ebx
-    call _PsConvertToGuiThread@0
-
-    /* FIXME: Handle failure */
-    pop eax
-    pop edx
-
-    /* Reset trap frame address */
-    mov ebp, esp
-    mov [esi+KTHREAD_TRAP_FRAME], ebp
-
-    /* Try the Call again */
-    jmp CheckValidCall
-
-InvalidCall:
-
-    /* Invalid System Call */
-    mov eax, STATUS_INVALID_SYSTEM_SERVICE
-    jmp KeReturnFromSystemCall
-.endfunc
-
-.func KiServiceExit2
-_KiServiceExit2:
-
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 0
-
-#ifdef DBG
-    /* Assert the flags */
-    pushfd
-    pop edx
-    test edx, EFLAGS_INTERRUPT_MASK
-    jnz InvalidExitState2
-
-    /* Assert the stack */
-    cmp esp, ebp
-    jnz InvalidExitState2
-
-    /* Assert the trap frame */
-StateCheckDone2:
-    sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    jnz InvalidTrapFrame2
-
-    /* Assert FS */
-    mov bx, fs
-    cmp bx, KGDT_R0_PCR
-    jnz InvalidFs2
-
-    /* Assert exception list */
-    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
-    jnz ExceptionListOK2
-
-InvalidFs2:
-    push -1
-    call _KeBugCheck@4
-
-InvalidTrapFrame2:
-    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-
-InvalidExitState2:
-    int 3
-    jmp StateCheckDone2
-
-ExceptionListOK2:
-#endif
-
-    /* Get exception list */
-    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
-
-#ifdef DBG
-    /* Assert the saved exception list */
-    or edx, edx
-    jnz ListOk2
-    int 3
-
-ListOk2:
-#endif
-
-    /* Restore it */
-    mov [fs:KPCR_EXCEPTION_LIST], edx
-
-// ==================== ONLY IF PREVIOUS MODE NEEDED ==================//
-    /* Get previous mode */
-    mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
-
-#ifdef DBG
-    /* Assert the saved previous mode */
-    cmp ecx, -1
-    jnz ModeOk2
-    int 3
-
-ModeOk2:
-#endif
-
-    /* Restore previous mode */
-    mov esi, [fs:KPCR_CURRENT_THREAD]
-    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
-
-    /* Check for V86 */
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86_Exit
-
-    /* Check if the frame was edited */
-    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
-    jz EditedFrame2
-
-    /* Restore volatiles */
-    mov edx, [esp+KTRAP_FRAME_EDX]
-    mov ecx, [esp+KTRAP_FRAME_ECX]
-    mov eax, [esp+KTRAP_FRAME_EAX]
-
-    /* Check if it was kernel */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
-    jz CommonStackClean2
-
-    /* Skip registers */
-    lea esp, [ebp+KTRAP_FRAME_GS]
-
-    /* Restore segments and volatiles */
-    pop gs
-    pop es
-    pop ds
-    lea esp, [ebp+KTRAP_FRAME_FS]
-    pop fs
-
-CommonStackClean2:
-    /* Skip debug information and unsaved registers */
-    lea esp, [ebp+KTRAP_FRAME_EDI]
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-
-    /* Check for ABIOS */
-    cmp word ptr [esp+8], 0x80
-    ja AbiosExit
-
-    /* Pop error code and return */
-    add esp, 4
-    iret
-
-EditedFrame2:
-    /* Restore real CS value */
-    mov ebx, [esp+KTRAP_FRAME_TEMPCS]
-    mov [esp+KTRAP_FRAME_CS], ebx
-
-    /*
-     * If ESP was modified, then a special interrupt exit stack
-     * must be created to "update" ESP's value in a legal manner
-     */
-    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
-    sub ebx, 0xC
-    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
-
-    /* Copy Interrupt Stack */
-    mov esi, [esp+KTRAP_FRAME_EFLAGS]
-    mov [ebx+8], esi
-    mov esi, [esp+KTRAP_FRAME_CS]
-    mov [ebx+4], esi
-    mov esi, [esp+KTRAP_FRAME_EIP]
-    mov [ebx], esi
-
-    /* Restore volatiles */
-    mov eax, [esp+KTRAP_FRAME_EAX]
-    mov edx, [esp+KTRAP_FRAME_EDX]
-    mov ecx, [esp+KTRAP_FRAME_ECX]
-
-    /* Return */
-    add esp, KTRAP_FRAME_EDI
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-    mov esp, [esp]
-    iret
 
 _KiDebugService:
 
@@ -915,150 +534,6 @@ NotUserMode:
 
     /* Exit through common routine */
     jmp _Kei386EoiHelper@0
-.endfunc
-
-.globl _Kei386EoiHelper@0
-.func Kei386EoiHelper@0
-_Kei386EoiHelper@0:
-
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 0
-
-#ifdef DBG
-    /* Assert the flags */
-    pushfd
-    pop edx
-    test edx, EFLAGS_INTERRUPT_MASK
-    jnz InvalidExitState3
-
-    /* Assert the stack */
-    cmp esp, ebp
-    jnz InvalidExitState3
-
-    /* Assert the trap frame */
-StateCheckDone3:
-    //sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    //jnz InvalidTrapFrame3
-
-    /* Assert FS */
-    mov bx, fs
-    cmp bx, KGDT_R0_PCR
-    jnz InvalidFs3
-
-    /* Assert exception list */
-    cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
-    jnz ExceptionListOK3
-
-InvalidFs3:
-    push -1
-    call _KeBugCheck@4
-
-InvalidTrapFrame3:
-    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-
-InvalidExitState3:
-    int 3
-    jmp StateCheckDone3
-
-ExceptionListOK3:
-#endif
-
-    /* Get exception list */
-    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
-
-#ifdef DBG
-    /* Assert the saved exception list */
-    or edx, edx
-    jnz ListOk3
-    int 3
-
-ListOk3:
-#endif
-
-    /* Restore exception list */
-    mov [fs:KPCR_EXCEPTION_LIST], edx
-
-    /* Check for V86 */
-    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz V86_Exit
-
-    /* Check if the frame was edited */
-    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
-    jz EditedFrame3
-
-    /* Restore volatiles */
-    mov edx, [esp+KTRAP_FRAME_EDX]
-    mov ecx, [esp+KTRAP_FRAME_ECX]
-    mov eax, [esp+KTRAP_FRAME_EAX]
-
-    /* Check if it was kernel */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
-    jz CommonStackClean3
-
-    /* Skip registers */
-    lea esp, [ebp+KTRAP_FRAME_GS]
-
-    /* Restore segments and volatiles */
-    pop gs
-    pop es
-    pop ds
-    lea esp, [ebp+KTRAP_FRAME_FS]
-    pop fs
-
-CommonStackClean3:
-    /* Skip debug information and unsaved registers */
-    lea esp, [ebp+KTRAP_FRAME_EDI]
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-
-    /* Check for ABIOS */
-    cmp word ptr [esp+8], 0x80
-    ja AbiosExit
-
-    /* Pop error code and return */
-    add esp, 4
-    iret
-
-EditedFrame3:
-    /* Restore real CS value */
-    mov ebx, [esp+KTRAP_FRAME_TEMPCS]
-    mov [esp+KTRAP_FRAME_CS], ebx
-
-    /*
-     * If ESP was modified, then a special interrupt exit stack
-     * must be created to "update" ESP's value in a legal manner
-     */
-    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
-    sub ebx, 0xC
-    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
-
-    /* Copy Interrupt Stack */
-    mov esi, [esp+KTRAP_FRAME_EFLAGS]
-    mov [ebx+8], esi
-    mov esi, [esp+KTRAP_FRAME_CS]
-    mov [ebx+4], esi
-    mov esi, [esp+KTRAP_FRAME_EIP]
-    mov [ebx], esi
-
-    /* Restore volatiles */
-    mov eax, [esp+KTRAP_FRAME_EAX]
-    mov edx, [esp+KTRAP_FRAME_EDX]
-    mov ecx, [esp+KTRAP_FRAME_ECX]
-
-    /* Return */
-    add esp, KTRAP_FRAME_EDI
-    pop edi
-    pop esi
-    pop ebx
-    pop ebp
-    mov esp, [esp]
-    iret
-.endfunc
 
 .globl _NtRaiseException@12
 _NtRaiseException@12:
