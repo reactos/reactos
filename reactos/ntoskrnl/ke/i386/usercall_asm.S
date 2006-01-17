@@ -9,16 +9,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.h>
-//#include <bugcodes.h>
-#define APC_INDEX_MISMATCH 1
-#define IRQL_GT_ZERO_AT_SYSTEM_SERVICE 0x4A
-#define STATUS_NO_CALLBACK_ACTIVE 0xC0000258
+#include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
-
-// This file is a work in progress. Most of the code is currently disabled.
-
-/* GLOBALS ****************************************************************/
-.extern PVOID _KeUserCallbackDispatcher
 
 /* FUNCTIONS ****************************************************************/
 
@@ -186,8 +178,7 @@ DontBias:
     lea esi, [edx+KTRAP_FRAME_FS]
     rep movsd
 
-    /* TODO: Ugly hack because of some missing logic in syscall.s */
-    mov dword ptr [esp+KTRAP_FRAME_GS], 0
+    /* VMWARE Hack because ES/DS sometimes gets smashed when returning to User-Mode. Investigate! */
     mov dword ptr [esp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
     mov dword ptr [esp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
 
@@ -209,12 +200,7 @@ DontBias:
     sti
 
     /* Write the debug data */
-    mov edi, [ebp+KTRAP_FRAME_EBP]
-    mov edx, [ebp+KTRAP_FRAME_EIP]
-    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
-    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
+    SET_TF_DEBUG_HEADER
 
     /* Exit to user-mode */
     jmp _KiServiceExit

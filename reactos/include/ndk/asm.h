@@ -354,10 +354,13 @@ Author:
 #define CBSTACK_RESULT_LENGTH                   0x24
 
 //
-// NTSTATUS Codes
+// NTSTATUS and Bugcheck Codes
 //
 #ifdef __ASM__
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
+#define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
+#define APC_INDEX_MISMATCH                      1
+#define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #endif
 
 //

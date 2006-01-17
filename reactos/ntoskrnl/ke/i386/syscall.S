@@ -7,8 +7,6 @@
 
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
-#define APC_INDEX_MISMATCH 1
-#define IRQL_GT_ZERO_AT_SYSTEM_SERVICE 0x4A
 
 .globl _KiServiceExit
 .globl _KiServiceExit2
@@ -18,7 +16,7 @@
 .intel_syntax noprefix
 
 /*
- * There are 3 main types of Trap Entries:
+ * There are 3 main types of Trap Entries: <= Move this to asmmacro.S
  *
  * - System Calls
  *     - TODO
@@ -31,7 +29,7 @@
  */
  
 /*
- * There are 3 main types of Trap Exits:
+ * There are 3 main types of Trap Exits: <= Correct some things and move to asmmacro.S
  *
  * - KiServiceExit
  *     - Clear interrupt flag
@@ -66,17 +64,10 @@
  * All these are exemplified by the 3 trap exits shown above
  */
 
-/*
- * There is also common Debug Code present in the common exit code, which
- * in turn calls common code to save the debug registers
- */
- 
  /*
   * FIXMEs:
-  *         - Dig in trap code and see why we need to push/pop the segments,
-  *           which -shouldn't- be needed on syscalls; one of the things
-  *           missing for this to work is lazy loading in the GPF handler,
-  *           but there are other things to consider.
+  *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
+  *           and only when called from user-mode, and returning to user-mode.
   *         - Use macros and merge with trap.s nicely
   */
 
@@ -159,14 +150,12 @@ _KiFastCallEntry:
     /* Push previous mode */
     push UserMode
 
-.att_syntax
-    /* Save other registers */
-    sub $0xC, %esp                                                    // + 0x70
-    pushl $KGDT_R3_DATA + RPL_MASK                                    // + 0x40
-    pushl $KGDT_R3_DATA + RPL_MASK                                    // + 0x44
-    pushl $0                                                          // + 0x48
-    sub $0x30, %esp                                                   // + 0x70
-.intel_syntax noprefix
+    /* Skip the other registers */
+    sub esp, 0x48
+
+    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
+    mov dword ptr [esp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    mov dword ptr [esp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
 
     /* Make space for us on the stack */
     sub ebp, 0x29C
@@ -216,15 +205,13 @@ _KiSystemService:
 
     /* Save the old previous mode */
     push ss:[esi+KTHREAD_PREVIOUS_MODE]
-    
-.att_syntax
-    /* Save other registers */
-    sub $0xC, %esp                                                    // + 0x70
-    pushl %ds                                                          // + 0x40
-    pushl %es                                                          // + 0x44
-    pushl %gs                                                          // + 0x48
-    sub $0x30, %esp                                                    // + 0x70
-.intel_syntax noprefix
+
+    /* Skip the other registers */
+    sub esp, 0x48
+
+    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
+    mov [esp+KTRAP_FRAME_DS], ds
+    mov [esp+KTRAP_FRAME_ES], es
 
     /* Set the new previous mode based on the saved CS selector */
     mov ebx, [esp+0x6C]
@@ -424,6 +411,10 @@ _KiServiceExit:
     /* Check for, and deliver, User-Mode APCs if needed */
     CHECK_FOR_APC_DELIVER 1
 
+    /* Hack for VMWare: Sometimes ES/DS seem to be invalid when returning to user-mode. Investigate! */
+    mov es, [ebp+KTRAP_FRAME_ES]
+    mov ds, [ebp+KTRAP_FRAME_DS]
+
 // ========================= COMMON TRAP EXIT CODE ===================//
 #ifdef DBG
     /* Assert the flags */
@@ -514,14 +505,6 @@ ModeOk:
     cmp dword ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
     jz CommonStackClean
 // ==================== END IF FULL RESTORE NEEDED ====================//
-
-//badbadbad 	 
-     add esp, 0x30 	 
-     pop gs 	 
-     pop es 	 
-     pop ds 	 
-     add esp, 0x14 	 
-//badbadbad
 
     /* Restore FS */
 RestoreFs:
