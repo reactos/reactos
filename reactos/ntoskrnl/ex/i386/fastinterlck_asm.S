@@ -679,4 +679,182 @@
     mov eax, edx
     ret
 
+/*** Non-586 functions ***/
+
+/*PSINGLE_LIST_ENTRY
+ *NTAPI
+ *ExfInterlockedPopEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
+ *                            IN PKSPIN_LOCK Lock)
+ */
+.global @ExfInterlockedPopEntrySList@8
+@ExfInterlockedPopEntrySList@8:
+
+    /* Save flags */
+.starta:
+    pushfd
+
+    /* Disable interrupts */
+    cli
+
+    /* Acquire lock */
+    ACQUIRE_SPINLOCK(edx, .spina)
+
+    /* Get the next link and check if it's empty */
+    mov eax, [ecx]
+    or eax, eax
+    jz 1f
+
+    /* Get address of the next link and store it */
+    push [eax]
+    pop [ecx]
+
+    /* Decrement list depth */
+    dec dword ptr [ecx+4]
+
+1:
+#ifdef CONFIG_SMP
+    /* Release spinlock */
+    RELEASE_SPINLOCK(edx)
+#endif
+
+    /* Restore flags and return */
+    popfd
+    ret 0
+
+#ifdef CONFIG_SMP
+.spina:
+    /* Restore flags and spin */
+    popfd
+    SPIN_ON_LOCK(edx, .starta)
+#endif
+
+/*PSINGLE_LIST_ENTRY
+ *NTAPI
+ *ExInterlockedPushEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
+ *                            IN PSINGLE_LIST_ENTRY ListEntry,
+ *                            IN PKSPIN_LOCK Lock)
+ */
+.global @ExfInterlockedPushEntrySList@12
+@ExfInterlockedPushEntrySList@12:
+
+    /* Save flags */
+.startb:
+    pushfd
+
+    /* Disable interrupts */
+    cli
+
+    /* Acquire lock */
+#ifndef CONFIG_SMP
+    mov eax, [esp+8]
+    ACQUIRE_SPINLOCK(eax, .spinb)
+#endif
+
+    /* Get the next link and check if it's empty */
+    push [ecx]
+
+    /* Get address of the next link and store it */
+    pop [edx]
+    mov [ecx], edx
+
+    /* Increment list depth */
+    inc dword ptr [ecx+4]
+
+#ifdef CONFIG_SMP
+    /* Release spinlock */
+    RELEASE_SPINLOCK(eax)
+#endif
+
+    /* Restore flags and return */
+    popfd
+    ret 0
+
+#ifdef CONFIG_SMP
+.spinb:
+    /* Restore flags and spin */
+    popfd
+    SPIN_ON_LOCK(eax, .startb)
+#endif
+
+/*PVOID
+ *FASTCALL
+ *ExpInterlockedCompareExchange64(IN PLONGLONG Destination,
+ *                                IN PLONGLONG Exchange,
+ *                                IN PLONGLONG Comperand,
+ *                                IN PKSPIN_LOCK Lock)
+ */
+.global @ExpInterlockedCompareExchange64@16
+@ExpInterlockedCompareExchange64@16:
+
+    /* Save registers */
+    push ebp
+    push ebp
+
+    /* Get desination pointer, exchange value and comperand value/address */
+    mov ebp, ecx
+    mov ebx, [edx]
+    mov ecx, [edx+4]
+    mov edx, [esp+12]
+    mov eax, [edx]
+    mov edx, [edx+4]
+
+#ifdef CONFIG_SMP
+    /* Save ESI so we can store KSPINLOCK in it */
+    push esi
+
+    /* Save flags and lock, and disable interrupts */
+    pushfd
+    mov esi, [esp+24]
+    cli
+
+    /* Acquire the spinlock */
+    ACQUIRE_SPINLOCK(esi, .spinc)
+#else
+    /* Save flags and disable interrupts */
+    pushfd
+    cli
+#endif
+
+    /* Compare bottom */
+    cmp eax, [ebp]
+    jne NoMatch
+
+    /* Compare top */
+    cmp edx, [ebp+4]
+    jne NoMatch
+
+    /* Save new value */
+    mov [ebp], ebx
+    mov [ebp+4], ecx
+
+AfterSave:
+#ifdef CONFIG_SMP
+    /* Release lock, restore volatiles and flags */
+    RELEASE_SPINLOCK(esi)
+    popfd
+    pop esi
+#else
+    popfd
+#endif
+
+    /* Restore the other volatiles and return */
+    pop ebp
+    pop ebx
+
+    /* Return */
+    ret 8
+
+NoMatch:
+    /* Return the current value */
+    mov eax, [ebp]
+    mov edx, [ebp+4]
+    jmp AfterSave
+
+#ifdef CONFIG_SMP
+.spinc:
+    /* Restore flags and spin */
+    popfd
+    pushfd
+    SPIN_ON_LOCK(esi, .startc)
+#endif
 /* EOF */
