@@ -16,8 +16,6 @@
   * FIXMEs:
   *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
   *           and only when called from user-mode, and returning to user-mode.
-  *         - Use MmProbe when copying arguments to syscall.
-  *         - Handle failure after PsConvertToGuiThread.
   *         - Figure out what the DEBUGEIP hack is for and how it can be moved away.
   *         - Add DR macro/save and VM macro/save.
   *         - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
@@ -43,22 +41,22 @@ idt _KiTrap11,         INT_32_DPL0  /* INT 0B: Segment Not Present (#NP)    */
 idt _KiTrap12,         INT_32_DPL0  /* INT 0C: Stack Fault Exception (#SS)  */
 idt _KiTrap13,         INT_32_DPL0  /* INT 0D: General Protection (#GP)     */
 idt _KiTrap14,         INT_32_DPL0  /* INT 0E: Page-Fault Exception (#PF)   */
-idt _KiTrap15,         INT_32_DPL0  /* INT 0F: RESERVED                     */
+idt _KiTrap15,         INT_32_DPL0  /* INT 0F: RESERVED [FIXME: HBIRR HACK] */
 idt _KiTrap16,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
 idt _KiTrap17,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
-idt _KiTrap18,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
-idt _KiTrap19,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
+idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
+idt _KiTrap0F,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
 .rept 22
-idt _KiTrapUnknown,    INT_32_DPL0  /* INT 14-29: UNDEFINED INTERRUPTS      */
+idt _KiTrap0F,         INT_32_DPL0  /* INT 14-29: UNDEFINED INTERRUPTS      */
 .endr
 idt _KiGetTickCount,   INT_32_DPL3  /* INT 2A: Get Tick Count Handler       */
 idt _KiCallbackReturn, INT_32_DPL3  /* INT 2B: User-Mode Callback Return    */
 idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
 idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
 idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
-idt _KiTrapUnknown,    INT_32_DPL0  /* INT 2F: RESERVED                     */
+idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
 .rept 220
-idt _KiTrapUnknown,    INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
+idt _KiTrap0F,         INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
 .endr
 
 /* System call entrypoints:                                                 */
@@ -271,33 +269,28 @@ NoCountTable:
     /* Allocate space on our stack */
     sub esp, ecx
 
-    /* 
-     * Copy the arguments from the user stack to our stack
-     * FIXME: This needs to be probed with MmSystemRangeStart
-     */
+    /* Set the size of the arguments and the destination */
     shr ecx, 2
     mov edi, esp
+
+    /* Make sure we're within the User Probe Address */
+    cmp esi, _MmUserProbeAddress
+    jnb AccessViolation
+
+CopyParams:
+    /* Copy the parameters */
     rep movsd
 
 #ifdef DBG
-
-    /* Make sure this isn't a user-mode call at elevated IRQL */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz SkipCheck
-    call _KeGetCurrentIrql@0
-    or al, al
-    jnz InvalidIrql
-
     /*
      * The following lines are for the benefit of GDB. It will see the return
      * address of the "call ebx" below, find the last label before it and
      * thinks that that's the start of the function. It will then check to see
-     * if it starts with a standard function prolog (push ebp, mov ebp,esp).
+     * if it starts with a standard function prolog (push ebp, mov ebp,esp1).
      * When that standard function prolog is not found, it will stop the
      * stack backtrace. Since we do want to backtrace into usermode, let's
      * make GDB happy and create a standard prolog.
      */
-SkipCheck:
 KiSystemService:
     push ebp
     mov ebp,esp
@@ -307,10 +300,11 @@ KiSystemService:
     /* Do the System Call */
     call ebx
 
+AfterSysCall:
 #ifdef DBG
     /* Make sure the user-mode call didn't return at elevated IRQL */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz SkipCheck2
+    jz SkipCheck
     mov esi, eax                /* We need to save the syscall's return val */
     call _KeGetCurrentIrql@0
     or al, al
@@ -329,7 +323,7 @@ KiSystemService:
     jnz InvalidIndex
 #endif
 
-SkipCheck2:
+SkipCheck:
 
     /* Deallocate the kernel stack frame  */
     mov esp, ebp
@@ -363,7 +357,7 @@ _KiServiceExit:
 KiBBTUnexpectedRange:
 
     /* If this isn't a Win32K call, fail */
-    cmp ecx, 0x10
+    cmp ecx, SERVICE_TABLE_TEST
     jne InvalidCall
 
     /* Set up Win32K Table */
@@ -371,7 +365,10 @@ KiBBTUnexpectedRange:
     push ebx
     call _PsConvertToGuiThread@0
 
-    /* FIXME: Handle failure */
+    /* Check return code */
+    or eax, eax
+
+    /* Restore registers */
     pop eax
     pop edx
 
@@ -379,14 +376,52 @@ KiBBTUnexpectedRange:
     mov ebp, esp
     mov [esi+KTHREAD_TRAP_FRAME], ebp
 
-    /* Try the Call again */
-    jmp SharedCode
+    /* Try the Call again, if we suceeded */
+    jz SharedCode
+
+    /*
+     * The Shadow Table should have a special byte table which tells us
+     * whether we should return FALSE, -1 or STATUS_INVALID_SYSTEM_SERVICE.
+     */
+
+    /* Get the table limit and base */
+    lea edx, _KeServiceDescriptorTableShadow + SERVICE_TABLE_TEST
+    mov ecx, [edx+SERVICE_DESCRIPTOR_LIMIT]
+    mov edx, [edx+SERVICE_DESCRIPTOR_BASE]
+
+    /* Get the table address and add our index into the array */
+    lea edx, [edx+ecx*4]
+    and eax, SERVICE_NUMBER_MASK
+    add edx, eax
+
+    /* Find out what we should return */
+    movsx eax, byte ptr [edx]
+    or eax, eax
+
+    /* Return either 0 or -1, we've set it in EAX */
+    jle KeReturnFromSystemCall
+
+    /* Set STATUS_INVALID_SYSTEM_SERVICE */
+    mov eax, STATUS_INVALID_SYSTEM_SERVICE
+    jmp KeReturnFromSystemCall
 
 InvalidCall:
 
     /* Invalid System Call */
     mov eax, STATUS_INVALID_SYSTEM_SERVICE
     jmp KeReturnFromSystemCall
+
+AccessViolation:
+
+    /* Check if this came from kernel-mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+
+    /* It's fine, go ahead with it */
+    jz CopyParams
+
+    /* Caller sent invalid parameters, fail here */
+    mov eax, STATUS_ACCESS_VIOLATION
+    jmp AfterSysCall
 
 BadStack:
 
@@ -974,57 +1009,34 @@ _KiTrap17:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
-_KiTrap18:
+_KiTrap0F:
     /* Push error code */
     push 0
 
     /* Enter trap */
-    TRAP_PROLOG(18)
+    TRAP_PROLOG(15)
+    sti
 
-    /* Call the C exception handler */
-    push 18
+    /* Raise a fatal exception */
+    mov eax, 15
+    jmp _KiSystemFatalException
+
+.func KiSystemFatalException
+_KiSystemFatalException:
+
+    /* Push the trap frame */
     push ebp
-    call _KiTrapHandler
-    add esp, 8
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
-_KiTrap19:
-    /* Push error code */
+    /* Push empty parameters */
+    push 0
+    push 0
     push 0
 
-    /* Enter trap */
-    TRAP_PROLOG(19)
+    /* Push trap number and bugcheck code */
+    push eax
+    push UNEXPECTED_KERNEL_MODE_TRAP
+    call _KeBugCheckWithTf@24
+    ret
+.endfunc
 
-    /* Call the C exception handler */
-    push 19
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
-_KiTrapUnknown:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG(255)
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
 

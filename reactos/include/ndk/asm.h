@@ -357,10 +357,12 @@ Author:
 // NTSTATUS and Bugcheck Codes
 //
 #ifdef __ASM__
+#define STATUS_ACCESS_VIOLATION                 0xC0000005
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 #define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
-#define APC_INDEX_MISMATCH                      1
+#define APC_INDEX_MISMATCH                      0x01
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
+#define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #endif
 
 //
