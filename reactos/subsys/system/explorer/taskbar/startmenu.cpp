@@ -1101,7 +1101,7 @@ ShellEntryMap::iterator StartMenu::AddEntry(const ShellFolder folder, ShellEntry
 	ICON_ID icon_id;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		icon_id = ICID_FOLDER;
+		icon_id = ICID_APPS;
 	else
 		icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
 
@@ -1113,7 +1113,7 @@ ShellEntryMap::iterator StartMenu::AddEntry(const ShellFolder folder, Entry* ent
 	ICON_ID icon_id;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		icon_id = ICID_FOLDER;
+		icon_id = ICID_APPS;
 	else
 		icon_id = (ICON_ID)/*@@*/ entry->_icon_id;
 

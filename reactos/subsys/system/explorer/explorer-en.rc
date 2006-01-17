@@ -333,7 +333,7 @@ BEGIN
     IDS_LAUNCH              "Run..."
     IDS_START_HELP          "Help"
     IDS_SEARCH_FILES        "Search..."
-    IDS_DOCUMENTS           "Documents"
+    IDS_DOCUMENTS           "My Documents"
     IDS_FAVORITES           "Favorites"
     IDS_PROGRAMS            "Programs"
     IDS_SETTINGS            "Settings"
