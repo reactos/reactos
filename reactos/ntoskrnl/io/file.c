@@ -531,6 +531,8 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     PIO_STACK_LOCATION StackPtr;
     PKEVENT EventObject = NULL;
     BOOLEAN LocalEvent = FALSE;
+    ULONG AccessType;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
     DPRINT("IopDeviceFsIoControl(DeviceHandle 0x%p Event 0x%p UserApcRoutine 0x%p "
@@ -541,16 +543,83 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
            IoControlCode,InputBuffer,InputBufferLength,OutputBuffer,
            OutputBufferLength);
 
-    if (IoStatusBlock == NULL) return STATUS_ACCESS_VIOLATION;
+    AccessType = IO_METHOD_FROM_CTL_CODE(IoControlCode);
 
-    /* Check granted access against the access rights from IoContolCode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
+
+            /* probe the input and output buffers if needed */
+            if (AccessType == METHOD_BUFFERED)
+            {
+                if (OutputBuffer != NULL)
+                {
+                    ProbeForWrite(OutputBuffer,
+                                  OutputBufferLength,
+                                  1);
+                }
+                else
+                {
+                    /* make sure the caller can't fake this as we depend on this */
+                    OutputBufferLength = 0;
+                }
+            }
+
+            if (AccessType != METHOD_NEITHER)
+            {
+                if (InputBuffer != NULL)
+                {
+                    ProbeForRead(InputBuffer,
+                                 InputBufferLength,
+                                 1);
+                }
+                else
+                {
+                    /* make sure the caller can't fake this as we depend on this */
+                    InputBufferLength = 0;
+                }
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Probing the buffers failed!\n");
+            return Status;
+        }
+    }
+
+    /* Don't check for access rights right now, KernelMode can do anything */
     Status = ObReferenceObjectByHandle(DeviceHandle,
-                                       (IoControlCode >> 14) & 0x3,
+                                       0,
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID *) &FileObject,
-                                       NULL);
+                                       &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check for sufficient access rights */
+    if (PreviousMode != KernelMode)
+    {
+        ACCESS_MASK DesiredAccess = (ACCESS_MASK)((IoControlCode >> 14) & 3);
+        if (DesiredAccess != FILE_ANY_ACCESS &&
+            !RtlAreAllAccessesGranted(HandleInformation.GrantedAccess,
+                                      (ACCESS_MASK)((IoControlCode >> 14) & 3)))
+        {
+            DPRINT1("Insufficient access rights! Granted: 0x%x Desired: 0x%x\n",
+                    HandleInformation.GrantedAccess, (ACCESS_MASK)((IoControlCode >> 14) & 3));
+            ObDereferenceObject (FileObject);
+            return STATUS_ACCESS_DENIED;
+        }
+    }
 
     /* Check for an event */
     if (Event)
@@ -604,6 +673,19 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                         FALSE,
                                         EventObject,
                                         IoStatusBlock);
+
+    if (Irp == NULL)
+    {
+        DPRINT1("IoBuildDeviceIoControlRequest failed!\n");
+
+        if (EventObject != NULL)
+        {
+            ObDereferenceObject (EventObject);
+        }
+
+        ObDereferenceObject (FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Set some extra settings */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -2917,9 +2999,10 @@ NtReadFile(IN HANDLE FileHandle,
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode;
-    BOOLEAN LocalEvent = FALSE;
     PKEVENT EventObject = NULL;
     LARGE_INTEGER CapturedByteOffset;
+    ULONG CapturedKey = 0;
+    BOOLEAN Synchronous = FALSE;
 
     DPRINT("NtReadFile(FileHandle 0x%p Buffer 0x%p Length %x ByteOffset 0x%p, "
            "IoStatusBlock 0x%p)\n", FileHandle, Buffer, Length, ByteOffset,
@@ -2945,6 +3028,10 @@ NtReadFile(IN HANDLE FileHandle,
             {
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
+            if (Key != NULL)
+            {
+                CapturedKey = ProbeForReadUlong(Key);
+            }
             /* FIXME - probe other pointers and capture information */
         }
         _SEH_HANDLE
@@ -2961,6 +3048,10 @@ NtReadFile(IN HANDLE FileHandle,
         {
             CapturedByteOffset = *ByteOffset;
         }
+        if (Key != NULL)
+        {
+            CapturedKey = *Key;
+        }
     }
 
     /* Get File Object */
@@ -2972,21 +3063,27 @@ NtReadFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Check the Byte Offset */
-    if (ByteOffset == NULL ||
-        (CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-         CapturedByteOffset.u.HighPart == -1))
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* a valid ByteOffset is required if asynch. op. */
-        if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
+        if (ByteOffset == NULL ||
+            (CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
+             CapturedByteOffset.u.HighPart == -1))
         {
-            DPRINT1("NtReadFile: missing ByteOffset for asynch. op\n");
-            ObDereferenceObject(FileObject);
-            return STATUS_INVALID_PARAMETER;
+            /* Use the Current Byte OFfset */
+            CapturedByteOffset = FileObject->CurrentByteOffset;
         }
 
-        /* Use the Current Byte OFfset */
-        CapturedByteOffset = FileObject->CurrentByteOffset;
+        Synchronous = TRUE;
+    }
+    else if (ByteOffset == NULL && !(FileObject->Flags & FO_NAMED_PIPE))
+    {
+        /* a valid ByteOffset is required if asynch. op. */
+        DPRINT1("NtReadFile: missing ByteOffset for asynch. op (0x%p)\n",
+                ByteOffset);
+
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Check for event */
@@ -3017,16 +3114,7 @@ NtReadFile(IN HANDLE FileHandle,
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
-    /* Check if we should use Sync IO or not */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
-    }
-    else
-    {
-        LocalEvent = TRUE;
-    }
+    KeClearEvent(&FileObject->Event);
 
     /* Create the IRP */
     _SEH_TRY
@@ -3038,6 +3126,7 @@ NtReadFile(IN HANDLE FileHandle,
                                            &CapturedByteOffset,
                                            EventObject,
                                            IoStatusBlock);
+
         if (Irp == NULL)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -3073,13 +3162,13 @@ NtReadFile(IN HANDLE FileHandle,
     /* Setup Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->FileObject = FileObject;
-    StackPtr->Parameters.Read.Key = Key ? *Key : 0;
+    StackPtr->Parameters.Read.Key = CapturedKey;
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
-        if (!LocalEvent)
+        if (Synchronous)
         {
             KeWaitForSingleObject(&FileObject->Event,
                                   Executive,
@@ -3679,7 +3768,7 @@ NtWriteFile (IN HANDLE FileHandle,
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode;
-    BOOLEAN LocalEvent = FALSE;
+    BOOLEAN Synchronous = FALSE;
     PKEVENT EventObject = NULL;
     LARGE_INTEGER CapturedByteOffset;
     ULONG CapturedKey = 0;
@@ -3694,9 +3783,32 @@ NtWriteFile (IN HANDLE FileHandle,
     PreviousMode = KeGetPreviousMode();
     CapturedByteOffset.QuadPart = 0;
 
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       &ObjectHandleInfo);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* If this is a named pipe, make sure we don't ask for FILE_APPEND_DATA as it
+       overlaps with the FILE_CREATE_PIPE_INSTANCE access right! */
+    if (!(FileObject->Flags & FO_NAMED_PIPE))
+        DesiredAccess |= FILE_APPEND_DATA;
+
     /* Validate User-Mode Buffers */
     if(PreviousMode != KernelMode)
     {
+        /* check if the handle has either FILE_WRITE_DATA or FILE_APPEND_DATA was
+           granted. */
+        if (!RtlAreAnyAccessesGranted(ObjectHandleInfo.GrantedAccess,
+                                      DesiredAccess))
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_ACCESS_DENIED;
+        }
+
         _SEH_TRY
         {
             ProbeForWrite(IoStatusBlock,
@@ -3736,62 +3848,35 @@ NtWriteFile (IN HANDLE FileHandle,
         }
     }
 
-    /* Get File Object */
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       0,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&FileObject,
-                                       &ObjectHandleInfo);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* check if the handle has either FILE_WRITE_DATA or FILE_APPEND_DATA was
-       granted. However, if this is a named pipe, make sure we don't ask for
-       FILE_APPEND_DATA as it interferes with the FILE_CREATE_PIPE_INSTANCE
-       access right! */
-    if (!(FileObject->Flags & FO_NAMED_PIPE))
-        DesiredAccess |= FILE_APPEND_DATA;
-    if (!RtlAreAnyAccessesGranted(ObjectHandleInfo.GrantedAccess,
-                                  DesiredAccess))
+    /* check if this is an append operation */
+    if ((ObjectHandleInfo.GrantedAccess & DesiredAccess) == FILE_APPEND_DATA)
     {
-        ObDereferenceObject(FileObject);
-        return STATUS_ACCESS_DENIED;
+        /* Give the drivers something to understand */
+        CapturedByteOffset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
+        CapturedByteOffset.u.HighPart = -1;
     }
 
-    /* Check if we got write Access */
-    if (ObjectHandleInfo.GrantedAccess & FILE_WRITE_DATA)
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* Check the Byte Offset */
         if (ByteOffset == NULL ||
             (CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
              CapturedByteOffset.u.HighPart == -1))
         {
-            /* a valid ByteOffset is required if asynch. op. */
-            if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
-            {
-                DPRINT1("NtReadFile: missing ByteOffset for asynch. op\n");
-                ObDereferenceObject(FileObject);
-                return STATUS_INVALID_PARAMETER;
-            }
-
             /* Use the Current Byte OFfset */
             CapturedByteOffset = FileObject->CurrentByteOffset;
         }
+
+        Synchronous = TRUE;
     }
-    else if ((ObjectHandleInfo.GrantedAccess & FILE_APPEND_DATA) &&
-             !(FileObject->Flags & FO_NAMED_PIPE))
+    else if (ByteOffset == NULL && !(FileObject->Flags & FO_NAMED_PIPE))
     {
         /* a valid ByteOffset is required if asynch. op. */
-        if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
-        {
-            DPRINT1("NtWriteFile: missing ByteOffset for asynch. op\n");
-            ObDereferenceObject(FileObject);
-            return STATUS_INVALID_PARAMETER;
-        }
+        DPRINT1("NtReadFile: missing ByteOffset for asynch. op (0x%p)\n",
+                ByteOffset);
 
-        /* Give the drivers somethign to understand */
-        CapturedByteOffset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
-        CapturedByteOffset.u.HighPart = 0xffffffff;
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Check if we got an event */
@@ -3822,16 +3907,7 @@ NtWriteFile (IN HANDLE FileHandle,
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
-    /* Check if we should use Sync IO or not */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
-    }
-    else
-    {
-        LocalEvent = TRUE;
-    }
+    KeClearEvent(&FileObject->Event);
 
     /* Build the IRP */
     _SEH_TRY
@@ -3888,7 +3964,7 @@ NtWriteFile (IN HANDLE FileHandle,
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
-        if (!LocalEvent)
+        if (Synchronous)
         {
             KeWaitForSingleObject(&FileObject->Event,
                                   Executive,
