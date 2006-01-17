@@ -238,24 +238,20 @@ _KiSystemService:
     mov ebx, [esi+KTHREAD_TRAP_FRAME]
     mov [ebp+KTRAP_FRAME_EDX], ebx
 
-// ==================== COMMON DR SAVE CHECK.AND DEBUG FRAME SETUP ============//
     /* Flush DR7 */
     and dword ptr [ebp+KTRAP_FRAME_DR7], 0
 
     /* Check if the thread was being debugged */
     test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
-    cld
     //jnz Dr_kss_a
 
-    /* Save a pointer to the trap frame in the TCB */
 SharedCode:
     mov [esi+KTHREAD_TRAP_FRAME], ebp
 
-    /* Get the Debug Trap Frame EBP/EIP */
-    mov ebx, [ebp+KTRAP_FRAME_EBP]
-    mov edi, [ebp+KTRAP_FRAME_EIP]
+    /* Set the trap frame debug header */
+    SET_TF_DEBUG_HEADER
 
-#ifdef DBG
+#ifdef DBG // FIXME: Is this for GDB? Can it be moved in the stub?
     /*
      * We want to know the address from where the syscall stub was called.
      * If PrevMode is KernelMode, that address is stored in our own (kernel)
@@ -269,15 +265,9 @@ SharedCode:
     jz PrevWasKernelMode
     mov edi, [edi+4]
 PrevWasKernelMode:
+    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
 #endif
 
-    /* Write the debug data */
-    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
-    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
-
-// ============= END OF COMMON DR SAVE CHECK.AND DEBUG FRAME SETUP ============//
     /* Enable interrupts */
     sti
 
@@ -288,8 +278,8 @@ CheckValidCall:
      * The offset is related to the Table Index as such: Offset = TableIndex x 10
      */
     mov edi, eax
-    shr edi, 8
-    and edi, 0x10
+    shr edi, SERVICE_TABLE_SHIFT
+    and edi, SERVICE_TABLE_MASK
     mov ecx, edi
 
     /* Now add the thread's base system table to the offset */
@@ -297,8 +287,8 @@ CheckValidCall:
 
     /* Get the true syscall ID and check it */
     mov ebx, eax
-    and eax, 0xFFF
-    cmp eax, [edi+8]
+    and eax, SERVICE_NUMBER_MASK
+    cmp eax, [edi+SERVICE_DESCRIPTOR_LIMIT]
 
     /* Invalid ID, try to load Win32K Table */
     jnb KiBBTUnexpectedRange
@@ -307,7 +297,7 @@ CheckValidCall:
       // <== We don't have a KeGdiFlushUserBatch callback yet (needs to be
       //     sent through the PsInitializeWin32Callouts structure)
     /* Check if this was Win32K */
-    cmp ecx, 0x10
+    cmp ecx, SERVICE_TABLE_TEST
     jnz NotWin32K
 
     /* Get the TEB */
@@ -332,7 +322,7 @@ NotWin32K:
 
 #ifdef DBG
     /* Increase per-syscall count */
-    mov ecx, [edi+4]
+    mov ecx, [edi+SERVICE_DESCRIPTOR_COUNT]
     jecxz NoCountTable
     inc dword ptr [ecx+eax*4]
 #endif
@@ -342,12 +332,12 @@ NoCountTable:
     mov esi, edx
 
     /* Allocate room for argument list from kernel stack */
-    mov ebx, [edi+12]
+    mov ebx, [edi+SERVICE_DESCRIPTOR_NUMBER]
     xor ecx, ecx
     mov cl, [eax+ebx]
 
     /* Get pointer to function */
-    mov edi, [edi]
+    mov edi, [edi+SERVICE_DESCRIPTOR_BASE]
     mov ebx, [edi+eax*4]
 
     /* Allocate space on our stack */

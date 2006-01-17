@@ -46,29 +46,39 @@
 #endif
 
 //
-// SET_TF_DEBUG_HEADER
-// This macro sets up the debug header in the trap frame.
-// Assumptions:
-// ebp = PKTRAP_FRAME
-// edi/ebx = Have been saved and can be used
+// @name SET_TF_DEBUG_HEADER
 //
-#define SET_TF_DEBUG_HEADER \
-    /* Get the Debug Trap Frame EBP/EIP */ \
-    mov ebx, [ebp+KTRAP_FRAME_EBP]; \
-    mov edi, [ebp+KTRAP_FRAME_EIP]; \
-\
-    /* Write the debug data */ \
-    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx; \
-    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00; \
-    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx; \
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi;
+// This macro sets up the debug header in the trap frame.
+//
+// @param None.
+//
+// @remark ebp = PKTRAP_FRAME.
+//         edi/ebx = Have been saved and can be used.
+//
+.macro SET_TF_DEBUG_HEADER
+    /* Get the Debug Trap Frame EBP/EIP */
+    mov ebx, [ebp+KTRAP_FRAME_EBP]
+    mov edi, [ebp+KTRAP_FRAME_EIP]
+
+    /* Write the debug data */
+    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
+    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
+    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
+.endm
 
 //
-// These macros help with USer-Mode APC delivery after exiting a trap.
-//
-// CHECK_FOR_APC_DELIVER
+// @name CHECK_FOR_APC_DELIVER
+// 
 // This macro checks if the trapframe indicates a return to user-mode,
 // and, if so, checks if user-mode APCs should be delivered.
+//
+// @param PreserveEax
+//        Determines if EAX should be preserved. Implies that the segment
+//        registers will also be saved.
+//
+// @remark ebp = PKTRAP_FRAME.
+//         ebx = Saved and will be used.
 //
 .macro CHECK_FOR_APC_DELIVER PreserveEax
     /* Check for V86 mode */
@@ -129,25 +139,27 @@
 2:
 .endm
 
-
 //
-// These macros control common execution paths for Traps and System Call Code
-//
-// TRAP_PROLOG
+// @name TRAP_PROLOG
+// 
 // This macro creates a standard trap entry prologue.
 // It should be used for entry into any kernel trap (KiTrapXx), but not for
 // system calls, which require special handling.
 //
-// Use as follows:
-// _KiTrap00:
-// /* Push fake error code */
-// push 0
+// @param Label
+//        Identifying name of the caller function; will be used to append
+//        to the name V86 and DR helper functions, which must already exist.
 //
-// /* Enter common prologue */
-// TRAP_PROLOG(0)
+// @remark Use as follows:
+//          _KiTrap00:
+//              /* Push fake error code */
+//              push 0
 //
-// /* Handle trap */
-// <Your Trap Code Here>
+//              /* Enter common prologue */
+//              TRAP_PROLOG(0)
+//
+//              /* Handle trap */
+//              <Your Trap Code Here>
 //
 #define TRAP_PROLOG(Label) \
     /* Just to be safe, clear out the HIWORD, since it's reserved */ \
