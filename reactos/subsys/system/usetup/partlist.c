@@ -23,7 +23,6 @@
  * PURPOSE:         Partition list functions
  * PROGRAMMER:      Eric Kohl
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Hartmut Birr
  */
 
 #include <usetup.h>

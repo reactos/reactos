@@ -21,7 +21,6 @@
  * FILE:             drivers/fs/vfat/create.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/

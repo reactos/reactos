@@ -122,7 +122,7 @@
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
  *       Make MakeSureDirectoryPathExistsEx unicode safe.
  *
- *    28-Mai-2004 (Hartmut Birr)
+ *    28-Mai-2004
  *       Removed MakeSureDirectoryPathExistsEx.
  *       Use the current directory if GetTempPath fails.
  *

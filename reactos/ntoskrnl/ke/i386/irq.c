@@ -6,7 +6,6 @@
  * PURPOSE:         IRQ handling
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Hartmut Birr
  */
 
 /*

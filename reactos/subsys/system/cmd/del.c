@@ -39,7 +39,7 @@
 *    22-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
 *        Implemented /A   example "del /A:H /A:-R *.exe -ping.exe"
 *    
-*    07-Aug-2005 (Hartmut Birr)
+*    07-Aug-2005
 *        Removed the exclusive deletion (see two comments above) because '-' is a valid file name character.
 *        Optimized the recursive deletion in directories.
 *        Preload some nice strings.

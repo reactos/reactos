@@ -6,7 +6,6 @@
  * PURPOSE:         Process startup for PE executables
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
- *                  Hartmut Birr
  */
 
 /*

@@ -22,7 +22,6 @@
  * PURPOSE:         Implementing anonymous memory.
  *
  * PROGRAMMERS:     David Welch
- *                  Hartmut Birr
  *                  Casper Hornstrup
  *                  KJK::Hyperion
  *                  Ge van Geldorp

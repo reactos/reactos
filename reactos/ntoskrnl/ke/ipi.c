@@ -6,7 +6,6 @@
  * PURPOSE:         IPI Routines (Inter-Processor Interrupts). NT5+
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/

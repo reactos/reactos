@@ -26,7 +26,6 @@
  *                  Eric Kohl
  *                  Philip Susi
  *                  Casper Hornstrup
- *                  Hartmut Birr
  *                  Eric Kohl
  *                  Ge van Geldorp
  *                  Royce Mitchell III

@@ -4,8 +4,7 @@
  * FILE:            ntoskrnl/io/irp.c
  * PURPOSE:         Handle IRPs
  *
- * PROGRAMMERS:     Hartmut Birr
- *                  Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  David Welch (welch@mcmail.com)
  */
 

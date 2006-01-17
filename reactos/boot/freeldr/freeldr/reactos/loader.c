@@ -2,7 +2,6 @@
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *  Copyright (C) 2005       Alex Ionescu  <alex@relsoft.net>
- *  Copyright (C) 2005       Hartmut Birr  <hartmut.birr@gmx.de>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

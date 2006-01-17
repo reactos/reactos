@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS VFATx filesystem library
  * FILE:        vfatxlib.c
  * PURPOSE:     Main API
- * PROGRAMMERS: Hartmut Birr
+ * PROGRAMMERS: 
  * REVISIONS:
  *   CSH 05/04-2003 Created
  */

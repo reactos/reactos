@@ -23,7 +23,6 @@
  * FILE:        drivers/storage/atapi/atapi.c
  * PURPOSE:     ATAPI miniport driver
  * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
- *              Hartmut Birr
  * REVISIONS:
  *              09-09-2001 Created
  */

@@ -4,7 +4,6 @@
  * FILE:             drivers/fs/vfat/volume.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Hartmut Birr
  *                   Herve Poussineau (reactos@poussine.freesurf.fr)
  */
 

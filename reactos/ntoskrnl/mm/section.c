@@ -26,7 +26,6 @@
  *                  Eric Kohl
  *                  Emanuele Aliberti
  *                  Eugene Ingerman
- *                  Hartmut Birr
  *                  Casper Hornstrup
  *                  KJK::Hyperion
  *                  Guido de Jong

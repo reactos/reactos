@@ -23,7 +23,6 @@
  * FILE:            services/storage/scsiport/scsiport.c
  * PURPOSE:         SCSI port driver
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
- *                  Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/

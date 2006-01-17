@@ -4,7 +4,6 @@
  * FILE:            boot/freeldr/freeldr/multiboot.c
  * PURPOSE:         ReactOS Loader
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Hartmut Birr - SMP/PAE Code
  */
 
 #include <freeldr.h>

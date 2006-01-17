@@ -8,7 +8,6 @@
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Iwan Fatahi (i_fatahi@hotmail.com)
  *                  Robert Bergkvist (fragdance@hotmail.com)
- *                  Hartmut Birr
  */
 
 /* INCLUDES ****************************************************************/

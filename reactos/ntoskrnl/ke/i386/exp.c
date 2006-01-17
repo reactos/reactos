@@ -508,7 +508,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         *   in the early boot phase in apic mode (using the smp build). I've looked to the linux
         *   sources. Linux does ignore this exception.
         *
-        *   Hartmut Birr
         */
        DPRINT1("Ignoring P6 Local APIC Spurious Interrupt Bug...\n");
        return(0);
