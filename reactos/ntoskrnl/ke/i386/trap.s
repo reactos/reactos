@@ -43,7 +43,7 @@ _KiTrap0:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap1
@@ -64,7 +64,7 @@ _KiTrap1:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap2
@@ -85,7 +85,7 @@ _KiTrap2:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap3
@@ -106,7 +106,7 @@ _KiTrap3:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap4
@@ -127,7 +127,7 @@ _KiTrap4:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap5
@@ -148,7 +148,7 @@ _KiTrap5:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap6
@@ -169,7 +169,7 @@ _KiTrap6:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap7
@@ -190,7 +190,7 @@ _KiTrap7:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap8
@@ -216,7 +216,7 @@ _KiTrap9:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap10
@@ -234,7 +234,7 @@ _KiTrap10:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap11
@@ -252,7 +252,7 @@ _KiTrap11:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap12
@@ -270,7 +270,7 @@ _KiTrap12:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap13
@@ -288,7 +288,7 @@ _KiTrap13:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap14
@@ -306,7 +306,7 @@ _KiTrap14:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap15
@@ -327,7 +327,7 @@ _KiTrap15:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap16
@@ -348,7 +348,7 @@ _KiTrap16:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap17
@@ -369,7 +369,7 @@ _KiTrap17:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap18
@@ -390,7 +390,7 @@ _KiTrap18:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrap19
@@ -411,7 +411,7 @@ _KiTrap19:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiTrapUnknown
@@ -426,7 +426,7 @@ _KiTrapUnknown:
     cmp eax, 1
 
     /* Return to caller */
-    jne Kei386EoiHelper@0
+    jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
 .globl _KiCoprocessorError@0

@@ -107,6 +107,7 @@ BadStack:
     push 0
     jmp _KiTrap6
 
+.func KiFastCallEntry
 _KiFastCallEntry:
 
 // ==================== UNIQUE SYSENTER STUB. DO NOT DUPLICATE ============//
@@ -186,7 +187,9 @@ _KiFastCallEntry:
     /* Jump to shared code or DR Save */
     //jnz Dr_FastCallDrSave
     jmp SharedCode
+.endfunc
 
+.func KiSystemService
 _KiSystemService:
 
 // ==================== UNIQUE SYSCALL TRAP ENTRY DO NOT DUPLICATE ============//
@@ -421,68 +424,16 @@ KeReturnFromSystemCall:
     /* Restore the old trap frame pointer */
     mov edx, [ebp+KTRAP_FRAME_EDX]
     mov [ecx+KTHREAD_TRAP_FRAME], edx
+.endfunc
 
+.func KiServiceExit
 _KiServiceExit:
     /* Disable interrupts */
     cli
 
-// ================= COMMON USER-MODE APC DELIVERY CHECK ============//
-    /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz ApcLoop
+    /* Check for, and deliver, User-Mode APCs if needed */
+    CHECK_FOR_APC_DELIVER 1
 
-    /* Deliver APCs only if we were called from user mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], 1
-    je KiRosTrapReturn
-
-    /* Get the current thread */
-ApcLoop:
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
-
-    /* Make it non-alerted */
-    mov byte ptr [ebx+KTHREAD_ALERTED], 0
-
-    /* And only if any are actually pending */
-    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
-    je KiRosTrapReturn
-
-    /* Save pointer to Trap Frame */
-    mov ebx, ebp
-
-// ================= PRESENT ONLY IF VOLATILES NEEDED ============//
-    /* Save some stuff that raising IRQL will kill */
-    mov [ebx+KTRAP_FRAME_EAX], eax
-    mov dword ptr [ebx+KTRAP_FRAME_FS], KGDT_R3_TEB + RPL_MASK
-    mov dword ptr [ebx+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
-    mov dword ptr [ebx+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
-    mov dword ptr [ebx+KTRAP_FRAME_GS], 0
-// ============= END PRESENT ONLY IF VOLATILES NEEDED ============//
-
-    /* Raise IRQL to APC_LEVEL */
-    mov ecx, 1
-    call @KfRaiseIrql@4
-
-    /* Save old IRQL */
-    push eax
-
-    /* Deliver APCs */
-    sti
-    push ebx
-    push 0
-    push UserMode
-    call _KiDeliverApc@12
-
-    /* Return to old IRQL */
-    pop ecx
-    call @KfLowerIrql@4
-    
-    /* Restore EAX (only in volatile case) */
-    mov eax, [ebx+KTRAP_FRAME_EAX]
-    cli
-    jmp ApcLoop
-// ============== END COMMON USER-MODE APC DELIVERY CHECK ============//
-
-KiRosTrapReturn:
 // ========================= COMMON TRAP EXIT CODE ===================//
 #ifdef DBG
     /* Assert the flags */
@@ -778,55 +729,17 @@ InvalidCall:
     /* Invalid System Call */
     mov eax, STATUS_INVALID_SYSTEM_SERVICE
     jmp KeReturnFromSystemCall
+.endfunc
 
+.func KiServiceExit2
 _KiServiceExit2:
 
     /* Disable interrupts */
     cli
 
-    /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz ApcLoop2
+    /* Check for, and deliver, User-Mode APCs if needed */
+    CHECK_FOR_APC_DELIVER 0
 
-    /* Deliver APCs only if we were called from user mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], 1
-    je KiRosTrapReturn2
-
-    /* Get the current thread */
-ApcLoop2:
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
-
-    /* Make it non-alerted */
-    mov byte ptr [ebx+KTHREAD_ALERTED], 0
-
-    /* And only if any are actually pending */
-    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
-    je KiRosTrapReturn2
-
-    /* Save pointer to Trap Frame */
-    mov ebx, ebp
-
-    /* Raise IRQL to APC_LEVEL */
-    mov ecx, 1
-    call @KfRaiseIrql@4
-
-    /* Save old IRQL */
-    push eax
-
-    /* Deliver APCs */
-    sti
-    push ebx
-    push 0
-    push UserMode
-    call _KiDeliverApc@12
-
-    /* Return to old IRQL */
-    pop ecx
-    call @KfLowerIrql@4
-    cli
-    jmp ApcLoop2
-
-KiRosTrapReturn2:
 #ifdef DBG
     /* Assert the flags */
     pushfd
@@ -1028,57 +941,19 @@ NotUserMode:
     //jz VdmProc
 
     /* Exit through common routine */
-    jmp Kei386EoiHelper@0
+    jmp _Kei386EoiHelper@0
+.endfunc
 
-.globl Kei386EoiHelper@0
-Kei386EoiHelper@0:
+.globl _Kei386EoiHelper@0
+.func Kei386EoiHelper@0
+_Kei386EoiHelper@0:
 
     /* Disable interrupts */
     cli
 
-    /* Check for V86 mode */
-    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz ApcLoop3
+    /* Check for, and deliver, User-Mode APCs if needed */
+    CHECK_FOR_APC_DELIVER 0
 
-    /* Deliver APCs only if we were called from user mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], 1
-    je KiRosTrapReturn3
-
-    /* Get the current thread */
-ApcLoop3:
-    mov ebx, [fs:KPCR_CURRENT_THREAD]
-
-    /* Make it non-alerted */
-    mov byte ptr [ebx+KTHREAD_ALERTED], 0
-
-    /* And only if any are actually pending */
-    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
-    je KiRosTrapReturn3
-
-    /* Save pointer to Trap Frame */
-    mov ebx, ebp
-
-    /* Raise IRQL to APC_LEVEL */
-    mov ecx, 1
-    call @KfRaiseIrql@4
-
-    /* Save old IRQL */
-    push eax
-
-    /* Deliver APCs */
-    sti
-    push ebx
-    push 0
-    push UserMode
-    call _KiDeliverApc@12
-
-    /* Return to old IRQL */
-    pop ecx
-    call @KfLowerIrql@4
-    cli
-    jmp ApcLoop3
-
-KiRosTrapReturn3:
 #ifdef DBG
     /* Assert the flags */
     pushfd
@@ -1210,6 +1085,7 @@ EditedFrame3:
     pop ebp
     mov esp, [esp]
     iret
+.endfunc
 
 .globl _NtRaiseException@12
 _NtRaiseException@12:

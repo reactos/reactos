@@ -64,6 +64,73 @@
     mov [ebp+KTRAP_FRAME_DEBUGEIP], edi;
 
 //
+// These macros help with USer-Mode APC delivery after exiting a trap.
+//
+// CHECK_FOR_APC_DELIVER
+// This macro checks if the trapframe indicates a return to user-mode,
+// and, if so, checks if user-mode APCs should be delivered.
+//
+.macro CHECK_FOR_APC_DELIVER PreserveEax
+    /* Check for V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz 1f
+
+    /* Deliver APCs only if we were called from user mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], 1
+    je 2f
+
+    /* Get the current thread */
+1:
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+
+    /* Make it non-alerted */
+    mov byte ptr [ebx+KTHREAD_ALERTED], 0
+
+    /* And only if any are actually pending */
+    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
+    je 2f
+
+    /* Save pointer to Trap Frame */
+    mov ebx, ebp
+
+.if \PreserveEax
+    /* Save some stuff that raising IRQL will kill */
+    mov [ebx+KTRAP_FRAME_EAX], eax
+    mov dword ptr [ebx+KTRAP_FRAME_FS], KGDT_R3_TEB + RPL_MASK
+    mov dword ptr [ebx+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    mov dword ptr [ebx+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+    mov dword ptr [ebx+KTRAP_FRAME_GS], 0
+.endif
+
+    /* Raise IRQL to APC_LEVEL */
+    mov ecx, 1
+    call @KfRaiseIrql@4
+
+    /* Save old IRQL */
+    push eax
+
+    /* Deliver APCs */
+    sti
+    push ebx
+    push 0
+    push UserMode
+    call _KiDeliverApc@12
+
+    /* Return to old IRQL */
+    pop ecx
+    call @KfLowerIrql@4
+
+    /* Restore EAX (only in volatile case) */
+.if \PreserveEax
+    mov eax, [ebx+KTRAP_FRAME_EAX]
+.endif
+    cli
+    jmp 1b
+2:
+.endm
+
+
+//
 // These macros control common execution paths for Traps and System Call Code
 //
 // TRAP_PROLOG
