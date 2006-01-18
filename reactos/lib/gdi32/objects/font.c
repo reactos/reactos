@@ -331,8 +331,7 @@ GetCharWidthA (
 	LPINT	lpBuffer
 	)
 {
-  /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+  return GetCharWidth32A ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
