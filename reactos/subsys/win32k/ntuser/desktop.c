@@ -1274,18 +1274,20 @@ NtUserPaintDesktop(HDC hDC)
  
             if (WinSta->WallpaperMode == wmStretch)
             {
-                NtGdiStretchBlt(hDC, 
-                                x, 
-                                y, 
-                                Rect.right, 
-                                Rect.bottom, 
-                                hWallpaperDC, 
-                                0, 
-                                0, 
+                if(Rect.right && Rect.bottom)
+	                NtGdiStretchBlt(hDC,
+                                x,
+                                y,
+                                sz.cx,
+                                sz.cy,
+                                hWallpaperDC,
+                                0,
+                                0,
                                 WinSta->cxWallpaper, 
                                 WinSta->cyWallpaper, 
                                 SRCCOPY,
                                 0);
+                                
             }
             else if (WinSta->WallpaperMode == wmTile)
             {
