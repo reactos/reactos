@@ -5,6 +5,7 @@ HINSTANCE hInst = 0;
 HWND hMainWnd;                   /* Main Window */
 HWND hTabWnd;                    /* Tab Control Window */
 
+void MsConfig_OnTabWndSelChange(void);
 
 BOOL OnCreate(HWND hWnd)
 {
@@ -58,6 +59,8 @@ BOOL OnCreate(HWND hWnd)
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
     TabCtrl_InsertItem(hTabWnd, 5, &item);
+
+    MsConfig_OnTabWndSelChange();
 
 	return TRUE;
 }
@@ -161,6 +164,7 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY:
 		DestroyWindow(hToolsPage);
+        DestroyWindow(hGeneralPage);
 		DestroyWindow(hServicesPage);
 		DestroyWindow(hStartupPage);
         DestroyWindow(hFreeLdrPage);
