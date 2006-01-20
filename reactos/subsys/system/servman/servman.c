@@ -332,6 +332,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		    {
                 case ID_PROP:
                     OpenPropSheet(hwnd);
+
                 break;
 
                 case ID_REFRESH:
@@ -342,29 +343,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_START:
-                    DoStartService();
-                    RefreshServiceList();
+                    if ( DoStartService() )
+                    {
+                        LVITEM item;
+                        TCHAR szStatus[64];
+
+                        LoadString(hInstance, IDS_SERVICES_STARTED, szStatus,
+                            sizeof(szStatus) / sizeof(TCHAR));
+                        item.pszText = szStatus;
+                        item.iItem = GetSelectedItem();
+                        item.iSubItem = 2;
+                        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                    }
 			    break;
 
                 case ID_STOP:
-                    Control(SERVICE_CONTROL_STOP);
-                    RefreshServiceList();
+                    if( Control(SERVICE_CONTROL_STOP) )
+                    {
+                        LVITEM item;
+
+                        item.pszText = '\0';
+                        item.iItem = GetSelectedItem();
+                        item.iSubItem = 2;
+                        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                    }
                 break;
 
                 case ID_PAUSE:
                     Control(SERVICE_CONTROL_PAUSE);
-                    RefreshServiceList();
                 break;
 
                 case ID_RESUME:
                     Control(SERVICE_CONTROL_CONTINUE );
-                    RefreshServiceList();
                 break;
 
                 case ID_RESTART:
-                    Control(SERVICE_CONTROL_STOP);
-                    DoStartService();
-                    RefreshServiceList();
+                    if( Control(SERVICE_CONTROL_STOP) )
+                    {
+                        LVITEM item;
+
+                        item.pszText = '\0';
+                        item.iItem = GetSelectedItem();
+                        item.iSubItem = 2;
+                        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+
+                        if ( DoStartService() )
+                        {
+                            LVITEM item;
+                            TCHAR szStatus[64];
+
+                            LoadString(hInstance, IDS_SERVICES_STARTED, szStatus,
+                                sizeof(szStatus) / sizeof(TCHAR));
+                            item.pszText = szStatus;
+                            item.iItem = GetSelectedItem();
+                            item.iSubItem = 2;
+                            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                        }
+                    }
                 break;
 
                 case ID_NEW:
@@ -416,7 +451,6 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 {
     WNDCLASSEX wc;
     MSG Msg;
-    BOOL bRet;
 
     hInstance = hThisInstance;
 
@@ -461,17 +495,11 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
     ShowWindow(hMainWnd, nCmdShow);
     UpdateWindow(hMainWnd);
 
-    while( (bRet = GetMessage( &Msg, NULL, 0, 0 )) != 0)
+    while( GetMessage( &Msg, NULL, 0, 0 ) )
     {
-        if (bRet == -1)
-        {
-            /* handle the error and possibly exit */
-        }
-        else
-        {
-            TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
-        }
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
+
     }
     return (int)Msg.wParam;
 }

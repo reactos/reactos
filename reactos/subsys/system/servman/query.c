@@ -74,44 +74,64 @@ BOOL GetDescription(HKEY hKey, LPTSTR *retDescription)
 /* get vendor of service binary */
 BOOL GetExecutablePath(LPTSTR *ExePath)
 {
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hSc = NULL;
     LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
-    SC_HANDLE hService = NULL;
+    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     LVITEM item;
-    WORD wCodePage, wLangID;
-    DWORD BytesNeeded = 0, dwHandle, dwLen;
+    DWORD BytesNeeded = 0;
     TCHAR FileName[MAX_PATH];
-    LPTSTR lpData;
-    LPTSTR lpBuffer;
-    TCHAR szStrFileInfo[80];
-    LPVOID pvData;
-    UINT BufLen;
 
 
-    if (!QueryServiceConfig(hService, pServiceConfig, 0, &BytesNeeded))
+    item.mask = LVIF_PARAM;
+    item.iItem = GetSelectedItem();
+    SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
+
+    /* copy pointer to selected service */
+    Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
+
+    /* open handle to the SCM */
+    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (hSCManager == NULL)
+    {
+        GetError(0);
+        return FALSE;
+    }
+
+    /* get a handle to the service requested for starting */
+    hSc = OpenService(hSCManager, Service->lpServiceName, SERVICE_QUERY_CONFIG);
+    if (hSc == NULL)
+    {
+        GetError(0);
+        goto cleanup;
+    }
+
+
+    if (!QueryServiceConfig(hSc, pServiceConfig, 0, &BytesNeeded))
     {
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
             pServiceConfig = (LPQUERY_SERVICE_CONFIG)
                 HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
             if (pServiceConfig == NULL)
-                return FALSE;
+                goto cleanup;
 
-            if (!QueryServiceConfig(hService,
+            if (!QueryServiceConfig(hSc,
                                     pServiceConfig,
                                     BytesNeeded,
                                     &BytesNeeded))
             {
                 HeapFree(GetProcessHeap(), 0, pServiceConfig);
-                return FALSE;
+                goto cleanup;
             }
         }
         else /* exit on failure */
         {
-            return FALSE;
+            goto cleanup;
         }
     }
 
-    memset(&FileName, 0, MAX_PATH);
+    ZeroMemory(&FileName, MAX_PATH);
     if (_tcscspn(pServiceConfig->lpBinaryPathName, _T("\"")))
     {
         _tcsncpy(FileName, pServiceConfig->lpBinaryPathName,
@@ -122,46 +142,19 @@ BOOL GetExecutablePath(LPTSTR *ExePath)
         _tcscpy(FileName, pServiceConfig->lpBinaryPathName);
     }
 
-    HeapFree(GetProcessHeap(), 0, pServiceConfig);
-    pServiceConfig = NULL;
+    *ExePath = FileName;
 
-    dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
-    if (dwLen)
-    {
-        lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
-        if (lpData == NULL)
-            return FALSE;
-
-        if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData)) {
-            HeapFree(GetProcessHeap(), 0, lpData);
-            return FALSE;
-        }
-
-        if (VerQueryValue(lpData, _T("\\VarFileInfo\\Translation"), &pvData, (PUINT) &BufLen))
-        {
-            wCodePage = LOWORD(*(DWORD*) pvData);
-            wLangID = HIWORD(*(DWORD*) pvData);
-            wsprintf(szStrFileInfo, _T("StringFileInfo\\%04X%04X\\CompanyName"), wCodePage, wLangID);
-        }
-
-        if (VerQueryValue (lpData, szStrFileInfo, (LPVOID) &lpBuffer, (PUINT) &BufLen)) {
-            item.pszText = lpBuffer;
-            item.iSubItem = 2;
-            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-        }
-        HeapFree(GetProcessHeap(), 0, lpData);
-    }
-    /*else
-    {
-        LoadString(hInstance, IDS_SERVICES_UNKNOWN, szStatus, 128);
-        item.pszText = szStatus;
-        item.iSubItem = 2;
-        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-    }*/
-
-    CloseServiceHandle(hService);
+    CloseServiceHandle(hSCManager);
+    CloseServiceHandle(hSc);
 
     return TRUE;
+
+cleanup:
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+    if (hSc != NULL)
+        CloseServiceHandle(hSc);
+    return FALSE;
 }
 
 
@@ -172,7 +165,7 @@ RefreshServiceList(VOID)
 {
     LVITEM item;
     TCHAR szNumServices[32];
-    TCHAR szStatus[128];
+    TCHAR szStatus[64];
     DWORD NumServices = 0;
     DWORD Index;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
@@ -193,7 +186,8 @@ RefreshServiceList(VOID)
         GetSystemMetrics(SM_CYSMICON), ILC_MASK | ILC_COLOR16, 1, 1);
 
         /* Add an icon to each image list */
-        hiconItem = LoadImage(hInstance, MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
+        hiconItem = LoadImage(hInstance, MAKEINTRESOURCE(IDI_SM_ICON),
+                              IMAGE_ICON, 16, 16, 0);
         ImageList_AddIcon(hSmall, hiconItem);
 
         /* assign the image to the list view */
@@ -249,9 +243,11 @@ RefreshServiceList(VOID)
 
             /* set the status */
 
-            if (pServiceStatus[Index].ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+            if (pServiceStatus[Index].ServiceStatusProcess.dwCurrentState
+                    == SERVICE_RUNNING)
             {
-                LoadString(hInstance, IDS_SERVICES_STARTED, szStatus, 128);
+                LoadString(hInstance, IDS_SERVICES_STARTED, szStatus,
+                    sizeof(szStatus) / sizeof(TCHAR));
                 item.pszText = szStatus;
                 item.iSubItem = 2;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
@@ -275,21 +271,24 @@ RefreshServiceList(VOID)
 
             if (StartUp == 0x02)
             {
-                LoadString(hInstance, IDS_SERVICES_AUTO, szStatus, 128);
+                LoadString(hInstance, IDS_SERVICES_AUTO, szStatus,
+                    sizeof(szStatus) / sizeof(TCHAR));
                 item.pszText = szStatus;
                 item.iSubItem = 3;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
             }
             else if (StartUp == 0x03)
             {
-                LoadString(hInstance, IDS_SERVICES_MAN, szStatus, 128);
+                LoadString(hInstance, IDS_SERVICES_MAN, szStatus,
+                    sizeof(szStatus) / sizeof(TCHAR));
                 item.pszText = szStatus;
                 item.iSubItem = 3;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
             }
             else if (StartUp == 0x04)
             {
-                LoadString(hInstance, IDS_SERVICES_DIS, szStatus, 128);
+                LoadString(hInstance, IDS_SERVICES_DIS, szStatus,
+                    sizeof(szStatus) / sizeof(TCHAR));
                 item.pszText = szStatus;
                 item.iSubItem = 3;
                 SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
@@ -342,7 +341,8 @@ RefreshServiceList(VOID)
         NumListedServ = ListView_GetItemCount(hListView);
 
         /* set the number of listed services in the status bar */
-        LoadString(hInstance, IDS_NUM_SERVICES, szNumServices, 32);
+        LoadString(hInstance, IDS_NUM_SERVICES, szNumServices,
+            sizeof(szNumServices) / sizeof(TCHAR));
         _sntprintf(buf, 300, szNumServices, NumListedServ);
         SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)buf);
     }
@@ -382,7 +382,8 @@ GetServiceList(VOID)
             if (GetLastError() == ERROR_MORE_DATA)
             {
                 /* reserve memory for service info array */
-                pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+                pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *)
+                        HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                 if (pServiceStatus == NULL)
 			        return FALSE;
 
@@ -566,5 +567,53 @@ GetServiceList(VOID)
                     }
                     CloseServiceHandle(hService);
                 }
+
+
+
+
+
+
+
+    HeapFree(GetProcessHeap(), 0, pServiceConfig);
+    pServiceConfig = NULL;
+
+    dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
+    if (dwLen)
+    {
+        lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
+        if (lpData == NULL)
+            return FALSE;
+
+        if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData)) {
+            HeapFree(GetProcessHeap(), 0, lpData);
+            return FALSE;
+        }
+
+        if (VerQueryValue(lpData, _T("\\VarFileInfo\\Translation"),
+                          &pvData, (PUINT) &BufLen))
+        {
+            wCodePage = LOWORD(*(DWORD*) pvData);
+            wLangID = HIWORD(*(DWORD*) pvData);
+            wsprintf(szStrFileInfo, _T("StringFileInfo\\%04X%04X\\CompanyName"),
+                     wCodePage, wLangID);
+        }
+
+        if (VerQueryValue (lpData, szStrFileInfo, (LPVOID) &lpBuffer, (PUINT) &BufLen))
+        {
+            item.pszText = lpBuffer;
+            item.iSubItem = 2;
+            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+        }
+        HeapFree(GetProcessHeap(), 0, lpData);
+    }
+    else
+    {
+        LoadString(hInstance, IDS_SERVICES_UNKNOWN, szStatus, 128);
+        item.pszText = szStatus;
+        item.iSubItem = 2;
+        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+    }
+
+
 */
 

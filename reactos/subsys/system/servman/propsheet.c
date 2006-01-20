@@ -90,7 +90,7 @@ VOID GetDlgInfo(HWND hwndDlg)
     Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
 
     /* open the registry key for the service */
-    _sntprintf(buf, 300, Path, Service->lpServiceName);
+    _sntprintf(buf, sizeof(buf) / sizeof(TCHAR), Path, Service->lpServiceName);
     RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                  buf,
                  0,
@@ -99,23 +99,26 @@ VOID GetDlgInfo(HWND hwndDlg)
 
     /* set the service name */
     DlgInfo.lpServiceName = Service->lpServiceName;
-    SendDlgItemMessageW(hwndDlg, IDC_SERV_NAME, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpServiceName);
+    SendDlgItemMessage(hwndDlg, IDC_SERV_NAME, WM_SETTEXT, 0, (
+        LPARAM)DlgInfo.lpServiceName);
 
 
     /* set the display name */
     DlgInfo.lpDisplayName = Service->lpDisplayName;
-    SendDlgItemMessageW(hwndDlg, IDC_DISP_NAME, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpDisplayName);
+    SendDlgItemMessage(hwndDlg, IDC_DISP_NAME, WM_SETTEXT, 0,
+        (LPARAM)DlgInfo.lpDisplayName);
 
 
     /* set the description */
     if (GetDescription(hKey, &DlgInfo.lpDescription))
-        SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpDescription);
+        SendDlgItemMessage(hwndDlg, IDC_DESCRIPTION, WM_SETTEXT, 0,
+            (LPARAM)DlgInfo.lpDescription);
 
 
     /* FIXME: needs implementing. Use code base at bottom of query.c */
     /* set the executable path */
     if (GetExecutablePath(&DlgInfo.lpPathToExe))
-        SendDlgItemMessageW(hwndDlg, IDC_EXEPATH, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpPathToExe);
+        SendDlgItemMessage(hwndDlg, IDC_EXEPATH, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpPathToExe);
 
 
     /* set startup type */
@@ -163,17 +166,25 @@ GeneralPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
             GetDlgInfo(hwndDlg);
-
             break;
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDC_START:
+                    SendMessage(hMainWnd, WM_COMMAND, ID_START, 0);
                     break;
 
                 case IDC_STOP:
+                    SendMessage(hMainWnd, WM_COMMAND, ID_STOP, 0);
+                    break;
 
+                case IDC_PAUSE:
+                    SendMessage(hMainWnd, WM_COMMAND, ID_PAUSE, 0);
+                    break;
+
+                case IDC_RESUME:
+                    SendMessage(hMainWnd, WM_COMMAND, ID_RESUME, 0);
                     break;
             }
             break;
