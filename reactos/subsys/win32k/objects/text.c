@@ -2446,12 +2446,13 @@ NtGdiGetTextExtentExPoint(HDC hDC,
 
 BOOL
 STDCALL
-NtGdiGetTextExtentPoint(HDC hDC,
-                       LPCWSTR String,
-                       int Count,
-                       LPSIZE Size)
+NtGdiGetTextExtent(HDC hdc,
+                   LPWSTR lpwsz,
+                   INT cwc,
+                   LPSIZE psize,
+                   UINT flOpts)
 {
-  return NtGdiGetTextExtentExPoint(hDC, String, Count, 0, NULL, NULL, Size);
+  return NtGdiGetTextExtentExPoint(hdc, lpwsz, cwc, 0, NULL, NULL, psize);
 }
 
 BOOL

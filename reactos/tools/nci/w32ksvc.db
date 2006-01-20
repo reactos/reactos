@@ -159,7 +159,7 @@ NtGdiGetTextCharset			1
 NtGdiGetTextCharsetInfo			3
 NtGdiGetTextColor			1
 NtGdiGetTextExtentExPoint		7
-NtGdiGetTextExtentPoint			4
+NtGdiGetTextExtent		5
 NtGdiGetTextExtentPoint32		4
 NtGdiGetTextFace			3
 NtGdiGetTextMetrics			2

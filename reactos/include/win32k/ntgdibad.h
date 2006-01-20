@@ -714,14 +714,6 @@ NtGdiGetTextExtentExPoint(HDC  hDC,
                                LPINT  Dx,
                                LPSIZE  Size);
 
-/* Rename to NtGdiGetTextExtent. Add 0 at the end. */
-BOOL
-STDCALL
-NtGdiGetTextExtentPoint(HDC  hDC,
-                             LPCWSTR  String,
-                             int  Count,
-                             LPSIZE  Size);
-
 /* Rename to NtGdiGetTextFaceW, add FALSE at the end. */
 int
 STDCALL
