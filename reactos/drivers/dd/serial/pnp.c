@@ -242,15 +242,6 @@ SerialPnpStartDevice(
 		return Status;
 	}
 
-	/* Activate serial interface */
-	Status = IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, TRUE);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Serial: IoSetDeviceInterfaceState() failed with status 0x%08x\n", Status);
-		IoDeleteSymbolicLink(&LinkName);
-		return Status;
-	}
-
 	/* Connect interrupt and enable them */
 	Status = IoConnectInterrupt(
 		&DeviceExtension->Interrupt, SerialInterruptService,
@@ -288,6 +279,10 @@ SerialPnpStartDevice(
 	/* Activate DTR, RTS */
 	DeviceExtension->MCR |= SR_MCR_DTR | SR_MCR_RTS;
 	WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
+
+	/* Activate serial interface */
+	IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, TRUE);
+	/* We don't really care if the call succeeded or not... */
 
 	return STATUS_SUCCESS;
 }
