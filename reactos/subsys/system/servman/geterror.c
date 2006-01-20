@@ -1,4 +1,4 @@
-
+//#include <stdarg>
 #include "servman.h"
 /* temp file for debugging */
 
@@ -27,6 +27,7 @@ VOID GetError(DWORD err)
 
 VOID DisplayString(PTCHAR Msg)
 {
+
     MessageBox(NULL, Msg, _T("Error!"), MB_OK | MB_ICONERROR);
 
 }

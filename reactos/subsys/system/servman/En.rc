@@ -1,102 +1,92 @@
-
 IDR_MAINMENU MENU
 BEGIN
   POPUP "&File"
   BEGIN
-    MENUITEM "E&xit",       ID_EXIT
+    MENUITEM "E&xit",ID_EXIT
   END
   POPUP "Action"
   BEGIN
-    MENUITEM "Start",       ID_START
-    MENUITEM "Stop",        ID_STOP
-    MENUITEM "Pause",       ID_PAUSE
-    MENUITEM "Resume",      ID_RESUME
-    MENUITEM "Restart",     ID_RESTART
+    MENUITEM "Start",ID_START
+    MENUITEM "Stop",ID_STOP
+    MENUITEM "Pause",ID_PAUSE
+    MENUITEM "Resume",ID_RESUME
+    MENUITEM "Restart",ID_RESTART
     MENUITEM SEPARATOR
-    MENUITEM "Refresh",     ID_REFRESH
+    MENUITEM "Refresh",ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Properties",  ID_PROP
+    MENUITEM "Properties",ID_PROP
   END
   POPUP "View"
   BEGIN
-    MENUITEM "Customize",   ID_VIEW_CUSTOMIZE
+    MENUITEM "Customize",ID_VIEW_CUSTOMIZE
   END
   POPUP "Help"
   BEGIN
-    MENUITEM "About",       ID_ABOUT
+    MENUITEM "About",ID_ABOUT
   END
 END
-
-
 IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Start",       ID_START
-    MENUITEM "Stop",        ID_STOP
-    MENUITEM "Pause",       ID_PAUSE
-    MENUITEM "Resume",      ID_RESUME
-    MENUITEM "Restart",     ID_RESTART
+    MENUITEM "Start",ID_START
+    MENUITEM "Stop",ID_STOP
+    MENUITEM "Pause",ID_PAUSE
+    MENUITEM "Resume",ID_RESUME
+    MENUITEM "Restart",ID_RESTART
     MENUITEM SEPARATOR
     POPUP "All tasks"
     BEGIN
-      MENUITEM "Start",     ID_START
-      MENUITEM "Stop",      ID_STOP
-      MENUITEM "Pause",     ID_PAUSE
-      MENUITEM "Resume",    ID_RESUME
-      MENUITEM "Restart",   ID_RESTART
-      MENUITEM "Refresh",   ID_REFRESH
+      MENUITEM "Start",ID_START
+      MENUITEM "Stop",ID_STOP
+      MENUITEM "Pause",ID_PAUSE
+      MENUITEM "Resume",ID_RESUME
+      MENUITEM "Restart",ID_RESTART
+      MENUITEM "Refresh",ID_REFRESH
     END
     MENUITEM SEPARATOR
-    MENUITEM "Refresh",     ID_REFRESH
+    MENUITEM "Refresh",ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Properties",  ID_PROP
+    MENUITEM "Properties",ID_PROP
     MENUITEM SEPARATOR
-    MENUITEM "Help",        ID_HELP
+    MENUITEM "Help",ID_HELP
   END
 END
-
-
-IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,190,182
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
 CAPTION "About Service Manager"
-FONT 8, "Tahoma"
+FONT 8,"Tahoma",0,0
+STYLE 0x00C80080
 BEGIN
-    CONTROL         "Service Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,48,7,130,26
-    DEFPUSHBUTTON   "Close",IDOK,75,162,44,15,WS_GROUP
-    ICON            IDI_SM_ICON,IDC_STATIC,12,7,30,20
-    EDITTEXT        IDC_LICENSE_EDIT,8,44,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
+  CONTROL "Service Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)",IDC_STATIC,"Static",WS_VISIBLE|0x0002000C,48,7,130,26
+  CONTROL "Close",IDOK,"Button",0x50030001,75,162,44,15
+  CONTROL "",IDI_SM_ICON,"Static",0x50000203,0,12,7,30
+  CONTROL "",IDC_LICENSE_EDIT,"Edit",0x50210804,8,44,174,107,0x00000200
 END
-
-
 IDD_DLG_GENERAL DIALOGEX 6,6,253,225
 CAPTION "General"
 FONT 8,"MS Sans Serif",0,0
 STYLE 0x10CF0000
 BEGIN
   CONTROL "Service name:",IDC_STATIC,"Static",0x50000000,4,11,53,11
-  CONTROL "Display name:",IDC_STATIC,"Static",0x50000000,4,29,53,11
-  CONTROL "Description",IDC_STATIC,"Static",0x50000000,4,51,53,11
-  CONTROL "",IDC_SERV_NAME,"Static",0x50000000,70,11,176,11
   CONTROL "",IDC_DISP_NAME,"Static",0x50001000,70,29,176,12
   CONTROL "",IDC_DESCRIPTION,"Static",0x50201000,70,46,176,22
-  CONTROL "Path to executable:",IDC_STATIC,"Static",0x50000000,6,73,82,9
   CONTROL "",IDC_EXEPATH,"Static",0x50001000,6,86,238,12
-  CONTROL "Startup type:",IDC_STATIC,"Static",0x50000000,6,108,53,11
   CONTROL "",IDC_START_TYPE,"ComboBox",0x50010003,70,107,176,11
-  CONTROL "Service status:",IDC_STATIC,"Static",0x50000000,4,138,53,11
-  CONTROL "",IDC_SERV_STATUS,"Static",0x50000000,70,138,176,11
   CONTROL "Start",IDC_START,"Button",0x50010000,6,155,54,15
   CONTROL "Stop",IDC_STOP,"Button",0x50010000,68,155,54,15
   CONTROL "Pause",IDC_PAUSE,"Button",0x50010000,130,155,54,15
   CONTROL "Resume",IDC_RESUME,"Button",0x50010000,192,155,54,15
+  CONTROL "",IDC_START_PARAM,"Static",0x50001000,70,199,176,11
+  CONTROL "Display name:",IDC_STATIC,"Static",0x50000000,4,29,53,11
+  CONTROL "Description",IDC_STATIC,"Static",0x50000000,4,51,53,11
+  CONTROL "",IDC_SERV_NAME,"Static",0x50000000,70,11,176,11
+  CONTROL "Path to executable:",IDC_STATIC,"Static",0x50000000,6,73,82,9
+  CONTROL "Startup type:",IDC_STATIC,"Static",0x50000000,6,108,53,11
+  CONTROL "Service status:",IDC_STATIC,"Static",0x50000000,4,138,53,11
+  CONTROL "",IDC_SERV_STATUS,"Static",0x50000000,70,138,176,11
   CONTROL "You can specify the start parameters that apply when you start the service from here.",IDC_STATIC,"Static",0x50000000,6,177,240,15
   CONTROL "Start parameters",IDC_STATIC,"Static",0x50000000,6,199,53,11
-  CONTROL "",IDC_START_PARAM,"Static",0x50001000,70,199,176,11
 END
-
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Dependencies"
 FONT 8,"MS Sans Serif",0,0
@@ -108,44 +98,38 @@ BEGIN
   CONTROL "This service depends on the following components",IDC_STATIC,"Static",0x50000000,8,57,236,9
   CONTROL "",IDC_DEPEND_SERVICE,"Static",0x50000000,8,38,236,13
 END
-
-
-
-IDB_BUTTONS BITMAP "res/toolbar.bmp"
-
+IDB_BUTTONS BITMAP DISCARDABLE "res/toolbar.bmp"
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_FIRSTCOLUMN  "Name"
+  IDS_FIRSTCOLUMN "Name"
   IDS_SECONDCOLUMN "Description"
-  IDS_THIRDCOLUMN  "Status"
+  IDS_THIRDCOLUMN "Status"
   IDS_FOURTHCOLUMN "Startup Type"
-  IDS_FITHCOLUMN   "Log On As"
+  IDS_FITHCOLUMN "Log On As"
 END
-
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_SERVICES_STARTED      "Started"
-  IDS_SERVICES_AUTO         "Automatic"
-  IDS_SERVICES_MAN          "Manual"
-  IDS_SERVICES_DIS          "Disabled"
+  IDS_SERVICES_STARTED "Started"
+  IDS_SERVICES_STOPPED "Stopped"
+  IDS_SERVICES_AUTO "Automatic"
+  IDS_SERVICES_MAN "Manual"
+  IDS_SERVICES_DIS "Disabled"
 END
-
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Num Services: %d"
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have receive"
 END
-
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOOLTIP_PROP    "Properties"
-    IDS_TOOLTIP_REFRESH "Refresh"
-    IDS_TOOLTIP_EXPORT  "Export list"
-    IDS_TOOLTIP_START   "Start service"
-    IDS_TOOLTIP_STOP    "Stop service"
-    IDS_TOOLTIP_PAUSE   "Pause service"
-    IDS_TOOLTIP_RESTART "Restart service"
-    IDS_TOOLTIP_NEW     "Create a service"
-    IDS_TOOLTIP_HELP    "Help"
-    IDS_TOOLTIP_EXIT    "Exit"
+  IDS_TOOLTIP_PROP "Properties"
+  IDS_TOOLTIP_REFRESH "Refresh"
+  IDS_TOOLTIP_EXPORT "Export list"
+  IDS_TOOLTIP_START "Start service"
+  IDS_TOOLTIP_STOP "Stop service"
+  IDS_TOOLTIP_PAUSE "Pause service"
+  IDS_TOOLTIP_RESTART "Restart service"
+  IDS_TOOLTIP_NEW "Create new a service"
+  IDS_TOOLTIP_HELP "Help"
+  IDS_TOOLTIP_EXIT "Exit"
 END

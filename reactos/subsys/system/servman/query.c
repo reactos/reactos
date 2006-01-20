@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        subsys/system/servman/query.c
  * PURPOSE:     Query service information
- * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -22,6 +22,7 @@ VOID FreeMemory(VOID)
 {
     HeapFree(GetProcessHeap(), 0, pServiceStatus);
 }
+
 
 /* Retrives the service description from the registry */
 BOOL GetDescription(HKEY hKey, LPTSTR *retDescription)
@@ -70,11 +71,100 @@ BOOL GetDescription(HKEY hKey, LPTSTR *retDescription)
 }
 
 
+/* get vendor of service binary */
 BOOL GetExecutablePath(LPTSTR *ExePath)
 {
+    LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
+    SC_HANDLE hService = NULL;
+    LVITEM item;
+    WORD wCodePage, wLangID;
+    DWORD BytesNeeded = 0, dwHandle, dwLen;
+    TCHAR FileName[MAX_PATH];
+    LPTSTR lpData;
+    LPTSTR lpBuffer;
+    TCHAR szStrFileInfo[80];
+    LPVOID pvData;
+    UINT BufLen;
 
-    return FALSE;
+
+    if (!QueryServiceConfig(hService, pServiceConfig, 0, &BytesNeeded))
+    {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            pServiceConfig = (LPQUERY_SERVICE_CONFIG)
+                HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
+            if (pServiceConfig == NULL)
+                return FALSE;
+
+            if (!QueryServiceConfig(hService,
+                                    pServiceConfig,
+                                    BytesNeeded,
+                                    &BytesNeeded))
+            {
+                HeapFree(GetProcessHeap(), 0, pServiceConfig);
+                return FALSE;
+            }
+        }
+        else /* exit on failure */
+        {
+            return FALSE;
+        }
+    }
+
+    memset(&FileName, 0, MAX_PATH);
+    if (_tcscspn(pServiceConfig->lpBinaryPathName, _T("\"")))
+    {
+        _tcsncpy(FileName, pServiceConfig->lpBinaryPathName,
+            _tcscspn(pServiceConfig->lpBinaryPathName, _T(" ")) );
+    }
+    else
+    {
+        _tcscpy(FileName, pServiceConfig->lpBinaryPathName);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pServiceConfig);
+    pServiceConfig = NULL;
+
+    dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
+    if (dwLen)
+    {
+        lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
+        if (lpData == NULL)
+            return FALSE;
+
+        if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData)) {
+            HeapFree(GetProcessHeap(), 0, lpData);
+            return FALSE;
+        }
+
+        if (VerQueryValue(lpData, _T("\\VarFileInfo\\Translation"), &pvData, (PUINT) &BufLen))
+        {
+            wCodePage = LOWORD(*(DWORD*) pvData);
+            wLangID = HIWORD(*(DWORD*) pvData);
+            wsprintf(szStrFileInfo, _T("StringFileInfo\\%04X%04X\\CompanyName"), wCodePage, wLangID);
+        }
+
+        if (VerQueryValue (lpData, szStrFileInfo, (LPVOID) &lpBuffer, (PUINT) &BufLen)) {
+            item.pszText = lpBuffer;
+            item.iSubItem = 2;
+            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+        }
+        HeapFree(GetProcessHeap(), 0, lpData);
+    }
+    /*else
+    {
+        LoadString(hInstance, IDS_SERVICES_UNKNOWN, szStatus, 128);
+        item.pszText = szStatus;
+        item.iSubItem = 2;
+        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+    }*/
+
+    CloseServiceHandle(hService);
+
+    return TRUE;
 }
+
+
 
 
 BOOL
@@ -477,3 +567,4 @@ GetServiceList(VOID)
                     CloseServiceHandle(hService);
                 }
 */
+

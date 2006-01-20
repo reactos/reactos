@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        subsys/system/servman/servman.c
  * PURPOSE:     Main window message handler
- * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -18,6 +18,12 @@ HWND hStatus;
 HWND hTool;
 HMENU hShortcutMenu;
 INT SelectedItem;
+
+
+INT GetSelectedItem(VOID)
+{
+    return SelectedItem;
+}
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -336,18 +342,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_START:
+                    DoStartService();
+                    RefreshServiceList();
 			    break;
 
                 case ID_STOP:
+                    Control(SERVICE_CONTROL_STOP);
+                    RefreshServiceList();
                 break;
 
                 case ID_PAUSE:
+                    Control(SERVICE_CONTROL_PAUSE);
+                    RefreshServiceList();
                 break;
 
                 case ID_RESUME:
+                    Control(SERVICE_CONTROL_CONTINUE );
+                    RefreshServiceList();
                 break;
 
                 case ID_RESTART:
+                    Control(SERVICE_CONTROL_STOP);
+                    DoStartService();
+                    RefreshServiceList();
                 break;
 
                 case ID_NEW:
@@ -458,5 +475,6 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
     }
     return (int)Msg.wParam;
 }
+
 
 

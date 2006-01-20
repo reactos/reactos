@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        subsys/system/servman/propsheet.c
  * PURPOSE:     Property dialog box message handler
- * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -12,7 +12,7 @@
 extern ENUM_SERVICE_STATUS_PROCESS *pServiceStatus;
 extern HINSTANCE hInstance;
 extern HWND hListView;
-extern INT SelectedItem;
+extern HWND hMainWnd;
 
 
 typedef struct _PROP_DLG_INFO
@@ -21,14 +21,58 @@ typedef struct _PROP_DLG_INFO
     LPTSTR lpDisplayName;
     LPTSTR lpDescription;
     LPTSTR lpPathToExe;
-    DWORD  dwStartupType;
-    DWORD  dwServiceStatus;
+    TCHAR  szStartupType;
+    TCHAR  szServiceStatus[25];
     LPTSTR lpStartParams;
 } PROP_DLG_INFO, *PPROP_DLG_INFO;
 
 
+/*
+ * Fills the 'startup type' combo box with possible
+ * values and sets it to value of the selected item
+ */
+VOID SetStartupType(HKEY hKey, HWND hwndDlg)
+{
+    HWND hList;
+    TCHAR buf[25];
+    DWORD dwValueSize = 0;
+    DWORD StartUp = 0;
+
+    hList = GetDlgItem(hwndDlg, IDC_START_TYPE);
+
+    LoadString(hInstance, IDS_SERVICES_AUTO, buf, sizeof(buf) / sizeof(TCHAR));
+    SendMessage(hList, CB_ADDSTRING, 0, (LPARAM)buf);
+    LoadString(hInstance, IDS_SERVICES_MAN, buf, sizeof(buf) / sizeof(TCHAR));
+    SendMessage(hList, CB_ADDSTRING, 0, (LPARAM)buf);
+    LoadString(hInstance, IDS_SERVICES_DIS, buf, sizeof(buf) / sizeof(TCHAR));
+    SendMessage(hList, CB_ADDSTRING, 0, (LPARAM)buf);
+
+    dwValueSize = sizeof(DWORD);
+    if (RegQueryValueEx(hKey,
+                        _T("Start"),
+                        NULL,
+                        NULL,
+                        (LPBYTE)&StartUp,
+                        &dwValueSize))
+    {
+        RegCloseKey(hKey);
+        return;
+    }
+
+    if (StartUp == 0x02)
+        SendMessage(hList, CB_SETCURSEL, 0, 0);
+    else if (StartUp == 0x03)
+        SendMessage(hList, CB_SETCURSEL, 1, 0);
+    else if (StartUp == 0x04)
+        SendMessage(hList, CB_SETCURSEL, 2, 0);
+
+}
 
 
+/*
+ * Populates the General Properties dialog with
+ * the relevant service information
+ */
 VOID GetDlgInfo(HWND hwndDlg)
 {
     HKEY hKey;
@@ -39,7 +83,7 @@ VOID GetDlgInfo(HWND hwndDlg)
     TCHAR buf[300];
 
     item.mask = LVIF_PARAM;
-    item.iItem = SelectedItem;
+    item.iItem = GetSelectedItem();
     SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
 
     /* copy pointer to selected service */
@@ -57,17 +101,41 @@ VOID GetDlgInfo(HWND hwndDlg)
     DlgInfo.lpServiceName = Service->lpServiceName;
     SendDlgItemMessageW(hwndDlg, IDC_SERV_NAME, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpServiceName);
 
+
     /* set the display name */
     DlgInfo.lpDisplayName = Service->lpDisplayName;
     SendDlgItemMessageW(hwndDlg, IDC_DISP_NAME, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpDisplayName);
+
 
     /* set the description */
     if (GetDescription(hKey, &DlgInfo.lpDescription))
         SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpDescription);
 
+
+    /* FIXME: needs implementing. Use code base at bottom of query.c */
     /* set the executable path */
     if (GetExecutablePath(&DlgInfo.lpPathToExe))
         SendDlgItemMessageW(hwndDlg, IDC_EXEPATH, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpPathToExe);
+
+
+    /* set startup type */
+    SetStartupType(hKey, hwndDlg);
+
+
+
+    /* set service status */
+    if (Service->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+    {
+        LoadString(hInstance, IDS_SERVICES_STARTED, DlgInfo.szServiceStatus,
+            sizeof(DlgInfo.szServiceStatus) / sizeof(TCHAR));
+        SendDlgItemMessageW(hwndDlg, IDC_SERV_STATUS, WM_SETTEXT, 0, (LPARAM)DlgInfo.szServiceStatus);
+    }
+    else
+    {
+        LoadString(hInstance, IDS_SERVICES_STOPPED, DlgInfo.szServiceStatus,
+            sizeof(DlgInfo.szServiceStatus) / sizeof(TCHAR));
+        SendDlgItemMessageW(hwndDlg, IDC_SERV_STATUS, WM_SETTEXT, 0, (LPARAM)DlgInfo.szServiceStatus);
+    }
 
 
 
@@ -78,7 +146,12 @@ VOID GetDlgInfo(HWND hwndDlg)
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif
-/* Property page dialog callback */
+
+/*
+ * General Property dialog callback.
+ * Controls messages to the General dialog
+ */
+/* FIXME: this may be better as a modeless dialog */
 INT_PTR CALLBACK
 GeneralPageProc(HWND hwndDlg,
                 UINT uMsg,
@@ -125,8 +198,11 @@ GeneralPageProc(HWND hwndDlg,
 
 
 
-
-
+/*
+ * Dependancies Property dialog callback.
+ * Controls messages to the Dependancies dialog
+ */
+/* FIXME: this may be better as a modeless dialog */
 INT_PTR CALLBACK
 DependanciesPageProc(HWND hwndDlg,
                 UINT uMsg,
@@ -211,3 +287,4 @@ OpenPropSheet(HWND hwnd)
 
   return (LONG)(PropertySheet(&psh) != -1);
 }
+

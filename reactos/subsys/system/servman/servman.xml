@@ -14,10 +14,12 @@
 	<library>shell32</library>
 	<compilationunit name="unit.c">
 		<file>about.c</file>
+		<file>control.c</file>
 		<file>geterror.c</file>
 		<file>propsheet.c</file>
 		<file>query.c</file>
 		<file>servman.c</file>
+		<file>start.c</file>
 	</compilationunit>
 	<file>servman.rc</file>
 	<pch>servman.h</pch>

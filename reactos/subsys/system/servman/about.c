@@ -4,7 +4,7 @@
  * FILE:        subsys/system/servman/about.c
  * PURPOSE:     About dialog box message handler
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
- *               
+ *
  */
 
 //ShellAbout(hwnd, _T("test"), _T("test2"), MAKEINTRESOURCE(IDI_SM_ICON));
@@ -19,12 +19,16 @@ extern HINSTANCE hInstance;
 BOOL CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND    hLicenseEditWnd;
-    TCHAR    strLicense[0x1000];
+    HWND  hLicenseEditWnd;
+    HICON hIcon = NULL;
+    TCHAR strLicense[0x1000];
 
     switch (message)
     {
     case WM_INITDIALOG:
+
+        hIcon = LoadImage(hInstance, MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
+        SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 
         hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
 
@@ -38,6 +42,7 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
         {
+            DestroyIcon(hIcon);
             EndDialog(hDlg, LOWORD(wParam));
             return TRUE;
         }

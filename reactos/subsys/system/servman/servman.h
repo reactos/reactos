@@ -3,7 +3,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <windowsx.h>
+#include <windowsx.h> /* GET_X/Y_LPARAM */
 #include <stdio.h>
 #include <tchar.h>
 #include <commctrl.h>
@@ -16,7 +16,10 @@ BOOL RefreshServiceList(VOID);
 
 BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-BOOL Start(LPCTSTR, LPCTSTR, INT);
+BOOL DoStartService(VOID);
+BOOL Control(DWORD Control);
+
+INT GetSelectedItem(VOID);
 
 VOID GetError(DWORD);
 VOID FreeMemory(VOID);
