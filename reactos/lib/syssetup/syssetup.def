@@ -5,14 +5,14 @@ EXPORTS
 ;GenerateScsiHwIdList
 InitializeSetupActionLog@4
 InstallReactOS@4
-;KeyboardClassInstaller
+KeyboardClassInstaller@12
 LogItem@8
 ;LogItem0
 ;LogItem1
 ;LogItem2
 ;LogItem3
 ;LogItemN
-;MouseClassInstaller
+MouseClassInstaller@12
 ;PnPInitializationThread
 ;RepairStartMenuItems
 ;ReportError
