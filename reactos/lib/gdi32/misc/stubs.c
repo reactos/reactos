@@ -260,38 +260,6 @@ GetTextCharacterExtra(
 /*
  * @unimplemented
  */
-int
-STDCALL
-GetTextCharset(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetTextCharsetInfo(
-	HDC		hdc,
-	LPFONTSIGNATURE	lpSig,
-	DWORD		dwFlags
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 GetFontLanguageInfo(

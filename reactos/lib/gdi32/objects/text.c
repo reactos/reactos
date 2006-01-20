@@ -1,6 +1,10 @@
 #include "precomp.h"
 
 
+#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
+
+        
+
 /*
  * @implemented
  */
@@ -43,6 +47,37 @@ TextOutW(
 	int  cbString)
 {
   return NtGdiTextOut(hdc, nXStart, nYStart, lpString, cbString);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetTextCharset(
+	HDC	hdc
+	)
+{
+    /* MSDN docs say this is equivalent */
+        return GetTextCharsetInfo(hdc, NULL, 0);        
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GetTextCharsetInfo(
+	HDC		hdc,
+	LPFONTSIGNATURE	lpSig,
+	DWORD		dwFlags
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
 
