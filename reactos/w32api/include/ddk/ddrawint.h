@@ -421,7 +421,7 @@ typedef struct DD_SURFACECALLBACKS
 	PDD_SURFCB_GETFLIPSTATUS      GetFlipStatus;
 	PDD_SURFCB_UPDATEOVERLAY      UpdateOverlay;
 	PDD_SURFCB_SETOVERLAYPOSITION SetOverlayPosition;
-	PVOID                         Reserved;
+	PVOID                         reserved4;
 	PDD_SURFCB_SETPALETTE         SetPalette;
 } DD_SURFACECALLBACKS, *PDD_SURFACECALLBACKS;
 
