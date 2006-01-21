@@ -320,6 +320,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Process->DebugPort = pDebugPort;
     Process->ExceptionPort = pExceptionPort;
 
+    /* Save the pointer to the section object */
+    Process->SectionObject = SectionObject;
+
     /* Setup the Lock Event */
     DPRINT("Initialzing Process Lock\n");
     KeInitializeEvent(&Process->LockEvent, SynchronizationEvent, FALSE);
