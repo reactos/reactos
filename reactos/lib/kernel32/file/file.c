@@ -1432,7 +1432,7 @@ SetFileShortNameW(
   ULONG NeededSize;
   UNICODE_STRING ShortName;
   IO_STATUS_BLOCK IoStatusBlock;
-  PFILE_NAME_INFORMATION FileNameInformation;
+  PFILE_NAME_INFORMATION FileNameInfo;
 
   if(IsConsoleHandle(hFile))
   {
@@ -1449,29 +1449,29 @@ SetFileShortNameW(
   RtlInitUnicodeString(&ShortName, lpShortName);
 
   NeededSize = sizeof(FILE_NAME_INFORMATION) + ShortName.Length + sizeof(WCHAR);
-  if(!(FileNameInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
+  if(!(FileNameInfo = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
 
-  FileNameInformation->FileNameLength = ShortName.Length;
-  RtlCopyMemory(FileNameInformation->FileName, ShortName.Buffer, ShortName.Length);
+  FileNameInfo->FileNameLength = ShortName.Length;
+  RtlCopyMemory(FileNameInfo->FileName, ShortName.Buffer, ShortName.Length);
 
   Status = NtSetInformationFile(hFile,
                                 &IoStatusBlock,	 //out
-                                FileNameInformation,
+                                FileNameInfo,
                                 NeededSize,
                                 FileShortNameInformation);
 
-  RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInformation);
+  RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInfo);
   if(!NT_SUCCESS(Status))
   {
-
     SetLastErrorByStatus(Status);
+    return FALSE;
   }
 
-  return NT_SUCCESS(Status);
+  return TRUE;
 }
 
 
