@@ -167,7 +167,7 @@ void InitControls (HWND hwnd)
 	hPopup = LoadMenu(hinst, MAKEINTRESOURCE(IDR_POPUP));
 
 	// Create Tree Icons
-	HIMAGELIST hIcon = ImageList_Create(16,16,ILC_COLOR32,1,1); 
+	HIMAGELIST hIcon = ImageList_Create(16, 16, ILC_MASK|ILC_COLOR32, 1, 1);
 	SendMessage(hTree, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hIcon);
 		
 	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(1))); 
