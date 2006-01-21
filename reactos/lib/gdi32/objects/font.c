@@ -414,34 +414,8 @@ GetCharWidth32A(
 	LPINT	lpBuffer
 	)
 {
-    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
-    LPSTR str;
-    LPWSTR wstr;
-    BOOL ret = TRUE;
-
-    if(count <= 0) return FALSE;
-
-    str = HeapAlloc(GetProcessHeap(), 0, count);
-    for(i = 0; i < count; i++)
-	str[i] = (BYTE)(iFirstChar + i);
-
-    wstr = FONT_mbtowc(hdc, str, count, &wlen, NULL);
-
-    for(i = 0; i < wlen; i++)
-    {
-        /* FIXME should be NtGdiGetCharWidthW */
-	if(!NtGdiGetCharWidth32(hdc, wstr[i], wstr[i], lpBuffer))
-	{
-	    ret = FALSE;
-	    break;
-	}
-	lpBuffer++;
-    }
-
-    HeapFree(GetProcessHeap(), 0, str);
-    HeapFree(GetProcessHeap(), 0, wstr);
-
-    return ret;
+   /* FIXME should be NtGdiGetCharWidthW */
+   return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer))
 }
 
 
