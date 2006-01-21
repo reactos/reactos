@@ -1,9 +1,6 @@
 #include "precomp.h"
 
 
-#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
-
-        
 
 /*
  * @implemented
@@ -65,7 +62,7 @@ GetTextCharset(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -75,9 +72,7 @@ GetTextCharsetInfo(
 	DWORD		dwFlags
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+        return NtGdiGetTextCharsetInfo(hdc, lpSig, dwFlags);
 }
 
 
