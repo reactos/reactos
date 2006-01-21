@@ -89,10 +89,17 @@
 
 
 /* create service dialog */
-#define IDD_DLG_CREATE 8000
+#define IDD_DLG_CREATE      8000
 #define IDC_CREATE_SERVNAME 8001
 #define IDC_CREATE_DISPNAME 8002
-#define IDC_CREATE_PATH 8003
-#define IDC_CREATE_DESC 8004
-#define IDC_CREATE_OPTIONS 8005
-#define ID_CREATE_HELP 8006
+#define IDC_CREATE_PATH     8003
+#define IDC_CREATE_DESC     8004
+#define IDC_CREATE_OPTIONS  8005
+#define ID_CREATE_HELP      8006
+
+/* progress bar */
+#define IDD_DLG_PROGRESS    7000
+#define IDC_SERVCON_PROGRESS 7001
+#define IDC_SERVCON_INFO    7002
+#define IDC_SERVCON_NAME    7003
+#define IDS_PROGRESS_INFO   7004

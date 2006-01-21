@@ -115,7 +115,6 @@ VOID GetDlgInfo(HWND hwndDlg)
             (LPARAM)DlgInfo.lpDescription);
 
 
-    /* FIXME: needs implementing. Use code base at bottom of query.c */
     /* set the executable path */
     if (GetExecutablePath(&DlgInfo.lpPathToExe))
         SendDlgItemMessage(hwndDlg, IDC_EXEPATH, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpPathToExe);

@@ -52,45 +52,48 @@ BEGIN
     MENUITEM "Help",ID_HELP
   END
 END
+
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
 CAPTION "About Service Manager"
 FONT 8,"Tahoma",0,0
-STYLE 0x00C80080
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  CONTROL "Service Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)",IDC_STATIC,"Static",0x1002000C,48,7,130,26
-  CONTROL "Close",IDOK,"Button",0x50030001,75,162,44,15
+  LTEXT "Service Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
   CONTROL "",IDI_SM_ICON,"Static",0x50000203,0,12,7,30
-  CONTROL "",IDC_LICENSE_EDIT,"Edit",0x50210804,8,44,174,107,0x00000200
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
+
 IDD_DLG_GENERAL DIALOGEX 6,6,253,225
 CAPTION "General"
-FONT 8,"MS Sans Serif",0,0
-STYLE 0x10CF0000
+FONT 8,"Tahoma",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "",IDC_DISP_NAME,"Static",0x50001000,70,29,176,12
-  CONTROL "",IDC_DESCRIPTION,"Static",0x50201000,70,46,176,22
-  CONTROL "",IDC_EXEPATH,"Static",0x50001000,6,86,238,12
+  LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+  EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
   CONTROL "",IDC_START_TYPE,"ComboBox",0x50010003,70,107,176,11
-  CONTROL "Start",IDC_START,"Button",0x50010000,6,155,54,15
-  CONTROL "Stop",IDC_STOP,"Button",0x50010000,68,155,54,15
-  CONTROL "Pause",IDC_PAUSE,"Button",0x50010000,130,155,54,15
-  CONTROL "Resume",IDC_RESUME,"Button",0x50010000,192,155,54,15
-  CONTROL "Service name:",IDC_STATIC,"Static",0x50000000,4,11,53,11
-  CONTROL "",IDC_START_PARAM,"Static",0x50001000,70,199,176,11
-  CONTROL "Display name:",IDC_STATIC,"Static",0x50000000,4,29,53,11
-  CONTROL "Description",IDC_STATIC,"Static",0x50000000,4,51,53,11
-  CONTROL "",IDC_SERV_NAME,"Static",0x50000000,70,11,176,11
-  CONTROL "Path to executable:",IDC_STATIC,"Static",0x50000000,6,73,82,9
-  CONTROL "Startup type:",IDC_STATIC,"Static",0x50000000,6,108,53,11
-  CONTROL "Service status:",IDC_STATIC,"Static",0x50000000,4,138,53,11
+  PUSHBUTTON "Start", IDC_START, 6, 155, 54, 15
+  PUSHBUTTON "Stop", IDC_STOP, 68, 155, 54, 15
+  PUSHBUTTON "Pause", IDC_PAUSE , 130, 155, 54, 15
+  PUSHBUTTON "Resume", IDC_RESUME, 192, 155, 54, 15
+  LTEXT "Service name:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "Display name:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "Description", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "Path to executable:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "Startup type:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "Service status:", IDC_STATIC, 4, 138, 53, 11
   CONTROL "",IDC_SERV_STATUS,"Static",0x50000000,70,138,176,11
-  CONTROL "You can specify the start parameters that apply when you start the service from here.",IDC_STATIC,"Static",0x50000000,6,177,240,15
-  CONTROL "Start parameters",IDC_STATIC,"Static",0x50000000,6,199,53,11
+  LTEXT "You can specify the start parameters that apply when you start the service from here.",IDC_STATIC, 6,177,240,15
+  LTEXT "Start parameters", IDC_STATIC, 6, 199, 53, 11
+  EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
+
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
 CAPTION "Dependencies"
-FONT 8,"MS Sans Serif",0,0
-STYLE 0x10CF0000
+FONT 8,"Tahoma",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "",IDC_DEPEND_TREE1,"SysTreeView32",0x50010007,8,70,236,68,0x00000200
   CONTROL "",IDC_DEPEND_TREE2,"SysTreeView32",0x50010007,8,151,234,67,0x00000200
@@ -98,10 +101,11 @@ BEGIN
   CONTROL "This service depends on the following components",IDC_STATIC,"Static",0x50000000,8,57,236,9
   CONTROL "",IDC_DEPEND_SERVICE,"Static",0x50000000,8,38,236,13
 END
+
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
 CAPTION "Create a service"
-FONT 8,"MS Sans Serif",0,0
-STYLE 0x10CF0000
+FONT 8,"Tahoma",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
   CONTROL "",IDC_CREATE_SERVNAME,"Edit",0x50010000,72,12,150,11,0x00000200
   CONTROL "",IDC_CREATE_DISPNAME,"Edit",0x50010000,72,31,150,11,0x00000200
@@ -118,7 +122,20 @@ BEGIN
   CONTROL "Help",ID_CREATE_HELP,"Button",0x50010000,6,192,44,13
 END
 
+IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+CAPTION "Service Control"
+FONT 8,"MS Sans Serif",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  CONTROL "",IDC_SERVCON_PROGRESS,"msctls_progress32",0x50000000,8,46,238,13
+  CONTROL "",IDC_SERVCON_INFO,"Static",0x50000000,8,5,236,11
+  CONTROL "",IDC_SERVCON_NAME,"Static",0x50000000,8,25,66,11
+  CONTROL "&Close",IDOK,"Button",0x50010000,100,70,54,13
+END
+
+
 IDB_BUTTONS BITMAP DISCARDABLE "res/toolbar.bmp"
+
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -128,6 +145,7 @@ BEGIN
   IDS_FOURTHCOLUMN "Startup Type"
   IDS_FITHCOLUMN "Log On As"
 END
+
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_SERVICES_STARTED "Started"
@@ -136,11 +154,13 @@ BEGIN
   IDS_SERVICES_MAN "Manual"
   IDS_SERVICES_DIS "Disabled"
 END
+
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Num Services: %d"
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have receive"
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU Lesser General Public License along with this library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA"
 END
+
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP "Properties"
@@ -150,7 +170,12 @@ BEGIN
   IDS_TOOLTIP_STOP "Stop service"
   IDS_TOOLTIP_PAUSE "Pause service"
   IDS_TOOLTIP_RESTART "Restart service"
-  IDS_TOOLTIP_NEW "Create new a service"
+  IDS_TOOLTIP_NEW "Create a new service"
   IDS_TOOLTIP_HELP "Help"
   IDS_TOOLTIP_EXIT "Exit"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_PROGRESS_INFO "ReactOS is attempting to %s the following service on %s"
 END

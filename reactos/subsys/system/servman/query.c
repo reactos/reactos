@@ -80,8 +80,6 @@ BOOL GetExecutablePath(LPTSTR *ExePath)
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     LVITEM item;
     DWORD BytesNeeded = 0;
-    TCHAR FileName[MAX_PATH];
-
 
     item.mask = LVIF_PARAM;
     item.iItem = GetSelectedItem();
@@ -131,18 +129,7 @@ BOOL GetExecutablePath(LPTSTR *ExePath)
         }
     }
 
-    ZeroMemory(&FileName, MAX_PATH);
-    if (_tcscspn(pServiceConfig->lpBinaryPathName, _T("\"")))
-    {
-        _tcsncpy(FileName, pServiceConfig->lpBinaryPathName,
-            _tcscspn(pServiceConfig->lpBinaryPathName, _T(" ")) );
-    }
-    else
-    {
-        _tcscpy(FileName, pServiceConfig->lpBinaryPathName);
-    }
-
-    *ExePath = FileName;
+    *ExePath = pServiceConfig->lpBinaryPathName;
 
     CloseServiceHandle(hSCManager);
     CloseServiceHandle(hSc);
