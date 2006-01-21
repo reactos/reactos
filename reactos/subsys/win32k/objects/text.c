@@ -2165,7 +2165,7 @@ NtGdiGetRasterizerCaps(
 
 
 /*
- Bassed on "Undocumented W2k Secrets", Table B-2, page 473.
+ Based on "Undocumented W2k Secrets", Table B-2, page 473.
  This function does not exist. See note in gdi32/objects/text.c
  GetTextCharset. This should be moved to include/win32k/ntgdibad.h.
 */
