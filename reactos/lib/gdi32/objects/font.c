@@ -15,73 +15,6 @@
 
 #define INITIAL_FAMILY_COUNT 64
 
-/***********************************************************************
- *           FONT_mbtowc
- *
- * Returns a Unicode translation of str using the charset of the
- * currently selected font in hdc.  If count is -1 then str is assumed
- * to be '\0' terminated, otherwise it contains the number of bytes to
- * convert.  If plenW is non-NULL, on return it will point to the
- * number of WCHARs that have been written.  If pCP is non-NULL, on
- * return it will point to the codepage used in the conversion.  The
- * caller should free the returned LPWSTR from the process heap
- * itself.
- */
-static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
-{
-    UINT cp = CP_ACP;
-    INT lenW;
-    LPWSTR strW;
-    CHARSETINFO csi;
-    int charset = GetTextCharset(hdc);
-
-    /* Hmm, nicely designed api this one! */
-    if(NtGdiTranslateCharsetInfo((PDWORD)charset, &csi, TCI_SRCCHARSET))
-        cp = csi.ciACP;
-    else {
-        switch(charset) {
-        case OEM_CHARSET:
-            cp = GetOEMCP();
-            break;
-        case DEFAULT_CHARSET:
-            cp = GetACP();
-            break;
-
-/*        case VISCII_CHARSET:
-        case TCVN_CHARSET:
-        case KOI8_CHARSET:
-        case ISO3_CHARSET:
-        case ISO4_CHARSET:
-        case ISO10_CHARSET:
-        case CELTIC_CHARSET:*/
-            /* FIXME: These have no place here, but because x11drv
-               enumerates fonts with these (made up) charsets some apps
-               might use them and then the FIXME below would become
-               annoying.  Now we could pick the intended codepage for
-               each of these, but since it's broken anyway we'll just
-               use CP_ACP and hope it'll go away...
-            */
- /*           cp = CP_ACP;
-            break;*/
-
-        default:
-            DPRINT1("Can't find codepage for charset %d\n", charset);
-            break;
-        }
-    }
-
-    DPRINT("charset %d => cp %d\n", charset, cp);
-
-    if(count == -1) count = strlen(str);
-    lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
-    strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
-    MultiByteToWideChar(cp, 0, str, count, strW, lenW);
-    if(plenW) *plenW = lenW;
-    if(pCP) *pCP = cp;
-    return strW;
-}
-
-
 static BOOL FASTCALL
 MetricsCharConvert(WCHAR w, UCHAR *b)
   {
@@ -415,7 +348,7 @@ GetCharWidth32A(
 	)
 {
    /* FIXME should be NtGdiGetCharWidthW */
-   return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer))
+   return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer);
 }
 
 
