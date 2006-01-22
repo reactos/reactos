@@ -197,6 +197,12 @@ DWORD WINAPI FormatMessageA(
         }
     }
     target	= HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 100);
+    if(target == NULL)
+    {
+        HeapFree(GetProcessHeap(),0,from);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
     t	= target;
     talloced= 100;
 
@@ -250,16 +256,37 @@ DWORD WINAPI FormatMessageA(
                             if (NULL!=(x=strchr(f,'!'))) {
                                 *x='\0';
                                 fmtstr=HeapAlloc(GetProcessHeap(),0,strlen(f)+2);
+                                if(fmtstr == NULL)
+                                {
+                                    HeapFree(GetProcessHeap(),0,from);
+                                    HeapFree(GetProcessHeap(),0,target);
+                                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                    return 0;
+                                }
                                 sprintf(fmtstr,"%%%s",f);
                                 f=x+1;
                             } else {
                                 fmtstr=HeapAlloc(GetProcessHeap(),0,strlen(f)+2);
+                                if(fmtstr == NULL)
+                                {
+                                    HeapFree(GetProcessHeap(),0,from);
+                                    HeapFree(GetProcessHeap(),0,target);
+                                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                    return 0;
+                                }
                                 sprintf(fmtstr,"%%%s",f);
                                 f+=strlen(f); /*at \0*/
                             }
                         } else {
                             if(!args) break;
                             fmtstr = HeapAlloc(GetProcessHeap(),0,3);
+                            if(fmtstr == NULL)
+                            {
+                                HeapFree(GetProcessHeap(),0,from);
+                                HeapFree(GetProcessHeap(),0,target);
+                                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                return 0;
+                            }
                             strcpy( fmtstr, "%s" );
                         }
                         if (args) {
@@ -401,6 +428,11 @@ DWORD WINAPI FormatMessageW(
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING) {
         from = HeapAlloc( GetProcessHeap(), 0, (strlenW((LPCWSTR)lpSource) + 1) *
             sizeof(WCHAR) );
+        if(from == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
         strcpyW( from, (LPCWSTR)lpSource );
     }
     else {
@@ -418,6 +450,12 @@ DWORD WINAPI FormatMessageW(
     }
 
     target = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 100 * sizeof(WCHAR) );
+    if(target == NULL)
+    {
+        HeapFree(GetProcessHeap(),0,from);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
     t = target;
     talloced= 100;
 
@@ -472,16 +510,37 @@ DWORD WINAPI FormatMessageW(
                             if (NULL!=(x=strchrW(f,'!'))) {
                                 *x='\0';
                                 fmtstr=HeapAlloc( GetProcessHeap(), 0,(strlenW(f)+2)*sizeof(WCHAR));
+                                if(fmtstr == NULL)
+                                {
+                                    HeapFree(GetProcessHeap(),0,from);
+                                    HeapFree(GetProcessHeap(),0,target);
+                                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                    return 0;
+                                }
                                 sprintfW(fmtstr,PCNTFMTWSTR,f);
                                 f=x+1;
                             } else {
                                 fmtstr=HeapAlloc(GetProcessHeap(),0,(strlenW(f)+2)*sizeof(WCHAR));
+                                if(fmtstr == NULL)
+                                {
+                                    HeapFree(GetProcessHeap(),0,from);
+                                    HeapFree(GetProcessHeap(),0,target);
+                                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                    return 0;
+                                }
                                 sprintfW(fmtstr,PCNTFMTWSTR,f);
                                 f+=strlenW(f); /*at \0*/
                             }
                         } else {
                             if(!args) break;
                             fmtstr = HeapAlloc( GetProcessHeap(),0,3*sizeof(WCHAR));
+                            if(fmtstr == NULL)
+                            {
+                                HeapFree(GetProcessHeap(),0,from);
+                                HeapFree(GetProcessHeap(),0,target);
+                                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                                return 0;
+                            }
                             strcpyW( fmtstr, FMTWSTR );
                         }
 

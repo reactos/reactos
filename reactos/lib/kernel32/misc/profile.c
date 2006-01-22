@@ -830,6 +830,11 @@ static BOOL PROFILE_Open( LPCWSTR filename )
 
     /* OK, now that CurProfile is definitely free we assign it our new file */
     CurProfile->filename  = HeapAlloc( GetProcessHeap(), 0, (wcslen(buffer)+1) * sizeof(WCHAR) );
+    if(CurProfile->filename == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
     wcscpy( CurProfile->filename, buffer );
 
     if (hFile != INVALID_HANDLE_VALUE)
@@ -1061,6 +1066,11 @@ static BOOL PROFILE_SetString( LPCWSTR section_name, LPCWSTR key_name,
             DPRINT("  creating key\n");
         }
         key->value = HeapAlloc( GetProcessHeap(), 0, (wcslen(value) + 1) * sizeof(WCHAR) );
+        if(key->value == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
         wcscpy( key->value, value );
         CurProfile->changed = TRUE;
     }
@@ -1126,6 +1136,11 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
            LPWSTR p;
 
            p = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+           if(p == NULL)
+           {
+               SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+               return FALSE;
+           }
            memcpy(p, def_val, len * sizeof(WCHAR));
            p[len] = '\0';
            pDefVal = p;
@@ -1482,6 +1497,12 @@ BOOL WINAPI WritePrivateProfileSectionW( LPCWSTR section,
             ret = TRUE;
 	    while(*string) {
                 LPWSTR buf = HeapAlloc( GetProcessHeap(), 0, (wcslen(string)+1) * sizeof(WCHAR) );
+                if(buf == NULL)
+                {
+                    RtlLeaveCriticalSection( &PROFILE_CritSect );
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    return FALSE;
+                }
                 wcscpy( buf, string );
                 if((p = wcschr( buf, '='))) {
                     *p = '\0';
@@ -1759,6 +1780,11 @@ BOOL WINAPI WritePrivateProfileStructW (LPCWSTR section, LPCWSTR key,
 
     /* allocate string buffer for hex chars + checksum hex char + '\0' */
     outstring = HeapAlloc( GetProcessHeap(), 0, (bufsize*2 + 2 + 1) * sizeof(WCHAR) );
+    if(outstring == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
     p = outstring;
     for (binbuf = (LPBYTE)buf; binbuf < (LPBYTE)buf+bufsize; binbuf++)
     {
