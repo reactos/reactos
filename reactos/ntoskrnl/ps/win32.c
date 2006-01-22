@@ -192,25 +192,56 @@ STDCALL
 NtW32Call(IN ULONG RoutineIndex,
           IN PVOID Argument,
           IN ULONG ArgumentLength,
-          OUT PVOID* Result OPTIONAL,
-          OUT PULONG ResultLength OPTIONAL)
+          OUT PVOID* Result,
+          OUT PULONG ResultLength)
 {
-    NTSTATUS CallbackStatus;
+    PVOID RetResult;
+    ULONG RetResultLength;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
+    DPRINT("NtW32Call(RoutineIndex %d, Argument %p, ArgumentLength %d)\n",
             RoutineIndex, Argument, ArgumentLength);
 
-    /* FIXME: SEH!!! */
+    /* must not be called as KernelMode! */
+    ASSERT(KeGetPreviousMode() != KernelMode);
 
-    /* Call kernel function */
-    CallbackStatus = KeUserModeCallback(RoutineIndex,
-                                        Argument,
-                                        ArgumentLength,
-                                        Result,
-                                        ResultLength);
+    _SEH_TRY
+    {
+        ProbeForWritePointer(Result);
+        ProbeForWriteUlong(ResultLength);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Call kernel function */
+        Status = KeUserModeCallback(RoutineIndex,
+                                    Argument,
+                                    ArgumentLength,
+                                    &RetResult,
+                                    &RetResultLength);
+
+        if (NT_SUCCESS(Status))
+        {
+            _SEH_TRY
+            {
+                *Result = RetResult;
+                *ResultLength = RetResultLength;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+    }
 
     /* Return the result */
-    return(CallbackStatus);
+    return Status;
 }
 
 /* EOF */

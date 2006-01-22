@@ -426,8 +426,8 @@ NtW32Call(
     IN ULONG RoutineIndex,
     IN PVOID Argument,
     IN ULONG ArgumentLength,
-    OUT PVOID* Result OPTIONAL,
-    OUT PULONG ResultLength OPTIONAL
+    OUT PVOID* Result,
+    OUT PULONG ResultLength
 );
 
 NTSTATUS

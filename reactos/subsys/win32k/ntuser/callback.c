@@ -116,6 +116,8 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
+   PVOID ResultPointer;
+   ULONG ResultLength;
    NTSTATUS Status;
 
    Arguments.Callback = CompletionCallback;
@@ -126,11 +128,11 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
    UserLeaveCo();
 
-   Status = NtW32Call(USER32_CALLBACK_SENDASYNCPROC,
-                      &Arguments,
-                      sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS),
-                      NULL,
-                      NULL);
+   Status = KeUserModeCallback(USER32_CALLBACK_SENDASYNCPROC,
+                               &Arguments,
+                               sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS),
+                               &ResultPointer,
+                               &ResultLength);
 
    UserEnterCo();
 
@@ -187,11 +189,11 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    UserLeaveCo();
 
-   Status = NtW32Call(USER32_CALLBACK_WINDOWPROC,
-                      Arguments,
-                      ArgumentLength,
-                      &ResultPointer,
-                      &ResultLength);
+   Status = KeUserModeCallback(USER32_CALLBACK_WINDOWPROC,
+                               Arguments,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
 
    /* Simulate old behaviour: copy into our local buffer */
    RtlMoveMemory(Arguments, ResultPointer, ArgumentLength);
@@ -232,11 +234,11 @@ co_IntLoadSysMenuTemplate()
 
    UserLeaveCo();
 
-   Status = NtW32Call(USER32_CALLBACK_LOADSYSMENUTEMPLATE,
-                      NULL,
-                      0,
-                      &ResultPointer,
-                      &ResultLength);
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADSYSMENUTEMPLATE,
+                               NULL,
+                               0,
+                               &ResultPointer,
+                               &ResultLength);
 
    /* Simulate old behaviour: copy into our local buffer */
    Result = *(LRESULT*)ResultPointer;
@@ -264,11 +266,11 @@ co_IntLoadDefaultCursors(VOID)
 
    UserLeaveCo();
 
-   Status = NtW32Call(USER32_CALLBACK_LOADDEFAULTCURSORS,
-                      &DefaultCursor,
-                      sizeof(BOOL),
-                      &ResultPointer,
-                      &ResultLength);
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADDEFAULTCURSORS,
+                               &DefaultCursor,
+                               sizeof(BOOL),
+                               &ResultPointer,
+                               &ResultLength);
 
    /* Simulate old behaviour: copy into our local buffer */
    Result = *(LRESULT*)ResultPointer;
@@ -398,11 +400,11 @@ co_IntCallHookProc(INT HookId,
 
    UserLeaveCo();
 
-   Status = NtW32Call(USER32_CALLBACK_HOOKPROC,
-                      Argument,
-                      ArgumentLength,
-                      &ResultPointer,
-                      &ResultLength);
+   Status = KeUserModeCallback(USER32_CALLBACK_HOOKPROC,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
 
    /* Simulate old behaviour: copy into our local buffer */
    Result = *(LRESULT*)ResultPointer;
