@@ -393,7 +393,8 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
   {
       RtlCopyMemory(RequiredPrivileges->Privilege,
                     Privileges,
-                    PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));;
+                    PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
+      *Result = CheckResult;
       Status = STATUS_SUCCESS;
   }
   _SEH_HANDLE
