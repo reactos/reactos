@@ -1,4 +1,7 @@
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
 #include <windows.h>
+#include <ndk/ntndk.h>
 #include <accctrl.h>
 
 #ifndef HAS_FN_PROGRESSW

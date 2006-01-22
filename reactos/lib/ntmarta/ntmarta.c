@@ -48,8 +48,81 @@ AccRewriteGetHandleRights(HANDLE handle,
                           PACL* ppSacl,
                           PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    ULONG RequiredSize, SDSize = 0;
+    NTSTATUS Status;
+    DWORD LastErr;
+    DWORD Ret = ERROR_SUCCESS;
+
+    /* save the last error code */
+    LastErr = GetLastError();
+
+AllocBuffer:
+    /* allocate a buffer large enough to hold the
+       security descriptor we need to return */
+    SDSize += 0x100;
+    if (pSD != NULL)
+    {
+        pSD = LocalAlloc(LMEM_FIXED,
+                         (SIZE_T)SDSize);
+    }
+    else
+    {
+        pSD = LocalReAlloc((HLOCAL)pSD,
+                           (SIZE_T)SDSize,
+                           LMEM_MOVEABLE);
+    }
+
+    if (pSD == NULL)
+    {
+        Ret = GetLastError();
+        goto Cleanup;
+    }
+
+    /* perform the actual query depending on the object type */
+    switch (ObjectType)
+    {
+        case SE_KERNEL_OBJECT:
+        {
+            Status = NtQuerySecurityObject(handle,
+                                           SecurityInfo,
+                                           pSD,
+                                           SDSize,
+                                           &RequiredSize);
+            if (Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                /* not enough memory, increase the size of
+                   the buffer and try again */
+                ASSERT(RequiredSize > SDSize);
+                SDSize = RequiredSize;
+                goto AllocBuffer;
+            }
+            Ret = RtlNtStatusToDosError(Status);
+            break;
+        }
+
+        default:
+        {
+            UNIMPLEMENTED;
+            Ret = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+    }
+
+Cleanup:
+    if (Ret == ERROR_SUCCESS)
+    {
+        *ppSecurityDescriptor = pSD;
+    }
+    else if (pSD != NULL)
+    {
+        LocalFree((HLOCAL)pSD);
+    }
+
+    /* restore the last error code */
+    SetLastError(LastErr);
+
+    return Ret;
 }
 
 
