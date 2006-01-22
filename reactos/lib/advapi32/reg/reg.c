@@ -2662,7 +2662,9 @@ RegLoadKeyW (HKEY hKey,
   Status = NtLoadKey (&KeyObjectAttributes,
 		      &FileObjectAttributes);
 
-  RtlFreeUnicodeString (&FileName);
+  RtlFreeHeap (RtlGetProcessHeap (),
+               0,
+               FileName.Buffer);
 
   if (!NT_SUCCESS(Status))
     {
@@ -3948,7 +3950,9 @@ RegReplaceKeyW (HKEY hKey,
 				     NULL,
 				     NULL))
     {
-      RtlFreeUnicodeString (&NewFileName);
+      RtlFreeHeap (RtlGetProcessHeap (),
+                   0,
+                   NewFileName.Buffer);
       if (CloseRealKey)
 	{
 	  NtClose (RealKeyHandle);
@@ -3967,8 +3971,12 @@ RegReplaceKeyW (HKEY hKey,
 			 RealKeyHandle,
 			 &OldObjectAttributes);
 
-  RtlFreeUnicodeString (&OldFileName);
-  RtlFreeUnicodeString (&NewFileName);
+  RtlFreeHeap (RtlGetProcessHeap (),
+               0,
+               OldFileName.Buffer);
+  RtlFreeHeap (RtlGetProcessHeap (),
+               0,
+               NewFileName.Buffer);
 
   if (CloseRealKey)
     {
@@ -4063,7 +4071,9 @@ RegRestoreKeyW (HKEY hKey,
 		       &IoStatusBlock,
 		       FILE_SHARE_READ,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
-  RtlFreeUnicodeString (&FileName);
+  RtlFreeHeap (RtlGetProcessHeap(),
+               0,
+               FileName.Buffer);
   if (!NT_SUCCESS(Status))
     {
       goto Cleanup;
@@ -4165,7 +4175,9 @@ RegSaveKeyW (HKEY hKey,
 			 FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT,
 			 NULL,
 			 0);
-  RtlFreeUnicodeString (&FileName);
+  RtlFreeHeap (RtlGetProcessHeap (),
+               0,
+               FileName.Buffer);
   if (!NT_SUCCESS(Status))
     {
       goto Cleanup;

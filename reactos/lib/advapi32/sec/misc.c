@@ -243,14 +243,17 @@ GetFileSecurityW(LPCWSTR lpFileName,
 		      &StatusBlock,
 		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		      0);
+
+  RtlFreeHeap(RtlGetProcessHeap(),
+              0,
+              FileName.Buffer);
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
       SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
-
-  RtlFreeUnicodeString(&FileName);
 
   Status = NtQuerySecurityObject(FileHandle,
 				 RequestedInformation,
@@ -387,14 +390,17 @@ SetFileSecurityW (LPCWSTR lpFileName,
 		      &StatusBlock,
 		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		      0);
+
+  RtlFreeHeap(RtlGetProcessHeap(),
+              0,
+              FileName.Buffer);
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
       SetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
     }
-
-  RtlFreeUnicodeString(&FileName);
 
   Status = NtSetSecurityObject(FileHandle,
 			       SecurityInformation,
