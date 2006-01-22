@@ -7,6 +7,7 @@
 #include <ndk/ntndk.h>
 #include <commctrl.h>
 #include <shellapi.h>
+#include <aclapi.h>
 #include <stdlib.h>
 #include <math.h>
 #include <tchar.h>

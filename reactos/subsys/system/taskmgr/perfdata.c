@@ -38,9 +38,11 @@ SYSTEM_BASIC_INFORMATION        SystemBasicInfo;
 SYSTEM_CACHE_INFORMATION        SystemCacheInfo;
 SYSTEM_HANDLE_INFORMATION        SystemHandleInfo;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorTimeInfo = NULL;
+PSID                             SystemUserSid = NULL;
 
 BOOL PerfDataInitialize(void)
 {
+    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
     NTSTATUS    status;
 
     InitializeCriticalSection(&PerfDataCriticalSection);
@@ -52,12 +54,32 @@ BOOL PerfDataInitialize(void)
     if (status != NO_ERROR)
         return FALSE;
 
+    /*
+     * Create the SYSTEM Sid
+     */
+    AllocateAndInitializeSid(&NtSidAuthority, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &SystemUserSid);
     return TRUE;
 }
 
 void PerfDataUninitialize(void)
 {
     DeleteCriticalSection(&PerfDataCriticalSection);
+
+    if (SystemUserSid != NULL)
+    {
+        FreeSid(SystemUserSid);
+        SystemUserSid = NULL;
+    }
+}
+
+static void SidToUserName(PSID Sid, LPTSTR szBuffer, DWORD BufferSize)
+{
+    static TCHAR szDomainNameUnused[255]; 
+    DWORD DomainNameLen = sizeof(szDomainNameUnused) / sizeof(szDomainNameUnused[0]);
+    SID_NAME_USE Use;
+
+    if (Sid != NULL)
+        LookupAccountSid(NULL, Sid, szBuffer, &BufferSize, szDomainNameUnused, &DomainNameLen, &Use);
 }
 
 void PerfDataRefresh(void)
@@ -70,15 +92,14 @@ void PerfDataRefresh(void)
     PPERFDATA                        pPDOld;
     ULONG                            Idx, Idx2;
     HANDLE                            hProcess;
-    HANDLE                            hProcessToken;
-    TCHAR                            szTemp[MAX_PATH];
-    DWORD                            dwSize;
     SYSTEM_PERFORMANCE_INFORMATION    SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION      SysTimeInfo;
     SYSTEM_CACHE_INFORMATION        SysCacheInfo;
     LPBYTE                            SysHandleInfoData;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SysProcessorTimeInfo;
     double                            CurrentKernelTime;
+    PSECURITY_DESCRIPTOR              ProcessSD = NULL;
+    PSID                              ProcessUser;
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
@@ -259,33 +280,14 @@ void PerfDataRefresh(void)
         pPerfData[Idx].HandleCount = pSPI->HandleCount;
         pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
+        pPerfData[Idx].UserName[0] = _T('\0');
+        ProcessUser = SystemUserSid;
 
         if (pSPI->UniqueProcessId != NULL) {
-            hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pSPI->UniqueProcessId);
+            hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | READ_CONTROL, FALSE, PtrToUlong(pSPI->UniqueProcessId));
             if (hProcess) {
-                if (OpenProcessToken(hProcess, TOKEN_QUERY|TOKEN_DUPLICATE|TOKEN_IMPERSONATE, &hProcessToken)) {
-                    ImpersonateLoggedOnUser(hProcessToken);
-                    memset(szTemp, 0, sizeof(TCHAR[MAX_PATH]));
-                    dwSize = MAX_PATH;
-                    GetUserName(szTemp, &dwSize);
-#ifndef UNICODE
-                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTemp, -1, pPerfData[Idx].UserName, MAX_PATH);
-/*
-int MultiByteToWideChar(
-  UINT CodePage,         // code page
-  DWORD dwFlags,         //  character-type options
-  LPCSTR lpMultiByteStr, //  string to map
-  int cbMultiByte,       //  number of bytes in string
-  LPWSTR lpWideCharStr,  //  wide-character buffer
-  int cchWideChar        //  size of buffer
-);
- */
-#endif
-                    RevertToSelf();
-                    CloseHandle(hProcessToken);
-                } else {
-                    pPerfData[Idx].UserName[0] = _T('\0');
-                }
+                GetSecurityInfo(hProcess, SE_KERNEL_OBJECT, OWNER_SECURITY_INFORMATION, &ProcessUser, NULL, NULL, NULL, &ProcessSD);
+
                 pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
                 pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
                 GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
@@ -296,11 +298,18 @@ int MultiByteToWideChar(
         } else {
 ClearInfo:
             /* clear information we were unable to fetch */
-            pPerfData[Idx].UserName[0] = _T('\0');
             pPerfData[Idx].USERObjectCount = 0;
             pPerfData[Idx].GDIObjectCount = 0;
             ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
         }
+
+        SidToUserName(ProcessUser, pPerfData[Idx].UserName, sizeof(pPerfData[0].UserName) / sizeof(pPerfData[0].UserName[0]));
+
+        if (ProcessSD != NULL)
+        {
+            LocalFree((HLOCAL)ProcessSD);
+        }
+
         pPerfData[Idx].UserTime.QuadPart = pSPI->UserTime.QuadPart;
         pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
