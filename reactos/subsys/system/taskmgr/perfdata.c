@@ -92,14 +92,16 @@ void PerfDataRefresh(void)
     PPERFDATA                        pPDOld;
     ULONG                            Idx, Idx2;
     HANDLE                            hProcess;
+    HANDLE                            hProcessToken;
     SYSTEM_PERFORMANCE_INFORMATION    SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION      SysTimeInfo;
     SYSTEM_CACHE_INFORMATION        SysCacheInfo;
     LPBYTE                            SysHandleInfoData;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SysProcessorTimeInfo;
     double                            CurrentKernelTime;
-    PSECURITY_DESCRIPTOR              ProcessSD = NULL;
+    PSECURITY_DESCRIPTOR              ProcessSD;
     PSID                              ProcessUser;
+    ULONG                             Buffer[64]; /* must be 4 bytes aligned! */
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
@@ -281,15 +283,41 @@ void PerfDataRefresh(void)
         pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
         pPerfData[Idx].UserName[0] = _T('\0');
+        pPerfData[Idx].USERObjectCount = 0;
+        pPerfData[Idx].GDIObjectCount = 0;
         ProcessUser = SystemUserSid;
+        ProcessSD = NULL;
 
         if (pSPI->UniqueProcessId != NULL) {
             hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | READ_CONTROL, FALSE, PtrToUlong(pSPI->UniqueProcessId));
             if (hProcess) {
-                GetSecurityInfo(hProcess, SE_KERNEL_OBJECT, OWNER_SECURITY_INFORMATION, &ProcessUser, NULL, NULL, NULL, &ProcessSD);
+                /* don't query the information of the system process. It's possible but
+                   returns Administrators as the owner of the process instead of SYSTEM */
+                if (pSPI->UniqueProcessId != (HANDLE)0x4)
+                {
+                    if (OpenProcessToken(hProcess, TOKEN_QUERY, &hProcessToken))
+                    {
+                        DWORD RetLen = 0;
+                        BOOL Ret;
 
-                pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
-                pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+                        Ret = GetTokenInformation(hProcessToken, TokenUser, (LPVOID)Buffer, sizeof(Buffer), &RetLen);
+                        CloseHandle(hProcessToken);
+
+                        if (Ret)
+                            ProcessUser = ((PTOKEN_USER)Buffer)->User.Sid;
+                        else
+                            goto ReadProcOwner;
+                    }
+                    else
+                    {
+ReadProcOwner:
+                        GetSecurityInfo(hProcess, SE_KERNEL_OBJECT, OWNER_SECURITY_INFORMATION, &ProcessUser, NULL, NULL, NULL, &ProcessSD);
+                    }
+
+                    pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
+                    pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+                }
+
                 GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
                 CloseHandle(hProcess);
             } else {
@@ -298,8 +326,6 @@ void PerfDataRefresh(void)
         } else {
 ClearInfo:
             /* clear information we were unable to fetch */
-            pPerfData[Idx].USERObjectCount = 0;
-            pPerfData[Idx].GDIObjectCount = 0;
             ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
         }
 
