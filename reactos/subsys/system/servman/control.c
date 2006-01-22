@@ -23,6 +23,7 @@ BOOL Control(HWND hProgDlg, DWORD Control)
     LVITEM item;
     DWORD BytesNeeded = 0;
     DWORD Loop = 5; //FIXME: testing value. needs better control
+    DWORD dwStartTickCount, dwOldCheckPoint;
 
     item.mask = LVIF_PARAM;
     item.iItem = GetSelectedItem();
@@ -72,15 +73,28 @@ BOOL Control(HWND hProgDlg, DWORD Control)
         return FALSE;
     }
 
+    /* Save the tick count and initial checkpoint. */
+    dwStartTickCount = GetTickCount();
+    dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+
     /* loop whilst service is not running */
     /* FIXME: needs more control adding. 'Loop' is temparary */
     while (ServiceStatus.dwCurrentState != Control || !Loop)
     {
+        DWORD dwWaitTime;
+
+        dwWaitTime = ServiceStatus.dwWaitHint / 10;
+
+        if( dwWaitTime < 500 )
+            dwWaitTime = 500;
+        else if ( dwWaitTime > 5000 )
+            dwWaitTime = 5000;
+
         /* increment the progress bar */
         SendMessage(hProgBar, PBM_STEPIT, 0, 0);
 
         /* wait before checking status */
-        Sleep(ServiceStatus.dwWaitHint / 8);
+        Sleep(dwWaitTime);
 
         /* check status again */
         if (! QueryServiceStatusEx(
@@ -93,7 +107,22 @@ BOOL Control(HWND hProgDlg, DWORD Control)
             GetError(0);
             return FALSE;
         }
-        Loop--;
+        
+        if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
+        {
+            /* The service is making progress. increment the progress bar */
+            SendMessage(hProgBar, PBM_STEPIT, 0, 0);
+            dwStartTickCount = GetTickCount();
+            dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+        }
+        else
+        {
+            if(GetTickCount() - dwStartTickCount > ServiceStatus.dwWaitHint)
+            {
+                /* No progress made within the wait hint */
+                break;
+            }
+        }
     }
 
     CloseServiceHandle(hSc);

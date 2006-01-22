@@ -96,15 +96,10 @@ BOOL GetExecutablePath(LPTSTR *ExePath)
     SC_HANDLE hSc = NULL;
     LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-    LVITEM item;
     DWORD BytesNeeded = 0;
 
-    item.mask = LVIF_PARAM;
-    item.iItem = GetSelectedItem();
-    SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
-
     /* copy pointer to selected service */
-    Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
+    Service = GetSelectedService();
 
     /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);

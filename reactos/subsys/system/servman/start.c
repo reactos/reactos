@@ -19,17 +19,13 @@ BOOL DoStartService(HWND hProgDlg)
     SC_HANDLE hSc;
     SERVICE_STATUS_PROCESS ServiceStatus;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-    LVITEM item;
     DWORD BytesNeeded = 0;
     INT ArgCount = 0;
     DWORD Loop = 5; //FIXME: testing value. needs better control
-
-    item.mask = LVIF_PARAM;
-    item.iItem = GetSelectedItem();
-    SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
+    DWORD dwStartTickCount, dwOldCheckPoint;
 
     /* copy pointer to selected service */
-    Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
+    Service = GetSelectedService();
 
     /* set the progress bar range and step */
     hProgBar = GetDlgItem(hProgDlg, IDC_SERVCON_PROGRESS);
@@ -70,10 +66,23 @@ BOOL DoStartService(HWND hProgDlg)
         return FALSE;
     }
 
+    /* Save the tick count and initial checkpoint. */
+    dwStartTickCount = GetTickCount();
+    dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+
     /* loop whilst service is not running */
     /* FIXME: needs more control adding. 'Loop' is temparary */
     while (ServiceStatus.dwCurrentState != SERVICE_RUNNING || !Loop)
     {
+        DWORD dwWaitTime;
+
+        dwWaitTime = ServiceStatus.dwWaitHint / 10;
+
+        if( dwWaitTime < 500 )
+            dwWaitTime = 500;
+        else if ( dwWaitTime > 5000 )
+            dwWaitTime = 5000;
+
         /* increment the progress bar */
         SendMessage(hProgBar, PBM_STEPIT, 0, 0);
 
@@ -91,7 +100,22 @@ BOOL DoStartService(HWND hProgDlg)
             GetError(0);
             return FALSE;
         }
-        Loop--;
+        
+        if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
+        {
+            /* The service is making progress. increment the progress bar */
+            SendMessage(hProgBar, PBM_STEPIT, 0, 0);
+            dwStartTickCount = GetTickCount();
+            dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+        }
+        else
+        {
+            if(GetTickCount() - dwStartTickCount > ServiceStatus.dwWaitHint)
+            {
+                /* No progress made within the wait hint */
+                break;
+            }
+        }
     }
 
     CloseServiceHandle(hSc);
