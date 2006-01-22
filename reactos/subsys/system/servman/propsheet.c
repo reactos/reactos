@@ -77,17 +77,12 @@ VOID GetDlgInfo(HWND hwndDlg)
 {
     HKEY hKey;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-    LVITEM item;
     PROP_DLG_INFO DlgInfo;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
     TCHAR buf[300];
 
-    item.mask = LVIF_PARAM;
-    item.iItem = GetSelectedItem();
-    SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
-
-    /* copy pointer to selected service */
-    Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
+    /* get pointer to selected service */
+    Service = GetSelectedService();
 
     /* open the registry key for the service */
     _sntprintf(buf, sizeof(buf) / sizeof(TCHAR), Path, Service->lpServiceName);

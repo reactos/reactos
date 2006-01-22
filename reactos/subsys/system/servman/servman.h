@@ -15,11 +15,14 @@
 BOOL RefreshServiceList(VOID);
 
 BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK ProgressDialogProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam);
 
-BOOL DoStartService(VOID);
-BOOL Control(DWORD Control);
+BOOL DoStartService(HWND hProgDlg);
+BOOL Control(HWND hProgBar, DWORD Control);
 
 INT GetSelectedItem(VOID);
+
+ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(VOID);
 
 VOID GetError(DWORD);
 VOID FreeMemory(VOID);

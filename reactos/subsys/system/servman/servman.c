@@ -16,6 +16,7 @@ HWND hMainWnd;
 HWND hListView;
 HWND hStatus;
 HWND hTool;
+HWND hProgDlg;
 HMENU hShortcutMenu;
 INT SelectedItem;
 
@@ -343,7 +344,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
 
                 case ID_START:
-                    if ( DoStartService() )
+                {
+                    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
+                    TCHAR buf1[100];
+                    TCHAR buf2[100];
+                    /* open the progress dialog */
+                    hProgDlg = CreateDialog(GetModuleHandle(NULL), 
+                                            MAKEINTRESOURCE(IDD_DLG_PROGRESS),
+                                            hMainWnd, 
+                                            (DLGPROC)ProgressDialogProc);
+                    if (hProgDlg != NULL)
+                    {
+                        ShowWindow(hProgDlg, SW_SHOW);
+
+                        /* write the  info to the progress dialog */
+                        LoadString(hInstance, IDS_PROGRESS_INFO, buf1,
+                            sizeof(buf1) / sizeof(TCHAR));
+                        _sntprintf(buf2, 100, buf1, _T("start"));
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_INFO, WM_SETTEXT, 0, (LPARAM)buf2);
+
+                        /* get pointer to selected service */
+                        Service = GetSelectedService();
+
+                        /* write the service name to the progress dialog */
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_NAME, WM_SETTEXT, 0, 
+                            (LPARAM)Service->lpServiceName);
+                    }
+
+                    if ( DoStartService(hProgDlg) )
                     {
                         LVITEM item;
                         TCHAR szStatus[64];
@@ -355,10 +383,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                         item.iSubItem = 2;
                         SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                     }
+
+                    SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+                }
 			    break;
 
                 case ID_STOP:
-                    if( Control(SERVICE_CONTROL_STOP) )
+                {
+                    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
+                    TCHAR buf1[100];
+                    TCHAR buf2[100];
+                    /* open the progress dialog */
+                    hProgDlg = CreateDialog(GetModuleHandle(NULL), 
+                                            MAKEINTRESOURCE(IDD_DLG_PROGRESS),
+                                            hMainWnd, 
+                                            (DLGPROC)ProgressDialogProc);
+                    if (hProgDlg != NULL)
+                    {
+                        ShowWindow(hProgDlg, SW_SHOW);
+
+                        /* write the  info to the progress dialog */
+                        LoadString(hInstance, IDS_PROGRESS_INFO, buf1,
+                            sizeof(buf1) / sizeof(TCHAR));
+                        _sntprintf(buf2, 100, buf1, _T("stop"));
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_INFO, WM_SETTEXT, 0, (LPARAM)buf2);
+
+                        /* get pointer to selected service */
+                        Service = GetSelectedService();
+
+                        /* write the service name to the progress dialog */
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_NAME, WM_SETTEXT, 0, 
+                            (LPARAM)Service->lpServiceName);
+                    }
+
+                    if( Control(hProgDlg, SERVICE_CONTROL_STOP) )
                     {
                         LVITEM item;
 
@@ -367,39 +425,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                         item.iSubItem = 2;
                         SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                     }
+
+                    SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+                }
                 break;
 
                 case ID_PAUSE:
-                    Control(SERVICE_CONTROL_PAUSE);
+                    Control(hProgDlg, SERVICE_CONTROL_PAUSE);
                 break;
 
                 case ID_RESUME:
-                    Control(SERVICE_CONTROL_CONTINUE );
+                    Control(hProgDlg, SERVICE_CONTROL_CONTINUE );
                 break;
 
                 case ID_RESTART:
-                    if( Control(SERVICE_CONTROL_STOP) )
-                    {
-                        LVITEM item;
-
-                        item.pszText = '\0';
-                        item.iItem = GetSelectedItem();
-                        item.iSubItem = 2;
-                        SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-
-                        if ( DoStartService() )
-                        {
-                            LVITEM item;
-                            TCHAR szStatus[64];
-
-                            LoadString(hInstance, IDS_SERVICES_STARTED, szStatus,
-                                sizeof(szStatus) / sizeof(TCHAR));
-                            item.pszText = szStatus;
-                            item.iItem = GetSelectedItem();
-                            item.iSubItem = 2;
-                            SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
-                        }
-                    }
+                    SendMessage(hMainWnd, WM_COMMAND, 0, ID_STOP);
+                    SendMessage(hMainWnd, WM_COMMAND, 0, ID_START);
                 break;
 
                 case ID_NEW:
@@ -420,8 +461,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case ID_ABOUT:
                     DialogBox(hInstance,
                               MAKEINTRESOURCE(IDD_ABOUTBOX),
-                              hwnd,
-                              AboutDialogProc);
+                              hMainWnd,
+                              (DLGPROC)AboutDialogProc);
                  break;
 
 		    }
@@ -497,8 +538,11 @@ int WINAPI WinMain(HINSTANCE hThisInstance, HINSTANCE hPrevInstance,
 
     while( GetMessage( &Msg, NULL, 0, 0 ) )
     {
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
+        if(! IsDialogMessage(hProgDlg, &Msg) )
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
 
     }
     return (int)Msg.wParam;

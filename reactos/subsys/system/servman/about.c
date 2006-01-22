@@ -50,5 +50,5 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    return 0;
+    return FALSE;
 }

@@ -24,6 +24,24 @@ VOID FreeMemory(VOID)
 }
 
 
+
+ENUM_SERVICE_STATUS_PROCESS* 
+GetSelectedService(VOID)
+{
+    ENUM_SERVICE_STATUS_PROCESS *pSelectedService = NULL;
+    LVITEM item;
+
+    item.mask = LVIF_PARAM;
+    item.iItem = GetSelectedItem();
+    SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
+
+    /* copy pointer to selected service */
+    pSelectedService = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
+
+    return pSelectedService;
+}
+
+
 /* Retrives the service description from the registry */
 BOOL GetDescription(HKEY hKey, LPTSTR *retDescription)
 {

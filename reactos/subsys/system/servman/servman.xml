@@ -16,6 +16,7 @@
 		<file>about.c</file>
 		<file>control.c</file>
 		<file>geterror.c</file>
+		<file>progress.c</file>
 		<file>propsheet.c</file>
 		<file>query.c</file>
 		<file>servman.c</file>

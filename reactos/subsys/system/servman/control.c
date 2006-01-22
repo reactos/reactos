@@ -12,13 +12,17 @@
 extern HWND hListView;
 
 
-BOOL Control(DWORD Control)
+BOOL Control(HWND hProgDlg, DWORD Control)
 {
+    HWND hProgBar;
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
+    SERVICE_STATUS_PROCESS ServiceStatus;
     SERVICE_STATUS Status;
     LVITEM item;
+    DWORD BytesNeeded = 0;
+    DWORD Loop = 5; //FIXME: testing value. needs better control
 
     item.mask = LVIF_PARAM;
     item.iItem = GetSelectedItem();
@@ -26,6 +30,11 @@ BOOL Control(DWORD Control)
 
     /* copy pointer to selected service */
     Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
+
+    /* set the progress bar range and step */
+    hProgBar = GetDlgItem(hProgDlg, IDC_SERVCON_PROGRESS);
+    SendMessage(hProgBar, PBM_SETRANGE, 0, MAKELPARAM(0, Loop));
+    SendMessage(hProgBar, PBM_SETSTEP, (WPARAM)1, 0);
 
     /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
@@ -37,7 +46,7 @@ BOOL Control(DWORD Control)
 
     /* open handle to the service */
     hSc = OpenService(hSCManager, Service->lpServiceName,
-                      SERVICE_PAUSE_CONTINUE | SERVICE_STOP);
+                      SC_MANAGER_ALL_ACCESS);
     if (hSc == NULL)
     {
         GetError(0);
@@ -52,8 +61,50 @@ BOOL Control(DWORD Control)
         return FALSE;
     }
 
+    /* query the state of the service */
+    if (! QueryServiceStatusEx(hSc,
+                               SC_STATUS_PROCESS_INFO,
+                               (LPBYTE)&ServiceStatus,
+                               sizeof(SERVICE_STATUS_PROCESS),
+                               &BytesNeeded))
+    {
+        GetError(0);
+        return FALSE;
+    }
+
+    /* loop whilst service is not running */
+    /* FIXME: needs more control adding. 'Loop' is temparary */
+    while (ServiceStatus.dwCurrentState != Control || !Loop)
+    {
+        /* increment the progress bar */
+        SendMessage(hProgBar, PBM_STEPIT, 0, 0);
+
+        /* wait before checking status */
+        Sleep(ServiceStatus.dwWaitHint / 8);
+
+        /* check status again */
+        if (! QueryServiceStatusEx(
+                hSc,
+                SC_STATUS_PROCESS_INFO,
+                (LPBYTE)&ServiceStatus,
+                sizeof(SERVICE_STATUS_PROCESS),
+                &BytesNeeded))
+        {
+            GetError(0);
+            return FALSE;
+        }
+        Loop--;
+    }
+
     CloseServiceHandle(hSc);
 
-    return TRUE;
+    if (ServiceStatus.dwCurrentState == Control)
+    {
+        SendMessage(hProgBar, PBM_DELTAPOS, Loop, 0);
+        Sleep(1000);
+        return TRUE;
+    }
+    else
+        return FALSE;
 
 }
