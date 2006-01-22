@@ -49,20 +49,6 @@ typedef struct _KERNEL32_FIND_DATA_HEADER
 
 /* FUNCTIONS ****************************************************************/
 
-static __inline PKERNEL32_FIND_FILE_DATA
-HandleToFindData(IN HANDLE Handle)
-{
-    PKERNEL32_FIND_DATA_HEADER FindData = (PKERNEL32_FIND_DATA_HEADER)Handle;
-
-    if (Handle != NULL && Handle != INVALID_HANDLE_VALUE &&
-        FindData->Type == FileFind)
-    {
-        return (PKERNEL32_FIND_FILE_DATA)(FindData + 1);
-    }
-
-    return NULL;
-}
-
 VOID
 InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
                       PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
@@ -335,6 +321,7 @@ InternalFindFirstFile (
 	                  0,
 	                  SlashlessFileName);
 	   }
+           SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	   return NULL;
 	}
 
