@@ -52,13 +52,15 @@ AccRewriteGetHandleRights(HANDLE handle,
     ULONG SDSize = 0;
     NTSTATUS Status;
     DWORD LastErr;
-    DWORD Ret = ERROR_SUCCESS;
+    DWORD Ret;
 
     /* save the last error code */
     LastErr = GetLastError();
 
     do
     {
+        Ret = ERROR_SUCCESS;
+
         /* allocate a buffer large enough to hold the
            security descriptor we need to return */
         SDSize += 0x100;
@@ -89,14 +91,15 @@ AccRewriteGetHandleRights(HANDLE handle,
         {
             case SE_REGISTRY_KEY:
             {
-                Ret = RegGetKeySecurity((HKEY)handle,
-                                        SecurityInfo,
-                                        pSD,
-                                        &SDSize);
+                Ret = (DWORD)RegGetKeySecurity((HKEY)handle,
+                                               SecurityInfo,
+                                               pSD,
+                                               &SDSize);
                 break;
             }
 
             case SE_FILE_OBJECT:
+                /* FIXME - handle console handles? */
             case SE_KERNEL_OBJECT:
             {
                 Status = NtQuerySecurityObject(handle,
@@ -104,27 +107,36 @@ AccRewriteGetHandleRights(HANDLE handle,
                                                pSD,
                                                SDSize,
                                                &SDSize);
-                Ret = RtlNtStatusToDosError(Status);
+                if (!NT_SUCCESS(Status))
+                {
+                    Ret = RtlNtStatusToDosError(Status);
+                }
                 break;
             }
 
             case SE_SERVICE:
             {
-                Ret = QueryServiceObjectSecurity((SC_HANDLE)handle,
-                                                 SecurityInfo,
-                                                 pSD,
-                                                 SDSize,
-                                                 &SDSize);
+                if (!QueryServiceObjectSecurity((SC_HANDLE)handle,
+                                                SecurityInfo,
+                                                pSD,
+                                                SDSize,
+                                                &SDSize))
+                {
+                    Ret = GetLastError();
+                }
                 break;
             }
 
             case SE_WINDOW_OBJECT:
             {
-                Ret = GetUserObjectSecurity(handle,
-                                            &SecurityInfo,
-                                            pSD,
-                                            SDSize,
-                                            &SDSize);
+                if (!GetUserObjectSecurity(handle,
+                                           &SecurityInfo,
+                                           pSD,
+                                           SDSize,
+                                           &SDSize))
+                {
+                    Ret = GetLastError();
+                }
                 break;
             }
 
@@ -221,8 +233,73 @@ AccRewriteSetHandleRights(HANDLE handle,
                           SECURITY_INFORMATION SecurityInfo,
                           PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    DWORD LastErr;
+    DWORD Ret = ERROR_SUCCESS;
+
+    /* save the last error code */
+    LastErr = GetLastError();
+
+    /* set the security according to the object type */
+    switch (ObjectType)
+    {
+        case SE_REGISTRY_KEY:
+        {
+            Ret = (DWORD)RegSetKeySecurity((HKEY)handle,
+                                           SecurityInfo,
+                                           pSecurityDescriptor);
+            break;
+        }
+
+        case SE_FILE_OBJECT:
+            /* FIXME - handle console handles? */
+        case SE_KERNEL_OBJECT:
+        {
+            Status = NtSetSecurityObject(handle,
+                                         SecurityInfo,
+                                         pSecurityDescriptor);
+            if (!NT_SUCCESS(Status))
+            {
+                Ret = RtlNtStatusToDosError(Status);
+            }
+            break;
+        }
+
+        case SE_SERVICE:
+        {
+            if (!SetServiceObjectSecurity((SC_HANDLE)handle,
+                                          SecurityInfo,
+                                          pSecurityDescriptor))
+            {
+                Ret = GetLastError();
+            }
+            break;
+        }
+
+        case SE_WINDOW_OBJECT:
+        {
+            if (!SetUserObjectSecurity(handle,
+                                       &SecurityInfo,
+                                       pSecurityDescriptor))
+            {
+                Ret = GetLastError();
+            }
+            break;
+        }
+
+        default:
+        {
+            UNIMPLEMENTED;
+            Ret = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+    }
+
+
+    /* restore the last error code */
+    SetLastError(LastErr);
+
+    return Ret;
 }
 
 
@@ -362,9 +439,9 @@ DllMain(IN HINSTANCE hinstDLL,
     {
         case DLL_PROCESS_ATTACH:
             hDllInstance = hinstDLL;
+            DisableThreadLibraryCalls(hinstDLL);
             break;
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
+
         case DLL_PROCESS_DETACH:
             break;
     }
