@@ -62,7 +62,7 @@ AccRewriteGetHandleRights(HANDLE handle,
         /* allocate a buffer large enough to hold the
            security descriptor we need to return */
         SDSize += 0x100;
-        if (pSD != NULL)
+        if (pSD == NULL)
         {
             pSD = LocalAlloc(LMEM_FIXED,
                              (SIZE_T)SDSize);
