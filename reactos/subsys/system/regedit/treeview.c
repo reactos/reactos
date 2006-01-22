@@ -414,7 +414,7 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
 
     /* Create the image list.  */
     if ((himl = ImageList_Create(CX_ICON, CY_ICON,
-                                 ILC_MASK, 0, NUM_ICONS)) == NULL)
+                                 ILC_MASK|ILC_COLOR32, 0, NUM_ICONS)) == NULL)
         return FALSE;
 
     /* Add the open file, closed file, and document bitmaps.  */
