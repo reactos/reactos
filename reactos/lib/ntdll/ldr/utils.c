@@ -640,10 +640,14 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
     {
       DPRINT1("Dll open of %wZ failed: Status = 0x%08lx\n",
                &FullNtFileName, Status);
-      RtlFreeUnicodeString (&FullNtFileName);
+      RtlFreeHeap (RtlGetProcessHeap (),
+                   0,
+                   FullNtFileName.Buffer);
       return Status;
     }
-  RtlFreeUnicodeString (&FullNtFileName);
+  RtlFreeHeap (RtlGetProcessHeap (),
+               0,
+               FullNtFileName.Buffer);
 
   Status = NtReadFile(FileHandle,
                       NULL,

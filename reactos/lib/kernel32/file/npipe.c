@@ -215,7 +215,9 @@ CreateNamedPipeW(LPCWSTR lpName,
     }
 
     /* Free the name */
-    RtlFreeUnicodeString(&NamedPipeName);
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                NamedPipeName.Buffer);
 
     /* Check status */
     if (!NT_SUCCESS(Status))

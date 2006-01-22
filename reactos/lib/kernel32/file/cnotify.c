@@ -99,15 +99,9 @@ FindFirstChangeNotificationW (
    -Gunnar
    */
 
-
-
-   /* FIXME: We free the string alloced by RtlDosPathNameToNtPathName_U, but what
-    * about the special case where the user can pass a \\?\ path? We must not free
-    * the users buffer!. But should we even call RtlDosPathNameToNtPathName_U in that
-    * case??? -Gunnar
-    */
-
-   RtlFreeUnicodeString( &NtPathU);
+   RtlFreeHeap(RtlGetProcessHeap(),
+               0,
+               NtPathU.Buffer);
 
 
 

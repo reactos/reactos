@@ -66,7 +66,9 @@ InternalOpenDirW(LPCWSTR DirName,
 			    NULL,
 			    0);
 
-    RtlFreeUnicodeString(&NtPathU);
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                NtPathU.Buffer);
 
     if (!NT_SUCCESS(errCode))
     {

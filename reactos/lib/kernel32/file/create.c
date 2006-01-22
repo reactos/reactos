@@ -104,19 +104,6 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
         return (INVALID_HANDLE_VALUE);
      }
 
-   /* validate & translate the filename */
-   if (!RtlDosPathNameToNtPathName_U (lpFileName,
-				      &NtPathU,
-				      NULL,
-				      NULL))
-   {
-     DPRINT("Invalid path\n");
-     SetLastError(ERROR_PATH_NOT_FOUND);
-     return INVALID_HANDLE_VALUE;
-   }
-
-   DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
-
   /* validate & translate the flags */
 
    /* translate the flags that need no validation */
@@ -209,6 +196,19 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
       }
    }
 
+   /* validate & translate the filename */
+   if (!RtlDosPathNameToNtPathName_U (lpFileName,
+				      &NtPathU,
+				      NULL,
+				      NULL))
+   {
+     DPRINT("Invalid path\n");
+     SetLastError(ERROR_PATH_NOT_FOUND);
+     return INVALID_HANDLE_VALUE;
+   }
+
+   DPRINT("NtPathU \'%wZ\'\n", &NtPathU);
+
    if (hTemplateFile != NULL)
    {
       FILE_EA_INFORMATION EaInformation;
@@ -230,6 +230,10 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
                                        EaInformation.EaSize);
             if (EaBuffer == NULL)
             {
+               RtlFreeHeap(RtlGetProcessHeap(),
+                           0,
+                           NtPathU.Buffer);
+
                /* the template file handle is valid and has extended attributes,
                   however we seem to lack some memory here. We should fail here! */
                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -309,7 +313,9 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 			  EaBuffer,
 			  EaLength);
 
-   RtlFreeUnicodeString(&NtPathU);
+   RtlFreeHeap(RtlGetProcessHeap(),
+               0,
+               NtPathU.Buffer);
 
    /* free the extended attributes buffer if allocated */
    if (EaBuffer != NULL)
@@ -370,7 +376,7 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
     HANDLE hSymlink = NULL;
     UNICODE_STRING SymlinkFileName = { 0, 0, NULL };
     UNICODE_STRING TargetFileName = { 0, 0, NULL };
-    BOOLEAN bRelativePath = FALSE;
+    BOOLEAN bAllocatedTarget = FALSE, bRelativePath = FALSE;
     LPWSTR lpTargetFullFileName = NULL;
     SIZE_T cbPrintName;
     SIZE_T cbReparseData;
@@ -439,6 +445,7 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
     default:
         if(!RtlDosPathNameToNtPathName_U(lpTargetFileName, &TargetFileName, NULL, NULL))
         {
+            bAllocatedTarget = TRUE;
             dwErr = ERROR_INVALID_PARAMETER;
             goto Cleanup;
         }
@@ -535,7 +542,12 @@ Cleanup:
         NtClose(hSymlink);
 
     RtlFreeUnicodeString(&SymlinkFileName);
-    RtlFreeUnicodeString(&TargetFileName);
+    if (bAllocatedTarget)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    TargetFileName.Buffer);
+    }
 
     if(lpTargetFullFileName)
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpTargetFullFileName);

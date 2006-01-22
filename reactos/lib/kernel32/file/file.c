@@ -309,7 +309,9 @@ OpenFile(LPCSTR lpFileName,
 
 	if ((uStyle & OF_PARSE) == OF_PARSE)
 	{
-		RtlFreeUnicodeString(&FileNameString);
+		RtlFreeHeap(RtlGetProcessHeap(),
+                            0,
+                            FileNameString.Buffer);
 		return (HFILE)NULL;
 	}
 
@@ -327,7 +329,9 @@ OpenFile(LPCSTR lpFileName,
 	                      FILE_SHARE_READ,
 	                      FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
 
-	RtlFreeUnicodeString(&FileNameString);
+	RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    FileNameString.Buffer);
 
 	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
 

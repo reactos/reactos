@@ -203,9 +203,14 @@ SmLoadKnownDlls(VOID)
 		      &IoStatusBlock,
 		      FILE_SHARE_READ | FILE_SHARE_WRITE,
 		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+
+  RtlFreeHeap(RtlGetProcessHeap(),
+              0,
+              DllNtPath.Buffer);
+
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtOpenFile(%wZ) failed (Status %lx)\n", &DllNtPath, Status);
+      DPRINT1("NtOpenFile failed (Status %lx)\n", Status);
       return Status;
     }
 

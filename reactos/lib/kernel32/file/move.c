@@ -81,7 +81,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     UNICODE_STRING nameW, source_name, dest_name;
     KEY_VALUE_PARTIAL_INFORMATION *info;
     BOOL rc = FALSE;
-    HANDLE Reboot = 0;
+    HANDLE Reboot = NULL;
     DWORD len1, len2;
     DWORD DataSize = 0;
     BYTE *Buffer = NULL;
@@ -98,7 +98,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     dest_name.Buffer = NULL;
     if (dest && !RtlDosPathNameToNtPathName_U( dest, &dest_name, NULL, NULL ))
     {
-        RtlFreeUnicodeString( &source_name );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, source_name.Buffer );
         SetLastError( ERROR_PATH_NOT_FOUND );
         return FALSE;
     }
@@ -120,8 +120,8 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status 0x%lx)\n", Status);
-        RtlFreeUnicodeString( &source_name );
-        RtlFreeUnicodeString( &dest_name );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, source_name.Buffer );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, dest_name.Buffer );
         return FALSE;
     }
 
@@ -176,11 +176,11 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     *p = 0;
     DataSize += sizeof(WCHAR);
 
-    rc = !NtSetValueKey(Reboot, &nameW, 0, REG_MULTI_SZ, Buffer + info_size, DataSize - info_size);
+    rc = NT_SUCCESS(NtSetValueKey(Reboot, &nameW, 0, REG_MULTI_SZ, Buffer + info_size, DataSize - info_size));
 
  Quit:
-    RtlFreeUnicodeString( &source_name );
-    RtlFreeUnicodeString( &dest_name );
+    RtlFreeHeap( RtlGetProcessHeap(), 0, source_name.Buffer );
+    RtlFreeHeap( RtlGetProcessHeap(), 0, dest_name.Buffer );
     if (Reboot) NtClose(Reboot);
     HeapFree( GetProcessHeap(), 0, Buffer );
     return(rc);

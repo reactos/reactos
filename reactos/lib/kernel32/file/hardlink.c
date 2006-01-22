@@ -181,7 +181,7 @@ CreateHardLinkW(LPCWSTR lpFileName,
     {
       SetLastError(ERROR_INVALID_NAME);
     }
-    RtlFreeUnicodeString(&LinkTarget);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkTarget.Buffer);
   }
   else
   {

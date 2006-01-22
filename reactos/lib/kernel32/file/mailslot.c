@@ -99,7 +99,9 @@ CreateMailslotW(LPCWSTR lpName,
 				 nMaxMessageSize,
 				 &DefaultTimeOut);
 
-   RtlFreeUnicodeString(&MailslotName);
+   RtlFreeHeap(RtlGetProcessHeap(),
+               0,
+               MailslotName.Buffer);
 
    if (!NT_SUCCESS(Status))
      {

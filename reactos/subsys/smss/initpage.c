@@ -162,7 +162,9 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
                             NULL,
                             0);
 
-      RtlFreeUnicodeString(&NtPathU);
+      RtlFreeHeap(RtlGetProcessHeap(),
+                  0,
+                  NtPathU.Buffer);
 
       if (!NT_SUCCESS(Status))
         {
@@ -230,7 +232,9 @@ SmpPagingFilesQueryRoutine(PWSTR ValueName,
     }
 
 Cleanup:
-  RtlFreeUnicodeString(&FileName);
+  RtlFreeHeap(RtlGetProcessHeap(),
+              0,
+              FileName.Buffer);
 
   return STATUS_SUCCESS;
 }
