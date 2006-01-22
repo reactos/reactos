@@ -11,6 +11,7 @@
 
 #define MAX_KEY_LENGTH 256
 #define NUM_BUTTONS 13
+#define PROGRESSRANGE 8
 
 BOOL RefreshServiceList(VOID);
 

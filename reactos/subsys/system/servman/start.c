@@ -21,7 +21,6 @@ BOOL DoStartService(HWND hProgDlg)
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     DWORD BytesNeeded = 0;
     INT ArgCount = 0;
-    DWORD Loop = 5; //FIXME: testing value. needs better control
     DWORD dwStartTickCount, dwOldCheckPoint;
 
     /* copy pointer to selected service */
@@ -29,7 +28,7 @@ BOOL DoStartService(HWND hProgDlg)
 
     /* set the progress bar range and step */
     hProgBar = GetDlgItem(hProgDlg, IDC_SERVCON_PROGRESS);
-    SendMessage(hProgBar, PBM_SETRANGE, 0, MAKELPARAM(0, Loop));
+    SendMessage(hProgBar, PBM_SETRANGE, 0, MAKELPARAM(0, PROGRESSRANGE));
     SendMessage(hProgBar, PBM_SETSTEP, (WPARAM)1, 0);
 
     /* open handle to the SCM */
@@ -72,7 +71,7 @@ BOOL DoStartService(HWND hProgDlg)
 
     /* loop whilst service is not running */
     /* FIXME: needs more control adding. 'Loop' is temparary */
-    while (ServiceStatus.dwCurrentState != SERVICE_RUNNING || !Loop)
+    while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
     {
         DWORD dwWaitTime;
 
@@ -122,7 +121,7 @@ BOOL DoStartService(HWND hProgDlg)
 
     if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
     {
-        SendMessage(hProgBar, PBM_DELTAPOS, Loop, 0);
+        SendMessage(hProgBar, PBM_DELTAPOS, PROGRESSRANGE, 0);
         Sleep(1000);
         return TRUE;
     }
