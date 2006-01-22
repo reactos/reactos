@@ -372,8 +372,7 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
   PAGED_CODE();
 
   if(CapturedSecurityQualityOfService != NULL &&
-     (AccessMode != KernelMode ||
-      (AccessMode == KernelMode && CaptureIfKernel)))
+     (AccessMode != KernelMode || CaptureIfKernel))
   {
     ExFreePool(CapturedSecurityQualityOfService);
   }
@@ -551,10 +550,6 @@ SeCaptureSecurityDescriptor(
           ProbeForRead(SidType,                                                \
                        SidType##Size,                                          \
                        sizeof(ULONG));                                         \
-          if(!RtlValidSid(SidType))                                            \
-          {                                                                    \
-            Status = STATUS_INVALID_SID;                                       \
-          }                                                                    \
         }                                                                      \
         _SEH_HANDLE                                                            \
         {                                                                      \
@@ -600,10 +595,6 @@ SeCaptureSecurityDescriptor(
           ProbeForRead(AclType,                                                \
                        AclType##Size,                                          \
                        sizeof(ULONG));                                         \
-          if(!RtlValidAcl(AclType))                                            \
-          {                                                                    \
-            Status = STATUS_INVALID_ACL;                                       \
-          }                                                                    \
         }                                                                      \
         _SEH_HANDLE                                                            \
         {                                                                      \
@@ -648,8 +639,10 @@ SeCaptureSecurityDescriptor(
       {
         /* setup the offsets and copy the SIDs and ACLs to the new
            self-relative security descriptor. Probing the pointers is not
-           neccessary anymore as we did that when collecting the sizes! */
-#define CopySIDOrACL(Type)                                                     \
+           neccessary anymore as we did that when collecting the sizes!
+           Make sure to validate the SIDs and ACLs *again* as they could have
+           been modified in the meanwhile! */
+#define CopySID(Type)                                                          \
         do {                                                                   \
         if(DescriptorCopy.Type != NULL)                                        \
         {                                                                      \
@@ -658,14 +651,38 @@ SeCaptureSecurityDescriptor(
                                 (ULONG_PTR)NewDescriptor->Type),               \
                         DescriptorCopy.Type,                                   \
                         Type##Size);                                           \
+          if (!RtlValidSid((PSID)((ULONG_PTR)NewDescriptor +                   \
+                                  (ULONG_PTR)NewDescriptor->Type)))            \
+          {                                                                    \
+            RtlRaiseStatus(STATUS_INVALID_SID);                                \
+          }                                                                    \
           Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
         }                                                                      \
         } while(0)
 
-        CopySIDOrACL(Owner);
-        CopySIDOrACL(Group);
-        CopySIDOrACL(Sacl);
-        CopySIDOrACL(Dacl);
+        CopySID(Owner);
+        CopySID(Group);
+
+#define CopyACL(Type)                                                          \
+        do {                                                                   \
+        if(DescriptorCopy.Type != NULL)                                        \
+        {                                                                      \
+          NewDescriptor->Type = (PVOID)Offset;                                 \
+          RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor +                     \
+                                (ULONG_PTR)NewDescriptor->Type),               \
+                        DescriptorCopy.Type,                                   \
+                        Type##Size);                                           \
+          if (!RtlValidAcl((PACL)((ULONG_PTR)NewDescriptor +                   \
+                                  (ULONG_PTR)NewDescriptor->Type)))            \
+          {                                                                    \
+            RtlRaiseStatus(STATUS_INVALID_ACL);                                \
+          }                                                                    \
+          Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
+        }                                                                      \
+        } while(0)
+
+        CopyACL(Sacl);
+        CopyACL(Dacl);
       }
       _SEH_HANDLE
       {
