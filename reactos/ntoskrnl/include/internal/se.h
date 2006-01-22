@@ -153,7 +153,7 @@ SeCaptureLuidAndAttributesArray(
     PLUID_AND_ATTRIBUTES AllocatedMem,
     ULONG AllocatedLength,
     POOL_TYPE PoolType,
-    ULONG d,
+    BOOLEAN CaptureIfKernel,
     PLUID_AND_ATTRIBUTES* Dest,
     PULONG Length
 );
@@ -163,7 +163,7 @@ NTAPI
 SeReleaseLuidAndAttributesArray(
     PLUID_AND_ATTRIBUTES Privilege,
     KPROCESSOR_MODE PreviousMode,
-    ULONG a
+    BOOLEAN CaptureIfKernel
 );
 
 BOOLEAN

@@ -180,51 +180,96 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
 				 PLUID_AND_ATTRIBUTES AllocatedMem,
 				 ULONG AllocatedLength,
 				 POOL_TYPE PoolType,
-				 ULONG d,
+				 BOOLEAN CaptureIfKernel,
 				 PLUID_AND_ATTRIBUTES* Dest,
 				 PULONG Length)
 {
-  PLUID_AND_ATTRIBUTES* NewMem;
-  ULONG SrcLength;
+    ULONG BufferSize;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  if (PrivilegeCount == 0)
+    if (PrivilegeCount == 0)
     {
-      *Dest = 0;
-      *Length = 0;
-      return STATUS_SUCCESS;
+        *Dest = 0;
+        *Length = 0;
+        return STATUS_SUCCESS;
     }
 
-  if (PreviousMode == KernelMode && d == 0)
+    if (PreviousMode == KernelMode && !CaptureIfKernel)
     {
-      *Dest = Src;
-      return STATUS_SUCCESS;
+        *Dest = Src;
+        return STATUS_SUCCESS;
     }
 
-  SrcLength = ((PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES)) + 3) & 0xfc;
-  *Length = SrcLength;
-  if (AllocatedMem == NULL)
-    {
-      NewMem = ExAllocatePool (PoolType,
-			       SrcLength);
-      *Dest = (PLUID_AND_ATTRIBUTES)NewMem;
-      if (NewMem == NULL)
-	{
-	  return STATUS_UNSUCCESSFUL;
-	}
-    }
-  else
-    {
-      if (SrcLength > AllocatedLength)
-	{
-	  return STATUS_UNSUCCESSFUL;
-	}
-      *Dest = AllocatedMem;
-    }
-  memmove (*Dest, Src, SrcLength);
+    /* FIXME - check PrivilegeCount for a valid number so we don't
+               cause an integer overflow or exhaust system resources! */
 
-  return STATUS_SUCCESS;
+    BufferSize = PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+    *Length = ROUND_UP(BufferSize, 4); /* round up to a 4 byte alignment */
+
+    /* probe the buffer */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForRead(Src,
+                         BufferSize,
+                         sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* allocate enough memory or check if the provided buffer is
+       large enough to hold the array */
+    if (AllocatedMem != NULL)
+    {
+        if (AllocatedLength < BufferSize)
+        {
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        *Dest = AllocatedMem;
+    }
+    else
+    {
+        *Dest = ExAllocatePool(PoolType,
+                               BufferSize);
+
+        if (&Dest == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+    /* copy the array to the buffer */
+    _SEH_TRY
+    {
+        RtlCopyMemory(*Dest,
+                      Src,
+                      BufferSize);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status) && AllocatedMem == NULL)
+    {
+        ExFreePool(*Dest);
+    }
+
+    return Status;
 }
 
 
@@ -232,11 +277,15 @@ VOID
 NTAPI
 SeReleaseLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Privilege,
 				 KPROCESSOR_MODE PreviousMode,
-				 ULONG a)
+				 BOOLEAN CaptureIfKernel)
 {
-  PAGED_CODE();
+    PAGED_CODE();
 
-  ExFreePool (Privilege);
+    if (Privilege != NULL &&
+        (PreviousMode != KernelMode || CaptureIfKernel))
+    {
+        ExFreePool(Privilege);
+    }
 }
 
 
@@ -245,18 +294,58 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
 		  IN PPRIVILEGE_SET RequiredPrivileges,
 		  IN PBOOLEAN Result)
 {
-  PLUID_AND_ATTRIBUTES Privilege;
+  PLUID_AND_ATTRIBUTES Privileges;
   PTOKEN Token;
-  ULONG PrivilegeCount;
-  ULONG PrivilegeControl;
+  ULONG PrivilegeCount = 0;
+  ULONG PrivilegeControl = 0;
   ULONG Length;
+  BOOLEAN CheckResult;
   KPROCESSOR_MODE PreviousMode;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
 
   PreviousMode = KeGetPreviousMode();
 
+  /* probe the buffers */
+  if (PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(RequiredPrivileges,
+                    sizeof(PRIVILEGE_SET),
+                    sizeof(ULONG));
+
+      PrivilegeCount = RequiredPrivileges->PrivilegeCount;
+      PrivilegeControl = RequiredPrivileges->Control;
+
+      /* probe all of the array */
+      ProbeForWrite(RequiredPrivileges,
+                    sizeof(FIELD_OFFSET(PRIVILEGE_SET,
+                                        Privilege[PrivilegeCount])),
+                    sizeof(ULONG));
+
+      ProbeForWriteBoolean(Result);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+  else
+  {
+    PrivilegeCount = RequiredPrivileges->PrivilegeCount;
+    PrivilegeControl = RequiredPrivileges->Control;
+  }
+
+  /* reference the token and make sure we're
+     not doing an anonymous impersonation */
   Status = ObReferenceObjectByHandle (ClientToken,
 				      TOKEN_QUERY,
 				      SepTokenObjectType,
@@ -269,45 +358,55 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
     }
 
   if (Token->TokenType == TokenImpersonation &&
-      Token->ImpersonationLevel < SecurityAnonymous)
+      Token->ImpersonationLevel < SecurityIdentification)
     {
       ObDereferenceObject (Token);
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_BAD_IMPERSONATION_LEVEL;
     }
 
-  PrivilegeCount = RequiredPrivileges->PrivilegeCount;
-  PrivilegeControl = RequiredPrivileges->Control;
-  Privilege = 0;
+  /* capture the privileges */
   Status = SeCaptureLuidAndAttributesArray (RequiredPrivileges->Privilege,
 					    PrivilegeCount,
-					    UserMode,
+					    PreviousMode,
 					    NULL,
 					    0,
 					    PagedPool,
-					    1,
-					    &Privilege,
+					    TRUE,
+					    &Privileges,
 					    &Length);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject (Token);
-      return STATUS_UNSUCCESSFUL;
+      return Status;
     }
 
-  *Result = SepPrivilegeCheck (Token,
-			       Privilege,
-			       PrivilegeCount,
-			       PrivilegeControl,
-			       UserMode);
+  CheckResult = SepPrivilegeCheck (Token,
+			           Privileges,
+			           PrivilegeCount,
+			           PrivilegeControl,
+			           PreviousMode);
 
-  memmove (RequiredPrivileges->Privilege,
-	   Privilege,
-	   Length);
+  ObDereferenceObject (Token);
 
-  SeReleaseLuidAndAttributesArray (Privilege,
-				   UserMode,
-				   1);
+  /* return the array */
+  _SEH_TRY
+  {
+      RtlCopyMemory(RequiredPrivileges->Privilege,
+                    Privileges,
+                    PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));;
+      Status = STATUS_SUCCESS;
+  }
+  _SEH_HANDLE
+  {
+      Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
 
-  return STATUS_SUCCESS;
+  SeReleaseLuidAndAttributesArray (Privileges,
+				   PreviousMode,
+				   TRUE);
+
+  return Status;
 }
 
 
