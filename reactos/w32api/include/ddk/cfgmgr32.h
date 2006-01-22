@@ -736,8 +736,75 @@ CM_Connect_MachineW(
 #define CM_Connect_Machine CM_Connect_MachineA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Create_DevNode */
-/* FIXME: Obsolete CM_Create_DevNodeEx */
+/* Flags for CM_Create_DevNode[_Ex].ulFlags constants */
+#define CM_CREATE_DEVNODE_NORMAL          0x00000000
+#define CM_CREATE_DEVNODE_NO_WAIT_INSTALL 0x00000001
+#define CM_CREATE_DEVNODE_PHANTOM         0x00000002
+#define CM_CREATE_DEVNODE_GENERATE_ID     0x00000004
+#define CM_CREATE_DEVNODE_DO_NOT_INSTALL  0x00000008
+#define CM_CREATE_DEVNODE_BITS            0x0000000F
+
+#define CM_CREATE_DEVINST_NORMAL          CM_CREATE_DEVNODE_NORMAL
+#define CM_CREATE_DEVINST_NO_WAIT_INSTALL CM_CREATE_DEVNODE_NO_WAIT_INSTALL
+#define CM_CREATE_DEVINST_PHANTOM         CM_CREATE_DEVNODE_PHANTOM
+#define CM_CREATE_DEVINST_GENERATE_ID     CM_CREATE_DEVNODE_GENERATE_ID
+#define CM_CREATE_DEVINST_DO_NOT_INSTALL  CM_CREATE_DEVNODE_DO_NOT_INSTALL
+#define CM_CREATE_DEVINST_BITS            CM_CREATE_DEVNODE_BITS
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Create_DevNodeA(
+  OUT PDEVINST  pdnDevInst,
+  IN DEVINSTID_A  pDeviceID,
+  IN DEVINST  dnParent,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Create_DevNodeW(
+  OUT PDEVINST  pdnDevInst,
+  IN DEVINSTID_W  pDeviceID,
+  IN DEVINST  dnParent,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Create_DevNode_ExA(
+  OUT PDEVINST  pdnDevInst,
+  IN DEVINSTID_A  pDeviceID,
+  IN DEVINST  dnParent,
+  IN ULONG  ulFlags,
+  IN HANDLE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Create_DevNode_ExW(
+  OUT PDEVINST  pdnDevInst,
+  IN DEVINSTID_W  pDeviceID,
+  IN DEVINST  dnParent,
+  IN ULONG  ulFlags,
+  IN HANDLE  hMachine);
+
+#define CM_Create_DevInstW CM_Create_DevNodeW
+#define CM_Create_DevInstA CM_Create_DevNodeA
+#define CM_Create_DevInst_ExW CM_Create_DevNode_ExW
+#define CM_Create_DevInst_ExA CM_Create_DevNode_ExA
+#ifdef UNICODE
+#define CM_Create_DevNode CM_Create_DevNodeW
+#define CM_Create_DevInst CM_Create_DevNodeW
+#define CM_Create_DevNode_Ex CM_Create_DevNode_ExW
+#define CM_Create_DevInst_Ex CM_Create_DevInst_ExW
+#else
+#define CM_Create_DevNode CM_Create_DevNodeA
+#define CM_Create_DevInst CM_Create_DevNodeA
+#define CM_Create_DevNode_Ex CM_Create_DevNode_ExA
+#define CM_Create_DevInst_Ex CM_Create_DevNode_ExA
+#endif /* UNICODE */
+
 /* FIXME: Obsolete CM_Create_Range_List */
 
 /* Flags for CM_Delete_Class_Key.ulFlags constants */

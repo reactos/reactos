@@ -893,6 +893,24 @@ PNP_DeleteClassKey(handle_t BindingHandle,
 }
 
 
+/* Function 28 */
+CONFIGRET
+PNP_CreateDevInst(handle_t BindingHandle,
+                  wchar_t *DeviceId,       /* [in, out, string, size_is(Length)] */
+                  wchar_t *ParentDeviceId, /* [in, string] */
+                  unsigned long Length,    /* [in] */
+                  unsigned long Flags)     /* [in] */
+{
+    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+
+    DPRINT1("PNP_CreateDevInst() called\n");
+
+    DPRINT1("PNP_CreateDevInst() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 29 */
 CONFIGRET
 PNP_DeviceInstanceAction(handle_t BindingHandle,

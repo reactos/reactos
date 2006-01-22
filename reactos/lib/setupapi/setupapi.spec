@@ -20,10 +20,10 @@
 @ stub CM_Add_Res_Des_Ex
 @ stdcall CM_Connect_MachineA(str ptr)
 @ stdcall CM_Connect_MachineW(wstr ptr)
-@ stub CM_Create_DevNodeA
-@ stub CM_Create_DevNodeW
-@ stub CM_Create_DevNode_ExA
-@ stub CM_Create_DevNode_ExW
+@ stdcall CM_Create_DevNodeA(ptr str long long)
+@ stdcall CM_Create_DevNodeW(ptr wstr long long)
+@ stdcall CM_Create_DevNode_ExA(ptr str long long long)
+@ stdcall CM_Create_DevNode_ExW(ptr wstr long long long)
 @ stub CM_Create_Range_List
 @ stdcall CM_Delete_Class_Key(ptr long)
 @ stdcall CM_Delete_Class_Key_Ex(ptr long long)

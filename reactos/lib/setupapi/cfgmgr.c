@@ -2,7 +2,7 @@
  * Configuration manager functions
  *
  * Copyright 2000 James Hatheway
- * Copyright 2005 Eric Kohl
+ * Copyright 2005, 2006 Eric Kohl
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -181,6 +181,125 @@ CONFIGRET WINAPI CM_Connect_MachineW(
     phMachine = (PHMACHINE)pMachine;
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Create_DevNodeA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Create_DevNodeA(
+    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, DEVINST dnParent,
+    ULONG ulFlags)
+{
+    TRACE("%p %s %p %lx\n",
+          pdnDevInst, debugstr_a(pDeviceID), dnParent, ulFlags);
+    return CM_Create_DevNode_ExA(pdnDevInst, pDeviceID, dnParent,
+                                 ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Create_DevNodeW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Create_DevNodeW(
+    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, DEVINST dnParent,
+    ULONG ulFlags)
+{
+    TRACE("%p %s %p %lx\n",
+          pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags);
+    return CM_Create_DevNode_ExW(pdnDevInst, pDeviceID, dnParent,
+                                 ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Create_DevNode_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Create_DevNode_ExA(
+    PDEVINST pdnDevInst, DEVINSTID_A pDeviceID, DEVINST dnParent,
+    ULONG ulFlags, HANDLE hMachine)
+{
+    DEVINSTID_W pDeviceIDW;
+    CONFIGRET ret;
+
+    TRACE("%p %s %p %lx %p\n",
+          pdnDevInst, debugstr_a(pDeviceID), dnParent, ulFlags, hMachine);
+
+    if (CaptureAndConvertAnsiArg(pDeviceID, &pDeviceIDW))
+        return CR_INVALID_DATA;
+
+    ret = CM_Create_DevNode_ExW(pdnDevInst, pDeviceIDW, dnParent, ulFlags,
+                                hMachine);
+
+    MyFree(pDeviceIDW);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Create_DevNode_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Create_DevNode_ExW(
+    PDEVINST pdnDevInst, DEVINSTID_W pDeviceID, DEVINST dnParent,
+    ULONG ulFlags, HANDLE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpParentDevInst;
+    CONFIGRET ret = CR_SUCCESS;
+
+    FIXME("%p %s %p %lx %p\n",
+          pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags, hMachine);
+
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
+
+    if (pdnDevInst == NULL)
+        return CR_INVALID_POINTER;
+
+    if (pDeviceID == NULL || wcslen(pDeviceID) == 0)
+        return CR_INVALID_DEVICE_ID;
+
+    if (dnParent == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_CREATE_DEVNODE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpParentDevInst = StringTableStringFromId(StringTable, dnParent);
+    if (lpParentDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ret = PNP_CreateDevInst(BindingHandle,
+                            pDeviceID,
+                            lpParentDevInst,
+                            MAX_DEVICE_ID_LEN,
+                            ulFlags);
+    if (ret == CR_SUCCESS)
+    {
+        *pdnDevInst = StringTableAddString(StringTable, pDeviceID, 1);
+        if (*pdnDevInst == 0)
+            ret = CR_NO_SUCH_DEVNODE;
+    }
+
+    return ret;
 }
 
 
