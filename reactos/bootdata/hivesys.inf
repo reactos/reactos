@@ -534,6 +534,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 
 ; Event logging service
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Description",0x00000000,"Enables event log messages issued by Windows-based programs and components to be viewed in Event Viewer. This service cannot be stopped"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event log"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
@@ -541,6 +542,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
 ; DHCP client service
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Manages network configuration by registering and updating IP addresses and DNS names"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\dhcp.exe"
@@ -683,6 +685,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 
 ; Plug and Play manager
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Enables a computer to recognize and adapt to hardware changes with little or no user input. Stopping or disabling this service will result in system instability."
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Group",0x00000000,"PlugPlay"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\umpnpmgr.exe"
@@ -690,6 +693,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 
 ; RPC service
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Enables a computer to recognize and adapt to hardware changes with little or no user input"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000004
@@ -766,7 +770,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 
 ; Windows Installer Service
-
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Adds, modifies, and removes applications provided as a Windows Installer (*.msi) package. If this service is disabled, any services that explicitly depend on it will fail to start."
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ErrorControl",0x00010001,0x00000001
