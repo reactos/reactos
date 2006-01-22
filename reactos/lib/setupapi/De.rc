@@ -1,7 +1,7 @@
 /*
  * German resources for SETUPAPI
  *
- * Copyright 2004 Henning Gerhardt
+ * Copyright 2004 Henning Gerhardt ( added some stuff in 2006-1-20 by Friedrich Stange (dj_smith_reactos@online.de) )
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,4 +31,10 @@ BEGIN
 	LTEXT "Ziel:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
 	CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_QUERY_REBOOT_TEXT        "Ihr Computer muss zum Beenden der Installation neugestartet werden. Wollen Sie fortfahren?"
+	IDS_QUERY_REBOOT_CAPTION     "Neustarten"
 END
