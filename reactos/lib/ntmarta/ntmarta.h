@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 #include <accctrl.h>
+#include <winsvc.h>
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS

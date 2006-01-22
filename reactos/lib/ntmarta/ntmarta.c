@@ -49,7 +49,7 @@ AccRewriteGetHandleRights(HANDLE handle,
                           PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR pSD = NULL;
-    ULONG RequiredSize, SDSize = 0;
+    ULONG SDSize = 0;
     NTSTATUS Status;
     DWORD LastErr;
     DWORD Ret = ERROR_SUCCESS;
@@ -57,59 +57,83 @@ AccRewriteGetHandleRights(HANDLE handle,
     /* save the last error code */
     LastErr = GetLastError();
 
-AllocBuffer:
-    /* allocate a buffer large enough to hold the
-       security descriptor we need to return */
-    SDSize += 0x100;
-    if (pSD != NULL)
+    do
     {
-        pSD = LocalAlloc(LMEM_FIXED,
-                         (SIZE_T)SDSize);
-    }
-    else
-    {
-        pSD = LocalReAlloc((HLOCAL)pSD,
-                           (SIZE_T)SDSize,
-                           LMEM_MOVEABLE);
-    }
-
-    if (pSD == NULL)
-    {
-        Ret = GetLastError();
-        goto Cleanup;
-    }
-
-    /* perform the actual query depending on the object type */
-    switch (ObjectType)
-    {
-        case SE_KERNEL_OBJECT:
+        /* allocate a buffer large enough to hold the
+           security descriptor we need to return */
+        SDSize += 0x100;
+        if (pSD != NULL)
         {
-            Status = NtQuerySecurityObject(handle,
-                                           SecurityInfo,
-                                           pSD,
-                                           SDSize,
-                                           &RequiredSize);
-            if (Status == STATUS_BUFFER_TOO_SMALL)
+            pSD = LocalAlloc(LMEM_FIXED,
+                             (SIZE_T)SDSize);
+        }
+        else
+        {
+            pSD = LocalReAlloc((HLOCAL)pSD,
+                               (SIZE_T)SDSize,
+                               LMEM_MOVEABLE);
+        }
+
+        if (pSD == NULL)
+        {
+            Ret = GetLastError();
+            break;
+        }
+
+        /* perform the actual query depending on the object type */
+        switch (ObjectType)
+        {
+            case SE_REGISTRY_KEY:
             {
-                /* not enough memory, increase the size of
-                   the buffer and try again */
-                ASSERT(RequiredSize > SDSize);
-                SDSize = RequiredSize;
-                goto AllocBuffer;
+                Ret = RegGetKeySecurity((HKEY)handle,
+                                        SecurityInfo,
+                                        pSD,
+                                        &SDSize);
+                break;
             }
-            Ret = RtlNtStatusToDosError(Status);
-            break;
+
+            case SE_FILE_OBJECT:
+            case SE_KERNEL_OBJECT:
+            {
+                Status = NtQuerySecurityObject(handle,
+                                               SecurityInfo,
+                                               pSD,
+                                               SDSize,
+                                               &SDSize);
+                Ret = RtlNtStatusToDosError(Status);
+                break;
+            }
+
+            case SE_SERVICE:
+            {
+                Ret = QueryServiceObjectSecurity((SC_HANDLE)handle,
+                                                 SecurityInfo,
+                                                 pSD,
+                                                 SDSize,
+                                                 &SDSize);
+                break;
+            }
+
+            case SE_WINDOW_OBJECT:
+            {
+                Ret = GetUserObjectSecurity(handle,
+                                            &SecurityInfo,
+                                            pSD,
+                                            SDSize,
+                                            &SDSize);
+                break;
+            }
+
+            default:
+            {
+                UNIMPLEMENTED;
+                Ret = ERROR_CALL_NOT_IMPLEMENTED;
+                break;
+            }
         }
 
-        default:
-        {
-            UNIMPLEMENTED;
-            Ret = ERROR_CALL_NOT_IMPLEMENTED;
-            break;
-        }
-    }
+    } while (Ret == ERROR_INSUFFICIENT_BUFFER);
 
-Cleanup:
     if (Ret == ERROR_SUCCESS)
     {
         *ppSecurityDescriptor = pSD;
