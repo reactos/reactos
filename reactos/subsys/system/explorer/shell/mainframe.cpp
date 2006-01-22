@@ -176,9 +176,9 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 	_htoolbar = CreateToolbarEx(hwnd, 
 #ifndef _NO_REBAR
-		CCS_NOPARENTALIGN|CCS_NORESIZE|
+		CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
 #endif
-		WS_CHILD|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR,
+		WS_CHILD|TBSTYLE_FLAT|WS_VISIBLE, IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR,
 		toolbarBtns, sizeof(toolbarBtns)/sizeof(TBBUTTON),
 		16, 15, 16, 15, sizeof(TBBUTTON));
 
@@ -222,8 +222,8 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 #ifndef _NO_REBAR
 	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL,
 					WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
-					RBS_VARHEIGHT|RBS_AUTOSIZE|RBS_DBLCLKTOGGLE|
-					CCS_NODIVIDER|CCS_NOPARENTALIGN,
+					RBS_VARHEIGHT|RBS_DBLCLKTOGGLE|
+					WS_BORDER|RBS_AUTOSIZE|RBS_BANDBORDERS,
 					0, 0, 0, 0, _hwnd, 0, g_Globals._hInstance, 0);
 
 	int btn_hgt = HIWORD(SendMessage(_htoolbar, TB_GETBUTTONSIZE, 0, 0));
@@ -246,7 +246,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	rbBand.lpText = NULL;//TEXT("Toolbar");
 	rbBand.hwndChild = _htoolbar;
 	rbBand.cxMinChild = 0;
-	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cyMinChild = btn_hgt;
 	rbBand.cx = 284;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif
@@ -283,8 +283,12 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 		return true;
 
 	  case WM_SHOWWINDOW:
-		if (wparam)	// trigger child resizing after window creation - now we can succesfully call IsWindowVisible()
+		if (wparam) 	// trigger child resizing after window creation - now we can succesfully call IsWindowVisible()
+        {
+            int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
+    		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
 			resize_frame_client();
+        }
 		return false; // goto def;
 
 	  case WM_CLOSE:
@@ -295,9 +299,12 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 	  case WM_DESTROY:
 		break;
 
-	  case WM_SIZE:
-		resize_frame(LOWORD(lparam), HIWORD(lparam));
-		break;	// do not pass message to DefFrameProc
+      case WM_SIZE:{
+        int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
+		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
+
+		//resize_frame(LOWORD(lparam), HIWORD(lparam));
+        break;}	// do not pass message to DefFrameProc
 
 	  case WM_GETMINMAXINFO: {
 		LPMINMAXINFO lpmmi = (LPMINMAXINFO)lparam;
@@ -467,7 +474,8 @@ int MainFrameBase::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
 		 // resize children windows when the rebar size changes
-	  case RBN_AUTOSIZE:
+
+      case RBN_AUTOSIZE:
 		resize_frame_client();
 		break;
 
@@ -525,9 +533,9 @@ void MainFrameBase::resize_frame(int cx, int cy)
 	RECT rect = {0, 0, cx, cy};
 
 	if (_hwndrebar) {
-		int height = ClientRect(_hwndrebar).bottom;
-		MoveWindow(_hwndrebar, rect.left, rect.top, rect.right-rect.left, height, TRUE);
+        int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);	  
 		rect.top += height;
+        rect.top += 4;
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -730,13 +738,13 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 
 #ifndef _NO_REBAR
 	_hextrabar = CreateToolbarEx(hwnd,
-				CCS_NOPARENTALIGN|CCS_NORESIZE|
-				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
+				WS_CHILD|TBSTYLE_FLAT|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_EXTRABAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
-				16, 13, 16, 13, sizeof(TBBUTTON));
+				16, 15, 16, 15, sizeof(TBBUTTON));
 #else
 	_hextrabar = CreateToolbarEx(hwnd,
-				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,CCS_NODIVIDER|
 				IDW_EXTRABAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &extraBtns, 1,
 				16, 13, 16, 13, sizeof(TBBUTTON));
 #endif
@@ -799,13 +807,13 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 
 #ifndef _NO_REBAR
 	_hdrivebar = CreateToolbarEx(hwnd,
-				CCS_NOPARENTALIGN|CCS_NORESIZE|
-				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
+				WS_CHILD|WS_VISIBLE|TBSTYLE_FLAT|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, NULL, 0,
-				16, 13, 16, 13, sizeof(TBBUTTON));
+				16, 15, 16, 15, sizeof(TBBUTTON));
 #else
 	_hdrivebar = CreateToolbarEx(hwnd,
-				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
+				WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST|CCS_NODIVIDER,
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn, 1,
 				16, 13, 16, 13, sizeof(TBBUTTON));
 #endif
@@ -856,7 +864,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	rbBand.lpText = TEXT("Extras");
 	rbBand.hwndChild = _hextrabar;
 	rbBand.cxMinChild = 0;
-	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cyMinChild = btn_hgt;
 	rbBand.cx = 284;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -865,7 +873,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	rbBand.lpText = TEXT("Drives");
 	rbBand.hwndChild = _hdrivebar;
 	rbBand.cxMinChild = 0;
-	rbBand.cyMinChild = btn_hgt + 4;
+	rbBand.cyMinChild = btn_hgt;
 	rbBand.cx = 400;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif
@@ -1205,9 +1213,9 @@ void MDIMainFrame::resize_frame(int cx, int cy)
 	RECT rect = {0, 0, cx, cy};
 
 	if (_hwndrebar) {
-		int height = ClientRect(_hwndrebar).bottom;
-		MoveWindow(_hwndrebar, rect.left, rect.top, rect.right-rect.left, height, TRUE);
+        int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
 		rect.top += height;
+        rect.top += 4;
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -1566,8 +1574,8 @@ void SDIMainFrame::resize_frame(int cx, int cy)
 
 	if (_hwndrebar) {
 		int height = ClientRect(_hwndrebar).bottom;
-		MoveWindow(_hwndrebar, rect.left, rect.top, rect.right-rect.left, height, TRUE);
 		rect.top += height;
+        rect.top += 4;
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
