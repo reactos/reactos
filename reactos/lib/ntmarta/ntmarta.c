@@ -1,6 +1,6 @@
 /*
  * ReactOS MARTA provider
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2005 - 2006 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -69,9 +69,13 @@ AccRewriteGetHandleRights(HANDLE handle,
         }
         else
         {
-            pSD = LocalReAlloc((HLOCAL)pSD,
-                               (SIZE_T)SDSize,
-                               LMEM_MOVEABLE);
+            PSECURITY_DESCRIPTOR newSD;
+
+            newSD = LocalReAlloc((HLOCAL)pSD,
+                                 (SIZE_T)SDSize,
+                                 LMEM_MOVEABLE);
+            if (newSD != NULL)
+                pSD = newSD;
         }
 
         if (pSD == NULL)
@@ -136,11 +140,67 @@ AccRewriteGetHandleRights(HANDLE handle,
 
     if (Ret == ERROR_SUCCESS)
     {
+        BOOL Present, Defaulted;
+
+        if (SecurityInfo & OWNER_SECURITY_INFORMATION && ppsidOwner != NULL)
+        {
+            *ppsidOwner = NULL;
+            if (!GetSecurityDescriptorOwner(pSD,
+                                            ppsidOwner,
+                                            &Defaulted))
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
+        }
+
+        if (SecurityInfo & GROUP_SECURITY_INFORMATION && ppsidGroup != NULL)
+        {
+            *ppsidOwner = NULL;
+            if (!GetSecurityDescriptorGroup(pSD,
+                                            ppsidGroup,
+                                            &Defaulted))
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
+        }
+
+        if (SecurityInfo & DACL_SECURITY_INFORMATION && ppDacl != NULL)
+        {
+            *ppDacl = NULL;
+            if (!GetSecurityDescriptorDacl(pSD,
+                                           &Present,
+                                           ppDacl,
+                                           &Defaulted))
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
+        }
+
+        if (SecurityInfo & SACL_SECURITY_INFORMATION && ppSacl != NULL)
+        {
+            *ppSacl = NULL;
+            if (!GetSecurityDescriptorSacl(pSD,
+                                           &Present,
+                                           ppSacl,
+                                           &Defaulted))
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
+        }
+
         *ppSecurityDescriptor = pSD;
     }
-    else if (pSD != NULL)
+    else
     {
-        LocalFree((HLOCAL)pSD);
+Cleanup:
+        if (pSD != NULL)
+        {
+            LocalFree((HLOCAL)pSD);
+        }
     }
 
     /* restore the last error code */
