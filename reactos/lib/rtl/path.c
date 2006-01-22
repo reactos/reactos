@@ -690,9 +690,6 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 	WCHAR fullname[MAX_PATH + 1];
 	PWSTR Buffer = NULL;
 
-
-	RtlAcquirePebLock ();
-
 	RtlInitUnicodeString (&us, DosPathName);
 	if (us.Length > 8)
 	{
@@ -700,15 +697,56 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 		/* check for "\\?\" - allows to use very long filenames ( up to 32k ) */
 		if (Buffer[0] == L'\\' && Buffer[1] == L'\\' &&
 		    Buffer[2] == L'?' && Buffer[3] == L'\\')
-		{
-//			if( f_77F68606( &us, ntname, shortname, nah ) )
-//			{
-//				RtlReleasePebLock ();
-//				return TRUE;
-//			}
-			Buffer = NULL;
-			RtlReleasePebLock ();
-			return FALSE;
+                {
+			/* allocate the new string and simply copy it */
+			NtPathName->Length = us.Length;
+			NtPathName->MaximumLength = us.Length + sizeof(WCHAR);
+			NtPathName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+			                                     0,
+			                                     NtPathName->MaximumLength);
+			if (NtPathName->Buffer == NULL)
+			{
+				return FALSE;
+			}
+
+			/* copy the string */
+			RtlCopyMemory(NtPathName->Buffer,
+			              us.Buffer,
+			              NtPathName->Length);
+			NtPathName->Buffer[us.Length / sizeof(WCHAR)] = L'\0';
+
+			/* change the \\?\ prefix to \??\ */
+			NtPathName->Buffer[1] = L'?';
+
+			if (NtFileNamePart != NULL)
+			{
+				PWSTR FilePart = NULL;
+				PWSTR s;
+
+				/* try to find the last separator */
+				s = NtPathName->Buffer + (NtPathName->Length / sizeof(WCHAR));
+				while (s != NtPathName->Buffer)
+				{
+					if (*s == L'\\')
+					{
+						FilePart = s + 1;
+						break;
+					}
+					s--;
+				}
+
+				*NtFileNamePart = FilePart;
+			}
+
+			if (DirectoryInfo != NULL)
+			{
+				DirectoryInfo->DosPath.Length = 0;
+				DirectoryInfo->DosPath.MaximumLength = 0;
+				DirectoryInfo->DosPath.Buffer = NULL;
+				DirectoryInfo->Handle = NULL;
+			}
+
+			return TRUE;
 		}
 	}
 
@@ -717,9 +755,10 @@ RtlDosPathNameToNtPathName_U(IN PCWSTR DosPathName,
 	                          sizeof( fullname ) + MAX_PFX_SIZE);
 	if (Buffer == NULL)
 	{
-		RtlReleasePebLock ();
 		return FALSE;
 	}
+
+	RtlAcquirePebLock ();
 
 	Size = RtlGetFullPathName_U (DosPathName,
 	                             sizeof(fullname),
