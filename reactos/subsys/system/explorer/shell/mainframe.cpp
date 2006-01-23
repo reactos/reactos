@@ -535,7 +535,7 @@ void MainFrameBase::resize_frame(int cx, int cy)
 	if (_hwndrebar) {
         int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);	  
 		rect.top += height;
-        rect.top += 4;
+        rect.top += 5;
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -729,7 +729,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	ccs.hWindowMenu = _hMenuWindow;
 	ccs.idFirstChild = IDW_FIRST_CHILD;
 
-	_hmdiclient = CreateWindowEx(0, TEXT("MDICLIENT"), NULL,
+	_hmdiclient = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("MDICLIENT"), NULL,
 					WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
 					0, 0, 0, 0,
 					hwnd, 0, g_Globals._hInstance, &ccs);
@@ -1215,7 +1215,7 @@ void MDIMainFrame::resize_frame(int cx, int cy)
 	if (_hwndrebar) {
         int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
 		rect.top += height;
-        rect.top += 4;
+        rect.top += 5;
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -1270,7 +1270,7 @@ void MDIMainFrame::resize_frame(int cx, int cy)
 		SetWindowPos(_hsidebar, 0, -1, rect.top-1, rt.right-rt.left, rect.bottom-rect.top+1, SWP_NOACTIVATE|SWP_NOZORDER);
 	}
 
-	MoveWindow(_hmdiclient, rect.left-1, rect.top-1, rect.right-rect.left+2, rect.bottom-rect.top+1, TRUE);
+	MoveWindow(_hmdiclient, rect.left-1, rect.top-1, rect.right-rect.left+1, rect.bottom-rect.top+1, TRUE);
 }
 
 bool MDIMainFrame::activate_drive_window(LPCTSTR path)
@@ -1575,7 +1575,7 @@ void SDIMainFrame::resize_frame(int cx, int cy)
 	if (_hwndrebar) {
 		int height = ClientRect(_hwndrebar).bottom;
 		rect.top += height;
-        rect.top += 4;
+        rect.top += 5;
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -1658,7 +1658,7 @@ void SDIMainFrame::update_shell_browser()
 			ClientRect rect(_hwnd);
 
 			_left_hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_TREEVIEW, NULL,
-							WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
+							WS_CHILD|WS_TABSTOP|WS_VISIBLE|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
 							0, rect.top, split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
 							_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
 

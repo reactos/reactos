@@ -683,7 +683,7 @@ void MDIShellBrowserChild::update_shell_browser()
 			ClientRect rect(_hwnd);
 
 			_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-							WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,//|TVS_NOTOOLTIPS
+							WS_CHILD|WS_TABSTOP|WS_VISIBLE|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,//|TVS_NOTOOLTIPS
 							0, rect.top, split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
 							_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
 		}
