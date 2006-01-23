@@ -493,7 +493,16 @@ NdisReadConfiguration(
             str.Buffer = (PWCHAR)KeyInformation->Data;
 
             (*ParameterValue)->ParameterType = ParameterType;
-            *Status = RtlUnicodeStringToInteger(&str, 16, &(*ParameterValue)->ParameterData.IntegerData);
+            
+            /*
+                 If ParameterType is NdisParameterInteger then the base of str is decimal.
+                 If ParameterType is NdisParameterHexInteger then the base of str is hexadecimal.
+            */
+            if (ParameterType == NdisParameterInteger)
+               *Status = RtlUnicodeStringToInteger(&str, 10, &(*ParameterValue)->ParameterData.IntegerData);
+            else if (ParameterType == NdisParameterHexInteger)
+               *Status = RtlUnicodeStringToInteger(&str, 16, &(*ParameterValue)->ParameterData.IntegerData);
+
 
             ExFreePool(KeyInformation);
 
