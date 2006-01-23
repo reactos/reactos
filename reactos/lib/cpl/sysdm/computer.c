@@ -42,7 +42,15 @@ ComputerPageProc(
   switch(uMsg)
   {
     case WM_INITDIALOG:
+    {
+      /* Display computer name */
+      DWORD Size = MAX_COMPUTERNAME_LENGTH + 1;
+      TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+      GetComputerName(ComputerName,&Size);
+      SendDlgItemMessage(hwndDlg,IDC_COMPUTERNAME,WM_SETTEXT,0,(LPARAM)ComputerName);
+      /* FIXME: get the workgroup */
       break;
+    }
   }
   return FALSE;
 }
