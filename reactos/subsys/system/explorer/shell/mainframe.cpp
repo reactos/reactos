@@ -283,8 +283,7 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 		return true;
 
 	  case WM_SHOWWINDOW:
-		if (wparam) 	// trigger child resizing after window creation - now we can succesfully call IsWindowVisible()
-        {
+		if (wparam) {	// trigger child resizing after window creation - now we can succesfully call IsWindowVisible()
             int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
     		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
 			resize_frame_client();
@@ -299,12 +298,9 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 	  case WM_DESTROY:
 		break;
 
-      case WM_SIZE:{
-        int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
-		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
-
-		//resize_frame(LOWORD(lparam), HIWORD(lparam));
-        break;}	// do not pass message to DefFrameProc
+      case WM_SIZE:
+		resize_frame(LOWORD(lparam), HIWORD(lparam));
+        break;	// do not pass message to DefFrameProc
 
 	  case WM_GETMINMAXINFO: {
 		LPMINMAXINFO lpmmi = (LPMINMAXINFO)lparam;
