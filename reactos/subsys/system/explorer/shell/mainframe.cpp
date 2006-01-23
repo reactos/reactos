@@ -1433,6 +1433,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
 			Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
 			SelectObject(canvas, lastBrush);
+            DeleteObject(lastBrush);
 		}
 		break;}
 
