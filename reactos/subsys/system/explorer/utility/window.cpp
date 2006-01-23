@@ -387,12 +387,15 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_PAINT: {
+        RECT rc;
 		PaintCanvas canvas(_hwnd);
 		ClientRect rt(_hwnd);
 		rt.left = _split_pos-SPLIT_WIDTH/2;
 		rt.right = _split_pos+SPLIT_WIDTH/2+1;
-		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
+		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(LTGRAY_BRUSH));
 		Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
+        SetRect(&rc, rt.left, rt.top-1, rt.right, rt.bottom+1);
+        DrawEdge(canvas, &rc, EDGE_RAISED, BF_RECT);
 		SelectObject(canvas, lastBrush);
 		break;}
 
