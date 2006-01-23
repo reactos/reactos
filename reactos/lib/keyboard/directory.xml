@@ -47,4 +47,7 @@
 	<directory name="kbdur">
 		<xi:include href="kbdur/kbdur.xml" />
 	</directory>
+	<directory name="kbdpo">
+		<xi:include href="kbdpo/kbdpo.xml" />
+	</directory>
 </group>

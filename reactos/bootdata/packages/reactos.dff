@@ -117,6 +117,7 @@ lib\keyboard\kbdsk\kbdsk.dll            1
 lib\keyboard\kbduk\kbduk.dll            1
 lib\keyboard\kbdur\kbdur.dll            1
 lib\keyboard\kbdus\kbdus.dll            1
+lib\keyboard\kbdpo\kbdpo.dll            1
 lib\kernel32\kernel32.dll               1
 lib\lsasrv\lsasrv.dll                   1
 lib\lzexpand\lz32.dll                   1

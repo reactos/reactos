@@ -101,6 +101,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000422 = "Ukrainian"
 00010408 = "Greek 220"
 0000041B = "Slovak (QWERTZ)"
+00000816 = "Portuguese (Portugal)"
 
 [Files.KeyboardLayout]
 00000406 = kbdda.dll
@@ -119,6 +120,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000408 = kbdhe.dll
 00010408 = kbdhe.dll
 0000041B = kbdsk.dll
+00000816 = kbdpo.dll
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
