@@ -397,7 +397,6 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
         SetRect(&rc, rt.left, rt.top-1, rt.right, rt.bottom+1);
         DrawEdge(canvas, &rc, EDGE_RAISED, BF_RECT);
 		SelectObject(canvas, lastBrush);
-        DeleteObject(lastBrush);
 		break;}
 
 	  case WM_SETCURSOR:
