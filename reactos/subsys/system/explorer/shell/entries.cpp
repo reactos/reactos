@@ -163,8 +163,10 @@ Root::Root()
 
 Root::~Root()
 {
-	if (_entry)
+	if (_entry) {
 		_entry->free_subentries();
+		delete _entry;
+	}
 }
 
 
