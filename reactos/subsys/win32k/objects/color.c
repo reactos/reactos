@@ -611,6 +611,10 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    GDIOBJHDR * ptr;
    DWORD objectType;
    BOOL Ret = FALSE;
+
+   /* From Wine: UnrealizeObject does not SetLastError() on a null object */
+   if(!hgdiobj)
+     return Ret;
       
    ptr = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
    if (ptr == 0)
