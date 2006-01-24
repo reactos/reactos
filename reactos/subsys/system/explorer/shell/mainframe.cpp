@@ -298,9 +298,14 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 	  case WM_DESTROY:
 		break;
 
-      case WM_SIZE:
+	  case WM_SIZE:
+#ifdef _ROS_	///@todo Work around to display rebar in ROS (with flickering) as long as the control isn't fixed
+		int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
+		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
+#else
 		resize_frame(LOWORD(lparam), HIWORD(lparam));
-        break;	// do not pass message to DefFrameProc
+#endif
+		break;	// do not pass message to DefFrameProc
 
 	  case WM_GETMINMAXINFO: {
 		LPMINMAXINFO lpmmi = (LPMINMAXINFO)lparam;
