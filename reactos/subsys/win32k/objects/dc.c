@@ -1,3 +1,4 @@
+
 /*
  *  ReactOS W32 Subsystem
  *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -1788,6 +1789,9 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
   LPVOID SafeBuf;
   NTSTATUS Status = STATUS_SUCCESS;
 
+  /* From Wine: GetObject does not SetLastError() on a null object */
+  if (!handle) return 0;
+  
   if (count <= 0)
   {
     return 0;
