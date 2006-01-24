@@ -193,6 +193,9 @@ BOOL
 STDCALL
 DeleteObject(HGDIOBJ hObject)
 {
+  /* From Wine: DeleteObject does not SetLastError() on a null object */
+  if(!hObject) return FALSE;
+  
   if (0 != ((DWORD) hObject & GDI_HANDLE_STOCK_MASK))
     {
       DPRINT1("Trying to delete system object 0x%x\n", hObject);
