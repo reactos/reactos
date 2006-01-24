@@ -249,6 +249,8 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
   Type = NtGdiGetObjectType(Handle);
   if (0 == Type)
     {
+      /* From Wine: GetObject does not SetLastError() on a null object */
+      SetLastError(0);
       return 0;
     }
 
@@ -448,6 +450,8 @@ GetObjectType(
         break;
     }
   }
-
+  else
+    /* From Wine: GetObjectType does SetLastError() on a null object */
+    SetLastError(ERROR_INVALID_HANDLE);
   return Ret;
 }
