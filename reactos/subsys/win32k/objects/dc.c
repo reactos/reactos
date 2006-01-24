@@ -1173,6 +1173,9 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
   HGDIOBJ SelObject;
   DC *dc;
 
+  /* From Wine: GetCurrentObject does not SetLastError() on a null object */
+  if(!hDC) return NULL;
+
   if(!(dc = DC_LockDc(hDC)))
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
