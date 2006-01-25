@@ -2184,8 +2184,91 @@ NtGdiGetTextCharsetInfo(
     OUT OPTIONAL LPFONTSIGNATURE lpSig,
     IN DWORD dwFlags)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PDC Dc;
+  UINT Ret = DEFAULT_CHARSET, i = 0, fs_fsCsb0 = 0;
+  HFONT hFont;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGdi;
+  FONTSIGNATURE fs;
+  TT_OS2 *pOS2;
+  FT_Face Face;
+  NTSTATUS Status;
+  
+  Dc = DC_LockDc(hdc);
+  if (!Dc)
+    {
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         return Ret;
+    }
+  hFont = Dc->w.hFont;
+  TextObj = TEXTOBJ_LockText(hFont);
+  DC_UnlockDc( Dc );
+  if ( TextObj == NULL)
+    {
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         return Ret;
+    }
+  FontGdi = ObjToGDI(TextObj->Font, FONT);
+  Face = FontGdi->face;
+  TEXTOBJ_UnlockText(TextObj);
+  IntLockFreeType;
+  pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+  IntUnLockFreeType;
+  memset(&fs, 0, sizeof(FONTSIGNATURE));
+  if (NULL != pOS2)
+    {
+      fs.fsCsb[0] = pOS2->ulCodePageRange1;
+      fs.fsCsb[1] = pOS2->ulCodePageRange2;
+      fs.fsUsb[0] = pOS2->ulUnicodeRange1;
+      fs.fsUsb[1] = pOS2->ulUnicodeRange2;
+      fs.fsUsb[2] = pOS2->ulUnicodeRange3;
+      fs.fsUsb[3] = pOS2->ulUnicodeRange4;
+      fs_fsCsb0   = pOS2->ulCodePageRange1;
+      if (pOS2->version == 0) 
+        {
+          FT_UInt dummy;
+
+          if(FT_Get_First_Char( Face, &dummy ) < 0x100)
+                fs_fsCsb0 |= 1;
+          else
+                fs_fsCsb0 |= 1L << 31;
+        }
+    }
+  DPRINT("Csb 1=%x  0=%x\n", fs.fsCsb[1],fs.fsCsb[0]);
+  if (lpSig)
+    {
+      Status = MmCopyToCaller(lpSig, &fs,  sizeof(FONTSIGNATURE));
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return Ret;
+        }
+    }
+  if (0 == fs_fsCsb0)
+    { /* let's see if we can find any interesting cmaps */
+       for (i = 0; i < Face->num_charmaps; i++)
+          {
+              switch (Face->charmaps[i]->encoding)
+                {
+                  case ft_encoding_unicode:
+                  case ft_encoding_apple_roman:
+                    fs_fsCsb0 |= 1;
+                    break;
+                  case ft_encoding_symbol:
+                    fs_fsCsb0 |= 1L << 31;
+                    break;
+                  default:
+                    break;
+                }
+          }
+    }
+  while (0 == (fs_fsCsb0 >> i & 0x0001) && i < MAXTCIINDEX)
+       {
+          i++;
+       }
+  Ret = FontTci[i].ciCharset;
+  DPRINT("CharSet %d\n",Ret);
+  return Ret;
 }
 
 static BOOL
