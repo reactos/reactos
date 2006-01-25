@@ -2069,8 +2069,17 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   HRGN hVisRgn;
   BOOLEAN Failed;
 
-  if(!hDC || !hGDIObj) return NULL;
-
+  if (!hDC || !hGDIObj) 
+    {
+    /* From Wine:
+     * SelectObject() with a NULL DC returns 0 and sets ERROR_INVALID_HANDLE.
+     * Note: Under XP at least invalid ptrs can also be passed, not just NULL;
+     *       Don't test that here in case it crashes earlier win versions.
+     */
+       if (!hDC) SetLastWin32Error(ERROR_INVALID_HANDLE); 
+       return NULL;
+    }
+    
   dc = DC_LockDc(hDC);
   if (NULL == dc)
     {
