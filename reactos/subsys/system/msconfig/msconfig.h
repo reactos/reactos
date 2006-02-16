@@ -1,2 +1,0 @@
-extern HINSTANCE hInst;
-
