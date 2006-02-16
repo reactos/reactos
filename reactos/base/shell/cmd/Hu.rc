@@ -1,0 +1,623 @@
+#include "resource.h"
+#include "windows.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005
+ * Hungarian resource állomány for ntvdm
+ * Translation by Robert Horvath (talley at cubeclub.hu) 2005
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+
+STRING_ATTRIB_HELP,    "Állományok attribútumok megjelenítése vagy beállításai.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] állomány ...\n\
+       [/S [/D]]\n\n\
+  +   bekapcsol egy attribútumot\n\
+  -   kikapcsol egy attribútumot\n\
+  R   Írásvédett állomány\n\
+  A   Archiválandó állomány\n\
+  S   Rendszer állomány\n\
+  H   Rejtett állomány\n\
+  /S  Minden állomány módosítása a mappában és minden\n\
+      almappábanban\n\
+  /D  Mappákra is érvényesíti\n\n\
+Ha ATTRIB-ot paraméter nélkül írod be, megjeleníti a mappában található összes állományt és annak attribútumát.\n"
+
+STRING_ALIAS_HELP,  "Aliasok megjelenítése, hozzáadása és törlése\n\n\
+ALIAS [alias=[parancs]]\n\n\
+  alias    Alias neve.\n\
+  parancs  A szöveg amit behelyettesít.\n\n\
+Aliasok megjelenítése:\n\
+  ALIAS\n\n\
+Egy új hozzáadása vagy meglévõ helyettesítlse:\n\
+  ALIAS da=dir a:\n\n\
+Egy alias törlése:\n\
+  ALIAS da="
+
+STRING_BEEP_HELP, "Hangjelzés leadása a speakerbõl.\n\nBEEP\n"
+
+STRING_CALL_HELP, "Kötegelt parancsfájl meghívása egy másikból.\n\n\
+CALL [kötet:][elérési_út]állomány [paraméterek]\n\n\
+  paraméterek  Itt adható meg a szükséges paraméterlista"
+
+STRING_CD_HELP,      "Az aktuális mappa nevének a megjelenítése vagy váltás másikra\n\n\
+CHDIR [/D][meghajtó:][elérési_út]\n\
+CHDIR[..|.]\n\
+CD [/D][meghajtó:][elérési_út]\n\
+CD[..|.]\n\n\
+  ..   Szülõ mappa\n\
+  /D   Megváltoztatja az aktuális mappát és meghajtót is.\n\n\
+Írd be, hogy 'CD meghajtó:' hogy ki írja az aktuális mappát.\n\
+Írd be a CD-t paraméterek nélkül, hogy megjelenítse az aktuális meghajtót és mappát (ugyanaz mint az elõzõ).\n"
+
+STRING_CHCP_HELP,   "Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\n\
+CHCP [nnn]\n\n\
+  nnn   A használni kívánt kódlap száma.\n\n\
+Írd be a  CHCP paraméterek nélkül, hogy megjelenítse az aktív kódlapot.\n"
+
+STRING_CHOICE_HELP, "Vár a felhasználóra, hogy válasszon a felkínált lehetõségek közül.\n\n\
+CHOICE  [/C[:]választási lehetõségek][/N][/S][/T[:]c,nn][szöveg]\n\n\
+  /C[:]választási lehetõségek  Megengedett billentyûk. Alapértelmezett: YN. <-- Yes->Igen\n\
+  /N                           Elrejti a választási lehetõségeket és a kérdõjelet.\n\
+  /S                           Kis- és nagybetûk megkülönböztetése.\n\
+  /T[:]v,nn                    A v lehetõséget választja nn másodperc után.\n\
+  szöveg                       Megjelenítendõ szöveg.\n\n\
+Az ERRORLEVEL a válasz sorszámára lesz beállítva.\n"
+
+STRING_CLS_HELP, "Törli a képernyõt.\n\nCLS\n"
+
+STRING_CMD_HELP1, "\nElérhetõ belsõ parancsok:\n"
+
+STRING_CMD_HELP2, "\nElérhetõ lehetõségek:"
+
+STRING_CMD_HELP3,"  [aliasok]"
+
+STRING_CMD_HELP4,"  [elõzmények]"
+
+STRING_CMD_HELP5,"  [unix típusú állománynév kiegészítés]"
+
+STRING_CMD_HELP6,"  [mappa tár]"
+
+STRING_CMD_HELP7,"  [átirányítások és csõvezetékek]"
+
+STRING_CMD_HELP8, "Elindít egy új ReactOS parancssor értelmezõ.\n\n\
+CMD [/[C|K] parancs][/P][/Q][/T:eh]\n\n\
+  /C parancs  Végrehajtja a parancsot, majd kilép.\n\
+  /K parancs  Végrehajtja a parancsot, és tovább fut az értelmezõ.\n\
+  /P          Értelmezi az autoexec.bat állományt és a memóriában marad.\n\
+  /T:eh       COLOR parancs használata.\n"
+
+STRING_COLOR_HELP1, "A konzol elõ- és háttérszínét állítja be.\n\n\
+COLOR [eh [/-F]] \n\n\
+  eh          A konzol elõ- és háttérszínét állítja be.\n\
+  /-F         Nem frissíti az egész képernyõt\n\n\
+A színt két hexadecimális számjeggyel lehet beállítani\n\n\
+Az elérhetõ színek:\n\
+hex  név             hex  név\n\
+0    Fekete          8    Szürke\n\
+1    Sötétkék        9    Kék\n\
+2    Sötétzöld       A    Zöld\n\
+3    Sötétlila       B    Türkízkék\n\
+4    Bordó           C    Vörös\n\
+5    Ciklámen        D    Ciklámen\n\
+6    Olíva		     E    Sárga\n\
+7    Világos szürke  F    Fehér\n"
+
+STRING_COPY_HELP1,  "Felülírja a következõt: %s (Igen/Nem/Mind)? "
+
+STRING_COPY_HELP2, "Egy vagy több állományt másol a megadott helyre.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] forrás [/A|/B]\n\
+     [+ forrás [/A|/B] [+ ...]] [cél [/A|/B]]\n\n\
+  forrás       Megadott állomány(ok)at fogja másolni.\n\
+  /A           Ez ASCII szöveg állomány.\n\
+  /B           Ez bináris állomány.\n\
+  cél          Megadja a cél mappát és/vagy az (új) állománynevet.\n\
+  /V           Ellenõrzi a másolást.\n\
+  /Y           Igennel válaszol kérdésnél.\n\
+  /-Y          Nemmel válaszol kérdésnél.\n\n\
+Az /Y kapcsolót a COPYCMD környezeti változóban is használható.\n"
+
+STRING_DATE_HELP1, "\nÚj dátum (hh%cnn%céééé): "
+
+STRING_DATE_HELP2, "\nÚj dátum (nn%chh%céééé): "
+
+STRING_DATE_HELP3, "\nÚj dátum (éééé%chh%cnn): "
+
+STRING_DATE_HELP4, "Megjeleníti vagy beállítja a rendszerdátumot.\n\n\
+DATE [/T][dátum]\n\n\
+  /T    Csak megjeleníti\n\n\
+Írd be a DATE parancsot paraméter nélkül, hogy megjelenítse a rendszer dátumot és bekérjen egy újat.\n\
+Nyomj ENTERT-t, ha nem akarsz változtatni.\n"
+				
+STRING_DEL_HELP1, "Eltávolít egy vagy több állományt.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attribútumok]] állomány ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attribútumok]] állomány ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attribútumok]] állomány ...\n\n\
+      állomány  Törlésre kijelöl állomány(ok).\n\n\
+  /N    Nem csinál semmit.\n\
+  /P    Rákérdezés minden állománynál.\n\
+  /T    Statisztika megjelenítése a végén.\n\
+  /Q    Csendes üzemmód.\n\
+  /W    Wipe. Overwrite the állomány with random numbers before deleting it.\n\
+  /Y    Minden válaszra igen. Figyelem, *.*-ot is törli!!\n\
+  /F    Rejtett, csak olvasható és rendszer állományokat is töröl.\n\
+  /S    Almappákban is törli az állományokat\n\
+  /A    Attribútumok alapján törli az állományokat.\n\
+        attributes\n\
+        R     Csak olvasható állománys\n\
+        S     Rendszer állomány\n\
+        A     Archivált állomány\n\
+        H     Rejtett állománys\n\
+        -     ""Nem"" prefix\n"
+
+STRING_DEL_HELP2, "Minden állomány törölve lesz a mappában!\nBiztosan ezt akarod (I/N)?"
+STRING_DEL_HELP3, "    %lu állomány törölve\n"
+STRING_DEL_HELP4, "    %lu állomány törölve\n"
+
+STRING_DELAY_HELP, "pause for n seconds or milliseconds\n\
+DELAY [/m]n\n\n\
+  /m          specifiy than n are milliseconds\n\
+              otherwise n are seconds\n"
+
+STRING_DIR_HELP1, "DIR [meghajtó:][elérési_út][állománynév] [/A[[:]attribútumok]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]rendezési_feltétel]] [/P] [/Q] [/S] [/T[[:]idõ]] [/W] [/X] [/4]\n\n\
+  [meghajtó:][elérési_út][állományname]\n\
+              Az adott hely állományait és mappáit jeleníti meg.\n\n\
+  /A          A megadott attribútumu állományokat jeleníti csak meg.\n\
+  attributes   D  Mappák                         R  Csak olvasható állomány\n\
+               H  Rejtett állomány               A  Archiválandó állomány\n\
+               S  Rendszer állomány               -  ""Nem"" prefix\n\
+  /B          Fejléc és összefoglaló nélkül.\n\
+  /C          Ezres elválasztó jel használata. Ez az alapértelmezett, /-C a kikapcsolása.\n\
+  /D          Széles megjelenítés, oszlop szerint rendezve.\n\
+  /L          Kisbetûk használata.\n\
+  /N          New long list format where állománynames are on the far right.\n\
+  /O          Rendezés az alábbiak szerint.\n\
+  sortorder    N  Név alapján (ABC sorrend)           S  Méret alapján (növekvõ)\n\
+               E  Kiterjesztés alapján (ABC sorrend)  D  Dátum/idõ alapján (legrégebbi elején)\n\
+               G  Mappák legelõl                      -  ""Nem"" prefixel fordított rendezés\n\
+  /P          Csak egy képernyõnyi adat megjelenítése egyszerre.\n\
+  /Q          Állomány tulajdonsosának megjelenítése.\n\
+  /S          Almappák tartalmát is megjeleníti.\n\
+  /T          Controls which time field displayed or used for sorting\n\
+  timefield   C  Létrehozás\n\
+              A  Utolsó megtekintés\n\
+              W  Utolsó módosítás\n\
+  /W          Széles megjelenítés.\n\
+  /X          This displays the short names generated for non-8dot3 állomány\n\
+              names.  The format is that of /N with the short name inserted\n\
+              before the long name. If no short name is present, blanks are\n\
+              displayed in its place.\n\
+  /4          Négy számjegyû év\n\n\
+A kapcsolók a DIRCMD környezeti változóban is lehetnek.\n"
+
+STRING_DIR_HELP2, " A (%c) meghajtóban található kötet %s\n"
+STRING_DIR_HELP3, " A (%c) meghajtóban található kötetnek nincs címkéje.\n"
+STRING_DIR_HELP4, " A kötet sorozatszáma: %04X-%04X\n"
+STRING_DIR_HELP5, "\n     Összes állomány:\n%16i Állomány(ok)% 14s bájt\n"
+STRING_DIR_HELP6, "%16i Mappa %15s bájt"
+STRING_DIR_HELP7, "\n %s tartalma\n\n"
+STRING_DIR_HELP8, "%16i Állomány %14s bájt\n"
+
+STRING_DIRSTACK_HELP1, "Megjegyzi az aktuális mappát, majd átvált egy máasikra.\n\n\
+PUSHD [elérési_út | ..]\n\n\
+  elérési_út        Ebbe a mappába fog átváltani\n"
+
+STRING_DIRSTACK_HELP2, "Visszalép a PUSHD által megjegyzett mappába.\n\nPOPD"
+
+STRING_DIRSTACK_HELP3, "Megjeleníti a megjegyzett mappákat.\n\nDIRS"
+
+STRING_DIRSTACK_HELP4, "Üres a tár"
+
+STRING_ECHO_HELP1,  "Megjeleníti a szöveget új sor nélkül.\n\n\
+  ECHOS szöveg"
+
+STRING_ECHO_HELP2,  "Displays a message to the standard error.\n\n\
+  ECHOERR szöveg\n\
+  ECHOERR.           Új sor"
+
+STRING_ECHO_HELP3, "Prints a messages to standard error output without trailing carridge return and line feed.\n\n\
+  ECHOSERR message"
+
+STRING_ECHO_HELP4, "Megjelenít egy szöveget, vagy beállítja a visszhangot.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [üzenet]\n\
+  ECHO.             Új sor\n\n\
+Paraméter nélkül megjeleníti a visszang állapotát."
+
+STRING_ECHO_HELP5, "Az ECHO %s\n"
+
+STRING_EXIT_HELP, "Kilép a parancssor értelmezõbõl.\n\nEXIT\n"
+
+STRING_FOR_HELP1, "Végrehajt egy parancsot az összes fájlban a megadott mappákban\n\n\
+FOR %változó IN (csoport) DO parancs [paraméterek]\n\n\
+  %változó    A cserélhetõ paraméter.\n\
+  (csoport)   Állományok csoportja. Joker-karakterek megengedettek EZT KURVÁRA ÁTKELL FORDÍTANI :)) wildcardok helyett?.\n\
+  parancs     Ezt a parancsot hajtja végre minden egyes állománnyal.\n\
+  paraméterek Ezeket a paramétereket adja meg a parancsnak.\n\n\
+A batch állományban való haszálathoz %%változó kell a %változó helyett.\n"
+
+STRING_FREE_HELP1, "\nA (%s) meghajtóban lévõ kötet címkéje %-11s\n\
+ Sorozatszám: %s\n\
+  %16s bájt a teljes hely\n\
+  %16s bájt használva\n\
+  %16s bájt szabad\n"
+
+STRING_FREE_HELP2, "Kötet méret információk.\n\nFREE [meghajtó: ...]\n"
+
+STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
+  IF [NOT] ERRORLEVEL number command\n\
+  IF [NOT] string1==string2 command\n\
+  IF [NOT] EXIST állományname command\n\
+  IF [NOT] DEFINED variable command\n\n\
+NOT               Specifies that CMD should carry out the command only if\n\
+                  the condition is false\n\
+ERRORLEVEL number Specifies a true condition if the last program run returned\n\
+                  an exit code equal or greater than the number specified.\n\
+command           Specifies the command to carry out if the condition is met.\n\
+string1==string2  Specifies a true condition if the specified text strings\n\
+                  match.\n\
+EXIST állományname    Specifies a true condition if the specified állományname exists.\n\
+DEFINED variable  Specifies a true condition if the specified variable is\n\
+                  defined.\n"
+
+STRING_GOTO_HELP1,  "Átirányít egy másik címkére a batch állományban.\n\n\
+GOTO címke\n\n\
+  címke  A megadott címkére fog ugrani az értelmezõ.\n\n\
+Egy címkét egy sorban lehet megadni, ':' -tal kezdve."
+
+STRING_LABEL_HELP1, "A kötet címkéjét megjeleníti, vagy megváltoztatja.\n\n\
+LABEL [meghajtó:] [új_címke]\n"
+
+STRING_LABEL_HELP2, "A (%c) meghajtóban lévõ kötet címkéje %s\n"
+STRING_LABEL_HELP3, "A (%c) megjajtóban lévõ kötetnek nincs címkéje.\n"
+STRING_LABEL_HELP4, "A kötet sorozatszáma %04X-%04X\n"
+STRING_LABEL_HELP5, "Új kötetcímke (11 betû, ENTER ha üres)? "
+
+STRING_LOCALE_HELP1, "Az aktuális idõ:"
+
+STRING_MKDIR_HELP,   "Létrehoz egy új mappát.\n\n\
+MKDIR [meghajtó:]path\nMD [meghajtó:]path"
+
+STRING_MEMMORY_HELP1, "Megjeleníti a memória statisztikát.\n\nMEMORY"
+
+STRING_MEMMORY_HELP2, "\n A memória %12s%%-a foglalt.\n\n\
+  %13s bájtnyi teljes fizikai memória.\n\
+  %13s bájtnyi elérhetõ memória.\n\n\
+  %13s bájt a lapozóállomány.\n\
+  %13s bájtnyi elérhetõ a lapozóállományban.\n\n\
+  %13s bájt a teljes virtuális memória.\n\
+  %13s bájtnyi elérhetõ a virtuális memóriából.\n"
+
+STRING_MISC_HELP1, "A folytatáshoz nyomj meg egy billentyût . . .\n"
+
+STRING_MOVE_HELP1, "Felülírja %s (Igen/Nem/Mind)? "
+
+STRING_MOVE_HELP2, "Áthelyezi és átnevezi az állományokat a mappákban.\n\n\
+Egy vagy több állomány áthelyezéséhez:\n\
+MOVE [/N][meghajtó:][elérési_út]állomány1[,...] cél\n\n\
+Mappa átnevezése:\n\
+MOVE [/N][meghajtó:][elérési_út]mappa1 mappa2\n\n\
+  [meghajtó:][elérési_út]állomány1  Átnevezendõ állományok forrása.\n\
+  /N                    Nem helyez át semmit.\n\n\
+Hiányosságok:\n\
+  - Nem lehet meghajtók között áthelyezni állományokat.\n"
+
+STRING_MSGBOX_HELP, "display a message box and return user responce\n\n\
+MSGBOX type ['title'] prompt\n\n\
+type          button displayed\n\
+              possible values are: OK, OKCANCEL,\n\
+              YESNO, YESNOCANCEL\n\
+title         title of message box\n\
+prompt        text displayed by the message box\n\n\n\
+ERRORLEVEL is set according the button pressed:\n\n\
+YES  :  10    |  NO      :  11\n\
+OK   :  10    |  CANCEL  :  12\n"
+
+STRING_PATH_HELP1, "Megjeleníti vagy beállítja a keresési útvonalakat.\n\n\
+PATH [[meghajtó:]elérési_út[;...]]\n\
+PATH ; Keresési útvonalak törlése\n\n\
+A PATH törléséhez a következõt írd be: PATH ;\n\
+Így csak az aktuális mappában fog keresni a CMD.\
+Paraméterek nélkül az érvényes keresési útvonalakat mutatja meg.\n"
+
+STRING_PROMPT_HELP1, "Parancssor beállítása.\n\n\
+PROMPT [szöveg]\n\n\
+  szöveg    Az új parancssor megadása.\n\n\
+A parancssor speciális kódokat is tartalmazhat:\n\n\
+  $A   & (és jel)\n\
+  $B   | (csõ)\n\
+  $C   ( (kezdõ rázójel)\n\
+  $D   Aktuális dátum\n\
+  $E   Escape-kód (ASCII 27-es kód)\n\
+  $F   ) (záró zárójel)\n\
+  $G   > ('nagyobb' jel)\n\
+  $H   Törlés (elötte lévõ karaktert törli)\n\
+  $L   < ('kissebb' jel)\n\
+  $N   Aktuális meghajtó\n\
+  $P   Aktuális meghajtó és mappa\n\
+  $Q   = (egyenlõség jel)\n\
+  $T   Aktuális idõ\n\
+  $V   OS verziószám\n\
+  $_   Újsor\n\
+  $$   $ (dollár jel)\n"
+
+STRING_PAUSE_HELP1, "Felfüggeszti a futást, és vár a felhasználóra. A következõ üzenet jelenik meg:\n\
+'A folytatáshoz nyomj meg egy billentyût . . .' vagy egy általad választott üzenet.\n\n\
+PAUSE [message]"
+
+STRING_PROMPT_HELP2, "  $+   Displays the current depth of the directory stack"
+
+STRING_PROMPT_HELP3, "\nHa paraméter nélkül beírod a PROMPT parancsot, vissza áll az alapértelmezettre a kijelzés."
+
+STRING_REM_HELP, "Megjegyzést jelölõ sor batch fájlokban.\n\nREM [megjegyzés]"
+
+STRING_RMDIR_HELP,   "Eltávolít egy mappát.\n\n\
+RMDIR [meghajtó:]elérési_út\nRD [meghajtó:]elérési_út"
+
+STRING_REN_HELP1, "Átnevez egy állományt.\n\n\
+RENAME [/E /N /P /Q /S /T] régi_név ... új_név\n\
+REN [/E /N /P /Q /S /T] régi_név ... új_név\n\n\
+  /E    Hibaüzenetek elrejtése.\n\
+  /N    Ne csináljon semmit	.\n\
+  /P    Minden állománynál rákérdez. (Még NEM mûködik!!)\n\
+  /Q    Csendes mûködés.\n\
+  /S    Almappákat is átnevez.\n\
+  /T    Összes átnevezett fájl és állomány.\n\n\
+Csak az aktuális meghajtón és mappában fog mûködni.\n\
+Ha ez nem elég, használd a MOVE parancsot."
+
+STRING_REN_HELP2, "    %lu állomány átnevezve\n"
+
+STRING_REN_HELP3, "    %lu állomány átnevezve\n"
+		 
+STRING_SHIFT_HELP, "Eltolja a helyettesíthetõ paraméterek pozícióját a batch állományban.\n\n\
+SHIFT [DOWN]"
+
+STRING_SCREEN_HELP, "Megváltoztatja a kurzos pozícióját, vagy megjelenít adott pozícióban egy szöveget.\n\n\
+SCREEN sor oszlop [szöveg]\n\n\
+  sor         Ugrás sora\n\
+  oszlop      Ugrás oszlopa"
+
+STRING_SET_HELP, "Megjeleníti vagy beállítja a környezeti változókat.\n\n\
+SET [változó[=][érték]]\n\n\
+  változó  Környezeti változó neve.\n\
+  érték    A beállítandó érték.\n\n\
+Paraméterek nélkül megjeleníti az összes környezetiváltozót.\n"
+
+STRING_START_HELP1, "Végrehajt egy parancsot.\n\n\
+START parancs\n\n\
+  parancs     Végrehajtja a megadott parancsot.\n\n\
+Jelenleg minden parancs aszinkron hajtódik végre.\n"
+
+STRING_TITLE_HELP, "Beállítja az ablak címsorának szövegét.\n\n\
+TITLE [szöveg]\n\n\
+szöveg       Beállítja az ablak címsorának szövegét.\n"
+
+STRING_TIME_HELP1, "Megjeleníti vagy beállítja a rendszeridõt.\n\n\
+TIME [/T][idõ]\n\n\
+  /T    Csaj megjeleníti\n\n\
+Paraméterek nélkül megjeleníti az aktuális idõt és kér egy újat.\n\
+Csak egy ENTER megnyomásával nem állítja át.\n"
+
+STRING_TIME_HELP2, "Új idõ: "
+
+STRING_TIMER_HELP1, "Eltelt %d ezred másodperc\n"
+
+STRING_TIMER_HELP2, "Eltelt: %02d%c%02d%c%02d%c%02d\n"
+
+STRING_TIMER_HELP3, "allow the use of ten stopwaches.\n\n\
+TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
+  ON          Stopper bekapcsolása\n\
+  OFF         Stopper kikapcsolása\n\
+  /S          Split time. Return stopwatch split\n\
+              time without changing its value\n\
+  /n          Stopper azonosító megadása.\n\
+              Stopwaches avaliable are 0 to 9\n\
+              If it is not specified default is 1\n\
+  /Fn         Format for output\n\
+              n can be:\n\
+                    0    milliseconds\n\
+                    1    hh%cmm%css%cdd\n\n\
+if none of ON, OFF or /S is specified the command\n\
+will toggle stopwach state\n\n"
+
+STRING_TYPE_HELP1, "Megjeleníti az állományok tartalmát.\n\n\
+TYPE [meghajtó:][elérési_út]állománynév \n\
+  /P 		  Csak egy képernyõnyi tartalmat jelenít meg egyszerre.\n"
+
+STRING_VERIFY_HELP1, "Ez a parancs még nem mûködik!!\n\
+Lemezre írás utáni ellenõrzést állítja be.\n\n\
+VERIFY [ON | OFF]\n\n\
+Írd be a VERIFY-t paraméterek nélkül, hogy megjelenítse aktuális állapotát.\n"
+
+STRING_VERIFY_HELP2, "Az ellenõrzés jelenleg %s.\n"
+
+STRING_VERIFY_HELP3, "Csak az ON vagy OFF elfogadott."
+
+STRING_VERSION_HELP1, "A ReactOS verzióinformációit jeleníti meg\n\n\
+VER [/C][/R][/W]\n\n\
+  /C  Készítõk névsora.\n\
+  /R  Terjesztési információk.\n\
+  /W  Jótállási információk."
+
+STRING_VERSION_HELP2, " comes with ABSOLUTELY NO WARRANTY; for details\n\
+type: `ver /w'. This is free software, and you are welcome to redistribute\n\
+it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
+listing of credits."
+
+STRING_VERSION_HELP3, "\n This program is distributed in the hope that it will be useful,\n\
+ but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
+ GNU General Public License for more details."
+
+STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it and/or modify\n\
+ it under the terms of the GNU General Public License as published by\n\
+ the Free Software Foundation; either version 2 of the License, or\n\
+ (at your option) any later version.\n"
+
+STRING_VERSION_HELP5, "\nHibákról E-Maileket ide küldhetsz: <ros-dev@reactos.org>.\n\
+Frissítések és egyéb információk: http://www.reactos.org"
+
+STRING_VERSION_HELP6, "\nA FreeDOS készítõi:\n"
+
+STRING_VERSION_HELP7, "\nA ReactOS készítõi:\n"
+
+STRING_VOL_HELP1, " A (%c) meghajtóban lévõ kötet: %s\n"
+STRING_VOL_HELP2, " A (%c) meghajtóban lévõ kötetnek nincs címkéje"
+STRING_VOL_HELP3, " A kötet sorozatszáma %04X-%04X\n"
+STRING_VOL_HELP4, "A kötet címkéjének és sorozatszámának megjelenítése, ha léteznek.\n\nVOL [meghajtó:]"
+
+STRING_WINDOW_HELP1, "change console window aspect\n\n\
+WINDOW [/POS[=]left,top,width,heigth]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+/POS          specify window placement and dimensions\n\
+MIN           minimize the window\n\
+MAX           maximize the window\n\
+RESTORE       restore the window"
+
+STRING_WINDOW_HELP2, "change console window aspect\n\n\
+ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+window        tile of window on wich perform actions\n\
+/POS          specify window placement and dimensions\n\
+MIN           minimize the window\n\
+MAX           maximize the window\n\
+RESTORE       restore the window\n\
+title         new title\n"
+
+
+STRING_HELP1, "Támogatott parancsok megjelenítése\n\n\
+  parancs /?     Több (részletes) információ megtekintéséhez használd ezt.\n\n\
+?        Minden támogatott parancs megjelenítése (részletek nélkül).\n\
+ALIAS    Megjeleníti, vagy megváltoztatja az aliasokat.\n\
+ATTRIB   Megjeleníti vagy megváltoztatja az állományok attribútumát.\n\
+BEEP     Megszólaltatja a hangszórót.\n\
+CALL     Batch állományból egy másik batch állomány meghívása.\n\
+CD       Megjeleníti vagy átvált egy másik mappába.\n\
+CHCP     Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\
+CHOICE   Vár a felhasználóra, hogy válasszon a felkínált lehetõségek közül.\n\
+CLS      Letörli a képernyõt.\n\
+CMD      Egy új példányt indít a ReactOS parancsértelmezõjébõl.\n\
+COLOR    A konzol elõ- és háttérszínét állítja be.\n\
+COPY     Egy vagy több állományt másol a megadott helyre.\n\
+DATE     Megjeleníti vagy beállítja a rendszerdátumot.\n\
+DELETE   Eltávolít egy vagy több állományt.\n\
+DIR      Megjeleníti a mappában található almappákat és állományokat.\n\
+ECHO     Megjelenít egy szöveget, vagy beállítja a visszhangot.\n\
+ERASE    Eltávolít egy vagy több fájlt.\n\
+EXIT     Kilép a parancssor értelmezõbõl.\n\
+FOR      Végrehajt egy parancsot az összes fájlban a megadott mappákban.\n\
+FREE     Megjeleníti a szabad hely méretét.\n\
+GOTO     Átirányít egy másik címkére a batch állományban.\n\
+HELP     Segítséget ad a ReactOS parancsairól.\n\
+HISTORY  Megjeleníti az ebben az ablakban kiadott parancsok listáját.\n\
+IF       Feltételes végrehajtás batch állományokban.\n\
+LABEL    Beállítja egy kötet címkéjét.\n\
+MD       Létrehoz egy új mappát.\n\
+MKDIR    Létrehoz egy új mappát.\n\
+MOVE     Áthelyez egy vagy több állományt az egyik mappából a másikba.\n\
+PATH     Megjeleníti vagy beállítja a keresési útvonalakat.\n\
+PAUSE    Felfüggeszti a futást, és vár a felhasználóra.\n\
+POPD     Visszalép a PUSHD által megjegyzett mappába.\n\
+PROMPT   Parancssor beállítása.\n\
+PUSHD    Megjegyzi az aktuális mappát, majd átvált egy máasikra.\n\
+RD       Töröl egy mappát.\n\
+REM      Megjegyzést jelölõ sor batch fájlokban.\n\
+REN      Átnevez egy állományt.\n\
+RENAME   Átnevez egy állományt.\n\
+RMDIR    Töröl egy mappát.\n\
+SCREEN   Megváltoztatja a kurzos pozícióját, vagy megjelenít adott pozícióban egy szöveget.\n\
+SET      Megjeleníti vagy beállítja a környezeti változókat.\n\
+SHIFT    Eltolja a helyettesíthetõ paraméterek pozícióját a batch állományban.\n"
+STRING_HELP2, "START    Egy új ablakban hajtha végre a parancsot.\n\
+TIME     Megjeleníti vagy beállítja a rendszeridõt.\n\
+TIMER    Idõzítõk kezelését teszi lehetõve.\n\
+TITLE    Beállítja az ablak címsorának szövegét.\n\
+TYPE     Megjeleníti egy állomány tartalmát.\n\
+VER      Megjeleníti a ReactOS verzió információját.\n\
+VERIFY   Írási mûveletek ellenõrzését vezérli\n\
+VOL      Megjeleníti egy kötet címkéjét és sorozatszámát.\n"
+
+
+STRING_CHOICE_OPTION,         "IN"
+STRING_COPY_OPTION,           "INM"
+
+
+STRING_ALIAS_ERROR,          "A parancssor túl hosszú az alias kibontásakor!\n"
+STRING_BATCH_ERROR,          "Hiba a batch állomány megnyitásakor\n"
+STRING_CHCP_ERROR1,          "Aktív kódlap: %u\n"
+STRING_CHCP_ERROR4,          "Érvénytelen kódlap\n"
+STRING_CHOICE_ERROR,         "Érvénytelen paraméter. Várt formátum: /C[:]választási lehetõségek"
+STRING_CHOICE_ERROR_TXT,     "Érvénytelen paraméter. Várt formátum: /T[:]v,nn"
+STRING_CHOICE_ERROR_OPTION,  "Érvénytelen paraméter: %s"
+STRING_CMD_ERROR1,           "Nem lehet átirányítani a bevitelt a(z) %s állományból\n"
+STRING_CMD_ERROR2,           "Hiba a csõvezetékhez tartozó ideiglenes állomány létrehozásakor\n"
+STRING_CMD_ERROR3,           "Nem lehet a(z) %s állományba átirányítani\n"
+STRING_CMD_ERROR4,           "%s futtatása...\n"
+STRING_CMD_ERROR5,           "cmdexit.bat futtatása...\n"
+STRING_COLOR_ERROR1,         "Ugyanaz a szín nem lehet! (Az elõ- és háttérszín nem lehet ugyanolyan)"
+STRING_COLOR_ERROR2,         "Hibás szín megadás"
+STRING_COLOR_ERROR3,         "Szín %x\n"
+STRING_COLOR_ERROR4,         "Ugyanaz a szín nem lehet!"
+STRING_CONSOLE_ERROR,        "Ismeretlen hiba: %d\n"
+STRING_COPY_ERROR1,          "Hiba: a forrás nem nyitható meg - %s!\n"
+STRING_COPY_ERROR2,          "Hiba: nem másolhatod önmagára az állományt!\n"
+STRING_COPY_ERROR3,          "Hiba a cél írása közben!\n"
+STRING_COPY_ERROR4,          "Hiba: ez még nem mûködik!\n"
+STRING_DATE_ERROR,           "Érvénytelen dátum."
+STRING_DEL_ERROR5,           "A(z) %s állomány törölve lesz! "
+STRING_DEL_ERROR6,           "Biztos vagy benne (I/N)?"
+STRING_DEL_ERROR7,           "Törlés: %s\n"
+STRING_ERROR_ERROR1,         "Ismeretlen hiba! Hiba kód: 0x%lx\n"
+STRING_ERROR_ERROR2,         "Szintaxis hiba"
+STRING_FOR_ERROR1,           "az 'in' után hiányzik a feltétel."
+STRING_FOR_ERROR2,           "nincs zárójel megadva."
+STRING_FOR_ERROR3,           "a 'do' hiányzik." 
+STRING_FOR_ERROR4,           "nincs parancs a  'do' után."
+STRING_FREE_ERROR1,          "Érvénytelen meghajtó"
+STRING_FREE_ERROR2,          "nincs cimkézve"
+STRING_GOTO_ERROR1,          "Nem lett cimke megadva a  GOTO után"
+STRING_GOTO_ERROR2,          "A '%s' cimke nem található\n"
+
+STRING_MOVE_ERROR1,          "[OK]\n"
+STRING_MOVE_ERROR2,          "[HIBA]\n"
+
+STRING_REN_ERROR1,           "MoveÁllomány() sikertelen. Hiba: %lu\n"
+
+STRING_START_ERROR1,         "Nincs batch támogatás jelenleg!"
+
+STRING_TIME_ERROR1,          "Érvénytelen idõ."
+
+STRING_TYPE_ERROR1,          "Érvénytelen beállítás '/%s'\n"
+
+STRING_WINDOW_ERROR1,        "Az ablak nem található"
+
+
+STRING_ERROR_PARAMETERF_ERROR,     "A paraméter megadás hibás - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "Érvénytelen kapcsoló - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "Túl sok paraméter - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Az elérési_út nem halálható\n"
+STRING_ERROR_FILE_NOT_FOUND,       "Az állomány nem található\n"
+STRING_ERROR_REQ_PARAM_MISSING,    "Egy szükséges paraméter hiányzik\n"
+STRING_ERROR_INVALID_DRIVE,        "Érvénytelen meghajtó\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "Érvénytelen paraméter megadás - %s\n"
+STRING_ERROR_BADCOMMAND,           "Ismeretlen parancs vagy állomány név\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Nincs elég memória.\n"
+STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary állomány!\n"
+STRING_ERROR_D_PAUSEMSG,           "A folytatáshoz nyomj meg egy billentyût . . ."
+STRING_ERROR_DRIVER_NOT_READY,     "A meghajtó nem áll készen"
+
+STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
+
+STRING_CMD_SHELLINFO,              "\nReactOS Parancssor értelmezõ"
+STRING_VERSION_RUNVER,             " running on %s"
+STRING_COPY_FILE ,                 "        %d állomány másolva\n"
+STRING_DELETE_WIPE,                "wiped"
+STRING_FOR_ERROR,                  "Hibás változó."
+STRING_SCREEN_COL,                 "Érvénytelen érték oszlopnak"
+STRING_SCREEN_ROW,                 "Érvénytelen érték sornak"
+STRING_TIMER_TIME                  "Idõzítõ %d értéke %s: "
+}
