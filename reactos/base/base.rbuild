@@ -4,14 +4,12 @@
   <directory name="applications">
   <xi:include href="applications/applications.rbuild" />
   </directory>
-<!--
   <directory name="services">
   <xi:include href="services/services.rbuild" />
   </directory>
   <directory name="setup">
   <xi:include href="setup/setup.rbuild" />
   </directory>
--->
   <directory name="shell">
   <xi:include href="shell/shell.rbuild" />
   </directory>

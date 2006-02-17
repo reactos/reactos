@@ -229,9 +229,6 @@
 <directory name="version">
 	<xi:include href="version/version.rbuild" />
 </directory>
-<directory name="wdmaud">
-	<xi:include href="wdmaud/wdmaud.rbuild" />
-</directory>
 <directory name="wininet">
 	<xi:include href="wininet/wininet.rbuild" />
 </directory>

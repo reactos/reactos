@@ -2,7 +2,7 @@
 #include <ntdddisk.h>
 #include "ramdrv.h"
 #include <debug.h>
-#include "../../lib/bzip2/bzlib.h"
+#include "bzlib.h"
 
 static NTSTATUS STDCALL RamdrvDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
 					     PIRP Irp)

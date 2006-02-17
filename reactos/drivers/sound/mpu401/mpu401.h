@@ -15,7 +15,7 @@
 //#include <mmsystem.h>
 //#include <mmddk.h>
 //#include <winioctl.h>
-#include "../../../lib/mmdrv/mmdef.h"
+#include "../../../dll/win32/mmdrv/mmdef.h"
 
 #define DEFAULT_PORT    0x330
 #define DEFAULT_IRQ     9
