@@ -343,7 +343,7 @@ BUGCODES_RC = ntoskrnl$(SEP)bugcodes.rc
 ERRCODES_H = include$(SEP)reactos$(SEP)errcodes.h
 ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 
-# include lib/lib.mak
+include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
 -include $(ROS_AUTOMAKE)
