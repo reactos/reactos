@@ -5,9 +5,6 @@
 <directory name="gettype">
 	<xi:include href="gettype/gettype.xml" />
 </directory>
-<directory name="msiexec">
-	<xi:include href="msiexec/msiexec.xml" />
-</directory>
 <directory name="reactos">
 	<xi:include href="reactos/reactos.xml" />
 </directory>
@@ -19,15 +16,6 @@
 </directory>
 <directory name="sndvol32">
 	<xi:include href="sndvol32/sndvol32.xml" />
-</directory>
-<directory name="usetup">
-	<xi:include href="usetup/usetup.xml" />
-</directory>
-<directory name="vmwinst">
-	<xi:include href="vmwinst/vmwinst.xml" />
-</directory>
-<directory name="winver">
-	<xi:include href="winver/winver.xml" />
 </directory>
 </group>
 
