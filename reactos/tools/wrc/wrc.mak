@@ -59,7 +59,7 @@ WRC_HOST_CFLAGS = -I$(WRC_BASE) $(TOOLS_CFLAGS) \
 		  -DPULONG="unsigned int *" -DLONG_DEFINED \
                   -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
                   -I$(UNICODE_BASE) -I$(WPP_BASE) \
-                  -Iinclude/wine -Iinclude -Iw32api/include
+                  -Iinclude/reactos/wine -Iinclude/reactos -Iinclude 
 
 WRC_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
