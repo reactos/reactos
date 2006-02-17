@@ -1,7 +1,7 @@
 <module name="msacm32" type="win32dll" baseaddress="${BASEADDRESS_MSACM32}" installbase="system32" installname="msacm32.dll">
 	<importlibrary definition="msacm32.spec.def" />
 	<include base="msacm32">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

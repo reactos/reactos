@@ -1,7 +1,7 @@
 <module name="netapi32" type="win32dll" baseaddress="${BASEADDRESS_NETAPI32}" installbase="system32" installname="netapi32.dll" allowwarnings="true">
 	<importlibrary definition="netapi32.spec.def" />
 	<include base="netapi32">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

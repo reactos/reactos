@@ -36,7 +36,7 @@ WMC_HOST_CFLAGS = -I$(WMC_BASE) $(TOOLS_CFLAGS) \
                   -DLONG="int" -DULONG="unsigned int" \
                   -DPULONG="unsigned int *" -DLONG_DEFINED \
                   -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
-                  -Iinclude/wine -Iinclude -Iw32api/include
+                  -Iinclude/reactos/wine -Iinclude/reactos -Iinclude
 
 WMC_HOST_LFLAGS = $(TOOLS_LFLAGS)
 

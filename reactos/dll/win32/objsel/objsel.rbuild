@@ -2,7 +2,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="objsel.spec.def" />
 	<include base="objsel">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

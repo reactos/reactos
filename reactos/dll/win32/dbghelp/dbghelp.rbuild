@@ -1,7 +1,7 @@
 <module name="dbghelp" type="win32dll" baseaddress="${BASEADDRESS_DBGHELP}" installbase="system32" installname="dbghelp.dll" allowwarnings="true">
 	<importlibrary definition="dbghelp.spec.def" />
 	<include base="dbghelp">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

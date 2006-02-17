@@ -1,7 +1,7 @@
 <module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll" allowwarnings="true">
 	<importlibrary definition="setupapi.spec.def" />
 	<include base="setupapi">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />

@@ -1,7 +1,7 @@
 <module name="cabinet" type="win32dll" baseaddress="${BASEADDRESS_CABINET}" installbase="system32" installname="cabinet.dll" allowwarnings="true">
 	<importlibrary definition="cabinet.spec.def" />
 	<include base="cabinet">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

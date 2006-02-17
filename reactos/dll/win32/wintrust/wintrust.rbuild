@@ -2,7 +2,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="wintrust.spec.def" />
 	<include base="wintrust">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__USE_W32API" />
 	<library>wine</library>
 	<library>ntdll</library>

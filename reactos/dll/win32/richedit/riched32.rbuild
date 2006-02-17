@@ -1,7 +1,7 @@
 <module name="riched32" type="win32dll" baseaddress="${BASEADDRESS_RICHED32}" installbase="system32" installname="riched32.dll">
 	<importlibrary definition="riched32.spec.def" />
 	<include base="riched32">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

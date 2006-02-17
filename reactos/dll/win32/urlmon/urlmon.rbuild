@@ -1,7 +1,7 @@
 <module name="urlmon" type="win32dll" baseaddress="${BASEADDRESS_URLMON}" installbase="system32" installname="urlmon.dll" allowwarnings="true">
 	<importlibrary definition="urlmon.spec.def" />
 	<include base="urlmon">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

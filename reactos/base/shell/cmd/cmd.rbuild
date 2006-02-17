@@ -1,5 +1,5 @@
 <module name="cmd_base" type="objectlibrary">
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd_base">.</include>
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
@@ -62,7 +62,7 @@
 	</compilationunit>
 </module>
 <module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" usewrc="false">
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd">.</include>
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />

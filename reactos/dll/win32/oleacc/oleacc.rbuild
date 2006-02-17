@@ -2,7 +2,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="oleacc.spec.def" />
 	<include base="oleacc">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>ntdll</library>

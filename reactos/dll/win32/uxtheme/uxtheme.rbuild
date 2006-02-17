@@ -1,7 +1,7 @@
 <module name="uxtheme" type="win32dll" baseaddress="${BASEADDRESS_UXTHEME}" installbase="system32" installname="uxtheme.dll" allowwarnings="true">
 	<importlibrary definition="uxtheme.spec.def" />
 	<include base="uxtheme">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

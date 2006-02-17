@@ -4,7 +4,9 @@
 <directory name="smss">
 	<xi:include href="smss/smss.xml" />
 </directory>
+<!--
 <directory name="system">
 	<xi:include href="system/directory.xml" />
 </directory>
+-->
 </group>

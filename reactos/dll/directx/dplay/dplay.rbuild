@@ -1,7 +1,7 @@
 <module name="dplay" type="win32dll" baseaddress="${BASEADDRESS_DPLAY}" installbase="system32" installname="dplay.dll">  
 	<importlibrary definition="dplay.spec.def" />
 	<include base="dinput8">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

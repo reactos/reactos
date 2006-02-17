@@ -2,7 +2,7 @@
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shell32.spec.def" />
 	<include base="shell32">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

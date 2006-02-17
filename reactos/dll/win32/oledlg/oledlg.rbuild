@@ -1,7 +1,7 @@
 <module name="oledlg" type="win32dll" baseaddress="${BASEADDRESS_OLEDLG}" installbase="system32" installname="oledlg.dll" allowwarnings="true">
 	<importlibrary definition="oledlg.spec.def" />
 	<include base="oledlg">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

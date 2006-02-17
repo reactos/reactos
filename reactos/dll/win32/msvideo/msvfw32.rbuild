@@ -1,6 +1,6 @@
 <module name="msvfw32" type="win32dll" baseaddress="${BASEADDRESS_MSVFW32}" installbase="system32" installname="msvfw32.dll">
 	<importlibrary definition="msvfw32.spec.def" />
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

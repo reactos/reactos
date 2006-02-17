@@ -38,9 +38,9 @@
   <include>include/drivers</include>
   <include>include/subsys</include>
   <include>include/ndk</include>
-  <include>w32api/include</include>
-  <include>w32api/include/crt</include>
-  <include>w32api/include/ddk</include>
+  <include>include</include>
+  <include>include/crt</include>
+  <include>include/ddk</include>
 
   <directory name="boot">
     <xi:include href="boot/boot.rbuild" />

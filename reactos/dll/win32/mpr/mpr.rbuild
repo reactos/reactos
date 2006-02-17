@@ -1,7 +1,7 @@
 <module name="mpr" type="win32dll" baseaddress="${BASEADDRESS_MPR}" installbase="system32" installname="mpr.dll" allowwarnings="true">
 	<importlibrary definition="mpr.spec.def" />
 	<include base="mpr">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

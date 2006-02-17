@@ -1,6 +1,6 @@
 <module name="version" type="win32dll" baseaddress="${BASEADDRESS_VERSION}" installbase="system32" installname="version.dll" allowwarnings="true">
 	<importlibrary definition="version.def" />
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
