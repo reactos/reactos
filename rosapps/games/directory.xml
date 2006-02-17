@@ -1,7 +1,0 @@
-<directory name="solitaire">
-	<xi:include href="solitaire/solitaire.xml" />
-</directory>
-
-<directory name="winemine">
-	<xi:include href="winemine/winemine.xml" />
-</directory>
