@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="lsass" type="win32gui" installbase="system32" installname="lsass.exe">
 	<include base="lsass">.</include>
 	<define name="UNICODE" />
