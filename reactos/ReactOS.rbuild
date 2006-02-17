@@ -43,9 +43,6 @@
   <include>w32api/include/ddk</include>
 
 <!-- TODO
-  <directory name="apps">
-    <xi:include href="apps/directory.rbuild" />
-  </directory>
   <directory name="boot">
     <xi:include href="boot/boot.rbuild" />
   </directory>
