@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="ibrowser" type="win32gui" installbase="system32" installname="ibrowser.exe"  allowwarnings ="true">
 	<linkerflag>-fexceptions</linkerflag>
 	<include base="ibrowser">.</include>

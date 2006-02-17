@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="servman" type="win32gui" installbase="system32" installname="servman.exe">
 	<include base="servman">.</include>
 	<define name="UNICODE" />

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="winefile" type="win32gui"  installbase="system32" installname="winefile.exe" allowwarnings="true">
 	<include base="winefile">.</include>
 	<define name="UNICODE" />

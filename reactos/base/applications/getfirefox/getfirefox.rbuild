@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="getfirefox" type="win32gui" installbase="system32" installname="getfirefox.exe">
     <include base="getfirefox">.</include>
     <define name="UNICODE" />

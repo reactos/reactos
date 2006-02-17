@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="telnet" type="win32cui" installbase="system32" installname="telnet.exe" allowwarnings ="true">
 	<include base="telnet">.</include>
 	<define name="__USE_W32API" />

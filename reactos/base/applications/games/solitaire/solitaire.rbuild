@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="sol" type="win32gui" installbase="system32" installname="solitaire.exe" allowwarnings="true">
 	<include base="sol">.</include>
 	<include base="sol">cardlib</include>
