@@ -75,9 +75,6 @@
   <directory name="ntoskrnl">
     <xi:include href="ntoskrnl/ntoskrnl.rbuild" />
   </directory>
-  <directory name="subsys">
-    <xi:include href="subsys/subsys.rbuild" />
-  </directory>
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
