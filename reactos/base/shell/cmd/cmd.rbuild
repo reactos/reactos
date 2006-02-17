@@ -73,5 +73,5 @@
 	<file>cmd.rc</file>
 </module>
 <directory name="tests">
-	<xi:include href="tests/cmd_test.xml" />
+	<xi:include href="tests/cmd_test.rbuild" />
 </directory>
