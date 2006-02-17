@@ -33,7 +33,7 @@ using std::string;
 using std::vector;
 
 static string BuildSystem;
-static string RootXmlFile = "ReactOS.xml";
+static string RootXmlFile = "ReactOS.rbuild";
 static Configuration configuration;
 
 bool
