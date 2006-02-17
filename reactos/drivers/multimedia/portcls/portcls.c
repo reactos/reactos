@@ -1,30 +1,12 @@
 /*
- *  ReactOS PortCls Driver
- *  Copyright (C) 2005 ReactOS Team
+ * PROJECT:     ReactOS Sound System
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/multimedia/portcls/portcls.c
+ * PURPOSE:     Audio Port Class Functions
+ * PROGRAMMERS: 
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA 
- *
- *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS Sound System
- *  PURPOSE:          Audio Port Class Functions
- *  FILE:             drivers/multimedia/portcls/portcls.c
- *  PROGRAMMERS:
- *
- *  REVISION HISTORY:
- *       21 November 2005   Created James Tabor
  */
+
 #include "portcls.h"
 
 
