@@ -1,6 +1,60 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <group>
+<directory name="crt">
+	<xi:include href="crt/crt.xml" />
+</directory>
+<directory name="dxguid">
+	<xi:include href="dxguid/dxguid.xml" />
+</directory>
+<directory name="epsapi">
+	<xi:include href="epsapi/epsapi.xml" />
+</directory>
+<directory name="fslib">
+	<xi:include href="fslib/directory.xml" />
+</directory>
+<directory name="inflib">
+	<xi:include href="inflib/inflib.xml" />
+</directory>
+<directory name="intrlck">
+	<xi:include href="intrlck/intrlck.xml" />
+</directory>
+<directory name="kjs">
+	<xi:include href="kjs/kjs.xml" />
+</directory>
+<directory name="libwine">
+	<xi:include href="libwine/libwine.xml" />
+</directory>
+<directory name="nt">
+	<xi:include href="nt/nt.xml" />
+</directory>
+<directory name="pseh">
+	<xi:include href="pseh/pseh.xml" />
+</directory>
+<directory name="rtl">
+	<xi:include href="rtl/rtl.xml" />
+</directory>
+<directory name="smdll">
+	<xi:include href="smdll/smdll.xml" />
+</directory>
+<directory name="smlib">
+	<xi:include href="smlib/smlib.xml" />
+</directory>
+<directory name="string">
+	<xi:include href="string/string.xml" />
+</directory>
+<directory name="strmiids">
+	<xi:include href="strmiids/strmiids.xml" />
+</directory>
+<directory name="uuid">
+	<xi:include href="uuid/uuid.xml" />
+</directory>
+<directory name="wdmguid">
+	<xi:include href="wdmguid/wdmguid.xml" />
+</directory>
+</group>
+
+<!-- The following entires got moved:
 <directory name="acledit">
 	<xi:include href="acledit/acledit.xml" />
 </directory>
@@ -39,9 +93,6 @@
 </directory>
 <directory name="cpl">
 	<xi:include href="cpl/directory.xml" />
-</directory>
-<directory name="crt">
-	<xi:include href="crt/crt.xml" />
 </directory>
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.xml" />
@@ -88,12 +139,6 @@
 <directory name="dxdiagn">
 	<xi:include href="dxdiagn/dxdiagn.xml" />
 </directory>
-<directory name="dxguid">
-	<xi:include href="dxguid/dxguid.xml" />
-</directory>
-<directory name="epsapi">
-	<xi:include href="epsapi/epsapi.xml" />
-</directory>
 <directory name="expat">
 	<xi:include href="expat/expat.xml" />
 </directory>
@@ -102,9 +147,6 @@
 </directory>
 <directory name="freetype">
 	<xi:include href="freetype/freetype.xml" />
-</directory>
-<directory name="fslib">
-	<xi:include href="fslib/directory.xml" />
 </directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.xml" />
@@ -127,12 +169,6 @@
 <directory name="imm32">
 	<xi:include href="imm32/imm32.xml" />
 </directory>
-<directory name="inflib">
-	<xi:include href="inflib/inflib.xml" />
-</directory>
-<directory name="intrlck">
-	<xi:include href="intrlck/intrlck.xml" />
-</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.xml" />
 </directory>
@@ -141,12 +177,6 @@
 </directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.xml" />
-</directory>
-<directory name="kjs">
-	<xi:include href="kjs/kjs.xml" />
-</directory>
-<directory name="libwine">
-	<xi:include href="libwine/libwine.xml" />
 </directory>
 <directory name="lsasrv">
 	<xi:include href="lsasrv/lsasrv.xml" />
@@ -202,9 +232,6 @@
 <directory name="newdev">
 	<xi:include href="newdev/newdev.xml" />
 </directory>
-<directory name="nt">
-	<xi:include href="nt/nt.xml" />
-</directory>
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
 </directory>
@@ -235,9 +262,6 @@
 <directory name="psapi">
 	<xi:include href="psapi/psapi.xml" />
 </directory>
-<directory name="pseh">
-	<xi:include href="pseh/pseh.xml" />
-</directory>
 <directory name="richedit">
 	<xi:include href="richedit/riched32.xml" />
 </directory>
@@ -249,9 +273,6 @@
 </directory>
 <directory name="rpcrt4">
 	<xi:include href="rpcrt4/rpcrt4.xml" />
-</directory>
-<directory name="rtl">
-	<xi:include href="rtl/rtl.xml" />
 </directory>
 <directory name="samlib">
 	<xi:include href="samlib/samlib.xml" />
@@ -289,18 +310,6 @@
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.xml" />
 </directory>
-<directory name="smdll">
-	<xi:include href="smdll/smdll.xml" />
-</directory>
-<directory name="smlib">
-	<xi:include href="smlib/smlib.xml" />
-</directory>
-<directory name="string">
-	<xi:include href="string/string.xml" />
-</directory>
-<directory name="strmiids">
-	<xi:include href="strmiids/strmiids.xml" />
-</directory>
 <directory name="syssetup">
 	<xi:include href="syssetup/syssetup.xml" />
 </directory>
@@ -316,9 +325,6 @@
 <directory name="userenv">
 	<xi:include href="userenv/userenv.xml" />
 </directory>
-<directory name="uuid">
-	<xi:include href="uuid/uuid.xml" />
-</directory>
 <directory name="uxtheme">
 	<xi:include href="uxtheme/uxtheme.xml" />
 </directory>
@@ -327,9 +333,6 @@
 </directory>
 <directory name="version">
 	<xi:include href="version/version.xml" />
-</directory>
-<directory name="wdmguid">
-	<xi:include href="wdmguid/wdmguid.xml" />
 </directory>
 <directory name="wininet">
 	<xi:include href="wininet/wininet.xml" />
@@ -358,4 +361,4 @@
 <directory name="zlib">
 	<xi:include href="zlib/zlib.xml" />
 </directory>
-</group>
+-->

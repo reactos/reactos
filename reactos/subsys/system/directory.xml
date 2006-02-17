@@ -1,9 +1,40 @@
 <group>
-<directory name="autochk">
-	<xi:include href="autochk/autochk.xml" />
-</directory>
 <directory name="cacls">
 	<xi:include href="cacls/cacls.xml" />
+</directory>
+<directory name="gettype">
+	<xi:include href="gettype/gettype.xml" />
+</directory>
+<directory name="msiexec">
+	<xi:include href="msiexec/msiexec.xml" />
+</directory>
+<directory name="reactos">
+	<xi:include href="reactos/reactos.xml" />
+</directory>
+<directory name="reporterror">
+	<xi:include href="reporterror/reporterror.xml" />
+</directory>
+<directory name="sm">
+	<xi:include href="sm/sm.xml" />
+</directory>
+<directory name="sndvol32">
+	<xi:include href="sndvol32/sndvol32.xml" />
+</directory>
+<directory name="usetup">
+	<xi:include href="usetup/usetup.xml" />
+</directory>
+<directory name="vmwinst">
+	<xi:include href="vmwinst/vmwinst.xml" />
+</directory>
+<directory name="winver">
+	<xi:include href="winver/winver.xml" />
+</directory>
+</group>
+
+<!-- The following needs to be moved:
+
+<directory name="autochk">
+	<xi:include href="autochk/autochk.xml" />
 </directory>
 <directory name="calc">
 	<xi:include href="calc/calc.xml" />
@@ -20,9 +51,6 @@
 <directory name="explorer">
 	<xi:include href="explorer/explorer.xml" />
 </directory>
-<directory name="gettype">
-	<xi:include href="gettype/gettype.xml" />
-</directory>
 <directory name="hostname">
 	<xi:include href="hostname/hostname.xml" />
 </directory>
@@ -38,23 +66,14 @@
 <directory name="msconfig">
 	<xi:include href="msconfig/msconfig.xml" />
 </directory>
-<directory name="msiexec">
-	<xi:include href="msiexec/msiexec.xml" />
-</directory>
 <directory name="notepad">
 	<xi:include href="notepad/notepad.xml" />
-</directory>
-<directory name="reactos">
-	<xi:include href="reactos/reactos.xml" />
 </directory>
 <directory name="regedit">
 	<xi:include href="regedit/regedit.xml" />
 </directory>
 <directory name="regsvr32">
 	<xi:include href="regsvr32/regsvr32.xml" />
-</directory>
-<directory name="reporterror">
-	<xi:include href="reporterror/reporterror.xml" />
 </directory>
 <directory name="rundll32">
 	<xi:include href="rundll32/rundll32.xml" />
@@ -71,23 +90,11 @@
 <directory name="setup">
 	<xi:include href="setup/setup.xml" />
 </directory>
-<directory name="sm">
-	<xi:include href="sm/sm.xml" />
-</directory>
-<directory name="sndvol32">
-	<xi:include href="sndvol32/sndvol32.xml" />
-</directory>
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.xml" />
 </directory>
 <directory name="userinit">
 	<xi:include href="userinit/userinit.xml" />
-</directory>
-<directory name="usetup">
-	<xi:include href="usetup/usetup.xml" />
-</directory>
-<directory name="vmwinst">
-	<xi:include href="vmwinst/vmwinst.xml" />
 </directory>
 <directory name="winefile">
 	<xi:include href="winefile/winefile.xml" />
@@ -95,10 +102,7 @@
 <directory name="winlogon">
 	<xi:include href="winlogon/winlogon.xml" />
 </directory>
-<directory name="winver">
-	<xi:include href="winver/winver.xml" />
-</directory>
 <directory name="welcome">
 	<xi:include href="welcome/welcome.xml" />
 </directory>
-</group>
+-->

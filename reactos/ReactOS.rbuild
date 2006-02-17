@@ -90,10 +90,8 @@
   <directory name="subsys">
     <xi:include href="subsys/subsys.rbuild" />
   </directory>
-<!-- NOT DONE YET
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
--->
 
 </project>
