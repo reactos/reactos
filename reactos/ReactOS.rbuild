@@ -69,6 +69,12 @@
   <directory name="include">
     <xi:include href="include/directory.rbuild" />
   </directory>
+  <directory name="modules">
+    <xi:include href="modules/directory.rbuild" />
+  </directory>
+  <directory name="regtests">
+    <xi:include href="regtests/directory.rbuild" />
+  </directory>
 -->
   <directory name="lib">
     <xi:include href="lib/lib.rbuild" />
@@ -76,17 +82,9 @@
   <directory name="media">
     <xi:include href="media/media.rbuild" />
   </directory>
-<!-- TODO
-  <directory name="modules">
-    <xi:include href="modules/directory.rbuild" />
-  </directory>
   <directory name="ntoskrnl">
     <xi:include href="ntoskrnl/ntoskrnl.rbuild" />
   </directory>
-  <directory name="regtests">
-    <xi:include href="regtests/directory.rbuild" />
-  </directory>
--->
   <directory name="subsys">
     <xi:include href="subsys/subsys.rbuild" />
   </directory>

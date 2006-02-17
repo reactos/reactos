@@ -1,3 +1,4 @@
+<group>
 <cdfile base="reactos">c_437.nls</cdfile>
 <cdfile base="reactos">c_1252.nls</cdfile>
 <cdfile base="reactos">l_intl.nls</cdfile>
@@ -56,3 +57,4 @@
 <installfile base="system32">c_28598.nls</installfile>
 <installfile base="system32">c_28599.nls</installfile>
 <installfile base="system32">l_intl.nls</installfile>
+</group>

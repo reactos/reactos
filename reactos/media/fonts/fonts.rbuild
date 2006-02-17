@@ -1,3 +1,4 @@
+<group>
 <installfile base="media/fonts">c0419bt_.ttf</installfile>
 <installfile base="media/fonts">c0582bt_.ttf</installfile>
 <installfile base="media/fonts">c0583bt_.ttf</installfile>
@@ -26,3 +27,4 @@
 <installfile base="media/fonts">VeraMono.ttf</installfile>
 <installfile base="media/fonts">VeraSe.ttf</installfile>
 <installfile base="media/fonts">VeraSeBd.ttf</installfile>
+</group>
