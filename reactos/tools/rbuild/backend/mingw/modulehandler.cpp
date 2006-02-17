@@ -2937,7 +2937,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	string reactosInf = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdReactosNoFixup + sSep + "reactos.inf" ),
 		backend->outputDirectory );
-	string reactosDff = NormalizeFilename ( "bootdata" + sSep + "packages" + sSep + "reactos.dff" );
+	string reactosDff = NormalizeFilename ( "boot" + sSep + "bootdata" + sSep + "packages" + sSep + "reactos.dff" );
 	string cdDirectories = GetCdDirectories ( bootcdDirectory );
 	vector<string> vCdFiles;
 	GetCdFiles ( vCdFiles );
@@ -3059,7 +3059,7 @@ MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirec
 	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" + sSep + "Desktop" );
 	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" + sSep + "My Documents" );
 
-	string livecdIni = "bootdata" + sSep + "livecd.ini";
+	string livecdIni = "boot" + sSep + "bootdata" + sSep + "livecd.ini";
 	OutputCopyCommand ( livecdIni,
                         "freeldr.ini",
                         livecdDirectory );

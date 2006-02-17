@@ -1023,11 +1023,11 @@ MingwBackend::OutputModuleInstallTargets ()
 string
 MingwBackend::GetRegistrySourceFiles ()
 {
-	return "bootdata" + sSep + "hivecls.inf "
-		"bootdata" + sSep + "hivedef.inf "
-		"bootdata" + sSep + "hiveinst.inf "
-		"bootdata" + sSep + "hivesft.inf "
-		"bootdata" + sSep + "hivesys.inf";
+	return "boot" + sSep + "bootdata" + sSep + "hivecls.inf "
+		"boot" + sSep + "bootdata" + sSep + "hivedef.inf "
+		"boot" + sSep + "bootdata" + sSep + "hiveinst.inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesft.inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesys.inf";
 }
 
 string
