@@ -42,11 +42,6 @@
   <include>w32api/include/crt</include>
   <include>w32api/include/ddk</include>
 
-<!-- TODO
-  <directory name="boot">
-    <xi:include href="boot/boot.rbuild" />
-  </directory>
--->
   <directory name="boot">
     <xi:include href="boot/boot.rbuild" />
   </directory>
@@ -56,23 +51,21 @@
   <directory name="dll">
     <xi:include href="dll/dll.rbuild" />
   </directory>
-<!-- TODO
   <directory name="drivers">
-    <xi:include href="drivers/directory.rbuild" />
+    <xi:include href="drivers/drivers.rbuild" />
   </directory>
   <directory name="hal">
-    <xi:include href="hal/directory.rbuild" />
+    <xi:include href="hal/hal.rbuild" />
   </directory>
   <directory name="include">
-    <xi:include href="include/directory.rbuild" />
+    <xi:include href="include/directory.xml" />
   </directory>
   <directory name="modules">
-    <xi:include href="modules/directory.rbuild" />
+    <xi:include href="modules/directory.xml" />
   </directory>
   <directory name="regtests">
-    <xi:include href="regtests/directory.rbuild" />
+    <xi:include href="regtests/directory.xml" />
   </directory>
--->
   <directory name="lib">
     <xi:include href="lib/lib.rbuild" />
   </directory>
