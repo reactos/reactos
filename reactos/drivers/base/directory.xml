@@ -13,9 +13,6 @@
 <directory name="debugout">
 	<xi:include href="debugout/debugout.xml" />
 </directory>
-<directory name="mpu401">
-	<xi:include href="mpu401/mpu401.xml" />
-</directory>
 <directory name="null">
 	<xi:include href="null/null.xml" />
 </directory>
@@ -27,10 +24,4 @@
 </directory>
 <directory name="serial">
 	<xi:include href="serial/serial.xml" />
-</directory>
-<directory name="sndblst">
-	<xi:include href="sndblst/sndblst.xml" />
-</directory>
-<directory name="sound">
-	<xi:include href="sound/sound.xml" />
 </directory>

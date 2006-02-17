@@ -1,6 +1,3 @@
-<directory name="bzip2">
-	<xi:include href="bzip2/bzip2.xml" />
-</directory>
 <directory name="csq">
 	<xi:include href="csq/csq.xml" />
 </directory>

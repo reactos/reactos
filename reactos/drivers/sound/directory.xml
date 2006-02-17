@@ -1,0 +1,9 @@
+<directory name="mpu401">
+	<xi:include href="mpu401/mpu401.xml" />
+</directory>
+<directory name="sndblst">
+	<xi:include href="sndblst/sndblst.xml" />
+</directory>
+<directory name="sound">
+	<xi:include href="sound/sound.xml" />
+</directory>
