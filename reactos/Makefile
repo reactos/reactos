@@ -341,7 +341,7 @@ BUILDNO_H = include$(SEP)reactos$(SEP)buildno.h
 BUGCODES_H = include$(SEP)reactos$(SEP)bugcodes.h
 BUGCODES_RC = ntoskrnl$(SEP)bugcodes.rc
 ERRCODES_H = include$(SEP)reactos$(SEP)errcodes.h
-ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
+ERRCODES_RC = dll$(SEP)win32$(SEP)kernel32$(SEP)errcodes.rc
 
 include lib/lib.mak
 include tools/tools.mak
