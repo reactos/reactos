@@ -1,3 +1,3 @@
-<directory name="idl">
-	<xi:include href="idl/idl.xml" />
+<directory name="reactos">
+	<xi:include href="reactos/reactos.rbuild" />
 </directory>
