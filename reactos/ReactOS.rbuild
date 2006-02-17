@@ -71,7 +71,7 @@
   </directory>
 -->
   <directory name="lib">
-    <xi:include href="lib/directory.rbuild" />
+    <xi:include href="lib/lib.rbuild" />
   </directory>
   <directory name="media">
     <xi:include href="media/media.rbuild" />
@@ -87,8 +87,13 @@
     <xi:include href="regtests/directory.rbuild" />
   </directory>
 -->
+  <directory name="subsys">
+    <xi:include href="subsys/subsys.rbuild" />
+  </directory>
+<!-- NOT DONE YET
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
+-->
 
 </project>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <group>
 <directory name="drivers">
 	<xi:include href="drivers/directory.xml" />
