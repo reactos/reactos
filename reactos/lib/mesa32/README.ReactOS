@@ -1,8 +1,0 @@
-This is Mesa-6.4 (http://www.mesa3d.org/) with an ICD interface.
-
-The ICD functions are in src/drivers/windows/icd/icd.c
-I have created a Makefile.ReactOS which will generate a mesa32 output directory
-containing the needed sources and a mesa32.xml rbuild file.
-
- --blight
- 
