@@ -3,7 +3,7 @@
 <module name="ibrowser" type="win32gui" installbase="system32" installname="ibrowser.exe"  allowwarnings ="true">
 	<linkerflag>-fexceptions</linkerflag>
 	<include base="ibrowser">.</include>
-	<include base="ReactOS">include/expat</include>
+	<include base="ReactOS">include/reactos/libs</include>
 	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="WIN32" />

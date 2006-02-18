@@ -76,8 +76,5 @@
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
-  <directory name="subsystems">
-    <xi:include href="subsystems/subsystems.rbuild" />
-  </directory>
 
 </project>
