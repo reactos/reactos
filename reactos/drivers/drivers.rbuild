@@ -20,9 +20,6 @@
 <directory name="network">
 	<xi:include href="network/directory.xml" />
 </directory>
-<directory name="sound">
-	<xi:include href="sound/directory.xml" />
-</directory>
 <directory name="storage">
 	<xi:include href="storage/directory.xml" />
 </directory>

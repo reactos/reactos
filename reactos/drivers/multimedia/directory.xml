@@ -1,3 +1,7 @@
+<directory name="audio">
+	<xi:include href="audio/directory.xml" />
+</directory>
+
 <!--
     Kernel Streaming
 
