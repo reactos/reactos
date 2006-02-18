@@ -29,7 +29,7 @@
     <testprog>xmllint</testprog>
     <srcdir>test</srcdir>
     <resdir>result</resdir>
-    <file>*.xml</file>
+    <file>*.rbuild</file>
     <reserrext>err</reserrext>
     <errexcl/>
   </defaults>
@@ -54,7 +54,7 @@
     <srcsub>xmlid</srcsub>
     <ressub>xmlid</ressub>
     <flag>-i</flag>
-    <file>id_*.xml</file>
+    <file>id_*.rbuild</file>
     <extarg>"id('bar')"</extarg>
   </test>
   <test>
@@ -102,7 +102,7 @@
     <testprog>testSAX</testprog>
     <resext>sax</resext>
     <file>*</file>
-    <exclfile>utf16*.xml</exclfile>
+    <exclfile>utf16*.rbuild</exclfile>
     <reserrext>None</reserrext>
   </test>
   <test>

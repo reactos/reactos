@@ -1,3 +1,3 @@
 <directory name="idl">
-	<xi:include href="idl/idl.xml" />
+	<xi:include href="idl/idl.rbuild" />
 </directory>

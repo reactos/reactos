@@ -163,5 +163,5 @@
 	<file>win32k.rc</file>
 </module>
 <directory name="tests">
-	<xi:include href="tests/win32k.xml" />
+	<xi:include href="tests/win32k.rbuild" />
 </directory>

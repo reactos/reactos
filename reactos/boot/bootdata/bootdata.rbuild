@@ -8,9 +8,9 @@
 <cdfile base="reactos">hivesys.inf</cdfile>
 <cdfile base="reactos">txtsetup.sif</cdfile>
 <directory name="bootcd">
-	<xi:include href="bootcd/bootcd.xml" />
+	<xi:include href="bootcd/bootcd.rbuild" />
 </directory>
 <directory name="livecd">
-	<xi:include href="livecd/livecd.xml" />
+	<xi:include href="livecd/livecd.rbuild" />
 </directory>
 </group>

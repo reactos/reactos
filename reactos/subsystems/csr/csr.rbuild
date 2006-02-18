@@ -9,5 +9,5 @@
 	<file>main.c</file>
 </module>
 <directory name="csrsrv">
-	<xi:include href="csrsrv/csrsrv.xml" />
+	<xi:include href="csrsrv/csrsrv.rbuild" />
 </directory>

@@ -15,5 +15,5 @@
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<file>setup.c</file>
-	<xi:include href="stubs.xml" />
+	<xi:include href="stubs.rbuild" />
 </module>

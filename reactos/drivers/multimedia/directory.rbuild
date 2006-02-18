@@ -1,5 +1,5 @@
 <directory name="audio">
-	<xi:include href="audio/directory.xml" />
+	<xi:include href="audio/directory.rbuild" />
 </directory>
 
 <!--
@@ -9,16 +9,16 @@
 -->
 
 <!--directory name="wdmaud">
-    <xi:include href="wdmaud/wdmaud.xml" />
+    <xi:include href="wdmaud/wdmaud.rbuild" />
 </directory-->
 <!--directory name="ks">
-	<xi:include href="ks/ks.xml" />
+	<xi:include href="ks/ks.rbuild" />
 </directory-->
 
 <directory name="portcls">
-	<xi:include href="portcls/portcls.xml" />
+	<xi:include href="portcls/portcls.rbuild" />
 </directory>
 
 <!--<directory name="avtest">
-	<xi:include href="avtest/avtest.xml" />
+	<xi:include href="avtest/avtest.rbuild" />
 </directory-->

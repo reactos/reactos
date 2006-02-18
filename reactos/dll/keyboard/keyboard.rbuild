@@ -1,53 +1,53 @@
 <group>
 	<directory name="kbdda">
-		<xi:include href="kbdda/kbdda.xml" />
+		<xi:include href="kbdda/kbdda.rbuild" />
 	</directory>
 	<directory name="kbddv">
-		<xi:include href="kbddv/kbddv.xml" />
+		<xi:include href="kbddv/kbddv.rbuild" />
 	</directory>
 	<directory name="kbdes">
-		<xi:include href="kbdes/kbdes.xml" />
+		<xi:include href="kbdes/kbdes.rbuild" />
 	</directory>
 	<directory name="kbdfr">
-		<xi:include href="kbdfr/kbdfr.xml" />
+		<xi:include href="kbdfr/kbdfr.rbuild" />
 	</directory>
 	<directory name="kbdgr">
-		<xi:include href="kbdgr/kbdgr.xml" />
+		<xi:include href="kbdgr/kbdgr.rbuild" />
 	</directory>
 	<directory name="kbdhe">
-		<xi:include href="kbdhe/kbdhe.xml" />
+		<xi:include href="kbdhe/kbdhe.rbuild" />
 	</directory>
 	<directory name="kbdheb">
-		<xi:include href="kbdheb/kbdheb.xml" />
+		<xi:include href="kbdheb/kbdheb.rbuild" />
 	</directory>
 	<directory name="kbdhu">
-		<xi:include href="kbdhu/kbdhu.xml" />
+		<xi:include href="kbdhu/kbdhu.rbuild" />
 	</directory>
 	<directory name="kbdru">
-		<xi:include href="kbdru/kbdru.xml" />
+		<xi:include href="kbdru/kbdru.rbuild" />
 	</directory>
 	<directory name="kbdse">
-		<xi:include href="kbdse/kbdse.xml" />
+		<xi:include href="kbdse/kbdse.rbuild" />
 	</directory>
 	<directory name="kbdsg">
-		<xi:include href="kbdsg/kbdsg.xml" />
+		<xi:include href="kbdsg/kbdsg.rbuild" />
 	</directory>
 	<directory name="kbdsk">
-		<xi:include href="kbdsk/kbdsk.xml" />
+		<xi:include href="kbdsk/kbdsk.rbuild" />
 	</directory>
 	<directory name="kbduk">
-		<xi:include href="kbduk/kbduk.xml" />
+		<xi:include href="kbduk/kbduk.rbuild" />
 	</directory>
 	<directory name="kbdus">
-		<xi:include href="kbdus/kbdus.xml" />
+		<xi:include href="kbdus/kbdus.rbuild" />
 	</directory>
 	<directory name="kbdbe">
-		<xi:include href="kbdbe/kbdbe.xml" />
+		<xi:include href="kbdbe/kbdbe.rbuild" />
 	</directory>
 	<directory name="kbdur">
-		<xi:include href="kbdur/kbdur.xml" />
+		<xi:include href="kbdur/kbdur.rbuild" />
 	</directory>
 	<directory name="kbdpo">
-		<xi:include href="kbdpo/kbdpo.xml" />
+		<xi:include href="kbdpo/kbdpo.rbuild" />
 	</directory>
 </group>

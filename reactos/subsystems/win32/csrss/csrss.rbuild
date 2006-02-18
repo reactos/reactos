@@ -24,5 +24,5 @@
 	<file>csrss.rc</file>
 </module>
 <directory name="win32csr">
-	<xi:include href="win32csr/win32csr.xml" />
+	<xi:include href="win32csr/win32csr.rbuild" />
 </directory>

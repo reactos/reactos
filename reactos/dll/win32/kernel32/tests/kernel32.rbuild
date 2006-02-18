@@ -18,5 +18,5 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<file>setup.c</file>
 	<file>CreateFile.c</file>
-	<xi:include href="stubs.xml" />
+	<xi:include href="stubs.rbuild" />
 </module>

@@ -56,7 +56,7 @@
     <xi:include href="hal/hal.rbuild" />
   </directory>
   <directory name="include">
-    <xi:include href="include/directory.xml" />
+    <xi:include href="include/directory.rbuild" />
   </directory>
   <directory name="lib">
     <xi:include href="lib/lib.rbuild" />
@@ -65,13 +65,13 @@
     <xi:include href="media/media.rbuild" />
   </directory>
   <directory name="modules">
-    <xi:include href="modules/directory.xml" />
+    <xi:include href="modules/directory.rbuild" />
   </directory>
   <directory name="ntoskrnl">
     <xi:include href="ntoskrnl/ntoskrnl.rbuild" />
   </directory>
   <directory name="regtests">
-    <xi:include href="regtests/directory.xml" />
+    <xi:include href="regtests/directory.rbuild" />
   </directory>  
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />

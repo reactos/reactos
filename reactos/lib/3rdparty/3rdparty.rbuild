@@ -2,19 +2,19 @@
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <group>
 <directory name="adns">
-	<xi:include href="adns/adns.xml" />
+	<xi:include href="adns/adns.rbuild" />
 </directory>
 <directory name="bzip2">
-	<xi:include href="bzip2/bzip2.xml" />
+	<xi:include href="bzip2/bzip2.rbuild" />
 </directory>
 <directory name="expat">
-	<xi:include href="expat/expat.xml" />
+	<xi:include href="expat/expat.rbuild" />
 </directory>
 <directory name="libxml2">
-	<xi:include href="libxml2/libxml2.xml" />
+	<xi:include href="libxml2/libxml2.rbuild" />
 </directory>
 <directory name="zlib">
-	<xi:include href="zlib/zlib.xml" />
+	<xi:include href="zlib/zlib.rbuild" />
 </directory>
 </group>
 
