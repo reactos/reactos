@@ -18,7 +18,7 @@
 /* #undef HAVE_GETADDRINFO */
 
 /* Define to 1 if you have the <ansidecl.h> header file. */
-#define HAVE_ANSIDECL_H 1
+/* #undef HAVE_ANSICDECL_H */
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 /* #undef HAVE_ARPA_INET_H */
