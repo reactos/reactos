@@ -13,6 +13,9 @@
     <directory name="lsass">
       <xi:include href="lsass/lsass.rbuild" />
     </directory>
+    <directory name="msiexec">
+      <xi:include href="msiexec/msiexec.rbuild" />
+    </directory>
     <directory name="regsvr32">
       <xi:include href="regsvr32/regsvr32.rbuild" />
     </directory>
@@ -21,6 +24,9 @@
     </directory>
     <directory name="services">
       <xi:include href="services/services.rbuild" />
+    </directory>
+    <directory name="smss">
+      <xi:include href="smss/smss.rbuild" />
     </directory>
     <directory name="userinit">
       <xi:include href="userinit/userinit.rbuild" />
