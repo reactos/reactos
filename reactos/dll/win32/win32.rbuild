@@ -25,6 +25,9 @@
 <directory name="cards">
 	<xi:include href="cards/cards.rbuild" />
 </directory>
+<directory name="cfgmgr32">
+	<xi:include href="cfgmgr32/cfgmgr32.rbuild" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.rbuild" />
 </directory>
@@ -171,6 +174,9 @@
 </directory>
 <directory name="samlib">
 	<xi:include href="samlib/samlib.rbuild" />
+</directory>
+<directory name="samsrv">
+	<xi:include href="samsrv/samsrv.rbuild" />
 </directory>
 <directory name="secur32">
 	<xi:include href="secur32/secur32.rbuild" />
