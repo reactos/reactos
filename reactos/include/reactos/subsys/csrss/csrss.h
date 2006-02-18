@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_CSRSS_CSRSS_H
 #define __INCLUDE_CSRSS_CSRSS_H
 
-#include <blue/ntddblue.h>
+#include <drivers/blue/ntddblue.h>
 
 #define CSR_NATIVE     0x0000
 #define CSR_CONSOLE    0x0001

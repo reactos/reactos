@@ -2,6 +2,7 @@
 	<importlibrary definition="user32.def" />
 	<include base="user32">.</include>
 	<include base="user32">include</include>
+	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="UNICODE" />
 	<define name="__REACTOS__" />

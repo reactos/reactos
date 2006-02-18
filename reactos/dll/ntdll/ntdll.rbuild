@@ -2,6 +2,7 @@
 	<bootstrap base="reactos/system32" />
 	<importlibrary definition="def/ntdll.def" />
 	<include base="ntdll">inc</include>
+	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__NTDLL__" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />

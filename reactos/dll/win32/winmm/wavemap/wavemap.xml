@@ -1,7 +1,7 @@
 <module name="wavemap" type="win32dll" baseaddress="${BASEADDRESS_WAVEMAP}" installbase="system32" installname="wavemap.dll" allowwarnings="true">
 	<importlibrary definition="msacm.spec.def" />
 	<include base="wavemap">.</include>
-	<include base="ReactOS">include/wine</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

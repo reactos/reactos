@@ -1,6 +1,7 @@
 <module name="secur32" type="win32dll" baseaddress="${BASEADDRESS_SECUR32}" installbase="system32" installname="secur32.dll">
 	<importlibrary definition="secur32.def" />
 	<include base="secur32">.</include>
+	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__SECUR32__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x501</define>

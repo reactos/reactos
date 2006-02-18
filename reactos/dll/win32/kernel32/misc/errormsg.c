@@ -28,7 +28,7 @@
 #define NDEBUG
 
 #include "../include/debug.h"
-#include "../include/wine/unicode.h"
+#include "wine/unicode.h"
 
 #define TRACE DPRINT
 #define FIXME DPRINT
