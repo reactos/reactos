@@ -4,6 +4,9 @@
 <directory name="3rdparty">
 	<xi:include href="3rdparty/3rdparty.rbuild" />
 </directory>
+<directory name="drivers">
+	<xi:include href="drivers/directory.xml" />
+</directory>
 
 <directory name="crt">
 	<xi:include href="crt/crt.xml" />

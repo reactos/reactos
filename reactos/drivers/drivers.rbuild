@@ -11,9 +11,6 @@
 <directory name="input">
 	<xi:include href="input/directory.xml" />
 </directory>
-<directory name="lib">
-	<xi:include href="lib/directory.xml" />
-</directory>
 <directory name="multimedia">
 	<xi:include href="multimedia/directory.xml" />
 </directory>
