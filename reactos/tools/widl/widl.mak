@@ -56,7 +56,7 @@ WIDL_OBJECTS = \
 WIDL_HOST_CFLAGS = $(TOOLS_CFLAGS) \
 	-DINT16=SHORT -D__USE_W32API -DYYDEBUG=1 \
 	-I$(WIDL_BASE) -I$(WPP_BASE) \
-	-Iinclude/wine -Iinclude -Iw32api/include
+	-Iinclude/reactos/wine -Iinclude/reactos -Iinclude
 
 WIDL_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
