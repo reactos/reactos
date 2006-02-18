@@ -3087,10 +3087,9 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) bootdata %s bootdata%clivecd.inf bootdata%chiveinst.inf\n",
-	          reactosSystem32ConfigDirectory.c_str (),
-                  cSep,
-                  cSep );
+	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst.inf\n",
+	          cSep, reactosSystem32ConfigDirectory.c_str (),
+                  cSep, cSep, cSep, cSep );
 }
 
 void

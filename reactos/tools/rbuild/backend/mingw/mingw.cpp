@@ -1065,9 +1065,9 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) bootdata %s bootdata%chiveinst.inf\n",
-	          system32ConfigDirectory.c_str (),
-                  cSep );
+	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%chiveinst.inf\n",
+	          cSep, system32ConfigDirectory.c_str (),
+                  cSep, cSep );
 	fprintf ( fMakefile,
 	          "\n" );
 }
