@@ -5,12 +5,12 @@
 	<define name="_DISABLE_TIDENTS"/>
 	<define name="__USE_W32API"/>
 	<define name="__NO_CTYPE_INLINES" />
-	<include>drivers/lib/oskittcp/include/freebsd</include>
-	<include>drivers/lib/oskittcp/include/freebsd/sys/include</include>
-	<include>drivers/lib/oskittcp/include/freebsd/src/sys</include>
-	<include>drivers/lib/oskittcp/include/freebsd/dev/include</include>
-	<include>drivers/lib/oskittcp/include/freebsd/net/include</include>
-	<include>drivers/lib/oskittcp/include</include>
+	<include base="oskittcp">include/freebsd</include>
+	<include base="oskittcp">include/freebsd/sys/include</include>
+	<include base="oskittcp">include/freebsd/src/sys</include>
+	<include base="oskittcp">include/freebsd/dev/include</include>
+	<include base="oskittcp">include/freebsd/net/include</include>
+	<include base="oskittcp">include</include>
 	<directory name="oskittcp">
 		<file>defaults.c</file>
 		<file>in.c</file>

@@ -2,8 +2,8 @@
 	<define name="__NTDRIVER__"/>
 	<define name="_SEH_NO_NATIVE_NLG"/>
 	<define name="__USE_W32API"/>
-	<include>drivers/network/tcpip/include</include>
-	<include>drivers/lib/oskittcp/include</include>
+	<include base="tcpip">include</include>
+	<include base="oskittcp">include</include>
 	<directory name="network">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
