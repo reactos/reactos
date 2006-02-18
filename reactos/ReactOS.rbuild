@@ -33,20 +33,18 @@
 
   <include>.</include>
   <include>include</include>
-  <include>include/reactos</include>
-  <include>include/libs</include>
-  <include>include/drivers</include>
-  <include>include/subsys</include>
-  <include>include/ndk</include>
-  <include>include</include>
   <include>include/crt</include>
   <include>include/ddk</include>
+  <include>include/GL</include>
+  <include>include/ndk</include>
+  <include>include/reactos</include>
+  
 
-  <directory name="boot">
-    <xi:include href="boot/boot.rbuild" />
-  </directory>
   <directory name="base">
     <xi:include href="base/base.rbuild" />
+  </directory>
+  <directory name="boot">
+    <xi:include href="boot/boot.rbuild" />
   </directory>
   <directory name="dll">
     <xi:include href="dll/dll.rbuild" />
@@ -60,20 +58,23 @@
   <directory name="include">
     <xi:include href="include/directory.xml" />
   </directory>
-  <directory name="modules">
-    <xi:include href="modules/directory.xml" />
-  </directory>
-  <directory name="regtests">
-    <xi:include href="regtests/directory.xml" />
-  </directory>
   <directory name="lib">
     <xi:include href="lib/lib.rbuild" />
   </directory>
   <directory name="media">
     <xi:include href="media/media.rbuild" />
   </directory>
+  <directory name="modules">
+    <xi:include href="modules/directory.xml" />
+  </directory>
   <directory name="ntoskrnl">
     <xi:include href="ntoskrnl/ntoskrnl.rbuild" />
+  </directory>
+  <directory name="regtests">
+    <xi:include href="regtests/directory.xml" />
+  </directory>  
+  <directory name="subsystems">
+    <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
   <directory name="subsystems">
     <xi:include href="subsystems/subsystems.rbuild" />
