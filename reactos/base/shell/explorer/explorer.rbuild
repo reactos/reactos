@@ -68,7 +68,7 @@
 	<file>i386-stub-win32.c</file>
 	<file>explorer.rc</file>
 </module>
-<installfile base=".">explorer-cfg-template.rbuild</installfile>
+<installfile base=".">explorer-cfg-template.xml</installfile>
 <directory name="notifyhook">
 	<xi:include href="notifyhook/notifyhook.rbuild" />
 </directory>
