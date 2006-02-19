@@ -1,0 +1,107 @@
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&File"
+  BEGIN
+    MENUITEM "New...",         ID_NEW
+    MENUITEM "Open...",        ID_OPEN
+    MENUITEM "Close",          ID_CLOSE, GRAYED
+    MENUITEM "Close all",      ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Save",           ID_SAVE, GRAYED
+    MENUITEM "Save As",        ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Print Preview",  ID_PRINTPRE, GRAYED
+    MENUITEM "Print...",       ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Properties...",  ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit",          ID_EXIT
+  END
+  POPUP "Edit"
+  BEGIN
+    MENUITEM "Undo",           ID_UNDO, GRAYED
+    MENUITEM "Redo",           ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Cut",            ID_CUT, GRAYED
+    MENUITEM "Copy",           ID_COPY, GRAYED
+    MENUITEM "Paste",          ID_PASTE, GRAYED
+    MENUITEM "Paste as new image",ID_PASTENEWIMAGE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Select All",     ID_SELALL, GRAYED
+  END
+  POPUP "Image"
+  BEGIN
+    MENUITEM "Crop",           -1, GRAYED
+    MENUITEM "Resize",         -1, GRAYED
+    MENUITEM "Rotate",         -1, GRAYED
+    MENUITEM "Flip",           -1, GRAYED
+    MENUITEM "Stretch",        -1, GRAYED
+    MENUITEM "Skew",           -1, GRAYED
+    MENUITEM "Invert Colours", -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Attributes",     -1, GRAYED
+  END
+  POPUP "Colours"
+  BEGIN
+    MENUITEM "Edit Colours...", ID_EDITCOLOURS
+  END
+  POPUP "Window"
+  BEGIN
+    MENUITEM "Tile",           -1
+    MENUITEM "Cascade",        -1
+  END
+  POPUP "Help"
+  BEGIN
+    MENUITEM "About...",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "About ImageSoft"
+FONT 8,"Tahoma",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "ImageSoft v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
+
+/* status bar info */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_CURPOS "Cursor : %d,%d"
+  IDS_READY  "Ready"
+END
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW    "New"
+  IDS_TOOLTIP_OPEN   "Open"
+  IDS_TOOLTIP_SAVE   "Save"
+  IDS_TOOLTIP_PRINTPRE  "Print preview"
+  IDS_TOOLTIP_PRINT  "Print"
+  IDS_TOOLTIP_CUT    "Cut"
+  IDS_TOOLTIP_COPY   "Copy"
+  IDS_TOOLTIP_PASTE  "Paste"
+  IDS_TOOLTIP_UNDO   "Undo"
+  IDS_TOOLTIP_REDO   "Redo"
+END

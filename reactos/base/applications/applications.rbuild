@@ -19,6 +19,9 @@
 <directory name="ibrowser">
 	<xi:include href="ibrowser/ibrowser.rbuild" />
 </directory>
+<directory name="imagesoft">
+	<xi:include href="imagesoft/imagesoft.rbuild" />
+</directory>
 <directory name="msconfig">
 	<xi:include href="msconfig/msconfig.rbuild" />
 </directory>
