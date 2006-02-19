@@ -3,7 +3,7 @@
 <project name="ReactOS" makefile="makefile.ppc" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="config-ppc.rbuild">
     <xi:fallback>
-      <xi:include href="config.template.rbuild" />
+      <xi:include href="config-ppc.template.rbuild" />
     </xi:fallback>
   </xi:include>
 
@@ -19,7 +19,12 @@
   <define name="__PowerPC__" />
   <define name="_REACTOS_" />
   <define name="__MINGW_IMPORT" empty="true" />
-  <define name="__restrict__" empty="true" />
+  <define name="stdcall" empty="true" />	
+  <define name="__stdcall__" empty="true" />
+  <define name="fastcall" empty="true" />
+  <define name="cdecl" empty="true" />
+  <define name="__cdecl__" empty="true" />
+  <define name="dllimport" empty="true" />
   <compilerflag>-v</compilerflag>
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
@@ -49,26 +54,29 @@
   <include>include/crt</include>
   <include>include/ddk</include>
 
-  <directory name="apps">
-    <xi:include href="apps/directory.rbuild" />
+  <directory name="base">
+    <xi:include href="base/base.rbuild" />
   </directory>
   <directory name="boot">
     <xi:include href="boot/boot.rbuild" />
   </directory>
+  <directory name="dll">
+    <xi:include href="dll/dll.rbuild" />
+  </directory>
   <directory name="drivers">
-    <xi:include href="drivers/directory.rbuild" />
+    <xi:include href="drivers/drivers.rbuild" />
   </directory>
   <directory name="hal">
-    <xi:include href="hal/directory.rbuild" />
+    <xi:include href="hal/hal.rbuild" />
   </directory>
   <directory name="include">
     <xi:include href="include/directory.rbuild" />
   </directory>
   <directory name="lib">
-    <xi:include href="lib/directory.rbuild" />
+    <xi:include href="lib/lib.rbuild" />
   </directory>
   <directory name="media">
-    <xi:include href="media/directory.rbuild" />
+    <xi:include href="media/media.rbuild" />
   </directory>
   <directory name="modules">
     <xi:include href="modules/directory.rbuild" />
@@ -78,11 +86,9 @@
   </directory>
   <directory name="regtests">
     <xi:include href="regtests/directory.rbuild" />
+  </directory>  
+  <directory name="subsystems">
+    <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
-  <directory name="services">
-    <xi:include href="services/directory.rbuild" />
-  </directory>
-  <directory name="subsys">
-    <xi:include href="subsys/directory.rbuild" />
-  </directory>
+
 </project>
