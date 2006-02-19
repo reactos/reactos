@@ -46,7 +46,6 @@
 		<file>registry.c</file>
 		<file>arcname.c</file>
 		<file>binhive.c</file>
-		<file>loader.c</file>
 		<file>reactos.c</file>
 	</directory>
 	<directory name="rtl">

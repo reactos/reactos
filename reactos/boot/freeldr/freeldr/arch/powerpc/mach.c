@@ -58,10 +58,10 @@ int ofw_finddevice( const char *name ) {
 int ofw_getprop( int package, const char *name, void *buffer, int buflen ) {
     int ret, len = strlen(name);
     le_swap( name, name + len, name );
-    le_swap( buffer, buffer + buflen, buffer );
+    le_swap( buffer, (char *)buffer + buflen, buffer );
     ret = ofproxy
         ( 4, (void *)package, (char *)name, buffer, (void *)buflen );
-    le_swap( buffer, buffer + buflen, buffer );
+    le_swap( buffer, (char *)buffer + buflen, buffer );
     le_swap( name, name + len, name );
     return ret;
 }
@@ -155,7 +155,6 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
     match = !strncmp(buf, devname, strlen(devname));
 
     if( !nth && match ) return parent;
-    else if( match ) *nth--;
 
     for( i = 0; i < depth; i++ ) PpcPutChar( ' ' );
     
@@ -420,7 +419,7 @@ void PpcInit( of_proxy the_ofproxy ) {
     BootMain( CmdLine );
 }
 
-void MachInit(char *CmdLine) {
+void MachInit(const char *CmdLine) {
     int len, i;
     char *sep;
 

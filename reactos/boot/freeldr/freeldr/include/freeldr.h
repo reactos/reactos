@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <ntddk.h>
 #include <ndk/ntndk.h>
 #include <arch.h>
@@ -51,11 +52,13 @@
 #include <ui/tui.h>
 #include <ui/gui.h>
 /* arch files */
+#ifdef _X86_
 #include <arch/i386/hardware.h>
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
 #include <internal/i386/ke.h>
+#endif
 /* misc files */
 #include <keycodes.h>
 #include <version.h>

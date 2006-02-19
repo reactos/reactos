@@ -73,6 +73,8 @@ void	INSTRUCTION_BREAKPOINT4(unsigned long addr);
 void	MEMORY_READWRITE_BREAKPOINT4(unsigned long addr);
 void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
+#elif defined(__PowerPC__)
+#define UNIMPLEMENTED()   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 #endif // defined __i386__
 
 #else
@@ -83,8 +85,8 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
+#define UNIMPLEMENTED()   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 #endif // defined DEBUG
 
-#define UNIMPLEMENTED()   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 
 #endif // defined __DEBUG_H

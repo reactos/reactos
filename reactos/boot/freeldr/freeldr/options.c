@@ -113,6 +113,5 @@ VOID OptionMenuReboot(VOID)
 	DiskStopFloppyMotor();
 	SoftReboot();
 #else
-	UNIMPLEMENTED();
 #endif
 }

@@ -59,7 +59,7 @@
 ULONG_PTR NextModuleBase = 0;
 
 /* Currently Opened Module */
-PFRLDR_MODULE CurrentModule = NULL;
+VOID *CurrentModule = NULL;
 
 /* Unrelocated Kernel Base in Virtual Memory */
 ULONG_PTR KernelBase;
@@ -542,7 +542,7 @@ FrLdrMapKernel(FILE *KernelImage)
 ULONG_PTR
 STDCALL
 FrLdrLoadModule(FILE *ModuleImage, 
-                LPSTR ModuleName, 
+                LPCSTR ModuleName, 
                 PULONG ModuleSize)
 {
 #if 0
@@ -597,7 +597,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 
 ULONG_PTR
 STDCALL
-FrLdrCreateModule(LPSTR ModuleName)
+FrLdrCreateModule(LPCSTR ModuleName)
 {
 #if 0
     PFRLDR_MODULE ModuleData;
