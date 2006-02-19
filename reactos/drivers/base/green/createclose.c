@@ -1,23 +1,22 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS VT100 emulator
- * FILE:            drivers/dd/green/createclose.c
- * PURPOSE:         IRP_MJ_CREATE, IRP_MJ_CLOSE and IRP_MJ_CLEANUP operations
- *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS VT100 emulator
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/base/green/createclose.c
+ * PURPOSE:     IRP_MJ_CREATE, IRP_MJ_CLOSE and IRP_MJ_CLEANUP operations
+ * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-//#define NDEBUG
-#include <debug.h>
-
 #include "green.h"
+
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS NTAPI
 GreenCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("Green: IRP_MJ_CREATE\n");
+	DPRINT("IRP_MJ_CREATE\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -30,7 +29,7 @@ GreenClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("Green: IRP_MJ_CLOSE\n");
+	DPRINT("IRP_MJ_CLOSE\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;

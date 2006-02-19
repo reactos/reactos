@@ -1,18 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS VT100 emulator
- * FILE:            drivers/dd/green/screen.c
- * PURPOSE:         Screen part of green management
- *
- * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
- *                  Art Yerkes
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS VT100 emulator
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/base/green/screen.c
+ * PURPOSE:     IRP_MJ_PNP operations
+ * PROGRAMMERS: Copyright 2005 Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *              Copyright 2005 Art Yerkes
+ *              Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
+
+#include "green.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "green.h"
 
 #define ESC       ((UCHAR)0x1b)
 
@@ -38,9 +37,9 @@ AddToSendBuffer(
 	int CurrentInt;
 	UCHAR CurrentChar;
 	NTSTATUS Status;
-        LARGE_INTEGER ZeroOffset;
+	LARGE_INTEGER ZeroOffset;
 
-        ZeroOffset.QuadPart = 0;
+	ZeroOffset.QuadPart = 0;
 
 	SizeLeft = sizeof(DeviceExtension->SendBuffer) - DeviceExtension->SendBufferPosition;
 	if (SizeLeft < NumberOfChars * 2 || NumberOfChars == 0)
@@ -50,12 +49,12 @@ AddToSendBuffer(
 			IRP_MJ_WRITE,
 			SerialDevice,
 			DeviceExtension->SendBuffer, DeviceExtension->SendBufferPosition,
-                        &ZeroOffset,
+			&ZeroOffset,
 			NULL, /* Event */
 			&ioStatus);
 		if (!Irp)
 		{
-			DPRINT1("Green: IoBuildSynchronousFsdRequest() failed. Unable to flush output buffer\n");
+			DPRINT1("IoBuildSynchronousFsdRequest() failed. Unable to flush output buffer\n");
 			return;
 		}
 
@@ -63,7 +62,7 @@ AddToSendBuffer(
 
 		if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
 		{
-			DPRINT1("Green: IoCallDriver() failed. Status = 0x%08lx\n", Status);
+			DPRINT1("IoCallDriver() failed. Status = 0x%08lx\n", Status);
 			return;
 		}
 		DeviceExtension->SendBufferPosition = 0;
@@ -109,73 +108,113 @@ AddToSendBuffer(
 }
 
 NTSTATUS
-ScreenInitialize(
+ScreenAddDevice(
 	IN PDRIVER_OBJECT DriverObject,
-	OUT PDEVICE_OBJECT* ScreenFdo)
+	IN PDEVICE_OBJECT Pdo)
 {
-	PDEVICE_OBJECT Fdo, PreviousBlue = NULL;
-	PSCREEN_DEVICE_EXTENSION DeviceExtension;
-	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
+	/* We want to be an upper filter of Blue, if it is existing.
+	 * We also *have to* create a Fdo on top of the given Pdo.
+	 * Hence, we have 2 cases:
+	 * - Blue doesn't exist -> Create a unique Fdo (named Blue) at
+	 *   the top of the given Pdo
+	 * - Blue does exist -> Create a Fdo at the top of the existing
+	 *   DO, and create a "pass to Green" FDO at the top of the Pdo
+	 */
+	PDEVICE_OBJECT Fdo = NULL;
+	PDEVICE_OBJECT PassThroughFdo = NULL;
+	PDEVICE_OBJECT LowerDevice = NULL;
+	PDEVICE_OBJECT PreviousBlue = NULL;
+	PSCREEN_DEVICE_EXTENSION DeviceExtension = NULL;
+	UNICODE_STRING BlueScreenName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
 	NTSTATUS Status;
 
-	DPRINT("Green: ScreenInitialize() called\n");
+	DPRINT("ScreenInitialize() called\n");
 
-	Status = IoCreateDevice(DriverObject,
+	/* Try to create a unique Fdo */
+	Status = IoCreateDevice(
+		DriverObject,
 		sizeof(SCREEN_DEVICE_EXTENSION),
-		&DeviceName, /* FIXME: don't hardcode string */
+		&BlueScreenName,
 		FILE_DEVICE_SCREEN,
 		FILE_DEVICE_SECURE_OPEN,
 		TRUE,
 		&Fdo);
 
-        if (Status == STATUS_OBJECT_NAME_COLLISION)
-        {
-		DPRINT("Green: Attaching to old blue\n");
+	if (Status == STATUS_OBJECT_NAME_COLLISION)
+	{
+		DPRINT("Attaching to old blue\n");
 
 		/* Suggested by hpoussin .. Hide previous blue device 
 		 * This makes us able to coexist with blue, and install
 		 * when loaded */
-		Status = IoCreateDevice(DriverObject,
+		Status = IoCreateDevice(
+			DriverObject,
 			sizeof(SCREEN_DEVICE_EXTENSION),
 			NULL,
 			FILE_DEVICE_SCREEN,
 			FILE_DEVICE_SECURE_OPEN,
 			TRUE,
 			&Fdo);
-
 		if (!NT_SUCCESS(Status))
-			return Status;
+		{
+			DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+			goto cleanup;
+		}
 
+		/* Initialize some fields, as IoAttachDevice will trigger the
+		 * sending of IRP_MJ_CLEANUP/IRP_MJ_CLOSE. We have to know where to
+		 * dispatch these IRPs... */
+		((PSCREEN_DEVICE_EXTENSION)Fdo->DeviceExtension)->Common.Type = ScreenPDO;
 		Status = IoAttachDevice(
 			Fdo,
-			&DeviceName, /* FIXME: don't hardcode string */
-			&PreviousBlue);
-
-		if (!NT_SUCCESS(Status)) {
-			IoDeleteDevice(Fdo);
-			return Status;
+			&BlueScreenName,
+			&LowerDevice);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT("IoAttachDevice() failed with status 0x%08lx\n", Status);
+			goto cleanup;
 		}
-        }
-	else if (!NT_SUCCESS(Status))
-		return Status;
+		PreviousBlue = LowerDevice;
 
-	/* We definately have a device object.  PreviousBlue may or may
+		/* Attach a faked FDO to PDO */
+		Status = IoCreateDevice(
+			DriverObject,
+			sizeof(COMMON_FDO_DEVICE_EXTENSION),
+			NULL,
+			FILE_DEVICE_SCREEN,
+			FILE_DEVICE_SECURE_OPEN,
+			TRUE,
+			&PassThroughFdo);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+			goto cleanup;
+		}
+		((PCOMMON_FDO_DEVICE_EXTENSION)PassThroughFdo->DeviceExtension)->Type = PassThroughFDO;
+		((PCOMMON_FDO_DEVICE_EXTENSION)PassThroughFdo->DeviceExtension)->LowerDevice = Fdo;
+		PassThroughFdo->StackSize = Fdo->StackSize + 1;
+	}
+	else if (NT_SUCCESS(Status))
+	{
+		/* Attach the named Fdo on top of Pdo */
+		LowerDevice = IoAttachDeviceToDeviceStack(Fdo, Pdo);
+	}
+	else
+	{
+		DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+
+	/* We definately have a device object. PreviousBlue may or may
 	 * not be null */
-	
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(SCREEN_DEVICE_EXTENSION));
-	DeviceExtension->Common.Type = Screen;
+	DeviceExtension->Common.Type = ScreenFDO;
+	DeviceExtension->Common.LowerDevice = LowerDevice;
+	DeviceExtension->Green = ((PGREEN_DRIVER_EXTENSION)IoGetDriverObjectExtension(DriverObject, DriverObject))->GreenMainDO;
+	((PGREEN_DEVICE_EXTENSION)DeviceExtension->Green->DeviceExtension)->ScreenFdo = Fdo;
 	DeviceExtension->PreviousBlue = PreviousBlue;
-
-	if (!NT_SUCCESS(Status)) 
-	{
-		/* If a device was attached, detach it first */
-		if (DeviceExtension->PreviousBlue)
-			IoDetachDevice(DeviceExtension->PreviousBlue);
-
-		IoDeleteDevice(Fdo);
-                return Status;
-	}
+	IoAttachDeviceToDeviceStack(PassThroughFdo ? PassThroughFdo : Fdo, Pdo);
 
 	/* initialize screen */
 	DeviceExtension->Columns = 80;
@@ -186,12 +225,9 @@ ScreenInitialize(
 		2 * DeviceExtension->Columns * DeviceExtension->Rows * sizeof(UCHAR));
 	if (!DeviceExtension->VideoMemory)
 	{
-		/* If a device was attached, detach it first */
-		if (DeviceExtension->PreviousBlue)
-			IoDetachDevice(DeviceExtension->PreviousBlue);
-
-		IoDeleteDevice(Fdo);
-		return STATUS_INSUFFICIENT_RESOURCES;
+		DPRINT("ExAllocatePool() failed\n");
+		Status = STATUS_INSUFFICIENT_RESOURCES;
+		goto cleanup;
 	}
 	DeviceExtension->TabWidth = 8;
 
@@ -207,9 +243,22 @@ ScreenInitialize(
 	Fdo->Flags |= DO_POWER_PAGABLE;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	*ScreenFdo = Fdo;
+	Status = STATUS_SUCCESS;
 
-	return STATUS_SUCCESS;
+cleanup:
+	if (!NT_SUCCESS(Status))
+	{
+		if (DeviceExtension)
+			ExFreePool(DeviceExtension->VideoMemory);
+		if (LowerDevice)
+			IoDetachDevice(LowerDevice);
+		if (Fdo)
+			IoDeleteDevice(Fdo);
+		if (PassThroughFdo)
+			IoDeleteDevice(PassThroughFdo);
+	}
+
+	return Status;
 }
 
 NTSTATUS
@@ -227,9 +276,8 @@ ScreenWrite(
 	ULONG Columns, Rows;
 	ULONG CursorX, CursorY;
 	ULONG i, j;
-	NTSTATUS Status;
 
-	DPRINT("Green: IRP_MJ_WRITE\n");
+	DPRINT("ScreenWrite() called\n");
 
 	Stack = IoGetCurrentIrpStackLocation (Irp);
 	Buffer = Irp->UserBuffer;
@@ -249,14 +297,6 @@ ScreenWrite(
 	CursorX = (DeviceExtension->LogicalOffset / 2) % Columns + 1;
 	CursorY = (DeviceExtension->LogicalOffset / 2) / Columns + 1;
 	VideoMemorySize = Columns * Rows * 2 * sizeof(UCHAR);
-
-#if DBG
-	DPRINT("Y: %lu\n", CursorY);
-	DPRINT("Buffer =");
-	for (i = 0; i < Stack->Parameters.Write.Length; i++)
-		DbgPrint(" 0x%02x", Buffer[i]);
-	DbgPrint("\n");
-#endif
 
 	if (!(DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT))
 	{
@@ -358,11 +398,9 @@ ScreenWrite(
 	/* flush output buffer */
 	AddToSendBuffer(DeviceExtension, 0);
 
-	Status = STATUS_SUCCESS;
-	Irp->IoStatus.Status = Status;
-	IoCompleteRequest (Irp, IO_NO_INCREMENT);
-
-	return Status;
+	/* Call lower driver */
+	IoSkipCurrentIrpStackLocation(Irp);
+	return IoCallDriver(DeviceExtension->Common.LowerDevice, Irp);
 }
 
 NTSTATUS
@@ -377,7 +415,6 @@ ScreenDeviceControl(
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
 	SerialDevice = ((PGREEN_DEVICE_EXTENSION)DeviceExtension->Green->DeviceExtension)->Serial;
 	if (!SerialDevice)
 	{
@@ -388,10 +425,11 @@ ScreenDeviceControl(
 
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
+#if 0
 		case IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO:
 		{
 			PCONSOLE_SCREEN_BUFFER_INFO pcsbi;
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO\n");
 
 			pcsbi = (PCONSOLE_SCREEN_BUFFER_INFO)Irp->AssociatedIrp.SystemBuffer;
 
@@ -418,7 +456,7 @@ ScreenDeviceControl(
 		case IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO:
 		{
 			PCONSOLE_SCREEN_BUFFER_INFO pcsbi;
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO\n");
 
 			pcsbi = (PCONSOLE_SCREEN_BUFFER_INFO)Irp->AssociatedIrp.SystemBuffer;
 			/* FIXME: remove */ { pcsbi->dwCursorPosition.X++; }
@@ -447,7 +485,7 @@ ScreenDeviceControl(
 		case IOCTL_CONSOLE_GET_CURSOR_INFO:
 		{
 			PCONSOLE_CURSOR_INFO pcci = (PCONSOLE_CURSOR_INFO)Irp->AssociatedIrp.SystemBuffer;
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_CURSOR_INFO\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_CURSOR_INFO\n");
 
 			pcci->dwSize = 1;
 			pcci->bVisible = TRUE;
@@ -459,7 +497,7 @@ ScreenDeviceControl(
 		case IOCTL_CONSOLE_GET_MODE:
 		{
 			PCONSOLE_MODE pcm = (PCONSOLE_MODE)Irp->AssociatedIrp.SystemBuffer;
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_MODE\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_GET_MODE\n");
 
 			pcm->dwMode = DeviceExtension->Mode;
 
@@ -470,7 +508,7 @@ ScreenDeviceControl(
 		case IOCTL_CONSOLE_SET_MODE:
 		{
 			PCONSOLE_MODE pcm = (PCONSOLE_MODE)Irp->AssociatedIrp.SystemBuffer;
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_MODE\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_MODE\n");
 
 			DeviceExtension->Mode = pcm->dwMode;
 
@@ -480,25 +518,25 @@ ScreenDeviceControl(
 		}
 		case IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE:
 		{
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE\n");
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE\n");
 			Status = STATUS_NOT_IMPLEMENTED; /* FIXME: IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE */
 			break;
 		}
 		case IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE:
 		{
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE\n");
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE\n");
 			Status = STATUS_NOT_IMPLEMENTED; /* FIXME: IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE */
 			break;
 		}
 		case IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE:
 		{
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE\n");
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE\n");
 			Status = STATUS_NOT_IMPLEMENTED; /* FIXME: IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE */
 			break;
 		}
 		case IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE:
 		{
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE\n");
 
 			DeviceExtension->CharAttribute = (WORD)*(PWORD)Irp->AssociatedIrp.SystemBuffer;
 			Irp->IoStatus.Information = 0;
@@ -507,19 +545,19 @@ ScreenDeviceControl(
 		}
 		case IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER:
 		{
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER\n");
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER\n");
 			Status = STATUS_NOT_IMPLEMENTED; /* FIXME:IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER */
 			break;
 		}
 		case IOCTL_CONSOLE_READ_OUTPUT_CHARACTER:
 		{
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_READ_OUTPUT_CHARACTER\n");
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_READ_OUTPUT_CHARACTER\n");
 			Status = STATUS_NOT_IMPLEMENTED; /* FIXME: IOCTL_CONSOLE_READ_OUTPUT_CHARACTER */
 			break;
 		}
 		case IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER:
 		{
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER\n");
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER\n");
 			Status = STATUS_NOT_IMPLEMENTED; /* FIXME: IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER */
 			break;
 		}
@@ -529,7 +567,7 @@ ScreenDeviceControl(
 			PUCHAR Video;
 			ULONG x, y;
 			BOOLEAN DoOptimization = FALSE;
-			DPRINT("Green: IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_DRAW\n");
+			DPRINT("IRP_MJ_DEVICE_CONTROL / IOCTL_CONSOLE_DRAW\n");
 
 			ConsoleDraw = (PCONSOLE_DRAW)MmGetSystemAddressForMdl(Irp->MdlAddress);
 			/* FIXME: remove */ { ConsoleDraw->X++; ConsoleDraw->CursorX++; }
@@ -609,13 +647,28 @@ ScreenDeviceControl(
 			Status = STATUS_SUCCESS;
 			break;
 		}
+#endif
 		default:
-			DPRINT1("Green: IRP_MJ_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
+		{
+			DPRINT1("IRP_MJ_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
 				Stack->Parameters.DeviceIoControl.IoControlCode);
-			Status = STATUS_NOT_IMPLEMENTED;
+			/* Call lower driver */
+			IoSkipCurrentIrpStackLocation(Irp);
+			return IoCallDriver(DeviceExtension->Common.LowerDevice, Irp);
+		}
 	}
 
-	Irp->IoStatus.Status = Status;
-	IoCompleteRequest (Irp, IO_NO_INCREMENT);
-	return Status;
+	if (!NT_SUCCESS(Status))
+	{
+		/* Don't call blue (if any), as we encountered an error */
+		Irp->IoStatus.Status = Status;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return Status;
+	}
+	else
+	{
+		/* Call lower driver */
+		IoSkipCurrentIrpStackLocation(Irp);
+		return IoCallDriver(DeviceExtension->Common.LowerDevice, Irp);
+	}
 }
