@@ -341,7 +341,7 @@ static BOOL PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
 	if (RegsOut.w.cx == 0x0000 && DriveNumber != 0x9f)
 	{
 		// CX = API subset support bitmap
-		printf("Suspicious API subset support bitmap 0x%x on device 0x%x\n", RegsOut.w.cx, DriveNumber);
+		printf("Suspicious API subset support bitmap 0x%x on device 0x%lx\n", RegsOut.w.cx, DriveNumber);
 		LastSupported = FALSE;
 		return LastSupported;
 	}

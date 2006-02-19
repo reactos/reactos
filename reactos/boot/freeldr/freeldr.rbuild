@@ -5,6 +5,7 @@
 	<xi:include href="freeldr/freeldr_startup.rbuild" />
 	<xi:include href="freeldr/freeldr_base64k.rbuild" />
 	<xi:include href="freeldr/freeldr_base.rbuild" />
+	<xi:include href="freeldr/freeldr_arch.rbuild" />
 	<xi:include href="freeldr/freeldr_main.rbuild" />
 	<xi:include href="freeldr/setupldr_main.rbuild" />
 	<xi:include href="freeldr/freeldr.rbuild" />
