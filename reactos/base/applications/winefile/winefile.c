@@ -239,6 +239,23 @@ static void display_network_error(HWND hwnd)
 }
 
 
+static VOID WineLicense(HWND Wnd)
+{
+	TCHAR cap[20], text[1024];
+	LoadString(Globals.hInstance, IDS_LICENSE, text, 1024);
+	LoadString(Globals.hInstance, IDS_LICENSE_CAPTION, cap, 20);
+	MessageBox(Wnd, text, cap, MB_ICONINFORMATION | MB_OK);
+}
+
+static VOID WineWarranty(HWND Wnd)
+{
+	TCHAR cap[20], text[1024];
+	LoadString(Globals.hInstance, IDS_WARRANTY, text, 1024);
+	LoadString(Globals.hInstance, IDS_WARRANTY_CAPTION, cap, 20);
+	MessageBox(Wnd, text, cap, MB_ICONEXCLAMATION | MB_OK);
+}
+
+
 #ifdef __WINE__
 
 #ifdef UNICODE
@@ -1125,7 +1142,7 @@ static int TypeOrderFromDirname(LPCTSTR name)
 }
 
 /* directories first... */
-static int __cdecl compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
+static int compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA* fd2)
 {
 	int order1 = fd1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
 	int order2 = fd2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY? TO_DIR: TO_FILE;
@@ -1140,7 +1157,7 @@ static int __cdecl compareType(const WIN32_FIND_DATA* fd1, const WIN32_FIND_DATA
 }
 
 
-static int __cdecl compareName(const void* arg1, const void* arg2)
+static int compareName(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1152,7 +1169,7 @@ static int __cdecl compareName(const void* arg1, const void* arg2)
 	return lstrcmpi(fd1->cFileName, fd2->cFileName);
 }
 
-static int __cdecl compareExt(const void* arg1, const void* arg2)
+static int compareExt(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1185,7 +1202,7 @@ static int __cdecl compareExt(const void* arg1, const void* arg2)
 	return lstrcmpi(name1, name2);
 }
 
-static int __cdecl compareSize(const void* arg1, const void* arg2)
+static int compareSize(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1206,7 +1223,7 @@ static int __cdecl compareSize(const void* arg1, const void* arg2)
 	return cmp<0? -1: cmp>0? 1: 0;
 }
 
-static int __cdecl compareDate(const void* arg1, const void* arg2)
+static int compareDate(const void* arg1, const void* arg2)
 {
 	const WIN32_FIND_DATA* fd1 = &(*(const Entry* const*)arg1)->data;
 	const WIN32_FIND_DATA* fd2 = &(*(const Entry* const*)arg2)->data;
@@ -1219,7 +1236,7 @@ static int __cdecl compareDate(const void* arg1, const void* arg2)
 }
 
 
-static int (__cdecl *sortFunctions[])(const void* arg1, const void* arg2) = {
+static int (*sortFunctions[])(const void* arg1, const void* arg2) = {
 	compareName,	/* SORT_NAME */
 	compareExt,		/* SORT_EXT */
 	compareSize,	/* SORT_SIZE */
@@ -1403,6 +1420,7 @@ enum TYPE_FILTER {
 static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 {
 	TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
+	TCHAR dir_path[MAX_PATH];
 	TCHAR b1[BUFFER_LEN];
 	const static TCHAR sAsterics[] = {'*', '\0'};
 
@@ -1447,7 +1465,9 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 	root->entry.level = 0;
 
-	entry = read_tree(root, path, pidl, drv, child->sortOrder, hwnd);
+	lstrcpy(dir_path, drv);
+	lstrcat(dir_path, dir);
+	entry = read_tree(root, dir_path, pidl, drv, child->sortOrder, hwnd);
 
 #ifdef _SHELL_FOLDERS
 	if (root->entry.etype == ET_SHELL)
@@ -4779,6 +4799,36 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 	Globals.prescan_node = FALSE;
 
 	UpdateWindow(Globals.hMainWnd);
+
+	if (path && path[0])
+	{
+		int index,count;
+		TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
+		TCHAR fullname[_MAX_FNAME+_MAX_EXT+1];
+
+		memset(name,0,sizeof(name));
+		memset(name,0,sizeof(ext));
+		_tsplitpath(path, drv, dir, name, ext);
+		if (name[0])
+		{
+			count = ListBox_GetCount(child->right.hwnd);
+			lstrcpy(fullname,name);
+			lstrcat(fullname,ext);
+
+			for (index = 0; index < count; index ++)
+			{
+				Entry* entry = (Entry*) ListBox_GetItemData(child->right.hwnd,
+						index);
+				if (lstrcmp(entry->data.cFileName,fullname)==0 ||
+						lstrcmp(entry->data.cAlternateFileName,fullname)==0)
+				{
+					ListBox_SetCurSel(child->right.hwnd, index);
+					SetFocus(child->right.hwnd);
+					break;
+				}
+			}
+		}
+	}
 }
 
 static void ExitInstance(void)

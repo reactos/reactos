@@ -123,7 +123,7 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "winefileRelease"
+# PROP Output_Dir "."
 # PROP Intermediate_Dir "winefileRelease"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
@@ -139,7 +139,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib version.lib mpr.lib /nologo /subsystem:windows /machine:I386 /out:"winefileRelease/winefile-ansi.exe"
+# ADD LINK32 user32.lib gdi32.lib advapi32.lib comctl32.lib shell32.lib comdlg32.lib ole32.lib version.lib mpr.lib /nologo /subsystem:windows /machine:I386 /out:"winefile-ansi.exe"
 
 !ENDIF 
 
@@ -248,11 +248,6 @@ SOURCE=.\zh.rc
 # PROP Exclude_From_Build 1
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\license.c
-# PROP Exclude_From_Build 1
-# End Source File
 # Begin Source File
 
 SOURCE=.\resource.h

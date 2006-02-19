@@ -135,6 +135,11 @@
 #define IDS_COL_SEC                     1218
 #define IDS_FREE_SPACE_FMT              1219
 
+#define IDS_LICENSE_CAPTION             1300
+#define IDS_LICENSE                     1301
+#define IDS_WARRANTY_CAPTION            1302
+#define IDS_WARRANTY                    1303
+
 
 /* range for drive bar command ids: 0x9000..0x90FF */
 

@@ -149,10 +149,6 @@ extern WINEFILE_GLOBALS Globals;
 
 #ifdef __WINE__
 
-extern void WineLicense(HWND hwnd);
-extern void WineWarranty(HWND hwnd);
-
-
 #ifdef UNICODE
 extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
 #define _tsplitpath _wsplitpath
