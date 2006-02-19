@@ -13,9 +13,10 @@
 
 /* Language specific */
 
-#include "en.rc"
 #include "cz.rc"
 #include "de.rc"
+#include "en.rc"
 #include "es.rc"
+#include "fr.rc"
 
 /* EOF */
