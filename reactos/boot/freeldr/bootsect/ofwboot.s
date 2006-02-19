@@ -1,40 +1,10 @@
 	.section .text
+        .globl  setup_bats
+
 _start:	
 	.long	0xe00000 + 12
 	.long	0
 	.long	0
-	
-/*
- * LIFTED FROM arch/macppc/stand/ofwboot/Locore.c
- * Copyright (C) 1995, 1996 Wolfgang Solfrank.
- * Copyright (C) 1995, 1996 TooLs GmbH.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *      This product includes software developed by TooLs GmbH.
- * 4. The name of TooLs GmbH may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY TOOLS GMBH ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL TOOLS GMBH BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES ;  LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 	
 _begin:
 	sync                    
@@ -48,24 +18,8 @@ _begin:
 	li      %r0,0
 	mtmsr   %r0             
 	isync                   
-                               
-	mtibatu 0,%r0           
-	mtibatu 1,%r0           
-	mtibatu 2,%r0           
-	mtibatu 3,%r0           
-	mtdbatu 0,%r0           
-	mtdbatu 1,%r0           
-	mtdbatu 2,%r0           
-	mtdbatu 3,%r0           
-	
-	li      %r9,0x12             /* BATL(0, BAT_M, BAT_PP_RW) */
-	mtibatl 0,%r9           
-	mtdbatl 0,%r9           
-	li      %r10,0x1ffe          /* BATU(0, BAT_BL_256M, BAT_Vs) */
-	mtibatu 0,%r10           
-	mtdbatu 0,%r10
 
-	isync                   
+	bl	setup_bats	                               
 
 	li	%r8,0x3030
 	mtmsr	%r8
@@ -108,7 +62,55 @@ _begin:
 	addi	%r3,%r3,call_ofw - _start
 	
 	b	call_freeldr
-		
+
+/*
+ * lifted from ppc/boot/openfirmware/misc.S
+ * Copyright (C) Paul Mackerras 1997.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation	;  either version
+ * 2 of the License, or (at your option) any later version.
+ */
+
+/*
+ * Use the BAT2 & 3 registers to map the 1st 16MB of RAM to
+ * the address given as the 1st argument.
+ */
+setup_bats:
+        mfpvr   5
+        rlwinm  5,5,16,16,31            /* r3 = 1 for 601, 4 for 604 */
+        cmpwi   0,5,1
+        li      0,0
+        bne     4f
+        mtibatl 3,0                     /* invalidate BAT first */
+        ori     3,3,4                   /* set up BAT registers for 601 */
+        li      4,0x7f
+        mtibatu 2,3
+        mtibatl 2,4
+        oris    3,3,0x80
+        oris    4,4,0x80
+        mtibatu 3,3
+        mtibatl 3,4
+        b       5f
+4:	mtdbatu 3,0                     /* invalidate BATs first */
+        mtibatu 3,0
+        ori     3,3,0xff                /* set up BAT registers for 604 */
+        li      4,2
+        mtdbatl 2,4
+        mtdbatu 2,3
+        mtibatl 2,4
+        mtibatu 2,3
+        oris    3,3,0x80
+        oris    4,4,0x80
+        mtdbatl 3,4
+        mtdbatu 3,3
+        mtibatl 3,4
+        mtibatu 3,3
+5:	sync
+        isync
+        blr
+	
 	.align	4
 call_freeldr:
 	/* Get the address of the functions list --
@@ -1240,3 +1242,4 @@ ofw_functions:
 	.org	0x2000
 stack:
 	.space	0x4000
+
