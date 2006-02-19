@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        subsys/system/servman/start.c
+ * FILE:        base/system/servman/start.c
  * PURPOSE:     Start a service
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -99,7 +99,7 @@ BOOL DoStartService(HWND hProgDlg)
             GetError(0);
             return FALSE;
         }
-        
+
         if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
         {
             /* The service is making progress. increment the progress bar */

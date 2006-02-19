@@ -1,6 +1,14 @@
-//#include <stdarg>
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/servman/geterror.c
+ * PURPOSE:     displays error messages
+ * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
+ *
+ */
+
 #include "servman.h"
-/* temp file for debugging */
+
 
 VOID GetError(DWORD err)
 {
@@ -28,6 +36,6 @@ VOID GetError(DWORD err)
 VOID DisplayString(PTCHAR Msg)
 {
 
-    MessageBox(NULL, Msg, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBox(NULL, Msg, _T("Note!"), MB_OK);
 
 }

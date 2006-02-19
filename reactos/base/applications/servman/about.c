@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        subsys/system/servman/about.c
+ * FILE:        base/system/servman/about.c
  * PURPOSE:     About dialog box message handler
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -21,7 +21,7 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND  hLicenseEditWnd;
     HICON hIcon = NULL;
-    TCHAR strLicense[0x1000];
+    TCHAR strLicense[700];
 
     switch (message)
     {
@@ -32,7 +32,8 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
 
-        LoadString(hInstance, IDS_LICENSE, strLicense, 0x1000);
+        LoadString(hInstance, IDS_LICENSE, strLicense,
+            sizeof(strLicense) / sizeof(TCHAR));
 
         SetWindowText(hLicenseEditWnd, strLicense);
 

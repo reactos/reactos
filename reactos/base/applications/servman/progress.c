@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        subsys/system/servman/progress.c
+ * FILE:        base/system/servman/progress.c
  * PURPOSE:     Progress dialog box message handler
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *

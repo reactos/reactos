@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        subsys/system/servman/servman.c
+ * FILE:        base/system/servman/servman.c
  * PURPOSE:     Main window message handler
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -18,13 +18,110 @@ HWND hStatus;
 HWND hTool;
 HWND hProgDlg;
 HMENU hShortcutMenu;
-INT SelectedItem;
+INT SelectedItem = -1;
+
+TBBUTTON *ptbb;
+
+extern HWND hwndGenDlg;
 
 
 INT GetSelectedItem(VOID)
 {
     return SelectedItem;
 }
+
+VOID SetView(DWORD View)
+{
+    DWORD Style = GetWindowLong(hListView, GWL_STYLE);
+
+    if ((Style & LVS_TYPEMASK) != View)
+        SetWindowLong(hListView, GWL_STYLE, (Style & ~LVS_TYPEMASK) | View);
+}
+
+
+VOID SetMenuAndButtonStates()
+{
+    HMENU hMainMenu;
+    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
+    DWORD Flags, State;
+
+    /* get handle to menu */
+    hMainMenu = GetMenu(hMainWnd);
+
+    /* set all to greyed */
+    EnableMenuItem(hMainMenu, ID_START, MF_GRAYED);
+    EnableMenuItem(hMainMenu, ID_STOP, MF_GRAYED);
+    EnableMenuItem(hMainMenu, ID_PAUSE, MF_GRAYED);
+    EnableMenuItem(hMainMenu, ID_RESUME, MF_GRAYED);
+    EnableMenuItem(hMainMenu, ID_RESTART, MF_GRAYED);
+
+    EnableMenuItem(hShortcutMenu, ID_START, MF_GRAYED);
+    EnableMenuItem(hShortcutMenu, ID_STOP, MF_GRAYED);
+    EnableMenuItem(hShortcutMenu, ID_PAUSE, MF_GRAYED);
+    EnableMenuItem(hShortcutMenu, ID_RESUME, MF_GRAYED);
+    EnableMenuItem(hShortcutMenu, ID_RESTART, MF_GRAYED);
+
+    SendMessage(hTool, TB_SETSTATE, ID_START,
+                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+    SendMessage(hTool, TB_SETSTATE, ID_STOP,
+                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+    SendMessage(hTool, TB_SETSTATE, ID_PAUSE,
+                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+    SendMessage(hTool, TB_SETSTATE, ID_RESTART,
+                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+    if (GetSelectedItem() != -1)
+    {
+        /* get pointer to selected service */
+        Service = GetSelectedService();
+
+        Flags = Service->ServiceStatusProcess.dwControlsAccepted;
+        State = Service->ServiceStatusProcess.dwCurrentState;
+
+        if (State == SERVICE_STOPPED)
+        {
+            EnableMenuItem(hMainMenu, ID_START, MF_ENABLED);
+            EnableMenuItem(hShortcutMenu, ID_START, MF_ENABLED);
+            SendMessage(hTool, TB_SETSTATE, ID_START,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        }
+
+        if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+        {
+            EnableMenuItem(hMainMenu, ID_STOP, MF_ENABLED);
+            EnableMenuItem(hShortcutMenu, ID_STOP, MF_ENABLED);
+            SendMessage(hTool, TB_SETSTATE, ID_STOP,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        }
+
+        if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
+        {
+            EnableMenuItem(hMainMenu, ID_PAUSE, MF_ENABLED);
+            EnableMenuItem(hShortcutMenu, ID_PAUSE, MF_ENABLED);
+            SendMessage(hTool, TB_SETSTATE, ID_PAUSE,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        }
+
+        if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+        {
+            EnableMenuItem(hMainMenu, ID_RESTART, MF_ENABLED);
+            EnableMenuItem(hShortcutMenu, ID_RESTART, MF_ENABLED);
+            SendMessage(hTool, TB_SETSTATE, ID_RESTART,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        }
+    }
+    else
+    {
+        EnableMenuItem(hMainMenu, ID_PROP, MF_GRAYED);
+        EnableMenuItem(hMainMenu, ID_DELETE, MF_GRAYED);
+        EnableMenuItem(hShortcutMenu, ID_DELETE, MF_GRAYED);
+        SendMessage(hTool, TB_SETSTATE, ID_PROP,
+                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+    }
+
+}
+
+
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -42,28 +139,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Toolbar buttons */
             TBBUTTON tbb [NUM_BUTTONS] =
             {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-                {TBICON_PROP,    ID_PROP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* properties */
-                {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* refresh */
-                {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* export */
+                {TBICON_PROP,    ID_PROP,    TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0},    /* properties */
+                {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* refresh */
+                {TBICON_EXPORT,  ID_EXPORT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* export */
 
                 /* Note: First item for a seperator is its width in pixels */
-                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                            /* separator */
+                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
-                {TBICON_NEW,     ID_NEW,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },     /* create */
+                {TBICON_CREATE,  ID_CREATE,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },         /* create */
 
-                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                            /* separator */
+                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
-                {TBICON_START,   ID_START,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* start */
-                {TBICON_STOP,    ID_STOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
-                {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
-                {TBICON_RESTART, ID_RESTART, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
+                {TBICON_START,   ID_START,   TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* start */
+                {TBICON_STOP,    ID_STOP,    TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
+                {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
+                {TBICON_RESTART, ID_RESTART, TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
 
-                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                            /* separator */
+                {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
-                {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* help */
-                {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },    /* exit */
+                {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },         /* help */
+                {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },          /* exit */
 
             };
+
+            ptbb = tbb;
 
 /* ======================== Create Toolbar ============================== */
 
@@ -90,7 +189,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             tbb[0].iBitmap += iImageOffset; /* properties */
             tbb[1].iBitmap += iImageOffset; /* refresh */
             tbb[2].iBitmap += iImageOffset; /* export */
-            tbb[4].iBitmap += iImageOffset; /* new */
+            tbb[4].iBitmap += iImageOffset; /* create */
             tbb[6].iBitmap += iImageOffset; /* start */
             tbb[7].iBitmap += iImageOffset; /* stop */
             tbb[8].iBitmap += iImageOffset; /* pause */
@@ -122,7 +221,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 MessageBox(hwnd, _T("Could not create List View."), _T("Error"), MB_OK | MB_ICONERROR);
 
             ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT |
-                    LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP);
+                    /*LVS_EX_GRIDLINES |*/ LVS_EX_HEADERDRAGDROP);
 
             lvc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
             lvc.fmt  = LVCFMT_LEFT;
@@ -132,35 +231,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* name */
             lvc.iSubItem = 0;
             lvc.cx       = 150;
-            LoadString(hInstance, IDS_FIRSTCOLUMN, szTemp, 256);
+            LoadString(hInstance, IDS_FIRSTCOLUMN, szTemp,
+                sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 0, &lvc);
 
             /* description */
             lvc.iSubItem = 1;
             lvc.cx       = 240;
-            LoadString(hInstance, IDS_SECONDCOLUMN, szTemp, 256);
+            LoadString(hInstance, IDS_SECONDCOLUMN, szTemp,
+                sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 1, &lvc);
 
             /* status */
             lvc.iSubItem = 2;
             lvc.cx       = 55;
-            LoadString(hInstance, IDS_THIRDCOLUMN, szTemp, 256);
+            LoadString(hInstance, IDS_THIRDCOLUMN, szTemp,
+                sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 2, &lvc);
 
             /* startup type */
             lvc.iSubItem = 3;
             lvc.cx       = 80;
-            LoadString(hInstance, IDS_FOURTHCOLUMN, szTemp, 256);
+            LoadString(hInstance, IDS_FOURTHCOLUMN, szTemp,
+                sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 3, &lvc);
 
             /* logon as */
             lvc.iSubItem = 4;
             lvc.cx       = 100;
-            LoadString(hInstance, IDS_FITHCOLUMN, szTemp, 256);
+            LoadString(hInstance, IDS_FITHCOLUMN, szTemp,
+                sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
             ListView_InsertColumn(hListView, 4, &lvc);
 
@@ -244,11 +348,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     OpenPropSheet(hwnd);
 			    break;
 
+			    case LVN_COLUMNCLICK:
+
+                break;
+
 			    case LVN_ITEMCHANGED:
 			    {
 			        LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
+			        ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
+			        HMENU hMainMenu;
 
+                    /* get handle to menu */
+                    hMainMenu = GetMenu(hMainWnd);
+
+                    /* activate properties menu item, if not already */
+                    if (GetMenuState(hMainMenu, ID_PROP, MF_BYCOMMAND) != MF_ENABLED)
+                        EnableMenuItem(hMainMenu, ID_PROP, MF_ENABLED);
+
+                    /* activate delete menu item, if not already */
+                    if (GetMenuState(hMainMenu, ID_DELETE, MF_BYCOMMAND) != MF_ENABLED)
+                    {
+                        EnableMenuItem(hMainMenu, ID_DELETE, MF_ENABLED);
+                        EnableMenuItem(hShortcutMenu, ID_DELETE, MF_ENABLED);
+                    }
+
+
+                    /* globally set selected service */
 			        SelectedItem = pnmv->iItem;
+
+                    /* alter options for the service */
+			        SetMenuAndButtonStates();
+
+			        /* get pointer to selected service */
+                    Service = GetSelectedService();
+
+			        /* set current selected service in the status bar */
+                    SendMessage(hStatus, SB_SETTEXT, 1, (LPARAM)Service->lpDisplayName);
+
+                    /* show the properties button */
+                    SendMessage(hTool, TB_SETSTATE, ID_PROP,
+                        (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
 
 			    }
 			    break;
@@ -277,6 +416,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXPORT);
                         break;
 
+                        case ID_CREATE:
+                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_NEW);
+                        break;
+
                         case ID_START:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_START);
                         break;
@@ -291,10 +434,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                         case ID_RESTART:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_RESTART);
-                        break;
-
-                        case ID_NEW:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_NEW);
                         break;
 
                         case ID_HELP:
@@ -332,42 +471,88 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		    switch(LOWORD(wParam))
 		    {
                 case ID_PROP:
-                    OpenPropSheet(hwnd);
+                    if (GetSelectedItem() != -1)
+                        OpenPropSheet(hwnd);
 
                 break;
 
                 case ID_REFRESH:
                     RefreshServiceList();
+                    SelectedItem = -1;
+
+                    /* disable menus and buttons */
+                    SetMenuAndButtonStates();
+
+                    /* clear the service in the status bar */
+                    SendMessage(hStatus, SB_SETTEXT, 1, _T('\0'));
+
                 break;
 
                 case ID_EXPORT:
+                    ExportFile(hListView);
+                    SetFocus(hListView);
+                break;
+
+                case ID_CREATE:
+                    DialogBox(hInstance,
+                              MAKEINTRESOURCE(IDD_DLG_CREATE),
+                              hMainWnd,
+                              (DLGPROC)CreateDialogProc);
+                    SetFocus(hListView);
+                break;
+
+                case ID_DELETE:
+                {
+                    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
+
+                    Service = GetSelectedService();
+
+                    if (Service->ServiceStatusProcess.dwCurrentState !=
+                        SERVICE_RUNNING)
+                    {
+                        DialogBox(hInstance,
+                              MAKEINTRESOURCE(IDD_DLG_DELETE),
+                              hMainWnd,
+                              (DLGPROC)DeleteDialogProc);
+                    }
+                    else
+                    {
+                        TCHAR Buf[60];
+                        LoadString(hInstance, IDS_DELETE_STOP, Buf,
+                            sizeof(Buf) / sizeof(TCHAR));
+                        DisplayString(Buf);
+                    }
+
+                    SetFocus(hListView);
+
+                }
                 break;
 
                 case ID_START:
                 {
                     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-                    TCHAR buf1[100];
-                    TCHAR buf2[100];
+                    TCHAR ProgDlgBuf[100];
+
                     /* open the progress dialog */
-                    hProgDlg = CreateDialog(GetModuleHandle(NULL), 
+                    hProgDlg = CreateDialog(GetModuleHandle(NULL),
                                             MAKEINTRESOURCE(IDD_DLG_PROGRESS),
-                                            hMainWnd, 
+                                            hMainWnd,
                                             (DLGPROC)ProgressDialogProc);
                     if (hProgDlg != NULL)
                     {
                         ShowWindow(hProgDlg, SW_SHOW);
 
                         /* write the  info to the progress dialog */
-                        LoadString(hInstance, IDS_PROGRESS_INFO, buf1,
-                            sizeof(buf1) / sizeof(TCHAR));
-                        _sntprintf(buf2, 100, buf1, _T("start"));
-                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_INFO, WM_SETTEXT, 0, (LPARAM)buf2);
+                        LoadString(hInstance, IDS_PROGRESS_INFO_START, ProgDlgBuf,
+                                   sizeof(ProgDlgBuf) / sizeof(TCHAR));
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_INFO, WM_SETTEXT,
+                                           0, (LPARAM)ProgDlgBuf);
 
                         /* get pointer to selected service */
                         Service = GetSelectedService();
 
                         /* write the service name to the progress dialog */
-                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_NAME, WM_SETTEXT, 0, 
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_NAME, WM_SETTEXT, 0,
                             (LPARAM)Service->lpServiceName);
                     }
 
@@ -375,6 +560,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     {
                         LVITEM item;
                         TCHAR szStatus[64];
+                        TCHAR buf[25];
 
                         LoadString(hInstance, IDS_SERVICES_STARTED, szStatus,
                             sizeof(szStatus) / sizeof(TCHAR));
@@ -382,51 +568,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                         item.iItem = GetSelectedItem();
                         item.iSubItem = 2;
                         SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+
+                        /* change dialog status */
+                        if (hwndGenDlg)
+                        {
+                            LoadString(hInstance, IDS_SERVICES_STARTED, buf,
+                                       sizeof(buf) / sizeof(TCHAR));
+                            SendDlgItemMessageW(hwndGenDlg, IDC_SERV_STATUS, WM_SETTEXT,
+                                                0, (LPARAM)buf);
+                        }
                     }
 
                     SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+
                 }
 			    break;
 
                 case ID_STOP:
                 {
                     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-                    TCHAR buf1[100];
-                    TCHAR buf2[100];
+                    TCHAR ProgDlgBuf[100];
+
                     /* open the progress dialog */
-                    hProgDlg = CreateDialog(GetModuleHandle(NULL), 
+                    hProgDlg = CreateDialog(GetModuleHandle(NULL),
                                             MAKEINTRESOURCE(IDD_DLG_PROGRESS),
-                                            hMainWnd, 
+                                            hMainWnd,
                                             (DLGPROC)ProgressDialogProc);
                     if (hProgDlg != NULL)
                     {
                         ShowWindow(hProgDlg, SW_SHOW);
 
                         /* write the  info to the progress dialog */
-                        LoadString(hInstance, IDS_PROGRESS_INFO, buf1,
-                            sizeof(buf1) / sizeof(TCHAR));
-                        _sntprintf(buf2, 100, buf1, _T("stop"));
-                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_INFO, WM_SETTEXT, 0, (LPARAM)buf2);
+                        LoadString(hInstance, IDS_PROGRESS_INFO_STOP, ProgDlgBuf,
+                            sizeof(ProgDlgBuf) / sizeof(TCHAR));
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_INFO,
+                            WM_SETTEXT, 0, (LPARAM)ProgDlgBuf);
 
                         /* get pointer to selected service */
                         Service = GetSelectedService();
 
                         /* write the service name to the progress dialog */
-                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_NAME, WM_SETTEXT, 0, 
+                        SendDlgItemMessage(hProgDlg, IDC_SERVCON_NAME, WM_SETTEXT, 0,
                             (LPARAM)Service->lpServiceName);
                     }
 
                     if( Control(hProgDlg, SERVICE_CONTROL_STOP) )
                     {
                         LVITEM item;
+                        TCHAR buf[25];
 
-                        item.pszText = '\0';
+                        item.pszText = _T('\0');
                         item.iItem = GetSelectedItem();
                         item.iSubItem = 2;
                         SendMessage(hListView, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+
+                        /* change dialog status */
+                        if (hwndGenDlg)
+                        {
+                            LoadString(hInstance, IDS_SERVICES_STOPPED, buf,
+                                       sizeof(buf) / sizeof(TCHAR));
+                            SendDlgItemMessageW(hwndGenDlg, IDC_SERV_STATUS, WM_SETTEXT,
+                                                0, (LPARAM)buf);
+                        }
                     }
 
                     SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+
                 }
                 break;
 
@@ -443,16 +650,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     SendMessage(hMainWnd, WM_COMMAND, 0, ID_START);
                 break;
 
-                case ID_NEW:
-                break;
-
                 case ID_HELP:
                     MessageBox(NULL, _T("Help is not yet implemented\n"),
                         _T("Note!"), MB_OK | MB_ICONINFORMATION);
+                    SetFocus(hListView);
                 break;
 
                 case ID_EXIT:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
+                break;
+
+                case ID_VIEW_LARGE:
+                    SetView(LVS_ICON);
+                break;
+
+                case ID_VIEW_SMALL:
+                    SetView(LVS_SMALLICON);
+                break;
+
+                case ID_VIEW_LIST:
+                    SetView(LVS_LIST);
+                break;
+
+                case ID_VIEW_DETAILS:
+                    SetView(LVS_REPORT);
                 break;
 
                 case ID_VIEW_CUSTOMIZE:
@@ -463,7 +684,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                               MAKEINTRESOURCE(IDD_ABOUTBOX),
                               hMainWnd,
                               (DLGPROC)AboutDialogProc);
-                 break;
+                    SetFocus(hListView);
+                break;
 
 		    }
 	    break;

@@ -1,7 +1,7 @@
 #ifndef __SERVMAN_H
 #define __SERVMAN_H
 
-#define WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <windowsx.h> /* GET_X/Y_LPARAM */
 #include <stdio.h>
@@ -16,6 +16,8 @@
 BOOL RefreshServiceList(VOID);
 
 BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK CreateDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK DeleteDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ProgressDialogProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam);
 
 BOOL DoStartService(HWND hProgDlg);
@@ -29,12 +31,14 @@ VOID GetError(DWORD);
 VOID FreeMemory(VOID);
 VOID DisplayString(PTCHAR);
 
-BOOL GetDescription(HKEY, LPTSTR *);
+BOOL SetDescription(LPTSTR, LPTSTR);
+BOOL GetDescription(LPTSTR, LPTSTR *);
 BOOL GetExecutablePath(LPTSTR *);
 
 LONG APIENTRY OpenPropSheet(HWND);
 
 DWORD GetServiceList(VOID);
 
+VOID ExportFile(HWND);
 
 #endif /* __SERVMAN_H */

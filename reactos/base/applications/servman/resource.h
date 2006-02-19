@@ -8,6 +8,7 @@
 #define IDC_SERVLIST        1000
 #define IDC_TOOLBAR         1001
 #define IDC_STATUSBAR	    1002
+#define IDC_EDIT_BUTTON     1003
 
 #define ID_PROP             2000
 #define ID_REFRESH          2001
@@ -17,13 +18,20 @@
 #define ID_PAUSE            2005
 #define ID_RESUME           2006
 #define ID_RESTART          2007
-#define ID_NEW              2008
-#define ID_HELP             2009
-#define ID_EXIT             2010
+#define ID_EDIT             2008
+#define ID_CREATE           2009
+#define ID_DELETE           2010
+#define ID_HELP             2011
+#define ID_EXIT             2012
+#define ID_NET_CON          2013
 
 #define IDR_MAINMENU        102
 #define IDR_POPUP           103
 #define ID_VIEW_CUSTOMIZE   4021
+#define ID_VIEW_LARGE       4022
+#define ID_VIEW_SMALL       4023
+#define ID_VIEW_LIST        4024
+#define ID_VIEW_DETAILS     4025
 #define ID_ABOUT            4031
 
 /* List view columns */
@@ -59,7 +67,7 @@
 #define TBICON_PROP         0
 #define TBICON_REFRESH      1
 #define TBICON_EXPORT       2
-#define TBICON_NEW          3
+#define TBICON_CREATE       3
 #define TBICON_START        4
 #define TBICON_STOP         5
 #define TBICON_PAUSE        6
@@ -68,7 +76,6 @@
 #define TBICON_EXIT         9
 
 /* properties dialog */
-#define IDS_PROP_SHEET      10000
 #define IDD_DLG_GENERAL     10001
 #define IDC_SERV_NAME       10041
 #define IDC_DISP_NAME       10051
@@ -82,6 +89,7 @@
 #define IDC_RESUME          10161
 #define IDC_START_PARAM     10191
 
+/* dependancies dialog */
 #define IDD_DLG_DEPEND      20001
 #define IDC_DEPEND_TREE1    20002
 #define IDC_DEPEND_TREE2    20003
@@ -96,10 +104,27 @@
 #define IDC_CREATE_DESC     8004
 #define IDC_CREATE_OPTIONS  8005
 #define ID_CREATE_HELP      8006
+#define IDD_DLG_HELP_OPTIONS 8020
+#define IDC_CREATE_HELP     8021
+#define IDS_HELP_OPTIONS    8022
+#define IDS_CREATE_SUCCESS  8023
+#define IDS_CREATE_REQ      8024
+
+
+/* delete service dialog */
+#define IDD_DLG_DELETE      9000
+#define IDC_DEL_GROUP       9001
+#define IDC_DEL_NAME        9002
+#define IDC_DEL_DESC        9003
+#define IDS_DELETE_STOP     9010
+
 
 /* progress bar */
 #define IDD_DLG_PROGRESS    7000
 #define IDC_SERVCON_PROGRESS 7001
 #define IDC_SERVCON_INFO    7002
 #define IDC_SERVCON_NAME    7003
-#define IDS_PROGRESS_INFO   7004
+#define IDS_PROGRESS_INFO_START 7004
+#define IDS_PROGRESS_INFO_STOP 7005
+
+
