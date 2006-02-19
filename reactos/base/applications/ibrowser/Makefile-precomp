@@ -1,7 +1,7 @@
 #
 #  ROS Internet Web Browser
 #
-#  Makefile.PCH
+#  Makefile-precomp
 #
 #  MinGW Makefile with precompiled header support
 #
