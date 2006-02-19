@@ -22,7 +22,7 @@
 <directory name="msconfig">
 	<xi:include href="msconfig/msconfig.rbuild" />
 </directory>
-<directory name="net">
+<directory name="network">
 	<xi:include href="net/net.rbuild" />
 </directory>
 <directory name="notepad">
