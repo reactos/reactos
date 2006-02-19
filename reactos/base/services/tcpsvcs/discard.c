@@ -1,14 +1,9 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/discard.c
-  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/discard.c
+ * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -35,7 +30,7 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
         LogEvent(_T("Discard: Connection shutdown failed\n"), 0, FALSE);
         RetVal = 1;
     }
-    
+
     LogEvent(_T("Discard: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
 }
@@ -44,7 +39,7 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
 
 BOOL RecieveIncomingPackets(SOCKET Sock)
 {
-    TCHAR ReadBuffer[BUF];
+    char ReadBuffer[BUF];
     TCHAR buf[256];
     INT ReadBytes;
 
@@ -58,7 +53,7 @@ BOOL RecieveIncomingPackets(SOCKET Sock)
         }
         else if (ReadBytes == SOCKET_ERROR)
         {
-            _stprintf(buf, ("Socket Error: %d\n"), WSAGetLastError());
+            _stprintf(buf, _T("Socket Error: %d\n"), WSAGetLastError());
             LogEvent(buf, 0, TRUE);
             return FALSE;
         }

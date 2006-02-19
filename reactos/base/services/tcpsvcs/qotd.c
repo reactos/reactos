@@ -1,29 +1,24 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/qotd.c
-  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/qotd.c
+ * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
 #include "tcpsvcs.h"
 
-#define QBUFSIZ 160
+#define QBUFSIZ 60
 
-LPCTSTR FilePath = _T("\\drivers\\etc\\quotes");
+LPCTSTR FilePath = _T("\\drivers\\etc\\quotes"); /* 19 chars */
 
 DWORD WINAPI QotdHandler(VOID* Sock_)
 {
     FILE *fp;
     SOCKET Sock;
-    TCHAR Sys[MAX_PATH];
-    TCHAR Quote[60][BUFSIZ]; // need to set this dynamically
+    TCHAR Sys[MAX_PATH + 20];
+    char Quote[QBUFSIZ][BUFSIZ]; // need to set this dynamically
     INT QuoteToPrint;
     INT NumQuotes;
 
@@ -34,15 +29,15 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     	LogEvent(_T("QOTD: Getting system path failed.\n"), 0, TRUE);
     	ExitThread(1);
     }
-    
-    _tcscat(Sys, FilePath);
+
+    _tcsncat(Sys, FilePath, _tcslen(FilePath));
 
     LogEvent(_T("QOTD: Opening quotes file\n"), 0, FALSE);
-    if ((fp = _tfopen(Sys, "r")) == NULL)
+    if ((fp = _tfopen(Sys, _T("r"))) == NULL)
     {
-		TCHAR buf[256];
+		TCHAR buf[320];
 
-		_stprintf(buf, _T("QOTD: Error opening quote file : %s\n"), Sys);
+		_sntprintf(buf, 320, _T("QOTD: Error opening quote file : %s\n"), Sys);
         LogEvent(buf, 0, TRUE);
         LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
         ExitThread(1);
@@ -50,7 +45,8 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
 
     /* read all quotes in the file into an array */
     NumQuotes = 0;
-    while (_fgetts(Quote[NumQuotes], QBUFSIZ, fp) != NULL)
+    while ((fgets(Quote[NumQuotes], QBUFSIZ, fp) != NULL) &&
+           (NumQuotes != QBUFSIZ))
         NumQuotes++;
 
     LogEvent(_T("QOTD: Closing quotes file\n"), 0, FALSE);
@@ -73,21 +69,20 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
         LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
         ExitThread(1);
     }
-    
+
     LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
     ExitThread(0);
 
-    //return Retval;
 }
 
 
-BOOL SendQuote(SOCKET Sock, TCHAR* Quote)
+BOOL SendQuote(SOCKET Sock, char* Quote)
 {
     INT StringSize;
     INT RetVal;
 
-    StringSize = (INT)_tcsclen(Quote);
-    RetVal = send(Sock, Quote, sizeof(TCHAR) * StringSize, 0);
+    StringSize = (INT)strlen(Quote);
+    RetVal = send(Sock, Quote, sizeof(char) * StringSize, 0);
 
     if (RetVal == SOCKET_ERROR)
         return FALSE;

@@ -1,14 +1,9 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/tcpsvcs.c
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/tcpsvcs.c
  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 /*
@@ -36,7 +31,7 @@ FILE *hLogFile;
 BOOL bShutDown = FALSE;
 BOOL bPause = FALSE;
 
-LPCTSTR LogFileName = "\\tcpsvcs_log.log";
+LPCTSTR LogFileName = _T("\\tcpsvcs_log.log");
 LPTSTR ServiceName = _T("Simp Tcp");
 //LPTSTR DisplayName = _T("Simple TCP/IP Services");
 
@@ -74,19 +69,19 @@ main(void)
 VOID WINAPI
 ServiceMain(DWORD argc, LPTSTR argv[])
 {
-	TCHAR LogFilePath[MAX_PATH];
+	TCHAR LogFilePath[MAX_PATH + 17];
 
     if(! GetSystemDirectory(LogFilePath, MAX_PATH))
         return;
 
-    _tcscat(LogFilePath, LogFileName);
+    _tcsncat(LogFilePath, LogFileName, 17);
 
-	hLogFile = fopen(LogFilePath, _T("a+"));
+	hLogFile = _tfopen(LogFilePath, _T("a+"));
     if (hLogFile == NULL)
     {
-        TCHAR buf[50];
+        TCHAR buf[300];
 
-        _stprintf(buf, _T("Could not open log file: %s\n"), LogFilePath);
+        _sntprintf(buf, 300, _T("Could not open log file: %s\n"), LogFilePath);
         MessageBox(NULL, buf, NULL, MB_OK);
         return;
     }
@@ -125,7 +120,7 @@ ServiceMain(DWORD argc, LPTSTR argv[])
 	UpdateStatus (SERVICE_STOPPED, 0);
 	LogEvent(_T("Service status set to SERVICE_STOPPED\n"), 0, FALSE);
 	LogEvent(_T("Leaving ServiceMain\n"), 0, FALSE);
-	
+
 	fclose(hLogFile);
 
 	return;
@@ -237,10 +232,10 @@ CreateServers()
     {
         CloseHandle(hThread[i]);
     }
-    
+
     LogEvent(_T("Detaching Winsock2...\n"), 0, FALSE);
     WSACleanup();
-    
+
     return 0;
 }
 
@@ -252,7 +247,7 @@ LogEvent (LPCTSTR UserMessage, INT ExitCode, BOOL PrintErrorMsg)
 {
 	DWORD eMsgLen, ErrNum = GetLastError ();
 	LPTSTR lpvSysMsg;
-	TCHAR MessageBuffer[512];
+	TCHAR MessageBuffer[1024];
 
 
 
@@ -263,16 +258,16 @@ LogEvent (LPCTSTR UserMessage, INT ExitCode, BOOL PrintErrorMsg)
 			ErrNum, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 			(LPTSTR)&lpvSysMsg, 0, NULL);
 
-		_stprintf(MessageBuffer, _T("%s %s ErrNum = %lu. ExitCode = %d."),
+		_sntprintf(MessageBuffer, 1024, _T("%s %s ErrNum = %lu. ExitCode = %d."),
 			UserMessage, lpvSysMsg, ErrNum, ExitCode);
 		HeapFree(GetProcessHeap (), 0, lpvSysMsg);
 	}
     else
     {
-		_stprintf(MessageBuffer, _T("%s"), UserMessage);
+		_sntprintf(MessageBuffer, 1024, _T("%s"), UserMessage);
 	}
 
-	fputs (MessageBuffer, hLogFile);
+	_fputts(MessageBuffer, hLogFile);
 
 	if (ExitCode != 0)
 		ExitProcess(ExitCode);

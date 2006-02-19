@@ -1,4 +1,6 @@
-<module name="tcpsvcs" type="win32cui" installbase="system32" installname="tcpsvcs.exe">
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <module name="tcpsvcs" type="win32cui" installbase="system32" installname="tcpsvcs.exe">
     <include base="arp">.</include>
     <define name="__USE_W32API" />
     <library>kernel32</library>
@@ -14,4 +16,5 @@
     <file>chargen.c</file>
     <file>tcpsvcs.rc</file>
     <pch>tcpsvcs.h</pch>
-</module>
+  </module>
+</rbuild>

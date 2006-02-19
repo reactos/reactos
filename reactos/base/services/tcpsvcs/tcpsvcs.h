@@ -1,14 +1,9 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/tcpsvcs.h
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/tcpsvcs.h
  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -16,9 +11,6 @@
 #include <winsock2.h>
 #include <tchar.h>
 #include <time.h>
-
-#define UNICODE
-#define _UNICODE
 
 /* default port numbers */
 #define ECHO_PORT 7
@@ -68,11 +60,11 @@ BOOL ShutdownConnection(SOCKET Sock, BOOL bRec);
 /* chargen functions */
 DWORD WINAPI ChargenHandler(VOID* Sock_);
 BOOL GenerateChars(SOCKET Sock);
-BOOL SendLine(SOCKET Sock, TCHAR* Line);
+BOOL SendLine(SOCKET Sock, char* Line);
 
 /* daytime functions */
 DWORD WINAPI DaytimeHandler(VOID* Sock_);
-BOOL SendTime(SOCKET Sock, TCHAR *time);
+BOOL SendTime(SOCKET Sock, char *time);
 
 /* echo functions */
 DWORD WINAPI EchoHandler(VOID* Sock_);
@@ -84,4 +76,4 @@ BOOL RecieveIncomingPackets(SOCKET Sock);
 
 /* qotd functions */
 DWORD WINAPI QotdHandler(VOID* Sock_);
-BOOL SendQuote(SOCKET Sock, TCHAR* Quote);
+BOOL SendQuote(SOCKET Sock, char* Quote);

@@ -1,14 +1,9 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/chargen.c
-  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/chargen.c
+ * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -35,7 +30,7 @@ DWORD WINAPI ChargenHandler(VOID* Sock_)
         LogEvent(_T("Chargen: Connection shutdown failed\n"), 0, FALSE);
         RetVal = 1;
     }
-    
+
     LogEvent(_T("Chargen: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
 
@@ -78,8 +73,8 @@ BOOL GenerateChars(SOCKET Sock)
                 charIndex++;
         }
 
-        Line[LINESIZ - 2] = L'\r';
-        Line[LINESIZ - 1] = L'\n';
+        Line[LINESIZ - 2] = '\r';
+        Line[LINESIZ - 1] = '\n';
 
         if (! SendLine(Sock, Line))
             break;
@@ -87,14 +82,14 @@ BOOL GenerateChars(SOCKET Sock)
         /* increment loop index to start printing from next char in ring */
         loopIndex++;
     }
-    
+
     if (bShutDown)
         return FALSE;
     else
         return TRUE;
 }
 
-BOOL SendLine(SOCKET Sock, TCHAR* Line)
+BOOL SendLine(SOCKET Sock, char* Line)
 {
     INT RetVal;
     INT SentBytes;

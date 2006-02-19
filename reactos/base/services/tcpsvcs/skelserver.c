@@ -1,14 +1,9 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/skelserver.c
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/skelserver.c
  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -29,7 +24,7 @@ DWORD WINAPI StartServer(LPVOID lpParam)
     ListeningSocket = SetUpListener(htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
     {
-		LogEvent("Socket error when setting up listener\n", 0, TRUE);
+		LogEvent(_T("Socket error when setting up listener\n"), 0, TRUE);
         return 3;
     }
 
@@ -136,7 +131,7 @@ VOID AcceptConnections(SOCKET ListeningSocket,
 					}
 
 					WaitForSingleObject(hThread, INFINITE);
-	                
+
 					CloseHandle(hThread);
 				}
 				else

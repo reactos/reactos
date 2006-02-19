@@ -1,14 +1,9 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2005 ReactOS Team
- *
- * LICENCE:     GPL - See COPYING in the top level directory
  * PROJECT:     ReactOS simple TCP/IP services
- * FILE:        apps/utils/net/tcpsvcs/daytime.c
-  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 04/10/05 Created
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/services/tcpsvcs/daytime.c
+ * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -18,14 +13,14 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
 {
     struct tm *newtime;
     time_t aclock;
-    TCHAR *pszTime;
+    CHAR *pszTime;
     DWORD RetVal = 0;
     SOCKET Sock = (SOCKET)Sock_;
-    
+
     time(&aclock);
     newtime = localtime(&aclock);
-    pszTime = _tasctime(newtime);
-    
+    pszTime = asctime(newtime);
+
     SendTime(Sock, pszTime);
 
     LogEvent(_T("DayTime: Shutting connection down...\n"), 0, FALSE);
@@ -36,17 +31,17 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
         LogEvent(_T("DayTime: Connection shutdown failed\n"), 0, FALSE);
         RetVal = 1;
     }
-    
+
     LogEvent(_T("DayTime: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
 }
 
 
-BOOL SendTime(SOCKET Sock, TCHAR *time)
+BOOL SendTime(SOCKET Sock, CHAR *time)
 {
-    INT StringSize = (INT)_tcsclen(time);
-    INT RetVal = send(Sock, time, sizeof(TCHAR) * StringSize, 0);
-    
+    INT StringSize = (INT)strlen(time);
+    INT RetVal = send(Sock, time, sizeof(CHAR) * StringSize, 0);
+
     if (RetVal == SOCKET_ERROR)
         return FALSE;
 
