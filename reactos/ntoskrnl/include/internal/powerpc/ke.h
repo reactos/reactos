@@ -30,10 +30,6 @@
 
 #ifndef __ASM__
 
-typedef struct _KTRAP_FRAME
-{
-} KTRAP_FRAME, *PKTRAP_FRAME;
-
 typedef struct _KIRQ_TRAPFRAME
 {
 } KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
@@ -82,7 +78,7 @@ static inline LONG KePPCTestAndClearBit(ULONG BitPos, volatile PULONG Addr)
                           "success:\n\t"
                           "isync\n\t"
                           : "=r" (NewValue), "=r" (OldValue)
-                          : "=w" (NewValue), "=w" (*Addr)
+                          : "w" (NewValue), "w" (*Addr)
                           : "memory");
 
     return NewValue & (1 << BitPos);
@@ -105,7 +101,7 @@ static inline LONG KePPCTestAndSetBit(ULONG BitPos, volatile PULONG Addr)
                           "success:\n\t"
                           "isync\n\t"
                           : "=r" (NewValue), "=r" (OldValue)
-                          : "=w" (NewValue), "=w" (*Addr)
+                          : "w" (NewValue), "w" (*Addr)
                           : "memory");
 
     return NewValue & (1 << BitPos);
