@@ -303,6 +303,7 @@ Project::ProcessXML ( const string& path )
 			If * if_data = non_if_data.ifs[i];
 			non_if_data.ifs.erase ( non_if_data.ifs.begin () + i );
 			delete if_data;
+			i--;
 		}
 	}
 	for ( i = 0; i < linkerFlags.size (); i++ )
