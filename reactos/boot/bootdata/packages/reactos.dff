@@ -195,9 +195,9 @@ base\applications\cacls\cacls.exe           1
 base\applications\calc\calc.exe             1
 base\applications\cmd\cmd.exe               1
 base\applications\devmgr\devmgrapp.exe      1
-base\applications\explorer\explorer.exe     4
-base\applications\explorer\explorer-cfg-template.xml 4
-base\applications\explorer\notifyhook\notifyhook.dll 1
+base\shell\explorer\explorer.exe     4
+base\shell\explorer\explorer-cfg-template.xml 4
+base\shell\explorer\notifyhook\notifyhook.dll 1
 base\applications\format\format.exe         1
 base\applications\ibrowser\ibrowser.exe     1
 base\applications\lsass\lsass.exe           1
