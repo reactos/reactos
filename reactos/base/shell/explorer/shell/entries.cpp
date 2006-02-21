@@ -413,32 +413,10 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 		}
 
 		if (icon_id == ICID_NONE) {
-			SHFILEINFO sfi;
-
 			const ShellPath& pidl_abs = create_absolute_pidl();
 			LPCITEMIDLIST pidl = pidl_abs;
 
-			int shgfi_flags = SHGFI_PIDL;
-
-			if (!(flags & (ICF_LARGE|ICF_MIDDLE)))
-				shgfi_flags |= SHGFI_SMALLICON;
-
-			if (flags & ICF_OPEN)
-				shgfi_flags |= SHGFI_OPENICON;
-
-			if (flags & ICF_SYSCACHE) {
-				assert(!(flags&ICF_OVERLAYS));
-
-				HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|shgfi_flags);
-				if (himlSys)
-					icon_id = g_Globals._icon_cache.add(sfi.iIcon);
-			} else {
-				if (flags & ICF_OVERLAYS)
-					shgfi_flags |= SHGFI_ADDOVERLAYS;
-
-				if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_ICON|shgfi_flags))
-					icon_id = g_Globals._icon_cache.add(sfi.hIcon);
-			}
+			icon_id = g_Globals._icon_cache.extract(pidl, flags);
 		}
 	}
 

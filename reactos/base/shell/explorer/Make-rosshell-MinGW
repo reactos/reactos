@@ -1,7 +1,7 @@
 #
 #  ReactOS shell
 #
-#  Makefile.PCH
+#  Makefile-rosshell-MinGW
 #
 #  MinGW Makefile with precompiled header support
 #

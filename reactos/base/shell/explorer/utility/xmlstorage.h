@@ -4,7 +4,7 @@
  //
  // xmlstorage.h
  //
- // Copyright (c) 2004, 2005 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
 
@@ -38,18 +38,90 @@
 
 #ifndef _XMLSTORAGE_H
 
+
+#if _MSC_VER>=1400
+#ifndef _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES
+#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES			1
+#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT	1
+#define _CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES			1
+#endif
+#endif
+
+
+#ifndef _NO_EXPAT
+
+//#include "expat.h"
 #include <expat/expat.h>
 
-#ifdef _MSC_VER
-#pragma comment(lib, "libexpat.lib")
-#pragma warning(disable: 4786)
+#else
+
+typedef char XML_Char;
+
+enum XML_Status {
+	XML_STATUS_ERROR = 0,
+	XML_STATUS_OK = 1
+};
+
+enum XML_Error {
+	XML_ERROR_NONE,
+	XML_ERROR_FAILURE
+};
+
 #endif
+
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)
+
+#ifndef	_NO_COMMENT
+#ifndef _NO_EXPAT
+#ifdef XML_STATIC
+#ifndef _DEBUG
+#pragma comment(lib, "libexpatMT")
+#endif
+#else
+#pragma comment(lib, "libexpat")
+#endif
+#endif
+
+#ifndef _STRING_DEFINED	// _STRING_DEFINED only allowed if using xmlstorage.cpp embedded in the project
+#if defined(_DEBUG) && defined(_DLL)	// DEBUG version only supported with MSVCRTD
+#if _MSC_VER==1400
+#pragma comment(lib, "xmlstorage-vc8d")
+#else
+#pragma comment(lib, "xmlstorage-vc6d")
+#endif
+#else
+#ifdef _DLL
+#if _MSC_VER==1400
+#pragma comment(lib, "xmlstorage-vc8")
+#else
+#pragma comment(lib, "xmlstorage-vc6")
+#endif
+#elif defined(_MT)
+#if _MSC_VER==1400
+#pragma comment(lib, "xmlstorage-vc8t")
+#else
+#pragma comment(lib, "xmlstorage-vc6t")
+#endif
+#else
+ // -ML is no more supported by VS2005.
+#pragma comment(lib, "xmlstorage-vc6l")
+#endif
+#endif
+#endif // _STRING_DEFINED
+
+#endif // _NO_COMMENT
+
+#endif // _MSC_VER
 
 
 #include <windows.h>	// for LPCTSTR
 
 #ifdef UNICODE
+#ifndef _UNICODE
 #define _UNICODE
+#endif
 #endif
 
 #include <tchar.h>
@@ -81,6 +153,7 @@ namespace XMLStorage {
 #define	XS_icmp stricmp
 #define	XS_nicmp strnicmp
 #define	XS_toi atoi
+#define	XS_tod strtod
 #define	XS_len strlen
 #define	XS_snprintf snprintf
 #define	XS_vsnprintf vsnprintf
@@ -92,13 +165,18 @@ namespace XMLStorage {
 #define	XS_icmp _tcsicmp
 #define	XS_nicmp _tcsnicmp
 #define	XS_toi _ttoi
+#define	XS_tod _tcstod
 #define	XS_len _tcslen
 #define	XS_snprintf _sntprintf
 #define	XS_vsnprintf _vsntprintf
 #endif
 
 #ifndef COUNTOF
+#if _MSC_VER>=1400
+#define COUNTOF _countof
+#else
 #define COUNTOF(b) (sizeof(b)/sizeof(b[0]))
+#endif
 #endif
 
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
@@ -269,7 +347,6 @@ typedef __gnu_cxx::stdio_filebuf<char> STDIO_FILEBUF;
 typedef std::filebuf STDIO_FILEBUF;
 #endif
 
-
 struct FileHolder
 {
 	FileHolder(LPCTSTR path, LPCTSTR mode)
@@ -382,6 +459,34 @@ inline bool operator==(const XS_String& s1, const char* s2)
 #endif
 
 
+#ifdef XMLNODE_LOCATION
+ /// location of XML Node including XML file name
+struct XMLLocation
+{
+	XMLLocation()
+	 :	_pdisplay_path(NULL),
+		_line(0),
+		_column(0)
+	{
+	}
+
+	XMLLocation(const char* display_path, int line, int column)
+	 :	_pdisplay_path(display_path),
+		_line(line),
+		_column(column)
+	{
+	}
+
+	std::string str() const;
+
+protected:
+	const char*	_pdisplay_path;	// character pointer for fast reference
+	int	_line;
+	int	_column;
+};
+#endif
+
+
  /// in memory representation of an XML node
 struct XMLNode : public XS_String
 {
@@ -454,7 +559,8 @@ struct XMLNode : public XS_String
 	}
 
 	XMLNode(const XMLNode& other)
-	 :	_attributes(other._attributes),
+	 :	XS_String(other),
+		_attributes(other._attributes),
 		_leading(other._leading),
 		_content(other._content),
 		_end_leading(other._end_leading),
@@ -462,6 +568,10 @@ struct XMLNode : public XS_String
 	{
 		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
 			_children.push_back(new XMLNode(**it));
+
+#ifdef XMLNODE_LOCATION
+		_location = other._location;
+#endif
 	}
 
 	~XMLNode()
@@ -588,6 +698,16 @@ struct XMLNode : public XS_String
 		return _children;
 	}
 
+	const AttributeMap& get_attributes() const
+	{
+		return _attributes;
+	}
+
+	AttributeMap& get_attributes()
+	{
+		return _attributes;
+	}
+
 	XS_String get_content() const
 	{
 #ifdef XS_STRING_UTF8
@@ -604,6 +724,10 @@ struct XMLNode : public XS_String
 	{
 		_content.assign(EncodeXMLString(s.c_str()));
 	}
+
+#ifdef XMLNODE_LOCATION
+	const XMLLocation& get_location() const {return _location;}
+#endif
 
 	enum WRITE_MODE {
 		FORMAT_SMART	= 0,	/// preserve original white space and comments if present; pretty print otherwise
@@ -638,6 +762,10 @@ protected:
 	std::string _content;
 	std::string _end_leading;
 	std::string _trailing;
+
+#ifdef XMLNODE_LOCATION
+	XMLLocation	_location;
+#endif
 
 	XMLNode* get_first_child() const
 	{
@@ -706,9 +834,9 @@ protected:
 	 /// relative XPath create function
 	XMLNode* create_relative(const char* path);
 
-	void write_worker(std::ostream& out, int indent) const;
-	void pretty_write_worker(std::ostream& out, int indent) const;
-	void smart_write_worker(std::ostream& out, int indent) const;
+	void	write_worker(std::ostream& out, int indent) const;
+	void	pretty_write_worker(std::ostream& out, int indent) const;
+	void	smart_write_worker(std::ostream& out, int indent) const;
 };
 
 
@@ -1242,17 +1370,20 @@ protected:
 
 #define	XS_TRUE_STR XS_TEXT("true")
 #define	XS_FALSE_STR XS_TEXT("false")
-#define	XS_NUMBERFMT_STR XS_TEXT("%d")
+#define	XS_INTFMT_STR XS_TEXT("%d")
+#define	XS_FLOATFMT_STR XS_TEXT("%f")
 
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
 extern const LPCXSSTR XS_TRUE;
 extern const LPCXSSTR XS_FALSE;
-extern const LPCXSSTR XS_NUMBERFMT;
+extern const LPCXSSTR XS_INTFMT;
+extern const LPCXSSTR XS_FLOATFMT;
 #else
 #define	XS_TRUE XS_TRUE_STR
 #define	XS_FALSE XS_FALSE_STR
-#define	XS_NUMBERFMT XS_NUMBERFMT_STR
+#define	XS_INTFMT XS_INTFMT_STR
+#define	XS_FLOATFMT XS_FLOATFMT_STR
 #endif
 
 
@@ -1380,7 +1511,7 @@ struct XMLInt
 	operator XS_String() const
 	{
 		XS_CHAR buffer[32];
-		XS_snprintf(buffer, COUNTOF(buffer), XS_NUMBERFMT, _value);
+		XS_snprintf(buffer, COUNTOF(buffer), XS_INTFMT, _value);
 		return buffer;
 	}
 
@@ -1416,7 +1547,90 @@ struct XMLIntRef
 	void assign(int value)
 	{
 		XS_CHAR buffer[32];
-		XS_snprintf(buffer, COUNTOF(buffer), XS_NUMBERFMT, value);
+		XS_snprintf(buffer, COUNTOF(buffer), XS_INTFMT, value);
+		_ref.assign(buffer);
+	}
+
+protected:
+	XS_String& _ref;
+};
+
+
+ /// type converter for numeric data
+struct XMLDouble
+{
+	XMLDouble(double value)
+	 :	_value(value)
+	{
+	}
+
+	XMLDouble(LPCXSSTR value, double def=0.)
+	{
+		LPTSTR end;
+
+		if (value && *value)
+			_value = XS_tod(value, &end);
+		else
+			_value = def;
+	}
+
+	XMLDouble(const XMLNode* node, const XS_String& attr_name, double def=0.)
+	{
+		LPTSTR end;
+		const XS_String& value = node->get(attr_name);
+
+		if (!value.empty())
+			_value = XS_tod(value.c_str(), &end);
+		else
+			_value = def;
+	}
+
+	operator double() const
+	{
+		return _value;
+	}
+
+	operator XS_String() const
+	{
+		XS_CHAR buffer[32];
+		XS_snprintf(buffer, COUNTOF(buffer), XS_FLOATFMT, _value);
+		return buffer;
+	}
+
+protected:
+	double _value;
+
+private:
+	void operator=(const XMLDouble&); // disallow assignment operations
+};
+
+ /// type converter for numeric data with write access
+struct XMLDoubleRef
+{
+	XMLDoubleRef(XMLNode* node, const XS_String& attr_name, double def=0.)
+	 :	_ref((*node)[attr_name])
+	{
+		if (_ref.empty())
+			assign(def);
+	}
+
+	XMLDoubleRef& operator=(double value)
+	{
+		assign(value);
+
+		return *this;
+	}
+
+	operator double() const
+	{
+		LPTSTR end;
+		return XS_tod(_ref.c_str(), &end);
+	}
+
+	void assign(double value)
+	{
+		XS_CHAR buffer[32];
+		XS_snprintf(buffer, COUNTOF(buffer), XS_FLOATFMT, value);
 		_ref.assign(buffer);
 	}
 
@@ -1552,23 +1766,19 @@ struct XMLReaderBase
 
 	XML_Status read();
 
+	std::string	get_position() const;
+	std::string	get_instructions() const {return _instructions;}
+
+	XML_Error	get_error_code() const;
+	std::string	get_error_string() const;
+
+#ifdef XMLNODE_LOCATION
+	const char* _display_path;	// character pointer for fast reference in XMLLocation
+
+	XMLLocation get_location() const;
+#endif
+
 	virtual int read_buffer(char* buffer, int len) = 0;
-
-	std::string get_position() const
-	{
-		int line = XML_GetCurrentLineNumber(_parser);
-		int column = XML_GetCurrentColumnNumber(_parser);
-
-		std::ostringstream out;
-		out << "(" << line << ") : [column " << column << "]";
-
-		return out.str();
-	}
-
-	std::string get_instructions() const {return _instructions;}
-
-	XML_Error	get_error_code() {return XML_GetErrorCode(_parser);}
-	std::string get_error_string() const;
 
 protected:
 	XMLPos		_pos;
@@ -1579,6 +1789,13 @@ protected:
 
 	std::string _content;
 	enum {TAG_NONE, TAG_START, TAG_END} _last_tag;
+
+	void	finish_read();
+
+	virtual void XmlDeclHandler(const XML_Char* version, const XML_Char* encoding, int standalone);
+	virtual void StartElementHandler(const XS_String& name, const XMLNode::AttributeMap& attributes);
+	virtual void EndElementHandler();
+	virtual void DefaultHandler(const XML_Char* s, int len);
 
 	static void XMLCALL XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone);
 	static void XMLCALL XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts);
@@ -1612,7 +1829,7 @@ protected:
 };
 
 
- /// management of XML file headers
+ /// Management of XML file headers
 struct XMLHeader
 {
 	XMLHeader(const std::string& xml_version="1.0", const std::string& encoding="UTF-8", const std::string& doctype="")
@@ -1659,13 +1876,11 @@ struct XMLDoc : public XMLNode
 		read(path);
 	}
 
-	std::istream& read(std::istream& in)
+	bool read(std::istream& in)
 	{
 		XMLReader reader(this, in);
 
-		read(reader);
-
-		return in;
+		return read(reader);
 	}
 
 	bool read(LPCTSTR path)
@@ -1700,6 +1915,11 @@ struct XMLDoc : public XMLNode
 
 	bool read(XMLReaderBase& reader, const std::string& display_path)
 	{
+#ifdef XMLNODE_LOCATION
+		 // make a string copy to handle temporary string objects
+		_display_path = display_path;
+		reader._display_path = _display_path.c_str();
+#endif
 		XML_Status status = reader.read();
 
 		_header._additional = reader.get_instructions();
@@ -1750,6 +1970,10 @@ struct XMLDoc : public XMLNode
 	XMLHeader	_header;
 	XML_Error	_last_error;
 	std::string _last_error_msg;
+
+#ifdef XMLNODE_LOCATION
+	std::string	_display_path;
+#endif
 };
 
 
@@ -1848,7 +2072,7 @@ struct XMLWriter
 	void set_content(const XS_String& s)
 	{
 		if (!_stack.empty())
-			_stack.top()._content = s;
+			_stack.top()._content = EncodeXMLString(s.c_str());
 	}
 
 	 // public for access in StackEntry
@@ -1890,7 +2114,7 @@ protected:
 			_out << std::endl;
 
 		if (_pretty == PRETTY_INDENT)
-			for(int i=_stack.size(); --i>0; )
+			for(size_t i=_stack.size(); --i>0; )
 				_out << XML_INDENT_SPACE;
 
 		_out << '<' << EncodeXMLString(entry._node_name);
@@ -1921,7 +2145,7 @@ protected:
 				_out << std::endl;
 
 			if (_pretty==PRETTY_INDENT && entry._content.empty())
-				for(int i=_stack.size(); --i>0; )
+				for(size_t i=_stack.size(); --i>0; )
 					_out << XML_INDENT_SPACE;
 
 			_out << "</" << EncodeXMLString(entry._node_name) << ">";

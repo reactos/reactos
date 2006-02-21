@@ -791,6 +791,18 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		_p = (ITEMIDLIST*)p;
 	}
 
+	friend bool operator<(const ShellPath& a, const ShellPath& b)
+	{
+		int la = ILGetSize(a._p);
+		int lb = ILGetSize(b._p);
+
+		int r = memcmp(a._p, b._p, min(la, lb));
+		if (r)
+			return r < 0;
+		else
+			return la < lb;
+	}
+
 	void assign(LPCITEMIDLIST pidl, size_t size)
 	{
 		//CONTEXT("ShellPath::assign(LPCITEMIDLIST, size_t)");

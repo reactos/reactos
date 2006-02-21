@@ -304,8 +304,9 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
 #else
 		resize_frame(LOWORD(lparam), HIWORD(lparam));
+		SendMessage(_hwndrebar, WM_SIZE, 0, 0);
 #endif
-		} break;	// do not pass message to DefFrameProc
+		break;}	// do not pass message to DefFrameProc
 
 	  case WM_GETMINMAXINFO: {
 		LPMINMAXINFO lpmmi = (LPMINMAXINFO)lparam;

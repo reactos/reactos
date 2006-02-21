@@ -128,5 +128,13 @@ SOURCE=.\notifyhook.c
 
 SOURCE=.\notifyhook.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\notifyhook.rbuild
+# End Source File
+# Begin Source File
+
+SOURCE=..\utility\utility.h
+# End Source File
 # End Target
 # End Project

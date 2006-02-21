@@ -392,7 +392,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		ClientRect rt(_hwnd);
 		rt.left = _split_pos-SPLIT_WIDTH/2;
 		rt.right = _split_pos+SPLIT_WIDTH/2+1;
-		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(LTGRAY_BRUSH));
+		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
 		Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
         SetRect(&rc, rt.left, rt.top-1, rt.right, rt.bottom+1);
         DrawEdge(canvas, &rc, EDGE_RAISED, BF_RECT);

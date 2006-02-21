@@ -130,6 +130,7 @@ struct IconCache {
 	const Icon&	extract(LPCTSTR path, ICONCACHE_FLAGS flags=ICF_NORMAL);
 	const Icon&	extract(LPCTSTR path, int icon_idx, ICONCACHE_FLAGS flags=ICF_HICON);
 	const Icon&	extract(IExtractIcon* pExtract, LPCTSTR path, int icon_idx, ICONCACHE_FLAGS flags=ICF_HICON);
+	const Icon&	extract(LPCITEMIDLIST pidl, ICONCACHE_FLAGS flags=ICF_NORMAL);
 
 	const Icon&	add(HICON hIcon, ICON_TYPE type=IT_DYNAMIC);
 	const Icon&	add(int sys_idx/*, ICON_TYPE type=IT_SYSCACHE*/);
@@ -154,6 +155,10 @@ protected:
 	typedef map<IdxCacheKey, ICON_ID> IdxCacheMap;
 	IdxCacheMap _idxCache;
 
+	typedef pair<ShellPath,int/*ICONCACHE_FLAGS*/> PidlCacheKey;
+	typedef map<PidlCacheKey, ICON_ID> PidlCacheMap;
+	PidlCacheMap _pidlcache;
+
 	HIMAGELIST _himlSys_small;
 };
 
@@ -165,7 +170,7 @@ protected:
 #define STARTMENUROOT_ICON_SIZE		ICON_SIZE_MIDDLE	// ICON_SIZE_LARGE
 
 #define ICON_SIZE_FROM_ICF(flags)	(flags&ICF_LARGE? ICON_SIZE_LARGE: flags&ICF_MIDDLE? ICON_SIZE_MIDDLE: ICON_SIZE_SMALL)
-#define ICF_FROM_ICON_SIZE(size)	(size>=ICON_SIZE_LARGE? ICF_LARGE: size>=ICON_SIZE_MIDDLE? ICF_MIDDLE: ICF_NORMAL)
+#define ICF_FROM_ICON_SIZE(size)	(size>=ICON_SIZE_LARGE? ICF_LARGE: size>=ICON_SIZE_MIDDLE? ICF_MIDDLE: (ICONCACHE_FLAGS)0)
 
 
  /// create a bitmap from an icon

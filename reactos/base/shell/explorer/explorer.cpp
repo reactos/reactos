@@ -95,7 +95,7 @@ void ExplorerGlobals::read_persistent()
 
 	if (!_cfg.read(_cfg_path)) {
 		if (_cfg._last_error != XML_ERROR_NO_ELEMENTS)
-			MessageBox(g_Globals._hwndDesktop, String(_cfg._last_error_msg.c_str()),
+			MessageBox(_hwndDesktop, String(_cfg._last_error_msg.c_str()),
 						TEXT("ROS Explorer - reading user settings"), MB_OK);
 
 		_cfg.read(TEXT("explorer-cfg-template.xml"));
@@ -539,6 +539,73 @@ const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int icon_id
 
 	return _icons[ICID_NONE];
 }
+
+const Icon&	IconCache::extract(LPCITEMIDLIST pidl, ICONCACHE_FLAGS flags)
+{
+	 // search for matching icon with unchanged flags in the cache
+	PidlCacheKey mapkey(pidl, flags);
+	PidlCacheMap::iterator found = _pidlcache.find(mapkey);
+
+	if (found != _pidlcache.end())
+		return _icons[found->second];
+
+	 // search for matching icon with handle
+	PidlCacheKey mapkey_hicon(pidl, flags|ICF_HICON);
+	if (flags != mapkey_hicon.second) {
+		found = _pidlcache.find(mapkey_hicon);
+
+		if (found != _pidlcache.end())
+			return _icons[found->second];
+	}
+
+	 // search for matching icon in the system image list cache
+	PidlCacheKey mapkey_syscache(pidl, flags|ICF_SYSCACHE);
+	if (flags != mapkey_syscache.second) {
+		found = _pidlcache.find(mapkey_syscache);
+
+		if (found != _pidlcache.end())
+			return _icons[found->second];
+	}
+
+	SHFILEINFO sfi;
+
+	int shgfi_flags = SHGFI_PIDL;
+
+	if (!(flags & (ICF_LARGE|ICF_MIDDLE)))
+		shgfi_flags |= SHGFI_SMALLICON;
+
+	if (flags & ICF_OPEN)
+		shgfi_flags |= SHGFI_OPENICON;
+
+	if (flags & ICF_SYSCACHE) {
+		assert(!(flags&ICF_OVERLAYS));
+
+		HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|shgfi_flags);
+		if (himlSys) {
+			const Icon& icon = add(sfi.iIcon/*, IT_SYSCACHE*/);
+
+			///@todo limit cache size
+			_pidlcache[mapkey_syscache] = icon;
+
+			return icon;
+		}
+	} else {
+		if (flags & ICF_OVERLAYS)
+			shgfi_flags |= SHGFI_ADDOVERLAYS;
+
+		if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_ICON|shgfi_flags)) {
+			const Icon& icon = add(sfi.hIcon, IT_CACHED);
+
+			///@todo limit cache size
+			_pidlcache[mapkey_hicon] = icon;
+
+			return icon;
+		}
+	}
+
+	return _icons[ICID_NONE];
+}
+
 
 const Icon& IconCache::add(HICON hIcon, ICON_TYPE type)
 {

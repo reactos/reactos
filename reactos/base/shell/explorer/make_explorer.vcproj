@@ -25,8 +25,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="msdevfilt -gcc make -f Makefile.PCH UNICODE=1"
-				ReBuildCommandLine="msdevfilt -gcc make -f Makefile.PCH UNICODE=1 clean all"
+				BuildCommandLine="msdevfilt -gcc make -f Makefile-precomp UNICODE=1"
+				ReBuildCommandLine="msdevfilt -gcc make -f Makefile-precomp UNICODE=1 clean all"
 				CleanCommandLine=""
 				Output="explorer.exe"
 				PreprocessorDefinitions=""
@@ -71,8 +71,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.PCH UNICODE=0"
-				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.PCH UNICODE=0 clean all"
+				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0"
+				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0 clean all"
 				CleanCommandLine=""
 				Output="explorer.exe"
 				PreprocessorDefinitions=""
@@ -140,8 +140,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.PCH UNICODE=0 DEBUG=1"
-				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile.PCH UNICODE=0 DEBUG=1 clean all"
+				BuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0 DEBUG=1"
+				ReBuildCommandLine="msdevfilt -gcc -pipe &quot;perl d:\tools\gSTLFilt.pl&quot; make -f Makefile-precomp UNICODE=0 DEBUG=1 clean all"
 				CleanCommandLine=""
 				Output="explorer.exe"
 				PreprocessorDefinitions=""
@@ -173,7 +173,7 @@
 			>
 		</File>
 		<File
-			RelativePath="Makefile.PCH"
+			RelativePath="Makefile-precomp"
 			>
 		</File>
 		<File
