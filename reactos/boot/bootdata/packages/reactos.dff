@@ -29,22 +29,17 @@ Signature = "$ReactOS$"
 
 
 ; Base files
-base\applications\games\solitaire\sol.exe           1
-base\applications\games\winemine\winemine.exe       1
 base\applications\cacls\cacls.exe                   1
 base\applications\calc\calc.exe                     1
-base\applications\ibrowser\ibrowser.exe             1
-base\applications\notepad\notepad.exe               1
-base\applications\imagesoft\imagesoft.exe           1
+base\applications\devmgr\devmgrapp.exe              1
+base\applications\games\solitaire\sol.exe           1
+base\applications\games\winemine\winemine.exe       1
+base\applications\getfirefox\getfirefox.exe         1
 ;base\applications\gettype\gettype.exe              1
-base\applications\regedit\regedit.exe               4
-base\applications\regedit\clb\clb.dll               1
-;base\applications\reporterror\reporterror.exe      1
-base\applications\servman\servman.exe               1
-base\applications\winefile\winefile.exe             1
-;base\applications\winver\winver.exe                1
-;base\applications\sm\sm.exe                        1
 base\applications\hostname\hostname.exe             1
+base\applications\ibrowser\ibrowser.exe             1
+base\applications\imagesoft\imagesoft.exe           1
+base\applications\msconfig\msconfig.exe             1
 base\applications\network\arp\arp.exe               1
 base\applications\network\route\route.exe           1
 base\applications\network\finger\finger.exe         1
@@ -55,14 +50,19 @@ base\applications\network\ping\ping.exe             1
 base\applications\network\telnet\telnet.exe         1
 base\applications\network\tracert\tracert.exe       1
 base\applications\network\whois\whois.exe           1
-;base\applications\utils\ps\ps.exe                  1
-;base\applications\utils\rosperf\rosperf.exe        1
+base\applications\notepad\notepad.exe               1
+base\applications\regedit\regedit.exe               4
+base\applications\regedit\clb\clb.dll               1
+;base\applications\reporterror\reporterror.exe      1
+base\applications\sc\sc.exe                         1
+base\applications\servman\servman.exe               1
 base\applications\shutdown\shutdown.exe             1
-base\applications\getfirefox\getfirefox.exe         1
+;base\applications\sm\sm.exe                        1
 base\applications\taskmgr\taskmgr.exe               1
-base\applications\sc\sc.exe     		            1
-base\applications\msconfig\msconfig.exe             1
-base\applications\devmgr\devmgrapp.exe              1
+;base\applications\utils\rosperf\rosperf.exe        1
+;base\applications\utils\ps\ps.exe                  1
+base\applications\winefile\winefile.exe             1
+;base\applications\winver\winver.exe                1
 
 base\services\dhcp\dhcp.exe                         1
 base\services\eventlog\eventlog.exe                 1
