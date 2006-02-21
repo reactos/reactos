@@ -322,7 +322,7 @@ int ShellEntry::extract_icon()
 
 	ICON_ID icon_id = ICID_NONE;
 
-	if (get_path(path))
+	if (get_path(path, COUNTOF(path)))
 		icon_id = g_Globals._icon_cache.extract(path);
 
 	if (icon_id == ICID_NONE) {

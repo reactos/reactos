@@ -1,7 +1,7 @@
 #
 #  ReactOS lean explorer
 #
-#  Makefile.PCH
+#  Makefile-precomp
 #
 #  MinGW Makefile with precompiled header support
 #

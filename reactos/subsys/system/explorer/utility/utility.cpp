@@ -160,11 +160,20 @@ String Context::getStackTrace() const
 
 BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 {
+#ifdef __STDC_WANT_SECURE_LIB__
+	SYSTEMTIME stime;
+	struct tm tm_;
+	struct tm* tm = &tm_;
+
+	if (gmtime_s(tm, t) != 0)
+		return FALSE;
+#else
 	struct tm* tm = gmtime(t);
 	SYSTEMTIME stime;
 
 	if (!tm)
 		return FALSE;
+#endif
 
 	stime.wYear = tm->tm_year+1900;
 	stime.wMonth = tm->tm_mon+1;

@@ -1,7 +1,7 @@
 #
 #  ReactOS lean shell
 #
-#  Make-rosshell.MinGW
+#  Make-rosshell-MinGW
 #
 #  MinGW Makefile with precompiled header support
 #

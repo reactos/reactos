@@ -30,7 +30,7 @@
 
 #include "precomp.h"
 
-#include "explorer_intres.h"
+#include "resource.h"
 
 #include <locale.h>	// for setlocale()
 
@@ -88,7 +88,7 @@ void _log_(LPCTSTR txt)
 
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
-	_tcslwr((LPTSTR)ext.c_str());
+	ext.toLower();
 
 	iterator found = find(ext);
 	if (found != end())
@@ -99,7 +99,7 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 	ftype._neverShowExt = false;
 
 	HKEY hkey;
-	TCHAR value[MAX_PATH], display_name[MAX_PATH];;
+	TCHAR value[MAX_PATH], display_name[MAX_PATH];
 	LONG valuelen = sizeof(value);
 
 	if (!RegQueryValue(HKEY_CLASSES_ROOT, ext, value, &valuelen)) {
@@ -131,7 +131,7 @@ LPCTSTR FileTypeManager::set_type(ShellEntry* entry, bool dont_hide_ext)
 		if (type._neverShowExt && !dont_hide_ext) {
 			int len = ext - entry->_data.cFileName;
 			entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
-			_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
+			lstrcpyn(entry->_display_name, entry->_data.cFileName, len + 1);
 			entry->_display_name[len] = TEXT('\0');
 		}
 	}
@@ -271,7 +271,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 {
 	CachePair key(path, idx);
 
-	_tcslwr((LPTSTR)key.first.c_str());
+	key.first.toLower();
 
 	PathIdxMap::iterator found = _pathIdxMap.find(key);
 

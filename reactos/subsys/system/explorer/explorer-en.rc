@@ -1,0 +1,244 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 196, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Explorer"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,29,90,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,43,98,8
+    LTEXT           "(c) 2003-2006 Martin Fuchs",IDC_STATIC,91,58,79,8
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,21,84,104,
+                    8
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    151,90,38,12
+END
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancel",2,158,23,47,14
+    PUSHBUTTON      "&Help",254,158,43,47,14
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Desktop Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Display &Version Number",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Taskbar Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Startmenu Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Create Shortcut",             ID_FILE_CREATESHORTCUT
+        , GRAYED
+        MENUITEM "Delete",                      ID_FILE_DELETE, GRAYED
+        MENUITEM "Rename",                      ID_FILE_RENAME, GRAYED
+        MENUITEM "Properties",                  ID_FILE_PROPERTIES, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Close",                       ID_FILE_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Undo",                        ID_EDIT_UNDO, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Cut",                        ID_EDIT_CUt, GRAYED
+        MENUITEM "&Copy",                       ID_EDIT_COPY, GRAYED
+        MENUITEM "&Paste",                      ID_EDIT_PASTE, GRAYED
+        MENUITEM "&Paste Shortcut",             ID_EDIT_PASTE_SHORTCUT
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Copy to Folder",              ID_EDIT_COPY_FOLDER, GRAYED
+        MENUITEM "Move to Folder",              ID_EDIT_MOVE_TO_FOLDER
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Select All",                  ID_EDIT_SELECT_ALL, GRAYED
+        MENUITEM "Invert Selection",            ID_EDIT_INVERT_SELECTION
+        , GRAYED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "New &Window",                 ID_WINDOW_NEW
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Map Network Drive",           ID_TOOLS_MAP, GRAYED
+        MENUITEM "Disconnect Network Drive...", ID_TOOLS_DISCONNECT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Folder Options...",           ID_TOOLS_OPTIONS, GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Task Manager...",            ID_TASKMGR
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Reactos Explorer"
+    IDS_START               "Start"
+    IDS_LOGOFF              "Log Off..."
+    IDS_SHUTDOWN            "Turn Off..."
+    IDS_LAUNCH              "Run..."
+    IDS_START_HELP          "Help"
+    IDS_SEARCH_FILES        "Search..."
+    IDS_DOCUMENTS           "Documents"
+    IDS_FAVORITES           "Favorites"
+    IDS_PROGRAMS            "Programs"
+    IDS_SETTINGS            "Settings"
+    IDS_EXPLORE             "Explore"
+    IDS_EMPTY               "(Empty)"
+    IDS_RECENT              "Recent Documents"
+    IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_TERMINATE           "Terminate ROS Explorer"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Network"
+    IDS_CONNECTIONS         "Network Connections"
+    IDS_DRIVES              "Drives"
+    IDS_SEARCH_COMPUTER     "Search Computer..."
+    IDS_CONTROL_PANEL       "Control Panel"
+    IDS_PRINTERS            "Printers"
+    IDS_ALL_USERS           "All Users\\"
+    IDS_SEARCH              "Search"
+    IDS_ABOUT_EXPLORER      "&About Explorer..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "You have selected more than one program.\nAre you sure you want to launch all of them?"
+    IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
+    IDS_DESKTOP             "Desktop"
+    IDS_TASKBAR             "Taskbar"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O1 /D "NDEBUG" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /D "_NO_CONTEXT" /Yu"precomp.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GR /GX /O1 /D "NDEBUG" /D "_NO_CONTEXT" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /Yu"precomp.h" /FD /c
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
 # ADD RSC /l 0x407 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -95,7 +95,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "UNICODE" /D "_ROS_" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /D "NDEBUG" /D "UNICODE" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /D "_NO_CONTEXT" /Yu"precomp.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GR /GX /O2 /D "NDEBUG" /D "UNICODE" /D "_NO_CONTEXT" /D "WIN32" /D _WIN32_IE=0x0501 /D _WIN32_WINNT=0x0501 /Yu"precomp.h" /FD /c
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
 # ADD RSC /l 0x407 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -233,7 +233,7 @@ SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
-SOURCE=".\explorer-jp.rc"
+SOURCE=".\explorer-en.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

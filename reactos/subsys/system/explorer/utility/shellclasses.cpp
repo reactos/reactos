@@ -64,14 +64,21 @@ LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
 String COMException::toString() const
 {
 	TCHAR msg[4*BUFFER_LEN];
+#ifdef __STDC_WANT_SECURE_LIB__
+	int l = 4*BUFFER_LEN;
+#endif
 	LPTSTR p = msg;
 
 #ifndef _NO_CONTEXT
-	p += _stprintf(p, TEXT("%s\nContext: %s"), super::ErrorMessage(), (LPCTSTR)_context.toString());
+	int n = _stprintf_s2(p, l, TEXT("%s\nContext: %s"), super::ErrorMessage(), (LPCTSTR)_context.toString());
+	p += n;
+#ifdef __STDC_WANT_SECURE_LIB__
+	l -= n;
+#endif
 #endif
 
 	if (_file)
-		p += _stprintf(p, TEXT("\nLocation: %hs:%d"), _file, _line);
+		p += _stprintf_s2(p, l, TEXT("\nLocation: %hs:%d"), _file, _line);
 
 	return msg;
 }

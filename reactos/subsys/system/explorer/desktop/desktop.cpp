@@ -31,7 +31,7 @@
 #include "../taskbar/desktopbar.h"
 #include "../taskbar/taskbar.h"	// for PM_GET_LAST_ACTIVE
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);

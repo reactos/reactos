@@ -233,7 +233,7 @@ SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
-SOURCE=".\explorer-jp.rc"
+SOURCE=".\explorer-en.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

@@ -85,7 +85,7 @@ public:
 	int		extract_icon();
 	int		safe_extract_icon();
 
-	virtual bool get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path, size_t path_count) const;
 	ShellPath create_absolute_pidl() const;
 	BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 	HRESULT GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);

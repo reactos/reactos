@@ -28,7 +28,7 @@
 
 #include "precomp.h"
 
-#include "../explorer_intres.h"
+#include "../resource.h"
 
 
 static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)

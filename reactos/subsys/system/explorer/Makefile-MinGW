@@ -1,7 +1,7 @@
 #
 #  ReactOS lean explorer
 #
-#  Makefile.MinGW
+#  Makefile-MinGW
 #
 
 CC = gcc
