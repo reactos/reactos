@@ -239,6 +239,8 @@ static void display_network_error(HWND hwnd)
 }
 
 
+#ifdef __WINE__
+
 static VOID WineLicense(HWND Wnd)
 {
 	TCHAR cap[20], text[1024];
@@ -254,9 +256,6 @@ static VOID WineWarranty(HWND Wnd)
 	LoadString(Globals.hInstance, IDS_WARRANTY_CAPTION, cap, 20);
 	MessageBox(Wnd, text, cap, MB_ICONEXCLAMATION | MB_OK);
 }
-
-
-#ifdef __WINE__
 
 #ifdef UNICODE
 
