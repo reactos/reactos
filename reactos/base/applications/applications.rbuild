@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <group>
+<directory name="cacls">
+	<xi:include href="cacls/cacls.rbuild" />
+</directory>
 <directory name="calc">
 	<xi:include href="calc/calc.rbuild" />
 </directory>
