@@ -37,6 +37,9 @@
 <directory name="regedit">
 	<xi:include href="regedit/regedit.rbuild" />
 </directory>
+<directory name="reporterror">
+	<xi:include href="reporterror/reporterror.rbuild" />
+</directory>
 <directory name="sc">
 	<xi:include href="sc/sc.rbuild" />
 </directory>
