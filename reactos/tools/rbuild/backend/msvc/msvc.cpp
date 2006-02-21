@@ -68,9 +68,9 @@ void MSVCBackend::Process()
 	//string filename_rules = "gccasm.rules";
 	
 	if ( configuration.VSProjectVersion == "6.00" )
-		filename_sln += ".dsw";
+		filename_sln += "_auto.dsw";
 	else {
-		filename_sln += ".sln";
+		filename_sln += "_auto.sln";
 
 		//m_rulesFile = fopen ( filename_rules.c_str(), "wb" );
 		//if ( m_rulesFile )
@@ -109,9 +109,9 @@ void MSVCBackend::ProcessModules()
 		module.guid = _gen_guid();
 
 		if (configuration.VSProjectVersion == "6.00")
-			this->_generate_dsp ( module );
+			_generate_dsp ( module );
 		else
-			this->_generate_vcproj ( module );
+			_generate_vcproj ( module );
 
 
 		/*for(size_t k = 0; k < module.non_if_data.files.size(); k++)

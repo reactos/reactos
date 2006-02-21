@@ -229,7 +229,7 @@ main ( int argc, char** argv )
 		printf ( "  -v            Be verbose.\n" );
 		printf ( "  -c            Clean as you go. Delete generated files as soon as they are not\n" );
 		printf ( "                needed anymore.\n" );
-		printf ( "  -r{file.xml}  Name of the root xml file. Default is ReactOS.xml.\n" );
+		printf ( "  -r{file.rbuild}  Name of the root rbuild file. Default is ReactOS.rbuild.\n" );
 		printf ( "  -dd           Disable automatic dependencies.\n" );
 		printf ( "  -dm{module}   Check only automatic dependencies for this module.\n" );
 		printf ( "  -ud           Disable multiple source files per compilation unit.\n" );

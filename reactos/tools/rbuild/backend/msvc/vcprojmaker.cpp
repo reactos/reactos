@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include <stdio.h>
 
@@ -30,6 +31,9 @@
 
 using std::string;
 using std::vector;
+using std::set;
+
+typedef set<string> StringSet;
 
 #ifdef OUT
 #undef OUT
@@ -91,16 +95,17 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
 	string vcproj_path = module.GetBasePath();
-	vector<string> source_files, resource_files, includes, libraries, defines;
+	vector<string> source_files, resource_files, includes, libraries;
+	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
 
 	// MinGW doesn't have a safe-string library yet
-	defines.push_back ( "_CRT_SECURE_NO_DEPRECATE" );
-	defines.push_back ( "_CRT_NON_CONFORMING_SWPRINTFS" );
+	common_defines.insert ( "_CRT_SECURE_NO_DEPRECATE" );
+	common_defines.insert ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 	// this is a define in MinGW w32api, but not Microsoft's headers
-	defines.push_back ( "STDCALL=__stdcall" );
+	common_defines.insert ( "STDCALL=__stdcall" );
 
 	string baseaddr;
 
@@ -158,9 +163,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		for ( i = 0; i < defs.size(); i++ )
 		{
 			if ( defs[i]->value[0] )
-				defines.push_back ( defs[i]->name + "=" + defs[i]->value );
+				common_defines.insert( defs[i]->name + "=" + defs[i]->value );
 			else
-				defines.push_back ( defs[i]->name );
+				common_defines.insert( defs[i]->name );
 		}
 		for ( i = 0; i < data.properties.size(); i++ )
 		{
@@ -278,39 +283,45 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		}
 		fprintf ( OUT, "\"\r\n " );
 
+		StringSet defines = common_defines;
+
 		if ( debug )
 		{
-			defines.push_back ( "_DEBUG" );
+			defines.insert ( "_DEBUG" );
 		}
 		else
 		{
-			defines.push_back ( "NDEBUG" );
+			defines.insert ( "NDEBUG" );
 		}
 
 		if ( lib || exe )
 		{
-			defines.push_back ( "_LIB" );
+			defines.insert ( "_LIB" );
 		}
 		else
 		{
-			defines.push_back ( "_WINDOWS" );
-			defines.push_back ( "_USRDLL" );
+			defines.insert ( "_WINDOWS" );
+			defines.insert ( "_USRDLL" );
 		}
 
 		fprintf ( OUT, "\t\t\t\tPreprocessorDefinitions=\"" );
-		for ( i = 0; i < defines.size(); i++ )
+		for ( StringSet::iterator it1=defines.begin(); it1!=defines.end(); it1++ )
 		{
 			if ( i > 0 )
 				fprintf ( OUT, ";" );
 
-			defines[i] = _replace_str(defines[i], "\"","&quot;"); 
-			fprintf ( OUT, "%s", defines[i].c_str() );
+			string unescaped = *it1;
+			defines.erase(unescaped);
+			const string& escaped = _replace_str(unescaped, "\"","&quot;");
+
+			defines.insert(escaped);
+			fprintf ( OUT, "%s", escaped.c_str() );
 		}
 		fprintf ( OUT, "\"\r\n" );
 
 		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
         fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", sys ? 0 : (debug ? "3" : "0") );
-		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"5\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug? 1: 5 );	// 1=/MTd 5=/MT
         fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", sys ? "FALSE" : (debug ? "TRUE" : "FALSE" ));
 		fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
 		
@@ -337,14 +348,13 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tStringPooling=\"true\"\r\n" );
 		}
 
-		fprintf ( OUT, "\t\t\t\tEnablePREfast=\"%s\"\r\n", debug ? "TRUE" : "FALSE");
 		fprintf ( OUT, "\t\t\t\tDisableSpecificWarnings=\"4201;4127;4214\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", speed ? "0" : "4" );
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", speed ? "FALSE" : "TRUE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
-        fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", (sys || (exe && module.type == Kernel)) ? 2: 1);
-		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : "4");
+        fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", (sys || (exe && module.type == Kernel)) ? 2: 0);	// 2=__stdcall 0=__cdecl
+		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : release ? "3": "4");	// 3=/Zi 4=ZI
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCustomBuildTool\"/>\r\n" );
@@ -382,6 +392,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
 			fprintf ( OUT, "\t\t\t\tLinkIncremental=\"%d\"\r\n", debug ? 2 : 1 );
 			fprintf ( OUT, "\t\t\t\tGenerateDebugInformation=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
+			fprintf ( OUT, "\t\t\t\tLinkTimeCodeGeneration=\"%d\"\r\n", release? 1: 0);	// whole program optimization
 
 			if ( debug )
 				fprintf ( OUT, "\t\t\t\tProgramDatabaseFile=\"$(OutDir)/%s.pdb\"\r\n", module.name.c_str() );

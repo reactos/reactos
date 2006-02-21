@@ -244,7 +244,7 @@ Project::ReadXml ()
 		{
 			node = head->subElements[i];
 			string path;
-			this->ProcessXML ( path );
+			ProcessXML ( path );
 			return;
 		}
 	}

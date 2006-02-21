@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include <stdio.h>
 
@@ -30,6 +31,9 @@
 
 using std::string;
 using std::vector;
+using std::set;
+
+typedef set<string> StringSet;
 
 #ifdef OUT
 #undef OUT
@@ -79,13 +83,14 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	string dsp_path = module.GetBasePath();
-	vector<string> c_srcs, source_files, resource_files, includes, libraries, defines;
+	vector<string> c_srcs, source_files, resource_files, includes, libraries;
+	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
 
 	// this is a define in MinGW w32api, but not Microsoft's headers
-	defines.push_back ( "STDCALL=__stdcall" );
+	common_defines.insert ( "STDCALL=__stdcall" );
 
 	while ( ifs_list.size() )
 	{
@@ -132,9 +137,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		for ( i = 0; i < defs.size(); i++ )
 		{
 			if ( defs[i]->value[0] )
-				defines.push_back ( defs[i]->name + "=" + defs[i]->value );
+				common_defines.insert( defs[i]->name + "=" + defs[i]->value );
 			else
-				defines.push_back ( defs[i]->name );
+				common_defines.insert( defs[i]->name );
 		}
 	}
 	// TODO FIXME - we don't include header files in our build system
@@ -318,44 +323,46 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		if ( dll ) fprintf ( OUT, "# PROP Ignore_Export_Lib 0\r\n" );
 		fprintf ( OUT, "# PROP Target_Dir \"\"\r\n" );
 
+		StringSet defines = common_defines;
+
 		if ( debug )
 		{
-			defines.push_back ( "_DEBUG" );
+			defines.insert ( "_DEBUG" );
 			if ( lib || exe )
 			{
 				fprintf ( OUT, "# ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od" );
-				defines.push_back ( "_LIB" );
+				defines.insert ( "_LIB" );
 			}
 			else
 			{
 				fprintf ( OUT, "# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od" );
-				defines.push_back ( "_WINDOWS" );
-				defines.push_back ( "_USRDLL" );
+				defines.insert ( "_WINDOWS" );
+				defines.insert ( "_USRDLL" );
 				// TODO FIXME - wine hack?
-				//defines.push_back ( string("\U") + module.name + "\E_EXPORTS" );
+				//defines.insert ( string("\U") + module.name + "\E_EXPORTS" );
 			}
 		}
 		else
 		{
-			defines.push_back ( "NDEBUG" );
+			defines.insert ( "NDEBUG" );
 			if ( lib || exe )
 			{
 				fprintf ( OUT, "# ADD BASE CPP /nologo /W3 /GX /O2" );
-				defines.push_back ( "_LIB" );
+				defines.insert ( "_LIB" );
 			}
 			else
 			{
 				fprintf ( OUT, "# ADD BASE CPP /nologo /MT /W3 /GX /O2" );
-				defines.push_back ( "_WINDOWS" );
-				defines.push_back ( "_USRDLL" );
+				defines.insert ( "_WINDOWS" );
+				defines.insert ( "_USRDLL" );
 				// TODO FIXME - wine hack?
-				//defines.push_back ( string("\U") + module.name + "\E_EXPORTS" );
+				//defines.insert ( string("\U") + module.name + "\E_EXPORTS" );
 			}
 		}
 
-		for ( i = 0; i < defines.size(); i++ )
+		for ( StringSet::const_iterator it1=defines.begin(); it1!=defines.end(); it1++ )
 		{
-			fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
+			fprintf ( OUT, " /D \"%s\"", it1->c_str() );
 		}
 		if ( lib || exe ) fprintf ( OUT, " /YX" );
 		fprintf ( OUT, " /FD" );
@@ -367,33 +374,32 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, " /c" );
 		fprintf ( OUT, "\r\n" );
 
-		vector<string> defines2 = defines;
 		if ( debug )
 		{
-			defines2.push_back ( "_DEBUG" );
+			defines.insert ( "_DEBUG" );
 			if(lib)
 			{
 				fprintf ( OUT, "# ADD CPP /nologo /MTd /W3 /Gm /GX /Zi /Od" );
-				defines2.push_back ( "_LIB" );
+				defines.insert ( "_LIB" );
 			}
 			else
 			{
 				fprintf ( OUT, "# ADD CPP /nologo /MTd /W3 /Gm /GX /Zi /Od" );
-				defines2.push_back ( "_USRDLL" );
+				defines.insert ( "_USRDLL" );
 			}
 		}
 		else
 		{
-			defines2.push_back ( "NDEBUG" );
+			defines.insert ( "NDEBUG" );
 			if(lib)
 			{
 				fprintf ( OUT, "# ADD CPP /nologo /MT /W3 /GX /O2" );
-				defines2.push_back ( "_LIB" );
+				defines.insert ( "_LIB" );
 			}
 			else
 			{
 				fprintf ( OUT, "# ADD CPP /nologo /MT /W3 /GX /O2" );
-				defines2.push_back ( "_USRDLL" );
+				defines.insert ( "_USRDLL" );
 			}
 		}
 
@@ -401,16 +407,16 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		if ( wine )
 		{
 			// TODO FIXME - wine hack?
-			//defines2.push_back ( string("_\U") + module.name + "\E_" );
+			//defines.insert ( string("_\U") + module.name + "\E_" );
 			// TODO FIXME - wine hack?
 			/*if ( module.name !~ /^(?:wine(?:build|test)|.*?_test)$/ )
-				defines2.push_back ( "__WINESRC__" );*/
+				defines.insert ( "__WINESRC__" );*/
 			if ( msvc_headers )
-				defines2.push_back ( "__WINE_USE_NATIVE_HEADERS" );
+				defines.insert ( "__WINE_USE_NATIVE_HEADERS" );
 			string output_dir2 = Replace(output_dir,"\\","\\\\");
-			defines2.push_back ( ssprintf("__WINETEST_OUTPUT_DIR=\\\"%s\\\"",output_dir.c_str()) );
-			defines2.push_back ( "__i386__" );
-			defines2.push_back ( "_X86_" );
+			defines.insert ( ssprintf("__WINETEST_OUTPUT_DIR=\\\"%s\\\"",output_dir.c_str()) );
+			defines.insert ( "__i386__" );
+			defines.insert ( "_X86_" );
 
 			// TODO FIXME - wine hacks?
 			/*if(module.name =~ /^gdi32_(?:enhmfdrv|mfdrv)$/) {
@@ -445,9 +451,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		}
 
 		fprintf ( OUT, " /I \".\"" );
-		for ( i = 0; i < defines2.size(); i++ )
+		for ( StringSet::const_iterator it2=defines.begin(); it2!=defines.end(); it2++ )
 		{
-			const string& define = defines2[i];
+			const string& define = *it2;
 			if ( strpbrk ( define.c_str(), "[\\\"]" ) )
 			{
 				fprintf ( OUT, " /D \"%s\"", define.c_str() );
@@ -486,9 +492,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				}
 			}
 
-			for ( i = 0; i < defines.size(); i++ )
+			for ( StringSet::const_iterator it3=defines.begin(); it3!=defines.end(); it3++ )
 			{
-				fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
+				fprintf ( OUT, " /D \"%s\"", it3->c_str() );
 			}
 			fprintf ( OUT, " /d \"_DEBUG\"\r\n" );
 		}
@@ -508,9 +514,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 			}
 
-			for ( i = 0; i < defines.size(); i++ )
+			for ( StringSet::const_iterator it4=defines.begin(); it4!=defines.end(); it4++ )
 			{
-				fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
+				fprintf ( OUT, " /D \"%s\"", it4->c_str() );
 			}
 
 
