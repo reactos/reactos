@@ -1,5 +1,0 @@
-/me slaps %s with a large trout
-recycle(%s)
-Did I hear something? Musta been a %s-fly... Where's that fly-swatter?
-%s: go away son, you bother me....
-/me beats %s with the whipping noodle

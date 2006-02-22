@@ -1,4 +1,0 @@
-Sub Main
-  ' ToDo: Download putty.exe in own dir
-  download ("http://the.earth.li/~sgtatham/putty/latest/x86/putty.exe", "C:\Program Files\putty.exe")
-End Sub
