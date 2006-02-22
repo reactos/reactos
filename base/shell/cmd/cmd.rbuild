@@ -1,4 +1,6 @@
-<module name="cmd_base" type="objectlibrary">
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <module name="cmd_base" type="objectlibrary">
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd_base">.</include>
 	<define name="__USE_W32API" />
@@ -60,8 +62,8 @@
 		<file>where.c</file>
 		<file>window.c</file>
 	</compilationunit>
-</module>
-<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" usewrc="false">
+  </module>
+  <module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" usewrc="false">
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd">.</include>
 	<define name="__USE_W32API" />
@@ -71,7 +73,8 @@
 	<library>cmd_base</library>
 	<file>main.c</file>
 	<file>cmd.rc</file>
-</module>
-<directory name="tests">
+  </module>
+  <directory name="tests">
 	<xi:include href="tests/cmd_test.rbuild" />
-</directory>
+  </directory>
+</rbuild>

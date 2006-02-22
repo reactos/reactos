@@ -45,7 +45,7 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 #define STRFMT "%s"
 
 #ifdef _MSC_VER
-#define strcasecmp stricmp
+#define strcasecmp _stricmp
 #endif
 
 extern unsigned long DbgPrint(char *Fmt, ...);

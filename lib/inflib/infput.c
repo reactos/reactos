@@ -8,7 +8,9 @@
 
 #include "inflib.h"
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #define EOL      _T("\r\n")

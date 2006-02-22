@@ -1,4 +1,6 @@
-<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
 	<bootstrap base="reactos" />
 	<importlibrary definition="ntoskrnl.def" />
 	<define name="_SEH_NO_NATIVE_NLG" />
@@ -351,4 +353,5 @@
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
-</module>
+  </module>
+</rbuild>

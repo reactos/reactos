@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<group>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="cacls">
 	<xi:include href="cacls/cacls.rbuild" />
 </directory>
@@ -55,4 +55,4 @@
 <directory name="winefile">
 	<xi:include href="winefile/winefile.rbuild" />
 </directory>
-</group>
+</rbuild>

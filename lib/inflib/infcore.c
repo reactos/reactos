@@ -10,7 +10,9 @@
 
 #include "inflib.h"
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #define CONTROL_Z  '\x1a'

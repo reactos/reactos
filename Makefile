@@ -38,7 +38,7 @@
 #        This can require several minutes to complete. If you only need to check
 #        dependencies for a single or few modules then you can use the
 #        module_depends targets instead. This target can also repair a damaged or
-#        missing makefile.auto if needed.
+#        missing Makefile.auto if needed.
 #
 #    module_depends
 #        These targets do a dependency check of individual modules. Replace module
@@ -109,7 +109,7 @@
 #            -r           Input XML
 #
 #    ROS_AUTOMAKE
-#        Alternate name of makefile.auto
+#        Alternate name of Makefile.auto
 #
 
 # check for versions of make that don't have features we need...
@@ -131,7 +131,7 @@ endif
 .PHONY: clean
 
 ifeq ($(ROS_AUTOMAKE),)
-ROS_AUTOMAKE=makefile.auto
+ROS_AUTOMAKE=Makefile.auto
 endif
 
 all: $(ROS_AUTOMAKE)
@@ -484,5 +484,5 @@ clean: makefile_auto_clean
 
 .PHONY: depends
 depends:
-	@-$(rm) makefile.auto
+	@-$(rm) Makefile.auto
 	@$(MAKE) $(filter-out depends, $(MAKECMDGOALS))

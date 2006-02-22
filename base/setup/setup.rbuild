@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-  <group>
   <directory name="setup">
   <xi:include href="setup/setup.rbuild" />
   </directory>
@@ -16,5 +15,4 @@
   <directory name="reactos">
   <xi:include href="reactos/reactos.rbuild" />
   </directory>
-  </group>
 </rbuild>

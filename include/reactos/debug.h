@@ -99,9 +99,14 @@ RtlAssert(
 
 #else
 
+#ifdef _MSC_VER
+    #define DPRINT1
+    #define DPRINT
+#else
     /* On non-debug builds, we never show these */
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+#endif
 
     #define CHECKPOINT1
     #define CHECKPOINT

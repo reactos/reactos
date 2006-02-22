@@ -11,7 +11,9 @@
 #include "inflib.h"
 #include "infhost.h"
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 int

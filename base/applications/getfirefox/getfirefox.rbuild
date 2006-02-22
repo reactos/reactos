@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<module name="getfirefox" type="win32gui" installbase="system32" installname="getfirefox.exe">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <module name="getfirefox" type="win32gui" installbase="system32" installname="getfirefox.exe">
     <include base="getfirefox">.</include>
     <define name="UNICODE" />
     <define name="_UNICODE" />
@@ -16,4 +17,5 @@
     <pch>precomp.h</pch>
     <file>getfirefox.c</file>
     <file>getfirefox.rc</file>
-</module>
+  </module>
+</rbuild>

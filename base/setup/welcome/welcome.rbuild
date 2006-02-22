@@ -1,4 +1,6 @@
-<module name="welcome" type="win32gui" installbase="system32" installname="welcome.exe">
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <module name="welcome" type="win32gui" installbase="system32" installname="welcome.exe">
 	<bootstrap base="reactos" />
 	<include base="welcome">.</include>
 	<define name="_WIN32_IE">0x0501</define>
@@ -11,4 +13,5 @@
 	<library>user32</library>
 	<file>welcome.c</file>
 	<file>welcome.rc</file>
-</module>
+  </module>
+</rbuild>

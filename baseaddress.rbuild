@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-<group>
   <property name="BASEADDRESS_DPLAYX" value="0x5E080000" />
   <property name="BASEADDRESS_DPLAY" value="0x71E80000" />
   <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
@@ -122,5 +121,4 @@
   <property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
   <property name="BASEADDRESS_NTDLL" value="0x7C900000" />
   <property name="BASEADDRESS_FREETYPE" value="0x7F000000" />
-</group>
 </rbuild>

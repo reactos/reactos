@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="csrss" type="nativecui" installbase="system32" installname="csrss.exe">
 	<include base="csrss">.</include>
 	<include base="csrss">include</include>
@@ -26,3 +28,4 @@
 <directory name="win32csr">
 	<xi:include href="win32csr/win32csr.rbuild" />
 </directory>
+</rbuild>

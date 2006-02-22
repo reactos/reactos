@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<group>
-<directory name="csrss">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <directory name="csrss">
 	<xi:include href="csrss/csrss.rbuild" />
-</directory>
-<directory name="win32k">
+  </directory>
+  <directory name="win32k">
 	<xi:include href="win32k/win32k.rbuild" />
-</directory>
-</group>
+  </directory>
+</rbuild>

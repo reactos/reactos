@@ -1,4 +1,6 @@
-<component name="kernel32.dll">
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+  <component name="kernel32.dll">
 	<symbol>FindFirstFileA@8</symbol>
 	<symbol>GetLastError@0</symbol>
 	<symbol>FindNextFileA@8</symbol>
@@ -81,4 +83,5 @@
 	<symbol>InterlockedIncrement@4</symbol>
 	<symbol>InterlockedDecrement@4</symbol>
 	<symbol>ReleaseSemaphore@12</symbol>
-</component>
+  </component>
+</rbuild>
