@@ -11,9 +11,11 @@ HWND hMainWnd;
 HWND hMDIClient;
 HWND hStatus;
 HWND hTool;
-HWND hwndRebar;
+HWND hFloatTool;
 HMENU hShortcutMenu;
 
+WORD cxClient;
+WORD cyClient;
 
 /*
  * Initialize the structure and send a message to the MDI
@@ -25,17 +27,20 @@ HWND CreateNewMDIChild(HWND hMDIClient)
     HWND hChild;
     TCHAR Buf[15];
     static DWORD MDINum = 1;
+    DWORD style;
 
     _sntprintf(Buf, sizeof(Buf) / sizeof(TCHAR), _T("Untitled%d"), MDINum);
+
+    style = 0;//MDIS_ALLCHILDSTYLES & ~WS_BORDER;
 
     mcs.szTitle = Buf;
     mcs.szClass = ChildClassName;
     mcs.hOwner  = hInstance;
     mcs.x = mcs.cx = CW_USEDEFAULT;
     mcs.y = mcs.cy = CW_USEDEFAULT;
-    mcs.style = MDIS_ALLCHILDSTYLES;
+    mcs.style = style; //MDIS_ALLCHILDSTYLES | WS_MAXIMIZE;
 
-    hChild = (HWND)SendMessage(hMDIClient, WM_MDICREATE, 0, (LONG)&mcs);
+    hChild = (HWND)SendMessage(hMDIClient, WM_MDICREATE, 0, (LPARAM)&mcs);
     if(!hChild)
     {
         MessageBox(hMDIClient, _T("MDI Child creation failed."), _T("Error!"),
@@ -59,18 +64,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             CLIENTCREATESTRUCT ccs;
             TBADDBITMAP tbab;
+            HMENU hMenu;
             INT iImageOffset;
             INT statwidths[] = {300, 450, 550, -1}; /* widths of status bar */
             TCHAR Buf[6];
 
-            /* Toolbar buttons */
-            TBBUTTON tbb [NUM_BUTTONS] =
-            {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
+            /* Standard toolbar buttons */
+            TBBUTTON StdButtons [NUM_BUTTONS] =
+            {
+                /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
                 {STD_FILENEW,  ID_NEW,      TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, 0},    /* new */
                 {STD_FILEOPEN, ID_OPEN,     TBSTATE_ENABLED, BTNS_BUTTON,    {0}, 0, 0},    /* open */
                 {STD_FILESAVE, ID_SAVE,     TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0},    /* save */
 
-                /* Note: First item for a seperator is its width in pixels */
                 {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
                 {STD_PRINTPRE, ID_PRINTPRE, TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0 },   /* print */
@@ -86,6 +92,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 {STD_UNDO,     ID_UNDO,    TBSTATE_INDETERMINATE, BTNS_BUTTON,     {0}, 0, 0 },   /* undo */
                 {STD_REDOW,    ID_REDO,    TBSTATE_INDETERMINATE, BTNS_BUTTON,     {0}, 0, 0 },   /* redo */
+
+                {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
             };
 
 
@@ -107,32 +115,59 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
             SendMessage(hTool, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 
-            /* Add custom images */
+            /* Add standard images */
             tbab.hInst = HINST_COMMCTRL;
             tbab.nID = IDB_STD_SMALL_COLOR;
-            iImageOffset = (INT)SendMessage(hTool, TB_ADDBITMAP, NUM_BUTTONS, (LPARAM)&tbab);
- /*           tbb[0].iBitmap += iImageOffset; / * properties * /
-            tbb[1].iBitmap += iImageOffset; / * refresh * /
-            tbb[2].iBitmap += iImageOffset; / * export * /
-            tbb[4].iBitmap += iImageOffset; / * create * /
-            tbb[6].iBitmap += iImageOffset; / * start * /
-            tbb[7].iBitmap += iImageOffset; / * stop * /
-            tbb[8].iBitmap += iImageOffset; / * pause * /
-            tbb[9].iBitmap += iImageOffset; / * restart * /
-            tbb[11].iBitmap += iImageOffset; / * help * /
-            tbb[12].iBitmap += iImageOffset; / * exit * /
-*/
+            SendMessage(hTool, TB_ADDBITMAP, NUM_BUTTONS, (LPARAM)&tbab);
+
             /* Add buttons to toolbar */
-            SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &tbb);
+            SendMessage(hTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &StdButtons);
 
             /* Show toolbar */
-            ShowWindow(hTool, SW_SHOWNORMAL);
+            ShowWindow(hTool, SW_SHOW);
 
 
 
 /* ======================== Create Floating Toolbar ============================== */
 
- 
+            hFloatTool = CreateDialog(GetModuleHandle(NULL),MAKEINTRESOURCE(IDD_TOOLBAR),
+                                      hwnd, (DLGPROC)ToolDlgProc);
+            if(hFloatTool != NULL)
+            {
+                ;//ShowWindow(hFloatTool, SW_SHOW);
+            }
+            else
+            {
+                MessageBox(hwnd, _T("CreateDialog returned NULL"), _T("Warning!"),
+                MB_OK | MB_ICONINFORMATION);
+            }
+
+            /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
+            SendMessage(hFloatTool, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+            /* Add custom images */
+            tbab.hInst = HINST_COMMCTRL;
+            tbab.nID = IDB_STD_SMALL_COLOR;
+            iImageOffset = (INT)SendMessage(hFloatTool, TB_ADDBITMAP, 10, (LPARAM)&tbab);
+
+ /*           StdButtons[0].iBitmap += iImageOffset; / * properties * /
+            StdButtons[1].iBitmap += iImageOffset; / * refresh * /
+            StdButtons[2].iBitmap += iImageOffset; / * export * /
+            StdButtons[4].iBitmap += iImageOffset; / * create * /
+            StdButtons[6].iBitmap += iImageOffset; / * start * /
+            StdButtons[7].iBitmap += iImageOffset; / * stop * /
+            StdButtons[8].iBitmap += iImageOffset; / * pause * /
+            StdButtons[9].iBitmap += iImageOffset; / * restart * /
+            StdButtons[11].iBitmap += iImageOffset; / * help * /
+            StdButtons[12].iBitmap += iImageOffset; / * exit * /
+*/
+
+            /* Add buttons to toolbar */
+            SendMessage(hFloatTool, TB_ADDBUTTONS, NUM_BUTTONS, (LPARAM) &StdButtons);
+
+            /* Show toolbar */
+            //ShowWindow(hFloatTool, SW_SHOWNORMAL);
+
 
 
 /* ======================== Create Status Bar ============================== */
@@ -162,7 +197,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /* ======================= Create MDI Client ============================= */
 
             /* Find window menu where children will be listed */
-            ccs.hWindowMenu  = GetSubMenu(GetMenu(hwnd), 4);
+            ccs.hWindowMenu  = GetSubMenu(GetMenu(hwnd), 5);
             ccs.idFirstChild = ID_MDI_FIRSTCHILD;
 
             hMDIClient = CreateWindowEx(WS_EX_CLIENTEDGE,
@@ -186,12 +221,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 /* ======================= Miscelaneous ============================= */
 
+                hMenu = GetMenu(hwnd);
+
+                EnableMenuItem(hMenu, 1, MF_DELETE); /* edit */
+                EnableMenuItem(hMenu, 2, MF_REMOVE); /* image */
+                EnableMenuItem(hMenu, 3, MF_BYPOSITION | MF_REMOVE); /* colours */
+                EnableMenuItem(hMenu, 4, MF_BYPOSITION | MF_DELETE); /* window */
+
+
                 /* indicate program is ready in the status bar */
                 LoadString(hInstance, IDS_READY, Buf, sizeof(Buf) / sizeof(TCHAR));
                 SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)Buf);
 
                 /* inilalize file open/save structure */
                 FileInitialize(hwnd);
+
+                //Style = GetWindowLong(hwnd, GWL_STYLE);
+
+                //SetWindowLong(hwnd, GWL_STYLE, (Style & DS_CENTER));
 
 	    }
 	    break;
@@ -208,6 +255,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             int iMDIHeight;
             RECT rcClient;
 
+            cxClient = LOWORD(lParam);
+            cyClient = HIWORD(lParam);
+
             /* Size toolbar and get height */
             hTool = GetDlgItem(hwnd, IDC_TOOLBAR);
             SendMessage(hTool, TB_AUTOSIZE, 0, 0);
@@ -217,8 +267,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             /* Size status bar and get height */
             hStatus = GetDlgItem(hwnd, IDC_STATUSBAR);
-            SendMessage(hStatus, WM_SIZE, 0, 0);
-
             GetWindowRect(hStatus, &rcStatus);
             iStatusHeight = rcStatus.bottom - rcStatus.top;
 
@@ -299,7 +347,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-
+/*
         case WM_CONTEXTMENU:
         {
             int xPos, yPos;
@@ -311,7 +359,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                              xPos, yPos, hwnd, NULL);
         }
         break;
-
+*/
 	    case WM_COMMAND:
 
             switch(LOWORD(wParam))
@@ -349,6 +397,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     }
                 }
 				break;
+
+				case ID_TOOLS:
+				    ShowHideToolbar(hFloatTool);
+                break;
+
+                case ID_STATUSBAR:
+                    ShowHideToolbar(hStatus);
+                    /* FIXME: Need to resize client area */
+                break;
 
                 case ID_EXIT:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
@@ -424,20 +481,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
+void GetLargestDisplayMode (int * pcxBitmap, int * pcyBitmap)
+{
+     DEVMODE devmode ;
+     int     iModeNum = 0 ;
+
+     * pcxBitmap = * pcyBitmap = 0 ;
+
+     ZeroMemory (&devmode, sizeof (DEVMODE)) ;
+     devmode.dmSize = sizeof (DEVMODE) ;
+
+     while (EnumDisplaySettings (NULL, iModeNum++, &devmode))
+     {
+          * pcxBitmap = max (* pcxBitmap, (int) devmode.dmPelsWidth) ;
+          * pcyBitmap = max (* pcyBitmap, (int) devmode.dmPelsHeight) ;
+     }
+}
+
+
+
 /*
  * MDI child window message handler
  */
 LRESULT CALLBACK MDIChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static BOOL    fLeftButtonDown, fRightButtonDown;
+    static HBITMAP hBitmap;
     static HDC     hdcMem;
-    static INT     cxClient, cyClient, xMouse, yMouse;
+    static INT     cxBitmap, cyBitmap, cxClient, cyClient, xMouse, yMouse;
     HDC            hdc;
     PAINTSTRUCT    ps;
 
 	switch(msg)
 	{
         case WM_CREATE:
+            GetLargestDisplayMode(&cxBitmap, &cyBitmap);
+
+            hdc = GetDC(hwnd);
+            hBitmap = CreateCompatibleBitmap(hdc, cxBitmap, cyBitmap);
+            hdcMem  = CreateCompatibleDC(hdc);
+            ReleaseDC(hwnd, hdc);
+
+            if (!hBitmap)       // no memory for bitmap
+            {
+                DeleteDC(hdcMem);
+                return -1;
+            }
+
+            SelectObject(hdcMem, hBitmap);
+            PatBlt(hdcMem, 0, 0, cxBitmap, cyBitmap, WHITENESS);
+
         break;
 
         case WM_MDIACTIVATE:
@@ -479,6 +572,13 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         }
         break;
 
+        case WM_NOTIFY:
+        {
+            MSG mymsg;
+            PeekMessage(&mymsg, NULL, 0, 0, PM_REMOVE);
+        }
+        break;
+
         case WM_MOUSEMOVE:
         {
             POINT pt;
@@ -493,8 +593,12 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
             _sntprintf(Buf, sizeof(Buf) / sizeof(TCHAR), Cur, pt.x, pt.y);
             SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)Buf);
 
+            /* change cursor to a cross */
+            /*FIXME: can this be forced into the MDI child class? */
+            SetCursor (LoadCursor (NULL, IDC_CROSS));
+
             if (!fLeftButtonDown && !fRightButtonDown)
-                return 0;
+                break;
 
             hdc = GetDC(hwnd);
 
@@ -557,15 +661,16 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
                 EndPaint(hwnd, &ps);
         break;
 
-		case WM_COMMAND:
-			switch(LOWORD(wParam))
-			{
-
-			}
-		break;
-
 		case WM_SIZE:
+
+
             return DefMDIChildProc(hwnd, msg, wParam, lParam);
+
+        case WM_DESTROY:
+            DeleteDC(hdcMem);
+            DeleteObject(hBitmap);
+        break;
+
 
 		default:
 		{

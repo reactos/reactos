@@ -1,8 +1,13 @@
 #define IDC_STATIC -1
 
 #define IDC_TOOLBAR         1001
-#define IDC_STATUSBAR	    1002
+#define IDC_FLOATTOOLBAR         1002
+#define IDC_STATUSBAR	    1003
 #define IDC_MAIN_MDI        1004
+
+#define IDD_TOOLBAR         1100
+#define IDC_PRESS           1101
+#define IDC_OTHER           1102
 
 #define ID_NEW              2000
 #define ID_OPEN             2001
@@ -22,6 +27,9 @@
 #define ID_SELALL           2015
 #define ID_EXIT             2016
 #define ID_EDITCOLOURS      2017
+#define ID_TOOLS            2018
+#define ID_STATUSBAR        2019
+
 
 #define ID_REFRESH          3000
 #define ID_HELP             3001

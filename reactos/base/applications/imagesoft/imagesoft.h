@@ -1,5 +1,5 @@
-#ifndef __IMAGESOFT_H
-#define __IMAGESOFT_H
+#ifndef __PAINT_H
+#define __PAINT_H
 
 //#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -10,12 +10,15 @@
 #include "resource.h"
 
 #define MAX_KEY_LENGTH 256
-#define NUM_BUTTONS 13
+#define NUM_BUTTONS 14
 
 BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK ToolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
-VOID FileInitialize (HWND hwnd);
+BOOL ShowHideToolbar(HWND hwnd);
+
+VOID FileInitialize(HWND hwnd);
 VOID DoOpenFile(HWND hwnd);
 VOID DoSaveFile(HWND hwnd);
 
-#endif /* __IMAGESOFT_H */
+#endif /* __SERVMAN_H */

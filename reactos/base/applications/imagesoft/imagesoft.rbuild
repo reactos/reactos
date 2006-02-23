@@ -17,8 +17,9 @@
     <library>shell32</library>
     <library>comdlg32</library>
     <compilationunit name="unit.c">
-      <file>imagesoft.c</file>
       <file>about.c</file>
+      <file>floattoolbar.c</file>
+      <file>imagesoft.c</file>
       <file>opensave.c</file>
     </compilationunit>
     <file>imagesoft.rc</file>
