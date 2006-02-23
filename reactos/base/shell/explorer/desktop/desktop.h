@@ -184,6 +184,8 @@ protected:
 	HRESULT DoDesktopContextMenu(int x, int y);
 	void	PositionIcons(int dir=1);
 
+	void	refresh();
+
 	DesktopDropTarget* _pDropTarget;
 	HWND	_hwndListView;
 	int		_icon_algo;

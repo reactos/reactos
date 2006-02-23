@@ -51,9 +51,10 @@ IDB_SDI                 BITMAP  MOVEABLE PURE   "res/sdi.bmp"
 
 IDA_EXPLORER ACCELERATORS MOVEABLE PURE 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
     "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
+    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
 END
 
 IDA_SEARCH_PROGRAM ACCELERATORS MOVEABLE PURE 

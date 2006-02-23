@@ -191,10 +191,6 @@ SOURCE=.\Jamfile
 # End Source File
 # Begin Source File
 
-SOURCE=.\Makefile
-# End Source File
-# Begin Source File
-
 SOURCE=".\Makefile-MinGW"
 # End Source File
 # Begin Source File

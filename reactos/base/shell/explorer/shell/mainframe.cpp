@@ -1538,7 +1538,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		else
 			_shellpath_info._root_shell_path = DesktopFolderPath();	//SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
-		jump_to(shell_path, wparam);	//@todo content of 'path' not used any more
+		jump_to(shell_path, wparam);	///@todo content of 'path' not used any more
 		return TRUE;}	// success
 
 	  default: def:

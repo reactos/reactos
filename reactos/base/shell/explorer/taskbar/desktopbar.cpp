@@ -487,7 +487,7 @@ void DesktopBar::ControlResize(WPARAM wparam, LPARAM lparam)
 	///@todo write code for taskbar being at sides or top.
 
 	switch(wparam) {
-	  case WMSZ_BOTTOM: //@todo Taskbar is at the top of the screen
+	  case WMSZ_BOTTOM:	///@todo Taskbar is at the top of the screen
 		break;
 
 	  case WMSZ_TOP:	// Taskbar is at the bottom of the screen
@@ -498,10 +498,10 @@ void DesktopBar::ControlResize(WPARAM wparam, LPARAM lparam)
 			dragRect->top = screenHeight - 5;
 		break;
 
-	  case WMSZ_RIGHT:	//@todo Taskbar is at the left of the screen
+	  case WMSZ_RIGHT:	///@todo Taskbar is at the left of the screen
 		break;
 
-	  case WMSZ_LEFT:	//@todo Taskbar is at the right of the screen
+	  case WMSZ_LEFT:	///@todo Taskbar is at the right of the screen
 		break;
 	}
 }

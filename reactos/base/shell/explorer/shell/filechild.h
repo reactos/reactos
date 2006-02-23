@@ -109,6 +109,8 @@ protected:
 	void	set_curdir(Entry* entry);
 	void	activate_entry(Pane* pane);
 
+	void	refresh();
+
 protected:
 	Root	_root;
 	Pane*	_left;

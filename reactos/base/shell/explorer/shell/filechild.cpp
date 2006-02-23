@@ -481,13 +481,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				break;}
 
 			  case ID_REFRESH: {CONTEXT("ID_REFRESH");
-				WaitCursor wait;
-				bool expanded = _left->_cur->_expanded;
-
-				scan_entry(_left->_cur);
-
-				if (expanded)
-					expand_entry(_left->_cur);
+				refresh();
 				break;}
 
 			  case ID_ACTIVATE: {CONTEXT("ID_ACTIVATE");
@@ -519,7 +513,12 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (idx != -1) {
 				Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
 
-				CHECKERROR(entry->do_context_menu(_hwnd, pt_screen, _cm_ifs));
+				HRESULT hr = entry->do_context_menu(_hwnd, pt_screen, _cm_ifs);
+
+				if (SUCCEEDED(hr))
+					refresh();
+				else
+					CHECKERROR(hr);
 			}
 			break;}
 
@@ -528,6 +527,18 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return 0;
+}
+
+
+void FileChildWindow::refresh()
+{
+	WaitCursor wait;
+	bool expanded = _left->_cur->_expanded;
+
+	scan_entry(_left->_cur);
+
+	if (expanded)
+		expand_entry(_left->_cur);
 }
 
 

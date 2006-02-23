@@ -175,6 +175,8 @@ protected:
 	map<int, int> _image_map;
 
 	int		get_image_idx(int icon_id);
+
+	void	refresh();
 };
 
 

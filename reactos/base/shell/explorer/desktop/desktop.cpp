@@ -599,7 +599,10 @@ bool DesktopShellView::DoContextMenu(int x, int y)
 
 	selection->Release();
 
-	CHECKERROR(hr);
+	if (SUCCEEDED(hr))
+		refresh();
+	else
+		CHECKERROR(hr);
 
 	return true;
 }
@@ -837,4 +840,10 @@ void DesktopShellView::PositionIcons(int dir)
 
 		ListView_SetItemPosition32(_hwndListView, it->second, pos.second, pos.first);
 	}
+}
+
+
+void DesktopShellView::refresh()
+{
+	///@todo
 }

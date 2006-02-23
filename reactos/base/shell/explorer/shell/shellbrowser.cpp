@@ -256,8 +256,10 @@ void ShellBrowser::invalidate_cache()
 	(void)TreeView_SetImageList(_left_hwnd, _himl_old, TVSIL_NORMAL);
 	ImageList_Destroy(_himl);
 
-	_himl_old = TreeView_SetImageList(_left_hwnd, _himl, TVSIL_NORMAL);
 	_himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0);
+	ImageList_SetBkColor(_himl, GetSysColor(COLOR_WINDOW));
+
+	_himl_old = TreeView_SetImageList(_left_hwnd, _himl, TVSIL_NORMAL);
 
 	for(map<int,int>::const_iterator it=_image_map.begin(); it!=_image_map.end(); ++it)
 		g_Globals._icon_cache.free_icon(it->first);
@@ -397,7 +399,12 @@ void ShellBrowser::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 			Entry* entry = (Entry*)itemData;
 			ClientToScreen(_left_hwnd, &tvhti.pt);
 
-			CHECKERROR(entry->do_context_menu(_hwnd, tvhti.pt, _cm_ifs));
+			HRESULT hr = entry->do_context_menu(_hwnd, tvhti.pt, _cm_ifs);
+
+			if (SUCCEEDED(hr))
+				refresh();
+			else
+				CHECKERROR(hr);
 		}
 	}
 }
@@ -457,7 +464,7 @@ void ShellBrowser::UpdateFolderView(IShellFolder* folder)
 HRESULT STDMETHODCALLTYPE ShellBrowser::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == SFVM_INITMENUPOPUP) {
-		//@todo never reached
+		///@todo never reached
 		InsertMenu((HMENU)lParam, 0, MF_BYPOSITION, 12345, TEXT("TEST ENTRY"));
 		return S_OK;
 	}
@@ -494,7 +501,7 @@ HRESULT ShellBrowser::OnDefaultCommand(LPIDA pida)
 							if (_last_sel && select_entry(_last_sel, entry))
 								return S_OK;
 
-					//@todo look for hidden or new subfolders and refresh/add new entry instead of opening a new window
+					///@todo look for hidden or new subfolders and refresh/add new entry instead of opening a new window
 					return E_NOTIMPL;
 				}
 			}
@@ -598,6 +605,12 @@ bool ShellBrowser::select_folder(Entry* entry, bool expand)
 }
 
 
+void ShellBrowser::refresh()
+{
+	///@todo
+}
+
+
 #ifndef _NO_MDI
 
 MDIShellBrowserChild::MDIShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
@@ -648,7 +661,7 @@ LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			break;}
 
 		  case ID_REFRESH:
-			//@todo refresh shell child
+			///@todo refresh shell child
 			_shellBrowser->invalidate_cache();
 			break;
 
