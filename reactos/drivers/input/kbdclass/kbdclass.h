@@ -35,6 +35,8 @@ typedef struct _PORT_DEVICE_EXTENSION
 {
 	COMMON_DEVICE_EXTENSION Common;
 
+	LIST_ENTRY ListEntry;
+	PDEVICE_OBJECT DeviceObject;
 	PORT_DEVICE_STATE PnpState;
 	PDEVICE_OBJECT LowerDevice;
 	UNICODE_STRING InterfaceName;
@@ -46,6 +48,8 @@ typedef struct _CLASS_DEVICE_EXTENSION
 
 	PCLASS_DRIVER_EXTENSION DriverExtension;
 
+	LIST_ENTRY ListHead;
+	KSPIN_LOCK ListSpinLock;
 	KSPIN_LOCK SpinLock;
 	BOOLEAN ReadIsPending;
 	ULONG InputCount;
@@ -53,6 +57,11 @@ typedef struct _CLASS_DEVICE_EXTENSION
 } CLASS_DEVICE_EXTENSION, *PCLASS_DEVICE_EXTENSION;
 
 /* misc.c */
+
+NTSTATUS
+ForwardIrpAndWait(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
 
 NTSTATUS NTAPI
 ForwardIrpAndForget(

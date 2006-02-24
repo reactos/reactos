@@ -96,7 +96,7 @@ ClassDeviceControl(
 	IN PIRP Irp)
 {
 	PCLASS_DEVICE_EXTENSION DeviceExtension;
-	NTSTATUS Status;
+	NTSTATUS Status = Irp->IoStatus.Status;
 
 	DPRINT("IRP_MJ_DEVICE_CONTROL\n");
 
@@ -111,15 +111,44 @@ ClassDeviceControl(
 		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
 		case IOCTL_KEYBOARD_QUERY_INDICATORS:
 		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
+		{
+			/* FIXME: We hope that all devices will return the same result.
+			 * Ask only the first one */
+			PLIST_ENTRY Head = &((PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ListHead;
+			if (Head->Flink != Head)
+			{
+				/* We have at least one keyboard */
+				PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Head->Flink, PORT_DEVICE_EXTENSION, ListEntry);
+				IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+				IoSkipCurrentIrpStackLocation(Irp);
+				return IoCallDriver(DevExt->DeviceObject, Irp);
+			}
+			break;
+		}
 		case IOCTL_KEYBOARD_SET_INDICATORS:
 		case IOCTL_KEYBOARD_SET_TYPEMATIC: /* not in MSDN, would seem logical */
-			/* FIXME: send it to all associated Port devices */
-			Status = STATUS_NOT_SUPPORTED;
+		{
+			/* Send it to all associated Port devices */
+			PLIST_ENTRY Head = &((PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ListHead;
+			PLIST_ENTRY Entry = Head->Flink;
+			Status = STATUS_SUCCESS;
+			while (Entry != Head)
+			{
+				PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Entry, PORT_DEVICE_EXTENSION, ListEntry);
+				NTSTATUS IntermediateStatus;
+
+				IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+				IntermediateStatus = ForwardIrpAndWait(DevExt->DeviceObject, Irp);
+				if (!NT_SUCCESS(IntermediateStatus))
+					Status = IntermediateStatus;
+				Entry = Entry->Flink;
+			}
 			break;
+		}
 		default:
 			DPRINT1("IRP_MJ_DEVICE_CONTROL / unknown I/O control code 0x%lx\n",
 				IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode);
-			Status = STATUS_NOT_SUPPORTED;
+			break;
 	}
 
 	Irp->IoStatus.Status = Status;
@@ -141,6 +170,7 @@ IrpStub(
 		/* Forward some IRPs to lower device */
 		switch (IoGetCurrentIrpStackLocation(Irp)->MajorFunction)
 		{
+			case IRP_MJ_PNP:
 			case IRP_MJ_INTERNAL_DEVICE_CONTROL:
 				return ForwardIrpAndForget(DeviceObject, Irp);
 			default:
@@ -325,7 +355,9 @@ cleanup:
 	RtlZeroMemory(DeviceExtension, sizeof(CLASS_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsClassDO = TRUE;
 	DeviceExtension->DriverExtension = DriverExtension;
-	KeInitializeSpinLock(&(DeviceExtension->SpinLock));
+	InitializeListHead(&DeviceExtension->ListHead);
+	KeInitializeSpinLock(&DeviceExtension->ListSpinLock);
+	KeInitializeSpinLock(&DeviceExtension->SpinLock);
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
@@ -478,7 +510,20 @@ ConnectPortDriver(
 		IoStatus.Status = Status;
 
 	if (NT_SUCCESS(IoStatus.Status))
+	{
 		ObReferenceObject(PortDO);
+		ExInterlockedInsertTailList(
+			&((PCLASS_DEVICE_EXTENSION)ClassDO->DeviceExtension)->ListHead,
+			&((PPORT_DEVICE_EXTENSION)PortDO->DeviceExtension)->ListEntry,
+			&((PCLASS_DEVICE_EXTENSION)ClassDO->DeviceExtension)->ListSpinLock);
+		if (ClassDO->StackSize <= PortDO->StackSize)
+		{
+			/* Increase the stack size, in case we have to
+			 * forward some IRPs to the port device object
+			 */
+			ClassDO->StackSize = PortDO->StackSize + 1;
+		}
+	}
 
 	return IoStatus.Status;
 }
@@ -520,6 +565,7 @@ ClassAddDevice(
 	DeviceExtension = (PPORT_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(CLASS_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsClassDO = FALSE;
+	DeviceExtension->DeviceObject = Fdo;
 	DeviceExtension->PnpState = dsStopped;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
@@ -541,8 +587,8 @@ ClassAddDevice(
 	{
 		DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
 		IoDetachDevice(DeviceExtension->LowerDevice);
-		/* FIXME: why can't I cleanup without error? */
-		//IoDeleteDevice(Fdo);
+		ObDereferenceObject(Fdo);
+		IoDeleteDevice(Fdo);
 		return Status;
 	}
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -698,35 +744,14 @@ SearchForLegacyDrivers(
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT("IoGetDeviceObjectPointer(%wZ) failed with status 0x%08lx\n", Status);
+			continue;
 		}
 
-		/* Connect the port device object */
-		if (DriverExtension->ConnectMultiplePorts)
+		Status = ClassAddDevice(DriverObject, PortDeviceObject);
+		if (!NT_SUCCESS(Status))
 		{
-			Status = ConnectPortDriver(PortDeviceObject, DriverExtension->MainClassDeviceObject);
-			if (!NT_SUCCESS(Status))
-			{
-				/* FIXME: Log the error */
-				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-			}
-		}
-		else
-		{
-			PDEVICE_OBJECT ClassDO;
-			Status = CreateClassDeviceObject(DriverObject, &ClassDO);
-			if (!NT_SUCCESS(Status))
-			{
-				/* FIXME: Log the error */
-				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
-				continue;
-			}
-			Status = ConnectPortDriver(PortDeviceObject, ClassDO);
-			if (!NT_SUCCESS(Status))
-			{
-				/* FIXME: Log the error */
-				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-				IoDeleteDevice(ClassDO);
-			}
+			/* FIXME: Log the error */
+			DPRINT("ClassAddDevice() failed with status 0x%08lx\n", Status);
 		}
 	}
 	if (Status == STATUS_NO_MORE_ENTRIES)
@@ -806,6 +831,7 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP]        = ClassCleanup;
 	DriverObject->MajorFunction[IRP_MJ_READ]           = ClassRead;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ClassDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ForwardIrpAndForget;
 	DriverObject->DriverStartIo                        = ClassStartIo;
 
 	return STATUS_SUCCESS;
