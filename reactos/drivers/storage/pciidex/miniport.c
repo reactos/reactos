@@ -13,6 +13,37 @@
 #include "pciidex.h"
 
 static NTSTATUS NTAPI
+PciIdeXForwardOrIgnore(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
+		return ForwardIrpAndForget(DeviceObject, Irp);
+	else
+	{
+		ULONG MajorFunction = IoGetCurrentIrpStackLocation(Irp)->MajorFunction;
+		NTSTATUS Status;
+
+		if (MajorFunction == IRP_MJ_CREATE ||
+		    MajorFunction == IRP_MJ_CLEANUP ||
+		    MajorFunction == IRP_MJ_CLOSE)
+		{
+			Status = STATUS_SUCCESS;
+		}
+		else
+		{
+			DPRINT1("PDO stub for major function 0x%lx\n", MajorFunction);
+			ASSERT(FALSE);
+			Status = STATUS_NOT_SUPPORTED;
+		}
+		Irp->IoStatus.Information = 0;
+		Irp->IoStatus.Status = Status;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return Status;
+	}
+}
+
+static NTSTATUS NTAPI
 PciIdeXPnpDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -51,7 +82,7 @@ PciIdeXInitialize(
 	DriverObject->DriverExtension->AddDevice = PciIdeXAddDevice;
 
 	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-		DriverObject->MajorFunction[i] = ForwardIrpAndForget;
+		DriverObject->MajorFunction[i] = PciIdeXForwardOrIgnore;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = PciIdeXPnpDispatch;
 
 	return STATUS_SUCCESS;
