@@ -43,9 +43,6 @@
 <directory name="dbghelp">
 	<xi:include href="dbghelp/dbghelp.rbuild" />
 </directory>
-<directory name="devenum">
-	<xi:include href="devenum/devenum.rbuild" />
-</directory>
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>
