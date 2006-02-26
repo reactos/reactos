@@ -107,6 +107,7 @@ ClassDeviceControl(
 
 	switch (IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode)
 	{
+#if 0
 		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
 		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
 		case IOCTL_KEYBOARD_QUERY_INDICATORS:
@@ -145,6 +146,7 @@ ClassDeviceControl(
 			}
 			break;
 		}
+#endif
 		default:
 			DPRINT1("IRP_MJ_DEVICE_CONTROL / unknown I/O control code 0x%lx\n",
 				IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode);
