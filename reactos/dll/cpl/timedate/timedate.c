@@ -3,8 +3,8 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        lib/cpl/timedate/timedate.c
  * PURPOSE:     ReactOS Timedate Control Panel
- * COPYRIGHT:   Copyright 2004-2005 Eric Kohl <"programmer@email.com">
- *              Copyright 2006 Ged Murphy <gedmurphy@ntlworld.com>
+ * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
+ *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *               
  */
 
@@ -574,7 +574,7 @@ CreateNTPServerList(HWND hwnd)
     DWORD Index = 0;
     DWORD ValSize;
     DWORD dwNameSize;
-   // DWORD dwValueSize;
+    DWORD Default = 0;
     LONG Ret;
     HKEY hKey;
 
@@ -593,24 +593,32 @@ CreateNTPServerList(HWND hwnd)
             ValSize = MAX_VALUE_NAME; 
             ValName[0] = '\0'; 
             Ret = RegEnumValue(hKey, 
-                Index, 
-                ValName, 
-                &ValSize, 
-                NULL, 
-                NULL,
-                (LPBYTE)Data,
-                &dwNameSize);
+                               Index, 
+                               ValName, 
+                               &ValSize, 
+                               NULL, 
+                               NULL,
+                               (LPBYTE)Data,
+                               &dwNameSize);
  
             if (Ret == ERROR_SUCCESS) 
-            { 
-                SendMessageW(hList, CB_ADDSTRING, 0, (LPARAM)Data); 
-                Index++;
+            {
+                if (wcscmp(ValName, L"") == 0)
+                {
+                    Default = _wtoi(Data);
+                    Index++;
+                }
+                else
+                {
+                    SendMessageW(hList, CB_ADDSTRING, 0, (LPARAM)Data); 
+                    Index++;
+                }
             }
             else if (Ret != ERROR_MORE_DATA)
                 break;
     }
 
-    SendMessageW(hList, CB_SELECTSTRING, 0, 0);
+    SendMessage(hList, CB_SETCURSEL, --Default, 0);
 
 }
 
@@ -631,7 +639,8 @@ InetTimePageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            CreateNTPServerList(hwndDlg);           
+            CreateNTPServerList(hwndDlg);
+
 
         break;
 
