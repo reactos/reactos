@@ -747,11 +747,33 @@ SearchForLegacyDrivers(
 			continue;
 		}
 
-		Status = ClassAddDevice(DriverObject, PortDeviceObject);
-		if (!NT_SUCCESS(Status))
+		/* Connect the port device object */
+		if (DriverExtension->ConnectMultiplePorts)
 		{
-			/* FIXME: Log the error */
-			DPRINT("ClassAddDevice() failed with status 0x%08lx\n", Status);
+			Status = ConnectPortDriver(PortDeviceObject, DriverExtension->MainClassDeviceObject);
+			if (!NT_SUCCESS(Status))
+			{
+				/* FIXME: Log the error */
+				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
+			}
+		}
+		else
+		{
+			PDEVICE_OBJECT ClassDO;
+			Status = CreateClassDeviceObject(DriverObject, &ClassDO);
+			if (!NT_SUCCESS(Status))
+			{
+				/* FIXME: Log the error */
+				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
+				continue;
+			}
+			Status = ConnectPortDriver(PortDeviceObject, ClassDO);
+			if (!NT_SUCCESS(Status))
+			{
+				/* FIXME: Log the error */
+				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
+				IoDeleteDevice(ClassDO);
+			}
 		}
 	}
 	if (Status == STATUS_NO_MORE_ENTRIES)
