@@ -1,27 +1,11 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS Timedate Control Panel
- * FILE:            lib/cpl/timedate/timedate.c
- * PURPOSE:         ReactOS Timedate Control Panel
- * PROGRAMMER:      Eric Kohl
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/cpl/timedate/timedate.c
+ * PURPOSE:     ReactOS Timedate Control Panel
+ * COPYRIGHT:   Copyright 2004-2005 Eric Kohl <"programmer@email.com">
+ *              Copyright 2006 Ged Murphy <gedmurphy@ntlworld.com>
+ *               
  */
 
 #include <windows.h>
@@ -31,6 +15,7 @@
 #include "resource.h"
 #include "timedate.h"
 
+#define SERVERLISTSIZE 6
 
 typedef struct _TZ_INFO
 {
@@ -52,6 +37,12 @@ typedef struct _TIMEZONE_ENTRY
   ULONG Index;             /* 'Index ' */
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
 
+typedef struct _SERVERS
+{
+    CHAR *Address;
+    WCHAR *Name;
+} SERVERS;
+
 
 #define NUM_APPLETS	(1)
 
@@ -60,6 +51,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 
 
 HINSTANCE hApplet = 0;
+BOOL bSynced = FALSE;
 
 PTIMEZONE_ENTRY TimeZoneListHead = NULL;
 PTIMEZONE_ENTRY TimeZoneListTail = NULL;
@@ -570,38 +562,131 @@ TimeZonePageProc(HWND hwndDlg,
 }
 
 
+#define MAX_KEY_LENGTH 255
+#define MAX_VALUE_NAME 16383
+
+static VOID
+CreateNTPServerList(HWND hwnd)
+{
+    HWND hList;
+    WCHAR ValName[MAX_VALUE_NAME];
+    WCHAR Data[256];
+    DWORD Index = 0;
+    DWORD ValSize;
+    DWORD dwNameSize;
+   // DWORD dwValueSize;
+    LONG Ret;
+    HKEY hKey;
+
+    hList = GetDlgItem(hwnd, IDC_SERVERLIST);
+
+    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		                L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+		                0,
+		                KEY_READ,
+		                &hKey);
+    if (Ret != ERROR_SUCCESS)
+        return;
+
+    while (TRUE) 
+    {
+            ValSize = MAX_VALUE_NAME; 
+            ValName[0] = '\0'; 
+            Ret = RegEnumValue(hKey, 
+                Index, 
+                ValName, 
+                &ValSize, 
+                NULL, 
+                NULL,
+                (LPBYTE)Data,
+                &dwNameSize);
+ 
+            if (Ret == ERROR_SUCCESS) 
+            { 
+                SendMessageW(hList, CB_ADDSTRING, 0, (LPARAM)Data); 
+                Index++;
+            }
+            else if (Ret != ERROR_MORE_DATA)
+                break;
+    }
+
+    SendMessageW(hList, CB_SELECTSTRING, 0, 0);
+
+}
+
+
+            
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 InetTimePageProc(HWND hwndDlg,
-		 UINT uMsg,
-		 WPARAM wParam,
-		 LPARAM lParam)
+		         UINT uMsg,
+		         WPARAM wParam,
+		         LPARAM lParam)
 {
-  switch (uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
 
-    case WM_COMMAND:
-      break;
+    HWND hCheck;
+    INT Check;
 
-    case WM_DESTROY:
-      break;
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            CreateNTPServerList(hwndDlg);           
 
-    case WM_NOTIFY:
-      {
-         switch (lParam)
+        break;
+
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
             {
+                case IDC_UPDATEBUTTON:
+                    MessageBox(NULL, L"Boo!", NULL, 0);
+                    break;
+            
+                case IDC_SERVERLIST:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                        /* Enable the 'Apply' button */
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
 
-              default:
+                case IDC_AUTOSYNC:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        hCheck = GetDlgItem(hwndDlg, IDC_AUTOSYNC);
+                        Check = (INT)SendMessageW(hCheck, BM_GETCHECK, 0, 0);
+                        bSynced = (Check) ? TRUE : FALSE;
+                        /* Enable the 'Apply' button */
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+            }
+            break;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_APPLY:
+                    //DebugBreak();
+                  
+                /*  SetNTPServer(GetDlgItem(hwndDlg, IDC_SERVERLIST));
+                    SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                */
+                    return TRUE;
+
+                default:
                 break;
             }
+        }
+        break;
+    }
 
-      }
-      break;
-  }
-
-  return FALSE;
+    return FALSE;
 }
 
 
