@@ -4,7 +4,7 @@
 <directory name="d3d8thk">
 	<xi:include href="d3d8thk/d3d8thk.rbuild" />
 </directory>
-<directory name="ddraw">
+<directory name="devenum">
 	<xi:include href="devenum/devenum.rbuild" />
 </directory>
 <directory name="ddraw">
