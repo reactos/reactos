@@ -1,11 +1,9 @@
-#include "imagesoft.h"
-
-extern HINSTANCE hInstance;
+#include <precomp.h>
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif
-BOOL CALLBACK
+INT_PTR CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND  hLicenseEditWnd;

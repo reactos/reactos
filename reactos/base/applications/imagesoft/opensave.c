@@ -1,4 +1,4 @@
-#include "imagesoft.h"
+#include <precomp.h>
 
 static OPENFILENAME ofn;
 

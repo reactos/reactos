@@ -2,62 +2,67 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&File"
   BEGIN
-    MENUITEM "New...",         ID_NEW
-    MENUITEM "Open...",        ID_OPEN
-    MENUITEM "Close",          ID_CLOSE, GRAYED
-    MENUITEM "Close all",      ID_CLOSEALL, GRAYED
+    MENUITEM "&New...",         ID_NEW
+    MENUITEM "&Open...",        ID_OPEN
     MENUITEM SEPARATOR
-    MENUITEM "Save",           ID_SAVE, GRAYED
-    MENUITEM "Save As",        ID_SAVEAS, GRAYED
+    MENUITEM "&Close\tCtrl+F4", ID_CLOSE, GRAYED
+    MENUITEM "C&lose all",      ID_CLOSEALL, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Print Preview",  ID_PRINTPRE, GRAYED
-    MENUITEM "Print...",       ID_PRINT, GRAYED
+    MENUITEM "&Save",           ID_SAVE, GRAYED
+    MENUITEM "Save &As...",     ID_SAVEAS, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Properties...",  ID_PROP, GRAYED
+    MENUITEM "Print Pre&view",  ID_PRINTPRE, GRAYED
+    MENUITEM "&Print...",       ID_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "E&xit",          ID_EXIT
+    MENUITEM "Pr&operties...",  ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit\tAlt+F4",   ID_EXIT
   END
-  POPUP "Edit"
+  POPUP "&Edit"
   BEGIN
-    MENUITEM "Undo",           ID_UNDO, GRAYED
-    MENUITEM "Redo",           ID_REDO, GRAYED
+    MENUITEM "&Undo",           ID_UNDO, GRAYED
+    MENUITEM "&Redo",           ID_REDO, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Cut",            ID_CUT, GRAYED
-    MENUITEM "Copy",           ID_COPY, GRAYED
-    MENUITEM "Paste",          ID_PASTE, GRAYED
-    MENUITEM "Paste as new image",ID_PASTENEWIMAGE, GRAYED
+    MENUITEM "Cu&t",            ID_CUT, GRAYED
+    MENUITEM "&Copy",           ID_COPY, GRAYED
+    MENUITEM "&Paste",          ID_PASTE, GRAYED
+    MENUITEM "Paste as new &image", ID_PASTENEWIMAGE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Select All",     ID_SELALL, GRAYED
+    MENUITEM "Select &All",     ID_SELALL, GRAYED
   END
-  POPUP "View"
+  POPUP "&View"
   BEGIN
-    MENUITEM "Tools",           ID_TOOLS, CHECKED
-    MENUITEM "Status Bar",      ID_STATUSBAR, CHECKED
+    MENUITEM "&Tools",           ID_TOOLS, CHECKED
+    MENUITEM "&Status Bar",      ID_STATUSBAR, CHECKED
   END
-  POPUP "Image"
+  POPUP "&Image"
   BEGIN
-    MENUITEM "Crop",           -1, GRAYED
-    MENUITEM "Resize",         -1, GRAYED
-    MENUITEM "Rotate",         -1, GRAYED
-    MENUITEM "Flip",           -1, GRAYED
-    MENUITEM "Stretch",        -1, GRAYED
-    MENUITEM "Skew",           -1, GRAYED
-    MENUITEM "Invert Colours", -1, GRAYED
+    MENUITEM "&Crop...",           -1, GRAYED
+    MENUITEM "&Resize...",         -1, GRAYED
+    MENUITEM "R&otate...",         -1, GRAYED
+    MENUITEM "&Flip...",           -1, GRAYED
+    MENUITEM "&Stretch...",        -1, GRAYED
+    MENUITEM "S&kew...",           -1, GRAYED
+    MENUITEM "&Invert Colors", -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Attributes",     -1, GRAYED
+    MENUITEM "&Attributes...",     -1, GRAYED
   END
-  POPUP "Colours"
+  POPUP "&Colors"
   BEGIN
-    MENUITEM "Edit Colours...", ID_EDITCOLOURS
+    MENUITEM "&Edit Colors...", ID_EDITCOLOURS
   END
-  POPUP "Window"
+  POPUP "&Window"
   BEGIN
-    MENUITEM "Tile",           -1
-    MENUITEM "Cascade",        -1
+    MENUITEM "&Cascade",           ID_WINDOW_CASCADE
+    MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
+    MENUITEM "Tile &Vertiacally",  ID_WINDOW_TILE_VERT
+    MENUITEM "&Arrange Icons",     ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "Nex&t\tCtrl+F6",     ID_WINDOW_NEXT
   END
-  POPUP "Help"
+  POPUP "&Help"
   BEGIN
-    MENUITEM "About...",       ID_ABOUT
+    MENUITEM "&About...",       ID_ABOUT
   END
 END
 
@@ -108,14 +113,13 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+  IDS_APPNAME "ImageSoft"
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
-END
-
-/* status bar info */
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_CURPOS "Cursor : %d,%d"
-  IDS_READY  "Ready"
+  IDS_READY   " Ready."
+  
+  IDS_TOOLBAR_STANDARD "Standard"
+  IDS_TOOLBAR_TEST "Test"
+  IDS_IMAGE_NAME "Image %1!u!"
 END
 
 /* Tooltips */
@@ -132,3 +136,18 @@ BEGIN
   IDS_TOOLTIP_UNDO   "Undo"
   IDS_TOOLTIP_REDO   "Redo"
 END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_EXIT         " Exits this application."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_NEXT     " Activates the next window."
+END
+

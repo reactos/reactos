@@ -33,8 +33,11 @@
 
 #define ID_REFRESH          3000
 #define ID_HELP             3001
-#define ID_WINDOW_TILE      3002
-#define ID_WINDOW_CASCADE   3003
+#define ID_WINDOW_TILE_HORZ 3002
+#define ID_WINDOW_TILE_VERT 3003
+#define ID_WINDOW_CASCADE   3004
+#define ID_WINDOW_NEXT      3005
+#define ID_WINDOW_ARRANGE   3006
 
 /* Menu */
 #define IDR_MAINMENU        102
@@ -72,7 +75,22 @@
 /* about box info */
 #define IDD_ABOUTBOX        200
 #define IDC_LICENSE_EDIT    201
-#define IDS_LICENSE         202
 
-#define IDS_CURPOS          550
-#define IDS_READY           551
+#define IDS_APPNAME             101
+#define IDS_LICENSE             102
+#define IDS_READY               103
+#define IDS_TOOLBAR_STANDARD    201
+#define IDS_TOOLBAR_TEST        202
+#define IDS_IMAGE_NAME          203
+
+/* menu hints */
+#define IDS_HINT_EXIT       20001
+
+/* system menu hints */
+#define IDS_HINT_SYS_RESTORE  21001
+#define IDS_HINT_SYS_MOVE     21002
+#define IDS_HINT_SYS_SIZE     21003
+#define IDS_HINT_SYS_MINIMIZE 21004
+#define IDS_HINT_SYS_MAXIMIZE 21005
+#define IDS_HINT_SYS_CLOSE    21006
+#define IDS_HINT_SYS_NEXT     21007
