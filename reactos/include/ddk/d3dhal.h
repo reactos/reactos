@@ -28,6 +28,8 @@ extern "C" {
 
 #include <d3d.h>
 
+#define D3DERR_COMMAND_UNPARSED 0x88760BB8;
+
 /*****************************************************************************
  * device info structures
  */
