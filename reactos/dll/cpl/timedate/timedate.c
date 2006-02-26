@@ -574,7 +574,7 @@ CreateNTPServerList(HWND hwnd)
     DWORD Index = 0;
     DWORD ValSize;
     DWORD dwNameSize;
-    DWORD Default = 0;
+    DWORD Default = 1;
     LONG Ret;
     HKEY hKey;
 
@@ -617,6 +617,9 @@ CreateNTPServerList(HWND hwnd)
             else if (Ret != ERROR_MORE_DATA)
                 break;
     }
+
+    if (Default < 1 || Default > Index)
+        Default = 1;
 
     SendMessage(hList, CB_SETCURSEL, --Default, 0);
 
