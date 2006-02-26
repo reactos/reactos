@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msimg32" type="win32dll" baseaddress="${BASEADDRESS_MSIMG32}" installbase="system32" installname="msimg32.dll" allowwarnings="true">
 	<importlibrary definition="msimg32.spec.def" />
 	<include base="msimg32">.</include>
@@ -10,3 +12,4 @@
 	<file>msimg32_main.c</file>
 	<file>msimg32.spec</file>
 </module>
+</rbuild>

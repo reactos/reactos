@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="aclui" type="win32dll" baseaddress="${BASEADDRESS_ACLUI}" installbase="system32" installname="aclui.dll">
 	<importlibrary definition="aclui.spec.def" />
 	<include base="aclui">.</include>
@@ -25,3 +27,4 @@
 	<file>aclui.spec</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

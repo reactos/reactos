@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="i8042prt" type="kernelmodedriver" installbase="system32/drivers" installname="i8042prt.sys">
 	<bootstrap base="reactos" />
 	<include base="i8042prt">.</include>
@@ -12,3 +14,4 @@
 	<file>registry.c</file>
 	<file>i8042prt.rc</file>
 </module>
+</rbuild>

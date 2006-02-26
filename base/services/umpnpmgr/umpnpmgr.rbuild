@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="umpnpmgr" type="win32cui" installbase="system32" installname="umpnpmgr.exe">
 	<include base="umpnpmgr">.</include>
 	<include base="pnp_server">.</include>
@@ -17,3 +19,4 @@
 	<file>umpnpmgr.c</file>
 	<file>umpnpmgr.rc</file>
 </module>
+</rbuild>

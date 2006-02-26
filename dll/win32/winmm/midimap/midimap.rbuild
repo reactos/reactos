@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="midimap" type="win32dll" baseaddress="${BASEADDRESS_MIDIMAP}" installbase="system32" installname="midimap.dll" allowwarnings="true">
 	<importlibrary definition="midimap.spec.def" />
 	<include base="midimap">.</include>
@@ -20,3 +22,4 @@
 	<file>midimap.rc</file>
 	<file>midimap.spec</file>
 </module>
+</rbuild>

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="services" type="win32cui" installbase="system32" installname="services.exe">
 	<include base="services">.</include>
 	<include base="scm_server">.</include>
@@ -22,3 +23,4 @@
 	<file>services.rc</file>
 	<pch>services.h</pch>
 </module>
+</rbuild>

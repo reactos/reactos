@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <RegressionTests>
 <!--
   Within the following test descriptions the possible elements are:
@@ -224,3 +226,4 @@
     <flag>--debug</flag>
   </test>
 </RegressionTests>
+</rbuild>

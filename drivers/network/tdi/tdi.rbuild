@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="tdi" type="kernelmodedriver" installbase="system32/drivers" installname="tdi.sys">
 	<importlibrary definition="misc/tdi.def"></importlibrary>
 	<define name="__USE_W32API" />
@@ -18,3 +20,4 @@
 		<file>stubs.c</file>
 	</directory>
 </module>
+</rbuild>

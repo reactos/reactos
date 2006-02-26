@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="oledlg" type="win32dll" baseaddress="${BASEADDRESS_OLEDLG}" installbase="system32" installname="oledlg.dll" allowwarnings="true">
 	<importlibrary definition="oledlg.spec.def" />
 	<include base="oledlg">.</include>
@@ -17,3 +19,4 @@
 	<file>rsrc.rc</file>
 	<file>oledlg.spec</file>
 </module>
+</rbuild>

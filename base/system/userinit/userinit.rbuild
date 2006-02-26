@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="userinit" type="win32gui" installbase="system32" installname="userinit.exe">
 	<include base="userinit">.</include>
 	<define name="UNICODE" />
@@ -13,3 +14,4 @@
 	<file>userinit.c</file>
 	<file>userinit.rc</file>
 </module>
+</rbuild>

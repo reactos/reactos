@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="crt" type="staticlibrary">
 	<include base="crt">.</include>
 	<include base="crt">include</include>
@@ -389,3 +391,4 @@
 		<file>undname.c</file>
 	</directory>
 </module>
+</rbuild>

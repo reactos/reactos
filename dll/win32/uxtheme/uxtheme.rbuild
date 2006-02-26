@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="uxtheme" type="win32dll" baseaddress="${BASEADDRESS_UXTHEME}" installbase="system32" installname="uxtheme.dll" allowwarnings="true">
 	<importlibrary definition="uxtheme.spec.def" />
 	<include base="uxtheme">.</include>
@@ -26,3 +28,4 @@
 	<file>version.rc</file>
 	<file>uxtheme.spec</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="imm32" type="win32dll" baseaddress="${BASEADDRESS_IMM32}" installbase="system32" installname="imm32.dll">
 	<importlibrary definition="imm32.spec.def" />
 	<include base="imm32">.</include>
@@ -11,3 +13,4 @@
 	<file>imm.c</file>
 	<file>imm32.spec</file>
 </module>
+</rbuild>

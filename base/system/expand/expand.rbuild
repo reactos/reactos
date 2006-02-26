@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="expand" type="win32cui" installbase="system32" installname="expand.exe" usewrc="false">
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd">.</include>
@@ -11,3 +12,4 @@
       <file>expand.c</file>	
       <file>expand.rc</file> 
 </module>
+</rbuild>

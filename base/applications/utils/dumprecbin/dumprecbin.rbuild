@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dumprecbin" type="win32cui" installbase="bin" installname="dumprecbin.exe">
 	<include base="dumprecbin">.</include>
 	<define name="__USE_W32API" />
@@ -11,3 +13,4 @@
 	<library>ntdll</library>
 	<file>dumprecbin.c</file>
 </module>
+</rbuild>

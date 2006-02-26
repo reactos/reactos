@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
  <assemblyIdentity
   version="1.0.0.0"
@@ -22,3 +23,4 @@
 </assembly>
 
 <!-- EOF -->
+</rbuild>

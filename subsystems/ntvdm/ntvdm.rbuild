@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ntvdm" type="win32cui" installbase="system32" installname="ntvdm.exe">
 	<include base="ntvdm">.</include>
 	<define name="__USE_W32API" />
@@ -10,3 +12,4 @@
 	<file>ntvdm.c</file>
 	<file>ntvdm.rc</file>
 </module>
+</rbuild>

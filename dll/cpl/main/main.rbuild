@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="main" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl">
 	<importlibrary definition="main.def" />
 	<include base="main">.</include>
@@ -16,3 +18,4 @@
 	<file>mouse.c</file>
 	<file>main.rc</file>
 </module>
+</rbuild>

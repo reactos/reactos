@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="fmifs" type="win32dll" entrypoint="_InitializeFmIfs@12" baseaddress="${BASEADDRESS_FMIFS}" installbase="system32" installname="fmifs.dll">
 	<importlibrary definition="fmifs.def" />
 	<include base="fmifs">.</include>
@@ -18,3 +20,4 @@
 	<file>fmifs.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

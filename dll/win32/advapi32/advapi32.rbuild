@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}"  installbase="system32" installname="advapi32.dll">
 	<importlibrary definition="advapi32.def" />
 	<include base="advapi32">.</include>
@@ -64,3 +66,4 @@
 	</directory>
 	<file>advapi32.rc</file>
 </module>
+</rbuild>

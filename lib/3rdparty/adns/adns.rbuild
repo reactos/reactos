@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="adns" type="staticlibrary" allowwarnings="true">
 	<include base="adns">src</include>
 	<include base="adns">adns_win32</include>
@@ -19,3 +21,4 @@
 		<file>types.c</file>
 	</directory>
 </module>
+</rbuild>

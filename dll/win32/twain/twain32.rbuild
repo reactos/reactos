@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="twain_32" type="win32dll" baseaddress="${BASEADDRESS_TWAIN_32}" installbase="system32" installname="twain_32.dll" allowwarnings="true">
 	<importlibrary definition="twain_32.def" />
 	<include base="twain_32">.</include>
@@ -14,3 +16,4 @@
 	<file>twain32_main.c</file>
 	<file>twain_32.rc</file>
 </module>
+</rbuild>

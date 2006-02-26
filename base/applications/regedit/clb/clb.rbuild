@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="clb" type="win32dll" baseaddress="${BASEADDRESS_CLB}" installbase="system32" installname="clb.dll">
 	<importlibrary definition="clb.def" />
 	<include base="clb">.</include>
@@ -16,3 +18,4 @@
 	<file>clb.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

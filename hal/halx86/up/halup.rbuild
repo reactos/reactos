@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="halup" type="kernelmodedll">
 	<importlibrary definition="../../hal/hal.def" />
 	<bootstrap base="reactos" nameoncd="hal.dll" />
@@ -13,3 +15,4 @@
 	<file>halinit_up.c</file>
 	<file>halup.rc</file>
 </module>
+</rbuild>

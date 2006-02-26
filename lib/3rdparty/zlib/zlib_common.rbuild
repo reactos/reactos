@@ -1,5 +1,6 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <include base="zlib">.</include>
-
 <file>adler32.c</file>
 <file>compress.c</file>
 <file>crc32.c</file>
@@ -14,3 +15,4 @@
 <file>infcodes.c</file>
 <file>infutil.c</file>
 <file>inffast.c</file>
+</rbuild>

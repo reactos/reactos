@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dxdiagn" type="win32dll" baseaddress="${BASEADDRESS_DXDIAGN}" installbase="system32" installname="dxdiagn.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dxdiagn.spec.def" />
@@ -26,3 +28,4 @@
 	<file>regsvr.c</file>
 	<file>dxdiagn.spec</file>
 </module>
+</rbuild>

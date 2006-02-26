@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ip" type="staticlibrary" allowwarnings="true">
 	<define name="__NTDRIVER__"/>
 	<define name="_SEH_NO_NATIVE_NLG"/>
@@ -43,3 +45,4 @@
 		</directory>
 	</directory>
 </module>
+</rbuild>

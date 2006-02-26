@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="win32csr" type="win32dll" installbase="system32" installname="win32csr.dll">
 	<importlibrary definition="win32csr.def" />
 	<include base="win32csr">.</include>
@@ -20,3 +22,4 @@
 	<file>tuiconsole.c</file>
 	<file>win32csr.rc</file>
 </module>
+</rbuild>

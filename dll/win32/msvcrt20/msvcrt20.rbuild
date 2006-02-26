@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msvcrt20" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT20}" mangledsymbols="yes" installbase="system32" installname="msvcrt20.dll">
 	<importlibrary definition="msvcrt20.def" />
 	<include base="msvcrt20">.</include>
@@ -15,3 +17,4 @@
 	<file>msvcrt20.c</file>
 	<file>msvcrt20.rc</file>
 </module>
+</rbuild>

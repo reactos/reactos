@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="secur32" type="win32dll" baseaddress="${BASEADDRESS_SECUR32}" installbase="system32" installname="secur32.dll">
 	<importlibrary definition="secur32.def" />
 	<include base="secur32">.</include>
@@ -15,3 +17,4 @@
 	<file>secur32.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

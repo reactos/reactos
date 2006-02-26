@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ntdll" type="win32dll" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
 	<bootstrap base="reactos/system32" />
 	<importlibrary definition="def/ntdll.def" />
@@ -50,3 +52,4 @@
 	</directory>
 	<file>napi.S</file>
 </module>
+</rbuild>

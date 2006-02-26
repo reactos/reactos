@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="smlib" type="staticlibrary">
 	<include base="smlib">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
@@ -9,3 +11,4 @@
 	<file>lookupss.c</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

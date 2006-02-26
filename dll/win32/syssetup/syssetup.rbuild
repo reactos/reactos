@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="syssetup" type="win32dll" baseaddress="${BASEADDRESS_SYSSETUP}" installbase="system32" installname="syssetup.dll">
 	<importlibrary definition="syssetup.def" />
 	<include base="syssetup">.</include>
@@ -28,3 +30,4 @@
 	<file>wizard.c</file>
 	<file>syssetup.rc</file>
 </module>
+</rbuild>

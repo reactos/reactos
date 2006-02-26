@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="icmp" type="win32dll" baseaddress="${BASEADDRESS_ICMP}" installbase="system32" installname="icmp.dll" allowwarnings="true">
 	<importlibrary definition="icmp.spec.def" />
 	<include base="icmp">.</include>
@@ -11,3 +13,4 @@
 	<file>icmp.rc</file>
 	<file>icmp.spec</file>
 </module>
+</rbuild>

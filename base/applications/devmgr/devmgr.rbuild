@@ -11,6 +11,6 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<file>devmgr.c</file>
-	<efile>devmgr.rc</efile>
+	<file>devmgr.rc</file>
   </module>
 </rbuild>

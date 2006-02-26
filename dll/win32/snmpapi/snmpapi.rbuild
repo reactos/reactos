@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="snmpapi" type="win32dll" baseaddress="${BASEADDRESS_SNMPAPI}" installbase="system32" installname="snmpapi.dll">
 	<importlibrary definition="snmpapi.def" />
 	<include base="snmpapi">.</include>
@@ -9,3 +11,4 @@
 	<file>snmpapi.c</file>
 	<file>snmpapi.rc</file>
 </module>
+</rbuild>

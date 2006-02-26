@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msi.spec.def" />
@@ -60,3 +62,4 @@
 	<file>msi.spec</file>
 	<file>msi.rc</file>
 </module>
+</rbuild>

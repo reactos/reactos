@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kernel32_base" type="objectlibrary">
 	<include base="kernel32_base">.</include>
 	<include base="kernel32_base">include</include>
@@ -137,3 +139,4 @@
 <directory name="tests">
 	<xi:include href="tests/kernel32.rbuild" />
 </directory>
+</rbuild>

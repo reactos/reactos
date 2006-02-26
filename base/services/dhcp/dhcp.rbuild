@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dhcp" type="win32gui" installbase="system32" installname="dhcp.exe" allowwarnings="true">
 	<include base="dhcp">.</include>
 	<include base="dhcp">include</include>
@@ -25,3 +27,4 @@
 	<file>util.c</file>
 	<file>dhcp.rc</file>
 </module>
+</rbuild>

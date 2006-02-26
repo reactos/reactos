@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="authz" type="win32dll" baseaddress="${BASEADDRESS_AUTHZ}" installbase="system32" installname="authz.dll">
 	<importlibrary definition="authz.def" />
 	<include base="authz">.</include>
@@ -16,3 +18,4 @@
 	<file>authz.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

@@ -1,4 +1,5 @@
-<group>
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 	<directory name="kbdda">
 		<xi:include href="kbdda/kbdda.rbuild" />
 	</directory>
@@ -50,4 +51,4 @@
 	<directory name="kbdpo">
 		<xi:include href="kbdpo/kbdpo.rbuild" />
 	</directory>
-</group>
+</rbuild>

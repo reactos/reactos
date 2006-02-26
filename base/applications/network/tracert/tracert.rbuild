@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="tracert" type="win32cui" installbase="system32" installname="tracert.exe">
 	<include base="tracert">.</include>
 	<define name="__USE_W32API" />
@@ -11,3 +12,4 @@
 	<file>tracert.c</file>
 	<file>tracert.rc</file>
 </module>
+</rbuild>

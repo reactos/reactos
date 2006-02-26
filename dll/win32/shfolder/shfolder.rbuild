@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="shfolder" type="win32dll" baseaddress="${BASEADDRESS_SHFOLDER}" installbase="system32" installname="shfolder.dll">
 	<importlibrary definition="shfolder.spec.def" />
 	<include base="shfolder">.</include>
@@ -8,3 +10,4 @@
 	<file>shfolder_main.c</file>
 	<file>shfolder.spec</file>
 </module>
+</rbuild>

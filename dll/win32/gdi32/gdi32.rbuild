@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll">
 	<importlibrary definition="gdi32.def" />
 	<include base="gdi32">include</include>
@@ -42,3 +44,4 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<file>gdi32.rc</file>
 </module>
+</rbuild>

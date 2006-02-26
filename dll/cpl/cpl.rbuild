@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="access">
 	<xi:include href="access/access.rbuild" />
 </directory>
@@ -28,3 +30,4 @@
 <directory name="timedate">
 	<xi:include href="timedate/timedate.rbuild" />
 </directory>
+</rbuild>

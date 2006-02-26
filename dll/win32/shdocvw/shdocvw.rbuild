@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="shdocvw" type="win32dll" baseaddress="${BASEADDRESS_SHDOCVW}" installbase="system32" installname="shdocvw.dll" usewrc="false" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shdocvw.spec.def" />
@@ -35,3 +37,4 @@
 	<file>shdocvw.rc</file>
 	<file>shdocvw.spec</file>
 </module>
+</rbuild>

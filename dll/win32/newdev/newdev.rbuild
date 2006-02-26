@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="newdev" type="win32dll" installbase="system32" installname="newdev.dll">
 	<include base="newdev">.</include>
 	<define name="UNICODE" />
@@ -15,3 +17,4 @@
 	<library>ntdll</library>
 	<library>setupapi</library>
 </module>
+</rbuild>

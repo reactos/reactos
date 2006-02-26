@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dosmbr" type="bootsector" >
 	<bootstrap base="loader" nameoncd="dosmbr.bin" />
 	<file>dosmbr.asm</file>
@@ -24,3 +26,4 @@
 		<file>ofwboot.s</file>
 	</module>
 </if>
+</rbuild>

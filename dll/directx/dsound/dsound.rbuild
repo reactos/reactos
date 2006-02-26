@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dsound" type="win32dll" baseaddress="${BASEADDRESS_DSOUND}" installbase="system32" installname="dsound.dll" allowwarnings ="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dsound.spec.def" />
@@ -34,3 +36,4 @@
       <file>dxroslayer/getguidfromstring.c</file>
 	<file>dsound.spec</file>
 </module>
+</rbuild>

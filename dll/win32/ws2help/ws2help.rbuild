@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ws2help" type="win32dll" baseaddress="${BASEADDRESS_WS2HELP}" installbase="system32" installname="ws2help.dll">
 	<importlibrary definition="ws2help.def" />
 	<include base="ws2help">.</include>
@@ -10,3 +12,4 @@
 	<file>ws2help.c</file>
 	<file>ws2help.rc</file>
 </module>
+</rbuild>

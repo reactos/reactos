@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dplay" type="win32dll" baseaddress="${BASEADDRESS_DPLAY}" installbase="system32" installname="dplay.dll">  
 	<importlibrary definition="dplay.spec.def" />
 	<include base="dinput8">.</include>
@@ -23,3 +25,4 @@
 	<file>dplay_main.c</file>
 	<file>dplay.spec</file>
 </module>
+</rbuild>

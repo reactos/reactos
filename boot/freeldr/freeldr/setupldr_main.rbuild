@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="setupldr_main" type="objectlibrary">
 	<include base="setupldr_main">include</include>
 	<include base="ntoskrnl">include</include>
@@ -15,3 +17,4 @@
 	  <file>setupldr.c</file>
 	</directory>
 </module>
+</rbuild>

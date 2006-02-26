@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="lsasrv" type="win32dll" baseaddress="${BASEADDRESS_LSASRV}" entrypoint="0" installbase="system32" installname="lsasrv.dll">
 	<importlibrary definition="lsasrv.def" />
 	<include base="lsasrv">.</include>
@@ -17,3 +19,4 @@
 	<file>lsasrv.c</file>
 	<file>lsasrv.rc</file>
 </module>
+</rbuild>

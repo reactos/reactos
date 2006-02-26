@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="gdiplus" type="win32dll" baseaddress="${BASEADDRESS_GDIPLUS}" installbase="system32" installname="gdiplus.dll">
 	<importlibrary definition="gdiplus.def" />
 	<include base="gdiplus">include</include>
@@ -45,3 +47,4 @@
 	</directory>
 	<file>gdiplus.rc</file>
 </module>
+</rbuild>

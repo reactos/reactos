@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="imagehlp" type="win32dll" baseaddress="${BASEADDRESS_IMAGEHLP}" installbase="system32" installname="imagehlp.dll" allowwarnings="true">
 	<importlibrary definition="imagehlp.def" />
 	<include base="imagehlp">.</include>
@@ -15,3 +17,4 @@
 	<pch>precomp.h</pch>
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
 </module>
+</rbuild>

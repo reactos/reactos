@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="serialui" type="win32dll" baseaddress="${BASEADDRESS_SERIALUI}" installbase="system32" installname="serialui.dll">
 	<importlibrary definition="serialui.def" />
 	<include base="serialui">.</include>
@@ -10,3 +12,4 @@
 	<file>serialui.c</file>
 	<file>serialui.rc</file>
 </module>
+</rbuild>

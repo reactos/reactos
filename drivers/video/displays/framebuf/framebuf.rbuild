@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="framebuf" type="kernelmodedll" entrypoint="_DrvEnableDriver@12" installbase="system32" installname="framebuf.dll">
 	<importlibrary definition="framebuf.def" />
 	<include base="framebuf">.</include>
@@ -11,3 +13,4 @@
 	<file>surface.c</file>
 	<file>framebuf.rc</file>
 </module>
+</rbuild>

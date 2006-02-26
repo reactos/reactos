@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <component name="ntdll.dll">
 	<symbol>DbgPrint</symbol>
 	<symbol>RtlAssert@16</symbol>
@@ -169,3 +171,4 @@
 	<symbol>FT_Set_Charmap</symbol>
 	<symbol>FT_Load_Sfnt_Table</symbol>
 </component>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="advpack" type="win32dll" baseaddress="${BASEADDRESS_ADVPACK}"  installbase="system32" installname="advpack.dll">
 	<importlibrary definition="advpack.def" />
 	<include base="advpack">.</include>
@@ -18,3 +20,4 @@
 	<file>stubs.c</file>
 	<file>advpack.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msvcrt_winetest" type="win32cui" installbase="bin" installname="msvcrt_winetest.exe" allowwarnings="true">
     <include base="msvcrt_winetest">.</include>
     <define name="__USE_W32API" />
@@ -12,3 +14,4 @@
     <file>testlist.c</file>
     <file>time.c</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="version" type="win32dll" baseaddress="${BASEADDRESS_VERSION}" installbase="system32" installname="version.dll" allowwarnings="true">
 	<importlibrary definition="version.def" />
 	<include base="ReactOS">include/reactos/wine</include>
@@ -19,3 +21,4 @@
 	<file>resource.c</file>
 	<file>version.rc</file>
 </module>
+</rbuild>

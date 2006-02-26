@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
 	<include base="acpi">include</include>
 	<include base="acpi">ospm/include</include>
@@ -136,3 +138,4 @@
 	<file>acpi.rc</file>
 	<pch>include/acpi.h</pch>
 </module>
+</rbuild>

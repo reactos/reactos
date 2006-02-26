@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="crypt32" type="win32dll" baseaddress="${BASEADDRESS_CRYPT32}" installbase="system32" installname="crypt32.dll">
 	<importlibrary definition="crypt32.spec.def" />
 	<include base="crypt32">.</include>
@@ -16,3 +18,4 @@
 	<file>crypt32.rc</file>
 	<file>crypt32.spec</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msvfw32" type="win32dll" baseaddress="${BASEADDRESS_MSVFW32}" installbase="system32" installname="msvfw32.dll">
 	<importlibrary definition="msvfw32.spec.def" />
 	<include base="ReactOS">include/reactos/wine</include>
@@ -18,3 +20,4 @@
 	<file>msvideo_main.c</file>
 	<file>msvfw32.spec</file>
 </module>
+</rbuild>

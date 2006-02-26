@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="psapi" type="win32dll" baseaddress="${BASEADDRESS_PSAPI}" installbase="system32" installname="psapi.dll">
 	<importlibrary definition="psapi.def" />
 	<include base="psapi">.</include>
@@ -13,3 +15,4 @@
 	<file>psapi.c</file>
 	<file>psapi.rc</file>
 </module>
+</rbuild>

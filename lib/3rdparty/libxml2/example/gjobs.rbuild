@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <gjob:Helping xmlns:gjob="http://www.gnome.org/some-location">
   <gjob:Jobs>
 
@@ -55,3 +56,4 @@
   </gjob:Jobs>
 </gjob:Helping>
 
+</rbuild>

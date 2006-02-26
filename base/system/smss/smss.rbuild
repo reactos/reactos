@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="smss" type="nativecui" installbase="system32" installname="smss.exe">
 	<include base="smss">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
@@ -31,3 +33,4 @@
 	</compilationunit>
 	<file>smss.rc</file>
 </module>
+</rbuild>

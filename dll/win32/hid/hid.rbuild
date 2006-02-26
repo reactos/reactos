@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="hid" type="win32dll" baseaddress="${BASEADDRESS_HID}" installbase="system32" installname="hid.dll">
 	<importlibrary definition="hid.def" />
 	<include base="hid">.</include>
@@ -14,3 +16,4 @@
 	<file>hid.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

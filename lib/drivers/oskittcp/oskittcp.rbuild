@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="oskittcp" type="staticlibrary" allowwarnings="true">
 	<define name="__REACTOS__">1</define>
 	<define name="__NTDRIVER__"/>
@@ -46,3 +48,4 @@
 		<file>uipc_socket2.c</file>
 	</directory>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <component name="ntdll.dll">
 	<symbol>CsrCaptureParameterBuffer@16</symbol>
 	<symbol>CsrClientCallServer@16</symbol>
@@ -255,3 +257,4 @@
 	<symbol>RtlUpcaseUnicodeChar@4</symbol>
 	<symbol>NtCreateSemaphore@20</symbol>
 </component>
+</rbuild>

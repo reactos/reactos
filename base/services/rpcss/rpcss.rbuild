@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="rpcss" type="win32cui" installbase="system32" installname="rpcss.exe">
 	<include base="rpcss">.</include>
 	<define name="__USE_W32API" />
@@ -7,3 +9,4 @@
 	<file>endpoint.c</file>
 	<file>rpcss.rc</file>
 </module>
+</rbuild>

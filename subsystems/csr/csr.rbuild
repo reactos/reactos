@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="csr" type="nativecui" installbase="system32" installname="csr.exe">
 	<include base="csr">.</include>
 	<define name="__USE_W32API" />
@@ -11,3 +13,4 @@
 <directory name="csrsrv">
 	<xi:include href="csrsrv/csrsrv.rbuild" />
 </directory>
+</rbuild>

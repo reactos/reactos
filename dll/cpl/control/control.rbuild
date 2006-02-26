@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="control" type="win32gui" baseaddress="${BASEADDRESS_CONTROL}" installbase="system32" installname="control.exe">
 	<include base="control">.</include>
 	<define name="UNICODE" />
@@ -12,3 +14,4 @@
 	<file>control.c</file>
 	<file>control.rc</file>
 </module>
+</rbuild>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<group>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="3rdparty">
 	<xi:include href="3rdparty/3rdparty.rbuild" />
 </directory>
@@ -19,5 +19,5 @@
 <directory name="win32">
 	<xi:include href="win32/win32.rbuild" />
 </directory>
-</group>
+</rbuild>
 

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="tcpip" type="kernelmodedriver" installbase="system32/drivers" installname="tcpip.sys">
 	<importlibrary definition="tcpip.def"></importlibrary>
 	<include base="tcpip">include</include>
@@ -39,3 +41,4 @@
 	</directory>
 	<file>tcpip.rc</file>
 </module>
+</rbuild>

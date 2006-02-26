@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="rundll32" type="win32gui" installbase="system32" installname="rundll32.exe">
 	<include base="rundll32">.</include>
 	<define name="UNICODE" />
@@ -9,3 +10,4 @@
 	<file>rundll32.c</file>
 	<file>rundll32.rc</file>
 </module>
+</rbuild>

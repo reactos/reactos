@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="timedate" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}" installbase="system32" installname="timedate.cpl">
 	<importlibrary definition="timedate.def" />
 	<include base="timedate">.</include>
@@ -14,3 +16,4 @@
 	<file>timedate.c</file>
 	<file>timedate.rc</file>
 </module>
+</rbuild>

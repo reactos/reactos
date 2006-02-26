@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="samlib" type="win32dll" baseaddress="${BASEADDRESS_SAMLIB}" installbase="system32" installname="samlib.dll">
 	<importlibrary definition="samlib.def" />
 	<include base="samlib">.</include>
@@ -10,3 +12,4 @@
 	<file>samlib.c</file>
 	<file>samlib.rc</file>
 </module>
+</rbuild>

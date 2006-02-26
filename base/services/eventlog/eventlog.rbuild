@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="eventlog" type="win32cui" installbase="system32" installname="eventlog.exe">
 	<include base="eventlog">.</include>
 	<include base="eventlog_server">.</include>
@@ -16,3 +18,4 @@
 	<file>file.c</file>
 	<pch>eventlog.h</pch>
 </module>
+</rbuild>

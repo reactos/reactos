@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="bootsect">
 	<xi:include href="bootsect/bootsect.rbuild" />
 </directory>
@@ -14,3 +16,4 @@
 <directory name="install">
 	<xi:include href="install/installfreeldr.rbuild" />
 </directory>
+</rbuild>

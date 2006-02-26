@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dinput8" type="win32dll" baseaddress="${BASEADDRESS_DINPUT8}" installbase="system32" installname="dinput8.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput8.spec.def" />
@@ -24,3 +26,4 @@
 	<file>dinput8_main.c</file>
 	<file>dinput8.spec</file>
 </module>
+</rbuild>

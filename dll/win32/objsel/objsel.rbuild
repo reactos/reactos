@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="objsel" type="win32dll" baseaddress="${BASEADDRESS_OBJSEL}" installbase="system32" installname="objsel.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="objsel.spec.def" />
@@ -21,3 +23,4 @@
 	<file>objsel.rc</file>
 	<file>objsel.spec</file>
 </module>
+</rbuild>

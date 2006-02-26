@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="iphlpapi" type="win32dll" baseaddress="${BASEADDRESS_IPHLPAPI}" installbase="system32" installname="iphlpapi.dll" allowwarnings="true">
 	<importlibrary definition="iphlpapi.spec.def" />
 	<include base="iphlpapi">include</include>
@@ -23,3 +25,4 @@
 	<file>iphlpapi.rc</file>
 	<file>iphlpapi.spec</file>
 </module>
+</rbuild>

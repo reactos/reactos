@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ndis" type="kernelmodedriver" installbase="system32/drivers" installname="ndis.sys">
 	<importlibrary definition="ndis.def"></importlibrary>
 	<include base="ndis">include</include>
@@ -37,3 +39,4 @@
 	</directory>
 	<file>ndis.rc</file>
 </module>
+</rbuild>

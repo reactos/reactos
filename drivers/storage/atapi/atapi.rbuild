@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="atapi" type="kernelmodedriver" installbase="system32/drivers" installname="atapi.sys">
 	<bootstrap base="reactos" />
 	<define name="__USE_W32API" />
@@ -8,3 +10,4 @@
 	<file>atapi.c</file>
 	<file>atapi.rc</file>
 </module>
+</rbuild>

@@ -1,4 +1,5 @@
-<group>
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <cdfile base="reactos">c_437.nls</cdfile>
 <cdfile base="reactos">c_1252.nls</cdfile>
 <cdfile base="reactos">l_intl.nls</cdfile>
@@ -57,4 +58,4 @@
 <installfile base="system32">c_28598.nls</installfile>
 <installfile base="system32">c_28599.nls</installfile>
 <installfile base="system32">l_intl.nls</installfile>
-</group>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="freeldr_base64k" type="objectlibrary">
 	<include base="freeldr_base64k">include</include>
 	<include base="ntoskrnl">include</include>
@@ -26,3 +28,4 @@
 		</if>
 	</directory>
 </module>
+</rbuild>

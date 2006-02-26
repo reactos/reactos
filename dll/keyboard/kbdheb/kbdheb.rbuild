@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbdheb" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdheb.dll" allowwarnings="true">
 	<importlibrary definition="kbdheb.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbdheb.c</file>
 	<file>kbdheb.rc</file>
 </module>
+</rbuild>

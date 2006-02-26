@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="vgaddi" type="kernelmodedll" entrypoint="_DrvEnableDriver@12" installbase="system32" installname="vgaddi.dll">
 	<importlibrary definition="vgaddi.def" />
 	<include base="vgaddi">.</include>
@@ -23,3 +25,4 @@
 	</directory>
 	<file>vgaddi.rc</file>
 </module>
+</rbuild>

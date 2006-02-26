@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbddv" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbddv.dll" allowwarnings="true">
 	<importlibrary definition="kbddv.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbddv.c</file>
 	<file>kbddv.rc</file>
 </module>
+</rbuild>

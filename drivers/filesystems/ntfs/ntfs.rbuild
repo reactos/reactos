@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ntfs" type="kernelmodedriver" installbase="system32/drivers" installname="ntfs.sys">
 	<bootstrap base="reactos" />
 	<include base="ntfs">.</include>
@@ -19,3 +21,4 @@
 	<file>ntfs.rc</file>
 	<pch>ntfs.h</pch>
 </module>
+</rbuild>

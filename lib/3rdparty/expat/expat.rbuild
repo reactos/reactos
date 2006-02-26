@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="expat" type="staticlibrary">
 	<include base="expat">.</include>
 	<include base="expat">lib</include>
@@ -10,3 +12,4 @@
 		<file>xmltok.c</file>
 	</directory>
 </module>
+</rbuild>

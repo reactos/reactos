@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="intl" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl.cpl" usewrc="false">
 	<importlibrary definition="intl.def" />
 	<include base="intl">.</include>
@@ -20,3 +22,4 @@
 	<file>time.c</file>
 	<file>intl.rc</file>
 </module>
+</rbuild>

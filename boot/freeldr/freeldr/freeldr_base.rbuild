@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="freeldr_base" type="objectlibrary">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
@@ -71,3 +73,4 @@
 	<file>machine.c</file>
 	<pch>include/freeldr.h</pch>
 </module>
+</rbuild>

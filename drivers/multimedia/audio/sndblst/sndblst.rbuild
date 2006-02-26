@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="sndblst" type="kernelmodedriver" allowwarnings="true">
 	<include base="sndblst">.</include>
 	<define name="__USE_W32API" />
@@ -11,3 +13,4 @@
 	<file>sndblst.c</file>
 	<file>sndblst.rc</file>
 </module>
+</rbuild>

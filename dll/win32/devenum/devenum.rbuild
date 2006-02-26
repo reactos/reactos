@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="devenum" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devenum.dll" allowwarnings="true">
   <!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="devenum.spec.def" />
@@ -27,3 +29,4 @@
 	<file>parsedisplayname.c</file>
 	<file>devenum.spec</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="urlmon" type="win32dll" baseaddress="${BASEADDRESS_URLMON}" installbase="system32" installname="urlmon.dll" allowwarnings="true">
 	<importlibrary definition="urlmon.spec.def" />
 	<include base="urlmon">.</include>
@@ -33,3 +35,4 @@
 	<file>rsrc.rc</file>
 	<file>urlmon.spec</file>
 </module>
+</rbuild>

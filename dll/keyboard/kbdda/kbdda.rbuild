@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbdda" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdda.dll" allowwarnings="true">
 	<importlibrary definition="kbdda.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbdda.c</file>
 	<file>kbdda.rc</file>
 </module>
+</rbuild>

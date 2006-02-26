@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ipconfig" type="win32cui" installbase="system32" installname="ipconfig.exe" allowwarnings="true">
     <include base="ipconfig">.</include>
     <define name="__USE_W32API" />
@@ -9,3 +10,4 @@
     <file>ipconfig.c</file>
     <file>ipconfig.rc</file>
 </module>
+</rbuild>

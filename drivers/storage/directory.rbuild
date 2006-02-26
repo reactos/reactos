@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="atapi">
 	<xi:include href="atapi/atapi.rbuild" />
 </directory>
@@ -28,3 +30,4 @@
 <directory name="diskdump">
 	<xi:include href="diskdump/diskdump.rbuild" />
 </directory>
+</rbuild>

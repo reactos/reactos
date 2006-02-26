@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ncpa" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_NCPA}" installbase="system32" installname="ncpa.cpl">
 	<importlibrary definition="ncpa.def" />
 	<include base="ncpa">.</include>
@@ -18,3 +20,4 @@
 	<file>tcpip_properties.c</file>
 	<file>ncpa.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="vmwinst" type="win32gui" installbase="system32" installname="vmwinst.exe">
 	<include base="vmwinst">.</include>
 	<define name="UNICODE" />
@@ -13,3 +15,4 @@
 	<file>vmwinst.c</file>
 	<file>vmwinst.rc</file>
 </module>
+</rbuild>

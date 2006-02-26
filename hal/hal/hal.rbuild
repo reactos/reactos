@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="hal" type="kernelmodedll">
 	<importlibrary basename="hal" definition="hal.def" />
 	<include base="ntoskrnl">include</include>
@@ -13,3 +15,4 @@
 
 <module if="${MP}" name="halmpalias" type="alias" installbase="system32" installname="hal.dll" aliasof="halmp">
 </module>
+</rbuild>

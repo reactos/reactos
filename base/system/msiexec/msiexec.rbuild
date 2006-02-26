@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msiexec" type="win32gui" installbase="system32" installname="msiexec.exe" allowwarnings="true">
 	<include base="msiexec">.</include>
 	<include base="ReactOS">include/wine</include>
@@ -17,3 +19,4 @@
 	<file>msiexec.c</file>
 	<file>version.rc</file>
 </module>
+</rbuild>

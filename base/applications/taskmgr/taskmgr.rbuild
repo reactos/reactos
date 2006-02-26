@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="taskmgr" type="win32gui" installbase="system32" installname="taskmgr.exe">
 	<include base="taskmgr">.</include>
 	<define name="__USE_W32API" />
@@ -33,3 +35,4 @@
 	</compilationunit>
 	<file>taskmgr.rc</file>
 </module>
+</rbuild>

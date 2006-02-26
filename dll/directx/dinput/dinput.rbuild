@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dinput" type="win32dll" baseaddress="${BASEADDRESS_DINPUT}" installbase="system32" installname="dinput.dll" allowwarnings ="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput.spec.def" />
@@ -31,3 +33,4 @@
 	<file>regsvr.c</file>
 	<file>dinput.spec</file>
 </module>
+</rbuild>

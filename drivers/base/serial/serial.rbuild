@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="serial" type="kernelmodedriver" installbase="system32/drivers" installname="serial.sys">
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
@@ -16,3 +18,4 @@
 	<file>serial.c</file>
 	<file>serial.rc</file>
 </module>
+</rbuild>

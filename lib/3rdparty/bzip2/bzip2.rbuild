@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="bzip2" type="kernelmodedll" installbase="system32/drivers" installname="bzip2.dll">
 	<importlibrary definition="unbzip2.def" />
 	<define name="BZ_NO_STDIO" />
@@ -13,3 +15,4 @@
 	<file>huffman.c</file>
 	<file>dllmain.c</file>
 </module>
+</rbuild>

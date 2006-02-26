@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbdpo" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdpo.dll" allowwarnings="true">
 	<importlibrary definition="kbdpo.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbdpo.c</file>
 	<file>kbdpo.rc</file>
 </module>
+</rbuild>

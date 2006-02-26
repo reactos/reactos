@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="reporterror" type="win32gui" installbase="system32" installname="reporterror.exe">
 	<include base="reporterror">.</include>
 	<define name="__USE_W32API" />
@@ -15,3 +17,4 @@
 	<file>reporterror.c</file>
 	<file>reporterror.rc</file>
 </module>
+</rbuild>

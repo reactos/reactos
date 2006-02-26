@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="mmsys" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl">
 	<importlibrary definition="mmsys.def" />
 	<include base="mmsys">.</include>
@@ -14,3 +16,4 @@
 	<file>mmsys.c</file>
 	<file>mmsys.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dhcpcsvc" type="win32dll" installbase="system32" installname="dhcpcsvc.dll">
 	<importlibrary definition="dhcpcsvc.spec.def" />
 	<include base="dhcpcsvc">include</include>
@@ -13,3 +15,4 @@
 	<file>dhcpcsvc.rc</file>
 	<file>dhcpcsvc.spec</file>
 </module>
+</rbuild>

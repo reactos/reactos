@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="winlogon" type="win32gui" installbase="system32" installname="winlogon.exe">
 	<include base="winlogon">.</include>
 	<define name="UNICODE" />
@@ -18,3 +19,4 @@
 	<file>winlogon.rc</file>
 	<pch>winlogon.h</pch>
 </module>
+</rbuild>

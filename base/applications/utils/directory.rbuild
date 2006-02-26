@@ -1,4 +1,5 @@
-<group>
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="net">
 	<xi:include href="net/directory.rbuild" />
 </directory>
@@ -14,4 +15,4 @@
 <directory name="rosperf">
 	<xi:include href="rosperf/rosperf.rbuild" />
 </directory>
-</group>
+</rbuild>

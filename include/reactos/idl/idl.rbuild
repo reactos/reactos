@@ -1,4 +1,5 @@
-<group>
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="pnp_server" type="rpcserver">
 	<include base="ReactOS">.</include>
 	<include base="ReactOS">w32api/include</include>
@@ -47,4 +48,4 @@
 	<define name="_X86_" />
 	<file switches="--oldnames">lsa.idl</file>
 </module>
-</group>
+</rbuild>

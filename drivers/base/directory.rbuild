@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="beep">
 	<xi:include href="beep/beep.rbuild" />
 </directory>
@@ -25,3 +27,4 @@
 <directory name="serial">
 	<xi:include href="serial/serial.rbuild" />
 </directory>
+</rbuild>

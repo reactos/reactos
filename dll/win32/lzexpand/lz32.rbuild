@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="lz32" type="win32dll" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll">
 	<importlibrary definition="lz32.def" />
 	<include base="lz32">.</include>
@@ -8,3 +10,4 @@
 	<file>lzexpand_main.c</file>
 	<file>lz32.rc</file>
 </module>
+</rbuild>

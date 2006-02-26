@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="slayer" type="win32dll" baseaddress="${BASEADDRESS_SLAYER}" installbase="system32" installname="slayer.dll">
 	<importlibrary definition="slayer.def" />
 	<include base="slayer">.</include>
@@ -16,3 +18,4 @@
 	<file>slayer.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

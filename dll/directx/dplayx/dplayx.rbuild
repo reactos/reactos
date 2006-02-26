@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dplayx" type="win32dll" baseaddress="${BASEADDRESS_DPLAYX}" installbase="system32" installname="dplayx.dll" allowwarnings ="true">
 	<!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="dplayx.spec.def" />
@@ -32,3 +34,4 @@
 	<file>regsvr.c</file>
 	<file>dplayx.spec</file>	
 </module>
+</rbuild>

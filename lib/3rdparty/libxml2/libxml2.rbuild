@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="libxml2" type="staticlibrary" allowwarnings="true">
  	<library>ntdll</library>
  	<library>kernel32</library>
@@ -55,3 +57,4 @@
 	<file>xpointer.c</file>
 	<file>xmlstring.c</file>
 </module>
+</rbuild>

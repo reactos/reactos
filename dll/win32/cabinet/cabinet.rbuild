@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="cabinet" type="win32dll" baseaddress="${BASEADDRESS_CABINET}" installbase="system32" installname="cabinet.dll" allowwarnings="true">
 	<importlibrary definition="cabinet.spec.def" />
 	<include base="cabinet">.</include>
@@ -21,3 +23,4 @@
 	<file>cabinet.rc</file>
 	<file>cabinet.spec</file>
 </module>
+</rbuild>

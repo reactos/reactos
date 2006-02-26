@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbdse" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdse.dll" allowwarnings="true">
 	<importlibrary definition="kbdse.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbdse.c</file>
 	<file>kbdse.rc</file>
 </module>
+</rbuild>

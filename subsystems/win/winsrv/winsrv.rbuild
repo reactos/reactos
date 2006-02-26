@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="winsrv" type="win32dll">
 	<importlibrary definition="winsrv.def" />
 	<include base="winsrv">.</include>
@@ -14,3 +16,4 @@
 	<file>winsrv.rc</file>
 </module>
 
+</rbuild>

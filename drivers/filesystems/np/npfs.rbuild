@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="npfs" type="kernelmodedriver" installbase="system32/drivers" installname="npfs.sys">
 	<include base="npfs">.</include>
 	<define name="__USE_W32API" />
@@ -13,3 +15,4 @@
 	<file>npfs.rc</file>
 	<pch>npfs.h</pch>
 </module>
+</rbuild>

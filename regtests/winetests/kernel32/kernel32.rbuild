@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kernel32_winetest" type="win32cui" installbase="bin" installname="kernel32_winetest.exe" allowwarnings="true">
     <include base="kernel32_winetest">.</include>
     <define name="__USE_W32API" />
@@ -29,3 +31,4 @@
     <file>virtual.c</file>
     <file>testlist.c</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="epsapi" type="objectlibrary">
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />
@@ -7,3 +9,4 @@
 		<file>processes.c</file>
 	</directory>
 </module>
+</rbuild>

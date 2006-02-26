@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="diskdump" type="kernelmodedriver" installbase="system32/drivers" installname="diskdump.sys">
 	<bootstrap base="reactos" />
 	<define name="__USE_W32API" />
@@ -11,3 +13,4 @@
 	<file>diskdump_helper.S</file>
 	<file>diskdump.rc</file>
 </module>
+</rbuild>

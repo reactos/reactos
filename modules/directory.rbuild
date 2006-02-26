@@ -1,4 +1,5 @@
-<group>
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 	<directory name="os2">
 		<xi:include href="os2/directory.rbuild">
 			<xi:fallback>
@@ -41,4 +42,4 @@
 			</xi:fallback>
 		</xi:include>
 	</directory>
-</group>
+</rbuild>

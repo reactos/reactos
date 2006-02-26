@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msafd" type="win32dll" baseaddress="${BASEADDRESS_MSAFD}" installbase="system32" installname="msafd.dll">
 	<importlibrary definition="msafd.def" />
 	<include base="msafd">include</include>
@@ -19,3 +21,4 @@
 	</directory>
 	<file>msafd.rc</file>
 </module>
+</rbuild>

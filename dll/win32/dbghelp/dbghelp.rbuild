@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="dbghelp" type="win32dll" baseaddress="${BASEADDRESS_DBGHELP}" installbase="system32" installname="dbghelp.dll" allowwarnings="true">
 	<importlibrary definition="dbghelp.spec.def" />
 	<include base="dbghelp">.</include>
@@ -32,3 +34,4 @@
 	<file>dbghelp.rc</file>
 	<file>dbghelp.spec</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="shell32_winetest" type="win32cui" installbase="bin" installname="shell32_winetest.exe" allowwarnings="true">
     <include base="shell32_winetest">.</include>
     <define name="__USE_W32API" />
@@ -14,3 +16,4 @@
     <file>string.c</file>
     <file>testlist.c</file>
 </module>
+</rbuild>

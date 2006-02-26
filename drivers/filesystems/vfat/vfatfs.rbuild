@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="vfatfs" type="kernelmodedriver" installbase="system32/drivers" installname="vfatfs.sys">
 	<bootstrap base="reactos" />
 	<include base="vfatfs">.</include>
@@ -28,3 +30,4 @@
 	<file>vfatfs.rc</file>
 	<pch>vfat.h</pch>
 </module>
+</rbuild>

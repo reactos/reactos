@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="calc" type="win32gui" installbase="system32" installname="calc.exe">
 	<include base="calc">.</include>
 	<define name="__USE_W32API" />
@@ -14,3 +16,4 @@
 	<file>winecalc.c</file>
 	<file>rsrc.rc</file>
 </module>
+</rbuild>

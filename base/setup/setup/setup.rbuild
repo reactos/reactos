@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="setup" type="win32gui" installbase="system32" installname="setup.exe">
 	<include base="setup">.</include>
 	<define name="__USE_W32API" />
@@ -9,3 +11,4 @@
 	<file>setup.c</file>
 	<file>setup.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="appwiz" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="appwiz.cpl">
 	<importlibrary definition="appwiz.def" />
 	<include base="appwiz">.</include>
@@ -14,3 +16,4 @@
 	<file>appwiz.c</file>
 	<file>appwiz.rc</file>
 </module>
+</rbuild>

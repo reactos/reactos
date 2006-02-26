@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll" allowwarnings="true">
 	<importlibrary definition="setupapi.spec.def" />
 	<include base="setupapi">.</include>
@@ -36,3 +38,4 @@
 	<file>setupapi.rc</file>
 	<file>setupapi.spec</file>
 </module>
+</rbuild>

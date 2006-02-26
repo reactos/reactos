@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shell32.spec.def" />
@@ -61,3 +63,4 @@
 	<file>shres.rc</file>
 	<file>shell32.spec</file>
 </module>
+</rbuild>

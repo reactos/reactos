@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false">
 	<importlibrary definition="sysdm.def" />
 	<include base="sysdm">.</include>
@@ -20,3 +22,4 @@
 	<file>virtmem.c</file>
 	<file>sysdm.rc</file>
 </module>
+</rbuild>

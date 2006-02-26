@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="sndvol32" type="win32gui" installbase="system32" installname="sndvol32.exe">
 	<include base="ReactOS">include/wine</include>
 	<include base="sndvol32">.</include>
@@ -20,3 +22,4 @@
 	<file>sndvol32.c</file>
 	<file>sndvol32.rc</file>
 </module>
+</rbuild>

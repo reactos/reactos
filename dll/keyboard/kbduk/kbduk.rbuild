@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbduk" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbduk.dll" allowwarnings="true">
 	<importlibrary definition="kbduk.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbduk.c</file>
 	<file>kbduk.rc</file>
 </module>
+</rbuild>

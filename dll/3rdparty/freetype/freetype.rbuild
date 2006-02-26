@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="freetype" type="kernelmodedll" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="freetype.dll" entrypoint="0" allowwarnings="true">
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
@@ -100,3 +102,4 @@
 	<file>rosglue.c</file>
 	<file>freetype.rc</file>
 </module>
+</rbuild>

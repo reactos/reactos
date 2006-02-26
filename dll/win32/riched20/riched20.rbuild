@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="riched20" type="win32dll" baseaddress="${BASEADDRESS_RICHED20}" installbase="system32" installname="riched20.dll" allowwarnings="true">
 	<importlibrary definition="riched20.spec.def" />
 	<include base="riched20">.</include>
@@ -30,3 +32,4 @@
 	<file>writer.c</file>
 	<file>riched20.spec</file>
 </module>
+</rbuild>

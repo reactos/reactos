@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ne2000" type="kernelmodedriver" installbase="system32/drivers" installname="ne2000.sys">
 	<include base="ne2000">include</include>
 	<define name="__USE_W32API" />
@@ -10,3 +12,4 @@
 	</directory>
 	<file>ne2000.rc</file>
 </module>
+</rbuild>

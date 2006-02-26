@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="devmgr" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devmgr.dll" allowwarnings="true">
 	<include base="devmgr">.</include>
 	<importlibrary definition="devmgr.spec.def" />
@@ -22,3 +24,4 @@
 	<file>devmgr.spec</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

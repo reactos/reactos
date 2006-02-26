@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="cacls" type="win32cui" installbase="system32" installname="cacls.exe" usewrc="false">
 	<include base="cacls">.</include>
 	<define name="__USE_W32API" />
@@ -13,3 +15,4 @@
 	<file>cacls.rc</file>
 	<pch>precomp.h</pch>
 </module>
+</rbuild>

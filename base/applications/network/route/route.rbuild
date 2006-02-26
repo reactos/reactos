@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="route" type="win32cui" installbase="system32" installname="route.exe">
 	<include base="route">.</include>
 	<define name="__USE_W32API" />
@@ -11,3 +12,4 @@
 	<file>route.c</file>
 	<file>route.rc</file>
 </module>
+</rbuild>

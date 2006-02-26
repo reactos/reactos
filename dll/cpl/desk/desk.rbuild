@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl">
 	<importlibrary definition="desk.def" />
 	<include base="desk">.</include>
@@ -26,3 +28,4 @@
 	<file>dibitmap.c</file>
 	<file>desk.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="wdmaud" type="win32dll" extension=".drv" baseaddress="${BASEADDRESS_WDMAUD}" installbase="system32" installname="wdmaud.drv">
 	<importlibrary definition="wdmaud.def" />
 	<include base="wdmaud">.</include>
@@ -20,3 +22,4 @@
 	<file>memtrack.c</file>
 	<file>wdmaud.rc</file>
 </module>
+</rbuild>

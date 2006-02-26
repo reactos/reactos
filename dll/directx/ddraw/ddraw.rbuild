@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll">
   <importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
@@ -43,3 +45,4 @@
 		<file>surface_thunk.c</file>
 	</directory>
 </module>
+</rbuild>

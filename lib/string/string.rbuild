@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="string" type="staticlibrary">
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="_CTYPE_DISABLE_MACROS" />
@@ -103,3 +105,4 @@
 	<file>rand.c</file>
 	<file>sscanf.c</file>
 </module>
+</rbuild>

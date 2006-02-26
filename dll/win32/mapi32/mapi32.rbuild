@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="mapi32" type="win32dll" baseaddress="${BASEADDRESS_MAPI32}" installbase="system32" installname="mapi32.dll">
 	<importlibrary definition="mapi32.spec.def" />
 	<include base="mapi32">.</include>
@@ -17,3 +19,4 @@
 	<file>util.c</file>
 	<file>mapi32.spec</file>
 </module>
+</rbuild>

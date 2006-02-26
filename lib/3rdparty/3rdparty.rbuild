@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<group>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="adns">
 	<xi:include href="adns/adns.rbuild" />
 </directory>
@@ -16,5 +16,5 @@
 <directory name="zlib">
 	<xi:include href="zlib/zlib.rbuild" />
 </directory>
-</group>
+</rbuild>
 

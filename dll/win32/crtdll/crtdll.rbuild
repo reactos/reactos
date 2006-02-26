@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" mangledsymbols="true" installbase="system32" installname="crtdll.dll">
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
@@ -19,3 +21,4 @@
 	<file>dllmain.c</file>
 	<file>crtdll.rc</file>
 </module>
+</rbuild>

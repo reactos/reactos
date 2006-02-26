@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="avtest" type="kernelmodedriver" installbase="system32/drivers" installname="avtest.sys" warnings="true">
 	<include base="avtest">.</include>
 	<include base="avtest">..</include>
@@ -6,3 +8,4 @@
 	<library>ntoskrnl</library>
 	<file>entry.c</file>
 </module>
+</rbuild>

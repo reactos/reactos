@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" allowwarnings="true">
 	<importlibrary definition="user32.def" />
 	<include base="user32">.</include>
@@ -79,3 +81,4 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<file>user32.rc</file>
 </module>
+</rbuild>

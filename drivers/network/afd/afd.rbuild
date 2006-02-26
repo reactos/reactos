@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="afd" type="kernelmodedriver" installbase="system32/drivers" installname="afd.sys">
 	<include base="afd">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>
@@ -24,3 +26,4 @@
 	</directory>
 	<file>afd.rc</file>
 </module>
+</rbuild>

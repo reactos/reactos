@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="sound" type="kernelmodedriver">
         <define name="__USE_W32API" />
 	<library>ntoskrnl</library>
@@ -11,3 +13,4 @@
 	<file>wave.c</file>
 	<file>sb16.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="wavemap" type="win32dll" baseaddress="${BASEADDRESS_WAVEMAP}" installbase="system32" installname="wavemap.dll" allowwarnings="true">
 	<importlibrary definition="msacm.spec.def" />
 	<include base="wavemap">.</include>
@@ -21,3 +23,4 @@
 	<file>wavemap.rc</file>
 	<file>msacm.spec</file>
 </module>
+</rbuild>

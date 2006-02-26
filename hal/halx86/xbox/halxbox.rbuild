@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="halxbox" type="kernelmodedll" allowwarnings="true">
 	<importlibrary definition="../../hal/hal.def" />
 	<include base="hal_generic">../include</include>
@@ -17,3 +19,4 @@
 	<file>halxbox.rc</file>
 	<pch>halxbox.h</pch>
 </module>
+</rbuild>

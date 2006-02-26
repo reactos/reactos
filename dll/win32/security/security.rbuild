@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="security" type="win32dll" baseaddress="${BASEADDRESS_SECUR32}" installbase="system32" installname="security.dll">
 	<importlibrary definition="security.def" />
 	<include base="security">.</include>
@@ -9,3 +11,4 @@
 	<library>advapi32</library>
 	<file>security.rc</file>
 </module>
+</rbuild>

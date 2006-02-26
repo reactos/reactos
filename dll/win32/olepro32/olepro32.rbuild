@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="olepro32" type="win32dll" baseaddress="${BASEADDRESS_OLEPRO32}" installbase="system32" installname="olepro32.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="olepro32.spec.def" />
@@ -16,3 +18,4 @@
 	<file>olepro32.rc</file>
 	<file>olepro32.spec</file>
 </module>
+</rbuild>

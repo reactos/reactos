@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="csrsrv" type="nativedll">
 	<importlibrary definition="csrsrv.def" />
 	<include base="csrsrv">.</include>
@@ -16,3 +18,4 @@
 	<file>wait.c</file>
 	<pch>srv.h</pch>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="usbport" type="kernelmodedriver" installbase="system32/drivers" installname="usbport.sys">
 	<importlibrary definition="usbport.def" />
 	<define name="__USE_W32API" />
@@ -19,3 +21,4 @@
 
 	<file>usbcore.rc</file>
 </module>
+</rbuild>

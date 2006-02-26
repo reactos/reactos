@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="acledit" type="win32dll" baseaddress="${BASEADDRESS_ACLEDIT}" installbase="system32" installname="acledit.dll">
 	<importlibrary definition="acledit.def" />
 	<include base="acledit">.</include>
@@ -13,3 +15,4 @@
 	<file>stubs.c</file>
 	<file>acledit.rc</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbdsk" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdsk.dll" allowwarnings="true">
 	<importlibrary definition="kbdsk.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbdsk.c</file>
 	<file>kbdsk.rc</file>
 </module>
+</rbuild>

@@ -95,12 +95,10 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<if property="KDBG" value="1">
-					<group>
 						<file>i386-dis.c</file>
 						<file>kdb_help.S</file>
 						<file>longjmp.S</file>
 						<file>setjmp.S</file>
-					</group>
 				</if>
 			</directory>
 		</if>

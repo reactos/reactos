@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <!-- Autogeneratd by Makefile.ReactOS -->
 <module name="mesa32" type="win32dll" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" allowwarnings="true">
  	<importlibrary definition="src/drivers/windows/icd/mesa.def" />
@@ -211,3 +213,4 @@
  	<file>src/drivers/windows/gdi/wmesa.c</file>
  	<file>src/drivers/windows/icd/icd.c</file>
 </module>
+</rbuild>

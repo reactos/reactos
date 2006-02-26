@@ -7,7 +7,7 @@
     <define name="_UNICODE" />
     <define name="__USE_W32API" />
     <define name="WINVER">0x0501</define>
-    <define name="_WIN32_IE>0x0600</define>
+    <define name="_WIN32_IE">0x0600</define>
     <library>comctl32</library>
     <library>ntdll</library>
     <library>shell32</library>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="comdlg32" type="win32dll" baseaddress="${BASEADDRESS_COMDLG32}" installbase="system32" installname="comdlg32.dll" allowwarnings="true" usewrc="false">
 	<importlibrary definition="comdlg32.spec.def" />
 	<include base="comdlg32">.</include>
@@ -31,3 +33,4 @@
 	<file>rsrc.rc</file>
 	<file>comdlg32.spec</file>
 </module>
+</rbuild>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="userenv" type="win32dll" baseaddress="${BASEADDRESS_USERENV}" installbase="system32" installname="userenv.dll">
 	<importlibrary definition="userenv.def" />
 	<include base="userenv">.</include>
@@ -22,3 +24,4 @@
 	<file>userenv.c</file>
 	<file>userenv.rc</file>
 </module>
+</rbuild>

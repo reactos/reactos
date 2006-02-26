@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbdur" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdur.dll" allowwarnings="true">
 	<importlibrary definition="kbdur.def" />
 	<include base="ntoskrnl">include</include>
@@ -7,3 +9,4 @@
 	<file>kbdur.c</file>
 	<file>kbdur.rc</file>
 </module>
+</rbuild>

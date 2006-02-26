@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="avifil32" type="win32dll" baseaddress="${BASEADDRESS_AVIFIL32}" installbase="system32" installname="avifil32.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="avifil32.spec.def" />
@@ -27,3 +29,4 @@
 	<file>rsrc.rc</file>
 	<file>avifil32.spec</file>
 </module>
+</rbuild>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<group>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="acledit">
 	<xi:include href="acledit/acledit.rbuild" />
 </directory>
@@ -259,4 +259,4 @@
 <directory name="wsock32">
 	<xi:include href="wsock32/wsock32.rbuild" />
 </directory>
-</group>
+</rbuild>

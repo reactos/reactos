@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="audio">
 	<xi:include href="audio/directory.rbuild" />
 </directory>
@@ -22,3 +24,4 @@
 <!--<directory name="avtest">
 	<xi:include href="avtest/avtest.rbuild" />
 </directory-->
+</rbuild>

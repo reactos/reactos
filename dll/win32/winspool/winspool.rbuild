@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="winspool" type="win32dll" extension=".drv" baseaddress="${BASEADDRESS_WINSPOOL}" installbase="system32" installname="winspool.drv">
 	<importlibrary definition="winspool.def" />
 	<include base="winspool">.</include>
@@ -12,3 +14,4 @@
 	<file>stubs.c</file>
 	<file>winspool.rc</file>
 </module>
+</rbuild>

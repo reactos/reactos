@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="netapi32" type="win32dll" baseaddress="${BASEADDRESS_NETAPI32}" installbase="system32" installname="netapi32.dll" allowwarnings="true">
 	<importlibrary definition="netapi32.spec.def" />
 	<include base="netapi32">.</include>
@@ -26,3 +28,4 @@
 	<file>wksta.c</file>
 	<file>netapi32.spec</file>
 </module>
+</rbuild>

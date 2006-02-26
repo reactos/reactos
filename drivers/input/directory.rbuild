@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="i8042prt">
 	<xi:include href="i8042prt/i8042prt.rbuild" />
 </directory>
@@ -10,3 +12,4 @@
 <directory name="sermouse">
 	<xi:include href="sermouse/sermouse.rbuild" />
 </directory>
+</rbuild>

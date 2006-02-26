@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="rosperf" type="win32cui" installbase="system32" installname="rosperf.exe">
     <include base="rosperf">.</include>
     <define name="__USE_W32API" />
@@ -17,3 +19,4 @@
     <file>testlist.c</file>
     <file>rosperf.rc</file>
 </module>
+</rbuild>

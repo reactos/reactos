@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="pcnet" type="kernelmodedriver" installbase="system32/drivers" installname="pcnet.sys">
 	<include base="pcnet">.</include>
 	<define name="NDIS50_MINIPORT" />
@@ -12,3 +14,4 @@
 	<file>requests.c</file>
 	<file>pcnet.rc</file>
 </module>
+</rbuild>

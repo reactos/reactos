@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" mangledsymbols="true" installbase="system32" installname="msvcrt.dll">
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>--enable-stdcall-fixup</linkerflag>
@@ -23,3 +25,4 @@
 	<file>dllmain.c</file>
 	<file>msvcrt.rc</file>
 </module>
+</rbuild>

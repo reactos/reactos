@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="pciidex" type="kernelmodedriver" installbase="system32/drivers" installname="pciidex.sys">
 	<importlibrary definition="pciidex.def" />
 	<define name="__USE_W32API" />
@@ -9,3 +11,4 @@
 	<file>pdo.c</file>
 	<file>pciidex.rc</file>
 </module>
+</rbuild>

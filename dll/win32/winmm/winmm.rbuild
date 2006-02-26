@@ -1,4 +1,5 @@
-<group>
+<?xml version="1.0"?>
+<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="midimap">
 	<xi:include href="midimap/midimap.rbuild" />
 </directory>
@@ -30,4 +31,4 @@
 	<file>winmm_res.rc</file>
 	<file>winmm.spec</file>
 </module>
-</group>
+</rbuild>
