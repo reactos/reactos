@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-<project name="ReactOS" makefile="makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="config.rbuild">
     <xi:fallback>
       <xi:include href="config.template.rbuild" />
