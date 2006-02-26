@@ -741,6 +741,16 @@ HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartLsass",0x000100
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartGUI",0x00010001,0x00000000
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 
+;Time Zone Servers
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","Worldwide",0x00000000,"pool.ntp.org"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","Asia",0x00000000,"asia.pool.ntp.org"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","Europe",0x00000000,"europe.pool.ntp.org"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","North America",0x00000000,"north-america.pool.ntp.org"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","Oceania",0x00000000,"oceania.pool.ntp.org"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","South America",0x00000000,"south-america.pool.ntp.org"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","1",0x00000000,"time.windows.com"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","2",0x00000000,"time.nist.gov"
+
 ; Where to download the Mozilla ActiveX control
 HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://links.reactos.org/mozactivex"
 
