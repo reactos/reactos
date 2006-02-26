@@ -73,7 +73,7 @@ enum XML_Error {
 #ifdef _MSC_VER
 #pragma warning(disable: 4786)
 
-#ifndef	_NO_COMMENT
+#ifndef _NO_COMMENT
 #ifndef _NO_EXPAT
 #ifdef XML_STATIC
 #ifndef _DEBUG
@@ -84,7 +84,7 @@ enum XML_Error {
 #endif
 #endif
 
-#ifndef _STRING_DEFINED	// _STRING_DEFINED only allowed if using xmlstorage.cpp embedded in the project
+#ifndef _STRING_DEFINED // _STRING_DEFINED only allowed if using xmlstorage.cpp embedded in the project
 #if defined(_DEBUG) && defined(_DLL)	// DEBUG version only supported with MSVCRTD
 #if _MSC_VER==1400
 #pragma comment(lib, "xmlstorage-vc8d")
@@ -116,13 +116,17 @@ enum XML_Error {
 #endif // _MSC_VER
 
 
-#include <windows.h>	// for LPCTSTR
-
 #ifdef UNICODE
 #ifndef _UNICODE
 #define _UNICODE
 #endif
+#else
+#ifdef _UNICODE
+#define UNICODE
 #endif
+#endif
+
+#include <windows.h>	// for LPCTSTR
 
 #include <tchar.h>
 #include <malloc.h>
@@ -146,29 +150,29 @@ namespace XMLStorage {
 #ifndef XS_String
 
 #ifdef XS_STRING_UTF8
-#define	XS_CHAR char
-#define	XS_TEXT(x) x
+#define XS_CHAR char
+#define XS_TEXT(x) x
 #define LPXSSTR LPSTR
 #define LPCXSSTR LPCSTR
-#define	XS_icmp stricmp
-#define	XS_nicmp strnicmp
-#define	XS_toi atoi
-#define	XS_tod strtod
-#define	XS_len strlen
-#define	XS_snprintf snprintf
-#define	XS_vsnprintf vsnprintf
+#define XS_icmp stricmp
+#define XS_nicmp strnicmp
+#define XS_toi atoi
+#define XS_tod strtod
+#define XS_len strlen
+#define XS_snprintf snprintf
+#define XS_vsnprintf vsnprintf
 #else
-#define	XS_CHAR TCHAR
-#define	XS_TEXT(x) TEXT(x)
+#define XS_CHAR TCHAR
+#define XS_TEXT(x) TEXT(x)
 #define LPXSSTR LPTSTR
 #define LPCXSSTR LPCTSTR
-#define	XS_icmp _tcsicmp
-#define	XS_nicmp _tcsnicmp
-#define	XS_toi _ttoi
-#define	XS_tod _tcstod
-#define	XS_len _tcslen
-#define	XS_snprintf _sntprintf
-#define	XS_vsnprintf _vsntprintf
+#define XS_icmp _tcsicmp
+#define XS_nicmp _tcsnicmp
+#define XS_toi _ttoi
+#define XS_tod _tcstod
+#define XS_len _tcslen
+#define XS_snprintf _sntprintf
+#define XS_vsnprintf _vsntprintf
 #endif
 
 #ifndef COUNTOF
@@ -181,7 +185,7 @@ namespace XMLStorage {
 
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
 
-#define	XS_String String
+#define XS_String String
 
 #else // _STRING_DEFINED, !XS_STRING_UTF8
 
@@ -351,7 +355,7 @@ struct FileHolder
 {
 	FileHolder(LPCTSTR path, LPCTSTR mode)
 	{
-#ifdef __STDC_WANT_SECURE_LIB__	// secure CRT functions using VS 2005
+#ifdef __STDC_WANT_SECURE_LIB__ // secure CRT functions using VS 2005
 		if (_tfopen_s(&_pfile, path, mode) != 0)
 			_pfile = NULL;
 #else
@@ -376,9 +380,9 @@ struct tifstream : public std::istream, FileHolder
 
 	tifstream(LPCTSTR path)
 	 :	super(&_buf),
-		FileHolder(path, TEXT("r")),
+		FileHolder(path, TEXT("rb")),	// binary mode is important for XMLReader::read_buffer() with MinGW libraries
 #ifdef __GNUC__
-		_buf(_pfile, ios::in)
+		_buf(_pfile, std::ios::in)
 #else
 		_buf(_pfile)
 #endif
@@ -398,7 +402,7 @@ struct tofstream : public std::ostream, FileHolder
 	 :	super(&_buf),
 		FileHolder(path, TEXT("w")),
 #ifdef __GNUC__
-		_buf(_pfile, ios::out)
+		_buf(_pfile, std::ios::out)
 #else
 		_buf(_pfile)
 #endif
@@ -480,9 +484,9 @@ struct XMLLocation
 	std::string str() const;
 
 protected:
-	const char*	_pdisplay_path;	// character pointer for fast reference
-	int	_line;
-	int	_column;
+	const char* _pdisplay_path; // character pointer for fast reference
+	int _line;
+	int _column;
 };
 #endif
 
@@ -565,16 +569,15 @@ struct XMLNode : public XS_String
 		_content(other._content),
 		_end_leading(other._end_leading),
 		_trailing(other._trailing)
+#ifdef XMLNODE_LOCATION
+		, _location(other._location)
+#endif
 	{
 		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
 			_children.push_back(new XMLNode(**it));
-
-#ifdef XMLNODE_LOCATION
-		_location = other._location;
-#endif
 	}
 
-	~XMLNode()
+	virtual ~XMLNode()
 	{
 		while(!_children.empty()) {
 			delete _children.back();
@@ -764,7 +767,7 @@ protected:
 	std::string _trailing;
 
 #ifdef XMLNODE_LOCATION
-	XMLLocation	_location;
+	XMLLocation _location;
 #endif
 
 	XMLNode* get_first_child() const
@@ -1368,10 +1371,10 @@ protected:
 };
 
 
-#define	XS_TRUE_STR XS_TEXT("true")
-#define	XS_FALSE_STR XS_TEXT("false")
-#define	XS_INTFMT_STR XS_TEXT("%d")
-#define	XS_FLOATFMT_STR XS_TEXT("%f")
+#define XS_TRUE_STR XS_TEXT("true")
+#define XS_FALSE_STR XS_TEXT("false")
+#define XS_INTFMT_STR XS_TEXT("%d")
+#define XS_FLOATFMT_STR XS_TEXT("%f")
 
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
@@ -1380,10 +1383,10 @@ extern const LPCXSSTR XS_FALSE;
 extern const LPCXSSTR XS_INTFMT;
 extern const LPCXSSTR XS_FLOATFMT;
 #else
-#define	XS_TRUE XS_TRUE_STR
-#define	XS_FALSE XS_FALSE_STR
-#define	XS_INTFMT XS_INTFMT_STR
-#define	XS_FLOATFMT XS_FLOATFMT_STR
+#define XS_TRUE XS_TRUE_STR
+#define XS_FALSE XS_FALSE_STR
+#define XS_INTFMT XS_INTFMT_STR
+#define XS_FLOATFMT XS_FLOATFMT_STR
 #endif
 
 
@@ -1766,11 +1769,11 @@ struct XMLReaderBase
 
 	XML_Status read();
 
-	std::string	get_position() const;
-	std::string	get_instructions() const {return _instructions;}
+	std::string get_position() const;
+	std::string get_instructions() const {return _instructions;}
 
 	XML_Error	get_error_code() const;
-	std::string	get_error_string() const;
+	std::string get_error_string() const;
 
 #ifdef XMLNODE_LOCATION
 	const char* _display_path;	// character pointer for fast reference in XMLLocation
@@ -1785,7 +1788,7 @@ protected:
 	XML_Parser	_parser;
 	std::string _xml_version;
 	std::string _encoding;
-	std::string	_instructions;
+	std::string _instructions;
 
 	std::string _content;
 	enum {TAG_NONE, TAG_START, TAG_END} _last_tag;
@@ -1972,7 +1975,7 @@ struct XMLDoc : public XMLNode
 	std::string _last_error_msg;
 
 #ifdef XMLNODE_LOCATION
-	std::string	_display_path;
+	std::string _display_path;
 #endif
 };
 
@@ -1992,7 +1995,7 @@ struct XMLMessage : public XMLDoc
 
 enum PRETTY_FLAGS {
 	PRETTY_PLAIN	= 0,
-	PRETTY_LINEFEED	= 1,
+	PRETTY_LINEFEED = 1,
 	PRETTY_INDENT	= 2
 };
 
@@ -2089,8 +2092,8 @@ protected:
 
 	struct StackEntry {
 		XS_String	_node_name;
-		AttrMap		_attributes;
-		std::string	_content;
+		AttrMap 	_attributes;
+		std::string _content;
 		WRITESTATE	_state;
 		bool		_children;
 
