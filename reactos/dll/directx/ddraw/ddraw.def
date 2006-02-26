@@ -1,7 +1,7 @@
 EXPORTS
 ;AcquireDDThreadLock
 ;CompleteCreateSysmemSurface
-;D3DParseUnknownCommand
+D3DParseUnknownCommand
 ;DDGetAttachedSurfaceLcl
 ;DDInternalLock
 ;DDInternalUnlock

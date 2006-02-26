@@ -11,9 +11,13 @@
 
 #include <windows.h>
 #include "rosdraw.h"
+#include "d3dhal.h"
 
 
-HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex)
+
+HRESULT 
+WINAPI 
+Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex)
 {   
     IDirectDrawImpl* This = (IDirectDrawImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawImpl));
 
@@ -36,7 +40,9 @@ HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id,
 	return This->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
 }
 
-HRESULT WINAPI DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
+HRESULT 
+WINAPI 
+DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
 {   
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
@@ -48,7 +54,9 @@ HRESULT WINAPI DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN 
 	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw, FALSE);
 }
  
-HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID id, LPUNKNOWN pUnkOuter)
+HRESULT 
+WINAPI 
+DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID id, LPUNKNOWN pUnkOuter)
 {    	
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
@@ -66,7 +74,8 @@ HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID id, LPUN
     return Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
 }
 
-HRESULT WINAPI DirectDrawEnumerateA(
+HRESULT 
+WINAPI DirectDrawEnumerateA(
   LPDDENUMCALLBACKA lpCallback, 
   LPVOID lpContext
 )
@@ -100,4 +109,54 @@ HRESULT WINAPI DirectDrawEnumerateExW(
 {
      DX_STUB;
 }
+
+/*
+   See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/
+       Display_d/hh/Display_d/d3d_21ac30ea-9803-401e-b541-6b08af79653d.xml.asp
+
+   for more info about this command 
+
+ */
+
+HRESULT WINAPI 
+D3DParseUnknownCommand( LPVOID lpvCommands, 
+                        LPVOID *lplpvReturnedCommand)
+{
+    LPD3DHAL_DP2COMMAND cmd = lpvCommands;
+
+    DWORD retCode = D3DERR_COMMAND_UNPARSED; 
+
+    *lplpvReturnedCommand = lpvCommands;
+     
+    if (cmd->bCommand > D3DDP2OP_TRIANGLESTRIP)
+    {
+        retCode = DD_FALSE;
+
+        if (cmd->bCommand == D3DDP2OP_VIEWPORTINFO)
+        {
+            /* FIXME */
+            retCode = DD_OK; 
+        }
+
+        if (cmd->bCommand == D3DDP2OP_WINFO)
+        {
+            /* FIXME */
+            retCode = DD_OK; 
+        }     
+    }
+    else if (cmd->bCommand == D3DDP2OP_TRIANGLESTRIP)  
+    {
+        /* FIXME */
+        retCode = DD_OK; 
+    }
+  
+    if ((cmd->bCommand <= D3DDP2OP_INDEXEDTRIANGLELIST) || (cmd->bCommand == D3DDP2OP_RENDERSTATE))
+    {
+        retCode = DD_FALSE;
+    }
+
+    return retCode;
+}
+
  
+
