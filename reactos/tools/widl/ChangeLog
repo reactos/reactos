@@ -1,5 +1,13 @@
 ChangeLog
 
+2006-02-27 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Move proc string offset calculation to a separate function.
+- Replace all __FUNCTION__ by __FILE__.
+
 2006-01-01 ekohl
 
    tools/widl/client.c

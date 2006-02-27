@@ -105,6 +105,16 @@ get_var_stack_offset_64(func_t *func, char *name)
 
 
 static unsigned int
+get_var_proc_offset(var_t *var)
+{
+    if (var->ptr_level == 0 && is_base_type(var->type))
+        return 2;
+
+    return 4;
+}
+
+
+static unsigned int
 get_var_type_offset(var_t *var)
 {
     unsigned int toffset = 0;
@@ -250,7 +260,7 @@ static int get_type_size(type_t *type, int alignment)
 
     default:
         error("%s:%d Unknown/unsupported type 0x%x\n",
-              __FUNCTION__,__LINE__, type->type);
+              __FILE__,__LINE__, type->type);
         return 0;
     }
 
@@ -289,7 +299,7 @@ static int get_type_alignment(type_t *type)
 
     default:
         error("%s:%d Unknown/unsupported type 0x%x\n",
-              __FUNCTION__,__LINE__, type->type);
+              __FILE__,__LINE__, type->type);
         return 0;
     }
 
@@ -356,7 +366,7 @@ static void write_procformatstring(type_t *iface)
                         print_client("0x4d,    /* FC_IN_PARAM */\n");
 
                         error("%s:%d Unknown/unsupported type 0x%x\n",
-                              __FUNCTION__,__LINE__, var->type->type);
+                              __FILE__,__LINE__, var->type->type);
                         return;
                     }
                 }
@@ -378,7 +388,7 @@ static void write_procformatstring(type_t *iface)
                 else
                 {
                     error("%s:%d Pointer level %d is not supported!\n",
-                          __FUNCTION__,__LINE__, var->ptr_level);
+                          __FILE__,__LINE__, var->ptr_level);
                     return;
                 }
 
@@ -403,7 +413,7 @@ static void write_procformatstring(type_t *iface)
         else
         {
             error("%s:%d Unknown/unsupported type 0x%x\n",
-                  __FUNCTION__,__LINE__, var->type->type);
+                  __FILE__,__LINE__, var->type->type);
             return;
         }
 
@@ -495,7 +505,7 @@ static void write_typeformatstring(type_t *iface)
                         {
 
                             error("%s:%d Unknown/unsupported type 0x%x\n",
-                                  __FUNCTION__,__LINE__, var->type->type);
+                                  __FILE__,__LINE__, var->type->type);
                             return;
                         }
                     }
@@ -596,7 +606,7 @@ static void write_typeformatstring(type_t *iface)
                                 print_client("0x%02x,          /* FC_C_WSTRING */\n", RPC_FC_C_WSTRING);
                             else
                             {
-                                error("%s: Invalid type!\n", __FUNCTION__);
+                                error("%s:%d Invalid type!\n", __FILE__, __LINE__);
                                 return;
                             }
                         }
@@ -728,7 +738,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
 
                         default:
                             error("%s:%d Unknown/unsupported type 0x%x\n",
-                                  __FUNCTION__,__LINE__, var->type->type);
+                                  __FILE__,__LINE__, var->type->type);
                             return;
                         }
 
@@ -790,7 +800,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
 
                 default:
                     error("%s:%d Unknown/unsupported type 0x%x\n",
-                          __FUNCTION__,__LINE__, var->type->type);
+                          __FILE__,__LINE__, var->type->type);
                     return;
                 }
             }
@@ -1081,7 +1091,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
 
                         default:
                             error("%s:%d Unknown/unsupported type 0x%x\n",
-                                  __FUNCTION__,__LINE__, var->type->type);
+                                  __FILE__,__LINE__, var->type->type);
                             return;
                         }
 
@@ -1176,7 +1186,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
 
                     default:
                         error("%s:%d Unknown/unsupported type 0x%x\n",
-                              __FUNCTION__,__LINE__, var->type->type);
+                              __FILE__,__LINE__, var->type->type);
                         return;
                     }
 
@@ -1346,7 +1356,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
 
                     default:
                         error("%s:%d Unknown/unsupported type 0x%x\n",
-                              __FUNCTION__,__LINE__, var->type->type);
+                              __FILE__,__LINE__, var->type->type);
                         return;
                     }
 
@@ -1417,7 +1427,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                 else
                 {
                     error("%s:%d Unknown/unsupported type 0x%x\n",
-                          __FUNCTION__,__LINE__, var->type->type);
+                          __FILE__,__LINE__, var->type->type);
                     return;
                 }
             }
@@ -1456,7 +1466,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
 
         default:
             error("%s:%d Unknown/unsupported type 0x%x\n",
-                  __FUNCTION__,__LINE__, def->type->type);
+                  __FILE__,__LINE__, def->type->type);
             return;
         }
 
@@ -1719,18 +1729,7 @@ static void write_function_stubs(type_t *iface)
             while (NEXT_LINK(var)) var = NEXT_LINK(var);
             while (var)
             {
-                switch (var->ptr_level)
-                {
-                case 0:
-                    if (is_base_type(var->type))
-                        proc_offset += 2;
-                    break;
-
-                case 1:
-                    if (is_base_type(var->type))
-                        proc_offset += 4;
-                    break;
-                }
+                proc_offset += get_var_proc_offset(var);
 
                 var = PREV_LINK(var);
             }
@@ -1916,20 +1915,7 @@ static int get_proc_format_string_size(type_t *iface)
             while (NEXT_LINK(var)) var = NEXT_LINK(var);
             while (var)
             {
-                switch (var->ptr_level)
-                {
-                case 0:
-                    if (is_base_type(var->type))
-                        size += 2;
-                    else if (var->type->type == RPC_FC_RP)
-                        size += 4;
-                    break;
-
-                case 1:
-                    if (is_base_type(var->type))
-                        size += 4;
-                    break;
-                }
+                size += get_var_proc_offset(var);
 
                 var = PREV_LINK(var);
             }
