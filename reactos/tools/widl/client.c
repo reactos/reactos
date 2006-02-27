@@ -120,25 +120,34 @@ get_var_type_offset(var_t *var)
     unsigned int toffset = 0;
     void *sizeis_attr;
     int string_attr;
+    type_t *type;
+
+    type = var->type;
 
     if (var->ptr_level == 0)
     {
-        if ((var->type->type == RPC_FC_RP) &&
-            (var->type->ref->ref->type == RPC_FC_STRUCT))
+        if (type->type == RPC_FC_RP)
         {
-            var_t *field = var->type->ref->ref->fields;
             int tsize = 9;
 
-            while (NEXT_LINK(field)) field = NEXT_LINK(field);
-            while (field)
-            {
-                tsize++;
-                field = PREV_LINK(field);
-            }
-            if (tsize % 2)
-                tsize++;
+            while (type->ref)
+                type = type->ref;
 
-            toffset += tsize;
+            if (type->type == RPC_FC_STRUCT)
+            {
+                var_t *field = type->fields;
+
+                while (NEXT_LINK(field)) field = NEXT_LINK(field);
+                while (field)
+                {
+                    tsize++;
+                    field = PREV_LINK(field);
+                }
+                if (tsize % 2)
+                    tsize++;
+
+                toffset += tsize;
+            }
         }
     }
     else if (var->ptr_level == 1)
@@ -150,20 +159,20 @@ get_var_type_offset(var_t *var)
         {
             if (string_attr)
             {
-                if (var->type->type == RPC_FC_BYTE ||
-                    var->type->type == RPC_FC_CHAR ||
-                    var->type->type == RPC_FC_WCHAR)
+                if (type->type == RPC_FC_BYTE ||
+                    type->type == RPC_FC_CHAR ||
+                    type->type == RPC_FC_WCHAR)
                     toffset += 10;
             }
             else
             {
-                if (is_base_type(var->type))
+                if (is_base_type(type))
                     toffset += 14;
             }
         }
         else
         {
-            if (is_base_type(var->type))
+            if (is_base_type(type))
                 toffset += 4;
         }
     }
@@ -467,11 +476,12 @@ static void write_typeformatstring(type_t *iface)
                     return;
                 }
 
+                type = var->type;
                 if (var->ptr_level == 0)
                 {
-                    if (!is_base_type(var->type))
+                    if (!is_base_type(type))
                     {
-                        if (var->type->type == RPC_FC_RP)
+                        if (type->type == RPC_FC_RP)
                         {
                             var_t *field;
                             int tsize = 9;
@@ -480,13 +490,16 @@ static void write_typeformatstring(type_t *iface)
                             if (!in_attr && out_attr)
                                 flags |= RPC_FC_P_ONSTACK;
 
+                            while (type->ref)
+                                type = type->ref;
+
                             print_client("0x11, 0x%02X,    /* FC_RP, [flags] */\n", flags);
                             print_client("NdrFcShort(0x%02X),\n", 0x02);
-                            print_client("0x%02X,\n", var->type->ref->ref->type);
+                            print_client("0x%02X,\n", type->type);
                             print_client("0x%02X,\n", 3); /* alignment - 1 */
-                            print_client("NdrFcShort(0x%02X),\n", get_type_size(var->type->ref->ref, 4));
+                            print_client("NdrFcShort(0x%02X),\n", get_type_size(type, 4));
 
-                            field = var->type->ref->ref->fields;
+                            field = type->fields;
                             while (NEXT_LINK(field)) field = NEXT_LINK(field);
                             while (field)
                             {
@@ -505,7 +518,7 @@ static void write_typeformatstring(type_t *iface)
                         {
 
                             error("%s:%d Unknown/unsupported type 0x%x\n",
-                                  __FILE__,__LINE__, var->type->type);
+                                  __FILE__,__LINE__, type->type);
                             return;
                         }
                     }
@@ -577,7 +590,7 @@ static void write_typeformatstring(type_t *iface)
                             print_client("0x5b,          /* FC_END */\n");
                         }
                     }
-                    else if (is_base_type(var->type))
+                    else if (is_base_type(type))
                     {
                         if (out_attr && !in_attr)
                         {
@@ -600,9 +613,9 @@ static void write_typeformatstring(type_t *iface)
 
                         if (string_attr)
                         {
-                            if (var->type->type == RPC_FC_CHAR)
+                            if (type->type == RPC_FC_CHAR)
                                 print_client("0x%02x,          /* FC_C_CSTRING */\n", RPC_FC_C_CSTRING);
-                            else if (var->type->type == RPC_FC_WCHAR)
+                            else if (type->type == RPC_FC_WCHAR)
                                 print_client("0x%02x,          /* FC_C_WSTRING */\n", RPC_FC_C_WSTRING);
                             else
                             {
@@ -646,6 +659,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
     int padding = 0, first_padding = 0;
     void *sizeis_attr;
     var_t *var;
+    type_t *type;
 
     print_client("_StubMsg.BufferLength =");
     if (func->args)
@@ -675,12 +689,14 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
             string_attr = is_attr(var->attrs, ATTR_STRING);
             sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
 
+            type = var->type;
+
             if (var->ptr_level == 1)
             {
                 if (string_attr && !sizeis_attr)
                 {
                     /* non-sized conformant string */
-                    if (var->type->type == RPC_FC_CHAR || var->type->type == RPC_FC_WCHAR)
+                    if (type->type == RPC_FC_CHAR || type->type == RPC_FC_WCHAR)
                     {
                         size = (unique_attr) ? 16 : 12;
                         alignment = 0;
@@ -697,10 +713,10 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
                 else if (!sizeis_attr && !string_attr)
                 {
                     /* simple pointers */
-                    if (is_base_type(var->type))
+                    if (is_base_type(type))
                     {
                         alignment = 0;
-                        switch (var->type->type)
+                        switch (type->type)
                         {
                         case RPC_FC_BYTE:
                         case RPC_FC_CHAR:
@@ -756,7 +772,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
             else
             {
                 alignment = 0;
-                switch (var->type->type)
+                switch (type->type)
                 {
                 case RPC_FC_BYTE:
                 case RPC_FC_CHAR:
@@ -818,7 +834,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
                 if (string_attr && !sizeis_attr)
                 {
                     /* non-sized conformant string */
-                    if (var->type->type == RPC_FC_CHAR || var->type->type == RPC_FC_WCHAR)
+                    if (type->type == RPC_FC_CHAR || type->type == RPC_FC_WCHAR)
                     {
                         first_padding = 3;
                         padding = 3;
@@ -868,29 +884,36 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
             string_attr = is_attr(var->attrs, ATTR_STRING);
             sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
 
+            type = var->type;
+
             if (in_attr)
             {
                 if (var->ptr_level == 0)
                 {
-                    if (var->type->type == RPC_FC_RP &&
-                        var->type->ref->ref->type == RPC_FC_STRUCT)
+                    if (type->type == RPC_FC_RP)
                     {
-                        print_client("NdrSimpleStructBufferSize(\n");
-                        indent++;
-                        print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
-                        print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
-                        print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
-                                     local_type_offset + 4);
-                        nothing_printed = 1;
-                        indent--;
+                        while (type->ref)
+                            type = type->ref;
+
+                        if (type->type == RPC_FC_STRUCT)
+                        {
+                            print_client("NdrSimpleStructBufferSize(\n");
+                            indent++;
+                            print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
+                            print_client("(unsigned char __RPC_FAR *)%s,\n", var->name);
+                            print_client("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
+                                         local_type_offset + 4);
+                            nothing_printed = 1;
+                            indent--;
+                        }
                     }
                 }
                 else if (var->ptr_level == 1)
                 {
                     if (string_attr)
                     {
-                        if ((var->type->type == RPC_FC_CHAR ||
-                             var->type->type == RPC_FC_WCHAR))
+                        if ((type->type == RPC_FC_CHAR ||
+                             type->type == RPC_FC_WCHAR))
                         {
                             if (ref_attr)
                             {
@@ -983,6 +1006,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
     void *sizeis_attr;
     var_t *var;
     int default_align = 0;
+    type_t *type;
 
     if (!func->args)
         return;
@@ -997,6 +1021,8 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
         /* set 'in' attribute if neither 'in' nor 'out' is set */
         if (!out_attr && !in_attr)
             in_attr = 1;
+
+        type = var->type;
 
         if (in_attr)
         {
@@ -1038,7 +1064,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                     }
                     else
                     if (string_attr &&
-                        (var->type->type == RPC_FC_CHAR || var->type->type == RPC_FC_WCHAR))
+                        (type->type == RPC_FC_CHAR || type->type == RPC_FC_WCHAR))
                     {
                         print_client("NdrConformantStringMarshall(\n");
                         indent++;
@@ -1053,7 +1079,7 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                     else
                     {
                         alignment = 0;
-                        switch (var->type->type)
+                        switch (type->type)
                         {
                         case RPC_FC_BYTE:
                         case RPC_FC_CHAR:
@@ -1145,10 +1171,10 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
             }
             else
             {
-                if (is_base_type(var->type))
+                if (is_base_type(type))
                 {
                     alignment = 0;
-                    switch (var->type->type)
+                    switch (type->type)
                     {
                     case RPC_FC_BYTE:
                     case RPC_FC_CHAR:
@@ -1218,9 +1244,12 @@ static void marshall_in_arguments(func_t *func, unsigned int *type_offset)
                         last_size = size;
                     }
                 }
-                else if (var->type->type == RPC_FC_RP)
+                else if (type->type == RPC_FC_RP)
                 {
-                    if (var->type->ref->ref->type == RPC_FC_STRUCT)
+                    while (type->ref)
+                        type = type->ref;
+
+                    if (type->type == RPC_FC_STRUCT)
                     {
                         print_client("NdrSimpleStructMarshall(\n");
                         indent++;
@@ -1255,6 +1284,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
     var_t *def;
     unsigned int local_type_offset = *type_offset;
     int default_align = 0;
+    type_t *type;
 
     def = func->def;
 
@@ -1274,6 +1304,8 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
             unique_attr = is_attr(var->attrs, ATTR_UNIQUE);
             if (ptr_attr + ref_attr + unique_attr == 0)
                 ref_attr = 1;
+
+            type = var->type;
 
             if (out_attr)
             {
@@ -1315,10 +1347,10 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                         default_align = 1;
                     }
                 }
-                else if (is_base_type(var->type))
+                else if (is_base_type(type))
                 {
                     alignment = 0;
-                    switch (var->type->type)
+                    switch (type->type)
                     {
                     case RPC_FC_BYTE:
                     case RPC_FC_CHAR:
@@ -1356,7 +1388,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
 
                     default:
                         error("%s:%d Unknown/unsupported type 0x%x\n",
-                              __FILE__,__LINE__, var->type->type);
+                              __FILE__,__LINE__, type->type);
                         return;
                     }
 
@@ -1407,9 +1439,12 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                         last_size = size;
                     }
                 }
-                else if (var->type->type == RPC_FC_RP)
+                else if (type->type == RPC_FC_RP)
                 {
-                    if (var->type->ref->ref->type == RPC_FC_STRUCT)
+                    while (type->ref)
+                        type = type->ref;
+
+                    if (type->type == RPC_FC_STRUCT)
                     {
                         fprintf(client, "\n");
                         print_client("NdrSimpleStructUnmarshall(\n");
@@ -1427,7 +1462,7 @@ static void unmarshall_out_arguments(func_t *func, unsigned int *type_offset)
                 else
                 {
                     error("%s:%d Unknown/unsupported type 0x%x\n",
-                          __FILE__,__LINE__, var->type->type);
+                          __FILE__,__LINE__, type->type);
                     return;
                 }
             }
