@@ -129,6 +129,8 @@ endif
 
 .PHONY: all
 .PHONY: clean
+.PHONY: world
+.PHONY: universe
 
 ifeq ($(ROS_AUTOMAKE),)
 ROS_AUTOMAKE=makefile.auto
@@ -362,6 +364,28 @@ PREAUTO := \
 $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) mingw
+
+world: all bootcd livecd
+
+universe:
+	$(MAKE) KDBG=1 DBG=1 \
+		ROS_AUTOMAKE=makefile-$(ARCH)-kd.auto \
+		ROS_INSTALL=reactos-$(ARCH)-kd \
+		ROS_INTERMEDIATE=obj-$(ARCH)-kd \
+		ROS_OUTPUT=output-$(ARCH)-kd \
+		world
+	$(MAKE) KDBG=0 DBG=1 \
+		ROS_AUTOMAKE=makefile-$(ARCH)-d.auto \
+		ROS_INSTALL=reactos-$(ARCH)-d \
+		ROS_INTERMEDIATE=obj-$(ARCH)-d \
+		ROS_OUTPUT=output-$(ARCH)-d \
+		world
+	$(MAKE) KDBG=0 DBG=0 \
+		ROS_AUTOMAKE=makefile-$(ARCH)-r.auto \
+		ROS_INSTALL=reactos-$(ARCH)-r \
+		ROS_INTERMEDIATE=obj-$(ARCH)-r \
+		ROS_OUTPUT=output-$(ARCH)-r \
+		world
 
 .PHONY: msvc
 msvc: $(RBUILD_TARGET)
