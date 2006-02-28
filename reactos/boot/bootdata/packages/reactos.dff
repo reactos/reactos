@@ -115,6 +115,7 @@ dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\ddraw\ddraw.dll                         1
 dll\directx\d3d8thk\d3d8thk.dll                     1
+dll\directx\devenum\devenum.dll                     1
 
 dll\keyboard\kbdbe\kbdbe.dll                        1
 dll\keyboard\kbdda\kbdda.dll                        1
@@ -147,7 +148,6 @@ dll\win32\comdlg32\comdlg32.dll                     1
 dll\win32\crtdll\crtdll.dll                         1
 dll\win32\crypt32\crypt32.dll                       1
 dll\win32\dbghelp\dbghelp.dll                       1
-dll\win32\devenum\devenum.dll                       1
 dll\win32\devmgr\devmgr.dll                         1
 dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
 dll\win32\dnsapi\dnsapi.dll                         1
