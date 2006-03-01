@@ -15,7 +15,7 @@ BEGIN
     GROUPBOX "Tij&d", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-            144, 17, 90, 12
+            144, 105, 90, 12
     LTEXT "", IDC_TIMEZONE, 4, 136, 241, 8
 END
 

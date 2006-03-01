@@ -16,7 +16,7 @@ BEGIN
              -1, 132, 2, 113, 133
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-            144, 17, 90, 12
+            144, 105, 90, 12
     LTEXT "Nuværende Tidszone:", IDC_TIMEZONE, 4, 138, 241, 8
 END
 
