@@ -9,8 +9,12 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>user32</library>
+	<library>gdi32</library>
 	<library>comctl32</library>
+	<library>ws2_32</library>
 	<library>iphlpapi</library>
+	<file>ntpclient.c</file>
+	<file>clock.c</file>
 	<file>timedate.c</file>
 	<file>timedate.rc</file>
 </module>

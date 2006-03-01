@@ -5,17 +5,10 @@
  * PURPOSE:     ReactOS Timedate Control Panel
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *               
+ *
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include "resource.h"
 #include "timedate.h"
-
-#define SERVERLISTSIZE 6
 
 typedef struct _TZ_INFO
 {
@@ -44,7 +37,7 @@ typedef struct _SERVERS
 } SERVERS;
 
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS    (1)
 
 LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
@@ -58,7 +51,7 @@ PTIMEZONE_ENTRY TimeZoneListTail = NULL;
 
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
   {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };
@@ -100,7 +93,7 @@ SetTimeZoneName(HWND hwnd)
 
   TimeZoneId = GetTimeZoneInformation(&TimeZoneInfo);
 
-  LoadString(hApplet, IDS_TIMEZONETEXT, TimeZoneText, 128);
+  LoadStringW(hApplet, IDS_TIMEZONETEXT, TimeZoneText, 128);
 
   switch (TimeZoneId)
   {
@@ -113,16 +106,16 @@ SetTimeZoneName(HWND hwnd)
       break;
 
     case TIME_ZONE_ID_UNKNOWN:
-      LoadString(hApplet, IDS_TIMEZONEUNKNOWN, TimeZoneName, 128);
+      LoadStringW(hApplet, IDS_TIMEZONEUNKNOWN, TimeZoneName, 128);
       break;
 
     case TIME_ZONE_ID_INVALID:
     default:
-      LoadString(hApplet, IDS_TIMEZONEINVALID, TimeZoneName, 128);
+      LoadStringW(hApplet, IDS_TIMEZONEINVALID, TimeZoneName, 128);
       break;
   }
 
-  wsprintf(TimeZoneString, TimeZoneText, TimeZoneName);
+  wsprintfW(TimeZoneString, TimeZoneText, TimeZoneName);
   SendDlgItemMessageW(hwnd, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneString);
 }
 
@@ -130,12 +123,25 @@ SetTimeZoneName(HWND hwnd)
 /* Property page dialog callback */
 INT_PTR CALLBACK
 DateTimePageProc(HWND hwndDlg,
-		 UINT uMsg,
-		 WPARAM wParam,
-		 LPARAM lParam)
+         UINT uMsg,
+         WPARAM wParam,
+         LPARAM lParam)
 {
   switch (uMsg)
   {
+    case WM_INITDIALOG:
+        InitClockWindowClass();
+        CreateWindowEx(0,
+                       L"ClockWndClass",
+                       L"Clock",
+                       WS_CHILD | WS_VISIBLE,
+                       208, 12, 150, 150,
+                       hwndDlg,
+                       NULL,
+                       hApplet,
+                       NULL);
+    break;
+
     case WM_NOTIFY:
       {
           LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -179,7 +185,7 @@ GetLargerTimeZoneEntry(DWORD Index)
   while (Entry != NULL)
     {
       if (Entry->Index >= Index)
-	return Entry;
+    return Entry;
 
       Entry = Entry->Next;
     }
@@ -203,10 +209,10 @@ CreateTimeZoneList(VOID)
   PTIMEZONE_ENTRY Current;
 
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
-		    0,
-		    KEY_ALL_ACCESS,
-		    &hZonesKey))
+            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
+            0,
+            KEY_ALL_ACCESS,
+            &hZonesKey))
     return;
 
   dwIndex = 0;
@@ -214,131 +220,131 @@ CreateTimeZoneList(VOID)
     {
       dwNameSize = 256;
       lError = RegEnumKeyExW(hZonesKey,
-			     dwIndex,
-			     szKeyName,
-			     &dwNameSize,
-			     NULL,
-			     NULL,
-			     NULL,
-			     NULL);
+                 dwIndex,
+                 szKeyName,
+                 &dwNameSize,
+                 NULL,
+                 NULL,
+                 NULL,
+                 NULL);
       if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
-	break;
+    break;
 
       if (RegOpenKeyExW(hZonesKey,
-			szKeyName,
-			0,
-			KEY_ALL_ACCESS,
-			&hZoneKey))
-	break;
+            szKeyName,
+            0,
+            KEY_ALL_ACCESS,
+            &hZoneKey))
+    break;
 
       Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
       if (Entry == NULL)
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
+      {
+      RegCloseKey(hZoneKey);
+      break;
+    }
 
       dwValueSize = 64 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
-			   L"Display",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->Description,
-			   &dwValueSize))
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
+               L"Display",
+               NULL,
+               NULL,
+               (LPBYTE)&Entry->Description,
+               &dwValueSize))
+    {
+      RegCloseKey(hZoneKey);
+      break;
+    }
 
       dwValueSize = 32 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
-			   L"Std",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->StandardName,
-			   &dwValueSize))
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
+               L"Std",
+               NULL,
+               NULL,
+               (LPBYTE)&Entry->StandardName,
+               &dwValueSize))
+    {
+      RegCloseKey(hZoneKey);
+      break;
+    }
 
       dwValueSize = 32 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
-			   L"Dlt",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->DaylightName,
-			   &dwValueSize))
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
+               L"Dlt",
+               NULL,
+               NULL,
+               (LPBYTE)&Entry->DaylightName,
+               &dwValueSize))
+    {
+      RegCloseKey(hZoneKey);
+      break;
+    }
 
       dwValueSize = sizeof(DWORD);
       if (RegQueryValueExW(hZoneKey,
-			   L"Index",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->Index,
-			   &dwValueSize))
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
+               L"Index",
+               NULL,
+               NULL,
+               (LPBYTE)&Entry->Index,
+               &dwValueSize))
+    {
+      RegCloseKey(hZoneKey);
+      break;
+    }
 
       dwValueSize = sizeof(TZ_INFO);
       if (RegQueryValueExW(hZoneKey,
-			   L"TZI",
-			   NULL,
-			   NULL,
-			   (LPBYTE)&Entry->TimezoneInfo,
-			   &dwValueSize))
-	{
-	  RegCloseKey(hZoneKey);
-	  break;
-	}
+               L"TZI",
+               NULL,
+               NULL,
+               (LPBYTE)&Entry->TimezoneInfo,
+               &dwValueSize))
+    {
+      RegCloseKey(hZoneKey);
+      break;
+    }
 
       RegCloseKey(hZoneKey);
 
       if (TimeZoneListHead == NULL &&
-	  TimeZoneListTail == NULL)
-	{
-	  Entry->Prev = NULL;
-	  Entry->Next = NULL;
-	  TimeZoneListHead = Entry;
-	  TimeZoneListTail = Entry;
-	}
+      TimeZoneListTail == NULL)
+    {
+      Entry->Prev = NULL;
+      Entry->Next = NULL;
+      TimeZoneListHead = Entry;
+      TimeZoneListTail = Entry;
+    }
       else
-	{
-	  Current = GetLargerTimeZoneEntry(Entry->Index);
-	  if (Current != NULL)
-	    {
-	      if (Current == TimeZoneListHead)
-		{
-		  /* Prepend to head */
-		  Entry->Prev = NULL;
-		  Entry->Next = TimeZoneListHead;
-		  TimeZoneListHead->Prev = Entry;
-		  TimeZoneListHead = Entry;
-		}
-	      else
-		{
-		  /* Insert before current */
-		  Entry->Prev = Current->Prev;
-		  Entry->Next = Current;
-		  Current->Prev->Next = Entry;
-		  Current->Prev = Entry;
-		}
-	    }
-	  else
-	    {
-	      /* Append to tail */
-	      Entry->Prev = TimeZoneListTail;
-	      Entry->Next = NULL;
-	      TimeZoneListTail->Next = Entry;
-	      TimeZoneListTail = Entry;
-	    }
-	}
+    {
+      Current = GetLargerTimeZoneEntry(Entry->Index);
+      if (Current != NULL)
+        {
+          if (Current == TimeZoneListHead)
+        {
+          /* Prepend to head */
+          Entry->Prev = NULL;
+          Entry->Next = TimeZoneListHead;
+          TimeZoneListHead->Prev = Entry;
+          TimeZoneListHead = Entry;
+        }
+          else
+        {
+          /* Insert before current */
+          Entry->Prev = Current->Prev;
+          Entry->Next = Current;
+          Current->Prev->Next = Entry;
+          Current->Prev = Entry;
+        }
+        }
+      else
+        {
+          /* Append to tail */
+          Entry->Prev = TimeZoneListTail;
+          Entry->Next = NULL;
+          TimeZoneListTail->Next = Entry;
+          TimeZoneListTail = Entry;
+        }
+    }
 
       dwIndex++;
     }
@@ -358,9 +364,9 @@ DestroyTimeZoneList(VOID)
 
       TimeZoneListHead = Entry->Next;
       if (TimeZoneListHead != NULL)
-	{
-	  TimeZoneListHead->Prev = NULL;
-	}
+    {
+      TimeZoneListHead->Prev = NULL;
+    }
 
       HeapFree(GetProcessHeap(), 0, Entry);
     }
@@ -385,21 +391,21 @@ ShowTimeZoneList(HWND hwnd)
   while (Entry != NULL)
     {
       SendMessageW(hwnd,
-		   CB_ADDSTRING,
-		   0,
-		   (LPARAM)Entry->Description);
+           CB_ADDSTRING,
+           0,
+           (LPARAM)Entry->Description);
 
       if (!wcscmp(Entry->StandardName, TimeZoneInfo.StandardName))
-	dwIndex = i;
+    dwIndex = i;
 
       i++;
       Entry = Entry->Next;
     }
 
   SendMessageW(hwnd,
-	       CB_SETCURSEL,
-	       (WPARAM)dwIndex,
-	       0);
+           CB_SETCURSEL,
+           (WPARAM)dwIndex,
+           0);
 }
 
 
@@ -412,36 +418,36 @@ SetLocalTimeZone(HWND hwnd)
   DWORD i;
 
   dwIndex = SendMessage(hwnd,
-			CB_GETCURSEL,
-			0,
-			0);
+            CB_GETCURSEL,
+            0,
+            0);
 
   i = 0;
   Entry = TimeZoneListHead;
   while (i < dwIndex)
     {
       if (Entry == NULL)
-	return;
+    return;
 
       i++;
       Entry = Entry->Next;
     }
 
   wcscpy(TimeZoneInformation.StandardName,
-	 Entry->StandardName);
+     Entry->StandardName);
   wcscpy(TimeZoneInformation.DaylightName,
-	 Entry->DaylightName);
+     Entry->DaylightName);
 
   TimeZoneInformation.Bias = Entry->TimezoneInfo.Bias;
   TimeZoneInformation.StandardBias = Entry->TimezoneInfo.StandardBias;
   TimeZoneInformation.DaylightBias = Entry->TimezoneInfo.DaylightBias;
 
   memcpy(&TimeZoneInformation.StandardDate,
-	 &Entry->TimezoneInfo.StandardDate,
-	 sizeof(SYSTEMTIME));
+     &Entry->TimezoneInfo.StandardDate,
+     sizeof(SYSTEMTIME));
   memcpy(&TimeZoneInformation.DaylightDate,
-	 &Entry->TimezoneInfo.DaylightDate,
-	 sizeof(SYSTEMTIME));
+     &Entry->TimezoneInfo.DaylightDate,
+     sizeof(SYSTEMTIME));
 
   /* Set time zone information */
   SetTimeZoneInformation(&TimeZoneInformation);
@@ -454,18 +460,18 @@ GetAutoDaylightInfo(HWND hwnd)
   HKEY hKey;
 
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
-		    0,
-		    KEY_QUERY_VALUE,
-		    &hKey))
+            L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+            0,
+            KEY_QUERY_VALUE,
+            &hKey))
     return;
 
   if (RegQueryValueExW(hKey,
-		       L"DisableAutoDaylightTimeSet",
-		       NULL,
-		       NULL,
-		       NULL,
-		       NULL))
+               L"DisableAutoDaylightTimeSet",
+               NULL,
+               NULL,
+               NULL,
+               NULL))
     {
       SendMessage(hwnd, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
     }
@@ -485,25 +491,25 @@ SetAutoDaylightInfo(HWND hwnd)
   DWORD dwValue = 1;
 
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
-		    0,
-		    KEY_SET_VALUE,
-		    &hKey))
+            L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+            0,
+            KEY_SET_VALUE,
+            &hKey))
     return;
 
   if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
     {
       RegSetValueExW(hKey,
-		     L"DisableAutoDaylightTimeSet",
-		     0,
-		     REG_DWORD,
-		     (LPBYTE)&dwValue,
-		     sizeof(DWORD));
+             L"DisableAutoDaylightTimeSet",
+             0,
+             REG_DWORD,
+             (LPBYTE)&dwValue,
+             sizeof(DWORD));
     }
   else
     {
       RegDeleteValueW(hKey,
-		      L"DisableAutoDaylightTimeSet");
+              L"DisableAutoDaylightTimeSet");
     }
 
   RegCloseKey(hKey);
@@ -513,9 +519,9 @@ SetAutoDaylightInfo(HWND hwnd)
 /* Property page dialog callback */
 INT_PTR CALLBACK
 TimeZonePageProc(HWND hwndDlg,
-		 UINT uMsg,
-		 WPARAM wParam,
-		 LPARAM lParam)
+         UINT uMsg,
+         WPARAM wParam,
+         LPARAM lParam)
 {
   switch (uMsg)
   {
@@ -578,30 +584,31 @@ CreateNTPServerList(HWND hwnd)
     LONG Ret;
     HKEY hKey;
 
-    hList = GetDlgItem(hwnd, IDC_SERVERLIST);
+    hList = GetDlgItem(hwnd,
+                       IDC_SERVERLIST);
 
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		                L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
-		                0,
-		                KEY_READ,
-		                &hKey);
+                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                        0,
+                        KEY_READ,
+                        &hKey);
     if (Ret != ERROR_SUCCESS)
         return;
 
-    while (TRUE) 
+    while (TRUE)
     {
-            ValSize = MAX_VALUE_NAME; 
-            ValName[0] = '\0'; 
-            Ret = RegEnumValue(hKey, 
-                               Index, 
-                               ValName, 
-                               &ValSize, 
-                               NULL, 
-                               NULL,
-                               (LPBYTE)Data,
-                               &dwNameSize);
- 
-            if (Ret == ERROR_SUCCESS) 
+            ValSize = MAX_VALUE_NAME;
+            ValName[0] = '\0';
+            Ret = RegEnumValueW(hKey,
+                                Index,
+                                ValName,
+                                &ValSize,
+                                NULL,
+                                NULL,
+                                (LPBYTE)Data,
+                                &dwNameSize);
+
+            if (Ret == ERROR_SUCCESS)
             {
                 if (wcscmp(ValName, L"") == 0)
                 {
@@ -610,7 +617,10 @@ CreateNTPServerList(HWND hwnd)
                 }
                 else
                 {
-                    SendMessageW(hList, CB_ADDSTRING, 0, (LPARAM)Data); 
+                    SendMessageW(hList,
+                                 CB_ADDSTRING,
+                                 0,
+                                 (LPARAM)Data);
                     Index++;
                 }
             }
@@ -621,29 +631,88 @@ CreateNTPServerList(HWND hwnd)
     if (Default < 1 || Default > Index)
         Default = 1;
 
-    SendMessage(hList, CB_SETCURSEL, --Default, 0);
+    SendMessage(hList,
+                CB_SETCURSEL,
+                --Default,
+                0);
+
+    RegCloseKey(hKey);
 
 }
 
 
-            
+VOID SetNTPServer(HWND hwnd)
+{
+    HKEY hKey;
+    HWND hList;
+    INT Sel;
+    WCHAR szSel[4];
+    LONG Ret;
+//DebugBreak();
+    hList = GetDlgItem(hwnd,
+                       IDC_SERVERLIST);
+
+    Sel = (INT)SendMessage(hList,
+                           CB_GETCURSEL,
+                           0,
+                           0);
+
+    _itow(Sel, szSel, 10);
+
+    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                        0,
+                        KEY_READ,
+                        &hKey);
+    if (Ret != ERROR_SUCCESS)
+        return;
+
+    Ret = RegSetValueExW(hKey,
+                         L"",
+                         0,
+                         REG_SZ,
+                         (LPBYTE)szSel,
+                         sizeof(szSel));
+    if (Ret == ERROR_SUCCESS)
+        MessageBox(NULL, szSel, NULL, 0);
+    else
+    {
+        WCHAR Buff[20];
+        _itow(Ret, Buff, 10);
+        //MessageBox(NULL, Buff, NULL, 0);
+    }
+
+    RegCloseKey(hKey);
+
+    
+
+}
+
+
+VOID UpdateSystemTime(HWND hwndDlg)
+{
+    //SYSTEMTIME systime;
+    CHAR Buf[BUFSIZE];
+
+    InitialiseConnection();
+    SendData();
+    RecieveData(Buf);
+    DestroyConnection();
+
+    //DateTime_SetSystemtime(hwndDlg, 0, systime);
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
 InetTimePageProc(HWND hwndDlg,
-		         UINT uMsg,
-		         WPARAM wParam,
-		         LPARAM lParam)
+                 UINT uMsg,
+                 WPARAM wParam,
+                 LPARAM lParam)
 {
-
-    HWND hCheck;
-    INT Check;
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
             CreateNTPServerList(hwndDlg);
-
 
         break;
 
@@ -651,30 +720,42 @@ InetTimePageProc(HWND hwndDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_UPDATEBUTTON:
-                    MessageBox(NULL, L"Boo!", NULL, 0);
-                    break;
-            
+                    SetNTPServer(hwndDlg);
+                    //UpdateSystemTime(hwndDlg);
+                    MessageBox(NULL, L"Not yet implemented", NULL, 0);
+                break;
+
                 case IDC_SERVERLIST:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    break;
+                break;
 
                 case IDC_AUTOSYNC:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        hCheck = GetDlgItem(hwndDlg, IDC_AUTOSYNC);
-                        Check = (INT)SendMessageW(hCheck, BM_GETCHECK, 0, 0);
-                        bSynced = (Check) ? TRUE : FALSE;
+                        HWND hCheck = GetDlgItem(hwndDlg, IDC_AUTOSYNC);
+                        //HWND hSerText = GetDlgItem(hwndDlg, IDC_SERVERTEXT);
+                        //HWND hSerList = GetDlgItem(hwndDlg, IDC_SERVERLIST);
+                        //HWND hUpdateBut = GetDlgItem(hwndDlg, IDC_UPDATEBUTTON);
+                        //HWND hSucSync = GetDlgItem(hwndDlg, IDC_SUCSYNC);
+                        //HWND hNextSync = GetDlgItem(hwndDlg, IDC_NEXTSYNC);
+
+                        INT Check = (INT)SendMessageW(hCheck, BM_GETCHECK, 0, 0);
+                        if (Check)
+                            ;//show all data
+                        else
+                            ;//hide all data
+
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
-                    break;
+                break;
             }
             break;
 
         case WM_DESTROY:
-            break;
+        break;
 
         case WM_NOTIFY:
         {
@@ -684,11 +765,8 @@ InetTimePageProc(HWND hwndDlg,
             {
                 case PSN_APPLY:
                     //DebugBreak();
-                  
-                /*  SetNTPServer(GetDlgItem(hwndDlg, IDC_SERVERLIST));
-                    SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
-                */
+                    SetNTPServer(hwndDlg);
+
                     return TRUE;
 
                 default:
@@ -745,12 +823,12 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 /* Control Panel Callback */
 LONG CALLBACK
 CPlApplet(HWND hwndCpl,
-	  UINT uMsg,
-	  LPARAM lParam1,
-	  LPARAM lParam2)
+      UINT uMsg,
+      LPARAM lParam1,
+      LPARAM lParam2)
 {
   int i = (int)lParam1;
-  
+
   switch (uMsg)
   {
     case CPL_INIT:
@@ -781,20 +859,20 @@ CPlApplet(HWND hwndCpl,
 
 BOOL STDCALL
 DllMain(HINSTANCE hinstDLL,
-	DWORD dwReason,
-	LPVOID lpReserved)
+    DWORD dwReason,
+    LPVOID lpReserved)
 {
   switch (dwReason)
   {
     case DLL_PROCESS_ATTACH:
       {
-	INITCOMMONCONTROLSEX InitControls;
+    INITCOMMONCONTROLSEX InitControls;
 
-	InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-	InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
-	InitCommonControlsEx(&InitControls);
+    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
+    InitCommonControlsEx(&InitControls);
 
-	hApplet = hinstDLL;
+    hApplet = hinstDLL;
       }
       break;
   }

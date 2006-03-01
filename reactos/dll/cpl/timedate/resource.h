@@ -20,6 +20,8 @@
 #define IDC_AUTOSYNC            123
 #define IDC_SUCSYNC             126
 #define IDC_NEXTSYNC            127
+#define IDC_SERVERTEXT          128
+#define IDC_CLOCK               129
 
 #define IDS_CPLNAME             1001
 #define IDS_CPLDESCRIPTION      1002
