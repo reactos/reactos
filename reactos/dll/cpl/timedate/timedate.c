@@ -131,11 +131,11 @@ DateTimePageProc(HWND hwndDlg,
   {
     case WM_INITDIALOG:
         InitClockWindowClass();
-        CreateWindowEx(0,
+        CreateWindowExW(0,
                        L"ClockWndClass",
                        L"Clock",
                        WS_CHILD | WS_VISIBLE,
-                       208, 12, 150, 150,
+                       208, 14, 150, 150,
                        hwndDlg,
                        NULL,
                        hApplet,
@@ -674,17 +674,17 @@ VOID SetNTPServer(HWND hwnd)
                          (LPBYTE)szSel,
                          sizeof(szSel));
     if (Ret == ERROR_SUCCESS)
-        MessageBox(NULL, szSel, NULL, 0);
+        MessageBoxW(NULL, szSel, NULL, 0);
     else
     {
         WCHAR Buff[20];
         _itow(Ret, Buff, 10);
-        //MessageBox(NULL, Buff, NULL, 0);
+        //MessageBoxW(NULL, Buff, NULL, 0);
     }
 
     RegCloseKey(hKey);
 
-    
+
 
 }
 
