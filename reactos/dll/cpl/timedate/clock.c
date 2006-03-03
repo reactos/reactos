@@ -1,4 +1,4 @@
-/* Core functions lifted from Programming Windows, Charles Petzold */
+/* Code based on clock.c from Programming Windows, Charles Petzold */
 
 #include "timedate.h"
 
@@ -9,10 +9,10 @@ static const TCHAR szClockWndClass[] = TEXT("ClockWndClass");
 
 VOID SetIsotropic(HDC hdc, INT cxClient, INT cyClient)
 {
-     SetMapMode (hdc, MM_ISOTROPIC);
-     SetWindowExtEx (hdc, 1000, 1000, NULL);
-     SetViewportExtEx (hdc, cxClient / 2, -cyClient / 2, NULL);
-     SetViewportOrgEx (hdc, cxClient / 2,  cyClient / 2, NULL);
+    /* set isotropic mode */
+     SetMapMode(hdc, MM_ISOTROPIC);
+     /* position axis in centre of window */
+     SetViewportOrgEx(hdc, cxClient / 2,  cyClient / 2, NULL);
 }
 
 VOID RotatePoint(POINT pt[], INT iNum, INT iAngle)
@@ -34,48 +34,68 @@ VOID RotatePoint(POINT pt[], INT iNum, INT iAngle)
 
 VOID DrawClock(HDC hdc)
 {
-     INT iAngle;
+     INT   iAngle;
      POINT pt[3];
 
-     for (iAngle = 0; iAngle < 360; iAngle += 6)
+     /* grey brush to fill the dots */
+     SelectObject(hdc, CreateSolidBrush(RGB(128, 128, 128)));
+
+     for(iAngle = 0; iAngle < 360; iAngle += 6)
      {
+          /* starting coords */
           pt[0].x = 0;
-          pt[0].y = 900;
-          
+          pt[0].y = 180;
+
+          /* rotate start coords */
           RotatePoint(pt, 1, iAngle);
-          
-          pt[2].x = pt[2].y = iAngle % 5 ? 33 : 100;
-          
+
+          /* determine whether it's a big dot or a little dot
+           * i.e. 1-4 or 5, 6-9 or 10, 11-14 or 15 */
+          if (iAngle % 5)
+          {
+                pt[2].x = pt[2].y = 7;
+                SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(128, 128, 128)));
+
+          }
+          else
+          {
+              pt[2].x = pt[2].y = 16;
+              SelectObject(hdc, GetStockObject(BLACK_PEN));
+          }
+
           pt[0].x -= pt[2].x / 2;
           pt[0].y -= pt[2].y / 2;
-          
+
           pt[1].x  = pt[0].x + pt[2].x;
           pt[1].y  = pt[0].y + pt[2].y;
-          
-          SelectObject(hdc, GetStockObject (BLACK_BRUSH));
-          
+
           Ellipse(hdc, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
+
      }
 }
 
 VOID DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange)
 {
-    static POINT pt[3][5] = { {{0, -150}, {100, 0}, {0, 600}, {-100, 0}, {0, -150}},
-                              {{0, -200}, { 50, 0}, {0, 800}, { -50, 0}, {0, -200}},
-                              {{0,    0}, {  0, 0}, {0,   0}, {   0, 0}, {0,  800}} };
+     static POINT pt[3][5] = { {{0, -30}, {20, 0}, {0, 100}, {-20, 0}, {0, -30}},
+                               {{0, -40}, {10, 0}, {0, 160}, {-10, 0}, {0, -40}},
+                               {{0,   0}, { 0, 0}, {0,   0}, {  0, 0}, {0, 160}} };
      INT i, iAngle[3];
      POINT ptTemp[3][5];
-     
+
+     /* Black pen for outline, white brush for fill */
+     SelectObject(hdc, GetStockObject(BLACK_PEN));
+     SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+
      iAngle[0] = (pst->wHour * 30) % 360 + pst->wMinute / 2;
      iAngle[1] =  pst->wMinute  *  6;
      iAngle[2] =  pst->wSecond  *  6;
-     
+
      memcpy(ptTemp, pt, sizeof(pt));
-     
-     for (i = fChange ? 0 : 2 ; i < 3 ; i++)
+
+     for(i = fChange ? 0 : 2; i < 3; i++)
      {
           RotatePoint(ptTemp[i], 5, iAngle[i]);
-          
+
           Polygon(hdc, ptTemp[i], 5);
      }
 }
@@ -89,7 +109,6 @@ ClockWndProc(HWND hwnd,
 {
     static INT cxClient, cyClient;
     static SYSTEMTIME stPrevious;
-    BOOL fChange;
     HDC hdc;
     PAINTSTRUCT ps;
     SYSTEMTIME st;
@@ -110,19 +129,7 @@ ClockWndProc(HWND hwnd,
         case WM_TIMER:
             GetLocalTime(&st);
 
-            fChange = st.wHour   != stPrevious.wHour ||
-                    st.wMinute != stPrevious.wMinute;
-
-            hdc = GetDC(hwnd);
-
-            SetIsotropic(hdc, cxClient, cyClient);
-
             InvalidateRect(hwnd, NULL, TRUE);
-
-            SelectObject(hdc, GetStockObject(BLACK_PEN));
-            DrawHands(hdc, &st, TRUE);
-
-            ReleaseDC(hwnd, hdc);
 
             stPrevious = st;
         break;
@@ -133,7 +140,6 @@ ClockWndProc(HWND hwnd,
             SetIsotropic(hdc, cxClient, cyClient);
 
             DrawClock(hdc);
-            SelectObject(hdc, GetStockObject(WHITE_BRUSH));
             DrawHands(hdc, &stPrevious, TRUE);
 
             EndPaint(hwnd, &ps);
