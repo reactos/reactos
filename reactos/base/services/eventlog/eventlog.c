@@ -1,10 +1,10 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/eventlog/eventlog.c
  * PURPOSE:          Event logging service
- * PROGRAMMERS:      Saveliy Tretiakov (saveliyt@mail.ru)
- *                   Eric Kohl  
+ * COPYRIGHT:        Copyright 2002 Eric Kohl
+ *                   Copyright 2005 Saveliy Tretiakov
  */
 
 
@@ -18,8 +18,11 @@ SERVICE_TABLE_ENTRY ServiceTable[2] =
   {NULL, NULL}
 };
 
+/* GLOBAL VARIABLES */
 HANDLE MyHeap = NULL;
 PLOGFILE SystemLog = NULL;
+PLOGFILE ApplicationLog = NULL;
+BOOL onLiveCD = FALSE; // On livecd events will go to debug output only
 
 VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv)
 {
@@ -51,7 +54,7 @@ VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv)
 
 int main(int argc, char *argv[])
 {
-	WCHAR SysLogPath[MAX_PATH];
+	WCHAR LogPath[MAX_PATH];
 	MyHeap = HeapCreate(0, 1024*256, 0);
 
 	if(MyHeap==NULL)
@@ -64,16 +67,36 @@ int main(int argc, char *argv[])
 	This will be fixed in near future
 	 */
 	
-	GetWindowsDirectory(SysLogPath, MAX_PATH);
-	lstrcat(SysLogPath, L"\\system32\\config\\SysEvent.evt");
-
-	SystemLog = LogfCreate(L"System", SysLogPath);
-
-	if(SystemLog == NULL)
+	GetWindowsDirectory(LogPath, MAX_PATH);
+	if(GetDriveType(LogPath) == DRIVE_CDROM)
 	{
-		DbgPrint("EventLog: FATAL ERROR, can't create %S\n", SysLogPath);
-		HeapDestroy(MyHeap);
-		return 1;
+		DPRINT("LiveCD detected\n");
+		onLiveCD = TRUE;
+	}
+	else
+	{
+		lstrcat(LogPath, L"\\system32\\config\\SysEvent.evt");
+
+		SystemLog = LogfCreate(L"System", LogPath);
+
+		if(SystemLog == NULL)
+		{
+			DbgPrint("EventLog: FATAL ERROR, can't create %S\n", LogPath);
+			HeapDestroy(MyHeap);
+			return 1;
+		}
+
+		GetWindowsDirectory(LogPath, MAX_PATH);
+		lstrcat(LogPath, L"\\system32\\config\\AppEvent.evt");
+
+		ApplicationLog = LogfCreate(L"Application", LogPath);
+
+		if(ApplicationLog == NULL)
+		{
+			DbgPrint("EventLog: FATAL ERROR, can't create %S\n", LogPath);
+			HeapDestroy(MyHeap);
+			return 1;
+		}
 	}
 
     StartServiceCtrlDispatcher(ServiceTable);

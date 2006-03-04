@@ -1,10 +1,11 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS
- * FILE:        eventlog.h
- * PURPOSE:     Event logging service
- * PROGRAMMER:  Saveliy Tretiakov (saveliyt@mail.ru)
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
+ * FILE:             services/eventlog/eventlog.h
+ * PURPOSE:          Event logging service
+ * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov            
  */
+ 
  
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
@@ -17,7 +18,9 @@
 #include <obfuncs.h>
 #include <iotypes.h>
 #include <debug.h>
+#include <pseh/pseh.h>
 #include "eventlogrpc_s.h"
+
 
 typedef struct _IO_ERROR_LPC
 {
@@ -25,8 +28,8 @@ typedef struct _IO_ERROR_LPC
     IO_ERROR_LOG_MESSAGE Message;
 } IO_ERROR_LPC, *PIO_ERROR_LPC;
 
-#define LOGHANDLE unsigned char*
-#define PLOGHANDLE int* 
+#define LOGHANDLE unsigned int
+#define PLOGHANDLE unsigned int* 
 
 #define MAJORVER 1
 #define MINORVER 1
@@ -101,6 +104,8 @@ INT LogfListItemCount();
 PLOGFILE LogfListItemByIndex(INT Index);
 
 PLOGFILE LogfListItemByName(WCHAR *Name);
+
+INT LogfListItemIndexByName(WCHAR *Name);
 
 VOID LogfListAddItem(PLOGFILE Item);
 
@@ -199,7 +204,8 @@ NTSTATUS EventLogGetOldestRec(
 	LOGHANDLE Handle,
 	unsigned long *OldestRecNumber);
 
-NTSTATUS Unknown6(handle_t BindingHandle);
+NTSTATUS EventLogChangeNotify( 
+	handle_t BindingHandle);
 
 NTSTATUS EventLogOpenW(
 	handle_t BindingHandle,
@@ -250,7 +256,9 @@ NTSTATUS EventLogReportEventW(
 	unsigned char *SID,
 	wchar_t *Strings,
 	unsigned char *Data,
-	unsigned short Flags);
+	unsigned short Flags,
+	unsigned long * unknown1,
+	unsigned long * unknown2);
 
 NTSTATUS EventLogClearA(
 	handle_t BindingHandle,
@@ -311,13 +319,18 @@ NTSTATUS EventLogReportEventA(
 	unsigned char *SID,
 	char* Strings,
 	unsigned char *Data,
-	unsigned short Flags);
+	unsigned short Flags,
+	unsigned long * unknown1,
+	unsigned long * unknown2);
 
-NTSTATUS Unknown19(handle_t BindingHandle);
+NTSTATUS EventLogRegisterClusterSvc( 
+	handle_t BindingHandle);
+	
+NTSTATUS EventLogDeregisterClusterSvc( 
+	handle_t BindingHandle);
 
-NTSTATUS Unknown20(handle_t BindingHandle);
-
-NTSTATUS Unknown21(handle_t BindingHandle);
+NTSTATUS EventLogWriteClusterEvents( 
+	handle_t BindingHandle);
 
 NTSTATUS EventLogGetInfo(
 	handle_t BindingHandle,
@@ -327,6 +340,8 @@ NTSTATUS EventLogGetInfo(
 	unsigned long BufSize,
 	unsigned long *BytesNeeded);
 
+NTSTATUS EventLogFlush( 
+	handle_t BindingHandle);
 
 
 #endif /* __EVENTLOG_H__ */

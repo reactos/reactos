@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/eventlog/rpc.c
  * PURPOSE:          Event logging service
- * PROGRAMMER:       Saveliy Tretiakov (savelity@mail.ru)
+ * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov            
  */
  
 #include "eventlog.h"
@@ -104,10 +104,11 @@ NTSTATUS EventLogGetOldestRec(
 }
 
 
-/* FIXME */
-NTSTATUS Unknown6(handle_t BindingHandle)
+/* Function 6 */
+NTSTATUS EventLogChangeNotify( 
+	handle_t BindingHandle)
 {
-    DPRINT("Unknown6() called\n");
+    DPRINT("EventLogChangeNotify UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -116,7 +117,7 @@ NTSTATUS Unknown6(handle_t BindingHandle)
 NTSTATUS EventLogOpenW(
 	handle_t BindingHandle,
 	LPWSTR ServerName,
-	wchar_t *FileName, 
+	wchar_t *LogName, 
 	wchar_t *NullStr, 
 	unsigned long MajorVer,
 	unsigned long MinorVer,
@@ -186,7 +187,9 @@ NTSTATUS EventLogReportEventW(
 	unsigned char *SID,
 	wchar_t *Strings,
 	unsigned char *Data,
-	unsigned short Flags)
+	unsigned short Flags,
+	unsigned long * unknown1,
+	unsigned long * unknown2)
 {
     DPRINT("EventLogReportEventW UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -225,8 +228,33 @@ NTSTATUS EventLogOpenA(
 	unsigned long MinorVer,
 	PLOGHANDLE Handle)
 {
-    DPRINT("EventLogOpenA UNIMPLEMENTED\n");
-    return STATUS_NOT_IMPLEMENTED;
+	UNICODE_STRING logname = {0}, servername={0};
+	NTSTATUS status;
+
+   	if(LogName && !RtlCreateUnicodeStringFromAsciiz(&logname, LogName))
+	{
+		return STATUS_NO_MEMORY;
+	}
+
+	if(ServerName && 
+		!RtlCreateUnicodeStringFromAsciiz(&servername, ServerName))
+	{
+		RtlFreeUnicodeString(&servername);
+		return STATUS_NO_MEMORY;
+	}
+
+	status = EventLogOpenW(BindingHandle,
+		servername.Buffer,
+		logname.Buffer,
+		L"",
+		MajorVer,
+		MinorVer,
+		Handle);
+
+	RtlFreeUnicodeString(&servername);
+	RtlFreeUnicodeString(&logname);
+
+    return status;
 }
 
 
@@ -289,33 +317,38 @@ NTSTATUS EventLogReportEventA(
 	unsigned char *SID,
 	char* Strings,
 	unsigned char *Data,
-	unsigned short Flags)
+	unsigned short Flags,
+	unsigned long * unknown1,
+	unsigned long * unknown2)
 {
     DPRINT("EventLogReportEventA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* FIXME */
-NTSTATUS Unknown19(handle_t BindingHandle)
+/* Function 19 */
+NTSTATUS EventLogRegisterClusterSvc( 
+	handle_t BindingHandle)
 {
-    DPRINT("Unknown19 called\n");
+    DPRINT("EventLogRegisterClusterSvc UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
+ 
 	
-	
-/* FIXME */
-NTSTATUS Unknown20(handle_t BindingHandle)
+/* Function 20 */
+NTSTATUS EventLogDeregisterClusterSvc( 
+	handle_t BindingHandle)
 {
-    DPRINT("Unknown20 called\n");
+    DPRINT("EventLogDeregisterClusterSvc UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
-/* FIXME */
-NTSTATUS Unknown21(handle_t BindingHandle)
+/* Function 21 */
+NTSTATUS EventLogWriteClusterEvents( 
+	handle_t BindingHandle)
 {
-    DPRINT("Unknown21 called\n");
+    DPRINT("EventLogWriteClusterEvents UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -332,6 +365,16 @@ NTSTATUS EventLogGetInfo(
     DPRINT("EventLogGetInfo UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
+
+
+/* Function 23 */
+NTSTATUS EventLogFlush( 
+	handle_t BindingHandle)
+{
+    DbgPrint("EventLogFlush UNIMPLEMENTED\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)

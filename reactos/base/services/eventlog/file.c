@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS
+ * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/eventlog/file.c
  * PURPOSE:          Event logging service
- * PROGRAMMER:       Saveliy Tretiakov (saveliyt@mail.ru)
+ * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov           
  */
  
 #include "eventlog.h"
@@ -204,7 +204,7 @@ PLOGFILE LogfCreate(WCHAR *LogName,
 	
     if(LogFile->hFile == INVALID_HANDLE_VALUE)
     {
-		DbgPrint("EventLog: Can't open file %S.\n", FileName);
+		DPRINT("Can't create file %S.\n", FileName);
         HeapFree(MyHeap, 0, LogFile); 
 		return NULL;
 	}
@@ -310,9 +310,29 @@ PLOGFILE LogfListItemByName(WCHAR *Name)
     return NULL;
 }
 
+/* index starting from 1 */
+INT LogfListItemIndexByName(WCHAR *Name)
+{
+    PLOGFILE Item;
+	INT i = 1;
+
+    Item = LogfListHead();
+    
+	while(Item)
+    {
+        if(Item->LogName && lstrcmpW(Item->LogName, Name)==0)
+            return i;
+        Item = (PLOGFILE)Item->Next;
+		i++;
+    }
+    
+	return 0;
+}
+
+/* index starting from 1 */
 PLOGFILE LogfListItemByIndex(INT Index)
 {
-    INT i = 0;
+    INT i = 1;
     PLOGFILE Item;
     Item = LogfListHead();
     while(Item)

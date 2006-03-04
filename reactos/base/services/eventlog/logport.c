@@ -1,10 +1,10 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
+ * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/eventlog/logport.c
  * PURPOSE:          Event logging service
- * PROGRAMMER:       Eric Kohl
- *                   Saveliy Tretiakov (saveliyt@mail.ru)
+ * COPYRIGHT:        Copyright 2002 Eric Kohl
+ *                   Copyright 2005 Saveliy Tretiakov 
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,7 +17,7 @@ HANDLE ConnectPortHandle = NULL;
 HANDLE MessagePortHandle = NULL;
 extern PLOGFILE SystemLog;
 extern HANDLE MyHeap;
-
+extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -205,7 +205,7 @@ NTSTATUS ProcessPortMessage(VOID)
 			PRINT_RECORD(pRec);
 			DPRINT("\n");
 			
-			if(SystemLog)
+			if(!onLiveCD && SystemLog)
 			{
 				if(!LogfWriteData(SystemLog, ulRecSize, (PBYTE)pRec))
 					DPRINT("LogfWriteData failed!\n");
