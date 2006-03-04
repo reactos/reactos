@@ -52,7 +52,7 @@
 
 void usage (void)
 {
-  printf ("Usage: mkhive <srcdir> <dstdir> <addinf>\n\n");
+  printf ("Usage: mkhive <srcdir> <dstdir> [addinf]\n\n");
   printf ("  srcdir  - inf files are read from this directory\n");
   printf ("  dstdir  - binary hive files are created in this directory\n");
   printf ("  addinf  - additional inf files with full path\n");

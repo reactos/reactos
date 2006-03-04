@@ -358,6 +358,37 @@ do_reg_operation(HKEY KeyHandle,
   return TRUE;
 }
 
+ULONG get_flags(PINFCONTEXT Context)
+{
+	CHAR Buffer[MAX_INF_STRING_LENGTH], *p;
+	ULONG Ret = 0;
+	
+	if (!InfHostGetStringField (Context, 4, Buffer, MAX_INF_STRING_LENGTH, NULL))
+	{
+		p = strtok(Buffer, " |");
+		while(p)
+		{
+			if(isdigit(*p))Ret|=strtol(p, NULL, 0);
+			else if(strcmp(p, "BINVALUETYPE")==0) Ret|= FLG_ADDREG_BINVALUETYPE;
+			else if(strcmp(p, "NOCLOBBER")==0) Ret|= FLG_ADDREG_NOCLOBBER;
+			else if(strcmp(p, "DELVAL")==0) Ret|= FLG_ADDREG_DELVAL;
+			else if(strcmp(p, "APPEND")==0) Ret|= FLG_ADDREG_APPEND;
+			else if(strcmp(p, "KEYONLY")==0) Ret|= FLG_ADDREG_KEYONLY;
+			else if(strcmp(p, "OVERWRITEONLY")==0) Ret|= FLG_ADDREG_OVERWRITEONLY;
+			else if(strcmp(p, "TYPE_SZ")==0) Ret|= FLG_ADDREG_TYPE_SZ;
+			else if(strcmp(p, "TYPE_MULTI_SZ")==0) Ret|= FLG_ADDREG_TYPE_MULTI_SZ;
+			else if(strcmp(p, "TYPE_EXPAND_SZ")==0) Ret|= FLG_ADDREG_TYPE_EXPAND_SZ;
+			else if(strcmp(p, "TYPE_BINARY")==0) Ret|= FLG_ADDREG_TYPE_BINARY;
+			else if(strcmp(p, "TYPE_DWORD")==0) Ret|= FLG_ADDREG_TYPE_DWORD;
+			else if(strcmp(p, "TYPE_NONE")==0) Ret|= FLG_ADDREG_TYPE_NONE;
+			else if(strcmp(p, "TYPE_MASK")==0) Ret|= FLG_ADDREG_TYPE_MASK;
+			p = strtok(NULL, " |");
+		}
+	}
+	
+	return Ret;
+}
+
 
 /***********************************************************************
  *            registry_callback
@@ -400,12 +431,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
         {
           Flags = FLG_ADDREG_DELVAL;
         }
-      else
-        {
-          /* get flags */
-          if (InfHostGetIntField (Context, 4, (PLONG)&Flags) != 0)
-            Flags = 0;
-        }
+      else Flags = get_flags(Context);
 
       DPRINT("Flags: %lx\n", Flags);
 
