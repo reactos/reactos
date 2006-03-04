@@ -4,6 +4,11 @@
 	<define name="_NO_INLINING" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
+
+	<!--	__MINGW_IMPORT needs to be defined differently because it's defined
+		as dllimport by default, which is invalid from GCC 4.1.0 on!	-->
+	<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
+
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>memchr_asm.s</file>

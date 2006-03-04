@@ -61,7 +61,7 @@ NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
 	  IoAcquireCancelSpinLock(&oldIrql);
           if (!Irp->Cancel)
 	    {
-	      IoSetCancelRoutine(Irp, NULL);
+	      (void)IoSetCancelRoutine(Irp, NULL);
               IoReleaseCancelSpinLock(oldIrql);
               return Waiter->Fcb;
             }
@@ -646,7 +646,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
 	    IoAcquireCancelSpinLock(&oldIrql);
 	    if (!tmpIrp->Cancel)
 	    {
-               IoSetCancelRoutine(tmpIrp, NULL);
+               (void)IoSetCancelRoutine(tmpIrp, NULL);
 	       Complete = TRUE;
 	    }
 	    IoReleaseCancelSpinLock(oldIrql);

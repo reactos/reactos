@@ -97,11 +97,11 @@ static DMA_OPERATIONS HalpDmaOperations = {
    (PPUT_DMA_ADAPTER)HalPutDmaAdapter,
    (PALLOCATE_COMMON_BUFFER)HalAllocateCommonBuffer,
    (PFREE_COMMON_BUFFER)HalFreeCommonBuffer,
-   (PALLOCATE_ADAPTER_CHANNEL)IoAllocateAdapterChannel,
-   (PFLUSH_ADAPTER_BUFFERS)IoFlushAdapterBuffers,
-   (PFREE_ADAPTER_CHANNEL)IoFreeAdapterChannel,
-   (PFREE_MAP_REGISTERS)IoFreeMapRegisters,
-   (PMAP_TRANSFER)IoMapTransfer,
+   NULL, /* Initialized in HalpInitDma() */
+   NULL, /* Initialized in HalpInitDma() */
+   NULL, /* Initialized in HalpInitDma() */
+   NULL, /* Initialized in HalpInitDma() */
+   NULL, /* Initialized in HalpInitDma() */
    (PGET_DMA_ALIGNMENT)HalpDmaGetDmaAlignment,
    (PREAD_DMA_COUNTER)HalReadDmaCounter,
    /* FIXME: Implement the S/G funtions. */
@@ -121,6 +121,15 @@ static DMA_OPERATIONS HalpDmaOperations = {
 VOID
 HalpInitDma(VOID)
 {
+   /*
+    * Initialize the DMA Operation table
+    */
+   HalpDmaOperations.AllocateAdapterChannel = (PALLOCATE_ADAPTER_CHANNEL)IoAllocateAdapterChannel;
+   HalpDmaOperations.FlushAdapterBuffers = (PFLUSH_ADAPTER_BUFFERS)IoFlushAdapterBuffers;
+   HalpDmaOperations.FreeAdapterChannel = (PFREE_ADAPTER_CHANNEL)IoFreeAdapterChannel;
+   HalpDmaOperations.FreeMapRegisters = (PFREE_MAP_REGISTERS)IoFreeMapRegisters;
+   HalpDmaOperations.MapTransfer = (PMAP_TRANSFER)IoMapTransfer;
+
    /*
     * Check if Extended DMA is available. We're just going to do a random
     * read and write.

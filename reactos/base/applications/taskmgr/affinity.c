@@ -41,7 +41,7 @@ void ProcessPage_OnSetAffinity(void)
         lvitem.mask = LVIF_STATE;
         lvitem.stateMask = LVIS_SELECTED;
         lvitem.iItem = Index;
-        ListView_GetItem(hProcessPageListCtrl, &lvitem);
+        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
         if (lvitem.state & LVIS_SELECTED)
             break;
     }

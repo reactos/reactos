@@ -269,12 +269,12 @@ SetListViewColumns(HWND hwndListView)
   column.cx = (rect.right - rect.left) / 3;
   column.iSubItem = 0;
   column.pszText = _T("Variable");
-  ListView_InsertColumn(hwndListView, 0, &column);
+  (void)ListView_InsertColumn(hwndListView, 0, &column);
 
   column.cx = (rect.right - rect.left) - ((rect.right - rect.left) / 3) - 1;
   column.iSubItem = 1;
   column.pszText = _T("Value");
-  ListView_InsertColumn(hwndListView, 1, &column);
+  (void)ListView_InsertColumn(hwndListView, 1, &column);
 }
 
 
@@ -292,8 +292,8 @@ OnInitDialog(HWND hwndDlg)
 			  HKEY_CURRENT_USER,
 			  _T("Environment"));
 
-  ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
-  ListView_Update(hwndListView,0);
+  (void)ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
+  (void)ListView_Update(hwndListView,0);
 
 
   /* Set system environment variables */
@@ -305,8 +305,8 @@ OnInitDialog(HWND hwndDlg)
 			  HKEY_LOCAL_MACHINE,
 			  _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"));
 
-  ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
-  ListView_Update(hwndListView,0);
+  (void)ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
+  (void)ListView_Update(hwndListView,0);
 }
 
 
@@ -427,7 +427,7 @@ OnDeleteVariable(HWND hwndDlg,
       }
     }
 
-    ListView_DeleteItem(hwndListView, iItem);
+    (void)ListView_DeleteItem(hwndListView, iItem);
   }
 }
 

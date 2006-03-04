@@ -93,7 +93,7 @@ DeleteDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         {
             case IDOK:
                 if (DoDeleteService(hDlg))
-                    ListView_DeleteItem(hListView, GetSelectedItem());
+                    (void)ListView_DeleteItem(hListView, GetSelectedItem());
 
                 DestroyIcon(hIcon);
                 EndDialog(hDlg, LOWORD(wParam));

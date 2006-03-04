@@ -151,9 +151,9 @@ STDCALL
 Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                    IN LPCSTR String);
 
-typedef NTSTATUS (STDCALL *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
-                                                IN PCANSI_STRING AnsiString,
-                                                IN BOOLEAN AllocateMemory);
+typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
+                                              IN PANSI_STRING AnsiString,
+                                              IN BOOLEAN AllocateMemory);
                                                 
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 

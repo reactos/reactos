@@ -98,6 +98,7 @@ ExfUnblockPushLock(
 //
 // Native Calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAddAtom(
@@ -106,6 +107,7 @@ NtAddAtom(
     IN OUT PRTL_ATOM Atom
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCancelTimer(
@@ -113,12 +115,14 @@ NtCancelTimer(
     OUT PBOOLEAN CurrentState OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtClearEvent(
     IN HANDLE EventHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateEvent(
@@ -129,6 +133,7 @@ NtCreateEvent(
     IN BOOLEAN InitialState
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateEventPair(
@@ -137,6 +142,7 @@ NtCreateEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateMutant(
@@ -146,6 +152,7 @@ NtCreateMutant(
     IN BOOLEAN InitialOwner
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateSemaphore(
@@ -156,6 +163,7 @@ NtCreateSemaphore(
     IN LONG MaximumCount
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateTimer(
@@ -165,18 +173,21 @@ NtCreateTimer(
     IN TIMER_TYPE TimerType
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteAtom(
     IN RTL_ATOM Atom
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDisplayString(
     IN PUNICODE_STRING DisplayString
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFindAtom(
@@ -185,6 +196,7 @@ NtFindAtom(
     OUT PRTL_ATOM Atom OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenEvent(
@@ -193,6 +205,7 @@ NtOpenEvent(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenEventPair(
@@ -201,6 +214,7 @@ NtOpenEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenMutant(
@@ -209,6 +223,7 @@ NtOpenMutant(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenSemaphore(
@@ -217,6 +232,7 @@ NtOpenSemaphore(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenTimer(
@@ -225,6 +241,7 @@ NtOpenTimer(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPulseEvent(
@@ -232,6 +249,7 @@ NtPulseEvent(
     IN PLONG PulseCount OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDefaultLocale(
@@ -239,12 +257,14 @@ NtQueryDefaultLocale(
     OUT PLCID DefaultLocaleId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDefaultUILanguage(
     PLANGID LanguageId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryEvent(
@@ -255,6 +275,7 @@ NtQueryEvent(
     OUT PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationAtom(
@@ -265,12 +286,14 @@ NtQueryInformationAtom(
     OUT PULONG ReturnLength OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInstallUILanguage(
     PLANGID LanguageId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryMutant(
@@ -281,6 +304,7 @@ NtQueryMutant(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySemaphore(
@@ -291,6 +315,7 @@ NtQuerySemaphore(
     OUT PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemEnvironmentValue(
@@ -300,6 +325,7 @@ NtQuerySystemEnvironmentValue(
     PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemInformation(
@@ -309,6 +335,7 @@ NtQuerySystemInformation(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryTimer(
@@ -319,6 +346,7 @@ NtQueryTimer(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRaiseHardError(
@@ -330,6 +358,7 @@ NtRaiseHardError(
     OUT PULONG Response
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReleaseMutant(
@@ -337,6 +366,7 @@ NtReleaseMutant(
     IN PLONG ReleaseCount OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReleaseSemaphore(
@@ -345,6 +375,7 @@ NtReleaseSemaphore(
     OUT PLONG PreviousCount
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtResetEvent(
@@ -352,6 +383,7 @@ NtResetEvent(
     OUT PLONG NumberOfWaitingThreads OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDefaultLocale(
@@ -359,18 +391,21 @@ NtSetDefaultLocale(
     IN LCID DefaultLocaleId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDefaultUILanguage(
     LANGID LanguageId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDefaultHardErrorPort(
     IN HANDLE PortHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetEvent(
@@ -378,30 +413,35 @@ NtSetEvent(
     OUT PLONG PreviousState  OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetHighEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetHighWaitLowEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLowEventPair(
     HANDLE EventPair
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLowWaitHighEventPair(
     HANDLE EventPair
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemEnvironmentValue(
@@ -409,6 +449,7 @@ NtSetSystemEnvironmentValue(
     IN PUNICODE_STRING Value
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemInformation(
@@ -417,6 +458,7 @@ NtSetSystemInformation(
     IN ULONG SystemInformationLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetTimer(
@@ -429,30 +471,35 @@ NtSetTimer(
     OUT PBOOLEAN PreviousState OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetUuidSeed(
     IN PUCHAR UuidSeed
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtShutdownSystem(
     IN SHUTDOWN_ACTION Action
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitHighEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitLowEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTraceEvent(
@@ -462,6 +509,7 @@ NtTraceEvent(
     IN PEVENT_TRACE_HEADER TraceHeader
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAddAtom(
@@ -471,6 +519,7 @@ ZwAddAtom(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCancelTimer(
@@ -479,12 +528,14 @@ ZwCancelTimer(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClearEvent(
     IN HANDLE EventHandle
 );
 
+NTSYSAPI
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -496,6 +547,7 @@ ZwCreateEvent(
     IN BOOLEAN InitialState
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateEventPair(
@@ -504,6 +556,7 @@ ZwCreateEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateMutant(
@@ -513,6 +566,7 @@ ZwCreateMutant(
     IN BOOLEAN InitialOwner
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSemaphore(
@@ -524,6 +578,7 @@ ZwCreateSemaphore(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateTimer(
@@ -534,18 +589,21 @@ ZwCreateTimer(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteAtom(
     IN RTL_ATOM Atom
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDisplayString(
     IN PUNICODE_STRING DisplayString
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFindAtom(
@@ -554,6 +612,7 @@ ZwFindAtom(
     OUT PRTL_ATOM Atom OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenEvent(
@@ -562,6 +621,7 @@ ZwOpenEvent(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenEventPair(
@@ -570,6 +630,7 @@ ZwOpenEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenMutant(
@@ -578,6 +639,7 @@ ZwOpenMutant(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSemaphore(
@@ -587,6 +649,7 @@ ZwOpenSemaphore(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenTimer(
@@ -596,6 +659,7 @@ ZwOpenTimer(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPulseEvent(
@@ -603,6 +667,7 @@ ZwPulseEvent(
     IN PLONG PulseCount OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDefaultLocale(
@@ -610,12 +675,14 @@ ZwQueryDefaultLocale(
     OUT PLCID DefaultLocaleId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDefaultUILanguage(
     PLANGID LanguageId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryEvent(
@@ -626,6 +693,7 @@ ZwQueryEvent(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationAtom(
@@ -636,12 +704,14 @@ ZwQueryInformationAtom(
     OUT PULONG ReturnLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInstallUILanguage(
     PLANGID LanguageId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMutant(
@@ -652,6 +722,7 @@ ZwQueryMutant(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySemaphore(
@@ -662,6 +733,7 @@ ZwQuerySemaphore(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemEnvironmentValue(
@@ -671,6 +743,7 @@ ZwQuerySystemEnvironmentValue(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemInformation(
@@ -680,6 +753,7 @@ ZwQuerySystemInformation(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryTimer(
@@ -690,6 +764,7 @@ ZwQueryTimer(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRaiseHardError(
@@ -701,6 +776,7 @@ ZwRaiseHardError(
     OUT PULONG Response
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseMutant(
@@ -708,6 +784,7 @@ ZwReleaseMutant(
     IN PLONG ReleaseCount OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseSemaphore(
@@ -716,6 +793,7 @@ ZwReleaseSemaphore(
     OUT PLONG PreviousCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResetEvent(
@@ -723,6 +801,7 @@ ZwResetEvent(
     OUT PLONG NumberOfWaitingThreads OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultLocale(
@@ -730,12 +809,14 @@ ZwSetDefaultLocale(
     IN LCID DefaultLocaleId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultUILanguage(
     LANGID LanguageId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultHardErrorPort(
@@ -750,30 +831,35 @@ ZwSetEvent(
     OUT PLONG PreviousState  OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetHighEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetHighWaitLowEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLowEventPair(
     HANDLE EventPair
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLowWaitHighEventPair(
     HANDLE EventPair
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemEnvironmentValue(
@@ -781,6 +867,7 @@ ZwSetSystemEnvironmentValue(
     IN PUNICODE_STRING Value
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemInformation(
@@ -790,6 +877,7 @@ ZwSetSystemInformation(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetTimer(
@@ -803,30 +891,35 @@ ZwSetTimer(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetUuidSeed(
     IN PUCHAR UuidSeed
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwShutdownSystem(
     IN SHUTDOWN_ACTION Action
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitHighEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitLowEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTraceEvent(

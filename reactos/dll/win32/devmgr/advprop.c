@@ -101,8 +101,8 @@ EnumDeviceDriverFilesCallback(IN PVOID Context,
     li.state = (li.iItem == 0 ? LVIS_SELECTED : 0);
     li.stateMask = LVIS_SELECTED;
     li.pszText = (LPWSTR)Param1;
-    ListView_InsertItem(EnumDriverFilesContext->hDriversListView,
-                        &li);
+    (void)ListView_InsertItem(EnumDriverFilesContext->hDriversListView,
+                              &li);
     return NO_ERROR;
 }
 
@@ -144,7 +144,7 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
     EnumDriverFilesContext.hDriversListView = hDriversListView;
     EnumDriverFilesContext.nCount = 0;
 
-    ListView_DeleteAllItems(EnumDriverFilesContext.hDriversListView);
+    (void)ListView_DeleteAllItems(EnumDriverFilesContext.hDriversListView);
     DriverInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
     if (FindCurrentDriver(DeviceInfoSet,
                           DeviceInfoData,
@@ -191,9 +191,9 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                                   &rcClient);
                     lvc.mask = LVCF_WIDTH;
                     lvc.cx = rcClient.right;
-                    ListView_SetColumn(hDriversListView,
-                                       0,
-                                       &lvc);
+                    (void)ListView_SetColumn(hDriversListView,
+                                             0,
+                                             &lvc);
                 }
             }
 
@@ -260,9 +260,9 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                     lvc.mask = LVCF_FMT | LVCF_WIDTH;
                     lvc.fmt = LVCFMT_LEFT;
                     lvc.cx = 0;
-                    ListView_InsertColumn(hDriversListView,
-                                          0,
-                                          &lvc);
+                    (void)ListView_InsertColumn(hDriversListView,
+                                                0,
+                                                &lvc);
 
                     UpdateDriverDetailsDlg(hwndDlg,
                                            hDriversListView,

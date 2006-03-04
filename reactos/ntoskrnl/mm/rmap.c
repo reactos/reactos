@@ -481,7 +481,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
       }
       if (Process)
       {
-         InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
+         (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
       }
    }
 }
@@ -517,7 +517,7 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
 	 }
 	 if (Process)
 	 {
-            InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
+            (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
 	 }
          return;
       }

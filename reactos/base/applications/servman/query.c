@@ -230,8 +230,8 @@ VOID InitListViewImage(VOID)
     ImageList_AddIcon(hLarge, hLgIconItem);
 
     /* assign the image to the list view */
-    ListView_SetImageList(hListView, hSmall, LVSIL_SMALL);
-    ListView_SetImageList(hListView, hLarge, LVSIL_NORMAL);
+    (void)ListView_SetImageList(hListView, hSmall, LVSIL_SMALL);
+    (void)ListView_SetImageList(hListView, hLarge, LVSIL_NORMAL);
 
 }
 
@@ -247,7 +247,7 @@ RefreshServiceList(VOID)
     DWORD Index;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
 
-    ListView_DeleteAllItems(hListView);
+    (void)ListView_DeleteAllItems(hListView);
 
     InitListViewImage();
 

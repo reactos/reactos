@@ -29,6 +29,7 @@ Author:
 //
 // Security Descriptors
 //
+NTKERNELAPI
 NTSTATUS
 NTAPI
 SeCaptureSecurityDescriptor(
@@ -39,6 +40,7 @@ SeCaptureSecurityDescriptor(
     OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 SeReleaseSecurityDescriptor(
@@ -50,6 +52,7 @@ SeReleaseSecurityDescriptor(
 //
 // Access States
 //
+NTKERNELAPI
 NTSTATUS
 NTAPI
 SeCreateAccessState(
@@ -59,6 +62,7 @@ SeCreateAccessState(
     PGENERIC_MAPPING GenericMapping
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 SeDeleteAccessState(
@@ -68,6 +72,7 @@ SeDeleteAccessState(
 //
 // Impersonation
 //
+NTKERNELAPI
 SECURITY_IMPERSONATION_LEVEL
 NTAPI
 SeTokenImpersonationLevel(
@@ -79,6 +84,7 @@ SeTokenImpersonationLevel(
 //
 // Native Calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheck(
@@ -133,12 +139,14 @@ NtAdjustPrivilegesToken(
     OUT PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateLocallyUniqueId(
     OUT LUID *LocallyUniqueId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateUuids(
@@ -148,6 +156,7 @@ NtAllocateUuids(
     PUCHAR Seed
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateToken(
@@ -265,7 +274,7 @@ NtQueryInformationToken(
     OUT PULONG ReturnLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtSetInformationToken(
@@ -275,6 +284,7 @@ NtSetInformationToken(
     IN ULONG TokenInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAccessCheck(
@@ -288,7 +298,7 @@ ZwAccessCheck(
     OUT PNTSTATUS AccessStatus
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAdjustGroupsToken(
@@ -300,7 +310,7 @@ ZwAdjustGroupsToken(
     OUT PULONG ReturnLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAdjustPrivilegesToken(
@@ -312,12 +322,14 @@ ZwAdjustPrivilegesToken(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateLocallyUniqueId(
     OUT LUID *LocallyUniqueId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateUuids(
@@ -327,6 +339,7 @@ ZwAllocateUuids(
     PUCHAR Seed
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateToken(
@@ -345,7 +358,7 @@ ZwCreateToken(
     IN PTOKEN_SOURCE TokenSource
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDuplicateToken(
@@ -357,14 +370,14 @@ ZwDuplicateToken(
     OUT PHANDLE NewTokenHandle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateAnonymousToken(
     IN HANDLE Thread
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenObjectAuditAlarm(
@@ -382,7 +395,7 @@ ZwOpenObjectAuditAlarm(
     OUT PBOOLEAN GenerateOnClose
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcessToken(
@@ -391,7 +404,7 @@ ZwOpenProcessToken(
     OUT PHANDLE TokenHandle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcessTokenEx(
@@ -401,7 +414,7 @@ ZwOpenProcessTokenEx(
     OUT PHANDLE TokenHandle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPrivilegeCheck(
@@ -410,7 +423,7 @@ ZwPrivilegeCheck(
     IN PBOOLEAN Result
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPrivilegedServiceAuditAlarm(
@@ -421,7 +434,7 @@ ZwPrivilegedServiceAuditAlarm(
     IN BOOLEAN AccessGranted
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPrivilegeObjectAuditAlarm(
@@ -433,7 +446,7 @@ ZwPrivilegeObjectAuditAlarm(
     IN BOOLEAN AccessGranted
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationToken(
@@ -444,7 +457,7 @@ ZwQueryInformationToken(
     OUT PULONG ReturnLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationToken(

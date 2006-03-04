@@ -444,7 +444,7 @@ void ProcessPage_OnViewSelectColumns(void)
     {
         for (i=Header_GetItemCount(hProcessPageHeaderCtrl)-1; i>=0; i--)
         {
-            ListView_DeleteColumn(hProcessPageListCtrl, i);
+            (void)ListView_DeleteColumn(hProcessPageListCtrl, i);
         }
 
         for (i=0; i<25; i++)

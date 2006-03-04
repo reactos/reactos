@@ -128,7 +128,7 @@ int convert(char* endp, int bufsiz, int n)
     while (bufsiz > 0) {
         *endp = *(endp - n);
         if (*endp == '\n') {
-            *endp--;
+            endp--;
             n--;
             *endp = '\r';
         }

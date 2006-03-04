@@ -75,15 +75,15 @@ InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
     int iCol = 0;
 
     /* set the list view style */
-    ListView_SetExtendedListViewStyle(hpd->hWndDevList,
-                                      LVS_EX_FULLROWSELECT);
+    (void)ListView_SetExtendedListViewStyle(hpd->hWndDevList,
+                                            LVS_EX_FULLROWSELECT);
 
     /* set the list view image list */
     if (hpd->ClassImageListData.ImageList != NULL)
     {
-        ListView_SetImageList(hpd->hWndDevList,
-                              hpd->ClassImageListData.ImageList,
-                              LVSIL_SMALL);
+        (void)ListView_SetImageList(hpd->hWndDevList,
+                                    hpd->ClassImageListData.ImageList,
+                                    LVSIL_SMALL);
     }
 
     GetClientRect(hpd->hWndDevList,
@@ -101,9 +101,9 @@ InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
     {
         lvc.cx = rcClient.right - CX_TYPECOLUMN_WIDTH -
                  GetSystemMetrics(SM_CXVSCROLL);
-        ListView_InsertColumn(hpd->hWndDevList,
-                              iCol++,
-                              &lvc);
+        (void)ListView_InsertColumn(hpd->hWndDevList,
+                                    iCol++,
+                                    &lvc);
     }
     if (LoadString(hDllInstance,
                    IDS_TYPE,
@@ -111,9 +111,9 @@ InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                    sizeof(szColName) / sizeof(szColName[0])))
     {
         lvc.cx = CX_TYPECOLUMN_WIDTH;
-        ListView_InsertColumn(hpd->hWndDevList,
-                              iCol++,
-                              &lvc);
+        (void)ListView_InsertColumn(hpd->hWndDevList,
+                                    iCol++,
+                                    &lvc);
     }
 }
 
@@ -459,8 +459,8 @@ FillDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd,
                             li.iItem = iItem;
                             li.iSubItem = 1;
 
-                            ListView_SetItem(hpd->hWndDevList,
-                                             &li);
+                            (void)ListView_SetItem(hpd->hWndDevList,
+                                                   &li);
                         }
                     }
                 }
@@ -517,7 +517,7 @@ UpdateDevicesListViewControl(IN PHARDWARE_PAGE_DATA hpd)
     }
 
     /* clear the devices list view control */
-    ListView_DeleteAllItems(hpd->hWndDevList);
+    (void)ListView_DeleteAllItems(hpd->hWndDevList);
 
     /* free the device list */
     FreeDevicesList(hpd);

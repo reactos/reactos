@@ -59,7 +59,7 @@ NpfsAddListeningServerInstance(PIRP Irp,
   IoAcquireCancelSpinLock(&oldIrql);
   if (!Irp->Cancel)
     {
-      IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
+      (void)IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
       IoReleaseCancelSpinLock(oldIrql);
       KeUnlockMutex(&Fcb->Pipe->FcbListLock);
       return STATUS_PENDING;

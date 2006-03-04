@@ -8,7 +8,8 @@
 				<define name="__USE_W32API" />
 <!--	
 				<define name="DEBUG" />
--->	
+-->
+				<define name="_NTHAL_" />
 				<compilerflag>-ffreestanding</compilerflag>
 				<compilerflag>-fno-builtin</compilerflag>
 				<compilerflag>-fno-inline</compilerflag>
@@ -53,7 +54,8 @@
 				<define name="__USE_W32API" />
 <!--	
 				<define name="DEBUG" />
--->	
+-->
+				<define name="_NTHAL_" />
 				<compilerflag>-ffreestanding</compilerflag>
 				<compilerflag>-fno-builtin</compilerflag>
 				<compilerflag>-fno-inline</compilerflag>

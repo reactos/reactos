@@ -274,7 +274,7 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
      }
    else
      {
-       IoSetCancelRoutine(Irp, NpfsReadWriteCancelRoutine);
+       (void)IoSetCancelRoutine(Irp, NpfsReadWriteCancelRoutine);
        IoReleaseCancelSpinLock(oldIrql);
        ThreadContext->WaitObjectArray[ThreadContext->Count] = Context->WaitEvent;
        ThreadContext->WaitIrpArray[ThreadContext->Count] = Irp;
@@ -371,7 +371,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	      Status = STATUS_CANCELLED;
 	      goto done;
            }
-           IoSetCancelRoutine(Irp, NpfsReadWriteCancelRoutine);
+           (void)IoSetCancelRoutine(Irp, NpfsReadWriteCancelRoutine);
            IoReleaseCancelSpinLock(oldIrql);
 	   ExReleaseFastMutex(&Fcb->DataListLock);
            IoMarkIrpPending(Irp);

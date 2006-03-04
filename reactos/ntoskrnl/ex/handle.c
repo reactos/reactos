@@ -616,10 +616,10 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
       (cure - 1)->u2.NextFreeTableEntry = -1;
 
       /* save the pointers to the allocated list(s) */
-      InterlockedExchangePointer(&nmtbl[mli], ntbl);
+      (void)InterlockedExchangePointer(&nmtbl[mli], ntbl);
       if(AllocatedMtbl)
       {
-        InterlockedExchangePointer(&HandleTable->Table[tli], nmtbl);
+        (void)InterlockedExchangePointer(&HandleTable->Table[tli], nmtbl);
       }
 
       /* increment the NextIndexNeedingPool to the next index where we need to
@@ -651,7 +651,7 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
   /* automatically unlock the entry if currently locked. We however don't notify
      anyone who waited on the handle because we're holding an exclusive lock after
      all and these locks will fail then */
-  InterlockedExchangePointer(&Entry->u1.Object, NULL);
+  (void)InterlockedExchangePointer(&Entry->u1.Object, NULL);
   Entry->u2.NextFreeTableEntry = HandleTable->FirstFreeTableEntry;
   HandleTable->FirstFreeTableEntry = Handle;
 
@@ -762,8 +762,8 @@ ExUnlockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
   New = Current & ~EX_HANDLE_ENTRY_LOCKED;
 
-  InterlockedExchangePointer(&Entry->u1.Object,
-                             (PVOID)New);
+  (void)InterlockedExchangePointer(&Entry->u1.Object,
+                                   (PVOID)New);
 
   /* we unlocked the entry, pulse the contention event so threads who're waiting
      on the release can continue */

@@ -88,7 +88,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
 
         case ID_TOOLBAR_TEST:
         {
-            hWndClient = CreateWindowEx(0,
+            hWndClient = CreateWindowEx(WS_EX_TOOLWINDOW,
                                         TEXT("BUTTON"),
                                         TEXT("Test Button"),
                                         WS_CHILD | WS_VISIBLE,

@@ -53,6 +53,7 @@ NtAllocateVirtualMemory(
     IN ULONG Protect
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreatePagingFile(
@@ -75,6 +76,7 @@ NtCreateSection(
     IN HANDLE FileHandle OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtExtendSection(
@@ -82,6 +84,7 @@ NtExtendSection(
     IN PLARGE_INTEGER NewMaximumSize
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushVirtualMemory(
@@ -101,6 +104,7 @@ NtFreeVirtualMemory(
     IN ULONG FreeType
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLockVirtualMemory(
@@ -110,6 +114,7 @@ NtLockVirtualMemory(
     PULONG NumberOfBytesLocked
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMapViewOfSection(
@@ -125,6 +130,7 @@ NtMapViewOfSection(
     IN ULONG AccessProtection
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenSection(
@@ -133,6 +139,7 @@ NtOpenSection(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtProtectVirtualMemory(
@@ -143,6 +150,7 @@ NtProtectVirtualMemory(
     OUT PULONG OldAccessProtection
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySection(
@@ -153,6 +161,7 @@ NtQuerySection(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryVirtualMemory(
@@ -164,6 +173,7 @@ NtQueryVirtualMemory(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadVirtualMemory(
@@ -174,6 +184,7 @@ NtReadVirtualMemory(
     OUT PULONG NumberOfBytesRead
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnlockVirtualMemory(
@@ -183,6 +194,7 @@ NtUnlockVirtualMemory(
     OUT PULONG NumberOfBytesUnlocked OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnmapViewOfSection(
@@ -190,6 +202,7 @@ NtUnmapViewOfSection(
     IN PVOID BaseAddress
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWriteVirtualMemory(
@@ -200,7 +213,7 @@ NtWriteVirtualMemory(
     OUT PULONG NumberOfBytesWritten
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateVirtualMemory(
@@ -212,6 +225,7 @@ ZwAllocateVirtualMemory(
     IN ULONG Protect
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreatePagingFile(
@@ -221,7 +235,7 @@ ZwCreatePagingFile(
     IN ULONG Reserved
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSection(
@@ -234,6 +248,7 @@ ZwCreateSection(
     IN HANDLE FileHandle OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwExtendSection(
@@ -241,7 +256,7 @@ ZwExtendSection(
     IN PLARGE_INTEGER NewMaximumSize
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFreeVirtualMemory(
@@ -251,6 +266,7 @@ ZwFreeVirtualMemory(
     IN ULONG FreeType
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockVirtualMemory(
@@ -285,6 +301,7 @@ ZwOpenSection(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwProtectVirtualMemory(
@@ -295,6 +312,7 @@ ZwProtectVirtualMemory(
     OUT PULONG OldAccessProtection
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySection(
@@ -305,6 +323,7 @@ ZwQuerySection(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryVirtualMemory(
@@ -316,6 +335,7 @@ ZwQueryVirtualMemory(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadVirtualMemory(
@@ -326,6 +346,7 @@ ZwReadVirtualMemory(
     OUT PULONG NumberOfBytesRead
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnlockVirtualMemory(
@@ -343,6 +364,7 @@ ZwUnmapViewOfSection(
     IN PVOID BaseAddress
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteVirtualMemory(

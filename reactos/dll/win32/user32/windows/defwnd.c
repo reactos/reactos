@@ -53,9 +53,9 @@ InitStockObjects(void)
   if(SysBrushes[0] == NULL)
   {
     /* only initialize once */
-    NtUserGetSysColors(SysColors, NUM_SYSCOLORS);
-    NtUserGetSysColorPens(SysPens, NUM_SYSCOLORS);
-    NtUserGetSysColorBrushes(SysBrushes, NUM_SYSCOLORS);
+    (void)NtUserGetSysColors(SysColors, NUM_SYSCOLORS);
+    (void)NtUserGetSysColorPens(SysPens, NUM_SYSCOLORS);
+    (void)NtUserGetSysColorBrushes(SysBrushes, NUM_SYSCOLORS);
   }
 }
 
@@ -130,7 +130,7 @@ SetSysColors(
     if(Ret)
     {
       /* FIXME - just change it in the usermode structure, too, instead of asking win32k again */
-      NtUserGetSysColors(SysColors, NUM_SYSCOLORS);
+      (void)NtUserGetSysColors(SysColors, NUM_SYSCOLORS);
     }
   }
   else
@@ -528,7 +528,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     }
 
   SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
-  NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
+  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
   if (GetCapture() != hwnd) SetCapture( hwnd );
 
   if (Style & WS_CHILD)
@@ -675,7 +675,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
-  NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
+  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
 

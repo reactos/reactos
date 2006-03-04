@@ -161,7 +161,7 @@ PsaEnumerateProcessesAndThreads(IN PPROC_ENUM_ROUTINE ProcessCallback,
                                 IN PTHREAD_ENUM_ROUTINE ThreadCallback,
                                 IN OUT PVOID ThreadCallbackContext)
 {
-  PSYSTEM_PROCESS_INFORMATION pInfoBuffer;
+  PSYSTEM_PROCESS_INFORMATION pInfoBuffer = NULL;
   NTSTATUS Status;
 
   if(ProcessCallback == NULL && ThreadCallback == NULL)

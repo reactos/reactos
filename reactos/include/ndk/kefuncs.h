@@ -254,6 +254,7 @@ KeRaiseUserException(
 //
 // Native Calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtContinue(
@@ -261,6 +262,7 @@ NtContinue(
     IN BOOLEAN TestAlert
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCallbackReturn(
@@ -269,6 +271,7 @@ NtCallbackReturn(
     NTSTATUS Status
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateProfile(
@@ -283,6 +286,7 @@ NtCreateProfile(
     IN KAFFINITY ProcessorMask
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDelayExecution(
@@ -290,6 +294,7 @@ NtDelayExecution(
     IN LARGE_INTEGER *Interval
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushInstructionCache(
@@ -298,6 +303,7 @@ NtFlushInstructionCache(
     IN ULONG NumberOfBytesToFlush
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetContextThread(
@@ -305,12 +311,14 @@ NtGetContextThread(
     OUT PCONTEXT Context
 );
 
+NTSYSCALLAPI
 ULONG
 NTAPI
 NtGetTickCount(
     VOID
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryIntervalProfile(
@@ -318,6 +326,7 @@ NtQueryIntervalProfile(
     OUT PULONG Interval
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryPerformanceCounter(
@@ -325,12 +334,14 @@ NtQueryPerformanceCounter(
     IN PLARGE_INTEGER Frequency
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemTime(
     OUT PLARGE_INTEGER CurrentTime
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryTimerResolution(
@@ -339,6 +350,7 @@ NtQueryTimerResolution(
     OUT PULONG ActualResolution
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueueApcThread(
@@ -349,6 +361,7 @@ NtQueueApcThread(
     PVOID SystemArgument2
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRaiseException(
@@ -357,6 +370,7 @@ NtRaiseException(
     IN BOOLEAN SearchFrames
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetContextThread(
@@ -364,6 +378,7 @@ NtSetContextThread(
     IN PCONTEXT Context
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetIntervalProfile(
@@ -371,6 +386,7 @@ NtSetIntervalProfile(
     KPROFILE_SOURCE ClockSource
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLdtEntries(
@@ -380,6 +396,7 @@ NtSetLdtEntries(
     LDT_ENTRY LdtEntry2
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemTime(
@@ -387,6 +404,7 @@ NtSetSystemTime(
     IN PLARGE_INTEGER NewSystemTime OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetTimerResolution(
@@ -395,24 +413,28 @@ NtSetTimerResolution(
     OUT PULONG ActualResolution
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtStartProfile(
     IN HANDLE ProfileHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtStopProfile(
     IN HANDLE ProfileHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTestAlert(
     VOID
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtVdmControl(
@@ -420,6 +442,7 @@ NtVdmControl(
     PVOID ControlData
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtW32Call(
@@ -430,12 +453,14 @@ NtW32Call(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtYieldExecution(
     VOID
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwContinue(
@@ -443,6 +468,7 @@ ZwContinue(
     IN BOOLEAN TestAlert
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCallbackReturn(
@@ -451,6 +477,7 @@ ZwCallbackReturn(
     NTSTATUS Status
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateProfile(
@@ -465,6 +492,7 @@ ZwCreateProfile(
     IN KAFFINITY ProcessorMask
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDelayExecution(
@@ -472,6 +500,7 @@ ZwDelayExecution(
     IN LARGE_INTEGER *Interval
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushInstructionCache(
@@ -480,6 +509,7 @@ ZwFlushInstructionCache(
     IN ULONG NumberOfBytesToFlush
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwGetContextThread(
@@ -487,12 +517,14 @@ ZwGetContextThread(
     OUT PCONTEXT Context
 );
 
+NTSYSAPI
 ULONG
 NTAPI
 ZwGetTickCount(
     VOID
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryIntervalProfile(
@@ -500,6 +532,7 @@ ZwQueryIntervalProfile(
     OUT PULONG Interval
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryPerformanceCounter(
@@ -507,12 +540,14 @@ ZwQueryPerformanceCounter(
     IN PLARGE_INTEGER Frequency
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemTime(
     OUT PLARGE_INTEGER CurrentTime
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryTimerResolution(
@@ -521,6 +556,7 @@ ZwQueryTimerResolution(
     OUT PULONG ActualResolution
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueueApcThread(
@@ -531,6 +567,7 @@ ZwQueueApcThread(
     PVOID SystemArgument2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRaiseException(
@@ -539,6 +576,7 @@ ZwRaiseException(
     IN BOOLEAN SearchFrames
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetContextThread(
@@ -546,6 +584,7 @@ ZwSetContextThread(
     IN PCONTEXT Context
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetIntervalProfile(
@@ -553,6 +592,7 @@ ZwSetIntervalProfile(
     KPROFILE_SOURCE ClockSource
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLdtEntries(
@@ -562,6 +602,7 @@ ZwSetLdtEntries(
     LDT_ENTRY LdtEntry2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemTime(
@@ -569,6 +610,7 @@ ZwSetSystemTime(
     IN PLARGE_INTEGER NewSystemTime OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetTimerResolution(
@@ -577,24 +619,28 @@ ZwSetTimerResolution(
     OUT PULONG ActualResolution
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStartProfile(
     IN HANDLE ProfileHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStopProfile(
     IN HANDLE ProfileHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTestAlert(
     VOID
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwVdmControl(
@@ -602,6 +648,7 @@ ZwVdmControl(
     PVOID ControlData
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwW32Call(
@@ -612,6 +659,7 @@ ZwW32Call(
     OUT PULONG ResultLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwYieldExecution(

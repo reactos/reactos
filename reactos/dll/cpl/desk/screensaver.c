@@ -172,7 +172,7 @@ void AddListViewItems2()
     dummy.iSubItem  = 0;
     dummy.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
     
-    ListView_InsertColumn(g_hScreengroundList, 0, &dummy);
+    (void)ListView_InsertColumn(g_hScreengroundList, 0, &dummy);
 
     /* Add the "None" item */
     ScreenSaverItem = &g_ScreenSaverItems[g_ScreenlistViewItemCount];
@@ -192,7 +192,7 @@ void AddListViewItems2()
     listItem.iItem      = g_ScreenlistViewItemCount;
     listItem.lParam     = g_ScreenlistViewItemCount;
     
-    ListView_InsertItem(g_hScreengroundList, &listItem);
+    (void)ListView_InsertItem(g_hScreengroundList, &listItem);
     ListView_SetItemState(g_hScreengroundList, g_ScreenlistViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
     g_ScreenlistViewItemCount++;
@@ -216,7 +216,7 @@ void AddListViewItems2()
             if(i++ == 0)
             {
                 g_hScreenShellImageList = himl;
-                ListView_SetImageList(g_hScreengroundList, himl, LVSIL_SMALL);
+                (void)ListView_SetImageList(g_hScreengroundList, himl, LVSIL_SMALL);
             }
 
             ScreenSaverItem = &g_ScreenSaverItems[g_ScreenlistViewItemCount];
@@ -234,7 +234,7 @@ void AddListViewItems2()
             listItem.iItem      = g_ScreenlistViewItemCount;
             listItem.lParam     = g_ScreenlistViewItemCount;
 
-            ListView_InsertItem(g_hScreengroundList, &listItem);
+            (void)ListView_InsertItem(g_hScreengroundList, &listItem);
             ListView_SetItemState(g_hScreengroundList, g_ScreenlistViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
             g_ScreenlistViewItemCount++;
@@ -276,7 +276,7 @@ void AddListViewItems2()
             if(i++ == 0)
             {
                 g_hScreenShellImageList = himl;
-                ListView_SetImageList(g_hScreengroundList, himl, LVSIL_SMALL);
+                (void)ListView_SetImageList(g_hScreengroundList, himl, LVSIL_SMALL);
             }
 
             ScreenSaverItem = &g_ScreenSaverItems[g_ScreenlistViewItemCount];
@@ -294,7 +294,7 @@ void AddListViewItems2()
             listItem.iItem      = g_ScreenlistViewItemCount;
             listItem.lParam     = g_ScreenlistViewItemCount;
             
-            ListView_InsertItem(g_hScreengroundList, &listItem);
+            (void)ListView_InsertItem(g_hScreengroundList, &listItem);
             
             g_ScreenlistViewItemCount++;
         }

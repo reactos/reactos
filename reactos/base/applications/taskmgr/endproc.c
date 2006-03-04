@@ -42,7 +42,7 @@ void ProcessPage_OnEndProcess(void)
         lvitem.stateMask = LVIS_SELECTED;
         lvitem.iItem = Index;
 
-        ListView_GetItem(hProcessPageListCtrl, &lvitem);
+        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
 
         if (lvitem.state & LVIS_SELECTED)
             break;
@@ -94,7 +94,7 @@ void ProcessPage_OnEndProcessTree(void)
         lvitem.stateMask = LVIS_SELECTED;
         lvitem.iItem = Index;
 
-        ListView_GetItem(hProcessPageListCtrl, &lvitem);
+        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
 
         if (lvitem.state & LVIS_SELECTED)
             break;

@@ -72,10 +72,10 @@ ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
          * subtract it from our clip rect because we don't
          * use icons in this list control.
          */
-        ListView_GetItemRect(hWnd, 0, &rcClip, LVIR_BOUNDS);
-        ListView_GetItemRect(hWnd, ListView_GetItemCount(hWnd) - 1, &rcItem, LVIR_BOUNDS);
+        (void)ListView_GetItemRect(hWnd, 0, &rcClip, LVIR_BOUNDS);
+        (void)ListView_GetItemRect(hWnd, ListView_GetItemCount(hWnd) - 1, &rcItem, LVIR_BOUNDS);
         rcClip.bottom = rcItem.bottom;
-        ListView_GetItemRect(hWnd, 0, &rcItem, LVIR_ICON);
+        (void)ListView_GetItemRect(hWnd, 0, &rcItem, LVIR_ICON);
         rcClip.left = rcItem.right;
 
         /*

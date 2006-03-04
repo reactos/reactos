@@ -15,16 +15,7 @@
 
 /* GLOBALS ******************************************************************/
 
-/* GCC s^H can't handle static initializers to APIs, so we have to hack this */
-NTSTATUS
-NTAPI
-RtlAnsiStringToUnicodeString(
-    PUNICODE_STRING DestinationString,
-    PCANSI_STRING SourceString,
-    BOOLEAN AllocateDestinationString
-);
-
-PRTL_CONVERT_STRING Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
+PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 
 /* FUNCTIONS ****************************************************************/
 

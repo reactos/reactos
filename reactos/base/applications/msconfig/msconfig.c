@@ -28,37 +28,37 @@ BOOL OnCreate(HWND hWnd)
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 0, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 0, &item);
 
 	LoadString(hInst, IDS_TAB_SYSTEM, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 1, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 1, &item);
 
 	LoadString(hInst, IDS_TAB_FREELDR, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 2, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 2, &item);
 
 	LoadString(hInst, IDS_TAB_SERVICES, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 3, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 3, &item);
 
 	LoadString(hInst, IDS_TAB_STARTUP, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 4, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 4, &item);
 
 	LoadString(hInst, IDS_TAB_TOOLS, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 5, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 5, &item);
 
     MsConfig_OnTabWndSelChange();
 

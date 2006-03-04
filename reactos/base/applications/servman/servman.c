@@ -220,7 +220,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (hListView == NULL)
                 MessageBox(hwnd, _T("Could not create List View."), _T("Error"), MB_OK | MB_ICONERROR);
 
-            ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT |
+            (void)ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT |
                     /*LVS_EX_GRIDLINES |*/ LVS_EX_HEADERDRAGDROP);
 
             lvc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
@@ -234,7 +234,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(hInstance, IDS_FIRSTCOLUMN, szTemp,
                 sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
-            ListView_InsertColumn(hListView, 0, &lvc);
+            (void)ListView_InsertColumn(hListView, 0, &lvc);
 
             /* description */
             lvc.iSubItem = 1;
@@ -242,7 +242,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(hInstance, IDS_SECONDCOLUMN, szTemp,
                 sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
-            ListView_InsertColumn(hListView, 1, &lvc);
+            (void)ListView_InsertColumn(hListView, 1, &lvc);
 
             /* status */
             lvc.iSubItem = 2;
@@ -250,7 +250,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(hInstance, IDS_THIRDCOLUMN, szTemp,
                 sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
-            ListView_InsertColumn(hListView, 2, &lvc);
+            (void)ListView_InsertColumn(hListView, 2, &lvc);
 
             /* startup type */
             lvc.iSubItem = 3;
@@ -258,7 +258,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(hInstance, IDS_FOURTHCOLUMN, szTemp,
                 sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
-            ListView_InsertColumn(hListView, 3, &lvc);
+            (void)ListView_InsertColumn(hListView, 3, &lvc);
 
             /* logon as */
             lvc.iSubItem = 4;
@@ -266,7 +266,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LoadString(hInstance, IDS_FITHCOLUMN, szTemp,
                 sizeof(szTemp) / sizeof(TCHAR));
             lvc.pszText  = szTemp;
-            ListView_InsertColumn(hListView, 4, &lvc);
+            (void)ListView_InsertColumn(hListView, 4, &lvc);
 
 
 

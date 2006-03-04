@@ -4,13 +4,6 @@
 #include <wdmguid.h>
 #include <stdio.h>
 
-/* FIXME: I don't know why it is not defined anywhere... */
-NTSTATUS STDCALL
-IoAttachDeviceToDeviceStackSafe(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice,
-  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-
 typedef struct _PCIIDEX_DRIVER_EXTENSION
 {
 	PCONTROLLER_PROPERTIES HwGetControllerProperties;

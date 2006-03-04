@@ -5,13 +5,6 @@
 
 #if defined(__GNUC__)
   #include <stdio.h>
-
-  /* FIXME: these prototypes MUST NOT be here! */
-  NTSTATUS NTAPI
-  IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT SourceDevice,
-    IN PDEVICE_OBJECT TargetDevice,
-    OUT PDEVICE_OBJECT *AttachedToDeviceObject);
 #elif defined(_MSC_VER)
   NTSTATUS NTAPI
   IoAttachDeviceToDeviceStackSafe(

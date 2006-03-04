@@ -33,6 +33,7 @@ DbgPrint(
     IN ...
 );
 
+NTSYSAPI
 VOID
 NTAPI
 RtlAssert(

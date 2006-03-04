@@ -46,7 +46,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return;
    }
-   InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
+   (void)InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
    PrevPageOp = MmPageOpHashTable[PageOp->Hash];
    if (PrevPageOp == PageOp)
    {
@@ -236,7 +236,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PageOp->MArea = MArea;
    KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
    MmPageOpHashTable[Hash] = PageOp;
-   InterlockedIncrementUL(&MArea->PageOpCount);
+   (void)InterlockedIncrementUL(&MArea->PageOpCount);
 
    KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
    return(PageOp);

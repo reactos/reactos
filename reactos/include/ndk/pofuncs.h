@@ -57,7 +57,7 @@ NtSetSystemPowerState(
     IN ULONG Flags
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction(
@@ -67,7 +67,7 @@ ZwInitiatePowerAction(
     BOOLEAN Asynchronous
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
@@ -78,7 +78,7 @@ ZwPowerInformation(
     ULONG OutputBufferLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemPowerState(

@@ -24,7 +24,7 @@ NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     UntrackFL( __FILE__, __LINE__, Irp );
 #endif
 
-    IoSetCancelRoutine( Irp, NULL );
+    (void)IoSetCancelRoutine( Irp, NULL );
 
     if( Status == STATUS_PENDING )
 	IoMarkIrpPending( Irp );

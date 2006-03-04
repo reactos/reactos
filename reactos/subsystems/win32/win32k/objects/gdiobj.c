@@ -398,7 +398,7 @@ LockHandle:
           Entry->Type = TypeInfo;
 
           /* unlock the entry */
-          InterlockedExchangePointer(&Entry->ProcessId, CurrentProcessId);
+          (void)InterlockedExchangePointer(&Entry->ProcessId, CurrentProcessId);
 
 #ifdef GDI_DEBUG
           memset ( GDIHandleAllocator[Index], 0xcd, GDI_STACK_LEVELS * sizeof(ULONG) );
@@ -520,7 +520,7 @@ LockHandle:
         Entry->KernelData = NULL;
 
         /* unlock the handle slot */
-        InterlockedExchangePointer(&Entry->ProcessId, NULL);
+        (void)InterlockedExchangePointer(&Entry->ProcessId, NULL);
 
         /* push this entry to the free list */
         InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
@@ -565,7 +565,7 @@ LockHandle:
       {
         DPRINT1("Attempted to delete object 0x%x which was already deleted!\n", hObj);
       }
-      InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
+      (void)InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
     }
   }
   else if(PrevProcId == LockedProcessId)
@@ -788,7 +788,7 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
                   InterlockedDecrement((PLONG)&GdiHdr->Locks);
 
                   /* Unlock the handle table entry. */
-                  InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
+                  (void)InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
 
                   DelayExecution();
                   continue;
@@ -824,7 +824,7 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
          }
 
          /* Unlock the handle table entry. */
-         InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
+         (void)InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
 
          break;
       }
@@ -961,7 +961,7 @@ GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType)
          }
 
          /* Unlock the handle table entry. */
-         InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
+         (void)InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
 
          break;
       }
@@ -1111,7 +1111,7 @@ LockHandle:
           }
 
           /* remove the process id lock and make it global */
-          InterlockedExchangePointer(&Entry->ProcessId, GDI_GLOBAL_PROCESS);
+          (void)InterlockedExchangePointer(&Entry->ProcessId, GDI_GLOBAL_PROCESS);
 
           *hObj = (HGDIOBJ)((ULONG)(*hObj) | GDI_HANDLE_STOCK_MASK);
 
@@ -1132,7 +1132,7 @@ LockHandle:
           /* WTF?! The object is already locked by a different thread!
              Release the lock, wait a bit and try again!
              FIXME - we should give up after some time unless we want to wait forever! */
-          InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
+          (void)InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
           DelayExecution();
           goto LockHandle;
@@ -1236,7 +1236,7 @@ LockHandle:
             ProcessId = 0;
 
           /* remove the process id lock and change it to the new process id */
-          InterlockedExchangePointer(&Entry->ProcessId, ProcessId);
+          (void)InterlockedExchangePointer(&Entry->ProcessId, ProcessId);
 
           /* we're done! */
           return;
@@ -1258,7 +1258,7 @@ LockHandle:
              being deleted in the meantime (because we don't have aquired a reference
              at this point).
              FIXME - we should give up after some time unless we want to wait forever! */
-          InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
+          (void)InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
           DelayExecution();
           goto LockHandle;
@@ -1357,7 +1357,7 @@ LockHandleFrom:
             GDIOBJ_SetOwnership(CopyTo, NULL);
           }
 
-          InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
+          (void)InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
         }
         else
         {
@@ -1376,7 +1376,7 @@ LockHandleFrom:
              being deleted in the meantime (because we don't have aquired a reference
              at this point).
              FIXME - we should give up after some time unless we want to wait forever! */
-          InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
+          (void)InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
 
           DelayExecution();
           goto LockHandleFrom;

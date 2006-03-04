@@ -31,19 +31,19 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         LoadString(hInst, IDS_STARTUP_COLUMN_ELEMENT, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 150;
-        ListView_InsertColumn(hStartupListCtrl, 0, &column);
+        (void)ListView_InsertColumn(hStartupListCtrl, 0, &column);
 
         column.mask = LVCF_TEXT | LVCF_WIDTH;
         LoadString(hInst, IDS_STARTUP_COLUMN_CMD, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 150;
-        ListView_InsertColumn(hStartupListCtrl, 1, &column);
+        (void)ListView_InsertColumn(hStartupListCtrl, 1, &column);
 
         column.mask = LVCF_TEXT | LVCF_WIDTH;
         LoadString(hInst, IDS_STARTUP_COLUMN_PATH, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 250;
-        ListView_InsertColumn(hStartupListCtrl, 2, &column);
+        (void)ListView_InsertColumn(hStartupListCtrl, 2, &column);
 
         GetAutostartEntriesFromRegistry(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"));
         GetAutostartEntriesFromRegistry(HKEY_CURRENT_USER, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"));
@@ -87,7 +87,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                     item.pszText = lpValueName;
                     item.iItem = ListView_GetItemCount(hStartupListCtrl);
                     item.lParam = 0;
-                    ListView_InsertItem(hStartupListCtrl, &item);
+                    (void)ListView_InsertItem(hStartupListCtrl, &item);
 
                     if (dwType == REG_SZ)
                     {

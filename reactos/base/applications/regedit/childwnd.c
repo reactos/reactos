@@ -112,14 +112,14 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         /* TODO */
         break;
     case ID_TREE_EXPANDBRANCH:
-        TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_EXPAND);
+        (void)TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_EXPAND);
         break;
     case ID_TREE_COLLAPSEBRANCH:
-        TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_COLLAPSE);
+        (void)TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_COLLAPSE);
         break;
     case ID_TREE_RENAME:
         SetFocus(pChildWnd->hTreeWnd);
-        TreeView_EditLabel(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
+        (void)TreeView_EditLabel(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
         break;
     case ID_TREE_DELETE:
         hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
@@ -528,17 +528,17 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         hti.pt.x = pt.x;
         hti.pt.y = pt.y;
         ScreenToClient(pChildWnd->hTreeWnd, &hti.pt);
-        TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
+        (void)TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
 
         if ((hti.flags & TVHT_ONITEM) != 0)
         {
           hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
-          TreeView_SelectItem(pChildWnd->hTreeWnd, hti.hItem);
+          (void)TreeView_SelectItem(pChildWnd->hTreeWnd, hti.hItem);
 
           memset(&item, 0, sizeof(item));
           item.mask = TVIF_STATE | TVIF_CHILDREN;
           item.hItem = hti.hItem;
-          TreeView_GetItem(pChildWnd->hTreeWnd, &item);
+          (void)TreeView_GetItem(pChildWnd->hTreeWnd, &item);
 
           /* Set the Expand/Collapse menu item appropriately */
           LoadString(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, sizeof(buffer) / sizeof(buffer[0]));

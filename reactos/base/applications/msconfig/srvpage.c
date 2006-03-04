@@ -31,25 +31,25 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         LoadString(hInst, IDS_SERVICES_COLUMN_SERVICE, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 200;
-        ListView_InsertColumn(hServicesListCtrl, 0, &column);
+        (void)ListView_InsertColumn(hServicesListCtrl, 0, &column);
 
         column.mask = LVCF_TEXT | LVCF_WIDTH;
         LoadString(hInst, IDS_SERVICES_COLUMN_REQ, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 70;
-        ListView_InsertColumn(hServicesListCtrl, 1, &column);
+        (void)ListView_InsertColumn(hServicesListCtrl, 1, &column);
 
         column.mask = LVCF_TEXT | LVCF_WIDTH;
         LoadString(hInst, IDS_SERVICES_COLUMN_VENDOR, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 200;
-        ListView_InsertColumn(hServicesListCtrl, 2, &column);
+        (void)ListView_InsertColumn(hServicesListCtrl, 2, &column);
 
         column.mask = LVCF_TEXT | LVCF_WIDTH;
         LoadString(hInst, IDS_SERVICES_COLUMN_STATUS, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 70;
-        ListView_InsertColumn(hServicesListCtrl, 3, &column);
+        (void)ListView_InsertColumn(hServicesListCtrl, 3, &column);
 
         GetServices();
 		return TRUE;

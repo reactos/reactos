@@ -132,7 +132,7 @@ NtQueryDebugFilterState(
      ULONG Level
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDebugFilterState(
@@ -141,6 +141,7 @@ NtSetDebugFilterState(
     BOOLEAN State
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSystemDebugControl(
@@ -152,7 +153,7 @@ NtSystemDebugControl(
     PULONG ReturnLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDebugFilterState(
@@ -169,6 +170,7 @@ ZwSetDebugFilterState(
     BOOLEAN State
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSystemDebugControl(

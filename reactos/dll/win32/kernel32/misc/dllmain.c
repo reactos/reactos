@@ -252,6 +252,8 @@ DllMain(HANDLE hDll,
     DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
            hDll, dwReason);
 
+    Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
+
     /* Cache the PEB and Session ID */
     Peb = NtCurrentPeb();
     SessionId = Peb->SessionId;

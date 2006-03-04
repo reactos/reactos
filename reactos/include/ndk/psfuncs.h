@@ -102,6 +102,7 @@ PsGetProcessId(PEPROCESS Process);
 //
 // Native Calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAlertResumeThread(
@@ -109,12 +110,14 @@ NtAlertResumeThread(
     OUT PULONG SuspendCount
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAlertThread(
     IN HANDLE ThreadHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAssignProcessToJobObject(
@@ -122,6 +125,7 @@ NtAssignProcessToJobObject(
     HANDLE ProcessHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateJobObject(
@@ -130,6 +134,7 @@ NtCreateJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateProcess(
@@ -143,6 +148,7 @@ NtCreateProcess(
     IN HANDLE ExceptionPort OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateThread(
@@ -156,6 +162,7 @@ NtCreateThread(
     IN BOOLEAN CreateSuspended
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateThread(
@@ -164,6 +171,7 @@ NtImpersonateThread(
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtIsProcessInJob(
@@ -181,6 +189,7 @@ NtOpenProcess(
     IN PCLIENT_ID ClientId
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenThread(
@@ -211,6 +220,7 @@ NtOpenThreadTokenEx(
     OUT PHANDLE TokenHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationJobObject(
@@ -222,6 +232,7 @@ NtQueryInformationJobObject(
 );
 
 #ifndef _NTDDK_
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationProcess(
@@ -233,6 +244,7 @@ NtQueryInformationProcess(
 );
 #endif
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationThread(
@@ -243,12 +255,14 @@ NtQueryInformationThread(
     OUT PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRegisterThreadTerminatePort(
     HANDLE TerminationPort
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtResumeThread(
@@ -256,12 +270,14 @@ NtResumeThread(
     OUT PULONG SuspendCount
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtResumeProcess(
     IN HANDLE ProcessHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationJobObject(
@@ -271,6 +287,7 @@ NtSetInformationJobObject(
     ULONG JobInformationLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationProcess(
@@ -290,6 +307,7 @@ NtSetInformationThread(
     IN ULONG ThreadInformationLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSuspendProcess(
@@ -303,6 +321,7 @@ NtSuspendThread(
     IN PULONG PreviousSuspendCount
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTerminateProcess(
@@ -310,6 +329,7 @@ NtTerminateProcess(
     IN NTSTATUS ExitStatus
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTerminateThread(
@@ -317,6 +337,7 @@ NtTerminateThread(
     IN NTSTATUS ExitStatus
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTerminateJobObject(
@@ -324,6 +345,7 @@ NtTerminateJobObject(
     NTSTATUS ExitStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAlertResumeThread(
@@ -331,12 +353,14 @@ ZwAlertResumeThread(
     OUT PULONG SuspendCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAlertThread(
     IN HANDLE ThreadHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAssignProcessToJobObject(
@@ -344,6 +368,7 @@ ZwAssignProcessToJobObject(
     HANDLE ProcessHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateJobObject(
@@ -352,6 +377,7 @@ ZwCreateJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateProcess(
@@ -365,6 +391,7 @@ ZwCreateProcess(
     IN HANDLE ExceptionPort OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateThread(
@@ -378,6 +405,7 @@ ZwCreateThread(
     IN BOOLEAN CreateSuspended
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateThread(
@@ -386,6 +414,7 @@ ZwImpersonateThread(
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwIsProcessInJob(
@@ -393,7 +422,7 @@ ZwIsProcessInJob(
     IN HANDLE JobHandle OPTIONAL
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcess(
@@ -403,6 +432,7 @@ ZwOpenProcess(
     IN PCLIENT_ID ClientId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThread(
@@ -412,7 +442,7 @@ ZwOpenThread(
     IN PCLIENT_ID ClientId
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThreadToken(
@@ -422,7 +452,7 @@ ZwOpenThreadToken(
     OUT PHANDLE TokenHandle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThreadTokenEx(
@@ -433,6 +463,7 @@ ZwOpenThreadTokenEx(
     OUT PHANDLE TokenHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationJobObject(
@@ -444,6 +475,7 @@ ZwQueryInformationJobObject(
 );
 
 #ifndef _NTDDK_
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationProcess(
@@ -455,6 +487,7 @@ ZwQueryInformationProcess(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationThread(
@@ -465,12 +498,14 @@ ZwQueryInformationThread(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRegisterThreadTerminatePort(
     HANDLE TerminationPort
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResumeThread(
@@ -478,12 +513,14 @@ ZwResumeThread(
     OUT PULONG SuspendCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResumeProcess(
     IN HANDLE ProcessHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationJobObject(
@@ -493,6 +530,7 @@ ZwSetInformationJobObject(
     ULONG JobInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationProcess(
@@ -502,7 +540,7 @@ ZwSetInformationProcess(
     IN ULONG ProcessInformationLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationThread(
@@ -512,12 +550,14 @@ ZwSetInformationThread(
     IN ULONG ThreadInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSuspendProcess(
     IN HANDLE ProcessHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSuspendThread(
@@ -525,6 +565,7 @@ ZwSuspendThread(
     IN PULONG PreviousSuspendCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateProcess(
@@ -532,6 +573,7 @@ ZwTerminateProcess(
     IN NTSTATUS ExitStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateThread(
@@ -539,6 +581,7 @@ ZwTerminateThread(
     IN NTSTATUS ExitStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateJobObject(

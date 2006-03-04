@@ -463,17 +463,17 @@ BOOL OnCreate(HWND hWnd)
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 0, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 0, &item);
     LoadString(hInst, IDS_TAB_PROCESSES, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 1, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 1, &item);
     LoadString(hInst, IDS_TAB_PERFORMANCE, szTemp, 256);
     memset(&item, 0, sizeof(TCITEM));
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
-    TabCtrl_InsertItem(hTabWnd, 2, &item);
+    (void)TabCtrl_InsertItem(hTabWnd, 2, &item);
 
     /* Size everything correctly */
     GetClientRect(hWnd, &rc);

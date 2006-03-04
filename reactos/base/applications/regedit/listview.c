@@ -281,7 +281,7 @@ static BOOL InitListViewImageLists(HWND hwndLV)
     }
 
     /* Associate the image list with the tree view control.  */
-    ListView_SetImageList(hwndLV, himl, LVSIL_SMALL);
+    (void)ListView_SetImageList(hwndLV, himl, LVSIL_SMALL);
 
     return TRUE;
 }
@@ -386,7 +386,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 g_invertSort = FALSE;
             }
 
-            ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
+            (void)ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
             return TRUE;
         case NM_DBLCLK:
         case NM_RETURN:
@@ -500,7 +500,7 @@ void DestroyListView(HWND hwndLV) {
     for (i = 0; i < count; i++) {
         item.mask = LVIF_PARAM;
         item.iItem = i;
-        ListView_GetItem(hwndLV, &item);
+        (void)ListView_GetItem(hwndLV, &item);
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
@@ -521,19 +521,19 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
 
     if (!hwndLV) return FALSE;
 
-    ListView_EditLabel(hwndLV, -1);
+    (void)ListView_EditLabel(hwndLV, -1);
 
     SendMessage(hwndLV, WM_SETREDRAW, FALSE, 0);
     count = ListView_GetItemCount(hwndLV);
     for (i = 0; i < count; i++) {
         item.mask = LVIF_PARAM;
         item.iItem = i;
-        ListView_GetItem(hwndLV, &item);
+        (void)ListView_GetItem(hwndLV, &item);
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
     g_columnToSort = ~0UL;
-    ListView_DeleteAllItems(hwndLV);
+    (void)ListView_DeleteAllItems(hwndLV);
 
     if(!hKey) return FALSE;
 
@@ -575,7 +575,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     {
       AddEntryToList(hwndLV, _T(""), REG_SZ, NULL, 0, 0, FALSE);
     }
-    ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
+    (void)ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
     RegCloseKey(hNewKey);
     SendMessage(hwndLV, WM_SETREDRAW, TRUE, 0);
 

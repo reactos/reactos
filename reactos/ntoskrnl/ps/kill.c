@@ -329,9 +329,9 @@ PspExitThread(NTSTATUS ExitStatus)
      * unset it.
      */
     KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
-    InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread,
-                                      NULL,
-                                      (PKPROCESS)CurrentThread);
+    (void)InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread,
+                                            NULL,
+                                            (PVOID)CurrentThread);
     KeLowerIrql(oldIrql);
 
     /* Rundown Mutexes */

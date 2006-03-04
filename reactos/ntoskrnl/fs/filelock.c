@@ -1021,7 +1021,7 @@ FsRtlPrivateLock (
       Irp->Tail.Overlay.DriverContext[3] = &LockToc->SpinLock;
       Irp->Tail.Overlay.DriverContext[2] = Context;
 
-      IoSetCancelRoutine(Irp, FsRtlpFileLockCancelRoutine);
+      (void)IoSetCancelRoutine(Irp, FsRtlpFileLockCancelRoutine);
       if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
       {
          //irp was canceled

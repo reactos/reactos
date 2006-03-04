@@ -97,7 +97,7 @@ void ListByClass()
 
 	SendMessage(hwndListView, WM_SETREDRAW, FALSE, 0);
 
-	ListView_DeleteAllItems(hwndListView);
+	(void)ListView_DeleteAllItems(hwndListView);
 	while (1)
 	{
 		CONFIGRET res;
@@ -267,7 +267,7 @@ int ListByConnection()
 {
 	CONFIGRET cr;
 	DEVINST root;
-	ListView_DeleteAllItems(hwndListView);
+	(void)ListView_DeleteAllItems(hwndListView);
 
 	cr = CM_Locate_DevNode(&root, NULL, 0);
 
@@ -292,7 +292,7 @@ int ListByInterface(const GUID* guid)
 	DWORD i;
 	SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
 
-	ListView_DeleteAllItems(hwndListView);
+	(void)ListView_DeleteAllItems(hwndListView);
 
 	DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)Buffer;
 	DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
@@ -585,7 +585,7 @@ if(((dwStyle & LVS_TYPEMASK) == LVS_REPORT) && hwndHeader)
    hdLayout.prc = &rc;
    hdLayout.pwpos = &wpos;
 
-   Header_Layout(hwndHeader, &hdLayout);
+   (void)Header_Layout(hwndHeader, &hdLayout);
 
    SetWindowPos(  hwndHeader,
                   wpos.hwndInsertAfter,
@@ -595,7 +595,7 @@ if(((dwStyle & LVS_TYPEMASK) == LVS_REPORT) && hwndHeader)
                   wpos.cy,
                   wpos.flags | SWP_SHOWWINDOW);
 
-   ListView_EnsureVisible(hwndListView, 0, FALSE);
+   (void)ListView_EnsureVisible(hwndListView, 0, FALSE);
    }
 }
 
@@ -606,7 +606,7 @@ int         i;
 TCHAR       szString[3][20] = {TEXT("#"), TEXT("Name"), TEXT("Intern name")};
 
 //empty the list
-ListView_DeleteAllItems(hwndListView);
+(void)ListView_DeleteAllItems(hwndListView);
 
 //initialize the columns
 lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
@@ -614,15 +614,15 @@ lvColumn.fmt = LVCFMT_LEFT;
 i=0;
 lvColumn.cx = 20;
 lvColumn.pszText = szString[i];
-ListView_InsertColumn(hwndListView, i, &lvColumn);
+(void)ListView_InsertColumn(hwndListView, i, &lvColumn);
 i=1;
 lvColumn.cx = 400;
 lvColumn.pszText = szString[i];
-ListView_InsertColumn(hwndListView, i, &lvColumn);
+(void)ListView_InsertColumn(hwndListView, i, &lvColumn);
 i=2;
 lvColumn.cx = 150;
 lvColumn.pszText = szString[i];
-ListView_InsertColumn(hwndListView, i, &lvColumn);
+(void)ListView_InsertColumn(hwndListView, i, &lvColumn);
 
 
 return TRUE;

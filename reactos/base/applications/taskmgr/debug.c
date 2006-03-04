@@ -48,7 +48,7 @@ void ProcessPage_OnDebug(void)
         lvitem.stateMask = LVIS_SELECTED;
         lvitem.iItem = Index;
 
-        ListView_GetItem(hProcessPageListCtrl, &lvitem);
+        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
 
         if (lvitem.state & LVIS_SELECTED)
             break;

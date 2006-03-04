@@ -13,8 +13,8 @@
 #define _NTSYSTEM_
 
 /* DDK/IFS/NDK Headers */
-#include <ntifs.h>
 #include <ntddk.h>
+#include <ntifs.h>
 #include <wdmguid.h>
 #include <ndk/ntndk.h>
 #undef TEXT

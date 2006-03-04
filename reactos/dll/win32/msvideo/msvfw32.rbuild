@@ -1,4 +1,4 @@
-<module name="msvfw32" type="win32dll" baseaddress="${BASEADDRESS_MSVFW32}" installbase="system32" installname="msvfw32.dll">
+<module name="msvfw32" type="win32dll" baseaddress="${BASEADDRESS_MSVFW32}" installbase="system32" installname="msvfw32.dll" allowwarnings="true">
 	<importlibrary definition="msvfw32.spec.def" />
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />

@@ -633,7 +633,7 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
     lvfi.psz = szNewValue;
     iIndex = ListView_FindItem(g_pChildWnd->hListWnd, -1, &lvfi);
     if (iIndex >= 0)
-        ListView_EditLabel(g_pChildWnd->hListWnd, iIndex);
+        (void)ListView_EditLabel(g_pChildWnd->hListWnd, iIndex);
 
     return TRUE;
 }
@@ -886,7 +886,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           item = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_SELECTED);
           if(item > -1)
           {
-            ListView_EditLabel(g_pChildWnd->hListWnd, item);
+            (void)ListView_EditLabel(g_pChildWnd->hListWnd, item);
           }
         }
         break;

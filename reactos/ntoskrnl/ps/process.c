@@ -98,7 +98,7 @@ PsUnlockProcess(PEPROCESS Process)
 
   if(InterlockedDecrementUL(&Process->LockCount) == 0)
   {
-    InterlockedExchangePointer(&Process->LockOwner, NULL);
+    (void)InterlockedExchangePointer(&Process->LockOwner, NULL);
     KeSetEvent(&Process->LockEvent, IO_NO_INCREMENT, FALSE);
   }
 

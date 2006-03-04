@@ -40,28 +40,26 @@ extern "C" {
 #define DDKCDECLAPI __cdecl
 
 /* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
-#if defined(_NTOSKRNL_)
-#ifndef NTOSAPI
-#define NTOSAPI DECL_EXPORT
+#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined (_NTIFS_) || defined(_NTHAL_)
+#define NTKERNELAPI DECLSPEC_IMPORT
+#else
+#define NTKERNELAPI
 #endif
+#ifndef NTOSAPI
+#define NTOSAPI NTKERNELAPI
+#endif
+#if defined(_NTOSKRNL_)
 #define DECLARE_INTERNAL_OBJECT(x) typedef struct _##x; typedef struct _##x *P##x;
 #define DECLARE_INTERNAL_OBJECT2(x,y) typedef struct _##x; typedef struct _##x *P##y;
 #else
-#ifndef NTOSAPI
-#define NTOSAPI DECL_IMPORT
-#endif
 #define DECLARE_INTERNAL_OBJECT(x) struct _##x; typedef struct _##x *P##x;
 #define DECLARE_INTERNAL_OBJECT2(x,y) struct _##x; typedef struct _##x *P##y;
 #endif
 
-#if defined(_NTHAL_)
-#ifndef NTHALAPI
-#define NTHALAPI DECL_EXPORT
-#endif
+#if !defined(_NTHAL_)
+#define NTHALAPI DECLSPEC_IMPORT
 #else
-#ifndef NTHALAPI
-#define NTHALAPI DECL_IMPORT
-#endif
+#define NTHALAPI
 #endif
 
 /* Pseudo modifiers for parameters */
@@ -5157,9 +5155,9 @@ KfReleaseSpinLock(
 #define ROUND_TO_PAGES(Size) \
   ((ULONG_PTR) (((ULONG_PTR) Size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)))
 
-NTOSAPI
+NTSYSAPI
 VOID
-DDKAPI
+NTAPI
 RtlAssert(
   IN PVOID  FailedAssertion,
   IN PVOID  FileName,
@@ -5976,15 +5974,13 @@ RtlTimeToTimeFields(
   IN PLARGE_INTEGER  Time,
   IN PTIME_FIELDS  TimeFields);
 
-NTOSAPI
 ULONG
-DDKFASTAPI
+FASTCALL
 RtlUlongByteSwap(
   IN ULONG  Source);
 
-NTOSAPI
 ULONGLONG
-DDKFASTAPI
+FASTCALL
 RtlUlonglongByteSwap(
   IN ULONGLONG  Source);
 
@@ -6037,9 +6033,8 @@ RtlUpperString(
   IN OUT PSTRING  DestinationString,
   IN PSTRING  SourceString);
 
-NTOSAPI
 USHORT
-DDKFASTAPI
+FASTCALL
 RtlUshortByteSwap(
   IN USHORT  Source);
 
@@ -6798,6 +6793,7 @@ HalPutDmaAdapter(
     PADAPTER_OBJECT AdapterObject
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAllocateAdapterChannel(
@@ -10209,9 +10205,8 @@ DDKAPI
 KdEnableDebugger(
   VOID);
 
-NTOSAPI
 VOID
-DDKAPI
+NTAPI
 DbgBreakPoint(
   VOID);
 
@@ -10221,16 +10216,14 @@ DDKAPI
 DbgBreakPointWithStatus(
   IN ULONG  Status);
 
-NTOSAPI
 ULONG
-DDKCDECLAPI
+__cdecl
 DbgPrint(
   IN PCH  Format,
   IN ...);
 
-NTOSAPI
 ULONG
-DDKCDECLAPI
+__cdecl
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,

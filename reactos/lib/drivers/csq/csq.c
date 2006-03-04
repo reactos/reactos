@@ -25,9 +25,8 @@
  */
 /* $Id$ */
 
-#define __NTDRIVER__
-#include <ntifs.h>
 #include <ntddk.h>
+#include <ntifs.h>
 
 
 static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
@@ -254,7 +253,7 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 				}
 
 			/* Step 2: Set our cancel routine */
-			IoSetCancelRoutine(Irp, IopCsqCancelRoutine);
+			(void)IoSetCancelRoutine(Irp, IopCsqCancelRoutine);
 
 			/* Step 3: Deal with an IRP that is already canceled */
 			if(!Irp->Cancel)

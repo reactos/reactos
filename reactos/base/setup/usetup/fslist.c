@@ -138,7 +138,7 @@ ScrollDownFileSystemList (PFILE_SYSTEM_LIST List)
 {
   if ((ULONG) List->CurrentFileSystem < List->FileSystemCount - 1)
     {
-      (ULONG) List->CurrentFileSystem++;
+      List->CurrentFileSystem++;
       DrawFileSystemList (List);
     }
 }
@@ -149,7 +149,7 @@ ScrollUpFileSystemList (PFILE_SYSTEM_LIST List)
 {
   if ((ULONG) List->CurrentFileSystem > 0)
     {
-      (ULONG) List->CurrentFileSystem--;
+      List->CurrentFileSystem--;
       DrawFileSystemList (List);
     }
 }

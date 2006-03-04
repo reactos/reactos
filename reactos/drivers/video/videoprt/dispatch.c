@@ -24,9 +24,6 @@
 
 /* EXTERNAL FUNCTIONS *********************************************************/
 
-VOID NTAPI HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
-VOID NTAPI HalReleaseDisplayOwnership();
-
 /* GLOBAL VARIABLES ***********************************************************/
 
 PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;

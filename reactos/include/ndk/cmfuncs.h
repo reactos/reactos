@@ -27,6 +27,7 @@ Author:
 //
 // Native calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateKey(
@@ -39,12 +40,14 @@ NtCreateKey(
     IN PULONG Disposition OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteKey(
     IN HANDLE KeyHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteValueKey(
@@ -52,6 +55,7 @@ NtDeleteValueKey(
     IN PUNICODE_STRING ValueName
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateKey(
@@ -63,6 +67,7 @@ NtEnumerateKey(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateValueKey(
@@ -74,12 +79,14 @@ NtEnumerateValueKey(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushKey(
     IN HANDLE KeyHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetPlugPlayEvent(
@@ -89,12 +96,14 @@ NtGetPlugPlayEvent(
     IN ULONG BufferSize
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtInitializeRegistry(
     BOOLEAN SetUpBoot
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLoadKey(
@@ -102,6 +111,7 @@ NtLoadKey(
     IN POBJECT_ATTRIBUTES FileObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLoadKey2(
@@ -110,6 +120,7 @@ NtLoadKey2(
     IN ULONG Flags
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtNotifyChangeKey(
@@ -125,6 +136,7 @@ NtNotifyChangeKey(
     IN BOOLEAN WatchSubtree
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenKey(
@@ -133,6 +145,7 @@ NtOpenKey(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPlugPlayControl(
@@ -141,6 +154,7 @@ NtPlugPlayControl(
     IN ULONG BufferSize
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryKey(
@@ -151,6 +165,7 @@ NtQueryKey(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryMultipleValueKey(
@@ -162,6 +177,7 @@ NtQueryMultipleValueKey(
     OUT PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryValueKey(
@@ -173,6 +189,7 @@ NtQueryValueKey(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplaceKey(
@@ -181,6 +198,7 @@ NtReplaceKey(
     IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRestoreKey(
@@ -189,6 +207,7 @@ NtRestoreKey(
     IN ULONG RestoreFlags
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSaveKey(
@@ -196,6 +215,7 @@ NtSaveKey(
     IN HANDLE FileHandle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSaveKeyEx(
@@ -204,6 +224,7 @@ NtSaveKeyEx(
     IN ULONG Flags
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationKey(
@@ -213,6 +234,7 @@ NtSetInformationKey(
     IN ULONG KeyInformationLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetValueKey(
@@ -224,6 +246,7 @@ NtSetValueKey(
     IN ULONG DataSize
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnloadKey(
@@ -231,6 +254,7 @@ NtUnloadKey(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateKey(
@@ -243,13 +267,14 @@ ZwCreateKey(
     IN PULONG Disposition OPTIONAL
 );
 
-
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteKey(
     IN HANDLE KeyHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteValueKey(
@@ -257,6 +282,7 @@ ZwDeleteValueKey(
     IN PUNICODE_STRING ValueName
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateKey(
@@ -268,6 +294,7 @@ ZwEnumerateKey(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateValueKey(
@@ -279,12 +306,14 @@ ZwEnumerateValueKey(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushKey(
     IN HANDLE KeyHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwGetPlugPlayEvent(
@@ -294,12 +323,14 @@ ZwGetPlugPlayEvent(
     IN ULONG BufferSize
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwInitializeRegistry(
     BOOLEAN SetUpBoot
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadKey(
@@ -307,6 +338,7 @@ ZwLoadKey(
     IN POBJECT_ATTRIBUTES FileObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadKey2(
@@ -315,6 +347,7 @@ ZwLoadKey2(
     IN ULONG Flags
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeKey(
@@ -330,6 +363,7 @@ ZwNotifyChangeKey(
     IN BOOLEAN WatchSubtree
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKey(
@@ -338,6 +372,7 @@ ZwOpenKey(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPlugPlayControl(
@@ -346,6 +381,7 @@ ZwPlugPlayControl(
     IN ULONG BufferSize
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryKey(
@@ -356,6 +392,7 @@ ZwQueryKey(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMultipleValueKey(
@@ -367,6 +404,7 @@ ZwQueryMultipleValueKey(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryValueKey(
@@ -378,6 +416,7 @@ ZwQueryValueKey(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplaceKey(
@@ -386,6 +425,7 @@ ZwReplaceKey(
     IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRestoreKey(
@@ -394,6 +434,7 @@ ZwRestoreKey(
     IN ULONG RestoreFlags
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSaveKey(
@@ -401,6 +442,7 @@ ZwSaveKey(
     IN HANDLE FileHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSaveKeyEx(
@@ -409,6 +451,7 @@ ZwSaveKeyEx(
     IN ULONG Flags
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationKey(
@@ -418,6 +461,7 @@ ZwSetInformationKey(
     IN ULONG KeyInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetValueKey(
@@ -430,6 +474,7 @@ ZwSetValueKey(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnloadKey(

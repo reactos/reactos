@@ -262,7 +262,7 @@ BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     while (childItem) {
         HTREEITEM nextItem = TreeView_GetNextSibling(hwndTV, childItem);
         if (RefreshTreeItem(hwndTV, childItem) == FALSE) {
-            TreeView_DeleteItem(hwndTV, childItem);
+            (void)TreeView_DeleteItem(hwndTV, childItem);
         }
         childItem = nextItem;
     }
@@ -296,7 +296,7 @@ BOOL RefreshTreeView(HWND hwndTV)
     SetCursor(hcursorOld);
     
     /* We reselect the currently selected node, this will prompt a refresh of the listview. */
-    TreeView_SelectItem(hwndTV, hSelectedItem);
+    (void)TreeView_SelectItem(hwndTV, hSelectedItem);
     return TRUE;
 }
 
@@ -334,7 +334,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name)
             return FALSE;
     }
 
-    TreeView_Expand(hwndTV, hItem, TVE_EXPAND);
+    (void)TreeView_Expand(hwndTV, hItem, TVE_EXPAND);
     if (!hNewItem)
     {
         for(hNewItem = TreeView_GetChild(hwndTV, hItem); hNewItem; hNewItem = TreeView_GetNextSibling(hwndTV, hNewItem))
@@ -347,7 +347,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name)
             if (lstrcmp(name, item.pszText) == 0) break;
         }	
     }
-    if (hNewItem) TreeView_SelectItem(hwndTV, hNewItem);
+    if (hNewItem) (void)TreeView_SelectItem(hwndTV, hNewItem);
 
     return hNewItem;
 }
@@ -395,8 +395,8 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
 	}
     
     /* expand and select host name */
-    TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
-    TreeView_Select(hwndTV, hRoot, TVGN_CARET);
+    (void)TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
+    (void)TreeView_Select(hwndTV, hRoot, TVGN_CARET);
     return TRUE;
 }
 
@@ -434,7 +434,7 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     }
 
     /* Associate the image list with the tree view control.  */
-    TreeView_SetImageList(hwndTV, himl, TVSIL_NORMAL);
+    (void)TreeView_SetImageList(hwndTV, himl, TVSIL_NORMAL);
 
     return TRUE;
 }
@@ -541,7 +541,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
         goto done;
 
     /* The new key's name is probably not appropriate yet */
-    TreeView_EditLabel(hwndTV, hNewItem);
+    (void)TreeView_EditLabel(hwndTV, hNewItem);
 
     bSuccess = TRUE;
 
@@ -630,7 +630,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 			tvi.pszText = szBuffer;
 			tvi.cchTextMax = sizeof(szBuffer) / sizeof(szBuffer[0]);
 
-			TreeView_GetItem(hwndTV, &tvi);
+			(void)TreeView_GetItem(hwndTV, &tvi);
 
 			if (!_tcscmp(szBuffer, szPathPart))
 				break;
@@ -649,8 +649,8 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 		hItem = hChildItem;
 	}
 
-	TreeView_SelectItem(hwndTV, hItem);
-	TreeView_EnsureVisible(hwndTV, hItem);
+	(void)TreeView_SelectItem(hwndTV, hItem);
+	(void)TreeView_EnsureVisible(hwndTV, hItem);
 
 	return TRUE;
 }

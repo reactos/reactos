@@ -488,7 +488,7 @@ FsRtlNotifyFullChangeDirectory (
       /* save NotifySych for use in the cancel routine */
       Irp->Tail.Overlay.DriverContext[3] = NotifySync;
 
-      IoSetCancelRoutine(Irp, FsRtlpNotifyCancelRoutine);
+      (void)IoSetCancelRoutine(Irp, FsRtlpNotifyCancelRoutine);
       if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
       {
          //irp was canceled

@@ -72,7 +72,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
    if (Ke386TestAndClearBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen))
    {
-      InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
+      (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
 #ifdef DBG
@@ -109,7 +109,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 #endif
          }
       }
-      InterlockedExchangePointer(&Prcb->SignalDone, NULL);
+      (void)InterlockedExchangePointer(&Prcb->SignalDone, NULL);
    }
    DPRINT("KiIpiServiceRoutine done\n");
    return TRUE;
@@ -128,11 +128,11 @@ KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID 
     ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
 
     CurrentPrcb = KeGetCurrentPrcb();
-    InterlockedExchangeUL(&CurrentPrcb->TargetSet, TargetSet);
-    InterlockedExchangeUL(&CurrentPrcb->WorkerRoutine, (ULONG_PTR)WorkerRoutine);
-    InterlockedExchangePointer(&CurrentPrcb->CurrentPacket[0], Argument);
-    InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[1], Count);
-    InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[2], Synchronize ? 1 : 0);
+    (void)InterlockedExchangeUL(&CurrentPrcb->TargetSet, TargetSet);
+    (void)InterlockedExchangeUL(&CurrentPrcb->WorkerRoutine, (ULONG_PTR)WorkerRoutine);
+    (void)InterlockedExchangePointer(&CurrentPrcb->CurrentPacket[0], Argument);
+    (void)InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[1], Count);
+    (void)InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[2], Synchronize ? 1 : 0);
 
     for (i = 0, Processor = 1; i < KeNumberProcessors; i++, Processor <<= 1)
     {

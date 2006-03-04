@@ -170,8 +170,8 @@ NtfsDumpAttribute (PATTRIBUTE Attribute)
   PNONRESIDENT_ATTRIBUTE NresAttr;
   UNICODE_STRING Name;
 
-  ULONGLONG lcn;
-  ULONGLONG runcount;
+  ULONGLONG lcn = 0;
+  ULONGLONG runcount = 0;
 
   switch (Attribute->AttributeType)
     {

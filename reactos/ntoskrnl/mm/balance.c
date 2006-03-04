@@ -104,7 +104,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
    KeAcquireSpinLock(&AllocationListLock, &oldIrql);
    if (MmGetReferenceCountPage(Page) == 1)
    {
-      InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+      (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
       if (IsListEmpty(&AllocationListHead) || MmStats.NrFreePages < MiMinimumAvailablePages)
       {
          KeReleaseSpinLock(&AllocationListLock, oldIrql);
@@ -199,7 +199,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    {
       if (!CanWait)
       {
-         InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+         (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
          return(STATUS_NO_MEMORY);
       }
       MiTrimMemoryConsumer(Consumer);
@@ -233,7 +233,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
       if (!CanWait)
       {
-         InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
+         (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
          return(STATUS_NO_MEMORY);
       }
 
@@ -241,7 +241,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       Request.Page = 0;
 
       KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
-      InterlockedIncrementUL(&MiPagesRequired);
+      (void)InterlockedIncrementUL(&MiPagesRequired);
 
       KeAcquireSpinLock(&AllocationListLock, &oldIrql);
 
@@ -265,7 +265,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       }
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
-      InterlockedDecrementUL(&MiPagesRequired);
+      (void)InterlockedDecrementUL(&MiPagesRequired);
       return(STATUS_SUCCESS);
    }
 

@@ -175,8 +175,8 @@ VOID PopulateCPLList(HWND hLisCtrl)
 			hFind = INVALID_HANDLE_VALUE;
 	}
 
-	ListView_SetImageList(hLisCtrl,hImgListSmall,LVSIL_SMALL);
-	ListView_SetImageList(hLisCtrl,hImgListLarge,LVSIL_NORMAL);
+	(void)ListView_SetImageList(hLisCtrl,hImgListSmall,LVSIL_SMALL);
+	(void)ListView_SetImageList(hLisCtrl,hImgListLarge,LVSIL_NORMAL);
 }
 
 LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -198,14 +198,14 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			column.cx = (rect.right - rect.left) / 3;
 			column.iSubItem = 0;
 			column.pszText = _T("Name");
-			ListView_InsertColumn(hListView,0,&column);
+			(void)ListView_InsertColumn(hListView,0,&column);
 			column.cx = (rect.right - rect.left) - ((rect.right - rect.left) / 3) - 1;
 			column.iSubItem = 1;
 			column.pszText = _T("Comment");
-			ListView_InsertColumn(hListView,1,&column);
+			(void)ListView_InsertColumn(hListView,1,&column);
 			PopulateCPLList(hListView);
-			ListView_SetColumnWidth(hListView,2,LVSCW_AUTOSIZE_USEHEADER);
-			ListView_Update(hListView,0);
+			(void)ListView_SetColumnWidth(hListView,2,LVSCW_AUTOSIZE_USEHEADER);
+			(void)ListView_Update(hListView,0);
 
 			SetFocus(hListView);
 		}
@@ -250,7 +250,7 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					memset(&lvi,0x00,sizeof(lvi));
 					lvi.iItem = nSelect;
 					lvi.mask = LVIF_PARAM;
-					ListView_GetItem(hListView,&lvi);
+					(void)ListView_GetItem(hListView,&lvi);
 					pEntry = (PCPLLISTENTRY)lvi.lParam;
 					CTL_DEBUG((_T("Listview DblClk Entry %08X\r\n"),pEntry));
 					if (pEntry)

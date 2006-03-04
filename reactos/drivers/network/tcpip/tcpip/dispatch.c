@@ -34,7 +34,7 @@ NTSTATUS DispPrepareIrpForCancel(
 
     if (!Irp->Cancel) {
         IoMarkIrpPending(Irp);
-        IoSetCancelRoutine(Irp, CancelRoutine);
+        (void)IoSetCancelRoutine(Irp, CancelRoutine);
         IoReleaseCancelSpinLock(OldIrql);
 
         TI_DbgPrint(DEBUG_IRP, ("Leaving (IRP at 0x%X can now be cancelled).\n", Irp));
@@ -108,7 +108,7 @@ VOID DispDataRequestComplete(
 
     IoAcquireCancelSpinLock(&OldIrql);
 
-    IoSetCancelRoutine(Irp, NULL);
+    (void)IoSetCancelRoutine(Irp, NULL);
 
     if (Irp->Cancel || TranContext->CancelIrps) {
         /* The IRP has been cancelled */
@@ -1485,7 +1485,7 @@ NTSTATUS DispTdiSetInformationEx(
 
         if (Status != STATUS_PENDING) {
             IoAcquireCancelSpinLock(&OldIrql);
-            IoSetCancelRoutine(Irp, NULL);
+            (void)IoSetCancelRoutine(Irp, NULL);
             IoReleaseCancelSpinLock(OldIrql);
         }
     }

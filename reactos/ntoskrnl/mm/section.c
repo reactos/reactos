@@ -2111,7 +2111,7 @@ MmpDeleteSection(PVOID ObjectBody)
       }
       else
       {
-         InterlockedDecrementUL(&Section->Segment->ReferenceCount);
+         (void)InterlockedDecrementUL(&Section->Segment->ReferenceCount);
       }
    }
    if (Section->FileObject != NULL)
@@ -2499,7 +2499,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
          (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
          DataSectionObject;
       Section->Segment = Segment;
-      InterlockedIncrementUL(&Segment->ReferenceCount);
+      (void)InterlockedIncrementUL(&Segment->ReferenceCount);
       MmLockSectionSegment(Segment);
 
       if (MaximumSize.u.LowPart > Segment->RawLength &&
@@ -3309,7 +3309,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
 
          for (i = 0; i < ImageSectionObject->NrSegments; i++)
          {
-            InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
+            (void)InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
          }
       }
 
@@ -3337,7 +3337,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
        */
       for (i = 0; i < ImageSectionObject->NrSegments; i++)
       {
-         InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
+         (void)InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
       }
 
       Status = STATUS_SUCCESS;

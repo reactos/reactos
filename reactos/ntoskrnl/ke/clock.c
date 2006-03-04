@@ -267,8 +267,8 @@ KeUpdateRunTime(
    if (TrapFrame->SegCs & MODE_MASK ||
        TrapFrame->EFlags & X86_EFLAGS_VM)
    {
-      InterlockedIncrementUL(&CurrentThread->UserTime);
-      InterlockedIncrementUL(&CurrentProcess->UserTime);
+      (void)InterlockedIncrementUL(&CurrentThread->UserTime);
+      (void)InterlockedIncrementUL(&CurrentProcess->UserTime);
       Prcb->UserTime++;
    }
    else
@@ -283,8 +283,8 @@ KeUpdateRunTime(
       }
       else
       {
-         InterlockedIncrementUL(&CurrentThread->KernelTime);
-         InterlockedIncrementUL(&CurrentProcess->KernelTime);
+         (void)InterlockedIncrementUL(&CurrentThread->KernelTime);
+         (void)InterlockedIncrementUL(&CurrentProcess->KernelTime);
          Prcb->KernelTime++;
       }
    }

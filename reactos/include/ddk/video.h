@@ -36,6 +36,7 @@
 #else
   #define VPAPI DECLSPEC_IMPORT
 #endif
+#define VIDEOPORT_API VPAPI
 
 #include "videoagp.h"
 #include "ntddvdeo.h"

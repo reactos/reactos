@@ -29,6 +29,7 @@ Author:
 //
 // Object Functions
 //
+NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCreateObject(
@@ -43,12 +44,14 @@ ObCreateObject(
     OUT PVOID *Object
 );
 
+NTKERNELAPI
 ULONG
 NTAPI
 ObGetObjectPointerCount(
     IN PVOID Object
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByName(
@@ -62,6 +65,7 @@ ObReferenceObjectByName(
     OUT PVOID *Object
 );
 
+NTKERNELAPI
 NTSTATUS 
 NTAPI
 ObFindHandleForObject(
@@ -93,6 +97,7 @@ NtCloseObjectAuditAlarm(
     IN BOOLEAN GenerateOnClose
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateDirectoryObject(
@@ -101,6 +106,7 @@ NtCreateDirectoryObject(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateSymbolicLinkObject(
@@ -110,7 +116,7 @@ NtCreateSymbolicLinkObject(
     IN PUNICODE_STRING Name
 );
 
-NTSYSAPI
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteObjectAuditAlarm(
@@ -119,6 +125,7 @@ NtDeleteObjectAuditAlarm(
     IN BOOLEAN GenerateOnClose
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDuplicateObject(
@@ -131,18 +138,21 @@ NtDuplicateObject(
     IN ULONG Options
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMakePermanentObject(
     IN HANDLE Object
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMakeTemporaryObject(
     IN HANDLE Handle
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenDirectoryObject(
@@ -151,6 +161,7 @@ NtOpenDirectoryObject(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenJobObject(
@@ -159,6 +170,7 @@ NtOpenJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenSymbolicLinkObject(
@@ -167,6 +179,7 @@ NtOpenSymbolicLinkObject(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDirectoryObject(
@@ -179,6 +192,7 @@ NtQueryDirectoryObject(
     OUT PULONG ReturnLength OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryObject(
@@ -200,6 +214,7 @@ NtQuerySecurityObject(
     OUT PULONG ResultLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySymbolicLinkObject(
@@ -208,6 +223,7 @@ NtQuerySymbolicLinkObject(
     OUT PULONG DataWritten OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationObject(
@@ -226,6 +242,7 @@ NtSetSecurityObject(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSignalAndWaitForSingleObject(
@@ -235,6 +252,7 @@ NtSignalAndWaitForSingleObject(
     IN PLARGE_INTEGER Time
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForMultipleObjects(
@@ -245,6 +263,7 @@ NtWaitForMultipleObjects(
     IN PLARGE_INTEGER Time
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForSingleObject(
@@ -253,14 +272,14 @@ NtWaitForSingleObject(
     IN PLARGE_INTEGER Time
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClose(
     IN HANDLE Handle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCloseObjectAuditAlarm(
@@ -278,6 +297,7 @@ ZwCreateDirectoryObject(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSymbolicLinkObject(
@@ -309,6 +329,7 @@ ZwDuplicateObject(
     IN ULONG Options
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakePermanentObject(
@@ -331,6 +352,7 @@ ZwOpenDirectoryObject(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenJobObject(
@@ -348,6 +370,7 @@ ZwOpenSymbolicLinkObject(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDirectoryObject(
@@ -360,6 +383,7 @@ ZwQueryDirectoryObject(
     OUT PULONG ReturnLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryObject(
@@ -370,7 +394,7 @@ ZwQueryObject(
     OUT PULONG ResultLength OPTIONAL
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySecurityObject(
@@ -390,6 +414,7 @@ ZwQuerySymbolicLinkObject(
     OUT PULONG DataWritten OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationObject(
@@ -399,7 +424,7 @@ ZwSetInformationObject(
     IN ULONG Length
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSecurityObject(
@@ -408,6 +433,7 @@ ZwSetSecurityObject(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSignalAndWaitForSingleObject(
@@ -417,6 +443,7 @@ ZwSignalAndWaitForSingleObject(
     IN PLARGE_INTEGER Time
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForMultipleObjects(

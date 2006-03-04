@@ -1063,7 +1063,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
 {
     PVOID BufferW;
     ULONG LengthW;
-    ULONG RegDataType;
+    ULONG RegDataType = REG_NONE;
     CONFIGRET ret;
 
     TRACE("%lx %lu %p %p %p %lx %lx\n",

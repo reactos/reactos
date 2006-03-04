@@ -186,7 +186,7 @@ IntGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
 BOOL STDCALL
 NtGdiUnionRect(PRECT UnsafeDest, const RECT* UnsafeSrc1, const RECT* UnsafeSrc2)
 {
-  RECT Dest, Src1, Src2;
+    RECT Dest, Src1 = {0}, Src2 = {0};
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 

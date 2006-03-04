@@ -8,12 +8,6 @@
 
 #define USB_HUB_TAG TAG('u','s','b','h')
 
-NTSTATUS STDCALL
-IoAttachDeviceToDeviceStackSafe(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice,
-  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-
 typedef struct _HUB_DEVICE_EXTENSION
 {
 	BOOLEAN IsFDO;

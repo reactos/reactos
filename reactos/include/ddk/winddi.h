@@ -42,10 +42,8 @@ extern "C" {
 #define DECL_IMPORT __attribute__((dllimport))
 #endif
 
-#if defined(_WIN32K_)
-#define WIN32KAPI DECL_EXPORT
-#else
-#define WIN32KAPI DECL_IMPORT
+#ifndef WIN32KAPI
+#define WIN32KAPI DECLSPEC_ADDRSAFE
 #endif
 
 #define DDI_DRIVER_VERSION_NT4            0x00020000

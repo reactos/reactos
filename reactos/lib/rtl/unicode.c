@@ -965,7 +965,7 @@ NTSTATUS
 NTAPI
 RtlOemStringToUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PCOEM_STRING OemSource,
+   IN POEM_STRING OemSource,
    IN BOOLEAN AllocateDestinationString)
 {
     NTSTATUS Status;

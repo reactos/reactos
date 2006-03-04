@@ -2765,7 +2765,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
         {
           Mt->OwnerWnd = NewWnd;
           SetCapture(Mt->OwnerWnd);
-          NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd);
+          (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd);
         }
 
       Mt->TopMenu = Mt->CurrentMenu = NewMenu; /* all subpopups are hidden */
@@ -3128,7 +3128,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
     }
 
   SetCapture(Mt.OwnerWnd);
-  NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt.OwnerWnd);
+  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt.OwnerWnd);
 
   while (! fEndMenu)
     {
@@ -3418,7 +3418,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
         }
     }
 
-  NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
+  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
   SetCapture(NULL);  /* release the capture */
 
   /* If dropdown is still painted and the close box is clicked on

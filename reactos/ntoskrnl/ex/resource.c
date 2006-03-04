@@ -109,6 +109,9 @@ ExpCheckForApcsDisabled(IN BOOLEAN BreakIfTrue,
         DbgBreakPoint();
     }
 }
+#else
+#define ExpVerifyResource(r)
+#define ExpCheckForApcsDisabled(b,r,t)
 #endif
 
 /*++
@@ -598,10 +601,13 @@ FASTCALL
 ExpWaitForResource(IN PERESOURCE Resource,
                    IN PVOID Object)
 {
+#if DBG
     ULONG i;
-    ULONG Size, WaitCount = 0;
+    ULONG Size;
     KIRQL OldIrql;
     POWNER_ENTRY Owner;
+#endif
+    ULONG WaitCount = 0;
     NTSTATUS Status;
     LARGE_INTEGER Timeout;
 

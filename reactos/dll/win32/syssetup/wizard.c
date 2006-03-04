@@ -330,7 +330,7 @@ AckPageDlgProc(HWND hwndDlg,
                 {
                   *End = L'\0';
                 }
-              ListBox_AddString(GetDlgItem(hwndDlg, IDC_PROJECTS), CurrentProject);
+              (void)ListBox_AddString(GetDlgItem(hwndDlg, IDC_PROJECTS), CurrentProject);
               if (NULL != End)
                 {
                   CurrentProject = End + 1;

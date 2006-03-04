@@ -478,13 +478,13 @@ UpdatePrincipalListItem(IN PSECURITY_PAGE sp,
     /* don't change the list item state */
     li.mask &= ~(LVIF_STATE | LVIF_PARAM);
 
-    ListView_SetItem(sp->hWndPrincipalsList,
-                     &li);
+    (void)ListView_SetItem(sp->hWndPrincipalsList,
+                           &li);
 
     /* sort the principals list view again */
-    ListView_SortItems(sp->hWndPrincipalsList,
-                       PrincipalCompare,
-                       (LPARAM)sp);
+    (void)ListView_SortItems(sp->hWndPrincipalsList,
+                             PrincipalCompare,
+                             (LPARAM)sp);
 }
 
 static VOID
@@ -1025,9 +1025,9 @@ EndDeferWnds:
                   &rcControl);
     lvc.mask = LVCF_WIDTH;
     lvc.cx = rcControl.right;
-    ListView_SetColumn(sp->hWndPrincipalsList,
-                       0,
-                       &lvc);
+    (void)ListView_SetColumn(sp->hWndPrincipalsList,
+                             0,
+                             &lvc);
 
     /* calculate the columns of the allow/deny checkboxes */
     SetAceCheckListColumns(sp->hAceCheckList,
@@ -1263,9 +1263,9 @@ SecurityPageProc(IN HWND hwndDlg,
                                      DWL_USER,
                                      (DWORD_PTR)sp);
 
-                    ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
-                                                        LVS_EX_FULLROWSELECT,
-                                                        LVS_EX_FULLROWSELECT);
+                    (void)ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
+                                                              LVS_EX_FULLROWSELECT,
+                                                              LVS_EX_FULLROWSELECT);
 
                     sp->hiPrincipals = ImageList_LoadBitmap(hDllInstance,
                                                             MAKEINTRESOURCE(IDB_USRGRPIMAGES),
@@ -1278,9 +1278,9 @@ SecurityPageProc(IN HWND hwndDlg,
                     /* setup the listview control */
                     if (sp->hiPrincipals != NULL)
                     {
-                        ListView_SetImageList(sp->hWndPrincipalsList,
-                                              sp->hiPrincipals,
-                                              LVSIL_SMALL);
+                        (void)ListView_SetImageList(sp->hWndPrincipalsList,
+                                                    sp->hiPrincipals,
+                                                    LVSIL_SMALL);
                     }
 
                     GetClientRect(sp->hWndPrincipalsList,
@@ -1290,9 +1290,9 @@ SecurityPageProc(IN HWND hwndDlg,
                     lvc.mask = LVCF_FMT | LVCF_WIDTH;
                     lvc.fmt = LVCFMT_LEFT;
                     lvc.cx = rcLvClient.right;
-                    ListView_InsertColumn(sp->hWndPrincipalsList,
-                                          0,
-                                          &lvc);
+                    (void)ListView_InsertColumn(sp->hWndPrincipalsList,
+                                                0,
+                                                &lvc);
                     
                     ReloadPrincipalsList(sp);
                     

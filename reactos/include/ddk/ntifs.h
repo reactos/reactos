@@ -29,7 +29,6 @@
 #endif
 
 #include "ntddk.h"
-#include "csq.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,8 +43,14 @@ extern "C" {
 #endif
 
 #ifndef NTKERNELAPI
+#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined (_NTIFS_) || defined(_NTHAL_)
 #define NTKERNELAPI DECLSPEC_IMPORT
+#else
+#define NTKERNELAPI
 #endif
+#endif
+
+#include "csq.h"
 
 typedef struct _SE_EXPORTS                  *PSE_EXPORTS;
 
@@ -2934,21 +2939,21 @@ FsRtlUninitializeOplock (
     IN OUT POPLOCK Oplock
 );
 
-NTSYSAPI
+NTHALAPI
 VOID
 NTAPI
 HalDisplayString (
     IN PCHAR String
 );
 
-NTSYSAPI
+NTHALAPI
 VOID
 NTAPI
 HalQueryRealTimeClock (
     IN OUT PTIME_FIELDS TimeFields
 );
 
-NTSYSAPI
+NTHALAPI
 VOID
 NTAPI
 HalSetRealTimeClock (

@@ -344,6 +344,7 @@ RtlCreateHeap(
     IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
 );
 
+NTSYSAPI
 ULONG
 NTAPI
 RtlCompactHeap(
@@ -365,6 +366,7 @@ RtlFreeHeap(
     IN PVOID P
 );
 
+NTSYSAPI
 ULONG
 NTAPI
 RtlGetProcessHeaps(
@@ -372,6 +374,7 @@ RtlGetProcessHeaps(
     HANDLE *HeapArray
 );
 
+NTSYSAPI
 PVOID
 NTAPI
 RtlReAllocateHeap(
@@ -381,14 +384,17 @@ RtlReAllocateHeap(
     ULONG Size
 );
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlLockHeap(IN HANDLE Heap);
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlUnlockHeap(IN HANDLE Heap);
 
+NTSYSAPI
 ULONG
 NTAPI
 RtlSizeHeap(
@@ -397,6 +403,7 @@ RtlSizeHeap(
     IN PVOID MemoryPointer
 );
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlValidateHeap(
@@ -429,6 +436,7 @@ RtlAddAccessAllowedAce(
     PSID Sid
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAddAccessAllowedAceEx(
@@ -439,6 +447,7 @@ RtlAddAccessAllowedAceEx(
     IN PSID pSid
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAddAccessDeniedAce(
@@ -448,6 +457,7 @@ RtlAddAccessDeniedAce(
     PSID Sid
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAddAccessDeniedAceEx(
@@ -458,6 +468,7 @@ RtlAddAccessDeniedAceEx(
     IN PSID Sid
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAddAuditAccessAceEx(
@@ -481,6 +492,7 @@ RtlAddAce(
     ULONG AceListLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAddAuditAccessAce(
@@ -492,6 +504,7 @@ RtlAddAuditAccessAce(
     BOOLEAN Failure
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAdjustPrivilege(
@@ -518,6 +531,7 @@ RtlAllocateAndInitializeSid(
     OUT PSID *Sid
 );
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlAreAllAccessesGranted(
@@ -525,6 +539,7 @@ RtlAreAllAccessesGranted(
     ACCESS_MASK DesiredAccess
 );
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlAreAnyAccessesGranted(
@@ -540,6 +555,7 @@ RtlCopyLuid(
     IN PLUID LuidSrc
 );
 
+NTSYSAPI
 VOID
 NTAPI
 RtlCopyLuidAndAttributesArray(
@@ -548,6 +564,7 @@ RtlCopyLuidAndAttributesArray(
     PLUID_AND_ATTRIBUTES Dest
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCopySidAndAttributesArray(
@@ -560,6 +577,7 @@ RtlCopySidAndAttributesArray(
     PULONG RemainingSidAreaSize
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlConvertSidToUnicodeString(
@@ -626,6 +644,7 @@ RtlEqualSid (
     IN PSID Sid2
 );
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlFirstFreeAce(
@@ -649,6 +668,7 @@ RtlGetAce(
     PVOID *Ace
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetControlSecurityDescriptor(
@@ -1181,7 +1201,7 @@ NTSTATUS
 NTAPI
 RtlOemStringToUnicodeString(
     PUNICODE_STRING DestinationString,
-    PCOEM_STRING SourceString,
+    POEM_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 

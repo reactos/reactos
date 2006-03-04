@@ -56,7 +56,7 @@ static DWORD    get_selected_pid(void)
         lvitem.stateMask = LVIS_SELECTED;
         lvitem.iItem = Index;
 
-        ListView_GetItem(hProcessPageListCtrl, &lvitem);
+        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
 
         if (lvitem.state & LVIS_SELECTED)
             break;
@@ -288,7 +288,7 @@ static void DebugChannels_FillList(HWND hChannelLV)
 {
     HANDLE      hProcess;
 
-    ListView_DeleteAllItems(hChannelLV);
+    (void)ListView_DeleteAllItems(hChannelLV);
 
     hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ, FALSE, get_selected_pid());
     if (!hProcess) return; /* FIXME messagebox */
@@ -307,31 +307,31 @@ static void DebugChannels_OnCreate(HWND hwndDlg)
     lvc.fmt = LVCFMT_LEFT;
     lvc.pszText = _T("Debug Channel");
     lvc.cx = 100;
-    ListView_InsertColumn(hLV, 0, &lvc);
+    (void)ListView_InsertColumn(hLV, 0, &lvc);
 
     lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
     lvc.fmt = LVCFMT_CENTER;
     lvc.pszText = _T("Fixme");
     lvc.cx = 55;
-    ListView_InsertColumn(hLV, 1, &lvc);
+    (void)ListView_InsertColumn(hLV, 1, &lvc);
 
     lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
     lvc.fmt = LVCFMT_CENTER;
     lvc.pszText = _T("Err");
     lvc.cx = 55;
-    ListView_InsertColumn(hLV, 2, &lvc);
+    (void)ListView_InsertColumn(hLV, 2, &lvc);
 
     lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
     lvc.fmt = LVCFMT_CENTER;
     lvc.pszText = _T("Warn");
     lvc.cx = 55;
-    ListView_InsertColumn(hLV, 3, &lvc);
+    (void)ListView_InsertColumn(hLV, 3, &lvc);
 
     lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
     lvc.fmt = LVCFMT_CENTER;
     lvc.pszText = _T("Trace");
     lvc.cx = 55;
-    ListView_InsertColumn(hLV, 4, &lvc);
+    (void)ListView_InsertColumn(hLV, 4, &lvc);
 
     DebugChannels_FillList(hLV);
 }

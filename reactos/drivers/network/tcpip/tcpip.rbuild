@@ -5,6 +5,7 @@
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="NDIS40" />
 	<define name="__USE_W32API" />
+	<define name="_NTDRIVER_" />
 	<library>ip</library>
 	<library>oskittcp</library>
 	<library>ndis</library>

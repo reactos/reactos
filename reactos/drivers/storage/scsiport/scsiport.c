@@ -2902,18 +2902,18 @@ SpiRemoveActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   InterlockedDecrement((PLONG)&DeviceExtension->ActiveIrpCount);
   if (PrevIrp)
     {
-      InterlockedExchangePointer(&PrevIrp->Tail.Overlay.DriverContext[0],
-	                         Irp->Tail.Overlay.DriverContext[0]);
+      (void)InterlockedExchangePointer(&PrevIrp->Tail.Overlay.DriverContext[0],
+	                               Irp->Tail.Overlay.DriverContext[0]);
     }
   else
     {
-      InterlockedExchangePointer(&DeviceExtension->NextIrp,
-	                         Irp->Tail.Overlay.DriverContext[0]);
+      (void)InterlockedExchangePointer(&DeviceExtension->NextIrp,
+	                               Irp->Tail.Overlay.DriverContext[0]);
     }
   if (LunExtension->NextIrp == Irp)
     {
-      InterlockedExchangePointer(&LunExtension->NextIrp,
-	                         Irp->Tail.Overlay.DriverContext[1]);
+      (void)InterlockedExchangePointer(&LunExtension->NextIrp,
+	                               Irp->Tail.Overlay.DriverContext[1]);
       return;
     }
   else
@@ -2923,8 +2923,8 @@ SpiRemoveActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         {
 	  if (CurrentIrp->Tail.Overlay.DriverContext[1] == Irp)
 	    {
-	      InterlockedExchangePointer(&CurrentIrp->Tail.Overlay.DriverContext[1],
-		                         Irp->Tail.Overlay.DriverContext[1]);
+	      (void)InterlockedExchangePointer(&CurrentIrp->Tail.Overlay.DriverContext[1],
+		                               Irp->Tail.Overlay.DriverContext[1]);
 	      return;
 	    }
           CurrentIrp = CurrentIrp->Tail.Overlay.DriverContext[1];
@@ -2942,9 +2942,9 @@ SpiAddActiveIrp(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   LunExtension = Irp->Tail.Overlay.DriverContext[2];
   Srb = Irp->Tail.Overlay.DriverContext[3];
   Irp->Tail.Overlay.DriverContext[0] = (PVOID)DeviceExtension->NextIrp;
-  InterlockedExchangePointer(&DeviceExtension->NextIrp, Irp);
+  (void)InterlockedExchangePointer(&DeviceExtension->NextIrp, Irp);
   Irp->Tail.Overlay.DriverContext[1] = (PVOID)LunExtension->NextIrp;
-  InterlockedExchangePointer(&LunExtension->NextIrp, Irp);
+  (void)InterlockedExchangePointer(&LunExtension->NextIrp, Irp);
 }
 
 static VOID

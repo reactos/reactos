@@ -28,6 +28,7 @@ Author:
 //
 // Native calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAddBootEntry(
@@ -35,6 +36,7 @@ NtAddBootEntry(
     IN PUNICODE_STRING EntryValue
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCancelIoFile(
@@ -59,6 +61,7 @@ NtCreateFile(
     IN ULONG EaLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateIoCompletion(
@@ -68,6 +71,7 @@ NtCreateIoCompletion(
     IN ULONG NumberOfConcurrentThreads
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateMailslotFile(
@@ -81,6 +85,7 @@ NtCreateMailslotFile(
     IN PLARGE_INTEGER TimeOut
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateNamedPipeFile(
@@ -100,6 +105,7 @@ NtCreateNamedPipeFile(
     IN PLARGE_INTEGER DefaultTimeOut
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteBootEntry(
@@ -107,6 +113,7 @@ NtDeleteBootEntry(
     IN PUNICODE_STRING EntryValue
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteFile(
@@ -129,6 +136,7 @@ NtDeviceIoControlFile(
     IN ULONG OutputBufferSize
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateBootEntries(
@@ -136,6 +144,7 @@ NtEnumerateBootEntries(
     IN ULONG Unknown2
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushBuffersFile(
@@ -143,6 +152,7 @@ NtFlushBuffersFile(
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushWriteBuffer(VOID);
@@ -163,6 +173,7 @@ NtFsControlFile(
     IN ULONG OutputBufferSize
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLoadDriver(
@@ -185,6 +196,7 @@ NtLockFile(
     IN BOOLEAN ExclusiveLock
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtNotifyChangeDirectoryFile(
@@ -211,6 +223,7 @@ NtOpenFile(
     IN ULONG OpenOptions
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenIoCompletion(
@@ -219,6 +232,7 @@ NtOpenIoCompletion(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryAttributesFile(
@@ -226,6 +240,7 @@ NtQueryAttributesFile(
     OUT PFILE_BASIC_INFORMATION FileInformation
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryBootEntryOrder(
@@ -233,6 +248,7 @@ NtQueryBootEntryOrder(
     IN ULONG Unknown2
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryBootOptions(
@@ -257,6 +273,7 @@ NtQueryDirectoryFile(
     IN BOOLEAN RestartScan
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryEaFile(
@@ -271,6 +288,7 @@ NtQueryEaFile(
     IN BOOLEAN RestartScan
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryFullAttributesFile(
@@ -289,6 +307,7 @@ NtQueryInformationFile(
     IN FILE_INFORMATION_CLASS FileInformationClass
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryIoCompletion(
@@ -340,6 +359,7 @@ NtReadFile(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadFileScatter(
@@ -354,6 +374,7 @@ NtReadFileScatter(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRemoveIoCompletion(
@@ -364,6 +385,7 @@ NtRemoveIoCompletion(
     IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetBootEntryOrder(
@@ -371,6 +393,7 @@ NtSetBootEntryOrder(
     IN ULONG Unknown2
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetBootOptions(
@@ -378,6 +401,7 @@ NtSetBootOptions(
     ULONG Unknown2
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetEaFile(
@@ -398,6 +422,7 @@ NtSetInformationFile(
     IN FILE_INFORMATION_CLASS FileInformationClass
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetIoCompletion(
@@ -429,6 +454,7 @@ NtSetVolumeInformationFile(
     IN FS_INFORMATION_CLASS FsInformationClass
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTranslateFilePath(
@@ -437,6 +463,7 @@ NtTranslateFilePath(
     ULONG Unknown3
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnloadDriver(
@@ -469,6 +496,7 @@ NtWriteFile(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWriteFileGather(
@@ -483,6 +511,7 @@ NtWriteFileGather(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAddBootEntry(
@@ -490,6 +519,7 @@ ZwAddBootEntry(
     IN PUNICODE_STRING EntryValue
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCancelIoFile(
@@ -497,7 +527,7 @@ ZwCancelIoFile(
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateFile(
@@ -514,6 +544,7 @@ ZwCreateFile(
     IN ULONG EaLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateIoCompletion(
@@ -523,6 +554,7 @@ ZwCreateIoCompletion(
     IN ULONG NumberOfConcurrentThreads
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateMailslotFile(
@@ -536,6 +568,7 @@ ZwCreateMailslotFile(
     IN PLARGE_INTEGER TimeOut
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateNamedPipeFile(
@@ -555,6 +588,7 @@ ZwCreateNamedPipeFile(
     IN PLARGE_INTEGER DefaultTimeOut
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteBootEntry(
@@ -569,7 +603,7 @@ ZwDeleteFile(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeviceIoControlFile(
@@ -585,6 +619,7 @@ ZwDeviceIoControlFile(
     IN ULONG OutputBufferSize
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateBootEntries(
@@ -602,11 +637,12 @@ ZwFlushBuffersFile(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushWriteBuffer(VOID);
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFsControlFile(
@@ -623,6 +659,7 @@ ZwFsControlFile(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadDriver(
@@ -630,7 +667,7 @@ ZwLoadDriver(
 );
 #endif
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockFile(
@@ -646,6 +683,7 @@ ZwLockFile(
     IN BOOLEAN ExclusiveLock
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeDirectoryFile(
@@ -660,7 +698,7 @@ ZwNotifyChangeDirectoryFile(
     IN BOOLEAN WatchTree
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenFile(
@@ -672,6 +710,7 @@ ZwOpenFile(
     IN ULONG OpenOptions
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenIoCompletion(
@@ -680,6 +719,7 @@ ZwOpenIoCompletion(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryAttributesFile(
@@ -687,6 +727,7 @@ ZwQueryAttributesFile(
     OUT PFILE_BASIC_INFORMATION FileInformation
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryBootEntryOrder(
@@ -694,6 +735,7 @@ ZwQueryBootEntryOrder(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryBootOptions(
@@ -701,7 +743,7 @@ ZwQueryBootOptions(
     IN ULONG Unknown2
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDirectoryFile(
@@ -719,6 +761,7 @@ ZwQueryDirectoryFile(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryEaFile(
@@ -734,6 +777,7 @@ ZwQueryEaFile(
 );
 #endif
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryFullAttributesFile(
@@ -741,7 +785,7 @@ ZwQueryFullAttributesFile(
     OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationFile(
@@ -752,6 +796,7 @@ ZwQueryInformationFile(
     IN FILE_INFORMATION_CLASS FileInformationClass
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryIoCompletion(
@@ -762,7 +807,7 @@ ZwQueryIoCompletion(
     OUT PULONG ResultLength OPTIONAL
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryQuotaInformationFile(
@@ -777,7 +822,7 @@ ZwQueryQuotaInformationFile(
     IN BOOLEAN RestartScan
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryVolumeInformationFile(
@@ -788,7 +833,7 @@ ZwQueryVolumeInformationFile(
     IN FS_INFORMATION_CLASS FsInformationClass
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadFile(
@@ -803,6 +848,7 @@ ZwReadFile(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadFileScatter(
@@ -817,6 +863,7 @@ ZwReadFileScatter(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRemoveIoCompletion(
@@ -827,6 +874,7 @@ ZwRemoveIoCompletion(
     IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetBootEntryOrder(
@@ -834,6 +882,7 @@ ZwSetBootEntryOrder(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetBootOptions(
@@ -842,6 +891,7 @@ ZwSetBootOptions(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEaFile(
@@ -852,7 +902,7 @@ ZwSetEaFile(
 );
 #endif
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationFile(
@@ -863,6 +913,7 @@ ZwSetInformationFile(
     IN FILE_INFORMATION_CLASS FileInformationClass
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetIoCompletion(
@@ -873,7 +924,7 @@ ZwSetIoCompletion(
     IN ULONG CompletionInformation
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetQuotaInformationFile(
@@ -883,7 +934,7 @@ ZwSetQuotaInformationFile(
     ULONG BufferLength
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetVolumeInformationFile(
@@ -894,6 +945,7 @@ ZwSetVolumeInformationFile(
     IN FS_INFORMATION_CLASS FsInformationClass
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTranslateFilePath(
@@ -909,7 +961,7 @@ ZwUnloadDriver(
     IN PUNICODE_STRING DriverServiceName
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnlockFile(
@@ -920,7 +972,7 @@ ZwUnlockFile(
     OUT ULONG Key OPTIONAL
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteFile(
@@ -935,6 +987,7 @@ ZwWriteFile(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteFileGather(

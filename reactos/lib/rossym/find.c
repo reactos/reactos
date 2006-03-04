@@ -35,7 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#define NTOSAPI
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"

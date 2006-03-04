@@ -102,7 +102,9 @@ EngInitializeSafeSemaphore(
          InterlockedDecrement(&Semaphore->lCount);
          return FALSE;
       }
-      InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, hSem);
+      /* FIXME - not thread-safe! Check result of InterlockedCompareExchangePointer
+                 and delete semaphore if already initialized! */
+      (void)InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, hSem);
    }
    else
    {
@@ -124,8 +126,9 @@ EngDeleteSafeSemaphore(
 {
    if (InterlockedDecrement(&Semaphore->lCount) == 0)
    {
+      /* FIXME - not thread-safe! Use result of InterlockedCompareExchangePointer! */
       EngDeleteSemaphore(Semaphore->hsem);
-      InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, NULL);
+      (void)InterlockedExchangePointer((volatile PVOID *)&Semaphore->hsem, NULL);
    }
 }
 

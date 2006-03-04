@@ -238,11 +238,11 @@ typedef struct _LOADER_PARAMETER_BLOCK
 // Kernel Exports
 //
 #ifdef __NTOSKRNL__
-extern HAL_PRIVATE_DISPATCH NTSYSAPI HalPrivateDispatchTable;
+extern HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 #else
-extern PHAL_PRIVATE_DISPATCH NTSYSAPI HalPrivateDispatchTable;
+extern PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 #endif
-extern ULONG NTSYSAPI KdComPortInUse;
+extern ULONG KdComPortInUse;
 
 #endif
 #endif

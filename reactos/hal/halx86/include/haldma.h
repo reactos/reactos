@@ -376,19 +376,6 @@ HalpGetDmaAdapter(
    IN PDEVICE_DESCRIPTION DeviceDescription,
    OUT PULONG NumberOfMapRegisters);
 
-/* FIXME: I added the definition to winddk.h but gcc wants it -HERE-. WHY?? */
-#ifndef _MSC_VER
-NTSTATUS
-NTAPI
-IoAllocateAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG NumberOfMapRegisters,
-    IN PDRIVER_CONTROL ExecutionRoutine,
-    IN PVOID Context
-);
-#endif
-
 ULONG STDCALL
 HalpDmaGetDmaAlignment(
    PADAPTER_OBJECT AdapterObject);

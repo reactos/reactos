@@ -130,7 +130,7 @@ BOOL ParseCmdline(int argc, char* argv[])
                             Usage();
                             return EXIT_FAILURE;
                         }
-                        (--argv)[i]; /* move pointer back down to previous argv */
+                        --i; /* move pointer back down to previous argv */
                         break;
                     case 'r' :
                         bDoShowRouteTable = TRUE;

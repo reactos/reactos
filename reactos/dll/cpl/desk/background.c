@@ -72,7 +72,7 @@ void AddListViewItems()
     dummy.iSubItem  = 0;
     dummy.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
     
-    ListView_InsertColumn(g_hBackgroundList, 0, &dummy);
+    (void)ListView_InsertColumn(g_hBackgroundList, 0, &dummy);
 
     /* Add the "None" item */
 
@@ -93,7 +93,7 @@ void AddListViewItems()
     listItem.iItem      = g_listViewItemCount;
     listItem.lParam     = g_listViewItemCount;
     
-    ListView_InsertItem(g_hBackgroundList, &listItem);
+    (void)ListView_InsertItem(g_hBackgroundList, &listItem);
     ListView_SetItemState(g_hBackgroundList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
     g_listViewItemCount++;
@@ -118,7 +118,7 @@ void AddListViewItems()
             if(i++ == 0)
             {
                 g_hShellImageList = himl;
-                ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
+                (void)ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
             }
 
             backgroundItem = &g_backgroundItems[g_listViewItemCount];
@@ -136,7 +136,7 @@ void AddListViewItems()
             listItem.iItem      = g_listViewItemCount;
             listItem.lParam     = g_listViewItemCount;
 
-            ListView_InsertItem(g_hBackgroundList, &listItem);
+            (void)ListView_InsertItem(g_hBackgroundList, &listItem);
             ListView_SetItemState(g_hBackgroundList, g_listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
             g_listViewItemCount++;
@@ -185,7 +185,7 @@ void AddListViewItems()
 				if(i++ == 0)
 				{
 					g_hShellImageList = himl;
-					ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
+					(void)ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
 				}
 
 				backgroundItem = &g_backgroundItems[g_listViewItemCount];
@@ -203,7 +203,7 @@ void AddListViewItems()
 				listItem.iItem      = g_listViewItemCount;
 				listItem.lParam     = g_listViewItemCount;
 	            
-				ListView_InsertItem(g_hBackgroundList, &listItem);
+				(void)ListView_InsertItem(g_hBackgroundList, &listItem);
 	            
 				g_listViewItemCount++;
 			}
@@ -351,7 +351,7 @@ void OnBrowseButton()
         listItem.iItem      = g_listViewItemCount;
         listItem.lParam     = g_listViewItemCount;
         
-        ListView_InsertItem(g_hBackgroundList, &listItem);
+        (void)ListView_InsertItem(g_hBackgroundList, &listItem);
         
         g_listViewItemCount++;
     }

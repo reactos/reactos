@@ -21,7 +21,7 @@ void AddItem ( DWORD name_id, DWORD descr_id, DWORD cmd_id , DWORD param_id ) {
     item.pszText = szTemp;
     item.iItem = ListView_GetItemCount(hToolsListCtrl);
     item.lParam = 0;
-    ListView_InsertItem(hToolsListCtrl, &item);
+    (void)ListView_InsertItem(hToolsListCtrl, &item);
 
 	ListItems_Cmds[item.iItem] = cmd_id;
 	ListItems_Params[item.iItem] = param_id;
@@ -67,13 +67,13 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         LoadString(hInst, IDS_TOOLS_COLUMN_NAME, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 150;
-        ListView_InsertColumn(hToolsListCtrl, 0, &column);
+        (void)ListView_InsertColumn(hToolsListCtrl, 0, &column);
 
         column.mask = LVCF_TEXT | LVCF_WIDTH;
         LoadString(hInst, IDS_TOOLS_COLUMN_DESCR, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 500;
-        ListView_InsertColumn(hToolsListCtrl, 1, &column);
+        (void)ListView_InsertColumn(hToolsListCtrl, 1, &column);
 
 		FillListView();
 		return TRUE;

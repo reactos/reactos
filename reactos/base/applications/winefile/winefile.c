@@ -1670,11 +1670,11 @@ static HWND create_child_window(ChildWnd* child)
 
 	UnhookWindowsHookEx(hcbthook);
 
-	ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
-	ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
+	(void)ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
+	(void)ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
 
 	idx = ListBox_FindItemData(child->left.hwnd, 0, child->left.cur);
-	ListBox_SetCurSel(child->left.hwnd, idx);
+	(void)ListBox_SetCurSel(child->left.hwnd, idx);
 
 	return child->hwnd;
 }
@@ -1894,12 +1894,12 @@ static void CheckForFileInfo(struct PropertiesDialog* dlg, HWND hwnd, LPCTSTR st
 						/* Retrieve file description for language and code page */
 						if (VerQueryValue(dlg->pVersionData, subblock, (PVOID)&pTxt, &nValLen)) {
 							int idx = ListBox_AddString(hlbox, infoStr);
-							ListBox_SetItemData(hlbox, idx, pTxt);
+							(void)ListBox_SetItemData(hlbox, idx, pTxt);
 						}
 					}
 				}
 
-				ListBox_SetCurSel(hlbox, 0);
+				(void)ListBox_SetCurSel(hlbox, 0);
 
 				PropDlg_DisplayValue(hlbox, GetDlgItem(hwnd,IDC_LIST_PROP_VERSION_VALUES));
 			}
@@ -2038,7 +2038,7 @@ static BOOL toggle_fullscreen(HWND hwnd)
 		GetWindowRect(hwnd, &g_fullscreen.orgPos);
 		g_fullscreen.wasZoomed = IsZoomed(hwnd);
 
-		Frame_CalcFrameClient(hwnd, &rt);
+		(void)Frame_CalcFrameClient(hwnd, &rt);
 		ClientToScreen(hwnd, (LPPOINT)&rt.left);
 		ClientToScreen(hwnd, (LPPOINT)&rt.right);
 
@@ -2065,7 +2065,7 @@ static void fullscreen_move(HWND hwnd)
 	RECT rt, pos;
 	GetWindowRect(hwnd, &pos);
 
-	Frame_CalcFrameClient(hwnd, &rt);
+	(void)Frame_CalcFrameClient(hwnd, &rt);
 	ClientToScreen(hwnd, (LPPOINT)&rt.left);
 	ClientToScreen(hwnd, (LPPOINT)&rt.right);
 
@@ -2278,13 +2278,13 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 							ChildWnd* child = (ChildWnd*) GetWindowLongPtr(childWnd, GWLP_USERDATA);
 							SetWindowFont(child->left.hwnd, Globals.hfont, TRUE);
 							SetWindowFont(child->right.hwnd, Globals.hfont, TRUE);
-							ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
-							ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
+							(void)ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
+							(void)ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
 							InvalidateRect(child->left.hwnd, NULL, TRUE);
 							InvalidateRect(child->right.hwnd, NULL, TRUE);
 						}
 
-						SelectFont(hdc, hFontOld);
+						(void)SelectFont(hdc, hFontOld);
 					}
 					else if (CommDlgExtendedError()) {
 						LoadString(Globals.hInstance, IDS_FONT_SEL_DLG_NAME, dlg_name, BUFFER_LEN);
@@ -2504,7 +2504,7 @@ static void resize_tree(ChildWnd* child, int cx, int cy)
 		hdl.prc   = &rt;
 		hdl.pwpos = &wp;
 
-		Header_Layout(child->left.hwndHeader, &hdl);
+		(void)Header_Layout(child->left.hwndHeader, &hdl);
 
 		DeferWindowPos(hdwp, child->left.hwndHeader, wp.hwndInsertAfter,
 						wp.x-1, wp.y, child->split_pos-SPLIT_WIDTH/2+1, wp.cy, wp.flags);
@@ -2540,7 +2540,7 @@ static HWND create_header(HWND parent, Pane* pane, int id)
 		hdi.pszText = g_pos_names[idx];
 		hdi.fmt = HDF_STRING | g_pos_align[idx];
 		hdi.cxy = pane->widths[idx];
-		Header_InsertItem(hwnd, idx, &hdi);
+		(void)Header_InsertItem(hwnd, idx, &hdi);
 	}
 
 	return hwnd;
@@ -2564,7 +2564,7 @@ static void init_output(HWND hwnd)
 
 	old_font = SelectFont(hdc, Globals.hfont);
 	GetTextExtentPoint32(hdc, sSpace, 1, &Globals.spaceSize);
-	SelectFont(hdc, old_font);
+	(void)SelectFont(hdc, old_font);
 	ReleaseDC(hwnd, hdc);
 }
 
@@ -2829,7 +2829,7 @@ static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_fl
 		if (idx != -1)
 			idx++;
 
-		ListBox_InsertItemData(pane->hwnd, idx, entry);
+		(void)ListBox_InsertItemData(pane->hwnd, idx, entry);
 
 		if (pane->treePane && entry->expanded)
 			idx = insert_entries(pane, entry->down, pattern, filter_flags, idx);
@@ -3507,18 +3507,18 @@ static void set_header(Pane* pane)
 
 	for(; x+pane->widths[i]<scroll_pos && i<COLUMNS; i++) {
 		x += pane->widths[i];
-		Header_SetItem(pane->hwndHeader, i, &item);
+		(void)Header_SetItem(pane->hwndHeader, i, &item);
 	}
 
 	if (i < COLUMNS) {
 		x += pane->widths[i];
 		item.cxy = x - scroll_pos;
-		Header_SetItem(pane->hwndHeader, i++, &item);
+		(void)Header_SetItem(pane->hwndHeader, i++, &item);
 
 		for(; i<COLUMNS; i++) {
 			item.cxy = pane->widths[i];
 			x += pane->widths[i];
-			Header_SetItem(pane->hwndHeader, i, &item);
+			(void)Header_SetItem(pane->hwndHeader, i, &item);
 		}
 	}
 }
@@ -3537,7 +3537,7 @@ static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
 			GetClientRect(pane->hwnd, &clnt);
 
 			/* move immediate to simulate HDS_FULLDRAG (for now [04/2000] not really needed with WINELIB) */
-			Header_SetItem(pane->hwndHeader, idx, phdn->pitem);
+			(void)Header_SetItem(pane->hwndHeader, idx, phdn->pitem);
 
 			pane->widths[idx] += dx;
 
@@ -3586,7 +3586,7 @@ static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
 			item.mask = HDI_WIDTH;
 			item.cxy = pane->widths[phdn->iItem];
 
-			Header_SetItem(pane->hwndHeader, phdn->iItem, &item);
+			(void)Header_SetItem(pane->hwndHeader, phdn->iItem, &item);
 			InvalidateRect(pane->hwnd, 0, TRUE);
 			break;}
 	}
@@ -3610,11 +3610,11 @@ static void scan_entry(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 		if (res==LB_ERR || !sub || sub->level<=entry->level)
 			break;
 
-		ListBox_DeleteString(child->left.hwnd, idx+1);
+		(void)ListBox_DeleteString(child->left.hwnd, idx+1);
 	}
 
 	/* empty right pane */
-	ListBox_ResetContent(child->right.hwnd);
+	(void)ListBox_ResetContent(child->right.hwnd);
 
 	/* release memory */
 	free_entries(entry);
@@ -3704,7 +3704,7 @@ static void collapse_entry(Pane* pane, Entry* dir)
 		if (res==LB_ERR || !sub || sub->level<=dir->level)
 			break;
 
-		ListBox_DeleteString(pane->hwnd, idx+1);
+		(void)ListBox_DeleteString(pane->hwnd, idx+1);
 	}
 
 	dir->expanded = FALSE;
@@ -3715,7 +3715,7 @@ static void collapse_entry(Pane* pane, Entry* dir)
 
 static void refresh_right_pane(ChildWnd* child)
 {
-	ListBox_ResetContent(child->right.hwnd);
+	(void)ListBox_ResetContent(child->right.hwnd);
 	insert_entries(&child->right, child->right.root, child->filter_pattern, child->filter_flags, -1);
 	calc_widths(&child->right, FALSE);
 
@@ -3783,7 +3783,7 @@ static void refresh_child(ChildWnd* child)
 	set_curdir(child, entry, 0, child->hwnd);
 
 	idx = ListBox_FindItemData(child->left.hwnd, 0, child->left.cur);
-	ListBox_SetCurSel(child->left.hwnd, idx);
+	(void)ListBox_SetCurSel(child->left.hwnd, idx);
 }
 
 
@@ -3951,7 +3951,7 @@ static void activate_entry(ChildWnd* child, Pane* pane, HWND hwnd)
 
 			if (!pane->treePane) focus_entry: {
 				int idx = ListBox_FindItemData(child->left.hwnd, ListBox_GetCurSel(child->left.hwnd), entry);
-				ListBox_SetCurSel(child->left.hwnd, idx);
+				(void)ListBox_SetCurSel(child->left.hwnd, idx);
 				set_curdir(child, entry, idx, hwnd);
 			}
 		}
@@ -4587,7 +4587,7 @@ static LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 
 		case WM_SETFOCUS:
 			child->focus_pane = pane==&child->right? 1: 0;
-			ListBox_SetSel(hwnd, TRUE, 1);
+			(void)ListBox_SetSel(hwnd, TRUE, 1);
 			/*TODO: check menu items */
 			break;
 
@@ -4821,7 +4821,7 @@ static void show_frame(HWND hwndParent, int cmdshow, LPCTSTR path)
 				if (lstrcmp(entry->data.cFileName,fullname)==0 ||
 						lstrcmp(entry->data.cAlternateFileName,fullname)==0)
 				{
-					ListBox_SetCurSel(child->right.hwnd, index);
+					(void)ListBox_SetCurSel(child->right.hwnd, index);
 					SetFocus(child->right.hwnd);
 					break;
 				}

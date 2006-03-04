@@ -237,6 +237,7 @@ typedef NTSTATUS (NTAPI *PIO_CSQ_INSERT_IRP_EX) (struct _IO_CSQ *Csq,
  * As long as the Csq struct and the functions you pass in are resident,
  * there are no IRQL restrictions.
  */
+NTKERNELAPI
 NTSTATUS NTAPI IoCsqInitialize(PIO_CSQ Csq,
                                PIO_CSQ_INSERT_IRP CsqInsertIrp,
                                PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
@@ -250,6 +251,7 @@ NTSTATUS NTAPI IoCsqInitialize(PIO_CSQ Csq,
  * CsqInsertIrp.  This eventually allows you to supply extra tracking
  * information for use with the queue.
  */
+NTKERNELAPI
 NTSTATUS NTAPI IoCsqInitializeEx(PIO_CSQ Csq,
                                  PIO_CSQ_INSERT_IRP_EX CsqInsertIrpEx,
                                  PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
@@ -261,6 +263,7 @@ NTSTATUS NTAPI IoCsqInitializeEx(PIO_CSQ Csq,
 /*
  * Insert an IRP into the queue
  */
+NTKERNELAPI
 VOID NTAPI IoCsqInsertIrp(PIO_CSQ Csq,
                           PIRP Irp,
                           PIO_CSQ_IRP_CONTEXT Context);
@@ -269,6 +272,7 @@ VOID NTAPI IoCsqInsertIrp(PIO_CSQ Csq,
  * Insert an IRP into the queue, with special context maintained that
  * makes it easy to find IRPs in the queue
  */
+NTKERNELAPI
 NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
                                 PIRP Irp,
                                 PIO_CSQ_IRP_CONTEXT Context,
@@ -277,12 +281,14 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 /*
  * Remove a particular IRP from the queue
  */
+NTKERNELAPI
 PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
                           PIO_CSQ_IRP_CONTEXT Context);
 
 /*
  * Remove the next IRP from the queue 
  */
+NTKERNELAPI
 PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
                               PVOID PeekContext);
 

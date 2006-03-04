@@ -195,16 +195,6 @@ IntVideoPortMapPhysicalMemory(
 extern ULONG CsrssInitialized;
 extern PKPROCESS Csrss;
 
-VP_STATUS NTAPI
-VideoPortEnumerateChildren(
-   IN PVOID HwDeviceExtension,
-   IN PVOID Reserved);
-
-PVOID NTAPI
-VideoPortGetProcAddress(
-   IN PVOID HwDeviceExtension,
-   IN PUCHAR FunctionName);
-
 VOID FASTCALL
 IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
@@ -259,10 +249,5 @@ VP_STATUS NTAPI
 IntInt10CallBios(
    IN PVOID Context,
    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments);
-
-VP_STATUS NTAPI
-VideoPortInt10(
-   IN PVOID HwDeviceExtension,
-   IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments);
 
 #endif /* VIDEOPRT_H */

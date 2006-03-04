@@ -25,7 +25,7 @@ PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess)
         
         ASSERT(QuotaBlock != NULL);
 
-        InterlockedIncrementUL(&QuotaBlock->ReferenceCount);
+        (void)InterlockedIncrementUL(&QuotaBlock->ReferenceCount);
         
         Process->QuotaBlock = QuotaBlock;
     }
