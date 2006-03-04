@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2005 Saveliy Tretiakov (saveliyt@mail.ru)  
+ *  Copyright 2005 Saveliy Tretiakov
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,21 +49,21 @@ interface eventlog
 	
 	#define LPWSTR wchar_t*
 	#define LPSTR char*
-	#define LOGHANDLE unsigned char*
-	#define PLOGHANDLE int* 
+	#define LOGHANDLE unsigned int
+	#define PLOGHANDLE unsigned int*
 	#define NTSTATUS long
 	
 	/* Function 0 */
 	NTSTATUS EventLogClearW(
 		handle_t BindingHandle,
 		[in] LOGHANDLE Handle,
-		[in] wchar_t *BackupName);
+		[in,string] wchar_t *BackupName);
 
 	/* Function 1 */
 	NTSTATUS EventLogBackupW(
 		handle_t BindingHandle,
 		[in] LOGHANDLE Handle,
-		[in] wchar_t *FileName);
+		[in, string] wchar_t *FileName);
 	
 	/* Function 2 */
 	NTSTATUS EventLogClose(
@@ -87,15 +87,16 @@ interface eventlog
 		[in] LOGHANDLE Handle,
 		[out] unsigned long *OldestRecNumber);
 
-	/* FIXME */
-	NTSTATUS Unknown6(handle_t BindingHandle);
+	/* Function 6 */
+	NTSTATUS EventLogChangeNotify( //FIXME
+		handle_t BindingHandle); 
 
 	/* Function 7 */
 	NTSTATUS EventLogOpenW(
 		handle_t BindingHandle,
-		[in] LPWSTR ServerName,
-		[in] wchar_t *FileName, 
-		[in] wchar_t *NullStr, 
+		[in, string] LPWSTR ServerName,
+		[in, string] wchar_t *FileName, 
+		[in, string] wchar_t *NullStr, 
 		[in] unsigned long MajorVer,
 		[in] unsigned long MinorVer,
 		[out] PLOGHANDLE Handle );
@@ -103,9 +104,9 @@ interface eventlog
 	/* Function 8 */
 	NTSTATUS EventLogRegSrcW(
 		handle_t BindingHandle,
-		[in] LPWSTR ServerName,
-		[in] wchar_t *LogName, 
-		[in] wchar_t *NullStr, 
+		[in,string] LPWSTR ServerName,
+		[in,string] wchar_t *LogName, 
+		[in,string] wchar_t *NullStr, 
 		[in] unsigned long MajorVer,
 		[in] unsigned long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -113,8 +114,8 @@ interface eventlog
 	/* Function 9 */
 	NTSTATUS EventLogOpenBackupW(
 		handle_t BindingHandle,
-		[in] LPWSTR ServerName,
-		[in] wchar_t *BackupName, 
+		[in,string] LPWSTR ServerName,
+		[in,string] wchar_t *BackupName, 
 		[in] unsigned long MajorVer,
 		[in] unsigned long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -140,30 +141,32 @@ interface eventlog
 		[in] unsigned long ID,
 		[in] unsigned short NumStrings,
 		[in] unsigned long DataSize,
-		[in] wchar_t *ComputerName,
+		[in,string] wchar_t *ComputerName,
 		[in] unsigned char *SID,
-		[in] wchar_t *Strings,
+		[in,string] wchar_t *Strings,
 		[in,size_is(DataSize)] unsigned char *Data,
-		[in] unsigned short Flags);
+		[in] unsigned short Flags,
+		[out] unsigned long *unknown1,
+		[out] unsigned long *unknown2);
 		
 	/* Function 12 */
 	NTSTATUS EventLogClearA(
 		handle_t BindingHandle,
 		[in] LOGHANDLE Handle,
-		[in] char *BackupName);
+		[in,string] char *BackupName);
 
 	/* Function 13 */
 	NTSTATUS EventLogBackupA(
 		handle_t BindingHandle,
 		[in] LOGHANDLE Handle,
-		[in] char *BackupName);
+		[in,string] char *BackupName);
 
 	/* Function 14 */
 	NTSTATUS EventLogOpenA(
 		handle_t BindingHandle,
-		[in] LPSTR ServerName,
-		[in] char *LogName, 
-		[in] char *NullStr, 
+		[in,string] LPSTR ServerName,
+		[in,string] char *LogName, 
+		[in,string] char *NullStr, 
 		[in] unsigned long MajorVer,
 		[in] unsigned long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -171,19 +174,18 @@ interface eventlog
 	/* Function 15 */
 	NTSTATUS EventLogRegSrcA(
 		handle_t BindingHandle,
-		[in] LPSTR ServerName,
-		[in] char *LogName, 
-		[in] char *NullStr,
+		[in,string] LPSTR ServerName,
+		[in,string] char *LogName, 
+		[in,string] char *NullStr,
 		[in] unsigned long MajorVer,
 		[in] unsigned long MinorVer,
 		[out] PLOGHANDLE Handle);
 
-
 	/* Function 16 */
 	NTSTATUS EventLogOpenBackupA(
 		handle_t BindingHandle,
-		[in] LPSTR ServerName,
-		[in] char *BackupName, 
+		[in,string] LPSTR ServerName,
+		[in,string] char *BackupName, 
 		[in] unsigned long MajorVer,
 		[in] unsigned long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -209,20 +211,25 @@ interface eventlog
 		[in] unsigned long ID,
 		[in] unsigned short NumStrings,
 		[in] unsigned long DataSize,
-		[in] char *ComputerName,
+		[in,string] char *ComputerName,
 		[in] unsigned char *SID,
-		[in] char* Strings,
+		[in,string] char* Strings,
 		[in,size_is(DataSize)] unsigned char *Data,
-		[in] unsigned short Flags);
+		[in] unsigned short Flags,
+		[out] unsigned long * unknown1,
+		[out] unsigned long * unknown2);
 		
-	/* FIXME */
-	NTSTATUS Unknown19(handle_t BindingHandle);
+	/* Function 19 */
+	NTSTATUS EventLogRegisterClusterSvc( //FIXME
+		handle_t BindingHandle); 
 	
-	/* FIXME */
-	NTSTATUS Unknown20(handle_t BindingHandle);
+	/* Function 20 */
+	NTSTATUS EventLogDeregisterClusterSvc( //FIXME
+		handle_t BindingHandle);
 
-	/* FIXME */
-	NTSTATUS Unknown21(handle_t BindingHandle);
+	/* Function 21 */
+	NTSTATUS EventLogWriteClusterEvents( //FIXME
+		handle_t BindingHandle); 
 
 	/* Function 22 */
 	NTSTATUS EventLogGetInfo(
@@ -232,6 +239,9 @@ interface eventlog
 		[out,size_is(BufSize)] unsigned char *Buffer,
 		[in] unsigned long BufSize,
 		[out] unsigned long *BytesNeeded);
-
+	
+	/* Function 23 */
+	NTSTATUS EventLogFlush( //FIXME
+		handle_t BindingHandle); 
 }
 
