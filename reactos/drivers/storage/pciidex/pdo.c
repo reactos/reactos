@@ -178,16 +178,26 @@ GetCurrentResources(
 		switch (DeviceExtension->Channel)
 		{
 			case 0:
-				*CommandPortBase = 0x1F0;
-				*ControlPortBase = 0x3F6;
-				*InterruptVector = 14;
-				ret = STATUS_SUCCESS;
+				if (IoGetConfigurationInformation()->AtDiskPrimaryAddressClaimed)
+					ret = STATUS_INSUFFICIENT_RESOURCES;
+				else
+				{
+					*CommandPortBase = 0x1F0;
+					*ControlPortBase = 0x3F6;
+					*InterruptVector = 14;
+					ret = STATUS_SUCCESS;
+				}
 				break;
 			case 1:
-				*CommandPortBase = 0x170;
-				*ControlPortBase = 0x376;
-				*InterruptVector = 15;
-				ret = STATUS_SUCCESS;
+				if (IoGetConfigurationInformation()->AtDiskSecondaryAddressClaimed)
+					ret = STATUS_INSUFFICIENT_RESOURCES;
+				else
+				{
+					*CommandPortBase = 0x170;
+					*ControlPortBase = 0x376;
+					*InterruptVector = 15;
+					ret = STATUS_SUCCESS;
+				}
 				break;
 		}
 	}
