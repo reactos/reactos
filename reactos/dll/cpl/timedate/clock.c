@@ -36,9 +36,12 @@ VOID DrawClock(HDC hdc)
 {
      INT   iAngle;
      POINT pt[3];
+     HBRUSH hBrush, hBrushOld;
+     HPEN hPen = NULL, hPenOld = NULL;
 
      /* grey brush to fill the dots */
-     SelectObject(hdc, CreateSolidBrush(RGB(128, 128, 128)));
+     hBrush = CreateSolidBrush(RGB(128, 128, 128));
+     hBrushOld = SelectObject(hdc, hBrush);
 
      for(iAngle = 0; iAngle < 360; iAngle += 6)
      {
@@ -54,7 +57,8 @@ VOID DrawClock(HDC hdc)
           if (iAngle % 5)
           {
                 pt[2].x = pt[2].y = 7;
-                SelectObject(hdc, CreatePen(PS_SOLID, 1, RGB(128, 128, 128)));
+                hPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
+                hPenOld = SelectObject(hdc, hPen);
 
           }
           else
@@ -72,6 +76,11 @@ VOID DrawClock(HDC hdc)
           Ellipse(hdc, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
 
      }
+
+     SelectObject(hdc, hPenOld);
+     SelectObject(hdc, hBrushOld);
+     DeleteObject(hBrush);
+     DeleteObject(hPen);
 }
 
 VOID DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange)
