@@ -15,7 +15,10 @@
  * list, in no particular order. Current order is kept for historical
  * reason.
  *
+ * 2006-03-05, frik85: add new coders (in no particular order)
+ *
  */
+
 STRINGTABLE MOVEABLE
 BEGIN
   1, "Boudewijn Dekker (Ariadne)" 
@@ -69,6 +72,18 @@ BEGIN
  41, "Jonathan Wilson"
  42, "Alex Ionescu"
  43, "Jim Tabor"
+ 44, "Magnus Olsen"
+ 45, "Herve Poussineau"
+END
+
+STRINGTABLE MOVEABLE
+BEGIN
+ 46, "Christoph von Wittich"
+ 47, "Brandon Turner"
+ 48, "Ged Murphy"
+ 49, "Klemens R. Friedl"
+ 50, "Maarten Bosma"
+ 51, "Saveliy Tretiakov"
 END
 
 /* EOF */
