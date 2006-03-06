@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/winlogon/sas.c
@@ -200,7 +199,7 @@ HandleExitWindows(PWLSESSION Session, DWORD RequestingProcessId, UINT Flags)
 LRESULT CALLBACK
 SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwnd, GWL_USERDATA);
+  PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwnd, GWLP_USERDATA);
   if(!Session)
   {
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -222,6 +221,12 @@ SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CREATE:
     {
+      /* Get the session pointer from the create data */
+      Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
+
+      /* Save the Session pointer */
+      SetWindowLongPtr(Session->SASWindow, GWLP_USERDATA, (DWORD_PTR)Session);
+
       if(!SetupSAS(Session, hwnd))
       {
         /* Fail! */
@@ -265,15 +270,12 @@ InitializeSAS(PWLSESSION Session)
 
   /* create invisible SAS window */
   Session->SASWindow = CreateWindowEx(0, WINLOGON_SAS_CLASS, WINLOGON_SAS_TITLE, WS_POPUP,
-                                      0, 0, 0, 0, 0, 0, hAppInstance, NULL);
+                                      0, 0, 0, 0, 0, 0, hAppInstance, Session);
   if(!Session->SASWindow)
   {
     DPRINT1("WL: Failed to create SAS window\n");
     return FALSE;
   }
-
-  /* Save the Session pointer so the window proc can access it */
-  SetWindowLongPtr(Session->SASWindow, GWL_USERDATA, (DWORD_PTR)Session);
 
   /* Register SAS window to receive SAS notifications */
   if(!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
