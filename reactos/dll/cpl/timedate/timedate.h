@@ -32,11 +32,6 @@ VOID DestroyConnection(VOID);
 BOOL SendData(VOID);
 BOOL RecieveData(CHAR *);
 
-VOID SetIsotropic (HDC hdc, INT cxClient, INT cyClient);
-VOID RotatePoint (POINT pt[], INT iNum, INT iAngle);
-VOID DrawClock (HDC hdc);
-VOID DrawHands (HDC hdc, SYSTEMTIME * pst, BOOL fChange);
-
 #endif /* __CPL_SAMPLE_H */
 
 /* EOF */

@@ -5,9 +5,11 @@
 #define TWOPI (2 * 3.14159)
 
 static const TCHAR szClockWndClass[] = TEXT("ClockWndClass");
+static HBRUSH hGreyBrush = NULL;
+static HPEN hGreyPen = NULL;
 
-
-VOID SetIsotropic(HDC hdc, INT cxClient, INT cyClient)
+static VOID 
+SetIsotropic(HDC hdc, INT cxClient, INT cyClient)
 {
     /* set isotropic mode */
      SetMapMode(hdc, MM_ISOTROPIC);
@@ -15,7 +17,8 @@ VOID SetIsotropic(HDC hdc, INT cxClient, INT cyClient)
      SetViewportOrgEx(hdc, cxClient / 2,  cyClient / 2, NULL);
 }
 
-VOID RotatePoint(POINT pt[], INT iNum, INT iAngle)
+static VOID 
+RotatePoint(POINT pt[], INT iNum, INT iAngle)
 {
      INT i;
      POINT ptTemp;
@@ -32,16 +35,18 @@ VOID RotatePoint(POINT pt[], INT iNum, INT iAngle)
      }
 }
 
-VOID DrawClock(HDC hdc)
+static VOID 
+DrawClock(HDC hdc)
 {
      INT   iAngle;
      POINT pt[3];
-     HBRUSH hBrush, hBrushOld;
-     HPEN hPen = NULL, hPenOld = NULL;
+     HBRUSH hBrushOld;
+     HPEN hPenOld = NULL;
 
-     /* grey brush to fill the dots */
-     hBrush = CreateSolidBrush(RGB(128, 128, 128));
-     hBrushOld = SelectObject(hdc, hBrush);
+     /* grey brush to fill the dots */     
+     hBrushOld = SelectObject(hdc, hGreyBrush);
+
+     hPenOld = GetCurrentObject(hdc, OBJ_PEN);
 
      for(iAngle = 0; iAngle < 360; iAngle += 6)
      {
@@ -56,10 +61,8 @@ VOID DrawClock(HDC hdc)
            * i.e. 1-4 or 5, 6-9 or 10, 11-14 or 15 */
           if (iAngle % 5)
           {
-                pt[2].x = pt[2].y = 7;
-                hPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
-                hPenOld = SelectObject(hdc, hPen);
-
+                pt[2].x = pt[2].y = 7;                
+                SelectObject(hdc, hGreyPen);
           }
           else
           {
@@ -76,14 +79,13 @@ VOID DrawClock(HDC hdc)
           Ellipse(hdc, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
 
      }
-
-     SelectObject(hdc, hPenOld);
+     
      SelectObject(hdc, hBrushOld);
-     DeleteObject(hBrush);
-     DeleteObject(hPen);
+     SelectObject(hdc, hPenOld);
 }
 
-VOID DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange)
+static VOID 
+DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange)
 {
      static POINT pt[3][5] = { {{0, -30}, {20, 0}, {0, 100}, {-20, 0}, {0, -30}},
                                {{0, -40}, {10, 0}, {0, 160}, {-10, 0}, {0, -40}},
@@ -116,6 +118,7 @@ ClockWndProc(HWND hwnd,
              WPARAM wParam,
              LPARAM lParam)
 {
+        
     static INT cxClient, cyClient;
     static SYSTEMTIME stPrevious;
     HDC hdc;
@@ -125,6 +128,8 @@ ClockWndProc(HWND hwnd,
     switch (uMsg)
     {
         case WM_CREATE:
+            hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
+            hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
             SetTimer(hwnd, ID_TIMER, 1000, NULL);
             GetLocalTime(&st);
             stPrevious = st;
@@ -155,6 +160,8 @@ ClockWndProc(HWND hwnd,
         break;
 
         case WM_DESTROY:
+            DeleteObject(hGreyPen);
+            DeleteObject(hGreyBrush);
             KillTimer(hwnd, ID_TIMER);
         break;
 
