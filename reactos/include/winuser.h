@@ -825,8 +825,8 @@ extern "C" {
 #define QS_SENDMESSAGE 64
 #define QS_TIMER 16
 
-#define USER_TIMER_MAXIMUM  0x7FFFFFFF
-#define USER_TIMER_MINIMUM  0x0000000A
+#define USER_TIMER_MAXIMUM  2147483647
+#define USER_TIMER_MINIMUM  10
 
 #define MWMO_WAITALL 1
 #define MWMO_ALERTABLE 2
@@ -966,12 +966,10 @@ extern "C" {
 #else
 #define SM_CMETRICS 83
 #endif
-
 #if(_WIN32_WINNT >= 0x0501)
-#define SM_CXFOCUSBORDER        83
-#define SM_CYFOCUSBORDER        84
+#define SM_CXFOCUSBORDER 83
+#define SM_CYFOCUSBORDER 84
 #endif /* _WIN32_WINNT >= 0x0501 */
-
 #define SM_REMOTESESSION 0X1000
 #define ARW_BOTTOMLEFT 0
 #define ARW_BOTTOMRIGHT 1
@@ -1551,31 +1549,21 @@ extern "C" {
 #if (_WIN32_WINNT >= 0x0501)
 #define WM_THEMECHANGED 794
 #endif
-
 #ifndef _WIN32_WCE
 #if(_WIN32_WINNT >= 0x0500)
-#define WM_CHANGEUISTATE                0x0127
-#define WM_UPDATEUISTATE                0x0128
-#define WM_QUERYUISTATE                 0x0129
-
-/*
- * LOWORD(wParam) values in WM_*UISTATE*
- */
-#define UIS_SET                         1
-#define UIS_CLEAR                       2
-#define UIS_INITIALIZE                  3
-
-/*
- * HIWORD(wParam) values in WM_*UISTATE*
- */
-#define UISF_HIDEFOCUS                  0x1
-#define UISF_HIDEACCEL                  0x2
+#define WM_CHANGEUISTATE 295
+#define WM_UPDATEUISTATE 296
+#define WM_QUERYUISTATE 297
+#define UIS_SET 1
+#define UIS_CLEAR 2
+#define UIS_INITIALIZE 3
+#define UISF_HIDEFOCUS 1
+#define UISF_HIDEACCEL 2
 #if(_WIN32_WINNT >= 0x0501)
-#define UISF_ACTIVE                     0x4
+#define UISF_ACTIVE 4
 #endif /* _WIN32_WINNT >= 0x0501 */
 #endif /* _WIN32_WINNT >= 0x0500 */
 #endif /* _WIN32_WCE */
-
 #define BM_CLICK 245
 #define BM_GETCHECK 240
 #define BM_GETIMAGE 246
