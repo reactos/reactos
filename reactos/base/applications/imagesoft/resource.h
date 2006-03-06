@@ -100,15 +100,16 @@
 
 /* image property dialog */
 #define IDD_IMAGE_PROP      4000
-#define IDC_IMAGETYPE       4001
-#define IDC_RES_EDIT        4002
-#define IDC_WIDTH_EDIT      4003
-#define IDC_HEIGHT_EDIT     4004
-#define IDC_UNIT            4005
-#define IDC_RES_STAT        4006
-#define IDC_WIDTH_STAT      4007
-#define IDC_HEIGHT_STAT     4008
-#define IDC_MEMORY          4009
+#define IDC_IMAGE_NAME_EDIT 4001
+#define IDC_IMAGETYPE       4003
+#define IDC_WIDTH_EDIT      4004
+#define IDC_WIDTH_STAT      4005
+#define IDC_HEIGHT_EDIT     4006
+#define IDC_HEIGHT_STAT     4007
+#define IDC_RES_EDIT        4008
+#define IDC_RES_STAT        4009
+#define IDC_UNIT            4010
+#define IDC_IMAGE_SIZE      4011
 #define IDS_IMAGE_MONOCHROME 4100
 #define IDS_IMAGE_GREYSCALE 4101
 #define IDS_IMAGE_PALETTE   4102
