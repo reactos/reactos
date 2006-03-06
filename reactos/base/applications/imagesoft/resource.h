@@ -94,3 +94,27 @@
 #define IDS_HINT_SYS_MAXIMIZE 21005
 #define IDS_HINT_SYS_CLOSE    21006
 #define IDS_HINT_SYS_NEXT     21007
+
+
+
+
+/* image property dialog */
+#define IDD_IMAGE_PROP      4000
+#define IDC_IMAGETYPE       4001
+#define IDC_RES_EDIT        4002
+#define IDC_WIDTH_EDIT      4003
+#define IDC_HEIGHT_EDIT     4004
+#define IDC_UNIT            4005
+#define IDC_RES_STAT        4006
+#define IDC_WIDTH_STAT      4007
+#define IDC_HEIGHT_STAT     4008
+#define IDC_MEMORY          4009
+#define IDS_IMAGE_MONOCHROME 4100
+#define IDS_IMAGE_GREYSCALE 4101
+#define IDS_IMAGE_PALETTE   4102
+#define IDS_IMAGE_TRUECOLOR 4103
+#define IDS_UNIT_CM         4104
+#define IDS_UNIT_INCHES     4105
+#define IDS_UNIT_PIXELS     4106
+#define IDS_UNIT_DOTSCM     4107
+#define IDS_UNIT_DPI        4108

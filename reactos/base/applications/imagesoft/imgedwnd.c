@@ -4,6 +4,7 @@ static const TCHAR szImageEditWndClass[] = TEXT("ImageSoftEditWndClass");
 
 #define IMAGE_FRAME_SIZE    1
 
+
 static VOID
 EditWndUpdateScrollInfo(PEDIT_WND_INFO Info)
 {
@@ -35,14 +36,37 @@ EditWndUpdateScrollInfo(PEDIT_WND_INFO Info)
 static BOOL
 InitEditWnd(PEDIT_WND_INFO Info)
 {
+    HDC hDC;
+    LONG cxBitmap, cyBitmap;
+
     Info->Zoom = 100;
 
     if (Info->OpenInfo != NULL)
     {
+        /* set bitmap dimensions */
+        cxBitmap = Info->OpenInfo->New.Width;
+        cyBitmap = Info->OpenInfo->New.Height;
+
+        /* create bitmap */
+        hDC = GetDC(Info->hSelf);
+        Info->hBitmap = CreateCompatibleBitmap(hDC, cxBitmap, cyBitmap);
+        Info->hDCMem  = CreateCompatibleDC(hDC);
+        ReleaseDC(Info->hSelf, hDC);
+
+        if (!Info->hBitmap)
+        {
+            DeleteDC(Info->hDCMem);
+            return FALSE;
+        }
+
         if (Info->OpenInfo->CreateNew)
         {
+            /* what is this for? Does Info->OpenInfo become obsolete? */
             Info->Width = Info->OpenInfo->New.Width;
             Info->Height = Info->OpenInfo->New.Height;
+
+            SelectObject(Info->hDCMem, Info->hBitmap);
+            PatBlt(Info->hDCMem, 0, 0, cxBitmap, cxBitmap, WHITENESS);
         }
         else
         {
@@ -90,7 +114,7 @@ ImageEditWndRepaint(PEDIT_WND_INFO Info,
                     HDC hDC,
                     LPPAINTSTRUCT lpps)
 {
-    /* FIXME */
+    BitBlt(hDC, 0, 0, Info->Width, Info->Height, Info->hDCMem, 0, 0, SRCCOPY);
 }
 
 static LRESULT CALLBACK
@@ -244,8 +268,8 @@ CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
                                      WS_HSCROLL | WS_VSCROLL,
                                      CW_USEDEFAULT,
                                      CW_USEDEFAULT,
-                                     CW_USEDEFAULT,
-                                     CW_USEDEFAULT,
+                                     OpenInfo->New.Width,
+                                     OpenInfo->New.Height,
                                      MainWnd->hMdiClient,
                                      hInstance,
                                      (LPARAM)Info);
@@ -275,8 +299,8 @@ InitImageEditWindowImpl(VOID)
     wc.hIcon = LoadIcon(hInstance,
                         MAKEINTRESOURCE(IDI_ICON));
     wc.hCursor = LoadCursor(NULL,
-                            IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+                            IDC_CROSS);
+    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wc.lpszClassName = szImageEditWndClass;
     wc.hIconSm = (HICON)LoadImage(hInstance,
                                   MAKEINTRESOURCE(IDI_ICON),

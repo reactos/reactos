@@ -39,11 +39,50 @@ INT_PTR CALLBACK AboutDialogProc(HWND hDlg,
                                  WPARAM wParam,
                                  LPARAM lParam);
 
+/* imageprop.c */
+typedef struct _IMAGE_PROP
+{
+    /* Canvas properties */
+    USHORT Type;
+    LONG Resolution;
+    /* size of drawing area */
+    LONG Width;
+    LONG Height;
+} IMAGE_PROP, *PIMAGE_PROP;
+
+INT_PTR CALLBACK
+ImagePropDialogProc(HWND hDlg,
+                    UINT message,
+                    WPARAM wParam,
+                    LPARAM lParam);
+
+
 /* imagesoft.c */
 extern HINSTANCE hInstance;
 extern HANDLE ProcessHeap;
 
 /* imgedwnd.c */
+typedef enum
+{
+    tSelect = 0,
+    tMove,
+    tLasso,
+    tZoom,
+    tMagicWand,
+    tBrush,
+    tEraser,
+    tPencil,
+    tColorPick,
+    tStamp,
+    tFill,
+    tLine,
+    tPolyline,
+    tRectangle,
+    tRoundRectangle,
+    tPolygon,
+    tElipse,
+} TOOL;
+
 typedef struct _OPEN_IMAGE_EDIT_INFO
 {
     BOOL CreateNew;
@@ -59,6 +98,8 @@ typedef struct _OPEN_IMAGE_EDIT_INFO
             LPCTSTR lpFileName;
         } Open;
     };
+    USHORT Type;
+    LONG Resolution;
 } OPEN_IMAGE_EDIT_INFO, *POPEN_IMAGE_EDIT_INFO;
 
 typedef struct _EDIT_WND_INFO
@@ -66,6 +107,8 @@ typedef struct _EDIT_WND_INFO
     MDI_EDITOR_TYPE MdiEditorType; /* Must be first member! */
 
     HWND hSelf;
+    HBITMAP hBitmap;
+    HDC hDCMem;
     struct _MAIN_WND_INFO *MainWnd;
     struct _EDIT_WND_INFO *Next;
     POINT ScrollPos;
@@ -73,10 +116,15 @@ typedef struct _EDIT_WND_INFO
 
     POPEN_IMAGE_EDIT_INFO OpenInfo; /* Only valid during initialization */
 
-    /* Bitmap size */
+    /* Canvas properties */
+    USHORT Type;
+    LONG Resolution;
+    /* size of drawing area */
     LONG Width;
     LONG Height;
+
 } EDIT_WND_INFO, *PEDIT_WND_INFO;
+
 
 BOOL CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
                            LPCTSTR lpCaption,

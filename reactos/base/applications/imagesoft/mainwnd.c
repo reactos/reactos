@@ -462,6 +462,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case ID_NEW:
         {
             OPEN_IMAGE_EDIT_INFO OpenInfo;
+            PIMAGE_PROP ImageProp = NULL;
             LPTSTR lpCaption = NULL;
 
             LoadAndFormatString(hInstance,
@@ -469,13 +470,27 @@ MainWndCommand(PMAIN_WND_INFO Info,
                                 &lpCaption,
                                 ++Info->ImagesCreated);
 
-            OpenInfo.CreateNew = TRUE;
-            OpenInfo.New.Width = 400;
-            OpenInfo.New.Height = 300;
+            ImageProp = (PIMAGE_PROP)DialogBox(hInstance,
+                                               MAKEINTRESOURCE(IDD_IMAGE_PROP),
+                                               Info->hSelf,
+                                               ImagePropDialogProc);
 
-            CreateImageEditWindow(Info,
-                                  lpCaption,
-                                  &OpenInfo);
+            if (ImageProp != 0)
+            {
+                OpenInfo.CreateNew = TRUE;
+                OpenInfo.Type = ImageProp->Type;
+                OpenInfo.Resolution = ImageProp->Resolution;
+                OpenInfo.New.Width = ImageProp->Width;
+                OpenInfo.New.Height = ImageProp->Height;
+
+                HeapFree(ProcessHeap,
+                         0,
+                         ImageProp);
+
+                CreateImageEditWindow(Info,
+                                      lpCaption,
+                                      &OpenInfo);
+            }
 
             if (lpCaption != NULL)
                 LocalFree((HLOCAL)lpCaption);

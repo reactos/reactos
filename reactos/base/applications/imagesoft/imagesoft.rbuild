@@ -18,6 +18,7 @@
 		<library>comdlg32</library>
 		<compilationunit name="unit.c">
 			<file>about.c</file>
+			<file>imageprop.c</file>
 			<file>imagesoft.c</file>
 			<file>imgedwnd.c</file>
 			<file>mainwnd.c</file>
