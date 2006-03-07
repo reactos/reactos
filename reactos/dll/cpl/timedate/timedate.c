@@ -8,7 +8,7 @@
  *
  */
 
-#include "timedate.h"
+#include <timedate.h>
 
 typedef struct _TZ_INFO
 {
@@ -60,25 +60,37 @@ APPLET Applets[NUM_APPLETS] =
 static VOID
 SetLocalSystemTime(HWND hwnd)
 {
-  SYSTEMTIME Date;
-  SYSTEMTIME Time;
+    SYSTEMTIME Time;
 
-  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_DATEPICKER), &Date) != GDT_VALID)
+    if (DateTime_GetSystemTime(GetDlgItem(hwnd,
+                                          IDC_TIMEPICKER),
+                               &Time) == GDT_VALID &&
+        SendMessage(GetDlgItem(hwnd,
+                               IDC_MONTHCALENDAR),
+                    MCCM_GETDATE,
+                    (WPARAM)&Time,
+                    0))
     {
-      return;
+        /* Call SetLocalTime twice to ensure correct results */
+        SetLocalTime(&Time);
+        SetLocalTime(&Time);
+
+        SetWindowLong(hwnd,
+                      DWL_MSGRESULT,
+                      PSNRET_NOERROR);
+
+        SendMessage(GetDlgItem(hwnd,
+                               IDC_MONTHCALENDAR),
+                    MCCM_RESET,
+                    (WPARAM)&Time,
+                    0);
+
+        /* broadcast the time change message */
+        SendMessage(HWND_BROADCAST,
+                    WM_TIMECHANGE,
+                    0,
+                    0);
     }
-
-  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_TIMEPICKER), &Time) != GDT_VALID)
-    {
-      return;
-    }
-
-  Time.wYear = Date.wYear;
-  Time.wMonth = Date.wMonth;
-  Time.wDayOfWeek = Date.wDayOfWeek;
-  Time.wDay = Date.wDay;
-
-  SetLocalTime(&Time);
 }
 
 
@@ -120,6 +132,104 @@ SetTimeZoneName(HWND hwnd)
 }
 
 
+static VOID
+FillMonthsComboBox(HWND hCombo)
+{
+    SYSTEMTIME LocalDate = {0};
+    WCHAR szBuf[64];
+    INT i;
+    UINT Month;
+
+    GetLocalTime(&LocalDate);
+
+    SendMessage(hCombo,
+                CB_RESETCONTENT,
+                0,
+                0);
+
+    for (Month = 1;
+         Month <= 13;
+         Month++)
+    {
+        i = GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                           ((Month < 13) ? LOCALE_SMONTHNAME1 + Month - 1 : LOCALE_SMONTHNAME13),
+                           szBuf,
+                           sizeof(szBuf) / sizeof(szBuf[0]));
+        if (i > 1)
+        {
+            i = (INT)SendMessage(hCombo,
+                                 CB_ADDSTRING,
+                                 0,
+                                 (LPARAM)szBuf);
+            if (i != CB_ERR)
+            {
+                SendMessage(hCombo,
+                            CB_SETITEMDATA,
+                            (WPARAM)i,
+                            Month);
+
+                if (Month == (UINT)LocalDate.wMonth)
+                {
+                    SendMessage(hCombo,
+                                CB_SETCURSEL,
+                                (WPARAM)i,
+                                0);
+                }
+            }
+        }
+    }
+}
+
+
+static WORD
+GetCBSelectedMonth(HWND hCombo)
+{
+    INT i;
+    WORD Ret = (WORD)-1;
+
+    i = (INT)SendMessage(hCombo,
+                         CB_GETCURSEL,
+                         0,
+                         0);
+    if (i != CB_ERR)
+    {
+        i = (INT)SendMessage(hCombo,
+                             CB_GETITEMDATA,
+                             (WPARAM)i,
+                             0);
+
+        if (i >= 1 && i <= 13)
+            Ret = (WORD)i;
+    }
+
+    return Ret;
+}
+
+
+static VOID
+ChangeMonthCalDate(HWND hMonthCal,
+                   WORD Day,
+                   WORD Month,
+                   WORD Year)
+{
+    SendMessage(hMonthCal,
+                MCCM_SETDATE,
+                MAKEWPARAM(Day,
+                           Month),
+                MAKELPARAM(Year,
+                           0));
+}
+
+static VOID
+AutoUpdateMonthCal(HWND hwndDlg,
+                   PNMMCCAUTOUPDATE lpAutoUpdate)
+{
+    /* update the controls */
+    FillMonthsComboBox(GetDlgItem(hwndDlg,
+                                  IDC_MONTHCB));
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 DateTimePageProc(HWND hwndDlg,
@@ -130,6 +240,8 @@ DateTimePageProc(HWND hwndDlg,
   switch (uMsg)
   {
     case WM_INITDIALOG:
+        FillMonthsComboBox(GetDlgItem(hwndDlg,
+                                      IDC_MONTHCB));
         InitClockWindowClass();
         CreateWindowExW(0,
                        L"ClockWndClass",
@@ -142,32 +254,82 @@ DateTimePageProc(HWND hwndDlg,
                        NULL);
     break;
 
+    case WM_COMMAND:
+    {
+        switch (LOWORD(wParam))
+        {
+            case IDC_MONTHCB:
+            {
+                if (HIWORD(wParam) == CBN_SELCHANGE)
+                {
+                    ChangeMonthCalDate(GetDlgItem(hwndDlg,
+                                                  IDC_MONTHCALENDAR),
+                                       -1,
+                                       GetCBSelectedMonth((HWND)lParam),
+                                       -1);
+                }
+                break;
+            }
+        }
+        break;
+    }
+
     case WM_NOTIFY:
       {
           LPNMHDR lpnm = (LPNMHDR)lParam;
 
-          switch (lpnm->code)
-            {
-              case DTN_DATETIMECHANGE:
-              case MCN_SELECT:
-                /* Enable the 'Apply' button */
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                break;
+          switch (lpnm->idFrom)
+          {
+              case IDC_TIMEPICKER:
+                  switch (lpnm->code)
+                  {
+                      case DTN_DATETIMECHANGE:
+                          /* Enable the 'Apply' button */
+                          PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                          break;
+                  }
+                  break;
 
-              case PSN_SETACTIVE:
-                SetTimeZoneName(hwndDlg);
-                return 0;
+              case IDC_MONTHCALENDAR:
+                  switch (lpnm->code)
+                  {
+                      case MCCN_SELCHANGE:
+                          /* Enable the 'Apply' button */
+                          PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                          break;
 
-              case PSN_APPLY:
-                SetLocalSystemTime(hwndDlg);
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
-                return TRUE;
+                      case MCCN_AUTOUPDATE:
+                          AutoUpdateMonthCal(hwndDlg,
+                                             (PNMMCCAUTOUPDATE)lpnm);
+                          break;
+                  }
+                  break;
 
               default:
-                break;
-            }
+                  switch (lpnm->code)
+                  {
+                      case PSN_SETACTIVE:
+                          SetTimeZoneName(hwndDlg);
+                          break;
+
+                      case PSN_APPLY:
+                          SetLocalSystemTime(hwndDlg);
+                          return TRUE;
+                  }
+          }
       }
       break;
+
+    case WM_TIMECHANGE:
+    {
+        /* FIXME - we don't get this message as we're not a top-level window... */
+        SendMessage(GetDlgItem(hwndDlg,
+                               IDC_MONTHCALENDAR),
+                    MCCM_RESET,
+                    0,
+                    0);
+        break;
+    }
   }
 
   return FALSE;
@@ -211,7 +373,7 @@ CreateTimeZoneList(VOID)
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
             L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
             0,
-            KEY_ALL_ACCESS,
+            KEY_ENUMERATE_SUB_KEYS,
             &hZonesKey))
     return;
 
@@ -233,7 +395,7 @@ CreateTimeZoneList(VOID)
       if (RegOpenKeyExW(hZonesKey,
             szKeyName,
             0,
-            KEY_ALL_ACCESS,
+            KEY_QUERY_VALUE,
             &hZoneKey))
     break;
 
@@ -590,7 +752,7 @@ CreateNTPServerList(HWND hwnd)
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
                         0,
-                        KEY_READ,
+                        KEY_QUERY_VALUE,
                         &hKey);
     if (Ret != ERROR_SUCCESS)
         return;
@@ -662,7 +824,7 @@ VOID SetNTPServer(HWND hwnd)
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
                         0,
-                        KEY_READ,
+                        KEY_SET_VALUE,
                         &hKey);
     if (Ret != ERROR_SUCCESS)
         return;
@@ -798,25 +960,33 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   PROPSHEETHEADER psh;
   PROPSHEETPAGE psp[3];
   TCHAR Caption[256];
+  LONG Ret = 0;
 
-  LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+  if (RegisterMonthCalControl(hApplet))
+  {
+    LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
-  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-  psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-  psh.hwndParent = NULL;
-  psh.hInstance = hApplet;
-  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-  psh.pszCaption = Caption;
-  psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-  psh.nStartPage = 0;
-  psh.ppsp = psp;
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.hwndParent = NULL;
+    psh.hInstance = hApplet;
+    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
+    psh.pszCaption = Caption;
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nStartPage = 0;
+    psh.ppsp = psp;
 
-  InitPropSheetPage(&psp[0], IDD_DATETIMEPAGE, DateTimePageProc);
-  InitPropSheetPage(&psp[1], IDD_TIMEZONEPAGE, TimeZonePageProc);
-  InitPropSheetPage(&psp[2], IDD_INETTIMEPAGE, InetTimePageProc);
+    InitPropSheetPage(&psp[0], IDD_DATETIMEPAGE, DateTimePageProc);
+    InitPropSheetPage(&psp[1], IDD_TIMEZONEPAGE, TimeZonePageProc);
+    InitPropSheetPage(&psp[2], IDD_INETTIMEPAGE, InetTimePageProc);
 
-  return (LONG)(PropertySheet(&psh) != -1);
+    Ret = (LONG)(PropertySheet(&psh) != -1);
+
+    UnregisterMonthCalControl(hApplet);
+  }
+
+  return Ret;
 }
 
 

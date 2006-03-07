@@ -1,4 +1,4 @@
-#include "timedate.h"
+#include <timedate.h>
 
 SOCKET Sock;
 SOCKADDR_IN myAddr, ntpAddr;

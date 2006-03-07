@@ -1,6 +1,6 @@
 /* Code based on clock.c from Programming Windows, Charles Petzold */
 
-#include "timedate.h"
+#include <timedate.h>
 
 #define TWOPI (2 * 3.14159)
 

@@ -5,8 +5,9 @@
 #define IDC_CPLICON		1
 
 #define IDD_DATETIMEPAGE        100
-#define IDC_DATEPICKER          101
-#define IDC_MONTHCALENDAR       102
+#define IDC_MONTHCB             101
+#define IDC_YEAREDIT            102
+#define IDC_MONTHCALENDAR       103
 #define IDC_TIMEZONE            106
 #define IDC_TIMEPICKER          107
 

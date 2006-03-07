@@ -13,8 +13,10 @@
 	<library>comctl32</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
-	<file>ntpclient.c</file>
+	<library>ntdll</library>
 	<file>clock.c</file>
+	<file>ntpclient.c</file>
+	<file>monthcal.c</file>
 	<file>timedate.c</file>
 	<file>timedate.rc</file>
 </module>
