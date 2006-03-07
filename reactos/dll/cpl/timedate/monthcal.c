@@ -46,9 +46,9 @@ typedef struct _MONTHCALWND
     HBRUSH hbHeader;
     HBRUSH hbSelection;
 
+    DWORD UIState;
     BOOL Changed : 1;
     BOOL DayTimerSet : 1;
-    BOOL HideFocus : 1;
     BOOL HasFocus : 1;
 } MONTHCALWND, *PMONTHCALWND;
 
@@ -58,16 +58,16 @@ MonthCalNotifyControlParent(IN PMONTHCALWND infoPtr,
                             IN OUT PVOID data)
 {
     LRESULT Ret = 0;
-    
+
     if (infoPtr->hNotify != NULL)
     {
         LPNMHDR pnmh = (LPNMHDR)data;
-        
+
         pnmh->hwndFrom = infoPtr->hSelf;
         pnmh->idFrom = GetWindowLongPtr(infoPtr->hSelf,
                                         GWLP_ID);
         pnmh->code = code;
-        
+
         Ret = SendMessage(infoPtr->hNotify,
                           WM_NOTIFY,
                           (WPARAM)pnmh->idFrom,
@@ -238,6 +238,12 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
 {
     TCHAR szBuf[64];
     UINT i;
+
+    infoPtr->UIState = SendMessage(GetAncestor(infoPtr->hSelf,
+                                               GA_PARENT),
+                                   WM_QUERYUISTATE,
+                                   0,
+                                   0);
 
     /* cache the configuration */
     infoPtr->FirstDayOfWeek = MonthCalFirstDayOfWeek();
@@ -563,7 +569,7 @@ FailNoHighlight:
 
                         if (Day == infoPtr->Day && crOldText != CLR_INVALID)
                         {
-                            if (infoPtr->HasFocus && !infoPtr->HideFocus)
+                            if (infoPtr->HasFocus && !(infoPtr->UIState & UISF_HIDEFOCUS))
                             {
                                 COLORREF crOldBk;
 
@@ -751,6 +757,7 @@ MonthCalWndProc(IN HWND hwnd,
                     }
                     break;
                 }
+
                 case VK_LEFT:
                 {
                     if (infoPtr->Day > 1)
@@ -794,7 +801,7 @@ MonthCalWndProc(IN HWND hwnd,
                 {
                     /* change the UI status */
                     SendMessage(GetAncestor(hwnd,
-                                            GA_ROOT),
+                                            GA_PARENT),
                                 WM_CHANGEUISTATE,
                                 MAKEWPARAM(UIS_INITIALIZE,
                                            0),
@@ -825,21 +832,19 @@ MonthCalWndProc(IN HWND hwnd,
 
         case WM_UPDATEUISTATE:
         {
-            BOOL OldHideFocus = infoPtr->HideFocus;
+            DWORD OldUIState = infoPtr->UIState;
             switch (LOWORD(wParam))
             {
                 case UIS_SET:
-                    if (HIWORD(wParam) & UISF_HIDEFOCUS)
-                        infoPtr->HideFocus = TRUE;
+                    infoPtr->UIState |= HIWORD(wParam);
                     break;
 
                 case UIS_CLEAR:
-                    if (HIWORD(wParam) & UISF_HIDEFOCUS)
-                        infoPtr->HideFocus = FALSE;
+                    infoPtr->UIState &= ~HIWORD(wParam);
                     break;
             }
 
-            if (infoPtr->HideFocus != OldHideFocus)
+            if (infoPtr->UIState != OldUIState)
             {
                 MonthCalRepaintDay(infoPtr,
                                    infoPtr->Day);
@@ -1021,7 +1026,7 @@ BOOL
 RegisterMonthCalControl(IN HINSTANCE hInstance)
 {
     WNDCLASS wc = {0};
-    
+
     wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = MonthCalWndProc;
     wc.cbWndExtra = sizeof(PMONTHCALWND);
@@ -1030,7 +1035,7 @@ RegisterMonthCalControl(IN HINSTANCE hInstance)
                             (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(MONTHCAL_CTRLBG + 1);
     wc.lpszClassName = szMonthCalWndClass;
-    
+
     return RegisterClass(&wc) != 0;
 }
 

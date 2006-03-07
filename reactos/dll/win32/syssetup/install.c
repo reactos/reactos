@@ -417,6 +417,9 @@ InstallReactOS (HINSTANCE hInstance)
   CreateShortcut(CSIDL_PROGRAMS, NULL, _T("ibrowser.lnk"), _T("ibrowser.exe"), IDS_CMT_IBROWSER);
   CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Get Firefox.lnk"), _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
 
+  /* create administritive tools startmenu shortcuts */
+  CreateShortcut(CSIDL_ADMINTOOLS, NULL, _T("Services.lnk"), _T("servman.exe"), IDS_CMT_SERVMAN);
+
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);

@@ -1557,7 +1557,7 @@ DllMain(IN HINSTANCE hinstDLL,
             break;
 
         case DLL_PROCESS_DETACH:
-            UnregisterCheckListControl();
+            UnregisterCheckListControl(hinstDLL);
             break;
     }
 

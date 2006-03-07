@@ -146,7 +146,7 @@ BOOL
 RegisterCheckListControl(HINSTANCE hInstance);
 
 VOID
-UnregisterCheckListControl(VOID);
+UnregisterCheckListControl(HINSTANCE hInstance);
 
 /* DLLMAIN ********************************************************************/
 

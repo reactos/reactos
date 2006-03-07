@@ -31,6 +31,8 @@
 #define NDEBUG
 #include <debug.h>
 
+static const WCHAR szCheckListWndClass[] = L"CHECKLIST_ACLUI";
+
 #define CI_TEXT_MARGIN_WIDTH    (8)
 #define CI_TEXT_MARGIN_HEIGHT   (3)
 #define CI_TEXT_SELECTIONMARGIN (1)
@@ -60,23 +62,20 @@ typedef struct _CHECKLISTWND
 
     INT ItemHeight;
 
-    BOOL HasFocus;
     PCHECKITEM FocusedCheckItem;
     UINT FocusedCheckItemBox;
-    BOOL FocusedPushed;
-    BOOL FocusVisible;
 
     COLORREF TextColor[2];
     INT CheckBoxLeft[2];
 
-    BOOL QuickSearchEnabled;
     PCHECKITEM QuickSearchHitItem;
     WCHAR QuickSearchText[65];
     UINT QuickSearchSetFocusDelay;
     UINT QuickSearchResetDelay;
 
     DWORD CaretWidth;
-    BOOL ShowingCaret;
+
+    DWORD UIState;
 
 #if SUPPORT_UXTHEME
     PCHECKITEM HoveredCheckItem;
@@ -85,6 +84,11 @@ typedef struct _CHECKLISTWND
 
     HTHEME ThemeHandle;
 #endif
+
+    BOOL HasFocus : 1;
+    BOOL FocusedPushed : 1;
+    BOOL QuickSearchEnabled : 1;
+    BOOL ShowingCaret : 1;
 } CHECKLISTWND, *PCHECKLISTWND;
 
 static VOID EscapeQuickSearch(IN PCHECKLISTWND infoPtr);
@@ -970,7 +974,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                  ((Item->State & CIS_ALLOW) ? DFCS_CHECKED : 0) |
                                  (IsPushed ? DFCS_PUSHED : 0));
             }
-            if (Item == infoPtr->FocusedCheckItem && infoPtr->FocusVisible &&
+            if (Item == infoPtr->FocusedCheckItem && !(infoPtr->UIState & UISF_HIDEFOCUS) &&
                 infoPtr->HasFocus &&
                 infoPtr->FocusedCheckItemBox != CLB_DENY)
             {
@@ -1025,7 +1029,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
                                  ((Item->State & CIS_DENY) ? DFCS_CHECKED : 0) |
                                  (IsPushed ? DFCS_PUSHED : 0));
             }
-            if (infoPtr->HasFocus && infoPtr->FocusVisible &&
+            if (infoPtr->HasFocus && !(infoPtr->UIState & UISF_HIDEFOCUS) &&
                 Item == infoPtr->FocusedCheckItem &&
                 infoPtr->FocusedCheckItemBox == CLB_DENY)
             {
@@ -1865,7 +1869,7 @@ CheckListWndProc(IN HWND hwnd,
         {
             Ret = (LRESULT)RetChangeControlFont(infoPtr,
                                                 (HFONT)wParam,
-                                                (BOOL)lParam);
+                                                (BOOL)LOWORD(lParam));
             break;
         }
         
@@ -2204,16 +2208,13 @@ CheckListWndProc(IN HWND hwnd,
                                                        Shift,
                                                        &NewFocusBox);
 
-                        if (!infoPtr->FocusVisible)
-                        {
-                            /* change the UI status */
-                            SendMessage(GetAncestor(hwnd,
-                                                    GA_ROOT),
-                                        WM_CHANGEUISTATE,
-                                        MAKEWPARAM(UIS_INITIALIZE,
-                                                   UISF_HIDEFOCUS),
-                                        0);
-                        }
+                        /* update the UI status */
+                        SendMessage(GetAncestor(hwnd,
+                                                GA_PARENT),
+                                    WM_CHANGEUISTATE,
+                                    MAKEWPARAM(UIS_INITIALIZE,
+                                               0),
+                                    0);
 
                         ChangeCheckItemFocus(infoPtr,
                                              NewFocus,
@@ -2394,14 +2395,22 @@ CheckListWndProc(IN HWND hwnd,
         
         case WM_UPDATEUISTATE:
         {
-            if (HIWORD(wParam) & UISF_HIDEFOCUS)
-            {
-                BOOL OldFocusVisible = infoPtr->FocusVisible;
-                
-                infoPtr->FocusVisible = (LOWORD(wParam) == UIS_CLEAR);
+            DWORD OldUIState = infoPtr->UIState;
 
-                if (infoPtr->FocusVisible != OldFocusVisible &&
-                    infoPtr->FocusedCheckItem != NULL)
+            switch (LOWORD(wParam))
+            {
+                case UIS_SET:
+                    infoPtr->UIState |= HIWORD(wParam);
+                    break;
+
+                case UIS_CLEAR:
+                    infoPtr->UIState &= ~(HIWORD(wParam));
+                    break;
+            }
+
+            if (OldUIState != infoPtr->UIState)
+            {
+                if (infoPtr->FocusedCheckItem != NULL)
                 {
                     UpdateCheckItemBox(infoPtr,
                                        infoPtr->FocusedCheckItem,
@@ -2525,10 +2534,10 @@ CheckListWndProc(IN HWND hwnd,
                 }
 #endif
 
-                infoPtr->FocusVisible = !(SendMessage(hwnd,
-                                                      WM_QUERYUISTATE,
-                                                      0,
-                                                      0) & UISF_HIDEFOCUS);
+                infoPtr->UIState = SendMessage(hwnd,
+                                               WM_QUERYUISTATE,
+                                               0,
+                                               0);
             }
             else
             {
@@ -2591,14 +2600,14 @@ RegisterCheckListControl(IN HINSTANCE hInstance)
                             (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = NULL;
-    wc.lpszClassName = L"CHECKLIST_ACLUI";
+    wc.lpszClassName = szCheckListWndClass;
     
     return RegisterClass(&wc) != 0;
 }
 
 VOID
-UnregisterCheckListControl(VOID)
+UnregisterCheckListControl(HINSTANCE hInstance)
 {
-    UnregisterClass(L"CHECKLIST_ACLUI",
-                    NULL);
+    UnregisterClass(szCheckListWndClass,
+                    hInstance);
 }
