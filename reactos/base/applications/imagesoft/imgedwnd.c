@@ -246,7 +246,6 @@ SetImageEditorEnvironment(PEDIT_WND_INFO Info,
 
 BOOL
 CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
-                      LPCTSTR lpCaption,
                       POPEN_IMAGE_EDIT_INFO OpenInfo)
 {
     PEDIT_WND_INFO Info;
@@ -264,7 +263,7 @@ CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
         Info->OpenInfo = OpenInfo;
 
         hWndEditor = CreateMDIWindow(szImageEditWndClass,
-                                     lpCaption,
+                                     OpenInfo->New.lpImageName,
                                      WS_HSCROLL | WS_VSCROLL,
                                      CW_USEDEFAULT,
                                      CW_USEDEFAULT,

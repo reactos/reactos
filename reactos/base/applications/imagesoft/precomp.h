@@ -42,8 +42,10 @@ INT_PTR CALLBACK AboutDialogProc(HWND hDlg,
 /* imageprop.c */
 typedef struct _IMAGE_PROP
 {
+    LPTSTR lpImageName;
     /* Canvas properties */
     USHORT Type;
+    USHORT Unit;
     LONG Resolution;
     /* size of drawing area */
     LONG Width;
@@ -92,6 +94,7 @@ typedef struct _OPEN_IMAGE_EDIT_INFO
         {
             LONG Width;
             LONG Height;
+            LPTSTR lpImageName;
         } New;
         struct
         {
@@ -127,7 +130,6 @@ typedef struct _EDIT_WND_INFO
 
 
 BOOL CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
-                           LPCTSTR lpCaption,
                            POPEN_IMAGE_EDIT_INFO OpenInfo);
 VOID SetImageEditorEnvironment(PEDIT_WND_INFO Info,
                                BOOL Setup);
@@ -299,5 +301,12 @@ BOOL StatusBarLoadString(IN HWND hStatusBar,
                          IN INT PartId,
                          IN HINSTANCE hInstance,
                          IN UINT uID);
+
+INT GetTextFromEdit(OUT LPTSTR lpString,
+                    IN HWND hDlg,
+                    IN UINT Res);
+
+LONG GetNumFromEdit(IN HWND hDlg,
+                    IN UINT Res);
 
 #endif /* __IMAGESOFT_PRECOMP_H */

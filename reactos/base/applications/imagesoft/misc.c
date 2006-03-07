@@ -158,3 +158,42 @@ StatusBarLoadString(IN HWND hStatusBar,
 
     return Ret;
 }
+
+INT
+GetTextFromEdit(OUT LPTSTR lpString,
+                IN HWND hDlg,
+                IN UINT Res)
+{
+    INT len = GetWindowTextLength(GetDlgItem(hDlg, Res));
+    if(len > 0)
+    {
+        GetDlgItemText(hDlg,
+                       Res,
+                       lpString,
+                       len + 1);
+    }
+    else
+        lpString = NULL;
+
+    return len;
+}
+
+LONG
+GetNumFromEdit(IN HWND hDlg,
+               IN UINT Res)
+{
+    LONG num = 0;
+    INT len = GetWindowTextLength(GetDlgItem(hDlg, Res));
+    TCHAR buf[len+1];
+
+    if(len > 0)
+    {
+        GetDlgItemText(hDlg,
+                       Res,
+                       buf,
+                       len + 1);
+        num = _ttol(buf);
+    }
+
+    return num;
+}

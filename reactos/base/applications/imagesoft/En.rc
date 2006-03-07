@@ -43,7 +43,7 @@ BEGIN
     MENUITEM "&Flip...",           -1, GRAYED
     MENUITEM "&Stretch...",        -1, GRAYED
     MENUITEM "S&kew...",           -1, GRAYED
-    MENUITEM "&Invert Colors", -1, GRAYED
+    MENUITEM "&Invert Colors",     -1, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Attributes...",     -1, GRAYED
   END
@@ -96,7 +96,7 @@ FONT 8,"MS Sans Serif",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Name:", IDC_STATIC, 12, 5, 38, 9
-  EDITTEXT IDC_IMAGE_NAME_EDIT,  58, 3, 76, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  EDITTEXT IDC_IMAGE_NAME_EDIT,  58, 3, 94, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
   GROUPBOX "Canvas properties", IDC_STATIC, 4, 22, 148, 98
   LTEXT "Image type:", IDC_STATIC, 12, 36, 42, 9
   CONTROL "", IDC_IMAGETYPE, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 35, 88, 54
@@ -113,8 +113,8 @@ BEGIN
   CONTROL "", IDC_UNIT, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 99, 54, 50
   LTEXT "Image size:", IDC_STATIC, 12, 125, 42, 9
   LTEXT "", IDC_IMAGE_SIZE, 58, 125, 54, 9
-  PUSHBUTTON "OK", IDOK, 98, 144, 54, 13
-  PUSHBUTTON "Cancel", IDCANCEL, 40, 144, 54, 13
+  PUSHBUTTON "OK", IDOK, 50, 144, 48, 13
+  PUSHBUTTON "Cancel", IDCANCEL, 102, 144, 48, 13
 END
 
 
@@ -142,43 +142,43 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ImageSoft"
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
-  IDS_READY   " Ready."
+  IDS_APPNAME           "ImageSoft"
+  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_READY             " Ready."
 
-  IDS_TOOLBAR_STANDARD "Standard"
-  IDS_TOOLBAR_TEST "Test"
-  IDS_IMAGE_NAME "Image %1!u!"
+  IDS_TOOLBAR_STANDARD  "Standard"
+  IDS_TOOLBAR_TEST      "Test"
+  IDS_IMAGE_NAME        "Image %1!u!"
 END
 
 /* imageprop.c */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMAGE_MONOCHROME "Monochrome (1 bit)"
-  IDS_IMAGE_GREYSCALE  "Greyscale (8 bit)"
-  IDS_IMAGE_PALETTE    "Palette or 256 color (8 bit)"
-  IDS_IMAGE_TRUECOLOR  "True color (24 bit)"
+  IDS_IMAGE_MONOCHROME  "Monochrome (1 bit)"
+  IDS_IMAGE_GREYSCALE   "Greyscale (8 bit)"
+  IDS_IMAGE_PALETTE     "Palette or 256 color (8 bit)"
+  IDS_IMAGE_TRUECOLOR   "True color (24 bit)"
 
-  IDS_UNIT_CM "Cm"
-  IDS_UNIT_INCHES "Inches"
-  IDS_UNIT_PIXELS "Pixels"
-  IDS_UNIT_DOTSCM "Dots / Cm"
-  IDS_UNIT_DPI "DPI"
+  IDS_UNIT_PIXELS       "Pixels"
+  IDS_UNIT_CM           "Cm"
+  IDS_UNIT_INCHES       "Inches"
+  IDS_UNIT_DOTSCM       "Dots / Cm"
+  IDS_UNIT_DPI          "DPI"
 END
 
 /* Tooltips */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_NEW    "New"
-  IDS_TOOLTIP_OPEN   "Open"
-  IDS_TOOLTIP_SAVE   "Save"
+  IDS_TOOLTIP_NEW       "New"
+  IDS_TOOLTIP_OPEN      "Open"
+  IDS_TOOLTIP_SAVE      "Save"
   IDS_TOOLTIP_PRINTPRE  "Print preview"
-  IDS_TOOLTIP_PRINT  "Print"
-  IDS_TOOLTIP_CUT    "Cut"
-  IDS_TOOLTIP_COPY   "Copy"
-  IDS_TOOLTIP_PASTE  "Paste"
-  IDS_TOOLTIP_UNDO   "Undo"
-  IDS_TOOLTIP_REDO   "Redo"
+  IDS_TOOLTIP_PRINT     "Print"
+  IDS_TOOLTIP_CUT       "Cut"
+  IDS_TOOLTIP_COPY      "Copy"
+  IDS_TOOLTIP_PASTE     "Paste"
+  IDS_TOOLTIP_UNDO      "Undo"
+  IDS_TOOLTIP_REDO      "Redo"
 END
 
 /* Hints */

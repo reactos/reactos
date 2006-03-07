@@ -463,20 +463,23 @@ MainWndCommand(PMAIN_WND_INFO Info,
         {
             OPEN_IMAGE_EDIT_INFO OpenInfo;
             PIMAGE_PROP ImageProp = NULL;
-            LPTSTR lpCaption = NULL;
-
-            LoadAndFormatString(hInstance,
-                                IDS_IMAGE_NAME,
-                                &lpCaption,
-                                ++Info->ImagesCreated);
 
             ImageProp = (PIMAGE_PROP)DialogBox(hInstance,
                                                MAKEINTRESOURCE(IDD_IMAGE_PROP),
                                                Info->hSelf,
                                                ImagePropDialogProc);
 
-            if (ImageProp != 0)
+            if (ImageProp)
             {
+                /* if an image name isn't provided, load a default name */
+                if (! ImageProp->lpImageName)
+                    LoadAndFormatString(hInstance,
+                                        IDS_IMAGE_NAME,
+                                        &OpenInfo.New.lpImageName,
+                                        ++Info->ImagesCreated);
+                else
+                    OpenInfo.New.lpImageName = ImageProp->lpImageName;
+
                 OpenInfo.CreateNew = TRUE;
                 OpenInfo.Type = ImageProp->Type;
                 OpenInfo.Resolution = ImageProp->Resolution;
@@ -488,12 +491,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
                          ImageProp);
 
                 CreateImageEditWindow(Info,
-                                      lpCaption,
                                       &OpenInfo);
             }
 
-            if (lpCaption != NULL)
-                LocalFree((HLOCAL)lpCaption);
             break;
         }
 
