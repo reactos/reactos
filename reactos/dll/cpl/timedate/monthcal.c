@@ -26,6 +26,12 @@ static const TCHAR szMonthCalWndClass[] = TEXT("MonthCalWnd");
 #define MONTHCAL_CTRLFG     COLOR_WINDOWTEXT
 #define MONTHCAL_SELBG      COLOR_ACTIVECAPTION
 #define MONTHCAL_SELFG      COLOR_CAPTIONTEXT
+#define MONTHCAL_DISABLED_HEADERBG  COLOR_INACTIVECAPTION
+#define MONTHCAL_DISABLED_HEADERFG  COLOR_INACTIVECAPTIONTEXT
+#define MONTHCAL_DISABLED_CTRLBG    COLOR_WINDOW
+#define MONTHCAL_DISABLED_CTRLFG    COLOR_WINDOWTEXT
+#define MONTHCAL_DISABLED_SELBG     COLOR_INACTIVECAPTION
+#define MONTHCAL_DISABLED_SELFG     COLOR_INACTIVECAPTIONTEXT
 
 #define ID_DAYTIMER 1
 
@@ -49,6 +55,7 @@ typedef struct _MONTHCALWND
     DWORD UIState;
     BOOL Changed : 1;
     BOOL DayTimerSet : 1;
+    BOOL Enabled : 1;
     BOOL HasFocus : 1;
 } MONTHCALWND, *PMONTHCALWND;
 
@@ -248,8 +255,8 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
     /* cache the configuration */
     infoPtr->FirstDayOfWeek = MonthCalFirstDayOfWeek();
 
-    infoPtr->hbHeader = GetSysColorBrush(MONTHCAL_HEADERBG);
-    infoPtr->hbSelection = GetSysColorBrush(MONTHCAL_SELBG);
+    infoPtr->hbHeader = GetSysColorBrush(infoPtr->Enabled ? MONTHCAL_HEADERBG : MONTHCAL_DISABLED_HEADERBG);
+    infoPtr->hbSelection = GetSysColorBrush(infoPtr->Enabled ? MONTHCAL_SELBG : MONTHCAL_DISABLED_SELBG);
 
     for (i = 0;
          i < 7;
@@ -447,6 +454,15 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
     HFONT hOldFont;
     INT iOldBkMode;
 
+#if MONTHCAL_CTRLBG != MONTHCAL_DISABLED_CTRLBG
+    if (!infoPtr->Enabled)
+    {
+        FillRect(hDC,
+                 prcUpdate,
+                 GetSysColorBrush(MONTHCAL_DISABLED_CTRLBG));
+    }
+#endif
+
     iOldBkMode = SetBkMode(hDC,
                            TRANSPARENT);
     hOldFont = (HFONT)SelectObject(hDC,
@@ -474,7 +490,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
                      infoPtr->hbHeader);
 
             crOldText = SetTextColor(hDC,
-                                     GetSysColor(MONTHCAL_HEADERFG));
+                                     GetSysColor(infoPtr->Enabled ? MONTHCAL_HEADERFG : MONTHCAL_DISABLED_HEADERFG));
 
             for (x = prcUpdate->left / infoPtr->CellSize.cx;
                  x <= prcUpdate->right / infoPtr->CellSize.cx && x < 7;
@@ -499,7 +515,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
             if (crOldCtrlText == CLR_INVALID)
             {
                 crOldCtrlText = SetTextColor(hDC,
-                                             MONTHCAL_CTRLFG);
+                                             infoPtr->Enabled ? MONTHCAL_CTRLFG : MONTHCAL_DISABLED_CTRLFG);
             }
 
             for (x = prcUpdate->left / infoPtr->CellSize.cx;
@@ -552,7 +568,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
 
                             /* highlight the selected day */
                             crOldText = SetTextColor(hDC,
-                                                     GetSysColor(MONTHCAL_SELFG));
+                                                     GetSysColor(infoPtr->Enabled ? MONTHCAL_SELFG : MONTHCAL_DISABLED_SELFG));
                         }
                         else
                         {
@@ -569,12 +585,12 @@ FailNoHighlight:
 
                         if (Day == infoPtr->Day && crOldText != CLR_INVALID)
                         {
-                            if (infoPtr->HasFocus && !(infoPtr->UIState & UISF_HIDEFOCUS))
+                            if (infoPtr->HasFocus && infoPtr->Enabled && !(infoPtr->UIState & UISF_HIDEFOCUS))
                             {
                                 COLORREF crOldBk;
 
                                 crOldBk = SetBkColor(hDC,
-                                                     GetSysColor(MONTHCAL_SELBG));
+                                                     GetSysColor(infoPtr->Enabled ? MONTHCAL_SELBG : MONTHCAL_DISABLED_SELBG));
 
                                 DrawFocusRect(hDC,
                                               &rcHighlight);
@@ -663,6 +679,12 @@ MonthCalWndProc(IN HWND hwnd,
     
     switch (uMsg)
     {
+#if MONTHCAL_CTRLBG != MONTHCAL_DISABLED_CTRLBG
+        case WM_ERASEBKGND:
+            Ret = !infoPtr->Enabled;
+            break;
+#endif
+
         case WM_PAINT:
         case WM_PRINTCLIENT:
         {
@@ -969,6 +991,28 @@ MonthCalWndProc(IN HWND hwnd,
             break;
         }
 
+        case WM_ENABLE:
+        {
+            infoPtr->Enabled = ((BOOL)wParam != FALSE);
+            MonthCalReload(infoPtr);
+            break;
+        }
+
+        case WM_STYLECHANGED:
+        {
+            if (wParam == GWL_STYLE)
+            {
+                BOOL OldEnabled = infoPtr->Enabled;
+                infoPtr->Enabled = !(((LPSTYLESTRUCT)lParam)->styleNew & WS_DISABLED);
+
+                if (OldEnabled != infoPtr->Enabled)
+                {
+                    MonthCalReload(infoPtr);
+                }
+            }
+            break;
+        }
+
         case WM_CREATE:
         {
             infoPtr = HeapAlloc(GetProcessHeap(),
@@ -989,6 +1033,7 @@ MonthCalWndProc(IN HWND hwnd,
 
             infoPtr->hSelf = hwnd;
             infoPtr->hNotify = ((LPCREATESTRUCTW)lParam)->hwndParent;
+            infoPtr->Enabled = !(((LPCREATESTRUCTW)lParam)->style & WS_DISABLED);
 
             MonthCalSetLocalTime(infoPtr,
                                  NULL);
