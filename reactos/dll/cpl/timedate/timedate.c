@@ -56,6 +56,64 @@ APPLET Applets[NUM_APPLETS] =
   {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };
 
+static BOOL
+SystemSetLocalTime(LPSYSTEMTIME lpSystemTime)
+{
+    HANDLE hToken;
+    DWORD PrevSize;
+    TOKEN_PRIVILEGES priv, previouspriv;
+    BOOL Ret = FALSE;
+
+    /*
+     * Enable the SeSystemtimePrivilege privilege
+     */
+
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+                         &hToken))
+    {
+        priv.PrivilegeCount = 1;
+        priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (LookupPrivilegeValue(NULL,
+                                 SE_SYSTEMTIME_NAME,
+                                 &priv.Privileges[0].Luid))
+        {
+            if (AdjustTokenPrivileges(hToken,
+                                      FALSE,
+                                      &priv,
+                                      sizeof(previouspriv),
+                                      &previouspriv,
+                                      &PrevSize) &&
+                GetLastError() == ERROR_SUCCESS)
+            {
+                /*
+                 * We successfully enabled it, we're permitted to change the system time
+                 * Call SetLocalTime twice to ensure correct results
+                 */
+                Ret = SetLocalTime(lpSystemTime) &&
+                      SetLocalTime(lpSystemTime);
+
+                /*
+                 * For the sake of security, restore the previous status again
+                 */
+                if (previouspriv.PrivilegeCount > 0)
+                {
+                    AdjustTokenPrivileges(hToken,
+                                          FALSE,
+                                          &previouspriv,
+                                          0,
+                                          NULL,
+                                          0);
+                }
+            }
+        }
+        CloseHandle(hToken);
+    }
+
+    return Ret;
+}
+
 
 static VOID
 SetLocalSystemTime(HWND hwnd)
@@ -71,9 +129,7 @@ SetLocalSystemTime(HWND hwnd)
                     (WPARAM)&Time,
                     0))
     {
-        /* Call SetLocalTime twice to ensure correct results */
-        SetLocalTime(&Time);
-        SetLocalTime(&Time);
+        SystemSetLocalTime(&Time);
 
         SetWindowLong(hwnd,
                       DWL_MSGRESULT,

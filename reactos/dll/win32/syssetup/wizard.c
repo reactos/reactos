@@ -1204,9 +1204,11 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
          GetLastError() == ERROR_SUCCESS)
       {
         /*
-         * we successfully enabled it, we're permitted to change the system time
+         * We successfully enabled it, we're permitted to change the system time
+         * Call SetLocalTime twice to ensure correct results
          */
-        Ret = SetLocalTime(&SetupData->SystemTime);
+        Ret = SetLocalTime(&SetupData->SystemTime) &&
+              SetLocalTime(&SetupData->SystemTime);
 
         /*
          * for the sake of security, restore the previous status again
