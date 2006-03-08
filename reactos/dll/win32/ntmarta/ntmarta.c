@@ -38,7 +38,7 @@ HINSTANCE hDllInstance;
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccRewriteGetHandleRights(HANDLE handle,
                           SE_OBJECT_TYPE ObjectType,
                           SECURITY_INFORMATION SecurityInfo,
@@ -227,7 +227,7 @@ Cleanup:
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccRewriteSetHandleRights(HANDLE handle,
                           SE_OBJECT_TYPE ObjectType,
                           SECURITY_INFORMATION SecurityInfo,
@@ -303,12 +303,280 @@ AccRewriteSetHandleRights(HANDLE handle,
 }
 
 
+static DWORD
+AccpOpenNamedObject(LPWSTR pObjectName,
+                    SE_OBJECT_TYPE ObjectType,
+                    SECURITY_INFORMATION SecurityInfo,
+                    PHANDLE Handle,
+                    PHANDLE Handle2,
+                    BOOL Write)
+{
+    LPWSTR lpPath;
+    ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
+    DWORD Ret = ERROR_SUCCESS;
+
+    /* determine the required access rights */
+    switch (ObjectType)
+    {
+        case SE_REGISTRY_KEY:
+        case SE_FILE_OBJECT:
+        case SE_KERNEL_OBJECT:
+        case SE_SERVICE:
+        case SE_WINDOW_OBJECT:
+            if (Write)
+            {
+                if (SecurityInfo & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+                    DesiredAccess |= WRITE_OWNER;
+                if (SecurityInfo & DACL_SECURITY_INFORMATION)
+                    DesiredAccess |= WRITE_DAC;
+                if (SecurityInfo & SACL_SECURITY_INFORMATION)
+                    DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+            }
+            else
+            {
+                if (SecurityInfo & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+                                    DACL_SECURITY_INFORMATION))
+                    DesiredAccess |= READ_CONTROL;
+                if (SecurityInfo & SACL_SECURITY_INFORMATION)
+                    DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    /* make a copy of the path if we're modifying the string */
+    switch (ObjectType)
+    {
+        case SE_REGISTRY_KEY:
+        case SE_SERVICE:
+            lpPath = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                        (wcslen(pObjectName) + 1) * sizeof(WCHAR));
+            if (lpPath == NULL)
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
+
+            wcscpy(lpPath,
+                   pObjectName);
+            break;
+
+        default:
+            lpPath = pObjectName;
+            break;
+    }
+
+    /* open a handle to the path depending on the object type */
+    switch (ObjectType)
+    {
+        case SE_REGISTRY_KEY:
+        {
+            static const struct
+            {
+                HKEY hRootKey;
+                LPCWSTR szRootKey;
+            } AccRegRootKeys[] =
+            {
+                {HKEY_CLASSES_ROOT, L"CLASSES_ROOT"},
+                {HKEY_CURRENT_USER, L"CURRENT_USER"},
+                {HKEY_LOCAL_MACHINE, L"MACHINE"},
+                {HKEY_USERS, L"USERS"},
+                {HKEY_CURRENT_CONFIG, L"CONFIG"},
+            };
+            LPWSTR lpMachineName, lpRootKeyName, lpKeyName;
+            HKEY hRootKey = NULL;
+            UINT i;
+
+            /* parse the registry path */
+            if (lpPath[0] == L'\\' && lpPath[1] == L'\\')
+            {
+                lpMachineName = lpPath;
+
+                lpRootKeyName = wcschr(lpPath + 2,
+                                       L'\\');
+                if (lpRootKeyName == NULL)
+                    goto ParseRegErr;
+                else
+                    *(lpRootKeyName++) = L'\0';
+            }
+            else
+            {
+                lpMachineName = NULL;
+                lpRootKeyName = lpPath;
+            }
+
+            lpKeyName = wcschr(lpRootKeyName,
+                               L'\\');
+            if (lpKeyName != NULL)
+            {
+                *(lpKeyName++) = L'\0';
+            }
+
+            for (i = 0;
+                 i != sizeof(AccRegRootKeys) / sizeof(AccRegRootKeys[0]);
+                 i++)
+            {
+                if (!wcsicmp(lpRootKeyName,
+                             AccRegRootKeys[i].szRootKey))
+                {
+                    hRootKey = AccRegRootKeys[i].hRootKey;
+                    break;
+                }
+            }
+
+            if (hRootKey == NULL)
+            {
+ParseRegErr:
+                /* FIXME - right error code? */
+                Ret = ERROR_INVALID_PARAMETER;
+                goto Cleanup;
+            }
+
+            /* open the registry key */
+            if (lpMachineName != NULL)
+            {
+                Ret = RegConnectRegistry(lpMachineName,
+                                         hRootKey,
+                                         (PHKEY)Handle2);
+
+                if (Ret != ERROR_SUCCESS)
+                    goto Cleanup;
+
+                hRootKey = (HKEY)(*Handle2);
+            }
+
+            Ret = RegOpenKeyEx(hRootKey,
+                               lpKeyName,
+                               0,
+                               (REGSAM)DesiredAccess,
+                               (PHKEY)Handle);
+            if (Ret != ERROR_SUCCESS)
+            {
+                if (*Handle2 != NULL)
+                {
+                    RegCloseKey((HKEY)(*Handle2));
+                }
+
+                goto Cleanup;
+            }
+            break;
+        }
+
+        case SE_SERVICE:
+        {
+            LPWSTR lpServiceName, lpMachineName;
+
+            /* parse the service path */
+            if (lpPath[0] == L'\\' && lpPath[1] == L'\\')
+            {
+                DesiredAccess |= SC_MANAGER_CONNECT;
+
+                lpMachineName = lpPath;
+
+                lpServiceName = wcschr(lpPath + 2,
+                                       L'\\');
+                if (lpServiceName == NULL)
+                {
+                    /* FIXME - right error code? */
+                    Ret = ERROR_INVALID_PARAMETER;
+                    goto Cleanup;
+                }
+                else
+                    *(lpServiceName++) = L'\0';
+            }
+            else
+            {
+                lpMachineName = NULL;
+                lpServiceName = lpPath;
+            }
+
+            /* open the service */
+            *Handle2 = (HANDLE)OpenSCManager(lpMachineName,
+                                             NULL,
+                                             (DWORD)DesiredAccess);
+            if (*Handle2 == NULL)
+            {
+                goto FailOpenService;
+            }
+
+            DesiredAccess &= ~SC_MANAGER_CONNECT;
+            *Handle = (HANDLE)OpenService((SC_HANDLE)(*Handle2),
+                                          lpServiceName,
+                                          DesiredAccess);
+            if (*Handle == NULL)
+            {
+                if (*Handle2 != NULL)
+                {
+                    CloseServiceHandle((SC_HANDLE)(*Handle2));
+                }
+
+FailOpenService:
+                Ret = GetLastError();
+                goto Cleanup;
+            }
+            break;
+        }
+
+        default:
+        {
+            UNIMPLEMENTED;
+            Ret = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+    }
+
+Cleanup:
+    if (lpPath != NULL)
+    {
+        LocalFree((HLOCAL)lpPath);
+    }
+
+    return Ret;
+}
+
+
+static VOID
+AccpCloseObjectHandle(SE_OBJECT_TYPE ObjectType,
+                      HANDLE Handle,
+                      HANDLE Handle2)
+{
+    ASSERT(Handle != NULL);
+
+    /* close allocated handlees depending on the object type */
+    switch (ObjectType)
+    {
+        case SE_REGISTRY_KEY:
+            RegCloseKey((HKEY)Handle);
+            if (Handle2 != NULL)
+                RegCloseKey((HKEY)Handle2);
+            break;
+
+        case SE_FILE_OBJECT:
+        case SE_KERNEL_OBJECT:
+        case SE_WINDOW_OBJECT:
+            CloseHandle(Handle);
+            break;
+
+        case SE_SERVICE:
+            CloseServiceHandle((SC_HANDLE)Handle);
+            ASSERT(Handle2 != NULL);
+            CloseServiceHandle((SC_HANDLE)Handle2);
+            break;
+
+        default:
+            break;
+    }
+}
+
+
 /**********************************************************************
  * AccRewriteGetNamedRights				EXPORTED
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccRewriteGetNamedRights(LPWSTR pObjectName,
                          SE_OBJECT_TYPE ObjectType,
                          SECURITY_INFORMATION SecurityInfo,
@@ -318,8 +586,46 @@ AccRewriteGetNamedRights(LPWSTR pObjectName,
                          PACL* ppSacl,
                          PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    HANDLE Handle = NULL;
+    HANDLE Handle2 = NULL;
+    DWORD LastErr;
+    DWORD Ret;
+
+    /* save the last error code */
+    LastErr = GetLastError();
+
+    /* create the handle */
+    Ret = AccpOpenNamedObject(pObjectName,
+                              ObjectType,
+                              SecurityInfo,
+                              &Handle,
+                              &Handle2,
+                              FALSE);
+
+    if (Ret == ERROR_SUCCESS)
+    {
+        ASSERT(Handle != NULL);
+
+        /* perform the operation */
+        Ret = AccRewriteGetHandleRights(Handle,
+                                        ObjectType,
+                                        SecurityInfo,
+                                        ppsidOwner,
+                                        ppsidGroup,
+                                        ppDacl,
+                                        ppSacl,
+                                        ppSecurityDescriptor);
+
+        /* close opened handles */
+        AccpCloseObjectHandle(ObjectType,
+                              Handle,
+                              Handle2);
+    }
+
+    /* restore the last error code */
+    SetLastError(LastErr);
+
+    return Ret;
 }
 
 
@@ -328,14 +634,48 @@ AccRewriteGetNamedRights(LPWSTR pObjectName,
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccRewriteSetNamedRights(LPWSTR pObjectName,
                          SE_OBJECT_TYPE ObjectType,
                          SECURITY_INFORMATION SecurityInfo,
                          PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    HANDLE Handle = NULL;
+    HANDLE Handle2 = NULL;
+    DWORD LastErr;
+    DWORD Ret;
+
+    /* save the last error code */
+    LastErr = GetLastError();
+
+    /* create the handle */
+    Ret = AccpOpenNamedObject(pObjectName,
+                              ObjectType,
+                              SecurityInfo,
+                              &Handle,
+                              &Handle2,
+                              TRUE);
+
+    if (Ret == ERROR_SUCCESS)
+    {
+        ASSERT(Handle != NULL);
+
+        /* perform the operation */
+        Ret = AccRewriteSetHandleRights(Handle,
+                                        ObjectType,
+                                        SecurityInfo,
+                                        pSecurityDescriptor);
+
+        /* close opened handles */
+        AccpCloseObjectHandle(ObjectType,
+                              Handle,
+                              Handle2);
+    }
+
+    /* restore the last error code */
+    SetLastError(LastErr);
+
+    return Ret;
 }
 
 
@@ -344,7 +684,7 @@ AccRewriteSetNamedRights(LPWSTR pObjectName,
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                           PEXPLICIT_ACCESS_W pListOfExplicitEntries,
                           PACL OldAcl,
@@ -360,7 +700,7 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccGetInheritanceSource(LPWSTR pObjectName,
                         SE_OBJECT_TYPE ObjectType,
                         SECURITY_INFORMATION SecurityInfo,
@@ -380,15 +720,28 @@ AccGetInheritanceSource(LPWSTR pObjectName,
 /**********************************************************************
  * AccFreeIndexArray					EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
                   USHORT AceCnt,
                   PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    UNREFERENCED_PARAMETER(pfnArray);
+
+    while (AceCnt != 0)
+    {
+        if (pInheritArray->AncestorName != NULL)
+        {
+            LocalFree((HLOCAL)pInheritArray->AncestorName);
+            pInheritArray->AncestorName = NULL;
+        }
+
+        pInheritArray++;
+        AceCnt--;
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -397,7 +750,7 @@ AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
                                     PULONG pcCountOfExplicitEntries,
                                     PEXPLICIT_ACCESS_W* pListOfExplicitEntries)
@@ -412,7 +765,7 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 AccTreeResetNamedSecurityInfo(LPWSTR pObjectName,
                               SE_OBJECT_TYPE ObjectType,
                               SECURITY_INFORMATION SecurityInfo,
@@ -430,7 +783,7 @@ AccTreeResetNamedSecurityInfo(LPWSTR pObjectName,
 }
 
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
         IN LPVOID lpvReserved)

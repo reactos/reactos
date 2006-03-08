@@ -513,9 +513,6 @@ FreeInheritedFromArray (
 	)
 {
     DWORD ErrorCode;
-    
-    /* pfnArray is not yet used */
-    UNREFERENCED_PARAMETER(pfnArray);
 
     ErrorCode = CheckNtMartaPresent();
     if (ErrorCode == ERROR_SUCCESS)
@@ -523,7 +520,7 @@ FreeInheritedFromArray (
         /* call the MARTA provider */
         ErrorCode = AccFreeIndexArray(pInheritArray,
                                       AceCnt,
-                                      NULL);
+                                      pfnArray);
     }
 
     return ErrorCode;
