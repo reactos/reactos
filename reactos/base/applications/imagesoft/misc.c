@@ -183,8 +183,12 @@ GetNumFromEdit(IN HWND hDlg,
                IN UINT Res)
 {
     LONG num = 0;
+    LPTSTR buf;
     INT len = GetWindowTextLength(GetDlgItem(hDlg, Res));
-    TCHAR buf[len+1];
+
+    buf = HeapAlloc(ProcessHeap, 
+                    0, 
+                    len);
 
     if(len > 0)
     {
@@ -194,6 +198,10 @@ GetNumFromEdit(IN HWND hDlg,
                        len + 1);
         num = _ttol(buf);
     }
+
+    HeapFree(ProcessHeap, 
+             0, 
+             buf);
 
     return num;
 }

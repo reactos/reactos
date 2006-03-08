@@ -24,6 +24,10 @@ ULONG DbgPrint(PCH Format,...);
 #define MAX_KEY_LENGTH 256
 #define NUM_BUTTONS 14
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4100)
+#endif
+
 /* generic definitions and forward declarations */
 struct _MAIN_WND_INFO;
 struct _EDIT_WND_INFO;

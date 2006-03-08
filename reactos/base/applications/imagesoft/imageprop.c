@@ -3,9 +3,6 @@
 static PIMAGE_PROP ImageProp;
 static HWND hImageType, hUnitType, hHeightUnit, hWidthUnit, hResUnit;
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4100)
-#endif
 INT_PTR CALLBACK
 ImagePropDialogProc(HWND hDlg,
                     UINT message,
