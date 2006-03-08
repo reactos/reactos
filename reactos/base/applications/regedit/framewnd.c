@@ -963,14 +963,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CopyKeyName(hWnd, hKeyRoot, keyPath);
         break;
     case ID_EDIT_PERMISSIONS:
-        if(keyPath != NULL && _tcslen(keyPath) > 0)
-        {
-          RegKeyEditPermissions(hWnd, hKey, NULL, keyPath);
-        }
-        else
-        {
-          MessageBeep(MB_ICONASTERISK);
-        }
+        RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
     case ID_REGISTRY_PRINTERSETUP:
         /*PRINTDLG pd;*/

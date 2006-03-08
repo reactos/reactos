@@ -16,6 +16,7 @@
 #include <basetyps.h>
 #include <unknwn.h>
 #include <aclui.h>
+#include <aclapi.h>
 #include <commdlg.h>
 #include <cderr.h>
 #include <ole2.h>

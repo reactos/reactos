@@ -18,6 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define _WIN32_WINNT 0x0501
+
 #include <stdio.h>
 
 #include "wine/test.h"

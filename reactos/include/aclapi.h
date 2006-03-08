@@ -27,6 +27,7 @@ VOID WINAPI BuildTrusteeWithObjectsAndSidA(PTRUSTEE_A,POBJECTS_AND_SID,GUID*,GUI
 VOID WINAPI BuildTrusteeWithObjectsAndSidW(PTRUSTEE_W,POBJECTS_AND_SID,GUID*,GUID*,PSID);
 VOID WINAPI BuildTrusteeWithSidA(PTRUSTEE_A,PSID);
 VOID WINAPI BuildTrusteeWithSidW(PTRUSTEE_W,PSID);
+DWORD WINAPI FreeInheritedFromArray(PINHERITED_FROMW,USHORT,PFN_OBJECT_MGR_FUNCTS);
 DWORD WINAPI GetAuditedPermissionsFromAclA(PACL,PTRUSTEE_A,PACCESS_MASK,PACCESS_MASK);
 DWORD WINAPI GetAuditedPermissionsFromAclW(PACL,PTRUSTEE_W,PACCESS_MASK,PACCESS_MASK);
 DWORD WINAPI GetEffectiveRightsFromAclA(PACL,PTRUSTEE_A,PACCESS_MASK);
@@ -77,6 +78,7 @@ MULTIPLE_TRUSTEE_OPERATION WINAPI GetMultipleTrusteeOperationW(PTRUSTEE_W);
 #define GetAuditedPermissionsFromAcl  GetAuditedPermissionsFromAclW
 #define GetEffectiveRightsFromAcl  GetEffectiveRightsFromAclW
 #define GetExplicitEntriesFromAcl  GetExplicitEntriesFromAclW
+#define GetInheritanceSource  GetInheritanceSourceW
 #define GetNamedSecurityInfo  GetNamedSecurityInfoW
 #define GetTrusteeForm  GetTrusteeFormW
 #define GetTrusteeName  GetTrusteeNameW
@@ -98,6 +100,7 @@ MULTIPLE_TRUSTEE_OPERATION WINAPI GetMultipleTrusteeOperationW(PTRUSTEE_W);
 #define GetAuditedPermissionsFromAcl  GetAuditedPermissionsFromAclA
 #define GetEffectiveRightsFromAcl  GetEffectiveRightsFromAclA
 #define GetExplicitEntriesFromAcl  GetExplicitEntriesFromAclA
+#define GetInheritanceSource  GetInheritanceSourceA
 #define GetNamedSecurityInfo  GetNamedSecurityInfoA
 #define GetTrusteeForm  GetTrusteeFormA
 #define GetTrusteeName  GetTrusteeNameA
