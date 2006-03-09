@@ -107,6 +107,7 @@ RtlpAddKnownAce (PACL Acl,
                  ULONG Type)
 {
    PACE Ace;
+   ULONG InvalidFlags;
 
    PAGED_CODE_RTL();
 
@@ -123,6 +124,19 @@ RtlpAddKnownAce (PACL Acl,
    {
       Revision = Acl->AclRevision;
    }
+
+   /* Validate the flags */
+   if (Type == SYSTEM_AUDIT_ACE_TYPE)
+      InvalidFlags = Flags & ~(VALID_INHERIT_FLAGS |
+                               SUCCESSFUL_ACCESS_ACE_FLAG | FAILED_ACCESS_ACE_FLAG);
+   else
+      InvalidFlags = Flags & ~VALID_INHERIT_FLAGS;
+
+   if (InvalidFlags != 0)
+   {
+      return(STATUS_INVALID_PARAMETER);
+   }
+
    if (!RtlFirstFreeAce(Acl, &Ace))
    {
       return(STATUS_INVALID_ACL);
@@ -331,59 +345,26 @@ RtlAddAuditAccessAce(PACL Acl,
                      BOOLEAN Success,
                      BOOLEAN Failure)
 {
-   PACE Ace;
    ULONG Flags = 0;
 
    PAGED_CODE_RTL();
 
-   if (Success != FALSE)
+   if (Success)
    {
       Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
    }
 
-   if (Failure != FALSE)
+   if (Failure)
    {
       Flags |= FAILED_ACCESS_ACE_FLAG;
    }
 
-   if (!RtlValidSid(Sid))
-   {
-      return(STATUS_INVALID_SID);
-   }
-
-   if (Acl->AclRevision > MAX_ACL_REVISION ||
-       Revision > MAX_ACL_REVISION)
-   {
-      return(STATUS_REVISION_MISMATCH);
-   }
-
-   if (Revision < Acl->AclRevision)
-   {
-      Revision = Acl->AclRevision;
-   }
-
-   if (!RtlFirstFreeAce(Acl, &Ace))
-   {
-      return(STATUS_INVALID_ACL);
-   }
-
-   if (Ace == NULL ||
-       ((ULONG_PTR)Ace + RtlLengthSid(Sid) + sizeof(ACE)) > ((ULONG_PTR)Acl + Acl->AclSize))
-   {
-      return(STATUS_ALLOTTED_SPACE_EXCEEDED);
-   }
-
-   Ace->Header.AceFlags = Flags;
-   Ace->Header.AceType = SYSTEM_AUDIT_ACE_TYPE;
-   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-   Ace->AccessMask = AccessMask;
-   RtlCopySid(RtlLengthSid(Sid),
-              (PSID)(Ace + 1),
-              Sid);
-   Acl->AceCount++;
-   Acl->AclRevision = Revision;
-
-   return(STATUS_SUCCESS);
+   return RtlpAddKnownAce (Acl,
+                           Revision,
+                           Flags,
+                           AccessMask,
+                           Sid,
+                           SYSTEM_AUDIT_ACE_TYPE);
 }
 
 
@@ -399,58 +380,22 @@ RtlAddAuditAccessAceEx(PACL Acl,
                        BOOLEAN Success,
                        BOOLEAN Failure)
 {
-  PACE Ace;
+   if (Success)
+   {
+      Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
+   }
 
-  PAGED_CODE_RTL();
+   if (Failure)
+   {
+      Flags |= FAILED_ACCESS_ACE_FLAG;
+   }
 
-  if (Success != FALSE)
-  {
-    Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
-  }
-
-  if (Failure != FALSE)
-  {
-    Flags |= FAILED_ACCESS_ACE_FLAG;
-  }
-
-  if (!RtlValidSid(Sid))
-  {
-    return STATUS_INVALID_SID;
-  }
-
-  if (Acl->AclRevision > MAX_ACL_REVISION ||
-      Revision > MAX_ACL_REVISION)
-  {
-    return STATUS_REVISION_MISMATCH;
-  }
-
-  if (Revision < Acl->AclRevision)
-  {
-    Revision = Acl->AclRevision;
-  }
-
-  if (!RtlFirstFreeAce(Acl, &Ace))
-  {
-    return STATUS_INVALID_ACL;
-  }
-
-  if (Ace == NULL ||
-      ((ULONG_PTR)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= ((ULONG_PTR)Acl + Acl->AclSize))
-  {
-    return STATUS_ALLOTTED_SPACE_EXCEEDED;
-  }
-
-  Ace->Header.AceFlags = Flags;
-  Ace->Header.AceType = SYSTEM_AUDIT_ACE_TYPE;
-  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-  Ace->AccessMask = AccessMask;
-  RtlCopySid(RtlLengthSid(Sid),
-             (PSID)(Ace + 1),
-             Sid);
-  Acl->AceCount++;
-  Acl->AclRevision = Revision;
-
-  return STATUS_SUCCESS;
+   return RtlpAddKnownAce (Acl,
+                           Revision,
+                           Flags,
+                           AccessMask,
+                           Sid,
+                           SYSTEM_AUDIT_ACE_TYPE);
 }
 
 
