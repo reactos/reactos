@@ -33,6 +33,131 @@
 
 HINSTANCE hDllInstance;
 
+static ACCESS_MODE
+AccpGetAceAccessMode(IN PACE_HEADER AceHeader)
+{
+    ACCESS_MODE Mode = NOT_USED_ACCESS;
+
+    switch (AceHeader->AceType)
+    {
+        case ACCESS_ALLOWED_ACE_TYPE:
+        case ACCESS_ALLOWED_CALLBACK_ACE_TYPE:
+        case ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+            Mode = GRANT_ACCESS;
+            break;
+
+        case ACCESS_DENIED_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_OBJECT_ACE_TYPE:
+            Mode = DENY_ACCESS;
+            break;
+
+        case SYSTEM_AUDIT_ACE_TYPE:
+        case SYSTEM_AUDIT_CALLBACK_ACE_TYPE:
+        case SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE:
+        case SYSTEM_AUDIT_OBJECT_ACE_TYPE:
+            if (AceHeader->AceFlags & FAILED_ACCESS_ACE_FLAG)
+                Mode = SET_AUDIT_FAILURE;
+            else if (AceHeader->AceFlags & SUCCESSFUL_ACCESS_ACE_FLAG)
+                Mode = SET_AUDIT_SUCCESS;
+            break;
+    }
+
+    return Mode;
+}
+
+static UINT
+AccpGetAceStructureSize(IN PACE_HEADER AceHeader)
+{
+    UINT Size = 0;
+
+    switch (AceHeader->AceType)
+    {
+        case ACCESS_ALLOWED_ACE_TYPE:
+        case ACCESS_DENIED_ACE_TYPE:
+            Size = FIELD_OFFSET(ACCESS_ALLOWED_ACE,
+                                SidStart);
+            break;
+        case ACCESS_ALLOWED_CALLBACK_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_ACE_TYPE:
+            Size = FIELD_OFFSET(ACCESS_ALLOWED_CALLBACK_ACE,
+                                SidStart);
+            break;
+        case ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE:
+        {
+            PACCESS_ALLOWED_CALLBACK_OBJECT_ACE Ace = (PACCESS_ALLOWED_CALLBACK_OBJECT_ACE)AceHeader;
+            Size = FIELD_OFFSET(ACCESS_ALLOWED_CALLBACK_OBJECT_ACE,
+                                ObjectType);
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->ObjectType);
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->InheritedObjectType);
+            break;
+        }
+        case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_OBJECT_ACE_TYPE:
+        {
+            PACCESS_ALLOWED_OBJECT_ACE Ace = (PACCESS_ALLOWED_OBJECT_ACE)AceHeader;
+            Size = FIELD_OFFSET(ACCESS_ALLOWED_OBJECT_ACE,
+                                ObjectType);
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->ObjectType);
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->InheritedObjectType);
+            break;
+        }
+
+        case SYSTEM_AUDIT_ACE_TYPE:
+            Size = FIELD_OFFSET(SYSTEM_AUDIT_ACE,
+                                SidStart);
+            break;
+        case SYSTEM_AUDIT_CALLBACK_ACE_TYPE:
+            Size = FIELD_OFFSET(SYSTEM_AUDIT_CALLBACK_ACE,
+                                SidStart);
+            break;
+        case SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE:
+        {
+            PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE Ace = (PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE)AceHeader;
+            Size = FIELD_OFFSET(SYSTEM_AUDIT_CALLBACK_OBJECT_ACE,
+                                ObjectType);
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->ObjectType);
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->InheritedObjectType);
+            break;
+        }
+        case SYSTEM_AUDIT_OBJECT_ACE_TYPE:
+        {
+            PSYSTEM_AUDIT_OBJECT_ACE Ace = (PSYSTEM_AUDIT_OBJECT_ACE)AceHeader;
+            Size = FIELD_OFFSET(SYSTEM_AUDIT_OBJECT_ACE,
+                                ObjectType);
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->ObjectType);
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+                Size += sizeof(Ace->InheritedObjectType);
+            break;
+        }
+    }
+
+    return Size;
+}
+
+static PSID
+AccpGetAceSid(IN PACE_HEADER AceHeader)
+{
+    return (PSID)((ULONG_PTR)AceHeader + AccpGetAceStructureSize(AceHeader));
+}
+
+static ACCESS_MASK
+AccpGetAceAccessMask(IN PACE_HEADER AceHeader)
+{
+    return *((PACCESS_MASK)(AceHeader + 1));
+}
+
+
 /**********************************************************************
  * AccRewriteGetHandleRights				EXPORTED
  *
@@ -504,7 +629,7 @@ ParseRegErr:
             DesiredAccess &= ~SC_MANAGER_CONNECT;
             *Handle = (HANDLE)OpenService((SC_HANDLE)(*Handle2),
                                           lpServiceName,
-                                          DesiredAccess);
+                                          (DWORD)DesiredAccess);
             if (*Handle == NULL)
             {
                 if (*Handle2 != NULL)
@@ -748,15 +873,103 @@ AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
 /**********************************************************************
  * AccRewriteGetExplicitEntriesFromAcl			EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD WINAPI
 AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
                                     PULONG pcCountOfExplicitEntries,
                                     PEXPLICIT_ACCESS_W* pListOfExplicitEntries)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PACE_HEADER AceHeader;
+    PSID Sid, SidTarget;
+    SIZE_T Size;
+    PEXPLICIT_ACCESS_W peaw;
+    DWORD LastErr, SidLen;
+    DWORD AceIndex = 0;
+    DWORD ErrorCode = ERROR_SUCCESS;
+
+    /* save the last error code */
+    LastErr = GetLastError();
+
+    if (pacl != NULL)
+    {
+        if (pacl->AceCount != 0)
+        {
+            Size = (SIZE_T)pacl->AceCount * sizeof(EXPLICIT_ACCESS_W);
+
+            /* calculate the space needed */
+            while (GetAce(pacl,
+                          AceIndex,
+                          (LPVOID*)&AceHeader))
+            {
+                Sid = AccpGetAceSid(AceHeader);
+                Size += GetLengthSid(Sid);
+                /* FIXME - take size of opaque data in account? */
+                AceIndex++;
+            }
+
+            ASSERT(pacl->AceCount == AceIndex);
+
+            /* allocate the array */
+            peaw = (PEXPLICIT_ACCESS_W)LocalAlloc(LMEM_FIXED,
+                                                  Size);
+            if (peaw != NULL)
+            {
+                AceIndex = 0;
+                SidTarget = (PSID)(peaw + pacl->AceCount);
+
+                /* initialize the array */\
+                while (GetAce(pacl,
+                              AceIndex,
+                              (LPVOID*)&AceHeader))
+                {
+                    Sid = AccpGetAceSid(AceHeader);
+                    SidLen = GetLengthSid(Sid);
+
+                    peaw[AceIndex].grfAccessPermissions = AccpGetAceAccessMask(AceHeader);
+                    peaw[AceIndex].grfAccessMode = AccpGetAceAccessMode(AceHeader);
+                    peaw[AceIndex].grfInheritance = AceHeader->AceFlags & VALID_INHERIT_FLAGS;
+
+                    if (CopySid(SidLen,
+                                SidTarget,
+                                Sid))
+                    {
+                        BuildTrusteeWithSid(&peaw[AceIndex].Trustee,
+                                            SidTarget);
+                        SidTarget = (PSID)((ULONG_PTR)SidTarget + SidLen);
+                    }
+                    else
+                    {
+                        /* copying the SID failed, treat it as an fatal error... */
+                        ErrorCode = GetLastError();
+
+                        /* free allocated resources */
+                        LocalFree(peaw);
+                        peaw = NULL;
+                        AceIndex = 0;
+                        break;
+                    }
+
+                    AceIndex++;
+                }
+
+                *pcCountOfExplicitEntries = AceIndex;
+                *pListOfExplicitEntries = peaw;
+            }
+            else
+                ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        }
+        else
+        {
+            *pcCountOfExplicitEntries = 0;
+            *pListOfExplicitEntries = NULL;
+        }
+    }
+
+    /* restore the last error code */
+    SetLastError(LastErr);
+
+    return ErrorCode;
 }
 
 
