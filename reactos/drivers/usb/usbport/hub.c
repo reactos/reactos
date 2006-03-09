@@ -1412,7 +1412,7 @@ int usb_physical_reset_device(struct usb_device *dev)
 	le16_to_cpus(&descriptor->idProduct);
 	le16_to_cpus(&descriptor->bcdDevice);
 
-	if (RtlCompareMemory(&dev->descriptor, descriptor, sizeof(*descriptor))) {
+	if (RtlCompareMemory(&dev->descriptor, descriptor, sizeof(*descriptor)) != sizeof(*descriptor)) {
 		kfree(descriptor);
 		usb_destroy_configuration(dev);
 
