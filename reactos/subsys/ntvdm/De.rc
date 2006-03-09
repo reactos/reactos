@@ -1,0 +1,13 @@
+#include "resource.h"
+/*
+ * Translate into German.
+ * By Rouven Wessling 2005 pentiumforever@gmail.com
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+STRING_WelcomeMsg,      "ReactOS Virtuelle DOS Unterstützung.\n"
+STRING_PromptMsg,       "Drücke jetzt r<cr> zum starten, s<cr> zum runterfahren oder q<cr> zum schließen."
+}

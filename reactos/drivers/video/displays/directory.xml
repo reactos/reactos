@@ -1,0 +1,6 @@
+<directory name="framebuf">
+	<xi:include href="framebuf/framebuf.xml" />
+</directory>
+<directory name="vga">
+	<xi:include href="vga/vgaddi.xml" />
+</directory>

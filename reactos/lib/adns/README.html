@@ -1,0 +1,222 @@
+<html>
+<head>
+<title>adns - advanced, alternative, asynchronous resolver</title>
+<link rev="made" href="mailto:adns-maint@chiark.greenend.org.uk">
+</head>
+<body>
+<h1>GNU adns</h1>
+
+<strong>Advanced, easy to use, asynchronous-capable DNS client
+library and utilities.</strong>
+
+<!-- Note: this file is maintained in Ian Jackson's private CVS.  -->
+<!--                                                              -->
+<!--  It is served on the GNU site and also from my own system,   -->
+<!--  under the URL http://www.chiark.greenend.org.uk/adns/       -->
+<!--  Please ensure that all links continine to be correct        -->
+<!--  both for www.gnu.org and chiark.                            -->
+<!--                                                              -->
+<!--  $Id$        -->   
+
+<p>
+
+adns is a resolver library for C (and C++) programs, and a collection
+of useful DNS resolver utilities.
+
+
+<h2>C library</h2>
+
+In contrast with the standard interfaces, gethostbyname et al and
+libresolv, it has the following features:
+
+<ul>
+
+<li>It is reasonably easy to use for simple programs which just want
+to translate names to addresses, look up MX records, etc.
+
+<li>It can be used in an asynchronous, non-blocking, manner.  Many
+queries can be handled simultaneously.
+
+<li>Responses are decoded automatically into a natural representation
+for a C program - there is no need to deal with DNS packet formats.
+
+<li>Sanity checking (eg, name syntax checking, reverse/forward
+correspondence, CNAME pointing to CNAME) is performed automatically.
+
+<li>Time-to-live, CNAME and other similar information is returned in
+an easy-to-use form, without getting in the way.
+
+<li>There is no global state in the library; resolver state is an
+opaque data structure which the client creates explicitly.  A program
+can have several instances of the resolver.
+
+<li>Errors are reported to the application in a way that distinguishes
+the various causes of failure properly.
+
+<li>Understands conventional resolv.conf, but this can overridden by
+environment variables.
+
+<li>Flexibility.  For example, the application can tell adns to:
+ignore environment variables (for setuid programs), disable hostname
+syntax sanity checks to return arbitrary data, override or ignore
+resolv.conf in favour of supplied configuration, etc.
+
+<li>Believed to be correct !  For example, will correctly back off to
+TCP in case of long replies or queries, or to other nameservers if
+several are available.  It has sensible handling of bad responses etc.
+
+</ul>
+
+<h2>DNS utility programs</h2>
+
+adns also comes with a number of utility programs for use from the
+command line and in scripts:
+
+<ul>
+
+<li><code>adnslogres</code> is a much faster version of Apache's
+logresolv program.
+
+<li><code>adnsresfilter</code> is a filter which copies its input to
+its output, replacing IP addresses by the corresponding names, without
+unduly delaying the output.  For example, you can usefully pipe the
+output of netstat -n, tcpdump -ln, and the like, into it.
+
+<li><code>adnshost</code> is a general-purpose DNS lookup utility
+which can be used easily in from the command line and from shell
+scripts to do simple lookups.  In a more advanced mode it can be used
+as a general-purpose DNS helper program for scripting languages which
+can invoke and communicate with subprocesses.  See the
+<A href="http://www.chiark.greenend.org.uk/~ian/adns/adnshost.txt">adnshost
+usage message</A> for a summary of its capabilities.
+
+</ul>
+
+<h2>Documentation</h2>
+
+I'm afraid there is no manual yet.  However, competent C programmers
+should be able to use the library based on the
+<A href="http://www.chiark.greenend.org.uk/~ian/adns/adns.h.txt">commented
+adns.h header file</A>, and the usage messages for the programs should
+be sufficient.
+
+<h2>Feedback</h2>
+
+I'd be pleased if you would let me know if you're using my library in
+your project, and what you think of it.
+
+<p>
+
+If you are subscribed to <code>adns-discuss</code> please send
+feedback, including bug reports, there; otherwise send mail to
+<code>adns-bugreports@chiark.greenend.org.uk</code>.  If you'd prefer
+that your message wasn't forwarded to the <code>adns-bugreports</code>
+list, send it to <code>adns-maint@chiark.greenend.org.uk</code>.
+
+<h2>Mailinglists</h2>
+
+I have set up mailinglists <code>adns-announce</code> and
+<code>adns-discuss</code>.  The announcements list is moderated and
+will contain only announcements of important bugs, new versions, etc.
+The bug reports address mentioned above is also a mailing list; feel
+free to subscribe to it.
+
+<p>
+
+There are
+<A href="http://www.chiark.greenend.org.uk/mailman/listinfo">archives
+and subscription web pages</A>, or you can subscribe by sending mail
+containing the word `subscribe' to
+<code>adns-announce-REQUEST@chiark.greenend.org.uk</code> or
+<code>adns-discuss-REQUEST@chiark.greenend.org.uk</code>.
+
+<h2>Download</h2>
+
+Available for download from
+<A href="http://www.chiark.greenend.org.uk/~ian/adns/">chiark.greenend.org.uk</A>
+are:
+<ul>
+<li>The <A href="http://www.chiark.greenend.org.uk/~ian/adns/adns.tar.gz">current
+    release</A> as a gzipped tarfile.
+<li><A href="http://www.chiark.greenend.org.uk/~ian/adns/adns.h.txt">adns.h</A>
+    API header file with comments, and
+    <A href="http://www.chiark.greenend.org.uk/~ian/adns/adnshost.txt">usage
+    message for adnshost</A> (currently there is no manual, sorry).
+<li>All versions released so far are also available via
+    <A href="ftp://ftp.chiark.greenend.org.uk/users/ian/adns/">anonymous
+    FTP</A> and <A href="http://www.chiark.greenend.org.uk/~ian/adns/ftp/">HTTP</A>,
+<li>A mirror of my CVS repository is available via rsync from
+    <code>rsync.chiark.greenend.org.uk::ftp/users/ian/cvs-pub/adns</code>
+    (use FTP first to find your way around), or via
+    <A href="http://www.chiark.greenend.org.uk/ucgi/~ijackson/cvsweb/adns/">cvsweb</A>.
+</ul>
+
+adns is also available from the
+<A href="http://www.gnu.org/">GNU Project</A> FTP servers and their
+<A href="http://www.gnu.org/order/ftp.html">mirrors</A>.
+
+<h2>Technical note</h2>
+
+adns requires a real nameserver like
+<A href="http://www.isc.org/view.cgi?/products/BIND/index.phtml">BIND</A>
+or
+<A href="http://www.dents.org/">Dents</A> running on
+the same system or a nearby one, which must be willing to provide
+`recursive service'.  I.e., adns is a `stub resolver'.  All properly
+configured UN*X and GNU systems will already have such nameserver(s);
+they are usually listed in /etc/resolv.conf.
+
+<h2>Copyright and licensing</h2>
+
+<kbd>adns</kbd> is Copyright 1997-2000 Ian Jackson, Copyright
+1999-2000 Tony Finch, and Copyright (C) 1991 Massachusetts Institute
+of Technology.
+
+<p>
+
+<kbd>adns</kbd> is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+<p>
+
+This program and documentation is distributed in the hope that it will
+be useful, but <em>without any warranty</em>; without even the implied
+warranty of <em>merchantability</em> or <em>fitness for a particular
+purpose</em>.  See the
+<A href="http://www.chiark.greenend.org.uk/~ian/COPYING.txt">GNU
+General Public License</A> for more details.
+
+<p>
+
+You should have received a copy of the GNU General Public License
+along with <kbd>adns</kbd>, or one should be available above; if not,
+write to the
+<A href="http://www.fsf.org/">Free Software Foundation</A>,
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA,
+or email <code>adns-maint@chiark.greenend.org.uk</code>.
+
+<p>
+
+<hr>
+<A href="http://www.chiark.greenend.org.uk/">Ian Jackson</A> / 
+<A href="mailto:adns-maint@chiark.greenend.org.uk"><tt>adns-maint@chiark.greenend.org.uk</tt></A>;
+more <A href="http://www.chiark.greenend.org.uk/~ian/software/">free
+software</A> by me.
+<p>
+
+<A href="http://www.gnu.org/">GNU home page</A>;
+<A href="http://www.chiark.greenend.org.uk/">chiark home page</A>;
+<A href="/">site or mirror home page</A>
+<p>
+
+This web page is Copyright (C)1996-2000 Ian Jackson.  See the
+<A href="http://www.chiark.greenend.org.uk/~ian/sw-www-copy.html">Copyright/acknowledgements</A>.
+<p>
+
+Use any browser -
+<A href="http://www.anybrowser.org/campaign/">Campaign for a non-browser-specific WWW</A>
+
+</body>
+</html>

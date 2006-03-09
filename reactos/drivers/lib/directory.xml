@@ -1,0 +1,12 @@
+<directory name="bzip2">
+	<xi:include href="bzip2/bzip2.xml" />
+</directory>
+<directory name="csq">
+	<xi:include href="csq/csq.xml" />
+</directory>
+<directory name="ip">
+	<xi:include href="ip/ip.xml" />
+</directory>
+<directory name="oskittcp">
+	<xi:include href="oskittcp/oskittcp.xml" />
+</directory>

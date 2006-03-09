@@ -1,0 +1,9 @@
+<module name="kbdclass" type="kernelmodedriver" installbase="system32/drivers" installname="kbdclass.sys">
+	<bootstrap base="reactos" />
+	<include base="kbdclass">.</include>
+	<define name="__USE_W32API" />
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>kbdclass.c</file>
+	<file>kbdclass.rc</file>
+</module>

@@ -1,0 +1,62 @@
+/* $Id$ */
+
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPTITLE            "ReactOS - Velkommen"
+    IDS_DEFAULTTOPICTITLE   "ReactOS"
+    IDS_DEFAULTTOPICDESC    "Velkommen til ReactOs operativ System.\n\nKlik på et emne til venstre."
+//    IDS_CHECKTEXT           "Vis denne dialog igen ved opstart"
+//    IDS_CLOSETEXT           "Afslut"
+END
+
+/* Topic buttons */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICBUTTON0        "Installer ReactOS"
+    IDS_TOPICBUTTON1        "Gennemse Cdrom"
+    IDS_TOPICBUTTON2        "Afslut"
+//    IDS_TOPICBUTTON3        "Empty Topic 3"
+//    IDS_TOPICBUTTON4        "Empty Topic 4"
+//    IDS_TOPICBUTTON5        "Empty Topic 5"
+//    IDS_TOPICBUTTON6        "Empty Topic 6"
+//    IDS_TOPICBUTTON7        "Empty Topic 7"
+//    IDS_TOPICBUTTON8        "Empty Topic 8"
+//    IDS_TOPICBUTTON9        "Empty Topic 9"
+END
+
+/* Topic titles */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICTITLE0         "Installer ReactOS"
+    IDS_TOPICTITLE1         "Gennemse Cdrom"
+    IDS_TOPICTITLE2         "Afslut"
+//    IDS_TOPICTITLE3         "Empty Topic Title 3"
+//    IDS_TOPICTITLE4         "Empty Topic Title 4"
+//    IDS_TOPICTITLE5         "Empty Topic Title 5"
+//    IDS_TOPICTITLE6         "Empty Topic Title 6"
+//    IDS_TOPICTITLE7         "Empty Topic Title 7"
+//    IDS_TOPICTITLE8         "Empty Topic Title 8"
+//    IDS_TOPICTITLE9         "Empty Topic Title 9"
+END
+
+/* Topic descriptions */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICDESC0          "Opret en ny ReactOS installation på din computer eller opgradere en eksisterende installation."
+    IDS_TOPICDESC1          "Gennemse Reactos Installations Cdrom"
+    IDS_TOPICDESC2          "Klik på Afslut for at lukke."
+//    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
+//    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
+//    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
+//    IDS_TOPICDESC6          "Topic description 6.\n\nDescribe topic 6 here."
+//    IDS_TOPICDESC7          "Topic description 7.\n\nDescribe topic 7 here."
+//    IDS_TOPICDESC8          "Topic description 8.\n\nDescribe topic 8 here."
+//    IDS_TOPICDESC9          "Topic description 9.\n\nDescribe topic 9 here."
+END
+
+/* EOF */

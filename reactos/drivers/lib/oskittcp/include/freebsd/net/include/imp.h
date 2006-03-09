@@ -1,0 +1,1 @@
+#define NIMP 0

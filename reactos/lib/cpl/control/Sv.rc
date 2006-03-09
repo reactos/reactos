@@ -1,0 +1,28 @@
+// Swedish resources by Andreas Bjerkeholt 2005-04-28
+
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&Stäng",                      IDM_CLOSE
+    END
+    POPUP "&Visa"
+    BEGIN
+        MENUITEM "Stora ikoner",                 IDM_LARGEICONS
+        MENUITEM "Små ikoner",                 IDM_SMALLICONS
+        MENUITEM "Lista",                        IDM_LIST
+        MENUITEM "Detaljerad lista",                     IDM_DETAILS
+    END
+    POPUP "Hjälp"
+    BEGIN
+        MENUITEM "Om",                       IDM_ABOUT
+    END
+END
+

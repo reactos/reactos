@@ -1,0 +1,61 @@
+1998-10-26  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* extract-op-names.js (main): Fixed to use the flags comments in
+	the operands.def file.
+
+1998-09-01  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* bc.js (ByteCode$parse): Added a more verbose error message for
+	cases when the byte-code file is truncated.
+
+1998-08-25  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* bc.js (ByteCode$prettyPrintString): Added support for some
+	missing character escapes.
+
+1998-08-14  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* bc.js: Added support for the regular expression constants.
+
+1998-06-08  Markku Rossi  <mtr@ngs.fi>
+
+	* Changed all character constants to the new #'f' format.
+
+1998-05-27  Markku Rossi  <mtr@ngs.fi>
+
+	* jsdas.1: Documented the command line options.
+
+1998-05-25  Markku Rossi  <mtr@ngs.fi>
+
+	* main.js (main): Added option -S, --strip to remove the debug
+	section.
+
+1998-05-14  Markku Rossi  <mtr@ngs.fi>
+
+	* bc.js (ByteCode$printCode): Added support for the `try_push'
+	operand.
+
+1998-05-12  Markku Rossi  <mtr@ngs.fi>
+
+	* jsdas.1: Initial version of the manual page.
+
+1998-05-11  Markku Rossi  <mtr@ngs.fi>
+
+	* bc.js (ByteCode$printCode): Added support for the
+	`delete_property' operand.
+
+1998-05-08  Markku Rossi  <mtr@ngs.fi>
+
+	* bc.js: Cleaned up the byte-code file handling.
+	(ByteCode$printCode): Implemented byte-code printing.
+	Implemented byte-code file mutators: linkSection(),
+	removeSection() and write().
+
+1998-05-07  Markku Rossi  <mtr@ngs.fi>
+
+	* Re-organized the das directory.  Now the JavaScript disassembler
+	is built automatically with the `all' target.  It is a
+	`bin_SCRIPTS' target so it gets installed when the JavaScript
+	package is installed.  The makefile also makes the `jsdasm' an
+	executable and it sets the `js' interpreter command to the first
+	line of the compiled `jsdasm' program.

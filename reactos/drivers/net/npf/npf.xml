@@ -1,0 +1,30 @@
+<module name="npf" type="kernelmodedriver" installbase="system32/drivers" installname="npf.sys">
+	<include base="npf">include</include>
+	<include base="ntoskrnl">include</include>
+	<define name="__USE_W32API" />
+	<define name="_TIMEVAL_DEFINED" />
+	<define name="WIN_NT_DRIVER" />
+	<define name="KQPC_TS" />
+	<define name="USE_KLOCKS" />
+	<define name="BINARY_COMPATIBLE" />
+	<library>ndis</library>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>bucket_lookup.c</file>
+	<file>count_packets.c</file>
+	<file>dump.c</file>
+	<file>functions.c</file>
+	<file>jitter.c</file>
+	<file>memory_t.c</file>
+	<file>normal_lookup.c</file>
+	<file>openclos.c</file>
+	<file>packet.c</file>
+	<file>read.c</file>
+	<file>tcp_session.c</file>
+	<file>time_calls.c</file>
+	<file>tme.c</file>
+	<file>win_bpf_filter.c</file>
+	<file>win_bpf_filter_init.c</file>
+	<file>write.c</file>
+	<file>npf.rc</file>
+</module>

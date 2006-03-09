@@ -1,0 +1,146 @@
+/*
+ * Winetest resources
+ *
+ * Copyright 2004 Ferenc Wagner
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include <windows.h>
+#include <winres.h>
+#include "resource.h"
+#include "tests.rc"
+
+IDD_TAG DIALOG 0, 0, 150, 65
+STYLE WS_POPUP
+CAPTION "No tag supplied"
+BEGIN
+    CTEXT "Please supply a tag for your report.  You can use letters, digits, dashes and periods."
+        IDC_STATIC, 10, 5, 130, 30
+    EDITTEXT IDC_TAG, 35, 30, 80, 10, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Start", IDOK, 25, 45, 40, 14
+    PUSHBUTTON    "Abort", IDABORT, 85, 45, 40, 14
+END
+
+IDD_STATUS DIALOG 0, 0, 160, 150
+STYLE WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
+CAPTION "Wine Test Shell"
+BEGIN
+    LTEXT   "Extracting:",       IDC_ST0,        10,   5, 140, 10
+    CONTROL "PB0", IDC_PB0, PROGRESS_CLASS, 0,    5,  15, 150, 10
+    LTEXT   "Running:",          IDC_ST1,        10,  30, 140, 10
+    CONTROL "PB1", IDC_PB1, PROGRESS_CLASS, 0,    5,  40, 150, 15
+    LTEXT   "Network transfer:", IDC_ST2,        10,  60, 140, 10
+    CONTROL "PB2", IDC_PB2, PROGRESS_CLASS, 0,    5,  70, 150, 10
+                                               
+    LTEXT   "Tag:",               IDC_STATIC,    10,  89, 100, 10
+    EDITTEXT                      IDC_TAG,       25,  88, 125, 10,
+             ES_READONLY
+    LTEXT   "Working directory:", IDC_STATIC,    10, 100, 100, 10
+    EDITTEXT                      IDC_DIR,       71,  99,  79, 10,
+             ES_READONLY | ES_AUTOHSCROLL
+    LTEXT   "Output file:",       IDC_STATIC,    10, 111, 100, 10
+    EDITTEXT                      IDC_OUT,       46, 110, 104, 10,
+             ES_READONLY | ES_AUTOHSCROLL
+
+    DEFPUSHBUTTON "About", IDHELP,               20, 123,  30, 14
+    PUSHBUTTON    "Edit",  IDCANCEL,             65, 123,  30, 14,
+                   WS_DISABLED
+    PUSHBUTTON    "Stop",  IDABORT,             110, 123,  30, 14
+
+    CONTROL "Created", IDC_SB, STATUSCLASSNAME, 0, 0,0,0,0
+END
+
+IDD_ABOUT DIALOG 0, 0, 150, 60
+STYLE WS_POPUP
+CAPTION "About Wine Test Shell"
+BEGIN
+    CTEXT "This program extracts and runs a series of tests which check Wine's conformance to the Windows API.",
+        IDC_STATIC, 10, 5, 130, 30
+    DEFPUSHBUTTON "Close", IDCANCEL, 55, 40, 40, 14
+END
+
+/* BINRES wine.ico */
+IDI_WINE ICON "wine.ico"
+/* {
+ '00 00 01 00 02 00 20 20 10 00 00 00 00 00 E8 02'
+ '00 00 26 00 00 00 10 10 10 00 00 00 00 00 28 01'
+ '00 00 0E 03 00 00 28 00 00 00 20 00 00 00 40 00'
+ '00 00 01 00 04 00 00 00 00 00 00 02 00 00 00 00'
+ '00 00 00 00 00 00 10 00 00 00 00 00 00 00 39 02'
+ 'B1 00 23 02 6C 00 0F 03 29 00 1B 02 51 00 FF FF'
+ 'FF 00 1B 1A 1B 00 1E 02 63 00 33 02 A1 00 08 08'
+ '08 00 14 03 3C 00 0C 04 1E 00 2E 02 8E 00 10 0F'
+ '10 00 2A 02 82 00 29 02 7D 00 03 02 04 00 44 44'
+ '44 44 44 44 44 44 55 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 8F FF 84 44 44 44 44 44 44 44 44 44'
+ '44 44 44 8F F8 F8 44 44 44 44 44 44 44 44 44 44'
+ '44 44 8F FF F5 44 44 44 44 44 44 44 44 44 44 44'
+ '44 5C F8 C8 F5 44 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 85 44 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 4C 44 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 4C 44 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 45 54 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 45 F4 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 45 FF 44 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 48 FF F4 44 44 44 44 44 44 44 44 44'
+ '44 44 44 44 48 23 9A 84 44 44 44 44 44 44 44 44'
+ '44 44 44 44 42 B7 7E AF 44 44 44 44 44 44 44 44'
+ '44 44 44 44 49 00 00 EA C4 44 44 44 44 44 44 44'
+ '44 44 44 44 46 00 00 01 F4 44 44 44 44 44 44 44'
+ '44 44 44 44 46 00 00 00 9F 44 44 44 44 44 44 44'
+ '44 44 44 44 46 00 70 00 EF 44 44 44 44 44 44 44'
+ '44 44 44 44 43 00 00 00 79 F4 44 44 44 44 44 44'
+ '44 44 44 44 49 00 00 00 0E F4 44 44 44 44 44 44'
+ '44 44 44 44 42 00 00 00 07 24 44 44 44 44 44 44'
+ '44 44 44 44 43 B0 00 00 00 34 44 44 44 44 44 44'
+ '44 44 44 44 4C 30 00 00 00 1F 44 44 44 44 44 44'
+ '44 44 44 44 48 27 E1 1D B1 2C 44 44 44 44 44 44'
+ '44 44 44 44 44 A9 CC CF F8 48 C4 44 44 44 44 44'
+ '44 44 44 44 44 58 44 44 44 45 C4 44 44 44 44 44'
+ '44 44 44 44 44 4C 44 44 44 44 84 44 44 44 44 44'
+ '44 44 44 44 44 48 44 44 44 44 C4 44 44 44 44 44'
+ '44 44 44 44 44 48 C4 44 44 44 C4 44 44 44 44 44'
+ '44 44 44 44 44 44 F4 44 44 4C C4 44 44 44 44 44'
+ '44 44 44 44 44 44 84 44 F8 84 44 44 44 44 44 44'
+ '44 44 44 44 44 44 48 F8 44 44 44 44 44 44 FF FF'
+ '3F FF FF F0 7F FF FF C0 FF FF FF 03 FF FF FC 03'
+ 'FF FF FF F3 FF FF FF FB FF FF FF FB FF FF FF F9'
+ 'FF FF FF F9 FF FF FF F8 FF FF FF F8 7F FF FF F8'
+ '1F FF FF F8 0F FF FF F8 07 FF FF F8 07 FF FF F8'
+ '03 FF FF F8 03 FF FF F8 01 FF FF F8 01 FF FF F8'
+ '01 FF FF F8 01 FF FF F8 00 FF FF F8 00 FF FF FC'
+ '02 7F FF FC FE 7F FF FE FF 7F FF FE FF 7F FF FE'
+ '7F 7F FF FF 7E 7F FF FF 71 FF FF FF 8F FF 28 00'
+ '00 00 10 00 00 00 20 00 00 00 01 00 04 00 00 00'
+ '00 00 80 00 00 00 00 00 00 00 00 00 00 00 10 00'
+ '00 00 00 00 00 00 3A 02 B1 00 0A 06 14 00 12 03'
+ '33 00 FF FF FF 00 12 12 12 00 0B 0B 0B 00 1B 1B'
+ '1B 00 25 02 6F 00 2E 02 92 00 1A 02 52 00 36 02'
+ 'A6 00 15 03 3E 00 04 04 05 00 13 11 19 00 1E 02'
+ '62 00 2A 02 82 00 33 33 33 CC 43 33 33 33 33 33'
+ 'CC 5C 33 33 33 33 33 36 C5 53 33 33 33 33 33 33'
+ '33 43 33 33 33 33 33 33 33 65 33 33 33 33 33 33'
+ '33 DC 33 33 33 33 33 33 33 17 EC 33 33 33 33 33'
+ '33 B0 07 53 33 33 33 33 33 90 00 B3 33 33 33 33'
+ '33 B0 00 FC 33 33 33 33 33 BA 00 A2 33 33 33 33'
+ '33 C7 88 82 33 33 33 33 33 3D D5 14 43 33 33 33'
+ '33 35 33 33 53 33 33 33 33 33 53 33 53 33 33 33'
+ '33 33 C5 5C 33 33 FC 7F 00 00 F0 FF 00 00 E1 FF'
+ '00 00 FD FF 00 00 FC FF 00 00 FC FF 00 00 FC 3F'
+ '00 00 FC 1F 00 00 FC 1F 00 00 FC 0F 00 00 FC 0F'
+ '00 00 FC 0F 00 00 FE 07 00 00 FE F7 00 00 FF 77'
+ '00 00 FF 0F 00 00'
+} */

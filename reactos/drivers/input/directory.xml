@@ -1,0 +1,12 @@
+<directory name="i8042prt">
+	<xi:include href="i8042prt/i8042prt.xml" />
+</directory>
+<directory name="kbdclass">
+	<xi:include href="kbdclass/kbdclass.xml" />
+</directory>
+<directory name="mouclass">
+	<xi:include href="mouclass/mouclass.xml" />
+</directory>
+<directory name="sermouse">
+	<xi:include href="sermouse/sermouse.xml" />
+</directory>

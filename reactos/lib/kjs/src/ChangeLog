@@ -1,0 +1,1183 @@
+1999-01-19  Markku Rossi  <mtr@amme.ssh.fi>
+
+	* jsint.h (struct js_vm_st): Implemented file descriptor limit.
+	Now you can specify the maximum amount of file descriptors the
+	interpreter can allocate.  Thanks to Indrek Mandre
+	<indrek@warp.edu.ee>.
+
+1999-01-11  Markku Rossi  <mtr@amme.ssh.fi>
+
+	* b_string.c (method): Fixed the append() method to accept also
+	integer arguments.
+
+1999-01-08  Markku Rossi  <mtr@amme.ssh.fi>
+
+	* js.c (iofunc_close): Fixed a memory leak by freeing the
+	context.
+
+1998-11-25  Markku Rossi  <mtr@amme.ssh.fi>
+
+	* js.c (js_create_interp): Added a sanity check to assure that the
+	js.h and jsint.h APIs share a common view about the node size.
+
+	* js.h (struct js_type_st): Changed the JSType to be compatible
+	with the internal JSNode.
+
+	* operands.def: Changed the with-chain to use a JSUIntAlign count
+	instead of a JSUInt32 count.
+
+	* jsint.h: New integer type JSUIntAlign that can be used to align
+	structures on correct byte boundaries.
+	(struct js_heap_memory_block_st): Changed to use JSUIntAlign
+	integers instead of JSUInt32s.  Now the memory allocation seems to
+	work on Alpha machines.
+
+1998-10-26  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* vmswt0.c (js_vm_switch0_exec): Added support for anonymous
+	functions.
+
+	* vmswitch.c (js_vm_switch_exec): Added support for anonymous
+	functions.
+
+	* vmjumps.c (js_vm_jumps_exec): Added support for anonymous
+	functions.
+
+	* vm.c (js_vm_execute): Added support for anonymous functions.
+
+	* jsint.h: Added argument `anonymous_function_offset' to
+	JSVMExecute.  All uses changed.
+
+	* operands.def: Tagged all symbol and jump operands with
+	comments.  Now these operands can be handled automatically.
+	New operands `load_global_w' and `jsr_w'.
+	Added support for function pointers.
+
+	* js.c (js_create_interp): Pass the `options.warn_undef' to the
+	virtual machine.
+
+	* jsint.h (JS_OPERAND_CMP_EQ): Fixed to handle the `object _OP_
+	string / number' cases.  Now the == and != is ECMA compatible.
+	(JS_IS_PRIMITIVE_VALUE): New macro to check whether the argument
+	is a primitive value or not.
+
+	* utils.c (js_vm_to_primitive): Implement ToPrimitive() type
+	conversion.
+
+1998-10-20  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.c (js_global_method_delete): New function to delete the user
+	defined global method from the memory.
+
+	* jsint.h (JS_SUBROUTINE_CALL): Fixed to check that we have
+	enought stack space for yet another subroutine call.  The same
+	thing is also checked in the `locals' operand, but some functions
+	don't use any local variables, and therefore, the stack usage
+	wasn't ever checked.
+
+	* operands.def: Fixed `locals' to use the
+	JS_RESERVE_STACK_FOR_FUNCTION preprocessor constant.
+
+1998-10-16  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* jsint.h (JS_IS_FINITE): New macro to determine whether a number
+	node is a finite number.
+
+	* b_date.c: Implemented MakeTime(), MakeDay(), MakeDate(), and
+	TimeClip() operators.
+	Implemented the global method invocation of the Date()
+	constructor.
+
+	* b_regexp.c (new_proc): Fixed to work with 0 arguments.
+
+1998-10-12  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* operands.def: Cleaned up namespace by fixing load_property's
+	goto labels.
+	Fixed call_method to lookup the methods also from the prototypes
+	of string, array, and func built-in objects.
+
+1998-10-07  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* heap.c: Optimized the heap memory consumption by fixing the
+	block headers and the freelist block handling.  The total savings
+	in the memory usage (with the js_vm_make_function() fix) are about
+	15 %.
+
+	* jsint.h (js_vm_make_function): Fixed a typo that caused us to
+	allocate one JSVirtualMachine for each function, instead of one
+	JSFunction.
+	(struct js_heap_memory_block_st): Optimized the header from 12
+	bytes to 4 (on 32bit machines).
+	(struct js_heap_freelist_block_st): Header for the memory block
+	when it is on the freelist.
+
+1998-10-05  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* operands.def: ECMA compliancy fixes for the `mod' operand.
+
+1998-10-02  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* main.c: New option -E, --events to print the interpreter
+	events.
+
+	* js.h (struct js_interp_options_st): Added event hooks.
+
+	* vmjumps.c: Implemented byte-code execution hooks.
+
+	* jsint.h: Implemented event hooks for garbage collection and
+	byte-code operand execution.
+
+	* b_regexp.c: Implemented the `The RegExp Constructor Called as a
+	Function'.
+	ECMAScript compliance fixes for the method argument checks.
+
+1998-10-01  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* utils.c (js_vm_to_string): Fixed to work with native Objects.
+
+	* vm.c (js_vm_call_method): Fixed to call the built-in Object's
+	method proc, if the property hasn't bee defined in the native
+	object instance.
+
+	* jsint.h: Added some consts to function arguments.
+
+	* b_object.c (method): Implemented toString() method.
+
+	* alloc.c (js_strdup_i): Added const to the dupped string
+	argument.
+
+	* operands.def: Fixed the operand `call_method' to call the method
+	from the object's constructor, if the object hasn't redefined the
+	called method.
+
+	* regex.c: Updated regex.{c,h} files from the glibc-2.0.96.  Added
+	some re-entrancy fixed to regex.c.
+
+1998-09-29  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_dir.c: New built-in object `Directory' to handle directories.
+
+	* md5.h: Keep the namespace clean!  Defined MD5_CTX to
+	_JS_MD5_CTX.
+
+1998-09-25  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_core.c (print_global_method): New global method `print()' to
+	print its arguments to system's standard output stream.
+
+	* js.h (struct js_interp_options_st): New security options
+	`secure_builtin_{file,system}'.
+
+	* main.c: New option -r, --secure to turn on security options.
+
+1998-09-24  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* heap.c (BLOCK_SIZE): Changed to 200 * 1024 bytes on 32 bit and
+	bigger systems.
+	(js_vm_alloc): Fixed the `alloc_size' calculation for cases when
+	it is bigger than BLOCK_SIZE.  Now we can re-use those bigger
+	blocks more efficiently.
+
+1998-09-22  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.c (js_create_interp): Added debug call for
+	js_alloc_dump_blocks() to find out how much memory one interpreter
+	takes.  Maybe the heap.c:BLOCK_SIZE should be an option in the
+	JSInterpOptions.
+
+1998-09-21  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_regexp.c (js_builtin_RegExp): Removed the re_set_syntax()
+	call, since the correct default is already present in the regex.c.
+
+	* regex.c: Initialized the default syntax to RE_SYNTAX_GNU_AWK.
+	This removes the re-entrancy problem from b_regexp.c.
+
+	* operands.def: ECMA compliancy fixes for the `and', `or', `xor',
+	`shift_left', `shift_right', and `shift_rright' operands.
+
+	* jsint.h (JS_OPERAND_BINARY): New macro to implement binary and,
+	or, and xor operands.
+
+1998-09-17  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* vmswitch.c (link_code): Fixed to handle the debugging
+	information.
+
+	* operands.def: Fixed operand `throw' to convert the thrown value
+	to an error when the exception is thrown to the top-level.
+
+1998-09-15  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* operands.def: ECMA compliancy fixes for the `mul', `div', and
+	`neg' operands.
+
+1998-09-10  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.c (js_eval_source): When evaluating the on-demand-compiler
+	source files, warn only about `with-clobber' cases.
+
+	* operands.def: Made the cmp_{eq,ne}, sub, and add byte-code
+	operands ECMAScript compatible.
+	Implemented cmp_{seq,sne} operands.
+	New operand `const_i' to push a Int32 integer to the stack.
+
+1998-09-09  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* jsint.h (JS_IS_NUMBER): New macro to determine whether a node is
+	a number or not.
+
+1998-09-08  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_math.c (method): Fixed max() and min() to allow multiple
+	arguments.
+	Made ECMAScript compatible.
+
+	* utils.c (js_vm_to_boolean): New function to perform the
+	`ToBoolean()' type conversion.
+
+	* b_bool.c (method): Implemented the `valueOf' method.
+	Implemented global function invocation `Boolean()'.
+
+	* b_string.c (method): Implemented the `valueOf()' method.
+	Implemented global function invocation `String()'.
+	Made the `new' invocation ECMAScript compatible.
+	(method): Fixed concat() to accept any number of arguments.
+
+	* b_array.c: Implemented global function invocation `Array()'.
+	Fixed some argument checks.
+
+	* b_object.c: Implemented some ECMAScript features.  Some things
+	are still unimplemented.
+
+	* utils.c (js_vm_to_object): New function to perform the
+	`ToObject()' type conversion.
+
+	* jsint.h (struct js_vm_st): New symbol s_toSource.
+
+	* utils.c (js_vm_to_int32): New function to perform the
+	`ToInt32()' type conversion.
+
+	* jsint.h: Created new macros
+	JS_MAKE_{POSITIVE,NEGATIVE}_INFINITY(),
+	JS_IS_{POSITIVE,NEGATIVE}_INFINITY() to handle infinity values.
+
+	* js.c: Moved the error() global method to b_core.c.
+
+	* b_core.c: Made ECMAScript compatible.
+
+1998-09-07  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* jsint.h (JS_OPERAND_CMP): New macro to implement relational
+	comparison.
+
+	* main.c: New compiler option `-Wdeprecated'.
+
+	* operands.def: Added the missing line break sequence to the end
+	of the warning from the load_global operand.
+	Made the load_array's error messages more verbose.
+	Re-implemented the cmp_{lt,gt,le,ge} operands.
+	Re-implemented the add operand.
+	Re-implemented the div operand.
+	Added a missing JS_POP() to mul operand's one argument
+	combination.
+	New operand load_nth_arg.
+
+	* b_core.c: Cleaned up the error messages.
+	(parseInt_global_method): Made ECMAScript compatible.
+
+1998-09-04  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* operands.def: New operands `cmp_seq' and `cmp_sne' for strict
+	equals and does-not-equal comparisons.
+
+	* js.h: New API function js_lookup_class() to lookup the class
+	handle by its name.
+	New API function js_isa() to check whether an object is an
+	instance of a given class.
+
+1998-09-02  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.h: New API function js_version() that returns the interpreter
+	version number as a string of format "MAJOR.MINOR.PATCH".
+
+1998-09-01  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_system.c: Removed the flush method.
+
+	* b_file.c (method): Fixed the read() method to always return a
+	string.
+
+1998-08-26  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* iostream.c (js_iostream_file): Added argument <do_close> that
+	specifies whether the actual `FILE *' file pointer will be closed
+	when the stream is destroyed.  Normally, we don't want to close
+	stdin, stdout, or stderr when the interpreter is destoyed.
+
+1998-08-25  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.h: New API function js_apply() to apply function to
+	arguments.
+
+	* vm.c (js_vm_apply): Fixed to work also with built-in functions.
+
+	* jsint.h: Removed the <func_name> argument from the JSVMExecute
+	function type.  All uses changed.
+
+1998-08-24  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.h: Keep the namespace clean!  Renamed DLLEXPORT to
+	JS_DLLEXPORT.
+	New API functions: js_result(), js_{get,set}_options(), and
+	js_instantiate_class().
+
+1998-08-21  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* jsint.h: Keep the namespace clean!  Renamed
+	HOST_LINE_BREAK_SEQUENCE{,_LEN} to JS_HOST_LINE_BREAK{,_LEN}.
+
+	* js.h: W32 portability fixes.  Now the header should co-operate
+	with Borland's and MS compilers.
+	Added support for user-defined classes.
+
+1998-08-20  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_vm.c (property): New property verboseStacktrace.
+
+	* jsint.h (struct js_vm_st): New flag `verbose_stacktrace'.
+
+	* operands.def: Added a new slot to the stack frame: args_fix.
+	The args_fix holds the relocation information from the `min_args'
+	operand.  The operand `return' needs that information when it is
+	returning from a function that was called with too few arguments.
+	All uses of STACKFRAME were changed.
+
+1998-08-19  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* b_system.c (property): New property `lineBreakSequence'.  The
+	value of the property is a string that is the line break sequence
+	on the underlying system.
+
+	* jsint.h: Added portability defines for the line break sequence.
+
+	* b_file.c (property): New instance properties `autoFlush' and
+	`bufferSize'.
+	(method): Fixed writeln() to use the host dependent line break
+	sequence.  The sequence is defined in jsint.h.
+
+	* jsint.h: Re-implemented all I/O stuffs to use JSIOStream
+	interface.  All uses of the old `FILE *' interface, including the
+	stdin, stdout, and stderr streams, are changed.
+
+1998-08-18  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.c (call_method_global_method): New global method to call
+	methods from objects with a given array of arguments.
+
+	* vm.c (js_vm_call_method): New function to call method from an
+	object.
+
+	* jsint.h: New function js_vm_call_method() to call a method from
+	an object.
+	Changed the exec functions of different dispatchers to accept one
+	extra parameter: the object that should be used as the `this'
+	object.
+
+1998-08-17  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.h: Added DllExport's to all public API functions.  These must
+	be exported explicitly on w32.
+
+	* b_file.c (method): Ported to w32.  The member
+	struct_st.st_blksize is not present there.
+
+	* b_array.c (new_proc): Added support for array initializers which
+	pass the number of arguments as negative integers.
+
+1998-08-14  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* operands.def: Fixed operand `call_method' to call JS_MAYBE_GC()
+	also for the language primitives.  This fixes a memory leak.
+
+	* vm.c (js_vm_execute): Added support for regular expression
+	constants.
+
+	* b_regexp.c (js_builtin_RegExp_new): New global function to
+	create built-in regular expression objects.
+	(struct regexp_instance_ctx_st): Added flags `immutable'.
+
+	* b_string.c (method): Implemented 'd' modifier for the unpack()
+	method.
+
+1998-08-13  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* main.c: New compiler option `-Wstrict-ecma'.
+
+	* b_vm.c (property): The property `verbose' can have different
+	values, not just 0 or 1.  Fixed.
+
+1998-08-12  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* main.c: New compiler option -Wmissing-semicolon to warn about
+	missing semicolons that are fixed by the automatic semicolon
+	inserting during the compilation.
+	New warning level -Wpedantic.
+
+	* jsint.h: Renamed js_intern() to js_intern_with_len().
+	Implemented inline function js_intern() that counts the length and
+	passes it to js_intern_with_len().
+	New macro JS_POP_N() to pop n elements from the stack.  This
+	should remove all direct sp modifications from the operands.def
+	file.
+
+	* operands.def: Fixed load_array and store_array to work with
+	built-in objects with string array indexes.
+
+	* jsint.h (js_string_to_c_string): Made the argument node const.
+	(JS_IS_STR_WHITE_SPACE_CHAR): Macro to match StrWhiteSpaceChars.
+
+	* utils.c (js_vm_to_number): Convert any JSNode to its Number
+	presentation.  This implementes the ToNumber() type conversion.
+
+	* jsint.h (struct js_vm_st): Added symbol `valueOf'.
+
+	* Renamed all `delete' delete procs to `delete_proc'.
+
+	* b_number.c (global_method): Implemented global method use of the
+	Number object.
+	(method): Implemented radix 2 for the `toString()' method.
+	(method): Implemented method `valueOf()'.
+	(new_proc): Implemented new proc.
+
+1998-08-11  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.h: Added C++'s extern C defs around the header.
+
+	* jsint.h: Added C++'s extern C defs around the header.
+
+1998-08-10  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* jsint.h (struct js_vm_st): Removed variable `exec_result_sp'
+	since it didn't contain accurate information.  The needed values
+	can be fetched through vm->sp after the apply.
+
+1998-08-07  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* jsint.h (struct js_vm_st): Added variable `exec_result_sp' that
+	can be used to fetch the valeus of the by-reference arguments.
+
+1998-08-05  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* js.h: New API functions: js_compile_to_byte_code(),
+	js_compile_data_to_byte_code(), and js_execute_byte_code().
+
+	* main.c: New option -x, --executable to create executable
+	byte-code files.
+
+	* js.h (struct js_interp_options_st): New option
+	`generate_executable_bc_files'.
+
+	* b_file.c (method): New static method chmod() to change
+	permissions of a file.
+
+1998-08-04  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* dl_dummy.c: Dummy stubs for the dynamic loading functions for
+	environments which do not support dynamic loading.
+
+	* dl_open.c: Implement dynamic loading with dl{close,open,sym}()
+	functions.
+
+	* js.c (load_class_global_method): New global method loadClass()
+	that extend the interpreter by calling extension entry functions
+	from shared libraries.
+
+1998-07-30  Markku Rossi  <mtr@ngs.fi>
+
+	* operands.def: Fixed a reference bug from operand nth.
+
+1998-07-07  Markku Rossi  <mtr@ngs.fi>
+
+	* b_core.c: New global methods escape() and unescape().  Thanks to
+	Roger E Critchlow Jr <rec@daylight.com>.
+
+	* Changed license to GNU Library General Public License (LGPL).
+
+1998-06-26  Markku Rossi  <mtr@ngs.fi>
+
+	* make-jumps.pl: Changed to generate `OPERAND(op)' statements for
+	each operand in ejumps.h.  These stmts are needed for the
+	byte-code operand profiling.
+
+	* jsint.h (struct js_vm_st): Added support for byte-code operand
+	profiling.  This is a debugging tool to profile the performance of
+	individual byte-code operands.  It is not intended to be used in
+	production interpreters.
+
+1998-06-25  Markku Rossi  <mtr@ngs.fi>
+
+	* make-data.c (main): Changed to create also a pre-processor
+	definition for the data length.  It is the same as the data length
+	variable name, but in upper case.
+
+	* b_regexp.c (EMIT_TO_RESULT): Fixed a typo where the result of
+	the realloc() wasn't assigned to the reallocated pointer.
+
+1998-06-09  Markku Rossi  <mtr@ngs.fi>
+
+	* operands.def (halt): Changed to sleep forever instead of exiting
+	the process.
+	(roll): Fixed the negative roll value.
+
+	* vmswitch.c (struct function_st): Changed the name to be
+	dynamically allocated.
+	(execute_code): Save the executed function to the stack.  This
+	protects it against the gc.
+	(js_vm_switch_func_name): Fixed to lookup the function name also
+	from the stack.
+
+	* vmswt0.c (struct function_st): Changed the name to be
+	dynamically allocated.
+	(execute_code): Save the executed function to the stack.  This
+	protects it against the gc.
+	(js_vm_switch0_func_name): Fixed to lookup the function name also
+	from the stack.
+
+	* vmjumps.c (struct function_st): Changed the name to be
+	dynamically allocated.
+	(js_vm_jumps_exec): Save the executed function to the stack.
+	There it is protected against garbage collections and it won't be
+	collected while we are executing its code.
+	(js_vm_jumps_func_name): Fixed to lookup the function name also
+	from the stack.
+	(js_vm_jumps_debug_position): Fixed to lookup the function also
+	from the stack.  Now we find the `.global' code and we can fetch
+	the debugging information for it.
+
+	* heap.c (js_vm_garbage_collect): Changed the way how the stack is
+	marked.  Now we do not follow the frame pointers, but we use brute
+	force and process whole active stack.
+
+	* debug.c (js_vm_stacktrace): Cleaned up the stacktrace output.
+	Now the function parenthesis () are not printed after `.global'.
+
+1998-06-08  Markku Rossi  <mtr@ngs.fi>
+
+	* operands.def: Added support for the prototype properties of
+	built-in objects.
+
+	* jsint.h (struct js_builtin_st): Added the prototype property.
+	(struct js_builtin_info_st): Added the prototype property.
+	(struct js_string_st): Added the prototype property.
+	(struct js_array_st): Added the prototype property.
+	Added `JS_' prefixes to the property attribute values.
+
+	* operands.def: Changed the way how the primitive language objects
+	are called.
+	Replaced all by-hand subroutine calls with JS_SUBROUTINE_CALL()
+	macro.
+	Removed operands `assert_args', `assert_min_args', and
+	`assert_max_args'.
+	Added operands `min_args', `add_1_i', and `add_2_i'.
+
+	* object.c (js_vm_object_load_property): Changed the prototype
+	property to be always linked through the `__proto__' property.
+
+	* b_func.c (property): Made the `prototype' property mutable.
+
+	* js.h (struct js_interp_options_st): Removed option
+	argument_count_checks.
+
+	* jsint.h: Added macro JS_SUBROUTINE_CALL() to handle the
+	subroutine call stack frame creation.  All uses changed.
+	Cleaned up JSNode types.
+	Changed JSVirtualMachine's primitive object infos to be in an
+	array that is indexed with the object type.  This cleans up the
+	source noticeably.
+	Removed flag JSC_FLAG_ARGUMENT_COUNT_CHECKS.  All uses changed.
+
+1998-06-07  Markku Rossi  <mtr@ngs.fi>
+
+	* jsint.h: Implemented the prototype property of object.  Changed
+	all uses of the object built-in to use it.
+	Added the prototype property to functions.
+
+	* b_object.c: New built-in object for the object primitive type.
+
+	* b_func.c: New built-in object for the function primitive type.
+
+1998-06-05  Markku Rossi  <mtr@ngs.fi>
+
+	* operands.def: Implemented mod operand.
+	Reorganized the operand opcodes.
+
+1998-06-04  Markku Rossi  <mtr@ngs.fi>
+
+	* heap.c: Optimized the heap performance.  Now the vm has separate
+	freelists for each block size.  This allows us to put each freed
+	heap block to the freelist, and therefore, we need much less
+	memory from the system.
+
+	* jsint.h (struct js_vm_st): Added separate freelists for each
+	heap block size.
+
+	* vm.c (js_vm_intern): Changed the hash function to
+	js_count_hash() that creates much evenly distributed hash values.
+
+1998-06-03  Markku Rossi  <mtr@ngs.fi>
+
+	* r_pthrs.c: Implemented an alternative method to count random
+	numbers.  The new method assumes that the drand48() function is
+	thread-safe.
+
+	* rentrant.h: Added buffer_length argument to the js_asctime()
+	function.  All uses and implementations changed.
+
+1998-06-02  Markku Rossi  <mtr@ngs.fi>
+
+	* rentrant.h: Added vm argument to the js_drand48_create()
+	function.  All uses and implementations changed.
+
+	* make-data.c (main): Changed to take third (first) argument that
+	specifies the data name.
+
+	* heap.c (js_vm_alloc_destroyable): Changed to return zeroed
+	memory.
+
+1998-06-01  Markku Rossi  <mtr@ngs.fi>
+
+	* js.h: New function js_define_module() to initialize an extension
+	module to the interpreter.
+
+	* vm.c (js_vm_destroy): Fixed to destroy everything we allocate
+	during the initialization and the evaluations.  Now there
+	shouldn't be any memory leaks.
+
+	* js.h: Moved all extension to be public at the js.h API.  Now the
+	interpreter do not initialize any extensions; you have to do it
+	explictly.
+
+	* heap.c (js_vm_clear_heap): New function to delete all
+	built-ins, etc. from the heap.  This is called from the
+	js_vm_destroy() to remove everything dynamically allocated from
+	the heap.
+
+	* b_file.c (struct file_instance_ctx_st): Added flag dont_close to
+	indicate that the file shouldn't be closed on delete.  This is
+	useful for the system's standard streams.
+
+	* jsint.h (struct js_heap_destroyable_st): Changed the way how the
+	built-in objects are handled.  In the older versions, the
+	built-ins were allocated with the js_vm_alloc_buitin() function.
+	Now the function has been renamed to js_vm_alloc_destroyable()
+	that allocates memory that has a callback function that will be
+	called, when the garbage collector reclaims the storage.  This is
+	more general way to handle the delete operand in the memory
+	blocks.  The same method are now used also for JSBuiltinInfo,
+	JSBuiltin, and for the Function closures.
+	Implemented memory leak checks.  Now the memory leaks can be found
+	easily.  Just turn the JS_DEBUG_MEMORY_LEAKS to 1 in the jsint.h
+	file and dump the leaks after the interpreter has been deleted.
+
+1998-05-29  Markku Rossi  <mtr@ngs.fi>
+
+	* jsint.h: Major reorganization in the memory management.  The
+	interpreter does no longer use the xalloc() semantics, but it will
+	return an error message to the caller, if the memory were
+	exhausted.  This change affects functions
+	js_{malloc,calloc,realloc,strdup}() and js_string_to_c_string().
+	All uses of these functions were changed.
+
+1998-05-28  Markku Rossi  <mtr@ngs.fi>
+
+	* b_file.c: Removed the historical stdin, stdout, and stderr
+	references.
+
+	* js.h (struct js_interp_options_st): Added options s_stdin,
+	s_stdout, and s_stderr.  These can be used to redirect the System
+	builtin's idea about the default streams.  All uses of globals
+	stdin, stdout, and stderr were redirected to these streams.
+
+	* heap.c (js_vm_garbage_collect): Fixed a bug from with-chain
+	marking.
+
+	* jsint.h: Massive namespace cleanup.  All functions, types, and
+	preprocessor constants have now an appropriate `js' prefix.  All
+	uses changed.
+
+1998-05-27  Markku Rossi  <mtr@ngs.fi>
+
+	* jsint.h: Namespace cleanups for the different integer types.
+	Added `JS' prefix to types `{U,}Int{8,16,32}'.  All uses changed.
+
+	* js.1: Documented the command line options.
+
+1998-05-26  Markku Rossi  <mtr@ngs.fi>
+
+	* xalloc.c: Renamed functions x{malloc,calloc,realloc,free,strdup}
+	to js_{malloc,calloc,realloc,free,strdup}.  All prototypes and
+	calls changed.
+
+1998-05-22  Markku Rossi  <mtr@ngs.fi>
+
+	* main.c (create_interp): Fixed to pass the `warn_with_clobber'
+	option to the interpreter.
+
+	* b_date.c (new_proc): Implemented constructors with three and six
+	arguments.
+
+1998-05-20  Markku Rossi  <mtr@ngs.fi>
+
+	* js.h: Added new API function js_create_global_method() to
+	implement the user-defined global methods.
+
+	* js.c (js_create_global_method): New API function to implement
+	user-defined global methods.
+
+	* b_vm.c (method): Fixed the method stackTrace() to pass the limit
+	argument to the js_vm_stacktrace().
+
+	* debug.c (js_vm_stacktrace): Added argument `num_frames' to
+	specify how many stack frames the function should print.
+
+1998-05-19  Markku Rossi  <mtr@ngs.fi>
+
+	* b_md5.c (method): Fixed an off-by-one bug from the final()
+	method.
+
+	* b_math.c (method): Removed the clock seed setting from the
+	random() method.
+	Implemented new method seed() to set the random seed.
+
+1998-05-18  Markku Rossi  <mtr@ngs.fi>
+
+	* b_array.c (method): Set the default result type to be
+	`undefined'.
+
+1998-05-15  Markku Rossi  <mtr@ngs.fi>
+
+	* jsint.h (struct error_handler_frame_st): Added item `thrown' for
+	the thrown value.
+
+	* operands.def: Implemented operand throw.
+
+	* vm.c (js_vm_error): When jumping to a catch-block, format the
+	error message to the vm->error_handler->thrown as a JS string.
+
+1998-05-14  Markku Rossi  <mtr@ngs.fi>
+
+	* operands.def: Implemented operands try_push and try_pop.
+
+	* jsint.h (struct error_handler_frame_st): Added slots for the
+	try_push operands saved state.
+
+1998-05-13  Markku Rossi  <mtr@ngs.fi>
+
+	* xjs.c (method): Implemented getVar() and setVar() methods.
+
+	* jsint.h: Added prototype for the js_crc32() function.
+
+	* b_md5.c: New builtin object to count the MD5 message digests.
+
+	* b_string.c (method): Implemented method crc32().
+
+	* b_math.c: Changed to use the rentrant.h API.
+
+	* b_date.c: Changed to use the rentrant.h API.
+
+	* r_std.c: Non-re-entrant versions of the re-entrant functions.
+	This uses the standard C-library.  This shouldn't be used with
+	threads.
+
+	* r_pthrs.c: Implement Re-entrant functions with Posix threads.
+
+	* rentrant.h: New file to define functions that must be
+	re-implemented on different operating systems to assure that the
+	interpreter will be re-entrant.
+
+	* b_date.c (method): Implemented format() and formatGMT()
+	methods.
+
+	* object.c (js_vm_object_nth): Implemented.  This is needed for
+	the byte-code operand `nth'.
+
+	* jsint.h (struct object_st): Added <hash_lengths> to hold the
+	chain lengths of each hash slot.
+
+1998-05-12  Markku Rossi  <mtr@ngs.fi>
+
+	* main.c (long_options): Changed long option `--dispatch' to take
+	an argument.
+
+	* operands.def: New operands: `roll' and `nth'.
+	Reorganized the operands.  All old byte-code file must be
+	recompiled.
+
+	* b_date.c: Implemented Date built-in object.
+
+1998-05-11  Markku Rossi  <mtr@ngs.fi>
+
+	* jsint.h (SYMBOL_NULL): New constant for nonexistent symbols.
+
+	* operands.def (delete_property): New operand to delete a property
+	from an object.
+	(delete_array): New operand to delete an item from an array.
+	These two new operands implement the JavaScript `delete'
+	operator.
+
+	* object.c (js_vm_object_delete_property): New function to delete
+	a property of an object through the standard object.property
+	interface.
+	(js_vm_object_delete_array): New function to delete a property of
+	an object through the array reference interface.
+
+1998-05-08  Markku Rossi  <mtr@ngs.fi>
+
+	* main.c: Fixed long option --file not to take an argument.  The
+	arguments are handled after the getopt_long() has processed them.
+
+	* js.c (js_eval_file): Added more knowledge to the file type
+	determination.  If we can't determine the file type from the
+	file's suffix, the file is opened and searched for the magic
+	number of the JS byte-code file.
+
+	* b_array.c (method): Changed the splice() method to return an
+	array containing the deleted items, or `undefined' if no items
+	were deleted.
+
+1998-05-07  Markku Rossi  <mtr@ngs.fi>
+
+	* b_regexp.c (js_builtin_RegExp_split): New function to preform
+	string split from the matched regexp boundaries.
+	(new_proc): Fixed a zero allocation bug when a regular expression
+	was created from an empty string.
+
+	* b_string.c (method): Implemented split() method.
+
+1998-05-05  Markku Rossi  <mtr@ngs.fi>
+
+	* b_core.c: New global methods float() and int().
+
+1998-04-23  Markku Rossi  <mtr@ngs.fi>
+
+	* b_string.c (method): Implemented slice() method.
+
+	* xcurses.c (method): New method mvaddsubstr() to draw a substring
+	of a string.
+
+	* b_string.c (method): Cleaned up argument handling for substr()
+	and substring() methods.
+
+1998-04-22  Markku Rossi  <mtr@ngs.fi>
+
+	* b_regexp.c (js_builtin_RegExp_match): New function to perform
+	regexp execution against a string.  String.match() uses this.
+	(js_builtin_RegExp_search): New function to perform regexp
+	search against a string.  String.search() uses this.
+
+	* vm.c (intern_builtins): Changed the order in which the built-ins
+	are initialized.  The RegExp object must be initialized before
+	String.
+
+	* b_regexp.c (js_builtin_RegExp_replace): New function to perform
+	search-replace operation for a string.
+
+	* b_string.c (method): Implemented replace(), match(), and
+	search() methods.
+
+	* vm.c: Added `js_' prefix to all built-in global functions.
+
+	* b_regexp.c (method): Changed the test() method to obey and
+	update the RegExp.lastIndex property.
+
+1998-04-21  Markku Rossi  <mtr@ngs.fi>
+
+	* vm.c (js_vm_apply): Changed to reset the vm->sp to the saved
+	value in every case, not just when an error occurred.  Otherwise
+	the stack will eventually overflow.
+	(js_vm_execute): Likewise.
+
+	* b_system.c (method): New method popen().
+	(property): Added properties stderr, stdin, and stdout.
+
+	* b_file.c (method): Major cleanup.  Added some missing argument
+	checks.
+	(builtin_File_new): New function to enter files to the JS system.
+	(builtin_File): Moved File.stderr, File.stdin, and File.stdout to
+	the System built-in.
+	(method): New methods lstat() and stat().
+
+	* Removed all ToStringProcs from the built-in objects.  The
+	toString() methods is now always implemented in the object's
+	method proc.
+
+	* Major cleanup for all builtin-objects.  Now the instance methods
+	actually check that there is an instance of the object available;
+	the instance methods can now longer be called statically.
+
+	* b_string.c (method): Implemented indexOf() and lastIndexOf()
+	methods.
+
+	* mrgsort.h (mergesort_r): Renamed re_mergesort() to
+	mergesort_r().
+
+1998-04-20  Markku Rossi  <mtr@ngs.fi>
+
+	* b_regexp.c: Implemented RegExp built-in object.
+
+1998-04-16  Markku Rossi  <mtr@ngs.fi>
+
+	* mrgsort.h (re_mergesort): Renamed mergesort() to re_mergesort()
+	because mergesort() was already defined in The FreeBSD's stdlib.h.
+
+	* vm.c (js_vm_execute): Added support for NaN constants.
+
+	* main.c: New compiler option -Wwith-clobber.
+
+	* js.c (js_compile): Added support for option
+	JSC_FLAG_WARN_WITH_CLOBBER.
+
+	* b_string.c (builtin_String_method): Implemented modifier 'd' for
+	the pack() method.
+
+	* b_core.c: Implemented global methods isFloat() and isInt().
+
+1998-04-15  Markku Rossi  <mtr@ngs.fi>
+
+	* heap.c (js_vm_garbage_collect): Updated to mark the with-chains
+	from the stack.
+
+	* operands.def: Implemented the with-chain.  This affected
+	operands load_global, jsr, with_push, and with_pop.
+
+	* jsint.h (WITHPTR): New macro to refer to the stack frame's with
+	pointer.
+
+	* object.c (js_vm_object_load_property): Changed to return an
+	integer return value that specifies whether the property was
+	defined in the object or not.  This is needed by the with
+	statement.
+
+	* operands.def: Changed with_pop to take an Int8 argument to
+	specify the number of with-frames to pop.
+
+1998-04-14  Markku Rossi  <mtr@ngs.fi>
+
+	* vmjumps.c (js_vm_jumps_exec): Added a slot for the with chain to
+	the stack frame.
+
+	* jsint.h: Removed #if HAVE_CONFIG_H from the inclusion of
+	jsconfig.h.  We have it always.
+
+	* b_array.c (method): Implemented splice() method.
+
+1998-04-03  Markku Rossi  <mtr@ngs.fi>
+
+	* mrgsort.c: New file that implements re-entrant, stable
+	mergesort.
+
+	* utils.c (js_vm_to_string): Changed to generate static strings
+	when ever it is possible.
+
+	* jsint.h: Changed JSVMExecute function type to allow applying
+	arguments to an anonymous function pointer.
+
+	* b_array.c (method): Implemented sort() method.
+
+	* vmswitch.c: Optimized to pre-compile the byte-code stream to
+	internal presentation.  This gives some speedup.  The old
+	non-compiled version is now called `switch-basic' and it can be
+	found from vmswt0.c.
+
+	* debug.c (js_vm_stacktrace): Implemented JS_ARRAY type.
+
+	* jsint.h: Cleaned up byte-code instruction dispatcher
+	interfaces.
+
+	* js.c (js_create_interp): Added support for the new switch-basic
+	dispatch method.
+
+	* b_vm.c (builtin_VM_property): Renamed property dispatchType to
+	dispatchMethod and changed its value to be string that gives the
+	name of the dispatchmethod.
+
+	* js.h: Added new bc instruction dispatch method switch-basic.
+
+1998-04-01  Markku Rossi  <mtr@ngs.fi>
+
+	* object.c (js_vm_object_mark): Tail-recursive optimization for
+	linked list properties.  This saves the gc-mark stack usage
+	noticeably.
+
+	* heap.c (js_vm_is_marked_ptr): New function to determine whether
+	the pointer is marked or not.
+
+1998-03-31  Markku Rossi  <mtr@ngs.fi>
+
+	* b_file.c (builtin_File_method): Changed the open() method to add
+	the 'b' flag to the fopen mode.
+
+	* js.c (js_execute_byte_code_file): Added 'b' to the fopen mode.
+
+	* Ported to OS/2 1.3.  It is a 16 bit system.
+
+	* heap.c: Cleaned up the heap allocation.
+
+	* bc.c (js_bc_read_data): Fixed all 16 / 32 bit issues.
+
+	* main.c: Implemented `--no-compiler' option to disable compiler
+	from the interpreter.  This option makes the interpreter a pure
+	virtual machine that can only execute byte-code files.
+
+	* b_system.c (builtin_System_property): New property `bits' to
+	tell the "bits" of the underlying processor (16, 32, 64).
+	(builtin_System_method): Implement sleep() and usleep() methods
+	only if the system supports them.
+
+	* b_string.c (builtin_String_method): Fixed pack() and unpack()
+	methods to work in 16 bit environments.
+
+	* b_math.c: Defined some double constants which can be used if the
+	system headers do not define them.
+	(method): Implemented an alternative method to count random
+	numbers.
+
+	* b_file.c (builtin_File_method): Fixed a typo from the return
+	value check of fread().
+	Included sys/types.h.
+
+	* heap.c (BLOCK_SIZE): Changed the default block size to depend on
+	the underlying machine (16 / 32 bit).
+
+	* jsint.h: Defined integer types: UInt8, Int8, UInt16, Int16,
+	UInt32, Int32.
+	Changed unistd.h to be included only if it is detected by the
+	configure script.
+	Included limits.h.
+	(struct js_vm_st): Changed garbage collection variables to be 32
+	bit integers, instead of using unsigned int.
+	(struct symtab_entry_st): Changed symtab entry's name to be
+	dynamically allocated.  This saves noticeably memory.
+	Renamed option JSC_FLAG_OPTIMIZE_JUMPS_TO_JUMPS to
+	JSC_FLAG_OPTIMIZE_JUMPS.
+
+	* vm.c (js_vm_execute): Changed symtab entry's symbol names to be
+	dynamically allocated.
+	(js_vm_execute): Removed uses of __FUNCTION__ macros.
+
+1998-03-30  Markku Rossi  <mtr@ngs.fi>
+
+	* main.c (usage): Fixed some compiler warnings.
+
+	* object.c: Fixed some compiler warnings.
+
+	* vm_jumps2.c: Added support for non-gcc environments.
+
+	* vm.c (js_vm_create): Added support for non-gcc environments.
+
+1998-03-27  Markku Rossi  <mtr@ngs.fi>
+
+	* bi_array.c (method): Implemented toString() and join() methods.
+	(method): Implemented slice() method.
+
+	* utils.c (js_vm_to_string): New function to convert any node to
+	string.  This function is used in all places where a string
+	presentation of a value is needed.
+
+1998-03-26  Markku Rossi  <mtr@ngs.fi>
+
+	* bi_array.c (method): Implemented reverse() and shift() methods.
+
+	* jsint.h: Changed the definition of truthness and falseness of a
+	node.  Now also integer 0 is false.
+
+	* bi_math.c: Implemented the Math core object.
+
+	* operands.def: Implemented type conversions to operands add, sub,
+	div and mul.
+
+	* bi_boolean.c: Finished the Boolean core object.
+
+1998-03-25  Markku Rossi  <mtr@ngs.fi>
+
+	* jsint.h: Implemented array core type.
+	Cleaned up the internal namespace.  Now all virtual machine
+	functions start with prefix `js_vm_'.
+
+	* main.c: Changed the default optimization level to 1.
+	(main): Pass all arguments (and the name of the script) to the
+	script through ARGS array.
+
+	* js.h: Implemented public interface to JavaScript's types.
+	Implemented functions to create string and array types.
+	Implemented functions to set and get values of global variables.
+
+	* bi_system.c (builtin_System_method): Implemented chdir() and
+	getcwd() methods.
+
+1998-03-24  Markku Rossi  <mtr@ngs.fi>
+
+	* xcurses.c: Curses extension.  It is still under construction.
+
+	* main.c: Changed the default optimization level to be 1 (no heavy
+	optimizations).
+
+1998-03-19  Markku Rossi  <mtr@ngs.fi>
+
+	* bi_string.c (builtin_String_method): Implemented toLowerCase()
+	and toUpperCase() methods.
+
+1998-03-17  Markku Rossi  <mtr@ngs.fi>
+
+	* bi_system.c: Implemented canonical host properties:
+	canonicalHost, canonicalHostCPU, canonicalHostVendor,
+	canonicalHostOS.
+
+	* bi_vm.c: Implemented version properties: version, versionMajor,
+	versionMinor, versionPatch.
+
+1998-03-10  Markku Rossi  <mtr@ngs.fi>
+
+	* bi_number.c (builtin_Number_property): Implemented properties.
+
+1998-03-06  Markku Rossi  <mtr@ngs.fi>
+
+	* bi_number.c (builtin_Number_method): Added radix argument to the
+	toString() method.
+
+	* bi_core.c: New file to implement the virtual machine level
+	global methods.
+
+	* operands.def: Added some missing SAVE_REGS() calls.
+
+	* defs.h (JSType): New type JS_NAN for NaN numbers.  Changed all
+	places where node types are checked.
+
+	* bi_string.c (builtin_String_method): Implemented methods concat,
+	fromCharCode, substr and substring.  Changed the missing methods
+	to raise an error.
+
+1998-03-05  Markku Rossi  <mtr@ngs.fi>
+
+	* vm.c (js_vm_builtin_create): New function to create builtin
+	objects.
+
+	* heap.c (js_vm_alloc_builtin): New function to allocate tagged
+	memory for the builtin objects.
+	(js_vm_garbage_collect): Changed to call the possible user-defined
+	destructor for each collected builtin node.
+
+	* defs.h: Defined macros IS_TRUE() and IS_FALSE() to determine the
+	trueness and falseness of a node.
+	Changed all Builtin procs to take BuiltinInfo argument instead of
+	the object context.
+	(js_string_to_c_string): New function to convert JS string to a
+	C-string.
+
+	* vm_jumps2.c (js_vm_exec_jumps2): Optimized the debug info
+	handling.
+
+	* bi_system.c: New methods: flush, getenv, sleep, system and
+	usleep.

@@ -1,0 +1,13 @@
+1998-08-12  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* process.js (path_to_ppname): Fixed to convert all non-identifier
+	characters to '_'.  The function can now also handle file names
+	which start with an number.
+
+1998-08-10  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* process.js (Func$print_c): Fixed call-by-reference arguments.
+	Implemented the `static' modifier for arguments.
+	(c_typename): Changed int's C-type to `long'.
+	(Func$print_c): Added some casts to make C++ compilers happy about
+	our code.

@@ -1,0 +1,5 @@
+
+These are notes about the NT filesystem
+
+More documentation is available at:
+http://linux-ntfs.sourceforge.net/ntfs/index.html

@@ -1,0 +1,57 @@
+; MACHINE.INF
+
+; Installation file for machine internal stuff
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = System
+ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 10/11/2005,1.01.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = SystemClass.NT.AddReg
+
+[SystemClass.NT.AddReg]
+HKR, , ,               0, %SystemClassName%
+HKR, , Icon,           0, "-27"
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+%*PNP0A03.DeviceDesc% = PCI_Inst,*PNP0A03
+%PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
+
+;---------------------------- PCI BUS DRIVER ----------------------------
+
+[PCI_Inst.NT]
+CopyFiles = PCI_CopyFiles.NT
+
+[PCI_CopyFiles.NT]
+pci.sys
+
+[PCI_Inst.NT.Services]
+AddService = pci, 0x00000002, pci_Service_Inst
+
+[pci_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 3
+ServiceBinary = %12%\pci.sys
+LoadOrderGroup = Boot Bus Extender
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+SystemClassName = "System devices"
+
+GenericMfg = "(Generic system devices)"
+*PNP0A03.DeviceDesc = "PCI bus"
+PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"

@@ -1,0 +1,7 @@
+; $Id$
+;
+; diskdump.def - export definition file for crash dump driver
+;
+LIBRARY DISKDUMP.SYS
+EXPORTS
+DiskDumpFunctions

@@ -1,0 +1,103 @@
+.TH WMC 1 "June 12, 2000" "Version 1.0.0" "Wine Message Compiler"
+.SH NAME
+wrc \- Wine Message Compiler
+.SH SYNOPSIS
+.BI "wmc " "[options] " "[inputfile]"
+.SH DESCRIPTION
+.B wmc
+compiles messages from
+.B inputfile
+into FormatMessage[AW] compatible format encapsulated in a resourcescript
+format.
+.B wmc
+outputs the data either in a standard \fB.bin\fR formatted binary
+file, or can generated inline resource data.
+.PP
+.B wmc
+takes only one \fBinputfile\fR as argument (see \fBBUGS\fR). The
+\fBinputfile\fR normally has extension \fB.mc\fR. The messages are read from
+standard input if no inputfile is given. If the outputfile is not specified
+with \fI-o\fR, then \fBwmc\fR will write the output to \fBinputfile.{rc,h}\fR.
+The outputfile is named \fBwmc.tab.{rc,h}\fR if no inputfile was given.
+.SH OPTIONS
+.TP
+.I \-B x
+Set output byte-order x={n[ative], l[ittle], b[ig]}. Default is n[ative].
+.TP
+.I \-c
+Set 'custom-bit' in message-code values.
+.TP
+.I \-d
+NON-FUNCTIONAL; Use decimal values in output
+.TP
+.I \-D
+Set debug flag. This results is a parser trace and a lot of extra messages.
+.TP
+.I \-h
+Print an informative usage message.
+.TP
+.I \-H file
+Write headerfile to \fIfile\fR. Default is \fIinputfile.h\fR.
+.TP
+.I \-i
+Inline messagetable(s). This option skips the generation of all \fI.bin\fR files
+and writes all output into the \fI.rc\fR file. This encoding is parsable with
+wrc(1).
+.TP
+.I \-o file
+Output to \fIfile\fR. Default is \fIinputfile.rc\fR.
+.TP
+.I \-u
+Assume that the inputfile is in unicode.
+.TP
+.I \-U
+Write resource output in unicode formatted messagetable(s).
+.TP
+.I \-v
+Show all supported codepages and languages.
+.TP
+.I \-V
+Print version end exit.
+.TP
+.I \-W
+Enable pedantic warnings.
+.SH EXTENSIONS
+The original syntax is extended to support codepages more smoothly. Normally,
+codepages are based on the DOS\-codepage from the language setting. The
+original syntax only allows the destination codepage to be set. However, this
+is not enough for non\-DOS systems which do not use unicode source-files.
+.PP
+A new keyword \fICodepages\fR is introduced to set both input and output
+codepages to anything one wants for each language. The syntax is similar to
+the other constructs:
+.PP
+Codepages '=' '(' language '=' cpin ':' cpout ... ')'
+.PP
+The \fIlanguage\fR is the numerical language\-ID or the alias set with
+LanguageNames. The input\-codepage \fIcpin\fR and output\-codepage
+\fIcpout\fR are the numerical codepage\-IDs. There can be multiple mapping
+within the definition and the definition may occur more than once.
+.SH AUTHORS
+.B wmc
+was written by Bertho A. Stultiens.
+.SH BUGS
+The message compiler should be able to have multiple inputfiles and combine
+them into one outputfile. This would enable the splitting of languages into
+separate files.
+.PP
+Unicode detection of the input is suboptimal, to say the least. It should
+recognize byte\-order\-marks (BOM) and decide what to do.
+.PP
+Decimal output is completely lacking. Don't know whether it should be
+implemented because it is a, well, non-informative format change. It is
+recognized on the commandline for some form of compatibility.
+.SH AVAILABILITY
+.B wmc
+is part of the wine distribution, which is available through
+WineHQ, the
+.B wine
+development headquarters, at
+.I http://www.winehq.com/.
+.SH "SEE ALSO"
+.BR wine (1),
+.BR wrc (1)

@@ -1,0 +1,237 @@
+/* 
+ *  Copyright (c) 2005 Saveliy Tretiakov (saveliyt@mail.ru)  
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+ 
+[
+	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
+	version(0.0),
+	pointer_default(unique),
+	explicit_handle
+]
+
+interface eventlog
+{
+	/*
+	cpp_quote("#if 0")
+	typedef [handle, unique] wchar_t *LPWSTR;
+	typedef [handle, unique] char *LPSTR;
+	cpp_quote("#endif")
+	typedef [context_handle] void *LOGHANDLE;
+	typedef LOGHANDLE *PLOGHANDLE;
+	typedef unsigned int NTSTATUS;
+
+	typedef struct _UNICODE_STRING {
+		unsigned short Length;
+		unsigned short MaximumLength;
+		[size_is(MaximumLength)] wchar_t *Buffer;
+	} UNICODE_STRING, *PUNICODE_STRING;
+
+	typedef struct _ANSI_STRING {
+		unsigned short Length;
+		unsigned short MaximumLength;
+		[size_is(MaximumLength)] char *Buffer;
+	} ANSI_STRING, *PANSI_STRING;
+	*/
+	
+	#define LPWSTR wchar_t*
+	#define LPSTR char*
+	#define LOGHANDLE unsigned char*
+	#define PLOGHANDLE int* 
+	#define NTSTATUS long
+	
+	/* Function 0 */
+	NTSTATUS EventLogClearW(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] wchar_t *BackupName);
+
+	/* Function 1 */
+	NTSTATUS EventLogBackupW(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] wchar_t *FileName);
+	
+	/* Function 2 */
+	NTSTATUS EventLogClose(
+		handle_t BindingHandle,
+		[in,out] PLOGHANDLE Handle);   
+
+	/* Function 3 */
+	NTSTATUS EventLogUnregSrc(
+		handle_t BindingHandle,
+		[in,out] PLOGHANDLE Handle);
+
+	/* Function 4 */
+	NTSTATUS EventLogRecordsNumber(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[out] unsigned long *RecordsNumber);
+
+	/* Function 5 */
+	NTSTATUS EventLogGetOldestRec(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[out] unsigned long *OldestRecNumber);
+
+	/* FIXME */
+	NTSTATUS Unknown6(handle_t BindingHandle);
+
+	/* Function 7 */
+	NTSTATUS EventLogOpenW(
+		handle_t BindingHandle,
+		[in] LPWSTR ServerName,
+		[in] wchar_t *FileName, 
+		[in] wchar_t *NullStr, 
+		[in] unsigned long MajorVer,
+		[in] unsigned long MinorVer,
+		[out] PLOGHANDLE Handle );
+		
+	/* Function 8 */
+	NTSTATUS EventLogRegSrcW(
+		handle_t BindingHandle,
+		[in] LPWSTR ServerName,
+		[in] wchar_t *LogName, 
+		[in] wchar_t *NullStr, 
+		[in] unsigned long MajorVer,
+		[in] unsigned long MinorVer,
+		[out] PLOGHANDLE Handle);
+		
+	/* Function 9 */
+	NTSTATUS EventLogOpenBackupW(
+		handle_t BindingHandle,
+		[in] LPWSTR ServerName,
+		[in] wchar_t *BackupName, 
+		[in] unsigned long MajorVer,
+		[in] unsigned long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 10 */
+	NTSTATUS EventLogReadW(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] unsigned long Flags,
+		[in] unsigned long Offset,
+		[in] unsigned long BufSize,
+		[out,size_is(BufSize)] unsigned char *Buffer,
+		[out] unsigned long *BytesRead,
+		[out] unsigned long *BytesNeeded);
+
+	/* Function 11 */
+	NTSTATUS EventLogReportEventW(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] unsigned long Time,
+		[in] unsigned short Type,
+		[in] unsigned short Category,
+		[in] unsigned long ID,
+		[in] unsigned short NumStrings,
+		[in] unsigned long DataSize,
+		[in] wchar_t *ComputerName,
+		[in] unsigned char *SID,
+		[in] wchar_t *Strings,
+		[in,size_is(DataSize)] unsigned char *Data,
+		[in] unsigned short Flags);
+		
+	/* Function 12 */
+	NTSTATUS EventLogClearA(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] char *BackupName);
+
+	/* Function 13 */
+	NTSTATUS EventLogBackupA(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] char *BackupName);
+
+	/* Function 14 */
+	NTSTATUS EventLogOpenA(
+		handle_t BindingHandle,
+		[in] LPSTR ServerName,
+		[in] char *LogName, 
+		[in] char *NullStr, 
+		[in] unsigned long MajorVer,
+		[in] unsigned long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 15 */
+	NTSTATUS EventLogRegSrcA(
+		handle_t BindingHandle,
+		[in] LPSTR ServerName,
+		[in] char *LogName, 
+		[in] char *NullStr,
+		[in] unsigned long MajorVer,
+		[in] unsigned long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+
+	/* Function 16 */
+	NTSTATUS EventLogOpenBackupA(
+		handle_t BindingHandle,
+		[in] LPSTR ServerName,
+		[in] char *BackupName, 
+		[in] unsigned long MajorVer,
+		[in] unsigned long MinorVer,
+		[out] PLOGHANDLE Handle);
+
+	/* Function 17 */
+	NTSTATUS EventLogReadA(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] unsigned long Flags,
+		[in] unsigned long Offset,
+		[in] unsigned long BufSize,
+		[out,size_is(BufSize)] unsigned char *Buffer,
+		[out] unsigned long *BytesRead,
+		[out] unsigned long *BytesNeeded);
+
+	/* Function 18 */
+	NTSTATUS EventLogReportEventA(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] unsigned long Time,
+		[in] unsigned short Type,
+		[in] unsigned short Category,
+		[in] unsigned long ID,
+		[in] unsigned short NumStrings,
+		[in] unsigned long DataSize,
+		[in] char *ComputerName,
+		[in] unsigned char *SID,
+		[in] char* Strings,
+		[in,size_is(DataSize)] unsigned char *Data,
+		[in] unsigned short Flags);
+		
+	/* FIXME */
+	NTSTATUS Unknown19(handle_t BindingHandle);
+	
+	/* FIXME */
+	NTSTATUS Unknown20(handle_t BindingHandle);
+
+	/* FIXME */
+	NTSTATUS Unknown21(handle_t BindingHandle);
+
+	/* Function 22 */
+	NTSTATUS EventLogGetInfo(
+		handle_t BindingHandle,
+		[in] LOGHANDLE Handle,
+		[in] unsigned long InfoLevel,
+		[out,size_is(BufSize)] unsigned char *Buffer,
+		[in] unsigned long BufSize,
+		[out] unsigned long *BytesNeeded);
+
+}
+

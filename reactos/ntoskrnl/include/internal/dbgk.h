@@ -1,0 +1,10 @@
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_DBGK_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_DBGK_H
+
+VOID
+STDCALL
+DbgkCreateThread(PVOID StartAddress);
+
+#endif
+
+/* EOF */

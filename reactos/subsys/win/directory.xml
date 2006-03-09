@@ -1,0 +1,6 @@
+<directory name="basesrv">
+	<xi:include href="basesrv/basesrv.xml" />
+</directory>
+<directory name="winsrv">
+	<xi:include href="winsrv/winsrv.xml" />
+</directory>

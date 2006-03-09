@@ -1,0 +1,112 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename jsdesign.info
+@settitle jsdesign
+@setchapternewpage on
+@c %**end of header
+
+@ifinfo
+Copyright (C) 1998 New Generation Software (NGS) Oy
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+@ignore
+Permission is granted to process this file through TeX and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+
+
+@end ignore
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by the Foundation.
+@end ifinfo
+
+
+@titlepage
+@title NGS JavaScript Interpreter
+@subtitle Design Goals
+@author Markku Rossi
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1998 New Generation Software (NGS) Oy
+@sp 2
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation
+approved by the Free Software Foundation.
+@end titlepage
+
+@ifinfo
+@node Top, Introduction, (dir), (dir)
+@comment  node-name,  next,  previous,  up
+@top The Design Goals of the NGS JavaScript Interpreter
+
+The Design Goals of the NGS JavaScript Interpreter.
+
+@end ifinfo
+
+@strong{This document is very much under construction.}
+
+@menu
+* Introduction::
+* Re-Entrant::
+* Extendible::
+* Fast::
+* Programmable::
+* The *Java* Hype::
+@end menu
+
+@node Introduction, Re-Entrant, Top, Top
+@chapter Introduction
+
+The NGS JavaScript interpreter is "yet another extension language".
+Although the world is full of extensions languages, none of the
+currently available languages didn't meet all the requirements we had
+for the extension language.  So, as a trivial solution, we decided to
+implement one that would satisfy our needs.
+
+The following chapters describe the goals that were set for the project.
+The chapters are in priority order, starting from the most important
+feature.
+
+@node Re-Entrant, Extendible, Introduction, Top
+@chapter Re-Entrant
+
+One of the original reasons for the JS project was the lack of
+thread-safe interpreters.
+
+@node Extendible, Fast, Re-Entrant, Top
+@chapter Extendible
+
+@node Fast, Programmable, Extendible, Top
+@chapter Fast
+
+@node Programmable, The *Java* Hype, Fast, Top
+@chapter Programmable
+
+@node The *Java* Hype,  , Programmable, Top
+@chapter The *Java* Hype
+
+@contents
+
+@bye

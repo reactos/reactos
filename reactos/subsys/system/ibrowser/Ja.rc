@@ -1,0 +1,57 @@
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_NEUTRAL
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "開く(&O)",                    ID_FILE_OPEN
+        MENUITEM "終了(&X)",                    ID_FILE_EXIT
+    END
+    POPUP "表\示(&V)"
+    BEGIN
+        MENUITEM "ツール バー(&T)",             ID_VIEW_TOOL_BAR
+        MENUITEM "サイド バー(&I)",             ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "ステータス バー(&S)",         ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "最新の情報に更新(&R)\tF5",    ID_REFRESH
+        MENUITEM "全画面表\示(&I)\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "IBrowser FAQ (&F)...",        ID_IBROWSER_FAQ
+        MENUITEM "IBrowser について(&A)...",    ID_ABOUT_IBROWSER
+        MENUITEM "OS について(&O)...",          ID_ABOUT_WINDOWS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Reactos Internet Web Browser"
+    IDS_EMPTY               "(Empty)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUT_IBROWSER      "バージョン情報(&A)..."
+END
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////

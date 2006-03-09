@@ -1,0 +1,14 @@
+This folder contains
+
+  . a Makefile for Apple MPW build environment (currently PPC only)
+
+  . supporting code and CodeWarrior Pro 7 project files to build the
+    FreeType library.
+
+Notes:
+The library will be built as a static lib in the obj/ folder.
+
+Current maintainer: Leonard Rosenthol, <leonardr@lazerware.com>
+Originally prepared by Just van Rossum, <just@letterror.com>
+
+This directory is now actively maintained as part of the FreeType Project.

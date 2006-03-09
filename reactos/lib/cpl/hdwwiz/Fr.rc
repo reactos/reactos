@@ -1,0 +1,7 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+	IDS_CPLNAME "Ajout de matériel"
+	IDS_CPLDESCRIPTION "Ajoute un nouveau matériel à votre ordinateur."
+END

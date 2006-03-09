@@ -1,0 +1,21 @@
+<directory name="afd">
+	<xi:include href="afd/afd.xml" />
+</directory>
+<directory name="dd">
+	<xi:include href="dd/directory.xml" />
+</directory>
+<directory name="ndis">
+	<xi:include href="ndis/ndis.xml" />
+</directory>
+<directory name="npf">
+	<xi:include href="npf/npf.xml" />
+</directory>
+<directory name="tcpip">
+	<xi:include href="tcpip/tcpip.xml" />
+</directory>
+<directory name="tdi">
+	<xi:include href="tdi/tdi.xml" />
+</directory>
+<directory name="wshtcpip">
+	<xi:include href="wshtcpip/wshtcpip.xml" />
+</directory>

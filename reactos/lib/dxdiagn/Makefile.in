@@ -1,0 +1,19 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = dxdiagn.dll
+IMPORTS   = ole32 user32 advapi32 kernel32
+EXTRALIBS = -ldxguid -luuid
+
+C_SRCS = \
+	container.c \
+	dxdiag_main.c \
+	provider.c \
+	regsvr.c
+
+RC_SRCS = version.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
