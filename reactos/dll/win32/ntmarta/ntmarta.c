@@ -918,7 +918,7 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
                 AceIndex = 0;
                 SidTarget = (PSID)(peaw + pacl->AceCount);
 
-                /* initialize the array */\
+                /* initialize the array */
                 while (GetAce(pacl,
                               AceIndex,
                               (LPVOID*)&AceHeader))
