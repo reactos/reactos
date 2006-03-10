@@ -1,4 +1,14 @@
 /*
+ * PROJECT:     ReactOS Universal Serial Bus Driver/Helper Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/usbd/usbd.c
+ * PURPOSE:     Helper Library for USB
+ * PROGRAMMERS:
+ *              Filip Navara <xnavara@volny.cz>
+ *
+ */
+
+/*
  * Universal Serial Bus Driver/Helper Library
  *
  * Written by Filip Navara <xnavara@volny.cz>
