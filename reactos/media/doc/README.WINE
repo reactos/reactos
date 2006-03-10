@@ -36,58 +36,58 @@ reactos/tools/widl		# Forked at Wine-20050930
 
 The following libraries are shared with Wine.
 
-reactos/lib/avifil32            # Synced to Wine-0_9_5
-reactos/lib/cabinet             # Synced to Wine-0_9_5
-reactos/lib/comctl32            # Synced to Wine-0_9_5
-reactos/lib/comdlg32		# Synced to Wine-0_9_5
-reactos/lib/crypt32		# Synced to Wine-0_9_5
-reactos/lib/dbghelp		# 
-reactos/lib/dinput		# Synced to Wine-0_9_5
-reactos/lib/dinput8		# Synced to Wine-0_9_5
-reactos/lib/dplay		# Synced to Wine-0_9_5
-reactos/lib/dplayx		# Synced to Wine-0_9_5
-reactos/lib/dxdiagn		# Synced to Wine-0_9_5
-reactos/lib/icmp		# Synced to Wine-0_9_5
-reactos/lib/imm32		# Synced to Wine-0_9_5
-reactos/lib/iphlpapi		# Out of sync
-reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
-reactos/lib/mapi32		# Synced to Wine-0_9_5
-reactos/lib/msvcrt20		# Out of sync
-reactos/lib/mpr                 # Synced to Wine-0_9_5
-reactos/lib/msacm		# Out of sync
-reactos/lib/msimg32		# Synced to Wine-0_9_5
-reactos/lib/msi			# Synced to Wine-0_9_5
-reactos/lib/msvideo		# Out of sync
-reactos/lib/netapi32		# Synced to Wine-0_9_5
-reactos/lib/objsel		# Synced to Wine-0_9_5
-reactos/lib/odbc32		# Out of sync. Depends on port of Linux ODBC.
-reactos/lib/ole32               # Synced to Wine-0_9_5
-reactos/lib/oleacc              # Synced to Wine-0_9_5
-reactos/lib/oleaut32		# Synced to Wine-0_9_5
-reactos/lib/oledlg              # Synced to Wine-0_9_5
-reactos/lib/olepro32		# Synced to Wine-0_9_5
-reactos/lib/riched20		# Synced to Wine-0_9_5
-reactos/lib/richedit		# Synced to Wine-0_9_5
-reactos/lib/rpcrt4		# Synced to Wine-0_9_5
-reactos/lib/setupapi		# Forked at Wine-20050524
-reactos/lib/shell32             # Synced to Wine-0_9_5
-reactos/lib/shdocvw             # Synced to Wine-0_9_5
-reactos/lib/shfolder            # Synced to Wine-0_9_5
-reactos/lib/shlwapi             # Synced to Wine-0_9_5
-reactos/lib/twain		# Out of sync
-reactos/lib/urlmon		# Synced to Wine-0_9_5
-reactos/lib/uxtheme		# Synced to Wine-0_9_5
-reactos/lib/version		# Out of sync
-reactos/lib/wininet		# Synced to Wine-0_9_5
-reactos/lib/wintrust		# Synced to Wine-0_9_5
-reactos/lib/winmm		# Forked at Wine-20050628
-reactos/lib/winmm/midimap       # Forked at Wine-20050628
-reactos/lib/winmm/wavemap       # Forked at Wine-20050628
+reactos/dll/win32/avifil32            # Synced to Wine-0_9_5
+reactos/dll/win32/cabinet             # Synced to Wine-0_9_5
+reactos/dll/win32/comctl32            # Synced to Wine-0_9_5
+reactos/dll/win32/comdlg32		# Synced to Wine-0_9_5
+reactos/dll/win32/crypt32		# Synced to Wine-0_9_5
+reactos/dll/win32/dbghelp		# 
+reactos/dll/win32/icmp		# Synced to Wine-0_9_5
+reactos/dll/win32/imm32		# Synced to Wine-0_9_5
+reactos/dll/win32/iphlpapi		# Out of sync
+reactos/dll/win32/imagehlp		# Patches for BindImage need review and submission to winehq.
+reactos/dll/win32/mapi32		# Synced to Wine-0_9_5
+reactos/dll/win32/msvcrt20		# Out of sync
+reactos/dll/win32/mpr                 # Synced to Wine-0_9_5
+reactos/dll/win32/msacm		# Out of sync
+reactos/dll/win32/msimg32		# Synced to Wine-0_9_5
+reactos/dll/win32/msi			# Synced to Wine-0_9_5
+reactos/dll/win32/msvideo		# Out of sync
+reactos/dll/win32/netapi32		# Synced to Wine-0_9_5
+reactos/dll/win32/objsel		# Synced to Wine-0_9_5
+reactos/dll/win32/odbc32		# Out of sync. Depends on port of Linux ODBC.
+reactos/dll/win32/ole32               # Synced to Wine-0_9_5
+reactos/dll/win32/oleacc              # Synced to Wine-0_9_5
+reactos/dll/win32/oleaut32		# Synced to Wine-0_9_5
+reactos/dll/win32/oledlg              # Synced to Wine-0_9_5
+reactos/dll/win32/olepro32		# Synced to Wine-0_9_5
+reactos/dll/win32/riched20		# Synced to Wine-0_9_5
+reactos/dll/win32/richedit		# Synced to Wine-0_9_5
+reactos/dll/win32/rpcrt4		# Synced to Wine-0_9_5
+reactos/dll/win32/setupapi		# Forked at Wine-20050524
+reactos/dll/win32/shell32             # Synced to Wine-0_9_5
+reactos/dll/win32/shdocvw             # Synced to Wine-0_9_5
+reactos/dll/win32/shfolder            # Synced to Wine-0_9_5
+reactos/dll/win32/shlwapi             # Synced to Wine-0_9_5
+reactos/dll/win32/twain		# Out of sync
+reactos/dll/win32/urlmon		# Synced to Wine-0_9_5
+reactos/dll/win32/uxtheme		# Synced to Wine-0_9_5
+reactos/dll/win32/version		# Out of sync
+reactos/dll/win32/wininet		# Synced to Wine-0_9_5
+reactos/dll/win32/wintrust		# Synced to Wine-0_9_5
+reactos/dll/win32/winmm		# Forked at Wine-20050628
+reactos/dll/win32/winmm/midimap       # Forked at Wine-20050628
+reactos/dll/win32/winmm/wavemap       # Forked at Wine-20050628
+reactos/dll/directx/dinput		# Synced to Wine-0_9_5
+reactos/dll/directx/dinput8		# Synced to Wine-0_9_5
+reactos/dll/directx/dplay		# Synced to Wine-0_9_5
+reactos/dll/directx/dplayx		# Synced to Wine-0_9_5
+reactos/dll/directx/dxdiagn		# Synced to Wine-0_9_5
 
 ReactOS shares the following programs with Winehq.
-reactos/subsys/system/regedit	# Out of sync
-reactos/subsys/system/expand	# Out of sync
-reactos/subsys/system/msiexec	# Synced to Wine-0_9_3
+reactos/base/applications/regedit	# Out of sync
+reactos/base/system/expand	# Out of sync
+reactos/base/system/msiexec	# Synced to Wine-0_9_3
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
@@ -96,25 +96,25 @@ check Wine current souces first as it may already be fixed.
 reactos/lib/uuid		#
 
 advapi32 -
-  reactos/lib/advapi32/crypt/*.c	# ekohl says we're not sharing this
+  reactos/dll/win32/advapi32/crypt/*.c	# ekohl says we're not sharing this
 
 gdi32 -
-  reactos/lib/gdi32/objects/linedda.c	# Out of sync
+  reactos/dll/win32/gdi32/objects/linedda.c	# Out of sync
 
 kernel32 -
-  reactos/lib/kernel32/misc/errormsg.c	# Out of sync
-  reactos/lib/kernel32/misc/profile.c	# Out of sync
-  reactos/lib/kernel32/misc/lcformat.c	# Out of sync
+  reactos/dll/win32/kernel32/misc/errormsg.c	# Out of sync
+  reactos/dll/win32/kernel32/misc/profile.c	# Out of sync
+  reactos/dll/win32/kernel32/misc/lcformat.c	# Out of sync
 
 msvcrt -
-  reactos/lib/msvcrt/wine/*.c		# Out of sync
+  reactos/dll/win32/msvcrt/wine/*.c		# Out of sync
 
 User32 -
-  reactos/lib/user32/controls/button.c	# Out of sync
-  reactos/lib/user32/controls/edit.c	# Out of sync
-  reactos/lib/user32/controls/static.c	# Out of sync
-  reactos/lib/user32/misc/wsprintf.c	# Out of sync
-  reactos/lib/user32/windows/mdi.c	# Out of sync
+  reactos/dll/win32/user32/controls/button.c	# Out of sync
+  reactos/dll/win32/user32/controls/edit.c	# Out of sync
+  reactos/dll/win32/user32/controls/static.c	# Out of sync
+  reactos/dll/win32/user32/misc/wsprintf.c	# Out of sync
+  reactos/dll/win32/user32/windows/mdi.c	# Out of sync
 
 - Cd to the parent directory of your top-level "reactos" directory
 - Check out the Wine release: "cvs -d :pserver:cvs@cvs.winehq.com:2401/home/wine co wine -r Wine-20050211"
