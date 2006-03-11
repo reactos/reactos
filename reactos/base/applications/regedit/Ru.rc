@@ -124,7 +124,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_EDIT_MODIFY          "Modifies the value's data"
+    ID_EDIT_MODIFY          "Изменяет значение"
     ID_EDIT_NEW_KEY         "Добавляет новый ключ"
     ID_EDIT_NEW_STRINGVALUE "Добавляет новое строковое значение"
     ID_EDIT_NEW_BINARYVALUE "Добавляет новое бинарное значение"
@@ -137,8 +137,8 @@ BEGIN
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
                             "Отключается от реестра удалённого компьютера"
     ID_REGISTRY_PRINT       "Печатает весь реестр или ого часть"
-/*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
-    ID_HELP_ABOUT           "Отображает информацию о программе, номер версии и авторство"
+/*    ID_HELP_HELPTOPICS      "Открывает справку редактора реестра" */
+    ID_HELP_ABOUT           "Отображает информацию о программе, номер версии и авторские права"
 END
 
 STRINGTABLE DISCARDABLE
@@ -198,8 +198,8 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
- *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *    ID_HELP_HELPTOPICS      "Открывает справку редактора реестра."
+ *    ID_HELP_ABOUT           "Отображает информацию о программе, номер версии и авторские права."
  *END
  */
 
