@@ -16,14 +16,15 @@ IDI_MAIN ICON "res/reactos.ico"
 
 
 /* Language-specific resources */
-#include "En.rc"
 #include "Cz.rc"
 #include "De.rc"
-#include "Sv.rc"
+#include "En.rc"
+#include "Fr.rc"
+#include "Hu.rc"
 #include "It.rc"
 #include "Ja.rc"
-#include "Hu.rc"
-#include "Fr.rc"
+#include "Ru.rc"
+#include "Sv.rc"
 #include "Uk.rc"
 
 /* EOF */
