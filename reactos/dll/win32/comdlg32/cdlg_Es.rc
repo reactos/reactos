@@ -389,7 +389,7 @@ STRINGTABLE DISCARDABLE
 
     PD32_VALUE_UREADABLE                  "Entrada ilegible"
     PD32_INVALID_PAGE_RANGE "Este valor no concuerda con el rango de la \
-página.\n\ Por favor, introduzca un valor entre %d y %d."
+página.\n Por favor, introduzca un valor entre %d y %d."
     PD32_FROM_NOT_ABOVE_TO                "La entrada 'desde' no puede exceder \
 a la entrada 'hasta'."
     PD32_MARGINS_OVERLAP                  "Los márgenes se superponen o quedan \
