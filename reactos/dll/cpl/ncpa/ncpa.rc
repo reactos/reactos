@@ -27,4 +27,4 @@ IDI_NETSTAT ICON "resources/NETCONN.ICO"
 #include "es.rc"
 #include "Ja.rc"
 #include "hu.rc"
-
+#include "ru.rc"
