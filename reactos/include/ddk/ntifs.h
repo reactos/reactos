@@ -3918,6 +3918,24 @@ RtlNtStatusToDosError (
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlOemStringToUnicodeString(
+    IN OUT PUNICODE_STRING DestinationString,
+    IN PCOEM_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeStringToOemString(
+    IN OUT POEM_STRING DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlReserveChunk (
     IN USHORT       CompressionFormat,
     IN OUT PUCHAR   *CompressedBuffer,
