@@ -36,6 +36,7 @@ extern "C" {
 
 #include <ctype.h>
 #include <winerror.h>
+#include <sdkddkver.h>
 
 #ifndef RC_INVOKED
 #include <string.h>
