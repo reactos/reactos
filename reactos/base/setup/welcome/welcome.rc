@@ -57,6 +57,6 @@ END
 #include "Hu.rc"
 #include "Ja.rc"
 #include "Sv.rc"
-
+#include "Ru.rc"
 
 /* EOF */
