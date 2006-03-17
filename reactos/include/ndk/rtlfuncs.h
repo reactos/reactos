@@ -1201,7 +1201,7 @@ NTSTATUS
 NTAPI
 RtlOemStringToUnicodeString(
     PUNICODE_STRING DestinationString,
-    POEM_STRING SourceString,
+    PCOEM_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
