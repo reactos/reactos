@@ -22,3 +22,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #include "Hu.rc"
 #include "Fr.rc"
 #include "Uk.rc"
+#include "Ru.rc"
