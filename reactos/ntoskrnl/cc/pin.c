@@ -11,91 +11,155 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+#define YDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
 extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
+extern FAST_MUTEX CcCacheViewLock;
+extern LIST_ENTRY CcFreeCacheViewListHead;
+extern LIST_ENTRY CcInUseCacheViewListHead;
+
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS STDCALL
+MmMapViewInSystemCache(PCACHE_VIEW);
+
 
 /*
  * @implemented
  */
 BOOLEAN STDCALL
-CcMapData (IN PFILE_OBJECT FileObject,
-	   IN PLARGE_INTEGER FileOffset,
-	   IN ULONG Length,
-	   IN BOOLEAN Wait,
-	   OUT PVOID *pBcb,
-	   OUT PVOID *pBuffer)
+CcMapData(IN PFILE_OBJECT FileObject,
+	  IN PLARGE_INTEGER FileOffset,
+	  IN ULONG Length,
+	  IN BOOLEAN Wait,
+	  OUT PVOID* piBcb,
+	  OUT PVOID* pBuffer)
 {
-  ULONG ReadOffset;
-  BOOLEAN Valid;
-  PBCB Bcb;
-  PCACHE_SEGMENT CacheSeg;
-  NTSTATUS Status;
-  PINTERNAL_BCB iBcb;
-  ULONG ROffset;
+   PINTERNAL_BCB iBcb;
+   PBCB Bcb;
+   ULONG Index;
+   NTSTATUS Status;
+   PLIST_ENTRY entry;
+   PCACHE_VIEW current = NULL;
 
-  DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
-	 " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
-	 Length, Wait, pBcb, pBuffer);
+   DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
+	  " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
+	  Length, Wait, piBcb, pBuffer);
 
-  ReadOffset = (ULONG)FileOffset->QuadPart;
-  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-  ASSERT(Bcb);
+   ASSERT (FileObject);
+   ASSERT (FileObject->SectionObjectPointer);
+   ASSERT (FileObject->SectionObjectPointer->SharedCacheMap);
+   ASSERT (FileOffset);
+   ASSERT (piBcb);
+   ASSERT (pBuffer);
 
-  DPRINT("AllocationSize %I64x, FileSize %I64x\n",
-         Bcb->AllocationSize.QuadPart,
-         Bcb->FileSize.QuadPart);
-
-  if (ReadOffset % Bcb->CacheSegmentSize + Length > Bcb->CacheSegmentSize)
-    {
-      return(FALSE);
-    }
-  ROffset = ROUND_DOWN (ReadOffset, Bcb->CacheSegmentSize);
-  Status = CcRosRequestCacheSegment(Bcb,
-				    ROffset,
-				    pBuffer,
-				    &Valid,
-				    &CacheSeg);
-  if (!NT_SUCCESS(Status))
-    {
-      return(FALSE);
-    }
-  if (!Valid)
-    {
-      if (!Wait)
-	{
-          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-	  return(FALSE);
-	}
-      if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
-	{
-          CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-	  return(FALSE);
-	}
-    }
-
-  *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % Bcb->CacheSegmentSize));
-  iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
-  if (iBcb == NULL)
-    {
-      CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
+   if (!Wait)
+   {
+      *piBcb = NULL;
+      *pBuffer = NULL;
       return FALSE;
-    }
-  memset(iBcb, 0, sizeof(INTERNAL_BCB));
-  iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
-  iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
-  iBcb->PFCB.MappedLength = Length;
-  iBcb->PFCB.MappedFileOffset = *FileOffset;
-  iBcb->CacheSegment = CacheSeg;
-  iBcb->Dirty = FALSE;
-  iBcb->RefCount = 1;
-  *pBcb = (PVOID)iBcb;
-  return(TRUE);
+   }
+
+   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+
+   if (FileOffset->QuadPart + Length > Bcb->FileSizes.AllocationSize.QuadPart)
+   {
+      DPRINT("%d %I64d %I64d\n", Length, FileOffset->QuadPart + Length, Bcb->FileSizes.AllocationSize.QuadPart);
+//      KEBUGCHECK(0);
+   }
+
+   if (FileOffset->QuadPart + Length - ROUND_DOWN(FileOffset->QuadPart, CACHE_VIEW_SIZE) > CACHE_VIEW_SIZE)
+   {
+      /* not implemented */
+      KEBUGCHECK(0);
+   }
+
+
+
+   if (Bcb->FileSizes.AllocationSize.QuadPart > sizeof(Bcb->CacheView) / sizeof(Bcb->CacheView[0]) * CACHE_VIEW_SIZE)
+   {
+      /* not implemented */
+      KEBUGCHECK(0);
+   }
+
+   ExAcquireFastMutex(&CcCacheViewLock);
+
+   Index = FileOffset->QuadPart / CACHE_VIEW_SIZE;
+   if (Bcb->CacheView[Index] && Bcb->CacheView[Index]->Bcb == Bcb)
+   {
+      if (Bcb->CacheView[Index]->RefCount == 0)
+      {
+         RemoveEntryList(&Bcb->CacheView[Index]->ListEntry);
+	 InsertHeadList(&CcInUseCacheViewListHead, &Bcb->CacheView[Index]->ListEntry);
+      }
+      Bcb->CacheView[Index]->RefCount++;
+   }
+   else
+   {
+      if (IsListEmpty(&CcFreeCacheViewListHead))
+      {
+         /* not implemented */
+         KEBUGCHECK(0);
+      }
+
+      entry = CcFreeCacheViewListHead.Flink;
+      while (entry != &CcFreeCacheViewListHead)
+      {
+         current = CONTAINING_RECORD(entry, CACHE_VIEW, ListEntry);
+	 entry = entry->Flink;
+	 if (current->Bcb == NULL)
+	 {
+	    break;
+	 }
+      }
+      if (entry == &CcFreeCacheViewListHead)
+      {
+         KEBUGCHECK(0);
+      }
+      
+      Bcb->CacheView[Index] = current;
+
+      if(Bcb->CacheView[Index]->Bcb != NULL)
+      {
+         DPRINT1("%x\n", Bcb->CacheView[Index]->Bcb);
+         /* not implemented */
+         KEBUGCHECK(0);
+      }
+      Bcb->CacheView[Index]->RefCount = 1;
+      Bcb->CacheView[Index]->Bcb = Bcb;
+      Bcb->CacheView[Index]->SectionData.ViewOffset = Index * CACHE_VIEW_SIZE;
+      Bcb->CacheView[Index]->SectionData.Section = Bcb->Section;
+      Bcb->CacheView[Index]->SectionData.Segment = Bcb->Section->Segment;
+
+      Status = MmMapViewInSystemCache(Bcb->CacheView[Index]);
+
+      if (!NT_SUCCESS(Status))
+      {
+         KEBUGCHECK(0);
+      }
+   }
+   ExReleaseFastMutex(&CcCacheViewLock);
+
+   iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
+   if (iBcb == NULL)
+   {
+      KEBUGCHECK(0);
+   }
+   memset(iBcb, 0, sizeof(INTERNAL_BCB));
+
+   iBcb->Bcb = Bcb;
+   iBcb->Index = Index;
+
+   *piBcb = iBcb;
+   *pBuffer = (PVOID)((ULONG_PTR)Bcb->CacheView[Index]->BaseAddress + (ULONG_PTR)(FileOffset->QuadPart - Bcb->CacheView[Index]->SectionData.ViewOffset));
+
+   DPRINT("CcMapData() done\n");
+
+   return TRUE;
 }
 
 /*
@@ -172,8 +236,9 @@ VOID STDCALL
 CcSetDirtyPinnedData (IN PVOID Bcb,
 		      IN PLARGE_INTEGER Lsn)
 {
-   PINTERNAL_BCB iBcb = Bcb;
-   iBcb->Dirty = TRUE;
+//   PINTERNAL_BCB iBcb = Bcb;
+//   iBcb->Dirty = TRUE;
+//   UNIMPLEMENTED;
 }
 
 
@@ -181,15 +246,23 @@ CcSetDirtyPinnedData (IN PVOID Bcb,
  * @implemented
  */
 VOID STDCALL
-CcUnpinData (IN PVOID Bcb)
+CcUnpinData (IN PVOID _iBcb)
 {
-  PINTERNAL_BCB iBcb = Bcb;
-  CcRosReleaseCacheSegment(iBcb->CacheSegment->Bcb, iBcb->CacheSegment, TRUE,
-                           iBcb->Dirty, FALSE);
-  if (--iBcb->RefCount == 0)
-  {
-    ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
-  }
+   PINTERNAL_BCB iBcb = _iBcb;
+
+   DPRINT("CcUnpinData(%x)\n", _iBcb);
+
+   ExAcquireFastMutex(&CcCacheViewLock);
+   iBcb->Bcb->CacheView[iBcb->Index]->RefCount--;
+   if (iBcb->Bcb->CacheView[iBcb->Index]->RefCount == 0)
+   {
+     RemoveEntryList(&iBcb->Bcb->CacheView[iBcb->Index]->ListEntry);
+     InsertHeadList(&CcFreeCacheViewListHead, &iBcb->Bcb->CacheView[iBcb->Index]->ListEntry);
+   }
+   ExReleaseFastMutex(&CcCacheViewLock);
+   ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+   
+   DPRINT("CcUnpinData done\n");
 }
 
 /*
@@ -214,8 +287,9 @@ CcRepinBcb (
 	IN	PVOID	Bcb
 	)
 {
-  PINTERNAL_BCB iBcb = Bcb;
-  iBcb->RefCount++;
+//  PINTERNAL_BCB iBcb = Bcb;
+//  iBcb->RefCount++;
+    UNIMPLEMENTED;
 }
 
 /*
@@ -226,32 +300,8 @@ STDCALL
 CcUnpinRepinnedBcb (
 	IN	PVOID			Bcb,
 	IN	BOOLEAN			WriteThrough,
-	IN	PIO_STATUS_BLOCK	IoStatus
-	)
+	IN	PIO_STATUS_BLOCK	IoStatus)
 {
-  PINTERNAL_BCB iBcb = Bcb;
-
-  if (--iBcb->RefCount == 0)
-    {
-      IoStatus->Information = 0;
-      if (WriteThrough)
-        {
-          ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&iBcb->CacheSegment->Lock);
-          if (iBcb->CacheSegment->Dirty)
-            {
-              IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
-            }
-          else
-            {
-              IoStatus->Status = STATUS_SUCCESS;
-            }
-          ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&iBcb->CacheSegment->Lock);
-        }
-      else
-        {
-          IoStatus->Status = STATUS_SUCCESS;
-        }
-
-      ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
-    }
+   KEBUGCHECK(0);
 }
+

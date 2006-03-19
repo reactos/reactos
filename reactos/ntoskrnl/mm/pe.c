@@ -146,13 +146,16 @@ static __inline BOOLEAN AlignUp(OUT PULONG AlignedAddress, IN ULONG Address, IN 
   [1] Microsoft Corporation, "Microsoft Portable Executable and Common Object
       File Format Specification", revision 6.0 (February 1999)
 */
-NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
-				  IN SIZE_T FileHeaderSize,
-				  IN PVOID File,
-				  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
-				  OUT PULONG Flags,
-				  IN PEXEFMT_CB_READ_FILE ReadFileCb,
-				  IN PEXEFMT_CB_ALLOCATE_SEGMENTS AllocateSegmentsCb)
+NTSTATUS NTAPI PeFmtCreateSection
+(
+ IN CONST VOID * FileHeader,
+ IN SIZE_T FileHeaderSize,
+ IN PFILE_OBJECT FileObject,
+ OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
+ OUT PULONG Flags,
+ IN PEXEFMT_CB_READ_FILE ReadFileCb,
+ IN PEXEFMT_CB_ALLOCATE_SEGMENTS AllocateSegmentsCb
+)
 {
     NTSTATUS nStatus;
     ULONG cbFileHeaderOffsetSize = 0;
@@ -174,12 +177,12 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ULONG nFileSizeOfHeaders = 0;
     ULONG i;
 
-    ASSERT(FileHeader);
-    ASSERT(FileHeaderSize > 0);
-    ASSERT(File);
-    ASSERT(ImageSectionObject);
-    ASSERT(ReadFileCb);
-    ASSERT(AllocateSegmentsCb);
+ ASSERT(FileHeader);
+ ASSERT(FileHeaderSize > 0);
+ ASSERT(FileObject);
+ ASSERT(ImageSectionObject);
+ ASSERT(ReadFileCb);
+ ASSERT(AllocateSegmentsCb);
 
     ASSERT(Intsafe_CanOffsetPointer(FileHeader, FileHeaderSize));
 
@@ -244,8 +247,17 @@ l_ReadHeaderFromFile:
 	cbNtHeaderSize = 0;
 	lnOffset.QuadPart = pidhDosHeader->e_lfanew;
 
-	/* read the header from the file */
-	nStatus = ReadFileCb(File, &lnOffset, sizeof(IMAGE_NT_HEADERS64), &pData, &pBuffer, &cbReadSize);
+  /* read the header from the file */
+  nStatus = ReadFileCb
+  (
+   FileObject,
+   ImageSectionObject->BytesPerSector,
+   &lnOffset,
+   sizeof(IMAGE_NT_HEADERS64),
+   &pData,
+   &pBuffer,
+   &cbReadSize
+  );
 
 	if(!NT_SUCCESS(nStatus))
 	    DIE(("ReadFile failed, status %08X\n", nStatus));
@@ -526,8 +538,17 @@ l_ReadHeaderFromFile:
 
 	lnOffset.QuadPart = cbSectionHeadersOffset;
 
-	/* read the header from the file */
-	nStatus = ReadFileCb(File, &lnOffset, cbSectionHeadersSize, &pData, &pBuffer, &cbReadSize);
+  /* read the header from the file */
+  nStatus = ReadFileCb
+  (
+   FileObject,
+   ImageSectionObject->BytesPerSector,
+   &lnOffset,
+   cbSectionHeadersSize,
+   &pData,
+   &pBuffer,
+   &cbReadSize
+  );
 
 	if(!NT_SUCCESS(nStatus))
 	    DIE(("ReadFile failed with status %08X\n", nStatus));

@@ -21,6 +21,7 @@
  * FILE:             drivers/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/

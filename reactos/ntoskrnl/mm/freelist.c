@@ -46,6 +46,7 @@ typedef struct _PHYSICAL_PAGE
    SWAPENTRY SavedSwapEntry;
    ULONG LockCount;
    ULONG MapCount;
+   ULONG ShareCount;
    struct _MM_RMAP_ENTRY* RmapListHead;
 }
 PHYSICAL_PAGE, *PPHYSICAL_PAGE;
@@ -718,7 +719,7 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
    {
-      DbgPrint("Getting reference count for free page\n");
+      DPRINT1("Getting reference count for free page (%x, %x)\n", Pfn, MmPageArray[Pfn].Flags.Type);
       KEBUGCHECK(0);
    }
 
@@ -781,6 +782,12 @@ MmDereferencePage(PFN_TYPE Pfn)
       MmStats.NrFreePages++;
       MmStats.NrSystemPages--;
       RemoveEntryList(&MmPageArray[Pfn].ListEntry);
+      if (MmPageArray[Pfn].ShareCount != 0)
+      {
+         DbgPrint("Freeing shared page (%x ShareCount %d)\n",
+	          Pfn << PAGE_SHIFT, MmPageArray[Pfn].ShareCount);
+	 KEBUGCHECK(0);
+      }
       if (MmPageArray[Pfn].RmapListHead != NULL)
       {
          DbgPrint("Freeing page with rmap entries.\n");
@@ -913,6 +920,67 @@ MmUnlockPage(PFN_TYPE Pfn)
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
+ULONG
+MmSharePage(PFN_TYPE Pfn)
+{
+   KIRQL oldIrql;
+   ULONG ShareCount;
+
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+
+   if (Pfn >= MmPageArraySize)
+   {
+      DPRINT1("%x %x\n", Pfn, MmPageArraySize);
+      KEBUGCHECK(0);
+   }
+
+   if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
+     {
+	DbgPrint("Sharing free page\n");
+	KEBUGCHECK(0);
+     }
+   if (MmPageArray[Pfn].ShareCount == 0xffffffff)
+     {
+       DbgPrint("Maximum share count reached\n");
+       KEBUGCHECK(0);
+     }
+   MmPageArray[Pfn].ShareCount++;
+   ShareCount = MmPageArray[Pfn].ShareCount;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+   return ShareCount;
+}
+
+ULONG
+MmUnsharePage(PFN_TYPE Pfn)
+{
+   KIRQL oldIrql;
+   ULONG ShareCount;
+
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+
+   if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
+     {
+	DbgPrint("Unsharing free page\n");
+	KEBUGCHECK(0);
+     }
+
+   if (MmPageArray[Pfn].ShareCount == 0)
+     {
+       DbgPrint("Unsharing not shared page\n");
+       KEBUGCHECK(0);
+     }
+   MmPageArray[Pfn].ShareCount--;
+   ShareCount = MmPageArray[Pfn].ShareCount;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+   return ShareCount;
+}
+
+ULONG
+MmGetShareCountPage(PFN_TYPE Pfn)
+{
+   return MmPageArray[Pfn].ShareCount;
+}
+
 PFN_TYPE
 NTAPI
 MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
@@ -968,6 +1036,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    PageDescriptor->ReferenceCount = 1;
    PageDescriptor->LockCount = 0;
    PageDescriptor->MapCount = 0;
+   PageDescriptor->ShareCount = 0;
    PageDescriptor->SavedSwapEntry = SavedSwapEntry;
    InsertTailList(&UsedPageListHeads[Consumer], ListEntry);
 
@@ -1068,6 +1137,7 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
          PageDescriptor->ReferenceCount = 1;
          PageDescriptor->LockCount = 0;
          PageDescriptor->MapCount = 0;
+	 PageDescriptor->ShareCount = 0;
          PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
          InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
 
@@ -1102,6 +1172,7 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
             PageDescriptor->ReferenceCount = 1;
             PageDescriptor->LockCount = 0;
             PageDescriptor->MapCount = 0;
+	    PageDescriptor->ShareCount = 0;
             PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
             RemoveEntryList(&PageDescriptor->ListEntry);
             InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);

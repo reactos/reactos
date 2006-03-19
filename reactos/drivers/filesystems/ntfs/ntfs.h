@@ -6,7 +6,7 @@
 #include <ntdddisk.h>
 #include <ccros.h>
 
-#define USE_ROS_CC_AND_FS
+//#define USE_ROS_CC_AND_FS
 
 
 #define CACHEPAGESIZE(pDeviceExt) \

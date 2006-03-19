@@ -4,6 +4,7 @@
  * FILE:             drivers/fs/vfat/blockdev.c
  * PURPOSE:          Temporary sector reading support
  * PROGRAMMER:       David Welch (welch@cwcom.net)
+ *                   Hartmut Birr
  * UPDATE HISTORY:
  */
 

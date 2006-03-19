@@ -4,6 +4,7 @@
  * FILE:             drivers/fs/vfat/finfo.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  *                   Herve Poussineau (reactos@poussine.freesurf.fr)
  *
  */
@@ -95,6 +96,34 @@ VfatGetStandardInformation(PVFATFCB FCB,
   StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
 
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
+  return(STATUS_SUCCESS);
+}
+
+static NTSTATUS
+VfatGetAttributeTagInformation(PVFATFCB FCB,
+			       PFILE_ATTRIBUTE_TAG_INFORMATION AttributeTagInfo,
+			       PULONG BufferLength)
+{
+  if (*BufferLength < sizeof(FILE_ATTRIBUTE_TAG_INFORMATION))
+    return STATUS_BUFFER_OVERFLOW;
+
+  /* PRECONDITION */
+  ASSERT(AttributeTagInfo != NULL);
+  ASSERT(FCB != NULL);
+
+  AttributeTagInfo->FileAttributes = *FCB->Attributes & 0x3f;
+  /* Synthesize FILE_ATTRIBUTE_NORMAL */
+  if (0 == (AttributeTagInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
+                                                FILE_ATTRIBUTE_ARCHIVE |
+                                                FILE_ATTRIBUTE_SYSTEM |
+                                                FILE_ATTRIBUTE_HIDDEN |
+                                                FILE_ATTRIBUTE_READONLY)))
+  {
+    AttributeTagInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
+  }
+  AttributeTagInfo->ReparseTag = 0;
+
+  *BufferLength -= sizeof(FILE_ATTRIBUTE_TAG_INFORMATION);
   return(STATUS_SUCCESS);
 }
 
@@ -780,6 +809,12 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 				 &BufferLength);
       break;
 
+    case FileAttributeTagInformation:
+      RC = VfatGetAttributeTagInformation(FCB,
+	                                  SystemBuffer,
+					  &BufferLength);
+      break;
+
     case FileAlternateNameInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;
@@ -866,6 +901,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 				   SystemBuffer);
       break;
     case FileRenameInformation:
+    case FileAttributeTagInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;
     default:

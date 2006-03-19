@@ -5,6 +5,7 @@
 * PROJECT:          ReactOS kernel
 * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
 *                   Rex Jolliff (rex@lvcablemodem.com)
+*                   Hartmut Birr
 *                   Herve Poussineau (reactos@poussine.freesurf.fr)
 */
 

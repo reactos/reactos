@@ -4,6 +4,7 @@
  * FILE:             drivers/fs/vfat/close.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/
@@ -30,11 +31,14 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   pCcb = (PVFATCCB) (FileObject->FsContext2);
   pFcb = (PVFATFCB) (FileObject->FsContext);
 
+  FileObject->FsContext2 = NULL;
+
   if (pFcb == NULL)
   {
      return STATUS_SUCCESS;
   }
 
+  DPRINT("'%wZ'\n", &pFcb->PathNameU);
   if (pFcb->Flags & FCB_IS_VOLUME)
   {
      DPRINT1("Volume\n");
@@ -43,7 +47,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   }
   else
   {
-    if (FileObject->DeletePending)
+//    if (FileObject->DeletePending)
     {
       if (pFcb->Flags & FCB_DELETE_PENDING)
       {
@@ -57,7 +61,6 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
     vfatReleaseFCB (DeviceExt, pFcb);
   }
 
-  FileObject->FsContext2 = NULL;
   FileObject->FsContext = NULL;
   FileObject->SectionObjectPointer = NULL;
 
@@ -65,7 +68,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   {
     vfatDestroyCCB(pCcb);
   }
-
+  CHECKPOINT;
   return  Status;
 }
 

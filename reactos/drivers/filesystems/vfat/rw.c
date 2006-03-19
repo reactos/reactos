@@ -4,6 +4,7 @@
  * FILE:             drivers/fs/vfat/rw.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Hartmut Birr
  *
  */
 

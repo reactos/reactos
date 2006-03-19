@@ -340,6 +340,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SECTION_VIEW:
+	 case MEMORY_AREA_CACHE_SEGMENT:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
                                                   (PVOID)Address,

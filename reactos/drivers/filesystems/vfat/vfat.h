@@ -7,7 +7,7 @@
 #include <ndk/ntndk.h>
 #include <ccros.h>
 
-#define USE_ROS_CC_AND_FS
+//#define USE_ROS_CC_AND_FS
 #else
 #define KEBUGCHECK KeBugCheck
 #define KEBUGCHECKEX KeBugCheckEx

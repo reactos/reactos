@@ -34,7 +34,8 @@
 
 typedef NTSTATUS (NTAPI * PEXEFMT_CB_READ_FILE)
 (
- IN PVOID File,
+ IN PFILE_OBJECT FileObject,
+ ULONG SectorSize,
  IN PLARGE_INTEGER Offset,
  IN ULONG Length,
  OUT PVOID * Data,
@@ -51,7 +52,7 @@ typedef NTSTATUS (NTAPI * PEXEFMT_LOADER)
 (
  IN CONST VOID * FileHeader,
  IN SIZE_T FileHeaderSize,
- IN PVOID File,
+ IN PFILE_OBJECT FileObject,
  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
  OUT PULONG Flags,
  IN PEXEFMT_CB_READ_FILE ReadFileCb,

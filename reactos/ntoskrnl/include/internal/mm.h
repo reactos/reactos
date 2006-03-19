@@ -163,33 +163,41 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONGLONG FileOffset;
-    ULONG_PTR VirtualAddress;
-    ULONG RawLength;
-    ULONG Length;
-    ULONG Protection;
-    FAST_MUTEX Lock;
-    ULONG ReferenceCount;
-    SECTION_PAGE_DIRECTORY PageDirectory;
-    ULONG Flags;
-    ULONG Characteristics;
-    BOOLEAN WriteCopy;
+  LONGLONG FileOffset;		/* start offset into the file for image sections */		     
+  ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
+  ULONG RawLength;		/* length of the segment which is part of the mapped file */
+  ULONG Length;			/* absolute length of the segment */
+  ULONG Protection;
+  FAST_MUTEX Lock;		/* lock which protects the page directory */
+  ULONG ReferenceCount;
+  SECTION_PAGE_DIRECTORY PageDirectory;
+  ULONG Flags;
+  ULONG Characteristics;
+  BOOLEAN WriteCopy;
+  LIST_ENTRY ListEntry;
+  ULONG BytesPerSector;
+  PFILE_OBJECT FileObject;
+
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-    ULONG_PTR ImageBase;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG_PTR EntryPoint;
-    ULONG Subsystem;
-    ULONG ImageCharacteristics;
-    USHORT MinorSubsystemVersion;
-    USHORT MajorSubsystemVersion;
-    USHORT Machine;
-    BOOLEAN Executable;
-    ULONG NrSegments;
-    PMM_SECTION_SEGMENT Segments;
+  ULONG_PTR ImageBase;
+  ULONG_PTR StackReserve;
+  ULONG_PTR StackCommit;
+  ULONG_PTR EntryPoint;
+  ULONG Subsystem;
+  ULONG ImageCharacteristics;
+  USHORT MinorSubsystemVersion;
+  USHORT MajorSubsystemVersion;
+  USHORT Machine;
+  BOOLEAN Executable;
+  ULONG NrSegments;
+  ULONG RefCount;
+  LIST_ENTRY ListEntry;
+  PFILE_OBJECT FileObject;
+  ULONG BytesPerSector;
+  PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
 typedef struct _SECTION_OBJECT
@@ -207,34 +215,37 @@ typedef struct _SECTION_OBJECT
     };
 } SECTION_OBJECT, *PSECTION_OBJECT;
 
+typedef struct
+{
+   SECTION_OBJECT* Section;
+   ULONG ViewOffset;
+   LIST_ENTRY ViewListEntry;
+   PMM_SECTION_SEGMENT Segment;
+// BOOLEAN WriteCopyView;
+   LIST_ENTRY RegionListHead;
+} SECTION_DATA, *PSECTION_DATA;
+  
 typedef struct _MEMORY_AREA
 {
-    PVOID StartingAddress;
-    PVOID EndingAddress;
-    struct _MEMORY_AREA *Parent;
-    struct _MEMORY_AREA *LeftChild;
-    struct _MEMORY_AREA *RightChild;
+  PVOID StartingAddress;
+  PVOID EndingAddress;
+  struct _MEMORY_AREA *Parent;
+  struct _MEMORY_AREA *LeftChild;
+  struct _MEMORY_AREA *RightChild;
     ULONG Type;
     ULONG Protect;
     ULONG Flags;
     ULONG LockCount;
     BOOLEAN DeleteInProgress;
-    ULONG PageOpCount;
-    union
+	    ULONG PageOpCount;
+  union
+  {
+    SECTION_DATA SectionData;
+    struct
     {
-        struct
-        {
-            SECTION_OBJECT* Section;
-            ULONG ViewOffset;
-            PMM_SECTION_SEGMENT Segment;
-            BOOLEAN WriteCopyView;
-            LIST_ENTRY RegionListHead;
-        } SectionData;
-        struct
-        {
-            LIST_ENTRY RegionListHead;
-        } VirtualMemoryData;
-    } Data;
+      LIST_ENTRY RegionListHead;
+    } VirtualMemoryData;
+  } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
 #ifndef _MMTYPES_H

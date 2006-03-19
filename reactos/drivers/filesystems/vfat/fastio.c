@@ -4,6 +4,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PROGRAMMER:       Herve Poussineau (hpoussin@reactos.org)
+ *                   Hartmut Birr
  */
 
 #define NDEBUG
