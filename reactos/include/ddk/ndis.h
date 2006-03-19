@@ -4127,12 +4127,6 @@ typedef struct _NDIS_INTERRUPT {
 } NDIS_INTERRUPT, *PNDIS_INTERRUPT;
 
 
-typedef struct _MAP_REGISTER_ENTRY {
-	PVOID  MapRegister;
-	BOOLEAN  WriteToDevice;
-} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
-
-
 typedef enum _NDIS_WORK_ITEM_TYPE {
   NdisWorkItemRequest,
   NdisWorkItemSend,

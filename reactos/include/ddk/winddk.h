@@ -201,6 +201,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define ZwCurrentProcess() NtCurrentProcess()         
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 #define ZwCurrentThread() NtCurrentThread()      
+#define KIP0PCRADDRESS                      0xffdff000
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
@@ -4118,32 +4119,6 @@ typedef struct _RTL_BITMAP_RUN {
     ULONG  StartingIndex;
     ULONG  NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
-
-typedef struct _RTL_RANGE_LIST
-{
-    LIST_ENTRY ListHead;
-    ULONG Flags;  /* RTL_RANGE_LIST_... flags */
-    ULONG Count;
-    ULONG Stamp;
-} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
-
-typedef struct _RTL_RANGE
-{
-    ULONGLONG Start;
-    ULONGLONG End;
-    PVOID UserData;
-    PVOID Owner;
-    UCHAR Attributes;
-    UCHAR Flags;  /* RTL_RANGE_... flags */
-} RTL_RANGE, *PRTL_RANGE;
-
-typedef struct _RANGE_LIST_ITERATOR
-{
-    PLIST_ENTRY RangeListHead;
-    PLIST_ENTRY MergedHead;
-    PVOID Current;
-    ULONG Stamp;
-} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef BOOLEAN
 (NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
@@ -10475,6 +10450,8 @@ extern BOOLEAN KdDebuggerEnabled;
 /* Available as intrinsics on MSVC */
 static __inline void _disable(void) {__asm__("cli\n\t");}
 static __inline void _enable(void)  {__asm__("sti\n\t");}
+static __inline __int64 __readcr3(void) {__asm__("mov %cr3, %eax\n\t");}
+static __inline __int64 __readcr4(void) {__asm__("mov %cr4, %eax\n\t");}
 
 #ifdef __cplusplus
 }
