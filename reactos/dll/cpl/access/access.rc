@@ -13,5 +13,6 @@
 #include "Hu.rc"
 #include "Nl.rc"
 #include "Pl.rc"
+#include "Ru.rc"
 #include "Fr.rc"
 #include "Es.rc"
