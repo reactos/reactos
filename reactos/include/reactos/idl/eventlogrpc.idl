@@ -15,233 +15,223 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
- 
+
+#ifdef __midl
+
 [
 	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
-	version(0.0),
-	pointer_default(unique),
-	explicit_handle
+    version(0.0),
+    pointer_default(unique)
 ]
 
 interface eventlog
 {
-	/*
+	cpp_quote("#define RPC_ENABLED")
 	cpp_quote("#if 0")
 	typedef [handle, unique] wchar_t *LPWSTR;
 	typedef [handle, unique] char *LPSTR;
-	cpp_quote("#endif")
-	typedef [context_handle] void *LOGHANDLE;
-	typedef LOGHANDLE *PLOGHANDLE;
 	typedef unsigned int NTSTATUS;
-
+	
 	typedef struct _UNICODE_STRING {
 		unsigned short Length;
 		unsigned short MaximumLength;
-		[size_is(MaximumLength)] wchar_t *Buffer;
+		[size_is(MaximumLength/2), unique] wchar_t *Buffer;
 	} UNICODE_STRING, *PUNICODE_STRING;
 
 	typedef struct _ANSI_STRING {
-		unsigned short Length;
-		unsigned short MaximumLength;
-		[size_is(MaximumLength)] char *Buffer;
+	    unsigned short Length;
+	    unsigned short MaximumLength;
+	    [size_is(MaximumLength), unique] char *Buffer;
 	} ANSI_STRING, *PANSI_STRING;
-	*/
-	
-	#define LPWSTR wchar_t*
-	#define LPSTR char*
-	#define LOGHANDLE unsigned int
-	#define PLOGHANDLE unsigned int*
-	#define NTSTATUS long
-	
-	/* Function 0 */
-	NTSTATUS EventLogClearW(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in,string] wchar_t *BackupName);
+	cpp_quote("#endif")
 
-	/* Function 1 */
-	NTSTATUS EventLogBackupW(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in, string] wchar_t *FileName);
-	
-	/* Function 2 */
-	NTSTATUS EventLogClose(
-		handle_t BindingHandle,
-		[in,out] PLOGHANDLE Handle);   
+	typedef [context_handle] struct _LOGHANDLE {
+		int pos;
+	} *LOGHANDLE;
+	typedef LOGHANDLE *PLOGHANDLE;
 
-	/* Function 3 */
-	NTSTATUS EventLogUnregSrc(
-		handle_t BindingHandle,
+	/* Function 0x00 */
+	NTSTATUS ElfrClearELFW(
+		[in] LOGHANDLE Handle,
+		[in] PUNICODE_STRING BackupName);
+
+	/* Function 0x01 */
+	NTSTATUS ElfrBackupELFW(
+		[in] LOGHANDLE Handle,
+		[in] PUNICODE_STRING BackupName);
+
+	/* Function 0x02 */
+	NTSTATUS ElfrCloseEL(
 		[in,out] PLOGHANDLE Handle);
 
-	/* Function 4 */
-	NTSTATUS EventLogRecordsNumber(
-		handle_t BindingHandle,
+	/* Function 0x03 */
+	NTSTATUS ElfrDeregisterEventSource(
+		[in,out] PLOGHANDLE Handle);
+
+	/* Function 0x04 */
+	NTSTATUS ElfrNumberOfRecords(
 		[in] LOGHANDLE Handle,
-		[out] unsigned long *RecordsNumber);
+		[out] long * NumberOfRecords);
 
-	/* Function 5 */
-	NTSTATUS EventLogGetOldestRec(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[out] unsigned long *OldestRecNumber);
+	/* Function 0x05 */
+	NTSTATUS ElfrOldestRecord(
+		[in] LOGHANDLE LogHandle,
+		[out] long * OldestRecNumber);
 
-	/* Function 6 */
-	NTSTATUS EventLogChangeNotify( //FIXME
-		handle_t BindingHandle); 
+	/* Function 0x06 */
+	NTSTATUS ElfrChangeNotify(); // FIXME
 
-	/* Function 7 */
-	NTSTATUS EventLogOpenW(
-		handle_t BindingHandle,
-		[in, string] LPWSTR ServerName,
-		[in, string] wchar_t *FileName, 
-		[in, string] wchar_t *NullStr, 
-		[in] unsigned long MajorVer,
-		[in] unsigned long MinorVer,
+	/* Function 0x07 */
+	NTSTATUS ElfrOpenELW(
+		[in, unique] LPWSTR ServerName,
+		[in] PUNICODE_STRING FileName, 
+		[in] PUNICODE_STRING NullStr, 
+		[in] long MajorVer,
+		[in] long MinorVer,
 		[out] PLOGHANDLE Handle );
-		
-	/* Function 8 */
-	NTSTATUS EventLogRegSrcW(
-		handle_t BindingHandle,
-		[in,string] LPWSTR ServerName,
-		[in,string] wchar_t *LogName, 
-		[in,string] wchar_t *NullStr, 
-		[in] unsigned long MajorVer,
-		[in] unsigned long MinorVer,
-		[out] PLOGHANDLE Handle);
-		
-	/* Function 9 */
-	NTSTATUS EventLogOpenBackupW(
-		handle_t BindingHandle,
-		[in,string] LPWSTR ServerName,
-		[in,string] wchar_t *BackupName, 
-		[in] unsigned long MajorVer,
-		[in] unsigned long MinorVer,
+
+	/* Function 0x08 */
+	NTSTATUS ElfrRegisterEventSourceW(
+		[in, unique] LPWSTR ServerName,
+		[in] PUNICODE_STRING LogName, 
+		[in] PUNICODE_STRING NullStr, 
+		[in] long MajorVer,
+		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
 
-	/* Function 10 */
-	NTSTATUS EventLogReadW(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in] unsigned long Flags,
-		[in] unsigned long Offset,
-		[in] unsigned long BufSize,
-		[out,size_is(BufSize)] unsigned char *Buffer,
-		[out] unsigned long *BytesRead,
-		[out] unsigned long *BytesNeeded);
-
-	/* Function 11 */
-	NTSTATUS EventLogReportEventW(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in] unsigned long Time,
-		[in] unsigned short Type,
-		[in] unsigned short Category,
-		[in] unsigned long ID,
-		[in] unsigned short NumStrings,
-		[in] unsigned long DataSize,
-		[in,string] wchar_t *ComputerName,
-		[in] unsigned char *SID,
-		[in,string] wchar_t *Strings,
-		[in,size_is(DataSize)] unsigned char *Data,
-		[in] unsigned short Flags,
-		[out] unsigned long *unknown1,
-		[out] unsigned long *unknown2);
-		
-	/* Function 12 */
-	NTSTATUS EventLogClearA(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in,string] char *BackupName);
-
-	/* Function 13 */
-	NTSTATUS EventLogBackupA(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in,string] char *BackupName);
-
-	/* Function 14 */
-	NTSTATUS EventLogOpenA(
-		handle_t BindingHandle,
-		[in,string] LPSTR ServerName,
-		[in,string] char *LogName, 
-		[in,string] char *NullStr, 
-		[in] unsigned long MajorVer,
-		[in] unsigned long MinorVer,
+	/* Function 0x09 */
+	NTSTATUS ElfrOpenBELW(
+		[in, unique] LPWSTR ServerName,
+		[in] PUNICODE_STRING BackupName, 
+		[in] long MajorVer,
+		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
 
-	/* Function 15 */
-	NTSTATUS EventLogRegSrcA(
-		handle_t BindingHandle,
-		[in,string] LPSTR ServerName,
-		[in,string] char *LogName, 
-		[in,string] char *NullStr,
-		[in] unsigned long MajorVer,
-		[in] unsigned long MinorVer,
+	/* Function 0x0a */
+	NTSTATUS ElfrReadELW(
+		[in] LOGHANDLE Handle,
+		[in] long Flags,
+		[in] long Offset,
+		[in] long BufSize,
+		[out,size_is(BufSize)] char * Buffer,
+		[out] long * BytesRead,
+		[out] long * BytesNeeded);
+
+	/* Function 0x0b */
+	NTSTATUS ElfrReportEventW(
+		[in] LOGHANDLE Handle,
+		[in] long Time,
+		[in] short Type,
+		[in] short Category,
+		[in] long ID,
+		[in] short NumStrings,
+		[in] long DataSize,
+		[in] PUNICODE_STRING ComputerName,
+		[in, unique] char *SID,
+		[in, size_is(NumStrings), unique] PUNICODE_STRING Strings[*],
+		[in, size_is(DataSize), unique] unsigned char * Data,
+		[in] short Flags,
+		[in,out,unique] long * unknown1,
+		[in,out,unique] long * unknown2);
+
+	/* Function 0x0c */
+	NTSTATUS ElfrClearELFA(
+		[in] LOGHANDLE Handle,
+		[in,unique] PANSI_STRING BackupName);
+
+	/* Function 0x0d */
+	NTSTATUS ElfrBackupELFA(
+		[in] LOGHANDLE Handle,
+		[in] PANSI_STRING BackupName);
+
+	/* Function 0x0e */
+	NTSTATUS ElfrOpenELA(
+		[in, unique] LPSTR ServerName,
+		[in] PANSI_STRING LogName, 
+		[in] PANSI_STRING NullStr, 
+		[in] long MajorVer,
+		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
 
-	/* Function 16 */
-	NTSTATUS EventLogOpenBackupA(
-		handle_t BindingHandle,
-		[in,string] LPSTR ServerName,
-		[in,string] char *BackupName, 
-		[in] unsigned long MajorVer,
-		[in] unsigned long MinorVer,
+	/* Function 0x0f */
+	NTSTATUS ElfrRegisterEventSourceA(
+		[in, unique] LPSTR ServerName,
+		[in] PANSI_STRING LogName, 
+		[in] PANSI_STRING NullStr,
+		[in] long MajorVer,
+		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
 
-	/* Function 17 */
-	NTSTATUS EventLogReadA(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in] unsigned long Flags,
-		[in] unsigned long Offset,
-		[in] unsigned long BufSize,
-		[out,size_is(BufSize)] unsigned char *Buffer,
-		[out] unsigned long *BytesRead,
-		[out] unsigned long *BytesNeeded);
+	/* Function 0x10 */
+	NTSTATUS ElfrOpenBELA(
+		[in, unique] LPSTR ServerName,
+		[in] PANSI_STRING BakckupName, 
+		[in] long MajorVer,
+		[in] long MinorVer,
+		[out] PLOGHANDLE Handle);
 
-	/* Function 18 */
-	NTSTATUS EventLogReportEventA(
-		handle_t BindingHandle,
+	/* Function 0x11 */
+	NTSTATUS ElfrReadELA(
 		[in] LOGHANDLE Handle,
-		[in] unsigned long Time,
-		[in] unsigned short Type,
-		[in] unsigned short Category,
-		[in] unsigned long ID,
-		[in] unsigned short NumStrings,
-		[in] unsigned long DataSize,
-		[in,string] char *ComputerName,
-		[in] unsigned char *SID,
-		[in,string] char* Strings,
-		[in,size_is(DataSize)] unsigned char *Data,
-		[in] unsigned short Flags,
-		[out] unsigned long * unknown1,
-		[out] unsigned long * unknown2);
-		
-	/* Function 19 */
-	NTSTATUS EventLogRegisterClusterSvc( //FIXME
-		handle_t BindingHandle); 
+		[in] long Flags,
+		[in] long Offset,
+		[in] long BufSize,
+		[out,size_is(BufSize)] unsigned char * Buffer,
+		[out] long *BytesRead,
+		[out] long *BytesNeeded);
+
+	/* Function 0x12 */
+	NTSTATUS ElfrReportEventA(
+		[in] LOGHANDLE Handle,
+		[in] long Time,
+		[in] short Type,
+		[in] short Category,
+		[in] long ID,
+		[in] short NumStrings,
+		[in] long DataSize,
+		[in] PANSI_STRING ComputerName,
+		[in, unique] unsigned char * SID,
+		[in, size_is(NumStrings), unique] PANSI_STRING Strings[*],
+		[in, size_is(DataSize), unique] unsigned char *Data,
+		[in] short Flags,
+		[in,out,unique] long * unknown1,
+		[in,out,unique] long * unknown2);
+
+	/* Function 0x13 */
+	NTSTATUS ElfrRegisterClusterSvc(); //FIXME
+
+	/* Function 0x14 */
+	NTSTATUS ElfrDeregisterClusterSvc(); //FIXME
+
+	/* Function 0x15 */
+	NTSTATUS ElfrWriteClusterEvents(); //FIXME
+
+	/* Function 0x16 */
+	NTSTATUS ElfrGetLogInformation(
+		[in] LOGHANDLE Handle,
+		[in] long InfoLevel,
+		[out, size_is(BufSize)] char *Buffer,
+		[in] long BufSize,
+		[out] long *BytesNeeded);
 	
-	/* Function 20 */
-	NTSTATUS EventLogDeregisterClusterSvc( //FIXME
-		handle_t BindingHandle);
+	/* Function 0x17 */
+	NTSTATUS ElfrFlushEL(
+		[in] LOGHANDLE Handle); 
 
-	/* Function 21 */
-	NTSTATUS EventLogWriteClusterEvents( //FIXME
-		handle_t BindingHandle); 
-
-	/* Function 22 */
-	NTSTATUS EventLogGetInfo(
-		handle_t BindingHandle,
-		[in] LOGHANDLE Handle,
-		[in] unsigned long InfoLevel,
-		[out,size_is(BufSize)] unsigned char *Buffer,
-		[in] unsigned long BufSize,
-		[out] unsigned long *BytesNeeded);
-	
-	/* Function 23 */
-	NTSTATUS EventLogFlush( //FIXME
-		handle_t BindingHandle); 
 }
 
+#else
+
+
+[
+	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
+    version(0.0),
+    explicit_handle
+]
+
+interface eventlog
+{
+	void func(handle_t h);
+}
+
+#endif // __midl

@@ -13,8 +13,10 @@
 [
   uuid(12345778-1234-abcd-ef00-0123456789ab),
   version(0.0),
-  pointer_default(unique),
-  explicit_handle
+  pointer_default(unique)
+  #ifndef __midl
+  ,explicit_handle
+  #endif
 ]
 interface lsarpc
 {

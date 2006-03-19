@@ -7,6 +7,7 @@
  */
  
 #include "eventlog.h"
+#ifdef RPC_ENABLED
 
 DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
 {
@@ -41,63 +42,56 @@ DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
 }
 
 /* Function 0 */
-NTSTATUS EventLogClearW(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	wchar_t *BackupName)
+NTSTATUS ElfrClearELFW( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ PUNICODE_STRING BackupName)
 {
-    DPRINT("EventLogClearW UNIMPLEMENTED\n");
+   DPRINT("UNIMPLEMENTED");
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 /* Function 1 */
-NTSTATUS EventLogBackupW(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	wchar_t *FileName)
+NTSTATUS ElfrBackupELFW( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ PUNICODE_STRING BackupName)
 {
-    DPRINT("EventLogBackupW UNIMPLEMENTED\n");
+    DPRINT("UNIMPLEMENTED");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 	
 /* Function 2 */
-NTSTATUS EventLogClose(
-	handle_t BindingHandle,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrCloseEL( 
+    /* [out][in] */ PLOGHANDLE Handle)
 {
-    DPRINT("EventLogClose UNIMPLEMENTED\n");
+    DPRINT("UNIMPLEMENTED");
     return STATUS_NOT_IMPLEMENTED;
 }
    
 
 /* Function 3 */
-NTSTATUS EventLogUnregSrc(
-	handle_t BindingHandle,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrDeregisterEventSource( 
+    /* [out][in] */ PLOGHANDLE Handle)
 {
-    DPRINT("EventLogUnregSrc UNIMPLEMENTED\n");
+    DPRINT("UNIMPLEMENTED");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
 /* Function 4 */
-NTSTATUS EventLogRecordsNumber(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long *RecordsNumber)
+NTSTATUS ElfrNumberOfRecords( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [out] */ long __RPC_FAR *NumberOfRecords)
 {
-    DPRINT("EventLogRecordsNumber UNIMPLEMENTED\n");
+    DPRINT("UNIMPLEMENTED");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
 /* Function 5 */
-NTSTATUS EventLogGetOldestRec(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long *OldestRecNumber)
+NTSTATUS ElfrOldestRecord( 
+    /* [in] */ LOGHANDLE LogHandle,
+    /* [out] */ long __RPC_FAR *OldestRecNumber)
 {
     DPRINT("EventLogGetOldestRec UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -105,8 +99,7 @@ NTSTATUS EventLogGetOldestRec(
 
 
 /* Function 6 */
-NTSTATUS EventLogChangeNotify( 
-	handle_t BindingHandle)
+NTSTATUS ElfrChangeNotify( void)
 {
     DPRINT("EventLogChangeNotify UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -114,14 +107,13 @@ NTSTATUS EventLogChangeNotify(
 
 
 /* Function 7 */
-NTSTATUS EventLogOpenW(
-	handle_t BindingHandle,
-	LPWSTR ServerName,
-	wchar_t *LogName, 
-	wchar_t *NullStr, 
-	unsigned long MajorVer,
-	unsigned long MinorVer,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrOpenELW( 
+    /* [unique][in] */ LPWSTR ServerName,
+    /* [in] */ PUNICODE_STRING FileName,
+    /* [in] */ PUNICODE_STRING NullStr,
+    /* [in] */ long MajorVer,
+    /* [in] */ long MinorVer,
+    /* [out] */ PLOGHANDLE Handle)
 {
     DPRINT("EventLogOpenW UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -129,14 +121,13 @@ NTSTATUS EventLogOpenW(
 
 		
 /* Function 8 */
-NTSTATUS EventLogRegSrcW(
-	handle_t BindingHandle,
-	LPWSTR ServerName,
-	wchar_t *LogName, 
-	wchar_t *NullStr, 
-	unsigned long MajorVer,
-	unsigned long MinorVer,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrRegisterEventSourceA( 
+    /* [unique][in] */ LPSTR ServerName,
+    /* [in] */ PANSI_STRING LogName,
+    /* [in] */ PANSI_STRING NullStr,
+    /* [in] */ long MajorVer,
+    /* [in] */ long MinorVer,
+    /* [out] */ PLOGHANDLE Handle)
 {
     DPRINT("EventLogRegSrcW UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -144,13 +135,12 @@ NTSTATUS EventLogRegSrcW(
 
 		
 /* Function 9 */
-NTSTATUS EventLogOpenBackupW(
-	handle_t BindingHandle,
-	LPWSTR ServerName,
-	wchar_t *BackupName, 
-	unsigned long MajorVer,
-	unsigned long MinorVer,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrOpenBELW( 
+    /* [unique][in] */ LPWSTR ServerName,
+    /* [in] */ PUNICODE_STRING BackupName,
+    /* [in] */ long MajorVer,
+    /* [in] */ long MinorVer,
+    /* [out] */ PLOGHANDLE Handle)
 {
     DPRINT("EventLogOpenBackupW UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -158,15 +148,14 @@ NTSTATUS EventLogOpenBackupW(
 
 
 /* Function 10 */
-NTSTATUS EventLogReadW(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long Flags,
-	unsigned long Offset,
-	unsigned long BufSize,
-	unsigned char *Buffer,
-	unsigned long *BytesRead,
-	unsigned long *BytesNeeded)
+NTSTATUS ElfrReadELW( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ long Flags,
+    /* [in] */ long Offset,
+    /* [in] */ long BufSize,
+    /* [size_is][out] */ unsigned char __RPC_FAR *Buffer,
+    /* [out] */ long __RPC_FAR *BytesRead,
+    /* [out] */ long __RPC_FAR *BytesNeeded)
 {
     DPRINT("EventLogReadW UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -174,22 +163,21 @@ NTSTATUS EventLogReadW(
 
 
 /* Function 11 */
-NTSTATUS EventLogReportEventW(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long Time,
-	unsigned short Type,
-	unsigned short Category,
-	unsigned long ID,
-	unsigned short NumStrings,
-	unsigned long DataSize,
-	wchar_t *ComputerName,
-	unsigned char *SID,
-	wchar_t *Strings,
-	unsigned char *Data,
-	unsigned short Flags,
-	unsigned long * unknown1,
-	unsigned long * unknown2)
+NTSTATUS ElfrReportEventW( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ long Time,
+    /* [in] */ short Type,
+    /* [in] */ short Category,
+    /* [in] */ long ID,
+    /* [in] */ short NumStrings,
+    /* [in] */ long DataSize,
+    /* [in] */ PUNICODE_STRING ComputerName,
+    /* [unique][in] */ unsigned char __RPC_FAR *SID,
+    /* [unique][size_is][in] */ PUNICODE_STRING __RPC_FAR Strings[  ],
+    /* [unique][size_is][in] */ unsigned char __RPC_FAR *Data,
+    /* [in] */ short Flags,
+    /* [unique][out][in] */ long __RPC_FAR *unknown1,
+    /* [unique][out][in] */ long __RPC_FAR *unknown2)
 {
     DPRINT("EventLogReportEventW UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -197,10 +185,9 @@ NTSTATUS EventLogReportEventW(
 
 		
 /* Function 12 */
-NTSTATUS EventLogClearA(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	char *BackupName)
+NTSTATUS ElfrClearELFA( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [unique][in] */ PANSI_STRING BackupName)
 {
     DPRINT("EventLogClearA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -208,10 +195,9 @@ NTSTATUS EventLogClearA(
 
 
 /* Function 13 */
-NTSTATUS EventLogBackupA(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	char *BackupName)
+NTSTATUS ElfrBackupELFA( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ PANSI_STRING BackupName)
 {
     DPRINT("EventLogBackupA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -219,16 +205,15 @@ NTSTATUS EventLogBackupA(
 
 
 /* Function 14 */
-NTSTATUS EventLogOpenA(
-	handle_t BindingHandle,
-	LPSTR ServerName,
-	char *LogName, 
-	char *NullStr, 
-	unsigned long MajorVer,
-	unsigned long MinorVer,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrOpenELA( 
+    /* [unique][in] */ LPSTR ServerName,
+    /* [in] */ PANSI_STRING LogName,
+    /* [in] */ PANSI_STRING NullStr,
+    /* [in] */ long MajorVer,
+    /* [in] */ long MinorVer,
+    /* [out] */ PLOGHANDLE Handle)
 {
-	UNICODE_STRING logname = {0}, servername={0};
+	UNICODE_STRING logname = {0}, servername={0}, StrNull = {0};
 	NTSTATUS status;
 
    	if(LogName && !RtlCreateUnicodeStringFromAsciiz(&logname, LogName))
@@ -243,10 +228,10 @@ NTSTATUS EventLogOpenA(
 		return STATUS_NO_MEMORY;
 	}
 
-	status = EventLogOpenW(BindingHandle,
+	status = EventLogOpenW(
 		servername.Buffer,
 		logname.Buffer,
-		L"",
+		StrNull,
 		MajorVer,
 		MinorVer,
 		Handle);
@@ -259,14 +244,13 @@ NTSTATUS EventLogOpenA(
 
 
 /* Function 15 */
-NTSTATUS EventLogRegSrcA(
-	handle_t BindingHandle,
-	LPSTR ServerName,
-	char *LogName, 
-	char *NullStr,
-	unsigned long MajorVer,
-	unsigned long MinorVer,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrRegisterEventSourceA( 
+    /* [unique][in] */ LPSTR ServerName,
+    /* [in] */ PANSI_STRING LogName,
+    /* [in] */ PANSI_STRING NullStr,
+    /* [in] */ long MajorVer,
+    /* [in] */ long MinorVer,
+    /* [out] */ PLOGHANDLE Handle)
 {
     DPRINT("EventLogRegSrcA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -274,13 +258,12 @@ NTSTATUS EventLogRegSrcA(
 
 
 /* Function 16 */
-NTSTATUS EventLogOpenBackupA(
-	handle_t BindingHandle,
-	LPSTR ServerName,
-	char *BackupName, 
-	unsigned long MajorVer,
-	unsigned long MinorVer,
-	PLOGHANDLE Handle)
+NTSTATUS ElfrOpenBELA( 
+    /* [unique][in] */ LPSTR ServerName,
+    /* [in] */ PANSI_STRING BakckupName,
+    /* [in] */ long MajorVer,
+    /* [in] */ long MinorVer,
+    /* [out] */ PLOGHANDLE Handle)
 {
     DPRINT("EventLogOpenBackupA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -288,15 +271,14 @@ NTSTATUS EventLogOpenBackupA(
 
 
 /* Function 17 */
-NTSTATUS EventLogReadA(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long Flags,
-	unsigned long Offset,
-	unsigned long BufSize,
-	unsigned char *Buffer,
-	unsigned long *BytesRead,
-	unsigned long *BytesNeeded)
+NTSTATUS ElfrReadELA( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ long Flags,
+    /* [in] */ long Offset,
+    /* [in] */ long BufSize,
+    /* [size_is][out] */ unsigned char __RPC_FAR *Buffer,
+    /* [out] */ long __RPC_FAR *BytesRead,
+    /* [out] */ long __RPC_FAR *BytesNeeded)
 {
     DPRINT("EventLogReadA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -304,22 +286,21 @@ NTSTATUS EventLogReadA(
 
 
 /* Function 18 */
-NTSTATUS EventLogReportEventA(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long Time,
-	unsigned short Type,
-	unsigned short Category,
-	unsigned long ID,
-	unsigned short NumStrings,
-	unsigned long DataSize,
-	char *ComputerName,
-	unsigned char *SID,
-	char* Strings,
-	unsigned char *Data,
-	unsigned short Flags,
-	unsigned long * unknown1,
-	unsigned long * unknown2)
+NTSTATUS ElfrReportEventA( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ long Time,
+    /* [in] */ short Type,
+    /* [in] */ short Category,
+    /* [in] */ long ID,
+    /* [in] */ short NumStrings,
+    /* [in] */ long DataSize,
+    /* [in] */ PANSI_STRING ComputerName,
+    /* [unique][in] */ unsigned char __RPC_FAR *SID,
+    /* [unique][size_is][in] */ PANSI_STRING __RPC_FAR Strings[  ],
+    /* [unique][size_is][in] */ unsigned char __RPC_FAR *Data,
+    /* [in] */ short Flags,
+    /* [unique][out][in] */ long __RPC_FAR *unknown1,
+    /* [unique][out][in] */ long __RPC_FAR *unknown2)
 {
     DPRINT("EventLogReportEventA UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -327,8 +308,7 @@ NTSTATUS EventLogReportEventA(
 
 
 /* Function 19 */
-NTSTATUS EventLogRegisterClusterSvc( 
-	handle_t BindingHandle)
+NTSTATUS ElfrRegisterClusterSvc( void)
 {
     DPRINT("EventLogRegisterClusterSvc UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -336,8 +316,7 @@ NTSTATUS EventLogRegisterClusterSvc(
  
 	
 /* Function 20 */
-NTSTATUS EventLogDeregisterClusterSvc( 
-	handle_t BindingHandle)
+NTSTATUS ElfrDeregisterClusterSvc( void)
 {
     DPRINT("EventLogDeregisterClusterSvc UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -345,8 +324,7 @@ NTSTATUS EventLogDeregisterClusterSvc(
 
 
 /* Function 21 */
-NTSTATUS EventLogWriteClusterEvents( 
-	handle_t BindingHandle)
+NTSTATUS ElfrWriteClusterEvents( void)
 {
     DPRINT("EventLogWriteClusterEvents UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -354,13 +332,12 @@ NTSTATUS EventLogWriteClusterEvents(
 
 
 /* Function 22 */
-NTSTATUS EventLogGetInfo(
-	handle_t BindingHandle,
-	LOGHANDLE Handle,
-	unsigned long InfoLevel,
-	unsigned char *Buffer,
-	unsigned long BufSize,
-	unsigned long *BytesNeeded)
+NTSTATUS ElfrGetLogInformation( 
+    /* [in] */ LOGHANDLE Handle,
+    /* [in] */ long InfoLevel,
+    /* [size_is][out] */ unsigned char __RPC_FAR *Buffer,
+    /* [in] */ long BufSize,
+    /* [out] */ long __RPC_FAR *BytesNeeded)
 {
     DPRINT("EventLogGetInfo UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
@@ -368,14 +345,16 @@ NTSTATUS EventLogGetInfo(
 
 
 /* Function 23 */
-NTSTATUS EventLogFlush( 
-	handle_t BindingHandle)
+NTSTATUS ElfrFlushEL( 
+    /* [in] */ LOGHANDLE Handle)
 {
     DbgPrint("EventLogFlush UNIMPLEMENTED\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
+#else
+void func(handle_t h){}
+#endif // RPC_ENABLED
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
@@ -387,3 +366,5 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
     HeapFree(GetProcessHeap(), 0, ptr);
 }
+
+

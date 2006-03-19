@@ -3977,6 +3977,17 @@ RtlSubAuthoritySid (
     IN ULONG   SubAuthority
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToMultiByteN(
+    OUT PCHAR MultiByteString,
+    IN ULONG MaxBytesInMultiByteString,
+    OUT PULONG BytesInMultiByteString OPTIONAL,
+    IN PWCH UnicodeString,
+    IN ULONG BytesInUnicodeString
+);
+
 /* RTL Splay Tree Functions */
 NTSYSAPI
 PRTL_SPLAY_LINKS

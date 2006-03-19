@@ -1065,6 +1065,17 @@ typedef struct _KDPC {
   PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
+typedef PVOID PKIPI_CONTEXT;
+
+typedef
+VOID
+(*PKIPI_WORKER)(
+    IN PKIPI_CONTEXT PacketContext,
+    IN PVOID Parameter1,
+    IN PVOID Parameter2,
+    IN PVOID Parameter3
+);
+
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
   PDRIVER_CONTROL  DeviceRoutine;
@@ -1712,6 +1723,13 @@ typedef struct _POOLED_USAGE_AND_LIMITS
     SIZE_T PagefileLimit;
 } POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
 
+typedef enum _KINTERRUPT_POLARITY
+{
+    InterruptPolarityUnknown,
+    InterruptActiveHigh,
+    InterruptActiveLow
+} KINTERRUPT_POLARITY, *PKINTERRUPT_POLARITY;
+
 /* IO_RESOURCE_DESCRIPTOR.Option */
 
 #define IO_RESOURCE_PREFERRED             0x01
@@ -2085,6 +2103,40 @@ typedef struct _MDL {
   MDL_SYSTEM_VA               | \
   MDL_IO_SPACE)
 
+typedef struct _DRIVER_EXTENSION {
+  struct _DRIVER_OBJECT  *DriverObject;
+  PDRIVER_ADD_DEVICE  AddDevice;
+  ULONG  Count;
+  UNICODE_STRING  ServiceKeyName;
+} DRIVER_EXTENSION, *PDRIVER_EXTENSION;
+
+#define DRVO_UNLOAD_INVOKED               0x00000001
+#define DRVO_LEGACY_DRIVER                0x00000002
+#define DRVO_BUILTIN_DRIVER               0x00000004
+#define DRVO_REINIT_REGISTERED            0x00000008
+#define DRVO_INITIALIZED                  0x00000010
+#define DRVO_BOOTREINIT_REGISTERED        0x00000020
+#define DRVO_LEGACY_RESOURCES             0x00000040
+
+typedef struct _DRIVER_OBJECT {
+  CSHORT  Type;
+  CSHORT  Size;
+  PDEVICE_OBJECT  DeviceObject;
+  ULONG  Flags;
+  PVOID  DriverStart;
+  ULONG  DriverSize;
+  PVOID  DriverSection;
+  PDRIVER_EXTENSION  DriverExtension;
+  UNICODE_STRING  DriverName;
+  PUNICODE_STRING  HardwareDatabase;
+  struct _FAST_IO_DISPATCH *FastIoDispatch;
+  PDRIVER_INITIALIZE  DriverInit;
+  PDRIVER_STARTIO  DriverStartIo;
+  PDRIVER_UNLOAD  DriverUnload;
+  PDRIVER_DISPATCH  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
+} DRIVER_OBJECT;
+typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
+
 typedef VOID
 (DDKAPI *PPUT_DMA_ADAPTER)(
   IN PDMA_ADAPTER  DmaAdapter);
@@ -2367,6 +2419,45 @@ typedef enum _HAL_SET_INFORMATION_CLASS {
   HalGenerateCmcInterrupt
 } HAL_SET_INFORMATION_CLASS, *PHAL_SET_INFORMATION_CLASS;
 
+typedef struct _MAP_REGISTER_ENTRY
+{
+    PVOID MapRegister;
+    BOOLEAN WriteToDevice;
+} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
+
+typedef struct
+{
+    UCHAR Type;
+    BOOLEAN Valid;
+    UCHAR Reserved[2];
+    PUCHAR TranslatedAddress;
+    ULONG Length;
+} DEBUG_DEVICE_ADDRESS, *PDEBUG_DEVICE_ADDRESS;
+
+typedef struct
+{
+    PHYSICAL_ADDRESS Start;
+    PHYSICAL_ADDRESS MaxEnd;
+    PVOID VirtualAddress;
+    ULONG Length;
+    BOOLEAN Cached;
+    BOOLEAN Aligned;
+} DEBUG_MEMORY_REQUIREMENTS, *PDEBUG_MEMORY_REQUIREMENTS;
+
+typedef struct
+{
+    ULONG Bus;
+    ULONG Slot;
+    USHORT VendorID;
+    USHORT DeviceID;
+    UCHAR BaseClass;
+    UCHAR SubClass;
+    UCHAR ProgIf;
+    BOOLEAN Initialized;
+    DEBUG_DEVICE_ADDRESS BaseAddress[6];
+    DEBUG_MEMORY_REQUIREMENTS Memory;
+} DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
+
 /* Function Type Defintions for Dispatch Functions */
 
 typedef VOID
@@ -2543,6 +2634,137 @@ typedef NTSTATUS
 typedef VOID
 (DDKAPI *pHalEndOfBoot)(
   VOID);
+
+typedef
+BOOLEAN
+(DDKAPI *pHalTranslateBusAddress)(
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+typedef
+NTSTATUS
+(DDKAPI *pHalAssignSlotResources)(
+    IN PUNICODE_STRING RegistryPath,
+    IN PUNICODE_STRING DriverClassName OPTIONAL,
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN INTERFACE_TYPE BusType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN OUT PCM_RESOURCE_LIST *AllocatedResources
+);
+
+typedef
+VOID
+(DDKAPI *pHalHaltSystem)(
+    VOID
+);
+
+typedef
+BOOLEAN
+(DDKAPI *pHalResetDisplay)(
+    VOID
+);
+
+typedef
+UCHAR
+(DDKAPI *pHalVectorToIDTEntry)(
+    ULONG Vector
+);
+
+typedef
+BOOLEAN
+(DDKAPI *pHalFindBusAddressTranslation)(
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress,
+    IN OUT PULONG_PTR Context,
+    IN BOOLEAN NextBus
+);
+
+typedef
+NTSTATUS
+(DDKAPI *pKdSetupPciDeviceForDebugging)(
+    IN PVOID LoaderBlock OPTIONAL,
+    IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
+);
+
+typedef
+NTSTATUS
+(DDKAPI *pKdReleasePciDeviceForDebugging)(
+    IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
+);
+
+typedef
+PVOID
+(DDKAPI *pKdGetAcpiTablePhase0)(
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN ULONG Signature
+);
+
+typedef
+VOID
+(DDKAPI *pKdCheckPowerButton)(
+    VOID
+);
+
+typedef
+ULONG
+(DDKAPI *pHalGetInterruptVector)(
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN ULONG BusInterruptLevel,
+    IN ULONG BusInterruptVector,
+    OUT PKIRQL Irql,
+    OUT PKAFFINITY Affinity
+);
+
+typedef
+NTSTATUS
+(DDKAPI *pHalGetVectorInput)(
+    IN ULONG Vector,
+    IN KAFFINITY Affinity,
+    OUT PULONG Input,
+    OUT PKINTERRUPT_POLARITY Polarity
+);
+
+typedef
+PVOID
+(DDKAPI *pKdMapPhysicalMemory64)(
+    IN PHYSICAL_ADDRESS PhysicalAddress,
+    IN ULONG NumberPages
+);
+
+typedef
+VOID
+(DDKAPI *pKdUnmapVirtualAddress)(
+    IN PVOID VirtualAddress,
+    IN ULONG NumberPages
+);
+
+typedef
+ULONG
+(DDKAPI *pKdGetPciDataByOffset)(
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    OUT PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+typedef
+ULONG
+(DDKAPI *pKdSetPciDataByOffset)(
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
 
 typedef BOOLEAN
 (DDKAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
@@ -2775,13 +2997,6 @@ typedef struct _DEVOBJ_EXTENSION
     USHORT Size;
     PDEVICE_OBJECT DeviceObject;
 } DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
-
-typedef struct _DRIVER_EXTENSION {
-  struct _DRIVER_OBJECT  *DriverObject;
-  PDRIVER_ADD_DEVICE  AddDevice;
-  ULONG  Count;
-  UNICODE_STRING  ServiceKeyName;
-} DRIVER_EXTENSION, *PDRIVER_EXTENSION;
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_CHECK_IF_POSSIBLE)(
@@ -3033,33 +3248,6 @@ typedef struct _FAST_IO_DISPATCH {
   PFAST_IO_ACQUIRE_FOR_CCFLUSH  AcquireForCcFlush;
   PFAST_IO_RELEASE_FOR_CCFLUSH  ReleaseForCcFlush;
 } FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
-
-#define DRVO_UNLOAD_INVOKED               0x00000001
-#define DRVO_LEGACY_DRIVER                0x00000002
-#define DRVO_BUILTIN_DRIVER               0x00000004
-#define DRVO_REINIT_REGISTERED            0x00000008
-#define DRVO_INITIALIZED                  0x00000010
-#define DRVO_BOOTREINIT_REGISTERED        0x00000020
-#define DRVO_LEGACY_RESOURCES             0x00000040
-
-typedef struct _DRIVER_OBJECT {
-  CSHORT  Type;
-  CSHORT  Size;
-  PDEVICE_OBJECT  DeviceObject;
-  ULONG  Flags;
-  PVOID  DriverStart;
-  ULONG  DriverSize;
-  PVOID  DriverSection;
-  PDRIVER_EXTENSION  DriverExtension;
-  UNICODE_STRING  DriverName;
-  PUNICODE_STRING  HardwareDatabase;
-  PFAST_IO_DISPATCH  FastIoDispatch;
-  PDRIVER_INITIALIZE  DriverInit;
-  PDRIVER_STARTIO  DriverStartIo;
-  PDRIVER_UNLOAD  DriverUnload;
-  PDRIVER_DISPATCH  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
-} DRIVER_OBJECT;
-typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
 
 typedef struct _SECTION_OBJECT_POINTERS {
   PVOID  DataSectionObject;
