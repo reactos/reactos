@@ -23,9 +23,8 @@
 
 HRESULT WINAPI StdProxy_Construct(REFIID riid,
 				  LPUNKNOWN pUnkOuter,
-				  PCInterfaceName name,
-				  CInterfaceProxyVtbl *vtbl,
-				  CInterfaceStubVtbl *svtbl,
+				  const ProxyFileInfo *ProxyInfo,
+				  int Index,
 				  LPPSFACTORYBUFFER pPSFactory,
 				  LPRPCPROXYBUFFER *ppProxy,
 				  LPVOID *ppvObj);
@@ -42,5 +41,7 @@ HRESULT WINAPI CStdStubBuffer_Construct(REFIID riid,
 					LPRPCSTUBBUFFER *ppStub);
 
 const MIDL_SERVER_INFO *CStdStubBuffer_GetServerInfo(IRpcStubBuffer *iface);
+
+const IRpcStubBufferVtbl CStdStubBuffer_Vtbl;
 
 #endif  /* __WINE_CPSF_H */

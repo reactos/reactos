@@ -303,7 +303,7 @@
 @ stub NdrRpcSsDisableAllocate
 @ stub NdrRpcSsEnableAllocate
 @ stdcall NdrSendReceive(ptr ptr)
-@ stub NdrServerCall2
+@ stdcall NdrServerCall2(ptr)
 @ stub NdrServerCall
 @ stdcall NdrServerContextMarshall(ptr ptr long)
 @ stdcall NdrServerContextNewMarshall(ptr ptr ptr ptr) # wxp
@@ -323,7 +323,7 @@
 @ stdcall NdrSimpleStructUnmarshall(ptr ptr ptr long)
 @ stdcall NdrSimpleTypeMarshall(ptr ptr long)
 @ stdcall NdrSimpleTypeUnmarshall(ptr ptr long)
-@ stub NdrStubCall2
+@ stdcall NdrStubCall2(ptr ptr ptr ptr)
 @ stub NdrStubCall
 @ stdcall NdrStubForwardingFunction(ptr ptr ptr ptr)
 @ stdcall NdrStubGetBuffer(ptr ptr ptr)

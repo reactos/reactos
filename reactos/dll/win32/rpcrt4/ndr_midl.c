@@ -269,6 +269,8 @@ void WINAPI NdrFreeBuffer(MIDL_STUB_MESSAGE *pStubMsg)
  */
 unsigned char *WINAPI NdrSendReceive( MIDL_STUB_MESSAGE *stubmsg, unsigned char *buffer  )
 {
+  RPC_STATUS status;
+
   TRACE("(stubmsg == ^%p, buffer == ^%p)\n", stubmsg, buffer);
 
   /* FIXME: how to handle errors? (raise exception?) */
@@ -281,10 +283,9 @@ unsigned char *WINAPI NdrSendReceive( MIDL_STUB_MESSAGE *stubmsg, unsigned char 
     return NULL;
   }
 
-  if (I_RpcSendReceive(stubmsg->RpcMsg) != RPC_S_OK) {
-    WARN("I_RpcSendReceive did not return success.\n");
-    /* FIXME: raise exception? */
-  }
+  status = I_RpcSendReceive(stubmsg->RpcMsg);
+  if (status != RPC_S_OK)
+    RpcRaiseException(status);
 
   stubmsg->BufferLength = stubmsg->RpcMsg->BufferLength;
   stubmsg->BufferStart = stubmsg->RpcMsg->Buffer;

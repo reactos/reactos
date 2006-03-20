@@ -104,7 +104,7 @@ static HRESULT WINAPI ObjectStubless(DWORD index)
   unsigned bytes = *(const WORD*)(fs+8) - STACK_ADJUST;
   TRACE("(%p)->(%ld)([%d bytes]) ret=%08lx\n", iface, index, bytes, *(DWORD*)(args+bytes));
 
-  return RPCRT4_NdrClientCall2(This->stubless->pStubDesc, fs, args);
+  return NdrClientCall2(This->stubless->pStubDesc, fs, args);
 }
 
 #else  /* __i386__ */
@@ -119,20 +119,21 @@ struct StublessThunk { int dummy; };
 
 HRESULT WINAPI StdProxy_Construct(REFIID riid,
                                  LPUNKNOWN pUnkOuter,
-                                 PCInterfaceName name,
-                                 CInterfaceProxyVtbl *vtbl,
-                                 CInterfaceStubVtbl *svtbl,
+                                 const ProxyFileInfo *ProxyInfo,
+                                 int Index,
                                  LPPSFACTORYBUFFER pPSFactory,
                                  LPRPCPROXYBUFFER *ppProxy,
                                  LPVOID *ppvObj)
 {
   StdProxyImpl *This;
   const MIDL_STUBLESS_PROXY_INFO *stubless = NULL;
+  PCInterfaceName name = ProxyInfo->pNamesArray[Index];
+  CInterfaceProxyVtbl *vtbl = ProxyInfo->pProxyVtblList[Index];
 
   TRACE("(%p,%p,%p,%p,%p) %s\n", pUnkOuter, vtbl, pPSFactory, ppProxy, ppvObj, name);
 
-  /* I can't find any other way to detect stubless proxies than this hack */
-  if (!IsEqualGUID(vtbl->header.piid, riid)) {
+  /* TableVersion = 2 means it is the stubless version of CInterfaceProxyVtbl */
+  if (ProxyInfo->TableVersion > 1) {
     stubless = *(const void **)vtbl;
     vtbl = (CInterfaceProxyVtbl *)((const void **)vtbl + 1);
     TRACE("stubless=%p\n", stubless);
@@ -150,11 +151,12 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
   if (!This) return E_OUTOFMEMORY;
 
   if (stubless) {
-    unsigned i, count = svtbl->header.DispatchTableCount;
+    CInterfaceStubVtbl *svtbl = ProxyInfo->pStubVtblList[Index];
+    unsigned long i, count = svtbl->header.DispatchTableCount;
     /* Maybe the original vtbl is just modified directly to point at
      * ObjectStublessClientXXX thunks in real Windows, but I don't like it
      */
-    TRACE("stubless thunks: count=%d\n", count);
+    TRACE("stubless thunks: count=%ld\n", count);
     This->thunks = HeapAlloc(GetProcessHeap(),0,sizeof(struct StublessThunk)*count);
     This->PVtbl = HeapAlloc(GetProcessHeap(),0,sizeof(LPVOID)*count);
     for (i=0; i<count; i++) {
@@ -162,7 +164,7 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
       if (vtbl->Vtbl[i] == (LPVOID)-1) {
         PFORMAT_STRING fs = stubless->ProcFormatString + stubless->FormatStringOffset[i];
         unsigned bytes = *(const WORD*)(fs+8) - STACK_ADJUST;
-        TRACE("method %d: stacksize=%d\n", i, bytes);
+        TRACE("method %ld: stacksize=%d\n", i, bytes);
         FILL_STUBLESS(thunk, i, bytes)
         This->PVtbl[i] = thunk;
       }
@@ -186,7 +188,11 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
   This->pChannel = NULL;
   *ppProxy = (LPRPCPROXYBUFFER)&This->lpVtbl;
   *ppvObj = &This->PVtbl;
-  IUnknown_AddRef((IUnknown *)*ppvObj);
+  /* if there is no outer unknown then the caller will control the lifetime
+   * of the proxy object through the proxy buffer, so no need to increment the
+   * ref count of the proxy object */
+  if (pUnkOuter)
+    IUnknown_AddRef((IUnknown *)*ppvObj);
   IPSFactoryBuffer_AddRef(pPSFactory);
 
   return S_OK;

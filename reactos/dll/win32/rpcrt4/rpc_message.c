@@ -254,15 +254,13 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
   hdr_size = Header->common.frag_len;
   Header->common.flags |= RPC_FLG_FIRST;
   Header->common.flags &= ~RPC_FLG_LAST;
-  while (!(Header->common.flags & RPC_FLG_LAST)) {    
+  while (!(Header->common.flags & RPC_FLG_LAST)) {
     /* decide if we need to split the packet into fragments */
     if ((BufferLength + hdr_size) <= Connection->MaxTransmissionSize) {
       Header->common.flags |= RPC_FLG_LAST;
       Header->common.frag_len = BufferLength + hdr_size;
     } else {
       Header->common.frag_len = Connection->MaxTransmissionSize;
-      buffer_pos += Header->common.frag_len - hdr_size;
-      BufferLength -= Header->common.frag_len - hdr_size;
     }
 
     /* transmit packet header */
@@ -293,6 +291,8 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
       return GetLastError();
     }
 
+    buffer_pos += Header->common.frag_len - hdr_size;
+    BufferLength -= Header->common.frag_len - hdr_size;
     Header->common.flags &= ~RPC_FLG_FIRST;
   }
 

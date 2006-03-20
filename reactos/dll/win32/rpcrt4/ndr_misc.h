@@ -30,11 +30,6 @@
 
 struct IPSFactoryBuffer;
 
-LONG_PTR RPCRT4_NdrClientCall2(PMIDL_STUB_DESC pStubDesc,
-			       PFORMAT_STRING pFormat, va_list args );
-
-HRESULT RPCRT4_GetPSFactory(REFIID riid, struct IPSFactoryBuffer **ppPS);
-
 #define ComputeConformance(pStubMsg, pMemory, pFormat, def) ComputeConformanceOrVariance(pStubMsg, pMemory, pFormat, def, &pStubMsg->MaxCount)
 #define ComputeVariance(pStubMsg, pMemory, pFormat, def) ComputeConformanceOrVariance(pStubMsg, pMemory, pFormat, def, &pStubMsg->ActualCount)
 PFORMAT_STRING ComputeConformanceOrVariance(
