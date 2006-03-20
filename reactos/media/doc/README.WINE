@@ -120,7 +120,7 @@ User32 -
 - Check out the Wine release: "cvs -d :pserver:cvs@cvs.winehq.com:2401/home/wine co wine -r Wine-20050211"
 - Create "vendor" directory (as a sibling of your top-level "reactos" directory)
 - Cd to the vendor dir and check out the current vendor drop:
-  "svn co svn://svn.reactos.com/vendor/wine".
+  "svn co svn://svn.reactos.org/reactos/vendor/wine".
 - For each component shared with Wine (e.g. cabinet):
   "del vendor\wine\dlls\cabinet\current\*"
   "copy wine\dlls\cabinet vendor\wine\dlls\cabinet\current"
@@ -128,7 +128,7 @@ User32 -
   Check svn status, svn add/delete files as needed
   Tag new Wine release "svn copy vendor\wine\dlls\cabinet\current vendor\wine\dlls\cabinet\Wine-20050211"
 - Commit the vendor drop: svn commit vendor\wine -m "Wine-20050211 vendor drop"
-- Determine the revision number of the last Wine tag by looking at http://svn.reactos.com/viewcvs/tags/
+- Determine the revision number of the last Wine tag by looking at http://svn.reactos.ru/svn/reactos/tags/
   and finding the last Wine-yyyymmdd-sync tag, e.g. Wine-20050111-sync had rev 13007
 - For each component shared with Wine (e.g. cabinet):
 - "cd reactos\lib\cabinet"
