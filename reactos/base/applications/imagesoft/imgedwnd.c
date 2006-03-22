@@ -211,11 +211,13 @@ ImageEditWndRepaint(PEDIT_WND_INFO Info,
                     HDC hDC,
                     LPPAINTSTRUCT lpps)
 {
+    HBITMAP hOldBitmap;
+
     if (Info->hBitmap)
     {
         Info->hDCMem = CreateCompatibleDC(hDC);
 
-        SelectObject(Info->hDCMem,
+        hOldBitmap = (HBITMAP) SelectObject(Info->hDCMem,
                      Info->hBitmap);
 
         BitBlt(hDC,
@@ -227,6 +229,8 @@ ImageEditWndRepaint(PEDIT_WND_INFO Info,
                0,
                0,
                SRCCOPY);
+
+        Info->hBitmap = SelectObject(Info->hDCMem, hOldBitmap);
 
         DeleteDC(Info->hDCMem);
     }
