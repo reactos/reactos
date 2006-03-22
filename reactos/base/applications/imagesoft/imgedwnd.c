@@ -92,6 +92,7 @@ InitEditWnd(PEDIT_WND_INFO Info)
                                 NULL);
 
             if ( bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
+                            /* FIXME: Why is this failing?? */
                           /*&& (bmfh.bfType == *(WORD *)_T("BM"))*/)
             {
                 InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
