@@ -159,6 +159,7 @@ StatusBarLoadString(IN HWND hStatusBar,
     return Ret;
 }
 
+
 INT
 GetTextFromEdit(OUT LPTSTR lpString,
                 IN HWND hDlg,
@@ -178,30 +179,31 @@ GetTextFromEdit(OUT LPTSTR lpString,
     return len;
 }
 
-LONG
-GetNumFromEdit(IN HWND hDlg,
-               IN UINT Res)
+
+VOID GetError(DWORD err)
 {
-    LONG num = 0;
-    LPTSTR buf;
-    INT len = GetWindowTextLength(GetDlgItem(hDlg, Res));
+    LPVOID lpMsgBuf;
 
-    buf = HeapAlloc(ProcessHeap, 
-                    0, 
-                    len);
+    if (err == 0)
+        err = GetLastError();
 
-    if(len > 0)
-    {
-        GetDlgItemText(hDlg,
-                       Res,
-                       buf,
-                       len + 1);
-        num = _ttol(buf);
-    }
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                  FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL,
+                  err,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPTSTR) &lpMsgBuf,
+                  0,
+                  NULL );
 
-    HeapFree(ProcessHeap, 
-             0, 
-             buf);
+    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
 
-    return num;
+    LocalFree(lpMsgBuf);
+}
+
+
+VOID MessageBoxInt(INT num)
+{
+    MessageBox(NULL, _itot(num, NULL, 10), NULL, 0);
 }

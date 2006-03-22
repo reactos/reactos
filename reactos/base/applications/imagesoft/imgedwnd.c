@@ -36,45 +36,127 @@ EditWndUpdateScrollInfo(PEDIT_WND_INFO Info)
 static BOOL
 InitEditWnd(PEDIT_WND_INFO Info)
 {
+    BITMAPFILEHEADER bmfh;
+    PBITMAPINFO pbmi = NULL;
+    PBYTE pBits;
+    HANDLE hFile;
     HDC hDC;
-    LONG cxBitmap, cyBitmap;
+    BITMAP bitmap;
 
     Info->Zoom = 100;
 
     if (Info->OpenInfo != NULL)
     {
-        /* set bitmap dimensions */
-        cxBitmap = Info->OpenInfo->New.Width;
-        cyBitmap = Info->OpenInfo->New.Height;
-
-        /* create bitmap */
-        hDC = GetDC(Info->hSelf);
-        Info->hBitmap = CreateCompatibleBitmap(hDC, cxBitmap, cyBitmap);
-        Info->hDCMem  = CreateCompatibleDC(hDC);
-        ReleaseDC(Info->hSelf, hDC);
-
-        if (!Info->hBitmap)
-        {
-            DeleteDC(Info->hDCMem);
-            return FALSE;
-        }
-
         if (Info->OpenInfo->CreateNew)
         {
-            /* what is this for? Does Info->OpenInfo become obsolete? */
+            /* FIXME: convert this to a DIB Section */
+
+            /* set bitmap dimensions */
             Info->Width = Info->OpenInfo->New.Width;
             Info->Height = Info->OpenInfo->New.Height;
 
-            SelectObject(Info->hDCMem, Info->hBitmap);
-            PatBlt(Info->hDCMem, 0, 0, cxBitmap, cxBitmap, WHITENESS);
+            /* create bitmap */
+            hDC = GetDC(Info->hSelf);
+            Info->hBitmap = CreateCompatibleBitmap(hDC, Info->Width, Info->Height);
+            //Info->hDCMem  = CreateCompatibleDC(hDC);
+            ReleaseDC(Info->hSelf, hDC);
+
+            if (!Info->hBitmap)
+            {
+                DeleteDC(Info->hDCMem);
+                return FALSE;
+            }
+
+            //SelectObject(Info->hDCMem, Info->hBitmap);
+            PatBlt(Info->hDCMem, 0, 0, Info->Width, Info->Height, WHITENESS);
         }
         else
         {
-            /* Load the image from file */
+            DWORD InfoSize, BytesRead;
+            BOOL bSuccess;
+
+            hFile = CreateFile(Info->OpenInfo->Open.lpImagePath,
+                               GENERIC_READ,
+                               FILE_SHARE_READ,
+                               NULL,
+                               OPEN_EXISTING,
+                               FILE_FLAG_SEQUENTIAL_SCAN,
+                               NULL);
+            if (hFile == INVALID_HANDLE_VALUE)
+                return FALSE;
+
+            bSuccess = ReadFile(hFile,
+                                &bmfh,
+                                sizeof(BITMAPFILEHEADER),
+                                &BytesRead,
+                                NULL);
+
+            if ( bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
+                          && (bmfh.bfType == *(WORD *)_T("BM")))
+            {
+                InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
+
+                pbmi = HeapAlloc(ProcessHeap,
+                                 0,
+                                 InfoSize);
+
+                bSuccess = ReadFile(hFile,
+                                    pbmi,
+                                    InfoSize,
+                                    &BytesRead,
+                                    NULL);
+
+                if (bSuccess && (BytesRead == InfoSize))
+                {
+                    Info->hBitmap = CreateDIBSection(NULL,
+                                                     pbmi,
+                                                     DIB_RGB_COLORS,
+                                                     (VOID *)&pBits,
+                                                     NULL,
+                                                     0);
+                    if (Info->hBitmap != NULL)
+                    {
+                        ReadFile(hFile,
+                                 pBits,
+                                 bmfh.bfSize - bmfh.bfOffBits,
+                                 &BytesRead,
+                                 NULL);
+                    }
+                    else
+                    {
+                        goto fail;
+                    }
+                }
+                else
+                {
+                    goto fail;
+                }
+            }
+            else
+            {
+                if (! bSuccess)
+                    GetError(0);
+
+                goto fail;
+            }
+
+            CloseHandle(hFile);
+
+            HeapFree(ProcessHeap,
+                     0,
+                     pbmi);
         }
 
         Info->OpenInfo = NULL;
     }
+
+    /* get bitmap dimensions */
+    GetObject(Info->hBitmap,
+                  sizeof(BITMAP),
+                  &bitmap);
+
+    Info->Width = bitmap.bmWidth;
+    Info->Height = bitmap.bmHeight;
 
     EditWndUpdateScrollInfo(Info);
 
@@ -82,8 +164,22 @@ InitEditWnd(PEDIT_WND_INFO Info)
     Info->Next = Info->MainWnd->ImageEditors;
     Info->MainWnd->ImageEditors = Info;
 
+    InvalidateRect(Info->hSelf,
+                   NULL,
+                   TRUE);
+
     /* FIXME - if returning FALSE, remove the image editor from the list! */
     return TRUE;
+
+
+fail:
+    if (! hFile)
+        CloseHandle(hFile);
+    if (! pbmi)
+        HeapFree(ProcessHeap,
+                 0,
+                 pbmi);
+    return FALSE;
 }
 
 static VOID
@@ -114,7 +210,25 @@ ImageEditWndRepaint(PEDIT_WND_INFO Info,
                     HDC hDC,
                     LPPAINTSTRUCT lpps)
 {
-    BitBlt(hDC, 0, 0, Info->Width, Info->Height, Info->hDCMem, 0, 0, SRCCOPY);
+    if (Info->hBitmap)
+    {
+        Info->hDCMem = CreateCompatibleDC(hDC);
+
+        SelectObject(Info->hDCMem,
+                     Info->hBitmap);
+
+        BitBlt(hDC,
+               0,
+               0,
+               Info->Width,
+               Info->Height,
+               Info->hDCMem,
+               0,
+               0,
+               SRCCOPY);
+
+        DeleteDC(Info->hDCMem);
+    }
 }
 
 static LRESULT CALLBACK
@@ -125,6 +239,7 @@ ImageEditWndProc(HWND hwnd,
 {
     PEDIT_WND_INFO Info;
     LRESULT Ret = 0;
+    static BOOL bLMButtonDown = FALSE;
 
     /* Get the window context */
     Info = (PEDIT_WND_INFO)GetWindowLongPtr(hwnd,
@@ -136,12 +251,50 @@ ImageEditWndProc(HWND hwnd,
 
     switch (uMsg)
     {
+        case WM_CREATE:
+        {
+            Info = (PEDIT_WND_INFO)(((LPMDICREATESTRUCT)((LPCREATESTRUCT)lParam)->lpCreateParams)->lParam);
+            Info->hSelf = hwnd;
+
+            SetWindowLongPtr(hwnd,
+                             GWLP_USERDATA,
+                             (LONG_PTR)Info);
+
+            if (!InitEditWnd(Info))
+            {
+                Ret = (LRESULT)-1;
+                break;
+            }
+            break;
+        }
+
         case WM_ERASEBKGND:
             if (Info->Width != 0 && Info->Height != 0)
             {
                 Ret = TRUE;
             }
             break;
+
+        case WM_LBUTTONDOWN:
+            SetCursor(LoadCursor(hInstance,
+                                 MAKEINTRESOURCE(IDC_PAINTBRUSHCURSORMOUSEDOWN)));
+            bLMButtonDown = TRUE;
+
+        break;
+
+        case WM_LBUTTONUP:
+            bLMButtonDown = FALSE;
+
+        break;
+
+        case WM_MOUSEMOVE:
+            if (bLMButtonDown)
+                SetCursor(LoadCursor(hInstance,
+                                     MAKEINTRESOURCE(IDC_PAINTBRUSHCURSORMOUSEDOWN)));
+            else
+                SetCursor(LoadCursor(hInstance,
+                                     MAKEINTRESOURCE(IDC_PAINTBRUSHCURSOR)));
+        break;
 
         case WM_PAINT:
         {
@@ -188,23 +341,6 @@ ImageEditWndProc(HWND hwnd,
                                        (HWND)lParam);
             break;
 
-        case WM_CREATE:
-        {
-            Info = (PEDIT_WND_INFO)(((LPMDICREATESTRUCT)((LPCREATESTRUCT)lParam)->lpCreateParams)->lParam);
-            Info->hSelf = hwnd;
-
-            SetWindowLongPtr(hwnd,
-                             GWLP_USERDATA,
-                             (LONG_PTR)Info);
-
-            if (!InitEditWnd(Info))
-            {
-                Ret = (LRESULT)-1;
-                break;
-            }
-            break;
-        }
-
         case WM_DESTROY:
         {
             DestroyEditWnd(Info);
@@ -250,6 +386,7 @@ CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
 {
     PEDIT_WND_INFO Info;
     HWND hWndEditor;
+    LONG Width, Height;
 
     Info = HeapAlloc(ProcessHeap,
                      0,
@@ -262,13 +399,24 @@ CreateImageEditWindow(struct _MAIN_WND_INFO *MainWnd,
         Info->MdiEditorType = metImageEditor;
         Info->OpenInfo = OpenInfo;
 
+        if (OpenInfo->CreateNew)
+        {
+            Width = OpenInfo->New.Width;
+            Height = OpenInfo->New.Height;
+        }
+        else
+        {
+            Width = CW_USEDEFAULT;
+            Height = CW_USEDEFAULT;
+        }
+
         hWndEditor = CreateMDIWindow(szImageEditWndClass,
-                                     OpenInfo->New.lpImageName,
-                                     WS_HSCROLL | WS_VSCROLL,
-                                     CW_USEDEFAULT,
-                                     CW_USEDEFAULT,
-                                     OpenInfo->New.Width,
-                                     OpenInfo->New.Height,
+                                     OpenInfo->lpImageName,
+                                     WS_HSCROLL | WS_VSCROLL | WS_MAXIMIZE,
+                                     200,
+                                     200,
+                                     Width,
+                                     Height,
                                      MainWnd->hMdiClient,
                                      hInstance,
                                      (LPARAM)Info);
@@ -297,8 +445,8 @@ InitImageEditWindowImpl(VOID)
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(hInstance,
                         MAKEINTRESOURCE(IDI_ICON));
-    wc.hCursor = LoadCursor(NULL,
-                            IDC_CROSS);
+    wc.hCursor = LoadCursor(hInstance,
+                            MAKEINTRESOURCE(IDC_PAINTBRUSHCURSOR));
     wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wc.lpszClassName = szImageEditWndClass;
     wc.hIconSm = (HICON)LoadImage(hInstance,

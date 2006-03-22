@@ -28,27 +28,27 @@ static const MENU_HINT SystemMenuHintTable[] = {
 /* Standard Toolbar */
 #define ID_TOOLBAR_STANDARD 0
 static const TCHAR szToolbarStandard[] = TEXT("STANDARD");
-static const TBBUTTON StdButtons[] = {
+static TBBUTTON StdButtons[] = {
     /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-    {STD_FILENEW,  ID_NEW,      TBSTATE_ENABLED, TBSTYLE_BUTTON, {0}, 0, 0},    /* new */
-    {STD_FILEOPEN, ID_OPEN,     TBSTATE_ENABLED, BTNS_BUTTON,    {0}, 0, 0},    /* open */
-    {STD_FILESAVE, ID_SAVE,     TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0},    /* save */
+    {TBICON_NEW,      ID_NEW,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* new */
+    {TBICON_OPEN,     ID_OPEN,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* open */
+    {TBICON_SAVE,     ID_SAVE,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* save */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
-    {STD_PRINTPRE, ID_PRINTPRE, TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0 },   /* print */
-    {STD_PRINT,    ID_PRINT,    TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0 },   /* print preview */
+    {TBICON_PRINT,    ID_PRINTPRE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* print */
+    {TBICON_PRINTPRE, ID_PRINT,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* print preview */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
-    {STD_CUT,      ID_CUT,      TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0 },   /* cut */
-    {STD_COPY,     ID_COPY,     TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0 },   /* copy */
-    {STD_PASTE,    ID_PASTE,    TBSTATE_INDETERMINATE, BTNS_BUTTON,    {0}, 0, 0 },   /* paste */
+    {TBICON_CUT,      ID_CUT,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* cut */
+    {TBICON_COPY,     ID_COPY,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* copy */
+    {TBICON_PASTE,    ID_PASTE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* paste */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
-    {STD_UNDO,     ID_UNDO,    TBSTATE_INDETERMINATE, BTNS_BUTTON,     {0}, 0, 0 },   /* undo */
-    {STD_REDOW,    ID_REDO,    TBSTATE_INDETERMINATE, BTNS_BUTTON,     {0}, 0, 0 },   /* redo */
+    {TBICON_UNDO,     ID_UNDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* undo */
+    {TBICON_REDO,     ID_REDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* redo */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
 };
@@ -62,6 +62,56 @@ static const DOCKBAR MainDockBars[] = {
     {ID_TOOLBAR_STANDARD, szToolbarStandard, IDS_TOOLBAR_STANDARD, TOP_DOCK},
     {ID_TOOLBAR_TEST, szToolbarTest, IDS_TOOLBAR_TEST, TOP_DOCK},
 };
+
+
+static HIMAGELIST
+InitImageList(UINT NumButtons, UINT StartResource)
+{
+    HBITMAP hBitmap;
+    HIMAGELIST hImageList;
+    INT i, k, Ret;
+
+
+    /* Create the toolbar icon image list */
+    hImageList = ImageList_Create(TB_BMP_WIDTH,
+                                  TB_BMP_HEIGHT,
+                                  ILC_MASK | ILC_COLOR24,
+                                  NumButtons,
+                                  0);
+    if (! hImageList)
+        return NULL;
+
+    /* Add all icons to the image list */
+    for (i = StartResource, k = 0; k < NumButtons; i++, k++)
+    {
+        hBitmap = LoadImage(hInstance,
+                            MAKEINTRESOURCE(i),
+                            IMAGE_BITMAP,
+                            TB_BMP_WIDTH,
+                            TB_BMP_HEIGHT,
+                            LR_LOADTRANSPARENT);
+
+        Ret = ImageList_AddMasked(hImageList,
+                                  hBitmap,
+                                  RGB(255, 255, 254));
+
+        DeleteObject(hBitmap);
+    }
+
+    return hImageList;
+
+}
+
+/*
+static BOOL
+DestroyImageList(HIMAGELIST hImageList)
+{
+    if (! ImageList_Destroy(hImageList))
+        return FALSE;
+    else
+        return TRUE;
+}
+*/
 
 static BOOL CALLBACK
 MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
@@ -106,8 +156,6 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
 
     if (Buttons != NULL)
     {
-        TBADDBITMAP tbab;
-
         hWndClient = CreateWindowEx(0,
                                     TOOLBARCLASSNAME,
                                     NULL,
@@ -124,6 +172,8 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                                     NULL);
         if (hWndClient != NULL)
         {
+            HIMAGELIST hMainTBImageList;
+
             SendMessage(hWndClient,
                         TB_SETEXTENDEDSTYLE,
                         0,
@@ -135,19 +185,24 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                         sizeof(Buttons[0]),
                         0);
 
-            /* Add standard images */
-            tbab.hInst = HINST_COMMCTRL;
-            tbab.nID = IDB_STD_SMALL_COLOR;
             SendMessage(hWndClient,
-                        TB_ADDBITMAP,
-                        (WPARAM)NumButtons,
-                        (LPARAM)&tbab);
+                        TB_SETBITMAPSIZE,
+                        0,
+                        (LPARAM)MAKELONG(TB_BMP_WIDTH, TB_BMP_HEIGHT));
 
-            /* Add buttons to toolbar */
+            hMainTBImageList = InitImageList(NUM_MAINTB_IMAGES,
+                                             IDB_MAINNEWICON);
+
+            ImageList_Destroy((HIMAGELIST)SendMessage(hWndClient,
+                                                      TB_SETIMAGELIST,
+                                                      0,
+                                                      (LPARAM)hMainTBImageList));
+
             SendMessage(hWndClient,
                         TB_ADDBUTTONS,
-                        (WPARAM)NumButtons,
-                        (LPARAM)Buttons);
+                        NumButtons,
+                        (LPARAM)&StdButtons);
+
         }
     }
 
@@ -308,6 +363,77 @@ MainWndToolbarChevronPushed(struct _TOOLBAR_DOCKS *TbDocks,
     }
 }
 
+
+static VOID
+MainWndCreateFloatToolbars(PMAIN_WND_INFO Info)
+{
+    const TBBUTTON *Buttons = NULL;
+    UINT NumButtons = 2;
+
+    /* create the 'tools' toolbar */
+    /*Info->hFloatTools = CreateDialog(hInstance,
+                                     MAKEINTRESOURCE(IDD_FLOATTOOLS),
+                                     Info->hSelf,
+                                     FloatToolbarWndProc);*/
+
+
+    Info->hFloatTools = CreateWindowEx(WS_EX_TOOLWINDOW,
+                                       TEXT("ImageSoftFloatWndClass"),
+                                       TEXT("Test"),
+                                       WS_POPUPWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_DLGFRAME,
+                                       0,
+                                       0,
+                                       36,
+                                       132,
+                                       Info->hSelf,
+                                       NULL,
+                                       hInstance,
+                                       NULL);
+
+
+    if (Info->hFloatTools != NULL)
+    {
+        HIMAGELIST hFloatToolsImageList;
+
+        SendMessage(Info->hFloatTools,
+                    TB_SETEXTENDEDSTYLE,
+                    0,
+                    TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+
+        /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
+        SendMessage(Info->hFloatTools,
+                    TB_BUTTONSTRUCTSIZE,
+                    sizeof(Buttons[0]),
+                    0);
+
+        SendMessage(Info->hFloatTools,
+                    TB_SETBITMAPSIZE,
+                    0,
+                    (LPARAM)MAKELONG(TB_BMP_WIDTH, TB_BMP_HEIGHT));
+
+        hFloatToolsImageList = InitImageList(2,
+                                             IDB_MAINNEWICON);
+
+        ImageList_Destroy((HIMAGELIST)SendMessage(Info->hFloatTools,
+                                                  TB_SETIMAGELIST,
+                                                  0,
+                                                  (LPARAM)hFloatToolsImageList));
+
+        SendMessage(Info->hFloatTools,
+                    TB_ADDBUTTONS,
+                    NumButtons,
+                    (LPARAM)&StdButtons);
+
+    }
+
+
+    /* other floating toolbars may include colours, history and layers */
+
+}
+
+
+
+
 static const DOCKBAR_ITEM_CALLBACKS MainWndDockBarCallbacks = {
     MainWndCreateToolbarClient,
     MainWndDestroyToolbarClient,
@@ -329,6 +455,8 @@ CreateToolbars(PMAIN_WND_INFO Info)
                       Info,
                       &MainWndDockBarCallbacks);
     }
+
+    MainWndCreateFloatToolbars(Info);
 }
 
 static VOID CALLBACK
@@ -447,6 +575,9 @@ InitMainWnd(PMAIN_WND_INFO Info)
                        MainWndResize);
 
     CreateToolbars(Info);
+
+    /* initialize file open/save structure */
+    FileInitialize(Info->hSelf);
 }
 
 static VOID
@@ -454,31 +585,39 @@ MainWndCommand(PMAIN_WND_INFO Info,
                WORD CmdId,
                HWND hControl)
 {
+    static TCHAR szFileName[MAX_PATH];
+    static TCHAR szImageName[MAX_PATH];
+
     UNREFERENCED_PARAMETER(hControl);
 
     switch (CmdId)
     {
-        /* File Menu */
         case ID_NEW:
         {
             OPEN_IMAGE_EDIT_INFO OpenInfo;
             PIMAGE_PROP ImageProp = NULL;
 
-            ImageProp = (PIMAGE_PROP)DialogBox(hInstance,
-                                               MAKEINTRESOURCE(IDD_IMAGE_PROP),
-                                               Info->hSelf,
-                                               ImagePropDialogProc);
+            ImageProp = HeapAlloc(ProcessHeap,
+                                  0,
+                                  sizeof(IMAGE_PROP));
+            if (ImageProp == NULL)
+                break;
 
-            if (ImageProp)
+            /* load the properties dialog */
+            if (DialogBoxParam(hInstance,
+                               MAKEINTRESOURCE(IDD_IMAGE_PROP),
+                               Info->hSelf,
+                               ImagePropDialogProc,
+                               (LPARAM)ImageProp))
             {
                 /* if an image name isn't provided, load a default name */
                 if (! ImageProp->lpImageName)
                     LoadAndFormatString(hInstance,
                                         IDS_IMAGE_NAME,
-                                        &OpenInfo.New.lpImageName,
+                                        &OpenInfo.lpImageName,
                                         ++Info->ImagesCreated);
                 else
-                    OpenInfo.New.lpImageName = ImageProp->lpImageName;
+                    OpenInfo.lpImageName = ImageProp->lpImageName;
 
                 OpenInfo.CreateNew = TRUE;
                 OpenInfo.Type = ImageProp->Type;
@@ -496,6 +635,26 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
             break;
         }
+
+        case ID_OPEN:
+        {
+            OPEN_IMAGE_EDIT_INFO OpenInfo;
+
+            if (DoOpenFile(Info->hSelf,
+                           szFileName,   /* full file path */
+                           szImageName)) /* file name */
+            {
+                OpenInfo.CreateNew = FALSE;
+
+                OpenInfo.Open.lpImagePath = szFileName;
+                OpenInfo.lpImageName = szImageName;
+
+                CreateImageEditWindow(Info,
+                                      &OpenInfo);
+            }
+
+        }
+        break;
 
         case ID_EXIT:
             SendMessage(Info->hSelf,
@@ -711,6 +870,7 @@ MainWndProc(HWND hwnd,
             /* Show the window */
             ShowWindow(hwnd,
                        Info->nCmdShow);
+
             break;
         }
 

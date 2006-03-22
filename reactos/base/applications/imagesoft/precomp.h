@@ -22,7 +22,18 @@
 ULONG DbgPrint(PCH Format,...);
 
 #define MAX_KEY_LENGTH 256
-#define NUM_BUTTONS 14
+#define NUM_MAINTB_IMAGES 10
+#define TB_BMP_WIDTH 16
+#define TB_BMP_HEIGHT 16
+
+#define MONOCHROMEBITS  1
+#define GREYSCALEBITS   8
+#define PALLETEBITS     8
+#define TRUECOLORBITS   24
+
+#define PIXELS      0
+#define CENTIMETERS 1
+#define INCHES      2
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
@@ -98,13 +109,13 @@ typedef struct _OPEN_IMAGE_EDIT_INFO
         {
             LONG Width;
             LONG Height;
-            LPTSTR lpImageName;
         } New;
         struct
         {
-            LPCTSTR lpFileName;
+            LPTSTR lpImagePath;
         } Open;
     };
+    LPTSTR lpImageName;
     USHORT Type;
     LONG Resolution;
 } OPEN_IMAGE_EDIT_INFO, *POPEN_IMAGE_EDIT_INFO;
@@ -259,6 +270,7 @@ typedef struct _MAIN_WND_INFO
     HWND hSelf;
     HWND hMdiClient;
     HWND hStatus;
+    HWND hFloatTools;
     int nCmdShow;
 
     TOOLBAR_DOCKS ToolDocks;
@@ -310,7 +322,22 @@ INT GetTextFromEdit(OUT LPTSTR lpString,
                     IN HWND hDlg,
                     IN UINT Res);
 
-LONG GetNumFromEdit(IN HWND hDlg,
-                    IN UINT Res);
+VOID GetError(DWORD err);
+
+VOID MessageBoxInt(INT num);
+
+/* opensave.c */
+VOID FileInitialize(HWND hwnd);
+BOOL DoOpenFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpName);
+BOOL DoSaveFile(HWND hwnd);
+
+/* floating toolbars */
+BOOL InitFloatWndClass(VOID);
+VOID UninitFloatWndImpl(VOID);
+/*LRESULT CALLBACK FloatToolbarWndProc(HWND hwnd,
+                                     UINT Message,
+                                     WPARAM wParam,
+                                     LPARAM lParam);*/
+BOOL ShowHideToolbar(HWND hwnd);
 
 #endif /* __IMAGESOFT_PRECOMP_H */

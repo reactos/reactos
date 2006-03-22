@@ -644,7 +644,7 @@ ToolDockWndProc(HWND hwnd,
             SetWindowLongPtr(hwnd,
                              GWLP_USERDATA,
                              (LONG_PTR)TbDocks);
-            SetWindowLongPtr(hwnd, 
+            SetWindowLongPtr(hwnd,
                              GWLP_DOCKITEM,
                              (LONG_PTR)GWLP_DOCKITEM);
             break;
@@ -657,7 +657,7 @@ ToolDockWndProc(HWND hwnd,
             SetWindowLongPtr(hwnd,
                              GWLP_USERDATA,
                              0);
-            SetWindowLongPtr(hwnd, 
+            SetWindowLongPtr(hwnd,
                              GWLP_DOCKITEM,
                              0);
             break;

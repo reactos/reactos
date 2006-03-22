@@ -39,31 +39,36 @@ WinMain(HINSTANCE hThisInstance,
         {
             if (InitImageEditWindowImpl())
             {
-                hMainWnd = CreateMainWindow(lpAppName,
-                                            nCmdShow);
-                if (hMainWnd != NULL)
+                if (InitFloatWndClass())
                 {
-                    /* pump the message queue */
-                    while((bRet = GetMessage(&Msg,
-                                             NULL,
-                                             0,
-                                             0) != 0))
+                    hMainWnd = CreateMainWindow(lpAppName,
+                                                nCmdShow);
+                    if (hMainWnd != NULL)
                     {
-                        if (bRet != (BOOL)-1)
+                        /* pump the message queue */
+                        while((bRet = GetMessage(&Msg,
+                                                 NULL,
+                                                 0,
+                                                 0) != 0))
                         {
-                            if (!MainWndTranslateMDISysAccel(hMainWnd,
-                                                             &Msg))
+                            if (bRet != (BOOL)-1)
                             {
-                                TranslateMessage(&Msg);
-                                DispatchMessage(&Msg);
+                                if (!MainWndTranslateMDISysAccel(hMainWnd,
+                                                                 &Msg))
+                                {
+                                    TranslateMessage(&Msg);
+                                    DispatchMessage(&Msg);
+                                }
                             }
                         }
+
+                        Ret = 0;
                     }
 
-                    Ret = 0;
+                    UninitImageEditWindowImpl();
                 }
 
-                UninitImageEditWindowImpl();
+                UninitFloatWndImpl();
             }
 
             UninitMainWindowImpl();
