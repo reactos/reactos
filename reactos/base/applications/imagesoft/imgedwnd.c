@@ -92,7 +92,7 @@ InitEditWnd(PEDIT_WND_INFO Info)
                                 NULL);
 
             if ( bSuccess && (BytesRead == sizeof(BITMAPFILEHEADER))
-                          && (bmfh.bfType == *(WORD *)_T("BM")))
+                          /*&& (bmfh.bfType == *(WORD *)_T("BM"))*/)
             {
                 InfoSize = bmfh.bfOffBits - sizeof(BITMAPFILEHEADER);
 
