@@ -117,38 +117,16 @@ BEGIN
   PUSHBUTTON "Cancel", IDCANCEL, 102, 144, 48, 13
 END
 
-
-/* floating toolbar */
-IDD_FLOATTOOLS DIALOGEX 1, 17, 32, 112
-STYLE WS_POPUP | WS_SYSMENU | WS_CAPTION | WS_VISIBLE
-EXSTYLE WS_EX_TOOLWINDOW
-CAPTION "Tools"
-FONT 8, "MS Sans Serif"
-BEGIN
-/*
-    PUSHBUTTON "1", IDC_PRESS,0,0,16,16
-    PUSHBUTTON "2", IDC_PRESS,16,0,16,16
-    PUSHBUTTON "3", IDC_PRESS,0,16,16,16
-    PUSHBUTTON "4", IDC_PRESS,16,16,16,16
-    PUSHBUTTON "5", IDC_PRESS,0,32,16,16
-    PUSHBUTTON "6", IDC_PRESS,16,32,16,16
-    PUSHBUTTON "7", IDC_PRESS,0,48,16,16
-    PUSHBUTTON "8", IDC_PRESS,16,48,16,16
-    PUSHBUTTON "9", IDC_PRESS,0,64,16,16
-    PUSHBUTTON "10", IDC_PRESS,16,64,16,16
-*/
-END
-
-
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME           "ImageSoft"
   IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
   IDS_READY             " Ready."
-
   IDS_TOOLBAR_STANDARD  "Standard"
   IDS_TOOLBAR_TEST      "Test"
   IDS_IMAGE_NAME        "Image %1!u!"
+  IDS_FLT_TOOLS         "Tools"
+  IDS_FLT_COLORS        "Colors"
+  IDS_FLT_HISTORY       "History"
 END
 
 /* imageprop.c */

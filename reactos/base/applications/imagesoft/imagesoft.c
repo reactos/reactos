@@ -1,4 +1,4 @@
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
@@ -12,11 +12,11 @@ WinMain(HINSTANCE hThisInstance,
         LPSTR lpCmdLine,
         int nCmdShow)
 {
-    LPTSTR lpAppName;
+    LPTSTR lpAppName, lpVersion, lpTitle;
     HWND hMainWnd;
     MSG Msg;
     BOOL bRet;
-    int Ret = 1;
+    int Ret = 1, len;
     INITCOMMONCONTROLSEX icex;
 
     hInstance = hThisInstance;
@@ -26,12 +26,21 @@ WinMain(HINSTANCE hThisInstance,
     icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&icex);
 
-    if (!AllocAndLoadString(&lpAppName,
-                            hInstance,
-                            IDS_APPNAME))
+    if (!AllocAndLoadString(&lpAppName, hInstance, IDS_APPNAME) ||
+        !AllocAndLoadString(&lpVersion, hInstance, IDS_VERSION) )
     {
         return 1;
     }
+
+    len = _tcslen(lpAppName) + _tcslen(lpVersion);
+    lpTitle = HeapAlloc(ProcessHeap,
+                        0,
+                        (len + 2) * sizeof(TCHAR));
+
+    wsprintf(lpTitle,
+             _T("%s %s"),
+             lpAppName,
+             lpVersion);
 
     if (TbdInitImpl())
     {
@@ -41,7 +50,7 @@ WinMain(HINSTANCE hThisInstance,
             {
                 if (InitFloatWndClass())
                 {
-                    hMainWnd = CreateMainWindow(lpAppName,
+                    hMainWnd = CreateMainWindow(lpTitle,
                                                 nCmdShow);
                     if (hMainWnd != NULL)
                     {

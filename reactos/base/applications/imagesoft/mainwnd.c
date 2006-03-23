@@ -1,9 +1,11 @@
 #include <precomp.h>
+#include "buttons.h"
 
 static const TCHAR szMainWndClass[] = TEXT("ImageSoftWndClass");
 
 #define ID_MDI_FIRSTCHILD   50000
 #define ID_MDI_WINDOWMENU   5
+#define NUM_FLT_TB          3
 
 /* menu hints */
 static const MENU_HINT MainMenuHintTable[] = {
@@ -25,33 +27,17 @@ static const MENU_HINT SystemMenuHintTable[] = {
     {SC_NEXTWINDOW, IDS_HINT_SYS_NEXT},
 };
 
+static FLT_TB FloatingToolbar[NUM_FLT_TB] = {
+    {NULL, NULL, 0, 0, 55,  300},
+    {NULL, NULL, 0, 0, 200, 200},
+    {NULL, NULL, 0, 0, 150, 150}
+};
+
+
 /* Standard Toolbar */
 #define ID_TOOLBAR_STANDARD 0
 static const TCHAR szToolbarStandard[] = TEXT("STANDARD");
-static TBBUTTON StdButtons[] = {
-    /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
-    {TBICON_NEW,      ID_NEW,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* new */
-    {TBICON_OPEN,     ID_OPEN,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* open */
-    {TBICON_SAVE,     ID_SAVE,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* save */
 
-    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
-
-    {TBICON_PRINT,    ID_PRINTPRE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* print */
-    {TBICON_PRINTPRE, ID_PRINT,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* print preview */
-
-    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
-
-    {TBICON_CUT,      ID_CUT,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* cut */
-    {TBICON_COPY,     ID_COPY,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* copy */
-    {TBICON_PASTE,    ID_PASTE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* paste */
-
-    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
-
-    {TBICON_UNDO,     ID_UNDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* undo */
-    {TBICON_REDO,     ID_REDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* redo */
-
-    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
-};
 
 /* Test Toolbar */
 #define ID_TOOLBAR_TEST 1
@@ -363,32 +349,120 @@ MainWndToolbarChevronPushed(struct _TOOLBAR_DOCKS *TbDocks,
     }
 }
 
+static VOID
+MainWndMoveFloatingToolbars(HWND hwnd, PRECT wndOldPos)
+{
+    RECT wndNewPos, TbRect;
+    INT i, xMoved, yMoved;
+
+    GetWindowRect(hwnd,
+                  &wndNewPos);
+
+    xMoved = wndNewPos.left - wndOldPos->left;
+    yMoved = wndNewPos.top - wndOldPos->top;
+
+    for (i = 0; i < NUM_FLT_TB; i++)
+    {
+        GetWindowRect(FloatingToolbar[i].hSelf,
+                      &TbRect);
+
+        FloatingToolbar[i].x = TbRect.left + xMoved;
+        FloatingToolbar[i].y = TbRect.top + yMoved;
+
+        MoveWindow(FloatingToolbar[i].hSelf,
+                   FloatingToolbar[i].x,
+                   FloatingToolbar[i].y,
+                   FloatingToolbar[i].Width,
+                   FloatingToolbar[i].Height,
+                   TRUE);
+    }
+
+    CopyMemory(wndOldPos,
+               &wndNewPos,
+               sizeof(RECT));
+}
+
+
+static VOID
+MainWndResetFloatingToolbars(HWND hwnd)
+{
+    RECT rect;
+
+    GetWindowRect(hwnd,
+                  &rect);
+
+    /* tools datum */
+    MoveWindow(FloatingToolbar[0].hSelf,
+               rect.left + 5,
+               rect.top + 5,
+               FloatingToolbar[0].Width,
+               FloatingToolbar[0].Height,
+               TRUE);
+
+    /* colors datum */
+    MoveWindow(FloatingToolbar[1].hSelf,
+               rect.left + 5,
+               rect.bottom - FloatingToolbar[1].Height - 5,
+               FloatingToolbar[1].Width,
+               FloatingToolbar[1].Height,
+               TRUE);
+
+    /* history datum */
+    MoveWindow(FloatingToolbar[2].hSelf,
+               rect.right - FloatingToolbar[2].Width - 5,
+               rect.top + 5,
+               FloatingToolbar[2].Width,
+               FloatingToolbar[2].Height,
+               TRUE);
+}
 
 static VOID
 MainWndCreateFloatToolbars(PMAIN_WND_INFO Info)
 {
+    RECT rect;
     const TBBUTTON *Buttons = NULL;
-    UINT NumButtons = 2;
+    UINT Res, NumButtons = 2;
+    INT i = 0;
 
-    /* create the 'tools' toolbar */
-    /*Info->hFloatTools = CreateDialog(hInstance,
-                                     MAKEINTRESOURCE(IDD_FLOATTOOLS),
-                                     Info->hSelf,
-                                     FloatToolbarWndProc);*/
+    GetWindowRect(Info->hMdiClient,
+                  &rect);
+
+    /* tools datum */
+    FloatingToolbar[0].x = rect.left + 5;
+    FloatingToolbar[0].y = rect.top + 5;
+
+    /* colors datum */
+    FloatingToolbar[1].x = rect.left + 5;
+    FloatingToolbar[1].y = rect.bottom - FloatingToolbar[1].Height - 5;
+
+    /* history datum */
+    FloatingToolbar[2].x = rect.right - FloatingToolbar[2].Width - 5;
+    FloatingToolbar[2].y = rect.top + 5;
+
+    for (Res = IDS_FLT_TOOLS; Res < IDS_FLT_TOOLS + NUM_FLT_TB; Res++, i++)
+    {
+        if (! AllocAndLoadString(&FloatingToolbar[i].lpName,
+                                 hInstance,
+                                 Res))
+        {
+            FloatingToolbar[i].lpName = NULL;
+        }
 
 
-    Info->hFloatTools = CreateWindowEx(WS_EX_TOOLWINDOW,
-                                       TEXT("ImageSoftFloatWndClass"),
-                                       TEXT("Test"),
-                                       WS_POPUPWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_DLGFRAME,
-                                       0,
-                                       0,
-                                       36,
-                                       132,
-                                       Info->hSelf,
-                                       NULL,
-                                       hInstance,
-                                       NULL);
+        /* create the 'tools' toolbar */
+        FloatingToolbar[i].hSelf = CreateWindowEx(WS_EX_TOOLWINDOW,
+                                                  TEXT("ImageSoftFloatWndClass"),
+                                                  FloatingToolbar[i].lpName,
+                                                  WS_POPUPWINDOW | WS_DLGFRAME | WS_VISIBLE,
+                                                  FloatingToolbar[i].x,
+                                                  FloatingToolbar[i].y,
+                                                  FloatingToolbar[i].Width,
+                                                  FloatingToolbar[i].Height,
+                                                  Info->hSelf,
+                                                  NULL,
+                                                  hInstance,
+                                                  NULL);
+    }
 
 
     if (Info->hFloatTools != NULL)
@@ -414,10 +488,10 @@ MainWndCreateFloatToolbars(PMAIN_WND_INFO Info)
         hFloatToolsImageList = InitImageList(2,
                                              IDB_MAINNEWICON);
 
-        ImageList_Destroy((HIMAGELIST)SendMessage(Info->hFloatTools,
-                                                  TB_SETIMAGELIST,
-                                                  0,
-                                                  (LPARAM)hFloatToolsImageList));
+        SendMessage(Info->hFloatTools,
+                    TB_SETIMAGELIST,
+                    0,
+                    (LPARAM)hFloatToolsImageList);
 
         SendMessage(Info->hFloatTools,
                     TB_ADDBUTTONS,
@@ -425,9 +499,6 @@ MainWndCreateFloatToolbars(PMAIN_WND_INFO Info)
                     (LPARAM)&StdButtons);
 
     }
-
-
-    /* other floating toolbars may include colours, history and layers */
 
 }
 
@@ -767,6 +838,8 @@ MainWndProc(HWND hwnd,
 {
     PMAIN_WND_INFO Info;
     LRESULT Ret = 0;
+    static BOOL bLBMouseDown = FALSE;
+    static RECT wndOldPos;
 
     /* Get the window context */
     Info = (PMAIN_WND_INFO)GetWindowLongPtr(hwnd,
@@ -785,8 +858,37 @@ MainWndProc(HWND hwnd,
                           HIWORD(lParam));
             /* NOTE - do *not* forward this message to DefFrameProc! Otherwise the MDI client
                       will attempt to resize itself */
+
+                /* reposition the floating toolbars */
+                if ((wParam == SIZE_MAXIMIZED) || (wParam == SIZE_RESTORED))
+                    MainWndResetFloatingToolbars(Info->hMdiClient);
+
             break;
         }
+
+        case WM_NCLBUTTONDOWN:
+            bLBMouseDown = TRUE;
+            DefWindowProc(hwnd,
+                          uMsg,
+                          wParam,
+                          lParam);
+        break;
+
+        case WM_NCLBUTTONUP :
+            bLBMouseDown = FALSE;
+            DefWindowProc(hwnd,
+                          uMsg,
+                          wParam,
+                          lParam);
+        break;
+
+        case WM_MOVE:
+        {
+            /* if the main window is moved, move the toolbars too */
+            if (bLBMouseDown)
+                MainWndMoveFloatingToolbars(hwnd, &wndOldPos);
+        }
+        break;
 
         case WM_NOTIFY:
         {
@@ -870,6 +972,10 @@ MainWndProc(HWND hwnd,
             /* Show the window */
             ShowWindow(hwnd,
                        Info->nCmdShow);
+
+            /* get the windows position */
+            GetWindowRect(hwnd,
+                          &wndOldPos);
 
             break;
         }

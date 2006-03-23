@@ -1,6 +1,8 @@
-#include "precomp.h"
+#include <precomp.h>
 
 static const TCHAR szFloatWndClass[] = TEXT("ImageSoftFloatWndClass");
+
+
 
 BOOL
 ShowHideToolbar(HWND hwnd)
@@ -39,12 +41,11 @@ FloatToolbarWndProc(HWND hwnd,
             }
         break;*/
 
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-        break;
+        case WM_NCACTIVATE:
+            return DefWindowProc(hwnd, Message, TRUE, lParam);
 
-        case WM_DESTROY:
-            PostQuitMessage(0);
+        case WM_CLOSE:
+            ShowHideToolbar(hwnd);
         break;
 
         default:

@@ -40,7 +40,6 @@ InitEditWnd(PEDIT_WND_INFO Info)
     PBITMAPINFO pbmi = NULL;
     PBYTE pBits;
     HANDLE hFile;
-    HDC hDC;
     BITMAP bitmap;
 
     Info->Zoom = 100;
@@ -51,24 +50,6 @@ InitEditWnd(PEDIT_WND_INFO Info)
         {
             /* FIXME: convert this to a DIB Section */
 
-            /* set bitmap dimensions */
-            Info->Width = Info->OpenInfo->New.Width;
-            Info->Height = Info->OpenInfo->New.Height;
-
-            /* create bitmap */
-            hDC = GetDC(Info->hSelf);
-            Info->hBitmap = CreateCompatibleBitmap(hDC, Info->Width, Info->Height);
-            //Info->hDCMem  = CreateCompatibleDC(hDC);
-            ReleaseDC(Info->hSelf, hDC);
-
-            if (!Info->hBitmap)
-            {
-                DeleteDC(Info->hDCMem);
-                return FALSE;
-            }
-
-            //SelectObject(Info->hDCMem, Info->hBitmap);
-            PatBlt(Info->hDCMem, 0, 0, Info->Width, Info->Height, WHITENESS);
         }
         else
         {

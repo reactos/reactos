@@ -331,13 +331,19 @@ VOID FileInitialize(HWND hwnd);
 BOOL DoOpenFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpName);
 BOOL DoSaveFile(HWND hwnd);
 
-/* floating toolbars */
+/* floattoolbar.c */
+typedef struct _FLT_TB
+{
+    HWND hSelf;
+    LPTSTR lpName;
+    INT x;
+    INT y;
+    INT Width;
+    INT Height;
+} FLT_TB, *PFLT_TB;
+
 BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
-/*LRESULT CALLBACK FloatToolbarWndProc(HWND hwnd,
-                                     UINT Message,
-                                     WPARAM wParam,
-                                     LPARAM lParam);*/
 BOOL ShowHideToolbar(HWND hwnd);
 
 #endif /* __IMAGESOFT_PRECOMP_H */

@@ -60,6 +60,11 @@
 #define IDI_ICON            50
 #define IDB_BUTTONS         51
 
+/* these need to be kept consecutive */
+#define IDS_FLT_TOOLS           60
+#define IDS_FLT_COLORS          61
+#define IDS_FLT_HISTORY         62
+
 /* toolbar buttons */
 #define TBICON_PROP         0
 #define TBICON_REFRESH      1
@@ -77,8 +82,9 @@
 #define IDC_LICENSE_EDIT        201
 
 #define IDS_APPNAME             101
-#define IDS_LICENSE             102
-#define IDS_READY               103
+#define IDS_VERSION             102
+#define IDS_LICENSE             103
+#define IDS_READY               104
 #define IDS_TOOLBAR_STANDARD    201
 #define IDS_TOOLBAR_TEST        202
 #define IDS_IMAGE_NAME          203
@@ -119,6 +125,8 @@
 #define IDS_UNIT_DPI            4108
 #define IDS_UNIT_MB             4109
 #define IDS_UNIT_KB             4110
+
+
 
 
 /* toolbar buttons resources
