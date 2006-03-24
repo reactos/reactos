@@ -254,6 +254,13 @@ BOOL TbdAddToolbar(PTOOLBAR_DOCKS TbDocks,
 BOOL TbdHandleNotifications(PTOOLBAR_DOCKS TbDocks,
                             LPNMHDR pnmh,
                             LRESULT *Result);
+VOID TbdHandleEnabling(PTOOLBAR_DOCKS TbDocks,
+                       HWND hWnd,
+                       BOOL Enable);
+VOID TbdHandleActivation(PTOOLBAR_DOCKS TbDocks,
+                         HWND hWnd,
+                         WPARAM *wParam,
+                         LPARAM *lParam);
 VOID TbdShowFloatingToolbars(PTOOLBAR_DOCKS TbDocks,
                              BOOL Show);
 BOOL TbdInitImpl(VOID);

@@ -611,7 +611,9 @@ TbdAddToolbar(PTOOLBAR_DOCKS TbDocks,
     return FALSE;
 }
 
-#define GWLP_DOCKITEM   0
+#define GWLP_TBDOCKS    0
+#define GWLP_DOCKITEM   (GWLP_TBDOCKS + sizeof(PTOOLBAR_DOCKS))
+#define TD_EXTRA_BYTES  (GWLP_DOCKITEM + sizeof(PDOCKBAR_ITEM))
 
 static LRESULT CALLBACK
 ToolDockWndProc(HWND hwnd,
@@ -625,9 +627,10 @@ ToolDockWndProc(HWND hwnd,
 
     /* Get the window context */
     TbDocks = (PTOOLBAR_DOCKS)GetWindowLongPtr(hwnd,
-                                               GWLP_USERDATA);
+                                               GWLP_TBDOCKS);
     Item = (PDOCKBAR_ITEM)GetWindowLongPtr(hwnd,
                                            GWLP_DOCKITEM);
+
     if ((TbDocks == NULL || Item == NULL) && uMsg != WM_CREATE)
     {
         goto HandleDefaultMessage;
@@ -635,6 +638,15 @@ ToolDockWndProc(HWND hwnd,
 
     switch (uMsg)
     {
+        case WM_NCACTIVATE:
+        {
+            TbdHandleActivation(TbDocks,
+                                hwnd,
+                                &wParam,
+                                &lParam);
+            goto HandleDefaultMessage;
+        }
+
         case WM_CREATE:
         {
             TbDocks = ((PTOOLDOCKWND_INIT)(((LPCREATESTRUCT)lParam)->lpCreateParams))->TbDocks;
@@ -642,11 +654,13 @@ ToolDockWndProc(HWND hwnd,
             Item->hWndTool = hwnd;
 
             SetWindowLongPtr(hwnd,
-                             GWLP_USERDATA,
+                             GWLP_TBDOCKS,
                              (LONG_PTR)TbDocks);
             SetWindowLongPtr(hwnd,
                              GWLP_DOCKITEM,
-                             (LONG_PTR)GWLP_DOCKITEM);
+                             (LONG_PTR)Item);
+
+            Ret = TRUE;
             break;
         }
 
@@ -933,6 +947,76 @@ MoveFailed:
 }
 
 VOID
+TbdHandleEnabling(PTOOLBAR_DOCKS TbDocks,
+                  HWND hWnd,
+                  BOOL Enable)
+{
+    PDOCKBAR_ITEM Item;
+
+    Item = TbDocks->Items;
+    while (Item != NULL)
+    {
+        if (Item->hWndTool != NULL &&
+            Item->hWndTool != hWnd)
+        {
+            EnableWindow(Item->hWndTool,
+                         Enable);
+        }
+        Item = Item->Next;
+    }
+}
+
+VOID
+TbdHandleActivation(PTOOLBAR_DOCKS TbDocks,
+                    HWND hWnd,
+                    WPARAM *wParam,
+                    LPARAM *lParam)
+{
+    BOOL SynchronizeSiblings = TRUE;
+    BOOL KeepActive = *(BOOL*)wParam;
+    HWND hWndActivate = *(HWND*)lParam;
+    PDOCKBAR_ITEM Item;
+DbgPrint("-- 0x%p --\n", hWnd);
+    Item = TbDocks->Items;
+    while (Item != NULL)
+    {
+        if (Item->hWndTool != NULL &&
+            Item->hWndTool == hWndActivate)
+        {DbgPrint("Activate toolbars (0x%p)\n", hWndActivate);
+            KeepActive = TRUE;
+            SynchronizeSiblings = FALSE;
+            break;
+        }
+        Item = Item->Next;
+    }
+
+    if (hWndActivate != (HWND)-1)
+    {
+        if (SynchronizeSiblings)
+        {
+            Item = TbDocks->Items;
+            while (Item != NULL)
+            {
+                if (Item->hWndTool != NULL &&
+                    Item->hWndTool != hWnd &&
+                    Item->hWndTool != hWndActivate)
+                {DbgPrint("WM_NCACTIVE %p (wnd %p)\n", KeepActive, Item->hWndTool);
+                    SendMessage(Item->hWndTool,
+                                WM_NCACTIVATE,
+                                (WPARAM)KeepActive,
+                                (LPARAM)-1);
+                }
+                Item = Item->Next;
+            }
+        }
+    }
+    else
+        *lParam = 0;
+
+    *wParam = (WPARAM)KeepActive;
+}
+
+VOID
 TbdShowFloatingToolbars(PTOOLBAR_DOCKS TbDocks,
                         BOOL Show)
 {
@@ -1014,7 +1098,7 @@ TbdInitImpl(VOID)
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = ToolDockWndProc;
-    wc.cbWndExtra = sizeof(PDOCKBAR_ITEM);
+    wc.cbWndExtra = TD_EXTRA_BYTES;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL,
                             IDC_ARROW);

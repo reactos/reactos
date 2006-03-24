@@ -978,11 +978,28 @@ MainWndProc(HWND hwnd,
             break;
         }
 
+        case WM_ENABLE:
+        {
+            TbdHandleEnabling(&Info->ToolDocks,
+                              hwnd,
+                              (BOOL)wParam);
+            goto HandleDefaultMessage;
+        }
+
+        case WM_NCACTIVATE:
+        {
+            TbdHandleActivation(&Info->ToolDocks,
+                                hwnd,
+                                &wParam,
+                                &lParam);
+            goto HandleDefaultMessage;
+        }
+
         case WM_ACTIVATEAPP:
         {
             //TbdShowFloatingToolbars(&Info->ToolDocks,
             //                        (BOOL)wParam);
-            break;
+            goto HandleDefaultMessage;
         }
 
         case WM_CREATE:
@@ -1001,7 +1018,6 @@ MainWndProc(HWND hwnd,
             /* Show the window */
             ShowWindow(hwnd,
                        Info->nCmdShow);
-
             /* get the windows position */
             GetWindowRect(hwnd,
                           &wndOldPos);
