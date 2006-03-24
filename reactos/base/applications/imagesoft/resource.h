@@ -29,7 +29,12 @@
 #define ID_EDITCOLOURS      2017
 #define ID_TOOLS            2018
 #define ID_STATUSBAR        2019
-
+#define ID_BOLD             2030
+#define ID_ITALIC           2031
+#define ID_ULINE            2032
+#define ID_TXTLEFT          2033
+#define ID_TXTCENTER        2034
+#define ID_TXTRIGHT         2035
 
 #define ID_REFRESH          3000
 #define ID_HELP             3001
@@ -77,6 +82,13 @@
 #define TBICON_HELP         8
 #define TBICON_EXIT         9
 
+#define TBICON_BOLD         10
+#define TBICON_ITALIC       11
+#define TBICON_ULINE        12
+#define TBICON_TXTLEFT      13
+#define TBICON_TXTCENTER    14
+#define TBICON_TXTRIGHT     15
+
 /* about box info */
 #define IDD_ABOUTBOX            200
 #define IDC_LICENSE_EDIT        201
@@ -87,7 +99,8 @@
 #define IDS_READY               104
 #define IDS_TOOLBAR_STANDARD    201
 #define IDS_TOOLBAR_TEST        202
-#define IDS_IMAGE_NAME          203
+#define IDS_TOOLBAR_TEXT        203
+#define IDS_IMAGE_NAME          210
 
 /* menu hints */
 #define IDS_HINT_EXIT           20001
@@ -127,8 +140,6 @@
 #define IDS_UNIT_KB             4110
 
 
-
-
 /* toolbar buttons resources
  * these must be numbered consecutively
  * see loop in InitImageList */
@@ -142,6 +153,13 @@
 #define IDB_MAINPASTEICON       10007
 #define IDB_MAINUNDOICON        10008
 #define IDB_MAINREDOICON        10009
+#define IDB_TEXTBOLD            10020
+#define IDB_TEXTITALIC          10021
+#define IDB_TEXTULINE           10022
+#define IDB_TEXTLEFT            10023
+#define IDB_TEXTCENTER          10024
+#define IDB_TEXTRIGHT           10025
+
 
 /* toolbar buttons */
 #define TBICON_NEW              0

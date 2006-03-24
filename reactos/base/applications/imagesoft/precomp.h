@@ -131,6 +131,7 @@ typedef struct _EDIT_WND_INFO
     struct _EDIT_WND_INFO *Next;
     POINT ScrollPos;
     USHORT Zoom;
+    DWORD Tool;
 
     POPEN_IMAGE_EDIT_INFO OpenInfo; /* Only valid during initialization */
 
@@ -332,7 +333,7 @@ BOOL DoOpenFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpName);
 BOOL DoSaveFile(HWND hwnd);
 
 /* floattoolbar.c */
-typedef struct _FLT_TB
+typedef struct _FLT_WND
 {
     HWND hSelf;
     LPTSTR lpName;
@@ -340,10 +341,11 @@ typedef struct _FLT_TB
     INT y;
     INT Width;
     INT Height;
-} FLT_TB, *PFLT_TB;
+    BOOL bOpaque;
+} FLT_WND, *PFLT_WND;
 
 BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
-BOOL ShowHideToolbar(HWND hwnd);
+BOOL ShowHideWindow(HWND hwnd);
 
 #endif /* __IMAGESOFT_PRECOMP_H */

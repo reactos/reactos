@@ -33,6 +33,8 @@ BEGIN
   POPUP "&View"
   BEGIN
     MENUITEM "&Tools",           ID_TOOLS, CHECKED
+    MENUITEM "&Color",           -1, CHECKED
+    MENUITEM "&History",         -1, CHECKED
     MENUITEM "&Status Bar",      ID_STATUSBAR, CHECKED
   END
   POPUP "&Image"

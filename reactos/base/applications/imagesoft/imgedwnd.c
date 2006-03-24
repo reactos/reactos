@@ -46,9 +46,16 @@ InitEditWnd(PEDIT_WND_INFO Info)
 
     if (Info->OpenInfo != NULL)
     {
+        HDC hDC = GetDC(Info->hSelf);
+        Info->hDCMem = CreateCompatibleDC(hDC);
+        ReleaseDC(Info->hSelf, hDC);
+
         if (Info->OpenInfo->CreateNew)
         {
             /* FIXME: convert this to a DIB Section */
+            /* set bitmap dimensions */
+            Info->Width = Info->OpenInfo->New.Width;
+            Info->Height = Info->OpenInfo->New.Height;
 
         }
         else
@@ -157,10 +164,12 @@ InitEditWnd(PEDIT_WND_INFO Info)
 fail:
     if (! hFile)
         CloseHandle(hFile);
+
     if (! pbmi)
         HeapFree(ProcessHeap,
                  0,
                  pbmi);
+
     return FALSE;
 }
 
@@ -169,6 +178,8 @@ DestroyEditWnd(PEDIT_WND_INFO Info)
 {
     PEDIT_WND_INFO *PrevEditor;
     PEDIT_WND_INFO Editor;
+
+    DeleteDC(Info->hDCMem);
 
     /* FIXME - free resources and run down editor */
 
@@ -196,24 +207,20 @@ ImageEditWndRepaint(PEDIT_WND_INFO Info,
 
     if (Info->hBitmap)
     {
-        Info->hDCMem = CreateCompatibleDC(hDC);
-
         hOldBitmap = (HBITMAP) SelectObject(Info->hDCMem,
-                     Info->hBitmap);
+                                            Info->hBitmap);
 
         BitBlt(hDC,
-               0,
-               0,
-               Info->Width,
-               Info->Height,
+               lpps->rcPaint.left,
+               lpps->rcPaint.top,
+               lpps->rcPaint.right - lpps->rcPaint.left,
+               lpps->rcPaint.bottom - lpps->rcPaint.top,
                Info->hDCMem,
-               0,
-               0,
+               lpps->rcPaint.left,
+               lpps->rcPaint.top,
                SRCCOPY);
 
         Info->hBitmap = SelectObject(Info->hDCMem, hOldBitmap);
-
-        DeleteDC(Info->hDCMem);
     }
 }
 
@@ -225,7 +232,9 @@ ImageEditWndProc(HWND hwnd,
 {
     PEDIT_WND_INFO Info;
     LRESULT Ret = 0;
-    static BOOL bLMButtonDown = FALSE;
+    HDC hDC;
+    static INT xMouse, yMouse;
+    static BOOL bLeftButtonDown, bRightButtonDown;
 
     /* Get the window context */
     Info = (PEDIT_WND_INFO)GetWindowLongPtr(hwnd,
@@ -262,24 +271,96 @@ ImageEditWndProc(HWND hwnd,
             break;
 
         case WM_LBUTTONDOWN:
+            if (! bRightButtonDown)
+                SetCapture(Info->hSelf);
+
+            bLeftButtonDown = TRUE;
+            xMouse = LOWORD(lParam);
+            yMouse = HIWORD(lParam);
+
             SetCursor(LoadCursor(hInstance,
                                  MAKEINTRESOURCE(IDC_PAINTBRUSHCURSORMOUSEDOWN)));
-            bLMButtonDown = TRUE;
-
         break;
 
         case WM_LBUTTONUP:
-            bLMButtonDown = FALSE;
+            if (bLeftButtonDown)
+                SetCapture(NULL);
+
+            bLeftButtonDown = FALSE;
+
+        break;
+
+        case WM_RBUTTONDOWN:
+            if (! bLeftButtonDown)
+                SetCapture(Info->hSelf);
+
+            bRightButtonDown = TRUE;
+            xMouse = LOWORD(lParam);
+            yMouse = HIWORD(lParam);
+
+            SetCursor(LoadCursor(hInstance,
+                                 MAKEINTRESOURCE(IDC_PAINTBRUSHCURSORMOUSEDOWN)));
+        break;
+
+        case WM_RBUTTONUP:
+            if (bRightButtonDown)
+                SetCapture(NULL);
+
+            bRightButtonDown = FALSE;
 
         break;
 
         case WM_MOUSEMOVE:
-            if (bLMButtonDown)
-                SetCursor(LoadCursor(hInstance,
-                                     MAKEINTRESOURCE(IDC_PAINTBRUSHCURSORMOUSEDOWN)));
+        {
+            HPEN hPen, hPenOld;
+
+            if (!bLeftButtonDown && !bRightButtonDown)
+                break;
+
+            hDC = GetDC(Info->hSelf);
+
+            SelectObject(Info->hDCMem,
+                         Info->hBitmap);
+
+            if (bLeftButtonDown)
+                hPen = CreatePen(PS_SOLID,
+                                 3,
+                                 RGB(0, 0, 0));
             else
-                SetCursor(LoadCursor(hInstance,
-                                     MAKEINTRESOURCE(IDC_PAINTBRUSHCURSOR)));
+                hPen = CreatePen(PS_SOLID,
+                                 3,
+                                 RGB(255, 255, 255));
+
+            hPenOld = SelectObject(hDC,
+                                   hPen);
+
+            MoveToEx(hDC,
+                     xMouse,
+                     yMouse,
+                     NULL);
+
+            MoveToEx(Info->hDCMem,
+                     xMouse,
+                     yMouse,
+                     NULL);
+
+            xMouse = (short)LOWORD(lParam);
+            yMouse = (short)HIWORD(lParam);
+
+            LineTo(hDC,
+                   xMouse,
+                   yMouse);
+
+            LineTo(Info->hDCMem,
+                   xMouse,
+                   yMouse);
+
+            DeleteObject(SelectObject(hDC,
+                                      hPenOld));
+
+            ReleaseDC(Info->hSelf,
+                      hDC);
+        }
         break;
 
         case WM_PAINT:

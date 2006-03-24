@@ -5,7 +5,7 @@ static const TCHAR szMainWndClass[] = TEXT("ImageSoftWndClass");
 
 #define ID_MDI_FIRSTCHILD   50000
 #define ID_MDI_WINDOWMENU   5
-#define NUM_FLT_TB          3
+#define NUM_FLT_WND         3
 
 /* menu hints */
 static const MENU_HINT MainMenuHintTable[] = {
@@ -27,26 +27,29 @@ static const MENU_HINT SystemMenuHintTable[] = {
     {SC_NEXTWINDOW, IDS_HINT_SYS_NEXT},
 };
 
-static FLT_TB FloatingToolbar[NUM_FLT_TB] = {
+static FLT_WND FloatingWindow[NUM_FLT_WND] = {
     {NULL, NULL, 0, 0, 55,  300},
     {NULL, NULL, 0, 0, 200, 200},
     {NULL, NULL, 0, 0, 150, 150}
 };
 
 
-/* Standard Toolbar */
+/*  Toolbars */
 #define ID_TOOLBAR_STANDARD 0
+#define ID_TOOLBAR_TEXT     1
 static const TCHAR szToolbarStandard[] = TEXT("STANDARD");
+static const TCHAR szToolbarText[]     = TEXT("TEXT");
 
 
 /* Test Toolbar */
-#define ID_TOOLBAR_TEST 1
+#define ID_TOOLBAR_TEST 5
 static const TCHAR szToolbarTest[] = TEXT("TEST");
 
 /* Toolbars table */
 static const DOCKBAR MainDockBars[] = {
     {ID_TOOLBAR_STANDARD, szToolbarStandard, IDS_TOOLBAR_STANDARD, TOP_DOCK},
     {ID_TOOLBAR_TEST, szToolbarTest, IDS_TOOLBAR_TEST, TOP_DOCK},
+    {ID_TOOLBAR_TEXT, szToolbarText, IDS_TOOLBAR_TEXT, TOP_DOCK},
 };
 
 
@@ -108,6 +111,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
 {
     const TBBUTTON *Buttons = NULL;
     UINT NumButtons = 0;
+    UINT StartImageRes;
     HWND hWndClient = NULL;
 
     UNREFERENCED_PARAMETER(Context);
@@ -119,6 +123,15 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
         {
             Buttons = StdButtons;
             NumButtons = sizeof(StdButtons) / sizeof(StdButtons[0]);
+            StartImageRes = IDB_MAINNEWICON;
+            break;
+        }
+
+        case ID_TOOLBAR_TEXT:
+        {
+            Buttons = TextButtons;
+            NumButtons = sizeof(TextButtons) / sizeof(TextButtons[0]);
+            StartImageRes = IDB_TEXTBOLD;
             break;
         }
 
@@ -158,7 +171,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                                     NULL);
         if (hWndClient != NULL)
         {
-            HIMAGELIST hMainTBImageList;
+            HIMAGELIST hImageList;
 
             SendMessage(hWndClient,
                         TB_SETEXTENDEDSTYLE,
@@ -176,18 +189,20 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                         0,
                         (LPARAM)MAKELONG(TB_BMP_WIDTH, TB_BMP_HEIGHT));
 
-            hMainTBImageList = InitImageList(NUM_MAINTB_IMAGES,
-                                             IDB_MAINNEWICON);
+            hImageList = InitImageList(NumButtons,
+                                       StartImageRes);
 
             ImageList_Destroy((HIMAGELIST)SendMessage(hWndClient,
                                                       TB_SETIMAGELIST,
                                                       0,
-                                                      (LPARAM)hMainTBImageList));
+                                                      (LPARAM)hImageList));
 
             SendMessage(hWndClient,
                         TB_ADDBUTTONS,
                         NumButtons,
-                        (LPARAM)&StdButtons);
+                        (LPARAM)Buttons);
+
+
 
         }
     }
@@ -224,6 +239,7 @@ MainWndToolbarInsertBand(struct _TOOLBAR_DOCKS *TbDocks,
 {
     switch (rbi->wID)
     {
+        case ID_TOOLBAR_TEXT:
         case ID_TOOLBAR_STANDARD:
         {
             SIZE Size;
@@ -273,6 +289,7 @@ MainWndToolbarDockBand(struct _TOOLBAR_DOCKS *TbDocks,
     {
         switch (rbi->wID)
         {
+            case ID_TOOLBAR_TEXT:
             case ID_TOOLBAR_STANDARD:
             {
                 SIZE Size;
@@ -350,118 +367,125 @@ MainWndToolbarChevronPushed(struct _TOOLBAR_DOCKS *TbDocks,
 }
 
 static VOID
-MainWndMoveFloatingToolbars(HWND hwnd, PRECT wndOldPos)
+MainWndMoveFloatingWindows(HWND hwnd, PRECT wndOldPos)
 {
     RECT wndNewPos, TbRect;
     INT i, xMoved, yMoved;
 
-    GetWindowRect(hwnd,
-                  &wndNewPos);
-
-    xMoved = wndNewPos.left - wndOldPos->left;
-    yMoved = wndNewPos.top - wndOldPos->top;
-
-    for (i = 0; i < NUM_FLT_TB; i++)
+    if (GetWindowRect(hwnd,
+                      &wndNewPos))
     {
-        GetWindowRect(FloatingToolbar[i].hSelf,
-                      &TbRect);
 
-        FloatingToolbar[i].x = TbRect.left + xMoved;
-        FloatingToolbar[i].y = TbRect.top + yMoved;
+        xMoved = wndNewPos.left - wndOldPos->left;
+        yMoved = wndNewPos.top - wndOldPos->top;
 
-        MoveWindow(FloatingToolbar[i].hSelf,
-                   FloatingToolbar[i].x,
-                   FloatingToolbar[i].y,
-                   FloatingToolbar[i].Width,
-                   FloatingToolbar[i].Height,
-                   TRUE);
+        for (i = 0; i < NUM_FLT_WND; i++)
+        {
+            GetWindowRect(FloatingWindow[i].hSelf,
+                          &TbRect);
+
+            FloatingWindow[i].x = TbRect.left + xMoved;
+            FloatingWindow[i].y = TbRect.top + yMoved;
+
+            MoveWindow(FloatingWindow[i].hSelf,
+                       FloatingWindow[i].x,
+                       FloatingWindow[i].y,
+                       FloatingWindow[i].Width,
+                       FloatingWindow[i].Height,
+                       TRUE);
+        }
+
+        CopyMemory(wndOldPos,
+                   &wndNewPos,
+                   sizeof(RECT));
     }
-
-    CopyMemory(wndOldPos,
-               &wndNewPos,
-               sizeof(RECT));
 }
 
 
 static VOID
-MainWndResetFloatingToolbars(HWND hwnd)
+MainWndResetFloatingWindows(HWND hwnd)
 {
     RECT rect;
 
-    GetWindowRect(hwnd,
-                  &rect);
+    if (GetWindowRect(hwnd,
+                      &rect))
+    {
 
-    /* tools datum */
-    MoveWindow(FloatingToolbar[0].hSelf,
-               rect.left + 5,
-               rect.top + 5,
-               FloatingToolbar[0].Width,
-               FloatingToolbar[0].Height,
-               TRUE);
+        /* tools datum */
+        MoveWindow(FloatingWindow[0].hSelf,
+                   rect.left + 5,
+                   rect.top + 5,
+                   FloatingWindow[0].Width,
+                   FloatingWindow[0].Height,
+                   TRUE);
 
-    /* colors datum */
-    MoveWindow(FloatingToolbar[1].hSelf,
-               rect.left + 5,
-               rect.bottom - FloatingToolbar[1].Height - 5,
-               FloatingToolbar[1].Width,
-               FloatingToolbar[1].Height,
-               TRUE);
+        /* colors datum */
+        MoveWindow(FloatingWindow[1].hSelf,
+                   rect.left + 5,
+                   rect.bottom - FloatingWindow[1].Height - 5,
+                   FloatingWindow[1].Width,
+                   FloatingWindow[1].Height,
+                   TRUE);
 
-    /* history datum */
-    MoveWindow(FloatingToolbar[2].hSelf,
-               rect.right - FloatingToolbar[2].Width - 5,
-               rect.top + 5,
-               FloatingToolbar[2].Width,
-               FloatingToolbar[2].Height,
-               TRUE);
+        /* history datum */
+        MoveWindow(FloatingWindow[2].hSelf,
+                   rect.right - FloatingWindow[2].Width - 5,
+                   rect.top + 5,
+                   FloatingWindow[2].Width,
+                   FloatingWindow[2].Height,
+                   TRUE);
+    }
 }
 
 static VOID
-MainWndCreateFloatToolbars(PMAIN_WND_INFO Info)
+MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
 {
     RECT rect;
     const TBBUTTON *Buttons = NULL;
     UINT Res, NumButtons = 2;
     INT i = 0;
 
-    GetWindowRect(Info->hMdiClient,
-                  &rect);
+    if (! GetWindowRect(Info->hMdiClient,
+                        &rect))
+    {
+        return;
+    }
 
     /* tools datum */
-    FloatingToolbar[0].x = rect.left + 5;
-    FloatingToolbar[0].y = rect.top + 5;
+    FloatingWindow[0].x = rect.left + 5;
+    FloatingWindow[0].y = rect.top + 5;
 
     /* colors datum */
-    FloatingToolbar[1].x = rect.left + 5;
-    FloatingToolbar[1].y = rect.bottom - FloatingToolbar[1].Height - 5;
+    FloatingWindow[1].x = rect.left + 5;
+    FloatingWindow[1].y = rect.bottom - FloatingWindow[1].Height - 5;
 
     /* history datum */
-    FloatingToolbar[2].x = rect.right - FloatingToolbar[2].Width - 5;
-    FloatingToolbar[2].y = rect.top + 5;
+    FloatingWindow[2].x = rect.right - FloatingWindow[2].Width - 5;
+    FloatingWindow[2].y = rect.top + 5;
 
-    for (Res = IDS_FLT_TOOLS; Res < IDS_FLT_TOOLS + NUM_FLT_TB; Res++, i++)
+    for (Res = IDS_FLT_TOOLS; Res < IDS_FLT_TOOLS + NUM_FLT_WND; Res++, i++)
     {
-        if (! AllocAndLoadString(&FloatingToolbar[i].lpName,
+        if (! AllocAndLoadString(&FloatingWindow[i].lpName,
                                  hInstance,
                                  Res))
         {
-            FloatingToolbar[i].lpName = NULL;
+            FloatingWindow[i].lpName = NULL;
         }
 
 
         /* create the 'tools' toolbar */
-        FloatingToolbar[i].hSelf = CreateWindowEx(WS_EX_TOOLWINDOW,
-                                                  TEXT("ImageSoftFloatWndClass"),
-                                                  FloatingToolbar[i].lpName,
-                                                  WS_POPUPWINDOW | WS_DLGFRAME | WS_VISIBLE,
-                                                  FloatingToolbar[i].x,
-                                                  FloatingToolbar[i].y,
-                                                  FloatingToolbar[i].Width,
-                                                  FloatingToolbar[i].Height,
-                                                  Info->hSelf,
-                                                  NULL,
-                                                  hInstance,
-                                                  NULL);
+        FloatingWindow[i].hSelf = CreateWindowEx(WS_EX_TOOLWINDOW,
+                                                 TEXT("ImageSoftFloatWndClass"),
+                                                 FloatingWindow[i].lpName,
+                                                 WS_POPUPWINDOW | WS_DLGFRAME | WS_VISIBLE,
+                                                 FloatingWindow[i].x,
+                                                 FloatingWindow[i].y,
+                                                 FloatingWindow[i].Width,
+                                                 FloatingWindow[i].Height,
+                                                 Info->hSelf,
+                                                 NULL,
+                                                 hInstance,
+                                                 NULL);
     }
 
 
@@ -527,7 +551,7 @@ CreateToolbars(PMAIN_WND_INFO Info)
                       &MainWndDockBarCallbacks);
     }
 
-    MainWndCreateFloatToolbars(Info);
+    MainWndCreateFloatWindows(Info);
 }
 
 static VOID CALLBACK
@@ -707,6 +731,10 @@ MainWndCommand(PMAIN_WND_INFO Info,
             break;
         }
 
+        case ID_BOLD:
+            MessageBox(NULL, _T("Bingo"), NULL, 0);
+        break;
+
         case ID_OPEN:
         {
             OPEN_IMAGE_EDIT_INFO OpenInfo;
@@ -861,7 +889,7 @@ MainWndProc(HWND hwnd,
 
                 /* reposition the floating toolbars */
                 if ((wParam == SIZE_MAXIMIZED) || (wParam == SIZE_RESTORED))
-                    MainWndResetFloatingToolbars(Info->hMdiClient);
+                    MainWndResetFloatingWindows(Info->hMdiClient);
 
             break;
         }
@@ -875,6 +903,7 @@ MainWndProc(HWND hwnd,
         break;
 
         case WM_NCLBUTTONUP :
+
             bLBMouseDown = FALSE;
             DefWindowProc(hwnd,
                           uMsg,
@@ -886,7 +915,7 @@ MainWndProc(HWND hwnd,
         {
             /* if the main window is moved, move the toolbars too */
             if (bLBMouseDown)
-                MainWndMoveFloatingToolbars(hwnd, &wndOldPos);
+                MainWndMoveFloatingWindows(hwnd, &wndOldPos);
         }
         break;
 
