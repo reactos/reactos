@@ -369,7 +369,7 @@
 @ stub RpcAsyncGetCallStatus
 @ stub RpcAsyncInitializeHandle
 @ stub RpcAsyncRegisterInfo
-@ stub RpcBindingCopy
+@ stdcall RpcBindingCopy(ptr ptr)
 @ stdcall RpcBindingFree(ptr)
 @ stdcall RpcBindingFromStringBindingA(str  ptr)
 @ stdcall RpcBindingFromStringBindingW(wstr ptr)
