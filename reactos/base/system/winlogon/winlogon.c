@@ -127,7 +127,7 @@ StartServices (VOID)
      {
         Sleep(1000);
 
-        //DbgPrint("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
+        DPRINT("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
         ServicesInitEvent = OpenEvent(EVENT_ALL_ACCESS, //SYNCHRONIZE,
                                       FALSE,
                                       L"SvcctrlStartEvent_A3725DX");
@@ -139,16 +139,16 @@ StartServices (VOID)
 
    if (ServicesInitEvent == NULL)
      {
-        DbgPrint("WL: Failed to open event \"SvcctrlStartEvent_A3725DX\"\n");
+        DPRINT1("WL: Failed to open event \"SvcctrlStartEvent_A3725DX\"\n");
         return FALSE;
      }
 
    /* wait for event signalization */
-   //DbgPrint("WL: Waiting forever on event handle: %x\n", ServicesInitEvent);
+   DPRINT("WL: Waiting forever on event handle: %x\n", ServicesInitEvent);
    WaitForSingleObject(ServicesInitEvent, INFINITE);
-   //DbgPrint("WL: Closing event object \"SvcctrlStartEvent_A3725DX\"\n");
+   DPRINT("WL: Closing event object \"SvcctrlStartEvent_A3725DX\"\n");
    CloseHandle(ServicesInitEvent);
-   //DbgPrint("WL: StartServices() Done.\n");
+   DPRINT("WL: StartServices() Done.\n");
 
    return TRUE;
 }
@@ -170,7 +170,7 @@ StartLsass (VOID)
 
    if (LsassInitEvent == NULL)
      {
-        DbgPrint("WL: Failed to create lsass notification event\n");
+        DPRINT1("WL: Failed to create lsass notification event\n");
         return(FALSE);
      }
 
@@ -196,7 +196,7 @@ StartLsass (VOID)
                           &ProcessInformation);
    if (!Result)
      {
-        DbgPrint("WL: Failed to execute lsass\n");
+        DPRINT1("WL: Failed to execute lsass\n");
         return(FALSE);
      }
 
@@ -292,7 +292,7 @@ UnregisterHotKeys(VOID)
 VOID STDCALL
 HandleHotKey(MSG *Msg)
 {
-  DbgPrint("HOTKEY: Got hot key (%d)\n", Msg->wParam);
+  DPRINT1("HOTKEY: Got hot key (%d)\n", Msg->wParam);
 
   /* CTRL-ALT-DEL */
   if (Msg->wParam == 0)
@@ -418,7 +418,7 @@ DoLogonUser (PWCHAR Name,
 		       &WLSession->UserToken);
   if (!Result)
     {
-      DbgPrint ("WL: LogonUserW() failed\n");
+      DPRINT1 ("WL: LogonUserW() failed\n");
       RtlDestroyEnvironment (lpEnvironment);
       return FALSE;
     }
@@ -436,7 +436,7 @@ DoLogonUser (PWCHAR Name,
   if (!LoadUserProfileW (WLSession->UserToken,
 			 &ProfileInfo))
     {
-      DbgPrint ("WL: LoadUserProfileW() failed\n");
+      DPRINT1 ("WL: LoadUserProfileW() failed\n");
       CloseHandle (WLSession->UserToken);
       RtlDestroyEnvironment (lpEnvironment);
       return FALSE;
@@ -446,7 +446,7 @@ DoLogonUser (PWCHAR Name,
 			       WLSession->UserToken,
 			       TRUE))
     {
-      DbgPrint ("WL: CreateEnvironmentBlock() failed\n");
+      DPRINT1("WL: CreateEnvironmentBlock() failed\n");
       return FALSE;
     }
 
@@ -479,7 +479,7 @@ DoLogonUser (PWCHAR Name,
 				 &ProcessInformation);
   if (!Result)
     {
-      DbgPrint ("WL: Failed to execute user shell %s\n", CommandLine);
+      DPRINT1("WL: Failed to execute user shell %s\n", CommandLine);
       if (ImpersonateLoggedOnUser(WLSession->UserToken))
         {
           UpdatePerUserSystemParameters(0, FALSE);
@@ -549,25 +549,29 @@ WinMain(HINSTANCE hInstance,
 
   if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
   {
-    DbgPrint("WL: Could not register logon process\n");
+    DPRINT1("WL: Could not register logon process\n");
     NtShutdownSystem(ShutdownNoReboot);
     ExitProcess(0);
     return 0;
   }
 
 #if START_LSASS
-   if (StartProcess(L"StartLsass"))
-     {
-	if (!StartLsass())
-	  {
-	     DbgPrint("WL: Failed to start LSASS (0x%X)\n", GetLastError());
-	  }
-     }
+  if (StartProcess(L"StartLsass"))
+  {
+    if (!StartLsass())
+	{
+	  DPRINT1("WL: Failed to start LSASS (0x%X)\n", GetLastError());
+	}
+  }
+  else
+  {
+	  DPRINT1("WL: StartProcess() failed!\n");
+  }
 #endif
 
   if(!(WLSession = MsGinaInit()))
   {
-    DbgPrint("WL: Failed to initialize msgina.dll\n");
+    DPRINT1("WL: Failed to initialize msgina.dll\n");
     NtShutdownSystem(ShutdownNoReboot);
     ExitProcess(0);
     return 0;
@@ -589,7 +593,7 @@ WinMain(HINSTANCE hInstance,
   SetThreadDesktop(WLSession->ApplicationDesktop);
   if(!SwitchDesktop(WLSession->ApplicationDesktop))
   {
-    DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
+    DPRINT1("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
   }
 
   InitServices();
@@ -597,7 +601,7 @@ WinMain(HINSTANCE hInstance,
   /* Check for pending setup */
   if (GetSetupType () != 0)
   {
-    DPRINT ("Winlogon: CheckForSetup() in setup mode\n");
+    DPRINT("Winlogon: CheckForSetup() in setup mode\n");
 
     /* Run setup and reboot when done */
     RunSetup();
@@ -608,11 +612,11 @@ WinMain(HINSTANCE hInstance,
   }
 
 #if SUPPORT_CONSOLESTART
- StartConsole = !StartIntoGUI();
+  StartConsole = !StartIntoGUI();
 #endif
- if(!InitializeSAS(WLSession))
+  if(!InitializeSAS(WLSession))
   {
-    DbgPrint("WL: Failed to initialize SAS\n");
+    DPRINT1("WL: Failed to initialize SAS\n");
     ExitProcess(2);
     return 2;
   }
@@ -628,13 +632,13 @@ WinMain(HINSTANCE hInstance,
        case STATUS_PORT_CONNECTION_REFUSED:
          /* FIXME - we don't have the 'SeTcbPrivilege' pivilege, so set it or call
                     LsaAddAccountRights() and try again */
-         DbgPrint("WL: LsaRegisterLogonProcess() returned STATUS_PORT_CONNECTION_REFUSED\n");
+         DPRINT1("WL: LsaRegisterLogonProcess() returned STATUS_PORT_CONNECTION_REFUSED\n");
          break;
        case STATUS_NAME_TOO_LONG:
-         DbgPrint("WL: LsaRegisterLogonProcess() returned STATUS_NAME_TOO_LONG\n");
+         DPRINT1("WL: LsaRegisterLogonProcess() returned STATUS_NAME_TOO_LONG\n");
          break;
        default:
-         DbgPrint("WL: Failed to connect to LSASS\n");
+         DPRINT1("WL: Failed to connect to LSASS\n");
          break;
      }
      return(1);
@@ -645,7 +649,7 @@ WinMain(HINSTANCE hInstance,
    if (!NT_SUCCESS(Status))
    {
      LsaDeregisterLogonProcess(LsaHandle);
-     DbgPrint("WL: Failed to lookup authentication package\n");
+     DPRINT1("WL: Failed to lookup authentication package\n");
      return(1);
    }
 #endif
@@ -734,7 +738,7 @@ WinMain(HINSTANCE hInstance,
    }
    else
    {
-     DbgPrint("WL: LogonStatus != LOGON_SHUTDOWN!!!\n");
+     DPRINT1("WL: LogonStatus != LOGON_SHUTDOWN!!!\n");
      ExitProcess(0);
    }
 #if SUPPORT_CONSOLESTART
@@ -757,7 +761,7 @@ DisplayStatusMessage(PWLSESSION Session, HDESK hDesktop, DWORD dwOptions, PWSTR 
   {
     if(pMessage)
     {
-      DbgPrint("WL-Status: %ws\n", pMessage);
+      DPRINT1("WL-Status: %ws\n", pMessage);
     }
     return TRUE;
   }
@@ -779,8 +783,12 @@ InitServices(void)
   {
 	if(!StartServices())
     {
-      DbgPrint("WL: Failed to start Services (0x%X)\n", GetLastError());
+      DPRINT1("WL: Failed to start Services (0x%X)\n", GetLastError());
     }
+  }
+  else
+  {
+	  DPRINT1("WL: StartProcess() failed!\n");
   }
 
   return TRUE;
@@ -856,7 +864,7 @@ SessionLoop(PWLSESSION Session)
       /* the user doesn't want to login, instead pressed cancel
          we should display the window again so one can logon again */
       /* FIXME - disconnect any connections in case we did a remote logon */
-      DbgPrint("WL: DoLogin failed\n");
+      DPRINT1("WL: DoLogin failed\n");
       WlxAction = WLX_SAS_ACTION_NONE;
     }
     if(WlxAction == WLX_SAS_ACTION_NONE)
