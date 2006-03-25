@@ -45,7 +45,7 @@ IDD_GENERAL_PAGE DIALOG DISCARDABLE  0, 0, 362, 175
 STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "Tahoma"
 BEGIN
- GROUPBOX "Systemstartauswahl", -1, 10, 10, 340, 150
+ GROUPBOX "Systemstartauswahl", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
  CONTROL "&Normaler Systemstart - Alle Gerätetreiber und Dienste laden", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 210, 10
  CONTROL "&Diagnosesystemstart - Nur grundlegende Geräte und Dienste laden", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 230, 10
  CONTROL "B&enutzerdefinierter Systemstart", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 120, 10
@@ -63,7 +63,7 @@ BEGIN
    PUSHBUTTON    "A&ls Standard", IDC_BTN_SET_DEFAULT_BOOT, 120, 65, 63, 12
    PUSHBUTTON    "Nach &oben", IDC_BTN_MOVE_UP_BOOT_OPTION, 203, 65, 63, 12
    PUSHBUTTON    "Nach &unten", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 286, 65, 63, 12
-   GROUPBOX "Boot Optionen", -1, 10, 80, 250, 90
+   GROUPBOX "Boot Optionen", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 50, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 55, 10
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
