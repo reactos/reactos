@@ -82,12 +82,12 @@
 #define TBICON_HELP         8
 #define TBICON_EXIT         9
 
-#define TBICON_BOLD         10
-#define TBICON_ITALIC       11
-#define TBICON_ULINE        12
-#define TBICON_TXTLEFT      13
-#define TBICON_TXTCENTER    14
-#define TBICON_TXTRIGHT     15
+#define TBICON_BOLD         0
+#define TBICON_ITALIC       1
+#define TBICON_ULINE        2
+#define TBICON_TXTLEFT      3
+#define TBICON_TXTCENTER    4
+#define TBICON_TXTRIGHT     5
 
 /* about box info */
 #define IDD_ABOUTBOX            200
