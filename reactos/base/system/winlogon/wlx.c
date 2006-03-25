@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            services/winlogon/winlogon.c
+ * FILE:            services/winlogon/wlx.c
  * PURPOSE:         Logon
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
