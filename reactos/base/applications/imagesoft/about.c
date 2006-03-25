@@ -1,7 +1,10 @@
 #include <precomp.h>
 
 INT_PTR CALLBACK
-AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+AboutDialogProc(HWND hDlg,
+                UINT message,
+                WPARAM wParam,
+                LPARAM lParam)
 {
     HWND  hLicenseEditWnd;
     HICON hIcon = NULL;
@@ -11,24 +14,36 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
 
-        hIcon = LoadImage(hInstance, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 16, 16, 0);
-        SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+        hIcon = LoadImage(hInstance,
+                          MAKEINTRESOURCE(IDI_ICON),
+                          IMAGE_ICON,
+                          16,
+                          16,
+                          0);
 
-        hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
+        SendMessage(hDlg,
+                    WM_SETICON,
+                    ICON_SMALL,
+                    (LPARAM)hIcon);
 
-        LoadString(hInstance, IDS_LICENSE, strLicense,
-            sizeof(strLicense) / sizeof(TCHAR));
+        hLicenseEditWnd = GetDlgItem(hDlg,
+                                     IDC_LICENSE_EDIT);
 
-        SetWindowText(hLicenseEditWnd, strLicense);
+        LoadString(hInstance,
+                   IDS_LICENSE,
+                   strLicense,
+                   sizeof(strLicense) / sizeof(TCHAR));
 
+        SetWindowText(hLicenseEditWnd,
+                      strLicense);
         return TRUE;
 
     case WM_COMMAND:
-
         if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
         {
             DestroyIcon(hIcon);
-            EndDialog(hDlg, LOWORD(wParam));
+            EndDialog(hDlg,
+                      LOWORD(wParam));
             return TRUE;
         }
 

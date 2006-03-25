@@ -19,6 +19,7 @@ END
 
 IDI_ICON ICON "res/imagesoft.ico"
 
+/* main toolbar icons */
 IDB_MAINCOPYICON BITMAP DISCARDABLE "res/icons/MainCopyIcon.bmp"
 IDB_MAINCUTICON BITMAP DISCARDABLE "res/icons/MainCutIcon.bmp"
 IDB_MAINPASTEICON BITMAP DISCARDABLE "res/icons/MainPasteIcon.bmp"
@@ -30,6 +31,7 @@ IDB_MAINPRINTICON BITMAP DISCARDABLE "res/icons/MainPrintIcon.bmp"
 IDB_MAINPRINTPREICON BITMAP DISCARDABLE "res/icons/MainPrintPreIcon.bmp"
 IDB_MAINSAVEICON BITMAP DISCARDABLE "res/icons/MainSaveIcon.bmp"
 
+/* text toolbar icons */
 IDB_TEXTBOLD BITMAP DISCARDABLE "res/icons/TextBoldIcon.bmp"
 IDB_TEXTITALIC BITMAP DISCARDABLE "res/icons/TextItalicIcon.bmp"
 IDB_TEXTULINE BITMAP DISCARDABLE "res/icons/TextUnderlineIcon.bmp"
@@ -37,6 +39,10 @@ IDB_TEXTLEFT BITMAP DISCARDABLE "res/icons/TextAlignLeftIcon.bmp"
 IDB_TEXTCENTER BITMAP DISCARDABLE "res/icons/TextAlignCenterIcon.bmp"
 IDB_TEXTRIGHT BITMAP DISCARDABLE "res/icons/TextAlignRightIcon.bmp"
 
+/* tools window icons */
+
+
+/* cursors */
 IDC_PAINTBRUSHCURSOR CURSOR DISCARDABLE "res/cursors/PaintBrushToolCursor.cur"
 IDC_PAINTBRUSHCURSORMOUSEDOWN CURSOR DISCARDABLE "res/cursors/PaintBrushToolCursorMouseDown.cur"
 
