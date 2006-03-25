@@ -33,11 +33,11 @@ MmMapViewInSystemCache(PCACHE_VIEW);
  */
 BOOLEAN STDCALL
 CcMapData(IN PFILE_OBJECT FileObject,
-	  IN PLARGE_INTEGER FileOffset,
-	  IN ULONG Length,
-	  IN BOOLEAN Wait,
-	  OUT PVOID* piBcb,
-	  OUT PVOID* pBuffer)
+          IN PLARGE_INTEGER FileOffset,
+          IN ULONG Length,
+          IN BOOLEAN Wait,
+          OUT PVOID* piBcb,
+          OUT PVOID* pBuffer)
 {
    PINTERNAL_BCB iBcb;
    PBCB Bcb;
@@ -47,8 +47,8 @@ CcMapData(IN PFILE_OBJECT FileObject,
    PCACHE_VIEW current = NULL;
 
    DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
-	  " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
-	  Length, Wait, piBcb, pBuffer);
+          " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
+          Length, Wait, piBcb, pBuffer);
 
    ASSERT (FileObject);
    ASSERT (FileObject->SectionObjectPointer);
@@ -94,7 +94,7 @@ CcMapData(IN PFILE_OBJECT FileObject,
       if (Bcb->CacheView[Index]->RefCount == 0)
       {
          RemoveEntryList(&Bcb->CacheView[Index]->ListEntry);
-	 InsertHeadList(&CcInUseCacheViewListHead, &Bcb->CacheView[Index]->ListEntry);
+         InsertHeadList(&CcInUseCacheViewListHead, &Bcb->CacheView[Index]->ListEntry);
       }
       Bcb->CacheView[Index]->RefCount++;
    }
@@ -110,11 +110,11 @@ CcMapData(IN PFILE_OBJECT FileObject,
       while (entry != &CcFreeCacheViewListHead)
       {
          current = CONTAINING_RECORD(entry, CACHE_VIEW, ListEntry);
-	 entry = entry->Flink;
-	 if (current->Bcb == NULL)
-	 {
-	    break;
-	 }
+         entry = entry->Flink;
+         if (current->Bcb == NULL)
+         {
+            break;
+         }
       }
       if (entry == &CcFreeCacheViewListHead)
       {
@@ -168,12 +168,12 @@ CcMapData(IN PFILE_OBJECT FileObject,
 BOOLEAN
 STDCALL
 CcPinMappedData (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			Flags,
-	OUT	PVOID			* Bcb
-	)
+        IN	PFILE_OBJECT		FileObject,
+        IN	PLARGE_INTEGER		FileOffset,
+        IN	ULONG			Length,
+        IN	ULONG			Flags,
+        OUT	PVOID			* Bcb
+        )
 {
   /* no-op for current implementation. */
   return TRUE;
@@ -185,13 +185,13 @@ CcPinMappedData (
 BOOLEAN
 STDCALL
 CcPinRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			Flags,
-	OUT	PVOID			* Bcb,
-	OUT	PVOID			* Buffer
-	)
+        IN	PFILE_OBJECT		FileObject,
+        IN	PLARGE_INTEGER		FileOffset,
+        IN	ULONG			Length,
+        IN	ULONG			Flags,
+        OUT	PVOID			* Bcb,
+        OUT	PVOID			* Buffer
+        )
 {
   if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
   {
@@ -209,14 +209,14 @@ CcPinRead (
 BOOLEAN
 STDCALL
 CcPreparePinWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	BOOLEAN			Zero,
-	IN	ULONG			Flags,
-	OUT	PVOID			* Bcb,
-	OUT	PVOID			* Buffer
-	)
+        IN	PFILE_OBJECT		FileObject,
+        IN	PLARGE_INTEGER		FileOffset,
+        IN	ULONG			Length,
+        IN	BOOLEAN			Zero,
+        IN	ULONG			Flags,
+        OUT	PVOID			* Bcb,
+        OUT	PVOID			* Buffer
+        )
 {
         /*
          * FIXME: This is function is similar to CcPinRead, but doesn't
@@ -234,7 +234,7 @@ CcPreparePinWrite (
  */
 VOID STDCALL
 CcSetDirtyPinnedData (IN PVOID Bcb,
-		      IN PLARGE_INTEGER Lsn)
+        	      IN PLARGE_INTEGER Lsn)
 {
 //   PINTERNAL_BCB iBcb = Bcb;
 //   iBcb->Dirty = TRUE;
@@ -271,11 +271,11 @@ CcUnpinData (IN PVOID _iBcb)
 VOID
 STDCALL
 CcUnpinDataForThread (
-	IN	PVOID			Bcb,
-	IN	ERESOURCE_THREAD	ResourceThreadId
-	)
+        IN	PVOID			Bcb,
+        IN	ERESOURCE_THREAD	ResourceThreadId
+        )
 {
-	UNIMPLEMENTED;
+        UNIMPLEMENTED;
 }
 
 /*
@@ -284,8 +284,8 @@ CcUnpinDataForThread (
 VOID
 STDCALL
 CcRepinBcb (
-	IN	PVOID	Bcb
-	)
+        IN	PVOID	Bcb
+        )
 {
 //  PINTERNAL_BCB iBcb = Bcb;
 //  iBcb->RefCount++;
@@ -298,9 +298,9 @@ CcRepinBcb (
 VOID
 STDCALL
 CcUnpinRepinnedBcb (
-	IN	PVOID			Bcb,
-	IN	BOOLEAN			WriteThrough,
-	IN	PIO_STATUS_BLOCK	IoStatus)
+        IN	PVOID			Bcb,
+        IN	BOOLEAN			WriteThrough,
+        IN	PIO_STATUS_BLOCK	IoStatus)
 {
    KEBUGCHECK(0);
 }
