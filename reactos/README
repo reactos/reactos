@@ -9,11 +9,11 @@ Updated June 23rd, 2004
 that is compatible with Windows NT applications and drivers.
 
    The ReactOS project, although currently focused on Windows NT 4.0
-compatibility, is always keeping an eye towards compatibility with
+compatibility, is always keeping an eye toward compatibility with
 future Windows NT releases, that is, Windows 2000 (NT 5.0) and
 Windows XP (NT 5.1).
 
-More information is available at http://www.reactos.com.
+More information is available at http://www.reactos.org/.
 
 2. Building ReactOS
 

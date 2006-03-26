@@ -2,21 +2,21 @@
 
 To build the system you need either mingw32 installed on Windows or a mingw32
 cross compiler running on unix. You may obtain MinGW binaries that build
-ReactOS from http://www.reactos.com. 
+ReactOS from http://www.reactos.org/. 
 
 
 2. Building ReactOS
 
 2.1 Building the binaries
 
-To build ReactOS run 'make' (wihout the quotes) if you are building on Linux
+To build ReactOS run 'make' (without the quotes) if you are building on Linux
 or 'mingw32-make' if you are building on Windows (or ReactOS) from the top
 directory.
 
 
 2.2 Building a bootable CD image
 
-To build a bootable CD image run 'make bootcd' (wihout the quotes) if you are
+To build a bootable CD image run 'make bootcd' (without the quotes) if you are
 building on Linux or 'mingw32-make bootcd' if you are building on Windows (or
 ReactOS) from the top directory. This will create a CD image with a filename,
 ReactOS.iso, in the top directory.
@@ -75,6 +75,6 @@ visit the address below. Mailing lists are available for a variety of topics,
 bugs should be submitted to bugzilla and general chat takes place in the forums, 
 or #reactos on freenode
 
-http://www.reactos.org
+http://www.reactos.org/
 
 ReactOS Development Team
