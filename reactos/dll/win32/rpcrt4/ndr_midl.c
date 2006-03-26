@@ -285,7 +285,11 @@ unsigned char *WINAPI NdrSendReceive( MIDL_STUB_MESSAGE *stubmsg, unsigned char 
 
   status = I_RpcSendReceive(stubmsg->RpcMsg);
   if (status != RPC_S_OK)
-    RpcRaiseException(status);
+  {
+    WARN("I_RpcSendReceive did not return success.\n");
+    /* FIXME: raise exception? */
+    //RpcRaiseException(status);
+  }
 
   stubmsg->BufferLength = stubmsg->RpcMsg->BufferLength;
   stubmsg->BufferStart = stubmsg->RpcMsg->Buffer;
