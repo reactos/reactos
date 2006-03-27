@@ -539,8 +539,8 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
   case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
   case LANG_VIETNAMESE: case LANG_GAELIC:     case LANG_MALTESE:
-  case LANG_MAORI:      case LANG_RHAETO_ROMANCE:
-  case LANG_SAAMI:      case LANG_SORBIAN:    case LANG_SUTU:
+  case LANG_MAORI:      case LANG_ROMANSH:    case LANG_IRISH:
+  case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_SUTU:
   case LANG_TSONGA:     case LANG_TSWANA:     case LANG_VENDA:
   case LANG_XHOSA:      case LANG_ZULU:       case LANG_ESPERANTO:
   case LANG_WALON:      case LANG_CORNISH:    case LANG_WELSH:

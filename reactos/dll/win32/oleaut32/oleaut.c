@@ -446,8 +446,8 @@ void WINAPI SetOaNoCache(void)
   BSTR_bCache = FALSE;
 }
 
-static WCHAR	_delimiter[2] = {'!',0}; /* default delimiter apparently */
-static WCHAR	*pdelimiter = &_delimiter[0];
+static const WCHAR	_delimiter[2] = {'!',0}; /* default delimiter apparently */
+static const WCHAR	*pdelimiter = &_delimiter[0];
 
 /***********************************************************************
  *		RegisterActiveObject (OLEAUT32.33)

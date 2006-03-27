@@ -62,6 +62,22 @@ HRESULT OLEAUTPS_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
                               &CLSID_PSDispatch, &PSFactoryBuffer);
 }
 
+static void dump_user_flags(unsigned long *pFlags)
+{
+    if (HIWORD(*pFlags) == NDR_LOCAL_DATA_REPRESENTATION)
+        TRACE("MAKELONG(NDR_LOCAL_REPRESENTATION, ");
+    else
+        TRACE("MAKELONG(0x%04x, ", HIWORD(*pFlags));
+    switch (LOWORD(*pFlags))
+    {
+        case MSHCTX_LOCAL: TRACE("MSHCTX_LOCAL)"); break;
+        case MSHCTX_NOSHAREDMEM: TRACE("MSHCTX_NOSHAREDMEM)"); break;
+        case MSHCTX_DIFFERENTMACHINE: TRACE("MSHCTX_DIFFERENTMACHINE)"); break;
+        case MSHCTX_INPROC: TRACE("MSHCTX_INPROC)"); break;
+        default: TRACE("%d)", LOWORD(*pFlags));
+    }
+}
+
 /* CLEANLOCALSTORAGE */
 /* I'm not sure how this is supposed to work yet */
 
@@ -514,6 +530,402 @@ void WINAPI VARIANT_UserFree(unsigned long *pFlags, VARIANT *pvar)
   }
 
   CoTaskMemFree(ref);
+}
+
+/* LPSAFEARRAY */
+
+/* Get the number of cells in a SafeArray */
+static ULONG SAFEARRAY_GetCellCount(const SAFEARRAY *psa)
+{
+    const SAFEARRAYBOUND* psab = psa->rgsabound;
+    USHORT cCount = psa->cDims;
+    ULONG ulNumCells = 1;
+
+    while (cCount--)
+    {
+        /* This is a valid bordercase. See testcases. -Marcus */
+        if (!psab->cElements)
+            return 0;
+        ulNumCells *= psab->cElements;
+        psab++;
+    }
+    return ulNumCells;
+}
+
+static inline SF_TYPE SAFEARRAY_GetUnionType(SAFEARRAY *psa)
+{
+    VARTYPE vt;
+    HRESULT hr;
+
+    hr = SafeArrayGetVartype(psa, &vt);
+    if (FAILED(hr))
+        RpcRaiseException(hr);
+
+    if (psa->fFeatures & FADF_HAVEIID)
+        return SF_HAVEIID;
+
+    switch (vt)
+    {
+    case VT_I1:
+    case VT_UI1:      return SF_I1;
+    case VT_BOOL:
+    case VT_I2:
+    case VT_UI2:      return SF_I2;
+    case VT_INT:
+    case VT_UINT:
+    case VT_I4:
+    case VT_UI4:
+    case VT_R4:       return SF_I4;
+    case VT_DATE:
+    case VT_CY:
+    case VT_R8:
+    case VT_I8:
+    case VT_UI8:      return SF_I8;
+    case VT_INT_PTR:
+    case VT_UINT_PTR: return (sizeof(UINT_PTR) == 4 ? SF_I4 : SF_I8);
+    case VT_BSTR:     return SF_BSTR;
+    case VT_DISPATCH: return SF_DISPATCH;
+    case VT_VARIANT:  return SF_VARIANT;
+    case VT_UNKNOWN:  return SF_UNKNOWN;
+    /* Note: Return a non-zero size to indicate vt is valid. The actual size
+     * of a UDT is taken from the result of IRecordInfo_GetSize().
+     */
+    case VT_RECORD:   return SF_RECORD;
+    default:          return SF_ERROR;
+    }
+}
+
+unsigned long WINAPI LPSAFEARRAY_UserSize(unsigned long *pFlags, unsigned long StartingSize, LPSAFEARRAY *ppsa)
+{
+    unsigned long size = StartingSize;
+
+    TRACE("("); dump_user_flags(pFlags); TRACE(", %ld, %p\n", StartingSize, *ppsa);
+
+    size += sizeof(ULONG_PTR);
+    if (*ppsa)
+    {
+        SAFEARRAY *psa = *ppsa;
+        ULONG ulCellCount = SAFEARRAY_GetCellCount(psa);
+        SF_TYPE sftype;
+        HRESULT hr;
+
+        size += sizeof(ULONG);
+        size += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+
+        sftype = SAFEARRAY_GetUnionType(psa);
+        size += sizeof(ULONG);
+
+        size += sizeof(ULONG);
+        size += sizeof(ULONG_PTR);
+        if (sftype == SF_HAVEIID)
+            size += sizeof(IID);
+
+        size += sizeof(psa->rgsabound[0]) * psa->cDims;
+
+        size += sizeof(ULONG);
+
+        switch (sftype)
+        {
+            case SF_BSTR:
+            {
+                BSTR* lpBstr;
+
+                for (lpBstr = (BSTR*)psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
+                    size = BSTR_UserSize(pFlags, size, lpBstr);
+
+                break;
+            }
+            case SF_DISPATCH:
+            case SF_UNKNOWN:
+            case SF_HAVEIID:
+                FIXME("size interfaces\n");
+                break;
+            case SF_VARIANT:
+            {
+                VARIANT* lpVariant;
+
+                for (lpVariant = (VARIANT*)psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
+                    size = VARIANT_UserSize(pFlags, size, lpVariant);
+
+                break;
+            }
+            case SF_RECORD:
+            {
+                IRecordInfo* pRecInfo = NULL;
+
+                hr = SafeArrayGetRecordInfo(psa, &pRecInfo);
+                if (FAILED(hr))
+                    RpcRaiseException(hr);
+
+                if (pRecInfo)
+                {
+                    FIXME("size record info %p\n", pRecInfo);
+
+                    IRecordInfo_Release(pRecInfo);
+                }
+                break;
+            }
+            case SF_I1:
+            case SF_I2:
+            case SF_I4:
+            case SF_I8:
+                size += ulCellCount * psa->cbElements;
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    return size;
+}
+
+unsigned char * WINAPI LPSAFEARRAY_UserMarshal(unsigned long *pFlags, unsigned char *Buffer, LPSAFEARRAY *ppsa)
+{
+    HRESULT hr;
+
+    TRACE("("); dump_user_flags(pFlags); TRACE(", %p, &%p\n", Buffer, *ppsa);
+
+    *(ULONG_PTR *)Buffer = *ppsa ? TRUE : FALSE;
+    Buffer += sizeof(ULONG_PTR);
+    if (*ppsa)
+    {
+        VARTYPE vt;
+        SAFEARRAY *psa = *ppsa;
+        ULONG ulCellCount = SAFEARRAY_GetCellCount(psa);
+        wireSAFEARRAY wiresa;
+        SF_TYPE sftype;
+        GUID guid;
+
+        *(ULONG *)Buffer = psa->cDims;
+        Buffer += sizeof(ULONG);
+        wiresa = (wireSAFEARRAY)Buffer;
+        wiresa->cDims = psa->cDims;
+        wiresa->fFeatures = psa->fFeatures;
+        wiresa->cbElements = psa->cbElements;
+
+        hr = SafeArrayGetVartype(psa, &vt);
+        if (FAILED(hr))
+            RpcRaiseException(hr);
+        wiresa->cLocks = (USHORT)psa->cLocks | (vt << 16);
+
+        Buffer += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+
+        sftype = SAFEARRAY_GetUnionType(psa);
+        *(ULONG *)Buffer = sftype;
+        Buffer += sizeof(ULONG);
+
+        *(ULONG *)Buffer = ulCellCount;
+        Buffer += sizeof(ULONG);
+        *(ULONG_PTR *)Buffer = (ULONG_PTR)psa->pvData;
+        Buffer += sizeof(ULONG_PTR);
+        if (sftype == SF_HAVEIID)
+        {
+            SafeArrayGetIID(psa, &guid);
+            memcpy(Buffer, &guid, sizeof(guid));
+            Buffer += sizeof(guid);
+        }
+
+        memcpy(Buffer, psa->rgsabound, sizeof(psa->rgsabound[0]) * psa->cDims);
+        Buffer += sizeof(psa->rgsabound[0]) * psa->cDims;
+
+        *(ULONG *)Buffer = ulCellCount;
+        Buffer += sizeof(ULONG);
+
+        if (psa->pvData)
+        {
+            switch (sftype)
+            {
+                case SF_BSTR:
+                {
+                    BSTR* lpBstr;
+
+                    for (lpBstr = (BSTR*)psa->pvData; ulCellCount; ulCellCount--, lpBstr++)
+                        Buffer = BSTR_UserMarshal(pFlags, Buffer, lpBstr);
+
+                    break;
+                }
+                case SF_DISPATCH:
+                case SF_UNKNOWN:
+                case SF_HAVEIID:
+                    FIXME("marshal interfaces\n");
+                    break;
+                case SF_VARIANT:
+                {
+                    VARIANT* lpVariant;
+
+                    for (lpVariant = (VARIANT*)psa->pvData; ulCellCount; ulCellCount--, lpVariant++)
+                        Buffer = VARIANT_UserMarshal(pFlags, Buffer, lpVariant);
+
+                    break;
+                }
+                case SF_RECORD:
+                {
+                    IRecordInfo* pRecInfo = NULL;
+
+                    hr = SafeArrayGetRecordInfo(psa, &pRecInfo);
+                    if (FAILED(hr))
+                        RpcRaiseException(hr);
+
+                    if (pRecInfo)
+                    {
+                        FIXME("write record info %p\n", pRecInfo);
+
+                        IRecordInfo_Release(pRecInfo);
+                    }
+                    break;
+                }
+                case SF_I1:
+                case SF_I2:
+                case SF_I4:
+                case SF_I8:
+                    /* Just copy the data over */
+                    memcpy(Buffer, psa->pvData, ulCellCount * psa->cbElements);
+                    Buffer += ulCellCount * psa->cbElements;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+    return Buffer;
+}
+
+#define FADF_AUTOSETFLAGS (FADF_HAVEIID | FADF_RECORD | FADF_HAVEVARTYPE | \
+                           FADF_BSTR | FADF_UNKNOWN | FADF_DISPATCH | \
+                           FADF_VARIANT | FADF_CREATEVECTOR)
+
+unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(unsigned long *pFlags, unsigned char *Buffer, LPSAFEARRAY *ppsa)
+{
+    ULONG_PTR ptr;
+    wireSAFEARRAY wiresa;
+    ULONG cDims;
+    HRESULT hr;
+    SF_TYPE sftype;
+    ULONG cell_count;
+    GUID guid;
+    VARTYPE vt;
+    SAFEARRAYBOUND *wiresab;
+
+    TRACE("("); dump_user_flags(pFlags); TRACE(", %p, %p\n", Buffer, ppsa);
+
+    ptr = *(ULONG_PTR *)Buffer;
+    Buffer += sizeof(ULONG_PTR);
+
+    if (!ptr)
+    {
+        *ppsa = NULL;
+
+        TRACE("NULL safe array unmarshaled\n");
+
+        return Buffer;
+    }
+
+    cDims = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
+
+    wiresa = (wireSAFEARRAY)Buffer;
+    Buffer += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+
+    if (cDims != wiresa->cDims)
+        RpcRaiseException(RPC_S_INVALID_BOUND);
+
+    /* FIXME: there should be a limit on how large cDims can be */
+
+    vt = HIWORD(wiresa->cLocks);
+
+    sftype = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
+
+    cell_count = *(ULONG *)Buffer;
+    Buffer += sizeof(ULONG);
+    ptr = *(ULONG_PTR *)Buffer;
+    Buffer += sizeof(ULONG_PTR);
+    if (sftype == SF_HAVEIID)
+    {
+        memcpy(&guid, Buffer, sizeof(guid));
+        Buffer += sizeof(guid);
+    }
+
+    wiresab = (SAFEARRAYBOUND *)Buffer;
+    Buffer += sizeof(wiresab[0]) * wiresa->cDims;
+
+    *ppsa = SafeArrayCreateEx(vt, wiresa->cDims, wiresab, NULL);
+    if (!ppsa)
+        RpcRaiseException(E_OUTOFMEMORY);
+
+    /* be careful about which flags we set since they could be a security
+     * risk */
+    (*ppsa)->fFeatures = wiresa->fFeatures & ~(FADF_AUTOSETFLAGS);
+    /* FIXME: there should be a limit on how large wiresa->cbElements can be */
+    (*ppsa)->cbElements = wiresa->cbElements;
+    (*ppsa)->cLocks = LOWORD(wiresa->cLocks);
+
+    hr = SafeArrayAllocData(*ppsa);
+    if (FAILED(hr))
+        RpcRaiseException(hr);
+
+    if ((*(ULONG *)Buffer != cell_count) || (SAFEARRAY_GetCellCount(*ppsa) != cell_count))
+        RpcRaiseException(RPC_S_INVALID_BOUND);
+    Buffer += sizeof(ULONG);
+
+    if (ptr)
+    {
+        switch (sftype)
+        {
+            case SF_BSTR:
+            {
+                BSTR* lpBstr;
+
+                for (lpBstr = (BSTR*)(*ppsa)->pvData; cell_count; cell_count--, lpBstr++)
+                    Buffer = BSTR_UserUnmarshal(pFlags, Buffer, lpBstr);
+
+                break;
+            }
+            case SF_DISPATCH:
+            case SF_UNKNOWN:
+            case SF_HAVEIID:
+                FIXME("marshal interfaces\n");
+                break;
+            case SF_VARIANT:
+            {
+                VARIANT* lpVariant;
+
+                for (lpVariant = (VARIANT*)(*ppsa)->pvData; cell_count; cell_count--, lpVariant++)
+                    Buffer = VARIANT_UserUnmarshal(pFlags, Buffer, lpVariant);
+
+                break;
+            }
+            case SF_RECORD:
+            {
+                FIXME("set record info\n");
+
+                break;
+            }
+            case SF_I1:
+            case SF_I2:
+            case SF_I4:
+            case SF_I8:
+                /* Just copy the data over */
+                memcpy((*ppsa)->pvData, Buffer, cell_count * (*ppsa)->cbElements);
+                Buffer += cell_count * (*ppsa)->cbElements;
+                break;
+            default:
+                break;
+        }
+    }
+
+    TRACE("safe array unmarshaled: %p\n", *ppsa);
+
+    return Buffer;
+}
+
+void WINAPI LPSAFEARRAY_UserFree(unsigned long *pFlags, LPSAFEARRAY *ppsa)
+{
+    TRACE("("); dump_user_flags(pFlags); TRACE(", &%p\n", *ppsa);
+
+    SafeArrayDestroy(*ppsa);
 }
 
 /* IDispatch */

@@ -218,6 +218,9 @@ extern "C" {
 #define DISPID_FONT_STRIKE 6
 #define DISPID_FONT_WEIGHT 7
 #define DISPID_FONT_CHARSET 8
+#define DISPID_FONT_CHANGED 9
+
+/* IPicture */
 #define DISPID_PICT_HANDLE 0
 #define DISPID_PICT_HPAL 2
 #define DISPID_PICT_TYPE 3

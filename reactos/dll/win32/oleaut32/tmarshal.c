@@ -43,6 +43,7 @@
 
 #include "ole2.h"
 #include "typelib.h"
+#include "variant.h"
 #include "wine/debug.h"
 
 static const WCHAR IDispatchW[] = { 'I','D','i','s','p','a','t','c','h',0};
@@ -167,7 +168,7 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
 	 * can happen. S_OK to make sure we continue
 	 * serializing.
 	 */
-        ERR("pUnk is NULL?\n");
+        WARN("pUnk is NULL\n");
         xsize = 0;
         return xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
     }
@@ -354,6 +355,7 @@ typedef struct _TMProxyImpl {
     CRITICAL_SECTION	crit;
     IUnknown				*outerunknown;
     IDispatch				*dispatch;
+    IRpcProxyBuffer			*dispatch_proxy;
 } TMProxyImpl;
 
 static HRESULT WINAPI
@@ -390,7 +392,7 @@ TMProxyImpl_Release(LPRPCPROXYBUFFER iface)
 
     if (!refCount)
     {
-        if (This->dispatch) IDispatch_Release(This->dispatch);
+        if (This->dispatch_proxy) IRpcProxyBuffer_Release(This->dispatch_proxy);
         DeleteCriticalSection(&This->crit);
         if (This->chanbuf) IRpcChannelBuffer_Release(This->chanbuf);
         VirtualFree(This->asmstubs, 0, MEM_RELEASE);
@@ -414,6 +416,9 @@ TMProxyImpl_Connect(
 
     LeaveCriticalSection(&This->crit);
 
+    if (This->dispatch_proxy)
+        IRpcProxyBuffer_Connect(This->dispatch_proxy, pRpcChannelBuffer);
+
     return S_OK;
 }
 
@@ -430,6 +435,9 @@ TMProxyImpl_Disconnect(LPRPCPROXYBUFFER iface)
     This->chanbuf = NULL;
 
     LeaveCriticalSection(&This->crit);
+
+    if (This->dispatch_proxy)
+        IRpcProxyBuffer_Disconnect(This->dispatch_proxy);
 }
 
 
@@ -501,13 +509,14 @@ serialize_param(
 {
     HRESULT hres = S_OK;
 
-    TRACE("(tdesc.vt %d)\n",tdesc->vt);
+    TRACE("(tdesc.vt %s)\n",debugstr_vt(tdesc->vt));
 
     switch (tdesc->vt) {
     case VT_EMPTY: /* nothing. empty variant for instance */
 	return S_OK;
     case VT_I8:
     case VT_UI8:
+    case VT_CY:
 	hres = S_OK;
 	if (debugout) TRACE_(olerelay)("%lx%lx",arg[0],arg[1]);
 	if (writeit)
@@ -515,6 +524,7 @@ serialize_param(
 	return hres;
     case VT_BOOL:
     case VT_ERROR:
+    case VT_INT:
     case VT_UINT:
     case VT_I4:
     case VT_R4:
@@ -550,7 +560,7 @@ serialize_param(
 	VARIANT		*vt = (VARIANT*)arg;
 	DWORD		vttype = V_VT(vt);
 
-	if (debugout) TRACE_(olerelay)("Vt(%ld)(",vttype);
+	if (debugout) TRACE_(olerelay)("Vt(%s%s)(",debugstr_vt(vttype),debugstr_vf(vttype));
 	tdesc2.vt = vttype;
 	if (writeit) {
 	    hres = xbuf_add(buf,(LPBYTE)&vttype,sizeof(vttype));
@@ -666,11 +676,15 @@ serialize_param(
 	if (debugout) TRACE_(olerelay)("unk(0x%lx)",*arg);
 	if (writeit)
 	    hres = _marshal_interface(buf,&IID_IUnknown,(LPUNKNOWN)*arg);
+	if (dealloc && *(IUnknown **)arg)
+	    IUnknown_Release((LPUNKNOWN)*arg);
 	return hres;
     case VT_DISPATCH:
 	if (debugout) TRACE_(olerelay)("idisp(0x%lx)",*arg);
 	if (writeit)
 	    hres = _marshal_interface(buf,&IID_IDispatch,(LPUNKNOWN)*arg);
+	if (dealloc && *(IUnknown **)arg)
+	    IUnknown_Release((LPUNKNOWN)*arg);
 	return hres;
     case VT_VOID:
 	if (debugout) TRACE_(olerelay)("<void>");
@@ -761,7 +775,7 @@ serialize_param(
 	    if (debugout) TRACE_(olerelay)("[%ld]",adesc->rgbounds[i].cElements);
 	    arrsize *= adesc->rgbounds[i].cElements;
 	}
-	if (debugout) TRACE_(olerelay)("(vt %d)",adesc->tdescElem.vt);
+	if (debugout) TRACE_(olerelay)("(vt %s)",debugstr_vt(adesc->tdescElem.vt));
 	if (debugout) TRACE_(olerelay)("[");
 	for (i=0;i<arrsize;i++) {
 	    hres = serialize_param(tinfo, writeit, debugout, dealloc, &adesc->tdescElem, (DWORD*)((LPBYTE)arg+i*_xsize(&adesc->tdescElem)), buf);
@@ -790,7 +804,7 @@ deserialize_param(
 {
     HRESULT hres = S_OK;
 
-    TRACE("vt %d at %p\n",tdesc->vt,arg);
+    TRACE("vt %s at %p\n",debugstr_vt(tdesc->vt),arg);
 
     while (1) {
 	switch (tdesc->vt) {
@@ -814,7 +828,7 @@ deserialize_param(
 		memset(&tdesc2,0,sizeof(tdesc2));
 		tdesc2.vt = vttype;
 		V_VT(vt)  = vttype;
-	        if (debugout) TRACE_(olerelay)("Vt(%ld)(",vttype);
+	        if (debugout) TRACE_(olerelay)("Vt(%s%s)(",debugstr_vt(vttype),debugstr_vf(vttype));
 		hres = deserialize_param(tinfo, readit, debugout, alloc, &tdesc2, (DWORD*)&(V_I4(vt)), buf);
 		TRACE_(olerelay)(")");
 		return hres;
@@ -825,6 +839,7 @@ deserialize_param(
 	}
         case VT_I8:
         case VT_UI8:
+        case VT_CY:
 	    if (readit) {
 		hres = xbuf_get(buf,(LPBYTE)arg,8);
 		if (hres) ERR("Failed to read integer 8 byte\n");
@@ -834,6 +849,7 @@ deserialize_param(
         case VT_ERROR:
 	case VT_BOOL:
         case VT_I4:
+        case VT_INT:
         case VT_UINT:
         case VT_R4:
         case VT_UI4:
@@ -1371,56 +1387,29 @@ ULONG WINAPI ProxyIUnknown_Release(IUnknown *iface)
 static HRESULT WINAPI ProxyIDispatch_GetTypeInfoCount(LPDISPATCH iface, UINT * pctinfo)
 {
     TMProxyImpl *This = (TMProxyImpl *)iface;
-    HRESULT hr;
 
     TRACE("(%p)\n", pctinfo);
 
-    if (!This->dispatch)
-    {
-        hr = IUnknown_QueryInterface(This->outerunknown, &IID_IDispatch,
-                                     (LPVOID *)&This->dispatch);
-    }
-    if (This->dispatch)
-        hr = IDispatch_GetTypeInfoCount(This->dispatch, pctinfo);
-
-    return hr;
+    return IDispatch_GetTypeInfoCount(This->dispatch, pctinfo);
 }
 
 static HRESULT WINAPI ProxyIDispatch_GetTypeInfo(LPDISPATCH iface, UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo)
 {
     TMProxyImpl *This = (TMProxyImpl *)iface;
-    HRESULT hr = S_OK;
 
     TRACE("(%d, %lx, %p)\n", iTInfo, lcid, ppTInfo);
 
-    if (!This->dispatch)
-    {
-        hr = IUnknown_QueryInterface(This->outerunknown, &IID_IDispatch,
-                                     (LPVOID *)&This->dispatch);
-    }
-    if (This->dispatch)
-        hr = IDispatch_GetTypeInfo(This->dispatch, iTInfo, lcid, ppTInfo);
-
-    return hr;
+    return IDispatch_GetTypeInfo(This->dispatch, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI ProxyIDispatch_GetIDsOfNames(LPDISPATCH iface, REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
 {
     TMProxyImpl *This = (TMProxyImpl *)iface;
-    HRESULT hr;
 
     TRACE("(%s, %p, %d, 0x%lx, %p)\n", debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
 
-    if (!This->dispatch)
-    {
-        hr = IUnknown_QueryInterface(This->outerunknown, &IID_IDispatch,
-                                     (LPVOID *)&This->dispatch);
-    }
-    if (This->dispatch)
-        hr = IDispatch_GetIDsOfNames(This->dispatch, riid, rgszNames,
-                                     cNames, lcid, rgDispId);
-
-    return hr;
+    return IDispatch_GetIDsOfNames(This->dispatch, riid, rgszNames,
+                                   cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI ProxyIDispatch_Invoke(LPDISPATCH iface, DISPID dispIdMember, REFIID riid, LCID lcid,
@@ -1428,21 +1417,25 @@ static HRESULT WINAPI ProxyIDispatch_Invoke(LPDISPATCH iface, DISPID dispIdMembe
                                             EXCEPINFO * pExcepInfo, UINT * puArgErr)
 {
     TMProxyImpl *This = (TMProxyImpl *)iface;
-    HRESULT hr;
 
-    TRACE("(%ld, %s, 0x%lx, 0x%x, %p, %p, %p, %p)\n", dispIdMember, debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    TRACE("(%ld, %s, 0x%lx, 0x%x, %p, %p, %p, %p)\n", dispIdMember,
+          debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult,
+          pExcepInfo, puArgErr);
 
-    if (!This->dispatch)
-    {
-        hr = IUnknown_QueryInterface(This->outerunknown, &IID_IDispatch,
-                                     (LPVOID *)&This->dispatch);
-    }
-    if (This->dispatch)
-        hr = IDispatch_Invoke(This->dispatch, dispIdMember, riid, lcid,
-                              wFlags, pDispParams, pVarResult, pExcepInfo,
-                              puArgErr);
+    return IDispatch_Invoke(This->dispatch, dispIdMember, riid, lcid,
+                            wFlags, pDispParams, pVarResult, pExcepInfo,
+                            puArgErr);
+}
 
-    return hr;
+static inline HRESULT get_facbuf_for_iid(REFIID riid, IPSFactoryBuffer **facbuf)
+{
+    HRESULT       hr;
+    CLSID         clsid;
+
+    if ((hr = CoGetPSClsid(riid, &clsid)))
+        return hr;
+    return CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL,
+                             &IID_IPSFactoryBuffer, (LPVOID*)facbuf);
 }
 
 static HRESULT WINAPI
@@ -1470,6 +1463,7 @@ PSFacBuf_CreateProxy(
     assert(sizeof(TMAsmProxy) == 12);
 
     proxy->dispatch = NULL;
+    proxy->dispatch_proxy = NULL;
     proxy->outerunknown = pUnkOuter;
     proxy->asmstubs = VirtualAlloc(NULL, sizeof(TMAsmProxy) * nroffuncs, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!proxy->asmstubs) {
@@ -1549,10 +1543,22 @@ PSFacBuf_CreateProxy(
     {
         if (typeattr->wTypeFlags & TYPEFLAG_FDISPATCHABLE)
         {
-            proxy->lpvtbl[3] = ProxyIDispatch_GetTypeInfoCount;
-            proxy->lpvtbl[4] = ProxyIDispatch_GetTypeInfo;
-            proxy->lpvtbl[5] = ProxyIDispatch_GetIDsOfNames;
-            proxy->lpvtbl[6] = ProxyIDispatch_Invoke;
+            IPSFactoryBuffer *factory_buffer;
+            hres = get_facbuf_for_iid(&IID_IDispatch, &factory_buffer);
+            if (hres == S_OK)
+            {
+                hres = IPSFactoryBuffer_CreateProxy(factory_buffer, NULL,
+                    &IID_IDispatch, &proxy->dispatch_proxy,
+                    (void **)&proxy->dispatch);
+                IPSFactoryBuffer_Release(factory_buffer);
+            }
+            if (hres == S_OK)
+            {
+                proxy->lpvtbl[3] = ProxyIDispatch_GetTypeInfoCount;
+                proxy->lpvtbl[4] = ProxyIDispatch_GetTypeInfo;
+                proxy->lpvtbl[5] = ProxyIDispatch_GetIDsOfNames;
+                proxy->lpvtbl[6] = ProxyIDispatch_Invoke;
+            }
         }
         ITypeInfo_ReleaseTypeAttr(tinfo, typeattr);
     }
@@ -1563,10 +1569,16 @@ PSFacBuf_CreateProxy(
     proxy->tinfo	= tinfo;
     memcpy(&proxy->iid,riid,sizeof(*riid));
     proxy->chanbuf      = 0;
-    *ppv		= (LPVOID)proxy;
-    *ppProxy		= (IRpcProxyBuffer *)&(proxy->lpvtbl2);
-    IUnknown_AddRef((IUnknown *)*ppv);
-    return S_OK;
+    if (hres == S_OK)
+    {
+        *ppv		= (LPVOID)proxy;
+        *ppProxy		= (IRpcProxyBuffer *)&(proxy->lpvtbl2);
+        IUnknown_AddRef((IUnknown *)*ppv);
+        return S_OK;
+    }
+    else
+        TMProxyImpl_Release((IRpcProxyBuffer *)&proxy->lpvtbl2);
+    return hres;
 }
 
 typedef struct _TMStubImpl {
@@ -1576,6 +1588,7 @@ typedef struct _TMStubImpl {
     LPUNKNOWN			pUnk;
     ITypeInfo			*tinfo;
     IID				iid;
+    IRpcStubBuffer		*dispatch_stub;
 } TMStubImpl;
 
 static HRESULT WINAPI
@@ -1627,6 +1640,10 @@ TMStubImpl_Connect(LPRPCSTUBBUFFER iface, LPUNKNOWN pUnkServer)
 
     IUnknown_AddRef(pUnkServer);
     This->pUnk = pUnkServer;
+
+    if (This->dispatch_stub)
+        IRpcStubBuffer_Connect(This->dispatch_stub, pUnkServer);
+
     return S_OK;
 }
 
@@ -1642,6 +1659,9 @@ TMStubImpl_Disconnect(LPRPCSTUBBUFFER iface)
         IUnknown_Release(This->pUnk);
         This->pUnk = NULL;
     }
+
+    if (This->dispatch_stub)
+        IRpcStubBuffer_Disconnect(This->dispatch_stub);
 }
 
 static HRESULT WINAPI
@@ -1659,18 +1679,21 @@ TMStubImpl_Invoke(
     BSTR	iname = NULL;
     ITypeInfo 	*tinfo;
 
-    memset(&buf,0,sizeof(buf));
-    buf.size	= xmsg->cbBuffer;
-    buf.base	= HeapAlloc(GetProcessHeap(), 0, xmsg->cbBuffer);
-    memcpy(buf.base, xmsg->Buffer, xmsg->cbBuffer);
-    buf.curoff	= 0;
-
     TRACE("...\n");
 
     if (xmsg->iMethod < 3) {
         ERR("IUnknown methods cannot be marshaled by the typelib marshaler\n");
         return E_UNEXPECTED;
     }
+
+    if (This->dispatch_stub && xmsg->iMethod < sizeof(IDispatchVtbl)/sizeof(void *))
+        return IRpcStubBuffer_Invoke(This->dispatch_stub, xmsg, rpcchanbuf);
+
+    memset(&buf,0,sizeof(buf));
+    buf.size	= xmsg->cbBuffer;
+    buf.base	= HeapAlloc(GetProcessHeap(), 0, xmsg->cbBuffer);
+    memcpy(buf.base, xmsg->Buffer, xmsg->cbBuffer);
+    buf.curoff	= 0;
 
     hres = _get_funcdesc(This->tinfo,xmsg->iMethod,&tinfo,&fdesc,&iname,NULL);
     if (hres) {
@@ -1830,25 +1853,48 @@ PSFacBuf_CreateStub(
     HRESULT hres;
     ITypeInfo	*tinfo;
     TMStubImpl	*stub;
+    TYPEATTR *typeattr;
 
     TRACE("(%s,%p,%p)\n",debugstr_guid(riid),pUnkServer,ppStub);
+
     hres = _get_typeinfo_for_iid(riid,&tinfo);
     if (hres) {
 	ERR("No typeinfo for %s?\n",debugstr_guid(riid));
 	return hres;
     }
+
     stub = CoTaskMemAlloc(sizeof(TMStubImpl));
     if (!stub)
 	return E_OUTOFMEMORY;
     stub->lpvtbl	= &tmstubvtbl;
     stub->ref		= 1;
     stub->tinfo		= tinfo;
+    stub->dispatch_stub = NULL;
     memcpy(&(stub->iid),riid,sizeof(*riid));
     hres = IRpcStubBuffer_Connect((LPRPCSTUBBUFFER)stub,pUnkServer);
     *ppStub 		= (LPRPCSTUBBUFFER)stub;
     TRACE("IRpcStubBuffer: %p\n", stub);
     if (hres)
 	ERR("Connect to pUnkServer failed?\n");
+
+    /* if we derive from IDispatch then defer to its stub for some of its methods */
+    hres = ITypeInfo_GetTypeAttr(tinfo, &typeattr);
+    if (hres == S_OK)
+    {
+        if (typeattr->wTypeFlags & TYPEFLAG_FDISPATCHABLE)
+        {
+            IPSFactoryBuffer *factory_buffer;
+            hres = get_facbuf_for_iid(&IID_IDispatch, &factory_buffer);
+            if (hres == S_OK)
+            {
+                hres = IPSFactoryBuffer_CreateStub(factory_buffer, &IID_IDispatch,
+                    pUnkServer, &stub->dispatch_stub);
+                IPSFactoryBuffer_Release(factory_buffer);
+            }
+        }
+        ITypeInfo_ReleaseTypeAttr(tinfo, typeattr);
+    }
+
     return hres;
 }
 

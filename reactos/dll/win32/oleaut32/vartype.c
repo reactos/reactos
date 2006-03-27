@@ -110,7 +110,8 @@ static HRESULT VARIANT_NumberFromBstr(OLECHAR* pStrIn, LCID lcid, ULONG ulFlags,
 }
 
 /* Coerce VT_DISPATCH to another type */
-static HRESULT VARIANT_FromDisp(IDispatch* pdispIn, LCID lcid, void* pOut, VARTYPE vt)
+static HRESULT VARIANT_FromDisp(IDispatch* pdispIn, LCID lcid, void* pOut,
+                                VARTYPE vt, DWORD dwFlags)
 {
   static const DISPPARAMS emptyParams = { NULL, NULL, 0, 0 };
   VARIANTARG srcVar, dstVar;
@@ -127,7 +128,7 @@ static HRESULT VARIANT_FromDisp(IDispatch* pdispIn, LCID lcid, void* pOut, VARTY
   {
     /* Convert the property to the requested type */
     V_VT(&dstVar) = VT_EMPTY;
-    hRet = VariantChangeTypeEx(&dstVar, &srcVar, lcid, 0, vt);
+    hRet = VariantChangeTypeEx(&dstVar, &srcVar, lcid, dwFlags, vt);
     VariantClear(&srcVar);
 
     if (SUCCEEDED(hRet))
@@ -448,7 +449,7 @@ HRESULT WINAPI VarI1FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, signed cha
  */
 HRESULT WINAPI VarI1FromDisp(IDispatch* pdispIn, LCID lcid, signed char* pcOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pcOut, VT_I1);
+  return VARIANT_FromDisp(pdispIn, lcid, pcOut, VT_I1, 0);
 }
 
 /************************************************************************
@@ -741,7 +742,7 @@ HRESULT WINAPI VarUI1FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, BYTE* pbO
  */
 HRESULT WINAPI VarUI1FromDisp(IDispatch* pdispIn, LCID lcid, BYTE* pbOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pbOut, VT_UI1);
+  return VARIANT_FromDisp(pdispIn, lcid, pbOut, VT_UI1, 0);
 }
 
 /************************************************************************
@@ -1042,7 +1043,7 @@ HRESULT WINAPI VarI2FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, SHORT* psO
  */
 HRESULT WINAPI VarI2FromDisp(IDispatch* pdispIn, LCID lcid, SHORT* psOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, psOut, VT_I2);
+  return VARIANT_FromDisp(pdispIn, lcid, psOut, VT_I2, 0);
 }
 
 /************************************************************************
@@ -1356,7 +1357,7 @@ HRESULT WINAPI VarUI2FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, USHORT* p
  */
 HRESULT WINAPI VarUI2FromDisp(IDispatch* pdispIn, LCID lcid, USHORT* pusOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pusOut, VT_UI2);
+  return VARIANT_FromDisp(pdispIn, lcid, pusOut, VT_UI2, 0);
 }
 
 /************************************************************************
@@ -1632,7 +1633,7 @@ HRESULT WINAPI VarI4FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, LONG *piOu
  */
 HRESULT WINAPI VarI4FromDisp(IDispatch* pdispIn, LCID lcid, LONG *piOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, piOut, VT_I4);
+  return VARIANT_FromDisp(pdispIn, lcid, piOut, VT_I4, 0);
 }
 
 /************************************************************************
@@ -1941,7 +1942,7 @@ HRESULT WINAPI VarUI4FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, ULONG *pu
  */
 HRESULT WINAPI VarUI4FromDisp(IDispatch* pdispIn, LCID lcid, ULONG *pulOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pulOut, VT_UI4);
+  return VARIANT_FromDisp(pdispIn, lcid, pulOut, VT_UI4, 0);
 }
 
 /************************************************************************
@@ -2248,7 +2249,7 @@ HRESULT WINAPI VarI8FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, LONG64* pi
  */
 HRESULT WINAPI VarI8FromDisp(IDispatch* pdispIn, LCID lcid, LONG64* pi64Out)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pi64Out, VT_I8);
+  return VARIANT_FromDisp(pdispIn, lcid, pi64Out, VT_I8, 0);
 }
 
 /************************************************************************
@@ -2576,7 +2577,7 @@ HRESULT WINAPI VarUI8FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, ULONG64* 
  */
 HRESULT WINAPI VarUI8FromDisp(IDispatch* pdispIn, LCID lcid, ULONG64* pui64Out)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pui64Out, VT_UI8);
+  return VARIANT_FromDisp(pdispIn, lcid, pui64Out, VT_UI8, 0);
 }
 
 /************************************************************************
@@ -2851,7 +2852,7 @@ HRESULT WINAPI VarR4FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, float *pFl
  */
 HRESULT WINAPI VarR4FromDisp(IDispatch* pdispIn, LCID lcid, float *pFltOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pFltOut, VT_R4);
+  return VARIANT_FromDisp(pdispIn, lcid, pFltOut, VT_R4, 0);
 }
 
 /************************************************************************
@@ -3172,7 +3173,7 @@ HRESULT WINAPI VarR8FromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, double *pD
  */
 HRESULT WINAPI VarR8FromDisp(IDispatch* pdispIn, LCID lcid, double *pDblOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pDblOut, VT_R8);
+  return VARIANT_FromDisp(pdispIn, lcid, pDblOut, VT_R8, 0);
 }
 
 /************************************************************************
@@ -3594,7 +3595,7 @@ HRESULT WINAPI VarCyFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, CY* pCyOut
  */
 HRESULT WINAPI VarCyFromDisp(IDispatch* pdispIn, LCID lcid, CY* pCyOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pCyOut, VT_CY);
+  return VARIANT_FromDisp(pdispIn, lcid, pCyOut, VT_CY, 0);
 }
 
 /************************************************************************
@@ -4265,7 +4266,7 @@ HRESULT WINAPI VarDecFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DECIMAL* 
  */
 HRESULT WINAPI VarDecFromDisp(IDispatch* pdispIn, LCID lcid, DECIMAL* pDecOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pDecOut, VT_DECIMAL);
+  return VARIANT_FromDisp(pdispIn, lcid, pDecOut, VT_DECIMAL, 0);
 }
 
 /************************************************************************
@@ -5806,7 +5807,7 @@ VarBoolFromStr_CheckLocalised:
  */
 HRESULT WINAPI VarBoolFromDisp(IDispatch* pdispIn, LCID lcid, VARIANT_BOOL *pBoolOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pBoolOut, VT_BOOL);
+  return VARIANT_FromDisp(pdispIn, lcid, pBoolOut, VT_BOOL, 0);
 }
 
 /************************************************************************
@@ -6544,6 +6545,27 @@ HRESULT WINAPI VarBstrFromUI8(ULONG64 ullIn, LCID lcid, ULONG dwFlags, BSTR* pbs
   return VARIANT_BstrFromUInt(ullIn, lcid, dwFlags, pbstrOut);
 }
 
+/************************************************************************
+ * VarBstrFromDisp (OLEAUT32.115)
+ *
+ * Convert a VT_DISPATCH to a BSTR.
+ *
+ * PARAMS
+ *  pdispIn [I] Source
+ *  lcid    [I] LCID for conversion
+ *  dwFlags [I] Flags controlling the conversion (VAR_ flags from "oleauto.h")
+ *  pbstrOut  [O] Destination
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: E_INVALIDARG, if the source value is invalid
+ *           DISP_E_TYPEMISMATCH, if the type cannot be converted
+ */
+HRESULT WINAPI VarBstrFromDisp(IDispatch* pdispIn, LCID lcid, ULONG dwFlags, BSTR* pbstrOut)
+{
+  return VARIANT_FromDisp(pdispIn, lcid, pbstrOut, VT_BSTR, dwFlags);
+}
+
 /**********************************************************************
  * VarBstrCat (OLEAUT32.313)
  *
@@ -6727,7 +6749,7 @@ HRESULT WINAPI VarDateFromR8(double dblIn, DATE* pdateOut)
  */
 HRESULT WINAPI VarDateFromDisp(IDispatch* pdispIn, LCID lcid, DATE* pdateOut)
 {
-  return VARIANT_FromDisp(pdispIn, lcid, pdateOut, VT_DATE);
+  return VARIANT_FromDisp(pdispIn, lcid, pdateOut, VT_DATE, 0);
 }
 
 /******************************************************************************

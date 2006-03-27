@@ -2500,199 +2500,231 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
     return S_OK;
 }
 
+/* Wrapper around VariantChangeTypeEx() which permits changing a
+   variant with VT_RESERVED flag set. Needed by VarCmp. */
+static HRESULT _VarChangeTypeExWrap (VARIANTARG* pvargDest,
+                    VARIANTARG* pvargSrc, LCID lcid, USHORT wFlags, VARTYPE vt)
+{
+    HRESULT res;
+    VARTYPE flags;
+
+    flags = V_VT(pvargSrc) & ~VT_TYPEMASK;
+    V_VT(pvargSrc) &= ~VT_RESERVED;
+    res = VariantChangeTypeEx(pvargDest,pvargSrc,lcid,wFlags,vt);
+    V_VT(pvargSrc) |= flags;
+
+    return res;
+}
+
 /**********************************************************************
  *              VarCmp [OLEAUT32.176]
  *
- * flags can be:
- *   NORM_IGNORECASE, NORM_IGNORENONSPACE, NORM_IGNORESYMBOLS
- *   NORM_IGNOREWIDTH, NORM_IGNOREKANATYPE, NORM_IGNOREKASHIDA
+ * Compare two variants.
  *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  lcid    [I] LCID (locale identifier) for the comparison
+ *  flags   [I] Flags to be used in the comparision:
+ *              NORM_IGNORECASE, NORM_IGNORENONSPACE, NORM_IGNORESYMBOLS,
+ *              NORM_IGNOREWIDTH, NORM_IGNOREKANATYPE, NORM_IGNOREKASHIDA
+ *
+ * RETURNS
+ *  VARCMP_LT:   left variant is less than right variant.
+ *  VARCMP_EQ:   input variants are equal.
+ *  VARCMP_LT:   left variant is greater than right variant.
+ *  VARCMP_NULL: either one of the input variants is NULL.
+ *  Failure:     An HRESULT error code indicating the error.
+ *
+ * NOTES
+ *  Native VarCmp up to and including WinXP dosn't like as input variants
+ *  I1, UI2, VT_UI4, UI8 and UINT. INT is accepted only as left variant.
+ *
+ *  If both input variants are ERROR then VARCMP_EQ will be returned, else
+ *  an ERROR variant will trigger an error.
+ *
+ *  Both input variants can have VT_RESERVED flag set which is ignored
+ *  unless one and only one of the variants is a BSTR and the other one
+ *  is not an EMPTY variant. All four VT_RESERVED combinations have a
+ *  different meaning:
+ *   - BSTR and other: BSTR is always greater than the other variant.
+ *   - BSTR|VT_RESERVED and other: a string comparision is performed.
+ *   - BSTR and other|VT_RESERVED: If the BSTR is a number a numeric
+ *     comparision will take place else the BSTR is always greater.
+ *   - BSTR|VT_RESERVED and other|VT_RESERVED: It seems that the other
+ *     variant is ignored and the return value depends only on the sign
+ *     of the BSTR if it is a number else the BSTR is always greater. A
+ *     positive BSTR is greater, a negative one is smaller than the other
+ *     variant.
+ *
+ * SEE
+ *  VarBstrCmp for the lcid and flags usage.
  */
 HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
 {
-    BOOL	lOk        = TRUE;
-    BOOL	rOk        = TRUE;
-    BOOL	l_isR      = FALSE;
-    BOOL	r_isR      = FALSE;
-    LONGLONG	lVal = -1;
-    LONGLONG	rVal = -1;
-    VARIANT	rv,lv;
-    DWORD	xmask;
-    HRESULT	rc;
-    double	lDouble =0.0,rDouble=0.0;
+    VARTYPE     lvt, rvt, vt;
+    VARIANT     rv,lv;
+    DWORD       xmask;
+    HRESULT     rc;
 
     TRACE("(%p->(%s%s),%p->(%s%s),0x%08lx,0x%08lx)\n", left, debugstr_VT(left),
           debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right), lcid, flags);
 
-    VariantInit(&lv);VariantInit(&rv);
-    V_VT(right) &= ~0x8000; /* hack since we sometime get this flag.  */
-    V_VT(left) &= ~0x8000; /* hack since we sometime get this flag. */
+    lvt = V_VT(left) & VT_TYPEMASK;
+    rvt = V_VT(right) & VT_TYPEMASK;
+    xmask = (1 << lvt) | (1 << rvt);
 
-    /* If either are null, then return VARCMP_NULL */
-    if ((V_VT(left)&VT_TYPEMASK) == VT_NULL ||
-        (V_VT(right)&VT_TYPEMASK) == VT_NULL)
+    /* If we have any flag set except VT_RESERVED bail out.
+       Same for the left input variant type > VT_INT and for the
+       right input variant type > VT_I8. Yes, VT_INT is only supported
+       as left variant. Go figure */
+    if (((V_VT(left) | V_VT(right)) & ~VT_TYPEMASK & ~VT_RESERVED) ||
+            lvt > VT_INT || rvt > VT_I8) {
+        return DISP_E_BADVARTYPE;
+    }
+
+    /* Don't ask me why but native VarCmp cannot handle: VT_I1, VT_UI2, VT_UI4,
+       VT_UINT and VT_UI8. Tested with DCOM98, Win2k, WinXP */
+    if (rvt == VT_INT || xmask & (VTBIT_I1 | VTBIT_UI2 | VTBIT_UI4 | VTBIT_UI8 |
+                VTBIT_DISPATCH | VTBIT_VARIANT | VTBIT_UNKNOWN | VTBIT_15))
+        return DISP_E_TYPEMISMATCH;
+
+    /* If both variants are VT_ERROR return VARCMP_EQ */
+    if (xmask == VTBIT_ERROR)
+        return VARCMP_EQ;
+    else if (xmask & VTBIT_ERROR)
+        return DISP_E_TYPEMISMATCH;
+
+    if (xmask & VTBIT_NULL)
         return VARCMP_NULL;
 
-    /* Strings - use VarBstrCmp */
-    if ((V_VT(left)&VT_TYPEMASK) == VT_BSTR &&
-        (V_VT(right)&VT_TYPEMASK) == VT_BSTR) {
+    VariantInit(&lv);
+    VariantInit(&rv);
+
+    /* Two BSTRs, ignore VT_RESERVED */
+    if (xmask == VTBIT_BSTR)
         return VarBstrCmp(V_BSTR(left), V_BSTR(right), lcid, flags);
-    }
 
-    xmask = (1<<(V_VT(left)&VT_TYPEMASK))|(1<<(V_VT(right)&VT_TYPEMASK));
-    if (xmask & VTBIT_DECIMAL) {
-	rc = VariantChangeType(&lv,left,0,VT_DECIMAL);
-	if (FAILED(rc)) return rc;
-	rc = VariantChangeType(&rv,right,0,VT_DECIMAL);
-	if (FAILED(rc)) return rc;
-        return VarDecCmp(&V_DECIMAL(&lv), &V_DECIMAL(&rv));
-    }
-    if (xmask & VTBIT_R8) {
-	rc = VariantChangeType(&lv,left,0,VT_R8);
-	if (FAILED(rc)) return rc;
-	rc = VariantChangeType(&rv,right,0,VT_R8);
-	if (FAILED(rc)) return rc;
+    /* A BSTR and an other variant; we have to take care of VT_RESERVED */
+    if (xmask & VTBIT_BSTR) {
+        VARIANT *bstrv, *nonbv;
+        VARTYPE nonbvt;
+        int swap = 0;
 
-	if (V_R8(&lv) == V_R8(&rv)) return VARCMP_EQ;
-	if (V_R8(&lv) < V_R8(&rv)) return VARCMP_LT;
-	if (V_R8(&lv) > V_R8(&rv)) return VARCMP_GT;
-	return E_FAIL; /* can't get here */
-    }
-    if (xmask & VTBIT_R4) {
-	rc = VariantChangeType(&lv,left,0,VT_R4);
-	if (FAILED(rc)) return rc;
-	rc = VariantChangeType(&rv,right,0,VT_R4);
-	if (FAILED(rc)) return rc;
-
-	if (V_R4(&lv) == V_R4(&rv)) return VARCMP_EQ;
-	if (V_R4(&lv) < V_R4(&rv)) return VARCMP_LT;
-	if (V_R4(&lv) > V_R4(&rv)) return VARCMP_GT;
-	return E_FAIL; /* can't get here */
-    }
-
-    /* Integers - Ideally like to use VarDecCmp, but no Dec support yet
-           Use LONGLONG to maximize ranges                              */
-    lOk = TRUE;
-    switch (V_VT(left)&VT_TYPEMASK) {
-    case VT_I1   : lVal = V_I1(left); break;
-    case VT_I2   : lVal = V_I2(left); break;
-    case VT_I4   :
-    case VT_INT  : lVal = V_I4(left); break;
-    case VT_UI1  : lVal = V_UI1(left); break;
-    case VT_UI2  : lVal = V_UI2(left); break;
-    case VT_UI4  :
-    case VT_UINT : lVal = V_UI4(left); break;
-    case VT_BOOL : lVal = V_BOOL(left); break;
-    case VT_EMPTY : lVal = 0; break;
-    case VT_R4 : lDouble = V_R4(left); lOk = FALSE; l_isR= TRUE; break;
-    case VT_R8 : lDouble = V_R8(left); lOk = FALSE; l_isR= TRUE; break;
-    default: lOk = FALSE;
-    }
-
-    rOk = TRUE;
-    switch (V_VT(right)&VT_TYPEMASK) {
-    case VT_I1   : rVal = V_I1(right); break;
-    case VT_I2   : rVal = V_I2(right); break;
-    case VT_I4   :
-    case VT_INT  : rVal = V_I4(right); break;
-    case VT_UI1  : rVal = V_UI1(right); break;
-    case VT_UI2  : rVal = V_UI2(right); break;
-    case VT_UI4  :
-    case VT_UINT : rVal = V_UI4(right); break;
-    case VT_BOOL : rVal = V_BOOL(right); break;
-    case VT_EMPTY : rVal = 0; break;
-    case VT_R4 : rDouble = V_R4(right); rOk = FALSE;r_isR= TRUE; break;
-    case VT_R8 : rDouble = V_R8(right); rOk = FALSE;r_isR= TRUE; break;
-    default: rOk = FALSE;
-    }
-
-    if (lOk && rOk) {
-        if (lVal < rVal) {
-            return VARCMP_LT;
-        } else if (lVal > rVal) {
-            return VARCMP_GT;
+        /* Swap the variants so the BSTR is always on the left */
+        if (lvt == VT_BSTR) {
+            bstrv = left;
+            nonbv = right;
+            nonbvt = rvt;
         } else {
-            return VARCMP_EQ;
+            swap = 1;
+            bstrv = right;
+            nonbv = left;
+            nonbvt = lvt;
         }
-    }
-    else if (l_isR && r_isR) {
-        if (lDouble < rDouble) {
-            return VARCMP_LT;
-        } else if (lDouble > rDouble) {
-            return VARCMP_GT;
-        } else {
-            return VARCMP_EQ;
+
+        /* BSTR and EMPTY: ignore VT_RESERVED */
+        if (nonbvt == VT_EMPTY)
+            rc = (!V_BSTR(bstrv) || !*V_BSTR(bstrv)) ? VARCMP_EQ : VARCMP_GT;
+        else {
+            VARTYPE breserv = V_VT(bstrv) & ~VT_TYPEMASK;
+            VARTYPE nreserv = V_VT(nonbv) & ~VT_TYPEMASK;
+
+            if (!breserv && !nreserv) 
+                /* No VT_RESERVED set ==> BSTR always greater */
+                rc = VARCMP_GT;
+            else if (breserv && !nreserv) {
+                /* BSTR has VT_RESERVED set. Do a string comparision */
+                rc = VariantChangeTypeEx(&rv,nonbv,lcid,0,VT_BSTR);
+                if (FAILED(rc))
+                    return rc;
+                rc = VarBstrCmp(V_BSTR(bstrv), V_BSTR(&rv), lcid, flags);
+            } else if (V_BSTR(bstrv) && *V_BSTR(bstrv)) {
+            /* Non NULL nor empty BSTR */
+                /* If the BSTR is not a number the BSTR is greater */
+                rc = _VarChangeTypeExWrap(&lv,bstrv,lcid,0,VT_R8);
+                if (FAILED(rc))
+                    rc = VARCMP_GT;
+                else if (breserv && nreserv)
+                    /* FIXME: This is strange: with both VT_RESERVED set it
+                       looks like the result depends only on the sign of
+                       the BSTR number */
+                    rc = (V_R8(&lv) >= 0) ? VARCMP_GT : VARCMP_LT;
+                else
+                    /* Numeric comparision, will be handled below.
+                       VARCMP_NULL used only to break out. */
+                    rc = VARCMP_NULL;
+            VariantClear(&lv);
+            VariantClear(&rv);
+            } else
+                /* Empty or NULL BSTR */
+                rc = VARCMP_GT;
         }
-    }
-    else if (lOk && r_isR) {
-        if (lVal < rDouble) {
-            return VARCMP_LT;
-        } else if (lVal > rDouble) {
-            return VARCMP_GT;
-        } else {
-            return VARCMP_EQ;
+        /* Fixup the return code if we swapped left and right */
+        if (swap) {
+            if (rc == VARCMP_GT)
+                rc = VARCMP_LT;
+            else if (rc == VARCMP_LT)
+                rc = VARCMP_GT;
         }
+        if (rc != VARCMP_NULL)
+            return rc;
     }
-    else if (l_isR && rOk) {
-        if (lDouble < rVal) {
-            return VARCMP_LT;
-        } else if (lDouble > rVal) {
-            return VARCMP_GT;
-        } else {
-            return VARCMP_EQ;
-        }
+
+    if (xmask & VTBIT_DECIMAL)
+        vt = VT_DECIMAL;
+    else if (xmask & VTBIT_BSTR)
+        vt = VT_R8;
+    else if (xmask & VTBIT_R4)
+        vt = VT_R4;
+    else if (xmask & (VTBIT_R8 | VTBIT_DATE))
+        vt = VT_R8;
+    else if (xmask & VTBIT_CY)
+        vt = VT_CY;
+    else
+        /* default to I8 */
+        vt = VT_I8;
+
+    /* Coerce the variants */
+    rc = _VarChangeTypeExWrap(&lv,left,lcid,0,vt);
+    if (rc == DISP_E_OVERFLOW && vt != VT_R8) {
+        /* Overflow, change to R8 */
+        vt = VT_R8;
+        rc = _VarChangeTypeExWrap(&lv,left,lcid,0,vt);
     }
-    if ((V_VT(left)&VT_TYPEMASK) == VT_BSTR ) {
-	if(((V_VT(right)&VT_TYPEMASK) == VT_EMPTY ) && !(V_BSTR(left))) {
-	    return VARCMP_EQ;
-	} else {
-	    return VARCMP_GT;
-	}
+    if (FAILED(rc))
+        return rc;
+    rc = _VarChangeTypeExWrap(&rv,right,lcid,0,vt);
+    if (rc == DISP_E_OVERFLOW && vt != VT_R8) {
+        /* Overflow, change to R8 */
+        vt = VT_R8;
+        rc = _VarChangeTypeExWrap(&lv,left,lcid,0,vt);
+        if (FAILED(rc))
+            return rc;
+        rc = _VarChangeTypeExWrap(&rv,right,lcid,0,vt);
     }
-    if ((V_VT(right)&VT_TYPEMASK) == VT_BSTR ) {
-	if(((V_VT(left)&VT_TYPEMASK) == VT_EMPTY ) && !(V_BSTR(right))) {
-	    return VARCMP_EQ;
-	} else {
-	    return VARCMP_LT;
-	}
+    if (FAILED(rc))
+        return rc;
+
+#define _VARCMP(a,b) \
+    (((a) == (b)) ? VARCMP_EQ : (((a) < (b)) ? VARCMP_LT : VARCMP_GT))
+
+    switch (vt) {
+        case VT_CY:
+            return VarCyCmp(V_CY(&lv), V_CY(&rv));
+        case VT_DECIMAL:
+            return VarDecCmp(&V_DECIMAL(&lv), &V_DECIMAL(&rv));
+        case VT_I8:
+            return _VARCMP(V_I8(&lv), V_I8(&rv));
+        case VT_R4:
+            return _VARCMP(V_R4(&lv), V_R4(&rv));
+        case VT_R8:
+            return _VARCMP(V_R8(&lv), V_R8(&rv));
+        default:
+            /* We should never get here */
+            return E_FAIL;
     }
-    /* Dates */
-    if ((V_VT(left)&VT_TYPEMASK) == VT_DATE &&
-        (V_VT(right)&VT_TYPEMASK) == VT_DATE) {
-
-        if (floor(V_DATE(left)) == floor(V_DATE(right))) {
-            /* Due to floating point rounding errors, calculate varDate in whole numbers) */
-            double wholePart = 0.0;
-            double leftR;
-            double rightR;
-
-            /* Get the fraction * 24*60*60 to make it into whole seconds */
-            wholePart = (double) floor( V_DATE(left) );
-            if (wholePart == 0) wholePart = 1;
-            leftR = floor(fmod( V_DATE(left), wholePart ) * (24*60*60));
-
-            wholePart = (double) floor( V_DATE(right) );
-            if (wholePart == 0) wholePart = 1;
-            rightR = floor(fmod( V_DATE(right), wholePart ) * (24*60*60));
-
-            if (leftR < rightR) {
-                return VARCMP_LT;
-            } else if (leftR > rightR) {
-                return VARCMP_GT;
-            } else {
-                return VARCMP_EQ;
-            }
-
-        } else if (V_DATE(left) < V_DATE(right)) {
-            return VARCMP_LT;
-        } else if (V_DATE(left) > V_DATE(right)) {
-            return VARCMP_GT;
-        }
-    }
-    else if((V_VT(right)&VT_TYPEMASK) == VT_EMPTY)
-        return VARCMP_GT;
-    FIXME("VarCmp partial implementation, doesn't support %s / %s\n",wine_vtypes[V_VT(left)], wine_vtypes[V_VT(right)]);
-    return E_FAIL;
+#undef _VARCMP
 }
 
 /**********************************************************************
@@ -2920,7 +2952,6 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 
     /* Do the math */
     hres = S_OK;
-    V_VT(&tv) = tvt;
     V_VT(result) = resvt;
     switch (tvt) {
         case VT_DECIMAL:
@@ -2941,10 +2972,13 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
                 V_VT(result) = VT_R8;
                 V_R8(result) = r8res;
                 goto end;
-            } else
+            } else {
+                V_VT(&tv) = tvt;
                 V_I8(&tv) = V_I8(&lv) + V_I8(&rv);
+            }
             break;
         case VT_R8:
+            V_VT(&tv) = tvt;
             /* FIXME: overflow detection */
             V_R8(&tv) = V_R8(&lv) + V_R8(&rv);
             break;
@@ -3184,7 +3218,7 @@ HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	found = TRUE;
 	resvt = VT_DECIMAL;
     }
-    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|VTBIT_INT|VTBIT_UINT))) {
 	found = TRUE;
 	resvt = VT_I4;
     }
@@ -3253,7 +3287,7 @@ HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     lvt = V_VT(left)&VT_TYPEMASK;
     rvt = V_VT(right)&VT_TYPEMASK;
     found = FALSE;resvt = VT_VOID;
-    if (((1<<lvt) | (1<<rvt)) & ((1<<VT_DATE)|(1<<VT_R4)|(1<<VT_R8))) {
+    if (((1<<lvt) | (1<<rvt)) & (VTBIT_DATE|VTBIT_R4|VTBIT_R8)) {
 	found = TRUE;
 	resvt = VT_R8;
     }
@@ -3261,7 +3295,7 @@ HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	found = TRUE;
 	resvt = VT_DECIMAL;
     }
-    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|VTBIT_INT|VTBIT_UINT))) {
 	found = TRUE;
 	resvt = VT_I4;
     }

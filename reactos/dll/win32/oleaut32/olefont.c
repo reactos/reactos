@@ -40,6 +40,7 @@
 #include "olectl.h"
 #include "wine/debug.h"
 #include "connpt.h" /* for CreateConnectionPoint */
+#include "oaidl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -95,7 +96,8 @@ struct OLEFontImpl
   long cyLogical;
   long cyHimetric;
 
-  IConnectionPoint *pCP;
+  IConnectionPoint *pPropertyNotifyCP;
+  IConnectionPoint *pFontEventsCP;
 };
 
 /*
@@ -378,24 +380,74 @@ HRESULT WINAPI OleCreateFontIndirect(
  */
 static void OLEFont_SendNotify(OLEFontImpl* this, DISPID dispID)
 {
+  static const WCHAR wszName[] = {'N','a','m','e',0};
+  static const WCHAR wszSize[] = {'S','i','z','e',0};
+  static const WCHAR wszBold[] = {'B','o','l','d',0};
+  static const WCHAR wszItalic[] = {'I','t','a','l','i','c',0};
+  static const WCHAR wszUnder[] = {'U','n','d','e','r','l','i','n','e',0};
+  static const WCHAR wszStrike[] = {'S','t','r','i','k','e','t','h','r','o','u','g','h',0};
+  static const WCHAR wszWeight[] = {'W','e','i','g','h','t',0};
+  static const WCHAR wszCharset[] = {'C','h','a','r','s','s','e','t',0};
+  static const LPCWSTR dispid_mapping[] =
+  {
+    wszName,
+    NULL,
+    wszSize,
+    wszBold,
+    wszItalic,
+    wszUnder,
+    wszStrike,
+    wszWeight,
+    wszCharset
+  };
+
   IEnumConnections *pEnum;
   CONNECTDATA CD;
   HRESULT hres;
 
-  hres = IConnectionPoint_EnumConnections(this->pCP, &pEnum);
-  if (FAILED(hres)) /* When we have 0 connections. */
-    return;
+  hres = IConnectionPoint_EnumConnections(this->pPropertyNotifyCP, &pEnum);
+  if (SUCCEEDED(hres))
+  {
+    while(IEnumConnections_Next(pEnum, 1, &CD, NULL) == S_OK) {
+      IPropertyNotifySink *sink;
 
-  while(IEnumConnections_Next(pEnum, 1, &CD, NULL) == S_OK) {
-    IPropertyNotifySink *sink;
-
-    IUnknown_QueryInterface(CD.pUnk, &IID_IPropertyNotifySink, (LPVOID)&sink);
-    IPropertyNotifySink_OnChanged(sink, dispID);
-    IPropertyNotifySink_Release(sink);
-    IUnknown_Release(CD.pUnk);
+      IUnknown_QueryInterface(CD.pUnk, &IID_IPropertyNotifySink, (LPVOID)&sink);
+      IPropertyNotifySink_OnChanged(sink, dispID);
+      IPropertyNotifySink_Release(sink);
+      IUnknown_Release(CD.pUnk);
+    }
+    IEnumConnections_Release(pEnum);
   }
-  IEnumConnections_Release(pEnum);
-  return;
+
+  hres = IConnectionPoint_EnumConnections(this->pFontEventsCP, &pEnum);
+  if (SUCCEEDED(hres))
+  {
+    DISPPARAMS dispparams;
+    VARIANTARG vararg;
+
+    VariantInit(&vararg);
+    V_VT(&vararg) = VT_BSTR;
+    V_BSTR(&vararg) = SysAllocString(dispid_mapping[dispID]);
+
+    dispparams.cArgs = 1;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &vararg;
+
+    while(IEnumConnections_Next(pEnum, 1, &CD, NULL) == S_OK) {
+        IFontEventsDisp *disp;
+
+        IUnknown_QueryInterface(CD.pUnk, &IID_IFontEventsDisp, (LPVOID)&disp);
+        IDispatch_Invoke(disp, DISPID_FONT_CHANGED, &IID_NULL,
+                         LOCALE_NEUTRAL, INVOKE_FUNC, &dispparams, NULL,
+                         NULL, NULL);
+
+        IDispatch_Release(disp);
+        IUnknown_Release(CD.pUnk);
+    }
+    VariantClear(&vararg);
+    IEnumConnections_Release(pEnum);
+  }
 }
 
 /************************************************************************
@@ -459,7 +511,18 @@ static OLEFontImpl* OLEFontImpl_Construct(LPFONTDESC fontDesc)
   newObject->fontLock = 0;
   newObject->cyLogical  = 72L;
   newObject->cyHimetric = 2540L;
-  CreateConnectionPoint((IUnknown*)newObject, &IID_IPropertyNotifySink, &newObject->pCP);
+  newObject->pPropertyNotifyCP = NULL;
+  newObject->pFontEventsCP = NULL;
+
+  CreateConnectionPoint((IUnknown*)newObject, &IID_IPropertyNotifySink, &newObject->pPropertyNotifyCP);
+  CreateConnectionPoint((IUnknown*)newObject, &IID_IFontEventsDisp, &newObject->pFontEventsCP);
+
+  if (!newObject->pPropertyNotifyCP || !newObject->pFontEventsCP)
+  {
+    OLEFontImpl_Destroy(newObject);
+    return NULL;
+  }
+
   TRACE("returning %p\n", newObject);
   return newObject;
 }
@@ -479,6 +542,11 @@ static void OLEFontImpl_Destroy(OLEFontImpl* fontDesc)
 
   if (fontDesc->gdiFont!=0)
     DeleteObject(fontDesc->gdiFont);
+
+  if (fontDesc->pPropertyNotifyCP)
+      IConnectionPoint_Release(fontDesc->pPropertyNotifyCP);
+  if (fontDesc->pFontEventsCP)
+      IConnectionPoint_Release(fontDesc->pFontEventsCP);
 
   HeapFree(GetProcessHeap(), 0, fontDesc);
 }
@@ -1041,6 +1109,17 @@ static HRESULT WINAPI OLEFontImpl_Clone(
 
   newObject->gdiFont = CreateFontIndirectW(&logFont);
 
+  /* create new connection points */
+  newObject->pPropertyNotifyCP = NULL;
+  newObject->pFontEventsCP = NULL;
+  CreateConnectionPoint((IUnknown*)newObject, &IID_IPropertyNotifySink, &newObject->pPropertyNotifyCP);
+  CreateConnectionPoint((IUnknown*)newObject, &IID_IFontEventsDisp, &newObject->pFontEventsCP);
+
+  if (!newObject->pPropertyNotifyCP || !newObject->pFontEventsCP)
+  {
+    OLEFontImpl_Destroy(newObject);
+    return E_OUTOFMEMORY;
+  }
 
   /* The cloned object starts with a reference count of 1 */
   newObject->ref          = 1;
@@ -1839,12 +1918,17 @@ static HRESULT WINAPI OLEFontImpl_FindConnectionPoint(
   OLEFontImpl *this = impl_from_IConnectionPointContainer(iface);
   TRACE("(%p)->(%s, %p): stub\n", this, debugstr_guid(riid), ppCp);
 
-  if(memcmp(riid, &IID_IPropertyNotifySink, sizeof(IID_IPropertyNotifySink)) == 0) {
-    return IConnectionPoint_QueryInterface(this->pCP, &IID_IConnectionPoint,
-					   (LPVOID)ppCp);
+  if(IsEqualIID(riid, &IID_IPropertyNotifySink)) {
+    return IConnectionPoint_QueryInterface(this->pPropertyNotifyCP,
+                                           &IID_IConnectionPoint,
+                                           (LPVOID)ppCp);
+  } else if(IsEqualIID(riid, &IID_IFontEventsDisp)) {
+    return IConnectionPoint_QueryInterface(this->pFontEventsCP,
+                                           &IID_IConnectionPoint,
+                                           (LPVOID)ppCp);
   } else {
-    FIXME("Tried to find connection point on %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    FIXME("no connection point for %s\n", debugstr_guid(riid));
+    return CONNECT_E_NOCONNECTION;
   }
 }
 

@@ -34,6 +34,20 @@
 /* Get the extra flags from a variant pointer */
 #define V_EXTRA_TYPE(v) (V_VT((v)) & VT_EXTRA_TYPE)
 
+/* Missing in Windows but useful VTBIT_* defines */
+#define VTBIT_BOOL      (1 << VT_BSTR)
+#define VTBIT_BSTR      (1 << VT_BSTR)
+#define VTBIT_DATE      (1 << VT_DATE)
+#define VTBIT_DISPATCH  (1 << VT_DISPATCH)
+#define VTBIT_EMPTY     (1 << VT_EMPTY)
+#define VTBIT_ERROR     (1 << VT_ERROR)
+#define VTBIT_INT       (1 << VT_INT)
+#define VTBIT_NULL      (1 << VT_NULL)
+#define VTBIT_UINT      (1 << VT_UINT)
+#define VTBIT_UNKNOWN   (1 << VT_UNKNOWN)
+#define VTBIT_VARIANT   (1 << VT_VARIANT)
+#define VTBIT_15        (1 << 15)        /* no variant type with this number */
+
 extern const char* wine_vtypes[];
 #define debugstr_vt(v) (((v)&VT_TYPEMASK) <= VT_CLSID ? wine_vtypes[((v)&VT_TYPEMASK)] : \
   ((v)&VT_TYPEMASK) == VT_BSTR_BLOB ? "VT_BSTR_BLOB": "Invalid")

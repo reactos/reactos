@@ -40,6 +40,7 @@ extern const GUID CLSID_StdFont;
 extern const GUID CLSID_StdPicture;
 extern const GUID IID_IFont;
 extern const GUID IID_IFontDisp;
+extern const GUID IID_IFontEventsDisp;
 extern const GUID IID_IPicture;
 extern const GUID IID_IPictureDisp;
 extern const GUID GUID_HIMETRIC;

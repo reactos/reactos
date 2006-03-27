@@ -1983,7 +1983,7 @@ VARIANT_FormatString_Exit:
 #define NUMBER_VTBITS (VTBIT_I1|VTBIT_UI1|VTBIT_I2|VTBIT_UI2| \
                        VTBIT_I4|VTBIT_UI4|VTBIT_I8|VTBIT_UI8| \
                        VTBIT_R4|VTBIT_R8|VTBIT_CY|VTBIT_DECIMAL| \
-                       (1<<VT_BOOL)|(1<<VT_INT)|(1<<VT_UINT))
+                       VTBIT_BOOL|VTBIT_INT|VTBIT_UINT)
 
 /**********************************************************************
  *              VarFormatFromTokens [OLEAUT32.139]
@@ -2006,6 +2006,9 @@ HRESULT WINAPI VarFormatFromTokens(LPVARIANT pVarIn, LPOLESTR lpszFormat,
 
   if (!pVarIn || !rgbTok)
     return E_INVALIDARG;
+
+  if (V_VT(pVarIn) == VT_NULL)
+    return S_OK;
 
   if (*rgbTok == FMT_TO_STRING || header->type == FMT_TYPE_GENERAL)
   {

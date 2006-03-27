@@ -160,14 +160,10 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
-  {
+  if (IsEqualIID(&IID_IUnknown, riid))
     *ppvObject = (IConnectionPoint*)This;
-  }
-  else if (memcmp(&IID_IConnectionPoint, riid, sizeof(IID_IConnectionPoint)) == 0)
-  {
+  else if (IsEqualIID(&IID_IConnectionPoint, riid))
     *ppvObject = (IConnectionPoint*)This;
-  }
 
   /*
    * Check that we obtained an interface.
@@ -433,14 +429,10 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
-  {
+  if (IsEqualIID(&IID_IUnknown, riid))
     *ppvObject = (IEnumConnections*)This;
-  }
-  else if (memcmp(&IID_IEnumConnections, riid, sizeof(IID_IEnumConnections)) == 0)
-  {
+  else if (IsEqualIID(&IID_IEnumConnections, riid))
     *ppvObject = (IEnumConnections*)This;
-  }
 
   /*
    * Check that we obtained an interface.

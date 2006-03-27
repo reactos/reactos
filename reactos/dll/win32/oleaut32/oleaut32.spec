@@ -111,7 +111,7 @@
 112 stdcall VarBstrFromR8(double long long ptr)
 113 stdcall VarBstrFromCy(double long long ptr)
 114 stdcall VarBstrFromDate(double long long ptr)
-115 stub VarBstrFromDisp
+115 stdcall VarBstrFromDisp(ptr long long ptr)
 116 stdcall VarBstrFromBool(long long long ptr)
 117 stdcall VarFormatPercent(ptr long long long long long ptr)
 118 stdcall VarBoolFromUI1(long ptr)
@@ -285,10 +285,10 @@
 288 stdcall VARIANT_UserMarshal(ptr ptr ptr)
 289 stdcall VARIANT_UserUnmarshal(ptr ptr ptr)
 290 stdcall VARIANT_UserFree(ptr ptr)
-291 stub LPSAFEARRAY_UserSize
-292 stub LPSAFEARRAY_UserMarshal
-293 stub LPSAFEARRAY_UserUnmarshal
-294 stub LPSAFEARRAY_UserFree
+291 stdcall LPSAFEARRAY_UserSize(ptr long ptr)
+292 stdcall LPSAFEARRAY_UserMarshal(ptr ptr ptr)
+293 stdcall LPSAFEARRAY_UserUnmarshal(ptr ptr ptr)
+294 stdcall LPSAFEARRAY_UserFree(ptr ptr)
 295 stub LPSAFEARRAY_Size
 296 stub LPSAFEARRAY_Marshal
 297 stub LPSAFEARRAY_Unmarshal
