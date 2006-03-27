@@ -16,41 +16,34 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-NTAPI
-CcInit(VOID)
+VOID NTAPI
+CcInit (VOID)
 {
-  CcInitView();
+    CcInitView ();
 }
 
 /*
  * @unimplemented
  */
-LARGE_INTEGER
-STDCALL
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN BcbListHeld
-    )
+LARGE_INTEGER STDCALL
+CcGetFlushedValidData (IN PSECTION_OBJECT_POINTERS SectionObjectPointer, 
+                       IN BOOLEAN BcbListHeld)
 {
-	LARGE_INTEGER i;
+    LARGE_INTEGER i;
 
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 
-	i.QuadPart = 0;
-	return i;
+    i.QuadPart = 0;
+    return i;
 }
 
 /*
  * @unimplemented
  */
-PVOID
-STDCALL
-CcRemapBcb (
-    IN PVOID Bcb
-    )
+PVOID STDCALL
+CcRemapBcb (IN PVOID Bcb)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 
     return 0;
 }
@@ -58,66 +51,51 @@ CcRemapBcb (
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-CcScheduleReadAhead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length
-	)
+VOID STDCALL
+CcScheduleReadAhead (IN PFILE_OBJECT FileObject, 
+                     IN PLARGE_INTEGER FileOffset, 
+                     IN ULONG Length)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-CcSetAdditionalCacheAttributes (
-	IN	PFILE_OBJECT	FileObject,
-	IN	BOOLEAN		DisableReadAhead,
-	IN	BOOLEAN		DisableWriteBehind
-	)
+VOID STDCALL
+CcSetAdditionalCacheAttributes (IN PFILE_OBJECT FileObject, 
+                                IN BOOLEAN DisableReadAhead, 
+                                IN BOOLEAN DisableWriteBehind)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-CcSetBcbOwnerPointer (
-	IN	PVOID	Bcb,
-	IN	PVOID	Owner
-	)
+VOID STDCALL
+CcSetBcbOwnerPointer (IN PVOID Bcb, 
+                      IN PVOID Owner)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-CcSetDirtyPageThreshold (
-	IN	PFILE_OBJECT	FileObject,
-	IN	ULONG		DirtyPageThreshold
-	)
+VOID STDCALL
+CcSetDirtyPageThreshold (IN PFILE_OBJECT FileObject, 
+                         IN ULONG DirtyPageThreshold)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
  * @unimplemented
  */
-VOID
-STDCALL
-CcSetReadAheadGranularity (
-	IN	PFILE_OBJECT	FileObject,
-	IN	ULONG		Granularity
-	)
+VOID STDCALL
+CcSetReadAheadGranularity (IN PFILE_OBJECT FileObject, 
+                           IN ULONG Granularity)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }

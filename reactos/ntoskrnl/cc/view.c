@@ -23,7 +23,7 @@
 #undef ROUND_DOWN
 #endif
 
-#define ROUND_UP(N, S)	    (((N) + (S) - 1) & ~((S) - 1))
+#define ROUND_UP(N, S)        (((N) + (S) - 1) & ~((S) - 1))
 #define ROUND_DOWN(N, S)    ((N) & ~((S) - 1))
 
 NPAGED_LOOKASIDE_LIST iBcbLookasideList;
@@ -37,21 +37,18 @@ LIST_ENTRY CcFreeCacheViewListHead;
 LIST_ENTRY CcInUseCacheViewListHead;
 PMEMORY_AREA CcCacheViewMemoryArea;
 
-NTSTATUS NTAPI
-MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
-                        ACCESS_MASK DesiredAccess,
-                        POBJECT_ATTRIBUTES ObjectAttributes,
-                        PLARGE_INTEGER UMaximumSize,
-                        ULONG SectionPageProtection,
-                        ULONG AllocationAttributes,
-                        PFILE_OBJECT FileObject,
-			BOOLEAN CacheManager);
+NTSTATUS NTAPI MmCreateDataFileSection (PSECTION_OBJECT * SectionObject,
+                                        ACCESS_MASK DesiredAccess,
+                                        POBJECT_ATTRIBUTES ObjectAttributes,
+                                        PLARGE_INTEGER UMaximumSize,
+                                        ULONG SectionPageProtection,
+                                        ULONG AllocationAttributes, 
+                                        PFILE_OBJECT FileObject, 
+                                        BOOLEAN CacheManager);
 
-NTSTATUS STDCALL
-MmUnmapViewInSystemCache(PCACHE_VIEW);
+NTSTATUS STDCALL MmUnmapViewInSystemCache (PCACHE_VIEW);
 
-NTSTATUS
-MmFlushDataFileSection(PSECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULONG Length);
+NTSTATUS MmFlushDataFileSection (PSECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULONG Length);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -59,247 +56,220 @@ MmFlushDataFileSection(PSECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULON
  * @implemented
  */
 VOID STDCALL
-CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
-	     IN PLARGE_INTEGER FileOffset OPTIONAL,
-	     IN ULONG Length,
-	     OUT PIO_STATUS_BLOCK IoStatus)
+CcFlushCache (IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
+              IN PLARGE_INTEGER FileOffset OPTIONAL, 
+              IN ULONG Length, 
+              OUT PIO_STATUS_BLOCK IoStatus)
 {
-   PBCB Bcb;
-   NTSTATUS Status = STATUS_SUCCESS;
+    PBCB Bcb;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
-           SectionObjectPointers, FileOffset, Length, IoStatus);
+    DPRINT ("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
+            SectionObjectPointers, FileOffset, Length, IoStatus);
 
-   if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
-   {
-      Bcb = (PBCB)SectionObjectPointers->SharedCacheMap;
-      ASSERT(Bcb);
+    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
+    {
+        Bcb = (PBCB) SectionObjectPointers->SharedCacheMap;
+        ASSERT (Bcb);
 
-      Status = MmFlushDataFileSection(Bcb->Section, FileOffset, Length);
-   }
-   if (IoStatus)
-   {
-      IoStatus->Status = Status;
-      IoStatus->Status = STATUS_SUCCESS;
-   }
+        Status = MmFlushDataFileSection (Bcb->Section, FileOffset, Length);
+    }
+    if (IoStatus)
+    {
+        IoStatus->Status = Status;
+        IoStatus->Status = STATUS_SUCCESS;
+    }
 }
 
 /*
  * @implemented
  */
 PFILE_OBJECT STDCALL
-CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers)
+CcGetFileObjectFromSectionPtrs (IN PSECTION_OBJECT_POINTERS SectionObjectPointers)
 {
-   PBCB Bcb;
-   if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
-   {
-      Bcb = (PBCB)SectionObjectPointers->SharedCacheMap;
-      ASSERT(Bcb);
-      return Bcb->FileObject;
-   }
-   return NULL;
+    PBCB Bcb;
+    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
+    {
+        Bcb = (PBCB) SectionObjectPointers->SharedCacheMap;
+        ASSERT (Bcb);
+        return Bcb->FileObject;
+    }
+    return NULL;
 }
 
 
-VOID 
-INIT_FUNCTION
-NTAPI
-CcInitView(VOID)
-
+VOID INIT_FUNCTION NTAPI
+CcInitView (VOID)
 {
-   NTSTATUS Status;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-   ULONG i;
-   ULONG Size;
-   PVOID Base;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    ULONG i;
+    ULONG Size;
+    PVOID Base;
 
-   DPRINT("CcInitView()\n");
+    DPRINT ("CcInitView()\n");
 
-   ExInitializeFastMutex(&CcCacheViewLock);
+    ExInitializeFastMutex (&CcCacheViewLock);
 
-   ExInitializeNPagedLookasideList (&iBcbLookasideList,
-	                            NULL,
-				    NULL,
-				    0,
-				    sizeof(INTERNAL_BCB),
-				    TAG_IBCB,
-				    20);
-   ExInitializeNPagedLookasideList (&BcbLookasideList,
-	                            NULL,
-				    NULL,
-				    0,
-				    sizeof(BCB),
-				    TAG_BCB,
-				    20);
-				    
-   InitializeListHead(&CcFreeCacheViewListHead);
-   InitializeListHead(&CcInUseCacheViewListHead);
+    ExInitializeNPagedLookasideList (&iBcbLookasideList, NULL, NULL, 0, sizeof (INTERNAL_BCB), TAG_IBCB, 20);
+    ExInitializeNPagedLookasideList (&BcbLookasideList, NULL, NULL, 0, sizeof (BCB), TAG_BCB, 20);
 
-   BoundaryAddressMultiple.QuadPart = 0LL;
+    InitializeListHead (&CcFreeCacheViewListHead);
+    InitializeListHead (&CcInUseCacheViewListHead);
 
-   Size = MmSystemRangeStart >= (PVOID)0xC0000000 ? 0x18000000 : 0x20000000;
-   CcCacheViewBase = (PVOID)(0xF0000000 - Size);
-   MmLockAddressSpace(MmGetKernelAddressSpace());
+    BoundaryAddressMultiple.QuadPart = 0LL;
 
-   Status = MmCreateMemoryArea(
-				   MmGetKernelAddressSpace(),
-			       MEMORY_AREA_CACHE_SEGMENT,
-			       &CcCacheViewBase,
-			       Size,
-			       0,
-			       &CcCacheViewMemoryArea,
-			       FALSE,
-			       FALSE,
-			       BoundaryAddressMultiple);
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
-   DPRINT1("CcCacheViewBase: %x\n", CcCacheViewBase);
-   if (!NT_SUCCESS(Status))
-   {
-      KEBUGCHECK(0);
-   }
-   CcCacheViewArray = ExAllocatePool(NonPagedPool, sizeof(CACHE_VIEW) * (Size / CACHE_VIEW_SIZE));
-   if (CcCacheViewArray == NULL)
-   {
-      KEBUGCHECK(0);
-   }
+    Size = MmSystemRangeStart >= (PVOID) 0xC0000000 ? 0x18000000 : 0x20000000;
+    CcCacheViewBase = (PVOID) (0xF0000000 - Size);
+    MmLockAddressSpace (MmGetKernelAddressSpace ());
 
-   Base = CcCacheViewBase;
-   CcCacheViewArrayCount = Size / CACHE_VIEW_SIZE;
-   for (i = 0; i < CcCacheViewArrayCount; i++)
-   {
-      CcCacheViewArray[i].BaseAddress = Base;
-      CcCacheViewArray[i].RefCount = 0;
-      CcCacheViewArray[i].Bcb = NULL;
-      CcCacheViewArray[i].SectionData.ViewOffset = 0;
-      InsertTailList(&CcFreeCacheViewListHead, &CcCacheViewArray[i].ListEntry);
-      Base = (PVOID)((ULONG_PTR)Base + CACHE_VIEW_SIZE);
-   }
-   CcInitCacheZeroPage();
-  
+    Status = MmCreateMemoryArea (MmGetKernelAddressSpace (),
+                                 MEMORY_AREA_CACHE_SEGMENT,
+                                 &CcCacheViewBase, Size, 0, &CcCacheViewMemoryArea, FALSE, FALSE, BoundaryAddressMultiple);
+    MmUnlockAddressSpace (MmGetKernelAddressSpace ());
+    DPRINT1 ("CcCacheViewBase: %x\n", CcCacheViewBase);
+    if (!NT_SUCCESS (Status))
+    {
+        KEBUGCHECK (0);
+    }
+    CcCacheViewArray = ExAllocatePool (NonPagedPool, sizeof (CACHE_VIEW) * (Size / CACHE_VIEW_SIZE));
+    if (CcCacheViewArray == NULL)
+    {
+        KEBUGCHECK (0);
+    }
+
+    Base = CcCacheViewBase;
+    CcCacheViewArrayCount = Size / CACHE_VIEW_SIZE;
+    for (i = 0; i < CcCacheViewArrayCount; i++)
+    {
+        CcCacheViewArray[i].BaseAddress = Base;
+        CcCacheViewArray[i].RefCount = 0;
+        CcCacheViewArray[i].Bcb = NULL;
+        CcCacheViewArray[i].SectionData.ViewOffset = 0;
+        InsertTailList (&CcFreeCacheViewListHead, &CcCacheViewArray[i].ListEntry);
+        Base = (PVOID) ((ULONG_PTR) Base + CACHE_VIEW_SIZE);
+    }
+    CcInitCacheZeroPage ();
+
 }
 
 VOID STDCALL
-CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
-		     IN PCC_FILE_SIZES FileSizes,
-		     IN BOOLEAN PinAccess,
-		     IN PCACHE_MANAGER_CALLBACKS CallBacks,
-		     IN PVOID LazyWriterContext)
+CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
+                      IN PCC_FILE_SIZES FileSizes,
+                      IN BOOLEAN PinAccess, 
+                      IN PCACHE_MANAGER_CALLBACKS CallBacks, 
+                      IN PVOID LazyWriterContext)
 {
-   PBCB Bcb;
-   NTSTATUS Status;
+    PBCB Bcb;
+    NTSTATUS Status;
 
-   DPRINT("CcInitializeCacheMap(), %wZ\n", &FileObject->FileName);
-   DPRINT("%I64x (%I64d)\n", FileSizes->FileSize.QuadPart, FileSizes->FileSize.QuadPart);
+    DPRINT ("CcInitializeCacheMap(), %wZ\n", &FileObject->FileName);
+    DPRINT ("%I64x (%I64d)\n", FileSizes->FileSize.QuadPart, FileSizes->FileSize.QuadPart);
 
-   ASSERT (FileObject);
-   ASSERT (FileSizes);
+    ASSERT (FileObject);
+    ASSERT (FileSizes);
 
-   ExAcquireFastMutex(&CcCacheViewLock);
+    ExAcquireFastMutex (&CcCacheViewLock);
 
-   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-   if (Bcb == NULL)
-   {
-      Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);
-      if (Bcb == NULL)
-      {
-         KEBUGCHECK(0);
-      }
-      memset(Bcb, 0, sizeof(BCB));
+    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    if (Bcb == NULL)
+    {
+        Bcb = ExAllocateFromNPagedLookasideList (&BcbLookasideList);
+        if (Bcb == NULL)
+        {
+            KEBUGCHECK (0);
+        }
+        memset (Bcb, 0, sizeof (BCB));
 
-      Bcb->FileObject = FileObject;
-      Bcb->FileSizes = *FileSizes;
-      Bcb->PinAccess = PinAccess;
-      Bcb->CallBacks = CallBacks;
-      Bcb->LazyWriterContext = LazyWriterContext;
-      Bcb->RefCount = 0;
+        Bcb->FileObject = FileObject;
+        Bcb->FileSizes = *FileSizes;
+        Bcb->PinAccess = PinAccess;
+        Bcb->CallBacks = CallBacks;
+        Bcb->LazyWriterContext = LazyWriterContext;
+        Bcb->RefCount = 0;
 
-      DPRINT("%x %x\n", FileObject, FileSizes->FileSize.QuadPart);
+        DPRINT ("%x %x\n", FileObject, FileSizes->FileSize.QuadPart);
 
-      Status = MmCreateDataFileSection(&Bcb->Section, 
-	                               STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ | SECTION_MAP_WRITE,
-		                       NULL,
-		                       &Bcb->FileSizes.FileSize,
-		                       PAGE_READWRITE,
-		                       SEC_COMMIT,
-		                       Bcb->FileObject,
-				       TRUE);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("%x\n", Status);
-         KEBUGCHECK(0);
-      }
+        Status = MmCreateDataFileSection (&Bcb->Section,
+                                          STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ | SECTION_MAP_WRITE,
+                                          NULL, &Bcb->FileSizes.FileSize, PAGE_READWRITE, SEC_COMMIT, Bcb->FileObject, TRUE);
+        if (!NT_SUCCESS (Status))
+        {
+            DPRINT1 ("%x\n", Status);
+            KEBUGCHECK (0);
+        }
 
-      FileObject->SectionObjectPointer->SharedCacheMap = Bcb;
-   }
+        FileObject->SectionObjectPointer->SharedCacheMap = Bcb;
+    }
 
-   if (FileObject->PrivateCacheMap == NULL)
-   {
-      FileObject->PrivateCacheMap = Bcb;
-      Bcb->RefCount++;
-   }
-   
-   ExReleaseFastMutex(&CcCacheViewLock);
-   DPRINT("CcInitializeCacheMap() done\n");
+    if (FileObject->PrivateCacheMap == NULL)
+    {
+        FileObject->PrivateCacheMap = Bcb;
+        Bcb->RefCount++;
+    }
+
+    ExReleaseFastMutex (&CcCacheViewLock);
+    DPRINT ("CcInitializeCacheMap() done\n");
 }
 
 BOOLEAN STDCALL
-CcUninitializeCacheMap (IN PFILE_OBJECT	FileObject,
-			IN PLARGE_INTEGER TruncateSize OPTIONAL,
-			IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
+CcUninitializeCacheMap (IN PFILE_OBJECT FileObject,
+                        IN PLARGE_INTEGER TruncateSize OPTIONAL, 
+                        IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
 {
-   PBCB Bcb;
-   ULONG i;
-   NTSTATUS Status;
+    PBCB Bcb;
+    ULONG i;
+    NTSTATUS Status;
 
-   DPRINT("CcUninitializeCacheMap(), %wZ\n", &FileObject->FileName);
-   ExAcquireFastMutex(&CcCacheViewLock);
-   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-   if (Bcb)
-   {
-      if (FileObject->PrivateCacheMap == Bcb)
-      {
-         Bcb->RefCount--;
-	 FileObject->PrivateCacheMap = NULL;
-      }
-      if (Bcb->RefCount == 0)
-      {
-         Bcb->RefCount++;
-         ExReleaseFastMutex(&CcCacheViewLock);
-	 MmFlushDataFileSection(Bcb->Section, NULL, 0);
-         ExAcquireFastMutex(&CcCacheViewLock);
-	 Bcb->RefCount--;
-	 if (Bcb->RefCount == 0)
-	 {
-            for (i = 0; i < ROUND_UP(Bcb->FileSizes.AllocationSize.QuadPart, CACHE_VIEW_SIZE) / CACHE_VIEW_SIZE; i++)
-	    {
-	       if (Bcb->CacheView[i] && Bcb->CacheView[i]->Bcb == Bcb)
-               {
-                  CHECKPOINT;
-	          if (Bcb->CacheView[i]->RefCount > 0)
-	          {
-	             KEBUGCHECK(0);
-	          }
-	          Status = MmUnmapViewInSystemCache(Bcb->CacheView[i]);
-                  if (!NT_SUCCESS(Status))
-	          {
-	             KEBUGCHECK(0);
-	          }
-	          Bcb->CacheView[i]->RefCount = 0;
-		  Bcb->CacheView[i]->Bcb = NULL;
-                  Bcb->CacheView[i] = NULL;
-	       }
-	    }
+    DPRINT ("CcUninitializeCacheMap(), %wZ\n", &FileObject->FileName);
+    ExAcquireFastMutex (&CcCacheViewLock);
+    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+    if (Bcb)
+    {
+        if (FileObject->PrivateCacheMap == Bcb)
+        {
+            Bcb->RefCount--;
+            FileObject->PrivateCacheMap = NULL;
+        }
+        if (Bcb->RefCount == 0)
+        {
+            Bcb->RefCount++;
+            ExReleaseFastMutex (&CcCacheViewLock);
+            MmFlushDataFileSection (Bcb->Section, NULL, 0);
+            ExAcquireFastMutex (&CcCacheViewLock);
+            Bcb->RefCount--;
+            if (Bcb->RefCount == 0)
+            {
+                for (i = 0; i < ROUND_UP (Bcb->FileSizes.AllocationSize.QuadPart, CACHE_VIEW_SIZE) / CACHE_VIEW_SIZE; i++)
+                {
+                    if (Bcb->CacheView[i] && Bcb->CacheView[i]->Bcb == Bcb)
+                    {
+                        CHECKPOINT;
+                        if (Bcb->CacheView[i]->RefCount > 0)
+                        {
+                            KEBUGCHECK (0);
+                        }
+                        Status = MmUnmapViewInSystemCache (Bcb->CacheView[i]);
+                        if (!NT_SUCCESS (Status))
+                        {
+                            KEBUGCHECK (0);
+                        }
+                        Bcb->CacheView[i]->RefCount = 0;
+                        Bcb->CacheView[i]->Bcb = NULL;
+                        Bcb->CacheView[i] = NULL;
+                    }
+                }
 
-            DPRINT("%x\n", Bcb->Section);
-	    ObDereferenceObject(Bcb->Section);
-            FileObject->SectionObjectPointer->SharedCacheMap = NULL;
-	    ExFreeToNPagedLookasideList(&BcbLookasideList, Bcb);
-	 }
-      }
-   }
-   DPRINT("CcUninitializeCacheMap() done, %wZ\n", &FileObject->FileName);
-   ExReleaseFastMutex(&CcCacheViewLock);
-   return TRUE;
+                DPRINT ("%x\n", Bcb->Section);
+                ObDereferenceObject (Bcb->Section);
+                FileObject->SectionObjectPointer->SharedCacheMap = NULL;
+                ExFreeToNPagedLookasideList (&BcbLookasideList, Bcb);
+            }
+        }
+    }
+    DPRINT ("CcUninitializeCacheMap() done, %wZ\n", &FileObject->FileName);
+    ExReleaseFastMutex (&CcCacheViewLock);
+    return TRUE;
 }
 
 
