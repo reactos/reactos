@@ -638,6 +638,7 @@ typedef enum
 #define LANG_HEBREW	0x0d
 #define LANG_HUNGARIAN	0x0e
 #define LANG_ICELANDIC	0x0f
+#define LANG_IRISH      0x3c
 #define LANG_ITALIAN	0x10
 #define LANG_JAPANESE	0x11
 #define LANG_KOREAN	0x12
@@ -646,7 +647,9 @@ typedef enum
 #define LANG_POLISH	0x15
 #define LANG_PORTUGUESE	0x16
 #define LANG_ROMANIAN	0x18
+#define LANG_ROMANSH    0x17
 #define LANG_RUSSIAN	0x19
+#define LANG_SAMI       0x3b
 #define LANG_CROATIAN	0x1a
 #define LANG_SERBIAN	0x1a
 #define LANG_SLOVAK	0x1b
@@ -656,6 +659,7 @@ typedef enum
 #define LANG_TURKISH	0x1f
 #define LANG_URDU	0x20
 #define LANG_INDONESIAN	0x21
+#define LANG_UPPER_SORBIAN 0x2e
 #define LANG_UKRAINIAN	0x22
 #define LANG_BELARUSIAN	0x23
 #define LANG_SLOVENIAN	0x24
@@ -699,6 +703,7 @@ typedef enum
 #define LANG_NEPALI	0x61
 #define LANG_DIVEHI	0x65
 #define LANG_INVARIANT	0x7f
+#define LANG_MAORI      0x81
 #define SUBLANG_NEUTRAL	0x00
 #define SUBLANG_DEFAULT	0x01
 #define SUBLANG_SYS_DEFAULT	0x02

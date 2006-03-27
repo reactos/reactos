@@ -17,12 +17,6 @@ extern "C" {
 #define RPC_UNICODE_SUPPORTED
 #endif
 
-#ifdef _RPCRT4_
-#define RPCRTAPI DECLSPEC_EXPORT
-#else
-#define RPCRTAPI DECLSPEC_IMPORT
-#endif
-
 #ifndef __MIDL_USER_DEFINED
 #define midl_user_allocate MIDL_user_allocate
 #define midl_user_free     MIDL_user_free
@@ -34,6 +28,7 @@ extern "C" {
 #define __RPC_USER __stdcall
 #define __RPC_STUB __stdcall
 #define RPC_ENTRY  __stdcall
+#define RPCRTAPI
 typedef void *I_RPC_HANDLE;
 typedef long RPC_STATUS;
 
