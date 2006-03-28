@@ -1,0 +1,66 @@
+/*
+ * Copyright 2006 by Hans Leidekker
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_DEFAULT
+
+MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Bestand"
+    BEGIN
+        MENUITEM "&Nieuw"         ID_FILE_NEW
+        MENUITEM "&Openen",       ID_FILE_OPEN
+        MENUITEM "O&pslaan",      ID_FILE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Afsluiten",    ID_FILE_EXIT
+    END
+    POPUP "Be&werken"
+    BEGIN
+        MENUITEM "&Ongedaan maken\tCtrl+Z",     ID_EDIT_UNDO
+        MENUITEM "O&pnieuw\tCtrl+Y",            ID_EDIT_REDO
+        MENUITEM "&Alles selecteren\tCtrl+A",   ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "K&nippen\tCtrl+X",            ID_EDIT_CUT
+        MENUITEM "&Kopieren\tCtrl+C",           ID_EDIT_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "Alleen &lezen",               ID_EDIT_READONLY
+        MENUITEM "&Gewijzigd",                  ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "&Extra's"
+        BEGIN
+            MENUITEM "Selectie&informatie",          ID_EDIT_SELECTIONINFO
+            MENUITEM "&Karakterformaat",             ID_EDIT_CHARFORMAT
+            MENUITEM "&Standaard karakterformaat",   ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Paragraafformaat",            ID_EDIT_PARAFORMAT
+            MENUITEM "&Haal tekst",                  ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "&Opmaak"
+    BEGIN
+        POPUP "&Achtergrond"
+        BEGIN
+            MENUITEM "&Systeem\tCtrl+1",   ID_BACK_1
+            MENUITEM "&Geeltje\tCtrl+2",   ID_BACK_2
+        END
+        POPUP "&Uitlijning"
+        BEGIN
+            MENUITEM "&Links\tCtrl+L",        ID_ALIGN_LEFT
+            MENUITEM "&Gecentreerd\tCtrl+E",  ID_ALIGN_CENTER
+            MENUITEM "&Rechts\tCtrl+R",       ID_ALIGN_RIGHT
+        END
+    END
+END

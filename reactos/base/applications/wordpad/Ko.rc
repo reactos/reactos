@@ -1,0 +1,67 @@
+ /*
+ * Copyright 2004 by Krzysztof Foltman
+ * Copyright 2006 by YunSong Hwang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+MAINMENU MENU DISCARDABLE  
+BEGIN
+    POPUP "파일(&F)"
+    BEGIN
+        MENUITEM "새 파일(&N)",          ID_FILE_NEW
+        MENUITEM "열기(&O)",         ID_FILE_OPEN
+        MENUITEM "저장(&S)",         ID_FILE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "나가기(&E)",         ID_FILE_EXIT
+    END
+    POPUP "편집(&E)"
+    BEGIN
+        MENUITEM "되돌리기(&U)\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "다시 실행(&R)\tCtrl+Y",               ID_EDIT_REDO
+        MENUITEM "모두 선택(&S)\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기(&T)\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "복사(&C)\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "읽기 전용(&O)",                  ID_EDIT_READONLY
+        MENUITEM "수정 가능(&M)",                   ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "기타(&E)"
+        BEGIN
+            MENUITEM "선택 영역 정보(&I)",             ID_EDIT_SELECTIONINFO
+            MENUITEM "문자 형식(&F)",           ID_EDIT_CHARFORMAT
+            MENUITEM "정의된 문자열 형식(&D)",           ID_EDIT_DEFCHARFORMAT
+            MENUITEM "단락 형식(&H)",           ID_EDIT_PARAFORMAT
+            MENUITEM "텍스트 얻기(&G)",                   ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "형식(&O)"
+    BEGIN
+        POPUP "배경(&B)"
+        BEGIN
+            MENUITEM "시스템(&S)\tCtrl+1",         ID_BACK_1
+            MENUITEM "노랑색으로(&P)\tCtrl+2",           ID_BACK_2
+        END
+        POPUP "정렬(&A)"
+        BEGIN
+            MENUITEM "왼쪽(&L)\tCtrl+L",         ID_ALIGN_LEFT
+            MENUITEM "가운데(&C)\tCtrl+E",       ID_ALIGN_CENTER
+            MENUITEM "오른쪽(&R)\tCtrl+R",        ID_ALIGN_RIGHT
+        END
+    END
+END
