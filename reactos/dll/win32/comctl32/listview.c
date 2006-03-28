@@ -172,7 +172,6 @@
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -565,40 +564,15 @@ static char* debug_getbuf(void)
 
 static inline const char* debugrange(const RANGE *lprng)
 {
-    if (lprng) 
-    {
-	char* buf = debug_getbuf();
-	snprintf(buf, DEBUG_BUFFER_SIZE, "[%d, %d)", lprng->lower, lprng->upper);
-    	return buf;
-    } else return "(null)";
-}
-
-static inline const char* debugpoint(const POINT *lppt)
-{
-    if (lppt) 
-    {
-	char* buf = debug_getbuf();
-	snprintf(buf, DEBUG_BUFFER_SIZE, "(%ld, %ld)", lppt->x, lppt->y);
-    	return buf;
-    } else return "(null)";
-}
-
-static inline const char* debugrect(const RECT *rect)
-{
-    if (rect) 
-    {
-	char* buf = debug_getbuf();
-	snprintf(buf, DEBUG_BUFFER_SIZE, "[(%ld, %ld);(%ld, %ld)]",
-		 rect->left, rect->top, rect->right, rect->bottom);
-    	return buf;
-    } else return "(null)";
+    if (!lprng) return "(null)";
+    return wine_dbg_sprintf("[%d, %d)", lprng->lower, lprng->upper);
 }
 
 static const char* debugscrollinfo(const SCROLLINFO *pScrollInfo)
 {
     char* buf = debug_getbuf(), *text = buf;
     int len, size = DEBUG_BUFFER_SIZE;
-    
+
     if (pScrollInfo == NULL) return "(null)";
     len = snprintf(buf, size, "{cbSize=%d, ", pScrollInfo->cbSize);
     if (len == -1) goto end; buf += len; size -= len;
@@ -628,15 +602,11 @@ undo:
 
 static const char* debugnmlistview(const NMLISTVIEW *plvnm)
 {
-    if (plvnm)
-    {
-	char* buf = debug_getbuf();
-        snprintf(buf, DEBUG_BUFFER_SIZE, "iItem=%d, iSubItem=%d, uNewState=0x%x,"
+    if (!plvnm) return "(null)";
+    return wine_dbg_sprintf("iItem=%d, iSubItem=%d, uNewState=0x%x,"
 	         " uOldState=0x%x, uChanged=0x%x, ptAction=%s, lParam=%ld\n",
 	         plvnm->iItem, plvnm->iSubItem, plvnm->uNewState, plvnm->uOldState,
-		 plvnm->uChanged, debugpoint(&plvnm->ptAction), plvnm->lParam);
-	return buf;
-    } else return "(null)";
+		 plvnm->uChanged, wine_dbgstr_point(&plvnm->ptAction), plvnm->lParam);
 }
 
 static const char* debuglvitem_t(const LVITEMW *lpLVItem, BOOL isW)
@@ -717,13 +687,10 @@ undo:
 
 static const char* debuglvhittestinfo(const LVHITTESTINFO *lpht)
 {
-    if (lpht) 
-    {
-	char* buf = debug_getbuf();
-	snprintf(buf, DEBUG_BUFFER_SIZE, "{pt=%s, flags=0x%x, iItem=%d, iSubItem=%d}",
-		 debugpoint(&lpht->pt), lpht->flags, lpht->iItem, lpht->iSubItem);
-    	return buf;
-    } else return "(null)";
+    if (!lpht) return "(null)";
+
+    return wine_dbg_sprintf("{pt=%s, flags=0x%x, iItem=%d, iSubItem=%d}",
+		 wine_dbgstr_point(&lpht->pt), lpht->flags, lpht->iItem, lpht->iSubItem);
 }
 
 /* Return the corresponding text for a given scroll value */
@@ -2083,8 +2050,7 @@ calc_label:
 		         infoPtr->iconSize.cy + ICON_BOTTOM_PADDING;
 	    Label.right = Label.left + labelSize.cx;
 	    Label.bottom = Label.top + infoPtr->nItemHeight;
-	    if (!oversizedBox && labelSize.cy > infoPtr->ntmHeight &&
-	        infoPtr->ntmHeight)
+	    if (!oversizedBox && labelSize.cy > infoPtr->ntmHeight)
 	    {
 		labelSize.cy = min(Box.bottom - Label.top, labelSize.cy);
 		labelSize.cy /= infoPtr->ntmHeight;
@@ -3711,8 +3677,9 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     NMLVCUSTOMDRAW nmlvcd;
     HIMAGELIST himl;
     LVITEMW lvItem;
+    HFONT hOldFont;
 
-    TRACE("(hdc=%p, nItem=%d, nSubItem=%d, pos=%s)\n", hdc, nItem, nSubItem, debugpoint(&pos));
+    TRACE("(hdc=%p, nItem=%d, nSubItem=%d, pos=%s)\n", hdc, nItem, nSubItem, wine_dbgstr_point(&pos));
 
     /* get information needed for drawing the item */
     lvItem.mask = LVIF_TEXT | LVIF_IMAGE;
@@ -3733,7 +3700,7 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
 
     /* now check if we need to update the focus rectangle */
     lprcFocus = infoPtr->bFocus && (lvItem.state & LVIS_FOCUSED) ? &infoPtr->rcFocus : 0;
-    
+
     if (!lprcFocus) lvItem.state &= ~LVIS_FOCUSED;
     LISTVIEW_GetItemMetrics(infoPtr, &lvItem, &rcBox, &rcState, &rcIcon, &rcLabel);
     OffsetRect(&rcBox, pos.x, pos.y);
@@ -3741,11 +3708,13 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     OffsetRect(&rcIcon, pos.x, pos.y);
     OffsetRect(&rcLabel, pos.x, pos.y);
     TRACE("    rcBox=%s, rcState=%s, rcIcon=%s. rcLabel=%s\n", 
-	debugrect(&rcBox), debugrect(&rcState), debugrect(&rcIcon), debugrect(&rcLabel));
+        debugrect(&rcBox), debugrect(&rcState),
+        debugrect(&rcIcon), debugrect(&rcLabel));
 
     /* fill in the custom draw structure */
     customdraw_fill(&nmlvcd, infoPtr, hdc, &rcBox, &lvItem);
 
+    hOldFont = GetCurrentObject(hdc, OBJ_FONT);
     if (nSubItem > 0) cdmode = infoPtr->cditemmode;
     if (cdmode & CDRF_NOTIFYITEMDRAW)
         cdsubitemmode = notify_customdraw(infoPtr, CDDS_PREPAINT, &nmlvcd);
@@ -3823,6 +3792,8 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
 postpaint:
     if (cdsubitemmode & CDRF_NOTIFYPOSTPAINT)
         notify_postpaint(infoPtr, &nmlvcd);
+    if (cdsubitemmode & CDRF_NEWFONT)
+        SelectObject(hdc, hOldFont);
     return TRUE;
 }
 
@@ -5461,7 +5432,7 @@ static BOOL LISTVIEW_GetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, LPPOINT 
     lpptPosition->x += Origin.x;
     lpptPosition->y += Origin.y;
     
-    TRACE ("  lpptPosition=%s\n", debugpoint(lpptPosition));
+    TRACE ("  lpptPosition=%s\n", wine_dbgstr_point(lpptPosition));
     return TRUE;
 }
 
@@ -5848,7 +5819,7 @@ static INT LISTVIEW_GetNextItem(LISTVIEW_INFO *infoPtr, INT nItem, UINT uFlags)
         }
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_UP;
-        ListView_GetItemPosition(infoPtr->hwndSelf, nItem, &lvFindInfo.pt);
+        SendMessageW( infoPtr->hwndSelf, LVM_GETITEMPOSITION, nItem, (LPARAM)&lvFindInfo.pt );
         while ((nItem = ListView_FindItemW(infoPtr->hwndSelf, nItem, &lvFindInfo)) != -1)
         {
           if ((ListView_GetItemState(infoPtr->hwndSelf, nItem, uMask) & uMask) == uMask)
@@ -5883,7 +5854,7 @@ static INT LISTVIEW_GetNextItem(LISTVIEW_INFO *infoPtr, INT nItem, UINT uFlags)
         }
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_DOWN;
-        ListView_GetItemPosition(infoPtr->hwndSelf, nItem, &lvFindInfo.pt);
+        SendMessageW( infoPtr->hwndSelf, LVM_GETITEMPOSITION, nItem, (LPARAM)&lvFindInfo.pt );
         while ((nItem = ListView_FindItemW(infoPtr->hwndSelf, nItem, &lvFindInfo)) != -1)
         {
           if ((LISTVIEW_GetItemState(infoPtr, nItem, uMask) & uMask) == uMask)
@@ -5919,7 +5890,7 @@ static INT LISTVIEW_GetNextItem(LISTVIEW_INFO *infoPtr, INT nItem, UINT uFlags)
         }
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_LEFT;
-        ListView_GetItemPosition(infoPtr->hwndSelf, nItem, &lvFindInfo.pt);
+        SendMessageW( infoPtr->hwndSelf, LVM_GETITEMPOSITION, nItem, (LPARAM)&lvFindInfo.pt );
         while ((nItem = ListView_FindItemW(infoPtr->hwndSelf, nItem, &lvFindInfo)) != -1)
         {
           if ((ListView_GetItemState(infoPtr->hwndSelf, nItem, uMask) & uMask) == uMask)
@@ -5955,7 +5926,7 @@ static INT LISTVIEW_GetNextItem(LISTVIEW_INFO *infoPtr, INT nItem, UINT uFlags)
         }
         lvFindInfo.flags = LVFI_NEARESTXY;
         lvFindInfo.vkDirection = VK_RIGHT;
-        ListView_GetItemPosition(infoPtr->hwndSelf, nItem, &lvFindInfo.pt);
+        SendMessageW( infoPtr->hwndSelf, LVM_GETITEMPOSITION, nItem, (LPARAM)&lvFindInfo.pt );
         while ((nItem = ListView_FindItemW(infoPtr->hwndSelf, nItem, &lvFindInfo)) != -1)
         {
           if ((LISTVIEW_GetItemState(infoPtr, nItem, uMask) & uMask) == uMask)
@@ -6017,7 +5988,7 @@ static void LISTVIEW_GetOrigin(LISTVIEW_INFO *infoPtr, LPPOINT lpptOrigin)
     lpptOrigin->x -= nHorzPos;
     lpptOrigin->y -= nVertPos;
 
-    TRACE(" origin=%s\n", debugpoint(lpptOrigin));
+    TRACE(" origin=%s\n", wine_dbgstr_point(lpptOrigin));
 }
 
 /***
@@ -6083,7 +6054,7 @@ static INT LISTVIEW_HitTest(LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, BOOL s
     ITERATOR i;
     INT iItem;
     
-    TRACE("(pt=%s, subitem=%d, select=%d)\n", debugpoint(&lpht->pt), subitem, select);
+    TRACE("(pt=%s, subitem=%d, select=%d)\n", wine_dbgstr_point(&lpht->pt), subitem, select);
     
     lpht->flags = 0;
     lpht->iItem = -1;
@@ -6240,7 +6211,7 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
     if (infoPtr->dwStyle & LVS_OWNERDATA) return infoPtr->nItemCount++;
 
     /* make sure it's an item, and not a subitem; cannot insert a subitem */
-    if (!lpLVItem || lpLVItem->iItem < 0 || lpLVItem->iSubItem) return -1;
+    if (!lpLVItem || lpLVItem->iSubItem) return -1;
 
     if (!is_assignable_item(lpLVItem, infoPtr->dwStyle)) return -1;
 
@@ -6252,6 +6223,8 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
 
     is_sorted = (infoPtr->dwStyle & (LVS_SORTASCENDING | LVS_SORTDESCENDING)) &&
 	        !(infoPtr->dwStyle & LVS_OWNERDRAWFIXED) && (LPSTR_TEXTCALLBACKW != lpLVItem->pszText);
+
+    if (lpLVItem->iItem < 0 && !is_sorted) return -1;
 
     nItem = is_sorted ? infoPtr->nItemCount : min(lpLVItem->iItem, infoPtr->nItemCount);
     TRACE(" inserting at %d, sorted=%d, count=%d, iItem=%d\n", nItem, is_sorted, infoPtr->nItemCount, lpLVItem->iItem);
@@ -6767,7 +6740,7 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
 	    hdi.mask = HDI_TEXT;
 	    hdi.cchTextMax = DISP_TEXT_SIZE;
 	    hdi.pszText = szDispText;
-	    if (Header_GetItemW(infoPtr->hwndHeader, nColumn, (LPARAM)&hdi))
+	    if (Header_GetItemW(infoPtr->hwndHeader, nColumn, &hdi))
 	    {
 		HDC hdc = GetDC(infoPtr->hwndSelf);
 		HFONT old_font = SelectObject(hdc, (HFONT)SendMessageW(infoPtr->hwndHeader, WM_GETFONT, 0, 0));
@@ -6789,7 +6762,7 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
     hdi.mask = HDI_WIDTH;
     hdi.cxy = cx;
     TRACE("hdi.cxy=%d\n", hdi.cxy);
-    return Header_SetItemW(infoPtr->hwndHeader, nColumn, (LPARAM)&hdi);
+    return Header_SetItemW(infoPtr->hwndHeader, nColumn, &hdi);
 }
 
 /***
@@ -6988,7 +6961,7 @@ static DWORD LISTVIEW_SetIconSpacing(LISTVIEW_INFO *infoPtr, INT cx, INT cy)
     return oldspacing;
 }
 
-static inline void set_icon_size(SIZE *size, HIMAGELIST himl, BOOL _small)
+static inline void set_icon_size(SIZE *size, HIMAGELIST himl, BOOL small)
 {
     INT cx, cy;
     
@@ -6999,8 +6972,8 @@ static inline void set_icon_size(SIZE *size, HIMAGELIST himl, BOOL _small)
     }
     else
     {
-	size->cx = GetSystemMetrics(_small ? SM_CXSMICON : SM_CXICON);
-	size->cy = GetSystemMetrics(_small ? SM_CYSMICON : SM_CYICON);
+	size->cx = GetSystemMetrics(small ? SM_CXSMICON : SM_CXICON);
+	size->cy = GetSystemMetrics(small ? SM_CYSMICON : SM_CYICON);
     }
 }
 
@@ -7177,7 +7150,7 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, POINT pt
     UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
     POINT Origin;
 
-    TRACE("(nItem=%d, &pt=%s\n", nItem, debugpoint(&pt));
+    TRACE("(nItem=%d, &pt=%s\n", nItem, wine_dbgstr_point(&pt));
 
     if (nItem < 0 || nItem >= infoPtr->nItemCount ||
 	!(uView == LVS_ICON || uView == LVS_SMALLICON)) return FALSE;
@@ -7417,11 +7390,9 @@ static INT WINAPI LISTVIEW_CallBackCompare(LPVOID first, LPVOID second, LPARAM l
   LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)lParam;
   ITEM_INFO* lv_first = (ITEM_INFO*) DPA_GetPtr( (HDPA)first, 0 );
   ITEM_INFO* lv_second = (ITEM_INFO*) DPA_GetPtr( (HDPA)second, 0 );
-  PFNLVCOMPARE CompareFunction = infoPtr->pfnCompare;
 
   /* Forward the call to the client defined callback */
-  
-  return (CompareFunction)( lv_first->lParam , lv_second->lParam, infoPtr->lParamSort );
+  return (infoPtr->pfnCompare)( lv_first->lParam , lv_second->lParam, infoPtr->lParamSort );
 }
 
 /***
@@ -8205,7 +8176,7 @@ static LRESULT LISTVIEW_LButtonDown(LISTVIEW_INFO *infoPtr, WORD wKey, INT x, IN
   lvHitTestInfo.pt.y = y;
 
   nItem = LISTVIEW_HitTest(infoPtr, &lvHitTestInfo, TRUE, TRUE);
-  TRACE("at %s, nItem=%d\n", debugpoint(&pt), nItem);
+  TRACE("at %s, nItem=%d\n", wine_dbgstr_point(&pt), nItem);
   infoPtr->nEditLabelItem = -1;
   if ((nItem >= 0) && (nItem < infoPtr->nItemCount))
   {
@@ -8414,7 +8385,7 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
     		HDITEMW hdi;
     
 		hdi.mask = HDI_WIDTH;
-    		if (!Header_GetItemW(infoPtr->hwndHeader, lpnmh->iItem, (LPARAM)&hdi)) return 0;
+    		if (!Header_GetItemW(infoPtr->hwndHeader, lpnmh->iItem, &hdi)) return 0;
 		cxy = hdi.cxy;
 	    }
 	    else
@@ -8938,7 +8909,7 @@ static void LISTVIEW_UpdateSize(LISTVIEW_INFO *infoPtr)
 
 	hl.prc = &infoPtr->rcList;
 	hl.pwpos = &wp;
-	Header_Layout(infoPtr->hwndHeader, &hl);
+	SendMessageW( infoPtr->hwndHeader, HDM_LAYOUT, 0, (LPARAM)&hl );
 
 	SetWindowPos(wp.hwnd, wp.hwndInsertAfter, wp.x, wp.y, wp.cx, wp.cy, wp.flags);
 
@@ -9016,7 +8987,7 @@ static INT LISTVIEW_StyleChanged(LISTVIEW_INFO *infoPtr, WPARAM wStyleType,
 
             hl.prc = &infoPtr->rcList;
             hl.pwpos = &wp;
-            Header_Layout(infoPtr->hwndHeader, &hl);
+            SendMessageW( infoPtr->hwndHeader, HDM_LAYOUT, 0, (LPARAM)&hl );
             SetWindowPos(infoPtr->hwndHeader, infoPtr->hwndSelf, wp.x, wp.y, wp.cx, wp.cy, wp.flags);
         }
 
@@ -9820,8 +9791,7 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style,
         hOldFont = SelectObject(hdc, infoPtr->hFont);
 
     /*Get String Length in pixels */
-    if(!GetTextExtentPoint32W(hdc, text, lstrlenW(text), &sz))
-        sz.cx = 0;
+    GetTextExtentPoint32W(hdc, text, lstrlenW(text), &sz);
 
     /*Add Extra spacing for the next character */
     GetTextMetricsW(hdc, &textMetric);

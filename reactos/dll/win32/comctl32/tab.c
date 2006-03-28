@@ -261,9 +261,11 @@ static inline LRESULT TAB_SetCurSel (TAB_INFO *infoPtr, INT iItem)
 
   if (iItem >= 0 && iItem < infoPtr->uNumItem) {
       prevItem=infoPtr->iSelected;
-      infoPtr->iSelected=iItem;
-      TAB_EnsureSelectionVisible(infoPtr);
-      TAB_InvalidateTabArea(infoPtr);
+      if (infoPtr->iSelected != iItem) {
+          infoPtr->iSelected=iItem;
+          TAB_EnsureSelectionVisible(infoPtr);
+          TAB_InvalidateTabArea(infoPtr);
+      }
   }
   return prevItem;
 }
@@ -1745,13 +1747,19 @@ TAB_DrawItemInterior
       if(lStyle & TCS_VERTICAL)
       {
         center_offset_h = ((drawRect->bottom - drawRect->top) - (cy + infoPtr->uHItemPadding + (rcText.right  - rcText.left))) / 2;
-        center_offset_v = ((drawRect->right - drawRect->left) - (cx + infoPtr->uVItemPadding)) / 2;
+        center_offset_v = (drawRect->left + (drawRect->right - drawRect->left) - cx) / 2;
       }
       else
       {
         center_offset_h = ((drawRect->right - drawRect->left) - (cx + infoPtr->uHItemPadding + (rcText.right  - rcText.left))) / 2;
-        center_offset_v = ((drawRect->bottom - drawRect->top) - (cy + infoPtr->uVItemPadding)) / 2;
+        center_offset_v = (drawRect->top + (drawRect->bottom - drawRect->top) - cy) / 2;
       }
+
+      /* if an item is selected, the icon is shifted up instead of down */
+      if (iItem == infoPtr->iSelected)
+        center_offset_v -= infoPtr->uVItemPadding / 2;
+      else
+        center_offset_v += infoPtr->uVItemPadding / 2;
 
       if (lStyle & TCS_FIXEDWIDTH && lStyle & (TCS_FORCELABELLEFT | TCS_FORCEICONLEFT))
 	center_offset_h = infoPtr->uHItemPadding;
