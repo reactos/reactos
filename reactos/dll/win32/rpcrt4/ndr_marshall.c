@@ -41,6 +41,8 @@
 
 #include "wine/debug.h"
 
+#include "rpc_binding.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 #define BUFFER_PARANOIA 20
@@ -3292,6 +3294,6 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
 RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 {
-    FIXME("(%p): stub\n", CContext);
-    return NULL;
+    
+    return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
 }

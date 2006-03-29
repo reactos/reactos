@@ -53,6 +53,13 @@ typedef struct _RpcBinding
   RpcConnection* FromConn;
 } RpcBinding;
 
+
+typedef struct _CContextHandle
+{
+	RpcBinding *Binding;
+	BYTE Ndr[20];
+} CContextHandle;
+
 LPSTR RPCRT4_strndupA(LPCSTR src, INT len);
 LPWSTR RPCRT4_strndupW(LPWSTR src, INT len);
 LPSTR RPCRT4_strdupWtoA(LPWSTR src);

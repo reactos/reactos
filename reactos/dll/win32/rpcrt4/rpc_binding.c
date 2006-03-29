@@ -619,7 +619,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
   
 	memcpy(DestBinding, SrcBinding, sizeof(RpcBinding));
 	DestBinding->refs = 1;
-	DestBinding->Next = NULL;
+	DestBinding->Next = NULL; // FIXME: ?
 	DestBinding->server = FALSE;
 	DestBinding->Protseq = RPCRT4_strndupA(SrcBinding->Protseq, -1);
 	DestBinding->NetworkAddr = RPCRT4_strndupA(SrcBinding->NetworkAddr, -1);
