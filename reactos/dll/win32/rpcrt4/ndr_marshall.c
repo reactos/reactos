@@ -3231,6 +3231,15 @@ static void WINAPI NdrBaseTypeFree(PMIDL_STUB_MESSAGE pStubMsg,
 }
 
 /***********************************************************************
+ *           NDRCContextMarshall
+ */
+void WINAPI NDRCContextMarshall(IN NDR_CCONTEXT CContext, OUT void *pBuff )
+{
+	CContextHandle *ctx = (CContextHandle*)CContext;
+	memcpy(pBuff, ctx->Ndr, sizeof(ctx->Ndr));
+}
+
+/***********************************************************************
  *           NdrClientContextMarshall
  */
 void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
