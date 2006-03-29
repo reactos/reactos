@@ -154,6 +154,12 @@ STRING_NOTFOUND,                                        "'%s' kann nicht gefunde
 STRING_OUT_OF_MEMORY,                   "Nicht genügend Arbeitsspeicher, \
 um diese Funktion \nabzuschließen. Beenden Sie eine oder mehrere \
 \nAnwendungen, um den verfügbaren Arbeitsspeicher zu \nerhöhen."
-
-
+STRING_CANNOTFIND                               "'%s' wurde nicht gefunden."
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
 }

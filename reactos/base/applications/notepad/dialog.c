@@ -698,8 +698,8 @@ VOID DIALOG_Search(VOID)
 
 VOID DIALOG_SearchNext(VOID)
 {
-    /* FIXME: Search Next */
-    DIALOG_Search();
+    if (Globals.find.lpstrFindWhat != NULL)
+      NOTEPAD_FindNext(&Globals.find, FALSE, TRUE);
 }
 
 VOID DIALOG_Replace(VOID)

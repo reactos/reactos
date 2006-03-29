@@ -125,7 +125,7 @@ static BOOL NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int i
  *           NOTEPAD_FindNext
  */
 
-static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
+BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
 {
     int iTextLength, iTargetLength;
     int iAdjustment = 0;
@@ -255,6 +255,7 @@ static VOID NOTEPAD_InitData(VOID)
     lstrcpy(p, all_files);
     p += lstrlen(p) + 1;
     *p = '\0';
+    Globals.find.lpstrFindWhat = NULL;
 }
 
 /***********************************************************************
@@ -358,6 +359,7 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         if (msg == aFINDMSGSTRING)
         {
             FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
+            Globals.find = *(FINDREPLACE *) lParam;
 
             if (pFindReplace->Flags & FR_FINDNEXT)
                 NOTEPAD_FindNext(pFindReplace, FALSE, TRUE);
