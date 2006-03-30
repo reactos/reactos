@@ -1,0 +1,48 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: unfrag - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\TEMP\RSP9D8.tmp" with contents
+[
+/nologo /G6 /Gr /MD /W3 /GX /Ox /Ot /Og /Oi /Ob2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\src\Fraginator\Defragment.cpp"
+"C:\src\Fraginator\DriveVolume.cpp"
+"C:\src\Fraginator\Unfrag.cpp"
+]
+Creating command line "xicl6.exe @C:\TEMP\RSP9D8.tmp" 
+Creating temporary file "C:\TEMP\RSP9D9.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/unfrag.pdb" /machine:I386 /out:"Release/unfrag.exe" 
+.\Release\Defragment.obj
+.\Release\DriveVolume.obj
+.\Release\Unfrag.obj
+]
+Creating command line "xilink6.exe @C:\TEMP\RSP9D9.tmp"
+<h3>Output Window</h3>
+Compiling...
+Defragment.cpp
+DriveVolume.cpp
+Unfrag.cpp
+Generating Code...
+Linking...
+xilink6: executing 'C:\PROGRA~1\MIAF9D~1\VC98\Bin\link.exe'
+Creating temporary file "C:\TEMP\RSP9DB.bat" with contents
+[
+@echo off
+copy Release\unfrag.exe "c:\Program Files\Fraginator\unfrag.exe"
+]
+Creating command line "C:\TEMP\RSP9DB.bat"
+Copying to Program Files ...
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+unfrag.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
