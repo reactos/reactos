@@ -110,6 +110,98 @@ void m_CtxOpen(
     
 }
 
+void m_CtxOpen2( 
+    /* [out] */ PCTXTYPE __RPC_FAR *pphContext,
+    /* [in] */ long Value)
+{
+
+    RPC_BINDING_HANDLE _Handle	=	0;
+    
+    RPC_MESSAGE _RpcMessage;
+    
+    MIDL_STUB_MESSAGE _StubMsg;
+    
+    char buf[255];
+    
+        NdrClientInitializeNew(
+                          ( PRPC_MESSAGE  )&_RpcMessage,
+                          ( PMIDL_STUB_MESSAGE  )&_StubMsg,
+                          ( PMIDL_STUB_DESC  )&hello_StubDesc,
+                          0);
+        
+        
+        _Handle = hBinding;
+        
+        
+        _StubMsg.BufferLength = 4U;
+        NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
+        
+        *(( long __RPC_FAR * )_StubMsg.Buffer)++ = Value;
+        
+        NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
+        
+        if ( (_RpcMessage.DataRepresentation & 0X0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION )
+            NdrConvert( (PMIDL_STUB_MESSAGE) &_StubMsg, (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[0] );
+        
+        *pphContext = (void *)0;
+        
+        RpcTryExcept
+        {
+        NdrClientContextUnmarshall(
+                              ( PMIDL_STUB_MESSAGE  )&_StubMsg,
+                              NULL,
+                              _Handle);
+        }
+        RpcExcept(1)
+        {
+        	printf("NdrClientContextUnmarshall reported exception = %d\n", RpcExceptionCode());
+        }
+        RpcEndExcept
+        
+        
+        
+        RpcTryExcept
+        {
+        NdrClientContextUnmarshall(
+                              ( PMIDL_STUB_MESSAGE  )&_StubMsg,
+                              (NDR_CCONTEXT __RPC_FAR * )pphContext,
+                              NULL);
+        }
+        RpcExcept(1)
+        {
+        	printf("NdrClientContextUnmarshall reported exception = %d\n", RpcExceptionCode());
+        }
+        RpcEndExcept
+        
+                            
+        RpcTryExcept
+        {
+        NdrClientContextMarshall(
+                            ( PMIDL_STUB_MESSAGE  )&_StubMsg,
+                            NULL,
+                            1);
+        }
+        RpcExcept(1)
+        {
+        	printf("NdrClientContextMarshall reported exception = %d\n", RpcExceptionCode());
+        }
+        RpcEndExcept
+        
+        RpcTryExcept
+        {
+		NDRCContextUnmarshall( NULL, _Handle, buf, _RpcMessage.DataRepresentation  );
+        }
+        RpcExcept(1)
+        {
+        	printf("NDRCContextUnmarshall reported exception = %d\n", RpcExceptionCode());
+        }
+        RpcEndExcept
+
+        
+        NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
+        
+    
+}
 
 void m_CtxHello( 
     /* [in] */ PCTXTYPE phContext)
@@ -245,12 +337,26 @@ void m_CtxClose(
     
 }
 
-void main()
+void main(int argc, char **argv)
 {
 	RPC_STATUS status;
 	unsigned long ulCode;
 	PCTXTYPE hContext;
 	char *pszStringBinding = NULL;
+	int test_num = 0;
+	RPC_BINDING_HANDLE Handle =	0;
+	char buffer[255];
+	
+	if(argc<2)
+	{
+		printf("USAGE: client.exe <test_number>\n"
+			"Available tests:\n"
+			"0. General test\n"
+			"1. NULL pointer test\n");
+		return;
+	}
+	
+	test_num = atoi(argv[1]);
 
 	status = RpcStringBindingCompose(NULL, 
 		"ncacn_np", 
@@ -275,13 +381,47 @@ void main()
 
 	RpcStringFree(&pszStringBinding); 
 	
-	m_CtxOpen(&hContext, 31337);
-	RpcBindingFree(&hBinding);
+	switch(test_num)
+	{
+	case 0:
+		m_CtxOpen(&hContext, 31337);
+		RpcBindingFree(&hBinding);
+		m_CtxHello(hContext);
+		m_CtxClose(&hContext);
+		break;
+	case 1:
+		/////////////////////////////////////////////////////////////////////////////////////////
+		RpcTryExcept
+		{
+			Handle = NDRCContextBinding(NULL);
+			printf("NDRCContextBinding(NULL) returned %p\n", Handle);
+		}
+		RpcExcept(1)
+		{
+			 printf("NDRCContextBinding(NULL) reported exception = %d\n", RpcExceptionCode());
+		}
+		RpcEndExcept	
+		
+		m_CtxOpen2(&hContext, 31337);
+		
+		/////////////////////////////////////////////////////////////////////////////////////////
+		RpcTryExcept
+		{
+			NDRCContextMarshall(NULL, &buffer);
+			printf("NDRCContextMarshall(NULL) returned %p\n", Handle);
+		}
+		RpcExcept(1)
+		{
+			 printf("NDRCContextMarshall(NULL) reported exception = %d\n", RpcExceptionCode());
+		}
+		RpcEndExcept	
 	
-	m_CtxHello(hContext);
-	
-	m_CtxClose(&hContext);
-	
+		
+		/////////////////////////////////////////////////////////////////////////////////////////
+		break;
+	default:
+		printf("Unknown test %d\n", test_num);
+	}
 
 }
 
