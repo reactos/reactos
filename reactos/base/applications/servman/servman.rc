@@ -14,4 +14,5 @@ IDI_SM_ICON ICON "res/system.ico"
 
 #include "En.rc"
 //#include "De.rc" /* I don't want to have to keep altering 2 files whilst developing */
+#include "Ru.rc" /* You have to alter 3 of them now ;-) */
 
