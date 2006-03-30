@@ -3246,7 +3246,14 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                      NDR_CCONTEXT ContextHandle,
                                      int fCheck)
 {
-    FIXME("(%p, %p, %d): stub\n", pStubMsg, ContextHandle, fCheck);
+   
+	if(!ContextHandle) 
+		RpcRaiseException(ERROR_INVALID_HANDLE);
+
+	NDRCContextMarshall(ContextHandle, pStubMsg->Buffer);
+	
+	pStubMsg->Buffer += 20;
+
 }
 
 /***********************************************************************
