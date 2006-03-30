@@ -38,7 +38,7 @@ The following libraries are shared with Wine.
 
 reactos/dll/win32/avifil32            # Synced to Wine-0_9_5
 reactos/dll/win32/cabinet             # Synced to Wine-0_9_5
-reactos/dll/win32/comctl32            # Synced to Wine-0_9_5
+reactos/dll/win32/comctl32            # Synced to Wine-20060328
 reactos/dll/win32/comdlg32		# Synced to Wine-0_9_5
 reactos/dll/win32/crypt32		# Synced to Wine-0_9_5
 reactos/dll/win32/dbghelp		# 
@@ -136,8 +136,8 @@ User32 -
   If any changes are found, see if they're present in the Wine code. If not, submit to WineHQ
   if apropriate.
 - Merge in Wine changes:
-  "svn merge svn://svn.reactos.com/vendor/wine/dlls/cabinet/Wine-20050111
-   svn://svn.reactos.com/vendor/wine/dlls/cabinet/current"
+  "svn merge svn://svn.reactos.org/vendor/wine/dlls/cabinet/Wine-20050111
+   svn://svn.reactos.org/vendor/wine/dlls/cabinet/current"
 - Fix any merge conflicts
 - Build and test (building will sometimes require adjusting header files)
 - Check which files were changed: "svn status"
