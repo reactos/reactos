@@ -3233,10 +3233,10 @@ static void WINAPI NdrBaseTypeFree(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NDRCContextMarshall
  */
-void WINAPI NDRCContextMarshall(IN NDR_CCONTEXT CContext, OUT void *pBuff )
+void WINAPI NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff )
 {
 	CContextHandle *ctx = (CContextHandle*)CContext;
-	memcpy(pBuff, ctx->Ndr, sizeof(ctx->Ndr));
+	memcpy(pBuff, ctx->Ndr, 20);
 }
 
 /***********************************************************************
@@ -3254,6 +3254,45 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 	
 	pStubMsg->Buffer += 20;
 
+}
+
+
+/***********************************************************************
+ *           NDRCContextUnmarshall
+ */
+void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *pCContext, 
+                                  RPC_BINDING_HANDLE hBinding,
+                                  void *pBuff, 
+                                  unsigned long DataRepresentation )
+{
+	CContextHandle *ctx;
+	RPC_STATUS status;
+	char *buf = (char*)pBuff;
+	int i;
+	
+	for(i = 0; i < 20 && !buf[i]; i++);
+	
+	if(i == 20) 
+	{
+		ctx = (CContextHandle*)*pCContext;
+		if(ctx)
+		{
+			RPCRT4_DestroyBinding(ctx->Binding);
+			HeapFree(GetProcessHeap(), 0, ctx);
+		}
+		*pCContext = NULL;
+	}
+	else 
+	{
+		ctx = HeapAlloc(GetProcessHeap(), 0, sizeof(CContextHandle));
+		if(!ctx) RpcRaiseException(ERROR_OUTOFMEMORY);
+
+		status = RpcBindingCopy(hBinding, (RPC_BINDING_HANDLE*) &ctx->Binding);
+		if(status != RPC_S_OK) RpcRaiseException(status);
+		
+		memcpy(ctx->Ndr, pBuff, 20);
+		*pCContext = (NDR_CCONTEXT)ctx;
+	}
 }
 
 /***********************************************************************
