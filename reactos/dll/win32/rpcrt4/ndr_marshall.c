@@ -3303,6 +3303,8 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
 RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 {
-    
+    if(!CContext)
+		RpcRaiseException(ERROR_INVALID_HANDLE);
+
     return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
 }
