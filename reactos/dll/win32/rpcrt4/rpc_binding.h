@@ -53,11 +53,12 @@ typedef struct _RpcBinding
   RpcConnection* FromConn;
 } RpcBinding;
 
+#define CONTEXT_HANDLE_NDR_SIZE 20
 
 typedef struct _CContextHandle
 {
 	RpcBinding *Binding;
-	BYTE Ndr[20];
+	BYTE Ndr[CONTEXT_HANDLE_NDR_SIZE];
 } CContextHandle;
 
 LPSTR RPCRT4_strndupA(LPCSTR src, INT len);
