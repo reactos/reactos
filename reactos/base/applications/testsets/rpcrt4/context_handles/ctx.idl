@@ -7,7 +7,7 @@ interface hello
 {
 
 typedef long CTXTYPE;
-typedef [context_handle] CTXTYPE, *PCTXTYPE;
+typedef [context_handle] CTXTYPE *PCTXTYPE;
 
 void CtxOpen( [out] PCTXTYPE *pphContext,
 				[in] long Value);
