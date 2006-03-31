@@ -58,12 +58,12 @@ reactos/dll/win32/objsel		# Synced to Wine-0_9_5
 reactos/dll/win32/odbc32		# Out of sync. Depends on port of Linux ODBC.
 reactos/dll/win32/ole32               # Synced to Wine-0_9_5
 reactos/dll/win32/oleacc              # Synced to Wine-0_9_5
-reactos/dll/win32/oleaut32		# Synced to Wine-0_9_5
+reactos/dll/win32/oleaut32		# Synced to Wine-0_9_10
 reactos/dll/win32/oledlg              # Synced to Wine-0_9_5
 reactos/dll/win32/olepro32		# Synced to Wine-0_9_5
 reactos/dll/win32/riched20		# Synced to Wine-0_9_5
 reactos/dll/win32/richedit		# Synced to Wine-0_9_5
-reactos/dll/win32/rpcrt4		# Synced to Wine-0_9_5
+reactos/dll/win32/rpcrt4		# Synced to Wine-0_9_10
 reactos/dll/win32/setupapi		# Forked at Wine-20050524
 reactos/dll/win32/shell32             # Synced to Wine-0_9_5
 reactos/dll/win32/shdocvw             # Synced to Wine-0_9_5
