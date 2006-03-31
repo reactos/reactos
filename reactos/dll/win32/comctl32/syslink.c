@@ -1,7 +1,7 @@
 /*
  * SysLink control
  *
- * Copyright 2004, 2005 Thomas Weidenmueller <w3seek@reactos.com>
+ * Copyright 2004 - 2006 Thomas Weidenmueller <w3seek@reactos.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,7 +62,6 @@ typedef enum
 typedef struct _DOC_ITEM
 {
     struct _DOC_ITEM *Next; /* Address to the next item */
-    LPWSTR Text;            /* Text of the document item */
     UINT nText;             /* Number of characters of the text */
     SL_ITEM_TYPE Type;      /* type of the item */
     PDOC_TEXTBLOCK Blocks;  /* Array of text blocks */
@@ -79,6 +78,7 @@ typedef struct _DOC_ITEM
             UINT Dummy;
         } Text;
     } u;
+    WCHAR Text[1];          /* Text of the document item */
 } DOC_ITEM, *PDOC_ITEM;
 
 typedef struct
@@ -117,8 +117,14 @@ static VOID SYSLINK_FreeDocItem (PDOC_ITEM DocItem)
 {
     if(DocItem->Type == slLink)
     {
-        Free(DocItem->u.Link.szID);
-        Free(DocItem->u.Link.szUrl);
+        if (DocItem->u.Link.szID != NULL)
+        {
+            Free(DocItem->u.Link.szID);
+        }
+        if (DocItem->u.Link.szUrl != NULL)
+        {
+            Free(DocItem->u.Link.szUrl);
+        }
     }
 
     /* we don't free Text because it's just a pointer to a character in the
@@ -135,16 +141,16 @@ static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPCWSTR Text, UIN
                                         SL_ITEM_TYPE type, PDOC_ITEM LastItem)
 {
     PDOC_ITEM Item;
-    Item = Alloc(sizeof(DOC_ITEM) + ((textlen + 1) * sizeof(WCHAR)));
+
+    textlen = min(textlen, lstrlenW(Text));
+    Item = Alloc(FIELD_OFFSET(DOC_ITEM, Text[textlen + 1]));
     if(Item == NULL)
     {
         ERR("Failed to alloc DOC_ITEM structure!\n");
         return NULL;
     }
-    textlen = min(textlen, lstrlenW(Text));
 
     Item->Next = NULL;
-    Item->Text = (LPWSTR)(Item + 1);
     Item->nText = textlen;
     Item->Type = type;
     Item->Blocks = NULL;
@@ -159,7 +165,6 @@ static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPCWSTR Text, UIN
     }
     
     lstrcpynW(Item->Text, Text, textlen + 1);
-    Item->Text[textlen] = 0;
     
     return Item;
 }
@@ -351,12 +356,11 @@ CheckParameter:
                         if(lpID != NULL)
                         {
                             nc = min(lenId, strlenW(lpID));
-                            nc = min(nc, MAX_LINKID_TEXT);
-                            Last->u.Link.szID = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
+                            nc = min(nc, MAX_LINKID_TEXT - 1);
+                            Last->u.Link.szID = Alloc((nc + 1) * sizeof(WCHAR));
                             if(Last->u.Link.szID != NULL)
                             {
                                 lstrcpynW(Last->u.Link.szID, lpID, nc + 1);
-                                Last->u.Link.szID[nc] = 0;
                             }
                         }
                         else
@@ -364,12 +368,11 @@ CheckParameter:
                         if(lpUrl != NULL)
                         {
                             nc = min(lenUrl, strlenW(lpUrl));
-                            nc = min(nc, L_MAX_URL_LENGTH);
-                            Last->u.Link.szUrl = Alloc((L_MAX_URL_LENGTH + 1) * sizeof(WCHAR));
+                            nc = min(nc, L_MAX_URL_LENGTH - 1);
+                            Last->u.Link.szUrl = Alloc((nc + 1) * sizeof(WCHAR));
                             if(Last->u.Link.szUrl != NULL)
                             {
                                 lstrcpynW(Last->u.Link.szUrl, lpUrl, nc + 1);
-                                Last->u.Link.szUrl[nc] = 0;
                             }
                         }
                         else
@@ -431,12 +434,11 @@ CheckParameter:
             if(lpID != NULL)
             {
                 nc = min(lenId, strlenW(lpID));
-                nc = min(nc, MAX_LINKID_TEXT);
-                Last->u.Link.szID = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
+                nc = min(nc, MAX_LINKID_TEXT - 1);
+                Last->u.Link.szID = Alloc((nc + 1) * sizeof(WCHAR));
                 if(Last->u.Link.szID != NULL)
                 {
                     lstrcpynW(Last->u.Link.szID, lpID, nc + 1);
-                    Last->u.Link.szID[nc] = 0;
                 }
             }
             else
@@ -444,12 +446,11 @@ CheckParameter:
             if(lpUrl != NULL)
             {
                 nc = min(lenUrl, strlenW(lpUrl));
-                nc = min(nc, L_MAX_URL_LENGTH);
-                Last->u.Link.szUrl = Alloc((L_MAX_URL_LENGTH + 1) * sizeof(WCHAR));
+                nc = min(nc, L_MAX_URL_LENGTH - 1);
+                Last->u.Link.szUrl = Alloc((nc + 1) * sizeof(WCHAR));
                 if(Last->u.Link.szUrl != NULL)
                 {
                     lstrcpynW(Last->u.Link.szUrl, lpUrl, nc + 1);
-                    Last->u.Link.szUrl[nc] = 0;
                 }
             }
             else
@@ -751,6 +752,7 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
                             {
                                 Free(bl);
                                 bl = NULL;
+                                nBlocks = 0;
                             }
                             break;
                         }
@@ -769,11 +771,12 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
                     {
                         Free(bl);
                         bl = NULL;
+                        nBlocks = 0;
                     }
                 }
                 else
                 {
-                    bl = Alloc((nBlocks + 1) * sizeof(DOC_TEXTBLOCK));
+                    bl = Alloc(sizeof(DOC_TEXTBLOCK));
                     if (bl != NULL)
                         nBlocks++;
                 }
@@ -820,8 +823,6 @@ static VOID SYSLINK_Render (SYSLINK_INFO *infoPtr, HDC hdc)
         {
             Current->Blocks = bl;
         }
-        else
-            Current->Blocks = NULL;
     }
     
     SelectObject(hdc, hOldFont);
@@ -877,10 +878,10 @@ static LRESULT SYSLINK_Draw (SYSLINK_INFO *infoPtr, HDC hdc)
                 ExtTextOutW(hdc, bl->rc.left, bl->rc.top, ETO_OPAQUE | ETO_CLIPPED, &bl->rc, tx, bl->nChars, NULL);
                 if((Current->Type == slLink) && (Current->u.Link.state & LIS_FOCUSED) && infoPtr->HasFocus)
                 {
-                    COLORREF PrevColor;
-                    PrevColor = SetBkColor(hdc, OldBkColor);
+                    COLORREF PrevTextColor;
+                    PrevTextColor = SetTextColor(hdc, infoPtr->TextColor);
                     DrawFocusRect(hdc, &bl->rc);
-                    SetBkColor(hdc, PrevColor);
+                    SetTextColor(hdc, PrevTextColor);
                 }
                 tx += bl->nChars;
                 n -= bl->nChars + bl->nSkip;
@@ -907,8 +908,11 @@ static LRESULT SYSLINK_Paint (SYSLINK_INFO *infoPtr, HDC hdcParam)
     PAINTSTRUCT ps;
 
     hdc = hdcParam ? hdcParam : BeginPaint (infoPtr->Self, &ps);
-    SYSLINK_Draw (infoPtr, hdc);
-    if (!hdcParam) EndPaint (infoPtr->Self, &ps);
+    if (hdc)
+    {
+        SYSLINK_Draw (infoPtr, hdc);
+        if (!hdcParam) EndPaint (infoPtr->Self, &ps);
+    }
     return 0;
 }
 
@@ -972,8 +976,7 @@ static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
     /* clear the document */
     SYSLINK_ClearDoc(infoPtr);
     
-    textlen = lstrlenW(Text);
-    if(Text == NULL || textlen == 0)
+    if(Text == NULL || (textlen = lstrlenW(Text)) == 0)
     {
         return TRUE;
     }
@@ -983,9 +986,13 @@ static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
     {
         /* Render text position and word wrapping in memory */
         HDC hdc = GetDC(infoPtr->Self);
-        SYSLINK_Render(infoPtr, hdc);
-        SYSLINK_Draw(infoPtr, hdc);
-        ReleaseDC(infoPtr->Self, hdc);
+        if (hdc != NULL)
+        {
+            SYSLINK_Render(infoPtr, hdc);
+            ReleaseDC(infoPtr->Self, hdc);
+
+            InvalidateRect(infoPtr->Self, NULL, TRUE);
+        }
     }
     
     return TRUE;
@@ -1031,8 +1038,10 @@ static PDOC_ITEM SYSLINK_SetFocusLink (SYSLINK_INFO *infoPtr, PDOC_ITEM DocItem)
 static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
 {
     PDOC_ITEM di;
+    int nc;
+    PWSTR szId = NULL;
+    PWSTR szUrl = NULL;
     BOOL Repaint = FALSE;
-    BOOL Ret = TRUE;
 
     if(!(Item->mask & LIF_ITEMINDEX) || !(Item->mask & (LIF_FLAGSMASK)))
     {
@@ -1046,7 +1055,60 @@ static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
         ERR("Link %d couldn't be found\n", Item->iLink);
         return FALSE;
     }
-    
+
+    if(Item->mask & LIF_ITEMID)
+    {
+        nc = min(lstrlenW(Item->szID), MAX_LINKID_TEXT - 1);
+        szId = Alloc((nc + 1) * sizeof(WCHAR));
+        if(szId)
+        {
+            lstrcpynW(szId, Item->szID, nc + 1);
+        }
+        else
+        {
+            ERR("Unable to allocate memory for link id\n");
+            return FALSE;
+        }
+    }
+
+    if(Item->mask & LIF_URL)
+    {
+        nc = min(lstrlenW(Item->szUrl), L_MAX_URL_LENGTH - 1);
+        szUrl = Alloc((nc + 1) * sizeof(WCHAR));
+        if(szUrl)
+        {
+            lstrcpynW(szUrl, Item->szUrl, nc + 1);
+        }
+        else
+        {
+            if (szId)
+            {
+                Free(szId);
+            }
+
+            ERR("Unable to allocate memory for link url\n");
+            return FALSE;
+        }
+    }
+
+    if(Item->mask & LIF_ITEMID)
+    {
+        if(di->u.Link.szID)
+        {
+            Free(di->u.Link.szID);
+        }
+        di->u.Link.szID = szId;
+    }
+
+    if(Item->mask & LIF_URL)
+    {
+        if(di->u.Link.szUrl)
+        {
+            Free(di->u.Link.szUrl);
+        }
+        di->u.Link.szUrl = szUrl;
+    }
+
     if(Item->mask & LIF_STATE)
     {
         UINT oldstate = di->u.Link.state;
@@ -1059,47 +1121,13 @@ static LRESULT SYSLINK_SetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
         /* update the focus */
         SYSLINK_SetFocusLink(infoPtr, ((di->u.Link.state & LIS_FOCUSED) ? di : NULL));
     }
-
-    if(Item->mask & LIF_ITEMID)
-    {
-        if(!di->u.Link.szID)
-        {
-            di->u.Link.szID = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
-            if(!Item->szID)
-            {
-                ERR("Unable to allocate memory for link id\n");
-                Ret = FALSE;
-            }
-        }
-        if(di->u.Link.szID)
-        {
-            lstrcpynW(di->u.Link.szID, Item->szID, MAX_LINKID_TEXT + 1);
-        }
-    }
-
-    if(Item->mask & LIF_URL)
-    {
-        if(!di->u.Link.szUrl)
-        {
-            di->u.Link.szUrl = Alloc((MAX_LINKID_TEXT + 1) * sizeof(WCHAR));
-            if(!Item->szUrl)
-            {
-                ERR("Unable to allocate memory for link url\n");
-                Ret = FALSE;
-            }
-        }
-        if(di->u.Link.szUrl)
-        {
-            lstrcpynW(di->u.Link.szUrl, Item->szUrl, MAX_LINKID_TEXT + 1);
-        }
-    }
     
     if(Repaint)
     {
         SYSLINK_RepaintLink(infoPtr, di);
     }
     
-    return Ret;
+    return TRUE;
 }
 
 /***********************************************************************
@@ -1137,7 +1165,7 @@ static LRESULT SYSLINK_GetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
     {
         if(di->u.Link.szID)
         {
-            lstrcpynW(Item->szID, di->u.Link.szID, MAX_LINKID_TEXT + 1);
+            lstrcpyW(Item->szID, di->u.Link.szID);
         }
         else
         {
@@ -1149,7 +1177,7 @@ static LRESULT SYSLINK_GetItem (SYSLINK_INFO *infoPtr, PLITEM Item)
     {
         if(di->u.Link.szUrl)
         {
-            lstrcpynW(Item->szUrl, di->u.Link.szUrl, L_MAX_URL_LENGTH + 1);
+            lstrcpyW(Item->szUrl, di->u.Link.szUrl);
         }
         else
         {
@@ -1209,7 +1237,7 @@ static LRESULT SYSLINK_HitTest (SYSLINK_INFO *infoPtr, PLHITTESTINFO HitTest)
                 HitTest->item.stateMask = 0;
                 if(Current->u.Link.szID)
                 {
-                    lstrcpynW(HitTest->item.szID, Current->u.Link.szID, MAX_LINKID_TEXT + 1);
+                    lstrcpyW(HitTest->item.szID, Current->u.Link.szID);
                 }
                 else
                 {
@@ -1217,7 +1245,7 @@ static LRESULT SYSLINK_HitTest (SYSLINK_INFO *infoPtr, PLHITTESTINFO HitTest)
                 }
                 if(Current->u.Link.szUrl)
                 {
-                    lstrcpynW(HitTest->item.szUrl, Current->u.Link.szUrl, L_MAX_URL_LENGTH + 1);
+                    lstrcpyW(HitTest->item.szUrl, Current->u.Link.szUrl);
                 }
                 else
                 {
@@ -1279,7 +1307,7 @@ static LRESULT SYSLINK_SendParentNotify (SYSLINK_INFO *infoPtr, UINT code, PDOC_
     nml.item.stateMask = 0;
     if(Link->u.Link.szID)
     {
-        lstrcpynW(nml.item.szID, Link->u.Link.szID, MAX_LINKID_TEXT + 1);
+        lstrcpyW(nml.item.szID, Link->u.Link.szID);
     }
     else
     {
@@ -1287,7 +1315,7 @@ static LRESULT SYSLINK_SendParentNotify (SYSLINK_INFO *infoPtr, UINT code, PDOC_
     }
     if(Link->u.Link.szUrl)
     {
-        lstrcpynW(nml.item.szUrl, Link->u.Link.szUrl, L_MAX_URL_LENGTH + 1);
+        lstrcpyW(nml.item.szUrl, Link->u.Link.szUrl);
     }
     else
     {

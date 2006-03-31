@@ -396,7 +396,7 @@ typedef struct tagLISTVIEW_INFO
   TRACE("hwndSelf=%p, ntmH=%d, icSz.cx=%ld, icSz.cy=%ld, icSp.cx=%ld, icSp.cy=%ld, notifyFmt=%d\n", \
         iP->hwndSelf, iP->ntmHeight, iP->iconSize.cx, iP->iconSize.cy, \
         iP->iconSpacing.cx, iP->iconSpacing.cy, iP->notifyFormat); \
-  TRACE("hwndSelf=%p, rcList=%s\n", iP->hwndSelf, debugrect(&iP->rcList)); \
+  TRACE("hwndSelf=%p, rcList=%s\n", iP->hwndSelf, wine_dbgstr_rect(&iP->rcList)); \
 } while(0)
 
 static const WCHAR themeClass[] = {'L','i','s','t','V','i','e','w',0};
@@ -1202,7 +1202,7 @@ static BOOL iterator_frameditems(ITERATOR* i, LISTVIEW_INFO* infoPtr, const RECT
 
     LISTVIEW_GetOrigin(infoPtr, &Origin);
 
-    TRACE("(lprc=%s)\n", debugrect(lprc));
+    TRACE("(lprc=%s)\n", wine_dbgstr_rect(lprc));
     OffsetRect(&frame, -Origin.x, -Origin.y);
 
     if (uView == LVS_ICON || uView == LVS_SMALLICON)
@@ -1373,7 +1373,7 @@ static inline BOOL is_redrawing(LISTVIEW_INFO *infoPtr)
 static inline void LISTVIEW_InvalidateRect(LISTVIEW_INFO *infoPtr, const RECT* rect)
 {
     if(!is_redrawing(infoPtr)) return; 
-    TRACE(" invalidating rect=%s\n", debugrect(rect));
+    TRACE(" invalidating rect=%s\n", wine_dbgstr_rect(rect));
     InvalidateRect(infoPtr->hwndSelf, rect, TRUE);
 }
 
@@ -1950,7 +1950,7 @@ static void LISTVIEW_GetItemMetrics(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVI
 	    State.bottom += infoPtr->iconStateSize.cy;
 	}
 	if (lprcState) *lprcState = State;
-	TRACE("    - state=%s\n", debugrect(&State));
+	TRACE("    - state=%s\n", wine_dbgstr_rect(&State));
     }
     else  State.right = 0;
 
@@ -1985,7 +1985,7 @@ static void LISTVIEW_GetItemMetrics(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVI
 	    Icon.bottom = Icon.top + infoPtr->nItemHeight;
 	}
 	if(lprcIcon) *lprcIcon = Icon;
-	TRACE("    - icon=%s\n", debugrect(&Icon));
+	TRACE("    - icon=%s\n", wine_dbgstr_rect(&Icon));
      }
      else Icon.right = 0;
 
@@ -2068,7 +2068,7 @@ calc_label:
 	}
   
 	if (lprcLabel) *lprcLabel = Label;
-	TRACE("    - label=%s\n", debugrect(&Label));
+	TRACE("    - label=%s\n", wine_dbgstr_rect(&Label));
     }
 
     /* Fix the Box if necessary */
@@ -2077,7 +2077,7 @@ calc_label:
 	if (oversizedBox) UnionRect(lprcBox, &Box, &Label);
 	else *lprcBox = Box;
     }
-    TRACE("    - box=%s\n", debugrect(&Box));
+    TRACE("    - box=%s\n", wine_dbgstr_rect(&Box));
 }
 
 /***
@@ -2335,7 +2335,7 @@ static BOOL LISTVIEW_GetViewRect(LISTVIEW_INFO *infoPtr, LPRECT lprcView)
     LISTVIEW_GetAreaRect(infoPtr, lprcView); 
     OffsetRect(lprcView, ptOrigin.x, ptOrigin.y); 
 
-    TRACE("lprcView=%s\n", debugrect(lprcView));
+    TRACE("lprcView=%s\n", wine_dbgstr_rect(lprcView));
 
     return TRUE;
 }
@@ -3646,7 +3646,7 @@ static inline BOOL LISTVIEW_FillBkgnd(LISTVIEW_INFO *infoPtr, HDC hdc, const REC
 {
     if (!infoPtr->hBkBrush) return FALSE;
 
-    TRACE("(hdc=%p, lprcBox=%s, hBkBrush=%p)\n", hdc, debugrect(lprcBox), infoPtr->hBkBrush);
+    TRACE("(hdc=%p, lprcBox=%s, hBkBrush=%p)\n", hdc, wine_dbgstr_rect(lprcBox), infoPtr->hBkBrush);
 
     return FillRect(hdc, lprcBox, infoPtr->hBkBrush);
 }
@@ -3708,8 +3708,8 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     OffsetRect(&rcIcon, pos.x, pos.y);
     OffsetRect(&rcLabel, pos.x, pos.y);
     TRACE("    rcBox=%s, rcState=%s, rcIcon=%s. rcLabel=%s\n", 
-        debugrect(&rcBox), debugrect(&rcState),
-        debugrect(&rcIcon), debugrect(&rcLabel));
+        wine_dbgstr_rect(&rcBox), wine_dbgstr_rect(&rcState),
+        wine_dbgstr_rect(&rcIcon), wine_dbgstr_rect(&rcLabel));
 
     /* fill in the custom draw structure */
     customdraw_fill(&nmlvcd, infoPtr, hdc, &rcBox, &lvItem);
@@ -3849,7 +3849,7 @@ static void LISTVIEW_RefreshOwnerDraw(LISTVIEW_INFO *infoPtr, ITERATOR *i, HDC h
 	dis.rcItem.bottom = dis.rcItem.top + infoPtr->nItemHeight;
 	dis.itemData = item.lParam;
 
-	TRACE("item=%s, rcItem=%s\n", debuglvitem_t(&item, TRUE), debugrect(&dis.rcItem));
+	TRACE("item=%s, rcItem=%s\n", debuglvitem_t(&item, TRUE), wine_dbgstr_rect(&dis.rcItem));
 
     /*
      * Even if we do not send the CDRF_NOTIFYITEMDRAW we need to fill the nmlvcd
@@ -4471,10 +4471,10 @@ static void LISTVIEW_ScrollOnInsert(LISTVIEW_INFO *infoPtr, INT nItem, INT dir)
     rcScroll.right = rcScroll.left + infoPtr->nItemWidth;
     rcScroll.bottom = nPerCol * infoPtr->nItemHeight;
     OffsetRect(&rcScroll, Origin.x, Origin.y);
-    TRACE("rcScroll=%s, dx=%d\n", debugrect(&rcScroll), dir * infoPtr->nItemHeight);
+    TRACE("rcScroll=%s, dx=%d\n", wine_dbgstr_rect(&rcScroll), dir * infoPtr->nItemHeight);
     if (IntersectRect(&rcScroll, &rcScroll, &infoPtr->rcList))
     {
-	TRACE("Scrolling rcScroll=%s, rcList=%s\n", debugrect(&rcScroll), debugrect(&infoPtr->rcList));
+	TRACE("Scrolling rcScroll=%s, rcList=%s\n", wine_dbgstr_rect(&rcScroll), wine_dbgstr_rect(&infoPtr->rcList));
 	ScrollWindowEx(infoPtr->hwndSelf, 0, dir * infoPtr->nItemHeight, 
 		       &rcScroll, &rcScroll, 0, 0, SW_ERASE | SW_INVALIDATE);
     }
@@ -5568,7 +5568,7 @@ static BOOL LISTVIEW_GetItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lprc)
 
     OffsetRect(lprc, Position.x + Origin.x, Position.y + Origin.y);
 
-    TRACE(" rect=%s\n", debugrect(lprc));
+    TRACE(" rect=%s\n", wine_dbgstr_rect(lprc));
 
     return TRUE;
 }
@@ -6111,7 +6111,7 @@ static INT LISTVIEW_HitTest(LISTVIEW_INFO *infoPtr, LPLVHITTESTINFO lpht, BOOL s
 	rcBounds = rcBox;
     else
 	UnionRect(&rcBounds, &rcIcon, &rcLabel);
-    TRACE("rcBounds=%s\n", debugrect(&rcBounds));
+    TRACE("rcBounds=%s\n", wine_dbgstr_rect(&rcBounds));
     if (!PtInRect(&rcBounds, opt)) return -1;
 
     if (PtInRect(&rcIcon, opt))
@@ -6466,7 +6466,7 @@ static void column_fill_hditem(LISTVIEW_INFO *infoPtr, HDITEMW *lphdi, INT nColu
 
             /* retrieve the layout of the header */
             GetClientRect(infoPtr->hwndSelf, &rcHeader);
-            TRACE("start cxy=%d rcHeader=%s\n", lphdi->cxy, debugrect(&rcHeader));
+            TRACE("start cxy=%d rcHeader=%s\n", lphdi->cxy, wine_dbgstr_rect(&rcHeader));
 
             lphdi->cxy = (rcHeader.right - rcHeader.left) - lphdi->cxy;
         }
@@ -8885,7 +8885,7 @@ static void LISTVIEW_UpdateSize(LISTVIEW_INFO *infoPtr)
 {
     UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
 
-    TRACE("uView=%d, rcList(old)=%s\n", uView, debugrect(&infoPtr->rcList));
+    TRACE("uView=%d, rcList(old)=%s\n", uView, wine_dbgstr_rect(&infoPtr->rcList));
     
     GetClientRect(infoPtr->hwndSelf, &infoPtr->rcList);
 
@@ -8916,7 +8916,7 @@ static void LISTVIEW_UpdateSize(LISTVIEW_INFO *infoPtr)
 	infoPtr->rcList.top = max(wp.cy, 0);
     }
 
-    TRACE("  rcList=%s\n", debugrect(&infoPtr->rcList));
+    TRACE("  rcList=%s\n", wine_dbgstr_rect(&infoPtr->rcList));
 }
 
 /***
