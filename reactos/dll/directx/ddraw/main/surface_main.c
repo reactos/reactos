@@ -16,7 +16,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
 	/* Call the Hal CreateSurface */
-	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
+	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
     {
         return Hal_DDrawSurface_Initialize (iface, pDD, pDDSD2);
     }
@@ -29,13 +29,13 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 {
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
-    return InterlockedIncrement((PLONG)&This->owner->DirectDrawGlobal.dsList->dwIntRefCnt);
+    return InterlockedIncrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
 }
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-    ULONG ref = InterlockedDecrement((PLONG)&This->owner->DirectDrawGlobal.dsList->dwIntRefCnt);
+    ULONG ref = InterlockedDecrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
     
     if (ref == 0)
 		HeapFree(GetProcessHeap(), 0, This);
@@ -57,9 +57,8 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 {
 	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 	
-	DX_STUB;
 
-	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
+	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
 	{
 		return Hal_DDrawSurface_Blt( iface,  rdst, src,  rsrc,  dwFlags,  lpbltfx);
 	}

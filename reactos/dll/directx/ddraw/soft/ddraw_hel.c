@@ -83,12 +83,12 @@ HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD
 
 	/* FIXME fill the DirectDrawGlobal right the modeindex old and new */
 
-	if(dwWidth)
-		This->Height = dwWidth;
-	if(dwHeight)
-		This->Width = dwHeight;
-	if(dwBPP)
-		This->Bpp = dwBPP;
+	//if(dwWidth)
+	//	This->Height = dwWidth;
+	//if(dwHeight)
+	//	This->Width = dwHeight;
+	//if(dwBPP)
+	//	This->Bpp = dwBPP;
 
 	return DD_OK;
 }

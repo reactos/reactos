@@ -13,22 +13,13 @@
 ULONG WINAPI
 Main_DirectDrawGammaControl_AddRef(LPDIRECTDRAWGAMMACONTROL iface)
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedIncrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
-
-   	return ref;
+    return 1;
 }
 
 ULONG WINAPI
 Main_DirectDrawGammaControl_Release(LPDIRECTDRAWGAMMACONTROL iface)
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedDecrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
-    
-    if (ref == 0)
-		HeapFree(GetProcessHeap(), 0, This);
-
-    return ref;
+    return 0;
 }
 
 HRESULT WINAPI

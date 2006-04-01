@@ -45,15 +45,15 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 
     /************ Test see if we can Create Surface ***********************/
 
-	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{
 		/* can the driver create the surface */
 		DDHAL_CANCREATESURFACEDATA CanCreateData;
 		memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
-		CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
+		CanCreateData.lpDD = &This->owner->mDDrawGlobal; 
 		CanCreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&This->ddsd;
 			
-		if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
+		if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
 			return DDERR_INVALIDPARAMS;
 		
 	   if(CanCreateData.ddRVal != DD_OK)
@@ -64,10 +64,10 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	 
 	/* surface global struct */	
 	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));	
-	This->Global.lpDD = &This->owner->DirectDrawGlobal;	
-	This->Global.wHeight = This->owner->DirectDrawGlobal.vmiData.dwDisplayHeight;
-	This->Global.wWidth = This->owner->DirectDrawGlobal.vmiData.dwDisplayWidth;
-	This->Global.dwLinearSize =  This->owner->DirectDrawGlobal.vmiData.lDisplayPitch;
+	This->Global.lpDD = &This->owner->mDDrawGlobal;	
+	This->Global.wHeight = This->owner->mDDrawGlobal.vmiData.dwDisplayHeight;
+	This->Global.wWidth = This->owner->mDDrawGlobal.vmiData.dwDisplayWidth;
+	This->Global.dwLinearSize =  This->owner->mDDrawGlobal.vmiData.lDisplayPitch;
 	if(pDDSD2->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
 		This->Global.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE; 
 
@@ -76,8 +76,10 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 	This->More.dmiDDrawReserved7.wWidth = This->Global.wWidth;
 	This->More.dmiDDrawReserved7.wHeight = This->Global.wHeight;
-	This->More.dmiDDrawReserved7.wBPP = This->owner->Bpp;
-	This->More.dmiDDrawReserved7.wRefreshRate = This->owner->DirectDrawGlobal.dwMonitorFrequency;
+	//This->More.dmiDDrawReserved7.wBPP = This->owner->Bpp;
+	This->More.dmiDDrawReserved7.wBPP = This->Global.dwLinearSize;
+
+	This->More.dmiDDrawReserved7.wRefreshRate = This->owner->mDDrawGlobal.dwMonitorFrequency;
 	//This->More.dmiDDrawReserved7.wMonitorsAttachedToDesktop = 2;
 	/* ToDo: fill ddsCapsEx */
  
@@ -95,7 +97,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	/* the parameter struct */
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
-	CreateData.lpDD = &This->owner->DirectDrawGlobal;	
+	CreateData.lpDD = &This->owner->mDDrawGlobal;	
 	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&This->ddsd; 
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = This->pLocal;	
@@ -103,7 +105,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	CreateData.ddRVal = 1;
 
 	/* this is the call we were waiting for */
-	if(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
+	if(This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
 	asm("int3");
 
@@ -126,13 +128,13 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
     IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
  	
-	if (!(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
+	if (!(This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
 	{
 		return DDERR_NODRIVERSUPPORT;
 	}
 
 	DDHAL_BLTDATA BltData;
-	BltData.lpDD = &This->owner->DirectDrawGlobal;
+	BltData.lpDD = &This->owner->mDDrawGlobal;
 	BltData.dwFlags = dwFlags;
 	BltData.lpDDDestSurface = &This->Local;
     if(rDest) BltData.rDest = *(RECTL*)rDest;
@@ -140,7 +142,7 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
     if(That) BltData.lpDDSrcSurface = &That->Local;
 	if(lpbltfx) BltData.bltFX = *lpbltfx;
 
-	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.Blt(&BltData) != DDHAL_DRIVER_HANDLED)
+	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.Blt(&BltData) != DDHAL_DRIVER_HANDLED)
 	{
 	   return DDERR_NODRIVERSUPPORT;
 	}

@@ -10,6 +10,9 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
+/* own macro to alloc memmory */
+#define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
+#define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p);
 /******** Main Object ********/
 
 typedef struct 
@@ -20,21 +23,36 @@ typedef struct
 	IDirectDraw2Vtbl* lpVtbl_v2;
 	IDirectDrawVtbl*  lpVtbl_v1;
 
-	/* The main struct that contain all info from the HAL and HEL */
-	DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
+	/* The main struct that contain all info from the HAL and HEL */	
+	HDC hdc;
+    DDRAWI_DIRECTDRAW_GBL mDDrawGlobal;
+    DDRAWI_DIRECTDRAW_LCL mDDrawLocal;
+    DDHALINFO mHALInfo;
+
+    DDHAL_CALLBACKS mCallbacks;
+    DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
+    D3DHAL_CALLBACKS mD3dCallbacks;
+    D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
+
+    UINT mcModeInfos;
+    DDHALMODEINFO *mpModeInfos;
+
+    UINT mcvmList;
+    VIDMEM *mpvmList;
+
+    UINT mcFourCC;
+    DWORD *mpFourCC;
+
+    UINT mcTextures;
+    DDSURFACEDESC *mpTextures;
+
 
 	/* ExclusiveOwner */
-	DDRAWI_DIRECTDRAW_LCL ExclusiveOwner;
-				
-	/* MISC info that will be remove in futuer */	
-	DDHAL_DDMISCELLANEOUSCALLBACKS Misc2Callback;
-	DDHALINFO HalInfo;	
+	DDRAWI_DIRECTDRAW_LCL ExclusiveOwner;				
     
     DWORD cooperative_level;	
-	int Height, Width, Bpp;
 
-	BOOL InitializeDraw;
-
+	BOOL InitializeDraw; 
 
 } IDirectDrawImpl; 
 

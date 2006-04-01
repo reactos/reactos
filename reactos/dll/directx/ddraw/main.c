@@ -15,9 +15,17 @@
 
 
 
+/*
+ * IMPLEMENT
+ * Status this api is finish and is 100% correct 
+ */
+
 HRESULT 
 WINAPI 
-Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex)
+Create_DirectDraw (LPGUID pGUID, 
+				   LPDIRECTDRAW* pIface, 
+				   REFIID id, 
+				   BOOL ex)
 {   
     IDirectDrawImpl* This = (IDirectDrawImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawImpl));
 
@@ -30,8 +38,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex)
 	This->lpVtbl_v1 = &DDRAW_IDirectDraw_VTable;
 	This->lpVtbl_v2 = &DDRAW_IDirectDraw2_VTable;
 	This->lpVtbl_v4 = &DDRAW_IDirectDraw4_VTable;
-
-	This->DirectDrawGlobal.dwRefCnt = 1;
+	
 	*pIface = (LPDIRECTDRAW)This;
 
 	if(This->lpVtbl->QueryInterface ((LPDIRECTDRAW7)This, id, (void**)&pIface) != S_OK)
@@ -40,9 +47,16 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex)
 	return This->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
 }
 
+/*
+ * IMPLEMENT
+ * Status this api is finish and is 100% correct 
+ */
+
 HRESULT 
 WINAPI 
-DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
+DirectDrawCreate (LPGUID lpGUID, 
+				  LPDIRECTDRAW* lplpDD, 
+				  LPUNKNOWN pUnkOuter) 
 {   
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
@@ -53,10 +67,18 @@ DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter)
 	
 	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw, FALSE);
 }
- 
+
+/*
+ * IMPLEMENT
+ * Status this api is finish and is 100% correct 
+ */
+
 HRESULT 
 WINAPI 
-DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID id, LPUNKNOWN pUnkOuter)
+DirectDrawCreateEx(LPGUID lpGUID, 
+				   LPVOID* lplpDD, 
+				   REFIID id, 
+				   LPUNKNOWN pUnkOuter)
 {    	
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
@@ -74,38 +96,52 @@ DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID id, LPUNKNOWN pUnkOuter
     return Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
 }
 
+/*
+ * UNIMPLEMENT 
+ */
+
 HRESULT 
-WINAPI DirectDrawEnumerateA(
-  LPDDENUMCALLBACKA lpCallback, 
-  LPVOID lpContext
-)
+WINAPI 
+DirectDrawEnumerateA(
+                     LPDDENUMCALLBACKA lpCallback, 
+                     LPVOID lpContext)
 {
     DX_STUB;
 }
 
 
-HRESULT WINAPI DirectDrawEnumerateW(
-  LPDDENUMCALLBACKW lpCallback, 
-  LPVOID lpContext
-)
+/*
+ * UNIMPLEMENT 
+ */
+
+HRESULT WINAPI DirectDrawEnumerateW(LPDDENUMCALLBACKW lpCallback, 
+                                    LPVOID lpContext)
 {
     DX_STUB;
 }
 
-HRESULT WINAPI DirectDrawEnumerateExA(
-  LPDDENUMCALLBACKEXA lpCallback, 
-  LPVOID lpContext, 
-  DWORD dwFlags
-)
+/*
+ * UNIMPLEMENT 
+ */
+
+HRESULT 
+WINAPI 
+DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback, 
+                       LPVOID lpContext, 
+                       DWORD dwFlags)
 {
     DX_STUB;
 }
 
-HRESULT WINAPI DirectDrawEnumerateExW(
-  LPDDENUMCALLBACKEXW lpCallback, 
-  LPVOID lpContext, 
-  DWORD dwFlags
-)
+/*
+ * UNIMPLEMENT 
+ */
+
+HRESULT 
+WINAPI 
+DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback, 
+                       LPVOID lpContext, 
+                       DWORD dwFlags)
 {
      DX_STUB;
 }
@@ -118,7 +154,13 @@ HRESULT WINAPI DirectDrawEnumerateExW(
 
  */
 
-HRESULT WINAPI 
+/*
+ * UNIMPLEMENT 
+ * Status FIXME need be implement and this code is realy need be tested
+ */
+
+HRESULT 
+WINAPI 
 D3DParseUnknownCommand( LPVOID lpvCommands, 
                         LPVOID *lplpvReturnedCommand)
 {
