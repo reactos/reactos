@@ -16,6 +16,8 @@
 /* swtich this off to get rid of all dx debug msg */
 #define DX_DEBUG
 
+#define DdHandleTable GdiHandleTable
+
 
 /************************************************************************/
 /* DIRECT DRAW OBJECT                                                   */
@@ -95,7 +97,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 		return NULL;
 	}
 
-	hDirectDraw = GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DIRECTDRAW);
+	hDirectDraw = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (!hDirectDraw)
 	{
 		/* No more memmory */
@@ -106,7 +108,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 		return NULL;
 	}
 
-	pDirectDraw = GDIOBJ_LockObj(hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (!pDirectDraw)
 	{
 		/* invalid handle */
@@ -133,7 +135,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	/* DD_PALETTECALLBACKS setup*/	
 	RtlMoveMemory(&pDirectDraw->Pal, &surface_callbacks, sizeof(DD_PALETTECALLBACKS));
 	
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	DC_UnlockDc(pDC);
 
 	return hDirectDraw;
@@ -146,7 +148,7 @@ BOOL STDCALL NtGdiDdDeleteDirectDrawObject(
 #ifdef DX_DEBUG
     DPRINT1("NtGdiDdDeleteDirectDrawObject\n");
 #endif
-	return GDIOBJ_FreeObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	return GDIOBJ_FreeObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 }
 
 BOOL STDCALL NtGdiDdQueryDirectDrawObject(
@@ -201,7 +203,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     }
    
     
-	pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	
 	
 	if (!pDirectDraw)
@@ -226,7 +228,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 #ifdef DX_DEBUG
         DPRINT1(" Fail to get DirectDraw driver info \n");
 #endif
-		GDIOBJ_UnlockObjByPtr(pDirectDraw);
+		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 		return FALSE;
 	}
 
@@ -351,7 +353,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
     }
 #endif
         
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 	return TRUE;
 }
@@ -364,7 +366,7 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 {
 	DWORD  ddRVal = 0;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdGetDriverInfo\n");
 #endif
@@ -397,7 +399,7 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 	else
 	     ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
    
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 	return ddRVal;
 }
@@ -425,7 +427,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
 	DPRINT1("NtGdiDdCreateSurface\n");
 #endif
 
-	pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 	{
 #ifdef DX_DEBUG
@@ -456,7 +458,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
 	/* But back the orignal PDev */
 	puCreateSurfaceData->lpDD = lgpl;
     
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);	
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);	
 	return ddRVal;
 }
 
@@ -473,7 +475,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 #endif
 
 
-	pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
@@ -492,7 +494,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 	/* But back the orignal PDev */
 	puWaitForVerticalBlankData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	return ddRVal;
 }
 
@@ -504,7 +506,7 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;	
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdCanCreateSurface\n");
 #endif
@@ -526,7 +528,7 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 	/* But back the orignal PDev */
 	puCanCreateSurfaceData->lpDD = lgpl;
 
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	return ddRVal;
 }
 
@@ -538,7 +540,7 @@ DWORD STDCALL NtGdiDdGetScanLine(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdGetScanLine\n");
 #endif
@@ -560,7 +562,7 @@ DWORD STDCALL NtGdiDdGetScanLine(
 	/* But back the orignal PDev */
 	puGetScanLineData->lpDD = lgpl;
 
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	return ddRVal;
 }
 
@@ -579,7 +581,7 @@ DWORD STDCALL NtGdiDdDestroySurface(
 {	
 	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdDestroySurface\n");
 #endif
@@ -605,7 +607,7 @@ DWORD STDCALL NtGdiDdDestroySurface(
 	}
 
 	
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;			
 }
 
@@ -620,7 +622,7 @@ DWORD STDCALL NtGdiDdFlip(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceTarget, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceTarget, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdFlip\n");
 #endif
@@ -643,7 +645,7 @@ DWORD STDCALL NtGdiDdFlip(
 	/* But back the orignal PDev */
 	puFlipData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;		
 }
 
@@ -656,7 +658,7 @@ DWORD STDCALL NtGdiDdLock(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdLock\n");
 #endif
@@ -678,7 +680,7 @@ DWORD STDCALL NtGdiDdLock(
 	/* But back the orignal PDev */
 	puLockData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;		
 }
 
@@ -690,7 +692,7 @@ DWORD STDCALL NtGdiDdUnlock(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdUnlock\n");
 #endif
@@ -712,7 +714,7 @@ DWORD STDCALL NtGdiDdUnlock(
 	/* But back the orignal PDev */
 	puUnlockData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);    
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);    
 	return ddRVal;
 }
 
@@ -725,7 +727,7 @@ DWORD STDCALL NtGdiDdBlt(
     DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
     DPRINT1("NtGdiDdBlt\n");
 #endif
@@ -747,7 +749,7 @@ DWORD STDCALL NtGdiDdBlt(
 	/* But back the orignal PDev */
 	puBltData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;
    }
 
@@ -759,7 +761,7 @@ DWORD STDCALL NtGdiDdSetColorKey(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdSetColorKey\n");
 #endif
@@ -781,7 +783,7 @@ DWORD STDCALL NtGdiDdSetColorKey(
 	/* But back the orignal PDev */
 	puSetColorKeyData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;	
 }
 
@@ -795,7 +797,7 @@ DWORD STDCALL NtGdiDdAddAttachedSurface(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceAttached, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceAttached, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdAddAttachedSurface\n");
 #endif
@@ -817,7 +819,7 @@ DWORD STDCALL NtGdiDdAddAttachedSurface(
 	/* But back the orignal PDev */
 	puAddAttachedSurfaceData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;	
 }
 
@@ -829,7 +831,7 @@ DWORD STDCALL NtGdiDdGetBltStatus(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdGetBltStatus\n");
 #endif
@@ -851,7 +853,7 @@ DWORD STDCALL NtGdiDdGetBltStatus(
 	/* But back the orignal PDev */
 	puGetBltStatusData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;		
 }
 
@@ -863,7 +865,7 @@ DWORD STDCALL NtGdiDdGetFlipStatus(
     DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdGetFlipStatus\n");
 #endif
@@ -885,7 +887,7 @@ DWORD STDCALL NtGdiDdGetFlipStatus(
 	/* But back the orignal PDev */
 	puGetFlipStatusData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;		
 }
 
@@ -898,7 +900,7 @@ DWORD STDCALL NtGdiDdUpdateOverlay(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
     DPRINT1("NtGdiDdUpdateOverlay\n");
 #endif
@@ -920,7 +922,7 @@ DWORD STDCALL NtGdiDdUpdateOverlay(
 	/* But back the orignal PDev */
 	puUpdateOverlayData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;
 }
 
@@ -933,7 +935,7 @@ DWORD STDCALL NtGdiDdSetOverlayPosition(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
     DPRINT1("NtGdiDdSetOverlayPosition\n");
 #endif
@@ -955,7 +957,7 @@ DWORD STDCALL NtGdiDdSetOverlayPosition(
 	/* But back the orignal PDev */
 	puSetOverlayPositionData->lpDD = lgpl;
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;
 }
 
@@ -985,7 +987,7 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
     BOOL bComplete
 )
 {
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
     PDD_SURFACE pSurface;
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdCreateSurfaceObject\n");
@@ -994,9 +996,9 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 		return NULL;
 
 	if (!hSurface)
-		hSurface = GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DD_SURFACE);
+		hSurface = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
 
-	pSurface = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
+	pSurface = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
         /* FIXME - Handle pSurface == NULL!!!! */
 
 	RtlMoveMemory(&pSurface->Local, puSurfaceLocal, sizeof(DD_SURFACE_LOCAL));
@@ -1010,8 +1012,8 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 	// FIXME: figure out how to use this
 	pSurface->bComplete = bComplete;
 
-	GDIOBJ_UnlockObjByPtr(pSurface);
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pSurface);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 	return hSurface;
 }
@@ -1026,7 +1028,7 @@ BOOL STDCALL NtGdiDdDeleteSurfaceObject(
     /* FIXME add right GDI_OBJECT_TYPE_ for everthing for now 
        we are using same type */
 	/* return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE); */
-	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
+	return GDIOBJ_FreeObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
 	
 }
 
@@ -1072,7 +1074,7 @@ DWORD STDCALL NtGdiDdGetAvailDriverMemory(
 	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdGetAvailDriverMemory\n");
 #endif
@@ -1086,7 +1088,7 @@ DWORD STDCALL NtGdiDdGetAvailDriverMemory(
 	/* make the call */
    // ddRVal = pDirectDraw->DdGetAvailDriverMemory(puGetAvailDriverMemoryData); 
  
-	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 
 	/* But back the orignal PDev */
@@ -1106,7 +1108,7 @@ DWORD STDCALL NtGdiDdSetExclusiveMode(
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
 
 #ifdef DX_DEBUG
 	DPRINT1("NtGdiDdSetExclusiveMode\n");
@@ -1121,7 +1123,7 @@ DWORD STDCALL NtGdiDdSetExclusiveMode(
 	/* make the call */
     ddRVal = pDirectDraw->DdSetExclusiveMode(puSetExclusiveModeData);
 
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 	/* But back the orignal PDev */
 	puSetExclusiveModeData->lpDD = lgpl;

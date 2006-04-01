@@ -490,12 +490,12 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
    /* delete bitmaps */
    if(bmpMask)
    {
-      GDIOBJ_SetOwnership(bmpMask, PsGetCurrentProcess());
+      GDIOBJ_SetOwnership(GdiHandleTable, bmpMask, PsGetCurrentProcess());
       NtGdiDeleteObject(bmpMask);
    }
    if(bmpColor)
    {
-      GDIOBJ_SetOwnership(bmpColor, PsGetCurrentProcess());
+      GDIOBJ_SetOwnership(GdiHandleTable, bmpColor, PsGetCurrentProcess());
       NtGdiDeleteObject(bmpColor);
    }
 
@@ -587,7 +587,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
             CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy;
             BITMAPOBJ_UnlockBitmap(bmp);
-            GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmColor, NULL);
          }
          if(CurIcon->IconInfo.hbmMask &&
                (bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmMask)))
@@ -598,7 +598,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
                CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
             }
             BITMAPOBJ_UnlockBitmap(bmp);
-            GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
          }
       }
       else
@@ -1142,7 +1142,7 @@ NtUserSetCursorIconContents(
       CurIcon->Size.cx = bmp->SurfObj.sizlBitmap.cx;
       CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy;
       BITMAPOBJ_UnlockBitmap(bmp);
-      GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+      GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmColor, NULL);
    }
    else
    {
@@ -1154,7 +1154,7 @@ NtUserSetCursorIconContents(
       CurIcon->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
 
       BITMAPOBJ_UnlockBitmap(bmp);
-      GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+      GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
    }
 
    Ret = TRUE;

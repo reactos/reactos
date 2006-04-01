@@ -125,8 +125,6 @@ typedef struct _USER_REFERENCE_ENTRY
    \
 }
 
-VOID  INTERNAL_CALL InitGdiObjectHandleTable (VOID);
-
 VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);
 

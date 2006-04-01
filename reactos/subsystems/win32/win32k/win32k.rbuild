@@ -66,11 +66,11 @@
 			<file>copy.c</file>
 		</compilationunit>
 		<directory name="i386">
-            <file>cos_asm.s</file>
-            <file>sin_asm.s</file>
-            <file>atan2_asm.s</file>
-            <file>floor_asm.s</file>
-            <file>ceil_asm.s</file>
+		<file>cos_asm.s</file>
+		<file>sin_asm.s</file>
+		<file>atan2_asm.s</file>
+		<file>floor_asm.s</file>
+		<file>ceil_asm.s</file>
         </directory>
 	</directory>
 	<directory name="ntddraw">
@@ -115,7 +115,6 @@
 			<file>winpos.c</file>
 			<file>winsta.c</file>
 			<file>object.c</file>
-			<file>ssec.c</file>
 		</compilationunit>
 	</directory>
 	<directory name="objects">

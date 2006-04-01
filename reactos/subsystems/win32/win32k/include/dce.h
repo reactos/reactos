@@ -44,10 +44,10 @@ typedef struct tagDCE
 #define DCX_NOCLIPCHILDREN      0x00080000
 
 #define  DCEOBJ_AllocDCE()  \
-  ((HDCE) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_DCE))
-#define  DCEOBJ_FreeDCE(hDCE)  GDIOBJ_FreeObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE)
-#define  DCEOBJ_LockDCE(hDCE) ((PDCE)GDIOBJ_LockObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE))
-#define  DCEOBJ_UnlockDCE(pDCE) GDIOBJ_UnlockObjByPtr(pDCE)
+  ((HDCE) GDIOBJ_AllocObj (GdiHandleTable, GDI_OBJECT_TYPE_DCE))
+#define  DCEOBJ_FreeDCE(hDCE)  GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE)
+#define  DCEOBJ_LockDCE(hDCE) ((PDCE)GDIOBJ_LockObj(GdiHandleTable, (HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE))
+#define  DCEOBJ_UnlockDCE(pDCE) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pDCE)
 BOOL INTERNAL_CALL DCE_Cleanup(PVOID ObjectBody);
 
 PDCE FASTCALL DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type);

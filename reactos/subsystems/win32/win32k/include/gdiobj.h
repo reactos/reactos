@@ -9,6 +9,21 @@
 /* Public GDI Object/Handle definitions */
 #include <win32k/ntgdihdl.h>
 
+typedef struct _GDI_HANDLE_TABLE
+{
+  /* the table must be located at the beginning of this structure so it can be
+     properly mapped! */
+  GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
+
+  PPAGED_LOOKASIDE_LIST LookasideLists;
+
+  SLIST_HEADER FreeEntriesHead;
+  SLIST_ENTRY FreeEntries[((GDI_HANDLE_COUNT * sizeof(GDI_TABLE_ENTRY)) << 3) /
+                          (sizeof(SLIST_ENTRY) << 3)];
+} GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
+
+extern PGDI_HANDLE_TABLE GdiHandleTable;
+
 typedef PVOID PGDIOBJ;
 
 typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
@@ -28,11 +43,11 @@ typedef struct _GDIOBJHDR
 #endif
 } GDIOBJHDR, *PGDIOBJHDR;
 
-BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
-void    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
-void    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
-BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
-VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDIOBJ Object);
+BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle);
+void    INTERNAL_CALL GDIOBJ_SetOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle, PEPROCESS Owner);
+void    INTERNAL_CALL GDIOBJ_CopyOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
+BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *hObj);
+VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIOBJ Object);
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)
@@ -40,26 +55,26 @@ VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDIOBJ Object);
 #ifdef GDI_DEBUG
 
 /* a couple macros for debugging GDIOBJ locking */
-#define GDIOBJ_AllocObj(ty) GDIOBJ_AllocObjDbg(__FILE__,__LINE__,ty)
-#define GDIOBJ_FreeObj(obj,ty) GDIOBJ_FreeObjDbg(__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_ShareLockObj(obj,ty) GDIOBJ_ShareLockObjDbg(__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_AllocObj(ty) GDIOBJ_AllocObjDbg(GdiHandleTable,__FILE__,__LINE__,ty)
+#define GDIOBJ_FreeObj(obj,ty) GDIOBJ_FreeObjDbg(GdiHandleTable,__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(GdiHandleTable,__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_ShareLockObj(obj,ty) GDIOBJ_ShareLockObjDbg(GdiHandleTable,__FILE__,__LINE__,obj,ty)
 
-HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(const char* file, int line, ULONG ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
+HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, ULONG ObjectType);
+BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 
 #else /* !GDI_DEBUG */
 
-HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_FreeObj (HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
-PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
+HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType);
+BOOL    INTERNAL_CALL GDIOBJ_FreeObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType);
 
 #endif /* GDI_DEBUG */
 
-PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
+PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process);
 
 #define GDIOBJFLAG_DEFAULT	(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)

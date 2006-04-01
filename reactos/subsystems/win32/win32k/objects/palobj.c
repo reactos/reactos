@@ -63,7 +63,7 @@ PALETTE_AllocPalette(ULONG Mode,
   HPALETTE NewPalette;
   PPALGDI PalGDI;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PALETTE);
+  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_PALETTE);
   if (NULL == NewPalette)
     {
       return NULL;
@@ -112,7 +112,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   PPALGDI PalGDI;
   unsigned i;
 
-  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PALETTE);
+  NewPalette = (HPALETTE) GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_PALETTE);
   if (NULL == NewPalette)
     {
       return NULL;

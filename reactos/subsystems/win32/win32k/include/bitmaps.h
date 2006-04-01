@@ -25,9 +25,9 @@ typedef struct _BITMAPOBJ
 /*  Internal interface  */
 
 #define  BITMAPOBJ_AllocBitmap()  \
-  ((HBITMAP) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_BITMAP))
+  ((HBITMAP) GDIOBJ_AllocObj (GdiHandleTable, GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
-  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
+  GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
 /* NOTE: Use shared locks! */
 #define  BITMAPOBJ_LockBitmap(hBMObj) (PBITMAPOBJ)EngLockSurface((HSURF)hBMObj)
 #define  BITMAPOBJ_UnlockBitmap(pBMObj) EngUnlockSurface(&pBMObj->SurfObj)

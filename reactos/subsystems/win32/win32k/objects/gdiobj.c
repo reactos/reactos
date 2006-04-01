@@ -40,19 +40,6 @@
 /* apparently the first 10 entries are never used in windows as they are empty */
 #define RESERVE_ENTRIES_COUNT 10
 
-typedef struct _GDI_HANDLE_TABLE
-{
-  /* the table must be located at the beginning of this structure so it can be
-     properly mapped! */
-  GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
-
-  PPAGED_LOOKASIDE_LIST LookasideLists;
-
-  SLIST_HEADER FreeEntriesHead;
-  SLIST_ENTRY FreeEntries[((GDI_HANDLE_COUNT * sizeof(GDI_TABLE_ENTRY)) << 3) /
-                          (sizeof(SLIST_ENTRY) << 3)];
-} GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
-
 typedef struct
 {
   ULONG Type;
@@ -63,7 +50,7 @@ typedef struct
 /*
  * Dummy GDI Cleanup Callback
  */
-BOOL INTERNAL_CALL
+static BOOL INTERNAL_CALL
 GDI_CleanupDummy(PVOID ObjectBody)
 {
   return TRUE;
@@ -71,7 +58,7 @@ GDI_CleanupDummy(PVOID ObjectBody)
 
 /* Testing shows that regions are the most used GDIObj type,
    so put that one first for performance */
-const
+static const
 GDI_OBJ_INFO ObjInfo[] =
 {
    /* Type */                   /* Size */             /* CleanupProc */
@@ -96,7 +83,6 @@ GDI_OBJ_INFO ObjInfo[] =
 
 #define OBJTYPE_COUNT (sizeof(ObjInfo) / sizeof(ObjInfo[0]))
 
-static PGDI_HANDLE_TABLE HandleTable = NULL;
 static LARGE_INTEGER ShortDelay;
 
 #define DelayExecution() \
@@ -113,57 +99,80 @@ ULONG STDCALL KeRosGetStackFrames(PULONG Frames, ULONG FrameCount);
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
 */
-static PGDI_HANDLE_TABLE INTERNAL_CALL
-GDIOBJ_iAllocHandleTable(VOID)
+PGDI_HANDLE_TABLE INTERNAL_CALL
+GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
 {
-  PGDI_HANDLE_TABLE handleTable;
-  ULONG htSize;
+  PGDI_HANDLE_TABLE HandleTable = NULL;
+  LARGE_INTEGER htSize;
   UINT ObjType;
   UINT i;
+  ULONG ViewSize = 0;
   PGDI_TABLE_ENTRY Entry;
+  NTSTATUS Status;
 
-  handleTable = NULL;
-  htSize = sizeof(GDI_HANDLE_TABLE);
+  ASSERT(SectionObject != NULL);
 
-  IntUserCreateSharedSection(SessionSharedSectionPool,
-                             (PVOID*)&handleTable,
-                             &htSize);
-  ASSERT( handleTable );
-  RtlZeroMemory(handleTable, sizeof(GDI_HANDLE_TABLE));
+  htSize.QuadPart = sizeof(GDI_HANDLE_TABLE);
+
+  Status = MmCreateSection((PVOID*)SectionObject,
+                           SECTION_ALL_ACCESS,
+                           NULL,
+                           &htSize,
+                           PAGE_READWRITE,
+                           SEC_COMMIT,
+                           NULL,
+                           NULL);
+  if (!NT_SUCCESS(Status))
+      return NULL;
+
+  /* FIXME - use MmMapViewInSessionSpace once available! */
+  Status = MmMapViewInSystemSpace(*SectionObject,
+                                  (PVOID*)&HandleTable,
+                                  &ViewSize);
+  if (!NT_SUCCESS(Status))
+  {
+      ObDereferenceObject(*SectionObject);
+      *SectionObject = NULL;
+      return NULL;
+  }
+
+  RtlZeroMemory(HandleTable, sizeof(GDI_HANDLE_TABLE));
 
   /*
    * initialize the free entry cache
    */
-  InitializeSListHead(&handleTable->FreeEntriesHead);
+  InitializeSListHead(&HandleTable->FreeEntriesHead);
   Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
   for(i = GDI_HANDLE_COUNT - 1; i >= RESERVE_ENTRIES_COUNT; i--)
   {
-    InterlockedPushEntrySList(&handleTable->FreeEntriesHead, &handleTable->FreeEntries[i]);
+    InterlockedPushEntrySList(&HandleTable->FreeEntriesHead, &HandleTable->FreeEntries[i]);
   }
 
-  handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
+  HandleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
                                                       OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
                                                       TAG_GDIHNDTBLE);
-  if(handleTable->LookasideLists == NULL)
+  if(HandleTable->LookasideLists == NULL)
   {
-    InUserDeleteSharedSection(SessionSharedSectionPool,
-                              handleTable);
+    MmUnmapViewInSystemSpace(HandleTable);
+    ObDereferenceObject(*SectionObject);
+    *SectionObject = NULL;
     return NULL;
   }
 
   for(ObjType = 0; ObjType < OBJTYPE_COUNT; ObjType++)
   {
-    ExInitializePagedLookasideList(handleTable->LookasideLists + ObjType, NULL, NULL, 0,
+    ExInitializePagedLookasideList(HandleTable->LookasideLists + ObjType, NULL, NULL, 0,
                                    ObjInfo[ObjType].Size + sizeof(GDIOBJHDR), TAG_GDIOBJ, 0);
   }
 
   ShortDelay.QuadPart = -5000LL; /* FIXME - 0.5 ms? */
 
-  return handleTable;
+  return HandleTable;
 }
 
 static __inline PPAGED_LOOKASIDE_LIST
-FindLookasideList(DWORD ObjectType)
+FindLookasideList(PGDI_HANDLE_TABLE HandleTable,
+                  DWORD ObjectType)
 {
   int Index;
 
@@ -227,7 +236,7 @@ struct DbgOpenGDIHandle
 #define H 1024
 static struct DbgOpenGDIHandle h[H];
 
-void IntDumpHandleTable()
+void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 {
 	int i, n = 0, j, k, J;
 
@@ -318,9 +327,9 @@ done:
 */
 HGDIOBJ INTERNAL_CALL
 #ifdef GDI_DEBUG
-GDIOBJ_AllocObjDbg(const char* file, int line, ULONG ObjectType)
+GDIOBJ_AllocObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, ULONG ObjectType)
 #else /* !GDI_DEBUG */
-GDIOBJ_AllocObj(ULONG ObjectType)
+GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
 #endif /* GDI_DEBUG */
 {
   PW32PROCESS W32Process;
@@ -339,7 +348,7 @@ GDIOBJ_AllocObj(ULONG ObjectType)
 
   ASSERT(ObjectType != GDI_OBJECT_TYPE_DONTCARE);
 
-  LookasideList = FindLookasideList(ObjectType);
+  LookasideList = FindLookasideList(HandleTable, ObjectType);
   if(LookasideList != NULL)
   {
     newObject = ExAllocateFromPagedLookasideList(LookasideList);
@@ -434,7 +443,7 @@ LockHandle:
       ExFreeToPagedLookasideList(LookasideList, newObject);
       DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
 #ifdef GDI_DEBUG
-      IntDumpHandleTable();
+      IntDumpHandleTable(HandleTable);
 #endif /* GDI_DEBUG */
     }
     else
@@ -461,9 +470,9 @@ LockHandle:
 */
 BOOL INTERNAL_CALL
 #ifdef GDI_DEBUG
-GDIOBJ_FreeObjDbg(const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
+GDIOBJ_FreeObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 #else /* !GDI_DEBUG */
-GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
+GDIOBJ_FreeObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType)
 #endif /* GDI_DEBUG */
 {
   PGDI_TABLE_ENTRY Entry;
@@ -535,7 +544,7 @@ LockHandle:
         Ret = RunCleanupCallback(GDIHdrToBdy(GdiHdr), Type);
 
         /* Now it's time to free the memory */
-        LookasideList = FindLookasideList(Type);
+        LookasideList = FindLookasideList(HandleTable, Type);
         if(LookasideList != NULL)
         {
           ExFreeToPagedLookasideList(LookasideList, GdiHdr);
@@ -604,18 +613,6 @@ LockHandle:
 }
 
 /*!
- * Initialization of the GDI object engine.
-*/
-VOID INTERNAL_CALL
-InitGdiObjectHandleTable (VOID)
-{
-  DPRINT("InitGdiObjectHandleTable\n");
-
-  HandleTable = GDIOBJ_iAllocHandleTable();
-  DPRINT("HandleTable: %x\n", HandleTable);
-}
-
-/*!
  * Delete GDI object
  * \param	hObject object handle
  * \return	if the function fails the returned value is FALSE.
@@ -626,7 +623,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
   DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
 
   return NULL != hObject
-         ? GDIOBJ_FreeObj(hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
+         ? GDIOBJ_FreeObj(GdiHandleTable, hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
 }
 
 /*!
@@ -634,7 +631,7 @@ NtGdiDeleteObject(HGDIOBJ hObject)
  * \param	Process - PID of the process that will be destroyed.
 */
 BOOL INTERNAL_CALL
-GDI_CleanupForProcess (struct _EPROCESS *Process)
+GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct _EPROCESS *Process)
 {
   PGDI_TABLE_ENTRY Entry, End;
   PEPROCESS CurrentProcess;
@@ -673,7 +670,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
            simply ignore this fact here. */
         ObjectHandle = (HGDIOBJ)(Index | (Entry->Type & 0xFFFF0000));
 
-        if(GDIOBJ_FreeObj(ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
+        if(GDIOBJ_FreeObj(HandleTable, ObjectHandle, GDI_OBJECT_TYPE_DONTCARE) &&
            W32Process->GDIObjects == 0)
         {
           /* there are no more gdi handles for this process, bail */
@@ -705,9 +702,9 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
 */
 PGDIOBJ INTERNAL_CALL
 #ifdef GDI_DEBUG
-GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
+GDIOBJ_LockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 #else /* !GDI_DEBUG */
-GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
+GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType)
 #endif /* GDI_DEBUG */
 {
    USHORT HandleIndex;
@@ -858,9 +855,9 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
 */
 PGDIOBJ INTERNAL_CALL
 #ifdef GDI_DEBUG
-GDIOBJ_ShareLockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
+GDIOBJ_ShareLockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 #else /* !GDI_DEBUG */
-GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType)
+GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ObjectType)
 #endif /* GDI_DEBUG */
 {
    USHORT HandleIndex;
@@ -989,7 +986,7 @@ GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType)
  * \param Object 	Object pointer (as returned by GDIOBJ_LockObj).
  */
 VOID INTERNAL_CALL
-GDIOBJ_UnlockObjByPtr(PGDIOBJ Object)
+GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIOBJ Object)
 {
    PGDIOBJHDR GdiHdr = GDIBdyToHdr(Object);
 #ifdef GDI_DEBUG
@@ -1005,7 +1002,7 @@ GDIOBJ_UnlockObjByPtr(PGDIOBJ Object)
 
 
 BOOL INTERNAL_CALL
-GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
+GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle)
 {
   PGDI_TABLE_ENTRY Entry;
   HANDLE ProcessId;
@@ -1029,7 +1026,7 @@ GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 }
 
 BOOL INTERNAL_CALL
-GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj)
+GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *hObj)
 {
 /*
  * FIXME !!!!! THIS FUNCTION NEEDS TO BE FIXED - IT IS NOT SAFE WHEN OTHER THREADS
@@ -1167,7 +1164,7 @@ LockHandle:
 }
 
 void INTERNAL_CALL
-GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
+GDIOBJ_SetOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 {
   PGDI_TABLE_ENTRY Entry;
   HANDLE ProcessId, LockedProcessId, PrevProcId;
@@ -1302,7 +1299,7 @@ LockHandle:
 }
 
 void INTERNAL_CALL
-GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
+GDIOBJ_CopyOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
 {
   PGDI_TABLE_ENTRY FromEntry;
   PETHREAD Thread;
@@ -1347,14 +1344,14 @@ LockHandleFrom:
             /* FIXME */
             if(NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)FromPrevProcId & ~0x1), &ProcessTo)))
             {
-              GDIOBJ_SetOwnership(CopyTo, ProcessTo);
+              GDIOBJ_SetOwnership(HandleTable, CopyTo, ProcessTo);
               ObDereferenceObject(ProcessTo);
             }
           }
           else
           {
             /* mark the object as global */
-            GDIOBJ_SetOwnership(CopyTo, NULL);
+            GDIOBJ_SetOwnership(HandleTable, CopyTo, NULL);
           }
 
           (void)InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
@@ -1417,23 +1414,33 @@ LockHandleFrom:
 }
 
 PVOID INTERNAL_CALL
-GDI_MapHandleTable(PEPROCESS Process)
+GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 {
-  ULONG TableSize = sizeof(HandleTable->Entries);
-  PVOID MappedGdiTable = NULL; /* FIXME - try preferred GDI_HANDLE_TABLE_BASE_ADDRESS? */
-  NTSTATUS Status = IntUserMapSharedSection(SessionSharedSectionPool,
-                                            Process,
-                                            HandleTable,
-                                            NULL,
-                                            &MappedGdiTable,
-                                            &TableSize,
-                                            TRUE);
-  if(NT_SUCCESS(Status))
-  {
-    return MappedGdiTable;
-  }
+    PVOID MappedView = NULL;
+    NTSTATUS Status;
+    LARGE_INTEGER Offset;
+    ULONG ViewSize = sizeof(GDI_HANDLE_TABLE);
 
-  return NULL;
+    Offset.QuadPart = 0;
+
+    ASSERT(SectionObject != NULL);
+    ASSERT(Process != NULL);
+
+    Status = MmMapViewOfSection(SectionObject,
+                                Process,
+                                &MappedView,
+                                0,
+                                0,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                SEC_NO_CHANGE,
+                                PAGE_READONLY);
+
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    return MappedView;
 }
 
 /* EOF */

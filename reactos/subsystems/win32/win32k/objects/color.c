@@ -616,7 +616,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    if(!hgdiobj)
      return Ret;
       
-   ptr = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
+   ptr = GDIOBJ_LockObj(GdiHandleTable, hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
    if (ptr == 0)
      {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -642,7 +642,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
            break;
      }
 
-   GDIOBJ_UnlockObjByPtr(ptr);
+   GDIOBJ_UnlockObjByPtr(GdiHandleTable, ptr);
    return Ret;
 }
 

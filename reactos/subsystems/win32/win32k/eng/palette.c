@@ -44,7 +44,7 @@ EngCreatePalette(ULONG Mode, ULONG NumColors, ULONG *Colors,
    Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
    if (Palette != NULL)
    {
-      GDIOBJ_SetOwnership(Palette, NULL);
+      GDIOBJ_SetOwnership(GdiHandleTable, Palette, NULL);
    }
 
    return Palette;
@@ -56,7 +56,7 @@ EngCreatePalette(ULONG Mode, ULONG NumColors, ULONG *Colors,
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette)
 {
-   GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
+   GDIOBJ_SetOwnership(GdiHandleTable, Palette, PsGetCurrentProcess());
 
    return PALETTE_FreePalette(Palette);
 }

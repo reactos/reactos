@@ -147,7 +147,7 @@ CreateStockObjects(void)
     {
       if (NULL != StockObjects[Object])
 	{
-	  GDIOBJ_ConvertToStockObj(&StockObjects[Object]);
+	  GDIOBJ_ConvertToStockObj(GdiHandleTable, &StockObjects[Object]);
 	}
     }
 
@@ -268,7 +268,7 @@ CreateSysColorObjects(VOID)
       SysColorBrushes[i] = IntGdiCreateSolidBrush(SysColors[i]);
       if(SysColorBrushes[i] != NULL)
       {
-        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorBrushes[i]);
+        GDIOBJ_ConvertToStockObj(GdiHandleTable, (HGDIOBJ*)&SysColorBrushes[i]);
       }
     }
   }
@@ -285,7 +285,7 @@ CreateSysColorObjects(VOID)
       SysColorPens[i] = IntGdiCreatePenIndirect(&Pen);
       if(SysColorPens[i] != NULL)
       {
-        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&SysColorPens[i]);
+        GDIOBJ_ConvertToStockObj(GdiHandleTable, (HGDIOBJ*)&SysColorPens[i]);
       }
     }
   }

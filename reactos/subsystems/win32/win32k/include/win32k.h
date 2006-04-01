@@ -14,7 +14,6 @@
 /* Internal Win32k Headers */
 #include <include/ntuser.h>
 #include <include/win32.h>
-#include <include/ssec.h>
 #include <include/accelerator.h>
 #include <include/callback.h>
 #include <include/class.h>

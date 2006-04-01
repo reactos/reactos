@@ -68,10 +68,10 @@ typedef struct
 #define GDIBRUSH_IS_MASKING		0x8000 /* Pattern bitmap is used as transparent mask (?) */
 #define GDIBRUSH_CACHED_IS_SOLID	0x80000000 
 
-#define  BRUSHOBJ_AllocBrush() ((HBRUSH) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
-#define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
-#define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr(pBrush)
+#define  BRUSHOBJ_AllocBrush() ((HBRUSH) GDIOBJ_AllocObj (GdiHandleTable, GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
+#define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj(GdiHandleTable, (HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
+#define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pBrush)
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
 #endif

@@ -42,7 +42,7 @@ BRUSH_Cleanup(PVOID ObjectBody)
   if(pBrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
   {
     ASSERT(pBrush->hbmPattern);
-    GDIOBJ_SetOwnership(pBrush->hbmPattern, PsGetCurrentProcess());
+    GDIOBJ_SetOwnership(GdiHandleTable, pBrush->hbmPattern, PsGetCurrentProcess());
     NtGdiDeleteObject(pBrush->hbmPattern);
   }
 
@@ -297,7 +297,7 @@ IntGdiCreateDIBBrush(
    BrushObject->hbmPattern = hPattern;
    /* FIXME: Fill in the rest of fields!!! */
 
-   GDIOBJ_SetOwnership(hPattern, NULL);
+   GDIOBJ_SetOwnership(GdiHandleTable, hPattern, NULL);
 
    BRUSHOBJ_UnlockBrush(BrushObject);
 
@@ -340,7 +340,7 @@ IntGdiCreateHatchBrush(
    BrushObject->hbmPattern = hPattern;
    BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
 
-   GDIOBJ_SetOwnership(hPattern, NULL);
+   GDIOBJ_SetOwnership(GdiHandleTable, hPattern, NULL);
 
    BRUSHOBJ_UnlockBrush(BrushObject);
 
@@ -377,7 +377,7 @@ IntGdiCreatePatternBrush(
    BrushObject->hbmPattern = hPattern;
    /* FIXME: Fill in the rest of fields!!! */
 
-   GDIOBJ_SetOwnership(hPattern, NULL);
+   GDIOBJ_SetOwnership(GdiHandleTable, hPattern, NULL);
 
    BRUSHOBJ_UnlockBrush(BrushObject);
 

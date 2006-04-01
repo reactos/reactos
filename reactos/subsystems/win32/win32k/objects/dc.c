@@ -1065,7 +1065,7 @@ NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {
   PDC  DCToDelete;
 
-  if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
+  if (!GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, DCHandle))
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
@@ -1739,7 +1739,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
   INT Result = 0;
   DWORD ObjectType;
 
-  GdiObject = GDIOBJ_LockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
+  GdiObject = GDIOBJ_LockObj(GdiHandleTable, Handle, GDI_OBJECT_TYPE_DONTCARE);
   if (NULL == GdiObject)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1780,7 +1780,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
         break;
     }
 
-  GDIOBJ_UnlockObjByPtr(GdiObject);
+  GDIOBJ_UnlockObjByPtr(GdiHandleTable, GdiObject);
 
   return Result;
 }
@@ -1857,7 +1857,7 @@ NtGdiGetObjectType(HANDLE handle)
   INT result;
   DWORD objectType;
 
-  ptr = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
+  ptr = GDIOBJ_LockObj(GdiHandleTable, handle, GDI_OBJECT_TYPE_DONTCARE);
   if (ptr == 0)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1912,7 +1912,7 @@ NtGdiGetObjectType(HANDLE handle)
       result = 0;
       break;
   }
-  GDIOBJ_UnlockObjByPtr(ptr);
+  GDIOBJ_UnlockObjByPtr(GdiHandleTable, ptr);
   return result;
 }
 
@@ -2263,7 +2263,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
   }
 
-  hDC = (HDC) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DC);
+  hDC = (HDC) GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_DC);
   if (hDC == NULL)
   {
     if(Buf)
@@ -2339,7 +2339,7 @@ DC_InitDC(HDC  DCHandle)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
-  if (!GDIOBJ_FreeObj(DCToFree, GDI_OBJECT_TYPE_DC))
+  if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");
   }
@@ -2415,21 +2415,21 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 {
   PDC DC;
 
-  GDIOBJ_SetOwnership(hDC, Owner);
+  GDIOBJ_SetOwnership(GdiHandleTable, hDC, Owner);
   DC = DC_LockDc(hDC);
   if (NULL != DC)
     {
       if (NULL != DC->w.hClipRgn)
         {
-          GDIOBJ_CopyOwnership(hDC, DC->w.hClipRgn);
+          GDIOBJ_CopyOwnership(GdiHandleTable, hDC, DC->w.hClipRgn);
         }
       if (NULL != DC->w.hVisRgn)
         {
-          GDIOBJ_CopyOwnership(hDC, DC->w.hVisRgn);
+          GDIOBJ_CopyOwnership(GdiHandleTable, hDC, DC->w.hVisRgn);
         }
       if (NULL != DC->w.hGCClipRgn)
         {
-          GDIOBJ_CopyOwnership(hDC, DC->w.hGCClipRgn);
+          GDIOBJ_CopyOwnership(GdiHandleTable, hDC, DC->w.hGCClipRgn);
         }
       DC_UnlockDc(DC);
     }

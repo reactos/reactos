@@ -123,7 +123,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
       defaultDCstate = NtGdiGetDCState(Dce->hDC);
       DC_SetOwnership(defaultDCstate, NULL);
    }
-   GDIOBJ_SetOwnership(Dce->Self, NULL);
+   GDIOBJ_SetOwnership(GdiHandleTable, Dce->Self, NULL);
    DC_SetOwnership(Dce->hDC, NULL);
    Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
    Dce->hClipRgn = NULL;
@@ -641,9 +641,9 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
    SetDCHook(dce->hDC, NULL, 0L);
 #endif
 
-   if(Force && !GDIOBJ_OwnedByCurrentProcess(dce->hDC))
+   if(Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, dce->hDC))
    {
-      GDIOBJ_SetOwnership(dce->Self, PsGetCurrentProcess());
+      GDIOBJ_SetOwnership(GdiHandleTable, dce->Self, PsGetCurrentProcess());
       DC_SetOwnership(dce->hDC, PsGetCurrentProcess());
    }
 

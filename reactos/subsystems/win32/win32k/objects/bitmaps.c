@@ -1516,7 +1516,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
         if (hBitmap == NULL)
 		return 0;
 
-	Bitmap = GDIOBJ_LockObj(hBitmap, GDI_OBJECT_TYPE_BITMAP);
+	Bitmap = GDIOBJ_LockObj(GdiHandleTable, hBitmap, GDI_OBJECT_TYPE_BITMAP);
         if (Bitmap == NULL)
 		return 0;
 
@@ -1536,7 +1536,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		ExFreePool (buf);
 	}
 
-	GDIOBJ_UnlockObjByPtr(Bitmap);
+	GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
 
 	return  res;
 }

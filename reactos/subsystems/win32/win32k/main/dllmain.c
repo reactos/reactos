@@ -27,13 +27,15 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
+PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
+BOOL INTERNAL_CALL GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct _EPROCESS *Process);
+/* FIXME */
+PGDI_HANDLE_TABLE GdiHandleTable = NULL;
+PSECTION_OBJECT GdiTableSection = NULL;
 
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
-
-PSHARED_SECTION_POOL SessionSharedSectionPool = NULL;
 
 NTSTATUS 
 STDCALL
@@ -84,7 +86,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       if(Process->Peb != NULL)
       {
         /* map the gdi handle table to user land */
-        Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
+        Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(GdiTableSection, Process);
       }
 
       /* setup process flags */
@@ -102,7 +104,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       /* no process windows should exist at this point, or the function will assert! */
       DestroyProcessClasses(Win32Process);
 
-      GDI_CleanupForProcess(Process);
+      GDI_CleanupForProcess(GdiHandleTable, Process);
 
       co_IntGraphicsCheck(FALSE);
 
@@ -340,13 +342,6 @@ DriverEntry (
      */
     PsEstablishWin32Callouts(&CalloutData);
 
-  Status = IntUserCreateSharedSectionPool(48 * 1024 * 1024, /* 48 MB by default */
-                                          &SessionSharedSectionPool);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to initialize the shared section pool: Status 0x%x\n", Status);
-  }
-
   Status = InitUserImpl();
   if (!NT_SUCCESS(Status))
   {
@@ -445,7 +440,12 @@ DriverEntry (
       return(Status);
     }
 
-  InitGdiObjectHandleTable ();
+  GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
+  if (GdiHandleTable == NULL)
+  {
+      DPRINT1("Failed to initialize the GDI handle table.\n");
+      return STATUS_UNSUCCESSFUL;
+  }
 
   /* Initialize FreeType library */
   if (! InitFontSupport())

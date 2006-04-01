@@ -1905,7 +1905,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
   HRGN hReg;
   PROSRGNDATA pReg;
 
-  if ((hReg = (HRGN) GDIOBJ_AllocObj(GDI_OBJECT_TYPE_REGION)))
+  if ((hReg = (HRGN) GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_REGION)))
     {
       if (NULL != (pReg = RGNDATA_LockRgn(hReg)))
         {
