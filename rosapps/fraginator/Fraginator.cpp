@@ -42,7 +42,7 @@ int WINAPI WinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR CmdLine,
 
     if (!CheckWinVer())
     {
-        MessageBox (GetDesktopWindow(), "Sorry, this program requires Windows 2000.", "Error", MB_OK);
+        MessageBox (GetDesktopWindow(), L"Sorry, this program requires Windows 2000.", L"Error", MB_OK);
         return (0);
     }
 
@@ -51,7 +51,7 @@ int WINAPI WinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR CmdLine,
 #if 0
     AllocConsole ();
     if (_CrtDumpMemoryLeaks ())
-        MessageBox (NULL, "Click OK to quit", "Leaks", MB_OK);
+        MessageBox (NULL, L"Click OK to quit", L"Leaks", MB_OK);
 #endif
 
     return (0);

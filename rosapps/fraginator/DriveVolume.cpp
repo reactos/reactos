@@ -39,14 +39,14 @@ void DriveVolume::Close (void)
 // "Name" should be the drive letter followed by a colon. ie, "c:"
 // It's a string to allow for further expansion (ie, defragging over the network?)
 // or some other baloney reason
-bool DriveVolume::Open (string Name)
+bool DriveVolume::Open (wstring Name)
 {
-    char FileName[100];
+    wchar_t FileName[100];
     bool ReturnVal;
 
-    sprintf (FileName, "\\\\.\\%s", Name.c_str());
+    swprintf (FileName, L"\\\\.\\%s", Name.c_str());
     RootPath = Name.c_str();
-    RootPath += "\\";
+    RootPath += L"\\";
 
     Handle = CreateFile 
     (
@@ -63,11 +63,11 @@ bool DriveVolume::Open (string Name)
         ReturnVal = false;
     else
     {
-        char  VolName[64];
+        wchar_t  VolName[64];
         DWORD VolSN;
         DWORD VolMaxFileLen;
         DWORD FSFlags;
-        char  FSName[64];
+        wchar_t  FSName[64];
         BOOL  Result;
 
         ReturnVal = true;
@@ -85,24 +85,24 @@ bool DriveVolume::Open (string Name)
 
         if (Result)
         {
-            char SerialText[10];
+            wchar_t SerialText[10];
 
             VolInfo.FileSystem = FSName;
             VolInfo.MaxNameLen = VolMaxFileLen;
             VolInfo.Name       = VolName;
 
-            sprintf (SerialText, "%x-%x", (VolSN & 0xffff0000) >> 16, 
+            swprintf (SerialText, L"%x-%x", (VolSN & 0xffff0000) >> 16, 
                 VolSN & 0x0000ffff);
 
-            strupr (SerialText);
+            wcsupr (SerialText);
             VolInfo.Serial     = SerialText;
         }
         else
         {
-            VolInfo.FileSystem = "(Unknown)";
+            VolInfo.FileSystem = L"(Unknown)";
             VolInfo.MaxNameLen = 255;
-            VolInfo.Name       = "(Unknown)";
-            VolInfo.Serial     = "(Unknown)";
+            VolInfo.Name       = L"(Unknown)";
+            VolInfo.Serial     = L"(Unknown)";
         }
     }
 
@@ -202,7 +202,7 @@ bool DriveVolume::GetBitmap (void)
     // Bad result?
     if (Result == FALSE  &&  GetLastError () != ERROR_MORE_DATA)
     {
-        //printf ("\nDeviceIoControl returned false, GetLastError() was not ERROR_MORE_DATA\n");
+        //wprintf ("\nDeviceIoControl returned false, GetLastError() was not ERROR_MORE_DATA\n");
         free (Bitmap);
         return (false);
     }
@@ -226,12 +226,12 @@ bool DriveVolume::GetBitmap (void)
 
     if (Result == FALSE)
     {
-        printf ("\nCouldn't properly read volume bitmap\n");
+        wprintf (L"\nCouldn't properly read volume bitmap\n");
         free (Bitmap);
         return (false);
     }
 
-    // Convert to a 'quick use' bitmap
+    // Convert to a L'quick use' bitmap
     //const int BitShift[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
     VolInfo.ClusterCount = Bitmap->BitmapSize.QuadPart;
@@ -331,7 +331,7 @@ bool BuildDBCallback (FileInfo &Info, HANDLE &FileHandle, void *UserData)
 }
 
 
-string &DriveVolume::GetDBDir (uint32 Indice)
+wstring &DriveVolume::GetDBDir (uint32 Indice)
 {
     return (Directories[Indice]);
 }
@@ -365,17 +365,17 @@ uint32 DriveVolume::RemoveDBFile (uint32 Indice)
 }
 
 
-bool DriveVolume::ScanDirectory (string DirPrefix, ScanCallback Callback, void *UserData)
+bool DriveVolume::ScanDirectory (wstring DirPrefix, ScanCallback Callback, void *UserData)
 {
     WIN32_FIND_DATA FindData;
     HANDLE          FindHandle;
-    string          SearchString;
+    wstring          SearchString;
     uint32          DirIndice;
 
     DirIndice = Directories.size() - 1;
 
     SearchString = DirPrefix;
-    SearchString += "*.*";
+    SearchString += L"*.*";
     ZeroMemory (&FindData, sizeof (FindData));
     FindHandle = FindFirstFile (SearchString.c_str(), &FindData);
 
@@ -393,8 +393,8 @@ bool DriveVolume::ScanDirectory (string DirPrefix, ScanCallback Callback, void *
         // First copy over the easy stuff.
         Info.Name = FindData.cFileName;
 
-        // Don't ever include '.' and '..'
-        if (Info.Name == "."  ||  Info.Name == "..")
+        // DonLL't ever include '.L' and '..'
+        if (Info.Name == L"."  ||  Info.Name == L"..")
             continue;
 
         //Info.FullName = DirPrefix + Info.Name;
@@ -450,11 +450,11 @@ bool DriveVolume::ScanDirectory (string DirPrefix, ScanCallback Callback, void *
         // If directory, perform recursion
         if (Info.Attributes.Directory == 1)
         {
-            string Dir;
+            wstring Dir;
 
             Dir = GetDBDir (Info.DirIndice);
             Dir += Info.Name;
-            Dir += "\\";
+            Dir += L"\\";
 
             Directories.push_back (Dir);
             ScanDirectory (Dir, Callback, UserData);
@@ -485,7 +485,7 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
 {
     BOOL     Result;
     HANDLE   Handle;
-    string   FullName;
+    wstring   FullName;
     BY_HANDLE_FILE_INFORMATION FileInfo;
 
     Info.Fragments.resize (0);
@@ -529,7 +529,7 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
     if (Result == FALSE)
     {
         Info.Attributes.AccessDenied = 1;
-        printf ("GetFileInformationByHandle ('%s%s') failed\n", GetDBDir (Info.DirIndice).c_str(), 
+        wprintf (L"GetFileInformationByHandle ('%s%s') failed\n", GetDBDir (Info.DirIndice).c_str(), 
             Info.Name.c_str());
 
         CloseHandle (Handle);
@@ -544,7 +544,7 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
     DWORD                      BytesReturned;
 
     // Grab info one extent at a time, until it's done grabbing all the extent data
-    // Yeah, well it doesn't give us a way to ask "how many extents?" that I know of ...
+    // Yeah, well it doesn't give us a way to ask L"how many extents?" that I know of ...
     // btw, the Extents variable tends to only reflect memory usage, so when we have
     // all the extents we look at the structure Win32 gives us for the REAL count!
     Extents = 10;
@@ -668,7 +668,7 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
     bool ReturnVal = false;
     FileInfo Info;
     HANDLE FileHandle;
-    string FullName;
+    wstring FullName;
     MOVE_FILE_DATA MoveData;
     uint64 CurrentLCN;
     uint64 CurrentVCN;
@@ -724,7 +724,7 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
             BOOL Result;
             DWORD BytesReturned;
 
-            //printf ("%3u", i);
+            //wprintf (L"%3u", i);
 
             MoveData.ClusterCount = Info.Fragments[i].Length;
             MoveData.StartingLcn.QuadPart = CurrentLCN;
@@ -733,15 +733,15 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
             MoveData.FileHandle = FileHandle;
 
             /*
-            printf ("\n");
-            printf ("StartLCN: %I64u\n", MoveData.StartingLcn.QuadPart);
-            printf ("StartVCN: %I64u\n", MoveData.StartingVcn.QuadPart);
-            printf ("Clusters: %u (%I64u-%I64u --> %I64u-%I64u)\n", MoveData.ClusterCount,
+            wprintf (L"\n");
+            wprintf (L"StartLCN: %I64u\n", MoveData.StartingLcn.QuadPart);
+            wprintf (L"StartVCN: %I64u\n", MoveData.StartingVcn.QuadPart);
+            wprintf (L"Clusters: %u (%I64u-%I64u --> %I64u-%I64u)\n", MoveData.ClusterCount,
                 Info.Fragments[i].StartLCN,
                 Info.Fragments[i].StartLCN + MoveData.ClusterCount,
                 MoveData.StartingLcn.QuadPart,
                 MoveData.StartingLcn.QuadPart + MoveData.ClusterCount - 1);
-            printf ("\n");
+            wprintf (L"\n");
             */
 
             Result = DeviceIoControl
@@ -756,7 +756,7 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
                 NULL
             );
 
-            //printf ("\b\b\b");
+            //wprintf (L"\b\b\b");
 
             if (Result == FALSE)
             {

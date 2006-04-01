@@ -32,12 +32,12 @@
 #include <stdlib.h>
 
 
-#define APPNAME_CLI   "Unfrag"
-#define APPNAME_GUI   "Fraginator"
-#define APPVER_STR    "1.03"
+#define APPNAME_CLI   L"Unfrag"
+#define APPNAME_GUI   L"Fraginator"
+#define APPVER_STR    L"1.03"
 #define APPVER_NUM     1.03f
-#define APPAUTHOR     "Rick Brewster"
-#define APPCOPYRIGHT  "Copyright 2000-2002 Rick Brewster"
+#define APPAUTHOR     L"Rick Brewster"
+#define APPCOPYRIGHT  L"Copyright 2000-2002 Rick Brewster"
 
 
 #include <vector>
@@ -73,10 +73,10 @@ extern bool CheckWinVer (void);
 
 
 class Defragment;
-extern Defragment *StartDefragThread (string Drive, DefragType Method, HANDLE &Handle);
+extern Defragment *StartDefragThread (wstring Drive, DefragType Method, HANDLE &Handle);
 
 
-extern char *AddCommas (char *Result, uint64 Number);
+extern wchar_t *AddCommas (wchar_t *Result, uint64 Number);
 
 
 #endif // UNFRAG_H

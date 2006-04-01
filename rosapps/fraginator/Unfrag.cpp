@@ -27,7 +27,7 @@ bool CheckWinVer (void)
     // Need Windows 2000!
 
     // Check for NT first
-    // Actually what we do is check that we're not on Win31+Win32s and that we're
+    // Actually what we do is check that weLL're not on Win31+Win32s and that we're
     // not in Windows 9x. It's possible that there could be more Windows "platforms"
     // in the future and there's no sense in claiming incompatibility.
     if (OSVersion.dwPlatformId == VER_PLATFORM_WIN32s  ||
@@ -36,7 +36,7 @@ bool CheckWinVer (void)
         return (false);
     }
 
-    // Ok we're in Windows NT, now make sure we're in 2000
+    // Ok weLL're in Windows NT, now make sure we're in 2000
     if (OSVersion.dwMajorVersion < 5)
         return (false);
 
@@ -45,27 +45,27 @@ bool CheckWinVer (void)
 }
 
 
-char *AddCommas (char *Result, uint64 Number)
+wchar_t *AddCommas (wchar_t *Result, uint64 Number)
 {
-	char  Temp[128];
+	wchar_t  Temp[128];
 	int   TempLen;
-	char *p = NULL;
+	wchar_t *p = NULL;
 	int   AddCommas = 0;
-	char *StrPosResult = NULL;
-	char *StrPosOrig = NULL;
+	wchar_t *StrPosResult = NULL;
+	wchar_t *StrPosOrig = NULL;
 
 	// we get the string form of the number, then we count down w/ AddCommas
 	// while copying the string from Temp1 to Result. when AddCommas % 3  == 1,
 	// slap in a commas as well, before the #.
-	sprintf (Temp, "%I64u", Number);
-	AddCommas = TempLen = strlen (Temp);
+	swprintf (Temp, L"%I64u", Number);
+	AddCommas = TempLen = wcslen (Temp);
 	StrPosOrig   = Temp;
 	StrPosResult = Result;
 	while (AddCommas)
 	{
 		if ((AddCommas % 3) == 0  &&  AddCommas != TempLen) // avoid stuff like ",345"
 		{
-			*StrPosResult = ',';
+			*StrPosResult = L',';
 			StrPosResult++;
 		}
 
@@ -84,9 +84,9 @@ char *AddCommas (char *Result, uint64 Number)
 
 void PrintBanner (void)
 {
-    printf ("%s v%s\n", APPNAME_CLI, APPVER_STR);
-    printf ("%s\n", APPCOPYRIGHT);
-    printf ("\n");
+    wprintf (L"%s v%s\n", APPNAME_CLI, APPVER_STR);
+    wprintf (L"%s\n", APPCOPYRIGHT);
+    wprintf (L"\n");
 
     return;
 }
@@ -94,23 +94,23 @@ void PrintBanner (void)
 
 void FraggerHelp (void)
 {
-    printf ("Usage: unfrag drive: [...] <-f | -e>\n");
-    printf ("\n");
-    printf ("drive:  : The drive to defrag. Should be two characters long, ie 'c:' or 'd:'.\n");
-    printf ("          Multiple drives may be given, and all will be simultaneously\n");
-    printf ("          defragmented using the same options.\n");
-    printf ("-f      : Do a fast defragmentation. Files that are not fragmented will not be\n");
-    printf ("          moved. Only one pass is made over the file list. Using this option\n");
-    printf ("          may result in not all files being defragmented, depending on\n");
-    printf ("          available disk space.\n");
-    printf ("-e      : Do an extensive defragmention. Files will be moved in an attempt to\n");
-    printf ("          defragment both files and free space.\n");
+    wprintf (L"Usage: unfrag drive: [...] <-f | -e>\n");
+    wprintf (L"\n");
+    wprintf (L"drive:  : The drive to defrag. Should be two characters long, ie 'c:' or 'd:'.\n");
+    wprintf (L"          Multiple drives may be given, and all will be simultaneously\n");
+    wprintf (L"          defragmented using the same options.\n");
+    wprintf (L"-f      : Do a fast defragmentation. Files that are not fragmented will not be\n");
+    wprintf (L"          moved. Only one pass is made over the file list. Using this option\n");
+    wprintf (L"          may result in not all files being defragmented, depending on\n");
+    wprintf (L"          available disk space.\n");
+    wprintf (L"-e      : Do an extensive defragmention. Files will be moved in an attempt to\n");
+    wprintf (L"          defragment both files and free space.\n");
 
     if (!CheckWinVer())
     {
-        printf ("\n");
-        printf ("NOTE: This program requires Windows 2000, which is not presently running on\n");
-        printf ("this system.\n");
+        wprintf (L"\n");
+        wprintf (L"NOTE: This program requires Windows 2000, which is not presently running on\n");
+        wprintf (L"this system.\n");
     }
 
     return;
@@ -129,7 +129,7 @@ void __cdecl DefragThread (LPVOID parm)
 }
 
 
-Defragment *StartDefragThread (string Drive, DefragType Method, HANDLE &Handle)
+Defragment *StartDefragThread (wstring Drive, DefragType Method, HANDLE &Handle)
 {
     Defragment *Defragger;
     unsigned long Thread;
@@ -143,12 +143,11 @@ Defragment *StartDefragThread (string Drive, DefragType Method, HANDLE &Handle)
 
 
 // Main Initialization
-int __cdecl main (int argc, char **argv)
+int wmain (int argc, wchar_t **argv)
 {
-    vector<string>       Drives;
+    vector<wstring>       Drives;
     vector<Defragment *> Defrags;
     DefragType           DefragMode = DefragInvalid;
-    int                  d;
 
     PrintBanner ();
 
@@ -156,21 +155,21 @@ int __cdecl main (int argc, char **argv)
     bool ValidCmdLine = false;
     for (int c = 0; c < argc; c++)
     {
-        if (strlen(argv[c]) == 2  &&  argv[c][1] == ':')
+        if (wcslen(argv[c]) == 2  &&  argv[c][1] == L':')
         {
-            Drives.push_back (strupr(argv[c]));
+            Drives.push_back (wcsupr(argv[c]));
         }
         else
-        if (argv[c][0] == '-'  ||  argv[c][0] == '/'  &&  strlen(argv[c]) == 2)
+        if (argv[c][0] == L'-'  ||  argv[c][0] == L'/'  &&  wcslen(argv[c]) == 2)
         {
             switch (tolower(argv[c][1]))
             {
-                case '?' :
-                case 'h' :
+                case L'?' :
+                case L'h' :
                     FraggerHelp ();
                     return (0);
 
-                case 'f' :
+                case L'f' :
                     if (DefragMode != DefragInvalid)
                     {
                         ValidCmdLine = false;
@@ -180,7 +179,7 @@ int __cdecl main (int argc, char **argv)
                     ValidCmdLine = true;
                     break;
 
-                case 'e' :
+                case L'e' :
                     if (DefragMode != DefragInvalid)
                     {
                         ValidCmdLine = false;
@@ -199,25 +198,25 @@ int __cdecl main (int argc, char **argv)
 
     if (!ValidCmdLine)
     {
-        printf ("Invalid command-line options. Use '%s -?' for help.\n", argv[0]);
+        wprintf (L"Invalid command-line options. Use '%s -?' for help.\n", argv[0]);
         return (0);
     }
 
     // Check OS requirements
     if (!CheckWinVer())
     {
-        printf ("Fatal Error: This program requires Windows 2000.\n");
+        wprintf (L"Fatal Error: This program requires Windows 2000.\n");
         return (0);
     }
 
-    for (d = 0; d < Drives.size (); d++)
+	for (size_t d = 0; d < Drives.size (); d++)
     {
         HANDLE TossMe;
         Defrags.push_back (StartDefragThread (Drives[d], DefragMode, TossMe));
     }
 
-    for (d = 0; d < Drives.size () - 1; d++)
-        printf ("\n ");
+    for (size_t d = 0; d < Drives.size () - 1; d++)
+        wprintf (L"\n ");
 
     bool Continue = true;
     HANDLE Screen;
@@ -237,14 +236,14 @@ int __cdecl main (int argc, char **argv)
         ScreenInfo.dwCursorPosition.Y -= Drives.size();
         SetConsoleCursorPosition (Screen, ScreenInfo.dwCursorPosition);
 
-        for (d = 0; d < Drives.size (); d++)
+        for (size_t d = 0; d < Drives.size (); d++)
         {
-            printf ("\n%6.2f%% %-70s", Defrags[d]->GetStatusPercent(), Defrags[d]->GetStatusString().c_str());
+            wprintf (L"\n%6.2f%% %-70s", Defrags[d]->GetStatusPercent(), Defrags[d]->GetStatusString().c_str());
         }
 
         // Determine if we should keep going
         Continue = false;
-        for (d = 0; d < Drives.size (); d++)
+        for (size_t d = 0; d < Drives.size (); d++)
         {
             if (!Defrags[d]->IsDoneYet()  &&  !Defrags[d]->HasError())
                 Continue = true;                
@@ -260,43 +259,43 @@ int __cdecl main (int argc, char **argv)
         Drive = new DriveVolume;
 
         // First thing: build a file list.
-        printf ("Opening volume %s ...", Drives[d].c_str());
+        wprintf (L"Opening volume %s ...", Drives[d].c_str());
         if (!Drive->Open (Drives[d]))
         {
-            printf ("FAILED\n\n");
+            wprintf (L"FAILED\n\n");
             delete Drive;
             continue;
         }
-        printf ("\n");
+        wprintf (L"\n");
 
-        printf ("    Getting drive bitmap ...");
+        wprintf (L"    Getting drive bitmap ...");
         if (!Drive->GetBitmap ())
         {
-            printf ("FAILED\n\n");
+            wprintf (L"FAILED\n\n");
             delete Drive;
             continue;
         }
-        printf ("\n");
+        wprintf (L"\n");
 
-        printf ("    Obtaining drive geometry ...");
+        wprintf (L"    Obtaining drive geometry ...");
         if (!Drive->ObtainInfo ())
         {
-            printf ("FAILED\n\n");
+            wprintf (L"FAILED\n\n");
             delete Drive;
             continue;
         }
-        printf ("\n");
+        wprintf (L"\n");
 
-        printf ("    Building file database for drive %s ...", Drives[d].c_str());
+        wprintf (L"    Building file database for drive %s ...", Drives[d].c_str());
         if (!Drive->BuildFileList ())
         {
-            printf ("FAILED\n\n");
+            wprintf (L"FAILED\n\n");
             delete Drive;
             continue;
         }
-        printf ("\n");
+        wprintf (L"\n");
 
-        printf ("    %u files\n", Drive->GetDBFileCount ());
+        wprintf (L"    %u files\n", Drive->GetDBFileCount ());
 
         // Analyze only?
         if (DefragMode == DefragAnalyze)
@@ -306,9 +305,9 @@ int __cdecl main (int argc, char **argv)
             uint64 SlackBytes = 0;  // wasted space due to slack
             uint32 Fragged    = 0;  // fragmented files
 
-            printf ("    Analyzing ...");
+            wprintf (L"    Analyzing ...");
             if (VerboseMode)
-                printf ("\n");
+                wprintf (L"\n");
 
             for (int i = 0; i < Drive->GetDBFileCount(); i++)
             {
@@ -328,16 +327,16 @@ int __cdecl main (int argc, char **argv)
 
                 if (VerboseMode)
                 {
-                    printf ("    %s%s, ", Drive->GetDBDir (Info.DirIndice).c_str(), Info.Name.c_str());
+                    wprintf (L"    %s%s, ", Drive->GetDBDir (Info.DirIndice).c_str(), Info.Name.c_str());
 
                     if (Info.Attributes.AccessDenied)
-                        printf ("access was denied\n");
+                        wprintf (L"access was denied\n");
                     else
                     {
                         if (Info.Attributes.Unmovable == 1)
-                            printf ("unmovable, ");
+                            wprintf (L"unmovable, ");
 
-                        printf ("%I64u bytes, %I64u bytes on disk, %I64u bytes slack, %u fragments\n", 
+                        wprintf (L"%I64u bytes, %I64u bytes on disk, %I64u bytes slack, %u fragments\n", 
                             Info.Size, Used, Slack, Info.Fragments.size());
                     }
                 }
@@ -347,23 +346,23 @@ int __cdecl main (int argc, char **argv)
             }
 
             if (!VerboseMode)
-                printf ("\n");
+                wprintf (L"\n");
 
             // TODO: Make it not look like ass
-            printf ("\n");
-            printf ("    Overall Analysis\n");
-            printf ("    ----------------\n");
-            printf ("    %u clusters\n", Drive->GetClusterCount ());
-            printf ("    %u bytes per cluster\n", Drive->GetClusterSize());
-            printf ("    %I64u total bytes on drive\n", (uint64)Drive->GetClusterCount() * (uint64)Drive->GetClusterSize());
-            printf ("\n");
-            printf ("    %u files\n", Drive->GetDBFileCount ());
-            printf ("    %u contiguous files\n", Drive->GetDBFileCount () - Fragged);
-            printf ("    %u fragmented files\n", Fragged);
-            printf ("\n");
-            printf ("    %I64u bytes\n", TotalBytes);
-            printf ("    %I64u bytes on disk\n", UsedBytes);
-            printf ("    %I64u bytes slack\n", SlackBytes);
+            wprintf (L"\n");
+            wprintf (L"    Overall Analysis\n");
+            wprintf (L"    ----------------\n");
+            wprintf (L"    %u clusters\n", Drive->GetClusterCount ());
+            wprintf (L"    %u bytes per cluster\n", Drive->GetClusterSize());
+            wprintf (L"    %I64u total bytes on drive\n", (uint64)Drive->GetClusterCount() * (uint64)Drive->GetClusterSize());
+            wprintf (L"\n");
+            wprintf (L"    %u files\n", Drive->GetDBFileCount ());
+            wprintf (L"    %u contiguous files\n", Drive->GetDBFileCount () - Fragged);
+            wprintf (L"    %u fragmented files\n", Fragged);
+            wprintf (L"\n");
+            wprintf (L"    %I64u bytes\n", TotalBytes);
+            wprintf (L"    %I64u bytes on disk\n", UsedBytes);
+            wprintf (L"    %I64u bytes slack\n", SlackBytes);
         }
 
         // Fast defragment!
@@ -371,14 +370,14 @@ int __cdecl main (int argc, char **argv)
         {
             uint32 i;
             uint64 FirstFreeLCN;
-            char PrintName[80];
+            wchar_t PrintName[80];
             int Width = 66;
 
             if (DefragMode == DefragFast)
-                printf ("    Performing fast file defragmentation ...\n");
+                wprintf (L"    Performing fast file defragmentation ...\n");
             else
             if (DefragMode == DefragExtensive)
-                printf ("    Performing extensive file defragmentation\n");
+                wprintf (L"    Performing extensive file defragmentation\n");
 
             // Find first free LCN for speedier searches ...
             Drive->FindFreeRange (0, 1, FirstFreeLCN);
@@ -389,12 +388,12 @@ int __cdecl main (int argc, char **argv)
                 bool Result;
                 uint64 TargetLCN;
 
-                printf ("\r");
+                wprintf (L"\r");
 
                 Info = Drive->GetDBFile (i);
 
                 FitName (PrintName, Drive->GetDBDir (Info.DirIndice).c_str(), Info.Name.c_str(), Width);
-                printf ("    %6.2f%% %-66s", (float)i / (float)Drive->GetDBFileCount() * 100.0f, PrintName);
+                wprintf (L"    %6.2f%% %-66s", (float)i / (float)Drive->GetDBFileCount() * 100.0f, PrintName);
 
                 // Can't defrag 0 byte files :)
                 if (Info.Fragments.size() == 0)
@@ -446,17 +445,17 @@ int __cdecl main (int argc, char **argv)
                     }
 
                     if (!Success)
-                        printf ("\n        -> failed\n");
+                        wprintf (L"\n        -> failed\n");
 
                     Drive->FindFreeRange (0, 1, FirstFreeLCN);
                 }
             }
 
-            printf ("\n");
+            wprintf (L"\n");
         }
-        printf ("Closing volume %s ...", Drives[d].c_str());
+        wprintf (L"Closing volume %s ...", Drives[d].c_str());
         delete Drive;
-        printf ("\n");
+        wprintf (L"\n");
     }
 #endif
 

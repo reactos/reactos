@@ -14,7 +14,7 @@
 
 
 int WINAPI  WinMain (HINSTANCE HInstance, HINSTANCE HPrevInstance, LPSTR CmdLine, int ShowCmd);
-Defragment *StartDefragBox (string Drive, DefragType Method);
+Defragment *StartDefragBox (wstring Drive, DefragType Method);
 
 
 extern HINSTANCE   GlobalHInstance;

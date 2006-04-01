@@ -1,158 +1,233 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="8,00"
 	Name="unfrag"
-	SccProjectName=""
-	SccLocalPath="">
+	ProjectGUID="{8E7E76C1-739B-46E5-99C2-A0504558164B}"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC70.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TypeLibraryName=".\Release/unfrag.tlb"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
-				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="TRUE"
+				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				OptimizeForProcessor="2"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
 				RuntimeLibrary="0"
 				StructMemberAlignment="5"
-				BufferSecurityCheck="FALSE"
+				BufferSecurityCheck="false"
 				PrecompiledHeaderFile=".\Release/unfrag.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				CallingConvention="1"/>
+				SuppressStartupBanner="true"
+				CallingConvention="1"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
-				OutputFile=".\Release/unfrag.exe"
-				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
-				ProgramDatabaseFile=".\Release/unfrag.pdb"
-				SubSystem="1"/>
-			<Tool
-				Name="VCMIDLTool"
-				TypeLibraryName=".\Release/unfrag.tlb"/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying to Program Files ..."
-				CommandLine="copy Release\unfrag.exe &quot;c:\Program Files\Fraginator\unfrag.exe&quot;"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"/>
+				Culture="1033"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386"
+				LinkIncremental="1"
+				SuppressStartupBanner="true"
+				GenerateManifest="false"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying to Program Files ..."
+				CommandLine="copy Release\unfrag.exe &quot;c:\Program Files\Fraginator\unfrag.exe&quot;"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\unfrag___Win32_Debug"
-			IntermediateDirectory=".\unfrag___Win32_Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC70.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TypeLibraryName=".\unfrag___Win32_Debug/unfrag.tlb"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				PrecompiledHeaderFile=".\unfrag___Win32_Debug/unfrag.pch"
-				AssemblerListingLocation=".\unfrag___Win32_Debug/"
-				ObjectFile=".\unfrag___Win32_Debug/"
-				ProgramDataBaseFileName=".\unfrag___Win32_Debug/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="4"/>
+				SuppressStartupBanner="true"
+				DebugInformationFormat="4"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
-				OutputFile=".\unfrag___Win32_Debug/unfrag.exe"
-				LinkIncremental="2"
-				SuppressStartupBanner="TRUE"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\unfrag___Win32_Debug/unfrag.pdb"
-				SubSystem="1"/>
-			<Tool
-				Name="VCMIDLTool"
-				TypeLibraryName=".\unfrag___Win32_Debug/unfrag.tlb"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"/>
+				Culture="1033"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386"
+				LinkIncremental="2"
+				SuppressStartupBanner="true"
+				GenerateManifest="false"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+			>
 			<File
-				RelativePath=".\Defragment.cpp">
+				RelativePath=".\Defragment.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\DriveVolume.cpp">
+				RelativePath=".\DriveVolume.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Unfrag.cpp">
+				RelativePath=".\Unfrag.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl">
+			Filter="h;hpp;hxx;hm;inl"
+			>
 			<File
-				RelativePath=".\Defragment.h">
+				RelativePath=".\Defragment.h"
+				>
 			</File>
 			<File
-				RelativePath=".\DriveVolume.h">
+				RelativePath=".\DriveVolume.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Mutex.h">
+				RelativePath=".\Mutex.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Unfrag.h">
+				RelativePath=".\Unfrag.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
-			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+			>
 		</Filter>
 	</Files>
 	<Globals>

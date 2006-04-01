@@ -51,7 +51,7 @@ typedef struct
 
 typedef struct
 {
-    string   Name;
+    wstring   Name;
     uint32   DirIndice;   // indice into directory list
     uint64   Size;
     uint64   Clusters;
@@ -65,10 +65,10 @@ typedef vector<FileInfo> FileList;
 
 typedef struct
 {
-    string Name;
-    string Serial;
+    wstring Name;
+    wstring Serial;
     DWORD  MaxNameLen;
-    string FileSystem;
+    wstring FileSystem;
     uint64 ClusterCount;
     uint32 ClusterSize;
     uint64 TotalBytes;
@@ -92,7 +92,7 @@ public:
     DriveVolume ();
     ~DriveVolume ();
 
-    bool Open            (string Name);  // opens the volume
+    bool Open            (wstring Name);  // opens the volume
     void Close           (void);
     bool ObtainInfo      (void);         // retrieves drive geometry
     bool GetBitmap       (void);         // gets drive bitmap
@@ -108,7 +108,7 @@ public:
     DISK_GEOMETRY GetGeometry (void) { return (Geometry); }
     VolumeInfo GetVolumeInfo (void) { return (VolInfo); }
 
-    string GetRootPath (void) { return (RootPath); }
+    wstring GetRootPath (void) { return (RootPath); }
 
     // Scans drive starting from the root dir and calls a user defined function
     // for each file/directory encountered. void* UserData is passed to this
@@ -116,7 +116,7 @@ public:
     bool Scan (ScanCallback Callback, void *UserData);
 
     // Retrieve a directory string from the file database
-    string   &GetDBDir       (uint32 Indice);
+    wstring   &GetDBDir       (uint32 Indice);
     uint32    GetDBDirCount  (void);
     // Retrieve file strings/info from the file database
     FileInfo &GetDBFile      (uint32 Indice);
@@ -137,7 +137,7 @@ private:
     friend bool BuildDBCallback (FileInfo &Info, HANDLE &FileHandle, void *UserData);
 
     // DirPrefix should be in the form "drive:\\path\\" ie, C:\CRAP\     .
-    bool ScanDirectory (string DirPrefix, ScanCallback Callback, void *UserData);
+    bool ScanDirectory (wstring DirPrefix, ScanCallback Callback, void *UserData);
 
     // given a file's attributes, should it be processed or not?
     bool ShouldProcess (FileAttr Attr);
@@ -146,8 +146,8 @@ private:
 
     VolumeInfo               VolInfo;
     FileList                 Files;
-    vector<string>           Directories; // Directories[Files[x].DirIndice]
-    string                   RootPath;    // ie, C:\    .
+    vector<wstring>           Directories; // Directories[Files[x].DirIndice]
+    wstring                   RootPath;    // ie, C:\    .
     HANDLE                   Handle;
     DISK_GEOMETRY            Geometry;
     uint32                  *BitmapDetail;

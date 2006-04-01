@@ -6,11 +6,11 @@
 #include "resource.h"
 
 
-void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, char *BytesUnits, bool Fractional)
+void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t *BytesUnits, bool Fractional)
 {
-    char Text[1000];
-    char Text2[1000];
-    char Text3[1000];
+    wchar_t Text[1000];
+    wchar_t Text2[1000];
+    wchar_t Text3[1000];
 
     memset (Text, 0, sizeof (Text));
 
@@ -29,14 +29,14 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, char *B
     // DiskSizeBytes
     if (Fractional)
     {
-        sprintf (Text, "%.2f %s", (double)(signed)(Report.DiskSizeBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Report.DiskSizeBytes / 
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
     {
         AddCommas (Text, Report.DiskSizeBytes / BytesDivisor);
-        strcat (Text, " ");
-        strcat (Text, BytesUnits);
+        wcscat (Text, L" ");
+        wcscat (Text, BytesUnits);
     }
 
     SetDlgItemText (Dlg, IDC_DISKSIZEBYTES, Text);
@@ -44,24 +44,24 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, char *B
     // DiskFreeBytes
     if (Fractional)
     {
-        sprintf (Text, "%.2f %s", (double)(signed)(Defrag->GetVolume().GetVolumeInfo().FreeBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Defrag->GetVolume().GetVolumeInfo().FreeBytes / 
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
     {
         AddCommas (Text, Defrag->GetVolume().GetVolumeInfo().FreeBytes / BytesDivisor);
-        strcat (Text, " ");
-        strcat (Text, BytesUnits);
+        wcscat (Text, L" ");
+        wcscat (Text, BytesUnits);
     }
     SetDlgItemText (Dlg, IDC_DISKFREEBYTES, Text);
 
     // DiskSizeClusters
     AddCommas (Text, Defrag->GetVolume().GetVolumeInfo().ClusterCount);
-    strcat (Text, " clusters");
+    wcscat (Text, L" clusters");
     SetDlgItemText (Dlg, IDC_DISKSIZECLUSTERS, Text);
 
     // DiskClusterSize
-    sprintf (Text, "%u bytes", Defrag->GetVolume().GetVolumeInfo().ClusterSize);
+    swprintf (Text, L"%u bytes", Defrag->GetVolume().GetVolumeInfo().ClusterSize);
     SetDlgItemText (Dlg, IDC_DISKCLUSTERSIZE, Text);
 
     // DirsCount
@@ -73,40 +73,40 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, char *B
     SetDlgItemText (Dlg, IDC_FILESCOUNT, Text);
 
     // FilesFragged
-    sprintf (Text, "(%.2f%%)", Report.PercentFragged);
+    swprintf (Text, L"(%.2f%%)", Report.PercentFragged);
     AddCommas (Text2, Report.FraggedFiles.size());
-    sprintf (Text3, "%s %s", Text, Text2);
+    swprintf (Text3, L"%s %s", Text, Text2);
     SetDlgItemText (Dlg, IDC_FILESFRAGGED, Text3);
 
     // Average Frags
-    sprintf (Text, "%.2f", Report.AverageFragments);
+    swprintf (Text, L"%.2f", Report.AverageFragments);
     SetDlgItemText (Dlg, IDC_AVERAGEFRAGS, Text);
 
     // FilesSizeBytes
     if (Fractional)
     {
-        sprintf (Text, "%.2f %s", (double)(signed)(Report.FilesSizeBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Report.FilesSizeBytes / 
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
     {
         AddCommas (Text, Report.FilesSizeBytes / (uint64)BytesDivisor);
-        strcat (Text, " ");
-        strcat (Text, BytesUnits);
+        wcscat (Text, L" ");
+        wcscat (Text, BytesUnits);
     }
     SetDlgItemText (Dlg, IDC_FILESSIZEBYTES, Text);
 
     // Files SizeOnDisk
     if (Fractional)
     {
-        sprintf (Text, "%.2f %s", (double)(signed)((Report.FilesSizeBytes + Report.FilesSlackBytes) / 
+        swprintf (Text, L"%.2f %s", (double)(signed)((Report.FilesSizeBytes + Report.FilesSlackBytes) / 
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
     {
         AddCommas (Text, (Report.FilesSizeBytes + Report.FilesSlackBytes) / (uint64)BytesDivisor);
-        strcat (Text, " ");
-        strcat (Text, BytesUnits);
+        wcscat (Text, L" ");
+        wcscat (Text, BytesUnits);
        
     }
     SetDlgItemText (Dlg, IDC_FILESSIZEONDISK, Text);
@@ -114,17 +114,17 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, char *B
     // FilesSlackBytes
     if (Fractional)
     {
-        sprintf (Text, "%.2f %s", (double)(signed)(Report.FilesSlackBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Report.FilesSlackBytes / 
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
     {
         AddCommas (Text, Report.FilesSlackBytes / BytesDivisor);
-        strcat (Text, " ");
-        strcat (Text, BytesUnits);
+        wcscat (Text, L" ");
+        wcscat (Text, BytesUnits);
     }
-    sprintf (Text2, "(%.2f%%)", Report.PercentSlack);
-    sprintf (Text3, "%s %s", Text2, Text);
+    swprintf (Text2, L"(%.2f%%)", Report.PercentSlack);
+    swprintf (Text3, L"%s %s", Text2, Text);
     SetDlgItemText (Dlg, IDC_FILESSLACKBYTES, Text3);
 
     // Recommendation
@@ -137,55 +137,55 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, char *B
     if (Report.AverageFragments >= 1.1f)
         AFRec = true;
 
-    strcpy (Text, "* ");
+    wcscpy (Text, L"* ");
 
     if (PFRec)
     {
-        sprintf 
+        swprintf 
         (
             Text2,
-            "%.2f%% of the files on this volume are fragmented. ",
+            L"%.2f%% of the files on this volume are fragmented. ",
             Report.PercentFragged
         );
 
-        strcat (Text, Text2);
+        wcscat (Text, Text2);
     }
 
     if (AFRec)
     {
-        sprintf
+        swprintf
         (
             Text2,
-            "The average fragments per file (%.2f) indicates a high degree of fragmentation. ",
+            L"The average fragments per file (%.2f) indicates a high degree of fragmentation. ",
             Report.AverageFragments
         );
 
-        strcat (Text, Text2);
+        wcscat (Text, Text2);
     }
 
     if (Report.PercentFragged <  5.0f  &&  Report.AverageFragments < 1.1f)
-        sprintf (Text, "* No defragmentation is necessary at this point.");
+        swprintf (Text, L"* No defragmentation is necessary at this point.");
     else
     if (Report.PercentFragged < 15.0f  &&  Report.AverageFragments < 1.3f)
-        strcat (Text, "It is recommended that you perform a Fast Defrag.");
+        wcscat (Text, L"It is recommended that you perform a Fast Defrag.");
     else
-        strcat (Text, "It is recommended that you perform an Extensive Defrag.");
+        wcscat (Text, L"It is recommended that you perform an Extensive Defrag.");
 
     // Should we recommend a smaller cluster size?
     if (Report.PercentSlack >= 10.0f)
     {
-        sprintf 
+        swprintf 
         (
             Text2, 
-            "\n* A large amount of disk space (%.2f%%) is being lost "
-            "due to a large (%u bytes) cluster size. It is recommended "
-            "that you use a disk utility such as Partition Magic to "
-            "reduce the cluster size of this volume.",
+            L"\n* A large amount of disk space (%.2f%%) is being lost "
+            L"due to a large (%u bytes) cluster size. It is recommended "
+            L"that you use a disk utility such as Partition Magic to "
+            L"reduce the cluster size of this volume.",
             Report.PercentSlack,
             Defrag->GetVolume().GetVolumeInfo().ClusterSize
         );
 
-        strcat (Text, Text2);
+        wcscat (Text, Text2);
     }
 
     SetDlgItemText (Dlg, IDC_RECOMMEND, Text);
@@ -199,7 +199,7 @@ INT_PTR CALLBACK ReportDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPa
     switch (Msg)
     {
         case WM_INITDIALOG:
-            SetReportInfo (Dlg, Defrag->GetDefragReport (), 1, "bytes", false);
+            SetReportInfo (Dlg, Defrag->GetDefragReport (), 1, L"bytes", false);
             return (1);
 
         case WM_COMMAND:
@@ -210,19 +210,19 @@ INT_PTR CALLBACK ReportDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPa
                     return (1);
 
                 case IDC_GIGABYTES:
-                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1024*1024*1024, "GB", true);
+                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1024*1024*1024, L"GB", true);
                     return (1);
 
                 case IDC_MEGABYTES:
-                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1024*1024, "MB", false);
+                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1024*1024, L"MB", false);
                     return (1);
 
                 case IDC_KILOBYTES:
-                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1024, "KB", false);
+                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1024, L"KB", false);
                     return (1);
 
                 case IDC_BYTES:
-                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1, "bytes", false);
+                    SetReportInfo (Dlg, Defrag->GetDefragReport (), 1, L"bytes", false);
                     return (1);
             }
     }

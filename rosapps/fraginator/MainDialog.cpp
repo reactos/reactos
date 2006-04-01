@@ -6,7 +6,7 @@
 #include "ReportDialog.h"
 
 
-vector<string> DrivesList;
+vector<wstring> DrivesList;
 LRESULT AnalyzeID;
 LRESULT FastID;
 LRESULT ExtensiveID;
@@ -24,8 +24,8 @@ LRESULT PriIdleID;
 void             InitDialog       (HWND Dlg);
 void             UpdateDefragInfo (HWND Dlg);
 void             UpdatePriority   (HWND Dlg);
-string           GetDefaultTitle  (void);
-string           GetDefragTitle   (void);
+wstring           GetDefaultTitle  (void);
+wstring           GetDefragTitle   (void);
 void             SetDisables      (HWND Dlg);
 INT_PTR CALLBACK MainDialogProc   (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LParam);
 
@@ -38,7 +38,7 @@ static void InitDialog (HWND Dlg)
     int d;
 
     // Clear out wisecracks line for now
-    SetDlgItemText (Dlg, IDC_WISECRACKS, "\"Defrag, baby!\"");
+    SetDlgItemText (Dlg, IDC_WISECRACKS, L"\"Defrag, baby!\"");
 
     // Make list of logical drives
     DrivesList.resize (0);
@@ -48,10 +48,10 @@ static void InitDialog (HWND Dlg)
     {
         if (DriveMask & (1 << d))
         {
-            string Name;
+            wstring Name;
 
-            Name = (char)('A' + d);
-            Name += ':';
+            Name = (wchar_t)(L'A' + d);
+            Name += L':';
             DrivesList.push_back (Name);
         }
     }
@@ -67,23 +67,23 @@ static void InitDialog (HWND Dlg)
     // Put in defrag methods
     DlgItem = GetDlgItem (Dlg, IDC_METHODS_LIST);
     SendMessage (DlgItem, CB_RESETCONTENT, 0, 0);
-    AnalyzeID   = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Analyze Only");
-    FastID      = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Fast Defrag");
-    ExtensiveID = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Extensive Defrag");
+    AnalyzeID   = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Analyze Only");
+    FastID      = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Fast Defrag");
+    ExtensiveID = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Extensive Defrag");
 
     // Set up process priorities
     DlgItem = GetDlgItem (Dlg, IDC_PRIORITY_LIST);
     SendMessage (Dlg, CB_RESETCONTENT, 0, 0);
-    PriHighID      = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "High");
-    PriAboveNormID = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Above Normal");
-    PriNormalID    = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Normal");
-    PriBelowNormID = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Below Normal");
-    PriIdleID      = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) "Idle");
+    PriHighID      = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"High");
+    PriAboveNormID = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Above Normal");
+    PriNormalID    = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Normal");
+    PriBelowNormID = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Below Normal");
+    PriIdleID      = SendMessage (DlgItem, CB_ADDSTRING, 0, (LPARAM) L"Idle");
     UpdatePriority (Dlg);
 
     // Reset texts and progress meters
-    SendDlgItemMessage (Dlg, IDC_STATUS,   WM_SETTEXT,   0, (LPARAM) "");
-    SendDlgItemMessage (Dlg, IDC_PERCENT,  WM_SETTEXT,   0, (LPARAM) "");
+    SendDlgItemMessage (Dlg, IDC_STATUS,   WM_SETTEXT,   0, (LPARAM) L"");
+    SendDlgItemMessage (Dlg, IDC_PERCENT,  WM_SETTEXT,   0, (LPARAM) L"");
     SendDlgItemMessage (Dlg, IDC_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM (0, 10000));
     SendDlgItemMessage (Dlg, IDC_PROGRESS, PBM_SETPOS,   0, 0);
 
@@ -93,10 +93,10 @@ static void InitDialog (HWND Dlg)
 
 void UpdateDefragInfo (HWND Dlg)
 {
-    char PercentText[100];
+    wchar_t PercentText[100];
     static double OldPercent = 200.0f;
-    static string OldStatus = "Non";
-    string NewStatus;
+    static wstring OldStatus = L"Non";
+    wstring NewStatus;
     double NewPercent;
 
     if (Defrag == NULL)
@@ -109,7 +109,7 @@ void UpdateDefragInfo (HWND Dlg)
         NewPercent = 0.0f;
     if (NewPercent != OldPercent)
     {
-        sprintf (PercentText, "%6.2f%%", NewPercent);
+        swprintf (PercentText, L"%6.2f%%", NewPercent);
         SendDlgItemMessage (Dlg, IDC_PERCENT, WM_SETTEXT, 0, (LPARAM) PercentText);
         SendDlgItemMessage (Dlg, IDC_PROGRESS, PBM_SETPOS, 
             (WPARAM) (int)(NewPercent * 100.0f), 0);
@@ -119,16 +119,16 @@ void UpdateDefragInfo (HWND Dlg)
     NewStatus = Defrag->GetStatusString ();
     if (NewStatus != OldStatus)
     {   // Change & characters to && to avoid underlining
-        string Status;
-        string::iterator it;
+        wstring Status;
+        wstring::iterator it;
 
         Status = NewStatus;
         it = Status.begin ();
         while (it < Status.end())
         {
-            if (*it == '&')
+            if (*it == L'&')
             {
-                Status.insert (it, 1, '&');
+                Status.insert (it, 1, L'&');
                 it++;
             }
 
@@ -145,29 +145,29 @@ void UpdateDefragInfo (HWND Dlg)
 }
 
 
-string GetDefaultTitle (void)
+wstring GetDefaultTitle (void)
 {
-    string DefaultText;
+    wstring DefaultText;
 
-    DefaultText = string(string(APPNAME_GUI) + string(" v") + string(APPVER_STR) +
-                  string(" (C) 2000 by Rick Brewster"));
+    DefaultText = wstring(wstring(APPNAME_GUI) + wstring(L" v") + wstring(APPVER_STR) +
+                  wstring(L" (C) 2000 by Rick Brewster"));
 
     return (DefaultText);
 }
 
 
-string GetDefragTitle (void)
+wstring GetDefragTitle (void)
 {
-    string DefragText;
-    char Percent[10];
+    wstring DefragText;
+    wchar_t Percent[10];
 
-    sprintf (Percent, "%.2f%%", Defrag->GetStatusPercent());
+    swprintf (Percent, L"%.2f%%", Defrag->GetStatusPercent());
 
     DefragText = GetDefaultTitle ();
     if (Defrag != NULL)
     {
-        DefragText = string(Percent) + string (" - ") + Defrag->GetVolume().GetRootPath() + 
-            string (" - ") + DefragText;
+        DefragText = wstring(Percent) + wstring (L" - ") + Defrag->GetVolume().GetRootPath() + 
+            wstring (L" - ") + DefragText;
     }
 
     return (DefragText);
@@ -176,17 +176,17 @@ string GetDefragTitle (void)
 
 void SetDisables (HWND Dlg)
 {
-    // If a defrag is in process, set 'Start' button to say 'Stop' and disable
+    // If a defrag is in process, set L'Start' button to say L'Stop' and disable
     // the Select Drive and Select Action controls
     if (Defrag != NULL  &&  !Defrag->IsDoneYet()  &&  !Defrag->HasError())
     {
-        SendMessage (GetDlgItem (Dlg, IDC_STARTSTOP), WM_SETTEXT, 0, (LPARAM) "Stop");
+        SendMessage (GetDlgItem (Dlg, IDC_STARTSTOP), WM_SETTEXT, 0, (LPARAM) L"Stop");
         EnableWindow (GetDlgItem (Dlg, IDC_DRIVES_LIST), FALSE);
         EnableWindow (GetDlgItem (Dlg, IDC_METHODS_LIST), FALSE);
     }
     else
     {
-        SendMessage (GetDlgItem (Dlg, IDC_STARTSTOP), WM_SETTEXT, 0, (LPARAM) "Start");
+        SendMessage (GetDlgItem (Dlg, IDC_STARTSTOP), WM_SETTEXT, 0, (LPARAM) L"Start");
         EnableWindow (GetDlgItem (Dlg, IDC_STARTSTOP), TRUE);
         EnableWindow (GetDlgItem (Dlg, IDC_QUIT), TRUE);
         EnableWindow (GetDlgItem (Dlg, IDC_DRIVES_LIST), TRUE);
@@ -235,7 +235,7 @@ bool GetRegKeys (HKEY *RegKeyResult)
     Error = RegCreateKeyEx
     (
         HKEY_CURRENT_USER,
-        "Software\\Fraginator",
+        L"Software\\Fraginator",
         0,
         NULL,
         REG_OPTION_NON_VOLATILE,
@@ -303,7 +303,7 @@ void SaveSettings (HWND Dlg)
     RegSetValueEx
     (
         RegKey,
-        "Default Action",
+        L"Default Action",
         0,
         REG_DWORD,
         (CONST BYTE *)&DefragVal,
@@ -313,7 +313,7 @@ void SaveSettings (HWND Dlg)
     RegSetValueEx
     (
         RegKey,
-        "Process Priority",
+        L"Process Priority",
         0,
         REG_DWORD,
         (CONST BYTE *)&PriVal,
@@ -346,7 +346,7 @@ void LoadSettings (HWND Dlg)
     Error = RegQueryValueEx
     (
         RegKey,
-        "Default Action",
+        L"Default Action",
         0,
         &RegType,
         (BYTE *)&DTypeVal,
@@ -359,7 +359,7 @@ void LoadSettings (HWND Dlg)
     Error = RegQueryValueEx
     (
         RegKey,
-        "Process Priority",
+        L"Process Priority",
         0,
         &RegType,
         (BYTE *)&PriVal,
@@ -419,7 +419,7 @@ void LoadSettings (HWND Dlg)
 
 
 #define IDLETIME 25
-string OldWindowText = "";
+wstring OldWindowText = L"";
 
 INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LParam)
 {
@@ -443,7 +443,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
         case WM_TIMER:
             if (Defrag != NULL  &&  !ReEntrance)
             {
-                string NewTitle;
+                wstring NewTitle;
 
                 SendMessage (Dlg, WM_UPDATEINFO, 0, 0);
 
@@ -503,7 +503,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
 
 
                 case ID_MAIN_HELP:
-                    ShellExecute (Dlg, "open", "Fraginator.chm", "", ".", SW_SHOW);
+                    ShellExecute (Dlg, L"open", L"Fraginator.chm", L"", L".", SW_SHOW);
                     return (1);
 
 
@@ -524,8 +524,8 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
 
                 case IDC_STARTSTOP:
                     if (Defrag == NULL)
-                    {   // "Start"
-                        char Drive[10];
+                    {   // L"Start"
+                        wchar_t Drive[10];
                         LRESULT ID;
                         DefragType Method;
                         HANDLE H;
@@ -536,7 +536,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
                         SendMessage (GetDlgItem (Dlg, IDC_DRIVES_LIST), WM_GETTEXT, 
                             sizeof (Drive) - 1, (LPARAM) Drive);
 
-                        if (strlen(Drive) != 2  ||  Drive[1] != ':')
+                        if (wcslen(Drive) != 2  ||  Drive[1] != L':')
                             return (1);
 
                         ID = SendMessage (GetDlgItem (Dlg, IDC_METHODS_LIST), CB_GETCURSEL, 0, 0);
@@ -559,7 +559,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
                         }   
                     }
                     else
-                    {   // "Stop"
+                    {   // L"Stop"
                         Stopping = true;
                         Defrag->Stop ();
                         EnableWindow (GetDlgItem (Dlg, IDC_STARTSTOP), FALSE);

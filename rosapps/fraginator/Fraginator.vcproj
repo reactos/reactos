@@ -1,200 +1,292 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="8,00"
 	Name="Fraginator"
-	SccProjectName=""
-	SccLocalPath="">
+	ProjectGUID="{7CB0DB3F-D4AB-4A99-807F-C56CC9F0B19C}"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC70.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			ManagedExtensions="0"
+			>
 			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="3"
-				GlobalOptimizations="TRUE"
-				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="TRUE"
-				FavorSizeOrSpeed="1"
-				OptimizeForProcessor="2"
-				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
-				ExceptionHandling="TRUE"
-				RuntimeLibrary="0"
-				StructMemberAlignment="5"
-				BufferSecurityCheck="FALSE"
-				PrecompiledHeaderFile=".\Release/Fraginator.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
-				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				CompileAsManaged="0"
-				CallingConvention="1"/>
+				Name="VCPreBuildEventTool"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCCustomBuildTool"
+			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="comctl32.lib odbc32.lib odbccp32.lib"
-				OutputFile=".\Release/Fraginator.exe"
-				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
-				SubSystem="2"/>
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="TRUE"
-				SuppressStartupBanner="TRUE"
+				MkTypLibCompatible="true"
+				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/Fraginator.tlb"/>
+				TypeLibraryName=".\Release/Fraginator.tlb"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying to Program Files ..."
-				CommandLine="copy Release\Fraginator.exe &quot;c:\Program Files\Fraginator\Fraginator.exe&quot;"/>
+				Name="VCCLCompilerTool"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
+				ExceptionHandling="1"
+				RuntimeLibrary="0"
+				StructMemberAlignment="5"
+				BufferSecurityCheck="false"
+				PrecompiledHeaderFile=".\Release/Fraginator.pch"
+				WarningLevel="3"
+				SuppressStartupBanner="true"
+				CallingConvention="1"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"/>
+				Culture="1033"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386"
+				AdditionalDependencies="user32.lib advapi32.lib shell32.lib comctl32.lib"
+				LinkIncremental="1"
+				SuppressStartupBanner="true"
+				GenerateManifest="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying to Program Files ..."
+				CommandLine="copy Release\Fraginator.exe &quot;c:\Program Files\Fraginator\Fraginator.exe&quot;"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC70.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="true"
+				SuppressStartupBanner="true"
+				TargetEnvironment="1"
+				TypeLibraryName=".\Debug/Fraginator.tlb"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32,_DEBUG,_WINDOWS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				PrecompiledHeaderFile=".\Debug/Fraginator.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="4"/>
+				SuppressStartupBanner="true"
+				DebugInformationFormat="4"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="comctl32.lib odbc32.lib odbccp32.lib"
-				OutputFile=".\Debug/Fraginator.exe"
-				LinkIncremental="2"
-				SuppressStartupBanner="TRUE"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Debug/Fraginator.pdb"
-				SubSystem="2"/>
-			<Tool
-				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="TRUE"
-				SuppressStartupBanner="TRUE"
-				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/Fraginator.tlb"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"/>
+				Culture="1033"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386"
+				AdditionalDependencies="user32.lib advapi32.lib shell32.lib comctl32.lib"
+				LinkIncremental="2"
+				SuppressStartupBanner="true"
+				GenerateManifest="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+			>
 			<File
-				RelativePath=".\Defragment.cpp">
+				RelativePath=".\Defragment.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\DriveVolume.cpp">
+				RelativePath=".\DriveVolume.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\Fraginator.cpp">
+				RelativePath=".\Fraginator.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\MainDialog.cpp">
+				RelativePath=".\MainDialog.cpp"
+				>
 			</File>
 			<File
-				RelativePath=".\ReportDialog.cpp">
+				RelativePath=".\ReportDialog.cpp"
+				>
 			</File>
 			<File
-				RelativePath="Unfrag.cpp">
+				RelativePath="Unfrag.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl">
+			Filter="h;hpp;hxx;hm;inl"
+			>
 			<File
-				RelativePath=".\Defragment.h">
+				RelativePath=".\Defragment.h"
+				>
 			</File>
 			<File
-				RelativePath=".\DriveVolume.h">
+				RelativePath=".\DriveVolume.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Fraginator.h">
+				RelativePath=".\Fraginator.h"
+				>
 			</File>
 			<File
-				RelativePath=".\MainDialog.h">
+				RelativePath=".\MainDialog.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Mutex.h">
+				RelativePath=".\Mutex.h"
+				>
 			</File>
 			<File
-				RelativePath=".\ReportDialog.h">
+				RelativePath=".\ReportDialog.h"
+				>
 			</File>
 			<File
-				RelativePath=".\Unfrag.h">
+				RelativePath=".\resource.h"
+				>
 			</File>
 			<File
-				RelativePath=".\resource.h">
+				RelativePath=".\Unfrag.h"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
-			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+			>
 			<File
-				RelativePath=".\Fraginator Help - Fraginator Icon.bmp">
+				RelativePath=".\default1.bin"
+				>
 			</File>
 			<File
-				RelativePath=".\Fraginator Motif Icon.bmp">
+				RelativePath=".\Fraginator Help - Fraginator Icon.bmp"
+				>
 			</File>
 			<File
-				RelativePath=".\Fraginator.rc">
+				RelativePath=".\Fraginator Motif Icon.bmp"
+				>
 			</File>
 			<File
-				RelativePath=".\default1.bin">
+				RelativePath=".\Fraginator.rc"
+				>
 			</File>
 			<File
-				RelativePath=".\icon1.ico">
+				RelativePath=".\icon1.ico"
+				>
 			</File>
 		</Filter>
 	</Files>

@@ -6,16 +6,16 @@
 // and fits it to a given length. If it has to truncate it will first truncate from the path,
 // substituting in periods. So you might end up with something like:
 // C:\Program Files\Micro...\Register.exe
-int FitName (char *destination, const char *path, const char *filename, uint32 totalWidth)
+int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename, uint32 totalWidth)
 {
 	uint32 pathLen=0;
 	uint32 fnLen=0;
 	uint32 halfTotLen=0;
 	uint32 len4fn=0;     /* number of chars remaining for filename after path is applied */
 	uint32 len4path=0;   /* number of chars for path before filename is applied          */
-	char fmtStrPath[20]="";
-	char fmtStrFile[20]="";
-	char fmtString[40]="";
+	wchar_t fmtStrPath[20]=L"";
+	wchar_t fmtStrFile[20]=L"";
+	wchar_t fmtString[40]=L"";
 
     /*
 	assert (destination != NULL);
@@ -24,8 +24,8 @@ int FitName (char *destination, const char *path, const char *filename, uint32 t
 	assert (totalWidth != 0);
     */
 
-	pathLen = strlen(path);
-	fnLen = strlen(filename);
+	pathLen = wcslen(path);
+	fnLen = wcslen(filename);
 	if (!(totalWidth % 2))
 		halfTotLen=totalWidth / 2;
 	else
@@ -58,28 +58,28 @@ int FitName (char *destination, const char *path, const char *filename, uint32 t
 	}
 	/* 
 		if halfTotLen was adjusted above to avoid a rounding error, give the 
-		extra char to the filename 
+		extra wchar_t to the filename 
 	*/
 	if (halfTotLen < (totalWidth/2)) len4path++; 
 
-	if (pathLen > len4path)	sprintf (fmtStrPath, "%%.%ds...\\", len4path-4);
+	if (pathLen > len4path)	swprintf (fmtStrPath, L"%%.%ds...\\", len4path-4);
 	else
-		sprintf (fmtStrPath, "%%s");
+		swprintf (fmtStrPath, L"%%s");
 	
-	if (fnLen > len4fn)	sprintf (fmtStrFile, "%%.%ds...", len4fn-3);
+	if (fnLen > len4fn)	swprintf (fmtStrFile, L"%%.%ds...", len4fn-3);
 	else
-		sprintf (fmtStrFile, "%%s");
+		swprintf (fmtStrFile, L"%%s");
 
-	strcpy (fmtString, fmtStrPath);
-	strcat (fmtString, fmtStrFile);
-	/*sprintf (fmtString, "%s%s", fmtStrPath, fmtStrFile);*/
-	sprintf (destination, fmtString, path,filename);
+	wcscpy (fmtString, fmtStrPath);
+	wcscat (fmtString, fmtStrFile);
+	/*swprintf (fmtString, L"%s%s", fmtStrPath, fmtStrFile);*/
+	swprintf (destination, fmtString, path,filename);
 	
 	return (1);	
 }
 
 
-Defragment::Defragment (string Name, DefragType DefragMethod)
+Defragment::Defragment (wstring Name, DefragType DefragMethod)
 {
     Method = DefragMethod;
     DoLimitLength = true;
@@ -91,10 +91,10 @@ Defragment::Defragment (string Name, DefragType DefragMethod)
     StatusPercent = 0.0f;
     LastBMPUpdate = GetTickCount ();
 
-    SetStatusString ("Opening volume " + Name);
+    SetStatusString (L"Opening volume " + Name);
     if (!Volume.Open (Name))
     {
-        SetStatusString ("Error opening volume " + Name);
+        SetStatusString (L"Error opening volume " + Name);
         Error = true;
         Done = true;
         StatusPercent = 100.0f;
@@ -111,7 +111,7 @@ Defragment::~Defragment ()
         Stop ();
         while (!IsDoneYet()  &&  !HasError())
         {
-            SetStatusString ("Waiting for thread to stop ...");
+            SetStatusString (L"Waiting for thread to stop ...");
             Sleep (150);
         }
     }
@@ -121,7 +121,7 @@ Defragment::~Defragment ()
 }
 
 
-void Defragment::SetStatusString (string NewStatus)
+void Defragment::SetStatusString (wstring NewStatus)
 {
     Lock ();
     StatusString = NewStatus;
@@ -131,9 +131,9 @@ void Defragment::SetStatusString (string NewStatus)
 }
 
 
-string Defragment::GetStatusString (void)
+wstring Defragment::GetStatusString (void)
 {
-    string ReturnVal;
+    wstring ReturnVal;
 
     Lock ();
     ReturnVal = StatusString;
@@ -161,17 +161,17 @@ void Defragment::Start (void)
     uint64 FirstFreeLCN;
     uint64 TotalClusters;
     uint64 ClustersProgress;
-    char PrintName[80];
+    wchar_t PrintName[80];
     int Width = 70;
 
     if (Error)
         goto DoneDefrag;
 
     // First thing: build a file list.
-    SetStatusString ("Getting volume bitmap");
+    SetStatusString (L"Getting volume bitmap");
     if (!Volume.GetBitmap())
     {
-        SetStatusString ("Could not get volume " + DriveName + " bitmap");
+        SetStatusString (L"Could not get volume " + DriveName + L" bitmap");
         Error = true;
         goto DoneDefrag;
     }
@@ -181,10 +181,10 @@ void Defragment::Start (void)
     if (PleaseStop)
         goto DoneDefrag;
 
-    SetStatusString ("Obtaining volume geometry");
+    SetStatusString (L"Obtaining volume geometry");
     if (!Volume.ObtainInfo ())
     {
-        SetStatusString ("Could not obtain volume " + DriveName + " geometry");
+        SetStatusString (L"Could not obtain volume " + DriveName + L" geometry");
         Error = true;
         goto DoneDefrag;
     }
@@ -192,10 +192,10 @@ void Defragment::Start (void)
     if (PleaseStop)
         goto DoneDefrag;
 
-    SetStatusString ("Building file database for volume " + DriveName);
+    SetStatusString (L"Building file database for volume " + DriveName);
     if (!Volume.BuildFileList (PleaseStop, StatusPercent))
     {
-        SetStatusString ("Could not build file database for volume " + DriveName);
+        SetStatusString (L"Could not build file database for volume " + DriveName);
         Error = true;
         goto DoneDefrag;
     }
@@ -203,7 +203,7 @@ void Defragment::Start (void)
     if (PleaseStop)
         goto DoneDefrag;
 
-    SetStatusString ("Analyzing database for " + DriveName);
+    SetStatusString (L"Analyzing database for " + DriveName);
     TotalClusters = 0;
     for (i = 0; i < Volume.GetDBFileCount(); i++)
     {
@@ -287,7 +287,7 @@ void Defragment::Start (void)
         // What? They want us to pause? Oh ok.
         if (PleasePause)
         {
-            SetStatusString ("Paused");
+            SetStatusString (L"Paused");
             PleasePause = false;
 
             while (PleasePause == false)
@@ -300,7 +300,7 @@ void Defragment::Start (void)
 
         if (PleaseStop)
         {
-            SetStatusString ("Stopping");
+            SetStatusString (L"Stopping");
             break;
         }
 
@@ -374,11 +374,11 @@ void Defragment::Start (void)
             else
             if (!Result  ||  Retry != 1)
             {   // hmm. Wait for a moment, then update the drive bitmap
-                //SetStatusString ("(Reobtaining volume " + DriveName + " bitmap)");
+                //SetStatusString (L"(Reobtaining volume " + DriveName + L" bitmap)");
 
                 if (!DoLimitLength)
                 {
-                    SetStatusString (GetStatusString() + string (" ."));
+                    SetStatusString (GetStatusString() + wstring (L" ."));
                 }
 
                 if (Volume.GetBitmap ())
@@ -394,7 +394,7 @@ void Defragment::Start (void)
                 }
                 else
                 {
-                    SetStatusString ("Could not re-obtain volume " + DriveName + " bitmap");
+                    SetStatusString (L"Could not re-obtain volume " + DriveName + L" bitmap");
                     Error = true;
                 }
             }
@@ -407,22 +407,22 @@ void Defragment::Start (void)
     }
 
 DoneDefrag:
-    string OldStatus;
+    wstring OldStatus;
 
     OldStatus = GetStatusString ();
     StatusPercent = 99.999999f;
-    SetStatusString ("Closing volume " + DriveName);
+    SetStatusString (L"Closing volume " + DriveName);
     Volume.Close ();
     StatusPercent = 100.0f;
 
-    // If there was an error then the string has already been set
+    // If there was an error then the wstring has already been set
     if (Error)
         SetStatusString (OldStatus);
     else
     if (PleaseStop)
-        SetStatusString ("Volume " + DriveName + " defragmentation was stopped");
+        SetStatusString (L"Volume " + DriveName + L" defragmentation was stopped");
     else
-        SetStatusString ("Finished defragmenting " + DriveName);
+        SetStatusString (L"Finished defragmenting " + DriveName);
 
     Done = true;
 
@@ -433,7 +433,7 @@ DoneDefrag:
 void Defragment::TogglePause (void)
 {
     Lock ();
-    SetStatusString ("Pausing ...");
+    SetStatusString (L"Pausing ...");
     PleasePause = true;
     Unlock ();
 
@@ -444,7 +444,7 @@ void Defragment::TogglePause (void)
 void Defragment::Stop (void)
 {
     Lock ();
-    SetStatusString ("Stopping ...");
+    SetStatusString (L"Stopping ...");
     PleaseStop = true;
     Unlock ();
 

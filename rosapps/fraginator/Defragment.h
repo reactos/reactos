@@ -14,12 +14,12 @@
 #include "Mutex.h"
 
 
-extern int FitName (char *destination, const char *path, const char *filename, uint32 totalWidth);
+extern int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename, uint32 totalWidth);
 
 
 typedef struct DefragReport
 {
-    string    RootPath;
+    wstring    RootPath;
     uint64    DiskSizeBytes;
     uint64    DirsCount;
     uint64    FilesCount;
@@ -41,7 +41,7 @@ typedef struct DefragReport
 class Defragment
 {
 public:
-    Defragment (string Name, DefragType DefragMethod);
+    Defragment (wstring Name, DefragType DefragMethod);
     ~Defragment ();
 
     // Commands
@@ -52,7 +52,7 @@ public:
     // Info
     bool          IsDoneYet (void);
     bool          HasError (void);
-    string        GetStatusString  (void);
+    wstring        GetStatusString  (void);
     double         GetStatusPercent (void);
     DefragType    GetDefragType    (void)  { return (Method); }
     DefragReport &GetDefragReport  (void)  { return (Report); }
@@ -69,16 +69,16 @@ public:
 private:
     void FastDefrag (void);
     void ExtensiveDefrag (void);
-    void SetStatusString (string NewStatus);
+    void SetStatusString (wstring NewStatus);
 
     DWORD        LastBMPUpdate; // Last time volume bitmap was updated
     DefragReport Report;
     bool         DoLimitLength;
     DefragType   Method;
-    string       DriveName;
+    wstring       DriveName;
     DriveVolume  Volume;
-    string       StatusString;
-    string       ErrorString;
+    wstring       StatusString;
+    wstring       ErrorString;
     double        StatusPercent;
     Mutex        DefragMutex;
     bool         Error;
