@@ -341,7 +341,7 @@ HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps
 {
     DWORD status = DD_FALSE;
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
-
+	
     if (pDriverCaps != NULL) 
     {
       RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
@@ -353,9 +353,6 @@ HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps
       RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddHELCaps,sizeof(DDCORECAPS));
       status = DD_OK;
     }
-
-    /* Both caps mixed ?? */
-    /* DDCORECAPS ddBothCaps; */
     
     return status;
 }
@@ -448,6 +445,12 @@ HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScan
     return Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine);
 }
 
+HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
+{
+   ChangeDisplaySettings(NULL, 0);
+   return DD_OK;
+}
+
 /********************************** Stubs **********************************/
 
 HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
@@ -491,10 +494,7 @@ HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOO
     DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
-{
-    DX_STUB;
-}
+
                                                    
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
                                                 LPDIRECTDRAWSURFACE7 *lpDDS)
