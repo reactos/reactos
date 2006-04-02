@@ -112,6 +112,8 @@ extern IDirectDrawGammaControlVtbl	DirectDrawGammaControl_Vtable;
 
 /********* Prototypes **********/
 
+HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps, LPDWORD total, LPDWORD free); 
+
 HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 );
 HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 );
 VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 );

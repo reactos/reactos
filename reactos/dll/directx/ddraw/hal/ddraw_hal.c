@@ -260,6 +260,17 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
   DeleteObject(hbmp);
   //DeleteDC(This->hdc);
 
+   DDHAL_GETDRIVERINFODATA DriverInfo;
+   memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
+   DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
+   DriverInfo.dwContext = This->mDDrawGlobal.hDD; 
+
+  /* Get the MiscellaneousCallbacks  */    
+  DriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
+  DriverInfo.lpvData = &This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous;
+  DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+  This->mHALInfo.GetDriverInfo(&DriverInfo);
+
   return DD_OK;
 }
 
@@ -337,16 +348,16 @@ Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
 
     if (!(This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY)) 
-    {
-        return DDERR_NODRIVERSUPPORT;
+    {       
+       return DDERR_NODRIVERSUPPORT;
     }
 
     mem.lpDD = &This->mDDrawGlobal;    
     mem.ddRVal = DDERR_NOTPALETTIZED;
 
     if (This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem) != DDHAL_DRIVER_HANDLED)
-    {
-       return DDERR_NODRIVERSUPPORT;
+    {	
+      return DDERR_NODRIVERSUPPORT;
     }
 
     ddscaps->dwCaps = mem.DDSCaps.dwCaps;

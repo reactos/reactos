@@ -272,13 +272,63 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	/* start alloc memory */
 	if ((pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
 	{
-		 // Do not alloc system memmory 
+		///* HAL Code  */
+		//DDHAL_CANCREATESURFACEDATA CanCreateData;
+  //      memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
+  //      CanCreateData.lpDD = &This->mDDrawGlobal; 
+  //      CanCreateData.lpDDSurfaceDesc = &mddsdPrimary;
+		//
+  //      if (mDDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
+  //      {
+  //         return DDERR_INVALIDPARAMS;
+  //      }
+
+		//memset(&mPrimaryGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
+  //      mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
+  //      mPrimaryGlobal.lpDD       = &mDDrawGlobal;
+  //      mPrimaryGlobal.lpDDHandle = &mDDrawGlobal;
+  //      mPrimaryGlobal.wWidth  = (WORD)mpModeInfos[0].dwWidth;
+  //      mPrimaryGlobal.wHeight = (WORD)mpModeInfos[0].dwHeight;
+  //      mPrimaryGlobal.lPitch  = mpModeInfos[0].lPitch;
+
+		//memset(&mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
+  //      mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+
+  //      memset(&mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
+  //      mPrimaryLocal.lpGbl = &mPrimaryGlobal;
+  //      mPrimaryLocal.lpSurfMore = &mPrimaryMore;
+  //      mPrimaryLocal.dwProcessId = GetCurrentProcessId();
+  //   //   mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
+  //
+  //       mPrimaryLocal.ddsCaps.dwCaps = mddsdPrimary.ddsCaps.dwCaps;
+
+  //       mpPrimaryLocals[0] = &mPrimaryLocal;
+  //
+  //	     DDHAL_CREATESURFACEDATA CreateData;
+	 //    memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
+	 //    CreateData.lpDD = &mDDrawGlobal;
+	 //    CreateData.lpDDSurfaceDesc = &mddsdPrimary; 
+	 //    CreateData.dwSCnt = 1;
+	 //    CreateData.lplpSList = mpPrimaryLocals;	
+	 //    CreateData.ddRVal	= DD_FALSE;	
+  // 
+  //       if (mDDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData)==DDHAL_DRIVER_NOTHANDLED)
+  //       {
+	 //      return DD_FALSE;
+  //       }
+
+  //       if(CreateData.ddRVal != DD_OK)
+  //       {	 	  
+	 //      return CreateData.ddRVal;
+  //       }
+		// return DD_OK;
 		
 	}
 	else
 	{
 		// Create system mmeory 
 		//DDSCAPS_SYSTEMMEMORY 
+		return DD_FALSE;
 	}
 
 
@@ -295,7 +345,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	// DDSCAPS_OVERLAY create overlay surface 
     
 	// DDSCAPS_TEXTURE  
-	// DDSCAPS_SYSTEMMEMORY 
 
   //  return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
 	return DD_OK;
@@ -364,19 +413,30 @@ HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
 
 HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
             LPDDCAPS pHELCaps) 
-{
-    DWORD status = DD_FALSE;
+{	
+	DDSCAPS2 ddscaps;
+    DWORD status = DD_FALSE;	
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 	
     if (pDriverCaps != NULL) 
-    {
-      RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+    {           
+	  Main_DirectDraw_GetAvailableVidMem(iface, 
+		                                 &ddscaps,
+		                                 &This->mDDrawGlobal.ddCaps.dwVidMemTotal, 
+		                                 &This->mDDrawGlobal.ddCaps.dwVidMemFree);	 
+	
+	  RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
       status = DD_OK;
     }
 
     if (pHELCaps != NULL) 
-    {
-      RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddHELCaps,sizeof(DDCORECAPS));
+    {      	  
+	  Main_DirectDraw_GetAvailableVidMem(iface, 
+		                                 &ddscaps,
+		                                 &This->mDDrawGlobal.ddHELCaps.dwVidMemTotal, 
+		                                 &This->mDDrawGlobal.ddHELCaps.dwVidMemFree);	  	 
+
+	  RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddHELCaps,sizeof(DDCORECAPS));
       status = DD_OK;
     }
     
@@ -438,6 +498,7 @@ HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS
 {    
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
+	
     if (This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) 
     {
         return Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
