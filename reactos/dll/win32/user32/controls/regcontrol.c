@@ -69,9 +69,7 @@ ControlsInit(LPCWSTR ClassName)
       &POPUPMENU_builtin_class,
       &COMBO_builtin_class,
       &COMBOLBOX_builtin_class,
-#if 0
       &DESKTOP_builtin_class,
-#endif
       &MDICLIENT_builtin_class,
 #if 0
       &MENU_builtin_class,

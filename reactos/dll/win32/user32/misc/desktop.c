@@ -11,6 +11,35 @@
 
 #include <user32.h>
 
+#define DESKTOP_CLASS_ATOM   MAKEINTATOMA(32769)  /* Desktop */
+static LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+
+/*********************************************************************
+ * desktop class descriptor
+ */
+const struct builtin_class_descr DESKTOP_builtin_class =
+{
+  (LPCWSTR) DESKTOP_CLASS_ATOM,   /* name */
+  CS_DBLCLKS,           /* style */
+  NULL,                 /* procA (winproc is Unicode only) */
+  (WNDPROC) DesktopWndProc,       /* procW */
+  0,                    /* extra */
+  IDC_ARROW,            /* cursor */
+  (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
+};
+
+static 
+LRESULT 
+WINAPI 
+DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    DPRINT1("Desktop Class Atom!\n");
+    if (message == WM_NCCREATE) return TRUE;
+    return 0;  /* all other messages are ignored */
+}
+
+
+
 VOID
 STDCALL
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
