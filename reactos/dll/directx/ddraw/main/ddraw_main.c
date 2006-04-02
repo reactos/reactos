@@ -43,12 +43,6 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 	RtlCopyMemory(&This->mDDrawGlobal.cObsolete,&"DISPLAY",7);
 	RtlCopyMemory(&This->mDDrawGlobal.cDriverName,&"DISPLAY",7);
 
-    /* Setup the lpExclusiveOwner struct in msdn this struct member is undoc 
-	   I am using there name to figout which info it should be fild with 
-	   My hardware drv does not support call to SetExusive so I can not 
-	   debug it see how it should be fild 
-	   this part have been move to HAL 
-	*/
 		 
                        
     // call software first
@@ -254,8 +248,9 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawSurfaceImpl));
     
     if (That == NULL) 
+	{
         return E_OUTOFMEMORY;
-
+	}
     ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
     
     That->lpVtbl = &DirectDrawSurface7_Vtable;
@@ -272,7 +267,9 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     *ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
     // the real surface object creation
-    return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
+    //return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
+
+	return DD_OK;
 }
 
 HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface, DWORD dwFlags, 

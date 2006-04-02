@@ -11,18 +11,10 @@
 #include "rosdraw.h"
 
 
+
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
 {
-	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-
-	/* Call the Hal CreateSurface */
-	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
-    {
-        return Hal_DDrawSurface_Initialize (iface, pDD, pDDSD2);
-    }
-
-	/* Call Hel if Hal of CreateSurface is not supported */
-	return Hel_DDrawSurface_Initialize (iface, pDD, pDDSD2);
+	return DDERR_ALREADYINITIALIZED;
 }
 
 ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
@@ -55,10 +47,10 @@ Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	 IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
 
-	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
+	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_SURFCB32_BLT) 
 	{
 		return Hal_DDrawSurface_Blt( iface,  rdst, src,  rsrc,  dwFlags,  lpbltfx);
 	}
@@ -69,7 +61,15 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 
 HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 				LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE event)
-{
+{ /*   
+	IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)iface;
+
+	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
+	{
+		return Hal_DDrawSurface_Lock( iiface, LPRECT prect, pDDSD,  flags,  event);
+	}
+
+	return Hel_DDrawSurface_Lock( iiface, LPRECT prect, pDDSD,  flags,  event);*/
     DX_STUB;
 }
 

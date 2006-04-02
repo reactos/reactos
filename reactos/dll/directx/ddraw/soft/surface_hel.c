@@ -10,10 +10,7 @@
 
 #include "rosdraw.h"
 
-HRESULT Hel_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
-{
-    DX_STUB;
-}
+
 
 HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
