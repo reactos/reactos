@@ -216,26 +216,26 @@ MmFreeImageSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
             KEBUGCHECK(0);
          }
          Length = PAGE_ROUND_UP(SectionSegments[i].Length);
-	 for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
-	 {
-	    Entry = MmGetPageEntrySectionSegment(&SectionSegments[i], Offset);
-	    if (Entry != 0)
-	    {
-	       if (IS_SWAP_FROM_SSE(Entry)) 
-	       {
-	          KEBUGCHECK(0);
-	       }
-	       else if (MmGetShareCountPage(PFN_FROM_SSE(Entry)) != 0)
-	       {
-	          DPRINT1("%d %x\n", i, Offset, MmGetShareCountPage(PFN_FROM_SSE(Entry)));
-	          KEBUGCHECK(0);
-	       }
-	       else
-	       {
-	          MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
-	       }
-	    }
-	 }
+         for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
+         {
+            Entry = MmGetPageEntrySectionSegment(&SectionSegments[i], Offset);
+            if (Entry != 0)
+            {
+               if (IS_SWAP_FROM_SSE(Entry)) 
+               {
+                  KEBUGCHECK(0);
+               }
+               else if (MmGetShareCountPage(PFN_FROM_SSE(Entry)) != 0)
+               {
+                  DPRINT1("%d %x\n", i, Offset, MmGetShareCountPage(PFN_FROM_SSE(Entry)));
+                  KEBUGCHECK(0);
+               }
+               else
+               {
+                  MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+               }
+            }
+         }
          MmFreePageTablesSectionSegment(&SectionSegments[i]);
       }
       RemoveEntryList(&ImageSectionObject->ListEntry);
@@ -299,8 +299,8 @@ MmFreeDataSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
       FoundPageOp = FALSE;
       while (Offset < Length)
       {
-	 while (NULL != (PageOp = MmCheckForPageOp(CcCacheViewMemoryArea, NULL, NULL, Segment, Offset)))
-	 {
+         while (NULL != (PageOp = MmCheckForPageOp(CcCacheViewMemoryArea, NULL, NULL, Segment, Offset)))
+         {
             MmUnlockSectionSegment(Segment);
             Status = MmspWaitForPageOpCompletionEvent(PageOp);
             if (Status != STATUS_SUCCESS)
@@ -310,36 +310,36 @@ MmFreeDataSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
             }
             MmLockSectionSegment(Segment);
             MmspCompleteAndReleasePageOp(PageOp);
-	    FoundPageOp = TRUE;
-	 }
-	 if (FoundPageOp)
-	 {
-	    FoundPageOp = FALSE;
+            FoundPageOp = TRUE;
+         }
+         if (FoundPageOp)
+         {
+            FoundPageOp = FALSE;
             Length = PAGE_ROUND_UP(Segment->Length);
             Offset = 0;
             continue;
-	 }
+         }
 
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-	 if (Entry != 0)
-	 {
-	    if (IS_SWAP_FROM_SSE(Entry)) 
-	    {
-	       KEBUGCHECK(0);
-	    }
-	    else if (MmGetShareCountPage(PFN_FROM_SSE(Entry)) != 0)
-	    {
-	       DPRINT1("%d %x\n", Offset, MmGetShareCountPage(PFN_FROM_SSE(Entry)));
-	       KEBUGCHECK(0);
-	    }
-	    else
-	    {
-	       if (Entry & 0x2)
-	       {
-	          DPRINT1("Releasing dirty page at offset %d from %wZ\n", Offset, &Segment->FileObject->FileName);
+         if (Entry != 0)
+         {
+            if (IS_SWAP_FROM_SSE(Entry)) 
+            {
+               KEBUGCHECK(0);
+            }
+            else if (MmGetShareCountPage(PFN_FROM_SSE(Entry)) != 0)
+            {
+               DPRINT1("%d %x\n", Offset, MmGetShareCountPage(PFN_FROM_SSE(Entry)));
+               KEBUGCHECK(0);
+            }
+            else
+            {
+               if (Entry & 0x2)
+               {
+                  DPRINT1("Releasing dirty page at offset %d from %wZ\n", Offset, &Segment->FileObject->FileName);
 
                   MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
-		  Pfn = PFN_FROM_SSE(Entry);
+                  Pfn = PFN_FROM_SSE(Entry);
                   MmBuildMdlFromPages(Mdl, &Pfn);
                   FileOffset.QuadPart = Offset * PAGE_SIZE;
                   KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -352,13 +352,13 @@ MmFreeDataSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
                   {
                      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
                      Status = Iosb.Status;
-		  }
+                  }
                   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
-	       }
-	       MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
-	    }
-	 }
-	 Offset += PAGE_SIZE;
+               }
+               MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+            }
+         }
+         Offset += PAGE_SIZE;
       }
       MmUnlockSectionSegment(Segment);
       RemoveEntryList(&Segment->ListEntry);
@@ -376,7 +376,7 @@ MmFreeDataSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
 
 VOID
 MmChangeSectionSegmentSize(PMM_SECTION_SEGMENT Segment,
-		           ULONG NewLength)
+                           ULONG NewLength)
 {
    PSECTION_PAGE_TABLE Table;
    ULONG i, j;
@@ -392,19 +392,19 @@ MmChangeSectionSegmentSize(PMM_SECTION_SEGMENT Segment,
          for (i = 0; i < NR_SECTION_PAGE_ENTRIES; i++)
          {
             if (Table->Entry[i])
-	    {
-	       Table = ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
+            {
+               Table = ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
                                              TAG_SECTION_PAGE_TABLE); 
-	       if (Table == NULL)
-	       {
-	          KEBUGCHECK(0);
-	       }
-	       memcpy(Table, Segment->PageDirectory.PageTables, sizeof(SECTION_PAGE_TABLE));
-	       memset(Segment->PageDirectory.PageTables, 0, sizeof(SECTION_PAGE_TABLE));
-	       Segment->PageDirectory.PageTables[0] = Table;
-	       break;
-	    }
-	 }
+               if (Table == NULL)
+               {
+                  KEBUGCHECK(0);
+               }
+               memcpy(Table, Segment->PageDirectory.PageTables, sizeof(SECTION_PAGE_TABLE));
+               memset(Segment->PageDirectory.PageTables, 0, sizeof(SECTION_PAGE_TABLE));
+               Segment->PageDirectory.PageTables[0] = Table;
+               break;
+            }
+         }
       }
       Segment->RawLength = NewLength;
       Segment->Length = PAGE_ROUND_UP(NewLength);
@@ -415,56 +415,56 @@ MmChangeSectionSegmentSize(PMM_SECTION_SEGMENT Segment,
       if (PAGE_ROUND_UP(NewLength) > NR_SECTION_PAGE_TABLES * PAGE_SIZE)
       {
          for (i = PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(PAGE_ROUND_UP(NewLength)); 
-	      i < NR_SECTION_PAGE_TABLES; 
-	      i++)
-	 {
-	    Table = Segment->PageDirectory.PageTables[i];
-	    if (Table)
-	    {
+              i < NR_SECTION_PAGE_TABLES; 
+              i++)
+         {
+            Table = Segment->PageDirectory.PageTables[i];
+            if (Table)
+            {
                if (i > PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(PAGE_ROUND_UP(Segment->Length)))
-	       {
-	          KEBUGCHECK(0);
-	       }
+               {
+                  KEBUGCHECK(0);
+               }
                if (i == PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(PAGE_ROUND_UP(NewLength)) &&
-		   PAGE_ROUND_UP(NewLength) % (NR_SECTION_PAGE_TABLES * PAGE_SIZE))
-	       {
-	          Start = PAGE_ROUND_UP(NewLength) % (NR_SECTION_PAGE_TABLES * PAGE_SIZE);
-	       }
-	       else
-	       {
-	          Start = 0;
-	       }
-	       for (j = Start; j < NR_SECTION_PAGE_TABLES; j++)
-	       {
+                   PAGE_ROUND_UP(NewLength) % (NR_SECTION_PAGE_TABLES * PAGE_SIZE))
+               {
+                  Start = PAGE_ROUND_UP(NewLength) % (NR_SECTION_PAGE_TABLES * PAGE_SIZE);
+               }
+               else
+               {
+                  Start = 0;
+               }
+               for (j = Start; j < NR_SECTION_PAGE_TABLES; j++)
+               {
                   if(Table->Entry[j])
-		  {
-		     KEBUGCHECK(0);
-		  }
-	       }
-	       if (i > PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(PAGE_ROUND_UP(NewLength)))
-	       {
-	          ExFreePool(Table);
+                  {
+                     KEBUGCHECK(0);
+                  }
+               }
+               if (i > PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(PAGE_ROUND_UP(NewLength)))
+               {
+                  ExFreePool(Table);
                   Segment->PageDirectory.PageTables[i] = NULL;
-	       }
-	    }
-	 }
+               }
+            }
+         }
       }
       else
       {
          for (i = PAGE_ROUND_UP(NewLength); i < NR_SECTION_PAGE_TABLES; i++)
-	 {
-	    if (Segment->PageDirectory.PageTables[i])
-	    {
-	       KEBUGCHECK(0);
-	    }
-	 }
+         {
+            if (Segment->PageDirectory.PageTables[i])
+            {
+               KEBUGCHECK(0);
+            }
+         }
       }
       if (PAGE_ROUND_UP(NewLength) <= NR_SECTION_PAGE_TABLES * PAGE_SIZE &&
-	  PAGE_ROUND_UP(Segment->Length) > NR_SECTION_PAGE_TABLES * PAGE_SIZE)
+          PAGE_ROUND_UP(Segment->Length) > NR_SECTION_PAGE_TABLES * PAGE_SIZE)
       {
          Table = Segment->PageDirectory.PageTables[0];
-	 memcpy(Segment->PageDirectory.PageTables, Table->Entry, sizeof(SECTION_PAGE_TABLE));
-	 ExFreePool(Table);
+         memcpy(Segment->PageDirectory.PageTables, Table->Entry, sizeof(SECTION_PAGE_TABLE));
+         ExFreePool(Table);
       }
    }
    else
@@ -608,46 +608,46 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
 
       if (PageOut)
       {
-	 MmSetPageEntrySectionSegment(Segment, Offset, 0);
+         MmSetPageEntrySectionSegment(Segment, Offset, 0);
          MmReleasePageMemoryConsumer(MC_USER, Page);
       }
       else
       {
          if (Section->AllocationAttributes & SEC_IMAGE &&
-	     !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-	 {
-	    if (SavedSwapEntry)
-	    {
-	       KEBUGCHECK(0);
-	    }
-	    if (Dirty || (Entry & 0x2))
-	    {
-	       KEBUGCHECK(0);
-	    }
-	 }
-	 else if (!(Section->AllocationAttributes & SEC_IMAGE) &&
-	          Section->FileObject != NULL)
-	 {
-	    if (SavedSwapEntry)
-	    {
-	       KEBUGCHECK(0);
-	    }
-	    if (Dirty && !(Entry & 0x2))
-	    {
-	       MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
-	    }
-	 }
-	 else if(Segment->Flags & MM_PAGEFILE_SEGMENT ||
+             !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
+         {
+            if (SavedSwapEntry)
+            {
+               KEBUGCHECK(0);
+            }
+            if (Dirty || (Entry & 0x2))
+            {
+               KEBUGCHECK(0);
+            }
+         }
+         else if (!(Section->AllocationAttributes & SEC_IMAGE) &&
+                  Section->FileObject != NULL)
+         {
+            if (SavedSwapEntry)
+            {
+               KEBUGCHECK(0);
+            }
+            if (Dirty && !(Entry & 0x2))
+            {
+               MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
+            }
+         }
+         else if(Segment->Flags & MM_PAGEFILE_SEGMENT ||
                  Segment->Characteristics & IMAGE_SCN_MEM_SHARED)
-	 {
-	    if (Dirty && !(Entry & 0x2))
-	    {
-	       MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
-	    }
-	 }
-	 else
-	 {
-	    KEBUGCHECK(0);
+         {
+            if (Dirty && !(Entry & 0x2))
+            {
+               MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
+            }
+         }
+         else
+         {
+            KEBUGCHECK(0);
             if (SavedSwapEntry == 0)
             {
                if (!PageOut &&
@@ -666,37 +666,37 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                else
                {
                   if (IsImageSection)
-	          {
+                  {
                      if (PageOut)
-	             {
-	                MmSetPageEntrySectionSegment(Segment, Offset, 0);
+                     {
+                        MmSetPageEntrySectionSegment(Segment, Offset, 0);
                         MmReleasePageMemoryConsumer(MC_USER, Page);
-	             }
-	             else
-	             {
-//	                MmSetPageEntrySectionSegment(Segment, Offset, Entry);	    
-	             }
-	          }
-	          else if (Section->FileObject != NULL)
-	          {
-	             if (PageOut && !Dirty && !(Entry & 0x2))
-	             {
-	                MmSetPageEntrySectionSegment(Segment, Offset, 0);
+                     }
+                     else
+                     {
+//                        MmSetPageEntrySectionSegment(Segment, Offset, Entry);            
+                     }
+                  }
+                  else if (Section->FileObject != NULL)
+                  {
+                     if (PageOut && !Dirty && !(Entry & 0x2))
+                     {
+                        MmSetPageEntrySectionSegment(Segment, Offset, 0);
                         MmReleasePageMemoryConsumer(MC_USER, Page);
-	             }
-	             else
-	             {
-	                if (Dirty && !(Entry & 0x2))
-		        {
-		           MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
-		        }
-	             }      
-	          }
-	          else
-	          {
+                     }
+                     else
+                     {
+                        if (Dirty && !(Entry & 0x2))
+                        {
+                           MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
+                        }
+                     }      
+                  }
+                  else
+                  {
                      MmSetPageEntrySectionSegment(Segment, Offset, 0);
                      MmReleasePageMemoryConsumer(MC_USER, Page);
-	          }
+                  }
                }
             }
             else
@@ -704,7 +704,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
                    (Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
                {
-	          CHECKPOINT1;
+                  CHECKPOINT1;
                   if (!PageOut)
                   {
                      if (Dirty)
@@ -725,11 +725,11 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                      MmSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
                      MmSetSavedSwapEntryPage(Page, 0);
                   }
-	          else
-	          {
-	             CHECKPOINT1;
-//                   MmSetPageEntrySectionSegment(Segment, Offset, 0);	    
-	          }
+                  else
+                  {
+                     CHECKPOINT1;
+//                   MmSetPageEntrySectionSegment(Segment, Offset, 0);            
+                  }
                   MmReleasePageMemoryConsumer(MC_USER, Page);
                }
                else
@@ -774,7 +774,7 @@ MmspRequestPages(ULONG PageCount, PPFN_TYPE Pfns)
       if (!NT_SUCCESS(Status))
       {
          MmspReleasePages(i, Pfns);
-	 return Status;
+         return Status;
       }
    }
    return STATUS_SUCCESS;
@@ -782,10 +782,10 @@ MmspRequestPages(ULONG PageCount, PPFN_TYPE Pfns)
 
 NTSTATUS
 MmspRawReadPages(PFILE_OBJECT FileObject,
-		 ULONG SectorSize,
-		 PLARGE_INTEGER FileOffset,
-		 ULONG ReadSize,
-		 PPFN_TYPE Pfns)
+                 ULONG SectorSize,
+                 PLARGE_INTEGER FileOffset,
+                 ULONG ReadSize,
+                 PPFN_TYPE Pfns)
 {
    ULONG PageCount = PAGE_ROUND_UP(ReadSize) / PAGE_SIZE;
    ULONG MdlSize;
@@ -839,36 +839,36 @@ MmspRawReadPages(PFILE_OBJECT FileObject,
       if (Offset != FileOffset->u.LowPart)
       {
          *MdlPages++ = Pfn;
-	 if (FileOffset->u.LowPart - Offset > PAGE_SIZE)
-	 {
-	    MdlSize -= PAGE_SIZE;
-	    Offset += PAGE_SIZE;
-	 }
-	 else
-	 {
-	    MdlSize -= (FileOffset->u.LowPart - Offset);
-	    Offset = FileOffset->u.LowPart;
-	 }
+         if (FileOffset->u.LowPart - Offset > PAGE_SIZE)
+         {
+            MdlSize -= PAGE_SIZE;
+            Offset += PAGE_SIZE;
+         }
+         else
+         {
+            MdlSize -= (FileOffset->u.LowPart - Offset);
+            Offset = FileOffset->u.LowPart;
+         }
       }
       i = 0;
       while (MdlSize > 0)
       {
          if (i < PageCount)
-	 {
-	    *MdlPages++ = Pfns[i++];
-	 }
-	 else
-	 {
-	    *MdlPages++ = Pfn;
-	 }
-	 if (MdlSize > PAGE_SIZE)
-	 {
-	    MdlSize -= PAGE_SIZE;
-	 }
-	 else
-	 {
-	    MdlSize = 0;
-	 }
+         {
+            *MdlPages++ = Pfns[i++];
+         }
+         else
+         {
+            *MdlPages++ = Pfn;
+         }
+         if (MdlSize > PAGE_SIZE)
+         {
+            MdlSize -= PAGE_SIZE;
+         }
+         else
+         {
+            MdlSize = 0;
+         }
       }
    }
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -891,9 +891,9 @@ MmspRawReadPages(PFILE_OBJECT FileObject,
 
 NTSTATUS
 MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
-			    ULONG SegOffset,
-			    ULONG PageCount,
-			    PPFN_TYPE Pages)
+                            ULONG SegOffset,
+                            ULONG PageCount,
+                            PPFN_TYPE Pages)
 {
    NTSTATUS Status;
    ULONG SectorSize;
@@ -926,9 +926,9 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
 
    Status = MmspRawReadPages(SectionData->Section->FileObject,
                              SectorSize,
-			     &FileOffset,
-			     Length,
-			     Pages);
+                             &FileOffset,
+                             Length,
+                             Pages);
    if (!NT_SUCCESS(Status) && SectionData->Segment->BytesPerSector == 0)
    {
       NTSTATUS tmpStatus;
@@ -936,22 +936,22 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
 
       tmpStatus = IoQueryVolumeInformation(SectionData->Section->FileObject,
                                            FileFsSizeInformation,
-				           sizeof(FILE_FS_SIZE_INFORMATION),
+                                           sizeof(FILE_FS_SIZE_INFORMATION),
                                            &FileFsSize,
-				           NULL);
+                                           NULL);
 
       if (NT_SUCCESS(tmpStatus))
       {
          DPRINT("%d\n", FileFsSize.BytesPerSector);
          SectionData->Segment->BytesPerSector = FileFsSize.BytesPerSector;
-	 if (FileFsSize.BytesPerSector != 512)
-	 {
+         if (FileFsSize.BytesPerSector != 512)
+         {
             Status = MmspRawReadPages(SectionData->Section->FileObject,
                                       FileFsSize.BytesPerSector,
-			              &FileOffset,
-			              PageCount * PAGE_SIZE,
-			              Pages);
-	 }
+                                      &FileOffset,
+                                      PageCount * PAGE_SIZE,
+                                      Pages);
+         }
       }
    }
    if (!NT_SUCCESS(Status))
@@ -965,9 +965,9 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
 
 NTSTATUS
 MmspNotPresentFaultPhysMemSectionView(PMADDRESS_SPACE AddressSpace,
-				      MEMORY_AREA* MemoryArea,
-				      PVOID Address,
-				      BOOLEAN Locked)
+                                      MEMORY_AREA* MemoryArea,
+                                      PVOID Address,
+                                      BOOLEAN Locked)
 {
    PVOID PAddress;
    ULONG Offset;
@@ -1025,9 +1025,9 @@ MmspNotPresentFaultPhysMemSectionView(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS
 MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
-				    MEMORY_AREA* MemoryArea,
-				    PVOID Address,
-				    BOOLEAN Locked)
+                                    MEMORY_AREA* MemoryArea,
+                                    PVOID Address,
+                                    BOOLEAN Locked)
 {
    PVOID PAddress;
    ULONG SectionOffset;
@@ -1140,11 +1140,11 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       if (!MmIsPagePresent(AddressSpace->Process, Address))
       {
          HasSwapEntry = MmIsPageSwapEntry(AddressSpace->Process, (PVOID)PAddress);
-	 if (!HasSwapEntry)
-	 {
+         if (!HasSwapEntry)
+         {
              Entry = MmGetPageEntrySectionSegment(Segment, SegmentOffset);
              Pfn[0] = PFN_FROM_SSE(Entry);
-	 }
+         }
          if (HasSwapEntry || Pfn[0] == 0)
          {
             /*
@@ -1307,35 +1307,35 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       PageCount = 1;
       while (PageCount < 4)
       {
-	 if (SegmentOffset + PageCount * PAGE_SIZE < Segment->RawLength &&
-	     SegmentOffset + PageCount * PAGE_SIZE < (ULONG_PTR)RegionBase + Region->Length - (ULONG_PTR)MemoryArea->StartingAddress &&
-	     0 == MmGetPageEntrySectionSegment(Segment, SegmentOffset + PageCount * PAGE_SIZE))
-	 {
-	    PageOp[PageCount] = MmGetPageOp(MemoryArea, 0, 0, Segment, SegmentOffset + PageCount * PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
-	    if (PageOp[PageCount])
-	    {
-	      PageCount++;
-	      continue;
-	    }
-	 }
+         if (SegmentOffset + PageCount * PAGE_SIZE < Segment->RawLength &&
+             SegmentOffset + PageCount * PAGE_SIZE < (ULONG_PTR)RegionBase + Region->Length - (ULONG_PTR)MemoryArea->StartingAddress &&
+             0 == MmGetPageEntrySectionSegment(Segment, SegmentOffset + PageCount * PAGE_SIZE))
+         {
+            PageOp[PageCount] = MmGetPageOp(MemoryArea, 0, 0, Segment, SegmentOffset + PageCount * PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
+            if (PageOp[PageCount])
+            {
+              PageCount++;
+              continue;
+            }
+         }
 #if 0
-	 if (Offset >= PAGE_SIZE &&
-	     MemoryArea->StartingAddress + Offset - PAGE_SIZE >= RegionBase &&
-	     0 == MmGetPageEntrySectionSegment(Segment, Offset - PAGE_SIZE))
-	 {
-	    tmpPageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset - PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
-	    if (tmpPageOp)
-	    {
-	       memmove(&PageOp[1], &PageOp[0], sizeof(PMM_PAGEOP) * PageCount);
-	       PageOp[0] = tmpPageOp;
-	       PageCount++;
-	       Offset -= PAGE_SIZE;
-	       PAddress -= PAGE_SIZE;
-	       continue;
-	    }
-	 }
+         if (Offset >= PAGE_SIZE &&
+             MemoryArea->StartingAddress + Offset - PAGE_SIZE >= RegionBase &&
+             0 == MmGetPageEntrySectionSegment(Segment, Offset - PAGE_SIZE))
+         {
+            tmpPageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset - PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
+            if (tmpPageOp)
+            {
+               memmove(&PageOp[1], &PageOp[0], sizeof(PMM_PAGEOP) * PageCount);
+               PageOp[0] = tmpPageOp;
+               PageCount++;
+               Offset -= PAGE_SIZE;
+               PAddress -= PAGE_SIZE;
+               continue;
+            }
+         }
 #endif
-	 break;
+         break;
       }
       DPRINT("%d %wZ\n", PageCount, &MemoryArea->Data.SectionData.Section->FileObject->FileName);
       
@@ -1348,13 +1348,13 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       if (SegmentOffset >= PAGE_ROUND_UP(Segment->RawLength))
       {
          for (i = 0; i < PageCount; i++)
-	 {
+         {
             Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Pfn[i]);
             if (!NT_SUCCESS(Status))
             {
                DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
             }
-	 }
+         }
       }
       else
       {
@@ -1377,10 +1377,10 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
           * Cleanup and release locks
           */
          for (i = 0; i < PageCount; i++)
-	 {
+         {
             PageOp[i]->Status = Status;
             MmspCompleteAndReleasePageOp(PageOp[i]);
-	 }
+         }
          DPRINT("Address 0x%.8X\n", Address);
          return(Status);
       }
@@ -1434,7 +1434,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       }
       for(i = 0; i < PageCount; i++)
       {
-	 PageOp[i]->Status = STATUS_SUCCESS;
+         PageOp[i]->Status = STATUS_SUCCESS;
          MmspCompleteAndReleasePageOp(PageOp[i]);
       }
       DPRINT("%x %x %x %x Address 0x%.8X\n", *(PULONG)Address, Region->Protect, Attributes, MemoryArea->StartingAddress + SegmentOffset, Address);
@@ -1689,15 +1689,15 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
       if (!MmIsPagePresent(AddressSpace->Process, Address))
       {
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-	 if (IS_SWAP_FROM_SSE(Entry))
-	 {
-	    KEBUGCHECK(0);
-	 }
-	 Pfn[0] = PFN_FROM_SSE(Entry);
-	 if (Pfn[0] == 0) 
-	 {
-	    KEBUGCHECK(0);
-	 }
+         if (IS_SWAP_FROM_SSE(Entry))
+         {
+            KEBUGCHECK(0);
+         }
+         Pfn[0] = PFN_FROM_SSE(Entry);
+         if (Pfn[0] == 0) 
+         {
+            KEBUGCHECK(0);
+         }
 
          MmSharePageEntrySectionSegment(Segment, Offset);
          Status = MmCreateVirtualMapping(AddressSpace->Process,
@@ -1745,16 +1745,16 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
       while (PageCount < 4)
       {
          if (Offset + PageCount * PAGE_SIZE < Segment->RawLength &&
-	     Offset + PageCount * PAGE_SIZE < (ULONG_PTR)RegionBase + Region->Length - (ULONG_PTR)StartingAddress &&
-	     0 == MmGetPageEntrySectionSegment(Segment, Offset + PageCount * PAGE_SIZE))
-	 {
-	    PageOp[PageCount] = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset + PageCount * PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
-	    if (PageOp[PageCount])
-	    {
-	       PageCount++;
-	       continue;
-	    }
-	 }
+             Offset + PageCount * PAGE_SIZE < (ULONG_PTR)RegionBase + Region->Length - (ULONG_PTR)StartingAddress &&
+             0 == MmGetPageEntrySectionSegment(Segment, Offset + PageCount * PAGE_SIZE))
+         {
+            PageOp[PageCount] = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset + PageCount * PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
+            if (PageOp[PageCount])
+            {
+               PageCount++;
+               continue;
+            }
+         }
          break;
       }
 
@@ -1779,11 +1779,11 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
          /*
           * Cleanup and release locks
           */
-	 for (i = 0; i < PageCount; i++)
-	 {
+         for (i = 0; i < PageCount; i++)
+         {
             PageOp[i]->Status = Status;
             MmspCompleteAndReleasePageOp(PageOp[i]);
-	 }
+         }
          DPRINT("Address 0x%.8X\n", Address);
          return(Status);
       }
@@ -1810,7 +1810,7 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
           * data
           */
          Entry = MAKE_SSE(Pfn[i] << PAGE_SHIFT, 0);
-	 ASSERT (Entry);
+         ASSERT (Entry);
          MmSharePage(Pfn[i]);
          MmSetPageEntrySectionSegment(Segment, Offset + i * PAGE_SIZE, Entry);
       }
@@ -1875,9 +1875,9 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
 /*****************************************************************************************************/
 NTSTATUS
 MmspNotPresentFaultPageFileSectionView(PMADDRESS_SPACE AddressSpace,
-				       MEMORY_AREA* MemoryArea,
-				       PVOID Address,
-				       BOOLEAN Locked)
+                                       MEMORY_AREA* MemoryArea,
+                                       PVOID Address,
+                                       BOOLEAN Locked)
 {
    PVOID PAddress;
    ULONG Offset;
@@ -1984,15 +1984,15 @@ MmspNotPresentFaultPageFileSectionView(PMADDRESS_SPACE AddressSpace,
       if (!MmIsPagePresent(AddressSpace->Process, Address))
       {
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-	 if (IS_SWAP_FROM_SSE(Entry))
-	 {
-	    KEBUGCHECK(0);
-	 }
-	 Pfn = PFN_FROM_SSE(Entry);
-	 if (Pfn == 0) 
-	 {
-	    KEBUGCHECK(0);
-	 }
+         if (IS_SWAP_FROM_SSE(Entry))
+         {
+            KEBUGCHECK(0);
+         }
+         Pfn = PFN_FROM_SSE(Entry);
+         if (Pfn == 0) 
+         {
+            KEBUGCHECK(0);
+         }
 
          Pfn = PFN_FROM_SSE(Entry);
 
@@ -3264,12 +3264,12 @@ VOID STDCALL
 MmspWorkerThread(PVOID);
 
    Status = PsCreateSystemThread(&ThreadHandle,
-				 THREAD_ALL_ACCESS,
-				 NULL,
-				 NULL,
-				 &ThreadId,
-				 MmspWorkerThread,
-				 NULL);
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &ThreadId,
+                                 MmspWorkerThread,
+                                 NULL);
 
    KeSetTimerEx(&MmspWorkerThreadTimer, DueTime, 5000, NULL);
 }
@@ -3391,7 +3391,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                         ULONG SectionPageProtection,
                         ULONG AllocationAttributes,
                         PFILE_OBJECT FileObject,
-			BOOLEAN CacheManager)
+                        BOOLEAN CacheManager)
 /*
  * Create a section backed by a data file
  */
@@ -3462,7 +3462,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       {
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
-	 return STATUS_FILE_INVALID;
+         return STATUS_FILE_INVALID;
       }
       DPRINT("%I64x\n", UMaximumSize->QuadPart);
       MaximumSize = *UMaximumSize;
@@ -3477,9 +3477,9 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
        */
       Status = IoQueryFileInformation(FileObject,
                                       FileStandardInformation,
-				      sizeof(FILE_STANDARD_INFORMATION),
-				      &FileInfo,
-				      &Length);
+                                      sizeof(FILE_STANDARD_INFORMATION),
+                                      &FileInfo,
+                                      &Length);
       if (!NT_SUCCESS(Status))
       {
          ObDereferenceObject(Section);
@@ -3490,7 +3490,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       {
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
-	 return STATUS_FILE_INVALID;
+         return STATUS_FILE_INVALID;
       }
   
       /*
@@ -3518,7 +3518,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
          Status = IoSetInformation(FileObject,
                                    FileAllocationInformation,
                                    sizeof(LARGE_INTEGER),
-				   &MaximumSize);
+                                   &MaximumSize);
          if (!NT_SUCCESS(Status))
          {
             ObDereferenceObject(Section);
@@ -3591,17 +3591,17 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       ExAcquireFastMutex(&Segment->Lock);
 
       tmpSegment = InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->DataSectionObject,
-	                                             Segment, NULL);
+                                                     Segment, NULL);
       if (tmpSegment != NULL)
       {
          CHECKPOINT;
          MmUnlockSectionSegment(Segment);
-	 ExFreePool(Segment);
-	 Segment = tmpSegment;
+         ExFreePool(Segment);
+         Segment = tmpSegment;
          MmLockSectionSegment(Segment);
-	 CHECKPOINT;
-	 Segment->ReferenceCount++;
-	 Section->Segment = Segment;
+         CHECKPOINT;
+         Segment->ReferenceCount++;
+         Section->Segment = Segment;
 
          if (MaximumSize.u.LowPart > Segment->RawLength &&
             !(AllocationAttributes & SEC_RESERVE))
@@ -3612,7 +3612,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       }
       else
       {
-	 InsertHeadList(&DataSectionObjectListHead, &Segment->ListEntry);
+         InsertHeadList(&DataSectionObjectListHead, &Segment->ListEntry);
          ObReferenceObject(FileObject);
       }
    }
@@ -3716,7 +3716,7 @@ static
 NTSTATUS
 NTAPI
 ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
-		ULONG SectorSize,
+                ULONG SectorSize,
                 IN PLARGE_INTEGER Offset,
                 IN ULONG Length,
                 OUT PVOID * Data,
@@ -3779,9 +3779,9 @@ ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
    }
    Status = MmspRawReadPages(FileObject,
                              SectorSize,
-			     &FileOffset, 
-			     BufferSize,
-			     Pages);
+                             &FileOffset, 
+                             BufferSize,
+                             Pages);
    UsedSize = BufferSize;
    if(NT_SUCCESS(Status) && UsedSize < OffsetAdjustment)
    {
@@ -4156,9 +4156,9 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
 
    Status = IoQueryVolumeInformation(FileObject,
                                      FileFsSizeInformation,
-				     sizeof(FILE_FS_SIZE_INFORMATION),
+                                     sizeof(FILE_FS_SIZE_INFORMATION),
                                      &FileFsSize,
-				     NULL);
+                                     NULL);
    if (!NT_SUCCESS(Status))
    {
       return Status;
@@ -4401,10 +4401,10 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
 
          CHECKPOINT;
          CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, &Iosb);
-	 if (!NT_SUCCESS(Iosb.Status))
-	 {
+         if (!NT_SUCCESS(Iosb.Status))
+         {
             DPRINT1("%x\n", Iosb.Status);
-	 }
+         }
       }
 
       ImageSectionObject = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
@@ -4422,9 +4422,9 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       if (!NT_SUCCESS(StatusExeFmt))
       {
          if(ImageSectionObject->Segments != NULL)
-	 {
+         {
             ExFreePool(ImageSectionObject->Segments);
-	 }
+         }
 
          ExFreePool(ImageSectionObject);
          ObDereferenceObject(Section);
@@ -4458,9 +4458,9 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       else
       {
          ImageSectionObject->RefCount++;
-	 InsertHeadList(&ImageSectionObjectListHead, &ImageSectionObject->ListEntry);
-	 ImageSectionObjectCount++;
-	 ImageSectionObject->FileObject = FileObject;
+         InsertHeadList(&ImageSectionObjectListHead, &ImageSectionObject->ListEntry);
+         ImageSectionObjectCount++;
+         ImageSectionObject->FileObject = FileObject;
          ObReferenceObject(FileObject);
 
       }
@@ -4988,7 +4988,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       else
       {
          MmDeleteRmap(Page, AddressSpace->Process, Address);
-	 DPRINT("%x\n", Address);
+         DPRINT("%x\n", Address);
          MmUnsharePageEntrySectionSegment(Section, Segment, Offset, Dirty, FALSE);
       }
    }
@@ -5431,7 +5431,7 @@ NtExtendSection(IN HANDLE SectionHandle,
 
 NTSTATUS STDCALL
 MmChangeSectionSize(PSECTION_OBJECT Section,
-		    PLARGE_INTEGER NewMaxSize)
+                    PLARGE_INTEGER NewMaxSize)
 {
    PMM_SECTION_SEGMENT Segment;
    ULONG Offset;
@@ -5469,30 +5469,30 @@ MmChangeSectionSize(PSECTION_OBJECT Section,
          if (Entry != 0)
          {
             if (IS_SWAP_FROM_SSE(Entry)) 
-	    {
-	       KEBUGCHECK(0);
-	    }
-	    else if (MmCheckForPageOp(CcCacheViewMemoryArea, NULL, NULL, Segment, Offset))
-	    {
-	       /* page operation in progress */
-	       KEBUGCHECK(0);
-	    }
-	    else
-	    {
-	       Pfn = PFN_FROM_SSE(Entry);
-	       if (0 != (ShareCount = MmGetShareCountPage(Pfn)))
-	       {
+            {
+               KEBUGCHECK(0);
+            }
+            else if (MmCheckForPageOp(CcCacheViewMemoryArea, NULL, NULL, Segment, Offset))
+            {
+               /* page operation in progress */
+               KEBUGCHECK(0);
+            }
+            else
+            {
+               Pfn = PFN_FROM_SSE(Entry);
+               if (0 != (ShareCount = MmGetShareCountPage(Pfn)))
+               {
                   /* page is mapped */
-	          DPRINT1("%d\n", ShareCount);
-	          KEBUGCHECK(0);
-	       }
-	       else
-	       {
-	          MmSetPageEntrySectionSegment(Segment, Offset, 0);
-		  DPRINT("%x %x\n", Offset, Pfn);
+                  DPRINT1("%d\n", ShareCount);
+                  KEBUGCHECK(0);
+               }
+               else
+               {
+                  MmSetPageEntrySectionSegment(Segment, Offset, 0);
+                  DPRINT("%x %x\n", Offset, Pfn);
                   MmReleasePageMemoryConsumer(MC_USER, Pfn);
-	       }
-	    }
+               }
+            }
          }
       }
    }
@@ -5862,72 +5862,72 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
          Result = TRUE;
          ExAcquireFastMutex(&ImageSectionObjectLock);
          if (ImageSectionObject)
-	 {
-	    if(ImageSectionObject->RefCount == 0)
-	    {
+         {
+            if(ImageSectionObject->RefCount == 0)
+            {
                DPRINT1("%x %d\n", ImageSectionObject, ImageSectionObject->RefCount);
                MmFreeImageSectionSegments(SectionObjectPointer);
-	    }
-	    else
-	    {
-	       Result = FALSE;
-	    }
-	 }
+            }
+            else
+            {
+               Result = FALSE;
+            }
+         }
          ExReleaseFastMutex(&ImageSectionObjectLock);
 #if 1
          ExAcquireFastMutex(&DataSectionObjectLock);
-	 if (Segment)
-	 {
+         if (Segment)
+         {
             DPRINT("%d %wZ\n", Segment->ReferenceCount, &Segment->FileObject->FileName);
-	    if (Segment->ReferenceCount == 0)
-	    {
-	       MmFreeDataSectionSegments(SectionObjectPointer);
-	    }
-	    else
-	    {
-//	       Result = FALSE;
-	    }
-	 }
+            if (Segment->ReferenceCount == 0)
+            {
+               MmFreeDataSectionSegments(SectionObjectPointer);
+            }
+            else
+            {
+//               Result = FALSE;
+            }
+         }
          ExReleaseFastMutex(&DataSectionObjectLock);
 #endif
-	 if (Result)
-	 {
+         if (Result)
+         {
 #if 1
-//	     KEBUGCHECK(0);
+//             KEBUGCHECK(0);
 #else
-	     CcRosSetRemoveOnClose(SectionObjectPointer);
+             CcRosSetRemoveOnClose(SectionObjectPointer);
 #endif
-	 }
+         }
          break;
       case MmFlushForWrite:
-	 Result = TRUE;
+         Result = TRUE;
          ExAcquireFastMutex(&ImageSectionObjectLock);
          if (ImageSectionObject)
-	 {
-	    if (ImageSectionObject->RefCount == 0)
-	    {
-	       MmFreeImageSectionSegments(SectionObjectPointer);
-	    }
-	    else
-	    {
-	       Result = FALSE;
-	    }
-	 }
+         {
+            if (ImageSectionObject->RefCount == 0)
+            {
+               MmFreeImageSectionSegments(SectionObjectPointer);
+            }
+            else
+            {
+               Result = FALSE;
+            }
+         }
          ExReleaseFastMutex(&ImageSectionObjectLock);
 #if 0
          ExAcquireFastMutex(&DataSectionObjectLock);
-	 if (Segment)
-	 {
-	    CHECKPOINT;
-	    if (Segment->ReferenceCount == 0)
-	    {
-	       MmFreeDataSectionSegments(SectionObjectPointer);
-	    }
-	    else
-	    {
-	       Result = FALSE;
-	    }
-	 }
+         if (Segment)
+         {
+            CHECKPOINT;
+            if (Segment->ReferenceCount == 0)
+            {
+               MmFreeDataSectionSegments(SectionObjectPointer);
+            }
+            else
+            {
+               Result = FALSE;
+            }
+         }
          ExReleaseFastMutex(&DataSectionObjectLock);
 #endif
          break;
@@ -6006,8 +6006,8 @@ MmMapViewInSessionSpace (
     IN OUT PSIZE_T ViewSize
     )
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -6038,8 +6038,8 @@ MmUnmapViewInSessionSpace (
     IN PVOID MappedBase
     )
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -6164,11 +6164,11 @@ MmCreateSection (OUT PVOID  * Section,
       }
 
       Status = ObReferenceObjectByHandle(FileHandle,
-	                                 FileAccess,
-					 IoFileObjectType,
-					 UserMode,
-					 (PVOID*)&FileObject,
-					 NULL);
+                                         FileAccess,
+                                         IoFileObjectType,
+                                         UserMode,
+                                         (PVOID*)&FileObject,
+                                         NULL);
       if (!NT_SUCCESS(Status))
       {
          return Status;
@@ -6194,13 +6194,13 @@ MmCreateSection (OUT PVOID  * Section,
    {
       DPRINT("%wZ\n", &FileObject->FileName);
       Status = MmCreateDataFileSection(SectionObject,
-	                               DesiredAccess,
-				       ObjectAttributes,
-				       MaximumSize,
-				       SectionPageProtection,
-				       AllocationAttributes,
-				       FileObject,
-				       FALSE);
+                                       DesiredAccess,
+                                       ObjectAttributes,
+                                       MaximumSize,
+                                       SectionPageProtection,
+                                       AllocationAttributes,
+                                       FileObject,
+                                       FALSE);
    }
    else
    {
@@ -6251,34 +6251,34 @@ MmRosTrimImageSectionObjects(ULONG Target, ULONG Priority, PULONG NrFreed)
             for (i = 0; i < NrSegments && *NrFreed < Target; i++)
             {
                Length = PAGE_ROUND_UP(SectionSegments[i].Length);
-	       for (Offset = 0; Offset < Length && *NrFreed < Target; Offset += PAGE_SIZE)
-	       {
-	          Entry = MmGetPageEntrySectionSegment(&SectionSegments[i], Offset);
-	          if (Entry != 0)
-	          {
-	             if (IS_SWAP_FROM_SSE(Entry)) 
-	             {
-	                KEBUGCHECK(0);
-	             }
-	             else if (MmGetShareCountPage(PFN_FROM_SSE(Entry)) != 0)
-	             {
-	                DPRINT1("%d %x\n", i, Offset, MmGetShareCountPage(PFN_FROM_SSE(Entry)));
-	                KEBUGCHECK(0);
-	             }
-	             else
-	             {
-	                MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
-		        MmSetPageEntrySectionSegment(&SectionSegments[i], Offset, 0);
-		        (*NrFreed)++;
-	             }
-	          }
-	       }
-	    }
-	    if (*NrFreed >= Target)
-	    {
-	       break;
-	    }
-	 }
+               for (Offset = 0; Offset < Length && *NrFreed < Target; Offset += PAGE_SIZE)
+               {
+                  Entry = MmGetPageEntrySectionSegment(&SectionSegments[i], Offset);
+                  if (Entry != 0)
+                  {
+                     if (IS_SWAP_FROM_SSE(Entry)) 
+                     {
+                        KEBUGCHECK(0);
+                     }
+                     else if (MmGetShareCountPage(PFN_FROM_SSE(Entry)) != 0)
+                     {
+                        DPRINT1("%d %x\n", i, Offset, MmGetShareCountPage(PFN_FROM_SSE(Entry)));
+                        KEBUGCHECK(0);
+                     }
+                     else
+                     {
+                        MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+                        MmSetPageEntrySectionSegment(&SectionSegments[i], Offset, 0);
+                        (*NrFreed)++;
+                     }
+                  }
+               }
+            }
+            if (*NrFreed >= Target)
+            {
+               break;
+            }
+         }
 
          if (current->ListEntry.Blink == &ImageSectionObjectListHead)
          {
@@ -6301,8 +6301,8 @@ MmRosTrimImageSectionObjects(ULONG Target, ULONG Priority, PULONG NrFreed)
 
 NTSTATUS
 MmspWriteDataSectionPage(PMM_SECTION_SEGMENT Segment,
-			 ULONG Offset,
-			 PMM_PAGEOP PageOp)
+                         ULONG Offset,
+                         PMM_PAGEOP PageOp)
 {
    ULONG Entry;
    PFN_TYPE Pfn;
@@ -6422,7 +6422,7 @@ MmspWriteDataSectionPages(PVOID Context)
       {
          Entry = MmGetPageEntrySectionSegment(((PPAGE_IO_CONTEXT)Context)->Segment, Offset);
          MmSetPageEntrySectionSegment(((PPAGE_IO_CONTEXT)Context)->Segment, Offset, Entry | 0x2);
-	 Offset += PAGE_SIZE;
+         Offset += PAGE_SIZE;
       }
       ((PPAGE_IO_CONTEXT)Context)->PageOp[i]->Status = Status;
       MmspCompleteAndReleasePageOp(((PPAGE_IO_CONTEXT)Context)->PageOp[i]);
@@ -6445,10 +6445,10 @@ MmspWorkerThread(PVOID Pointer)
    while(1)
    {
       KeWaitForSingleObject(&MmspWorkerThreadTimer,
-	                   0,
-			   KernelMode,
-			   FALSE,
-			   NULL);
+                           0,
+                           KernelMode,
+                           FALSE,
+                           NULL);
 
       DPRINT("MmspWorkerThread\n");
 
@@ -6459,63 +6459,63 @@ MmspWorkerThread(PVOID Pointer)
       {
          current = CONTAINING_RECORD(entry, MM_SECTION_SEGMENT, ListEntry);
          MmLockSectionSegment(current);
-	 entry = entry->Flink;
+         entry = entry->Flink;
          Context = NULL;
-	 for (i = 0; i < PAGE_ROUND_UP(current->Length)/PAGE_SIZE; i++)
-	 {
+         for (i = 0; i < PAGE_ROUND_UP(current->Length)/PAGE_SIZE; i++)
+         {
             Entry = MmGetPageEntrySectionSegment(current, i * PAGE_SIZE);
-	    Pfn = PFN_FROM_SSE(Entry);
+            Pfn = PFN_FROM_SSE(Entry);
 
-	    if (!IS_SWAP_FROM_SSE(Entry) && Pfn && !(Entry & 0x2) && MmGetShareCountPage(Pfn) && MmIsDirtyPageRmap(Pfn))
-	    {
-	       Entry |= 0x2;
-	       MmSetPageEntrySectionSegment(current, i * PAGE_SIZE, Entry);
-	    }
+            if (!IS_SWAP_FROM_SSE(Entry) && Pfn && !(Entry & 0x2) && MmGetShareCountPage(Pfn) && MmIsDirtyPageRmap(Pfn))
+            {
+               Entry |= 0x2;
+               MmSetPageEntrySectionSegment(current, i * PAGE_SIZE, Entry);
+            }
             if (!IS_SWAP_FROM_SSE(Entry) && Pfn && (Entry & 0x2))
-	    {
-	       PageOp = MmGetPageOp(CcCacheViewMemoryArea, NULL, NULL, current, i * PAGE_SIZE, MM_PAGEOP_PAGESYNCH, TRUE);
+            {
+               PageOp = MmGetPageOp(CcCacheViewMemoryArea, NULL, NULL, current, i * PAGE_SIZE, MM_PAGEOP_PAGESYNCH, TRUE);
                if (PageOp)
-	       {
-		  if (Context == NULL)
-		  {
-		     Context = ExAllocatePool(NonPagedPool, sizeof(PAGE_IO_CONTEXT));
-		     Context->Segment = current;
-		     Context->Offset = i * PAGE_SIZE;
-		     Context->PageCount = 0;
-		     ExInitializeWorkItem(&Context->WorkQueueItem, MmspWriteDataSectionPages, Context);
-		  }
-		  Context->PageOp[Context->PageCount++] = PageOp;
-		  if (Context->PageCount == 16)
-		  {
+               {
+                  if (Context == NULL)
+                  {
+                     Context = ExAllocatePool(NonPagedPool, sizeof(PAGE_IO_CONTEXT));
+                     Context->Segment = current;
+                     Context->Offset = i * PAGE_SIZE;
+                     Context->PageCount = 0;
+                     ExInitializeWorkItem(&Context->WorkQueueItem, MmspWriteDataSectionPages, Context);
+                  }
+                  Context->PageOp[Context->PageCount++] = PageOp;
+                  if (Context->PageCount == 16)
+                  {
                      ExQueueWorkItem(&Context->WorkQueueItem, HyperCriticalWorkQueue);
-		     Context = NULL;
-		  }
-	       }
-	       else
-	       {
-		  if (Context)
-		  {
+                     Context = NULL;
+                  }
+               }
+               else
+               {
+                  if (Context)
+                  {
                      ExQueueWorkItem(&Context->WorkQueueItem, HyperCriticalWorkQueue);
-		     Context = NULL;
-		  }
-	       }
-	    }
+                     Context = NULL;
+                  }
+               }
+            }
             else
-	    {
-	       if (Context)
-	       {
+            {
+               if (Context)
+               {
                   ExQueueWorkItem(&Context->WorkQueueItem, HyperCriticalWorkQueue);
-		  Context = NULL;
-	       }
-	    }
-	 }
+                  Context = NULL;
+               }
+            }
+         }
          if (Context)
-	 {
+         {
             ExQueueWorkItem(&Context->WorkQueueItem, HyperCriticalWorkQueue);
-	    Context = NULL;
-	 }
-	 
-	 MmUnlockSectionSegment(current);
+            Context = NULL;
+         }
+         
+         MmUnlockSectionSegment(current);
       }
       ExReleaseFastMutex(&DataSectionObjectLock);
    }
@@ -6630,50 +6630,50 @@ MmFlushDataFileSection(PSECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULON
        if (!IS_SWAP_FROM_SSE(Entry) && Pfn && !(Entry & 0x2) && MmGetShareCountPage(Pfn) && MmIsDirtyPageRmap(Pfn))
        {
           Entry|=0x2;
-	  MmSetPageEntrySectionSegment(Segment, i * PAGE_SIZE, Entry);
+          MmSetPageEntrySectionSegment(Segment, i * PAGE_SIZE, Entry);
        }
        if (!IS_SWAP_FROM_SSE(Entry) && Pfn && (Entry & 0x2))
        {
-	  PageOp = MmGetPageOp(CcCacheViewMemoryArea, NULL, NULL, Segment, i * PAGE_SIZE, MM_PAGEOP_PAGESYNCH, TRUE);
+          PageOp = MmGetPageOp(CcCacheViewMemoryArea, NULL, NULL, Segment, i * PAGE_SIZE, MM_PAGEOP_PAGESYNCH, TRUE);
           if (PageOp)
-	  {
-	     if (Context == NULL)
-	     {
-		Context = ExAllocatePool(NonPagedPool, sizeof(PAGE_IO_CONTEXT));
-		Context->Segment = Segment;
-		Context->Offset = i * PAGE_SIZE;
-		Context->PageCount = 0;
-	     }
-	     Context->PageOp[Context->PageCount++] = PageOp;
-	     if (Context->PageCount == 16)
-	     {
-		MmUnlockSectionSegment(Segment);
+          {
+             if (Context == NULL)
+             {
+                Context = ExAllocatePool(NonPagedPool, sizeof(PAGE_IO_CONTEXT));
+                Context->Segment = Segment;
+                Context->Offset = i * PAGE_SIZE;
+                Context->PageCount = 0;
+             }
+             Context->PageOp[Context->PageCount++] = PageOp;
+             if (Context->PageCount == 16)
+             {
+                MmUnlockSectionSegment(Segment);
                 MmspWriteDataSectionPages(Context);
-		Context = NULL;
-		MmLockSectionSegment(Segment);
-	     }
-	  }
-	  else
-	  {
-	     CHECKPOINT;
-	     if (Context)
-	     {
-		MmUnlockSectionSegment(Segment);
+                Context = NULL;
+                MmLockSectionSegment(Segment);
+             }
+          }
+          else
+          {
+             CHECKPOINT;
+             if (Context)
+             {
+                MmUnlockSectionSegment(Segment);
                 MmspWriteDataSectionPages(Context);
-		Context = NULL;
-		MmLockSectionSegment(Segment);
-	     }
-	  }
+                Context = NULL;
+                MmLockSectionSegment(Segment);
+             }
+          }
        }
        else
        {
-	  if (Context)
-	  {
-	     MmUnlockSectionSegment(Segment);
+          if (Context)
+          {
+             MmUnlockSectionSegment(Segment);
              MmspWriteDataSectionPages(Context);
-	     Context = NULL;
-	     MmLockSectionSegment(Segment);
-	  }
+             Context = NULL;
+             MmLockSectionSegment(Segment);
+          }
        }
    }
    MmUnlockSectionSegment(Segment);
