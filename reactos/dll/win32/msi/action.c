@@ -154,6 +154,8 @@ static const WCHAR szInstallODBC[] =
     {'I','n','s','t','a','l','l','O','D','B','C',0};
 static const WCHAR szInstallServices[] = 
     {'I','n','s','t','a','l','l','S','e','r','v','i','c','e','s',0};
+static const WCHAR szISInitAllUsers[] = 
+    {'I','S','I','n','i','t','A','l','l','U','s','e','r','s',0};
 const WCHAR szPatchFiles[] = 
     {'P','a','t','c','h','F','i','l','e','s',0};
 static const WCHAR szPublishComponents[] = 
@@ -4277,6 +4279,7 @@ static struct _actions StandardActions[] = {
     { szMoveFiles, ACTION_MoveFiles },
     { szMsiPublishAssemblies, ACTION_MsiPublishAssemblies },
     { szMsiUnpublishAssemblies, ACTION_MsiUnpublishAssemblies },
+    { szISInitAllUsers, NULL },
     { szInstallODBC, NULL},
     { szInstallServices, ACTION_InstallServices },
     { szPatchFiles, ACTION_PatchFiles },
