@@ -6129,6 +6129,21 @@ MmCreateSection (OUT PVOID  * Section,
    BOOLEAN FileObjectCreated;
    PSECTION_OBJECT *SectionObject = (PSECTION_OBJECT *)Section;
 
+   /*
+    * Check the protection
+    */
+   ULONG Protection = SectionPageProtection & ~(PAGE_GUARD | PAGE_NOCACHE);
+   if (Protection != PAGE_NOACCESS &&
+       Protection != PAGE_READONLY &&
+       Protection != PAGE_READWRITE &&
+       Protection != PAGE_WRITECOPY &&
+       Protection != PAGE_EXECUTE &&
+       Protection != PAGE_EXECUTE_READ && Protection != PAGE_EXECUTE_READWRITE && Protection != PAGE_EXECUTE_WRITECOPY)
+   {
+       CHECKPOINT1;
+       return STATUS_INVALID_PAGE_PROTECTION;
+   }
+
    if (AllocationAttributes & SEC_IMAGE &&
        FileHandle == NULL &&
        FileObject == NULL)
