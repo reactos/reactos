@@ -266,9 +266,38 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     
     *ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
+
+	 //This->mpLocal  = (DDRAWI_DDRAWSURFACE_LCL* )DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL)  * This->cSurfaces);
+     //This->mppLocal = (DDRAWI_DDRAWSURFACE_LCL**)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL*) * This->cSurfaces);
+	/* start alloc memory */
+	if ((pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+	{
+		 // Do not alloc system memmory 
+		
+	}
+	else
+	{
+		// Create system mmeory 
+		//DDSCAPS_SYSTEMMEMORY 
+	}
+
+
+
+
     // the real surface object creation
     //return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
 
+	/* alloc memmory if we need it for diffent surface */
+	// DDSCAPS_VIDEOMEMORY graphic card alloc memmory */
+
+	// DDSCAPS_OFFSCREENPLAIN offcreen surface alloc memmory ??
+
+	// DDSCAPS_OVERLAY create overlay surface 
+    
+	// DDSCAPS_TEXTURE  
+	// DDSCAPS_SYSTEMMEMORY 
+
+  //  return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
 	return DD_OK;
 }
 
