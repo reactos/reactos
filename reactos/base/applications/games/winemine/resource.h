@@ -19,6 +19,8 @@
  */
 
 
+#define IDNONE          -1
+
 #define ID_TIMER        1000
 
 /* menu defines */
