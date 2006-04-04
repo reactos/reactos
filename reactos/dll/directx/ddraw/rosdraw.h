@@ -54,6 +54,9 @@ typedef struct
 
 	BOOL InitializeDraw; 
 
+	/* HEL stuff */
+	DWORD HELMemoryAvilable;
+
 } IDirectDrawImpl; 
 
 /******** Surface Object ********/
@@ -136,6 +139,10 @@ HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 , DWORD , DWORD ,DWORD , DWORD , DWORD );
 HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
 
+/* Setting for HEL should be move to ros special reg key ? */
+
+/* setup how much graphic memory should hel be limit, set it now to 64MB */
+#define HEL_GRAPHIC_MEMORY_MAX 67108864
 
 /*********** Macros ***********/
 

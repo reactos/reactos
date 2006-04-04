@@ -11,8 +11,13 @@
 #include "rosdraw.h"
 
 
+
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 {
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+	This->HELMemoryAvilable = HEL_GRAPHIC_MEMORY_MAX;
+
 	return DD_OK;
 }
 
@@ -29,7 +34,11 @@ VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface)
 HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 				   LPDWORD total, LPDWORD free)	
 {
-	DX_STUB;
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+	*total = HEL_GRAPHIC_MEMORY_MAX;
+    *free = This->HELMemoryAvilable;
+	return DD_OK;
 }
 
 

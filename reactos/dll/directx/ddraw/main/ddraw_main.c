@@ -19,8 +19,7 @@ WINAPI
 Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    HRESULT ret;
-   
+       
 	if (iface==NULL) 
 	{
 		return DDERR_NOTINITIALIZED;
@@ -46,13 +45,10 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 		 
                        
     // call software first
-    if((ret = Hal_DirectDraw_Initialize (iface)) != DD_OK)
-        return ret;
-    
-    // ... then overwrite with hal
-    if((ret = Hel_DirectDraw_Initialize (iface)) != DD_OK)
-        return ret;
-	   
+    Hal_DirectDraw_Initialize (iface);
+        
+    Hel_DirectDraw_Initialize (iface); 
+        	   
     return DD_OK;
 }
 
