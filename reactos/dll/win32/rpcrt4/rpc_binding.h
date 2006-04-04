@@ -53,12 +53,16 @@ typedef struct _RpcBinding
   RpcConnection* FromConn;
 } RpcBinding;
 
-#define CONTEXT_HANDLE_NDR_SIZE 20
+typedef struct _ContextHandleNdr
+{
+	UINT attributes;
+	UUID uuid;
+} ContextHandleNdr;
 
 typedef struct _CContextHandle
 {
 	RpcBinding *Binding;
-	BYTE Ndr[CONTEXT_HANDLE_NDR_SIZE];
+	ContextHandleNdr Ndr;
 } CContextHandle;
 
 LPSTR RPCRT4_strndupA(LPCSTR src, INT len);

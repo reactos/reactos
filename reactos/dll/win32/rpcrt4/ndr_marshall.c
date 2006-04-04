@@ -3236,7 +3236,7 @@ static void WINAPI NdrBaseTypeFree(PMIDL_STUB_MESSAGE pStubMsg,
 void WINAPI NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff )
 {
 	CContextHandle *ctx = (CContextHandle*)CContext;
-	memcpy(pBuff, ctx->Ndr, CONTEXT_HANDLE_NDR_SIZE);
+	memcpy(pBuff, &ctx->Ndr, sizeof(ContextHandleNdr));
 }
 
 /***********************************************************************
@@ -3252,7 +3252,7 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
 	NDRCContextMarshall(ContextHandle, pStubMsg->Buffer);
 	
-	pStubMsg->Buffer += CONTEXT_HANDLE_NDR_SIZE;
+	pStubMsg->Buffer += sizeof(ContextHandleNdr);
 
 }
 
@@ -3265,16 +3265,12 @@ void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *pCContext,
                                   void *pBuff, 
                                   unsigned long DataRepresentation )
 {
-	CContextHandle *ctx;
+	CContextHandle *ctx = (CContextHandle*)*pCContext;
+	ContextHandleNdr *ndr = (ContextHandleNdr*)pBuff;
 	RPC_STATUS status;
-	char *buf = (char*)pBuff;
-	int i;
-	
-	for(i = 0; i < CONTEXT_HANDLE_NDR_SIZE && !buf[i]; i++);
-	
-	if(i == CONTEXT_HANDLE_NDR_SIZE) 
+
+	if(UuidIsNil(&ndr->uuid, &status)) 
 	{
-		ctx = (CContextHandle*)*pCContext;
 		if(ctx)
 		{
 			RPCRT4_DestroyBinding(ctx->Binding);
@@ -3290,7 +3286,7 @@ void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *pCContext,
 		status = RpcBindingCopy(hBinding, (RPC_BINDING_HANDLE*) &ctx->Binding);
 		if(status != RPC_S_OK) RpcRaiseException(status);
 		
-		memcpy(ctx->Ndr, pBuff, CONTEXT_HANDLE_NDR_SIZE);
+		memcpy(&ctx->Ndr, ndr, sizeof(ContextHandleNdr));
 		*pCContext = (NDR_CCONTEXT)ctx;
 	}
 }
@@ -3310,7 +3306,7 @@ void WINAPI NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 		pStubMsg->Buffer, 
 		pStubMsg->RpcMsg->DataRepresentation);
 	
-	pStubMsg->Buffer += CONTEXT_HANDLE_NDR_SIZE;
+	pStubMsg->Buffer += sizeof(ContextHandleNdr);
 }
 
 void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
