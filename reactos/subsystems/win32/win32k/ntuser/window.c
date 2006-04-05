@@ -33,10 +33,6 @@
 #define NDEBUG
 #include <debug.h>
 
-static WndProcHandle *WndProcHandlesArray = 0;
-static WORD WndProcHandlesArraySize = 0;
-#define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */
-
 /* dialog resources appear to pass this in 16 bits, handle them properly */
 #define CW_USEDEFAULT16 (0x8000)
 
@@ -53,8 +49,6 @@ static WORD WndProcHandlesArraySize = 0;
 NTSTATUS FASTCALL
 InitWindowImpl(VOID)
 {
-   WndProcHandlesArray = ExAllocatePoolWithTag(PagedPool,WPH_SIZE * sizeof(WndProcHandle), TAG_WINPROCLST);
-   WndProcHandlesArraySize = WPH_SIZE;
    return STATUS_SUCCESS;
 }
 
@@ -67,9 +61,6 @@ InitWindowImpl(VOID)
 NTSTATUS FASTCALL
 CleanupWindowImpl(VOID)
 {
-   ExFreePool(WndProcHandlesArray);
-   WndProcHandlesArray = 0;
-   WndProcHandlesArraySize = 0;
    return STATUS_SUCCESS;
 }
 
@@ -95,15 +86,26 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 /* temp hack */
 PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
 {
+   PW32THREADINFO ti;
    PWINDOW_OBJECT Window;
-   
+
+   if (PsGetCurrentProcess() != PsInitialSystemProcess)
+   {
+       ti = GetW32ThreadInfo();
+       if (ti == NULL)
+       {
+          SetLastWin32Error(ERROR_ACCESS_DENIED);
+          return NULL;
+       }
+   }
+
    if (!hWnd)
    { 
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
    
-   Window = (PWINDOW_OBJECT)UserGetObject(&gHandleTable, hWnd, otWindow);
+   Window = (PWINDOW_OBJECT)UserGetObject(gHandleTable, hWnd, otWindow);
    if (!Window || 0 != (Window->Status & WINDOWSTATUS_DESTROYED))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -432,8 +434,16 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    IntDestroyScrollBars(Window);
 
+   if (!Window->Class->System && Window->CallProc != NULL)
+   {
+       DestroyCallProc(Window->ti->Desktop,
+                       Window->CallProc);
+   }
+
    /* dereference the class */
-   ClassDerefObject(Window->Class);
+   IntDereferenceClass(Window->Class,
+                       Window->ti->Desktop,
+                       Window->ti->kpi);
    Window->Class = NULL;
 
    if(Window->WindowRegion)
@@ -473,6 +483,57 @@ IntGetWindowBorderMeasures(PWINDOW_OBJECT Window, UINT *cx, UINT *cy)
          *cx = *cy = 0;
       }
    }
+}
+
+static WNDPROC
+IntGetWindowProc(IN PWINDOW_OBJECT Window,
+                 IN BOOL Ansi)
+{
+    if (Window->IsSystem)
+    {
+        return (Ansi ? Window->WndProcExtra : Window->WndProc);
+    }
+    else
+    {
+        if (!Ansi == Window->Unicode)
+        {
+            return Window->WndProc;
+        }
+        else
+        {
+            if (Window->CallProc != NULL)
+            {
+                return (WNDPROC)ObmObjectToHandle(Window->CallProc);
+            }
+            else
+            {
+                PCALLPROC NewCallProc, CallProc;
+
+                /* NOTE: use the interlocked functions, as this operation may be done even
+                         when only the shared lock is held! */
+                NewCallProc = CreateCallProc(Window->ti->Desktop,
+                                             Window->WndProc,
+                                             Window->Unicode,
+                                             Window->ti->kpi);
+                if (NewCallProc == NULL)
+                {
+                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                    return NULL;
+                }
+
+                CallProc = InterlockedCompareExchangePointer(&Window->CallProc,
+                                                             NewCallProc,
+                                                             NULL);
+                if (CallProc != NULL)
+                {
+                    DestroyCallProc(Window->ti->Desktop,
+                                    NewCallProc);
+                }
+
+                return (WNDPROC)ObmObjectToHandle((CallProc == NULL ? NewCallProc : CallProc));
+            }
+        }
+    }
 }
 
 BOOL FASTCALL
@@ -1333,7 +1394,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                      BOOL bUnicodeWindow)
 {
    PWINSTATION_OBJECT WinSta;
-   PWNDCLASS_OBJECT Class = NULL;
+   PWINDOWCLASS Class = NULL;
+   RTL_ATOM ClassAtom;
    PWINDOW_OBJECT Window = NULL;
    PWINDOW_OBJECT ParentWindow = NULL, OwnerWindow;
    HWND ParentWindowHandle;
@@ -1342,6 +1404,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    HWND hWnd;
    POINT Pos;
    SIZE Size;
+   PW32THREADINFO ti = NULL;
 #if 0
 
    POINT MaxSize, MaxPos, MinTrack, MaxTrack;
@@ -1349,7 +1412,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    POINT MaxPos;
 #endif
-
    CREATESTRUCTW Cs;
    CBT_CREATEWNDW CbtCreate;
    LRESULT Result;
@@ -1399,13 +1461,27 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* FIXME: parent must belong to the current process */
 
+   /* Check the window station. */
+   ti = GetW32ThreadInfo();
+   if (ti == NULL || PsGetWin32Thread()->Desktop == NULL)
+   {
+      DPRINT1("Thread is not attached to a desktop! Cannot create window!\n");
+      RETURN( (HWND)0);
+   }
+
    /* Check the class. */
-   Class = ClassGetClassByNameOrAtom(ClassName->Buffer, hInstance);
-   if (!Class)
+
+   ClassAtom = IntGetClassAtom(ClassName,
+                               hInstance,
+                               ti->kpi,
+                               &Class,
+                               NULL);
+
+   if (ClassAtom == (RTL_ATOM)0)
    {
       if (IS_ATOM(ClassName->Buffer))
       {
-         DPRINT1("Class 0x%x not found\n", (DWORD_PTR) ClassName->Buffer);
+         DPRINT1("Class 0x%p not found\n", (DWORD_PTR) ClassName->Buffer);
       }
       else
       {
@@ -1416,14 +1492,14 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       RETURN((HWND)0);
    }
 
-   ClassRefObject(Class);
-
-   /* Check the window station. */
-   if (PsGetWin32Thread()->Desktop == NULL)
+   Class = IntReferenceClass(Class,
+                             ti->Desktop);
+   if (Class == NULL)
    {
-      DPRINT("Thread is not attached to a desktop! Cannot create window!\n");
-      RETURN( (HWND)0);
+       DPRINT1("Failed to reference window class!\n");
+       RETURN(NULL);
    }
+
    WinSta = PsGetWin32Thread()->Desktop->WindowStation;
 
    //FIXME: Reference thread/desktop instead
@@ -1431,8 +1507,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Create the window object. */
    Window = (PWINDOW_OBJECT)
-            ObmCreateObject(&gHandleTable, (PHANDLE)&hWnd,
-                            otWindow, sizeof(WINDOW_OBJECT) + Class->cbWndExtra
+            ObmCreateObject(gHandleTable, (PHANDLE)&hWnd,
+                            otWindow, sizeof(WINDOW_OBJECT) + Class->WndExtra
                            );
 
    DPRINT("Created object with handle %X\n", hWnd);
@@ -1456,6 +1532,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    /*
     * Fill out the structure describing it.
     */
+   Window->ti = ti;
    Window->Class = Class;
    Window->SystemMenu = (HMENU)0;
    Window->ContextHelpId = 0;
@@ -1474,7 +1551,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    {
       IntSetMenu(Window, hMenu, &MenuChanged);
    }
-   
+
    Window->MessageQueue = PsGetWin32Thread()->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
@@ -1491,27 +1568,38 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
    
    Window->UserData = 0;
-   
-   if ((((DWORD)Class->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000)
-         && (((DWORD)Class->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000))
+
+   Window->IsSystem = Class->System;
+   if (Class->System)
    {
-      Window->Unicode = bUnicodeWindow;
+       Window->Unicode = bUnicodeWindow;
+       if (bUnicodeWindow)
+       {
+           Window->WndProc = Class->WndProc;
+           Window->WndProcExtra = Class->WndProcExtra;
+       }
+       else
+       {
+           Window->WndProc = Class->WndProcExtra;
+           Window->WndProcExtra = Class->WndProc;
+       }
    }
    else
    {
-      Window->Unicode = Class->Unicode;
+       Window->Unicode = Class->Unicode;
+       Window->WndProc = Class->WndProc;
+       Window->CallProc = NULL;
    }
-   Window->WndProcA = Class->lpfnWndProcA;
-   Window->WndProcW = Class->lpfnWndProcW;
+
    Window->OwnerThread = PsGetCurrentThread();
    Window->FirstChild = NULL;
    Window->LastChild = NULL;
    Window->PrevSibling = NULL;
    Window->NextSibling = NULL;
-   Window->ExtraDataSize = Class->cbWndExtra;
+   Window->ExtraDataSize = Class->WndExtra;
 
    /* extra window data */
-   if (Class->cbWndExtra)
+   if (Class->WndExtra)
       Window->ExtraData = (PCHAR)(Window + 1);
 
    InitializeListHead(&Window->PropListHead);
@@ -1535,7 +1623,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    {
       RtlInitUnicodeString(&Window->WindowName, NULL);
    }
-
 
    /*
     * This has been tested for WS_CHILD | WS_VISIBLE.  It has not been
@@ -1931,7 +2018,15 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
-   if (!_ret_ && Class) ClassDerefObject(Class); /* only deref if failure (return 0) */
+   if (!_ret_ && ti != NULL)
+   {
+       if (Class != NULL)
+       {
+           IntDereferenceClass(Class,
+                               ti->Desktop,
+                               ti->kpi);
+       }
+   }
    END_CLEANUP;
 }
 
@@ -1967,7 +2062,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       SetLastNtError(Status);
       RETURN( NULL);
    }
-   if (! IS_ATOM(ClassName.Buffer))
+   if (ClassName.Length != 0)
    {
       Status = IntSafeCopyUnicodeStringTerminateNULL(&ClassName, UnsafeClassName);
       if (! NT_SUCCESS(Status))
@@ -1975,6 +2070,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
          SetLastNtError(Status);
          RETURN( NULL);
       }
+   }
+   else if (! IS_INTRESOURCE(ClassName.Buffer))
+   {
+       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       return NULL;
    }
 
    /* safely copy the window name */
@@ -3254,10 +3354,8 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
             break;
 
          case GWL_WNDPROC:
-            if (Ansi)
-               Result = (LONG) Window->WndProcA;
-            else
-               Result = (LONG) Window->WndProcW;
+            Result = (LONG)IntGetWindowProc(Window,
+                                            Ansi);
             break;
 
          case GWL_HINSTANCE:
@@ -3390,22 +3488,28 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             break;
 
          case GWL_WNDPROC:
+         {
             /* FIXME: should check if window belongs to current process */
-            if (Ansi)
+            if (Window->IsSystem)
             {
-               OldValue = (LONG) Window->WndProcA;
-               Window->WndProcA = (WNDPROC) NewValue;
-               Window->WndProcW = (WNDPROC) IntAddWndProcHandle((WNDPROC)NewValue,FALSE);
-               Window->Unicode = FALSE;
+               /* the user changes the window procedure, the window is no longer
+                  directly derived from the system class, because it no longer
+                  uses independent window procedures for ansi and unicode */
+               Window->IsSystem = FALSE;
+               Window->CallProc = NULL;
             }
-            else
+
+            /* update the window procedure */
+            OldValue = (LONG)Window->WndProc;
+            Window->WndProc = (WNDPROC)NewValue;
+            if (Window->CallProc != NULL)
             {
-               OldValue = (LONG) Window->WndProcW;
-               Window->WndProcW = (WNDPROC) NewValue;
-               Window->WndProcA = (WNDPROC) IntAddWndProcHandle((WNDPROC)NewValue,TRUE);
-               Window->Unicode = TRUE;
+                Window->CallProc->WndProc = (WNDPROC)NewValue;
+                Window->CallProc->Unicode = !Ansi;
             }
+            Window->Unicode = !Ansi;
             break;
+         }
 
          case GWL_HINSTANCE:
             OldValue = (LONG) Window->Instance;
@@ -4402,99 +4506,6 @@ CLEANUP:
    DPRINT("Leave NtUserInternalGetWindowText, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-DWORD STDCALL
-NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data)
-{
-   DECLARE_RETURN(DWORD);
-   WndProcHandle Entry;
-
-   DPRINT("Enter NtUserDereferenceWndProcHandle\n");
-   UserEnterShared();
-
-   if (((DWORD)wpHandle & 0xFFFF0000) == 0xFFFF0000)
-   {
-      Entry = WndProcHandlesArray[(DWORD)wpHandle & 0x0000FFFF];
-      Data->WindowProc = Entry.WindowProc;
-      Data->IsUnicode = Entry.IsUnicode;
-      Data->ProcessID = Entry.ProcessID;
-      RETURN(  TRUE);
-   }
-   else
-   {
-      RETURN(  FALSE);
-   }
-   RETURN( FALSE);
-
-CLEANUP:
-   DPRINT("Leave NtUserDereferenceWndProcHandle, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-DWORD
-IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
-{
-   WORD i;
-   WORD FreeSpot = 0;
-   BOOL found;
-   WndProcHandle *OldArray;
-   WORD OldArraySize;
-   found = FALSE;
-   for (i = 0;i < WndProcHandlesArraySize;i++)
-   {
-      if (WndProcHandlesArray[i].WindowProc == NULL)
-      {
-         FreeSpot = i;
-         found = TRUE;
-      }
-   }
-   if (!found)
-   {
-      OldArray = WndProcHandlesArray;
-      OldArraySize = WndProcHandlesArraySize;
-      WndProcHandlesArray = ExAllocatePoolWithTag(PagedPool,(OldArraySize + WPH_SIZE) * sizeof(WndProcHandle), TAG_WINPROCLST);
-      WndProcHandlesArraySize = OldArraySize + WPH_SIZE;
-      RtlCopyMemory(WndProcHandlesArray,OldArray,OldArraySize * sizeof(WndProcHandle));
-      ExFreePool(OldArray);
-      FreeSpot = OldArraySize + 1;
-   }
-   WndProcHandlesArray[FreeSpot].WindowProc = WindowProc;
-   WndProcHandlesArray[FreeSpot].IsUnicode = IsUnicode;
-   WndProcHandlesArray[FreeSpot].ProcessID = PsGetCurrentProcessId();
-   return FreeSpot + 0xFFFF0000;
-}
-
-DWORD
-IntRemoveWndProcHandle(WNDPROC Handle)
-{
-   WORD position;
-   position = (DWORD)Handle & 0x0000FFFF;
-   if (position > WndProcHandlesArraySize)
-   {
-      return FALSE;
-   }
-   WndProcHandlesArray[position].WindowProc = NULL;
-   WndProcHandlesArray[position].IsUnicode = FALSE;
-   WndProcHandlesArray[position].ProcessID = NULL;
-   return TRUE;
-}
-
-DWORD
-IntRemoveProcessWndProcHandles(HANDLE ProcessID)
-{
-   WORD i;
-   for (i = 0;i < WndProcHandlesArraySize;i++)
-   {
-      if (WndProcHandlesArray[i].ProcessID == ProcessID)
-      {
-         WndProcHandlesArray[i].WindowProc = NULL;
-         WndProcHandlesArray[i].IsUnicode = FALSE;
-         WndProcHandlesArray[i].ProcessID = NULL;
-      }
-   }
-   return TRUE;
 }
 
 #define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)

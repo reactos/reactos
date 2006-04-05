@@ -353,7 +353,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
       if (!(Flags & DCX_WINDOW))
       {
-         if (Window->Class->style & CS_PARENTDC)
+         if (Window->Class->Style & CS_PARENTDC)
          {
             Flags |= DCX_PARENTCLIP;
          }
@@ -676,7 +676,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
       {
          if (pDCE == Window->Dce) /* owned or Class DCE*/
          {
-            if (Window->Class->style & CS_OWNDC) /* owned DCE*/
+            if (Window->Class->Style & CS_OWNDC) /* owned DCE*/
             {
                pDCE = DceFreeDCE(pDCE, FALSE);
                Window->Dce = NULL;

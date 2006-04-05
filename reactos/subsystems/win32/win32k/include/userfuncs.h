@@ -75,7 +75,7 @@ BOOL FASTCALL ObmCreateHandleTable();
 
 /******************** HANDLE.C ***************/
 
-extern USER_HANDLE_TABLE gHandleTable;
+extern PUSER_HANDLE_TABLE gHandleTable;
 
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);

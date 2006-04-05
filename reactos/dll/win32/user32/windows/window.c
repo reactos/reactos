@@ -289,8 +289,8 @@ CreateWindowExW(DWORD dwExStyle,
   {
     wce.cbSize = sizeof(WNDCLASSEXW);
     if(GetClassInfoExW(hInstance, lpClassName, &wce) && wce.lpszMenuName)
-    {
-      hMenu = LoadMenuW(hInstance, wce.lpszMenuName);
+    {DbgPrint("LoadingMenu 0x%p %d\n", wce.lpszMenuName, IS_INTRESOURCE(wce.lpszMenuName));
+    hMenu = LoadMenuW(hInstance, wce.lpszMenuName);DbgPrint("Loaded menu: 0x%p\n", hMenu);
     }
   }
 
@@ -1449,7 +1449,7 @@ HWND
 STDCALL
 GetFocus(VOID)
 {
-  return (HWND)NtUserGetThreadState(0);
+  return (HWND)NtUserGetThreadState(THREADSTATE_FOCUSWINDOW);
 }
 
 /*

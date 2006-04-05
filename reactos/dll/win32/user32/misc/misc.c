@@ -113,3 +113,34 @@ UpdatePerUserSystemParameters(
 {
    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
+
+PW32THREADINFO
+GetW32ThreadInfo(VOID)
+{
+    PW32THREADINFO ti;
+
+    ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+    if (ti == NULL)
+    {
+        /* create the W32THREADINFO structure */
+        NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+        ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+    }
+
+    return ti;
+}
+
+PW32PROCESSINFO
+GetW32ProcessInfo(VOID)
+{
+    PW32THREADINFO ti;
+    PW32PROCESSINFO pi = NULL;
+
+    ti = GetW32ThreadInfo();
+    if (ti != NULL)
+    {
+        pi = ti->pi;
+    }
+
+    return pi;
+}

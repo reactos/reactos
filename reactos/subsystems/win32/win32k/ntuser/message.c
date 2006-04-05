@@ -378,28 +378,9 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 
             MsgInfo.HandledByKernel = FALSE;
             Result = 0;
-            if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
-            {
-               if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
-               {
-                  /* Both Unicode and Ansi winprocs are real, use whatever
-                     usermode prefers */
-                  MsgInfo.Proc = (MsgInfo.Ansi ? Window->WndProcA
-                                  : Window->WndProcW);
-               }
-               else
-               {
-                  /* Real Unicode winproc */
-                  MsgInfo.Ansi = FALSE;
-                  MsgInfo.Proc = Window->WndProcW;
-               }
-            }
-            else
-            {
-               /* Must have real Ansi winproc */
-               MsgInfo.Ansi = TRUE;
-               MsgInfo.Proc = Window->WndProcA;
-            }
+
+            MsgInfo.Ansi = !Window->Unicode;
+            MsgInfo.Proc = Window->WndProc;
          }
       }
    }
@@ -615,7 +596,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
    {
       /* generate double click messages, if necessary */
       if ((((*HitTest) != HTCLIENT) ||
-            (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
+            (Window->Class->Style & CS_DBLCLKS)) &&
             MsqIsDblClk(Msg, Remove))
       {
          Msg->message += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
@@ -1401,16 +1382,9 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
          DPRINT1("Failed to pack message parameters\n");
           RETURN( FALSE);
       }
-      if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
-      {
-         Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProcW, FALSE, hWnd, Msg, wParam,
-                  lParamPacked,lParamBufferSize);
-      }
-      else
-      {
-         Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProcA, TRUE, hWnd, Msg, wParam,
-                  lParamPacked,lParamBufferSize);
-      }
+
+      Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProc, !Window->Unicode, hWnd, Msg, wParam,
+               lParamPacked,lParamBufferSize);
 
       if(uResult)
       {
@@ -1580,32 +1554,16 @@ co_IntDoSendMessage(HWND hWnd,
    {
       /* Gather the information usermode needs to call the window proc directly */
       Info.HandledByKernel = FALSE;
-      if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
+
+      Status = MmCopyFromCaller(&(Info.Ansi), &(UnsafeInfo->Ansi),
+                                sizeof(BOOL));
+      if (! NT_SUCCESS(Status))
       {
-         if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
-         {
-            /* Both Unicode and Ansi winprocs are real, see what usermode prefers */
-            Status = MmCopyFromCaller(&(Info.Ansi), &(UnsafeInfo->Ansi),
-                                      sizeof(BOOL));
-            if (! NT_SUCCESS(Status))
-            {
-               Info.Ansi = ! Window->Unicode;
-            }
-            Info.Proc = (Info.Ansi ? Window->WndProcA : Window->WndProcW);
-         }
-         else
-         {
-            /* Real Unicode winproc */
-            Info.Ansi = FALSE;
-            Info.Proc = Window->WndProcW;
-         }
+         Info.Ansi = ! Window->Unicode;
       }
-      else
-      {
-         /* Must have real Ansi winproc */
-         Info.Ansi = TRUE;
-         Info.Proc = Window->WndProcA;
-      }
+
+      Info.Ansi = !Window->Unicode;
+      Info.Proc = Window->WndProc;
    }
    else
    {

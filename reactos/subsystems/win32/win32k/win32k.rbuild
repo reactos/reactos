@@ -64,14 +64,15 @@
 			<file>err.c</file>
 			<file>math.c</file>
 			<file>copy.c</file>
+			<file>usrheap.c</file>
 		</compilationunit>
 		<directory name="i386">
-		<file>cos_asm.s</file>
-		<file>sin_asm.s</file>
-		<file>atan2_asm.s</file>
-		<file>floor_asm.s</file>
-		<file>ceil_asm.s</file>
-        </directory>
+			<file>cos_asm.s</file>
+			<file>sin_asm.s</file>
+			<file>atan2_asm.s</file>
+			<file>floor_asm.s</file>
+			<file>ceil_asm.s</file>
+	        </directory>
 	</directory>
 	<directory name="ntddraw">
 		<compilationunit name="ntddraw.c">

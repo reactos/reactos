@@ -45,7 +45,7 @@ typedef enum _USER_OBJECT_TYPE
   otCursorIcon,
   otHook,
   otMonitor,
-  otClass //fixme: remove
+  otCallProc
   
 } USER_OBJECT_TYPE;
 
@@ -124,6 +124,8 @@ typedef struct _USER_REFERENCE_ENTRY
    ObmDereferenceObject(_obj_); \
    \
 }
+
+HANDLE FASTCALL ObmObjectToHandle(PVOID obj);
 
 VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);

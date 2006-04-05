@@ -33,6 +33,9 @@ BOOL INTERNAL_CALL GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct 
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
 
+HANDLE GlobalUserHeap = NULL;
+PSECTION_OBJECT GlobalUserHeapSection = NULL;
+
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
@@ -69,7 +72,34 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
   if (Create)
     {
+      ULONG ViewSize = 0;
+      LARGE_INTEGER Offset;
+      PVOID UserBase = NULL;
+      NTSTATUS Status;
+      extern PSECTION_OBJECT GlobalUserHeapSection;
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
+
+      /* map the global heap into the process */
+      Offset.QuadPart = 0;
+      Status = MmMapViewOfSection(GlobalUserHeapSection,
+                                  PsGetCurrentProcess(),
+                                  &UserBase,
+                                  0,
+                                  0,
+                                  &Offset,
+                                  &ViewSize,
+                                  ViewUnmap,
+                                  SEC_NO_CHANGE,
+                                  PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+      if (!NT_SUCCESS(Status))
+      {
+          DPRINT1("Failed to map the global heap! 0x%x\n", Status);
+          RETURN(Status);
+      }
+      Win32Process->HeapMappings.Next = NULL;
+      Win32Process->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
+      Win32Process->HeapMappings.UserMapping = UserBase;
+      Win32Process->HeapMappings.Count = 1;
 
       InitializeListHead(&Win32Process->ClassList);
 
@@ -95,7 +125,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
   else
     {
       DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
-      IntRemoveProcessWndProcHandles((HANDLE)Process->UniqueProcessId);
       IntCleanupMenus(Process, Win32Process);
       IntCleanupCurIcons(Process, Win32Process);
       IntEngCleanupDriverObjs(Process, Win32Process);
@@ -114,6 +143,12 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       if(LogonProcess == Win32Process)
       {
         LogonProcess = NULL;
+      }
+
+      if (Win32Process->ProcessInfo != NULL)
+      {
+          UserHeapFree(Win32Process->ProcessInfo);
+          Win32Process->ProcessInfo = NULL;
       }
     }
 
@@ -198,17 +233,25 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
         if (hDesk != NULL)
         {
+          PDESKTOP_OBJECT DesktopObject;
+          Win32Thread->Desktop = NULL;
           Status = ObReferenceObjectByHandle(hDesk,
                                              0,
                                              ExDesktopObjectType,
                                              KernelMode,
-                                             (PVOID*)&Win32Thread->Desktop,
+                                             (PVOID*)&DesktopObject,
                                              NULL);
           NtClose(hDesk);
-          if(!NT_SUCCESS(Status))
+          if(NT_SUCCESS(Status))
+          {
+            if (!IntSetThreadDesktop(DesktopObject))
+            {
+              DPRINT1("Unable to set thread desktop\n");
+            }
+          }
+          else
           {
             DPRINT1("Unable to reference thread desktop handle 0x%x\n", hDesk);
-            Win32Thread->Desktop = NULL;
           }
         }
       }
@@ -234,11 +277,15 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       IntBlockInput(Win32Thread, FALSE);
       MsqDestroyMessageQueue(Win32Thread->MessageQueue);
       IntCleanupThreadCallbacks(Win32Thread);
-      if(Win32Thread->Desktop != NULL)
+
+      IntSetThreadDesktop(NULL);
+
+      if (Win32Thread->ThreadInfo != NULL)
       {
-        ObDereferenceObject(Win32Thread->Desktop);
+          UserHeapFree(Win32Thread->ThreadInfo);
+          Win32Thread->ThreadInfo = NULL;
       }
-      
+
       /* cleanup user object references stack */
       e = PopEntryList(&Win32Thread->ReferencesList);
       while (e)
@@ -309,6 +356,7 @@ DriverEntry (
   NTSTATUS Status;
   BOOLEAN Result;
   W32_CALLOUT_DATA CalloutData;
+  PVOID GlobalUserHeapBase = NULL;
 
   /*
    * Register user mode call interface
@@ -341,6 +389,16 @@ DriverEntry (
      * Register our per-process and per-thread structures.
      */
     PsEstablishWin32Callouts(&CalloutData);
+
+    GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
+                                    &GlobalUserHeapBase,
+                                    1 * 1024 * 1024); /* FIXME - 1 MB for now... */
+    if (GlobalUserHeap == NULL)
+    {
+        DPRINT1("Failed to initialize the global heap!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
 
   Status = InitUserImpl();
   if (!NT_SUCCESS(Status))

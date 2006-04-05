@@ -127,7 +127,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
       return NULL;
    }
    
-   Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
+   Menu = (PMENU_OBJECT)UserGetObject(gHandleTable, hMenu, otMenu);
    if (!Menu)
    {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -310,7 +310,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    PMENU_OBJECT Menu;
 
    Menu = (PMENU_OBJECT)ObmCreateObject(
-             &gHandleTable, Handle,
+             gHandleTable, Handle,
              otMenu, sizeof(MENU_OBJECT));
 
    if(!Menu)
@@ -419,7 +419,7 @@ IntCloneMenu(PMENU_OBJECT Source)
       return NULL;
 
    Menu = (PMENU_OBJECT)ObmCreateObject(
-             &gHandleTable, &hMenu,
+             gHandleTable, &hMenu,
              otMenu, sizeof(MENU_OBJECT));
 
    if(!Menu)

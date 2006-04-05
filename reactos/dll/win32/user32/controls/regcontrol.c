@@ -44,15 +44,13 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
       RtlInitUnicodeString(&ClassName, Descr->name);
    }
 
-   NtUserRegisterClassExWOW(
+   NtUserRegisterClassEx(
       &wc,
-      &ClassName,
       &ClassName,
       &MenuName,
       Descr->procA,
       REGISTERCLASS_SYSTEM,
-      0,
-      0);
+      NULL);
 }
 
 /***********************************************************************

@@ -26,8 +26,21 @@ typedef struct _INTERNALPOS
 
 typedef struct _WINDOW_OBJECT
 {
+  /* Pointer to the thread information */
+  PW32THREADINFO ti;
+  /* Pointer to the desktop */
+  PDESKTOP Desktop;
+  union
+  {
+    /* Pointer to a call procedure handle */
+    PCALLPROC CallProc;
+    /* Extra Wnd proc (windows of system classes) */
+    WNDPROC WndProcExtra;
+  };
+  /* Indicates whether the window is derived from a system class */
+  BOOL IsSystem;
   /* Pointer to the window class. */
-  PWNDCLASS_OBJECT Class;
+  PWINDOWCLASS Class;
   /* Extended style. */
   DWORD ExStyle;
   /* Window name. */
@@ -81,8 +94,7 @@ typedef struct _WINDOW_OBJECT
   PWINDOW_SCROLLINFO Scroll;
   LONG UserData;
   BOOL Unicode;
-  WNDPROC WndProcA;
-  WNDPROC WndProcW;
+  WNDPROC WndProc;
   PETHREAD OwnerThread;
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   PINTERNALPOS InternalPos;
@@ -189,10 +201,6 @@ IntAnyPopup(VOID);
 
 BOOL FASTCALL
 IntIsWindowInDestroy(PWINDOW_OBJECT Window);
-
-DWORD IntRemoveWndProcHandle(WNDPROC Handle);
-DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
-DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
 BOOL FASTCALL
 IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );

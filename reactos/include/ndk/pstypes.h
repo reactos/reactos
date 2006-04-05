@@ -424,7 +424,7 @@ typedef struct _TEB
     ULONG LastErrorValue;                   /* 34h */
     ULONG CountOfOwnedCriticalSections;     /* 38h */
     PVOID CsrClientThread;                  /* 3Ch */
-    struct _W32THREAD* Win32ThreadInfo;     /* 40h */
+    PVOID Win32ThreadInfo;                  /* 40h */
     ULONG User32Reserved[0x1A];             /* 44h */
     ULONG UserReserved[5];                  /* ACh */
     PVOID WOW32Reserved;                    /* C0h */

@@ -311,7 +311,7 @@ HEAP_Commit(SUBHEAP *subheap,
    }
    else
    {
-      Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+      Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                        &address,
                                        0,
                                        &commitsize,
@@ -570,13 +570,24 @@ static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
 
       /* Initialize critical section */
 
-      RtlInitializeHeapLock( &heap->critSection );
+      if (RtlpGetMode() == UserMode)
+      {
+         RtlInitializeHeapLock( &heap->critSection );
+      }
    }
 
    /* Commit memory */
    if (heap->commitRoutine)
    {
-      Status = heap->commitRoutine(heap, &address, &commitSize);
+      if (subheap != (SUBHEAP *)heap)
+      {
+         Status = heap->commitRoutine(heap, &address, &commitSize);
+      }
+      else
+      {
+         /* the caller is responsible for committing the first page! */
+         Status = STATUS_SUCCESS;
+      }
    }
    else
    {

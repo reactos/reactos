@@ -1,3 +1,5 @@
+#ifndef __W32K_H
+#define __W32K_H
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Graphics Subsystem
@@ -68,3 +70,77 @@ typedef DRIVEROBJ *PDRIVEROBJ;
 #define M_PI_2 1.57079632679489661923
 #endif
 
+/* User heap */
+extern HANDLE GlobalUserHeap;
+
+HANDLE
+UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
+               IN OUT PVOID *SystemBase,
+               IN ULONG HeapSize);
+
+static __inline PVOID
+UserHeapAlloc(SIZE_T Bytes)
+{
+    return RtlAllocateHeap(GlobalUserHeap,
+                           HEAP_NO_SERIALIZE,
+                           Bytes);
+}
+
+static __inline BOOL
+UserHeapFree(PVOID lpMem)
+{
+    return RtlFreeHeap(GlobalUserHeap,
+                       HEAP_NO_SERIALIZE,
+                       lpMem);
+}
+
+static __inline PVOID
+UserHeapReAlloc(PVOID lpMem,
+                SIZE_T Bytes)
+{
+#if 0
+    /* NOTE: ntoskrnl doesn't export RtlReAllocateHeap... */
+    return RtlReAllocateHeap(GlobalUserHeap,
+                             HEAP_NO_SERIALIZE,
+                             lpMem,
+                             Bytes);
+#else
+    SIZE_T PrevSize;
+    PVOID pNew;
+
+    PrevSize = RtlSizeHeap(GlobalUserHeap,
+                           HEAP_NO_SERIALIZE,
+                           lpMem);
+
+    if (PrevSize == Bytes)
+        return lpMem;
+
+    pNew = RtlAllocateHeap(GlobalUserHeap,
+                           HEAP_NO_SERIALIZE,
+                           Bytes);
+    if (pNew != NULL)
+    {
+        if (PrevSize < Bytes)
+            Bytes = PrevSize;
+
+        RtlCopyMemory(pNew,
+                      lpMem,
+                      Bytes);
+
+        RtlFreeHeap(GlobalUserHeap,
+                    HEAP_NO_SERIALIZE,
+                    lpMem);
+    }
+
+    return pNew;
+#endif
+}
+
+static __inline PVOID
+UserHeapAddressToUser(PVOID lpMem)
+{
+    return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)GlobalUserHeap) +
+                   (ULONG_PTR)PsGetWin32Process()->HeapMappings.UserMapping);
+}
+
+#endif /* __W32K_H */

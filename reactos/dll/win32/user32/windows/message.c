@@ -951,6 +951,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
           return FALSE;
         }
       Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
+
       if (! MsgiUnicodeToAnsiReply(&AnsiMsg, &UnicodeMsg, &Result))
         {
           return FALSE;
@@ -991,6 +992,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
         }
       Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
                        UnicodeMsg.wParam, UnicodeMsg.lParam);
+
       if (! MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
         {
           return FALSE;
@@ -1010,20 +1012,19 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  BOOL IsHandle;
-  WndProcHandle wphData;
+  WNDPROC_INFO wpInfo;
 
   if (lpPrevWndFunc == NULL)
-    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
+    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWLP_WNDPROC, FALSE);
 
-  IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
-  if (! IsHandle)
+  if (!NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
+                                      &wpInfo))
     {
       return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
     }
   else
     {
-      return IntCallWindowProcA(! wphData.IsUnicode, wphData.WindowProc,
+      return IntCallWindowProcA(!wpInfo.IsUnicode, wpInfo.WindowProc,
                                 hWnd, Msg, wParam, lParam);
     }
 }
@@ -1039,17 +1040,16 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  BOOL IsHandle;
-  WndProcHandle wphData;
+  WNDPROC_INFO wpInfo;
 
-  IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
-  if (! IsHandle)
+  if (!NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
+                                      &wpInfo))
     {
       return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
     }
   else
     {
-      return IntCallWindowProcW(! wphData.IsUnicode, wphData.WindowProc,
+      return IntCallWindowProcW(!wpInfo.IsUnicode, wpInfo.WindowProc,
                                 hWnd, Msg, wParam, lParam);
     }
 }

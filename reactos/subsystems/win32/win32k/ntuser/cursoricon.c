@@ -83,7 +83,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
       return NULL;
    }
    
-   CurIcon = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hCurIcon, otCursorIcon);
+   CurIcon = (PCURICON_OBJECT)UserGetObject(gHandleTable, hCurIcon, otCursorIcon);
    if (!CurIcon)
    {
       /* we never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
@@ -397,7 +397,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinSta)
    PCURICON_OBJECT CurIcon;
    HANDLE hCurIcon;
 
-   CurIcon = ObmCreateObject(&gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+   CurIcon = ObmCreateObject(gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
 
    if(!CurIcon)
    {

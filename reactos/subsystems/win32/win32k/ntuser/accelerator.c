@@ -80,7 +80,7 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
       return NULL;
    }
    
-   Accel= UserGetObject(&gHandleTable, hAccel,  otAccel);
+   Accel= UserGetObject(gHandleTable, hAccel,  otAccel);
    if (!Accel)
    {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
@@ -344,7 +344,7 @@ NtUserCreateAcceleratorTable(
           Entries, EntriesCount);
    UserEnterExclusive();
 
-   Accel = ObmCreateObject(&gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+   Accel = ObmCreateObject(gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
 
    if (Accel == NULL)
    {

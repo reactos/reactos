@@ -9,6 +9,14 @@ static const UNICODE_STRING __emptyUnicodeString = {0};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
 
+#if defined(_WIN32K_)
+/*
+ * NOTE: NTOSKRNL unfortunately doesn't export RtlRaiseStatus!
+ */
+VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
+#define RtlRaiseStatus W32kRaiseStatus
+#endif
+
 /*
  * NOTE: Alignment of the pointers is not verified!
  */

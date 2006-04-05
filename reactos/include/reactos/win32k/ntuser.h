@@ -1,6 +1,75 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+struct _W32PROCESSINFO;
+struct _W32THREADINFO;
+
+typedef struct _DESKTOP
+{
+    HANDLE hKernelHeap;
+    WCHAR szDesktopName[1];
+} DESKTOP, *PDESKTOP;
+
+typedef struct _CALLPROC
+{
+    struct _W32PROCESSINFO *pi;
+    WNDPROC WndProc;
+    BOOL Unicode : 1;
+} CALLPROC, *PCALLPROC;
+
+typedef struct _WINDOWCLASS
+{
+    struct _WINDOWCLASS *Next;
+    struct _WINDOWCLASS *Clone;
+    struct _WINDOWCLASS *Base;
+    PDESKTOP Desktop;
+    RTL_ATOM Atom;
+    ULONG Windows;
+
+    UINT Style;
+    WNDPROC WndProc;
+    union
+    {
+        WNDPROC WndProcExtra;
+        PCALLPROC CallProc;
+    };
+    INT ClsExtra;
+    INT WndExtra;
+    HINSTANCE hInstance;
+    HANDLE hIcon; /* FIXME - Use pointer! */
+    HANDLE hIconSm; /* FIXME - Use pointer! */
+    HANDLE hCursor; /* FIXME - Use pointer! */
+    HBRUSH hbrBackground;
+    HANDLE hMenu; /* FIXME - Use pointer! */
+    PWSTR MenuName;
+    PSTR AnsiMenuName;
+
+    ULONG_PTR ClassExtraDataOffset;
+
+    BOOL Destroying : 1;
+    BOOL Unicode : 1;
+    BOOL System : 1;
+    BOOL Global : 1;
+} WINDOWCLASS, *PWINDOWCLASS;
+
+typedef struct _W32PROCESSINFO
+{
+    PVOID UserHandleTable;
+    PWINDOWCLASS LocalClassList;
+    PWINDOWCLASS GlobalClassList;
+    PWINDOWCLASS SystemClassList;
+} W32PROCESSINFO, *PW32PROCESSINFO;
+
+typedef struct _W32THREADINFO
+{
+    PW32PROCESSINFO pi; /* [USER] */
+    PW32PROCESSINFO kpi; /* [KERNEL] */
+    PDESKTOP Desktop;
+    ULONG_PTR DesktopHeapDelta;
+} W32THREADINFO, *PW32THREADINFO;
+
+PW32THREADINFO GetW32ThreadInfo(VOID);
+PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
 DWORD
 NTAPI
@@ -196,8 +265,8 @@ NtUserTrackPopupMenuEx(
 ULONG NTAPI
 NtUserGetSystemMetrics(ULONG Index);
 
-DWORD NTAPI
-NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi);
+ULONG_PTR NTAPI
+NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
 
 LONG NTAPI
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
@@ -785,18 +854,17 @@ NTAPI
 NtUserGetCaretPos(
   LPPOINT lpPoint);
 
-DWORD NTAPI
-NtUserGetClassInfo(HINSTANCE hInst,
-		   LPCWSTR str,
+BOOL NTAPI
+NtUserGetClassInfo(HINSTANCE hInstance,
+		   PUNICODE_STRING ClassName,
 		   LPWNDCLASSEXW wcex,
-		   BOOL Ansi,
-		   DWORD unknown3);
+		   BOOL Ansi);
 
-DWORD
+INT
 NTAPI
 NtUserGetClassName(HWND hWnd,
-		   LPWSTR lpClassName,
-		   ULONG nMaxCount);
+		   PUNICODE_STRING ClassName,
+                   BOOL Ansi);
 
 HANDLE
 NTAPI
@@ -1041,6 +1109,7 @@ NtUserGetThreadDesktop(
   DWORD dwThreadId,
   DWORD Unknown1);
 
+#define THREADSTATE_GETTHREADINFO   (0)
 #define THREADSTATE_FOCUSWINDOW (1)
 #define THREADSTATE_INSENDMESSAGE       (2)
 DWORD
@@ -1355,14 +1424,12 @@ NtUserRedrawWindow
 #define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI | REGISTERCLASS_SYSTEM)
 
 RTL_ATOM NTAPI
-NtUserRegisterClassExWOW(
+NtUserRegisterClassEx(
    CONST WNDCLASSEXW* lpwcx,
    PUNICODE_STRING ClassName,
-   PUNICODE_STRING ClassNameCopy,
    PUNICODE_STRING MenuName,
    WNDPROC wpExtra,
    DWORD Flags,
-   DWORD Unknown7,
    HMENU hMenu);
 
 BOOL
@@ -1470,11 +1537,11 @@ NtUserSetCapture(HWND Wnd);
 HWND NTAPI
 NtUserGetCapture(VOID);
 
-DWORD NTAPI
+ULONG_PTR NTAPI
 NtUserSetClassLong(
   HWND  hWnd,
-  DWORD Offset,
-  LONG  dwNewLong,
+  INT Offset,
+  ULONG_PTR  dwNewLong,
   BOOL  Ansi );
 
 
@@ -1840,9 +1907,8 @@ NtUserUnlockWindowStation(
 BOOL
 NTAPI
 NtUserUnregisterClass(
-  LPCWSTR ClassNameOrAtom,
-  HINSTANCE hInstance,
-  DWORD Unknown);
+  PUNICODE_STRING ClassNameOrAtom,
+  HINSTANCE hInstance);
 
 BOOL
 NTAPI
@@ -1951,15 +2017,15 @@ NtUserGetWindow(HWND hWnd, UINT Relationship);
 
 HWND NTAPI
 NtUserGetLastActivePopup(HWND hWnd);
-typedef struct _WndProcHandle
+
+typedef struct _WNDPROC_INFO
 {
-  WNDPROC WindowProc;
-  BOOL IsUnicode;
-  HANDLE ProcessID;
-} WndProcHandle;
+    WNDPROC WindowProc;
+    BOOL IsUnicode;
+} WNDPROC_INFO, *PWNDPROC_INFO;
                                     
-DWORD NTAPI
-NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
+BOOL NTAPI
+NtUserDereferenceWndProcHandle(IN HANDLE wpHandle, OUT PWNDPROC_INFO wpInfo);
 
 VOID NTAPI
 NtUserManualGuiCheck(LONG Check);

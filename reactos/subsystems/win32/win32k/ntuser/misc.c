@@ -886,11 +886,22 @@ NtUserGetThreadState(
    DECLARE_RETURN(DWORD);
 
    DPRINT("Enter NtUserGetThreadState\n");
-   UserEnterShared();
+   if (Routine != THREADSTATE_GETTHREADINFO)
+   {
+       UserEnterShared();
+   }
+   else
+   {
+       UserEnterExclusive();
+   }
 
    switch (Routine)
    {
-      case 0:
+      case THREADSTATE_GETTHREADINFO:
+         GetW32ThreadInfo();
+         RETURN(0);
+
+      case THREADSTATE_FOCUSWINDOW:
          RETURN( (DWORD)IntGetThreadFocusWindow());
    }
    RETURN( 0);
@@ -1828,5 +1839,107 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
+
+PW32PROCESSINFO
+GetW32ProcessInfo(VOID)
+{
+    PW32PROCESSINFO pi;
+    PW32PROCESS W32Process = PsGetWin32Process();
+
+    if (W32Process == NULL)
+    {
+        /* FIXME - temporary hack for system threads... */
+        return NULL;
+    }
+
+    if (W32Process->ProcessInfo == NULL)
+    {
+        pi = UserHeapAlloc(sizeof(W32PROCESSINFO));
+        if (pi != NULL)
+        {
+            RtlZeroMemory(pi,
+                          sizeof(W32PROCESSINFO));
+
+            /* initialize it */
+            pi->UserHandleTable = gHandleTable;
+
+            if (InterlockedCompareExchangePointer(&W32Process->ProcessInfo,
+                                                  pi,
+                                                  NULL) != NULL)
+            {
+                UserHeapFree(pi);
+            }
+        }
+        else
+        {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        }
+    }
+
+    return W32Process->ProcessInfo;
+}
+
+PW32THREADINFO
+GetW32ThreadInfo(VOID)
+{
+    PTEB Teb;
+    PW32THREADINFO ti;
+    PW32THREAD W32Thread = PsGetWin32Thread();
+
+    if (W32Thread == NULL)
+    {
+        /* FIXME - temporary hack for system threads... */
+        return NULL;
+    }
+
+    /* allocate a W32THREAD structure if neccessary */
+    if (W32Thread->ThreadInfo == NULL)
+    {
+        ti = UserHeapAlloc(sizeof(W32THREADINFO));
+        if (ti != NULL)
+        {
+            RtlZeroMemory(ti,
+                          sizeof(W32THREADINFO));
+
+            /* initialize it */
+            ti->kpi = GetW32ProcessInfo();
+            ti->pi = UserHeapAddressToUser(ti->kpi);
+            if (W32Thread->Desktop != NULL)
+            {
+                ti->Desktop = W32Thread->Desktop->DesktopInfo;
+                ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
+            }
+            else
+            {
+                ti->Desktop = NULL;
+                ti->DesktopHeapDelta = 0;
+            }
+
+            W32Thread->ThreadInfo = ti;
+            /* update the TEB */
+            Teb = NtCurrentTeb();
+            _SEH_TRY
+            {
+                ProbeForWrite(Teb,
+                              sizeof(TEB),
+                              sizeof(ULONG));
+
+                Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
+            }
+            _SEH_HANDLE
+            {
+                SetLastNtError(_SEH_GetExceptionCode());
+            }
+            _SEH_END;
+        }
+        else
+        {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        }
+    }
+
+    return W32Thread->ThreadInfo;
+}
+
 
 /* EOF */

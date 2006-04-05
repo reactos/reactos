@@ -356,7 +356,7 @@ NtUserGetAsyncKeyState                  1
 NtUserGetCapture			0
 NtUserGetCaretBlinkTime                 0
 NtUserGetCaretPos                       1
-NtUserGetClassInfo                      5
+NtUserGetClassInfo                      4
 NtUserGetClassLong			3
 NtUserGetClassName                      3
 NtUserGetClientOrigin			2
@@ -457,7 +457,7 @@ NtUserQueryWindow                       2
 NtUserReleaseDC				2
 NtUserRealChildWindowFromPoint          3
 NtUserRedrawWindow                      4
-NtUserRegisterClassExWOW                8
+NtUserRegisterClassEx                   6
 NtUserRegisterHotKey                    4
 NtUserRegisterTasklist                  1
 NtUserRegisterWindowMessage             1
@@ -536,7 +536,7 @@ NtUserUnhookWindowsHookEx               1
 NtUserUnhookWinEvent                    1
 NtUserUnloadKeyboardLayout              1
 NtUserUnlockWindowStation               1
-NtUserUnregisterClass                   3
+NtUserUnregisterClass                   2
 NtUserUnregisterHotKey                  2
 NtUserUpdateInputContext                3
 NtUserUpdateInstance                    3

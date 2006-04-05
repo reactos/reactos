@@ -43,6 +43,8 @@ HDC ScreenDeviceContext = NULL;
 
 BOOL g_PaintDesktopVersion = FALSE;
 
+static VOID IntFreeDesktopHeap(IN OUT PDESKTOP_OBJECT Desktop);
+
 /* INITALIZATION FUNCTIONS ****************************************************/
 
 static GENERIC_MAPPING IntDesktopMapping =
@@ -121,6 +123,8 @@ IntDesktopObjectDelete(PVOID DeletedObject)
    RemoveEntryList(&Desktop->ListEntry);
 
    RtlFreeUnicodeString(&Desktop->Name);
+
+   IntFreeDesktopHeap(Desktop);
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -723,7 +727,15 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
    return FALSE;
 }
 
-
+static VOID
+IntFreeDesktopHeap(IN OUT PDESKTOP_OBJECT Desktop)
+{
+    if (Desktop->DesktopHeapSection != NULL)
+    {
+        ObDereferenceObject(Desktop->DesktopHeapSection);
+        Desktop->DesktopHeapSection = NULL;
+    }
+}
 
 
 /* SYSCALLS *******************************************************************/
@@ -776,6 +788,8 @@ NtUserCreateDesktop(
    NTSTATUS Status;
    HDESK Desktop;
    CSR_API_MESSAGE Request;
+   PVOID DesktopHeapSystemBase = NULL;
+   SIZE_T DesktopInfoSize;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
@@ -857,6 +871,39 @@ NtUserCreateDesktop(
       SetLastNtError(STATUS_UNSUCCESSFUL);
       RETURN( NULL);
    }
+
+   DesktopObject->DesktopHeapSection = NULL;
+   DesktopObject->hDesktopHeap = UserCreateHeap(&DesktopObject->DesktopHeapSection,
+                                                &DesktopHeapSystemBase,
+                                                4 * 1024 * 1024); /* FIXME */
+   if (DesktopObject->hDesktopHeap == NULL)
+   {
+       ObDereferenceObject(DesktopObject);
+       DPRINT1("Failed to create desktop heap!\n");
+       RETURN(NULL);
+   }
+
+   DesktopInfoSize = FIELD_OFFSET(DESKTOP,
+                                  szDesktopName[(lpszDesktopName->Length / sizeof(WCHAR)) + 1]);
+
+   DesktopObject->DesktopInfo = RtlAllocateHeap(DesktopObject->hDesktopHeap,
+                                                HEAP_NO_SERIALIZE,
+                                                DesktopInfoSize);
+
+   if (DesktopObject->DesktopInfo == NULL)
+   {
+       ObDereferenceObject(DesktopObject);
+       DPRINT1("Failed to create the DESKTOP structure!\n");
+       RETURN(NULL);
+   }
+
+   RtlZeroMemory(DesktopObject->DesktopInfo,
+                 DesktopInfoSize);
+
+   DesktopObject->DesktopInfo->hKernelHeap = DesktopObject->hDesktopHeap;
+   RtlCopyMemory(DesktopObject->DesktopInfo->szDesktopName,
+                 lpszDesktopName->Buffer,
+                 lpszDesktopName->Length);
 
    // init desktop area
    DesktopObject->WorkArea.left = 0;
@@ -1216,7 +1263,7 @@ NtUserPaintDesktop(HDC hDC)
       RETURN(FALSE);
    }
 
-   DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE); //fixme: verify retval
+   DesktopBrush = (HBRUSH)UserGetClassLongPtr(WndDesktop->Class, GCL_HBRBACKGROUND, FALSE);
 
 
    /*
@@ -1560,6 +1607,183 @@ CLEANUP:
    END_CLEANUP;
 }
 
+static NTSTATUS
+IntUnmapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
+{
+    PW32THREADINFO ti;
+    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetWin32Process()->HeapMappings.Next;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* unmap if we're the last thread using the desktop */
+    HeapMapping = *PrevLink;
+    while (HeapMapping != NULL)
+    {
+        if (HeapMapping->KernelMapping == (PVOID)DesktopObject->hDesktopHeap)
+        {
+            if (--HeapMapping->Count == 0)
+            {
+                *PrevLink = HeapMapping->Next;
+
+                Status = MmUnmapViewOfSection(PsGetCurrentProcess(),
+                                              HeapMapping->UserMapping);
+
+                ObDereferenceObject(DesktopObject);
+
+                UserHeapFree(HeapMapping);
+                break;
+            }
+        }
+
+        PrevLink = &HeapMapping->Next;
+        HeapMapping = HeapMapping->Next;
+    }
+
+    ti = GetW32ThreadInfo();
+    if (ti != NULL)
+    {
+        if (ti->Desktop == DesktopObject->DesktopInfo)
+        {
+            ti->Desktop = NULL;
+            ti->DesktopHeapDelta = 0;
+        }
+    }
+
+    return Status;
+}
+
+static NTSTATUS
+IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
+{
+    PW32THREADINFO ti;
+    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetWin32Process()->HeapMappings.Next;
+    PVOID UserBase = NULL;
+    ULONG ViewSize = 0;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    /* find out if another thread already mapped the desktop heap */
+    HeapMapping = *PrevLink;
+    while (HeapMapping != NULL)
+    {
+        if (HeapMapping->KernelMapping == (PVOID)DesktopObject->hDesktopHeap)
+        {
+            HeapMapping->Count++;
+            return STATUS_SUCCESS;
+        }
+
+        PrevLink = &HeapMapping->Next;
+        HeapMapping = HeapMapping->Next;
+    }
+
+    /* we're the first, map the heap */
+    Offset.QuadPart = 0;
+    Status = MmMapViewOfSection(DesktopObject->DesktopHeapSection,
+                                PsGetCurrentProcess(),
+                                &UserBase,
+                                0,
+                                0,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                SEC_NO_CHANGE,
+                                PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+    if (!NT_SUCCESS(Status))
+    {
+        DbgPrint("Failed to map desktop\n");
+        return Status;
+    }
+
+    /* add the mapping */
+    HeapMapping = UserHeapAlloc(sizeof(W32HEAP_USER_MAPPING));
+    if (HeapMapping == NULL)
+    {
+        MmUnmapViewOfSection(PsGetCurrentProcess(),
+                             UserBase);
+        return STATUS_NO_MEMORY;
+    }
+
+    HeapMapping->Next = NULL;
+    HeapMapping->KernelMapping = (PVOID)DesktopObject->hDesktopHeap;
+    HeapMapping->UserMapping = UserBase;
+    HeapMapping->Count = 1;
+
+    ObReferenceObject(DesktopObject);
+
+    /* create a W32THREADINFO structure if not already done, or update it */
+    ti = GetW32ThreadInfo();
+    if (ti != NULL)
+    {
+        if (ti->Desktop == NULL)
+        {
+            ti->Desktop = DesktopObject->DesktopInfo;
+            ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+BOOL
+IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject)
+{
+    PDESKTOP_OBJECT OldDesktop;
+    PW32THREAD W32Thread;
+    NTSTATUS Status;
+    BOOL MapHeap;
+
+    MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
+    W32Thread = PsGetWin32Thread();
+
+    if (W32Thread->Desktop != DesktopObject)
+    {
+        OldDesktop = W32Thread->Desktop;
+
+        W32Thread->Desktop = DesktopObject;
+
+        if (MapHeap && DesktopObject != NULL)
+        {
+            Status = IntMapDesktopView(DesktopObject);
+            if (!NT_SUCCESS(Status))
+            {
+                SetLastNtError(Status);
+                return FALSE;
+            }
+        }
+
+        if (DesktopObject != NULL)
+        {
+            ObReferenceObject(DesktopObject);
+        }
+
+        if (OldDesktop != NULL)
+        {
+            if (MapHeap)
+            {
+                IntUnmapDesktopView(OldDesktop);
+            }
+
+            ObDereferenceObject(OldDesktop);
+
+            if (W32Thread != NULL && W32Thread->ThreadInfo != NULL &&
+                W32Thread->ThreadInfo->Desktop != (DesktopObject != NULL ? DesktopObject->DesktopInfo : NULL))
+            {
+                if (DesktopObject != NULL)
+                {
+                    W32Thread->ThreadInfo->Desktop = DesktopObject->DesktopInfo;
+                    W32Thread->ThreadInfo->DesktopHeapDelta = DesktopHeapGetUserDelta();
+                }
+                else
+                {
+                    W32Thread->ThreadInfo->Desktop = NULL;
+                    W32Thread->ThreadInfo->DesktopHeapDelta = 0;
+                }
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 /*
  * NtUserSetThreadDesktop
  *
@@ -1570,7 +1794,6 @@ CLEANUP:
 BOOL STDCALL
 NtUserSetThreadDesktop(HDESK hDesktop)
 {
-   PW32THREAD W32Thread;
    PDESKTOP_OBJECT DesktopObject;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
@@ -1591,17 +1814,12 @@ NtUserSetThreadDesktop(HDESK hDesktop)
       RETURN(FALSE);
    }
 
-   W32Thread = PsGetWin32Thread();
-
    /* FIXME: Should check here to see if the thread has any windows. */
 
-   if (W32Thread->Desktop != NULL)
+   if (!IntSetThreadDesktop(DesktopObject))
    {
-      ObDereferenceObject(W32Thread->Desktop);
+       RETURN(FALSE);
    }
-
-   W32Thread->Desktop = DesktopObject;
-   W32Thread->hDesktop = hDesktop;
 
    RETURN(TRUE);
    

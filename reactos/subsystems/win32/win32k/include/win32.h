@@ -15,10 +15,18 @@ typedef struct _W32THREAD
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
 
+  PW32THREADINFO ThreadInfo;
 } W32THREAD, *PW32THREAD;
 
 #include <poppack.h>
 
+typedef struct _W32HEAP_USER_MAPPING
+{
+    struct _W32HEAP_USER_MAPPING *Next;
+    PVOID KernelMapping;
+    PVOID UserMapping;
+    ULONG Count;
+} W32HEAP_USER_MAPPING, *PW32HEAP_USER_MAPPING;
 
 typedef struct _W32PROCESS
 {
@@ -32,6 +40,9 @@ typedef struct _W32PROCESS
   ULONG Flags;
   LONG GDIObjects;
   LONG UserObjects;
+
+  W32HEAP_USER_MAPPING HeapMappings;
+  PW32PROCESSINFO ProcessInfo;
 } W32PROCESS, *PW32PROCESS;
 
 
