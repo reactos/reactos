@@ -47,10 +47,14 @@ static const char * const strings[4] = {
 static HWND
 create_listbox (DWORD add_style, HWND parent)
 {
-  HWND handle=CreateWindow ("LISTBOX", "TestList",
+  HWND handle;
+  int ctl_id=0;
+  if (parent)
+    ctl_id=1;
+  handle=CreateWindow ("LISTBOX", "TestList",
                             (LBS_STANDARD & ~LBS_SORT) | add_style,
                             0, 0, 100, 100,
-                            parent, (HMENU)1, NULL, 0);
+                            parent, (HMENU)ctl_id, NULL, 0);
 
   assert (handle);
   SendMessage (handle, LB_ADDSTRING, 0, (LPARAM) (LPCTSTR) strings[0]);
@@ -135,6 +139,7 @@ check (const struct listbox_test test)
   HWND hLB=create_listbox (test.prop.add_style, 0);
   RECT second_item;
   int i;
+  int res;
 
   listbox_query (hLB, &answer);
   listbox_ok (test, init, answer);
@@ -175,6 +180,16 @@ check (const struct listbox_test test)
 	HeapFree (GetProcessHeap(), 0, txt);
   }
   
+  /* Confirm the count of items, and that an invalid delete does not remove anything */
+  res = SendMessage (hLB, LB_GETCOUNT, 0, 0);
+  ok((res==4), "Expected 4 items, got %d\n", res);
+  res = SendMessage (hLB, LB_DELETESTRING, -1, 0);
+  ok((res==LB_ERR), "Expected LB_ERR items, got %d\n", res);
+  res = SendMessage (hLB, LB_DELETESTRING, 4, 0);
+  ok((res==LB_ERR), "Expected LB_ERR items, got %d\n", res);
+  res = SendMessage (hLB, LB_GETCOUNT, 0, 0);
+  ok((res==4), "Expected 4 items, got %d\n", res);
+
   WAIT;
   DestroyWindow (hLB);
 }
@@ -212,7 +227,8 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
 
         trace("%p WM_DRAWITEM %08x %08lx\n", hwnd, wparam, lparam);
 
-        ok(wparam == 0, "wrong wparam %04x\n", wparam);
+        ok(wparam == dis->CtlID, "got wParam=%08x instead of %08x\n",
+			wparam, dis->CtlID);
         ok(dis->CtlType == ODT_LISTBOX, "wrong CtlType %04x\n", dis->CtlType);
 
         GetClientRect(dis->hwndItem, &rc_client);
@@ -288,6 +304,131 @@ static void test_ownerdraw(void)
     DestroyWindow(parent);
 }
 
+#define listbox_test_query(exp, got) \
+  ok(exp.selected == got.selected, "expected selected %d, got %d\n", exp.selected, got.selected); \
+  ok(exp.anchor == got.anchor, "expected anchor %d, got %d\n", exp.anchor, got.anchor); \
+  ok(exp.caret == got.caret, "expected caret %d, got %d\n", exp.caret, got.caret); \
+  ok(exp.selcount == got.selcount, "expected selcount %d, got %d\n", exp.selcount, got.selcount);
+
+static void test_selection(void)
+{
+    static const struct listbox_stat test_nosel = { 0, LB_ERR, 0, 0 };
+    static const struct listbox_stat test_1 = { 0, LB_ERR, 0, 2 };
+    static const struct listbox_stat test_2 = { 0, LB_ERR, 0, 3 };
+    static const struct listbox_stat test_3 = { 0, LB_ERR, 0, 4 };
+    HWND hLB;
+    struct listbox_stat answer;
+    INT ret;
+
+    trace("testing LB_SELITEMRANGE\n");
+
+    hLB = create_listbox(LBS_EXTENDEDSEL, 0);
+    assert(hLB);
+
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(1, 2));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_1, answer);
+
+    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(0, 4));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_3, answer);
+
+    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(-5, 5));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(2, 10));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_1, answer);
+
+    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(4, 10));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(10, 1));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_2, answer);
+
+    SendMessage(hLB, LB_SETSEL, FALSE, (LPARAM)-1);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_nosel, answer);
+
+    ret = SendMessage(hLB, LB_SELITEMRANGE, TRUE, MAKELPARAM(1, -1));
+    ok(ret == LB_OKAY, "LB_SELITEMRANGE returned %d instead of LB_OKAY\n", ret);
+    listbox_query(hLB, &answer);
+    listbox_test_query(test_2, answer);
+
+    DestroyWindow(hLB);
+}
+
+static void test_listbox_height(void)
+{
+    HWND hList;
+    int r, id;
+
+    hList = CreateWindow( "ListBox", "list test", 0, 
+                          1, 1, 600, 100, NULL, NULL, NULL, NULL );
+    ok( hList != NULL, "failed to create listbox\n");
+
+    id = SendMessage( hList, LB_ADDSTRING, 0, (LPARAM) "hi");
+    ok( id == 0, "item id wrong\n");
+
+    r = SendMessage( hList, LB_SETITEMHEIGHT, 0, MAKELPARAM( 20, 0 ));
+    ok( r == 0, "send message failed\n");
+
+    r = SendMessage(hList, LB_GETITEMHEIGHT, 0, 0 );
+    ok( r == 20, "height wrong\n");
+
+    r = SendMessage( hList, LB_SETITEMHEIGHT, 0, MAKELPARAM( 0, 30 ));
+    ok( r == -1, "send message failed\n");
+
+    r = SendMessage(hList, LB_GETITEMHEIGHT, 0, 0 );
+    ok( r == 20, "height wrong\n");
+
+    r = SendMessage( hList, LB_SETITEMHEIGHT, 0, MAKELPARAM( 0x100, 0 ));
+    ok( r == -1, "send message failed\n");
+
+    r = SendMessage(hList, LB_GETITEMHEIGHT, 0, 0 );
+    ok( r == 20, "height wrong\n");
+
+    r = SendMessage( hList, LB_SETITEMHEIGHT, 0, MAKELPARAM( 0xff, 0 ));
+    ok( r == 0, "send message failed\n");
+
+    r = SendMessage(hList, LB_GETITEMHEIGHT, 0, 0 );
+    ok( r == 0xff, "height wrong\n");
+
+    DestroyWindow( hList );
+}
+
 START_TEST(listbox)
 {
   const struct listbox_test SS =
@@ -360,4 +501,6 @@ START_TEST(listbox)
 
   check_item_height();
   test_ownerdraw();
+  test_selection();
+  test_listbox_height();
 }

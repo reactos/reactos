@@ -289,13 +289,11 @@ todo_wine {
 
     ok(DdeFreeStringHandle(dde_inst, hsz_server), "DdeFreeStringHandle error %x\n", DdeGetLastError(dde_inst));
 
-    /* This call hangs on win2k SP4.
+    /* This call hangs on win2k SP4 and XP SP1.
     DdeUninitialize(dde_inst);*/
 
     DestroyWindow(hwnd_client);
     DestroyWindow(hwnd_server);
-
-    DdeUninitialize(dde_inst);
 }
 
 static void test_DdeCreateStringHandleW(DWORD dde_inst, int codepage)

@@ -22,6 +22,7 @@ extern void func_edit(void);
 extern void func_input(void);
 extern void func_listbox(void);
 extern void func_menu(void);
+extern void func_monitor(void);
 extern void func_msg(void);
 extern void func_resource(void);
 extern void func_sysparams(void);
@@ -41,6 +42,7 @@ const struct test winetest_testlist[] =
     { "input", func_input },
     { "listbox", func_listbox },
     { "menu", func_menu },
+    { "monitor", func_monitor },
     { "msg", func_msg },
     { "resource", func_resource },
     { "sysparams", func_sysparams },

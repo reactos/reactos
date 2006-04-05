@@ -33,7 +33,9 @@
 
 #include "wine/test.h"
 
-#define DCX_USESTYLE 0x00010000
+#ifndef DCX_USESTYLE
+#define DCX_USESTYLE         0x00010000
+#endif
 
 static HWND hwnd_cache, hwnd_owndc, hwnd_classdc, hwnd_classdc2;
 

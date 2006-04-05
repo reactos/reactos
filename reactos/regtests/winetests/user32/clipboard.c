@@ -30,8 +30,8 @@ static BOOL is_win9x = FALSE;
     { \
         if (!is_win9x) \
             ok(GetLastError() == expected_error, \
-               "Last error should be set to %ld, not %ld\n", \
-                (DWORD) expected_error, (DWORD) GetLastError()); \
+               "Last error should be set to %d, not %ld\n", \
+                expected_error, GetLastError()); \
     } while (0)
 
 static void test_ClipboardOwner(void)

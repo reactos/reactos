@@ -248,12 +248,12 @@ static void check_instance( const char *name, HINSTANCE inst, HINSTANCE info_ins
         wc.hInstance, info_inst, name );
     hwnd = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, inst, 0 );
     ok( hwnd != NULL, "Couldn't create window for class %s inst %p\n", name, inst );
-    ok( (HINSTANCE)GetClassLongA( hwnd, GCL_HMODULE ) == gcl_inst,
+    ok( (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ) == gcl_inst,
         "Wrong GCL instance %p/%p for class %s\n",
-        (HINSTANCE)GetClassLongA( hwnd, GCL_HMODULE ), gcl_inst, name );
-    ok( (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ) == inst,
+        (HINSTANCE)GetClassLongPtrA( hwnd, GCLP_HMODULE ), gcl_inst, name );
+    ok( (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ) == inst,
         "Wrong GWL instance %p/%p for window %s\n",
-        (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ), inst, name );
+        (HINSTANCE)GetWindowLongPtrA( hwnd, GWLP_HINSTANCE ), inst, name );
     ok(!UnregisterClassA(name, inst), "UnregisterClassA should fail while exists a class window\n");
     ok(GetLastError() == ERROR_CLASS_HAS_WINDOWS, "GetLastError() should be set to ERROR_CLASS_HAS_WINDOWS not %ld\n", GetLastError());
     DestroyWindow(hwnd);
@@ -363,7 +363,7 @@ static void test_instances(void)
     ok( UnregisterClassA( name, kernel32 ), "Unregister failed for kernel32\n" );
 
     /* changing the instance doesn't make it global */
-    SetClassLongA( hwnd, GCL_HMODULE, 0 );
+    SetClassLongPtrA( hwnd, GCLP_HMODULE, 0 );
     ok( RegisterClassA( &cls ), "Failed to register local class for kernel32\n" );
     check_class( kernel32, name, "kernel32" );
     check_instance( name, kernel32, kernel32, kernel32 );
@@ -372,7 +372,7 @@ static void test_instances(void)
     ok( UnregisterClassA( name, kernel32 ), "Unregister failed for kernel32\n" );
 
     /* GetClassInfo with instance 0 finds user32 instance */
-    SetClassLongA( hwnd, GCL_HMODULE, (LONG)user32 );
+    SetClassLongPtrA( hwnd, GCLP_HMODULE, (LONG_PTR)user32 );
     ok( RegisterClassA( &cls ), "Failed to register local class for kernel32\n" );
     check_class( kernel32, name, "kernel32" );
     check_class( user32, name, "main_module" );
@@ -385,7 +385,7 @@ static void test_instances(void)
     check_thread_instance( name, 0, 0, kernel32 );
     ok( UnregisterClassA( name, kernel32 ), "Unregister failed for kernel32\n" );
 
-    SetClassLongA( hwnd, GCL_HMODULE, 0x12345678 );
+    SetClassLongPtrA( hwnd, GCLP_HMODULE, 0x12345678 );
     ok( RegisterClassA( &cls ), "Failed to register local class for kernel32\n" );
     check_class( kernel32, name, "kernel32" );
     check_class( (HINSTANCE)0x12345678, name, "main_module" );
@@ -401,24 +401,24 @@ static void test_instances(void)
     cls.style = 3;
     ok( RegisterClassA( &cls ), "Failed to register local class for deadbeef\n" );
     hwnd2 = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, NULL, 0 );
-    ok( (HINSTANCE)GetClassLong( hwnd2, GCL_HMODULE ) == (HINSTANCE)0xdeadbeef,
+    ok( (HINSTANCE)GetClassLongPtrA( hwnd2, GCLP_HMODULE ) == (HINSTANCE)0xdeadbeef,
         "Didn't get deadbeef class for null instance\n" );
     DestroyWindow( hwnd2 );
     ok( UnregisterClassA( name, (HINSTANCE)0xdeadbeef ), "Unregister failed for deadbeef\n" );
 
     hwnd2 = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, NULL, 0 );
-    ok( (HINSTANCE)GetClassLong( hwnd2, GCL_HMODULE ) == kernel32,
+    ok( (HINSTANCE)GetClassLongPtrA( hwnd2, GCLP_HMODULE ) == kernel32,
         "Didn't get kernel32 class for null instance\n" );
     DestroyWindow( hwnd2 );
 
     ok( UnregisterClassA( name, kernel32 ), "Unregister failed for kernel32\n" );
 
     hwnd2 = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, NULL, 0 );
-    ok( GetClassLong( hwnd2, GCL_HMODULE ) == 0x12345678,
+    ok( GetClassLongPtrA( hwnd2, GCLP_HMODULE ) == 0x12345678,
         "Didn't get 12345678 class for null instance\n" );
     DestroyWindow( hwnd2 );
 
-    SetClassLongA( hwnd, GCL_HMODULE, (LONG)main_module );
+    SetClassLongPtrA( hwnd, GCLP_HMODULE, (LONG_PTR)main_module );
     DestroyWindow( hwnd );
 
     /* null handle means the same thing as main module */
@@ -476,7 +476,7 @@ static void test_instances(void)
     check_thread_instance( name, (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, main_module );
 
     /* changing the instance for global class doesn't make much difference */
-    SetClassLongA( hwnd, GCL_HMODULE, 0xdeadbeef );
+    SetClassLongPtrA( hwnd, GCLP_HMODULE, 0xdeadbeef );
     check_instance( name, main_module, main_module, (HINSTANCE)0xdeadbeef );
     check_instance( name, (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef );
     check_thread_instance( name, main_module, main_module, (HINSTANCE)0xdeadbeef );
@@ -542,7 +542,7 @@ static void test_instances(void)
     check_instance( "EDIT", (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, user32 );
     check_thread_instance( "EDIT", (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, user32 );
     hwnd = CreateWindowExA( 0, "EDIT", "test", 0, 0, 0, 0, 0, 0, 0, main_module, 0 );
-    SetClassLongA( hwnd, GCL_HMODULE, 0xdeadbeef );
+    SetClassLongPtrA( hwnd, GCLP_HMODULE, 0xdeadbeef );
     check_instance( "EDIT", (HINSTANCE)0x12345678, (HINSTANCE)0x12345678, (HINSTANCE)0xdeadbeef );
     check_thread_instance( "EDIT", (HINSTANCE)0x12345678, (HINSTANCE)0x12345678, (HINSTANCE)0xdeadbeef );
 }
