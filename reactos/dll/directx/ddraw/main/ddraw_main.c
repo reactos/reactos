@@ -230,6 +230,8 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                             LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
 {
+	HRESULT ret;
+
     if (pUnkOuter!=NULL) 
         return DDERR_INVALIDPARAMS; 
 
@@ -251,6 +253,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     
     That->lpVtbl = &DirectDrawSurface7_Vtable;
     That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
+	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
     This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                                                             sizeof(DDRAWI_DDRAWSURFACE_INT));        
@@ -259,90 +262,22 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
     /* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
     That->owner->mDDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
+   
     
-    *ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
 
-	 //This->mpLocal  = (DDRAWI_DDRAWSURFACE_LCL* )DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL)  * This->cSurfaces);
-     //This->mppLocal = (DDRAWI_DDRAWSURFACE_LCL**)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_LCL*) * This->cSurfaces);
-	/* start alloc memory */
-	if ((pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
 	{
-		///* HAL Code  */
-		//DDHAL_CANCREATESURFACEDATA CanCreateData;
-  //      memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
-  //      CanCreateData.lpDD = &This->mDDrawGlobal; 
-  //      CanCreateData.lpDDSurfaceDesc = &mddsdPrimary;
-		//
-  //      if (mDDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
-  //      {
-  //         return DDERR_INVALIDPARAMS;
-  //      }
-
-		//memset(&mPrimaryGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
-  //      mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
-  //      mPrimaryGlobal.lpDD       = &mDDrawGlobal;
-  //      mPrimaryGlobal.lpDDHandle = &mDDrawGlobal;
-  //      mPrimaryGlobal.wWidth  = (WORD)mpModeInfos[0].dwWidth;
-  //      mPrimaryGlobal.wHeight = (WORD)mpModeInfos[0].dwHeight;
-  //      mPrimaryGlobal.lPitch  = mpModeInfos[0].lPitch;
-
-		//memset(&mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
-  //      mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-
-  //      memset(&mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
-  //      mPrimaryLocal.lpGbl = &mPrimaryGlobal;
-  //      mPrimaryLocal.lpSurfMore = &mPrimaryMore;
-  //      mPrimaryLocal.dwProcessId = GetCurrentProcessId();
-  //   //   mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-  //
-  //       mPrimaryLocal.ddsCaps.dwCaps = mddsdPrimary.ddsCaps.dwCaps;
-
-  //       mpPrimaryLocals[0] = &mPrimaryLocal;
-  //
-  //	     DDHAL_CREATESURFACEDATA CreateData;
-	 //    memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
-	 //    CreateData.lpDD = &mDDrawGlobal;
-	 //    CreateData.lpDDSurfaceDesc = &mddsdPrimary; 
-	 //    CreateData.dwSCnt = 1;
-	 //    CreateData.lplpSList = mpPrimaryLocals;	
-	 //    CreateData.ddRVal	= DD_FALSE;	
-  // 
-  //       if (mDDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData)==DDHAL_DRIVER_NOTHANDLED)
-  //       {
-	 //      return DD_FALSE;
-  //       }
-
-  //       if(CreateData.ddRVal != DD_OK)
-  //       {	 	  
-	 //      return CreateData.ddRVal;
-  //       }
-		// return DD_OK;
-		
-	}
-	else
+		ret =  Hal_DirectDraw_CreateSurface (iface, pDDSD, ppSurf, pUnkOuter);       
+    }    
+	else 
 	{
-		// Create system mmeory 
-		//DDSCAPS_SYSTEMMEMORY 
-		return DD_FALSE;
+		ret = Hel_DirectDraw_CreateSurface (iface, pDDSD, ppSurf, pUnkOuter);       
 	}
-
-
 
 
     // the real surface object creation
-    //return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
-
-	/* alloc memmory if we need it for diffent surface */
-	// DDSCAPS_VIDEOMEMORY graphic card alloc memmory */
-
-	// DDSCAPS_OFFSCREENPLAIN offcreen surface alloc memmory ??
-
-	// DDSCAPS_OVERLAY create overlay surface 
-    
-	// DDSCAPS_TEXTURE  
-
-  //  return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
+   
 	return DD_OK;
 }
 

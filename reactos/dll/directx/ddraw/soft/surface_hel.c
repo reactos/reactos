@@ -11,6 +11,10 @@
 #include "rosdraw.h"
 
 
+HRESULT Hel_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+{
+	DX_STUB;
+}
 
 HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)

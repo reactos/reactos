@@ -46,6 +46,22 @@ typedef struct
     UINT mcTextures;
     DDSURFACEDESC *mpTextures;
 
+	/* Surface */
+	DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
+    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
+    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
+    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
+    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
+    //DDRAWI_DDRAWCLIPPER_INT mPrimaryClipperInterface;
+    DDSURFACEDESC mddsdPrimary;
+    DDSURFACEDESC mddsdOverlay;
+
+    DDRAWI_DDRAWSURFACE_GBL mOverlayGlobal;
+    DDRAWI_DDRAWSURFACE_LCL mOverlayLocal[6];
+    DDRAWI_DDRAWSURFACE_LCL *mpOverlayLocals[6];
+    DDRAWI_DDRAWSURFACE_MORE mOverlayMore[6];
+
 
 	/* ExclusiveOwner */
 	DDRAWI_DIRECTDRAW_LCL ExclusiveOwner;				
@@ -126,7 +142,7 @@ HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
 HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 ); 
 HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD );
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
-
+HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);       
 
 
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
@@ -138,6 +154,7 @@ HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
 HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 , DWORD , DWORD ,DWORD , DWORD , DWORD );
 HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
+HRESULT Hel_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);       
 
 /* Setting for HEL should be move to ros special reg key ? */
 
