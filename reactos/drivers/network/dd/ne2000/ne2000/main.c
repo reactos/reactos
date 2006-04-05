@@ -224,7 +224,7 @@ static NDIS_STATUS STDCALL MiniportInitialize(
         }
 
         NdisInitUnicodeString(&Keyword, L"Irq");
-        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterInteger);
+        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterHexInteger);
         if(Status == NDIS_STATUS_SUCCESS)
         {
             NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Irq returned successfully, irq 0x%x\n",
@@ -233,7 +233,7 @@ static NDIS_STATUS STDCALL MiniportInitialize(
         }
 
         NdisInitUnicodeString(&Keyword, L"Port");
-        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterInteger);
+        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterHexInteger);
         if(Status == NDIS_STATUS_SUCCESS)
         {
             NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Port returned successfully, port 0x%x\n",
