@@ -32,7 +32,8 @@ void FASTCALL
 DestroyProcessClasses(PW32PROCESS Process );
 
 PWINDOWCLASS
-IntReferenceClass(IN PWINDOWCLASS BaseClass,
+IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
+                  IN OUT PWINDOWCLASS *ClassLink,
                   IN PDESKTOP Desktop);
 
 VOID

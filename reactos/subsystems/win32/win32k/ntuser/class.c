@@ -361,7 +361,8 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 }
 
 static PWINDOWCLASS
-IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
+IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
+                      IN OUT PWINDOWCLASS *ClassLink,
                       IN PDESKTOP Desktop)
 {
     SIZE_T ClassSize;
@@ -380,6 +381,8 @@ IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
 
     if (BaseClass->Desktop == NULL)
     {
+        ASSERT(BaseClass->Windows == 0);
+
         /* Classes are also located in the shared heap when the class
            was created before the thread attached to a desktop. As soon
            as a window is created for such a class located on the shared
@@ -424,11 +427,22 @@ IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
             /* update some pointers and link the class */
             Class->Next = BaseClass->Clone;
             Class->Clone = NULL;
-            Class->Base = BaseClass;
             Class->Desktop = Desktop;
             Class->Windows = 0;
-            (void)InterlockedExchangePointer(&BaseClass->Clone,
-                                             Class);
+
+            if (BaseClass->Desktop == NULL)
+            {
+                /* replace the base class */
+                Class->Base = BaseClass;
+                /* FIXME */
+            }
+            else
+            {
+                /* link in the clone */
+                Class->Base = BaseClass;
+                (void)InterlockedExchangePointer(&BaseClass->Clone,
+                                                 Class);
+            }
         }
         else
         {
@@ -440,12 +454,14 @@ IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
 }
 
 PWINDOWCLASS
-IntReferenceClass(IN PWINDOWCLASS BaseClass,
+IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
+                  IN OUT PWINDOWCLASS *ClassLink,
                   IN PDESKTOP Desktop)
 {
     PWINDOWCLASS Class;
 
     Class = IntGetClassForDesktop(BaseClass,
+                                  ClassLink,
                                   Desktop);
     if (Class != NULL)
     {
