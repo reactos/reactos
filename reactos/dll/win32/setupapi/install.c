@@ -2,7 +2,7 @@
  * Setupapi install routines
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1481,6 +1481,89 @@ nextservice:
             SetLastError(ERROR_SUCCESS);
         ret = TRUE;
     }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+
+/***********************************************************************
+ *		SetupCopyOEMInfA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupCopyOEMInfA(
+        IN PCSTR SourceInfFileName,
+        IN PCSTR OEMSourceMediaLocation,
+        IN DWORD OEMSourceMediaType,
+        IN DWORD CopyStyle,
+        OUT PSTR DestinationInfFileName OPTIONAL,
+        IN DWORD DestinationInfFileNameSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PSTR* DestinationInfFileNameComponent OPTIONAL)
+{
+    PWSTR SourceInfFileNameW = NULL;
+    PWSTR OEMSourceMediaLocationW = NULL;
+    PWSTR DestinationInfFileNameW = NULL;
+    PWSTR DestinationInfFileNameComponentW = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("%s %s 0x%lx 0x%lx %p 0%lu %p %p\n",
+        SourceInfFileName, OEMSourceMediaLocation, OEMSourceMediaType,
+        CopyStyle, DestinationInfFileName, DestinationInfFileNameSize,
+        RequiredSize, DestinationInfFileNameComponent);
+
+    if (!DestinationInfFileName && DestinationInfFileNameSize > 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (!(SourceInfFileNameW = MultiByteToUnicode(SourceInfFileName, CP_ACP)))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (!(OEMSourceMediaLocationW = MultiByteToUnicode(OEMSourceMediaLocation, CP_ACP)))
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        if (DestinationInfFileNameSize != 0)
+        {
+            DestinationInfFileNameW = MyMalloc(DestinationInfFileNameSize * sizeof(WCHAR));
+            if (!DestinationInfFileNameW)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto cleanup;
+            }
+        }
+
+        ret = SetupCopyOEMInfW(
+            SourceInfFileNameW,
+            OEMSourceMediaLocationW,
+            OEMSourceMediaType,
+            CopyStyle,
+            DestinationInfFileNameW,
+            DestinationInfFileNameSize,
+            RequiredSize,
+            DestinationInfFileNameComponent ? &DestinationInfFileNameComponentW : NULL);
+        if (!ret)
+            goto cleanup;
+
+        if (DestinationInfFileNameSize != 0)
+        {
+            if (WideCharToMultiByte(CP_ACP, 0, DestinationInfFileNameW, -1,
+                DestinationInfFileName, DestinationInfFileNameSize, NULL, NULL) == 0)
+            {
+                DestinationInfFileName[0] = '\0';
+                goto cleanup;
+            }
+        }
+        if (DestinationInfFileNameComponent)
+        {
+            if (DestinationInfFileNameComponentW)
+                *DestinationInfFileNameComponent = &DestinationInfFileName[DestinationInfFileNameComponentW - DestinationInfFileNameW];
+            else
+                *DestinationInfFileNameComponent = NULL;
+        }
+        ret = TRUE;
+    }
+
+cleanup:
+    MyFree(SourceInfFileNameW);
+    MyFree(OEMSourceMediaLocationW);
+    MyFree(DestinationInfFileNameW);
 
     TRACE("Returning %d\n", ret);
     return ret;
