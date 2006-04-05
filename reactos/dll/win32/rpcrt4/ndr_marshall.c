@@ -3351,6 +3351,9 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
     return NULL;
 }
 
+/***********************************************************************
+ *           NDRCContextBinding
+ */
 RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 {
     if(!CContext)
@@ -3358,3 +3361,35 @@ RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 
     return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
 }
+
+/***********************************************************************
+ *           RpcSmDestroyClientContext
+ */
+RPC_STATUS WINAPI RpcSmDestroyClientContext(void** ContextHandle)
+{
+	CContextHandle *ctx = (CContextHandle*)ContextHandle;
+
+	if(!ctx)
+		return RPC_X_SS_CONTEXT_MISMATCH;
+
+	RPCRT4_DestroyBinding(ctx->Binding);
+	HeapFree(GetProcessHeap(), 0, ctx);
+	*ContextHandle = NULL;
+
+	return RPC_S_OK;
+}
+
+/***********************************************************************
+ *           RpcSsDestroyClientContext
+ */
+void WINAPI RpcSsDestroyClientContext(void** ContextHandle)
+{
+	RPC_STATUS status;
+
+	status = RpcSmDestroyClientContext(ContextHandle);
+
+	if(status != RPC_S_OK) 
+		RpcRaiseException(status);
+}
+
+

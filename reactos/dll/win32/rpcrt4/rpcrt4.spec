@@ -494,7 +494,7 @@
 @ stub RpcServerYield
 @ stub RpcSmAllocate
 @ stub RpcSmClientFree
-@ stub RpcSmDestroyClientContext
+@ stdcall RpcSmDestroyClientContext (ptr)
 @ stub RpcSmDisableAllocate
 @ stub RpcSmEnableAllocate
 @ stub RpcSmFree
@@ -505,7 +505,7 @@
 @ stub RpcSsAllocate
 @ stub RpcSsContextLockExclusive # wxp
 @ stub RpcSsContextLockShared # wxp
-@ stub RpcSsDestroyClientContext
+@ stdcall RpcSsDestroyClientContext (ptr)
 @ stub RpcSsDisableAllocate
 @ stub RpcSsDontSerializeContext
 @ stub RpcSsEnableAllocate
