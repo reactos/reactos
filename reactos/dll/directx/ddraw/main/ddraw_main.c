@@ -275,6 +275,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 		ret = Hel_DirectDraw_CreateSurface (iface, pDDSD, ppSurf, pUnkOuter);       
 	}
 
+	This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)&This->mPrimaryLocal;
 
     // the real surface object creation
    

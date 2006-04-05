@@ -66,7 +66,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
   mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
   mDdCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary;//pDDSD;
   mDdCreateSurface.lplpSList = This->mpPrimaryLocals; //cSurfaces;
-  mDdCreateSurface.dwSCnt = 1 ;  //ppSurfaces;
+  mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ;  //ppSurfaces;
 
   if (This->mHALInfo.lpDDCallbacks->CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
   {
@@ -138,8 +138,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
    
    if (This->mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
    {
-    // derr(L"DirectDrawImpl[%08x]::__createPrimary Cannot create primary [%08x]", this, rv);
-    return DDERR_NOTINITIALIZED;
+     return DDERR_NOTINITIALIZED;
    }
 
    if (mDdCanCreateSurface.ddRVal != DD_OK)
@@ -181,7 +180,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
     This->mpOverlayLocals[i] = &This->mOverlayLocal[i];
   }
 
-  for (i = 0; i < cSurfaces; i++)
+  for ( i = 0; i < cSurfaces; i++)
   {
     UINT j = (i + 1) % cSurfaces;
 
