@@ -114,6 +114,13 @@ int              check_arp( struct interface_info *ip, struct client_lease *lp )
 
 time_t	scripttime;
 
+/* XXX Added this since it's not in the NDK ;0/ */
+ULONG
+NTAPI
+RtlRandom(
+  IN OUT PULONG  Seed
+  );
+
 /* XXX Implement me */
 int check_arp( struct interface_info *ip, struct client_lease *lp ) {
     return 1;
@@ -221,6 +228,7 @@ void
 state_reboot(void *ipp)
 {
 	struct interface_info *ip = ipp;
+	ULONG foo = (ULONG) GetTickCount();
 
 	/* If we don't remember an active lease, go straight to INIT. */
 	if (!ip->client->active || ip->client->active->is_bootp) {
@@ -234,7 +242,7 @@ state_reboot(void *ipp)
 	/* make_request doesn't initialize xid because it normally comes
 	   from the DHCPDISCOVER, but we haven't sent a DHCPDISCOVER,
 	   so pick an xid now. */
-	ip->client->xid = rand();
+	ip->client->xid = RtlRandom(&foo);
 
 	/* Make a DHCPREQUEST packet, and set appropriate per-interface
 	   flags. */
@@ -1229,6 +1237,7 @@ make_discover(struct interface_info *ip, struct client_lease *lease)
 	struct tree_cache *options[256];
 	struct tree_cache option_elements[256];
 	int i;
+	ULONG foo = (ULONG) GetTickCount();
 
 	memset(option_elements, 0, sizeof(option_elements));
 	memset(options, 0, sizeof(options));
@@ -1287,7 +1296,7 @@ make_discover(struct interface_info *ip, struct client_lease *lease)
 	ip->client->packet.htype = ip->hw_address.htype;
 	ip->client->packet.hlen = ip->hw_address.hlen;
 	ip->client->packet.hops = 0;
-	ip->client->packet.xid = rand();
+	ip->client->packet.xid = RtlRandom(&foo);
 	ip->client->packet.secs = 0; /* filled in by send_discover. */
 	ip->client->packet.flags = 0;
 
@@ -1996,11 +2005,11 @@ ipv4addrs(char * buf)
     struct in_addr jnk;
     int i = 0;
 
-    note("Input: %s\n", buf);
+    note("Input: %s", buf);
 
     do {
         tmp = strtok(buf, " ");
-        note("got %s\n", tmp);
+        note("got %s", tmp);
 		if( tmp && inet_aton(tmp, &jnk) ) i++;
         buf = NULL;
     } while( tmp );

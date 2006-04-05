@@ -4,6 +4,8 @@
 #define NDEBUG
 #include <reactos/debug.h>
 
+extern struct interface_info *ifi;
+
 char *piaddr( struct iaddr addr ) {
     struct sockaddr_in sa;
     memcpy(&sa.sin_addr,addr.iabuf,sizeof(sa.sin_addr));
@@ -95,7 +97,33 @@ int addr_eq( struct iaddr a, struct iaddr b ) {
 void *dmalloc( int size, char *name ) { return malloc( size ); }
 
 int read_client_conf(void) {
-       error("util.c read_client_conf not implemented!");
+       /* What a strage dance */
+       struct client_config *config = ifi->client->config;
+       char ComputerName [MAX_COMPUTERNAME_LENGTH + 1];
+       DWORD ComputerNameSize = sizeof ComputerName / sizeof ComputerName[0];
+
+       GetComputerName(ComputerName, & ComputerNameSize);
+       /* This never gets freed since it's only called once */
+       LPSTR lpCompName =
+       HeapAlloc(GetProcessHeap(), 0, strlen(ComputerName) + 1);
+       if (lpCompName !=NULL) {
+           GetComputerName(lpCompName, & ComputerNameSize);
+           /* Send our hostname, some dhcpds use this to update DNS */
+           config->send_options[DHO_HOST_NAME].data = strlwr(lpCompName);
+           config->send_options[DHO_HOST_NAME].len = strlen(ComputerName);
+           debug("Hostname: %s, length: %d",
+                 config->send_options[DHO_HOST_NAME].data,
+                 config->send_options[DHO_HOST_NAME].len);
+       } else {
+           error("Failed to allocate heap for hostname");
+       }
+       /* Both Linux and Windows send this */
+       config->send_options[DHO_DHCP_CLIENT_IDENTIFIER].data =
+             ifi->hw_address.haddr;
+       config->send_options[DHO_DHCP_CLIENT_IDENTIFIER].len =
+             ifi->hw_address.hlen;
+
+       warn("util.c read_client_conf poorly implemented!");
     return 0;
 }
 

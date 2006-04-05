@@ -258,6 +258,12 @@ void AdapterInit() {
                    Adapter->IfMib.dwPhysAddrLen);
             Adapter->DhclientInfo.hw_address.hlen  =
                 Adapter->IfMib.dwPhysAddrLen;
+            /* I'm not sure where else to set this, but 
+               some DHCP servers won't take a zero.
+               We checked the hardware type earlier in 
+               the if statement. */
+            Adapter->DhclientInfo.hw_address.htype  =
+                HTYPE_ETHER;
 
             if( DhcpSocket == INVALID_SOCKET ) {
                 DhcpSocket =
