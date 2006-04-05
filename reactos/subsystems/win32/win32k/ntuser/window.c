@@ -1394,7 +1394,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                      BOOL bUnicodeWindow)
 {
    PWINSTATION_OBJECT WinSta;
-   PWINDOWCLASS *ClassLink, Class = NULL;
+   PWINDOWCLASS Class = NULL;
    RTL_ATOM ClassAtom;
    PWINDOW_OBJECT Window = NULL;
    PWINDOW_OBJECT ParentWindow = NULL, OwnerWindow;
@@ -1475,7 +1475,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                                hInstance,
                                ti->kpi,
                                &Class,
-                               &ClassLink);
+                               NULL);
 
    if (ClassAtom == (RTL_ATOM)0)
    {
@@ -1493,7 +1493,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
 
    Class = IntReferenceClass(Class,
-                             ClassLink,
                              ti->Desktop);
    if (Class == NULL)
    {
