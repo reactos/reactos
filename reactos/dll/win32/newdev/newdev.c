@@ -1,7 +1,7 @@
 /*
  * New device installer (newdev.dll)
  *
- * Copyright 2005 Hervé Poussineau (hpoussin@reactos.org)
+ * Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  *           2005 Christoph von Wittich (Christoph@ActiveVB.de)
  *
  * This library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(newdev);
 static BOOL SearchDriver ( PDEVINSTDATA DevInstData, LPCTSTR Path );
 static BOOL InstallDriver ( PDEVINSTDATA DevInstData );
 static DWORD WINAPI FindDriverProc( LPVOID lpParam );
-static BOOL FindDriver ( PDEVINSTDATA DevInstData );
+static BOOL FindDriver ( PDEVINSTDATA DevInstData, LPCWSTR InfFile );
 
 static DEVINSTDATA DevInstData;
 HINSTANCE hDllInstance;
@@ -163,7 +163,7 @@ StartDevice(
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 BOOL WINAPI
 UpdateDriverForPlugAndPlayDevicesW(
@@ -173,9 +173,159 @@ UpdateDriverForPlugAndPlayDevicesW(
 	IN DWORD InstallFlags,
 	OUT PBOOL bRebootRequired OPTIONAL)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_GEN_FAILURE);
-	return FALSE;
+	DEVINSTDATA DevInstData;
+	DWORD i;
+	LPWSTR Buffer = NULL;
+	DWORD BufferSize;
+	LPCWSTR CurrentHardwareId; /* Pointer into Buffer */
+	BOOL FoundHardwareId, FoundAtLeastOneDevice = FALSE;
+	BOOL ret = FALSE;
+
+	DevInstData.hDevInfo = INVALID_HANDLE_VALUE;
+
+	TRACE("UpdateDriverForPlugAndPlayDevicesW(%p %S %S 0x%lx %p)\n",
+		hwndParent, HardwareId, FullInfPath, InstallFlags, bRebootRequired);
+
+	/* FIXME: InstallFlags bRebootRequired ignored! */
+
+	/* Check flags */
+	/* FIXME: if (InstallFlags & ~(INSTALLFLAG_FORCE | INSTALLFLAG_READONLY | INSTALLFLAG_NONINTERACTIVE))
+	{
+		DPRINT("Unknown flags: 0x%08lx\n", InstallFlags & ~(INSTALLFLAG_FORCE | INSTALLFLAG_READONLY | INSTALLFLAG_NONINTERACTIVE));
+		SetLastError(ERROR_INVALID_FLAGS);
+		goto cleanup;
+	}*/
+
+	/* Enumerate all devices of the system */
+	DevInstData.hDevInfo = SetupDiGetClassDevsW(NULL, NULL, hwndParent, DIGCF_ALLCLASSES | DIGCF_PRESENT);
+	if (DevInstData.hDevInfo == INVALID_HANDLE_VALUE)
+		goto cleanup;
+	DevInstData.devInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+	for (i = 0; ; i++)
+	{
+		if (!SetupDiEnumDeviceInfo(DevInstData.hDevInfo, i, &DevInstData.devInfoData))
+		{
+			if (GetLastError() != ERROR_NO_MORE_ITEMS)
+			{
+				TRACE("SetupDiEnumDeviceInfo() failed with error 0x%lx\n", GetLastError());
+				goto cleanup;
+			}
+			/* This error was expected */
+			break;
+		}
+
+		/* Get Hardware ID */
+		HeapFree(GetProcessHeap(), 0, Buffer);
+		Buffer = NULL;
+		BufferSize = 0;
+		while (!SetupDiGetDeviceRegistryPropertyW(
+			DevInstData.hDevInfo,
+			&DevInstData.devInfoData,
+			SPDRP_HARDWAREID,
+			NULL,
+			(PBYTE)Buffer,
+			BufferSize,
+			&BufferSize))
+		{
+			if (GetLastError() == ERROR_FILE_NOT_FOUND)
+			{
+				Buffer = NULL;
+				break;
+			}
+			else if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+			{
+				TRACE("SetupDiGetDeviceRegistryPropertyW() failed with error 0x%lx\n", GetLastError());
+				goto cleanup;
+			}
+			/* This error was expected */
+			HeapFree(GetProcessHeap(), 0, Buffer);
+			Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
+			if (!Buffer)
+			{
+				TRACE("HeapAlloc() failed\n", GetLastError());
+				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+				goto cleanup;
+			}
+		}
+		if (Buffer == NULL)
+			continue;
+
+		/* Check if we match the given hardware ID */
+		FoundHardwareId = FALSE;
+		for (CurrentHardwareId = Buffer; *CurrentHardwareId != UNICODE_NULL; CurrentHardwareId += wcslen(CurrentHardwareId) + 1)
+		{
+			if (wcscmp(CurrentHardwareId, HardwareId) == 0)
+			{
+				FoundHardwareId = TRUE;
+				break;
+			}
+		}
+		if (!FoundHardwareId)
+			continue;
+
+		/* We need to try to update the driver of this device */
+
+		/* Get Instance ID */
+		HeapFree(GetProcessHeap(), 0, Buffer);
+		Buffer = NULL;
+		if (SetupDiGetDeviceInstanceIdW(DevInstData.hDevInfo, &DevInstData.devInfoData, NULL, 0, &BufferSize))
+		{
+			/* Error, as the output buffer should be too small */
+			SetLastError(ERROR_GEN_FAILURE);
+			goto cleanup;
+		}
+		else if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		{
+			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", GetLastError());
+			goto cleanup;
+		}
+		else if ((Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize)) == NULL)
+		{
+			TRACE("HeapAlloc() failed\n", GetLastError());
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			goto cleanup;
+		}
+		else if (!SetupDiGetDeviceInstanceIdW(DevInstData.hDevInfo, &DevInstData.devInfoData, Buffer, BufferSize, NULL))
+		{
+			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", GetLastError());
+			goto cleanup;
+		}
+		TRACE("Trying to update the driver of %S\n", Buffer);
+
+		/* Search driver in the specified .inf file */
+		if (!FindDriver(&DevInstData, FullInfPath))
+		{
+			TRACE("FindDriver() failed with error 0x%lx\n", GetLastError());
+			continue;
+		}
+
+		/* FIXME: HACK! We shouldn't check of ERROR_PRIVILEGE_NOT_HELD */
+		//if (!InstallDriver(&DevInstData))
+		if (!InstallDriver(&DevInstData) && GetLastError() != ERROR_PRIVILEGE_NOT_HELD)
+			{
+			TRACE("InstallDriver() failed with error 0x%lx\n", GetLastError());
+			continue;
+		}
+
+		FoundAtLeastOneDevice = TRUE;
+	}
+
+	if (FoundAtLeastOneDevice)
+	{
+		SetLastError(NO_ERROR);
+		ret = TRUE;
+	}
+	else
+	{
+		TRACE("No device found with HardwareID %S\n", HardwareId);
+		SetLastError(ERROR_NO_SUCH_DEVINST);
+	}
+
+cleanup:
+	if (DevInstData.hDevInfo != INVALID_HANDLE_VALUE)
+		SetupDiDestroyDeviceInfoList(DevInstData.hDevInfo);
+	HeapFree(GetProcessHeap(), 0, Buffer);
+	return ret;
 }
 
 /*
@@ -549,7 +699,7 @@ FindDriverProc(
 				if (SearchDriver ( DevInstData, drive ))
 				{
 					/* if we found a valid driver inf... */
-					if (FindDriver ( DevInstData ))
+					if (FindDriver ( DevInstData, NULL ))
 					{
 						InstallDriver ( DevInstData );
 						PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 1, 0);
@@ -769,7 +919,8 @@ InstFailDlgProc(
 
 static BOOL
 FindDriver(
-	IN PDEVINSTDATA DevInstData)
+	IN PDEVINSTDATA DevInstData,
+	IN LPCWSTR InfFile OPTIONAL)
 {
 	SP_DEVINSTALL_PARAMS DevInstallParams = {0,};
 	BOOL ret;
@@ -781,6 +932,13 @@ FindDriver(
 		return FALSE;
 	}
 	DevInstallParams.FlagsEx |= DI_FLAGSEX_ALLOWEXCLUDEDDRVS;
+
+	if (InfFile)
+	{
+		DevInstallParams.Flags |= DI_ENUMSINGLEINF;
+		wcscpy(DevInstallParams.DriverPath, InfFile);
+	}
+
 	if (!SetupDiSetDeviceInstallParams(DevInstData->hDevInfo, &DevInstData->devInfoData, &DevInstallParams))
 	{
 		TRACE("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
@@ -902,7 +1060,7 @@ SearchDriver(
 					&DevInstData->devInfoData,
 					&DevInstallParams);
 
-				if ( FindDriver ( DevInstData ) )
+				if ( FindDriver ( DevInstData, NULL ) )
 				{
 					if (hFindFile != INVALID_HANDLE_VALUE)
 					FindClose(hFindFile);
@@ -1153,7 +1311,7 @@ DevInstallW(
 
 	TRACE("Installing %S (%S)\n", DevInstData.buffer, InstanceId);
 
-	if ((!FindDriver(&DevInstData)) && (Show != SW_HIDE))
+	if ((!FindDriver(&DevInstData, NULL)) && (Show != SW_HIDE))
 	{
 
 		/* Create the Welcome page */
