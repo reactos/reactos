@@ -84,7 +84,7 @@ AboutDialogProc(HWND hDlg,
 {
     HWND  hLicenseEditWnd;
     HICON hIcon = NULL;
-    TCHAR strLicense[700];
+    static LPTSTR lpLicense = NULL;
 
     switch (message)
     {
@@ -96,27 +96,30 @@ AboutDialogProc(HWND hDlg,
                           16,
                           16,
                           0);
-
-        SendMessage(hDlg,
-                    WM_SETICON,
-                    ICON_SMALL,
-                    (LPARAM)hIcon);
+        if (hIcon != NULL)
+        {
+            SendMessage(hDlg,
+                        WM_SETICON,
+                        ICON_SMALL,
+                        (LPARAM)hIcon);
+        }
 
         hLicenseEditWnd = GetDlgItem(hDlg,
                                      IDC_LICENSE_EDIT);
 
-        LoadString(hInstance,
-                   IDS_LICENSE,
-                   strLicense,
-                   sizeof(strLicense) / sizeof(TCHAR));
-
-        SetWindowText(hLicenseEditWnd,
-                      strLicense);
+        if (AllocAndLoadString(&lpLicense,
+                               hInstance,
+                               IDS_LICENSE))
+        {
+            SetWindowText(hLicenseEditWnd,
+                          lpLicense);
+        }
         return TRUE;
 
     case WM_COMMAND:
         if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
         {
+            LocalFree((HLOCAL)lpLicense);
             DestroyIcon(hIcon);
             EndDialog(hDlg,
                       LOWORD(wParam));
