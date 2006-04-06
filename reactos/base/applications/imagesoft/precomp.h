@@ -251,9 +251,6 @@ BOOL TbdAddToolbar(PTOOLBAR_DOCKS TbDocks,
                    const DOCKBAR *Dockbar,
                    PVOID Context,
                    const DOCKBAR_ITEM_CALLBACKS *DockbarCallbacks);
-BOOL TbdDockBarIdFromClientWindow(PTOOLBAR_DOCKS TbDocks,
-                                  HWND hWndClient,
-                                  UINT *Id);
 BOOL TbdHandleNotifications(PTOOLBAR_DOCKS TbDocks,
                             LPNMHDR pnmh,
                             LRESULT *Result);
@@ -336,21 +333,6 @@ INT GetTextFromEdit(OUT LPTSTR lpString,
 VOID GetError(DWORD err);
 
 VOID MessageBoxInt(INT num);
-
-BOOL ToolbarDeleteControlSpace(HWND hWndToolbar,
-                               const TBBUTTON *ptbButton);
-
-typedef VOID (*ToolbarChangeControlCallback)(HWND hWndToolbar,
-                                             HWND hWndControl,
-                                             BOOL Vert);
-VOID ToolbarUpdateControlSpaces(HWND hWndToolbar,
-                                ToolbarChangeControlCallback ChangeCallback);
-
-BOOL ToolbarInsertSpaceForControl(HWND hWndToolbar,
-                                  HWND hWndControl,
-                                  INT Index,
-                                  INT iCmd,
-                                  BOOL HideVertical);
 
 /* opensave.c */
 VOID FileInitialize(HWND hwnd);
