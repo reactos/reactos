@@ -83,7 +83,7 @@ AboutDialogProc(HWND hDlg,
                 LPARAM lParam)
 {
     HWND  hLicenseEditWnd;
-    HICON hIcon = NULL;
+    static HICON hIcon = NULL;
     static LPTSTR lpLicense = NULL;
 
     switch (message)
