@@ -19,7 +19,10 @@
 #ifndef RBN_CHEVRONPUSHED
 #define RBN_CHEVRONPUSHED (RBN_FIRST - 10)
 #endif
-ULONG DbgPrint(PCH Format,...);
+
+#ifdef _MSC_VER
+#pragma warning(disable : 4100)
+#endif
 
 #define MAX_KEY_LENGTH 256
 #define NUM_MAINTB_IMAGES 10
@@ -152,8 +155,8 @@ VOID SetImageEditorEnvironment(PEDIT_WND_INFO Info,
 BOOL InitImageEditWindowImpl(VOID);
 VOID UninitImageEditWindowImpl(VOID);
 
-/* tooldock.c */
 
+/* tooldock.c */
 typedef enum
 {
     TOP_DOCK = 0,
@@ -251,6 +254,9 @@ BOOL TbdAddToolbar(PTOOLBAR_DOCKS TbDocks,
                    const DOCKBAR *Dockbar,
                    PVOID Context,
                    const DOCKBAR_ITEM_CALLBACKS *DockbarCallbacks);
+BOOL TbdDockBarIdFromClientWindow(PTOOLBAR_DOCKS TbDocks,
+                                  HWND hWndClient,
+                                  UINT *Id);
 BOOL TbdHandleNotifications(PTOOLBAR_DOCKS TbDocks,
                             LPNMHDR pnmh,
                             LRESULT *Result);
@@ -333,6 +339,21 @@ INT GetTextFromEdit(OUT LPTSTR lpString,
 VOID GetError(DWORD err);
 
 VOID MessageBoxInt(INT num);
+
+BOOL ToolbarDeleteControlSpace(HWND hWndToolbar,
+                               const TBBUTTON *ptbButton);
+
+typedef VOID (*ToolbarChangeControlCallback)(HWND hWndToolbar,
+                                             HWND hWndControl,
+                                             BOOL Vert);
+VOID ToolbarUpdateControlSpaces(HWND hWndToolbar,
+                                ToolbarChangeControlCallback ChangeCallback);
+
+BOOL ToolbarInsertSpaceForControl(HWND hWndToolbar,
+                                  HWND hWndControl,
+                                  INT Index,
+                                  INT iCmd,
+                                  BOOL HideVertical);
 
 /* opensave.c */
 VOID FileInitialize(HWND hwnd);

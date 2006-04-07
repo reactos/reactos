@@ -5,9 +5,9 @@ static HWND hImageType, hUnitType, hHeightUnit, hWidthUnit, hResUnit;
 UINT ConvertValue(HWND hDlg, UINT EdBoxChanged, UINT LastUnitSel)
 {
     LONG Resolution = GetDlgItemInt(hDlg, IDC_RES_EDIT, NULL, FALSE);
-    FLOAT Width      = GetDlgItemInt(hDlg, IDC_WIDTH_EDIT, NULL, FALSE);
-    FLOAT Height     = GetDlgItemInt(hDlg, IDC_HEIGHT_EDIT, NULL, FALSE);
-    USHORT CurUnit  = SendMessage(hUnitType, CB_GETCURSEL, 0, 0);
+    FLOAT Width     = (FLOAT)GetDlgItemInt(hDlg, IDC_WIDTH_EDIT, NULL, FALSE);
+    FLOAT Height    = (FLOAT)GetDlgItemInt(hDlg, IDC_HEIGHT_EDIT, NULL, FALSE);
+    USHORT CurUnit  = (USHORT)SendMessage(hUnitType, CB_GETCURSEL, 0, 0);
 
     /* if the user typed in the resolution box */
     if ((EdBoxChanged == IDC_RES_EDIT) && (CurUnit != PIXELS))

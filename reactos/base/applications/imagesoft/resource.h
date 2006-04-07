@@ -35,6 +35,7 @@
 #define ID_TXTLEFT          2033
 #define ID_TXTCENTER        2034
 #define ID_TXTRIGHT         2035
+#define ID_TXTFONTNAME      2036
 
 #define ID_REFRESH          3000
 #define ID_HELP             3001

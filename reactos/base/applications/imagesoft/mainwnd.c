@@ -1,11 +1,54 @@
 #include <precomp.h>
-#include "buttons.h"
 
 static const TCHAR szMainWndClass[] = TEXT("ImageSoftWndClass");
 
 #define ID_MDI_FIRSTCHILD   50000
 #define ID_MDI_WINDOWMENU   5
 #define NUM_FLT_WND         3
+
+/* toolbar buttons */
+TBBUTTON StdButtons[] = {
+/*   iBitmap,         idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */
+    {TBICON_NEW,      ID_NEW,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* new */
+    {TBICON_OPEN,     ID_OPEN,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* open */
+    {TBICON_SAVE,     ID_SAVE,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* save */
+
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
+
+    {TBICON_PRINT,    ID_PRINTPRE, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* print */
+    {TBICON_PRINTPRE, ID_PRINT,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* print preview */
+
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
+
+    {TBICON_CUT,      ID_CUT,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* cut */
+    {TBICON_COPY,     ID_COPY,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* copy */
+    {TBICON_PASTE,    ID_PASTE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* paste */
+
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
+
+    {TBICON_UNDO,     ID_UNDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* undo */
+    {TBICON_REDO,     ID_REDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* redo */
+
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
+};
+
+TBBUTTON TextButtons[] = {
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
+
+    {TBICON_BOLD,     ID_BOLD,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* bold */
+    {TBICON_ITALIC,   ID_ITALIC,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* italic */
+    {TBICON_ULINE,    ID_ULINE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* underline */
+
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
+
+    {TBICON_TXTLEFT,  ID_TXTLEFT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* left justified */
+    {TBICON_TXTCENTER,ID_TXTCENTER,TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* centered */
+    {TBICON_TXTRIGHT, ID_TXTRIGHT, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* right justified */
+
+    {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
+};
+
+
 
 /* menu hints */
 static const MENU_HINT MainMenuHintTable[] = {
@@ -111,7 +154,7 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
 {
     const TBBUTTON *Buttons = NULL;
     UINT NumButtons = 0;
-    UINT StartImageRes;
+    UINT StartImageRes = 0;
     HWND hWndClient = NULL;
 
     UNREFERENCED_PARAMETER(Context);
@@ -207,6 +250,40 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
         }
     }
 
+    switch (Dockbar->BarId)
+    {
+        case ID_TOOLBAR_TEXT:
+        {
+            HWND hWndCombo;
+
+            /* drop combo box into container window */
+            hWndCombo = CreateWindowEx(0,
+                                       WC_COMBOBOX,
+                                       NULL,
+                                       WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
+                                       0, 0, 120, 25,
+                                       hParent,
+                                       NULL,
+                                       hInstance,
+                                       NULL);
+            if (hWndCombo != NULL)
+            {
+                SetParent(hWndCombo,
+                          hWndClient);
+
+                if (!ToolbarInsertSpaceForControl(hWndClient,
+                                                  hWndCombo,
+                                                  0,
+                                                  ID_TXTFONTNAME,
+                                                  TRUE))
+                {
+                    DestroyWindow(hWndCombo);
+                }
+            }
+            break;
+        }
+    }
+
     if (hWndClient != NULL)
     {
         *hwnd = hWndClient;
@@ -277,6 +354,15 @@ MainWndToolbarInsertBand(struct _TOOLBAR_DOCKS *TbDocks,
     return TRUE;
 }
 
+static VOID
+TbCustomControlChange(HWND hWndToolbar,
+                      HWND hWndControl,
+                      BOOL Vert)
+{
+    /* the toolbar changed from horizontal to vertical or vice versa... */
+    return;
+}
+
 static VOID CALLBACK
 MainWndToolbarDockBand(struct _TOOLBAR_DOCKS *TbDocks,
                        const DOCKBAR *Dockbar,
@@ -316,6 +402,9 @@ MainWndToolbarDockBand(struct _TOOLBAR_DOCKS *TbDocks,
                             TB_SETSTYLE,
                             0,
                             (LPARAM)dwStyle);
+
+                ToolbarUpdateControlSpaces(rbi->hwndChild,
+                                           TbCustomControlChange);
 
                 if (SendMessage(rbi->hwndChild,
                                 TB_GETMAXSIZE,
@@ -630,6 +719,7 @@ static VOID
 InitMainWnd(PMAIN_WND_INFO Info)
 {
     CLIENTCREATESTRUCT ccs;
+    INT statwidths[] = {110, -1};
 
     /* FIXME - create controls and initialize the application */
 
@@ -646,6 +736,12 @@ InitMainWnd(PMAIN_WND_INFO Info)
                                    (HMENU)IDC_STATUSBAR,
                                    hInstance,
                                    NULL);
+
+    if (Info->hStatus != NULL)
+        SendMessage(Info->hStatus,
+                    SB_SETPARTS,
+                    sizeof(statwidths)/sizeof(int),
+                    (LPARAM)statwidths);
 
     /* create the MDI client window */
     ccs.hWindowMenu = GetSubMenu(GetMenu(Info->hSelf),
@@ -921,11 +1017,33 @@ MainWndProc(HWND hwnd,
 
         case WM_NOTIFY:
         {
+            UINT BarId;
+            LPNMHDR pnmhdr = (LPNMHDR)lParam;
             if (!TbdHandleNotifications(&Info->ToolDocks,
-                                        (LPNMHDR)lParam,
+                                        pnmhdr,
                                         &Ret))
             {
-                /* FIXME - handle other notifications */
+                if (TbdDockBarIdFromClientWindow(&Info->ToolDocks,
+                                                 pnmhdr->hwndFrom,
+                                                 &BarId))
+                {
+                    switch (BarId)
+                    {
+                        case ID_TOOLBAR_TEXT:
+                            switch (pnmhdr->code)
+                            {
+                                case TBN_DELETINGBUTTON:
+                                {
+                                    LPNMTOOLBAR lpnmtb = (LPNMTOOLBAR)lParam;
+
+                                    ToolbarDeleteControlSpace(pnmhdr->hwndFrom,
+                                                              &lpnmtb->tbButton);
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+                }
             }
             break;
         }

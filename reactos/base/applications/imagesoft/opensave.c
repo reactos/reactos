@@ -37,7 +37,7 @@ DoOpenFile(HWND hwnd,
                             _T("TAG Image File Format (*tif)\0*.tif\0") \
                             _T("Portable Network Graphics (*png)\0*.png\0\0");*/
 
-    static TCHAR Filter[] = _T("Windows Bitmap (*bmp)\0*.bmp\0");
+    static TCHAR Filter[] = _T("Windows Bitmap (*.bmp)\0*.bmp\0");
 
 	ofn.lpstrFilter = Filter;
 	ofn.lpstrFile = szFileName;

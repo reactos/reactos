@@ -47,7 +47,7 @@ AllocAndLoadString(OUT LPTSTR *lpTarget,
                              uID);
     if (ln++ > 0)
     {
-        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+        (*lpTarget) = (LPTSTR)LocalAlloc(LMEM_FIXED,
                                          ln * sizeof(TCHAR));
         if ((*lpTarget) != NULL)
         {
@@ -206,4 +206,170 @@ VOID GetError(DWORD err)
 VOID MessageBoxInt(INT num)
 {
     MessageBox(NULL, _itot(num, NULL, 10), NULL, 0);
+}
+
+/*
+ * Toolbar custom control routines
+ */
+
+typedef struct _TBCUSTCTL
+{
+    HWND hWndControl;
+    INT iCommand;
+    BOOL HideVertical : 1;
+    BOOL IsVertical : 1;
+} TBCUSTCTL, *PTBCUSTCTL;
+
+BOOL
+ToolbarDeleteControlSpace(HWND hWndToolbar,
+                          const TBBUTTON *ptbButton)
+{
+    if ((ptbButton->fsStyle & TBSTYLE_SEP) &&
+        ptbButton->dwData != 0)
+    {
+        PTBCUSTCTL cctl = (PTBCUSTCTL)ptbButton->dwData;
+
+        DestroyWindow(cctl->hWndControl);
+
+        HeapFree(ProcessHeap,
+                 0,
+                 cctl);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+VOID
+ToolbarUpdateControlSpaces(HWND hWndToolbar,
+                           ToolbarChangeControlCallback ChangeCallback)
+{
+    BOOL Vert;
+    DWORD nButtons, i;
+    TBBUTTON tbtn;
+
+    Vert = ((SendMessage(hWndToolbar,
+                         TB_GETSTYLE,
+                         0,
+                         0) & CCS_VERT) != 0);
+
+    nButtons = SendMessage(hWndToolbar,
+                           TB_BUTTONCOUNT,
+                           0,
+                           0);
+
+    for (i = 0;
+         i != nButtons;
+         i++)
+    {
+        if (SendMessage(hWndToolbar,
+                        TB_GETBUTTON,
+                        (WPARAM)i,
+                        (LPARAM)&tbtn))
+        {
+            if ((tbtn.fsStyle & TBSTYLE_SEP) && tbtn.dwData != 0)
+            {
+                PTBCUSTCTL cctl = (PTBCUSTCTL)tbtn.dwData;
+
+                cctl->IsVertical = Vert;
+
+                if (cctl->HideVertical)
+                {
+                    ShowWindow(cctl->hWndControl,
+                               (Vert ? SW_HIDE : SW_SHOW));
+                    goto ShowHideSep;
+                }
+                else if (cctl->IsVertical != Vert)
+                {
+                    ChangeCallback(hWndToolbar,
+                                   cctl->hWndControl,
+                                   Vert);
+
+ShowHideSep:
+                    /* show/hide the separator */
+                    SendMessage(hWndToolbar,
+                                TB_HIDEBUTTON,
+                                (WPARAM)cctl->iCommand,
+                                (LPARAM)Vert && cctl->HideVertical);
+                }
+            }
+        }
+    }
+}
+
+BOOL
+ToolbarInsertSpaceForControl(HWND hWndToolbar,
+                             HWND hWndControl,
+                             INT Index,
+                             INT iCmd,
+                             BOOL HideVertical)
+{
+    PTBCUSTCTL cctl;
+    RECT rcControl, rcItem;
+
+    cctl = HeapAlloc(ProcessHeap,
+                     0,
+                     sizeof(TBCUSTCTL));
+    if (cctl == NULL)
+        return FALSE;
+
+    cctl->HideVertical = HideVertical;
+    cctl->hWndControl = hWndControl;
+    cctl->iCommand = iCmd;
+
+    if (GetWindowRect(hWndControl,
+                      &rcControl))
+    {
+        TBBUTTON tbtn = {0};
+
+        tbtn.iBitmap = rcControl.right - rcControl.left;
+        tbtn.idCommand = iCmd;
+        tbtn.fsStyle = TBSTYLE_SEP;
+        tbtn.dwData = (DWORD_PTR)cctl;
+
+        if (SendMessage(hWndToolbar,
+                        TB_GETSTYLE,
+                        0,
+                        0) & CCS_VERT)
+        {
+            if (HideVertical)
+                tbtn.fsState |= TBSTATE_HIDDEN;
+
+            cctl->IsVertical = TRUE;
+        }
+        else
+            cctl->IsVertical = FALSE;
+
+        if (SendMessage(hWndToolbar,
+                        TB_INSERTBUTTON,
+                        (WPARAM)Index,
+                        (LPARAM)&tbtn))
+        {
+            if (SendMessage(hWndToolbar,
+                            TB_GETITEMRECT,
+                            (WPARAM)Index,
+                            (LPARAM)&rcItem))
+            {
+                SetWindowPos(hWndControl,
+                             NULL,
+                             rcItem.left,
+                             rcItem.top,
+                             rcItem.right - rcItem.left,
+                             rcItem.bottom - rcItem.top,
+                             SWP_NOZORDER);
+
+                ShowWindow(hWndControl,
+                           SW_SHOW);
+
+                return TRUE;
+            }
+            else if (tbtn.fsState & TBSTATE_HIDDEN)
+            {
+                ShowWindow(hWndControl,
+                           SW_HIDE);
+            }
+        }
+    }
+
+    return FALSE;
 }

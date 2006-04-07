@@ -264,6 +264,30 @@ TbnRebarEndDrag(PTOOLBAR_DOCKS TbDocks,
 }
 
 BOOL
+TbdDockBarIdFromClientWindow(PTOOLBAR_DOCKS TbDocks,
+                             HWND hWndClient,
+                             UINT *Id)
+{
+    PDOCKBAR_ITEM Item;
+    BOOL Ret = FALSE;
+
+    Item = TbDocks->Items;
+    while (Item != NULL)
+    {
+        if (Item->hWndClient == hWndClient)
+        {
+            *Id = Item->DockBar.BarId;
+            Ret = TRUE;
+            break;
+        }
+
+        Item = Item->Next;
+    }
+
+    return Ret;
+}
+
+BOOL
 TbdHandleNotifications(PTOOLBAR_DOCKS TbDocks,
                        LPNMHDR pnmh,
                        LRESULT *Result)
@@ -976,13 +1000,13 @@ TbdHandleActivation(PTOOLBAR_DOCKS TbDocks,
     BOOL KeepActive = *(BOOL*)wParam;
     HWND hWndActivate = *(HWND*)lParam;
     PDOCKBAR_ITEM Item;
-DbgPrint("-- 0x%p --\n", hWnd);
+
     Item = TbDocks->Items;
     while (Item != NULL)
     {
         if (Item->hWndTool != NULL &&
             Item->hWndTool == hWndActivate)
-        {DbgPrint("Activate toolbars (0x%p)\n", hWndActivate);
+        {
             KeepActive = TRUE;
             SynchronizeSiblings = FALSE;
             break;
@@ -1000,7 +1024,7 @@ DbgPrint("-- 0x%p --\n", hWnd);
                 if (Item->hWndTool != NULL &&
                     Item->hWndTool != hWnd &&
                     Item->hWndTool != hWndActivate)
-                {DbgPrint("WM_NCACTIVE %p (wnd %p)\n", KeepActive, Item->hWndTool);
+                {
                     SendMessage(Item->hWndTool,
                                 WM_NCACTIVATE,
                                 (WPARAM)KeepActive,
