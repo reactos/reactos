@@ -58,4 +58,7 @@
 <directory name="wordpad">
 	<xi:include href="wordpad/wordpad.rbuild" />
 </directory>
+<directory name="control">
+	<xi:include href="control/control.rbuild" />
+</directory>
 </group>

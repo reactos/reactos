@@ -63,6 +63,7 @@ base\applications\taskmgr\taskmgr.exe               1
 ;base\applications\utils\ps\ps.exe                  1
 base\applications\winefile\winefile.exe             1
 ;base\applications\winver\winver.exe                1
+base\applications\control\control.exe               1
 
 base\services\dhcp\dhcp.exe                         1
 base\services\eventlog\eventlog.exe                 1
@@ -98,7 +99,6 @@ dll\3rdparty\mesa32\mesa32.dll                      1
 
 dll\cpl\access\access.cpl                           1
 dll\cpl\appwiz\appwiz.cpl                           1
-dll\cpl\control\control.exe                         1
 dll\cpl\desk\desk.cpl                               1
 dll\cpl\intl\intl.cpl                               1
 dll\cpl\main\main.cpl                               1
