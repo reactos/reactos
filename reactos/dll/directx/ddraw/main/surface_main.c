@@ -82,7 +82,18 @@ HRESULT WINAPI
 Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					  LPDIRECTDRAWSURFACE7 pAttach)
 {
-    DX_STUB;
+   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;        
+
+   
+   IDirectDrawSurfaceImpl* That = NULL;
+   if (pAttach==NULL)
+   {
+     return DDERR_INVALIDOBJECT;     
+   }
+   That = (IDirectDrawSurfaceImpl*)pAttach;
+   
+   //FIXME Have I put This and That in right order ?? DdAttachSurface(from, to) 
+   return DdAttachSurface( That->Surf->mpPrimaryLocals[0],This->Surf->mpPrimaryLocals[0]);
 }
 
 /* MSDN: "not currently implemented." */
@@ -176,7 +187,24 @@ Main_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 HRESULT WINAPI
 Main_DDrawSurface_GetCaps(LPDIRECTDRAWSURFACE7 iface, LPDDSCAPS2 pCaps)
 {
-    DX_STUB;
+    IDirectDrawSurfaceImpl* This;
+
+    if (iface == NULL)
+    {
+       return DDERR_INVALIDOBJECT;  
+    }
+
+    if (pCaps == NULL)
+    {
+       return DDERR_INVALIDPARAMS;  
+    }
+
+    This = (IDirectDrawSurfaceImpl*)iface;        
+     
+    RtlZeroMemory(pCaps,sizeof(DDSCAPS2));
+    pCaps->dwCaps = This->Surf->mddsdPrimary.ddsCaps.dwCaps;
+    
+    return DD_OK;
 }
 
 HRESULT WINAPI
