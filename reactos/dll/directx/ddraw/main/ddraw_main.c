@@ -137,8 +137,6 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
     This->mDDrawGlobal.lpExclusiveOwner->hWnd = (ULONG_PTR) hwnd;
     This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC(hwnd);
 
-	This->CooperativeHWND = hwnd;
-
 	
 	/* FIXME : fill the  mDDrawGlobal.lpExclusiveOwner->dwLocalFlags right */
 	//mDDrawGlobal.lpExclusiveOwner->dwLocalFlags

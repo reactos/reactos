@@ -63,11 +63,10 @@ typedef struct
     DDRAWI_DDRAWSURFACE_MORE mOverlayMore[6];
 
 
-	/* ExclusiveOwner */
-	DDRAWI_DIRECTDRAW_LCL ExclusiveOwner;				
+	/* ExclusiveOwner */	
     
     DWORD cooperative_level;	
-	HWND CooperativeHWND;
+	
 
 	BOOL InitializeDraw; 
 

@@ -17,7 +17,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
         IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
         DDHAL_CREATESURFACEDATA      mDdCreateSurface;
-	DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
+        DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
 	
 
         mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
@@ -25,18 +25,15 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 	
         mDdCreateSurface.lpDD = &This->mDDrawGlobal;
         mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
-  
-        /* create primare surface now */
+          
         if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
-        {
-           memset(&This->mddsdPrimary,   0, sizeof(DDSURFACEDESC));
-           This->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);
-           This->mddsdPrimary.dwFlags     = pDDSD->dwFlags;
-           This->mddsdPrimary.ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;	   
-	   mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
-           mDdCanCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary; // pDDSD;
+        {           
+           memcpy(&This->mddsdPrimary,pDDSD,sizeof(DDSURFACEDESC));
+           This->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);          
+           mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
+           mDdCanCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary; 
 
-	   if (This->mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+           if (This->mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
            {         
               return DDERR_NOTINITIALIZED;
            }
@@ -64,10 +61,9 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 	   
            /*
               FIXME Check the flags if we shall create a primaresurface for overlay or something else 
-              Examine windows which flags are being set for we assume this is right
+              Examine windows which flags are being set for we assume this is right unsue I think
            */
-
-           This->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
+           //This->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
            This->mPrimaryLocal.ddsCaps.dwCaps = This->mddsdPrimary.ddsCaps.dwCaps;
            This->mpPrimaryLocals[0] = &This->mPrimaryLocal;
 
@@ -90,19 +86,20 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
         }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
         {
-           memset(&This->mddsdOverlay, 0, sizeof(DDSURFACEDESC));
+           //memset(&This->mddsdOverlay, 0, sizeof(DDSURFACEDESC));
+           memcpy(&This->mddsdOverlay,pDDSD,sizeof(DDSURFACEDESC));
            This->mddsdOverlay.dwSize = sizeof(DDSURFACEDESC);
-           This->mddsdOverlay.dwFlags = DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT | DDSD_WIDTH | DDSD_HEIGHT;
+           //This->mddsdOverlay.dwFlags = DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT | DDSD_WIDTH | DDSD_HEIGHT;
 
-           This->mddsdOverlay.ddsCaps.dwCaps = DDSCAPS_OVERLAY | DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM | DDSCAPS_COMPLEX | DDSCAPS_FLIP;
+           //This->mddsdOverlay.ddsCaps.dwCaps = DDSCAPS_OVERLAY | DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM | DDSCAPS_COMPLEX | DDSCAPS_FLIP;
 
-           This->mddsdOverlay.dwWidth = 100;  //pels;
-           This->mddsdOverlay.dwHeight = 100; // lines;
-           This->mddsdOverlay.dwBackBufferCount = 1; //cBuffers;
+           //This->mddsdOverlay.dwWidth = 100;  //pels;
+           //This->mddsdOverlay.dwHeight = 100; // lines;
+           //This->mddsdOverlay.dwBackBufferCount = 1; //cBuffers;
 
-           This->mddsdOverlay.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-           This->mddsdOverlay.ddpfPixelFormat.dwFlags = DDPF_RGB; 
-           This->mddsdOverlay.ddpfPixelFormat.dwRGBBitCount = 32;
+           //This->mddsdOverlay.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+           //This->mddsdOverlay.ddpfPixelFormat.dwFlags = DDPF_RGB; 
+           //This->mddsdOverlay.ddpfPixelFormat.dwRGBBitCount = 32;
      
            mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
            mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;
@@ -205,19 +202,19 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 
            return DD_OK;
  
-	}	
+        }	
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)
-	{
+        {
            DX_STUB;
-	}
+        }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
-	{
+        {
            DX_STUB;
-	}
+        }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
-	{
+        {
            DX_STUB;
-	}
+        }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OFFSCREENPLAIN) 
         {
            DX_STUB;
@@ -229,69 +226,65 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rSrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
-	DX_STUB;
- // DDHAL_BLTDATA mDdBlt;
- // mDdBlt.lpDDDestSurface = This->mpPrimaryLocals[0];
-
- // if (!DdResetVisrgn(This->mpPrimaryLocals[0], NULL)) 
- // {
- //     // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
- //   return DDERR_NOGDI;
- // }
-
- //   memset(&mDdBlt, 0, sizeof(DDHAL_BLTDATA));
- //   memset(&mDdBlt.bltFX, 0, sizeof(DDBLTFX));
- //   mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
-
- //   mDdBlt.lpDD = &This->mDDrawGlobal;
- //   mDdBlt.Blt = This->mCallbacks.HALDDSurface.Blt; 
- //   mDdBlt.lpDDDestSurface = This->mpPrimaryLocals[0];
-	//
- //   This->mpPrimaryLocals[0]->hDC = (ULONG_PTR)GetDC(This->CooperativeHWND);
- //   mDdBlt.rDest.top = 50;
- //   mDdBlt.rDest.bottom = 100;
- //   mDdBlt.rDest.left = 0;
- //   mDdBlt.rDest.right = 100;
- //   mDdBlt.lpDDSrcSurface = NULL;
- //   mDdBlt.IsClipped = FALSE;    
- //   mDdBlt.bltFX.dwFillColor = 0xFFFF00;
- //   mDdBlt.dwFlags = DDBLT_COLORFILL | DDBLT_WAIT;
-
- //  if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
-	//{
-	//  return DDHAL_DRIVER_HANDLED;
- //   }
-
-	//
-
- //   if (mDdBlt.ddRVal!=DD_OK) 
-	//{
- // 		return mDdBlt.ddRVal;
- //   }
-
-
-
-	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-    IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
+        DDHAL_BLTDATA mDdBlt;
+        IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+        //IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
  	
-	if (!(This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
-	{
-		return DDERR_NODRIVERSUPPORT;
-	}
+        if (!(This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
+        {
+              return DDERR_NODRIVERSUPPORT;
+        }
 
-	DDHAL_BLTDATA BltData;
-	BltData.lpDD = &This->owner->mDDrawGlobal;
-	BltData.dwFlags = dwFlags;
-	BltData.lpDDDestSurface = &This->Local;
-    if(rDest) BltData.rDest = *(RECTL*)rDest;
-    if(rSrc) BltData.rSrc = *(RECTL*)rSrc;
-    if(That) BltData.lpDDSrcSurface = &That->Local;
-	if(lpbltfx) BltData.bltFX = *lpbltfx;
+        mDdBlt.lpDDDestSurface = This->owner->mpPrimaryLocals[0];
 
-	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.Blt(&BltData) != DDHAL_DRIVER_HANDLED)
-	{
-	   return DDERR_NODRIVERSUPPORT;
-	}
-	
-	return BltData.ddRVal;
+        if (!DdResetVisrgn(This->owner->mpPrimaryLocals[0], NULL)) 
+        {      
+              return DDERR_NOGDI;
+        }
+
+        memset(&mDdBlt, 0, sizeof(DDHAL_BLTDATA));
+        memset(&mDdBlt.bltFX, 0, sizeof(DDBLTFX));
+
+        if (lpbltfx!=NULL)
+        {
+              memcpy(&mDdBlt.bltFX, lpbltfx, sizeof(DDBLTFX));
+        }
+
+        if (rDest!=NULL)
+        {
+              memcpy(& mDdBlt.rDest, rDest, sizeof(DDBLTFX));
+        }
+
+        if (rSrc!=NULL)
+        {
+              memcpy(& mDdBlt.rDest, rSrc, sizeof(DDBLTFX));
+        }
+
+   
+        // FIXME setup src surface 
+        mDdBlt.lpDDSrcSurface = NULL; //src->
+   
+        mDdBlt.lpDD = &This->owner->mDDrawGlobal;
+        mDdBlt.Blt = This->owner->mCallbacks.HALDDSurface.Blt; 
+        mDdBlt.lpDDDestSurface = This->owner->mpPrimaryLocals[0];
+
+        mDdBlt.dwFlags = dwFlags;
+      
+        This->owner->mpPrimaryLocals[0]->hDC = This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
+    
+        // FIXME dectect if it clipped or not 
+        mDdBlt.IsClipped = FALSE;    
+   
+        if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
+        {
+              return DDHAL_DRIVER_HANDLED;
+        }
+
+
+        if (mDdBlt.ddRVal!=DD_OK) 
+        {
+              return mDdBlt.ddRVal;
+        }
+
+        return DD_OK;
 }
