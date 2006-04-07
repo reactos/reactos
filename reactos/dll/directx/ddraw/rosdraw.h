@@ -46,21 +46,7 @@ typedef struct
     UINT mcTextures;
     DDSURFACEDESC *mpTextures;
 
-	/* Surface */
-	DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
-    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
-    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
-    //DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
-    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
-    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
-    //DDRAWI_DDRAWCLIPPER_INT mPrimaryClipperInterface;
-    DDSURFACEDESC mddsdPrimary;
-    DDSURFACEDESC mddsdOverlay;
-
-    DDRAWI_DDRAWSURFACE_GBL mOverlayGlobal;
-    DDRAWI_DDRAWSURFACE_LCL mOverlayLocal[6];
-    DDRAWI_DDRAWSURFACE_LCL *mpOverlayLocals[6];
-    DDRAWI_DDRAWSURFACE_MORE mOverlayMore[6];
+	
 
 
 	/* ExclusiveOwner */	
@@ -77,8 +63,16 @@ typedef struct
 
 /******** Surface Object ********/
 typedef struct 
-{
+{    
+    DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
+    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
+    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
     DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+
+    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
+    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
+
+    DDSURFACEDESC mddsdPrimary;
 } DxSurf;
 
 typedef struct 
