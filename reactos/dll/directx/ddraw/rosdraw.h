@@ -50,7 +50,7 @@ typedef struct
 	DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
     DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
     DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
-    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+    //DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
     DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
     DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
     //DDRAWI_DDRAWCLIPPER_INT mPrimaryClipperInterface;
@@ -76,6 +76,10 @@ typedef struct
 } IDirectDrawImpl; 
 
 /******** Surface Object ********/
+typedef struct 
+{
+    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+} DxSurf;
 
 typedef struct 
 {
@@ -90,7 +94,13 @@ typedef struct
 	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
 	DDSURFACEDESC ddsd; 
 
+    DxSurf *Surf;
+
 } IDirectDrawSurfaceImpl;
+
+
+
+
 
 /******** Clipper Object ********/
 
@@ -142,7 +152,7 @@ HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
 HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 ); 
 HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD );
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
-HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);       
+HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, IDirectDrawSurfaceImpl *ppSurf, IUnknown *pUnkOuter);       
 
 
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );

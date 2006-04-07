@@ -232,6 +232,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
                                             LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
 {
 	HRESULT ret;
+    DxSurf *surf;
 
     if (pUnkOuter!=NULL) 
         return DDERR_INVALIDPARAMS; 
@@ -252,10 +253,21 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	}
     ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
     
+    surf = (DxSurf*)HeapAlloc(GetProcessHeap(), 0, sizeof(DxSurf));
+
+    if (surf == NULL) 
+	{
+        // FIXME Free memmory at exit
+        return E_OUTOFMEMORY;
+	}
+    
+  
+
     That->lpVtbl = &DirectDrawSurface7_Vtable;
     That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
+    // FIXME free This->mDDrawGlobal.dsList  on release 
     This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                                                             sizeof(DDRAWI_DDRAWSURFACE_INT));        
     That->owner = (IDirectDrawImpl *)This;
@@ -264,19 +276,19 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     /* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
     That->owner->mDDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
    
-    
-
+   
+    That->Surf = surf;
 
     if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE)
 	{
-		ret =  Hal_DirectDraw_CreateSurface (iface, pDDSD, ppSurf, pUnkOuter);       
+		ret =  Hal_DirectDraw_CreateSurface (iface, pDDSD, That, pUnkOuter);       
     }    
 	else 
 	{
 		ret = Hel_DirectDraw_CreateSurface (iface, pDDSD, ppSurf, pUnkOuter);       
 	}
 
-	This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)&This->mPrimaryLocal;
+	//This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)&This->mPrimaryLocal;
 
     // the real surface object creation
    

@@ -11,10 +11,11 @@
 #include "rosdraw.h"
 
 
-HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, IDirectDrawSurfaceImpl *ppSurf, IUnknown *pUnkOuter)
 {
         UINT i;
         IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+        IDirectDrawSurfaceImpl* That = ppSurf;        
 
         DDHAL_CREATESURFACEDATA      mDdCreateSurface;
         DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
@@ -65,10 +66,10 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
            */
            //This->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
            This->mPrimaryLocal.ddsCaps.dwCaps = This->mddsdPrimary.ddsCaps.dwCaps;
-           This->mpPrimaryLocals[0] = &This->mPrimaryLocal;
+           That->Surf->mpPrimaryLocals[0] = &This->mPrimaryLocal;
 
            mDdCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary;
-           mDdCreateSurface.lplpSList = This->mpPrimaryLocals;
+           mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
            mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
 
            if (This->mHALInfo.lpDDCallbacks->CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
@@ -176,7 +177,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
            DDHAL_UPDATEOVERLAYDATA      mDdUpdateOverlay;
            mDdUpdateOverlay.lpDD = &This->mDDrawGlobal;
            mDdUpdateOverlay.UpdateOverlay = This->mCallbacks.HALDDSurface.UpdateOverlay;
-           mDdUpdateOverlay.lpDDDestSurface = This->mpPrimaryLocals[0];
+           mDdUpdateOverlay.lpDDDestSurface = That->Surf->mpPrimaryLocals[0];
            mDdUpdateOverlay.lpDDSrcSurface = This->mpOverlayLocals[0];//pDDSurface;
            mDdUpdateOverlay.dwFlags = DDOVER_SHOW;
   
@@ -227,17 +228,23 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rSrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
         DDHAL_BLTDATA mDdBlt;
-        IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+        IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;        
+
         //IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
  	
+        if (This==NULL)
+        {
+            return DD_FALSE;
+        }
+
         if (!(This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
         {
               return DDERR_NODRIVERSUPPORT;
         }
 
-        mDdBlt.lpDDDestSurface = This->owner->mpPrimaryLocals[0];
+        mDdBlt.lpDDDestSurface = This->Surf->mpPrimaryLocals[0];
 
-        if (!DdResetVisrgn(This->owner->mpPrimaryLocals[0], NULL)) 
+        if (!DdResetVisrgn(This->Surf->mpPrimaryLocals[0], NULL)) 
         {      
               return DDERR_NOGDI;
         }
@@ -266,11 +273,11 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
    
         mDdBlt.lpDD = &This->owner->mDDrawGlobal;
         mDdBlt.Blt = This->owner->mCallbacks.HALDDSurface.Blt; 
-        mDdBlt.lpDDDestSurface = This->owner->mpPrimaryLocals[0];
+        mDdBlt.lpDDDestSurface = This->Surf->mpPrimaryLocals[0];
 
         mDdBlt.dwFlags = dwFlags;
       
-        This->owner->mpPrimaryLocals[0]->hDC = This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
+        This->Surf->mpPrimaryLocals[0]->hDC = This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
     
         // FIXME dectect if it clipped or not 
         mDdBlt.IsClipped = FALSE;    
