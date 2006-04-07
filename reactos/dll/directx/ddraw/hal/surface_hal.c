@@ -13,97 +13,91 @@
 
 HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
-	UINT i;
-	 IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+//	UINT i;
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	  /* create primare surface now */
+	DDHAL_CREATESURFACEDATA      mDdCreateSurface;
+	DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
+	
+
+	mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
+    mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;
+	
+    mDdCreateSurface.lpDD = &This->mDDrawGlobal;
+    mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
   
-   memset(&This->mddsdPrimary,   0, sizeof(DDSURFACEDESC));
-   This->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);
-   This->mddsdPrimary.dwFlags     = DDSD_CAPS;
-   This->mddsdPrimary.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY | DDSCAPS_VISIBLE;
+	/* create primare surface now */
+	if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+    {
+       memset(&This->mddsdPrimary,   0, sizeof(DDSURFACEDESC));
+       This->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);
+       This->mddsdPrimary.dwFlags     = pDDSD->dwFlags;
+       This->mddsdPrimary.ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;	   
+	   mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
+       mDdCanCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary; // pDDSD;
 
-   DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
-   mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
-   mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;
-   mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
-   mDdCanCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary; // pDDSD;
-   
-   
-   if (This->mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
-   {
-    // derr(L"DirectDrawImpl[%08x]::__createPrimary Cannot create primary [%08x]", this, rv);
-    return DDERR_NOTINITIALIZED;
-   }
+	   if (This->mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+       {         
+           return DDERR_NOTINITIALIZED;
+       }
 
-   if (mDdCanCreateSurface.ddRVal != DD_OK)
-   {
-     return DDERR_NOTINITIALIZED;
-   }
+	   if (mDdCanCreateSurface.ddRVal != DD_OK)
+       {
+           return DDERR_NOTINITIALIZED;
+       }
+	   memset(&This->mPrimaryGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
+       This->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
+       This->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
+       This->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
+       This->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
+       This->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
+       This->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;
 
-  memset(&This->mPrimaryGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
-  This->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
-  This->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
-  This->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
-  This->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
-  This->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
-  This->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;
+	   memset(&This->mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
+       This->mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 
-  memset(&This->mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
-  This->mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+	   memset(&This->mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
+       This->mPrimaryLocal.lpGbl = &This->mPrimaryGlobal;
+       This->mPrimaryLocal.lpSurfMore = &This->mPrimaryMore;
+       This->mPrimaryLocal.dwProcessId = GetCurrentProcessId();
+	   
+	   // FIXME Check the flags if we shall create a primaresurface for overlay or something else 
+       This->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA|DDRAWISURF_HASDC;
+       This->mPrimaryLocal.ddsCaps.dwCaps = This->mddsdPrimary.ddsCaps.dwCaps;
+	   This->mpPrimaryLocals[0] = &This->mPrimaryLocal;
 
-  memset(&This->mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
-  This->mPrimaryLocal.lpGbl = &This->mPrimaryGlobal;
-  This->mPrimaryLocal.lpSurfMore = &This->mPrimaryMore;
-  This->mPrimaryLocal.dwProcessId = GetCurrentProcessId();
-  This->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-  This->mPrimaryLocal.ddsCaps.dwCaps = This->mddsdPrimary.ddsCaps.dwCaps;
+	   mDdCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary;//pDDSD;
+	   mDdCreateSurface.lplpSList = This->mpPrimaryLocals; //cSurfaces;
+       mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ;  //ppSurfaces;
+	   if (This->mHALInfo.lpDDCallbacks->CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+       {
+	       return DDERR_NOTINITIALIZED;
+       }
 
-  This->mpPrimaryLocals[0] = &This->mPrimaryLocal;
-
-  DDHAL_CREATESURFACEDATA      mDdCreateSurface;
-  mDdCreateSurface.lpDD = &This->mDDrawGlobal;
-  mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
-  mDdCreateSurface.lpDDSurfaceDesc = &This->mddsdPrimary;//pDDSD;
-  mDdCreateSurface.lplpSList = This->mpPrimaryLocals; //cSurfaces;
-  mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ;  //ppSurfaces;
-
-  if (This->mHALInfo.lpDDCallbacks->CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
-  {
-	return DDERR_NOTINITIALIZED;
-  }
+	   if (mDdCreateSurface.ddRVal != DD_OK) 
+       {   
+           return mDdCreateSurface.ddRVal;
+       }
+    }
+	else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)
+	{
+		DX_STUB;
+	}
+	else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
+	{
+		DX_STUB;
+	}
+    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+	{
+		DX_STUB;
+	}
+    else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OFFSCREENPLAIN) 
+    {
+		DX_STUB;
+    }
   
-
-  if (mDdCreateSurface.ddRVal != DD_OK) 
-  {   
-    return mDdCreateSurface.ddRVal;
-  }
-
-  // -- Setup Clipper ---------------------------------------------------------
-  memset(&This->mPrimaryClipperGlobal, 0, sizeof(DDRAWI_DDRAWCLIPPER_GBL));
-  This->mPrimaryClipperGlobal.dwFlags = DDRAWICLIP_ISINITIALIZED;
-  This->mPrimaryClipperGlobal.dwProcessId = GetCurrentProcessId();
-  //mPrimaryClipperGlobal.hWnd = (ULONG_PTR)hwnd; 
-  This->mPrimaryClipperGlobal.hWnd = (ULONG_PTR)GetDesktopWindow();
-  This->mPrimaryClipperGlobal.lpDD = &This->mDDrawGlobal;
-  This->mPrimaryClipperGlobal.lpStaticClipList = NULL;
-
-  memset(&This->mPrimaryClipperLocal, 0, sizeof(DDRAWI_DDRAWCLIPPER_LCL));
-  This->mPrimaryClipperLocal.lpGbl = &This->mPrimaryClipperGlobal;
-
-  //memset(&mPrimaryClipperInterface, 0, sizeof(DDRAWI_DDRAWCLIPPER_INT));
-  //mPrimaryClipperInterface.lpLcl = &mPrimaryClipperLocal;
-  //mPrimaryClipperInterface.dwIntRefCnt = 1;
-  //mPrimaryClipperInterface.lpLink = null;
-  //mPrimaryClipperInterface.lpVtbl = null;
-
-  This->mPrimaryLocal.lpDDClipper = &This->mPrimaryClipperLocal;
-  //mPrimaryMore.lpDDIClipper = &mPrimaryClipperInterface;
-
-  //mDdBlt.lpDDDestSurface = mpPrimaryLocals[0];
+  //  return DDERR_INVALIDSURFACETYPE;
   
-  
-  /* create primare surface is down now */
 
   
   /*
@@ -114,6 +108,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 
   /* create overlay surface now */
   
+	/*
   memset(&This->mddsdOverlay, 0, sizeof(DDSURFACEDESC));
   This->mddsdOverlay.dwSize = sizeof(DDSURFACEDESC);
   This->mddsdOverlay.dwFlags = DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT | DDSD_WIDTH | DDSD_HEIGHT;
@@ -185,12 +180,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
     UINT j = (i + 1) % cSurfaces;
 
 	
-    /*if (!mHALInfo.lpDDSurfaceCallbacks->AddAttachedSurface(mpOverlayLocals[i], mpOverlayLocals[j])) 
-	{
-     // derr(L"DirectDrawImpl[%08x]::__setupDevice DdAttachSurface(%d, %d) failed", this, i, j);
-      return DD_FALSE;
-    }*/
-
+    
 	if (!DdAttachSurface(This->mpOverlayLocals[i], This->mpOverlayLocals[j])) 
 	{
      // derr(L"DirectDrawImpl[%08x]::__setupDevice DdAttachSurface(%d, %d) failed", this, i, j);
@@ -230,11 +220,7 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
   mDdUpdateOverlay.lpDDSrcSurface = This->mpOverlayLocals[0];//pDDSurface;
   mDdUpdateOverlay.dwFlags = DDOVER_SHOW;
 
- /* if (flags & DDOVER_DDFX)
-    mDdUpdateOverlay.overlayFX = *pFx;
-  copyRect(&mDdUpdateOverlay.rDest, pdst);
-  copyRect(&mDdUpdateOverlay.rSrc, psrc);
-*/
+ 
   
   mDdUpdateOverlay.rDest.top = 0;
   mDdUpdateOverlay.rDest.left = 0;
@@ -259,6 +245,46 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
   {   
     return mDdUpdateOverlay.ddRVal;
   }
+*/
+
+  DDHAL_BLTDATA mDdBlt;
+  mDdBlt.lpDDDestSurface = This->mpPrimaryLocals[0];
+
+  if (!DdResetVisrgn(This->mpPrimaryLocals[0], NULL)) 
+  {
+      // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
+    return DDERR_NOGDI;
+  }
+
+    memset(&mDdBlt, 0, sizeof(DDHAL_BLTDATA));
+    memset(&mDdBlt.bltFX, 0, sizeof(DDBLTFX));
+    mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
+
+    mDdBlt.lpDD = &This->mDDrawGlobal;
+    mDdBlt.Blt = This->mCallbacks.HALDDSurface.Blt; 
+    mDdBlt.lpDDDestSurface = This->mpPrimaryLocals[0];
+	
+    This->mpPrimaryLocals[0]->hDC = (ULONG_PTR)GetDC(This->CooperativeHWND);
+    mDdBlt.rDest.top = 50;
+    mDdBlt.rDest.bottom = 100;
+    mDdBlt.rDest.left = 0;
+    mDdBlt.rDest.right = 100;
+    mDdBlt.lpDDSrcSurface = NULL;
+    mDdBlt.IsClipped = FALSE;    
+    mDdBlt.bltFX.dwFillColor = 0xFFFF00;
+    mDdBlt.dwFlags = DDBLT_COLORFILL | DDBLT_WAIT;
+
+   if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
+	{
+	  return DDHAL_DRIVER_HANDLED;
+    }
+
+	
+
+    if (mDdBlt.ddRVal!=DD_OK) 
+	{
+  		return mDdBlt.ddRVal;
+    }
 
   return DD_OK;
 }

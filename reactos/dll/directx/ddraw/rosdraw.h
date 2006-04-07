@@ -67,6 +67,7 @@ typedef struct
 	DDRAWI_DIRECTDRAW_LCL ExclusiveOwner;				
     
     DWORD cooperative_level;	
+	HWND CooperativeHWND;
 
 	BOOL InitializeDraw; 
 
