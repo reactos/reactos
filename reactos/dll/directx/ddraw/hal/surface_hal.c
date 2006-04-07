@@ -232,7 +232,11 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
         DDHAL_BLTDATA mDdBlt;
         IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;        
 
-        //IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
+        IDirectDrawSurfaceImpl* That = NULL;
+        if (src!=NULL)
+        {
+            That = (IDirectDrawSurfaceImpl*)src;
+        }
  	
         if (This==NULL)
         {
@@ -268,10 +272,13 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
         {
               memcpy(& mDdBlt.rDest, rSrc, sizeof(DDBLTFX));
         }
+           
+        if (src != NULL)
+        {
+              mDdBlt.lpDDSrcSurface = That->Surf->mpPrimaryLocals[0];
+        }
 
-   
-        // FIXME setup src surface 
-        mDdBlt.lpDDSrcSurface = NULL; //src->
+        //mDdBlt.lpDDSrcSurface = NULL; //src->
    
         mDdBlt.lpDD = &This->owner->mDDrawGlobal;
         mDdBlt.Blt = This->owner->mCallbacks.HALDDSurface.Blt; 
