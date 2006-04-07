@@ -24,8 +24,8 @@ NewDocSelDlgProc(HWND hDlg,
                                        hInstance,
                                        i))
                 {
-                    ListBox_AddString(hList,
-                                      lpDocType);
+                    (void)ListBox_AddString(hList,
+                                            lpDocType);
                     LocalFree((HLOCAL)lpDocType);
                 }
             }
