@@ -195,6 +195,7 @@ BEGIN
     IDS_CMT_EXPLORER    "Launch Explorer"
     IDS_CMT_NOTEPAD     "Launch Text Editor"
     IDS_CMT_REGEDIT     "Launch Registry Editor"
+    IDS_CMT_WORDPAD     "Launch Document Editor"
 END
 
 STRINGTABLE

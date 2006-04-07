@@ -427,6 +427,7 @@ InstallReactOS (HINSTANCE hInstance)
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("ReactOS Explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("WordPad.lnk"), _T("wordpad.exe"), IDS_CMT_WORDPAD);
   }
 
 
