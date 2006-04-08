@@ -236,10 +236,16 @@ Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
     }
 
     This = (IDirectDrawSurfaceImpl*)iface;        
+
+    /*
+      FIXME check if the surface exists or not
+      for now we aussme the surface exits and create the hDC for it
+    */
      
     if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
     {
-        *phDC = (HDC)This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
+         This->Surf->mPrimaryLocal.hDC = (ULONG_PTR)GetDC((HWND)This->owner->mDDrawGlobal.lpExclusiveOwner->hWnd);
+        *phDC = (HDC)This->Surf->mPrimaryLocal.hDC;
     }
     else
     {
@@ -336,7 +342,30 @@ Main_DDrawSurface_PageUnlock(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 HRESULT WINAPI
 Main_DDrawSurface_ReleaseDC(LPDIRECTDRAWSURFACE7 iface, HDC hDC)
 {
-    DX_STUB;
+     IDirectDrawSurfaceImpl* This;
+
+    if (iface == NULL)
+    {
+       return DDERR_INVALIDOBJECT;  
+    }
+
+    if (hDC == NULL)
+    {
+       return DDERR_INVALIDPARAMS;  
+    }
+
+    This = (IDirectDrawSurfaceImpl*)iface;        
+   
+    /* FIXME check if surface exits or not */
+
+    if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
+    {
+        return DDERR_GENERIC;         
+    }
+
+    ReleaseDC((HWND)This->owner->mDDrawGlobal.lpExclusiveOwner->hWnd,hDC);
+
+    return DD_OK;
 }
 
 HRESULT WINAPI
