@@ -61,16 +61,15 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 
 HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 				LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE event)
-{ /*   
-	IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)iface;
+{   
+	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
+	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
 	{
-		return Hal_DDrawSurface_Lock( iiface, LPRECT prect, pDDSD,  flags,  event);
+		return Hal_DDrawSurface_Lock( iface, prect, pDDSD,  flags,  event);
 	}
 
-	return Hel_DDrawSurface_Lock( iiface, LPRECT prect, pDDSD,  flags,  event);*/
-    DX_STUB;
+	return Hel_DDrawSurface_Lock( iface, prect, pDDSD,  flags,  event);
 }
 
 HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
@@ -224,7 +223,30 @@ Main_DDrawSurface_GetColorKey(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags,
 HRESULT WINAPI
 Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
 {
-    DX_STUB;
+    IDirectDrawSurfaceImpl* This;
+
+    if (iface == NULL)
+    {
+       return DDERR_INVALIDOBJECT;  
+    }
+
+    if (phDC == NULL)
+    {
+       return DDERR_INVALIDPARAMS;  
+    }
+
+    This = (IDirectDrawSurfaceImpl*)iface;        
+     
+    if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
+    {
+        *phDC = (HDC)This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
+    }
+    else
+    {
+       *phDC =  (HDC)This->Surf->mpPrimaryLocals[0]->hDC;
+    }
+
+    return DD_OK;
 }
 
 HRESULT WINAPI

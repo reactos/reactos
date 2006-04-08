@@ -69,10 +69,13 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
            That->Surf->mPrimaryLocal.ddsCaps.dwCaps = That->Surf->mddsdPrimary.ddsCaps.dwCaps;
            That->Surf->mpPrimaryLocals[0] = &That->Surf->mPrimaryLocal;
 
+          
+
            mDdCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary;
            mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
            mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
 
+            
            if (This->mHALInfo.lpDDCallbacks->CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
            {
               return DDERR_NOTINITIALIZED;
@@ -82,12 +85,15 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
            {   
               return mDdCreateSurface.ddRVal;
            }
+                     
+
 
            return DD_OK;
 
         }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
         {
+            DX_STUB_str( "Can not create overlay surface");
            ////memset(&This->mddsdOverlay, 0, sizeof(DDSURFACEDESC));
            //memcpy(&This->mddsdOverlay,pDDSD,sizeof(DDSURFACEDESC));
            //This->mddsdOverlay.dwSize = sizeof(DDSURFACEDESC);
@@ -208,19 +214,19 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
         }	
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)
         {
-           DX_STUB;
+           DX_STUB_str( "Can not create backbuffer surface");
         }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
         {
-           DX_STUB;
+           DX_STUB_str( "Can not create texture surface");
         }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
         {
-           DX_STUB;
+           DX_STUB_str( "Can not create zbuffer surface");
         }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OFFSCREENPLAIN) 
         {
-           DX_STUB;
+           DX_STUB_str( "Can not create offscreenplain surface");
         }
   
     return DDERR_INVALIDSURFACETYPE;  
@@ -289,6 +295,7 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
        // This->Surf->mpPrimaryLocals[0]->hDC = This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
     
         // FIXME dectect if it clipped or not 
+        DX_STUB_str( "Can not create offscreenplain surface");
         mDdBlt.IsClipped = FALSE;    
    
         if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
@@ -303,4 +310,10 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
         }
 
         return DD_OK;
+}
+
+HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURFACEDESC2 
+                              pDDSD, DWORD flags, HANDLE event)
+{
+    DX_STUB;
 }

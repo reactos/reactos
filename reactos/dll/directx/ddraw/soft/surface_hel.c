@@ -21,3 +21,12 @@ HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 {
     DX_STUB;
 }
+
+HRESULT Hel_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURFACEDESC2 
+                              pDDSD, DWORD flags, HANDLE event)
+{
+    DX_STUB;
+}
+
+
+

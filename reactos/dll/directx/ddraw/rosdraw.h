@@ -147,7 +147,10 @@ HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
 HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD );
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
 HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, IDirectDrawSurfaceImpl *ppSurf, IUnknown *pUnkOuter);       
+HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE event);
 
+
+	
 
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 );
@@ -159,6 +162,7 @@ HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 , DWORD , DWORD ,DWORD , DWORD , DWORD );
 HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
 HRESULT Hel_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD, LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);       
+HRESULT Hel_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE event);
 
 /* Setting for HEL should be move to ros special reg key ? */
 
@@ -177,5 +181,15 @@ HRESULT Hel_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 		firstcall = FALSE; \
 	} \
 	return DDERR_UNSUPPORTED; 
+
+#define DX_STUB_str(x) \
+	static BOOL firstcall = TRUE; \
+	if (firstcall) \
+	{ \
+		char buffer[1024]; \
+		sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
+		OutputDebugStringA(buffer); \
+		firstcall = FALSE; \
+	}
 
 #endif /* __DDRAW_PRIVATE */
