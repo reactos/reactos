@@ -192,4 +192,24 @@ HRESULT Hel_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
 		firstcall = FALSE; \
 	}
 
+#define DX_WINDBG_trace() \
+	static BOOL firstcallx = TRUE; \
+	if (firstcallx) \
+	{ \
+		char buffer[1024]; \
+		sprintf ( buffer, "Enter Function %s (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+		OutputDebugStringA(buffer); \
+		firstcallx = FALSE; \
+	}
+
+#define DX_WINDBG_trace_res(width,height,bpp) \
+	static BOOL firstcallxx = TRUE; \
+	if (firstcallxx) \
+	{ \
+		char buffer[1024]; \
+		sprintf ( buffer, "Setmode have been req width=%d, height=%d bpp=%d\n",width,height,bpp); \
+		OutputDebugStringA(buffer); \
+		firstcallxx = FALSE; \
+	}
+
 #endif /* __DDRAW_PRIVATE */

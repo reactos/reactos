@@ -14,11 +14,14 @@
 
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
 {
+    DX_WINDBG_trace();
 	return DDERR_ALREADYINITIALIZED;
 }
 
 ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 {
+    DX_WINDBG_trace();
+
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
     return InterlockedIncrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
@@ -26,6 +29,8 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
+    DX_WINDBG_trace();
+
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
     ULONG ref = InterlockedDecrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
     
@@ -41,12 +46,16 @@ HRESULT WINAPI
 Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
 				      LPVOID* ppObj)
 {
+    DX_WINDBG_trace();
+
 	return E_NOINTERFACE;
 }
 
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
+     DX_WINDBG_trace();
+
 	 IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
 
@@ -62,6 +71,8 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 				LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE event)
 {   
+    DX_WINDBG_trace();
+
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
 	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
@@ -74,6 +85,8 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 
 HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -81,6 +94,8 @@ HRESULT WINAPI
 Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					  LPDIRECTDRAWSURFACE7 pAttach)
 {
+   DX_WINDBG_trace();
+
    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;        
 
    
@@ -100,6 +115,8 @@ HRESULT WINAPI
 Main_DDrawSurface_AddOverlayDirtyRect(LPDIRECTDRAWSURFACE7 iface,
 					   LPRECT pRect)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -108,12 +125,16 @@ Main_DDrawSurface_BltFast(LPDIRECTDRAWSURFACE7 iface, DWORD dstx,
 			      DWORD dsty, LPDIRECTDRAWSURFACE7 src,
 			      LPRECT rsrc, DWORD trans)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_Restore(LPDIRECTDRAWSURFACE7 iface)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -123,12 +144,16 @@ Main_DDrawSurface_BltBatch(LPDIRECTDRAWSURFACE7 iface,
 				LPDDBLTBATCH pBatch, DWORD dwCount,
 				DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_ChangeUniquenessValue(LPDIRECTDRAWSURFACE7 iface)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -137,6 +162,8 @@ Main_DDrawSurface_DeleteAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					     DWORD dwFlags,
 					     LPDIRECTDRAWSURFACE7 pAttach)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -145,6 +172,8 @@ Main_DDrawSurface_EnumAttachedSurfaces(LPDIRECTDRAWSURFACE7 iface,
 					    LPVOID context,
 					    LPDDENUMSURFACESCALLBACK7 cb)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -153,6 +182,8 @@ Main_DDrawSurface_EnumOverlayZOrders(LPDIRECTDRAWSURFACE7 iface,
 					  DWORD dwFlags, LPVOID context,
 					  LPDDENUMSURFACESCALLBACK7 cb)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -160,12 +191,16 @@ HRESULT WINAPI
 Main_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface,
 			    LPDIRECTDRAWSURFACE7 override, DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_FreePrivateData(LPDIRECTDRAWSURFACE7 iface, REFGUID tag)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -174,18 +209,24 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					  LPDDSCAPS2 pCaps,
 					  LPDIRECTDRAWSURFACE7* ppSurface)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_GetCaps(LPDIRECTDRAWSURFACE7 iface, LPDDSCAPS2 pCaps)
 {
+    DX_WINDBG_trace();
+
     IDirectDrawSurfaceImpl* This;
 
     if (iface == NULL)
@@ -210,6 +251,8 @@ HRESULT WINAPI
 Main_DDrawSurface_GetClipper(LPDIRECTDRAWSURFACE7 iface,
 				  LPDIRECTDRAWCLIPPER* ppClipper)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -217,12 +260,16 @@ HRESULT WINAPI
 Main_DDrawSurface_GetColorKey(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags,
 				   LPDDCOLORKEY pCKey)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
 {
+    DX_WINDBG_trace();
+
     IDirectDrawSurfaceImpl* This;
 
     if (iface == NULL)
@@ -258,17 +305,23 @@ Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
 HRESULT WINAPI
 Main_DDrawSurface_GetDDInterface(LPDIRECTDRAWSURFACE7 iface, LPVOID* pDD)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 HRESULT WINAPI
 Main_DDrawSurface_GetFlipStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_GetLOD(LPDIRECTDRAWSURFACE7 iface, LPDWORD pdwMaxLOD)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -276,12 +329,16 @@ HRESULT WINAPI
 Main_DDrawSurface_GetOverlayPosition(LPDIRECTDRAWSURFACE7 iface,
 					  LPLONG pX, LPLONG pY)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 HRESULT WINAPI
 Main_DDrawSurface_GetPalette(LPDIRECTDRAWSURFACE7 iface,
 				  LPDIRECTDRAWPALETTE* ppPalette)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -289,6 +346,8 @@ HRESULT WINAPI
 Main_DDrawSurface_GetPixelFormat(LPDIRECTDRAWSURFACE7 iface,
 				      LPDDPIXELFORMAT pDDPixelFormat)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -296,6 +355,8 @@ HRESULT WINAPI
 Main_DDrawSurface_GetPriority(LPDIRECTDRAWSURFACE7 iface,
 				   LPDWORD pdwPriority)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -304,6 +365,8 @@ Main_DDrawSurface_GetPrivateData(LPDIRECTDRAWSURFACE7 iface,
 				      REFGUID tag, LPVOID pBuffer,
 				      LPDWORD pcbBufferSize)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -311,6 +374,8 @@ HRESULT WINAPI
 Main_DDrawSurface_GetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface,
 				      LPDDSURFACEDESC2 pDDSD)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -318,30 +383,40 @@ HRESULT WINAPI
 Main_DDrawSurface_GetUniquenessValue(LPDIRECTDRAWSURFACE7 iface,
 					  LPDWORD pValue)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_IsLost(LPDIRECTDRAWSURFACE7 iface)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_PageLock(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_PageUnlock(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_ReleaseDC(LPDIRECTDRAWSURFACE7 iface, HDC hDC)
 {
+    DX_WINDBG_trace();
+
      IDirectDrawSurfaceImpl* This;
 
     if (iface == NULL)
@@ -372,6 +447,8 @@ HRESULT WINAPI
 Main_DDrawSurface_SetClipper (LPDIRECTDRAWSURFACE7 iface,
 				  LPDIRECTDRAWCLIPPER pDDClipper)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -379,12 +456,16 @@ HRESULT WINAPI
 Main_DDrawSurface_SetColorKey (LPDIRECTDRAWSURFACE7 iface,
 				   DWORD dwFlags, LPDDCOLORKEY pCKey)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI
 Main_DDrawSurface_SetLOD (LPDIRECTDRAWSURFACE7 iface, DWORD dwMaxLOD)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -392,6 +473,8 @@ HRESULT WINAPI
 Main_DDrawSurface_SetOverlayPosition (LPDIRECTDRAWSURFACE7 iface,
 					  LONG X, LONG Y)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -399,6 +482,8 @@ HRESULT WINAPI
 Main_DDrawSurface_SetPalette (LPDIRECTDRAWSURFACE7 iface,
 				  LPDIRECTDRAWPALETTE pPalette)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -406,6 +491,8 @@ HRESULT WINAPI
 Main_DDrawSurface_SetPriority (LPDIRECTDRAWSURFACE7 iface,
 				   DWORD dwPriority)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -414,6 +501,8 @@ Main_DDrawSurface_SetPrivateData (LPDIRECTDRAWSURFACE7 iface,
 				      REFGUID tag, LPVOID pData,
 				      DWORD cbSize, DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -424,6 +513,8 @@ Main_DDrawSurface_UpdateOverlay (LPDIRECTDRAWSURFACE7 iface,
 				     LPRECT pDstRect, DWORD dwFlags,
 				     LPDDOVERLAYFX pFX)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
@@ -432,12 +523,16 @@ HRESULT WINAPI
 Main_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface,
 					    DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 
 HRESULT WINAPI Main_DDrawSurface_UpdateOverlayZOrder (LPDIRECTDRAWSURFACE7 iface,
 					   DWORD dwFlags, LPDIRECTDRAWSURFACE7 pDDSRef)
 {
+    DX_WINDBG_trace();
+
     DX_STUB;
 }
 

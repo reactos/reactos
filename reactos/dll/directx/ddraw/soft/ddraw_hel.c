@@ -72,8 +72,11 @@ HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD
 	mode.dmPelsWidth = dwWidth;
 	mode.dmPelsHeight = dwHeight;
 	mode.dmBitsPerPel = dwBPP;
-	mode.dmDisplayFrequency = dwRefreshRate;
+    
+	//mode.dmDisplayFrequency = dwRefreshRate;
 	mode.dmFields = 0;
+
+    DX_STUB_str("in hel");
 
 	if(dwWidth)
 		mode.dmFields |= DM_PELSWIDTH;
@@ -81,12 +84,14 @@ HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD
 		mode.dmFields |= DM_PELSHEIGHT;
 	if(dwBPP)
 		mode.dmFields |= DM_BITSPERPEL;
+    /*
 	if(dwRefreshRate)
 		mode.dmFields |= DM_DISPLAYFREQUENCY;
-
+    */
 	if (ChangeDisplaySettings(&mode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
 		return DDERR_UNSUPPORTEDMODE;
 	
+    
 	// TODO: reactivate ddraw object, maximize window, set it in foreground 
 	// and set excluive mode (if implemented by the driver)
 
