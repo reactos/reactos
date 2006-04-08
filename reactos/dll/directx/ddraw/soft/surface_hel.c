@@ -28,5 +28,31 @@ HRESULT Hel_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
     DX_STUB;
 }
 
+HRESULT Hel_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
+{
+    DX_STUB;
+}
+
+HRESULT Hel_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAWSURFACE7 override, DWORD dwFlags)
+{
+    DX_STUB;
+}
+
+HRESULT Hel_DDrawSurface_SetColorKey (LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags, LPDDCOLORKEY pCKey)
+{
+    DX_STUB;
+}
+
+HRESULT Hel_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
+{
+    DX_STUB;
+}
+
+HRESULT Hel_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
+{
+    DX_STUB;
+}
+
+
 
 

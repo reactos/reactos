@@ -11,27 +11,34 @@
 #include "rosdraw.h"
 
 
+/* FIXME adding hal and hel stub 
+    DestroySurface; 
+    SetClipList;
+    AddAttachedSurface;  
+    GetFlipStatus;
+    SetOverlayPosition;  
+    SetPalette;
+*/
+
 
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
-{
-    DX_WINDBG_trace();
+{    
 	return DDERR_ALREADYINITIALIZED;
 }
 
 ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 {
-    DX_WINDBG_trace();
-
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-	
+
+    DX_WINDBG_trace();
+    	
     return InterlockedIncrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
 }
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
-    DX_WINDBG_trace();
-
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+        
     ULONG ref = InterlockedDecrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
     
     if (ref == 0)
@@ -59,7 +66,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 	 IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
 
-	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_SURFCB32_BLT) 
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_BLT) 
 	{
 		return Hal_DDrawSurface_Blt( iface,  rdst, src,  rsrc,  dwFlags,  lpbltfx);
 	}
@@ -75,7 +82,7 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->owner->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
 	{
 		return Hal_DDrawSurface_Lock( iface, prect, pDDSD,  flags,  event);
 	}
@@ -87,7 +94,14 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRec
 {
     DX_WINDBG_trace();
 
-    DX_STUB;
+	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
+	{
+		return Hal_DDrawSurface_Unlock( iface,  pRect);
+	}
+
+	return Hel_DDrawSurface_Unlock( iface,  pRect);
 }
 
 HRESULT WINAPI
@@ -97,7 +111,6 @@ Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
    DX_WINDBG_trace();
 
    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;        
-
    
    IDirectDrawSurfaceImpl* That = NULL;
    if (pAttach==NULL)
@@ -192,8 +205,15 @@ Main_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface,
 			    LPDIRECTDRAWSURFACE7 override, DWORD dwFlags)
 {
     DX_WINDBG_trace();
+    
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-    DX_STUB;
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_FLIP) 
+	{
+		return Hal_DDrawSurface_Flip(iface, override,  dwFlags);
+	}
+
+	return Hel_DDrawSurface_Flip(iface, override,  dwFlags);
 }
 
 HRESULT WINAPI
@@ -217,9 +237,16 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 HRESULT WINAPI
 Main_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 {
-    DX_WINDBG_trace();
+     DX_WINDBG_trace();
+    
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-    DX_STUB;
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_FLIP) 
+	{
+		return Hal_DDrawSurface_GetBltStatus( iface,  dwFlags);
+	}
+
+	return Hel_DDrawSurface_GetBltStatus( iface,  dwFlags);
 }
 
 HRESULT WINAPI
@@ -458,16 +485,17 @@ Main_DDrawSurface_SetColorKey (LPDIRECTDRAWSURFACE7 iface,
 {
     DX_WINDBG_trace();
 
-    DX_STUB;
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_SETCOLORKEY) 
+	{
+		return Hal_DDrawSurface_SetColorKey (iface, dwFlags, pCKey);
+	}
+
+	return Hel_DDrawSurface_SetColorKey (iface, dwFlags, pCKey);
 }
 
-HRESULT WINAPI
-Main_DDrawSurface_SetLOD (LPDIRECTDRAWSURFACE7 iface, DWORD dwMaxLOD)
-{
-    DX_WINDBG_trace();
 
-    DX_STUB;
-}
 
 HRESULT WINAPI
 Main_DDrawSurface_SetOverlayPosition (LPDIRECTDRAWSURFACE7 iface,
@@ -525,7 +553,14 @@ Main_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface,
 {
     DX_WINDBG_trace();
 
-    DX_STUB;
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+
+	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY) 
+	{
+		return Hal_DDrawSurface_UpdateOverlayDisplay ( iface,  dwFlags);
+	}
+
+	return Hel_DDrawSurface_UpdateOverlayDisplay ( iface,  dwFlags);
 }
 
 HRESULT WINAPI Main_DDrawSurface_UpdateOverlayZOrder (LPDIRECTDRAWSURFACE7 iface,
