@@ -10,6 +10,22 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
+
+/* this sturct are not longer in DDK 
+   I did recrate it by looking diffent betwin DD_xx struct and _DDHAL strucrt 
+   only diffent I found was the global pointer have been change from LPDDRAWI_DDRAWSURFACE_GBL
+   to DD_DIRECTDRAW_GLOBAL
+*/
+
+typedef struct _DDHAL_MAPMEMORYDATA 
+{
+  LPDDRAWI_DDRAWSURFACE_GBL  lpDD;
+  BOOL  bMap;
+  HANDLE  hProcess;
+  FLATPTR  fpProcess;
+  HRESULT  ddRVal;
+} DDHAL_MAPMEMORYDATA;
+
 /* own macro to alloc memmory */
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
 #define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p);

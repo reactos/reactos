@@ -315,7 +315,37 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURFACEDESC2 
                               pDDSD, DWORD flags, HANDLE event)
 {
-    DX_STUB;
+
+   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+   
+  
+   DDHAL_LOCKDATA Lock;
+   
+   if (prect!=NULL)
+   {
+      Lock.bHasRect = TRUE;
+      memcpy(&Lock.rArea,prect,sizeof(RECTL));
+   }
+   else
+   {
+      Lock.bHasRect = FALSE;
+   }
+
+   Lock.ddRVal = DDERR_NOTPALETTIZED;
+   Lock.Lock = This->owner->mCallbacks.HALDDSurface.Lock;
+   Lock.dwFlags = flags;
+   Lock.lpDDSurface = This->Surf->mpPrimaryLocals[0];
+   Lock.lpDD = &This->owner->mDDrawGlobal;
+   // FIXME lpSurfData
+   //Lock.lpSurfData = 
+
+   if (This->owner->mCallbacks.HALDDSurface.Lock(&Lock)!= DDHAL_DRIVER_NOTHANDLED)
+   {
+      return Lock.ddRVal;
+   }
+    // FIXME LPDDSURFACEDESC2
+   
+   return DD_OK;   
 }
 HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
 {

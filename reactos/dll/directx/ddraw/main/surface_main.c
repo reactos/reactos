@@ -82,6 +82,11 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
+    if (event != NULL)
+    {
+        return DDERR_INVALIDPARAMS; 
+    }
+
 	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
 	{
 		return Hal_DDrawSurface_Lock( iface, prect, pDDSD,  flags,  event);
