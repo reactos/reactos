@@ -10,10 +10,11 @@
 
 #include "rosdraw.h"
 
-static const DDPIXELFORMAT pixelformats[] =
+const DDPIXELFORMAT pixelformats[] =
 {
     /* 8bpp paletted */
-    { sizeof(DDPIXELFORMAT), DDPF_RGB|DDPF_PALETTEINDEXED8, 0, { 8 } },
+     { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 24 }, { 0xFF0000 },
+      { 0x00FF00 }, { 0x0000FF } },
     /* 15bpp 5/5/5 */
     { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 16 }, { 0x7C00 }, { 0x3E0 },
       { 0x1F } },
@@ -27,6 +28,37 @@ static const DDPIXELFORMAT pixelformats[] =
     { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 32 }, { 0xFF0000 },
       { 0x00FF00 }, { 0x0000FF } }
 };
+
+const DWORD pixelformatsCount = sizeof(pixelformats) / sizeof(DDPIXELFORMAT);
+
+/* more surface format not adding it */
+      /* 4 bit  paletted  0 */
+      //   sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_PALETTEINDEXED4, 0, 4, 0x00, 0x00, 0x00, 0x00
+
+      ///* 8bpp paletted  1 */
+      //{sizeof(DDPIXELFORMAT), DDPF_RGB|DDPF_PALETTEINDEXED8, 0, 8, 0, 0, 0, 0},
+
+      ///* 15bpp 5:5:5 RGB  2 */
+      //{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 0x7c00, 0x03e0, 0x001f, 0},
+
+      ///* 15bpp 1:5:5:5 ARGB 3 */
+      //{sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 0x7c00, 0x03e0, 0x001f, 0x8000},
+
+      ///* 16bpp 5:6:5 RGB  4 */
+      //{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 0xf800, 0x07e0, 0x001f, 0}                                 
+
+      ///* 16bpp 4:4:4:4 ARGB 5 */
+      //{sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS,´0, 16,       0x0f00,      0x00f0, 0x000f, 0xf000},
+
+      /* 24bpp 8/8/8 RGB 6 */
+      //  {sizeof(DDPIXELFORMAT), DDPF_RGB,                    0,  24 ,  0x00FF0000, 0x0000FF00 , 0x000000FF, 0 },
+
+      /* 32bpp 8:8:8 RGB  7 */
+      //   {sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0},                     
+ 
+      /* 32bpp 8:8:8:8 ARGB  8*/
+       // {sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000}
+      
 
 
 
@@ -625,7 +657,7 @@ HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFla
             break;
 
        case 32: 
-            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[3],sizeof(DDPIXELFORMAT));
+            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[4],sizeof(DDPIXELFORMAT));
             break;
 
         default:

@@ -187,6 +187,10 @@ HRESULT Hel_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 HRESULT Hel_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAWSURFACE7 override, DWORD dwFlags);
 HRESULT Hel_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags);
 
+/* HEL CALLBACK */
+DWORD CALLBACK HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd);
+
+
 /* Setting for HEL should be move to ros special reg key ? */
 
 /* setup how much graphic memory should hel be limit, set it now to 64MB */

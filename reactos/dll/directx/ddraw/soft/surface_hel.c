@@ -56,3 +56,7 @@ HRESULT Hel_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface, DWORD
 
 
 
+
+
+
+

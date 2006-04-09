@@ -37,6 +37,7 @@
 	<directory name="soft">
 		<file>ddraw_hel.c</file>
 		<file>surface_hel.c</file>
+            <file>surface_callbacks_hel.c</file>
 	</directory>
 
 	<directory name="thunks">

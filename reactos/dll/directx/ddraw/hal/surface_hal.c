@@ -22,8 +22,16 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
 	
 
         mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
-        mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;
-	
+        
+        if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) 
+        {
+           mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
+        }
+        else
+        {
+           mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;
+        }
+                	
         mDdCreateSurface.lpDD = &This->mDDrawGlobal;
         mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
           
@@ -335,15 +343,22 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    Lock.Lock = This->owner->mCallbacks.HALDDSurface.Lock;
    Lock.dwFlags = flags;
    Lock.lpDDSurface = This->Surf->mpPrimaryLocals[0];
-   Lock.lpDD = &This->owner->mDDrawGlobal;
-   // FIXME lpSurfData
-   //Lock.lpSurfData = 
+   Lock.lpDD = &This->owner->mDDrawGlobal;   
+   Lock.lpSurfData = NULL;
 
-   if (This->owner->mCallbacks.HALDDSurface.Lock(&Lock)!= DDHAL_DRIVER_NOTHANDLED)
+   if (This->owner->mCallbacks.HALDDSurface.Lock(&Lock)!= DDHAL_DRIVER_HANDLED)
    {
       return Lock.ddRVal;
    }
-    // FIXME LPDDSURFACEDESC2
+
+   RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
+   memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+   pDDSD->dwSize = sizeof(DDSURFACEDESC2);
+
+   pDDSD->lpSurface = Lock.lpSurfData;
+
+
+    // FIXME some things is wrong it does not show the data on screen ??
    
    return DD_OK;   
 }
