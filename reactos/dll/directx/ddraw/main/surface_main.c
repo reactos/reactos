@@ -406,9 +406,24 @@ HRESULT WINAPI
 Main_DDrawSurface_GetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface,
 				      LPDDSURFACEDESC2 pDDSD)
 {
+    DWORD dwSize;
     DX_WINDBG_trace();
 
-    DX_STUB;
+    IDirectDrawSurfaceImpl *This = (IDirectDrawSurfaceImpl *)iface;
+
+    dwSize =  pDDSD->dwSize;
+  
+    if ((dwSize != sizeof(DDSURFACEDESC)) &&
+    	(dwSize != sizeof(DDSURFACEDESC2))) 
+    {	
+	   return DDERR_GENERIC;
+    }
+    
+    RtlZeroMemory(pDDSD,dwSize);
+    memcpy(pDDSD, &This->Surf->mddsdPrimary, sizeof(DDSURFACEDESC));
+    pDDSD->dwSize = dwSize;
+   
+    return DD_OK;
 }
 
 HRESULT WINAPI

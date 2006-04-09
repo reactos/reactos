@@ -92,6 +92,14 @@ typedef struct
     DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
 
     DDSURFACEDESC mddsdPrimary;
+
+    DDRAWI_DDRAWSURFACE_GBL mOverlayGlobal;
+    DDRAWI_DDRAWSURFACE_LCL mOverlayLocal[6];
+    DDRAWI_DDRAWSURFACE_LCL *mpOverlayLocals[6];
+    DDRAWI_DDRAWSURFACE_MORE mOverlayMore[6];
+
+    DDSURFACEDESC mddsdOverlay;
+
 } DxSurf;
 
 typedef struct 
@@ -229,7 +237,7 @@ DWORD CALLBACK HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd);
 		char buffer[1024]; \
 		sprintf ( buffer, "Enter Function %s (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
 		OutputDebugStringA(buffer); \
-		firstcallx = FALSE; \
+		firstcallx = TRUE; \
 	}
 
 #define DX_WINDBG_trace_res(width,height,bpp) \

@@ -144,9 +144,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 	if (iface!=NULL)
 	{	  	
 		ref = InterlockedDecrement(&This->ref);
-    
-        DX_WINDBG_trace_res((INT)This->mDDrawGlobal.dwRefCnt,(INT)ref,(INT)0);
-
+            
 		if (ref == 0)
 		{
 			// set resoltion back to the one in registry
@@ -481,22 +479,19 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
     pDDSD->dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
     pDDSD->lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
     pDDSD->dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
-    
+    pDDSD->dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
+
     RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
     RtlCopyMemory(&pDDSD->ddsCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+    
+    RtlCopyMemory(&pDDSD->ddckCKDestOverlay,&This->mDDrawGlobal.ddckCKDestOverlay,sizeof(DDCOLORKEY));
+    RtlCopyMemory(&pDDSD->ddckCKSrcOverlay,&This->mDDrawGlobal.ddckCKSrcOverlay,sizeof(DDCOLORKEY));
 
     /* have not check where I should get hold of this info yet
-	DWORD  dwBackBufferCount;
-    DWORD  dwAlphaBitDepth;
+	DWORD  dwBackBufferCount;    
     DWORD  dwReserved;
-    LPVOID lpSurface;
-    union
-    {
-        DDCOLORKEY    ddckCKDestOverlay;
-        DWORD         dwEmptyFaceColor;
-    } 
-    DDCOLORKEY    ddckCKDestBlt;
-    DDCOLORKEY    ddckCKSrcOverlay;
+    LPVOID lpSurface;    
+    DDCOLORKEY    ddckCKDestBlt;    
     DDCOLORKEY    ddckCKSrcBlt;  
     DWORD         dwTextureStage;
     */
