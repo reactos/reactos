@@ -474,6 +474,7 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
       return DD_FALSE;
     }
     
+    
     pDDSD->dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE | DDSD_WIDTH; 
     pDDSD->dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
     pDDSD->dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 

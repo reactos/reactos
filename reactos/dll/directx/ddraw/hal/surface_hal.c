@@ -94,7 +94,55 @@ HRESULT Hal_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDS
               return mDdCreateSurface.ddRVal;
            }
                      
+            
+           /* FIXME fill in this if they are avali
+              DDSD_BACKBUFFERCOUNT 
+              DDSD_CKDESTBLT 
+              DDSD_CKDESTOVERLAY 
+              DDSD_CKSRCBLT 
+              DDSD_CKSRCOVERLAY 
+              DDSD_LINEARSIZE 
+              DDSD_LPSURFACE 
+              DDSD_MIPMAPCOUNT 
+              DDSD_ZBUFFERBITDEPTH
+           */
 
+           That->Surf->mddsdPrimary.dwFlags = DDSD_CAPS + DDSD_PIXELFORMAT;
+           RtlCopyMemory(&That->Surf->mddsdPrimary.ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
+           RtlCopyMemory(&That->Surf->mddsdPrimary.ddsCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+    
+           //RtlCopyMemory(&pDDSD->ddckCKDestOverlay,&This->mDDrawGlobal.ddckCKDestOverlay,sizeof(DDCOLORKEY));
+           //RtlCopyMemory(&pDDSD->ddckCKSrcOverlay,&This->mDDrawGlobal.ddckCKSrcOverlay,sizeof(DDCOLORKEY));
+
+           if (This->mDDrawGlobal.vmiData.dwDisplayHeight != 0)
+           {
+              That->Surf->mddsdPrimary.dwFlags += DDSD_HEIGHT ;
+              That->Surf->mddsdPrimary.dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
+           }
+
+           if (This->mDDrawGlobal.vmiData.dwDisplayWidth != 0)
+           {
+              That->Surf->mddsdPrimary.dwFlags += DDSD_WIDTH ;
+              That->Surf->mddsdPrimary.dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
+           }
+
+           if (This->mDDrawGlobal.vmiData.lDisplayPitch != 0)
+           {
+              That->Surf->mddsdPrimary.dwFlags += DDSD_PITCH ;           
+              That->Surf->mddsdPrimary.lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
+           }
+
+           if ( This->mDDrawGlobal.dwMonitorFrequency != 0)
+           {
+              That->Surf->mddsdPrimary.dwFlags += DDSD_REFRESHRATE ;           
+              That->Surf->mddsdPrimary.dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
+           }
+          
+           if (This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth != 0)
+           {
+             That->Surf->mddsdPrimary.dwFlags += DDSD_ALPHABITDEPTH ;
+             That->Surf->mddsdPrimary.dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
+           }
 
            return DD_OK;
 
@@ -346,6 +394,8 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    Lock.lpDD = &This->owner->mDDrawGlobal;   
    Lock.lpSurfData = NULL;
 
+   // FIXME some how lock goes wrong; 
+   return DD_FALSE;
    if (This->owner->mCallbacks.HALDDSurface.Lock(&Lock)!= DDHAL_DRIVER_HANDLED)
    {
       return Lock.ddRVal;
