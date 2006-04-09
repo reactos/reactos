@@ -608,7 +608,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
        /* Try to find a match */
        if (RtlCompareMemory(BusTypeGuid,
                             &IopBusTypeGuidList->Guids[i],
-                            sizeof(GUID)))
+                            sizeof(GUID)) == sizeof(GUID))
        {
            /* Found it */
            FoundIndex = i;
