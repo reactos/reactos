@@ -500,7 +500,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 				   &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Could not create device dir object\n");
+      DPRINT("Could not create device dir object\n");
       return(Status);
     }
 
@@ -511,7 +511,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 				&PortDeviceObject);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Could not claim disk device\n");
+      DPRINT("Could not claim disk device\n");
 
       ZwMakeTemporaryObject(Handle);
       ZwClose(Handle);
