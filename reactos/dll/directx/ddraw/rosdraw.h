@@ -75,6 +75,9 @@ typedef struct
 	/* HEL stuff */
 	DWORD HELMemoryAvilable;
 
+    /* internal counter */
+    ULONG ref;
+
 } IDirectDrawImpl; 
 
 /******** Surface Object ********/

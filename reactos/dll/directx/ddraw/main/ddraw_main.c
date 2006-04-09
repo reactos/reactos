@@ -118,11 +118,11 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 	ULONG ref=0;
-
+    
 	if (iface!=NULL)
 	{
-       ref = InterlockedIncrement((PLONG)&This->mDDrawGlobal.dwRefCnt);
-	}
+        ref = InterlockedIncrement(&This->ref);       
+	}    
     return ref;
 }
 
@@ -143,8 +143,10 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 
 	if (iface!=NULL)
 	{	  	
-		ref = InterlockedDecrement((PLONG)&This->mDDrawGlobal.dwRefCnt);
+		ref = InterlockedDecrement(&This->ref);
     
+        DX_WINDBG_trace_res((INT)This->mDDrawGlobal.dwRefCnt,(INT)ref,(INT)0);
+
 		if (ref == 0)
 		{
 			// set resoltion back to the one in registry
@@ -153,17 +155,11 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 				ChangeDisplaySettings(NULL, 0);
 			}
             
-
 			Hal_DirectDraw_Release(iface);
-			//Hel_DirectDraw_Release(iface);
-            
-			RtlZeroMemory(&This->mDDrawGlobal, sizeof(DDRAWI_DIRECTDRAW_GBL));
-			//RtlZeroMemory(This, sizeof(IDirectDrawImpl));	
-           
+			//Hel_DirectDraw_Release(iface);            			
             if (This!=NULL)
-            {
-              
-			  // HeapFree(GetProcessHeap(), 0, This);
+            {              
+			    HeapFree(GetProcessHeap(), 0, This);
             }
 		}
     }
