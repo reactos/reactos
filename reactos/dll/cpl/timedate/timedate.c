@@ -24,8 +24,8 @@ typedef struct _TIMEZONE_ENTRY
   struct _TIMEZONE_ENTRY *Prev;
   struct _TIMEZONE_ENTRY *Next;
   WCHAR Description[64];   /* 'Display' */
-  WCHAR StandardName[32];  /* 'Std' */
-  WCHAR DaylightName[32];  /* 'Dlt' */
+  WCHAR StandardName[33];  /* 'Std' */
+  WCHAR DaylightName[33];  /* 'Dlt' */
   TZ_INFO TimezoneInfo;    /* 'TZI' */
   ULONG Index;             /* 'Index ' */
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
@@ -474,7 +474,7 @@ CreateTimeZoneList(VOID)
       break;
     }
 
-      dwValueSize = 32 * sizeof(WCHAR);
+      dwValueSize = 33 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
                L"Std",
                NULL,
@@ -486,7 +486,7 @@ CreateTimeZoneList(VOID)
       break;
     }
 
-      dwValueSize = 32 * sizeof(WCHAR);
+      dwValueSize = 33 * sizeof(WCHAR);
       if (RegQueryValueExW(hZoneKey,
                L"Dlt",
                NULL,
