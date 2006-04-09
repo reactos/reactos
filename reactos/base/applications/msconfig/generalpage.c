@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Applications
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/generalpage.c
+ * PURPOSE:     General page message handler
+ * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
+ *
+ */
+
 #include <precomp.h>
 
 HWND hGeneralPage;
