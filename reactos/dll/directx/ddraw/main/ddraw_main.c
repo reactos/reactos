@@ -121,7 +121,7 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
     
 	if (iface!=NULL)
 	{
-        ref = InterlockedIncrement(&This->ref);       
+        ref = InterlockedIncrement( (PLONG) &This->ref);       
 	}    
     return ref;
 }
@@ -143,7 +143,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 
 	if (iface!=NULL)
 	{	  	
-		ref = InterlockedDecrement(&This->ref);
+		ref = InterlockedDecrement( (PLONG) &This->ref);
             
 		if (ref == 0)
 		{
