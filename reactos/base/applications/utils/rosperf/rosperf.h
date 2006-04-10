@@ -65,6 +65,10 @@ unsigned AlphaBlendInit(void **Context, PPERF_INFO PerfInfo, unsigned Reps);
 void AlphaBlendCleanup(void *Context, PPERF_INFO PerfInfo);
 void AlphaBlendProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
 
+void GradientHorizontalProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
+void GradientVerticalProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
+void GradientProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
+
 #endif /* ROSPERF_H_INCLUDED */
 
 /* EOF */

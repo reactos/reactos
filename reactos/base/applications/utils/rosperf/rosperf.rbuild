@@ -2,7 +2,7 @@
     <include base="rosperf">.</include>
     <define name="__USE_W32API" />
     <define name="UNICODE" />
-    <define name="WINVER">0x0500</define>
+    <define name="WINVER">0x0501</define>
     <library>version</library>
     <library>msimg32</library>
     <library>gdi32</library>
@@ -15,5 +15,6 @@
     <file>text.c</file>
     <file>alphablend.c</file>
     <file>testlist.c</file>
+    <file>gradient.c</file>
     <file>rosperf.rc</file>
 </module>
