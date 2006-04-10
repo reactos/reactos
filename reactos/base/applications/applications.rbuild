@@ -61,4 +61,7 @@
 <directory name="control">
 	<xi:include href="control/control.rbuild" />
 </directory>
+<directory name="utils">
+	<xi:include href="utils/utils.rbuild" />
+</directory>
 </group>
