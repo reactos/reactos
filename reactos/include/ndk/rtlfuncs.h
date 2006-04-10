@@ -273,6 +273,14 @@ NTAPI
 RtlCaptureContext(OUT PCONTEXT ContextRecord);
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlComputeCrc32(
+    IN ULONG Initial,
+    IN PUCHAR Data,
+    IN ULONG Length);
+
+NTSYSAPI
 PVOID
 NTAPI
 RtlEncodePointer(IN PVOID Pointer);
