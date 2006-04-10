@@ -104,7 +104,9 @@ protected:
 	WindowHandle _hwndNotify;
 	WindowHandle _hwndQuickLaunch;
 	WindowHandle _hwndrebar;
-
+	/* Needed to make the StartButton pushed, if it's called by windowskey: SC_TASKLIST command */
+	WindowHandle _hwndStartButton;
+	
 	struct StartMenuRoot* _startMenuRoot;
 
 #ifdef _ROS_
