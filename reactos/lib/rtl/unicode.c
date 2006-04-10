@@ -625,7 +625,7 @@ RtlIntegerToUnicodeString(
    IN OUT PUNICODE_STRING String)
 {
     ANSI_STRING AnsiString;
-    CHAR Buffer[16];
+    CHAR Buffer[33];
     NTSTATUS Status;
 
     Status = RtlIntegerToChar(Value, Base, sizeof(Buffer), Buffer);
@@ -653,7 +653,7 @@ RtlInt64ToUnicodeString (
 {
     LARGE_INTEGER LargeInt;
     ANSI_STRING AnsiString;
-    CHAR Buffer[32];
+    CHAR Buffer[65];
     NTSTATUS Status;
 
     LargeInt.QuadPart = Value;
