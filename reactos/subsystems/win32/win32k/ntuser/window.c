@@ -3676,7 +3676,7 @@ NtUserGetWindowPlacement(HWND hWnd,
    {
       Safepl.showCmd = SW_MINIMIZE;
    }
-   else if (0 != (Window->Style & WS_MINIMIZE))
+   else if (0 != (Window->Style & WS_VISIBLE))
    {
       Safepl.showCmd = SW_SHOWNORMAL;
    }
