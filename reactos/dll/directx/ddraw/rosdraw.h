@@ -77,6 +77,10 @@ typedef struct
 
     /* internal counter */
     ULONG ref;
+    
+    /*    Callbacks info */
+    DDHAL_CREATESURFACEDATA      mDdCreateSurface;
+    DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
 
 } IDirectDrawImpl; 
 

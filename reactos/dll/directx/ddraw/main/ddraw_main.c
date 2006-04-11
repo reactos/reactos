@@ -102,7 +102,31 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
     Hal_DirectDraw_Initialize (iface);
         
     Hel_DirectDraw_Initialize (iface); 
-        	   
+        This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
+        
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) 
+    {
+        This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
+    }
+    else
+    {
+        This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;
+    }
+        
+    This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;
+        
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
+    {
+        This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
+    }
+    else
+    {
+        This->mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;
+    }
+                	
+    This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;
+    This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;    	
+               
     return DD_OK;
 }
 
@@ -348,48 +372,24 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     //IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
     //IDirectDrawSurfaceImpl* That = ppSurf;        
 
-    DDHAL_CREATESURFACEDATA      mDdCreateSurface;
-    DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
+    
 	
-    mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
-        
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) 
-    {
-        mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
-    }
-    else
-    {
-        mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;
-    }
-        
-    mDdCreateSurface.lpDD = &This->mDDrawGlobal;
-        
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
-    {
-        mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
-    }
-    else
-    {
-        mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;
-    }
-                	
-    mDdCreateSurface.lpDD = &This->mDDrawGlobal;
-    mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
+  
           
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {   
            
            memcpy(&That->Surf->mddsdPrimary,pDDSD,sizeof(DDSURFACEDESC));
            That->Surf->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);          
-           mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
-           mDdCanCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary; 
+           This->mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
+           This->mDdCanCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary; 
 
-           if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+           if (This->mDdCanCreateSurface.CanCreateSurface(&This->mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
            {         
               return DDERR_NOTINITIALIZED;
            }
 
-           if (mDdCanCreateSurface.ddRVal != DD_OK)
+           if (This->mDdCanCreateSurface.ddRVal != DD_OK)
            {
               return DDERR_NOTINITIALIZED;
            }
@@ -420,19 +420,19 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
           
 
-           mDdCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary;
-           mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
-           mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
+           This->mDdCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary;
+           This->mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
+           This->mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
 
             
-           if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+           if (This->mDdCreateSurface.CreateSurface(&This->mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
            {
               return DDERR_NOTINITIALIZED;
            }
 
-           if (mDdCreateSurface.ddRVal != DD_OK) 
+           if (This->mDdCreateSurface.ddRVal != DD_OK) 
            {   
-              return mDdCreateSurface.ddRVal;
+              return This->mDdCreateSurface.ddRVal;
            }
                      
             
