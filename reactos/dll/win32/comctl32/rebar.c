@@ -1918,7 +1918,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	y = clientcy;
     }
     if (infoPtr->dwStyle & CCS_VERT) {
-        if( x < REBAR_MINSIZE )
+        if( infoPtr->uNumBands != 0 && x < REBAR_MINSIZE )
             x = REBAR_MINSIZE;
 	infoPtr->calcSize.cx = x;
 	infoPtr->calcSize.cy = clientcy;
@@ -1927,7 +1927,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	if (notify && (x != origheight)) infoPtr->fStatus |= NTF_HGHTCHG;
     }
     else {
-        if( y < REBAR_MINSIZE )
+        if( infoPtr->uNumBands != 0 && y < REBAR_MINSIZE )
             y = REBAR_MINSIZE;
 	infoPtr->calcSize.cx = clientcx;
 	infoPtr->calcSize.cy = y;
