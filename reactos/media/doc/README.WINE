@@ -26,6 +26,7 @@ This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
 The following build tools are shared with Wine.
+
 reactos/tools/unicode             # Synced to Wine-0_9_5
 reactos/tools/wpp                 # Synced to Wine-0_9_5
 reactos/tools/bin2res	          # Resource to binary converter
@@ -85,9 +86,11 @@ reactos/dll/directx/dplayx        # Synced to Wine-0_9_5
 reactos/dll/directx/dxdiagn       # Synced to Wine-0_9_5
 
 ReactOS shares the following programs with Winehq.
-reactos/base/applications/regedit # Out of sync
-reactos/base/system/expand        # Out of sync
-reactos/base/system/msiexec       # Synced to Wine-0_9_3
+
+reactos/base/applications/games/winemine  # Out of sync
+reactos/base/applications/regedit         # Out of sync
+reactos/base/system/expand                # Out of sync
+reactos/base/system/msiexec               # Synced to Wine-0_9_3
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
