@@ -16,104 +16,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
 	/* HAL Startup process */
-    DEVMODE devmode;
-    HBITMAP hbmp;
-    const UINT bmiSize = sizeof(BITMAPINFOHEADER) + 0x10;
-    UCHAR *pbmiData;
-    BITMAPINFO *pbmi;    
-    DWORD *pMasks;
     BOOL newmode = FALSE;	
 	    	
-    /* 
-       Get Display mode res and caps 	   
-	   We need fill the mDDrawGlobal 
-	   vmidata struct right 
-
-	   this code is from Steffen Schulze 
-	   1. Add the mpModeInfos to inisate 	   	   
-    */
-    This->mcModeInfos = 1;
-    This->mpModeInfos = (DDHALMODEINFO*) DxHeapMemAlloc(This->mcModeInfos * sizeof(DDHALMODEINFO));  
-   
-    if (This->mpModeInfos == NULL)
-    {
-       return DD_FALSE;
-    }
-
-    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
-
-    This->mpModeInfos[0].dwWidth      = devmode.dmPelsWidth;
-    This->mpModeInfos[0].dwHeight     = devmode.dmPelsHeight;
-    This->mpModeInfos[0].dwBPP        = devmode.dmBitsPerPel;
-    This->mpModeInfos[0].lPitch       = (devmode.dmPelsWidth*devmode.dmBitsPerPel)/8;
-    This->mpModeInfos[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
-
-    /*
-       Create HDC 
-	   we need it for doing the Call to GdiEntry1
-    */    
-    This->hdc = CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
-
-    if (This->hdc == NULL)
-    {
-      return DD_FALSE;
-    }
-
-	/* Do not release HDC it is mapen in kernel mode 
-	   we can only release it at exit of ddraw.dll
-	*/
-
-    /*
-      Dectect RGB bit mask
-      this code is from Steffen Schulze 
-	  why it need I do not know yet but it 
-	  will allown us to create any type of
-	  surface later
-    */  
-
-    hbmp = CreateCompatibleBitmap(This->hdc, 1, 1);  
-    if (hbmp==NULL)
-    {
-       DxHeapMemFree(This->mpModeInfos);
-       DeleteDC(This->hdc);
-       return DD_FALSE;
-    }
-  
-    pbmiData = (UCHAR *) DxHeapMemAlloc(bmiSize);
-    pbmi = (BITMAPINFO*)pbmiData;
-
-    if (pbmiData==NULL)
-    {
-       DxHeapMemFree(This->mpModeInfos);       
-       DeleteDC(This->hdc);
-       DeleteObject(hbmp);
-       return DDERR_UNSUPPORTED;
-    }
-
-    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    pbmi->bmiHeader.biBitCount = (WORD)devmode.dmBitsPerPel;
-    pbmi->bmiHeader.biCompression = BI_BITFIELDS;
-    pbmi->bmiHeader.biWidth = 1;
-    pbmi->bmiHeader.biHeight = 1;
-
-    GetDIBits(This->hdc, hbmp, 0, 0, NULL, pbmi, 0);
-    DeleteObject(hbmp);
-
-    pMasks = (DWORD*)(pbmiData + sizeof(BITMAPINFOHEADER));
-    This->mpModeInfos[0].dwRBitMask = pMasks[0];
-    This->mpModeInfos[0].dwGBitMask = pMasks[1];
-    This->mpModeInfos[0].dwBBitMask = pMasks[2];
-    This->mpModeInfos[0].dwAlphaBitMask = pMasks[3];
-
-	DxHeapMemFree(pbmiData);
-
-    /* 
-      prepare start up the DX Draw HAL interface now 
-    */
-   
-    memset(&This->mDDrawGlobal, 0, sizeof(DDRAWI_DIRECTDRAW_GBL));
-    memset(&This->mHALInfo,     0, sizeof(DDHALINFO));
-    memset(&This->mCallbacks,   0, sizeof(DDHAL_CALLBACKS));
 
     /* 
       Startup DX HAL step one of three 
@@ -121,8 +25,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     if (!DdCreateDirectDrawObject(&This->mDDrawGlobal, This->hdc))
     {
        DxHeapMemFree(This->mpModeInfos);	   
-       DeleteDC(This->hdc);
-       DeleteObject(hbmp);
+       DeleteDC(This->hdc);       
        return DD_FALSE;
     }
 	
@@ -132,21 +35,10 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     if (!DdReenableDirectDrawObject(&This->mDDrawGlobal, &newmode))
     {
       DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);
-      DeleteObject(hbmp);
+      DeleteDC(This->hdc);      
       return DD_FALSE;
     }
-  
-    /*
-      Setup the DirectDraw Local 
-    */
-  
-    This->mDDrawLocal.lpDDCB = &This->mCallbacks;
-    This->mDDrawLocal.lpGbl = &This->mDDrawGlobal;
-    This->mDDrawLocal.dwProcessId = GetCurrentProcessId();
-
-    This->mDDrawGlobal.lpDDCBtmp = &This->mCallbacks;
-    This->mDDrawGlobal.lpExclusiveOwner = &This->mDDrawLocal;
+           
 	
     /*
        Startup DX HAL step two of three 
@@ -165,8 +57,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
                                  NULL))
     {
       DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);
-      DeleteObject(hbmp);
+      DeleteDC(This->hdc);      
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
@@ -176,8 +67,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     if (This->mpvmList == NULL)
     {      
       DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);
-      DeleteObject(hbmp);
+      DeleteDC(This->hdc);      
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
@@ -188,8 +78,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     {
       DxHeapMemFree(This->mpvmList);
       DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);
-      DeleteObject(hbmp);
+      DeleteDC(This->hdc);      
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
@@ -201,8 +90,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
       DxHeapMemFree( This->mpFourCC);
       DxHeapMemFree( This->mpvmList);
       DxHeapMemFree( This->mpModeInfos);
-      DeleteDC(This->hdc);
-      DeleteObject(hbmp);
+      DeleteDC(This->hdc);      
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
@@ -229,8 +117,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
       DxHeapMemFree(This->mpFourCC);
       DxHeapMemFree(This->mpvmList);
       DxHeapMemFree(This->mpModeInfos);
-      DeleteDC(This->hdc);
-      DeleteObject(hbmp);
+      DeleteDC(This->hdc);      
 	  // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
@@ -256,8 +143,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
   This->mDDrawGlobal.hInstance          = This->mHALInfo.hInstance;    
   
   This->mDDrawGlobal.lp16DD = &This->mDDrawGlobal;
-
-  DeleteObject(hbmp);
+  
   //DeleteDC(This->hdc);
 
    DDHAL_GETDRIVERINFODATA DriverInfo;
