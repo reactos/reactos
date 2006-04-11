@@ -4,12 +4,11 @@
 <directory name="3rdparty">
 	<xi:include href="3rdparty/3rdparty.rbuild" />
 </directory>
-<directory name="drivers">
-	<xi:include href="drivers/directory.rbuild" />
-</directory>
-
 <directory name="crt">
 	<xi:include href="crt/crt.rbuild" />
+</directory>
+<directory name="drivers">
+	<xi:include href="drivers/directory.rbuild" />
 </directory>
 <directory name="dxguid">
 	<xi:include href="dxguid/dxguid.rbuild" />
@@ -37,6 +36,9 @@
 </directory>
 <directory name="pseh">
 	<xi:include href="pseh/pseh.rbuild" />
+</directory>
+<directory name="recyclebin">
+	<xi:include href="recyclebin/recyclebin.rbuild" />
 </directory>
 <directory name="rossym">
 	<xi:include href="rossym/rossym.rbuild" />
