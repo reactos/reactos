@@ -269,7 +269,7 @@ int ListByConnection()
 	DEVINST root;
 	(void)ListView_DeleteAllItems(hwndListView);
 
-	cr = CM_Locate_DevNode(&root, NULL, 0);
+	cr = CM_Locate_DevNode(&root, TEXT("Root\\*PNP0A03\\0000"), 0);
 
 	if (cr != CR_SUCCESS)
 	{
@@ -690,7 +690,7 @@ void CreateButtons(HINSTANCE hInstance, HWND hwndParent)
 	  hwndButtonListByConnection = CreateWindowEx (
 	          0,
 	          "button",         /* Builtin button class */
-	          "List by Connection",
+	          "List by Connection (PCI)",
 	          WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 	          200, 0, 190, 30,
 	          hwndParent,             /* Parent is this window. */
