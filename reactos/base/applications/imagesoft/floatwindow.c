@@ -6,26 +6,26 @@ static const TCHAR szFloatWndClass[] = TEXT("ImageSoftFloatWndClass");
 
 TBBUTTON ToolsButtons[] = {
 /*   iBitmap,            idCommand,      fsState,         fsStyle,     bReserved[2], dwData, iString */
-    {TBICON_RECTSEL,     ID_RECTSEL,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_MOVESEL,     ID_MOVESEL,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_LASOO,       ID_LASOO,       TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* cut */
-    {TBICON_MOVE,        ID_MOVE,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* undo */
-    {TBICON_ECLIPSESEL,  ID_ECLIPSESEL,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* save */
-    {TBICON_ZOOM,        ID_ZOOM,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_MAGICWAND,   ID_MAGICWAND,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* paste */
-    {TBICON_TEXT,        ID_TEXT,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_PAINTBRUSH,  ID_PAINTBRUSH,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_ERASER,      ID_ERASER,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* print */
-    {TBICON_PENCIL,      ID_PENCIL,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_COLORPICKER, ID_COLORPICKER, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* new */
-    {TBICON_CLONESTAMP,  ID_CLONESTAMP,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* new */
-    {TBICON_RECOLORING,  ID_RECOLORING,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_PAINTBUCKET, ID_PAINTBUCKET, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_LINE,        ID_LINE,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* copy */
-    {TBICON_RECTANGLE,   ID_RECTANGLE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_ROUNDRECT,   ID_ROUNDRECT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* redo */
-    {TBICON_ECLIPSE,     ID_ECLIPSE,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* open */
-    {TBICON_FREEFORM,    ID_FREEFORM,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* print preview */
+    {TBICON_RECTSEL,     ID_RECTSEL,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* rectangle select */
+    {TBICON_MOVESEL,     ID_MOVESEL,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* move selected pixels */
+    {TBICON_LASOO,       ID_LASOO,       TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* lasso select */
+    {TBICON_MOVE,        ID_MOVE,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* move selection */
+    {TBICON_ECLIPSESEL,  ID_ECLIPSESEL,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* elipse select */
+    {TBICON_ZOOM,        ID_ZOOM,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* zoom */
+    {TBICON_MAGICWAND,   ID_MAGICWAND,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* magic wand */
+    {TBICON_TEXT,        ID_TEXT,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* text */
+    {TBICON_PAINTBRUSH,  ID_PAINTBRUSH,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* paintbrush */
+    {TBICON_ERASER,      ID_ERASER,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* eraser */
+    {TBICON_PENCIL,      ID_PENCIL,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* pencil */
+    {TBICON_COLORPICKER, ID_COLORPICKER, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* color picker */
+    {TBICON_CLONESTAMP,  ID_CLONESTAMP,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* clone stamp */
+    {TBICON_RECOLORING,  ID_RECOLORING,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* recolor */
+    {TBICON_PAINTBUCKET, ID_PAINTBUCKET, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* paint bucket */
+    {TBICON_LINE,        ID_LINE,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* line */
+    {TBICON_RECTANGLE,   ID_RECTANGLE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* rectangle */
+    {TBICON_ROUNDRECT,   ID_ROUNDRECT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* round rectangle */
+    {TBICON_ECLIPSE,     ID_ECLIPSE,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* elipse */
+    {TBICON_FREEFORM,    ID_FREEFORM,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* free form */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
 };
@@ -94,8 +94,6 @@ FloatToolbarCreateToolsGui(PFLT_WND FltTools)
                 TB_AUTOSIZE,
                 0,
                 0);
-
-    return;
 }
 
 
