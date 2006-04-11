@@ -786,7 +786,6 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 	part->text = ntext;
     }
     InvalidateRect(infoPtr->Self, &part->bound, FALSE);
-    UpdateWindow(infoPtr->Self);
 
     return TRUE;
 }

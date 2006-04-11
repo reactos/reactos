@@ -2025,8 +2025,7 @@ TOOLTIPS_SetToolInfoA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	else {
 	    if ( (toolPtr->lpszText) &&
 		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
-		if( toolPtr->lpszText != LPSTR_TEXTCALLBACKW)
-                    Free (toolPtr->lpszText);
+		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
 	    if (lpToolInfo->lpszText) {
@@ -2083,8 +2082,7 @@ TOOLTIPS_SetToolInfoW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	else {
 	    if ( (toolPtr->lpszText) &&
 		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
-		if( toolPtr->lpszText != LPSTR_TEXTCALLBACKW)
-                    Free (toolPtr->lpszText);
+		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
 	    if (lpToolInfo->lpszText) {
@@ -2210,8 +2208,7 @@ TOOLTIPS_UpdateTipTextA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	else {
 	    if ( (toolPtr->lpszText) &&
 		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
-		if( toolPtr->lpszText != LPSTR_TEXTCALLBACKW)
-                    Free (toolPtr->lpszText);
+		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
 	    if (lpToolInfo->lpszText) {
@@ -2268,8 +2265,7 @@ TOOLTIPS_UpdateTipTextW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	else {
 	    if ( (toolPtr->lpszText)  &&
 		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
-		if( toolPtr->lpszText != LPSTR_TEXTCALLBACKW)
-                    Free (toolPtr->lpszText);
+		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
 	    if (lpToolInfo->lpszText) {

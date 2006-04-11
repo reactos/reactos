@@ -386,8 +386,10 @@ INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
     UINT i;
     LPSTR dataA = NULL;
 
-    if (!mp->extview.lpfnCompare)
+    if (!mp->extview.lpfnCompare) {
+	ERR("MRU list not properly created. No compare procedure.\n");
 	return -1;
+    }
 
     if(!(mp->extview.dwFlags & MRUF_BINARY_LIST) && !mp->isUnicode) {
         DWORD len = WideCharToMultiByte(CP_ACP, 0, lpData, -1,

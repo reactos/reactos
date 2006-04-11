@@ -106,13 +106,13 @@
 412 stdcall -noname RemoveWindowSubclass(long ptr long)
 413 stdcall -noname DefSubclassProc(long long long long)
 414 stdcall -noname MirrorIcon(ptr ptr)
-415 stdcall -noname DrawTextWrap(long wstr long ptr long) user32.DrawTextW
-416 stdcall -noname DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW
-417 stdcall -noname ExtTextOutWrap(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
-418 stdcall -noname GetCharWidthWrap(long long long long) gdi32.GetCharWidthW
-419 stdcall -noname GetTextExtentPointWrap(long wstr long ptr) gdi32.GetTextExtentPointW
-420 stdcall -noname GetTextExtentPoint32Wrap(long wstr long ptr) gdi32.GetTextExtentPoint32W
-421 stdcall -noname TextOutWrap(long long long wstr long) gdi32.TextOutW
+415 stdcall DrawTextWrap(long wstr long ptr long) user32.DrawTextW
+416 stdcall DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW
+417 stdcall ExtTextOutWrap(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
+418 stdcall GetCharWidthWrap(long long long long) gdi32.GetCharWidthW
+419 stdcall GetTextExtentPointWrap(long wstr long ptr) gdi32.GetTextExtentPointW
+420 stdcall GetTextExtentPoint32Wrap(long wstr long ptr) gdi32.GetTextExtentPoint32W
+421 stdcall TextOutWrap(long long long wstr long) gdi32.TextOutW
 
 # Functions imported by name
 

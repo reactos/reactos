@@ -166,7 +166,6 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     RECT r;
     INT  oldBkMode, cxEdge = GetSystemMetrics(SM_CXEDGE);
     HTHEME theme = GetWindowTheme (hwnd);
-    NMCUSTOMDRAW nmcd;
 
     TRACE("DrawItem(iItem %d bHotTrack %d unicode flag %d)\n", iItem, bHotTrack, infoPtr->bUnicode);
 
@@ -206,24 +205,22 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
     r.left  -= cxEdge;
     r.right += cxEdge;
 
-    /* Set the colors before sending NM_CUSTOMDRAW so that it can change them */
-    SetTextColor (hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
-    SetBkColor(hdc, GetSysColor(COLOR_3DFACE));
-
-    nmcd.hdr.hwndFrom = hwnd;
-    nmcd.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
-    nmcd.hdr.code     = NM_CUSTOMDRAW;
-    nmcd.dwDrawStage  = CDDS_PREPAINT | CDDS_ITEM | CDDS_ITEMPOSTERASE;
-    nmcd.hdc          = hdc;
-    nmcd.dwItemSpec   = iItem;
-    nmcd.rc           = r;
-    nmcd.uItemState   = phdi->bDown ? CDIS_SELECTED : 0;
-    nmcd.lItemlParam  = phdi->lParam;
-
-    SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, nmcd.hdr.idFrom, (LPARAM)&nmcd);
-
     if (phdi->fmt & HDF_OWNERDRAW) {
 	DRAWITEMSTRUCT dis;
+	NMCUSTOMDRAW nmcd;
+	
+	nmcd.hdr.hwndFrom = hwnd;
+	nmcd.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
+	nmcd.hdr.code     = NM_CUSTOMDRAW;
+	nmcd.dwDrawStage  = CDDS_PREPAINT | CDDS_ITEM | CDDS_ITEMPOSTERASE;
+	nmcd.hdc          = hdc;
+	nmcd.dwItemSpec   = iItem;
+	nmcd.rc           = r;
+	nmcd.uItemState   = phdi->bDown ? CDIS_SELECTED : 0;
+	nmcd.lItemlParam  = phdi->lParam;
+
+	SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
+			(WPARAM)nmcd.hdr.idFrom, (LPARAM)&nmcd);
 
 	dis.CtlType    = ODT_HEADER;
 	dis.CtlID      = GetWindowLongPtrW (hwnd, GWLP_ID);
@@ -252,14 +249,6 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	rw = r.right - r.left;
 	rh = r.bottom - r.top;
 
-        if (theme == NULL) {
-            HBRUSH hbr = CreateSolidBrush(GetBkColor(hdc));
-            RECT rcBackground = r;
-
-            rcBackground.right -= cxEdge;
-            FillRect(hdc, &rcBackground, hbr);
-            DeleteObject(hbr);
-        }
 	if (phdi->fmt & HDF_STRING) {
 	    RECT textRect;
 
@@ -330,8 +319,8 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	if (iw || bw) {
 	    HDC hClipDC = GetDC(hwnd);
 	    HRGN hClipRgn = CreateRectRgn(r.left, r.top, r.right, r.bottom);
-	    SelectClipRgn(hClipDC, hClipRgn);
 	    
+	    SelectClipRgn(hClipDC, hClipRgn);
 	    if (bw) {
 	        HDC hdcBitmap = CreateCompatibleDC (hClipDC);
 	        SelectObject (hdcBitmap, phdi->hbm);
@@ -355,6 +344,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 				   HDF_BITMAP_ON_RIGHT|HDF_IMAGE)))) /* no explicit format specified? */
 	    && (phdi->pszText)) {
 	    oldBkMode = SetBkMode(hdc, TRANSPARENT);
+	    SetTextColor (hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
 	    r.left  = tx;
 	    r.right = tx + tw;
 	    DrawTextW (hdc, phdi->pszText, -1,

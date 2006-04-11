@@ -2316,14 +2316,11 @@ TREEVIEW_DrawItemLines(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
     {
 	HPEN hOldPen, hNewPen;
 	HTREEITEM parent;
-        LOGBRUSH lb;
 
 	/*
 	 * Get a dotted grey pen
 	 */
-        lb.lbStyle = BS_SOLID;
-        lb.lbColor = infoPtr->clrLine;
-        hNewPen = ExtCreatePen(PS_COSMETIC|PS_ALTERNATE, 1, &lb, 0, NULL);
+	hNewPen = CreatePen(PS_ALTERNATE, 0, infoPtr->clrLine);
 	hOldPen = SelectObject(hdc, hNewPen);
 
 	MoveToEx(hdc, item->stateOffset, centery, NULL);
@@ -2823,8 +2820,6 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, RECT *rc)
 	    TREEVIEW_DrawItem(infoPtr, hdc, wineItem);
 	}
     }
-
-    TREEVIEW_UpdateScrollBars(infoPtr);
 
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =
@@ -3330,6 +3325,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	    }
 	}
     }
+    TREEVIEW_UpdateScrollBars(infoPtr);
 
     return TRUE;
 }
