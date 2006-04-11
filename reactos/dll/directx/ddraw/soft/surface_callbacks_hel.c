@@ -138,3 +138,8 @@ DWORD CALLBACK HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
     pccsd->ddRVal = DD_OK;
     return DDHAL_DRIVER_HANDLED;   
 }
+
+DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface)
+{
+	DX_STUB;
+}

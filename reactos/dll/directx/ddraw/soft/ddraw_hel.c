@@ -18,10 +18,11 @@ HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 	This->HELMemoryAvilable = HEL_GRAPHIC_MEMORY_MAX;
 
-
     This->mCallbacks.HELDD.dwFlags = DDHAL_CB32_CANCREATESURFACE;
     This->mCallbacks.HELDD.CanCreateSurface = HelDdCanCreateSurface;
 
+    This->mCallbacks.HELDD.dwFlags = DDHAL_CB32_CREATESURFACE; 
+    This->mCallbacks.HELDD.CreateSurface = HelDdCreateSurface;
 
 	return DD_OK;
 }
