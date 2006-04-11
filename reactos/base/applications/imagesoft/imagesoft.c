@@ -32,7 +32,7 @@ WinMain(HINSTANCE hThisInstance,
         return 1;
     }
 
-    len = _tcslen(lpAppName) + _tcslen(lpVersion);
+    len = (int)_tcslen(lpAppName) + (int)_tcslen(lpVersion);
     lpTitle = HeapAlloc(ProcessHeap,
                         0,
                         (len + 2) * sizeof(TCHAR));

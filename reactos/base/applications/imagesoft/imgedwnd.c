@@ -511,13 +511,13 @@ InitImageEditWindowImpl(VOID)
     wc.lpfnWndProc = ImageEditWndProc;
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(hInstance,
-                        MAKEINTRESOURCE(IDI_ICON));
+                        MAKEINTRESOURCE(IDI_IMAGESOFTICON));
     wc.hCursor = LoadCursor(hInstance,
                             MAKEINTRESOURCE(IDC_PAINTBRUSHCURSOR));
     wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wc.lpszClassName = szImageEditWndClass;
     wc.hIconSm = (HICON)LoadImage(hInstance,
-                                  MAKEINTRESOURCE(IDI_ICON),
+                                  MAKEINTRESOURCE(IDI_IMAGESOFTICON),
                                   IMAGE_ICON,
                                   16,
                                   16,

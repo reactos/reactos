@@ -1,107 +1,84 @@
 #define IDC_STATIC -1
 
-#define IDC_TOOLBAR         1001
-#define IDC_FLOATTOOLBAR    1002
-#define IDC_STATUSBAR	    1003
-#define IDC_MAIN_MDI        1004
-
-#define IDD_FLOATTOOLS      1100
-#define IDC_PRESS           1101
-#define IDC_OTHER           1102
-
-#define ID_NEW              2000
-#define ID_OPEN             2001
-#define ID_CLOSE            2002
-#define ID_CLOSEALL         2003
-#define ID_SAVE             2004
-#define ID_SAVEAS           2005
-#define ID_PRINTPRE         2006
-#define ID_PRINT            2007
-#define ID_PROP             2008
-#define ID_CUT              2009
-#define ID_COPY             2010
-#define ID_PASTE            2011
-#define ID_PASTENEWIMAGE    2012
-#define ID_UNDO             2013
-#define ID_REDO             2014
-#define ID_SELALL           2015
-#define ID_EXIT             2016
-#define ID_EDITCOLOURS      2017
-#define ID_TOOLS            2018
-#define ID_STATUSBAR        2019
-#define ID_BOLD             2030
-#define ID_ITALIC           2031
-#define ID_ULINE            2032
-#define ID_TXTLEFT          2033
-#define ID_TXTCENTER        2034
-#define ID_TXTRIGHT         2035
-#define ID_TXTFONTNAME      2036
-
-#define ID_REFRESH          3000
-#define ID_HELP             3001
-#define ID_WINDOW_TILE_HORZ 3002
-#define ID_WINDOW_TILE_VERT 3003
-#define ID_WINDOW_CASCADE   3004
-#define ID_WINDOW_NEXT      3005
-#define ID_WINDOW_ARRANGE   3006
-
-/* Menu */
-#define IDR_MAINMENU        102
-#define IDR_POPUP           103
-#define ID_ABOUT            4031
-
-
-/* tooltips */
-#define IDS_TOOLTIP_NEW         6000
-#define IDS_TOOLTIP_OPEN        6001
-#define IDS_TOOLTIP_SAVE        6002
-#define IDS_TOOLTIP_PRINTPRE    6003
-#define IDS_TOOLTIP_PRINT       6004
-#define IDS_TOOLTIP_CUT         6005
-#define IDS_TOOLTIP_COPY        6006
-#define IDS_TOOLTIP_PASTE       6007
-#define IDS_TOOLTIP_UNDO        6008
-#define IDS_TOOLTIP_REDO        6009
-
-#define IDI_ICON            50
-#define IDB_BUTTONS         51
-
+/* Main Windows */
+#define IDC_TOOLBAR             10
+#define IDC_STATUSBAR	        11
+#define IDC_MAIN_MDI            12
 /* these need to be kept consecutive */
-#define IDS_FLT_TOOLS           60
-#define IDS_FLT_COLORS          61
-#define IDS_FLT_HISTORY         62
+#define IDS_FLT_TOOLS           20
+#define IDS_FLT_COLORS          21
+#define IDS_FLT_HISTORY         22
 
-/* toolbar buttons */
-#define TBICON_PROP         0
-#define TBICON_REFRESH      1
-#define TBICON_EXPORT       2
-#define TBICON_CREATE       3
-#define TBICON_START        4
-#define TBICON_STOP         5
-#define TBICON_PAUSE        6
-#define TBICON_RESTART      7
-#define TBICON_HELP         8
-#define TBICON_EXIT         9
+/* Program icon */
+#define IDI_IMAGESOFTICON       50
 
-#define TBICON_BOLD         0
-#define TBICON_ITALIC       1
-#define TBICON_ULINE        2
-#define TBICON_TXTLEFT      3
-#define TBICON_TXTCENTER    4
-#define TBICON_TXTRIGHT     5
+/* Menus */
+#define IDR_MAINMENU            102
+#define IDR_POPUP               103
 
-/* about box info */
-#define IDD_ABOUTBOX            200
-#define IDC_LICENSE_EDIT        201
+/* COMMANDS */
+/* main */
+#define ID_NEW                  2000
+#define ID_OPEN                 2001
+#define ID_CLOSE                2002
+#define ID_CLOSEALL             2003
+#define ID_SAVE                 2004
+#define ID_SAVEAS               2005
+#define ID_PRINTPRE             2006
+#define ID_PRINT                2007
+#define ID_PROP                 2008
+#define ID_CUT                  2009
+#define ID_COPY                 2010
+#define ID_PASTE                2011
+#define ID_PASTENEWIMAGE        2012
+#define ID_UNDO                 2013
+#define ID_REDO                 2014
+#define ID_SELALL               2015
+#define ID_EXIT                 2016
+#define ID_EDITCOLOURS          2017
+#define ID_TOOLS                2018
+#define ID_STATUSBAR            2019
 
-#define IDS_APPNAME             101
-#define IDS_VERSION             102
-#define IDS_LICENSE             103
-#define IDS_READY               104
-#define IDS_TOOLBAR_STANDARD    201
-#define IDS_TOOLBAR_TEST        202
-#define IDS_TOOLBAR_TEXT        203
-#define IDS_IMAGE_NAME          210
+/* text */
+#define ID_BOLD                 2030
+#define ID_ITALIC               2031
+#define ID_ULINE                2032
+#define ID_TXTLEFT              2033
+#define ID_TXTCENTER            2034
+#define ID_TXTRIGHT             2035
+#define ID_TXTFONTNAME          2036
+
+/* tools */
+#define ID_CLONESTAMP           2050
+#define ID_COLORPICKER          2051
+#define ID_ECLIPSE              2052
+#define ID_ECLIPSESEL           2053
+#define ID_ERASER               2054
+#define ID_FREEFORM             2055
+#define ID_LASOO                2056
+#define ID_LINE                 2057
+#define ID_MAGICWAND            2058
+#define ID_MOVE                 2059
+#define ID_MOVESEL              2060
+#define ID_PAINTBRUSH           2061
+#define ID_PAINTBUCKET          2062
+#define ID_PENCIL               2063
+#define ID_RECOLORING           2064
+#define ID_RECTANGLE            2065
+#define ID_RECTSEL              2066
+#define ID_ROUNDRECT            2067
+#define ID_TEXT                 2068
+#define ID_ZOOM                 2069
+
+#define ID_ABOUT                2100
+
+#define ID_REFRESH              3000
+#define ID_HELP                 3001
+#define ID_WINDOW_TILE_HORZ     3002
+#define ID_WINDOW_TILE_VERT     3003
+#define ID_WINDOW_CASCADE       3004
+#define ID_WINDOW_NEXT          3005
+#define ID_WINDOW_ARRANGE       3006
 
 /* menu hints */
 #define IDS_HINT_EXIT           20001
@@ -115,6 +92,108 @@
 #define IDS_HINT_SYS_CLOSE      21006
 #define IDS_HINT_SYS_NEXT       21007
 
+
+/* Toolbar button bitmaps.
+ * These must be numbered consecutively
+ * See loop in InitImageList (misc.c)
+ */
+#define IDB_MAINNEWICON         10000
+#define IDB_MAINOPENICON        10001
+#define IDB_MAINSAVEICON        10002
+#define IDB_MAINPRINTICON       10003
+#define IDB_MAINPRINTPREICON    10004
+#define IDB_MAINCUTICON         10005
+#define IDB_MAINCOPYICON        10006
+#define IDB_MAINPASTEICON       10007
+#define IDB_MAINUNDOICON        10008
+#define IDB_MAINREDOICON        10009
+
+#define IDB_TEXTBOLD            10020
+#define IDB_TEXTITALIC          10021
+#define IDB_TEXTULINE           10022
+#define IDB_TEXTLEFT            10023
+#define IDB_TEXTCENTER          10024
+#define IDB_TEXTRIGHT           10025
+
+#define IDB_TOOLSRECTSEL        10030
+#define IDB_TOOLSMOVESEL        10031
+#define IDB_TOOLSLASOO          10032
+#define IDB_TOOLSMOVE           10033
+#define IDB_TOOLSECLIPSESEL     10034
+#define IDB_TOOLSZOOM           10035
+#define IDB_TOOLSMAGICWAND      10036
+#define IDB_TOOLSTEXT           10037
+#define IDB_TOOLSPAINTBRUSH     10038
+#define IDB_TOOLSERASER         10039
+#define IDB_TOOLSPENCIL         10040
+#define IDB_TOOLSCOLORPICKER    10041
+#define IDB_TOOLSCLONESTAMP     10042
+#define IDB_TOOLSRECOLORING     10043
+#define IDB_TOOLSPAINTBUCKET    10044
+#define IDB_TOOLSLINE           10045
+#define IDB_TOOLSRECTANGLE      10046
+#define IDB_TOOLSROUNDRECT      10047
+#define IDB_TOOLSECLIPSE        10048
+#define IDB_TOOLSFREEFORM       10049
+
+/* toolbar buttons */
+#define TBICON_NEW              0
+#define TBICON_OPEN             1
+#define TBICON_SAVE             2
+#define TBICON_PRINT            3
+#define TBICON_PRINTPRE         4
+#define TBICON_CUT              5
+#define TBICON_COPY             6
+#define TBICON_PASTE            7
+#define TBICON_UNDO             8
+#define TBICON_REDO             9
+
+#define TBICON_BOLD             0
+#define TBICON_ITALIC           1
+#define TBICON_ULINE            2
+#define TBICON_TXTLEFT          3
+#define TBICON_TXTCENTER        4
+#define TBICON_TXTRIGHT         5
+
+#define TBICON_RECTSEL          0
+#define TBICON_MOVESEL          1
+#define TBICON_LASOO            2
+#define TBICON_MOVE             3
+#define TBICON_ECLIPSESEL       4
+#define TBICON_ZOOM             5
+#define TBICON_MAGICWAND        6
+#define TBICON_TEXT             7
+#define TBICON_PAINTBRUSH       8
+#define TBICON_ERASER           9
+#define TBICON_PENCIL           10
+#define TBICON_COLORPICKER      11
+#define TBICON_CLONESTAMP       12
+#define TBICON_RECOLORING       13
+#define TBICON_PAINTBUCKET      14
+#define TBICON_LINE             15
+#define TBICON_RECTANGLE        16
+#define TBICON_ROUNDRECT        17
+#define TBICON_ECLIPSE          18
+#define TBICON_FREEFORM         19
+
+/* tooltips */
+#define IDS_TOOLTIP_NEW         6000
+#define IDS_TOOLTIP_OPEN        6001
+#define IDS_TOOLTIP_SAVE        6002
+#define IDS_TOOLTIP_PRINTPRE    6003
+#define IDS_TOOLTIP_PRINT       6004
+#define IDS_TOOLTIP_CUT         6005
+#define IDS_TOOLTIP_COPY        6006
+#define IDS_TOOLTIP_PASTE       6007
+#define IDS_TOOLTIP_UNDO        6008
+#define IDS_TOOLTIP_REDO        6009
+
+/* cursors */
+#define IDC_PAINTBRUSHCURSOR    20001
+#define IDC_PAINTBRUSHCURSORMOUSEDOWN 20002
+
+
+/* DIALOGS */
 
 /* image property dialog */
 #define IDD_IMAGE_PROP          4000
@@ -140,41 +219,14 @@
 #define IDS_UNIT_MB             4109
 #define IDS_UNIT_KB             4110
 
-
-/* toolbar buttons resources
- * these must be numbered consecutively
- * see loop in InitImageList */
-#define IDB_MAINNEWICON         10000
-#define IDB_MAINOPENICON        10001
-#define IDB_MAINSAVEICON        10002
-#define IDB_MAINPRINTICON       10003
-#define IDB_MAINPRINTPREICON    10004
-#define IDB_MAINCUTICON         10005
-#define IDB_MAINCOPYICON        10006
-#define IDB_MAINPASTEICON       10007
-#define IDB_MAINUNDOICON        10008
-#define IDB_MAINREDOICON        10009
-#define IDB_TEXTBOLD            10020
-#define IDB_TEXTITALIC          10021
-#define IDB_TEXTULINE           10022
-#define IDB_TEXTLEFT            10023
-#define IDB_TEXTCENTER          10024
-#define IDB_TEXTRIGHT           10025
-
-
-/* toolbar buttons */
-#define TBICON_NEW              0
-#define TBICON_OPEN             1
-#define TBICON_SAVE             2
-#define TBICON_PRINT            3
-#define TBICON_PRINTPRE         4
-#define TBICON_CUT              5
-#define TBICON_COPY             6
-#define TBICON_PASTE            7
-#define TBICON_UNDO             8
-#define TBICON_REDO             9
-
-
-/* cursors */
-#define IDC_PAINTBRUSHCURSOR    20001
-#define IDC_PAINTBRUSHCURSORMOUSEDOWN 20002
+/* about box info */
+#define IDD_ABOUTBOX            4200
+#define IDC_LICENSE_EDIT        4201
+#define IDS_APPNAME             4202
+#define IDS_VERSION             4203
+#define IDS_LICENSE             4204
+#define IDS_READY               4205
+#define IDS_TOOLBAR_STANDARD    4206
+#define IDS_TOOLBAR_TEST        4207
+#define IDS_TOOLBAR_TEXT        4208
+#define IDS_IMAGE_NAME          4209

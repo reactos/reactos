@@ -71,9 +71,9 @@ static const MENU_HINT SystemMenuHintTable[] = {
 };
 
 static FLT_WND FloatingWindow[NUM_FLT_WND] = {
-    {NULL, NULL, 0, 0, 55,  300},
-    {NULL, NULL, 0, 0, 200, 200},
-    {NULL, NULL, 0, 0, 150, 150}
+    {NULL, NULL, 0, 0, 53,  300}, /* tools */
+    {NULL, NULL, 0, 0, 200, 200}, /* colors */
+    {NULL, NULL, 0, 0, 150, 150}  /* history */
 };
 
 
@@ -95,55 +95,6 @@ static const DOCKBAR MainDockBars[] = {
     {ID_TOOLBAR_TEXT, szToolbarText, IDS_TOOLBAR_TEXT, TOP_DOCK},
 };
 
-
-static HIMAGELIST
-InitImageList(UINT NumButtons, UINT StartResource)
-{
-    HBITMAP hBitmap;
-    HIMAGELIST hImageList;
-    INT i, k, Ret;
-
-
-    /* Create the toolbar icon image list */
-    hImageList = ImageList_Create(TB_BMP_WIDTH,
-                                  TB_BMP_HEIGHT,
-                                  ILC_MASK | ILC_COLOR24,
-                                  NumButtons,
-                                  0);
-    if (! hImageList)
-        return NULL;
-
-    /* Add all icons to the image list */
-    for (i = StartResource, k = 0; k < NumButtons; i++, k++)
-    {
-        hBitmap = LoadImage(hInstance,
-                            MAKEINTRESOURCE(i),
-                            IMAGE_BITMAP,
-                            TB_BMP_WIDTH,
-                            TB_BMP_HEIGHT,
-                            LR_LOADTRANSPARENT);
-
-        Ret = ImageList_AddMasked(hImageList,
-                                  hBitmap,
-                                  RGB(255, 255, 254));
-
-        DeleteObject(hBitmap);
-    }
-
-    return hImageList;
-
-}
-
-/*
-static BOOL
-DestroyImageList(HIMAGELIST hImageList)
-{
-    if (! ImageList_Destroy(hImageList))
-        return FALSE;
-    else
-        return TRUE;
-}
-*/
 
 static BOOL CALLBACK
 MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
@@ -530,9 +481,8 @@ static VOID
 MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
 {
     RECT rect;
-    const TBBUTTON *Buttons = NULL;
-    UINT Res, NumButtons = 2;
-    INT i = 0;
+    UINT Res;
+    INT i = TOOLS;
 
     if (! GetWindowRect(Info->hMdiClient,
                         &rect))
@@ -541,16 +491,16 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
     }
 
     /* tools datum */
-    FloatingWindow[0].x = rect.left + 5;
-    FloatingWindow[0].y = rect.top + 5;
+    FloatingWindow[TOOLS].x = rect.left + 5;
+    FloatingWindow[TOOLS].y = rect.top + 5;
 
     /* colors datum */
-    FloatingWindow[1].x = rect.left + 5;
-    FloatingWindow[1].y = rect.bottom - FloatingWindow[1].Height - 5;
+    FloatingWindow[COLORS].x = rect.left + 5;
+    FloatingWindow[COLORS].y = rect.bottom - FloatingWindow[1].Height - 5;
 
     /* history datum */
-    FloatingWindow[2].x = rect.right - FloatingWindow[2].Width - 5;
-    FloatingWindow[2].y = rect.top + 5;
+    FloatingWindow[HISTORY].x = rect.right - FloatingWindow[2].Width - 5;
+    FloatingWindow[HISTORY].y = rect.top + 5;
 
     for (Res = IDS_FLT_TOOLS; Res < IDS_FLT_TOOLS + NUM_FLT_WND; Res++, i++)
     {
@@ -561,8 +511,6 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
             FloatingWindow[i].lpName = NULL;
         }
 
-
-        /* create the 'tools' toolbar */
         FloatingWindow[i].hSelf = CreateWindowEx(WS_EX_TOOLWINDOW,
                                                  TEXT("ImageSoftFloatWndClass"),
                                                  FloatingWindow[i].lpName,
@@ -578,39 +526,21 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
     }
 
 
-    if (Info->hFloatTools != NULL)
+
+
+    if (FloatingWindow[TOOLS].hSelf != NULL)
     {
-        HIMAGELIST hFloatToolsImageList;
+        FloatToolbarCreateToolsGui(&FloatingWindow[TOOLS]);
+    }
 
-        SendMessage(Info->hFloatTools,
-                    TB_SETEXTENDEDSTYLE,
-                    0,
-                    TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+    if (FloatingWindow[COLORS].hSelf != NULL)
+    {
+        FloatToolbarCreateColorsGui(&FloatingWindow[COLORS]);
+    }
 
-        /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
-        SendMessage(Info->hFloatTools,
-                    TB_BUTTONSTRUCTSIZE,
-                    sizeof(Buttons[0]),
-                    0);
-
-        SendMessage(Info->hFloatTools,
-                    TB_SETBITMAPSIZE,
-                    0,
-                    (LPARAM)MAKELONG(TB_BMP_WIDTH, TB_BMP_HEIGHT));
-
-        hFloatToolsImageList = InitImageList(2,
-                                             IDB_MAINNEWICON);
-
-        SendMessage(Info->hFloatTools,
-                    TB_SETIMAGELIST,
-                    0,
-                    (LPARAM)hFloatToolsImageList);
-
-        SendMessage(Info->hFloatTools,
-                    TB_ADDBUTTONS,
-                    NumButtons,
-                    (LPARAM)&StdButtons);
-
+    if (FloatingWindow[HISTORY].hSelf != NULL)
+    {
+        FloatToolbarCreateHistoryGui(&FloatingWindow[HISTORY]);
     }
 
 }
@@ -846,6 +776,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
                 CreateImageEditWindow(Info,
                                       &OpenInfo);
+
+                /* FIXME: move flt wnd's if scroll bars show
+                MainWndResetFloatingWindows(Info->hMdiClient); */
             }
 
         }
@@ -998,7 +931,7 @@ MainWndProc(HWND hwnd,
                           lParam);
         break;
 
-        case WM_NCLBUTTONUP :
+        case WM_NCLBUTTONUP:
 
             bLBMouseDown = FALSE;
             DefWindowProc(hwnd,
@@ -1325,14 +1258,14 @@ InitMainWindowImpl(VOID)
     wc.lpfnWndProc = MainWndProc;
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(hInstance,
-                        MAKEINTRESOURCE(IDI_ICON));
+                        MAKEINTRESOURCE(IDI_IMAGESOFTICON));
     wc.hCursor = LoadCursor(NULL,
                             IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wc.lpszMenuName = MAKEINTRESOURCE(IDR_MAINMENU);
     wc.lpszClassName = szMainWndClass;
     wc.hIconSm = (HICON)LoadImage(hInstance,
-                                  MAKEINTRESOURCE(IDI_ICON),
+                                  MAKEINTRESOURCE(IDI_IMAGESOFTICON),
                                   IMAGE_ICON,
                                   16,
                                   16,

@@ -10,36 +10,56 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 1 24 DISCARDABLE "manifest.xml"
- 
+
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME   "ImageSoft"
   IDS_VERSION   "v0.1"
 END
 
-IDI_ICON ICON "res/imagesoft.ico"
+IDI_IMAGESOFTICON ICON "res/imagesoft.ico"
 
 /* main toolbar icons */
-IDB_MAINCOPYICON BITMAP DISCARDABLE "res/icons/MainCopyIcon.bmp"
-IDB_MAINCUTICON BITMAP DISCARDABLE "res/icons/MainCutIcon.bmp"
-IDB_MAINPASTEICON BITMAP DISCARDABLE "res/icons/MainPasteIcon.bmp"
-IDB_MAINREDOICON BITMAP DISCARDABLE "res/icons/MainRedoIcon.bmp"
-IDB_MAINUNDOICON BITMAP DISCARDABLE "res/icons/MainUndoIcon.bmp"
-IDB_MAINNEWICON BITMAP DISCARDABLE "res/icons/MainNewIcon.bmp"
-IDB_MAINOPENICON BITMAP DISCARDABLE "res/icons/MainOpenIcon.bmp"
-IDB_MAINPRINTICON BITMAP DISCARDABLE "res/icons/MainPrintIcon.bmp"
-IDB_MAINPRINTPREICON BITMAP DISCARDABLE "res/icons/MainPrintPreIcon.bmp"
-IDB_MAINSAVEICON BITMAP DISCARDABLE "res/icons/MainSaveIcon.bmp"
+IDB_MAINCOPYICON BITMAP DISCARDABLE "res/icons/std/MainCopyIcon.bmp"
+IDB_MAINCUTICON BITMAP DISCARDABLE "res/icons/std/MainCutIcon.bmp"
+IDB_MAINPASTEICON BITMAP DISCARDABLE "res/icons/std/MainPasteIcon.bmp"
+IDB_MAINREDOICON BITMAP DISCARDABLE "res/icons/std/MainRedoIcon.bmp"
+IDB_MAINUNDOICON BITMAP DISCARDABLE "res/icons/std/MainUndoIcon.bmp"
+IDB_MAINNEWICON BITMAP DISCARDABLE "res/icons/std/MainNewIcon.bmp"
+IDB_MAINOPENICON BITMAP DISCARDABLE "res/icons/std/MainOpenIcon.bmp"
+IDB_MAINPRINTICON BITMAP DISCARDABLE "res/icons/std/MainPrintIcon.bmp"
+IDB_MAINPRINTPREICON BITMAP DISCARDABLE "res/icons/std/MainPrintPreIcon.bmp"
+IDB_MAINSAVEICON BITMAP DISCARDABLE "res/icons/std/MainSaveIcon.bmp"
 
 /* text toolbar icons */
-IDB_TEXTBOLD BITMAP DISCARDABLE "res/icons/TextBoldIcon.bmp"
-IDB_TEXTITALIC BITMAP DISCARDABLE "res/icons/TextItalicIcon.bmp"
-IDB_TEXTULINE BITMAP DISCARDABLE "res/icons/TextUnderlineIcon.bmp"
-IDB_TEXTLEFT BITMAP DISCARDABLE "res/icons/TextAlignLeftIcon.bmp"
-IDB_TEXTCENTER BITMAP DISCARDABLE "res/icons/TextAlignCenterIcon.bmp"
-IDB_TEXTRIGHT BITMAP DISCARDABLE "res/icons/TextAlignRightIcon.bmp"
+IDB_TEXTBOLD BITMAP DISCARDABLE "res/icons/text/TextBoldIcon.bmp"
+IDB_TEXTITALIC BITMAP DISCARDABLE "res/icons/text/TextItalicIcon.bmp"
+IDB_TEXTULINE BITMAP DISCARDABLE "res/icons/text/TextUnderlineIcon.bmp"
+IDB_TEXTLEFT BITMAP DISCARDABLE "res/icons/text/TextAlignLeftIcon.bmp"
+IDB_TEXTCENTER BITMAP DISCARDABLE "res/icons/text/TextAlignCenterIcon.bmp"
+IDB_TEXTRIGHT BITMAP DISCARDABLE "res/icons/text/TextAlignRightIcon.bmp"
 
 /* tools window icons */
+IDB_TOOLSCLONESTAMP BITMAP DISCARDABLE "res/icons/tools/ToolsCloneStamp.bmp"
+IDB_TOOLSCOLORPICKER BITMAP DISCARDABLE "res/icons/tools/ToolsColorPicker.bmp"
+IDB_TOOLSECLIPSE BITMAP DISCARDABLE "res/icons/tools/ToolsEllipse.bmp"
+IDB_TOOLSECLIPSESEL BITMAP DISCARDABLE "res/icons/tools/ToolsEllipseSelect.bmp"
+IDB_TOOLSERASER BITMAP DISCARDABLE "res/icons/tools/ToolsEraser.bmp"
+IDB_TOOLSFREEFORM BITMAP DISCARDABLE "res/icons/tools/ToolsFreeformShape.bmp"
+IDB_TOOLSLASOO BITMAP DISCARDABLE "res/icons/tools/ToolsLassoSelect.bmp"
+IDB_TOOLSLINE BITMAP DISCARDABLE "res/icons/tools/ToolsLine.bmp"
+IDB_TOOLSMAGICWAND BITMAP DISCARDABLE "res/icons/tools/ToolsMagicWand.bmp"
+IDB_TOOLSMOVE BITMAP DISCARDABLE "res/icons/tools/ToolsMove.bmp"
+IDB_TOOLSMOVESEL BITMAP DISCARDABLE "res/icons/tools/ToolsMoveSelection.bmp"
+IDB_TOOLSPAINTBRUSH BITMAP DISCARDABLE "res/icons/tools/ToolsPaintBrush.bmp"
+IDB_TOOLSPAINTBUCKET BITMAP DISCARDABLE "res/icons/tools/ToolsPaintBucket.bmp"
+IDB_TOOLSPENCIL BITMAP DISCARDABLE "res/icons/tools/ToolsPencil.bmp"
+IDB_TOOLSRECOLORING BITMAP DISCARDABLE "res/icons/tools/ToolsRecoloring.bmp"
+IDB_TOOLSRECTANGLE BITMAP DISCARDABLE "res/icons/tools/ToolsRectangle.bmp"
+IDB_TOOLSRECTSEL BITMAP DISCARDABLE "res/icons/tools/ToolsRectangleSelect.bmp"
+IDB_TOOLSROUNDRECT BITMAP DISCARDABLE "res/icons/tools/ToolsRoundedRectangle.bmp"
+IDB_TOOLSTEXT BITMAP DISCARDABLE "res/icons/tools/ToolsText.bmp"
+IDB_TOOLSZOOM BITMAP DISCARDABLE "res/icons/tools/ToolsZoom.bmp"
 
 
 /* cursors */

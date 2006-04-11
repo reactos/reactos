@@ -15,7 +15,7 @@ AboutDialogProc(HWND hDlg,
     case WM_INITDIALOG:
 
         hIcon = LoadImage(hInstance,
-                          MAKEINTRESOURCE(IDI_ICON),
+                          MAKEINTRESOURCE(IDI_IMAGESOFTICON),
                           IMAGE_ICON,
                           16,
                           16,

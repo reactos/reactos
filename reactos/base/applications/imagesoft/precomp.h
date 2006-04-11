@@ -29,6 +29,10 @@
 #define TB_BMP_WIDTH 16
 #define TB_BMP_HEIGHT 16
 
+#define TOOLS   0
+#define COLORS  1
+#define HISTORY 2
+
 #define MONOCHROMEBITS  1
 #define GREYSCALEBITS   8
 #define PALLETEBITS     8
@@ -338,8 +342,6 @@ INT GetTextFromEdit(OUT LPTSTR lpString,
 
 VOID GetError(DWORD err);
 
-VOID MessageBoxInt(INT num);
-
 BOOL ToolbarDeleteControlSpace(HWND hWndToolbar,
                                const TBBUTTON *ptbButton);
 
@@ -355,9 +357,14 @@ BOOL ToolbarInsertSpaceForControl(HWND hWndToolbar,
                                   INT iCmd,
                                   BOOL HideVertical);
 
+HIMAGELIST InitImageList(UINT NumButtons,
+                         UINT StartResource);
+
 /* opensave.c */
 VOID FileInitialize(HWND hwnd);
-BOOL DoOpenFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpName);
+BOOL DoOpenFile(HWND hwnd,
+                LPTSTR lpFileName,
+                LPTSTR lpName);
 BOOL DoSaveFile(HWND hwnd);
 
 /* floattoolbar.c */
@@ -372,6 +379,9 @@ typedef struct _FLT_WND
     BOOL bOpaque;
 } FLT_WND, *PFLT_WND;
 
+VOID FloatToolbarCreateToolsGui(PFLT_WND FltTools);
+VOID FloatToolbarCreateColorsGui(PFLT_WND FltColors);
+VOID FloatToolbarCreateHistoryGui(PFLT_WND FltHistory);
 BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
 BOOL ShowHideWindow(HWND hwnd);

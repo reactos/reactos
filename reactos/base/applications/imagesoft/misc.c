@@ -203,10 +203,6 @@ VOID GetError(DWORD err)
 }
 
 
-VOID MessageBoxInt(INT num)
-{
-    MessageBox(NULL, _itot(num, NULL, 10), NULL, 0);
-}
 
 /*
  * Toolbar custom control routines
@@ -373,3 +369,53 @@ ToolbarInsertSpaceForControl(HWND hWndToolbar,
 
     return FALSE;
 }
+
+
+HIMAGELIST
+InitImageList(UINT NumImages, UINT StartResource)
+{
+    HBITMAP hBitmap;
+    HIMAGELIST hImageList;
+    INT i, k, Ret;
+
+
+    /* Create the toolbar icon image list */
+    hImageList = ImageList_Create(TB_BMP_WIDTH,
+                                  TB_BMP_HEIGHT,
+                                  ILC_MASK | ILC_COLOR24,
+                                  NumImages,
+                                  0);
+    if (! hImageList)
+        return NULL;
+
+    /* Add all icons to the image list */
+    for (i = StartResource, k = 0; k < NumImages; i++, k++)
+    {
+        hBitmap = LoadImage(hInstance,
+                            MAKEINTRESOURCE(i),
+                            IMAGE_BITMAP,
+                            TB_BMP_WIDTH,
+                            TB_BMP_HEIGHT,
+                            LR_LOADTRANSPARENT);
+
+        Ret = ImageList_AddMasked(hImageList,
+                                  hBitmap,
+                                  RGB(255, 255, 254));
+
+        DeleteObject(hBitmap);
+    }
+
+    return hImageList;
+
+}
+
+/*
+static BOOL
+DestroyImageList(HIMAGELIST hImageList)
+{
+    if (! ImageList_Destroy(hImageList))
+        return FALSE;
+    else
+        return TRUE;
+}
+*/
