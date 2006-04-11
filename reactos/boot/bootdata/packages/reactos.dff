@@ -351,6 +351,7 @@ media\inf\NET_NIC.inf                               6
 media\inf\netamd.inf                                6
 media\inf\netisa.inf                                6
 media\inf\netrtpnt.inf                              6
+media\inf\nettcpip.inf                              6
 media\inf\ports.inf                                 6
 media\inf\scsi.inf                                  6
 media\inf\syssetup.inf                              6

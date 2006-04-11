@@ -92,6 +92,83 @@ cleanup:
 	return rc;
 }
 
+/* Install a section of a .inf file
+ * Returns TRUE if success, FALSE if failure. Error code can
+ * be retrieved with GetLastError()
+ */
+static BOOL
+InstallInfSection(
+	IN HWND hWnd,
+	IN LPCWSTR InfFile,
+	IN LPCWSTR InfSection)
+{
+	WCHAR Buffer[MAX_PATH];
+	HINF hInf = INVALID_HANDLE_VALUE;
+	UINT BufferSize;
+	PVOID Context = NULL;
+	BOOL ret = FALSE;
+
+	/* Get Windows directory */
+	BufferSize = MAX_PATH - 5 - wcslen(InfFile);
+	if (GetWindowsDirectoryW(Buffer, BufferSize) > BufferSize)
+	{
+		/* Function failed */
+		SetLastError(ERROR_GEN_FAILURE);
+		goto cleanup;
+	}
+	/* We have enough space to add some information in the buffer */
+	if (Buffer[wcslen(Buffer) - 1] != '\\')
+		wcscat(Buffer, L"\\");
+	wcscat(Buffer, L"Inf\\");
+	wcscat(Buffer, InfFile);
+
+	/* Install specified section */
+	hInf = SetupOpenInfFileW(Buffer, NULL, INF_STYLE_WIN4, NULL);
+	if (hInf == INVALID_HANDLE_VALUE)
+		goto cleanup;
+
+	Context = SetupInitDefaultQueueCallback(hWnd);
+	if (Context == NULL)
+		goto cleanup;
+
+	ret = SetupInstallFromInfSectionW(
+		hWnd, hInf,
+		InfSection, SPINST_ALL,
+		NULL, NULL, SP_COPY_NEWER,
+		SetupDefaultQueueCallbackW, Context,
+		NULL, NULL);
+
+cleanup:
+	if (Context)
+		SetupTermDefaultQueueCallback(Context);
+	if (hInf != INVALID_HANDLE_VALUE)
+		SetupCloseInfFile(hInf);
+	return ret;
+}
+
+/* Add default services for network cards */
+static DWORD
+InstallAdditionalServices(
+	IN HWND hWnd)
+{
+	BOOL ret;
+
+	/* Install TCP/IP protocol */
+	ret = InstallInfSection(
+		hWnd,
+		L"nettcpip.inf",
+		L"MS_TCPIP.PrimaryInstall");
+	if (!ret && GetLastError() != ERROR_FILE_NOT_FOUND)
+	{
+		DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
+		return GetLastError();
+	}
+
+	/* You can add here more clients (SMB...) and services (DHCP server...) */
+
+	return ERROR_SUCCESS;
+}
+
 DWORD WINAPI
 NetClassInstaller(
 	IN DI_FUNCTION InstallFunction,
@@ -343,6 +420,15 @@ NetClassInstaller(
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+
+	/* Install additionnal services */
+	/* FIXME: do it only if it is a network adapter! */
+	rc = InstallAdditionalServices(NULL);
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("InstallAdditionalServices() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
 

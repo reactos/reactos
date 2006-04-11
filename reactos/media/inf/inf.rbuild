@@ -11,6 +11,7 @@
 <installfile base="inf">netamd.inf</installfile>
 <installfile base="inf">netisa.inf</installfile>
 <installfile base="inf">netrtpnt.inf</installfile>
+<installfile base="inf">nettcpip.inf</installfile>
 <installfile base="inf">ports.inf</installfile>
 <installfile base="inf">scsi.inf</installfile>
 <installfile base="inf">syssetup.inf</installfile>
