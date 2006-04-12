@@ -12,8 +12,8 @@ typedef struct _DELETED_FILE_DETAILS_A
 {
 	FILETIME      LastModification;
 	FILETIME      DeletionTime;
-	LARGE_INTEGER FileSize;
-	LARGE_INTEGER PhysicalFileSize;
+	ULARGE_INTEGER FileSize;
+	ULARGE_INTEGER PhysicalFileSize;
 	DWORD         Attributes;
 	CHAR          FileName[ANY_SIZE];
 } DELETED_FILE_DETAILS_A, *PDELETED_FILE_DETAILS_A;
@@ -21,8 +21,8 @@ typedef struct _DELETED_FILE_DETAILS_W
 {
 	FILETIME      LastModification;
 	FILETIME      DeletionTime;
-	LARGE_INTEGER FileSize;
-	LARGE_INTEGER PhysicalFileSize;
+	ULARGE_INTEGER FileSize;
+	ULARGE_INTEGER PhysicalFileSize;
 	DWORD         Attributes;
 	WCHAR         FileName[ANY_SIZE];
 } DELETED_FILE_DETAILS_W, *PDELETED_FILE_DETAILS_W;

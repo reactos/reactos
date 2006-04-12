@@ -38,7 +38,7 @@ DeleteFile5(
 	INFO2_HEADER Header;
 	DELETED_FILE_RECORD DeletedFile;
 	DWORD bytesRead, bytesWritten;
-	LARGE_INTEGER fileSize;
+	ULARGE_INTEGER fileSize;
 	SYSTEMTIME SystemTime;
 	WCHAR RootDir[4];
 	WCHAR DeletedFileName[2 * MAX_PATH];
