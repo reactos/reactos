@@ -77,7 +77,7 @@ IntCreateEmptyRecycleBin(
 	if (OwnerSid)
 	{
 		//DWORD rc;
-		
+
 		/* Add ACL to allow only user/SYSTEM to open it */
 		/* FIXME: rc = SetNamedSecurityInfo(
 			BufferName,
@@ -114,7 +114,7 @@ IntCreateEmptyRecycleBin(
 	}
 	CloseHandle(hFile);
 	hFile = INVALID_HANDLE_VALUE;
-	
+
 	/* Create empty INFO2 file */
 	wcscpy(FileName, RECYCLE_BIN_FILE_NAME);
 	hFile = CreateFileW(BufferName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
@@ -140,7 +140,7 @@ cleanup:
 		if (hFile != INVALID_HANDLE_VALUE)
 			CloseHandle(hFile);
 	}
-	return ret;	
+	return ret;
 }
 
 PRECYCLE_BIN

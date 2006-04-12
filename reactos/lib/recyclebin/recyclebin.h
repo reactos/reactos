@@ -68,12 +68,12 @@ BOOL WINAPI
 EnumerateRecycleBinA(
 	IN CHAR driveLetter,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context);
+	IN PVOID Context OPTIONAL);
 BOOL WINAPI
 EnumerateRecycleBinW(
 	IN WCHAR driveLetter,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context);
+	IN PVOID Context OPTIONAL);
 #ifdef UNICODE
 #define EnumerateRecycleBin EnumerateRecycleBinW
 #else
@@ -84,13 +84,13 @@ BOOL WINAPI
 GetDeletedFileDetailsA(
 	IN HANDLE hDeletedFile,
 	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_A FileDetails,
+	IN OUT PDELETED_FILE_DETAILS_A FileDetails OPTIONAL,
 	OUT LPDWORD RequiredSize OPTIONAL);
 BOOL WINAPI
 GetDeletedFileDetailsW(
 	IN HANDLE hDeletedFile,
 	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_W FileDetails,
+	IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
 	OUT LPDWORD RequiredSize OPTIONAL);
 #ifdef UNICODE
 #define GetDeletedFileDetails GetDeletedFileDetailsW

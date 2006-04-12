@@ -20,7 +20,7 @@ CloseRecycleBinHandle(
 	IN HANDLE hDeletedFile)
 {
 	BOOL ret = FALSE;
-	
+
 	if (!IntCheckDeletedFileHandle(hDeletedFile))
 		SetLastError(ERROR_INVALID_HANDLE);
 	else
@@ -28,7 +28,7 @@ CloseRecycleBinHandle(
 		PDELETED_FILE_HANDLE file = (PDELETED_FILE_HANDLE)hDeletedFile;
 		ret = DereferenceHandle(&file->refCount);
 	}
-	
+
 	return ret;
 }
 
@@ -39,7 +39,14 @@ DeleteFileToRecycleBinA(
 	int len;
 	LPWSTR FileNameW = NULL;
 	BOOL ret = FALSE;
-	
+
+	/* Check parameters */
+	if (FileName == NULL)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		goto cleanup;
+	}
+
 	len = MultiByteToWideChar(CP_ACP, 0, FileName, -1, NULL, 0);
 	if (len == 0)
 		goto cleanup;
@@ -69,6 +76,13 @@ DeleteFileToRecycleBinW(
 	DWORD len;
 	PRECYCLE_BIN bin = NULL;
 	BOOL ret = FALSE;
+
+	/* Check parameters */
+	if (FileName == NULL)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		goto cleanup;
+	}
 
 	/* Get full file name */
 	while (TRUE)
@@ -145,7 +159,7 @@ BOOL WINAPI
 EnumerateRecycleBinA(
 	IN CHAR driveLetter,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context)
+	IN PVOID Context OPTIONAL)
 {
 	return EnumerateRecycleBinW((WCHAR)driveLetter, pFnCallback, Context);
 }
@@ -202,10 +216,17 @@ BOOL WINAPI
 EnumerateRecycleBinW(
 	IN WCHAR driveLetter,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context)
+	IN PVOID Context OPTIONAL)
 {
 	PRECYCLE_BIN bin = NULL;
 	BOOL ret = FALSE;
+
+	/* Check parameters */
+	if (pFnCallback == NULL)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		goto cleanup;
+	}
 
 	/* Open recycle bin */
 	bin = IntReferenceRecycleBin(driveLetter);
@@ -235,7 +256,7 @@ BOOL WINAPI
 GetDeletedFileDetailsA(
 	IN HANDLE hDeletedFile,
 	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_A FileDetails,
+	IN OUT PDELETED_FILE_DETAILS_A FileDetails OPTIONAL,
 	OUT LPDWORD RequiredSize OPTIONAL)
 {
 	PDELETED_FILE_DETAILS_W FileDetailsW = NULL;
@@ -279,7 +300,7 @@ BOOL WINAPI
 GetDeletedFileDetailsW(
 	IN HANDLE hDeletedFile,
 	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_W FileDetails,
+	IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
 	OUT LPDWORD RequiredSize OPTIONAL)
 {
 	BOOL ret = FALSE;

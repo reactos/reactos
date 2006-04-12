@@ -6,6 +6,7 @@ TODO
 - Empty a recycle bin containing directories (v5)
 - Set security on recycle bin folder
 - Delete files > 4Gb
+- Make the library thread-safe
 
 3 levels
 - 1:  recyclebin.c:   Public interface

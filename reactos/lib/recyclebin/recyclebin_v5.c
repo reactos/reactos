@@ -189,13 +189,13 @@ static BOOL
 EnumerateFiles5(
 	IN PRECYCLE_BIN bin,
 	IN PINT_ENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context)
+	IN PVOID Context OPTIONAL)
 {
 	INFO2_HEADER Header;
 	DELETED_FILE_RECORD DeletedFile;
 	DWORD bytesRead, dwEntries;
 	BOOL ret = FALSE;
-		
+
 	if (SetFilePointer(bin->hInfo, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 		goto cleanup;
 	if (!ReadFile(bin->hInfo, &Header, sizeof(INFO2_HEADER), &bytesRead, NULL))
@@ -227,7 +227,7 @@ EnumerateFiles5(
 		if (SetFilePointer(bin->hInfo, sizeof(INFO2_HEADER) + Header.dwRecordSize * dwEntries, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 			goto cleanup;
 	}
-	
+
 	ret = TRUE;
 
 cleanup:
@@ -239,7 +239,7 @@ GetDetails5(
 	IN PRECYCLE_BIN bin,
 	IN HANDLE hDeletedFile,
 	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_W FileDetails,
+	IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
 	OUT LPDWORD RequiredSize OPTIONAL)
 {
 	DELETED_FILE_RECORD DeletedFile;
@@ -248,9 +248,16 @@ GetDetails5(
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 	BOOL ret = FALSE;
 
+	/* Check parameters */
+	if (BufferSize > 0 && FileDetails == NULL)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		goto cleanup;
+	}
+
 	if (!IntSearchRecord(bin, hDeletedFile, &DeletedFile, NULL))
 		goto cleanup;
-	Needed = (DWORD)FIELD_OFFSET(DELETED_FILE_DETAILS_W, FileName) + (wcslen(DeletedFile.FileNameW) + 1) * sizeof(WCHAR);
+	Needed = FIELD_OFFSET(DELETED_FILE_DETAILS_W, FileName) + (wcslen(DeletedFile.FileNameW) + 1) * sizeof(WCHAR);
 	if (RequiredSize)
 		*RequiredSize = (DWORD)Needed;
 	if (Needed > BufferSize)
@@ -304,7 +311,7 @@ RestoreFile5(
 	DELETED_FILE_RECORD DeletedFile, LastFile;
 	LPWSTR FullName = NULL;
 	BOOL ret = FALSE;
-		
+
 	if (SetFilePointer(bin->hInfo, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 		goto cleanup;
 	if (!ReadFile(bin->hInfo, &Header, sizeof(INFO2_HEADER), &bytesRead, NULL))
@@ -330,7 +337,7 @@ RestoreFile5(
 	/* Restore file */
 	if (!MoveFileW(FullName, DeletedFile.FileNameW))
 		goto cleanup;
-	
+
 	/* Update INFO2 */
 	/* 1) If not last entry, copy last entry to the current one */
 	if (SetFilePointer(bin->hInfo, -sizeof(DELETED_FILE_RECORD), NULL, FILE_END) == INVALID_SET_FILE_POINTER)
@@ -434,7 +441,7 @@ IntEmptyRecycleBinCallback(
 
 	if (!IntGetFullName(bin, &DeletedFile, &FullName))
 		goto cleanup;
-	
+
 	if (!IntDeleteRecursive(FullName))
 		goto cleanup;
 	ret = TRUE;
@@ -489,7 +496,7 @@ IntSearchRecord(
 	DELETED_FILE_RECORD DeletedFile;
 	DWORD bytesRead, dwEntries;
 	BOOL ret = FALSE;
-		
+
 	if (SetFilePointer(bin->hInfo, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 		goto cleanup;
 	if (!ReadFile(bin->hInfo, &Header, sizeof(INFO2_HEADER), &bytesRead, NULL))

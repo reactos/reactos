@@ -26,7 +26,7 @@ CloseHandle5(
 
 static BOOL
 DeleteFile5(
-	IN PRECYCLE_BIN Context,
+	IN PRECYCLE_BIN bin,
 	IN LPCWSTR FullPath,
 	IN LPCWSTR FileName);
 
@@ -38,19 +38,19 @@ static BOOL
 EnumerateFiles5(
 	IN PRECYCLE_BIN bin,
 	IN PINT_ENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context);
+	IN PVOID Context OPTIONAL);
 
 static BOOL
 GetDetails5(
 	IN PRECYCLE_BIN bin,
 	IN HANDLE hDeletedFile,
 	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_W FileDetails,
+	IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
 	OUT LPDWORD RequiredSize OPTIONAL);
 
 static BOOL
 RestoreFile5(
-	IN PRECYCLE_BIN Context,
+	IN PRECYCLE_BIN bin,
 	IN HANDLE hDeletedFile);
 
 static BOOL
