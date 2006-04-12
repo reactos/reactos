@@ -3133,8 +3133,11 @@ BOOL WINAPI SetupDiInstallClassExW(
     TRACE("%p %s 0x%lx %p %s %p %p\n", hwndParent, debugstr_w(InfFileName), Flags,
         FileQueue, debugstr_guid(InterfaceClassGuid), Reserved1, Reserved2);
 
-    if (!InfFileName && !InterfaceClassGuid)
-        SetLastError(ERROR_INVALID_PARAMETER);
+    if (!InfFileName)
+    {
+        FIXME("Case not implemented: InfFileName NULL\n");
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
     else if (Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL))
     {
         TRACE("Unknown flags: 0x%08lx\n", Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL));
@@ -3148,41 +3151,67 @@ BOOL WINAPI SetupDiInstallClassExW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
+        HDEVINFO hDeviceInfo = INVALID_HANDLE_VALUE;
+        SP_DEVINSTALL_PARAMS_W InstallParams;
         WCHAR SectionName[MAX_PATH];
         HINF hInf = INVALID_HANDLE_VALUE;
-        HKEY hClassKey = INVALID_HANDLE_VALUE;
+        HKEY hRootKey = INVALID_HANDLE_VALUE;
         PVOID callback_context = NULL;
+
+        hDeviceInfo = SetupDiCreateDeviceInfoList(NULL, NULL);
+
+        InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+        if (!SetupDiGetDeviceInstallParamsW(hDeviceInfo, NULL, &InstallParams))
+            goto cleanup;
+        InstallParams.Flags &= ~(DI_NOVCP | DI_NOBROWSE | DI_QUIETINSTALL);
+        InstallParams.Flags |= Flags & (DI_NOVCP | DI_NOBROWSE | DI_QUIETINSTALL);
+        if (Flags & DI_NOVCP)
+            InstallParams.FileQueue = FileQueue;
+        if (!SetupDiSetDeviceInstallParamsW(hDeviceInfo, NULL, &InstallParams))
+            goto cleanup;
+
+        /* Open the .inf file */
+        hInf = SetupOpenInfFileW(
+            InfFileName,
+            NULL,
+            INF_STYLE_WIN4,
+            NULL);
+        if (hInf == INVALID_HANDLE_VALUE)
+            goto cleanup;
+
+        /* Try to append a layout file */
+        ret = SetupOpenAppendInfFileW(NULL, hInf, NULL);
+        if (!ret)
+            goto cleanup;
 
         if (InterfaceClassGuid)
         {
+            /* Retrieve the actual section name */
+            ret = SetupDiGetActualSectionToInstallW(
+                hInf,
+                InterfaceInstall32,
+                SectionName,
+                MAX_PATH,
+                NULL,
+                NULL);
+            if (!ret)
+                goto cleanup;
+
+            /* Open registry key related to this interface */
+            /* FIXME: What happens if the key doesn't exist? */
+            hRootKey = SetupDiOpenClassRegKeyExW(InterfaceClassGuid, KEY_ENUMERATE_SUB_KEYS, DIOCR_INTERFACE, NULL, NULL);
+            if (hRootKey == INVALID_HANDLE_VALUE)
+                goto cleanup;
+
             /* SetupDiCreateDeviceInterface??? */
             FIXME("Installing an interface is not implemented\n");
             SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         }
         else
         {
-            if (Flags & DI_NOVCP)
-                FIXME("FileQueue argument ignored\n");
-            if (Flags & (DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL))
-                FIXME("Flags 0x%lx ignored\n", Flags & (DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL));
-
-            /* Open the .inf file */
-            hInf = SetupOpenInfFileW(
-                InfFileName,
-                NULL,
-                INF_STYLE_WIN4,
-                NULL);
-            if (hInf == INVALID_HANDLE_VALUE)
-                goto cleanup;
-
             /* Create or open the class registry key 'HKLM\CurrentControlSet\Class\{GUID}' */
-            hClassKey = CreateClassKey(hInf);
-            if (hClassKey == INVALID_HANDLE_VALUE)
-                goto cleanup;
-
-            /* Try to append a layout file */
-            ret = SetupOpenAppendInfFileW(NULL, hInf, NULL);
-            if (!ret)
+            hRootKey = CreateClassKey(hInf);
+            if (hRootKey == INVALID_HANDLE_VALUE)
                 goto cleanup;
 
             /* Retrieve the actual section name */
@@ -3205,19 +3234,26 @@ BOOL WINAPI SetupDiInstallClassExW(
                 hInf,
                 SectionName,
                 SPINST_REGISTRY | SPINST_FILES | SPINST_BITREG | SPINST_INIFILES | SPINST_INI2REG,
-                hClassKey,
+                hRootKey,
                 NULL, /* SourceRootPath */
-                0, /* CopyFlags */
+                !(Flags & DI_NOVCP) && (Flags & DI_FORCECOPY) ? SP_COPY_FORCE_IN_USE : 0, /* CopyFlags */
                 SetupDefaultQueueCallbackW,
                 callback_context,
-                NULL,
+                hDeviceInfo,
                 NULL);
             if (!ret)
                 goto cleanup;
 
             /* Install .Services section */
             lstrcatW(SectionName, DotServices);
-            ret = SetupInstallServicesFromInfSectionW(hInf, SectionName, 0);
+            ret = SetupInstallServicesFromInfSectionExW(
+                hInf,
+                SectionName,
+                0,
+                hDeviceInfo,
+                NULL,
+                NULL,
+                NULL);
             if (!ret)
                 goto cleanup;
 
@@ -3225,10 +3261,12 @@ BOOL WINAPI SetupDiInstallClassExW(
         }
 
 cleanup:
+        if (hDeviceInfo != INVALID_HANDLE_VALUE)
+            SetupDiDestroyDeviceInfoList(hDeviceInfo);
         if (hInf != INVALID_HANDLE_VALUE)
             SetupCloseInfFile(hInf);
-        if (hClassKey != INVALID_HANDLE_VALUE)
-            RegCloseKey(hClassKey);
+        if (hRootKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hRootKey);
         SetupTermDefaultQueueCallback(callback_context);
     }
 
@@ -4076,7 +4114,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
  */
 BOOL WINAPI SetupDiGetDeviceInstallParamsA(
        IN HDEVINFO DeviceInfoSet,
-       IN PSP_DEVINFO_DATA DeviceInfoData,
+       IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
        OUT PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
 {
     SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
@@ -4118,7 +4156,7 @@ BOOL WINAPI SetupDiGetDeviceInstallParamsA(
  */
 BOOL WINAPI SetupDiGetDeviceInstallParamsW(
        IN HDEVINFO DeviceInfoSet,
-       IN PSP_DEVINFO_DATA DeviceInfoData,
+       IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
        OUT PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     struct DeviceInfoSet *list;
@@ -4167,6 +4205,7 @@ CheckDeviceInstallParameters(
         DI_ENUMSINGLEINF |                    /* 0x00010000 */
         DI_CLASSINSTALLPARAMS |               /* 0x00100000 */
         DI_NODI_DEFAULTACTION |               /* 0x00200000 */
+        DI_QUIETINSTALL |                     /* 0x00800000 */
         DI_NOFILECOPY |                       /* 0x01000000 */
         DI_DRIVERPAGE_ADDED;                  /* 0x04000000 */
     DWORD SupportedFlagsEx =
@@ -7480,7 +7519,35 @@ SetupDiInstallDevice(
 
     if (InstallParams.FlagsEx & DI_FLAGSEX_SETFAILEDINSTALL)
     {
-        /* FIXME: set FAILEDINSTALL in ConfigFlags registry value */
+        /* Set FAILEDINSTALL in ConfigFlags registry value */
+        DWORD ConfigFlags, regType;
+        Result = SetupDiGetDeviceRegistryPropertyW(
+            DeviceInfoSet,
+            DeviceInfoData,
+            SPDRP_CONFIGFLAGS,
+            &regType,
+            (PBYTE)&ConfigFlags,
+            sizeof(ConfigFlags),
+            NULL);
+        if (!Result || regType != REG_DWORD)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
+        }
+        ConfigFlags |= DNF_DISABLED;
+        Result = SetupDiSetDeviceRegistryPropertyW(
+            DeviceInfoSet,
+            DeviceInfoData,
+            SPDRP_CONFIGFLAGS,
+            (PBYTE)&ConfigFlags,
+            sizeof(ConfigFlags));
+        if (!Result)
+        {
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
+        }
+
+        ret = TRUE;
         goto cleanup;
     }
 
