@@ -53,18 +53,6 @@ typedef struct _RpcBinding
   RpcConnection* FromConn;
 } RpcBinding;
 
-typedef struct _ContextHandleNdr
-{
-	UINT attributes;
-	UUID uuid;
-} ContextHandleNdr;
-
-typedef struct _CContextHandle
-{
-	RpcBinding *Binding;
-	ContextHandleNdr Ndr;
-} CContextHandle;
-
 LPSTR RPCRT4_strndupA(LPCSTR src, INT len);
 LPWSTR RPCRT4_strndupW(LPWSTR src, INT len);
 LPSTR RPCRT4_strdupWtoA(LPWSTR src);

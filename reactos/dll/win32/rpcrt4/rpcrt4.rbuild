@@ -29,6 +29,7 @@
 	<file>rpc_epmap.c</file>
 	<file>rpc_message.c</file>
 	<file>rpc_server.c</file>
+	<file>ndr_contexth.c</file>
 	<file>rpcrt4_main.c</file>
 	<file>rpcss_np_client.c</file>
 	<file>rpcrt4.rc</file>
