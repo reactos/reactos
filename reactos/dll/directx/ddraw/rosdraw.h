@@ -233,6 +233,9 @@ DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface);
 		firstcall = FALSE; \
 	}
 
+#define DX_WINDBG_trace()  
+
+/*
 #define DX_WINDBG_trace() \
 	static BOOL firstcallx = TRUE; \
 	if (firstcallx) \
@@ -242,6 +245,7 @@ DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface);
 		OutputDebugStringA(buffer); \
 		firstcallx = TRUE; \
 	}
+*/
 
 #define DX_WINDBG_trace_res(width,height,bpp) \
 	static BOOL firstcallxx = TRUE; \
