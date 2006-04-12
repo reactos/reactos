@@ -65,25 +65,20 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
               mDdBlt.lpDDSrcSurface = That->Surf->mpPrimaryLocals[0];
         }
 
-        //mDdBlt.lpDDSrcSurface = NULL; //src->
-   
         mDdBlt.lpDD = &This->owner->mDDrawGlobal;
         mDdBlt.Blt = This->owner->mCallbacks.HALDDSurface.Blt; 
         mDdBlt.lpDDDestSurface = This->Surf->mpPrimaryLocals[0];
 
         mDdBlt.dwFlags = dwFlags;
-      
-       // This->Surf->mpPrimaryLocals[0]->hDC = This->owner->mDDrawGlobal.lpExclusiveOwner->hDC; 
+             
     
         // FIXME dectect if it clipped or not 
-        DX_STUB_str( "Can not create offscreenplain surface");
         mDdBlt.IsClipped = FALSE;    
    
         if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
         {
               return DDHAL_DRIVER_HANDLED;
         }
-
 
         if (mDdBlt.ddRVal!=DD_OK) 
         {
@@ -97,10 +92,9 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
                               pDDSD, DWORD flags, HANDLE event)
 {
 
-   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-   
-  
-   DDHAL_LOCKDATA Lock;
+  IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+     
+  DDHAL_LOCKDATA Lock;
    
    if (prect!=NULL)
    {
@@ -115,26 +109,32 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    Lock.ddRVal = DDERR_NOTPALETTIZED;
    Lock.Lock = This->owner->mCallbacks.HALDDSurface.Lock;
    Lock.dwFlags = flags;
-   Lock.lpDDSurface = This->Surf->mpPrimaryLocals[0];
+   Lock.lpDDSurface = &This->Surf->mPrimaryLocal;
    Lock.lpDD = &This->owner->mDDrawGlobal;   
    Lock.lpSurfData = NULL;
-
-   // FIXME some how lock goes wrong; 
-   return DD_FALSE;
-   if (This->owner->mCallbacks.HALDDSurface.Lock(&Lock)!= DDHAL_DRIVER_HANDLED)
+     
+   if (!DdResetVisrgn(&This->Surf->mPrimaryLocal, NULL)) 
    {
+    // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
+   }
+   
+   if (Lock.Lock(&Lock)!= DDHAL_DRIVER_HANDLED)
+   {
+      return DDERR_LOCKEDSURFACES;
+   }
+   
+   if (Lock.ddRVal!= DD_OK)
+   {      
       return Lock.ddRVal;
    }
 
+   // FIXME ??? is this right ?? 
    RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
    memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
    pDDSD->dwSize = sizeof(DDSURFACEDESC2);
-
-   pDDSD->lpSurface = Lock.lpSurfData;
-
-
-    // FIXME some things is wrong it does not show the data on screen ??
-   
+       
+   pDDSD->lpSurface = (LPVOID)  Lock.lpSurfData;
+      
    return DD_OK;   
 }
 HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
