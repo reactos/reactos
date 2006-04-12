@@ -790,7 +790,9 @@ NtUserCreateDesktop(
    CSR_API_MESSAGE Request;
    PVOID DesktopHeapSystemBase = NULL;
    SIZE_T DesktopInfoSize;
+   UNICODE_STRING SafeDesktopName;
    DECLARE_RETURN(HDESK);
+  
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
    UserEnterExclusive();
@@ -808,15 +810,29 @@ NtUserCreateDesktop(
       SetLastNtError(Status);
       RETURN( NULL);
    }
+   if(lpszDesktopName != NULL)
+   {
+      Status = IntSafeCopyUnicodeString(&SafeDesktopName, lpszDesktopName);
+      if(!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         RETURN( NULL);
+	  }
+   }
+   else
+   {
+      RtlInitUnicodeString(&SafeDesktopName, NULL);
+   }
 
    if (! IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
-                                     lpszDesktopName))
+                                     &SafeDesktopName))
    {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
+      RtlFreeUnicodeString(&SafeDesktopName);
       RETURN( NULL);
    }
-
+   RtlFreeUnicodeString(&SafeDesktopName);
    ObDereferenceObject(WinStaObject);
 
    /*
@@ -998,6 +1014,7 @@ NtUserOpenDesktop(
    HWINSTA WinSta;
    PWINSTATION_OBJECT WinStaObject;
    UNICODE_STRING DesktopName;
+   UNICODE_STRING SafeDesktopName;
    NTSTATUS Status;
    HDESK Desktop;
    DECLARE_RETURN(HDESK);
@@ -1024,14 +1041,30 @@ NtUserOpenDesktop(
       RETURN( 0);
    }
 
+   if(lpszDesktopName != NULL)
+   {
+      Status = IntSafeCopyUnicodeString(&SafeDesktopName, lpszDesktopName);
+      if(!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         RETURN( NULL);
+	  }
+   }
+   else
+   {
+      RtlInitUnicodeString(&SafeDesktopName, NULL);
+   }
+
    if (!IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
                                     lpszDesktopName))
    {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
+      RtlFreeUnicodeString(&SafeDesktopName);
       RETURN( 0);
    }
 
+   RtlFreeUnicodeString(&SafeDesktopName);
    ObDereferenceObject(WinStaObject);
 
    DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
