@@ -577,6 +577,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
              That->Owner->mddsdPrimary.dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
            }
 
+           That->Surf->mpInUseSurfaceLocals[0] = &That->Owner->mPrimaryLocal;
            return DD_OK;
 
         }
@@ -586,18 +587,23 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
             OutputDebugStringA("Create DDSCAPS_OVERLAY\n");
 
             memset(&That->Surf->mddsdOverlay, 0, sizeof(DDSURFACEDESC));
+            memcpy(&That->Surf->mddsdOverlay, pDDSD, sizeof(DDSURFACEDESC));
             That->Surf->mddsdOverlay.dwSize = sizeof(DDSURFACEDESC);
             That->Surf->mddsdOverlay.dwFlags = DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT | DDSD_WIDTH | DDSD_HEIGHT;
             That->Surf->mddsdOverlay.ddsCaps.dwCaps = DDSCAPS_OVERLAY | DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM | DDSCAPS_COMPLEX | DDSCAPS_FLIP;
+            
+            
+          
 //
-            That->Surf->mddsdOverlay.dwWidth = 100;  //pels;
-            That->Surf->mddsdOverlay.dwHeight = 100; // lines;
+        
+            That->Surf->mddsdOverlay.dwWidth = pDDSD->dwWidth;  //pels;
+            That->Surf->mddsdOverlay.dwHeight = pDDSD->dwHeight; // lines;
             That->Surf->mddsdOverlay.dwBackBufferCount = 1; //cBuffers;
 
             That->Surf->mddsdOverlay.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
             That->Surf->mddsdOverlay.ddpfPixelFormat.dwFlags = DDPF_RGB; 
             That->Surf->mddsdOverlay.ddpfPixelFormat.dwRGBBitCount = 32;
-//  
+//   
 //
             DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
             mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
@@ -712,6 +718,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
                 return mDdUpdateOverlay.ddRVal;
             }
 
+            That->Surf->mpInUseSurfaceLocals[0] = That->Surf->mpOverlayLocals[0];
+            //That->Surf->mpInUseSurfaceLocals[0] = &That->Owner->mPrimaryLocal;
             return DD_OK;          
         }	
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_BACKBUFFER)

@@ -67,7 +67,7 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 
         mDdBlt.lpDD = &This->Owner->mDDrawGlobal;
         mDdBlt.Blt = This->Owner->mCallbacks.HALDDSurface.Blt; 
-        mDdBlt.lpDDDestSurface = This->Owner->mpPrimaryLocals[0];
+        mDdBlt.lpDDDestSurface = This->Surf->mpInUseSurfaceLocals[0];
 
         mDdBlt.dwFlags = dwFlags;
              
@@ -109,7 +109,7 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    Lock.ddRVal = DDERR_NOTPALETTIZED;
    Lock.Lock = This->Owner->mCallbacks.HALDDSurface.Lock;
    Lock.dwFlags = flags;
-   Lock.lpDDSurface = &This->Owner->mPrimaryLocal;
+   Lock.lpDDSurface = This->Surf->mpInUseSurfaceLocals[0]; 
    Lock.lpDD = &This->Owner->mDDrawGlobal;   
    Lock.lpSurfData = NULL;
      
@@ -160,7 +160,7 @@ HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
    DDHAL_UNLOCKDATA unLock;   
    unLock.ddRVal = DDERR_NOTPALETTIZED;
    unLock.lpDD = &This->Owner->mDDrawGlobal;   
-   unLock.lpDDSurface =  &This->Owner->mPrimaryLocal;
+   unLock.lpDDSurface =  This->Surf->mpInUseSurfaceLocals[0];
    unLock.Unlock = This->Owner->mCallbacks.HALDDSurface.Unlock;
 
 

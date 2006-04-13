@@ -98,6 +98,8 @@ typedef struct
 typedef struct 
 {    
 
+    DDRAWI_DDRAWSURFACE_LCL *mpInUseSurfaceLocals[1];
+    
     DDRAWI_DDRAWSURFACE_GBL mSurfGlobal;
     DDRAWI_DDRAWSURFACE_MORE mSurfMore;
     DDRAWI_DDRAWSURFACE_LCL mSurfLocal;
