@@ -3155,9 +3155,9 @@ BOOL WINAPI SetupDiInstallClassExW(
         FIXME("Case not implemented: InfFileName NULL\n");
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     }
-    else if (Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY))
+    else if (Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL))
     {
-        TRACE("Unknown flags: 0x%08lx\n", Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY));
+        TRACE("Unknown flags: 0x%08lx\n", Flags & ~(DI_NOVCP | DI_NOBROWSE | DI_FORCECOPY | DI_QUIETINSTALL));
         SetLastError(ERROR_INVALID_FLAGS);
     }
     else if ((Flags & DI_NOVCP) && FileQueue == NULL)
