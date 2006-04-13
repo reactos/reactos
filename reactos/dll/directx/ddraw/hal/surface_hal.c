@@ -130,13 +130,26 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
       OutputDebugStringA("Here ddRVal lock");
       return Lock.ddRVal;
    }
-
+   
    // FIXME ??? is this right ?? 
-   RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
-   memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
-   pDDSD->dwSize = sizeof(DDSURFACEDESC2);
-       
-   pDDSD->lpSurface = (LPVOID)  Lock.lpSurfData;
+   if (pDDSD != NULL)
+   {
+        if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
+        {
+            RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
+            // FIXME the interanl mddsdPrimary shall be DDSURFACEDESC2
+            memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+            pDDSD->dwSize = sizeof(DDSURFACEDESC2);
+        }
+        if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
+        {
+            RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC));
+            memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+            pDDSD->dwSize = sizeof(DDSURFACEDESC);
+        }
+
+        pDDSD->lpSurface = (LPVOID)  Lock.lpSurfData;
+   }
       
    return DD_OK;   
 }
