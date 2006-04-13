@@ -31,10 +31,10 @@
  */
 RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 {
-    if(!CContext)
+	if(!CContext)
 		RpcRaiseException(ERROR_INVALID_HANDLE);
 
-    return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
+	return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
 }
 
 /***********************************************************************
@@ -53,7 +53,6 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                      NDR_CCONTEXT ContextHandle,
                                      int fCheck)
 {
-   
 	if(!ContextHandle) 
 		RpcRaiseException(ERROR_INVALID_HANDLE);
 
@@ -146,25 +145,6 @@ void WINAPI RpcSsDestroyClientContext(void** ContextHandle)
 }
 
 /***********************************************************************
- *           NdrServerContextMarshall
- */
-void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
-                                     NDR_SCONTEXT ContextHandle,
-                                     NDR_RUNDOWN RundownRoutine )
-{
-    FIXME("(%p, %p, %p): stub\n", pStubMsg, ContextHandle, RundownRoutine);
-}
-
-/***********************************************************************
- *           NdrServerContextUnmarshall
- */
-NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
-{
-    FIXME("(%p): stub\n", pStubMsg);
-    return NULL;
-}
-
-/***********************************************************************
  *           NdrContextHandleSize
  */
 void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
@@ -181,6 +161,51 @@ NDR_SCONTEXT WINAPI NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
                                                PFORMAT_STRING pFormat)
 {
     FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
+    return NULL;
+}
+
+/***********************************************************************
+ *           NDRSContextMarshall2
+ */
+void WINAPI NDRSContextMarshall2(IN RPC_BINDING_HANDLE BindingHandle,
+                                 IN NDR_SCONTEXT CContext,
+                                 OUT void *pBuff,
+                                 IN NDR_RUNDOWN userRunDownIn,
+                                 IN void *CtxGuard,
+                                 IN unsigned long Flags)
+{
+	FIXME("stub\n");
+}
+
+/***********************************************************************
+ *           NDRSContextUnmarshall2
+ */
+NDR_SCONTEXT WINAPI NDRSContextUnmarshall2(IN RPC_BINDING_HANDLE BindingHandle,
+                                           IN void *pBuff,
+                                           IN unsigned long DataRepresentation,
+                                           IN void *CtxGuard,
+                                           IN unsigned long Flags)
+{
+	FIXME("stub\n");
+	return NULL;
+}
+
+/***********************************************************************
+ *           NdrServerContextMarshall
+ */
+void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                     NDR_SCONTEXT ContextHandle,
+                                     NDR_RUNDOWN RundownRoutine)
+{
+    FIXME("(%p, %p, %p): stub\n", pStubMsg, ContextHandle, RundownRoutine);
+}
+
+/***********************************************************************
+ *           NdrServerContextUnmarshall
+ */
+NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
+{
+    FIXME("(%p): stub\n", pStubMsg);
     return NULL;
 }
 
@@ -203,4 +228,46 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 {
     FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
     return NULL;
+}
+
+/***********************************************************************
+ *           NDRSContextMarshall
+ */
+void WINAPI NDRSContextMarshall(IN NDR_SCONTEXT CContext,
+                                OUT void *pBuff,
+                                IN NDR_RUNDOWN userRunDownIn)
+{
+	FIXME("stub\n");
+}
+
+/***********************************************************************
+ *           NDRSContextUnmarshall
+ */
+NDR_SCONTEXT WINAPI NDRSContextUnmarshall(IN void *pBuff,
+                                          IN unsigned long DataRepresentation)
+{
+	FIXME("stub\n");
+	return NULL;
+}
+
+/***********************************************************************
+ *           NDRSContextMarshallEx
+ */
+void WINAPI NDRSContextMarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
+                                  IN NDR_SCONTEXT CContext,
+                                  OUT void *pBuff,
+                                  IN NDR_RUNDOWN userRunDownIn)
+{
+	FIXME("stub\n");
+}
+
+/***********************************************************************
+ *           NDRSContextUnmarshallEx
+ */
+NDR_SCONTEXT WINAPI NDRSContextUnmarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
+                                            IN void *pBuff,
+                                            IN unsigned long DataRepresentation)
+{
+	FIXME("stub\n");
+	return NULL;
 }

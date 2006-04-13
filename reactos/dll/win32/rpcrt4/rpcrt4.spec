@@ -140,12 +140,12 @@
 @ stdcall NDRCContextBinding(ptr)
 @ stdcall NDRCContextMarshall(ptr ptr)
 @ stdcall NDRCContextUnmarshall(ptr ptr ptr long)
-@ stub NDRSContextMarshall2
-@ stub NDRSContextMarshall
-@ stub NDRSContextMarshallEx
-@ stub NDRSContextUnmarshall2
-@ stub NDRSContextUnmarshall
-@ stub NDRSContextUnmarshallEx
+@ stdcall NDRSContextMarshall2(ptr ptr ptr ptr ptr long)
+@ stdcall NDRSContextMarshall(ptr ptr ptr)
+@ stdcall NDRSContextMarshallEx(ptr ptr ptr ptr)
+@ stdcall NDRSContextUnmarshall2(ptr ptr ptr ptr long)
+@ stdcall NDRSContextUnmarshall(ptr long)
+@ stdcall NDRSContextUnmarshallEx(ptr ptr long)
 @ stub NDRcopy
 @ stdcall NdrAllocate(ptr long)
 @ stub NdrAsyncClientCall
