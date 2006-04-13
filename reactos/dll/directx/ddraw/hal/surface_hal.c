@@ -93,7 +93,7 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
 {
 
   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-     
+  
   DDHAL_LOCKDATA Lock;
    
    if (prect!=NULL)
@@ -115,16 +115,19 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
      
    if (!DdResetVisrgn(&This->Surf->mPrimaryLocal, NULL)) 
    {
-    // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
+      OutputDebugStringA("Here DdResetVisrgn lock");
+      return DDERR_UNSUPPORTED;
    }
    
    if (Lock.Lock(&Lock)!= DDHAL_DRIVER_HANDLED)
    {
-      return DDERR_LOCKEDSURFACES;
+      OutputDebugStringA("Here DDHAL_DRIVER_HANDLED lock");
+      return DDERR_UNSUPPORTED;
    }
    
    if (Lock.ddRVal!= DD_OK)
    {      
+      OutputDebugStringA("Here ddRVal lock");
       return Lock.ddRVal;
    }
 
@@ -138,8 +141,33 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    return DD_OK;   
 }
 HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
-{
-    DX_STUB;
+{     
+   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+      
+   DDHAL_UNLOCKDATA unLock;   
+   unLock.ddRVal = DDERR_NOTPALETTIZED;
+   unLock.lpDD = &This->owner->mDDrawGlobal;   
+   unLock.lpDDSurface =  &This->Surf->mPrimaryLocal;
+   unLock.Unlock = This->owner->mCallbacks.HALDDSurface.Unlock;
+
+
+
+   if (!DdResetVisrgn( unLock.lpDDSurface, NULL)) 
+   {   
+    return DDERR_UNSUPPORTED;
+   }
+
+   if (unLock.Unlock(&unLock)!= DDHAL_DRIVER_HANDLED)
+   {
+      return DDERR_UNSUPPORTED;
+   }
+
+   if (unLock.ddRVal!= DD_OK)
+   {     
+      return unLock.ddRVal;
+   } 
+   
+    return DD_OK;
 }
 
 HRESULT Hal_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAWSURFACE7 override, DWORD dwFlags)
